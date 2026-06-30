@@ -1,0 +1,42 @@
+package com.njydsz.pmis.execution.enums;
+
+/**
+ * 发票开票依据
+ *
+ * <ul>
+ *   <li>MILESTONE - 里程碑（需验收报告）</li>
+ *   <li>OUTSOURCING - 人力外包（需客户确认人天单）</li>
+ *   <li>MONTHLY - 月度结算</li>
+ *   <li>FINAL - 终验/尾款</li>
+ *   <li>OTHER - 其他</li>
+ * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+public enum InvoiceBasis {
+    MILESTONE("MILESTONE", "里程碑"),
+    OUTSOURCING("OUTSOURCING", "人力外包"),
+    MONTHLY("MONTHLY", "月度结算"),
+    FINAL("FINAL", "终验/尾款"),
+    OTHER("OTHER", "其他");
+
+    private final String code;
+    private final String desc;
+
+    InvoiceBasis(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
+    }
+
+    public String getCode() { return code; }
+    public String getDesc() { return desc; }
+
+    public static InvoiceBasis fromCode(String code) {
+        if (code == null) return null;
+        for (InvoiceBasis b : values()) {
+            if (b.code.equalsIgnoreCase(code)) return b;
+        }
+        return null;
+    }
+}

@@ -1,0 +1,36 @@
+package com.njydsz.pmis.execution.mapper;
+
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.njydsz.pmis.execution.entity.PaymentDO;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
+
+@Mapper
+public interface PaymentMapper extends BaseMapper<PaymentDO> {
+
+    PaymentDO selectByCode(@Param("code") String code);
+
+    int updateStatus(@Param("id") Long id, @Param("status") String status,
+                     @Param("confirmedBy") Long confirmedBy);
+
+    int updateAllocation(@Param("id") Long id,
+                         @Param("allocation") String allocation,
+                         @Param("allocatedAmount") BigDecimal allocatedAmount,
+                         @Param("unallocatedAmount") BigDecimal unallocatedAmount);
+
+    List<PaymentDO> selectByContract(@Param("contractId") Long contractId);
+
+    List<PaymentDO> selectByCustomer(@Param("customerId") Long customerId);
+
+    List<PaymentDO> selectUnallocated(@Param("customerId") Long customerId);
+
+    BigDecimal sumReceivedByContract(@Param("contractId") Long contractId);
+
+    List<Map<String, Object>> aggregateByMonth(@Param("initiationId") Long initiationId);
+
+    List<Map<String, Object>> aggregateByCustomer();
+}

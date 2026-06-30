@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.execution.mapper.PaymentMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.execution.entity.PaymentDO">
+        <id column="id" property="id"/>
+        <result column="payment_no" property="paymentNo"/>
+        <result column="payment_code" property="paymentCode"/>
+        <result column="contract_id" property="contractId"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="amount" property="amount"/>
+        <result column="currency" property="currency"/>
+        <result column="payment_method" property="paymentMethod"/>
+        <result column="payment_date" property="paymentDate"/>
+        <result column="bank_account" property="bankAccount"/>
+        <result column="our_bank_account" property="ourBankAccount"/>
+        <result column="bank_reference" property="bankReference"/>
+        <result column="invoice_allocation" property="invoiceAllocation"/>
+        <result column="allocated_amount" property="allocatedAmount"/>
+        <result column="unallocated_amount" property="unallocatedAmount"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="confirmed_by" property="confirmedBy"/>
+        <result column="confirmed_at" property="confirmedAt"/>
+        <result column="recorded_by" property="recordedBy"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT * FROM pmis_finance_payment
+        WHERE payment_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <update id="updateStatus">
+        UPDATE pmis_finance_payment
+        SET status = #{status},
+            confirmed_by = COALESCE(#{confirmedBy}, confirmed_by),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <update id="updateAllocation">
+        UPDATE pmis_finance_payment
+        SET invoice_allocation = #{allocation},
+            allocated_amount = #{allocatedAmount},
+            unallocated_amount = #{unallocatedAmount},
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="selectByContract" resultMap="BaseResultMap">
+        SELECT * FROM pmis_finance_payment
+        WHERE contract_id = #{contractId} AND deleted = 0
+        ORDER BY payment_date DESC
+    </select>
+
+    <select id="selectByCustomer" resultMap="BaseResultMap">
+        SELECT * FROM pmis_finance_payment
+        WHERE customer_id = #{customerId} AND deleted = 0
+        ORDER BY payment_date DESC
+    </select>
+
+    <select id="selectUnallocated" resultMap="BaseResultMap">
+        SELECT * FROM pmis_finance_payment
+        WHERE customer_id = #{customerId}
+          AND status = 'CONFIRMED'
+          AND unallocated_amount > 0
+          AND deleted = 0
+        ORDER BY payment_date ASC
+    </select>
+
+    <select id="sumReceivedByContract" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
+        WHERE contract_id = #{contractId}
+          AND status IN ('CONFIRMED', 'ALLOCATED')
+          AND deleted = 0
+    </select>
+
+    <select id="aggregateByMonth" resultType="java.util.Map">
+        SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month,
+               COALESCE(SUM(amount), 0) AS amount,
+               COUNT(1) AS cnt
+        FROM pmis_finance_payment
+        WHERE initiation_id = #{initiationId}
+          AND status IN ('CONFIRMED', 'ALLOCATED') AND deleted = 0
+        GROUP BY TO_CHAR(payment_date, 'YYYY-MM')
+        ORDER BY month
+    </select>
+
+    <select id="aggregateByCustomer" resultType="java.util.Map">
+        SELECT customer_id, customer_name,
+               COALESCE(SUM(amount), 0) AS amount,
+               COUNT(1) AS cnt
+        FROM pmis_finance_payment
+        WHERE status IN ('CONFIRMED', 'ALLOCATED') AND deleted = 0
+        GROUP BY customer_id, customer_name
+        ORDER BY amount DESC
+    </select>
+</mapper>

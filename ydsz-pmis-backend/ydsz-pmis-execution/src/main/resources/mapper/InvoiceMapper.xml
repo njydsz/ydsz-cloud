@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.execution.mapper.InvoiceMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.execution.entity.InvoiceDO">
+        <id column="id" property="id"/>
+        <result column="invoice_no" property="invoiceNo"/>
+        <result column="invoice_code" property="invoiceCode"/>
+        <result column="invoice_type" property="invoiceType"/>
+        <result column="contract_id" property="contractId"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="invoice_basis" property="invoiceBasis"/>
+        <result column="amount" property="amount"/>
+        <result column="tax_amount" property="taxAmount"/>
+        <result column="net_amount" property="netAmount"/>
+        <result column="tax_rate" property="taxRate"/>
+        <result column="currency" property="currency"/>
+        <result column="invoice_date" property="invoiceDate"/>
+        <result column="tax_period" property="taxPeriod"/>
+        <result column="title" property="title"/>
+        <result column="tax_no" property="taxNo"/>
+        <result column="bank_info" property="bankInfo"/>
+        <result column="address" property="address"/>
+        <result column="phone" property="phone"/>
+        <result column="remark" property="remark"/>
+        <result column="status" property="status"/>
+        <result column="reversed_by_id" property="reversedById"/>
+        <result column="attachment_id" property="attachmentId"/>
+        <result column="approval_comment" property="approvalComment"/>
+        <result column="applied_by" property="appliedBy"/>
+        <result column="approved_by" property="approvedBy"/>
+        <result column="approved_at" property="approvedAt"/>
+        <result column="issued_by" property="issuedBy"/>
+        <result column="issued_at" property="issuedAt"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT * FROM pmis_finance_invoice
+        WHERE invoice_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <select id="selectByInvoiceNo" resultMap="BaseResultMap">
+        SELECT * FROM pmis_finance_invoice
+        WHERE invoice_no = #{invoiceNo} AND deleted = 0 LIMIT 1
+    </select>
+
+    <update id="updateStatus">
+        UPDATE pmis_finance_invoice
+        SET status = #{status},
+            approved_by = COALESCE(#{approvedBy}, approved_by),
+            issued_by = COALESCE(#{issuedBy}, issued_by),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="selectByContract" resultMap="BaseResultMap">
+        SELECT * FROM pmis_finance_invoice
+        WHERE contract_id = #{contractId} AND deleted = 0
+        ORDER BY invoice_date DESC
+    </select>
+
+    <select id="selectByInitiation" resultMap="BaseResultMap">
+        SELECT * FROM pmis_finance_invoice
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        ORDER BY invoice_date DESC
+    </select>
+
+    <select id="selectByCustomer" resultMap="BaseResultMap">
+        SELECT * FROM pmis_finance_invoice
+        WHERE customer_id = #{customerId} AND deleted = 0
+        ORDER BY invoice_date DESC
+    </select>
+
+    <select id="sumInvoicedByContract" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_finance_invoice
+        WHERE contract_id = #{contractId}
+          AND status IN ('APPROVED', 'ISSUED')
+          AND invoice_type = 'NORMAL'
+          AND deleted = 0
+    </select>
+
+    <select id="aggregateByStatus" resultType="java.util.Map">
+        SELECT status, COUNT(1) AS cnt, COALESCE(SUM(amount), 0) AS amount
+        FROM pmis_finance_invoice
+        WHERE contract_id = #{contractId} AND deleted = 0
+        GROUP BY status
+    </select>
+
+    <select id="sumByMonth" resultType="java.util.Map">
+        SELECT tax_period, COALESCE(SUM(amount), 0) AS amount, COUNT(1) AS cnt
+        FROM pmis_finance_invoice
+        WHERE initiation_id = #{initiationId}
+          AND status = 'ISSUED' AND invoice_type = 'NORMAL' AND deleted = 0
+        GROUP BY tax_period
+        ORDER BY tax_period
+    </select>
+</mapper>
