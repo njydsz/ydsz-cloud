@@ -3,12 +3,14 @@ package com.njydsz.pmis.project.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.project.dto.InitiationCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityStatusDTO;
 import com.njydsz.pmis.project.dto.OpportunityUpdateDTO;
 import com.njydsz.pmis.project.entity.OpportunityDO;
 import com.njydsz.pmis.project.enums.OpportunityStatus;
 import com.njydsz.pmis.project.mapper.OpportunityMapper;
+import com.njydsz.pmis.project.service.InitiationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -28,14 +30,16 @@ import static org.mockito.Mockito.when;
 class OpportunityServiceImplTest {
 
     private OpportunityMapper mapper;
+    private InitiationService initiationService;
     private OpportunityServiceImpl service;
 
     @BeforeEach
     void setUp() {
         mapper = mock(OpportunityMapper.class);
+        initiationService = mock(InitiationService.class);
         com.njydsz.pmis.project.assembler.NameAssembler assembler =
                 mock(com.njydsz.pmis.project.assembler.NameAssembler.class);
-        service = new OpportunityServiceImpl(mapper, assembler);
+        service = new OpportunityServiceImpl(mapper, assembler, initiationService);
     }
 
     @Test
@@ -195,5 +199,80 @@ class OpportunityServiceImplTest {
         service.page(1, 20, "k", "FOLLOWING", "B", null);
         verify(mapper).selectPage(any(Page.class), any());
         verify(mapper, never()).selectById(any());
+    }
+
+    @Test
+    @DisplayName("商机转立项 - null id 抛 BAD_REQUEST")
+    void convertNullId() {
+        assertThatThrownBy(() -> service.convertToInitiation(null, 1L, 2L))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(10001);
+    }
+
+    @Test
+    @DisplayName("商机转立项 - 商机不存在抛 NOT_FOUND")
+    void convertNotFound() {
+        when(mapper.selectById(99L)).thenReturn(null);
+        assertThatThrownBy(() -> service.convertToInitiation(99L, 1L, 2L))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(10101);
+    }
+
+    @Test
+    @DisplayName("商机转立项 - 非 WON 状态拒绝")
+    void convertInvalidStatus() {
+        OpportunityDO o = new OpportunityDO();
+        o.setId(1L);
+        o.setStatus("NEGOTIATING");
+        o.setCustomerId(10L);
+        when(mapper.selectById(1L)).thenReturn(o);
+        assertThatThrownBy(() -> service.convertToInitiation(1L, 1L, 2L))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(10001);
+    }
+
+    @Test
+    @DisplayName("商机转立项 - 缺客户拒绝")
+    void convertNoCustomer() {
+        OpportunityDO o = new OpportunityDO();
+        o.setId(1L);
+        o.setStatus("WON");
+        when(mapper.selectById(1L)).thenReturn(o);
+        assertThatThrownBy(() -> service.convertToInitiation(1L, 1L, 2L))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(10001);
+    }
+
+    @Test
+    @DisplayName("商机转立项 - WON 成功创建立项 + 状态推进到 CONVERTED")
+    void convertOk() {
+        OpportunityDO o = new OpportunityDO();
+        o.setId(1L);
+        o.setOpportunityCode("OPP-001");
+        o.setOpportunityName("测试商机");
+        o.setStatus("WON");
+        o.setCustomerId(10L);
+        o.setCustomerName("客户A");
+        o.setLevel("B");
+        o.setBusinessDeptId(20L);
+        o.setEstimatedAmount(new BigDecimal("100000"));
+        when(mapper.selectById(1L)).thenReturn(o);
+        when(initiationService.create(any(InitiationCreateDTO.class))).thenReturn(888L);
+
+        Long id = service.convertToInitiation(1L, 100L, 200L);
+        assertThat(id).isEqualTo(888L);
+
+        ArgumentCaptor<InitiationCreateDTO> initCaptor = ArgumentCaptor.forClass(InitiationCreateDTO.class);
+        verify(initiationService).create(initCaptor.capture());
+        InitiationCreateDTO dto = initCaptor.getValue();
+        assertThat(dto.getOpportunityId()).isEqualTo(1L);
+        assertThat(dto.getCustomerId()).isEqualTo(10L);
+        assertThat(dto.getProjectCode()).startsWith("PRJ-OPP-");
+        assertThat(dto.getSponsorId()).isEqualTo(100L);
+        assertThat(dto.getPmId()).isEqualTo(200L);
+        assertThat(dto.getProjectLevel()).isEqualTo("B");
+        assertThat(dto.getBudgetAmount()).isEqualByComparingTo("100000");
+
+        verify(mapper).updateStatus(1L, "CONVERTED", null);
     }
 }

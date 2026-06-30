@@ -103,4 +103,12 @@ public class OpportunityController {
     public R<List<Map<String, Object>>> aggregateByLevel(@RequestParam(required = false) Long tenantId) {
         return R.ok(service.aggregateByLevel(tenantId));
     }
+
+    @Operation(summary = "商机转立项自动化(WON -> CONVERTED + 创建预立项草稿)")
+    @PostMapping("/{id}/convert-to-initiation")
+    public R<Long> convertToInitiation(@PathVariable Long id,
+                                        @RequestParam(required = false) Long sponsorId,
+                                        @RequestParam(required = false) Long pmId) {
+        return R.ok(service.convertToInitiation(id, sponsorId, pmId));
+    }
 }

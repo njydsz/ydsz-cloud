@@ -15,4 +15,9 @@ public interface ExpenseMapper extends BaseMapper<ExpenseDO> {
 
     /** 跨项目汇总所有费用金额 */
     java.math.BigDecimal sumAllAmount();
+
+    /**
+     * 按项目汇总「已发生」费用金额（强管控用）
+     */
+    java.math.BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
 }

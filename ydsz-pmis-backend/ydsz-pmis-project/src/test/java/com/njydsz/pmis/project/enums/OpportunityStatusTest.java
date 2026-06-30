@@ -11,9 +11,11 @@ class OpportunityStatusTest {
     @Test
     @DisplayName("终态判定")
     void isTerminal() {
-        assertThat(OpportunityStatus.WON.isTerminal()).isTrue();
+        assertThat(OpportunityStatus.CONVERTED.isTerminal()).isTrue();
         assertThat(OpportunityStatus.LOST.isTerminal()).isTrue();
         assertThat(OpportunityStatus.INVALID.isTerminal()).isTrue();
+        // WON 不再是终态(可转 CONVERTED)
+        assertThat(OpportunityStatus.WON.isTerminal()).isFalse();
         assertThat(OpportunityStatus.FOLLOWING.isTerminal()).isFalse();
         assertThat(OpportunityStatus.QUOTED.isTerminal()).isFalse();
         assertThat(OpportunityStatus.NEGOTIATING.isTerminal()).isFalse();
@@ -26,6 +28,8 @@ class OpportunityStatusTest {
         assertThat(OpportunityStatus.FOLLOWING.canTransitTo(OpportunityStatus.NEGOTIATING)).isTrue();
         assertThat(OpportunityStatus.QUOTED.canTransitTo(OpportunityStatus.NEGOTIATING)).isTrue();
         assertThat(OpportunityStatus.NEGOTIATING.canTransitTo(OpportunityStatus.WON)).isTrue();
+        // WON -> CONVERTED (转立项)
+        assertThat(OpportunityStatus.WON.canTransitTo(OpportunityStatus.CONVERTED)).isTrue();
         // 任何非终态 -> LOST/INVALID
         assertThat(OpportunityStatus.FOLLOWING.canTransitTo(OpportunityStatus.LOST)).isTrue();
         assertThat(OpportunityStatus.QUOTED.canTransitTo(OpportunityStatus.INVALID)).isTrue();
@@ -37,9 +41,14 @@ class OpportunityStatusTest {
         assertThat(OpportunityStatus.WON.canTransitTo(OpportunityStatus.FOLLOWING)).isFalse();
         assertThat(OpportunityStatus.LOST.canTransitTo(OpportunityStatus.WON)).isFalse();
         assertThat(OpportunityStatus.INVALID.canTransitTo(OpportunityStatus.QUOTED)).isFalse();
+        // CONVERTED 终态不能再迁移
+        assertThat(OpportunityStatus.CONVERTED.canTransitTo(OpportunityStatus.LOST)).isFalse();
+        assertThat(OpportunityStatus.CONVERTED.canTransitTo(OpportunityStatus.WON)).isFalse();
         // 不能跳过中间阶段
         assertThat(OpportunityStatus.FOLLOWING.canTransitTo(OpportunityStatus.WON)).isFalse();
         assertThat(OpportunityStatus.QUOTED.canTransitTo(OpportunityStatus.FOLLOWING)).isFalse();
+        // 非 WON 不能直接转 CONVERTED
+        assertThat(OpportunityStatus.NEGOTIATING.canTransitTo(OpportunityStatus.CONVERTED)).isFalse();
     }
 
     @Test

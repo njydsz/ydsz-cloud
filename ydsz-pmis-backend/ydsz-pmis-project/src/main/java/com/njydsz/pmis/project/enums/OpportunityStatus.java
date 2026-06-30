@@ -5,10 +5,10 @@ package com.njydsz.pmis.project.enums;
  *
  * <p>状态转移图：
  * <pre>
- *   FOLLOWING ──► QUOTED ──► NEGOTIATING ──► WON
- *      │            │              │
- *      ▼            ▼              ▼
- *    LOST        LOST/INVALID   LOST
+ *   FOLLOWING ──► QUOTED ──► NEGOTIATING ──► WON ──► CONVERTED
+ *      │            │              │           │
+ *      ▼            ▼              ▼           ▼
+ *    LOST        LOST/INVALID   LOST         LOST
  *      │
  *      ▼
  *   INVALID
@@ -23,6 +23,7 @@ public enum OpportunityStatus {
     QUOTED("QUOTED", "已报价"),
     NEGOTIATING("NEGOTIATING", "商务谈判"),
     WON("WON", "已赢单"),
+    CONVERTED("CONVERTED", "已转立项"),
     LOST("LOST", "已输单"),
     INVALID("INVALID", "无效");
 
@@ -43,7 +44,7 @@ public enum OpportunityStatus {
     }
 
     public boolean isTerminal() {
-        return this == WON || this == LOST || this == INVALID;
+        return this == CONVERTED || this == LOST || this == INVALID;
     }
 
     /**
@@ -55,12 +56,15 @@ public enum OpportunityStatus {
         if (this.isTerminal()) return false;  // 终态不能迁移
         // 任何非终态可以转为 LOST/INVALID
         if (target == LOST || target == INVALID) return true;
+        // WON 可转为 CONVERTED
+        if (this == WON && target == CONVERTED) return true;
         return switch (this) {
             case FOLLOWING -> target == QUOTED || target == NEGOTIATING
                     || target == LOST || target == INVALID;
             case QUOTED -> target == NEGOTIATING || target == WON
                     || target == LOST || target == INVALID;
             case NEGOTIATING -> target == WON || target == LOST || target == INVALID;
+            case WON -> target == CONVERTED;
             default -> false;
         };
     }

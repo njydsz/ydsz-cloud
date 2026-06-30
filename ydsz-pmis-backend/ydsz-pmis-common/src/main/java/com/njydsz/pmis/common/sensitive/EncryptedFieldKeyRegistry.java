@@ -54,7 +54,8 @@ public final class EncryptedFieldKeyRegistry {
     private static byte[] defaultKey() {
         if (DEFAULT_KEY == null) {
             // 仅用于本地开发/单元测试, 真实部署应通过 Nacos/ConfigMap 注入 32 字节密钥
-            DEFAULT_KEY = "pmis-default-32byte-aes-key!!!!!!".getBytes(java.nio.charset.StandardCharsets.UTF_8);
+            // 32 字节 (UTF-8) 字符串: "pmis-default-aes-key-32bytes!!!!" (32 chars)
+            DEFAULT_KEY = "pmis-default-aes-key-32bytes!!!!".getBytes(java.nio.charset.StandardCharsets.UTF_8);
         }
         return DEFAULT_KEY;
     }

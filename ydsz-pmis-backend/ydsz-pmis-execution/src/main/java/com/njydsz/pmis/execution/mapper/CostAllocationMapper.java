@@ -30,4 +30,9 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
 
     /** 跨项目汇总所有成本金额 */
     java.math.BigDecimal sumAllAmount();
+
+    /**
+     * 按项目汇总所有已归集成本（强管控用）
+     */
+    java.math.BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
 }

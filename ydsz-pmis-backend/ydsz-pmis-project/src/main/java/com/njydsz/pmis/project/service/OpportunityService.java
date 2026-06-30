@@ -44,4 +44,21 @@ public interface OpportunityService {
      * 分级分布
      */
     List<Map<String, Object>> aggregateByLevel(Long tenantId);
+
+    /**
+     * 商机转立项自动化：
+     * <ol>
+     *   <li>校验商机状态必须是 WON</li>
+     *   <li>创建立项申请(草稿态 PRE_INITIATION)</li>
+     *   <li>同步商机客户/金额/业主/预计周期到立项</li>
+     *   <li>将商机状态推进到 CONVERTED</li>
+     *   <li>返回新建立项 ID</li>
+     * </ol>
+     *
+     * @param opportunityId 商机 ID
+     * @param sponsorId     发起人 ID
+     * @param pmId          项目经理 ID(可空)
+     * @return 新建立项 ID
+     */
+    Long convertToInitiation(Long opportunityId, Long sponsorId, Long pmId);
 }

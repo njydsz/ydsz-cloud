@@ -90,7 +90,8 @@ class AdvancedReportServiceImplTest {
         when(rateInternalMapper.selectAll()).thenReturn(rates);
         List<Map<String, Object>> out = service.utilizationRank(3);
         assertThat(out).hasSize(3);
-        assertThat(out.get(0).get("levelCode")).isEqualTo("L19"); // costAmount 最大
+        // costAmount 最大的是 1005，对应 L15
+        assertThat(out.get(0).get("levelCode")).isEqualTo("L15");
     }
 
     @Test
@@ -176,14 +177,15 @@ class AdvancedReportServiceImplTest {
         r1.setInitiationId(10L);
         RiskDO r2 = new RiskDO();
         r2.setRiskLevel("HIGH");
-        r2.setInitiationId(10L);
+        r2.setInitiationId(20L);
         RiskDO r3 = new RiskDO();
         r3.setRiskLevel("MEDIUM");
         r3.setInitiationId(20L);
         when(riskMapper.selectAll()).thenReturn(List.of(r1, r2, r3));
 
         List<Map<String, Object>> out = service.riskDashboard();
-        assertThat(out).hasSize(3); // 2 BY_LEVEL + 1 BY_INITIATION
+        // 2 BY_LEVEL (HIGH=2, MEDIUM=1) + 2 BY_INITIATION (10=1, 20=2) = 4
+        assertThat(out).hasSize(4);
     }
 
     @Test

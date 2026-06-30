@@ -61,9 +61,9 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         kpi.setConfirmedRevenue(confirmedRevenue);
 
         // 4) 累计成本 = 人力 + 采购 + 费用
-        BigDecimal laborCost = nz(costAllocationMapper.sumAllAmount());
-        BigDecimal purchaseCost = nz(purchaseMapper.sumAllAmount());
-        BigDecimal expenseCost = nz(expenseMapper.sumAllAmount());
+        BigDecimal laborCost = safeSum(costAllocationMapper::sumAllAmount);
+        BigDecimal purchaseCost = safeSum(purchaseMapper::sumAllAmount);
+        BigDecimal expenseCost = safeSum(expenseMapper::sumAllAmount);
         BigDecimal totalCost = laborCost.add(purchaseCost).add(expenseCost);
         kpi.setTotalCost(totalCost);
 
@@ -196,5 +196,14 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
     private BigDecimal nz(BigDecimal v) {
         return v == null ? ZERO : v;
+    }
+
+    private BigDecimal safeSum(java.util.function.Supplier<BigDecimal> supplier) {
+        try {
+            return nz(supplier.get());
+        } catch (Exception e) {
+            log.warn("[Cockpit] 成本聚合失败: {}", e.getMessage());
+            return ZERO;
+        }
     }
 }

@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.dto.ApprovalDTO;
 import com.njydsz.pmis.execution.dto.PurchaseCreateDTO;
+import com.njydsz.pmis.execution.engine.BudgetGuard;
 import com.njydsz.pmis.execution.entity.PurchaseDO;
 import com.njydsz.pmis.execution.enums.ApprovalStatus;
 import com.njydsz.pmis.execution.mapper.PurchaseMapper;
@@ -23,6 +24,7 @@ import org.springframework.util.StringUtils;
 public class PurchaseServiceImpl implements PurchaseService {
 
     private final PurchaseMapper purchaseMapper;
+    private final BudgetGuard budgetGuard;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -53,6 +55,11 @@ public class PurchaseServiceImpl implements PurchaseService {
         if (!StringUtils.hasText(p.getStatus())) p.setStatus(ApprovalStatus.DRAFT.getCode());
         if (p.getTenantId() == null) p.setTenantId(1L);
         if (p.getProviderTraceId() == null) p.setProviderTraceId("");
+
+        // 预算强管控：本次新增 + 项目已发生 ≤ 立项预算
+        if (p.getAmount() != null && p.getAmount().signum() > 0) {
+            budgetGuard.check(p.getInitiationId(), p.getAmount(), "PURCHASE");
+        }
 
         purchaseMapper.insert(p);
         log.info("[Purchase] 创建采购单: code={} item={} amount={}",

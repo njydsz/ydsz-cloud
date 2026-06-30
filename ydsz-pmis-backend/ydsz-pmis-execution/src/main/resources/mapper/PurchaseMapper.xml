@@ -45,4 +45,16 @@
         SELECT COALESCE(SUM(amount), 0) FROM pmis_cost_purchase
         WHERE deleted = 0
     </select>
+
+    <!--
+      强管控用：按项目汇总「已发生」采购金额
+      状态机：DRAFT(0) 仍计入预算占用(已提交未审批)，RECEIVED(3) 计入实付，PAID 计入实付
+      为简化，统计 status IN ('SUBMITTED','APPROVED','RECEIVED','PAID')，不含 DRAFT/REJECTED/CANCELLED
+    -->
+    <select id="sumByInitiation" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_cost_purchase
+        WHERE initiation_id = #{initiationId}
+          AND deleted = 0
+          AND status IN ('SUBMITTED','APPROVED','RECEIVED','PAID')
+    </select>
 </mapper>

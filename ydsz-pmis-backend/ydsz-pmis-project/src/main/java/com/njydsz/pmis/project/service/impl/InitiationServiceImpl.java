@@ -328,6 +328,19 @@ public class InitiationServiceImpl implements InitiationService {
         }
     }
 
+    @Override
+    public java.util.Map<String, Object> budgetSnapshot(Long id) {
+        InitiationDO o = getById(id);
+        java.util.Map<String, Object> snap = new java.util.LinkedHashMap<>();
+        snap.put("initiationId", o.getId());
+        snap.put("projectCode", o.getProjectCode());
+        snap.put("projectName", o.getProjectName());
+        snap.put("budgetAmount", o.getBudgetAmount());
+        snap.put("estimatedAmount", o.getEstimatedAmount());
+        snap.put("stage", o.getStage());
+        return snap;
+    }
+
     private String safeCustomerName(Long id) {
         try { return nameAssembler.resolveCustomer(id); }
         catch (Exception e) { return null; }

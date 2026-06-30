@@ -134,4 +134,10 @@ public class InitiationController {
     public R<List<Map<String, Object>>> aggregateByStage(@RequestParam(required = false) Long tenantId) {
         return R.ok(service.aggregateByStage(tenantId));
     }
+
+    @Operation(summary = "查询立项预算（供执行模块调用）")
+    @GetMapping("/{id}/budget/snapshot")
+    public R<java.math.Map<String, Object>> budgetSnapshot(@PathVariable Long id) {
+        return R.ok(service.budgetSnapshot(id));
+    }
 }

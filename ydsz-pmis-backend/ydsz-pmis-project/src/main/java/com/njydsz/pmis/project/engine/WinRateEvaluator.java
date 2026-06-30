@@ -96,6 +96,7 @@ public class WinRateEvaluator {
             case QUOTED -> new BigDecimal("0.60");
             case NEGOTIATING -> new BigDecimal("0.85");
             case WON -> new BigDecimal("1.0");
+            case CONVERTED -> new BigDecimal("1.0");
             case LOST, INVALID -> new BigDecimal("0");
         };
     }

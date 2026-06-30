@@ -7,6 +7,7 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.assembler.NameAssembler;
 import com.njydsz.pmis.execution.dto.ApprovalDTO;
 import com.njydsz.pmis.execution.dto.ExpenseCreateDTO;
+import com.njydsz.pmis.execution.engine.BudgetGuard;
 import com.njydsz.pmis.execution.entity.ExpenseDO;
 import com.njydsz.pmis.execution.enums.ApprovalStatus;
 import com.njydsz.pmis.execution.mapper.ExpenseMapper;
@@ -25,6 +26,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     private final ExpenseMapper expenseMapper;
     private final NameAssembler nameAssembler;
+    private final BudgetGuard budgetGuard;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -53,6 +55,12 @@ public class ExpenseServiceImpl implements ExpenseService {
                 if (n != null) e.setEmployeeName(n);
             } catch (Exception ignore) { }
         }
+
+        // 预算强管控：本次报销 + 项目已发生 ≤ 立项预算
+        if (e.getInitiationId() != null && e.getAmount() != null && e.getAmount().signum() > 0) {
+            budgetGuard.check(e.getInitiationId(), e.getAmount(), "EXPENSE");
+        }
+
         expenseMapper.insert(e);
         log.info("[Expense] 录入费用: code={} amount={}", e.getExpenseCode(), e.getAmount());
         return e.getId();

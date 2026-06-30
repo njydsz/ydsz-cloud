@@ -71,4 +71,11 @@ public interface InitiationService {
      * 装配客户/PM/发起人名称（按需调用 Feign 客户端）
      */
     void assembleNames(InitiationDO initiation);
+
+    /**
+     * 预算快照（供其他模块 Feign 调用）
+     *
+     * @return {initiationId, projectCode, projectName, budgetAmount, estimatedAmount, stage}
+     */
+    java.util.Map<String, Object> budgetSnapshot(Long id);
 }

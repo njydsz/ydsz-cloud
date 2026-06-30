@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.project.dto.InitiationCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityStatusDTO;
 import com.njydsz.pmis.project.dto.OpportunityUpdateDTO;
@@ -11,15 +12,18 @@ import com.njydsz.pmis.project.engine.WinRateEvaluator;
 import com.njydsz.pmis.project.entity.OpportunityDO;
 import com.njydsz.pmis.project.enums.OpportunityStatus;
 import com.njydsz.pmis.project.mapper.OpportunityMapper;
+import com.njydsz.pmis.project.service.InitiationService;
 import com.njydsz.pmis.project.service.OpportunityService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -36,6 +40,14 @@ public class OpportunityServiceImpl implements OpportunityService {
 
     private final OpportunityMapper opportunityMapper;
     private final com.njydsz.pmis.project.assembler.NameAssembler nameAssembler;
+    /**
+     * 使用 @Lazy 注入 InitiationService，避免与本服务的循环依赖(InitiationService 暂不引用本服务，但保留扩展性)
+     */
+    @Lazy
+    private final InitiationService initiationService;
+
+    private static final String PROJECT_CODE_PREFIX = "PRJ-OPP-";
+    private static final DateTimeFormatter CODE_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -200,5 +212,62 @@ public class OpportunityServiceImpl implements OpportunityService {
     private String safeEmployeeName(Long id) {
         try { return nameAssembler == null ? null : nameAssembler.resolveEmployee(id); }
         catch (Exception e) { return null; }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long convertToInitiation(Long opportunityId, Long sponsorId, Long pmId) {
+        if (opportunityId == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "商机 ID 不能为空");
+        }
+        OpportunityDO opp = opportunityMapper.selectById(opportunityId);
+        if (opp == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "商机不存在: " + opportunityId);
+        }
+        OpportunityStatus cur = OpportunityStatus.fromCode(opp.getStatus());
+        if (cur != OpportunityStatus.WON) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "仅已赢单(WON)状态的商机可转立项，当前状态: " + (cur == null ? "未知" : cur.getDesc()));
+        }
+        if (opp.getCustomerId() == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "商机客户为空，无法转立项");
+        }
+
+        // 1. 装配立项草稿
+        InitiationCreateDTO initDto = new InitiationCreateDTO();
+        initDto.setProjectCode(buildProjectCode(opp));
+        initDto.setProjectName(buildProjectName(opp));
+        initDto.setOpportunityId(opp.getId());
+        initDto.setCustomerId(opp.getCustomerId());
+        initDto.setCustomerName(opp.getCustomerName());
+        initDto.setBusinessDeptId(opp.getBusinessDeptId());
+        // 商机表没有 projectType 字段，默认按 OUTSOURCING 兜底(由项目类型字典维护)
+        initDto.setProjectType("OUTSOURCING");
+        initDto.setProjectLevel(opp.getLevel());
+        initDto.setPmId(pmId);
+        initDto.setSponsorId(sponsorId);
+        initDto.setEstimatedAmount(opp.getEstimatedAmount());
+        initDto.setBudgetAmount(opp.getEstimatedAmount());
+        initDto.setPlannedStartDate(opp.getExpectedStartDate());
+        initDto.setPlannedEndDate(opp.getExpectedEndDate());
+        initDto.setDescription("由商机[" + opp.getOpportunityCode() + "]自动转立项");
+        initDto.setBusinessCase("商机赢单后自动生成立项草稿，请补充业务依据后提交审批");
+
+        Long initiationId = initiationService.create(initDto);
+        log.info("[Opportunity] 商机[{}]自动转立项[{}]成功", opp.getOpportunityCode(), initiationId);
+
+        // 2. 商机状态推进到 CONVERTED
+        opportunityMapper.updateStatus(opp.getId(), OpportunityStatus.CONVERTED.getCode(), null);
+        return initiationId;
+    }
+
+    private String buildProjectCode(OpportunityDO opp) {
+        String ts = java.time.LocalDateTime.now().format(CODE_FMT);
+        return PROJECT_CODE_PREFIX + ts;
+    }
+
+    private String buildProjectName(OpportunityDO opp) {
+        String name = opp.getOpportunityName() == null ? "" : opp.getOpportunityName();
+        return name.length() > 200 ? name.substring(0, 200) : name;
     }
 }
