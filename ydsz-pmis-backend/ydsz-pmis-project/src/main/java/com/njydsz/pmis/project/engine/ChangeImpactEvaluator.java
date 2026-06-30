@@ -1,0 +1,131 @@
+package com.njydsz.pmis.project.engine;
+
+import com.njydsz.pmis.project.dto.ProjectChangeCreateDTO;
+import com.njydsz.pmis.project.enums.ChangeType;
+import com.njydsz.pmis.project.enums.RiskLevel;
+import lombok.extern.slf4j.Slf4j;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
+/**
+ * 项目变更影响评估引擎
+ *
+ * <p>多维度评估：
+ * <ul>
+ *   <li>预算/合同金额影响（金额越大风险越高）</li>
+ *   <li>进度影响（天数越多风险越高）</li>
+ *   <li>利润影响（绝对值或百分比）</li>
+ *   <li>影响范围（WBS 任务数/人员数）</li>
+ * </ul>
+ *
+ * <p>输出：综合风险等级（LOW/MEDIUM/HIGH）、是否重大变更（majorFlag）。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Slf4j
+public class ChangeImpactEvaluator {
+
+    private static final BigDecimal MAJOR_BUDGET = new BigDecimal("500000");
+    private static final BigDecimal MAJOR_CONTRACT = new BigDecimal("1000000");
+    private static final int MAJOR_SCHEDULE_DAYS = 30;
+    private static final BigDecimal MAJOR_PROFIT_PCT = new BigDecimal("0.10");
+
+    public static ImpactResult evaluate(ProjectChangeCreateDTO dto) {
+        if (dto == null) {
+            return new ImpactResult(RiskLevel.LOW, false, BigDecimal.ZERO);
+        }
+        double score = 0.0;
+        boolean major = false;
+
+        // 1) 预算影响
+        if (dto.getBudgetImpact() != null) {
+            BigDecimal abs = dto.getBudgetImpact().abs();
+            if (abs.compareTo(MAJOR_BUDGET) >= 0) {
+                score += 0.30;
+                major = true;
+            } else if (abs.compareTo(new BigDecimal("100000")) >= 0) {
+                score += 0.18;
+            } else if (abs.signum() > 0) {
+                score += 0.08;
+            }
+        }
+
+        // 2) 合同金额影响
+        if (dto.getContractImpact() != null) {
+            BigDecimal abs = dto.getContractImpact().abs();
+            if (abs.compareTo(MAJOR_CONTRACT) >= 0) {
+                score += 0.25;
+                major = true;
+            } else if (abs.signum() > 0) {
+                score += 0.12;
+            }
+        }
+
+        // 3) 进度影响
+        if (dto.getScheduleImpactDays() != null) {
+            int days = Math.abs(dto.getScheduleImpactDays());
+            if (days >= MAJOR_SCHEDULE_DAYS) {
+                score += 0.20;
+                major = true;
+            } else if (days >= 14) {
+                score += 0.12;
+            } else if (days > 0) {
+                score += 0.05;
+            }
+        }
+
+        // 4) 利润影响
+        if (dto.getProfitImpact() != null) {
+            BigDecimal abs = dto.getProfitImpact().abs();
+            if (abs.compareTo(new BigDecimal("100000")) >= 0) {
+                score += 0.15;
+            } else if (abs.signum() > 0) {
+                score += 0.06;
+            }
+        }
+
+        // 5) 影响范围
+        if (dto.getAffectedWbsCount() != null && dto.getAffectedWbsCount() >= 5) {
+            score += 0.10;
+        }
+        if (dto.getAffectedStaffCount() != null && dto.getAffectedStaffCount() >= 3) {
+            score += 0.05;
+        }
+
+        // 6) 变更类型加分：合同/成本类影响最严重
+        ChangeType t = ChangeType.fromCode(dto.getChangeType());
+        if (t == ChangeType.CONTRACT) {
+            score += 0.10;
+            major = true;
+        } else if (t == ChangeType.COST) {
+            score += 0.05;
+        }
+
+        RiskLevel level;
+        if (score >= 0.6) level = RiskLevel.HIGH;
+        else if (score >= 0.3) level = RiskLevel.MEDIUM;
+        else level = RiskLevel.LOW;
+
+        BigDecimal profitPct = computeProfitImpactPct(dto.getProfitImpact());
+        log.debug("[ChangeImpact] code={} score={} level={} major={} profitPct={}",
+                dto.getChangeCode(), score, level, major, profitPct);
+        return new ImpactResult(level, major, profitPct);
+    }
+
+    private static BigDecimal computeProfitImpactPct(BigDecimal profitImpact) {
+        if (profitImpact == null || profitImpact.signum() == 0) {
+            return BigDecimal.ZERO;
+        }
+        // 简化：直接返回绝对值占位（实际项目应除以基线利润）
+        BigDecimal v = profitImpact.abs();
+        if (v.compareTo(MAJOR_PROFIT_PCT) > 0) return BigDecimal.ONE.setScale(4, RoundingMode.HALF_UP);
+        return v.divide(MAJOR_PROFIT_PCT, 4, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 评估结果
+     */
+    public record ImpactResult(RiskLevel level, boolean major, BigDecimal profitImpactPct) { }
+}

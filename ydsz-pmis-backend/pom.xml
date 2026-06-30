@@ -32,6 +32,7 @@
         <module>ydsz-pmis-audit</module>
         <module>ydsz-pmis-project</module>
         <module>ydsz-pmis-execution</module>
+        <module>ydsz-pmis-agent</module>
     </modules>
 
     <properties>
@@ -89,6 +90,16 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-project</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-execution</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

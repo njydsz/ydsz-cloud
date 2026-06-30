@@ -1,0 +1,38 @@
+package com.njydsz.pmis.execution.enums;
+
+/**
+ * 项目结项类型
+ *
+ * <ul>
+ *   <li>FORMAL - 正式结项：所有交付物验收完成、回款结清</li>
+ *   <li>PRE_CLOSURE - 预结项：交付物完成、回款未结清</li>
+ *   <li>FORCED - 强制结项：异常情况强制结束</li>
+ * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+public enum ClosureType {
+    FORMAL("FORMAL", "正式结项"),
+    PRE_CLOSURE("PRE_CLOSURE", "预结项"),
+    FORCED("FORCED", "强制结项");
+
+    private final String code;
+    private final String desc;
+
+    ClosureType(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
+    }
+
+    public String getCode() { return code; }
+    public String getDesc() { return desc; }
+
+    public static ClosureType fromCode(String code) {
+        if (code == null) return null;
+        for (ClosureType t : values()) {
+            if (t.code.equalsIgnoreCase(code)) return t;
+        }
+        return null;
+    }
+}

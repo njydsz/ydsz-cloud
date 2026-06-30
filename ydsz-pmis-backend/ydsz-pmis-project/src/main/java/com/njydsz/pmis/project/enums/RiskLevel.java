@@ -7,7 +7,20 @@ package com.njydsz.pmis.project.enums;
  * @since 1.0.0
  */
 public enum RiskLevel {
-    LOW, MEDIUM, HIGH;
+    LOW("LOW", "低风险"),
+    MEDIUM("MEDIUM", "中风险"),
+    HIGH("HIGH", "高风险");
+
+    private final String code;
+    private final String desc;
+
+    RiskLevel(String code, String desc) {
+        this.code = code;
+        this.desc = desc;
+    }
+
+    public String getCode() { return code; }
+    public String getDesc() { return desc; }
 
     public static RiskLevel fromCode(String code) {
         if (code == null) return LOW;
