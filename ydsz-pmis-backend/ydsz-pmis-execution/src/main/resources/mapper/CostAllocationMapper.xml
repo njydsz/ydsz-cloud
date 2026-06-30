@@ -66,7 +66,7 @@
         WHERE deleted = 0
     </select>
 
-    <!-- P6 按 cost_type 汇总（单参版本，跨项目） -->
+    <!-- P4-3/P6 按 cost_type 汇总（单参版本，跨项目） -->
     <select id="sumByCostType" resultType="java.math.BigDecimal">
         SELECT COALESCE(SUM(amount), 0) FROM pmis_cost_allocation
         WHERE deleted = 0

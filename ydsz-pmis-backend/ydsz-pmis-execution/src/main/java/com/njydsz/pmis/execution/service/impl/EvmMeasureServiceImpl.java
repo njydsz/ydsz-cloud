@@ -3,6 +3,7 @@ package com.njydsz.pmis.execution.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.dto.EvmMeasureCreateDTO;
 import com.njydsz.pmis.execution.engine.EvmCalculator;
@@ -30,6 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     private final EvmMeasureMapper evmMapper;
+    private final ThresholdProvider thresholdProvider;
 
     /**
      * 项目级 EVM 基线版本号: initiationId -> 自增版本号.
@@ -53,7 +55,11 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
         if (dto.getMeasureDate() == null) dto.setMeasureDate(LocalDate.now());
 
         EvmCalculator.EVMResult r = EvmCalculator.calculate(
-                dto.getPv(), dto.getEv(), dto.getAc(), dto.getBac());
+                dto.getPv(), dto.getEv(), dto.getAc(), dto.getBac(),
+                thresholdProvider.cpiYellow(),
+                thresholdProvider.cpiRed(),
+                thresholdProvider.spiYellow(),
+                thresholdProvider.spiRed());
 
         // 幂等：相同 initiation+wbs+period 视为同一条
         EvmMeasureDO existing = evmMapper.selectByInitiationAndPeriod(

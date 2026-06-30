@@ -1,0 +1,36 @@
+package com.njydsz.pmis.common.feign;
+
+import com.njydsz.pmis.common.api.R;
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import java.util.Map;
+
+/**
+ * 执行模块 Feign 客户端（供 scheduler / 跨模块调用）
+ *
+ * <p>scheduler 通过此接口触发可计费利用率快照重算，
+ * 避免 scheduler 直接依赖 execution 模块的具体类路径。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@FeignClient(name = "ydsz-pmis-execution", fallbackFactory = ExecutionClientFallback.class)
+public interface ExecutionClient {
+
+    /**
+     * 触发可计费利用率快照重算
+     */
+    @PostMapping("/api/v1/execution/billable-utilization/recompute")
+    R<Map<String, Object>> recomputeBillableUtilization(
+            @RequestParam(value = "period", required = false) String period,
+            @RequestParam(value = "recomputeAll", defaultValue = "false") boolean recomputeAll);
+
+    /**
+     * 健康检查
+     */
+    @GetMapping("/api/v1/execution/billable-utilization/snapshot-average")
+    R<Map<String, Object>> snapshotAverage(@RequestParam(value = "period", required = false) String period);
+}

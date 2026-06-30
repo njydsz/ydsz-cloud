@@ -2,6 +2,7 @@ package com.njydsz.pmis.execution.service.impl;
 
 import com.njydsz.pmis.execution.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.execution.dto.CockpitKpiVO;
+import com.njydsz.pmis.execution.mapper.BillableUtilizationSnapshotMapper;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
 import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
 import com.njydsz.pmis.execution.mapper.ExpenseMapper;
@@ -9,6 +10,7 @@ import com.njydsz.pmis.execution.mapper.InvoiceMapper;
 import com.njydsz.pmis.execution.mapper.PaymentMapper;
 import com.njydsz.pmis.execution.mapper.PurchaseMapper;
 import com.njydsz.pmis.execution.mapper.RiskMapper;
+import com.njydsz.pmis.execution.service.BillableUtilizationService;
 import com.njydsz.pmis.execution.service.CockpitReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,6 +19,8 @@ import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,8 +46,11 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     private final ExpenseMapper expenseMapper;
     private final EvmMeasureMapper evmMeasureMapper;
     private final RiskMapper riskMapper;
+    private final BillableUtilizationSnapshotMapper utilizationSnapshotMapper;
+    private final BillableUtilizationService billableUtilizationService;
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
+    private static final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     @Override
     public CockpitKpiVO overview(String period, CockpitDrillDownDTO drillDown) {
@@ -86,8 +93,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         // 8) Bench 闲置成本（用户模块 Feign 调用失败时回退 0）
         kpi.setBenchIdleCost(benchIdleCostSafe());
 
-        // 9) 可计费利用率均值
-        kpi.setAvgBillableUtilization(BigDecimal.valueOf(0.75)); // 默认基准，可由 scheduler 重算
+        // 9) 可计费利用率均值：从快照表读取（scheduler 每日计算），无数据时实时聚合兜底
+        kpi.setAvgBillableUtilization(avgBillableUtilizationSafe(period));
 
         return kpi;
     }
@@ -126,10 +133,42 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     @Override
     public Map<String, Object> utilizationSummary(CockpitDrillDownDTO drillDown) {
         Map<String, Object> out = new HashMap<>();
-        out.put("avgBillable", BigDecimal.valueOf(0.75));
-        out.put("overloaded", 0);
-        out.put("underutilized", 0);
-        out.put("normal", 0);
+        String period = currentPeriodOrDefault(null);
+        Map<String, Object> avg = billableUtilizationService.snapshotAverage(period);
+        if (avg == null) avg = new HashMap<>();
+
+        BigDecimal avgPct = toDecimal(avg.get("avg_pct"));
+        out.put("avgBillable", avgPct);
+        out.put("avgPct", avgPct);
+        out.put("period", period);
+        out.put("source", avg.getOrDefault("source", "UNKNOWN"));
+        out.put("headcount", toLongOrZero(avg.get("headcount")));
+
+        // 预警计数：WARN / CRITICAL 数量
+        out.put("warnCount", toLongOrZero(avg.get("warn_count")));
+        out.put("criticalCount", toLongOrZero(avg.get("critical_count")));
+
+        // 利用率分布（grade 维度）
+        List<Map<String, Object>> gradeDist = new ArrayList<>();
+        try {
+            gradeDist = utilizationSnapshotMapper.gradeDistribution(period);
+        } catch (Exception e) {
+            log.warn("[Cockpit] 利用率等级分布失败: {}", e.getMessage());
+        }
+        out.put("gradeDistribution", gradeDist);
+
+        // 部门维度 top 5
+        List<Map<String, Object>> deptList = new ArrayList<>();
+        try {
+            deptList = utilizationSnapshotMapper.groupByDepartment(period);
+        } catch (Exception e) {
+            log.warn("[Cockpit] 部门利用率聚合失败: {}", e.getMessage());
+        }
+        if (deptList.size() > 5) {
+            deptList = deptList.subList(0, 5);
+        }
+        out.put("topDepartments", deptList);
+
         return out;
     }
 
@@ -204,6 +243,46 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         } catch (Exception e) {
             log.warn("[Cockpit] 成本聚合失败: {}", e.getMessage());
             return ZERO;
+        }
+    }
+
+    private BigDecimal avgBillableUtilizationSafe(String period) {
+        try {
+            String p = currentPeriodOrDefault(period);
+            Map<String, Object> avg = billableUtilizationService.snapshotAverage(p);
+            if (avg == null || avg.isEmpty()) {
+                return BigDecimal.valueOf(0.75);
+            }
+            return toDecimal(avg.get("avg_pct"));
+        } catch (Exception e) {
+            log.warn("[Cockpit] 利用率均值获取失败: {}", e.getMessage());
+            return BigDecimal.valueOf(0.75);
+        }
+    }
+
+    private String currentPeriodOrDefault(String period) {
+        if (StringUtils.hasText(period)) return period;
+        return LocalDate.now().format(PERIOD_FMT);
+    }
+
+    private BigDecimal toDecimal(Object o) {
+        if (o == null) return ZERO;
+        if (o instanceof BigDecimal) return (BigDecimal) o;
+        if (o instanceof Number) return new BigDecimal(o.toString());
+        try {
+            return new BigDecimal(String.valueOf(o));
+        } catch (Exception e) {
+            return ZERO;
+        }
+    }
+
+    private long toLongOrZero(Object o) {
+        if (o == null) return 0L;
+        if (o instanceof Number) return ((Number) o).longValue();
+        try {
+            return Long.parseLong(String.valueOf(o));
+        } catch (Exception e) {
+            return 0L;
         }
     }
 }

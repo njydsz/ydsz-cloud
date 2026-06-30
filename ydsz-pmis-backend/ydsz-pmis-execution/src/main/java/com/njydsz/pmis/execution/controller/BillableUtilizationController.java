@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -79,5 +80,20 @@ public class BillableUtilizationController {
             @RequestParam double totalHours,
             @RequestParam double billableHours) {
         return R.ok(service.evaluate(totalHours, billableHours));
+    }
+
+    @Operation(summary = "触发快照重算（Scheduler 调用 / 运维手工）")
+    @PostMapping("/recompute")
+    public R<Map<String, Object>> recompute(
+            @RequestParam(required = false) String period,
+            @RequestParam(defaultValue = "false") boolean recomputeAll) {
+        return R.ok(service.recompute(period, recomputeAll));
+    }
+
+    @Operation(summary = "读取最新一期快照均值（驾驶舱取数，快照为空时实时聚合兜底）")
+    @GetMapping("/snapshot-average")
+    public R<Map<String, Object>> snapshotAverage(
+            @RequestParam(required = false) String period) {
+        return R.ok(service.snapshotAverage(period));
     }
 }

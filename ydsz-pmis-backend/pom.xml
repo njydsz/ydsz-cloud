@@ -108,6 +108,16 @@
                 <artifactId>ydsz-pmis-execution</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-scheduler</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-message</artifactId>
+                <version>${project.version}</version>
+            </dependency>
 
             <!-- MyBatis-Plus -->
             <dependency>

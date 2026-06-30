@@ -6,6 +6,7 @@ import com.njydsz.pmis.execution.dto.OpsTicketCreateDTO;
 import com.njydsz.pmis.execution.dto.OpsTicketStatusDTO;
 import com.njydsz.pmis.execution.entity.OpsTicketDO;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -30,6 +31,11 @@ public interface OpsTicketService {
 
     /** SLA 扫描：标记超时工单（用于定时任务） */
     int scanSlaBreaches();
+
+    /** SLA 扫描：按指定基准日期（兼容老接口） */
+    default int scanSlaBreaches(LocalDate baseDate) {
+        return scanSlaBreaches();
+    }
 
     /** 关闭工单并允许评价 */
     void closeAndEvaluate(OpsTicketStatusDTO dto);

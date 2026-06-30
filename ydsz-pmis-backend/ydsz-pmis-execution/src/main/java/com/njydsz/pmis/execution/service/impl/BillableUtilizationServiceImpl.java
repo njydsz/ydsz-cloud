@@ -1,6 +1,10 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.njydsz.pmis.execution.entity.BillableUtilizationSnapshotDO;
+import com.njydsz.pmis.execution.entity.RateInternalDO;
 import com.njydsz.pmis.execution.enums.UtilizationGrade;
+import com.njydsz.pmis.execution.mapper.BillableUtilizationSnapshotMapper;
+import com.njydsz.pmis.execution.mapper.RateInternalMapper;
 import com.njydsz.pmis.execution.mapper.TimeEntryMapper;
 import com.njydsz.pmis.execution.service.BillableUtilizationService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +14,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -31,9 +37,12 @@ import java.util.Map;
 public class BillableUtilizationServiceImpl implements BillableUtilizationService {
 
     private final TimeEntryMapper timeEntryMapper;
+    private final BillableUtilizationSnapshotMapper snapshotMapper;
+    private final RateInternalMapper rateInternalMapper;
 
     private static final BigDecimal HUNDRED = new BigDecimal("100");
     private static final int DEFAULT_TOP = 20;
+    private static final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
     @Override
     public List<Map<String, Object>> aggregate(LocalDate from, LocalDate to) {
@@ -155,25 +164,124 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
         return row;
     }
 
+    @Override
+    public Map<String, Object> recompute(String period, boolean recomputeAll) {
+        long start = System.currentTimeMillis();
+        String p = (period == null || period.isBlank())
+                ? LocalDate.now().minusMonths(1).format(PERIOD_FMT)
+                : period;
+        YearMonth ym;
+        try {
+            ym = YearMonth.parse(p, PERIOD_FMT);
+        } catch (Exception e) {
+            throw new IllegalArgumentException("period 必须为 yyyy-MM 格式: " + period);
+        }
+        LocalDate from = ym.atDay(1);
+        LocalDate to = ym.atEndOfMonth();
+
+        if (recomputeAll) {
+            try {
+                int removed = snapshotMapper.deleteByPeriod(p);
+                log.info("[BillableUtilization] recompute 软删 period={} count={}", p, removed);
+            } catch (Exception e) {
+                log.warn("[BillableUtilization] 软删失败: {}", e.getMessage());
+            }
+        }
+
+        List<Map<String, Object>> rows = safe(
+                () -> timeEntryMapper.aggregateBillableByEmployee(from, to));
+        if (rows == null) rows = new ArrayList<>();
+
+        // 拼接部门（来自 RateInternal）
+        Map<String, String> deptByLevel = deptByLevelSafe();
+
+        int affected = 0;
+        for (Map<String, Object> raw : rows) {
+            try {
+                BillableUtilizationSnapshotDO snap = toSnapshot(p, raw, from, to, deptByLevel);
+                int n = snapshotMapper.upsert(snap);
+                affected += Math.max(n, 0);
+            } catch (Exception e) {
+                log.warn("[BillableUtilization] 写入快照失败 employee={} : {}",
+                        raw.get("employee_id"), e.getMessage());
+            }
+        }
+
+        Map<String, Object> out = new HashMap<>();
+        out.put("ok", true);
+        out.put("period", p);
+        out.put("recomputeAll", recomputeAll);
+        out.put("affectedCount", affected);
+        out.put("rangeFrom", from.toString());
+        out.put("rangeTo", to.toString());
+        out.put("recomputeAt", java.time.LocalDateTime.now().toString());
+        out.put("costMs", System.currentTimeMillis() - start);
+        return out;
+    }
+
+    @Override
+    public Map<String, Object> snapshotAverage(String period) {
+        String p = (period == null || period.isBlank())
+                ? LocalDate.now().format(PERIOD_FMT)
+                : period;
+        Map<String, Object> out = safe(() -> snapshotMapper.averageByPeriod(p));
+        if (out == null) out = new HashMap<>();
+        // 兜底：快照表无数据 → 实时聚合
+        if (out.isEmpty() || out.get("headcount") == null
+                || "0".equals(String.valueOf(out.get("headcount")))) {
+            return realtimeAverageFallback(p);
+        }
+        // 补齐展示字段
+        out.put("source", "SNAPSHOT");
+        out.put("period", p);
+        return out;
+    }
+
     // ----------------- 私有 -----------------
 
     private void enrich(Map<String, Object> row) {
-        double total = toDouble(row.get("totalHours"));
-        double billable = toDouble(row.get("billableHours"));
+        double total = toDouble(firstNonNull(row, "totalHours", "total_hours"));
+        double billable = toDouble(firstNonNull(row, "billableHours", "billable_hours"));
         BigDecimal pct;
         if (total <= 0.0001) {
             pct = BigDecimal.ZERO;
         } else {
-            pct = BigDecimal.valueOf(billable)
-                    .multiply(HUNDRED)
-                    .divide(BigDecimal.valueOf(total), 4, RoundingMode.HALF_UP);
+            double raw = billable / total * 100d;
+            // billable > total 钳制为 100%
+            if (raw > 100d) raw = 100d;
+            if (raw < 0d) raw = 0d;
+            pct = BigDecimal.valueOf(raw).setScale(4, RoundingMode.HALF_UP);
         }
         UtilizationGrade grade = UtilizationGrade.of(pct.doubleValue());
+        // 标准化为 camelCase，便于下游直接 get("totalHours") / get("billableHours")
+        row.put("totalHours", total);
+        row.put("billableHours", billable);
         row.put("utilizationPct", pct);
         row.put("utilizationPctDisplay", pct.setScale(2, RoundingMode.HALF_UP));
         row.put("grade", grade.getCode());
         row.put("gradeDesc", grade.getDesc());
         row.put("alert", grade.isAlert());
+        // 同时标准化 employeeId / employeeName / levelCode（MyBatis 默认下划线）
+        normalizeKey(row, "employeeId", "employee_id");
+        normalizeKey(row, "employeeName", "employee_name");
+        normalizeKey(row, "levelCode", "level_code");
+    }
+
+    private static void normalizeKey(Map<String, Object> row, String camelKey, String snakeKey) {
+        Object v = row.get(camelKey);
+        if (v != null) return;
+        Object src = row.get(snakeKey);
+        if (src != null) {
+            row.put(camelKey, src);
+        }
+    }
+
+    private static Object firstNonNull(Map<String, Object> row, String... keys) {
+        for (String k : keys) {
+            Object v = row.get(k);
+            if (v != null) return v;
+        }
+        return null;
     }
 
     private LocalDate[] normalizeRange(LocalDate from, LocalDate to) {
@@ -228,6 +336,117 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
         } catch (Exception e) {
             log.warn("[Utilization] 数据查询失败: {}", e.getMessage());
             return null;
+        }
+    }
+
+    private BillableUtilizationSnapshotDO toSnapshot(String period, Map<String, Object> raw,
+                                                     LocalDate from, LocalDate to,
+                                                     Map<String, String> deptByLevel) {
+        BillableUtilizationSnapshotDO snap = new BillableUtilizationSnapshotDO();
+        snap.setPeriod(period);
+        Long empId = toLong(firstNonNull(raw, "employeeId", "employee_id"));
+        if (empId == null) {
+            throw new IllegalArgumentException("employee_id 缺失");
+        }
+        snap.setEmployeeId(empId);
+        snap.setEmployeeName(str(firstNonNull(raw, "employeeName", "employee_name")));
+        String level = str(firstNonNull(raw, "levelCode", "level_code"));
+        snap.setLevelCode(level);
+        snap.setDepartment(deptByLevel.getOrDefault(level, ""));
+
+        BigDecimal total = toBd(firstNonNull(raw, "totalHours", "total_hours"));
+        BigDecimal billable = toBd(firstNonNull(raw, "billableHours", "billable_hours"));
+        BigDecimal overtime = toBd(firstNonNull(raw, "overtimeHours", "overtime_hours"));
+        BigDecimal leave = toBd(firstNonNull(raw, "leaveHours", "leave_hours"));
+        BigDecimal training = toBd(firstNonNull(raw, "trainingHours", "training_hours"));
+
+        snap.setTotalHours(total);
+        snap.setBillableHours(billable);
+        snap.setOvertimeHours(overtime);
+        snap.setLeaveHours(leave);
+        snap.setTrainingHours(training);
+
+        // bench = total - billable - leave - training（钳制为 0）
+        BigDecimal bench = total.subtract(billable).subtract(leave).subtract(training);
+        if (bench.signum() < 0) bench = BigDecimal.ZERO;
+        snap.setBenchHours(bench);
+
+        BigDecimal pct;
+        if (total.signum() == 0) {
+            pct = BigDecimal.ZERO;
+        } else {
+            double raw2 = billable.divide(total, 4, RoundingMode.HALF_UP).doubleValue();
+            if (raw2 > 1d) raw2 = 1d;
+            if (raw2 < 0d) raw2 = 0d;
+            pct = BigDecimal.valueOf(raw2);
+        }
+        snap.setUtilizationPct(pct);
+        UtilizationGrade g = UtilizationGrade.of(pct.doubleValue() * 100d);
+        snap.setGrade(g.getCode());
+        snap.setRangeFrom(from);
+        snap.setRangeTo(to);
+        snap.setSnapshotAt(java.time.LocalDateTime.now());
+        snap.setSource("SCHEDULER");
+        snap.setDeleted(0);
+        return snap;
+    }
+
+    private Map<String, String> deptByLevelSafe() {
+        Map<String, String> out = new HashMap<>();
+        try {
+            List<RateInternalDO> all = rateInternalMapper.selectAll();
+            if (all != null) {
+                for (RateInternalDO r : all) {
+                    String lvl = r.getLevelCode();
+                    String dept = r.getDepartment();
+                    if (lvl != null && !lvl.isBlank() && dept != null && !dept.isBlank()) {
+                        out.putIfAbsent(lvl, dept);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Utilization] 读取 RateInternal 失败: {}", e.getMessage());
+        }
+        return out;
+    }
+
+    private Map<String, Object> realtimeAverageFallback(String period) {
+        YearMonth ym;
+        try {
+            ym = YearMonth.parse(period, PERIOD_FMT);
+        } catch (Exception e) {
+            ym = YearMonth.now();
+        }
+        LocalDate from = ym.atDay(1);
+        LocalDate to = ym.atEndOfMonth();
+        List<Map<String, Object>> rows = aggregate(from, to);
+        double total = 0, billable = 0;
+        long head = 0;
+        for (Map<String, Object> r : rows) {
+            total += toDouble(r.get("totalHours"));
+            billable += toDouble(r.get("billableHours"));
+        }
+        head = countDistinctEmployee(rows);
+        Map<String, Object> out = new HashMap<>();
+        double pct = total <= 0.0001 ? 0d : Math.min(1d, billable / total);
+        out.put("avg_pct", pct);
+        out.put("sum_total", total);
+        out.put("sum_billable", billable);
+        out.put("sum_bench", Math.max(0d, total - billable));
+        out.put("headcount", head);
+        out.put("source", "REALTIME");
+        out.put("period", period);
+        return out;
+    }
+
+    private static BigDecimal toBd(Object o) {
+        if (o == null) return BigDecimal.ZERO;
+        if (o instanceof BigDecimal) return (BigDecimal) o;
+        if (o instanceof Number) return new BigDecimal(o.toString());
+        try {
+            return new BigDecimal(o.toString());
+        } catch (Exception e) {
+            return BigDecimal.ZERO;
         }
     }
 }

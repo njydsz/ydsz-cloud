@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
 import com.njydsz.pmis.execution.entity.RateCardDO;
 import com.njydsz.pmis.execution.entity.RateInternalDO;
@@ -28,9 +29,6 @@ import java.util.stream.Collectors;
 
 /**
  * 高级报表 Service 实现
- *
- * @author ydsz-pmis-team
- * @since 1.0.0
  */
 @Slf4j
 @Service
@@ -42,6 +40,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     private final RateInternalMapper rateInternalMapper;
     private final RiskMapper riskMapper;
     private final TimeEntryMapper timeEntryMapper;
+    private final ThresholdProvider thresholdProvider;
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final BigDecimal HUNDRED = new BigDecimal("100");
@@ -376,9 +375,11 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
                     .multiply(HUNDRED).setScale(2, RoundingMode.HALF_UP);
 
             String alertLevel;
-            if (benchDays.compareTo(new BigDecimal("15")) >= 0) {
+            int yellowDays = thresholdProvider.benchYellowDays();
+            int redDays = thresholdProvider.benchRedDays();
+            if (benchDays.compareTo(new BigDecimal(redDays)) >= 0) {
                 alertLevel = "RED";
-            } else if (benchDays.compareTo(new BigDecimal("7")) >= 0) {
+            } else if (benchDays.compareTo(new BigDecimal(yellowDays)) >= 0) {
                 alertLevel = "YELLOW";
             } else {
                 alertLevel = "GREEN";

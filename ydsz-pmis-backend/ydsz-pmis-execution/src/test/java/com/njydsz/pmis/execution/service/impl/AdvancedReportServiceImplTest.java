@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
 import com.njydsz.pmis.execution.entity.RateCardDO;
 import com.njydsz.pmis.execution.entity.RateInternalDO;
@@ -36,6 +37,7 @@ class AdvancedReportServiceImplTest {
     private RateInternalMapper rateInternalMapper;
     private RiskMapper riskMapper;
     private TimeEntryMapper timeEntryMapper;
+    private ThresholdProvider thresholdProvider;
     private AdvancedReportServiceImpl service;
 
     @BeforeEach
@@ -45,8 +47,11 @@ class AdvancedReportServiceImplTest {
         rateInternalMapper = mock(RateInternalMapper.class);
         riskMapper = mock(RiskMapper.class);
         timeEntryMapper = mock(TimeEntryMapper.class);
+        thresholdProvider = mock(ThresholdProvider.class);
+        when(thresholdProvider.benchYellowDays()).thenReturn(7);
+        when(thresholdProvider.benchRedDays()).thenReturn(15);
         service = new AdvancedReportServiceImpl(evmMapper, rateCardMapper,
-                rateInternalMapper, riskMapper, timeEntryMapper);
+                rateInternalMapper, riskMapper, timeEntryMapper, thresholdProvider);
     }
 
     @Test

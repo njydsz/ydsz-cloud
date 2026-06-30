@@ -63,4 +63,23 @@ public interface BillableUtilizationService {
      * 计算（不依赖数据库）：给一个 total/billable 数字直接得评估
      */
     Map<String, Object> evaluate(double totalHours, double billableHours);
+
+    /**
+     * 触发快照重算（供 scheduler 调用）
+     *
+     * <p>聚合 pmis_execution_time_entry（status=APPROVED）中指定周期的工时，
+     * 写入 pmis_billable_utilization_snapshot。recomputeAll=true 时先按 period 软删再重写。
+     *
+     * @param period       yyyy-MM；为空时取上一月
+     * @param recomputeAll 是否清空本周期所有快照后重算
+     * @return 包含 affectedCount / period / recomputeAt / costMs 的结果
+     */
+    Map<String, Object> recompute(String period, boolean recomputeAll);
+
+    /**
+     * 读取最新一期快照均值（驾驶舱取数）
+     *
+     * <p>优先从快照表读取，无数据时实时聚合兜底，保证驾驶舱 KPI 永远有数。
+     */
+    Map<String, Object> snapshotAverage(String period);
 }

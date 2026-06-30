@@ -1,10 +1,15 @@
-package com.njydsz.pmis.scheduler.handler;
+package com.njydsz.pmis.common.job;
 
 /**
- * 任务处理器接口
+ * 任务处理器接口（公共）
  *
  * <p>实现此接口的 Bean 即可被 ydsz-pmis-scheduler 动态调度。
  * Bean 名称需与 pmis_job.handler 一致。
+ *
+ * <p>为避免 scheduler 与业务模块之间的循环依赖，接口统一声明在 common 模块。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public interface JobHandler {
 

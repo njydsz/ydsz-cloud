@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.dto.EvmMeasureCreateDTO;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
@@ -22,12 +23,18 @@ import static org.mockito.Mockito.when;
 class EvmMeasureServiceImplTest {
 
     private EvmMeasureMapper mapper;
+    private ThresholdProvider thresholdProvider;
     private EvmMeasureServiceImpl service;
 
     @BeforeEach
     void setUp() {
         mapper = mock(EvmMeasureMapper.class);
-        service = new EvmMeasureServiceImpl(mapper);
+        thresholdProvider = mock(ThresholdProvider.class);
+        when(thresholdProvider.cpiYellow()).thenReturn(0.95);
+        when(thresholdProvider.cpiRed()).thenReturn(0.85);
+        when(thresholdProvider.spiYellow()).thenReturn(0.90);
+        when(thresholdProvider.spiRed()).thenReturn(0.80);
+        service = new EvmMeasureServiceImpl(mapper, thresholdProvider);
     }
 
     @Test

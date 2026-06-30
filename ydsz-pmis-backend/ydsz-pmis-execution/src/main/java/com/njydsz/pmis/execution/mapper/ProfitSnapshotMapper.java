@@ -5,6 +5,7 @@ import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -19,8 +20,5 @@ public interface ProfitSnapshotMapper extends BaseMapper<ProfitSnapshotDO> {
     List<Map<String, Object>> trendByPeriod(@Param("initiationId") Long initiationId);
 
     /** P4-3 跨项目汇总所有快照利润 */
-    java.math.BigDecimal sumAll();
-}
-    /** P6 每日对账：跨项目汇总所有快照利润 */
     BigDecimal sumAll();
 }

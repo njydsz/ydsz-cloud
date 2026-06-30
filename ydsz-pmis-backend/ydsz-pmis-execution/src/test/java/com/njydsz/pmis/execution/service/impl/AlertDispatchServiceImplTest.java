@@ -2,10 +2,14 @@ package com.njydsz.pmis.execution.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.dto.AlertDispatchDTO;
 import com.njydsz.pmis.execution.entity.AlertDispatchDO;
+import com.njydsz.pmis.execution.feign.MessageServiceClient;
 import com.njydsz.pmis.execution.mapper.AlertDispatchMapper;
+import com.njydsz.pmis.message.channel.MessageRequest;
+import com.njydsz.pmis.message.channel.MessageResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,12 +34,14 @@ import static org.mockito.Mockito.when;
 class AlertDispatchServiceImplTest {
 
     private AlertDispatchMapper mapper;
+    private MessageServiceClient messageClient;
     private AlertDispatchServiceImpl service;
 
     @BeforeEach
     void setUp() {
         mapper = mock(AlertDispatchMapper.class);
-        service = new AlertDispatchServiceImpl(mapper);
+        messageClient = mock(MessageServiceClient.class);
+        service = new AlertDispatchServiceImpl(mapper, messageClient);
     }
 
     @Test
@@ -125,7 +131,12 @@ class AlertDispatchServiceImplTest {
         AlertDispatchDO d = new AlertDispatchDO();
         d.setId(1L);
         d.setStatus("PENDING");
+        d.setAlertType("BUDGET");
+        d.setAlertLevel("YELLOW");
+        d.setPushChannels("IN_APP");
         when(mapper.selectById(1L)).thenReturn(d);
+        when(messageClient.send(any(MessageRequest.class)))
+                .thenReturn(R.ok(MessageResult.ok("IN_APP", "trace-1")));
         when(mapper.markSent(ArgumentMatchers.eq(1L), any())).thenReturn(1);
         boolean ok = service.dispatchNow(1L);
         assertThat(ok).isTrue();
@@ -144,12 +155,17 @@ class AlertDispatchServiceImplTest {
     }
 
     @Test
-    @DisplayName("dispatchNow mapper 异常时 markFailed")
+    @DisplayName("dispatchNow Feign 失败时 markFailed")
     void dispatchNow_exception() {
         AlertDispatchDO d = new AlertDispatchDO();
+        d.setId(1L);
         d.setStatus("PENDING");
+        d.setAlertType("BUDGET");
+        d.setAlertLevel("YELLOW");
+        d.setPushChannels("IN_APP");
         when(mapper.selectById(1L)).thenReturn(d);
-        when(mapper.markSent(any(), any())).thenThrow(new RuntimeException("net err"));
+        when(messageClient.send(any(MessageRequest.class)))
+                .thenReturn(R.ok(MessageResult.fail("IN_APP", "net err")));
         boolean ok = service.dispatchNow(1L);
         assertThat(ok).isFalse();
         verify(mapper).markFailed(ArgumentMatchers.eq(1L), ArgumentMatchers.contains("net err"));
@@ -170,12 +186,20 @@ class AlertDispatchServiceImplTest {
         AlertDispatchDO d1 = new AlertDispatchDO();
         d1.setId(1L);
         d1.setStatus("FAILED");
+        d1.setAlertType("BUDGET");
+        d1.setAlertLevel("YELLOW");
+        d1.setPushChannels("IN_APP");
         AlertDispatchDO d2 = new AlertDispatchDO();
         d2.setId(2L);
         d2.setStatus("FAILED");
+        d2.setAlertType("EVM");
+        d2.setAlertLevel("RED");
+        d2.setPushChannels("IN_APP,EMAIL");
         when(mapper.selectRetryable(any(), ArgumentMatchers.anyInt())).thenReturn(List.of(d1, d2));
         when(mapper.selectById(1L)).thenReturn(d1);
         when(mapper.selectById(2L)).thenReturn(d2);
+        when(messageClient.send(any(MessageRequest.class)))
+                .thenReturn(R.ok(MessageResult.ok("IN_APP", "trace-x")));
         when(mapper.markSent(any(), any())).thenReturn(1);
         int n = service.retryFailed(3);
         assertThat(n).isEqualTo(2);
