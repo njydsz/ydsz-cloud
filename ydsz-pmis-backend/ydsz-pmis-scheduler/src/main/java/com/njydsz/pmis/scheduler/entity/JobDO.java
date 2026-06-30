@@ -1,0 +1,68 @@
+package com.njydsz.pmis.scheduler.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.io.Serial;
+import java.time.LocalDateTime;
+
+/**
+ * 定时任务定义
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("pmis_job")
+public class JobDO extends BaseDO {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    @TableId(type = IdType.AUTO)
+    private Long id;
+
+    /** 任务名称 */
+    private String jobName;
+
+    /** 任务分组 */
+    private String jobGroup;
+
+    /** 任务 KEY（唯一） */
+    private String jobKey;
+
+    /** 任务处理器 Bean 名称 */
+    private String handler;
+
+    /** Cron 表达式 */
+    private String cronExpression;
+
+    /** 参数 JSON */
+    private String paramsJson;
+
+    /** 状态: NORMAL/PAUSED/ERROR */
+    private String status;
+
+    /** 备注 */
+    private String remark;
+
+    /** 下次触发时间 */
+    private LocalDateTime nextFireTime;
+
+    /** 上次触发时间 */
+    private LocalDateTime lastFireTime;
+
+    /** 触发次数 */
+    private Long fireCount;
+
+    /** 成功次数 */
+    private Long successCount;
+
+    /** 失败次数 */
+    private Long failCount;
+
+    /** 租户 ID */
+    private Long tenantId;
+}

@@ -1,0 +1,27 @@
+package com.njydsz.pmis.user.dto;
+
+import com.njydsz.pmis.common.entity.PageQuery;
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.io.Serial;
+
+/**
+ * 角色分页查询
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "角色查询条件")
+public class RoleQueryDTO extends PageQuery {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    private String dataScope;
+
+    private String status;
+}

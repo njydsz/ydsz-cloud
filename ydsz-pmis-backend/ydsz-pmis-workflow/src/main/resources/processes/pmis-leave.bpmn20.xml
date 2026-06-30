@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="http://flowable.org/bpmn20"
+             id="pmis-leave-definitions">
+
+    <process id="pmis_leave" name="请假申请流程" isExecutable="true">
+        <documentation>PMIS 通用请假申请流程（演示）</documentation>
+
+        <startEvent id="startEvent" name="提交申请"/>
+
+        <userTask id="submitTask" name="申请人确认"
+                  flowable:assignee="${initiatorId}"/>
+
+        <userTask id="managerApprove" name="直属上级审批"
+                  flowable:assignee="${managerId}"/>
+
+        <userTask id="hrApprove" name="人事审批"
+                  flowable:candidateGroups="hr"/>
+
+        <exclusiveGateway id="decision" name="审批决定"/>
+
+        <endEvent id="approvedEnd" name="通过"/>
+        <endEvent id="rejectedEnd" name="驳回"/>
+
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="submitTask"/>
+        <sequenceFlow id="flow2" sourceRef="submitTask" targetRef="managerApprove"/>
+        <sequenceFlow id="flow3" sourceRef="managerApprove" targetRef="hrApprove"/>
+        <sequenceFlow id="flow4" sourceRef="hrApprove" targetRef="decision"/>
+
+        <sequenceFlow id="flowApprove" name="通过" sourceRef="decision" targetRef="approvedEnd">
+            <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${approved == true}</conditionExpression>
+        </sequenceFlow>
+        <sequenceFlow id="flowReject" name="驳回" sourceRef="decision" targetRef="rejectedEnd">
+            <conditionExpression xsi:type="tFormalExpression" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">${approved == false}</conditionExpression>
+        </sequenceFlow>
+    </process>
+</definitions>

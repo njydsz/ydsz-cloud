@@ -47,13 +47,14 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         String path = request.getURI().getPath();
 
         // 链路追踪 ID
-        String traceId = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
-        if (traceId == null || traceId.isEmpty()) {
-            traceId = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        String traceId0 = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
+        if (traceId0 == null || traceId0.isEmpty()) {
+            traceId0 = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
         }
+        final String traceId = traceId0;
 
         // 跨域预检直接放行
-        if ("OPTIONS".equalsIgnoreCase(request.getMethodValue())) {
+        if ("OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
             return chain.filter(exchange);
         }
 

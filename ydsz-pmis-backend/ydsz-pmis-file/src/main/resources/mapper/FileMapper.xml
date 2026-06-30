@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.file.mapper.FileMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.file.entity.FileDO">
+        <id column="id" property="id"/>
+        <result column="file_name" property="fileName"/>
+        <result column="original_name" property="originalName"/>
+        <result column="file_path" property="filePath"/>
+        <result column="bucket" property="bucket"/>
+        <result column="content_type" property="contentType"/>
+        <result column="file_size" property="fileSize"/>
+        <result column="file_hash" property="fileHash"/>
+        <result column="biz_type" property="bizType"/>
+        <result column="biz_id" property="bizId"/>
+        <result column="storage_type" property="storageType"/>
+        <result column="access_url" property="accessUrl"/>
+        <result column="url_expire_at" property="urlExpireAt"/>
+        <result column="uploader_id" property="uploaderId"/>
+        <result column="uploader_name" property="uploaderName"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="description" property="description"/>
+        <result column="create_by" property="createdBy"/>
+        <result column="create_time" property="createdAt"/>
+        <result column="update_by" property="updatedBy"/>
+        <result column="update_time" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, file_name, original_name, file_path, bucket, content_type, file_size,
+        file_hash, biz_type, biz_id, storage_type, access_url, url_expire_at,
+        uploader_id, uploader_name, tenant_id, description,
+        create_by, create_time, update_by, update_time, deleted
+    </sql>
+
+    <select id="selectByBiz" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_file
+        WHERE biz_type = #{bizType} AND biz_id = #{bizId} AND deleted = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByHash" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_file
+        WHERE file_hash = #{fileHash}
+          AND bucket = #{bucket}
+          AND file_path = #{filePath}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+</mapper>

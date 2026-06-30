@@ -1,0 +1,46 @@
+package com.njydsz.pmis.user.service;
+
+import com.njydsz.pmis.user.dto.DepartmentFormDTO;
+import com.njydsz.pmis.user.entity.DepartmentDO;
+import com.njydsz.pmis.user.vo.DepartmentTreeVO;
+
+import java.util.List;
+
+/**
+ * 部门服务
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+public interface DepartmentService {
+
+    /**
+     * 获取部门树
+     */
+    List<DepartmentTreeVO> tree();
+
+    /**
+     * 列出所有启用的部门（扁平）
+     */
+    List<DepartmentDO> listAllEnabled();
+
+    /**
+     * 根据 ID 获取
+     */
+    DepartmentDO getById(Long id);
+
+    /**
+     * 创建部门
+     */
+    Long create(DepartmentFormDTO dto);
+
+    /**
+     * 更新部门
+     */
+    void update(DepartmentFormDTO dto);
+
+    /**
+     * 删除部门（逻辑删除，含子部门校验）
+     */
+    void delete(Long id);
+}

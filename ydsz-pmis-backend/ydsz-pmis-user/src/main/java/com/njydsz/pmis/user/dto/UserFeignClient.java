@@ -2,10 +2,7 @@ package com.njydsz.pmis.user.dto;
 
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.user.vo.UserVO;
-import lombok.Data;
 
-import java.io.Serial;
-import java.io.Serializable;
 import java.util.List;
 
 /**

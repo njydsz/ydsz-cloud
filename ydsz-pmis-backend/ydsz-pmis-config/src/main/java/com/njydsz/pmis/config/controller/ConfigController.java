@@ -1,0 +1,90 @@
+package com.njydsz.pmis.config.controller;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.OperationLog;
+import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.config.dto.ConfigFormDTO;
+import com.njydsz.pmis.config.dto.ConfigQueryDTO;
+import com.njydsz.pmis.config.entity.ConfigDO;
+import com.njydsz.pmis.config.service.ConfigService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 系统配置接口
+ */
+@Tag(name = "系统-配置中心")
+@RestController
+@RequestMapping("/api/v1/configs")
+@RequiredArgsConstructor
+public class ConfigController {
+
+    private final ConfigService configService;
+
+    @Operation(summary = "配置分页")
+    @PrePermission("sys:config:list")
+    @GetMapping
+    public R<Page<ConfigDO>> page(ConfigQueryDTO query) {
+        return R.ok(configService.page(query));
+    }
+
+    @Operation(summary = "按 group+key 查配置")
+    @GetMapping("/by-key")
+    public R<ConfigDO> getByKey(@RequestParam String group, @RequestParam String key) {
+        return R.ok(configService.getByKey(group, key));
+    }
+
+    @Operation(summary = "按 group 查全部配置（key-value 形式）")
+    @GetMapping("/group/{group}")
+    public R<Map<String, String>> getGroup(@PathVariable String group) {
+        return R.ok(configService.getGroupAsMap(group));
+    }
+
+    @Operation(summary = "公开配置（前端可见）")
+    @GetMapping("/public")
+    public R<List<ConfigDO>> publicConfigs() {
+        return R.ok(configService.listPublic());
+    }
+
+    @Operation(summary = "创建配置")
+    @PrePermission("sys:config:create")
+    @OperationLog(module = "系统配置", action = "创建配置", bizType = "CONFIG")
+    @PostMapping
+    public R<Long> create(@Valid @RequestBody ConfigFormDTO dto) {
+        return R.ok(configService.create(dto));
+    }
+
+    @Operation(summary = "更新配置")
+    @PrePermission("sys:config:update")
+    @OperationLog(module = "系统配置", action = "更新配置", bizType = "CONFIG")
+    @PutMapping
+    public R<Void> update(@Valid @RequestBody ConfigFormDTO dto) {
+        configService.update(dto);
+        return R.ok();
+    }
+
+    @Operation(summary = "删除配置")
+    @PrePermission("sys:config:delete")
+    @OperationLog(module = "系统配置", action = "删除配置", bizType = "CONFIG")
+    @DeleteMapping("/{id}")
+    public R<Void> delete(@PathVariable Long id) {
+        configService.delete(id);
+        return R.ok();
+    }
+
+    @Operation(summary = "刷新缓存")
+    @PrePermission("sys:config:refresh")
+    @OperationLog(module = "系统配置", action = "刷新缓存", bizType = "CONFIG")
+    @PostMapping("/refresh")
+    public R<Void> refresh() {
+        configService.refreshCache();
+        return R.ok();
+    }
+}

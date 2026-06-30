@@ -1,25 +1,27 @@
 package com.njydsz.pmis.user.dto;
 
+import com.njydsz.pmis.common.entity.PageQuery;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
-import java.io.Serializable;
 
+/**
+ * 用户分页查询
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Data
-public class UserQueryDTO implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+@Schema(description = "用户查询条件")
+public class UserQueryDTO extends PageQuery {
 
     @Serial
     private static final long serialVersionUID = 1L;
 
-    private Long id;
-    private String username;
-    private String realName;
-    private String keyword;
-    private Long departmentId;
-    private String levelCode;
     private String status;
-    private Long page = 1L;
-    private Long size = 20L;
-    private String sort;
-    private String order;
+
+    private Long employeeId;
 }

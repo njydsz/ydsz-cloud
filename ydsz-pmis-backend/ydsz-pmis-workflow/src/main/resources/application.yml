@@ -1,0 +1,103 @@
+server:
+  port: 9007
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: ydsz-pmis-workflow
+  profiles:
+    active: dev
+  main:
+    web-application-type: servlet
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: NON_NULL
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+      config:
+        server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        file-extension: yml
+        refresh-enabled: true
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:pmis}?currentSchema=${DB_SCHEMA:pmis}
+    username: ${DB_USER:pmis}
+    password: ${DB_PASSWORD:pmis}
+  data:
+    redis:
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+      database: 0
+      timeout: 5s
+      lettuce:
+        pool:
+          max-active: 16
+          max-idle: 8
+          min-idle: 2
+  flowable:
+    # 数据库表更新策略: true=随引擎启动自动建表/升级
+    database-schema-update: true
+    # 异步执行器配置
+    async-executor:
+      activate: true
+      core-pool-size: 8
+      max-pool-size: 32
+      queue-size: 200
+    # 自动部署: process-definitions 下的 .bpmn20.xml/bpmn 自动部署
+    process-definition-locator:
+      enabled: true
+    # 关闭历史级别以便生产调优
+    history-level: full
+    # 检查流程定义变化
+    check-process-definitions: true
+    # 事件日志
+    event-registry:
+      enabled: true
+
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*.xml
+  type-aliases-package: com.njydsz.pmis.workflow.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
+  global-config:
+    banner: false
+    db-config:
+      id-type: AUTO
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    com.njydsz.pmis: DEBUG
+    org.flowable: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"

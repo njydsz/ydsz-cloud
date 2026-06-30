@@ -1,7 +1,6 @@
 package com.njydsz.pmis.common.filter;
 
 import com.njydsz.pmis.common.constant.CommonConstants;
-import com.njydsz.pmis.common.util.TraceIdUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
