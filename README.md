@@ -47,7 +47,7 @@ PMIS 是面向"软件定制开发 + 人力外包（T&M）"双业态的项目运�
 ## 微服务拆分
 
 ```
-ydsz-pmis-admin          # 前端管理后台
+ydsz-pmis-frontend       # 前端工程 (Vue 3 + Vite + TS)
 ydsz-pmis-gateway        # API 网关
 ydsz-pmis-auth           # 认证授权服务
 ydsz-pmis-user           # 用户与权限服务

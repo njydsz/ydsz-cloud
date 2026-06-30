@@ -1,0 +1,7 @@
+node_modules
+dist
+coverage
+.vite
+.cache
+*.lock
+pnpm-lock.yaml

@@ -1,0 +1,5 @@
+# Common 模块无独立配置
+spring:
+  main:
+    web-application-type: none
+    banner-mode: off

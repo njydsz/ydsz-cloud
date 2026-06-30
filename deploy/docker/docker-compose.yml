@@ -1,0 +1,94 @@
+# ====================================================================
+# 南京云顶 PMIS 基础环境
+# Nacos + PostgreSQL 18 + Redis 7
+# ====================================================================
+
+version: '3.8'
+
+services:
+  # ============ PostgreSQL 主数据库 ============
+  postgres:
+    image: postgres:18-alpine
+    container_name: pmis-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: pmis
+      POSTGRES_USER: pmis
+      POSTGRES_PASSWORD: pmis@2026
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=zh_CN.UTF-8"
+      TZ: Asia/Shanghai
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pmis -d pmis"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pmis-net
+
+  # ============ Redis 缓存 ============
+  redis:
+    image: redis:7-alpine
+    container_name: pmis-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass pmis@2026 --appendonly yes --maxmemory 1gb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "pmis@2026", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pmis-net
+
+  # ============ Nacos 注册中心 + 配置中心 ============
+  nacos:
+    image: nacos/nacos-server:v2.4.0
+    container_name: pmis-nacos
+    restart: unless-stopped
+    ports:
+      - "8848:8848"
+      - "9848:9848"
+    environment:
+      MODE: standalone
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+      JVM_XMN: 256m
+      SPRING_DATASOURCE_PLATFORM: derby
+      NACOS_AUTH_ENABLE: "true"
+      NACOS_AUTH_TOKEN: SecretKey012345678901234567890123456789012345678901234567890123456789
+      NACOS_AUTH_IDENTITY_KEY: pmis
+      NACOS_AUTH_IDENTITY_VALUE: pmis
+      TZ: Asia/Shanghai
+    volumes:
+      - nacos-data:/home/nacos/data
+      - nacos-logs:/home/nacos/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - pmis-net
+
+volumes:
+  postgres-data:
+    name: pmis-postgres-data
+  redis-data:
+    name: pmis-redis-data
+  nacos-data:
+    name: pmis-nacos-data
+  nacos-logs:
+    name: pmis-nacos-logs
+
+networks:
+  pmis-net:
+    name: pmis-network
+    driver: bridge

@@ -1,0 +1,51 @@
+// Element Plus 主题覆盖
+:root {
+  --el-color-primary: #{$primary-color};
+  --el-color-success: #{$success-color};
+  --el-color-warning: #{$warning-color};
+  --el-color-danger: #{$danger-color};
+  --el-color-info: #{$info-color};
+  --el-border-radius-base: #{$border-radius-base};
+  --el-border-radius-small: #{$border-radius-sm};
+}
+
+// 表单 label
+.el-form-item__label {
+  font-weight: 500;
+}
+
+// 卡片标题
+.el-card__header {
+  font-weight: 600;
+}
+
+// 表格优化
+.el-table {
+  font-size: $font-size-base;
+
+  th.el-table__cell {
+    background-color: $bg-base !important;
+    font-weight: 600;
+  }
+}
+
+// 对话框
+.el-dialog__header {
+  margin-right: 0;
+  padding: $spacing-md $spacing-lg;
+  border-bottom: 1px solid $border-extra-light;
+}
+
+.el-dialog__title {
+  font-size: $font-size-md;
+  font-weight: 600;
+}
+
+.el-dialog__body {
+  padding: $spacing-lg;
+}
+
+.el-dialog__footer {
+  border-top: 1px solid $border-extra-light;
+  padding: $spacing-sm $spacing-lg;
+}

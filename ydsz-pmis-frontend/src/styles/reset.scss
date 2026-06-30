@@ -1,0 +1,63 @@
+// 样式重置
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  font-size: $font-size-base;
+  color: $text-primary;
+  background-color: $bg-page;
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  vertical-align: middle;
+}
+
+button {
+  border: none;
+  background: none;
+  cursor: pointer;
+  outline: none;
+}
+
+input,
+textarea {
+  outline: none;
+  border: none;
+  background: transparent;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.4);
+  }
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
