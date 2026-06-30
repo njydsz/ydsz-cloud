@@ -1,93 +1,183 @@
-# Ydsz Pmis
+# YDSZ PMIS - 项目运营管理系统
 
+> 南京云顶数字科技有限公司 · 项目运营管理系统（Project Management Information System）
 
+---
 
-## Getting started
+## 项目概述
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+PMIS 是面向"软件定制开发 + 人力外包（T&M）"双业态的项目运营管理系统，覆盖从商机到结项的全生命周期管理，实现业财一体化精细化运营与利润管控。
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+**核心定位**：以 WBS 为业财一体化锚点，以 EVM 挣值管理为预警引擎，以双费率体系（对外报价费率 + 对内成本费率）为利润核算基础的项目管理平台。
 
-## Add your files
+## 技术架构
 
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+### 前端
+
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| Vue | 3.x | 前端核心框架 |
+| TypeScript | 5.x | 类型安全 |
+| Vite | 5.x | 构建工具 |
+| Element Plus | - | 企业级组件库 |
+| vxe-table | - | 高级表格组件 |
+| Pinia | 2.x | 状态管理 |
+| ECharts | - | 数据可视化 |
+
+### 后端
+
+| 技术 | 版本 | 用途 |
+|------|------|------|
+| Spring Boot | 3.x | 微服务基础框架 |
+| Spring Cloud Alibaba | 2023.x | 微服务全家桶 |
+| MyBatis-Plus | - | ORM 框架 |
+| PostgreSQL | 18 | 主数据库 |
+| Redis | - | 缓存 / 会话管理 |
+| Flowable | - | 工作流引擎 |
+| Nacos | 2.x | 服务注册发现 + 配置中心 |
+| RocketMQ | - | 消息队列 |
+
+### 基础设施
+
+- **容器化**：Docker / Docker Compose / Kubernetes
+- **CI/CD**：GitLab CI / Jenkins + SonarQube
+- **监控**：Prometheus + Grafana + SkyWalking + ELK
+- **API 网关**：Spring Cloud Gateway
+
+## 微服务拆分
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.njydsz.com/ydsz/oursource/ydsz-pmis.git
-git branch -M main
-git push -uf origin main
+ydsz-pmis-admin          # 前端管理后台
+ydsz-pmis-gateway        # API 网关
+ydsz-pmis-auth           # 认证授权服务
+ydsz-pmis-user           # 用户与权限服务
+ydsz-pmis-project        # 项目管理服务（商机、立项、合同、执行、变更、结项）
+ydsz-pmis-finance        # 财务服务（成本归集、利润核算、开票、回款）
+ydsz-pmis-resource       # 资源管理服务（资源池、人员调度、Bench 闲置池）
+ydsz-pmis-workflow       # 工作流服务（审批流、门径式评审）
+ydsz-pmis-report         # 报表服务（经营驾驶舱、各类报表）
+ydsz-pmis-agent          # AI 服务（风险预警、资源推荐、利润预测）
+ydsz-pmis-notification   # 通知服务（站内消息、邮件通知）
 ```
 
-## Integrate with your tools
+## 核心业务模块
 
-- [ ] [Set up project integrations](http://da18fd123d58/ydsz/oursource/ydsz-pmis/-/settings/integrations)
+### 一期（核心业务闭环）
 
-## Collaborate with your team
+| 模块 | 功能 |
+|------|------|
+| 商机管理 | 商机录入、分级管理（A/B/C）、跟进记录、赢率测算、商机转立项 |
+| 立项管理 | 预立项、立项申请与审批、预算编制（WBS）、门径式阶段评审（CDCP） |
+| 合同管理 | 合同模板、合同录入与审批、补充协议、合同变更、风险管控 |
+| 项目执行 | WBS 任务管理、工时填报与审核（日清日结）、采购申请、费用报销 |
+| 成本归集 | 人力成本、采购成本、费用成本、分摊费用、跨组织内部结算 |
+| 利润核算 | 收入确认（终验法/里程碑法/按月）、成本核算、毛利计算、项目利润表 |
+| 开票管理 | 开票申请与审批、开票金额上限控制、红冲发票、开票台账 |
+| 回款管理 | 回款录入、自动核销、客户信用等级、回款台账、回款预测 |
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
+### 二期（精细化管控）
 
-## Test and Deploy
+| 模块 | 功能 |
+|------|------|
+| EVM 挣值管理 | PV/EV/AC 三量核算、CPI/SPI 指数计算、EAC/VAC 预测、预警阈值配置 |
+| 双费率利润引擎 | 对外报价费率（Rate Card）、对内成本费率、双费率利润对比、利润滚动预测 |
+| 资源池与调度 | 资源池分级（总部/事业部/备用）、人员标签、资源预占、冲突处理、利用率统计 |
+| Bench 闲置池 | 自动入池/出池、闲置成本量化、闲置预警、调配推荐、Bench 成本报表 |
+| 经营驾驶舱 | 项目数、合同额、收入、成本、毛利、EVM 健康度、多维度下钻分析 |
 
-Use the built-in continuous integration in GitLab.
+### 三期（智能化升级）
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+| 模块 | 功能 |
+|------|------|
+| 项目变更管理 | 范围/成本/合同/人员/进度变更、变更影响评估、变更审批流 |
+| 项目交付管理 | 交付物标准化、阶段流转校验、验收流程、质量审计（TR 评审） |
+| 项目售后管理 | 质保期管理、运维工单（P1-P4）、服务满意度 |
+| 项目结项归档 | 正式/预/强制结项、结项准入校验、项目归档、质保期跟踪 |
+| AI 能力 | 风险预警 Agent、资源调度推荐 Agent、利润预测 Agent、商机赢率预测 Agent |
 
-***
+## 核心业务规则
 
-# Editing this README
+### 职级费率体系（L1-L18）
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+系统采用 L1-L18 十八级职级体系，费率采用"对外人天 + 对内人天"双列直出模式：
 
-## Suggestions for a good README
+| 职级段 | 岗位工资（元/月） | 公司总成本（元/月） | 对内人天费率 | 对外人天费率 |
+|--------|-------------------|---------------------|-------------|-------------|
+| L1-L3 | 4,500 - 5,500 | 6,120 - 7,480 | 281 - 344 | 422 - 516 |
+| L4-L6 | 6,000 - 8,000 | 8,160 - 10,880 | 375 - 500 | 563 - 750 |
+| L7-L9 | 9,000 - 12,000 | 12,240 - 16,320 | 563 - 750 | 844 - 1,125 |
+| L10-L12 | 13,000 - 16,000 | 17,680 - 21,760 | 814 - 1,001 | 1,221 - 1,501 |
+| L13-L15 | 17,000 - 20,000 | 23,120 - 27,200 | 1,063 - 1,251 | 1,595 - 1,876 |
+| L16-L18 | 19,000 - 21,000 | 24,605 - 27,195 | 1,131 - 1,251 | 1,697 - 1,876 |
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+### 资源池分级
 
-## Name
-Choose a self-explaining name for your project.
+| 资源池 | 职级范围 | 管理职责 |
+|--------|----------|----------|
+| 总部资源池 | L13+ | 总部统一管理，跨事业部调配 |
+| 事业部资源池 | L4-L12 | 事业部内部管理 |
+| 备用资源池 | L1-L3 | 培训/储备人员 |
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+### EVM 预警体系
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+| 指标 | 绿色 | 黄色预警 | 红色预警 |
+|------|------|----------|----------|
+| CPI（成本绩效指数） | ≥ 0.95 | 0.85 - 0.95 | < 0.85 |
+| SPI（进度绩效指数） | ≥ 0.95 | 0.85 - 0.95 | < 0.85 |
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+### Bench 闲置预警
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+| 闲置时长 | 预警级别 | 处理策略 |
+|----------|----------|----------|
+| 7 天 | 黄色预警 | 通知事业部经理 |
+| 15 天 | 红色预警 | 通知事业部总经理，启动调配 |
+| L10+ 人员 | 阈值减半 | 3 天黄色 / 7 天红色 |
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+## 项目状态
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+**当前阶段**：项目初始化与基础架构搭建（第一阶段）
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+- [x] PRD 需求文档（V3.2）
+- [x] 开发计划编制
+- [ ] 前端工程初始化
+- [ ] 后端微服务骨架搭建
+- [ ] 数据库设计
+- [ ] 基础功能开发
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+## 文档
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+| 文档 | 路径 |
+|------|------|
+| PRD 需求详细设计（V3.2） | [docs/pmis-prd-v3.md](file:///d:/Code/ydsz/ydsz-pmis/docs/pmis-prd-v3.md) |
+| PRD HTML 版 | [docs/pmis-prd-v3.html](file:///d:/Code/ydsz/ydsz-pmis/docs/pmis-prd-v3.html) |
+| 开发计划 | [开发计划.md](file:///d:/Code/ydsz/ydsz-pmis/开发计划.md) |
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+## 团队配置
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+### 一期（3 个月）
 
-## License
-For open source projects, say how it is licensed.
+| 角色 | 人数 |
+|------|------|
+| 项目经理 | 1 |
+| 产品经理 | 1 |
+| 前端开发 | 2-3 |
+| 后端开发 | 3-4 |
+| 测试 | 1-2 |
+| UI 设计 | 1 |
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+### 二期（+3 个月）
+
+在一期基础上增加数据工程师 1 人。
+
+### 三期（+2 个月）
+
+在二期基础上增加 AI 工程师 1 人、运维工程师 1 人。
+
+## 仓库地址
+
+- GitLab: https://gitlab.njydsz.com/ydsz/oursource/ydsz-pmis
+
+---
+
+> 本文档为 PMIS 项目说明文档，基于 PRD V3.2 编制。任何变更需走变更审批流程。
+> 编制日期：2026-06-30
