@@ -16,7 +16,7 @@ describe('StatusTag 通用状态标签', () => {
     expect(wrapper.text()).toContain('计划中')
   })
 
-  it('value 不在 map 中时回退为 "-"', () => {
+  it('value 不在 map 中时回退显示原值并使用 fallbackType', () => {
     const wrapper = mount(StatusTag, {
       props: {
         value: 'UNKNOWN',
@@ -24,7 +24,8 @@ describe('StatusTag 通用状态标签', () => {
         fallbackType: 'warning',
       },
     })
-    expect(wrapper.text()).toContain('-')
+    // 原值是非空字符串时, label 显示原值, 避免无意义 "-" 噪音
+    expect(wrapper.text()).toContain('UNKNOWN')
   })
 
   it('value 为 null / undefined 时显示 "-"', () => {

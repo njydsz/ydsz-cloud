@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.api;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -53,5 +54,15 @@ public class PageResult<T> implements Serializable {
 
     public static <T> PageResult<T> of(List<T> list, long total, long page, long size) {
         return new PageResult<>(list, total, page, size);
+    }
+
+    /**
+     * 从 MyBatis-Plus Page 转 PageResult
+     */
+    public static <T> PageResult<T> ofPage(Page<T> p) {
+        if (p == null) {
+            return empty();
+        }
+        return new PageResult<>(p.getRecords(), p.getTotal(), p.getCurrent(), p.getSize());
     }
 }

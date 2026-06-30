@@ -13,7 +13,10 @@ import type { MenuTreeNode } from '@/api/menu/types'
  * - permType=MENU  → 路由 (Layout 或 Leaf)
  * - permType=BUTTON → 按钮权限,仅记录到 meta.permissions,不转换为路由
  */
-function convertMenuToRoutes(menus: MenuTreeNode[]): RouteRecordRaw[] {
+function convertMenuToRoutes(
+  menus: MenuTreeNode[],
+  isChild = false,
+): RouteRecordRaw[] {
   const routes: RouteRecordRaw[] = []
   for (const m of menus) {
     if (m.permType === 'BUTTON' || m.permType === 'API') {
@@ -23,8 +26,11 @@ function convertMenuToRoutes(menus: MenuTreeNode[]): RouteRecordRaw[] {
     if (!m.path) {
       continue
     }
+    // 顶层路由 path 必须以 / 开头 (vue-router 4 要求);
+    // 子路由 path 使用相对路径 (不带 /)
+    const rawPath = m.path.startsWith('/') ? m.path : `/${m.path}`
     const route: RouteRecordRaw = {
-      path: m.path.startsWith('/') ? m.path.substring(1) : m.path,
+      path: isChild ? rawPath.replace(/^\//, '') : rawPath,
       name: 'Menu_' + m.permCode.replace(/[:.]/g, '_'),
       component: m.component
         ? () => import(/* @vite-ignore */ `@/views/${m.component}.vue`)
@@ -37,7 +43,7 @@ function convertMenuToRoutes(menus: MenuTreeNode[]): RouteRecordRaw[] {
       },
     }
     if (m.children && m.children.length > 0) {
-      const childRoutes = convertMenuToRoutes(m.children)
+      const childRoutes = convertMenuToRoutes(m.children, true)
       if (childRoutes.length > 0) {
         // 父路由通常是 Layout
         if (!m.component) {

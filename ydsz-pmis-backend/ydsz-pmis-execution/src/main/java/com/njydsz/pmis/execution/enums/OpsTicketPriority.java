@@ -1,0 +1,49 @@
+package com.njydsz.pmis.execution.enums;
+
+/**
+ * 运维工单优先级与 SLA 时限
+ *
+ * <ul>
+ *   <li>P1 - 紧急：15 分钟首次响应，4 小时解决</li>
+ *   <li>P2 - 高：1 小时首次响应，24 小时解决</li>
+ *   <li>P3 - 中：4 小时首次响应，72 小时解决</li>
+ *   <li>P4 - 低：8 小时首次响应，7 天解决</li>
+ * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+public enum OpsTicketPriority {
+
+    P1("P1", "紧急", 15, 4 * 60),
+    P2("P2", "高", 60, 24 * 60),
+    P3("P3", "中", 4 * 60, 72 * 60),
+    P4("P4", "低", 8 * 60, 7 * 24 * 60);
+
+    private final String code;
+    private final String desc;
+    /** 首次响应 SLA（分钟） */
+    private final int responseMinutes;
+    /** 解决 SLA（分钟） */
+    private final int resolveMinutes;
+
+    OpsTicketPriority(String code, String desc, int responseMinutes, int resolveMinutes) {
+        this.code = code;
+        this.desc = desc;
+        this.responseMinutes = responseMinutes;
+        this.resolveMinutes = resolveMinutes;
+    }
+
+    public String getCode() { return code; }
+    public String getDesc() { return desc; }
+    public int getResponseMinutes() { return responseMinutes; }
+    public int getResolveMinutes() { return resolveMinutes; }
+
+    public static OpsTicketPriority fromCode(String code) {
+        if (code == null) return null;
+        for (OpsTicketPriority p : values()) {
+            if (p.code.equalsIgnoreCase(code)) return p;
+        }
+        return null;
+    }
+}
