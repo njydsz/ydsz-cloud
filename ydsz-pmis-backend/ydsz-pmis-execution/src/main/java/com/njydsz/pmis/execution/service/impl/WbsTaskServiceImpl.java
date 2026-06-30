@@ -154,6 +154,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     }
 
     @Override
+    @com.njydsz.pmis.common.annotation.DataScope(userColumn = "created_by")
     public Page<WbsTaskDO> page(int page, int size, String keyword, String status,
                                 String taskType, Long initiationId, Long ownerId) {
         Page<WbsTaskDO> p = new Page<>(page, size);
@@ -166,6 +167,9 @@ public class WbsTaskServiceImpl implements WbsTaskService {
         if (StringUtils.hasText(taskType)) w.eq(WbsTaskDO::getTaskType, taskType);
         if (initiationId != null) w.eq(WbsTaskDO::getInitiationId, initiationId);
         if (ownerId != null) w.eq(WbsTaskDO::getOwnerId, ownerId);
+        // 数据权限 SQL 注入
+        String ds = com.njydsz.pmis.common.security.DataScopeHelper.buildSqlFragment("", "");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByAsc(WbsTaskDO::getTaskLevel).orderByAsc(WbsTaskDO::getSortOrder);
         return wbsTaskMapper.selectPage(p, w);
     }

@@ -30,4 +30,10 @@ export const getUserInfoApi = () => request<UserInfo>({ url: '/users/me', method
 export const refreshTokenApi = (refreshToken: string) =>
   request<LoginResult>({ url: '/auth/refresh', method: 'POST', params: { refreshToken } })
 
+/**
+ * 修改自己的密码
+ */
+export const changePasswordApi = (data: { oldPassword: string; newPassword: string }) =>
+  request<void>({ url: '/users/me/password', method: 'POST', data })
+
 import { request } from '@/utils/request'

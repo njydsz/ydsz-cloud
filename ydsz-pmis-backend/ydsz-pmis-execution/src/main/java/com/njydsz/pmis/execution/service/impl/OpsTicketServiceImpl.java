@@ -210,6 +210,21 @@ public class OpsTicketServiceImpl implements OpsTicketService {
         return ticketMapper.aggregateByStatus(initiationId);
     }
 
+    @Override
+    public List<OpsTicketDO> listByInitiation(Long initiationId) {
+        return ticketMapper.selectByInitiation(initiationId);
+    }
+
+    @Override
+    public List<OpsTicketDO> listByWarranty(Long warrantyId) {
+        return ticketMapper.selectByWarranty(warrantyId);
+    }
+
+    @Override
+    public List<OpsTicketDO> listByAssignee(Long assigneeId, String status) {
+        return ticketMapper.selectByAssignee(assigneeId, status);
+    }
+
     private void validate(OpsTicketCreateDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");

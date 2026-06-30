@@ -60,4 +60,10 @@
           AND status = 'CONFIRMED' AND deleted = 0
         GROUP BY contract_id
     </select>
+
+    <!-- P6 每日对账：跨项目汇总全部已确认收入 -->
+    <select id="sumAll" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_profit_revenue
+        WHERE status = 'CONFIRMED' AND deleted = 0
+    </select>
 </mapper>

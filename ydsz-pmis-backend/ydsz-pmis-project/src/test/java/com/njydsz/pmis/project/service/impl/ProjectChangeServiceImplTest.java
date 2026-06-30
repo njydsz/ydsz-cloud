@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.event.ProjectChangeExecutedEvent;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.dto.ProjectChangeCreateDTO;
 import com.njydsz.pmis.project.dto.ProjectChangeStatusDTO;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 
@@ -20,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -33,12 +36,14 @@ import static org.mockito.Mockito.when;
 class ProjectChangeServiceImplTest {
 
     private ProjectChangeMapper mapper;
+    private ApplicationEventPublisher eventPublisher;
     private ProjectChangeServiceImpl service;
 
     @BeforeEach
     void setUp() {
         mapper = mock(ProjectChangeMapper.class);
-        service = new ProjectChangeServiceImpl(mapper);
+        eventPublisher = mock(ApplicationEventPublisher.class);
+        service = new ProjectChangeServiceImpl(mapper, eventPublisher);
     }
 
     @Test
@@ -125,6 +130,8 @@ class ProjectChangeServiceImplTest {
         dto.setTargetStatus("SUBMITTED");
         service.changeStatus(dto);
         verify(mapper).updateStatus(1L, "SUBMITTED");
+        // DRAFT -> SUBMITTED 不应触发基线重算事件
+        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -135,6 +142,47 @@ class ProjectChangeServiceImplTest {
         dto.setId(1L);
         dto.setTargetStatus("APPROVED");
         assertThatThrownBy(() -> service.changeStatus(dto)).isInstanceOf(BizException.class);
+        verify(eventPublisher, never()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("状态迁移-APPROVED->EXECUTING 触发基线重算事件")
+    void changeStatusExecutingTriggersEvent() {
+        ProjectChangeDO c = change(1L, "APPROVED");
+        c.setMajorFlag(1);
+        c.setChangeTitle("重大变更");
+        c.setChangeType(ChangeType.CONTRACT.getCode());
+        c.setProfitImpactPct(new BigDecimal("15.5"));
+        c.setScheduleImpactDays(30);
+        when(mapper.selectById(1L)).thenReturn(c);
+        when(mapper.updateStatus(1L, "EXECUTING")).thenReturn(1);
+        ProjectChangeStatusDTO dto = new ProjectChangeStatusDTO();
+        dto.setId(1L);
+        dto.setTargetStatus("EXECUTING");
+        service.changeStatus(dto);
+        ArgumentCaptor<ProjectChangeExecutedEvent> capt = ArgumentCaptor.forClass(ProjectChangeExecutedEvent.class);
+        verify(eventPublisher).publishEvent(capt.capture());
+        ProjectChangeExecutedEvent ev = capt.getValue();
+        assertThat(ev.getChangeId()).isEqualTo(1L);
+        assertThat(ev.getInitiationId()).isEqualTo(c.getInitiationId());
+        assertThat(ev.getChangeType()).isEqualTo(ChangeType.CONTRACT.getCode());
+        assertThat(ev.getMajorFlag()).isTrue();
+        assertThat(ev.getFinalStatusCode()).isEqualTo(ChangeStatus.EXECUTING.getCode());
+        assertThat(ev.getProfitImpactPct().compareTo(new BigDecimal("15.5"))).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("状态迁移-EXECUTING->EXECUTED 触发基线重算事件")
+    void changeStatusExecutedTriggersEvent() {
+        when(mapper.selectById(1L)).thenReturn(change(1L, "EXECUTING"));
+        when(mapper.updateStatus(1L, "EXECUTED")).thenReturn(1);
+        ProjectChangeStatusDTO dto = new ProjectChangeStatusDTO();
+        dto.setId(1L);
+        dto.setTargetStatus("EXECUTED");
+        service.changeStatus(dto);
+        ArgumentCaptor<ProjectChangeExecutedEvent> capt = ArgumentCaptor.forClass(ProjectChangeExecutedEvent.class);
+        verify(eventPublisher).publishEvent(capt.capture());
+        assertThat(capt.getValue().getFinalStatusCode()).isEqualTo(ChangeStatus.EXECUTED.getCode());
     }
 
     @Test

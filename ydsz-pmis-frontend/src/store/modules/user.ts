@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { loginApi, logoutApi, getUserInfoApi } from '@/api/user'
-import type { LoginParams, UserInfo } from '@/api/user/types'
+import type { LoginParams, LoginResult, UserInfo } from '@/api/user/types'
 import { removeToken, setToken, getToken } from '@/utils/auth'
 
 export const useUserStore = defineStore('user', () => {
@@ -16,13 +16,23 @@ export const useUserStore = defineStore('user', () => {
   const realName = computed(() => userInfo.value?.realName || '')
 
   /**
-   * 登录
+   * 登录（支持 2FA）
+   * @returns LoginResult，当 mfaRequired 为 true 时不存 token
    */
-  async function login(params: LoginParams): Promise<void> {
+  async function login(params: LoginParams): Promise<LoginResult> {
     const { data } = await loginApi(params)
-    token.value = data.token
-    refreshToken.value = data.refreshToken
-    setToken(data.token, data.refreshToken)
+    if (data.mfaRequired && !data.mfaPassed) {
+      // 2FA 二次验证未通过，暂不存 token，由上层触发 2FA 校验
+      token.value = ''
+      refreshToken.value = ''
+      return data
+    }
+    const tk = data.accessToken || data.token || ''
+    const rt = data.refreshToken || ''
+    token.value = tk
+    refreshToken.value = rt
+    setToken(tk, rt)
+    return data
   }
 
   /**

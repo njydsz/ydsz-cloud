@@ -31,6 +31,12 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
     /** 跨项目汇总所有成本金额 */
     java.math.BigDecimal sumAllAmount();
 
+    /** P6 每日对账：跨项目汇总全部成本（兼容 sumAll） */
+    java.math.BigDecimal sumAll();
+
+    /** P6 每日对账：按 costType 汇总（与 sumByType(initId, period) 区分） */
+    java.math.BigDecimal sumByCostType(@Param("costType") String costType);
+
     /**
      * 按项目汇总所有已归集成本（强管控用）
      */

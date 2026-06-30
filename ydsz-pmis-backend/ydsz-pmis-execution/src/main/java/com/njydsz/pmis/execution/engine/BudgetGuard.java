@@ -9,6 +9,7 @@ import com.njydsz.pmis.execution.mapper.ExpenseMapper;
 import com.njydsz.pmis.execution.mapper.PurchaseMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -39,6 +40,10 @@ public class BudgetGuard {
     private final PurchaseMapper purchaseMapper;
     private final ExpenseMapper expenseMapper;
     private final CostAllocationMapper costAllocationMapper;
+    /**
+     * Spring 事件发布器; null-safe(单元测试场景下未注入时直接跳过)
+     */
+    private final ApplicationEventPublisher eventPublisher;
 
     /** 黄色告警阈值 */
     public static final BigDecimal YELLOW_RATIO = new BigDecimal("0.80");
@@ -88,11 +93,17 @@ public class BudgetGuard {
                             purchaseUsed.toPlainString(), expenseUsed.toPlainString(),
                             allocatedUsed.toPlainString(), delta.toPlainString()));
         }
-        // 黄色 / 红色 预警
+        // 黄色 / 红色 预警 -> 发布事件 (通知中心 / 预警中心 / RocketMQ 推送等监听器订阅)
         if (ratio.compareTo(RED_RATIO) >= 0) {
-            log.warn("[BudgetGuard-RED] 项目 {} {} 累计使用率 {}% 已触及红色告警阈值(95%)", initiationId, bizType, ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
+            log.warn("[BudgetGuard-RED] 项目 {} {} 累计使用率 {}% 已触及红色告警阈值(95%)",
+                    initiationId, bizType, percent(ratio));
+            publishAlert(snap, initiationId, bizType, delta, afterUsed, budget, ratio,
+                    BudgetAlertEvent.Level.RED);
         } else if (ratio.compareTo(YELLOW_RATIO) >= 0) {
-            log.warn("[BudgetGuard-YELLOW] 项目 {} {} 累计使用率 {}% 已触及黄色告警阈值(80%)", initiationId, bizType, ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP));
+            log.warn("[BudgetGuard-YELLOW] 项目 {} {} 累计使用率 {}% 已触及黄色告警阈值(80%)",
+                    initiationId, bizType, percent(ratio));
+            publishAlert(snap, initiationId, bizType, delta, afterUsed, budget, ratio,
+                    BudgetAlertEvent.Level.YELLOW);
         }
     }
 
@@ -144,6 +155,39 @@ public class BudgetGuard {
             log.warn("[BudgetGuard] budgetSnapshot 调用异常，已降级: {}", e.getMessage());
             return null;
         }
+    }
+
+    private void publishAlert(Map<String, Object> snap, Long initiationId, String bizType,
+                              BigDecimal delta, BigDecimal usedAfter, BigDecimal budget,
+                              BigDecimal ratio, BudgetAlertEvent.Level level) {
+        if (eventPublisher == null) {
+            // 单测或非 Spring 容器场景, 仅记录日志
+            return;
+        }
+        try {
+            BudgetAlertEvent event = BudgetAlertEvent.builder()
+                    .initiationId(initiationId)
+                    .projectCode(snap == null ? null : str(snap.get("projectCode")))
+                    .projectName(snap == null ? null : str(snap.get("projectName")))
+                    .bizType(bizType)
+                    .delta(delta)
+                    .usedAfter(usedAfter)
+                    .budget(budget)
+                    .ratio(ratio)
+                    .level(level)
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            eventPublisher.publishEvent(event);
+        } catch (Exception e) {
+            // 事件发布失败不影响主业务流
+            log.warn("[BudgetGuard] 预算告警事件发布失败: {}", e.getMessage());
+        }
+    }
+
+    private static String str(Object o) { return o == null ? null : String.valueOf(o); }
+
+    private static BigDecimal percent(BigDecimal ratio) {
+        return ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
     }
 
     private static BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }

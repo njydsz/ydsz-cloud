@@ -138,4 +138,44 @@ class EvmMeasureServiceImplTest {
         assertThat(service.listByWbs(1L)).isEmpty();
         assertThat(service.listByWbs(null)).isEmpty();
     }
+
+    @Test
+    @DisplayName("recalculateBaseline - 自增版本号 + 统计受影响测量")
+    void recalculateBaseline() {
+        when(mapper.selectByInitiation(1L)).thenReturn(List.of(new EvmMeasureDO(), new EvmMeasureDO(), new EvmMeasureDO()));
+        Map<String, Object> r1 = service.recalculateBaseline(1L, "PROJECT_CHANGE:CHG-001");
+        assertThat(r1.get("ok")).isEqualTo(true);
+        assertThat(r1.get("baselineVersion")).isEqualTo(1);
+        assertThat(r1.get("affectedMeasures")).isEqualTo(3);
+        assertThat(r1.get("recalcReason")).isEqualTo("PROJECT_CHANGE:CHG-001");
+
+        // 第二次调用版本号应继续自增
+        when(mapper.selectByInitiation(1L)).thenReturn(List.of(new EvmMeasureDO()));
+        Map<String, Object> r2 = service.recalculateBaseline(1L, "PROJECT_CHANGE:CHG-002");
+        assertThat(r2.get("baselineVersion")).isEqualTo(2);
+        assertThat(r2.get("affectedMeasures")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("recalculateBaseline - null initiationId 返回失败")
+    void recalculateBaselineNull() {
+        Map<String, Object> r = service.recalculateBaseline(null, "X");
+        assertThat(r.get("ok")).isEqualTo(false);
+    }
+
+    @Test
+    @DisplayName("currentBaselineVersion - 未重算过返回 0")
+    void currentBaselineVersionZero() {
+        assertThat(service.currentBaselineVersion(999L)).isEqualTo(0);
+        assertThat(service.currentBaselineVersion(null)).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("currentBaselineVersion - 重算后返回当前版本号")
+    void currentBaselineVersionAfter() {
+        when(mapper.selectByInitiation(5L)).thenReturn(List.of());
+        service.recalculateBaseline(5L, "X");
+        service.recalculateBaseline(5L, "X");
+        assertThat(service.currentBaselineVersion(5L)).isEqualTo(2);
+    }
 }

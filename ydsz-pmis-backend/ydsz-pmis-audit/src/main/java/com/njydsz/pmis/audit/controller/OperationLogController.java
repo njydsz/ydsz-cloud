@@ -3,6 +3,7 @@ package com.njydsz.pmis.audit.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.audit.entity.OperationLogDO;
 import com.njydsz.pmis.audit.service.OperationLogServiceImpl;
+import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.R;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -31,14 +32,14 @@ public class OperationLogController {
 
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public R<Page<OperationLogDO>> page(
+    public R<PageResult<OperationLogDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String module) {
-        return R.ok(service.page(page, size, userId, bizType, status, module));
+        return R.ok(PageResult.ofPage(service.page(page, size, userId, bizType, status, module)));
     }
 
     @Operation(summary = "按用户查询")

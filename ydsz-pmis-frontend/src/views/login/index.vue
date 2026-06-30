@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { reactive, ref, onMounted } from 'vue'
+/**
+ * 登录页 - 支持 2FA 二步验证
+ *
+ * 流程：账号密码 -> 后端返回 mfaRequired -> 弹窗输入 OTP/备份码 -> 完成登录
+ */
+import { reactive, ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { getCaptchaApi } from '@/api/user'
+import { verify2fa, verifyBackupCode } from '@/api/user/two-factor'
+import { setToken } from '@/utils/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -45,29 +52,108 @@ async function refreshCaptcha() {
   }
 }
 
+// ===== 2FA 弹窗 =====
+const mfaDialogVisible = ref(false)
+const mfaForm = reactive({ otp: '', backupCode: '' })
+const mfaFormRef = ref<FormInstance>()
+const mfaLoading = ref(false)
+const mfaMode = ref<'OTP' | 'BACKUP'>('OTP')
+const pendingMfa = ref<{ username: string; password: string; rememberMe: boolean } | null>(null)
+
+const mfaRules = computed<FormRules>(() => ({
+  otp: mfaMode.value === 'OTP' ? [
+    { required: true, message: '请输入 6 位动态码', trigger: 'blur' },
+    { len: 6, message: '动态码为 6 位数字', trigger: 'blur' },
+  ] : [],
+  backupCode: mfaMode.value === 'BACKUP' ? [
+    { required: true, message: '请输入备份码', trigger: 'blur' },
+  ] : [],
+}))
+
 async function handleLogin() {
   if (!formRef.value) return
   try {
     await formRef.value.validate()
-    loading.value = true
-    await userStore.login({
+  } catch {
+    return
+  }
+  loading.value = true
+  try {
+    const result = await userStore.login({
       username: form.username,
       password: form.password,
       captchaKey: form.captchaKey,
       captchaCode: form.captchaCode,
       rememberMe: form.rememberMe,
     })
-    ElMessage.success('登录成功')
-    const redirect = (route.query.redirect as string) || '/'
-    await router.push(redirect)
-  } catch (e) {
-    // 错误已在 request 中处理
-    if (!(e instanceof Error && e.message?.includes('captcha'))) {
-      refreshCaptcha()
+    if (result.mfaRequired && !result.mfaPassed) {
+      // 进入 2FA 二次验证
+      pendingMfa.value = {
+        username: form.username,
+        password: form.password,
+        rememberMe: form.rememberMe,
+      }
+      mfaMode.value = 'OTP'
+      mfaForm.otp = ''
+      mfaForm.backupCode = ''
+      mfaDialogVisible.value = true
+      ElMessage.warning('该账号已开启双因素认证，请输入 6 位动态码')
+      return
     }
+    await onLoginSuccess()
+  } catch (e) {
+    refreshCaptcha()
   } finally {
     loading.value = false
   }
+}
+
+async function submitMfa() {
+  if (!mfaFormRef.value) return
+  try {
+    await mfaFormRef.value.validate()
+  } catch {
+    return
+  }
+  mfaLoading.value = true
+  try {
+    // 1) 调用后端 verify 完成 2FA（后端会校验 otp / backup）
+    if (mfaMode.value === 'OTP') {
+      await verify2fa(mfaForm.otp)
+    } else {
+      await verifyBackupCode(mfaForm.backupCode)
+    }
+    // 2) 重新登录带上 otp，拿到完整 token
+    if (!pendingMfa.value) return
+    const result = await userStore.login({
+      username: pendingMfa.value.username,
+      password: pendingMfa.value.password,
+      rememberMe: pendingMfa.value.rememberMe,
+      otp: mfaMode.value === 'OTP' ? mfaForm.otp : undefined,
+      backupCode: mfaMode.value === 'BACKUP' ? mfaForm.backupCode : undefined,
+    })
+    if (result.mfaRequired && !result.mfaPassed) {
+      ElMessage.error('2FA 验证失败，请重试')
+      return
+    }
+    mfaDialogVisible.value = false
+    await onLoginSuccess()
+  } catch (e: any) {
+    ElMessage.error(e?.message || '2FA 验证失败')
+  } finally {
+    mfaLoading.value = false
+  }
+}
+
+async function onLoginSuccess() {
+  await userStore.fetchUserInfo()
+  ElMessage.success('登录成功')
+  const redirect = (route.query.redirect as string) || '/'
+  await router.push(redirect)
+}
+
+function switchMfaMode(mode: 'OTP' | 'BACKUP') {
+  mfaMode.value = mode
 }
 
 onMounted(() => {
@@ -85,6 +171,7 @@ onMounted(() => {
           <li>业财一体化 · 全生命周期管控</li>
           <li>L1-L18 职级费率 · EVM 挣值管理</li>
           <li>WBS 锚点 · 利润精细化核算</li>
+          <li>双因素认证 · 等保 2.0 安全基线</li>
         </ul>
       </div>
       <div class="login-right">
@@ -121,6 +208,50 @@ onMounted(() => {
         <p class="login-tip">默认账号: admin / admin123（演示）</p>
       </div>
     </div>
+
+    <!-- 2FA 二次验证弹窗 -->
+    <el-dialog
+      v-model="mfaDialogVisible"
+      title="双因素认证"
+      width="420px"
+      :close-on-click-modal="false"
+      :show-close="false"
+    >
+      <el-alert
+        type="warning"
+        :closable="false"
+        show-icon
+        title="您的账号已开启双因素认证"
+        description="请打开手机 Google Authenticator / 微软 Authenticator，扫描或输入 6 位动态码。"
+        style="margin-bottom: 16px"
+      />
+      <el-tabs v-model="mfaMode" @tab-change="switchMfaMode">
+        <el-tab-pane label="动态码" name="OTP" />
+        <el-tab-pane label="备份码" name="BACKUP" />
+      </el-tabs>
+      <el-form ref="mfaFormRef" :model="mfaForm" :rules="mfaRules" @keyup.enter="submitMfa">
+        <el-form-item v-if="mfaMode === 'OTP'" prop="otp">
+          <el-input
+            v-model="mfaForm.otp"
+            placeholder="请输入 6 位动态码"
+            maxlength="6"
+            size="large"
+            style="letter-spacing: 4px; font-size: 20px; text-align: center"
+          />
+        </el-form-item>
+        <el-form-item v-else prop="backupCode">
+          <el-input
+            v-model="mfaForm.backupCode"
+            placeholder="请输入一次性备份码"
+            size="large"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="mfaDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="mfaLoading" @click="submitMfa">验证</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 

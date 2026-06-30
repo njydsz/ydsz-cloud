@@ -47,4 +47,9 @@ public interface WarrantyService {
      * 分页查询
      */
     Page<WarrantyDO> page(int page, int size, String status, Long initiationId, String keyword);
+
+    /**
+     * 详情
+     */
+    WarrantyDO getById(Long id);
 }

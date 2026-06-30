@@ -56,11 +56,11 @@ public class WarrantyServiceImpl implements WarrantyService {
             w.setWarrantyCode(AfterSalesCodeGen.warrantyCode(LocalDate.now()));
         }
         if (w.getStartDate() == null) w.setStartDate(LocalDate.now());
-        int months = w.getDurationMonths() == null ? 12 : w.getDurationMonths();
-        if (months <= 0 || months > 120) {
+        if (w.getDurationMonths() == null) w.setDurationMonths(12);
+        if (w.getDurationMonths() <= 0 || w.getDurationMonths() > 120) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "质保期月数必须在 1-120 之间");
         }
-        w.setEndDate(w.getStartDate().plusMonths(months));
+        w.setEndDate(w.getStartDate().plusMonths(w.getDurationMonths()));
         if (w.getNoticeDays() == null) w.setNoticeDays(30);
         if (w.getNoticeDays() < 0 || w.getNoticeDays() > 180) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "提醒天数必须在 0-180 之间");
@@ -145,6 +145,13 @@ public class WarrantyServiceImpl implements WarrantyService {
         }
         w.orderByDesc(WarrantyDO::getCreatedAt);
         return warrantyMapper.selectPage(p, w);
+    }
+
+    @Override
+    public WarrantyDO getById(Long id) {
+        WarrantyDO w = warrantyMapper.selectById(id);
+        if (w == null) throw new BizException(BizErrorCode.NOT_FOUND, "质保期不存在");
+        return w;
     }
 
     private void validate(WarrantyCreateDTO dto) {

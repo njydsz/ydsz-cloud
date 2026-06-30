@@ -107,6 +107,11 @@
         WHERE status = 'ISSUED' AND invoice_type = 'NORMAL' AND deleted = 0
     </select>
 
+    <select id="sumAmountIssued" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_finance_invoice
+        WHERE status = 'ISSUED' AND invoice_type = 'NORMAL' AND deleted = 0
+    </select>
+
     <select id="sumConfirmedAmount" resultType="java.math.BigDecimal">
         SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
         WHERE status = 'ALLOCATED' AND deleted = 0

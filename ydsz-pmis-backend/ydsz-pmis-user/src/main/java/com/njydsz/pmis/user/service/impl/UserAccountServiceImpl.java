@@ -72,6 +72,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @com.njydsz.pmis.common.annotation.DataScope(deptColumn = "dept_id", userColumn = "id")
     public Page<UserAccountDO> page(UserQueryDTO query) {
         Page<UserAccountDO> page = new Page<>(query.getPage(), query.getSize());
         LambdaQueryWrapper<UserAccountDO> w = new LambdaQueryWrapper<>();
@@ -84,6 +85,9 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (query.getEmployeeId() != null) {
             w.eq(UserAccountDO::getEmployeeId, query.getEmployeeId());
         }
+        // 数据权限 SQL 注入（按员工 dept_id 与 user.id）
+        String ds = com.njydsz.pmis.common.security.DataScopeHelper.buildSqlFragment("", "");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(UserAccountDO::getId);
         return userAccountMapper.selectPage(page, w);
     }

@@ -19,6 +19,10 @@
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-project</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.alibaba.cloud</groupId>

@@ -3,6 +3,7 @@ package com.njydsz.pmis.project.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.event.ProjectChangeExecutedEvent;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.dto.ProjectChangeCreateDTO;
 import com.njydsz.pmis.project.dto.ProjectChangeStatusDTO;
@@ -16,6 +17,7 @@ import com.njydsz.pmis.project.service.ProjectChangeService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -36,6 +38,11 @@ import java.util.Map;
 public class ProjectChangeServiceImpl implements ProjectChangeService {
 
     private final ProjectChangeMapper changeMapper;
+    /**
+     * Spring 事件发布器, 用于变更执行后发布 ProjectChangeExecutedEvent
+     * 通知 EVM 基线重算 / 资源重调度 / 通知中心等监听器
+     */
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -89,6 +96,13 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         changeMapper.updateStatus(c.getId(), to.getCode());
         changeMapper.updateById(c);
         log.info("[ProjectChange] 状态迁移: id={} {} -> {}", c.getId(), from.getCode(), to.getCode());
+
+        // 变更执行/闭环: 触发 EVM 基线重算 等下游联动
+        // EXECUTING 触发表明变更已落地, 旧基线需要刷新
+        // EXECUTED 为终态闭环, 进一步触发收尾
+        if (to == ChangeStatus.EXECUTING || to == ChangeStatus.EXECUTED) {
+            publishExecutedEvent(c, to);
+        }
     }
 
     @Override
@@ -164,6 +178,32 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         }
         if (dto.getScheduleImpactDays() != null && dto.getScheduleImpactDays() < -3650) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "进度影响天数超出合理范围");
+        }
+    }
+
+    private void publishExecutedEvent(ProjectChangeDO c, ChangeStatus finalStatus) {
+        if (eventPublisher == null) {
+            return; // 单测场景
+        }
+        try {
+            ProjectChangeExecutedEvent event = ProjectChangeExecutedEvent.builder()
+                    .changeId(c.getId())
+                    .changeCode(c.getChangeCode())
+                    .changeTitle(c.getChangeTitle())
+                    .initiationId(c.getInitiationId())
+                    .changeType(c.getChangeType())
+                    .majorFlag(c.getMajorFlag() != null && c.getMajorFlag() == 1)
+                    .finalStatusCode(finalStatus == null ? null : finalStatus.getCode())
+                    .profitImpactPct(c.getProfitImpactPct())
+                    .scheduleImpactDays(c.getScheduleImpactDays())
+                    .timestamp(System.currentTimeMillis())
+                    .build();
+            eventPublisher.publishEvent(event);
+            log.info("[ProjectChange] 发布执行事件: change={} status={} initiation={}",
+                    c.getChangeCode(), finalStatus, c.getInitiationId());
+        } catch (Exception e) {
+            // 事件发布失败不影响主业务流
+            log.warn("[ProjectChange] 事件发布失败: {}", e.getMessage());
         }
     }
 }

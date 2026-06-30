@@ -35,6 +35,9 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
     /** 跨合同汇总已开票金额 */
     BigDecimal sumInvoicedAmount();
 
+    /** P6 每日对账：跨合同汇总已开票金额（ISSUED 状态，兼容 sumAmountIssued） */
+    BigDecimal sumAmountIssued();
+
     /** 跨合同汇总已确认收入（ALLOCATED 状态的 payment） */
     BigDecimal sumConfirmedAmount();
 

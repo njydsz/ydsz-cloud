@@ -163,6 +163,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
+    @com.njydsz.pmis.common.annotation.DataScope(userColumn = "employee_id")
     public Page<TimeEntryDO> page(int page, int size, String keyword, String status,
                                   Long employeeId, Long initiationId, Long taskId,
                                   LocalDate from, LocalDate to) {
@@ -178,6 +179,9 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         if (taskId != null) w.eq(TimeEntryDO::getTaskId, taskId);
         if (from != null) w.ge(TimeEntryDO::getEntryDate, from);
         if (to != null) w.le(TimeEntryDO::getEntryDate, to);
+        // 数据权限 SQL 注入
+        String ds = com.njydsz.pmis.common.security.DataScopeHelper.buildSqlFragment("", "");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(TimeEntryDO::getEntryDate);
         return timeEntryMapper.selectPage(p, w);
     }

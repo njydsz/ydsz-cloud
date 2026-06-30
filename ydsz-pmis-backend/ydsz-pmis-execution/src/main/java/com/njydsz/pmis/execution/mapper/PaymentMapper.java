@@ -36,4 +36,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
 
     /** 跨项目汇总已分配（确认）回款金额 */
     BigDecimal sumAllocatedAmount();
+
+    /** P6 每日对账：跨项目汇总已分配金额（兼容 sumAmountAllocated） */
+    BigDecimal sumAmountAllocated();
 }

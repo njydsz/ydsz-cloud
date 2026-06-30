@@ -2,8 +2,10 @@ package com.njydsz.pmis.project.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.dto.InitiationCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityStatusDTO;
@@ -150,6 +152,7 @@ public class OpportunityServiceImpl implements OpportunityService {
     }
 
     @Override
+    @DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
     public Page<OpportunityDO> page(int page, int size, String keyword, String status, String level, Long ownerId) {
         Page<OpportunityDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OpportunityDO> w = new LambdaQueryWrapper<>();
@@ -161,6 +164,9 @@ public class OpportunityServiceImpl implements OpportunityService {
         if (StringUtils.hasText(status)) w.eq(OpportunityDO::getStatus, status);
         if (StringUtils.hasText(level)) w.eq(OpportunityDO::getLevel, level);
         if (ownerId != null) w.eq(OpportunityDO::getOwnerId, ownerId);
+        // 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(OpportunityDO::getCreatedAt);
         return opportunityMapper.selectPage(p, w);
     }

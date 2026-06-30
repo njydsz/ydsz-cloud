@@ -21,4 +21,7 @@ public interface RevenueMapper extends BaseMapper<RevenueDO> {
     List<Map<String, Object>> sumByPeriod(@Param("initiationId") Long initiationId);
 
     List<Map<String, Object>> sumByContract(@Param("contractId") Long contractId);
+
+    /** P6 每日对账：跨项目汇总全部已确认收入 */
+    BigDecimal sumAll();
 }

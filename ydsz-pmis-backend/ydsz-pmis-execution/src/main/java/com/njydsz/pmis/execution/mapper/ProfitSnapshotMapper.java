@@ -17,4 +17,10 @@ public interface ProfitSnapshotMapper extends BaseMapper<ProfitSnapshotDO> {
     List<ProfitSnapshotDO> selectByInitiation(@Param("initiationId") Long initiationId);
 
     List<Map<String, Object>> trendByPeriod(@Param("initiationId") Long initiationId);
+
+    /** P4-3 跨项目汇总所有快照利润 */
+    java.math.BigDecimal sumAll();
+}
+    /** P6 每日对账：跨项目汇总所有快照利润 */
+    BigDecimal sumAll();
 }

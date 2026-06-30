@@ -61,8 +61,8 @@ function handleToggleTheme() {
         </div>
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item>
-              <el-icon><User /></el-icon>个人中心
+            <el-dropdown-item @click="router.push('/profile/security')">
+              <el-icon><Lock /></el-icon>安全设置
             </el-dropdown-item>
             <el-dropdown-item divided @click="handleLogout">
               <el-icon><SwitchButton /></el-icon>退出登录

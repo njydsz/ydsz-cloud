@@ -44,4 +44,10 @@
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY period ASC
     </select>
+
+    <!-- P6 每日对账：跨项目汇总所有快照利润 -->
+    <select id="sumAll" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(gross_profit), 0) FROM pmis_profit_snapshot
+        WHERE deleted = 0
+    </select>
 </mapper>

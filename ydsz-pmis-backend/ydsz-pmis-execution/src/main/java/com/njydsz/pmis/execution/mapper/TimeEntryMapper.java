@@ -47,4 +47,22 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
      */
     List<Map<String, Object>> detectCrossProject(@Param("employeeId") Long employeeId,
                                                  @Param("entryDate") LocalDate entryDate);
+
+    /**
+     * P4-1 可计费利用率：按员工 × 月份聚合 billable / total / overtime / leave
+     */
+    List<Map<String, Object>> aggregateBillableByEmployee(@Param("from") LocalDate from,
+                                                          @Param("to") LocalDate to);
+
+    /**
+     * P4-1 单员工可计费利用率
+     */
+    Map<String, Object> aggregateBillableOne(@Param("employeeId") Long employeeId,
+                                             @Param("from") LocalDate from,
+                                             @Param("to") LocalDate to);
+
+    /**
+     * P4-3 已审批工时总小时数
+     */
+    java.math.BigDecimal sumApprovedHours();
 }

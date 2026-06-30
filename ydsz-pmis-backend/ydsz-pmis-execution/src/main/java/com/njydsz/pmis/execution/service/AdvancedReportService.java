@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.service;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -29,14 +30,42 @@ public interface AdvancedReportService {
     List<Map<String, Object>> evmReport(Long initiationId);
 
     /**
-     * 人效排行榜（按可计费利用率倒序）
+     * 人效排行榜（按可计费利用率倒序，默认近 3 个月）
      */
     List<Map<String, Object>> utilizationRank(int top);
 
     /**
-     * Bench 闲置成本报表
+     * 人效排行榜（按可计费利用率倒序，自定义时间窗口）
+     *
+     * <p>基于工时数据计算 billable_hours / (total_hours - leave_hours) 作为可计费利用率，
+     * 按职级内部成本率折算人效贡献金额，输出排行榜。
+     *
+     * @param top         返回 Top N
+     * @param from        起始日期（含）
+     * @param to          结束日期（含）
+     * @param department  事业部过滤（可选）
+     */
+    List<Map<String, Object>> utilizationRank(int top, LocalDate from, LocalDate to, String department);
+
+    /**
+     * 单员工可计费利用率
+     */
+    Map<String, Object> utilizationOf(Long employeeId, LocalDate from, LocalDate to);
+
+    /**
+     * 事业部级可计费利用率
+     */
+    List<Map<String, Object>> utilizationByDepartment(LocalDate from, LocalDate to);
+
+    /**
+     * Bench 闲置成本报表（近 N 天）
      */
     List<Map<String, Object>> benchCostReport();
+
+    /**
+     * Bench 闲置成本报表（自定义时间窗口）
+     */
+    List<Map<String, Object>> benchCostReport(LocalDate from, LocalDate to);
 
     /**
      * 双费率利润对比表

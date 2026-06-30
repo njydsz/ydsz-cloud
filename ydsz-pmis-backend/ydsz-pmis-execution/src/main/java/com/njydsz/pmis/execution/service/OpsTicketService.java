@@ -38,6 +38,15 @@ public interface OpsTicketService {
     Page<OpsTicketDO> page(int page, int size, String status, String priority,
                            Long initiationId, Long assigneeId, String keyword);
 
+    /** 按项目查询 */
+    List<OpsTicketDO> listByInitiation(Long initiationId);
+
+    /** 按质保期查询 */
+    List<OpsTicketDO> listByWarranty(Long warrantyId);
+
+    /** 按处理人查询 */
+    List<OpsTicketDO> listByAssignee(Long assigneeId, String status);
+
     /** SLA 达成率统计 */
     List<Map<String, Object>> slaSummary();
 

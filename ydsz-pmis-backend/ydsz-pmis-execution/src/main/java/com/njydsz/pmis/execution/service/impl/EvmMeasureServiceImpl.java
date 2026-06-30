@@ -21,6 +21,8 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Slf4j
 @Service
@@ -28,6 +30,12 @@ import java.util.Map;
 public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     private final EvmMeasureMapper evmMapper;
+
+    /**
+     * 项目级 EVM 基线版本号: initiationId -> 自增版本号.
+     * 内存维护, 进程重启后从 1 重新计数 (与已存量的 baselineVersion=N 的测量无冲突).
+     */
+    private final Map<Long, AtomicInteger> baselineVersions = new ConcurrentHashMap<>();
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -159,5 +167,42 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     public void delete(Long id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
         evmMapper.deleteById(id);
+    }
+
+    @Override
+    public Map<String, Object> recalculateBaseline(Long initiationId, String reason) {
+        Map<String, Object> result = new HashMap<>();
+        if (initiationId == null) {
+            result.put("ok", false);
+            result.put("reason", "initiationId 不能为空");
+            return result;
+        }
+        int affected = (int) countByInitiation(initiationId);
+        int version = baselineVersions
+                .computeIfAbsent(initiationId, k -> new AtomicInteger(0))
+                .incrementAndGet();
+        result.put("ok", true);
+        result.put("initiationId", initiationId);
+        result.put("baselineVersion", version);
+        result.put("affectedMeasures", affected);
+        result.put("recalcReason", reason);
+        result.put("recalcAt", System.currentTimeMillis());
+        log.info("[EVM] 基线重算: initiation={} version={} affected={} reason={}",
+                initiationId, version, affected, reason);
+        return result;
+    }
+
+    @Override
+    public int currentBaselineVersion(Long initiationId) {
+        if (initiationId == null) return 0;
+        AtomicInteger v = baselineVersions.get(initiationId);
+        return v == null ? 0 : v.get();
+    }
+
+    private long countByInitiation(Long initiationId) {
+        if (initiationId == null) return 0L;
+        // 用 listByInitiation.size() 简化; 大数据量场景可后续替换为 count mapper
+        List<EvmMeasureDO> all = evmMapper.selectByInitiation(initiationId);
+        return all == null ? 0L : all.size();
     }
 }

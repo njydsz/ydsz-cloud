@@ -63,6 +63,26 @@ export const PC = {
 
   RESOURCE_ASSIGN_ACT: 'resource:assign:act',
   RESOURCE_BENCH_ACT: 'resource:bench:act',
+  RESOURCE_BENCH_LIST: 'resource:bench:list',
+  RESOURCE_BENCH_INTO: 'resource:bench:into',
+  RESOURCE_BENCH_OUT: 'resource:bench:out',
+  RESOURCE_UTILIZATION_LIST: 'resource:utilization:list',
+
+  // 个人安全
+  AUTH_USER_2FA_BIND: 'auth:user:2fa-bind',
+  AUTH_USER_2FA_VERIFY: 'auth:user:2fa-verify',
+  AUTH_USER_SESSION_LIST: 'auth:user:session-list',
+  AUTH_USER_SESSION_KICK: 'auth:user:session-kick',
+  AUTH_USER_CHANGE_PWD: 'auth:user:change-password',
+
+  // 审计细分
+  AUDIT_LOG_VIEW: 'audit:log:view',
+  AUDIT_LOGIN_VIEW: 'audit:login:view',
+  AUDIT_EXPORT_VIEW: 'audit:export:view',
+  AUDIT_SENSITIVE_VIEW: 'audit:sensitive:view',
+
+  // 敏感操作二次认证
+  SENSITIVE_REAUTH: 'sensitive:reauth:confirm',
 
   // 调度
   SCHEDULER_JOB_CREATE: 'scheduler:job:create',

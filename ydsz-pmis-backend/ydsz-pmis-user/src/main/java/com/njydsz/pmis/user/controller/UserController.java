@@ -3,7 +3,9 @@ package com.njydsz.pmis.user.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.user.dto.UserQueryDTO;
 import com.njydsz.pmis.user.entity.UserAccountDO;
@@ -48,6 +50,18 @@ public class UserController {
     @GetMapping("/me")
     public R<UserAccountDO> me() {
         return R.ok(userAccountService.findById(SecurityContext.getUserId()));
+    }
+
+    @Operation(summary = "修改自己的密码")
+    @PostMapping("/me/password")
+    public R<Void> changeMyPassword(@RequestBody Map<String, String> body) {
+        String oldPassword = body.get("oldPassword");
+        String newPassword = body.get("newPassword");
+        if (oldPassword == null || newPassword == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "原密码或新密码不能为空");
+        }
+        userAccountService.changePassword(SecurityContext.getUserId(), oldPassword, newPassword);
+        return R.ok();
     }
 
     @Operation(summary = "创建用户")

@@ -38,6 +38,7 @@ public class TimeEntryDO implements Serializable {
     private BigDecimal days;
     private BigDecimal overtime;
     private String workType;
+    private Integer billable;
     private String description;
     private String status;
     private Long approverId;

@@ -16,6 +16,7 @@
         <result column="days" property="days"/>
         <result column="overtime" property="overtime"/>
         <result column="work_type" property="workType"/>
+        <result column="billable" property="billable"/>
         <result column="description" property="description"/>
         <result column="status" property="status"/>
         <result column="approver_id" property="approverId"/>
@@ -97,5 +98,48 @@
           AND deleted = 0
         GROUP BY initiation_id
         HAVING COUNT(DISTINCT initiation_id) > 1
+    </select>
+
+    <!-- P4-1 可计费利用率：按员工 × 月份 聚合 billable / total / overtime / leave -->
+    <select id="aggregateBillableByEmployee" resultType="java.util.Map">
+        SELECT
+            employee_id,
+            MAX(employee_name)                         AS employee_name,
+            level_code,
+            TO_CHAR(entry_date, 'YYYY-MM')             AS period,
+            COALESCE(SUM(hours), 0)                    AS total_hours,
+            COALESCE(SUM(CASE WHEN COALESCE(billable, 0) = 1
+                              AND work_type IN ('REGULAR','OVERTIME') THEN hours ELSE 0 END), 0) AS billable_hours,
+            COALESCE(SUM(CASE WHEN work_type = 'OVERTIME' THEN COALESCE(overtime, 0) ELSE 0 END), 0) AS overtime_hours,
+            COALESCE(SUM(CASE WHEN work_type = 'LEAVE' THEN hours ELSE 0 END), 0) AS leave_hours,
+            COALESCE(SUM(CASE WHEN work_type = 'TRAINING' THEN hours ELSE 0 END), 0) AS training_hours
+        FROM pmis_execution_time_entry
+        WHERE deleted = 0
+          AND status = 'APPROVED'
+          AND entry_date BETWEEN #{from} AND #{to}
+        GROUP BY employee_id, level_code, TO_CHAR(entry_date, 'YYYY-MM')
+        ORDER BY period DESC, employee_id
+    </select>
+
+    <!-- 单一员工统计：用于个人查询 -->
+    <select id="aggregateBillableOne" resultType="java.util.Map">
+        SELECT
+            COALESCE(SUM(hours), 0)                    AS total_hours,
+            COALESCE(SUM(CASE WHEN COALESCE(billable, 0) = 1
+                              AND work_type IN ('REGULAR','OVERTIME') THEN hours ELSE 0 END), 0) AS billable_hours,
+            COALESCE(SUM(CASE WHEN work_type = 'OVERTIME' THEN COALESCE(overtime, 0) ELSE 0 END), 0) AS overtime_hours,
+            COALESCE(SUM(CASE WHEN work_type = 'LEAVE' THEN hours ELSE 0 END), 0) AS leave_hours,
+            COALESCE(SUM(CASE WHEN work_type = 'TRAINING' THEN hours ELSE 0 END), 0) AS training_hours
+        FROM pmis_execution_time_entry
+        WHERE deleted = 0
+          AND status = 'APPROVED'
+          AND employee_id = #{employeeId}
+          AND entry_date BETWEEN #{from} AND #{to}
+    </select>
+
+    <!-- P4-3 已审批工时总小时数 -->
+    <select id="sumApprovedHours" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(hours), 0) FROM pmis_execution_time_entry
+        WHERE deleted = 0 AND status = 'APPROVED'
     </select>
 </mapper>

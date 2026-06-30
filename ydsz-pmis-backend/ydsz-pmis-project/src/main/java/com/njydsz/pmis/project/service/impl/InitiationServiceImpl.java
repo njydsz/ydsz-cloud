@@ -129,6 +129,7 @@ public class InitiationServiceImpl implements InitiationService {
     }
 
     @Override
+    @com.njydsz.pmis.common.annotation.DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
     public Page<InitiationDO> page(int page, int size, String keyword, String stage,
                                    String projectLevel, Long pmId) {
         Page<InitiationDO> p = new Page<>(page, size);
@@ -141,6 +142,9 @@ public class InitiationServiceImpl implements InitiationService {
         if (StringUtils.hasText(stage)) w.eq(InitiationDO::getStage, stage);
         if (StringUtils.hasText(projectLevel)) w.eq(InitiationDO::getProjectLevel, projectLevel);
         if (pmId != null) w.eq(InitiationDO::getPmId, pmId);
+        // 数据权限 SQL 注入
+        String ds = com.njydsz.pmis.common.security.DataScopeHelper.buildSqlFragment("", "");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(InitiationDO::getCreatedAt);
         Page<InitiationDO> result = initiationMapper.selectPage(p, w);
         if (result != null && result.getRecords() != null) {
