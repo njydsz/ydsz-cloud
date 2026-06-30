@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.project.mapper.InitiationMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.project.entity.InitiationDO">
+        <id column="id" property="id"/>
+        <result column="project_code" property="projectCode"/>
+        <result column="project_name" property="projectName"/>
+        <result column="opportunity_id" property="opportunityId"/>
+        <result column="customer_id" property="customerId"/>
+        <result column="customer_name" property="customerName"/>
+        <result column="business_dept_id" property="businessDeptId"/>
+        <result column="project_type" property="projectType"/>
+        <result column="project_level" property="projectLevel"/>
+        <result column="pm_id" property="pmId"/>
+        <result column="pm_name" property="pmName"/>
+        <result column="sponsor_id" property="sponsorId"/>
+        <result column="sponsor_name" property="sponsorName"/>
+        <result column="estimated_amount" property="estimatedAmount"/>
+        <result column="budget_amount" property="budgetAmount"/>
+        <result column="planned_start_date" property="plannedStartDate"/>
+        <result column="planned_end_date" property="plannedEndDate"/>
+        <result column="duration_days" property="durationDays"/>
+        <result column="stage" property="stage"/>
+        <result column="current_gate" property="currentGate"/>
+        <result column="description" property="description"/>
+        <result column="business_case" property="businessCase"/>
+        <result column="risk_assessment" property="riskAssessment"/>
+        <result column="workflow_id" property="workflowId"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT * FROM pmis_project_initiation
+        WHERE project_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <update id="updateStage">
+        UPDATE pmis_project_initiation
+        SET stage = #{stage},
+            current_gate = COALESCE(#{gate}, current_gate),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id} AND deleted = 0
+    </update>
+
+    <select id="aggregateByStage" resultType="java.util.Map">
+        SELECT stage, COUNT(1) AS cnt, COALESCE(SUM(budget_amount), 0) AS budget
+        FROM pmis_project_initiation
+        WHERE tenant_id = #{tenantId} AND deleted = 0
+        GROUP BY stage
+    </select>
+
+    <select id="countByStage" resultType="java.lang.Long">
+        SELECT COUNT(1) FROM pmis_project_initiation
+        WHERE stage = #{stage} AND tenant_id = #{tenantId} AND deleted = 0
+    </select>
+
+</mapper>

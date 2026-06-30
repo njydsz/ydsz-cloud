@@ -1,0 +1,376 @@
+package com.njydsz.pmis.project.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.project.assembler.NameAssembler;
+import com.njydsz.pmis.project.dto.BudgetItemDTO;
+import com.njydsz.pmis.project.dto.GateReviewDTO;
+import com.njydsz.pmis.project.dto.InitiationCreateDTO;
+import com.njydsz.pmis.project.dto.InitiationStageDTO;
+import com.njydsz.pmis.project.entity.BudgetItemDO;
+import com.njydsz.pmis.project.entity.GateReviewDO;
+import com.njydsz.pmis.project.entity.InitiationDO;
+import com.njydsz.pmis.project.enums.GateCode;
+import com.njydsz.pmis.project.enums.InitiationStage;
+import com.njydsz.pmis.project.feign.WorkflowServiceClient;
+import com.njydsz.pmis.project.mapper.BudgetItemMapper;
+import com.njydsz.pmis.project.mapper.GateReviewMapper;
+import com.njydsz.pmis.project.mapper.InitiationMapper;
+import com.njydsz.pmis.project.service.InitiationService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * 立项服务实现
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class InitiationServiceImpl implements InitiationService {
+
+    private static final Set<String> BUDGET_CATEGORIES =
+            Set.of("LABOR", "PURCHASE", "EXPENSE", "OUTSOURCE", "OTHER");
+
+    private static final Set<String> GATE_RESULTS =
+            Set.of("PENDING", "PASSED", "REJECTED", "CONDITIONAL");
+
+    private final InitiationMapper initiationMapper;
+    private final BudgetItemMapper budgetItemMapper;
+    private final GateReviewMapper gateReviewMapper;
+    private final NameAssembler nameAssembler;
+    private final WorkflowServiceClient workflowServiceClient;
+
+    // ============= 立项主表 =============
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long create(InitiationCreateDTO dto) {
+        validate(dto);
+        if (initiationMapper.selectByCode(dto.getProjectCode()) != null) {
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "项目编号已存在: " + dto.getProjectCode());
+        }
+        InitiationDO o = new InitiationDO();
+        BeanUtils.copyProperties(dto, o);
+        if (!StringUtils.hasText(o.getStage())) {
+            o.setStage(InitiationStage.PRE_INITIATION.getCode());
+        }
+        if (!StringUtils.hasText(o.getProjectLevel())) {
+            o.setProjectLevel("C");
+        }
+        if (o.getTenantId() == null) {
+            o.setTenantId(1L);
+        }
+        if (o.getPlannedStartDate() != null && o.getPlannedEndDate() != null) {
+            long days = ChronoUnit.DAYS.between(o.getPlannedStartDate(), o.getPlannedEndDate());
+            o.setDurationDays((int) Math.max(0, days));
+        }
+        // 装配客户/PM/发起人名称（容错，Feign 调用失败不阻塞创建）
+        assembleNames(o);
+        initiationMapper.insert(o);
+        log.info("[Initiation] 创建立项: code={} name={}", o.getProjectCode(), o.getProjectName());
+        return o.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changeStage(InitiationStageDTO dto) {
+        InitiationDO o = getById(dto.getId());
+        InitiationStage from = InitiationStage.fromCode(o.getStage());
+        InitiationStage to = InitiationStage.fromCode(dto.getTargetStage());
+        if (to == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "未知阶段: " + dto.getTargetStage());
+        }
+        if (from == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "当前阶段非法: " + o.getStage());
+        }
+        if (!from.canTransitTo(to)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "阶段不允许迁移: " + from.getDesc() + " → " + to.getDesc());
+        }
+        String gate = to == InitiationStage.APPROVED ? GateCode.CD1.name() : o.getCurrentGate();
+        initiationMapper.updateStage(o.getId(), to.getCode(), gate);
+        log.info("[Initiation] 阶段迁移: id={} {} -> {}", o.getId(), from.getCode(), to.getCode());
+    }
+
+    @Override
+    public void delete(Long id) {
+        InitiationDO o = getById(id);
+        initiationMapper.deleteById(o.getId());
+        log.info("[Initiation] 删除立项: id={}", id);
+    }
+
+    @Override
+    public InitiationDO getById(Long id) {
+        InitiationDO o = initiationMapper.selectById(id);
+        if (o == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+        }
+        assembleNames(o);
+        return o;
+    }
+
+    @Override
+    public Page<InitiationDO> page(int page, int size, String keyword, String stage,
+                                   String projectLevel, Long pmId) {
+        Page<InitiationDO> p = new Page<>(page, size);
+        LambdaQueryWrapper<InitiationDO> w = new LambdaQueryWrapper<>();
+        if (StringUtils.hasText(keyword)) {
+            w.and(qw -> qw.like(InitiationDO::getProjectCode, keyword)
+                    .or().like(InitiationDO::getProjectName, keyword)
+                    .or().like(InitiationDO::getCustomerName, keyword));
+        }
+        if (StringUtils.hasText(stage)) w.eq(InitiationDO::getStage, stage);
+        if (StringUtils.hasText(projectLevel)) w.eq(InitiationDO::getProjectLevel, projectLevel);
+        if (pmId != null) w.eq(InitiationDO::getPmId, pmId);
+        w.orderByDesc(InitiationDO::getCreatedAt);
+        Page<InitiationDO> result = initiationMapper.selectPage(p, w);
+        if (result != null && result.getRecords() != null) {
+            for (InitiationDO rec : result.getRecords()) {
+                assembleNames(rec);
+            }
+        }
+        return result;
+    }
+
+    // ============= 预算 =============
+
+    @Override
+    public Long addBudgetItem(BudgetItemDTO dto) {
+        validateBudget(dto);
+        if (initiationMapper.selectById(dto.getInitiationId()) == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+        }
+        BudgetItemDO b = new BudgetItemDO();
+        BeanUtils.copyProperties(dto, b);
+        if (b.getAmount() == null && b.getQuantity() != null && b.getUnitPrice() != null) {
+            b.setAmount(b.getQuantity().multiply(b.getUnitPrice()));
+        }
+        budgetItemMapper.insert(b);
+        // 重新汇总预算
+        recomputeBudget(dto.getInitiationId());
+        log.info("[Initiation] 新增预算明细: init={} cat={} amt={}",
+                dto.getInitiationId(), dto.getCategory(), b.getAmount());
+        return b.getId();
+    }
+
+    @Override
+    public void deleteBudgetItem(Long id) {
+        BudgetItemDO b = budgetItemMapper.selectById(id);
+        if (b == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "预算明细不存在");
+        }
+        budgetItemMapper.deleteById(id);
+        recomputeBudget(b.getInitiationId());
+    }
+
+    @Override
+    public List<BudgetItemDO> listBudget(Long initiationId) {
+        if (initiationId == null) return List.of();
+        return budgetItemMapper.selectByInitiationId(initiationId);
+    }
+
+    @Override
+    public List<Map<String, Object>> sumBudgetByCategory(Long initiationId) {
+        if (initiationId == null) return List.of();
+        return budgetItemMapper.sumByCategory(initiationId);
+    }
+
+    @Override
+    public BigDecimal recomputeBudget(Long initiationId) {
+        List<BudgetItemDO> items = budgetItemMapper.selectByInitiationId(initiationId);
+        BigDecimal total = BigDecimal.ZERO;
+        for (BudgetItemDO b : items) {
+            if (b.getAmount() != null) {
+                total = total.add(b.getAmount());
+            }
+        }
+        InitiationDO o = initiationMapper.selectById(initiationId);
+        if (o != null) {
+            o.setBudgetAmount(total);
+            initiationMapper.updateById(o);
+        }
+        return total;
+    }
+
+    // ============= 门径 =============
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long reviewGate(GateReviewDTO dto) {
+        InitiationDO o = getById(dto.getInitiationId());
+        GateCode gate = GateCode.fromCode(dto.getGateCode());
+        if (gate == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "门径编码非法: " + dto.getGateCode());
+        }
+        if (!GATE_RESULTS.contains(dto.getReviewResult().toUpperCase())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "评审结果非法: " + dto.getReviewResult());
+        }
+        GateReviewDO existing = gateReviewMapper.selectByInitiationAndGate(o.getId(), gate.name());
+        GateReviewDO record = existing != null ? existing : new GateReviewDO();
+        record.setInitiationId(o.getId());
+        record.setGateCode(gate.name());
+        record.setGateName(gate.name() + " Gate");
+        record.setReviewResult(dto.getReviewResult().toUpperCase());
+        record.setDecisionBasis(dto.getDecisionBasis());
+        record.setConditions(dto.getConditions());
+        record.setReviewAt(LocalDateTime.now());
+        GateCode next = GateCode.next(gate);
+        record.setNextGate(next == null ? null : next.name());
+
+        if (existing == null) {
+            gateReviewMapper.insert(record);
+        } else {
+            gateReviewMapper.updateById(record);
+        }
+        // 通过则更新立项 currentGate
+        if ("PASSED".equalsIgnoreCase(dto.getReviewResult()) && next != null) {
+            o.setCurrentGate(next.name());
+            initiationMapper.updateById(o);
+        }
+        log.info("[Initiation] 门径评审: init={} gate={} result={}",
+                o.getId(), gate.name(), dto.getReviewResult());
+        return record.getId();
+    }
+
+    @Override
+    public List<GateReviewDO> listGateReviews(Long initiationId) {
+        if (initiationId == null) return List.of();
+        return gateReviewMapper.selectByInitiationId(initiationId);
+    }
+
+    // ============= 统计 =============
+
+    @Override
+    public List<Map<String, Object>> aggregateByStage(Long tenantId) {
+        if (tenantId == null) tenantId = 1L;
+        return initiationMapper.aggregateByStage(tenantId);
+    }
+
+    // ============= 流程集成 =============
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String startProcess(Long id, Long initiatorId) {
+        InitiationDO o = getById(id);
+        if (StringUtils.hasText(o.getWorkflowId())) {
+            log.info("[Initiation] 立项 {} 已存在流程实例: {}，跳过启动", id, o.getWorkflowId());
+            return o.getWorkflowId();
+        }
+        Map<String, Object> body = new HashMap<>();
+        body.put("businessKey", "PMIS_INIT_" + o.getId());
+        body.put("processDefinitionKey", "pmis-initiation");
+        body.put("initiator", initiatorId);
+        Map<String, Object> vars = new HashMap<>();
+        vars.put("initiationId", o.getId());
+        vars.put("projectCode", o.getProjectCode());
+        vars.put("projectName", o.getProjectName());
+        vars.put("projectType", o.getProjectType());
+        vars.put("projectLevel", o.getProjectLevel());
+        vars.put("estimatedAmount", o.getEstimatedAmount());
+        vars.put("customerId", o.getCustomerId());
+        vars.put("pmId", o.getPmId());
+        body.put("variables", vars);
+
+        String processInstanceId = null;
+        try {
+            R<String> r = workflowServiceClient.startProcess(body);
+            if (r != null && r.isSuccess() && r.getData() != null) {
+                processInstanceId = r.getData();
+            } else {
+                log.warn("[Initiation] 启动审批流失败 initiation={} msg={}", id,
+                        r == null ? "null" : r.getMessage());
+                return null;
+            }
+        } catch (Exception e) {
+            log.warn("[Initiation] Feign 调用 workflow 失败: {}", e.getMessage());
+            return null;
+        }
+        o.setWorkflowId(processInstanceId);
+        initiationMapper.updateById(o);
+        log.info("[Initiation] 立项 {} 启动审批流: instanceId={}", id, processInstanceId);
+        return processInstanceId;
+    }
+
+    @Override
+    public void assembleNames(InitiationDO initiation) {
+        if (initiation == null) return;
+        if (nameAssembler == null) return;
+        if (!StringUtils.hasText(initiation.getCustomerName()) && initiation.getCustomerId() != null) {
+            String n = safeCustomerName(initiation.getCustomerId());
+            if (n != null) initiation.setCustomerName(n);
+        }
+        if (!StringUtils.hasText(initiation.getPmName()) && initiation.getPmId() != null) {
+            String n = safeEmployeeName(initiation.getPmId());
+            if (n != null) initiation.setPmName(n);
+        }
+        if (!StringUtils.hasText(initiation.getSponsorName()) && initiation.getSponsorId() != null) {
+            String n = safeEmployeeName(initiation.getSponsorId());
+            if (n != null) initiation.setSponsorName(n);
+        }
+    }
+
+    private String safeCustomerName(Long id) {
+        try { return nameAssembler.resolveCustomer(id); }
+        catch (Exception e) { return null; }
+    }
+
+    private String safeEmployeeName(Long id) {
+        try { return nameAssembler.resolveEmployee(id); }
+        catch (Exception e) { return null; }
+    }
+
+    // ============= 校验 =============
+
+    private void validate(InitiationCreateDTO dto) {
+        if (dto == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        }
+        if (!StringUtils.hasText(dto.getProjectCode())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "项目编号不能为空");
+        }
+        if (!StringUtils.hasText(dto.getProjectName())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "项目名称不能为空");
+        }
+        if (dto.getCustomerId() == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "客户 ID 不能为空");
+        }
+        if (!StringUtils.hasText(dto.getProjectType())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "项目类型不能为空");
+        }
+        if (dto.getPlannedStartDate() != null && dto.getPlannedEndDate() != null
+                && dto.getPlannedEndDate().isBefore(dto.getPlannedStartDate())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "结束日期不能早于开始日期");
+        }
+    }
+
+    private void validateBudget(BudgetItemDTO dto) {
+        if (dto == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        }
+        if (dto.getInitiationId() == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "立项 ID 不能为空");
+        }
+        if (!BUDGET_CATEGORIES.contains(dto.getCategory().toUpperCase())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "分类非法: " + dto.getCategory());
+        }
+    }
+}
