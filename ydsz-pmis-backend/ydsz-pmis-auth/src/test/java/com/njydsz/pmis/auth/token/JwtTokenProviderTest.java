@@ -1,5 +1,6 @@
 package com.njydsz.pmis.auth.token;
 
+import com.njydsz.pmis.common.token.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

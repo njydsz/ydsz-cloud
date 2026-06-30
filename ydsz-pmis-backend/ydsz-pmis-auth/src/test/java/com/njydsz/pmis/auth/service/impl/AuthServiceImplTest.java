@@ -3,15 +3,19 @@ package com.njydsz.pmis.auth.service.impl;
 import com.njydsz.pmis.auth.dto.CaptchaVO;
 import com.njydsz.pmis.auth.dto.LoginDTO;
 import com.njydsz.pmis.auth.dto.LoginResultVO;
-import com.njydsz.pmis.auth.token.JwtTokenProvider;
+import com.njydsz.pmis.auth.feign.UserAuthClient;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.token.JwtTokenProvider;
+import com.njydsz.pmis.user.dto.LoginContextDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -31,7 +35,28 @@ class AuthServiceImplTest {
     private StringRedisTemplate redisTemplate;
     private ValueOperations<String, String> valueOps;
     private JwtTokenProvider jwtTokenProvider;
+    private UserAuthClient userAuthClient;
     private AuthServiceImpl service;
+
+    private LoginContextDTO mockContext(String username) {
+        return LoginContextDTO.builder()
+                .userId(1L)
+                .username(username)
+                .password("e10adc3949ba59abbe56e057f20f883e") // MD5("123456")
+                .salt("")
+                .status("ENABLED")
+                .realName("管理员")
+                .departmentId(1L)
+                .departmentName("研发中心")
+                .levelCode("L5")
+                .levelName("P5")
+                .dataScope("DEPT")
+                .roles(List.of("ADMIN"))
+                .permissions(List.of("system:user:list"))
+                .loginFailCount(0)
+                .lockedUntil(0L)
+                .build();
+    }
 
     @BeforeEach
     @SuppressWarnings("unchecked")
@@ -49,7 +74,11 @@ class AuthServiceImplTest {
         when(jwtTokenProvider.getUserId(anyString())).thenReturn(1L);
         when(jwtTokenProvider.getUsername(anyString())).thenReturn("admin");
 
-        service = new AuthServiceImpl(redisTemplate, jwtTokenProvider);
+        userAuthClient = mock(UserAuthClient.class);
+        when(userAuthClient.getLoginContextByUsername("admin"))
+                .thenReturn(R.ok(mockContext("admin")));
+
+        service = new AuthServiceImpl(redisTemplate, jwtTokenProvider, userAuthClient);
     }
 
     @Test
@@ -64,9 +93,11 @@ class AuthServiceImplTest {
     @Test
     @DisplayName("login 正确凭证应返回 token")
     void login_success() {
+        // 使用 service 暴露的测试钩子跳过图形验证码
+        service.setCaptchaRequired(false);
         LoginDTO dto = new LoginDTO();
         dto.setUsername("admin");
-        dto.setPassword("admin123");
+        dto.setPassword("123456");
 
         LoginResultVO result = service.login(dto);
         assertThat(result.getToken()).isEqualTo("access-token-xxx");
@@ -77,6 +108,7 @@ class AuthServiceImplTest {
     @Test
     @DisplayName("login 错误密码应抛 PASSWORD_INCORRECT")
     void login_wrongPassword() {
+        service.setCaptchaRequired(false);
         LoginDTO dto = new LoginDTO();
         dto.setUsername("admin");
         dto.setPassword("wrong");
@@ -93,7 +125,7 @@ class AuthServiceImplTest {
 
         LoginDTO dto = new LoginDTO();
         dto.setUsername("admin");
-        dto.setPassword("admin123");
+        dto.setPassword("123456");
         dto.setCaptchaKey("ck-1");
         dto.setCaptchaCode("0000");
 
@@ -109,7 +141,7 @@ class AuthServiceImplTest {
 
         LoginDTO dto = new LoginDTO();
         dto.setUsername("admin");
-        dto.setPassword("admin123");
+        dto.setPassword("123456");
         dto.setCaptchaKey("ck-1");
         dto.setCaptchaCode("1234");
 

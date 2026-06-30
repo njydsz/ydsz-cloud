@@ -78,8 +78,141 @@ export const PC = {
   FILE_STORAGE_UPLOAD: 'file:storage:upload',
   FILE_STORAGE_DELETE: 'file:storage:delete',
 
-  // 执行
+  // ============= 项目模块(project) =============
+  // 商机
+  PROJECT_OPPORTUNITY_LIST: 'project:opportunity:list',
+  PROJECT_OPPORTUNITY_CREATE: 'project:opportunity:create',
+  PROJECT_OPPORTUNITY_UPDATE: 'project:opportunity:update',
+  PROJECT_OPPORTUNITY_DELETE: 'project:opportunity:delete',
+  PROJECT_OPPORTUNITY_EVALUATE: 'project:opportunity:evaluate',
+  PROJECT_OPPORTUNITY_CONVERT: 'project:opportunity:convert',
+
+  // 立项
+  PROJECT_INITIATION_LIST: 'project:initiation:list',
+  PROJECT_INITIATION_CREATE: 'project:initiation:create',
+  PROJECT_INITIATION_DELETE: 'project:initiation:delete',
+  PROJECT_INITIATION_BUDGET: 'project:initiation:budget',
+  PROJECT_INITIATION_GATE: 'project:initiation:gate',
+  PROJECT_INITIATION_START_PROCESS: 'project:initiation:start-process',
+
+  // 合同
+  PROJECT_CONTRACT_LIST: 'project:contract:list',
+  PROJECT_CONTRACT_CREATE: 'project:contract:create',
+  PROJECT_CONTRACT_UPDATE: 'project:contract:update',
+  PROJECT_CONTRACT_DELETE: 'project:contract:delete',
+  PROJECT_CONTRACT_STATUS: 'project:contract:status',
+
+  PROJECT_CONTRACT_TEMPLATE_LIST: 'project:contract-template:list',
+  PROJECT_CONTRACT_TEMPLATE_CREATE: 'project:contract-template:create',
+  PROJECT_CONTRACT_TEMPLATE_PUBLISH: 'project:contract-template:publish',
+
+  PROJECT_CONTRACT_CHANGE_LIST: 'project:contract-change:list',
+  PROJECT_CONTRACT_CHANGE_CREATE: 'project:contract-change:create',
+  PROJECT_CONTRACT_CHANGE_APPROVE: 'project:contract-change:approve',
+
+  // ============= 执行模块(execution) =============
+  // WBS
+  EXECUTION_WBS_LIST: 'execution:wbs:list',
+  EXECUTION_WBS_CREATE: 'execution:wbs:create',
+  EXECUTION_WBS_UPDATE: 'execution:wbs:update',
+  EXECUTION_WBS_STATUS: 'execution:wbs:status',
+  EXECUTION_WBS_DELETE: 'execution:wbs:delete',
+
+  // 工时
+  EXECUTION_TIME_LIST: 'execution:time:list',
+  EXECUTION_TIME_CREATE: 'execution:time:create',
+  EXECUTION_TIME_APPROVE: 'execution:time:approve',
+  EXECUTION_TIME_REJECT: 'execution:time:reject',
+
+  // 采购
+  EXECUTION_PURCHASE_LIST: 'execution:purchase:list',
+  EXECUTION_PURCHASE_CREATE: 'execution:purchase:create',
+  EXECUTION_PURCHASE_STATUS: 'execution:purchase:status',
+  EXECUTION_PURCHASE_DELETE: 'execution:purchase:delete',
+
+  // 费用
+  EXECUTION_EXPENSE_LIST: 'execution:expense:list',
+  EXECUTION_EXPENSE_CREATE: 'execution:expense:create',
+  EXECUTION_EXPENSE_STATUS: 'execution:expense:status',
+
+  // 风险
+  EXECUTION_RISK_LIST: 'execution:risk:list',
+  EXECUTION_RISK_CREATE: 'execution:risk:create',
+  EXECUTION_RISK_STATUS: 'execution:risk:status',
+
+  // 收入
+  EXECUTION_REVENUE_LIST: 'execution:revenue:list',
+  EXECUTION_REVENUE_CREATE: 'execution:revenue:create',
+
+  // 利润
+  EXECUTION_PROFIT_LIST: 'execution:profit:list',
+  EXECUTION_PROFIT_SNAPSHOT: 'execution:profit:snapshot',
+
+  // 交付
+  EXECUTION_DELIVERY_LIST: 'execution:delivery:list',
+  EXECUTION_DELIVERY_CREATE: 'execution:delivery:create',
+  EXECUTION_DELIVERY_REVIEW: 'execution:delivery:review',
+
+  // EVM
+  EXECUTION_EVM_LIST: 'execution:evm:list',
+  EXECUTION_EVM_SAVE: 'execution:evm:save',
+  EXECUTION_EVM_DASHBOARD: 'execution:evm:dashboard',
+
+  // 双费率/模拟
+  EXECUTION_RATE_LIST: 'execution:rate:list',
+  EXECUTION_RATE_CARD_CREATE: 'execution:rate-card:create',
+  EXECUTION_RATE_INTERNAL_CREATE: 'execution:rate-internal:create',
+  EXECUTION_SIMULATION_LIST: 'execution:simulation:list',
+  EXECUTION_SIMULATION_CREATE: 'execution:simulation:create',
+  EXECUTION_SIMULATION_APPROVE: 'execution:simulation:approve',
+
+  // 对账
   EXECUTION_RECONCILE_VIEW: 'execution:reconcile:view',
+  EXECUTION_RECONCILE_RUN: 'execution:reconcile:run',
+
+  // 预算
+  EXECUTION_BUDGET_VIEW: 'execution:budget:view',
+
+  // ============= 财务模块(finance) =============
+  // 开票
+  FINANCE_INVOICE_LIST: 'finance:invoice:list',
+  FINANCE_INVOICE_CREATE: 'finance:invoice:create',
+  FINANCE_INVOICE_APPROVE: 'finance:invoice:approve',
+  FINANCE_INVOICE_ISSUE: 'finance:invoice:issue',
+  FINANCE_INVOICE_REVERSE: 'finance:invoice:reverse',
+
+  // 回款
+  FINANCE_PAYMENT_LIST: 'finance:payment:list',
+  FINANCE_PAYMENT_CREATE: 'finance:payment:create',
+  FINANCE_PAYMENT_ALLOCATE: 'finance:payment:allocate',
+
+  // 客户信用
+  FINANCE_CREDIT_LIST: 'finance:credit:list',
+  FINANCE_CREDIT_ASSESS: 'finance:credit:assess',
+
+  // ============= 报表与驾驶舱 =============
+  REPORT_PROFIT_VIEW: 'report:profit:view',
+  REPORT_COST_VIEW: 'report:cost:view',
+  REPORT_PAYMENT_LEDGER_VIEW: 'report:payment-ledger:view',
+  REPORT_LIFECYCLE_VIEW: 'report:lifecycle:view',
+  REPORT_ADVANCED_VIEW: 'report:advanced:view',
+  COCKPIT_OVERVIEW_VIEW: 'cockpit:overview:view',
+  COCKPIT_DRILLDOWN_VIEW: 'cockpit:drilldown:view',
+
+  // ============= 项目结项与变更 =============
+  CLOSURE_LIST: 'closure:project:list',
+  CLOSURE_CREATE: 'closure:project:create',
+  CLOSURE_STATUS: 'closure:project:status',
+  PROJECT_CHANGE_LIST: 'project:change:list',
+  PROJECT_CHANGE_CREATE: 'project:change:create',
+  PROJECT_CHANGE_STATUS: 'project:change:status',
+
+  // ============= AI Agent =============
+  AGENT_RUN: 'agent:run',
+  AGENT_HISTORY: 'agent:history',
+
+  // ============= 审计 =============
+  AUDIT_LOG_VIEW: 'audit:log:view',
 } as const
 
 export type PermissionCode = (typeof PC)[keyof typeof PC]

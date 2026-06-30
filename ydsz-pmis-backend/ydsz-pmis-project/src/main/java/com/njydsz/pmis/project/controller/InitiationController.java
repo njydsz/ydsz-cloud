@@ -137,7 +137,7 @@ public class InitiationController {
 
     @Operation(summary = "查询立项预算（供执行模块调用）")
     @GetMapping("/{id}/budget/snapshot")
-    public R<java.math.Map<String, Object>> budgetSnapshot(@PathVariable Long id) {
+    public R<Map<String, Object>> budgetSnapshot(@PathVariable Long id) {
         return R.ok(service.budgetSnapshot(id));
     }
 }

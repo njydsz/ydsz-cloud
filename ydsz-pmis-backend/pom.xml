@@ -21,8 +21,8 @@
     <modules>
         <module>ydsz-pmis-common</module>
         <module>ydsz-pmis-gateway</module>
-        <module>ydsz-pmis-auth</module>
         <module>ydsz-pmis-user</module>
+        <module>ydsz-pmis-auth</module>
         <module>ydsz-pmis-config</module>
         <module>ydsz-pmis-notification</module>
         <module>ydsz-pmis-workflow</module>

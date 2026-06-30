@@ -145,13 +145,6 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 生成刷新 Token (旧签名, 使用默认 refresh 过期时间)
-     */
-    public String generateRefreshToken(Long userId, long expireSeconds) {
-        return generateRefreshToken(userId, (Long) expireSeconds);
-    }
-
-    /**
      * 验证 Token
      */
     public boolean validateToken(String token) {

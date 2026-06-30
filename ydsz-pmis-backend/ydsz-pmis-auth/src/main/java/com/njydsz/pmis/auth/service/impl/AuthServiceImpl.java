@@ -15,6 +15,7 @@ import com.njydsz.pmis.user.dto.LoginContextDTO;
 import com.wf.captcha.SpecCaptcha;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -57,6 +58,16 @@ public class AuthServiceImpl implements AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final UserAuthClient userAuthClient;
 
+    /**
+     * 是否强制启用图形验证码 (测试场景可关闭)
+     */
+    @Value("${pmis.auth.captcha-required:true}")
+    private boolean captchaRequired;
+
+    public void setCaptchaRequired(boolean captchaRequired) {
+        this.captchaRequired = captchaRequired;
+    }
+
     @Override
     public CaptchaVO generateCaptcha() {
         // 1. 生成图形验证码 (使用 easy-captcha)
@@ -77,8 +88,10 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginResultVO login(LoginDTO dto) {
-        // 1. 图形验证码校验（强制启用）
-        validateCaptcha(dto.getCaptchaKey(), dto.getCaptchaCode());
+        // 1. 图形验证码校验（可配置关闭）
+        if (captchaRequired) {
+            validateCaptcha(dto.getCaptchaKey(), dto.getCaptchaCode());
+        }
 
         // 2. 通过 Feign 加载登录上下文
         R<LoginContextDTO> r = userAuthClient.getLoginContextByUsername(dto.getUsername());
