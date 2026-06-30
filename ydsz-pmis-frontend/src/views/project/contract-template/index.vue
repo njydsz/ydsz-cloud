@@ -157,7 +157,7 @@ onMounted(fetchList)
         <vxe-column field="name" title="模板名称" min-width="200" show-overflow />
         <vxe-column field="type" title="类型" width="120">
           <template #default="{ row }">
-            {{ typeMap[(row.type as any)]?.label || row.type || '-' }}
+            {{ typeMap[row.type as keyof typeof typeMap]?.label || row.type || '-' }}
           </template>
         </vxe-column>
         <vxe-column field="version" title="版本" width="100" align="center" />

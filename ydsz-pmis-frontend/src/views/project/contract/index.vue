@@ -226,7 +226,7 @@ onMounted(fetchList)
         <vxe-column field="initiationName" title="关联项目" width="160" show-overflow />
         <vxe-column field="contractType" title="类型" width="110">
           <template #default="{ row }">
-            {{ typeMap[(row.contractType as any)]?.label || row.contractType || '-' }}
+            {{ typeMap[row.contractType as keyof typeof typeMap]?.label || row.contractType || '-' }}
           </template>
         </vxe-column>
         <vxe-column field="amount" title="金额" width="130" align="right" :formatter="({ cellValue, row }: any) => cellValue != null ? `${row?.currency || '¥'} ${Number(cellValue).toLocaleString()}` : '-'" />

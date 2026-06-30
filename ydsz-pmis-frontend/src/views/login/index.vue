@@ -200,7 +200,7 @@ onMounted(() => {
   .captcha-img {
     width: 130px;
     height: 40px;
-    border: 1px solid $border-color-base;
+    border: 1px solid $border-base;
     border-radius: 4px;
     overflow: hidden;
     cursor: pointer;
@@ -208,7 +208,7 @@ onMounted(() => {
     align-items: center;
     justify-content: center;
     flex-shrink: 0;
-    background: $bg-light;
+    background: $bg-base;
 
     img {
       width: 100%;

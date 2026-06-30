@@ -31,7 +31,7 @@ export function setupRouterGuard(router: Router): void {
       if (!userStore.userInfo) {
         try {
           await userStore.fetchUserInfo()
-        } catch (err) {
+        } catch (_err) {
           userStore.logout()
           next(`/login?redirect=${to.path}`)
           NProgress.done()
@@ -44,7 +44,7 @@ export function setupRouterGuard(router: Router): void {
           await permissionStore.generateRoutes()
           next({ ...to, replace: true })
           return
-        } catch (err) {
+        } catch (_err) {
           userStore.logout()
           next(`/login?redirect=${to.path}`)
           NProgress.done()

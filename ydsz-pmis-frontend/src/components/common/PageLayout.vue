@@ -30,8 +30,9 @@
  *   </PageLayout>
  */
 import type { PropType } from 'vue'
+import { computed } from 'vue'
 
-defineProps({
+const props = defineProps({
   query: { type: Object as PropType<Record<string, any>>, required: true },
   list: { type: Array as PropType<unknown[]>, required: true },
   total: { type: Number, default: 0 },
@@ -57,7 +58,19 @@ const emit = defineEmits<{
   (e: 'reset'): void
   (e: 'page-change'): void
   (e: 'refresh'): void
+  (e: 'update:query', value: Record<string, any>): void
 }>()
+
+// el-pagination 不允许直接 v-model 外部 prop，
+// 通过本地计算属性代理读写,避免 vue/no-mutating-props 违规
+const currentPage = computed<number>({
+  get: () => Number(props.query.page) || 1,
+  set: (v) => emit('update:query', { ...props.query, page: v }),
+})
+const pageSize = computed<number>({
+  get: () => Number(props.query.size) || 10,
+  set: (v) => emit('update:query', { ...props.query, size: v }),
+})
 
 function onQuery() {
   emit('query')
@@ -108,8 +121,8 @@ function onRefresh() {
       <!-- 分页 -->
       <div v-if="!hidePagination" class="pagination">
         <el-pagination
-          v-model:current-page="query.page"
-          v-model:page-size="query.size"
+          v-model:current-page="currentPage"
+          v-model:page-size="pageSize"
           :total="total"
           :page-sizes="pageSizes"
           :layout="paginationLayout"

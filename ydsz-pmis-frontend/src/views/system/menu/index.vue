@@ -166,13 +166,13 @@ onMounted(fetchTree)
         </el-table-column>
         <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
-            <el-button v-permission="['auth:perm:create']" type="primary" link @click="openCreate(row)">
+            <el-button v-permission="['auth:perm:create']" type="primary" link @click="openCreate(row as MenuTreeVO)">
               新增下级
             </el-button>
-            <el-button v-permission="['auth:perm:update']" type="primary" link @click="openEdit(row)">
+            <el-button v-permission="['auth:perm:update']" type="primary" link @click="openEdit(row as MenuTreeVO)">
               编辑
             </el-button>
-            <el-button v-permission="['auth:perm:delete']" type="danger" link @click="handleDelete(row)">
+            <el-button v-permission="['auth:perm:delete']" type="danger" link @click="handleDelete(row as MenuTreeVO)">
               删除
             </el-button>
           </template>

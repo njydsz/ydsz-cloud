@@ -41,24 +41,14 @@ function convertMenuToRoutes(menus: MenuTreeNode[]): RouteRecordRaw[] {
       if (childRoutes.length > 0) {
         // 父路由通常是 Layout
         if (!m.component) {
-          route.redirect = childRoutes[0].path
+          ;(route as { redirect?: string }).redirect = childRoutes[0].path
         }
-        route.children = childRoutes
+        ;(route as { children?: RouteRecordRaw[] }).children = childRoutes
       }
     }
     routes.push(route)
   }
   return routes
-}
-
-/**
- * 用于根据角色生成可访问路由
- */
-function hasPermission(permissions: string[], route: RouteRecordRaw): boolean {
-  if (route.meta?.permissions) {
-    return (route.meta.permissions as string[]).some((p) => permissions.includes(p))
-  }
-  return true
 }
 
 export const usePermissionStore = defineStore('permission', () => {

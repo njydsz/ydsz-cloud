@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
-import { useUserStore } from '@/store/modules/user'
 
 // 直接测试 v-permission 指令中的 check 逻辑
 // 通过 setupPermissionDirective 注入到 mock app

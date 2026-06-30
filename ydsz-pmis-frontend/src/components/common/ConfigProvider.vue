@@ -4,7 +4,7 @@ import { ElConfigProvider } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 
 const locale = ref(zhCn)
-const size = computed(() => 'default')
+const size = computed<'default' | 'small' | 'large'>(() => 'default')
 </script>
 
 <template>

@@ -12,11 +12,6 @@ import { useUserStore } from '@/store/modules/user'
 
 type PermissionValue = string | string[]
 
-interface PermissionBinding extends Omit<DirectiveBinding<PermissionValue>, 'value'> {
-  value?: PermissionValue
-  modifiers?: { all?: boolean; or?: boolean }
-}
-
 function check(perm: string | string[], all = false): boolean {
   const userStore = useUserStore()
   const permissions = userStore.permissions

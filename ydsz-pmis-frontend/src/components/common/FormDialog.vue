@@ -86,7 +86,7 @@ function onClosed() {
     @opened="onOpened"
     @closed="onClosed"
   >
-    <div v-loading="loading">
+    <div v-loading="loading ?? false">
       <slot />
     </div>
     <template v-if="showFooter !== false" #footer>

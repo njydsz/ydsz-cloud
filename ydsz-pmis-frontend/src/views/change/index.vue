@@ -6,7 +6,6 @@
  * 影响等级: LOW / MEDIUM / HIGH (ChangeImpactEvaluator 评估)
  */
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import { PC } from '@/constants/permissionCodes'
 
@@ -58,16 +57,6 @@ function handleReset() {
   query.initiationId = undefined
   query.page = 1
   fetchList()
-}
-
-async function handleStatus(row: any, target: string) {
-  const targetText = (statusMap as Record<string, { label: string }>)[target]?.label || target
-  try {
-    await ElMessageBox.confirm(`确认将状态变更为「${targetText}」吗？`, '提示', { type: 'warning' })
-    ElMessage.success('演示状态机，暂无后端接口')
-    fetchList()
-  } catch { /* 取消 */ }
-  void row
 }
 
 onMounted(fetchList)

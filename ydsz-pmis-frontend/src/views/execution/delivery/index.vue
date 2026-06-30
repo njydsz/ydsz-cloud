@@ -114,7 +114,6 @@ async function submitForm() {
 }
 
 async function handleStatus(row: DeliveryItemVO, target: string) {
-  const targetText = (statusMap as any)[target]?.label || target
   try {
     let reason: string | undefined
     if (target === 'REJECTED') {

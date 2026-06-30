@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   pageConfigs,
@@ -196,7 +196,7 @@ async function handleRefresh() {
 
 // 解析后的显示值
 function displayValue(row: ConfigVO): string {
-  if (row.configValue == null) return ''
+  if (row.configValue === null || row.configValue === undefined) return ''
   if (row.valueType === 'BOOLEAN') {
     return row.configValue === 'true' ? 'true' : 'false'
   }
@@ -416,9 +416,10 @@ onMounted(fetchList)
           />
           <el-input-number
             v-else-if="form.valueType === 'NUMBER'"
-            v-model="form.configValue"
+            :model-value="Number(form.configValue || 0)"
             :controls="true"
             style="width: 100%"
+            @update:model-value="(v) => (form.configValue = String(v))"
           />
           <el-input
             v-else-if="form.valueType === 'JSON'"

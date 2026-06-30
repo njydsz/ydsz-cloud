@@ -6,7 +6,7 @@
  * 等级: A(90-100) / B(75-89) / C(60-74) / D(0-59)
  */
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {

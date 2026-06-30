@@ -200,7 +200,7 @@ onMounted(fetchList)
         <vxe-column field="hours" title="工时(h)" width="90" align="right" />
         <vxe-column field="overtime" title="加班(h)" width="90" align="right" />
         <vxe-column field="workType" title="类型" width="80" align="center">
-          <template #default="{ row }">{{ workTypeMap[(row.workType as any)]?.label || row.workType || '-' }}</template>
+          <template #default="{ row }">{{ workTypeMap[row.workType as keyof typeof workTypeMap]?.label || row.workType || '-' }}</template>
         </vxe-column>
         <vxe-column field="status" title="状态" width="100">
           <template #default="{ row }"><StatusTag :value="row.status" :map="statusMap" /></template>

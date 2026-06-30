@@ -5,7 +5,6 @@ import {
   listDictTypes,
   listDictItems,
   createDictType,
-  updateDictType,
   deleteDictType,
   createDictItem,
   updateDictItem,
@@ -187,8 +186,12 @@ onMounted(fetchTypes)
         :class="{ active: currentType?.typeCode === t.typeCode }"
         @click="selectType(t)"
       >
-        <span>{{ t.typeName }}</span>
+        <span class="type-name">{{ t.typeName }}</span>
         <el-tag size="small" type="info">{{ t.typeCode }}</el-tag>
+        <span class="type-actions">
+          <el-button type="primary" link size="small" @click.stop="openTypeEdit(t)">编辑</el-button>
+          <el-button type="danger" link size="small" @click.stop="handleDeleteType(t)">删除</el-button>
+        </span>
       </div>
       <el-empty v-if="types.length === 0" description="暂无字典类型" :image-size="60" />
     </el-card>

@@ -52,7 +52,7 @@ service.interceptors.request.use(
 
 // 响应拦截器
 service.interceptors.response.use(
-  (response: AxiosResponse) => {
+  (response: AxiosResponse): any => {
     const res = response.data as ApiResponse
 
     // 二进制流直接返回

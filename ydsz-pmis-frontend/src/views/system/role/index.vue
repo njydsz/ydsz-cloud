@@ -127,7 +127,7 @@ function collectCheckedIds(nodes: MenuTreeNode[], acc: number[] = []): number[] 
 }
 
 async function submitPermAssign() {
-  if (permDialogRoleId.value == null) return
+  if (permDialogRoleId.value === null || permDialogRoleId.value === undefined) return
   // 收集所有勾选节点(包括半勾节点的子节点)
   const checked = permTreeRef.value?.getCheckedNodes?.() || []
   const halfChecked = permTreeRef.value?.getHalfCheckedNodes?.() || []

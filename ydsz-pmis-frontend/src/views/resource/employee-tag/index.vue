@@ -4,7 +4,6 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   addEmployeeTag,
   removeEmployeeTag,
-  replaceEmployeeTags,
   listEmployeeTags,
   findCandidates,
 } from '@/api/resource/employee-tag'

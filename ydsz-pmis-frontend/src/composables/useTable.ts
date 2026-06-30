@@ -28,15 +28,15 @@ export function useTable<Q extends UseTableQuery>(
   const total = ref(0)
 
   const query = reactive<Q>({
-    page: 1,
-    size: options.defaultSize ?? 10,
     ...(options.defaultQuery as Q),
-  } as Q)
+    page: (options.defaultQuery?.page ?? 1) as Q['page'],
+    size: (options.defaultQuery?.size ?? options.defaultSize ?? 10) as Q['size'],
+  } as unknown as Q)
 
   async function fetchData(): Promise<void> {
     loading.value = true
     try {
-      const res: any = await fetcher(query)
+      const res: any = await fetcher(query as unknown as Q)
       list.value = res?.data?.list ?? res?.list ?? []
       total.value = res?.data?.total ?? res?.total ?? 0
     } finally {

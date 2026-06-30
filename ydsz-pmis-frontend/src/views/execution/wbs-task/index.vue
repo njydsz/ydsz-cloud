@@ -11,7 +11,6 @@ import StatusTag from '@/components/common/StatusTag.vue'
 import {
   pageWbsTasks,
   createWbsTask,
-  updateWbsTask,
   changeWbsTaskStatus,
   deleteWbsTask,
 } from '@/api/execution/wbs-task'
@@ -50,12 +49,6 @@ const typeMap = {
   TASK: { label: '任务' },
   MILESTONE: { label: '里程碑' },
   SUMMARY: { label: '汇总' },
-}
-
-const riskMap = {
-  LOW: { label: '低', type: 'success' as const },
-  MEDIUM: { label: '中', type: 'warning' as const },
-  HIGH: { label: '高', type: 'danger' as const },
 }
 
 async function fetchList() {
@@ -207,7 +200,7 @@ onMounted(fetchList)
         <vxe-column field="taskName" title="任务名称" min-width="200" show-overflow />
         <vxe-column field="initiationName" title="项目" width="160" show-overflow />
         <vxe-column field="taskType" title="类型" width="80" align="center">
-          <template #default="{ row }">{{ typeMap[(row.taskType as any)]?.label || row.taskType || '-' }}</template>
+          <template #default="{ row }">{{ typeMap[row.taskType as keyof typeof typeMap]?.label || row.taskType || '-' }}</template>
         </vxe-column>
         <vxe-column field="priority" title="优先级" width="80" align="center">
           <template #default="{ row }"><StatusTag :value="row.priority" :map="priorityMap" /></template>

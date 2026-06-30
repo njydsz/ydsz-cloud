@@ -118,7 +118,7 @@ function handleResize() {
 }
 
 function fmtMoney(v: any) {
-  if (v == null) return '-'
+  if (v === null || v === undefined) return '-'
   return `¥${Number(v).toLocaleString()}`
 }
 </script>

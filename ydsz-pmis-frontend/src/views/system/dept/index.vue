@@ -123,7 +123,6 @@ onMounted(fetchTree)
         :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
         :default-expand-all="true"
         border
-        default-expand-all
         @row-click="onNodeClick"
       >
         <el-table-column prop="deptName" label="部门名称" min-width="220" />
@@ -141,13 +140,13 @@ onMounted(fetchTree)
         </el-table-column>
         <el-table-column label="操作" width="260" fixed="right">
           <template #default="{ row }">
-            <el-button v-permission="['org:dept:create']" type="primary" link @click.stop="openCreate(row)">
+            <el-button v-permission="['org:dept:create']" type="primary" link @click.stop="openCreate(row as DeptVO)">
               新增下级
             </el-button>
-            <el-button v-permission="['org:dept:update']" type="primary" link @click.stop="openEdit(row)">
+            <el-button v-permission="['org:dept:update']" type="primary" link @click.stop="openEdit(row as DeptVO)">
               编辑
             </el-button>
-            <el-button v-permission="['org:dept:delete']" type="danger" link @click.stop="handleDelete(row)">
+            <el-button v-permission="['org:dept:delete']" type="danger" link @click.stop="handleDelete(row as DeptVO)">
               删除
             </el-button>
           </template>

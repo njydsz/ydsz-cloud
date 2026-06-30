@@ -41,7 +41,7 @@ const resolved = computed<StatusMapItem>(() => {
   if (props.label !== undefined) {
     return { label: props.label, type: props.type || 'info' }
   }
-  const v = props.value == null ? '' : String(props.value)
+  const v = props.value === null || props.value === undefined ? '' : String(props.value)
   return (
     props.map?.[v] || {
       label: v || '-',

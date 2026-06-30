@@ -36,10 +36,6 @@ describe('request 拦截器逻辑', () => {
   // 这里改成: 验证 service 的 request/response 方法内部确实经过拦截器处理,
   // 通过 service.request 调用并通过 mock adapter 验证 header / response 处理
 
-  let requestInterceptor: any
-  let responseSuccessInterceptor: any
-  let responseErrorInterceptor: any
-
   beforeEach(async () => {
     vi.clearAllMocks()
     // Axios 0.x 不允许读已注册 handler, 改为通过 mock adapter 验证最终行为

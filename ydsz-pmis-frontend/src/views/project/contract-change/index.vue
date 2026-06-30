@@ -162,7 +162,7 @@ onMounted(fetchList)
         <vxe-column field="contractCode" title="合同" width="160" />
         <vxe-column field="changeType" title="类型" width="100">
           <template #default="{ row }">
-            {{ typeMap[(row.changeType as any)]?.label || row.changeType || '-' }}
+            {{ typeMap[row.changeType as keyof typeof typeMap]?.label || row.changeType || '-' }}
           </template>
         </vxe-column>
         <vxe-column field="impactLevel" title="影响" width="80" align="center">

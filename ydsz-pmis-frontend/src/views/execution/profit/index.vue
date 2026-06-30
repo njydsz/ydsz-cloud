@@ -172,7 +172,7 @@ onMounted(() => {
               <vxe-column field="initiationName" title="项目" width="160" show-overflow />
               <vxe-column field="contractCode" title="合同" width="140" />
               <vxe-column field="recognitionMethod" title="方法" width="100">
-                <template #default="{ row }">{{ methodMap[(row.recognitionMethod as any)]?.label || row.recognitionMethod || '-' }}</template>
+                <template #default="{ row }">{{ methodMap[row.recognitionMethod as keyof typeof methodMap]?.label || row.recognitionMethod || '-' }}</template>
               </vxe-column>
               <vxe-column field="period" title="期间" width="100" />
               <vxe-column field="amount" title="金额" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />

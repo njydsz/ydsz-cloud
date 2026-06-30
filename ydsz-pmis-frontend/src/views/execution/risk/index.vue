@@ -169,7 +169,7 @@ onMounted(fetchList)
         <vxe-column field="riskName" title="风险名称" min-width="200" show-overflow />
         <vxe-column field="initiationName" title="项目" width="160" show-overflow />
         <vxe-column field="category" title="分类" width="100">
-          <template #default="{ row }">{{ categoryMap[(row.category as any)]?.label || row.category || '-' }}</template>
+          <template #default="{ row }">{{ categoryMap[row.category as keyof typeof categoryMap]?.label || row.category || '-' }}</template>
         </vxe-column>
         <vxe-column field="probability" title="概率" width="80" align="center" />
         <vxe-column field="impact" title="影响" width="80" align="center" />

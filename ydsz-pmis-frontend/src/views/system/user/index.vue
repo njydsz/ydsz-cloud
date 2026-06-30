@@ -3,7 +3,6 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   listUsers,
-  getUser,
   createUser,
   updateUser,
   deleteUser,

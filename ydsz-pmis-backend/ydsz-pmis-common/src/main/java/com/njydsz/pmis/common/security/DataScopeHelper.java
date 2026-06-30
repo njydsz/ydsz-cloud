@@ -113,7 +113,13 @@ public final class DataScopeHelper {
                             .append(" IN (").append(joinIds(ids)).append(")");
                 }
             }
-            case PROJECT -> sb.append("1=1 /* TODO: 注入项目成员子查询 */");
+            case PROJECT -> {
+                // 项目级数据权限: 走"用户可访问的项目ID集合"子查询。
+                // 当前实现: 保守默认 1=0, 避免越权; 业务层在调用前需自行使用
+                // ProjectPermissionHelper.projIdsIn(userId) 拼接 IN 条件并传入。
+                log.debug("[DataScope] PROJECT scope 默认返回 1=0, 业务层需自行注入项目成员子查询");
+                sb.append("1=0 /* PROJECT scope: 由业务层显式注入 */");
+            }
             default -> log.debug("[DataScope] 未处理 scope={}", ctx.getScope());
         }
         return sb.toString();
