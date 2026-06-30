@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.execution.mapper.CostAllocationMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.execution.entity.CostAllocationDO">
+        <id column="id" property="id"/>
+        <result column="initiation_id" property="initiationId"/>
+        <result column="period" property="period"/>
+        <result column="cost_type" property="costType"/>
+        <result column="source_id" property="sourceId"/>
+        <result column="source_type" property="sourceType"/>
+        <result column="description" property="description"/>
+        <result column="amount" property="amount"/>
+        <result column="billable" property="billable"/>
+        <result column="allocated" property="allocated"/>
+        <result column="employee_id" property="employeeId"/>
+        <result column="employee_name" property="employeeName"/>
+        <result column="level_code" property="levelCode"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByInitiationAndPeriod" resultMap="BaseResultMap">
+        SELECT * FROM pmis_cost_allocation
+        WHERE initiation_id = #{initiationId}
+          AND period = #{period} AND deleted = 0
+        ORDER BY cost_type, created_at
+    </select>
+
+    <select id="sumByType" resultType="java.util.Map">
+        SELECT cost_type, COALESCE(SUM(amount), 0) AS amount, COUNT(1) AS cnt
+        FROM pmis_cost_allocation
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+          AND period = #{period}
+        GROUP BY cost_type
+    </select>
+
+    <select id="monthlySummary" resultType="java.util.Map">
+        SELECT period,
+               COALESCE(SUM(amount), 0) AS total_amount,
+               COUNT(1) AS entry_count
+        FROM pmis_cost_allocation
+        WHERE initiation_id = #{initiationId} AND deleted = 0
+        GROUP BY period
+        ORDER BY period DESC
+    </select>
+
+    <select id="sumBySourceType" resultType="java.util.Map">
+        SELECT source_type, COALESCE(SUM(amount), 0) AS amount, COUNT(1) AS cnt
+        FROM pmis_cost_allocation
+        WHERE initiation_id = #{initiationId}
+          AND period = #{period} AND deleted = 0
+        GROUP BY source_type
+    </select>
+</mapper>

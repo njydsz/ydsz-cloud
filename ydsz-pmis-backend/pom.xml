@@ -31,6 +31,7 @@
         <module>ydsz-pmis-message</module>
         <module>ydsz-pmis-audit</module>
         <module>ydsz-pmis-project</module>
+        <module>ydsz-pmis-execution</module>
     </modules>
 
     <properties>
