@@ -68,6 +68,52 @@ export const constantRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/resource',
+    component: () => import('@/layout/default/index.vue'),
+    redirect: '/resource/job-level',
+    meta: { title: '资源管理', icon: 'UserFilled' },
+    children: [
+      {
+        path: 'job-level',
+        name: 'ResourceJobLevel',
+        component: () => import('@/views/resource/job-level/index.vue'),
+        meta: { title: '职级费率', icon: 'DataLine', keepAlive: true },
+      },
+      {
+        path: 'pool',
+        name: 'ResourcePool',
+        component: () => import('@/views/resource/pool/index.vue'),
+        meta: { title: '资源池', icon: 'Files', keepAlive: true },
+      },
+      {
+        path: 'employee-tag',
+        name: 'ResourceEmployeeTag',
+        component: () => import('@/views/resource/employee-tag/index.vue'),
+        meta: { title: '人员标签', icon: 'CollectionTag', keepAlive: true },
+      },
+      {
+        path: 'assignment',
+        name: 'ResourceAssignment',
+        component: () => import('@/views/resource/assignment/index.vue'),
+        meta: { title: '资源分配', icon: 'Connection', keepAlive: true },
+      },
+    ],
+  },
+  {
+    path: '/attendance',
+    component: () => import('@/layout/default/index.vue'),
+    redirect: '/attendance/index',
+    meta: { title: '考勤管理', icon: 'Clock' },
+    children: [
+      {
+        path: 'index',
+        name: 'Attendance',
+        component: () => import('@/views/attendance/index.vue'),
+        meta: { title: '考勤中心', icon: 'Calendar', keepAlive: true },
+      },
+    ],
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/404',
     meta: { hidden: true },

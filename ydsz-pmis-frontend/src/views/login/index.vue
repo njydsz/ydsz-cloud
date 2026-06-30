@@ -1,21 +1,27 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { reactive, ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
+import { getCaptchaApi } from '@/api/user'
 
 const router = useRouter()
-const route = route
+const route = useRoute()
 const userStore = useUserStore()
 
 const formRef = ref<FormInstance>()
 const loading = ref(false)
+const captchaLoading = ref(false)
 
 const form = reactive({
   username: 'admin',
   password: 'admin123',
+  captchaKey: '',
+  captchaCode: '',
   rememberMe: true,
 })
+
+const captchaImage = ref<string>('')
 
 const rules: FormRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
@@ -23,6 +29,20 @@ const rules: FormRules = {
     { required: true, message: '请输入密码', trigger: 'blur' },
     { min: 6, message: '密码长度不能少于 6 位', trigger: 'blur' },
   ],
+  captchaCode: [{ required: true, message: '请输入图形验证码', trigger: 'blur' }],
+}
+
+async function refreshCaptcha() {
+  captchaLoading.value = true
+  try {
+    const { data } = await getCaptchaApi()
+    form.captchaKey = data.captchaKey
+    captchaImage.value = data.captchaImage
+  } catch (e: any) {
+    ElMessage.error(e?.message || '验证码加载失败')
+  } finally {
+    captchaLoading.value = false
+  }
 }
 
 async function handleLogin() {
@@ -33,6 +53,8 @@ async function handleLogin() {
     await userStore.login({
       username: form.username,
       password: form.password,
+      captchaKey: form.captchaKey,
+      captchaCode: form.captchaCode,
       rememberMe: form.rememberMe,
     })
     ElMessage.success('登录成功')
@@ -40,10 +62,17 @@ async function handleLogin() {
     await router.push(redirect)
   } catch (e) {
     // 错误已在 request 中处理
+    if (!(e instanceof Error && e.message?.includes('captcha'))) {
+      refreshCaptcha()
+    }
   } finally {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  refreshCaptcha()
+})
 </script>
 
 <template>
@@ -73,6 +102,15 @@ async function handleLogin() {
               show-password
             />
           </el-form-item>
+          <el-form-item prop="captchaCode">
+            <div class="captcha-row">
+              <el-input v-model="form.captchaCode" placeholder="请输入图形验证码" :prefix-icon="'Picture'" />
+              <div class="captcha-img" :class="{ loading: captchaLoading }" @click="refreshCaptcha">
+                <img v-if="captchaImage" :src="captchaImage" alt="captcha" />
+                <span v-else class="captcha-placeholder">{{ captchaLoading ? '加载中…' : '点击加载' }}</span>
+              </div>
+            </div>
+          </el-form-item>
           <el-form-item>
             <el-checkbox v-model="form.rememberMe">记住我</el-checkbox>
           </el-form-item>
@@ -99,7 +137,7 @@ async function handleLogin() {
 .login-container {
   display: flex;
   width: 880px;
-  height: 540px;
+  height: 600px;
   background: $bg-white;
   border-radius: $border-radius-lg;
   box-shadow: $shadow-light;
@@ -150,6 +188,38 @@ async function handleLogin() {
     font-weight: 600;
     margin-bottom: $spacing-xl;
     color: $text-primary;
+  }
+
+  .captcha-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 12px;
+  }
+
+  .captcha-img {
+    width: 130px;
+    height: 40px;
+    border: 1px solid $border-color-base;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    background: $bg-light;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .captcha-placeholder {
+      font-size: 12px;
+      color: $text-secondary;
+    }
   }
 
   .login-btn {

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import type { RouteRecordRaw } from 'vue-router'
+import router from '@/router'
 import { constantRoutes, asyncRoutes } from '@/router/routes'
 import { getMenuTreeApi } from '@/api/menu'
 import type { MenuTreeNode } from '@/api/menu/types'
@@ -103,6 +104,20 @@ export const usePermissionStore = defineStore('permission', () => {
     addRoutes.value = dynamicRoutes.concat(asyncRoutes)
     routes.value = constantRoutes.concat(addRoutes.value)
 
+    // 关键: 把动态路由真正注册到 vue-router
+    dynamicRoutes.forEach((route) => {
+      // 父级(Menu 容器)不重复注册,只注册叶子节点
+      if (route.children && route.children.length > 0) {
+        route.children.forEach((child) => {
+          if (!router.hasRoute(child.name as string)) {
+            router.addRoute(route.path || '/', child)
+          }
+        })
+      } else if (!router.hasRoute(route.name as string)) {
+        router.addRoute(route)
+      }
+    })
+
     isDynamicRouteLoaded.value = true
   }
 
@@ -110,6 +125,16 @@ export const usePermissionStore = defineStore('permission', () => {
    * 重置
    */
   function reset(): void {
+    // 关键: 清空已注册的动态路由,避免切换账号后菜单错乱
+    addRoutes.value.forEach((route) => {
+      if (route.children && route.children.length > 0) {
+        route.children.forEach((child) => {
+          if (child.name) router.removeRoute(child.name as string)
+        })
+      } else if (route.name) {
+        router.removeRoute(route.name as string)
+      }
+    })
     routes.value = []
     addRoutes.value = []
     isDynamicRouteLoaded.value = false

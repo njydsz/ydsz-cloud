@@ -3,6 +3,12 @@ import type { LoginParams, LoginResult, UserInfo } from './types'
 export * from './types'
 
 /**
+ * 获取图形验证码
+ */
+export const getCaptchaApi = () =>
+  request<{ captchaKey: string; captchaImage: string }>({ url: '/auth/captcha', method: 'GET' })
+
+/**
  * 登录
  */
 export const loginApi = (data: LoginParams) =>
