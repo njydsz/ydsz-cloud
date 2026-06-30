@@ -62,7 +62,7 @@ public class AuthServiceImpl implements AuthService {
      * 是否强制启用图形验证码 (测试场景可关闭)
      */
     @Value("${pmis.auth.captcha-required:true}")
-    private boolean captchaRequired;
+    private boolean captchaRequired = true;
 
     public void setCaptchaRequired(boolean captchaRequired) {
         this.captchaRequired = captchaRequired;

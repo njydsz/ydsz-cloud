@@ -8,6 +8,7 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
+import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.user.dto.LoginContextDTO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -21,6 +22,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -32,6 +34,9 @@ import static org.mockito.Mockito.when;
 @DisplayName("AuthServiceImpl 认证服务测试")
 class AuthServiceImplTest {
 
+    private static final String TEST_PASSWORD = "123456";
+    private static final String TEST_SALT = "abcd1234";
+
     private StringRedisTemplate redisTemplate;
     private ValueOperations<String, String> valueOps;
     private JwtTokenProvider jwtTokenProvider;
@@ -39,11 +44,12 @@ class AuthServiceImplTest {
     private AuthServiceImpl service;
 
     private LoginContextDTO mockContext(String username) {
+        String hashed = CryptoUtil.md5(TEST_PASSWORD + TEST_SALT);
         return LoginContextDTO.builder()
                 .userId(1L)
                 .username(username)
-                .password("e10adc3949ba59abbe56e057f20f883e") // MD5("123456")
-                .salt("")
+                .password(hashed)
+                .salt(TEST_SALT)
                 .status("ENABLED")
                 .realName("管理员")
                 .departmentId(1L)
@@ -66,7 +72,7 @@ class AuthServiceImplTest {
         when(redisTemplate.opsForValue()).thenReturn(valueOps);
 
         jwtTokenProvider = mock(JwtTokenProvider.class);
-        when(jwtTokenProvider.generateToken(eq(1L), eq("admin"), any(Long.class)))
+        when(jwtTokenProvider.generateToken(eq(1L), eq("admin"), any(), any(), anyLong()))
                 .thenReturn("access-token-xxx");
         when(jwtTokenProvider.generateRefreshToken(eq(1L), any(Long.class)))
                 .thenReturn("refresh-token-xxx");
@@ -76,6 +82,8 @@ class AuthServiceImplTest {
 
         userAuthClient = mock(UserAuthClient.class);
         when(userAuthClient.getLoginContextByUsername("admin"))
+                .thenReturn(R.ok(mockContext("admin")));
+        when(userAuthClient.getLoginContextById(1L))
                 .thenReturn(R.ok(mockContext("admin")));
 
         service = new AuthServiceImpl(redisTemplate, jwtTokenProvider, userAuthClient);
@@ -93,11 +101,10 @@ class AuthServiceImplTest {
     @Test
     @DisplayName("login 正确凭证应返回 token")
     void login_success() {
-        // 使用 service 暴露的测试钩子跳过图形验证码
         service.setCaptchaRequired(false);
         LoginDTO dto = new LoginDTO();
         dto.setUsername("admin");
-        dto.setPassword("123456");
+        dto.setPassword(TEST_PASSWORD);
 
         LoginResultVO result = service.login(dto);
         assertThat(result.getToken()).isEqualTo("access-token-xxx");
@@ -125,7 +132,7 @@ class AuthServiceImplTest {
 
         LoginDTO dto = new LoginDTO();
         dto.setUsername("admin");
-        dto.setPassword("123456");
+        dto.setPassword(TEST_PASSWORD);
         dto.setCaptchaKey("ck-1");
         dto.setCaptchaCode("0000");
 
@@ -141,7 +148,7 @@ class AuthServiceImplTest {
 
         LoginDTO dto = new LoginDTO();
         dto.setUsername("admin");
-        dto.setPassword("123456");
+        dto.setPassword(TEST_PASSWORD);
         dto.setCaptchaKey("ck-1");
         dto.setCaptchaCode("1234");
 
@@ -178,6 +185,6 @@ class AuthServiceImplTest {
     void captchaExpire() {
         service.generateCaptcha();
         org.mockito.Mockito.verify(valueOps)
-                .set(anyString(), anyString(), org.mockito.ArgumentMatchers.anyLong(), eq(TimeUnit.MINUTES));
+                .set(anyString(), anyString(), anyLong(), eq(TimeUnit.MINUTES));
     }
 }

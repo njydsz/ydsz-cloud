@@ -29,6 +29,8 @@ class JwtTokenProviderTest {
         for (int i = 0; i < keyBytes.length; i++) keyBytes[i] = (byte) (i + 1);
         ReflectionTestUtils.setField(provider, "secret", "base64:" + Base64.getEncoder().encodeToString(keyBytes));
         ReflectionTestUtils.setField(provider, "issuer", "pmis-test");
+        ReflectionTestUtils.setField(provider, "accessExpireSeconds", 7200L);
+        ReflectionTestUtils.setField(provider, "refreshExpireSeconds", 604800L);
         ReflectionTestUtils.invokeMethod(provider, "init");
     }
 

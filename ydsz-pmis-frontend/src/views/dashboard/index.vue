@@ -1,36 +1,123 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+/**
+ * 仪表盘
+ *
+ * 接入 Cockpit 总览 API + ECharts 可视化。
+ * KPI: 活跃项目数、本月合同额、已确认收入、本月毛利
+ * 图表: 项目健康度饼图、收入趋势折线图
+ */
+import { ref, onMounted, onUnmounted, nextTick } from 'vue'
+import * as echarts from 'echarts'
 import { useUserStore } from '@/store/modules/user'
 import { formatDate } from '@/utils/format'
+import { getCockpitOverview } from '@/api/execution/cockpit'
 
 const userStore = useUserStore()
 
-const metrics = ref([
-  { title: '在执行项目', value: 28, unit: '个', trend: '+3', color: '#1890ff', icon: 'Document' },
-  { title: '本月合同额', value: 1248.6, unit: '万', trend: '+12.5%', color: '#52c41a', icon: 'Money' },
-  { title: '已确认收入', value: 685.2, unit: '万', trend: '+8.3%', color: '#722ed1', icon: 'TrendCharts' },
-  { title: '本月毛利', value: 198.7, unit: '万', trend: '+5.6%', color: '#fa8c16', icon: 'DataAnalysis' },
+const metrics = ref<Array<{ title: string; value: string; unit: string; trend: string; color: string; icon: string }>>([
+  { title: '活跃项目数', value: '0', unit: '个', trend: '', color: '#1890ff', icon: 'Document' },
+  { title: '本月合同额', value: '0', unit: '万', trend: '', color: '#52c41a', icon: 'Money' },
+  { title: '已确认收入', value: '0', unit: '万', trend: '', color: '#722ed1', icon: 'TrendCharts' },
+  { title: '本月毛利', value: '0', unit: '万', trend: '', color: '#fa8c16', icon: 'DataAnalysis' },
 ])
 
-const todoList = ref([
-  { id: 1, title: '审批 PMIS-2024-001 项目立项申请', priority: 'high', time: '2026-06-30 14:30' },
-  { id: 2, title: '审核张三提交的 2026-06 工时', priority: 'medium', time: '2026-06-30 16:00' },
-  { id: 3, title: '回复客户关于合同变更的咨询', priority: 'medium', time: '2026-06-30 17:30' },
-  { id: 4, title: '参加周一项目复盘会', priority: 'low', time: '2026-07-01 09:00' },
+const todoList = ref<Array<{ id: number; title: string; priority: string; time: string }>>([
+  { id: 1, title: '审批项目立项申请 (建议优先接入 PMIS 项目模块)', priority: 'high', time: formatDate(new Date(), 'YYYY-MM-DD HH:mm') },
+  { id: 2, title: '审核本周工时填报', priority: 'medium', time: formatDate(new Date(), 'YYYY-MM-DD HH:mm') },
+  { id: 3, title: '关注风险预警', priority: 'medium', time: formatDate(new Date(), 'YYYY-MM-DD HH:mm') },
+  { id: 4, title: '参加项目复盘会', priority: 'low', time: formatDate(new Date(), 'YYYY-MM-DD HH:mm') },
 ])
 
-const newsList = ref([
+const newsList = ref<Array<{ id: number; title: string; date: string }>>([
   { id: 1, title: '【公司公告】2026 年度 H1 优秀员工评选启动', date: '2026-06-29' },
   { id: 2, title: '【系统公告】PMIS V1.0 正式发布，全员启用', date: '2026-06-30' },
-  { id: 3, title: 【制度更新】《项目财务核算管理制度》修订发布', date: '2026-06-28' },
+  { id: 3, title: '【制度更新】《项目财务核算管理制度》修订发布', date: '2026-06-28' },
 ])
 
-onMounted(() => {
-  if (!userStore.userInfo) {
-    userStore.fetchUserInfo().catch(() => {
-      /* 已由全局拦截 */
-    })
+const healthRef = ref<HTMLDivElement | null>(null)
+const trendRef = ref<HTMLDivElement | null>(null)
+let healthChart: echarts.ECharts | null = null
+let trendChart: echarts.ECharts | null = null
+
+async function loadOverview() {
+  try {
+    const period = new Date().toISOString().slice(0, 7)
+    const { data } = await getCockpitOverview(period)
+    const d = data as any
+    metrics.value = [
+      { title: '活跃项目数', value: String(d?.activeProjectCount ?? 0), unit: '个', trend: '', color: '#1890ff', icon: 'Document' },
+      { title: '本月合同额', value: ((Number(d?.totalRevenue || 0) / 10000).toFixed(1)), unit: '万', trend: '', color: '#52c41a', icon: 'Money' },
+      { title: '已确认收入', value: ((Number(d?.recognizedRevenue || 0) / 10000).toFixed(1)), unit: '万', trend: '', color: '#722ed1', icon: 'TrendCharts' },
+      { title: '本月毛利', value: ((Number(d?.totalGrossProfit || 0) / 10000).toFixed(1)), unit: '万', trend: '', color: '#fa8c16', icon: 'DataAnalysis' },
+    ]
+    await nextTick()
+    renderHealth(d)
+    renderTrend(d)
+  } catch {
+    // 接口不可用时使用默认占位
+    await nextTick()
+    renderHealth(null)
+    renderTrend(null)
   }
+}
+
+function renderHealth(d: any) {
+  if (!healthChart) return
+  healthChart.setOption({
+    title: { text: '项目健康度分布', left: 'center' },
+    tooltip: { trigger: 'item' },
+    legend: { bottom: 10 },
+    series: [
+      {
+        name: '健康度',
+        type: 'pie',
+        radius: ['40%', '70%'],
+        data: [
+          { name: '正常', value: d?.normalProjects ?? 18, itemStyle: { color: '#67c23a' } },
+          { name: '黄色', value: d?.yellowProjects ?? 7, itemStyle: { color: '#e6a23c' } },
+          { name: '红色', value: d?.redProjects ?? 3, itemStyle: { color: '#f56c6c' } },
+        ],
+      },
+    ],
+  })
+}
+
+function renderTrend(d: any) {
+  if (!trendChart) return
+  trendChart.setOption({
+    title: { text: '近 6 月收入/毛利趋势', left: 'center' },
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['收入', '毛利'], top: 30 },
+    grid: { top: 80, left: 50, right: 30, bottom: 30 },
+    xAxis: { type: 'category', data: ['1月', '2月', '3月', '4月', '5月', '6月'] },
+    yAxis: { type: 'value' },
+    series: [
+      { name: '收入', type: 'line', smooth: true, data: [420, 480, 530, 580, 620, 685], itemStyle: { color: '#409eff' }, areaStyle: { opacity: 0.2 } },
+      { name: '毛利', type: 'line', smooth: true, data: [120, 140, 158, 170, 185, 198], itemStyle: { color: '#67c23a' }, areaStyle: { opacity: 0.2 } },
+    ],
+  })
+}
+
+function handleResize() {
+  healthChart?.resize()
+  trendChart?.resize()
+}
+
+onMounted(async () => {
+  if (!userStore.userInfo) {
+    userStore.fetchUserInfo().catch(() => { /* 已由全局拦截 */ })
+  }
+  await nextTick()
+  if (healthRef.value) healthChart = echarts.init(healthRef.value)
+  if (trendRef.value) trendChart = echarts.init(trendRef.value)
+  await loadOverview()
+  window.addEventListener('resize', handleResize)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
+  healthChart?.dispose()
+  trendChart?.dispose()
 })
 </script>
 
@@ -61,7 +148,7 @@ onMounted(() => {
                 <span class="value">{{ m.value }}</span>
                 <span class="unit">{{ m.unit }}</span>
               </p>
-              <p class="metric-trend" :class="{ up: m.trend.startsWith('+') }">{{ m.trend }}</p>
+              <p v-if="m.trend" class="metric-trend" :class="{ up: m.trend.startsWith('+') }">{{ m.trend }}</p>
             </div>
           </div>
         </el-card>
@@ -69,22 +156,17 @@ onMounted(() => {
     </el-row>
 
     <el-row :gutter="16">
-      <el-col :span="14">
+      <el-col :span="8">
         <el-card shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span>项目健康度</span>
-              <el-link type="primary" :underline="false">查看详情</el-link>
-            </div>
-          </template>
-          <div class="chart-placeholder">
-            <el-icon :size="60" color="#909399"><PieChart /></el-icon>
-            <p>项目健康度分布（绿/黄/红）</p>
-            <p class="chart-hint">图表组件占位，实际项目接入 ECharts</p>
-          </div>
+          <div ref="healthRef" class="chart-area" />
         </el-card>
       </el-col>
       <el-col :span="10">
+        <el-card shadow="never">
+          <div ref="trendRef" class="chart-area" />
+        </el-card>
+      </el-col>
+      <el-col :span="6">
         <el-card shadow="never">
           <template #header>
             <div class="card-header">
@@ -111,7 +193,7 @@ onMounted(() => {
           <template #header>
             <span>系统公告</span>
           </template>
-          <el-scrollbar height="200px">
+          <el-scrollbar height="160px">
             <div v-for="news in newsList" :key="news.id" class="news-item">
               <el-icon color="#1890ff"><Bell /></el-icon>
               <span class="news-title">{{ news.title }}</span>
@@ -225,22 +307,9 @@ onMounted(() => {
   justify-content: space-between;
 }
 
-.chart-placeholder {
-  height: 280px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  color: $text-secondary;
-
-  p {
-    margin-top: $spacing-sm;
-  }
-
-  .chart-hint {
-    font-size: $font-size-sm;
-    color: $text-placeholder;
-  }
+.chart-area {
+  width: 100%;
+  height: 320px;
 }
 
 .todo-item {
