@@ -29,7 +29,10 @@ function convertRoutes(routes: RouteRecordRaw[]): MenuItem[] {
 
 const menus = computed(() => convertRoutes(permissionStore.sidebarRoutes as RouteRecordRaw[]))
 
-const activeMenu = computed(() => route.meta?.activeMenu || route.path)
+const activeMenu = computed<string>(() => {
+  const meta = route.meta as { activeMenu?: string } | undefined
+  return meta?.activeMenu || route.path
+})
 </script>
 
 <template>

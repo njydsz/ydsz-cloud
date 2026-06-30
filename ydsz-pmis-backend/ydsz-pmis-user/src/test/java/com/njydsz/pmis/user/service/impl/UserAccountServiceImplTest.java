@@ -5,11 +5,14 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.user.entity.UserAccountDO;
 import com.njydsz.pmis.user.entity.UserRoleDO;
+import com.njydsz.pmis.user.mapper.User2FAMapper;
 import com.njydsz.pmis.user.mapper.UserAccountMapper;
 import com.njydsz.pmis.user.mapper.UserRoleMapper;
+import com.njydsz.pmis.user.service.SessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
 
@@ -30,13 +33,19 @@ class UserAccountServiceImplTest {
 
     private UserAccountMapper userMapper;
     private UserRoleMapper userRoleMapper;
+    private User2FAMapper user2FAMapper;
+    private SessionService sessionService;
+    private ApplicationEventPublisher publisher;
     private UserAccountServiceImpl service;
 
     @BeforeEach
     void setUp() {
         userMapper = mock(UserAccountMapper.class);
         userRoleMapper = mock(UserRoleMapper.class);
-        service = new UserAccountServiceImpl(userMapper, userRoleMapper);
+        user2FAMapper = mock(User2FAMapper.class);
+        sessionService = mock(SessionService.class);
+        publisher = mock(ApplicationEventPublisher.class);
+        service = new UserAccountServiceImpl(userMapper, userRoleMapper, user2FAMapper, sessionService, publisher);
     }
 
     @Test
@@ -61,11 +70,24 @@ class UserAccountServiceImplTest {
         });
 
         UserAccountDO u = new UserAccountDO();
-        u.setUsername("new");
-        Long id = service.create(u, "secret123");
+        u.setUsername("newuser");
+        Long id = service.create(u, "Secret123!@#");
         assertThat(id).isEqualTo(100L);
-        assertThat(u.getPassword()).isNotEqualTo("secret123");
-        assertThat(CryptoUtil.verifyPassword("secret123", u.getPassword(), u.getSalt())).isTrue();
+        assertThat(u.getPassword()).isNotEqualTo("Secret123!@#");
+        assertThat(CryptoUtil.verifyPassword("Secret123!@#", u.getPassword(), u.getSalt())).isTrue();
+        assertThat(u.getDataScope()).isEqualTo("SELF");
+        assertThat(u.getLastPwdChangeAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("create 弱密码拒绝")
+    void create_weakPassword() {
+        when(userMapper.selectOne(any())).thenReturn(null);
+        UserAccountDO u = new UserAccountDO();
+        u.setUsername("newuser");
+        assertThatThrownBy(() -> service.create(u, "123"))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.PASSWORD_WEAK.getCode());
     }
 
     @Test
@@ -110,13 +132,13 @@ class UserAccountServiceImplTest {
     @DisplayName("resetPassword 应重置 loginFailCount")
     void resetPassword() {
         when(userMapper.selectById(5L)).thenReturn(account(5L, "u5"));
-        service.resetPassword(5L, "newPwd");
+        service.resetPassword(5L, "newPwd@2026");
         org.mockito.ArgumentCaptor<UserAccountDO> cap = org.mockito.ArgumentCaptor.forClass(UserAccountDO.class);
         verify(userMapper).updateById(cap.capture());
         UserAccountDO saved = cap.getValue();
         assertThat(saved.getLoginFailCount()).isZero();
         assertThat(saved.getLockedUntil()).isNull();
-        assertThat(CryptoUtil.verifyPassword("newPwd", saved.getPassword(), saved.getSalt())).isTrue();
+        assertThat(CryptoUtil.verifyPassword("newPwd@2026", saved.getPassword(), saved.getSalt())).isTrue();
     }
 
     @Test

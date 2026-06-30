@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.user.mapper.User2FAMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.user.entity.User2FADO">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="mfa_type" property="mfaType"/>
+        <result column="secret" property="secret"/>
+        <result column="binding_at" property="bindingAt"/>
+        <result column="last_used_at" property="lastUsedAt"/>
+        <result column="backup_codes" property="backupCodes"/>
+        <result column="enabled" property="enabled"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByUserId" resultMap="BaseResultMap">
+        SELECT * FROM pmis_user_2fa
+        WHERE user_id = #{userId} AND deleted = 0
+        ORDER BY id DESC
+        LIMIT 1
+    </select>
+
+    <update id="disableByUserId">
+        UPDATE pmis_user_2fa
+        SET enabled = FALSE, updated_at = NOW()
+        WHERE user_id = #{userId} AND deleted = 0
+    </update>
+
+</mapper>

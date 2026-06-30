@@ -196,7 +196,7 @@ onMounted(fetchList)
         <vxe-column field="amount" title="金额" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
         <vxe-column field="unallocatedAmount" title="未核销" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
         <vxe-column field="paymentMethod" title="方式" width="100">
-          <template #default="{ row }">{{ methodMap[(row.paymentMethod as any)]?.label || row.paymentMethod || '-' }}</template>
+          <template #default="{ row }">{{ methodMap[row.paymentMethod as keyof typeof methodMap]?.label || row.paymentMethod || '-' }}</template>
         </vxe-column>
         <vxe-column field="paymentDate" title="到账日期" width="110" />
         <vxe-column field="bankRef" title="银行流水" width="160" />

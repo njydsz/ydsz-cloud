@@ -6,8 +6,6 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import PageLayout from '@/components/common/PageLayout.vue'
-import StatusTag from '@/components/common/StatusTag.vue'
-import { PC } from '@/constants/permissionCodes'
 
 const loading = ref(false)
 const list = ref<any[]>([])
@@ -22,12 +20,6 @@ const query = reactive({
   startDate: '',
   endDate: '',
 })
-
-const levelMap = {
-  INFO: { label: '信息', type: 'info' as const },
-  WARN: { label: '警告', type: 'warning' as const },
-  ERROR: { label: '错误', type: 'danger' as const },
-}
 
 async function fetchList() {
   loading.value = true

@@ -52,16 +52,16 @@ service.interceptors.request.use(
 
 // 响应拦截器
 service.interceptors.response.use(
-  (response: AxiosResponse<ApiResponse>) => {
-    const res = response.data
+  (response: AxiosResponse) => {
+    const res = response.data as ApiResponse
 
     // 二进制流直接返回
     if (response.config.responseType === 'blob') {
-      return response as unknown as ApiResponse
+      return response
     }
 
     if (res.code === 0 || res.code === 200) {
-      return res as unknown as ApiResponse
+      return res
     }
 
     // 401: Token 失效

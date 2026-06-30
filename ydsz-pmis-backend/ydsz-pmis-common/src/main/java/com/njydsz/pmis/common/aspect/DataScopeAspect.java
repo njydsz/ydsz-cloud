@@ -1,0 +1,85 @@
+package com.njydsz.pmis.common.aspect;
+
+import com.njydsz.pmis.common.annotation.DataScope;
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeContext;
+import com.njydsz.pmis.common.security.DataScopeHelper;
+import com.njydsz.pmis.common.security.SecurityContext;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.stereotype.Component;
+
+import java.lang.reflect.Method;
+
+/**
+ * 数据权限 AOP
+ *
+ * <p>拦截 {@code @DataScope} 注解方法，将当前用户的数据权限上下文放入 ThreadLocal，
+ * 业务 Service 在拼装 SQL 时通过 {@link DataScopeHelper} 取出。
+ *
+ * <p>该 AOP 不会自动改写 SQL（避免复杂的 SQL 解析），而是通过 ThreadLocal 传递上下文。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Aspect
+@Component
+public class DataScopeAspect {
+
+    private static final ThreadLocal<DataScopeContext> CTX = new ThreadLocal<>();
+
+    @Around("@annotation(dataScope)")
+    public Object around(ProceedingJoinPoint pjp, DataScope dataScope) throws Throwable {
+        try {
+            DataScopeContext ctx = DataScopeHelper.current();
+            CTX.set(ctx);
+            log.debug("[DataScope] 进入数据权限 scope={} userId={} deptId={}",
+                    ctx.getScope(), ctx.getUserId(), ctx.getDeptId());
+            return pjp.proceed();
+        } finally {
+            CTX.remove();
+        }
+    }
+
+    /**
+     * 获取当前线程数据权限上下文（供业务层使用）
+     */
+    public static DataScopeContext peek() {
+        DataScopeContext ctx = CTX.get();
+        if (ctx == null) {
+            // 兜底：从 SecurityContext 重新构造
+            return DataScopeContext.from(SecurityContext.getCurrentOrNull());
+        }
+        return ctx;
+    }
+
+    /**
+     * 越权检查：抛出异常
+     */
+    public static void assertAllow(Long targetDeptId) {
+        DataScopeContext ctx = peek();
+        if (ctx.isAll()) {
+            return;
+        }
+        if (targetDeptId == null) {
+            return;
+        }
+        if (ctx.getDeptId() != null && ctx.getDeptId().equals(targetDeptId)) {
+            return;
+        }
+        if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
+            return;
+        }
+        MethodSignature sig = null;
+        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "无权访问部门: " + targetDeptId);
+    }
+
+    private static void unused(Method m) {
+        // 占位，避免 IDE 警告
+    }
+}

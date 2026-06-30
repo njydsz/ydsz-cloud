@@ -14,7 +14,6 @@ const route = useRoute()
 const router = useRouter()
 const tags = ref<TagItem[]>([])
 
-const affixTags = computed(() => tags.value.filter((t) => t.affix))
 const visitedViews = computed(() => tags.value)
 
 function addTag(): void {

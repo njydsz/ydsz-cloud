@@ -10,8 +10,10 @@ import { useUserStore } from '@/store/modules/user'
  *   <el-button v-permission.all="['system:user:*']">管理员</el-button>
  */
 
-interface PermissionBinding extends DirectiveBinding {
-  value?: string | string[]
+type PermissionValue = string | string[]
+
+interface PermissionBinding extends Omit<DirectiveBinding<PermissionValue>, 'value'> {
+  value?: PermissionValue
   modifiers?: { all?: boolean; or?: boolean }
 }
 
@@ -33,11 +35,11 @@ function check(perm: string | string[], all = false): boolean {
   return false
 }
 
-const permissionDirective: Directive<HTMLElement, string | string[]> = {
-  mounted(el: HTMLElement, binding: PermissionBinding) {
+const permissionDirective: Directive<HTMLElement, PermissionValue> = {
+  mounted(el: HTMLElement, binding: DirectiveBinding<PermissionValue>) {
     const { value, modifiers } = binding
     if (!value) return
-    if (!check(value, modifiers?.all)) {
+    if (!check(value, modifiers?.all as boolean | undefined)) {
       el.parentNode?.removeChild(el)
     }
   },

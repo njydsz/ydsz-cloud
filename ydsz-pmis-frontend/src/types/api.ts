@@ -9,6 +9,21 @@ export interface PageQuery {
   keyword?: string
 }
 
+export interface PageResult<T = unknown> {
+  records: T[]
+  total: number
+  page: number
+  size: number
+  pages?: number
+}
+
+export interface ApiResponse<T = unknown> {
+  code: number
+  message: string
+  data: T
+  traceId?: string
+}
+
 export interface BaseVO {
   id: number
   createdBy?: number

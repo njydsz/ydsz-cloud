@@ -9,8 +9,6 @@ import * as echarts from 'echarts'
 import {
   getCockpitOverview,
   getEvmHealthDistribution,
-  getBenchCostSummary,
-  getUtilizationSummary,
   drillByDept,
   drillByProjectType,
   drillByCustomer,
@@ -65,13 +63,14 @@ async function loadDrill() {
     if (drillDimension.value === 'dept') res = await drillByDept(query.period)
     else if (drillDimension.value === 'projectType') res = await drillByProjectType(query.period)
     else res = await drillByCustomer(query.period)
-    drillData.value = res?.data || []
+    drillData.value = (res?.data as any[]) || []
     renderDrillChart()
   } catch { /* 静默 */ }
 }
 
 function renderDrillChart() {
   if (!chart) return
+  const rows = drillData.value
   chart.setOption({
     title: { text: '下钻分析', left: 'center' },
     tooltip: { trigger: 'axis' },
@@ -79,13 +78,13 @@ function renderDrillChart() {
     grid: { top: 80, left: 60, right: 40, bottom: 40 },
     xAxis: {
       type: 'category',
-      data: drillData.map((d: any) => d.name || d.dimension || '-'),
+      data: rows.map((d: any) => d.name || d.dimension || '-'),
     },
     yAxis: { type: 'value' },
     series: [
-      { name: '收入', type: 'bar', data: drillData.map((d: any) => Number(d.revenue || 0)), itemStyle: { color: '#409eff' } },
-      { name: '成本', type: 'bar', data: drillData.map((d: any) => Number(d.cost || 0)), itemStyle: { color: '#909399' } },
-      { name: '毛利', type: 'bar', data: drillData.map((d: any) => Number(d.grossProfit || 0)), itemStyle: { color: '#67c23a' } },
+      { name: '收入', type: 'bar', data: rows.map((d: any) => Number(d.revenue || 0)), itemStyle: { color: '#409eff' } },
+      { name: '成本', type: 'bar', data: rows.map((d: any) => Number(d.cost || 0)), itemStyle: { color: '#909399' } },
+      { name: '毛利', type: 'bar', data: rows.map((d: any) => Number(d.grossProfit || 0)), itemStyle: { color: '#67c23a' } },
     ],
   })
 }

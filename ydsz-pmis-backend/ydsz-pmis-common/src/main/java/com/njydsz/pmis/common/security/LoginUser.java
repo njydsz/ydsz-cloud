@@ -53,6 +53,9 @@ public class LoginUser implements Serializable {
     /** 数据权限范围: ALL/DEPT/SELF/CUSTOM */
     private String dataScope;
 
+    /** 自定义部门 ID 集（CUSTOM 模式） */
+    private List<Long> customDeptIds;
+
     /** Token */
     private String token;
 

@@ -1,0 +1,50 @@
+package com.njydsz.pmis.audit.listener;
+
+import com.njydsz.pmis.audit.entity.DataExportAuditDO;
+import com.njydsz.pmis.audit.mapper.DataExportAuditMapper;
+import com.njydsz.pmis.common.security.DataExportAuditEvent;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.stereotype.Component;
+
+import java.time.LocalDateTime;
+
+/**
+ * 数据导出审计监听器
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class DataExportAuditListener {
+
+    private final DataExportAuditMapper mapper;
+
+    @Async
+    @EventListener
+    public void onExport(DataExportAuditEvent e) {
+        try {
+            DataExportAuditDO d = new DataExportAuditDO();
+            d.setUserId(e.getUserId());
+            d.setUsername(e.getUsername());
+            d.setExportModule(e.getExportModule());
+            d.setExportAction(e.getExportAction());
+            d.setBizType(e.getBizType());
+            d.setRowCount(e.getRowCount() == null ? 0 : e.getRowCount());
+            d.setTraceId(e.getTraceId());
+            d.setClientIp(e.getClientIp());
+            d.setTenantId(e.getTenantId());
+            d.setExportedAt(e.getExportedAt() != null
+                    ? LocalDateTime.ofEpochSecond(e.getExportedAt() / 1000, 0, java.time.ZoneOffset.ofHours(8))
+                    : LocalDateTime.now());
+            d.setCreatedAt(LocalDateTime.now());
+            mapper.insertExport(d);
+        } catch (Exception ex) {
+            log.error("[ExportAudit] 落库失败: {}", ex.getMessage(), ex);
+        }
+    }
+}

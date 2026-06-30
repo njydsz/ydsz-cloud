@@ -61,20 +61,6 @@ function hasPermission(permissions: string[], route: RouteRecordRaw): boolean {
   return true
 }
 
-function filterAsyncRoutes(routes: RouteRecordRaw[], permissions: string[]): RouteRecordRaw[] {
-  const res: RouteRecordRaw[] = []
-  routes.forEach((route) => {
-    const tmp: RouteRecordRaw = { ...route }
-    if (hasPermission(permissions, tmp)) {
-      if (tmp.children) {
-        tmp.children = filterAsyncRoutes(tmp.children, permissions)
-      }
-      res.push(tmp)
-    }
-  })
-  return res
-}
-
 export const usePermissionStore = defineStore('permission', () => {
   const routes = ref<RouteRecordRaw[]>([])
   const addRoutes = ref<RouteRecordRaw[]>([])

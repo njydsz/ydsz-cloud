@@ -6,47 +6,54 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * 合同模板状态机测试
- *
- * @author ydsz-pmis-team
- * @since 1.0.0
+ * ContractTemplateStatus 状态机测试
  */
-@DisplayName("ContractTemplateStatus 合同模板状态机")
+@DisplayName("ContractTemplateStatus 合同模板状态机测试")
 class ContractTemplateStatusTest {
 
     @Test
-    @DisplayName("终态")
-    void terminal() {
+    @DisplayName("DEPRECATED 是终态")
+    void terminalStates() {
         assertThat(ContractTemplateStatus.DEPRECATED.isTerminal()).isTrue();
         assertThat(ContractTemplateStatus.DRAFT.isTerminal()).isFalse();
         assertThat(ContractTemplateStatus.PUBLISHED.isTerminal()).isFalse();
     }
 
     @Test
-    @DisplayName("DRAFT->PUBLISHED")
-    void draftPub() {
+    @DisplayName("DRAFT -> PUBLISHED")
+    void draftTransition() {
         assertThat(ContractTemplateStatus.DRAFT.canTransitTo(ContractTemplateStatus.PUBLISHED)).isTrue();
         assertThat(ContractTemplateStatus.DRAFT.canTransitTo(ContractTemplateStatus.DEPRECATED)).isFalse();
     }
 
     @Test
-    @DisplayName("PUBLISHED->DRAFT/DEPRECATED")
-    void pubTrans() {
-        assertThat(ContractTemplateStatus.PUBLISHED.canTransitTo(ContractTemplateStatus.DRAFT)).isTrue();
+    @DisplayName("PUBLISHED -> DEPRECATED 或回退 DRAFT")
+    void publishedTransition() {
         assertThat(ContractTemplateStatus.PUBLISHED.canTransitTo(ContractTemplateStatus.DEPRECATED)).isTrue();
+        assertThat(ContractTemplateStatus.PUBLISHED.canTransitTo(ContractTemplateStatus.DRAFT)).isTrue();
     }
 
     @Test
-    @DisplayName("DEPRECATED 终态")
-    void deprecatedNoTrans() {
-        assertThat(ContractTemplateStatus.DEPRECATED.canTransitTo(ContractTemplateStatus.DRAFT)).isFalse();
-        assertThat(ContractTemplateStatus.DEPRECATED.canTransitTo(ContractTemplateStatus.PUBLISHED)).isFalse();
+    @DisplayName("DEPRECATED 不能迁移")
+    void deprecatedTerminal() {
+        for (ContractTemplateStatus s : ContractTemplateStatus.values()) {
+            if (s == ContractTemplateStatus.DEPRECATED) continue;
+            assertThat(ContractTemplateStatus.DEPRECATED.canTransitTo(s)).isFalse();
+        }
     }
 
     @Test
-    @DisplayName("自身不可迁移")
-    void selfNoTrans() {
-        assertThat(ContractTemplateStatus.DRAFT.canTransitTo(ContractTemplateStatus.DRAFT)).isFalse();
+    @DisplayName("自身不允许迁移")
+    void selfNotAllowed() {
+        for (ContractTemplateStatus s : ContractTemplateStatus.values()) {
+            assertThat(s.canTransitTo(s)).isFalse();
+        }
+    }
+
+    @Test
+    @DisplayName("canTransitTo null 应返回 false")
+    void nullTarget() {
+        assertThat(ContractTemplateStatus.DRAFT.canTransitTo(null)).isFalse();
     }
 
     @Test
@@ -54,7 +61,7 @@ class ContractTemplateStatusTest {
     void fromCode() {
         assertThat(ContractTemplateStatus.fromCode("DRAFT")).isEqualTo(ContractTemplateStatus.DRAFT);
         assertThat(ContractTemplateStatus.fromCode("published")).isEqualTo(ContractTemplateStatus.PUBLISHED);
-        assertThat(ContractTemplateStatus.fromCode(null)).isNull();
         assertThat(ContractTemplateStatus.fromCode("XXX")).isNull();
+        assertThat(ContractTemplateStatus.fromCode(null)).isNull();
     }
 }

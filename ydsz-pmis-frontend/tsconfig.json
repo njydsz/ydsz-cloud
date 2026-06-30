@@ -21,10 +21,11 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["node", "element-plus/global", "unplugin-vue-components/client", "unplugin-auto-imports/client"]
+    "types": ["node", "element-plus/global"]
   },
   "include": [
     "src/**/*.ts",

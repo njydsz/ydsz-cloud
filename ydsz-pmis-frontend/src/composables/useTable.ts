@@ -5,16 +5,21 @@
  * 配合 PageLayout 组件使用，大幅减少页面样板代码。
  */
 import { ref, reactive, type Ref } from 'vue'
-import type { PageResult } from '@/utils/request'
 
-export interface UseTableOptions<Q extends Record<string, unknown>> {
+export interface UseTableQuery {
+  page: number
+  size: number
+  [key: string]: unknown
+}
+
+export interface UseTableOptions<Q extends UseTableQuery> {
   /** 默认分页大小 */
   defaultSize?: number
   /** 初始查询参数 */
   defaultQuery?: Partial<Q>
 }
 
-export function useTable<Q extends Record<string, unknown>>(
+export function useTable<Q extends UseTableQuery>(
   fetcher: (query: Q) => Promise<PageResult<any>>,
   options: UseTableOptions<Q> = {},
 ) {
@@ -32,8 +37,8 @@ export function useTable<Q extends Record<string, unknown>>(
     loading.value = true
     try {
       const res: any = await fetcher(query)
-      list.value = res?.data?.list ?? []
-      total.value = res?.data?.total ?? 0
+      list.value = res?.data?.list ?? res?.list ?? []
+      total.value = res?.data?.total ?? res?.total ?? 0
     } finally {
       loading.value = false
     }

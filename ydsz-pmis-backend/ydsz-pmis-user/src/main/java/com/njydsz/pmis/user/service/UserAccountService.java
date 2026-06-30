@@ -1,6 +1,8 @@
 package com.njydsz.pmis.user.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.user.dto.LoginRequest;
+import com.njydsz.pmis.user.dto.LoginResult;
 import com.njydsz.pmis.user.dto.UserQueryDTO;
 import com.njydsz.pmis.user.entity.UserAccountDO;
 
@@ -63,4 +65,21 @@ public interface UserAccountService {
      * 查询用户角色 ID
      */
     List<Long> listRoleIds(Long userId);
+
+    /**
+     * 登录（带失败锁定 + 登录审计 + 2FA 校验）
+     *
+     * @return 登录结果（含 token / 是否需要 2FA）
+     */
+    LoginResult login(LoginRequest request);
+
+    /**
+     * 修改自己密码（带强度校验 + 90 天强制过期）
+     */
+    void changePassword(Long userId, String oldPassword, String newPassword);
+
+    /**
+     * 清除登录失败计数（管理员解锁）
+     */
+    void clearLoginFailCount(Long userId);
 }

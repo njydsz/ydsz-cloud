@@ -47,6 +47,15 @@ public enum BizErrorCode {
     TOKEN_INVALID(20003, "Token 无效"),
     FORBIDDEN(20101, "无权限访问"),
     DATA_SCOPE_FORBIDDEN(20102, "数据权限不足"),
+    PASSWORD_WEAK(20103, "密码强度不足"),
+    PASSWORD_EXPIRED(20104, "密码已过期，请修改"),
+    PASSWORD_REUSED(20105, "不能使用最近使用过的密码"),
+    REAUTH_REQUIRED(20106, "该操作需要二次认证"),
+    REAUTH_INVALID(20107, "二次认证 token 无效或已过期"),
+    MFA_REQUIRED(20108, "需要双因素认证"),
+    MFA_INVALID(20109, "双因素认证码无效"),
+    ACCOUNT_LOCKED(20110, "账号已锁定"),
+    SESSION_KICKED(20111, "账号已在其他设备登录"),
 
     // ========== 3xxxx 用户/组织/人员 ==========
     USER_NOT_FOUND(30001, "用户不存在"),

@@ -175,7 +175,7 @@ onMounted(fetchList)
         <vxe-column field="employeeName" title="员工" width="100" />
         <vxe-column field="initiationName" title="项目" width="160" show-overflow />
         <vxe-column field="expenseType" title="类型" width="100">
-          <template #default="{ row }">{{ typeMap[(row.expenseType as any)]?.label || row.expenseType || '-' }}</template>
+          <template #default="{ row }">{{ typeMap[row.expenseType as keyof typeof typeMap]?.label || row.expenseType || '-' }}</template>
         </vxe-column>
         <vxe-column field="amount" title="金额" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
         <vxe-column field="expenseDate" title="发生日期" width="110" />

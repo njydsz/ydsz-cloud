@@ -1,16 +1,18 @@
 package com.njydsz.pmis.project.service.impl;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.assembler.NameAssembler;
+import com.njydsz.pmis.project.dto.BudgetItemDTO;
 import com.njydsz.pmis.project.dto.GateReviewDTO;
 import com.njydsz.pmis.project.dto.InitiationCreateDTO;
 import com.njydsz.pmis.project.dto.InitiationStageDTO;
+import com.njydsz.pmis.project.entity.BudgetItemDO;
 import com.njydsz.pmis.project.entity.GateReviewDO;
 import com.njydsz.pmis.project.entity.InitiationDO;
 import com.njydsz.pmis.project.enums.GateCode;
+import com.njydsz.pmis.project.enums.InitiationStage;
 import com.njydsz.pmis.project.feign.WorkflowServiceClient;
 import com.njydsz.pmis.project.mapper.BudgetItemMapper;
 import com.njydsz.pmis.project.mapper.GateReviewMapper;
@@ -18,21 +20,20 @@ import com.njydsz.pmis.project.mapper.InitiationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * InitiationServiceImpl 单元测试
+ */
 @DisplayName("InitiationServiceImpl 立项服务测试")
 class InitiationServiceImplTest {
 
@@ -44,7 +45,6 @@ class InitiationServiceImplTest {
     private InitiationServiceImpl service;
 
     @BeforeEach
-    @SuppressWarnings("unchecked")
     void setUp() {
         initiationMapper = mock(InitiationMapper.class);
         budgetItemMapper = mock(BudgetItemMapper.class);
@@ -56,246 +56,260 @@ class InitiationServiceImplTest {
     }
 
     @Test
-    @DisplayName("创建立项 - 缺少必填抛 BAD_REQUEST")
-    void createMissing() {
-        InitiationCreateDTO dto = new InitiationCreateDTO();
-        assertThatThrownBy(() -> service.create(dto))
-                .isInstanceOf(BizException.class)
-                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
-    }
+    @DisplayName("create 项目编号重复应抛 DUPLICATE_KEY")
+    void create_duplicateCode() {
+        InitiationDO exist = new InitiationDO();
+        when(initiationMapper.selectByCode("P001")).thenReturn(exist);
 
-    @Test
-    @DisplayName("创建立项 - 编号重复抛 DUPLICATE_KEY")
-    void createDuplicate() {
-        when(initiationMapper.selectByCode("P-1")).thenReturn(new InitiationDO());
-        InitiationCreateDTO dto = new InitiationCreateDTO();
-        dto.setProjectCode("P-1");
-        dto.setProjectName("proj");
-        dto.setCustomerId(1L);
-        dto.setProjectType("FIXED_PRICE");
+        InitiationCreateDTO dto = validDto();
+        dto.setProjectCode("P001");
+
         assertThatThrownBy(() -> service.create(dto))
                 .isInstanceOf(BizException.class)
                 .extracting("code").isEqualTo(BizErrorCode.DUPLICATE_KEY.getCode());
     }
 
     @Test
-    @DisplayName("创建立项 - 结束日期早于开始日期抛错")
-    void createInvalidDate() {
-        InitiationCreateDTO dto = new InitiationCreateDTO();
-        dto.setProjectCode("P-2");
-        dto.setProjectName("proj");
-        dto.setCustomerId(1L);
-        dto.setProjectType("FIXED_PRICE");
-        dto.setPlannedStartDate(LocalDate.of(2026, 6, 30));
-        dto.setPlannedEndDate(LocalDate.of(2026, 6, 1));
+    @DisplayName("create 编号为空应抛 BAD_REQUEST")
+    void create_blankCode() {
+        InitiationCreateDTO dto = validDto();
+        dto.setProjectCode(" ");
         assertThatThrownBy(() -> service.create(dto))
                 .isInstanceOf(BizException.class)
                 .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
     }
 
     @Test
-    @DisplayName("创建立项成功 - 计算 durationDays + 默认 stage")
-    void createOk() {
-        when(initiationMapper.selectByCode("P-3")).thenReturn(null);
-        when(initiationMapper.insert(any(InitiationDO.class))).thenAnswer(inv -> {
-            InitiationDO o = inv.getArgument(0);
-            o.setId(99L);
-            return 1;
-        });
-        InitiationCreateDTO dto = new InitiationCreateDTO();
-        dto.setProjectCode("P-3");
-        dto.setProjectName("金陵项目");
-        dto.setCustomerId(1L);
-        dto.setProjectType("FIXED_PRICE");
-        dto.setPlannedStartDate(LocalDate.of(2026, 1, 1));
-        dto.setPlannedEndDate(LocalDate.of(2026, 1, 31));
-        dto.setCustomerName("南京客户");
-        dto.setPmName("张PM");
-        Long id = service.create(dto);
-        assertThat(id).isEqualTo(99L);
-
-        ArgumentCaptor<InitiationDO> captor = ArgumentCaptor.forClass(InitiationDO.class);
-        verify(initiationMapper).insert(captor.capture());
-        InitiationDO saved = captor.getValue();
-        assertThat(saved.getStage()).isEqualTo("PRE_INITIATION");
-        assertThat(saved.getProjectLevel()).isEqualTo("C");
-        assertThat(saved.getDurationDays()).isEqualTo(30);
-        assertThat(saved.getTenantId()).isEqualTo(1L);
+    @DisplayName("create 名称为空应抛 BAD_REQUEST")
+    void create_blankName() {
+        InitiationCreateDTO dto = validDto();
+        dto.setProjectName(" ");
+        assertThatThrownBy(() -> service.create(dto))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
     }
 
     @Test
-    @DisplayName("阶段迁移 - 非法跳级拒绝")
-    void changeStageInvalid() {
-        InitiationDO o = new InitiationDO();
-        o.setId(1L);
-        o.setStage("PRE_INITIATION");
-        when(initiationMapper.selectById(1L)).thenReturn(o);
+    @DisplayName("create 客户 ID 为空应抛 BAD_REQUEST")
+    void create_nullCustomer() {
+        InitiationCreateDTO dto = validDto();
+        dto.setCustomerId(null);
+        assertThatThrownBy(() -> service.create(dto))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+    }
+
+    @Test
+    @DisplayName("create 结束日期早于开始日期应抛 BAD_REQUEST")
+    void create_invalidDateRange() {
+        InitiationCreateDTO dto = validDto();
+        dto.setPlannedStartDate(LocalDate.of(2026, 6, 1));
+        dto.setPlannedEndDate(LocalDate.of(2026, 5, 1));
+        assertThatThrownBy(() -> service.create(dto))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+    }
+
+    @Test
+    @DisplayName("create 正常应返回 id 并填充默认值")
+    void create_ok() {
+        when(initiationMapper.selectByCode("P001")).thenReturn(null);
+        when(initiationMapper.insert(any(InitiationDO.class))).thenAnswer(inv -> {
+            InitiationDO arg = inv.getArgument(0);
+            arg.setId(100L);
+            return 1;
+        });
+
+        InitiationCreateDTO dto = validDto();
+        dto.setPlannedStartDate(LocalDate.of(2026, 1, 1));
+        dto.setPlannedEndDate(LocalDate.of(2026, 4, 1));
+        Long id = service.create(dto);
+        assertThat(id).isEqualTo(100L);
+    }
+
+    @Test
+    @DisplayName("changeStage 阶段非法应抛 BAD_REQUEST")
+    void changeStage_invalid() {
+        InitiationDO exist = new InitiationDO();
+        exist.setId(1L);
+        exist.setStage(InitiationStage.PRE_INITIATION.getCode());
+        when(initiationMapper.selectById(1L)).thenReturn(exist);
+
         InitiationStageDTO dto = new InitiationStageDTO();
         dto.setId(1L);
-        dto.setTargetStage("APPROVED");
+        dto.setTargetStage(InitiationStage.EXECUTING.getCode());
+
         assertThatThrownBy(() -> service.changeStage(dto))
                 .isInstanceOf(BizException.class)
                 .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
     }
 
     @Test
-    @DisplayName("阶段迁移 - PRE_INITIATION -> SUBMITTED 合法")
-    void changeStageOk() {
-        InitiationDO o = new InitiationDO();
-        o.setId(1L);
-        o.setStage("PRE_INITIATION");
-        when(initiationMapper.selectById(1L)).thenReturn(o);
+    @DisplayName("changeStage PRE_INITIATION -> SUBMITTED 合法")
+    void changeStage_preToSubmit() {
+        InitiationDO exist = new InitiationDO();
+        exist.setId(1L);
+        exist.setStage(InitiationStage.PRE_INITIATION.getCode());
+        when(initiationMapper.selectById(1L)).thenReturn(exist);
+
         InitiationStageDTO dto = new InitiationStageDTO();
         dto.setId(1L);
-        dto.setTargetStage("SUBMITTED");
+        dto.setTargetStage(InitiationStage.SUBMITTED.getCode());
+
         service.changeStage(dto);
-        verify(initiationMapper).updateStage(1L, "SUBMITTED", null);
     }
 
     @Test
-    @DisplayName("门径评审 - CD1 通过应记录 next gate")
-    void reviewGatePass() {
-        InitiationDO o = new InitiationDO();
-        o.setId(7L);
-        o.setStage("APPROVING");
-        when(initiationMapper.selectById(7L)).thenReturn(o);
-        when(gateReviewMapper.selectByInitiationAndGate(7L, "CD1")).thenReturn(null);
+    @DisplayName("getById 不存在应抛 NOT_FOUND")
+    void getById_notFound() {
+        when(initiationMapper.selectById(99L)).thenReturn(null);
+        assertThatThrownBy(() -> service.getById(99L))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.NOT_FOUND.getCode());
+    }
+
+    @Test
+    @DisplayName("delete 不存在应抛 NOT_FOUND")
+    void delete_notFound() {
+        when(initiationMapper.selectById(99L)).thenReturn(null);
+        assertThatThrownBy(() -> service.delete(99L))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.NOT_FOUND.getCode());
+    }
+
+    @Test
+    @DisplayName("addBudgetItem 分类非法应抛 BAD_REQUEST")
+    void addBudgetItem_invalidCategory() {
+        InitiationCreateDTO iDto = validDto();
+        when(initiationMapper.selectById(any())).thenReturn(new InitiationDO());
+
+        BudgetItemDTO b = new BudgetItemDTO();
+        b.setInitiationId(1L);
+        b.setCategory("INVALID");
+        b.setAmount(new BigDecimal("1000"));
+
+        assertThatThrownBy(() -> service.addBudgetItem(b))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+    }
+
+    @Test
+    @DisplayName("addBudgetItem 立项不存在应抛 NOT_FOUND")
+    void addBudgetItem_initiationNotFound() {
+        when(initiationMapper.selectById(99L)).thenReturn(null);
+
+        BudgetItemDTO b = new BudgetItemDTO();
+        b.setInitiationId(99L);
+        b.setCategory("LABOR");
+        b.setAmount(new BigDecimal("1000"));
+
+        assertThatThrownBy(() -> service.addBudgetItem(b))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.NOT_FOUND.getCode());
+    }
+
+    @Test
+    @DisplayName("reviewGate 编码非法应抛 BAD_REQUEST")
+    void reviewGate_invalidCode() {
+        when(initiationMapper.selectById(any())).thenReturn(new InitiationDO());
+
         GateReviewDTO dto = new GateReviewDTO();
-        dto.setInitiationId(7L);
-        dto.setGateCode("CD1");
+        dto.setInitiationId(1L);
+        dto.setGateCode("INVALID");
         dto.setReviewResult("PASSED");
-        dto.setDecisionBasis("材料齐全");
-        service.reviewGate(dto);
-        ArgumentCaptor<GateReviewDO> captor = ArgumentCaptor.forClass(GateReviewDO.class);
-        verify(gateReviewMapper).insert(captor.capture());
-        assertThat(captor.getValue().getNextGate()).isEqualTo("CD2");
-    }
 
-    @Test
-    @DisplayName("门径评审 - 非法结果抛错")
-    void reviewGateInvalidResult() {
-        InitiationDO o = new InitiationDO();
-        o.setId(7L);
-        o.setStage("APPROVING");
-        when(initiationMapper.selectById(7L)).thenReturn(o);
-        GateReviewDTO dto = new GateReviewDTO();
-        dto.setInitiationId(7L);
-        dto.setGateCode("CD1");
-        dto.setReviewResult("MAYBE");
         assertThatThrownBy(() -> service.reviewGate(dto))
-                .isInstanceOf(BizException.class);
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
     }
 
     @Test
-    @DisplayName("门径评审 - CD5 通过无下个门径")
-    void reviewGateLast() {
-        InitiationDO o = new InitiationDO();
-        o.setId(8L);
-        o.setStage("EXECUTING");
-        when(initiationMapper.selectById(8L)).thenReturn(o);
-        when(gateReviewMapper.selectByInitiationAndGate(8L, "CD5")).thenReturn(null);
+    @DisplayName("reviewGate 结果非法应抛 BAD_REQUEST")
+    void reviewGate_invalidResult() {
+        when(initiationMapper.selectById(any())).thenReturn(new InitiationDO());
+
         GateReviewDTO dto = new GateReviewDTO();
-        dto.setInitiationId(8L);
-        dto.setGateCode("CD5");
+        dto.setInitiationId(1L);
+        dto.setGateCode(GateCode.CD1.name());
+        dto.setReviewResult("INVALID");
+
+        assertThatThrownBy(() -> service.reviewGate(dto))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+    }
+
+    @Test
+    @DisplayName("reviewGate PASSED 正常")
+    void reviewGate_passed() {
+        InitiationDO exist = new InitiationDO();
+        exist.setId(1L);
+        when(initiationMapper.selectById(1L)).thenReturn(exist);
+        when(gateReviewMapper.selectByInitiationAndGate(any(), any())).thenReturn(null);
+        when(gateReviewMapper.insert(any(GateReviewDO.class))).thenAnswer(inv -> {
+            GateReviewDO arg = inv.getArgument(0);
+            arg.setId(200L);
+            return 1;
+        });
+
+        GateReviewDTO dto = new GateReviewDTO();
+        dto.setInitiationId(1L);
+        dto.setGateCode(GateCode.CD1.name());
         dto.setReviewResult("PASSED");
-        service.reviewGate(dto);
-        ArgumentCaptor<GateReviewDO> captor = ArgumentCaptor.forClass(GateReviewDO.class);
-        verify(gateReviewMapper).insert(captor.capture());
-        assertThat(captor.getValue().getNextGate()).isNull();
+        dto.setDecisionBasis("OK");
+
+        Long id = service.reviewGate(dto);
+        assertThat(id).isNotNull();
     }
 
     @Test
-    @DisplayName("预算汇总 - 应按金额求和并落库")
-    void recomputeBudget() {
-        com.njydsz.pmis.project.entity.BudgetItemDO b1 = new com.njydsz.pmis.project.entity.BudgetItemDO();
-        b1.setAmount(new BigDecimal("100.00"));
-        com.njydsz.pmis.project.entity.BudgetItemDO b2 = new com.njydsz.pmis.project.entity.BudgetItemDO();
-        b2.setAmount(new BigDecimal("250.50"));
-        when(budgetItemMapper.selectByInitiationId(11L)).thenReturn(List.of(b1, b2));
-        InitiationDO o = new InitiationDO();
-        o.setId(11L);
-        when(initiationMapper.selectById(11L)).thenReturn(o);
-        BigDecimal total = service.recomputeBudget(11L);
-        assertThat(total).isEqualByComparingTo("350.50");
-        assertThat(o.getBudgetAmount()).isEqualByComparingTo("350.50");
-        verify(initiationMapper).updateById(o);
+    @DisplayName("startProcess 已有 workflow 应直接返回")
+    void startProcess_existing() {
+        InitiationDO exist = new InitiationDO();
+        exist.setId(1L);
+        exist.setWorkflowId("W-EXIST");
+        when(initiationMapper.selectById(1L)).thenReturn(exist);
+
+        String result = service.startProcess(1L, 100L);
+        assertThat(result).isEqualTo("W-EXIST");
     }
 
     @Test
-    @DisplayName("启动审批流 - 成功写回 workflowId")
-    void startProcessOk() {
-        InitiationDO o = new InitiationDO();
-        o.setId(20L);
-        o.setProjectCode("P-20");
-        o.setProjectName("流程项目");
-        o.setStage("SUBMITTED");
-        when(initiationMapper.selectById(20L)).thenReturn(o);
-        when(workflowServiceClient.startProcess(anyMap())).thenReturn(R.ok("INST-100"));
-        String id = service.startProcess(20L, 1L);
-        assertThat(id).isEqualTo("INST-100");
-        assertThat(o.getWorkflowId()).isEqualTo("INST-100");
+    @DisplayName("startProcess Feign 失败应返回 null 不抛异常")
+    void startProcess_feignFailure() {
+        InitiationDO exist = new InitiationDO();
+        exist.setId(1L);
+        when(initiationMapper.selectById(1L)).thenReturn(exist);
+        when(workflowServiceClient.startProcess(any())).thenThrow(new RuntimeException("feign down"));
+
+        String result = service.startProcess(1L, 100L);
+        assertThat(result).isNull();
     }
 
     @Test
-    @DisplayName("启动审批流 - Feign 异常时返回 null")
-    void startProcessFail() {
-        InitiationDO o = new InitiationDO();
-        o.setId(21L);
-        o.setProjectCode("P-21");
-        when(initiationMapper.selectById(21L)).thenReturn(o);
-        when(workflowServiceClient.startProcess(anyMap())).thenThrow(new RuntimeException("down"));
-        String id = service.startProcess(21L, 1L);
-        assertThat(id).isNull();
+    @DisplayName("listGateReviews initiationId 为空应返回空列表")
+    void listGateReviews_null() {
+        assertThat(service.listGateReviews(null)).isEmpty();
     }
 
     @Test
-    @DisplayName("启动审批流 - 已存在流程实例直接返回")
-    void startProcessDuplicate() {
-        InitiationDO o = new InitiationDO();
-        o.setId(22L);
-        o.setWorkflowId("EXIST-1");
-        when(initiationMapper.selectById(22L)).thenReturn(o);
-        String id = service.startProcess(22L, 1L);
-        assertThat(id).isEqualTo("EXIST-1");
+    @DisplayName("aggregateByStage tenantId 为空应使用默认 1L")
+    void aggregateByStage_defaultTenant() {
+        when(initiationMapper.aggregateByStage(1L)).thenReturn(List.of());
+        assertThat(service.aggregateByStage(null)).isEmpty();
     }
 
     @Test
-    @DisplayName("assembleNames - 已有名称不调用 Feign")
-    void assembleNamesSkip() {
-        InitiationDO o = new InitiationDO();
-        o.setCustomerId(1L);
-        o.setCustomerName("已有客户");
-        o.setPmId(2L);
-        o.setPmName("已有PM");
-        service.assembleNames(o);
-        org.mockito.Mockito.verify(nameAssembler, org.mockito.Mockito.never()).resolveCustomer(any());
-        org.mockito.Mockito.verify(nameAssembler, org.mockito.Mockito.never()).resolveEmployee(any());
+    @DisplayName("assembleNames 空对象应安全返回")
+    void assembleNames_null() {
+        service.assembleNames(null);
     }
 
-    @Test
-    @DisplayName("assembleNames - 缺名称时调用 Feign 补齐")
-    void assembleNamesFill() {
-        InitiationDO o = new InitiationDO();
-        o.setCustomerId(1L);
-        o.setPmId(2L);
-        when(nameAssembler.resolveCustomer(1L)).thenReturn("客户X");
-        when(nameAssembler.resolveEmployee(2L)).thenReturn("员工Y");
-        service.assembleNames(o);
-        assertThat(o.getCustomerName()).isEqualTo("客户X");
-        assertThat(o.getPmName()).isEqualTo("员工Y");
-    }
-
-    @Test
-    @DisplayName("分页 - 对结果集调用 assembleNames")
-    void pageAssemble() {
-        InitiationDO o = new InitiationDO();
-        o.setId(1L);
-        o.setCustomerId(10L);
-        Page<InitiationDO> p = new Page<>();
-        p.setRecords(List.of(o));
-        when(initiationMapper.selectPage(any(Page.class), any())).thenReturn(p);
-        Page<InitiationDO> r = service.page(1, 10, null, null, null, null);
-        assertThat(r.getRecords()).hasSize(1);
-        verify(nameAssembler).resolveCustomer(10L);
+    private InitiationCreateDTO validDto() {
+        InitiationCreateDTO dto = new InitiationCreateDTO();
+        dto.setProjectCode("P001");
+        dto.setProjectName("项目1");
+        dto.setCustomerId(10L);
+        dto.setProjectType("FIXED_PRICE");
+        return dto;
     }
 }

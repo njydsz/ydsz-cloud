@@ -1,0 +1,170 @@
+package com.njydsz.pmis.common.security;
+
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.BizException;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+/**
+ * 数据权限助手
+ *
+ * <p>提供业务层手动调用的工具：判定数据是否可访问 / 抛出异常 / 返回 deptId 列表。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Slf4j
+public final class DataScopeHelper {
+
+    private DataScopeHelper() {
+    }
+
+    /**
+     * 当前上下文
+     */
+    public static DataScopeContext current() {
+        LoginUser user = SecurityContext.getCurrentOrNull();
+        return DataScopeContext.from(user);
+    }
+
+    /**
+     * 校验当前用户是否有权访问指定 dept 数据
+     */
+    public static void requireDept(Long targetDeptId) {
+        if (targetDeptId == null) {
+            return;
+        }
+        DataScopeContext ctx = current();
+        if (ctx.isAll()) {
+            return;
+        }
+        if (ctx.getDeptId() != null && ctx.getDeptId().equals(targetDeptId)) {
+            return;
+        }
+        if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
+            return;
+        }
+        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "无权访问部门: " + targetDeptId);
+    }
+
+    /**
+     * 校验当前用户是否有权访问指定用户数据
+     */
+    public static void requireOwner(Long ownerUserId) {
+        if (ownerUserId == null) {
+            return;
+        }
+        DataScopeContext ctx = current();
+        if (ctx.isAll()) {
+            return;
+        }
+        if (ctx.getScope() == DataScope.DEPT || ctx.getScope() == DataScope.DEPT_AND_CHILD) {
+            return;
+        }
+        if (ctx.getUserId() != null && ctx.getUserId().equals(ownerUserId)) {
+            return;
+        }
+        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "无权访问他人数据");
+    }
+
+    /**
+     * 计算 WHERE 条件 SQL 片段（不含 WHERE 关键字）
+     *
+     * <p>由 Service 层拼接到 QueryWrapper：
+     * <pre>
+     *   String fragment = DataScopeHelper.buildSqlFragment("t", "t");
+     *   if (!fragment.isEmpty()) wrapper.apply(fragment);
+     * </pre>
+     *
+     * @param deptAlias 部门字段别名
+     * @param userAlias 创建人字段别名
+     * @return 条件片段，无数据权限时返回 ""
+     */
+    public static String buildSqlFragment(String deptAlias, String userAlias) {
+        DataScopeContext ctx = current();
+        if (ctx.isAll()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        switch (ctx.getScope()) {
+            case SELF -> sb.append(prefix(deptAlias)).append("creator_id").append(suffix(userAlias))
+                    .append(" = ").append(safeValue(ctx.getUserId()));
+            case DEPT -> sb.append(prefix(deptAlias)).append("dept_id").append(suffix(deptAlias))
+                    .append(" = ").append(safeValue(ctx.getDeptId()));
+            case DEPT_AND_CHILD -> {
+                List<Long> ids = ctx.getDeptIds();
+                if (ids == null || ids.isEmpty()) {
+                    sb.append(prefix(deptAlias)).append("dept_id").append(suffix(deptAlias))
+                            .append(" = ").append(safeValue(ctx.getDeptId()));
+                } else {
+                    sb.append(prefix(deptAlias)).append("dept_id").append(suffix(deptAlias))
+                            .append(" IN (").append(joinIds(ids)).append(")");
+                }
+            }
+            case CUSTOM -> {
+                List<Long> ids = ctx.getCustomDeptIds();
+                if (ids == null || ids.isEmpty()) {
+                    sb.append("1=0");
+                } else {
+                    sb.append(prefix(deptAlias)).append("dept_id").append(suffix(deptAlias))
+                            .append(" IN (").append(joinIds(ids)).append(")");
+                }
+            }
+            case PROJECT -> sb.append("1=1 /* TODO: 注入项目成员子查询 */");
+            default -> log.debug("[DataScope] 未处理 scope={}", ctx.getScope());
+        }
+        return sb.toString();
+    }
+
+    private static String prefix(String alias) {
+        return (alias == null || alias.isEmpty()) ? "" : alias + ".";
+    }
+
+    private static String suffix(String alias) {
+        return alias == null ? "" : "";
+    }
+
+    private static String safeValue(Object v) {
+        return v == null ? "NULL" : v.toString();
+    }
+
+    private static String joinIds(List<Long> ids) {
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Long id : ids) {
+            if (id == null) continue;
+            if (!first) sb.append(",");
+            sb.append(id);
+            first = false;
+        }
+        return sb.length() == 0 ? "NULL" : sb.toString();
+    }
+
+    /**
+     * 过滤可访问部门 ID 集合（去除越权 ID）
+     */
+    public static List<Long> filterDeptIds(Set<Long> candidate) {
+        if (candidate == null || candidate.isEmpty()) {
+            return new ArrayList<>();
+        }
+        DataScopeContext ctx = current();
+        if (ctx.isAll()) {
+            return new ArrayList<>(candidate);
+        }
+        List<Long> allowed = new ArrayList<>();
+        for (Long id : candidate) {
+            if (id == null) continue;
+            if (ctx.getDeptId() != null && ctx.getDeptId().equals(id)) {
+                allowed.add(id);
+                continue;
+            }
+            if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(id)) {
+                allowed.add(id);
+            }
+        }
+        return allowed;
+    }
+}

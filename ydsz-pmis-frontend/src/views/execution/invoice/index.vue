@@ -214,10 +214,10 @@ onMounted(fetchList)
         <vxe-column field="invoiceCode" title="编码" width="160" />
         <vxe-column field="invoiceNo" title="发票号" width="160" />
         <vxe-column field="invoiceType" title="类型" width="100">
-          <template #default="{ row }">{{ typeMap[(row.invoiceType as any)]?.label || row.invoiceType || '-' }}</template>
+          <template #default="{ row }">{{ typeMap[row.invoiceType as keyof typeof typeMap]?.label || row.invoiceType || '-' }}</template>
         </vxe-column>
         <vxe-column field="invoiceBasis" title="开票依据" width="100">
-          <template #default="{ row }">{{ basisMap[(row.invoiceBasis as any)]?.label || row.invoiceBasis || '-' }}</template>
+          <template #default="{ row }">{{ basisMap[row.invoiceBasis as keyof typeof basisMap]?.label || row.invoiceBasis || '-' }}</template>
         </vxe-column>
         <vxe-column field="customerName" title="客户" width="160" show-overflow />
         <vxe-column field="initiationName" title="项目" width="160" show-overflow />

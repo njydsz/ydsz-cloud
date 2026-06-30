@@ -8,7 +8,6 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
-import StatusTag from '@/components/common/StatusTag.vue'
 import { PC } from '@/constants/permissionCodes'
 
 // 项目变更 API 待 ydsz-pmis-project 提供，先用占位 mock
@@ -43,12 +42,6 @@ const typeMap = {
   OTHER: { label: '其他' },
 }
 
-const impactMap = {
-  LOW: { label: '低', type: 'success' as const },
-  MEDIUM: { label: '中', type: 'warning' as const },
-  HIGH: { label: '高', type: 'danger' as const },
-}
-
 async function fetchList() {
   loading.value = true
   // mock data
@@ -68,12 +61,13 @@ function handleReset() {
 }
 
 async function handleStatus(row: any, target: string) {
-  const targetText = (statusMap as any)[target]?.label || target
+  const targetText = (statusMap as Record<string, { label: string }>)[target]?.label || target
   try {
     await ElMessageBox.confirm(`确认将状态变更为「${targetText}」吗？`, '提示', { type: 'warning' })
     ElMessage.success('演示状态机，暂无后端接口')
     fetchList()
   } catch { /* 取消 */ }
+  void row
 }
 
 onMounted(fetchList)

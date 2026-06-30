@@ -1,0 +1,81 @@
+package com.njydsz.pmis.common.security;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serial;
+import java.io.Serializable;
+import java.util.List;
+
+/**
+ * 数据权限上下文
+ *
+ * <p>基于 {@link LoginUser} 解析得到，供 DataScopeAspect / DataScopeHelper 使用。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class DataScopeContext implements Serializable {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    /** 数据权限范围 */
+    private DataScope scope;
+
+    /** 当前用户 ID */
+    private Long userId;
+
+    /** 当前部门 ID */
+    private Long deptId;
+
+    /** 当前部门 ID 链（含所有下级，DEPT_AND_CHILD 模式） */
+    private List<Long> deptIds;
+
+    /** 自定义部门 ID 集（CUSTOM 模式） */
+    private List<Long> customDeptIds;
+
+    /** 是否超管（绕过数据权限） */
+    private boolean superAdmin;
+
+    /**
+     * 是否全量
+     */
+    public boolean isAll() {
+        return superAdmin || scope == DataScope.ALL;
+    }
+
+    /**
+     * 仅本人
+     */
+    public boolean isSelfOnly() {
+        return scope == DataScope.SELF;
+    }
+
+    /**
+     * 解析当前用户的数据权限上下文
+     */
+    public static DataScopeContext from(LoginUser user) {
+        if (user == null) {
+            return DataScopeContext.builder()
+                    .scope(DataScope.SELF)
+                    .superAdmin(false)
+                    .build();
+        }
+        boolean superAdmin = user.isSuperAdmin();
+        DataScope scope = superAdmin ? DataScope.ALL : DataScope.parse(user.getDataScope());
+        return DataScopeContext.builder()
+                .scope(scope)
+                .userId(user.getUserId())
+                .deptId(user.getDeptId())
+                .customDeptIds(user.getCustomDeptIds())
+                .superAdmin(superAdmin)
+                .build();
+    }
+}

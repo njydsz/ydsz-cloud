@@ -46,4 +46,22 @@ public class UserAccountDO extends BaseDO {
     private Integer loginFailCount;
 
     private LocalDateTime lockedUntil;
+
+    /** 数据权限范围: ALL/DEPT/DEPT_AND_CHILD/SELF/CUSTOM/PROJECT */
+    private String dataScope;
+
+    /** CUSTOM 模式下自定义部门 ID 集（逗号分隔） */
+    private String customDeptIds;
+
+    /** 是否启用双因素认证 */
+    private Boolean mfaEnabled;
+
+    /** 双因素类型: NONE/TOTP/SMS */
+    private String mfaType;
+
+    /** 最近一次修改密码时间 */
+    private LocalDateTime lastPwdChangeAt;
+
+    /** 密码累计修改次数 */
+    private Integer pwdChangeCount;
 }

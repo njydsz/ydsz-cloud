@@ -82,7 +82,7 @@ function renderHealth(d: any) {
   })
 }
 
-function renderTrend(d: any) {
+function renderTrend(_d: any) {
   if (!trendChart) return
   trendChart.setOption({
     title: { text: '近 6 月收入/毛利趋势', left: 'center' },
