@@ -74,6 +74,10 @@ public class R<T> implements Serializable {
         return failed(errorCode.getCode(), errorCode.getMessage());
     }
 
+    public static <T> R<T> failed(BizErrorCode errorCode, String message) {
+        return failed(errorCode.getCode(), message);
+    }
+
     public boolean isSuccess() {
         return code == CODE_SUCCESS;
     }

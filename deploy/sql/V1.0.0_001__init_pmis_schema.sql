@@ -432,9 +432,10 @@ CREATE INDEX idx_pmis_oplog_created ON pmis_log.pmis_operation_log (created_at);
 -- ====================================================================
 
 -- 初始化超级管理员
+-- 默认 admin 账号 (盐: pmis_salt_8, 密码: admin123, 哈希: MD5('admin123pmis_salt_8'))
 INSERT INTO pmis.pmis_user_account (username, password, salt, status, created_by)
-VALUES ('admin', MD5('admin123' || 'salt_admin'), 'salt_admin', 'ENABLED', 0)
-ON CONFLICT DO NOTHING;
+VALUES ('admin', MD5('admin123' || 'pmis_salt_8'), 'pmis_salt_8', 'ENABLED', 0)
+ON CONFLICT (username, deleted) DO NOTHING;
 
 -- 初始化职级 (L1-L18)
 INSERT INTO pmis.pmis_job_level (level_code, level_name, level_segment, sort_order, description, created_by)

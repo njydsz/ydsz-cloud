@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.user.dto.PermissionFormDTO;
 import com.njydsz.pmis.user.entity.PermissionDO;
 import com.njydsz.pmis.user.service.PermissionService;
+import com.njydsz.pmis.user.vo.MenuTreeVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -38,6 +39,18 @@ public class PermissionController {
     @GetMapping("/mine")
     public R<List<String>> mine(@RequestHeader("X-User-Id") Long userId) {
         return R.ok(permissionService.listPermCodesByUserId(userId));
+    }
+
+    @Operation(summary = "查询当前用户菜单树")
+    @GetMapping("/menu-tree")
+    public R<List<MenuTreeVO>> menuTree(@RequestHeader("X-User-Id") Long userId) {
+        return R.ok(permissionService.listMenuTreeByUserId(userId));
+    }
+
+    @Operation(summary = "查询所有权限(构建树)")
+    @GetMapping("/tree")
+    public R<List<MenuTreeVO>> tree() {
+        return R.ok(permissionService.listAllMenuTree());
     }
 
     @Operation(summary = "查询角色的权限")

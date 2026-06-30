@@ -4,6 +4,7 @@ import com.njydsz.pmis.auth.dto.LoginDTO;
 import com.njydsz.pmis.auth.dto.LoginResultVO;
 import com.njydsz.pmis.auth.dto.CaptchaVO;
 import com.njydsz.pmis.auth.service.AuthService;
+import com.njydsz.pmis.auth.service.impl.AuthServiceImpl;
 import com.njydsz.pmis.common.api.R;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,7 +46,13 @@ public class AuthController {
 
     @Operation(summary = "登出")
     @PostMapping("/logout")
-    public R<Void> logout(@RequestHeader(value = "X-User-Id", required = false) String userId) {
+    public R<Void> logout(@RequestHeader(value = "X-User-Id", required = false) String userId,
+                          @RequestHeader(value = "Authorization", required = false) String authorization) {
+        // 把当前 Token 加入黑名单（防止 8 小时内继续使用）
+        if (authorization != null && authorization.startsWith("Bearer ")) {
+            String token = authorization.substring(7);
+            ((AuthServiceImpl) authService).blacklistToken(token, 8 * 3600);
+        }
         authService.logout(userId);
         return R.ok();
     }

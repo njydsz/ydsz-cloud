@@ -61,6 +61,7 @@
         <easyexcel.version>4.0.3</easyexcel.version>
         <minio.version>8.5.11</minio.version>
         <redisson.version>3.34.1</redisson.version>
+        <easycaptcha.version>1.6.2</easycaptcha.version>
 
         <!-- 测试 -->
         <springdoc.version>2.6.0</springdoc.version>
@@ -90,6 +91,11 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-user</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -216,6 +222,13 @@
                 <groupId>org.redisson</groupId>
                 <artifactId>redisson-spring-boot-starter</artifactId>
                 <version>${redisson.version}</version>
+            </dependency>
+
+            <!-- Easy-Captcha -->
+            <dependency>
+                <groupId>com.github.whvcse</groupId>
+                <artifactId>easy-captcha</artifactId>
+                <version>${easycaptcha.version}</version>
             </dependency>
 
             <!-- Testcontainers -->

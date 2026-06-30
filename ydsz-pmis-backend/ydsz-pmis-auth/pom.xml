@@ -20,6 +20,12 @@
             <artifactId>ydsz-pmis-common</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-user</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
@@ -70,6 +76,10 @@
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.whvcse</groupId>
+            <artifactId>easy-captcha</artifactId>
         </dependency>
     </dependencies>
 

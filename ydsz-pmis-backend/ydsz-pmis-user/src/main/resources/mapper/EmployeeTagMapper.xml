@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.user.mapper.EmployeeTagMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.user.entity.EmployeeTagDO">
+        <id column="id" property="id"/>
+        <result column="employee_id" property="employeeId"/>
+        <result column="tag_type" property="tagType"/>
+        <result column="tag_code" property="tagCode"/>
+        <result column="tag_name" property="tagName"/>
+        <result column="proficiency" property="proficiency"/>
+        <result column="years_exp" property="yearsExp"/>
+        <result column="remark" property="remark"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByEmployee" resultMap="BaseResultMap">
+        SELECT * FROM pmis_employee_tag
+        WHERE employee_id = #{employeeId} AND deleted = 0
+        ORDER BY tag_type, proficiency DESC
+    </select>
+
+    <select id="selectByTag" resultMap="BaseResultMap">
+        SELECT * FROM pmis_employee_tag
+        WHERE tag_type = #{tagType}
+          <if test="tagCode != null and tagCode != ''">
+              AND tag_code = #{tagCode}
+          </if>
+          AND deleted = 0
+        ORDER BY proficiency DESC, years_exp DESC
+    </select>
+
+    <update id="deleteByEmployee">
+        UPDATE pmis_employee_tag
+        SET deleted = 1, updated_at = CURRENT_TIMESTAMP
+        WHERE employee_id = #{employeeId}
+    </update>
+</mapper>

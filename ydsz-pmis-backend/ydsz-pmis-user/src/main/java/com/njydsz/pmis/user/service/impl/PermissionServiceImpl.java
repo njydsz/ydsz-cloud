@@ -7,11 +7,17 @@ import com.njydsz.pmis.user.dto.PermissionFormDTO;
 import com.njydsz.pmis.user.entity.PermissionDO;
 import com.njydsz.pmis.user.mapper.PermissionMapper;
 import com.njydsz.pmis.user.service.PermissionService;
+import com.njydsz.pmis.user.vo.MenuTreeVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 权限服务实现
@@ -35,6 +41,66 @@ public class PermissionServiceImpl implements PermissionService {
     @Override
     public List<String> listPermCodesByUserId(Long userId) {
         return permissionMapper.selectPermCodesByUserId(userId);
+    }
+
+    @Override
+    public List<MenuTreeVO> listMenuTreeByUserId(Long userId) {
+        // 1. 拉取该用户所有权限
+        List<PermissionDO> perms = permissionMapper.selectByUserId(userId);
+        if (perms == null || perms.isEmpty()) {
+            return List.of();
+        }
+        return buildMenuTree(perms);
+    }
+
+    @Override
+    public List<MenuTreeVO> listAllMenuTree() {
+        return buildMenuTree(listAllEnabled());
+    }
+
+    /**
+     * 构建菜单树 (按 parentId 递归,只保留 permType=MENU/API 的节点)
+     */
+    private List<MenuTreeVO> buildMenuTree(List<PermissionDO> perms) {
+        // 1. 转 VO
+        Map<Long, MenuTreeVO> map = new HashMap<>();
+        for (PermissionDO p : perms) {
+            MenuTreeVO vo = new MenuTreeVO();
+            BeanUtils.copyProperties(p, vo);
+            map.put(p.getId(), vo);
+        }
+
+        // 2. 拼树
+        List<MenuTreeVO> roots = new ArrayList<>();
+        for (PermissionDO p : perms) {
+            MenuTreeVO vo = map.get(p.getId());
+            Long pid = p.getParentId() == null ? 0L : p.getParentId();
+            if (pid == null || pid == 0L) {
+                roots.add(vo);
+            } else {
+                MenuTreeVO parent = map.get(pid);
+                if (parent != null) {
+                    parent.getChildren().add(vo);
+                } else {
+                    // 父节点未授权,作为根处理
+                    roots.add(vo);
+                }
+            }
+        }
+
+        // 3. 排序 + 过滤
+        sortTree(roots);
+        return roots;
+    }
+
+    private void sortTree(List<MenuTreeVO> nodes) {
+        if (nodes == null || nodes.isEmpty()) return;
+        nodes.sort(Comparator.comparing(MenuTreeVO::getSortOrder,
+                Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparing(MenuTreeVO::getId, Comparator.nullsLast(Comparator.naturalOrder())));
+        for (MenuTreeVO n : nodes) {
+            sortTree(n.getChildren());
+        }
     }
 
     @Override

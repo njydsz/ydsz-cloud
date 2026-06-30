@@ -2,6 +2,7 @@ package com.njydsz.pmis.user.service;
 
 import com.njydsz.pmis.user.dto.PermissionFormDTO;
 import com.njydsz.pmis.user.entity.PermissionDO;
+import com.njydsz.pmis.user.vo.MenuTreeVO;
 
 import java.util.List;
 
@@ -22,6 +23,16 @@ public interface PermissionService {
      * 查询用户拥有的权限编码
      */
     List<String> listPermCodesByUserId(Long userId);
+
+    /**
+     * 查询用户拥有的菜单树 (已过滤 permType=MENU/BUTTON 排序)
+     */
+    List<MenuTreeVO> listMenuTreeByUserId(Long userId);
+
+    /**
+     * 查询全部菜单树 (管理端使用)
+     */
+    List<MenuTreeVO> listAllMenuTree();
 
     /**
      * 查询角色拥有的权限

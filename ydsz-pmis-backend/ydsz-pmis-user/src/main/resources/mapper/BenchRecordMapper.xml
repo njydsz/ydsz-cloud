@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.user.mapper.BenchRecordMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.user.entity.BenchRecordDO">
+        <id column="id" property="id"/>
+        <result column="bench_code" property="benchCode"/>
+        <result column="employee_id" property="employeeId"/>
+        <result column="employee_name" property="employeeName"/>
+        <result column="level_code" property="levelCode"/>
+        <result column="pool_id" property="poolId"/>
+        <result column="bench_reason" property="benchReason"/>
+        <result column="reason_type" property="reasonType"/>
+        <result column="source_assignment" property="sourceAssignment"/>
+        <result column="bench_date" property="benchDate"/>
+        <result column="exit_date" property="exitDate"/>
+        <result column="idle_days" property="idleDays"/>
+        <result column="status" property="status"/>
+        <result column="daily_cost" property="dailyCost"/>
+        <result column="total_idle_cost" property="totalIdleCost"/>
+        <result column="remark" property="remark"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT * FROM pmis_bench_record
+        WHERE bench_code = #{code} AND deleted = 0 LIMIT 1
+    </select>
+
+    <select id="selectActiveByEmployee" resultMap="BaseResultMap">
+        SELECT * FROM pmis_bench_record
+        WHERE employee_id = #{employeeId} AND status = 'ACTIVE' AND deleted = 0
+        ORDER BY bench_date DESC LIMIT 1
+    </select>
+
+    <select id="selectByStatus" resultMap="BaseResultMap">
+        SELECT * FROM pmis_bench_record
+        WHERE status = #{status} AND deleted = 0
+        ORDER BY bench_date DESC
+    </select>
+
+    <select id="selectByPool" resultMap="BaseResultMap">
+        SELECT * FROM pmis_bench_record
+        WHERE pool_id = #{poolId}
+          <if test="status != null and status != ''">
+              AND status = #{status}
+          </if>
+          AND deleted = 0
+        ORDER BY bench_date DESC
+    </select>
+
+    <select id="aggregateByPool" resultType="java.util.Map">
+        SELECT pool_id,
+               COUNT(1)          AS headcount,
+               COALESCE(SUM(total_idle_cost), 0) AS total_cost,
+               COALESCE(AVG(idle_days), 0)      AS avg_idle_days
+        FROM pmis_bench_record
+        WHERE status = #{status} AND deleted = 0
+        GROUP BY pool_id
+    </select>
+
+    <select id="flowByDateRange" resultType="java.util.Map">
+        SELECT bench_date, bench_reason, COUNT(1) AS cnt
+        FROM pmis_bench_record
+        WHERE bench_date BETWEEN #{from} AND #{to} AND deleted = 0
+        GROUP BY bench_date, bench_reason
+        ORDER BY bench_date
+    </select>
+</mapper>
