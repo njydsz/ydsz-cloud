@@ -26,7 +26,8 @@ import static org.mockito.Mockito.when;
 @DisplayName("OperationLogAspect 操作日志切面测试")
 class OperationLogAspectTest {
 
-    private final OperationLogAspect aspect = new OperationLogAspect();
+    private final OperationLogAspect aspect = new OperationLogAspect(
+            org.mockito.Mockito.mock(org.springframework.context.ApplicationEventPublisher.class));
 
     @AfterEach
     void cleanUp() {

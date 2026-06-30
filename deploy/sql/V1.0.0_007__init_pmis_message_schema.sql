@@ -16,6 +16,7 @@ CREATE TABLE pmis_message_log (
     content         TEXT,
     status          VARCHAR(32)  NOT NULL,
     error_message   TEXT,
+    provider_trace_id VARCHAR(128),
     cost_ms         BIGINT,
     trace_id        VARCHAR(64),
     tenant_id       BIGINT       DEFAULT 1,

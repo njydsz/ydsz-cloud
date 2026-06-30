@@ -1,0 +1,140 @@
+package com.njydsz.pmis.common.aspect;
+
+import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.LoginUser;
+import com.njydsz.pmis.common.security.SecurityContext;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.core.DefaultParameterNameDiscoverer;
+import org.springframework.core.ParameterNameDiscoverer;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.Expression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.stereotype.Component;
+
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 幂等（防重提交）AOP
+ *
+ * <p>使用 Redis SETNX + Lua 原子脚本，保证并发场景下仅一次执行通过。
+ *
+ * <p>Lua 脚本：
+ * <pre>
+ *   if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then
+ *     return 1
+ *   else
+ *     return 0
+ *   end
+ * </pre>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Aspect
+@Component
+@RequiredArgsConstructor
+public class IdempotentAspect {
+
+    private static final String LUA = "if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then return 1 else return 0 end";
+
+    private static final RedisScript<Long> SCRIPT = new DefaultRedisScript<>(LUA, Long.class);
+
+    private final StringRedisTemplate redisTemplate;
+
+    private final SpelExpressionParser parser = new SpelExpressionParser();
+    private final ParameterNameDiscoverer paramNames = new DefaultParameterNameDiscoverer();
+
+    @Around("@annotation(idempotent)")
+    public Object around(ProceedingJoinPoint pjp, Idempotent idempotent) throws Throwable {
+        String key = buildKey(pjp, idempotent);
+        Long ok = redisTemplate.execute(
+                SCRIPT,
+                Collections.singletonList(key),
+                String.valueOf(System.currentTimeMillis()),
+                String.valueOf(idempotent.ttlSeconds())
+        );
+        if (ok == null || ok == 0L) {
+            log.warn("[Idempotent] 重复提交被拦截 key={}", key);
+            throw new BizException(BizErrorCode.BAD_REQUEST, idempotent.message());
+        }
+        try {
+            return pjp.proceed();
+        } catch (RuntimeException e) {
+            // 业务异常时主动释放锁，避免短暂窗口内无法重试
+            redisTemplate.delete(key);
+            throw e;
+        }
+    }
+
+    private String buildKey(ProceedingJoinPoint pjp, Idempotent ann) {
+        StringBuilder sb = new StringBuilder("pmis:idempotent:");
+        sb.append(ann.key());
+        if (!ann.key().endsWith(":")) {
+            sb.append(":");
+        }
+        if (ann.useUser()) {
+            String user = "anon";
+            try {
+                LoginUser u = SecurityContext.getCurrentOrNull();
+                if (u != null && u.getUserId() != null) {
+                    user = String.valueOf(u.getUserId());
+                }
+            } catch (Exception ignored) {
+            }
+            sb.append("u").append(user).append(":");
+        }
+        if (ann.keyFromArg() != null && !ann.keyFromArg().isEmpty()) {
+            String extracted = extractSpEL(pjp, ann.keyFromArg());
+            sb.append(extracted == null ? "null" : extracted);
+        } else {
+            // 兜底：附加 method 签名 + args hash
+            MethodSignature sig = (MethodSignature) pjp.getSignature();
+            sb.append(sig.getMethod().getName()).append(":");
+            int h = argsHash(pjp.getArgs());
+            sb.append(Integer.toHexString(h));
+        }
+        return sb.toString();
+    }
+
+    private String extractSpEL(ProceedingJoinPoint pjp, String expr) {
+        try {
+            MethodSignature sig = (MethodSignature) pjp.getSignature();
+            EvaluationContext ctx = new StandardEvaluationContext();
+            String[] names = paramNames.getParameterNames(sig.getMethod());
+            Object[] values = pjp.getArgs();
+            if (names != null) {
+                for (int i = 0; i < names.length; i++) {
+                    ctx.setVariable(names[i], values[i]);
+                }
+            }
+            Expression e = parser.parseExpression(expr);
+            Object v = e.getValue(ctx);
+            return v == null ? "null" : String.valueOf(v);
+        } catch (Exception ex) {
+            log.warn("[Idempotent] SpEL 解析失败: {} {}", expr, ex.getMessage());
+            return "spel-error";
+        }
+    }
+
+    private int argsHash(Object[] args) {
+        if (args == null) return 0;
+        int h = 1;
+        for (Object a : args) {
+            h = 31 * h + (a == null ? 0 : a.toString().hashCode());
+        }
+        return h;
+    }
+}

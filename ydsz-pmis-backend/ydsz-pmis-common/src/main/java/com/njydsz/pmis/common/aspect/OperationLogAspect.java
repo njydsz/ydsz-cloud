@@ -2,34 +2,34 @@ package com.njydsz.pmis.common.aspect;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.annotation.OperationLog;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.event.OperationLogEvent;
 import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.util.TraceIdUtil;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Method;
-import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * 操作日志 AOP
  *
- * <p>拦截 {@code @OperationLog} 注解方法，自动记录：
- * <ul>
- *   <li>用户、IP、UA</li>
- *   <li>请求 URL、方法、入参</li>
- *   <li>响应结果、耗时、状态</li>
- * </ul>
+ * <p>拦截 {@code @OperationLog} 注解方法，构造事件并发布。
+ * 持久化由 audit 模块的 {@code OperationLogListener} 异步落库。
  *
- * <p>实际日志落库需结合事件机制（异步）推送至日志服务。
+ * <p>同时保留本地日志（DEBUG 级别）便于排障。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -37,7 +37,10 @@ import java.util.Arrays;
 @Slf4j
 @Aspect
 @Component
+@RequiredArgsConstructor
 public class OperationLogAspect {
+
+    private final ApplicationEventPublisher publisher;
 
     @Pointcut("@annotation(com.njydsz.pmis.common.annotation.OperationLog)")
     public void pointcut() {
@@ -57,61 +60,85 @@ public class OperationLogAspect {
         } finally {
             long cost = System.currentTimeMillis() - start;
             try {
-                saveLog(pjp, operationLog, result, error, cost);
+                publishEvent(pjp, operationLog, result, error, cost);
             } catch (Exception e) {
-                log.error("[OperationLog] 保存操作日志失败", e);
+                log.error("[OperationLog] 发布事件失败", e);
             }
         }
     }
 
-    private void saveLog(ProceedingJoinPoint pjp, OperationLog log, Object result, Throwable error, long cost) {
+    @Async
+    void publishEvent(ProceedingJoinPoint pjp, OperationLog operationLog,
+                      Object result, Throwable error, long cost) {
+        try {
+            OperationLogEvent event = buildEvent(pjp, operationLog, result, error, cost);
+            publisher.publishEvent(event);
+        } catch (Exception e) {
+            log.error("[OperationLog] 构造事件失败", e);
+        }
+    }
+
+    private OperationLogEvent buildEvent(ProceedingJoinPoint pjp, OperationLog ann,
+                                         Object result, Throwable error, long cost) {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attrs != null ? attrs.getRequest() : null;
 
         MethodSignature signature = (MethodSignature) pjp.getSignature();
         Method method = signature.getMethod();
-
         LoginUser user = SecurityContext.getCurrentOrNull();
 
-        String url = request != null ? request.getRequestURI() : "";
-        String methodName = request != null ? request.getMethod() : "";
-        String ip = request != null ? getIp(request) : "";
-        String userAgent = request != null ? request.getHeader("User-Agent") : "";
-
         String params = "";
-        if (log.saveParams()) {
-            params = JSON.toJSONString(pjp.getArgs());
-            // 脱敏
-            for (String field : log.excludeFields()) {
-                params = params.replaceAll("\"" + field + "\"\\s*:\\s*\"[^\"]*\"",
-                        "\"" + field + "\":\"******\"");
+        if (ann.saveParams()) {
+            try {
+                params = JSON.toJSONString(pjp.getArgs());
+                for (String field : ann.excludeFields()) {
+                    params = params.replaceAll("\"" + field + "\"\\s*:\\s*\"[^\"]*\"",
+                            "\"" + field + "\":\"******\"");
+                }
+            } catch (Exception e) {
+                params = "[serialize-failed]";
             }
         }
 
         String responseData = "";
-        if (log.saveResult() && result != null) {
-            responseData = JSON.toJSONString(result);
+        if (ann.saveResult() && result != null) {
+            try {
+                responseData = JSON.toJSONString(result);
+            } catch (Exception e) {
+                responseData = "[serialize-failed]";
+            }
         }
 
-        String status = error == null ? "SUCCESS" : "FAILED";
-        String errorMsg = error == null ? "" : error.getMessage();
+        return OperationLogEvent.builder()
+                .module(ann.module())
+                .action(ann.action())
+                .bizType(ann.bizType())
+                .bizId(extractBizId(pjp.getArgs()))
+                .userId(user != null ? user.getUserId() : null)
+                .username(user != null ? user.getUsername() : null)
+                .requestUrl(request != null ? request.getRequestURI() : "")
+                .httpMethod(request != null ? request.getMethod() : "")
+                .methodSignature(method.getDeclaringClass().getName() + "#" + method.getName())
+                .clientIp(request != null ? getIp(request) : "")
+                .userAgent(request != null ? request.getHeader("User-Agent") : "")
+                .paramsJson(params)
+                .responseJson(responseData)
+                .status(error == null ? "SUCCESS" : "FAILED")
+                .errorMessage(error == null ? "" : error.getMessage())
+                .costMs(cost)
+                .traceId(TraceIdUtil.get())
+                .tenantId(1L)
+                .timestamp(System.currentTimeMillis())
+                .build();
+    }
 
-        // TODO: 异步落库到 pmis_log.pmis_operation_log
-        // 当前阶段仅控制台输出，待运营日志服务就绪后改为事件发布
-        org.slf4j.Logger log4j = org.slf4j.LoggerFactory.getLogger("OPERATION_LOG");
-        log4j.info("[{}] module={} action={} bizType={} userId={} username={} url={} {} params={} status={} cost={}ms error={}",
-                status,
-                log.module(),
-                log.action(),
-                log.bizType(),
-                user != null ? user.getUserId() : "-",
-                user != null ? user.getUsername() : "-",
-                methodName,
-                url,
-                params,
-                status,
-                cost,
-                errorMsg);
+    private String extractBizId(Object[] args) {
+        if (args == null) return null;
+        for (Object a : args) {
+            if (a == null) continue;
+            if (a instanceof com.baomidou.mybatisplus.core.metadata.IPage) continue;
+        }
+        return null;
     }
 
     private String getIp(HttpServletRequest request) {
@@ -124,6 +151,6 @@ public class OperationLogAspect {
         if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {
             return ip;
         }
-        return request.getRemoteAddr();
+        return Objects.requireNonNullElse(request.getRemoteAddr(), "unknown");
     }
 }

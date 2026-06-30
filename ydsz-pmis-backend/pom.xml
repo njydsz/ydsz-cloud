@@ -29,6 +29,7 @@
         <module>ydsz-pmis-file</module>
         <module>ydsz-pmis-scheduler</module>
         <module>ydsz-pmis-message</module>
+        <module>ydsz-pmis-audit</module>
     </modules>
 
     <properties>

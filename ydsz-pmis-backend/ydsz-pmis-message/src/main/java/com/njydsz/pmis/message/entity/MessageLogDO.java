@@ -50,6 +50,9 @@ public class MessageLogDO extends BaseDO {
     /** 错误信息 */
     private String errorMessage;
 
+    /** 供应商侧追踪 ID */
+    private String providerTraceId;
+
     /** 耗时(毫秒) */
     private Long costMs;
 
