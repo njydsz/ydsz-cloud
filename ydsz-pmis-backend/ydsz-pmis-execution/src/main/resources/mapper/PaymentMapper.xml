@@ -102,4 +102,9 @@
         GROUP BY customer_id, customer_name
         ORDER BY amount DESC
     </select>
+
+    <select id="sumAllocatedAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
+        WHERE status = 'ALLOCATED' AND deleted = 0
+    </select>
 </mapper>

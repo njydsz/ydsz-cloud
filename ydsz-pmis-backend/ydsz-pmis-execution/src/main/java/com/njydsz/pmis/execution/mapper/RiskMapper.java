@@ -18,4 +18,7 @@ public interface RiskMapper extends BaseMapper<RiskDO> {
     List<RiskDO> selectByInitiation(@Param("initiationId") Long initiationId);
 
     List<Map<String, Object>> aggregateByLevel(@Param("initiationId") Long initiationId);
+
+    /** 查询所有未结风险 */
+    List<RiskDO> selectAll();
 }

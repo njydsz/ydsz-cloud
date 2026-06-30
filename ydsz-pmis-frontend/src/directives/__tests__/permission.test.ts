@@ -37,9 +37,9 @@ describe('v-permission 指令', () => {
   })
 
   it('空 value 不应删除元素', () => {
-    const el = document.createElement('div')
-    directive.mounted(el, { value: undefined, modifiers: {} })
-    expect(el.parentNode).not.toBeNull()
+    // 当 value 为空时, 指令应直接 return, 不调用 el.parentNode.removeChild
+    // 此时即使 el 没在 DOM 中, 也不会抛错 (因为没访问 parentNode)
+    expect(() => directive.mounted(document.createElement('div'), { value: undefined, modifiers: {} })).not.toThrow()
   })
 
   it('单权限字符串匹配时保留元素', () => {
@@ -58,7 +58,7 @@ describe('v-permission 指令', () => {
     el.setAttribute('data-test', 'remove-me')
     document.body.appendChild(el)
     directive.mounted(el, { value: 'auth:user:create', modifiers: {} })
-    expect(document.querySelector('[data-test="remove-me"])).toBeNull()
+    expect(document.querySelector('[data-test="remove-me"]')).toBeNull()
   })
 
   it('数组权限 OR 模式 (默认): 任一匹配即保留', () => {

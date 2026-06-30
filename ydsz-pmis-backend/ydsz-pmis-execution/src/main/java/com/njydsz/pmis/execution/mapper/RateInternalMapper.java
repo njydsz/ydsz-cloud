@@ -19,4 +19,7 @@ public interface RateInternalMapper extends BaseMapper<RateInternalDO> {
 
     List<RateInternalDO> selectByLevelAndDept(@Param("levelCode") String levelCode,
                                               @Param("departmentId") Long departmentId);
+
+    /** 全量查询 */
+    List<RateInternalDO> selectAll();
 }

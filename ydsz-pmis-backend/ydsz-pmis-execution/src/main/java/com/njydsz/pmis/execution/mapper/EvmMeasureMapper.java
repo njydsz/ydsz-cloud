@@ -21,4 +21,7 @@ public interface EvmMeasureMapper extends BaseMapper<EvmMeasureDO> {
 
     /** WBS 节点级偏差趋势：返回每期 CPI/SPI/VAC */
     List<Map<String, Object>> trendByPeriod(@Param("initiationId") Long initiationId);
+
+    /** 跨项目 EVM 健康度：返回每个项目的 top_alert */
+    List<Map<String, Object>> aggregateHealthByInitiation();
 }

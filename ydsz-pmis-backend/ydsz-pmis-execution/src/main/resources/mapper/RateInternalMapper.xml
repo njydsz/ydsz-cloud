@@ -52,4 +52,10 @@
           AND deleted = 0
         ORDER BY effective_date DESC
     </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM pmis_rate_internal
+        WHERE deleted = 0
+        ORDER BY level_code ASC
+    </select>
 </mapper>

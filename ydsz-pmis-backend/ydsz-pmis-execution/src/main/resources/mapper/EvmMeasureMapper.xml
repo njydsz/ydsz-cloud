@@ -64,4 +64,22 @@
         GROUP BY period
         ORDER BY period ASC
     </select>
+
+    <select id="aggregateHealthByInitiation" resultType="java.util.Map">
+        SELECT initiation_id,
+               CASE
+                   WHEN MAX(CASE alert_level WHEN 'RED'    THEN 3
+                                              WHEN 'YELLOW' THEN 2
+                                              WHEN 'NORMAL' THEN 1
+                                              ELSE 0 END) = 3 THEN 'RED'
+                   WHEN MAX(CASE alert_level WHEN 'RED'    THEN 3
+                                              WHEN 'YELLOW' THEN 2
+                                              WHEN 'NORMAL' THEN 1
+                                              ELSE 0 END) = 2 THEN 'YELLOW'
+                   ELSE 'NORMAL'
+               END AS top_alert
+        FROM pmis_evm_measure
+        WHERE deleted = 0
+        GROUP BY initiation_id
+    </select>
 </mapper>

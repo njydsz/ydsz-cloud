@@ -49,4 +49,10 @@
         WHERE initiation_id = #{initiationId} AND deleted = 0
         GROUP BY risk_level
     </select>
+
+    <select id="selectAll" resultMap="BaseResultMap">
+        SELECT * FROM pmis_execution_risk
+        WHERE deleted = 0
+        ORDER BY created_at DESC
+    </select>
 </mapper>

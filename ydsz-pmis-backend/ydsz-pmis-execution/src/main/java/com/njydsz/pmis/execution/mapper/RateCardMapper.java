@@ -20,4 +20,7 @@ public interface RateCardMapper extends BaseMapper<RateCardDO> {
                               @Param("date") LocalDate date);
 
     List<RateCardDO> selectByLevel(@Param("levelCode") String levelCode);
+
+    /** 全量查询 */
+    List<RateCardDO> selectAll();
 }

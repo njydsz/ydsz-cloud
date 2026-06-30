@@ -9,6 +9,7 @@ import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
+import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -16,6 +17,7 @@ import org.springframework.context.annotation.Bean;
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.notification", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
+@EnableFeignClients(basePackages = "com.njydsz.pmis.notification.feign")
 @MapperScan("com.njydsz.pmis.notification.mapper")
 public class NotificationApplication {
 

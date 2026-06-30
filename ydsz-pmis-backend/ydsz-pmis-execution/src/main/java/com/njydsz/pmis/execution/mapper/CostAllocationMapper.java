@@ -27,4 +27,7 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
      */
     List<Map<String, Object>> sumBySourceType(@Param("initiationId") Long initiationId,
                                               @Param("period") String period);
+
+    /** 跨项目汇总所有成本金额 */
+    java.math.BigDecimal sumAllAmount();
 }

@@ -33,4 +33,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
     List<Map<String, Object>> aggregateByMonth(@Param("initiationId") Long initiationId);
 
     List<Map<String, Object>> aggregateByCustomer();
+
+    /** 跨项目汇总已分配（确认）回款金额 */
+    BigDecimal sumAllocatedAmount();
 }

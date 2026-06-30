@@ -55,4 +55,9 @@
           AND period = #{period} AND deleted = 0
         GROUP BY source_type
     </select>
+
+    <select id="sumAllAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_cost_allocation
+        WHERE deleted = 0
+    </select>
 </mapper>

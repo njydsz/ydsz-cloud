@@ -40,4 +40,9 @@
             updated_at = CURRENT_TIMESTAMP
         WHERE id = #{id} AND deleted = 0
     </update>
+
+    <select id="sumAllAmount" resultType="java.math.BigDecimal">
+        SELECT COALESCE(SUM(amount), 0) FROM pmis_cost_purchase
+        WHERE deleted = 0
+    </select>
 </mapper>

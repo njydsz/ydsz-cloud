@@ -12,4 +12,7 @@ public interface PurchaseMapper extends BaseMapper<PurchaseDO> {
 
     int updateStatus(@Param("id") Long id, @Param("status") String status,
                      @Param("approverId") Long approverId, @Param("approverName") String approverName);
+
+    /** 跨项目汇总所有采购金额 */
+    java.math.BigDecimal sumAllAmount();
 }

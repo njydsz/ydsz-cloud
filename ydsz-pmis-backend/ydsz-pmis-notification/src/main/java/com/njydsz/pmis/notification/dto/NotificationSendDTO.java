@@ -47,4 +47,10 @@ public class NotificationSendDTO implements Serializable {
 
     /** 过期时间（可选） */
     private LocalDateTime expiredAt;
+
+    /** 是否同时发送邮件（仅对单接收人有效，需 receiverEmail 非空） */
+    private Boolean emailEnabled = Boolean.FALSE;
+
+    /** 接收人邮箱（emailEnabled=true 时必填，亦可由系统根据 receiverId 自动解析） */
+    private String receiverEmail;
 }

@@ -98,4 +98,7 @@ export function request<T = unknown>(config: AxiosRequestConfig): Promise<ApiRes
   return service(config) as unknown as Promise<ApiResponse<T>>
 }
 
+/** 导出 service 实例, 供测试与外部拦截器使用 */
+export { service }
+
 export default service

@@ -31,4 +31,19 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
     List<Map<String, Object>> aggregateByStatus(@Param("contractId") Long contractId);
 
     List<Map<String, Object>> sumByMonth(@Param("initiationId") Long initiationId);
+
+    /** 跨合同汇总已开票金额 */
+    BigDecimal sumInvoicedAmount();
+
+    /** 跨合同汇总已确认收入（ALLOCATED 状态的 payment） */
+    BigDecimal sumConfirmedAmount();
+
+    /** 客户维度下钻 */
+    List<Map<String, Object>> sumByCustomer();
+
+    /** 部门维度下钻 */
+    List<Map<String, Object>> sumByDepartment();
+
+    /** 统计独立项目数 */
+    Integer countDistinctInitiation();
 }
