@@ -65,6 +65,12 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/system/dict/index.vue'),
         meta: { title: '枚举值管理', icon: 'Collection', keepAlive: true },
       },
+      {
+        path: 'config',
+        name: 'SystemConfig',
+        component: () => import('@/views/system/config/index.vue'),
+        meta: { title: '参数配置', icon: 'Tools', keepAlive: true },
+      },
     ],
   },
   {

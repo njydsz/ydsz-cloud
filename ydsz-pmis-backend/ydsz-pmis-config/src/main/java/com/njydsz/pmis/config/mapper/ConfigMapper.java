@@ -5,6 +5,7 @@ import com.njydsz.pmis.config.entity.ConfigDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
+import org.apache.ibatis.annotations.Update;
 
 import java.util.List;
 
@@ -19,4 +20,18 @@ public interface ConfigMapper extends BaseMapper<ConfigDO> {
 
     @Select("SELECT * FROM pmis_cfg.pmis_config WHERE is_public = 1 AND deleted = 0 ORDER BY sort_order, id")
     List<ConfigDO> selectPublic();
+
+    /**
+     * 按 group 逻辑删除所有配置（批量清理用）
+     */
+    @Update("UPDATE pmis_cfg.pmis_config SET deleted = 1, updated_at = CURRENT_TIMESTAMP " +
+            "WHERE config_group = #{group} AND deleted = 0")
+    int deleteByGroup(@Param("group") String group);
+
+    /**
+     * 按 group 批量更新状态
+     */
+    @Update("UPDATE pmis_cfg.pmis_config SET status = #{status}, updated_at = CURRENT_TIMESTAMP " +
+            "WHERE config_group = #{group} AND deleted = 0")
+    int updateStatusByGroup(@Param("group") String group, @Param("status") String status);
 }

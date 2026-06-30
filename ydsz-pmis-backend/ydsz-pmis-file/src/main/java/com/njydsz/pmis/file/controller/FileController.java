@@ -33,7 +33,7 @@ public class FileController {
     private final FileService fileService;
 
     @Operation(summary = "上传文件")
-    @PrePermission("file:upload")
+    @PrePermission(PermissionCodes.FILE_STORAGE_UPLOAD)
     @OperationLog(module = "文件存储", action = "上传文件", bizType = "FILE")
     @PostMapping("/upload")
     public R<FileDO> upload(@RequestPart("file") MultipartFile file,
@@ -51,7 +51,7 @@ public class FileController {
     }
 
     @Operation(summary = "删除文件")
-    @PrePermission("file:delete")
+    @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "删除文件", bizType = "FILE")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) throws Exception {
@@ -60,7 +60,7 @@ public class FileController {
     }
 
     @Operation(summary = "批量删除")
-    @PrePermission("file:delete")
+    @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @DeleteMapping("/batch")
     public R<Void> deleteBatch(@RequestBody List<Long> ids) throws Exception {
         fileService.deleteBatch(ids);

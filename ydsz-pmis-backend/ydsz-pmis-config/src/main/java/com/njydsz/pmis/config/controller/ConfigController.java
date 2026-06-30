@@ -79,6 +79,22 @@ public class ConfigController {
         return R.ok();
     }
 
+    @Operation(summary = "按分组批量删除")
+    @PrePermission("sys:config:delete")
+    @OperationLog(module = "系统配置", action = "按分组删除", bizType = "CONFIG")
+    @DeleteMapping("/group/{group}")
+    public R<Integer> deleteByGroup(@PathVariable String group) {
+        return R.ok(configService.deleteByGroup(group));
+    }
+
+    @Operation(summary = "按分组批量启停")
+    @PrePermission("sys:config:update")
+    @OperationLog(module = "系统配置", action = "按分组启停", bizType = "CONFIG")
+    @PutMapping("/group/{group}/status/{status}")
+    public R<Integer> updateStatusByGroup(@PathVariable String group, @PathVariable String status) {
+        return R.ok(configService.updateStatusByGroup(group, status));
+    }
+
     @Operation(summary = "刷新缓存")
     @PrePermission("sys:config:refresh")
     @OperationLog(module = "系统配置", action = "刷新缓存", bizType = "CONFIG")

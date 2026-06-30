@@ -3,6 +3,7 @@ package com.njydsz.pmis.user.controller;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.user.dto.EmployeeTagCreateDTO;
 import com.njydsz.pmis.user.entity.EmployeeTagDO;
 import com.njydsz.pmis.user.service.EmployeeTagService;
@@ -37,7 +38,7 @@ public class EmployeeTagController {
     private final EmployeeTagService tagService;
 
     @Operation(summary = "添加标签")
-    @PrePermission("resource:tag:add")
+    @PrePermission(PermissionCodes.RESOURCE_TAG_CREATE)
     @OperationLog(module = "人员标签", action = "添加标签", bizType = "EMPLOYEE_TAG")
     @PostMapping
     public R<Long> add(@Valid @RequestBody EmployeeTagCreateDTO dto) {
@@ -45,7 +46,7 @@ public class EmployeeTagController {
     }
 
     @Operation(summary = "删除标签")
-    @PrePermission("resource:tag:remove")
+    @PrePermission(PermissionCodes.RESOURCE_TAG_DELETE)
     @OperationLog(module = "人员标签", action = "删除标签", bizType = "EMPLOYEE_TAG")
     @DeleteMapping("/{id}")
     public R<Void> remove(@PathVariable Long id) {
@@ -54,7 +55,7 @@ public class EmployeeTagController {
     }
 
     @Operation(summary = "覆盖式设置员工标签")
-    @PrePermission("resource:tag:replace")
+    @PrePermission(PermissionCodes.RESOURCE_TAG_UPDATE)
     @OperationLog(module = "人员标签", action = "覆盖员工标签", bizType = "EMPLOYEE_TAG")
     @PutMapping("/replace/{employeeId}")
     public R<Void> replaceByEmployee(@PathVariable Long employeeId,

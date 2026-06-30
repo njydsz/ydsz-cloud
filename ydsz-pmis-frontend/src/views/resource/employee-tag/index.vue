@@ -9,6 +9,7 @@ import {
   findCandidates,
 } from '@/api/resource/employee-tag'
 import type { EmployeeTagVO, EmployeeTagCreateDTO } from '@/api/resource/employee-tag/types'
+import { PC } from '@/constants/permissionCodes'
 
 const tab = ref<'byEmployee' | 'candidates'>('byEmployee')
 const employeeId = ref<number | null>(null)
@@ -108,7 +109,7 @@ onMounted(() => {
           <div class="search-row">
             <el-input-number v-model="employeeId" :min="1" placeholder="员工 ID" />
             <el-button type="primary" @click="fetchTags">查询</el-button>
-            <el-button v-permission="['resource:tag:add']" type="primary" :icon="'Plus'" @click="openCreate">新增标签</el-button>
+            <el-button v-permission="[PC.RESOURCE_TAG_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">新增标签</el-button>
           </div>
           <vxe-table :data="tags" border>
             <vxe-column type="seq" title="#" width="50" />
@@ -124,7 +125,7 @@ onMounted(() => {
             <vxe-column field="description" title="描述" min-width="200" />
             <vxe-column title="操作" width="120" fixed="right">
               <template #default="{ row }">
-                <el-button v-permission="['resource:tag:remove']" link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+                <el-button v-permission="[PC.RESOURCE_TAG_DELETE]" link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
               </template>
             </vxe-column>
           </vxe-table>

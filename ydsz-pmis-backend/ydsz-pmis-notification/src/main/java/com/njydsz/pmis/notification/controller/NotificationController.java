@@ -29,7 +29,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @Operation(summary = "发送通知")
-    @PrePermission("notif:send")
+    @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @OperationLog(module = "通知中心", action = "发送通知", bizType = "NOTIF")
     @PostMapping("/send")
     public R<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {

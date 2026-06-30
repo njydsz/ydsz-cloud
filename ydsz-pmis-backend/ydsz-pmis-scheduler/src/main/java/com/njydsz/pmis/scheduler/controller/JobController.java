@@ -3,6 +3,7 @@ package com.njydsz.pmis.scheduler.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.scheduler.entity.JobDO;
 import com.njydsz.pmis.scheduler.entity.JobLogDO;
 import com.njydsz.pmis.scheduler.service.JobService;
@@ -25,14 +26,14 @@ public class JobController {
     private final JobService jobService;
 
     @Operation(summary = "新增任务")
-    @PrePermission("job:add")
+    @PrePermission(PermissionCodes.SCHEDULER_JOB_CREATE)
     @PostMapping
     public R<Long> create(@RequestBody JobDO job) {
         return R.ok(jobService.create(job));
     }
 
     @Operation(summary = "更新任务")
-    @PrePermission("job:edit")
+    @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PutMapping
     public R<Void> update(@RequestBody JobDO job) {
         jobService.update(job);
@@ -40,7 +41,7 @@ public class JobController {
     }
 
     @Operation(summary = "删除任务")
-    @PrePermission("job:delete")
+    @PrePermission(PermissionCodes.SCHEDULER_JOB_DELETE)
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         jobService.delete(id);
@@ -48,7 +49,7 @@ public class JobController {
     }
 
     @Operation(summary = "暂停任务")
-    @PrePermission("job:edit")
+    @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PostMapping("/{id}/pause")
     public R<Void> pause(@PathVariable Long id) {
         jobService.pause(id);
@@ -56,7 +57,7 @@ public class JobController {
     }
 
     @Operation(summary = "恢复任务")
-    @PrePermission("job:edit")
+    @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PostMapping("/{id}/resume")
     public R<Void> resume(@PathVariable Long id) {
         jobService.resume(id);
@@ -64,7 +65,7 @@ public class JobController {
     }
 
     @Operation(summary = "立即执行一次")
-    @PrePermission("job:trigger")
+    @PrePermission(PermissionCodes.SCHEDULER_JOB_TRIGGER)
     @PostMapping("/{id}/trigger")
     public R<Long> trigger(@PathVariable Long id) {
         return R.ok(jobService.trigger(id));
@@ -98,7 +99,7 @@ public class JobController {
     }
 
     @Operation(summary = "重新加载所有任务")
-    @PrePermission("job:reload")
+    @PrePermission(PermissionCodes.SCHEDULER_JOB_RELOAD)
     @PostMapping("/reload")
     public R<Map<String, Object>> reload() {
         jobService.loadOnStartup();

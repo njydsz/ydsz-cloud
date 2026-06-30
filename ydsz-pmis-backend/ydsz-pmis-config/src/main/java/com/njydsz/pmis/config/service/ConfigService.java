@@ -46,6 +46,16 @@ public interface ConfigService {
     void delete(Long id);
 
     /**
+     * 批量按 group 删除（清理整个分组的配置）
+     */
+    int deleteByGroup(String group);
+
+    /**
+     * 批量按 group 启用/停用
+     */
+    int updateStatusByGroup(String group, String status);
+
+    /**
      * 刷新缓存（变更后调用）
      */
     void refreshCache();
