@@ -1,13 +1,16 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
+import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;
 import com.njydsz.pmis.execution.entity.RateCardDO;
 import com.njydsz.pmis.execution.entity.RateInternalDO;
 import com.njydsz.pmis.execution.entity.RiskDO;
 import com.njydsz.pmis.execution.feign.BenchResourceClient;
 import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
+import com.njydsz.pmis.execution.mapper.ProfitSnapshotMapper;
 import com.njydsz.pmis.execution.mapper.RateCardMapper;
 import com.njydsz.pmis.execution.mapper.RateInternalMapper;
 import com.njydsz.pmis.execution.mapper.RiskMapper;
@@ -45,6 +48,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     private final TimeEntryMapper timeEntryMapper;
     private final ThresholdProvider thresholdProvider;
     private final BenchResourceClient benchResourceClient;
+    private final ProfitSnapshotMapper profitSnapshotMapper;
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final BigDecimal HUNDRED = new BigDecimal("100");
@@ -694,6 +698,169 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         String up = s.trim().toUpperCase();
         if (RISK_LEVELS.contains(up)) return up;
         return "MEDIUM";
+    }
+
+    @Override
+    public Map<String, Object> projectHealthDashboard(List<Long> initiationIds, String health) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        // 1) 加载 EVM 健康聚合
+        List<Map<String, Object>> evmRows = safeAll(evmMapper, m -> m.aggregateHealthByInitiation());
+        // 2) 加载 ProfitSnapshot 全部
+        List<ProfitSnapshotDO> snaps = new ArrayList<>();
+        try {
+            LambdaQueryWrapper<ProfitSnapshotDO> w = new LambdaQueryWrapper<>();
+            w.orderByDesc(ProfitSnapshotDO::getSnapshotAt);
+            List<ProfitSnapshotDO> all = profitSnapshotMapper.selectList(w);
+            if (all != null) snaps.addAll(all);
+        } catch (Exception e) {
+            log.warn("[AdvancedReport] projectHealthDashboard 快照查询失败: {}", e.getMessage());
+        }
+
+        // 3) 取每个项目最新 snapshot
+        Map<Long, ProfitSnapshotDO> latestSnap = new LinkedHashMap<>();
+        for (ProfitSnapshotDO s : snaps) {
+            if (s == null || s.getInitiationId() == null) continue;
+            ProfitSnapshotDO prev = latestSnap.get(s.getInitiationId());
+            if (prev == null
+                    || (s.getSnapshotAt() != null
+                        && (prev.getSnapshotAt() == null
+                            || s.getSnapshotAt().isAfter(prev.getSnapshotAt())))) {
+                latestSnap.put(s.getInitiationId(), s);
+            }
+        }
+
+        // 4) 合并生成项目行
+        Map<Long, Map<String, Object>> projectMap = new LinkedHashMap<>();
+        // 从 EVM 行入
+        for (Map<String, Object> row : evmRows) {
+            Long initId = toLong(row.get("initiation_id"));
+            if (initId == null) continue;
+            Map<String, Object> p = projectMap.computeIfAbsent(initId, k -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("initiationId", k);
+                return m;
+            });
+            p.put("cpi", toBigDecimal(row.get("cpi")));
+            p.put("spi", toBigDecimal(row.get("spi")));
+            p.put("eac", toBigDecimal(row.get("eac")));
+            p.put("vac", toBigDecimal(row.get("vac")));
+            p.put("topAlert", row.getOrDefault("top_alert", "NORMAL"));
+        }
+        // 从 snapshot 补 margin
+        for (Map.Entry<Long, ProfitSnapshotDO> e : latestSnap.entrySet()) {
+            Map<String, Object> p = projectMap.computeIfAbsent(e.getKey(), k -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("initiationId", k);
+                return m;
+            });
+            p.put("margin", nz(e.getValue().getGrossMargin()));
+            p.put("totalCost", nz(e.getValue().getTotalCost()));
+            p.put("grossProfit", nz(e.getValue().getGrossProfit()));
+            p.put("contractAmount", nz(e.getValue().getContractAmount()));
+            p.put("recognizedRevenue", nz(e.getValue().getRecognizedRevenue()));
+            p.put("period", e.getValue().getPeriod());
+            p.put("snapshotAt", e.getValue().getSnapshotAt());
+        }
+
+        // 5) 计算健康度评分
+        List<Map<String, Object>> projects = new ArrayList<>();
+        int green = 0, yellow = 0, red = 0, unknown = 0;
+        for (Map<String, Object> p : projectMap.values()) {
+            BigDecimal cpi = toBigDecimal(p.get("cpi"));
+            BigDecimal spi = toBigDecimal(p.get("spi"));
+            BigDecimal margin = toBigDecimal(p.get("margin"));
+
+            // CPI 钳制 [0, 2]：cpi=1 -> 50; cpi>=1.2 -> 60; cpi<=0.8 -> 0
+            BigDecimal cpiPart = cpi.signum() == 0 ? ZERO
+                    : cpi.multiply(new BigDecimal("50")).setScale(4, RoundingMode.HALF_UP);
+            if (cpiPart.compareTo(new BigDecimal("60")) > 0) {
+                cpiPart = new BigDecimal("60");
+            }
+            if (cpi.compareTo(new BigDecimal("0.8")) < 0) {
+                cpiPart = ZERO;
+            }
+            // SPI 钳制 [0, 30]
+            BigDecimal spiPart = spi.signum() == 0 ? ZERO
+                    : spi.multiply(new BigDecimal("30")).setScale(4, RoundingMode.HALF_UP);
+            if (spiPart.compareTo(new BigDecimal("30")) > 0) {
+                spiPart = new BigDecimal("30");
+            }
+            if (spi.compareTo(new BigDecimal("0.8")) < 0) {
+                spiPart = ZERO;
+            }
+            // margin 分数：margin=0.5 -> 100; margin>=0.5 -> 100
+            BigDecimal marginScore = margin.multiply(new BigDecimal("200"))
+                    .setScale(4, RoundingMode.HALF_UP);
+            if (marginScore.compareTo(ZERO) < 0) {
+                marginScore = ZERO;
+            }
+            if (marginScore.compareTo(new BigDecimal("20")) > 0) {
+                marginScore = new BigDecimal("20");
+            }
+
+            BigDecimal score = cpiPart.add(spiPart).add(marginScore)
+                    .setScale(2, RoundingMode.HALF_UP);
+
+            String level;
+            if (cpi.signum() == 0 && spi.signum() == 0 && margin.signum() == 0) {
+                level = "UNKNOWN";
+            } else if (score.compareTo(new BigDecimal("80")) >= 0) {
+                level = "GREEN";
+            } else if (score.compareTo(new BigDecimal("60")) >= 0) {
+                level = "YELLOW";
+            } else {
+                level = "RED";
+            }
+            p.put("healthScore", score);
+            p.put("healthLevel", level);
+            p.put("cpiPart", cpiPart);
+            p.put("spiPart", spiPart);
+            p.put("marginScore", marginScore);
+            projects.add(p);
+
+            if ("GREEN".equals(level)) green++;
+            else if ("YELLOW".equals(level)) yellow++;
+            else if ("RED".equals(level)) red++;
+            else unknown++;
+        }
+
+        // 6) 应用过滤
+        String realHealth = StringUtils.hasText(health) ? health.trim().toUpperCase() : null;
+        List<Long> filterIds = initiationIds == null ? List.of() : initiationIds.stream()
+                .filter(java.util.Objects::nonNull).collect(Collectors.toList());
+        boolean filterByIds = !filterIds.isEmpty();
+        if (realHealth != null || filterByIds) {
+            List<Map<String, Object>> filtered = new ArrayList<>();
+            for (Map<String, Object> p : projects) {
+                if (realHealth != null && !realHealth.equals(p.get("healthLevel"))) {
+                    continue;
+                }
+                if (filterByIds && !filterIds.contains(toLong(p.get("initiationId")))) {
+                    continue;
+                }
+                filtered.add(p);
+            }
+            projects = filtered;
+        }
+
+        // 7) 排序：健康度低到高（优先关注红/黄）
+        projects.sort(Comparator
+                .comparing((Map<String, Object> m) -> toBigDecimal(m.get("healthScore")))
+                .thenComparing(m -> toLong(m.get("initiationId")) == null ? 0L : toLong(m.get("initiationId"))));
+
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("totalCount", projects.size());
+        summary.put("greenCount", green);
+        summary.put("yellowCount", yellow);
+        summary.put("redCount", red);
+        summary.put("unknownCount", unknown);
+
+        out.put("projects", projects);
+        out.put("summary", summary);
+        out.put("filter", Map.of(
+                "initiationIds", filterIds,
+                "health", realHealth == null ? "" : realHealth));
+        return out;
     }
 
     @Override

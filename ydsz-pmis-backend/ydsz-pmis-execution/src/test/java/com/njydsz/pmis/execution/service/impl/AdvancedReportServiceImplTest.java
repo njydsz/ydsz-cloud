@@ -3,11 +3,13 @@ package com.njydsz.pmis.execution.service.impl;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
+import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;
 import com.njydsz.pmis.execution.entity.RateCardDO;
 import com.njydsz.pmis.execution.entity.RateInternalDO;
 import com.njydsz.pmis.execution.entity.RiskDO;
 import com.njydsz.pmis.execution.feign.BenchResourceClient;
 import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
+import com.njydsz.pmis.execution.mapper.ProfitSnapshotMapper;
 import com.njydsz.pmis.execution.mapper.RateCardMapper;
 import com.njydsz.pmis.execution.mapper.RateInternalMapper;
 import com.njydsz.pmis.execution.mapper.RiskMapper;
@@ -18,6 +20,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -42,6 +45,7 @@ class AdvancedReportServiceImplTest {
     private TimeEntryMapper timeEntryMapper;
     private ThresholdProvider thresholdProvider;
     private BenchResourceClient benchResourceClient;
+    private ProfitSnapshotMapper profitSnapshotMapper;
     private AdvancedReportServiceImpl service;
 
     @BeforeEach
@@ -53,6 +57,7 @@ class AdvancedReportServiceImplTest {
         timeEntryMapper = mock(TimeEntryMapper.class);
         thresholdProvider = mock(ThresholdProvider.class);
         benchResourceClient = mock(BenchResourceClient.class);
+        profitSnapshotMapper = mock(ProfitSnapshotMapper.class);
         when(thresholdProvider.benchYellowDays()).thenReturn(7);
         when(thresholdProvider.benchRedDays()).thenReturn(15);
         // 默认 user 服务降级：返回空数据，不让现有测试受 Feign 影响
@@ -64,7 +69,7 @@ class AdvancedReportServiceImplTest {
                 .thenReturn(R.ok(Collections.emptyList()));
         service = new AdvancedReportServiceImpl(evmMapper, rateCardMapper,
                 rateInternalMapper, riskMapper, timeEntryMapper, thresholdProvider,
-                benchResourceClient);
+                benchResourceClient, profitSnapshotMapper);
     }
 
     @Test
@@ -735,6 +740,172 @@ class AdvancedReportServiceImplTest {
         // 起始 > 结束 已被交换为 from <= to
         assertThat(filter.get("from").toString()).isEqualTo("2026-01-01");
         assertThat(filter.get("to").toString()).isEqualTo("2026-06-01");
+    }
+
+    // ----------------- P2-5 项目健康仪表盘 -----------------
+
+    @Test
+    @DisplayName("projectHealthDashboard 空数据返回空结构")
+    void projectHealth_empty() {
+        when(evmMapper.aggregateHealthByInitiation()).thenReturn(List.of());
+        when(profitSnapshotMapper.selectList(any())).thenReturn(List.of());
+        Map<String, Object> out = service.projectHealthDashboard(null, null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> projects = (List<Map<String, Object>>) out.get("projects");
+        assertThat(projects).isEmpty();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("totalCount")).intValue()).isZero();
+    }
+
+    @Test
+    @DisplayName("projectHealthDashboard 综合 CPI/SPI/毛利率评分 GREEN")
+    void projectHealth_green() {
+        Map<String, Object> evm = new HashMap<>();
+        evm.put("initiation_id", 1L);
+        evm.put("cpi", new BigDecimal("1.10"));
+        evm.put("spi", new BigDecimal("1.05"));
+        evm.put("eac", new BigDecimal("90000"));
+        evm.put("vac", new BigDecimal("10000"));
+        evm.put("top_alert", "NORMAL");
+        when(evmMapper.aggregateHealthByInitiation()).thenReturn(List.of(evm));
+        ProfitSnapshotDO snap = new ProfitSnapshotDO();
+        snap.setInitiationId(1L);
+        snap.setPeriod("2026-Q1");
+        snap.setSnapshotAt(LocalDateTime.of(2026, 3, 31, 0, 0));
+        snap.setGrossMargin(new BigDecimal("0.30"));
+        snap.setTotalCost(new BigDecimal("70000"));
+        snap.setGrossProfit(new BigDecimal("30000"));
+        snap.setContractAmount(new BigDecimal("100000"));
+        snap.setRecognizedRevenue(new BigDecimal("100000"));
+        when(profitSnapshotMapper.selectList(any())).thenReturn(List.of(snap));
+
+        Map<String, Object> out = service.projectHealthDashboard(null, null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> projects = (List<Map<String, Object>>) out.get("projects");
+        assertThat(projects).hasSize(1);
+        Map<String, Object> p = projects.get(0);
+        // cpi=1.10*50=55, spi=1.05*30=31.5, margin=0.30*200=60 -> cap 20
+        // score = 55 + 31.5 + 20 = 106.5 -> clamp... 实际 cap 60 for cpi part, cap 30 for spi
+        // 我们的实现：cpiPart = min(1.10*50, 60) = 55; spiPart = min(1.05*30, 30) = 31.5; marginScore = min(0.30*200, 20) = 20
+        // score = 55 + 31.5 + 20 = 106.5
+        assertThat(p.get("healthLevel")).isEqualTo("GREEN");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("greenCount")).intValue()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("projectHealthDashboard CPI 极低时强制 0 分 + RED")
+    void projectHealth_redByCpi() {
+        Map<String, Object> evm = new HashMap<>();
+        evm.put("initiation_id", 2L);
+        evm.put("cpi", new BigDecimal("0.50"));   // 极低 CPI
+        evm.put("spi", new BigDecimal("1.20"));
+        evm.put("eac", new BigDecimal("200000"));
+        evm.put("vac", new BigDecimal("-50000"));
+        evm.put("top_alert", "RED");
+        when(evmMapper.aggregateHealthByInitiation()).thenReturn(List.of(evm));
+        ProfitSnapshotDO snap = new ProfitSnapshotDO();
+        snap.setInitiationId(2L);
+        snap.setPeriod("2026-Q1");
+        snap.setSnapshotAt(LocalDateTime.of(2026, 3, 31, 0, 0));
+        snap.setGrossMargin(new BigDecimal("0.10"));
+        when(profitSnapshotMapper.selectList(any())).thenReturn(List.of(snap));
+
+        Map<String, Object> out = service.projectHealthDashboard(null, null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> projects = (List<Map<String, Object>>) out.get("projects");
+        assertThat(projects).hasSize(1);
+        Map<String, Object> p = projects.get(0);
+        // cpi=0.5 < 0.8 -> cpiPart = 0
+        // spi=1.2*30 = 36 -> cap 30
+        // margin=0.10*200=20 -> cap 20
+        // score = 0 + 30 + 20 = 50 -> RED
+        assertThat(p.get("healthLevel")).isEqualTo("RED");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("redCount")).intValue()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("projectHealthDashboard 按 health=GREEN 过滤")
+    void projectHealth_filterByHealth() {
+        Map<String, Object> evm1 = new HashMap<>();
+        evm1.put("initiation_id", 1L);
+        evm1.put("cpi", new BigDecimal("1.10"));
+        evm1.put("spi", new BigDecimal("1.05"));
+        evm1.put("eac", BigDecimal.ZERO);
+        evm1.put("vac", BigDecimal.ZERO);
+        evm1.put("top_alert", "NORMAL");
+        Map<String, Object> evm2 = new HashMap<>();
+        evm2.put("initiation_id", 2L);
+        evm2.put("cpi", new BigDecimal("0.50"));
+        evm2.put("spi", new BigDecimal("0.50"));
+        evm2.put("eac", BigDecimal.ZERO);
+        evm2.put("vac", BigDecimal.ZERO);
+        evm2.put("top_alert", "RED");
+        when(evmMapper.aggregateHealthByInitiation()).thenReturn(List.of(evm1, evm2));
+        when(profitSnapshotMapper.selectList(any())).thenReturn(List.of());
+
+        Map<String, Object> out = service.projectHealthDashboard(null, "GREEN");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> projects = (List<Map<String, Object>>) out.get("projects");
+        // 项目 1 cpi=1.10*50=55, spi=1.05*30=31.5, margin=0 -> score=86.5 -> GREEN
+        // 项目 2 cpi<0.8 -> 0; spi<0.8 -> 0; margin=0 -> score=0 -> UNKNOWN
+        assertThat(projects).hasSize(1);
+        assertThat(projects.get(0).get("initiationId")).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("projectHealthDashboard 按 initiationIds 过滤")
+    void projectHealth_filterByIds() {
+        Map<String, Object> evm1 = new HashMap<>();
+        evm1.put("initiation_id", 1L);
+        evm1.put("cpi", new BigDecimal("1.10"));
+        evm1.put("spi", new BigDecimal("1.05"));
+        evm1.put("eac", BigDecimal.ZERO);
+        evm1.put("vac", BigDecimal.ZERO);
+        evm1.put("top_alert", "NORMAL");
+        Map<String, Object> evm2 = new HashMap<>();
+        evm2.put("initiation_id", 2L);
+        evm2.put("cpi", new BigDecimal("1.10"));
+        evm2.put("spi", new BigDecimal("1.05"));
+        evm2.put("eac", BigDecimal.ZERO);
+        evm2.put("vac", BigDecimal.ZERO);
+        evm2.put("top_alend", "NORMAL");
+        evm2.put("top_alert", "NORMAL");
+        when(evmMapper.aggregateHealthByInitiation()).thenReturn(List.of(evm1, evm2));
+        when(profitSnapshotMapper.selectList(any())).thenReturn(List.of());
+
+        Map<String, Object> out = service.projectHealthDashboard(List.of(1L), null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> projects = (List<Map<String, Object>>) out.get("projects");
+        assertThat(projects).hasSize(1);
+        assertThat(projects.get(0).get("initiationId")).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("projectHealthDashboard 全部数据缺失时为 UNKNOWN")
+    void projectHealth_unknown() {
+        when(evmMapper.aggregateHealthByInitiation()).thenReturn(List.of());
+        when(profitSnapshotMapper.selectList(any())).thenReturn(List.of());
+        Map<String, Object> out = service.projectHealthDashboard(null, null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("unknownCount")).intValue()).isZero();
+        assertThat(((Number) summary.get("totalCount")).intValue()).isZero();
+    }
+
+    @Test
+    @DisplayName("projectHealthDashboard 异常降级返回空")
+    void projectHealth_exception() {
+        when(evmMapper.aggregateHealthByInitiation()).thenThrow(new RuntimeException("DB down"));
+        when(profitSnapshotMapper.selectList(any())).thenReturn(List.of());
+        Map<String, Object> out = service.projectHealthDashboard(null, null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> projects = (List<Map<String, Object>>) out.get("projects");
+        assertThat(projects).isEmpty();
     }
 
     private static Map<String, Object> findCell(List<Map<String, Object>> matrix,

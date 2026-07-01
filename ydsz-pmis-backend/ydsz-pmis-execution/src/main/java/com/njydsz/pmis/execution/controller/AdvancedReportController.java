@@ -118,4 +118,12 @@ public class AdvancedReportController {
             @RequestParam(required = false) String department) {
         return R.ok(service.resourceUtilizationTrend(from, to, department));
     }
+
+    @Operation(summary = "项目健康仪表盘 CPI/SPI/毛利率（P2-5）")
+    @GetMapping("/project-health-dashboard")
+    public R<Map<String, Object>> projectHealthDashboard(
+            @RequestParam(required = false) List<Long> initiationIds,
+            @RequestParam(required = false) String health) {
+        return R.ok(service.projectHealthDashboard(initiationIds, health));
+    }
 }

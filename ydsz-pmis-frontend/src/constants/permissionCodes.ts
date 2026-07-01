@@ -250,6 +250,10 @@ export const PC = {
   // ============= AI Agent =============
   AGENT_RUN: 'agent:run',
   AGENT_HISTORY: 'agent:history',
+  AGENT_VIEW: 'agent:view',
+  AGENT_ORCHESTRATION_RUN: 'agent:orchestration:run',
+  AGENT_ORCHESTRATION_VIEW: 'agent:orchestration:view',
+  AGENT_PREDICTION_VIEW: 'agent:prediction:view',
 } as const
 
 export type PermissionCode = (typeof PC)[keyof typeof PC]

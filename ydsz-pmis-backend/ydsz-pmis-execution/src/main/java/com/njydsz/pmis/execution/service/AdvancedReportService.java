@@ -122,4 +122,22 @@ public interface AdvancedReportService {
      * @param department  事业部过滤（可空）
      */
     Map<String, Object> resourceUtilizationTrend(LocalDate from, LocalDate to, String department);
+
+    /**
+     * 项目健康仪表盘（P2-5 体验增强）
+     *
+     * <p>综合 CPI / SPI / 毛利率 三维度计算每个项目的健康度评分（0-100）：
+     * <ul>
+     *   <li>score = cpi * 50 + spi * 30 + marginScore * 20</li>
+     *   <li>marginScore = max(0, min(100, margin * 200)) — 50% 毛利率对应 100 分</li>
+     *   <li>健康度等级：GREEN >= 80 / YELLOW >= 60 / RED < 60</li>
+     * </ul>
+     *
+     * <p>数据源：EVM 最新测量（aggregateHealthByInitiation）+ ProfitSnapshot 最新快照。
+     * 数据缺失时降级为 0 评分（健康度等级 = UNKNOWN）。
+     *
+     * @param initiationIds 可选项目 ID 列表（空 = 全局）
+     * @param health        可选健康度过滤（GREEN/YELLOW/RED/UNKNOWN）
+     */
+    Map<String, Object> projectHealthDashboard(List<Long> initiationIds, String health);
 }

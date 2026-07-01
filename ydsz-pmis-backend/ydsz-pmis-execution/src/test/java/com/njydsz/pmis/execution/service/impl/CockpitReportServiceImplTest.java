@@ -216,4 +216,97 @@ class CockpitReportServiceImplTest {
     void drillByProjectType() {
         assertThat(service.drillByProjectType(null)).isEmpty();
     }
+
+    // ----------------- P2-4 合同总额年度趋势 -----------------
+
+    @Test
+    @DisplayName("contractAmountYearlyTrend 空数据返回空结构")
+    void contractYearlyTrend_empty() {
+        when(invoiceMapper.sumByYear()).thenReturn(List.of());
+        Map<String, Object> out = service.contractAmountYearlyTrend();
+        @SuppressWarnings("unchecked")
+        List<String> years = (List<String>) out.get("years");
+        assertThat(years).isEmpty();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("yearCount")).intValue()).isZero();
+    }
+
+    @Test
+    @DisplayName("contractAmountYearlyTrend 多年聚合含合同额、项目数、同比")
+    void contractYearlyTrend_normal() {
+        Map<String, Object> r2023 = new HashMap<>();
+        r2023.put("year", "2023");
+        r2023.put("total_amount", new BigDecimal("1000000"));
+        r2023.put("invoice_count", 5);
+        r2023.put("project_count", 3);
+        Map<String, Object> r2024 = new HashMap<>();
+        r2024.put("year", "2024");
+        r2024.put("total_amount", new BigDecimal("1500000"));
+        r2024.put("invoice_count", 8);
+        r2024.put("project_count", 4);
+        Map<String, Object> r2025 = new HashMap<>();
+        r2025.put("year", "2025");
+        r2025.put("total_amount", new BigDecimal("1200000"));
+        r2025.put("invoice_count", 6);
+        r2025.put("project_count", 5);
+        when(invoiceMapper.sumByYear()).thenReturn(List.of(r2023, r2024, r2025));
+
+        Map<String, Object> out = service.contractAmountYearlyTrend();
+        @SuppressWarnings("unchecked")
+        List<String> years = (List<String>) out.get("years");
+        assertThat(years).containsExactly("2023", "2024", "2025");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> series = (List<Map<String, Object>>) out.get("series");
+        assertThat(series).hasSize(2);
+        // 合同总额 series
+        Map<String, Object> amountSeries = series.get(0);
+        assertThat(amountSeries.get("type")).isEqualTo("bar");
+        @SuppressWarnings("unchecked")
+        List<BigDecimal> amountData = (List<BigDecimal>) amountSeries.get("data");
+        assertThat(amountData).containsExactly(
+                new BigDecimal("1000000"),
+                new BigDecimal("1500000"),
+                new BigDecimal("1200000"));
+
+        // summary
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("yearCount")).intValue()).isEqualTo(3);
+        assertThat(summary.get("peakYear")).isEqualTo("2024");
+        assertThat(summary.get("peakAmount")).isEqualTo(new BigDecimal("1500000"));
+        // 同比 = (1200000 - 1500000) / 1500000 = -0.20
+        assertThat(((Number) summary.get("latestYoy")).doubleValue()).isEqualTo(-0.20);
+        // 累计 = 3700000
+        assertThat(summary.get("totalAmount")).isEqualTo(new BigDecimal("3700000"));
+        // 累计项目数 3+4+5=12
+        assertThat(((Number) summary.get("totalProjects")).intValue()).isEqualTo(12);
+        // 累计发票数 5+8+6=19
+        assertThat(((Number) summary.get("totalInvoices")).intValue()).isEqualTo(19);
+    }
+
+    @Test
+    @DisplayName("contractAmountYearlyTrend 单年无同比")
+    void contractYearlyTrend_singleYear() {
+        Map<String, Object> r = new HashMap<>();
+        r.put("year", "2024");
+        r.put("total_amount", new BigDecimal("500000"));
+        r.put("invoice_count", 3);
+        r.put("project_count", 2);
+        when(invoiceMapper.sumByYear()).thenReturn(List.of(r));
+        Map<String, Object> out = service.contractAmountYearlyTrend();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("latestYoy")).doubleValue()).isEqualTo(0.0);
+    }
+
+    @Test
+    @DisplayName("contractAmountYearlyTrend 异常降级")
+    void contractYearlyTrend_exception() {
+        when(invoiceMapper.sumByYear()).thenThrow(new RuntimeException("DB down"));
+        Map<String, Object> out = service.contractAmountYearlyTrend();
+        @SuppressWarnings("unchecked")
+        List<String> years = (List<String>) out.get("years");
+        assertThat(years).isEmpty();
+    }
 }

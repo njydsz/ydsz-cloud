@@ -83,6 +83,11 @@
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>
         </dependency>
+        <!-- 显式锁定 commons-io 2.13+，解决 easyexcel 4.x UnsynchronizedByteArrayOutputStream.builder() 缺失 -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+        </dependency>
     </dependencies>
 
     <build>
