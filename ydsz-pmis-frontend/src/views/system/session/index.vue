@@ -13,7 +13,7 @@ import {
   adminKickSession,
 } from '@/api/user/session'
 import type { UserSessionVO } from '@/api/user/session'
-import { parseUserAgent, deviceIconName } from '@/utils/device'
+import { parseUserAgent } from '@/utils/device'
 
 const loading = ref(false)
 const list = ref<UserSessionVO[]>([])

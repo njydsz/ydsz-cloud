@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.job;
 
 import com.njydsz.pmis.execution.service.OpsTicketService;
 import com.njydsz.pmis.execution.service.WarrantyService;
-import com.njydsz.pmis.scheduler.handler.JobHandler;
+import com.njydsz.pmis.common.job.JobHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

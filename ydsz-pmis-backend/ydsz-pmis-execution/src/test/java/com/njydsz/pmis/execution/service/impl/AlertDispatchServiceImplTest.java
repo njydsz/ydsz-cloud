@@ -246,4 +246,66 @@ class AlertDispatchServiceImplTest {
         assertThat(service.listByLevelAndStatus("YELLOW", "PENDING")).isEmpty();
         assertThat(service.aggregateByTypeAndLevel(1L)).isEmpty();
     }
+
+    @Test
+    @DisplayName("dispatchNow 多通道：IN_APP 失败时整体失败")
+    void dispatchNow_multiChannel_partialFail() {
+        AlertDispatchDO d = new AlertDispatchDO();
+        d.setId(5L);
+        d.setStatus("PENDING");
+        d.setAlertType("EVM");
+        d.setAlertLevel("RED");
+        d.setPushChannels("IN_APP,EMAIL");
+        when(mapper.selectById(5L)).thenReturn(d);
+        // IN_APP 成功, EMAIL 失败
+        when(messageClient.send(ArgumentMatchers.argThat(req ->
+                req != null && "IN_APP".equals(req.getChannel()))))
+                .thenReturn(R.ok(MessageResult.ok("IN_APP", "t-1")));
+        when(messageClient.send(ArgumentMatchers.argThat(req ->
+                req != null && "EMAIL".equals(req.getChannel()))))
+                .thenReturn(R.ok(MessageResult.fail("EMAIL", "smtp 521")));
+        boolean ok = service.dispatchNow(5L);
+        assertThat(ok).isFalse();
+        verify(mapper).markFailed(ArgumentMatchers.eq(5L), ArgumentMatchers.contains("smtp 521"));
+        verify(mapper, never()).markSent(any(), any());
+    }
+
+    @Test
+    @DisplayName("dispatchNow Feign 抛异常时整体失败并降级捕获")
+    void dispatchNow_feignException() {
+        AlertDispatchDO d = new AlertDispatchDO();
+        d.setId(6L);
+        d.setStatus("PENDING");
+        d.setAlertType("RISK");
+        d.setAlertLevel("YELLOW");
+        d.setPushChannels("IN_APP");
+        when(mapper.selectById(6L)).thenReturn(d);
+        when(messageClient.send(any(MessageRequest.class)))
+                .thenThrow(new RuntimeException("connection refused"));
+        boolean ok = service.dispatchNow(6L);
+        assertThat(ok).isFalse();
+        verify(mapper).markFailed(ArgumentMatchers.eq(6L), ArgumentMatchers.contains("connection refused"));
+    }
+
+    @Test
+    @DisplayName("dispatchNow 接收人: targetUserIds 优先于 targetRole")
+    void resolveReceiver_priority() {
+        // 通过 dispatchNow 内部行为间接校验: targetUserIds 出现在 MessageRequest.receiver
+        AlertDispatchDO d = new AlertDispatchDO();
+        d.setId(7L);
+        d.setStatus("PENDING");
+        d.setAlertType("BUDGET");
+        d.setAlertLevel("YELLOW");
+        d.setPushChannels("IN_APP");
+        d.setTargetUserIds("101,102");
+        d.setTargetRole("PM,PMO");
+        when(mapper.selectById(7L)).thenReturn(d);
+        when(messageClient.send(any(MessageRequest.class)))
+                .thenReturn(R.ok(MessageResult.ok("IN_APP", "t")));
+        when(mapper.markSent(any(), any())).thenReturn(1);
+        service.dispatchNow(7L);
+        ArgumentCaptor<MessageRequest> cap = ArgumentCaptor.forClass(MessageRequest.class);
+        verify(messageClient).send(cap.capture());
+        assertThat(cap.getValue().getReceiver()).isEqualTo("101,102");
+    }
 }

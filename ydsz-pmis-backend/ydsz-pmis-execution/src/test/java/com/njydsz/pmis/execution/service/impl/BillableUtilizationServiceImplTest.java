@@ -1,6 +1,9 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.njydsz.pmis.execution.entity.RateInternalDO;
 import com.njydsz.pmis.execution.enums.UtilizationGrade;
+import com.njydsz.pmis.execution.mapper.BillableUtilizationSnapshotMapper;
+import com.njydsz.pmis.execution.mapper.RateInternalMapper;
 import com.njydsz.pmis.execution.mapper.TimeEntryMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +17,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -24,12 +28,16 @@ import static org.mockito.Mockito.when;
 class BillableUtilizationServiceImplTest {
 
     private TimeEntryMapper mapper;
+    private BillableUtilizationSnapshotMapper snapshotMapper;
+    private RateInternalMapper rateInternalMapper;
     private BillableUtilizationServiceImpl service;
 
     @BeforeEach
     void setUp() {
         mapper = mock(TimeEntryMapper.class);
-        service = new BillableUtilizationServiceImpl(mapper);
+        snapshotMapper = mock(BillableUtilizationSnapshotMapper.class);
+        rateInternalMapper = mock(RateInternalMapper.class);
+        service = new BillableUtilizationServiceImpl(mapper, snapshotMapper, rateInternalMapper);
     }
 
     @Test
@@ -278,5 +286,124 @@ class BillableUtilizationServiceImplTest {
         assertThat(UtilizationGrade.of(Double.NaN)).isEqualTo(UtilizationGrade.CRITICAL);
         assertThat(UtilizationGrade.fromCode("EXCELLENT")).isEqualTo(UtilizationGrade.EXCELLENT);
         assertThat(UtilizationGrade.fromCode(null)).isNull();
+    }
+
+    @Test
+    @DisplayName("recompute 正常路径：聚合 + UPSERT 快照")
+    void recompute_ok() {
+        Map<String, Object> row = new HashMap<>();
+        row.put("employee_id", 1L);
+        row.put("employee_name", "张三");
+        row.put("level_code", "L8");
+        row.put("period", "2026-06");
+        row.put("total_hours", 176d);
+        row.put("billable_hours", 140d);
+        row.put("overtime_hours", 0d);
+        row.put("leave_hours", 0d);
+        row.put("training_hours", 0d);
+        when(mapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of(row));
+        when(snapshotMapper.upsert(any())).thenReturn(1);
+        when(rateInternalMapper.selectAll()).thenReturn(List.of());
+
+        Map<String, Object> r = service.recompute("2026-06", false);
+        assertThat(r.get("ok")).isEqualTo(true);
+        assertThat(r.get("period")).isEqualTo("2026-06");
+        assertThat(r.get("recomputeAll")).isEqualTo(false);
+        assertThat(r.get("affectedCount")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("recompute recomputeAll=true 先软删再重算")
+    void recompute_recomputeAll() {
+        Map<String, Object> row = new HashMap<>();
+        row.put("employee_id", 1L);
+        row.put("employee_name", "张三");
+        row.put("level_code", "L5");
+        row.put("period", "2026-05");
+        row.put("total_hours", 100d);
+        row.put("billable_hours", 80d);
+        when(mapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of(row));
+        when(snapshotMapper.deleteByPeriod("2026-05")).thenReturn(3);
+        when(snapshotMapper.upsert(any())).thenReturn(1);
+        when(rateInternalMapper.selectAll()).thenReturn(List.of());
+
+        Map<String, Object> r = service.recompute("2026-05", true);
+        assertThat(r.get("affectedCount")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("recompute 默认上一月")
+    void recompute_defaultPeriod() {
+        when(mapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of());
+        when(rateInternalMapper.selectAll()).thenReturn(List.of());
+        Map<String, Object> r = service.recompute(null, false);
+        assertThat(r.get("ok")).isEqualTo(true);
+        assertThat(r.get("period")).isNotNull();
+    }
+
+    @Test
+    @DisplayName("recompute period 格式错误抛异常")
+    void recompute_badPeriod() {
+        assertThatThrownBy(() -> service.recompute("2026/06", false))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("recompute 写入失败时单条容错 不影响整体")
+    void recompute_partialFailure() {
+        Map<String, Object> good = new HashMap<>();
+        good.put("employee_id", 1L);
+        good.put("employee_name", "good");
+        good.put("level_code", "L5");
+        good.put("total_hours", 100d);
+        good.put("billable_hours", 80d);
+        Map<String, Object> bad = new HashMap<>();
+        bad.put("employee_id", null); // 缺 employee_id
+        bad.put("employee_name", "bad");
+        when(mapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of(good, bad));
+        when(snapshotMapper.upsert(any())).thenReturn(1);
+        when(rateInternalMapper.selectAll()).thenReturn(List.of());
+
+        Map<String, Object> r = service.recompute("2026-04", false);
+        assertThat(r.get("affectedCount")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("snapshotAverage 优先读快照表")
+    void snapshotAverage_fromSnapshot() {
+        Map<String, Object> snap = new HashMap<>();
+        snap.put("avg_pct", 0.82d);
+        snap.put("headcount", 10L);
+        when(snapshotMapper.averageByPeriod("2026-06")).thenReturn(snap);
+        Map<String, Object> r = service.snapshotAverage("2026-06");
+        assertThat(r.get("source")).isEqualTo("SNAPSHOT");
+        assertThat(((Number) r.get("avg_pct")).doubleValue()).isEqualTo(0.82d);
+    }
+
+    @Test
+    @DisplayName("snapshotAverage 快照为空时实时聚合兜底")
+    void snapshotAverage_fallback() {
+        when(snapshotMapper.averageByPeriod("2026-06")).thenReturn(new HashMap<>());
+        Map<String, Object> row = new HashMap<>();
+        row.put("employee_id", 1L);
+        row.put("employee_name", "a");
+        row.put("level_code", "L5");
+        row.put("total_hours", 100d);
+        row.put("billable_hours", 60d);
+        when(mapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of(row));
+
+        Map<String, Object> r = service.snapshotAverage("2026-06");
+        assertThat(r.get("source")).isEqualTo("REALTIME");
+        assertThat(r.get("headcount")).isEqualTo(1L);
+        assertThat(((Number) r.get("avg_pct")).doubleValue()).isEqualTo(0.6d);
+    }
+
+    @Test
+    @DisplayName("snapshotAverage 默认当前月")
+    void snapshotAverage_defaultPeriod() {
+        when(snapshotMapper.averageByPeriod(any())).thenReturn(new HashMap<>());
+        when(mapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of());
+        Map<String, Object> r = service.snapshotAverage(null);
+        assertThat(r.get("period")).isNotNull();
     }
 }

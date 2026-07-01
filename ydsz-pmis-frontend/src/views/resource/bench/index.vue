@@ -7,7 +7,7 @@
  * 3) 分页查询 + 筛选
  */
 import { ref, reactive, onMounted, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import {
   pageBench,

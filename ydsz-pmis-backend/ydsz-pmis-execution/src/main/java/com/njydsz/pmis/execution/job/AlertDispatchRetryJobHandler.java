@@ -1,7 +1,7 @@
 package com.njydsz.pmis.execution.job;
 
 import com.njydsz.pmis.execution.service.AlertDispatchService;
-import com.njydsz.pmis.scheduler.handler.JobHandler;
+import com.njydsz.pmis.common.job.JobHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -57,7 +57,8 @@ public class AlertDispatchRetryJobHandler implements JobHandler {
             for (String kv : s.split(",")) {
                 String[] pair = kv.split("[:=]");
                 if (pair.length == 2 && "maxRetry".equalsIgnoreCase(pair[0])) {
-                    return Integer.parseInt(pair[1]);
+                    int v = Integer.parseInt(pair[1]);
+                    return v > 0 ? v : DEFAULT_MAX_RETRY;
                 }
             }
         } catch (Exception e) {

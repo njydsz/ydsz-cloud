@@ -2,6 +2,7 @@ package com.njydsz.pmis.execution.service.impl;
 
 import com.njydsz.pmis.execution.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.execution.dto.CockpitKpiVO;
+import com.njydsz.pmis.execution.mapper.BillableUtilizationSnapshotMapper;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
 import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
 import com.njydsz.pmis.execution.mapper.ExpenseMapper;
@@ -9,6 +10,7 @@ import com.njydsz.pmis.execution.mapper.InvoiceMapper;
 import com.njydsz.pmis.execution.mapper.PaymentMapper;
 import com.njydsz.pmis.execution.mapper.PurchaseMapper;
 import com.njydsz.pmis.execution.mapper.RiskMapper;
+import com.njydsz.pmis.execution.service.BillableUtilizationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +42,8 @@ class CockpitReportServiceImplTest {
     private ExpenseMapper expenseMapper;
     private EvmMeasureMapper evmMeasureMapper;
     private RiskMapper riskMapper;
+    private BillableUtilizationSnapshotMapper utilizationSnapshotMapper;
+    private BillableUtilizationService billableUtilizationService;
     private CockpitReportServiceImpl service;
 
     @BeforeEach
@@ -51,8 +55,11 @@ class CockpitReportServiceImplTest {
         expenseMapper = mock(ExpenseMapper.class);
         evmMeasureMapper = mock(EvmMeasureMapper.class);
         riskMapper = mock(RiskMapper.class);
+        utilizationSnapshotMapper = mock(BillableUtilizationSnapshotMapper.class);
+        billableUtilizationService = mock(BillableUtilizationService.class);
         service = new CockpitReportServiceImpl(invoiceMapper, paymentMapper, costAllocationMapper,
-                purchaseMapper, expenseMapper, evmMeasureMapper, riskMapper);
+                purchaseMapper, expenseMapper, evmMeasureMapper, riskMapper,
+                utilizationSnapshotMapper, billableUtilizationService);
     }
 
     @Test
@@ -69,6 +76,11 @@ class CockpitReportServiceImplTest {
                 Map.of("initiation_id", 2, "top_alert", "YELLOW"),
                 Map.of("initiation_id", 3, "top_alert", "NORMAL")
         ));
+        Map<String, Object> snap = new HashMap<>();
+        snap.put("avg_pct", 0.82);
+        snap.put("headcount", 8L);
+        snap.put("source", "SNAPSHOT");
+        when(billableUtilizationService.snapshotAverage(any())).thenReturn(snap);
 
         CockpitKpiVO kpi = service.overview(null, null);
 
@@ -81,6 +93,7 @@ class CockpitReportServiceImplTest {
         assertThat(kpi.getEvmRedCount()).isEqualTo(1);
         assertThat(kpi.getEvmYellowCount()).isEqualTo(1);
         assertThat(kpi.getEvmGreenCount()).isEqualTo(1);
+        assertThat(kpi.getAvgBillableUtilization()).isEqualByComparingTo(new BigDecimal("0.82"));
     }
 
     @Test
@@ -93,6 +106,7 @@ class CockpitReportServiceImplTest {
         when(purchaseMapper.sumAllAmount()).thenReturn(BigDecimal.ZERO);
         when(expenseMapper.sumAllAmount()).thenReturn(BigDecimal.ZERO);
         when(evmMeasureMapper.aggregateHealthByInitiation()).thenReturn(List.of());
+        when(billableUtilizationService.snapshotAverage(any())).thenReturn(new HashMap<>());
 
         CockpitKpiVO kpi = service.overview(null, null);
 
@@ -110,6 +124,7 @@ class CockpitReportServiceImplTest {
         when(purchaseMapper.sumAllAmount()).thenThrow(new RuntimeException("DB down"));
         when(expenseMapper.sumAllAmount()).thenThrow(new RuntimeException("DB down"));
         when(evmMeasureMapper.aggregateHealthByInitiation()).thenThrow(new RuntimeException("DB down"));
+        when(billableUtilizationService.snapshotAverage(any())).thenReturn(new HashMap<>());
 
         CockpitKpiVO kpi = service.overview(null, null);
 
@@ -147,8 +162,32 @@ class CockpitReportServiceImplTest {
     @Test
     @DisplayName("utilizationSummary 返回基础结构")
     void utilization() {
+        Map<String, Object> snap = new HashMap<>();
+        snap.put("avg_pct", 0.75);
+        snap.put("headcount", 5L);
+        snap.put("source", "SNAPSHOT");
+        snap.put("warn_count", 1L);
+        snap.put("critical_count", 0L);
+        when(billableUtilizationService.snapshotAverage(any())).thenReturn(snap);
+        when(utilizationSnapshotMapper.gradeDistribution(any())).thenReturn(List.of());
+        when(utilizationSnapshotMapper.groupByDepartment(any())).thenReturn(List.of());
+
         Map<String, Object> out = service.utilizationSummary(null);
-        assertThat(out).containsKeys("avgBillable", "overloaded", "underutilized", "normal");
+        assertThat(out).containsKeys("avgBillable", "source", "headcount", "gradeDistribution", "topDepartments");
+        assertThat((BigDecimal) out.get("avgBillable")).isEqualByComparingTo(new BigDecimal("0.75"));
+        assertThat(out.get("warnCount")).isEqualTo(1L);
+        assertThat(out.get("criticalCount")).isEqualTo(0L);
+    }
+
+    @Test
+    @DisplayName("utilizationSummary 部门聚合异常时安全降级")
+    void utilization_deptException() {
+        when(billableUtilizationService.snapshotAverage(any())).thenReturn(new HashMap<>());
+        when(utilizationSnapshotMapper.gradeDistribution(any())).thenThrow(new RuntimeException());
+        when(utilizationSnapshotMapper.groupByDepartment(any())).thenThrow(new RuntimeException());
+
+        Map<String, Object> out = service.utilizationSummary(null);
+        assertThat(out).containsKeys("avgBillable");
     }
 
     @Test

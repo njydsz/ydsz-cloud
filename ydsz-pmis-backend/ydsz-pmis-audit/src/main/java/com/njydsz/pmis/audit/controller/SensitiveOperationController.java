@@ -35,8 +35,8 @@ public class SensitiveOperationController {
         Page<SensitiveOperationDO> p = new Page<>(page, size);
         LambdaQueryWrapper<SensitiveOperationDO> w = new LambdaQueryWrapper<>();
         if (userId != null) w.eq(SensitiveOperationDO::getUserId, userId);
-        if (StringUtils.hasText(opType)) w.eq(SensitiveOperationDO::getOpType, opType);
-        w.orderByDesc(SensitiveOperationDO::getOperatedAt);
+        if (StringUtils.hasText(opType)) w.eq(SensitiveOperationDO::getBizType, opType);
+        w.orderByDesc(SensitiveOperationDO::getVerifiedAt);
         return R.ok(PageResult.ofPage(mapper.selectPage(p, w)));
     }
 

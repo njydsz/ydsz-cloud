@@ -190,8 +190,28 @@ export const PC = {
   EXECUTION_RECONCILE_VIEW: 'execution:reconcile:view',
   EXECUTION_RECONCILE_RUN: 'execution:reconcile:run',
 
+  EXECUTION_UTILIZATION_VIEW: 'execution:utilization:view',
+  EXECUTION_UTILIZATION_RECOMPUTE: 'execution:utilization:recompute',
+
   // 预算
   EXECUTION_BUDGET_VIEW: 'execution:budget:view',
+
+  // ============= 售后管理(aftersales) =============
+  AFTERSALES_WARRANTY_LIST: 'aftersales:warranty:list',
+  AFTERSALES_WARRANTY_CREATE: 'aftersales:warranty:create',
+  AFTERSALES_WARRANTY_TERMINATE: 'aftersales:warranty:terminate',
+  AFTERSALES_WARRANTY_SCAN: 'aftersales:warranty:scan',
+
+  AFTERSALES_OPS_TICKET_LIST: 'aftersales:ops-ticket:list',
+  AFTERSALES_OPS_TICKET_CREATE: 'aftersales:ops-ticket:create',
+  AFTERSALES_OPS_TICKET_ASSIGN: 'aftersales:ops-ticket:assign',
+  AFTERSALES_OPS_TICKET_STATUS: 'aftersales:ops-ticket:status',
+  AFTERSALES_OPS_TICKET_EVALUATE: 'aftersales:ops-ticket:evaluate',
+  AFTERSALES_OPS_TICKET_SCAN: 'aftersales:ops-ticket:scan',
+
+  AFTERSALES_SATISFACTION_LIST: 'aftersales:satisfaction:list',
+  AFTERSALES_SATISFACTION_SUBMIT: 'aftersales:satisfaction:submit',
+  AFTERSALES_SATISFACTION_FOLLOWUP: 'aftersales:satisfaction:follow-up',
 
   // ============= 财务模块(finance) =============
   // 开票
@@ -230,9 +250,6 @@ export const PC = {
   // ============= AI Agent =============
   AGENT_RUN: 'agent:run',
   AGENT_HISTORY: 'agent:history',
-
-  // ============= 审计 =============
-  AUDIT_LOG_VIEW: 'audit:log:view',
 } as const
 
 export type PermissionCode = (typeof PC)[keyof typeof PC]

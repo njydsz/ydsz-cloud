@@ -8,7 +8,7 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.scheduler.entity.JobDO;
 import com.njydsz.pmis.scheduler.entity.JobLogDO;
-import com.njydsz.pmis.scheduler.handler.JobHandler;
+import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.scheduler.mapper.JobLogMapper;
 import com.njydsz.pmis.scheduler.mapper.JobMapper;
 import com.njydsz.pmis.scheduler.service.JobService;

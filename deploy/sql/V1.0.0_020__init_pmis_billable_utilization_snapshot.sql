@@ -14,7 +14,7 @@
 --         PostgreSQL UPSERT ON CONFLICT 保证幂等。
 -- ====================================================================
 
-CREATE TABLE IF NOT EXISTS pmis_execution.pmis_billable_utilization_snapshot (
+CREATE TABLE IF NOT EXISTS pmis_billable_utilization_snapshot (
     id               BIGSERIAL PRIMARY KEY,
     period           VARCHAR(7)  NOT NULL,                          -- yyyy-MM
     employee_id      BIGINT      NOT NULL,
@@ -39,21 +39,21 @@ CREATE TABLE IF NOT EXISTS pmis_execution.pmis_billable_utilization_snapshot (
 );
 
 CREATE INDEX IF NOT EXISTS idx_billable_period
-    ON pmis_execution.pmis_billable_utilization_snapshot (period, deleted);
+    ON pmis_billable_utilization_snapshot (period, deleted);
 
 CREATE INDEX IF NOT EXISTS idx_billable_department
-    ON pmis_execution.pmis_billable_utilization_snapshot (department, period)
+    ON pmis_billable_utilization_snapshot (department, period)
     WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_billable_grade
-    ON pmis_execution.pmis_billable_utilization_snapshot (grade, period)
+    ON pmis_billable_utilization_snapshot (grade, period)
     WHERE deleted = 0;
 
 CREATE INDEX IF NOT EXISTS idx_billable_range
-    ON pmis_execution.pmis_billable_utilization_snapshot (range_from, range_to)
+    ON pmis_billable_utilization_snapshot (range_from, range_to)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_execution.pmis_billable_utilization_snapshot IS '可计费利用率快照（scheduler 每日计算）';
-COMMENT ON COLUMN pmis_execution.pmis_billable_utilization_snapshot.period IS '统计周期 yyyy-MM';
-COMMENT ON COLUMN pmis_execution.pmis_billable_utilization_snapshot.utilization_pct IS '利用率 0-1';
-COMMENT ON COLUMN pmis_execution.pmis_billable_utilization_snapshot.grade IS '考核等级 EXCELLENT/GOOD/NORMAL/WARN/CRITICAL';
+COMMENT ON TABLE  pmis_billable_utilization_snapshot IS '可计费利用率快照（scheduler 每日计算）';
+COMMENT ON COLUMN pmis_billable_utilization_snapshot.period IS '统计周期 yyyy-MM';
+COMMENT ON COLUMN pmis_billable_utilization_snapshot.utilization_pct IS '利用率 0-1';
+COMMENT ON COLUMN pmis_billable_utilization_snapshot.grade IS '考核等级 EXCELLENT/GOOD/NORMAL/WARN/CRITICAL';

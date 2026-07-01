@@ -20,7 +20,7 @@ interface StatusMapItem {
 
 const props = defineProps<{
   /** 当前状态值 */
-  value: string | number | null | undefined
+  value?: string | number | null | undefined
   /** 状态映射表 key=value 编码，value=item */
   map?: Record<string, StatusMapItem>
   /** 当 value 不在 map 中时回退的 type */

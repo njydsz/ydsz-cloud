@@ -81,4 +81,10 @@ public class WarrantyController {
             @RequestParam(required = false) String keyword) {
         return R.ok(PageResult.ofPage(service.page(page, size, status, initiationId, keyword)));
     }
+
+    @Operation(summary = "质保期详情")
+    @GetMapping("/{id}")
+    public R<WarrantyDO> getById(@PathVariable Long id) {
+        return R.ok(service.getById(id));
+    }
 }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.execution.job;
 
 import com.njydsz.pmis.execution.service.DailyReconcileService;
-import com.njydsz.pmis.scheduler.handler.JobHandler;
+import com.njydsz.pmis.common.job.JobHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -49,7 +49,7 @@ public class DailyReconcileJobHandler implements JobHandler {
             return result;
         } catch (Exception e) {
             log.error("[DailyReconcileJob] 对账失败: date={} err={}", target, e.getMessage(), e);
-            throw new RuntimeException("DailyReconcile failed for " + target, e);
+            throw new RuntimeException("DailyReconcile failed for " + target + ": " + e.getMessage(), e);
         }
     }
 

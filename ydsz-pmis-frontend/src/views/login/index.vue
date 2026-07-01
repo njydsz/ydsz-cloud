@@ -10,7 +10,6 @@ import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { getCaptchaApi } from '@/api/user'
 import { verify2fa, verifyBackupCode } from '@/api/user/two-factor'
-import { setToken } from '@/utils/auth'
 
 const router = useRouter()
 const route = useRoute()
@@ -152,8 +151,10 @@ async function onLoginSuccess() {
   await router.push(redirect)
 }
 
-function switchMfaMode(mode: 'OTP' | 'BACKUP') {
-  mfaMode.value = mode
+function switchMfaMode(mode: string | number) {
+  if (mode === 'OTP' || mode === 'BACKUP') {
+    mfaMode.value = mode
+  }
 }
 
 onMounted(() => {

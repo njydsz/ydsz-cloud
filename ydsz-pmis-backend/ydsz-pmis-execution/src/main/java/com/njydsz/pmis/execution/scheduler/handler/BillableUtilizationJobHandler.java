@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.scheduler.handler;
 
-import com.njydsz.pmis.execution.feign.ExecutionClient;
+import com.njydsz.pmis.common.feign.ExecutionClient;
+import com.njydsz.pmis.common.job.JobHandler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -36,7 +37,7 @@ import java.util.Map;
 @Slf4j
 @Component("billableUtilizationJobHandler")
 @RequiredArgsConstructor
-public class BillableUtilizationJobHandler implements com.njydsz.pmis.scheduler.handler.JobHandler {
+public class BillableUtilizationJobHandler implements JobHandler {
 
     private final ExecutionClient executionClient;
 

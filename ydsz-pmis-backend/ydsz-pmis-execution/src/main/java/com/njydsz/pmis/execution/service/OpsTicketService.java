@@ -53,6 +53,9 @@ public interface OpsTicketService {
     /** 按处理人查询 */
     List<OpsTicketDO> listByAssignee(Long assigneeId, String status);
 
+    /** 工单详情 */
+    OpsTicketDO getById(Long id);
+
     /** SLA 达成率统计 */
     List<Map<String, Object>> slaSummary();
 

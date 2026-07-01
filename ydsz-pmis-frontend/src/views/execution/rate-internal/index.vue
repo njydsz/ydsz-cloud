@@ -212,7 +212,7 @@ onMounted(async () => {
         <el-tree-select
           v-model="query.departmentId"
           :data="depts"
-          :props="{ value: 'id', label: 'deptName', children: 'children' }"
+          :props="({ value: 'id', label: 'deptName', children: 'children' } as any)"
           check-strictly
           clearable
           placeholder="全部"
@@ -301,7 +301,7 @@ onMounted(async () => {
         <el-tree-select
           v-model="form.departmentId"
           :data="depts"
-          :props="{ value: 'id', label: 'deptName', children: 'children' }"
+          :props="({ value: 'id', label: 'deptName', children: 'children' } as any)"
           check-strictly
           clearable
           placeholder="可空，应用于全公司"

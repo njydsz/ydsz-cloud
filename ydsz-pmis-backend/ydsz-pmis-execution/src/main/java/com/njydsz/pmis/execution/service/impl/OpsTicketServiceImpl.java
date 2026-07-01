@@ -225,6 +225,18 @@ public class OpsTicketServiceImpl implements OpsTicketService {
         return ticketMapper.selectByAssignee(assigneeId, status);
     }
 
+    @Override
+    public OpsTicketDO getById(Long id) {
+        if (id == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "id 不能为空");
+        }
+        OpsTicketDO t = ticketMapper.selectById(id);
+        if (t == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "工单不存在");
+        }
+        return t;
+    }
+
     private void validate(OpsTicketCreateDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");

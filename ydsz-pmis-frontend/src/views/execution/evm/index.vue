@@ -12,7 +12,6 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import {
-  pageEvm,
   saveEvm,
   deleteEvm,
   getEvmDashboard,

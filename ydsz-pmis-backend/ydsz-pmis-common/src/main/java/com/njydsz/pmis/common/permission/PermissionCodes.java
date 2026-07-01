@@ -97,6 +97,26 @@ public final class PermissionCodes {
     // ==================== 执行 ====================
 
     public static final String EXECUTION_RECONCILE_VIEW = "execution:reconcile:view";
+    public static final String EXECUTION_UTILIZATION_VIEW = "execution:utilization:view";
+    public static final String EXECUTION_UTILIZATION_RECOMPUTE = "execution:utilization:recompute";
+
+    // ==================== 售后管理 ====================
+
+    public static final String AFTERSALES_WARRANTY_LIST = "aftersales:warranty:list";
+    public static final String AFTERSALES_WARRANTY_CREATE = "aftersales:warranty:create";
+    public static final String AFTERSALES_WARRANTY_TERMINATE = "aftersales:warranty:terminate";
+    public static final String AFTERSALES_WARRANTY_SCAN = "aftersales:warranty:scan";
+
+    public static final String AFTERSALES_OPS_TICKET_LIST = "aftersales:ops-ticket:list";
+    public static final String AFTERSALES_OPS_TICKET_CREATE = "aftersales:ops-ticket:create";
+    public static final String AFTERSALES_OPS_TICKET_ASSIGN = "aftersales:ops-ticket:assign";
+    public static final String AFTERSALES_OPS_TICKET_STATUS = "aftersales:ops-ticket:status";
+    public static final String AFTERSALES_OPS_TICKET_EVALUATE = "aftersales:ops-ticket:evaluate";
+    public static final String AFTERSALES_OPS_TICKET_SCAN = "aftersales:ops-ticket:scan";
+
+    public static final String AFTERSALES_SATISFACTION_LIST = "aftersales:satisfaction:list";
+    public static final String AFTERSALES_SATISFACTION_SUBMIT = "aftersales:satisfaction:submit";
+    public static final String AFTERSALES_SATISFACTION_FOLLOWUP = "aftersales:satisfaction:follow-up";
 
     // ==================== 兼容旧码(将废弃,仅用于数据迁移) ====================
 

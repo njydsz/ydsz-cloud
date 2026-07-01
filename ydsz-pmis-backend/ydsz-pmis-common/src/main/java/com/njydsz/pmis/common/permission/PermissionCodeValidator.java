@@ -25,7 +25,9 @@ public final class PermissionCodeValidator {
     public static final java.util.Set<String> ALLOWED_ACTIONS = java.util.Set.of(
             "list", "create", "update", "delete", "approve", "refresh", "trigger",
             "reload", "send", "upload", "view", "export", "import", "assign",
-            "toggle", "reset-password", "act"
+            "toggle", "reset-password", "act", "recompute", "terminate",
+            "status", "scan", "follow-up", "evaluate", "dispatch", "aggregate",
+            "submit"
     );
 
     private PermissionCodeValidator() {}

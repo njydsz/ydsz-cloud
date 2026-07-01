@@ -398,7 +398,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
             if (all != null) {
                 for (RateInternalDO r : all) {
                     String lvl = r.getLevelCode();
-                    String dept = r.getDepartment();
+                    String dept = r.getDepartmentName();
                     if (lvl != null && !lvl.isBlank() && dept != null && !dept.isBlank()) {
                         out.putIfAbsent(lvl, dept);
                     }

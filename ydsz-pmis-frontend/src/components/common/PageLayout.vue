@@ -33,10 +33,11 @@ import type { PropType } from 'vue'
 import { computed } from 'vue'
 
 const props = defineProps({
-  query: { type: Object as PropType<Record<string, any>>, required: true },
-  list: { type: Array as PropType<unknown[]>, required: true },
+  query: { type: Object as PropType<Record<string, any>>, default: () => ({ page: 1, size: 10 }) },
+  list: { type: Array as PropType<unknown[]>, default: () => [] },
   total: { type: Number, default: 0 },
   loading: { type: Boolean, default: false },
+  title: { type: String, default: '' },
   /** 表格区域最小宽度，用于内嵌 vxe-table */
   tableMinHeight: { type: [Number, String], default: 400 },
   /** 分页条数选项 */
@@ -88,6 +89,9 @@ function onRefresh() {
 
 <template>
   <div class="page-layout">
+    <el-card v-if="title" shadow="never" class="mb-2">
+      <div class="text-lg font-semibold">{{ title }}</div>
+    </el-card>
     <el-card shadow="never" :body-style="noPadding ? { padding: 0 } : undefined">
       <!-- 搜索区 -->
       <el-form
