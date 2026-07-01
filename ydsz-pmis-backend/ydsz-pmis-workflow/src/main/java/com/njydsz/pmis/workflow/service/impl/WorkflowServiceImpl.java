@@ -27,6 +27,7 @@ import org.flowable.engine.repository.ProcessDefinitionQuery;
 import org.flowable.engine.runtime.ProcessInstance;
 import org.flowable.task.api.Task;
 import org.flowable.task.api.TaskQuery;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
@@ -58,6 +59,17 @@ public class WorkflowServiceImpl implements WorkflowService {
     private final TaskService taskService;
     private final HistoryService historyService;
     private final WorkflowBusinessMapper businessMapper;
+
+    /** 双轨运行：pmis.flow.engine 配置（flowable 默认 / local 自建） */
+    @Value("${pmis.flow.engine:flowable}")
+    private String flowEngine;
+
+    /** 走自建引擎的 flowCode 白名单（pmis.flow.local-flow-codes） */
+    @Value("${pmis.flow.local-flow-codes:project_initiation,contract_change,project_closure}")
+    private List<String> localFlowCodes;
+
+    /** 自建工作流 Facade（仅在 local 模式生效，软依赖：避免非 local 模式注入失败） */
+    private final ObjectProvider<WorkflowFacade> localWorkflowFacadeProvider;
 
     // ==================== 流程定义 ====================
 
@@ -189,17 +201,22 @@ public class WorkflowServiceImpl implements WorkflowService {
     public String startProcess(StartProcessDTO dto) {
         // ========== 双轨开关：按 flowCode 路由到 LocalWorkflowFacade 或 Flowable ==========
         if (shouldUseLocal(dto.getProcessKey())) {
-            log.info("[Workflow] 双轨路由: flowCode={} → local 引擎", dto.getProcessKey());
-            FlowStartProcessDTO localDto = new FlowStartProcessDTO();
-            localDto.setFlowCode(dto.getProcessKey());
-            localDto.setBusinessType(dto.getBusinessType());
-            localDto.setBusinessId(dto.getBusinessId());
-            localDto.setBusinessNo(dto.getBusinessNo());
-            localDto.setTitle(dto.getTitle());
-            localDto.setInitiatorId(dto.getInitiatorId());
-            localDto.setInitiatorName(dto.getInitiatorName());
-            localDto.setVariables(dto.getVariables());
-            return localWorkflowFacade.startProcess(localDto);
+            WorkflowFacade facade = localWorkflowFacadeProvider.getIfAvailable();
+            if (facade == null) {
+                log.warn("[Workflow] 双轨路由期望走 local 引擎，但 LocalWorkflowFacade bean 不存在，降级到 Flowable");
+            } else {
+                log.info("[Workflow] 双轨路由: flowCode={} → local 引擎", dto.getProcessKey());
+                FlowStartProcessDTO localDto = new FlowStartProcessDTO();
+                localDto.setFlowCode(dto.getProcessKey());
+                localDto.setBusinessType(dto.getBusinessType());
+                localDto.setBusinessId(dto.getBusinessId());
+                localDto.setBusinessNo(dto.getBusinessNo());
+                localDto.setTitle(dto.getTitle());
+                localDto.setInitiatorId(dto.getInitiatorId());
+                localDto.setInitiatorName(dto.getInitiatorName());
+                localDto.setVariables(dto.getVariables());
+                return facade.startProcess(localDto);
+            }
         }
 
         try {

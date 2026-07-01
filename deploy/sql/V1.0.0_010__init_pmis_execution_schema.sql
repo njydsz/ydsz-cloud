@@ -1,4 +1,4 @@
-﻿-- =====================================================
+-- =====================================================
 -- PMIS 项目执行/成本/利润模块 DDL
 -- 版本: V1.0.0_010
 -- 描述: WBS 任务、工时、成本归集、利润核算
@@ -46,10 +46,41 @@ CREATE TABLE pmis_execution_wbs_task (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_pewt_code UNIQUE (task_code, deleted)
 );
-COMMENT ON TABLE pmis_execution_wbs_task IS 'WBS 任务表';
-COMMENT ON COLUMN pmis_execution_wbs_task.task_type IS 'TASK/MILESTONE/SUMMARY';
-COMMENT ON COLUMN pmis_execution_wbs_task.status IS 'PLANNED/IN_PROGRESS/BLOCKED/IN_REVIEW/COMPLETED/CANCELLED';
-COMMENT ON COLUMN pmis_execution_wbs_task.priority IS 'LOW/NORMAL/HIGH/URGENT';
+COMMENT ON TABLE pmis_execution_wbs_task IS 'WBS 任务表: 项目工作分解结构,层级化任务编排,支撑进度/工时/责任追踪';
+COMMENT ON COLUMN pmis_execution_wbs_task.id IS '主键 ID';
+COMMENT ON COLUMN pmis_execution_wbs_task.task_code IS '任务编码(全局唯一,如 TASK20260001001)';
+COMMENT ON COLUMN pmis_execution_wbs_task.task_name IS '任务名称';
+COMMENT ON COLUMN pmis_execution_wbs_task.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_execution_wbs_task.parent_id IS '父任务 ID(0=根,支持多级 WBS)';
+COMMENT ON COLUMN pmis_execution_wbs_task.task_level IS 'WBS 层级(1=顶层)';
+COMMENT ON COLUMN pmis_execution_wbs_task.wbs_path IS 'WBS 路径(以斜杠分隔的祖先链路,如 /1/3/5)';
+COMMENT ON COLUMN pmis_execution_wbs_task.sort_order IS '同级排序号';
+COMMENT ON COLUMN pmis_execution_wbs_task.task_type IS '任务类型: TASK 普通任务 / MILESTONE 里程碑 / SUMMARY 汇总节点';
+COMMENT ON COLUMN pmis_execution_wbs_task.planned_start_date IS '计划开始日期';
+COMMENT ON COLUMN pmis_execution_wbs_task.planned_end_date IS '计划结束日期';
+COMMENT ON COLUMN pmis_execution_wbs_task.actual_start_date IS '实际开始日期';
+COMMENT ON COLUMN pmis_execution_wbs_task.actual_end_date IS '实际结束日期';
+COMMENT ON COLUMN pmis_execution_wbs_task.duration_days IS '工期(天)';
+COMMENT ON COLUMN pmis_execution_wbs_task.planned_effort IS '计划人天';
+COMMENT ON COLUMN pmis_execution_wbs_task.actual_effort IS '实际人天(从工时聚合)';
+COMMENT ON COLUMN pmis_execution_wbs_task.progress_pct IS '完成进度(0-100)';
+COMMENT ON COLUMN pmis_execution_wbs_task.owner_id IS '责任人 ID(关联 pmis_employee.id)';
+COMMENT ON COLUMN pmis_execution_wbs_task.owner_name IS '责任人姓名';
+COMMENT ON COLUMN pmis_execution_wbs_task.assignee_ids IS '执行人 ID 列表(逗号分隔)';
+COMMENT ON COLUMN pmis_execution_wbs_task.priority IS '优先级: LOW / NORMAL / HIGH / URGENT';
+COMMENT ON COLUMN pmis_execution_wbs_task.status IS '任务状态: PLANNED 计划中 / IN_PROGRESS 进行中 / BLOCKED 阻塞 / IN_REVIEW 评审中 / COMPLETED 已完成 / CANCELLED 已取消';
+COMMENT ON COLUMN pmis_execution_wbs_task.depends_on IS '依赖任务 ID 列表(逗号分隔,用于甘特图依赖连线)';
+COMMENT ON COLUMN pmis_execution_wbs_task.milestone IS '是否里程碑: 1 是 / 0 否';
+COMMENT ON COLUMN pmis_execution_wbs_task.description IS '任务描述';
+COMMENT ON COLUMN pmis_execution_wbs_task.deliverable IS '交付物说明';
+COMMENT ON COLUMN pmis_execution_wbs_task.risk_level IS '风险等级: LOW / MEDIUM / HIGH';
+COMMENT ON COLUMN pmis_execution_wbs_task.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_execution_wbs_task.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_execution_wbs_task.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_execution_wbs_task.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_execution_wbs_task.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_execution_wbs_task.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_execution_wbs_task.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX idx_pewt_initiation ON pmis_execution_wbs_task (initiation_id, deleted);
 CREATE INDEX idx_pewt_parent     ON pmis_execution_wbs_task (parent_id);
@@ -89,10 +120,32 @@ CREATE TABLE pmis_execution_time_entry (
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis_execution_time_entry IS '工时录入（日清日结）';
-COMMENT ON COLUMN pmis_execution_time_entry.hours IS '工时（小时）';
-COMMENT ON COLUMN pmis_execution_time_entry.days IS '人天（按 8h 折算）';
-COMMENT ON COLUMN pmis_execution_time_entry.status IS 'DRAFT/SUBMITTED/APPROVED/REJECTED';
+COMMENT ON TABLE pmis_execution_time_entry IS '工时录入表: 日清日结,员工每日填报工时,自动计算人天/成本';
+COMMENT ON COLUMN pmis_execution_time_entry.id IS '主键 ID';
+COMMENT ON COLUMN pmis_execution_time_entry.entry_date IS '工时日期';
+COMMENT ON COLUMN pmis_execution_time_entry.employee_id IS '填报人 ID(关联 pmis_employee.id)';
+COMMENT ON COLUMN pmis_execution_time_entry.employee_name IS '填报人姓名';
+COMMENT ON COLUMN pmis_execution_time_entry.level_code IS '填报人职级(冗余,锁定当时费率)';
+COMMENT ON COLUMN pmis_execution_time_entry.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_execution_time_entry.initiation_name IS '立项名称(冗余)';
+COMMENT ON COLUMN pmis_execution_time_entry.task_id IS 'WBS 任务 ID(关联 pmis_execution_wbs_task.id,可空:项目级工时)';
+COMMENT ON COLUMN pmis_execution_time_entry.task_name IS 'WBS 任务名称(冗余)';
+COMMENT ON COLUMN pmis_execution_time_entry.hours IS '工时(小时)';
+COMMENT ON COLUMN pmis_execution_time_entry.days IS '人天(按 8h 折算)';
+COMMENT ON COLUMN pmis_execution_time_entry.overtime IS '加班工时(小时)';
+COMMENT ON COLUMN pmis_execution_time_entry.work_type IS '工时类型: REGULAR 正常 / OVERTIME 加班 / TRAINING 培训 / LEAVE 请假';
+COMMENT ON COLUMN pmis_execution_time_entry.billable IS '是否可计费: 1 可计费(向客户收费) / 0 不可计费(培训/管理工时)';
+COMMENT ON COLUMN pmis_execution_time_entry.description IS '工时说明';
+COMMENT ON COLUMN pmis_execution_time_entry.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回';
+COMMENT ON COLUMN pmis_execution_time_entry.approver_id IS '审批人 ID';
+COMMENT ON COLUMN pmis_execution_time_entry.approver_name IS '审批人姓名';
+COMMENT ON COLUMN pmis_execution_time_entry.approved_at IS '审批时间';
+COMMENT ON COLUMN pmis_execution_time_entry.reject_reason IS '驳回原因';
+COMMENT ON COLUMN pmis_execution_time_entry.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_execution_time_entry.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_execution_time_entry.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_execution_time_entry.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_execution_time_entry.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX idx_pete_employee  ON pmis_execution_time_entry (employee_id, entry_date DESC);
 CREATE INDEX idx_pete_initiation ON pmis_execution_time_entry (initiation_id, entry_date DESC);
@@ -125,10 +178,25 @@ CREATE TABLE pmis_cost_allocation (
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis_cost_allocation IS '项目成本归集';
-COMMENT ON COLUMN pmis_cost_allocation.cost_type IS 'LABOR/PURCHASE/EXPENSE/OUTSOURCE/ALLOCATION/OTHER';
-COMMENT ON COLUMN pmis_cost_allocation.billable IS '1=可计费，0=不可计费';
-COMMENT ON COLUMN pmis_cost_allocation.allocated IS '1=已分摊到 WBS 节点';
+COMMENT ON TABLE pmis_cost_allocation IS '项目成本归集表: 按月 × 类别归集项目发生的所有成本,支撑利润核算与驾驶舱';
+COMMENT ON COLUMN pmis_cost_allocation.id IS '主键 ID';
+COMMENT ON COLUMN pmis_cost_allocation.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_cost_allocation.period IS '归集周期(YYYY-MM,如 2026-06)';
+COMMENT ON COLUMN pmis_cost_allocation.cost_type IS '成本类型: LABOR 人力 / PURCHASE 采购 / EXPENSE 费用 / OUTSOURCE 外包 / ALLOCATION 分摊 / OTHER 其他';
+COMMENT ON COLUMN pmis_cost_allocation.source_id IS '源单据 ID(关联 time_entry/purchase/expense)';
+COMMENT ON COLUMN pmis_cost_allocation.source_type IS '源单据类型(TIME_ENTRY/PURCHASE/EXPENSE/MANUAL)';
+COMMENT ON COLUMN pmis_cost_allocation.description IS '成本说明';
+COMMENT ON COLUMN pmis_cost_allocation.amount IS '金额(元)';
+COMMENT ON COLUMN pmis_cost_allocation.billable IS '是否可计费: 1 可计费 / 0 不可计费';
+COMMENT ON COLUMN pmis_cost_allocation.allocated IS '是否已分摊到 WBS 节点: 1 已分摊 / 0 待分摊';
+COMMENT ON COLUMN pmis_cost_allocation.employee_id IS '员工 ID(人力成本时关联)';
+COMMENT ON COLUMN pmis_cost_allocation.employee_name IS '员工姓名';
+COMMENT ON COLUMN pmis_cost_allocation.level_code IS '职级(冗余,锁定费率)';
+COMMENT ON COLUMN pmis_cost_allocation.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_cost_allocation.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_cost_allocation.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_cost_allocation.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_cost_allocation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX idx_pca_initiation ON pmis_cost_allocation (initiation_id, period);
 CREATE INDEX idx_pca_type       ON pmis_cost_allocation (cost_type) WHERE deleted = 0;
@@ -165,8 +233,28 @@ CREATE TABLE pmis_cost_purchase (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_pcp_code UNIQUE (purchase_code, deleted)
 );
-COMMENT ON TABLE pmis_cost_purchase IS '采购成本申请';
-COMMENT ON COLUMN pmis_cost_purchase.status IS 'DRAFT/SUBMITTED/APPROVED/REJECTED/PAID';
+COMMENT ON TABLE pmis_cost_purchase IS '采购成本申请表: 项目硬件/软件/服务采购,触发预算占用校验(80% 黄/95% 红)';
+COMMENT ON COLUMN pmis_cost_purchase.id IS '主键 ID';
+COMMENT ON COLUMN pmis_cost_purchase.purchase_code IS '采购单编码(全局唯一)';
+COMMENT ON COLUMN pmis_cost_purchase.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_cost_purchase.vendor IS '供应商';
+COMMENT ON COLUMN pmis_cost_purchase.item_name IS '采购品名';
+COMMENT ON COLUMN pmis_cost_purchase.quantity IS '采购数量';
+COMMENT ON COLUMN pmis_cost_purchase.unit_price IS '单价(元)';
+COMMENT ON COLUMN pmis_cost_purchase.amount IS '总金额(元,=quantity*unit_price)';
+COMMENT ON COLUMN pmis_cost_purchase.purchase_date IS '采购日期';
+COMMENT ON COLUMN pmis_cost_purchase.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / PAID 已付款';
+COMMENT ON COLUMN pmis_cost_purchase.applicant_id IS '申请人 ID';
+COMMENT ON COLUMN pmis_cost_purchase.applicant_name IS '申请人姓名';
+COMMENT ON COLUMN pmis_cost_purchase.approver_id IS '审批人 ID';
+COMMENT ON COLUMN pmis_cost_purchase.approver_name IS '审批人姓名';
+COMMENT ON COLUMN pmis_cost_purchase.approved_at IS '审批时间';
+COMMENT ON COLUMN pmis_cost_purchase.description IS '采购说明';
+COMMENT ON COLUMN pmis_cost_purchase.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_cost_purchase.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_cost_purchase.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_cost_purchase.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_cost_purchase.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX idx_pcp_initiation ON pmis_cost_purchase (initiation_id) WHERE deleted = 0;
 CREATE INDEX idx_pcp_status     ON pmis_cost_purchase (status) WHERE deleted = 0;
@@ -200,9 +288,26 @@ CREATE TABLE pmis_cost_expense (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_pce_code UNIQUE (expense_code, deleted)
 );
-COMMENT ON TABLE pmis_cost_expense IS '费用报销';
-COMMENT ON COLUMN pmis_cost_expense.expense_type IS 'TRAVEL/CATERING/MEETING/SUPPLIES/COMMUNICATION/OTHER';
-COMMENT ON COLUMN pmis_cost_expense.status IS 'DRAFT/SUBMITTED/APPROVED/REJECTED/PAID';
+COMMENT ON TABLE pmis_cost_expense IS '费用报销表: 差旅/团建/会议/办公等费用报销,可关联项目(影响项目预算)';
+COMMENT ON COLUMN pmis_cost_expense.id IS '主键 ID';
+COMMENT ON COLUMN pmis_cost_expense.expense_code IS '报销单编码(全局唯一)';
+COMMENT ON COLUMN pmis_cost_expense.initiation_id IS '关联立项 ID(项目级费用必填,公司公共费用可空)';
+COMMENT ON COLUMN pmis_cost_expense.employee_id IS '报销人 ID';
+COMMENT ON COLUMN pmis_cost_expense.employee_name IS '报销人姓名';
+COMMENT ON COLUMN pmis_cost_expense.expense_type IS '费用类型: TRAVEL 差旅 / CATERING 餐饮 / MEETING 会议 / SUPPLIES 办公 / COMMUNICATION 通讯 / OTHER 其他';
+COMMENT ON COLUMN pmis_cost_expense.amount IS '报销金额(元)';
+COMMENT ON COLUMN pmis_cost_expense.expense_date IS '费用发生日期';
+COMMENT ON COLUMN pmis_cost_expense.description IS '费用说明';
+COMMENT ON COLUMN pmis_cost_expense.receipt_url IS '发票/凭证 URL';
+COMMENT ON COLUMN pmis_cost_expense.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回 / PAID 已打款';
+COMMENT ON COLUMN pmis_cost_expense.approver_id IS '审批人 ID';
+COMMENT ON COLUMN pmis_cost_expense.approver_name IS '审批人姓名';
+COMMENT ON COLUMN pmis_cost_expense.approved_at IS '审批时间';
+COMMENT ON COLUMN pmis_cost_expense.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_cost_expense.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_cost_expense.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_cost_expense.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_cost_expense.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX idx_pce_initiation ON pmis_cost_expense (initiation_id) WHERE deleted = 0;
 CREATE INDEX idx_pce_employee   ON pmis_cost_expense (employee_id) WHERE deleted = 0;
@@ -237,8 +342,27 @@ CREATE TABLE pmis_profit_revenue (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppr_code UNIQUE (revenue_code, deleted)
 );
-COMMENT ON TABLE pmis_profit_revenue IS '收入确认';
-COMMENT ON COLUMN pmis_profit_revenue.recognition_method IS 'MILESTONE/PERCENTAGE/PERCENT_COMPLETE/POINTS/MANUAL';
+COMMENT ON TABLE pmis_profit_revenue IS '收入确认表: 按里程碑/百分比/完工法/手动法等多维度确认项目收入';
+COMMENT ON COLUMN pmis_profit_revenue.id IS '主键 ID';
+COMMENT ON COLUMN pmis_profit_revenue.contract_id IS '合同 ID(关联 pmis_project_contract.id)';
+COMMENT ON COLUMN pmis_profit_revenue.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_profit_revenue.revenue_code IS '收入确认单编码(全局唯一)';
+COMMENT ON COLUMN pmis_profit_revenue.recognition_method IS '确认方法: MILESTONE 里程碑法 / PERCENTAGE 比例法 / PERCENT_COMPLETE 完工法 / POINTS 工分法 / MANUAL 手动';
+COMMENT ON COLUMN pmis_profit_revenue.period IS '所属期间(YYYY-MM)';
+COMMENT ON COLUMN pmis_profit_revenue.amount IS '确认金额(元)';
+COMMENT ON COLUMN pmis_profit_revenue.recognition_date IS '确认日期';
+COMMENT ON COLUMN pmis_profit_revenue.milestone IS '里程碑描述';
+COMMENT ON COLUMN pmis_profit_revenue.percent_complete IS '完工百分比(0-100,完工法)';
+COMMENT ON COLUMN pmis_profit_revenue.invoice_id IS '关联开票申请 ID';
+COMMENT ON COLUMN pmis_profit_revenue.status IS '状态: DRAFT 草稿 / CONFIRMED 已确认 / REVERSED 已冲销';
+COMMENT ON COLUMN pmis_profit_revenue.confirmed_by IS '确认人 ID';
+COMMENT ON COLUMN pmis_profit_revenue.confirmed_at IS '确认时间';
+COMMENT ON COLUMN pmis_profit_revenue.description IS '收入确认说明';
+COMMENT ON COLUMN pmis_profit_revenue.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_profit_revenue.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_profit_revenue.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_profit_revenue.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_profit_revenue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX idx_ppr_contract    ON pmis_profit_revenue (contract_id) WHERE deleted = 0;
 CREATE INDEX idx_ppr_initiation  ON pmis_profit_revenue (initiation_id, period) WHERE deleted = 0;

@@ -3,20 +3,16 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.workflow.flow.dto.FlowAssigneeDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
-import com.njydsz.pmis.workflow.flow.engine.FlowVariableStrategy;
+import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
-import com.njydsz.pmis.workflow.flow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.flow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.flow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
-import com.njydsz.pmis.workflow.flow.mapper.FlowDefinitionMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
@@ -29,7 +25,6 @@ import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -45,11 +40,9 @@ import java.util.Map;
 public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     private final FlowInstanceMapper instanceMapper;
-    private final FlowDefinitionMapper definitionMapper;
     private final FlowDefinitionService definitionService;
     private final FlowAdvancer advancer;
     private final FlowTaskService taskService;
-    private final FlowVariableStrategy variableStrategy;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -181,6 +174,15 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 endNodeCode, null, now, durationMs);
         taskService.cancelByInstance(instanceId, FlowTaskStatus.SKIPPED.name());
         log.info("[Flow] 流程完成: instanceId={} endNode={}", instanceId, endNodeCode);
+
+        // 业务侧事件：onInstanceCompleted
+        try {
+            for (FlowEventListener listener : eventListeners) {
+                listener.onInstanceCompleted(instanceId);
+            }
+        } catch (Exception e) {
+            log.warn("[Flow] 业务侧 onInstanceCompleted 事件失败: {}", e.getMessage());
+        }
     }
 
     @Override

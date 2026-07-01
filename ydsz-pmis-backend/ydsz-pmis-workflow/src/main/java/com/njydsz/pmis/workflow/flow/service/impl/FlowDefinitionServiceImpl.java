@@ -54,7 +54,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         FlowDefinitionDO existing = definitionMapper.selectPublished(
                 dto.getFlowCode(), version, tenantId);
         if (existing != null) {
-            throw new BizException(BizErrorCode.CONFLICT,
+            throw new BizException(BizErrorCode.DUPLICATE_KEY,
                     "流程定义已存在: code=" + dto.getFlowCode() + " version=" + version);
         }
 
@@ -158,7 +158,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
         w.eq(StringUtils.hasText(category), FlowDefinitionDO::getCategory, category)
                 .like(StringUtils.hasText(flowCode), FlowDefinitionDO::getFlowCode, flowCode)
-                .eq(FlowDefinitionDO::getStatus, "ENABLED")
+                .eq(FlowDefinitionDO::getActivityStatus, 1)
                 .eq(FlowDefinitionDO::getDeleted, 0)
                 .orderByDesc(FlowDefinitionDO::getCreatedAt);
         return definitionMapper.selectPage(page, w).getRecords();

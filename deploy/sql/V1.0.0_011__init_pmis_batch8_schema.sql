@@ -35,7 +35,25 @@ CREATE TABLE pmis_project_contract_template (
     deleted                SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppct_code UNIQUE (template_code, deleted)
 );
-COMMENT ON TABLE pmis_project_contract_template IS '合同模板表（8类项目类型）';
+COMMENT ON TABLE  pmis_project_contract_template IS '合同模板表: 8 类项目类型（FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER）的标准化合同模板,合同起草时按类型引用';
+COMMENT ON COLUMN pmis_project_contract_template.template_code IS '模板编码: 业务唯一,如 TPL-FIX-001';
+COMMENT ON COLUMN pmis_project_contract_template.template_name IS '模板名称';
+COMMENT ON COLUMN pmis_project_contract_template.contract_type IS '合同类型: FIXED_PRICE 固定总价 / T_M 人月计费 / OUTSOURCING 人力外包 / PRODUCT 产品销售 / MAINTENANCE 运维服务 / CONSULTING 咨询服务 / TRAINING 培训服务 / OTHER 其他';
+COMMENT ON COLUMN pmis_project_contract_template.version IS '模板版本号: 语义化版本,默认 1.0.0';
+COMMENT ON COLUMN pmis_project_contract_template.payment_terms IS '付款条款: 文本描述,例如"3-3-3-1"分阶段比例';
+COMMENT ON COLUMN pmis_project_contract_template.default_payment_days IS '默认账期(天): 0=预付,30=月结30天';
+COMMENT ON COLUMN pmis_project_contract_template.default_penalty_rate IS '默认违约金比例: 0.0010=千分之一,作为合同基准';
+COMMENT ON COLUMN pmis_project_contract_template.sla_description IS 'SLA 描述: 服务等级协议,例如 P1 4 小时响应';
+COMMENT ON COLUMN pmis_project_contract_template.deliverables IS '交付物清单: 合同约定的交付物列表';
+COMMENT ON COLUMN pmis_project_contract_template.content IS '模板正文: 含占位符 ${} 的合同正文';
+COMMENT ON COLUMN pmis_project_contract_template.customer_level IS '客户级别: A/B/C/D 信用等级,NULL=全级别适用';
+COMMENT ON COLUMN pmis_project_contract_template.project_level IS '项目级别: L1-L18 复杂度等级,NULL=全级别适用';
+COMMENT ON COLUMN pmis_project_contract_template.status IS '模板状态: DRAFT 草稿 / PUBLISHED 已发布 / DEPRECATED 已废弃,状态机线性';
+COMMENT ON COLUMN pmis_project_contract_template.author_id IS '模板作者 ID';
+COMMENT ON COLUMN pmis_project_contract_template.author_name IS '模板作者姓名（冗余）';
+COMMENT ON COLUMN pmis_project_contract_template.remark IS '备注';
+COMMENT ON COLUMN pmis_project_contract_template.tenant_id IS '租户 ID: 多租户隔离';
+COMMENT ON COLUMN pmis_project_contract_template.deleted IS '逻辑删除: 0=未删除,1=已删除';
 CREATE INDEX idx_ppct_type_status ON pmis_project_contract_template(contract_type, status);
 CREATE INDEX idx_ppct_tenant ON pmis_project_contract_template(tenant_id);
 
@@ -79,7 +97,35 @@ CREATE TABLE pmis_project_change (
     deleted                  SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pch_code UNIQUE (change_code, deleted)
 );
-COMMENT ON TABLE pmis_project_change IS '项目变更主表（5类变更）';
+COMMENT ON TABLE  pmis_project_change IS '项目变更主表: 5 类变更（SCOPE/COST/CONTRACT/STAFF/SCHEDULE）全过程管理,严格执行 DRAFT→SUBMITTED→UNDER_REVIEW→APPROVED/REJECTED→EXECUTING 状态机';
+COMMENT ON COLUMN pmis_project_change.change_code IS '变更单号: 业务唯一,如 CHG-2026-001';
+COMMENT ON COLUMN pmis_project_change.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN pmis_project_change.change_type IS '变更类型: SCOPE 范围 / COST 成本 / CONTRACT 合同 / STAFF 人员 / SCHEDULE 进度';
+COMMENT ON COLUMN pmis_project_change.change_title IS '变更标题';
+COMMENT ON COLUMN pmis_project_change.change_reason IS '变更原因';
+COMMENT ON COLUMN pmis_project_change.change_desc IS '变更详细描述';
+COMMENT ON COLUMN pmis_project_change.budget_impact IS '预算影响金额(元): 正数=增加,负数=减少';
+COMMENT ON COLUMN pmis_project_change.contract_impact IS '合同金额影响(元): 正数=增加,负数=减少';
+COMMENT ON COLUMN pmis_project_change.schedule_impact_days IS '进度影响天数: 正数=延期,负数=提前';
+COMMENT ON COLUMN pmis_project_change.profit_impact IS '利润影响(元)';
+COMMENT ON COLUMN pmis_project_change.profit_impact_pct IS '利润影响比例: 0.05=5%';
+COMMENT ON COLUMN pmis_project_change.risk_level_after IS '变更后风险等级: LOW 低 / MEDIUM 中 / HIGH 高';
+COMMENT ON COLUMN pmis_project_change.affected_wbs_count IS '受影响 WBS 任务数';
+COMMENT ON COLUMN pmis_project_change.affected_staff_count IS '受影响人员数';
+COMMENT ON COLUMN pmis_project_change.major_flag IS '是否重大变更: 0=否,1=是（重大变更需走完整审批流）';
+COMMENT ON COLUMN pmis_project_change.approver_roles IS '审批人角色 JSON 数组: 指定审批节点的角色列表';
+COMMENT ON COLUMN pmis_project_change.applicant_id IS '申请人 ID';
+COMMENT ON COLUMN pmis_project_change.applicant_name IS '申请人姓名（冗余）';
+COMMENT ON COLUMN pmis_project_change.contract_id IS '关联合同 ID（合同变更时必填）';
+COMMENT ON COLUMN pmis_project_change.workflow_id IS '流程实例 ID: 关联工作流引擎的实例';
+COMMENT ON COLUMN pmis_project_change.status IS '变更状态: DRAFT 草稿 / SUBMITTED 已提交 / UNDER_REVIEW 审批中 / APPROVED 已批准 / REJECTED 已驳回 / EXECUTING 执行中';
+COMMENT ON COLUMN pmis_project_change.submitted_at IS '提交时间';
+COMMENT ON COLUMN pmis_project_change.approved_at IS '审批通过时间';
+COMMENT ON COLUMN pmis_project_change.executed_at IS '执行完成时间';
+COMMENT ON COLUMN pmis_project_change.remark IS '备注';
+COMMENT ON COLUMN pmis_project_change.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_project_change.provider_trace_id IS '链路追踪 ID: AI 智能体调用时的 trace 标识';
+COMMENT ON COLUMN pmis_project_change.deleted IS '逻辑删除: 0=未删除,1=已删除';
 CREATE INDEX idx_pch_initiation ON pmis_project_change(initiation_id);
 CREATE INDEX idx_pch_type_status ON pmis_project_change(change_type, status);
 CREATE INDEX idx_pch_major ON pmis_project_change(initiation_id, major_flag);
@@ -106,7 +152,20 @@ CREATE TABLE pmis_execution_delivery_standard (
     updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis_execution_delivery_standard IS '交付物标准表（8类项目类型 × 5门径阶段）';
+COMMENT ON TABLE  pmis_execution_delivery_standard IS '交付物标准库: 8 类项目类型 × 5 个门径阶段（CD1/CD2/CD3/CD4/CD5）的标准交付物定义,新建项目时按类型/级别自动生成交付物清单';
+COMMENT ON COLUMN pmis_execution_delivery_standard.project_type IS '项目类型: FIXED_PRICE / T_M / OUTSOURCING / PRODUCT / MAINTENANCE / CONSULTING / TRAINING / OTHER';
+COMMENT ON COLUMN pmis_execution_delivery_standard.project_level IS '项目级别: L1-L18,NULL 表示全级别适用';
+COMMENT ON COLUMN pmis_execution_delivery_standard.delivery_name IS '交付物名称: 例如 SRS 需求规格';
+COMMENT ON COLUMN pmis_execution_delivery_standard.delivery_category IS '交付物类别: DOC 文档 / CODE 代码 / MODEL 模型 / RUNBOOK 运维手册 / REPORT 报告 / OTHER 其他';
+COMMENT ON COLUMN pmis_execution_delivery_standard.stage IS '所属门径阶段: CD1_KICKOFF 启动 / CD2_DESIGN 设计 / CD3_BUILD 建设 / CD4_UAT UAT / CD5_GO_LIVE 上线';
+COMMENT ON COLUMN pmis_execution_delivery_standard.required IS '是否必交付: 1=必交付,0=可选';
+COMMENT ON COLUMN pmis_execution_delivery_standard.trigger_tr IS '是否触发技术评审(TR): 0=否,1=是';
+COMMENT ON COLUMN pmis_execution_delivery_standard.acceptance_criteria IS '验收标准: 文本描述,例如"客户签字"';
+COMMENT ON COLUMN pmis_execution_delivery_standard.template_ref IS '模板引用: 关联的模板路径或编码';
+COMMENT ON COLUMN pmis_execution_delivery_standard.remark IS '备注';
+COMMENT ON COLUMN pmis_execution_delivery_standard.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_execution_delivery_standard.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_execution_delivery_standard.deleted IS '逻辑删除: 0=未删除,1=已删除';
 CREATE INDEX idx_peds_type_level ON pmis_execution_delivery_standard(project_type, project_level);
 CREATE INDEX idx_peds_stage ON pmis_execution_delivery_standard(stage);
 

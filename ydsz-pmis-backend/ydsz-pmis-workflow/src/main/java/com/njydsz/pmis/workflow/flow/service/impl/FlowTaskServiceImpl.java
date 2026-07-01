@@ -12,15 +12,12 @@ import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowUserDO;
 import com.njydsz.pmis.workflow.flow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.flow.enums.FlowPerformType;
 import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowUserMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +28,6 @@ import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -49,8 +45,6 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
     private final FlowTaskMapper taskMapper;
     private final FlowHisTaskMapper hisTaskMapper;
-    private final FlowUserMapper userMapper;
-    private final FlowNodeMapper nodeMapper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowInstanceService instanceService;
     private final FlowAdvancer advancer;

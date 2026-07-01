@@ -1,6 +1,5 @@
 package com.njydsz.pmis.agent.engine;
 
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -14,7 +13,6 @@ import java.util.Map;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor
 public class AgentContext {
     /** 业务类型 */
     private String bizType;
@@ -30,4 +28,30 @@ public class AgentContext {
     private String source;
     /** 业务自定义输入参数（按 Agent 自行解释） */
     private Map<String, Object> params;
+    /** 链路追踪 ID（批次 22 增强） */
+    private String traceId;
+    /** 第三方大模型 provider trace ID（用于审计/账单核对） */
+    private String providerTraceId;
+
+    /** 7 参构造器（兼容历史调用方） */
+    public AgentContext(String bizType, Long bizId, String bizRef,
+                        Long callerId, String callerName, String source,
+                        Map<String, Object> params) {
+        this.bizType = bizType;
+        this.bizId = bizId;
+        this.bizRef = bizRef;
+        this.callerId = callerId;
+        this.callerName = callerName;
+        this.source = source;
+        this.params = params;
+    }
+
+    /** 9 参构造器（批次 22 全量构造） */
+    public AgentContext(String bizType, Long bizId, String bizRef,
+                        Long callerId, String callerName, String source,
+                        Map<String, Object> params, String traceId, String providerTraceId) {
+        this(bizType, bizId, bizRef, callerId, callerName, source, params);
+        this.traceId = traceId;
+        this.providerTraceId = providerTraceId;
+    }
 }

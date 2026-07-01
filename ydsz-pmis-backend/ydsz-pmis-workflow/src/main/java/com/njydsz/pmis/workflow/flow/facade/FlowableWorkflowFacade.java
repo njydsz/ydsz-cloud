@@ -34,13 +34,17 @@ public class FlowableWorkflowFacade implements WorkflowFacade {
 
     @Override
     public String startProcess(FlowStartProcessDTO dto) {
-        // 转换为 WorkflowService 需要的入参
-        Map<String, Object> body = new HashMap<>();
-        body.put("businessKey", dto.getBusinessType() + "_" + dto.getBusinessId());
-        body.put("processDefinitionKey", dto.getFlowCode());
-        body.put("initiator", dto.getInitiatorId());
-        body.put("variables", dto.getVariables());
-        return workflowService.startProcess(body);
+        // 转换为 WorkflowService.startProcess 需要的入参
+        com.njydsz.pmis.workflow.dto.StartProcessDTO legacy = new com.njydsz.pmis.workflow.dto.StartProcessDTO();
+        legacy.setProcessKey(dto.getFlowCode());
+        legacy.setBusinessType(dto.getBusinessType());
+        legacy.setBusinessId(dto.getBusinessId());
+        legacy.setBusinessNo(dto.getBusinessNo());
+        legacy.setTitle(dto.getTitle());
+        legacy.setInitiatorId(dto.getInitiatorId());
+        legacy.setInitiatorName(dto.getInitiatorName());
+        legacy.setVariables(dto.getVariables());
+        return workflowService.startProcess(legacy);
     }
 
     @Override
@@ -61,9 +65,11 @@ public class FlowableWorkflowFacade implements WorkflowFacade {
 
     @Override
     public void completeTask(FlowTaskOperateDTO dto) {
-        workflowService.completeTask(dto.getTaskId(),
-                dto.getVariables() == null ? Map.of() : dto.getVariables(),
-                dto.getComment());
+        com.njydsz.pmis.workflow.dto.TaskOperateDTO legacy = new com.njydsz.pmis.workflow.dto.TaskOperateDTO();
+        legacy.setTaskId(dto.getTaskId());
+        legacy.setVariables(dto.getVariables() == null ? Map.of() : dto.getVariables());
+        legacy.setComment(dto.getComment());
+        workflowService.completeTask(legacy);
     }
 
     @Override
@@ -73,33 +79,42 @@ public class FlowableWorkflowFacade implements WorkflowFacade {
 
     @Override
     public void transferTask(FlowTaskOperateDTO dto) {
-        workflowService.transfer(dto.getTaskId(), dto.getTargetUserId());
+        com.njydsz.pmis.workflow.dto.TaskOperateDTO legacy = new com.njydsz.pmis.workflow.dto.TaskOperateDTO();
+        legacy.setTaskId(dto.getTaskId());
+        legacy.setAssignee(dto.getTargetUserId() == null ? null : String.valueOf(dto.getTargetUserId()));
+        workflowService.transfer(legacy);
     }
 
     @Override
     public void delegateTask(FlowTaskOperateDTO dto) {
-        workflowService.delegate(dto.getTaskId(), dto.getTargetUserId());
+        com.njydsz.pmis.workflow.dto.TaskOperateDTO legacy = new com.njydsz.pmis.workflow.dto.TaskOperateDTO();
+        legacy.setTaskId(dto.getTaskId());
+        legacy.setAssignee(dto.getTargetUserId() == null ? null : String.valueOf(dto.getTargetUserId()));
+        workflowService.delegate(legacy);
     }
 
     @Override
     public void rejectTask(FlowTaskOperateDTO dto) {
-        workflowService.reject(dto.getTaskId(), dto.getComment(),
-                dto.getTargetNodeCode());
+        com.njydsz.pmis.workflow.dto.TaskOperateDTO legacy = new com.njydsz.pmis.workflow.dto.TaskOperateDTO();
+        legacy.setTaskId(dto.getTaskId());
+        legacy.setComment(dto.getComment());
+        legacy.setTargetNode(dto.getTargetNodeCode());
+        workflowService.reject(legacy);
     }
 
     @Override
     public void terminateProcess(String processInstanceId, String reason) {
-        workflowService.terminate(processInstanceId, reason);
+        workflowService.terminateInstance(processInstanceId, reason);
     }
 
     @Override
     public void suspendProcess(String processInstanceId) {
-        workflowService.suspend(processInstanceId);
+        workflowService.suspendInstance(processInstanceId);
     }
 
     @Override
     public void activateProcess(String processInstanceId) {
-        workflowService.activate(processInstanceId);
+        workflowService.activateInstance(processInstanceId);
     }
 
     @Override

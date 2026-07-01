@@ -1,8 +1,6 @@
 package com.njydsz.pmis.workflow.flow.entity;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.entity.BaseDO;
@@ -52,14 +50,6 @@ public class FlowHisTaskDO extends BaseDO {
     private Integer approveFinished;
     private String taskStatus;
     private String comment;
-
-    /**
-     * 任务原始创建时间（业务时间）
-     * <p>关闭 MyBatis Plus 自动填充：INSERT 时由归档逻辑从源 task.createdAt 显式复制，保留业务时间语义。
-     */
-    @TableField(value = "created_at", fill = FieldFill.NONE)
-    @Override
-    public LocalDateTime getCreatedAt() { return super.getCreatedAt(); }
 
     private LocalDateTime claimAt;
     private LocalDateTime finishAt;
