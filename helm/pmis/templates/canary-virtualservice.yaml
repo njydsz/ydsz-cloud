@@ -1,0 +1,79 @@
+# =============================================================================
+# PMIS 金丝雀发布 - Istio VirtualService 模板
+# 批次 20 P3-4
+#
+# 用法:
+#   helm template pmis helm/pmis --set canary.enabled=true \
+#     --set canary.serviceName=execution --set canary.weight=10 \
+#     --set canary.stableTag=1.0.0 --set canary.canaryTag=1.1.0-rc1
+#
+# 本模板假设已安装 Istio (istio-system namespace), 且微服务已注入 sidecar.
+# 适用于需要精细流量切分 (header / cookie / 百分比) 的场景.
+# =============================================================================
+{{- if .Values.canary.enabled }}
+{{- $svc := .Values.canary.serviceName -}}
+{{- $stable := .Values.canary.stableTag | default "latest" -}}
+{{- $canary := .Values.canary.canaryTag -}}
+{{- $weight := .Values.canary.weight | default 10 -}}
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  name: {{ $svc }}-canary
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/component: canary
+    pmis.ydsz.cn/canary-service: {{ $svc }}
+    pmis.ydsz.cn/stable-tag: {{ $stable }}
+    pmis.ydsz.cn/canary-tag: {{ $canary }}
+spec:
+  hosts:
+    - {{ $svc }}
+  http:
+    # === 阶段 1: 内部员工 (header x-pmis-canary=enabled) 100% 走 canary ===
+    - match:
+        - headers:
+            x-pmis-canary:
+              exact: "enabled"
+      route:
+        - destination:
+            host: {{ $svc }}
+            subset: canary
+          weight: 100
+    # === 阶段 2: 灰度 cookie 用户走 canary ===
+    - match:
+        - headers:
+            cookie:
+              regex: ".*pmis_canary=1.*"
+      route:
+        - destination:
+            host: {{ $svc }}
+            subset: canary
+          weight: 100
+    # === 阶段 3: 流量按权重切分 (stable / canary) ===
+    - route:
+        - destination:
+            host: {{ $svc }}
+            subset: stable
+          weight: {{ sub 100 $weight }}
+        - destination:
+            host: {{ $svc }}
+            subset: canary
+          weight: {{ $weight }}
+---
+apiVersion: networking.istio.io/v1beta1
+kind: DestinationRule
+metadata:
+  name: {{ $svc }}-canary
+  namespace: {{ .Release.Namespace }}
+spec:
+  host: {{ $svc }}
+  subsets:
+    - name: stable
+      labels:
+        app.kubernetes.io/component: {{ $svc }}
+        version: {{ $stable }}
+    - name: canary
+      labels:
+        app.kubernetes.io/component: {{ $svc }}
+        version: {{ $canary }}
+{{- end }}

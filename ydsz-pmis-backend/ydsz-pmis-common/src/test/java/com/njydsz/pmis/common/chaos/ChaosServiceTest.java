@@ -238,4 +238,150 @@ class ChaosServiceTest {
         ChaosOutcome out = chaosService.maybeInject("X.y");
         assertThat(out).isEqualTo(ChaosOutcome.INJECTED);
     }
+
+    // ============== 批次 20 P3-6: 扩展测试 ==============
+
+    @Test
+    @DisplayName("LATENCY 未指定 latencyMs 时默认 sleep 1000ms (mock 不可能 1000, 至少 50)")
+    void latencyDefaultAtLeast50() throws Exception {
+        when(featureFlagService.isEnabled(any())).thenReturn(true);
+        chaosService.register(ChaosExperiment.builder()
+                .target("X.y")
+                .type(ChaosExperiment.TYPE_LATENCY)
+                .enabled(true)
+                .build());
+        long t0 = System.currentTimeMillis();
+        chaosService.maybeInject("X.y");
+        long elapsed = System.currentTimeMillis() - t0;
+        // 默认 1000ms, 验证 sleep 真的执行了 (取 50ms 宽松阈值避免 CI 抖动)
+        assertThat(elapsed).isGreaterThanOrEqualTo(50L);
+    }
+
+    @Test
+    @DisplayName("RESOURCE_EXHAUSTION 抛 OutOfMemoryError")
+    void resourceExhaustionInjected() {
+        when(featureFlagService.isEnabled(any())).thenReturn(true);
+        chaosService.register(ChaosExperiment.builder()
+                .target("X.y")
+                .type(ChaosExperiment.TYPE_RESOURCE_EXHAUSTION)
+                .enabled(true)
+                .build());
+        assertThatThrownBy(() -> chaosService.maybeInject("X.y"))
+                .isInstanceOf(OutOfMemoryError.class);
+    }
+
+    @Test
+    @DisplayName("ERROR_RATE=null 时按 1.0 处理, 100% 注入")
+    void errorRateNullTreatedAsOne() {
+        when(featureFlagService.isEnabled(any())).thenReturn(true);
+        chaosService.register(ChaosExperiment.builder()
+                .target("X.y")
+                .type(ChaosExperiment.TYPE_ERROR_RATE)
+                .enabled(true)
+                .errorRate(null)
+                .build());
+        // null 视为 1.0 概率必注入
+        assertThatThrownBy(() -> chaosService.maybeInject("X.y"))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    @DisplayName("register 同 target 重复注册会覆盖")
+    void registerOverride() {
+        when(featureFlagService.isEnabled(any())).thenReturn(true);
+        chaosService.register(ChaosExperiment.builder()
+                .target("X.y").type(ChaosExperiment.TYPE_LATENCY).latencyMs(10L).enabled(true).build());
+        chaosService.register(ChaosExperiment.builder()
+                .target("X.y").type(ChaosExperiment.TYPE_EXCEPTION).enabled(true)
+                .exceptionClass("java.lang.RuntimeException").build());
+        // 第二次注册覆盖, 不再是 LATENCY
+        assertThatThrownBy(() -> chaosService.maybeInject("X.y"))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    @DisplayName("history 超过 100 条后裁剪, 仅保留最近 100 条")
+    void historyBoundedTo100() {
+        when(featureFlagService.isEnabled(any())).thenReturn(false);
+        chaosService.register(ChaosExperiment.builder()
+                .target("X.y").type(ChaosExperiment.TYPE_EXCEPTION).enabled(true).build());
+        for (int i = 0; i < 150; i++) {
+            chaosService.maybeInject("X.y");
+        }
+        assertThat(chaosService.recentHistory()).hasSizeLessThanOrEqualTo(100);
+    }
+
+    @Test
+    @DisplayName("EXCEPTION 默认类为 java.lang.RuntimeException")
+    void exceptionDefaultClass() {
+        when(featureFlagService.isEnabled(any())).thenReturn(true);
+        chaosService.register(ChaosExperiment.builder()
+                .target("X.y")
+                .type(ChaosExperiment.TYPE_EXCEPTION)
+                .enabled(true)
+                .build());
+        assertThatThrownBy(() -> chaosService.maybeInject("X.y"))
+                .isInstanceOf(RuntimeException.class);
+    }
+
+    @Test
+    @DisplayName("EXCEPTION 加载到非 RuntimeException 子类时降级包装")
+    void exceptionNonRuntimeWrapped() {
+        when(featureFlagService.isEnabled(any())).thenReturn(true);
+        // java.lang.Exception 是 checked exception, 不可直接实例化为 RuntimeException
+        chaosService.register(ChaosExperiment.builder()
+                .target("X.y")
+                .type(ChaosExperiment.TYPE_EXCEPTION)
+                .exceptionClass("java.lang.Exception")
+                .enabled(true)
+                .build());
+        assertThatThrownBy(() -> chaosService.maybeInject("X.y"))
+                .isInstanceOf(RuntimeException.class)
+                .hasMessageContaining("wrapped from java.lang.Exception");
+    }
+
+    @Test
+    @DisplayName("LATENCY 在 sleep 中被 interrupt 时, 标记 interrupt 状态")
+    void latencyInterrupt() {
+        when(featureFlagService.isEnabled(any())).thenReturn(true);
+        chaosService.register(ChaosExperiment.builder()
+                .target("X.y")
+                .type(ChaosExperiment.TYPE_LATENCY)
+                .latencyMs(5000L) // 5s, 保证被打断
+                .enabled(true)
+                .build());
+        Thread.currentThread().interrupt();
+        try {
+            // sleep 应捕获 InterruptedException 并设置 interrupt flag, 不抛错
+            chaosService.maybeInject("X.y");
+            assertThat(Thread.interrupted()).isTrue(); // 清掉 flag, 同时确认被设置过
+        } finally {
+            // 清理
+            Thread.interrupted();
+        }
+    }
+
+    @Test
+    @DisplayName("unregister 传入 null 不抛错")
+    void unregisterNullSafe() {
+        chaosService.unregister(null);
+        // 不抛错即通过
+        assertThat(chaosService.list()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("register target=null 抛 IllegalArgumentException (不抛 NPE)")
+    void registerNullTargetSafe() {
+        assertThatThrownBy(() -> chaosService.register(ChaosExperiment.builder()
+                .type(ChaosExperiment.TYPE_LATENCY)
+                .build()))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("register experiment=null 抛 IllegalArgumentException")
+    void registerNullExperimentSafe() {
+        assertThatThrownBy(() -> chaosService.register(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
 }

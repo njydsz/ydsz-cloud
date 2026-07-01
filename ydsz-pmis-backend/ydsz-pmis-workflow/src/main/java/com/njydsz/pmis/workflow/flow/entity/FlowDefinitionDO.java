@@ -1,0 +1,78 @@
+package com.njydsz.pmis.workflow.flow.entity;
+
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.entity.BaseDO;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
+import java.io.Serial;
+
+/**
+ * 流程定义 DO
+ *
+ * <p>对标 Warm-Flow flow_definition，存储流程模板元数据。<br>
+ * 字段规范对齐 V1.0.0_001：status / created_by / created_at / updated_by / updated_at / deleted。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@TableName("pmis_flow_definition")
+public class FlowDefinitionDO extends BaseDO {
+
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    @TableId(type = IdType.AUTO)
+    private Long id;
+
+    /** 流程编码（业务语义：project_initiation/contract_change/...） */
+    private String flowCode;
+
+    /** 流程名称 */
+    private String flowName;
+
+    /** 流程类别 */
+    private String category;
+
+    /** 流程版本 */
+    private String version;
+
+    /** 设计器模型：CLASSICS 经典 / MIMIC 仿钉钉 */
+    private String modelValue;
+
+    /** 审批表单是否自定义：Y/N */
+    private String formCustom;
+
+    /** 审批表单路径 */
+    private String formPath;
+
+    /** 激活状态：0 挂起 / 1 激活 */
+    private Integer activityStatus;
+
+    /** 发布状态：0 未发布 / 1 已发布 / 9 失效 */
+    @TableField("is_publish")
+    private Integer isPublish;
+
+    /** 监听器类型 */
+    private String listenerType;
+
+    /** 监听器 Spring Bean 路径 */
+    private String listenerPath;
+
+    /** 扩展字段 JSON */
+    private String ext;
+
+    /** 描述 */
+    private String description;
+
+    /** 租户 ID */
+    private Long tenantId;
+
+    /** 链路追踪 ID */
+    private String providerTraceId;
+}

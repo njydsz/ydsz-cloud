@@ -1,117 +1,153 @@
-# 金丝雀发布 SOP (批次 20 P3-2)
+# PMIS 金丝雀发布 (Canary Deployment)
 
-> 本文档描述 PMIS 系统金丝雀发布的完整流程, 包括流量切换 / 监控观察 / 决策回滚.
+> 批次 20 P3-4 | 适用: PMIS 全量 14 个 Spring Cloud 微服务 + 1 个前端
 
----
+## 1. 适用场景
+- 涉及 **线上 24h 服务** 的功能发布 (常规功能 / 优化 / 重构)
+- 需要 **细粒度流量控制** 的场景 (5% → 25% → 50% → 100%)
+- 业务对 **错误率敏感** (PMIS 经营驾驶舱 / 财务开票等核心域)
 
-## 1. 金丝雀发布流程图
+不适用:
+- 数据库 schema 变更 (必须先扩列 + 双写 + 切读 + 切写)
+- 一次性迁移任务 (执行型 Job, 应放 ops-ticket 离线执行)
+- 安全 patch (建议直接全量, 通过 SAST / SCA 阻断在 CI)
 
-```
-[Build] → [Stage 环境] → [Canary 5%] → [Canary 25%] → [Canary 50%] → [100%]
-                              ↓ 1h 监控     ↓ 1h 监控    ↓ 1h 监控      ↓
-                          告警/回滚      告警/回滚    告警/回滚       稳定运行
-```
+## 2. 基础设施选型
 
-## 2. 流量切分策略
+| 方案 | 优点 | 缺点 | 适用 |
+|------|------|------|------|
+| **Istio VirtualService** | header / cookie 路由、按权重切分、流量镜像 | sidecar 资源开销、运维复杂 | 生产 |
+| **Spring Cloud Gateway WeightFilter** | 零依赖, 走 Nacos config 热更新 | 仅权重路由、无流量镜像 | 准生产 / 中小规模 |
+| **K8s Deployment + Service 双版本** | 纯 K8s 原生 | 切换成本高 (改 selector) | 已废弃, 不推荐 |
 
-### 2.1 基于 Feature Flag 的灰度
+> PMIS 推荐: **生产** 用 Istio, **staging** 用 SCG WeightFilter (本目录 `canary-shift.sh`)。
 
-通过 `FeatureFlagService.setRolloutPercentage(flag, percentage)` 设置灰度比例,
-灰度逻辑由后端 `LocalFeatureFlagService.isUserInRollout(userId, percentage)` 实现:
+## 3. Istio 金丝雀发布流程 (推荐)
 
-```java
-// 灰度分桶: userId % 100 < percentage 即命中
-long bucket = Math.floorMod(userId, 100L);
-boolean inRollout = bucket < percentage;
-```
+### 3.1 前置条件
+1. 微服务 namespace 已开启 sidecar 注入: `kubectl label namespace pmis-prod istio-injection=enabled`
+2. `gateway` 服务本身不参与金丝雀 (它路由到后端), 仅对 backend (execution/project/...) 切分
+3. 当前版本 (stable) 的 Deployment labels 必须包含 `version: <tag>`
 
-特点:
-- 粘性: 同一用户多次访问结果一致
-- 均匀: hash 分桶保证各 userId 均匀分布
-- 无需网关支持: 应用层判断即可
-
-### 2.2 基于网关 Header 的灰度
-
-在 Nginx / Spring Cloud Gateway 层根据 `X-Canary` header 路由:
-
-```nginx
-map $cookie_canary $canary_group {
-    default    "stable";
-    "1"        "canary";
-}
-
-split_clients "$remote_addr" $canary_bucket {
-    5%    "canary";
-    *      "stable";
-}
-
-upstream stable_backend { server app-stable:8080; }
-upstream canary_backend { server app-canary:8080; }
-```
-
-## 3. 监控观察指标
-
-| 指标 | 阈值 | 数据源 |
-|------|------|--------|
-| HTTP 5xx 错误率 | < 0.5% | Prometheus + Grafana |
-| 平均响应时间 | < 200ms (95分位) | Prometheus |
-| CPU 使用率 | < 75% | Node Exporter |
-| 内存使用率 | < 80% | Node Exporter |
-| JVM GC 暂停 | < 500ms | Actuator + Prometheus |
-| 业务异常率 | < 0.1% | Sentry |
-
-## 4. 回滚 SOP
-
-### 4.1 自动回滚 (Prometheus AlertManager)
-
-```yaml
-groups:
-  - name: canary
-    rules:
-      - alert: CanaryErrorRateHigh
-        expr: |
-          sum(rate(http_requests_total{status=~"5..",app="pmis-canary"}[5m]))
-          / sum(rate(http_requests_total{app="pmis-canary"}[5m])) > 0.005
-        for: 2m
-        labels:
-          severity: critical
-        annotations:
-          summary: "金丝雀实例 5xx 错误率超过 0.5%"
-          runbook: "回滚 canary deployment 到上一版本"
-```
-
-### 4.2 手动回滚
+### 3.2 执行步骤
 
 ```bash
-# Kubernetes: 回滚到上一版本
-kubectl rollout undo deployment/pmis-canary -n pmis
+# 1. 部署 canary 版本 (与 stable 共存, 但暂时无流量)
+kubectl set image deployment/pmis-execution execution=registry/.../ydsz-pmis-execution:v1.1.0-rc1 -n pmis-prod
+kubectl rollout status deployment/pmis-execution -n pmis-prod --timeout=300s
 
-# Helm: 切回 stable
-helm upgrade pmis ./helm/pmis --reuse-values --set canary.enabled=false
+# 2. 启用 VirtualService (5% 流量到 canary)
+helm upgrade pmis helm/pmis --reuse-values \
+  --set canary.enabled=true \
+  --set canary.serviceName=execution \
+  --set canary.stableTag=v1.0.0 \
+  --set canary.canaryTag=v1.1.0-rc1 \
+  --set canary.weight=5 \
+  -n pmis-prod
 
-# Feature Flag: 一键关停灰度
-curl -X PUT 'http://config:9010/api/v1/feature-flags/AGENT_ORCHESTRATION/rollout?percentage=0' \
-  -H 'Authorization: Bearer xxx'
+# 3. 内部员工验证 (header)
+curl -H "x-pmis-canary: enabled" https://pmis.ydsz-pmis.cn/api/v1/execution/...
+
+# 4. 观察 1h, 检查以下指标 (任一不达标立即回滚)
+#    - 错误率 < 0.5%
+#    - p99 延迟 < 800ms
+#    - CPU/Memory < 80%
+#    - Sentry 新错误数 = 0
+
+# 5. 提升权重
+helm upgrade pmis helm/pmis --reuse-values --set canary.weight=25
+# 1h 观察后再提升到 50%, 100%
+
+# 6. 全量切换后, 更新 stable tag, 下线 canary 标签
+helm upgrade pmis helm/pmis --reuse-values \
+  --set canary.canaryTag=v1.1.0 --set canary.weight=100
+# 监控 24h 稳定后, 删除 canary VirtualService
+kubectl delete virtualservice execution-canary -n pmis-prod
+```
+
+### 3.3 紧急回滚 (< 30s)
+
+```bash
+# 方案 A: 100% 切回 stable
+helm upgrade pmis helm/pmis --reuse-values --set canary.weight=0
+
+# 方案 B: 直接 rollback 镜像
+kubectl rollout undo deployment/pmis-execution -n pmis-prod
+```
+
+## 4. Spring Cloud Gateway + Nacos 方案 (轻量)
+
+适用于 staging 或未启用 Istio 的环境, 见 `deploy/canary/canary-shift.sh`。
+
+```bash
+# 初始 (5%)
+./canary-shift.sh execution 5
+# 1h 后
+./canary-shift.sh execution 25
+./canary-shift.sh execution 50
+./canary-shift.sh execution 100
+# 紧急回滚
+./canary-rollback.sh execution
+```
+
+Gateway 大约 5s 内热更新, 通过 actuator/gateway/routes 验证:
+```bash
+curl http://gateway:9000/actuator/gateway/routes
 ```
 
 ## 5. 决策矩阵
 
-| 阶段 | 持续时间 | 决策点 | 行动 |
-|------|----------|--------|------|
-| Canary 5% | 1h | 错误率 < 0.5%? | 是 → 25% / 否 → 回滚 |
-| Canary 25% | 1h | 错误率 < 0.5%? | 是 → 50% / 否 → 回滚 |
-| Canary 50% | 1h | 错误率 < 0.5%? | 是 → 100% / 否 → 回滚 |
-| Full 100% | 持续监控 | SLA 正常? | 是 → 归档 / 否 → 回滚 |
+| 阶段 | 持续时间 | 通过条件 | 失败行动 |
+|------|----------|----------|----------|
+| Canary 5% | 1h | 错误率 < 0.5% | 立即回滚 |
+| Canary 25% | 1h | 错误率 < 0.5% | 回滚到 5% 或 0 |
+| Canary 50% | 1h | 错误率 < 0.5% | 回滚到 25% |
+| Canary 100% | 24h | Sentry 0 错误 + 监控基线正常 | 触发灾备 SOP |
 
-## 6. 灰度发布配套能力
+## 6. 监控信号
 
-- **Feature Flag 平台**: `ydsz-pmis-config` 模块 `/api/v1/feature-flags/{key}/rollout`
-- **混沌工程**: `ChaosService` 在 canary 阶段主动注入故障, 验证容错
-- **Sentry 监控**: 自动上报 canary 实例异常, 实时告警
-- **Lighthouse CI**: 前端性能基线监控, 防止 canary 引入性能回退
+| 指标 | 来源 | 阈值 |
+|------|------|------|
+| 错误率 | Prometheus `http_requests_total{status=~"5.."}` | < 0.5% |
+| p99 延迟 | Prometheus `http_request_duration_seconds` | < 800ms |
+| Sentry 新 issue | Sentry API | 0 (1h 内) |
+| CPU 使用率 | K8s metrics-server | < 80% |
+| DB 连接数 | HikariCP metrics | < 80% max pool |
+| 慢 SQL | pg_stat_statements | < 3s |
 
-## 7. 关联文档
+任一阈值越界, 立即回滚, 并在 `docs/operations/post-mortem-<date>.md` 记录。
 
-- [Lighthouse CI 配置](../ydsz-pmis-frontend/lighthouserc.json)
-- [混沌工程接入](../ydsz-pmis-backend/ydsz-pmis-common/src/main/java/com/njydsz/pmis/common/chaos/)
-- [Feature Flag 平台](../ydsz-pmis-backend/ydsz-pmis-common/src/main/java/com/njydsz/pmis/common/featureflag/)
+## 7. 与 FeatureFlag 联动
+
+金丝雀发布仅控制 **版本粒度** (整个 jar), 业务特性粒度由 FeatureFlag 控制:
+- 灰度新功能: `POST /api/v1/feature-flags/AGENT_ORCHESTRATION/rollout?percentage=10`
+- 紧急关闭: `PUT /api/v1/feature-flags/AGENT_ORCHESTRATION/enabled?enabled=false`
+- 不需重启服务, 通过 Nacos config 热更新
+
+## 8. 与混沌工程联动
+
+金丝雀验证通过后, 仍需在稳定版本上进行 **混沌工程实验** (见 `docs/chaos-engineering.md`):
+- 对金丝雀目标服务注册 LATENCY (500ms) 实验
+- 验证熔断器 (Sentinel) 是否能 100% 兜底
+- 验证下游服务的 fallback 是否生效
+
+## 9. 责任分工
+
+| 角色 | 责任 |
+|------|------|
+| 开发 | 提交 MR + 标注"需金丝雀" + 写发版说明 |
+| CI | 部署 canary 到 staging, 跑 E2E |
+| SRE | 生产金丝雀流量切分 + 监控 + 回滚 |
+| QA | Canary 阶段功能验证 |
+| PM | 100% 后业务验收 |
+
+## 10. 常见问题
+
+**Q: Canary 阶段出现 P0 故障, 但 SLO 未越界, 怎么办?**
+A: 以业务影响为先, 立即回滚, 不必等监控阈值。
+
+**Q: 数据库 schema 变更能否走金丝雀?**
+A: 不行。Schema 变更必须按 expand → migrate → dual-write → cutover 流程, 详见 `docs/standards/database-spec.md`。
+
+**Q: 前端 (Vue) 如何金丝雀?**
+A: 走 Nginx Ingress canary annotation 或 Argo Rollouts, 不影响后端金丝雀。

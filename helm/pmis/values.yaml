@@ -146,3 +146,13 @@ healthcheck:
     periodSeconds: 5
     timeoutSeconds: 3
     failureThreshold: 3
+
+# 金丝雀发布 (批次 20 P3-4)
+# 见 helm/pmis/templates/canary-virtualservice.yaml
+# 仅在生产 (pmis-prod) 启用, staging 走 SCG 权重方案 (deploy/canary/canary-shift.sh)
+canary:
+  enabled: false
+  serviceName: execution
+  stableTag: latest
+  canaryTag: ""
+  weight: 10
