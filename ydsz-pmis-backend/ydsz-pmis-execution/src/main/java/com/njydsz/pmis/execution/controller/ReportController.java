@@ -52,4 +52,13 @@ public class ReportController {
     public R<List<Map<String, Object>>> profitSummary() {
         return R.ok(service.profitSummaryAll());
     }
+
+    @Operation(summary = "项目利润排行榜（P2-1）")
+    @GetMapping("/profit-rank")
+    public R<List<Map<String, Object>>> profitRank(
+            @RequestParam(defaultValue = "10") int top,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(required = false) String period) {
+        return R.ok(service.profitRank(top, sortBy, period));
+    }
 }

@@ -141,4 +141,18 @@
         SELECT COUNT(DISTINCT initiation_id) FROM pmis_finance_invoice
         WHERE deleted = 0 AND initiation_id IS NOT NULL
     </select>
+
+    <select id="sumByYear" resultType="java.util.Map">
+        SELECT TO_CHAR(invoice_date, 'YYYY')            AS year,
+               COALESCE(SUM(amount), 0)                 AS total_amount,
+               COUNT(1)                                AS invoice_count,
+               COUNT(DISTINCT initiation_id)            AS project_count
+        FROM pmis_finance_invoice
+        WHERE deleted = 0
+          AND status = 'ISSUED'
+          AND invoice_type = 'NORMAL'
+          AND invoice_date IS NOT NULL
+        GROUP BY TO_CHAR(invoice_date, 'YYYY')
+        ORDER BY year
+    </select>
 </mapper>

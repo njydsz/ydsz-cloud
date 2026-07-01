@@ -49,4 +49,12 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
 
     /** 统计独立项目数 */
     Integer countDistinctInitiation();
+
+    /**
+     * 按年度汇总合同开票金额（P2-4 驾驶舱合同总额年度趋势）
+     *
+     * <p>从 invoice_date（按 YYYY）聚合 ISSUED 状态的合同开票金额；
+     * 返回字段：year / totalAmount / invoiceCount / projectCount
+     */
+    List<Map<String, Object>> sumByYear();
 }

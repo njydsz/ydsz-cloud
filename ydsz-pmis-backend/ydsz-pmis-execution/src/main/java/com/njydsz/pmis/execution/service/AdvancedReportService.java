@@ -85,4 +85,41 @@ public interface AdvancedReportService {
      * 项目风险预警看板
      */
     List<Map<String, Object>> riskDashboard();
+
+    /**
+     * 项目风险矩阵热力图（P2-2 体验增强）
+     *
+     * <p>基于 probability × impact 二维矩阵（各 3 档：LOW / MEDIUM / HIGH）聚合每个格子的风险数与项目数，
+     * 用于前端 ECharts heatmap 渲染。同时返回：
+     * <ul>
+     *   <li>cellProjectIds — 该格子下风险涉及的项目 ID 列表（用于下钻）</li>
+     *   <li>byType — 按 riskType 维度的风险数（用于堆叠辅助图）</li>
+     *   <li>summary — 总体风险数 / 高风险数 / 中风险数 / 低风险数 / 涉及项目数</li>
+     * </ul>
+     *
+     * <p>概率×影响等级映射遵循 RiskScoreEvaluator：
+     * LOW*LOW/MEDIUM*LOW=LOW；其它中风险；HIGH*HIGH=HIGH。
+     *
+     * @param initiationId 项目 ID（可选；为空时全局统计）
+     * @param riskType     风险类型过滤（SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER，可空）
+     * @param status       风险状态过滤（OPEN/IN_PROGRESS/CLOSED 等，可空）
+     */
+    Map<String, Object> riskMatrix(Long initiationId, String riskType, String status);
+
+    /**
+     * 资源占用趋势图（双 Y 轴，P2-3 体验增强）
+     *
+     * <p>输出按月（YYYY-MM）聚合的资源占用与可计费利用率趋势：
+     * <ul>
+     *   <li>左 Y 轴 — 总工时 / 可计费工时 / 加班工时（柱状图）</li>
+     *   <li>右 Y 轴 — 可计费利用率（折线图，单位 %）</li>
+     * </ul>
+     *
+     * <p>支持按时间窗口和事业部过滤；数据源为 time_entry 聚合，异常时降级为空结构。
+     *
+     * @param from        起始日期（含）
+     * @param to          结束日期（含）
+     * @param department  事业部过滤（可空）
+     */
+    Map<String, Object> resourceUtilizationTrend(LocalDate from, LocalDate to, String department);
 }

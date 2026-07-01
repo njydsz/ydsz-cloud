@@ -7,7 +7,7 @@
  * 3) 活跃会话管理
  * 4) 修改密码
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   bind2fa,
@@ -23,6 +23,8 @@ import {
 } from '@/api/user/session'
 import type { UserSessionVO } from '@/api/user/session'
 import { parseUserAgent } from '@/utils/device'
+import PasswordStrengthBar from '@/components/common/PasswordStrengthBar.vue'
+import { usePasswordStrength } from '@/composables/usePasswordStrength'
 import { useUserStore } from '@/store/modules/user'
 
 const userStore = useUserStore()
@@ -145,6 +147,10 @@ async function onKickOthers() {
 // ============= 修改密码 =============
 const pwdForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
 const pwdFormRef = ref<any>()
+const newPwdRef = ref<string>('')
+const { result: pwdStrength } = usePasswordStrength(
+  computed(() => pwdForm.newPassword),
+)
 const pwdRules = {
   oldPassword: [{ required: true, message: '请输入当前密码', trigger: 'blur' }],
   newPassword: [
@@ -153,14 +159,9 @@ const pwdRules = {
     {
       validator: (_: any, v: string, cb: any) => {
         if (!v) return cb()
-        const checks = [
-          /[A-Z]/.test(v),
-          /[a-z]/.test(v),
-          /\d/.test(v),
-          /[^\w\s]/.test(v),
-        ]
-        const score = checks.filter(Boolean).length
-        if (score < 3) return cb(new Error('密码需包含大小写字母、数字、特殊字符中至少 3 类'))
+        if (pwdStrength.value.score < 3) {
+          return cb(new Error(`密码强度不足（当前：${pwdStrength.value.text}，至少需 3 类规则）`))
+        }
         cb()
       },
       trigger: 'blur',
@@ -300,6 +301,12 @@ onMounted(async () => {
             </el-form-item>
             <el-form-item label="新密码" prop="newPassword">
               <el-input v-model="pwdForm.newPassword" type="password" show-password />
+              <PasswordStrengthBar
+                :password="pwdForm.newPassword"
+                :show-input="false"
+                :show-rules="true"
+                style="margin-top: 6px"
+              />
               <div class="hint">8-32 位，包含大小写/数字/特殊字符中至少 3 类</div>
             </el-form-item>
             <el-form-item label="确认新密码" prop="confirmPassword">

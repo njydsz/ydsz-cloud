@@ -3,6 +3,7 @@ package com.njydsz.pmis.user.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.annotation.RequireReAuth;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
@@ -94,6 +95,7 @@ public class UserController {
 
     @Operation(summary = "删除用户")
     @PrePermission("auth:user:delete")
+    @RequireReAuth(code = "USER_DELETE", name = "删除用户")
     @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
@@ -103,6 +105,7 @@ public class UserController {
 
     @Operation(summary = "重置密码")
     @PrePermission("auth:user:reset-password")
+    @RequireReAuth(code = "USER_RESET_PASSWORD", name = "重置用户密码")
     @OperationLog(module = "权限管理", action = "重置密码", bizType = "USER")
     @PostMapping("/{id}/reset-password")
     public R<Void> resetPassword(@PathVariable Long id, @RequestParam @NotBlank String password) {

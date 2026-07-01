@@ -20,6 +20,7 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -192,6 +193,86 @@ public class ReportServiceImpl implements ReportService {
             }
         } catch (Exception ignore) { }
         return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> profitRank(int top, String sortBy, String period) {
+        int limit = top <= 0 ? 10 : top;
+        String dim = StringUtils.hasText(sortBy) ? sortBy : "grossMargin";
+        Map<Long, ProfitSnapshotDO> latestByInitiation = new HashMap<>();
+        try {
+            LambdaQueryWrapper<ProfitSnapshotDO> w = new LambdaQueryWrapper<>();
+            if (StringUtils.hasText(period)) {
+                w.eq(ProfitSnapshotDO::getPeriod, period);
+            }
+            List<ProfitSnapshotDO> all = profitSnapshotMapper.selectList(w);
+            for (ProfitSnapshotDO s : all) {
+                if (s == null || s.getInitiationId() == null) continue;
+                ProfitSnapshotDO prev = latestByInitiation.get(s.getInitiationId());
+                if (prev == null
+                        || (s.getSnapshotAt() != null
+                            && (prev.getSnapshotAt() == null
+                                || s.getSnapshotAt().isAfter(prev.getSnapshotAt())))) {
+                    latestByInitiation.put(s.getInitiationId(), s);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Report] profitRank 快照查询失败: {}", e.getMessage());
+        }
+
+        List<Map<String, Object>> rows = new ArrayList<>();
+        for (ProfitSnapshotDO s : latestByInitiation.values()) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("initiationId", s.getInitiationId());
+            row.put("period", s.getPeriod());
+            row.put("contractAmount", nz(s.getContractAmount()));
+            row.put("recognizedRevenue", nz(s.getRecognizedRevenue()));
+            row.put("billedAmount", nz(s.getBilledAmount()));
+            row.put("receivedAmount", nz(s.getReceivedAmount()));
+            row.put("totalCost", nz(s.getTotalCost()));
+            row.put("grossProfit", nz(s.getGrossProfit()));
+            row.put("grossMargin", nz(s.getGrossMargin()));
+            row.put("progressPct", nz(s.getProgressPct()));
+            row.put("snapshotAt", s.getSnapshotAt());
+            // 健康度简易派生：毛利率 >= 0.30 = 绿；0.10-0.30 = 黄；< 0.10 = 红
+            BigDecimal margin = nz(s.getGrossMargin());
+            String health;
+            if (margin.compareTo(new BigDecimal("0.30")) >= 0) {
+                health = "GREEN";
+            } else if (margin.compareTo(new BigDecimal("0.10")) >= 0) {
+                health = "YELLOW";
+            } else {
+                health = "RED";
+            }
+            row.put("healthLevel", health);
+            rows.add(row);
+        }
+
+        Comparator<Map<String, Object>> cmp;
+        switch (dim) {
+            case "grossProfit":
+                cmp = Comparator.comparing((Map<String, Object> m) ->
+                        (BigDecimal) m.get("grossProfit"));
+                break;
+            case "contractAmount":
+                cmp = Comparator.comparing((Map<String, Object> m) ->
+                        (BigDecimal) m.get("contractAmount"));
+                break;
+            case "grossMargin":
+            default:
+                cmp = Comparator.comparing((Map<String, Object> m) ->
+                        (BigDecimal) m.get("grossMargin"));
+                break;
+        }
+        rows.sort(cmp.reversed());
+        if (rows.size() > limit) {
+            return new ArrayList<>(rows.subList(0, limit));
+        }
+        return rows;
+    }
+
+    private static BigDecimal nz(BigDecimal v) {
+        return v == null ? BigDecimal.ZERO : v;
     }
 
     private ProfitSnapshotDO latestSnapshot(Long initiationId, String period) {

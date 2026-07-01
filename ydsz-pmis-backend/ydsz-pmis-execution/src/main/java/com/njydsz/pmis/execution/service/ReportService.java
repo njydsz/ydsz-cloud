@@ -46,4 +46,17 @@ public interface ReportService {
      * 跨项目利润表（汇总）
      */
     List<Map<String, Object>> profitSummaryAll();
+
+    /**
+     * 项目利润排行榜（P2-1 体验增强）
+     *
+     * <p>基于 ProfitSnapshot 表，按每个项目最新一次快照聚合，
+     * 排序维度支持 {@code grossMargin}（毛利率）/ {@code grossProfit}（毛利金额）/
+     * {@code contractAmount}（合同金额）。
+     *
+     * @param top      返回 Top N（默认 10）
+     * @param sortBy   排序维度，默认 grossMargin
+     * @param period   期间过滤（YYYY-MM，可空，空表示不按期间过滤）
+     */
+    List<Map<String, Object>> profitRank(int top, String sortBy, String period);
 }

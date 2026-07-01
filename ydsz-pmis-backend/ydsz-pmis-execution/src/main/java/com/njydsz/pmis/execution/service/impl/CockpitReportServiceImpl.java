@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -199,6 +200,104 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         return out;
     }
 
+    @Override
+    public Map<String, Object> contractAmountYearlyTrend() {
+        Map<String, Object> out = new HashMap<>();
+        List<Map<String, Object>> rows = new ArrayList<>();
+        try {
+            rows = invoiceMapper.sumByYear();
+        } catch (Exception e) {
+            log.warn("[Cockpit] 合同年度趋势查询失败: {}", e.getMessage());
+        }
+        if (rows == null) {
+            rows = new ArrayList<>();
+        }
+
+        List<String> years = new ArrayList<>();
+        List<BigDecimal> amountSeries = new ArrayList<>();
+        List<Integer> projectCountSeries = new ArrayList<>();
+        List<Integer> invoiceCountSeries = new ArrayList<>();
+        BigDecimal totalAmount = ZERO;
+        String peakYear = "";
+        BigDecimal peakAmount = ZERO;
+        BigDecimal previousAmount = null;
+        BigDecimal latestYoy = null;
+        int totalProjects = 0;
+        int totalInvoices = 0;
+
+        for (Map<String, Object> row : rows) {
+            String y = String.valueOf(row.getOrDefault("year", ""));
+            BigDecimal amt = toDecimal(row.get("total_amount"));
+            Integer projCnt = toIntOrZero(row.get("project_count"));
+            Integer invCnt = toIntOrZero(row.get("invoice_count"));
+            years.add(y);
+            amountSeries.add(amt);
+            projectCountSeries.add(projCnt);
+            invoiceCountSeries.add(invCnt);
+            totalAmount = totalAmount.add(amt);
+            totalProjects += projCnt;
+            totalInvoices += invCnt;
+            if (amt.compareTo(peakAmount) > 0) {
+                peakAmount = amt;
+                peakYear = y;
+            }
+            if (previousAmount != null && previousAmount.signum() > 0) {
+                BigDecimal yoy = amt.subtract(previousAmount)
+                        .divide(previousAmount, 4, RoundingMode.HALF_UP);
+                latestYoy = yoy;
+            }
+            previousAmount = amt;
+        }
+
+        // series 配置（柱图 = 合同总额；折线 = 项目数）
+        List<Map<String, Object>> series = new ArrayList<>();
+        Map<String, Object> sAmount = new LinkedHashMap();
+        sAmount.put("name", "合同总额");
+        sAmount.put("type", "bar");
+        sAmount.put("data", amountSeries);
+        sAmount.put("unit", "元");
+        sAmount.put("yAxisIndex", 0);
+        series.add(sAmount);
+        Map<String, Object> sProj = new LinkedHashMap();
+        sProj.put("name", "项目数");
+        sProj.put("type", "line");
+        sProj.put("data", projectCountSeries);
+        sProj.put("unit", "个");
+        sProj.put("yAxisIndex", 1);
+        sProj.put("smooth", true);
+        series.add(sProj);
+
+        List<Map<String, Object>> yAxis = new ArrayList<>();
+        Map<String, Object> ya0 = new LinkedHashMap();
+        ya0.put("name", "合同总额（元）");
+        ya0.put("position", "left");
+        ya0.put("type", "value");
+        yAxis.add(ya0);
+        Map<String, Object> ya1 = new LinkedHashMap();
+        ya1.put("name", "项目数");
+        ya1.put("position", "right");
+        ya1.put("type", "value");
+        ya1.put("min", 0);
+        yAxis.add(ya1);
+
+        Map<String, Object> summary = new LinkedHashMap();
+        summary.put("yearCount", years.size());
+        summary.put("totalAmount", totalAmount);
+        summary.put("peakYear", peakYear);
+        summary.put("peakAmount", peakAmount);
+        summary.put("latestYoy", latestYoy == null ? ZERO : latestYoy);
+        summary.put("latestYoyPct", latestYoy == null ? ZERO
+                : latestYoy.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP));
+        summary.put("totalProjects", totalProjects);
+        summary.put("totalInvoices", totalInvoices);
+
+        out.put("years", years);
+        out.put("series", series);
+        out.put("yAxisConfig", yAxis);
+        out.put("summary", summary);
+        return out;
+    }
+
     // ------------------ 私有辅助 ------------------
 
     private int countActiveProjects() {
@@ -283,6 +382,16 @@ public class CockpitReportServiceImpl implements CockpitReportService {
             return Long.parseLong(String.valueOf(o));
         } catch (Exception e) {
             return 0L;
+        }
+    }
+
+    private int toIntOrZero(Object o) {
+        if (o == null) return 0;
+        if (o instanceof Number) return ((Number) o).intValue();
+        try {
+            return Integer.parseInt(String.valueOf(o));
+        } catch (Exception e) {
+            return 0;
         }
     }
 }

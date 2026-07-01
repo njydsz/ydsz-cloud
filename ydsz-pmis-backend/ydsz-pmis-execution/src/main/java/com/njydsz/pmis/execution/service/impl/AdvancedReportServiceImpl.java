@@ -1,10 +1,12 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
 import com.njydsz.pmis.execution.entity.RateCardDO;
 import com.njydsz.pmis.execution.entity.RateInternalDO;
 import com.njydsz.pmis.execution.entity.RiskDO;
+import com.njydsz.pmis.execution.feign.BenchResourceClient;
 import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
 import com.njydsz.pmis.execution.mapper.RateCardMapper;
 import com.njydsz.pmis.execution.mapper.RateInternalMapper;
@@ -25,6 +27,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
@@ -41,6 +44,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     private final RiskMapper riskMapper;
     private final TimeEntryMapper timeEntryMapper;
     private final ThresholdProvider thresholdProvider;
+    private final BenchResourceClient benchResourceClient;
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final BigDecimal HUNDRED = new BigDecimal("100");
@@ -355,6 +359,10 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
                     toBigDecimal(metaByEmp.get(empId).get("overtimeHours")).add(overtime));
         }
 
+        // 跨模块真实聚合：从 user 服务拉取 Bench 仪表盘作为池级汇总
+        BigDecimal totalIdleCostFromUser = fetchUserBenchIdleCost();
+        String benchSource = totalIdleCostFromUser.signum() > 0 ? "USER_FEIGN" : "LOCAL_AGG";
+
         List<Map<String, Object>> out = new ArrayList<>();
         for (Map.Entry<Long, BigDecimal> e : benchHoursByEmp.entrySet()) {
             Long empId = e.getKey();
@@ -400,7 +408,34 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         }
         out.sort(Comparator.comparing((Map<String, Object> m) ->
                 toBigDecimal(m.get("benchCost"))).reversed());
+        // 附加 pool 级汇总（来自 user 服务）
+        Map<String, Object> poolSummary = new LinkedHashMap<>();
+        poolSummary.put("type", "POOL_SUMMARY");
+        poolSummary.put("totalIdleCost", totalIdleCostFromUser);
+        poolSummary.put("source", benchSource);
+        poolSummary.put("fromDate", realFrom.toString());
+        poolSummary.put("toDate", realTo.toString());
+        out.add(0, poolSummary);
         return out;
+    }
+
+    /**
+     * 跨模块真实聚合：从 user 服务拉取 Bench 累计闲置成本
+     *
+     * @return 累计闲置成本；user 服务不可用时返回 ZERO
+     */
+    private BigDecimal fetchUserBenchIdleCost() {
+        try {
+            R<Map<String, Object>> resp = benchResourceClient.getBenchDashboard();
+            if (resp == null || resp.getData() == null) {
+                return ZERO;
+            }
+            Object cost = resp.getData().get("totalIdleCost");
+            return toBigDecimal(cost);
+        } catch (Exception e) {
+            log.warn("[AdvancedReport] Bench 仪表盘 Feign 调用失败: {}", e.getMessage());
+            return ZERO;
+        }
     }
 
     @Override
@@ -438,8 +473,49 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
 
     @Override
     public List<Map<String, Object>> resourceGantt(Long initiationId) {
-        // 跨模块：当前返回空，由后续集成 user Feign 后填充
-        return new ArrayList<>();
+        if (initiationId == null) {
+            return new ArrayList<>();
+        }
+        // 跨模块真实聚合：调用 user 服务获取资源分配
+        List<Map<String, Object>> assignments;
+        try {
+            R<List<Map<String, Object>>> resp = benchResourceClient.listResourceAssignmentsByInitiation(initiationId);
+            assignments = (resp == null || resp.getData() == null) ? List.of() : resp.getData();
+        } catch (Exception e) {
+            log.warn("[AdvancedReport] 资源分配 Feign 调用失败 initiationId={} err={}",
+                    initiationId, e.getMessage());
+            return new ArrayList<>();
+        }
+        if (assignments.isEmpty()) {
+            return new ArrayList<>();
+        }
+        // 转换为甘特图数据：每条分配 = 一行 (employeeId, employeeName, start, end, allocation, status, billable)
+        List<Map<String, Object>> out = new ArrayList<>(assignments.size());
+        for (Map<String, Object> a : assignments) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("id", a.get("id"));
+            row.put("employeeId", a.get("employeeId"));
+            row.put("employeeName", a.get("employeeName"));
+            row.put("levelCode", a.get("levelCode"));
+            row.put("poolType", a.get("poolType"));
+            row.put("allocation", a.get("allocation"));
+            row.put("status", a.get("status"));
+            row.put("billable", a.get("billable"));
+            row.put("dailyHours", a.get("dailyHours"));
+            row.put("startDate", a.get("actualStartDate") != null
+                    ? a.get("actualStartDate")
+                    : a.get("plannedStartDate"));
+            row.put("endDate", a.get("actualEndDate") != null
+                    ? a.get("actualEndDate")
+                    : a.get("plannedEndDate"));
+            out.add(row);
+        }
+        // 按员工+起始日期排序
+        out.sort(Comparator
+                .comparing((Map<String, Object> m) -> stringOf(m.get("employeeName")))
+                .thenComparing(m -> stringOf(m.get("startDate")) == null
+                        ? "" : stringOf(m.get("startDate"))));
+        return out;
     }
 
     @Override
@@ -472,6 +548,326 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             row.put("count", e.getValue());
             out.add(row);
         }
+        return out;
+    }
+
+    /** 风险矩阵档位（从弱到强） */
+    private static final List<String> RISK_LEVELS = List.of("LOW", "MEDIUM", "HIGH");
+
+    @Override
+    public Map<String, Object> riskMatrix(Long initiationId, String riskType, String status) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        // 1) 拉取风险列表（异常时降级为空）
+        List<RiskDO> risks = new ArrayList<>();
+        try {
+            risks = riskMapper.selectAll();
+        } catch (Exception e) {
+            log.warn("[AdvancedReport] riskMatrix 风险数据查询失败: {}", e.getMessage());
+        }
+
+        // 2) 过滤：项目、类型、状态
+        String realRiskType = StringUtils.hasText(riskType) ? riskType.trim().toUpperCase() : null;
+        String realStatus = StringUtils.hasText(status) ? status.trim().toUpperCase() : null;
+        List<RiskDO> filtered = new ArrayList<>();
+        for (RiskDO r : risks) {
+            if (r == null) continue;
+            if (initiationId != null && !initiationId.equals(r.getInitiationId())) continue;
+            if (realRiskType != null && !realRiskType.equalsIgnoreCase(
+                    r.getRiskType() == null ? "" : r.getRiskType().trim().toUpperCase())) {
+                continue;
+            }
+            if (realStatus != null && !realStatus.equalsIgnoreCase(
+                    r.getStatus() == null ? "" : r.getStatus().trim().toUpperCase())) {
+                continue;
+            }
+            filtered.add(r);
+        }
+
+        // 3) 初始化 3x3 矩阵（9 个格子）
+        Map<String, Map<String, Object>> cellMap = new LinkedHashMap<>();
+        for (String p : RISK_LEVELS) {
+            for (String i : RISK_LEVELS) {
+                String key = p + "|" + i;
+                Map<String, Object> cell = new LinkedHashMap<>();
+                cell.put("probability", p);
+                cell.put("impact", i);
+                cell.put("count", 0);
+                cell.put("projectCount", 0);
+                cell.put("cellProjectIds", new ArrayList<Long>());
+                cell.put("level", deriveLevel(p, i));
+                cellMap.put(key, cell);
+            }
+        }
+
+        // 4) 按 riskType 聚合
+        Map<String, Integer> byType = new HashMap<>();
+        // summary
+        int total = 0;
+        int high = 0;
+        int medium = 0;
+        int low = 0;
+        Map<Long, Integer> projectCount = new HashMap<>();
+
+        for (RiskDO r : filtered) {
+            String p = normalize(r.getProbability());
+            String im = normalize(r.getImpact());
+            String key = p + "|" + im;
+            Map<String, Object> cell = cellMap.get(key);
+            if (cell == null) continue;
+            cell.put("count", ((Number) cell.get("count")).intValue() + 1);
+            @SuppressWarnings("unchecked")
+            List<Long> ids = (List<Long>) cell.get("cellProjectIds");
+            if (r.getInitiationId() != null && !ids.contains(r.getInitiationId())) {
+                ids.add(r.getInitiationId());
+            }
+            cell.put("projectCount", ((List<?>) cell.get("cellProjectIds")).size());
+
+            if (StringUtils.hasText(r.getRiskType())) {
+                byType.merge(r.getRiskType().toUpperCase(), 1, Integer::sum);
+            }
+            if (r.getInitiationId() != null) {
+                projectCount.merge(r.getInitiationId(), 1, Integer::sum);
+            }
+            total++;
+            String cellLevel = (String) cell.get("level");
+            if ("HIGH".equals(cellLevel)) high++;
+            else if ("MEDIUM".equals(cellLevel)) medium++;
+            else low++;
+        }
+
+        // 5) 矩阵输出（按 概率从高到低 + 影响从低到高，方便前端 heatmap 渲染）
+        List<Map<String, Object>> matrix = new ArrayList<>();
+        for (String p : List.of("HIGH", "MEDIUM", "LOW")) {
+            for (String im : List.of("LOW", "MEDIUM", "HIGH")) {
+                String key = p + "|" + im;
+                matrix.add(cellMap.get(key));
+            }
+        }
+
+        List<Map<String, Object>> typeRows = new ArrayList<>();
+        for (Map.Entry<String, Integer> e : byType.entrySet()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("riskType", e.getKey());
+            row.put("count", e.getValue());
+            typeRows.add(row);
+        }
+        typeRows.sort(Comparator.comparing((Map<String, Object> m) ->
+                ((Number) m.get("count")).intValue()).reversed());
+
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("totalCount", total);
+        summary.put("highCount", high);
+        summary.put("mediumCount", medium);
+        summary.put("lowCount", low);
+        summary.put("projectCount", projectCount.size());
+
+        out.put("matrix", matrix);
+        out.put("axisX", List.of("LOW", "MEDIUM", "HIGH"));   // impact
+        out.put("axisY", List.of("HIGH", "MEDIUM", "LOW"));   // probability
+        out.put("byType", typeRows);
+        out.put("summary", summary);
+        out.put("filter", Map.of(
+                "initiationId", initiationId == null ? "" : initiationId,
+                "riskType", realRiskType == null ? "" : realRiskType,
+                "status", realStatus == null ? "" : realStatus));
+        return out;
+    }
+
+    /**
+     * 派生风险等级：LOW*LOW=LOW；HIGH*HIGH=HIGH；其它 MEDIUM
+     */
+    private static String deriveLevel(String probability, String impact) {
+        if ("HIGH".equals(probability) && "HIGH".equals(impact)) {
+            return "HIGH";
+        }
+        if ("LOW".equals(probability) && "LOW".equals(impact)) {
+            return "LOW";
+        }
+        return "MEDIUM";
+    }
+
+    /**
+     * 标准化概率/影响字符串，null 或未知值默认 MEDIUM
+     */
+    private static String normalize(String s) {
+        if (s == null) return "MEDIUM";
+        String up = s.trim().toUpperCase();
+        if (RISK_LEVELS.contains(up)) return up;
+        return "MEDIUM";
+    }
+
+    @Override
+    public Map<String, Object> resourceUtilizationTrend(LocalDate from, LocalDate to, String department) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        // 默认时间窗：近 6 个月
+        LocalDate f = from == null ? LocalDate.now().minusMonths(5).withDayOfMonth(1) : from;
+        LocalDate t = to == null ? LocalDate.now() : to;
+        if (t.isBefore(f)) {
+            LocalDate tmp = f;
+            f = t;
+            t = tmp;
+        }
+        final LocalDate realFrom = f;
+        final LocalDate realTo = t;
+        final String realDept = department == null ? "" : department;
+
+        // 1) 拉取工时聚合
+        List<Map<String, Object>> aggregates = safeAll(timeEntryMapper,
+                m -> m.aggregateBillableByEmployee(realFrom, realTo));
+        if (aggregates.isEmpty()) {
+            out.put("periods", List.of());
+            out.put("series", List.of());
+            out.put("yAxisConfig", List.of(
+                    Map.of("name", "工时（h）", "position", "left"),
+                    Map.of("name", "利用率（%）", "position", "right", "max", 100)));
+            out.put("summary", Map.of(
+                    "avgUtilization", 0,
+                    "peakPeriod", "",
+                    "peakUtilization", 0,
+                    "totalBillableHours", ZERO,
+                    "totalWorkingHours", ZERO));
+            out.put("filter", Map.of("from", realFrom.toString(), "to", realTo.toString(), "department", realDept));
+            return out;
+        }
+
+        // 2) 部门过滤：通过 RateInternal 职级-部门表
+        Map<String, String> levelDeptMap = safeAll(rateInternalMapper, RateInternalMapper::selectAll)
+                .stream()
+                .filter(r -> StringUtils.hasText(r.getLevelCode()) && StringUtils.hasText(r.getDepartmentName()))
+                .collect(Collectors.toMap(RateInternalDO::getLevelCode, RateInternalDO::getDepartmentName, (a, b) -> a));
+
+        // 3) 按月聚合 (period -> {total, billable, overtime, leave, working})
+        Map<String, BigDecimal> totalByMonth = new TreeMap<>();
+        Map<String, BigDecimal> billableByMonth = new TreeMap<>();
+        Map<String, BigDecimal> overtimeByMonth = new TreeMap<>();
+        Map<String, BigDecimal> leaveByMonth = new TreeMap<>();
+        Map<String, BigDecimal> trainingByMonth = new TreeMap<>();
+
+        for (Map<String, Object> row : aggregates) {
+            String levelCode = stringOf(row.get("level_code"));
+            // 部门过滤
+            if (StringUtils.hasText(realDept)) {
+                String dept = levelDeptMap.getOrDefault(levelCode, "");
+                if (!realDept.equalsIgnoreCase(dept)) {
+                    continue;
+                }
+            }
+            Object periodObj = row.get("period");
+            if (periodObj == null) continue;
+            String period = periodObj.toString();
+            totalByMonth.merge(period, toBigDecimal(row.get("total_hours")), BigDecimal::add);
+            billableByMonth.merge(period, toBigDecimal(row.get("billable_hours")), BigDecimal::add);
+            overtimeByMonth.merge(period, toBigDecimal(row.get("overtime_hours")), BigDecimal::add);
+            leaveByMonth.merge(period, toBigDecimal(row.get("leave_hours")), BigDecimal::add);
+            trainingByMonth.merge(period, toBigDecimal(row.get("training_hours")), BigDecimal::add);
+        }
+
+        // 4) 计算每个月的工作工时、利用率
+        List<String> periods = new ArrayList<>(totalByMonth.keySet());
+        List<BigDecimal> totalArr = new ArrayList<>();
+        List<BigDecimal> billableArr = new ArrayList<>();
+        List<BigDecimal> overtimeArr = new ArrayList<>();
+        List<BigDecimal> utilPctArr = new ArrayList<>();
+        BigDecimal sumUtil = ZERO;
+        int validMonthCount = 0;
+        String peakPeriod = "";
+        BigDecimal peakUtil = ZERO;
+        BigDecimal totalBillable = ZERO;
+        BigDecimal totalWorking = ZERO;
+        for (String p : periods) {
+            BigDecimal total = totalByMonth.getOrDefault(p, ZERO);
+            BigDecimal billable = billableByMonth.getOrDefault(p, ZERO);
+            BigDecimal overtime = overtimeByMonth.getOrDefault(p, ZERO);
+            BigDecimal leave = leaveByMonth.getOrDefault(p, ZERO);
+            BigDecimal working = total.subtract(leave);
+            BigDecimal util = working.signum() == 0
+                    ? ZERO
+                    : billable.divide(working, 4, RoundingMode.HALF_UP);
+            BigDecimal utilPct = util.multiply(HUNDRED).setScale(2, RoundingMode.HALF_UP);
+            totalArr.add(total);
+            billableArr.add(billable);
+            overtimeArr.add(overtime);
+            utilPctArr.add(utilPct);
+            totalBillable = totalBillable.add(billable);
+            totalWorking = totalWorking.add(working);
+            if (working.signum() > 0) {
+                sumUtil = sumUtil.add(util);
+                validMonthCount++;
+                if (util.compareTo(peakUtil) > 0) {
+                    peakUtil = util;
+                    peakPeriod = p;
+                }
+            }
+        }
+        BigDecimal avgUtil = validMonthCount == 0
+                ? ZERO
+                : sumUtil.divide(new BigDecimal(validMonthCount), 4, RoundingMode.HALF_UP);
+        BigDecimal avgUtilPct = avgUtil.multiply(HUNDRED).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal peakUtilPct = peakUtil.multiply(HUNDRED).setScale(2, RoundingMode.HALF_UP);
+
+        List<Map<String, Object>> series = new ArrayList<>();
+        Map<String, Object> s1 = new LinkedHashMap<>();
+        s1.put("name", "总工时");
+        s1.put("type", "bar");
+        s1.put("yAxisIndex", 0);
+        s1.put("data", totalArr);
+        s1.put("unit", "h");
+        series.add(s1);
+        Map<String, Object> s2 = new LinkedHashMap<>();
+        s2.put("name", "可计费工时");
+        s2.put("type", "bar");
+        s2.put("yAxisIndex", 0);
+        s2.put("data", billableArr);
+        s2.put("unit", "h");
+        series.add(s2);
+        Map<String, Object> s3 = new LinkedHashMap<>();
+        s3.put("name", "加班工时");
+        s3.put("type", "bar");
+        s3.put("yAxisIndex", 0);
+        s3.put("data", overtimeArr);
+        s3.put("unit", "h");
+        series.add(s3);
+        Map<String, Object> s4 = new LinkedHashMap<>();
+        s4.put("name", "可计费利用率");
+        s4.put("type", "line");
+        s4.put("yAxisIndex", 1);
+        s4.put("data", utilPctArr);
+        s4.put("unit", "%");
+        s4.put("smooth", true);
+        series.add(s4);
+
+        List<Map<String, Object>> yAxis = new ArrayList<>();
+        Map<String, Object> ya0 = new LinkedHashMap<>();
+        ya0.put("name", "工时（h）");
+        ya0.put("position", "left");
+        ya0.put("type", "value");
+        yAxis.add(ya0);
+        Map<String, Object> ya1 = new LinkedHashMap<>();
+        ya1.put("name", "利用率（%）");
+        ya1.put("position", "right");
+        ya1.put("type", "value");
+        ya1.put("max", 100);
+        ya1.put("min", 0);
+        yAxis.add(ya1);
+
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("avgUtilization", avgUtil);
+        summary.put("avgUtilizationPct", avgUtilPct);
+        summary.put("peakPeriod", peakPeriod);
+        summary.put("peakUtilization", peakUtil);
+        summary.put("peakUtilizationPct", peakUtilPct);
+        summary.put("totalBillableHours", totalBillable.setScale(2, RoundingMode.HALF_UP));
+        summary.put("totalWorkingHours", totalWorking.setScale(2, RoundingMode.HALF_UP));
+        summary.put("monthCount", periods.size());
+
+        out.put("periods", periods);
+        out.put("series", series);
+        out.put("yAxisConfig", yAxis);
+        out.put("summary", summary);
+        out.put("filter", Map.of(
+                "from", realFrom.toString(),
+                "to", realTo.toString(),
+                "department", realDept));
         return out;
     }
 

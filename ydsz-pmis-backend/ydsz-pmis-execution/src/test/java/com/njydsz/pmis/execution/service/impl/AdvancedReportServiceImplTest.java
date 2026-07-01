@@ -1,10 +1,12 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
 import com.njydsz.pmis.execution.entity.RateCardDO;
 import com.njydsz.pmis.execution.entity.RateInternalDO;
 import com.njydsz.pmis.execution.entity.RiskDO;
+import com.njydsz.pmis.execution.feign.BenchResourceClient;
 import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
 import com.njydsz.pmis.execution.mapper.RateCardMapper;
 import com.njydsz.pmis.execution.mapper.RateInternalMapper;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +41,7 @@ class AdvancedReportServiceImplTest {
     private RiskMapper riskMapper;
     private TimeEntryMapper timeEntryMapper;
     private ThresholdProvider thresholdProvider;
+    private BenchResourceClient benchResourceClient;
     private AdvancedReportServiceImpl service;
 
     @BeforeEach
@@ -48,10 +52,19 @@ class AdvancedReportServiceImplTest {
         riskMapper = mock(RiskMapper.class);
         timeEntryMapper = mock(TimeEntryMapper.class);
         thresholdProvider = mock(ThresholdProvider.class);
+        benchResourceClient = mock(BenchResourceClient.class);
         when(thresholdProvider.benchYellowDays()).thenReturn(7);
         when(thresholdProvider.benchRedDays()).thenReturn(15);
+        // 默认 user 服务降级：返回空数据，不让现有测试受 Feign 影响
+        when(benchResourceClient.getBenchDashboard()).thenReturn(R.ok(Map.of(
+                "totalIdleCost", BigDecimal.ZERO,
+                "activePools", Collections.emptyList(),
+                "source", "DOWN")));
+        when(benchResourceClient.listResourceAssignmentsByInitiation(any()))
+                .thenReturn(R.ok(Collections.emptyList()));
         service = new AdvancedReportServiceImpl(evmMapper, rateCardMapper,
-                rateInternalMapper, riskMapper, timeEntryMapper, thresholdProvider);
+                rateInternalMapper, riskMapper, timeEntryMapper, thresholdProvider,
+                benchResourceClient);
     }
 
     @Test
@@ -208,8 +221,12 @@ class AdvancedReportServiceImplTest {
 
         List<Map<String, Object>> out = service.benchCostReport(
                 LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
-        assertThat(out).hasSize(1);
-        Map<String, Object> row = out.get(0);
+        // 1 POOL_SUMMARY + 1 员工行
+        assertThat(out).hasSize(2);
+        // 第一个是 POOL_SUMMARY
+        assertThat(out.get(0).get("type")).isEqualTo("POOL_SUMMARY");
+        assertThat(out.get(0).get("source")).isEqualTo("LOCAL_AGG");
+        Map<String, Object> row = out.get(1);
         // bench=176-88-8-16=64h = 8天
         assertThat((BigDecimal) row.get("benchHours")).isEqualByComparingTo(new BigDecimal("64"));
         assertThat((BigDecimal) row.get("benchDays")).isEqualByComparingTo(new BigDecimal("8.00"));
@@ -229,7 +246,8 @@ class AdvancedReportServiceImplTest {
 
         List<Map<String, Object>> out = service.benchCostReport(
                 LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
-        assertThat(out.get(0).get("alertLevel")).isEqualTo("RED");
+        // 索引 0 = POOL_SUMMARY, 索引 1 = 员工行
+        assertThat(out.get(1).get("alertLevel")).isEqualTo("RED");
     }
 
     @Test
@@ -242,11 +260,11 @@ class AdvancedReportServiceImplTest {
 
         List<Map<String, Object>> out = service.benchCostReport(
                 LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
-        assertThat(out.get(0).get("alertLevel")).isEqualTo("GREEN");
+        assertThat(out.get(1).get("alertLevel")).isEqualTo("GREEN");
     }
 
     @Test
-    @DisplayName("benchCostReport 闲置=0 时不返回该员工")
+    @DisplayName("benchCostReport 闲置=0 时不返回员工行但仍附加 POOL_SUMMARY")
     void bench_zero() {
         Map<String, Object> r1 = rowOf(1L, "张三", "L5", "2026-06",
                 "176", "176", "0", "0", "0"); // 100% billable
@@ -255,7 +273,9 @@ class AdvancedReportServiceImplTest {
 
         List<Map<String, Object>> out = service.benchCostReport(
                 LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
-        assertThat(out).isEmpty();
+        // 仅 POOL_SUMMARY，无员工行
+        assertThat(out).hasSize(1);
+        assertThat(out.get(0).get("type")).isEqualTo("POOL_SUMMARY");
     }
 
     @Test
@@ -323,9 +343,109 @@ class AdvancedReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("resourceGantt 当前占位返回空")
-    void gantt() {
+    @DisplayName("resourceGantt initiationId 为空返回空列表")
+    void gantt_null() {
+        assertThat(service.resourceGantt(null)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("resourceGantt Feign 返回空数据时返回空列表")
+    void gantt_empty() {
+        when(benchResourceClient.listResourceAssignmentsByInitiation(any()))
+                .thenReturn(R.ok(Collections.emptyList()));
         assertThat(service.resourceGantt(1L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("resourceGantt 真实聚合：转换分配记录为甘特图数据")
+    void gantt_normal() {
+        Map<String, Object> a1 = new HashMap<>();
+        a1.put("id", 101L);
+        a1.put("employeeId", 11L);
+        a1.put("employeeName", "张三");
+        a1.put("levelCode", "L5");
+        a1.put("poolType", "DIVISION");
+        a1.put("allocation", new BigDecimal("0.5"));
+        a1.put("status", "ACTIVE");
+        a1.put("billable", 1);
+        a1.put("dailyHours", new BigDecimal("4"));
+        a1.put("plannedStartDate", "2026-06-01");
+        a1.put("plannedEndDate", "2026-08-31");
+        when(benchResourceClient.listResourceAssignmentsByInitiation(1L))
+                .thenReturn(R.ok(List.of(a1)));
+
+        List<Map<String, Object>> out = service.resourceGantt(1L);
+        assertThat(out).hasSize(1);
+        Map<String, Object> row = out.get(0);
+        assertThat(row.get("employeeId")).isEqualTo(11L);
+        assertThat(row.get("employeeName")).isEqualTo("张三");
+        assertThat(row.get("startDate")).isEqualTo("2026-06-01");
+        assertThat(row.get("endDate")).isEqualTo("2026-08-31");
+        assertThat(row.get("poolType")).isEqualTo("DIVISION");
+    }
+
+    @Test
+    @DisplayName("resourceGantt 优先使用 actualStartDate/EndDate")
+    void gantt_actualPreferred() {
+        Map<String, Object> a1 = new HashMap<>();
+        a1.put("id", 1L);
+        a1.put("employeeId", 1L);
+        a1.put("employeeName", "李四");
+        a1.put("plannedStartDate", "2026-06-01");
+        a1.put("plannedEndDate", "2026-12-31");
+        a1.put("actualStartDate", "2026-07-01");
+        a1.put("actualEndDate", "2026-11-30");
+        when(benchResourceClient.listResourceAssignmentsByInitiation(any()))
+                .thenReturn(R.ok(List.of(a1)));
+        List<Map<String, Object>> out = service.resourceGantt(2L);
+        assertThat(out.get(0).get("startDate")).isEqualTo("2026-07-01");
+        assertThat(out.get(0).get("endDate")).isEqualTo("2026-11-30");
+    }
+
+    @Test
+    @DisplayName("resourceGantt Feign 异常降级为空")
+    void gantt_feignException() {
+        when(benchResourceClient.listResourceAssignmentsByInitiation(any()))
+                .thenThrow(new RuntimeException("user service down"));
+        assertThat(service.resourceGantt(1L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("benchCostReport Feign 拉到 totalIdleCost 时 source=USER_FEIGN")
+    void bench_feignEnrich() {
+        Map<String, Object> r1 = rowOf(1L, "张三", "L5", "2026-06",
+                "176", "88", "0", "8", "16");
+        when(timeEntryMapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of(r1));
+        when(rateInternalMapper.selectAll()).thenReturn(List.of(internal("L5", "1000")));
+        when(benchResourceClient.getBenchDashboard()).thenReturn(R.ok(Map.of(
+                "totalIdleCost", new BigDecimal("12345.67"),
+                "activePools", List.of(),
+                "source", "USER")));
+
+        List<Map<String, Object>> out = service.benchCostReport(
+                LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
+        Map<String, Object> summary = out.get(0);
+        assertThat(summary.get("type")).isEqualTo("POOL_SUMMARY");
+        assertThat(summary.get("source")).isEqualTo("USER_FEIGN");
+        assertThat((BigDecimal) summary.get("totalIdleCost"))
+                .isEqualByComparingTo(new BigDecimal("12345.67"));
+    }
+
+    @Test
+    @DisplayName("benchCostReport Feign 异常降级为 LOCAL_AGG")
+    void bench_feignException() {
+        Map<String, Object> r1 = rowOf(1L, "张三", "L5", "2026-06",
+                "176", "88", "0", "8", "16");
+        when(timeEntryMapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of(r1));
+        when(rateInternalMapper.selectAll()).thenReturn(List.of(internal("L5", "1000")));
+        when(benchResourceClient.getBenchDashboard())
+                .thenThrow(new RuntimeException("user service down"));
+
+        List<Map<String, Object>> out = service.benchCostReport(
+                LocalDate.of(2026, 6, 1), LocalDate.of(2026, 6, 30));
+        assertThat(out.get(0).get("source")).isEqualTo("LOCAL_AGG");
+        assertThat((BigDecimal) out.get(0).get("totalIdleCost"))
+                .isEqualByComparingTo(BigDecimal.ZERO);
     }
 
     @Test
@@ -359,6 +479,272 @@ class AdvancedReportServiceImplTest {
     void riskDashboard_empty() {
         when(riskMapper.selectAll()).thenReturn(List.of());
         assertThat(service.riskDashboard()).isEmpty();
+    }
+
+    // ----------------- P2-2 风险矩阵热力图 -----------------
+
+    @Test
+    @DisplayName("riskMatrix 空数据返回 9 宫格 + 零计数")
+    void riskMatrix_empty() {
+        when(riskMapper.selectAll()).thenReturn(List.of());
+        Map<String, Object> out = service.riskMatrix(null, null, null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> matrix = (List<Map<String, Object>>) out.get("matrix");
+        assertThat(matrix).hasSize(9);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("totalCount")).intValue()).isZero();
+        assertThat(((Number) summary.get("highCount")).intValue()).isZero();
+        // 轴定义
+        @SuppressWarnings("unchecked")
+        List<String> axisX = (List<String>) out.get("axisX");
+        @SuppressWarnings("unchecked")
+        List<String> axisY = (List<String>) out.get("axisY");
+        assertThat(axisX).containsExactly("LOW", "MEDIUM", "HIGH");
+        assertThat(axisY).containsExactly("HIGH", "MEDIUM", "LOW");
+    }
+
+    @Test
+    @DisplayName("riskMatrix 按 probability × impact 落入正确格子")
+    void riskMatrix_classify() {
+        RiskDO r1 = new RiskDO(); // LOW*LOW -> LOW
+        r1.setInitiationId(1L);
+        r1.setProbability("LOW");
+        r1.setImpact("LOW");
+        r1.setRiskType("SCOPE");
+        r1.setStatus("OPEN");
+        RiskDO r2 = new RiskDO(); // HIGH*HIGH -> HIGH
+        r2.setInitiationId(2L);
+        r2.setProbability("HIGH");
+        r2.setImpact("HIGH");
+        r2.setRiskType("COST");
+        r2.setStatus("OPEN");
+        RiskDO r3 = new RiskDO(); // MEDIUM*MEDIUM -> MEDIUM
+        r3.setInitiationId(3L);
+        r3.setProbability("MEDIUM");
+        r3.setImpact("MEDIUM");
+        r3.setRiskType("SCHEDULE");
+        r3.setStatus("CLOSED");
+        RiskDO r4 = new RiskDO(); // LOW*MEDIUM -> MEDIUM
+        r4.setInitiationId(1L);
+        r4.setProbability("LOW");
+        r4.setImpact("MEDIUM");
+        r4.setRiskType("QUALITY");
+        r4.setStatus("OPEN");
+        when(riskMapper.selectAll()).thenReturn(List.of(r1, r2, r3, r4));
+
+        Map<String, Object> out = service.riskMatrix(null, null, null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> matrix = (List<Map<String, Object>>) out.get("matrix");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("totalCount")).intValue()).isEqualTo(4);
+        assertThat(((Number) summary.get("highCount")).intValue()).isEqualTo(1);
+        assertThat(((Number) summary.get("mediumCount")).intValue()).isEqualTo(2);
+        assertThat(((Number) summary.get("lowCount")).intValue()).isEqualTo(1);
+        assertThat(((Number) summary.get("projectCount")).intValue()).isEqualTo(3);
+
+        // 验证 LOW*LOW = 1, HIGH*HIGH = 1
+        Map<String, Object> lowLow = findCell(matrix, "LOW", "LOW");
+        assertThat(((Number) lowLow.get("count")).intValue()).isEqualTo(1);
+        assertThat(((List<?>) lowLow.get("cellProjectIds"))).hasSize(1);
+        Map<String, Object> highHigh = findCell(matrix, "HIGH", "HIGH");
+        assertThat(((Number) highHigh.get("count")).intValue()).isEqualTo(1);
+        assertThat(highHigh.get("level")).isEqualTo("HIGH");
+
+        // byType 排序
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> byType = (List<Map<String, Object>>) out.get("byType");
+        assertThat(byType).hasSize(4);
+        assertThat(byType.get(0).get("riskType")).isIn("SCOPE", "COST", "SCHEDULE", "QUALITY");
+    }
+
+    @Test
+    @DisplayName("riskMatrix 按 initiationId 过滤")
+    void riskMatrix_filterInitiation() {
+        RiskDO r1 = new RiskDO();
+        r1.setInitiationId(1L);
+        r1.setProbability("HIGH");
+        r1.setImpact("HIGH");
+        r1.setRiskType("COST");
+        RiskDO r2 = new RiskDO();
+        r2.setInitiationId(2L);
+        r2.setProbability("HIGH");
+        r2.setImpact("HIGH");
+        r2.setRiskType("COST");
+        when(riskMapper.selectAll()).thenReturn(List.of(r1, r2));
+
+        Map<String, Object> out = service.riskMatrix(1L, null, null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("totalCount")).intValue()).isEqualTo(1);
+        assertThat(((Number) summary.get("projectCount")).intValue()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("riskMatrix 按 riskType 过滤")
+    void riskMatrix_filterType() {
+        RiskDO r1 = new RiskDO();
+        r1.setInitiationId(1L);
+        r1.setProbability("HIGH");
+        r1.setImpact("HIGH");
+        r1.setRiskType("COST");
+        RiskDO r2 = new RiskDO();
+        r2.setInitiationId(2L);
+        r2.setProbability("LOW");
+        r2.setImpact("LOW");
+        r2.setRiskType("SCOPE");
+        when(riskMapper.selectAll()).thenReturn(List.of(r1, r2));
+
+        Map<String, Object> out = service.riskMatrix(null, "COST", null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("totalCount")).intValue()).isEqualTo(1);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> byType = (List<Map<String, Object>>) out.get("byType");
+        assertThat(byType).hasSize(1);
+        assertThat(byType.get(0).get("riskType")).isEqualTo("COST");
+    }
+
+    @Test
+    @DisplayName("riskMatrix 异常降级返回空矩阵")
+    void riskMatrix_exception() {
+        when(riskMapper.selectAll()).thenThrow(new RuntimeException("DB down"));
+        Map<String, Object> out = service.riskMatrix(null, null, null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> matrix = (List<Map<String, Object>>) out.get("matrix");
+        assertThat(matrix).hasSize(9);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("totalCount")).intValue()).isZero();
+    }
+
+    @Test
+    @DisplayName("riskMatrix 容错处理 null/异常概率与影响")
+    void riskMatrix_nullProbImpact() {
+        RiskDO r = new RiskDO();
+        r.setInitiationId(1L);
+        r.setProbability(null);
+        r.setImpact(null);
+        r.setRiskType("OTHER");
+        when(riskMapper.selectAll()).thenReturn(List.of(r));
+        Map<String, Object> out = service.riskMatrix(null, null, null);
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> matrix = (List<Map<String, Object>>) out.get("matrix");
+        Map<String, Object> medMed = findCell(matrix, "MEDIUM", "MEDIUM");
+        assertThat(((Number) medMed.get("count")).intValue()).isEqualTo(1);
+    }
+
+    // ----------------- P2-3 资源占用趋势图 -----------------
+
+    @Test
+    @DisplayName("utilizationTrend 空数据返回空结构")
+    void utilizationTrend_empty() {
+        when(timeEntryMapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of());
+        Map<String, Object> out = service.resourceUtilizationTrend(null, null, null);
+        @SuppressWarnings("unchecked")
+        List<String> periods = (List<String>) out.get("periods");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> series = (List<Map<String, Object>>) out.get("series");
+        assertThat(periods).isEmpty();
+        assertThat(series).isEmpty();
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> yAxis = (List<Map<String, Object>>) out.get("yAxisConfig");
+        assertThat(yAxis).hasSize(2);
+        assertThat(yAxis.get(0).get("position")).isEqualTo("left");
+        assertThat(yAxis.get(1).get("position")).isEqualTo("right");
+    }
+
+    @Test
+    @DisplayName("utilizationTrend 按月聚合总工时/可计费工时/加班/利用率")
+    void utilizationTrend_normal() {
+        // 准备 2 个月数据
+        Map<String, Object> r1 = rowOf(1L, "Alice", "L5", "2026-01", "200", "180", "10", "8", "5");
+        Map<String, Object> r2 = rowOf(2L, "Bob", "L6", "2026-01", "190", "150", "20", "10", "0");
+        Map<String, Object> r3 = rowOf(1L, "Alice", "L5", "2026-02", "210", "190", "15", "5", "0");
+        when(timeEntryMapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of(r1, r2, r3));
+        when(rateInternalMapper.selectAll()).thenReturn(List.of());
+
+        Map<String, Object> out = service.resourceUtilizationTrend(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 2, 28), null);
+        @SuppressWarnings("unchecked")
+        List<String> periods = (List<String>) out.get("periods");
+        assertThat(periods).containsExactly("2026-01", "2026-02");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> series = (List<Map<String, Object>>) out.get("series");
+        assertThat(series).hasSize(4);
+        // 总工时 series
+        Map<String, Object> totalSeries = series.get(0);
+        assertThat(totalSeries.get("name")).isEqualTo("总工时");
+        assertThat(totalSeries.get("type")).isEqualTo("bar");
+        assertThat(totalSeries.get("yAxisIndex")).isEqualTo(0);
+        // 折线 series
+        Map<String, Object> utilSeries = series.get(3);
+        assertThat(utilSeries.get("name")).isEqualTo("可计费利用率");
+        assertThat(utilSeries.get("type")).isEqualTo("line");
+        assertThat(utilSeries.get("yAxisIndex")).isEqualTo(1);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        assertThat(((Number) summary.get("monthCount")).intValue()).isEqualTo(2);
+        assertThat(summary.get("peakPeriod").toString()).isEqualTo("2026-02");
+        assertThat(summary.get("totalBillableHours")).isNotNull();
+    }
+
+    @Test
+    @DisplayName("utilizationTrend 按部门过滤")
+    void utilizationTrend_filterDept() {
+        Map<String, Object> r1 = rowOf(1L, "Alice", "L5", "2026-01", "200", "180", "10", "8", "5");
+        Map<String, Object> r2 = rowOf(2L, "Bob", "L6", "2026-01", "190", "150", "20", "10", "0");
+        when(timeEntryMapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of(r1, r2));
+        RateInternalDO in5 = new RateInternalDO();
+        in5.setLevelCode("L5");
+        in5.setDepartmentName("数字一部");
+        RateInternalDO in6 = new RateInternalDO();
+        in6.setLevelCode("L6");
+        in6.setDepartmentName("数字二部");
+        when(rateInternalMapper.selectAll()).thenReturn(List.of(in5, in6));
+
+        Map<String, Object> out = service.resourceUtilizationTrend(
+                LocalDate.of(2026, 1, 1), LocalDate.of(2026, 1, 31), "数字一部");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> summary = (Map<String, Object>) out.get("summary");
+        // 只有 Alice (L5) 进入"数字一部"
+        assertThat(summary.get("totalBillableHours")).isEqualTo(new BigDecimal("180.00"));
+    }
+
+    @Test
+    @DisplayName("utilizationTrend 异常降级返回空结构")
+    void utilizationTrend_exception() {
+        when(timeEntryMapper.aggregateBillableByEmployee(any(), any()))
+                .thenThrow(new RuntimeException("DB down"));
+        Map<String, Object> out = service.resourceUtilizationTrend(null, null, null);
+        @SuppressWarnings("unchecked")
+        List<String> periods = (List<String>) out.get("periods");
+        assertThat(periods).isEmpty();
+    }
+
+    @Test
+    @DisplayName("utilizationTrend 起始日期大于结束日期自动交换")
+    void utilizationTrend_swapRange() {
+        when(timeEntryMapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of());
+        Map<String, Object> out = service.resourceUtilizationTrend(
+                LocalDate.of(2026, 6, 1), LocalDate.of(2026, 1, 1), null);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> filter = (Map<String, Object>) out.get("filter");
+        // 起始 > 结束 已被交换为 from <= to
+        assertThat(filter.get("from").toString()).isEqualTo("2026-01-01");
+        assertThat(filter.get("to").toString()).isEqualTo("2026-06-01");
+    }
+
+    private static Map<String, Object> findCell(List<Map<String, Object>> matrix,
+                                                 String probability, String impact) {
+        for (Map<String, Object> cell : matrix) {
+            if (probability.equals(cell.get("probability")) && impact.equals(cell.get("impact"))) {
+                return cell;
+            }
+        }
+        throw new AssertionError("cell not found: " + probability + " * " + impact);
     }
 
     // ----------------- helpers -----------------

@@ -26,16 +26,25 @@ export const updateUser = (id: number, data: UserCreateDTO) =>
   request<void>({ url: `/users/${id}`, method: 'PUT', data })
 
 /**
- * 删除
+ * 删除（需要 X-Re-Auth-Token）
  */
-export const deleteUser = (id: number) =>
-  request<void>({ url: `/users/${id}`, method: 'DELETE' })
+export const deleteUser = (id: number, reauthToken?: string) =>
+  request<void>({
+    url: `/users/${id}`,
+    method: 'DELETE',
+    headers: reauthToken ? { 'X-Re-Auth-Token': reauthToken } : undefined,
+  })
 
 /**
- * 重置密码
+ * 重置密码（需要 X-Re-Auth-Token）
  */
-export const resetPassword = (id: number, newPassword: string) =>
-  request<void>({ url: `/users/${id}/reset-password`, method: 'POST', params: { password: newPassword } })
+export const resetPassword = (id: number, newPassword: string, reauthToken?: string) =>
+  request<void>({
+    url: `/users/${id}/reset-password`,
+    method: 'POST',
+    params: { password: newPassword },
+    headers: reauthToken ? { 'X-Re-Auth-Token': reauthToken } : undefined,
+  })
 
 /**
  * 启用/禁用用户

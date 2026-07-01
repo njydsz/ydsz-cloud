@@ -53,4 +53,12 @@ public interface CockpitReportService {
      * 按客户下钻
      */
     List<Map<String, Object>> drillByCustomer(String period);
+
+    /**
+     * 合同总额年度趋势（P2-4 体验增强）
+     *
+     * <p>基于 invoice 表 ISSUED 状态的合同开票金额，按 invoice_date 的年份聚合。
+     * 返回字段包含：years / amountSeries / projectCountSeries / summary（峰值年份、同比增长率、累计）。
+     */
+    Map<String, Object> contractAmountYearlyTrend();
 }

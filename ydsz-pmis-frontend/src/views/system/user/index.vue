@@ -12,6 +12,11 @@ import {
   listUserRoles,
 } from '@/api/system/user'
 import { listAllRoles } from '@/api/system/role'
+import { get2faStatus } from '@/api/user/two-factor'
+import ReAuthDialog from '@/components/common/ReAuthDialog.vue'
+import PasswordStrengthBar from '@/components/common/PasswordStrengthBar.vue'
+import { useReAuth } from '@/composables/useReAuth'
+import type { ReAuthMethod } from '@/api/user/reauth'
 import type { UserVO, UserCreateDTO } from '@/api/system/user/types'
 import type { RoleVO } from '@/api/system/role/types'
 
@@ -178,12 +183,14 @@ async function submitForm() {
 async function handleDelete(row: UserVO) {
   try {
     await ElMessageBox.confirm(`确认删除用户「${row.realName}」吗？`, '提示', { type: 'warning' })
-    await deleteUser(row.id)
-    ElMessage.success('删除成功')
-    fetchList()
   } catch {
-    /* 取消 */
+    return
   }
+  await deleteReAuth.withReAuth(async (token) => {
+    await deleteUser(row.id, token)
+    ElMessage.success('删除成功')
+    await fetchList()
+  })
 }
 
 async function handleToggleStatus(row: UserVO) {
@@ -217,14 +224,54 @@ async function submitResetPwd() {
     ElMessage.warning('密码长度至少 6 位')
     return
   }
-  await resetPassword(resetUserId.value, newPassword.value)
-  ElMessage.success('密码已重置')
-  resetDialogVisible.value = false
+  const id = resetUserId.value
+  const pwd = newPassword.value
+  await resetPwdReAuth.withReAuth(async (token) => {
+    await resetPassword(id, pwd, token)
+    ElMessage.success('密码已重置')
+    resetDialogVisible.value = false
+  })
+}
+
+// ============= 二次认证 =============
+const has2fa = ref(false)
+async function fetch2faStatus() {
+  try {
+    const { data } = await get2faStatus()
+    has2fa.value = data?.enabled || false
+  } catch {
+    has2fa.value = false
+  }
+}
+
+const deleteReAuth = useReAuth({
+  operationCode: 'USER_DELETE',
+  operationName: '删除用户',
+})
+const resetPwdReAuth = useReAuth({
+  operationCode: 'USER_RESET_PASSWORD',
+  operationName: '重置用户密码',
+})
+
+function onReAuthConfirm(
+  reauth: ReturnType<typeof useReAuth>,
+  payload: { method: ReAuthMethod; password?: string; otp?: string; backupCode?: string },
+) {
+  reauth.dialog.method = payload.method
+  if (payload.method === 'PASSWORD') reauth.dialog.password = payload.password || ''
+  else if (payload.method === 'TOTP') reauth.dialog.otp = payload.otp || ''
+  else if (payload.method === 'BACKUP_CODE') reauth.dialog.backupCode = payload.backupCode || ''
+  reauth.handleConfirm()
+}
+
+function onReAuthCancel(reauth: ReturnType<typeof useReAuth>) {
+  reauth.handleCancel()
 }
 
 onMounted(() => {
   fetchRoles()
   fetchList()
+  fetch2faStatus()
 })
 </script>
 
@@ -324,6 +371,12 @@ onMounted(() => {
           <el-col :span="12">
             <el-form-item label="密码" prop="password">
               <el-input v-model="form.password" type="password" show-password />
+              <PasswordStrengthBar
+                :password="form.password || ''"
+                :show-input="false"
+                :show-rules="true"
+                style="margin-top: 6px"
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -374,6 +427,12 @@ onMounted(() => {
       <el-form label-width="80px">
         <el-form-item label="新密码">
           <el-input v-model="newPassword" type="password" show-password placeholder="至少 6 位" />
+          <PasswordStrengthBar
+            :password="newPassword"
+            :show-input="false"
+            :show-rules="true"
+            style="margin-top: 6px"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -381,6 +440,32 @@ onMounted(() => {
         <el-button type="primary" @click="submitResetPwd">确定</el-button>
       </template>
     </el-dialog>
+
+    <!-- 二次认证弹窗：删除用户 -->
+    <ReAuthDialog
+      v-model:visible="deleteReAuth.dialog.visible"
+      v-model:method="deleteReAuth.dialog.method"
+      :operation-code="deleteReAuth.options.operationCode"
+      :operation-name="deleteReAuth.options.operationName"
+      :loading="deleteReAuth.dialog.loading"
+      :error-message="deleteReAuth.dialog.errorMessage"
+      :has-2fa="has2fa"
+      @confirm="(p) => onReAuthConfirm(deleteReAuth, p)"
+      @cancel="onReAuthCancel(deleteReAuth)"
+    />
+
+    <!-- 二次认证弹窗：重置密码 -->
+    <ReAuthDialog
+      v-model:visible="resetPwdReAuth.dialog.visible"
+      v-model:method="resetPwdReAuth.dialog.method"
+      :operation-code="resetPwdReAuth.options.operationCode"
+      :operation-name="resetPwdReAuth.options.operationName"
+      :loading="resetPwdReAuth.dialog.loading"
+      :error-message="resetPwdReAuth.dialog.errorMessage"
+      :has-2fa="has2fa"
+      @confirm="(p) => onReAuthConfirm(resetPwdReAuth, p)"
+      @cancel="onReAuthCancel(resetPwdReAuth)"
+    />
   </div>
 </template>
 

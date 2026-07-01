@@ -100,4 +100,22 @@ public class AdvancedReportController {
     public R<List<Map<String, Object>>> riskDashboard() {
         return R.ok(service.riskDashboard());
     }
+
+    @Operation(summary = "项目风险矩阵热力图（P2-2）")
+    @GetMapping("/risk-matrix")
+    public R<Map<String, Object>> riskMatrix(
+            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String riskType,
+            @RequestParam(required = false) String status) {
+        return R.ok(service.riskMatrix(initiationId, riskType, status));
+    }
+
+    @Operation(summary = "资源占用趋势图 双 Y 轴（P2-3）")
+    @GetMapping("/utilization-trend")
+    public R<Map<String, Object>> utilizationTrend(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
+            @RequestParam(required = false) String department) {
+        return R.ok(service.resourceUtilizationTrend(from, to, department));
+    }
 }

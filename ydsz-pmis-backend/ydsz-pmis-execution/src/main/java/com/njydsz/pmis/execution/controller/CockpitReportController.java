@@ -72,4 +72,10 @@ public class CockpitReportController {
     public R<List<Map<String, Object>>> drillCustomer(@RequestParam(required = false) String period) {
         return R.ok(service.drillByCustomer(period));
     }
+
+    @Operation(summary = "合同总额年度趋势（P2-4）")
+    @GetMapping("/contract-yearly-trend")
+    public R<Map<String, Object>> contractYearlyTrend() {
+        return R.ok(service.contractAmountYearlyTrend());
+    }
 }
