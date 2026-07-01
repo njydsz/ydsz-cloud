@@ -35,6 +35,14 @@
     "auto-imports.d.ts",
     "components.d.ts"
   ],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "e2e",
+    "e2e-report",
+    "playwright",
+    "**/*.test.ts",
+    "**/*.spec.ts"
+  ],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

@@ -63,9 +63,9 @@ pnpm install && pnpm dev
 | `NACOS_NAMESPACE` | pmis-dev | 命名空间 |
 | `DB_HOST` | 127.0.0.1 | 数据库地址 |
 | `DB_PORT` | 5432 | 数据库端口 |
-| `DB_NAME` | pmis | 数据库名 |
-| `DB_USER` | pmis | 数据库用户 |
-| `DB_PASSWORD` | pmis@2026 | 数据库密码 |
+| `DB_NAME` | ydsz-pmis | 数据库名 |
+| `DB_USER` | postgres | 数据库用户 |
+| `DB_PASSWORD` | Limw1020 | 数据库密码 |
 | `REDIS_HOST` | 127.0.0.1 | Redis 地址 |
 | `REDIS_PORT` | 6379 | Redis 端口 |
 | `REDIS_PASSWORD` | pmis@2026 | Redis 密码 |

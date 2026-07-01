@@ -1,0 +1,16 @@
+#!/bin/bash
+# =====================================================================
+#  certbot 自动续期定时任务（批次 19）
+# ---------------------------------------------------------------------
+#  安装：cp certbot-cron /etc/cron.d/certbot-renew
+#        systemctl restart cron
+#  触发：每天 03:00 续期（certbot 内部判断距离过期 < 30 天才续）
+# =====================================================================
+# 任务 1：续期
+0 3 * * * root /usr/bin/certbot renew --quiet --post-hook "systemctl reload nginx"
+
+# 任务 2：每周日清理归档证书（保留 5 个版本）
+0 4 * * 0 root /usr/bin/certbot delete --cert-name pmis.example.com 2>/dev/null; ls -1 /etc/letsencrypt/archive/pmis.example.com/ 2>/dev/null | head -n -5 | xargs -I {} rm -f /etc/letsencrypt/archive/pmis.example.com/{} /etc/letsencrypt/renewal/pmis.example.com.conf 2>/dev/null
+
+# 任务 3：续期失败告警（连续 3 天失败发邮件）
+0 5 * * * root /opt/pmis/scripts/check-cert-expiry.sh

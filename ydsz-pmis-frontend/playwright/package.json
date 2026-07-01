@@ -1,0 +1,9 @@
+{
+  "name": "@playwright/test",
+  "version": "1.48.0",
+  "description": "Playwright E2E 浏览器依赖",
+  "private": true,
+  "devDependencies": {
+    "@playwright/test": "1.48.0"
+  }
+}

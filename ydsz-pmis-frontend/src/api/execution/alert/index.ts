@@ -53,3 +53,11 @@ export const resolveAlertRoles = (level: string) =>
     method: 'GET',
     params: { level },
   })
+
+/** 仪表盘 - 预警项目 TOP N (批次 21 / P2 dashboard) */
+export const getCockpitAlertTopN = (period: string, topN = 5) =>
+  request<Array<{ projectCode: string; projectName: string; alertLevel: 'RED' | 'YELLOW' | 'NORMAL'; alertCount: number }>>({
+    url: '/execution/alert-dispatch/cockpit-top-n',
+    method: 'GET',
+    params: { period, topN },
+  })

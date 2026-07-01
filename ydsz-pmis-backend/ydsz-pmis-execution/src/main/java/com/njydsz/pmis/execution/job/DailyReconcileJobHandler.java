@@ -2,6 +2,8 @@ package com.njydsz.pmis.execution.job;
 
 import com.njydsz.pmis.execution.service.DailyReconcileService;
 import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.common.job.JobRunRecorder;
+import com.njydsz.pmis.common.job.JobRunRecorder.JobRunResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -22,6 +24,8 @@ import java.util.Map;
  *   cron:      0 0 2 * * ?
  * </pre>
  *
+ * <p>批次 21 / P2: 接入 {@link JobRunRecorder} 自动注入 provider_trace_id + 统一日志格式
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -33,12 +37,11 @@ public class DailyReconcileJobHandler implements JobHandler {
     private final DailyReconcileService dailyReconcileService;
 
     @Override
-    public Object execute(String paramsJson) {
-        long start = System.currentTimeMillis();
-        // 默认对前一日数据
-        LocalDate target = parseDate(paramsJson, LocalDate.now().minusDays(1));
-        log.info("[DailyReconcileJob] 开始执行对账: date={}", target);
-        try {
+    public Object execute(String paramsJson) throws Exception {
+        return JobRunRecorder.run("dailyReconcileJob", paramsJson, () -> {
+            long start = System.currentTimeMillis();
+            LocalDate target = parseDate(paramsJson, LocalDate.now().minusDays(1));
+            log.info("[DailyReconcileJob] 开始执行对账: date={}", target);
             int n = dailyReconcileService.runDaily(target);
             long cost = System.currentTimeMillis() - start;
             Map<String, Object> result = new HashMap<>();
@@ -46,11 +49,8 @@ public class DailyReconcileJobHandler implements JobHandler {
             result.put("recordCount", n);
             result.put("costMs", cost);
             log.info("[DailyReconcileJob] 对账完成: date={} records={} costMs={}", target, n, cost);
-            return result;
-        } catch (Exception e) {
-            log.error("[DailyReconcileJob] 对账失败: date={} err={}", target, e.getMessage(), e);
-            throw new RuntimeException("DailyReconcile failed for " + target + ": " + e.getMessage(), e);
-        }
+            return JobRunResult.success(result, cost);
+        });
     }
 
     private LocalDate parseDate(String paramsJson, LocalDate dflt) {

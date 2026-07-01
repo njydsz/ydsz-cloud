@@ -1,0 +1,78 @@
+# =====================================================================
+#  PMIS 基础运行时镜像（批次 19）
+# ---------------------------------------------------------------------
+#  基于 Eclipse Temurin JDK 21 LTS（生产环境推荐 Bellsoft Liberica
+#  或 Alibaba Dragonwell，参见 deploy/docker/README.md 切换说明）。
+#
+#  包含：
+#  - JDK 21（JRE 精简版 + java 命令）
+#  - 中文 zh_CN.UTF-8 locale（PostgreSQL 中文数据兼容）
+#  - 时区 Asia/Shanghai（业务系统统一时间）
+#  - tini 1.x 进程初始化（PID 1 信号转发 / 僵尸进程回收）
+#  - curl / tzdata / ca-certificates 基础工具
+#  - 非 root 用户 appuser（UID 10001）运行微服务
+#  - 健康检查 HEALTHCHECK 指向 /actuator/health
+# =====================================================================
+FROM eclipse-temurin:21.0.4_7-jre-alpine AS base
+
+LABEL maintainer="ydsz-pmis-team <ops@ydsz-pmis.cn>" \
+      version="1.0.0" \
+      description="PMIS 基础运行时镜像 (JDK 21 + JRE + tini)"
+
+# ---- 系统层依赖 ----
+RUN apk add --no-cache \
+        bash \
+        curl \
+        tini \
+        tzdata \
+        ca-certificates \
+        fontconfig \
+        musl-locales \
+    && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    && echo "Asia/Shanghai" > /etc/timezone
+
+# ---- Locale ----
+ENV LANG=zh_CN.UTF-8 \
+    LANGUAGE=zh_CN:zh \
+    LC_ALL=zh_CN.UTF-8
+
+# ---- JVM 通用调优（容器感知） ----
+ENV JAVA_OPTS="-XX:+UseContainerSupport \
+               -XX:MaxRAMPercentage=75.0 \
+               -XX:InitialRAMPercentage=50.0 \
+               -XX:+UseG1GC \
+               -XX:+ParallelRefProcEnabled \
+               -XX:+UseStringDeduplication \
+               -XX:+HeapDumpOnOutOfMemoryError \
+               -XX:HeapDumpPath=/var/log/pmis/heapdump.hprof \
+               -Djava.security.egd=file:/dev/./urandom \
+               -Duser.timezone=Asia/Shanghai \
+               -Dfile.encoding=UTF-8" \
+    JVM_OPTS="" \
+    APP_NAME="pmis-app"
+
+# ---- 创建非 root 用户 ----
+RUN addgroup -g 10001 -S appgroup \
+    && adduser -u 10001 -S appuser -G appgroup \
+    && mkdir -p /opt/pmis /var/log/pmis /tmp/pmis \
+    && chown -R appuser:appgroup /opt/pmis /var/log/pmis /tmp/pmis
+
+WORKDIR /opt/pmis
+
+# ---- 通用启动入口 ----
+COPY --chown=appuser:appgroup docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# ---- 切到非 root 用户 ----
+USER appuser
+
+# ---- 暴露应用端口（具体微服务在子镜像 Dockerfile 中覆盖） ----
+EXPOSE 9000 9001 9002 9013 9014 9015 9016 9017 9018 9019 9020 9021 9022
+
+# ---- 健康检查（具体微服务子镜像可覆盖） ----
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD curl -fsS http://localhost:${SERVER_PORT:-9000}/actuator/health || exit 1
+
+# ---- 启动入口 ----
+ENTRYPOINT ["/sbin/tini", "--", "/usr/local/bin/docker-entrypoint.sh"]
+CMD ["java", "${JAVA_OPTS}", "-jar", "/opt/pmis/app.jar"]

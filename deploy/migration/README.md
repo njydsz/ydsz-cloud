@@ -1,107 +1,148 @@
-# EncryptedField 历史数据回填迁移指南
+# Legacy 数据迁移与对账
 
-> 批次18 / P3-4 — `@EncryptedField` 字段级加密历史数据迁移
+> 批次 21 / P1 11.4 — 端到端遗留系统数据迁移与月度对账
 
-## 背景
+## 目录
 
-`@EncryptedField` 注解（见 `ydsz-pmis-common/.../sensitive/EncryptedField.java`）启用 AES-256-GCM / SM4-GCM 字段级加密。运行时通过 `EncryptedFieldSerializer` 在 Jackson 序列化时自动加密。
+```
+deploy/migration/
+├── README.md                     # 本文件
+├── migration.conf                # 通用配置 (DSN/容差/通知)
+├── legacy-extract.sh             # 1) 数据抽取 (legacy → staging JSONB)
+├── legacy-transform.sh           # 2) 数据转换 (staging JSONB → staging row)
+├── legacy-load.sh                # 3) 数据加载 (staging → 业务表)
+├── legacy-accuracy-verify.sh     # 4) 准确性校验 (三方一致性)
+├── finance-coa-mapping.sh        # 5) 财务科目映射
+├── monthly-reconcile-job.sh      # 6) 月度对账任务
+├── encrypted_field_migration.sql # 字段级加密历史回填 (批次 18, 旧)
+├── encrypted_field_migration_rollback.sql
+├── encrypted_field_migration_switch.sql
+└── cron.d/
+    └── pmis-migration            # cron 注册: 月度对账 + COA 校验
+```
 
-历史数据以**明文**落库（`id_card` / `phone` / `email` / `bank_card` / `address` 等），本批次提供端到端迁移流程，将明文回填为密文并保留可回滚的明文备份。
+## 端到端流程
 
-## 阶段
-
-| Phase | 工具 | 描述 |
-|-------|------|------|
-| PREPARE | `encrypted_field_migration.sql` | 创建 `pmis_migration_log` + 明文备份表 + 密文列 |
-| ENCRYPT | `EncryptedFieldMigrationCli` (Java) | 扫描明文 → AES-GCM 加密 → 写入 `*_cipher` 列 |
-| VERIFY | `EncryptedFieldMigrationCli --phase=VERIFY` | 解密 `*_cipher` 与备份表对照 |
-| SWITCH | `encrypted_field_migration_switch.sql` | 拷贝明文备份 → 重命名列 → 业务层切读密文 |
-| CLEANUP | 30 天后手工执行 | DROP 明文备份表 + DROP 明文列 |
+```
+┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌──────────────┐
+│ Legacy DB   │ → │ pmis_stage  │ → │ pmis_*      │ → │ 业务表        │
+│ (ERP/Fin/HR)│   │ (JSONB 原样) │   │ _staging    │   │ pmis_*        │
+└─────────────┘   └─────────────┘   └─────────────┘   └──────────────┘
+   legacy-           legacy-           legacy-          legacy-
+   extract.sh        transform.sh      load.sh          accuracy-verify.sh
+                                                  ↓
+                                          finance-coa-mapping.sh
+                                                  ↓
+                                          monthly-reconcile-job.sh (每月 1 日)
+```
 
 ## 快速使用
 
 ```bash
-# 1) 准备 (DDL, 仅创建表和列, 不动数据)
-psql -U pmis -d pmis -f deploy/migration/encrypted_field_migration.sql
+# 加载配置
+cd deploy/migration
+source migration.conf
 
-# 2) 加密 (Java 端读取明文, AES-GCM 加密后写 *_cipher)
-java -cp ydsz-pmis-common.jar \
-  com.njydsz.pmis.common.migration.EncryptedFieldMigrationCli \
-  --phase=ENCRYPT \
-  --batch=V1.0.0_018_ENCRYPTED_FIELD \
-  --key=ENC(AES256,...base64 32字节密钥...) \
-  --batchSize=500
+# 1) 抽取 (默认 dry-run 模拟数据; 配 --dsn 后真实抽取)
+./legacy-extract.sh --source=erp --period=2026-06 --dsn="${LEGACY_ERP_DSN}"
+./legacy-extract.sh --source=finance --period=2026-06 --dsn="${LEGACY_FINANCE_DSN}"
+./legacy-extract.sh --source=hr --period=2026-06 --dsn="${LEGACY_HR_DSN}"
 
-# 3) 校验 (解密 *_cipher, 与原明文对比)
-java -cp ydsz-pmis-common.jar \
-  com.njydsz.pmis.common.migration.EncryptedFieldMigrationCli \
-  --phase=VERIFY \
-  --batch=V1.0.0_018_ENCRYPTED_FIELD
+# 2) 转换 (默认 dry-run, 加 --commit 才落库到 staging)
+./legacy-transform.sh --source=erp --period=2026-06
 
-# 4) 切换 (拷贝明文备份, 重命名列, 业务切读密文)
-psql -U pmis -d pmis -f deploy/migration/encrypted_field_migration_switch.sql
+# 3) 加载 (默认 dry-run, 加 --commit 才写业务表)
+./legacy-load.sh --source=erp --period=2026-06 --commit
 
-# 5) 30 天后, 手工清理
-psql -U pmis -d pmis <<'SQL'
-DROP TABLE IF EXISTS pmis_user_account_plain_backup_V1_0_0_018_ENCRYPTED_FIELD;
-ALTER TABLE pmis_user_account DROP COLUMN IF EXISTS id_card_plain;
-ALTER TABLE pmis_user_account DROP COLUMN IF EXISTS phone_plain;
-ALTER TABLE pmis_user_account DROP COLUMN IF EXISTS email_plain;
-ALTER TABLE pmis_user_account DROP COLUMN IF EXISTS bank_card_plain;
-ALTER TABLE pmis_user_account DROP COLUMN IF EXISTS address_plain;
-SQL
+# 4) 准确性校验 (staging vs 业务表; 容差 0.01)
+./legacy-accuracy-verify.sh --source=erp --period=2026-06
+
+# 5) 财务科目映射 (默认 dry-run, --commit 写入 pmis_finance_coa)
+./finance-coa-mapping.sh
+
+# 6) 月度对账 (每月 1 日 03:00 自动)
+./monthly-reconcile-job.sh --period=2026-06 --notify
 ```
-
-## 回滚
-
-若 SWITCH 后发现问题（解密异常 / 性能回退 / 上游解析错误）：
-
-```bash
-psql -U pmis -d pmis -f deploy/migration/encrypted_field_migration_rollback.sql
-```
-
-回滚完成后：
-- 列名恢复为明文
-- 明文数据从备份表还原
-- 备份表保留（供后续诊断）
-- 应用代码无需变更（仍读 `id_card` / `phone` 等原列名）
-
-## 安全提示
-
-1. **维护窗口**：PREPARE / ENCRYPT / SWITCH / ROLLBACK 阶段必须在维护窗口执行，避免双写
-2. **密钥管理**：32 字节 AES 密钥通过 Nacos `pmis.crypto.aes-key` 注入，**禁止**写入 SQL / 配置文件
-3. **备份保留**：明文备份表保留 30 天（满足监管要求），到时由运维手工清理
-4. **审计追溯**：`pmis_migration_log` 记录所有阶段（PREPARE / BACKUP / ENCRYPT / SWITCH / ROLLED_BACK），用于等保 2.0 审计
-5. **范围限制**：本批次只覆盖 `pmis_user_account`，其他含敏感字段的表（`pmis_customer` / `pmis_employee` 等）按需扩展
-
-## 字段映射表
-
-| 原列 | 密文列 | 加密策略 | 备注 |
-|------|--------|----------|------|
-| `id_card` | `id_card_cipher` | AES-GCM, keyRef=pmis.crypto.aes-key | 身份证号 |
-| `phone` | `phone_cipher` | AES-GCM, keyRef=pmis.crypto.aes-key | 手机号 |
-| `email` | `email_cipher` | AES-GCM, keyRef=pmis.crypto.aes-key | 邮箱 |
-| `bank_card` | `bank_card_cipher` | AES-GCM, keyRef=pmis.crypto.aes-key | 银行卡号 |
-| `address` | `address_cipher` | AES-GCM, keyRef=pmis.crypto.aes-key | 地址 |
-
-> 实际列名以 `pmis_user_account` 表结构为准。若表结构无上述字段，对应 DDL 语句自动跳过（`ADD COLUMN IF NOT EXISTS`）。
 
 ## 状态机
 
 ```
-[PREPARE] --成功--> [ENCRYPT] --成功--> [VERIFY] --成功--> [SWITCH] --成功--> [CLEANUP]
-    |                  |                    |                  |
-    v                  v                    v                  v
-  FAILED           FAILED               FAILED             ROLLBACK
+[EXTRACT] --成功--> [TRANSFORM] --成功--> [LOAD] --成功--> [VERIFY]
+    |                    |                    |                 |
+    v                    v                    v                 v
+  FAILED              FAILED               FAILED            FAIL
+                                                            ↓
+                                                     [RECONCILE] (每月)
 ```
 
-任一阶段失败均记录到 `pmis_migration_log` 表的 `status` 字段，可通过：
+任一阶段记录到 `pmis_legacy_*_log` 表，可通过：
 
 ```sql
-SELECT batch_code, phase, status, affected_rows, started_at, finished_at, remark
-FROM pmis_migration_log
-WHERE batch_code = 'V1.0.0_018_ENCRYPTED_FIELD'
-ORDER BY started_at;
+-- 抽取历史
+SELECT * FROM pmis_legacy_extract_log ORDER BY started_at DESC LIMIT 20;
+-- 转换历史
+SELECT * FROM pmis_legacy_transform_log ORDER BY started_at DESC LIMIT 20;
+-- 加载历史
+SELECT * FROM pmis_legacy_load_log ORDER BY started_at DESC LIMIT 20;
+-- 校验历史
+SELECT * FROM pmis_legacy_verify_log ORDER BY started_at DESC LIMIT 20;
+-- 对账历史
+SELECT * FROM pmis_reconcile_log ORDER BY started_at DESC LIMIT 20;
 ```
 
-查询历史执行情况。
+## 月度对账规则 (5 类)
+
+| # | 类型 | 业务规则 | 异常阈值 |
+|---|------|----------|----------|
+| 1 | 发票 vs 收款 | 单张发票已收款 = 发票金额 | abs(diff) > 0.01 |
+| 2 | 合同 vs 发票 | 累计开票 <= 合同金额 | 超过即异常 |
+| 3 | 项目 vs 预算 | 预算总额 <= 合同金额 | 超过即异常 |
+| 4 | 工时 vs 工资 | 工资 ≈ 工时 × 平均时薪 | 偏差 > 50 元/小时 |
+| 5 | COA 借贷 | 借方合计 = 贷方合计 | abs(diff) > 0.01 |
+
+## cron 注册
+
+```bash
+# 月度对账 - 每月 1 日 03:00
+0 3 1 * *  cd /opt/pmis/deploy/migration && ./monthly-reconcile-job.sh --period=$(date -d "last month" +\%Y-\%m) --notify >> /var/log/pmis/reconcile.log 2>&1
+
+# COA 映射校验 - 每月 5 日 04:00 (在 P1 月度关账后执行)
+0 4 5 * *  cd /opt/pmis/deploy/migration && ./finance-coa-mapping.sh --report-only >> /var/log/pmis/coa-mapping.log 2>&1
+
+# staging 数据清理 - 每月 15 日 02:00 (清理 30 天前的 staging)
+0 2 15 * *  cd /opt/pmis/deploy/migration && ./cleanup-staging.sh --older-than-days=30 >> /var/log/pmis/cleanup.log 2>&1
+```
+
+## 关键安全约束
+
+1. **DSN 不入版本库** — `migration.conf` 中 `LEGACY_*_DSN` 通过 Ansible Vault 注入
+2. **维护窗口** — TRANSFORM / LOAD 阶段必须在维护窗口执行, 避免双写
+3. **幂等保证** — 所有脚本都支持 `--resume` 跳过已处理批次
+4. **审计追溯** — 6 张 *_log 表记录全量操作历史, 满足等保 2.0 三级审计要求
+5. **dry-run 优先** — 默认都是 dry-run, 必须显式 `--commit` 才落库
+6. **回滚机制** — 业务表保留 `_legacy_id` / `_migration_batch`, 必要时按 batch_code DELETE
+
+## 失败处理 SOP
+
+| 阶段 | 失败现象 | 处置 |
+|------|----------|------|
+| EXTRACT | 抽取行数 < 预期 | 1) 检查源库网络 2) 重跑 `--resume` 3) 联系源系统 DBA |
+| TRANSFORM | staging 字段类型不匹配 | 1) 修正 transform_one 中字段映射 2) 清空 staging 重新转换 |
+| LOAD | 唯一键冲突 | 1) 已有数据, 用 `--resume` 跳过 2) 真冲突则人工核对 |
+| VERIFY | mismatch > 阈值 | 1) 抽取 TRANSFORM 日志对比 2) 修正后重跑 |
+| RECONCILE | 借贷不平衡 | 1) 通知财务手工调账 2) 修正凭证后重跑 |
+
+## 与其他批次的关系
+
+| 依赖批次 | 接口 |
+|----------|------|
+| 批次 18 字段加密 | `pmis_*_cipher` 列名兼容 staging |
+| 批次 17 等保 2.0 | `pmis_legacy_*_log` 满足审计日志 6 个月保留 |
+| 批次 19 变更管理 | 业务表 `_legacy_id` 字段排除在变更审计之外 |
+| 批次 20 双算利润 | 对账时与 dual_rate_profit 视图交叉验证 |
+
+## 升级路径
+
+1. **V1.0 → V2.0**: 增加 Kafka 流式抽取, 支持近实时增量
+2. **V2.0 → V3.0**: 引入 Debezium CDC, 监听遗留库 binlog
+3. **V3.0 → V4.0**: 全量自动化 + AI 异常检测 (驱动对账差异分类)

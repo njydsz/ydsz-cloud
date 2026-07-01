@@ -1,0 +1,100 @@
+# =====================================================================
+#  PMIS 生产环境主机清单（批次 19）
+# ---------------------------------------------------------------------
+#  部署拓扑（3 节点起步，可水平扩展）：
+#  - node1: 网关 + 鉴权 + 用户中心 (CPU 密集)
+#  - node2: 项目 + 执行 + 调度 (业务核心)
+#  - node3: Agent + 报表 + 通知 (AI/IO 混合)
+#  数据库与缓存独立部署（参见 group pg/redis）
+# =====================================================================
+
+all:
+  vars:
+    ansible_user: deployer
+    ansible_ssh_private_key_file: ~/.ssh/pmis-prod.pem
+    ansible_python_interpreter: /usr/bin/python3
+    # 通用时区与 locale
+    timezone: Asia/Shanghai
+    locale: zh_CN.UTF-8
+    # Docker 与 docker-compose
+    docker_version: "26.1"
+    docker_compose_version: "2.27.0"
+    # PMIS 镜像 tag
+    pmis_image_tag: "1.0.0"
+
+  children:
+    # ---- 应用服务节点 ----
+    app_gateway:
+      hosts:
+        node1:
+          ansible_host: 10.0.1.11
+      vars:
+        role: gateway
+        services:
+          - ydsz-pmis-gateway
+          - ydsz-pmis-auth
+          - ydsz-pmis-user
+
+    app_core:
+      hosts:
+        node2:
+          ansible_host: 10.0.1.12
+      vars:
+        role: core
+        services:
+          - ydsz-pmis-project
+          - ydsz-pmis-execution
+          - ydsz-pmis-scheduler
+          - ydsz-pmis-workflow
+          - ydsz-pmis-file
+          - ydsz-pmis-audit
+          - ydsz-pmis-config
+
+    app_ai:
+      hosts:
+        node3:
+          ansible_host: 10.0.1.13
+      vars:
+        role: ai
+        services:
+          - ydsz-pmis-agent
+          - ydsz-pmis-message
+          - ydsz-pmis-notification
+
+    # ---- 数据库节点 ----
+    pg:
+      hosts:
+        pg-primary:
+          ansible_host: 10.0.2.11
+        pg-replica:
+          ansible_host: 10.0.2.12
+      vars:
+        postgresql_version: "16.3"
+        postgresql_data_dir: /var/lib/postgresql/16/main
+
+    # ---- 缓存节点 ----
+    redis:
+      hosts:
+        redis-1:
+          ansible_host: 10.0.3.11
+        redis-2:
+          ansible_host: 10.0.3.12
+        redis-3:
+          ansible_host: 10.0.3.13
+      vars:
+        redis_version: "7.2.4"
+        redis_cluster_replicas: 1
+        redis_cluster_port: 6379
+        redis_cluster_bus_port: 16379
+
+    # ---- 基础设施 ----
+    infra:
+      hosts:
+        nacos:
+          ansible_host: 10.0.4.11
+        seata:
+          ansible_host: 10.0.4.12
+        sentry:
+          ansible_host: 10.0.4.13
+        nginx:
+          ansible_host: 10.0.4.14

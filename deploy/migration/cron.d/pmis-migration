@@ -1,0 +1,25 @@
+# PMIS Legacy 数据迁移与对账 - 定时任务
+# 批次 21 / P1 11.4
+# 部署位置: /etc/cron.d/pmis-migration
+
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+PMIS_HOME=/opt/pmis
+PMIS_USER=pmis
+LOG_DIR=/var/log/pmis
+
+# ===== 月度对账 - 每月 1 日 03:00 =====
+# 校验 5 类业务对账 (发票-收款/合同-发票/项目-预算/工时-工资/COA 借贷)
+0 3 1 * *  ${PMIS_USER} cd ${PMIS_HOME}/deploy/migration && ./monthly-reconcile-job.sh --period=$(date -d "last month" +\%Y-\%m) --notify >> ${LOG_DIR}/reconcile.log 2>&1
+
+# ===== COA 映射校验 - 每月 5 日 04:00 =====
+# 月度关账后, 校验 COA 映射覆盖率
+0 4 5 * *  ${PMIS_USER} cd ${PMIS_HOME}/deploy/migration && ./finance-coa-mapping.sh --report-only >> ${LOG_DIR}/coa-mapping.log 2>&1
+
+# ===== 准确性周校验 - 每周日 02:00 =====
+# 重新校验最近一周的迁移数据
+0 2 * * 0  ${PMIS_USER} cd ${PMIS_HOME}/deploy/migration && ./legacy-accuracy-verify.sh --source=erp --period=$(date +\%Y-\%m) >> ${LOG_DIR}/verify-weekly.log 2>&1
+
+# ===== Staging 清理 - 每月 15 日 02:00 =====
+# 清理 30 天前的 staging 数据 (满足 30 天监管保留期)
+0 2 15 * *  ${PMIS_USER} psql "${PMIS_DSN}" -c "DELETE FROM pmis_stage_legacy_* WHERE _extracted_at < NOW() - INTERVAL '30 days';" >> ${LOG_DIR}/cleanup.log 2>&1

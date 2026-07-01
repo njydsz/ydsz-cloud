@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.project.dto.ProjectChangeCreateDTO;
 import com.njydsz.pmis.project.dto.ProjectChangeStatusDTO;
 import com.njydsz.pmis.project.entity.ProjectChangeDO;
+import com.njydsz.pmis.project.enums.ChangeStatus;
 import com.njydsz.pmis.project.service.ProjectChangeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -20,8 +21,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 项目变更 Controller
@@ -97,5 +101,51 @@ public class ProjectChangeController {
     @GetMapping("/major-count/{initiationId}")
     public R<Long> countMajor(@PathVariable Long initiationId) {
         return R.ok(service.countMajorByInitiation(initiationId));
+    }
+
+    /**
+     * 获取某条变更的合法状态迁移列表
+     * <p>
+     * 前端使用: 进入详情或审批时拉取, 用于即时判断按钮可用性 + 友好文案.
+     * 重大变更 (majorFlag=1) 在 UNDER_REVIEW → APPROVED 时需要双审批, 前端应额外提示.
+     * </p>
+     *
+     * @param id 变更 ID
+     * @return 合法目标状态码列表 (e.g. ["SUBMITTED", "CANCELLED"])
+     */
+    @Operation(summary = "获取合法状态迁移列表")
+    @GetMapping("/{id}/allowed-transitions")
+    public R<List<String>> getAllowedTransitions(@PathVariable Long id) {
+        ProjectChangeDO change = service.getById(id);
+        if (change == null) {
+            return R.ok(List.of());
+        }
+        ChangeStatus current = ChangeStatus.fromCode(change.getStatus());
+        if (current == null || current.isTerminal()) {
+            return R.ok(List.of());
+        }
+        List<String> allowed = Arrays.stream(ChangeStatus.values())
+                .filter(s -> current.canTransitTo(s))
+                .map(ChangeStatus::getCode)
+                .collect(Collectors.toList());
+        return R.ok(allowed);
+    }
+
+    /**
+     * 列出所有 ChangeStatus 状态码 + 中文描述
+     * <p>前端使用: 渲染状态下拉 / 字典 / 国际化</p>
+     */
+    @Operation(summary = "获取所有变更状态字典")
+    @GetMapping("/status-dict")
+    public R<List<Map<String, String>>> getStatusDict() {
+        List<Map<String, String>> list = new ArrayList<>();
+        for (ChangeStatus s : ChangeStatus.values()) {
+            list.add(Map.of(
+                "code", s.getCode(),
+                "desc", s.getDesc(),
+                "terminal", String.valueOf(s.isTerminal())
+            ));
+        }
+        return R.ok(list);
     }
 }
