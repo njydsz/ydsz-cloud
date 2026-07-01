@@ -206,7 +206,32 @@ CREATE TABLE pmis_execution_delivery_item (
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pedi_code UNIQUE (item_code, deleted)
 );
-COMMENT ON TABLE pmis_execution_delivery_item IS '交付物实例表';
+COMMENT ON TABLE  pmis_execution_delivery_item IS '交付物实例表: 项目立项后,按交付物标准库自动生成具体交付物实例,跟踪提交/验收全过程';
+COMMENT ON COLUMN pmis_execution_delivery_item.item_code IS '交付物实例编码: 业务唯一,如 DI-2026-001';
+COMMENT ON COLUMN pmis_execution_delivery_item.initiation_id IS '所属立项 ID';
+COMMENT ON COLUMN pmis_execution_delivery_item.standard_id IS '关联交付物标准 ID: 追溯到标准库';
+COMMENT ON COLUMN pmis_execution_delivery_item.project_type IS '项目类型: 冗余字段,便于快速查询';
+COMMENT ON COLUMN pmis_execution_delivery_item.project_level IS '项目级别: 冗余字段';
+COMMENT ON COLUMN pmis_execution_delivery_item.delivery_name IS '交付物名称';
+COMMENT ON COLUMN pmis_execution_delivery_item.delivery_category IS '交付物类别: DOC/CODE/MODEL/RUNBOOK/REPORT/OTHER';
+COMMENT ON COLUMN pmis_execution_delivery_item.stage IS '所属门径阶段: CD1-CD5';
+COMMENT ON COLUMN pmis_execution_delivery_item.required IS '是否必交付: 0=否,1=是';
+COMMENT ON COLUMN pmis_execution_delivery_item.planned_submit_date IS '计划提交日期';
+COMMENT ON COLUMN pmis_execution_delivery_item.actual_submit_date IS '实际提交日期';
+COMMENT ON COLUMN pmis_execution_delivery_item.accepted_date IS '验收日期';
+COMMENT ON COLUMN pmis_execution_delivery_item.submitter_id IS '提交人 ID';
+COMMENT ON COLUMN pmis_execution_delivery_item.submitter_name IS '提交人姓名（冗余）';
+COMMENT ON COLUMN pmis_execution_delivery_item.reviewer_id IS '验收人 ID';
+COMMENT ON COLUMN pmis_execution_delivery_item.reviewer_name IS '验收人姓名（冗余）';
+COMMENT ON COLUMN pmis_execution_delivery_item.review_comment IS '验收意见';
+COMMENT ON COLUMN pmis_execution_delivery_item.status IS '交付物状态: PENDING 待提交 / SUBMITTED 已提交 / IN_REVIEW 验收中 / ACCEPTED 已验收 / REJECTED 已驳回 / REVISION 待修订';
+COMMENT ON COLUMN pmis_execution_delivery_item.tr_required IS '是否需要技术评审: 0=否,1=是';
+COMMENT ON COLUMN pmis_execution_delivery_item.tr_completed IS '技术评审是否完成: 0=否,1=是';
+COMMENT ON COLUMN pmis_execution_delivery_item.file_ids IS '关联文件 ID 列表 JSON 数组: 引用 pmis_file_metadata.id';
+COMMENT ON COLUMN pmis_execution_delivery_item.remark IS '备注';
+COMMENT ON COLUMN pmis_execution_delivery_item.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_execution_delivery_item.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_execution_delivery_item.deleted IS '逻辑删除: 0=未删除,1=已删除';
 CREATE INDEX idx_pedi_initiation ON pmis_execution_delivery_item(initiation_id);
 CREATE INDEX idx_pedi_stage ON pmis_execution_delivery_item(initiation_id, stage);
 CREATE INDEX idx_pedi_status ON pmis_execution_delivery_item(status);
@@ -255,7 +280,39 @@ CREATE TABLE pmis_execution_closure (
     deleted                  SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pec_code UNIQUE (closure_code, deleted)
 );
-COMMENT ON TABLE pmis_execution_closure IS '项目结项主表（正式/预结项/强制）';
+COMMENT ON TABLE  pmis_execution_closure IS '项目结项主表: 3 种结项类型（FORMAL/PRE_CLOSURE/FORCED）,由 ClosureAdmissionValidator 按类型校验准入条件';
+COMMENT ON COLUMN pmis_execution_closure.closure_code IS '结项单号: 业务唯一,如 PC-2026-001';
+COMMENT ON COLUMN pmis_execution_closure.initiation_id IS '所属立项 ID: 一对一关联';
+COMMENT ON COLUMN pmis_execution_closure.closure_type IS '结项类型: FORMAL 正式结项 / PRE_CLOSURE 预结项 / FORCED 强制结项';
+COMMENT ON COLUMN pmis_execution_closure.closure_reason IS '结项原因';
+COMMENT ON COLUMN pmis_execution_closure.contract_amount IS '合同总金额(元)';
+COMMENT ON COLUMN pmis_execution_closure.received_amount IS '已回款金额(元)';
+COMMENT ON COLUMN pmis_execution_closure.received_ratio IS '回款完成率: 0.85=85%';
+COMMENT ON COLUMN pmis_execution_closure.cpi IS '成本绩效指数 CPI: >1 节约,<1 超支,1.0 为基准';
+COMMENT ON COLUMN pmis_execution_closure.spi IS '进度绩效指数 SPI: >1 提前,<1 滞后,1.0 为基准';
+COMMENT ON COLUMN pmis_execution_closure.gross_margin IS '毛利率: 0.25=25%';
+COMMENT ON COLUMN pmis_execution_closure.progress_pct IS '完成进度百分比: 0-100';
+COMMENT ON COLUMN pmis_execution_closure.total_cost IS '累计成本(元)';
+COMMENT ON COLUMN pmis_execution_closure.warranty_months IS '质保期(月): 0=无质保';
+COMMENT ON COLUMN pmis_execution_closure.warranty_start_date IS '质保期开始日期';
+COMMENT ON COLUMN pmis_execution_closure.warranty_end_date IS '质保期结束日期';
+COMMENT ON COLUMN pmis_execution_closure.planned_archive_date IS '计划归档日期';
+COMMENT ON COLUMN pmis_execution_closure.actual_archive_date IS '实际归档日期';
+COMMENT ON COLUMN pmis_execution_closure.archive_file_ids IS '归档文件 ID 列表 JSON: 引用 pmis_file_metadata.id';
+COMMENT ON COLUMN pmis_execution_closure.locked IS '是否锁定: 0=否,1=是（结项后锁定,防止修改）';
+COMMENT ON COLUMN pmis_execution_closure.status IS '结项状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / APPROVED 已批准 / REJECTED 已驳回 / ARCHIVED 已归档';
+COMMENT ON COLUMN pmis_execution_closure.remark IS '备注';
+COMMENT ON COLUMN pmis_execution_closure.applicant_id IS '申请人 ID';
+COMMENT ON COLUMN pmis_execution_closure.applicant_name IS '申请人姓名（冗余）';
+COMMENT ON COLUMN pmis_execution_closure.approver_id IS '审批人 ID';
+COMMENT ON COLUMN pmis_execution_closure.approver_name IS '审批人姓名（冗余）';
+COMMENT ON COLUMN pmis_execution_closure.submitted_at IS '提交时间';
+COMMENT ON COLUMN pmis_execution_closure.approved_at IS '审批通过时间';
+COMMENT ON COLUMN pmis_execution_closure.archived_at IS '归档时间';
+COMMENT ON COLUMN pmis_execution_closure.approval_comment IS '审批意见';
+COMMENT ON COLUMN pmis_execution_closure.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_execution_closure.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_execution_closure.deleted IS '逻辑删除: 0=未删除,1=已删除';
 CREATE INDEX idx_pec_initiation ON pmis_execution_closure(initiation_id);
 CREATE INDEX idx_pec_type_status ON pmis_execution_closure(closure_type, status);
 
@@ -291,7 +348,29 @@ CREATE TABLE pmis_agent_prediction (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pap_code UNIQUE (task_code, deleted)
 );
-COMMENT ON TABLE pmis_agent_prediction IS 'AI 智能体预测/推荐结果表';
+COMMENT ON TABLE  pmis_agent_prediction IS 'AI 智能体预测/推荐结果表: 5 类智能体（风险预警/资源推荐/利润预测/赢率预测/工时异常）的输出持久化';
+COMMENT ON COLUMN pmis_agent_prediction.task_code IS '任务编码: 业务唯一,如 AGT-2026-001';
+COMMENT ON COLUMN pmis_agent_prediction.agent_type IS '智能体类型: RISK_WARNING 风险预警 / RESOURCE_RECOMMEND 资源推荐 / PROFIT_FORECAST 利润预测 / WIN_RATE_PREDICT 赢率预测 / TIMESHEET_ANOMALY 工时异常';
+COMMENT ON COLUMN pmis_agent_prediction.biz_type IS '业务类型: PROJECT 项目 / OPPORTUNITY 商机 / TIMESHEET 工时 / STAFF 员工';
+COMMENT ON COLUMN pmis_agent_prediction.biz_id IS '业务对象 ID';
+COMMENT ON COLUMN pmis_agent_prediction.biz_ref IS '业务对象引用: 例如项目编号';
+COMMENT ON COLUMN pmis_agent_prediction.input_snapshot IS '输入数据快照 JSON: 智能体推理时的完整输入';
+COMMENT ON COLUMN pmis_agent_prediction.output_result IS '输出结果 JSON: 智能体的推理结果';
+COMMENT ON COLUMN pmis_agent_prediction.alert_level IS '预警等级: INFO 提示 / YELLOW 黄色 / RED 红色 / NORMAL 正常 / RECOMMEND 推荐';
+COMMENT ON COLUMN pmis_agent_prediction.score IS '评分: 0-100 分,具体含义由 agent_type 决定';
+COMMENT ON COLUMN pmis_agent_prediction.confidence IS '置信度: 0-1,例如 0.85=85% 置信';
+COMMENT ON COLUMN pmis_agent_prediction.suggestion IS '建议: 智能体给出的处置建议';
+COMMENT ON COLUMN pmis_agent_prediction.matched_rules IS '命中规则 JSON 数组: 命中的规则编码列表';
+COMMENT ON COLUMN pmis_agent_prediction.cost_ms IS '推理耗时(毫秒): 用于性能监控';
+COMMENT ON COLUMN pmis_agent_prediction.model_version IS '模型版本: 默认 v1.0.0';
+COMMENT ON COLUMN pmis_agent_prediction.status IS '执行状态: PENDING 待执行 / RUNNING 执行中 / SUCCESS 成功 / FAILED 失败';
+COMMENT ON COLUMN pmis_agent_prediction.error_msg IS '错误信息: 执行失败时的错误堆栈';
+COMMENT ON COLUMN pmis_agent_prediction.caller_id IS '调用方 ID';
+COMMENT ON COLUMN pmis_agent_prediction.caller_name IS '调用方姓名（冗余）';
+COMMENT ON COLUMN pmis_agent_prediction.source IS '调用来源: MANUAL 手动 / SCHEDULED 定时 / EVENT 事件触发';
+COMMENT ON COLUMN pmis_agent_prediction.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_agent_prediction.provider_trace_id IS '链路追踪 ID: 端到端 trace';
+COMMENT ON COLUMN pmis_agent_prediction.deleted IS '逻辑删除: 0=未删除,1=已删除';
 CREATE INDEX idx_pap_biz ON pmis_agent_prediction(biz_type, biz_id);
 CREATE INDEX idx_pap_agent_level ON pmis_agent_prediction(agent_type, alert_level);
 CREATE INDEX idx_pap_status ON pmis_agent_prediction(status);

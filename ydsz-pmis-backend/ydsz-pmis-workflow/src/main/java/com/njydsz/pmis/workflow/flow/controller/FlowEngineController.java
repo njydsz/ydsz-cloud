@@ -34,8 +34,6 @@ public class FlowEngineController {
 
     private final WorkflowFacade workflowFacade;
     private final FlowDefinitionService definitionService;
-    private final FlowInstanceService instanceService;
-    private final FlowTaskService taskService;
 
     // ============== 引擎信息 ==============
 

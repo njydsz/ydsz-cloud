@@ -9,7 +9,6 @@ import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 流程实例视图 DTO（Feign 友好，无内部敏感字段）

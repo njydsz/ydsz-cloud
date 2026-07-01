@@ -5,8 +5,6 @@ import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
-import java.util.List;
-
 /**
  * 流程定义 Mapper
  */
