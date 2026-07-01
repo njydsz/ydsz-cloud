@@ -43,7 +43,7 @@ public class ContractCreateDTO implements Serializable {
     private String customerName;
 
     @NotBlank
-    @Schema(description = "合同类型 FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE", required = true)
+    @Schema(description = "合同类型 FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE", requiredMode = RequiredMode.REQUIRED)
     private String contractType;
 
     @Schema(description = "签约日期")

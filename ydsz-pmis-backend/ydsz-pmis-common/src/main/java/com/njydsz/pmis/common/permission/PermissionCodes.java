@@ -59,6 +59,13 @@ public final class PermissionCodes {
     public static final String SYS_FEATURE_FLAG_UPDATE = "sys:feature-flag:update";
     public static final String SYS_FEATURE_FLAG_CHECK = "sys:feature-flag:check";
 
+    // ==================== 混沌工程 ====================
+
+    public static final String SYS_CHAOS_VIEW = "sys:chaos:view";
+    public static final String SYS_CHAOS_CREATE = "sys:chaos:create";
+    public static final String SYS_CHAOS_DELETE = "sys:chaos:delete";
+    public static final String SYS_CHAOS_TRIGGER = "sys:chaos:trigger";
+
     // ==================== 考勤 ====================
 
     public static final String ATTENDANCE_RECORD_CREATE = "attendance:record:create";

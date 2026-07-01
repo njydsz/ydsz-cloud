@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -23,11 +24,11 @@ public class OpportunityFollowDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    @Schema(description = "商机 ID", required = true)
+    @Schema(description = "商机 ID", requiredMode = RequiredMode.REQUIRED)
     private Long opportunityId;
 
     @NotBlank
-    @Schema(description = "跟进类型", required = true,
+    @Schema(description = "跟进类型", requiredMode = RequiredMode.REQUIRED,
             allowableValues = {"VISIT", "CALL", "QUOTE", "NEGOTIATE", "OTHER"})
     private String followType;
 

@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -22,11 +23,11 @@ public class ContractStatusDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    @Schema(description = "合同 ID", required = true)
+    @Schema(description = "合同 ID", requiredMode = RequiredMode.REQUIRED)
     private Long id;
 
     @NotBlank
-    @Schema(description = "目标状态", required = true,
+    @Schema(description = "目标状态", requiredMode = RequiredMode.REQUIRED,
             allowableValues = {"DRAFT", "SUBMITTED", "APPROVING", "ACTIVE",
                     "SUSPENDED", "EXPIRED", "TERMINATED"})
     private String targetStatus;

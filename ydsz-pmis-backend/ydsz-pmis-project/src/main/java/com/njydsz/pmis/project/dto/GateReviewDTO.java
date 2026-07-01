@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -22,15 +23,15 @@ public class GateReviewDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    @Schema(description = "立项 ID", required = true)
+    @Schema(description = "立项 ID", requiredMode = RequiredMode.REQUIRED)
     private Long initiationId;
 
     @NotBlank
-    @Schema(description = "门径编码: CD1/CD2/CD3/CD4/CD5", required = true)
+    @Schema(description = "门径编码: CD1/CD2/CD3/CD4/CD5", requiredMode = RequiredMode.REQUIRED)
     private String gateCode;
 
     @NotBlank
-    @Schema(description = "评审结果: PASSED/REJECTED/CONDITIONAL", required = true)
+    @Schema(description = "评审结果: PASSED/REJECTED/CONDITIONAL", requiredMode = RequiredMode.REQUIRED)
     private String reviewResult;
 
     @Schema(description = "决策依据")

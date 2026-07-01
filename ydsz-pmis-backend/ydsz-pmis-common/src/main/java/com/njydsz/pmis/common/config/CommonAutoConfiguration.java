@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.config;
 
+import com.njydsz.pmis.common.chaos.ChaosAutoConfiguration;
 import com.njydsz.pmis.common.featureflag.FeatureFlagAutoConfiguration;
 import com.njydsz.pmis.common.interceptor.AuthInterceptor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -22,7 +23,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @Configuration
 @ComponentScan("com.njydsz.pmis.common")
-@Import(FeatureFlagAutoConfiguration.class)
+@Import({FeatureFlagAutoConfiguration.class, ChaosAutoConfiguration.class})
 @EnableAsync
 public class CommonAutoConfiguration {
 

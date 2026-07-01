@@ -194,6 +194,42 @@ frontend:build:
       - $FRONTEND_DIR/dist
     expire_in: 3 days
 
+# Lighthouse CI 性能与无障碍检测 (批次 20 P3-1)
+# 依赖 frontend:build 的产物 (dist/), 启动 preview 服务并跑 Lighthouse
+frontend:lighthouse:
+  stage: build
+  image: node:20-alpine
+  needs: ["frontend:build"]
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+    - if: $CI_COMMIT_BRANCH == "develop"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - changes:
+        - $FRONTEND_DIR/**/*
+  before_script:
+    - cd $FRONTEND_DIR
+    - corepack enable
+    - corepack prepare pnpm@9 --activate
+    - pnpm install --frozen-lockfile
+    - apk add --no-cache chromium nss freetype harfbuzz ca-certificates ttf-dejavu
+    - export CHROME_PATH=/usr/bin/chromium-browser
+    - export LHCI_BUILD_CONTEXT__CURRENT_HASH=$CI_COMMIT_SHORT_SHA
+  script:
+    # 静态服务 dist 目录, 端口 5173 与 lighthouserc.json 中的 URL 保持一致
+    - pnpm dlx serve -s dist -l 5173 &
+    - sleep 4
+    - pnpm dlx @lhci/cli@0.14.x autorun --config=lighthouserc.json || LHCI_EXIT=$?
+    - kill %1 || true
+    # 仅在 main 分支才硬性失败, MR 阶段仅警告
+    - if [ -n "$LHCI_EXIT" ] && [ "$CI_COMMIT_BRANCH" = "main" ]; then exit $LHCI_EXIT; fi
+  artifacts:
+    when: always
+    paths:
+      - $FRONTEND_DIR/lhci_reports
+    expire_in: 14 days
+    reports:
+      junit: $FRONTEND_DIR/lhci_reports/lighthouse/*.xml
+
 # ===========================================================================
 # Image 阶段 (Docker 镜像构建)
 # ===========================================================================

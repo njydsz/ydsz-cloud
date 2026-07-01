@@ -28,7 +28,7 @@ public final class PermissionCodeValidator {
             "reload", "send", "upload", "view", "export", "import", "assign",
             "toggle", "reset-password", "act", "recompute", "terminate",
             "status", "scan", "follow-up", "evaluate", "dispatch", "aggregate",
-            "submit"
+            "submit", "check"
     );
 
     private PermissionCodeValidator() {}

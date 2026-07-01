@@ -47,6 +47,12 @@ export const PC = {
   SYS_FEATURE_FLAG_UPDATE: 'sys:feature-flag:update',
   SYS_FEATURE_FLAG_CHECK: 'sys:feature-flag:check',
 
+  // 混沌工程
+  SYS_CHAOS_VIEW: 'sys:chaos:view',
+  SYS_CHAOS_CREATE: 'sys:chaos:create',
+  SYS_CHAOS_DELETE: 'sys:chaos:delete',
+  SYS_CHAOS_TRIGGER: 'sys:chaos:trigger',
+
   // 考勤
   ATTENDANCE_RECORD_CREATE: 'attendance:record:create',
   ATTENDANCE_RECORD_LIST: 'attendance:record:list',

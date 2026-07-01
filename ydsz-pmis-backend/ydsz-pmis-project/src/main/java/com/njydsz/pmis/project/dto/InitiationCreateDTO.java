@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -24,18 +25,18 @@ public class InitiationCreateDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotBlank
-    @Schema(description = "项目编号", required = true)
+    @Schema(description = "项目编号", requiredMode = RequiredMode.REQUIRED)
     private String projectCode;
 
     @NotBlank
-    @Schema(description = "项目名称", required = true)
+    @Schema(description = "项目名称", requiredMode = RequiredMode.REQUIRED)
     private String projectName;
 
     @Schema(description = "来源商机 ID")
     private Long opportunityId;
 
     @NotNull
-    @Schema(description = "客户 ID", required = true)
+    @Schema(description = "客户 ID", requiredMode = RequiredMode.REQUIRED)
     private Long customerId;
 
     @Schema(description = "客户名称")
@@ -45,7 +46,7 @@ public class InitiationCreateDTO implements Serializable {
     private Long businessDeptId;
 
     @NotBlank
-    @Schema(description = "项目类型: FIXED_PRICE/T&M/OUTSOURCING/PRODUCT", required = true)
+    @Schema(description = "项目类型: FIXED_PRICE/T&M/OUTSOURCING/PRODUCT", requiredMode = RequiredMode.REQUIRED)
     private String projectType;
 
     @Schema(description = "项目级别 A/B/C", example = "C")

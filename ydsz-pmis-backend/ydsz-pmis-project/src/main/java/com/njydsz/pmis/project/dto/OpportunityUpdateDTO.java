@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
@@ -22,7 +23,7 @@ public class OpportunityUpdateDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    @Schema(description = "商机 ID", required = true)
+    @Schema(description = "商机 ID", requiredMode = RequiredMode.REQUIRED)
     private Long id;
 
     @Schema(description = "商机名称")
