@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- V1.0.0_016  权限安全体系  脚本
 -- ============================================================
 -- 说明：批次 13 权限安全体系
@@ -14,11 +14,11 @@
 -- 1) 增强用户账号表
 -- ----------------------------
 ALTER TABLE pmis_user_account
-    ADD COLUMN IF NOT EXISTS data_scope VARCHAR(16)  NOT NULL DEFAULT 'SELF'
-    ADD COLUMN IF NOT EXISTS custom_dept_ids TEXT
-    ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN     NOT NULL DEFAULT FALSE
-    ADD COLUMN IF NOT EXISTS mfa_type VARCHAR(16)    NOT NULL DEFAULT 'NONE'
-    ADD COLUMN IF NOT EXISTS last_pwd_change_at TIMESTAMP
+    ADD COLUMN IF NOT EXISTS data_scope VARCHAR(16)  NOT NULL DEFAULT 'SELF',
+    ADD COLUMN IF NOT EXISTS custom_dept_ids TEXT,
+    ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN     NOT NULL DEFAULT FALSE,
+    ADD COLUMN IF NOT EXISTS mfa_type VARCHAR(16)    NOT NULL DEFAULT 'NONE',
+    ADD COLUMN IF NOT EXISTS last_pwd_change_at TIMESTAMP,
     ADD COLUMN IF NOT EXISTS pwd_change_count INT    NOT NULL DEFAULT 0;
 
 -- ----------------------------

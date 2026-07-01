@@ -17,8 +17,9 @@ import {
   getEvmReport,
   getDualRateComparison,
   getRiskDashboard,
-  getUtilizationReport,
+  getUtilizationRank,
   getBenchCostReport,
+  getResourceGantt,
 } from '@/api/execution/report'
 
 type TabKey =
@@ -29,6 +30,7 @@ type TabKey =
   | 'summary'
   | 'evm'
   | 'dualRate'
+  | 'gantt'
   | 'risk'
   | 'utilization'
   | 'bench'
@@ -52,8 +54,12 @@ function setRef(key: string) {
 }
 
 async function load(target: TabKey) {
+  // P0 修复: 调整 initiationId 必传规则
+  // - summary / dualRate / risk / utilization / bench 不依赖 initiationId
+  // - profit / cost / payment / lifecycle / evm / gantt 需要 initiationId
   if (
     target !== 'summary' &&
+    target !== 'dualRate' &&
     target !== 'risk' &&
     target !== 'utilization' &&
     target !== 'bench' &&
@@ -91,26 +97,37 @@ async function load(target: TabKey) {
         renderSummaryChart()
         return
       case 'evm':
-        res = await getEvmReport(query.initiationId!, query.period)
-        reportData.value = res?.data ?? null
+        // P0 修复: 后端 /evm 仅取 initiationId, period 已被忽略
+        res = await getEvmReport(query.initiationId!)
+        listData.value = (res?.data as any[]) || []
         break
       case 'dualRate':
-        res = await getDualRateComparison(query.initiationId!)
-        reportData.value = res?.data ?? null
+        // P0 修复: 后端 /dual-rate 仅取 period, 按全局聚合 (不需要 initiationId)
+        res = await getDualRateComparison(query.period)
+        listData.value = (res?.data as any[]) || []
+        break
+      case 'gantt':
+        // P0 修复: 后端 /gantt 必传 initiationId
+        res = await getResourceGantt(query.initiationId!)
+        listData.value = (res?.data as any[]) || []
         break
       case 'risk':
-        res = await getRiskDashboard(query.period)
-        reportData.value = res?.data ?? null
+        // P0 修复: 后端 /risk-dashboard 返回 List<Map>, 不取 period
+        res = await getRiskDashboard()
+        listData.value = (res?.data as any[]) || []
         break
       case 'utilization':
-        res = await getUtilizationReport(query.period)
+        // P0 修复: 后端 /utilization-rank, 默认 top=20
+        res = await getUtilizationRank(20)
         listData.value = (res?.data as any[]) || []
         renderUtilizationChart()
         return
       case 'bench':
-        res = await getBenchCostReport(query.period)
-        reportData.value = res?.data ?? null
-        break
+        // P0 修复: 后端 /bench-cost 返回 List<Map>, 不取 period
+        res = await getBenchCostReport()
+        listData.value = (res?.data as any[]) || []
+        renderBenchChart()
+        return
     }
     await nextTick()
     renderChartForTab(target)
@@ -278,26 +295,27 @@ function renderEvmChart() {
 }
 
 function renderDualRateChart() {
-  const d = reportData.value || {}
+  // P0 修复: listData 为 List<Map>, 每行是 (jobLevel + externalRate/internalRate) 等字段
+  const rows = listData.value || []
   const c1 = ensureChart('dual-bar')
   c1?.setOption({
-    title: { text: '双费率利润对比', left: 'center' },
+    title: { text: '双费率利润对比 (按职级)', left: 'center' },
     tooltip: { trigger: 'axis' },
     legend: { data: ['对外报价', '对内成本'], top: 30 },
     grid: { top: 80, left: 60, right: 40, bottom: 40 },
-    xAxis: { type: 'category', data: ['收入', '毛利', '毛利率(%)'] },
-    yAxis: { type: 'value' },
+    xAxis: { type: 'category', data: rows.map((r) => r.jobLevel || r.level || '-') },
+    yAxis: { type: 'value', name: '元/天' },
     series: [
       {
         name: '对外报价',
         type: 'bar',
-        data: [toNumber(d.externalRevenue), toNumber(d.externalGrossProfit), toNumber(d.externalMargin) * 100],
+        data: rows.map((r) => toNumber(r.externalRate || r.cardRate)),
         itemStyle: { color: '#409eff' },
       },
       {
         name: '对内成本',
         type: 'bar',
-        data: [toNumber(d.internalRevenue), toNumber(d.internalGrossProfit), toNumber(d.internalMargin) * 100],
+        data: rows.map((r) => toNumber(r.internalRate || r.internalCost)),
         itemStyle: { color: '#67c23a' },
       },
     ],
@@ -305,7 +323,22 @@ function renderDualRateChart() {
 }
 
 function renderRiskChart() {
-  const d = reportData.value || {}
+  // P0 修复: listData 为 List<Map>, 按 highRiskCount/mediumRiskCount/lowRiskCount 字段聚合
+  const rows = listData.value || []
+  // 简单聚合: 取所有行的合计
+  const agg = rows.reduce(
+    (acc, r) => {
+      acc.highRiskCount += toNumber(r.highRiskCount)
+      acc.mediumRiskCount += toNumber(r.mediumRiskCount)
+      acc.lowRiskCount += toNumber(r.lowRiskCount)
+      acc.highAlerts += toNumber(r.highAlerts)
+      acc.mediumAlerts += toNumber(r.mediumAlerts)
+      acc.lowAlerts += toNumber(r.lowAlerts)
+      acc.alertCount += toNumber(r.alertCount)
+      return acc
+    },
+    { highRiskCount: 0, mediumRiskCount: 0, lowRiskCount: 0, highAlerts: 0, mediumAlerts: 0, lowAlerts: 0, alertCount: 0 },
+  )
   const c1 = ensureChart('risk-pie')
   c1?.setOption({
     title: { text: '项目风险分布', left: 'center' },
@@ -316,9 +349,9 @@ function renderRiskChart() {
         type: 'pie',
         radius: ['40%', '70%'],
         data: [
-          { name: '高风险', value: toNumber(d.highRiskCount), itemStyle: { color: '#f56c6c' } },
-          { name: '中风险', value: toNumber(d.mediumRiskCount), itemStyle: { color: '#e6a23c' } },
-          { name: '低风险', value: toNumber(d.lowRiskCount), itemStyle: { color: '#67c23a' } },
+          { name: '高风险', value: agg.highRiskCount, itemStyle: { color: '#f56c6c' } },
+          { name: '中风险', value: agg.mediumRiskCount, itemStyle: { color: '#e6a23c' } },
+          { name: '低风险', value: agg.lowRiskCount, itemStyle: { color: '#67c23a' } },
         ],
       },
     ],
@@ -333,12 +366,7 @@ function renderRiskChart() {
     series: [
       {
         type: 'bar',
-        data: [
-          toNumber(d.highAlerts),
-          toNumber(d.mediumAlerts),
-          toNumber(d.lowAlerts),
-          toNumber(d.alertCount),
-        ],
+        data: [agg.highAlerts, agg.mediumAlerts, agg.lowAlerts, agg.alertCount],
         itemStyle: { color: '#409eff' },
       },
     ],
@@ -369,20 +397,20 @@ function renderUtilizationChart() {
 }
 
 function renderBenchChart() {
-  const d = reportData.value || {}
-  const rows = d.records || d.items || d.list || []
+  // P0 修复: listData 为 List<Map>, 每行是一个 Bench 记录 (period/totalCost/cost/date)
+  const rows = listData.value || []
   const c1 = ensureChart('bench-line')
   c1?.setOption({
     title: { text: 'Bench 闲置成本趋势', left: 'center' },
     tooltip: { trigger: 'axis' },
     grid: { top: 60, left: 60, right: 40, bottom: 40 },
-    xAxis: { type: 'category', data: rows.map((r: any) => r.period || r.date || '-') },
+    xAxis: { type: 'category', data: rows.map((r) => r.period || r.date || '-') },
     yAxis: { type: 'value' },
     series: [
       {
         type: 'line',
         smooth: true,
-        data: rows.map((r: any) => toNumber(r.totalCost || r.cost)),
+        data: rows.map((r) => toNumber(r.totalCost || r.cost)),
         areaStyle: { color: 'rgba(230,162,60,0.3)' },
         itemStyle: { color: '#e6a23c' },
       },
@@ -461,6 +489,7 @@ onUnmounted(() => {
         <el-tab-pane label="跨项目汇总" name="summary" />
         <el-tab-pane label="EVM 报表" name="evm" />
         <el-tab-pane label="双费率对比" name="dualRate" />
+        <el-tab-pane label="资源甘特" name="gantt" />
         <el-tab-pane label="风险看板" name="risk" />
         <el-tab-pane label="利用率排行" name="utilization" />
         <el-tab-pane label="Bench 成本" name="bench" />

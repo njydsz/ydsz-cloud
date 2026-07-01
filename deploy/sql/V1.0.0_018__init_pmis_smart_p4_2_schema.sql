@@ -20,18 +20,18 @@ COMMENT ON COLUMN pmis_execution_time_entry.billable IS '可计费标识';
 CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     id                  BIGSERIAL PRIMARY KEY,
     alert_code          VARCHAR(64)  NOT NULL UNIQUE,
-    alert_type          VARCHAR(32)  NOT NULL
-    alert_level         VARCHAR(8)   NOT NULL
-    source_type         VARCHAR(32)  NOT NULL
-    source_id           VARCHAR(64)
+    alert_type          VARCHAR(32)  NOT NULL,
+    alert_level         VARCHAR(8)   NOT NULL,
+    source_type         VARCHAR(32)  NOT NULL,
+    source_id           VARCHAR(64),
     title               VARCHAR(256) NOT NULL,
     content             TEXT,
-    target_role         VARCHAR(64)  NOT NULL
-    target_user_ids     VARCHAR(1024)
-    push_channels       VARCHAR(64)  NOT NULL DEFAULT 'IN_APP'
+    target_role         VARCHAR(64)  NOT NULL,
+    target_user_ids     VARCHAR(1024),
+    push_channels       VARCHAR(64)  NOT NULL DEFAULT 'IN_APP',
     dispatched_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    dispatched_by       VARCHAR(64)
-    status              VARCHAR(16)  NOT NULL DEFAULT 'PENDING'
+    dispatched_by       VARCHAR(64),
+    status              VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
     sent_at             TIMESTAMP,
     fail_reason         VARCHAR(512),
     retry_count         INT          NOT NULL DEFAULT 0,

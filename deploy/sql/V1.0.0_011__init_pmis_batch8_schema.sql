@@ -1,4 +1,4 @@
-﻿-- =====================================================
+-- =====================================================
 -- PMIS 批次8 DDL：合同模板/项目变更/项目交付/项目结项/AI智能体
 -- 版本: V1.0.0_011
 -- 描述: 合同模板(Project)、项目变更(Project)、交付物标准(Execution)、
@@ -77,12 +77,12 @@ CREATE TABLE pmis_project_change (
     updated_by               BIGINT       NOT NULL DEFAULT 0,
     updated_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                  SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppc_code UNIQUE (change_code, deleted)
+    CONSTRAINT uk_pch_code UNIQUE (change_code, deleted)
 );
 COMMENT ON TABLE pmis_project_change IS '项目变更主表（5类变更）';
-CREATE INDEX idx_ppc_initiation ON pmis_project_change(initiation_id);
-CREATE INDEX idx_ppc_type_status ON pmis_project_change(change_type, status);
-CREATE INDEX idx_ppc_major ON pmis_project_change(initiation_id, major_flag);
+CREATE INDEX idx_pch_initiation ON pmis_project_change(initiation_id);
+CREATE INDEX idx_pch_type_status ON pmis_project_change(change_type, status);
+CREATE INDEX idx_pch_major ON pmis_project_change(initiation_id, major_flag);
 
 -- =====================================================
 -- 3. 交付物标准表 pmis_execution_delivery_standard

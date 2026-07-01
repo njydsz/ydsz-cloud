@@ -47,6 +47,9 @@ export interface BusinessEntity {
   status?: string
 }
 
+/** 业务实体基类别名（兼容 system 模块类型引用） */
+export type BaseVO = BusinessEntity
+
 /** 下拉项 / 树节点 */
 export interface OptionVO<T = string | number> {
   label: string

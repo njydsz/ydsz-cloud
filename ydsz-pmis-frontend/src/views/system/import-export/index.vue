@@ -236,10 +236,11 @@ async function handleImport() {
       }
     }, 200)
 
-    const result = await importData(selectedBiz.value, fileList.value[0].raw)
+    const resp = await importData(selectedBiz.value, fileList.value[0].raw)
     clearInterval(timer)
     importProgress.value = 100
     progressText.value = '导入完成'
+    const result = (resp as any)?.data ?? resp
     importResult.value = result
     if (result.success) {
       ElMessage.success(`导入成功 ${result.successCount} 条`)

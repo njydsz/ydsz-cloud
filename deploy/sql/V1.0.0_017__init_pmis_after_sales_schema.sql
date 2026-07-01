@@ -53,9 +53,9 @@ CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     warranty_id         BIGINT,
     title               VARCHAR(128) NOT NULL,
     description         TEXT,
-    category            VARCHAR(32)  NOT NULL DEFAULT 'OTHER'
-    priority            VARCHAR(8)   NOT NULL DEFAULT 'P3'
-    status              VARCHAR(16)  NOT NULL DEFAULT 'OPEN'
+    category            VARCHAR(32)  NOT NULL DEFAULT 'OTHER',
+    priority            VARCHAR(8)   NOT NULL DEFAULT 'P3',
+    status              VARCHAR(16)  NOT NULL DEFAULT 'OPEN',
     reporter_id         BIGINT,
     reporter_name       VARCHAR(64),
     reporter_phone      VARCHAR(32),
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     started_at          TIMESTAMP,
     resolved_at         TIMESTAMP,
     closed_at           TIMESTAMP,
-    response_due_at     TIMESTAMP    NOT NULL
+    response_due_at     TIMESTAMP    NOT NULL,
     resolve_due_at      TIMESTAMP    NOT NULL,
     response_breached   BOOLEAN      NOT NULL DEFAULT FALSE,
     resolve_breached    BOOLEAN      NOT NULL DEFAULT FALSE,

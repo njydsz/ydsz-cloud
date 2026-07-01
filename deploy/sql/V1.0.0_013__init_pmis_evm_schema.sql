@@ -1,4 +1,4 @@
-﻿-- =====================================================
+-- =====================================================
 -- PMIS 批次10 DDL：EVM 挣值 / 对外报价费率 / 对内成本费率 / 利润测算
 -- 版本: V1.0.0_013
 -- 描述: 挣值测量(pmis_evm_measure)、对外报价费率(pmis_rate_card)、
@@ -136,9 +136,9 @@ CREATE TABLE pmis_profit_simulation (
     CONSTRAINT uk_pps_code UNIQUE (simulation_code, deleted)
 );
 COMMENT ON TABLE pmis_profit_simulation IS '利润测算版本（What-if 多版本对比）';
-CREATE INDEX idx_pps_initiation ON pmis_profit_simulation(initiation_id);
-CREATE INDEX idx_pps_version ON pmis_profit_simulation(initiation_id, version);
-CREATE INDEX idx_pps_status ON pmis_profit_simulation(status, scenario_type);
+CREATE INDEX idx_psm_initiation ON pmis_profit_simulation(initiation_id);
+CREATE INDEX idx_psm_version ON pmis_profit_simulation(initiation_id, version);
+CREATE INDEX idx_psm_status ON pmis_profit_simulation(status, scenario_type);
 
 -- =====================================================
 -- 5. 初始化 L1-L18 职级默认对外报价费率（基线参考）

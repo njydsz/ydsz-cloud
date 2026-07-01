@@ -60,6 +60,35 @@ vi.mock('@/store/modules/user', () => ({
 
 import Dashboard from '../index.vue'
 
+// ===== Element Plus 组件 stub (jsdom 环境下避免 el-* 解析失败) =====
+const elementPlusStubs = {
+  'el-card': defineComponent({ setup: (_, { slots }) => () => h('div', { class: 'el-card-stub' }, slots.default?.()) }),
+  'el-select': defineComponent({
+    props: ['modelValue'],
+    emits: ['update:modelValue', 'change'],
+    setup: (_, { slots }) => () => h('div', { class: 'el-select-stub' }, slots.default?.()),
+  }),
+  'el-option': defineComponent({ props: ['label', 'value'], setup: (_, { slots }) => () => h('div', { class: 'el-option-stub' }, slots.default?.()) }),
+  'el-button': defineComponent({
+    props: ['loading'],
+    emits: ['click'],
+    setup: (_, { slots }) => () => h('button', { class: 'el-button-stub' }, slots.default?.()),
+  }),
+  'el-row': defineComponent({ setup: (_, { slots }) => () => h('div', { class: 'el-row-stub' }, slots.default?.()) }),
+  'el-col': defineComponent({
+    props: ['span'],
+    setup: (_, { slots }) => () => h('div', { class: 'el-col-stub' }, slots.default?.()),
+  }),
+  'el-icon': defineComponent({
+    props: ['size'],
+    setup: (_, { slots }) => () => h('span', { class: 'el-icon-stub' }, slots.default?.()),
+  }),
+  'el-scrollbar': defineComponent({
+    props: ['height'],
+    setup: (_, { slots }) => () => h('div', { class: 'el-scrollbar-stub' }, slots.default?.()),
+  }),
+}
+
 describe('Dashboard 仪表盘 (useECharts 迁移)', () => {
   beforeEach(() => {
     setActivePinia(createPinia())

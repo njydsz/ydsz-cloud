@@ -10,22 +10,21 @@
 -- ----------------------------
 CREATE OR REPLACE VIEW pmis_view_initiation_revenue_cost AS
 SELECT i.id              AS initiation_id,
-       COALESCE(SUM(r.amount), 0)         AS total_revenue,
-       COALESCE(SUM(p.invoiced_amount), 0) AS invoiced_amount,
-       COALESCE((SELECT SUM(amount) FROM pmis_execution_revenue r2
+       COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r
+                  WHERE r.initiation_id = i.id AND r.deleted = 0), 0)         AS total_revenue,
+       COALESCE((SELECT SUM(amount) FROM pmis_finance_invoice p
+                  WHERE p.initiation_id = i.id AND p.deleted = 0), 0)         AS invoiced_amount,
+       COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r2
                   WHERE r2.initiation_id = i.id AND r2.deleted = 0
                     AND r2.status = 'CONFIRMED'), 0) AS confirmed_revenue,
-       COALESCE((SELECT SUM(amount) FROM pmis_execution_cost_allocation
+       COALESCE((SELECT SUM(amount) FROM pmis_cost_allocation
                   WHERE initiation_id = i.id AND deleted = 0), 0) AS labor_cost,
-       COALESCE((SELECT SUM(amount) FROM pmis_execution_purchase
+       COALESCE((SELECT SUM(amount) FROM pmis_cost_purchase
                   WHERE initiation_id = i.id AND deleted = 0), 0) AS purchase_cost,
-       COALESCE((SELECT SUM(amount) FROM pmis_execution_expense
+       COALESCE((SELECT SUM(amount) FROM pmis_cost_expense
                   WHERE initiation_id = i.id AND deleted = 0), 0) AS expense_cost
 FROM pmis_project_initiation i
-         LEFT JOIN pmis_execution_revenue r   ON r.initiation_id = i.id  AND r.deleted = 0
-         LEFT JOIN pmis_finance_invoice p     ON p.initiation_id = i.id  AND p.deleted = 0
-WHERE i.deleted = 0
-GROUP BY i.id;
+WHERE i.deleted = 0;
 
 -- ----------------------------
 -- 2. 项目 EVM 预警分布
@@ -46,11 +45,11 @@ GROUP BY initiation_id;
 CREATE OR REPLACE VIEW pmis_view_cockpit_overview AS
 SELECT
     (SELECT COUNT(*) FROM pmis_project_initiation
-        WHERE deleted = 0 AND current_stage IN ('APPROVED','IN_PROGRESS')) AS active_projects,
+        WHERE deleted = 0 AND stage IN ('APPROVED','IN_PROGRESS'))      AS active_projects,
     (SELECT COALESCE(SUM(amount), 0) FROM pmis_finance_invoice
-        WHERE deleted = 0 AND status IN ('ISSUED','RED_REVERSED'))            AS total_invoiced,
+        WHERE deleted = 0 AND status IN ('ISSUED','RED_REVERSED'))      AS total_invoiced,
     (SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
-        WHERE deleted = 0 AND status = 'ALLOCATED')                          AS confirmed_revenue;
+        WHERE deleted = 0 AND status = 'ALLOCATED')                     AS confirmed_revenue;
 
 -- ----------------------------
 -- 4. 项目风险预警视图
