@@ -98,4 +98,56 @@
         </where>
     </select>
 
+    <!--
+      批次 21 / P2: AI Agent 执行耗时 P50/P90/P95 统计
+      使用 PostgreSQL percentile_cont(ordered by cost_ms) 在数据库内完成
+      percentile 计算; sample 不足 30 时 PostgreSQL 会自动插值
+    -->
+    <select id="selectDurationStats" resultType="java.util.Map">
+        SELECT
+            COUNT(1)                                                          AS sample_count,
+            COALESCE(AVG(cost_ms)::numeric(10,2),    0)                       AS avg_ms,
+            COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY cost_ms)::numeric(10,2), 0) AS p50_ms,
+            COALESCE(percentile_cont(0.90) WITHIN GROUP (ORDER BY cost_ms)::numeric(10,2), 0) AS p90_ms,
+            COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY cost_ms)::numeric(10,2), 0) AS p95_ms,
+            COALESCE(MAX(cost_ms), 0)                                          AS max_ms,
+            COALESCE(MIN(cost_ms), 0)                                          AS min_ms
+        FROM pmis_agent_prediction
+        <where>
+            deleted = 0
+            AND status = 'SUCCESS'
+            AND cost_ms IS NOT NULL
+            <if test="agentType != null and agentType != ''">
+                AND agent_type = #{agentType}
+            </if>
+            <if test="from != null">
+                AND created_at &gt;= #{from}
+            </if>
+            <if test="to != null">
+                AND created_at &lt;= #{to}
+            </if>
+            <if test="tenantId != null">
+                AND tenant_id = #{tenantId}
+            </if>
+        </where>
+    </select>
+
+    <select id="selectDurationStatsByAgentType" resultType="java.util.Map">
+        SELECT
+            agent_type,
+            COUNT(1)                                                            AS sample_count,
+            COALESCE(AVG(cost_ms)::numeric(10,2), 0)                            AS avg_ms,
+            COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY cost_ms)::numeric(10,2), 0) AS p50_ms,
+            COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY cost_ms)::numeric(10,2), 0) AS p95_ms
+        FROM pmis_agent_prediction
+        <where>
+            deleted = 0 AND status = 'SUCCESS' AND cost_ms IS NOT NULL
+            <if test="from != null">AND created_at &gt;= #{from}</if>
+            <if test="to != null">AND created_at &lt;= #{to}</if>
+            <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+        </where>
+        GROUP BY agent_type
+        ORDER BY p95_ms DESC
+    </select>
+
 </mapper>

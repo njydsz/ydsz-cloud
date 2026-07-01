@@ -2,6 +2,8 @@ package com.njydsz.pmis.execution.job;
 
 import com.njydsz.pmis.execution.service.AlertDispatchService;
 import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.common.job.JobRunRecorder;
+import com.njydsz.pmis.common.job.JobRunRecorder.JobRunResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,8 @@ import java.util.Map;
  *   cron:      0 0/5 * * * ?
  * </pre>
  *
+ * <p>批次 21 / P2: 接入 {@link JobRunRecorder} 自动注入 provider_trace_id
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -34,17 +38,19 @@ public class AlertDispatchRetryJobHandler implements JobHandler {
     private static final int DEFAULT_MAX_RETRY = 3;
 
     @Override
-    public Object execute(String paramsJson) {
-        long start = System.currentTimeMillis();
-        int maxRetry = parseMaxRetry(paramsJson);
-        int sent = alertDispatchService.retryFailed(maxRetry);
-        long cost = System.currentTimeMillis() - start;
-        Map<String, Object> result = new HashMap<>();
-        result.put("retried", sent);
-        result.put("maxRetry", maxRetry);
-        result.put("costMs", cost);
-        log.info("[AlertDispatchRetryJob] 重试完成: sent={} maxRetry={} costMs={}", sent, maxRetry, cost);
-        return result;
+    public Object execute(String paramsJson) throws Exception {
+        return JobRunRecorder.run("alertDispatchRetryJob", paramsJson, () -> {
+            long start = System.currentTimeMillis();
+            int maxRetry = parseMaxRetry(paramsJson);
+            int sent = alertDispatchService.retryFailed(maxRetry);
+            long cost = System.currentTimeMillis() - start;
+            Map<String, Object> result = new HashMap<>();
+            result.put("retried", sent);
+            result.put("maxRetry", maxRetry);
+            result.put("costMs", cost);
+            log.info("[AlertDispatchRetryJob] 重试完成: sent={} maxRetry={} costMs={}", sent, maxRetry, cost);
+            return JobRunResult.success(result, cost);
+        });
     }
 
     private int parseMaxRetry(String paramsJson) {

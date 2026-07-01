@@ -5,12 +5,14 @@ import com.njydsz.pmis.agent.dto.AgentRunRequestDTO;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.entity.AgentPredictionDO;
+import com.njydsz.pmis.agent.mapper.AgentPredictionMapper;
 import com.njydsz.pmis.agent.service.AgentService;
 import com.njydsz.pmis.common.api.R;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +38,7 @@ import java.util.Map;
 public class AgentController {
 
     private final AgentService service;
+    private final AgentPredictionMapper predictionMapper;
 
     @Operation(summary = "执行 Agent（同步）")
     @PostMapping("/run")
@@ -97,5 +101,31 @@ public class AgentController {
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) Long tenantId) {
         return R.ok(service.countByAlertLevel(alertLevel, agentType, tenantId));
+    }
+
+    /**
+     * 批次 21 / P2: AI Agent 执行耗时 P50/P90/P95 统计
+     * <p>通过 PostgreSQL percentile_cont 聚合 cost_ms, 性能优于 Java 端排序</p>
+     */
+    @Operation(summary = "AI Agent 执行耗时统计 (P50/P90/P95)")
+    @GetMapping("/duration-stats")
+    public R<Map<String, Object>> durationStats(
+            @RequestParam(required = false) String agentType,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
+            @RequestParam(required = false) Long tenantId) {
+        return R.ok(predictionMapper.selectDurationStats(agentType, from, to, tenantId));
+    }
+
+    /**
+     * 批次 21 / P2: 按 Agent 类型分组的耗时 P50/P95 统计
+     */
+    @Operation(summary = "按 Agent 类型统计耗时")
+    @GetMapping("/duration-stats/by-agent-type")
+    public R<List<Map<String, Object>>> durationStatsByAgentType(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
+            @RequestParam(required = false) Long tenantId) {
+        return R.ok(predictionMapper.selectDurationStatsByAgentType(from, to, tenantId));
     }
 }
