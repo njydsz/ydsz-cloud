@@ -22,6 +22,7 @@ const segmentMap: Record<string, string> = {
   STRATEGIC: '战略',
 }
 
+/** 拉取职级列表，并默认选中首个职级展示其费率 */
 async function fetchLevels() {
   loading.value = true
   try {
@@ -35,6 +36,10 @@ async function fetchLevels() {
   }
 }
 
+/**
+ * 选中指定职级，拉取其当日生效费率与历史版本
+ * @param code 职级编码（如 L8）
+ */
 async function selectLevel(code: string) {
   selectedLevel.value = code
   try {

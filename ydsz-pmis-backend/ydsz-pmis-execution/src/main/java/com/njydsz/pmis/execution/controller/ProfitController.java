@@ -50,12 +50,14 @@ public class ProfitController {
     }
 
     @Operation(summary = "趋势")
+    @PrePermission("execution:profit:list")
     @GetMapping("/trend/{initiationId}")
     public R<List<Map<String, Object>>> trend(@PathVariable Long initiationId) {
         return R.ok(service.trendByPeriod(initiationId));
     }
 
     @Operation(summary = "项目健康度评分")
+    @PrePermission("execution:profit:list")
     @GetMapping("/health-score")
     public R<Integer> healthScore(@RequestParam Long initiationId, @RequestParam String period) {
         return R.ok(service.healthScore(initiationId, period));

@@ -1,3 +1,8 @@
+<!--
+  @file 风险管理
+  @description 项目风险管理页面：支持风险分页查询、新建(概率×影响自动评级)、状态流转(OPEN→MITIGATING→CLOSED/ACCEPTED)，对应路由 /execution/risk
+  @module views/execution/risk
+-->
 <script setup lang="ts">
 /**
  * 风险管理
@@ -18,6 +23,7 @@ import {
 import type { RiskVO, RiskCreateDTO } from '@/api/execution/risk/types'
 import { PC } from '@/constants/permissionCodes'
 
+// 列表查询状态
 const loading = ref(false)
 const list = ref<RiskVO[]>([])
 const total = ref(0)
@@ -30,6 +36,7 @@ const query = reactive({
   initiationId: undefined as number | undefined,
 })
 
+// 状态字典：风险处理状态映射到标签文案与色值
 const statusMap = {
   OPEN: { label: '待处理', type: 'danger' as const },
   MITIGATING: { label: '缓解中', type: 'warning' as const },
@@ -37,12 +44,14 @@ const statusMap = {
   ACCEPTED: { label: '已接受', type: 'success' as const },
 }
 
+// 等级字典：风险等级(LOW/MEDIUM/HIGH)映射到标签文案与色值
 const levelMap = {
   LOW: { label: '低', type: 'success' as const },
   MEDIUM: { label: '中', type: 'warning' as const },
   HIGH: { label: '高', type: 'danger' as const },
 }
 
+// 分类字典：风险分类(技术/商务/资源/外部/其他)
 const categoryMap = {
   TECHNICAL: { label: '技术' },
   COMMERCE: { label: '商务' },
@@ -51,6 +60,7 @@ const categoryMap = {
   OTHER: { label: '其他' },
 }
 
+/** 拉取风险分页数据 */
 async function fetchList() {
   loading.value = true
   try {
@@ -67,6 +77,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并刷新列表 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -76,6 +87,7 @@ function handleReset() {
   fetchList()
 }
 
+// 弹窗 - 新建风险
 const dialogVisible = ref(false)
 const formRef = ref<any>()
 const form = reactive<Partial<RiskCreateDTO>>({
@@ -95,6 +107,7 @@ const formRules = {
   impact: [{ required: true, message: '影响必填', trigger: 'blur' }],
 }
 
+/** 打开新建弹窗：重置表单为默认值 */
 function openCreate() {
   Object.assign(form, {
     initiationId: 0,

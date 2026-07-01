@@ -24,9 +24,11 @@ import type { DeptVO } from '@/api/system/dept/types'
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
 
+// 权限助手：统一通过 userStore 校验按钮级权限
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
+// 列表查询状态
 const loading = ref(false)
 const list = ref<RateInternalVO[]>([])
 const total = ref(0)
@@ -37,9 +39,12 @@ const query = reactive({
   departmentId: undefined as number | undefined,
   status: '',
 })
+// 职级下拉数据
 const levels = ref<JobLevelVO[]>([])
+// 部门树下拉数据
 const depts = ref<DeptVO[]>([])
 
+/** 拉取职级下拉数据（用于表单与查询条件） */
 async function fetchLevels() {
   try {
     const { data } = await listJobLevels()
@@ -48,6 +53,7 @@ async function fetchLevels() {
     levels.value = []
   }
 }
+/** 拉取部门树下拉数据（用于表单与查询条件） */
 async function fetchDepts() {
   try {
     const { data } = await listDeptTree()
@@ -57,6 +63,7 @@ async function fetchDepts() {
   }
 }
 
+/** 拉取内部费率分页数据 */
 async function fetchList() {
   loading.value = true
   try {
@@ -72,20 +79,24 @@ async function fetchList() {
   }
 }
 
+// 状态字典：生效/停用
 const statusMap: Record<string, { label: string; type: 'success' | 'info' }> = {
   ACTIVE: { label: '生效', type: 'success' },
   INACTIVE: { label: '停用', type: 'info' },
 }
 
+/** 金额格式化：千分位 + ¥ 前缀，空值返回 - */
 function fmtMoney(n?: number) {
   if (n === undefined || n === null) return '-'
   return `¥${Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
 }
 
+/** 点击查询：重置页码后拉取列表 */
 function onQuery() {
   query.page = 1
   fetchList()
 }
+/** 重置查询条件并刷新列表 */
 function onReset() {
   query.page = 1
   query.size = 10
@@ -94,13 +105,16 @@ function onReset() {
   query.status = ''
   fetchList()
 }
+/** 翻页回调 */
 function onPageChange() {
   fetchList()
 }
+/** 手动刷新列表 */
 async function onRefresh() {
   await fetchList()
 }
 
+// 弹窗 - 新建/编辑内部费率
 const dialogVisible = ref(false)
 const formRef = ref<any>()
 const editingId = ref<number | null>(null)
@@ -126,6 +140,7 @@ const rules = {
   effectiveDate: [{ required: true, message: '请选择生效日期', trigger: 'change' }],
 }
 
+/** 打开新建弹窗：重置表单并生成默认费率编号 */
 function openCreate() {
   editingId.value = null
   Object.assign(form, {
@@ -144,6 +159,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 打开编辑弹窗：回填当前行数据到表单 */
 function openEdit(row: RateInternalVO) {
   editingId.value = row.id ?? null
   Object.assign(form, {
@@ -162,6 +178,7 @@ function openEdit(row: RateInternalVO) {
   dialogVisible.value = true
 }
 
+/** 提交表单：校验通过后按 editingId 区分新建/更新 */
 async function submit() {
   if (!formRef.value) return
   try {
@@ -180,6 +197,7 @@ async function submit() {
   fetchList()
 }
 
+/** 删除内部费率（二次确认） */
 async function onDelete(row: RateInternalVO) {
   if (!row.id) return
   try {

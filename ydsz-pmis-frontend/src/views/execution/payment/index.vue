@@ -1,3 +1,10 @@
+<!--
+  @file 回款管理
+  @description 项目执行过程中的回款管理页面，覆盖回款单的全生命周期：待确认 → 已确认 → 已核销/已取消；
+               支持回款核销（PaymentAllocation）将回款金额分摊到多张发票，余额耗尽自动转为 ALLOCATED；
+               状态流转: PENDING → CONFIRMED → ALLOCATED / CANCELLED。
+  @module views/execution/payment
+-->
 <script setup lang="ts">
 /**
  * 回款管理
@@ -19,9 +26,13 @@ import {
 import type { PaymentVO, PaymentCreateDTO, PaymentAllocationDTO } from '@/api/execution/payment/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 回款记录列表 */
 const list = ref<PaymentVO[]>([])
+/** 记录总数（分页用） */
 const total = ref(0)
+/** 查询条件：关键字 + 状态 + 客户 ID + 项目 ID */
 const query = reactive({
   page: 1,
   size: 10,
@@ -31,6 +42,7 @@ const query = reactive({
   initiationId: undefined as number | undefined,
 })
 
+/** 回款状态 → 标签/样式映射 */
 const statusMap = {
   PENDING: { label: '待确认', type: 'warning' as const },
   CONFIRMED: { label: '已确认', type: 'primary' as const },
@@ -38,6 +50,7 @@ const statusMap = {
   CANCELLED: { label: '已取消', type: 'info' as const },
 }
 
+/** 支付方式 → 中文标签映射 */
 const methodMap = {
   BANK_TRANSFER: { label: '银行转账' },
   CHECK: { label: '支票' },
@@ -45,6 +58,7 @@ const methodMap = {
   OTHER: { label: '其他' },
 }
 
+/** 分页查询回款列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -61,6 +75,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并回到首页刷新 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -70,8 +85,11 @@ function handleReset() {
   fetchList()
 }
 
+/** 新增回款弹窗可见性 */
 const dialogVisible = ref(false)
+/** 表单引用（用于校验） */
 const formRef = ref<any>()
+/** 新增回款表单数据 */
 const form = reactive<Partial<PaymentCreateDTO>>({
   paymentCode: '',
   customerId: 0,
@@ -81,6 +99,7 @@ const form = reactive<Partial<PaymentCreateDTO>>({
   paymentDate: new Date().toISOString().slice(0, 10),
 })
 
+/** 表单校验规则 */
 const formRules = {
   paymentCode: [{ required: true, message: '回款单号必填', trigger: 'blur' }],
   customerId: [{ required: true, message: '客户 ID 必填', trigger: 'blur' }],
@@ -88,6 +107,7 @@ const formRules = {
   amount: [{ required: true, message: '金额必填', trigger: 'blur' }],
 }
 
+/** 打开新增弹窗并重置表单为默认值 */
 function openCreate() {
   Object.assign(form, {
     paymentCode: '',
@@ -105,6 +125,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新建回款，校验通过后创建并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   await createPayment(form as PaymentCreateDTO)
@@ -113,6 +134,11 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 变更回款状态（确认/取消），需二次确认
+ * @param row 回款记录
+ * @param target 目标状态
+ */
 async function handleStatus(row: PaymentVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {
@@ -123,16 +149,24 @@ async function handleStatus(row: PaymentVO, target: string) {
   } catch { /* 取消 */ }
 }
 
+/** 核销弹窗可见性 */
 const allocDialogVisible = ref(false)
+/** 当前核销的回款记录 */
 const allocPayment = ref<PaymentVO | null>(null)
+/** 核销表单：回款 ID + 发票 ID + 核销金额 */
 const allocForm = reactive<PaymentAllocationDTO>({ paymentId: 0, invoiceId: 0, amount: 0 })
 
+/**
+ * 打开核销弹窗，默认填入剩余可核销金额
+ * @param row 回款记录
+ */
 function openAllocate(row: PaymentVO) {
   allocPayment.value = row
   Object.assign(allocForm, { paymentId: row.id, invoiceId: 0, amount: Number(row.unallocatedAmount ?? row.amount) })
   allocDialogVisible.value = true
 }
 
+/** 提交核销，将回款金额分摊到指定发票 */
 async function submitAllocate() {
   if (!allocForm.invoiceId || !allocForm.amount) {
     ElMessage.warning('请填写发票 ID 和金额')
@@ -148,6 +182,10 @@ async function submitAllocate() {
   }
 }
 
+/**
+ * 删除指定回款记录，需二次确认
+ * @param row 回款记录
+ */
 async function handleDelete(row: PaymentVO) {
   try {
     await ElMessageBox.confirm(`确认删除该回款？`, '提示', { type: 'warning' })
@@ -157,6 +195,7 @@ async function handleDelete(row: PaymentVO) {
   } catch { /* 取消 */ }
 }
 
+/** 页面挂载时加载列表 */
 onMounted(fetchList)
 </script>
 

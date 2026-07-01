@@ -33,6 +33,7 @@ public class ProfitSimulationController {
     private final ProfitSimulationService service;
 
     @Operation(summary = "创建测算版本")
+    @PrePermission("execution:simulation:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody ProfitSimulationCreateDTO dto) {
         return R.ok(service.create(dto));
@@ -47,6 +48,7 @@ public class ProfitSimulationController {
     }
 
     @Operation(summary = "删除")
+    @PrePermission("execution:simulation:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -54,6 +56,7 @@ public class ProfitSimulationController {
     }
 
     @Operation(summary = "详情")
+    @PrePermission("execution:simulation:list")
     @GetMapping("/{id}")
     public R<ProfitSimulationDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -74,6 +77,7 @@ public class ProfitSimulationController {
     }
 
     @Operation(summary = "分页")
+    @PrePermission("execution:simulation:list")
     @GetMapping("/page")
     public R<Page<ProfitSimulationDO>> page(
             @RequestParam(defaultValue = "1") int page,

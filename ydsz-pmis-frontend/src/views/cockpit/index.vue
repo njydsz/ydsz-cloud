@@ -1,3 +1,8 @@
+<!--
+  @file 经营驾驶舱
+  @description 经营驾驶舱页面，聚合 KPI 总览、EVM 健康度分布、维度下钻（事业部/项目类型/客户）、KPI 月度趋势与实时预警，60 秒自动刷新，对接 @/api/execution/cockpit 模块。
+  @module views/cockpit
+-->
 <script setup lang="ts">
 /**
  * 经营驾驶舱（批次18 增强）
@@ -21,31 +26,44 @@ import { PC } from '@/constants/permissionCodes'
 
 defineOptions({ name: 'Cockpit' })
 
+/** 查询条件（期间，YYYY-MM） */
 const query = ref({ period: new Date().toISOString().slice(0, 7) })
+/** KPI 总览数据 */
 const overview = ref<any>(null)
+/** 下钻分析原始数据 */
 const drillData = ref<any[]>([])
+/** 当前下钻维度：dept-事业部 / projectType-项目类型 / customer-客户 */
 const drillDimension = ref<'dept' | 'projectType' | 'customer'>('dept')
+/** 预警汇总数据 */
 const alert = ref<{ redCount: number; yellowCount: number; totalCount: number; topEvent: any | null } | null>(null)
+/** KPI 月度趋势数据（最近 12 月） */
 const trend = ref<{ periods: string[]; contractAmountSeries: number[]; confirmedRevenueSeries: number[]; totalCostSeries: number[]; grossProfitSeries: number[]; grossMarginPctSeries: number[] } | null>(null)
+/** 最后一次刷新时间 */
 const lastUpdated = ref('')
 
 // 自动刷新
 let pollTimer: number | null = null
+/** 是否启用自动刷新 */
 const autoRefresh = ref(true)
+/** 自动刷新间隔（毫秒） */
 const REFRESH_INTERVAL = 60_000
 
 // ========== ECharts: 下钻分析 ==========
+/** 下钻分析图表容器 ref */
 const chartRef = ref<HTMLDivElement | null>(null)
 const { setOption: setDrillOption } = useECharts(chartRef)
 
 // ========== ECharts: 健康度饼图 ==========
+/** EVM 健康度饼图容器 ref */
 const healthRef = ref<HTMLDivElement | null>(null)
 const { setOption: setHealthOption } = useECharts(healthRef)
 
 // ========== ECharts: KPI 趋势 ==========
+/** KPI 趋势图表容器 ref */
 const trendRef = ref<HTMLDivElement | null>(null)
 const { setOption: setTrendOption } = useECharts(trendRef)
 
+/** 加载 KPI 总览数据，失败静默处理 */
 async function loadOverview() {
   try {
     const { data } = await getCockpitOverview(query.value.period)
@@ -55,6 +73,7 @@ async function loadOverview() {
   }
 }
 
+/** 加载 EVM 健康度分布并渲染饼图，失败静默处理 */
 async function loadHealth() {
   try {
     const { data } = await getEvmHealthDistribution(query.value.period)
@@ -81,6 +100,7 @@ async function loadHealth() {
   }
 }
 
+/** 按当前下钻维度拉取数据并渲染图表，失败静默处理 */
 async function loadDrill() {
   try {
     let res: any
@@ -94,6 +114,7 @@ async function loadDrill() {
   }
 }
 
+/** 渲染下钻分析柱状图（收入/成本/毛利对比） */
 function renderDrillChart() {
   const rows = drillData.value
   setDrillOption({
@@ -114,6 +135,7 @@ function renderDrillChart() {
   })
 }
 
+/** 加载预警汇总数据，失败静默处理 */
 async function loadAlert() {
   try {
     const { data } = await getAlertSummary(query.value.period)
@@ -132,6 +154,7 @@ async function loadAlert() {
   }
 }
 
+/** 加载最近 12 月 KPI 趋势数据并渲染图表，失败静默处理 */
 async function loadTrend() {
   try {
     const { data } = await getKpiTrend(12)
@@ -153,6 +176,7 @@ async function loadTrend() {
   }
 }
 
+/** 渲染 KPI 月度趋势图（合同/收入/成本柱图 + 毛利率折线） */
 function renderTrendChart() {
   const t = trend.value
   if (!t) return
@@ -182,6 +206,7 @@ function renderTrendChart() {
   })
 }
 
+/** 并发刷新所有驾驶舱数据并更新最后刷新时间 */
 async function refresh() {
   try {
     await Promise.all([loadOverview(), loadHealth(), loadDrill(), loadAlert(), loadTrend()])
@@ -191,12 +216,14 @@ async function refresh() {
   }
 }
 
+/** 启动 60s 轮询定时器 */
 function startPolling() {
   stopPolling()
   if (!autoRefresh.value) return
   pollTimer = window.setInterval(() => refresh(), REFRESH_INTERVAL)
 }
 
+/** 停止轮询定时器 */
 function stopPolling() {
   if (pollTimer !== null) {
     window.clearInterval(pollTimer)
@@ -204,6 +231,7 @@ function stopPolling() {
   }
 }
 
+/** 切换自动刷新开关 */
 function toggleAutoRefresh() {
   autoRefresh.value = !autoRefresh.value
   if (autoRefresh.value) startPolling()
@@ -211,6 +239,7 @@ function toggleAutoRefresh() {
 }
 
 // ========== 计算属性 ==========
+/** 预警 banner 颜色基调：error-红色预警 / warning-黄色预警 / success-无预警 / info-未加载 */
 const alertTone = computed<'success' | 'warning' | 'info' | 'error'>(() => {
   if (!alert.value) return 'info'
   if (alert.value.redCount > 0) return 'error'
@@ -218,6 +247,7 @@ const alertTone = computed<'success' | 'warning' | 'info' | 'error'>(() => {
   return 'success'
 })
 
+/** 预警 banner 文案，包含红/黄数量与 TOP 事件标题 */
 const alertMessage = computed(() => {
   if (!alert.value || alert.value.totalCount === 0) return '当前无触发预警，系统状态良好。'
   const a = alert.value
@@ -227,11 +257,21 @@ const alertMessage = computed(() => {
   return `存在 ${parts.join('，')} 预警事件` + (a.topEvent ? `：${a.topEvent.title}` : '')
 })
 
+/**
+ * 格式化金额为人民币千分位字符串
+ * @param v 金额数值
+ * @returns 带人民币符号的格式化字符串，空值返回 '-'
+ */
 function fmtMoney(v: any) {
   if (v === null || v === undefined) return '-'
   return `¥${Number(v).toLocaleString()}`
 }
 
+/**
+ * 格式化比例为百分比字符串（保留 1 位小数）
+ * @param v 比例值（0-1）
+ * @returns 百分比字符串
+ */
 function fmtPct(v: any) {
   if (v === null || v === undefined) return '0.0%'
   return `${(Number(v) * 100).toFixed(1)}%`

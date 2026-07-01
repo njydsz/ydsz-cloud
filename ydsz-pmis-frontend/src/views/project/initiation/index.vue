@@ -1,11 +1,9 @@
+<!--
+  @file 项目立项管理
+  @description 立项的查询、新增、阶段流转、预算管理与门径评审；阶段机 DRAFT/UNDER_REVIEW/APPROVED/REJECTED/EXECUTING/CLOSED，门径 CD1_KICKOFF → CD2_DESIGN → CD3_BUILD → CD4_UAT → CD5_GO_LIVE；对接 Flowable 审批流与 @/api/project/initiation
+  @module views/project/initiation
+-->
 <script setup lang="ts">
-/**
- * 项目立项管理
- *
- * 提供立项的查询、新增、阶段流转、预算管理、门径评审。
- * 阶段机: DRAFT/UNDER_REVIEW/APPROVED/REJECTED/EXECUTING/CLOSED
- * 门径:   CD1_KICKOFF -> CD2_DESIGN -> CD3_BUILD -> CD4_UAT -> CD5_GO_LIVE
- */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
@@ -59,6 +57,7 @@ const gateMap = {
   CD5_GO_LIVE: { label: 'CD5 上线', type: 'success' as const },
 }
 
+/** 拉取立项分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -75,6 +74,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并重新加载列表 */
 function handleReset() {
   query.keyword = ''
   query.stage = ''
@@ -108,6 +108,7 @@ const formRules = {
   projectType: [{ required: true, message: '项目类型必填', trigger: 'change' }],
 }
 
+/** 打开新建立项弹窗，重置表单为初始值 */
 function openCreate() {
   Object.assign(form, {
     projectCode: '',
@@ -128,6 +129,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交立项表单：校验通过后创建并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   await createInitiation(form as InitiationCreateDTO)
@@ -136,6 +138,10 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 删除立项（二次确认）
+ * @param row 选中的立项行数据
+ */
 async function handleDelete(row: InitiationVO) {
   try {
     await ElMessageBox.confirm(`确认删除立项「${row.projectName}」吗？`, '提示', { type: 'warning' })
@@ -145,6 +151,11 @@ async function handleDelete(row: InitiationVO) {
   } catch { /* 取消 */ }
 }
 
+/**
+ * 变更立项阶段（二次确认），阶段机见文件头
+ * @param row 选中的立项行数据
+ * @param target 目标阶段编码
+ */
 async function handleStage(row: InitiationVO, target: string) {
   const targetText = (stageMap as any)[target]?.label || target
   try {
@@ -171,6 +182,10 @@ const budgetInitiationId = ref<number | null>(null)
 const budgetList = ref<any[]>([])
 const budgetForm = reactive({ category: 'LABOR', itemName: '', amount: 0, remark: '' })
 
+/**
+ * 打开预算明细弹窗，加载当前立项的预算列表
+ * @param row 选中的立项行数据
+ */
 async function openBudget(row: InitiationVO) {
   budgetInitiationId.value = row.id
   budgetForm.category = 'LABOR'
@@ -186,6 +201,7 @@ async function openBudget(row: InitiationVO) {
   budgetDialogVisible.value = true
 }
 
+/** 提交预算明细：追加一条预算项并刷新预算列表 */
 async function submitBudget() {
   if (!budgetInitiationId.value) return
   await addBudgetItem({
@@ -216,6 +232,7 @@ function openGate(row: InitiationVO) {
   gateDialogVisible.value = true
 }
 
+/** 提交门径评审结果：PASS / CONDITIONAL / FAIL */
 async function submitGate() {
   if (!gateInitiationId.value) return
   await reviewGate({

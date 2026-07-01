@@ -296,9 +296,9 @@ public final class PermissionCodes {
 
     // ==================== AI Agent ====================
 
-    public static final String AGENT_RUN = "agent:run";
-    public static final String AGENT_HISTORY = "agent:history";
-    public static final String AGENT_VIEW = "agent:view";
+    public static final String AGENT_RUN = "agent:task:run";
+    public static final String AGENT_HISTORY = "agent:task:list";
+    public static final String AGENT_VIEW = "agent:task:view";
     public static final String AGENT_ORCHESTRATION_RUN = "agent:orchestration:run";
     public static final String AGENT_ORCHESTRATION_VIEW = "agent:orchestration:view";
     public static final String AGENT_PREDICTION_VIEW = "agent:prediction:view";

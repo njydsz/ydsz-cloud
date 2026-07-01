@@ -167,6 +167,11 @@ function renderScoreChart() {
 }
 
 // ============= 工具方法 =============
+/**
+ * 告警等级映射为 el-tag 类型
+ * @param level 告警等级 RED / YELLOW / NORMAL / 其他
+ * @returns el-tag 类型 danger / warning / success / info
+ */
 function levelTagType(level?: string): 'success' | 'info' | 'warning' | 'danger' {
   switch (level) {
     case 'RED':  return 'danger'
@@ -176,9 +181,13 @@ function levelTagType(level?: string): 'success' | 'info' | 'warning' | 'danger'
   }
 }
 
+/** 追加一条事实上下文 */
 function addFact() { form.facts.push({ key: '', value: '' }) }
+/** 删除指定下标的事实上下文 */
 function removeFact(i: number) { form.facts.splice(i, 1) }
+/** 追加一条投票权重 */
 function addWeight() { form.weights.push({ agentType: '', weight: 0.5 }) }
+/** 删除指定下标的投票权重 */
 function removeWeight(i: number) { form.weights.splice(i, 1) }
 
 const currentMode = computed(() => MODE_OPTIONS.find((m) => m.code === form.mode)!)

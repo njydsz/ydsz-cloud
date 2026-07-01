@@ -1,3 +1,8 @@
+<!--
+  @file 项目变更管理
+  @description 项目变更管理页面，支持变更创建、状态机流转（DRAFT→SUBMITTED→UNDER_REVIEW→APPROVED/REJECTED→EXECUTING→EXECUTED）、影响等级评估与详情查看，对接 @/api/project/change 模块。
+  @module views/change
+-->
 <script setup lang="ts">
 /**
  * 项目变更管理（批次 19 补全 + 批次 21 / P2 useTable 重构）
@@ -100,6 +105,10 @@ const transitions: Record<string, string[]> = {
 // 优先从后端拉取 allowed-transitions; 失败时用前端兜底
 const backendAllowedMap = reactive<Record<number, string[]>>({})
 
+/**
+ * 加载指定变更的后端允许状态迁移列表，缓存避免重复请求
+ * @param id 变更 ID
+ */
 async function loadAllowedTransitions(id: number) {
   if (backendAllowedMap[id]) return
   try {
@@ -110,6 +119,11 @@ async function loadAllowedTransitions(id: number) {
   }
 }
 
+/**
+ * 获取当前行允许迁移的目标状态列表，后端优先、前端兜底
+ * @param row 当前行变更数据
+ * @returns 允许的目标状态码数组
+ */
 function allowedTargets(row: ProjectChangeVO): string[] {
   return backendAllowedMap[row.id]?.length
     ? backendAllowedMap[row.id]
@@ -122,18 +136,24 @@ const isEmpty = computed(() => !loading.value && list.value.length === 0)
 /** 选中的项目变更行 (用于批量操作) */
 const selectedRows = ref<ProjectChangeVO[]>([])
 
+/** 表格勾选行变更回调，同步本地选中列表 */
 function onSelectionChange({ rows }: { rows: ProjectChangeVO[] }) {
   selectedRows.value = rows
 }
 
+/** 重置查询条件并重新加载列表 */
 function handleReset() {
   resetQuery()
 }
 
 // ========== 新增/编辑 ==========
+/** 新增变更弹窗显隐 */
 const dialogVisible = ref(false)
+/** 提交中状态（防重复提交） */
 const submitting = ref(false)
+/** 新增变更表单引用 */
 const formRef = ref<any>()
+/** 新增变更表单数据 */
 const form = reactive<Partial<ProjectChangeCreateDTO>>({
   changeCode: '',
   initiationId: undefined,
@@ -159,6 +179,7 @@ const formRules = {
   changeTitle: [{ required: true, message: '变更标题必填', trigger: 'blur' }],
 }
 
+/** 打开新增变更弹窗，自动生成变更编号并重置表单为默认值 */
 function openCreate() {
   Object.assign(form, {
     changeCode: `CHG-${Date.now().toString().slice(-8)}`,
@@ -181,6 +202,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新增变更表单，校验通过后调用创建接口并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   submitting.value = true
@@ -195,6 +217,11 @@ async function submitForm() {
 }
 
 // ========== 状态迁移 ==========
+/**
+ * 变更状态迁移，重大变更需 GM+CFO 双审批（前端提示）
+ * @param row 当前行变更数据
+ * @param target 目标状态码
+ */
 async function handleStatus(row: ProjectChangeVO, target: string) {
   const targetLabel = statusMap[target]?.label || target
   let extraHint = ''
@@ -214,6 +241,10 @@ async function handleStatus(row: ProjectChangeVO, target: string) {
 }
 
 // ========== 删除 ==========
+/**
+ * 删除项目变更，仅 DRAFT/REJECTED/CANCELLED 状态可删除
+ * @param row 当前行变更数据
+ */
 async function handleDelete(row: ProjectChangeVO) {
   try {
     await ElMessageBox.confirm(
@@ -228,10 +259,17 @@ async function handleDelete(row: ProjectChangeVO) {
 }
 
 // ========== 详情抽屉 ==========
+/** 详情抽屉显隐 */
 const detailVisible = ref(false)
+/** 详情加载状态 */
 const detailLoading = ref(false)
+/** 当前查看的变更详情 */
 const detail = ref<ProjectChangeVO | null>(null)
 
+/**
+ * 打开详情抽屉，并行加载后端 allowed-transitions 与详情数据
+ * @param row 当前行变更数据
+ */
 async function openDetail(row: ProjectChangeVO) {
   detail.value = row
   detailVisible.value = true
@@ -246,17 +284,32 @@ async function openDetail(row: ProjectChangeVO) {
   }
 }
 
+/**
+ * 格式化金额为千分位两位小数
+ * @param n 金额数值
+ * @returns 格式化后的字符串，空值返回 '-'
+ */
 function fmtAmount(n?: number) {
   if (n === undefined || n === null) return '-'
   return n.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
 }
 
+/**
+ * 格式化影响金额，正数前加 '+' 号
+ * @param n 影响金额数值
+ * @returns 带符号的格式化字符串
+ */
 function fmtImpact(n?: number) {
   if (n === undefined || n === null) return '-'
   const prefix = n > 0 ? '+' : ''
   return prefix + fmtAmount(n)
 }
 
+/**
+ * 格式化百分比为保留两位小数
+ * @param n 比例值（0-1）
+ * @returns 百分比字符串
+ */
 function fmtPct(n?: number) {
   if (n === undefined || n === null) return '-'
   return (n * 100).toFixed(2) + '%'

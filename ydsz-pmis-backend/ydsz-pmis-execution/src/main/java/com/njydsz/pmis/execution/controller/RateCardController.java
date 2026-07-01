@@ -40,6 +40,7 @@ public class RateCardController {
     }
 
     @Operation(summary = "更新")
+    @PrePermission("execution:rate-card:update")
     @PutMapping("/{id}")
     public R<Void> update(@PathVariable Long id, @Valid @RequestBody RateCardCreateDTO dto) {
         service.update(id, dto);
@@ -47,6 +48,7 @@ public class RateCardController {
     }
 
     @Operation(summary = "删除")
+    @PrePermission("execution:rate-card:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -54,6 +56,7 @@ public class RateCardController {
     }
 
     @Operation(summary = "详情")
+    @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
     public R<RateCardDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -71,6 +74,7 @@ public class RateCardController {
     }
 
     @Operation(summary = "按职级查询")
+    @PrePermission("execution:rate:list")
     @GetMapping("/by-level")
     public R<List<RateCardDO>> listByLevel(@RequestParam String levelCode) {
         return R.ok(service.listByLevel(levelCode));

@@ -195,6 +195,7 @@ async function loadAll() {
   }
 }
 
+/** 启动轮询定时器（先清除已有定时器，避免重复） */
 function startPolling() {
   stopPolling()
   if (!autoRefresh.value) return
@@ -227,6 +228,11 @@ function fmtYuan(v?: number | null): string {
   return v.toFixed(0)
 }
 
+/**
+ * 百分比格式化（保留 1 位小数）
+ * @param v 0-1 之间的比例值
+ * @returns 形如 12.3% 的字符串
+ */
 function pct1(v?: number | null): string {
   if (v === null || v === undefined) return '0%'
   return (v * 100).toFixed(1) + '%'

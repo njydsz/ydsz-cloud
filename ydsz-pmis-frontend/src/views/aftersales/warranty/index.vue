@@ -64,6 +64,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并重新加载列表 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -78,12 +79,16 @@ const isEmpty = computed(() => !loading.value && list.value.length === 0)
 /** 选中的质保期行 (用于批量操作) */
 const selectedRows = ref<WarrantyVO[]>([])
 
+/** 表格勾选行变更回调，同步本地选中列表 */
 function onSelectionChange({ rows }: { rows: WarrantyVO[] }) {
   selectedRows.value = rows
 }
 
+/** 新增质保期弹窗显隐 */
 const dialogVisible = ref(false)
+/** 新增质保期表单引用 */
 const formRef = ref<any>()
+/** 新增质保期表单数据 */
 const form = reactive<Partial<WarrantyCreateDTO>>({
   initiationId: 0,
   durationMonths: 12,
@@ -95,6 +100,7 @@ const formRules = {
   durationMonths: [{ required: true, message: '质保期(月)必填', trigger: 'blur' }],
 }
 
+/** 打开新增质保期弹窗，重置表单为默认值 */
 function openCreate() {
   Object.assign(form, {
     initiationId: 0,
@@ -108,6 +114,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新增质保期表单，校验通过后调用创建接口 */
 async function submitForm() {
   await formRef.value?.validate()
   await createWarranty(form as WarrantyCreateDTO)
@@ -116,6 +123,10 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 提前终止指定质保期，需输入终止原因
+ * @param row 当前行质保期数据
+ */
 async function handleTerminate(row: WarrantyVO) {
   try {
     const { value } = await ElMessageBox.prompt('请输入提前终止原因', '终止质保期', {
@@ -127,6 +138,10 @@ async function handleTerminate(row: WarrantyVO) {
   } catch { /* 取消 */ }
 }
 
+/**
+ * 触发质保期扫描任务并刷新列表
+ * @param type 扫描类型：expiring-即将到期(30天内) / overdue-已过期
+ */
 async function handleScan(type: 'expiring' | 'overdue') {
   if (type === 'expiring') {
     const n = await scanExpiringWarranty(30)

@@ -1,3 +1,8 @@
+<!--
+  @file 审计中心
+  @description 审计中心页面，整合操作日志、登录审计、敏感操作、数据导出 4 个 Tab，对接 @/api/audit 模块。
+  @module views/audit
+-->
 <script setup lang="ts">
 /**
  * 审计中心
@@ -24,12 +29,18 @@ import type {
   DataExportAuditVO,
 } from '@/api/audit'
 
+/** 审计 Tab 类型：operation-操作日志 / login-登录审计 / sensitive-敏感操作 / export-数据导出 */
 type Tab = 'operation' | 'login' | 'sensitive' | 'export'
+/** 当前激活的 Tab */
 const activeTab = ref<Tab>('operation')
 
+/** 操作日志列表加载状态 */
 const opLoading = ref(false)
+/** 操作日志列表 */
 const opList = ref<OperationLogVO[]>([])
+/** 操作日志总条数 */
 const opTotal = ref(0)
+/** 操作日志查询条件 */
 const opQuery = reactive({
   page: 1,
   size: 20,
@@ -39,9 +50,13 @@ const opQuery = reactive({
   status: '',
 })
 
+/** 登录审计列表加载状态 */
 const loginLoading = ref(false)
+/** 登录审计列表 */
 const loginList = ref<LoginAuditVO[]>([])
+/** 登录审计总条数 */
 const loginTotal = ref(0)
+/** 登录审计查询条件 */
 const loginQuery = reactive({
   page: 1,
   size: 20,
@@ -50,9 +65,13 @@ const loginQuery = reactive({
   loginIp: '',
 })
 
+/** 敏感操作列表加载状态 */
 const soLoading = ref(false)
+/** 敏感操作列表 */
 const soList = ref<SensitiveOperationVO[]>([])
+/** 敏感操作总条数 */
 const soTotal = ref(0)
+/** 敏感操作查询条件 */
 const soQuery = reactive({
   page: 1,
   size: 20,
@@ -60,9 +79,13 @@ const soQuery = reactive({
   opType: '',
 })
 
+/** 数据导出列表加载状态 */
 const exLoading = ref(false)
+/** 数据导出列表 */
 const exList = ref<DataExportAuditVO[]>([])
+/** 数据导出总条数 */
 const exTotal = ref(0)
+/** 数据导出查询条件 */
 const exQuery = reactive({
   page: 1,
   size: 20,
@@ -71,6 +94,7 @@ const exQuery = reactive({
   exportAction: '',
 })
 
+/** 拉取操作日志分页列表 */
 async function fetchOperation() {
   opLoading.value = true
   try {
@@ -87,6 +111,7 @@ async function fetchOperation() {
   }
 }
 
+/** 拉取登录审计分页列表 */
 async function fetchLogin() {
   loginLoading.value = true
   try {
@@ -102,6 +127,7 @@ async function fetchLogin() {
   }
 }
 
+/** 拉取敏感操作分页列表 */
 async function fetchSensitive() {
   soLoading.value = true
   try {
@@ -116,6 +142,7 @@ async function fetchSensitive() {
   }
 }
 
+/** 拉取数据导出审计分页列表 */
 async function fetchExport() {
   exLoading.value = true
   try {
@@ -131,6 +158,10 @@ async function fetchExport() {
   }
 }
 
+/**
+ * Tab 切换回调，按需懒加载对应数据
+ * @param tab 切换后的 Tab 标识
+ */
 function onTabChange(tab: Tab) {
   activeTab.value = tab
   if (tab === 'operation') fetchOperation()
@@ -139,10 +170,20 @@ function onTabChange(tab: Tab) {
   else fetchExport()
 }
 
+/**
+ * 格式化 ISO 时间字符串为 yyyy-MM-dd HH:mm:ss
+ * @param s ISO 时间字符串
+ * @returns 格式化后的时间，空值返回 '-'
+ */
 function fmtDate(s?: string) {
   return s ? s.replace('T', ' ').slice(0, 19) : '-'
 }
 
+/**
+ * 根据审计状态文本推断 el-tag 类型
+ * @param status 状态文本（SUCCESS/FAILED/FAIL_PASSWORD 等）
+ * @returns el-tag type：success / danger / warning / info
+ */
 function statusTag(status?: string) {
   const t = (status || '').toUpperCase()
   if (t === 'SUCCESS' || t === 'OK' || t === 'PASS') return 'success'
@@ -152,6 +193,7 @@ function statusTag(status?: string) {
   return 'info'
 }
 
+/** 清理指定天数前的操作日志，需输入天数并二次确认 */
 async function handleClean() {
   try {
     const { value } = await ElMessageBox.prompt('清理 N 天前的操作日志', '清理日志', {

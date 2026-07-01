@@ -67,6 +67,7 @@ async function load() {
   }
 }
 
+/** 并发加载按类型聚合与各告警等级计数，完成后渲染图表 */
 async function loadAggregate() {
   try {
     const [aggRes, redRes, yellowRes, normalRes, totalRes] = await Promise.all([
@@ -167,8 +168,11 @@ async function loadRecent() {
   } catch { /* 静默 */ }
 }
 
+/** 翻页回调 */
 function onPageChange(p: number) { pageNo.value = p; load() }
+/** 每页条数变更回调 */
 function onSizeChange(s: number) { pageSize.value = s; pageNo.value = 1; load() }
+/** 筛选条件变更回调，重置到第一页后加载 */
 function onFilterChange() { pageNo.value = 1; load() }
 
 onMounted(() => {

@@ -1,3 +1,11 @@
+<!--
+  @file 收入确认 + 利润快照
+  @description 项目执行过程中的收入确认与利润快照管理页面，采用双 Tab 布局：
+               Tab1 收入确认：支持终验法/里程碑/按月三种确认方式，可新增/删除收入记录；
+               Tab2 利润快照：按项目 + 期间生成利润快照，自动汇总收入、人工成本、采购成本、费用成本、
+               总成本、毛利、毛利率及健康度评分。
+  @module views/execution/profit
+-->
 <script setup lang="ts">
 /**
  * 收入确认 + 利润快照
@@ -15,20 +23,27 @@ import {
 import type { RevenueVO, RevenueCreateDTO, ProfitSnapshotVO } from '@/api/execution/profit/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 当前激活的 Tab（revenue 收入确认 / profit 利润快照） */
 const tab = ref<'revenue' | 'profit'>('revenue')
 
-// 收入
+// ============= 收入确认 =============
+/** 收入列表加载状态 */
 const rLoading = ref(false)
+/** 收入确认记录列表 */
 const rList = ref<RevenueVO[]>([])
+/** 收入记录总数（分页用） */
 const rTotal = ref(0)
+/** 收入查询条件：关键字 + 项目 ID + 确认方法 */
 const rQuery = reactive({ page: 1, size: 10, keyword: '', initiationId: undefined as number | undefined, method: '' })
 
+/** 收入确认方法 → 中文标签映射（终验法/里程碑/按月） */
 const methodMap = {
   FINAL: { label: '终验法' },
   MILESTONE: { label: '里程碑' },
   MONTHLY: { label: '按月' },
 }
 
+/** 分页查询收入确认列表 */
 async function fetchRevenue() {
   rLoading.value = true
   try {
@@ -44,6 +59,7 @@ async function fetchRevenue() {
   }
 }
 
+/** 重置收入查询条件并回到首页刷新 */
 function resetRevenue() {
   rQuery.keyword = ''
   rQuery.initiationId = undefined
@@ -52,8 +68,11 @@ function resetRevenue() {
   fetchRevenue()
 }
 
+/** 新增收入弹窗可见性 */
 const rDialogVisible = ref(false)
+/** 收入表单引用（用于校验） */
 const rFormRef = ref<any>()
+/** 新增收入表单数据 */
 const rForm = reactive<Partial<RevenueCreateDTO>>({
   initiationId: 0,
   recognitionMethod: 'MILESTONE',
@@ -62,6 +81,7 @@ const rForm = reactive<Partial<RevenueCreateDTO>>({
   recognitionDate: new Date().toISOString().slice(0, 10),
 })
 
+/** 收入表单校验规则 */
 const rFormRules = {
   initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
   recognitionMethod: [{ required: true, message: '确认方法必填', trigger: 'change' }],
@@ -69,6 +89,7 @@ const rFormRules = {
   period: [{ required: true, message: '期间必填', trigger: 'blur' }],
 }
 
+/** 打开新增收入弹窗并重置表单为默认值 */
 function openRCreate() {
   Object.assign(rForm, {
     initiationId: 0,
@@ -82,6 +103,7 @@ function openRCreate() {
   rDialogVisible.value = true
 }
 
+/** 提交新建收入记录，校验通过后创建并刷新列表 */
 async function submitR() {
   await rFormRef.value?.validate()
   await createRevenue(rForm as RevenueCreateDTO)
@@ -90,6 +112,10 @@ async function submitR() {
   fetchRevenue()
 }
 
+/**
+ * 删除指定收入记录，需二次确认
+ * @param row 收入记录
+ */
 async function handleRDelete(row: RevenueVO) {
   try {
     await ElMessageBox.confirm(`确认删除该收入记录？`, '提示', { type: 'warning' })
@@ -99,12 +125,17 @@ async function handleRDelete(row: RevenueVO) {
   } catch { /* 取消 */ }
 }
 
-// 利润快照
+// ============= 利润快照 =============
+/** 快照列表加载状态 */
 const pLoading = ref(false)
+/** 利润快照记录列表 */
 const pList = ref<ProfitSnapshotVO[]>([])
+/** 快照记录总数（分页用） */
 const pTotal = ref(0)
+/** 快照查询条件：项目 ID + 期间（YYYY-MM） */
 const pQuery = reactive({ page: 1, size: 10, initiationId: undefined as number | undefined, period: '' })
 
+/** 分页查询利润快照列表 */
 async function fetchProfit() {
   pLoading.value = true
   try {
@@ -119,6 +150,10 @@ async function fetchProfit() {
   }
 }
 
+/**
+ * 按项目 + 期间生成利润快照，期间为空时默认取当月
+ * @returns 生成成功后返回快照 ID
+ */
 async function handleGenerate() {
   if (!pQuery.initiationId) {
     ElMessage.warning('请填写项目 ID')
@@ -134,6 +169,7 @@ async function handleGenerate() {
   }
 }
 
+/** 页面挂载时并行加载收入列表与利润快照列表 */
 onMounted(() => {
   fetchRevenue()
   fetchProfit()

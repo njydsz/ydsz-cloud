@@ -1,3 +1,8 @@
+<!--
+  @file 考勤管理
+  @description 考勤管理页面，整合出勤记录登记/查询、加班申请与审批、请假申请与审批三个 Tab，对接 @/api/attendance 模块。
+  @module views/attendance
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -14,13 +19,19 @@ import {
 } from '@/api/attendance'
 import type { AttendanceCreateDTO, AttendanceVO, OvertimeCreateDTO, OvertimeVO, LeaveCreateDTO, LeaveVO } from '@/api/attendance/types'
 
+/** 当前激活的 Tab：attendance-出勤 / overtime-加班 / leave-请假 */
 const tab = ref<'attendance' | 'overtime' | 'leave'>('attendance')
 
 // ============== 出勤 ==============
+/** 出勤列表加载状态 */
 const attLoading = ref(false)
+/** 出勤记录列表 */
 const attList = ref<AttendanceVO[]>([])
+/** 出勤记录总条数（用于分页） */
 const attTotal = ref(0)
+/** 出勤查询条件 */
 const attQuery = reactive({ employeeId: undefined as number | undefined, startDate: '', endDate: '', page: 1, size: 10 })
+/** 出勤状态聚合统计 */
 const attStat = ref<Array<Record<string, unknown>>>([])
 
 const statusMap: Record<string, { label: string; type: string }> = {
@@ -34,6 +45,7 @@ const statusMap: Record<string, { label: string; type: string }> = {
 
 const workTypeMap: Record<string, string> = { WORKDAY: '工作日', WEEKEND: '周末', HOLIDAY: '节假日' }
 
+/** 拉取出勤分页列表及按状态聚合统计 */
 async function fetchAttendance() {
   attLoading.value = true
   try {
@@ -52,7 +64,9 @@ async function fetchAttendance() {
   }).catch(() => (attStat.value = []))
 }
 
+/** 出勤登记弹窗显隐 */
 const attDialogVisible = ref(false)
+/** 出勤登记表单数据 */
 const attForm = reactive<AttendanceCreateDTO>({
   employeeId: 0,
   employeeName: '',
@@ -66,6 +80,7 @@ const attFormRules = {
   attendanceDate: [{ required: true, message: '日期必填', trigger: 'change' }],
 }
 
+/** 打开出勤登记弹窗，重置表单为默认值 */
 function openAttCreate() {
   Object.assign(attForm, {
     employeeId: attQuery.employeeId ?? 0,
@@ -78,6 +93,7 @@ function openAttCreate() {
   attDialogVisible.value = true
 }
 
+/** 提交出勤登记，调用后端登记接口并刷新列表 */
 async function submitAtt() {
   await recordAttendance(attForm)
   ElMessage.success('登记成功')
@@ -86,9 +102,13 @@ async function submitAtt() {
 }
 
 // ============== 加班 ==============
+/** 加班列表加载状态 */
 const otLoading = ref(false)
+/** 加班申请列表 */
 const otList = ref<OvertimeVO[]>([])
+/** 加班申请总条数（用于分页） */
 const otTotal = ref(0)
+/** 加班查询条件 */
 const otQuery = reactive({ employeeId: undefined as number | undefined, approvalStatus: '', page: 1, size: 10 })
 
 const otTypeMap: Record<string, string> = { WORKDAY: '工作日', WEEKEND: '周末', HOLIDAY: '节假日' }
@@ -100,6 +120,7 @@ const otStatusMap: Record<string, { label: string; type: string }> = {
   CANCELLED: { label: '已取消', type: 'info' },
 }
 
+/** 拉取加班申请分页列表 */
 async function fetchOvertime() {
   otLoading.value = true
   try {
@@ -111,7 +132,9 @@ async function fetchOvertime() {
   }
 }
 
+/** 加班申请弹窗显隐 */
 const otDialogVisible = ref(false)
+/** 加班申请表单数据 */
 const otForm = reactive<OvertimeCreateDTO>({
   employeeId: 0,
   overtimeDate: new Date().toISOString().slice(0, 10),
@@ -122,6 +145,7 @@ const otForm = reactive<OvertimeCreateDTO>({
   reason: '',
 })
 
+/** 打开加班申请弹窗，重置表单为默认值 */
 function openOtCreate() {
   Object.assign(otForm, {
     employeeId: otQuery.employeeId ?? 0,
@@ -135,6 +159,7 @@ function openOtCreate() {
   otDialogVisible.value = true
 }
 
+/** 提交加班申请，调用后端提交接口并刷新列表 */
 async function submitOt() {
   await submitOvertime(otForm)
   ElMessage.success('已提交')
@@ -142,6 +167,11 @@ async function submitOt() {
   fetchOvertime()
 }
 
+/**
+ * 加班审批操作（通过 / 驳回）
+ * @param row 当前行加班申请
+ * @param action 审批动作：APPROVED-通过 / REJECTED-驳回
+ */
 async function handleApproveOt(row: OvertimeVO, action: 'APPROVED' | 'REJECTED') {
   try {
     await ElMessageBox.confirm(`确认${action === 'APPROVED' ? '通过' : '驳回'}该加班申请?`, '提示', { type: 'warning' })
@@ -154,9 +184,13 @@ async function handleApproveOt(row: OvertimeVO, action: 'APPROVED' | 'REJECTED')
 }
 
 // ============== 请假 ==============
+/** 请假列表加载状态 */
 const lvLoading = ref(false)
+/** 请假申请列表 */
 const lvList = ref<LeaveVO[]>([])
+/** 请假申请总条数（用于分页） */
 const lvTotal = ref(0)
+/** 请假查询条件 */
 const lvQuery = reactive({ employeeId: undefined as number | undefined, approvalStatus: '', page: 1, size: 10 })
 
 const lvTypeMap: Record<string, string> = {
@@ -170,6 +204,7 @@ const lvTypeMap: Record<string, string> = {
 }
 const lvStatusMap: Record<string, { label: string; type: string }> = otStatusMap
 
+/** 拉取请假申请分页列表 */
 async function fetchLeave() {
   lvLoading.value = true
   try {
@@ -181,7 +216,9 @@ async function fetchLeave() {
   }
 }
 
+/** 请假申请弹窗显隐 */
 const lvDialogVisible = ref(false)
+/** 请假申请表单数据 */
 const lvForm = reactive<LeaveCreateDTO>({
   employeeId: 0,
   leaveType: 'ANNUAL',
@@ -190,6 +227,7 @@ const lvForm = reactive<LeaveCreateDTO>({
   reason: '',
 })
 
+/** 打开请假申请弹窗，重置表单为默认值 */
 function openLvCreate() {
   Object.assign(lvForm, {
     employeeId: lvQuery.employeeId ?? 0,
@@ -201,6 +239,7 @@ function openLvCreate() {
   lvDialogVisible.value = true
 }
 
+/** 提交请假申请，调用后端提交接口并刷新列表 */
 async function submitLv() {
   await submitLeave(lvForm)
   ElMessage.success('已提交')
@@ -208,6 +247,11 @@ async function submitLv() {
   fetchLeave()
 }
 
+/**
+ * 请假审批操作（提交 / 通过 / 驳回）
+ * @param row 当前行请假申请
+ * @param action 审批动作：SUBMITTED-提交 / APPROVED-通过 / REJECTED-驳回
+ */
 async function handleApproveLv(row: LeaveVO, action: 'SUBMITTED' | 'APPROVED' | 'REJECTED') {
   try {
     const actionText = action === 'SUBMITTED' ? '提交' : action === 'APPROVED' ? '通过' : '驳回'

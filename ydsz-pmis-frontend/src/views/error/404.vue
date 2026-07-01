@@ -1,6 +1,12 @@
+<!--
+  @file 404 错误页
+  @description 404 路由未匹配时展示的兜底错误页，提供返回首页入口，对应路由 * 兜底匹配。
+  @module views/error/404
+-->
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
 
+/** 路由实例，用于返回首页跳转 */
 const router = useRouter()
 </script>
 

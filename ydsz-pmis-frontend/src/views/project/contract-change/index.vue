@@ -70,6 +70,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并重新加载列表 */
 function handleReset() {
   query.contractId = undefined
   query.status = ''
@@ -95,6 +96,7 @@ const formRules = {
   reason: [{ required: true, message: '变更原因必填', trigger: 'blur' }],
 }
 
+/** 打开新增变更弹窗，重置表单为初始值 */
 function openCreate() {
   Object.assign(form, {
     contractId: 0,

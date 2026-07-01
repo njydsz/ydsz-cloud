@@ -1,3 +1,8 @@
+<!--
+  @file 首页仪表盘
+  @description 系统首页仪表盘，基于 Cockpit 总览 API 与 ECharts 可视化展示活跃项目、本月合同/收入/毛利、EVM 健康度分布、近 6 月趋势与预警 TOP 5，对接 @/api/execution/cockpit 与 @/api/execution/alert 模块。
+  @module views/dashboard
+-->
 <script setup lang="ts">
 /**
  * 仪表盘
@@ -17,6 +22,7 @@ import { getCockpitAlertTopN } from '@/api/execution/alert'
 import { useECharts } from '@/composables/useECharts'
 
 // ===== 数据状态 =====
+/** Cockpit KPI 数据结构 */
 interface CockpitKpi {
   activeProjectCount: number
   totalRevenue: number
@@ -33,14 +39,21 @@ interface CockpitKpi {
   redProjects: number
 }
 
+/** 全局加载状态 */
 const loading = ref(false)
+/** KPI 数据 */
 const kpi = ref<CockpitKpi | null>(null)
+/** 查询期间（YYYY-MM） */
 const period = ref(new Date().toISOString().slice(0, 7))
 
 // ===== 图表容器 ref =====
+/** 项目健康度饼图容器 */
 const healthRef = ref<HTMLDivElement | null>(null)
+/** 收入趋势折线图容器 */
 const trendRef = ref<HTMLDivElement | null>(null)
+/** EVM 状态柱图容器 */
 const evmRef = ref<HTMLDivElement | null>(null)
+/** 预警 TOP 5 图表容器 */
 const alertTopNRef = ref<HTMLDivElement | null>(null)
 
 // ===== useECharts 实例化 =====
@@ -51,16 +64,19 @@ const { setOption: setAlertTopNOption } = useECharts(alertTopNRef)
 
 // ===== 格式化辅助 =====
 const userStore = useUserStore()
+/** 元转万元（保留 1 位小数） */
 const yuanToWan = (v: number | undefined) => {
   const n = Number(v ?? 0)
   return (n / 10000).toFixed(1)
 }
+/** 比例转百分比字符串（保留 1 位小数） */
 const fmtPercent = (v: number | undefined) => {
   if (v === undefined || v === null) return '0.0%'
   return `${(Number(v) * 100).toFixed(1)}%`
 }
 
 // ===== KPI 列表 (动态计算) =====
+/** 顶部 4 个 KPI 卡片数据 */
 const metrics = computed(() => [
   {
     title: '活跃项目数',
@@ -94,6 +110,7 @@ const metrics = computed(() => [
 ])
 
 // ===== 图表 option 工厂 =====
+/** 项目健康度饼图 option */
 const healthOption = computed<EChartsOption>(() => ({
   title: { text: '项目健康度分布', left: 'center', textStyle: { fontSize: 14 } },
   tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
@@ -115,6 +132,7 @@ const healthOption = computed<EChartsOption>(() => ({
   ],
 }))
 
+/** 近 6 月收入/毛利趋势折线图 option */
 const trendOption = computed<EChartsOption>(() => {
   // 近 6 月 (基于 period 推断)
   const months: string[] = []
@@ -156,6 +174,7 @@ const trendOption = computed<EChartsOption>(() => {
   }
 })
 
+/** EVM 健康度柱图 option */
 const evmOption = computed<EChartsOption>(() => ({
   title: { text: 'EVM 健康度分布', left: 'center', textStyle: { fontSize: 14 } },
   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
@@ -176,13 +195,16 @@ const evmOption = computed<EChartsOption>(() => ({
   ],
 }))
 
+/** 预警 TOP 5 项目条目结构 */
 interface AlertTopNItem {
   projectCode: string
   projectName: string
   alertLevel: 'RED' | 'YELLOW' | 'NORMAL'
   alertCount: number
 }
+/** 预警 TOP 5 项目列表 */
 const alertTopN = ref<AlertTopNItem[]>([])
+/** 预警 TOP 5 横向柱图 option */
 const alertTopNOption = computed<EChartsOption>(() => ({
   title: { text: '预警项目 TOP 5', left: 'center', textStyle: { fontSize: 14 } },
   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
@@ -206,6 +228,7 @@ const alertTopNOption = computed<EChartsOption>(() => ({
 }))
 
 // ===== 数据加载 =====
+/** 拉取 Cockpit 总览 KPI 数据 */
 async function loadOverview() {
   loading.value = true
   try {
@@ -218,6 +241,7 @@ async function loadOverview() {
   }
 }
 
+/** 拉取预警 TOP 5 项目列表 */
 async function loadAlertTopN() {
   try {
     const { data } = await getCockpitAlertTopN(period.value, 5)
@@ -227,6 +251,7 @@ async function loadAlertTopN() {
   }
 }
 
+/** 并发刷新所有数据并重绘所有图表 */
 async function refreshAll() {
   await Promise.all([loadOverview(), loadAlertTopN()])
   await nextTick()
@@ -246,12 +271,17 @@ watch([healthOption, trendOption, evmOption, alertTopNOption], () => {
 })
 
 // ===== 周期切换 =====
+/**
+ * 切换查询期间并刷新所有数据
+ * @param newPeriod 新的期间字符串（YYYY-MM）
+ */
 function changePeriod(newPeriod: string) {
   period.value = newPeriod
   refreshAll()
 }
 
 // ===== 周期选项 =====
+/** 最近 12 个月的期间选项列表 */
 const periodOptions = computed(() => {
   const list: { label: string; value: string }[] = []
   const now = new Date()

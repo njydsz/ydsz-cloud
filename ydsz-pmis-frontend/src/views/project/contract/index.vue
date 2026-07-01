@@ -74,6 +74,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并重新加载列表 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -108,6 +109,7 @@ const formRules = {
   amount: [{ required: true, message: '金额必填', trigger: 'blur' }],
 }
 
+/** 打开新增合同弹窗，重置表单为初始值 */
 function openCreate() {
   formMode.value = 'create'
   Object.assign(form, {
@@ -128,6 +130,10 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/**
+ * 打开编辑合同弹窗，回填当前行数据
+ * @param row 选中的合同行数据
+ */
 async function openEdit(row: ContractVO) {
   formMode.value = 'edit'
   Object.assign(form, { ...row })
@@ -171,6 +177,10 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 删除合同（二次确认）
+ * @param row 选中的合同行数据
+ */
 async function handleDelete(row: ContractVO) {
   try {
     await ElMessageBox.confirm(`确认删除合同「${row.contractName}」吗？`, '提示', { type: 'warning' })
@@ -180,6 +190,11 @@ async function handleDelete(row: ContractVO) {
   } catch { /* 取消 */ }
 }
 
+/**
+ * 变更合同状态（二次确认），状态机见文件头
+ * @param row 选中的合同行数据
+ * @param target 目标状态编码
+ */
 async function handleStatus(row: ContractVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {

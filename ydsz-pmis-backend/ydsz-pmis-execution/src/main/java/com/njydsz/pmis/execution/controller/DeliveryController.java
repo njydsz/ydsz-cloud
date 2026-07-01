@@ -84,12 +84,14 @@ public class DeliveryController {
     // ========== 实例管理 ==========
 
     @Operation(summary = "创建项目交付物实例")
+    @PrePermission("execution:delivery:create")
     @PostMapping("/item")
     public R<Long> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
         return R.ok(service.createItem(dto));
     }
 
     @Operation(summary = "交付物状态迁移")
+    @PrePermission("execution:delivery:status")
     @PutMapping("/item/status")
     public R<Void> changeItemStatus(@Valid @RequestBody DeliveryItemStatusDTO dto) {
         service.changeItemStatus(dto);
@@ -97,6 +99,7 @@ public class DeliveryController {
     }
 
     @Operation(summary = "标记 TR 完成")
+    @PrePermission("execution:delivery:status")
     @PutMapping("/item/{id}/tr-completed")
     public R<Void> markTrCompleted(@PathVariable Long id,
                                    @RequestParam Integer completed) {
@@ -105,6 +108,7 @@ public class DeliveryController {
     }
 
     @Operation(summary = "删除交付物实例")
+    @PrePermission("execution:delivery:delete")
     @DeleteMapping("/item/{id}")
     public R<Void> deleteItem(@PathVariable Long id) {
         service.deleteItem(id);
@@ -119,12 +123,14 @@ public class DeliveryController {
     }
 
     @Operation(summary = "按项目查询所有交付物")
+    @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-initiation/{initiationId}")
     public R<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable Long initiationId) {
         return R.ok(service.listItemsByInitiation(initiationId));
     }
 
     @Operation(summary = "按项目+阶段查询交付物")
+    @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-stage")
     public R<List<DeliveryItemDO>> listItemsByStage(@RequestParam Long initiationId,
                                                     @RequestParam String stage) {
@@ -141,6 +147,7 @@ public class DeliveryController {
     // ========== 阶段门控 ==========
 
     @Operation(summary = "阶段门控校验")
+    @PrePermission("execution:delivery:status")
     @GetMapping("/stage-gate/check")
     public R<StageGateValidator.GateCheckResult> checkStageGate(
             @RequestParam Long initiationId,

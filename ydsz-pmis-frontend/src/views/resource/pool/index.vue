@@ -27,6 +27,7 @@ const poolTypeMap: Record<string, string> = {
   BACKUP: '备用池',
 }
 
+/** 拉取资源池分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -59,6 +60,7 @@ const formRules = {
   poolType: [{ required: true, message: '类型必填', trigger: 'change' }],
 }
 
+/** 打开新增资源池弹窗，初始化表单默认值 */
 function openCreate() {
   dialogMode.value = 'create'
   Object.assign(form, {
@@ -76,6 +78,10 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/**
+ * 打开编辑弹窗，回填行数据到表单
+ * @param row 待编辑的资源池行数据
+ */
 function openEdit(row: ResourcePoolVO) {
   dialogMode.value = 'edit'
   Object.assign(form, {

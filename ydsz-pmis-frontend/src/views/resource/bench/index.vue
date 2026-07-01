@@ -38,6 +38,7 @@ const totalCost = ref(0)
 const poolStats = ref<Array<Record<string, any>>>([])
 const pools = ref<ResourcePoolVO[]>([])
 
+/** 拉取全部启用状态的资源池（用于下拉选项） */
 async function fetchPools() {
   try {
     const { data } = await pageResourcePools(1, 100, undefined, 'ACTIVE')
@@ -47,6 +48,7 @@ async function fetchPools() {
   }
 }
 
+/** 拉取 Bench 记录分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -61,6 +63,7 @@ async function fetchList() {
   }
 }
 
+/** 拉取闲置池仪表盘数据：概览、池分布、累计闲置成本 */
 async function fetchDashboard() {
   try {
     const { data } = await benchDashboard()
@@ -97,6 +100,11 @@ const actionMap: Record<string, { label: string; type: 'warning' | 'success' }> 
   EXIT: { label: '出池', type: 'success' },
 }
 
+/**
+ * 金额格式化（数字 → ¥1,234.56）
+ * @param n 金额数值
+ * @returns 格式化后的字符串，空值返回 '-'
+ */
 function fmtMoney(n?: number) {
   if (n === undefined || n === null) return '-'
   return `¥${Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
@@ -110,10 +118,12 @@ const topCostList = computed(() => {
     .slice(0, 5)
 })
 
+/** 点击查询：重置页码到第 1 页后拉取列表 */
 function onQuery() {
   query.page = 1
   fetchList()
 }
+/** 重置查询条件并刷新列表 */
 function onReset() {
   query.page = 1
   query.size = 10
@@ -121,9 +131,11 @@ function onReset() {
   query.status = ''
   fetchList()
 }
+/** 分页变化时刷新列表 */
 function onPageChange() {
   fetchList()
 }
+/** 刷新：同时拉取列表与仪表盘数据 */
 async function onRefresh() {
   await fetchList()
   await fetchDashboard()
@@ -153,6 +165,10 @@ const rules = {
   benchDate: [{ required: true, message: '请选择日期', trigger: 'change' }],
 }
 
+/**
+ * 打开入池/出池弹窗，按动作类型初始化表单默认值
+ * @param action 动作类型：ENTER 入池 / EXIT 出池
+ */
 function openAct(action: 'ENTER' | 'EXIT') {
   dialogAction.value = action
   Object.assign(form, {

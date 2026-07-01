@@ -1,5 +1,7 @@
 <!--
-  混沌工程控制台 (批次 24 P2-2)
+  @file 混沌工程控制台
+  @description 混沌实验仪表盘，提供实验注册/启用/禁用/Dry-Run/注销、注入历史查询、按 outcome 与 target 的实时统计可视化；列表与历史每 5s 轮询刷新，对接 @/api/chaos 模块。
+  @module views/chaos
 
   功能:
     - 实验列表 (启用/禁用/编辑/删除/注册)
@@ -242,17 +244,26 @@ import {
 } from '@/api/chaos'
 import type { ChaosExperiment, ChaosEvent, ChaosOutcome, ChaosExperimentType, ChaosDryRunResult } from '@/api/chaos/types'
 
+/** 实验列表数据 */
 const experiments = ref<ChaosExperiment[]>([])
+/** 注入历史数据（最近 100 条） */
 const history = ref<ChaosEvent[]>([])
+/** 列表加载状态 */
 const loading = ref(false)
+/** 注册提交中状态 */
 const registering = ref(false)
+/** 当前 Dry-Run 中的 target，用于按钮 loading */
 const dryRunning = ref<string | null>(null)
+/** 当前注销中的 target，用于按钮 loading */
 const deleting = ref<string | null>(null)
+/** 各 target 启停切换 loading 状态 */
 const toggleLoading = reactive<Record<string, boolean>>({})
+/** 注册实验弹窗显隐 */
 const dialogVisible = ref(false)
 
 const canaryDeployFlag = ref(false)  // 仅展示, 真实后端通过 /feature-flags 拉取
 
+/** 注册实验表单初始默认值 */
 const initialForm: ChaosExperiment = {
   target: '',
   type: 'LATENCY',
@@ -263,20 +274,26 @@ const initialForm: ChaosExperiment = {
   enabled: false,
   createdBy: 'admin',
 }
+/** 注册实验表单数据 */
 const form = reactive<ChaosExperiment>({ ...initialForm })
 
 // ===== 派生指标 =====
+/** 启用中的实验数量 */
 const enabledCount = computed(() => experiments.value.filter((e) => e.enabled).length)
+/** 近 100 条历史中已成功注入的次数 */
 const injectedCount = computed(
   () => history.value.filter((h) => h.outcome === 'INJECTED').length,
 )
 
 // ===== ECharts =====
+/** Outcome 饼图容器 ref */
 const outcomeChartRef = ref<HTMLDivElement | null>(null)
+/** Target 柱状图容器 ref */
 const targetChartRef = ref<HTMLDivElement | null>(null)
 const outcomeChart = useECharts(outcomeChartRef)
 const targetChart = useECharts(targetChartRef)
 
+/** 渲染 Outcome 饼图与 Target Top10 柱状图 */
 function renderCharts() {
   // Outcome 饼图
   const outcomeGroups: Record<ChaosOutcome, number> = {
@@ -333,6 +350,7 @@ function renderCharts() {
 watch(history, () => renderCharts(), { deep: true })
 
 // ===== 数据加载 =====
+/** 并发拉取实验列表与注入历史，失败时全局提示 */
 async function refresh() {
   loading.value = true
   try {
@@ -358,6 +376,11 @@ onMounted(() => {
 onBeforeUnmount(() => pauseAutoRefresh())
 
 // ===== 操作 =====
+/**
+ * 切换实验启用状态
+ * @param target 实验目标标识
+ * @param enabled 是否启用
+ */
 async function onToggle(target: string, enabled: boolean) {
   toggleLoading[target] = true
   try {
@@ -371,6 +394,10 @@ async function onToggle(target: string, enabled: boolean) {
   }
 }
 
+/**
+ * 注销指定实验，需二次确认
+ * @param target 实验目标标识
+ */
 async function onUnregister(target: string) {
   await ElMessageBox.confirm(`确定注销实验 ${target} 吗?`, '提示', { type: 'warning' })
   deleting.value = target
@@ -385,6 +412,10 @@ async function onUnregister(target: string) {
   }
 }
 
+/**
+ * 触发一次 Dry-Run 注入以验证容错能力
+ * @param target 实验目标标识
+ */
 async function onDryRun(target: string) {
   dryRunning.value = target
   try {
@@ -403,11 +434,13 @@ async function onDryRun(target: string) {
   }
 }
 
+/** 打开注册实验弹窗，重置表单为默认值 */
 function onRegister() {
   Object.assign(form, initialForm)
   dialogVisible.value = true
 }
 
+/** 提交注册实验表单，校验 target 必填后调用注册接口 */
 async function onSubmitRegister() {
   if (!form.target.trim()) {
     ElMessage.warning('Target 必填')
@@ -426,6 +459,7 @@ async function onSubmitRegister() {
   }
 }
 
+/** 清空所有注入历史，需二次确认且不可恢复 */
 async function onClearHistory() {
   await ElMessageBox.confirm('确定清空所有注入历史? 此操作不可恢复。', '提示', { type: 'warning' })
   try {
@@ -438,10 +472,20 @@ async function onClearHistory() {
 }
 
 // ===== 辅助 =====
+/**
+ * 将时间戳格式化为中文本地时间字符串（24 小时制）
+ * @param ts 毫秒时间戳
+ * @returns 格式化后的时间字符串
+ */
 function formatTime(ts: number) {
   return new Date(ts).toLocaleString('zh-CN', { hour12: false })
 }
 
+/**
+ * 根据实验类型返回 el-tag type
+ * @param t 实验类型
+ * @returns el-tag type
+ */
 function typeTagType(t: ChaosExperimentType): 'success' | 'warning' | 'info' | 'danger' {
   switch (t) {
     case 'LATENCY':
@@ -457,6 +501,11 @@ function typeTagType(t: ChaosExperimentType): 'success' | 'warning' | 'info' | '
   }
 }
 
+/**
+ * 根据 Outcome 返回 el-tag type
+ * @param o 注入结果
+ * @returns el-tag type
+ */
 function outcomeTagType(o: ChaosOutcome): 'success' | 'warning' | 'info' | 'danger' {
   switch (o) {
     case 'INJECTED':

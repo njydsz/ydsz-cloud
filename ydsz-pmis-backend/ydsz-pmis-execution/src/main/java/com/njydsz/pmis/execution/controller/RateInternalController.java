@@ -40,6 +40,7 @@ public class RateInternalController {
     }
 
     @Operation(summary = "更新")
+    @PrePermission("execution:rate-internal:update")
     @PutMapping("/{id}")
     public R<Void> update(@PathVariable Long id, @Valid @RequestBody RateInternalCreateDTO dto) {
         service.update(id, dto);
@@ -55,6 +56,7 @@ public class RateInternalController {
     }
 
     @Operation(summary = "详情")
+    @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
     public R<RateInternalDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -71,6 +73,7 @@ public class RateInternalController {
     }
 
     @Operation(summary = "按职级+部门查询")
+    @PrePermission("execution:rate:list")
     @GetMapping("/by-level-dept")
     public R<List<RateInternalDO>> listByLevelAndDept(
             @RequestParam String levelCode,

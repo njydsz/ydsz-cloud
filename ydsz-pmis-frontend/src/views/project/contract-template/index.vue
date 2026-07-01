@@ -1,9 +1,9 @@
+<!--
+  @file 合同模板管理
+  @description 合同模板的查询与新增；模板编码 code 唯一，状态按 DRAFT → PUBLISHED → DEPRECATED 线性转换；对接 @/api/project/contract
+  @module views/project/contract-template
+-->
 <script setup lang="ts">
-/**
- * 合同模板管理
- *
- * 状态: DRAFT -> PUBLISHED -> DEPRECATED
- */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
@@ -45,6 +45,7 @@ const typeMap = {
   OTHER: { label: '其他' },
 }
 
+/** 拉取合同模板分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -60,6 +61,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并重新加载列表 */
 function handleReset() {
   query.keyword = ''
   query.type = ''
@@ -74,6 +76,7 @@ const isEmpty = computed(() => !loading.value && list.value.length === 0)
 /** 选中的合同模板行 (用于批量操作) */
 const selectedRows = ref<ContractTemplateVO[]>([])
 
+/** 表格勾选行变更回调，同步 selectedRows */
 function onSelectionChange({ rows }: { rows: ContractTemplateVO[] }) {
   selectedRows.value = rows
 }
@@ -96,6 +99,7 @@ const formRules = {
   content: [{ required: true, message: '模板内容必填', trigger: 'blur' }],
 }
 
+/** 打开新增模板弹窗，重置表单为初始值 */
 function openCreate() {
   Object.assign(form, {
     code: '',
@@ -108,6 +112,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新增模板表单：校验通过后创建并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   await createContractTemplate(form as ContractTemplateCreateDTO)
@@ -116,6 +121,11 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 变更模板状态（二次确认），状态机：DRAFT → PUBLISHED → DEPRECATED
+ * @param row 选中的模板行数据
+ * @param target 目标状态编码
+ */
 async function handleStatus(row: ContractTemplateVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {

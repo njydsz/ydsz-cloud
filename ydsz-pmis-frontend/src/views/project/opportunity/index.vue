@@ -97,6 +97,7 @@ const formRules = {
   ownerId: [{ required: true, message: '负责人 ID 必填', trigger: 'blur' }],
 }
 
+/** 打开新增商机弹窗，重置表单为初始值 */
 function openCreate() {
   formMode.value = 'create'
   Object.assign(form, {
@@ -170,6 +171,11 @@ async function handleDelete(row: OpportunityVO) {
   } catch { /* 取消 */ }
 }
 
+/**
+ * 变更商机状态（二次确认），状态机见文件头
+ * @param row 选中的商机行数据
+ * @param target 目标状态编码
+ */
 async function handleChangeStatus(row: OpportunityVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {

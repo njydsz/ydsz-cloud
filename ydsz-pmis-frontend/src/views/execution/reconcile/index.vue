@@ -1,3 +1,8 @@
+<!--
+  @file 执行-财务对账
+  @description 每日对账管理页面：支持按日期区间查询对账明细(成本/收入/回款/开票/工时/利润)、状态聚合统计(OK/WARN/ERROR)、手动触发对账重算，对应路由 /execution/reconcile
+  @module views/execution/reconcile
+-->
 <script setup lang="ts">
 /**
  * 每日对账 (P6)
@@ -20,6 +25,7 @@ import type {
 } from '@/api/execution/reconcile/types'
 import { PC } from '@/constants/permissionCodes'
 
+// 列表查询状态
 const loading = ref(false)
 const list = ref<DailyReconcileVO[]>([])
 const aggregate = ref<DailyReconcileAggregateVO[]>([])
@@ -29,12 +35,14 @@ const query = reactive({
   status: '',
 })
 
+// 状态字典：对账结果状态映射到标签文案与色值
 const statusMap = {
   OK: { label: '正常', type: 'success' as const },
   WARN: { label: '警告', type: 'warning' as const },
   ERROR: { label: '异常', type: 'danger' as const },
 }
 
+// 对账维度字典：成本/收入/回款/开票/工时/利润
 const typeMap: Record<string, string> = {
   COST: '成本',
   REVENUE: '收入',
@@ -44,6 +52,7 @@ const typeMap: Record<string, string> = {
   PROFIT: '利润',
 }
 
+/** 初始化默认查询区间：近 7 天（from = 今天 - 7 天，to = 今天） */
 function defaultRange() {
   const today = new Date()
   const from = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000)
@@ -51,6 +60,7 @@ function defaultRange() {
   query.to = today.toISOString().slice(0, 10)
 }
 
+/** 拉取对账明细列表：按日期区间与状态过滤 */
 async function fetchList() {
   loading.value = true
   try {
@@ -64,6 +74,7 @@ async function fetchList() {
   }
 }
 
+/** 拉取对账状态聚合统计：按日期区间汇总 OK/WARN/ERROR 数量与差异总额 */
 async function fetchAggregate() {
   try {
     aggregate.value = await aggregateReconcileStatus({
@@ -75,6 +86,7 @@ async function fetchAggregate() {
   }
 }
 
+/** 重置查询条件为默认区间并刷新列表与聚合数据 */
 function handleReset() {
   defaultRange()
   query.status = ''
@@ -82,6 +94,7 @@ function handleReset() {
   fetchAggregate()
 }
 
+/** 手动触发每日对账重算，生成对账记录后刷新列表与聚合数据 */
 async function handleRun() {
   const n = await runDailyReconcile()
   ElMessage.success(`已生成 ${n} 条对账记录`)

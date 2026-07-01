@@ -1,10 +1,9 @@
+<!--
+  @file 报表中心
+  @description 项目利润 / 成本明细 / 回款台账 / 生命周期台账 / EVM 挣值 / 双费率对比 / 风险看板 / 利用率 / Bench 成本等核心报表的 ECharts 可视化；对接 @/api/execution/report
+  @module views/report
+-->
 <script setup lang="ts">
-/**
- * 报表中心 (P4-2 高级报表可视化)
- *
- * 提供项目利润、成本归集、回款台账、生命周期台账、EVM 挣值、
- * 双费率对比、风险看板、利用率、Bench 成本等核心报表的 ECharts 可视化。
- */
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
@@ -181,6 +180,11 @@ async function renderChartForTab(key: TabKey) {
   else if (key === 'bench') renderBenchChart()
 }
 
+/**
+ * 获取或初始化指定 key 的 ECharts 实例
+ * @param key 图表容器标识
+ * @returns ECharts 实例，容器不存在时返回 null
+ */
 function ensureChart(key: string) {
   const el = chartRefs[key]
   if (!el) return null

@@ -180,10 +180,20 @@ function nodeTextColor(level: string): string {
   return '#FFF'
 }
 
+/**
+ * 根据告警等级返回节点描边虚线样式
+ * @param level 告警等级
+ * @returns SVG stroke-dasharray 值
+ */
 function nodeStrokeDash(level: string): string {
   return level === 'PENDING' || level === 'UNKNOWN' ? '4 3' : '0'
 }
 
+/**
+ * 根据告警等级返回节点描边色
+ * @param level 告警等级
+ * @returns 描边色值，已执行节点为 transparent
+ */
 function nodeStroke(level: string): string {
   return level === 'UNKNOWN' || level === 'PENDING' ? '#C0C4CC' : 'transparent'
 }

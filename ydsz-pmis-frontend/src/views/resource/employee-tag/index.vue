@@ -49,6 +49,7 @@ const formRules = {
   tagName: [{ required: true, message: '标签名称必填', trigger: 'blur' }],
 }
 
+/** 拉取指定员工的标签列表 */
 async function fetchTags() {
   if (!employeeId.value) return
   try {
@@ -83,6 +84,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新增标签，成功后关闭弹窗并刷新员工标签列表 */
 async function submitForm() {
   await addEmployeeTag(form)
   ElMessage.success('添加成功')
@@ -90,6 +92,10 @@ async function submitForm() {
   fetchTags()
 }
 
+/**
+ * 删除员工标签，二次确认后执行
+ * @param row 待删除的标签行数据
+ */
 async function handleDelete(row: EmployeeTagVO) {
   try {
     await ElMessageBox.confirm(`确认删除标签「${row.tagName}」?`, '提示', { type: 'warning' })

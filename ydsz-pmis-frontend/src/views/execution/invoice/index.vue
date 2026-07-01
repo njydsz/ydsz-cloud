@@ -1,3 +1,11 @@
+<!--
+  @file 发票管理
+  @description 项目执行过程中的发票管理页面，覆盖发票全生命周期：草稿 → 提交 → 审批 → 开票 → 红冲/取消；
+               支持蓝字发票与红字发票（红冲），开票依据包括里程碑、外协人天、按月、终验等；
+               状态流转: DRAFT → SUBMITTED → APPROVED → ISSUED → RED_REVERSED / CANCELLED；
+               开票后由后端自动生成发票号（invoiceNo）。
+  @module views/execution/invoice
+-->
 <script setup lang="ts">
 /**
  * 发票管理
@@ -20,9 +28,13 @@ import {
 import type { InvoiceVO, InvoiceCreateDTO } from '@/api/execution/invoice/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 发票记录列表 */
 const list = ref<InvoiceVO[]>([])
+/** 记录总数（分页用） */
 const total = ref(0)
+/** 查询条件：关键字 + 状态 + 类型 + 客户 ID + 项目 ID */
 const query = reactive({
   page: 1,
   size: 10,
@@ -33,6 +45,7 @@ const query = reactive({
   initiationId: undefined as number | undefined,
 })
 
+/** 发票状态 → 标签/样式映射 */
 const statusMap = {
   DRAFT: { label: '草稿', type: 'info' as const },
   SUBMITTED: { label: '已提交', type: 'warning' as const },
@@ -43,11 +56,13 @@ const statusMap = {
   CANCELLED: { label: '已取消', type: 'info' as const },
 }
 
+/** 发票类型 → 中文标签映射（蓝字/红字） */
 const typeMap = {
   NORMAL: { label: '蓝字发票' },
   RED_REVERSE: { label: '红字发票' },
 }
 
+/** 开票依据 → 中文标签映射 */
 const basisMap = {
   MILESTONE: { label: '里程碑' },
   OUTSOURCING: { label: '外协人天' },
@@ -56,6 +71,7 @@ const basisMap = {
   OTHER: { label: '其他' },
 }
 
+/** 分页查询发票列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -73,6 +89,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并回到首页刷新 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -83,8 +100,11 @@ function handleReset() {
   fetchList()
 }
 
+/** 新增发票弹窗可见性 */
 const dialogVisible = ref(false)
+/** 表单引用（用于校验） */
 const formRef = ref<any>()
+/** 新增发票表单数据 */
 const form = reactive<Partial<InvoiceCreateDTO>>({
   invoiceCode: '',
   invoiceType: 'NORMAL',
@@ -95,6 +115,7 @@ const form = reactive<Partial<InvoiceCreateDTO>>({
   taxRate: 0.06,
 })
 
+/** 表单校验规则 */
 const formRules = {
   invoiceCode: [{ required: true, message: '发票编码必填', trigger: 'blur' }],
   invoiceType: [{ required: true, message: '发票类型必填', trigger: 'change' }],
@@ -104,6 +125,7 @@ const formRules = {
   amount: [{ required: true, message: '金额必填', trigger: 'blur' }],
 }
 
+/** 打开新增弹窗并重置表单为默认值 */
 function openCreate() {
   Object.assign(form, {
     invoiceCode: '',
@@ -123,6 +145,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新建发票，校验通过后创建并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   await createInvoice(form as InvoiceCreateDTO)
@@ -131,6 +154,11 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 审批发票（通过/驳回），需二次确认
+ * @param row 发票记录
+ * @param action 审批动作（APPROVED 通过 / REJECTED 驳回）
+ */
 async function handleApprove(row: InvoiceVO, action: 'APPROVED' | 'REJECTED') {
   const text = action === 'APPROVED' ? '通过' : '驳回'
   try {
@@ -141,6 +169,10 @@ async function handleApprove(row: InvoiceVO, action: 'APPROVED' | 'REJECTED') {
   } catch { /* 取消 */ }
 }
 
+/**
+ * 开票操作，后端将自动生成发票号（invoiceNo）
+ * @param row 发票记录
+ */
 async function handleIssue(row: InvoiceVO) {
   try {
     await ElMessageBox.confirm('确认开票？开票后将自动生成发票号 (invoiceNo)。', '提示', { type: 'warning' })
@@ -152,6 +184,10 @@ async function handleIssue(row: InvoiceVO) {
   }
 }
 
+/**
+ * 红冲发票，需输入被红冲的原发票 ID
+ * @param row 发票记录
+ */
 async function handleReverse(row: InvoiceVO) {
   try {
     const { value } = await ElMessageBox.prompt('请输入被红冲的原发票 ID', '红冲发票', {
@@ -164,6 +200,10 @@ async function handleReverse(row: InvoiceVO) {
   } catch { /* 取消 */ }
 }
 
+/**
+ * 删除指定发票，需二次确认
+ * @param row 发票记录
+ */
 async function handleDelete(row: InvoiceVO) {
   try {
     await ElMessageBox.confirm(`确认删除该发票？`, '提示', { type: 'warning' })
@@ -173,6 +213,7 @@ async function handleDelete(row: InvoiceVO) {
   } catch { /* 取消 */ }
 }
 
+/** 页面挂载时加载列表 */
 onMounted(fetchList)
 </script>
 
