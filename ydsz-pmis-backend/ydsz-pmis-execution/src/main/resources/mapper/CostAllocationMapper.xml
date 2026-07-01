@@ -80,4 +80,19 @@
         SELECT COALESCE(SUM(amount), 0) FROM pmis_cost_allocation
         WHERE initiation_id = #{initiationId} AND deleted = 0
     </select>
+
+    <!--
+      批次18 增量：按 levelCode（事业部代码）汇总成本
+      返回：levelCode / totalAmount / entryCount
+      levelCode 缺失时归并到 'UNKNOWN'
+    -->
+    <select id="sumByLevelCode" resultType="java.util.Map">
+        SELECT COALESCE(NULLIF(level_code, ''), 'UNKNOWN') AS level_code,
+               COALESCE(SUM(amount), 0)                    AS total_amount,
+               COUNT(1)                                    AS entry_count
+        FROM pmis_cost_allocation
+        WHERE deleted = 0
+        GROUP BY COALESCE(NULLIF(level_code, ''), 'UNKNOWN')
+        ORDER BY total_amount DESC
+    </select>
 </mapper>

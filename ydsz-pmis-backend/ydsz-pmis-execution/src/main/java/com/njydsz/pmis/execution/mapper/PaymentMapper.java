@@ -39,4 +39,12 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
 
     /** P6 每日对账：跨项目汇总已分配金额（兼容 sumAmountAllocated） */
     BigDecimal sumAmountAllocated();
+
+    /**
+     * 批次18：跨项目按月汇总已确认回款金额（最近 N 个月）
+     *
+     * <p>用于 KPI 趋势的"已确认收入"序列。
+     * 返回字段：month / amount / cnt
+     */
+    List<Map<String, Object>> aggregateByRecentMonth(@Param("limit") Integer limit);
 }

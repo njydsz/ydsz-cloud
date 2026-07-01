@@ -105,13 +105,6 @@
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
         </dependency>
-
-        <!-- PostgreSQL 驱动（仅测试：EncryptedFieldMigrationService.fromJdbcUrl 通过反射创建 PGSimpleDataSource） -->
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>

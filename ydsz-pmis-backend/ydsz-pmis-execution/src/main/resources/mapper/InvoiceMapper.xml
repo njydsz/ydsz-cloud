@@ -155,4 +155,27 @@
         GROUP BY TO_CHAR(invoice_date, 'YYYY')
         ORDER BY year
     </select>
+
+    <!--
+      批次18 增量：按月汇总开票金额（最近 N 个月）
+      通过子查询挑选最近的 limit 个月，按月升序输出
+    -->
+    <select id="sumByRecentMonth" resultType="java.util.Map">
+        SELECT t.month,
+               t.total_amount,
+               t.invoice_count
+        FROM (
+            SELECT TO_CHAR(invoice_date, 'YYYY-MM')     AS month,
+                   COALESCE(SUM(amount), 0)             AS total_amount,
+                   COUNT(1)                            AS invoice_count
+            FROM pmis_finance_invoice
+            WHERE deleted = 0
+              AND status = 'ISSUED'
+              AND invoice_type = 'NORMAL'
+              AND invoice_date IS NOT NULL
+            GROUP BY TO_CHAR(invoice_date, 'YYYY-MM')
+            ORDER BY month DESC
+        ) t
+        WHERE ROWNUM &lt;= #{limit}
+    </select>
 </mapper>

@@ -1,8 +1,12 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.execution.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.execution.dto.CockpitKpiVO;
+import com.njydsz.pmis.execution.dto.ExecutiveOverviewVO;
+import com.njydsz.pmis.execution.dto.KpiTrendVO;
+import com.njydsz.pmis.execution.dto.ProjectGroupKpiDTO;
 import com.njydsz.pmis.execution.service.CockpitReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -16,7 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 经营驾驶舱 Controller
+ * 经营驾驶舱 Controller（批次18 增强）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -73,9 +77,38 @@ public class CockpitReportController {
         return R.ok(service.drillByCustomer(period));
     }
 
-    @Operation(summary = "合同总额年度趋势（P2-4）")
+    @Operation(summary = "合同总额年度趋势")
     @GetMapping("/contract-yearly-trend")
     public R<Map<String, Object>> contractYearlyTrend() {
         return R.ok(service.contractAmountYearlyTrend());
+    }
+
+    // ========== 批次18 增量端点 ==========
+
+    @Operation(summary = "预警事件摘要（批次18）")
+    @GetMapping("/alerts")
+    public R<CockpitAlertSummaryVO> alerts(@RequestParam(required = false) String period,
+                                            CockpitDrillDownDTO drillDown) {
+        return R.ok(service.alertSummary(period, drillDown));
+    }
+
+    @Operation(summary = "项目群驾驶舱（批次18）")
+    @GetMapping("/project-group")
+    public R<List<ProjectGroupKpiDTO>> projectGroup(@RequestParam(required = false) String period,
+                                                      CockpitDrillDownDTO drillDown) {
+        return R.ok(service.projectGroupOverview(period, drillDown));
+    }
+
+    @Operation(summary = "高管看板（批次18）")
+    @GetMapping("/executive")
+    public R<ExecutiveOverviewVO> executive(@RequestParam(required = false) String period,
+                                             CockpitDrillDownDTO drillDown) {
+        return R.ok(service.executiveOverview(period, drillDown));
+    }
+
+    @Operation(summary = "KPI 趋势（最近 N 个月，批次18）")
+    @GetMapping("/kpi-trend")
+    public R<KpiTrendVO> kpiTrend(@RequestParam(required = false, defaultValue = "12") Integer months) {
+        return R.ok(service.kpiTrend(months));
     }
 }

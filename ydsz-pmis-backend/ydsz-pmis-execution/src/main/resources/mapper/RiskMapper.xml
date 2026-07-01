@@ -55,4 +55,17 @@
         WHERE deleted = 0
         ORDER BY created_at DESC
     </select>
+
+    <!--
+      批次18 增量：按风险等级统计未结风险数量
+      仅统计 status != 'CLOSED' 的活跃风险
+    -->
+    <select id="countByRiskLevel" resultType="java.util.Map">
+        SELECT COALESCE(NULLIF(risk_level, ''), 'UNKNOWN') AS risk_level,
+               COUNT(1)                                  AS cnt
+        FROM pmis_execution_risk
+        WHERE deleted = 0
+          AND (status IS NULL OR status &lt;&gt; 'CLOSED')
+        GROUP BY COALESCE(NULLIF(risk_level, ''), 'UNKNOWN')
+    </select>
 </mapper>

@@ -41,4 +41,12 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
      * 按项目汇总所有已归集成本（强管控用）
      */
     java.math.BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
+
+    /**
+     * 批次18：按 levelCode（事业部代码）汇总成本
+     *
+     * <p>用于项目群驾驶舱 / 高管看板按事业部聚合。
+     * 返回字段：levelCode / totalAmount / entryCount
+     */
+    java.util.List<java.util.Map<String, Object>> sumByLevelCode();
 }

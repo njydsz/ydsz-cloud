@@ -1,15 +1,19 @@
 package com.njydsz.pmis.execution.service;
 
+import com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.execution.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.execution.dto.CockpitKpiVO;
+import com.njydsz.pmis.execution.dto.ExecutiveOverviewVO;
+import com.njydsz.pmis.execution.dto.KpiTrendVO;
+import com.njydsz.pmis.execution.dto.ProjectGroupKpiDTO;
 
 import java.util.List;
 import java.util.Map;
 
 /**
- * 经营驾驶舱服务
+ * 经营驾驶舱服务（批次18 增强）
  *
- * <p>提供 6 类经营 KPI + 3 维度下钻。
+ * <p>提供 6 类经营 KPI + 3 维度下钻 + 预警事件 + 项目群对比 + 高管看板 + KPI 趋势。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -61,4 +65,26 @@ public interface CockpitReportService {
      * 返回字段包含：years / amountSeries / projectCountSeries / summary（峰值年份、同比增长率、累计）。
      */
     Map<String, Object> contractAmountYearlyTrend();
+
+    // ========== 批次18 增量 ==========
+
+    /**
+     * 预警事件摘要：触发规则列表 + 严重度计数 + 顶部事件
+     */
+    CockpitAlertSummaryVO alertSummary(String period, CockpitDrillDownDTO drillDown);
+
+    /**
+     * 项目群 KPI 列表（按事业群/区域聚合）
+     */
+    List<ProjectGroupKpiDTO> projectGroupOverview(String period, CockpitDrillDownDTO drillDown);
+
+    /**
+     * 高管看板：核心 KPI + 项目群对比 + 健康度评分
+     */
+    ExecutiveOverviewVO executiveOverview(String period, CockpitDrillDownDTO drillDown);
+
+    /**
+     * KPI 趋势：最近 N 个月核心 KPI 序列
+     */
+    KpiTrendVO kpiTrend(Integer months);
 }

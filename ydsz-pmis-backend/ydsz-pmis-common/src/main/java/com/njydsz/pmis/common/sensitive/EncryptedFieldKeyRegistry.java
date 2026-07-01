@@ -27,7 +27,12 @@ public final class EncryptedFieldKeyRegistry {
      * @throws IllegalArgumentException keyRef 空 / key 为 null / 长度非 32
      */
     public static void register(String keyRef, byte[] key) {
-        if (keyRef == null || keyRef.isBlank() || key == null) return;
+        if (keyRef == null || keyRef.isBlank()) {
+            throw new IllegalArgumentException("keyRef 不能为空");
+        }
+        if (key == null) {
+            throw new IllegalArgumentException("key 不能为空");
+        }
         if (key.length != 32) {
             throw new IllegalArgumentException("AES-256 加密字段密钥必须 32 字节, 实际: " + key.length);
         }
@@ -42,7 +47,12 @@ public final class EncryptedFieldKeyRegistry {
      * @throws IllegalArgumentException keyRef 空 / key 为 null / 长度非 16
      */
     public static void registerSm4(String keyRef, byte[] key) {
-        if (keyRef == null || keyRef.isBlank() || key == null) return;
+        if (keyRef == null || keyRef.isBlank()) {
+            throw new IllegalArgumentException("keyRef 不能为空");
+        }
+        if (key == null) {
+            throw new IllegalArgumentException("key 不能为空");
+        }
         if (key.length != 16) {
             throw new IllegalArgumentException("SM4 加密字段密钥必须 16 字节, 实际: " + key.length);
         }

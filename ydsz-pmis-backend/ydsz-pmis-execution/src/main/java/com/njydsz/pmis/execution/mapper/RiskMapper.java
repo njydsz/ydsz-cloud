@@ -21,4 +21,12 @@ public interface RiskMapper extends BaseMapper<RiskDO> {
 
     /** 查询所有未结风险 */
     List<RiskDO> selectAll();
+
+    /**
+     * 批次18：按风险等级统计未结风险数量
+     *
+     * <p>用于高管看板"风险项目数"统计；riskLevel 缺失/空 时归并到 'UNKNOWN'。
+     * 返回字段：riskLevel / cnt
+     */
+    List<Map<String, Object>> countByRiskLevel();
 }

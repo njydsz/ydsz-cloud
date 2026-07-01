@@ -1,8 +1,15 @@
 import { request } from '@/utils/request'
+import type {
+  CockpitKpiVO,
+  CockpitAlertSummaryVO,
+  ExecutiveOverviewVO,
+  KpiTrendVO,
+  ProjectGroupKpiDTO,
+} from './types'
 
 /** 驾驶舱总览 KPI */
 export const getCockpitOverview = (period?: string, drillDown?: Record<string, unknown>) =>
-  request<Record<string, unknown>>({
+  request<CockpitKpiVO>({
     url: '/execution/cockpit/overview',
     method: 'GET',
     params: { period, ...(drillDown || {}) },
@@ -52,4 +59,45 @@ export const drillByCustomer = (period?: string) =>
     url: '/execution/cockpit/drill/customer',
     method: 'GET',
     params: { period },
+  })
+
+/** 合同总额年度趋势 */
+export const getContractYearlyTrend = () =>
+  request<Record<string, unknown>>({
+    url: '/execution/cockpit/contract-yearly-trend',
+    method: 'GET',
+  })
+
+// ========== 批次18 增量 ==========
+
+/** 预警事件摘要（批次18） */
+export const getAlertSummary = (period?: string) =>
+  request<CockpitAlertSummaryVO>({
+    url: '/execution/cockpit/alerts',
+    method: 'GET',
+    params: { period },
+  })
+
+/** 项目群驾驶舱（批次18） */
+export const getProjectGroupOverview = (period?: string) =>
+  request<Array<ProjectGroupKpiDTO>>({
+    url: '/execution/cockpit/project-group',
+    method: 'GET',
+    params: { period },
+  })
+
+/** 高管看板（批次18） */
+export const getExecutiveOverview = (period?: string) =>
+  request<ExecutiveOverviewVO>({
+    url: '/execution/cockpit/executive',
+    method: 'GET',
+    params: { period },
+  })
+
+/** KPI 趋势（批次18） */
+export const getKpiTrend = (months = 12) =>
+  request<KpiTrendVO>({
+    url: '/execution/cockpit/kpi-trend',
+    method: 'GET',
+    params: { months },
   })
