@@ -1,4 +1,4 @@
-﻿-- ====================================================================
+-- ====================================================================
 -- 南京云顶 PMIS 数据库初始化脚本
 -- V1.0.0
 -- 对应 PRD V3.2 + 开发计划 V1.0
@@ -29,7 +29,17 @@ CREATE TABLE pmis_dict_type (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_dict_type_code UNIQUE (type_code, deleted)
 );
-COMMENT ON TABLE pmis_dict_type IS '字典类型表';
+COMMENT ON TABLE pmis_dict_type IS '字典类型表: 业务字典分类定义(如项目类型、招采方式、计费方式)';
+COMMENT ON COLUMN pmis_dict_type.id IS '主键 ID';
+COMMENT ON COLUMN pmis_dict_type.type_code IS '字典类型编码(全局唯一,如 project_type/expense_category)';
+COMMENT ON COLUMN pmis_dict_type.type_name IS '字典类型名称(中文展示名)';
+COMMENT ON COLUMN pmis_dict_type.description IS '字典类型业务说明';
+COMMENT ON COLUMN pmis_dict_type.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN pmis_dict_type.created_by IS '创建人 ID(0=系统初始化)';
+COMMENT ON COLUMN pmis_dict_type.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_dict_type.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_dict_type.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_dict_type.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX idx_pmis_dict_type_status ON pmis_dict_type (status) WHERE deleted = 0;
 
@@ -51,8 +61,21 @@ CREATE TABLE pmis_dict_item (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_dict_item UNIQUE (type_code, item_code, deleted)
 );
-COMMENT ON TABLE pmis_dict_item IS '字典项表';
-COMMENT ON COLUMN pmis_dict_item.parent_id IS '父级 ID（0=根）';
+COMMENT ON TABLE pmis_dict_item IS '字典项表: 字典类型下的具体枚举值(如项目类型下的 SYSTEM_DEV/T_M 等)';
+COMMENT ON COLUMN pmis_dict_item.id IS '主键 ID';
+COMMENT ON COLUMN pmis_dict_item.type_code IS '所属字典类型编码(关联 pmis_dict_type.type_code)';
+COMMENT ON COLUMN pmis_dict_item.item_code IS '字典项编码(type_code 下唯一,如 SYSTEM_DEV/T_M)';
+COMMENT ON COLUMN pmis_dict_item.item_value IS '字典项展示值(中文)';
+COMMENT ON COLUMN pmis_dict_item.sort_order IS '字典项排序号(升序)';
+COMMENT ON COLUMN pmis_dict_item.parent_id IS '父级字典项 ID(0=根,支持树形字典)';
+COMMENT ON COLUMN pmis_dict_item.description IS '字典项业务说明';
+COMMENT ON COLUMN pmis_dict_item.ext_json IS '扩展属性 JSONB(如颜色/图标/跳转链接)';
+COMMENT ON COLUMN pmis_dict_item.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN pmis_dict_item.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_dict_item.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_dict_item.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_dict_item.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_dict_item.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 CREATE INDEX idx_pmis_dict_item_type ON pmis_dict_item (type_code) WHERE deleted = 0;
 CREATE INDEX idx_pmis_dict_item_status ON pmis_dict_item (status) WHERE deleted = 0;

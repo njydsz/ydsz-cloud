@@ -65,8 +65,8 @@ spring:
       enabled: true
 
 mybatis-plus:
-  mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.workflow.entity
+  mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
+  type-aliases-package: com.njydsz.pmis.workflow.entity,com.njydsz.pmis.workflow.flow.entity
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false
@@ -78,6 +78,19 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+
+# ============== PMIS 自建工作流引擎 ==============
+pmis:
+  flow:
+    # 双轨运行开关：local=自建 pmis_flow_* 引擎；flowable=原 Flowable 7 引擎
+    # 流程维度可通过 pmis_flow_definition.flow_code 单独控制
+    engine: ${PMIS_FLOW_ENGINE:flowable}
+    # 哪些 flowCode 走自建引擎（白名单，仅在 engine=flowable 时生效）
+    local-flow-codes:
+      - project_initiation
+      - contract_change
+      - project_closure
+    # 走自建引擎的流程将不再被 Flowable 处理（双轨隔离）
 
 management:
   endpoints:

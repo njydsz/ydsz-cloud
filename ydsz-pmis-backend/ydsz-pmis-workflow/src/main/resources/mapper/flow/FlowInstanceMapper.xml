@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO">
+        <id column="id" property="id"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="flow_name" property="flowName"/>
+        <result column="definition_id" property="definitionId"/>
+        <result column="flow_version" property="flowVersion"/>
+        <result column="business_type" property="businessType"/>
+        <result column="business_id" property="businessId"/>
+        <result column="business_no" property="businessNo"/>
+        <result column="title" property="title"/>
+        <result column="initiator_id" property="initiatorId"/>
+        <result column="initiator_name" property="initiatorName"/>
+        <result column="current_node_code" property="currentNodeCode"/>
+        <result column="current_node_name" property="currentNodeName"/>
+        <result column="variable" property="variable"/>
+        <result column="flow_status" property="flowStatus"/>
+        <result column="activity_status" property="activityStatus"/>
+        <result column="start_at" property="startAt"/>
+        <result column="end_at" property="endAt"/>
+        <result column="duration_ms" property="durationMs"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, flow_code, flow_name, definition_id, flow_version, business_type, business_id,
+        business_no, title, initiator_id, initiator_name, current_node_code, current_node_name,
+        variable, flow_status, activity_status, start_at, end_at, duration_ms, status,
+        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
+    </sql>
+
+    <select id="selectByBusiness" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_instance
+        WHERE business_type = #{businessType}
+          AND business_id = #{businessId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <update id="updateStatus">
+        UPDATE pmis_flow_instance
+        <set>
+            <if test="flowStatus != null">flow_status = #{flowStatus},</if>
+            <if test="currentNodeCode != null">current_node_code = #{currentNodeCode},</if>
+            <if test="currentNodeName != null">current_node_name = #{currentNodeName},</if>
+            <if test="endAt != null">end_at = #{endAt},</if>
+            <if test="durationMs != null">duration_ms = #{durationMs},</if>
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        </set>
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
+
+    <select id="selectByInitiator" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_instance
+        WHERE initiator_id = #{initiatorId}
+          <if test="flowStatus != null and flowStatus != ''">
+            AND flow_status = #{flowStatus}
+          </if>
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY start_at DESC
+    </select>
+</mapper>

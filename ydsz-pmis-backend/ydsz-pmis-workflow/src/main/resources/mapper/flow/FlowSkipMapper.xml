@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.workflow.flow.mapper.FlowSkipMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.workflow.flow.entity.FlowSkipDO">
+        <id column="id" property="id"/>
+        <result column="definition_id" property="definitionId"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="skip_name" property="skipName"/>
+        <result column="skip_type" property="skipType"/>
+        <result column="coordinate" property="coordinate"/>
+        <result column="skip_condition" property="skipCondition"/>
+        <result column="next_node_code" property="nextNodeCode"/>
+        <result column="next_node_type" property="nextNodeType"/>
+        <result column="coordinate_next" property="coordinateNext"/>
+        <result column="skip_list" property="skipList"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, definition_id, flow_code, skip_name, skip_type, coordinate, skip_condition,
+        next_node_code, next_node_type, coordinate_next, skip_list, status,
+        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
+    </sql>
+
+    <select id="selectByDefinitionId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_skip
+        WHERE definition_id = #{definitionId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <select id="selectByNodeCode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_skip
+        WHERE definition_id = #{definitionId}
+          AND flow_code IN (
+              SELECT flow_code FROM pmis_flow_node
+              WHERE definition_id = #{definitionId} AND node_code = #{nodeCode} AND deleted = 0
+          )
+          <if test="skipType != null and skipType != ''">
+            AND skip_type = #{skipType}
+          </if>
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <select id="selectByNextNode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_skip
+        WHERE definition_id = #{definitionId}
+          AND next_node_code = #{nextNodeCode}
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <delete id="deleteByDefinitionId">
+        UPDATE pmis_flow_skip
+        SET deleted = 1,
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE definition_id = #{definitionId}
+          AND deleted = 0
+    </delete>
+</mapper>

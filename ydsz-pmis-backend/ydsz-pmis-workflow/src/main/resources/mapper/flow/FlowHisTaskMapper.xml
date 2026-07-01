@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO">
+        <id column="id" property="id"/>
+        <result column="instance_id" property="instanceId"/>
+        <result column="task_id" property="taskId"/>
+        <result column="flow_code" property="flowCode"/>
+        <result column="definition_id" property="definitionId"/>
+        <result column="node_code" property="nodeCode"/>
+        <result column="node_name" property="nodeName"/>
+        <result column="node_type" property="nodeType"/>
+        <result column="business_type" property="businessType"/>
+        <result column="business_id" property="businessId"/>
+        <result column="business_no" property="businessNo"/>
+        <result column="flow_name" property="flowName"/>
+        <result column="title" property="title"/>
+        <result column="assignee_type" property="assigneeType"/>
+        <result column="assignee_id" property="assigneeId"/>
+        <result column="assignee_name" property="assigneeName"/>
+        <result column="perform_type" property="performType"/>
+        <result column="approve_count" property="approveCount"/>
+        <result column="approve_finished" property="approveFinished"/>
+        <result column="task_status" property="taskStatus"/>
+        <result column="comment" property="comment"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="claim_at" property="claimAt"/>
+        <result column="finish_at" property="finishAt"/>
+        <result column="duration_ms" property="durationMs"/>
+        <result column="deleted" property="deleted"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, instance_id, task_id, flow_code, definition_id, node_code, node_name, node_type,
+        business_type, business_id, business_no, flow_name, title,
+        assignee_type, assignee_id, assignee_name, perform_type,
+        approve_count, approve_finished, task_status, comment, status,
+        created_by, created_at, updated_by, updated_at, claim_at, finish_at, duration_ms,
+        deleted, tenant_id, provider_trace_id
+    </sql>
+
+    <select id="selectDoneByAssignee" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_his_task
+        WHERE assignee_id = #{assigneeId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY finish_at DESC
+    </select>
+
+    <select id="selectByInstanceId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_his_task
+        WHERE instance_id = #{instanceId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY finish_at ASC
+    </select>
+</mapper>

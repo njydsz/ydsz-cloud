@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.workflow.flow.mapper.FlowUserMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.workflow.flow.entity.FlowUserDO">
+        <id column="id" property="id"/>
+        <result column="task_id" property="taskId"/>
+        <result column="instance_id" property="instanceId"/>
+        <result column="node_code" property="nodeCode"/>
+        <result column="user_type" property="userType"/>
+        <result column="user_id" property="userId"/>
+        <result column="user_name" property="userName"/>
+        <result column="processed" property="processed"/>
+        <result column="process_at" property="processAt"/>
+        <result column="comment" property="comment"/>
+        <result column="status" property="status"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="provider_trace_id" property="providerTraceId"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, task_id, instance_id, node_code, user_type, user_id, user_name, processed, process_at,
+        comment, status,
+        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
+    </sql>
+
+    <select id="selectByTaskId" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_user
+        WHERE task_id = #{taskId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <update id="markProcessed">
+        UPDATE pmis_flow_user
+        SET processed = 1,
+            process_at = #{processAt},
+            comment = #{comment},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE task_id = #{taskId}
+          AND user_id = #{userId}
+          AND processed = 0
+          AND deleted = 0
+    </update>
+</mapper>

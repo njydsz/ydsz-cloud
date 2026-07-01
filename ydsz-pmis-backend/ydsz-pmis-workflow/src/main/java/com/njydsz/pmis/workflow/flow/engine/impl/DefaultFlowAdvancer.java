@@ -36,6 +36,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
 
     private final FlowSkipMapper skipMapper;
     private final FlowNodeMapper nodeMapper;
+    private final FlowInstanceMapper instanceMapper;
     private final FlowTaskService taskService;
     private final FlowInstanceService instanceService;
     private final FlowVariableStrategy variableStrategy;
@@ -52,11 +53,29 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             throw new BizException(BizErrorCode.INTERNAL_ERROR,
                     "流程定义缺少开始节点: definitionId=" + instance.getDefinitionId());
         }
-        // 开始节点 → 推进到下一节点
+        // 1. 推进到下一节点
         List<FlowNodeDO> nextNodes = advance(instance, startNode.getNodeCode(),
                 "PASS", null, parseVariable(instance.getVariable()));
-        // 实际生成的任务由 advance() 内调用 taskService 完成
-        return instanceService.toView(instance, loadCurrentTasks(instanceId));
+        if (nextNodes.isEmpty()) {
+            log.info("[Flow] 流程无下游节点，自动完成: instanceId={}", instanceId);
+            instanceService.complete(instanceId, startNode.getNodeCode());
+            return instanceService.toView(instanceService.getById(instanceId),
+                    loadCurrentTasks(instanceId));
+        }
+        // 2. 生成下一节点任务 + 更新实例当前节点
+        com.njydsz.pmis.workflow.flow.service.impl.FlowInstanceServiceImpl impl =
+                (com.njydsz.pmis.workflow.flow.service.impl.FlowInstanceServiceImpl) instanceService;
+        impl.generateTasksForNodes(instanceId, nextNodes, parseVariable(instance.getVariable()));
+        // 3. 更新实例当前节点
+        if (nextNodes.get(0).getNodeType() != com.njydsz.pmis.workflow.flow.enums.FlowNodeType.END.getCode()) {
+            instanceMapper.updateStatus(instanceId,
+                    instance.getFlowStatus(),
+                    nextNodes.get(0).getNodeCode(),
+                    nextNodes.get(0).getNodeName(),
+                    null, null);
+        }
+        return instanceService.toView(instanceService.getById(instanceId),
+                loadCurrentTasks(instanceId));
     }
 
     @Override

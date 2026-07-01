@@ -7,6 +7,8 @@ import com.njydsz.pmis.workflow.dto.DeployProcessDTO;
 import com.njydsz.pmis.workflow.dto.StartProcessDTO;
 import com.njydsz.pmis.workflow.dto.TaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.WorkflowBusinessDO;
+import com.njydsz.pmis.workflow.flow.WorkflowFacade;
+import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.mapper.WorkflowBusinessMapper;
 import com.njydsz.pmis.workflow.service.WorkflowService;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +27,7 @@ import org.flowable.engine.repository.ProcessDefinitionQuery;
 import org.flowable.engine.runtime.ProcessInstance;
 import org.flowable.task.api.Task;
 import org.flowable.task.api.TaskQuery;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -184,6 +187,21 @@ public class WorkflowServiceImpl implements WorkflowService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String startProcess(StartProcessDTO dto) {
+        // ========== 双轨开关：按 flowCode 路由到 LocalWorkflowFacade 或 Flowable ==========
+        if (shouldUseLocal(dto.getProcessKey())) {
+            log.info("[Workflow] 双轨路由: flowCode={} → local 引擎", dto.getProcessKey());
+            FlowStartProcessDTO localDto = new FlowStartProcessDTO();
+            localDto.setFlowCode(dto.getProcessKey());
+            localDto.setBusinessType(dto.getBusinessType());
+            localDto.setBusinessId(dto.getBusinessId());
+            localDto.setBusinessNo(dto.getBusinessNo());
+            localDto.setTitle(dto.getTitle());
+            localDto.setInitiatorId(dto.getInitiatorId());
+            localDto.setInitiatorName(dto.getInitiatorName());
+            localDto.setVariables(dto.getVariables());
+            return localWorkflowFacade.startProcess(localDto);
+        }
+
         try {
             Map<String, Object> vars = dto.getVariables() == null ? new HashMap<>() : dto.getVariables();
             // 注入业务变量
@@ -222,6 +240,17 @@ public class WorkflowServiceImpl implements WorkflowService {
             log.error("[Workflow] 启动流程失败: {}", e.getMessage(), e);
             throw new BizException(BizErrorCode.INTERNAL_ERROR, "启动流程失败: " + e.getMessage());
         }
+    }
+
+    /** 双轨路由判断：local 模式 + 命中白名单 → 走自建 */
+    private boolean shouldUseLocal(String flowCode) {
+        if (!"local".equalsIgnoreCase(flowEngine)) {
+            return false;
+        }
+        if (!StringUtils.hasText(flowCode) || localFlowCodes == null) {
+            return false;
+        }
+        return localFlowCodes.contains(flowCode);
     }
 
     @Override

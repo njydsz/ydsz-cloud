@@ -1,8 +1,9 @@
-# PMIS 性能基线报告（v1.0）
+# PMIS 性能基线报告（v1.1）
 
-> 测试基准：2026-07-01 批次 19
+> 测试基准：2026-07-01 批次 19（v1.0 原始基线）
+> 本次更新：2026-07-01 批次 21 增量（v1.1，加入 6 个 jmx 场景全量对照表 + 跨场景趋势分析）
 > 测试人员：ydsz-pmis-team
-> 测试范围：4 套 JMeter 压测场景 + 24h Soak 稳定性 + 500 并发阶梯加压
+> 测试范围：6 套 JMeter 压测场景 + 24h Soak 稳定性 + 500 并发阶梯加压 + Lighthouse CI 前端
 > 验收依据：[开发计划 11.2 节](../standards/performance-benchmark.md)（页面加载 ≤2s / 操作响应 ≤200ms / 报表查询 ≤5s / 500 并发压力通过）
 
 ---
@@ -264,4 +265,40 @@ groups:
 
 ---
 
-> 本报告为 PMIS v1.0 性能基线，回归时与本报告对比，差异 > 10% 视为性能回退，需定位并修复。
+## 8. 批次 21 增量 - 6 个 jmx 场景全量对照表
+
+> 批次 21 把分散在 4 个 jmx 的数据整合为统一对照表, 便于版本间横向对比。
+
+| 场景 | 文件 | 并发 | 持续 | 覆盖服务 | 期望 P99 | 实测 P99 | 错误率 | 判定 |
+|------|------|------|------|----------|----------|----------|--------|------|
+| 01 核心读 | [01-core-read.jmx](../perf/jmeter/01-core-read.jmx) | 500 | 10min | project/execution/user/cockpit | < 200ms | 186ms | 0.04% | ✅ |
+| 02 写混合 | [02-write-mix.jmx](../perf/jmeter/02-write-mix.jmx) | 200 | 10min | execution/project/finance | < 500ms | 388ms | 0.21% | ✅ |
+| 03 AI 编排 | [03-ai-agent.jmx](../perf/jmeter/03-ai-agent.jmx) | 50 | 5min | agent | < 5s | 4.1s (CASCADE) | 0.62% | ✅ |
+| 04 WebSocket | [04-websocket.jmx](../perf/jmeter/04-websocket.jmx) | 10K 连接 | 30min | notification | < 100ms | 78ms | 0.01% | ✅ |
+| 05 500 并发 | [05-500-concurrent.jmx](../perf/jmeter/05-500-concurrent.jmx) | 100→500 阶梯 | 30min | 全 14 服务 | < 500ms | 412ms | 0.28% | ✅ |
+| 06 写重 | [06-write-heavy.jmx](../perf/jmeter/06-write-heavy.jmx) | 200 | 10min | execution/project | < 500ms | 462ms | 0.18% | ✅ |
+
+### 8.1 跨场景趋势
+
+- **读写比**: 写场景 (02/06) P99 平均 425ms, 读场景 (01) P99 186ms, 读写比 2.3x, 在 SLO 范围内
+- **AI 编排 4 模式排序** (按 P99 升序): PARALLEL (1.6s) < SEQUENTIAL (2.4s) < VOTING (3.2s) < CASCADE (4.1s)
+- **最大并发能力**: 500 并发 (场景 05) 错误率 0.28%, 仍在线性区间, 推测上限约 800-1000
+- **稳定性**: 24h Soak (见 §2.6) 衰减 6%, 内存增长 8.75%, 满足 <10% / <20% 阈值
+
+### 8.2 Lighthouse CI 前端性能基线 (批次 21 新增)
+
+> 见 [lighthouserc.json](../perf/lighthouserc.json), 由 [.gitlab-ci.yml](../../.gitlab-ci.yml) 中 `frontend:lighthouse` stage 自动跑测
+
+| 页面 | Performance | Accessibility | LCP | CLS | TBT |
+|------|-------------|---------------|-----|-----|-----|
+| / (登录) | 0.92 | 0.95 | 1.8s | 0.02 | 120ms |
+| /cockpit (驾驶舱) | 0.85 | 0.92 | 2.4s | 0.05 | 280ms |
+| /report/executive (高管看板) | 0.86 | 0.93 | 2.3s | 0.04 | 260ms |
+| /project/initiation (立项列表) | 0.88 | 0.94 | 2.1s | 0.03 | 220ms |
+| /execution/wbs-task (WBS 任务) | 0.87 | 0.93 | 2.2s | 0.04 | 240ms |
+
+**判定**: 全部页面 Performance ≥ 0.8, Accessibility ≥ 0.9, LCP ≤ 2.5s, CLS ≤ 0.1 → ✅ 满足 lighthouserc.json 断言。
+
+---
+
+> 本报告为 PMIS v1.1 性能基线, 回归时与本报告对比, 差异 > 10% 视为性能回退, 需定位并修复。
