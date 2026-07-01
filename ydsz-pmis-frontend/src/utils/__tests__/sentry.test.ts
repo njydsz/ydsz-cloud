@@ -23,7 +23,7 @@ describe('sentry 工具 (降级模式)', () => {
     const { initSentry } = await import('../sentry')
     const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     try {
-      await initSentry(undefined, undefined, { dsn: '', environment: 'test' })
+      await initSentry({ dsn: '', environment: 'test' })
       expect(warnSpy).toHaveBeenCalled()
     } finally {
       warnSpy.mockRestore()

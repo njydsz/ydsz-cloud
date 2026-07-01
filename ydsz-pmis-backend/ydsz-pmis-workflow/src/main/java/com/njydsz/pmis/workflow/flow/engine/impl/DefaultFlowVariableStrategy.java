@@ -27,13 +27,17 @@ import java.util.regex.Pattern;
 @Component
 public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
 
-    private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{([^}]+)}");
+    private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{([a-zA-Z_][a-zA-Z0-9_\\.]*)}");
     /** 字面量比较：lhs (op) rhs  -- lhs 可为标识符、数字、字符串 */
     private static final Pattern COMPARE_LITERAL = Pattern.compile(
             "^\\s*(.+?)\\s*(>=|<=|==|!=|>|<)\\s*(.+?)\\s*$");
-    /** ${var} (op) 字面量  -- 主要使用模式 */
+    /** ${var} (op) 字面量  -- 主要使用模式（保留供未来扩展） */
+    @SuppressWarnings("unused")
     private static final Pattern COMPARE_PLACEHOLDER = Pattern.compile(
             "^\\s*\\$\\{([^}]+)}\\s*(>=|<=|==|!=|>|<)\\s*(.+?)\\s*$");
+    /** ${var op value} 内部比较模式  -- 即整体被 ${} 包裹且内部含运算符 */
+    private static final Pattern COMPARE_INNER = Pattern.compile(
+            "^\\s*([a-zA-Z_][a-zA-Z0-9_\\.]*)\\s*(>=|<=|==|!=|>|<)\\s*(.+?)\\s*$");
 
     @Override
     public boolean evaluate(String condition, Map<String, Object> variables) {
@@ -42,20 +46,22 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
         }
         String expr = condition.trim();
         try {
-            // 1. ${var} op value 模式（推荐用法）
-            Matcher phM = COMPARE_PLACEHOLDER.matcher(expr);
-            if (phM.matches()) {
-                String varName = phM.group(1).trim();
-                String op = phM.group(2);
-                String rawValue = phM.group(3).trim();
-                Object actual = lookupValue(varName, variables);
-                Object expected = parseLiteral(rawValue);
-                return compare(actual, op, expected);
-            }
-            // 2. 单一 ${var} 占位符：非空 + 非 false 即视为 true
-            if (PLACEHOLDER.matcher(expr).matches()) {
-                String varName = expr.substring(2, expr.length() - 1).trim();
-                Object v = lookupValue(varName, variables);
+            // 0. 如果整个表达式是单一 ${...} 占位符（允许非标识符内容如 "${var op value}"）
+            Matcher fullPh = Pattern.compile("^\\$\\{(.+)}\\s*$").matcher(expr);
+            if (fullPh.matches()) {
+                String inner = fullPh.group(1).trim();
+                // 先尝试 ${var op value} 格式：内部含运算符
+                Matcher innerCmp = COMPARE_INNER.matcher(inner);
+                if (innerCmp.matches()) {
+                    String varName = innerCmp.group(1).trim();
+                    String op = innerCmp.group(2);
+                    String rawValue = innerCmp.group(3).trim();
+                    Object actual = lookupValue(varName, variables);
+                    Object expected = parseLiteral(rawValue);
+                    return compare(actual, op, expected);
+                }
+                // 单一 ${var}：非空 + 非 false 即视为 true
+                Object v = lookupValue(inner, variables);
                 if (v == null) {
                     return false;
                 }
@@ -68,31 +74,36 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
                 }
                 return true;
             }
-            // 3. 字面量比较：lhs op rhs（lhs/rhs 可为数字、字符串、布尔；不含 ${}）
-            if (!expr.contains("${")) {
-                Matcher m = COMPARE_LITERAL.matcher(expr);
-                if (m.matches()) {
-                    String rawLhs = m.group(1).trim();
-                    String op = m.group(2);
-                    String rawValue = m.group(3).trim();
-                    Object actual = parseLiteral(rawLhs);
-                    Object expected = parseLiteral(rawValue);
-                    return compare(actual, op, expected);
-                }
+            // 1. 先做变量替换（${var} -> 实际值）
+            String resolved = replacePlaceholders(expr, variables);
+            // 2. 解析比较表达式 lhs op rhs
+            Matcher m = COMPARE_LITERAL.matcher(resolved);
+            if (m.matches() && isComparisonOperator(m.group(2))) {
+                String rawLhs = m.group(1).trim();
+                String op = m.group(2);
+                String rawValue = m.group(3).trim();
+                Object actual = parseLiteral(rawLhs);
+                Object expected = parseLiteral(rawValue);
+                return compare(actual, op, expected);
             }
-            // 4. 布尔字面量
-            if ("true".equalsIgnoreCase(expr)) {
+            // 3. 布尔字面量
+            if ("true".equalsIgnoreCase(resolved)) {
                 return true;
             }
-            if ("false".equalsIgnoreCase(expr)) {
+            if ("false".equalsIgnoreCase(resolved)) {
                 return false;
             }
-            log.warn("[Flow] 条件表达式无法识别: expr={}", condition);
+            log.warn("[Flow] 条件表达式无法识别: expr={} resolved={}", condition, resolved);
             return false;
         } catch (Exception e) {
             log.error("[Flow] 条件解析异常: expr={} err={}", condition, e.getMessage());
             return false;
         }
+    }
+
+    private static boolean isComparisonOperator(String s) {
+        return ">=".equals(s) || "<=".equals(s) || "==".equals(s)
+                || "!=".equals(s) || ">".equals(s) || "<".equals(s);
     }
 
     @Override
@@ -151,7 +162,8 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
         String s = raw.trim();
         if (s.equalsIgnoreCase("true")) return Boolean.TRUE;
         if (s.equalsIgnoreCase("false")) return Boolean.FALSE;
-        if (s.startsWith("\"") && s.endsWith("\"")) {
+        if ((s.startsWith("\"") && s.endsWith("\"")) ||
+                (s.startsWith("'") && s.endsWith("'"))) {
             return s.substring(1, s.length() - 1);
         }
         try {

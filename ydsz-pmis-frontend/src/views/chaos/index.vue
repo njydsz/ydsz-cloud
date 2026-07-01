@@ -240,7 +240,7 @@ import {
   history as fetchHistory,
   clearHistory as apiClearHistory,
 } from '@/api/chaos'
-import type { ChaosExperiment, ChaosEvent, ChaosOutcome, ChaosExperimentType } from '@/api/chaos/types'
+import type { ChaosExperiment, ChaosEvent, ChaosOutcome, ChaosExperimentType, ChaosDryRunResult } from '@/api/chaos/types'
 
 const experiments = ref<ChaosExperiment[]>([])
 const history = ref<ChaosEvent[]>([])
@@ -337,8 +337,8 @@ async function refresh() {
   loading.value = true
   try {
     const [exps, hist] = await Promise.all([listExperiments(), fetchHistory()])
-    experiments.value = exps
-    history.value = hist
+    experiments.value = (exps as unknown as { data: ChaosExperiment[] }).data ?? (exps as unknown as ChaosExperiment[])
+    history.value = (hist as unknown as { data: ChaosEvent[] }).data ?? (hist as unknown as ChaosEvent[])
   } catch (e) {
     ElMessage.error('加载混沌数据失败: ' + (e instanceof Error ? e.message : String(e)))
   } finally {
@@ -388,7 +388,8 @@ async function onUnregister(target: string) {
 async function onDryRun(target: string) {
   dryRunning.value = target
   try {
-    const r = await dryRun(target)
+    const resp = (await dryRun(target)) as unknown as { data?: ChaosDryRunResult } & Partial<ChaosDryRunResult>
+    const r: ChaosDryRunResult = resp.data ?? (resp as ChaosDryRunResult)
     if (r.outcome === 'INJECTED') {
       ElMessage.warning(`Dry-Run 已注入: ${r.error}`)
     } else {

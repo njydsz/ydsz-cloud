@@ -5,7 +5,7 @@
  * 提供与真实后端完全一致的 URL/方法, 便于切到真实环境。
  */
 import type { MockHandler } from './types'
-import type { ChaosExperiment, ChaosEvent } from './chaos-types'
+import type { ChaosExperiment, ChaosEvent } from '@/api/chaos/types'
 
 const experiments: Record<string, ChaosExperiment> = {
   'ContractService.getContract': {

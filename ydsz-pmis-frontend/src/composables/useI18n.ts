@@ -19,7 +19,9 @@ import { ref, computed, readonly } from 'vue'
 
 export type Locale = 'zh-CN' | 'en-US'
 
-export type TranslationDict = Record<string, string | TranslationDict>
+export interface TranslationDict {
+  [key: string]: string | TranslationDict
+}
 
 const STORAGE_KEY = 'pmis_locale'
 const DEFAULT_LOCALE: Locale = 'zh-CN'

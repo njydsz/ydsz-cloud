@@ -194,36 +194,36 @@ onMounted(fetchSnapshot)
             <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
             <el-table-column label="强制" width="80" align="center">
               <template #default="{ row }">
-                <el-tag v-if="row.mandatory" size="small" type="danger">强制</el-tag>
+                <el-tag v-if="(row as FeatureFlagSnapshot).mandatory" size="small" type="danger">强制</el-tag>
                 <span v-else class="muted">-</span>
               </template>
             </el-table-column>
             <el-table-column label="开关" width="100" align="center">
               <template #default="{ row }">
                 <el-switch
-                  :model-value="row.effectiveValue"
-                  :disabled="row.mandatory"
+                  :model-value="(row as FeatureFlagSnapshot).effectiveValue"
+                  :disabled="(row as FeatureFlagSnapshot).mandatory"
                   inline-prompt
                   active-text="开"
                   inactive-text="关"
-                  @change="() => handleToggle(row)"
+                  @change="() => handleToggle(row as FeatureFlagSnapshot)"
                 />
               </template>
             </el-table-column>
             <el-table-column label="灰度发布" min-width="280">
               <template #default="{ row }">
-                <div v-if="row.mandatory" class="muted">强制开启, 不支持灰度</div>
+                <div v-if="(row as FeatureFlagSnapshot).mandatory" class="muted">强制开启, 不支持灰度</div>
                 <div v-else class="rollout-cell">
                   <el-slider
-                    :model-value="row.rolloutPercentage ?? 100"
+                    :model-value="(row as FeatureFlagSnapshot).rolloutPercentage ?? 100"
                     :min="0"
                     :max="100"
                     :step="5"
                     show-stops
                     style="flex: 1; margin-right: 12px"
-                    @change="(v: number) => handleRolloutChange(row, v)"
+                    @change="(v: number | number[]) => handleRolloutChange(row as FeatureFlagSnapshot, Array.isArray(v) ? v[0] : v)"
                   />
-                  <span class="rollout-text">{{ rolloutText(row) }}</span>
+                  <span class="rollout-text">{{ rolloutText(row as FeatureFlagSnapshot) }}</span>
                 </div>
               </template>
             </el-table-column>

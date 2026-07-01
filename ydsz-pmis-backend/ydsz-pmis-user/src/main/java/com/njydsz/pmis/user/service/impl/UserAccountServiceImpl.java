@@ -237,7 +237,7 @@ public class UserAccountServiceImpl implements UserAccountService {
         User2FADO twofa = user2FAMapper.selectByUserId(u.getId());
         boolean mfaRequired = twofa != null && Boolean.TRUE.equals(twofa.getEnabled());
         boolean mfaPassed = false;
-        if (mfaRequired) {
+        if (mfaRequired && twofa != null) {
             if (StringUtils.hasText(request.getOtp())) {
                 mfaPassed = TotpUtil.verify(twofa.getSecret(), request.getOtp());
             } else if (StringUtils.hasText(request.getBackupCode())) {

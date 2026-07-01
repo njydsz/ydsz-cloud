@@ -3,10 +3,8 @@ package com.njydsz.pmis.agent.engine.llm;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.web.client.RestClient;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
 
 /**
  * DashScopeLlmProvider 单元测试 (批次 22 P1-5)

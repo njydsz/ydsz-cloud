@@ -78,9 +78,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         task.setTenantId(instance.getTenantId());
         task.setProviderTraceId(instance.getProviderTraceId());
 
-        // 解析办理人
-        resolveAssignee(task, node, variables, null);
         taskMapper.insert(task);
+        // 解析办理人（必须在 insert 之后，确保 task.getId() 有值）
+        resolveAssignee(task, node, variables, null, instance);
+        taskMapper.updateById(task);
         log.info("[Flow] 创建任务: instanceId={} node={} assignee={}",
                 instanceId, node.getNodeCode(), task.getAssigneeId());
         return task.getId();
@@ -186,10 +187,13 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "转办目标人不能为空");
         }
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
+        // 先保留原办理人信息（assignor = 委托人）
+        Long originalAssignorId = parseAssignorId(task.getAssigneeId());
+        String originalAssignorName = task.getAssigneeName();
         task.setAssigneeId(String.valueOf(dto.getTargetUserId()));
         task.setAssigneeName(dto.getTargetUserName());
-        task.setAssignorId(parseAssignorId(task.getAssigneeId()));
-        task.setAssignorName(task.getAssigneeName());
+        task.setAssignorId(originalAssignorId);
+        task.setAssignorName(originalAssignorName);
         task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
         task.setUpdatedAt(LocalDateTime.now());
         taskMapper.updateById(task);
@@ -258,7 +262,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
     private void resolveAssignee(FlowTaskDO task, FlowNodeDO node,
                                   Map<String, Object> variables,
-                                  FlowAssigneeDTO explicit) {
+                                  FlowAssigneeDTO explicit,
+                                  FlowInstanceDO instance) {
         String perm = node.getPermissionFlag();
         if (explicit != null) {
             task.setAssigneeType(explicit.getUserType());
@@ -269,7 +274,9 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         if (!StringUtils.hasText(perm)) {
             // 默认指派给发起人
             task.setAssigneeType(FlowAssigneeType.INITIATOR.name());
-            task.setAssigneeId(String.valueOf(task.getId()));
+            task.setAssigneeId(instance != null && instance.getInitiatorId() != null
+                    ? String.valueOf(instance.getInitiatorId())
+                    : String.valueOf(task.getId()));
             task.setAssigneeName("INITIATOR");
             return;
         }

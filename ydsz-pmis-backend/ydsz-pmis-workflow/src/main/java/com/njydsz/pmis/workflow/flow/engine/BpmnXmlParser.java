@@ -48,13 +48,16 @@ import java.util.Map;
 @Component
 public class BpmnXmlParser {
 
-    /** BPMN 默认命名空间 */
+    /** BPMN 默认命名空间（保留供未来扩展） */
+    @SuppressWarnings("unused")
     private static final String BPMN_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL";
-    /** BPMNDI 命名空间（用于坐标，可选解析） */
+    /** BPMNDI 命名空间（用于坐标，可选解析，保留供未来扩展） */
+    @SuppressWarnings("unused")
     private static final String BPMNDI_NS = "http://www.omg.org/spec/BPMN/20100524/DI";
     /** Flowable 扩展命名空间 */
     private static final String FLOWABLE_NS = "http://flowable.org/bpmn";
-    /** xsi 命名空间（用于 conditionExpression type） */
+    /** xsi 命名空间（用于 conditionExpression type，保留供未来扩展） */
+    @SuppressWarnings("unused")
     private static final String XSI_NS = "http://www.w3.org/2001/XMLSchema-instance";
 
     /**
@@ -288,7 +291,6 @@ public class BpmnXmlParser {
         String sourceRef = elem.getAttribute("sourceRef");
         String targetRef = elem.getAttribute("targetRef");
         // sourceRef / targetRef 临时借用 skipName + ext 传递
-        String existing = "{}";
         skip.setExt("{\"sourceRef\":\"" + sourceRef + "\",\"targetRef\":\""
                 + targetRef + "\",\"sequenceFlowId\":\"" + elem.getAttribute("id") + "\"}");
         // nextNodeCode 暂存 targetRef，定义模型转换时会再赋

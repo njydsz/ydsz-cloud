@@ -21,6 +21,7 @@ import {
   checkFeatureFlag,
   getFeatureFlagSnapshot,
 } from '@/api/feature-flag'
+import type { FeatureFlagSnapshot } from '@/api/feature-flag/types'
 
 /** 内置的 flag key 枚举 (与后端 FeatureFlag 保持一致) */
 export const FEATURE_FLAGS = {
@@ -100,9 +101,14 @@ export function useFeatureFlag() {
   async function refresh(): Promise<void> {
     loading.value = true
     try {
-      const snap = await getFeatureFlagSnapshot()
+      const resp = (await getFeatureFlagSnapshot()) as unknown as
+        | FeatureFlagSnapshot[]
+        | { data?: FeatureFlagSnapshot[] }
+      const list: FeatureFlagSnapshot[] = Array.isArray(resp)
+        ? resp
+        : (resp.data ?? [])
       const map: Record<string, boolean> = {}
-      for (const s of snap) {
+      for (const s of list) {
         map[s.key] = s.effectiveValue
       }
       flags.value = map

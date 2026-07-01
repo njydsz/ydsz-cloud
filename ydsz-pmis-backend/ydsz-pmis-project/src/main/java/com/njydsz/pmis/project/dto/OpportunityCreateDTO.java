@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -26,16 +27,16 @@ public class OpportunityCreateDTO implements Serializable {
 
     @NotBlank
     @Size(max = 64)
-    @Schema(description = "商机编号", required = true)
+    @Schema(description = "商机编号", requiredMode = RequiredMode.REQUIRED)
     private String opportunityCode;
 
     @NotBlank
     @Size(max = 256)
-    @Schema(description = "商机名称", required = true)
+    @Schema(description = "商机名称", requiredMode = RequiredMode.REQUIRED)
     private String opportunityName;
 
     @NotNull
-    @Schema(description = "客户 ID", required = true)
+    @Schema(description = "客户 ID", requiredMode = RequiredMode.REQUIRED)
     private Long customerId;
 
     @Schema(description = "客户名称（冗余）")
@@ -45,7 +46,7 @@ public class OpportunityCreateDTO implements Serializable {
     private Long businessDeptId;
 
     @NotNull
-    @Schema(description = "负责人 ID", required = true)
+    @Schema(description = "负责人 ID", requiredMode = RequiredMode.REQUIRED)
     private Long ownerId;
 
     @Schema(description = "负责人姓名（冗余）")
