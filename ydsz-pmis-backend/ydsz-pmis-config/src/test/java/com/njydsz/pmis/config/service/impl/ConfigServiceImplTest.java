@@ -1,6 +1,5 @@
 package com.njydsz.pmis.config.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.config.dto.ConfigFormDTO;
@@ -18,7 +17,6 @@ import java.util.Set;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -27,6 +25,7 @@ import static org.mockito.Mockito.when;
 /**
  * ConfigServiceImpl 单元测试
  */
+@SuppressWarnings("unchecked")
 @DisplayName("ConfigServiceImpl 配置中心测试")
 class ConfigServiceImplTest {
 

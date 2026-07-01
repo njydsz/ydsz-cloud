@@ -1,5 +1,8 @@
 package com.njydsz.pmis.message.channel;
 
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
+
 /**
  * 消息通道接口
  *

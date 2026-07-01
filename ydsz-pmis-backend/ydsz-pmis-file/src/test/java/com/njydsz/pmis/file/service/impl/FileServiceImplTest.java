@@ -8,18 +8,14 @@ import com.njydsz.pmis.file.entity.FileDO;
 import com.njydsz.pmis.file.mapper.FileMapper;
 import io.minio.BucketExistsArgs;
 import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
-import io.minio.http.Method;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 import org.springframework.mock.web.MockMultipartFile;
 
-import java.io.InputStream;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;

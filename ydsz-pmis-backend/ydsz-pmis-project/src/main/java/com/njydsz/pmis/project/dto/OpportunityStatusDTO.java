@@ -7,7 +7,6 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDate;
 
 /**
  * 商机状态迁移 DTO

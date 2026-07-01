@@ -1,8 +1,8 @@
 package com.njydsz.pmis.message.channel.impl;
 
 import com.njydsz.pmis.message.channel.MessageChannel;
-import com.njydsz.pmis.message.channel.MessageRequest;
-import com.njydsz.pmis.message.channel.MessageResult;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

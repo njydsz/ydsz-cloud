@@ -21,6 +21,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @DisplayName("ReportServiceImpl 报表服务测试")
+@SuppressWarnings("unchecked")
 class ReportServiceImplTest {
 
     private ProfitSnapshotMapper profitSnapshotMapper;

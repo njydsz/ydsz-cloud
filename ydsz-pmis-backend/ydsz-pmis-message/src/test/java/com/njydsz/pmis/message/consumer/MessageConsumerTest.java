@@ -1,7 +1,7 @@
 package com.njydsz.pmis.message.consumer;
 
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.message.channel.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.message.service.MessageService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

@@ -1,9 +1,8 @@
 package com.njydsz.pmis.message.service;
 
-import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.message.channel.MessageChannel;
-import com.njydsz.pmis.message.channel.MessageRequest;
-import com.njydsz.pmis.message.channel.MessageResult;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.entity.MessageLogDO;
 import com.njydsz.pmis.message.entity.MessageTemplateDO;
 import com.njydsz.pmis.message.mapper.MessageLogMapper;

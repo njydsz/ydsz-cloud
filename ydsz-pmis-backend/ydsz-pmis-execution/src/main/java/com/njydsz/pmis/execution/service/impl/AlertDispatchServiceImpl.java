@@ -10,8 +10,8 @@ import com.njydsz.pmis.execution.entity.AlertDispatchDO;
 import com.njydsz.pmis.execution.feign.MessageServiceClient;
 import com.njydsz.pmis.execution.mapper.AlertDispatchMapper;
 import com.njydsz.pmis.execution.service.AlertDispatchService;
-import com.njydsz.pmis.message.channel.MessageRequest;
-import com.njydsz.pmis.message.channel.MessageResult;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;

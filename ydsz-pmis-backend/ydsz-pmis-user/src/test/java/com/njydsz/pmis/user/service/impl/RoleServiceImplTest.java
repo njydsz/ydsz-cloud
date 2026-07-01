@@ -11,7 +11,6 @@ import com.njydsz.pmis.user.mapper.RolePermissionMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
 
 import java.util.List;
 
@@ -27,6 +26,7 @@ import static org.mockito.Mockito.when;
 /**
  * RoleServiceImpl 单元测试
  */
+@SuppressWarnings("unchecked")
 @DisplayName("RoleServiceImpl 角色服务测试")
 class RoleServiceImplTest {
 

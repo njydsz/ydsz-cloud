@@ -8,8 +8,8 @@ import com.njydsz.pmis.execution.dto.AlertDispatchDTO;
 import com.njydsz.pmis.execution.entity.AlertDispatchDO;
 import com.njydsz.pmis.execution.feign.MessageServiceClient;
 import com.njydsz.pmis.execution.mapper.AlertDispatchMapper;
-import com.njydsz.pmis.message.channel.MessageRequest;
-import com.njydsz.pmis.message.channel.MessageResult;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,6 +30,7 @@ import static org.mockito.Mockito.when;
 /**
  * 预警分级推送服务测试
  */
+@SuppressWarnings("unchecked")
 @DisplayName("AlertDispatchServiceImpl 预警分级")
 class AlertDispatchServiceImplTest {
 

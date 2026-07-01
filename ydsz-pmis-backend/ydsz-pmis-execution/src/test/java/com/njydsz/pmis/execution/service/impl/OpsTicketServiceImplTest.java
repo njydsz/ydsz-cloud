@@ -6,7 +6,6 @@ import com.njydsz.pmis.execution.dto.OpsTicketAssignDTO;
 import com.njydsz.pmis.execution.dto.OpsTicketCreateDTO;
 import com.njydsz.pmis.execution.dto.OpsTicketStatusDTO;
 import com.njydsz.pmis.execution.entity.OpsTicketDO;
-import com.njydsz.pmis.execution.enums.OpsTicketPriority;
 import com.njydsz.pmis.execution.enums.OpsTicketStatus;
 import com.njydsz.pmis.execution.mapper.OpsTicketMapper;
 import org.junit.jupiter.api.BeforeEach;

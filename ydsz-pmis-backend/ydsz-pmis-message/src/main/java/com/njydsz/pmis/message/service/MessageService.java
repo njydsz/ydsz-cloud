@@ -1,8 +1,8 @@
 package com.njydsz.pmis.message.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.message.channel.MessageRequest;
-import com.njydsz.pmis.message.channel.MessageResult;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.entity.MessageLogDO;
 import com.njydsz.pmis.message.entity.MessageTemplateDO;
 

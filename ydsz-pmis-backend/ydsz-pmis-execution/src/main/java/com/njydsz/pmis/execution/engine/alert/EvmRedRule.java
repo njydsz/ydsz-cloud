@@ -3,7 +3,6 @@ package com.njydsz.pmis.execution.engine.alert;
 import com.njydsz.pmis.execution.dto.AlertEventDTO;
 import com.njydsz.pmis.execution.enums.AlertSeverity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;

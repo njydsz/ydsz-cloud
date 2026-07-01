@@ -3,7 +3,6 @@ package com.njydsz.pmis.execution.engine;
 import com.njydsz.pmis.execution.entity.DeliveryItemDO;
 import com.njydsz.pmis.execution.enums.DeliveryItemStatus;
 import com.njydsz.pmis.execution.enums.DeliveryStage;
-import com.njydsz.pmis.execution.enums.ProjectType;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;

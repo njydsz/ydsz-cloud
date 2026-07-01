@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.consumer;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.message.channel.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.message.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

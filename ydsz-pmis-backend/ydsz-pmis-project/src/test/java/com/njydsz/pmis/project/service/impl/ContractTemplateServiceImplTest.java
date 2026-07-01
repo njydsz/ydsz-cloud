@@ -25,6 +25,7 @@ import static org.mockito.Mockito.when;
 /**
  * ContractTemplateServiceImpl 单元测试
  */
+@SuppressWarnings("unchecked")
 @DisplayName("ContractTemplateServiceImpl 合同模板服务测试")
 class ContractTemplateServiceImplTest {
 

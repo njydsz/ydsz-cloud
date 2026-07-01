@@ -19,7 +19,6 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
 import java.time.Duration;

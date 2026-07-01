@@ -47,13 +47,14 @@ const {
   changeType: string
   initiationId: number | undefined
 }>(async (q) => {
-  const { data } = await pageProjectChanges(q.page, q.size, {
+  const resp = await pageProjectChanges(q.page, q.size, {
     keyword: q.keyword || undefined,
     changeType: q.changeType || undefined,
     status: q.status || undefined,
     initiationId: q.initiationId,
   })
-  return { data: { list: data.list || [], total: data.total || 0 } }
+  const data = resp.data || (resp as any)
+  return { list: data.list || [], total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
 }, { defaultSize: 10 })
 
 // 状态映射（与后端 ChangeStatus 枚举对齐）
@@ -115,9 +116,8 @@ function allowedTargets(row: ProjectChangeVO): string[] {
     : transitions[row.status] || []
 }
 
-function handleReset() {
-  resetQuery()
-}
+/** 是否处于空态: 非加载中且列表无数据 */
+const isEmpty = computed(() => !loading.value && list.value.length === 0)
 
 /** 选中的项目变更行 (用于批量操作) */
 const selectedRows = ref<ProjectChangeVO[]>([])
@@ -126,119 +126,8 @@ function onSelectionChange({ rows }: { rows: ProjectChangeVO[] }) {
   selectedRows.value = rows
 }
 
-function clearSelection() {
-  selectedRows.value = []
-}
-
-const BATCH_CONCURRENCY = 4
-
-/**
- * 并发执行器: 限流 BATCH_CONCURRENCY, 单条失败不阻断其他.
- * 返回 {ok, error?} 列表用于统计成功/失败数.
- */
-async function runWithConcurrency<T>(
-  items: T[],
-  limit: number,
-  worker: (item: T) => Promise<unknown>,
-): Promise<Array<{ item: T; ok: boolean; error?: unknown }>> {
-  const out: Array<{ item: T; ok: boolean; error?: unknown }> = []
-  let cursor = 0
-  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
-    while (cursor < items.length) {
-      const idx = cursor++
-      const item = items[idx]
-      try {
-        await worker(item)
-        out.push({ item, ok: true })
-      } catch (error) {
-        out.push({ item, ok: false, error })
-      }
-    }
-  })
-  await Promise.all(runners)
-  return out
-}
-
-/**
- * 通用批量状态变更: 仅当 fromStatuses 内的记录会被处理, 单条失败不阻断其他.
- * 完成后弹成功/失败统计, 自动刷新列表并清空选中.
- */
-async function batchChangeStatus(target: string, fromStatuses: string[]) {
-  const eligible = selectedRows.value.filter((r) => fromStatuses.includes(r.status))
-  if (eligible.length === 0) {
-    ElMessage.warning(`当前选中的 ${selectedRows.value.length} 条记录中, 没有可执行该操作的变更`)
-    return
-  }
-  const targetText = (statusMap as any)[target]?.label || target
-  try {
-    await ElMessageBox.confirm(
-      `确认对 ${eligible.length} 条项目变更执行「${targetText}」吗？`,
-      '批量操作',
-      { type: 'warning' },
-    )
-  } catch {
-    return
-  }
-  const results = await runWithConcurrency(eligible, BATCH_CONCURRENCY, (row) =>
-    changeProjectChangeStatus({ id: row.id, targetStatus: target }),
-  )
-  const ok = results.filter((r) => r.ok).length
-  const fail = results.length - ok
-  if (fail === 0) {
-    ElMessage.success(`批量${targetText}完成: ${ok} 条`)
-  } else {
-    ElMessage.warning(`批量${targetText}完成: 成功 ${ok} 条, 失败 ${fail} 条`)
-  }
-  clearSelection()
-  fetchList()
-}
-
-/** 批量提交: DRAFT → SUBMITTED */
-async function handleBatchSubmit() {
-  await batchChangeStatus('SUBMITTED', ['DRAFT'])
-}
-
-/** 批量取消: DRAFT/SUBMITTED/UNDER_REVIEW/APPROVED/EXECUTING → CANCELLED */
-async function handleBatchCancel() {
-  await batchChangeStatus('CANCELLED', [
-    'DRAFT',
-    'SUBMITTED',
-    'UNDER_REVIEW',
-    'APPROVED',
-    'EXECUTING',
-  ])
-}
-
-/** 批量删除: 仅 DRAFT/REJECTED/CANCELLED 可删 */
-async function handleBatchDelete() {
-  const eligible = selectedRows.value.filter((r) =>
-    ['DRAFT', 'REJECTED', 'CANCELLED'].includes(r.status),
-  )
-  if (eligible.length === 0) {
-    ElMessage.warning(`当前选中的 ${selectedRows.value.length} 条记录中, 没有可删除的变更`)
-    return
-  }
-  try {
-    await ElMessageBox.confirm(
-      `确认删除 ${eligible.length} 条项目变更吗？此操作不可恢复`,
-      '批量删除',
-      { type: 'warning' },
-    )
-  } catch {
-    return
-  }
-  const results = await runWithConcurrency(eligible, BATCH_CONCURRENCY, (row) =>
-    deleteProjectChange(row.id),
-  )
-  const ok = results.filter((r) => r.ok).length
-  const fail = results.length - ok
-  if (fail === 0) {
-    ElMessage.success(`批量删除完成: ${ok} 条`)
-  } else {
-    ElMessage.warning(`批量删除完成: 成功 ${ok} 条, 失败 ${fail} 条`)
-  }
-  clearSelection()
-  fetchList()
+function handleReset() {
+  resetQuery()
 }
 
 // ========== 新增/编辑 ==========
@@ -628,8 +517,8 @@ onMounted(() => {
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="影响等级">
-              <el-tag v-if="riskMap[detail.riskLevelAfter]" :type="detail.riskLevelAfter === 'HIGH' ? 'danger' : detail.riskLevelAfter === 'MEDIUM' ? 'warning' : 'success'" size="small">
-                {{ riskMap[detail.riskLevelAfter].label }}
+              <el-tag v-if="riskMap[detail.riskLevelAfter as string]" :type="detail.riskLevelAfter === 'HIGH' ? 'danger' : detail.riskLevelAfter === 'MEDIUM' ? 'warning' : 'success'" size="small">
+                {{ riskMap[detail.riskLevelAfter as string].label }}
               </el-tag>
             </el-descriptions-item>
             <el-descriptions-item label="重大变更">

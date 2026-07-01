@@ -18,13 +18,13 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
  * JobServiceImpl 单元测试
  */
+@SuppressWarnings("unchecked")
 @DisplayName("JobServiceImpl 任务调度测试")
 class JobServiceImplTest {
 

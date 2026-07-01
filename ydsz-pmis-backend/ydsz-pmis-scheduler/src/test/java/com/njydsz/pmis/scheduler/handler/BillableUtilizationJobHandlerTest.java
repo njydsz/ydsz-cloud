@@ -11,12 +11,12 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyBoolean;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 @DisplayName("BillableUtilizationJobHandler 定时任务测试")
+@SuppressWarnings("unchecked")
 class BillableUtilizationJobHandlerTest {
 
     private ExecutionClient executionClient;

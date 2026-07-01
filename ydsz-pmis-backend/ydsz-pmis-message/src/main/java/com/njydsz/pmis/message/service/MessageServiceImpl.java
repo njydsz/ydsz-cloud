@@ -6,8 +6,8 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.message.channel.MessageChannel;
-import com.njydsz.pmis.message.channel.MessageRequest;
-import com.njydsz.pmis.message.channel.MessageResult;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.entity.MessageLogDO;
 import com.njydsz.pmis.message.entity.MessageTemplateDO;
 import com.njydsz.pmis.message.mapper.MessageLogMapper;
@@ -20,7 +20,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;

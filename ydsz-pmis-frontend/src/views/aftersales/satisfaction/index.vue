@@ -49,7 +49,7 @@ const followUpMap = {
 }
 
 function inferLevel(score?: number) {
-  if (score == null) return ''
+  if (score === null || score === undefined) return ''
   if (score <= 1) return 'VERY_DISSATISFIED'
   if (score <= 2) return 'DISSATISFIED'
   if (score <= 3) return 'NEUTRAL'

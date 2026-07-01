@@ -85,8 +85,8 @@
       <el-row :gutter="20" align="middle">
         <el-col :span="16">
           <p>
-            已选择文件：<strong>{{ fileList[0].name }}</strong>
-            （{{ formatSize(fileList[0].size) }}）
+            已选择文件：<strong>{{ fileList[0]?.name }}</strong>
+            （{{ formatSize(fileList[0]?.size ?? 0) }}）
           </p>
         </el-col>
         <el-col :span="8" style="text-align: right">
@@ -147,6 +147,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import type { UploadFile, UploadFiles, UploadUserFile } from 'element-plus'
 import { Download, UploadFilled, Check, Money, Timer, User } from '@element-plus/icons-vue'
 import { downloadTemplate, importData, type ImportResult } from '@/api/system/import-export'
 
@@ -190,7 +191,7 @@ const downloading = ref(false)
 const importing = ref(false)
 const importProgress = ref(0)
 const progressText = ref('')
-const fileList = ref<{ name: string; size: number; raw: File }[]>([])
+const fileList = ref<UploadUserFile[]>([])
 const importResult = ref<ImportResult | null>(null)
 
 function formatSize(bytes: number): string {
@@ -212,8 +213,9 @@ async function handleDownloadTemplate() {
   }
 }
 
-function handleFileChange(file: { name: string; size: number; raw: File }) {
-  fileList.value = [file]
+function handleFileChange(_uploadFile: UploadFile, uploadFiles: UploadFiles) {
+  // P0 修复: 类型对齐 UploadFile (el-upload 传的是 UploadFile, 但只需要这几个字段)
+  fileList.value = uploadFiles
   importResult.value = null
 }
 
@@ -236,7 +238,12 @@ async function handleImport() {
       }
     }, 200)
 
-    const resp = await importData(selectedBiz.value, fileList.value[0].raw)
+    const rawFile = fileList.value[0]?.raw
+    if (!rawFile) {
+      ElMessage.error('请先选择文件')
+      return
+    }
+    const resp = await importData(selectedBiz.value, rawFile)
     clearInterval(timer)
     importProgress.value = 100
     progressText.value = '导入完成'

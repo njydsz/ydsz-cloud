@@ -1,11 +1,14 @@
-package com.njydsz.pmis.message.channel;
+package com.njydsz.pmis.common.feign;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 消息发送结果
+ * 消息发送结果（跨模块共享 DTO）
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 @NoArgsConstructor

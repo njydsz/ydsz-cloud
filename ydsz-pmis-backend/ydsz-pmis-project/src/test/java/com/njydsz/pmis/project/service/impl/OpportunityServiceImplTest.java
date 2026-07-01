@@ -25,6 +25,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DisplayName("OpportunityServiceImpl 商机服务测试")
+@SuppressWarnings("unchecked")
 class OpportunityServiceImplTest {
 
     private OpportunityMapper mapper;

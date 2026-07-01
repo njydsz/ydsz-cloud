@@ -4,7 +4,6 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.dto.ProfitSimulationCreateDTO;
 import com.njydsz.pmis.execution.dto.SimulationStatusDTO;
 import com.njydsz.pmis.execution.entity.ProfitSimulationDO;
-import com.njydsz.pmis.execution.enums.SimulationStatus;
 import com.njydsz.pmis.execution.mapper.ProfitSimulationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

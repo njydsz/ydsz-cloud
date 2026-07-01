@@ -1,7 +1,6 @@
 package com.njydsz.pmis.execution.engine;
 
 import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;
-import com.njydsz.pmis.execution.enums.RiskLevel;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

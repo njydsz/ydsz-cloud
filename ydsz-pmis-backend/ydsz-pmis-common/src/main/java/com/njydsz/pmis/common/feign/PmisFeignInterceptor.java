@@ -3,7 +3,6 @@ package com.njydsz.pmis.common.feign;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import io.micrometer.core.instrument.MeterRegistry;
-import io.micrometer.core.instrument.Timer;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
