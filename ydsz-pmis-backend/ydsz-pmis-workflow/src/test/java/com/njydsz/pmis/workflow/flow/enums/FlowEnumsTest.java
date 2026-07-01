@@ -41,9 +41,9 @@ class FlowEnumsTest {
         assertThat(FlowNodeType.CC.getCode()).isEqualTo(2);
         assertThat(FlowNodeType.CONDITION.getCode()).isEqualTo(3);
         assertThat(FlowNodeType.PARALLEL.getCode()).isEqualTo(4);
-        assertThat(FlowNodeType.EXCLUSIVE.getCode()).isEqualTo(5);
+        assertThat(FlowNodeType.INCLUSIVE.getCode()).isEqualTo(5);
         assertThat(FlowNodeType.END.getCode()).isEqualTo(6);
-        assertThat(FlowNodeType.SUB_PROCESS.getCode()).isEqualTo(7);
+        assertThat(FlowNodeType.SUBPROCESS.getCode()).isEqualTo(7);
     }
 
     @Test

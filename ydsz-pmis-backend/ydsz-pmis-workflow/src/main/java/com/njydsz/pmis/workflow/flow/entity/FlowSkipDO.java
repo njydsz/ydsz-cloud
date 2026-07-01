@@ -58,6 +58,9 @@ public class FlowSkipDO extends BaseDO {
     /** 跳转路由集合 JSON */
     private String skipList;
 
+    /** 扩展字段 JSON（存储 sourceRef/sequenceFlowId 等 BPMN 派生信息） */
+    private String ext;
+
     /** 租户 ID */
     private Long tenantId;
 

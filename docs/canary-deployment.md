@@ -20,7 +20,7 @@
 | **Spring Cloud Gateway WeightFilter** | 零依赖, 走 Nacos config 热更新 | 仅权重路由、无流量镜像 | 准生产 / 中小规模 |
 | **K8s Deployment + Service 双版本** | 纯 K8s 原生 | 切换成本高 (改 selector) | 已废弃, 不推荐 |
 
-> PMIS 推荐: **生产** 用 Istio, **staging** 用 SCG WeightFilter (本目录 `canary-shift.sh`)。
+> PMIS 推荐: **生产** 用 Argo Rollouts (批次 23 P2-1), **staging** 用 SCG WeightFilter (`canary-shift.sh`)。
 
 ## 3. Istio 金丝雀发布流程 (推荐)
 
@@ -94,6 +94,56 @@ Gateway 大约 5s 内热更新, 通过 actuator/gateway/routes 验证:
 ```bash
 curl http://gateway:9000/actuator/gateway/routes
 ```
+
+## 4.5 Argo Rollouts 方案 (生产推荐, 批次 23 P2-1)
+
+替代 canary-shift.sh 手动脚本, 提供 **自动化分析 + 一键回滚**。
+
+### 4.5.1 安装 (一次性)
+
+```bash
+# 1. 部署 controller
+kubectl create namespace argo-rollouts
+kubectl apply -n argo-rollouts -f https://github.com/argoproj/argo-rollouts/releases/latest/download/install.yaml
+
+# 2. 安装 kubectl plugin
+brew install argoproj/tap/kubectl-argo-rollouts   # macOS
+# Linux: 见 https://argo-rollouts.readthedocs.io/en/latest/installation/
+
+# 3. 部署 PMIS Rollout 资源
+kubectl apply -k deploy/argo-rollouts/overlays/prod
+```
+
+### 4.5.2 日常发布 (替代 canary-shift.sh)
+
+```bash
+# 1. 启动金丝雀: 推送新镜像
+kubectl argo rollouts set image pmis-execution \
+  execution=registry.ydsz-pmis.cn/ydsz/ydsz-pmis-execution:v1.2.0-rc1 \
+  -n pmis-prod
+
+# 2. 实时观察 (Argo 自动执行 pause + analysis 5%→25%→50%→100%)
+kubectl argo rollouts status pmis-execution -n pmis-prod -w
+
+# 3. 紧急回滚 (< 5s)
+kubectl argo rollouts abort pmis-execution -n pmis-prod
+# 或直接回退到上一个版本
+kubectl argo rollouts undo pmis-execution -n pmis-prod
+
+# 4. Web Dashboard
+kubectl argo rollouts dashboard   # 默认 http://localhost:3100
+```
+
+### 4.5.3 自动分析模板
+
+`deploy/argo-rollouts/base/analysis-templates.yaml` 提供 3 个模板:
+- `error-rate-check`: 5xx 错误率 < 0.5% (默认)
+- `latency-p99-check`: p99 延迟 < 800ms
+- `composite-check`: 错误率 + 延迟同时检查
+
+阈值可在 Rollout `args` 中按服务覆盖, 如财务服务更严: `error-rate-threshold=0.003`。
+
+详细运维命令见 `deploy/argo-rollouts/ops-commands.md`。
 
 ## 5. 决策矩阵
 

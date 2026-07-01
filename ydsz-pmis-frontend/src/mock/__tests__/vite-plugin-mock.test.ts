@@ -179,4 +179,30 @@ describe('vite-plugin-pmis-mock', () => {
     await cap.middlewares[0](req, res, next)
     expect(nextCalled).toBe(true)
   })
+
+  it('支持路径参数匹配 /api/v1/.../{id}/... (批次 25 P1-6)', async () => {
+    // 临时注册一个带路径参数的 handler
+    const { mockHandlers } = await import('../handlers')
+    mockHandlers.push({
+      method: 'POST',
+      path: '/__test__/{id}/action',
+      handler: () => ({ ok: true, id: 42 }),
+    })
+    try {
+      const cap = captureConfigure(viteMockPlugin({ enabled: true, delay: 0 }))
+      const req = makeReq('POST', '/api/v1/__test__/42/action')
+      const { res, getBody } = makeRes()
+      await runChain(cap, req, res)
+      const body = JSON.parse(getBody())
+      expect(body.code).toBe(0)
+      expect(body.data).toEqual({ ok: true, id: 42 })
+    } finally {
+      // 清理
+      for (let i = mockHandlers.length - 1; i >= 0; i--) {
+        if (mockHandlers[i].path === '/__test__/{id}/action') {
+          mockHandlers.splice(i, 1)
+        }
+      }
+    }
+  })
 })

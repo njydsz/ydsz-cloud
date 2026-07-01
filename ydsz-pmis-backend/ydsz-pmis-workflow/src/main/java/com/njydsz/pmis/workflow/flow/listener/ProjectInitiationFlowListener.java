@@ -21,7 +21,8 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
 
     @Override
     public void onInstanceStart(Long instanceId, Map<String, Object> variables) {
-        log.info("[FlowListener] 立项流程启动: instanceId={} vars={}", instanceId, variables.keySet());
+        log.info("[FlowListener] 立项流程启动: instanceId={} vars={}", instanceId,
+                variables == null ? java.util.Collections.emptySet() : variables.keySet());
         // TODO: 调用 initiationService.markProcessing(instanceId)
     }
 

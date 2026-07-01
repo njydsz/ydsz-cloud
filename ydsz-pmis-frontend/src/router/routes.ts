@@ -101,6 +101,12 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/system/import-export/index.vue'),
         meta: { title: '数据导入导出', icon: 'Upload', keepAlive: true },
       },
+      {
+        path: 'chaos',
+        name: 'SystemChaos',
+        component: () => import('@/views/chaos/index.vue'),
+        meta: { title: '混沌工程', icon: 'Aim', keepAlive: true },
+      },
     ],
   },
   {

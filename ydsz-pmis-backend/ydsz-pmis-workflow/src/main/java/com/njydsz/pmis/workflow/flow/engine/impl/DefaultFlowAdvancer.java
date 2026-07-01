@@ -9,7 +9,6 @@ import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;

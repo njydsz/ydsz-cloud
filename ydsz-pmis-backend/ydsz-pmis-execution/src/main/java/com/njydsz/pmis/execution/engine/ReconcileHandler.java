@@ -88,7 +88,7 @@ public class ReconcileHandler {
                 else if (r.getLevel() == ReconcileLevel.WARN) warn++;
                 else if (r.getLevel() == ReconcileLevel.ERROR) err++;
                 String key = r.getType() == null ? "UNKNOWN" : r.getType().getCode();
-                countByType.merge(key, 1L, Long::sum);
+                countByType.merge(key, 1L, (a, b) -> a + b);
             }
         }
         report.setInfoCount(info);

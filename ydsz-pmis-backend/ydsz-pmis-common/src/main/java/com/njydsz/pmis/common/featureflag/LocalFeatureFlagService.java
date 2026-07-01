@@ -50,8 +50,11 @@ public class LocalFeatureFlagService implements FeatureFlagService {
     /** 本地快照缓存 */
     private final Map<String, CacheEntry> snapshotCache = new ConcurrentHashMap<>();
 
-    @Autowired(required = false)
-    private ConfigClient configClient;
+    private final ConfigClient configClient;
+
+    public LocalFeatureFlagService(@Autowired(required = false) ConfigClient configClient) {
+        this.configClient = configClient;
+    }
 
     // ============== 查询 ==============
 

@@ -1,0 +1,116 @@
+# PMIS 通用金丝雀分析模板 (Prometheus 错误率)
+#
+# 工作原理: 部署 canary 后, Argo Rollouts 触发此 AnalysisRun
+#   - 查询 Prometheus 错误率 (HTTP 5xx / 总请求)
+#   - 错误率 > 0.5% 则失败, 自动中止 Rollout
+#   - 错误率 <= 0.5% 则通过, 进入下一步
+#
+# 适用范围: 所有接入 Prometheus 的 PMIS 微服务
+# 阈值: 错误率 < 0.5% (与 docs/canary-deployment.md §6 监控信号保持一致)
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: error-rate-check
+  namespace: pmis-prod
+  labels:
+    app: pmis-rollout-analysis
+spec:
+  args:
+    - name: service-name
+    - name: error-rate-threshold
+      value: "0.005"   # 0.5%
+    - name: window
+      value: "5m"      # 5 分钟窗口
+  metrics:
+    - name: error-rate
+      interval: 60s
+      count: 5         # 连续 5 次失败才算中止 (避免抖动)
+      initialDelay: 30s
+      successCondition: "result <= {{args.error-rate-threshold}}"
+      failureCondition: "result > {{args.error-rate-threshold}}"
+      provider:
+        prometheus:
+          address: http://prometheus.pmis-monitoring.svc.cluster.local:9090
+          query: |
+            sum(rate(
+              http_requests_total{
+                job="{{args.service-name}}",
+                status=~"5.."
+              }[{{args.window}}]
+            ))
+            /
+            sum(rate(
+              http_requests_total{job="{{args.service-name}}"}[{{args.window}}]
+            ))
+---
+# 模板 2: p99 延迟检查 (P99 < 800ms)
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: latency-p99-check
+  namespace: pmis-prod
+  labels:
+    app: pmis-rollout-analysis
+spec:
+  args:
+    - name: service-name
+    - name: p99-threshold
+      value: "0.8"   # 800ms
+    - name: window
+      value: "5m"
+  metrics:
+    - name: p99-latency
+      interval: 60s
+      count: 5
+      successCondition: "result <= {{args.p99-threshold}}"
+      failureCondition: "result > {{args.p99-threshold}}"
+      provider:
+        prometheus:
+          address: http://prometheus.pmis-monitoring.svc.cluster.local:9090
+          query: |
+            histogram_quantile(0.99,
+              sum by (le) (
+                rate(http_request_duration_seconds_bucket{job="{{args.service-name}}"}[{{args.window}}])
+              )
+            )
+---
+# 模板 3: 综合 (错误率 + p99 延迟 同时检查)
+apiVersion: argoproj.io/v1alpha1
+kind: AnalysisTemplate
+metadata:
+  name: composite-check
+  namespace: pmis-prod
+  labels:
+    app: pmis-rollout-analysis
+spec:
+  args:
+    - name: service-name
+  metrics:
+    - name: error-rate
+      interval: 60s
+      count: 3
+      successCondition: "result <= 0.005"
+      failureCondition: "result > 0.005"
+      provider:
+        prometheus:
+          address: http://prometheus.pmis-monitoring.svc.cluster.local:9090
+          query: |
+            sum(rate(
+              http_requests_total{job="{{args.service-name}}",status=~"5.."}[5m]
+            )) / sum(rate(
+              http_requests_total{job="{{args.service-name}}"}[5m]
+            ))
+    - name: p99-latency
+      interval: 60s
+      count: 3
+      successCondition: "result <= 0.8"
+      failureCondition: "result > 0.8"
+      provider:
+        prometheus:
+          address: http://prometheus.pmis-monitoring.svc.cluster.local:9090
+          query: |
+            histogram_quantile(0.99,
+              sum by (le) (
+                rate(http_request_duration_seconds_bucket{job="{{args.service-name}}"}[5m])
+              )
+            )

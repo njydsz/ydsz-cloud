@@ -155,4 +155,61 @@ export const executionHandlers: MockHandler[] = [
     path: '/execution/alert/{id}/ack',
     handler: () => ({ success: true, status: 'ACKED' }),
   },
+  // ====== E2E P1-6 结项流程 mock (批次 25) ======
+  {
+    method: 'GET',
+    path: '/execution/project-closure/page',
+    handler: ({ query }) => ({
+      list: Array.from({ length: Number(query.size || 10) }, (_, i) => ({
+        id: i + 1,
+        closureCode: `CL-${String(i + 1).padStart(4, '0')}`,
+        initiationId: 100 + i,
+        initiationName: `项目${i + 1}`,
+        type: ['FORMAL', 'PRE_CLOSURE', 'FORCED'][i % 3],
+        status: ['DRAFT', 'SUBMITTED', 'ACCEPTED', 'REJECTED'][i % 4],
+        reason: `结项原因 ${i + 1}`,
+        createdAt: '2026-06-25 10:00:00',
+      })),
+      total: 20,
+      page: Number(query.page || 1),
+      size: Number(query.size || 10),
+      pages: 2,
+    }),
+  },
+  {
+    method: 'POST',
+    path: '/execution/project-closure',
+    handler: ({ body }) => {
+      const b = (body || {}) as Record<string, unknown>
+      return {
+        id: 3000 + Math.floor(Math.random() * 1000),
+        closureCode: `CL-${Date.now().toString().slice(-6)}`,
+        initiationId: b.initiationId,
+        initiationName: b.initiationName || `项目${b.initiationId}`,
+        type: b.type || 'FORMAL',
+        status: 'DRAFT',
+        reason: b.reason || '',
+        createdAt: new Date().toISOString(),
+      }
+    },
+  },
+  {
+    method: 'PUT',
+    path: '/execution/project-closure/status',
+    handler: () => ({ success: true }),
+  },
+  {
+    method: 'GET',
+    path: '/execution/project-closure/{id}',
+    handler: () => ({
+      id: 1,
+      closureCode: 'CL-0001',
+      initiationId: 100,
+      initiationName: '示例项目',
+      type: 'FORMAL',
+      status: 'ACCEPTED',
+      reason: '已完成',
+      createdAt: '2026-06-25 10:00:00',
+    }),
+  },
 ]

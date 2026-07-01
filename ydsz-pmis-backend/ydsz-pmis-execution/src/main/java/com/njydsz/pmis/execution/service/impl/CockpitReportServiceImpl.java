@@ -7,7 +7,6 @@ import com.njydsz.pmis.execution.dto.CockpitKpiVO;
 import com.njydsz.pmis.execution.dto.ExecutiveOverviewVO;
 import com.njydsz.pmis.execution.dto.KpiTrendVO;
 import com.njydsz.pmis.execution.dto.ProjectGroupKpiDTO;
-import com.njydsz.pmis.execution.engine.alert.AlertRule;
 import com.njydsz.pmis.execution.engine.alert.AlertRuleEngine;
 import com.njydsz.pmis.execution.engine.alert.BenchHighRule;
 import com.njydsz.pmis.execution.engine.alert.EvmRedRule;
@@ -32,7 +31,6 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -142,7 +140,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
                 if (top == null || "null".equalsIgnoreCase(top)) {
                     top = "NORMAL";
                 }
-                out.merge(top, 1, Integer::sum);
+                out.merge(top, 1, (a, b) -> a + b);
             }
         } catch (Exception e) {
             log.warn("[Cockpit] EVM 健康分布聚合失败: {}", e.getMessage());
@@ -280,14 +278,14 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
         // series 配置（柱图 = 合同总额；折线 = 项目数）
         List<Map<String, Object>> series = new ArrayList<>();
-        Map<String, Object> sAmount = new LinkedHashMap();
+        Map<String, Object> sAmount = new LinkedHashMap<>();
         sAmount.put("name", "合同总额");
         sAmount.put("type", "bar");
         sAmount.put("data", amountSeries);
         sAmount.put("unit", "元");
         sAmount.put("yAxisIndex", 0);
         series.add(sAmount);
-        Map<String, Object> sProj = new LinkedHashMap();
+        Map<String, Object> sProj = new LinkedHashMap<>();
         sProj.put("name", "项目数");
         sProj.put("type", "line");
         sProj.put("data", projectCountSeries);
@@ -297,19 +295,19 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         series.add(sProj);
 
         List<Map<String, Object>> yAxis = new ArrayList<>();
-        Map<String, Object> ya0 = new LinkedHashMap();
+        Map<String, Object> ya0 = new LinkedHashMap<>();
         ya0.put("name", "合同总额（元）");
         ya0.put("position", "left");
         ya0.put("type", "value");
         yAxis.add(ya0);
-        Map<String, Object> ya1 = new LinkedHashMap();
+        Map<String, Object> ya1 = new LinkedHashMap<>();
         ya1.put("name", "项目数");
         ya1.put("position", "right");
         ya1.put("type", "value");
         ya1.put("min", 0);
         yAxis.add(ya1);
 
-        Map<String, Object> summary = new LinkedHashMap();
+        Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("yearCount", years.size());
         summary.put("totalAmount", totalAmount);
         summary.put("peakYear", peakYear);

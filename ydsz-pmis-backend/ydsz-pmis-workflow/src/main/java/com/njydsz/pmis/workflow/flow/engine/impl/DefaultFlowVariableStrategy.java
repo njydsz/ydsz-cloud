@@ -28,7 +28,12 @@ import java.util.regex.Pattern;
 public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{([^}]+)}");
-    private static final Pattern COMPARE = Pattern.compile("^\\s*([a-zA-Z_][a-zA-Z0-9_\\.]*)\\s*(>=|<=|==|!=|>|<)\\s*(.+?)\\s*$");
+    /** 字面量比较：lhs (op) rhs  -- lhs 可为标识符、数字、字符串 */
+    private static final Pattern COMPARE_LITERAL = Pattern.compile(
+            "^\\s*(.+?)\\s*(>=|<=|==|!=|>|<)\\s*(.+?)\\s*$");
+    /** ${var} (op) 字面量  -- 主要使用模式 */
+    private static final Pattern COMPARE_PLACEHOLDER = Pattern.compile(
+            "^\\s*\\$\\{([^}]+)}\\s*(>=|<=|==|!=|>|<)\\s*(.+?)\\s*$");
 
     @Override
     public boolean evaluate(String condition, Map<String, Object> variables) {
@@ -37,26 +42,52 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
         }
         String expr = condition.trim();
         try {
-            // 1. 先做变量替换
-            String resolved = replacePlaceholders(expr, variables);
-            // 2. 尝试解析比较表达式
-            Matcher m = COMPARE.matcher(resolved);
-            if (m.matches()) {
-                String key = m.group(1);
-                String op = m.group(2);
-                String rawValue = m.group(3).trim();
-                Object actual = lookupValue(key, variables);
+            // 1. ${var} op value 模式（推荐用法）
+            Matcher phM = COMPARE_PLACEHOLDER.matcher(expr);
+            if (phM.matches()) {
+                String varName = phM.group(1).trim();
+                String op = phM.group(2);
+                String rawValue = phM.group(3).trim();
+                Object actual = lookupValue(varName, variables);
                 Object expected = parseLiteral(rawValue);
                 return compare(actual, op, expected);
             }
-            // 3. 布尔字面量
-            if ("true".equalsIgnoreCase(resolved)) {
+            // 2. 单一 ${var} 占位符：非空 + 非 false 即视为 true
+            if (PLACEHOLDER.matcher(expr).matches()) {
+                String varName = expr.substring(2, expr.length() - 1).trim();
+                Object v = lookupValue(varName, variables);
+                if (v == null) {
+                    return false;
+                }
+                if (v instanceof Boolean) {
+                    return (Boolean) v;
+                }
+                if (v instanceof String) {
+                    String s = ((String) v).trim();
+                    return !s.isEmpty() && !"false".equalsIgnoreCase(s);
+                }
                 return true;
             }
-            if ("false".equalsIgnoreCase(resolved)) {
+            // 3. 字面量比较：lhs op rhs（lhs/rhs 可为数字、字符串、布尔；不含 ${}）
+            if (!expr.contains("${")) {
+                Matcher m = COMPARE_LITERAL.matcher(expr);
+                if (m.matches()) {
+                    String rawLhs = m.group(1).trim();
+                    String op = m.group(2);
+                    String rawValue = m.group(3).trim();
+                    Object actual = parseLiteral(rawLhs);
+                    Object expected = parseLiteral(rawValue);
+                    return compare(actual, op, expected);
+                }
+            }
+            // 4. 布尔字面量
+            if ("true".equalsIgnoreCase(expr)) {
+                return true;
+            }
+            if ("false".equalsIgnoreCase(expr)) {
                 return false;
             }
-            log.warn("[Flow] 条件表达式无法识别: expr={} resolved={}", condition, resolved);
+            log.warn("[Flow] 条件表达式无法识别: expr={}", condition);
             return false;
         } catch (Exception e) {
             log.error("[Flow] 条件解析异常: expr={} err={}", condition, e.getMessage());
@@ -133,7 +164,6 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
         }
     }
 
-    @SuppressWarnings({"rawtypes", "unchecked"})
     private boolean compare(Object actual, String op, Object expected) {
         if (actual == null && expected == null) {
             return "==".equals(op) || "!=".equals(op) ? "==".equals(op) : false;

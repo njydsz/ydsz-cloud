@@ -16,6 +16,8 @@ import { cockpitHandlers } from './cockpit'
 import { resourceHandlers } from './resource'
 import { userHandlers } from './user'
 import { systemHandlers } from './system'
+import { agentHandlers } from './agent'
+import { chaosHandlers } from './chaos'
 
 export const mockHandlers: MockHandler[] = [
   ...authHandlers,
@@ -28,4 +30,6 @@ export const mockHandlers: MockHandler[] = [
   ...resourceHandlers,
   ...userHandlers,
   ...systemHandlers,
+  ...agentHandlers,
+  ...chaosHandlers,
 ]

@@ -171,8 +171,8 @@ class JobServiceImplTest {
     @DisplayName("page 分页应按条件过滤")
     void page() {
         when(jobMapper.selectPage(any(), any())).thenAnswer(inv -> {
-            com.baomidou.mybatisplus.extension.plugins.pagination.Page p =
-                    (com.baomidou.mybatisplus.extension.plugins.pagination.Page) inv.getArgument(0);
+            com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobDO> p =
+                    (com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobDO>) inv.getArgument(0);
             p.setRecords(List.of(new JobDO()));
             p.setTotal(1L);
             return p;
@@ -185,8 +185,8 @@ class JobServiceImplTest {
     @DisplayName("pageLog 应按条件过滤")
     void pageLog() {
         when(jobLogMapper.selectPage(any(), any())).thenAnswer(inv -> {
-            com.baomidou.mybatisplus.extension.plugins.pagination.Page p =
-                    (com.baomidou.mybatisplus.extension.plugins.pagination.Page) inv.getArgument(0);
+            com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLogDO> p =
+                    (com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLogDO>) inv.getArgument(0);
             p.setRecords(List.of(new JobLogDO()));
             p.setTotal(1L);
             return p;

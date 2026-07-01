@@ -41,7 +41,6 @@ public class QianfanLlmProvider extends AbstractHttpLlmProvider {
 
     private final String apiKey;
     private final String model;
-    private final String baseUrl;
     private final RestClient http;
 
     public QianfanLlmProvider(
@@ -53,7 +52,6 @@ public class QianfanLlmProvider extends AbstractHttpLlmProvider {
             @Value("${pmis.agent.llm.fallback-to-mock:true}") boolean fallback) {
         this.apiKey = apiKey;
         this.model = model;
-        this.baseUrl = baseUrl;
         this.timeoutMillis = timeoutMillis;
         this.maxRetries = maxRetries;
         this.fallbackToMockOnError = fallback;
@@ -87,13 +85,13 @@ public class QianfanLlmProvider extends AbstractHttpLlmProvider {
         body.put("top_p", 0.9);
         body.put("penalty_score", 1.0);
 
-        Map response = http.post()
+        Map<String, Object> response = http.post()
                 .uri("/v2/chat/completions")
                 .header("Authorization", "Bearer " + apiKey)
                 .header("Content-Type", "application/json")
                 .body(body)
                 .retrieve()
-                .body(Map.class);
+                .body(new org.springframework.core.ParameterizedTypeReference<Map<String, Object>>() {});
         if (response == null) return "";
         Object choices = response.get("choices");
         if (!(choices instanceof List<?> list) || list.isEmpty()) return "";

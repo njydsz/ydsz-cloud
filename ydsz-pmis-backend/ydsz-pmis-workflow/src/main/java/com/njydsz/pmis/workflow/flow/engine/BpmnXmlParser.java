@@ -98,7 +98,7 @@ public class BpmnXmlParser {
             }
             String local = elem.getLocalName();
             if (local == null) {
-                continue;
+                local = elem.getNodeName();
             }
             if (isFlowNode(local)) {
                 FlowNodeDO nodeDo = parseNode(elem, local);
@@ -125,15 +125,15 @@ public class BpmnXmlParser {
             }
         }
 
+        // 校验：节点编码唯一
+        if (nodeByCode.size() != nodes.size()) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "BPMN 节点 id 必须唯一");
+        }
         // 校验：必须含开始节点
         boolean hasStart = nodes.stream()
                 .anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
         if (!hasStart) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "BPMN 流程必须包含 <startEvent> 开始节点");
-        }
-        // 校验：节点编码唯一
-        if (nodeByCode.size() != nodes.size()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "BPMN 节点 id 必须唯一");
         }
 
         model.setNodes(nodes);
@@ -328,14 +328,14 @@ public class BpmnXmlParser {
      */
     private int mapNodeType(String localName) {
         return switch (localName.toLowerCase()) {
-            case "startEvent" -> FlowNodeType.START.getCode();
-            case "endEvent" -> FlowNodeType.END.getCode();
-            case "userTask", "serviceTask", "scriptTask", "manualTask",
-                 "receiveTask", "callActivity", "subProcess" -> FlowNodeType.APPROVAL.getCode();
-            case "exclusiveGateway", "eventBasedGateway", "complexGateway" -> FlowNodeType.CONDITION.getCode();
-            case "parallelGateway" -> FlowNodeType.PARALLEL.getCode();
-            case "inclusiveGateway" -> FlowNodeType.INCLUSIVE.getCode();
-            case "intermediateThrowEvent", "intermediateCatchEvent" -> FlowNodeType.CC.getCode();
+            case "startevent" -> FlowNodeType.START.getCode();
+            case "endevent" -> FlowNodeType.END.getCode();
+            case "usertask", "servicetask", "scripttask", "manualtask",
+                 "receivetask", "callactivity", "subprocess" -> FlowNodeType.APPROVAL.getCode();
+            case "exclusivegateway", "eventbasedgateway", "complexgateway" -> FlowNodeType.CONDITION.getCode();
+            case "parallelgateway" -> FlowNodeType.PARALLEL.getCode();
+            case "inclusivegateway" -> FlowNodeType.INCLUSIVE.getCode();
+            case "intermediatethrowevent", "intermediatecatchevent" -> FlowNodeType.CC.getCode();
             default -> FlowNodeType.APPROVAL.getCode();
         };
     }

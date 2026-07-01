@@ -1,0 +1,556 @@
+<!--
+  混沌工程控制台 (批次 24 P2-2)
+
+  功能:
+    - 实验列表 (启用/禁用/编辑/删除/注册)
+    - 实时统计 (按 outcome 类型分布饼图 + 按 target 柱状图)
+    - 注入历史 (最近 100 条, 实时刷新)
+    - Dry-Run 按钮 (主动触发一次, 验证容错)
+
+  实时性策略:
+    - 列表/历史每 5s 自动刷新 (useIntervalFn)
+    - 实时统计基于 history 数据, 跟随刷新节流
+    - 暂不接入 WebSocket (后端未实现推送), 5s 轮询已可满足"实时统计"需求
+-->
+<template>
+  <div class="chaos-dashboard">
+    <header class="chaos-dashboard__header">
+      <h2>混沌工程控制台</h2>
+      <p class="chaos-dashboard__desc">
+        通过模拟生产故障, 验证系统容错能力. 仅在 <code>dev / staging</code> 环境启用,
+        生产环境必须 <code>pmis.featureflag.CANARY_DEPLOY=false</code>。
+      </p>
+    </header>
+
+    <!-- KPI 概览 -->
+    <section class="chaos-dashboard__kpis">
+      <div class="kpi-card">
+        <div class="kpi-card__label">已注册实验</div>
+        <div class="kpi-card__value">{{ experiments.length }}</div>
+      </div>
+      <div class="kpi-card kpi-card--success">
+        <div class="kpi-card__label">启用中</div>
+        <div class="kpi-card__value">{{ enabledCount }}</div>
+      </div>
+      <div class="kpi-card kpi-card--warning">
+        <div class="kpi-card__label">已注入 (近 100 条)</div>
+        <div class="kpi-card__value">{{ injectedCount }}</div>
+      </div>
+      <div class="kpi-card kpi-card--info">
+        <div class="kpi-card__label">Feature Flag</div>
+        <div class="kpi-card__value kpi-card__value--small">
+          {{ canaryDeployFlag ? 'ON' : 'OFF' }}
+        </div>
+      </div>
+    </section>
+
+    <!-- 图表区 -->
+    <section class="chaos-dashboard__charts">
+      <div class="chart-box">
+        <h4>按 Outcome 分布</h4>
+        <div ref="outcomeChartRef" class="chart-canvas" data-test="chart-outcome" />
+      </div>
+      <div class="chart-box">
+        <h4>按 Target 注入频次 (Top 10)</h4>
+        <div ref="targetChartRef" class="chart-canvas" data-test="chart-target" />
+      </div>
+    </section>
+
+    <!-- 实验列表 + 操作 -->
+    <section class="chaos-dashboard__experiments">
+      <div class="section-header">
+        <h3>实验列表</h3>
+        <el-button
+          type="primary"
+          :loading="registering"
+          @click="onRegister"
+          data-test="btn-register"
+        >
+          + 注册实验
+        </el-button>
+      </div>
+
+      <el-table
+        :data="experiments"
+        border
+        stripe
+        data-test="exp-table"
+        :loading="loading"
+      >
+        <el-table-column prop="target" label="Target" min-width="220" />
+        <el-table-column prop="type" label="类型" width="160">
+          <template #default="{ row }">
+            <el-tag :type="typeTagType(row.type)">{{ row.type }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="参数" min-width="200">
+          <template #default="{ row }">
+            <span v-if="row.type === 'LATENCY'">{{ row.latencyMs ?? 0 }} ms</span>
+            <span v-else-if="row.type === 'ERROR_RATE'">{{ ((row.errorRate ?? 0) * 100).toFixed(0) }}%</span>
+            <span v-else-if="row.type === 'EXCEPTION'">{{ row.exceptionClass || 'RuntimeException' }}</span>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column prop="description" label="说明" min-width="200" show-overflow-tooltip />
+        <el-table-column label="启用" width="100">
+          <template #default="{ row }">
+            <el-switch
+              :model-value="row.enabled"
+              :loading="toggleLoading[row.target]"
+              @change="(v) => onToggle(row.target, v as boolean)"
+              data-test="switch-enabled"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="220" fixed="right">
+          <template #default="{ row }">
+            <el-button
+              size="small"
+              type="warning"
+              :loading="dryRunning === row.target"
+              @click="onDryRun(row.target)"
+              data-test="btn-dry-run"
+            >
+              Dry-Run
+            </el-button>
+            <el-button
+              size="small"
+              type="danger"
+              :loading="deleting === row.target"
+              @click="onUnregister(row.target)"
+            >
+              删除
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </section>
+
+    <!-- 历史时间线 -->
+    <section class="chaos-dashboard__history">
+      <div class="section-header">
+        <h3>注入历史 (最近 {{ history.length }} 条)</h3>
+        <div>
+          <el-button @click="refresh" :loading="loading">刷新</el-button>
+          <el-button type="danger" plain @click="onClearHistory" data-test="btn-clear-history">
+            清空
+          </el-button>
+        </div>
+      </div>
+      <el-table :data="history" border max-height="420" data-test="history-table">
+        <el-table-column label="时间" width="200">
+          <template #default="{ row }">
+            {{ formatTime(row.timestamp) }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="target" label="Target" min-width="220" />
+        <el-table-column label="Outcome" width="180">
+          <template #default="{ row }">
+            <el-tag :type="outcomeTagType(row.outcome)">{{ row.outcome }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="detail" label="详情" min-width="300" show-overflow-tooltip />
+      </el-table>
+    </section>
+
+    <!-- 注册弹窗 -->
+    <el-dialog
+      v-model="dialogVisible"
+      title="注册混沌实验"
+      width="560px"
+      data-test="dialog-register"
+    >
+      <el-form :model="form" label-width="100px">
+        <el-form-item label="Target" required>
+          <el-input
+            v-model="form.target"
+            placeholder="如: ContractService.getContract"
+            data-test="input-target"
+          />
+        </el-form-item>
+        <el-form-item label="类型" required>
+          <el-select v-model="form.type" data-test="select-type">
+            <el-option label="LATENCY (延迟)" value="LATENCY" />
+            <el-option label="EXCEPTION (异常)" value="EXCEPTION" />
+            <el-option label="ERROR_RATE (错误率)" value="ERROR_RATE" />
+            <el-option label="NETWORK_PARTITION (网络分区)" value="NETWORK_PARTITION" />
+            <el-option label="RESOURCE_EXHAUSTION (资源耗尽)" value="RESOURCE_EXHAUSTION" />
+          </el-select>
+        </el-form-item>
+        <el-form-item v-if="form.type === 'LATENCY'" label="延迟 (ms)">
+          <el-input-number v-model="form.latencyMs" :min="0" :max="60_000" />
+        </el-form-item>
+        <el-form-item v-if="form.type === 'EXCEPTION'" label="异常类">
+          <el-input
+            v-model="form.exceptionClass"
+            placeholder="java.lang.RuntimeException"
+          />
+        </el-form-item>
+        <el-form-item v-if="form.type === 'ERROR_RATE'" label="错误率 (0-1)">
+          <el-input-number
+            v-model="form.errorRate"
+            :min="0"
+            :max="1"
+            :step="0.1"
+          />
+        </el-form-item>
+        <el-form-item label="说明">
+          <el-input v-model="form.description" type="textarea" :rows="2" />
+        </el-form-item>
+        <el-form-item label="启用">
+          <el-switch v-model="form.enabled" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button
+          type="primary"
+          :loading="registering"
+          @click="onSubmitRegister"
+          data-test="btn-submit-register"
+        >
+          确认注册
+        </el-button>
+      </template>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+/**
+ * chaos-dashboard 主页面
+ *
+ * 数据来源:
+ *   - experiments: GET /chaos/experiments
+ *   - history:     GET /chaos/history
+ *   - toggle:      PUT /chaos/experiments/{target}/enabled?enabled=...
+ *   - register:    POST /chaos/experiments
+ *   - dryRun:      POST /chaos/dry-run?target=...
+ */
+import { computed, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { useECharts } from '@/composables/useECharts'
+import { useIntervalFn } from '@vueuse/core'
+import {
+  listExperiments,
+  toggleExperiment,
+  unregisterExperiment,
+  registerExperiment,
+  dryRun,
+  history as fetchHistory,
+  clearHistory as apiClearHistory,
+} from '@/api/chaos'
+import type { ChaosExperiment, ChaosEvent, ChaosOutcome, ChaosExperimentType } from '@/api/chaos/types'
+
+const experiments = ref<ChaosExperiment[]>([])
+const history = ref<ChaosEvent[]>([])
+const loading = ref(false)
+const registering = ref(false)
+const dryRunning = ref<string | null>(null)
+const deleting = ref<string | null>(null)
+const toggleLoading = reactive<Record<string, boolean>>({})
+const dialogVisible = ref(false)
+
+const canaryDeployFlag = ref(false)  // 仅展示, 真实后端通过 /feature-flags 拉取
+
+const initialForm: ChaosExperiment = {
+  target: '',
+  type: 'LATENCY',
+  latencyMs: 500,
+  errorRate: 0.3,
+  exceptionClass: 'java.lang.RuntimeException',
+  description: '',
+  enabled: false,
+  createdBy: 'admin',
+}
+const form = reactive<ChaosExperiment>({ ...initialForm })
+
+// ===== 派生指标 =====
+const enabledCount = computed(() => experiments.value.filter((e) => e.enabled).length)
+const injectedCount = computed(
+  () => history.value.filter((h) => h.outcome === 'INJECTED').length,
+)
+
+// ===== ECharts =====
+const outcomeChartRef = ref<HTMLDivElement | null>(null)
+const targetChartRef = ref<HTMLDivElement | null>(null)
+const outcomeChart = useECharts(outcomeChartRef)
+const targetChart = useECharts(targetChartRef)
+
+function renderCharts() {
+  // Outcome 饼图
+  const outcomeGroups: Record<ChaosOutcome, number> = {
+    INJECTED: 0,
+    NOT_TRIGGERED: 0,
+    BLOCKED_BY_FLAG: 0,
+    SKIPPED_PROBABILITY: 0,
+  }
+  for (const ev of history.value) outcomeGroups[ev.outcome]++
+  outcomeChart.setOption(
+    {
+      tooltip: { trigger: 'item' },
+      legend: { bottom: 0 },
+      series: [
+        {
+          type: 'pie',
+          radius: ['40%', '70%'],
+          data: (Object.keys(outcomeGroups) as ChaosOutcome[]).map((k) => ({
+            name: k,
+            value: outcomeGroups[k],
+          })),
+        },
+      ],
+    },
+    true,
+  )
+
+  // Target 柱状图 (Top 10)
+  const targetCount: Record<string, number> = {}
+  for (const ev of history.value) {
+    if (ev.outcome === 'INJECTED') {
+      targetCount[ev.target] = (targetCount[ev.target] || 0) + 1
+    }
+  }
+  const top = Object.entries(targetCount)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+  targetChart.setOption(
+    {
+      tooltip: { trigger: 'axis' },
+      grid: { left: 40, right: 16, top: 16, bottom: 40 },
+      xAxis: {
+        type: 'category',
+        data: top.map(([t]) => t.length > 18 ? t.slice(0, 18) + '…' : t),
+        axisLabel: { rotate: 30 },
+      },
+      yAxis: { type: 'value' },
+      series: [{ type: 'bar', data: top.map(([, c]) => c) }],
+    },
+    true,
+  )
+}
+
+watch(history, () => renderCharts(), { deep: true })
+
+// ===== 数据加载 =====
+async function refresh() {
+  loading.value = true
+  try {
+    const [exps, hist] = await Promise.all([listExperiments(), fetchHistory()])
+    experiments.value = exps
+    history.value = hist
+  } catch (e) {
+    ElMessage.error('加载混沌数据失败: ' + (e instanceof Error ? e.message : String(e)))
+  } finally {
+    loading.value = false
+  }
+}
+
+// 自动刷新 (5s) - 准实时统计
+const { pause: pauseAutoRefresh, resume: resumeAutoRefresh } = useIntervalFn(refresh, 5_000, {
+  immediate: true,
+  immediateCallback: true,
+})
+
+onMounted(() => {
+  // 首屏数据已在 useIntervalFn immediate 触发
+})
+onBeforeUnmount(() => pauseAutoRefresh())
+
+// ===== 操作 =====
+async function onToggle(target: string, enabled: boolean) {
+  toggleLoading[target] = true
+  try {
+    await toggleExperiment(target, enabled)
+    ElMessage.success(`${target} 已${enabled ? '启用' : '停用'}`)
+    await refresh()
+  } catch (e) {
+    ElMessage.error('操作失败: ' + (e instanceof Error ? e.message : String(e)))
+  } finally {
+    toggleLoading[target] = false
+  }
+}
+
+async function onUnregister(target: string) {
+  await ElMessageBox.confirm(`确定注销实验 ${target} 吗?`, '提示', { type: 'warning' })
+  deleting.value = target
+  try {
+    await unregisterExperiment(target)
+    ElMessage.success('已注销')
+    await refresh()
+  } catch (e) {
+    ElMessage.error('注销失败: ' + (e instanceof Error ? e.message : String(e)))
+  } finally {
+    deleting.value = null
+  }
+}
+
+async function onDryRun(target: string) {
+  dryRunning.value = target
+  try {
+    const r = await dryRun(target)
+    if (r.outcome === 'INJECTED') {
+      ElMessage.warning(`Dry-Run 已注入: ${r.error}`)
+    } else {
+      ElMessage.info(`Dry-Run: ${r.outcome}`)
+    }
+    await refresh()
+  } catch (e) {
+    ElMessage.error('Dry-Run 失败: ' + (e instanceof Error ? e.message : String(e)))
+  } finally {
+    dryRunning.value = null
+  }
+}
+
+function onRegister() {
+  Object.assign(form, initialForm)
+  dialogVisible.value = true
+}
+
+async function onSubmitRegister() {
+  if (!form.target.trim()) {
+    ElMessage.warning('Target 必填')
+    return
+  }
+  registering.value = true
+  try {
+    await registerExperiment({ ...form })
+    ElMessage.success('已注册')
+    dialogVisible.value = false
+    await refresh()
+  } catch (e) {
+    ElMessage.error('注册失败: ' + (e instanceof Error ? e.message : String(e)))
+  } finally {
+    registering.value = false
+  }
+}
+
+async function onClearHistory() {
+  await ElMessageBox.confirm('确定清空所有注入历史? 此操作不可恢复。', '提示', { type: 'warning' })
+  try {
+    await apiClearHistory()
+    ElMessage.success('已清空')
+    await refresh()
+  } catch (e) {
+    ElMessage.error('清空失败: ' + (e instanceof Error ? e.message : String(e)))
+  }
+}
+
+// ===== 辅助 =====
+function formatTime(ts: number) {
+  return new Date(ts).toLocaleString('zh-CN', { hour12: false })
+}
+
+function typeTagType(t: ChaosExperimentType): 'success' | 'warning' | 'info' | 'danger' {
+  switch (t) {
+    case 'LATENCY':
+      return 'warning'
+    case 'EXCEPTION':
+      return 'danger'
+    case 'ERROR_RATE':
+      return 'info'
+    case 'NETWORK_PARTITION':
+      return 'danger'
+    default:
+      return 'success'
+  }
+}
+
+function outcomeTagType(o: ChaosOutcome): 'success' | 'warning' | 'info' | 'danger' {
+  switch (o) {
+    case 'INJECTED':
+      return 'danger'
+    case 'BLOCKED_BY_FLAG':
+      return 'warning'
+    case 'SKIPPED_PROBABILITY':
+      return 'info'
+    default:
+      return 'success'
+  }
+}
+
+defineExpose({ refresh, pauseAutoRefresh, resumeAutoRefresh })
+</script>
+
+<style scoped>
+.chaos-dashboard {
+  padding: 16px 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+.chaos-dashboard__header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+.chaos-dashboard__desc {
+  color: #666;
+  font-size: 13px;
+  margin: 4px 0 16px;
+}
+.chaos-dashboard__desc code {
+  background: #f0f0f0;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+.chaos-dashboard__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.kpi-card {
+  padding: 16px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  border-left: 3px solid #409eff;
+}
+.kpi-card--success { border-left-color: #67c23a; }
+.kpi-card--warning { border-left-color: #e6a23c; }
+.kpi-card--info    { border-left-color: #909399; }
+.kpi-card__label { color: #888; font-size: 13px; }
+.kpi-card__value { font-size: 24px; font-weight: 600; margin-top: 4px; }
+.kpi-card__value--small { font-size: 16px; }
+
+.chaos-dashboard__charts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.chart-box {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+.chart-box h4 {
+  margin: 0 0 8px;
+  font-size: 14px;
+  color: #333;
+}
+.chart-canvas {
+  width: 100%;
+  height: 280px;
+}
+
+.chaos-dashboard__experiments,
+.chaos-dashboard__history {
+  background: #fff;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 16px;
+}
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.section-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+</style>
