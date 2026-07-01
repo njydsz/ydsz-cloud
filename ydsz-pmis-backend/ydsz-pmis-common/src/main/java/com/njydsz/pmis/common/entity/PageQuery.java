@@ -34,6 +34,11 @@ public class PageQuery implements Serializable {
     /** 排序方向 asc/desc */
     private String orderDir = "desc";
 
+    /**
+     * 计算 SQL 偏移量（page 从 1 开始，对 page/size 做最小值保护）
+     *
+     * @return 偏移量
+     */
     public long offset() {
         return (Math.max(page, 1) - 1) * Math.max(size, 1);
     }

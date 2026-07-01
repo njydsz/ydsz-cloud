@@ -50,12 +50,39 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     private final JobMapper jobMapper;
     private final JobLogMapper jobLogMapper;
     private final ApplicationContext applicationContext;
+    private final StringRedisTemplate redisTemplate;
 
     /** 调度器 */
     private TaskScheduler taskScheduler;
 
     /** 已调度的任务: jobKey -> Future */
     private final Map<String, ScheduledFuture<?>> scheduledMap = new ConcurrentHashMap<>();
+
+    // ==================== 分布式锁常量 ====================
+
+    /** 任务锁 key 前缀 */
+    private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
+
+    /** 任务锁默认 TTL: 5 分钟（防止节点宕机导致锁不释放） */
+    private static final Duration JOB_LOCK_TTL = Duration.ofMinutes(5);
+
+    /** 当前实例标识（hostname:pid），用于锁值和安全释放 */
+    private static final String INSTANCE_ID = initInstanceId();
+
+    /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete） */
+    private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
+
+    private static String initInstanceId() {
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        return name != null ? name : "unknown:" + ProcessHandle.current().pid();
+    }
+
+    private static DefaultRedisScript<Long> initReleaseScript() {
+        DefaultRedisScript<Long> script = new DefaultRedisScript<>();
+        script.setScriptText("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
+        script.setResultType(Long.class);
+        return script;
+    }
 
     @PostConstruct
     public void initScheduler() {
@@ -288,6 +315,19 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     // ==================== 内部执行逻辑 ====================
 
     private Long executeJob(JobDO job, boolean manual) {
+        // 定时触发（非手动）时获取分布式锁，防止多实例重复执行
+        String lockKey = null;
+        if (!manual) {
+            lockKey = JOB_LOCK_PREFIX + job.getJobKey();
+            Boolean acquired = redisTemplate.opsForValue()
+                    .setIfAbsent(lockKey, INSTANCE_ID, JOB_LOCK_TTL);
+            if (!Boolean.TRUE.equals(acquired)) {
+                log.info("[Scheduler] 任务已被其他实例持有锁, 跳过本次执行: key={}", job.getJobKey());
+                return null;
+            }
+            log.debug("[Scheduler] 获取分布式锁成功: key={} holder={}", lockKey, INSTANCE_ID);
+        }
+
         // 写开始日志
         JobLogDO log0 = new JobLogDO();
         log0.setJobId(job.getId());
@@ -329,6 +369,17 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             }
             jobMapper.updateStats(job.getId(), log0.getStartTime(), next, incFire, incSucc, incFail,
                     success ? null : "ERROR");
+
+            // 释放分布式锁（Lua 脚本安全释放: 仅当 value 匹配时才 delete）
+            if (lockKey != null) {
+                try {
+                    redisTemplate.execute(RELEASE_LOCK_SCRIPT,
+                            Collections.singletonList(lockKey), INSTANCE_ID);
+                } catch (Exception e) {
+                    log.warn("[Scheduler] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}",
+                            lockKey, e.getMessage());
+                }
+            }
         }
         return log0.getId();
     }
@@ -361,10 +412,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     private LocalDateTime nextFireTime(String cron) {
         try {
             CronExpression expr = CronExpression.parse(cron);
-            return expr.next(LocalDateTime.now()) == null ? null
-                    : expr.next(LocalDateTime.now()).atZone(ZoneId.systemDefault())
-                            .withZoneSameInstant(ZoneId.systemDefault()).toLocalDateTime();
+            // P0-5 修复: 仅调用一次 expr.next() 避免竞态条件
+            // CronExpression 基于 LocalDateTime 直接计算, 无需时区转换
+            return expr.next(LocalDateTime.now());
         } catch (Exception e) {
+            log.warn("[Scheduler] 计算 nextFireTime 失败: cron={} err={}", cron, e.getMessage());
             return null;
         }
     }

@@ -35,6 +35,14 @@ public class DataExportAuditAspect {
 
     private final ApplicationEventPublisher publisher;
 
+    /**
+     * 环绕增强：先执行目标方法，再异步发布数据导出审计事件
+     *
+     * @param pjp 连接点
+     * @param ann 数据导出审计注解
+     * @return 目标方法返回值
+     * @throws Throwable 目标方法抛出的异常
+     */
     @Around("@annotation(ann)")
     public Object around(ProceedingJoinPoint pjp, DataExportAudit ann) throws Throwable {
         Object result = pjp.proceed();

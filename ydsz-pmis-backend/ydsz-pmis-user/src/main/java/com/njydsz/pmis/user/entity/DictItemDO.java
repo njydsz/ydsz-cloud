@@ -24,25 +24,32 @@ public class DictItemDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 所属字典类型编码 */
     private String typeCode;
 
+    /** 字典项编码 */
     private String itemCode;
 
+    /** 字典项值 */
     private String itemValue;
 
+    /** 排序号 */
     private Integer sortOrder;
 
     /** 父项 ID（0=根） */
     private Long parentId;
 
+    /** 描述 */
     private String description;
 
     /** 扩展属性 JSON */
     @TableField(jdbcType = org.apache.ibatis.type.JdbcType.OTHER)
     private String extJson;
 
+    /** 状态：ENABLED/DISABLED */
     private String status;
 }

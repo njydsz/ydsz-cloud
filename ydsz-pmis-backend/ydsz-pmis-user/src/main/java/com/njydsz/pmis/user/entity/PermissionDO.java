@@ -23,6 +23,7 @@ public class PermissionDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -32,6 +33,7 @@ public class PermissionDO extends BaseDO {
     /** 权限编码：system:user:create */
     private String permCode;
 
+    /** 权限名称 */
     private String permName;
 
     /** MENU/BUTTON/API */
@@ -43,12 +45,15 @@ public class PermissionDO extends BaseDO {
     /** 组件路径 */
     private String component;
 
+    /** 菜单图标 */
     private String icon;
 
+    /** 排序号 */
     private Integer sortOrder;
 
     /** 1=显示, 0=隐藏 */
     private Integer visible;
 
+    /** 状态：ENABLED/DISABLED */
     private String status;
 }

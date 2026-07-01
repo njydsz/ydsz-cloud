@@ -18,6 +18,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
+/**
+ * 敏感操作审计查询 Controller
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "敏感操作审计")
 @RestController
 @RequestMapping("/api/v1/audit/sensitive-op")

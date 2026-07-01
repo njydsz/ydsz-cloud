@@ -34,7 +34,11 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     /**
-     * 业务异常
+     * 业务异常处理
+     *
+     * @param e   业务异常
+     * @param req HTTP 请求
+     * @return 统一响应
      */
     @ExceptionHandler(BizException.class)
     public R<Void> handleBizException(BizException e, HttpServletRequest req) {
@@ -46,7 +50,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * @Valid 校验失败 (RequestBody)
+     * @Valid 校验失败 (RequestBody) 处理
+     *
+     * @param e 校验异常
+     * @return 统一响应
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.OK)
@@ -61,7 +68,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * @Valid 校验失败 (Form)
+     * @Valid 校验失败 (Form) 处理
+     *
+     * @param e 绑定异常
+     * @return 统一响应
      */
     @ExceptionHandler(BindException.class)
     public R<Void> handleBindException(BindException e) {
@@ -75,7 +85,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * @Validated 校验失败 (Path/Param)
+     * @Validated 校验失败 (Path/Param) 处理
+     *
+     * @param e 约束违反异常
+     * @return 统一响应
      */
     @ExceptionHandler(ConstraintViolationException.class)
     public R<Void> handleConstraintViolation(ConstraintViolationException e) {
@@ -89,7 +102,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 缺少参数
+     * 缺少必填参数处理
+     *
+     * @param e 缺少参数异常
+     * @return 统一响应
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
     public R<Void> handleMissingParam(MissingServletRequestParameterException e) {
@@ -100,7 +116,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 请求体解析失败
+     * 请求体解析失败处理
+     *
+     * @param e 请求体不可读异常
+     * @return 统一响应
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public R<Void> handleNotReadable(HttpMessageNotReadableException e) {
@@ -111,7 +130,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 请求方法不允许
+     * 请求方法不允许处理
+     *
+     * @param e 请求方法不支持异常
+     * @return 统一响应
      */
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
@@ -122,7 +144,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 资源不存在
+     * 资源不存在处理
+     *
+     * @param e 找不到处理器异常
+     * @return 统一响应
      */
     @ExceptionHandler(NoHandlerFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
@@ -133,7 +158,10 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 非法参数
+     * 非法参数处理
+     *
+     * @param e 非法参数异常
+     * @return 统一响应
      */
     @ExceptionHandler(IllegalArgumentException.class)
     public R<Void> handleIllegalArgument(IllegalArgumentException e) {
@@ -144,7 +172,11 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * 兜底异常
+     * 兜底异常处理（捕获所有未明确处理的异常）
+     *
+     * @param e   异常
+     * @param req HTTP 请求
+     * @return 统一响应
      */
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)

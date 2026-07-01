@@ -43,12 +43,22 @@ public enum OpportunityStatus {
         return desc;
     }
 
+    /**
+     * 判断当前状态是否为终态（不可再迁移）。
+     *
+     * @return 终态返回 true，否则返回 false
+     */
     public boolean isTerminal() {
         return this == CONVERTED || this == LOST || this == INVALID;
     }
 
     /**
-     * 是否允许从当前状态迁移到目标状态
+     * 判断是否允许从当前状态迁移到目标状态。
+     *
+     * <p>终态不可迁移；非终态可迁移到 LOST/INVALID；WON 可迁移到 CONVERTED。
+     *
+     * @param target 目标状态，为 null 时返回 false
+     * @return 允许迁移返回 true，否则返回 false
      */
     public boolean canTransitTo(OpportunityStatus target) {
         if (target == null) return false;
@@ -69,6 +79,12 @@ public enum OpportunityStatus {
         };
     }
 
+    /**
+     * 根据状态码解析枚举。
+     *
+     * @param code 状态码，大小写不敏感，为 null 时返回 null
+     * @return 匹配到的枚举值；未匹配返回 null
+     */
     public static OpportunityStatus fromCode(String code) {
         if (code == null) return null;
         for (OpportunityStatus s : values()) {

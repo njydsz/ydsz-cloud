@@ -32,6 +32,12 @@ public enum ChangeType {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 根据状态码解析枚举。
+     *
+     * @param code 状态码，大小写不敏感，为 null 时返回 null
+     * @return 匹配到的枚举值；未匹配返回 null
+     */
     public static ChangeType fromCode(String code) {
         if (code == null) return null;
         for (ChangeType t : values()) {

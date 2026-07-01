@@ -23,9 +23,11 @@ public class User2FADO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 用户 ID */
     private Long userId;
 
     /** TOTP / SMS */
@@ -34,22 +36,29 @@ public class User2FADO implements Serializable {
     /** TOTP Base32 编码密钥 */
     private String secret;
 
+    /** 绑定时间 */
     private LocalDateTime bindingAt;
 
+    /** 最近一次使用时间 */
     private LocalDateTime lastUsedAt;
 
     /** 备份码（JSON 数组） */
     private String backupCodes;
 
+    /** 是否启用 */
     private Boolean enabled;
 
+    /** 租户 ID */
     private Long tenantId;
 
+    /** 创建时间 */
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新时间 */
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标识：0=未删除，1=已删除 */
     private Integer deleted;
 }

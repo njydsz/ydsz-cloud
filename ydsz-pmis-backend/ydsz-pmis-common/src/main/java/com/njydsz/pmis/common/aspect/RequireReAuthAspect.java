@@ -108,7 +108,12 @@ public class RequireReAuthAspect {
     }
 
     /**
-     * 颁发二次认证 token
+     * 颁发二次认证 token，写入 Redis 并设置过期时间
+     *
+     * @param operationCode 操作码
+     * @param userId        用户 ID
+     * @param ttlSeconds    有效期（秒）
+     * @return 二次认证 token
      */
     public String issueToken(String operationCode, Long userId, int ttlSeconds) {
         String token = java.util.UUID.randomUUID().toString().replace("-", "");

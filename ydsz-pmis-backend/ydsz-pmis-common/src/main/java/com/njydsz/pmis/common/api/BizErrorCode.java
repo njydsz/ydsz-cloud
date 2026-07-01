@@ -96,6 +96,9 @@ public enum BizErrorCode {
     // ========== 9xxxx 系统 ==========
     UNKNOWN(99999, "未知错误");
 
+    /** 业务错误码 */
     private final int code;
+
+    /** 错误码对应的可读提示信息 */
     private final String message;
 }

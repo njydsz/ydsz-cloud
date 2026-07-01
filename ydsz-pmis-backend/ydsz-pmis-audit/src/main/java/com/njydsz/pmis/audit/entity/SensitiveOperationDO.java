@@ -26,18 +26,31 @@ public class SensitiveOperationDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 用户 ID */
     private Long userId;
+    /** 用户名 */
     private String username;
+    /** 敏感操作编码 */
     private String operationCode;
+    /** 敏感操作名称 */
     private String operationName;
+    /** 业务类型 */
     private String bizType;
+    /** 业务单据 ID */
     private String bizId;
+    /** 二次认证方式 */
     private String reAuthMethod;
+    /** 二次认证令牌 */
     private String reAuthToken;
+    /** 验证时间 */
     private LocalDateTime verifiedAt;
+    /** 过期时间 */
     private LocalDateTime expireAt;
+    /** 客户端 IP */
     private String clientIp;
+    /** 链路追踪 ID */
     private String traceId;
+    /** 租户 ID */
     private Long tenantId;
 
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)

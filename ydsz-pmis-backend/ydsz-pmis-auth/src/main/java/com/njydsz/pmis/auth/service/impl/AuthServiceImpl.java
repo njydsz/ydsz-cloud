@@ -44,14 +44,22 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
+    /** 验证码 Redis Key 前缀 */
     private static final String CAPTCHA_KEY_PREFIX = "pmis:captcha:";
+    /** 登录失败计数 Redis Key 前缀 */
     private static final String LOGIN_FAIL_PREFIX = "pmis:login:fail:";
+    /** Token 黑名单 Redis Key 前缀 */
     private static final String TOKEN_BLACKLIST_PREFIX = "pmis:token:blacklist:";
 
+    /** 验证码有效期(分钟) */
     private static final long CAPTCHA_EXPIRE_MINUTES = 5;
+    /** 访问 Token 有效期(小时) */
     private static final long TOKEN_EXPIRE_HOURS = 8;
+    /** 刷新 Token 有效期(天) */
     private static final long REFRESH_TOKEN_EXPIRE_DAYS = 7;
+    /** 登录失败锁定阈值(次) */
     private static final int LOGIN_FAIL_THRESHOLD = 5;
+    /** 登录锁定时长(分钟) */
     private static final long LOGIN_LOCK_MINUTES = 30;
 
     private final StringRedisTemplate redisTemplate;

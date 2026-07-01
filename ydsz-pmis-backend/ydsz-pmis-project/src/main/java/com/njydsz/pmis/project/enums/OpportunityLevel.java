@@ -13,6 +13,12 @@ package com.njydsz.pmis.project.enums;
 public enum OpportunityLevel {
     A, B, C;
 
+    /**
+     * 根据状态码解析枚举。
+     *
+     * @param code 状态码，大小写不敏感，为 null 或解析失败时返回 C（默认最低级）
+     * @return 匹配到的枚举值；未匹配返回 C
+     */
     public static OpportunityLevel fromCode(String code) {
         if (code == null) return C;
         try {

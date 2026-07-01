@@ -36,6 +36,15 @@ public class RateLimiterAspect {
 
     private final StringRedisTemplate redisTemplate;
 
+    /**
+     * 环绕增强：基于 Redis 滑动窗口校验限流，超限抛出 RATE_LIMIT 异常
+     *
+     * @param pjp       连接点
+     * @param rateLimit 限流注解
+     * @return 目标方法返回值
+     * @throws Throwable    目标方法抛出的异常
+     * @throws BizException 触发限流时抛出
+     */
     @Around("@annotation(rateLimit)")
     public Object around(ProceedingJoinPoint pjp, RateLimit rateLimit) throws Throwable {
         String key = buildKey(rateLimit);
@@ -96,6 +105,11 @@ public class RateLimiterAspect {
 
     /**
      * 滑动窗口限流（基于 INCR + EXPIRE）
+     *
+     * @param key   Redis 计数 key
+     * @param qps   允许的请求数
+     * @param window 时间窗口（秒）
+     * @return true 表示放行；false 表示触发限流
      */
     private Boolean checkRateLimit(String key, int qps, int window) {
         String countKey = key + ":" + (System.currentTimeMillis() / 1000 / window);

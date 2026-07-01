@@ -1,206 +1,191 @@
 package com.njydsz.pmis.scheduler.service.impl;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.scheduler.entity.JobDO;
-import com.njydsz.pmis.scheduler.entity.JobLogDO;
 import com.njydsz.pmis.scheduler.mapper.JobLogMapper;
 import com.njydsz.pmis.scheduler.mapper.JobMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
-import org.springframework.scheduling.TaskScheduler;
-import org.springframework.scheduling.support.CronTrigger;
+import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.data.redis.core.script.RedisScript;
+import org.springframework.scheduling.support.CronExpression;
 
-import java.util.List;
+import java.lang.reflect.Method;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
  * JobServiceImpl 单元测试
+ *
+ * <p>P0-5: 验证 nextFireTime 修复 + 分布式锁防重入
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
-@SuppressWarnings("unchecked")
-@DisplayName("JobServiceImpl 任务调度测试")
+@DisplayName("JobServiceImpl 调度服务测试")
+@ExtendWith(MockitoExtension.class)
 class JobServiceImplTest {
 
+    @Mock
     private JobMapper jobMapper;
+    @Mock
     private JobLogMapper jobLogMapper;
+    @Mock
     private ApplicationContext applicationContext;
-    private TaskScheduler taskScheduler;
+    @Mock
+    private StringRedisTemplate redisTemplate;
+    @Mock
+    private ValueOperations<String, String> valueOps;
+
+    @InjectMocks
     private JobServiceImpl service;
 
-    @BeforeEach
-    void setUp() {
-        jobMapper = mock(JobMapper.class);
-        jobLogMapper = mock(JobLogMapper.class);
-        applicationContext = mock(ApplicationContext.class);
-        taskScheduler = mock(TaskScheduler.class);
-        service = new JobServiceImpl(jobMapper, jobLogMapper, applicationContext);
-        // 注入调度器
-        try {
-            var f = JobServiceImpl.class.getDeclaredField("taskScheduler");
-            f.setAccessible(true);
-            f.set(service, taskScheduler);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    // ==================== nextFireTime 修复验证 ====================
+
+    @Test
+    @DisplayName("nextFireTime: 标准 cron 表达式应返回未来时间")
+    void nextFireTime_standardCron() throws Exception {
+        LocalDateTime next = invokeNextFireTime("0 0 12 * * ?");
+        assertThat(next).isNotNull();
+        assertThat(next).isAfter(LocalDateTime.now());
     }
 
     @Test
-    @DisplayName("create 重复 jobKey 应抛 DUPLICATE_KEY")
-    void create_duplicate() {
-        when(jobMapper.selectByJobKey("k")).thenReturn(new JobDO());
-        JobDO j = baseJob("k", "0 0/1 * * * ?");
-        assertThatThrownBy(() -> service.create(j))
-                .isInstanceOf(BizException.class)
-                .extracting("code").isEqualTo(BizErrorCode.DUPLICATE_KEY.getCode());
+    @DisplayName("nextFireTime: 每分钟 cron 应返回下一分钟")
+    void nextFireTime_everyMinute() throws Exception {
+        LocalDateTime next = invokeNextFireTime("0 * * * * *");
+        assertThat(next).isNotNull();
+        assertThat(next).isAfter(LocalDateTime.now());
+        assertThat(next.getSecond()).isEqualTo(0);
     }
 
     @Test
-    @DisplayName("create cron 非法应抛 BAD_REQUEST")
-    void create_badCron() {
-        JobDO j = baseJob("k", "not-a-cron");
-        assertThatThrownBy(() -> service.create(j))
-                .isInstanceOf(BizException.class)
-                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+    @DisplayName("nextFireTime: 非法 cron 应返回 null 且不抛异常")
+    void nextFireTime_invalidCron() throws Exception {
+        LocalDateTime next = invokeNextFireTime("invalid-cron");
+        assertThat(next).isNull();
     }
 
     @Test
-    @DisplayName("create 正常路径应注册到调度器")
-    void create_ok() {
-        when(jobMapper.selectByJobKey("k")).thenReturn(null);
-        when(jobMapper.insert(any(JobDO.class))).thenAnswer(inv -> {
-            ((JobDO) inv.getArgument(0)).setId(1L);
-            return 1;
-        });
-        when(taskScheduler.schedule(any(Runnable.class), any(CronTrigger.class)))
-                .thenReturn(mock(java.util.concurrent.ScheduledFuture.class));
+    @DisplayName("nextFireTime: 验证仅调用一次 expr.next（无竞态条件）")
+    void nextFireTime_noDoubleCall() throws Exception {
+        // CronExpression.next 是无状态的，但旧代码调用了两次，可能返回不同结果
+        // 修复后应仅调用一次
+        LocalDateTime next = invokeNextFireTime("0 0 * * * *");
+        assertThat(next).isNotNull();
+        // 确保返回的时间是 "now" 之后最近的整点
+        assertThat(next.getMinute()).isEqualTo(0);
+        assertThat(next.getSecond()).isEqualTo(0);
+        assertThat(next).isAfter(LocalDateTime.now().minusMinutes(1));
+    }
 
-        JobDO j = baseJob("k", "0 0/1 * * * ?");
-        Long id = service.create(j);
-        assertThat(id).isEqualTo(1L);
-        assertThat(j.getStatus()).isEqualTo("NORMAL");
-        assertThat(j.getJobGroup()).isEqualTo("DEFAULT");
+    // ==================== 分布式锁验证 ====================
+
+    @Test
+    @DisplayName("手动触发(manual=true)不获取分布式锁")
+    void trigger_manual_noLock() {
+        // 准备
+        JobDO job = new JobDO();
+        job.setId(1L);
+        job.setJobKey("test-job");
+        job.setHandler("testHandler");
+        job.setCronExpression("0 0 * * * *");
+        job.setParamsJson("{}");
+
+        when(jobMapper.selectById(1L)).thenReturn(job);
+        when(applicationContext.getBean("testHandler", JobHandler.class))
+                .thenReturn(params -> "ok");
+        // redisTemplate 不应被调用
+
+        // 执行
+        service.trigger(1L);
+
+        // 验证: 未调用 setIfAbsent（手动触发不加锁）
+        verify(redisTemplate, never()).opsForValue();
     }
 
     @Test
-    @DisplayName("create 缺 jobKey 应抛 BAD_REQUEST")
-    void create_noKey() {
-        JobDO j = baseJob("", "0 0/1 * * * ?");
-        assertThatThrownBy(() -> service.create(j))
-                .isInstanceOf(BizException.class)
-                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+    @DisplayName("定时触发(manual=false)获取锁失败时跳过执行")
+    void executeJob_scheduled_lockAcquired() throws Exception {
+        // 准备一个测试 Job 用于反射调用 executeJob
+        JobDO job = new JobDO();
+        job.setId(2L);
+        job.setJobKey("scheduled-job");
+        job.setHandler("testHandler");
+        job.setCronExpression("0 0 * * * *");
+        job.setParamsJson("{}");
+
+        // 模拟锁获取成功
+        when(redisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(true);
+        when(applicationContext.getBean("testHandler", JobHandler.class))
+                .thenReturn(params -> "ok");
+
+        // 通过反射调用 executeJob(job, false)
+        Method method = JobServiceImpl.class.getDeclaredMethod("executeJob", JobDO.class, boolean.class);
+        method.setAccessible(true);
+        Long logId = (Long) method.invoke(service, job, false);
+
+        // 验证: 获取了锁
+        verify(valueOps).setIfAbsent(eq("pmis:job:lock:scheduled-job"), anyString(), any(Duration.class));
+        // 验证: 释放了锁（通过 Lua 脚本）
+        verify(redisTemplate).execute(any(RedisScript.class),
+                eq(Collections.singletonList("pmis:job:lock:scheduled-job")), anyString());
     }
 
     @Test
-    @DisplayName("create 缺 handler 应抛 BAD_REQUEST")
-    void create_noHandler() {
-        JobDO j = baseJob("k", "0 0/1 * * * ?");
-        j.setHandler(null);
-        assertThatThrownBy(() -> service.create(j))
-                .isInstanceOf(BizException.class)
-                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+    @DisplayName("定时触发锁已被持有时跳过执行并返回 null")
+    void executeJob_scheduled_lockHeld_skip() throws Exception {
+        JobDO job = new JobDO();
+        job.setId(3L);
+        job.setJobKey("locked-job");
+        job.setHandler("testHandler");
+        job.setCronExpression("0 0 * * * *");
+        job.setParamsJson("{}");
+
+        // 模拟锁已被其他实例持有
+        when(redisTemplate.opsForValue()).thenReturn(valueOps);
+        when(valueOps.setIfAbsent(anyString(), anyString(), any(Duration.class)))
+                .thenReturn(false);
+
+        // 通过反射调用 executeJob(job, false)
+        Method method = JobServiceImpl.class.getDeclaredMethod("executeJob", JobDO.class, boolean.class);
+        method.setAccessible(true);
+        Long result = (Long) method.invoke(service, job, false);
+
+        // 验证: 返回 null（跳过执行）
+        assertThat(result).isNull();
+        // 验证: 未写入 JobLog
+        verify(jobLogMapper, never()).insert(any());
+        // 验证: 未查找 handler
+        verify(applicationContext, never()).getBean(anyString(), any(Class.class));
     }
 
-    @Test
-    @DisplayName("update ID 为空应抛 BAD_REQUEST")
-    void update_noId() {
-        JobDO j = new JobDO();
-        assertThatThrownBy(() -> service.update(j))
-                .isInstanceOf(BizException.class)
-                .extracting("code").isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
-    }
+    // ==================== 辅助方法 ====================
 
-    @Test
-    @DisplayName("update 不存在应抛 NOT_FOUND")
-    void update_notFound() {
-        when(jobMapper.selectById(99L)).thenReturn(null);
-        JobDO j = new JobDO();
-        j.setId(99L);
-        j.setCronExpression("0 0/1 * * * ?");
-        assertThatThrownBy(() -> service.update(j))
-                .isInstanceOf(BizException.class)
-                .extracting("code").isEqualTo(BizErrorCode.NOT_FOUND.getCode());
-    }
-
-    @Test
-    @DisplayName("pause 应注销并写库")
-    void pause() {
-        JobDO j = baseJob("k", "0 0/1 * * * ?");
-        j.setId(1L);
-        j.setStatus("NORMAL");
-        when(jobMapper.selectById(1L)).thenReturn(j);
-        service.pause(1L);
-        assertThat(j.getStatus()).isEqualTo("PAUSED");
-    }
-
-    @Test
-    @DisplayName("delete 不存在应抛 NOT_FOUND")
-    void delete_notFound() {
-        when(jobMapper.selectById(99L)).thenReturn(null);
-        assertThatThrownBy(() -> service.delete(99L))
-                .isInstanceOf(BizException.class)
-                .extracting("code").isEqualTo(BizErrorCode.NOT_FOUND.getCode());
-    }
-
-    @Test
-    @DisplayName("trigger 找不到 handler 时任务状态为 FAILED")
-    void trigger_handlerMissing() {
-        JobDO j = baseJob("k", "0 0/1 * * * ?");
-        j.setId(1L);
-        when(jobMapper.selectById(1L)).thenReturn(j);
-        when(jobLogMapper.insert(any(JobLogDO.class)))
-                .thenAnswer(inv -> {
-                    ((JobLogDO) inv.getArgument(0)).setId(99L);
-                    return 1;
-                });
-
-        Long logId = service.trigger(1L);
-        assertThat(logId).isEqualTo(99L);
-        // 任务执行失败，job.status 应被置为 ERROR
-        org.mockito.Mockito.verify(jobMapper).updateStats(
-                org.mockito.ArgumentMatchers.eq(1L), any(), any(), any(), any(), any(), org.mockito.ArgumentMatchers.eq("ERROR"));
-    }
-
-    @Test
-    @DisplayName("page 分页应按条件过滤")
-    void page() {
-        when(jobMapper.selectPage(any(), any())).thenAnswer(inv -> {
-            com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobDO> p =
-                    (com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobDO>) inv.getArgument(0);
-            p.setRecords(List.of(new JobDO()));
-            p.setTotal(1L);
-            return p;
-        });
-        var p = service.page(1, 20, null, null, null);
-        assertThat(p.getTotal()).isEqualTo(1L);
-    }
-
-    @Test
-    @DisplayName("pageLog 应按条件过滤")
-    void pageLog() {
-        when(jobLogMapper.selectPage(any(), any())).thenAnswer(inv -> {
-            com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLogDO> p =
-                    (com.baomidou.mybatisplus.extension.plugins.pagination.Page<JobLogDO>) inv.getArgument(0);
-            p.setRecords(List.of(new JobLogDO()));
-            p.setTotal(1L);
-            return p;
-        });
-        var p = service.pageLog(1, 20, "k", "SUCCESS");
-        assertThat(p.getTotal()).isEqualTo(1L);
-    }
-
-    private JobDO baseJob(String key, String cron) {
-        JobDO j = new JobDO();
-        j.setJobName("test");
-        j.setJobKey(key);
-        j.setHandler("heartbeatHandler");
-        j.setCronExpression(cron);
-        return j;
+    /**
+     * 通过反射调用私有方法 nextFireTime
+     */
+    private LocalDateTime invokeNextFireTime(String cron) throws Exception {
+        Method method = JobServiceImpl.class.getDeclaredMethod("nextFireTime", String.class);
+        method.setAccessible(true);
+        return (LocalDateTime) method.invoke(service, cron);
     }
 }

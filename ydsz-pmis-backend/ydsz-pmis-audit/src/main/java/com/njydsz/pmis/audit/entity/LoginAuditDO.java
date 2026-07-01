@@ -26,17 +26,27 @@ public class LoginAuditDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 用户名 */
     private String username;
+    /** 用户 ID */
     private Long userId;
+    /** 登录时间 */
     private LocalDateTime loginAt;
+    /** 登录 IP */
     private String loginIp;
+    /** User-Agent */
     private String userAgent;
     /** SUCCESS / FAIL_PASSWORD / FAIL_LOCKED / ... */
     private String status;
+    /** 失败原因 */
     private String failReason;
+    /** 是否使用 MFA */
     private Boolean mfaUsed;
+    /** MFA 是否成功 */
     private Boolean mfaSuccess;
+    /** 链路追踪 ID */
     private String traceId;
+    /** 租户 ID */
     private Long tenantId;
 
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)

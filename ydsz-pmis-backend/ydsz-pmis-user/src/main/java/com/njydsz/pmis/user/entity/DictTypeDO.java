@@ -23,14 +23,19 @@ public class DictTypeDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 字典类型编码 */
     private String typeCode;
 
+    /** 字典类型名称 */
     private String typeName;
 
+    /** 描述 */
     private String description;
 
+    /** 状态：ENABLED/DISABLED */
     private String status;
 }

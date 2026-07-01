@@ -23,19 +23,25 @@ public class JobLevelDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 职级编码（如 L1、L2） */
     private String levelCode;
 
+    /** 职级名称 */
     private String levelName;
 
     /** PRIMARY/MIDDLE/SENIOR/EXPERT/STRATEGIC */
     private String levelSegment;
 
+    /** 排序号 */
     private Integer sortOrder;
 
+    /** 描述 */
     private String description;
 
+    /** 状态：ENABLED/DISABLED */
     private String status;
 }

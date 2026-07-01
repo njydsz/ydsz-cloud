@@ -23,11 +23,14 @@ public class DepartmentDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 部门编码 */
     private String deptCode;
 
+    /** 部门名称 */
     private String deptName;
 
     /** 父部门 ID（0=根） */
@@ -36,14 +39,19 @@ public class DepartmentDO extends BaseDO {
     /** 部门路径：/1/3/5 */
     private String deptPath;
 
+    /** 排序号 */
     private Integer sortOrder;
 
+    /** 部门负责人 ID */
     private Long leaderId;
 
+    /** 联系电话 */
     private String phone;
 
+    /** 邮箱 */
     private String email;
 
+    /** 部门描述 */
     private String description;
 
     /** ENABLED/DISABLED */

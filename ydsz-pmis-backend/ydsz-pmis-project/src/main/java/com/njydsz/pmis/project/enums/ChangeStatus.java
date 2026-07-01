@@ -38,10 +38,23 @@ public enum ChangeStatus {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 判断当前状态是否为终态（不可再迁移）。
+     *
+     * @return 终态（EXECUTED/REJECTED/CANCELLED）返回 true，否则返回 false
+     */
     public boolean isTerminal() {
         return this == EXECUTED || this == REJECTED || this == CANCELLED;
     }
 
+    /**
+     * 判断是否允许从当前状态迁移到目标状态。
+     *
+     * <p>终态不可迁移；DRAFT/SUBMITTED/APPROVED/EXECUTING 可迁移到 CANCELLED。
+     *
+     * @param target 目标状态，为 null 时返回 false
+     * @return 允许迁移返回 true，否则返回 false
+     */
     public boolean canTransitTo(ChangeStatus target) {
         if (target == null) return false;
         if (this == target) return true;
@@ -56,6 +69,12 @@ public enum ChangeStatus {
         };
     }
 
+    /**
+     * 根据状态码解析枚举。
+     *
+     * @param code 状态码，大小写不敏感，为 null 时返回 null
+     * @return 匹配到的枚举值；未匹配返回 null
+     */
     public static ChangeStatus fromCode(String code) {
         if (code == null) return null;
         for (ChangeStatus s : values()) {

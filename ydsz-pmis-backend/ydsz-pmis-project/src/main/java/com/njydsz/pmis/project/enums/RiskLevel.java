@@ -22,6 +22,12 @@ public enum RiskLevel {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 根据状态码解析枚举。
+     *
+     * @param code 状态码，大小写不敏感，为 null 或解析失败时返回 LOW
+     * @return 匹配到的枚举值；未匹配返回 LOW
+     */
     public static RiskLevel fromCode(String code) {
         if (code == null) return LOW;
         try {

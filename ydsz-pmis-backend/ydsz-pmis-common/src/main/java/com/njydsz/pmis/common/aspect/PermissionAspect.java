@@ -26,6 +26,15 @@ import java.util.Arrays;
 @Component
 public class PermissionAspect {
 
+    /**
+     * 环绕增强：校验当前登录用户是否拥有注解声明的权限，校验通过则放行
+     *
+     * @param pjp           连接点
+     * @param prePermission 权限注解
+     * @return 目标方法返回值
+     * @throws Throwable    目标方法抛出的异常
+     * @throws BizException 未登录或无权限时抛出
+     */
     @Around("@annotation(prePermission)")
     public Object around(ProceedingJoinPoint pjp, PrePermission prePermission) throws Throwable {
         LoginUser user = SecurityContext.getCurrentOrNull();

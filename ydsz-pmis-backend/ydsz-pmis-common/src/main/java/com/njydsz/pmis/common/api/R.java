@@ -45,10 +45,23 @@ public class R<T> implements Serializable {
     @Schema(description = "服务器时间戳")
     private long timestamp = System.currentTimeMillis();
 
+    /**
+     * 构建成功响应（无数据载荷）
+     *
+     * @param <T> 数据类型
+     * @return 成功响应
+     */
     public static <T> R<T> ok() {
         return ok(null);
     }
 
+    /**
+     * 构建成功响应（带数据）
+     *
+     * @param data 响应数据
+     * @param <T>  数据类型
+     * @return 成功响应
+     */
     public static <T> R<T> ok(T data) {
         R<T> r = new R<>();
         r.setCode(CODE_SUCCESS);
@@ -57,12 +70,28 @@ public class R<T> implements Serializable {
         return r;
     }
 
+    /**
+     * 构建成功响应（带数据与自定义提示信息）
+     *
+     * @param data    响应数据
+     * @param message 提示信息
+     * @param <T>     数据类型
+     * @return 成功响应
+     */
     public static <T> R<T> ok(T data, String message) {
         R<T> r = ok(data);
         r.setMessage(message);
         return r;
     }
 
+    /**
+     * 构建失败响应（指定状态码与提示信息）
+     *
+     * @param code    状态码
+     * @param message 提示信息
+     * @param <T>     数据类型
+     * @return 失败响应
+     */
     public static <T> R<T> failed(int code, String message) {
         R<T> r = new R<>();
         r.setCode(code);
@@ -70,14 +99,34 @@ public class R<T> implements Serializable {
         return r;
     }
 
+    /**
+     * 构建失败响应（基于业务错误码）
+     *
+     * @param errorCode 业务错误码
+     * @param <T>       数据类型
+     * @return 失败响应
+     */
     public static <T> R<T> failed(BizErrorCode errorCode) {
         return failed(errorCode.getCode(), errorCode.getMessage());
     }
 
+    /**
+     * 构建失败响应（基于业务错误码并覆盖提示信息）
+     *
+     * @param errorCode 业务错误码
+     * @param message   提示信息
+     * @param <T>       数据类型
+     * @return 失败响应
+     */
     public static <T> R<T> failed(BizErrorCode errorCode, String message) {
         return failed(errorCode.getCode(), message);
     }
 
+    /**
+     * 判断当前响应是否为成功响应
+     *
+     * @return true 表示成功；false 表示失败
+     */
     public boolean isSuccess() {
         return code == CODE_SUCCESS;
     }

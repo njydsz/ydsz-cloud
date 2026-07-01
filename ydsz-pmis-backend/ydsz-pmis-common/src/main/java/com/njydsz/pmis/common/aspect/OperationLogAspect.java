@@ -42,10 +42,21 @@ public class OperationLogAspect {
 
     private final ApplicationEventPublisher publisher;
 
+    /**
+     * 切点：标注 {@code @OperationLog} 的方法
+     */
     @Pointcut("@annotation(com.njydsz.pmis.common.annotation.OperationLog)")
     public void pointcut() {
     }
 
+    /**
+     * 环绕增强：执行目标方法并记录耗时，无论成功失败均异步发布操作日志事件
+     *
+     * @param pjp          连接点
+     * @param operationLog 操作日志注解
+     * @return 目标方法返回值
+     * @throws Throwable 目标方法抛出的异常
+     */
     @Around("pointcut() && @annotation(operationLog)")
     public Object around(ProceedingJoinPoint pjp, OperationLog operationLog) throws Throwable {
         long start = System.currentTimeMillis();

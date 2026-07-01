@@ -23,10 +23,13 @@ public class UserRoleDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 用户 ID */
     private Long userId;
 
+    /** 角色 ID */
     private Long roleId;
 }

@@ -5,11 +5,30 @@ import com.njydsz.pmis.audit.entity.SensitiveOperationDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+/**
+ * 敏感操作审计 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface SensitiveOperationMapper extends BaseMapper<SensitiveOperationDO> {
 
+    /**
+     * 插入敏感操作记录
+     *
+     * @param e 敏感操作实体
+     * @return 影响行数
+     */
     int insertOp(SensitiveOperationDO e);
 
+    /**
+     * 按用户查询敏感操作历史
+     *
+     * @param userId 用户 ID
+     * @param limit  最大条数
+     * @return 敏感操作列表
+     */
     java.util.List<SensitiveOperationDO> selectByUser(@Param("userId") Long userId,
                                                       @Param("limit") int limit);
 }
