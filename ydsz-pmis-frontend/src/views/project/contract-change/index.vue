@@ -120,6 +120,7 @@ async function handleStatus(row: ContractChangeVO, target: string) {
   } catch { /* 取消 */ }
 }
 
+// ===== 生命周期 =====
 onMounted(fetchList)
 </script>
 

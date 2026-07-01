@@ -1,4 +1,10 @@
 <script setup lang="ts">
+<!--
+  @file 服务满意度评价
+  @description 售后服务满意度评价管理页面，支持多维度打分、不满意评价跟进闭环及综合统计概览。
+  @module views/aftersales/satisfaction
+-->
+<script setup lang="ts">
 /**
  * 服务满意度评价 (P7)
  *

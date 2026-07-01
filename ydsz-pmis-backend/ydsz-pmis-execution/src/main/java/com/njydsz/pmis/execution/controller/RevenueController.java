@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.RevenueCreateDTO;
 import com.njydsz.pmis.execution.entity.RevenueDO;
@@ -58,6 +59,7 @@ public class RevenueController {
     }
 
     @Operation(summary = "详情")
+    @PrePermission("execution:revenue:list")
     @GetMapping("/{id}")
     public R<RevenueDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -83,6 +85,7 @@ public class RevenueController {
     }
 
     @Operation(summary = "按期间汇总")
+    @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/by-period")
     public R<List<Map<String, Object>>> sumByPeriod(@RequestParam Long initiationId) {
         return R.ok(service.sumByPeriod(initiationId));

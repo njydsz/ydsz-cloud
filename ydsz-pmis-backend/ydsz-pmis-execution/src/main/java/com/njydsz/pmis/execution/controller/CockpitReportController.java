@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.execution.dto.CockpitDrillDownDTO;
@@ -60,6 +61,7 @@ public class CockpitReportController {
     }
 
     @Operation(summary = "按事业部下钻")
+    @PrePermission("cockpit:drilldown:view")
     @GetMapping("/drill/dept")
     public R<List<Map<String, Object>>> drillDept(@RequestParam(required = false) String period) {
         return R.ok(service.drillByDept(period));
@@ -72,6 +74,7 @@ public class CockpitReportController {
     }
 
     @Operation(summary = "按客户下钻")
+    @PrePermission("cockpit:drilldown:view")
     @GetMapping("/drill/customer")
     public R<List<Map<String, Object>>> drillCustomer(@RequestParam(required = false) String period) {
         return R.ok(service.drillByCustomer(period));

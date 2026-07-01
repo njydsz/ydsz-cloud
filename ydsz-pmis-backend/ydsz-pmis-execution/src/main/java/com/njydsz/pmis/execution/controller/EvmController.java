@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.EvmMeasureCreateDTO;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
@@ -30,6 +31,7 @@ public class EvmController {
     private final EvmMeasureService service;
 
     @Operation(summary = "录入/更新 EVM 测量（按 initiation+wbs+period 幂等）")
+    @PrePermission("execution:evm:save")
     @PostMapping
     public R<Long> save(@Valid @RequestBody EvmMeasureCreateDTO dto) {
         return R.ok(service.save(dto));

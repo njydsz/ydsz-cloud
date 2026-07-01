@@ -1,3 +1,8 @@
+<!--
+  @file 资源池管理
+  @description 资源池管理页面：提供资源池分页查询（按类型/状态筛选）及新增/编辑/删除。资源池类型分为总部池/事业部池/备用池，后端 PoolType.inferByLevel() 按职级推断归属：L1-L3→储备 / L4-L12→事业部 / L13+→总部。对应路由 /resource/pool，后端服务 ydsz-pmis-user（端口 9002）。
+  @module views/resource/pool
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -12,8 +17,10 @@ import type { ResourcePoolVO, ResourcePoolCreateDTO } from '@/api/resource/pool/
 const loading = ref(false)
 const list = ref<ResourcePoolVO[]>([])
 const total = ref(0)
+// 分页查询条件：资源池类型 / 状态
 const query = reactive({ page: 1, size: 10, poolType: '', status: '' })
 
+// 资源池类型中文映射
 const poolTypeMap: Record<string, string> = {
   HEADQUARTER: '总部池',
   DIVISION: '事业部池',
@@ -99,6 +106,7 @@ async function submitForm() {
   fetchList()
 }
 
+/** 二次确认后删除资源池 */
 async function handleDelete(row: ResourcePoolVO) {
   try {
     await ElMessageBox.confirm(`确认删除资源池「${row.poolName}」?`, '提示', { type: 'warning' })

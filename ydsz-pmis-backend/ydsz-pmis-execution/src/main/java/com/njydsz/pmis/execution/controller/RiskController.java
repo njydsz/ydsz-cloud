@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.RiskCreateDTO;
 import com.njydsz.pmis.execution.dto.RiskStatusDTO;
@@ -58,6 +59,7 @@ public class RiskController {
     }
 
     @Operation(summary = "分页")
+    @PrePermission("execution:risk:list")
     @GetMapping("/page")
     public R<Page<RiskDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -70,6 +72,7 @@ public class RiskController {
     }
 
     @Operation(summary = "按等级聚合")
+    @PrePermission("execution:risk:list")
     @GetMapping("/aggregate/by-level")
     public R<List<Map<String, Object>>> aggregateByLevel(@RequestParam Long initiationId) {
         return R.ok(service.aggregateByLevel(initiationId));

@@ -121,6 +121,7 @@ onMounted(fetchList)
 
 <template>
   <div class="assignment-page">
+    <!-- 员工利用率查询区 -->
     <el-card shadow="never" class="util-card">
       <template #header>
         <span>员工利用率查询</span>
@@ -140,6 +141,7 @@ onMounted(fetchList)
       </div>
     </el-card>
 
+    <!-- 分配记录查询与操作区 -->
     <el-card shadow="never" style="margin-top: 16px">
       <el-form inline :model="query" class="search-form">
         <el-form-item label="员工 ID">
@@ -208,6 +210,7 @@ onMounted(fetchList)
       </div>
     </el-card>
 
+    <!-- 分配动作弹窗 -->
     <el-dialog v-model="dialogVisible" title="分配动作" width="500px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="员工 ID" prop="employeeId">

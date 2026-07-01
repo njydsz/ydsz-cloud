@@ -1,3 +1,8 @@
+<!--
+  @file 职级管理
+  @description 职级管理页面：左侧展示职级体系（L1-L18）并按段位（初级/中级/高级/专家/战略）分类，右侧展示所选职级的生效费率（对外报价、对内成本、毛利率、社保公积金、月综合成本等）及历史版本。对应路由 /resource/job-level，后端服务 ydsz-pmis-user（端口 9002）。
+  @module views/resource/job-level
+-->
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { listJobLevels, getJobLevelRate, listJobLevelRateVersions } from '@/api/resource/job-level'
@@ -47,11 +52,13 @@ async function selectLevel(code: string) {
   }
 }
 
+/** 金额格式化（元 → ¥1,234.56） */
 function formatMoney(v?: number) {
   if (v === undefined || v === null) return '-'
   return `¥${Number(v).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
 }
 
+/** 利用率小数格式化为百分比（0.85 → 85%） */
 function formatPct(v?: number) {
   if (v === undefined || v === null) return '-'
   return `${(Number(v) * 100).toFixed(0)}%`
@@ -64,6 +71,7 @@ onMounted(fetchLevels)
   <div class="job-level-page">
     <el-row :gutter="16">
       <el-col :span="6">
+        <!-- 职级列表 -->
         <el-card shadow="never" class="level-card">
           <template #header>
             <span>职级体系 (L1 - L18)</span>
@@ -90,6 +98,7 @@ onMounted(fetchLevels)
       </el-col>
 
       <el-col :span="18">
+        <!-- 生效费率详情 -->
         <el-card shadow="never" class="rate-card">
           <template #header>
             <div class="card-header">
@@ -127,6 +136,7 @@ onMounted(fetchLevels)
           </el-descriptions>
         </el-card>
 
+        <!-- 历史版本 -->
         <el-card shadow="never" class="version-card" style="margin-top: 16px">
           <template #header>
             <span>历史版本</span>

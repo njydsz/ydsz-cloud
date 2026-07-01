@@ -290,6 +290,7 @@ onMounted(() => {
       </el-table-column>
     </el-table>
 
+    <!-- 提交预警弹窗 -->
     <el-dialog v-model="dialogVisible" title="提交预警" width="600px">
       <el-form :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="预警类型" prop="alertType">

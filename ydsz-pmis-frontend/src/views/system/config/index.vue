@@ -1,3 +1,8 @@
+<!--
+  @file 系统参数配置
+  @description 系统参数配置页面：提供参数分页查询（按分组/状态/可见性/关键字筛选）、新增/编辑/删除，以及按分组批量启停、清空分组、刷新缓存等运维操作。对应路由 /system/config。
+  @module views/system/config
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'

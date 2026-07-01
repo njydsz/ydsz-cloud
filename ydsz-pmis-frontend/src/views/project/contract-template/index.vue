@@ -78,6 +78,7 @@ function onSelectionChange({ rows }: { rows: ContractTemplateVO[] }) {
   selectedRows.value = rows
 }
 
+// ===== 新增表单弹窗 =====
 const dialogVisible = ref(false)
 const formRef = ref<any>()
 const form = reactive<Partial<ContractTemplateCreateDTO>>({
@@ -201,6 +202,7 @@ onMounted(fetchList)
       </vxe-table>
     </template>
 
+    <!-- 新增模板弹窗 -->
     <el-dialog v-model="dialogVisible" title="新增合同模板" width="780px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">

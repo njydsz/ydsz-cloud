@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.ApprovalDTO;
 import com.njydsz.pmis.execution.dto.PurchaseCreateDTO;
@@ -55,6 +56,7 @@ public class PurchaseController {
     }
 
     @Operation(summary = "分页")
+    @PrePermission("execution:purchase:list")
     @GetMapping("/page")
     public R<Page<PurchaseDO>> page(
             @RequestParam(defaultValue = "1") int page,

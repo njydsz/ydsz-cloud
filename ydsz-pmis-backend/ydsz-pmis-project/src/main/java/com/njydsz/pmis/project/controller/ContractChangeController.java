@@ -57,6 +57,7 @@ public class ContractChangeController {
     }
 
     @Operation(summary = "驳回")
+    @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/reject")
     public R<Void> reject(@PathVariable Long id,
                           @RequestParam Long approverId,
@@ -83,6 +84,7 @@ public class ContractChangeController {
     }
 
     @Operation(summary = "按合同列出")
+    @PrePermission("project:contract-change:list")
     @GetMapping("/list")
     public R<List<ContractChangeDO>> listByContract(@RequestParam Long contractId) {
         return R.ok(service.listByContract(contractId));

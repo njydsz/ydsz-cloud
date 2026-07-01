@@ -62,6 +62,7 @@ public class ProjectChangeController {
     }
 
     @Operation(summary = "变更详情")
+    @PrePermission("project:change:list")
     @GetMapping("/{id}")
     public R<ProjectChangeDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -92,6 +93,7 @@ public class ProjectChangeController {
     }
 
     @Operation(summary = "按状态聚合")
+    @PrePermission("project:change:list")
     @GetMapping("/aggregate/status")
     public R<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long tenantId) {
         return R.ok(service.aggregateByStatus(tenantId));
@@ -136,6 +138,7 @@ public class ProjectChangeController {
      * <p>前端使用: 渲染状态下拉 / 字典 / 国际化</p>
      */
     @Operation(summary = "获取所有变更状态字典")
+    @PrePermission("project:change:list")
     @GetMapping("/status-dict")
     public R<List<Map<String, String>>> getStatusDict() {
         List<Map<String, String>> list = new ArrayList<>();

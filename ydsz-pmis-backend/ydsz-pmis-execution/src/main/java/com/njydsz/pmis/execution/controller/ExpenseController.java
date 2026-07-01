@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.ApprovalDTO;
 import com.njydsz.pmis.execution.dto.ExpenseCreateDTO;
@@ -29,6 +30,7 @@ public class ExpenseController {
     private final ExpenseService service;
 
     @Operation(summary = "创建费用")
+    @PrePermission("execution:expense:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody ExpenseCreateDTO dto) {
         return R.ok(service.create(dto));
@@ -55,6 +57,7 @@ public class ExpenseController {
     }
 
     @Operation(summary = "分页")
+    @PrePermission("execution:expense:list")
     @GetMapping("/page")
     public R<Page<ExpenseDO>> page(
             @RequestParam(defaultValue = "1") int page,

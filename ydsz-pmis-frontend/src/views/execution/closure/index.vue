@@ -1,3 +1,10 @@
+<!--
+  @file 项目结项管理
+  @description 项目交付完成后的结项流程管理页面，支持正式结项/预结项/强制结项三种类型，
+               状态流转: DRAFT → SUBMITTED → APPROVED → ARCHIVED / REJECTED，
+               由后端 ClosureAdmissionValidator 校验结项准入条件（回款比例、毛利率等）。
+  @module views/execution/closure
+-->
 <script setup lang="ts">
 /**
  * 项目结项管理
@@ -17,9 +24,13 @@ import {
 import type { ProjectClosureVO, ProjectClosureCreateDTO } from '@/api/execution/closure/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 结项记录列表 */
 const list = ref<ProjectClosureVO[]>([])
+/** 记录总数（分页用） */
 const total = ref(0)
+/** 查询条件：关键字 + 类型 + 状态 + 项目 ID */
 const query = reactive({
   page: 1,
   size: 10,
@@ -29,12 +40,14 @@ const query = reactive({
   initiationId: undefined as number | undefined,
 })
 
+/** 结项类型 → 标签/样式映射 */
 const typeMap = {
   FORMAL: { label: '正式结项', type: 'primary' as const },
   PRE_CLOSURE: { label: '预结项', type: 'warning' as const },
   FORCED: { label: '强制结项', type: 'danger' as const },
 }
 
+/** 结项状态 → 标签/样式映射 */
 const statusMap = {
   DRAFT: { label: '草稿', type: 'info' as const },
   SUBMITTED: { label: '已提交', type: 'warning' as const },
@@ -43,6 +56,7 @@ const statusMap = {
   ARCHIVED: { label: '已归档', type: 'info' as const },
 }
 
+/** 分页查询结项列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -59,6 +73,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并回到首页刷新 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -68,8 +83,11 @@ function handleReset() {
   fetchList()
 }
 
+/** 新建结项弹窗可见性 */
 const dialogVisible = ref(false)
+/** 表单引用（用于校验） */
 const formRef = ref<any>()
+/** 新建结项表单数据 */
 const form = reactive<Partial<ProjectClosureCreateDTO>>({
   closureCode: '',
   initiationId: 0,
@@ -80,12 +98,14 @@ const form = reactive<Partial<ProjectClosureCreateDTO>>({
   warrantyEndDate: '',
 })
 
+/** 表单校验规则 */
 const formRules = {
   closureCode: [{ required: true, message: '结项单号必填', trigger: 'blur' }],
   initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
   type: [{ required: true, message: '结项类型必填', trigger: 'change' }],
 }
 
+/** 打开新建弹窗并重置表单 */
 function openCreate() {
   Object.assign(form, {
     closureCode: '',
@@ -99,6 +119,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新建结项单，校验通过后创建并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   await createProjectClosure(form as ProjectClosureCreateDTO)
@@ -107,6 +128,11 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 变更结项状态（提交/通过/驳回/归档），需二次确认
+ * @param row 结项记录
+ * @param target 目标状态
+ */
 async function handleStatus(row: ProjectClosureVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {
@@ -117,6 +143,7 @@ async function handleStatus(row: ProjectClosureVO, target: string) {
   } catch { /* 取消 */ }
 }
 
+/** 页面挂载时加载列表 */
 onMounted(fetchList)
 </script>
 
@@ -131,6 +158,7 @@ onMounted(fetchList)
     @page-change="fetchList"
     @refresh="fetchList"
   >
+    <!-- 搜索栏 -->
     <template #search>
       <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="单号/项目" clearable /></el-form-item>
       <el-form-item label="类型">
@@ -145,12 +173,14 @@ onMounted(fetchList)
       </el-form-item>
     </template>
 
+    <!-- 工具栏 -->
     <template #toolbar>
       <el-button v-permission="[PC.CLOSURE_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
         新建结项
       </el-button>
     </template>
 
+    <!-- 结项列表表格 -->
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
@@ -179,6 +209,7 @@ onMounted(fetchList)
       </vxe-table>
     </template>
 
+    <!-- 新建结项弹窗 -->
     <el-dialog v-model="dialogVisible" title="新建结项" width="640px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.DeliveryItemCreateDTO;
 import com.njydsz.pmis.execution.dto.DeliveryItemStatusDTO;
@@ -70,6 +71,7 @@ public class DeliveryController {
     }
 
     @Operation(summary = "统计项目类型的标准数")
+    @PrePermission("execution:delivery:list")
     @GetMapping("/standard/count")
     public R<Long> countStandardsByType(@RequestParam String projectType) {
         return R.ok(service.countStandardsByType(projectType));
@@ -106,6 +108,7 @@ public class DeliveryController {
     }
 
     @Operation(summary = "交付物实例详情")
+    @PrePermission("execution:delivery:list")
     @GetMapping("/item/{id}")
     public R<DeliveryItemDO> getItem(@PathVariable Long id) {
         return R.ok(service.getItemById(id));
@@ -125,6 +128,7 @@ public class DeliveryController {
     }
 
     @Operation(summary = "按状态聚合交付物")
+    @PrePermission("execution:delivery:list")
     @GetMapping("/item/aggregate/status")
     public R<List<Map<String, Object>>> aggregateItemStatus(@RequestParam Long initiationId) {
         return R.ok(service.aggregateItemStatus(initiationId));

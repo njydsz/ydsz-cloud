@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.ProjectClosureCreateDTO;
 import com.njydsz.pmis.execution.dto.ProjectClosureStatusDTO;
@@ -39,6 +40,7 @@ public class ProjectClosureController {
     private final ProjectClosureService service;
 
     @Operation(summary = "创建项目结项")
+    @PrePermission("closure:project:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody ProjectClosureCreateDTO dto) {
         return R.ok(service.create(dto));
@@ -65,12 +67,14 @@ public class ProjectClosureController {
     }
 
     @Operation(summary = "按项目查询结项")
+    @PrePermission("closure:project:list")
     @GetMapping("/by-initiation/{initiationId}")
     public R<ProjectClosureDO> getByInitiation(@PathVariable Long initiationId) {
         return R.ok(service.getByInitiation(initiationId));
     }
 
     @Operation(summary = "分页查询")
+    @PrePermission("closure:project:list")
     @GetMapping("/page")
     public R<Page<ProjectClosureDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -82,6 +86,7 @@ public class ProjectClosureController {
     }
 
     @Operation(summary = "按结项类型查询")
+    @PrePermission("closure:project:list")
     @GetMapping("/list-by-type")
     public R<List<ProjectClosureDO>> listByType(@RequestParam(required = false) String closureType) {
         return R.ok(service.listByType(closureType));
@@ -94,6 +99,7 @@ public class ProjectClosureController {
     }
 
     @Operation(summary = "结项准入校验")
+    @PrePermission("closure:project:list")
     @GetMapping("/{id}/admission-check")
     public R<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable Long id) {
         return R.ok(service.checkAdmission(id));

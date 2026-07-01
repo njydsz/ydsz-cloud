@@ -1,3 +1,10 @@
+<!--
+  @file EVM 挣值管理
+  @description 挣值管理（Earned Value Management）独立页面，提供 EVM 测量记录的分页查询、
+               录入/更新（按 initiation + wbs + period 幂等）、项目级健康仪表盘（CPI/SPI/EAC/VAC + 趋势）
+               及红黄绿三色预警展示；CPI/SPI 由后端自动计算并判定预警级别。
+  @module views/execution/evm
+-->
 <script setup lang="ts">
 /**
  * EVM 挣值管理 - 独立页
@@ -21,12 +28,18 @@ import type { EvmMeasureVO, EvmMeasureCreateDTO, EvmDashboardVO } from '@/api/ex
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
 
+/** 用户信息 store（用于权限判断） */
 const userStore = useUserStore()
+/** 权限判断快捷方法 */
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** EVM 测量记录列表 */
 const list = ref<EvmMeasureVO[]>([])
+/** 记录总数（分页用） */
 const total = ref(0)
+/** 查询条件：项目 ID + 预警级别 */
 const query = reactive({
   page: 1,
   size: 10,
@@ -34,6 +47,7 @@ const query = reactive({
   alertLevel: '',
 })
 
+/** 拉取 EVM 测量列表（前端按 alertLevel 过滤 + 分页，避免大改后端接口） */
 async function fetchList() {
   if (!query.initiationId) {
     list.value = []
@@ -81,6 +95,7 @@ async function fetchDashboard() {
   }
 }
 
+/** 触发查询：重置页码并并行刷新列表与仪表盘 */
 async function onQuery() {
   query.page = 1
   await fetchList()

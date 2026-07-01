@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.PaymentAllocationDTO;
 import com.njydsz.pmis.execution.dto.PaymentCreateDTO;
@@ -33,21 +34,18 @@ public class PaymentController {
     private final PaymentService service;
 
     @Operation(summary = "录入回款")
-    @PostMapping
-    public R<Long> record(@Valid @RequestBody PaymentCreateDTO dto) {
+    @Pblic R<Long> record(@Valid @RequestBody PaymentCreateDTO dto) {
         return R.ok(service.record(dto));
     }
 
     @Operation(summary = "确认到账")
     @PutMapping("/{id}/confirm")
-    public R<Void> confirm(@PathVariable Long id, @RequestParam Long operatorId) {
-        service.confirm(id, operatorId);
+    pu  service.confirm(id, operatorId);
         return R.ok();
     }
 
-    @Operation(summary = "取消")
-    @PutMapping("/{id}/cancel")
-    public R<Void> cancel(@PathVariable Long id,
+    @
+blic R<Void> cancel(@PathVariable Long id,
                           @RequestParam Long operatorId,
                           @RequestParam(required = false) String reason) {
         service.cancel(id, operatorId, reason);
@@ -55,6 +53,7 @@ public class PaymentController {
     }
 
     @Operation(summary = "删除")
+    @PrePermission("finance:payment:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -63,7 +62,8 @@ public class PaymentController {
 
     @Operation(summary = "核销到发票")
     @PostMapping("/allocate")
-    public R<Void> allocate(@Valid @RequestBody PaymentAllocationDTO dto) {
+    public R<Void> allocate(@Va")
+    @PrePermission("finance:payment:allocatelid @RequestBody PaymentAllocationDTO dto) {
         service.allocate(dto);
         return R.ok();
     }
@@ -89,6 +89,7 @@ public class PaymentController {
     }
 
     @Operation(summary = "分页")
+    @PrePermission("finance:payment:list")
     @GetMapping("/page")
     public R<Page<PaymentDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -108,6 +109,7 @@ public class PaymentController {
     }
 
     @Operation(summary = "按月汇总")
+    @PrePermission("finance:payment:list")
     @GetMapping("/aggregate/by-month")
     public R<List<Map<String, Object>>> aggregateByMonth(@RequestParam Long initiationId) {
         return R.ok(service.aggregateByMonth(initiationId));

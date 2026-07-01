@@ -167,6 +167,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新建表单：校验通过后调用创建接口，引擎自动测算毛利/毛利率 */
 async function submit() {
   if (!formRef.value) return
   try {
@@ -181,6 +182,7 @@ async function submit() {
   fetchCompare()
 }
 
+/** 状态流转：DRAFT → SUBMITTED，提交审批 */
 async function onSubmit(row: ProfitSimulationVO) {
   if (!row.id) return
   try {
@@ -190,6 +192,7 @@ async function onSubmit(row: ProfitSimulationVO) {
     fetchList()
   } catch { /* 用户取消 */ }
 }
+/** 状态流转：SUBMITTED → APPROVED，记录审批意见与审批人 */
 async function onApprove(row: ProfitSimulationVO) {
   if (!row.id) return
   try {
@@ -204,6 +207,7 @@ async function onApprove(row: ProfitSimulationVO) {
     fetchList()
   } catch { /* 用户取消 */ }
 }
+/** 状态流转：SUBMITTED → REJECTED，记录驳回原因 */
 async function onReject(row: ProfitSimulationVO) {
   if (!row.id) return
   try {
@@ -218,6 +222,7 @@ async function onReject(row: ProfitSimulationVO) {
     fetchList()
   } catch { /* 用户取消 */ }
 }
+/** 删除测算版本（二次确认） */
 async function onDelete(row: ProfitSimulationVO) {
   if (!row.id) return
   try {
@@ -286,6 +291,7 @@ onMounted(() => {
       @page-change="onPageChange"
       @refresh="onRefresh"
     >
+      <!-- 查询条件区：项目 ID / 场景 / 状态 -->
       <template #search>
         <el-form-item label="项目 ID">
           <el-input-number
@@ -313,6 +319,7 @@ onMounted(() => {
           </el-select>
         </el-form-item>
       </template>
+      <!-- 工具栏：新建测算按钮（受权限控制，未选项目时禁用） -->
       <template #toolbar>
         <el-button
           v-if="hasPerm(PC.EXECUTION_SIMULATION_CREATE)"
@@ -324,6 +331,7 @@ onMounted(() => {
           新建测算
         </el-button>
       </template>
+      <!-- 数据表格：测算版本明细 + 状态流转操作列 -->
       <template #table>
         <vxe-table :data="list" :loading="loading" border height="auto">
           <vxe-column field="simulationCode" title="编号" width="160" />
@@ -376,6 +384,7 @@ onMounted(() => {
           </vxe-column>
           <vxe-column field="applicantName" title="申请人" width="100" />
           <vxe-column title="操作" width="240" fixed="right">
+            <!-- 操作按钮按状态与权限动态显隐：提交/批准/驳回/删除 -->
             <template #default="{ row }">
               <el-button
                 v-if="hasPerm(PC.EXECUTION_SIMULATION_CREATE) && row.status === 'DRAFT'"
@@ -410,6 +419,7 @@ onMounted(() => {
       </template>
     </PageLayout>
 
+    <!-- 新建测算弹窗：表单字段 + 引擎自动测算说明 -->
     <el-dialog
       v-model="dialogVisible"
       title="新建利润测算"

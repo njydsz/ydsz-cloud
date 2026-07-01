@@ -1,3 +1,10 @@
+<!--
+  @file 客户信用管理
+  @description 客户信用评分与等级管理页面，支持列表查询、按客户查询最新信用、人工触发信用评估；
+               评分模型: 30 基础分（新客户） + 合同数 + 合作年限 + 付款习惯 - 逾期惩罚；
+               等级划分: A(90-100) / B(75-89) / C(60-74) / D(0-59)。
+  @module views/execution/customer-credit
+-->
 <script setup lang="ts">
 /**
  * 客户信用管理
@@ -17,9 +24,13 @@ import {
 import type { CustomerCreditVO, CreditAssessmentDTO } from '@/api/execution/customer-credit/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 客户信用记录列表 */
 const list = ref<CustomerCreditVO[]>([])
+/** 记录总数（分页用） */
 const total = ref(0)
+/** 查询条件：关键字 + 等级 + 客户 ID */
 const query = reactive({
   page: 1,
   size: 10,
@@ -28,6 +39,7 @@ const query = reactive({
   customerId: undefined as number | undefined,
 })
 
+/** 信用等级 → 标签/样式映射（A/B/C/D） */
 const levelMap = {
   A: { label: 'A级', type: 'success' as const },
   B: { label: 'B级', type: 'primary' as const },
@@ -35,12 +47,14 @@ const levelMap = {
   D: { label: 'D级', type: 'danger' as const },
 }
 
+/** 付款习惯 → 中文标签映射 */
 const habitMap = {
   ONTIME: { label: '按时' },
   OFTEN_LATE: { label: '经常逾期' },
   SEVERE_LATE: { label: '严重逾期' },
 }
 
+/** 分页查询客户信用列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -56,6 +70,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并回到首页刷新 */
 function handleReset() {
   query.keyword = ''
   query.level = ''
@@ -64,6 +79,10 @@ function handleReset() {
   fetchList()
 }
 
+/**
+ * 按客户查询最新信用评级并以消息提示
+ * @param row 当前客户信用记录
+ */
 async function handleQuery(row: CustomerCreditVO) {
   try {
     const { data } = await getCreditByCustomer(row.customerId)
@@ -73,8 +92,11 @@ async function handleQuery(row: CustomerCreditVO) {
   }
 }
 
+/** 信用评估弹窗可见性 */
 const dialogVisible = ref(false)
+/** 表单引用（用于校验） */
 const formRef = ref<any>()
+/** 信用评估入参表单 */
 const form = reactive<Partial<CreditAssessmentDTO>>({
   customerId: 0,
   customerName: '',
@@ -86,10 +108,12 @@ const form = reactive<Partial<CreditAssessmentDTO>>({
   paymentHabit: 'ONTIME',
 })
 
+/** 表单校验规则 */
 const formRules = {
   customerId: [{ required: true, message: '客户 ID 必填', trigger: 'blur' }],
 }
 
+/** 打开信用评估弹窗并重置表单为默认值 */
 function openAssess() {
   Object.assign(form, {
     customerId: 0,
@@ -104,6 +128,7 @@ function openAssess() {
   dialogVisible.value = true
 }
 
+/** 提交信用评估，成功后展示评级与分数并刷新列表 */
 async function submitAssess() {
   await formRef.value?.validate()
   try {
@@ -116,6 +141,7 @@ async function submitAssess() {
   }
 }
 
+/** 页面挂载时加载列表 */
 onMounted(fetchList)
 </script>
 
@@ -130,6 +156,7 @@ onMounted(fetchList)
     @page-change="fetchList"
     @refresh="fetchList"
   >
+    <!-- 搜索栏 -->
     <template #search>
       <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="客户名" clearable /></el-form-item>
       <el-form-item label="等级">
@@ -139,12 +166,14 @@ onMounted(fetchList)
       </el-form-item>
     </template>
 
+    <!-- 工具栏 -->
     <template #toolbar>
       <el-button v-permission="[PC.FINANCE_CREDIT_ASSESS]" type="primary" :icon="'Plus'" @click="openAssess">
         信用评估
       </el-button>
     </template>
 
+    <!-- 客户信用列表表格 -->
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
@@ -173,6 +202,7 @@ onMounted(fetchList)
       </vxe-table>
     </template>
 
+    <!-- 信用评估弹窗 -->
     <el-dialog v-model="dialogVisible" title="客户信用评估" width="600px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="120px">
         <el-row :gutter="16">

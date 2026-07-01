@@ -112,6 +112,7 @@ async function fetchStats() {
   }
 }
 
+/** 重置查询条件并重新加载列表 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -125,8 +126,10 @@ function handleReset() {
 /** 是否处于空态: 非加载中且列表无数据 */
 const isEmpty = computed(() => !loading.value && list.value.length === 0)
 
+/** 新增工单弹窗显隐 */
 const dialogVisible = ref(false)
 const formRef = ref<any>()
+/** 新增工单表单数据 */
 const form = reactive<Partial<OpsTicketCreateDTO>>({
   initiationId: 0,
   priority: 'P3',
@@ -140,6 +143,7 @@ const formRules = {
   priority: [{ required: true, message: '优先级必填', trigger: 'change' }],
 }
 
+/** 打开新增工单弹窗，重置表单为默认值 */
 function openCreate() {
   Object.assign(form, {
     initiationId: 0,
@@ -153,6 +157,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新增工单表单，校验通过后调用创建接口 */
 async function submitForm() {
   await formRef.value?.validate()
   await createOpsTicket(form as OpsTicketCreateDTO)
@@ -161,13 +166,16 @@ async function submitForm() {
   fetchList()
 }
 
+/** 派单弹窗显隐 */
 const assignVisible = ref(false)
+/** 派单表单数据 */
 const assignForm = reactive<{ id?: number; assigneeId: number; comment: string }>({
   id: undefined,
   assigneeId: 0,
   comment: '',
 })
 
+/** 打开派单弹窗，回填当前工单处理人 */
 function openAssign(row: OpsTicketVO) {
   assignForm.id = row.id
   assignForm.assigneeId = row.assigneeId || 0
@@ -175,6 +183,7 @@ function openAssign(row: OpsTicketVO) {
   assignVisible.value = true
 }
 
+/** 提交派单，将工单指派给指定处理人 */
 async function submitAssign() {
   if (!assignForm.id || !assignForm.assigneeId) {
     ElMessage.warning('请填写处理人 ID')
@@ -187,6 +196,11 @@ async function submitAssign() {
   fetchList()
 }
 
+/**
+ * 变更工单状态
+ * @param row 当前行工单数据
+ * @param target 目标状态（RESOLVED/CANCELLED 等需补充说明）
+ */
 async function handleStatus(row: OpsTicketVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {
@@ -215,13 +229,16 @@ async function handleStatus(row: OpsTicketVO, target: string) {
   } catch { /* 取消 */ }
 }
 
+/** 关闭评价弹窗显隐 */
 const evalVisible = ref(false)
+/** 客户评价表单数据 */
 const evalForm = reactive<{ id?: number; score: number; comment: string }>({
   id: undefined,
   score: 5,
   comment: '',
 })
 
+/** 打开关闭评价弹窗，重置评分与评价说明 */
 function openEvaluate(row: OpsTicketVO) {
   evalForm.id = row.id
   evalForm.score = 5
@@ -229,6 +246,7 @@ function openEvaluate(row: OpsTicketVO) {
   evalVisible.value = true
 }
 
+/** 提交关闭并评价，将工单置为 CLOSED 并记录客户评分 */
 async function submitEvaluate() {
   if (!evalForm.id) return
   await closeAndEvaluateOpsTicket({
@@ -242,6 +260,7 @@ async function submitEvaluate() {
   fetchList()
 }
 
+/** 触发 SLA 超时扫描，并刷新列表与统计 */
 async function handleScan() {
   const n = await scanOpsTicketSlaBreaches()
   ElMessage.success(`扫描到 ${n} 条 SLA 超时`)
@@ -272,6 +291,7 @@ onMounted(() => {
     @page-change="fetchList"
     @refresh="() => { fetchList(); fetchStats(); }"
   >
+    <!-- 搜索栏 -->
     <template #search>
       <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="编号/标题" clearable /></el-form-item>
       <el-form-item label="状态">
@@ -288,6 +308,7 @@ onMounted(() => {
       <el-form-item label="处理人 ID"><el-input-number v-model="query.assigneeId" :min="0" :controls="false" /></el-form-item>
     </template>
 
+    <!-- 工具栏 -->
     <template #toolbar>
       <el-button v-permission="[PC.AFTERSALES_OPS_TICKET_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
         新增工单
@@ -315,6 +336,7 @@ onMounted(() => {
       </el-col>
     </el-row>
 
+    <!-- 工单表格 -->
     <template #table>
       <EmptyState
         v-if="isEmpty"
@@ -397,6 +419,7 @@ onMounted(() => {
       </vxe-table>
     </template>
 
+    <!-- 新增工单弹窗 -->
     <el-dialog v-model="dialogVisible" title="新增工单" width="560px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="项目 ID" prop="initiationId">
@@ -429,6 +452,7 @@ onMounted(() => {
       </template>
     </el-dialog>
 
+    <!-- 派单弹窗 -->
     <el-dialog v-model="assignVisible" title="派单" width="460px">
       <el-form label-width="100px">
         <el-form-item label="工单 ID"><el-input :model-value="assignForm.id" disabled /></el-form-item>
@@ -445,6 +469,7 @@ onMounted(() => {
       </template>
     </el-dialog>
 
+    <!-- 关闭评价弹窗 -->
     <el-dialog v-model="evalVisible" title="关闭工单并评价" width="460px">
       <el-form label-width="100px">
         <el-form-item label="工单 ID"><el-input :model-value="evalForm.id" disabled /></el-form-item>

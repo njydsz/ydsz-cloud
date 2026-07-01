@@ -1,11 +1,9 @@
+<!--
+  @file Bench 闲置池管理
+  @description Bench 闲置池管理页面：提供闲置概览仪表盘（累计闲置成本、各池人数、Top 成本与池分布）、员工入池/出池操作以及分页筛选查询。闲置天数由后端 ChronoUnit.DAYS.between 计算，培训窗口为 30 天。对应路由 /resource/bench，后端服务 ydsz-pmis-user（端口 9002）。
+  @module views/resource/bench
+-->
 <script setup lang="ts">
-/**
- * Bench 闲置池管理
- *
- * 1) 仪表盘：累计闲置成本 + 各池人数 + 流动趋势
- * 2) 入池/出池操作
- * 3) 分页查询 + 筛选
- */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
@@ -104,6 +102,7 @@ function fmtMoney(n?: number) {
   return `¥${Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
 }
 
+// 已出池记录中累计闲置成本 Top5（仪表盘展示用）
 const topCostList = computed(() => {
   return [...list.value]
     .filter((r) => r.status === 'EXITED')
@@ -171,6 +170,7 @@ function openAct(action: 'ENTER' | 'EXIT') {
   dialogVisible.value = true
 }
 
+/** 提交入池/出池动作，成功后刷新列表与仪表盘 */
 async function submit() {
   if (!formRef.value) return
   try {
@@ -254,6 +254,7 @@ onMounted(async () => {
       </div>
     </el-card>
 
+    <!-- 列表查询与入池/出池操作 -->
     <PageLayout
       :query="query"
       :list="list"
@@ -356,6 +357,7 @@ onMounted(async () => {
       </template>
     </PageLayout>
 
+    <!-- 入池/出池弹窗 -->
     <el-dialog
       v-model="dialogVisible"
       :title="dialogAction === 'ENTER' ? '员工入池' : '员工出池'"

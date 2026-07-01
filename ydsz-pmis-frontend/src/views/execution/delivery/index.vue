@@ -1,3 +1,10 @@
+<!--
+  @file 交付物管理
+  @description 项目交付物全生命周期管理页面，覆盖 CD1~CD5 五个交付阶段，
+               支持标准交付物与项目特异交付物的创建、提交、验收、驳回、豁免操作；
+               状态流转: PENDING → SUBMITTED → ACCEPTED / REJECTED / WAIVED。
+  @module views/execution/delivery
+-->
 <script setup lang="ts">
 /**
  * 交付物管理
@@ -18,9 +25,13 @@ import {
 import type { DeliveryItemVO, DeliveryItemCreateDTO } from '@/api/execution/delivery/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 交付物记录列表 */
 const list = ref<DeliveryItemVO[]>([])
+/** 记录总数（分页用） */
 const total = ref(0)
+/** 查询条件：关键字 + 状态 + 项目 ID + 阶段 */
 const query = reactive({
   page: 1,
   size: 10,
@@ -30,6 +41,7 @@ const query = reactive({
   stage: '',
 })
 
+/** 交付阶段 → 标签/样式映射（CD1~CD5） */
 const stageMap = {
   CD1_KICKOFF: { label: 'CD1 启动', type: 'info' as const },
   CD2_DESIGN: { label: 'CD2 设计', type: 'primary' as const },
@@ -38,11 +50,13 @@ const stageMap = {
   CD5_GO_LIVE: { label: 'CD5 上线', type: 'success' as const },
 }
 
+/** 交付物类型 → 标签/样式映射 */
 const typeMap = {
   STANDARD: { label: '标准', type: 'info' as const },
   SPECIFIC: { label: '项目特异', type: 'primary' as const },
 }
 
+/** 交付物状态 → 标签/样式映射 */
 const statusMap = {
   PENDING: { label: '待提交', type: 'info' as const },
   SUBMITTED: { label: '已提交', type: 'warning' as const },
@@ -51,6 +65,7 @@ const statusMap = {
   WAIVED: { label: '已豁免', type: 'info' as const },
 }
 
+/** 分页查询交付物列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -67,6 +82,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并回到首页刷新 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -76,8 +92,11 @@ function handleReset() {
   fetchList()
 }
 
+/** 新增交付物弹窗可见性 */
 const dialogVisible = ref(false)
+/** 表单引用（用于校验） */
 const formRef = ref<any>()
+/** 新增交付物表单数据 */
 const form = reactive<Partial<DeliveryItemCreateDTO>>({
   initiationId: 0,
   stage: 'CD2_DESIGN',
@@ -86,12 +105,14 @@ const form = reactive<Partial<DeliveryItemCreateDTO>>({
   level: 'NORMAL',
 })
 
+/** 表单校验规则 */
 const formRules = {
   initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
   stage: [{ required: true, message: '阶段必填', trigger: 'change' }],
   name: [{ required: true, message: '交付物名称必填', trigger: 'blur' }],
 }
 
+/** 打开新增弹窗并重置表单为默认值 */
 function openCreate() {
   Object.assign(form, {
     initiationId: 0,
@@ -105,6 +126,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新建交付物，校验通过后创建并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   await createDeliveryItem(form as DeliveryItemCreateDTO)
@@ -113,6 +135,11 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 变更交付物状态（提交/验收/驳回/豁免），驳回需填写原因
+ * @param row 交付物记录
+ * @param target 目标状态
+ */
 async function handleStatus(row: DeliveryItemVO, target: string) {
   try {
     let reason: string | undefined
@@ -126,6 +153,7 @@ async function handleStatus(row: DeliveryItemVO, target: string) {
   } catch { /* 取消 */ }
 }
 
+/** 页面挂载时加载列表 */
 onMounted(fetchList)
 </script>
 
@@ -140,6 +168,7 @@ onMounted(fetchList)
     @page-change="fetchList"
     @refresh="fetchList"
   >
+    <!-- 搜索栏 -->
     <template #search>
       <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="名称" clearable /></el-form-item>
       <el-form-item label="阶段">
@@ -155,12 +184,14 @@ onMounted(fetchList)
       <el-form-item label="项目 ID"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
     </template>
 
+    <!-- 工具栏 -->
     <template #toolbar>
       <el-button v-permission="[PC.EXECUTION_DELIVERY_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
         新增交付物
       </el-button>
     </template>
 
+    <!-- 交付物列表表格 -->
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
@@ -190,6 +221,7 @@ onMounted(fetchList)
       </vxe-table>
     </template>
 
+    <!-- 新增交付物弹窗 -->
     <el-dialog v-model="dialogVisible" title="新增交付物" width="520px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item>

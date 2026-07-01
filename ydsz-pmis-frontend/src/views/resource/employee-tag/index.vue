@@ -1,3 +1,8 @@
+<!--
+  @file 员工标签管理
+  @description 员工标签管理页面：提供「按员工查询标签」与「按标签筛选候选人」两个 Tab，支持为员工新增/删除标签（技术栈/技术方向/行业经验/可用时间）。对应路由 /resource/employee-tag，后端服务 ydsz-pmis-user（端口 9002）。
+  @module views/resource/employee-tag
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -54,6 +59,7 @@ async function fetchTags() {
   }
 }
 
+/** 按标签类型/编码筛选具备该标签的候选员工 */
 async function fetchCandidates() {
   if (!candidateForm.tagType) return
   try {
@@ -64,6 +70,7 @@ async function fetchCandidates() {
   }
 }
 
+/** 打开新增标签弹窗，初始化表单默认值 */
 function openCreate() {
   Object.assign(form, {
     employeeId: employeeId.value ?? 0,
@@ -130,6 +137,7 @@ onMounted(() => {
           </vxe-table>
         </el-tab-pane>
 
+        <!-- 按标签筛选候选人 -->
         <el-tab-pane label="按标签筛选候选人" name="candidates">
           <div class="search-row">
             <el-select v-model="candidateForm.tagType" style="width: 160px" @change="fetchCandidates">

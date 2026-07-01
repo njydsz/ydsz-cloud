@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.ProfitSnapshotDTO;
 import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;
@@ -40,6 +41,7 @@ public class ProfitController {
     }
 
     @Operation(summary = "项目所有快照")
+    @PrePermission("execution:profit:list")
     @GetMapping("/snapshots/{initiationId}")
     public R<List<ProfitSnapshotDO>> list(@PathVariable Long initiationId) {
         return R.ok(service.listByInitiation(initiationId));

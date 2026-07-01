@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.project.dto.OpportunityCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityStatusDTO;
@@ -47,6 +48,7 @@ public class OpportunityController {
     }
 
     @Operation(summary = "更新商机")
+    @PrePermission("project:opportunity:update")
     @PutMapping
     public R<Void> update(@Valid @RequestBody OpportunityUpdateDTO dto) {
         service.update(dto);
@@ -54,6 +56,7 @@ public class OpportunityController {
     }
 
     @Operation(summary = "变更状态")
+    @PrePermission("project:opportunity:update")
     @PutMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody OpportunityStatusDTO dto) {
         service.changeStatus(dto);
@@ -61,6 +64,7 @@ public class OpportunityController {
     }
 
     @Operation(summary = "删除商机")
+    @PrePermission("project:opportunity:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -68,12 +72,14 @@ public class OpportunityController {
     }
 
     @Operation(summary = "商机详情")
+    @PrePermission("project:opportunity:list")
     @GetMapping("/{id}")
     public R<OpportunityDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
     }
 
     @Operation(summary = "分页查询")
+    @PrePermission("project:opportunity:list")
     @GetMapping("/page")
     public R<Page<OpportunityDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -86,6 +92,7 @@ public class OpportunityController {
     }
 
     @Operation(summary = "评估并更新赢率")
+    @PrePermission("project:opportunity:evaluate")
     @PostMapping("/{id}/evaluate-winrate")
     public R<BigDecimal> evaluateWinRate(@PathVariable Long id,
                                          @RequestParam(required = false) String customerCredit,
@@ -101,6 +108,7 @@ public class OpportunityController {
     }
 
     @Operation(summary = "按分级聚合")
+    @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/level")
     public R<List<Map<String, Object>>> aggregateByLevel(@RequestParam(required = false) Long tenantId) {
         return R.ok(service.aggregateByLevel(tenantId));
