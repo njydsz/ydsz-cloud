@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.message.entity.MessageTemplateDO;
 import com.njydsz.pmis.message.service.MessageTemplateServiceImpl;
@@ -34,12 +35,14 @@ public class MessageTemplateController {
     private final MessageTemplateServiceImpl templateService;
 
     @Operation(summary = "创建模板")
+    @PrePermission("notif:message:send")
     @PostMapping
     public R<Long> create(@RequestBody MessageTemplateDTO dto) {
         return R.ok(templateService.create(dto.toDO()));
     }
 
     @Operation(summary = "更新模板")
+    @PrePermission("notif:message:send")
     @PutMapping
     public R<Void> update(@RequestBody MessageTemplateDTO dto) {
         MessageTemplateDO t = dto.toDO();
@@ -49,6 +52,7 @@ public class MessageTemplateController {
     }
 
     @Operation(summary = "删除模板")
+    @PrePermission("notif:message:send")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         templateService.delete(id);
@@ -56,12 +60,14 @@ public class MessageTemplateController {
     }
 
     @Operation(summary = "模板详情")
+    @PrePermission("notif:message:send")
     @GetMapping("/{id}")
     public R<MessageTemplateDO> get(@PathVariable Long id) {
         return R.ok(templateService.getById(id));
     }
 
     @Operation(summary = "模板分页")
+    @PrePermission("notif:message:send")
     @GetMapping("/page")
     public R<Page<MessageTemplateDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -72,6 +78,7 @@ public class MessageTemplateController {
     }
 
     @Operation(summary = "按通道列出模板")
+    @PrePermission("notif:message:send")
     @GetMapping("/list")
     public R<List<MessageTemplateDO>> listByChannel(@RequestParam String channel) {
         return R.ok(templateService.listByChannel(channel));

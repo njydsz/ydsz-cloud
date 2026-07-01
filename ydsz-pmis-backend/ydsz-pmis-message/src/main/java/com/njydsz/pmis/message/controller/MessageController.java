@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -34,6 +35,7 @@ public class MessageController {
     private final MessageServiceImpl messageService;
 
     @Operation(summary = "发送消息（支持模板渲染）")
+    @PrePermission("notif:message:send")
     @PostMapping("/send")
     public R<MessageResult> send(@RequestBody MessageSendDTO dto) {
         if (dto == null) {
@@ -44,6 +46,7 @@ public class MessageController {
     }
 
     @Operation(summary = "分页查询发送日志")
+    @PrePermission("notif:message:send")
     @GetMapping("/log/page")
     public R<Page<MessageLogDO>> pageLog(
             @RequestParam(defaultValue = "1") int page,
@@ -55,6 +58,7 @@ public class MessageController {
     }
 
     @Operation(summary = "已注册通道列表")
+    @PrePermission("notif:message:send")
     @GetMapping("/channels")
     public R<List<String>> channels() {
         return R.ok(messageService.listChannelTypes());

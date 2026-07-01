@@ -123,6 +123,7 @@ onMounted(fetchList)
 
 <template>
   <div class="pool-page">
+    <!-- 资源池列表（含查询/工具栏/表格/分页） -->
     <el-card shadow="never">
       <el-form inline :model="query" class="search-form">
         <el-form-item label="类型">

@@ -28,6 +28,7 @@ public class BudgetController {
     private final BudgetGuard budgetGuard;
 
     @Operation(summary = "查询项目预算占用率与告警级别")
+    @PrePermission("execution:budget:view")
     @GetMapping("/occupancy")
     public R<Map<String, Object>> occupancy(@RequestParam Long initiationId) {
         return R.ok(budgetGuard.occupancy(initiationId));

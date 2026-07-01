@@ -30,12 +30,14 @@ public class PurchaseController {
     private final PurchaseService service;
 
     @Operation(summary = "创建采购单")
+    @PrePermission("execution:purchase:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody PurchaseCreateDTO dto) {
         return R.ok(service.create(dto));
     }
 
     @Operation(summary = "状态迁移")
+    @PrePermission("execution:purchase:status")
     @PutMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
         service.changeStatus(dto);
@@ -43,6 +45,7 @@ public class PurchaseController {
     }
 
     @Operation(summary = "删除")
+    @PrePermission("execution:purchase:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -50,6 +53,7 @@ public class PurchaseController {
     }
 
     @Operation(summary = "详情")
+    @PrePermission("execution:purchase:list")
     @GetMapping("/{id}")
     public R<PurchaseDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));

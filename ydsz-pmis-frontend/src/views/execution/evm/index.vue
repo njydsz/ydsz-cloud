@@ -68,12 +68,18 @@ async function fetchList() {
   }
 }
 
+/** 预警级别 → 标签/样式映射（GREEN/YELLOW/RED） */
 const alertLevelMap: Record<string, { label: string; type: 'success' | 'warning' | 'danger' }> = {
   GREEN: { label: '健康', type: 'success' },
   YELLOW: { label: '预警', type: 'warning' },
   RED: { label: '严重', type: 'danger' },
 }
 
+/**
+ * 数字格式化
+ * @param n 待格式化数值
+ * @param d 保留小数位（默认 2）
+ */
 function fmt(n?: number, d = 2) {
   if (n === undefined || n === null) return '-'
   return Number(n).toFixed(d)

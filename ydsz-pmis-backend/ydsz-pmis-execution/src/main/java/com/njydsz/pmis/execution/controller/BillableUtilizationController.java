@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.service.BillableUtilizationService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -67,6 +68,7 @@ public class BillableUtilizationController {
     }
 
     @Operation(summary = "扫描预警员工（WARN/CRITICAL）")
+    @PrePermission("execution:utilization:view")
     @GetMapping("/alerts")
     public R<List<Map<String, Object>>> alerts(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
@@ -83,6 +85,7 @@ public class BillableUtilizationController {
     }
 
     @Operation(summary = "触发快照重算（Scheduler 调用 / 运维手工）")
+    @PrePermission("execution:utilization:recompute")
     @PostMapping("/recompute")
     public R<Map<String, Object>> recompute(
             @RequestParam(required = false) String period,

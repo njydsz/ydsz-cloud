@@ -29,12 +29,14 @@ public class ProfitController {
     private final ProfitService service;
 
     @Operation(summary = "生成/更新项目月度利润快照")
+    @PrePermission("execution:profit:snapshot")
     @PostMapping("/snapshot")
     public R<Long> snapshot(@Valid @RequestBody ProfitSnapshotDTO dto) {
         return R.ok(service.generateSnapshot(dto));
     }
 
     @Operation(summary = "查询项目某月快照")
+    @PrePermission("execution:profit:list")
     @GetMapping("/snapshot")
     public R<ProfitSnapshotDO> get(@RequestParam Long initiationId, @RequestParam String period) {
         return R.ok(service.getByInitiationAndPeriod(initiationId, period));

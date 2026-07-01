@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.audit.entity.SensitiveOperationDO;
 import com.njydsz.pmis.audit.mapper.SensitiveOperationMapper;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.R;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +27,7 @@ public class SensitiveOperationController {
     private final SensitiveOperationMapper mapper;
 
     @Operation(summary = "分页查询")
+    @PrePermission("audit:sensitive:view")
     @GetMapping("/page")
     public R<PageResult<SensitiveOperationDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -41,6 +43,7 @@ public class SensitiveOperationController {
     }
 
     @Operation(summary = "按用户查询敏感操作历史")
+    @PrePermission("audit:sensitive:view")
     @GetMapping("/by-user")
     public R<List<SensitiveOperationDO>> byUser(@RequestParam Long userId,
                                                 @RequestParam(defaultValue = "50") int limit) {

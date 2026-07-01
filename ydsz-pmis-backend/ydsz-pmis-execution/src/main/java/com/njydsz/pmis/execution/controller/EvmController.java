@@ -45,18 +45,21 @@ public class EvmController {
     }
 
     @Operation(summary = "按项目查询")
+    @PrePermission("execution:evm:list")
     @GetMapping("/by-initiation")
     public R<List<EvmMeasureDO>> listByInitiation(@RequestParam Long initiationId) {
         return R.ok(service.listByInitiation(initiationId));
     }
 
     @Operation(summary = "按 WBS 查询")
+    @PrePermission("execution:evm:list")
     @GetMapping("/by-wbs")
     public R<List<EvmMeasureDO>> listByWbs(@RequestParam Long wbsTaskId) {
         return R.ok(service.listByWbs(wbsTaskId));
     }
 
     @Operation(summary = "项目偏差趋势（按周期）")
+    @PrePermission("execution:evm:list")
     @GetMapping("/trend")
     public R<List<Map<String, Object>>> trend(@RequestParam Long initiationId) {
         return R.ok(service.trend(initiationId));

@@ -32,12 +32,14 @@ public class RevenueController {
     private final RevenueService service;
 
     @Operation(summary = "录入收入")
+    @PrePermission("execution:revenue:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody RevenueCreateDTO dto) {
         return R.ok(service.create(dto));
     }
 
     @Operation(summary = "确认收入")
+    @PrePermission("execution:revenue:update")
     @PutMapping("/{id}/confirm")
     public R<Void> confirm(@PathVariable Long id, @RequestParam Long confirmedBy) {
         service.confirm(id, confirmedBy);
@@ -45,6 +47,7 @@ public class RevenueController {
     }
 
     @Operation(summary = "冲销收入")
+    @PrePermission("execution:revenue:update")
     @PutMapping("/{id}/reverse")
     public R<Void> reverse(@PathVariable Long id) {
         service.reverse(id);
@@ -52,6 +55,7 @@ public class RevenueController {
     }
 
     @Operation(summary = "删除")
+    @PrePermission("execution:revenue:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -66,6 +70,7 @@ public class RevenueController {
     }
 
     @Operation(summary = "分页")
+    @PrePermission("execution:revenue:list")
     @GetMapping("/page")
     public R<Page<RevenueDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -79,6 +84,7 @@ public class RevenueController {
     }
 
     @Operation(summary = "按合同汇总")
+    @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/by-contract")
     public R<List<Map<String, Object>>> sumByContract(@RequestParam Long contractId) {
         return R.ok(service.sumByContract(contractId));

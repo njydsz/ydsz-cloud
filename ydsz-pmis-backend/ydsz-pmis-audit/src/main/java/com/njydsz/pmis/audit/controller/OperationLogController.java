@@ -2,6 +2,7 @@ package com.njydsz.pmis.audit.controller;
 
 import com.njydsz.pmis.audit.entity.OperationLogDO;
 import com.njydsz.pmis.audit.service.OperationLogServiceImpl;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.R;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,6 +31,7 @@ public class OperationLogController {
     private final OperationLogServiceImpl service;
 
     @Operation(summary = "分页查询")
+    @PrePermission("audit:log:view")
     @GetMapping("/page")
     public R<PageResult<OperationLogDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -42,6 +44,7 @@ public class OperationLogController {
     }
 
     @Operation(summary = "按用户查询")
+    @PrePermission("audit:log:view")
     @GetMapping("/by-user")
     public R<List<OperationLogDO>> byUser(@RequestParam Long userId,
                                           @RequestParam(defaultValue = "50") int limit) {
@@ -49,6 +52,7 @@ public class OperationLogController {
     }
 
     @Operation(summary = "按业务查询")
+    @PrePermission("audit:log:view")
     @GetMapping("/by-biz")
     public R<List<OperationLogDO>> byBiz(@RequestParam String bizType,
                                          @RequestParam String bizId,
@@ -57,6 +61,7 @@ public class OperationLogController {
     }
 
     @Operation(summary = "清理 N 天前日志")
+    @PrePermission("audit:log:view")
     @PostMapping("/clean")
     public R<Integer> clean(@RequestParam(defaultValue = "90") int days) {
         return R.ok(service.cleanBefore(days));

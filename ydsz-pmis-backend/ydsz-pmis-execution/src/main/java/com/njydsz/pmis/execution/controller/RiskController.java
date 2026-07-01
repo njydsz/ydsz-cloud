@@ -33,12 +33,14 @@ public class RiskController {
     private final RiskService service;
 
     @Operation(summary = "登记风险")
+    @PrePermission("execution:risk:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody RiskCreateDTO dto) {
         return R.ok(service.create(dto));
     }
 
     @Operation(summary = "状态迁移")
+    @PrePermission("execution:risk:status")
     @PutMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody RiskStatusDTO dto) {
         service.changeStatus(dto);
@@ -46,6 +48,7 @@ public class RiskController {
     }
 
     @Operation(summary = "删除")
+    @PrePermission("execution:risk:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -53,6 +56,7 @@ public class RiskController {
     }
 
     @Operation(summary = "详情")
+    @PrePermission("execution:risk:list")
     @GetMapping("/{id}")
     public R<RiskDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));

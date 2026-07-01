@@ -43,12 +43,14 @@ public class DeliveryController {
     // ========== 标准管理 ==========
 
     @Operation(summary = "创建交付物标准")
+    @PrePermission("execution:delivery:create")
     @PostMapping("/standard")
     public R<Long> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
         return R.ok(service.createStandard(dto));
     }
 
     @Operation(summary = "删除交付物标准")
+    @PrePermission("execution:delivery:delete")
     @DeleteMapping("/standard/{id}")
     public R<Void> deleteStandard(@PathVariable Long id) {
         service.deleteStandard(id);
@@ -56,12 +58,14 @@ public class DeliveryController {
     }
 
     @Operation(summary = "交付物标准详情")
+    @PrePermission("execution:delivery:list")
     @GetMapping("/standard/{id}")
     public R<DeliveryStandardDO> getStandard(@PathVariable Long id) {
         return R.ok(service.getStandardById(id));
     }
 
     @Operation(summary = "按类型/阶段查询交付物标准")
+    @PrePermission("execution:delivery:list")
     @GetMapping("/standard/list")
     public R<List<DeliveryStandardDO>> listStandards(
             @RequestParam(required = false) String projectType,

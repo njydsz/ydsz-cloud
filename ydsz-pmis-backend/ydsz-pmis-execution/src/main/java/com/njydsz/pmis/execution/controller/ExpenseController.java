@@ -37,6 +37,7 @@ public class ExpenseController {
     }
 
     @Operation(summary = "状态迁移")
+    @PrePermission("execution:expense:status")
     @PutMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
         service.changeStatus(dto);
@@ -44,6 +45,7 @@ public class ExpenseController {
     }
 
     @Operation(summary = "删除")
+    @PrePermission("execution:expense:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -51,6 +53,7 @@ public class ExpenseController {
     }
 
     @Operation(summary = "详情")
+    @PrePermission("execution:expense:list")
     @GetMapping("/{id}")
     public R<ExpenseDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));

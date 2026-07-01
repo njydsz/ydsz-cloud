@@ -49,6 +49,7 @@ public class WbsTaskController {
     }
 
     @Operation(summary = "更新任务进度")
+    @PrePermission("execution:wbs:update")
     @PutMapping("/{id}/progress")
     public R<Void> updateProgress(@PathVariable Long id,
                                    @RequestParam BigDecimal progressPct,
@@ -58,6 +59,7 @@ public class WbsTaskController {
     }
 
     @Operation(summary = "删除任务")
+    @PrePermission("execution:wbs:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -72,6 +74,7 @@ public class WbsTaskController {
     }
 
     @Operation(summary = "分页查询")
+    @PrePermission("execution:wbs:list")
     @GetMapping("/page")
     public R<Page<WbsTaskDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -85,18 +88,21 @@ public class WbsTaskController {
     }
 
     @Operation(summary = "项目下的任务列表")
+    @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}")
     public R<List<WbsTaskDO>> listByInitiation(@PathVariable Long initiationId) {
         return R.ok(service.listByInitiation(initiationId));
     }
 
     @Operation(summary = "项目里程碑")
+    @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/milestones")
     public R<List<WbsTaskDO>> listMilestones(@PathVariable Long initiationId) {
         return R.ok(service.listMilestones(initiationId));
     }
 
     @Operation(summary = "项目整体进度（按工时加权）")
+    @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/overall-progress")
     public R<BigDecimal> overallProgress(@PathVariable Long initiationId) {
         return R.ok(service.calcOverallProgress(initiationId));

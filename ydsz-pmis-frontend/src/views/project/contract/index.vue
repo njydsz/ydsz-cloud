@@ -82,6 +82,7 @@ function handleReset() {
   fetchList()
 }
 
+// ===== 新增/编辑表单弹窗 =====
 const dialogVisible = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const formRef = ref<any>()
@@ -133,6 +134,7 @@ async function openEdit(row: ContractVO) {
   dialogVisible.value = true
 }
 
+/** 提交合同表单：新增模式创建合同，编辑模式更新合同，完成后刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   if (formMode.value === 'create') {

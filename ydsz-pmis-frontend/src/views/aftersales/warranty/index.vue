@@ -24,9 +24,13 @@ import {
 import type { WarrantyVO, WarrantyCreateDTO } from '@/api/execution/aftersales/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 质保期列表数据 */
 const list = ref<WarrantyVO[]>([])
+/** 列表总条数（用于分页） */
 const total = ref(0)
+/** 列表查询条件 */
 const query = reactive({
   page: 1,
   size: 10,
@@ -42,6 +46,7 @@ const statusMap = {
   TERMINATED: { label: '已终止', type: 'danger' as const },
 }
 
+/** 拉取质保期分页列表 */
 async function fetchList() {
   loading.value = true
   try {

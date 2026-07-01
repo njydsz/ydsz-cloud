@@ -35,12 +35,14 @@ public class TimeEntryController {
     private final TimeEntryService service;
 
     @Operation(summary = "录入工时")
+    @PrePermission("execution:time:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
         return R.ok(service.create(dto));
     }
 
     @Operation(summary = "提交工时审批")
+    @PrePermission("execution:time:approve")
     @PutMapping("/{id}/submit")
     public R<Void> submit(@PathVariable Long id) {
         service.submit(id);
@@ -48,6 +50,7 @@ public class TimeEntryController {
     }
 
     @Operation(summary = "审批工时")
+    @PrePermission("execution:time:approve")
     @PutMapping("/approve")
     public R<Void> approve(@Valid @RequestBody TimeEntryApprovalDTO dto) {
         service.approve(dto);
@@ -63,12 +66,14 @@ public class TimeEntryController {
     }
 
     @Operation(summary = "工时详情")
+    @PrePermission("execution:time:list")
     @GetMapping("/{id}")
     public R<TimeEntryDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
     }
 
     @Operation(summary = "分页查询")
+    @PrePermission("execution:time:list")
     @GetMapping("/page")
     public R<Page<TimeEntryDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -84,6 +89,7 @@ public class TimeEntryController {
     }
 
     @Operation(summary = "项目工时按人员+职级聚合")
+    @PrePermission("execution:time:list")
     @GetMapping("/aggregate/by-employee-level")
     public R<List<Map<String, Object>>> aggregateByEmployeeLevel(
             @RequestParam Long initiationId,

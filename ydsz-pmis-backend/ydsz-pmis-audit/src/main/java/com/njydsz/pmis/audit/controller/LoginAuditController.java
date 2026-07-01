@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.audit.entity.LoginAuditDO;
 import com.njydsz.pmis.audit.mapper.LoginAuditMapper;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.R;
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +27,7 @@ public class LoginAuditController {
     private final LoginAuditMapper loginAuditMapper;
 
     @Operation(summary = "分页查询")
+    @PrePermission("audit:login:view")
     @GetMapping("/page")
     public R<PageResult<LoginAuditDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -43,6 +45,7 @@ public class LoginAuditController {
     }
 
     @Operation(summary = "按用户名查询登录历史")
+    @PrePermission("audit:login:view")
     @GetMapping("/by-username")
     public R<List<LoginAuditDO>> byUsername(@RequestParam String username,
                                             @RequestParam(defaultValue = "50") int limit) {
@@ -50,6 +53,7 @@ public class LoginAuditController {
     }
 
     @Operation(summary = "统计某 IP 短期登录失败次数")
+    @PrePermission("audit:login:view")
     @GetMapping("/count-by-ip")
     public R<Long> countByIp(@RequestParam String ip,
                              @RequestParam String status,

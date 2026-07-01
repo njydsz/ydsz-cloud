@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +23,7 @@ public class ReportController {
     private final ReportService service;
 
     @Operation(summary = "项目利润表")
+    @PrePermission("report:profit:view")
     @GetMapping("/profit")
     public R<Map<String, Object>> profit(@RequestParam Long initiationId,
                                          @RequestParam(required = false) String period) {
@@ -29,6 +31,7 @@ public class ReportController {
     }
 
     @Operation(summary = "项目成本归集明细表")
+    @PrePermission("report:cost:view")
     @GetMapping("/cost")
     public R<Map<String, Object>> cost(@RequestParam Long initiationId,
                                        @RequestParam(required = false) String period) {
@@ -36,24 +39,28 @@ public class ReportController {
     }
 
     @Operation(summary = "项目回款台账")
+    @PrePermission("report:payment-ledger:view")
     @GetMapping("/payment-ledger")
     public R<Map<String, Object>> paymentLedger(@RequestParam Long initiationId) {
         return R.ok(service.paymentLedgerReport(initiationId));
     }
 
     @Operation(summary = "项目全生命周期台账")
+    @PrePermission("report:lifecycle:view")
     @GetMapping("/lifecycle")
     public R<Map<String, Object>> lifecycle(@RequestParam Long initiationId) {
         return R.ok(service.projectLifecycleReport(initiationId));
     }
 
     @Operation(summary = "跨项目利润汇总")
+    @PrePermission("report:profit:view")
     @GetMapping("/profit-summary")
     public R<List<Map<String, Object>>> profitSummary() {
         return R.ok(service.profitSummaryAll());
     }
 
     @Operation(summary = "项目利润排行榜（P2-1）")
+    @PrePermission("report:profit:view")
     @GetMapping("/profit-rank")
     public R<List<Map<String, Object>>> profitRank(
             @RequestParam(defaultValue = "10") int top,
