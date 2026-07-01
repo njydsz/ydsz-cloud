@@ -19,8 +19,33 @@ public final class EncryptedFieldKeyRegistry {
     private EncryptedFieldKeyRegistry() {
     }
 
+    /**
+     * 注册加密字段密钥 (AES-256 32 字节)
+     *
+     * @param keyRef 密钥引用
+     * @param key    32 字节 AES 密钥
+     * @throws IllegalArgumentException keyRef 空 / key 为 null / 长度非 32
+     */
     public static void register(String keyRef, byte[] key) {
         if (keyRef == null || keyRef.isBlank() || key == null) return;
+        if (key.length != 32) {
+            throw new IllegalArgumentException("AES-256 加密字段密钥必须 32 字节, 实际: " + key.length);
+        }
+        KEYS.put(keyRef, key.clone());
+    }
+
+    /**
+     * 注册国密 SM4 加密字段密钥 (16 字节)
+     *
+     * @param keyRef 密钥引用
+     * @param key    16 字节 SM4 密钥
+     * @throws IllegalArgumentException keyRef 空 / key 为 null / 长度非 16
+     */
+    public static void registerSm4(String keyRef, byte[] key) {
+        if (keyRef == null || keyRef.isBlank() || key == null) return;
+        if (key.length != 16) {
+            throw new IllegalArgumentException("SM4 加密字段密钥必须 16 字节, 实际: " + key.length);
+        }
         KEYS.put(keyRef, key.clone());
     }
 

@@ -1,0 +1,125 @@
+[
+  {
+    "resource": "POST:/api/v1/auth/login",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 5,
+    "intervalSec": 60,
+    "controlBehavior": 0,
+    "burstCount": 0,
+    "maxQueueingTimeoutMs": 0,
+    "_comment": "登录接口 5 QPS/IP/min，防爆破"
+  },
+  {
+    "resource": "POST:/api/v1/auth/2fa/verify",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 10,
+    "intervalSec": 60,
+    "_comment": "2FA 校验 10 QPS/IP/min"
+  },
+  {
+    "resource": "POST:/api/v1/execution/import/*",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 1,
+    "intervalSec": 1,
+    "_comment": "导入接口 1 QPS/用户/秒，避免 OOM"
+  },
+  {
+    "resource": "GET:/api/v1/execution/cockpit/*",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 10,
+    "intervalSec": 1,
+    "_comment": "驾驶舱查询 10 QPS/用户/秒"
+  },
+  {
+    "resource": "GET:/api/v1/execution/report-export/download",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 2,
+    "intervalSec": 1,
+    "_comment": "报表导出 2 QPS/用户/秒，避免大数据量并发拖垮"
+  },
+  {
+    "resource": "GET:/api/v1/execution/advanced/*",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 5,
+    "intervalSec": 1,
+    "_comment": "高级报表 5 QPS/用户/秒"
+  },
+  {
+    "resource": "POST:/api/v1/execution/closure/*",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 3,
+    "intervalSec": 1,
+    "_comment": "结项提交 3 QPS/用户/秒"
+  },
+  {
+    "resource": "POST:/api/v1/project/contracts/*",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 5,
+    "intervalSec": 1,
+    "_comment": "合同操作 5 QPS/用户/秒"
+  },
+  {
+    "resource": "POST:/api/v1/agent/run",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 2,
+    "intervalSec": 1,
+    "_comment": "AI Agent 调用 2 QPS/用户/秒（模型推理耗时高）"
+  },
+  {
+    "resource": "POST:/api/v1/agent/orchestration/coordinate",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 1,
+    "intervalSec": 5,
+    "_comment": "AgentScope 编排 1 QPS/5秒（多 Agent 协同昂贵）"
+  },
+  {
+    "resource": "GET:/api/v1/audit/login-audit/page",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 20,
+    "intervalSec": 1,
+    "_comment": "审计分页 20 QPS/用户/秒"
+  },
+  {
+    "resource": "GET:/api/v1/notification/messages",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 30,
+    "intervalSec": 1,
+    "_comment": "通知中心列表 30 QPS/用户/秒"
+  },
+  {
+    "resource": "POST:/api/v1/notification/messages/*",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 50,
+    "intervalSec": 1,
+    "_comment": "通知写入 50 QPS/用户/秒"
+  },
+  {
+    "resource": "POST:/api/v1/workflow/processes/start",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 5,
+    "intervalSec": 1,
+    "_comment": "流程发起 5 QPS/用户/秒"
+  },
+  {
+    "resource": "GET:/api/v1/execution/billable-utilization/recompute",
+    "limitApp": "default",
+    "grade": 1,
+    "count": 1,
+    "intervalSec": 60,
+    "_comment": "可计费利用率重算 1 QPS/分钟（批次17补齐接口，重算昂贵）"
+  }
+]

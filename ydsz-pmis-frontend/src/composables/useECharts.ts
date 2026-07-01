@@ -17,8 +17,14 @@
 import { onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
 import * as echarts from 'echarts'
 import type { EChartsOption } from 'echarts'
-// ECharts 实例类型（5.5.x：ECharts 仅作为值导出，无独立 type）
-type EChartsInstance = ReturnType<typeof echarts.init>
+
+/** 内部 ECharts 实例最小方法集（避免直接依赖 ECharts 类型导出） */
+interface EChartsInstance {
+  setOption: (option: EChartsOption, notMerge?: boolean) => void
+  resize: () => void
+  dispose: () => void
+  getOption: () => unknown
+}
 
 export interface UseEChartsReturn {
   /** 当前 ECharts 实例（未挂载时为 null） */
@@ -45,12 +51,13 @@ export function useECharts(
   theme?: 'light' | 'dark' | string,
   initOption?: EChartsOption,
 ): UseEChartsReturn {
-  const chart = ref<unknown>(null)
+  const chart = ref<EChartsInstance | null>(null)
   const resizeHandler = ref<(() => void) | null>(null)
 
   function bindInstance() {
     if (!elRef.value) return
-    const inst = echarts.init(elRef.value, theme, initOption ? { renderer: 'canvas' } : undefined)
+    // echarts.init 在 5.5.x 中返回带 setOption/resize/dispose/getOption 方法的实例
+    const inst = echarts.init(elRef.value, theme, initOption ? { renderer: 'canvas' } : undefined) as unknown as EChartsInstance
     chart.value = inst
     if (initOption) inst.setOption(initOption)
     const handler = () => inst.resize()

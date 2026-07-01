@@ -10,8 +10,6 @@ import { describe, it, expect } from 'vitest'
 import { PC, ALL_PERMISSION_CODES } from '@/constants/permissionCodes'
 
 describe('permissionCodes 批次17 增量校验', () => {
-  const PATTERN = /^[a-z]+:[a-z0-9_-]+:[a-z0-9_-]+$/
-
   it('AGENT_RUN / AGENT_HISTORY 已存在', () => {
     expect(PC.AGENT_RUN).toBe('agent:run')
     expect(PC.AGENT_HISTORY).toBe('agent:history')

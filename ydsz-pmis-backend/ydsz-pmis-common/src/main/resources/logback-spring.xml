@@ -1,12 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PMIS 统一日志配置（ELK 友好）
+  --------------------------------------------------------------------------
+  - 控制台：开发期可读
+  - FILE_ALL / FILE_ERROR：磁盘归档，30/90 天滚动
+  - JSON_FILE：Filebeat 直采，每行 1 条 JSON（ELK 兼容）
+  - LOGSTASH：Logstash TCP 直发（生产环境启用，HOST 通过 ENV 注入）
+  - 异步写入：ASYNC_* 解耦业务线程与磁盘 IO
+  - traceId 透传：MDC 注入后所有 appender 自动附加
+-->
 <configuration>
 
     <!-- 通用属性 -->
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"/>
     <property name="LOG_HOME" value="${LOG_HOME:-./logs}"/>
     <property name="APP_NAME" value="${APP_NAME:-pmis}"/>
+    <property name="HOST_NAME" value="${HOSTNAME:-${COMPUTERNAME:-unknown}}"/>
+    <!-- Logstash TCP 接入点（默认关闭；生产通过 ENV 启用） -->
+    <property name="LOGSTASH_HOST" value="${LOGSTASH_HOST:-}"/>
+    <property name="LOGSTASH_PORT" value="${LOGSTASH_PORT:-5044}"/>
+    <property name="LOGSTASH_ENABLED" value="${LOGSTASH_ENABLED:-false}"/>
 
-    <!-- 控制台输出 -->
+    <!-- 控制台输出（开发期可读） -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
             <pattern>${LOG_PATTERN}</pattern>
@@ -14,7 +29,7 @@
         </encoder>
     </appender>
 
-    <!-- 全部日志文件 -->
+    <!-- 全部日志文件（人类可读） -->
     <appender name="FILE_ALL" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_HOME}/${APP_NAME}/all.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
@@ -29,7 +44,7 @@
         </encoder>
     </appender>
 
-    <!-- 错误日志文件 -->
+    <!-- 错误日志文件（仅 ERROR） -->
     <appender name="FILE_ERROR" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${LOG_HOME}/${APP_NAME}/error.log</file>
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
@@ -47,7 +62,48 @@
         </encoder>
     </appender>
 
-    <!-- 异步写入 -->
+    <!-- JSON 文件（Filebeat 直采） -->
+    <appender name="JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/${APP_NAME}/app.json.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/${APP_NAME}/app.json.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>50GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- 静态字段：注入 ELK 检索维度 -->
+            <customFields>{"app":"${APP_NAME}","host":"${HOST_NAME}"}</customFields>
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>requestUri</includeMdcKeyName>
+            <fieldNames>
+                <timestamp>@timestamp</timestamp>
+                <message>message</message>
+                <thread>thread</thread>
+                <logger>logger</logger>
+                <level>level</level>
+            </fieldNames>
+        </encoder>
+    </appender>
+
+    <!-- Logstash TCP 发送（生产环境 LOGSTASH_ENABLED=true 时启用） -->
+    <if condition='property("LOGSTASH_ENABLED").equals("true")'>
+        <then>
+            <appender name="LOGSTASH" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
+                <destination>${LOGSTASH_HOST}:${LOGSTASH_PORT}</destination>
+                <reconnectionDelay>5 seconds</reconnectionDelay>
+                <writeTimeout>10 seconds</writeTimeout>
+                <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+                    <customFields>{"app":"${APP_NAME}","host":"${HOST_NAME}"}</customFields>
+                    <includeMdcKeyName>traceId</includeMdcKeyName>
+                    <includeMdcKeyName>userId</includeMdcKeyName>
+                </encoder>
+            </appender>
+        </then>
+    </if>
+
+    <!-- 异步写入：解耦业务线程与磁盘 IO/网络发送 -->
     <appender name="ASYNC_ALL" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="FILE_ALL"/>
         <queueSize>2048</queueSize>
@@ -62,6 +118,24 @@
         <neverBlock>true</neverBlock>
     </appender>
 
+    <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="JSON_FILE"/>
+        <queueSize>4096</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <if condition='property("LOGSTASH_ENABLED").equals("true")'>
+        <then>
+            <appender name="ASYNC_LOGSTASH" class="ch.qos.logback.classic.AsyncAppender">
+                <appender-ref ref="LOGSTASH"/>
+                <queueSize>2048</queueSize>
+                <discardingThreshold>0</discardingThreshold>
+                <neverBlock>true</neverBlock>
+            </appender>
+        </then>
+    </if>
+
     <!-- 框架日志级别控制 -->
     <logger name="com.njydsz.pmis" level="DEBUG"/>
     <logger name="org.springframework" level="INFO"/>
@@ -75,6 +149,12 @@
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="ASYNC_ALL"/>
         <appender-ref ref="ASYNC_ERROR"/>
+        <appender-ref ref="ASYNC_JSON"/>
+        <if condition='property("LOGSTASH_ENABLED").equals("true")'>
+            <then>
+                <appender-ref ref="ASYNC_LOGSTASH"/>
+            </then>
+        </if>
     </root>
 
 </configuration>

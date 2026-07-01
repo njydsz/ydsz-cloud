@@ -51,12 +51,42 @@ class EncryptedFieldKeyRegistryTest {
     }
 
     @Test
-    @DisplayName("register 入参 null / 空应忽略")
+    @DisplayName("register 入参 null / 空应抛 IllegalArgumentException")
     void register_nullSafe() {
-        EncryptedFieldKeyRegistry.register(null, CryptoUtil.randomBytes(32));
-        EncryptedFieldKeyRegistry.register("", CryptoUtil.randomBytes(32));
-        EncryptedFieldKeyRegistry.register("k", null);
+        assertThatThrownBy(() -> EncryptedFieldKeyRegistry.register(null, CryptoUtil.randomBytes(32)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EncryptedFieldKeyRegistry.register("", CryptoUtil.randomBytes(32)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EncryptedFieldKeyRegistry.register("k", null))
+                .isInstanceOf(IllegalArgumentException.class);
         assertThat(EncryptedFieldKeyRegistry.has("k")).isFalse();
+    }
+
+    @Test
+    @DisplayName("register 长度非 32 应抛 IllegalArgumentException")
+    void register_invalidLength() {
+        assertThatThrownBy(() -> EncryptedFieldKeyRegistry.register("k", new byte[16]))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("32 字节");
+        assertThatThrownBy(() -> EncryptedFieldKeyRegistry.register("k", new byte[64]))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("32 字节");
+    }
+
+    @Test
+    @DisplayName("registerSm4 接受 16 字节密钥, 长度非法抛错")
+    void registerSm4() {
+        EncryptedFieldKeyRegistry.registerSm4("sm4-k", CryptoUtil.randomBytes(16));
+        assertThat(EncryptedFieldKeyRegistry.has("sm4-k")).isTrue();
+        assertThat(EncryptedFieldKeyRegistry.get("sm4-k")).hasSize(16);
+
+        assertThatThrownBy(() -> EncryptedFieldKeyRegistry.registerSm4("sm4-bad", new byte[32]))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("16 字节");
+        assertThatThrownBy(() -> EncryptedFieldKeyRegistry.registerSm4(null, CryptoUtil.randomBytes(16)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> EncryptedFieldKeyRegistry.registerSm4("sm4-null", null))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

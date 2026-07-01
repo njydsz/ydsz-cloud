@@ -366,6 +366,26 @@ export const constantRoutes: RouteRecordRaw[] = [
     ],
   },
   {
+    path: '/agent',
+    component: () => import('@/layout/default/index.vue'),
+    redirect: '/agent/orchestration',
+    meta: { title: 'AI 智能体', icon: 'MagicStick' },
+    children: [
+      {
+        path: 'orchestration',
+        name: 'AgentOrchestration',
+        component: () => import('@/views/agent/orchestration/index.vue'),
+        meta: { title: '多智能体编排', icon: 'Share', keepAlive: true },
+      },
+      {
+        path: 'prediction',
+        name: 'AgentPrediction',
+        component: () => import('@/views/agent/prediction/index.vue'),
+        meta: { title: '预测结果历史', icon: 'DataAnalysis', keepAlive: true },
+      },
+    ],
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/404',
     meta: { hidden: true },

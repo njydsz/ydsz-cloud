@@ -147,7 +147,6 @@ async function onKickOthers() {
 // ============= 修改密码 =============
 const pwdForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
 const pwdFormRef = ref<any>()
-const newPwdRef = ref<string>('')
 const { result: pwdStrength } = usePasswordStrength(
   computed(() => pwdForm.newPassword),
 )

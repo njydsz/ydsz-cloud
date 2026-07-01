@@ -83,10 +83,34 @@
             <groupId>com.alibaba</groupId>
             <artifactId>easyexcel</artifactId>
         </dependency>
+
+        <!-- Logstash JSON encoder（ELK 日志聚合） -->
+        <dependency>
+            <groupId>net.logstash.logback</groupId>
+            <artifactId>logstash-logback-encoder</artifactId>
+        </dependency>
+        <!-- Janino：logback-spring.xml 中 <if>/<then> 条件编译 -->
+        <dependency>
+            <groupId>org.codehaus.janino</groupId>
+            <artifactId>janino</artifactId>
+            <version>3.1.12</version>
+        </dependency>
         <!-- 显式锁定 commons-io 2.13+，解决 easyexcel 4.x UnsynchronizedByteArrayOutputStream.builder() 缺失 -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
+        </dependency>
+        <!-- PDF 生成（OpenPDF，AGPL-free iText 替代） -->
+        <dependency>
+            <groupId>com.github.librepdf</groupId>
+            <artifactId>openpdf</artifactId>
+        </dependency>
+
+        <!-- PostgreSQL 驱动（仅测试：EncryptedFieldMigrationService.fromJdbcUrl 通过反射创建 PGSimpleDataSource） -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 

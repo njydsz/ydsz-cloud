@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { nextTick } from 'vue'
 import { useReAuth, withReAuthHeader } from '@/composables/useReAuth'
 
 // Mock reauth API

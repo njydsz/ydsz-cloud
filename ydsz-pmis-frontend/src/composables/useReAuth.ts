@@ -28,7 +28,7 @@
  */
 import { reactive, ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { issueReAuthToken, type ReAuthMethod, type ReAuthResult } from '@/api/user/reauth'
+import { issueReAuthToken, type ReAuthMethod } from '@/api/user/reauth'
 
 export interface UseReAuthOptions {
   /** 操作码（与后端 @RequireReAuth.code() 一致） */
@@ -177,11 +177,9 @@ export function useReAuth(options: UseReAuthOptions) {
    * 装饰业务调用：自动弹窗 + 颁发 + 注入 X-Re-Auth-Token
    *
    * @param biz 业务回调，接收 token
-   * @param extraHeaders 业务接口需要的其他请求头
    */
   async function withReAuth<T>(
     biz: (token: string) => Promise<T>,
-    extraHeaders: Record<string, string> = {},
   ): Promise<T | undefined> {
     try {
       const token = await requestToken()

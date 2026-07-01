@@ -60,7 +60,7 @@ class EncryptedFieldSerializerTest {
     @Test
     @DisplayName("SM4-GCM 序列化应能正常输出")
     void serialize_sm4() throws Exception {
-        EncryptedFieldKeyRegistry.register("sm4-key", CryptoUtil.randomBytes(16));
+        EncryptedFieldKeyRegistry.registerSm4("sm4-key", CryptoUtil.randomBytes(16));
         EncryptedFieldSerializer sm4 = new EncryptedFieldSerializer("sm4-key", EncryptedField.Algorithm.SM4_GCM);
         sm4.serialize("secret-data", gen, prov);
         org.mockito.ArgumentCaptor<String> captor = org.mockito.ArgumentCaptor.forClass(String.class);

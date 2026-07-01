@@ -85,7 +85,9 @@ const view = computed<{ width: number; height: number; nodes: NodeView[]; edges:
     if (props.mode === 'CASCADE' && props.result) {
       // 已执行节点加描边
       nodes.forEach((n) => {
-        if (executedSet.has(n.label)) n.desc = n.desc
+        if (executedSet.has(n.label)) {
+          n.desc = `${n.desc} ✓`
+        }
       })
     }
     return { width: totalW, height: totalH, nodes, edges }

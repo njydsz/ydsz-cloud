@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
-import { ref, nextTick } from 'vue'
+import { ref } from 'vue'
 import { useECharts } from '@/composables/useECharts'
 
 // Mock ECharts

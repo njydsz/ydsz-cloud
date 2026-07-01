@@ -1,0 +1,30 @@
+[
+  {
+    "resource": "POST:/api/v1/auth/login",
+    "limitApp": "default",
+    "count": 10,
+    "intervalMs": 1000,
+    "_comment": "登录熔断：1s 内 10 次异常触发熔断 30s"
+  },
+  {
+    "resource": "POST:/api/v1/execution/import/*",
+    "limitApp": "default",
+    "count": 5,
+    "intervalMs": 1000,
+    "minRequestAmount": 10,
+    "slowRatioThreshold": 0.6,
+    "statIntervalMs": 30000,
+    "retryTimeoutMs": 5000,
+    "_comment": "导入慢调用熔断：30s 窗口慢调用 ≥60% 触发"
+  },
+  {
+    "resource": "GET:/api/v1/agent/run",
+    "limitApp": "default",
+    "count": 5,
+    "intervalMs": 1000,
+    "errorRatioThreshold": 0.3,
+    "minRequestAmount": 5,
+    "statIntervalMs": 10000,
+    "_comment": "AI Agent 错误率熔断：10s 窗口错误率 ≥30% 触发"
+  }
+]
