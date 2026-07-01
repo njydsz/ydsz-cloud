@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.user.mapper.LeaveMapper">
+<mapper namespace="com.njydsz.user.mapper.LeaveMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.user.entity.LeaveDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.user.entity.LeaveDO">
         <id property="id" column="id"/>
         <result property="leaveCode" column="leave_code"/>
         <result property="employeeId" column="employee_id"/>
@@ -27,23 +27,23 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis.pmis_leave WHERE deleted = 0 AND leave_code = #{leaveCode} LIMIT 1
+        SELECT * FROM pmis_leave WHERE deleted = 0 AND leave_code = #{leaveCode} LIMIT 1
     </select>
 
     <select id="selectByEmployee" resultMap="BaseResultMap">
-        SELECT * FROM pmis.pmis_leave
+        SELECT * FROM pmis_leave
         WHERE deleted = 0 AND employee_id = #{employeeId}
         ORDER BY start_date DESC
     </select>
 
     <select id="selectByStatus" resultMap="BaseResultMap">
-        SELECT * FROM pmis.pmis_leave
+        SELECT * FROM pmis_leave
         WHERE deleted = 0 AND approval_status = #{approvalStatus}
         ORDER BY start_date DESC
     </select>
 
     <select id="selectApprovedByEmployeeAndRange" resultMap="BaseResultMap">
-        SELECT * FROM pmis.pmis_leave
+        SELECT * FROM pmis_leave
         WHERE deleted = 0
           AND approval_status = 'APPROVED'
           AND employee_id = #{employeeId}

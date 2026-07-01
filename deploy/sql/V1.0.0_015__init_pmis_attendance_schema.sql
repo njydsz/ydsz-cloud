@@ -1,15 +1,14 @@
--- =====================================================
+﻿-- =====================================================
 -- PMIS 批次12 DDL：考勤管理(出勤/加班/请假)
 -- 版本: V1.0.0_015
 -- 描述: 出勤(pmis_attendance) + 加班(pmis_overtime) + 请假(pmis_leave)
--- Schema: pmis
 -- =====================================================
 
 -- =====================================================
 -- 1. 出勤记录表 pmis_attendance
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_attendance;
-CREATE TABLE pmis.pmis_attendance (
+DROP TABLE IF EXISTS pmis_attendance;
+CREATE TABLE pmis_attendance (
     id                  BIGSERIAL PRIMARY KEY,
     employee_id         BIGINT       NOT NULL,
     employee_name       VARCHAR(64),
@@ -28,16 +27,16 @@ CREATE TABLE pmis.pmis_attendance (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pa_emp_date UNIQUE (employee_id, attendance_date, deleted)
 );
-COMMENT ON TABLE pmis.pmis_attendance IS '员工出勤记录';
-CREATE INDEX idx_pa_emp ON pmis.pmis_attendance(employee_id);
-CREATE INDEX idx_pa_date ON pmis.pmis_attendance(attendance_date);
-CREATE INDEX idx_pa_status ON pmis.pmis_attendance(status);
+COMMENT ON TABLE pmis_attendance IS '员工出勤记录';
+CREATE INDEX idx_pa_emp ON pmis_attendance(employee_id);
+CREATE INDEX idx_pa_date ON pmis_attendance(attendance_date);
+CREATE INDEX idx_pa_status ON pmis_attendance(status);
 
 -- =====================================================
 -- 2. 加班申请表 pmis_overtime
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_overtime;
-CREATE TABLE pmis.pmis_overtime (
+DROP TABLE IF EXISTS pmis_overtime;
+CREATE TABLE pmis_overtime (
     id                  BIGSERIAL PRIMARY KEY,
     overtime_code       VARCHAR(64)  NOT NULL,
     employee_id         BIGINT       NOT NULL,
@@ -62,16 +61,16 @@ CREATE TABLE pmis.pmis_overtime (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pot_code UNIQUE (overtime_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_overtime IS '加班申请记录';
-CREATE INDEX idx_pot_emp ON pmis.pmis_overtime(employee_id);
-CREATE INDEX idx_pot_date ON pmis.pmis_overtime(overtime_date);
-CREATE INDEX idx_pot_status ON pmis.pmis_overtime(approval_status);
+COMMENT ON TABLE pmis_overtime IS '加班申请记录';
+CREATE INDEX idx_pot_emp ON pmis_overtime(employee_id);
+CREATE INDEX idx_pot_date ON pmis_overtime(overtime_date);
+CREATE INDEX idx_pot_status ON pmis_overtime(approval_status);
 
 -- =====================================================
 -- 3. 请假申请表 pmis_leave
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_leave;
-CREATE TABLE pmis.pmis_leave (
+DROP TABLE IF EXISTS pmis_leave;
+CREATE TABLE pmis_leave (
     id                  BIGSERIAL PRIMARY KEY,
     leave_code          VARCHAR(64)  NOT NULL,
     employee_id         BIGINT       NOT NULL,
@@ -95,8 +94,8 @@ CREATE TABLE pmis.pmis_leave (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pl_code UNIQUE (leave_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_leave IS '请假申请记录';
-CREATE INDEX idx_pl_emp ON pmis.pmis_leave(employee_id);
-CREATE INDEX idx_pl_date ON pmis.pmis_leave(start_date, end_date);
-CREATE INDEX idx_pl_type ON pmis.pmis_leave(leave_type);
-CREATE INDEX idx_pl_status ON pmis.pmis_leave(approval_status);
+COMMENT ON TABLE pmis_leave IS '请假申请记录';
+CREATE INDEX idx_pl_emp ON pmis_leave(employee_id);
+CREATE INDEX idx_pl_date ON pmis_leave(start_date, end_date);
+CREATE INDEX idx_pl_type ON pmis_leave(leave_type);
+CREATE INDEX idx_pl_status ON pmis_leave(approval_status);

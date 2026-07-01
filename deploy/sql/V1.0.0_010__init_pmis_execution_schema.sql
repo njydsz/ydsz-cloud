@@ -1,15 +1,14 @@
--- =====================================================
+﻿-- =====================================================
 -- PMIS 项目执行/成本/利润模块 DDL
 -- 版本: V1.0.0_010
 -- 描述: WBS 任务、工时、成本归集、利润核算
--- Schema: pmis
 -- =====================================================
 
 -- =====================================================
 -- 1. WBS 任务表 pmis_execution_wbs_task
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_execution_wbs_task;
-CREATE TABLE pmis.pmis_execution_wbs_task (
+DROP TABLE IF EXISTS pmis_execution_wbs_task;
+CREATE TABLE pmis_execution_wbs_task (
     id                  BIGSERIAL PRIMARY KEY,
     task_code           VARCHAR(64)   NOT NULL,
     task_name           VARCHAR(256)  NOT NULL,
@@ -47,23 +46,23 @@ CREATE TABLE pmis.pmis_execution_wbs_task (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_pewt_code UNIQUE (task_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_execution_wbs_task IS 'WBS 任务表';
-COMMENT ON COLUMN pmis.pmis_execution_wbs_task.task_type IS 'TASK/MILESTONE/SUMMARY';
-COMMENT ON COLUMN pmis.pmis_execution_wbs_task.status IS 'PLANNED/IN_PROGRESS/BLOCKED/IN_REVIEW/COMPLETED/CANCELLED';
-COMMENT ON COLUMN pmis.pmis_execution_wbs_task.priority IS 'LOW/NORMAL/HIGH/URGENT';
+COMMENT ON TABLE pmis_execution_wbs_task IS 'WBS 任务表';
+COMMENT ON COLUMN pmis_execution_wbs_task.task_type IS 'TASK/MILESTONE/SUMMARY';
+COMMENT ON COLUMN pmis_execution_wbs_task.status IS 'PLANNED/IN_PROGRESS/BLOCKED/IN_REVIEW/COMPLETED/CANCELLED';
+COMMENT ON COLUMN pmis_execution_wbs_task.priority IS 'LOW/NORMAL/HIGH/URGENT';
 
-CREATE INDEX idx_pewt_initiation ON pmis.pmis_execution_wbs_task (initiation_id, deleted);
-CREATE INDEX idx_pewt_parent     ON pmis.pmis_execution_wbs_task (parent_id);
-CREATE INDEX idx_pewt_owner      ON pmis.pmis_execution_wbs_task (owner_id) WHERE deleted = 0;
-CREATE INDEX idx_pewt_status     ON pmis.pmis_execution_wbs_task (status) WHERE deleted = 0;
-CREATE INDEX idx_pewt_milestone  ON pmis.pmis_execution_wbs_task (initiation_id, milestone) WHERE deleted = 0;
-CREATE INDEX idx_pewt_trace      ON pmis.pmis_execution_wbs_task (provider_trace_id);
+CREATE INDEX idx_pewt_initiation ON pmis_execution_wbs_task (initiation_id, deleted);
+CREATE INDEX idx_pewt_parent     ON pmis_execution_wbs_task (parent_id);
+CREATE INDEX idx_pewt_owner      ON pmis_execution_wbs_task (owner_id) WHERE deleted = 0;
+CREATE INDEX idx_pewt_status     ON pmis_execution_wbs_task (status) WHERE deleted = 0;
+CREATE INDEX idx_pewt_milestone  ON pmis_execution_wbs_task (initiation_id, milestone) WHERE deleted = 0;
+CREATE INDEX idx_pewt_trace      ON pmis_execution_wbs_task (provider_trace_id);
 
 -- =====================================================
 -- 2. 工时录入表 pmis_execution_time_entry
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_execution_time_entry;
-CREATE TABLE pmis.pmis_execution_time_entry (
+DROP TABLE IF EXISTS pmis_execution_time_entry;
+CREATE TABLE pmis_execution_time_entry (
     id                  BIGSERIAL PRIMARY KEY,
     entry_date          DATE          NOT NULL,
     employee_id         BIGINT        NOT NULL,        -- 填报人
@@ -90,23 +89,23 @@ CREATE TABLE pmis.pmis_execution_time_entry (
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_execution_time_entry IS '工时录入（日清日结）';
-COMMENT ON COLUMN pmis.pmis_execution_time_entry.hours IS '工时（小时）';
-COMMENT ON COLUMN pmis.pmis_execution_time_entry.days IS '人天（按 8h 折算）';
-COMMENT ON COLUMN pmis.pmis_execution_time_entry.status IS 'DRAFT/SUBMITTED/APPROVED/REJECTED';
+COMMENT ON TABLE pmis_execution_time_entry IS '工时录入（日清日结）';
+COMMENT ON COLUMN pmis_execution_time_entry.hours IS '工时（小时）';
+COMMENT ON COLUMN pmis_execution_time_entry.days IS '人天（按 8h 折算）';
+COMMENT ON COLUMN pmis_execution_time_entry.status IS 'DRAFT/SUBMITTED/APPROVED/REJECTED';
 
-CREATE INDEX idx_pete_employee  ON pmis.pmis_execution_time_entry (employee_id, entry_date DESC);
-CREATE INDEX idx_pete_initiation ON pmis.pmis_execution_time_entry (initiation_id, entry_date DESC);
-CREATE INDEX idx_pete_task      ON pmis.pmis_execution_time_entry (task_id) WHERE deleted = 0;
-CREATE INDEX idx_pete_status    ON pmis.pmis_execution_time_entry (status) WHERE deleted = 0;
-CREATE INDEX idx_pete_level     ON pmis.pmis_execution_time_entry (level_code) WHERE deleted = 0;
-CREATE INDEX idx_pete_trace     ON pmis.pmis_execution_time_entry (provider_trace_id);
+CREATE INDEX idx_pete_employee  ON pmis_execution_time_entry (employee_id, entry_date DESC);
+CREATE INDEX idx_pete_initiation ON pmis_execution_time_entry (initiation_id, entry_date DESC);
+CREATE INDEX idx_pete_task      ON pmis_execution_time_entry (task_id) WHERE deleted = 0;
+CREATE INDEX idx_pete_status    ON pmis_execution_time_entry (status) WHERE deleted = 0;
+CREATE INDEX idx_pete_level     ON pmis_execution_time_entry (level_code) WHERE deleted = 0;
+CREATE INDEX idx_pete_trace     ON pmis_execution_time_entry (provider_trace_id);
 
 -- =====================================================
 -- 3. 成本归集表 pmis_cost_allocation
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_cost_allocation;
-CREATE TABLE pmis.pmis_cost_allocation (
+DROP TABLE IF EXISTS pmis_cost_allocation;
+CREATE TABLE pmis_cost_allocation (
     id                  BIGSERIAL PRIMARY KEY,
     initiation_id       BIGINT        NOT NULL,
     period              VARCHAR(7)    NOT NULL,        -- 形如 2026-06
@@ -126,22 +125,22 @@ CREATE TABLE pmis.pmis_cost_allocation (
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_cost_allocation IS '项目成本归集';
-COMMENT ON COLUMN pmis.pmis_cost_allocation.cost_type IS 'LABOR/PURCHASE/EXPENSE/OUTSOURCE/ALLOCATION/OTHER';
-COMMENT ON COLUMN pmis.pmis_cost_allocation.billable IS '1=可计费，0=不可计费';
-COMMENT ON COLUMN pmis.pmis_cost_allocation.allocated IS '1=已分摊到 WBS 节点';
+COMMENT ON TABLE pmis_cost_allocation IS '项目成本归集';
+COMMENT ON COLUMN pmis_cost_allocation.cost_type IS 'LABOR/PURCHASE/EXPENSE/OUTSOURCE/ALLOCATION/OTHER';
+COMMENT ON COLUMN pmis_cost_allocation.billable IS '1=可计费，0=不可计费';
+COMMENT ON COLUMN pmis_cost_allocation.allocated IS '1=已分摊到 WBS 节点';
 
-CREATE INDEX idx_pca_initiation ON pmis.pmis_cost_allocation (initiation_id, period);
-CREATE INDEX idx_pca_type       ON pmis.pmis_cost_allocation (cost_type) WHERE deleted = 0;
-CREATE INDEX idx_pca_source     ON pmis.pmis_cost_allocation (source_type, source_id);
-CREATE INDEX idx_pca_employee   ON pmis.pmis_cost_allocation (employee_id) WHERE deleted = 0;
-CREATE INDEX idx_pca_trace      ON pmis.pmis_cost_allocation (provider_trace_id);
+CREATE INDEX idx_pca_initiation ON pmis_cost_allocation (initiation_id, period);
+CREATE INDEX idx_pca_type       ON pmis_cost_allocation (cost_type) WHERE deleted = 0;
+CREATE INDEX idx_pca_source     ON pmis_cost_allocation (source_type, source_id);
+CREATE INDEX idx_pca_employee   ON pmis_cost_allocation (employee_id) WHERE deleted = 0;
+CREATE INDEX idx_pca_trace      ON pmis_cost_allocation (provider_trace_id);
 
 -- =====================================================
 -- 4. 采购成本表 pmis_cost_purchase
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_cost_purchase;
-CREATE TABLE pmis.pmis_cost_purchase (
+DROP TABLE IF EXISTS pmis_cost_purchase;
+CREATE TABLE pmis_cost_purchase (
     id                  BIGSERIAL PRIMARY KEY,
     purchase_code       VARCHAR(64)   NOT NULL,
     initiation_id       BIGINT        NOT NULL,
@@ -166,19 +165,19 @@ CREATE TABLE pmis.pmis_cost_purchase (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_pcp_code UNIQUE (purchase_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_cost_purchase IS '采购成本申请';
-COMMENT ON COLUMN pmis.pmis_cost_purchase.status IS 'DRAFT/SUBMITTED/APPROVED/REJECTED/PAID';
+COMMENT ON TABLE pmis_cost_purchase IS '采购成本申请';
+COMMENT ON COLUMN pmis_cost_purchase.status IS 'DRAFT/SUBMITTED/APPROVED/REJECTED/PAID';
 
-CREATE INDEX idx_pcp_initiation ON pmis.pmis_cost_purchase (initiation_id) WHERE deleted = 0;
-CREATE INDEX idx_pcp_status     ON pmis.pmis_cost_purchase (status) WHERE deleted = 0;
-CREATE INDEX idx_pcp_applicant  ON pmis.pmis_cost_purchase (applicant_id) WHERE deleted = 0;
-CREATE INDEX idx_pcp_trace      ON pmis.pmis_cost_purchase (provider_trace_id);
+CREATE INDEX idx_pcp_initiation ON pmis_cost_purchase (initiation_id) WHERE deleted = 0;
+CREATE INDEX idx_pcp_status     ON pmis_cost_purchase (status) WHERE deleted = 0;
+CREATE INDEX idx_pcp_applicant  ON pmis_cost_purchase (applicant_id) WHERE deleted = 0;
+CREATE INDEX idx_pcp_trace      ON pmis_cost_purchase (provider_trace_id);
 
 -- =====================================================
 -- 5. 费用报销表 pmis_cost_expense
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_cost_expense;
-CREATE TABLE pmis.pmis_cost_expense (
+DROP TABLE IF EXISTS pmis_cost_expense;
+CREATE TABLE pmis_cost_expense (
     id                  BIGSERIAL PRIMARY KEY,
     expense_code        VARCHAR(64)   NOT NULL,
     initiation_id       BIGINT,                          -- 项目级费用可空（公司公共费用）
@@ -201,20 +200,20 @@ CREATE TABLE pmis.pmis_cost_expense (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_pce_code UNIQUE (expense_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_cost_expense IS '费用报销';
-COMMENT ON COLUMN pmis.pmis_cost_expense.expense_type IS 'TRAVEL/CATERING/MEETING/SUPPLIES/COMMUNICATION/OTHER';
-COMMENT ON COLUMN pmis.pmis_cost_expense.status IS 'DRAFT/SUBMITTED/APPROVED/REJECTED/PAID';
+COMMENT ON TABLE pmis_cost_expense IS '费用报销';
+COMMENT ON COLUMN pmis_cost_expense.expense_type IS 'TRAVEL/CATERING/MEETING/SUPPLIES/COMMUNICATION/OTHER';
+COMMENT ON COLUMN pmis_cost_expense.status IS 'DRAFT/SUBMITTED/APPROVED/REJECTED/PAID';
 
-CREATE INDEX idx_pce_initiation ON pmis.pmis_cost_expense (initiation_id) WHERE deleted = 0;
-CREATE INDEX idx_pce_employee   ON pmis.pmis_cost_expense (employee_id) WHERE deleted = 0;
-CREATE INDEX idx_pce_status     ON pmis.pmis_cost_expense (status) WHERE deleted = 0;
-CREATE INDEX idx_pce_trace      ON pmis.pmis_cost_expense (provider_trace_id);
+CREATE INDEX idx_pce_initiation ON pmis_cost_expense (initiation_id) WHERE deleted = 0;
+CREATE INDEX idx_pce_employee   ON pmis_cost_expense (employee_id) WHERE deleted = 0;
+CREATE INDEX idx_pce_status     ON pmis_cost_expense (status) WHERE deleted = 0;
+CREATE INDEX idx_pce_trace      ON pmis_cost_expense (provider_trace_id);
 
 -- =====================================================
 -- 6. 收入确认表 pmis_profit_revenue
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_profit_revenue;
-CREATE TABLE pmis.pmis_profit_revenue (
+DROP TABLE IF EXISTS pmis_profit_revenue;
+CREATE TABLE pmis_profit_revenue (
     id                  BIGSERIAL PRIMARY KEY,
     contract_id         BIGINT        NOT NULL,
     initiation_id       BIGINT        NOT NULL,
@@ -238,19 +237,19 @@ CREATE TABLE pmis.pmis_profit_revenue (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppr_code UNIQUE (revenue_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_profit_revenue IS '收入确认';
-COMMENT ON COLUMN pmis.pmis_profit_revenue.recognition_method IS 'MILESTONE/PERCENTAGE/PERCENT_COMPLETE/POINTS/MANUAL';
+COMMENT ON TABLE pmis_profit_revenue IS '收入确认';
+COMMENT ON COLUMN pmis_profit_revenue.recognition_method IS 'MILESTONE/PERCENTAGE/PERCENT_COMPLETE/POINTS/MANUAL';
 
-CREATE INDEX idx_ppr_contract    ON pmis.pmis_profit_revenue (contract_id) WHERE deleted = 0;
-CREATE INDEX idx_ppr_initiation  ON pmis.pmis_profit_revenue (initiation_id, period) WHERE deleted = 0;
-CREATE INDEX idx_ppr_status      ON pmis.pmis_profit_revenue (status) WHERE deleted = 0;
-CREATE INDEX idx_ppr_trace       ON pmis.pmis_profit_revenue (provider_trace_id);
+CREATE INDEX idx_ppr_contract    ON pmis_profit_revenue (contract_id) WHERE deleted = 0;
+CREATE INDEX idx_ppr_initiation  ON pmis_profit_revenue (initiation_id, period) WHERE deleted = 0;
+CREATE INDEX idx_ppr_status      ON pmis_profit_revenue (status) WHERE deleted = 0;
+CREATE INDEX idx_ppr_trace       ON pmis_profit_revenue (provider_trace_id);
 
 -- =====================================================
 -- 7. 项目利润快照表 pmis_profit_snapshot
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_profit_snapshot;
-CREATE TABLE pmis.pmis_profit_snapshot (
+DROP TABLE IF EXISTS pmis_profit_snapshot;
+CREATE TABLE pmis_profit_snapshot (
     id                  BIGSERIAL PRIMARY KEY,
     initiation_id       BIGINT        NOT NULL,
     period              VARCHAR(7)    NOT NULL,
@@ -274,18 +273,18 @@ CREATE TABLE pmis.pmis_profit_snapshot (
     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
     deleted             SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_profit_snapshot IS '项目利润快照（按月）';
-COMMENT ON COLUMN pmis.pmis_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
+COMMENT ON TABLE pmis_profit_snapshot IS '项目利润快照（按月）';
+COMMENT ON COLUMN pmis_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
 
-CREATE INDEX idx_pps_initiation ON pmis.pmis_profit_snapshot (initiation_id, period) WHERE deleted = 0;
-CREATE INDEX idx_pps_period     ON pmis.pmis_profit_snapshot (period) WHERE deleted = 0;
-CREATE INDEX idx_pps_trace      ON pmis.pmis_profit_snapshot (provider_trace_id);
+CREATE INDEX idx_pps_initiation ON pmis_profit_snapshot (initiation_id, period) WHERE deleted = 0;
+CREATE INDEX idx_pps_period     ON pmis_profit_snapshot (period) WHERE deleted = 0;
+CREATE INDEX idx_pps_trace      ON pmis_profit_snapshot (provider_trace_id);
 
 -- =====================================================
 -- 8. 项目风险登记表 pmis_execution_risk
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_execution_risk;
-CREATE TABLE pmis.pmis_execution_risk (
+DROP TABLE IF EXISTS pmis_execution_risk;
+CREATE TABLE pmis_execution_risk (
     id                  BIGSERIAL PRIMARY KEY,
     risk_code           VARCHAR(64)   NOT NULL,
     initiation_id       BIGINT        NOT NULL,
@@ -309,11 +308,11 @@ CREATE TABLE pmis.pmis_execution_risk (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_per_code UNIQUE (risk_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_execution_risk IS '项目风险登记';
-COMMENT ON COLUMN pmis.pmis_execution_risk.risk_type IS 'SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER';
-COMMENT ON COLUMN pmis.pmis_execution_risk.status IS 'OPEN/MITIGATING/CLOSED/OCCURRED';
+COMMENT ON TABLE pmis_execution_risk IS '项目风险登记';
+COMMENT ON COLUMN pmis_execution_risk.risk_type IS 'SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER';
+COMMENT ON COLUMN pmis_execution_risk.status IS 'OPEN/MITIGATING/CLOSED/OCCURRED';
 
-CREATE INDEX idx_per_initiation ON pmis.pmis_execution_risk (initiation_id) WHERE deleted = 0;
-CREATE INDEX idx_per_status     ON pmis.pmis_execution_risk (status) WHERE deleted = 0;
-CREATE INDEX idx_per_level      ON pmis.pmis_execution_risk (risk_level) WHERE deleted = 0;
-CREATE INDEX idx_per_trace      ON pmis.pmis_execution_risk (provider_trace_id);
+CREATE INDEX idx_per_initiation ON pmis_execution_risk (initiation_id) WHERE deleted = 0;
+CREATE INDEX idx_per_status     ON pmis_execution_risk (status) WHERE deleted = 0;
+CREATE INDEX idx_per_level      ON pmis_execution_risk (risk_level) WHERE deleted = 0;
+CREATE INDEX idx_per_trace      ON pmis_execution_risk (provider_trace_id);

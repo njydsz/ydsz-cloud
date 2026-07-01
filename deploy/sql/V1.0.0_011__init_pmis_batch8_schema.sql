@@ -1,16 +1,15 @@
--- =====================================================
+﻿-- =====================================================
 -- PMIS 批次8 DDL：合同模板/项目变更/项目交付/项目结项/AI智能体
 -- 版本: V1.0.0_011
 -- 描述: 合同模板(Project)、项目变更(Project)、交付物标准(Execution)、
 --       交付物实例(Execution)、项目结项(Execution)、AI预测(Agent)
--- Schema: pmis
 -- =====================================================
 
 -- =====================================================
 -- 1. 合同模板表 pmis_project_contract_template
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_contract_template;
-CREATE TABLE pmis.pmis_project_contract_template (
+DROP TABLE IF EXISTS pmis_project_contract_template;
+CREATE TABLE pmis_project_contract_template (
     id                     BIGSERIAL PRIMARY KEY,
     template_code          VARCHAR(64)  NOT NULL,
     template_name          VARCHAR(256) NOT NULL,
@@ -36,15 +35,15 @@ CREATE TABLE pmis.pmis_project_contract_template (
     deleted                SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppct_code UNIQUE (template_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_project_contract_template IS '合同模板表（8类项目类型）';
-CREATE INDEX idx_ppct_type_status ON pmis.pmis_project_contract_template(contract_type, status);
-CREATE INDEX idx_ppct_tenant ON pmis.pmis_project_contract_template(tenant_id);
+COMMENT ON TABLE pmis_project_contract_template IS '合同模板表（8类项目类型）';
+CREATE INDEX idx_ppct_type_status ON pmis_project_contract_template(contract_type, status);
+CREATE INDEX idx_ppct_tenant ON pmis_project_contract_template(tenant_id);
 
 -- =====================================================
 -- 2. 项目变更主表 pmis_project_change
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_change;
-CREATE TABLE pmis.pmis_project_change (
+DROP TABLE IF EXISTS pmis_project_change;
+CREATE TABLE pmis_project_change (
     id                       BIGSERIAL PRIMARY KEY,
     change_code              VARCHAR(64)  NOT NULL,
     initiation_id            BIGINT       NOT NULL,
@@ -80,16 +79,16 @@ CREATE TABLE pmis.pmis_project_change (
     deleted                  SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppc_code UNIQUE (change_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_project_change IS '项目变更主表（5类变更）';
-CREATE INDEX idx_ppc_initiation ON pmis.pmis_project_change(initiation_id);
-CREATE INDEX idx_ppc_type_status ON pmis.pmis_project_change(change_type, status);
-CREATE INDEX idx_ppc_major ON pmis.pmis_project_change(initiation_id, major_flag);
+COMMENT ON TABLE pmis_project_change IS '项目变更主表（5类变更）';
+CREATE INDEX idx_ppc_initiation ON pmis_project_change(initiation_id);
+CREATE INDEX idx_ppc_type_status ON pmis_project_change(change_type, status);
+CREATE INDEX idx_ppc_major ON pmis_project_change(initiation_id, major_flag);
 
 -- =====================================================
 -- 3. 交付物标准表 pmis_execution_delivery_standard
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_execution_delivery_standard;
-CREATE TABLE pmis.pmis_execution_delivery_standard (
+DROP TABLE IF EXISTS pmis_execution_delivery_standard;
+CREATE TABLE pmis_execution_delivery_standard (
     id                    BIGSERIAL PRIMARY KEY,
     project_type          VARCHAR(32)  NOT NULL,                 -- ProjectType
     project_level         VARCHAR(16),                            -- L1-L18, NULL=全部
@@ -107,15 +106,15 @@ CREATE TABLE pmis.pmis_execution_delivery_standard (
     updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_execution_delivery_standard IS '交付物标准表（8类项目类型 × 5门径阶段）';
-CREATE INDEX idx_peds_type_level ON pmis.pmis_execution_delivery_standard(project_type, project_level);
-CREATE INDEX idx_peds_stage ON pmis.pmis_execution_delivery_standard(stage);
+COMMENT ON TABLE pmis_execution_delivery_standard IS '交付物标准表（8类项目类型 × 5门径阶段）';
+CREATE INDEX idx_peds_type_level ON pmis_execution_delivery_standard(project_type, project_level);
+CREATE INDEX idx_peds_stage ON pmis_execution_delivery_standard(stage);
 
 -- =====================================================
 -- 4. 交付物实例表 pmis_execution_delivery_item
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_execution_delivery_item;
-CREATE TABLE pmis.pmis_execution_delivery_item (
+DROP TABLE IF EXISTS pmis_execution_delivery_item;
+CREATE TABLE pmis_execution_delivery_item (
     id                    BIGSERIAL PRIMARY KEY,
     item_code             VARCHAR(64)  NOT NULL,
     initiation_id         BIGINT       NOT NULL,
@@ -148,16 +147,16 @@ CREATE TABLE pmis.pmis_execution_delivery_item (
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pedi_code UNIQUE (item_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_execution_delivery_item IS '交付物实例表';
-CREATE INDEX idx_pedi_initiation ON pmis.pmis_execution_delivery_item(initiation_id);
-CREATE INDEX idx_pedi_stage ON pmis.pmis_execution_delivery_item(initiation_id, stage);
-CREATE INDEX idx_pedi_status ON pmis.pmis_execution_delivery_item(status);
+COMMENT ON TABLE pmis_execution_delivery_item IS '交付物实例表';
+CREATE INDEX idx_pedi_initiation ON pmis_execution_delivery_item(initiation_id);
+CREATE INDEX idx_pedi_stage ON pmis_execution_delivery_item(initiation_id, stage);
+CREATE INDEX idx_pedi_status ON pmis_execution_delivery_item(status);
 
 -- =====================================================
 -- 5. 项目结项主表 pmis_execution_closure
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_execution_closure;
-CREATE TABLE pmis.pmis_execution_closure (
+DROP TABLE IF EXISTS pmis_execution_closure;
+CREATE TABLE pmis_execution_closure (
     id                       BIGSERIAL PRIMARY KEY,
     closure_code             VARCHAR(64)  NOT NULL,
     initiation_id            BIGINT       NOT NULL,
@@ -197,15 +196,15 @@ CREATE TABLE pmis.pmis_execution_closure (
     deleted                  SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pec_code UNIQUE (closure_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_execution_closure IS '项目结项主表（正式/预结项/强制）';
-CREATE INDEX idx_pec_initiation ON pmis.pmis_execution_closure(initiation_id);
-CREATE INDEX idx_pec_type_status ON pmis.pmis_execution_closure(closure_type, status);
+COMMENT ON TABLE pmis_execution_closure IS '项目结项主表（正式/预结项/强制）';
+CREATE INDEX idx_pec_initiation ON pmis_execution_closure(initiation_id);
+CREATE INDEX idx_pec_type_status ON pmis_execution_closure(closure_type, status);
 
 -- =====================================================
 -- 6. AI 智能体预测/推荐结果表 pmis_agent_prediction
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_agent_prediction;
-CREATE TABLE pmis.pmis_agent_prediction (
+DROP TABLE IF EXISTS pmis_agent_prediction;
+CREATE TABLE pmis_agent_prediction (
     id                  BIGSERIAL PRIMARY KEY,
     task_code           VARCHAR(64)  NOT NULL,
     agent_type          VARCHAR(32)  NOT NULL,                  -- RISK_WARNING/RESOURCE_RECOMMEND/PROFIT_FORECAST/WIN_RATE_PREDICT/TIMESHEET_ANOMALY
@@ -233,15 +232,15 @@ CREATE TABLE pmis.pmis_agent_prediction (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pap_code UNIQUE (task_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_agent_prediction IS 'AI 智能体预测/推荐结果表';
-CREATE INDEX idx_pap_biz ON pmis.pmis_agent_prediction(biz_type, biz_id);
-CREATE INDEX idx_pap_agent_level ON pmis.pmis_agent_prediction(agent_type, alert_level);
-CREATE INDEX idx_pap_status ON pmis.pmis_agent_prediction(status);
+COMMENT ON TABLE pmis_agent_prediction IS 'AI 智能体预测/推荐结果表';
+CREATE INDEX idx_pap_biz ON pmis_agent_prediction(biz_type, biz_id);
+CREATE INDEX idx_pap_agent_level ON pmis_agent_prediction(agent_type, alert_level);
+CREATE INDEX idx_pap_status ON pmis_agent_prediction(status);
 
 -- =====================================================
 -- 7. 初始化 8 类项目类型的默认交付物标准（CD1-CD5）
 -- =====================================================
-INSERT INTO pmis.pmis_execution_delivery_standard
+INSERT INTO pmis_execution_delivery_standard
     (project_type, project_level, delivery_name, delivery_category, stage, required, trigger_tr, acceptance_criteria, tenant_id)
 VALUES
     -- 固定总价 FIXED_PRICE
@@ -305,7 +304,7 @@ VALUES
 -- =====================================================
 -- 8. 初始化 8 类项目类型的默认合同模板
 -- =====================================================
-INSERT INTO pmis.pmis_project_contract_template
+INSERT INTO pmis_project_contract_template
     (template_code, template_name, contract_type, version, payment_terms, default_payment_days, default_penalty_rate, sla_description, deliverables, status, tenant_id)
 VALUES
     ('TPL-FIX-001',  '固定总价标准合同',          'FIXED_PRICE',  '1.0.0', '3-3-3-1（预付款30%/启动30%/UAT30%/质保10%）', 30, 0.0010, 'P1 4小时响应/P2 1个工作日/P3 3个工作日', '系统源码/设计文档/验收报告', 'PUBLISHED', 1),

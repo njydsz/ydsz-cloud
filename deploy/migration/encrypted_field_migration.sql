@@ -1,4 +1,4 @@
--- =============================================================================
+﻿-- =============================================================================
 -- EncryptedField 历史数据回填迁移脚本
 -- 批次18 / P3-4
 --
@@ -24,7 +24,7 @@
 -- 使用方式:
 --   psql -U pmis -d pmis -f deploy/migration/encrypted_field_migration.sql
 --   # 然后运行 Java 迁移服务:
---   java -cp ydsz-pmis-common.jar com.njydsz.pmis.common.migration.EncryptedFieldMigrationCli
+--   java -cp ydsz-pmis-common.jar com.njydsz.common.migration.EncryptedFieldMigrationCli
 --
 -- 安全提示:
 --   - 备份表 _plain 仅保留至回填验证完毕 (建议保留 30 天后由 ops 手动 drop)
@@ -135,6 +135,6 @@ COMMIT;
 \echo ''
 \echo '  下一步: 运行 Java 端 ENCRYPT 阶段'
 \echo '    java -cp ydsz-pmis-common.jar \'
-\echo '      com.njydsz.pmis.common.migration.EncryptedFieldMigrationCli \'
+\echo '      com.njydsz.common.migration.EncryptedFieldMigrationCli \'
 \echo '      --phase=ENCRYPT --batch=V1.0.0_018_ENCRYPTED_FIELD'
 \echo '======================================================================'

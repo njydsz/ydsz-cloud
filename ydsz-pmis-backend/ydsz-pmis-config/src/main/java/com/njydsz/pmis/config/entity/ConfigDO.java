@@ -21,7 +21,7 @@ import java.io.Serial;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("pmis_cfg.pmis_config")
+@TableName("pmis_config")
 public class ConfigDO extends BaseDO {
 
     @Serial

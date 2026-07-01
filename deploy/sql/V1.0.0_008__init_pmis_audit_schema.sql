@@ -1,10 +1,8 @@
--- =====================================================
+﻿-- =====================================================
 -- PMIS 审计日志模块 DDL
 -- 版本: V1.0.0_008
 -- 描述: 操作日志持久化（pmis_log schema）
 -- =====================================================
-
-CREATE SCHEMA IF NOT EXISTS pmis_log;
 
 DROP TABLE IF EXISTS pmis_operation_log;
 CREATE TABLE pmis_operation_log (

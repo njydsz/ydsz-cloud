@@ -15,7 +15,7 @@ import java.util.function.Supplier;
  * 预警阈值提供器
  *
  * <p>统一从配置中心读取 {@code alert} 分组下的各项阈值，
- * 优先级：sys_config (pmis_cfg.pmis_config) > 静态默认值。
+ * 优先级：sys_config (public.pmis_config) > 静态默认值。
  *
  * <p>本地内存缓存 60s，配置变更后最多延迟 60s 生效。
  *

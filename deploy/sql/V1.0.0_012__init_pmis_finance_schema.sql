@@ -1,16 +1,15 @@
--- =====================================================
+﻿-- =====================================================
 -- PMIS 批次9 DDL：开票/回款/客户信用
 -- 版本: V1.0.0_012
 -- 描述: 发票主表(pmis_finance_invoice)、回款主表(pmis_finance_payment)、
 --       客户信用表(pmis_finance_customer_credit)
--- Schema: pmis
 -- =====================================================
 
 -- =====================================================
 -- 1. 发票主表 pmis_finance_invoice
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_finance_invoice;
-CREATE TABLE pmis.pmis_finance_invoice (
+DROP TABLE IF EXISTS pmis_finance_invoice;
+CREATE TABLE pmis_finance_invoice (
     id                  BIGSERIAL PRIMARY KEY,
     invoice_no          VARCHAR(64),                              -- 财务发票号
     invoice_code        VARCHAR(64)  NOT NULL,                    -- 业务编号（系统生成）
@@ -49,19 +48,19 @@ CREATE TABLE pmis.pmis_finance_invoice (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pfi_code UNIQUE (invoice_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_finance_invoice IS '发票主表（支持正常开票与红冲）';
-CREATE INDEX idx_pfi_contract ON pmis.pmis_finance_invoice(contract_id);
-CREATE INDEX idx_pfi_initiation ON pmis.pmis_finance_invoice(initiation_id);
-CREATE INDEX idx_pfi_customer ON pmis.pmis_finance_invoice(customer_id);
-CREATE INDEX idx_pfi_status ON pmis.pmis_finance_invoice(status, invoice_type);
-CREATE INDEX idx_pfi_invoice_date ON pmis.pmis_finance_invoice(invoice_date);
-CREATE INDEX idx_pfi_tax_period ON pmis.pmis_finance_invoice(tax_period);
+COMMENT ON TABLE pmis_finance_invoice IS '发票主表（支持正常开票与红冲）';
+CREATE INDEX idx_pfi_contract ON pmis_finance_invoice(contract_id);
+CREATE INDEX idx_pfi_initiation ON pmis_finance_invoice(initiation_id);
+CREATE INDEX idx_pfi_customer ON pmis_finance_invoice(customer_id);
+CREATE INDEX idx_pfi_status ON pmis_finance_invoice(status, invoice_type);
+CREATE INDEX idx_pfi_invoice_date ON pmis_finance_invoice(invoice_date);
+CREATE INDEX idx_pfi_tax_period ON pmis_finance_invoice(tax_period);
 
 -- =====================================================
 -- 2. 回款主表 pmis_finance_payment
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_finance_payment;
-CREATE TABLE pmis.pmis_finance_payment (
+DROP TABLE IF EXISTS pmis_finance_payment;
+CREATE TABLE pmis_finance_payment (
     id                  BIGSERIAL PRIMARY KEY,
     payment_no          VARCHAR(64),                              -- 银行流水号/系统流水
     payment_code        VARCHAR(64)  NOT NULL,                    -- 业务编号
@@ -91,19 +90,19 @@ CREATE TABLE pmis.pmis_finance_payment (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pfp_code UNIQUE (payment_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_finance_payment IS '回款主表';
-CREATE INDEX idx_pfp_contract ON pmis.pmis_finance_payment(contract_id);
-CREATE INDEX idx_pfp_initiation ON pmis.pmis_finance_payment(initiation_id);
-CREATE INDEX idx_pfp_customer ON pmis.pmis_finance_payment(customer_id);
-CREATE INDEX idx_pfp_status ON pmis.pmis_finance_payment(status);
-CREATE INDEX idx_pfp_payment_date ON pmis.pmis_finance_payment(payment_date);
-CREATE INDEX idx_pfp_unalloc ON pmis.pmis_finance_payment(customer_id, status, unallocated_amount);
+COMMENT ON TABLE pmis_finance_payment IS '回款主表';
+CREATE INDEX idx_pfp_contract ON pmis_finance_payment(contract_id);
+CREATE INDEX idx_pfp_initiation ON pmis_finance_payment(initiation_id);
+CREATE INDEX idx_pfp_customer ON pmis_finance_payment(customer_id);
+CREATE INDEX idx_pfp_status ON pmis_finance_payment(status);
+CREATE INDEX idx_pfp_payment_date ON pmis_finance_payment(payment_date);
+CREATE INDEX idx_pfp_unalloc ON pmis_finance_payment(customer_id, status, unallocated_amount);
 
 -- =====================================================
 -- 3. 客户信用表 pmis_finance_customer_credit
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_finance_customer_credit;
-CREATE TABLE pmis.pmis_finance_customer_credit (
+DROP TABLE IF EXISTS pmis_finance_customer_credit;
+CREATE TABLE pmis_finance_customer_credit (
     id                    BIGSERIAL PRIMARY KEY,
     customer_id           BIGINT       NOT NULL,
     customer_name         VARCHAR(256),
@@ -125,11 +124,11 @@ CREATE TABLE pmis.pmis_finance_customer_credit (
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pfcc_customer UNIQUE (customer_id, deleted)
 );
-COMMENT ON TABLE pmis.pmis_finance_customer_credit IS '客户信用记录';
-CREATE INDEX idx_pfcc_level ON pmis.pmis_finance_customer_credit(credit_level, credit_score);
-CREATE INDEX idx_pfcc_tenant ON pmis.pmis_finance_customer_credit(tenant_id);
+COMMENT ON TABLE pmis_finance_customer_credit IS '客户信用记录';
+CREATE INDEX idx_pfcc_level ON pmis_finance_customer_credit(credit_level, credit_score);
+CREATE INDEX idx_pfcc_tenant ON pmis_finance_customer_credit(tenant_id);
 
 -- =====================================================
 -- 4. 初始数据：信用等级字典（用于前端展示）
 -- =====================================================
-COMMENT ON COLUMN pmis.pmis_finance_customer_credit.credit_level IS 'A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59)';
+COMMENT ON COLUMN pmis_finance_customer_credit.credit_level IS 'A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59)';

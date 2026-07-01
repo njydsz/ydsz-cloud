@@ -40,4 +40,10 @@ public class CommonAutoConfiguration {
     public WebMvcConfig webMvcConfig(AuthInterceptor authInterceptor) {
         return new WebMvcConfig(authInterceptor);
     }
+
+    @Bean
+    @ConditionalOnMissingBean
+    public OpenApiConfig openApiConfig() {
+        return new OpenApiConfig();
+    }
 }

@@ -1,16 +1,15 @@
--- =====================================================
+﻿-- =====================================================
 -- PMIS 批次10 DDL：EVM 挣值 / 对外报价费率 / 对内成本费率 / 利润测算
 -- 版本: V1.0.0_013
 -- 描述: 挣值测量(pmis_evm_measure)、对外报价费率(pmis_rate_card)、
 --       对内成本费率(pmis_rate_internal)、利润测算版本(pmis_profit_simulation)
--- Schema: pmis
 -- =====================================================
 
 -- =====================================================
 -- 1. EVM 挣值测量表 pmis_evm_measure
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_evm_measure;
-CREATE TABLE pmis.pmis_evm_measure (
+DROP TABLE IF EXISTS pmis_evm_measure;
+CREATE TABLE pmis_evm_measure (
     id                  BIGSERIAL PRIMARY KEY,
     initiation_id       BIGINT       NOT NULL,
     wbs_task_id         BIGINT,                                -- 可空：项目级度量
@@ -37,17 +36,17 @@ CREATE TABLE pmis.pmis_evm_measure (
     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_evm_measure IS 'EVM 挣值测量记录（PV/EV/AC/CPI/SPI/EAC/VAC）';
-CREATE INDEX idx_pem_initiation ON pmis.pmis_evm_measure(initiation_id);
-CREATE INDEX idx_pem_wbs ON pmis.pmis_evm_measure(wbs_task_id);
-CREATE INDEX idx_pem_period ON pmis.pmis_evm_measure(initiation_id, period);
-CREATE INDEX idx_pem_alert ON pmis.pmis_evm_measure(alert_level);
+COMMENT ON TABLE pmis_evm_measure IS 'EVM 挣值测量记录（PV/EV/AC/CPI/SPI/EAC/VAC）';
+CREATE INDEX idx_pem_initiation ON pmis_evm_measure(initiation_id);
+CREATE INDEX idx_pem_wbs ON pmis_evm_measure(wbs_task_id);
+CREATE INDEX idx_pem_period ON pmis_evm_measure(initiation_id, period);
+CREATE INDEX idx_pem_alert ON pmis_evm_measure(alert_level);
 
 -- =====================================================
 -- 2. 对外报价费率表 pmis_rate_card
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_rate_card;
-CREATE TABLE pmis.pmis_rate_card (
+DROP TABLE IF EXISTS pmis_rate_card;
+CREATE TABLE pmis_rate_card (
     id                  BIGSERIAL PRIMARY KEY,
     rate_code           VARCHAR(64)  NOT NULL,
     level_code          VARCHAR(16)  NOT NULL,                 -- L1-L18
@@ -67,15 +66,15 @@ CREATE TABLE pmis.pmis_rate_card (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_prc_code UNIQUE (rate_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_rate_card IS '对外报价费率 Rate Card';
-CREATE INDEX idx_prc_level ON pmis.pmis_rate_card(level_code, project_type, customer_level);
-CREATE INDEX idx_prc_status ON pmis.pmis_rate_card(status, effective_date);
+COMMENT ON TABLE pmis_rate_card IS '对外报价费率 Rate Card';
+CREATE INDEX idx_prc_level ON pmis_rate_card(level_code, project_type, customer_level);
+CREATE INDEX idx_prc_status ON pmis_rate_card(status, effective_date);
 
 -- =====================================================
 -- 3. 对内成本费率表 pmis_rate_internal
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_rate_internal;
-CREATE TABLE pmis.pmis_rate_internal (
+DROP TABLE IF EXISTS pmis_rate_internal;
+CREATE TABLE pmis_rate_internal (
     id                  BIGSERIAL PRIMARY KEY,
     rate_code           VARCHAR(64)  NOT NULL,
     level_code          VARCHAR(16)  NOT NULL,
@@ -95,15 +94,15 @@ CREATE TABLE pmis.pmis_rate_internal (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pri_code UNIQUE (rate_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_rate_internal IS '对内成本费率';
-CREATE INDEX idx_pri_level_dept ON pmis.pmis_rate_internal(level_code, department_id);
-CREATE INDEX idx_pri_status ON pmis.pmis_rate_internal(status, effective_date);
+COMMENT ON TABLE pmis_rate_internal IS '对内成本费率';
+CREATE INDEX idx_pri_level_dept ON pmis_rate_internal(level_code, department_id);
+CREATE INDEX idx_pri_status ON pmis_rate_internal(status, effective_date);
 
 -- =====================================================
 -- 4. 利润测算版本表 pmis_profit_simulation
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_profit_simulation;
-CREATE TABLE pmis.pmis_profit_simulation (
+DROP TABLE IF EXISTS pmis_profit_simulation;
+CREATE TABLE pmis_profit_simulation (
     id                  BIGSERIAL PRIMARY KEY,
     simulation_code     VARCHAR(64)  NOT NULL,
     simulation_name     VARCHAR(256) NOT NULL,
@@ -136,15 +135,15 @@ CREATE TABLE pmis.pmis_profit_simulation (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pps_code UNIQUE (simulation_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_profit_simulation IS '利润测算版本（What-if 多版本对比）';
-CREATE INDEX idx_pps_initiation ON pmis.pmis_profit_simulation(initiation_id);
-CREATE INDEX idx_pps_version ON pmis.pmis_profit_simulation(initiation_id, version);
-CREATE INDEX idx_pps_status ON pmis.pmis_profit_simulation(status, scenario_type);
+COMMENT ON TABLE pmis_profit_simulation IS '利润测算版本（What-if 多版本对比）';
+CREATE INDEX idx_pps_initiation ON pmis_profit_simulation(initiation_id);
+CREATE INDEX idx_pps_version ON pmis_profit_simulation(initiation_id, version);
+CREATE INDEX idx_pps_status ON pmis_profit_simulation(status, scenario_type);
 
 -- =====================================================
 -- 5. 初始化 L1-L18 职级默认对外报价费率（基线参考）
 -- =====================================================
-INSERT INTO pmis.pmis_rate_card
+INSERT INTO pmis_rate_card
     (rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, status, tenant_id, provider_trace_id)
 VALUES
     ('RC-L1-DEFAULT',  'L1',  NULL, NULL, 'DAY',  1200.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
@@ -169,7 +168,7 @@ VALUES
 -- =====================================================
 -- 6. 初始化 L1-L18 职级默认对内成本费率（基线参考）
 -- =====================================================
-INSERT INTO pmis.pmis_rate_internal
+INSERT INTO pmis_rate_internal
     (rate_code, level_code, billing_unit, cost_amount, currency, effective_date, status, tenant_id, provider_trace_id)
 VALUES
     ('RI-L1-DEFAULT',  'L1',  'DAY',  800.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),

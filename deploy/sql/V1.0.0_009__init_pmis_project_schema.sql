@@ -1,15 +1,14 @@
--- =====================================================
+﻿-- =====================================================
 -- PMIS 项目全生命周期模块 DDL
 -- 版本: V1.0.0_009
 -- 描述: 商机、立项、合同、补充协议、合同变更
--- Schema: pmis
 -- =====================================================
 
 -- =====================================================
 -- 1. 商机主表 pmis_project_opportunity
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_opportunity;
-CREATE TABLE pmis.pmis_project_opportunity (
+DROP TABLE IF EXISTS pmis_project_opportunity;
+CREATE TABLE pmis_project_opportunity (
     id                BIGSERIAL PRIMARY KEY,
     opportunity_code  VARCHAR(64)   NOT NULL,
     opportunity_name  VARCHAR(256)  NOT NULL,
@@ -39,23 +38,23 @@ CREATE TABLE pmis.pmis_project_opportunity (
     deleted           SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppo_code UNIQUE (opportunity_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_project_opportunity IS '商机主表';
-COMMENT ON COLUMN pmis.pmis_project_opportunity.level IS '商机分级 A/B/C';
-COMMENT ON COLUMN pmis.pmis_project_opportunity.status IS 'FOLLOWING/QUOTED/NEGOTIATING/WON/LOST/INVALID';
-COMMENT ON COLUMN pmis.pmis_project_opportunity.win_rate IS '赢率 0.0000-1.0000';
+COMMENT ON TABLE pmis_project_opportunity IS '商机主表';
+COMMENT ON COLUMN pmis_project_opportunity.level IS '商机分级 A/B/C';
+COMMENT ON COLUMN pmis_project_opportunity.status IS 'FOLLOWING/QUOTED/NEGOTIATING/WON/LOST/INVALID';
+COMMENT ON COLUMN pmis_project_opportunity.win_rate IS '赢率 0.0000-1.0000';
 
-CREATE INDEX idx_ppo_customer   ON pmis.pmis_project_opportunity (customer_id);
-CREATE INDEX idx_ppo_owner      ON pmis.pmis_project_opportunity (owner_id);
-CREATE INDEX idx_ppo_status     ON pmis.pmis_project_opportunity (status);
-CREATE INDEX idx_ppo_level      ON pmis.pmis_project_opportunity (level);
-CREATE INDEX idx_ppo_created    ON pmis.pmis_project_opportunity (created_at DESC);
-CREATE INDEX idx_ppo_tenant     ON pmis.pmis_project_opportunity (tenant_id);
+CREATE INDEX idx_ppo_customer   ON pmis_project_opportunity (customer_id);
+CREATE INDEX idx_ppo_owner      ON pmis_project_opportunity (owner_id);
+CREATE INDEX idx_ppo_status     ON pmis_project_opportunity (status);
+CREATE INDEX idx_ppo_level      ON pmis_project_opportunity (level);
+CREATE INDEX idx_ppo_created    ON pmis_project_opportunity (created_at DESC);
+CREATE INDEX idx_ppo_tenant     ON pmis_project_opportunity (tenant_id);
 
 -- =====================================================
 -- 2. 商机跟进记录 pmis_project_opportunity_follow
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_opportunity_follow;
-CREATE TABLE pmis.pmis_project_opportunity_follow (
+DROP TABLE IF EXISTS pmis_project_opportunity_follow;
+CREATE TABLE pmis_project_opportunity_follow (
     id                BIGSERIAL PRIMARY KEY,
     opportunity_id    BIGINT        NOT NULL,
     follow_type       VARCHAR(32)   NOT NULL,    -- VISIT/CALL/QUOTE/NEGOTIATE/OTHER
@@ -68,14 +67,14 @@ CREATE TABLE pmis.pmis_project_opportunity_follow (
     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_project_opportunity_follow IS '商机跟进记录';
-CREATE INDEX idx_ppof_opp ON pmis.pmis_project_opportunity_follow (opportunity_id, follow_at DESC);
+COMMENT ON TABLE pmis_project_opportunity_follow IS '商机跟进记录';
+CREATE INDEX idx_ppof_opp ON pmis_project_opportunity_follow (opportunity_id, follow_at DESC);
 
 -- =====================================================
 -- 3. 立项主表 pmis_project_initiation
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_initiation;
-CREATE TABLE pmis.pmis_project_initiation (
+DROP TABLE IF EXISTS pmis_project_initiation;
+CREATE TABLE pmis_project_initiation (
     id                BIGSERIAL PRIMARY KEY,
     project_code      VARCHAR(64)   NOT NULL,
     project_name      VARCHAR(256)  NOT NULL,
@@ -108,22 +107,22 @@ CREATE TABLE pmis.pmis_project_initiation (
     deleted           SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppi_code UNIQUE (project_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_project_initiation IS '项目立项主表';
-COMMENT ON COLUMN pmis.pmis_project_initiation.stage IS '立项阶段 PRE_INITIATION/SUBMITTED/APPROVING/APPROVED/REJECTED/EXECUTING/CLOSED';
-COMMENT ON COLUMN pmis.pmis_project_initiation.current_gate IS '门径评审 CD1/CD2/CD3/CD4/CD5';
+COMMENT ON TABLE pmis_project_initiation IS '项目立项主表';
+COMMENT ON COLUMN pmis_project_initiation.stage IS '立项阶段 PRE_INITIATION/SUBMITTED/APPROVING/APPROVED/REJECTED/EXECUTING/CLOSED';
+COMMENT ON COLUMN pmis_project_initiation.current_gate IS '门径评审 CD1/CD2/CD3/CD4/CD5';
 
-CREATE INDEX idx_ppi_customer  ON pmis.pmis_project_initiation (customer_id);
-CREATE INDEX idx_ppi_stage     ON pmis.pmis_project_initiation (stage);
-CREATE INDEX idx_ppi_pm        ON pmis.pmis_project_initiation (pm_id);
-CREATE INDEX idx_ppi_opp       ON pmis.pmis_project_initiation (opportunity_id);
-CREATE INDEX idx_ppi_tenant    ON pmis.pmis_project_initiation (tenant_id);
-CREATE INDEX idx_ppi_created   ON pmis.pmis_project_initiation (created_at DESC);
+CREATE INDEX idx_ppi_customer  ON pmis_project_initiation (customer_id);
+CREATE INDEX idx_ppi_stage     ON pmis_project_initiation (stage);
+CREATE INDEX idx_ppi_pm        ON pmis_project_initiation (pm_id);
+CREATE INDEX idx_ppi_opp       ON pmis_project_initiation (opportunity_id);
+CREATE INDEX idx_ppi_tenant    ON pmis_project_initiation (tenant_id);
+CREATE INDEX idx_ppi_created   ON pmis_project_initiation (created_at DESC);
 
 -- =====================================================
 -- 4. 立项预算明细 pmis_project_budget_item
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_budget_item;
-CREATE TABLE pmis.pmis_project_budget_item (
+DROP TABLE IF EXISTS pmis_project_budget_item;
+CREATE TABLE pmis_project_budget_item (
     id                BIGSERIAL PRIMARY KEY,
     initiation_id     BIGINT        NOT NULL,
     category          VARCHAR(32)   NOT NULL,    -- LABOR/PURCHASE/EXPENSE/OUTSOURCE/OTHER
@@ -139,14 +138,14 @@ CREATE TABLE pmis.pmis_project_budget_item (
     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_project_budget_item IS '立项预算明细';
-CREATE INDEX idx_ppbi_init ON pmis.pmis_project_budget_item (initiation_id);
+COMMENT ON TABLE pmis_project_budget_item IS '立项预算明细';
+CREATE INDEX idx_ppbi_init ON pmis_project_budget_item (initiation_id);
 
 -- =====================================================
 -- 5. 门径评审记录 pmis_project_gate_review
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_gate_review;
-CREATE TABLE pmis.pmis_project_gate_review (
+DROP TABLE IF EXISTS pmis_project_gate_review;
+CREATE TABLE pmis_project_gate_review (
     id                BIGSERIAL PRIMARY KEY,
     initiation_id     BIGINT        NOT NULL,
     gate_code         VARCHAR(16)   NOT NULL,    -- CD1/CD2/CD3/CD4/CD5
@@ -162,14 +161,14 @@ CREATE TABLE pmis.pmis_project_gate_review (
     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_project_gate_review IS '门径评审记录（CDCP 决策评审）';
-CREATE INDEX idx_ppgr_init ON pmis.pmis_project_gate_review (initiation_id, gate_code);
+COMMENT ON TABLE pmis_project_gate_review IS '门径评审记录（CDCP 决策评审）';
+CREATE INDEX idx_ppgr_init ON pmis_project_gate_review (initiation_id, gate_code);
 
 -- =====================================================
 -- 6. 合同主表 pmis_project_contract
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_contract;
-CREATE TABLE pmis.pmis_project_contract (
+DROP TABLE IF EXISTS pmis_project_contract;
+CREATE TABLE pmis_project_contract (
     id                BIGSERIAL PRIMARY KEY,
     contract_code     VARCHAR(64)   NOT NULL,
     contract_name     VARCHAR(256)  NOT NULL,
@@ -201,22 +200,22 @@ CREATE TABLE pmis.pmis_project_contract (
     deleted           SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppc_code UNIQUE (contract_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_project_contract IS '合同主表';
-COMMENT ON COLUMN pmis.pmis_project_contract.status IS 'DRAFT/SUBMITTED/APPROVING/ACTIVE/SUSPENDED/EXPIRED/TERMINATED';
-COMMENT ON COLUMN pmis.pmis_project_contract.risk_level IS '风险等级 LOW/MEDIUM/HIGH';
+COMMENT ON TABLE pmis_project_contract IS '合同主表';
+COMMENT ON COLUMN pmis_project_contract.status IS 'DRAFT/SUBMITTED/APPROVING/ACTIVE/SUSPENDED/EXPIRED/TERMINATED';
+COMMENT ON COLUMN pmis_project_contract.risk_level IS '风险等级 LOW/MEDIUM/HIGH';
 
-CREATE INDEX idx_ppc_customer  ON pmis.pmis_project_contract (customer_id);
-CREATE INDEX idx_ppc_init      ON pmis.pmis_project_contract (initiation_id);
-CREATE INDEX idx_ppc_status    ON pmis.pmis_project_contract (status);
-CREATE INDEX idx_ppc_sign      ON pmis.pmis_project_contract (sign_date);
-CREATE INDEX idx_ppc_risk      ON pmis.pmis_project_contract (risk_level);
-CREATE INDEX idx_ppc_tenant    ON pmis.pmis_project_contract (tenant_id);
+CREATE INDEX idx_ppc_customer  ON pmis_project_contract (customer_id);
+CREATE INDEX idx_ppc_init      ON pmis_project_contract (initiation_id);
+CREATE INDEX idx_ppc_status    ON pmis_project_contract (status);
+CREATE INDEX idx_ppc_sign      ON pmis_project_contract (sign_date);
+CREATE INDEX idx_ppc_risk      ON pmis_project_contract (risk_level);
+CREATE INDEX idx_ppc_tenant    ON pmis_project_contract (tenant_id);
 
 -- =====================================================
 -- 7. 合同补充协议 pmis_project_contract_supplement
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_contract_supplement;
-CREATE TABLE pmis.pmis_project_contract_supplement (
+DROP TABLE IF EXISTS pmis_project_contract_supplement;
+CREATE TABLE pmis_project_contract_supplement (
     id                BIGSERIAL PRIMARY KEY,
     contract_id       BIGINT        NOT NULL,
     supplement_code   VARCHAR(64)   NOT NULL,
@@ -237,14 +236,14 @@ CREATE TABLE pmis.pmis_project_contract_supplement (
     deleted           SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppcs_code UNIQUE (supplement_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_project_contract_supplement IS '合同补充协议';
-CREATE INDEX idx_ppcs_contract ON pmis.pmis_project_contract_supplement (contract_id);
+COMMENT ON TABLE pmis_project_contract_supplement IS '合同补充协议';
+CREATE INDEX idx_ppcs_contract ON pmis_project_contract_supplement (contract_id);
 
 -- =====================================================
 -- 8. 合同变更记录 pmis_project_contract_change
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_project_contract_change;
-CREATE TABLE pmis.pmis_project_contract_change (
+DROP TABLE IF EXISTS pmis_project_contract_change;
+CREATE TABLE pmis_project_contract_change (
     id                BIGSERIAL PRIMARY KEY,
     contract_id       BIGINT        NOT NULL,
     change_code       VARCHAR(64)   NOT NULL,
@@ -269,6 +268,6 @@ CREATE TABLE pmis.pmis_project_contract_change (
     deleted           SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppcc_code UNIQUE (change_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_project_contract_change IS '合同变更记录';
-CREATE INDEX idx_ppcc_contract ON pmis.pmis_project_contract_change (contract_id);
-CREATE INDEX idx_ppcc_status   ON pmis.pmis_project_contract_change (status);
+COMMENT ON TABLE pmis_project_contract_change IS '合同变更记录';
+CREATE INDEX idx_ppcc_contract ON pmis_project_contract_change (contract_id);
+CREATE INDEX idx_ppcc_status   ON pmis_project_contract_change (status);

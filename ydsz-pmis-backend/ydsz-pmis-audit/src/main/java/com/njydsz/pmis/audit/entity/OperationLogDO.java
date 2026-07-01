@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 操作日志实体（pmis_log.pmis_operation_log）
+ * 操作日志实体（public.pmis_operation_log）
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

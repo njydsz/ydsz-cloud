@@ -1,4 +1,4 @@
--- ====================================================================
+﻿-- ====================================================================
 -- 南京云顶 PMIS 数据库初始化脚本
 -- V1.0.0
 -- 对应 PRD V3.2 + 开发计划 V1.0
@@ -11,19 +11,12 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ====================================================================
 -- Schema 划分
 -- ====================================================================
-CREATE SCHEMA IF NOT EXISTS pmis;        -- 主业务
-CREATE SCHEMA IF NOT EXISTS pmis_log;    -- 日志
-CREATE SCHEMA IF NOT EXISTS pmis_cfg;    -- 配置
-COMMENT ON SCHEMA pmis IS 'PMIS 主业务表';
-COMMENT ON SCHEMA pmis_log IS 'PMIS 日志表';
-COMMENT ON SCHEMA pmis_cfg IS 'PMIS 配置表';
-
 -- ====================================================================
 -- 1. 字典/枚举值模块
 -- ====================================================================
 
 -- 字典类型表
-CREATE TABLE pmis.pmis_dict_type (
+CREATE TABLE pmis_dict_type (
     id              BIGSERIAL      PRIMARY KEY,
     type_code       VARCHAR(64)    NOT NULL,
     type_name       VARCHAR(128)   NOT NULL,
@@ -36,12 +29,12 @@ CREATE TABLE pmis.pmis_dict_type (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_dict_type_code UNIQUE (type_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_dict_type IS '字典类型表';
+COMMENT ON TABLE pmis_dict_type IS '字典类型表';
 
-CREATE INDEX idx_pmis_dict_type_status ON pmis.pmis_dict_type (status) WHERE deleted = 0;
+CREATE INDEX idx_pmis_dict_type_status ON pmis_dict_type (status) WHERE deleted = 0;
 
 -- 字典项表
-CREATE TABLE pmis.pmis_dict_item (
+CREATE TABLE pmis_dict_item (
     id              BIGSERIAL      PRIMARY KEY,
     type_code       VARCHAR(64)    NOT NULL,
     item_code       VARCHAR(64)    NOT NULL,
@@ -58,14 +51,14 @@ CREATE TABLE pmis.pmis_dict_item (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_dict_item UNIQUE (type_code, item_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_dict_item IS '字典项表';
-COMMENT ON COLUMN pmis.pmis_dict_item.parent_id IS '父级 ID（0=根）';
+COMMENT ON TABLE pmis_dict_item IS '字典项表';
+COMMENT ON COLUMN pmis_dict_item.parent_id IS '父级 ID（0=根）';
 
-CREATE INDEX idx_pmis_dict_item_type ON pmis.pmis_dict_item (type_code) WHERE deleted = 0;
-CREATE INDEX idx_pmis_dict_item_status ON pmis.pmis_dict_item (status) WHERE deleted = 0;
+CREATE INDEX idx_pmis_dict_item_type ON pmis_dict_item (type_code) WHERE deleted = 0;
+CREATE INDEX idx_pmis_dict_item_status ON pmis_dict_item (status) WHERE deleted = 0;
 
 -- 字典版本表
-CREATE TABLE pmis.pmis_dict_version (
+CREATE TABLE pmis_dict_version (
     id              BIGSERIAL      PRIMARY KEY,
     type_code       VARCHAR(64)    NOT NULL,
     version         VARCHAR(32)    NOT NULL,
@@ -75,14 +68,14 @@ CREATE TABLE pmis.pmis_dict_version (
     created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_dict_version IS '字典版本表';
+COMMENT ON TABLE pmis_dict_version IS '字典版本表';
 
 -- ====================================================================
 -- 2. RBAC 权限模块
 -- ====================================================================
 
 -- 角色表
-CREATE TABLE pmis.pmis_role (
+CREATE TABLE pmis_role (
     id              BIGSERIAL      PRIMARY KEY,
     role_code       VARCHAR(64)    NOT NULL,
     role_name       VARCHAR(64)    NOT NULL,
@@ -97,13 +90,13 @@ CREATE TABLE pmis.pmis_role (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_role_code UNIQUE (role_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_role IS '角色表';
-COMMENT ON COLUMN pmis.pmis_role.data_scope IS '数据权限: ALL/DEPT/SELF/CUSTOM';
+COMMENT ON TABLE pmis_role IS '角色表';
+COMMENT ON COLUMN pmis_role.data_scope IS '数据权限: ALL/DEPT/SELF/CUSTOM';
 
-CREATE INDEX idx_pmis_role_status ON pmis.pmis_role (status) WHERE deleted = 0;
+CREATE INDEX idx_pmis_role_status ON pmis_role (status) WHERE deleted = 0;
 
 -- 权限/菜单表
-CREATE TABLE pmis.pmis_permission (
+CREATE TABLE pmis_permission (
     id              BIGSERIAL      PRIMARY KEY,
     parent_id       BIGINT         NOT NULL DEFAULT 0,
     perm_code       VARCHAR(128)   NOT NULL,
@@ -122,15 +115,15 @@ CREATE TABLE pmis.pmis_permission (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_permission_code UNIQUE (perm_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_permission IS '权限/菜单表';
-COMMENT ON COLUMN pmis.pmis_permission.perm_type IS 'MENU/BUTTON/API';
-COMMENT ON COLUMN pmis.pmis_permission.perm_code IS '权限标识 (例: system:user:create)';
+COMMENT ON TABLE pmis_permission IS '权限/菜单表';
+COMMENT ON COLUMN pmis_permission.perm_type IS 'MENU/BUTTON/API';
+COMMENT ON COLUMN pmis_permission.perm_code IS '权限标识 (例: system:user:create)';
 
-CREATE INDEX idx_pmis_permission_parent ON pmis.pmis_permission (parent_id);
-CREATE INDEX idx_pmis_permission_type ON pmis.pmis_permission (perm_type) WHERE deleted = 0;
+CREATE INDEX idx_pmis_permission_parent ON pmis_permission (parent_id);
+CREATE INDEX idx_pmis_permission_type ON pmis_permission (perm_type) WHERE deleted = 0;
 
 -- 用户-角色关联表
-CREATE TABLE pmis.pmis_user_role (
+CREATE TABLE pmis_user_role (
     id              BIGSERIAL      PRIMARY KEY,
     user_id         BIGINT         NOT NULL,
     role_id         BIGINT         NOT NULL,
@@ -139,13 +132,13 @@ CREATE TABLE pmis.pmis_user_role (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_user_role UNIQUE (user_id, role_id, deleted)
 );
-COMMENT ON TABLE pmis.pmis_user_role IS '用户-角色关联表';
+COMMENT ON TABLE pmis_user_role IS '用户-角色关联表';
 
-CREATE INDEX idx_pmis_user_role_user ON pmis.pmis_user_role (user_id) WHERE deleted = 0;
-CREATE INDEX idx_pmis_user_role_role ON pmis.pmis_user_role (role_id) WHERE deleted = 0;
+CREATE INDEX idx_pmis_user_role_user ON pmis_user_role (user_id) WHERE deleted = 0;
+CREATE INDEX idx_pmis_user_role_role ON pmis_user_role (role_id) WHERE deleted = 0;
 
 -- 角色-权限关联表
-CREATE TABLE pmis.pmis_role_permission (
+CREATE TABLE pmis_role_permission (
     id              BIGSERIAL      PRIMARY KEY,
     role_id         BIGINT         NOT NULL,
     permission_id   BIGINT         NOT NULL,
@@ -153,14 +146,14 @@ CREATE TABLE pmis.pmis_role_permission (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_role_permission UNIQUE (role_id, permission_id, deleted)
 );
-COMMENT ON TABLE pmis.pmis_role_permission IS '角色-权限关联表';
+COMMENT ON TABLE pmis_role_permission IS '角色-权限关联表';
 
 -- ====================================================================
 -- 3. 组织/人员模块
 -- ====================================================================
 
 -- 部门表
-CREATE TABLE pmis.pmis_department (
+CREATE TABLE pmis_department (
     id              BIGSERIAL      PRIMARY KEY,
     dept_code       VARCHAR(64)    NOT NULL,
     dept_name       VARCHAR(128)   NOT NULL,
@@ -179,14 +172,14 @@ CREATE TABLE pmis.pmis_department (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_department_code UNIQUE (dept_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_department IS '部门表';
-COMMENT ON COLUMN pmis.pmis_department.dept_path IS '部门路径 (例: /1/3/5)';
+COMMENT ON TABLE pmis_department IS '部门表';
+COMMENT ON COLUMN pmis_department.dept_path IS '部门路径 (例: /1/3/5)';
 
-CREATE INDEX idx_pmis_department_parent ON pmis.pmis_department (parent_id);
-CREATE INDEX idx_pmis_department_status ON pmis.pmis_department (status) WHERE deleted = 0;
+CREATE INDEX idx_pmis_department_parent ON pmis_department (parent_id);
+CREATE INDEX idx_pmis_department_status ON pmis_department (status) WHERE deleted = 0;
 
 -- 岗位表
-CREATE TABLE pmis.pmis_position (
+CREATE TABLE pmis_position (
     id              BIGSERIAL      PRIMARY KEY,
     position_code   VARCHAR(64)    NOT NULL,
     position_name   VARCHAR(128)   NOT NULL,
@@ -201,12 +194,12 @@ CREATE TABLE pmis.pmis_position (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_position_code UNIQUE (position_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_position IS '岗位表';
+COMMENT ON TABLE pmis_position IS '岗位表';
 
-CREATE INDEX idx_pmis_position_dept ON pmis.pmis_position (department_id) WHERE deleted = 0;
+CREATE INDEX idx_pmis_position_dept ON pmis_position (department_id) WHERE deleted = 0;
 
 -- 职级表 (L1-L18)
-CREATE TABLE pmis.pmis_job_level (
+CREATE TABLE pmis_job_level (
     id              BIGSERIAL      PRIMARY KEY,
     level_code      VARCHAR(8)     NOT NULL,
     level_name      VARCHAR(64)    NOT NULL,
@@ -221,11 +214,11 @@ CREATE TABLE pmis.pmis_job_level (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_job_level_code UNIQUE (level_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_job_level IS '职级表 (L1-L18)';
-COMMENT ON COLUMN pmis.pmis_job_level.level_segment IS '职级段: PRIMARY(初级)/MIDDLE(中级)/SENIOR(高级)/EXPERT(专家)/STRATEGIC(战略)';
+COMMENT ON TABLE pmis_job_level IS '职级表 (L1-L18)';
+COMMENT ON COLUMN pmis_job_level.level_segment IS '职级段: PRIMARY(初级)/MIDDLE(中级)/SENIOR(高级)/EXPERT(专家)/STRATEGIC(战略)';
 
 -- 职级费率表 (对外人天 / 对内人天)
-CREATE TABLE pmis.pmis_job_level_rate (
+CREATE TABLE pmis_job_level_rate (
     id                  BIGSERIAL      PRIMARY KEY,
     level_code          VARCHAR(8)     NOT NULL,
     external_daily      NUMERIC(10,2)  NOT NULL,
@@ -249,16 +242,16 @@ CREATE TABLE pmis.pmis_job_level_rate (
     deleted             SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_job_level_rate UNIQUE (level_code, version, deleted)
 );
-COMMENT ON TABLE pmis.pmis_job_level_rate IS '职级费率表 (双费率)';
-COMMENT ON COLUMN pmis.pmis_job_level_rate.external_daily IS '对外人天 (元/天)';
-COMMENT ON COLUMN pmis.pmis_job_level_rate.internal_daily IS '对内人天 (元/天)';
-COMMENT ON COLUMN pmis.pmis_job_level_rate.billable_target IS '可计费利用率目标';
+COMMENT ON TABLE pmis_job_level_rate IS '职级费率表 (双费率)';
+COMMENT ON COLUMN pmis_job_level_rate.external_daily IS '对外人天 (元/天)';
+COMMENT ON COLUMN pmis_job_level_rate.internal_daily IS '对内人天 (元/天)';
+COMMENT ON COLUMN pmis_job_level_rate.billable_target IS '可计费利用率目标';
 
-CREATE INDEX idx_pmis_job_level_rate_code ON pmis.pmis_job_level_rate (level_code) WHERE deleted = 0;
-CREATE INDEX idx_pmis_job_level_rate_effective ON pmis.pmis_job_level_rate (effective_date, expire_date);
+CREATE INDEX idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WHERE deleted = 0;
+CREATE INDEX idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
 
 -- 员工表
-CREATE TABLE pmis.pmis_employee (
+CREATE TABLE pmis_employee (
     id              BIGSERIAL      PRIMARY KEY,
     user_id         BIGINT         NOT NULL,
     emp_code        VARCHAR(64)    NOT NULL,
@@ -290,17 +283,17 @@ CREATE TABLE pmis.pmis_employee (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_emp_code UNIQUE (emp_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_employee IS '员工表';
-COMMENT ON COLUMN pmis.pmis_employee.work_status IS 'ACTIVE/LEAVE/SUSPEND';
-COMMENT ON COLUMN pmis.pmis_employee.bench_status IS 'YES/NO';
+COMMENT ON TABLE pmis_employee IS '员工表';
+COMMENT ON COLUMN pmis_employee.work_status IS 'ACTIVE/LEAVE/SUSPEND';
+COMMENT ON COLUMN pmis_employee.bench_status IS 'YES/NO';
 
-CREATE INDEX idx_pmis_emp_user ON pmis.pmis_employee (user_id);
-CREATE INDEX idx_pmis_emp_dept ON pmis.pmis_employee (department_id) WHERE deleted = 0;
-CREATE INDEX idx_pmis_emp_level ON pmis.pmis_employee (level_code) WHERE deleted = 0;
-CREATE INDEX idx_pmis_emp_bench ON pmis.pmis_employee (bench_status, bench_start) WHERE deleted = 0;
+CREATE INDEX idx_pmis_emp_user ON pmis_employee (user_id);
+CREATE INDEX idx_pmis_emp_dept ON pmis_employee (department_id) WHERE deleted = 0;
+CREATE INDEX idx_pmis_emp_level ON pmis_employee (level_code) WHERE deleted = 0;
+CREATE INDEX idx_pmis_emp_bench ON pmis_employee (bench_status, bench_start) WHERE deleted = 0;
 
 -- 员工标签表
-CREATE TABLE pmis.pmis_employee_tag (
+CREATE TABLE pmis_employee_tag (
     id              BIGSERIAL      PRIMARY KEY,
     employee_id     BIGINT         NOT NULL,
     tag_type        VARCHAR(32)    NOT NULL,
@@ -309,18 +302,18 @@ CREATE TABLE pmis.pmis_employee_tag (
     created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_employee_tag IS '员工标签表';
-COMMENT ON COLUMN pmis.pmis_employee_tag.tag_type IS 'TECH_STACK/INDUSTRY/CERTIFICATE/SKILL';
+COMMENT ON TABLE pmis_employee_tag IS '员工标签表';
+COMMENT ON COLUMN pmis_employee_tag.tag_type IS 'TECH_STACK/INDUSTRY/CERTIFICATE/SKILL';
 
-CREATE INDEX idx_pmis_emp_tag_emp ON pmis.pmis_employee_tag (employee_id);
-CREATE INDEX idx_pmis_emp_tag_code ON pmis.pmis_employee_tag (tag_code);
+CREATE INDEX idx_pmis_emp_tag_emp ON pmis_employee_tag (employee_id);
+CREATE INDEX idx_pmis_emp_tag_code ON pmis_employee_tag (tag_code);
 
 -- ====================================================================
 -- 4. 用户账号
 -- ====================================================================
 
 -- 用户账号表
-CREATE TABLE pmis.pmis_user_account (
+CREATE TABLE pmis_user_account (
     id              BIGSERIAL      PRIMARY KEY,
     username        VARCHAR(64)    NOT NULL,
     password        VARCHAR(128)   NOT NULL,
@@ -338,15 +331,15 @@ CREATE TABLE pmis.pmis_user_account (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_user_username UNIQUE (username, deleted)
 );
-COMMENT ON TABLE pmis.pmis_user_account IS '用户账号表';
+COMMENT ON TABLE pmis_user_account IS '用户账号表';
 
-CREATE INDEX idx_pmis_user_status ON pmis.pmis_user_account (status) WHERE deleted = 0;
+CREATE INDEX idx_pmis_user_status ON pmis_user_account (status) WHERE deleted = 0;
 
 -- ====================================================================
 -- 5. 通知中心
 -- ====================================================================
 
-CREATE TABLE pmis.pmis_notification (
+CREATE TABLE pmis_notification (
     id              BIGSERIAL      PRIMARY KEY,
     title           VARCHAR(255)   NOT NULL,
     content         TEXT,
@@ -365,18 +358,18 @@ CREATE TABLE pmis.pmis_notification (
     updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis.pmis_notification IS '通知表';
-COMMENT ON COLUMN pmis.pmis_notification.level IS 'INFO/WARN/ERROR/URGENT';
-COMMENT ON COLUMN pmis.pmis_notification.category IS 'SYSTEM/WORKFLOW/ALERT/TODO';
+COMMENT ON TABLE pmis_notification IS '通知表';
+COMMENT ON COLUMN pmis_notification.level IS 'INFO/WARN/ERROR/URGENT';
+COMMENT ON COLUMN pmis_notification.category IS 'SYSTEM/WORKFLOW/ALERT/TODO';
 
-CREATE INDEX idx_pmis_notif_receiver ON pmis.pmis_notification (receiver_id, read_status) WHERE deleted = 0;
-CREATE INDEX idx_pmis_notif_biz ON pmis.pmis_notification (biz_type, biz_id) WHERE deleted = 0;
+CREATE INDEX idx_pmis_notif_receiver ON pmis_notification (receiver_id, read_status) WHERE deleted = 0;
+CREATE INDEX idx_pmis_notif_biz ON pmis_notification (biz_type, biz_id) WHERE deleted = 0;
 
 -- ====================================================================
 -- 6. 系统配置
 -- ====================================================================
 
-CREATE TABLE pmis_cfg.pmis_config (
+CREATE TABLE pmis_config (
     id              BIGSERIAL      PRIMARY KEY,
     config_group    VARCHAR(64)    NOT NULL,
     config_key      VARCHAR(128)   NOT NULL,
@@ -394,16 +387,16 @@ CREATE TABLE pmis_cfg.pmis_config (
     deleted         SMALLINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pmis_config_key UNIQUE (config_group, config_key, deleted)
 );
-COMMENT ON TABLE pmis_cfg.pmis_config IS '系统配置表';
-COMMENT ON COLUMN pmis_cfg.pmis_config.value_type IS 'STRING/NUMBER/BOOLEAN/JSON';
+COMMENT ON TABLE pmis_config IS '系统配置表';
+COMMENT ON COLUMN pmis_config.value_type IS 'STRING/NUMBER/BOOLEAN/JSON';
 
-CREATE INDEX idx_pmis_config_group ON pmis_cfg.pmis_config (config_group) WHERE deleted = 0;
+CREATE INDEX idx_pmis_config_group ON pmis_config (config_group) WHERE deleted = 0;
 
 -- ====================================================================
 -- 7. 操作日志
 -- ====================================================================
 
-CREATE TABLE pmis_log.pmis_operation_log (
+CREATE TABLE pmis_operation_log (
     id              BIGSERIAL      PRIMARY KEY,
     user_id         BIGINT,
     username        VARCHAR(64),
@@ -421,11 +414,11 @@ CREATE TABLE pmis_log.pmis_operation_log (
     error_message   TEXT,
     created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-COMMENT ON TABLE pmis_log.pmis_operation_log IS '操作日志表';
+COMMENT ON TABLE pmis_operation_log IS '操作日志表';
 
-CREATE INDEX idx_pmis_oplog_user ON pmis_log.pmis_operation_log (user_id);
-CREATE INDEX idx_pmis_oplog_module ON pmis_log.pmis_operation_log (module, action);
-CREATE INDEX idx_pmis_oplog_created ON pmis_log.pmis_operation_log (created_at);
+CREATE INDEX idx_pmis_oplog_user ON pmis_operation_log (user_id);
+CREATE INDEX idx_pmis_oplog_module ON pmis_operation_log (module, action);
+CREATE INDEX idx_pmis_oplog_created ON pmis_operation_log (created_at);
 
 -- ====================================================================
 -- 8. 初始化数据
@@ -433,12 +426,12 @@ CREATE INDEX idx_pmis_oplog_created ON pmis_log.pmis_operation_log (created_at);
 
 -- 初始化超级管理员
 -- 默认 admin 账号 (盐: pmis_salt_8, 密码: admin123, 哈希: MD5('admin123pmis_salt_8'))
-INSERT INTO pmis.pmis_user_account (username, password, salt, status, created_by)
+INSERT INTO pmis_user_account (username, password, salt, status, created_by)
 VALUES ('admin', MD5('admin123' || 'pmis_salt_8'), 'pmis_salt_8', 'ENABLED', 0)
 ON CONFLICT (username, deleted) DO NOTHING;
 
 -- 初始化职级 (L1-L18)
-INSERT INTO pmis.pmis_job_level (level_code, level_name, level_segment, sort_order, description, created_by)
+INSERT INTO pmis_job_level (level_code, level_name, level_segment, sort_order, description, created_by)
 VALUES
     ('L1',  '助理工程师',   'PRIMARY',   1,  '0-1 年（应届大专/中专）', 0),
     ('L2',  '初级开发工程师','PRIMARY',  2,  '0-1 年（应届本科）', 0),
@@ -461,7 +454,7 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 初始化职级费率 (V3.2 双列直出)
-INSERT INTO pmis.pmis_job_level_rate
+INSERT INTO pmis_job_level_rate
 (level_code, external_daily, internal_daily, base_salary, social_company, social_personal, fund_company, fund_personal, take_home, total_cost, billable_target, effective_date, version, created_by)
 VALUES
     ('L1',  400,  200,  4000,  980,  430,  200,  200,  3370,  5180,  0.78, '2026-01-01', 1, 0),
@@ -485,17 +478,17 @@ VALUES
 ON CONFLICT DO NOTHING;
 
 -- 初始化根部门
-INSERT INTO pmis.pmis_department (dept_code, dept_name, parent_id, dept_path, sort_order, status, created_by)
+INSERT INTO pmis_department (dept_code, dept_name, parent_id, dept_path, sort_order, status, created_by)
 VALUES ('ROOT', '南京云顶数字科技有限公司', 0, '/1', 0, 'ENABLED', 0)
 ON CONFLICT DO NOTHING;
 
 -- 初始化超级管理员角色
-INSERT INTO pmis.pmis_role (role_code, role_name, data_scope, sort_order, status, created_by)
+INSERT INTO pmis_role (role_code, role_name, data_scope, sort_order, status, created_by)
 VALUES ('SUPER_ADMIN', '超级管理员', 'ALL', 0, 'ENABLED', 0)
 ON CONFLICT DO NOTHING;
 
 -- 初始化字典类型（PRD 2.3 节要求）
-INSERT INTO pmis.pmis_dict_type (type_code, type_name, description, created_by) VALUES
+INSERT INTO pmis_dict_type (type_code, type_name, description, created_by) VALUES
     ('procurement_method', '招采方式', '招采方式枚举', 0),
     ('project_type', '项目类型', '8 类项目类型', 0),
     ('product_type', '产品类型', '产品线', 0),
@@ -509,7 +502,7 @@ INSERT INTO pmis.pmis_dict_type (type_code, type_name, description, created_by) 
 ON CONFLICT DO NOTHING;
 
 -- 初始化项目类型字典项
-INSERT INTO pmis.pmis_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
+INSERT INTO pmis_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
     ('project_type', 'SYSTEM_DEV',     '系统开发',   1, 0),
     ('project_type', 'SYSTEM_INTEG',   '系统集成',   2, 0),
     ('project_type', 'SYSTEM_MAINT',   '系统维护',   3, 0),
@@ -521,7 +514,7 @@ INSERT INTO pmis.pmis_dict_item (type_code, item_code, item_value, sort_order, c
 ON CONFLICT DO NOTHING;
 
 -- 初始化项目阶段字典项
-INSERT INTO pmis.pmis_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
+INSERT INTO pmis_dict_item (type_code, item_code, item_value, sort_order, created_by) VALUES
     ('project_phase', 'REQUIREMENT', '需求调研', 1, 0),
     ('project_phase', 'DEVELOPMENT', '功能开发', 2, 0),
     ('project_phase', 'TESTING',     '测试阶段', 3, 0),
@@ -531,7 +524,7 @@ INSERT INTO pmis.pmis_dict_item (type_code, item_code, item_value, sort_order, c
 ON CONFLICT DO NOTHING;
 
 -- 初始化系统配置
-INSERT INTO pmis_cfg.pmis_config (config_group, config_key, config_value, value_type, description, created_by) VALUES
+INSERT INTO pmis_config (config_group, config_key, config_value, value_type, description, created_by) VALUES
     ('system', 'system.name', 'PMIS 项目运营管理系统', 'STRING', '系统名称', 0),
     ('system', 'system.version', '1.0.0', 'STRING', '系统版本', 0),
     ('rate', 'rate.social.company.rate', '0.245', 'NUMBER', '公司社保比例', 0),

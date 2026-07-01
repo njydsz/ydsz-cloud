@@ -32,7 +32,7 @@
     <!-- 按 group 查询全部配置（XML 版,与 @Select 注解保持一致) -->
     <select id="selectByGroup" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_cfg.pmis_config
+        FROM pmis_config
         WHERE config_group = #{group}
           AND deleted = 0
         ORDER BY sort_order ASC, id ASC
@@ -41,7 +41,7 @@
     <!-- 按 group + key 唯一查询 -->
     <select id="selectByGroupAndKey" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_cfg.pmis_config
+        FROM pmis_config
         WHERE config_group = #{group}
           AND config_key   = #{key}
           AND deleted = 0
@@ -51,7 +51,7 @@
     <!-- 公开配置(前端可见) -->
     <select id="selectPublic" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_cfg.pmis_config
+        FROM pmis_config
         WHERE is_public = 1
           AND deleted = 0
         ORDER BY sort_order ASC, id ASC
@@ -59,7 +59,7 @@
 
     <!-- 按 group 删除所有配置(级联清理用) -->
     <update id="deleteByGroup">
-        UPDATE pmis_cfg.pmis_config
+        UPDATE pmis_config
         SET deleted = 1, updated_at = CURRENT_TIMESTAMP
         WHERE config_group = #{group}
           AND deleted = 0
@@ -67,7 +67,7 @@
 
     <!-- 按 group 启用/停用批量 -->
     <update id="updateStatusByGroup">
-        UPDATE pmis_cfg.pmis_config
+        UPDATE pmis_config
         SET status = #{status}, updated_at = CURRENT_TIMESTAMP
         WHERE config_group = #{group}
           AND deleted = 0

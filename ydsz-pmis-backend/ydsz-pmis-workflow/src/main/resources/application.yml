@@ -29,9 +29,9 @@ spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:pmis}?currentSchema=${DB_SCHEMA:pmis}
-    username: ${DB_USER:pmis}
-    password: ${DB_PASSWORD:pmis}
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:Limw1020}
   data:
     redis:
       host: ${REDIS_HOST:127.0.0.1}

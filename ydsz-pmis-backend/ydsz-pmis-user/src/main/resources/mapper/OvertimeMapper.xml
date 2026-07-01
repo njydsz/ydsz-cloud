@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.user.mapper.OvertimeMapper">
+<mapper namespace="com.njydsz.user.mapper.OvertimeMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.user.entity.OvertimeDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.user.entity.OvertimeDO">
         <id property="id" column="id"/>
         <result property="overtimeCode" column="overtime_code"/>
         <result property="employeeId" column="employee_id"/>
@@ -28,17 +28,17 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis.pmis_overtime WHERE deleted = 0 AND overtime_code = #{overtimeCode} LIMIT 1
+        SELECT * FROM pmis_overtime WHERE deleted = 0 AND overtime_code = #{overtimeCode} LIMIT 1
     </select>
 
     <select id="selectByEmployee" resultMap="BaseResultMap">
-        SELECT * FROM pmis.pmis_overtime
+        SELECT * FROM pmis_overtime
         WHERE deleted = 0 AND employee_id = #{employeeId}
         ORDER BY overtime_date DESC
     </select>
 
     <select id="selectByStatus" resultMap="BaseResultMap">
-        SELECT * FROM pmis.pmis_overtime
+        SELECT * FROM pmis_overtime
         WHERE deleted = 0 AND approval_status = #{approvalStatus}
         ORDER BY overtime_date DESC
     </select>

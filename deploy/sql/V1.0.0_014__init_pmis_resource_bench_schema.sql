@@ -1,16 +1,15 @@
--- =====================================================
+﻿-- =====================================================
 -- PMIS 批次11 DDL：资源池 + 人员标签 + 资源分配 + Bench 闲置
 -- 版本: V1.0.0_014
 -- 描述: 资源池(pmis_resource_pool)、人员标签(pmis_employee_tag)、
 --       资源分配(pmis_resource_assignment)、Bench 闲置(pmis_bench_record)
--- Schema: pmis
 -- =====================================================
 
 -- =====================================================
 -- 1. 资源池主表 pmis_resource_pool
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_resource_pool;
-CREATE TABLE pmis.pmis_resource_pool (
+DROP TABLE IF EXISTS pmis_resource_pool;
+CREATE TABLE pmis_resource_pool (
     id                  BIGSERIAL PRIMARY KEY,
     pool_code           VARCHAR(64)  NOT NULL,
     pool_name           VARCHAR(256) NOT NULL,
@@ -29,15 +28,15 @@ CREATE TABLE pmis.pmis_resource_pool (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_prp_code UNIQUE (pool_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_resource_pool IS '资源池（总部/事业部/备用三级）';
-CREATE INDEX idx_prp_type_status ON pmis.pmis_resource_pool(pool_type, status);
-CREATE INDEX idx_prp_dept ON pmis.pmis_resource_pool(department_id);
+COMMENT ON TABLE pmis_resource_pool IS '资源池（总部/事业部/备用三级）';
+CREATE INDEX idx_prp_type_status ON pmis_resource_pool(pool_type, status);
+CREATE INDEX idx_prp_dept ON pmis_resource_pool(department_id);
 
 -- =====================================================
 -- 2. 人员标签表 pmis_employee_tag
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_employee_tag;
-CREATE TABLE pmis.pmis_employee_tag (
+DROP TABLE IF EXISTS pmis_employee_tag;
+CREATE TABLE pmis_employee_tag (
     id                  BIGSERIAL PRIMARY KEY,
     employee_id         BIGINT       NOT NULL,
     tag_type            VARCHAR(32)  NOT NULL,                 -- SKILL/INDUSTRY/DOMAIN/CERT
@@ -53,15 +52,15 @@ CREATE TABLE pmis.pmis_employee_tag (
     deleted             SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pet_emp_tag UNIQUE (employee_id, tag_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_employee_tag IS '人员标签（技能/行业/领域/资质）';
-CREATE INDEX idx_pet_emp ON pmis.pmis_employee_tag(employee_id);
-CREATE INDEX idx_pet_type ON pmis.pmis_employee_tag(tag_type, tag_code);
+COMMENT ON TABLE pmis_employee_tag IS '人员标签（技能/行业/领域/资质）';
+CREATE INDEX idx_pet_emp ON pmis_employee_tag(employee_id);
+CREATE INDEX idx_pet_type ON pmis_employee_tag(tag_type, tag_code);
 
 -- =====================================================
 -- 3. 资源分配主表 pmis_resource_assignment
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_resource_assignment;
-CREATE TABLE pmis.pmis_resource_assignment (
+DROP TABLE IF EXISTS pmis_resource_assignment;
+CREATE TABLE pmis_resource_assignment (
     id                    BIGSERIAL PRIMARY KEY,
     assignment_code       VARCHAR(64)  NOT NULL,
     employee_id           BIGINT       NOT NULL,
@@ -87,17 +86,17 @@ CREATE TABLE pmis.pmis_resource_assignment (
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pra_code UNIQUE (assignment_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_resource_assignment IS '资源分配记录（预占/入场/调岗/离场）';
-CREATE INDEX idx_pra_emp ON pmis.pmis_resource_assignment(employee_id);
-CREATE INDEX idx_pra_initiation ON pmis.pmis_resource_assignment(initiation_id);
-CREATE INDEX idx_pra_status ON pmis.pmis_resource_assignment(status);
-CREATE INDEX idx_pra_pool ON pmis.pmis_resource_assignment(pool_id, status);
+COMMENT ON TABLE pmis_resource_assignment IS '资源分配记录（预占/入场/调岗/离场）';
+CREATE INDEX idx_pra_emp ON pmis_resource_assignment(employee_id);
+CREATE INDEX idx_pra_initiation ON pmis_resource_assignment(initiation_id);
+CREATE INDEX idx_pra_status ON pmis_resource_assignment(status);
+CREATE INDEX idx_pra_pool ON pmis_resource_assignment(pool_id, status);
 
 -- =====================================================
 -- 4. Bench 闲置记录表 pmis_bench_record
 -- =====================================================
-DROP TABLE IF EXISTS pmis.pmis_bench_record;
-CREATE TABLE pmis.pmis_bench_record (
+DROP TABLE IF EXISTS pmis_bench_record;
+CREATE TABLE pmis_bench_record (
     id                    BIGSERIAL PRIMARY KEY,
     bench_code            VARCHAR(64)  NOT NULL,
     employee_id           BIGINT       NOT NULL,
@@ -121,16 +120,16 @@ CREATE TABLE pmis.pmis_bench_record (
     deleted               SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uk_pbr_code UNIQUE (bench_code, deleted)
 );
-COMMENT ON TABLE pmis.pmis_bench_record IS 'Bench 闲置记录（自动入池/出池/成本量化）';
-CREATE INDEX idx_pbr_emp ON pmis.pmis_bench_record(employee_id);
-CREATE INDEX idx_pbr_status ON pmis.pmis_bench_record(status, bench_date);
-CREATE INDEX idx_pbr_pool ON pmis.pmis_bench_record(pool_id, status);
-CREATE INDEX idx_pbr_date ON pmis.pmis_bench_record(bench_date, exit_date);
+COMMENT ON TABLE pmis_bench_record IS 'Bench 闲置记录（自动入池/出池/成本量化）';
+CREATE INDEX idx_pbr_emp ON pmis_bench_record(employee_id);
+CREATE INDEX idx_pbr_status ON pmis_bench_record(status, bench_date);
+CREATE INDEX idx_pbr_pool ON pmis_bench_record(pool_id, status);
+CREATE INDEX idx_pbr_date ON pmis_bench_record(bench_date, exit_date);
 
 -- =====================================================
 -- 5. 初始化三级资源池（HQ/DIVISION/RESERVE）
 -- =====================================================
-INSERT INTO pmis.pmis_resource_pool
+INSERT INTO pmis_resource_pool
     (pool_code, pool_name, pool_type, department_id, department_name, level_range, headcount, billable_target, status, tenant_id, provider_trace_id)
 VALUES
     ('POOL-HQ-GLOBAL',        '总部高级资源池',   'HQ',       1, '总部',  'L13+', 0, 0, 'ACTIVE', 1, 'init'),

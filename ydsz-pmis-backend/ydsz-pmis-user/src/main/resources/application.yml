@@ -16,9 +16,9 @@ spring:
         file-extension: yaml
         namespace: ${NACOS_NAMESPACE:}
   datasource:
-    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:pmis}?useUnicode=true&characterEncoding=utf8
-    username: ${DB_USER:pmis}
-    password: ${DB_PASSWORD:pmis}
+    url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?useUnicode=true&characterEncoding=utf8
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:Limw1020}
     driver-class-name: org.postgresql.Driver
     type: com.alibaba.druid.pool.DruidDataSource
   data:
