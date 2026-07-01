@@ -1,13 +1,13 @@
 /**
- * 敏感操作二次认证 Composable
+ * @file 敏感操作二次认证 Composable
+ * @description 维护二次认证弹窗状态机、表单、异步颁发 token；提供 withReAuth 装饰器包装业务调用
+ * @module composables/useReAuth
  *
- * <p>提供高层 API：
- * <ul>
- *   <li>{@link useReAuth}：维护弹窗状态机 / 表单 / 异步颁发</li>
- *   <li>{@link withReAuth}：以装饰器方式包装业务调用，自动弹窗→颁发→重放</li>
- * </ul>
+ * 提供高层 API：
+ *  - useReAuth：维护弹窗状态机 / 表单 / 异步颁发
+ *  - withReAuth：以装饰器方式包装业务调用，自动弹窗→颁发→重放
  *
- * <p>典型用法（删除用户）：
+ * 典型用法（删除用户）：
  * ```ts
  * const { withReAuth, dialog } = useReAuth({
  *   operationCode: 'USER_DELETE',

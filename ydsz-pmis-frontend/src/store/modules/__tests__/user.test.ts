@@ -10,6 +10,19 @@ vi.mock('@/api/user', () => ({
   getUserInfoApi: vi.fn(),
 }))
 
+// Mock permission store（clearAuth 调用 reset，避免引入 router 全链）
+const mockReset = vi.fn()
+vi.mock('@/store/modules/permission', () => ({
+  usePermissionStore: () => ({
+    reset: mockReset,
+    generateRoutes: vi.fn(),
+    isDynamicRouteLoaded: false,
+    routes: [],
+    addRoutes: [],
+    sidebarRoutes: [],
+  }),
+}))
+
 import { loginApi, getUserInfoApi, logoutApi } from '@/api/user'
 
 describe('user store', () => {
@@ -84,5 +97,28 @@ describe('user store', () => {
 
     expect(store.token).toBe('')
     expect(auth.removeToken).toHaveBeenCalled()
+  })
+
+  it('logout should reset permission store dynamic routes (P0-1 安全改造)', async () => {
+    // 防止切换账号后上一个账号菜单残留
+    vi.mocked(logoutApi).mockResolvedValue({
+      code: 0,
+      message: 'ok',
+      data: null,
+      timestamp: Date.now(),
+    })
+
+    const store = useUserStore()
+    store.token = 'abc'
+    await store.logout()
+
+    expect(mockReset).toHaveBeenCalled()
+  })
+
+  it('clearAuth should reset permission store dynamic routes', () => {
+    const store = useUserStore()
+    store.token = 'abc'
+    store.clearAuth()
+    expect(mockReset).toHaveBeenCalled()
   })
 })

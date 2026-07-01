@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest'
-import { constantRoutes } from '@/router/routes'
+import { asyncRoutes } from '@/router/routes'
 
 /**
- * 路由表结构测试（批次18 增量）
+ * 路由表结构测试（批次18 增量，批次25 P0-1 适配）
+ *
+ * 业务路由已迁移至 asyncRoutes（避免静态路由绕过权限），constantRoutes 仅保留 login/404/dashboard/profile/cockpit/catch-all。
  *
  * 验证：
  *  - /report 父路由包含 executive 子路由
@@ -11,11 +13,11 @@ import { constantRoutes } from '@/router/routes'
  *  - 子路由 meta.title 非空
  *
  * @author ydsz-pmis-team
- * @since 1.0.0 (批次18)
+ * @since 1.0.0 (批次18, 批次25 P0-1 适配)
  */
 describe('routes 路由表结构（批次18 增量）', () => {
   function findRoute(fullPath: string): any | undefined {
-    for (const r of constantRoutes) {
+    for (const r of asyncRoutes) {
       if (r.path === fullPath) return r
       if (r.children) {
         for (const c of r.children) {
@@ -28,7 +30,7 @@ describe('routes 路由表结构（批次18 增量）', () => {
   }
 
   function findParent(path: string): any | undefined {
-    return constantRoutes.find((r) => r.path === path)
+    return asyncRoutes.find((r) => r.path === path)
   }
 
   it('/report 父路由应存在', () => {

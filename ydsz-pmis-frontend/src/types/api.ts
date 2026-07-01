@@ -76,14 +76,27 @@ export type PagedApiResponse<T> = ApiResponse<PageData<T>>
 /** 请求来源标识（与后端 X-Request-Source 对应） */
 export const PMIS_REQUEST_SOURCE = 'PMIS-FRONTEND'
 
-/** HTTP 业务错误码（与后端 ResultCode 对应） */
+/**
+ * HTTP 业务错误码（与后端 ResultCode 对应）
+ *
+ * - 0/200 成功；4xx 客户端错误；5xx 服务端错误
+ * - 1xxx 业务错误；2xxx 幂等/限流等中间件错误
+ */
 export enum ResultCode {
+  /** 业务成功（兼容 0 与 200 两种返回） */
   SUCCESS = 0,
+  /** 未授权：Token 缺失或失效 */
   UNAUTHORIZED = 401,
+  /** 已登录但无权限访问该资源 */
   FORBIDDEN = 403,
+  /** 资源不存在 */
   NOT_FOUND = 404,
+  /** 服务端异常 */
   SERVER_ERROR = 500,
+  /** 通用业务异常 */
   BIZ_ERROR = 1000,
+  /** 参数校验失败 */
   VALIDATION_ERROR = 1001,
+  /** 幂等冲突：重复提交 */
   IDEMPOTENT_CONFLICT = 2001
 }

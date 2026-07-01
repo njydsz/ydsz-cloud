@@ -1,23 +1,21 @@
 /**
- * 密码强度计算（与后端 PasswordPolicy.strength() 对齐）
+ * @file 密码强度计算 composable
+ * @description 与后端 PasswordPolicy.strength() 对齐的密码强度评估，支持 0-4 分制与改进建议
+ * @module composables/usePasswordStrength
  *
- * <p>评分规则（0-4）：
- * <ul>
- *   <li>长度 >= 8 加 1</li>
- *   <li>长度 >= 12 加 1</li>
- *   <li>同时包含大小写字母 加 1</li>
- *   <li>包含数字 加 1</li>
- *   <li>包含特殊字符 加 1</li>
- * </ul>
+ * 评分规则（0-4）：
+ *  - 长度 >= 8 加 1
+ *  - 长度 >= 12 加 1
+ *  - 同时包含大小写字母 加 1
+ *  - 包含数字 加 1
+ *  - 包含特殊字符 加 1
  *
- * <p>展示建议：
- * <ul>
- *   <li>0 - 极弱（红）</li>
- *   <li>1 - 弱（橙）</li>
- *   <li>2 - 中（黄）</li>
- *   <li>3 - 良（蓝）</li>
- *   <li>4 - 强（绿）</li>
- * </ul>
+ * 展示建议：
+ *  - 0 - 极弱（红）
+ *  - 1 - 弱（橙）
+ *  - 2 - 中（黄）
+ *  - 3 - 良（蓝）
+ *  - 4 - 强（绿）
  */
 
 const STRENGTH_RULES = [

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
+import { ElMessage } from 'element-plus'
 
 // Mock nprogress
 vi.mock('nprogress', () => ({
@@ -15,6 +16,7 @@ const mockUserStore = {
   userInfo: null as any,
   fetchUserInfo: vi.fn(),
   logout: vi.fn(),
+  hasPermission: vi.fn().mockReturnValue(true),
 }
 
 vi.mock('@/store/modules/user', () => ({
@@ -44,6 +46,7 @@ describe('router guard 路由守卫', () => {
     mockUserStore.userInfo = null
     mockUserStore.fetchUserInfo = vi.fn()
     mockUserStore.logout = vi.fn()
+    mockUserStore.hasPermission = vi.fn().mockReturnValue(true)
     mockPermissionStore.isDynamicRouteLoaded = false
     mockPermissionStore.generateRoutes = vi.fn()
 
@@ -132,5 +135,97 @@ describe('router guard 路由守卫', () => {
   it('afterEach 无 title 时使用默认标题', () => {
     afterEachHandler({ meta: {} })
     expect(document.title).toBe('PMIS 运营管理系统')
+  })
+})
+
+/**
+ * P0-1 路由权限码校验（批次25 新增）
+ *
+ * 验证：
+ *  - 无 permCode 的路由（如 dashboard、login）直接放行
+ *  - 有 permCode 且用户有权限 → 放行
+ *  - 有 permCode 且用户无权限 → 跳转 /404 + ElMessage.error 提示
+ */
+describe('router guard 权限码校验（P0-1 安全改造）', () => {
+  let beforeEachHandler: any
+
+  beforeEach(() => {
+    vi.clearAllMocks()
+    setActivePinia(createPinia())
+    mockUserStore.token = 'abc'
+    mockUserStore.userInfo = { id: 1, username: 'admin' }
+    mockPermissionStore.isDynamicRouteLoaded = true
+    mockUserStore.hasPermission = vi.fn().mockReturnValue(true)
+
+    beforeEachHandler = null
+    const routerMock = {
+      beforeEach: (h: any) => {
+        beforeEachHandler = h
+      },
+      afterEach: () => {},
+      onError: vi.fn(),
+    }
+    setupRouterGuard(routerMock)
+  })
+
+  it('路由无 meta.permCode 时（如 /dashboard）应放行', async () => {
+    const next = vi.fn()
+    await beforeEachHandler(
+      { path: '/dashboard', meta: { title: '仪表盘' } },
+      {},
+      next,
+    )
+    expect(next).toHaveBeenCalledWith()
+    expect(mockUserStore.hasPermission).not.toHaveBeenCalled()
+  })
+
+  it('路由有 permCode 且用户有权限应放行', async () => {
+    mockUserStore.hasPermission = vi.fn().mockReturnValue(true)
+    const next = vi.fn()
+    await beforeEachHandler(
+      {
+        path: '/system/user',
+        meta: { title: '用户管理', permCode: 'auth:user:list' },
+      },
+      {},
+      next,
+    )
+    expect(mockUserStore.hasPermission).toHaveBeenCalledWith('auth:user:list')
+    expect(next).toHaveBeenCalledWith()
+  })
+
+  it('路由有 permCode 且用户无权限应跳转 /404 并 ElMessage.error 提示', async () => {
+    mockUserStore.hasPermission = vi.fn().mockReturnValue(false)
+    const next = vi.fn()
+    await beforeEachHandler(
+      {
+        path: '/system/user',
+        meta: { title: '用户管理', permCode: 'auth:user:list' },
+      },
+      {},
+      next,
+    )
+    expect(mockUserStore.hasPermission).toHaveBeenCalledWith('auth:user:list')
+    expect(ElMessage.error).toHaveBeenCalledWith(
+      expect.stringContaining('无权限访问该页面'),
+    )
+    expect(next).toHaveBeenCalledWith({ path: '/404', replace: true })
+  })
+
+  it('超管权限 *:*:* 时所有路由都应放行', async () => {
+    mockUserStore.hasPermission = vi.fn().mockImplementation((perm: string) => {
+      // 模拟超管逻辑：permissions 包含 *:*:* 时全部返回 true
+      return perm === '*:*:*' || true
+    })
+    const next = vi.fn()
+    await beforeEachHandler(
+      {
+        path: '/agent/orchestration',
+        meta: { title: '多智能体编排', permCode: 'agent:orchestration:view' },
+      },
+      {},
+      next,
+    )
+    expect(next).toHaveBeenCalledWith()
   })
 })

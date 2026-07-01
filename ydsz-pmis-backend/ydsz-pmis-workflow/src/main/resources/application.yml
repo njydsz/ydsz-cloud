@@ -60,15 +60,6 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-# ============== PMIS 自建工作流引擎 ==============
-# 当前引擎：自研 pmis_flow_*（Warm-Flow 风格），兼容 BPMN 2.0 标准流程文件
-pmis:
-  flow:
-    # 引擎类型：PMIS（自研，固定值）
-    engine: PMIS
-    # BPMN XML 中允许的最大节点数（防 XXE / 大文件攻击）
-    max-nodes: 500
-
 management:
   endpoints:
     web:

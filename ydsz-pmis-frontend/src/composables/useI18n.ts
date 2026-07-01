@@ -1,7 +1,9 @@
 /**
- * i18n 国际化 composable (批次 20 P2-2)
+ * @file i18n 国际化 composable
+ * @description 轻量级实现，不引入 vue-i18n 大依赖；支持 zh-CN / en-US 切换、变量插值、localStorage 持久化
+ * @module composables/useI18n
  *
- * 轻量级实现, 不引入 vue-i18n 大依赖
+ * (批次 20 P2-2)
  *
  * 特性:
  *   1. 简单 key-value 翻译, 支持嵌套对象

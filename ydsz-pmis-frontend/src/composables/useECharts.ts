@@ -1,5 +1,7 @@
 /**
- * ECharts 通用 composable
+ * @file ECharts 通用 composable
+ * @description 提供声明式 ECharts 实例管理：自动 init / setOption / resize / dispose
+ * @module composables/useECharts
  *
  * 提供声明式 ECharts 实例管理：自动 init / setOption / resize / dispose。
  * 在 Vue 3 组件中通过 ref 绑定容器即可使用。

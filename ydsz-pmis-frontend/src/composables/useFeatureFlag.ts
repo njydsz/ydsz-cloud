@@ -1,7 +1,9 @@
 /**
- * useFeatureFlag composable (批次 20 P2-3)
+ * @file 特性开关 composable
+ * @description 提供特性开关的响应式判断能力，支持远程拉取 + 本地缓存 + 安全降级
+ * @module composables/useFeatureFlag
  *
- * 提供特性开关的响应式判断能力.
+ * (批次 20 P2-3)
  *
  * 用法:
  *   const { isEnabled, flags, refresh } = useFeatureFlag()

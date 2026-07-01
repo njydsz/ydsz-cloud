@@ -1,9 +1,11 @@
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-
 /**
- * 移动端响应式断点 composable（批次 19 P3-2 落地）
+ * @file 移动端响应式断点 composable
+ * @description 提供 4 个断点检测，对应 Element Plus Grid 断点；自动监听 resize 事件并响应式更新
+ * @module composables/useResponsive
  *
- * 提供 4 个断点检测，对应 Element Plus Grid 断点：
+ * (批次 19 P3-2 落地)
+ *
+ * 断点定义：
  * - xs: < 768px  (手机竖屏)
  * - sm: 768-992px  (平板竖屏)
  * - md: 992-1200px (平板横屏/小桌面)
@@ -25,6 +27,9 @@ import { onBeforeUnmount, onMounted, ref } from 'vue'
  * </template>
  * ```
  */
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+
+/** 设备类型枚举 */
 export type DeviceType = 'mobile' | 'tablet' | 'desktop' | 'wide'
 
 export interface UseResponsiveReturn {
@@ -44,10 +49,15 @@ export interface UseResponsiveReturn {
   device: import('vue').Ref<DeviceType>
 }
 
+/**
+ * 响应式断点 composable 入口
+ * @returns 包含 isMobile/isTablet/isDesktop/isWide/screenWidth/screenHeight/device 的响应式对象
+ */
 export function useResponsive(): UseResponsiveReturn {
   const screenWidth = ref(window.innerWidth)
   const screenHeight = ref(window.innerHeight)
 
+  // resize 回调：刷新尺寸
   const update = () => {
     screenWidth.value = window.innerWidth
     screenHeight.value = window.innerHeight
@@ -55,6 +65,7 @@ export function useResponsive(): UseResponsiveReturn {
 
   onMounted(() => {
     update()
+    // passive: true 提升滚动性能
     window.addEventListener('resize', update, { passive: true })
   })
 
@@ -67,7 +78,7 @@ export function useResponsive(): UseResponsiveReturn {
   const isDesktop = ref(screenWidth.value >= 1200 && screenWidth.value < 1920)
   const isWide = ref(screenWidth.value >= 1920)
 
-  // 响应式更新
+  // 响应式更新（监听 screenWidth 变化后重新计算标志位）
   const refresh = () => {
     isMobile.value = screenWidth.value < 768
     isTablet.value = screenWidth.value >= 768 && screenWidth.value < 1200
