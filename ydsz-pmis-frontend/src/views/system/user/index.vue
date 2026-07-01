@@ -195,6 +195,10 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 删除用户（敏感操作，需二次认证）
+ * @param row 待删除的用户行数据
+ */
 async function handleDelete(row: UserVO) {
   try {
     await ElMessageBox.confirm(`确认删除用户「${row.realName}」吗？`, '提示', { type: 'warning' })
@@ -208,6 +212,10 @@ async function handleDelete(row: UserVO) {
   })
 }
 
+/**
+ * 切换用户启停状态，二次确认后执行
+ * @param row 待切换状态的用户行数据
+ */
 async function handleToggleStatus(row: UserVO) {
   const next = (row as any).status === 'ENABLED' ? 'DISABLED' : 'ENABLED'
   try {
@@ -228,11 +236,16 @@ async function handleToggleStatus(row: UserVO) {
 const resetDialogVisible = ref(false)
 const resetUserId = ref<number | null>(null)
 const newPassword = ref('')
+/**
+ * 打开重置密码弹窗
+ * @param row 待重置密码的用户行数据
+ */
 async function openResetPwd(row: UserVO) {
   resetUserId.value = row.id
   newPassword.value = ''
   resetDialogVisible.value = true
 }
+/** 提交重置密码（敏感操作，需二次认证） */
 async function submitResetPwd() {
   if (!resetUserId.value) return
   if (!newPassword.value || newPassword.value.length < 6) {
@@ -250,6 +263,7 @@ async function submitResetPwd() {
 
 // ============= 二次认证 =============
 const has2fa = ref(false)
+/** 拉取当前管理员是否启用 2FA（用于决定二次认证可用方式） */
 async function fetch2faStatus() {
   try {
     const { data } = await get2faStatus()
@@ -268,6 +282,11 @@ const resetPwdReAuth = useReAuth({
   operationName: '重置用户密码',
 })
 
+/**
+ * 二次认证确认回调：将所选方式与凭证写入 reauth 对话框状态并触发确认
+ * @param reauth useReAuth 实例
+ * @param payload 认证方式与凭证
+ */
 function onReAuthConfirm(
   reauth: ReturnType<typeof useReAuth>,
   payload: { method: ReAuthMethod; password?: string; otp?: string; backupCode?: string },
@@ -279,6 +298,10 @@ function onReAuthConfirm(
   reauth.handleConfirm()
 }
 
+/**
+ * 二次认证取消回调
+ * @param reauth useReAuth 实例
+ */
 function onReAuthCancel(reauth: ReturnType<typeof useReAuth>) {
   reauth.handleCancel()
 }
