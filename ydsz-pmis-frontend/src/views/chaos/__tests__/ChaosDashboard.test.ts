@@ -1,14 +1,9 @@
 /**
- * chaos-dashboard 单元测试 (批次 24 P2-2)
- *
- * 覆盖:
- *   - 页面挂载不抛错
- *   - 实验列表渲染 (使用 mock api)
- *   - 启停开关 (toggle) 流程
- *   - Dry-Run 按钮
- *   - 清空历史
- *   - 图表容器存在
- *   - API 集成 (列表/历史/注册/清空/DryRun/启停)
+ * @file ChaosDashboard 混沌实验仪表盘 单元测试
+ * @description 批次 24 P2-2。覆盖页面挂载、KPI 与实验列表渲染、启停开关 toggle 流程、
+ *              Dry-Run 按钮、注册实验弹窗提交、清空历史、图表容器存在性，以及
+ *              API 集成 (列表/历史/注册/清空/DryRun/启停) 等场景
+ * @module views/chaos/__tests__/ChaosDashboard
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

@@ -1,16 +1,16 @@
-import { describe, it, expect } from 'vitest'
-import { constantRoutes, asyncRoutes } from '@/router/routes'
-
 /**
- * 路由表结构测试（批次25 P0-1 路由权限改造）
- *
- * 验证：
+ * @file 路由表结构 单元测试（批次25 P0-1 路由权限改造）
+ * @description 验证路由表静态/动态拆分与权限码配置：
  *  - constantRoutes 仅包含基础路由（login/404/dashboard/profile/cockpit/catch-all）
  *  - 业务路由全部迁移到 asyncRoutes
  *  - 业务路由必须配置 meta.permCode
  *  - /agent /report 等关键子路由结构与 keepAlive
  *  - 所有完整路径不重复
+ * @module router/__tests__/routes
  */
+import { describe, it, expect } from 'vitest'
+import { constantRoutes, asyncRoutes } from '@/router/routes'
+
 describe('routes 静态路由（constantRoutes）应仅含基础路由', () => {
   it('constantRoutes 顶级路径仅含 /login /404 / 和 catch-all', () => {
     const topPaths = constantRoutes.map((r) => r.path)

@@ -1,8 +1,23 @@
 /**
- * 报表 mock
+ * @file 报表模块 Mock 数据处理器
+ * @description 为执行/报表中心的统计类接口提供 Mock 数据,
+ *              覆盖利润、成本、回款台账、生命周期、利润汇总等报表端点。
+ * @module mock/handlers/report
  */
 import type { MockHandler } from './types'
 
+/**
+ * 报表模块 Mock 处理器集合
+ *
+ * 覆盖端点:
+ * - GET /execution/report/profit           利润概览
+ * - GET /execution/report/cost             成本结构占比
+ * - GET /execution/report/payment-ledger   回款台账
+ * - GET /execution/report/lifecycle        项目生命周期
+ * - GET /execution/report/profit-summary   利润汇总
+ *
+ * @returns 报表模块所有 Mock 处理器数组
+ */
 export const reportHandlers: MockHandler[] = [
   {
     method: 'GET',

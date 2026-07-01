@@ -1,10 +1,10 @@
 /**
- * Sentry 集成单元测试 (批次 20 P2-1)
- *
- * 注: Sentry SDK 是动态导入的, 这里只测试:
+ * @file Sentry 集成 单元测试 (批次 20 P2-1)
+ * @description Sentry SDK 动态导入，仅测试降级路径与状态管理：
  *   1. 降级路径: DSN 为空时不报错
  *   2. 降级路径: DSN 无效时 captureError 走 console.error
  *   3. 状态管理: setUser / closeSentry 不抛错
+ * @module utils/__tests__/sentry
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 

@@ -23,7 +23,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @Configuration
 @ComponentScan("com.njydsz.pmis.common")
-@Import({FeatureFlagAutoConfiguration.class, ChaosAutoConfiguration.class})
+@Import({FeatureFlagAutoConfiguration.class, ChaosAutoConfiguration.class, SentinelAutoConfiguration.class})
 @EnableAsync
 public class CommonAutoConfiguration {
 

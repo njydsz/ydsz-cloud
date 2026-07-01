@@ -1,13 +1,19 @@
+/**
+ * @file useReAuth 单元测试
+ * @description 验证二次认证组合式 API：dialog 状态管理、PASSWORD/TOTP/BACKUP_CODE 三种凭据校验、
+ *              close 取消等待、withReAuth 装饰器串联弹窗-颁发-业务流程及 withReAuthHeader 头注入。
+ * @module composables/__tests__/useReAuth
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useReAuth, withReAuthHeader } from '@/composables/useReAuth'
 
-// Mock reauth API
+/** 二次认证 token 颁发接口 mock */
 const mockIssue = vi.fn()
 vi.mock('@/api/user/reauth', () => ({
   issueReAuthToken: (...args: unknown[]) => mockIssue(...args),
 }))
 
-// Mock ElMessage
+// Mock ElMessage，避免 element-plus 真实渲染消息提示
 vi.mock('element-plus', () => ({
   ElMessage: { error: vi.fn(), success: vi.fn() },
 }))

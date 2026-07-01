@@ -1,10 +1,13 @@
 /**
- * useFeatureFlag 单元测试 (批次 20 P2-3)
+ * @file useFeatureFlag 单元测试
+ * @description 验证特性开关组合式 API：单次 check 接口调用、30s 缓存、请求失败降级
+ *              （SAFETY 类默认开启）、refresh 全量快照填充、loading 状态及 useFlag computed 默认值。
+ * @module composables/__tests__/useFeatureFlag
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { ref } from 'vue'
 
-// mock request
+// mock request，避免特性开关接口发起真实网络请求
 vi.mock('@/utils/request', () => ({
   request: vi.fn(),
 }))

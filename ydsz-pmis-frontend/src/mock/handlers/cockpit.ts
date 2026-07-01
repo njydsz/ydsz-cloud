@@ -1,9 +1,16 @@
 /**
- * 经营驾驶舱 mock
+ * @file 经营驾驶舱 Mock 数据处理器
+ * @description 为经营驾驶舱的项目群、高管 KPI、合同年度趋势、部门下钻等 API 路径提供 Mock 数据
+ * @module mock/handlers/cockpit
  */
 import type { MockHandler } from './types'
 
+/**
+ * 经营驾驶舱 Mock 处理器集合
+ * @returns {MockHandler[]} 覆盖项目群概览、高管 KPI、合同年度趋势、部门下钻等接口的 Mock 处理器
+ */
 export const cockpitHandlers: MockHandler[] = [
+  // ===== 项目群概览：各大区项目数、收入、健康度 =====
   {
     method: 'GET',
     path: '/execution/cockpit/project-group',
@@ -15,6 +22,7 @@ export const cockpitHandlers: MockHandler[] = [
       ],
     }),
   },
+  // ===== 高管 KPI 概览：合同总额、收入、利润、毛利率、利用率及 TOP 项目 =====
   {
     method: 'GET',
     path: '/execution/cockpit/executive',
@@ -33,6 +41,7 @@ export const cockpitHandlers: MockHandler[] = [
       ],
     }),
   },
+  // ===== 合同年度签订 / 回款趋势（多月序列） =====
   {
     method: 'GET',
     path: '/execution/cockpit/contract-yearly-trend',
@@ -42,6 +51,7 @@ export const cockpitHandlers: MockHandler[] = [
       receivedAmount: [800, 1000, 1300, 1200, 1500, 1800, 2000],
     }),
   },
+  // ===== 部门维度下钻：活跃项目数、收入、毛利 =====
   {
     method: 'GET',
     path: '/execution/cockpit/drill/dept',

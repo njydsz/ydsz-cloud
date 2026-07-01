@@ -1,6 +1,9 @@
 /**
- * dashboard/index.vue 单元测试
- * 批次 21 / P2 - 验证 useECharts composable 集成与 KPI 渲染
+ * @file Dashboard 首页仪表盘 单元测试
+ * @description 批次 21 / P2 - 验证 useECharts composable 集成与 KPI 渲染。覆盖 KPI 卡片数量与数值、
+ *              4 个图表容器、健康度饼图/EVM 柱图/预警 TOP5 配置、毛利率与利用率渲染、
+ *              周期切换下拉及组件卸载时 dispose 调用等场景
+ * @module views/dashboard/__tests__/Dashboard
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'

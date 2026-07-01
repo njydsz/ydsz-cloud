@@ -1,8 +1,14 @@
+/**
+ * @file 路由守卫 单元测试
+ * @description 验证 router guard 的登录态校验、动态路由加载、用户信息拉取失败降级、
+ *              afterEach 标题设置及 P0-1 安全改造的权限码校验（permCode 放行/拦截/超管放行）。
+ * @module router/__tests__/guard
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { ElMessage } from 'element-plus'
 
-// Mock nprogress
+// Mock nprogress，避免进度条在测试环境真实渲染
 vi.mock('nprogress', () => ({
   default: {
     start: vi.fn(),
@@ -11,6 +17,7 @@ vi.mock('nprogress', () => ({
   },
 }))
 
+/** 用户 store mock：覆盖 token / userInfo / fetchUserInfo / logout / hasPermission */
 const mockUserStore = {
   token: '' as string,
   userInfo: null as any,
@@ -23,6 +30,7 @@ vi.mock('@/store/modules/user', () => ({
   useUserStore: () => mockUserStore,
 }))
 
+/** 权限 store mock：覆盖动态路由加载状态与 generateRoutes */
 const mockPermissionStore = {
   isDynamicRouteLoaded: false as boolean,
   generateRoutes: vi.fn(),

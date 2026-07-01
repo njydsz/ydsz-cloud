@@ -1,5 +1,7 @@
 package com.njydsz.pmis.agent.service.impl;
 
+import com.alibaba.csp.sentinel.annotation.SentinelResource;
+import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -43,6 +45,7 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @SentinelResource(value = "agent:run", blockHandler = "runBlockHandler", fallback = "runFallback")
     public AgentPredictionDO run(AgentRunRequestDTO req) {
         AgentType type = validate(req);
         Agent agent = findAgent(type);
@@ -94,6 +97,30 @@ public class AgentServiceImpl implements AgentService {
         log.info("[Agent] 执行成功: type={} biz={} score={} level={} cost={}ms",
                 type, req.getBizRef(), result.getScore(), result.getAlertLevel(), cost);
         return record;
+    }
+
+    /**
+     * Sentinel 限流 BlockException 处理
+     *
+     * @param req 原始请求
+     * @param ex  限流异常
+     * @return 不返回（抛出业务异常）
+     */
+    public AgentPredictionDO runBlockHandler(AgentRunRequestDTO req, BlockException ex) {
+        log.warn("[Agent] Sentinel 限流: {}", ex.getClass().getSimpleName());
+        throw new BizException(BizErrorCode.RATE_LIMIT, "AI Agent 服务繁忙，请稍后再试");
+    }
+
+    /**
+     * Sentinel 降级 fallback 处理
+     *
+     * @param req 原始请求
+     * @param e   业务异常
+     * @return 不返回（抛出业务异常）
+     */
+    public AgentPredictionDO runFallback(AgentRunRequestDTO req, Throwable e) {
+        log.error("[Agent] Sentinel 降级: {}", e.getMessage());
+        throw new BizException(BizErrorCode.SERVICE_UNAVAILABLE, "AI Agent 服务暂不可用");
     }
 
     @Override

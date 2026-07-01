@@ -1,3 +1,9 @@
+/**
+ * @file permission store 单元测试
+ * @description 验证权限 Pinia store 的初始状态、generateRoutes 拉取菜单并标记已加载、
+ *              后端菜单拉取失败时回退静态路由、reset 清空路由状态等场景。
+ * @module store/modules/__tests__/permission
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 

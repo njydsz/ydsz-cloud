@@ -1,5 +1,7 @@
 /**
- * Vite 插件: 本地 Mock 数据服务器（批次 20 补齐 P1 vite-plugin-mock）
+ * @file Vite 插件: 本地 Mock 数据服务器（批次 20 补齐 P1 vite-plugin-mock）
+ * @description 在 Vite dev server 中拦截 /api/v1/* 请求并返回 Mock 数据,
+ *              使前端在后端未启动时也能独立运行; 关闭后请求透传至 proxy。
  *
  * 设计目标:
  * 1. 后端未启动时, 前端可独立运行 (开发联调、UI 调试、CI 截图测试)
@@ -15,6 +17,8 @@
  * - 启用: env.VITE_USE_MOCK=true
  * - 关闭: env.VITE_USE_MOCK=false
  * - 模拟延迟: env.VITE_MOCK_DELAY (ms, 默认 200)
+ *
+ * @module mock/vite-plugin-mock
  */
 import { Plugin } from 'vite'
 import { mockHandlers } from './handlers'
@@ -30,6 +34,15 @@ export interface MockPluginOptions {
   verbose?: boolean
 }
 
+/**
+ * Vite 插件工厂: 注册 PMIS 本地 Mock 中间件
+ *
+ * 在 dev server 中拦截 /api/v1/* 请求, 按方法+路径匹配 mockHandlers,
+ * 命中则注入延迟并返回统一响应结构, 未命中则透传给 proxy。
+ *
+ * @param options 插件配置项 (enabled/delay/prefix/verbose), 缺省时从 env 读取
+ * @returns Vite Plugin 实例 (仅在 serve 阶段生效)
+ */
 export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
   const {
     enabled = (import.meta.env?.VITE_USE_MOCK ?? 'true') === 'true',
@@ -138,6 +151,11 @@ export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
   }
 }
 
+/**
+ * 读取并解析请求体
+ * @param req Node 原生 IncomingMessage
+ * @returns Promise; 成功解析返回 JSON 对象, 解析失败或空 body 返回 null/原始字符串
+ */
 function readBody(req: any): Promise<unknown> {
   return new Promise((resolve) => {
     const chunks: Buffer[] = []

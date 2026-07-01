@@ -1,9 +1,16 @@
+/**
+ * @file v-permission 指令 单元测试
+ * @description 验证权限指令的注册、display:none 隐藏模式、.disabled 修饰符降级模式、
+ *              超管 *:*:* 放行、AND/OR 模式及 updated 钩子响应式更新与可恢复性。
+ * @module directives/__tests__/permission
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 
 // 直接测试 v-permission 指令中的 check 逻辑
 // 通过 setupPermissionDirective 注入到 mock app
 
+/** 用户 store mock：仅暴露 permissions 数组供指令读取 */
 const mockUserStore = {
   permissions: [] as string[],
 }

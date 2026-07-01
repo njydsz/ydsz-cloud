@@ -1,9 +1,16 @@
 /**
- * 执行模块 mock (WBS/工时/采购/费用/风险/利润/EVM/费率/双费率/模拟)
+ * @file 执行模块 Mock 数据处理器
+ * @description 为执行模块的 WBS、EVM、利用率排名、闲置成本、风险仪表盘、风险/预警/结项等 API 路径提供 Mock 数据
+ * @module mock/handlers/execution
  */
 import type { MockHandler } from './types'
 
+/**
+ * 执行模块 Mock 处理器集合
+ * @returns {MockHandler[]} 覆盖 WBS 分页、EVM 分页、高级报表、风险/预警/结项流程等接口的 Mock 处理器
+ */
 export const executionHandlers: MockHandler[] = [
+  // ===== WBS 任务分页查询（含编码、名称、父级、进度、负责人、状态） =====
   {
     method: 'GET',
     path: '/execution/wbs/page',
@@ -23,6 +30,7 @@ export const executionHandlers: MockHandler[] = [
       pages: 20,
     }),
   },
+  // ===== EVM 指标分页查询（含周期、CPI、SPI、健康度） =====
   {
     method: 'GET',
     path: '/execution/evm/page',
@@ -40,6 +48,7 @@ export const executionHandlers: MockHandler[] = [
       pages: 3,
     }),
   },
+  // ===== 利用率排名报表（员工维度） =====
   {
     method: 'GET',
     path: '/execution/advanced-report/utilization-rank',
@@ -51,6 +60,7 @@ export const executionHandlers: MockHandler[] = [
         utilization: 60 + (i * 2) % 40,
       })),
   },
+  // ===== 闲置成本月度报表 =====
   {
     method: 'GET',
     path: '/execution/advanced-report/bench-cost',
@@ -61,6 +71,7 @@ export const executionHandlers: MockHandler[] = [
         headcount: 3 + (i % 4),
       })),
   },
+  // ===== 风险仪表盘报表（项目维度的风险/告警计数） =====
   {
     method: 'GET',
     path: '/execution/advanced-report/risk-dashboard',
@@ -78,6 +89,7 @@ export const executionHandlers: MockHandler[] = [
       })),
   },
   // ====== E2E P1-6 风险预警流程 mock (批次 25) ======
+  // 风险分页查询（含标题、等级、类别、状态、影响金额）
   {
     method: 'GET',
     path: '/execution/risk/page',
@@ -100,6 +112,7 @@ export const executionHandlers: MockHandler[] = [
       }
     },
   },
+  // 新建风险（随机生成 ID，回填默认值）
   {
     method: 'POST',
     path: '/execution/risk',
@@ -118,6 +131,7 @@ export const executionHandlers: MockHandler[] = [
       }
     },
   },
+  // 风险评估（返回等级、评分、命中规则）
   {
     method: 'POST',
     path: '/execution/risk/{id}/evaluate',
@@ -129,6 +143,7 @@ export const executionHandlers: MockHandler[] = [
       evaluatedAt: new Date().toISOString(),
     }),
   },
+  // 预警分页查询（含编码、标题、等级、状态）
   {
     method: 'GET',
     path: '/execution/alert/page',
@@ -150,12 +165,14 @@ export const executionHandlers: MockHandler[] = [
       }
     },
   },
+  // 预警确认（ack）
   {
     method: 'POST',
     path: '/execution/alert/{id}/ack',
     handler: () => ({ success: true, status: 'ACKED' }),
   },
   // ====== E2E P1-6 结项流程 mock (批次 25) ======
+  // 结项分页查询（含编码、立项、类型、状态、原因）
   {
     method: 'GET',
     path: '/execution/project-closure/page',
@@ -176,6 +193,7 @@ export const executionHandlers: MockHandler[] = [
       pages: 2,
     }),
   },
+  // 新建结项（生成编码，回填默认状态）
   {
     method: 'POST',
     path: '/execution/project-closure',
@@ -193,11 +211,13 @@ export const executionHandlers: MockHandler[] = [
       }
     },
   },
+  // 更新结项状态（提交 / 受理 / 驳回等）
   {
     method: 'PUT',
     path: '/execution/project-closure/status',
     handler: () => ({ success: true }),
   },
+  // 结项详情查询
   {
     method: 'GET',
     path: '/execution/project-closure/{id}',

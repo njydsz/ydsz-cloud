@@ -1,3 +1,9 @@
+/**
+ * @file format 工具函数 单元测试
+ * @description 验证格式化工具：formatMoney 金额格式化（前缀/小数/空值降级）、
+ *              maskPhone 手机号脱敏、maskIdCard 身份证号脱敏等场景。
+ * @module utils/__tests__/format
+ */
 import { describe, it, expect } from 'vitest'
 import { formatMoney, maskPhone, maskIdCard } from '@/utils/format'
 

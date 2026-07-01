@@ -1,7 +1,8 @@
 /**
- * 简单的 UA / 客户端信息解析工具
- *
- * 用于会话管理、设备可视化场景。规则不追求完美，只对常见浏览器/系统做归类。
+ * @file device 设备检测工具函数
+ * @description 简单的 UA / 客户端信息解析工具。用于会话管理、设备可视化场景。
+ *              规则不追求完美，只对常见浏览器/系统做归类
+ * @module utils/device
  */
 
 export interface DeviceInfo {
@@ -15,8 +16,14 @@ export interface DeviceInfo {
   shortLabel: string
 }
 
+/** UA 解析结果缓存，避免相同 UA 重复正则匹配 */
 const uaCache = new Map<string, DeviceInfo>()
 
+/**
+ * 解析 User Agent 字符串，提取设备类型/操作系统/浏览器等信息
+ * @param ua User Agent 字符串，未传入时返回未知设备信息
+ * @returns 解析后的设备信息对象（含设备类型、操作系统、浏览器、短标签）
+ */
 export function parseUserAgent(ua?: string): DeviceInfo {
   if (!ua) return { device: 'UNKNOWN', os: '-', browser: '-', shortLabel: '未知设备' }
   if (uaCache.has(ua)) return uaCache.get(ua)!
@@ -53,7 +60,11 @@ export function parseUserAgent(ua?: string): DeviceInfo {
   return info
 }
 
-/** Element Plus 适用的图标名 */
+/**
+ * 根据 DeviceInfo 返回 Element Plus 适用的图标名
+ * @param device 设备类型 (DESKTOP/MOBILE/TABLET/UNKNOWN)
+ * @returns 对应的 Element Plus 图标组件名
+ */
 export function deviceIconName(device: DeviceInfo['device']): string {
   if (device === 'MOBILE') return 'Iphone'
   if (device === 'TABLET') return 'Tablet'

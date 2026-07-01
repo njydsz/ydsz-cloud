@@ -1,7 +1,7 @@
 /**
- * Feature Flag API 契约测试 (批次 20 P2-3)
- *
- * 验证 6 个 endpoint 的 method + path 命名符合后端实现.
+ * @file Feature Flag API 契约测试 (批次 20 P2-3)
+ * @description 验证 6 个 endpoint 的 method + path 命名符合后端实现.
+ * @module api/__tests__/feature-flag
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 

@@ -1,20 +1,15 @@
-import { describe, it, expect } from 'vitest'
-import { asyncRoutes } from '@/router/routes'
-
 /**
- * 路由表结构测试（批次18 增量，批次25 P0-1 适配）
- *
- * 业务路由已迁移至 asyncRoutes（避免静态路由绕过权限），constantRoutes 仅保留 login/404/dashboard/profile/cockpit/catch-all。
- *
- * 验证：
- *  - /report 父路由包含 executive 子路由
- *  - /report/executive 指向 executive 页面
- *  - 子路由启用 keepAlive
- *  - 子路由 meta.title 非空
- *
+ * @file 路由表结构 单元测试（批次18 增量，批次25 P0-1 适配）
+ * @description 业务路由已迁移至 asyncRoutes（避免静态路由绕过权限），constantRoutes 仅保留
+ *              login/404/dashboard/profile/cockpit/catch-all。验证 /report 父子路由结构、
+ *              keepAlive 配置、meta.title 非空及批次18 权限码常量。
+ * @module router/__tests__/routes-batch18
  * @author ydsz-pmis-team
  * @since 1.0.0 (批次18, 批次25 P0-1 适配)
  */
+import { describe, it, expect } from 'vitest'
+import { asyncRoutes } from '@/router/routes'
+
 describe('routes 路由表结构（批次18 增量）', () => {
   function findRoute(fullPath: string): any | undefined {
     for (const r of asyncRoutes) {

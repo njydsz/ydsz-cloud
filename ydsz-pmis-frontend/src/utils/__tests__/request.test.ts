@@ -1,5 +1,12 @@
+/**
+ * @file request 请求封装 单元测试
+ * @description 验证 axios service 拦截器逻辑：请求拦截器注入 Authorization / X-Trace-Id、
+ *              响应拦截器 code=0/200 resolve、业务失败 reject、401 系列 code 与 HTTP 401 触发 clearAuth。
+ * @module utils/__tests__/request
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 
+// Mock element-plus，避免 ElMessage 在测试环境真实渲染
 vi.mock('element-plus', () => ({
   ElMessage: {
     success: vi.fn(),
@@ -9,6 +16,7 @@ vi.mock('element-plus', () => ({
   },
 }))
 
+/** 用户 store mock：仅暴露 clearAuth 供 401 拦截器调用 */
 const mockUserStore = {
   clearAuth: vi.fn(),
 }
@@ -17,11 +25,13 @@ vi.mock('@/store/modules/user', () => ({
   useUserStore: () => mockUserStore,
 }))
 
+/** getToken mock：控制请求拦截器是否注入 Authorization 头 */
 const getTokenMock = vi.fn()
 vi.mock('@/utils/auth', () => ({
   getToken: () => getTokenMock(),
 }))
 
+// Mock traceId 生成，保证断言可预测
 vi.mock('@/utils/trace', () => ({
   generateTraceId: () => 'mock-trace-id-001',
 }))

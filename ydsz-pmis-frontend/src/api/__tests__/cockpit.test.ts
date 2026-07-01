@@ -1,3 +1,11 @@
+/**
+ * @file 经营驾驶舱 API 调用层 单元测试
+ * @description 验证驾驶舱(cockpit)概览、EVM 健康、bench 成本、利用率、下钻、
+ *   高管看板、预警、KPI 趋势等 REST 调用正确触发且 URL / Method / 参数透传正确.
+ * @module api/__tests__/cockpit
+ * @author ydsz-pmis-team
+ * @since 1.0.0 (批次18)
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/utils/request', () => ({

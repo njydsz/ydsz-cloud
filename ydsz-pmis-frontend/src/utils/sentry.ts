@@ -1,18 +1,18 @@
 /**
- * Sentry 错误监控前端集成 (批次 20 P2-1)
- *
- * 设计目标:
- *   1. 错误自动上报 (uncaught exception, unhandled rejection, Vue errorHandler)
- *   2. 性能监控 (路由切换耗时 + API 请求耗时)
- *   3. 用户上下文 (登录后绑定 userId, 登出后清理)
- *   4. Source Map 自动上传 (Vite plugin @sentry/vite-plugin)
- *   5. 仅生产环境生效, dev 环境跳过 (避免开发噪音)
- *   6. 动态加载 @sentry/* 包, 减少 bundle 体积
- *
- * 用法:
- *   import { initSentry, captureError, setUser } from '@/utils/sentry'
- *   if (import.meta.env.PROD) initSentry()
- *   setUser({ id: 1, username: 'admin' })
+ * @file sentry Sentry 错误监控配置工具
+ * @description Sentry 错误监控前端集成 (批次 20 P2-1)。
+ *              设计目标:
+ *                1. 错误自动上报 (uncaught exception, unhandled rejection, Vue errorHandler)
+ *                2. 性能监控 (路由切换耗时 + API 请求耗时)
+ *                3. 用户上下文 (登录后绑定 userId, 登出后清理)
+ *                4. Source Map 自动上传 (Vite plugin @sentry/vite-plugin)
+ *                5. 仅生产环境生效, dev 环境跳过 (避免开发噪音)
+ *                6. 动态加载 @sentry/* 包, 减少 bundle 体积
+ *              用法:
+ *                import { initSentry, captureError, setUser } from '@/utils/sentry'
+ *                if (import.meta.env.PROD) initSentry()
+ *                setUser({ id: 1, username: 'admin' })
+ * @module utils/sentry
  */
 import type { App } from 'vue'
 
@@ -39,15 +39,18 @@ export interface SentryConfig {
   beforeSend?: (event: unknown) => unknown | null
 }
 
+/** Sentry 是否已初始化，避免重复 init */
 let _initialized = false
+/** 动态加载的 @sentry/vue 模块引用，类型用弱化签名以兼容动态 import */
 let _sentryModule: Record<string, (...args: unknown[]) => unknown> | null = null
 
 /**
  * 动态初始化 Sentry
  *
- * @param app Vue 应用实例
- * @param router Vue Router 实例
  * @param config Sentry 配置
+ * @param app Vue 应用实例，传入后启用 Vue 集成
+ * @param router Vue Router 实例，传入后启用路由性能监控
+ * @returns Promise<void>，初始化完成或因 DSN 缺失/已初始化而跳过
  */
 export async function initSentry(
   config: SentryConfig,
@@ -129,6 +132,9 @@ export async function initSentry(
 
 /**
  * 手动上报错误
+ * @param err 错误对象或错误信息
+ * @param context 附加上下文信息，将作为 extra 字段一并上报
+ * @returns void，未初始化时降级到 console.error 输出
  */
 export function captureError(err: unknown, context?: Record<string, unknown>): void {
   if (!_initialized || !_sentryModule) {
@@ -145,6 +151,8 @@ export function captureError(err: unknown, context?: Record<string, unknown>): v
 
 /**
  * 绑定用户上下文
+ * @param user 用户信息对象，传入 null 表示清理用户上下文（登出场景）
+ * @returns void，未初始化时不执行任何操作
  */
 export function setUser(user: { id: string | number; username?: string; email?: string } | null): void {
   if (!_initialized || !_sentryModule) return
@@ -161,6 +169,10 @@ export function setUser(user: { id: string | number; username?: string; email?: 
 
 /**
  * 添加面包屑
+ * @param category 面包屑分类
+ * @param message 面包屑消息
+ * @param data 附加数据键值对
+ * @returns void，未初始化时不执行任何操作
  */
 export function addBreadcrumb(category: string, message: string, data?: Record<string, unknown>): void {
   if (!_initialized || !_sentryModule) return
@@ -174,6 +186,7 @@ export function addBreadcrumb(category: string, message: string, data?: Record<s
 
 /**
  * 关闭 Sentry (登出后)
+ * @returns void，未初始化时不执行任何操作
  */
 export function closeSentry(): void {
   if (!_initialized || !_sentryModule) return

@@ -1,9 +1,16 @@
 /**
- * 财务模块 mock (发票/回款/客户信用)
+ * @file 财务模块 Mock 数据处理器
+ * @description 为财务模块的发票、回款、客户信用等 API 路径提供 Mock 数据
+ * @module mock/handlers/finance
  */
 import type { MockHandler } from './types'
 
+/**
+ * 财务模块 Mock 处理器集合
+ * @returns {MockHandler[]} 覆盖发票分页、回款分页、客户信用分页等接口的 Mock 处理器
+ */
 export const financeHandlers: MockHandler[] = [
+  // ===== 发票分页查询（含发票号、金额、状态、开票日期、客户） =====
   {
     method: 'GET',
     path: '/finance/invoice/page',
@@ -23,6 +30,7 @@ export const financeHandlers: MockHandler[] = [
       pages: 6,
     }),
   },
+  // ===== 回款分页查询（含回款编码、金额、状态、到账日期、客户） =====
   {
     method: 'GET',
     path: '/finance/payment/page',
@@ -41,6 +49,7 @@ export const financeHandlers: MockHandler[] = [
       pages: 5,
     }),
   },
+  // ===== 客户信用分页查询（含评分、等级、逾期金额、最近更新时间） =====
   {
     method: 'GET',
     path: '/finance/customer-credit/page',

@@ -1,3 +1,11 @@
+/**
+ * @file AI Agent API 调用层 单元测试
+ * @description 验证 AI Agent 编排(orchestration)与预测(prediction)相关 REST 调用,
+ *   确保方法名 / URL / HTTP Method 一一对应, 参数正确透传.
+ * @module api/__tests__/agent
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 vi.mock('@/utils/request', () => ({

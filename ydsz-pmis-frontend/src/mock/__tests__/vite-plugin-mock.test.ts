@@ -1,12 +1,12 @@
 /**
- * viteMockPlugin 单元测试（批次 20 P1-3）
- *
- * 覆盖:
- * - 路由匹配: method+path 精确命中
- * - 未匹配时 fallback 到下一个中间件
- * - 响应格式 (code=0/message/data/timestamp/traceId)
- * - 多种 HTTP method 支持
- * - 未启用时直接 passthrough
+ * @file viteMockPlugin 单元测试（批次 20 P1-3）
+ * @description 验证 Vite Mock 中间件插件：
+ *   - 路由匹配: method+path 精确命中
+ *   - 未匹配时 fallback 到下一个中间件
+ *   - 响应格式 (code=0/message/data/timestamp/traceId)
+ *   - 多种 HTTP method 支持
+ *   - 未启用时直接 passthrough
+ * @module mock/__tests__/vite-plugin-mock
  */
 import { describe, it, expect, vi } from 'vitest'
 import { viteMockPlugin } from '../vite-plugin-mock'

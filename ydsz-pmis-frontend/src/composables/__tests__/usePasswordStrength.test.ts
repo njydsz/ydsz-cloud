@@ -1,3 +1,9 @@
+/**
+ * @file usePasswordStrength 单元测试
+ * @description 验证密码强度计算函数 calcPasswordStrength 的评分规则、等级映射、规则明细、
+ *              建议项生成及 percent / color 映射，覆盖空值、单类、多类组合等边界场景。
+ * @module composables/__tests__/usePasswordStrength
+ */
 import { describe, it, expect } from 'vitest'
 import { calcPasswordStrength } from '@/composables/usePasswordStrength'
 

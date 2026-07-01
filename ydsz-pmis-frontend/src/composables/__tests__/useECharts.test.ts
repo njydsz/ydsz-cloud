@@ -1,13 +1,23 @@
+/**
+ * @file useECharts 单元测试
+ * @description 验证 ECharts 组合式 API 的生命周期管理、空安全、幂等性及实际挂载场景，
+ *              覆盖容器 ref 为 null、API 方法集合、dispose 幂等等场景。
+ * @module composables/__tests__/useECharts
+ */
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import { ref } from 'vue'
 import { useECharts } from '@/composables/useECharts'
 
-// Mock ECharts
+/**
+ * ECharts 实例方法 mock 集合
+ * 用于替代真实 echarts.init 返回的实例方法，便于断言调用情况。
+ */
 const setOptionMock = vi.fn()
 const resizeMock = vi.fn()
 const disposeMock = vi.fn()
 const getOptionMock = vi.fn(() => ({}))
 
+/** 构造一个仅含 mock 方法的伪 ECharts 实例 */
 const echartsInstance = {
   setOption: setOptionMock,
   resize: resizeMock,

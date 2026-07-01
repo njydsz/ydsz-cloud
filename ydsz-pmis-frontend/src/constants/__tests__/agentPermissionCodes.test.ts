@@ -1,8 +1,8 @@
 /**
- * 权限码常量测试（批次 17 增量）
- *
- * 验证 AI Agent / 编排 / 预测 相关权限码完整且符合 <module>:<resource>:<action> 三段式规范。
- *
+ * @file AI Agent 权限码常量 单元测试
+ * @description 验证 AI Agent / 编排 / 预测 相关权限码完整且符合 <module>:<resource>:<action> 三段式规范，
+ *              覆盖新增权限码、ALL_PERMISSION_CODES 包含性及全局唯一性校验。
+ * @module constants/__tests__/agentPermissionCodes
  * @author ydsz-pmis-team
  * @since 1.0.0
  */

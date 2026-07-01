@@ -1,3 +1,9 @@
+/**
+ * @file Executive 高管报表 单元测试
+ * @description 覆盖批次18 Executive 高管看板的 kpiCards/healthGradeColor/severityTag/fmtYuan/pct1
+ *              派生逻辑 stub 验证、3 个核心 API 接口集成验证，以及 index.vue 轻量挂载场景
+ * @module views/report/executive/__tests__/Executive
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'

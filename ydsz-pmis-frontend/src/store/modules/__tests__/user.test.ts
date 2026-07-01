@@ -1,9 +1,15 @@
+/**
+ * @file user store 单元测试
+ * @description 验证用户 Pinia store 的登录态管理：login 设置 token、fetchUserInfo 拉取用户信息与权限、
+ *              hasPermission 超管放行、logout 清理鉴权与重置权限 store 动态路由（P0-1 安全改造）。
+ * @module store/modules/__tests__/user
+ */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
 import { useUserStore } from '@/store/modules/user'
 import * as auth from '@/utils/auth'
 
-// Mock API
+// Mock 用户相关 API，避免发起真实网络请求
 vi.mock('@/api/user', () => ({
   loginApi: vi.fn(),
   logoutApi: vi.fn(),

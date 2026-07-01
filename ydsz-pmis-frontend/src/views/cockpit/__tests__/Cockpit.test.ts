@@ -1,3 +1,9 @@
+/**
+ * @file Cockpit 运营驾驶舱 单元测试
+ * @description 覆盖批次18新增 API 接口集成验证、alertTone/alertMessage 派生逻辑 stub 验证，
+ *              以及 cockpit/index.vue 在 jsdom 环境下的轻量挂载（受 jsdom 限制仅验证不抛错与标题）
+ * @module views/cockpit/__tests__/Cockpit
+ */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
 import { defineComponent, h } from 'vue'

@@ -1,9 +1,17 @@
 /**
- * Auth 鉴权 mock
+ * @file 鉴权模块 Mock 数据处理器
+ * @description 为登录、登出、验证码等鉴权相关 API 路径提供 Mock 数据，
+ *              支持前端独立联调与权限链路验证
+ * @module mock/handlers/auth
  */
 import type { MockHandler } from './types'
 
+/**
+ * 鉴权模块 Mock 处理器集合
+ * @returns {MockHandler[]} 覆盖登录、登出、验证码获取等接口的 Mock 处理器
+ */
 export const authHandlers: MockHandler[] = [
+  // ===== 账号登录：admin/admin123 返回超级管理员令牌，其余账号返回普通令牌 =====
   {
     method: 'POST',
     path: '/auth/login',
@@ -20,11 +28,13 @@ export const authHandlers: MockHandler[] = [
       return { accessToken: 'mock-access-token', refreshToken: 'mock-refresh', expiresIn: 7200 }
     },
   },
+  // ===== 登出：Mock 直接返回成功 =====
   {
     method: 'POST',
     path: '/auth/logout',
     handler: () => ({ success: true }),
   },
+  // ===== 图形验证码：返回内联 SVG，便于无后端环境渲染 =====
   {
     method: 'GET',
     path: '/auth/captcha',

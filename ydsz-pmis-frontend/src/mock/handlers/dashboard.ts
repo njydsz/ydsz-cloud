@@ -1,9 +1,16 @@
 /**
- * 仪表盘 / Cockpit mock（KPI、健康度、趋势、TOP5）
+ * @file 首页仪表盘 Mock 数据处理器
+ * @description 为首页 Cockpit 的 KPI 概览、EVM 健康度、告警 TOP N、告警汇总、KPI 趋势等 API 路径提供 Mock 数据
+ * @module mock/handlers/dashboard
  */
 import type { MockHandler } from './types'
 
+/**
+ * 首页仪表盘 Mock 处理器集合
+ * @returns {MockHandler[]} 覆盖概览 KPI、EVM 健康度、TOP N 预警、告警汇总、KPI 趋势等接口的 Mock 处理器
+ */
 export const dashboardHandlers: MockHandler[] = [
+  // ===== 概览 KPI：活跃项目、收入、毛利、EVM 分布、利用率、闲置成本、健康度分布等 =====
   {
     method: 'GET',
     path: '/execution/cockpit/overview',
@@ -23,11 +30,13 @@ export const dashboardHandlers: MockHandler[] = [
       redProjects: 2,
     }),
   },
+  // ===== EVM 健康度分布（红 / 黄 / 绿项目数） =====
   {
     method: 'GET',
     path: '/execution/cockpit/evm-health',
     handler: () => ({ RED: 2, YELLOW: 5, NORMAL: 18 }),
   },
+  // ===== 预警 TOP N：项目维度告警等级与告警次数 =====
   {
     method: 'GET',
     path: '/execution/alert/cockpit/topn',
@@ -37,6 +46,7 @@ export const dashboardHandlers: MockHandler[] = [
       { projectCode: 'P003', projectName: '项目丙', alertLevel: 'RED', alertCount: 3 },
     ],
   },
+  // ===== 告警汇总：红黄告警数、总告警数、事件列表与头条事件 =====
   {
     method: 'GET',
     path: '/execution/cockpit/alert-summary',
@@ -48,6 +58,7 @@ export const dashboardHandlers: MockHandler[] = [
       topEvent: { title: 'EVM 红项目超限', description: '>3 个', severity: 'RED' },
     }),
   },
+  // ===== KPI 趋势：合同额 / 确认收入 / 成本 / 毛利 / 毛利率多月序列 =====
   {
     method: 'GET',
     path: '/execution/cockpit/kpi-trend',

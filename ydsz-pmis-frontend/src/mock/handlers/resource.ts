@@ -1,8 +1,20 @@
 /**
- * 资源模块 mock (资源池/资源分配/Bench/职级/标签)
+ * @file 资源模块 Mock 数据处理器
+ * @description 为资源池、资源分配、Bench 闲置等资源管理类接口提供 Mock 数据。
+ * @module mock/handlers/resource
  */
 import type { MockHandler } from './types'
 
+/**
+ * 资源模块 Mock 处理器集合
+ *
+ * 覆盖端点:
+ * - GET /user/resource/pool/page        资源池分页查询
+ * - GET /user/resource/assignment/page  资源分配分页查询
+ * - GET /user/resource/bench/page       Bench 闲置资源分页查询
+ *
+ * @returns 资源模块所有 Mock 处理器数组
+ */
 export const resourceHandlers: MockHandler[] = [
   {
     method: 'GET',

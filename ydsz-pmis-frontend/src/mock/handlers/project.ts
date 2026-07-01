@@ -168,5 +168,7 @@ export const projectHandlers: MockHandler[] = [
   },
 ]
 
-/** 暴露 stores 给其他 handler 模块复用 (风险/预警联动) */
+/**
+ * 暴露 stores 给其他 handler 模块复用 (风险/预警联动)
+ */
 export { initiationStore, contractStore, riskStore, alertStore }

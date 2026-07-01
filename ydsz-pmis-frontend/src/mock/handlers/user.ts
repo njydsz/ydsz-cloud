@@ -1,10 +1,36 @@
 /**
- * 用户模块 mock (用户/角色/权限/部门)
+ * @file 用户认证与会话模块 Mock 数据处理器
+ * @description 为用户信息、菜单权限、Token 刷新、2FA、会话管理等接口提供 Mock 数据。
  *
  * 对齐 src/api/user/* 的所有 endpoint
+ *
+ * @module mock/handlers/user
  */
 import type { MockHandler } from './types'
 
+/**
+ * 用户/认证模块 Mock 处理器集合
+ *
+ * 覆盖端点:
+ * - GET    /user/info                 当前用户信息 (兼容老路径)
+ * - GET    /user/menu                 当前用户菜单
+ * - GET    /user/permission           当前用户权限码
+ * - GET    /users/me                  当前用户信息 (实际端点)
+ * - POST   /users/me/password         修改当前用户密码
+ * - POST   /auth/refresh              刷新 Token
+ * - POST   /user/2fa/bind             2FA 绑定 (生成 secret/otpauthUri)
+ * - POST   /user/2fa/confirm          2FA 绑定确认
+ * - POST   /user/2fa/verify           2FA 验证
+ * - POST   /user/2fa/verify-backup    2FA 备份码验证
+ * - POST   /user/2fa/disable          2FA 关闭
+ * - GET    /user/2fa/me               2FA 状态查询
+ * - GET    /user/2fa/backup-codes     2FA 备份码查询
+ * - GET    /user/session/active       在线会话列表
+ * - DELETE /user/session/others       踢出其他会话
+ * - DELETE /user/session/admin/kick   管理员踢人会话
+ *
+ * @returns 用户/认证模块所有 Mock 处理器数组
+ */
 export const userHandlers: MockHandler[] = [
   // 兼容老路径
   {

@@ -1,5 +1,8 @@
 /**
- * i18n 单元测试 (批次 20 P2-2)
+ * @file useI18n 单元测试
+ * @description 验证国际化组合式 API：默认 locale、中英文翻译、变量插值、缺失 key 降级、
+ *              supportedLocales 列表及 setLocale 持久化到 localStorage 等场景。
+ * @module composables/__tests__/useI18n
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 

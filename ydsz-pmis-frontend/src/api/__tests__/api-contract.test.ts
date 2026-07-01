@@ -1,5 +1,8 @@
 /**
- * API 契约测试（批次 20 P1-2 补齐）
+ * @file API 契约测试（批次 20 P1-2 补齐）
+ * @description 校验前端 src/api/ 下所有 endpoint URL 与后端 controller 路径一一对应,
+ *   防止前端 URL 拼写错误 / 后端 controller 改名导致的运行时 404.
+ * @module api/__tests__/api-contract
  *
  * 目的:
  *   确保前端 src/api/ 下所有 endpoint URL 与后端 controller 路径一一对应

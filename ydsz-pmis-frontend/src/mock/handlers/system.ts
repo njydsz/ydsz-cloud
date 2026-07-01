@@ -1,5 +1,6 @@
 /**
- * 系统管理 mock
+ * @file 系统管理模块 Mock 数据处理器
+ * @description 为系统管理类接口提供 Mock 数据。
  *
  * 覆盖以下模块:
  * - 操作日志 (audit)
@@ -11,12 +12,35 @@
  * - 导入导出 (import-export)
  *
  * 注: 2FA/会话/用户相关 mock 见 user.ts
+ *
+ * @module mock/handlers/system
  */
 import type { MockHandler } from './types'
 
+/**
+ * 批量生成 Mock 列表数据
+ * @param n 生成的记录数量
+ * @param factory 单条记录工厂函数, 入参为序号 (从 1 开始)
+ * @returns 生成的记录数组
+ */
 const list = (n: number, factory: (i: number) => Record<string, unknown>) =>
   Array.from({ length: n }, (_, i) => factory(i + 1))
 
+/**
+ * 系统管理模块 Mock 处理器集合
+ *
+ * 覆盖端点:
+ * - GET /system/audit-log/page   操作日志分页查询
+ * - GET /system/config/page      系统配置分页查询
+ * - GET /system/config/by-key    按 key 查询系统配置
+ * - GET /system/dict/page        字典分页查询
+ * - GET /system/dict/type        字典类型查询
+ * - GET /system/dept/tree        部门树查询
+ * - GET /system/menu/tree        菜单树查询
+ * - GET /system/role/page        角色分页查询
+ *
+ * @returns 系统管理模块所有 Mock 处理器数组
+ */
 export const systemHandlers: MockHandler[] = [
   // ============ 操作日志 (审计) ============
   {

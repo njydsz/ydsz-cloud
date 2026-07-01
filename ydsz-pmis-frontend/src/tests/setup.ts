@@ -1,3 +1,11 @@
+/**
+ * @file Vitest 全局测试配置
+ * @description 提供 Vitest 运行时全局 setup 钩子: 在 beforeAll 中以 inline factory 形式
+ *   mock element-plus (保留真实组件导出, 仅替换 ElMessage / ElMessageBox 为 vi.fn),
+ *   并导出 elComponents 供测试用例通过 global.components 注册全局组件,
+ *   解决 jsdom 环境下模板渲染 "Component not resolved" 报错问题.
+ * @module tests/setup
+ */
 import { beforeAll, afterEach, vi } from 'vitest'
 import {
   ElButton,

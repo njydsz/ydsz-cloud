@@ -1,12 +1,13 @@
 /**
- * 混沌工程 mock (批次 24 P2-2)
- *
- * 模拟 ChaosController 接口, 维护一份内存中的实验表 + 注入历史。
- * 提供与真实后端完全一致的 URL/方法, 便于切到真实环境。
+ * @file 混沌工程 Mock 数据处理器
+ * @description 模拟 ChaosController 接口，维护一份内存中的实验表 + 注入历史。
+ *              提供与真实后端完全一致的 URL/方法，便于切到真实环境（批次 24 P2-2）。
+ * @module mock/handlers/chaos
  */
 import type { MockHandler } from './types'
 import type { ChaosExperiment, ChaosEvent } from '@/api/chaos/types'
 
+// 内存中的实验表：以 target（目标接口）为键
 const experiments: Record<string, ChaosExperiment> = {
   'ContractService.getContract': {
     type: 'LATENCY',
@@ -34,6 +35,7 @@ const experiments: Record<string, ChaosExperiment> = {
   },
 }
 
+// 注入历史事件序列（按时间倒序维护，查询时取最近 100 条）
 let historySeq: ChaosEvent[] = [
   { timestamp: Date.now() - 600_000, target: 'PaymentService.create', outcome: 'INJECTED', detail: '已注入 EXCEPTION' },
   { timestamp: Date.now() - 540_000, target: 'PaymentService.create', outcome: 'SKIPPED_PROBABILITY', detail: '未命中概率 0.85 > 0.3' },
@@ -42,12 +44,18 @@ let historySeq: ChaosEvent[] = [
   { timestamp: Date.now() - 120_000, target: 'PaymentService.create', outcome: 'INJECTED', detail: '已注入 EXCEPTION' },
 ]
 
+/**
+ * 混沌工程 Mock 处理器集合
+ * @returns {MockHandler[]} 覆盖实验查询/CRUD、启停、历史查询/清空、试运行等接口的 Mock 处理器
+ */
 export const chaosHandlers: MockHandler[] = [
+  // ===== 查询全部实验列表 =====
   {
     method: 'GET',
     path: '/chaos/experiments',
     handler: () => Object.values(experiments),
   },
+  // ===== 按 target 查询单个实验 =====
   {
     method: 'GET',
     path: '/chaos/experiments/{target}',
@@ -56,6 +64,7 @@ export const chaosHandlers: MockHandler[] = [
       return experiments[target] || null
     },
   },
+  // ===== 新建实验（target 必填，否则抛错） =====
   {
     method: 'POST',
     path: '/chaos/experiments',
@@ -66,6 +75,7 @@ export const chaosHandlers: MockHandler[] = [
       return { success: true }
     },
   },
+  // ===== 更新实验（按 target 覆盖） =====
   {
     method: 'PUT',
     path: '/chaos/experiments/{target}',
@@ -76,6 +86,7 @@ export const chaosHandlers: MockHandler[] = [
       return { success: true }
     },
   },
+  // ===== 启用 / 禁用实验 =====
   {
     method: 'PUT',
     path: '/chaos/experiments/{target}/enabled',
@@ -87,6 +98,7 @@ export const chaosHandlers: MockHandler[] = [
       return { success: true }
     },
   },
+  // ===== 删除实验 =====
   {
     method: 'DELETE',
     path: '/chaos/experiments/{target}',
@@ -96,11 +108,13 @@ export const chaosHandlers: MockHandler[] = [
       return { success: true }
     },
   },
+  // ===== 查询注入历史（最近 100 条，倒序返回） =====
   {
     method: 'GET',
     path: '/chaos/history',
     handler: () => historySeq.slice(-100).reverse(),
   },
+  // ===== 清空注入历史 =====
   {
     method: 'POST',
     path: '/chaos/history/clear',
@@ -109,6 +123,7 @@ export const chaosHandlers: MockHandler[] = [
       return { success: true }
     },
   },
+  // ===== 试运行：按实验配置判定是否注入，并写入历史 =====
   {
     method: 'POST',
     path: '/chaos/dry-run',
@@ -128,7 +143,11 @@ export const chaosHandlers: MockHandler[] = [
   },
 ]
 
-/** 暴露给 chaos-dashboard 页面使用, 单元测试中重置状态 */
+/**
+ * 重置混沌 Mock 状态
+ * @description 暴露给 chaos-dashboard 页面使用，单元测试中重置状态：清空实验表与注入历史
+ * @returns {void}
+ */
 export function __resetChaosMock() {
   Object.keys(experiments).forEach((k) => delete experiments[k])
   historySeq = []

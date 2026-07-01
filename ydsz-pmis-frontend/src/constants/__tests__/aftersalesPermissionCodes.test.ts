@@ -1,3 +1,9 @@
+/**
+ * @file 售后管理权限码 常量单元测试
+ * @description 验证售后模块（质保期、运维工单、满意度）权限码符合
+ *              module:resource:action 三段式命名规范，且所有权限码全局唯一。
+ * @module constants/__tests__/aftersalesPermissionCodes
+ */
 import { describe, it, expect } from 'vitest'
 import { PC } from '@/constants/permissionCodes'
 

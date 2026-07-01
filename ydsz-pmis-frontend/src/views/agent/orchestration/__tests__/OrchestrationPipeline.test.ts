@@ -1,3 +1,9 @@
+/**
+ * @file OrchestrationPipeline 编排流程图 单元测试
+ * @description 覆盖 Agent 编排流水线组件在 SEQUENTIAL/PARALLEL/VOTING/CASCADE 四种模式下的
+ *              节点与边渲染，以及有/无 result 时的节点告警等级着色、UNKNOWN/PENDING 描边等场景
+ * @module views/agent/orchestration/__tests__/OrchestrationPipeline
+ */
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import OrchestrationPipeline from '../components/OrchestrationPipeline.vue'
