@@ -1,3 +1,8 @@
+<!--
+  @file 数据导入导出
+  @description 统一数据导入导出页面：支持职级费率/内部费率/工时数据三类业务数据的批量导入，流程为「下载模板 → 上传文件 → 系统校验 → 反馈结果」，并提供错误报告下载。对应路由 /system/import-export。
+  @module views/system/import-export
+-->
 <template>
   <div class="import-export-page">
     <el-card class="page-header" shadow="never">

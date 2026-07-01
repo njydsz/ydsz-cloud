@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.project.dto.ContractChangeDTO;
 import com.njydsz.pmis.project.entity.ContractChangeDO;
@@ -35,12 +36,14 @@ public class ContractChangeController {
     private final ContractChangeService service;
 
     @Operation(summary = "提交变更申请")
+    @PrePermission("project:contract-change:create")
     @PostMapping
     public R<Long> apply(@Valid @RequestBody ContractChangeDTO dto) {
         return R.ok(service.apply(dto));
     }
 
     @Operation(summary = "提交审批")
+    @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/submit")
     public R<Void> submit(@PathVariable Long id) {
         service.submit(id);
@@ -48,6 +51,7 @@ public class ContractChangeController {
     }
 
     @Operation(summary = "审批通过")
+    @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/approve")
     public R<Void> approve(@PathVariable Long id,
                            @RequestParam Long approverId,
@@ -68,12 +72,14 @@ public class ContractChangeController {
     }
 
     @Operation(summary = "变更详情")
+    @PrePermission("project:contract-change:list")
     @GetMapping("/{id}")
     public R<ContractChangeDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
     }
 
     @Operation(summary = "分页查询")
+    @PrePermission("project:contract-change:list")
     @GetMapping("/page")
     public R<Page<ContractChangeDO>> page(
             @RequestParam(defaultValue = "1") int page,

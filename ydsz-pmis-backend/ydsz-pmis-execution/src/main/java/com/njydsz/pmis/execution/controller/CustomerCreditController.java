@@ -31,24 +31,28 @@ public class CustomerCreditController {
     private final CustomerCreditService service;
 
     @Operation(summary = "评估客户信用")
+    @PrePermission("finance:credit:assess")
     @PostMapping("/assess")
     public R<CustomerCreditDO> assess(@Valid @RequestBody CreditAssessmentDTO dto) {
         return R.ok(service.assess(dto));
     }
 
     @Operation(summary = "获取客户信用")
+    @PrePermission("finance:credit:list")
     @GetMapping("/customer/{customerId}")
     public R<CustomerCreditDO> getByCustomer(@PathVariable Long customerId) {
         return R.ok(service.getByCustomer(customerId));
     }
 
     @Operation(summary = "客户风险画像")
+    @PrePermission("finance:credit:list")
     @GetMapping("/profile/{customerId}")
     public R<Map<String, Object>> profile(@PathVariable Long customerId) {
         return R.ok(service.profile(customerId));
     }
 
     @Operation(summary = "信用分布")
+    @PrePermission("finance:credit:list")
     @GetMapping("/distribution")
     public R<List<Map<String, Object>>> distribution() {
         return R.ok(service.distribution());

@@ -1,13 +1,20 @@
+<!--
+  @file 部门管理
+  @description 部门管理页面：以树形结构展示部门层级，支持新增根部门/下级部门、编辑、删除（存在子部门时不允许删除）。对应路由 /system/dept。
+  @module views/system/dept
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listDeptTree, createDept, updateDept, deleteDept } from '@/api/system/dept'
 import type { DeptVO, DeptFormDTO } from '@/api/system/dept/types'
 
+// 树形数据与当前选中节点
 const loading = ref(false)
 const treeData = ref<DeptVO[]>([])
 const currentNode = ref<DeptVO | null>(null)
 
+// 新增/编辑弹窗状态（dialogMode 区分新建与编辑）
 const dialogVisible = ref(false)
 const dialogMode = ref<'create' | 'edit'>('create')
 const formRef = ref()
@@ -29,6 +36,7 @@ const formRules = {
   parentId: [{ required: true, message: '上级部门必填', trigger: 'change' }],
 }
 
+/** 拉取部门树形数据 */
 async function fetchTree() {
   loading.value = true
   try {
@@ -39,6 +47,7 @@ async function fetchTree() {
   }
 }
 
+/** 打开新增弹窗：parent 为空时新增根部门，否则新增其下级 */
 function openCreate(parent: DeptVO | null) {
   dialogMode.value = 'create'
   Object.assign(form, {
@@ -55,6 +64,7 @@ function openCreate(parent: DeptVO | null) {
   dialogVisible.value = true
 }
 
+/** 打开编辑弹窗，回填节点数据到表单 */
 function openEdit(node: DeptVO) {
   dialogMode.value = 'edit'
   Object.assign(form, {
@@ -71,6 +81,7 @@ function openEdit(node: DeptVO) {
   dialogVisible.value = true
 }
 
+/** 提交表单：根据 dialogMode 执行创建或更新，成功后刷新树 */
 async function submitForm() {
   await formRef.value?.validate()
   if (dialogMode.value === 'create') {
@@ -84,6 +95,7 @@ async function submitForm() {
   fetchTree()
 }
 
+/** 删除部门：存在子部门时阻止删除，否则二次确认后删除 */
 async function handleDelete(node: DeptVO) {
   if (node.children && node.children.length > 0) {
     ElMessage.warning('该部门下存在子部门,请先删除子部门')
@@ -99,6 +111,7 @@ async function handleDelete(node: DeptVO) {
   }
 }
 
+/** 行点击时记录当前选中节点 */
 function onNodeClick(node: DeptVO) {
   currentNode.value = node
 }
@@ -116,6 +129,7 @@ onMounted(fetchTree)
         <el-button :icon="'Refresh'" @click="fetchTree">刷新</el-button>
       </div>
 
+      <!-- 部门树形表格 -->
       <el-table
         v-loading="loading"
         :data="treeData"

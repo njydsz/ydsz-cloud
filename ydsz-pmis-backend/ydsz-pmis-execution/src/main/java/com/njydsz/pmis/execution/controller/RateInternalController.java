@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.RateInternalCreateDTO;
 import com.njydsz.pmis.execution.entity.RateInternalDO;
@@ -32,6 +33,7 @@ public class RateInternalController {
     private final RateInternalService service;
 
     @Operation(summary = "创建对内成本费率")
+    @PrePermission("execution:rate-internal:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody RateInternalCreateDTO dto) {
         return R.ok(service.create(dto));
@@ -45,6 +47,7 @@ public class RateInternalController {
     }
 
     @Operation(summary = "删除")
+    @PrePermission("execution:rate-internal:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -58,6 +61,7 @@ public class RateInternalController {
     }
 
     @Operation(summary = "命中有效成本费率（职级+部门+日期）")
+    @PrePermission("execution:rate:list")
     @GetMapping("/match")
     public R<RateInternalDO> match(
             @RequestParam String levelCode,
@@ -75,6 +79,7 @@ public class RateInternalController {
     }
 
     @Operation(summary = "分页")
+    @PrePermission("execution:rate:list")
     @GetMapping("/page")
     public R<Page<RateInternalDO>> page(
             @RequestParam(defaultValue = "1") int page,

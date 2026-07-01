@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.project.dto.ProjectChangeCreateDTO;
 import com.njydsz.pmis.project.dto.ProjectChangeStatusDTO;
@@ -42,12 +43,14 @@ public class ProjectChangeController {
     private final ProjectChangeService service;
 
     @Operation(summary = "创建项目变更")
+    @PrePermission("project:change:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
         return R.ok(service.create(dto));
     }
 
     @Operation(summary = "状态迁移")
+    @PrePermission("project:change:status")
     @PutMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody ProjectChangeStatusDTO dto) {
         service.changeStatus(dto);
@@ -55,6 +58,7 @@ public class ProjectChangeController {
     }
 
     @Operation(summary = "删除变更")
+    @PrePermission("project:change:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -69,6 +73,7 @@ public class ProjectChangeController {
     }
 
     @Operation(summary = "分页查询")
+    @PrePermission("project:change:list")
     @GetMapping("/page")
     public R<Page<ProjectChangeDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -81,12 +86,14 @@ public class ProjectChangeController {
     }
 
     @Operation(summary = "按项目查询变更列表")
+    @PrePermission("project:change:list")
     @GetMapping("/list-by-initiation/{initiationId}")
     public R<List<ProjectChangeDO>> listByInitiation(@PathVariable Long initiationId) {
         return R.ok(service.listByInitiation(initiationId));
     }
 
     @Operation(summary = "按变更类型聚合")
+    @PrePermission("project:change:list")
     @GetMapping("/aggregate/type")
     public R<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
         return R.ok(service.aggregateByType(tenantId));
@@ -100,6 +107,7 @@ public class ProjectChangeController {
     }
 
     @Operation(summary = "统计项目重大变更数")
+    @PrePermission("project:change:list")
     @GetMapping("/major-count/{initiationId}")
     public R<Long> countMajor(@PathVariable Long initiationId) {
         return R.ok(service.countMajorByInitiation(initiationId));
@@ -116,6 +124,7 @@ public class ProjectChangeController {
      * @return 合法目标状态码列表 (e.g. ["SUBMITTED", "CANCELLED"])
      */
     @Operation(summary = "获取合法状态迁移列表")
+    @PrePermission("project:change:list")
     @GetMapping("/{id}/allowed-transitions")
     public R<List<String>> getAllowedTransitions(@PathVariable Long id) {
         ProjectChangeDO change = service.getById(id);

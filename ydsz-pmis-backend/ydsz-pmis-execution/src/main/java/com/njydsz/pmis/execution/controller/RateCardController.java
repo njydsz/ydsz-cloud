@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.RateCardCreateDTO;
 import com.njydsz.pmis.execution.entity.RateCardDO;
@@ -32,6 +33,7 @@ public class RateCardController {
     private final RateCardService service;
 
     @Operation(summary = "创建对外报价费率")
+    @PrePermission("execution:rate-card:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody RateCardCreateDTO dto) {
         return R.ok(service.create(dto));
@@ -58,6 +60,7 @@ public class RateCardController {
     }
 
     @Operation(summary = "命中有效费率（职级+项目类型+客户等级+日期）")
+    @PrePermission("execution:rate:list")
     @GetMapping("/match")
     public R<RateCardDO> match(
             @RequestParam String levelCode,
@@ -74,6 +77,7 @@ public class RateCardController {
     }
 
     @Operation(summary = "分页")
+    @PrePermission("execution:rate:list")
     @GetMapping("/page")
     public R<Page<RateCardDO>> page(
             @RequestParam(defaultValue = "1") int page,

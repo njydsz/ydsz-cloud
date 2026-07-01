@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.project.dto.ContractTemplateCreateDTO;
 import com.njydsz.pmis.project.dto.ContractTemplateStatusDTO;
@@ -37,12 +38,14 @@ public class ContractTemplateController {
     private final ContractTemplateService service;
 
     @Operation(summary = "创建合同模板")
+    @PrePermission("project:contract-template:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody ContractTemplateCreateDTO dto) {
         return R.ok(service.create(dto));
     }
 
     @Operation(summary = "状态迁移")
+    @PrePermission("project:contract-template:publish")
     @PutMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody ContractTemplateStatusDTO dto) {
         service.changeStatus(dto);
@@ -50,6 +53,7 @@ public class ContractTemplateController {
     }
 
     @Operation(summary = "删除模板")
+    @PrePermission("project:contract-template:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -64,6 +68,7 @@ public class ContractTemplateController {
     }
 
     @Operation(summary = "分页查询")
+    @PrePermission("project:contract-template:list")
     @GetMapping("/page")
     public R<Page<ContractTemplateDO>> page(
             @RequestParam(defaultValue = "1") int page,

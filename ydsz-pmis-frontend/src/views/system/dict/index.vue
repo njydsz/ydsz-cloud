@@ -1,3 +1,8 @@
+<!--
+  @file 数据字典
+  @description 数据字典管理页面：左侧维护字典类型，右侧维护所选类型下的字典项，支持新增/编辑/删除及缓存刷新。对应路由 /system/dict。
+  @module views/system/dict
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -49,6 +54,7 @@ const itemFormRules = {
   itemValue: [{ required: true, message: '项值必填', trigger: 'blur' }],
 }
 
+/** 拉取字典类型列表，并默认选中首个类型 */
 async function fetchTypes() {
   const { data } = await listDictTypes()
   types.value = data || []
@@ -57,6 +63,7 @@ async function fetchTypes() {
   }
 }
 
+/** 选中某个字典类型，拉取其下的字典项 */
 async function selectType(t: DictTypeVO) {
   currentType.value = t
   itemsLoading.value = true
@@ -68,16 +75,19 @@ async function selectType(t: DictTypeVO) {
   }
 }
 
+/** 打开字典类型新增弹窗 */
 function openTypeCreate() {
   Object.assign(typeForm, { typeCode: '', typeName: '', description: '' })
   typeDialogVisible.value = true
 }
 
+/** 打开字典类型编辑弹窗，回填数据 */
 function openTypeEdit(t: DictTypeVO) {
   Object.assign(typeForm, { typeCode: t.typeCode, typeName: t.typeName, description: t.description })
   typeDialogVisible.value = true
 }
 
+/** 提交字典类型（仅新增），成功后刷新类型列表 */
 async function submitType() {
   await typeFormRef.value?.validate()
   if (!typeForm.typeCode) return
@@ -92,6 +102,7 @@ async function submitType() {
   fetchTypes()
 }
 
+/** 删除字典类型（其下字典项一并删除），二次确认后执行 */
 async function handleDeleteType(t: DictTypeVO) {
   try {
     await ElMessageBox.confirm(`确认删除字典类型「${t.typeName}」?该项下的字典项也会被删除`, '提示', { type: 'warning' })
@@ -107,6 +118,7 @@ async function handleDeleteType(t: DictTypeVO) {
   }
 }
 
+/** 打开字典项新增弹窗（需先选中字典类型） */
 function openItemCreate() {
   if (!currentType.value) {
     ElMessage.warning('请先选择字典类型')
@@ -124,6 +136,7 @@ function openItemCreate() {
   itemDialogVisible.value = true
 }
 
+/** 打开字典项编辑弹窗，回填数据 */
 function openItemEdit(item: DictItemVO) {
   itemDialogMode.value = 'edit'
   Object.assign(itemForm, {
@@ -137,6 +150,7 @@ function openItemEdit(item: DictItemVO) {
   itemDialogVisible.value = true
 }
 
+/** 提交字典项：根据 dialogMode 执行创建或更新，成功后刷新当前类型字典项 */
 async function submitItem() {
   await itemFormRef.value?.validate()
   if (itemDialogMode.value === 'create') {
@@ -150,6 +164,7 @@ async function submitItem() {
   if (currentType.value) selectType(currentType.value)
 }
 
+/** 删除字典项，二次确认后执行 */
 async function handleDeleteItem(item: DictItemVO) {
   try {
     await ElMessageBox.confirm(`确认删除字典项「${item.itemValue}」?`, '提示', { type: 'warning' })
@@ -161,6 +176,7 @@ async function handleDeleteItem(item: DictItemVO) {
   }
 }
 
+/** 刷新当前字典类型的缓存 */
 async function handleRefresh() {
   if (!currentType.value) return
   await refreshDictCache(currentType.value.typeCode)

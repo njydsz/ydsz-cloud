@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.OpsTicketAssignDTO;
@@ -37,6 +38,7 @@ public class OpsTicketController {
     private final OpsTicketService service;
 
     @Operation(summary = "创建工单")
+    @PrePermission("aftersales:ops-ticket:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody OpsTicketCreateDTO dto) {
         return R.ok(service.create(dto));
@@ -67,6 +69,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "SLA 扫描")
+    @PrePermission("aftersales:ops-ticket:scan")
     @PostMapping("/scan/sla")
     public R<Integer> scanSla() {
         return R.ok(service.scanSlaBreaches());
@@ -102,6 +105,7 @@ public class OpsTicketController {
     }
 
     /** 工单详情 */
+    @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/{id}")
     public R<OpsTicketDO> getById(@PathVariable Long id) {
         return R.ok(service.getById(id));

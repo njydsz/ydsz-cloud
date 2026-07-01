@@ -35,6 +35,7 @@ public class SatisfactionController {
     private final SatisfactionService service;
 
     @Operation(summary = "提交评价")
+    @PrePermission("aftersales:satisfaction:submit")
     @PostMapping
     public R<Long> submit(@Valid @RequestBody SatisfactionCreateDTO dto) {
         return R.ok(service.submit(dto));
@@ -49,6 +50,7 @@ public class SatisfactionController {
     }
 
     @Operation(summary = "关闭跟进")
+    @PrePermission("aftersales:satisfaction:follow-up")
     @PostMapping("/follow-up/close")
     public R<Void> closeFollowUp(@RequestParam Long id) {
         service.closeFollowUp(id);
@@ -56,12 +58,14 @@ public class SatisfactionController {
     }
 
     @Operation(summary = "整体满意度均值")
+    @PrePermission("aftersales:satisfaction:list")
     @GetMapping("/overall")
     public R<Map<String, Object>> overall() {
         return R.ok(service.overall());
     }
 
     @Operation(summary = "等级分布")
+    @PrePermission("aftersales:satisfaction:list")
     @GetMapping("/level-distribution")
     public R<List<Map<String, Object>>> levelDistribution() {
         return R.ok(service.levelDistribution());

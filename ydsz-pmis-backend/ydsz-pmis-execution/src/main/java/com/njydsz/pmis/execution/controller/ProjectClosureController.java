@@ -47,6 +47,7 @@ public class ProjectClosureController {
     }
 
     @Operation(summary = "状态迁移")
+    @PrePermission("closure:project:status")
     @PutMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody ProjectClosureStatusDTO dto) {
         service.changeStatus(dto);
@@ -54,6 +55,7 @@ public class ProjectClosureController {
     }
 
     @Operation(summary = "删除结项记录")
+    @PrePermission("closure:project:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -61,6 +63,7 @@ public class ProjectClosureController {
     }
 
     @Operation(summary = "结项详情")
+    @PrePermission("closure:project:list")
     @GetMapping("/{id}")
     public R<ProjectClosureDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -93,6 +96,7 @@ public class ProjectClosureController {
     }
 
     @Operation(summary = "按结项类型聚合")
+    @PrePermission("closure:project:list")
     @GetMapping("/aggregate/type")
     public R<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
         return R.ok(service.aggregateByType(tenantId));

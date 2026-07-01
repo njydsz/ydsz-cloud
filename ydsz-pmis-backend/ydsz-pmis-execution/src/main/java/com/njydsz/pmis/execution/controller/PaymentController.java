@@ -34,18 +34,24 @@ public class PaymentController {
     private final PaymentService service;
 
     @Operation(summary = "录入回款")
-    @Pblic R<Long> record(@Valid @RequestBody PaymentCreateDTO dto) {
+    @PrePermission("finance:payment:create")
+    @PostMapping
+    public R<Long> record(@Valid @RequestBody PaymentCreateDTO dto) {
         return R.ok(service.record(dto));
     }
 
     @Operation(summary = "确认到账")
+    @PrePermission("finance:payment:status")
     @PutMapping("/{id}/confirm")
-    pu  service.confirm(id, operatorId);
+    public R<Void> confirm(@PathVariable Long id, @RequestParam Long operatorId) {
+        service.confirm(id, operatorId);
         return R.ok();
     }
 
-    @
-blic R<Void> cancel(@PathVariable Long id,
+    @Operation(summary = "取消")
+    @PrePermission("finance:payment:status")
+    @PutMapping("/{id}/cancel")
+    public R<Void> cancel(@PathVariable Long id,
                           @RequestParam Long operatorId,
                           @RequestParam(required = false) String reason) {
         service.cancel(id, operatorId, reason);
@@ -61,14 +67,15 @@ blic R<Void> cancel(@PathVariable Long id,
     }
 
     @Operation(summary = "核销到发票")
+    @PrePermission("finance:payment:allocate")
     @PostMapping("/allocate")
-    public R<Void> allocate(@Va")
-    @PrePermission("finance:payment:allocatelid @RequestBody PaymentAllocationDTO dto) {
+    public R<Void> allocate(@Valid @RequestBody PaymentAllocationDTO dto) {
         service.allocate(dto);
         return R.ok();
     }
 
     @Operation(summary = "自动核销（按客户）")
+    @PrePermission("finance:payment:allocate")
     @PostMapping("/auto-allocate")
     public R<Integer> autoAllocate(@RequestParam Long customerId,
                                    @RequestParam Long operatorId) {
@@ -76,6 +83,7 @@ blic R<Void> cancel(@PathVariable Long id,
     }
 
     @Operation(summary = "现金流预测")
+    @PrePermission("finance:payment:list")
     @GetMapping("/forecast")
     public R<List<Map<String, Object>>> forecast(@RequestParam Long initiationId,
                                                  @RequestParam(defaultValue = "3") int months) {
@@ -83,6 +91,7 @@ blic R<Void> cancel(@PathVariable Long id,
     }
 
     @Operation(summary = "详情")
+    @PrePermission("finance:payment:list")
     @GetMapping("/{id}")
     public R<PaymentDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -103,6 +112,7 @@ blic R<Void> cancel(@PathVariable Long id,
     }
 
     @Operation(summary = "按合同汇总回款")
+    @PrePermission("finance:payment:list")
     @GetMapping("/sum/by-contract")
     public R<BigDecimal> sumByContract(@RequestParam Long contractId) {
         return R.ok(service.sumReceivedByContract(contractId));

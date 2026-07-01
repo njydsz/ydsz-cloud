@@ -1,3 +1,8 @@
+<!--
+  @file 外部价目表
+  @description 对外报价费率(Rate Card)管理页面：按(职级×项目类型×客户等级)维护每日/每小时报价，支持三级回退(level→project→customer)匹配，对应路由 /execution/rate-card
+  @module views/execution/rate-card
+-->
 <script setup lang="ts">
 /**
  * 对外报价费率 (Rate Card) 管理
@@ -19,9 +24,11 @@ import type { JobLevelVO } from '@/api/resource/job-level/types'
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
 
+// 权限助手：统一通过 userStore 校验按钮级权限
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
+// 列表查询状态
 const loading = ref(false)
 const list = ref<RateCardVO[]>([])
 const total = ref(0)
@@ -31,8 +38,10 @@ const query = reactive({
   levelCode: '',
   status: '',
 })
+// 职级下拉数据
 const levels = ref<JobLevelVO[]>([])
 
+/** 拉取职级下拉数据（用于表单与查询条件） */
 async function fetchLevels() {
   try {
     const { data } = await listJobLevels()
@@ -42,6 +51,7 @@ async function fetchLevels() {
   }
 }
 
+/** 拉取报价费率分页数据 */
 async function fetchList() {
   loading.value = true
   try {
@@ -56,21 +66,25 @@ async function fetchList() {
   }
 }
 
+// 状态字典：生效/停用
 const statusMap: Record<string, { label: string; type: 'success' | 'info' }> = {
   ACTIVE: { label: '生效', type: 'success' },
   INACTIVE: { label: '停用', type: 'info' },
 }
 
+/** 金额格式化：按币种选择符号(¥/$/€)，空值返回 - */
 function fmtMoney(n?: number, cur = 'CNY') {
   if (n === undefined || n === null) return '-'
   const symbol = cur === 'CNY' ? '¥' : cur === 'USD' ? '$' : '€'
   return `${symbol}${Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
 }
 
+/** 点击查询：重置页码后拉取列表 */
 function onQuery() {
   query.page = 1
   fetchList()
 }
+/** 重置查询条件并刷新列表 */
 function onReset() {
   query.page = 1
   query.size = 10
@@ -78,14 +92,16 @@ function onReset() {
   query.status = ''
   fetchList()
 }
+/** 翻页回调 */
 function onPageChange() {
   fetchList()
 }
+/** 手动刷新列表 */
 async function onRefresh() {
   await fetchList()
 }
 
-// 弹窗
+// 弹窗 - 新建/编辑报价费率
 const dialogVisible = ref(false)
 const formRef = ref<any>()
 const editingId = ref<number | null>(null)
@@ -111,6 +127,7 @@ const rules = {
   effectiveDate: [{ required: true, message: '请选择生效日期', trigger: 'change' }],
 }
 
+/** 打开新建弹窗：重置表单并生成默认费率编号 */
 function openCreate() {
   editingId.value = null
   Object.assign(form, {
@@ -129,6 +146,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 打开编辑弹窗：回填当前行数据到表单 */
 function openEdit(row: RateCardVO) {
   editingId.value = row.id ?? null
   Object.assign(form, {
@@ -147,6 +165,7 @@ function openEdit(row: RateCardVO) {
   dialogVisible.value = true
 }
 
+/** 提交表单：校验通过后按 editingId 区分新建/更新 */
 async function submit() {
   if (!formRef.value) return
   try {
@@ -165,6 +184,7 @@ async function submit() {
   fetchList()
 }
 
+/** 删除报价费率（二次确认） */
 async function onDelete(row: RateCardVO) {
   if (!row.id) return
   try {
@@ -192,6 +212,7 @@ onMounted(async () => {
     @page-change="onPageChange"
     @refresh="onRefresh"
   >
+    <!-- 查询条件区：职级 / 状态 -->
     <template #search>
       <el-form-item label="职级">
         <el-select v-model="query.levelCode" placeholder="全部" clearable filterable style="width: 160px">
@@ -205,6 +226,7 @@ onMounted(async () => {
         </el-select>
       </el-form-item>
     </template>
+    <!-- 工具栏：新建报价按钮（受权限控制） -->
     <template #toolbar>
       <el-button
         v-if="hasPerm(PC.EXECUTION_RATE_CARD_CREATE)"
@@ -215,6 +237,7 @@ onMounted(async () => {
         新建报价
       </el-button>
     </template>
+    <!-- 数据表格：报价费率明细 + 编辑/删除操作列 -->
     <template #table>
       <vxe-table :data="list" :loading="loading" border height="auto">
         <vxe-column field="rateCode" title="费率编号" width="150" />
@@ -262,6 +285,7 @@ onMounted(async () => {
     </template>
   </PageLayout>
 
+  <!-- 新建/编辑报价费率弹窗：费率编号、职级、项目类型、客户等级、计费单位、币种、金额、生效/失效日期 -->
   <el-dialog
     v-model="dialogVisible"
     :title="editingId ? '编辑报价费率' : '新建报价费率'"

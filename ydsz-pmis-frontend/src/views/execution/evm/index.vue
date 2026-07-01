@@ -79,8 +79,11 @@ function fmt(n?: number, d = 2) {
   return Number(n).toFixed(d)
 }
 
+/** 项目 EVM 健康仪表盘数据 */
 const dashboard = ref<EvmDashboardVO | null>(null)
+/** 仪表盘加载状态 */
 const dashboardLoading = ref(false)
+/** 拉取项目 EVM 健康仪表盘（CPI/SPI/EAC/VAC + 趋势） */
 async function fetchDashboard() {
   if (!query.initiationId) {
     dashboard.value = null
@@ -102,6 +105,7 @@ async function onQuery() {
   await fetchDashboard()
 }
 
+/** 重置查询条件并刷新列表 */
 function onReset() {
   query.page = 1
   query.size = 10
@@ -110,18 +114,23 @@ function onReset() {
   fetchList()
 }
 
+/** 翻页回调 */
 function onPageChange() {
   fetchList()
 }
 
+/** 刷新：并行重新加载列表与仪表盘 */
 async function onRefresh() {
   await fetchList()
   await fetchDashboard()
 }
 
 // ============= 录入弹窗 =============
+/** 录入/编辑弹窗可见性 */
 const dialogVisible = ref(false)
+/** 表单引用（用于校验） */
 const formRef = ref<any>()
+/** EVM 测量录入/编辑表单 */
 const form = reactive<EvmMeasureCreateDTO>({
   initiationId: 0,
   wbsTaskId: undefined,
@@ -133,8 +142,10 @@ const form = reactive<EvmMeasureCreateDTO>({
   measureDate: '',
   remark: '',
 })
+/** 当前编辑记录 ID（null 表示新增） */
 const editingId = ref<number | null>(null)
 
+/** 表单校验规则 */
 const rules = {
   initiationId: [{ required: true, message: '请选择项目', trigger: 'change' }],
   period: [{ required: true, message: '请输入周期', trigger: 'blur' }],
@@ -144,6 +155,7 @@ const rules = {
   bac: [{ required: true, message: '请输入 BAC', trigger: 'blur' }],
 }
 
+/** 打开新增弹窗，默认周期/测量日期为当日 */
 function openCreate() {
   editingId.value = null
   Object.assign(form, {
@@ -160,6 +172,10 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/**
+ * 打开编辑弹窗，回填当前行数据
+ * @param row EVM 测量记录
+ */
 function openEdit(row: EvmMeasureVO) {
   editingId.value = row.id ?? null
   Object.assign(form, {
@@ -176,6 +192,7 @@ function openEdit(row: EvmMeasureVO) {
   dialogVisible.value = true
 }
 
+/** 保存（新增或更新），后端自动重算 CPI/SPI 并判定预警级别 */
 async function submit() {
   if (!formRef.value) return
   try {
@@ -189,6 +206,10 @@ async function submit() {
   onRefresh()
 }
 
+/**
+ * 删除指定 EVM 测量记录
+ * @param row EVM 测量记录
+ */
 async function onDelete(row: EvmMeasureVO) {
   if (!row.id) return
   try {
@@ -204,6 +225,7 @@ async function onDelete(row: EvmMeasureVO) {
 }
 
 // 简易趋势：用 CSS 柱状图展示 CPI / SPI 偏离 1.0 的程度
+/** 趋势柱状图数据（CPI/SPI 偏差百分点 + EAC/VAC） */
 const trendBars = computed(() => {
   if (!dashboard.value?.trend) return []
   return dashboard.value.trend.map((t) => ({
@@ -215,6 +237,7 @@ const trendBars = computed(() => {
   }))
 })
 
+/** 页面挂载时若有项目 ID 则加载数据 */
 onMounted(() => {
   if (query.initiationId) {
     fetchList()
@@ -318,6 +341,7 @@ onMounted(() => {
       @page-change="onPageChange"
       @refresh="onRefresh"
     >
+      <!-- 搜索栏 -->
       <template #search>
         <el-form-item label="项目 ID">
           <el-input-number
@@ -336,6 +360,7 @@ onMounted(() => {
           </el-select>
         </el-form-item>
       </template>
+      <!-- 工具栏 -->
       <template #toolbar>
         <el-button
           v-if="hasPerm(PC.EXECUTION_EVM_SAVE)"
@@ -347,6 +372,7 @@ onMounted(() => {
           录入 EVM
         </el-button>
       </template>
+      <!-- EVM 测量列表表格 -->
       <template #table>
         <vxe-table :data="list" :loading="loading" border height="auto">
           <vxe-column field="period" title="周期" width="100" />

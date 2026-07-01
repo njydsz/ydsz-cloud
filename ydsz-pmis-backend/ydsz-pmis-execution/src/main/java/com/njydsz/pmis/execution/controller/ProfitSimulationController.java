@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.ProfitSimulationCreateDTO;
 import com.njydsz.pmis.execution.dto.SimulationStatusDTO;
@@ -38,6 +39,7 @@ public class ProfitSimulationController {
     }
 
     @Operation(summary = "状态迁移")
+    @PrePermission("execution:simulation:approve")
     @PutMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody SimulationStatusDTO dto) {
         service.changeStatus(dto);
@@ -58,12 +60,14 @@ public class ProfitSimulationController {
     }
 
     @Operation(summary = "按项目查询所有版本")
+    @PrePermission("execution:simulation:list")
     @GetMapping("/by-initiation")
     public R<List<ProfitSimulationDO>> listByInitiation(@RequestParam Long initiationId) {
         return R.ok(service.listByInitiation(initiationId));
     }
 
     @Operation(summary = "多版本对比")
+    @PrePermission("execution:simulation:list")
     @GetMapping("/compare")
     public R<List<Map<String, Object>>> compare(@RequestParam Long initiationId) {
         return R.ok(service.compare(initiationId));

@@ -38,6 +38,7 @@ public class EvmController {
     }
 
     @Operation(summary = "详情")
+    @PrePermission("execution:evm:list")
     @GetMapping("/{id}")
     public R<EvmMeasureDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -62,12 +63,14 @@ public class EvmController {
     }
 
     @Operation(summary = "项目 EVM 健康仪表盘")
+    @PrePermission("execution:evm:dashboard")
     @GetMapping("/dashboard")
     public R<Map<String, Object>> dashboard(@RequestParam Long initiationId) {
         return R.ok(service.dashboard(initiationId));
     }
 
     @Operation(summary = "分页")
+    @PrePermission("execution:evm:list")
     @GetMapping("/page")
     public R<Page<EvmMeasureDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -78,6 +81,7 @@ public class EvmController {
     }
 
     @Operation(summary = "删除")
+    @PrePermission("execution:evm:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);

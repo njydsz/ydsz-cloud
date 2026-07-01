@@ -1,9 +1,9 @@
+<!--
+  @file 合同管理
+  @description 合同的查询、新增、编辑与状态流转；状态按 DRAFT → UNDER_REVIEW → APPROVED → SIGNED → EXECUTING → CLOSED 流转
+  @module views/project/contract
+-->
 <script setup lang="ts">
-/**
- * 合同管理
- *
- * 状态: DRAFT -> UNDER_REVIEW -> APPROVED -> SIGNED -> EXECUTING -> CLOSED
- */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
@@ -18,6 +18,7 @@ import {
 import type { ContractVO, ContractCreateDTO, ContractStatusDTO } from '@/api/project/contract/types'
 import { PC } from '@/constants/permissionCodes'
 
+// ===== 列表查询状态 =====
 const loading = ref(false)
 const list = ref<ContractVO[]>([])
 const total = ref(0)
@@ -56,6 +57,8 @@ const riskMap = {
   HIGH: { label: '高', type: 'danger' as const },
 }
 
+// ===== 列表加载 =====
+/** 拉取合同分页列表 */
 async function fetchList() {
   loading.value = true
   try {

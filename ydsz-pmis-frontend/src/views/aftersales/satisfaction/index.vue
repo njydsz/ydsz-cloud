@@ -1,4 +1,3 @@
-<script setup lang="ts">
 <!--
   @file 服务满意度评价
   @description 售后服务满意度评价管理页面，支持多维度打分、不满意评价跟进闭环及综合统计概览。
@@ -26,11 +25,17 @@ import {
 import type { SatisfactionVO, SatisfactionCreateDTO } from '@/api/execution/aftersales/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 评价列表数据 */
 const list = ref<SatisfactionVO[]>([])
+/** 列表总条数（用于分页） */
 const total = ref(0)
+/** 综合评价统计概览 */
 const overall = ref<Record<string, unknown>>({})
+/** 等级分布统计 */
 const levelDist = ref<Array<Record<string, unknown>>>([])
+/** 列表查询条件 */
 const query = reactive({
   page: 1,
   size: 10,
@@ -54,6 +59,7 @@ const followUpMap = {
   CLOSED: { label: '已关闭', type: 'success' as const },
 }
 
+/** 根据总分推断满意度等级 */
 function inferLevel(score?: number) {
   if (score === null || score === undefined) return ''
   if (score <= 1) return 'VERY_DISSATISFIED'
@@ -63,6 +69,7 @@ function inferLevel(score?: number) {
   return 'VERY_SATISFIED'
 }
 
+/** 拉取满意度评价分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -81,6 +88,7 @@ async function fetchList() {
   }
 }
 
+/** 拉取综合评价统计与等级分布 */
 async function fetchStats() {
   try {
     overall.value = await overallSatisfaction().then((r) => r.data as Record<string, unknown>)
@@ -94,6 +102,7 @@ async function fetchStats() {
   }
 }
 
+/** 重置查询条件并重新加载列表 */
 function handleReset() {
   query.keyword = ''
   query.level = ''
@@ -103,8 +112,10 @@ function handleReset() {
   fetchList()
 }
 
+/** 评价弹窗显隐 */
 const dialogVisible = ref(false)
 const formRef = ref<any>()
+/** 评价表单数据 */
 const form = reactive<Partial<SatisfactionCreateDTO>>({
   overallScore: 5,
   ticketId: undefined,
@@ -116,6 +127,7 @@ const formRules = {
   overallScore: [{ required: true, message: '总体评分必填', trigger: 'change' }],
 }
 
+/** 打开评价弹窗，重置表单各维度评分默认值 */
 function openCreate() {
   Object.assign(form, {
     ticketId: undefined,
@@ -132,6 +144,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交评价表单，校验通过后调用提交接口并刷新统计 */
 async function submitForm() {
   await formRef.value?.validate()
   await submitSatisfaction(form as SatisfactionCreateDTO)
@@ -141,6 +154,7 @@ async function submitForm() {
   fetchStats()
 }
 
+/** 标记不满意评价为跟进中，需输入跟进说明 */
 async function handleFollowUp(row: SatisfactionVO) {
   const level = inferLevel(row.overallScore)
   if (!['DISSATISFIED', 'VERY_DISSATISFIED'].includes(level)) {
@@ -157,6 +171,7 @@ async function handleFollowUp(row: SatisfactionVO) {
   } catch { /* 取消 */ }
 }
 
+/** 关闭跟进，需输入关闭说明 */
 async function handleCloseFollowUp(row: SatisfactionVO) {
   try {
     const { value } = await ElMessageBox.prompt('请输入关闭说明', '关闭跟进', {
@@ -185,6 +200,7 @@ onMounted(() => {
     @page-change="fetchList"
     @refresh="() => { fetchList(); fetchStats(); }"
   >
+    <!-- 搜索栏 -->
     <template #search>
       <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="编号/评价" clearable /></el-form-item>
       <el-form-item label="等级">
@@ -200,6 +216,7 @@ onMounted(() => {
       <el-form-item label="项目 ID"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
     </template>
 
+    <!-- 工具栏 -->
     <template #toolbar>
       <el-button v-permission="[PC.AFTERSALES_SATISFACTION_SUBMIT]" type="primary" :icon="'Plus'" @click="openCreate">
         提交评价
@@ -239,6 +256,7 @@ onMounted(() => {
       </el-col>
     </el-row>
 
+    <!-- 评价表格 -->
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
@@ -285,6 +303,7 @@ onMounted(() => {
       </vxe-table>
     </template>
 
+    <!-- 提交评价弹窗 -->
     <el-dialog v-model="dialogVisible" title="提交满意度评价" width="560px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="关联工单 ID">

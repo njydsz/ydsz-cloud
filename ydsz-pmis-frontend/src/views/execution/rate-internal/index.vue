@@ -1,3 +1,8 @@
+<!--
+  @file 内部价目表
+  @description 对内职级成本费率(Rate Internal)管理页面：按(职级×部门)维护每日/每小时内部成本价，支持二级回退(level→department)匹配，对应路由 /execution/rate-internal
+  @module views/execution/rate-internal
+-->
 <script setup lang="ts">
 /**
  * 对内职级成本费率 (Rate Internal) 管理

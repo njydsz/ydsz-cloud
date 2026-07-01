@@ -1,10 +1,9 @@
+<!--
+  @file 特性开关管理
+  @description 特性开关管理页面：提供 flag 启停与灰度发布控制台，按分类（基础设施/业务能力/界面特性/安全合规）聚合展示，灰度通过滑动条设置 0-100% 比例并立即生效；安全合规类强制开启不可关闭。对应路由 /system/feature-flag。
+  @module views/system/feature-flag
+-->
 <script setup lang="ts">
-/**
- * 特性开关管理 (批次 20 P2-3)
- *
- * 提供 flag 启停 / 灰度发布控制台.
- * 灰度通过滑动条设置 0-100% 比例, 立即生效.
- */
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {

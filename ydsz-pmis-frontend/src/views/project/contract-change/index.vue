@@ -1,9 +1,9 @@
+<!--
+  @file 合同变更管理
+  @description 合同变更单的查询与新增；状态按 DRAFT → SUBMITTED → UNDER_REVIEW → APPROVED/REJECTED → CLOSED 流转
+  @module views/project/contract-change
+-->
 <script setup lang="ts">
-/**
- * 合同变更管理
- *
- * 状态: DRAFT -> SUBMITTED -> UNDER_REVIEW -> APPROVED/REJECTED -> CLOSED
- */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
@@ -16,6 +16,7 @@ import {
 import type { ContractChangeVO, ContractChangeCreateDTO } from '@/api/project/contract/types'
 import { PC } from '@/constants/permissionCodes'
 
+// ===== 列表查询状态 =====
 const loading = ref(false)
 const list = ref<ContractChangeVO[]>([])
 const total = ref(0)
@@ -52,6 +53,8 @@ const impactMap = {
   HIGH: { label: '高', type: 'danger' as const },
 }
 
+// ===== 列表加载 =====
+/** 拉取合同变更分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -75,6 +78,7 @@ function handleReset() {
   fetchList()
 }
 
+// ===== 新增变更表单弹窗 =====
 const dialogVisible = ref(false)
 const formRef = ref<any>()
 const form = reactive<Partial<ContractChangeCreateDTO>>({
@@ -102,6 +106,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新增变更表单：校验通过后创建并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   await createContractChange(form as ContractChangeCreateDTO)
@@ -110,6 +115,7 @@ async function submitForm() {
   fetchList()
 }
 
+/** 变更单状态流转（需二次确认），状态机见文件头 */
 async function handleStatus(row: ContractChangeVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {
@@ -204,6 +210,7 @@ onMounted(fetchList)
       </vxe-table>
     </template>
 
+    <!-- 新增变更弹窗 -->
     <el-dialog v-model="dialogVisible" title="新增合同变更" width="640px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="合同 ID" prop="contractId">
