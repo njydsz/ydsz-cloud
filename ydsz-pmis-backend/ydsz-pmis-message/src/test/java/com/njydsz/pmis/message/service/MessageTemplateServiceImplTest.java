@@ -7,6 +7,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -82,7 +84,7 @@ class MessageTemplateServiceImplTest {
     @Test
     @DisplayName("listByChannel - 转大写")
     void listByChannelUpper() {
-        when(mapper.selectByChannel(anyString(), anyLong())).thenReturn(java.util.List.of());
+        when(mapper.selectByChannel(anyString(), anyLong())).thenReturn(List.of());
         service.listByChannel("sms");
         verifyChannel();
     }

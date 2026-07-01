@@ -19,6 +19,9 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+
 import java.time.Duration;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -179,7 +182,7 @@ class RequireReAuthAspectTest {
     }
 
     private RequireReAuth annotation(String code, String name, int ttl) {
-        return (RequireReAuth) java.lang.reflect.Proxy.newProxyInstance(
+        return (RequireReAuth) Proxy.newProxyInstance(
                 RequireReAuth.class.getClassLoader(),
                 new Class[]{RequireReAuth.class},
                 (proxy, method, args) -> {

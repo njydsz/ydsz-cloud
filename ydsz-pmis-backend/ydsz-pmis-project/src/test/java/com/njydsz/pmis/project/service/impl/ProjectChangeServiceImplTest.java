@@ -17,6 +17,8 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -203,7 +205,7 @@ class ProjectChangeServiceImplTest {
     @Test
     @DisplayName("按项目查询")
     void listByInitiation() {
-        when(mapper.selectByInitiation(1L)).thenReturn(java.util.List.of(change(1L, "DRAFT")));
+        when(mapper.selectByInitiation(1L)).thenReturn(List.of(change(1L, "DRAFT")));
         assertThat(service.listByInitiation(1L)).hasSize(1);
         assertThat(service.listByInitiation(null)).isEmpty();
     }
@@ -211,7 +213,7 @@ class ProjectChangeServiceImplTest {
     @Test
     @DisplayName("按类型统计")
     void aggregateByType() {
-        when(mapper.aggregateByType(1L)).thenReturn(java.util.List.of(java.util.Map.of("type", "SCOPE", "count", 2)));
+        when(mapper.aggregateByType(1L)).thenReturn(List.of(Map.of("type", "SCOPE", "count", 2)));
         assertThat(service.aggregateByType(1L)).hasSize(1);
         assertThat(service.aggregateByType(null)).isNotNull();
     }
@@ -219,7 +221,7 @@ class ProjectChangeServiceImplTest {
     @Test
     @DisplayName("按状态统计")
     void aggregateByStatus() {
-        when(mapper.aggregateByStatus(1L)).thenReturn(java.util.List.of());
+        when(mapper.aggregateByStatus(1L)).thenReturn(List.of());
         assertThat(service.aggregateByStatus(1L)).isEmpty();
     }
 

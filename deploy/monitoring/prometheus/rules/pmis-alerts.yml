@@ -1,0 +1,155 @@
+# ====================================================================
+#  PMIS Prometheus 告警规则（批次 19）
+#  ---------------------------------------------------------------------
+#  6 大类告警：API 性能 / JVM / 数据库 / 业务指标 / Feign / 安全
+#  与开发计划 11.3 节安全验收对齐
+# ====================================================================
+
+groups:
+  - name: pmis-api
+    interval: 30s
+    rules:
+      - alert: PmisApiP99High
+        expr: histogram_quantile(0.99, sum(rate(http_server_requests_seconds_bucket{uri!~"/actuator.*"}[5m])) by (le, service)) > 0.5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service }} API P99 > 500ms（持续 5min）"
+          description: "P99 响应时间 {{ $value }}s，请检查慢 SQL / Feign 链路"
+
+      - alert: PmisApiP95High
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket{uri!~"/actuator.*"}[5m])) by (le, service)) > 0.2
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service }} API P95 > 200ms（持续 5min）"
+
+      - alert: PmisApiErrorRateHigh
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) by (service) / sum(rate(http_server_requests_seconds_count[5m])) by (service) > 0.01
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.service }} 5xx 错误率 > 1%"
+          description: "5xx 错误率 {{ $value | humanizePercentage }}，需立即排查"
+
+      - alert: PmisApi4xxBurst
+        expr: sum(rate(http_server_requests_seconds_count{status=~"4.."}[5m])) by (service) / sum(rate(http_server_requests_seconds_count[5m])) by (service) > 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service }} 4xx 错误率 > 10%"
+
+  - name: pmis-jvm
+    interval: 30s
+    rules:
+      - alert: PmisJvmHeapHigh
+        expr: sum(jvm_memory_used_bytes{area="heap"}) by (service) / sum(jvm_memory_max_bytes{area="heap"}) by (service) > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service }} JVM Heap > 80%"
+
+      - alert: PmisJvmHeapCritical
+        expr: sum(jvm_memory_used_bytes{area="heap"}) by (service) / sum(jvm_memory_max_bytes{area="heap"}) by (service) > 0.92
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.service }} JVM Heap > 92%（持续 2min）"
+
+      - alert: PmisFullGcFrequent
+        expr: rate(jvm_gc_collection_seconds_count{gc="G1 Old Generation"}[1h]) * 3600 > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service }} Full GC > 5次/h"
+
+      - alert: PmisThreadPoolBusy
+        expr: jvm_threads_states_threads{state="BLOCKED"} > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service }} 阻塞线程数 > 100"
+
+  - name: pmis-database
+    interval: 30s
+    rules:
+      - alert: PmisHikariPoolExhausted
+        expr: hikaricp_connections_active / hikaricp_connections_max > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.service }} DB 连接池使用率 > 90%"
+
+      - alert: PmisRedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis 内存使用率 > 85%"
+
+  - name: pmis-business
+    interval: 60s
+    rules:
+      - alert: PmisEvmRedProjectCount
+        expr: pmis_evm_red_projects_count > 3
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "EVM 红色项目数 > 3（{{ $value }}）"
+
+      - alert: PmisBenchCostHigh
+        expr: pmis_bench_total_cost > 500000
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "Bench 闲置成本 > 50 万（{{ $value }}元）"
+
+      - alert: PmisUtilizationLow
+        expr: pmis_billable_utilization_avg < 60
+        for: 1h
+        labels:
+          severity: warning
+        annotations:
+          summary: "可计费利用率均值 < 60%（{{ $value }}%）"
+
+  - name: pmis-feign
+    interval: 30s
+    rules:
+      - alert: PmisFeignHighFailure
+        expr: sum(rate(pmis_feign_call_total{status="failure"}[5m])) by (target) / sum(rate(pmis_feign_call_total[5m])) by (target) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Feign 调用 {{ $labels.target }} 失败率 > 5%"
+
+  - name: pmis-security
+    interval: 30s
+    rules:
+      - alert: PmisLoginFailedBurst
+        expr: sum(rate(pmis_login_failed_total[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "登录失败速率 > 10 次/s（疑似暴力破解）"
+
+      - alert: PmisDataExportBurst
+        expr: sum(rate(pmis_data_export_total[5m])) > 5
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "数据导出速率 > 5 次/s（疑似数据泄露）"

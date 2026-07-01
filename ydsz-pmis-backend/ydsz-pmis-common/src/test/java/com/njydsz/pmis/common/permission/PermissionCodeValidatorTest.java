@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.permission;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -67,9 +69,9 @@ class PermissionCodeValidatorTest {
     @Test
     @DisplayName("所有 PermissionCodes 常量都应合法")
     void allConstantsValid() throws IllegalAccessException {
-        java.lang.reflect.Field[] fields = PermissionCodes.class.getFields();
+        Field[] fields = PermissionCodes.class.getFields();
         int checked = 0;
-        for (java.lang.reflect.Field f : fields) {
+        for (Field f : fields) {
             // 跳过 LEGACY_*
             if (f.getName().startsWith("LEGACY_")) continue;
             Object v = f.get(null);

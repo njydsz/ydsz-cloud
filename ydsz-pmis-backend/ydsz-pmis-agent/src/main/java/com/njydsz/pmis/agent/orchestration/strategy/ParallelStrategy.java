@@ -9,6 +9,7 @@ import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 import lombok.extern.slf4j.Slf4j;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -133,9 +134,9 @@ public class ParallelStrategy implements OrchestrationStrategy {
         if (a == null && b == null) return 0;
         if (a == null) return -1;
         if (b == null) return 1;
-        int c = a.getScore() == null ? 0 : a.getScore().compareTo(b.getScore() == null ? java.math.BigDecimal.ZERO : b.getScore());
+        int c = a.getScore() == null ? 0 : a.getScore().compareTo(b.getScore() == null ? BigDecimal.ZERO : b.getScore());
         if (c != 0) return c;
-        return a.getConfidence() == null ? 0 : a.getConfidence().compareTo(b.getConfidence() == null ? java.math.BigDecimal.ZERO : b.getConfidence());
+        return a.getConfidence() == null ? 0 : a.getConfidence().compareTo(b.getConfidence() == null ? BigDecimal.ZERO : b.getConfidence());
     }
 
     public void shutdown() {

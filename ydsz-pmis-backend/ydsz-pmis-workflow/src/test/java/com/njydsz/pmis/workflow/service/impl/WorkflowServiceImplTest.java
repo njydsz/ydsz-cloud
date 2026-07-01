@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -122,7 +123,7 @@ class WorkflowServiceImplTest {
         when(piq.processInstanceId(anyString())).thenReturn(piq);
         when(piq.singleResult()).thenReturn(pi);
 
-        List<java.util.Map<String, Object>> r = service.listTodoTasks(10L, 1, 20);
+        List<Map<String, Object>> r = service.listTodoTasks(10L, 1, 20);
         assertThat(r).hasSize(1);
         assertThat(r.get(0).get("taskId")).isEqualTo("t-1");
     }

@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.security;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -65,7 +67,7 @@ class DataScopeTest {
     void context_fromSuper() {
         LoginUser u = LoginUser.builder()
                 .userId(1L).username("admin")
-                .permissions(java.util.List.of("*:*:*"))
+                .permissions(List.of("*:*:*"))
                 .dataScope("SELF")
                 .build();
         DataScopeContext ctx = DataScopeContext.from(u);

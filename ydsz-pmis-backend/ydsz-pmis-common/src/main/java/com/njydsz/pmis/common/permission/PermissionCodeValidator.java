@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.permission;
 
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -22,7 +23,7 @@ public final class PermissionCodeValidator {
     private static final Pattern PATTERN = Pattern.compile("^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*:[a-z][a-z0-9-]+$");
 
     /** 允许的 action 词表 */
-    public static final java.util.Set<String> ALLOWED_ACTIONS = java.util.Set.of(
+    public static final Set<String> ALLOWED_ACTIONS = Set.of(
             "list", "create", "update", "delete", "approve", "refresh", "trigger",
             "reload", "send", "upload", "view", "export", "import", "assign",
             "toggle", "reset-password", "act", "recompute", "terminate",

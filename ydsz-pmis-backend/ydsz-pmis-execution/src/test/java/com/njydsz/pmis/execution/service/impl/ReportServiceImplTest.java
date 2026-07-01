@@ -74,7 +74,7 @@ class ReportServiceImplTest {
         when(revenueMapper.selectByInitiation(1L)).thenReturn(List.of());
         when(revenueMapper.sumByPeriod(1L)).thenReturn(List.of());
         Map<String, Object> r = service.paymentLedgerReport(1L);
-        assertThat(r.get("totalRevenue")).isEqualTo(java.math.BigDecimal.ZERO);
+        assertThat(r.get("totalRevenue")).isEqualTo(BigDecimal.ZERO);
     }
 
     @Test

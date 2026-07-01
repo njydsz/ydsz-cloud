@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 消息服务 Feign 客户端（通知模块专用）
@@ -36,7 +37,7 @@ public interface MessageServiceClient {
         private String channel;
         private String templateCode;
         private String receiver;
-        private java.util.Map<String, Object> params;
+        private Map<String, Object> params;
         private String content;
         private String subject;
         private String bizType;

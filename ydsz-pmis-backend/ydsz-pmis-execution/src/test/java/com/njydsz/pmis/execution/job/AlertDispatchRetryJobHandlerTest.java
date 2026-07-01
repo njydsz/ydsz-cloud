@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.job;
 
+import com.njydsz.pmis.common.job.JobRunRecorder.JobRunResult;
 import com.njydsz.pmis.execution.service.AlertDispatchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,11 +32,12 @@ class AlertDispatchRetryJobHandlerTest {
     void execute_default() throws Exception {
         when(alertDispatchService.retryFailed(anyInt())).thenReturn(5);
         Object r = handler.execute(null);
-        assertThat(r).isInstanceOf(java.util.Map.class);
+        assertThat(r).isInstanceOf(JobRunResult.class);
         @SuppressWarnings("unchecked")
-        java.util.Map<String, Object> map = (java.util.Map<String, Object>) r;
-        assertThat(map.get("retried")).isEqualTo(5);
-        assertThat(map.get("maxRetry")).isEqualTo(3);
+        JobRunResult<java.util.Map<String, Object>> result = (JobRunResult<java.util.Map<String, Object>>) r;
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getData().get("retried")).isEqualTo(5);
+        assertThat(result.getData().get("maxRetry")).isEqualTo(3);
         verify(alertDispatchService).retryFailed(3);
     }
 
@@ -45,8 +47,8 @@ class AlertDispatchRetryJobHandlerTest {
         when(alertDispatchService.retryFailed(anyInt())).thenReturn(2);
         Object r = handler.execute("{\"maxRetry\":5}");
         @SuppressWarnings("unchecked")
-        java.util.Map<String, Object> map = (java.util.Map<String, Object>) r;
-        assertThat(map.get("maxRetry")).isEqualTo(5);
+        JobRunResult<java.util.Map<String, Object>> result = (JobRunResult<java.util.Map<String, Object>>) r;
+        assertThat(result.getData().get("maxRetry")).isEqualTo(5);
         verify(alertDispatchService).retryFailed(5);
     }
 

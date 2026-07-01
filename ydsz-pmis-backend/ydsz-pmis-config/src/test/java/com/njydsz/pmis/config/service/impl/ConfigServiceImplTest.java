@@ -120,12 +120,12 @@ class ConfigServiceImplTest {
     @Test
     @DisplayName("refreshCache 应删除全部 cfg 缓存")
     void refresh() {
-        when(redis.keys("pmis:cfg:*")).thenReturn(java.util.Set.of("a", "b"));
-        when(redis.keys("pmis:cfg:group:*")).thenReturn(java.util.Set.of("c"));
+        when(redis.keys("pmis:cfg:*")).thenReturn(Set.of("a", "b"));
+        when(redis.keys("pmis:cfg:group:*")).thenReturn(Set.of("c"));
         service.refreshCache();
         // delete 被调用两次：cfg 单 key + cfg group
         org.mockito.Mockito.verify(redis, org.mockito.Mockito.times(2))
-                .delete(org.mockito.ArgumentMatchers.<java.util.Set<String>>any());
+                .delete(org.mockito.ArgumentMatchers.<Set<String>>any());
     }
 
     @Test

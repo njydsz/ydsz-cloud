@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.excel;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.write.handler.WriteHandler;
+import com.alibaba.excel.write.metadata.style.WriteCellStyle;
 import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.alibaba.excel.write.style.row.SimpleRowHeightStyleStrategy;
@@ -12,6 +13,7 @@ import org.apache.poi.ss.usermodel.VerticalAlignment;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -119,6 +121,6 @@ public final class ExcelTemplate {
                 .registerWriteHandler(columnWidth)
                 .registerWriteHandler(rowHeight)
                 .sheet(sheetName)
-                .doWrite(sampleData == null ? java.util.Collections.emptyList() : sampleData);
+                .doWrite(sampleData == null ? Collections.emptyList() : sampleData);
     }
 }

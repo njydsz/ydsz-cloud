@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -168,7 +169,7 @@ class ContractTemplateServiceImplTest {
     @Test
     @DisplayName("listByType 正常返回")
     void listByType_ok() {
-        when(mapper.selectList(any(Wrapper.class))).thenReturn(java.util.List.of());
+        when(mapper.selectList(any(Wrapper.class))).thenReturn(List.of());
         assertThat(service.listByType(null, null)).isEmpty();
     }
 }

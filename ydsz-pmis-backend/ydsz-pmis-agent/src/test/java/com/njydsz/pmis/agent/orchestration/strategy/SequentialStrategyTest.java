@@ -13,6 +13,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -64,7 +65,7 @@ class SequentialStrategyTest {
     @Test
     @DisplayName("上游 scratch 注入下游 params.upstream.*")
     void upstreamInjected() {
-        final List<String> seenB = new java.util.ArrayList<>();
+        final List<String> seenB = new ArrayList<>();
         Agent a = stubAgent(AgentType.RISK_WARNING, AgentAlertLevel.YELLOW, "70", "0.80", "first");
         Agent b = new Agent() {
             @Override

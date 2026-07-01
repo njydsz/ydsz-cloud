@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.job;
 
+import com.njydsz.pmis.common.job.JobRunRecorder.JobRunResult;
 import com.njydsz.pmis.execution.service.DailyReconcileService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -9,7 +10,6 @@ import org.mockito.ArgumentCaptor;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -35,10 +35,11 @@ class DailyReconcileJobHandlerTest {
     void execute_default() throws Exception {
         when(service.runDaily(any(LocalDate.class))).thenReturn(6);
         Object r = handler.execute(null);
-        assertThat(r).isInstanceOf(java.util.Map.class);
+        assertThat(r).isInstanceOf(JobRunResult.class);
         @SuppressWarnings("unchecked")
-        java.util.Map<String, Object> map = (java.util.Map<String, Object>) r;
-        assertThat(map.get("recordCount")).isEqualTo(6);
+        JobRunResult<java.util.Map<String, Object>> result = (JobRunResult<java.util.Map<String, Object>>) r;
+        assertThat(result.isSuccess()).isTrue();
+        assertThat(result.getData().get("recordCount")).isEqualTo(6);
 
         ArgumentCaptor<LocalDate> cap = ArgumentCaptor.forClass(LocalDate.class);
         verify(service).runDaily(cap.capture());
@@ -56,12 +57,16 @@ class DailyReconcileJobHandlerTest {
     }
 
     @Test
-    @DisplayName("execute service 抛异常时包装抛出")
+    @DisplayName("execute service 抛异常时返回失败 JobRunResult")
     void execute_serviceException() throws Exception {
         when(service.runDaily(any(LocalDate.class)))
                 .thenThrow(new RuntimeException("DB down"));
-        assertThatThrownBy(() -> handler.execute(null))
-                .isInstanceOf(RuntimeException.class)
-                .hasMessageContaining("DB down");
+        Object r = handler.execute(null);
+        assertThat(r).isInstanceOf(JobRunResult.class);
+        @SuppressWarnings("unchecked")
+        JobRunResult<java.util.Map<String, Object>> result = (JobRunResult<java.util.Map<String, Object>>) r;
+        assertThat(result.isSuccess()).isFalse();
+        assertThat(result.getError()).isNotNull();
+        assertThat(result.getError()).hasMessageContaining("DB down");
     }
 }

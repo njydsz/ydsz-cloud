@@ -9,6 +9,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -88,7 +90,7 @@ class PermissionServiceImplTest {
     @Test
     @DisplayName("listPermCodesByUserId 应透传 Mapper")
     void listByUser() {
-        when(mapper.selectPermCodesByUserId(7L)).thenReturn(java.util.List.of("a", "b"));
+        when(mapper.selectPermCodesByUserId(7L)).thenReturn(List.of("a", "b"));
         assertThat(service.listPermCodesByUserId(7L)).containsExactly("a", "b");
     }
 

@@ -1,0 +1,286 @@
+# ====================================================================
+# 南京云顶 PMIS 14 个微服务 + 周边组件编排（批次 19 落地）
+# ---------------------------------------------------------------------
+# 14 个微服务：
+#   gateway :9000  / auth :9001     / user :9002      / notification :9013
+#   workflow :9014 / project :9015  / execution :9016 / agent :9017
+#   config :9018   / file :9019     / audit :9020     / message :9021
+#   scheduler :9022
+# 周边组件：
+#   xxl-job-admin :9100（分布式任务调度）
+#   seata-server :8091（分布式事务协调器）
+#   sentinel-dashboard :8719（流量控制/熔断）
+# 依赖：docker-compose.base.yml 必须先 up
+# 用法：docker compose -f docker-compose.apps.yml up -d
+# ====================================================================
+
+name: pmis-apps
+
+x-microservice-common: &microservice-common
+  restart: unless-stopped
+  env_file:
+    - .env
+  environment:
+    NACOS_SERVER: pmis-nacos:8848
+    POSTGRES_HOST: pmis-postgres
+    POSTGRES_PORT: 5432
+    POSTGRES_USER: pmis
+    POSTGRES_PASSWORD: pmis@2026
+    REDIS_HOST: pmis-redis
+    REDIS_PORT: 6379
+    REDIS_PASSWORD: pmis@2026
+    ROCKETMQ_NAMESRV: pmis-rocketmq-namesrv:9876
+    TZ: Asia/Shanghai
+    JAVA_OPTS: >-
+      -Xms2g -Xmx2g
+      -XX:+UseG1GC
+      -XX:NewRatio=2
+      -XX:+HeapDumpOnOutOfMemoryError
+      -XX:HeapDumpPath=/var/log/pmis/oom
+      -Dfile.encoding=UTF-8
+  volumes:
+    - pmis-logs:/var/log/pmis
+  networks:
+    - pmis-net
+  healthcheck:
+    test: ["CMD-SHELL", "wget -qO- http://localhost:${SERVER_PORT}/actuator/health 2>/dev/null | grep -q UP || exit 1"]
+    interval: 30s
+    timeout: 10s
+    retries: 5
+    start_period: 60s
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    nacos:
+      condition: service_healthy
+
+services:
+  # ============ 14 个微服务（按依赖顺序启动）============
+
+  # 1) gateway - API 网关
+  gateway:
+    image: pmis-gateway:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-gateway
+    <<: *microservice-common
+    ports:
+      - "9000:9000"
+    environment:
+      APP_NAME: pmis-gateway
+      SERVER_PORT: 9000
+    depends_on:
+      - auth
+      - user
+      - project
+      - execution
+      - agent
+      - notification
+      - workflow
+      - file
+      - audit
+      - config
+      - message
+      - scheduler
+
+  # 2) auth - 认证授权
+  auth:
+    image: pmis-auth:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-auth
+    <<: *microservice-common
+    ports:
+      - "9001:9001"
+    environment:
+      APP_NAME: pmis-auth
+      SERVER_PORT: 9001
+
+  # 3) user - 用户/权限/部门/资源池
+  user:
+    image: pmis-user:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-user
+    <<: *microservice-common
+    ports:
+      - "9002:9002"
+    environment:
+      APP_NAME: pmis-user
+      SERVER_PORT: 9002
+
+  # 4) notification - 通知中心
+  notification:
+    image: pmis-notification:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-notification
+    <<: *microservice-common
+    ports:
+      - "9013:9013"
+    environment:
+      APP_NAME: pmis-notification
+      SERVER_PORT: 9013
+
+  # 5) workflow - 工作流
+  workflow:
+    image: pmis-workflow:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-workflow
+    <<: *microservice-common
+    ports:
+      - "9014:9014"
+    environment:
+      APP_NAME: pmis-workflow
+      SERVER_PORT: 9014
+
+  # 6) project - 商机/立项/合同/变更
+  project:
+    image: pmis-project:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-project
+    <<: *microservice-common
+    ports:
+      - "9015:9015"
+    environment:
+      APP_NAME: pmis-project
+      SERVER_PORT: 9015
+
+  # 7) execution - 执行/成本/财务/报表/驾驶舱
+  execution:
+    image: pmis-execution:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-execution
+    <<: *microservice-common
+    ports:
+      - "9016:9016"
+    environment:
+      APP_NAME: pmis-execution
+      SERVER_PORT: 9016
+
+  # 8) agent - AI 智能体
+  agent:
+    image: pmis-agent:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-agent
+    <<: *microservice-common
+    ports:
+      - "9017:9017"
+    environment:
+      APP_NAME: pmis-agent
+      SERVER_PORT: 9017
+
+  # 9) config - 配置中心
+  config:
+    image: pmis-config:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-config
+    <<: *microservice-common
+    ports:
+      - "9018:9018"
+    environment:
+      APP_NAME: pmis-config
+      SERVER_PORT: 9018
+
+  # 10) file - 文件存储
+  file:
+    image: pmis-file:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-file
+    <<: *microservice-common
+    ports:
+      - "9019:9019"
+    environment:
+      APP_NAME: pmis-file
+      SERVER_PORT: 9019
+
+  # 11) audit - 审计日志
+  audit:
+    image: pmis-audit:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-audit
+    <<: *microservice-common
+    ports:
+      - "9020:9020"
+    environment:
+      APP_NAME: pmis-audit
+      SERVER_PORT: 9020
+
+  # 12) message - 消息模板
+  message:
+    image: pmis-message:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-message
+    <<: *microservice-common
+    ports:
+      - "9021:9021"
+    environment:
+      APP_NAME: pmis-message
+      SERVER_PORT: 9021
+
+  # 13) scheduler - 分布式任务调度
+  scheduler:
+    image: pmis-scheduler:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-scheduler
+    <<: *microservice-common
+    ports:
+      - "9022:9022"
+    environment:
+      APP_NAME: pmis-scheduler
+      SERVER_PORT: 9022
+
+  # ============ 周边组件（独立部署）============
+
+  # xxl-job-admin 调度管理后台
+  xxl-job-admin:
+    image: xuxueli/xxl-job-admin:2.4.0
+    container_name: pmis-xxl-job-admin
+    restart: unless-stopped
+    ports:
+      - "9100:8080"
+    environment:
+      PARAMS: >-
+        --spring.datasource.url=jdbc:postgresql://pmis-postgres:5432/pmis
+        --spring.datasource.username=pmis
+        --spring.datasource.password=pmis@2026
+        --xxl.job.accessToken=pmis-xxl-token
+    volumes:
+      - xxljob-logs:/data/applogs/xxl-job
+    networks:
+      - pmis-net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # seata-server 分布式事务
+  seata-server:
+    image: seataio/seata-server:2.0.0
+    container_name: pmis-seata-server
+    restart: unless-stopped
+    ports:
+      - "8091:8091"
+      - "7091:7091"
+    environment:
+      SEATA_PORT: 8091
+      STORE_MODE: file
+      TZ: Asia/Shanghai
+    volumes:
+      - seata-logs:/root/logs/seata
+      - ../seata/seata-client.properties:/seata-server/resources/application.yml:ro
+    networks:
+      - pmis-net
+
+  # sentinel-dashboard 流控/熔断
+  sentinel-dashboard:
+    image: bladex/sentinel-dashboard:1.8.6
+    container_name: pmis-sentinel-dashboard
+    restart: unless-stopped
+    ports:
+      - "8719:8719"
+    environment:
+      JAVA_OPTS: >-
+        -Dcsp.sentinel.dashboard.server=localhost:8719
+        -Dproject.name=pmis
+        -Xms256m -Xmx512m
+    networks:
+      - pmis-net
+
+volumes:
+  pmis-logs:
+    name: pmis-logs
+  xxljob-logs:
+    name: pmis-xxljob-logs
+  seata-logs:
+    name: pmis-seata-logs
+
+networks:
+  pmis-net:
+    name: pmis-network
+    external: true
+    driver: bridge

@@ -7,6 +7,7 @@ import lombok.Data;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 通知发送 DTO
@@ -39,7 +40,7 @@ public class NotificationSendDTO implements Serializable {
     private Long receiverId;
 
     /** 批量接收（优先于 receiverId） */
-    private java.util.List<Long> receiverIds;
+    private List<Long> receiverIds;
 
     /** 业务关联 */
     private String bizType;

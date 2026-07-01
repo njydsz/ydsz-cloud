@@ -380,7 +380,7 @@ public class ReportExportServiceImpl implements ReportExportService {
                 new OutputStreamWriter(baos, StandardCharsets.UTF_8),
                 CSVFormat.DEFAULT.withQuoteMode(org.apache.commons.csv.QuoteMode.MINIMAL))) {
             String[] headers = cols.stream().map(ColumnDef::header).toArray(String[]::new);
-            printer.printRecord(headers);
+            printer.printRecord((Object[]) headers);
             for (Map<String, Object> data : rows) {
                 Object[] vals = new Object[cols.size()];
                 for (int i = 0; i < cols.size(); i++) {

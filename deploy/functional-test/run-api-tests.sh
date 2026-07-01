@@ -1,19 +1,22 @@
 #!/usr/bin/env bash
 # ============================================================================
-#  PMIS 全量 API 契约测试脚本
+#  PMIS 全量 API 契约测试脚本（批次 19 集成 Newman）
 #  --------------------------------------------------------------------------
-#  用途：基于 OpenAPI 3 规范（docs/api/openapi-summary.json）
+#  用途：基于 OpenAPI 3 规范（docs/api/openapi-summary.json）+ Postman 集合
 #        验证 14 个微服务的所有端点契约：状态码 / Content-Type / 必填字段
-#  依赖：curl、jq
+#  依赖：curl、jq、newman（可选，自动跑 Postman 集合）
 #  退出码：0=全部通过 1=有失败
 # ============================================================================
 set -euo pipefail
 
 GATEWAY="${PMIS_GATEWAY:-http://localhost:9000}"
 SPEC_FILE="${PMIS_SPEC_FILE:-$(dirname $0)/../../docs/api/openapi-summary.json}"
+COLLECTION_FILE="${PMIS_COLLECTION:-$(dirname $0)/pmis-contract.postman_collection.json}"
+ENV_FILE="${PMIS_ENV:-$(dirname $0)/pmis-contract.postman_environment.json}"
 USERNAME="${PMIS_TEST_USER:-admin}"
 PASSWORD="${PMIS_TEST_PASSWORD:-admin123}"
 LOGIN_RESP_FILE="/tmp/pmis_login_resp.json"
+NEWMAN_HTML_REPORT="/tmp/pmis-newman-report.html"
 
 echo "============================================================"
 echo "[PMIS API Contract Test] started at $(date '+%F %T')"
@@ -93,4 +96,32 @@ for path in "/api/v1/user/users" "/api/v1/audit/login-audit/page"; do
 done
 
 echo "[PMIS API Contract Test] done, ${PASS} passed, ${FAIL} failed"
+
+# ---------- 5. Newman Postman 集合契约测试（可选）----------
+if command -v newman >/dev/null 2>&1; then
+  echo "[STEP 5] Newman postman contract test"
+  if [ ! -f "${COLLECTION_FILE}" ]; then
+    echo "[WARN] postman collection not found: ${COLLECTION_FILE}, skip"
+  else
+    NEWMAN_ENV_ARGS=()
+    if [ -f "${ENV_FILE}" ]; then
+      NEWMAN_ENV_ARGS=(-e "${ENV_FILE}")
+    fi
+    if newman run "${COLLECTION_FILE}" \
+        --env-var "BASE_URL=${GATEWAY}" \
+        "${NEWMAN_ENV_ARGS[@]}" \
+        --reporters cli,html \
+        --reporter-htmlexport "${NEWMAN_HTML_REPORT}" \
+        --timeout 30000 \
+        --bail 2>&1 | tail -60; then
+      echo "[OK] Newman contract test passed, report: ${NEWMAN_HTML_REPORT}"
+    else
+      echo "[FAIL] Newman contract test failed, report: ${NEWMAN_HTML_REPORT}"
+      FAIL=$((FAIL+1))
+    fi
+  fi
+else
+  echo "[STEP 5] newman not installed, skip (install: npm i -g newman)"
+fi
+
 [ ${FAIL} -eq 0 ] && exit 0 || exit 1

@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * 任务操作 DTO（完成/签收/退回/转办）
@@ -33,5 +34,5 @@ public class TaskOperateDTO implements Serializable {
     private String targetNodeKey;
 
     /** 流程变量 */
-    private java.util.Map<String, Object> variables;
+    private Map<String, Object> variables;
 }

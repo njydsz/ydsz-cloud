@@ -5,6 +5,7 @@ import com.njydsz.pmis.agent.enums.AgentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -55,9 +56,9 @@ class ResourceRecommendAgentTest {
     @DisplayName("按综合分排序")
     void rankByScore() {
         List<Map<String, Object>> candidates = new ArrayList<>();
-        candidates.add(candidate("a", "L3", new java.math.BigDecimal("800"), "0.9", "0.9"));
-        candidates.add(candidate("b", "L4", new java.math.BigDecimal("1500"), "0.7", "0.7"));
-        candidates.add(candidate("c", "L3", new java.math.BigDecimal("1000"), "0.6", "0.6"));
+        candidates.add(candidate("a", "L3", new BigDecimal("800"), "0.9", "0.9"));
+        candidates.add(candidate("b", "L4", new BigDecimal("1500"), "0.7", "0.7"));
+        candidates.add(candidate("c", "L3", new BigDecimal("1000"), "0.6", "0.6"));
         Map<String, Object> p = new HashMap<>();
         p.put("candidates", candidates);
         p.put("topN", 2);
@@ -76,7 +77,7 @@ class ResourceRecommendAgentTest {
     void topNLimit() {
         List<Map<String, Object>> candidates = new ArrayList<>();
         for (int i = 0; i < 5; i++) {
-            candidates.add(candidate("u" + i, "L3", new java.math.BigDecimal("800"),
+            candidates.add(candidate("u" + i, "L3", new BigDecimal("800"),
                     "0." + (5 + i), "0.8"));
         }
         Map<String, Object> p = new HashMap<>();
@@ -94,8 +95,8 @@ class ResourceRecommendAgentTest {
     @DisplayName("级匹配")
     void levelMatch() {
         List<Map<String, Object>> candidates = new ArrayList<>();
-        candidates.add(candidate("a", "L3", new java.math.BigDecimal("800"), "0.9", "0.9"));
-        candidates.add(candidate("b", "L4", new java.math.BigDecimal("800"), "0.9", "0.9"));
+        candidates.add(candidate("a", "L3", new BigDecimal("800"), "0.9", "0.9"));
+        candidates.add(candidate("b", "L4", new BigDecimal("800"), "0.9", "0.9"));
         Map<String, Object> p = new HashMap<>();
         p.put("candidates", candidates);
         p.put("requiredLevel", "L3");
@@ -112,7 +113,7 @@ class ResourceRecommendAgentTest {
     @DisplayName("高分推荐 RECOMMEND")
     void recommendLevel() {
         List<Map<String, Object>> candidates = new ArrayList<>();
-        candidates.add(candidate("a", "L3", new java.math.BigDecimal("500"), "1.0", "1.0"));
+        candidates.add(candidate("a", "L3", new BigDecimal("500"), "1.0", "1.0"));
         Map<String, Object> p = new HashMap<>();
         p.put("candidates", candidates);
         AgentContext ctx = new AgentContext();
@@ -121,14 +122,14 @@ class ResourceRecommendAgentTest {
         assertThat(r.getAlertLevel()).isEqualTo(AgentAlertLevel.RECOMMEND);
     }
 
-    private Map<String, Object> candidate(String name, String level, java.math.BigDecimal cost,
+    private Map<String, Object> candidate(String name, String level, BigDecimal cost,
                                            String skill, String avail) {
         Map<String, Object> c = new HashMap<>();
         c.put("name", name);
         c.put("level", level);
         c.put("dailyCost", cost);
-        c.put("skillMatch", new java.math.BigDecimal(skill));
-        c.put("availability", new java.math.BigDecimal(avail));
+        c.put("skillMatch", new BigDecimal(skill));
+        c.put("availability", new BigDecimal(avail));
         return c;
     }
 }

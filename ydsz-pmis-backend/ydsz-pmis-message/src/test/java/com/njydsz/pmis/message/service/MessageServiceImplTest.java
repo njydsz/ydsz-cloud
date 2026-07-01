@@ -1,5 +1,6 @@
 package com.njydsz.pmis.message.service;
 
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.message.channel.MessageChannel;
 import com.njydsz.pmis.message.channel.MessageRequest;
 import com.njydsz.pmis.message.channel.MessageResult;
@@ -14,7 +15,9 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationContext;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -195,7 +198,7 @@ class MessageServiceImplTest {
     /** 测试用通道 */
     static class TestChannel implements MessageChannel {
         final String type;
-        final java.util.List<MessageRequest> received = new java.util.ArrayList<>();
+        final List<MessageRequest> received = new ArrayList<>();
         boolean failNext = false;
 
         TestChannel(String type) {

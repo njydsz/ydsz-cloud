@@ -1,0 +1,152 @@
+# ====================================================================
+#  PMIS Prometheus 主配置（批次 19）
+#  ---------------------------------------------------------------------
+#  抓取 14 个微服务的 /actuator/prometheus 端点
+#  + Node Exporter（主机层指标）
+#  + Prometheus 自身指标
+#  告警规则来自 rules/ 目录
+# ====================================================================
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  external_labels:
+    cluster: pmis-prod
+    environment: production
+
+rule_files:
+  - "rules/*.yml"
+
+scrape_configs:
+  # Prometheus 自身
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+        labels:
+          service: prometheus
+
+  # 主机层指标
+  - job_name: 'node-exporter'
+    static_configs:
+      - targets: ['pmis-node-exporter:9100']
+        labels:
+          service: node-exporter
+
+  # 14 个微服务（通过 Nacos 服务发现 + 静态兜底）
+  - job_name: 'pmis-gateway'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-gateway:9000']
+        labels:
+          service: pmis-gateway
+          tier: gateway
+
+  - job_name: 'pmis-auth'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-auth:9001']
+        labels:
+          service: pmis-auth
+          tier: business
+
+  - job_name: 'pmis-user'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-user:9002']
+        labels:
+          service: pmis-user
+          tier: business
+
+  - job_name: 'pmis-notification'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-notification:9013']
+        labels:
+          service: pmis-notification
+          tier: business
+
+  - job_name: 'pmis-workflow'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-workflow:9014']
+        labels:
+          service: pmis-workflow
+          tier: business
+
+  - job_name: 'pmis-project'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-project:9015']
+        labels:
+          service: pmis-project
+          tier: business
+
+  - job_name: 'pmis-execution'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-execution:9016']
+        labels:
+          service: pmis-execution
+          tier: business
+
+  - job_name: 'pmis-agent'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-agent:9017']
+        labels:
+          service: pmis-agent
+          tier: business
+
+  - job_name: 'pmis-config'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-config:9018']
+        labels:
+          service: pmis-config
+          tier: business
+
+  - job_name: 'pmis-file'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-file:9019']
+        labels:
+          service: pmis-file
+          tier: business
+
+  - job_name: 'pmis-audit'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-audit:9020']
+        labels:
+          service: pmis-audit
+          tier: business
+
+  - job_name: 'pmis-message'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-message:9021']
+        labels:
+          service: pmis-message
+          tier: business
+
+  - job_name: 'pmis-scheduler'
+    metrics_path: /actuator/prometheus
+    static_configs:
+      - targets: ['pmis-scheduler:9022']
+        labels:
+          service: pmis-scheduler
+          tier: business
+
+  # PostgreSQL Exporter（可选）
+  - job_name: 'postgres'
+    static_configs:
+      - targets: ['pmis-postgres-exporter:9187']
+        labels:
+          service: postgres
+
+  # Redis Exporter（可选）
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['pmis-redis-exporter:9121']
+        labels:
+          service: redis
