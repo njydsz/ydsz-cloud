@@ -65,7 +65,7 @@ class AfterSalesScanJobHandlerTest {
 
     @Test
     @DisplayName("execute 子任务异常被吞掉，主任务不失败")
-    void execute_subTaskException() {
+    void execute_subTaskException() throws Exception {
         when(warrantyService.scanExpiring(any(LocalDate.class), anyInt()))
                 .thenThrow(new RuntimeException("warranty down"));
         when(warrantyService.scanOverdue(any(LocalDate.class))).thenReturn(0);

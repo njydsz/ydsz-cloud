@@ -4,8 +4,6 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.scheduler.entity.JobDO;
 import com.njydsz.pmis.scheduler.entity.JobLogDO;
 
-import java.util.List;
-
 /**
  * 任务调度服务
  */

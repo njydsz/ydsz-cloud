@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
@@ -28,7 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
@@ -129,7 +129,7 @@ public class InitiationServiceImpl implements InitiationService {
     }
 
     @Override
-    @com.njydsz.pmis.common.annotation.DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
+    @DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
     public Page<InitiationDO> page(int page, int size, String keyword, String stage,
                                    String projectLevel, Long pmId) {
         Page<InitiationDO> p = new Page<>(page, size);

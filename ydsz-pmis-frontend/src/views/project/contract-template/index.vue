@@ -4,10 +4,11 @@
  *
  * 状态: DRAFT -> PUBLISHED -> DEPRECATED
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import {
   pageContractTemplates,
   createContractTemplate,
@@ -65,6 +66,89 @@ function handleReset() {
   query.status = ''
   query.page = 1
   fetchList()
+}
+
+/** 是否处于空态: 非加载中且列表无数据 */
+const isEmpty = computed(() => !loading.value && list.value.length === 0)
+
+/** 选中的合同模板行 (用于批量操作) */
+const selectedRows = ref<ContractTemplateVO[]>([])
+
+function onSelectionChange({ rows }: { rows: ContractTemplateVO[] }) {
+  selectedRows.value = rows
+}
+
+function clearSelection() {
+  selectedRows.value = []
+}
+
+const BATCH_CONCURRENCY = 4
+
+/**
+ * 通用批量状态变更: 并发上限 BATCH_CONCURRENCY, 单条失败不阻断其他.
+ * 完成后弹成功/失败统计, 自动刷新列表并清空选中.
+ */
+async function batchChangeStatus(target: 'PUBLISHED' | 'DEPRECATED', fromStatuses: string[]) {
+  const eligible = selectedRows.value.filter((r) => fromStatuses.includes(r.status))
+  if (eligible.length === 0) {
+    ElMessage.warning(`当前选中的 ${selectedRows.value.length} 条记录中, 没有可${target === 'PUBLISHED' ? '发布' : '废弃'}的模板`)
+    return
+  }
+  const targetText = statusMap[target].label
+  try {
+    await ElMessageBox.confirm(
+      `确认对 ${eligible.length} 条合同模板执行「${targetText}」吗？`,
+      '批量操作',
+      { type: 'warning' },
+    )
+  } catch {
+    return
+  }
+  const results = await runWithConcurrency(
+    eligible,
+    BATCH_CONCURRENCY,
+    (row) => changeContractTemplateStatus({ id: row.id, targetStatus: target }),
+  )
+  const ok = results.filter((r) => r.ok).length
+  const fail = results.length - ok
+  if (fail === 0) {
+    ElMessage.success(`批量${targetText}完成: ${ok} 条`)
+  } else {
+    ElMessage.warning(`批量${targetText}完成: 成功 ${ok} 条, 失败 ${fail} 条`)
+  }
+  clearSelection()
+  fetchList()
+}
+
+async function handleBatchPublish() {
+  await batchChangeStatus('PUBLISHED', ['DRAFT'])
+}
+
+async function handleBatchDeprecate() {
+  await batchChangeStatus('DEPRECATED', ['PUBLISHED'])
+}
+
+async function runWithConcurrency<T, R>(
+  items: T[],
+  limit: number,
+  worker: (item: T) => Promise<R>,
+): Promise<Array<{ item: T; ok: boolean; error?: unknown }>> {
+  const out: Array<{ item: T; ok: boolean; error?: unknown }> = []
+  let cursor = 0
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const idx = cursor++
+      const item = items[idx]
+      try {
+        await worker(item)
+        out.push({ item, ok: true })
+      } catch (error) {
+        out.push({ item, ok: false, error })
+      }
+    }
+  })
+  await Promise.all(runners)
+  return out
 }
 
 const dialogVisible = ref(false)
@@ -151,7 +235,16 @@ onMounted(fetchList)
     </template>
 
     <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+      <EmptyState
+        v-if="isEmpty"
+        preset="search"
+        :title="query.keyword || query.type || query.status ? '未找到匹配的合同模板' : '暂无合同模板'"
+        :description="query.keyword || query.type || query.status ? '请尝试调整筛选条件或清空搜索关键字' : '当前还没有任何合同模板, 可以创建第一条模板'"
+        action-text="新增模板"
+        @action="openCreate"
+      />
+      <vxe-table v-else :data="list" :loading="loading" border stripe @checkbox-change="onSelectionChange" @checkbox-all="onSelectionChange">
+        <vxe-column type="checkbox" width="50" :checkStrictly="false" />
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="code" title="编码" width="160" />
         <vxe-column field="name" title="模板名称" min-width="200" show-overflow />
@@ -223,3 +316,11 @@ onMounted(fetchList)
     </el-dialog>
   </PageLayout>
 </template>
+
+<style lang="scss" scoped>
+.batch-count {
+  margin-left: 4px;
+  font-weight: 600;
+  opacity: 0.85;
+}
+</style>

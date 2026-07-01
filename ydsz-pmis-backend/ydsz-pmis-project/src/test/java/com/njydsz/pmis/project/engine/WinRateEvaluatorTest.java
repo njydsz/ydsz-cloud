@@ -1,7 +1,6 @@
 package com.njydsz.pmis.project.engine;
 
 import com.njydsz.pmis.project.entity.OpportunityDO;
-import com.njydsz.pmis.project.enums.OpportunityStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

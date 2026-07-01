@@ -2,6 +2,7 @@ package com.njydsz.pmis.execution.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.assembler.NameAssembler;
@@ -154,7 +155,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     }
 
     @Override
-    @com.njydsz.pmis.common.annotation.DataScope(userColumn = "created_by")
+    @DataScope(userColumn = "created_by")
     public Page<WbsTaskDO> page(int page, int size, String keyword, String status,
                                 String taskType, Long initiationId, Long ownerId) {
         Page<WbsTaskDO> p = new Page<>(page, size);

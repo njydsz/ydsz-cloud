@@ -2,8 +2,10 @@ package com.njydsz.pmis.execution.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.execution.assembler.NameAssembler;
 import com.njydsz.pmis.execution.dto.TimeEntryApprovalDTO;
 import com.njydsz.pmis.execution.dto.TimeEntryCreateDTO;
@@ -20,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -57,7 +60,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         BeanUtils.copyProperties(dto, e);
         if (!StringUtils.hasText(e.getLevelCode())) e.setLevelCode("L5");
         if (!StringUtils.hasText(e.getWorkType())) e.setWorkType("REGULAR");
-        if (e.getOvertime() == null) e.setOvertime(java.math.BigDecimal.ZERO);
+        if (e.getOvertime() == null) e.setOvertime(BigDecimal.ZERO);
         if (!StringUtils.hasText(e.getStatus())) e.setStatus(TimeEntryStatus.DRAFT.getCode());
         if (e.getTenantId() == null) e.setTenantId(1L);
         if (e.getProviderTraceId() == null) e.setProviderTraceId("");
@@ -131,9 +134,9 @@ public class TimeEntryServiceImpl implements TimeEntryService {
                         ? LocalDate.now().format(PERIOD_FMT)
                         : e.getEntryDate().format(PERIOD_FMT);
                 // 简化：人力成本按 8h 折算 1 人天，费率取默认 800 元（人天）
-                java.math.BigDecimal amount = e.getDays() == null
-                        ? TimeEntryValidator.toDays(e.getHours()).multiply(new java.math.BigDecimal("800"))
-                        : e.getDays().multiply(new java.math.BigDecimal("800"));
+                BigDecimal amount = e.getDays() == null
+                        ? TimeEntryValidator.toDays(e.getHours()).multiply(new BigDecimal("800"))
+                        : e.getDays().multiply(new BigDecimal("800"));
                 costAllocationService.syncFromTimeEntry(
                         e.getId(), e.getInitiationId(), e.getEmployeeId(), e.getEmployeeName(),
                         e.getLevelCode(), period, amount, true);
@@ -163,7 +166,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
-    @com.njydsz.pmis.common.annotation.DataScope(userColumn = "employee_id")
+    @DataScope(userColumn = "employee_id")
     public Page<TimeEntryDO> page(int page, int size, String keyword, String status,
                                   Long employeeId, Long initiationId, Long taskId,
                                   LocalDate from, LocalDate to) {
@@ -180,7 +183,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         if (from != null) w.ge(TimeEntryDO::getEntryDate, from);
         if (to != null) w.le(TimeEntryDO::getEntryDate, to);
         // 数据权限 SQL 注入
-        String ds = com.njydsz.pmis.common.security.DataScopeHelper.buildSqlFragment("", "");
+        String ds = DataScopeHelper.buildSqlFragment("", "");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(TimeEntryDO::getEntryDate);
         return timeEntryMapper.selectPage(p, w);

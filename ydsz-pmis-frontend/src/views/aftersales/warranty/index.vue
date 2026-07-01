@@ -62,6 +62,88 @@ function handleReset() {
   fetchList()
 }
 
+/** 是否处于空态: 非加载中且列表无数据 */
+const isEmpty = computed(() => !loading.value && list.value.length === 0)
+
+/** 选中的质保期行 (用于批量操作) */
+const selectedRows = ref<WarrantyVO[]>([])
+
+function onSelectionChange({ rows }: { rows: WarrantyVO[] }) {
+  selectedRows.value = rows
+}
+
+function clearSelection() {
+  selectedRows.value = []
+}
+
+const BATCH_CONCURRENCY = 4
+
+/**
+ * 并发执行器: 限流 BATCH_CONCURRENCY, 单条失败不阻断其他.
+ * 返回 {ok, error?} 列表用于统计成功/失败数.
+ */
+async function runWithConcurrency<T>(
+  items: T[],
+  limit: number,
+  worker: (item: T) => Promise<unknown>,
+): Promise<Array<{ item: T; ok: boolean; error?: unknown }>> {
+  const out: Array<{ item: T; ok: boolean; error?: unknown }> = []
+  let cursor = 0
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (cursor < items.length) {
+      const idx = cursor++
+      const item = items[idx]
+      try {
+        await worker(item)
+        out.push({ item, ok: true })
+      } catch (error) {
+        out.push({ item, ok: false, error })
+      }
+    }
+  })
+  await Promise.all(runners)
+  return out
+}
+
+/** 批量提前终止: 仅 ACTIVE / EXPIRING_SOON 状态可终止 */
+async function handleBatchTerminate() {
+  const eligible = selectedRows.value.filter(
+    (r) => r.status === 'ACTIVE' || r.status === 'EXPIRING_SOON',
+  )
+  if (eligible.length === 0) {
+    ElMessage.warning(`当前选中的 ${selectedRows.value.length} 条记录中, 没有可终止的质保期`)
+    return
+  }
+  let reason = ''
+  try {
+    const { value } = await ElMessageBox.prompt(
+      `确认提前终止选中的 ${eligible.length} 条质保期吗？`,
+      '批量终止',
+      {
+        inputValidator: (v) => !!v || '原因必填',
+        inputPlaceholder: '请输入提前终止原因',
+      },
+    )
+    reason = value
+  } catch {
+    return
+  }
+  const results = await runWithConcurrency(
+    eligible,
+    BATCH_CONCURRENCY,
+    (row) => terminateWarranty({ id: row.id, reason }),
+  )
+  const ok = results.filter((r) => r.ok).length
+  const fail = results.length - ok
+  if (fail === 0) {
+    ElMessage.success(`批量终止完成: ${ok} 条`)
+  } else {
+    ElMessage.warning(`批量终止完成: 成功 ${ok} 条, 失败 ${fail} 条`)
+  }
+  clearSelection()
+  fetchList()
+}
+
 const dialogVisible = ref(false)
 const formRef = ref<any>()
 const form = reactive<Partial<WarrantyCreateDTO>>({
@@ -155,7 +237,16 @@ onMounted(fetchList)
     </template>
 
     <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+      <EmptyState
+        v-if="isEmpty"
+        preset="search"
+        :title="query.keyword || query.status || query.initiationId ? '未找到匹配的质保期' : '暂无质保期记录'"
+        :description="query.keyword || query.status || query.initiationId ? '请尝试调整筛选条件或清空搜索关键字' : '当前还没有任何质保期, 可以为已结项项目创建质保期'"
+        action-text="新增质保期"
+        @action="openCreate"
+      />
+      <vxe-table v-else :data="list" :loading="loading" border stripe @checkbox-change="onSelectionChange" @checkbox-all="onSelectionChange">
+        <vxe-column type="checkbox" width="50" />
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="warrantyCode" title="质保期编号" width="200" />
         <vxe-column field="initiationName" title="项目" min-width="200" show-overflow />

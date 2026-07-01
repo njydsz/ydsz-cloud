@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
@@ -280,7 +281,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
 
     private AlertDispatchDO findByCode(String code) {
         if (!StringUtils.hasText(code)) return null;
-        return mapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<AlertDispatchDO>()
+        return mapper.selectList(new QueryWrapper<AlertDispatchDO>()
                         .eq("alert_code", code)
                         .eq("deleted", 0)
                         .last("LIMIT 1"))

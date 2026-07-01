@@ -58,10 +58,15 @@ public final class JobRunRecorder {
      * @return {@link JobRunResult} 包装
      */
     public static <T> JobRunResult<T> run(String jobKey, String paramsJson, Supplier<T> biz) {
-        return run(jobKey, paramsJson, () -> {
-            T data = biz.get();
-            return new JobRunResult<>(data, null);
-        });
+        try {
+            return run(jobKey, paramsJson, () -> {
+                T data = biz.get();
+                return new JobRunResult<>(data, null);
+            });
+        } catch (Exception e) {
+            // Supplier 不声明抛出异常，此处理论上不会走到，兜底转为运行时异常
+            throw new RuntimeException(e);
+        }
     }
 
     /**

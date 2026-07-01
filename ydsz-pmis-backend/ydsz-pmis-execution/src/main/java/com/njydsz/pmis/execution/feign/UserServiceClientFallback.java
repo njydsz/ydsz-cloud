@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 @Slf4j
@@ -21,8 +22,8 @@ public class UserServiceClientFallback implements FallbackFactory<UserServiceCli
             }
 
             @Override
-            public R<java.math.BigDecimal> getLevelRate(String levelCode) {
-                return R.ok(java.math.BigDecimal.ZERO);
+            public R<BigDecimal> getLevelRate(String levelCode) {
+                return R.ok(BigDecimal.ZERO);
             }
         };
     }

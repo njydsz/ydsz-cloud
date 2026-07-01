@@ -3,13 +3,6 @@ package com.njydsz.pmis.common.permission;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
-import org.springframework.core.io.support.ResourcePatternResolver;
-import org.springframework.core.type.classreading.MetadataReader;
-import org.springframework.core.type.classreading.MetadataReaderFactory;
-import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
-import org.springframework.stereotype.Controller;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;

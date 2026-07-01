@@ -28,7 +28,7 @@ class AlertDispatchRetryJobHandlerTest {
 
     @Test
     @DisplayName("execute 默认 maxRetry=3 返回重试计数")
-    void execute_default() {
+    void execute_default() throws Exception {
         when(alertDispatchService.retryFailed(anyInt())).thenReturn(5);
         Object r = handler.execute(null);
         assertThat(r).isInstanceOf(java.util.Map.class);
@@ -41,7 +41,7 @@ class AlertDispatchRetryJobHandlerTest {
 
     @Test
     @DisplayName("execute 解析 maxRetry=5")
-    void execute_customMaxRetry() {
+    void execute_customMaxRetry() throws Exception {
         when(alertDispatchService.retryFailed(anyInt())).thenReturn(2);
         Object r = handler.execute("{\"maxRetry\":5}");
         @SuppressWarnings("unchecked")
@@ -52,7 +52,7 @@ class AlertDispatchRetryJobHandlerTest {
 
     @Test
     @DisplayName("execute maxRetry<=0 走默认 3")
-    void execute_invalidMaxRetry() {
+    void execute_invalidMaxRetry() throws Exception {
         when(alertDispatchService.retryFailed(anyInt())).thenReturn(0);
         handler.execute("{\"maxRetry\":0}");
         verify(alertDispatchService).retryFailed(3);

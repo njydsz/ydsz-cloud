@@ -2,8 +2,6 @@ package com.njydsz.pmis.common.excel;
 
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.write.handler.WriteHandler;
-import com.alibaba.excel.write.metadata.style.WriteCellStyle;
-import com.alibaba.excel.write.metadata.style.WriteFont;
 import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.alibaba.excel.write.style.row.SimpleRowHeightStyleStrategy;

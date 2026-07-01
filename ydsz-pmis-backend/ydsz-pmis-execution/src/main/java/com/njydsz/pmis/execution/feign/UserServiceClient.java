@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
@@ -18,5 +19,5 @@ public interface UserServiceClient {
     R<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
 
     @GetMapping("/api/v1/user/employee/level-rate")
-    R<java.math.BigDecimal> getLevelRate(@RequestParam("levelCode") String levelCode);
+    R<BigDecimal> getLevelRate(@RequestParam("levelCode") String levelCode);
 }

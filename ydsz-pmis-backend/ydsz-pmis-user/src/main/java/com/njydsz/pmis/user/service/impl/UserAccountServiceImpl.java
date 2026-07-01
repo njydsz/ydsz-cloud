@@ -2,6 +2,7 @@ package com.njydsz.pmis.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.AccountLockInfo;
@@ -72,7 +73,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
-    @com.njydsz.pmis.common.annotation.DataScope(deptColumn = "dept_id", userColumn = "id")
+    @DataScope(deptColumn = "dept_id", userColumn = "id")
     public Page<UserAccountDO> page(UserQueryDTO query) {
         Page<UserAccountDO> page = new Page<>(query.getPage(), query.getSize());
         LambdaQueryWrapper<UserAccountDO> w = new LambdaQueryWrapper<>();

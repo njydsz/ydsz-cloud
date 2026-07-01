@@ -1,14 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!--
-  PMIS 统一日志配置（ELK 友好）
-  --------------------------------------------------------------------------
-  - 控制台：开发期可读
-  - FILE_ALL / FILE_ERROR：磁盘归档，30/90 天滚动
-  - JSON_FILE：Filebeat 直采，每行 1 条 JSON（ELK 兼容）
-  - LOGSTASH：Logstash TCP 直发（生产环境启用，HOST 通过 ENV 注入）
-  - 异步写入：ASYNC_* 解耦业务线程与磁盘 IO
-  - traceId 透传：MDC 注入后所有 appender 自动附加
--->
+<!-- PMIS 统一日志配置（ELK 友好）: 控制台/FILE_ALL/FILE_ERROR/JSON_FILE/LOGSTASH/ASYNC -->
 <configuration>
 
     <!-- 通用属性 -->

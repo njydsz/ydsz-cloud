@@ -5,10 +5,11 @@
  * 优先级: P1/P2/P3/P4 (SLA 响应/解决时限不同)
  * 状态: OPEN/ASSIGNED/IN_PROGRESS/RESOLVED/CLOSED/CANCELLED
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import EmptyState from '@/components/common/EmptyState.vue'
 import {
   pageOpsTickets,
   createOpsTicket,
@@ -107,6 +108,9 @@ function handleReset() {
   query.page = 1
   fetchList()
 }
+
+/** 是否处于空态: 非加载中且列表无数据 */
+const isEmpty = computed(() => !loading.value && list.value.length === 0)
 
 const dialogVisible = ref(false)
 const formRef = ref<any>()
@@ -299,7 +303,15 @@ onMounted(() => {
     </el-row>
 
     <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+      <EmptyState
+        v-if="isEmpty"
+        preset="search"
+        :title="query.keyword || query.status || query.priority || query.initiationId || query.assigneeId ? '未找到匹配的运维工单' : '暂无运维工单'"
+        :description="query.keyword || query.status || query.priority || query.initiationId || query.assigneeId ? '请尝试调整筛选条件或清空搜索关键字' : '当前还没有任何运维工单, 可以创建第一条工单'"
+        action-text="新增工单"
+        @action="openCreate"
+      />
+      <vxe-table v-else :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="ticketCode" title="工单编号" width="180" />
         <vxe-column field="title" title="标题" min-width="220" show-overflow />

@@ -32,7 +32,7 @@ class DailyReconcileJobHandlerTest {
 
     @Test
     @DisplayName("execute 默认前一天对账")
-    void execute_default() {
+    void execute_default() throws Exception {
         when(service.runDaily(any(LocalDate.class))).thenReturn(6);
         Object r = handler.execute(null);
         assertThat(r).isInstanceOf(java.util.Map.class);
@@ -47,7 +47,7 @@ class DailyReconcileJobHandlerTest {
 
     @Test
     @DisplayName("execute 解析 date 参数")
-    void execute_customDate() {
+    void execute_customDate() throws Exception {
         when(service.runDaily(any(LocalDate.class))).thenReturn(6);
         Object r = handler.execute("{\"date\":\"2026-05-01\"}");
         ArgumentCaptor<LocalDate> cap = ArgumentCaptor.forClass(LocalDate.class);
@@ -57,7 +57,7 @@ class DailyReconcileJobHandlerTest {
 
     @Test
     @DisplayName("execute service 抛异常时包装抛出")
-    void execute_serviceException() {
+    void execute_serviceException() throws Exception {
         when(service.runDaily(any(LocalDate.class)))
                 .thenThrow(new RuntimeException("DB down"));
         assertThatThrownBy(() -> handler.execute(null))

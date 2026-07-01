@@ -2,6 +2,7 @@ package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.message.channel.MessageRequest;
 import com.njydsz.pmis.message.channel.MessageResult;
 import com.njydsz.pmis.message.dto.MessageSendDTO;
 import com.njydsz.pmis.message.entity.MessageLogDO;
@@ -59,8 +60,8 @@ public class MessageController {
         return R.ok(messageService.listChannelTypes());
     }
 
-    private com.njydsz.pmis.message.channel.MessageRequest toRequest(MessageSendDTO dto) {
-        com.njydsz.pmis.message.channel.MessageRequest req = new com.njydsz.pmis.message.channel.MessageRequest();
+    private MessageRequest toRequest(MessageSendDTO dto) {
+        MessageRequest req = new MessageRequest();
         req.setChannel(dto.getChannel());
         req.setTemplateCode(dto.getTemplateCode());
         req.setReceiver(dto.getReceiver());
