@@ -21,18 +21,42 @@ public class SensitiveOperationEvent implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 操作用户 ID */
     private Long userId;
+
+    /** 操作用户名 */
     private String username;
+
+    /** 操作码 */
     private String operationCode;
+
+    /** 操作名 */
     private String operationName;
+
+    /** 业务类型 */
     private String bizType;
+
+    /** 业务 ID */
     private String bizId;
-    /** PASSWORD / TOTP / SMS */
+
+    /** 二次认证方式: PASSWORD / TOTP / SMS */
     private String reAuthMethod;
+
+    /** 二次认证 token */
     private String reAuthToken;
+
+    /** 校验通过时间戳（毫秒） */
     private Long verifiedAt;
+
+    /** 二次认证 token 过期时间戳（毫秒） */
     private Long expireAt;
+
+    /** 客户端 IP */
     private String clientIp;
+
+    /** 链路追踪 ID */
     private String traceId;
+
+    /** 租户 ID */
     private Long tenantId;
 }

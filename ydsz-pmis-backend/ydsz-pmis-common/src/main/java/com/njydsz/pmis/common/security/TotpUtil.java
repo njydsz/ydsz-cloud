@@ -26,12 +26,18 @@ import java.time.Instant;
 @Slf4j
 public final class TotpUtil {
 
+    /** 密钥字节数 */
     private static final int SECRET_BYTES = 20;
+    /** 时间步长（秒） */
     private static final int TIME_STEP = 30;
+    /** OTP 位数 */
     private static final int DIGITS = 6;
-    private static final int WINDOW = 1; // 前后允许 1 个时间步
+    /** 时间步漂移窗口（前后允许 1 个时间步） */
+    private static final int WINDOW = 1;
 
+    /** Base32 字母表 */
     private static final String ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+    /** 安全随机数生成器 */
     private static final SecureRandom RANDOM = new SecureRandom();
 
     private TotpUtil() {
@@ -39,6 +45,8 @@ public final class TotpUtil {
 
     /**
      * 生成 20 字节 Base32 编码的密钥
+     *
+     * @return Base32 编码的密钥
      */
     public static String generateSecret() {
         byte[] bytes = new byte[SECRET_BYTES];
@@ -47,7 +55,10 @@ public final class TotpUtil {
     }
 
     /**
-     * 生成 8 组一次性备份码（每组 8 位十六进制）
+     * 生成 count 组一次性备份码（每组 8 位十六进制）
+     *
+     * @param count 备份码数量
+     * @return 备份码数组
      */
     public static String[] generateBackupCodes(int count) {
         String[] codes = new String[count];
@@ -65,6 +76,10 @@ public final class TotpUtil {
 
     /**
      * 生成指定时间点的 OTP
+     *
+     * @param base32Secret Base32 密钥
+     * @param unixSeconds  Unix 时间戳（秒）
+     * @return 6 位 OTP
      */
     public static String generate(String base32Secret, long unixSeconds) {
         long counter = unixSeconds / TIME_STEP;
@@ -72,7 +87,10 @@ public final class TotpUtil {
     }
 
     /**
-     * 生成默认时间点的 OTP
+     * 生成当前时间点的 OTP
+     *
+     * @param base32Secret Base32 密钥
+     * @return 6 位 OTP
      */
     public static String generate(String base32Secret) {
         return generate(base32Secret, Instant.now().getEpochSecond());
@@ -100,6 +118,10 @@ public final class TotpUtil {
 
     /**
      * 校验 OTP（允许前后各 WINDOW 个时间步漂移）
+     *
+     * @param base32Secret Base32 密钥
+     * @param otp          待校验的 OTP
+     * @return true 表示校验通过
      */
     public static boolean verify(String base32Secret, String otp) {
         if (base32Secret == null || otp == null || otp.length() != DIGITS) {
@@ -125,7 +147,11 @@ public final class TotpUtil {
     }
 
     /**
-     * 校验备用码
+     * 校验备用码（不区分大小写）
+     *
+     * @param input       用户输入的备用码
+     * @param storedCodes 已存储的备用码列表
+     * @return true 表示匹配
      */
     public static boolean verifyBackupCode(String input, String[] storedCodes) {
         if (input == null || storedCodes == null) return false;
@@ -139,6 +165,9 @@ public final class TotpUtil {
 
     /**
      * Base32 编码
+     *
+     * @param data 原始字节数组
+     * @return Base32 字符串
      */
     public static String encodeBase32(byte[] data) {
         if (data == null || data.length == 0) return "";
@@ -167,6 +196,9 @@ public final class TotpUtil {
 
     /**
      * Base32 解码
+     *
+     * @param base32 Base32 字符串
+     * @return 原始字节数组
      */
     public static byte[] decodeBase32(String base32) {
         if (base32 == null) return new byte[0];
@@ -194,6 +226,11 @@ public final class TotpUtil {
 
     /**
      * 生成 otpauth:// URI（用于 Google Authenticator 等）
+     *
+     * @param account 账号
+     * @param issuer  发行方
+     * @param secret  Base32 密钥
+     * @return otpauth URI
      */
     public static String otpAuthUri(String account, String issuer, String secret) {
         return "otpauth://totp/" + issuer + ":" + account
@@ -202,10 +239,20 @@ public final class TotpUtil {
                 + "&algorithm=SHA1&digits=" + DIGITS + "&period=" + TIME_STEP;
     }
 
+    /**
+     * 获取 OTP 位数
+     *
+     * @return 位数
+     */
     public static int getDigits() {
         return DIGITS;
     }
 
+    /**
+     * 获取时间步长（秒）
+     *
+     * @return 时间步长
+     */
     public static int getTimeStep() {
         return TIME_STEP;
     }

@@ -13,6 +13,9 @@ import org.mybatis.spring.annotation.MapperScan;
 
 /**
  * 配置中心启动类
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.config", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient

@@ -23,14 +23,21 @@ import java.util.regex.Pattern;
  */
 public final class PasswordPolicy {
 
+    /** 密码最小长度 */
     private static final int MIN_LENGTH = 8;
+    /** 密码最大长度 */
     private static final int MAX_LENGTH = 32;
 
+    /** 大写字母正则 */
     private static final Pattern UPPER = Pattern.compile("[A-Z]");
+    /** 小写字母正则 */
     private static final Pattern LOWER = Pattern.compile("[a-z]");
+    /** 数字正则 */
     private static final Pattern DIGIT = Pattern.compile("\\d");
+    /** 特殊字符正则 */
     private static final Pattern SPECIAL = Pattern.compile("[!@#$%^&*()_+\\-=]");
 
+    /** 常见弱密码列表 */
     private static final List<String> WEAK_PASSWORDS = List.of(
             "12345678", "123456789", "1234567890", "password", "qwerty",
             "abc123", "11111111", "00000000", "iloveyou", "admin123",
@@ -43,6 +50,8 @@ public final class PasswordPolicy {
     /**
      * 校验密码强度
      *
+     * @param password 密码
+     * @param username 用户名
      * @return 校验结果
      */
     public static PasswordCheckResult check(String password, String username) {
@@ -80,6 +89,9 @@ public final class PasswordPolicy {
 
     /**
      * 计算密码强度等级 0-4（0=弱 / 1=差 / 2=中 / 3=良 / 4=强）
+     *
+     * @param password 密码
+     * @return 强度等级
      */
     public static int strength(String password) {
         if (password == null || password.isEmpty()) return 0;
@@ -93,7 +105,11 @@ public final class PasswordPolicy {
     }
 
     /**
-     * 是否需要强制修改（90 天未改）
+     * 是否需要强制修改（maxDays 天未改）
+     *
+     * @param lastChange 上次修改时间，为 null 时返回 true
+     * @param maxDays    最大有效天数
+     * @return true 表示密码已过期
      */
     public static boolean isExpired(java.time.LocalDateTime lastChange, int maxDays) {
         if (lastChange == null) return true;
@@ -102,8 +118,16 @@ public final class PasswordPolicy {
 
     /**
      * 密码校验结果
+     *
+     * @param pass     是否通过
+     * @param failures 失败原因列表
      */
     public record PasswordCheckResult(boolean pass, List<String> failures) {
+        /**
+         * 获取第一条失败原因
+         *
+         * @return 失败原因；无失败时返回空字符串
+         */
         public String firstError() {
             return failures.isEmpty() ? "" : failures.get(0);
         }

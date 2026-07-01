@@ -50,17 +50,28 @@ public class PasswordScanResultDTO implements Serializable {
     /** 初始密码账号详情 */
     private List<AccountRisk> initialPasswordAccounts = new ArrayList<>();
 
+    /**
+     * 账号风险明细
+     *
+     * @author ydsz-pmis-team
+     * @since 1.0.0
+     */
     @Data
     public static class AccountRisk implements Serializable {
         @Serial
         private static final long serialVersionUID = 1L;
 
+        /** 用户 ID */
         private Long userId;
+        /** 用户名 */
         private String username;
+        /** 最近一次修改密码时间 */
         private LocalDateTime lastPwdChangeAt;
         /** 距今天数（负数=已过期 N 天，正数=还有 N 天到期） */
         private Integer daysSinceChange;
+        /** 风险等级：HIGH/MEDIUM/LOW */
         private String riskLevel;
+        /** 处置动作：FORCE_RESET/NOTIFY/NONE */
         private String action;
     }
 }

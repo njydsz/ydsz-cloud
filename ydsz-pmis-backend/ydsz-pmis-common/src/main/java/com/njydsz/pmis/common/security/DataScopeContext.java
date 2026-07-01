@@ -46,6 +46,8 @@ public class DataScopeContext implements Serializable {
 
     /**
      * 是否全量
+     *
+     * @return true 表示超管或数据范围为 ALL
      */
     public boolean isAll() {
         return superAdmin || scope == DataScope.ALL;
@@ -53,6 +55,8 @@ public class DataScopeContext implements Serializable {
 
     /**
      * 仅本人
+     *
+     * @return true 表示数据范围为 SELF
      */
     public boolean isSelfOnly() {
         return scope == DataScope.SELF;
@@ -60,6 +64,9 @@ public class DataScopeContext implements Serializable {
 
     /**
      * 解析当前用户的数据权限上下文
+     *
+     * @param user 登录用户，为 null 时返回 SELF 兜底上下文
+     * @return 数据权限上下文
      */
     public static DataScopeContext from(LoginUser user) {
         if (user == null) {

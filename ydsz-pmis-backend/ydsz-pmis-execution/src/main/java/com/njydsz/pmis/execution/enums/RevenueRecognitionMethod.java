@@ -2,6 +2,17 @@ package com.njydsz.pmis.execution.enums;
 
 /**
  * 收入确认方法
+ *
+ * <ul>
+ *   <li>MILESTONE - 里程碑法</li>
+ *   <li>PERCENTAGE - 完工百分比法</li>
+ *   <li>PERCENT_COMPLETE - 进度比例法</li>
+ *   <li>POINTS - 人天点数法</li>
+ *   <li>MANUAL - 手工确认</li>
+ * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public enum RevenueRecognitionMethod {
     MILESTONE("MILESTONE", "里程碑法"),

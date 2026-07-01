@@ -17,8 +17,11 @@ public enum PoolType {
     DIVISION("DIVISION", "事业部池", 2),
     RESERVE("RESERVE", "备用池", 3);
 
+    /** 枚举编码 */
     private final String code;
+    /** 枚举描述 */
     private final String desc;
+    /** 优先级（数字越小优先级越高） */
     private final int priority;
 
     PoolType(String code, String desc, int priority) {
@@ -33,6 +36,11 @@ public enum PoolType {
 
     /**
      * 按职级推算默认资源池
+     *
+     * <p>L13+ 归 HQ 池，L4-L12 归 DIVISION 池，其余归 RESERVE 池。
+     *
+     * @param levelCode 职级编码（如 L1、L15）
+     * @return 推算出的资源池类型；解析失败时返回 RESERVE
      */
     public static PoolType inferByLevel(String levelCode) {
         if (levelCode == null || levelCode.length() < 2) return RESERVE;
@@ -46,6 +54,12 @@ public enum PoolType {
         }
     }
 
+    /**
+     * 根据编码解析枚举
+     *
+     * @param code 枚举编码（大小写不敏感）
+     * @return 匹配的枚举值；code 为 null 或无匹配时返回 null
+     */
     public static PoolType fromCode(String code) {
         if (code == null) return null;
         for (PoolType p : values()) {

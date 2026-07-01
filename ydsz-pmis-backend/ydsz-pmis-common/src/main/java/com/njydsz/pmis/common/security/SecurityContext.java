@@ -21,6 +21,8 @@ public final class SecurityContext {
 
     /**
      * 设置当前登录用户
+     *
+     * @param user 登录用户
      */
     public static void setCurrent(LoginUser user) {
         CONTEXT.set(user);
@@ -29,6 +31,7 @@ public final class SecurityContext {
     /**
      * 获取当前登录用户
      *
+     * @return 当前登录用户
      * @throws BizException 未登录时抛出
      */
     public static LoginUser getCurrent() {
@@ -41,6 +44,8 @@ public final class SecurityContext {
 
     /**
      * 获取当前登录用户（允许为空）
+     *
+     * @return 当前登录用户；未登录时返回 null
      */
     public static LoginUser getCurrentOrNull() {
         return CONTEXT.get();
@@ -55,6 +60,8 @@ public final class SecurityContext {
 
     /**
      * 当前用户 ID
+     *
+     * @return 当前用户 ID
      */
     public static Long getUserId() {
         return getCurrent().getUserId();
@@ -62,6 +69,8 @@ public final class SecurityContext {
 
     /**
      * 当前用户名
+     *
+     * @return 当前用户名
      */
     public static String getUsername() {
         return getCurrent().getUsername();
@@ -69,6 +78,8 @@ public final class SecurityContext {
 
     /**
      * 当前部门 ID
+     *
+     * @return 当前部门 ID
      */
     public static Long getDeptId() {
         return getCurrent().getDeptId();
@@ -76,6 +87,9 @@ public final class SecurityContext {
 
     /**
      * 校验权限
+     *
+     * @param perm 权限编码
+     * @throws BizException 无权限时抛出
      */
     public static void requirePermission(String perm) {
         LoginUser user = getCurrent();
@@ -86,6 +100,9 @@ public final class SecurityContext {
 
     /**
      * 校验任一权限
+     *
+     * @param perms 权限编码列表
+     * @throws BizException 全部权限都不拥有时抛出
      */
     public static void requireAnyPermission(String... perms) {
         LoginUser user = getCurrent();

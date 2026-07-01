@@ -29,20 +29,29 @@ public class FlowUserDO extends BaseDO {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 任务 ID */
     private Long taskId;
+    /** 流程实例 ID */
     private Long instanceId;
+    /** 节点编码 */
     private String nodeCode;
 
     /** 用户类型：USER/ROLE/DEPT */
     private String userType;
 
+    /** 用户/角色/部门 ID */
     private String userId;
+    /** 姓名 */
     private String userName;
 
     /** 是否已处理：0 否 / 1 是 */
     private Integer processed;
+    /** 处理时间 */
     private LocalDateTime processAt;
+    /** 审批意见 */
     private String comment;
+    /** 租户 ID */
     private Long tenantId;
+    /** 链路追踪 ID */
     private String providerTraceId;
 }

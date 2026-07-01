@@ -38,6 +38,7 @@ public class LoginResult implements Serializable {
     /** 用户 ID */
     private Long userId;
 
+    /** 用户名 */
     private String username;
 
     /** 是否需要 2FA 二次验证 */

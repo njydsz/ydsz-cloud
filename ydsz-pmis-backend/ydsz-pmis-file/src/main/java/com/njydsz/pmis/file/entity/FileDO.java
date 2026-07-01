@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 
 /**
  * 文件元信息实体
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

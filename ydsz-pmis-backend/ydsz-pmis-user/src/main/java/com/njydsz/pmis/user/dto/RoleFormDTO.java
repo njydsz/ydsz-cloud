@@ -22,23 +22,29 @@ public class RoleFormDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID（更新时必填） */
     private Long id;
 
+    /** 角色编码 */
     @NotBlank
     @Size(max = 64)
     private String roleCode;
 
+    /** 角色名称 */
     @NotBlank
     @Size(max = 64)
     private String roleName;
 
+    /** 描述 */
     private String description;
 
+    /** 排序号 */
     private Integer sortOrder;
 
     /** ALL/DEPT/SELF/CUSTOM */
     private String dataScope = "SELF";
 
+    /** 状态：ENABLED/DISABLED */
     private String status = "ENABLED";
 
     /** 关联权限 ID 列表 */

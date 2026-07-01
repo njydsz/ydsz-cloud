@@ -23,10 +23,29 @@ import java.util.Map;
  */
 public interface ConfigService {
 
+    /**
+     * 分页查询配置
+     *
+     * @param query 查询条件
+     * @return 分页结果
+     */
     Page<ConfigDO> page(ConfigQueryDTO query);
 
+    /**
+     * 按 ID 查配置
+     *
+     * @param id 配置 ID
+     * @return 配置实体
+     */
     ConfigDO getById(Long id);
 
+    /**
+     * 按 group + key 查配置
+     *
+     * @param group 配置分组
+     * @param key   配置键
+     * @return 配置实体
+     */
     ConfigDO getByKey(String group, String key);
 
     /**
@@ -39,10 +58,26 @@ public interface ConfigService {
      */
     List<ConfigDO> listPublic();
 
+    /**
+     * 创建配置
+     *
+     * @param dto 配置表单
+     * @return 配置 ID
+     */
     Long create(ConfigFormDTO dto);
 
+    /**
+     * 更新配置
+     *
+     * @param dto 配置表单
+     */
     void update(ConfigFormDTO dto);
 
+    /**
+     * 删除配置
+     *
+     * @param id 配置 ID
+     */
     void delete(Long id);
 
     /**

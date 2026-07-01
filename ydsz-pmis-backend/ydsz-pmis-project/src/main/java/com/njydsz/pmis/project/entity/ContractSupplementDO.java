@@ -29,31 +29,48 @@ public class ContractSupplementDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 合同 ID */
     private Long contractId;
+    /** 补充协议编号 */
     private String supplementCode;
+    /** 补充协议名称 */
     private String supplementName;
-    private String supplementType;    // AMOUNT/SCOPE/TERM/OTHER
+    /** 补充类型（AMOUNT/SCOPE/TERM/OTHER） */
+    private String supplementType;
+    /** 变更金额 */
     private BigDecimal changeAmount;
+    /** 变更后合同总金额 */
     private BigDecimal newTotalAmount;
+    /** 生效日期 */
     private LocalDate effectiveDate;
+    /** 到期日期 */
     private LocalDate expireDate;
+    /** 协议内容 */
     private String content;
+    /** 附件 ID */
     private Long fileId;
+    /** 状态 */
     private String status;
+    /** 租户 ID */
     private Long tenantId;
 
+    /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新人 ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标识（0 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

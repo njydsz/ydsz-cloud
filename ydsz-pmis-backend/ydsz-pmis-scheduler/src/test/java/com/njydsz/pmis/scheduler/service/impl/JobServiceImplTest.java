@@ -2,6 +2,7 @@ package com.njydsz.pmis.scheduler.service.impl;
 
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.scheduler.entity.JobDO;
+import com.njydsz.pmis.scheduler.entity.JobLogDO;
 import com.njydsz.pmis.scheduler.mapper.JobLogMapper;
 import com.njydsz.pmis.scheduler.mapper.JobMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -173,7 +174,7 @@ class JobServiceImplTest {
         // 验证: 返回 null（跳过执行）
         assertThat(result).isNull();
         // 验证: 未写入 JobLog
-        verify(jobLogMapper, never()).insert(any());
+        verify(jobLogMapper, never()).insert(any(JobLogDO.class));
         // 验证: 未查找 handler
         verify(applicationContext, never()).getBean(anyString(), any(Class.class));
     }

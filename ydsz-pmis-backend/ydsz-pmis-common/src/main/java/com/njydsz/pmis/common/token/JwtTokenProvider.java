@@ -37,24 +37,35 @@ import java.util.Map;
 @Component
 public class JwtTokenProvider {
 
-    private static final int MIN_SECRET_BYTES = 32; // HS256 至少 256 位
+    /** HS256 密钥最小字节数（256 位） */
+    private static final int MIN_SECRET_BYTES = 32;
+    /** 默认密钥标识，用于启动时检测并告警 */
     private static final String DEFAULT_KEY_MARKER = "default-jwt-secret-key";
 
+    /** JWT 签名密钥（明文或 Base64） */
     @Value("${pmis.jwt.secret:}")
     private String secret;
 
+    /** JWT 签发方 */
     @Value("${pmis.jwt.issuer:pmis}")
     private String issuer;
 
+    /** 访问 Token 过期时间（秒） */
     @Value("${pmis.jwt.access-expire-seconds:7200}")
     private long accessExpireSeconds;
 
+    /** 刷新 Token 过期时间（秒） */
     @Value("${pmis.jwt.refresh-expire-seconds:604800}")
     private long refreshExpireSeconds;
 
+    /** 签名密钥对象 */
     private SecretKey key;
+    /** 是否使用默认密钥（启动时检测） */
     private boolean defaultKeyUsed = false;
 
+    /**
+     * 初始化签名密钥并打印配置日志
+     */
     @PostConstruct
     public void init() {
         this.key = buildKey();
@@ -90,6 +101,13 @@ public class JwtTokenProvider {
 
     /**
      * 生成访问 Token (含完整用户上下文)
+     *
+     * @param userId       用户 ID
+     * @param username     用户名
+     * @param roles        角色列表
+     * @param permissions  权限列表
+     * @param expireSeconds 过期时间（秒），为 null 时使用默认值
+     * @return JWT Token
      */
     public String generateToken(Long userId, String username,
                                 List<String> roles, List<String> permissions,
@@ -117,6 +135,11 @@ public class JwtTokenProvider {
 
     /**
      * 兼容旧签名: 仅 userId + username
+     *
+     * @param userId        用户 ID
+     * @param username      用户名
+     * @param expireSeconds 过期时间（秒）
+     * @return JWT Token
      */
     public String generateToken(Long userId, String username, long expireSeconds) {
         return generateToken(userId, username, null, null, expireSeconds);
@@ -124,6 +147,10 @@ public class JwtTokenProvider {
 
     /**
      * 生成刷新 Token
+     *
+     * @param userId        用户 ID
+     * @param expireSeconds 过期时间（秒），为 null 时使用默认值
+     * @return JWT Refresh Token
      */
     public String generateRefreshToken(Long userId, Long expireSeconds) {
         Map<String, Object> claims = new HashMap<>();
@@ -145,7 +172,10 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 验证 Token
+     * 验证 Token 是否合法且未过期
+     *
+     * @param token JWT Token
+     * @return true 表示验证通过
      */
     public boolean validateToken(String token) {
         try {
@@ -158,40 +188,82 @@ public class JwtTokenProvider {
     }
 
     /**
-     * 解析 Claims
+     * 解析 Token 的 Claims
+     *
+     * @param token JWT Token
+     * @return Claims
      */
     public Claims parseClaims(String token) {
         return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
     }
 
+    /**
+     * 从 Token 中提取用户 ID
+     *
+     * @param token JWT Token
+     * @return 用户 ID
+     */
     public Long getUserId(String token) {
         return Long.parseLong(parseClaims(token).getSubject());
     }
 
+    /**
+     * 从 Token 中提取用户名
+     *
+     * @param token JWT Token
+     * @return 用户名
+     */
     public String getUsername(String token) {
         return parseClaims(token).get("username", String.class);
     }
 
+    /**
+     * 从 Token 中提取角色列表
+     *
+     * @param token JWT Token
+     * @return 角色列表，无 roles 时返回空列表
+     */
     @SuppressWarnings("unchecked")
     public List<String> getRoles(String token) {
         Object v = parseClaims(token).get("roles");
         return v instanceof List ? (List<String>) v : List.of();
     }
 
+    /**
+     * 从 Token 中提取权限列表
+     *
+     * @param token JWT Token
+     * @return 权限列表，无 permissions 时返回空列表
+     */
     @SuppressWarnings("unchecked")
     public List<String> getPermissions(String token) {
         Object v = parseClaims(token).get("permissions");
         return v instanceof List ? (List<String>) v : List.of();
     }
 
+    /**
+     * 获取访问 Token 默认过期时间
+     *
+     * @return 过期时间（秒）
+     */
     public long getAccessExpireSeconds() {
         return accessExpireSeconds;
     }
 
+    /**
+     * 获取刷新 Token 默认过期时间
+     *
+     * @return 过期时间（秒）
+     */
     public long getRefreshExpireSeconds() {
         return refreshExpireSeconds;
     }
 
+    /**
+     * 是否使用了默认密钥
+     *
+     * @return true 表示使用了默认密钥
+     */
     public boolean isDefaultKeyUsed() {
         return defaultKeyUsed;
     }

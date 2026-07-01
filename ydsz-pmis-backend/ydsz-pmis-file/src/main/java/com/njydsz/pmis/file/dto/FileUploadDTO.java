@@ -7,6 +7,9 @@ import java.io.Serializable;
 
 /**
  * 文件上传 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class FileUploadDTO implements Serializable {

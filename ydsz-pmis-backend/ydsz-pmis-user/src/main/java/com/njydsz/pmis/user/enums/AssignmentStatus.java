@@ -21,7 +21,9 @@ public enum AssignmentStatus {
     RELEASED("RELEASED", "已离场"),
     CANCELLED("CANCELLED", "已取消");
 
+    /** 枚举编码 */
     private final String code;
+    /** 枚举描述 */
     private final String desc;
 
     AssignmentStatus(String code, String desc) {
@@ -32,10 +34,21 @@ public enum AssignmentStatus {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 判断是否为终态（已离场/已取消）
+     *
+     * @return 终态返回 true
+     */
     public boolean isTerminal() {
         return this == RELEASED || this == CANCELLED;
     }
 
+    /**
+     * 判断当前状态是否可流转到目标状态
+     *
+     * @param target 目标状态
+     * @return 允许流转返回 true，否则返回 false；target 为 null 返回 false
+     */
     public boolean canTransitTo(AssignmentStatus target) {
         if (target == null) return false;
         if (this == target) return true;
@@ -47,6 +60,12 @@ public enum AssignmentStatus {
         };
     }
 
+    /**
+     * 根据编码解析枚举
+     *
+     * @param code 枚举编码（大小写不敏感）
+     * @return 匹配的枚举值；code 为 null 或无匹配时返回 null
+     */
     public static AssignmentStatus fromCode(String code) {
         if (code == null) return null;
         for (AssignmentStatus s : values()) {

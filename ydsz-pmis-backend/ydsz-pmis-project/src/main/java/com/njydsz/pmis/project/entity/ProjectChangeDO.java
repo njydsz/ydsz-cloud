@@ -30,51 +30,83 @@ public class ProjectChangeDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 变更单号 */
     private String changeCode;
+    /** 立项 ID */
     private Long initiationId;
-    private String changeType;        // ChangeType.code
+    /** 变更类型（ChangeType.code） */
+    private String changeType;
+    /** 变更标题 */
     private String changeTitle;
+    /** 变更原因 */
     private String changeReason;
+    /** 变更描述 */
     private String changeDesc;
 
     // 影响评估字段
-    private BigDecimal budgetImpact;       // 预算影响（正=增加，负=减少）
-    private BigDecimal contractImpact;      // 合同金额影响
-    private Integer scheduleImpactDays;    // 进度影响天数
-    private BigDecimal profitImpact;        // 利润影响
-    private BigDecimal profitImpactPct;     // 利润影响百分比（-1~1）
-    private String riskLevelAfter;          // 变更后风险等级 LOW/MEDIUM/HIGH
-    private Integer affectedWbsCount;       // 影响的 WBS 任务数
-    private Integer affectedStaffCount;     // 影响的人员数
+    /** 预算影响（正=增加，负=减少） */
+    private BigDecimal budgetImpact;
+    /** 合同金额影响 */
+    private BigDecimal contractImpact;
+    /** 进度影响天数 */
+    private Integer scheduleImpactDays;
+    /** 利润影响 */
+    private BigDecimal profitImpact;
+    /** 利润影响百分比（-1~1） */
+    private BigDecimal profitImpactPct;
+    /** 变更后风险等级 LOW/MEDIUM/HIGH */
+    private String riskLevelAfter;
+    /** 影响的 WBS 任务数 */
+    private Integer affectedWbsCount;
+    /** 影响的人员数 */
+    private Integer affectedStaffCount;
 
     // 重大变更标识（事业部总经理+财务总监双审批）
+    /** 重大变更标识（0 否，1 是） */
     private Integer majorFlag;
-    private String approverRoles;           // JSON: ["GM","CFO"]
+    /** 审批角色 JSON 数组，例如 ["GM","CFO"] */
+    private String approverRoles;
 
+    /** 申请人 ID */
     private Long applicantId;
+    /** 申请人名称 */
     private String applicantName;
-    private Long contractId;                // 关联合同（可选）
-    private String workflowId;              // 关联流程实例 ID
-    private String status;                  // ChangeStatus.code
+    /** 关联合同（可选） */
+    private Long contractId;
+    /** 关联流程实例 ID */
+    private String workflowId;
+    /** 状态（ChangeStatus.code） */
+    private String status;
+    /** 提交时间 */
     private LocalDateTime submittedAt;
+    /** 审批时间 */
     private LocalDateTime approvedAt;
+    /** 执行时间 */
     private LocalDateTime executedAt;
+    /** 备注 */
     private String remark;
+    /** 租户 ID */
     private Long tenantId;
+    /** LLM Provider 跟踪 ID */
     private String providerTraceId;
 
+    /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新人 ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标识（0 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

@@ -20,14 +20,17 @@ public class PermissionFormDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID（更新时必填） */
     private Long id;
 
+    /** 父权限 ID（0=根） */
     private Long parentId;
 
     @NotBlank
     @Schema(description = "权限编码: system:user:create")
     private String permCode;
 
+    /** 权限名称 */
     @NotBlank
     private String permName;
 
@@ -35,10 +38,16 @@ public class PermissionFormDTO implements Serializable {
     @NotBlank
     private String permType;
 
+    /** 路由路径 */
     private String path;
+    /** 组件路径 */
     private String component;
+    /** 菜单图标 */
     private String icon;
+    /** 排序号 */
     private Integer sortOrder;
+    /** 1=显示, 0=隐藏 */
     private Integer visible = 1;
+    /** 状态：ENABLED/DISABLED */
     private String status = "ENABLED";
 }

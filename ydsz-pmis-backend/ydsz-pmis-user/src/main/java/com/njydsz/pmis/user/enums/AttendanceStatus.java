@@ -24,10 +24,19 @@ public enum AttendanceStatus {
     LEAVE("LEAVE", "请假", false),
     OVERTIME("OVERTIME", "加班", false);
 
+    /** 枚举编码 */
     private final String code;
+    /** 枚举描述 */
     private final String desc;
+    /** 是否终态 */
     private final boolean terminal;
 
+    /**
+     * 根据编码解析枚举
+     *
+     * @param code 枚举编码（大小写不敏感）
+     * @return 匹配的枚举值；code 为 null 或无匹配时返回 null
+     */
     public static AttendanceStatus fromCode(String code) {
         if (code == null) return null;
         return Arrays.stream(values()).filter(e -> e.code.equalsIgnoreCase(code)).findFirst().orElse(null);

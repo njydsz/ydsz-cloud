@@ -17,26 +17,35 @@ public class ConfigFormDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 配置 ID（更新时必填） */
     private Long id;
 
+    /** 配置分组 */
     @NotBlank
     private String configGroup;
 
+    /** 配置键 */
     @NotBlank
     private String configKey;
 
+    /** 配置值 */
     private String configValue;
 
+    /** 默认值 */
     private String defaultValue;
 
     /** STRING/NUMBER/BOOLEAN/JSON */
     private String valueType = "STRING";
 
+    /** 配置描述 */
     private String description;
 
+    /** 1=前端可见（public），0=私有 */
     private Integer isPublic = 0;
 
+    /** 排序序号 */
     private Integer sortOrder = 0;
 
+    /** 状态：ENABLED/DISABLED */
     private String status = "ENABLED";
 }

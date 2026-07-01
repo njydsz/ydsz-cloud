@@ -33,6 +33,9 @@ import java.util.UUID;
 
 /**
  * 文件存储服务实现（MinIO）
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Service

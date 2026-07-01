@@ -29,42 +29,70 @@ public class ContractDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 合同编号 */
     private String contractCode;
+    /** 合同名称 */
     private String contractName;
+    /** 关联立项 ID */
     private Long initiationId;
+    /** 客户 ID */
     private Long customerId;
+    /** 客户名称 */
     private String customerName;
-    private String contractType;       // FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE
+    /** 合同类型（FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE） */
+    private String contractType;
+    /** 签订日期 */
     private LocalDate signDate;
+    /** 生效日期 */
     private LocalDate effectiveDate;
+    /** 到期日期 */
     private LocalDate expireDate;
+    /** 合同总金额 */
     private BigDecimal totalAmount;
+    /** 币种 */
     private String currency;
+    /** 付款条款 */
     private String paymentTerms;
+    /** 结算周期 */
     private String billingCycle;
+    /** 税率 */
     private BigDecimal taxRate;
-    private String status;             // ContractStatus.code
-    private String riskLevel;          // LOW/MEDIUM/HIGH
+    /** 合同状态（ContractStatus.code） */
+    private String status;
+    /** 风险等级（LOW/MEDIUM/HIGH） */
+    private String riskLevel;
+    /** 风险说明 */
     private String riskNotes;
+    /** 责任人 ID */
     private Long ownerId;
+    /** 责任人名称 */
     private String ownerName;
+    /** 合同附件 ID */
     private Long contractFileId;
+    /** Flowable 工作流实例 ID */
     private String workflowId;
+    /** 备注 */
     private String remark;
+    /** 租户 ID */
     private Long tenantId;
 
+    /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新人 ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标识（0 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

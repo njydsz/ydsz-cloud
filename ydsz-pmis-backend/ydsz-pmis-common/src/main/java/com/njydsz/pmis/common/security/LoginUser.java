@@ -67,6 +67,8 @@ public class LoginUser implements Serializable {
 
     /**
      * 是否超级管理员
+     *
+     * @return true 表示拥有全部权限通配符
      */
     public boolean isSuperAdmin() {
         return permissions != null && permissions.contains("*:*:*");
@@ -74,6 +76,9 @@ public class LoginUser implements Serializable {
 
     /**
      * 是否拥有指定权限
+     *
+     * @param perm 权限编码
+     * @return true 表示拥有该权限
      */
     public boolean hasPermission(String perm) {
         if (permissions == null) return false;

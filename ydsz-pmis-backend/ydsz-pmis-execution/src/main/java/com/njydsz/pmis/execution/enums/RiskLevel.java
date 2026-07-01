@@ -2,6 +2,15 @@ package com.njydsz.pmis.execution.enums;
 
 /**
  * 项目风险等级
+ *
+ * <ul>
+ *   <li>LOW - 低风险</li>
+ *   <li>MEDIUM - 中风险</li>
+ *   <li>HIGH - 高风险</li>
+ * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public enum RiskLevel {
     LOW("LOW", "低风险", 1),

@@ -25,9 +25,11 @@ public class JobLevelRateDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 职级编码 */
     private String levelCode;
 
     /** 对外人天（元/天） */
@@ -36,22 +38,33 @@ public class JobLevelRateDO extends BaseDO {
     /** 对内人天（元/天） */
     private BigDecimal internalDaily;
 
+    /** 基本工资 */
     private BigDecimal baseSalary;
 
+    /** 社保公司部分 */
     private BigDecimal socialCompany;
+    /** 社保个人部分 */
     private BigDecimal socialPersonal;
+    /** 公积金公司部分 */
     private BigDecimal fundCompany;
+    /** 公积金个人部分 */
     private BigDecimal fundPersonal;
+    /** 税后到手 */
     private BigDecimal takeHome;
+    /** 用工总成本 */
     private BigDecimal totalCost;
 
     /** 可计费利用率目标 (0-1) */
     private BigDecimal billableTarget;
 
+    /** 生效日期 */
     private LocalDate effectiveDate;
+    /** 失效日期 */
     private LocalDate expireDate;
 
+    /** 版本号 */
     private Integer version;
 
+    /** 描述 */
     private String description;
 }

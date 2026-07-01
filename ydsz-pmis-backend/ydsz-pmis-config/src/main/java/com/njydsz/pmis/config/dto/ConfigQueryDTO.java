@@ -21,7 +21,10 @@ public class ConfigQueryDTO extends PageQuery {
     /** 关键字: 模糊匹配 configKey / configValue / description */
     private String keyword;
 
+    /** 配置分组 */
     private String configGroup;
+    /** 状态：ENABLED/DISABLED */
     private String status;
+    /** 是否公开：1 公开 / 0 私有 */
     private Integer isPublic;
 }

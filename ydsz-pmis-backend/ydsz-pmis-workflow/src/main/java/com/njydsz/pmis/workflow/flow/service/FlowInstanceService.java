@@ -6,6 +6,12 @@ import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 
 import java.util.List;
 
+/**
+ * 流程实例 Service
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 public interface FlowInstanceService {
 
     /**

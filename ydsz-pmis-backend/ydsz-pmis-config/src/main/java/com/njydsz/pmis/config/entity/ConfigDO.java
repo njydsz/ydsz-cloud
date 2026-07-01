@@ -45,12 +45,15 @@ public class ConfigDO extends BaseDO {
     /** STRING/NUMBER/BOOLEAN/JSON */
     private String valueType = "STRING";
 
+    /** 配置描述 */
     private String description;
 
     /** 1=前端可见（public），0=私有 */
     private Integer isPublic = 0;
 
+    /** 排序序号 */
     private Integer sortOrder = 0;
 
+    /** 状态：ENABLED/DISABLED */
     private String status = "ENABLED";
 }

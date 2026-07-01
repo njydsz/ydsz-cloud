@@ -21,7 +21,9 @@ public class UserQueryDTO extends PageQuery {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 状态：ENABLED/DISABLED/LOCKED */
     private String status;
 
+    /** 员工 ID */
     private Long employeeId;
 }

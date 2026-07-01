@@ -30,30 +30,55 @@ public class FlowHisTaskDO extends BaseDO {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 流程实例 ID */
     private Long instanceId;
+    /** 原始任务 ID */
     private Long taskId;
+    /** 流程编码 */
     private String flowCode;
+    /** 流程定义 ID */
     private Long definitionId;
+    /** 节点编码 */
     private String nodeCode;
+    /** 节点名称 */
     private String nodeName;
+    /** 节点类型（FlowNodeType.code） */
     private Integer nodeType;
+    /** 业务类型 */
     private String businessType;
+    /** 业务单据 ID */
     private String businessId;
+    /** 业务单据编号 */
     private String businessNo;
+    /** 流程名称 */
     private String flowName;
+    /** 任务标题 */
     private String title;
+    /** 办理人类型（FlowAssigneeType.name） */
     private String assigneeType;
+    /** 办理人 ID */
     private String assigneeId;
+    /** 办理人姓名 */
     private String assigneeName;
+    /** 会签类型（FlowPerformType.name） */
     private String performType;
+    /** 会签所需通过人数 */
     private Integer approveCount;
+    /** 会签当前已通过人数 */
     private Integer approveFinished;
+    /** 任务状态（FlowTaskStatus.name） */
     private String taskStatus;
+    /** 审批意见 */
     private String comment;
 
+    /** 签收时间 */
     private LocalDateTime claimAt;
+    /** 完成时间 */
     private LocalDateTime finishAt;
+    /** 耗时（毫秒） */
     private Long durationMs;
+    /** 租户 ID */
     private Long tenantId;
+    /** 链路追踪 ID */
     private String providerTraceId;
 }

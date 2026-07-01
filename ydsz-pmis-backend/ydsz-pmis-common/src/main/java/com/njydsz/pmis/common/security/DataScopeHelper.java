@@ -24,6 +24,8 @@ public final class DataScopeHelper {
 
     /**
      * 当前上下文
+     *
+     * @return 当前登录用户的数据权限上下文
      */
     public static DataScopeContext current() {
         LoginUser user = SecurityContext.getCurrentOrNull();
@@ -32,6 +34,9 @@ public final class DataScopeHelper {
 
     /**
      * 校验当前用户是否有权访问指定 dept 数据
+     *
+     * @param targetDeptId 目标部门 ID
+     * @throws BizException 无权限时抛出
      */
     public static void requireDept(Long targetDeptId) {
         if (targetDeptId == null) {
@@ -52,6 +57,9 @@ public final class DataScopeHelper {
 
     /**
      * 校验当前用户是否有权访问指定用户数据
+     *
+     * @param ownerUserId 目标用户 ID
+     * @throws BizException 无权限时抛出
      */
     public static void requireOwner(Long ownerUserId) {
         if (ownerUserId == null) {
@@ -151,6 +159,9 @@ public final class DataScopeHelper {
 
     /**
      * 过滤可访问部门 ID 集合（去除越权 ID）
+     *
+     * @param candidate 候选部门 ID 集合
+     * @return 当前用户可访问的部门 ID 列表
      */
     public static List<Long> filterDeptIds(Set<Long> candidate) {
         if (candidate == null || candidate.isEmpty()) {

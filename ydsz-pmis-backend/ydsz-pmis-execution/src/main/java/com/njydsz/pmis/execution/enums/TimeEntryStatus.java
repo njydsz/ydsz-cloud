@@ -2,6 +2,16 @@ package com.njydsz.pmis.execution.enums;
 
 /**
  * 工时录入状态
+ *
+ * <ul>
+ *   <li>DRAFT - 草稿</li>
+ *   <li>SUBMITTED - 已提交</li>
+ *   <li>APPROVED - 已批准</li>
+ *   <li>REJECTED - 已驳回</li>
+ * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public enum TimeEntryStatus {
     DRAFT("DRAFT", "草稿"),

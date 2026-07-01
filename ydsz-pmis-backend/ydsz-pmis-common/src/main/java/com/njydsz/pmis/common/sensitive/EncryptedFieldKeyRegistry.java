@@ -11,7 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class EncryptedFieldKeyRegistry {
 
+    /** keyRef -> 字节密钥 映射表 */
     private static final Map<String, byte[]> KEYS = new ConcurrentHashMap<>();
+    /** 默认密钥（仅本地开发使用） */
     private static volatile byte[] DEFAULT_KEY;
 
     private EncryptedFieldKeyRegistry() {
@@ -57,6 +59,12 @@ public final class EncryptedFieldKeyRegistry {
         KEYS.put(keyRef, key.clone());
     }
 
+    /**
+     * 获取密钥；未注册或 keyRef 为 null 时返回默认密钥
+     *
+     * @param keyRef 密钥引用
+     * @return 字节密钥
+     */
     public static byte[] get(String keyRef) {
         if (keyRef == null) return defaultKey();
         byte[] k = KEYS.get(keyRef);
@@ -64,15 +72,30 @@ public final class EncryptedFieldKeyRegistry {
         return defaultKey();
     }
 
+    /**
+     * 是否已注册指定 keyRef
+     *
+     * @param keyRef 密钥引用
+     * @return true 表示已注册
+     */
     public static boolean has(String keyRef) {
         return keyRef != null && KEYS.containsKey(keyRef);
     }
 
+    /**
+     * 清空所有已注册密钥及默认密钥
+     */
     public static void clear() {
         KEYS.clear();
         DEFAULT_KEY = null;
     }
 
+    /**
+     * 设置默认密钥（AES-256 32 字节）
+     *
+     * @param key 32 字节密钥，为 null 时清除默认密钥
+     * @throws IllegalArgumentException 长度非 32 时抛出
+     */
     public static synchronized void setDefaultKey(byte[] key) {
         if (key == null) {
             DEFAULT_KEY = null;

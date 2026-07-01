@@ -21,7 +21,9 @@ public class DepartmentQueryDTO extends PageQuery {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 父部门 ID（0=根） */
     private Long parentId;
 
+    /** 状态：ENABLED/DISABLED */
     private String status;
 }

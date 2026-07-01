@@ -10,6 +10,9 @@ import java.util.List;
 
 /**
  * 文件存储服务
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public interface FileService {
 

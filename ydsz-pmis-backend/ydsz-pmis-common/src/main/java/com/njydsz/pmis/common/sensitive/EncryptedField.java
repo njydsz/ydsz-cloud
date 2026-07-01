@@ -46,6 +46,9 @@ public @interface EncryptedField {
     Algorithm algorithm() default Algorithm.AES_GCM;
 
     enum Algorithm {
-        AES_GCM, SM4_GCM
+        /** AES-256-GCM 算法 */
+        AES_GCM,
+        /** 国密 SM4-GCM 算法 */
+        SM4_GCM
     }
 }

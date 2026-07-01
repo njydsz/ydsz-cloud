@@ -26,28 +26,44 @@ public class ResourcePoolDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String poolCode;        // 业务编号
-    private String poolName;        // 池名称
-    private String poolType;        // PoolType.code
-    private Long departmentId;      // 事业部/部门 ID
+    /** 业务编号 */
+    private String poolCode;
+    /** 池名称 */
+    private String poolName;
+    /** 池类型（PoolType.code） */
+    private String poolType;
+    /** 事业部/部门 ID */
+    private Long departmentId;
+    /** 部门名称 */
     private String departmentName;
-    private String levelRange;      // 职级范围 e.g. "L1-L3" "L4-L12" "L13+"
-    private Integer headcount;      // 池人数
-    private Integer billableTarget; // 目标计费人数
+    /** 职级范围 e.g. "L1-L3" "L4-L12" "L13+" */
+    private String levelRange;
+    /** 池人数 */
+    private Integer headcount;
+    /** 目标计费人数 */
+    private Integer billableTarget;
+    /** 描述 */
     private String description;
-    private String status;          // ACTIVE/INACTIVE
+    /** 状态：ACTIVE/INACTIVE */
+    private String status;
+    /** 租户 ID */
     private Long tenantId;
+    /** 外部提供方链路追踪 ID */
     private String providerTraceId;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标识：0=未删除，1=已删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

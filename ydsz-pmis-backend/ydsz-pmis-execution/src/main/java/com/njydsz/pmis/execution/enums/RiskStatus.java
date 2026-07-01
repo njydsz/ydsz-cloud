@@ -2,6 +2,16 @@ package com.njydsz.pmis.execution.enums;
 
 /**
  * 项目风险状态
+ *
+ * <ul>
+ *   <li>OPEN - 已识别</li>
+ *   <li>MITIGATING - 应对中</li>
+ *   <li>CLOSED - 已关闭</li>
+ *   <li>OCCURRED - 已发生</li>
+ * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public enum RiskStatus {
     OPEN("OPEN", "已识别"),

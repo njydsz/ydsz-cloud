@@ -34,7 +34,10 @@ public enum DataScope {
     /** 项目成员 */
     PROJECT(5, "项目成员");
 
+    /** 数据权限范围编码 */
     private final int code;
+
+    /** 数据权限范围描述 */
     private final String desc;
 
     DataScope(int code, String desc) {
@@ -44,6 +47,9 @@ public enum DataScope {
 
     /**
      * 从字符串解析，未知值默认为 SELF（最严格）
+     *
+     * @param s 字符串值
+     * @return 解析得到的 DataScope
      */
     public static DataScope parse(String s) {
         if (s == null || s.isEmpty()) {
@@ -58,6 +64,8 @@ public enum DataScope {
 
     /**
      * 是否能访问跨部门数据
+     *
+     * @return true 表示可访问全部数据
      */
     public boolean isCrossDept() {
         return this == ALL;

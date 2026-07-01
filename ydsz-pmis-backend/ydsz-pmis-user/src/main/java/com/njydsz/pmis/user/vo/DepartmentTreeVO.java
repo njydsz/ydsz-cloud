@@ -28,6 +28,12 @@ public class DepartmentTreeVO implements Serializable {
     @Schema(description = "子部门")
     private List<DepartmentTreeVO> children = new ArrayList<>();
 
+    /**
+     * 根据部门实体构建树节点（不含子节点）
+     *
+     * @param d 部门实体
+     * @return 部门树节点
+     */
     public static DepartmentTreeVO of(DepartmentDO d) {
         DepartmentTreeVO v = new DepartmentTreeVO();
         v.setDepartment(d);

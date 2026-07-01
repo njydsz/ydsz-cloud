@@ -32,6 +32,12 @@ public enum SensitiveStrategy {
     /** 自定义：使用 SensitiveUtil.register 注册的处理函数 */
     CUSTOM;
 
+    /**
+     * 从字符串解析脱敏策略，未知值默认为 NONE
+     *
+     * @param s 字符串值
+     * @return 解析得到的脱敏策略
+     */
     public static SensitiveStrategy parse(String s) {
         if (s == null || s.isEmpty()) return NONE;
         try {

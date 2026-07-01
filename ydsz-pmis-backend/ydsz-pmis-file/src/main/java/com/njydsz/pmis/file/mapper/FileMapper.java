@@ -9,6 +9,9 @@ import java.util.List;
 
 /**
  * 文件 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Mapper
 public interface FileMapper extends BaseMapper<FileDO> {

@@ -8,6 +8,12 @@ import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 待办任务 Service
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 public interface FlowTaskService {
 
     /**

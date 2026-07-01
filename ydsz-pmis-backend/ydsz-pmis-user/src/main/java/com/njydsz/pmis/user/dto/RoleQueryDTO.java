@@ -21,7 +21,9 @@ public class RoleQueryDTO extends PageQuery {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 数据权限范围：ALL/DEPT/SELF/CUSTOM */
     private String dataScope;
 
+    /** 状态：ENABLED/DISABLED */
     private String status;
 }

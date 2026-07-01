@@ -27,18 +27,28 @@ public class OpportunityFollowDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 商机 ID */
     private Long opportunityId;
-    private String followType;       // VISIT/CALL/QUOTE/NEGOTIATE/OTHER
+    /** 跟进类型（VISIT/CALL/QUOTE/NEGOTIATE/OTHER） */
+    private String followType;
+    /** 跟进时间 */
     private LocalDateTime followAt;
+    /** 跟进人 ID */
     private Long followerId;
+    /** 跟进人名称 */
     private String followerName;
+    /** 跟进内容 */
     private String content;
+    /** 下一步动作 */
     private String nextStep;
+    /** 下次跟进日期 */
     private LocalDate nextFollowDate;
 
+    /** 创建时间 */
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 逻辑删除标识（0 未删除，1 已删除） */
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private Integer deleted;
 }
