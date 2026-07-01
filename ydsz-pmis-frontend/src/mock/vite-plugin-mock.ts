@@ -84,7 +84,10 @@ export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
         }
 
         // 匹配 handler (path 已剥离 prefix, 与 handler.path 一致)
-        const handler = mockHandlers.find((h) => h.method === method && h.path === path)
+        // 支持路径参数匹配: /project/initiation/{id}/submit
+        const handler = mockHandlers.find(
+          (h) => h.method === method && matchPath(h.path, path),
+        )
         if (!handler) {
           // 未匹配, fallback 到 proxy
           if (verbose) {
@@ -152,4 +155,25 @@ function readBody(req: any): Promise<unknown> {
       }
     })
   })
+}
+
+/**
+ * 路径匹配: 支持 {id} 等占位符.
+ *   matchPath('/project/initiation/{id}/submit', '/project/initiation/42/submit') -> true
+ *   matchPath('/auth/login', '/auth/login') -> true
+ *   matchPath('/project/initiation/{id}/submit', '/project/initiation/42/cancel') -> false
+ */
+function matchPath(pattern: string, actual: string): boolean {
+  if (pattern === actual) return true
+  if (!pattern.includes('{')) return false
+  const pParts = pattern.split('/')
+  const aParts = actual.split('/')
+  if (pParts.length !== aParts.length) return false
+  for (let i = 0; i < pParts.length; i++) {
+    const p = pParts[i]
+    const a = aParts[i]
+    if (p.startsWith('{') && p.endsWith('}')) continue
+    if (p !== a) return false
+  }
+  return true
 }

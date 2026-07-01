@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.flow.dto.FlowDeployProcessDTO;
+import com.njydsz.pmis.workflow.flow.engine.BpmnModel;
+import com.njydsz.pmis.workflow.flow.engine.BpmnXmlParser;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowSkipDO;
@@ -19,10 +21,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * 流程定义 Service 实现
+ *
+ * <p>支持 BPMN 2.0 XML 与轻量 JSON 两种部署模式。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -35,6 +40,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     private final FlowDefinitionMapper definitionMapper;
     private final FlowNodeMapper nodeMapper;
     private final FlowSkipMapper skipMapper;
+    private final BpmnXmlParser bpmnXmlParser;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -42,9 +48,6 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (dto == null || !StringUtils.hasText(dto.getFlowCode())
                 || !StringUtils.hasText(dto.getFlowName())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode/flowName 不能为空");
-        }
-        if (dto.getNodes() == null || dto.getNodes().isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "至少需要 1 个节点");
         }
 
         String version = StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0";
@@ -58,7 +61,73 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                     "流程定义已存在: code=" + dto.getFlowCode() + " version=" + version);
         }
 
-        // 2. 创建定义
+        // 2. 解析 BPMN / JSON 模型
+        boolean hasBpmn = StringUtils.hasText(dto.getBpmnXml());
+        boolean hasJson = dto.getNodes() != null && !dto.getNodes().isEmpty();
+        if (!hasBpmn && !hasJson) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "bpmnXml / nodes 至少二选一");
+        }
+
+        List<FlowNodeDO> nodes = new ArrayList<>();
+        List<FlowSkipDO> skips = new ArrayList<>();
+
+        if (hasBpmn) {
+            // 模式 A：标准 BPMN 2.0 XML
+            BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
+            // 校验：flowCode 必须与 BPMN process id 一致（或缺失时不强制）
+            if (StringUtils.hasText(bpmnModel.getProcessId())
+                    && !bpmnModel.getProcessId().equals(dto.getFlowCode())) {
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "BPMN process id 与 flowCode 不一致: bpmn=" + bpmnModel.getProcessId()
+                                + " dto=" + dto.getFlowCode());
+            }
+            // 若 dto.flowName 为空，用 BPMN process name
+            if (!StringUtils.hasText(dto.getFlowName()) || dto.getFlowName().equals(dto.getFlowCode())) {
+                dto.setFlowName(bpmnModel.getProcessName());
+            }
+            nodes.addAll(bpmnModel.getNodes());
+            skips.addAll(bpmnModel.getSkips());
+        } else {
+            // 模式 B：轻量 JSON
+            for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
+                FlowNodeDO node = new FlowNodeDO();
+                node.setNodeCode(n.getNodeCode());
+                node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
+                node.setNodeType(n.getNodeType() == null
+                        ? FlowNodeType.APPROVAL.getCode() : n.getNodeType());
+                node.setPermissionFlag(n.getPermissionFlag());
+                node.setSkipAnyNode(n.getSkipAnyNode());
+                nodes.add(node);
+            }
+            // 必须含开始节点
+            boolean hasStart = nodes.stream()
+                    .anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
+            if (!hasStart) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "流程定义必须包含开始节点（nodeType=0）");
+            }
+            // 节点编码唯一
+            long uniqueCount = nodes.stream()
+                    .map(FlowNodeDO::getNodeCode)
+                    .distinct()
+                    .count();
+            if (uniqueCount != nodes.size()) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "节点编码 nodeCode 必须唯一");
+            }
+            if (dto.getSkips() != null) {
+                for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
+                    FlowSkipDO skip = new FlowSkipDO();
+                    skip.setSkipName(s.getSkipName());
+                    skip.setSkipType(StringUtils.hasText(s.getSkipType())
+                            ? s.getSkipType() : FlowSkipType.PASS.name());
+                    skip.setSkipCondition(s.getSkipCondition());
+                    skip.setNextNodeCode(s.getToNodeCode());
+                    skip.setExt("{\"sourceRef\":\"" + s.getFromNodeCode() + "\"}");
+                    skips.add(skip);
+                }
+            }
+        }
+
+        // 3. 写入定义
         FlowDefinitionDO def = new FlowDefinitionDO();
         def.setFlowCode(dto.getFlowCode());
         def.setFlowName(dto.getFlowName());
@@ -75,48 +144,28 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         definitionMapper.insert(def);
         Long definitionId = def.getId();
 
-        // 3. 写入节点
-        boolean hasStart = false;
-        for (FlowDeployProcessDTO.FlowNodeDTO nodeDto : dto.getNodes()) {
-            FlowNodeDO node = new FlowNodeDO();
+        // 4. 写入节点
+        for (FlowNodeDO node : nodes) {
             node.setDefinitionId(definitionId);
             node.setFlowCode(dto.getFlowCode());
-            node.setNodeCode(nodeDto.getNodeCode());
-            node.setNodeName(nodeDto.getNodeName());
-            node.setNodeType(nodeDto.getNodeType() == null
-                    ? FlowNodeType.APPROVAL.getCode() : nodeDto.getNodeType());
-            node.setPermissionFlag(nodeDto.getPermissionFlag());
-            node.setSkipAnyNode(nodeDto.getSkipAnyNode());
             node.setTenantId(tenantId);
             node.setProviderTraceId(dto.getProviderTraceId());
             nodeMapper.insert(node);
-            if (node.getNodeType().equals(FlowNodeType.START.getCode())) {
-                hasStart = true;
-            }
-        }
-        if (!hasStart) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "流程定义必须包含开始节点（nodeType=0）");
         }
 
-        // 4. 写入跳转
-        if (dto.getSkips() != null) {
-            for (FlowDeployProcessDTO.FlowSkipDTO skipDto : dto.getSkips()) {
-                FlowSkipDO skip = new FlowSkipDO();
-                skip.setDefinitionId(definitionId);
-                skip.setFlowCode(dto.getFlowCode());
-                skip.setSkipName(skipDto.getSkipName());
-                skip.setSkipType(StringUtils.hasText(skipDto.getSkipType())
-                        ? skipDto.getSkipType() : FlowSkipType.PASS.name());
-                skip.setSkipCondition(skipDto.getSkipCondition());
-                skip.setNextNodeCode(skipDto.getToNodeCode());
-                skip.setTenantId(tenantId);
-                skip.setProviderTraceId(dto.getProviderTraceId());
-                skipMapper.insert(skip);
-            }
+        // 5. 写入跳转
+        for (FlowSkipDO skip : skips) {
+            skip.setDefinitionId(definitionId);
+            skip.setFlowCode(dto.getFlowCode());
+            skip.setTenantId(tenantId);
+            skip.setProviderTraceId(dto.getProviderTraceId());
+            skipMapper.insert(skip);
         }
 
-        log.info("[Flow] 部署流程成功: code={} version={} defId={}",
-                dto.getFlowCode(), version, definitionId);
+        log.info("[Flow] 部署流程成功: code={} version={} defId={} mode={} nodes={} skips={}",
+                dto.getFlowCode(), version, definitionId,
+                hasBpmn ? "BPMN" : "JSON",
+                nodes.size(), skips.size());
         return definitionId;
     }
 

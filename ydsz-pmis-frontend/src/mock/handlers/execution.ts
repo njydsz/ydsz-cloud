@@ -77,4 +77,82 @@ export const executionHandlers: MockHandler[] = [
         alertCount: i + 3,
       })),
   },
+  // ====== E2E P1-6 风险预警流程 mock (批次 25) ======
+  {
+    method: 'GET',
+    path: '/execution/risk/page',
+    handler: ({ query }) => {
+      const fixture = Array.from({ length: Number(query.size || 10) }, (_, i) => ({
+        id: i + 1,
+        title: `示例风险 ${i + 1}`,
+        level: ['LOW', 'MEDIUM', 'HIGH'][i % 3],
+        category: ['SCOPE', 'BUDGET', 'SCHEDULE', 'QUALITY'][i % 4],
+        status: ['OPEN', 'CLOSED'][i % 2],
+        impactAmount: 100000 * (i + 1),
+        createdAt: '2026-06-15 10:00:00',
+      }))
+      return {
+        list: fixture,
+        total: 50,
+        page: Number(query.page || 1),
+        size: Number(query.size || 10),
+        pages: 5,
+      }
+    },
+  },
+  {
+    method: 'POST',
+    path: '/execution/risk',
+    handler: ({ body }) => {
+      const b = (body || {}) as Record<string, unknown>
+      const id = 2000 + Math.floor(Math.random() * 1000)
+      return {
+        id,
+        title: b.title || b.name || 'E2E 风险',
+        level: b.level || 'MEDIUM',
+        category: b.category || 'SCOPE',
+        status: 'OPEN',
+        impactAmount: Number(b.impactAmount) || 0,
+        description: b.description || '',
+        createdAt: new Date().toISOString(),
+      }
+    },
+  },
+  {
+    method: 'POST',
+    path: '/execution/risk/{id}/evaluate',
+    handler: () => ({
+      success: true,
+      level: 'HIGH',
+      score: 0.75,
+      matchedRules: ['CPI<0.95', '高风险事件≥2'],
+      evaluatedAt: new Date().toISOString(),
+    }),
+  },
+  {
+    method: 'GET',
+    path: '/execution/alert/page',
+    handler: ({ query }) => {
+      const list = Array.from({ length: Number(query.size || 10) }, (_, i) => ({
+        id: i + 1,
+        alertCode: `ALT-${String(i + 1).padStart(4, '0')}`,
+        title: `预警 ${i + 1}`,
+        level: ['INFO', 'YELLOW', 'RED'][i % 3],
+        status: i % 2 === 0 ? 'OPEN' : 'ACKED',
+        createdAt: '2026-06-20 10:00:00',
+      }))
+      return {
+        list,
+        total: 30,
+        page: Number(query.page || 1),
+        size: Number(query.size || 10),
+        pages: 3,
+      }
+    },
+  },
+  {
+    method: 'POST',
+    path: '/execution/alert/{id}/ack',
+    handler: () => ({ success: true, status: 'ACKED' }),
+  },
 ]

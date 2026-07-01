@@ -6,6 +6,15 @@ import type { MockHandler } from './types'
 const list = (n: number, factory: (i: number) => Record<string, unknown>) =>
   Array.from({ length: n }, (_, i) => factory(i + 1))
 
+/**
+ * 简易 in-memory 存储, 让 E2E 测试能验证创建/状态变更结果
+ */
+const initiationStore: Record<string, Record<string, unknown>> = {}
+const contractStore: Record<string, Record<string, unknown>> = {}
+const riskStore: Record<string, Record<string, unknown>> = {}
+const alertStore: Record<string, Record<string, unknown>> = {}
+let nextSeq = 1000
+
 export const projectHandlers: MockHandler[] = [
   {
     method: 'GET',
@@ -30,8 +39,9 @@ export const projectHandlers: MockHandler[] = [
   {
     method: 'GET',
     path: '/project/initiation/page',
-    handler: ({ query }) => ({
-      list: list(Number(query.size || 10), (i) => ({
+    handler: ({ query }) => {
+      const stored = Object.values(initiationStore)
+      const fixtureList = list(Number(query.size || 10), (i) => ({
         id: i,
         initiationCode: `INIT-${String(i).padStart(4, '0')}`,
         initiationName: `项目${i}`,
@@ -40,18 +50,66 @@ export const projectHandlers: MockHandler[] = [
         budgetTotal: 500000 * i,
         status: ['DRAFT', 'APPROVED', 'EXECUTING', 'CLOSED'][i % 4],
         createdAt: '2026-06-15 10:00:00',
-      })),
-      total: 80,
-      page: Number(query.page || 1),
-      size: Number(query.size || 10),
-      pages: 8,
-    }),
+      }))
+      // 真实创建的优先返回 (供 E2E 校验)
+      const merged = [...stored.map((s) => ({ ...s })), ...fixtureList].slice(0, Number(query.size || 10))
+      return {
+        list: merged,
+        total: stored.length + 80,
+        page: Number(query.page || 1),
+        size: Number(query.size || 10),
+        pages: Math.ceil((stored.length + 80) / Number(query.size || 10)),
+      }
+    },
+  },
+  {
+    method: 'POST',
+    path: '/project/initiation',
+    handler: ({ body }) => {
+      const b = (body || {}) as Record<string, unknown>
+      const id = ++nextSeq
+      const code = (b.initiationCode as string) || `INIT-${String(id).padStart(4, '0')}`
+      const rec = {
+        id,
+        initiationCode: code,
+        initiationName: b.initiationName || b.name || `项目${id}`,
+        pmName: 'PM-E2E',
+        customerName: b.customerName || '客户',
+        budgetTotal: b.budgetTotal || b.amount || 0,
+        status: 'DRAFT',
+        createdAt: new Date().toISOString(),
+      }
+      initiationStore[code] = rec
+      return rec
+    },
+  },
+  {
+    method: 'POST',
+    path: '/project/initiation/{id}/submit',
+    handler: ({ body }) => {
+      const id = (body as { id?: number })?.id || 0
+      // 更新 store
+      const obj = Object.values(initiationStore).find((s) => s.id === id)
+      if (obj) obj.status = 'SUBMITTED'
+      return { success: true, id, status: 'SUBMITTED' }
+    },
+  },
+  {
+    method: 'POST',
+    path: '/project/initiation/{id}/approve',
+    handler: ({ body }) => {
+      const id = (body as { id?: number })?.id || 0
+      const obj = Object.values(initiationStore).find((s) => s.id === id)
+      if (obj) obj.status = 'APPROVED'
+      return { success: true, id, status: 'APPROVED' }
+    },
   },
   {
     method: 'GET',
     path: '/project/contract/page',
-    handler: ({ query }) => ({
-      list: list(Number(query.size || 10), (i) => ({
+    handler: ({ query }) => {
+      const stored = Object.values(contractStore)
+      const fixtureList = list(Number(query.size || 10), (i) => ({
         id: i,
         contractCode: `CT-${String(i).padStart(4, '0')}`,
         contractName: `合同${i}`,
@@ -59,12 +117,36 @@ export const projectHandlers: MockHandler[] = [
         amount: 800000 * i,
         status: ['DRAFT', 'SIGNED', 'EXECUTING', 'COMPLETED'][i % 4],
         signDate: '2026-06-20',
-      })),
-      total: 60,
-      page: Number(query.page || 1),
-      size: Number(query.size || 10),
-      pages: 6,
-    }),
+      }))
+      const merged = [...stored.map((s) => ({ ...s })), ...fixtureList].slice(0, Number(query.size || 10))
+      return {
+        list: merged,
+        total: stored.length + 60,
+        page: Number(query.page || 1),
+        size: Number(query.size || 10),
+        pages: Math.ceil((stored.length + 60) / Number(query.size || 10)),
+      }
+    },
+  },
+  {
+    method: 'POST',
+    path: '/project/contract',
+    handler: ({ body }) => {
+      const b = (body || {}) as Record<string, unknown>
+      const id = ++nextSeq
+      const code = (b.contractCode as string) || `CT-${String(id).padStart(4, '0')}`
+      const rec = {
+        id,
+        contractCode: code,
+        contractName: b.contractName || b.name || `合同${id}`,
+        customerName: b.customerName || '客户',
+        amount: b.amount || 0,
+        status: 'DRAFT',
+        signDate: '2026-06-25',
+      }
+      contractStore[code] = rec
+      return rec
+    },
   },
   {
     method: 'GET',
@@ -85,3 +167,6 @@ export const projectHandlers: MockHandler[] = [
     }),
   },
 ]
+
+/** 暴露 stores 给其他 handler 模块复用 (风险/预警联动) */
+export { initiationStore, contractStore, riskStore, alertStore }

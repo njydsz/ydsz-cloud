@@ -58,7 +58,6 @@
         <jjwt.version>0.12.6</jjwt.version>
         <bcprov.version>1.78.1</bcprov.version>
         <knife4j.version>4.5.0</knife4j.version>
-        <flowable.version>7.0.1</flowable.version>
         <easyexcel.version>4.0.3</easyexcel.version>
         <commons-csv.version>1.11.0</commons-csv.version>
         <commons-io.version>2.16.1</commons-io.version>
@@ -212,13 +211,6 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
                 <version>${springdoc.version}</version>
-            </dependency>
-
-            <!-- Flowable -->
-            <dependency>
-                <groupId>org.flowable</groupId>
-                <artifactId>flowable-spring-boot-starter</artifactId>
-                <version>${flowable.version}</version>
             </dependency>
 
             <!-- EasyExcel -->

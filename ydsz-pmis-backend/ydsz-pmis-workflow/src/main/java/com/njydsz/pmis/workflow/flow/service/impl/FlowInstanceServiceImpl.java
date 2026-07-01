@@ -25,6 +25,7 @@ import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -43,6 +44,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowDefinitionService definitionService;
     private final FlowAdvancer advancer;
     private final FlowTaskService taskService;
+    private final List<FlowEventListener> eventListeners;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -177,7 +179,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
         // 业务侧事件：onInstanceCompleted
         try {
-            for (FlowEventListener listener : eventListeners) {
+            for (FlowEventListener listener : (eventListeners != null ? eventListeners : Collections.<FlowEventListener>emptyList())) {
                 listener.onInstanceCompleted(instanceId);
             }
         } catch (Exception e) {

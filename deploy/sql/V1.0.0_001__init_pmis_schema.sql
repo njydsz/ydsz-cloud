@@ -753,7 +753,7 @@ INSERT INTO pmis_config (config_group, config_key, config_value, value_type, des
     ('rate', 'rate.fund.company.rate', '0.05', 'NUMBER', '公司公积金比例', 0),
     ('rate', 'rate.workdays.per.month', '21.75', 'NUMBER', '月计薪天数', 0),
     ('rate', 'rate.hours.per.day', '8', 'NUMBER', '日标准工时', 0),
-    ('workflow', 'workflow.engine', 'flowable', 'STRING', '工作流引擎', 0),
+    ('workflow', 'workflow.engine', 'pmis', 'STRING', '工作流引擎（自研 pmis_flow_*）', 0),
     ('alert', 'alert.cpi.yellow', '0.95', 'NUMBER', 'CPI 黄色预警阈值', 0),
     ('alert', 'alert.cpi.red', '0.85', 'NUMBER', 'CPI 红色预警阈值', 0),
     ('alert', 'alert.spi.yellow', '0.90', 'NUMBER', 'SPI 黄色预警阈值', 0),

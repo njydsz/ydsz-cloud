@@ -10,7 +10,11 @@ import java.util.List;
 /**
  * 自建工作流引擎 - 部署流程 DTO
  *
- * <p>使用 JSON 描述流程图（不依赖 BPMN XML），对标 Warm-Flow 的轻量模型。
+ * <p>支持两种部署模式：
+ * <ul>
+ *   <li>BPMN 2.0 模式：传入 {@code bpmnXml}（标准 BPMN XML），由 BpmnXmlParser 自动解析为节点/跳转</li>
+ *   <li>轻量 JSON 模式：直接传入 {@code nodes} + {@code skips} 数组（对标 Warm-Flow）</li>
+ * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -41,10 +45,21 @@ public class FlowDeployProcessDTO implements Serializable {
     /** 审批表单路径 */
     private String formPath;
 
-    /** 节点列表 */
+    /**
+     * BPMN 2.0 XML 内容（标准 .bpmn20.xml 文件内容）
+     *
+     * <p>与 {@code nodes}/{@code skips} 二选一。优先使用 BPMN XML 模式。
+     */
+    private String bpmnXml;
+
+    /**
+     * 轻量节点列表（JSON 模式）
+     */
     private List<FlowNodeDTO> nodes;
 
-    /** 跳转列表 */
+    /**
+     * 轻量跳转列表（JSON 模式）
+     */
     private List<FlowSkipDTO> skips;
 
     /** 租户 ID */

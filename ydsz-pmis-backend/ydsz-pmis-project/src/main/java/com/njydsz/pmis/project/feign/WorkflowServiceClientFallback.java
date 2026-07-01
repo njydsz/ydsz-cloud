@@ -27,8 +27,8 @@ public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowSe
             }
 
             @Override
-            public R<String> getProcessStatus(String processInstanceId) {
-                return R.ok("UNKNOWN");
+            public R<Map<String, Object>> getByBusiness(String businessType, String businessId) {
+                return R.ok(null);
             }
 
             @Override

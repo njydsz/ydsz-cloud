@@ -41,7 +41,19 @@ CREATE TABLE IF NOT EXISTS pmis_login_audit (
     updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis_login_audit IS '登录审计日志（等保2.0要求：登录成功/失败全留存）';
+COMMENT ON TABLE  pmis_login_audit IS '登录审计日志表: 等保 2.0 要求,登录成功/失败全留存,支持溯源审计';
+COMMENT ON COLUMN pmis_login_audit.username IS '登录用户名: 失败时也可记录,便于排查撞库';
+COMMENT ON COLUMN pmis_login_audit.user_id IS '登录用户 ID: 成功时记录,失败可为 NULL';
+COMMENT ON COLUMN pmis_login_audit.login_at IS '登录时间';
+COMMENT ON COLUMN pmis_login_audit.login_ip IS '登录 IP: 用于异常登录检测';
+COMMENT ON COLUMN pmis_login_audit.user_agent IS '浏览器 UA: 用于设备指纹';
+COMMENT ON COLUMN pmis_login_audit.status IS '状态: SUCCESS 成功 / FAIL 失败 / LOCKED 锁定';
+COMMENT ON COLUMN pmis_login_audit.fail_reason IS '失败原因: 密码错误/账号锁定/MFA 失败等';
+COMMENT ON COLUMN pmis_login_audit.mfa_used IS '是否使用 MFA: true=已启用并使用';
+COMMENT ON COLUMN pmis_login_audit.mfa_success IS 'MFA 是否通过: NULL=未使用,true=通过,false=失败';
+COMMENT ON COLUMN pmis_login_audit.trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_login_audit.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_login_audit.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 CREATE INDEX IF NOT EXISTS idx_login_audit_user_at ON pmis_login_audit (username, login_at DESC);
 CREATE INDEX IF NOT EXISTS idx_login_audit_ip_at   ON pmis_login_audit (login_ip, login_at DESC);
@@ -65,7 +77,16 @@ CREATE TABLE IF NOT EXISTS pmis_user_2fa (
     deleted         SMALLINT      NOT NULL DEFAULT 0,
     UNIQUE (user_id, mfa_type, deleted)
 );
-COMMENT ON TABLE pmis_user_2fa IS '用户双因素认证（基于 TOTP）';
+COMMENT ON TABLE  pmis_user_2fa IS '用户双因素认证表: 基于 TOTP（Time-based OTP）的双因素认证,使用 constant-time 比对防时序攻击';
+COMMENT ON COLUMN pmis_user_2fa.user_id IS '用户 ID';
+COMMENT ON COLUMN pmis_user_2fa.mfa_type IS 'MFA 类型: TOTP 时间型 / SMS 短信 / EMAIL 邮件';
+COMMENT ON COLUMN pmis_user_2fa.secret IS 'TOTP 密钥: Base32 编码,扫描二维码';
+COMMENT ON COLUMN pmis_user_2fa.binding_at IS '绑定时间';
+COMMENT ON COLUMN pmis_user_2fa.last_used_at IS '最近使用时间';
+COMMENT ON COLUMN pmis_user_2fa.backup_codes IS '备份码（密文）: 一次性,小写 hex 存储,已使用标记为 _used_<timestamp>';
+COMMENT ON COLUMN pmis_user_2fa.enabled IS '是否启用: true=启用';
+COMMENT ON COLUMN pmis_user_2fa.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_user_2fa.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 -- ----------------------------
 -- 4) 数据导出审计
@@ -90,7 +111,22 @@ CREATE TABLE IF NOT EXISTS pmis_data_export_audit (
     updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis_data_export_audit IS '数据导出审计（合同/财务/薪酬等敏感数据导出全留存）';
+COMMENT ON TABLE  pmis_data_export_audit IS '数据导出审计表: 合同/财务/薪酬等敏感数据导出全留存,@DataExportAudit 自动捕获';
+COMMENT ON COLUMN pmis_data_export_audit.user_id IS '导出用户 ID';
+COMMENT ON COLUMN pmis_data_export_audit.username IS '导出用户姓名（冗余）';
+COMMENT ON COLUMN pmis_data_export_audit.export_module IS '导出模块: PROJECT/EXECUTION/FINANCE 等';
+COMMENT ON COLUMN pmis_data_export_audit.export_action IS '导出动作: EXPORT 导出 / PRINT 打印 / DOWNLOAD 下载';
+COMMENT ON COLUMN pmis_data_export_audit.biz_type IS '业务类型';
+COMMENT ON COLUMN pmis_data_export_audit.row_count IS '导出行数: 自动检测 Collection/Number,作为审计基数';
+COMMENT ON COLUMN pmis_data_export_audit.file_name IS '导出文件名';
+COMMENT ON COLUMN pmis_data_export_audit.file_size IS '文件大小(字节)';
+COMMENT ON COLUMN pmis_data_export_audit.export_format IS '导出格式: XLSX/CSV/PDF';
+COMMENT ON COLUMN pmis_data_export_audit.query_summary IS '查询条件摘要: 用于审计导出范围';
+COMMENT ON COLUMN pmis_data_export_audit.trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_data_export_audit.client_ip IS '客户端 IP';
+COMMENT ON COLUMN pmis_data_export_audit.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_data_export_audit.exported_at IS '导出时间';
+COMMENT ON COLUMN pmis_data_export_audit.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 CREATE INDEX IF NOT EXISTS idx_export_audit_user_at  ON pmis_data_export_audit (user_id, exported_at DESC);
 CREATE INDEX IF NOT EXISTS idx_export_audit_module   ON pmis_data_export_audit (export_module, exported_at DESC);
@@ -117,7 +153,21 @@ CREATE TABLE IF NOT EXISTS pmis_sensitive_operation (
     updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT      NOT NULL DEFAULT 0
 );
-COMMENT ON TABLE pmis_sensitive_operation IS '敏感操作二次确认记录';
+COMMENT ON TABLE  pmis_sensitive_operation IS '敏感操作二次确认记录表: @RequireReAuth 注解触发的二次认证,token 一次性消费,防重放';
+COMMENT ON COLUMN pmis_sensitive_operation.user_id IS '操作用户 ID';
+COMMENT ON COLUMN pmis_sensitive_operation.username IS '操作用户姓名（冗余）';
+COMMENT ON COLUMN pmis_sensitive_operation.operation_code IS '操作编码: 例如 USER_DELETE / CONTRACT_REVERSE';
+COMMENT ON COLUMN pmis_sensitive_operation.operation_name IS '操作名称';
+COMMENT ON COLUMN pmis_sensitive_operation.biz_type IS '业务类型';
+COMMENT ON COLUMN pmis_sensitive_operation.biz_id IS '业务对象 ID';
+COMMENT ON COLUMN pmis_sensitive_operation.re_auth_method IS '二次认证方式: PASSWORD 密码 / MFA / SMS';
+COMMENT ON COLUMN pmis_sensitive_operation.re_auth_token IS '二次认证 Token: Redis Key 一次性消费';
+COMMENT ON COLUMN pmis_sensitive_operation.verified_at IS '验证时间';
+COMMENT ON COLUMN pmis_sensitive_operation.expire_at IS 'Token 过期时间';
+COMMENT ON COLUMN pmis_sensitive_operation.client_ip IS '客户端 IP';
+COMMENT ON COLUMN pmis_sensitive_operation.trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_sensitive_operation.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_sensitive_operation.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 CREATE INDEX IF NOT EXISTS idx_sensitive_op_user_at ON pmis_sensitive_operation (user_id, verified_at DESC);
 CREATE INDEX IF NOT EXISTS idx_sensitive_op_code    ON pmis_sensitive_operation (operation_code, verified_at DESC);
@@ -146,7 +196,22 @@ CREATE TABLE IF NOT EXISTS pmis_user_session (
     deleted         SMALLINT      NOT NULL DEFAULT 0,
     UNIQUE (session_id)
 );
-COMMENT ON TABLE pmis_user_session IS '用户活跃会话';
+COMMENT ON TABLE  pmis_user_session IS '用户活跃会话表: 单点登录/强制下线管理,SessionService 维护生命周期';
+COMMENT ON COLUMN pmis_user_session.user_id IS '用户 ID';
+COMMENT ON COLUMN pmis_user_session.session_id IS '会话 ID: 唯一';
+COMMENT ON COLUMN pmis_user_session.token_jti IS 'JWT ID: 用于 token 失效';
+COMMENT ON COLUMN pmis_user_session.login_at IS '登录时间';
+COMMENT ON COLUMN pmis_user_session.last_active_at IS '最近活跃时间';
+COMMENT ON COLUMN pmis_user_session.expire_at IS '过期时间';
+COMMENT ON COLUMN pmis_user_session.client_ip IS '客户端 IP';
+COMMENT ON COLUMN pmis_user_session.user_agent IS '浏览器 UA';
+COMMENT ON COLUMN pmis_user_session.device_type IS '设备类型: WEB / IOS / ANDROID / DESKTOP';
+COMMENT ON COLUMN pmis_user_session.status IS '会话状态: ACTIVE 活跃 / EXPIRED 过期 / KICKED 踢出';
+COMMENT ON COLUMN pmis_user_session.logout_at IS '登出时间';
+COMMENT ON COLUMN pmis_user_session.logout_reason IS '登出原因: USER_LOGOUT / ADMIN_KICK / EXPIRED';
+COMMENT ON COLUMN pmis_user_session.trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_user_session.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_user_session.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 CREATE INDEX IF NOT EXISTS idx_user_session_user_status ON pmis_user_session (user_id, status);
 CREATE INDEX IF NOT EXISTS idx_user_session_expire      ON pmis_user_session (expire_at);

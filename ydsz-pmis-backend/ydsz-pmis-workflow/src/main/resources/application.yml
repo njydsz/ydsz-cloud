@@ -44,25 +44,6 @@ spring:
           max-active: 16
           max-idle: 8
           min-idle: 2
-  flowable:
-    # 数据库表更新策略: true=随引擎启动自动建表/升级
-    database-schema-update: true
-    # 异步执行器配置
-    async-executor:
-      activate: true
-      core-pool-size: 8
-      max-pool-size: 32
-      queue-size: 200
-    # 自动部署: process-definitions 下的 .bpmn20.xml/bpmn 自动部署
-    process-definition-locator:
-      enabled: true
-    # 关闭历史级别以便生产调优
-    history-level: full
-    # 检查流程定义变化
-    check-process-definitions: true
-    # 事件日志
-    event-registry:
-      enabled: true
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
@@ -80,17 +61,13 @@ mybatis-plus:
       logic-not-delete-value: 0
 
 # ============== PMIS 自建工作流引擎 ==============
+# 当前引擎：自研 pmis_flow_*（Warm-Flow 风格），兼容 BPMN 2.0 标准流程文件
 pmis:
   flow:
-    # 双轨运行开关：local=自建 pmis_flow_* 引擎；flowable=原 Flowable 7 引擎
-    # 流程维度可通过 pmis_flow_definition.flow_code 单独控制
-    engine: ${PMIS_FLOW_ENGINE:flowable}
-    # 哪些 flowCode 走自建引擎（白名单，仅在 engine=flowable 时生效）
-    local-flow-codes:
-      - project_initiation
-      - contract_change
-      - project_closure
-    # 走自建引擎的流程将不再被 Flowable 处理（双轨隔离）
+    # 引擎类型：PMIS（自研，固定值）
+    engine: PMIS
+    # BPMN XML 中允许的最大节点数（防 XXE / 大文件攻击）
+    max-nodes: 500
 
 management:
   endpoints:
@@ -111,6 +88,5 @@ logging:
   level:
     root: INFO
     com.njydsz.pmis: DEBUG
-    org.flowable: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
