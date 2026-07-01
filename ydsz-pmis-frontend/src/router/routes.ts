@@ -89,6 +89,12 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/system/session/index.vue'),
         meta: { title: '会话管理', icon: 'Connection', keepAlive: true },
       },
+      {
+        path: 'import-export',
+        name: 'SystemImportExport',
+        component: () => import('@/views/system/import-export/index.vue'),
+        meta: { title: '数据导入导出', icon: 'Upload', keepAlive: true },
+      },
     ],
   },
   {

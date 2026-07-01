@@ -20,12 +20,10 @@ CREATE TABLE IF NOT EXISTS pmis_warranty (
     start_date          DATE         NOT NULL,
     end_date            DATE         NOT NULL,
     duration_months     INT          NOT NULL DEFAULT 12,
-    notice_days         INT          NOT NULL DEFAULT 30
-        COMMENT '到期提前提醒天数',
+    notice_days         INT          NOT NULL DEFAULT 30,
     notice_sent         BOOLEAN      NOT NULL DEFAULT FALSE,
     notice_sent_at      TIMESTAMP,
-    status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE'
-        COMMENT 'ACTIVE/EXPIRING_SOON/EXPIRED/TERMINATED',
+    status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
     terminated_at       TIMESTAMP,
     terminated_reason   VARCHAR(256),
     contact_name        VARCHAR(64),
@@ -56,11 +54,8 @@ CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     title               VARCHAR(128) NOT NULL,
     description         TEXT,
     category            VARCHAR(32)  NOT NULL DEFAULT 'OTHER'
-        COMMENT 'BUG/DATA/CONFIG/PROCESS/OTHER',
     priority            VARCHAR(8)   NOT NULL DEFAULT 'P3'
-        COMMENT 'P1/P2/P3/P4',
     status              VARCHAR(16)  NOT NULL DEFAULT 'OPEN'
-        COMMENT 'OPEN/ASSIGNED/IN_PROGRESS/RESOLVED/CLOSED/CANCELLED',
     reporter_id         BIGINT,
     reporter_name       VARCHAR(64),
     reporter_phone      VARCHAR(32),
@@ -71,17 +66,13 @@ CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     resolved_at         TIMESTAMP,
     closed_at           TIMESTAMP,
     response_due_at     TIMESTAMP    NOT NULL
-        COMMENT '首次响应 SLA 截止时间',
-    resolve_due_at      TIMESTAMP    NOT NULL
-        COMMENT '解决 SLA 截止时间',
+    resolve_due_at      TIMESTAMP    NOT NULL,
     response_breached   BOOLEAN      NOT NULL DEFAULT FALSE,
     resolve_breached    BOOLEAN      NOT NULL DEFAULT FALSE,
     resolution_note     TEXT,
-    customer_score      INT
-        COMMENT '1-5 星',
+    customer_score      INT,
     customer_comment    VARCHAR(512),
-    file_ids            VARCHAR(1024)
-        COMMENT '附件 ID 列表（逗号分隔）',
+    file_ids            VARCHAR(1024),
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64),
     created_by          BIGINT,
@@ -108,18 +99,12 @@ CREATE TABLE IF NOT EXISTS pmis_satisfaction (
     initiation_id       BIGINT       NOT NULL,
     ticket_id           BIGINT,
     warranty_id         BIGINT,
-    score               INT          NOT NULL
-        COMMENT '1-5 星',
-    level               VARCHAR(16)  NOT NULL
-        COMMENT 'VERY_SATISFIED/SATISFIED/NEUTRAL/DISSATISFIED/VERY_DISSATISFIED',
-    professionalism     INT
-        COMMENT '专业度 1-5',
-    timeliness          INT
-        COMMENT '及时性 1-5',
-    quality             INT
-        COMMENT '质量 1-5',
-    attitude            INT
-        COMMENT '服务态度 1-5',
+    score               INT          NOT NULL,
+    level               VARCHAR(16)  NOT NULL,
+    professionalism     INT,
+    timeliness          INT,
+    quality             INT,
+    attitude            INT,
     comments            VARCHAR(1024),
     suggest             VARCHAR(1024),
     anonymous           BOOLEAN      NOT NULL DEFAULT FALSE,

@@ -13,7 +13,6 @@ import org.springframework.context.annotation.Configuration;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -26,6 +25,15 @@ import java.util.concurrent.TimeUnit;
  * <ul>
  *   <li>{@code pmis_feign_call_seconds} - 调用耗时直方图</li>
  *   <li>{@code pmis_feign_call_total{status="success|failure"}} - 调用计数</li>
+ * </ul>
+ *
+ * <p>Feign 13.x 适配说明:
+ * <ul>
+ *   <li>抽象方法 {@code log(String, String, Object...)} 由父类默认实现, 本类重写为
+ *       静默 (由 logRequest/logAndRebufferResponse/logIOException 负责实际输出,
+ *       避免 BASIC 级别下的重复日志)</li>
+ *   <li>{@code logIOException} 返回 {@link IOException} 而非 void</li>
+ *   <li>{@code Request.header(String)} 已废弃, 改用 {@code headers().get(name)}</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -43,18 +51,20 @@ public class PmisFeignLogger extends Logger {
         return Logger.Level.BASIC;
     }
 
+    /**
+     * 重写抽象方法: 静默, 由 logRequest/logAndRebufferResponse 输出, 避免重复日志
+     */
     @Override
     protected void log(String configKey, String format, Object... args) {
-        // 统一格式化输出（BASIC 级别只输出摘要）
-        log.info("[Feign] target={} {}", configKey, format, args);
+        // no-op: BASIC 级别下, 我们只关心 request/response 摘要, 不要全量日志
     }
 
     @Override
     protected void logRequest(String configKey, Level logLevel, Request request) {
         if (logLevel.ordinal() >= Level.BASIC.ordinal()) {
             String traceId = firstHeader(request, "X-Trace-Id");
-            log(configKey, "method={} url={} traceId={}",
-                    request.httpMethod(), request.url(), traceId);
+            log.info("[Feign Request] target={} method={} url={} traceId={}",
+                    configKey, request.httpMethod(), request.url(), traceId);
         }
     }
 
@@ -66,8 +76,8 @@ public class PmisFeignLogger extends Logger {
 
         if (logLevel.ordinal() >= Level.BASIC.ordinal()) {
             String traceId = firstHeader(response.request(), "X-Trace-Id");
-            log(configKey, "status={} elapsed={}ms traceId={}",
-                    response.status(), elapsedTime, traceId);
+            log.info("[Feign Response] target={} status={} elapsed={}ms traceId={}",
+                    configKey, response.status(), elapsedTime, traceId);
         }
         return response;
     }

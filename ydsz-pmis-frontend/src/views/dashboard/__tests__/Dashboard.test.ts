@@ -4,8 +4,8 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { mount, flushPromises } from '@vue/test-utils'
+import { defineComponent, h, nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { nextTick } from 'vue'
 
 // ===== Mock ECharts =====
 const setOptionMock = vi.fn()
@@ -170,10 +170,12 @@ describe('Dashboard 仪表盘 (useECharts 迁移)', () => {
   })
 
   it('周期切换下拉显示 12 个月', async () => {
-    const wrapper = mount(Dashboard, { global: { plugins: [createPinia()] } })
+    const wrapper = mount(Dashboard, {
+      global: { plugins: [createPinia()], stubs: elementPlusStubs },
+    })
     await flushPromises()
     await nextTick()
-    const select = wrapper.find('.toolbar .el-select')
+    const select = wrapper.find('.toolbar .el-select-stub')
     expect(select.exists()).toBe(true)
   })
 

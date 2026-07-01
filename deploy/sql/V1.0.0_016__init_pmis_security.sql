@@ -1,4 +1,4 @@
--- ============================================================
+﻿-- ============================================================
 -- V1.0.0_016  权限安全体系  脚本
 -- ============================================================
 -- 说明：批次 13 权限安全体系
@@ -15,17 +15,11 @@
 -- ----------------------------
 ALTER TABLE pmis_user_account
     ADD COLUMN IF NOT EXISTS data_scope VARCHAR(16)  NOT NULL DEFAULT 'SELF'
-        COMMENT '数据权限范围: ALL/DEPT/DEPT_AND_CHILD/SELF/CUSTOM/PROJECT',
     ADD COLUMN IF NOT EXISTS custom_dept_ids TEXT
-        COMMENT 'CUSTOM 模式下自定义部门 ID 集（逗号分隔）',
     ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN     NOT NULL DEFAULT FALSE
-        COMMENT '是否启用双因素认证',
     ADD COLUMN IF NOT EXISTS mfa_type VARCHAR(16)    NOT NULL DEFAULT 'NONE'
-        COMMENT '双因素类型: NONE/TOTP/SMS',
     ADD COLUMN IF NOT EXISTS last_pwd_change_at TIMESTAMP
-        COMMENT '最近一次修改密码时间',
-    ADD COLUMN IF NOT EXISTS pwd_change_count INT    NOT NULL DEFAULT 0
-        COMMENT '密码累计修改次数';
+    ADD COLUMN IF NOT EXISTS pwd_change_count INT    NOT NULL DEFAULT 0;
 
 -- ----------------------------
 -- 2) 登录审计

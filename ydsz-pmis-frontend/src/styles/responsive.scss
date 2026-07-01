@@ -1,0 +1,49 @@
+// PMIS 响应式 mixin（批次 19 P3-2 落地）
+// 用法：@include respond-to(tablet) { ... }
+
+$breakpoints: (
+  xs: 480px,
+  sm: 768px,
+  md: 992px,
+  lg: 1200px,
+  xl: 1920px
+);
+
+@mixin respond-to($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (max-width: map-get($breakpoints, $breakpoint) - 1) {
+      @content;
+    }
+  } @else {
+    @warn "未知的断点: #{$breakpoint}";
+  }
+}
+
+@mixin respond-above($breakpoint) {
+  @if map-has-key($breakpoints, $breakpoint) {
+    @media (min-width: map-get($breakpoints, $breakpoint)) {
+      @content;
+    }
+  }
+}
+
+// 移动端通用样式（<= 768px）
+@mixin mobile {
+  @media (max-width: 768px) {
+    @content;
+  }
+}
+
+// 平板端通用样式（769 - 1200px）
+@mixin tablet {
+  @media (min-width: 769px) and (max-width: 1200px) {
+    @content;
+  }
+}
+
+// 桌面端通用样式（> 1200px）
+@mixin desktop {
+  @media (min-width: 1201px) {
+    @content;
+  }
+}

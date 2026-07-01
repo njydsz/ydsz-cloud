@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- V1.0.0_018  智能化升级 P4-1/P4-2/P4-3  脚本
 -- ============================================================
 -- 说明：批次 15 智能化升级-系统内部数据管理（PRD 4.2）
@@ -11,8 +11,7 @@
 -- 1) 工时表新增 billable 字段
 -- ----------------------------
 ALTER TABLE pmis_execution_time_entry
-    ADD COLUMN IF NOT EXISTS billable SMALLINT NOT NULL DEFAULT 1
-        COMMENT '是否可计费：1=是（项目类工时） 0=否（Bench/培训/请假/内部事务）';
+    ADD COLUMN IF NOT EXISTS billable SMALLINT NOT NULL DEFAULT 1;
 COMMENT ON COLUMN pmis_execution_time_entry.billable IS '可计费标识';
 
 -- ----------------------------
@@ -22,26 +21,17 @@ CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     id                  BIGSERIAL PRIMARY KEY,
     alert_code          VARCHAR(64)  NOT NULL UNIQUE,
     alert_type          VARCHAR(32)  NOT NULL
-        COMMENT 'BUDGET/RISK/EVM/SLA/BENCH/UTILIZATION/QUALITY/OTHER',
     alert_level         VARCHAR(8)   NOT NULL
-        COMMENT 'YELLOW 黄色预警 / RED 红色预警 / NORMAL 通知',
     source_type         VARCHAR(32)  NOT NULL
-        COMMENT '来源模块: project/execution/finance/agent ...',
     source_id           VARCHAR(64)
-        COMMENT '来源业务主键，可为字符串拼接',
     title               VARCHAR(256) NOT NULL,
     content             TEXT,
     target_role         VARCHAR(64)  NOT NULL
-        COMMENT '目标接收人角色: PM/PMO/GM/CFO/HR/ALL',
     target_user_ids     VARCHAR(1024)
-        COMMENT '指定接收人 ID 列表，逗号分隔；为空则按 role 广播',
     push_channels       VARCHAR(64)  NOT NULL DEFAULT 'IN_APP'
-        COMMENT 'IN_APP/EMAIL/SMS，多个用逗号',
     dispatched_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dispatched_by       VARCHAR(64)
-        COMMENT '系统/调度任务名',
     status              VARCHAR(16)  NOT NULL DEFAULT 'PENDING'
-        COMMENT 'PENDING/SENT/FAILED/CANCELLED',
     sent_at             TIMESTAMP,
     fail_reason         VARCHAR(512),
     retry_count         INT          NOT NULL DEFAULT 0,
@@ -65,22 +55,14 @@ CREATE INDEX IF NOT EXISTS idx_alert_dispatch_target  ON pmis_alert_dispatch(tar
 CREATE TABLE IF NOT EXISTS pmis_reconcile_daily (
     id                  BIGSERIAL PRIMARY KEY,
     reconcile_date      DATE         NOT NULL,
-    reconcile_type      VARCHAR(32)  NOT NULL
-        COMMENT 'COST/REVENUE/PAYMENT/INVOICE/PROFIT/LABOR',
-    initiation_id       BIGINT
-        COMMENT '关联项目立项（项目级对账时填写）',
-    expected_amount     NUMERIC(18,2) NOT NULL DEFAULT 0
-        COMMENT '应计金额（业务系统账）',
-    actual_amount       NUMERIC(18,2) NOT NULL DEFAULT 0
-        COMMENT '实计金额（汇总源）',
-    diff_amount         NUMERIC(18,2) NOT NULL DEFAULT 0
-        COMMENT '差额 = 实际 - 应计',
-    diff_pct            NUMERIC(8,4) NOT NULL DEFAULT 0
-        COMMENT '差异百分比',
-    status              VARCHAR(16)  NOT NULL DEFAULT 'OK'
-        COMMENT 'OK/WARN/ERROR',
-    detail              TEXT
-        COMMENT '对账明细/差异说明',
+    reconcile_type      VARCHAR(32)  NOT NULL,
+    initiation_id       BIGINT,
+    expected_amount     NUMERIC(18,2) NOT NULL DEFAULT 0,
+    actual_amount       NUMERIC(18,2) NOT NULL DEFAULT 0,
+    diff_amount         NUMERIC(18,2) NOT NULL DEFAULT 0,
+    diff_pct            NUMERIC(8,4) NOT NULL DEFAULT 0,
+    status              VARCHAR(16)  NOT NULL DEFAULT 'OK',
+    detail              TEXT,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64),
     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
