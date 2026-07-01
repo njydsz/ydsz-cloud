@@ -93,8 +93,8 @@ export const PC = {
   RESOURCE_UTILIZATION_LIST: 'resource:utilization:list',
 
   // ============= 个人安全与 2FA =============
-  AUTH_USER_2FA_BIND: 'auth:user:2fa-bind',
-  AUTH_USER_2FA_VERIFY: 'auth:user:2fa-verify',
+  AUTH_USER_2FA_BIND: 'auth:user:bind-2fa',
+  AUTH_USER_2FA_VERIFY: 'auth:user:verify-2fa',
   AUTH_USER_SESSION_LIST: 'auth:user:session-list',
   AUTH_USER_SESSION_KICK: 'auth:user:session-kick',
   AUTH_USER_CHANGE_PWD: 'auth:user:change-password',
@@ -278,9 +278,9 @@ export const PC = {
   PROJECT_CHANGE_STATUS: 'project:change:status',
 
   // ============= AI Agent(agent) =============
-  AGENT_RUN: 'agent:run',
-  AGENT_HISTORY: 'agent:history',
-  AGENT_VIEW: 'agent:view',
+  AGENT_RUN: 'agent:task:run',
+  AGENT_HISTORY: 'agent:task:list',
+  AGENT_VIEW: 'agent:task:view',
   AGENT_ORCHESTRATION_RUN: 'agent:orchestration:run',
   AGENT_ORCHESTRATION_VIEW: 'agent:orchestration:view',
   AGENT_PREDICTION_VIEW: 'agent:prediction:view',

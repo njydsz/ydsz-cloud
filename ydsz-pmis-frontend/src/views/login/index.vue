@@ -1,3 +1,8 @@
+<!--
+  @file 登录页
+  @description 系统登录页，支持账号密码登录、图形验证码、记住我、2FA 二次验证（OTP/备份码），对接 @/api/user 与 @/api/user/two-factor 模块。
+  @module views/login
+-->
 <script setup lang="ts">
 /**
  * 登录页 - 支持 2FA 二步验证
@@ -15,10 +20,14 @@ const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 
+/** 登录表单引用 */
 const formRef = ref<FormInstance>()
+/** 登录提交中状态 */
 const loading = ref(false)
+/** 验证码加载中状态 */
 const captchaLoading = ref(false)
 
+/** 登录表单数据 */
 const form = reactive({
   username: 'admin',
   password: 'admin123',
@@ -27,6 +36,7 @@ const form = reactive({
   rememberMe: true,
 })
 
+/** 图形验证码图片 Base64 */
 const captchaImage = ref<string>('')
 
 const rules: FormRules = {
@@ -38,6 +48,7 @@ const rules: FormRules = {
   captchaCode: [{ required: true, message: '请输入图形验证码', trigger: 'blur' }],
 }
 
+/** 刷新图形验证码，失败时全局提示 */
 async function refreshCaptcha() {
   captchaLoading.value = true
   try {
@@ -52,13 +63,20 @@ async function refreshCaptcha() {
 }
 
 // ===== 2FA 弹窗 =====
+/** 2FA 验证弹窗显隐 */
 const mfaDialogVisible = ref(false)
+/** 2FA 表单数据（otp 或 backupCode 二选一） */
 const mfaForm = reactive({ otp: '', backupCode: '' })
+/** 2FA 表单引用 */
 const mfaFormRef = ref<FormInstance>()
+/** 2FA 验证提交中状态 */
 const mfaLoading = ref(false)
+/** 2FA 验证模式：OTP-动态码 / BACKUP-备份码 */
 const mfaMode = ref<'OTP' | 'BACKUP'>('OTP')
+/** 待完成 2FA 的登录上下文（暂存用户名/密码/记住我，2FA 通过后重新登录换 token） */
 const pendingMfa = ref<{ username: string; password: string; rememberMe: boolean } | null>(null)
 
+/** 2FA 表单校验规则，根据 mfaMode 动态切换 */
 const mfaRules = computed<FormRules>(() => ({
   otp: mfaMode.value === 'OTP' ? [
     { required: true, message: '请输入 6 位动态码', trigger: 'blur' },
@@ -69,6 +87,7 @@ const mfaRules = computed<FormRules>(() => ({
   ] : [],
 }))
 
+/** 提交登录，若后端要求 2FA 则弹出验证窗 */
 async function handleLogin() {
   if (!formRef.value) return
   try {
@@ -107,6 +126,7 @@ async function handleLogin() {
   }
 }
 
+/** 提交 2FA 验证，先调用 verify 接口完成 2FA，再重新登录换取完整 token */
 async function submitMfa() {
   if (!mfaFormRef.value) return
   try {
@@ -144,6 +164,7 @@ async function submitMfa() {
   }
 }
 
+/** 登录成功后处理：拉取用户信息并跳转到 redirect 或首页 */
 async function onLoginSuccess() {
   await userStore.fetchUserInfo()
   ElMessage.success('登录成功')
@@ -151,6 +172,10 @@ async function onLoginSuccess() {
   await router.push(redirect)
 }
 
+/**
+ * 切换 2FA 验证模式
+ * @param mode OTP-动态码 / BACKUP-备份码
+ */
 function switchMfaMode(mode: string | number) {
   if (mode === 'OTP' || mode === 'BACKUP') {
     mfaMode.value = mode

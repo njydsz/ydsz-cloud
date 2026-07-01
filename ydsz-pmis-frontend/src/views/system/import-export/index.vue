@@ -199,12 +199,18 @@ const progressText = ref('')
 const fileList = ref<UploadUserFile[]>([])
 const importResult = ref<ImportResult | null>(null)
 
+/**
+ * 文件大小格式化（B / KB / MB）
+ * @param bytes 字节数
+ * @returns 格式化后的字符串
+ */
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`
   return `${(bytes / 1024 / 1024).toFixed(2)} MB`
 }
 
+/** 下载当前所选业务类型的导入模板（.xlsx） */
 async function handleDownloadTemplate() {
   if (!selectedBiz.value) return
   downloading.value = true
@@ -218,17 +224,24 @@ async function handleDownloadTemplate() {
   }
 }
 
+/**
+ * 文件选择变化回调：更新文件列表并清空历史导入结果
+ * @param _uploadFile 当前变化的文件（未使用）
+ * @param uploadFiles 当前全部文件列表
+ */
 function handleFileChange(_uploadFile: UploadFile, uploadFiles: UploadFiles) {
   // P0 修复: 类型对齐 UploadFile (el-upload 传的是 UploadFile, 但只需要这几个字段)
   fileList.value = uploadFiles
   importResult.value = null
 }
 
+/** 文件移除回调：清空文件列表与导入结果 */
 function handleFileRemove() {
   fileList.value = []
   importResult.value = null
 }
 
+/** 执行导入：上传文件并展示进度，完成后反馈成功/失败明细 */
 async function handleImport() {
   if (!selectedBiz.value || !fileList.value.length) return
   importing.value = true
@@ -267,6 +280,7 @@ async function handleImport() {
   }
 }
 
+/** 下载错误报告：将导入失败明细生成 CSV 文件并触发浏览器下载 */
 function downloadErrorFile() {
   if (!importResult.value || !importResult.value.errors?.length) return
   // 生成 CSV 错误报告

@@ -122,6 +122,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新建表单：校验通过后调用创建接口，RiskScoreEvaluator 自动评级 */
 async function submitForm() {
   await formRef.value?.validate()
   await createRisk(form as RiskCreateDTO)
@@ -130,6 +131,7 @@ async function submitForm() {
   fetchList()
 }
 
+/** 状态流转：根据目标状态推进风险处理流程（启动缓解/关闭/接受） */
 async function handleStatus(row: RiskVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {

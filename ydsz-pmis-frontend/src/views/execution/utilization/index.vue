@@ -1,3 +1,8 @@
+<!--
+  @file 人员利用率
+  @description 可计费利用率统计与考核页面：支持团队整体均值(实时聚合+快照兜底)、等级分布、人效排行榜 TOP20、预警员工列表、快照重算(增量/强制)，对应路由 /execution/utilization
+  @module views/execution/utilization
+-->
 <script setup lang="ts">
 /**
  * 可计费利用率统计与考核
@@ -28,26 +33,30 @@ import type { UtilizationRowVO, UtilizationOverallVO } from '@/api/execution/uti
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
 
+// 权限助手：统一通过 userStore 校验按钮级权限
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
+// 列表加载状态
 const loading = ref(false)
 const snapshotLoading = ref(false)
 const recomputeLoading = ref(false)
 
+// 查询条件：日期区间 + 快照周期(yyyy-MM)
 const query = reactive({
   from: '',
   to: '',
   period: new Date().toISOString().slice(0, 7),
 })
 
+// 各区块数据：聚合明细 / 排行榜 / 预警 / 整体统计 / 快照均值
 const aggregate = ref<UtilizationRowVO[]>([])
 const rank = ref<UtilizationRowVO[]>([])
 const alerts = ref<UtilizationRowVO[]>([])
 const overall = ref<UtilizationOverallVO | null>(null)
 const snapshotAvg = ref<Record<string, unknown> | null>(null)
 
-// 默认查询区间：本月 1 号 ~ 今天
+/** 默认查询区间：本月 1 号 ~ 今天 */
 function defaultRange() {
   const now = new Date()
   const y = now.getFullYear()
@@ -56,6 +65,7 @@ function defaultRange() {
   query.to = now.toISOString().slice(0, 10)
 }
 
+// 考核等级颜色映射：优秀/良好/合格/黄色预警/红色预警
 const gradeColorMap: Record<string, string> = {
   EXCELLENT: '#67c23a',
   GOOD: '#409eff',
@@ -64,6 +74,7 @@ const gradeColorMap: Record<string, string> = {
   CRITICAL: '#f56c6c',
 }
 
+// 考核等级文案映射
 const gradeLabelMap: Record<string, string> = {
   EXCELLENT: '优秀',
   GOOD: '良好',
@@ -72,10 +83,12 @@ const gradeLabelMap: Record<string, string> = {
   CRITICAL: '红色预警',
 }
 
+/** 整体考核等级（取后端返回值，缺省为 NORMAL） */
 const overallGrade = computed(() => {
   return overall.value?.grade ?? 'NORMAL'
 })
 
+/** 考核等级分布：统计 aggregate 中各等级人数 */
 const gradeDistribution = computed(() => {
   const map: Record<string, number> = {
     EXCELLENT: 0,
@@ -90,6 +103,7 @@ const gradeDistribution = computed(() => {
   return map
 })
 
+/** 拉取团队整体利用率统计（含总工时/可计费工时/参与人数/等级） */
 async function fetchOverall() {
   loading.value = true
   try {
@@ -100,6 +114,7 @@ async function fetchOverall() {
   }
 }
 
+/** 拉取人效排行榜 TOP 20（按利用率倒序） */
 async function fetchRank() {
   loading.value = true
   try {
@@ -110,6 +125,7 @@ async function fetchRank() {
   }
 }
 
+/** 拉取预警员工列表（WARN/CRITICAL，按利用率升序） */
 async function fetchAlerts() {
   loading.value = true
   try {
@@ -120,6 +136,7 @@ async function fetchAlerts() {
   }
 }
 
+/** 拉取快照周期均值（scheduler 每日 02:30 计算的快照数据） */
 async function fetchSnapshot() {
   snapshotLoading.value = true
   try {
@@ -130,6 +147,7 @@ async function fetchSnapshot() {
   }
 }
 
+/** 拉取利用率聚合明细（用于等级分布统计） */
 async function fetchAggregate() {
   loading.value = true
   try {
@@ -140,16 +158,19 @@ async function fetchAggregate() {
   }
 }
 
+/** 刷新全部数据：并发拉取聚合/整体/排行/预警/快照 */
 async function refresh() {
   await Promise.all([fetchAggregate(), fetchOverall(), fetchRank(), fetchAlerts(), fetchSnapshot()])
 }
 
+/** 重置查询条件为默认区间并刷新全部数据 */
 function handleReset() {
   defaultRange()
   query.period = new Date().toISOString().slice(0, 7)
   refresh()
 }
 
+/** 触发快照重算：recomputeAll=true 强制重写，false 增量补算 */
 async function handleRecompute(recomputeAll: boolean) {
   try {
     await ElMessageBox.confirm(
@@ -179,10 +200,12 @@ onMounted(() => {
   refresh()
 })
 
+/** 百分比格式化：入参为小数(0.85 → 85.00%)，空值返回 0.00% */
 function fmtPct(v: number | undefined) {
   if (v === undefined || v === null) return '0.00%'
   return `${(v * 100).toFixed(2)}%`
 }
+/** 工时格式化：保留两位小数，空值返回 0.00 */
 function fmtHours(v: number | undefined) {
   if (v === undefined || v === null) return '0.00'
   return Number(v).toFixed(2)

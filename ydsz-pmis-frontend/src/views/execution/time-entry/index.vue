@@ -1,3 +1,8 @@
+<!--
+  @file 工时填报
+  @description 工时填报管理页面：支持工时分页查询、填报(TimeEntryValidator 校验)、审批流转(DRAFT→SUBMITTED→APPROVED/REJECTED)，审批通过后自动触发成本分摊，对应路由 /execution/time-entry
+  @module views/execution/time-entry
+-->
 <script setup lang="ts">
 /**
  * 工时管理
@@ -19,6 +24,7 @@ import {
 import type { TimeEntryVO, TimeEntryCreateDTO } from '@/api/execution/time-entry/types'
 import { PC } from '@/constants/permissionCodes'
 
+// 列表查询状态
 const loading = ref(false)
 const list = ref<TimeEntryVO[]>([])
 const total = ref(0)
@@ -33,6 +39,7 @@ const query = reactive({
   endDate: '',
 })
 
+// 状态字典：工时审批状态映射到标签文案与色值
 const statusMap = {
   DRAFT: { label: '草稿', type: 'info' as const },
   SUBMITTED: { label: '已提交', type: 'warning' as const },
@@ -40,6 +47,7 @@ const statusMap = {
   REJECTED: { label: '已驳回', type: 'danger' as const },
 }
 
+// 工作类型字典：常规/加班/培训/请假
 const workTypeMap = {
   REGULAR: { label: '常规' },
   OVERTIME: { label: '加班' },
@@ -47,6 +55,7 @@ const workTypeMap = {
   LEAVE: { label: '请假' },
 }
 
+/** 拉取工时分页数据 */
 async function fetchList() {
   loading.value = true
   try {
@@ -65,6 +74,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并刷新列表 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -76,6 +86,7 @@ function handleReset() {
   fetchList()
 }
 
+// 弹窗 - 填写工时
 const dialogVisible = ref(false)
 const formRef = ref<any>()
 const form = reactive<Partial<TimeEntryCreateDTO>>({
@@ -97,6 +108,7 @@ const formRules = {
   hours: [{ required: true, message: '工时必填', trigger: 'blur' }],
 }
 
+/** 打开新建弹窗：重置表单为默认值，回填当前查询的员工/项目 ID */
 function openCreate() {
   Object.assign(form, {
     entryDate: new Date().toISOString().slice(0, 10),
@@ -112,6 +124,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新建表单：校验通过后调用创建接口（TimeEntryValidator 校验），状态为待审批 */
 async function submitForm() {
   await formRef.value?.validate()
   await createTimeEntry(form as TimeEntryCreateDTO)
@@ -120,6 +133,7 @@ async function submitForm() {
   fetchList()
 }
 
+/** 审批通过：二次确认后推进状态，通过后自动触发成本分摊 */
 async function handleApprove(row: TimeEntryVO) {
   try {
     await ElMessageBox.confirm(`确认通过该工时记录？审批通过将自动触发成本分摊。`, '提示', { type: 'warning' })
@@ -129,6 +143,7 @@ async function handleApprove(row: TimeEntryVO) {
   } catch { /* 取消 */ }
 }
 
+/** 审批驳回：需输入驳回原因（必填）后推进状态 */
 async function handleReject(row: TimeEntryVO) {
   try {
     const { value } = await ElMessageBox.prompt('请输入驳回原因', '驳回工时', { inputValidator: (v) => !!v || '原因必填' })
@@ -138,6 +153,7 @@ async function handleReject(row: TimeEntryVO) {
   } catch { /* 取消 */ }
 }
 
+/** 删除工时记录（二次确认） */
 async function handleDelete(row: TimeEntryVO) {
   try {
     await ElMessageBox.confirm(`确认删除该工时记录？`, '提示', { type: 'warning' })

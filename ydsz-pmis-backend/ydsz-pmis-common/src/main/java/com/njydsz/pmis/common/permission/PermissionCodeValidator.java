@@ -28,7 +28,16 @@ public final class PermissionCodeValidator {
             "reload", "send", "upload", "view", "export", "import", "assign",
             "toggle", "reset-password", "act", "recompute", "terminate",
             "status", "scan", "follow-up", "evaluate", "dispatch", "aggregate",
-            "submit", "check"
+            "submit", "check",
+            // P0-3 扩充: 资源/2FA/会话/敏感操作/项目/执行/财务 等业务动作
+            "into", "out", "kick",
+            "bind-2fa", "verify-2fa",
+            "session-list", "session-kick",
+            "change-password", "confirm",
+            "convert", "gate", "budget", "start-process",
+            "save", "dashboard", "snapshot", "run",
+            "issue", "reverse", "allocate", "assess",
+            "publish", "reject", "review"
     );
 
     private PermissionCodeValidator() {}

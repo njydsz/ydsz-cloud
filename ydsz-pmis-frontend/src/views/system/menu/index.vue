@@ -1,3 +1,8 @@
+<!--
+  @file 菜单管理
+  @description 菜单/权限管理页面：以树形结构展示菜单层级（菜单/按钮/接口三类权限），支持新增根菜单/下级菜单、编辑、删除（存在子菜单时不允许删除）。对应路由 /system/menu。
+  @module views/system/menu
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -10,6 +15,7 @@ import {
 import type { MenuTreeVO, PermissionFormDTO } from '@/api/system/menu/types'
 
 const loading = ref(false)
+// 菜单权限树形数据
 const treeData = ref<MenuTreeVO[]>([])
 
 const dialogVisible = ref(false)
@@ -35,6 +41,7 @@ const formRules = {
   permType: [{ required: true, message: '权限类型必填', trigger: 'change' }],
 }
 
+/** 拉取菜单/权限树形数据 */
 async function fetchTree() {
   loading.value = true
   try {
@@ -45,6 +52,7 @@ async function fetchTree() {
   }
 }
 
+/** 重置表单为默认值 */
 function resetForm() {
   Object.assign(form, {
     id: undefined,
@@ -62,6 +70,10 @@ function resetForm() {
   })
 }
 
+/**
+ * 打开新增菜单弹窗，传入 parent 时作为其下级新增
+ * @param parent 上级菜单节点，未传则新增根菜单
+ */
 function openCreate(parent?: MenuTreeVO) {
   dialogMode.value = 'create'
   resetForm()
@@ -72,6 +84,10 @@ function openCreate(parent?: MenuTreeVO) {
   dialogVisible.value = true
 }
 
+/**
+ * 打开编辑弹窗，回填节点数据并查找上级名称
+ * @param node 待编辑的菜单节点
+ */
 function openEdit(node: MenuTreeVO) {
   dialogMode.value = 'edit'
   resetForm()
@@ -79,6 +95,11 @@ function openEdit(node: MenuTreeVO) {
   dialogVisible.value = true
 }
 
+/**
+ * 深度优先查找指定 parentId 对应的菜单名称
+ * @param parentId 上级菜单 ID
+ * @returns 上级菜单名称，未找到时返回 '#parentId' 或 '根'
+ */
 function findParentName(parentId?: number): string {
   if (!parentId) return '根'
   let name = ''
@@ -95,6 +116,7 @@ function findParentName(parentId?: number): string {
   return name || `#${parentId}`
 }
 
+/** 提交表单：根据 dialogMode 执行创建或更新，成功后刷新树 */
 async function submitForm() {
   await formRef.value?.validate()
   if (dialogMode.value === 'create') {
@@ -108,6 +130,10 @@ async function submitForm() {
   fetchTree()
 }
 
+/**
+ * 删除菜单：存在子菜单时阻止删除，否则二次确认后执行
+ * @param node 待删除的菜单节点
+ */
 async function handleDelete(node: MenuTreeVO) {
   if (node.children && node.children.length > 0) {
     ElMessage.warning('该菜单下存在子菜单,请先删除子菜单')

@@ -1,3 +1,8 @@
+<!--
+  @file 角色管理
+  @description 角色管理页面：提供角色分页查询、新增/编辑/删除，以及权限树分配（支持全部/本部门/本人/自定义四种数据权限范围）。对应路由 /system/role。
+  @module views/system/role
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -17,6 +22,7 @@ import type { MenuTreeNode } from '@/api/menu/types'
 const loading = ref(false)
 const list = ref<RoleVO[]>([])
 const total = ref(0)
+// 角色分页查询条件
 const query = reactive({
   page: 1,
   size: 10,
@@ -49,6 +55,7 @@ const permTreeRef = ref()
 const permDialogRoleId = ref<number | null>(null)
 const permCheckedIds = ref<number[]>([])
 
+/** 拉取角色分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -60,6 +67,7 @@ async function fetchList() {
   }
 }
 
+/** 打开新增角色弹窗，初始化表单默认值 */
 function openCreate() {
   dialogMode.value = 'create'
   Object.assign(form, {
@@ -75,6 +83,10 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/**
+ * 打开编辑弹窗：拉取角色详情并回填到表单
+ * @param row 待编辑的角色行数据
+ */
 async function openEdit(row: RoleVO) {
   dialogMode.value = 'edit'
   const { data } = await getRole(row.id)
@@ -83,6 +95,7 @@ async function openEdit(row: RoleVO) {
   dialogVisible.value = true
 }
 
+/** 提交表单：根据 dialogMode 执行创建或更新，成功后刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   if (dialogMode.value === 'create') {
@@ -96,6 +109,10 @@ async function submitForm() {
   fetchList()
 }
 
+/**
+ * 删除角色，二次确认后执行
+ * @param row 待删除的角色行数据
+ */
 async function handleDelete(row: RoleVO) {
   try {
     await ElMessageBox.confirm(`确认删除角色「${row.roleName}」吗？`, '提示', { type: 'warning' })
@@ -107,6 +124,10 @@ async function handleDelete(row: RoleVO) {
   }
 }
 
+/**
+ * 打开权限分配弹窗：拉取全量权限树与该角色已分配权限
+ * @param row 待分配权限的角色行数据
+ */
 async function openPermDialog(row: RoleVO) {
   permDialogRoleId.value = row.id
   // 1. 拉取全量权限
@@ -118,6 +139,12 @@ async function openPermDialog(row: RoleVO) {
   permDialogVisible.value = true
 }
 
+/**
+ * 递归收集节点及其子节点的全部 ID
+ * @param nodes 权限树节点列表
+ * @param acc 累加器数组
+ * @returns 包含全部节点 ID 的数组
+ */
 function collectCheckedIds(nodes: MenuTreeNode[], acc: number[] = []): number[] {
   for (const n of nodes) {
     acc.push(n.id)
@@ -126,6 +153,7 @@ function collectCheckedIds(nodes: MenuTreeNode[], acc: number[] = []): number[] 
   return acc
 }
 
+/** 提交权限分配：收集勾选与半勾节点 ID 并提交后端 */
 async function submitPermAssign() {
   if (permDialogRoleId.value === null || permDialogRoleId.value === undefined) return
   // 收集所有勾选节点(包括半勾节点的子节点)

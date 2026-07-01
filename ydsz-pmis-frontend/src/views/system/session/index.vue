@@ -1,3 +1,8 @@
+<!--
+  @file 会话管理
+  @description 会话管理页面（管理员视角）：提供全量会话分页查询（按用户/状态/IP 过滤）、UA 解析可视化（设备/操作系统/浏览器）及强制下线功能。对应路由 /system/session。
+  @module views/system/session
+-->
 <script setup lang="ts">
 /**
  * 会话管理（管理员视角）
@@ -33,10 +38,16 @@ const statusMap: Record<string, { label: string; type: 'success' | 'info' | 'war
   KICKED: { label: '已踢出', type: 'danger' },
 }
 
+/**
+ * 时间字符串格式化（ISO → 'YYYY-MM-DD HH:mm:ss'）
+ * @param s ISO 时间字符串
+ * @returns 格式化后的时间，空值返回 '-'
+ */
 function fmt(s?: string) {
   return s ? s.replace('T', ' ').slice(0, 19) : '-'
 }
 
+/** 拉取会话分页列表（按用户/状态/IP 过滤） */
 async function fetchList() {
   loading.value = true
   try {
@@ -52,6 +63,10 @@ async function fetchList() {
   }
 }
 
+/**
+ * 强制下线指定会话，二次确认后执行
+ * @param row 待下线的会话行数据
+ */
 async function onKick(row: UserSessionVO) {
   if (row.status !== 'ACTIVE') {
     ElMessage.warning('该会话已不活跃')
@@ -69,6 +84,7 @@ async function onKick(row: UserSessionVO) {
   } catch { /* 用户取消 */ }
 }
 
+/** 重置查询条件并刷新列表 */
 function onReset() {
   query.userId = undefined
   query.status = ''

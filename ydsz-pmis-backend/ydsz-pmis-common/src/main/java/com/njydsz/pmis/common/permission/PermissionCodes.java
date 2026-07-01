@@ -140,8 +140,8 @@ public final class PermissionCodes {
 
     // ==================== 个人安全与 2FA ====================
 
-    public static final String AUTH_USER_2FA_BIND = "auth:user:2fa-bind";
-    public static final String AUTH_USER_2FA_VERIFY = "auth:user:2fa-verify";
+    public static final String AUTH_USER_2FA_BIND = "auth:user:bind-2fa";
+    public static final String AUTH_USER_2FA_VERIFY = "auth:user:verify-2fa";
     public static final String AUTH_USER_SESSION_LIST = "auth:user:session-list";
     public static final String AUTH_USER_SESSION_KICK = "auth:user:session-kick";
     public static final String AUTH_USER_CHANGE_PWD = "auth:user:change-password";

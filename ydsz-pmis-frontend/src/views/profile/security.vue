@@ -1,3 +1,8 @@
+<!--
+  @file 个人安全中心
+  @description 个人安全设置页面，提供 2FA 绑定/关闭、备份码查看、活跃会话管理（下线/批量下线）、修改密码（含密码强度校验），对接 @/api/user/two-factor 与 @/api/user/session 模块。
+  @module views/profile/security
+-->
 <script setup lang="ts">
 /**
  * 个人中心 - 安全设置
@@ -30,13 +35,20 @@ import { useUserStore } from '@/store/modules/user'
 const userStore = useUserStore()
 
 // ============= 2FA =============
+/** 2FA 状态信息（是否开启、绑定时间、上次使用时间、备份码剩余数） */
 const twoFAStatus = ref<{ enabled: boolean; boundAt?: string; lastUsedAt?: string; backupCodeCount?: number }>({ enabled: false })
+/** 2FA 是否已绑定（用于 UI 切换） */
 const twoFABound = ref(false)
+/** 调用 bind2fa 返回的 secret 与 otpauthUri（扫码绑定阶段） */
 const bindResult = ref<{ secret: string; otpauthUri: string } | null>(null)
+/** 绑定确认表单（输入 6 位动态码） */
 const bindForm = reactive({ otp: '' })
+/** 绑定确认表单引用 */
 const bindFormRef = ref<any>()
+/** 备份码列表 */
 const backupCodes = ref<string[]>([])
 
+/** 拉取 2FA 状态信息，失败时降级为未开启 */
 async function fetch2faStatus() {
   try {
     const { data } = await get2faStatus()
@@ -52,6 +64,7 @@ async function fetch2faStatus() {
   }
 }
 
+/** 发起 2FA 绑定，后端返回 secret 与 otpauthUri 供前端展示二维码 */
 async function startBind() {
   try {
     const { data } = await bind2fa()
@@ -62,6 +75,7 @@ async function startBind() {
   }
 }
 
+/** 提交 6 位动态码确认绑定，绑定成功后拉取备份码 */
 async function confirmBind() {
   if (!bindFormRef.value) return
   try {
@@ -81,11 +95,13 @@ async function confirmBind() {
   }
 }
 
+/** 取消绑定，清空绑定结果与表单 */
 async function cancelBind() {
   bindResult.value = null
   bindForm.otp = ''
 }
 
+/** 拉取备份码列表，失败时降级为空数组 */
 async function fetchBackupCodes() {
   try {
     const { data } = await listBackupCodes()
@@ -95,6 +111,7 @@ async function fetchBackupCodes() {
   }
 }
 
+/** 关闭 2FA，需二次确认，关闭后降低账号安全等级 */
 async function onDisable() {
   try {
     await ElMessageBox.confirm(
@@ -109,8 +126,11 @@ async function onDisable() {
 }
 
 // ============= 会话管理 =============
+/** 当前账号活跃会话列表 */
 const sessions = ref<UserSessionVO[]>([])
+/** 会话列表加载状态 */
 const sessionLoading = ref(false)
+/** 拉取当前账号活跃会话列表 */
 async function fetchSessions() {
   sessionLoading.value = true
   try {
@@ -121,6 +141,10 @@ async function fetchSessions() {
   }
 }
 
+/**
+ * 下线指定会话，需二次确认
+ * @param row 当前行会话数据
+ */
 async function onKick(row: UserSessionVO) {
   const dev = parseUserAgent(row.userAgent)
   try {
@@ -135,6 +159,7 @@ async function onKick(row: UserSessionVO) {
   } catch { /* 用户取消 */ }
 }
 
+/** 下线其他所有设备，仅保留当前会话，需二次确认 */
 async function onKickOthers() {
   try {
     await ElMessageBox.confirm('确认下线其他所有设备？仅保留当前会话。', '提示', { type: 'warning' })
@@ -145,8 +170,11 @@ async function onKickOthers() {
 }
 
 // ============= 修改密码 =============
+/** 修改密码表单数据 */
 const pwdForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
+/** 修改密码表单引用 */
 const pwdFormRef = ref<any>()
+/** 新密码强度评估结果 */
 const { result: pwdStrength } = usePasswordStrength(
   computed(() => pwdForm.newPassword),
 )
@@ -178,6 +206,7 @@ const pwdRules = {
   ],
 }
 
+/** 提交修改密码，校验通过后调用后端接口，成功后延时登出并跳转登录页 */
 async function onChangePwd() {
   if (!pwdFormRef.value) return
   try {

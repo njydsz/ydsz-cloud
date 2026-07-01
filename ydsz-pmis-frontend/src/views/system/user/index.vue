@@ -1,3 +1,8 @@
+<!--
+  @file 用户管理
+  @description 用户管理页面：提供用户分页查询、新增/编辑/删除、重置密码、启停状态切换及角色分配；删除与重置密码等敏感操作需二次认证（密码/TOTP/备用码）。对应路由 /system/user。
+  @module views/system/user
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -23,6 +28,7 @@ import type { RoleVO } from '@/api/system/role/types'
 const loading = ref(false)
 const list = ref<UserVO[]>([])
 const total = ref(0)
+// 用户分页查询条件
 const query = reactive({
   page: 1,
   size: 10,
@@ -35,6 +41,7 @@ const queryForm = ref<InstanceType<any> | null>(null)
 // 角色选项
 const roleList = ref<RoleVO[]>([])
 
+/** 拉取全部角色（用于角色下拉选项） */
 async function fetchRoles() {
   try {
     const { data } = await listAllRoles()
@@ -44,6 +51,7 @@ async function fetchRoles() {
   }
 }
 
+/** 拉取用户分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -55,6 +63,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并刷新列表 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -95,6 +104,7 @@ const formRules = {
   ],
 }
 
+/** 打开新增用户弹窗，初始化表单默认值 */
 function openCreate() {
   formMode.value = 'create'
   Object.assign(form, {
@@ -113,6 +123,10 @@ function openCreate() {
   formDialogVisible.value = true
 }
 
+/**
+ * 打开编辑弹窗：回填用户基础信息并拉取已分配角色
+ * @param row 待编辑的用户行数据
+ */
 async function openEdit(row: UserVO) {
   formMode.value = 'edit'
   Object.assign(form, {
@@ -137,6 +151,7 @@ async function openEdit(row: UserVO) {
   formDialogVisible.value = true
 }
 
+/** 提交表单：根据 formMode 执行创建或更新，并在创建/更新后分配角色 */
 async function submitForm() {
   await formRef.value?.validate()
   if (formMode.value === 'create') {

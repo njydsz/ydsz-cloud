@@ -70,6 +70,7 @@ const filteredGrouped = computed(() => {
   return result
 })
 
+/** 拉取特性开关快照（全量） */
 async function fetchSnapshot() {
   loading.value = true
   try {
@@ -82,6 +83,10 @@ async function fetchSnapshot() {
   }
 }
 
+/**
+ * 切换特性开关启停状态（安全合规类强制开启不可关闭）
+ * @param s 特性开关快照
+ */
 async function handleToggle(s: FeatureFlagSnapshot) {
   if (s.mandatory) {
     ElMessage.warning(`「${s.key}」属于安全合规类, 强制开启, 不可关闭`)
@@ -103,6 +108,11 @@ async function handleToggle(s: FeatureFlagSnapshot) {
   }
 }
 
+/**
+ * 设置特性开关灰度比例并即时生效
+ * @param s 特性开关快照
+ * @param val 灰度比例（0-100）
+ */
 async function handleRolloutChange(s: FeatureFlagSnapshot, val: number) {
   try {
     const { data } = await setFeatureFlagRollout(s.key, val)
@@ -113,6 +123,7 @@ async function handleRolloutChange(s: FeatureFlagSnapshot, val: number) {
   }
 }
 
+/** 刷新特性开关缓存并重新拉取快照 */
 async function handleRefresh() {
   try {
     await refreshFeatureFlagCache()
@@ -123,7 +134,11 @@ async function handleRefresh() {
   }
 }
 
-/** 灰度比例展示 */
+/**
+ * 灰度比例展示文本
+ * @param s 特性开关快照
+ * @returns 灰度比例描述（如 '全量' / '0% (关闭)' / '85%'）
+ */
 function rolloutText(s: FeatureFlagSnapshot): string {
   if (s.rolloutPercentage == null) return '全量'
   if (s.rolloutPercentage === 0) return '0% (关闭)'
@@ -131,6 +146,7 @@ function rolloutText(s: FeatureFlagSnapshot): string {
   return `${s.rolloutPercentage}%`
 }
 
+/** 返回当前过滤结果中存在的分类（按预置顺序排列） */
 function categoryOrderList(): string[] {
   return categoryOrder.filter((c) => filteredGrouped.value[c]?.length > 0)
 }

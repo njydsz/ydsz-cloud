@@ -11,12 +11,12 @@ import { PC, ALL_PERMISSION_CODES } from '@/constants/permissionCodes'
 
 describe('permissionCodes 批次17 增量校验', () => {
   it('AGENT_RUN / AGENT_HISTORY 已存在', () => {
-    expect(PC.AGENT_RUN).toBe('agent:run')
-    expect(PC.AGENT_HISTORY).toBe('agent:history')
+    expect(PC.AGENT_RUN).toBe('agent:task:run')
+    expect(PC.AGENT_HISTORY).toBe('agent:task:list')
   })
 
   it('AGENT_VIEW 新增', () => {
-    expect(PC.AGENT_VIEW).toBe('agent:view')
+    expect(PC.AGENT_VIEW).toBe('agent:task:view')
   })
 
   it('AGENT_ORCHESTRATION_RUN / VIEW 新增', () => {
@@ -28,15 +28,17 @@ describe('permissionCodes 批次17 增量校验', () => {
     expect(PC.AGENT_PREDICTION_VIEW).toBe('agent:prediction:view')
   })
 
-  it('新增权限码符合 <module>:<resource>(:<action>)? 命名规范', () => {
+  it('新增权限码符合 <module>:<resource>:<action> 三段式命名规范', () => {
     const codes = [
+      PC.AGENT_RUN,
+      PC.AGENT_HISTORY,
       PC.AGENT_VIEW,
       PC.AGENT_ORCHESTRATION_RUN,
       PC.AGENT_ORCHESTRATION_VIEW,
       PC.AGENT_PREDICTION_VIEW,
     ]
-    // 允许 2 段或 3 段，与原有 AGENT_RUN='agent:run' / AGENT_HISTORY='agent:history' 风格保持一致
-    const PATTERN = /^[a-z]+:[a-z0-9_-]+(:[a-z0-9_-]+)?$/
+    // 统一三段式: module:resource:action
+    const PATTERN = /^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*:[a-z][a-z0-9-]+$/
     for (const c of codes) {
       expect(c).toMatch(PATTERN)
     }

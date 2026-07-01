@@ -99,6 +99,7 @@ function openEdit(row: ResourcePoolVO) {
   dialogVisible.value = true
 }
 
+/** 提交表单：根据 dialogMode 执行创建或更新，成功后刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   if (dialogMode.value === 'create') {

@@ -1,3 +1,8 @@
+<!--
+  @file WBS 任务管理
+  @description WBS 任务管理页面：支持任务分页查询、新建、状态流转(PLANNED→IN_PROGRESS→BLOCKED/IN_REVIEW→COMPLETED/CANCELLED)、进度更新，对应路由 /execution/wbs-task
+  @module views/execution/wbs-task
+-->
 <script setup lang="ts">
 /**
  * WBS 任务管理
@@ -17,6 +22,7 @@ import {
 import type { WbsTaskVO, WbsTaskCreateDTO } from '@/api/execution/wbs-task/types'
 import { PC } from '@/constants/permissionCodes'
 
+// 列表查询状态
 const loading = ref(false)
 const list = ref<WbsTaskVO[]>([])
 const total = ref(0)
@@ -29,6 +35,7 @@ const query = reactive({
   ownerId: undefined as number | undefined,
 })
 
+// 状态字典：任务全生命周期状态映射到标签文案与色值
 const statusMap = {
   PLANNED: { label: '计划中', type: 'info' as const },
   IN_PROGRESS: { label: '进行中', type: 'primary' as const },
@@ -38,6 +45,7 @@ const statusMap = {
   CANCELLED: { label: '已取消', type: 'info' as const },
 }
 
+// 优先级字典：低/普通/高/紧急
 const priorityMap = {
   LOW: { label: '低', type: 'info' as const },
   NORMAL: { label: '普通', type: 'primary' as const },
@@ -45,12 +53,14 @@ const priorityMap = {
   URGENT: { label: '紧急', type: 'danger' as const },
 }
 
+// 任务类型字典：任务/里程碑/汇总
 const typeMap = {
   TASK: { label: '任务' },
   MILESTONE: { label: '里程碑' },
   SUMMARY: { label: '汇总' },
 }
 
+/** 拉取 WBS 任务分页数据 */
 async function fetchList() {
   loading.value = true
   try {
@@ -67,6 +77,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并刷新列表 */
 function handleReset() {
   query.keyword = ''
   query.status = ''
@@ -76,6 +87,7 @@ function handleReset() {
   fetchList()
 }
 
+// 弹窗 - 新建 WBS 任务
 const dialogVisible = ref(false)
 const formRef = ref<any>()
 const form = reactive<Partial<WbsTaskCreateDTO>>({
@@ -97,6 +109,7 @@ const formRules = {
   ownerId: [{ required: true, message: '负责人 ID 必填', trigger: 'blur' }],
 }
 
+/** 打开新建弹窗：重置表单为默认值 */
 function openCreate() {
   Object.assign(form, {
     taskCode: '',
@@ -115,6 +128,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交新建表单：校验通过后调用创建接口 */
 async function submitForm() {
   await formRef.value?.validate()
   await createWbsTask(form as WbsTaskCreateDTO)
@@ -123,6 +137,7 @@ async function submitForm() {
   fetchList()
 }
 
+/** 删除任务（二次确认） */
 async function handleDelete(row: WbsTaskVO) {
   try {
     await ElMessageBox.confirm(`确认删除任务「${row.taskName}」吗？`, '提示', { type: 'warning' })
@@ -132,6 +147,7 @@ async function handleDelete(row: WbsTaskVO) {
   } catch { /* 取消 */ }
 }
 
+/** 状态流转：根据目标状态推进任务流程（启动/提评审/阻塞/解除阻塞/完成） */
 async function handleStatus(row: WbsTaskVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {
@@ -142,6 +158,7 @@ async function handleStatus(row: WbsTaskVO, target: string) {
   } catch { /* 取消 */ }
 }
 
+/** 更新任务进度：输入 0-100 的百分比，校验后调用状态变更接口带 progressPct */
 async function handleProgress(row: WbsTaskVO) {
   try {
     const { value } = await ElMessageBox.prompt('请输入完成进度 (0-100)', '更新进度', {

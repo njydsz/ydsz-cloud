@@ -85,6 +85,7 @@ const publicOptions = [
 // 当前选中 group (用于批量操作)
 const selectedGroup = ref<string>('')
 
+/** 拉取系统参数分页列表，并默认选中首个分组用于批量操作 */
 async function fetchList() {
   loading.value = true
   try {
@@ -99,6 +100,7 @@ async function fetchList() {
   }
 }
 
+/** 重置查询条件并刷新列表 */
 function reset() {
   Object.assign(query, {
     page: 1,
@@ -111,6 +113,7 @@ function reset() {
   fetchList()
 }
 
+/** 打开新增配置弹窗，默认分组取当前选中分组 */
 function openCreate() {
   dialogMode.value = 'create'
   Object.assign(form, {
@@ -128,12 +131,17 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/**
+ * 打开编辑弹窗，回填行数据到表单
+ * @param row 待编辑的配置行数据
+ */
 function openEdit(row: ConfigVO) {
   dialogMode.value = 'edit'
   Object.assign(form, { ...row })
   dialogVisible.value = true
 }
 
+/** 提交表单：根据 dialogMode 执行创建或更新，成功后刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
   try {
@@ -151,6 +159,10 @@ async function submitForm() {
   }
 }
 
+/**
+ * 删除单条配置，二次确认后执行
+ * @param row 待删除的配置行数据
+ */
 async function handleDelete(row: ConfigVO) {
   try {
     await ElMessageBox.confirm(
@@ -166,6 +178,10 @@ async function handleDelete(row: ConfigVO) {
   }
 }
 
+/**
+ * 按分组批量删除配置，二次确认后执行（不可恢复）
+ * @param group 配置分组名
+ */
 async function handleDeleteByGroup(group: string) {
   if (!group) return
   try {
@@ -182,6 +198,11 @@ async function handleDeleteByGroup(group: string) {
   }
 }
 
+/**
+ * 切换指定分组下全部配置的启停状态
+ * @param group 配置分组名
+ * @param currentStatus 当前状态（ENABLED / DISABLED），将切换为相反状态
+ */
 async function handleToggleGroupStatus(group: string, currentStatus: string) {
   if (!group) return
   const next = currentStatus === 'ENABLED' ? 'DISABLED' : 'ENABLED'
@@ -194,11 +215,17 @@ async function handleToggleGroupStatus(group: string, currentStatus: string) {
   }
 }
 
+/** 刷新配置缓存 */
 async function handleRefresh() {
   await refreshConfigCache()
   ElMessage.success('缓存已刷新')
 }
 
+/**
+ * 解析配置值用于表格展示（布尔/JSON 截断处理）
+ * @param row 配置行数据
+ * @returns 解析后的展示字符串
+ */
 // 解析后的显示值
 function displayValue(row: ConfigVO): string {
   if (row.configValue === null || row.configValue === undefined) return ''
@@ -212,6 +239,11 @@ function displayValue(row: ConfigVO): string {
   return row.configValue
 }
 
+/**
+ * 将值类型枚举转换为中文标签
+ * @param type 值类型枚举（STRING/NUMBER/BOOLEAN/JSON）
+ * @returns 中文标签
+ */
 // 解析后的值类型中文
 function valueTypeLabel(type: string): string {
   return valueTypeOptions.find((o) => o.value === type)?.label || type

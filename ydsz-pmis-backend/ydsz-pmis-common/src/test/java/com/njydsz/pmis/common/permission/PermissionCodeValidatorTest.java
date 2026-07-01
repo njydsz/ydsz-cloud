@@ -34,7 +34,7 @@ class PermissionCodeValidatorTest {
     @DisplayName("非法 action 词应被拒绝")
     void invalidAction() {
         assertThat(PermissionCodeValidator.isValid("auth:user:execute")).isFalse();
-        assertThat(PermissionCodeValidator.isValid("auth:user:run")).isFalse();
+        assertThat(PermissionCodeValidator.isValid("auth:user:do-something")).isFalse();
     }
 
     @Test
