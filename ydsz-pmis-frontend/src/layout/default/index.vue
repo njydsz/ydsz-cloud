@@ -1,3 +1,8 @@
+<!--
+  @file 默认布局
+  @description 后台主框架布局：左侧 Sidebar + 顶部 AppHeader + TagsView + MainContent（RouterView）
+  @module layout/default
+-->
 <script setup lang="ts">
 import Sidebar from './components/Sidebar.vue'
 import AppHeader from './components/AppHeader.vue'
