@@ -43,4 +43,7 @@ public class MessageRequest {
 
     /** 业务单据 ID */
     private String bizId;
+
+    /** 消息唯一标识（P0-6: 用于消费端幂等去重，producer 可生成 UUID 填入） */
+    private String messageId;
 }
