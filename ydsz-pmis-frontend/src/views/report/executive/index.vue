@@ -14,10 +14,13 @@ import {
   getExecutiveOverview,
   getKpiTrend,
   getAlertSummary,
-  type ExecutiveOverviewVO,
-  type KpiTrendVO,
-  type AlertEventDTO,
 } from '@/api/execution/cockpit'
+import type {
+  ExecutiveOverviewVO,
+  KpiTrendVO,
+  AlertEventDTO,
+  ProjectGroupKpiDTO,
+} from '@/api/execution/cockpit/types'
 
 defineOptions({ name: 'ExecutiveOverview' })
 
@@ -155,16 +158,16 @@ const updateGroupChart = () => {
       grid: { left: 60, right: 30, top: 40, bottom: 60 },
       xAxis: {
         type: 'category',
-        data: groups.map((g) => g.groupName || g.groupCode || '-'),
+        data: groups.map((g: ProjectGroupKpiDTO) => g.groupName || g.groupCode || '-'),
         axisLabel: { rotate: 30 },
       },
       yAxis: { type: 'value', name: '金额（元）' },
       series: [
-        { name: '合同总额', type: 'bar', data: groups.map((g) => Number(g.totalContractAmount || 0)), itemStyle: { color: '#409EFF' } },
+        { name: '合同总额', type: 'bar', data: groups.map((g: ProjectGroupKpiDTO) => Number(g.totalContractAmount || 0)), itemStyle: { color: '#409EFF' } },
         {
           name: '毛利',
           type: 'bar',
-          data: groups.map((g) => Number(g.grossProfit || 0)),
+          data: groups.map((g: ProjectGroupKpiDTO) => Number(g.grossProfit || 0)),
           itemStyle: {
             color: (params: { value: number }) => (params.value >= 0 ? '#67C23A' : '#F56C6C'),
           },
@@ -184,10 +187,11 @@ async function loadAll() {
       getKpiTrend(12).catch(() => null),
       getAlertSummary().catch(() => null),
     ])
-    executive.value = e
-    trend.value = t
-    alert.value = a
-      ? { redCount: a.redCount ?? 0, yellowCount: a.yellowCount ?? 0, totalCount: a.totalCount ?? 0, events: a.events || [] }
+    executive.value = e?.data ?? null
+    trend.value = t?.data ?? null
+    const aData = a?.data
+    alert.value = aData
+      ? { redCount: aData.redCount ?? 0, yellowCount: aData.yellowCount ?? 0, totalCount: aData.totalCount ?? 0, events: aData.events || [] }
       : null
     lastUpdated.value = new Date().toLocaleTimeString('zh-CN')
     updateTrendChart()
@@ -216,12 +220,6 @@ function toggleAutoRefresh() {
   autoRefresh.value = !autoRefresh.value
   if (autoRefresh.value) startPolling()
   else stopPolling()
-}
-
-function severityColor(severity?: string): string {
-  if (severity === 'RED') return '#F56C6C'
-  if (severity === 'YELLOW') return '#E6A23C'
-  return '#909399'
 }
 
 function severityTag(severity?: string): 'danger' | 'warning' | 'info' {

@@ -5,7 +5,18 @@ import type {
   ExecutiveOverviewVO,
   KpiTrendVO,
   ProjectGroupKpiDTO,
+  AlertEventDTO,
 } from './types'
+
+/** 重新导出常用类型，方便上层页面直接 import */
+export type {
+  CockpitKpiVO,
+  CockpitAlertSummaryVO,
+  ExecutiveOverviewVO,
+  KpiTrendVO,
+  ProjectGroupKpiDTO,
+  AlertEventDTO,
+}
 
 /** 驾驶舱总览 KPI */
 export const getCockpitOverview = (period?: string, drillDown?: Record<string, unknown>) =>

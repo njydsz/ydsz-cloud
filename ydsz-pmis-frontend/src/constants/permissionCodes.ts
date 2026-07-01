@@ -236,8 +236,10 @@ export const PC = {
   REPORT_PAYMENT_LEDGER_VIEW: 'report:payment-ledger:view',
   REPORT_LIFECYCLE_VIEW: 'report:lifecycle:view',
   REPORT_ADVANCED_VIEW: 'report:advanced:view',
+  REPORT_EXECUTIVE_VIEW: 'report:executive:view',
   COCKPIT_OVERVIEW_VIEW: 'cockpit:overview:view',
   COCKPIT_DRILLDOWN_VIEW: 'cockpit:drilldown:view',
+  COCKPIT_ALERT_VIEW: 'cockpit:alert:view',
 
   // ============= 项目结项与变更 =============
   CLOSURE_LIST: 'closure:project:list',

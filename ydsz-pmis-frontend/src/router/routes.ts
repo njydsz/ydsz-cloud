@@ -349,6 +349,12 @@ export const constantRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/report/index.vue'),
         meta: { title: '报表', icon: 'Document', keepAlive: true },
       },
+      {
+        path: 'executive',
+        name: 'ReportExecutive',
+        component: () => import('@/views/report/executive/index.vue'),
+        meta: { title: '高管看板', icon: 'TrendCharts', keepAlive: true },
+      },
     ],
   },
   {
