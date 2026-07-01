@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.WarrantyCreateDTO;
@@ -37,12 +38,14 @@ public class WarrantyController {
     private final WarrantyService service;
 
     @Operation(summary = "创建质保期")
+    @PrePermission("aftersales:warranty:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody WarrantyCreateDTO dto) {
         return R.ok(service.create(dto));
     }
 
     @Operation(summary = "手动提前终止质保期")
+    @PrePermission("aftersales:warranty:terminate")
     @PostMapping("/terminate")
     public R<Void> terminate(@Valid @RequestBody WarrantyTerminateDTO dto) {
         service.terminate(dto);
@@ -50,6 +53,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "扫描即将到期（≤ today + noticeDays 天）")
+    @PrePermission("aftersales:warranty:scan")
     @PostMapping("/scan/expiring")
     public R<Integer> scanExpiring(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate today,
@@ -58,6 +62,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "扫描已过期")
+    @PrePermission("aftersales:warranty:scan")
     @PostMapping("/scan/overdue")
     public R<Integer> scanOverdue(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate today) {
@@ -65,6 +70,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "即将到期列表")
+    @PrePermission("aftersales:warranty:list")
     @GetMapping("/expiring")
     public R<List<WarrantyDO>> listExpiring(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate until) {
@@ -72,6 +78,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "质保期分页")
+    @PrePermission("aftersales:warranty:list")
     @GetMapping("/page")
     public R<PageResult<WarrantyDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -83,6 +90,7 @@ public class WarrantyController {
     }
 
     @Operation(summary = "质保期详情")
+    @PrePermission("aftersales:warranty:list")
     @GetMapping("/{id}")
     public R<WarrantyDO> getById(@PathVariable Long id) {
         return R.ok(service.getById(id));

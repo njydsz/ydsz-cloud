@@ -57,6 +57,7 @@ public class ContractTemplateController {
     }
 
     @Operation(summary = "模板详情")
+    @PrePermission("project:contract-template:list")
     @GetMapping("/{id}")
     public R<ContractTemplateDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -74,6 +75,7 @@ public class ContractTemplateController {
     }
 
     @Operation(summary = "按合同类型查询模板")
+    @PrePermission("project:contract-template:list")
     @GetMapping("/list-by-type")
     public R<List<ContractTemplateDO>> listByType(
             @RequestParam(required = false) String contractType,

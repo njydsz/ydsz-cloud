@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.TimeEntryApprovalDTO;
 import com.njydsz.pmis.execution.dto.TimeEntryCreateDTO;
@@ -54,6 +55,7 @@ public class TimeEntryController {
     }
 
     @Operation(summary = "删除工时")
+    @PrePermission("execution:time:delete")
     @DeleteMapping("/{id}")
     public R<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -91,6 +93,7 @@ public class TimeEntryController {
     }
 
     @Operation(summary = "跨项目冲突检测")
+    @PrePermission("execution:time:list")
     @GetMapping("/conflict")
     public R<List<Map<String, Object>>> detectCrossProject(
             @RequestParam Long employeeId,

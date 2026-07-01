@@ -58,6 +58,7 @@ public class ContractController {
     }
 
     @Operation(summary = "合同详情")
+    @PrePermission("project:contract:list")
     @GetMapping("/{id}")
     public R<ContractDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -76,6 +77,7 @@ public class ContractController {
     }
 
     @Operation(summary = "重新评估风险等级")
+    @PrePermission("project:contract:evaluate")
     @PostMapping("/{id}/evaluate-risk")
     public R<String> evaluateRisk(@PathVariable Long id) {
         return R.ok(service.evaluateRisk(id));

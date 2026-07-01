@@ -1,3 +1,8 @@
+<!--
+  @file 利润模拟
+  @description 利润测算版本管理页面：支持测算版本分页查询、多版本对比(V1/V2/V3)、状态流转(DRAFT→SUBMITTED→APPROVED/REJECTED)，对应路由 /execution/profit-simulation
+  @module views/execution/profit-simulation
+-->
 <script setup lang="ts">
 /**
  * 利润测算 (Profit Simulation) 管理
@@ -23,9 +28,11 @@ import type {
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
 
+// 权限助手：统一通过 userStore 校验按钮级权限
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
+// 列表查询状态
 const loading = ref(false)
 const list = ref<ProfitSimulationVO[]>([])
 const total = ref(0)
@@ -37,6 +44,7 @@ const query = reactive({
   status: '',
 })
 
+/** 拉取测算版本分页数据，未选择项目时清空列表 */
 async function fetchList() {
   if (!query.initiationId) {
     list.value = []
@@ -57,12 +65,14 @@ async function fetchList() {
   }
 }
 
+// 状态字典：映射测算版本状态到标签文案与色值
 const statusMap: Record<string, { label: string; type: 'info' | 'primary' | 'warning' | 'success' | 'danger' }> = {
   DRAFT: { label: '草稿', type: 'info' },
   SUBMITTED: { label: '待审批', type: 'primary' },
   APPROVED: { label: '已批准', type: 'success' },
   REJECTED: { label: '已驳回', type: 'danger' },
 }
+// 场景字典：基准/乐观/悲观/自定义，用于对比卡片与表格标签配色
 const scenarioMap: Record<string, { label: string; color: string }> = {
   BASE: { label: '基准', color: '#409eff' },
   OPTIMISTIC: { label: '乐观', color: '#67c23a' },
@@ -70,20 +80,24 @@ const scenarioMap: Record<string, { label: string; color: string }> = {
   CUSTOM: { label: '自定义', color: '#909399' },
 }
 
+/** 金额格式化：千分位 + ¥ 前缀，空值返回 - */
 function fmtMoney(n?: number) {
   if (n === undefined || n === null) return '-'
   return `¥${Number(n).toLocaleString('zh-CN', { maximumFractionDigits: 2 })}`
 }
+/** 百分比格式化：入参为小数(0.2 → 20.0%)，空值返回 - */
 function fmtPct(n?: number) {
   if (n === undefined || n === null) return '-'
   return `${(Number(n) * 100).toFixed(1)}%`
 }
 
+/** 点击查询：重置页码后同步拉取列表与对比数据 */
 function onQuery() {
   query.page = 1
   fetchList()
   fetchCompare()
 }
+/** 重置查询条件并刷新列表 */
 function onReset() {
   query.page = 1
   query.size = 10
@@ -92,9 +106,11 @@ function onReset() {
   query.status = ''
   fetchList()
 }
+/** 翻页回调 */
 function onPageChange() {
   fetchList()
 }
+/** 手动刷新：重新拉取列表与对比数据 */
 async function onRefresh() {
   await fetchList()
   await fetchCompare()

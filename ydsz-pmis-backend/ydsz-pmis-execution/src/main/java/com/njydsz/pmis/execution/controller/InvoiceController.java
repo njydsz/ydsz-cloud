@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.InvoiceApprovalDTO;
 import com.njydsz.pmis.execution.dto.InvoiceCreateDTO;
@@ -53,6 +54,7 @@ public class InvoiceController {
     }
 
     @Operation(summary = "审批驳回")
+    @PrePermission("finance:invoice:approve")
     @PutMapping("/{id}/reject")
     public R<Void> reject(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.reject(id, dto);
@@ -76,6 +78,7 @@ public class InvoiceController {
     }
 
     @Operation(summary = "取消")
+    @PrePermission("finance:invoice:status")
     @PutMapping("/{id}/cancel")
     public R<Void> cancel(@PathVariable Long id,
                           @RequestParam Long operatorId,
@@ -112,12 +115,14 @@ public class InvoiceController {
     }
 
     @Operation(summary = "按合同汇总开票金额")
+    @PrePermission("finance:invoice:list")
     @GetMapping("/sum/by-contract")
     public R<BigDecimal> sumByContract(@RequestParam Long contractId) {
         return R.ok(service.sumInvoicedByContract(contractId));
     }
 
     @Operation(summary = "按状态分组台账")
+    @PrePermission("finance:invoice:list")
     @GetMapping("/aggregate/by-status")
     public R<List<Map<String, Object>>> aggregateByStatus(@RequestParam Long contractId) {
         return R.ok(service.aggregateByStatus(contractId));

@@ -43,6 +43,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "派单")
+    @PrePermission("aftersales:ops-ticket:assign")
     @PostMapping("/assign")
     public R<Void> assign(@Valid @RequestBody OpsTicketAssignDTO dto) {
         service.assign(dto);
@@ -50,6 +51,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "状态变更")
+    @PrePermission("aftersales:ops-ticket:status")
     @PostMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.changeStatus(dto);
@@ -57,6 +59,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "关闭工单并评价")
+    @PrePermission("aftersales:ops-ticket:evaluate")
     @PostMapping("/close-evaluate")
     public R<Void> closeAndEvaluate(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.closeAndEvaluate(dto);
@@ -70,6 +73,7 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "工单分页")
+    @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/page")
     public R<PageResult<OpsTicketDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -84,12 +88,14 @@ public class OpsTicketController {
     }
 
     @Operation(summary = "SLA 达成率")
+    @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/sla-summary")
     public R<List<Map<String, Object>>> slaSummary() {
         return R.ok(service.slaSummary());
     }
 
     @Operation(summary = "按状态聚合")
+    @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/aggregate/status")
     public R<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long initiationId) {
         return R.ok(service.aggregateByStatus(initiationId));
@@ -102,6 +108,7 @@ public class OpsTicketController {
     }
 
     /** 按项目查询工单 */
+    @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/by-initiation/{initiationId}")
     public R<List<OpsTicketDO>> listByInitiation(@PathVariable Long initiationId) {
         return R.ok(service.listByInitiation(initiationId));

@@ -1,3 +1,8 @@
+<!--
+  @file 资源分配管理
+  @description 资源分配管理页面：提供员工利用率/活跃项目数查询、分配记录分页筛选，并通过单一 act() 入口执行分配动作（预占 RESERVE / 入场 START / 调岗 TRANSFER / 离场 RELEASE / 取消 CANCEL）。对应路由 /resource/assignment，后端服务 ydsz-pmis-user（端口 9002）。
+  @module views/resource/assignment
+-->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
@@ -12,8 +17,10 @@ import type { ResourceAssignmentVO, ResourceAssignmentCreateDTO } from '@/api/re
 const loading = ref(false)
 const list = ref<ResourceAssignmentVO[]>([])
 const total = ref(0)
+// 分页查询条件：员工 ID / 项目 initiation ID / 分配状态
 const query = reactive({ page: 1, size: 10, employeeId: undefined as number | undefined, initiationId: undefined as number | undefined, status: '' })
 
+// 分配动作映射：label 为中文文案，type 对应 el-tag 类型
 const actionMap: Record<string, { label: string; type: string }> = {
   RESERVE: { label: '预占', type: 'info' },
   START: { label: '入场', type: 'success' },
@@ -22,12 +29,14 @@ const actionMap: Record<string, { label: string; type: string }> = {
   CANCEL: { label: '取消', type: 'info' },
 }
 
+// 分配状态映射：ACTIVE 生效中 / RELEASED 已离场 / CANCELLED 已取消
 const statusMap: Record<string, { label: string; type: string }> = {
   ACTIVE: { label: '生效中', type: 'success' },
   RELEASED: { label: '已离场', type: 'info' },
   CANCELLED: { label: '已取消', type: 'warning' },
 }
 
+/** 拉取分配记录分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -44,6 +53,7 @@ async function fetchList() {
 }
 
 const dialogVisible = ref(false)
+// 分配动作表单（与后端 ResourceAssignmentCreateDTO 对齐）
 const form = reactive<ResourceAssignmentCreateDTO>({
   employeeId: 0,
   initiationId: 0,
@@ -61,6 +71,7 @@ const formRules = {
   action: [{ required: true, message: '动作必填', trigger: 'change' }],
 }
 
+/** 打开分配动作弹窗，按动作类型初始化表单默认值 */
 function openAct(action: string) {
   Object.assign(form, {
     employeeId: query.employeeId ?? 0,
@@ -75,6 +86,7 @@ function openAct(action: string) {
   dialogVisible.value = true
 }
 
+/** 提交分配动作，成功后关闭弹窗并刷新列表 */
 async function submitForm() {
   await actResourceAssignment(form)
   ElMessage.success('操作成功')
@@ -82,10 +94,12 @@ async function submitForm() {
   fetchList()
 }
 
+// 员工利用率查询相关状态：utilResult 为利用率明细，activeProjectCount 为活跃项目数（≥3 触发过载预警）
 const utilEmployeeId = ref<number | null>(null)
 const utilResult = ref<Record<string, unknown> | null>(null)
 const activeProjectCount = ref<number | null>(null)
 
+/** 查询指定员工的利用率与活跃项目数 */
 async function checkUtilization() {
   if (!utilEmployeeId.value) return
   try {

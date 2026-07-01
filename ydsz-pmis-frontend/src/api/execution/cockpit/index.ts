@@ -1,3 +1,10 @@
+/**
+ * @file 经营驾驶舱 API 接口封装
+ * @description 提供驾驶舱总览 KPI、EVM 健康度分布、Bench 闲置成本、可计费利用率、
+ *              多维度下钻、合同年度趋势、预警事件摘要、项目群驾驶舱、高管看板、
+ *              KPI 趋势等能力，对应后端 CockpitController（/execution/cockpit）。
+ * @module api/execution/cockpit
+ */
 import { request } from '@/utils/request'
 import type {
   CockpitKpiVO,
@@ -18,7 +25,12 @@ export type {
   AlertEventDTO,
 }
 
-/** 驾驶舱总览 KPI */
+/**
+ * 查询驾驶舱总览 KPI
+ * @param period 统计周期（可选）
+ * @param drillDown 下钻维度参数（可选）
+ * @returns 驾驶舱总览 KPI 对象
+ */
 export const getCockpitOverview = (period?: string, drillDown?: Record<string, unknown>) =>
   request<CockpitKpiVO>({
     url: '/execution/cockpit/overview',
@@ -26,7 +38,11 @@ export const getCockpitOverview = (period?: string, drillDown?: Record<string, u
     params: { period, ...(drillDown || {}) },
   })
 
-/** EVM 健康度分布 */
+/**
+ * 查询 EVM 健康度分布
+ * @param period 统计周期（可选）
+ * @returns 各健康度等级对应项目数（红/黄/绿）
+ */
 export const getEvmHealthDistribution = (period?: string) =>
   request<Record<string, number>>({
     url: '/execution/cockpit/evm-health',
@@ -34,21 +50,31 @@ export const getEvmHealthDistribution = (period?: string) =>
     params: { period },
   })
 
-/** Bench 闲置成本汇总 */
+/**
+ * 查询 Bench 闲置成本汇总
+ * @returns Bench 闲置成本汇总对象
+ */
 export const getBenchCostSummary = () =>
   request<Record<string, unknown>>({
     url: '/execution/cockpit/bench-cost',
     method: 'GET',
   })
 
-/** 可计费利用率汇总 */
+/**
+ * 查询可计费利用率汇总
+ * @returns 可计费利用率汇总对象
+ */
 export const getUtilizationSummary = () =>
   request<Record<string, unknown>>({
     url: '/execution/cockpit/utilization',
     method: 'GET',
   })
 
-/** 按事业部下钻 */
+/**
+ * 按事业部下钻
+ * @param period 统计周期（可选）
+ * @returns 事业部维度下钻统计列表
+ */
 export const drillByDept = (period?: string) =>
   request<Array<Record<string, unknown>>>({
     url: '/execution/cockpit/drill/dept',
@@ -56,7 +82,11 @@ export const drillByDept = (period?: string) =>
     params: { period },
   })
 
-/** 按项目类型下钻 */
+/**
+ * 按项目类型下钻
+ * @param period 统计周期（可选）
+ * @returns 项目类型维度下钻统计列表
+ */
 export const drillByProjectType = (period?: string) =>
   request<Array<Record<string, unknown>>>({
     url: '/execution/cockpit/drill/project-type',
@@ -64,7 +94,11 @@ export const drillByProjectType = (period?: string) =>
     params: { period },
   })
 
-/** 按客户下钻 */
+/**
+ * 按客户下钻
+ * @param period 统计周期（可选）
+ * @returns 客户维度下钻统计列表
+ */
 export const drillByCustomer = (period?: string) =>
   request<Array<Record<string, unknown>>>({
     url: '/execution/cockpit/drill/customer',
@@ -72,7 +106,10 @@ export const drillByCustomer = (period?: string) =>
     params: { period },
   })
 
-/** 合同总额年度趋势 */
+/**
+ * 查询合同总额年度趋势
+ * @returns 合同总额年度趋势对象
+ */
 export const getContractYearlyTrend = () =>
   request<Record<string, unknown>>({
     url: '/execution/cockpit/contract-yearly-trend',
@@ -81,7 +118,11 @@ export const getContractYearlyTrend = () =>
 
 // ========== 批次18 增量 ==========
 
-/** 预警事件摘要（批次18） */
+/**
+ * 查询预警事件摘要（批次18）
+ * @param period 统计周期（可选）
+ * @returns 预警事件摘要对象
+ */
 export const getAlertSummary = (period?: string) =>
   request<CockpitAlertSummaryVO>({
     url: '/execution/cockpit/alerts',
@@ -89,7 +130,11 @@ export const getAlertSummary = (period?: string) =>
     params: { period },
   })
 
-/** 项目群驾驶舱（批次18） */
+/**
+ * 查询项目群驾驶舱 KPI（批次18）
+ * @param period 统计周期（可选）
+ * @returns 项目群 KPI 列表
+ */
 export const getProjectGroupOverview = (period?: string) =>
   request<Array<ProjectGroupKpiDTO>>({
     url: '/execution/cockpit/project-group',
@@ -97,7 +142,11 @@ export const getProjectGroupOverview = (period?: string) =>
     params: { period },
   })
 
-/** 高管看板（批次18） */
+/**
+ * 查询高管看板（批次18）
+ * @param period 统计周期（可选）
+ * @returns 高管看板对象
+ */
 export const getExecutiveOverview = (period?: string) =>
   request<ExecutiveOverviewVO>({
     url: '/execution/cockpit/executive',
@@ -105,7 +154,11 @@ export const getExecutiveOverview = (period?: string) =>
     params: { period },
   })
 
-/** KPI 趋势（批次18） */
+/**
+ * 查询 KPI 趋势（批次18）
+ * @param months 统计月份数（默认 12）
+ * @returns KPI 趋势对象
+ */
 export const getKpiTrend = (months = 12) =>
   request<KpiTrendVO>({
     url: '/execution/cockpit/kpi-trend',

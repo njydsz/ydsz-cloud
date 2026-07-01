@@ -40,6 +40,7 @@ public class OpportunityController {
     private final OpportunityService service;
 
     @Operation(summary = "创建商机")
+    @PrePermission("project:opportunity:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody OpportunityCreateDTO dto) {
         return R.ok(service.create(dto));
@@ -93,6 +94,7 @@ public class OpportunityController {
     }
 
     @Operation(summary = "按状态聚合")
+    @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/status")
     public R<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long tenantId) {
         return R.ok(service.aggregateByStatus(tenantId));
@@ -105,6 +107,7 @@ public class OpportunityController {
     }
 
     @Operation(summary = "商机转立项自动化(WON -> CONVERTED + 创建预立项草稿)")
+    @PrePermission("project:opportunity:convert")
     @PostMapping("/{id}/convert-to-initiation")
     public R<Long> convertToInitiation(@PathVariable Long id,
                                         @RequestParam(required = false) Long sponsorId,

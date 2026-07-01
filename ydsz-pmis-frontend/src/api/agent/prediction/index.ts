@@ -94,7 +94,11 @@ export const recent = (params: { agentType?: string; alertLevel?: string; limit?
     params,
   })
 
-/** 按类型/告警等级聚合 */
+/**
+ * 按类型/告警等级聚合统计
+ * @param tenantId 租户 ID（可选）
+ * @returns 聚合统计结果数组
+ */
 export const aggregateByType = (tenantId?: number) =>
   request<Array<Record<string, unknown>>>({
     url: '/agent/aggregate/type',
@@ -102,7 +106,11 @@ export const aggregateByType = (tenantId?: number) =>
     params: { tenantId },
   })
 
-/** 告警计数 */
+/**
+ * 告警计数
+ * @param params 过滤参数（alertLevel / agentType / tenantId）
+ * @returns 符合条件的告警记录数
+ */
 export const countByAlertLevel = (params: { alertLevel?: string; agentType?: string; tenantId?: number } = {}) =>
   request<number>({
     url: '/agent/count',

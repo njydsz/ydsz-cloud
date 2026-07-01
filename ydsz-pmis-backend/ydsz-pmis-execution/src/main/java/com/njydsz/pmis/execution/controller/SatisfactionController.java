@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.SatisfactionCreateDTO;
@@ -40,6 +41,7 @@ public class SatisfactionController {
     }
 
     @Operation(summary = "标记跟进")
+    @PrePermission("aftersales:satisfaction:follow-up")
     @PostMapping("/follow-up")
     public R<Void> markFollowUp(@RequestParam Long id, @RequestParam(required = false) String note) {
         service.markFollowUp(id, note);
@@ -66,6 +68,7 @@ public class SatisfactionController {
     }
 
     @Operation(summary = "分页")
+    @PrePermission("aftersales:satisfaction:list")
     @GetMapping("/page")
     public R<PageResult<SatisfactionDO>> page(
             @RequestParam(defaultValue = "1") int page,

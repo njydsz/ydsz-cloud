@@ -1,3 +1,10 @@
+<!--
+  @file 预警中心
+  @description 项目执行过程中的预算/风险/EVM/SLA/Bench 等多维预警中心页面，
+               支持预警提交、立即分发、失败重试、取消及等级聚合统计；
+               触达规则: 黄色 → PM + PMO / 红色 → PMO + GM + CFO。
+  @module views/execution/alert
+-->
 <script setup lang="ts">
 /**
  * 预警中心 (P5)
@@ -25,20 +32,26 @@ import type {
   AlertResolveRolesVO,
 } from '@/api/execution/alert/types'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 预警分发记录列表 */
 const list = ref<AlertDispatchVO[]>([])
+/** 等级聚合统计（按 alertType + alertLevel 维度） */
 const aggregate = ref<AlertAggregateVO[]>([])
+/** 查询条件：预警等级 + 分发状态 */
 const query = reactive({
   level: '' as '' | 'YELLOW' | 'RED' | 'NORMAL',
   status: '' as '' | 'PENDING' | 'SENT' | 'FAILED' | 'CANCELLED',
 })
 
+/** 预警等级 → 标签/样式映射 */
 const levelMap = {
   YELLOW: { label: '黄色', type: 'warning' as const },
   RED: { label: '红色', type: 'danger' as const },
   NORMAL: { label: '通知', type: 'info' as const },
 }
 
+/** 分发状态 → 标签/样式映射 */
 const statusMap = {
   PENDING: { label: '待分发', type: 'warning' as const },
   SENT: { label: '已发送', type: 'success' as const },
@@ -46,6 +59,7 @@ const statusMap = {
   CANCELLED: { label: '已取消', type: 'info' as const },
 }
 
+/** 预警业务类型 → 中文名映射 */
 const typeMap: Record<string, string> = {
   BUDGET: '预算',
   RISK: '风险',
@@ -57,6 +71,7 @@ const typeMap: Record<string, string> = {
   OTHER: '其他',
 }
 
+/** 拉取预警分发列表（按 level/status 过滤） */
 async function fetchList() {
   loading.value = true
   try {
@@ -70,6 +85,7 @@ async function fetchList() {
   }
 }
 
+/** 拉取等级聚合统计（projectId=1 占位） */
 async function fetchAggregate() {
   try {
     const { data } = await aggregateAlerts(1)
@@ -79,25 +95,30 @@ async function fetchAggregate() {
   }
 }
 
+/** 重置查询条件并刷新列表 */
 function handleReset() {
   query.level = ''
   query.status = ''
   fetchList()
 }
 
+/** 提交预警弹窗可见性 */
 const dialogVisible = ref(false)
+/** 预警提交表单数据 */
 const form = reactive<AlertDispatchDTO>({
   alertType: 'BUDGET',
   alertLevel: 'YELLOW',
   title: '',
   content: '',
 })
+/** 表单校验规则 */
 const formRules = {
   alertType: [{ required: true, message: '预警类型必填', trigger: 'change' }],
   alertLevel: [{ required: true, message: '预警等级必填', trigger: 'change' }],
   title: [{ required: true, message: '标题必填', trigger: 'blur' }],
 }
 
+/** 打开新增预警弹窗，重置表单为默认值 */
 function openCreate() {
   Object.assign(form, {
     alertType: 'BUDGET',
@@ -108,6 +129,7 @@ function openCreate() {
   dialogVisible.value = true
 }
 
+/** 提交预警，成功后关闭弹窗并刷新列表 */
 async function handleSubmit() {
   await submitAlert(form)
   ElMessage.success('预警已提交')
@@ -115,6 +137,10 @@ async function handleSubmit() {
   fetchList()
 }
 
+/**
+ * 立即分发指定预警
+ * @param row 预警分发记录
+ */
 async function handleDispatch(row: AlertDispatchVO) {
   await ElMessageBox.confirm(`确认立即分发预警 ${row.alertCode}?`, '提示', { type: 'warning' })
   const ok = await dispatchAlertNow(row.id)
@@ -122,12 +148,17 @@ async function handleDispatch(row: AlertDispatchVO) {
   fetchList()
 }
 
+/** 重试最多 3 次失败的预警分发 */
 async function handleRetry() {
   const n = await retryFailedAlerts(3)
   ElMessage.success(`已重发 ${n} 条预警`)
   fetchList()
 }
 
+/**
+ * 取消预警（需填写取消原因）
+ * @param row 预警分发记录
+ */
 async function handleCancel(row: AlertDispatchVO) {
   const { value: reason } = await ElMessageBox.prompt('请输入取消原因', '取消预警', {
     inputPattern: /.+/,
@@ -138,6 +169,10 @@ async function handleCancel(row: AlertDispatchVO) {
   fetchList()
 }
 
+/**
+ * 查询并弹窗展示指定等级的触达角色
+ * @param level 预警等级（YELLOW/RED/NORMAL）
+ */
 async function handleResolveRoles(level: string) {
   const { data } = await resolveAlertRoles(level)
   const roles = (data as unknown as AlertResolveRolesVO).roles || (data as unknown as string[])
@@ -146,6 +181,7 @@ async function handleResolveRoles(level: string) {
   })
 }
 
+/** 页面挂载时并行加载列表与聚合统计 */
 onMounted(() => {
   fetchList()
   fetchAggregate()
@@ -154,6 +190,7 @@ onMounted(() => {
 
 <template>
   <PageLayout>
+    <!-- 工具栏：提交/重试按钮 + 等级状态筛选 -->
     <template #toolbar>
       <div class="flex items-center justify-between w-full">
         <div class="flex gap-2">
@@ -197,6 +234,7 @@ onMounted(() => {
       </el-col>
     </el-row>
 
+    <!-- 预警分发列表 -->
     <el-table v-loading="loading" :data="list" border stripe>
       <el-table-column prop="alertCode" label="预警编号" width="220" />
       <el-table-column label="类型" width="100">

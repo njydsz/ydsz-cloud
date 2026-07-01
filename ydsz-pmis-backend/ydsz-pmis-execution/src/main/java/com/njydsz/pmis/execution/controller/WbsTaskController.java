@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.WbsTaskCreateDTO;
 import com.njydsz.pmis.execution.dto.WbsTaskStatusDTO;
@@ -33,12 +34,14 @@ public class WbsTaskController {
     private final WbsTaskService service;
 
     @Operation(summary = "创建 WBS 任务")
+    @PrePermission("execution:wbs:create")
     @PostMapping
     public R<Long> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
         return R.ok(service.create(dto));
     }
 
     @Operation(summary = "变更任务状态")
+    @PrePermission("execution:wbs:status")
     @PutMapping("/status")
     public R<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
         service.changeStatus(dto);
@@ -62,6 +65,7 @@ public class WbsTaskController {
     }
 
     @Operation(summary = "任务详情")
+    @PrePermission("execution:wbs:list")
     @GetMapping("/{id}")
     public R<WbsTaskDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -99,6 +103,7 @@ public class WbsTaskController {
     }
 
     @Operation(summary = "状态分布")
+    @PrePermission("execution:wbs:list")
     @GetMapping("/aggregate/status")
     public R<List<Map<String, Object>>> aggregateByStatus(@RequestParam Long initiationId) {
         return R.ok(service.aggregateByStatus(initiationId));

@@ -63,6 +63,7 @@ public class InitiationController {
     }
 
     @Operation(summary = "立项详情")
+    @PrePermission("project:initiation:list")
     @GetMapping("/{id}")
     public R<InitiationDO> get(@PathVariable Long id) {
         return R.ok(service.getById(id));
@@ -83,6 +84,7 @@ public class InitiationController {
     // ============= 预算 =============
 
     @Operation(summary = "新增预算明细")
+    @PrePermission("project:initiation:budget")
     @PostMapping("/budget")
     public R<Long> addBudget(@Valid @RequestBody BudgetItemDTO dto) {
         return R.ok(service.addBudgetItem(dto));
@@ -122,6 +124,7 @@ public class InitiationController {
     }
 
     @Operation(summary = "门径评审记录")
+    @PrePermission("project:initiation:gate")
     @GetMapping("/{id}/gate/reviews")
     public R<List<GateReviewDO>> listGateReviews(@PathVariable Long id) {
         return R.ok(service.listGateReviews(id));

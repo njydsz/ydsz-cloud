@@ -1,3 +1,8 @@
+<!--
+  @file 运维工单管理
+  @description 售后运维工单的统一管理页面，支持工单创建、派单、状态流转、SLA 达成率统计与客户评价闭环。
+  @module views/aftersales/ops-ticket
+-->
 <script setup lang="ts">
 /**
  * 运维工单管理 (P7)
@@ -28,11 +33,17 @@ import type {
 } from '@/api/execution/aftersales/types'
 import { PC } from '@/constants/permissionCodes'
 
+/** 列表加载状态 */
 const loading = ref(false)
+/** 工单列表数据 */
 const list = ref<OpsTicketVO[]>([])
+/** 列表总条数（用于分页） */
 const total = ref(0)
+/** SLA 达成率统计列表 */
 const slaList = ref<Array<Record<string, unknown>>>([])
+/** 按状态聚合的工单统计 */
 const statusAgg = ref<Array<Record<string, unknown>>>([])
+/** 列表查询条件 */
 const query = reactive({
   page: 1,
   size: 10,
@@ -67,6 +78,7 @@ const categoryMap: Record<string, string> = {
   OTHER: '其他',
 }
 
+/** 拉取运维工单分页列表 */
 async function fetchList() {
   loading.value = true
   try {
@@ -86,6 +98,7 @@ async function fetchList() {
   }
 }
 
+/** 拉取 SLA 达成率与状态聚合统计 */
 async function fetchStats() {
   try {
     slaList.value = await slaSummaryOpsTicket().then((r) => r.data as Array<Record<string, unknown>>)
