@@ -1,7 +1,7 @@
 package com.njydsz.pmis.agent.engine.llm;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
 
@@ -29,13 +29,11 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class LlmProviderRouter {
 
-    @Autowired
-    private ApplicationContext applicationContext;
-
-    @Autowired
-    private MockLlmProvider mockLlmProvider;
+    private final ApplicationContext applicationContext;
+    private final MockLlmProvider mockLlmProvider;
 
     private volatile LlmProvider activeProvider = null;
 

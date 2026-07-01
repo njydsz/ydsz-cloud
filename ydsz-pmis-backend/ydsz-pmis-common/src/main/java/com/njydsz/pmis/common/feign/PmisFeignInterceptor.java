@@ -2,11 +2,10 @@ package com.njydsz.pmis.common.feign;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
-import io.micrometer.core.instrument.MeterRegistry;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
@@ -40,17 +39,17 @@ import java.util.UUID;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class PmisFeignInterceptor implements RequestInterceptor {
 
     private static final String TRACE_ID_HEADER = "X-Trace-Id";
     private static final String REQUEST_SOURCE_HEADER = "X-Request-Source";
 
-    @Autowired(required = false)
-    private MeterRegistry meterRegistry;
+    private final Environment env;
 
-    @Autowired
-    private org.springframework.core.env.Environment env;
+    public PmisFeignInterceptor(Environment env, @Autowired(required = false) io.micrometer.core.instrument.MeterRegistry meterRegistry) {
+        this.env = env;
+        // meterRegistry reserved for future metrics recording
+    }
 
     @Override
     public void apply(RequestTemplate template) {

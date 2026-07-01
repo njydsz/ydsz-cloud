@@ -171,7 +171,7 @@ onMounted(fetchList)
         @action="openCreate"
       />
       <vxe-table v-else :data="list" :loading="loading" border stripe @checkbox-change="onSelectionChange" @checkbox-all="onSelectionChange">
-        <vxe-column type="checkbox" width="50" :checkStrictly="false" />
+        <vxe-column type="checkbox" width="50" :check-strictly="false" />
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="code" title="编码" width="160" />
         <vxe-column field="name" title="模板名称" min-width="200" show-overflow />

@@ -183,7 +183,7 @@ async function onDelete(row: EvmMeasureVO) {
     await deleteEvm(row.id)
     ElMessage.success('删除成功')
     onRefresh()
-  } catch (e) {
+  } catch {
     // 用户取消
   }
 }

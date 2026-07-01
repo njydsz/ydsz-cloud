@@ -73,7 +73,7 @@ public class MarginLowRule implements AlertRule {
                 .ruleName(getName())
                 .category(getCategory())
                 .severity(severity)
-                .title("毛利率仅 " + margin.multiply(new BigDecimal("100")).setScale(2, BigDecimal.ROUND_HALF_UP) + "%")
+                .title("毛利率仅 " + margin.multiply(new BigDecimal("100")).setScale(2, java.math.RoundingMode.HALF_UP) + "%")
                 .description("当前累计毛利率为 " + margin + "，低于阈值。需关注毛利结构与项目组合。")
                 .currentValue(margin.toPlainString())
                 .threshold("YELLOW<" + yellowThreshold + ", RED<" + redThreshold)

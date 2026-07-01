@@ -172,7 +172,7 @@ async function onSubmit(row: ProfitSimulationVO) {
     await changeSimulationStatus({ id: row.id, targetStatus: 'SUBMITTED' })
     ElMessage.success('已提交审批')
     fetchList()
-  } catch {}
+  } catch { /* 用户取消 */ }
 }
 async function onApprove(row: ProfitSimulationVO) {
   if (!row.id) return
@@ -186,7 +186,7 @@ async function onApprove(row: ProfitSimulationVO) {
     })
     ElMessage.success('已批准')
     fetchList()
-  } catch {}
+  } catch { /* 用户取消 */ }
 }
 async function onReject(row: ProfitSimulationVO) {
   if (!row.id) return
@@ -200,7 +200,7 @@ async function onReject(row: ProfitSimulationVO) {
     })
     ElMessage.success('已驳回')
     fetchList()
-  } catch {}
+  } catch { /* 用户取消 */ }
 }
 async function onDelete(row: ProfitSimulationVO) {
   if (!row.id) return
@@ -209,7 +209,7 @@ async function onDelete(row: ProfitSimulationVO) {
     await deleteProfitSimulation(row.id)
     ElMessage.success('删除成功')
     fetchList()
-  } catch {}
+  } catch { /* 用户取消 */ }
 }
 
 // 简易对比柱状图

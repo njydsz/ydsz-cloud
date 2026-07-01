@@ -100,7 +100,7 @@ async function handleLogin() {
       return
     }
     await onLoginSuccess()
-  } catch (e) {
+  } catch {
     refreshCaptcha()
   } finally {
     loading.value = false

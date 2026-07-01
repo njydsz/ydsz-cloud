@@ -1,5 +1,6 @@
 package com.njydsz.pmis.agent.engine.llm;
 
+import lombok.RequiredArgsConstructor;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,8 +46,11 @@ import org.springframework.stereotype.Component;
 @ConditionalOnProperty(prefix = "pmis.agent.llm", name = "provider", havingValue = "spring-ai-openai")
 public class SpringAiLlmProvider implements LlmProvider {
 
-    @Autowired(required = false)
-    private Object chatClient;
+    private final Object chatClient;
+
+    public SpringAiLlmProvider(@Autowired(required = false) Object chatClient) {
+        this.chatClient = chatClient;
+    }
 
     @Override
     public String name() {

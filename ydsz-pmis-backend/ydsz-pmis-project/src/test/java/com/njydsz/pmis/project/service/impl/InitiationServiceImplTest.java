@@ -178,7 +178,7 @@ class InitiationServiceImplTest {
     @Test
     @DisplayName("addBudgetItem 分类非法应抛 BAD_REQUEST")
     void addBudgetItem_invalidCategory() {
-        InitiationCreateDTO iDto = validDto();
+        validDto();
         when(initiationMapper.selectById(any())).thenReturn(new InitiationDO());
 
         BudgetItemDTO b = new BudgetItemDTO();

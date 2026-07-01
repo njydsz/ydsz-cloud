@@ -182,7 +182,7 @@ async function onDelete(row: RateInternalVO) {
     await deleteRateInternal(row.id)
     ElMessage.success('删除成功')
     fetchList()
-  } catch {}
+  } catch { /* 用户取消 */ }
 }
 
 onMounted(async () => {

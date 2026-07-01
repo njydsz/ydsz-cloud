@@ -545,7 +545,7 @@ class CockpitReportServiceImplTest {
     void kpiTrend_nullMonths() {
         when(invoiceMapper.sumByRecentMonth(any())).thenReturn(List.of());
         when(paymentMapper.aggregateByRecentMonth(any())).thenReturn(List.of());
-        com.njydsz.pmis.execution.dto.KpiTrendVO out = service.kpiTrend(null);
+        service.kpiTrend(null);
         org.mockito.Mockito.verify(invoiceMapper).sumByRecentMonth(Integer.valueOf(12));
     }
 

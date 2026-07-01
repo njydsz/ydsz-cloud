@@ -70,7 +70,7 @@ public class UtilizationLowRule implements AlertRule {
             severity = AlertSeverity.YELLOW;
         }
         if (severity == null) return null;
-        BigDecimal pct = util.multiply(new BigDecimal("100")).setScale(2, BigDecimal.ROUND_HALF_UP);
+        BigDecimal pct = util.multiply(new BigDecimal("100")).setScale(2, java.math.RoundingMode.HALF_UP);
         return AlertEventDTO.builder()
                 .eventId(UUID.randomUUID().toString())
                 .ruleCode(getCode())

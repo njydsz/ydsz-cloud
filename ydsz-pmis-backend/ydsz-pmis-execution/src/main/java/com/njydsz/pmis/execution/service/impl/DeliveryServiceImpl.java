@@ -132,7 +132,7 @@ public class DeliveryServiceImpl implements DeliveryService {
             throw new BizException(BizErrorCode.BAD_REQUEST,
                     "交付物状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
         }
-        LocalDateTime now = LocalDateTime.now();
+        // LocalDateTime now removed - unused
         LocalDate today = LocalDate.now();
         if (to == DeliveryItemStatus.SUBMITTED && i.getActualSubmitDate() == null) {
             i.setActualSubmitDate(today);

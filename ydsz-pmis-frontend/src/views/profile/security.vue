@@ -105,7 +105,7 @@ async function onDisable() {
     await disable2fa()
     ElMessage.success('已关闭 2FA')
     await fetch2faStatus()
-  } catch {}
+  } catch { /* 用户取消 */ }
 }
 
 // ============= 会话管理 =============
@@ -132,7 +132,7 @@ async function onKick(row: UserSessionVO) {
     await invalidateSession(row.sessionId)
     ElMessage.success('已下线')
     await fetchSessions()
-  } catch {}
+  } catch { /* 用户取消 */ }
 }
 
 async function onKickOthers() {
@@ -141,7 +141,7 @@ async function onKickOthers() {
     await kickOtherSessions()
     ElMessage.success('已下线其他设备')
     await fetchSessions()
-  } catch {}
+  } catch { /* 用户取消 */ }
 }
 
 // ============= 修改密码 =============

@@ -50,7 +50,7 @@ class DailyReconcileJobHandlerTest {
     @DisplayName("execute 解析 date 参数")
     void execute_customDate() throws Exception {
         when(service.runDaily(any(LocalDate.class))).thenReturn(6);
-        Object r = handler.execute("{\"date\":\"2026-05-01\"}");
+        handler.execute("{\"date\":\"2026-05-01\"}");
         ArgumentCaptor<LocalDate> cap = ArgumentCaptor.forClass(LocalDate.class);
         verify(service).runDaily(cap.capture());
         assertThat(cap.getValue()).isEqualTo(LocalDate.of(2026, 5, 1));

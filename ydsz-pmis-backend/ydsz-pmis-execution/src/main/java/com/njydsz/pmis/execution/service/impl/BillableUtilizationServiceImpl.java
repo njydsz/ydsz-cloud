@@ -40,7 +40,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
     private final BillableUtilizationSnapshotMapper snapshotMapper;
     private final RateInternalMapper rateInternalMapper;
 
-    private static final BigDecimal HUNDRED = new BigDecimal("100");
+    // HUNDRED reserved for future percentage calculations
     private static final int DEFAULT_TOP = 20;
     private static final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 

@@ -34,9 +34,7 @@ class EmailChannelTest {
     @BeforeEach
     void setUp() {
         mailSender = mock(JavaMailSender.class);
-        channel = new EmailChannel();
-        // 注入依赖（@Autowired(required=false) + 反射）
-        ReflectionTestUtils.setField(channel, "mailSender", mailSender);
+        channel = new EmailChannel(mailSender);
         ReflectionTestUtils.setField(channel, "from", "no-reply@pmis.com");
     }
 

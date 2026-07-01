@@ -5,7 +5,7 @@
  * 状态: ACTIVE / EXPIRING_SOON / EXPIRED / TERMINATED
  * 操作: 创建 / 终止 / 扫描即将到期 / 扫描已过期
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'

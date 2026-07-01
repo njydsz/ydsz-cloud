@@ -51,8 +51,6 @@ public class ReportExportServiceImpl implements ReportExportService {
 
     private final ReportService reportService;
     private final AdvancedReportService advancedReportService;
-    private final ProfitSnapshotMapper profitSnapshotMapper;
-    private final EvmMeasureMapper evmMapper;
 
     private static final DateTimeFormatter YMD = DateTimeFormatter.ofPattern("yyyyMMdd");
     private static final DateTimeFormatter YMD_HMS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -375,7 +373,7 @@ public class ReportExportServiceImpl implements ReportExportService {
         baos.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
         try (CSVPrinter printer = new CSVPrinter(
                 new OutputStreamWriter(baos, StandardCharsets.UTF_8),
-                CSVFormat.DEFAULT.withQuoteMode(org.apache.commons.csv.QuoteMode.MINIMAL))) {
+                CSVFormat.Builder.create(CSVFormat.DEFAULT).setQuoteMode(org.apache.commons.csv.QuoteMode.MINIMAL).build())) {
             String[] headers = cols.stream().map(ColumnDef::header).toArray(String[]::new);
             printer.printRecord((Object[]) headers);
             for (Map<String, Object> data : rows) {

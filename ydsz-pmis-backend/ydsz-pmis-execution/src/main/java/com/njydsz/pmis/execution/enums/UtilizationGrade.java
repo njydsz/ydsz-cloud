@@ -26,8 +26,10 @@ public enum UtilizationGrade {
 
     private final String code;
     private final String desc;
+    @SuppressWarnings("unused")
     /** 阈值下界（包含） */
     private final int lowerBound;
+    @SuppressWarnings("unused")
     /** 阈值上界（不包含） */
     private final int upperBound;
 

@@ -66,7 +66,7 @@ async function onKick(row: UserSessionVO) {
     await adminKickSession(row.sessionId)
     ElMessage.success('已下线')
     await fetchList()
-  } catch {}
+  } catch { /* 用户取消 */ }
 }
 
 function onReset() {

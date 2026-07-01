@@ -44,8 +44,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     /** Token 黑名单前缀 (与 auth 服务保持一致) */
     private static final String TOKEN_BLACKLIST_PREFIX = "pmis:token:blacklist:";
-    /** 黑名单标记值 */
-    private static final String BLACKLISTED = "1";
+    // BLACKLISTED reserved for future blacklist check implementation
 
     /** 白名单(不校验 Token) */
     private static final List<String> WHITE_LIST = List.of(
