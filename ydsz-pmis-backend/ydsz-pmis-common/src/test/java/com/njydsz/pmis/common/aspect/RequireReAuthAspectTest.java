@@ -44,6 +44,7 @@ class RequireReAuthAspectTest {
     private RequireReAuthAspect aspect;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     void setUp() {
         redisTemplate = mock(StringRedisTemplate.class);
         valueOps = mock(ValueOperations.class);

@@ -3,6 +3,7 @@ package com.njydsz.pmis.scheduler.service.impl;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.scheduler.entity.JobDO;
+import com.njydsz.pmis.scheduler.entity.JobLogDO;
 import com.njydsz.pmis.scheduler.mapper.JobLogMapper;
 import com.njydsz.pmis.scheduler.mapper.JobMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -153,9 +154,9 @@ class JobServiceImplTest {
         JobDO j = baseJob("k", "0 0/1 * * * ?");
         j.setId(1L);
         when(jobMapper.selectById(1L)).thenReturn(j);
-        when(jobLogMapper.insert(any(com.njydsz.pmis.scheduler.entity.JobLogDO.class)))
+        when(jobLogMapper.insert(any(JobLogDO.class)))
                 .thenAnswer(inv -> {
-                    ((com.njydsz.pmis.scheduler.entity.JobLogDO) inv.getArgument(0)).setId(99L);
+                    ((JobLogDO) inv.getArgument(0)).setId(99L);
                     return 1;
                 });
 
@@ -186,7 +187,7 @@ class JobServiceImplTest {
         when(jobLogMapper.selectPage(any(), any())).thenAnswer(inv -> {
             com.baomidou.mybatisplus.extension.plugins.pagination.Page p =
                     (com.baomidou.mybatisplus.extension.plugins.pagination.Page) inv.getArgument(0);
-            p.setRecords(List.of(new com.njydsz.pmis.scheduler.entity.JobLogDO()));
+            p.setRecords(List.of(new JobLogDO()));
             p.setTotal(1L);
             return p;
         });

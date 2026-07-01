@@ -24,11 +24,8 @@ class PrePermissionAnnotationScanTest {
 
     @Test
     @DisplayName("所有 @PrePermission 字符串必须是合法的三段式权限码")
+    @SuppressWarnings("deprecation")
     void scanAllControllers() throws Exception {
-        // 通过扫描 classpath:*com/njydsz/pmis/**/controller/**/*.class 找到所有 Controller
-        ResourcePatternResolver resolver = new PathMatchingResourcePatternResolver();
-        MetadataReaderFactory factory = new SimpleMetadataReaderFactory();
-
         // 由于测试运行在 ydsz-pmis-common 模块,无法直接依赖其他模块类
         // 改为基于源目录 + 反射加载策略:
         // 1) 先尝试通过 spring 的 ClassPathScan 找到当前模块的 Controller (common 没有 controller)

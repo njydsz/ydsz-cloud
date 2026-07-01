@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -114,7 +115,7 @@ public class BudgetGuard {
      */
     public Map<String, Object> occupancy(Long initiationId) {
         Map<String, Object> snap = safeBudgetSnapshot(initiationId);
-        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         if (snap == null) {
             result.put("used", BigDecimal.ZERO);
             result.put("budget", BigDecimal.ZERO);

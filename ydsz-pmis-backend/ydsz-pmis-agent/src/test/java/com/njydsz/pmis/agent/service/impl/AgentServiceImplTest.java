@@ -2,6 +2,7 @@ package com.njydsz.pmis.agent.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.agent.dto.AgentRunRequestDTO;
+import com.njydsz.pmis.agent.engine.Agent;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.engine.RiskWarningAgent;
@@ -41,7 +42,7 @@ class AgentServiceImplTest {
     @BeforeEach
     void setup() {
         predictionMapper = mock(AgentPredictionMapper.class);
-        List<com.njydsz.pmis.agent.engine.Agent> agents = List.of(
+        List<Agent> agents = List.of(
                 new RiskWarningAgent()
         );
         service = new AgentServiceImpl(agents, predictionMapper);

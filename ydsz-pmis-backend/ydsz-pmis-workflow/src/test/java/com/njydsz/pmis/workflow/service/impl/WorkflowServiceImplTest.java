@@ -3,6 +3,8 @@ package com.njydsz.pmis.workflow.service.impl;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.DeployProcessDTO;
+import com.njydsz.pmis.workflow.dto.StartProcessDTO;
+import com.njydsz.pmis.workflow.dto.TaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.WorkflowBusinessDO;
 import com.njydsz.pmis.workflow.mapper.WorkflowBusinessMapper;
 import org.flowable.common.engine.api.FlowableException;
@@ -65,7 +67,7 @@ class WorkflowServiceImplTest {
             return 1;
         });
 
-        com.njydsz.pmis.workflow.dto.StartProcessDTO dto = new com.njydsz.pmis.workflow.dto.StartProcessDTO();
+        StartProcessDTO dto = new StartProcessDTO();
         dto.setProcessKey("pmis_leave");
         dto.setBusinessType("LEAVE");
         dto.setBusinessId("B-001");
@@ -91,7 +93,7 @@ class WorkflowServiceImplTest {
         when(runtimeService.startProcessInstanceByKey(anyString(), anyString(), any()))
                 .thenThrow(new FlowableException("engine down"));
 
-        com.njydsz.pmis.workflow.dto.StartProcessDTO dto = new com.njydsz.pmis.workflow.dto.StartProcessDTO();
+        StartProcessDTO dto = new StartProcessDTO();
         dto.setProcessKey("k");
         dto.setBusinessType("T");
         dto.setBusinessId("1");
@@ -149,7 +151,7 @@ class WorkflowServiceImplTest {
         when(q.taskId("t-1")).thenReturn(q);
         when(q.singleResult()).thenReturn(t);
 
-        com.njydsz.pmis.workflow.dto.TaskOperateDTO dto = new com.njydsz.pmis.workflow.dto.TaskOperateDTO();
+        TaskOperateDTO dto = new TaskOperateDTO();
         dto.setTaskId("t-1");
         dto.setComment("驳回测试");
         service.rejectTask(dto);
@@ -175,7 +177,7 @@ class WorkflowServiceImplTest {
         when(cb.processInstanceId(anyString())).thenReturn(cb);
         when(cb.moveActivityIdTo(anyString(), anyString())).thenReturn(cb);
 
-        com.njydsz.pmis.workflow.dto.TaskOperateDTO dto = new com.njydsz.pmis.workflow.dto.TaskOperateDTO();
+        TaskOperateDTO dto = new TaskOperateDTO();
         dto.setTaskId("t-1");
         dto.setTargetNodeKey("startEvent");
 
@@ -240,7 +242,7 @@ class WorkflowServiceImplTest {
         when(q.taskId("t-1")).thenReturn(q);
         when(q.singleResult()).thenReturn(t);
 
-        com.njydsz.pmis.workflow.dto.TaskOperateDTO dto = new com.njydsz.pmis.workflow.dto.TaskOperateDTO();
+        TaskOperateDTO dto = new TaskOperateDTO();
         dto.setTaskId("t-1");
         dto.setComment("OK");
 

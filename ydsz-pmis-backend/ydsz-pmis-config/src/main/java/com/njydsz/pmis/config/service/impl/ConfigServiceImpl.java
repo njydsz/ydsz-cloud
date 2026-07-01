@@ -18,10 +18,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 配置中心服务实现
@@ -113,7 +115,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Transactional(rollbackFor = Exception.class)
     public Long create(ConfigFormDTO dto) {
         if (dto.getValueType() == null
-                || !java.util.Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
+                || !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "valueType 必须是 STRING/NUMBER/BOOLEAN/JSON");
         }
         ConfigDO exists = configMapper.selectByGroupAndKey(dto.getConfigGroup(), dto.getConfigKey());
@@ -139,7 +141,7 @@ public class ConfigServiceImpl implements ConfigService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "配置 ID 不能为空");
         }
         if (dto.getValueType() != null
-                && !java.util.Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
+                && !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "valueType 必须是 STRING/NUMBER/BOOLEAN/JSON");
         }
         ConfigDO exists = configMapper.selectById(dto.getId());
@@ -165,7 +167,7 @@ public class ConfigServiceImpl implements ConfigService {
         switch (entity.getValueType().toUpperCase()) {
             case "NUMBER" -> {
                 try {
-                    new java.math.BigDecimal(v);
+                    new BigDecimal(v);
                 } catch (NumberFormatException e) {
                     throw new BizException(BizErrorCode.BAD_REQUEST,
                             "NUMBER 类型配置值必须是数字: " + v);
@@ -234,7 +236,7 @@ public class ConfigServiceImpl implements ConfigService {
     @Override
     public void refreshCache() {
         // 简化：删除所有 pmis:cfg:* 前缀的 key
-        java.util.Set<String> keys = redisTemplate.keys(CACHE_PREFIX + "*");
+        Set<String> keys = redisTemplate.keys(CACHE_PREFIX + "*");
         if (keys != null && !keys.isEmpty()) {
             redisTemplate.delete(keys);
         }

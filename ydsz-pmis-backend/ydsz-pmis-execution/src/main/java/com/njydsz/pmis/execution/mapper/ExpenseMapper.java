@@ -5,6 +5,8 @@ import com.njydsz.pmis.execution.entity.ExpenseDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
+
 @Mapper
 public interface ExpenseMapper extends BaseMapper<ExpenseDO> {
 
@@ -14,10 +16,10 @@ public interface ExpenseMapper extends BaseMapper<ExpenseDO> {
                      @Param("approverId") Long approverId, @Param("approverName") String approverName);
 
     /** 跨项目汇总所有费用金额 */
-    java.math.BigDecimal sumAllAmount();
+    BigDecimal sumAllAmount();
 
     /**
      * 按项目汇总「已发生」费用金额（强管控用）
      */
-    java.math.BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
+    BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
 }

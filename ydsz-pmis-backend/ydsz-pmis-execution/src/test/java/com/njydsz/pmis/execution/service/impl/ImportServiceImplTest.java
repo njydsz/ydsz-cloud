@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.njydsz.pmis.common.excel.ExcelUtil;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.controller.ImportExportController;
 import com.njydsz.pmis.execution.dto.RateCardCreateDTO;
@@ -15,6 +16,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -66,7 +68,7 @@ class ImportServiceImplTest {
     @DisplayName("importFile rate-card 真正的空 xlsx 返回 0/0/0")
     void importFile_empty() throws Exception {
         // 准备一个真正空的 xlsx（仅表头、无数据行）
-        byte[] empty = buildRateCardXlsx(java.util.Collections.emptyList());
+        byte[] empty = buildRateCardXlsx(Collections.emptyList());
         MockMultipartFile file = new MockMultipartFile(
                 "file", "empty.xlsx",
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -154,7 +156,7 @@ class ImportServiceImplTest {
      * 通过 ExcelUtil 写出 xlsx 再读回（保持与生产一致）
      */
     private static byte[] buildRateCardXlsx(List<String[]> rows) throws Exception {
-        List<RateCardImportDTO> data = new java.util.ArrayList<>();
+        List<RateCardImportDTO> data = new ArrayList<>();
         for (String[] r : rows) {
             RateCardImportDTO dto = new RateCardImportDTO();
             dto.setLevel(r[0]);
@@ -168,9 +170,9 @@ class ImportServiceImplTest {
             data.add(dto);
         }
         ByteArrayOutputStream out = new ByteArrayOutputStream();
-        com.njydsz.pmis.common.excel.ExcelUtil.exportMultiSheet(
+        ExcelUtil.exportMultiSheet(
                 out, RateCardImportDTO.class,
-                List.of(new com.njydsz.pmis.common.excel.ExcelUtil.ExcelSheet<>("费率卡", data)));
+                List.of(new ExcelUtil.ExcelSheet<>("费率卡", data)));
         return out.toByteArray();
     }
 }

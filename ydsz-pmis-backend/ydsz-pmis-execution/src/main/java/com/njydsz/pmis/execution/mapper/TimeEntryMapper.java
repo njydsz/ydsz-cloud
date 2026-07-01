@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.math.BigDecimal;
 import java.util.Map;
 
 @Mapper
@@ -64,5 +65,5 @@ public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
     /**
      * P4-3 已审批工时总小时数
      */
-    java.math.BigDecimal sumApprovedHours();
+    BigDecimal sumApprovedHours();
 }

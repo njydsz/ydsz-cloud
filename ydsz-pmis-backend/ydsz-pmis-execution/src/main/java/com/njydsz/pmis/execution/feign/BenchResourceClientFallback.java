@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.math.BigDecimal;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -36,7 +37,7 @@ public class BenchResourceClientFallback implements FallbackFactory<BenchResourc
                 Map<String, Object> data = new HashMap<>();
                 data.put("source", "DOWN");
                 data.put("activePools", Collections.emptyList());
-                data.put("totalIdleCost", java.math.BigDecimal.ZERO);
+                data.put("totalIdleCost", BigDecimal.ZERO);
                 return R.ok(data);
             }
 

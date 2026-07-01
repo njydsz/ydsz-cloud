@@ -110,6 +110,7 @@ class GlobalExceptionHandlerTest {
 
     @Test
     @DisplayName("HttpMessageNotReadableException 应返回 BAD_REQUEST")
+    @SuppressWarnings("deprecation")
     void handleNotReadable() {
         HttpMessageNotReadableException ex =
                 new HttpMessageNotReadableException("JSON parse error");

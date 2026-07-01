@@ -18,6 +18,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -51,7 +53,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         if (p.getAmount() == null && p.getQuantity() != null && p.getUnitPrice() != null) {
             p.setAmount(p.getQuantity().multiply(p.getUnitPrice()));
         }
-        if (p.getQuantity() == null) p.setQuantity(java.math.BigDecimal.ONE);
+        if (p.getQuantity() == null) p.setQuantity(BigDecimal.ONE);
         if (!StringUtils.hasText(p.getStatus())) p.setStatus(ApprovalStatus.DRAFT.getCode());
         if (p.getTenantId() == null) p.setTenantId(1L);
         if (p.getProviderTraceId() == null) p.setProviderTraceId("");

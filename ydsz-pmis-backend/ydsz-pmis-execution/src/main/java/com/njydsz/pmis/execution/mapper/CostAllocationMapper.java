@@ -5,6 +5,7 @@ import com.njydsz.pmis.execution.entity.CostAllocationDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -29,18 +30,18 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
                                               @Param("period") String period);
 
     /** 跨项目汇总所有成本金额 */
-    java.math.BigDecimal sumAllAmount();
+    BigDecimal sumAllAmount();
 
     /** P6 每日对账：跨项目汇总全部成本（兼容 sumAll） */
-    java.math.BigDecimal sumAll();
+    BigDecimal sumAll();
 
     /** P6 每日对账：按 costType 汇总（与 sumByType(initId, period) 区分） */
-    java.math.BigDecimal sumByCostType(@Param("costType") String costType);
+    BigDecimal sumByCostType(@Param("costType") String costType);
 
     /**
      * 按项目汇总所有已归集成本（强管控用）
      */
-    java.math.BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
+    BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
 
     /**
      * 批次18：按 levelCode（事业部代码）汇总成本
@@ -48,5 +49,5 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
      * <p>用于项目群驾驶舱 / 高管看板按事业部聚合。
      * 返回字段：levelCode / totalAmount / entryCount
      */
-    java.util.List<java.util.Map<String, Object>> sumByLevelCode();
+    List<Map<String, Object>> sumByLevelCode();
 }

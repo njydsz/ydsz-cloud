@@ -3,6 +3,7 @@ package com.njydsz.pmis.notification.service.impl;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
 import com.njydsz.pmis.notification.dto.NotificationSendDTO;
 import com.njydsz.pmis.notification.entity.NotificationDO;
 import com.njydsz.pmis.notification.feign.MessageServiceClient;
@@ -276,7 +277,7 @@ class NotificationServiceImplTest {
     @DisplayName("inbox 应按 receiverId + category + level + readStatus 过滤")
     void inbox_filter() {
         when(mapper.selectPage(any(), any())).thenReturn(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>());
-        com.njydsz.pmis.notification.dto.NotificationQueryDTO q = new com.njydsz.pmis.notification.dto.NotificationQueryDTO();
+        NotificationQueryDTO q = new NotificationQueryDTO();
         q.setPage(1);
         q.setSize(10);
         q.setCategory("ALERT");

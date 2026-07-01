@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -187,14 +188,14 @@ class ProjectClosureServiceImplTest {
     @Test
     @DisplayName("listByType")
     void listByType() {
-        when(mapper.selectByType("FORMAL")).thenReturn(java.util.List.of(closure(1L, "DRAFT")));
+        when(mapper.selectByType("FORMAL")).thenReturn(List.of(closure(1L, "DRAFT")));
         assertThat(service.listByType("FORMAL")).hasSize(1);
     }
 
     @Test
     @DisplayName("aggregateByType")
     void aggregateByType() {
-        when(mapper.aggregateByType(1L)).thenReturn(java.util.List.of());
+        when(mapper.aggregateByType(1L)).thenReturn(List.of());
         assertThat(service.aggregateByType(1L)).isEmpty();
     }
 

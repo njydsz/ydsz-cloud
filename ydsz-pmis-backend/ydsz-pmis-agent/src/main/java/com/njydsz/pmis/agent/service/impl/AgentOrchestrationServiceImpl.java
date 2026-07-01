@@ -1,7 +1,6 @@
 package com.njydsz.pmis.agent.service.impl;
 
 import com.njydsz.pmis.agent.engine.Agent;
-import com.njydsz.pmis.agent.enums.AgentType;
 import com.njydsz.pmis.agent.orchestration.AgentCoordinator;
 import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;

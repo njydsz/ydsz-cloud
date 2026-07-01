@@ -6,6 +6,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
+import java.math.BigDecimal;
 import java.util.Map;
 
 @Mapper
@@ -15,8 +16,8 @@ public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
 
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
-    int updateProgress(@Param("id") Long id, @Param("progressPct") java.math.BigDecimal progressPct,
-                       @Param("actualEffort") java.math.BigDecimal actualEffort);
+    int updateProgress(@Param("id") Long id, @Param("progressPct") BigDecimal progressPct,
+                       @Param("actualEffort") BigDecimal actualEffort);
 
     List<WbsTaskDO> selectByInitiation(@Param("initiationId") Long initiationId);
 

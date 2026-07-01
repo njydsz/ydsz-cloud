@@ -368,8 +368,4 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             return null;
         }
     }
-
-    private LocalDateTime toLocalDateTime(java.time.ZonedDateTime zdt) {
-        return zdt == null ? null : LocalDateTime.ofInstant(zdt.toInstant(), java.time.ZoneId.systemDefault());
-    }
 }

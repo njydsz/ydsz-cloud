@@ -92,7 +92,7 @@ public final class ExcelUtil {
     /**
      * 流式读取（适合大数据量）
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("rawtypes")
     public static <T> void readStreaming(MultipartFile file, Class<T> headClass,
                                          Consumer<T> consumer) throws IOException {
         try (InputStream in = file.getInputStream()) {

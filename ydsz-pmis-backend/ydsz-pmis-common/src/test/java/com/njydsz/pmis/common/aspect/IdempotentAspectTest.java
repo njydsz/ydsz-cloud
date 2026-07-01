@@ -10,8 +10,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 
-import java.lang.reflect.Method;
-import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,14 +28,13 @@ class IdempotentAspectTest {
     private StringRedisTemplate redis;
     private IdempotentAspect aspect;
     private ProceedingJoinPoint pjp;
-    private MethodSignature signature;
 
     @BeforeEach
     void setUp() throws Exception {
         redis = mock(StringRedisTemplate.class);
         aspect = new IdempotentAspect(redis);
         pjp = mock(ProceedingJoinPoint.class);
-        signature = mock(MethodSignature.class);
+        MethodSignature signature = mock(MethodSignature.class);
         when(pjp.getSignature()).thenReturn(signature);
         when(signature.getMethod()).thenReturn(Sample.class.getDeclaredMethod("doIt", String.class));
         when(pjp.getArgs()).thenReturn(new Object[]{"hello"});
@@ -45,6 +42,7 @@ class IdempotentAspectTest {
 
     @Test
     @DisplayName("首次请求应放行 - Lua 返回 1")
+    @SuppressWarnings("unchecked")
     void firstPass() throws Throwable {
         when(redis.execute(any(RedisScript.class), anyList(), any(), any())).thenReturn(1L);
         when(pjp.proceed()).thenReturn("OK");
@@ -54,6 +52,7 @@ class IdempotentAspectTest {
 
     @Test
     @DisplayName("重复请求应抛 BizException")
+    @SuppressWarnings("unchecked")
     void duplicate() throws Throwable {
         when(redis.execute(any(RedisScript.class), anyList(), any(), any())).thenReturn(0L);
         assertThatThrownBy(() -> aspect.around(pjp, annOf("test:", 5)))
@@ -63,6 +62,7 @@ class IdempotentAspectTest {
 
     @Test
     @DisplayName("业务异常时主动释放锁")
+    @SuppressWarnings("unchecked")
     void releaseOnException() throws Throwable {
         when(redis.execute(any(RedisScript.class), anyList(), any(), any())).thenReturn(1L);
         when(pjp.proceed()).thenThrow(new RuntimeException("biz error"));
@@ -74,6 +74,7 @@ class IdempotentAspectTest {
 
     @Test
     @DisplayName("keyFromArg SpEL 解析为参数值")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     void spelExtract() throws Throwable {
         when(redis.execute(any(RedisScript.class), anyList(), any(), any())).thenReturn(1L);
         when(pjp.proceed()).thenReturn("OK");

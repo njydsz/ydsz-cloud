@@ -4,6 +4,8 @@ import com.njydsz.pmis.common.job.JobHandler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 /**
  * 示例任务处理器 - 心跳上报
  *
@@ -16,7 +18,7 @@ public class HeartbeatJobHandler implements JobHandler {
     @Override
     public Object execute(String paramsJson) {
         log.info("[HeartbeatJob] 节点心跳 params={}", paramsJson);
-        return java.util.Map.of(
+        return Map.of(
                 "ts", System.currentTimeMillis(),
                 "node", java.lang.management.ManagementFactory.getRuntimeMXBean().getName()
         );

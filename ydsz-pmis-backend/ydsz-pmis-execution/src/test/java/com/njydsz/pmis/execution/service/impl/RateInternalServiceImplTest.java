@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -96,7 +97,7 @@ class RateInternalServiceImplTest {
     @Test
     @DisplayName("listByLevelAndDept null 安全")
     void listSafe() {
-        when(mapper.selectByLevelAndDept("L8", null)).thenReturn(java.util.List.of());
+        when(mapper.selectByLevelAndDept("L8", null)).thenReturn(List.of());
         assertThat(service.listByLevelAndDept("L8", null)).isEmpty();
         assertThat(service.listByLevelAndDept(null, 1L)).isEmpty();
     }

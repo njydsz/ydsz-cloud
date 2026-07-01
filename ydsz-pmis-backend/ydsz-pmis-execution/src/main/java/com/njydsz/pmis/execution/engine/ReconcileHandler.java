@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -284,7 +285,7 @@ public class ReconcileHandler {
         if (entries.isEmpty()) return out;
 
         // 已检查的 (employeeId, date) 集合,避免重复告警
-        java.util.Set<String> checked = new java.util.HashSet<>();
+        Set<String> checked = new HashSet<>();
         for (TimeEntryDO e : entries) {
             if (e.getEmployeeId() == null || e.getEntryDate() == null) continue;
             String key = e.getEmployeeId() + "|" + e.getEntryDate();

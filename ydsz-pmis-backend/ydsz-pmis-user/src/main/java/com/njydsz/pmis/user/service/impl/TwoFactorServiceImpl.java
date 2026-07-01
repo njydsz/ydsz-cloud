@@ -160,8 +160,4 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     private String joinCodes(String[] codes) {
         return String.join(",", codes);
     }
-
-    private List<User2FADO> unused(LambdaQueryWrapper<User2FADO> w) {
-        return Collections.emptyList();
-    }
 }

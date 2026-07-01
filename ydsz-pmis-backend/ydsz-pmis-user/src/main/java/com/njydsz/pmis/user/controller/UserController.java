@@ -74,8 +74,7 @@ public class UserController {
         String password = (String) body.get("password");
         Long employeeId = body.get("employeeId") == null ? null : Long.valueOf(body.get("employeeId").toString());
         if (username == null || password == null) {
-            throw new com.njydsz.pmis.common.exception.BizException(
-                    com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "用户名或密码不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "用户名或密码不能为空");
         }
         UserAccountDO u = new UserAccountDO();
         u.setUsername(username);

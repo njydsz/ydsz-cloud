@@ -32,11 +32,13 @@ class OperationLogServiceImplTest {
 
     @Test
     @DisplayName("分页查询构造 wrapper 并委托给 mapper")
+    @SuppressWarnings({"rawtypes", "unchecked"})
     void page() {
         when(mapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
-        Page<OperationLogDO> r = service.page(1, 20, 100L, "USER", "SUCCESS", "用户管理");
+        service.page(1, 20, 100L, "USER", "SUCCESS", "用户管理");
         ArgumentCaptor<Page<OperationLogDO>> pageCap = ArgumentCaptor.forClass(Page.class);
-        ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper> wCap = ArgumentCaptor.forClass(com.baomidou.mybatisplus.core.conditions.Wrapper.class);
+        ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper<OperationLogDO>> wCap =
+                ArgumentCaptor.forClass((Class) com.baomidou.mybatisplus.core.conditions.Wrapper.class);
         verify(mapper).selectPage(pageCap.capture(), wCap.capture());
         assertThat(pageCap.getValue().getCurrent()).isEqualTo(1);
         assertThat(pageCap.getValue().getSize()).isEqualTo(20);

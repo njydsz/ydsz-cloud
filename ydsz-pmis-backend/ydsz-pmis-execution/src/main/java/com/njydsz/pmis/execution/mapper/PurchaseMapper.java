@@ -5,6 +5,8 @@ import com.njydsz.pmis.execution.entity.PurchaseDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.math.BigDecimal;
+
 @Mapper
 public interface PurchaseMapper extends BaseMapper<PurchaseDO> {
 
@@ -14,10 +16,10 @@ public interface PurchaseMapper extends BaseMapper<PurchaseDO> {
                      @Param("approverId") Long approverId, @Param("approverName") String approverName);
 
     /** 跨项目汇总所有采购金额 */
-    java.math.BigDecimal sumAllAmount();
+    BigDecimal sumAllAmount();
 
     /**
      * 按项目汇总「已发生」采购金额（强管控用）
      */
-    java.math.BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
+    BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
 }

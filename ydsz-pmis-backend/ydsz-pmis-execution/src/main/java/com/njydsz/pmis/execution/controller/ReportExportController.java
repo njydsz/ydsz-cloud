@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -56,7 +57,7 @@ public class ReportExportController {
             @RequestParam(required = false) String health,
             HttpServletResponse response) throws IOException {
         // 1) 收集通用参数
-        Map<String, Object> params = new java.util.LinkedHashMap<>();
+        Map<String, Object> params = new LinkedHashMap<>();
         if (initiationId != null) {
             params.put("initiationId", initiationId);
         }

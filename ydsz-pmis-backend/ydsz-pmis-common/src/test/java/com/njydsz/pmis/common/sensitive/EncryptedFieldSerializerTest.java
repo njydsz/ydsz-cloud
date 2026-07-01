@@ -73,8 +73,6 @@ class EncryptedFieldSerializerTest {
     @DisplayName("createContextual: 缺注解应回退到原 serializer")
     void createContextual_noAnnotation() throws Exception {
         ObjectMapper mapper = new ObjectMapper();
-        com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition prop =
-                mock(com.fasterxml.jackson.databind.introspect.BeanPropertyDefinition.class);
         // 简单覆盖: 不抛错即认为通过
         JsonSerializer<?> s = serializer.createContextual(mapper.getSerializerProvider(), null);
         assertThat(s).isSameAs(serializer);

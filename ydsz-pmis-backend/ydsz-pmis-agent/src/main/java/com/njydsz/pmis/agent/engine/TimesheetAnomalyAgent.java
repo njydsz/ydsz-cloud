@@ -35,7 +35,7 @@ public class TimesheetAnomalyAgent implements Agent {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "null"})
     public AgentResult execute(AgentContext ctx) {
         Map<String, Object> p = ctx.getParams() == null ? Map.of() : ctx.getParams();
         Object raw = p.get("timesheets");
@@ -61,13 +61,11 @@ public class TimesheetAnomalyAgent implements Agent {
             String employee = String.valueOf(t.get("employeeId"));
             String date = String.valueOf(t.get("workDate"));
             double hours = t.get("hours") instanceof Number n ? n.doubleValue() : 0;
-            int project = t.get("projectId") instanceof Number pn ? pn.intValue() : 0;
             int late = t.get("lateDays") instanceof Number ln ? ln.intValue() : 0;
             totalHours += hours;
             String key = employee + "#" + date;
             dailyHours.merge(key, hours, Double::sum);
-            String projKey = employee + "#" + date;
-            projectCount.merge(projKey, 1, Integer::sum);
+            projectCount.merge(key, 1, Integer::sum);
             if (hours > 24) over24++;
             if (late > 7) lateSubmit++;
         }
