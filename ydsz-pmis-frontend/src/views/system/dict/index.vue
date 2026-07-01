@@ -201,8 +201,8 @@ onMounted(fetchTypes)
         <div class="card-header">
           <span>{{ currentType ? currentType.typeName + ' / 字典项' : '字典项' }}</span>
           <div>
-            <el-button :icon="'Refresh'" @click="handleRefresh" :disabled="!currentType">刷新缓存</el-button>
-            <el-button type="primary" :icon="'Plus'" @click="openItemCreate" :disabled="!currentType">新增项</el-button>
+            <el-button :icon="'Refresh'" :disabled="!currentType" @click="handleRefresh">刷新缓存</el-button>
+            <el-button type="primary" :icon="'Plus'" :disabled="!currentType" @click="openItemCreate">新增项</el-button>
           </div>
         </div>
       </template>

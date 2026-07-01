@@ -85,7 +85,7 @@ describe('Executive 派生逻辑 stub 验证（批次18）', () => {
 
   it('fmtYuan 派生 - 大数自动切换单位', () => {
     function fmt(v?: number | null): string {
-      if (v == null) return '0'
+      if (v === null || v === undefined) return '0'
       if (Math.abs(v) >= 1e8) return (v / 1e8).toFixed(2) + ' 亿'
       if (Math.abs(v) >= 1e4) return (v / 1e4).toFixed(2) + ' 万'
       return v.toFixed(0)
@@ -100,7 +100,7 @@ describe('Executive 派生逻辑 stub 验证（批次18）', () => {
 
   it('pct1 派生 - 0-1 转 % 字符串', () => {
     function pct(v?: number | null): string {
-      if (v == null) return '0%'
+      if (v === null || v === undefined) return '0%'
       return (v * 100).toFixed(1) + '%'
     }
     expect(pct(0)).toBe('0.0%')

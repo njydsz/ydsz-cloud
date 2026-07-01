@@ -569,7 +569,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         List<Map<String, Object>> contractRowsDesc = new ArrayList<>();
         List<Map<String, Object>> paymentRowsDesc = new ArrayList<>();
         try {
-            contractRowsDesc = invoiceMapper.sumByRecentMonth(limit);
+            contractRowsDesc = invoiceMapper.sumByRecentMonth(Integer.valueOf(limit));
         } catch (Exception e) {
             log.warn("[Cockpit] KPI 趋势-合同查询失败: {}", e.getMessage());
         }

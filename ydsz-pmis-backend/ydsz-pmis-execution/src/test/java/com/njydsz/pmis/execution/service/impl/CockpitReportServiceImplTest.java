@@ -542,7 +542,7 @@ class CockpitReportServiceImplTest {
         when(paymentMapper.aggregateByRecentMonth(any())).thenReturn(List.of());
         com.njydsz.pmis.execution.dto.KpiTrendVO out = service.kpiTrend(99);
         assertThat(out.getPeriods()).isEmpty();
-        org.mockito.Mockito.verify(invoiceMapper).sumByRecentMonth(36);
+        org.mockito.Mockito.verify(invoiceMapper).sumByRecentMonth(Integer.valueOf(36));
     }
 
     @Test
@@ -551,7 +551,7 @@ class CockpitReportServiceImplTest {
         when(invoiceMapper.sumByRecentMonth(any())).thenReturn(List.of());
         when(paymentMapper.aggregateByRecentMonth(any())).thenReturn(List.of());
         com.njydsz.pmis.execution.dto.KpiTrendVO out = service.kpiTrend(null);
-        org.mockito.Mockito.verify(invoiceMapper).sumByRecentMonth(12);
+        org.mockito.Mockito.verify(invoiceMapper).sumByRecentMonth(Integer.valueOf(12));
     }
 
     @Test

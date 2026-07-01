@@ -452,7 +452,7 @@ onUnmounted(() => {
       </el-form>
     </el-card>
 
-    <el-card shadow="never" class="report-card" v-loading="loading">
+    <el-card v-loading="loading" shadow="never" class="report-card">
       <el-tabs :model-value="tab" @update:model-value="onTabChange">
         <el-tab-pane label="项目利润表" name="profit" />
         <el-tab-pane label="成本归集" name="cost" />

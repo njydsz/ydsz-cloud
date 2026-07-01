@@ -276,16 +276,16 @@ onMounted(fetchList)
         </el-button>
         <el-button :icon="'Refresh'" @click="handleRefresh">刷新缓存</el-button>
         <el-button
-          v-permission="['sys:config:update']"
           v-if="selectedGroup"
+          v-permission="['sys:config:update']"
           :icon="(list.find((c) => c.configGroup === selectedGroup)?.status || 'ENABLED') === 'ENABLED' ? 'VideoPause' : 'VideoPlay'"
           @click="handleToggleGroupStatus(selectedGroup, (list.find((c) => c.configGroup === selectedGroup)?.status || 'ENABLED'))"
         >
           启停当前分组
         </el-button>
         <el-button
-          v-permission="['sys:config:delete']"
           v-if="selectedGroup"
+          v-permission="['sys:config:delete']"
           type="danger"
           :icon="'Delete'"
           @click="handleDeleteByGroup(selectedGroup)"
@@ -354,9 +354,9 @@ onMounted(fetchList)
         :page-sizes="[10, 20, 50, 100]"
         :total="total"
         layout="total, sizes, prev, pager, next, jumper"
+        class="pagination"
         @current-change="fetchList"
         @size-change="fetchList"
-        class="pagination"
       />
     </el-card>
 

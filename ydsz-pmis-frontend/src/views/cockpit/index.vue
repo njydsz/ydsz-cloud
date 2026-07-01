@@ -198,7 +198,7 @@ function startPolling() {
 }
 
 function stopPolling() {
-  if (pollTimer != null) {
+  if (pollTimer !== null) {
     window.clearInterval(pollTimer)
     pollTimer = null
   }
@@ -299,7 +299,7 @@ onBeforeUnmount(() => stopPolling())
           <el-input v-model="query.period" placeholder="如 2026-07" style="width: 160px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="'Refresh'" @click="refresh" v-permission="[PC.COCKPIT_OVERVIEW_VIEW]">刷新</el-button>
+          <el-button v-permission="[PC.COCKPIT_OVERVIEW_VIEW]" type="primary" :icon="'Refresh'" @click="refresh">刷新</el-button>
         </el-form-item>
       </el-form>
     </el-card>

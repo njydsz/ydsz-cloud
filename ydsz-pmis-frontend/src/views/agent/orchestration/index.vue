@@ -224,7 +224,8 @@ onMounted(() => {
               <el-input v-model="form.bizRef" placeholder="如 PRJ-001" />
             </el-form-item>
             <el-form-item label="参与 Agent">
-              <el-select v-model="form.agentTypes" multiple collapse-tags collapse-tags-tooltip
+              <el-select
+v-model="form.agentTypes" multiple collapse-tags collapse-tags-tooltip
                          placeholder="选择要编排的 Agent" style="width: 100%">
                 <el-option v-for="a in agentOptions" :key="a.code" :value="a.code" :label="`${a.code}（${a.desc}）`" />
               </el-select>
@@ -238,9 +239,9 @@ onMounted(() => {
             <div v-for="(f, i) in form.facts" :key="i" class="kv-row">
               <el-input v-model="f.key" placeholder="key" style="width: 35%" />
               <el-input v-model="f.value" placeholder="value" style="width: 55%; margin-left: 8px" />
-              <el-button :icon="'Delete'" link @click="removeFact(i)" style="margin-left: 4px" />
+              <el-button :icon="'Delete'" link style="margin-left: 4px" @click="removeFact(i)" />
             </div>
-            <el-button :icon="'Plus'" link @click="addFact" type="primary" size="small">添加事实</el-button>
+            <el-button :icon="'Plus'" link type="primary" size="small" @click="addFact">添加事实</el-button>
 
             <template v-if="form.mode === 'VOTING'">
               <el-divider content-position="left">投票权重 (weights)</el-divider>
@@ -249,18 +250,18 @@ onMounted(() => {
                   <el-option v-for="a in agentOptions" :key="a.code" :value="a.code" :label="a.code" />
                 </el-select>
                 <el-input-number v-model="w.weight" :min="0" :max="1" :step="0.05" style="width: 50%; margin-left: 8px" />
-                <el-button :icon="'Delete'" link @click="removeWeight(i)" style="margin-left: 4px" />
+                <el-button :icon="'Delete'" link style="margin-left: 4px" @click="removeWeight(i)" />
               </div>
-              <el-button :icon="'Plus'" link @click="addWeight" type="primary" size="small">添加权重</el-button>
+              <el-button :icon="'Plus'" link type="primary" size="small" @click="addWeight">添加权重</el-button>
             </template>
 
             <el-form-item style="margin-top: 16px">
               <el-button
+                v-permission="[PC.AGENT_ORCHESTRATION_RUN]"
                 type="primary"
                 :icon="'VideoPlay'"
                 :loading="submitting"
                 :disabled="form.agentTypes.length === 0"
-                v-permission="[PC.AGENT_ORCHESTRATION_RUN]"
                 @click="runOrchestration"
               >
                 执行编排

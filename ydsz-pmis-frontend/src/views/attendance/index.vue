@@ -254,7 +254,7 @@ onMounted(() => {
             <el-button :icon="'Refresh'" @click="fetchAttendance">刷新</el-button>
           </div>
 
-          <div class="stat-row" v-if="attStat.length > 0">
+          <div v-if="attStat.length > 0" class="stat-row">
             <el-tag v-for="(s, idx) in attStat" :key="idx" :type="(statusMap[(s.status as string) || '']?.type as any) || 'info'" effect="plain" size="large">
               {{ statusMap[(s.status as string) || '']?.label || s.status || '未知' }}: {{ s.count }}天 / {{ s.total_hours }}h
             </el-tag>

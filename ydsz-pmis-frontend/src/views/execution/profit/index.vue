@@ -203,7 +203,7 @@ onMounted(() => {
               <el-form-item label="项目 ID"><el-input-number v-model="pQuery.initiationId" :min="0" :controls="false" /></el-form-item>
               <el-form-item label="期间 (YYYY-MM)"><el-input v-model="pQuery.period" placeholder="如 2026-07" /></el-form-item>
               <el-form-item>
-                <el-button type="primary" :icon="'Plus'" @click="handleGenerate" v-permission="[PC.EXECUTION_PROFIT_SNAPSHOT]">生成快照</el-button>
+                <el-button v-permission="[PC.EXECUTION_PROFIT_SNAPSHOT]" type="primary" :icon="'Plus'" @click="handleGenerate">生成快照</el-button>
                 <el-button @click="pQuery.initiationId = undefined; pQuery.period = ''; fetchProfit()">重置</el-button>
               </el-form-item>
             </el-form>

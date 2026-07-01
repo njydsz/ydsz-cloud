@@ -226,7 +226,7 @@ onMounted(() => {
       <el-col :span="6">
         <el-card shadow="hover">
           <div class="text-sm text-gray-500">等级分布</div>
-          <div class="text-xs mt-1" v-for="(row, idx) in levelDist" :key="idx">
+          <div v-for="(row, idx) in levelDist" :key="idx" class="text-xs mt-1">
             {{ (row as any).level || (row as any).name }}：<b>{{ (row as any).count }}</b>
           </div>
         </el-card>

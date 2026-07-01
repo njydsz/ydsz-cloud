@@ -278,7 +278,7 @@ onMounted(() => {
 <template>
   <div class="user-page">
     <el-card shadow="never">
-      <el-form inline :model="query" ref="queryForm" class="search-form">
+      <el-form ref="queryForm" inline :model="query" class="search-form">
         <el-form-item label="关键字">
           <el-input v-model="query.keyword" placeholder="用户名/姓名" clearable />
         </el-form-item>

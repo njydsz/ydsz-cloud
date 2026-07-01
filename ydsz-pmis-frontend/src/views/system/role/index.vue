@@ -201,9 +201,9 @@ onMounted(fetchList)
         :page-sizes="[10, 20, 50]"
         :total="total"
         layout="total, sizes, prev, pager, next, jumper"
+        class="pagination"
         @current-change="fetchList"
         @size-change="fetchList"
-        class="pagination"
       />
     </el-card>
 

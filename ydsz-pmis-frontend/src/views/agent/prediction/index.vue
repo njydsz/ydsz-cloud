@@ -235,11 +235,11 @@ onMounted(() => {
       <el-col :xs="24" :md="16">
         <el-card shadow="never">
           <vxe-table
+            v-permission="[PC.AGENT_PREDICTION_VIEW]"
             :data="list"
             :loading="loading"
             stripe
             height="auto"
-            v-permission="[PC.AGENT_PREDICTION_VIEW]"
           >
             <vxe-column type="seq" width="56" title="#" />
             <vxe-column field="taskCode" title="任务编码" width="200" show-overflow />

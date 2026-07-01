@@ -151,29 +151,21 @@ const { setOption: setGroupOption } = useECharts(groupRef)
 const updateGroupChart = () => {
   const groups = executive.value?.projectGroups || []
   if (groups.length === 0) return
+  const groupNames = groups.map((g: ProjectGroupKpiDTO) => g.groupName || g.groupCode || '-')
+  const contractData = groups.map((g: ProjectGroupKpiDTO) => Number(g.totalContractAmount || 0))
+  const profitData = groups.map((g: ProjectGroupKpiDTO) => Number(g.grossProfit || 0))
   setGroupOption(
     {
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
       legend: { data: ['合同总额', '毛利'] },
       grid: { left: 60, right: 30, top: 40, bottom: 60 },
-      xAxis: {
-        type: 'category',
-        data: groups.map((g: ProjectGroupKpiDTO) => g.groupName || g.groupCode || '-'),
-        axisLabel: { rotate: 30 },
-      },
+      xAxis: { type: 'category', data: groupNames, axisLabel: { rotate: 30 } },
       yAxis: { type: 'value', name: '金额（元）' },
       series: [
-        { name: '合同总额', type: 'bar', data: groups.map((g: ProjectGroupKpiDTO) => Number(g.totalContractAmount || 0)), itemStyle: { color: '#409EFF' } },
-        {
-          name: '毛利',
-          type: 'bar',
-          data: groups.map((g: ProjectGroupKpiDTO) => Number(g.grossProfit || 0)),
-          itemStyle: {
-            color: (params: { value: number }) => (params.value >= 0 ? '#67C23A' : '#F56C6C'),
-          },
-        },
+        { name: '合同总额', type: 'bar', data: contractData, itemStyle: { color: '#409EFF' } },
+        { name: '毛利', type: 'bar', data: profitData, itemStyle: { color: '#67C23A' } },
       ],
-    },
+    } as any,
     true,
   )
 }
@@ -210,7 +202,7 @@ function startPolling() {
 }
 
 function stopPolling() {
-  if (pollTimer != null) {
+  if (pollTimer !== null) {
     window.clearInterval(pollTimer)
     pollTimer = null
   }
@@ -229,14 +221,14 @@ function severityTag(severity?: string): 'danger' | 'warning' | 'info' {
 }
 
 function fmtYuan(v?: number | null): string {
-  if (v == null) return '0'
+  if (v === null || v === undefined) return '0'
   if (Math.abs(v) >= 1e8) return (v / 1e8).toFixed(2) + ' 亿'
   if (Math.abs(v) >= 1e4) return (v / 1e4).toFixed(2) + ' 万'
   return v.toFixed(0)
 }
 
 function pct1(v?: number | null): string {
-  if (v == null) return '0%'
+  if (v === null || v === undefined) return '0%'
   return (v * 100).toFixed(1) + '%'
 }
 

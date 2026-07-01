@@ -214,23 +214,23 @@ function fmtHours(v: number | undefined) {
           <el-input v-model="query.period" placeholder="yyyy-MM" style="width: 140px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="refresh" :loading="loading">查询</el-button>
+          <el-button type="primary" :loading="loading" @click="refresh">查询</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
         <el-form-item v-if="hasPerm(PC.EXECUTION_UTILIZATION_RECOMPUTE)">
           <el-button
             type="warning"
             :loading="recomputeLoading"
-            @click="handleRecompute(false)"
             plain
+            @click="handleRecompute(false)"
           >
             增量重算快照
           </el-button>
           <el-button
             type="danger"
             :loading="recomputeLoading"
-            @click="handleRecompute(true)"
             plain
+            @click="handleRecompute(true)"
           >
             强制重算快照
           </el-button>
@@ -303,7 +303,7 @@ function fmtHours(v: number | undefined) {
         <span>人效排行榜 TOP 20</span>
         <span class="muted">（按 utilizationPct 倒序）</span>
       </template>
-      <el-table :data="rank" border size="small" v-loading="loading">
+      <el-table v-loading="loading" :data="rank" border size="small">
         <el-table-column type="index" label="#" width="50" />
         <el-table-column prop="employeeName" label="员工" min-width="120" />
         <el-table-column prop="levelCode" label="职级" width="80" />
@@ -337,7 +337,7 @@ function fmtHours(v: number | undefined) {
         <span style="color: #f56c6c">预警员工（WARN/CRITICAL）</span>
         <span class="muted">（按 utilizationPct 升序）</span>
       </template>
-      <el-table :data="alerts" border size="small" v-loading="loading">
+      <el-table v-loading="loading" :data="alerts" border size="small">
         <el-table-column type="index" label="#" width="50" />
         <el-table-column prop="employeeName" label="员工" min-width="120" />
         <el-table-column prop="levelCode" label="职级" width="80" />

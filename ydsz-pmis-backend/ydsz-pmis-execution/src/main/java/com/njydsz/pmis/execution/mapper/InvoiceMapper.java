@@ -57,4 +57,14 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
      * 返回字段：year / totalAmount / invoiceCount / projectCount
      */
     List<Map<String, Object>> sumByYear();
+
+    /**
+     * 批次18 增量：按月汇总开票金额（最近 N 个月）
+     *
+     * <p>从 invoice_date（按 YYYY-MM）聚合 ISSUED + NORMAL 状态的开票金额；
+     * 返回字段：month / total_amount / invoice_count
+     *
+     * @param limit 限定返回最近的 N 个月（默认 12，上限 36）
+     */
+    List<Map<String, Object>> sumByRecentMonth(@Param("limit") Integer limit);
 }
