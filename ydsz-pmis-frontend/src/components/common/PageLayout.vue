@@ -1,3 +1,8 @@
+<!--
+  @file 通用列表页布局
+  @description 提供「搜索表单 + 工具栏 + 表格 + 分页」四段式布局，页面只需通过 slot 注入内容即可
+  @module components/common/PageLayout
+-->
 <script setup lang="ts">
 /**
  * 通用列表页布局

@@ -1,3 +1,8 @@
+<!--
+  @file 面包屑导航
+  @description 基于当前路由的 route.matched 渲染面包屑，固定首页 → 当前路由
+  @module layout/default/components/Breadcrumb
+-->
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
 

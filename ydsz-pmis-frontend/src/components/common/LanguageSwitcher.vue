@@ -1,6 +1,8 @@
 <!--
-  LanguageSwitcher 组件 (批次 20 P2-2)
-  顶部下拉式语言切换
+  @file 顶部语言切换组件
+  @description 下拉式语言切换，支持 zh-CN / en-US；基于 useI18n composable 实现
+  @module components/common/LanguageSwitcher
+  (批次 20 P2-2)
 -->
 <script setup lang="ts">
 import { useI18n, supportedLocales } from '@/composables/useI18n'
@@ -9,6 +11,7 @@ import { ElTooltip } from 'element-plus'
 
 const { locale, setLocale, t } = useI18n()
 
+/** 切换语言回调 */
 function handleSelect(next: Locale) {
   if (next === locale.value) return
   setLocale(next)

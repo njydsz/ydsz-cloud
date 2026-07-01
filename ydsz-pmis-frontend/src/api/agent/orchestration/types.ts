@@ -1,44 +1,65 @@
 /**
- * 多智能体编排相关类型定义
+ * @file 多智能体编排相关类型定义
+ * @description 定义编排模式、Agent 类型元信息、单 Agent 输出、协调请求/响应等类型，
+ *              供 orchestration/index.ts 及业务侧编排页面使用。
+ * @module api/agent/orchestration
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 
-/** 4 种编排模式 */
+/** 4 种编排模式：SEQUENTIAL(顺序) / PARALLEL(并行) / VOTING(投票) / CASCADE(级联) */
 export type OrchestrationModeCode = 'SEQUENTIAL' | 'PARALLEL' | 'VOTING' | 'CASCADE'
 
-/** 编排模式枚举 */
+/** 编排模式枚举（含 code 与中文描述，用于模式切换下拉） */
 export interface OrchestrationMode {
+  /** 模式编码 */
   code: OrchestrationModeCode
+  /** 模式中文描述 */
   desc: string
 }
 
-/** Agent 类型元信息 */
+/** Agent 类型元信息（用于编排页面下拉） */
 export interface AgentTypeInfo {
+  /** Agent 类型编码 */
   code: string
+  /** Agent 类型中文描述 */
   desc: string
+  /** 默认告警等级 */
   defaultAlertLevel?: string
 }
 
-/** 单个 Agent 的协调结果（trace 单条） */
+/** 单个 Agent 的协调结果（trace 单条，用于决策追踪） */
 export interface AgentTraceEntry {
+  /** Agent 类型 */
   agentType: string
+  /** 该步使用的编排模式 */
   mode?: OrchestrationModeCode | null
+  /** 评分 */
   score?: number | null
+  /** 置信度 */
   confidence?: number | null
+  /** 备注 */
   note?: string | null
+  /** 时间戳（ms） */
   ts: number
 }
 
 /** 单个 Agent 的输出 */
 export interface AgentResultPayload {
+  /** Agent 类型 */
   agentType?: string
+  /** 告警等级 */
   alertLevel?: string
+  /** 评分 */
   score?: number
+  /** 置信度 */
   confidence?: number
+  /** 处置建议 */
   suggestion?: string
+  /** 命中的规则列表 */
   matchedRules?: string[]
+  /** 原始附加数据 */
   payload?: Record<string, unknown>
 }
 

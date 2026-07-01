@@ -1,79 +1,156 @@
 /**
- * 审计中心 API
+ * @file 审计中心 API
+ * @description 提供操作日志、登录审计、敏感操作、数据导出审计的分页查询与日志清理能力，
+ *              对应后端 AuditController（/audit/**）。
+ * @module api/audit
  */
 import { request } from '@/utils/request'
 import type { PageResult } from '@/utils/request'
 
+/**
+ * 操作日志视图对象
+ */
 export interface OperationLogVO {
+  /** 日志 ID */
   id?: number
+  /** 业务模块 */
   module?: string
+  /** 操作动作 */
   action?: string
+  /** 业务类型 */
   bizType?: string
+  /** 业务 ID */
   bizId?: string
+  /** 操作用户 ID */
   userId?: number
+  /** 操作用户名 */
   username?: string
+  /** 请求 URL */
   requestUrl?: string
+  /** HTTP 方法 */
   httpMethod?: string
+  /** 后端方法签名 */
   methodSignature?: string
+  /** 客户端 IP */
   clientIp?: string
+  /** User-Agent */
   userAgent?: string
+  /** 请求参数 JSON */
   paramsJson?: string
+  /** 响应结果 JSON */
   responseJson?: string
   /** SUCCESS / FAILED */
   status?: string
+  /** 失败时的错误信息 */
   errorMessage?: string
+  /** 耗时（毫秒） */
   costMs?: number
+  /** 链路追踪 ID */
   traceId?: string
+  /** 创建时间（ISO 8601） */
   createdAt?: string
 }
 
+/**
+ * 登录审计视图对象
+ */
 export interface LoginAuditVO {
+  /** 日志 ID */
   id?: number
+  /** 用户名 */
   username?: string
+  /** 用户 ID */
   userId?: number
+  /** 登录时间（ISO 8601） */
   loginAt?: string
+  /** 登录 IP */
   loginIp?: string
+  /** User-Agent */
   userAgent?: string
   /** SUCCESS / FAIL_PASSWORD / FAIL_LOCKED ... */
   status?: string
+  /** 失败原因 */
   failReason?: string
+  /** 是否使用 2FA */
   mfaUsed?: boolean
+  /** 2FA 是否校验通过 */
   mfaSuccess?: boolean
+  /** 链路追踪 ID */
   traceId?: string
 }
 
+/**
+ * 数据导出审计视图对象
+ */
 export interface DataExportAuditVO {
+  /** 日志 ID */
   id?: number
+  /** 操作用户 ID */
   userId?: number
+  /** 操作用户名 */
   username?: string
+  /** 导出模块 */
   exportModule?: string
+  /** 导出动作 */
   exportAction?: string
+  /** 业务类型 */
   bizType?: string
+  /** 导出行数 */
   rowCount?: number
+  /** 文件名 */
   fileName?: string
+  /** 文件大小（字节） */
   fileSize?: number
+  /** 导出格式（XLSX / CSV 等） */
   exportFormat?: string
+  /** 查询条件摘要 */
   querySummary?: string
+  /** 客户端 IP */
   clientIp?: string
+  /** 导出时间（ISO 8601） */
   exportedAt?: string
+  /** 链路追踪 ID */
   traceId?: string
 }
 
+/**
+ * 敏感操作审计视图对象
+ */
 export interface SensitiveOperationVO {
+  /** 日志 ID */
   id?: number
+  /** 操作用户 ID */
   userId?: number
+  /** 操作用户名 */
   username?: string
+  /** 操作类型 */
   opType?: string
+  /** 操作目标 */
   opTarget?: string
+  /** 目标 ID */
   targetId?: string
+  /** 操作结果 */
   opResult?: string
+  /** 是否使用了二次认证 */
   reAuthUsed?: boolean
+  /** 客户端 IP */
   clientIp?: string
+  /** 操作时间（ISO 8601） */
   operatedAt?: string
+  /** 链路追踪 ID */
   traceId?: string
 }
 
-/** 操作日志分页 */
+/**
+ * 操作日志分页
+ *
+ * 按用户、业务类型、状态、模块筛选操作日志。
+ *
+ * @param page 页码
+ * @param size 每页大小
+ * @param params 可选筛选条件（userId / bizType / status / module）
+ * @returns 操作日志分页结果
+ */
 export const pageOperationLog = (
   page: number,
   size: number,
@@ -85,7 +162,16 @@ export const pageOperationLog = (
     params: { page, size, ...(params || {}) },
   })
 
-/** 登录审计分页 */
+/**
+ * 登录审计分页
+ *
+ * 按用户名、状态、IP 筛选登录审计记录。
+ *
+ * @param page 页码
+ * @param size 每页大小
+ * @param params 可选筛选条件（username / status / loginIp）
+ * @returns 登录审计分页结果
+ */
 export const pageLoginAudit = (
   page: number,
   size: number,
@@ -97,7 +183,16 @@ export const pageLoginAudit = (
     params: { page, size, ...(params || {}) },
   })
 
-/** 敏感操作分页 */
+/**
+ * 敏感操作分页
+ *
+ * 按用户、操作类型筛选敏感操作审计记录。
+ *
+ * @param page 页码
+ * @param size 每页大小
+ * @param params 可选筛选条件（userId / opType）
+ * @returns 敏感操作分页结果
+ */
 export const pageSensitiveOp = (
   page: number,
   size: number,
@@ -109,7 +204,16 @@ export const pageSensitiveOp = (
     params: { page, size, ...(params || {}) },
   })
 
-/** 数据导出分页 */
+/**
+ * 数据导出分页
+ *
+ * 按用户、导出模块、导出动作筛选数据导出审计记录。
+ *
+ * @param page 页码
+ * @param size 每页大小
+ * @param params 可选筛选条件（userId / exportModule / exportAction）
+ * @returns 数据导出分页结果
+ */
 export const pageDataExport = (
   page: number,
   size: number,
@@ -121,7 +225,14 @@ export const pageDataExport = (
     params: { page, size, ...(params || {}) },
   })
 
-/** 清理 N 天前日志 */
+/**
+ * 清理 N 天前日志
+ *
+ * 物理删除指定天数之前的操作日志，释放存储空间。
+ *
+ * @param days 保留天数，删除此天数之前的日志
+ * @returns 实际删除的记录数
+ */
 export const cleanOperationLog = (days: number) =>
   request<number>({
     url: '/audit/operation/clean',

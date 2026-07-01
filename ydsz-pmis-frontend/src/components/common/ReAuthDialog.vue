@@ -1,9 +1,14 @@
+<!--
+  @file 敏感操作二次认证弹窗
+  @description 支持 PASSWORD / TOTP / BACKUP_CODE 三种凭据切换；可配合 useReAuth 或单独受控使用
+  @module components/common/ReAuthDialog
+-->
 <script setup lang="ts">
 /**
  * 敏感操作二次认证弹窗
  *
- * <p>支持三种凭据切换：当前密码 / TOTP 动态码 / 一次性备份码。
- * <p>由 useReAuth composable 控制状态；也可单独使用，通过 v-model:visible 绑定。
+ * 支持三种凭据切换：当前密码 / TOTP 动态码 / 一次性备份码。
+ * 由 useReAuth composable 控制状态；也可单独使用，通过 v-model:visible 绑定。
  *
  * 使用方式 1（推荐）：配合 useReAuth
  * ```ts

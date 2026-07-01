@@ -1,7 +1,10 @@
 /**
- * AI 智能体预测结果 API
- *
- * 与后端 com.njydsz.pmis.agent.controller.AgentController 对齐。
+ * @file AI 智能体预测结果 API 接口封装
+ * @description 提供 Agent 同步/异步执行、内存执行、详情/分页/最近记录查询、
+ *              按类型聚合与告警计数等接口；
+ *              对应后端 com.njydsz.pmis.agent.controller.AgentController，
+ *              结果持久化至 AgentPredictionDO（含 provider_trace_id 追踪链路）。
+ * @module api/agent/prediction
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -10,7 +13,11 @@ import { request } from '@/utils/request'
 import type { PageResult } from '@/utils/request'
 import type { AgentPrediction, AgentRunRequest } from './types'
 
-/** 同步执行 Agent */
+/**
+ * 同步执行 Agent
+ * @param payload Agent 执行请求（含 agentType、业务上下文等）
+ * @returns Agent 预测结果（含 score、alertLevel、suggestion 等）
+ */
 export const runAgent = (payload: AgentRunRequest) =>
   request<AgentPrediction>({
     url: '/agent/run',
@@ -18,7 +25,12 @@ export const runAgent = (payload: AgentRunRequest) =>
     data: payload,
   })
 
-/** 异步执行 Agent */
+/**
+ * 异步执行 Agent
+ * @description 提交后立即返回，执行结果异步落库
+ * @param payload Agent 执行请求
+ * @returns 无返回值（void）
+ */
 export const runAgentAsync = (payload: AgentRunRequest) =>
   request<void>({
     url: '/agent/run-async',
@@ -26,7 +38,13 @@ export const runAgentAsync = (payload: AgentRunRequest) =>
     data: payload,
   })
 
-/** 内存执行（不落库） */
+/**
+ * 内存执行（不落库）
+ * @description 用于即时探查，结果不持久化到 AgentPredictionDO
+ * @param agentType Agent 类型编码
+ * @param params 输入参数（由具体 Agent 解释）
+ * @returns 执行结果（结构由 Agent 决定）
+ */
 export const inMemory = (agentType: string, params: Record<string, unknown>) =>
   request<unknown>({
     url: '/agent/in-memory',
@@ -35,14 +53,24 @@ export const inMemory = (agentType: string, params: Record<string, unknown>) =>
     data: { params },
   })
 
-/** 详情 */
+/**
+ * 查询 Agent 预测结果详情
+ * @param id 预测记录主键 ID
+ * @returns Agent 预测结果
+ */
 export const getById = (id: number) =>
   request<AgentPrediction>({
     url: `/agent/${id}`,
     method: 'GET',
   })
 
-/** 分页 */
+/**
+ * 分页查询 Agent 预测记录
+ * @param pageNo 页码（从 1 开始）
+ * @param pageSize 每页条数
+ * @param filter 过滤条件（agentType / alertLevel / status / bizType / bizId）
+ * @returns 分页结果
+ */
 export const page = (
   pageNo: number,
   pageSize: number,
@@ -54,7 +82,11 @@ export const page = (
     params: { page: pageNo, size: pageSize, ...filter },
   })
 
-/** 最近记录 */
+/**
+ * 查询最近 Agent 预测记录
+ * @param params 查询参数（agentType / alertLevel / limit）
+ * @returns 最近预测记录列表
+ */
 export const recent = (params: { agentType?: string; alertLevel?: string; limit?: number } = {}) =>
   request<AgentPrediction[]>({
     url: '/agent/recent',

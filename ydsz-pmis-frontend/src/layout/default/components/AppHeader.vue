@@ -1,3 +1,8 @@
+<!--
+  @file 顶部导航栏
+  @description 包含侧边栏折叠按钮、面包屑、语言切换、主题切换、全屏、用户下拉菜单
+  @module layout/default/components/AppHeader
+-->
 <script setup lang="ts">
 import { useAppStore } from '@/store/modules/app'
 import { useUserStore } from '@/store/modules/user'
@@ -9,6 +14,7 @@ const appStore = useAppStore()
 const userStore = useUserStore()
 const router = useRouter()
 
+/** 退出登录：二次确认后调用 userStore.logout 并跳登录页 */
 async function handleLogout() {
   try {
     await ElMessageBox.confirm('确认退出登录吗？', '提示', {
@@ -23,6 +29,7 @@ async function handleLogout() {
   }
 }
 
+/** 切换 light/dark 主题 */
 function handleToggleTheme() {
   appStore.toggleTheme()
 }

@@ -1,8 +1,11 @@
 /**
- * 特性开关类型定义 (批次 20 P2-3)
+ * @file 特性开关类型定义 (批次 20 P2-3)
+ * @description 定义特性开关分类、快照结构等类型，
+ *              与后端 ydsz-pmis-config 服务返回结构对齐。
+ * @module api/feature-flag/types
  */
 
-/** flag 分类 */
+/** flag 分类：基础设施 / 业务 / UI / 安全 */
 export type FeatureFlagCategory = 'INFRASTRUCTURE' | 'BUSINESS' | 'UI' | 'SAFETY'
 
 /** 单个 flag 的快照 */

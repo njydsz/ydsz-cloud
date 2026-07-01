@@ -1,3 +1,8 @@
+<!--
+  @file 通用表单弹窗
+  @description 集中处理 el-dialog 的打开/关闭/提交/loading 状态，避免每个页面重复实现弹窗样板代码
+  @module components/common/FormDialog
+-->
 <script setup lang="ts">
 /**
  * 通用表单弹窗

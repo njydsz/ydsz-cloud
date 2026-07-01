@@ -1,23 +1,24 @@
+<!--
+  @file 通用空状态组件
+  @description 列表/表格/搜索结果为空时的展示组件，支持 4 种预设场景与自定义内容
+  @module components/common/EmptyState
+-->
 <script setup lang="ts">
 /**
  * 通用空状态组件
  *
- * <p>用于列表/表格/搜索结果为空时展示, 支持:
- * <ul>
- *   <li>4 种预设场景 (list / search / network / noPermission) 与自定义 description</li>
- *   <li>自定义图标 (element-plus icon 或 URL 图片)</li>
- *   <li>可选的 CTA 按钮 (如 "新建"/"清除筛选")</li>
- *   <li>嵌入额外说明插槽 (如帮助链接/操作指引)</li>
- * </ul>
+ * 用于列表/表格/搜索结果为空时展示, 支持:
+ *  - 4 种预设场景 (list / search / network / noPermission) 与自定义 description
+ *  - 自定义图标 (element-plus icon 或 URL 图片)
+ *  - 可选的 CTA 按钮 (如 "新建"/"清除筛选")
+ *  - 嵌入额外说明插槽 (如帮助链接/操作指引)
  *
- * <p>使用示例:
- * <pre>
+ * 使用示例:
  *   <EmptyState preset="search" @action="resetQuery">
  *     <template #action>
  *       <el-button type="primary" @click="reset">清除筛选</el-button>
  *     </template>
  *   </EmptyState>
- * </pre>
  */
 import { computed } from 'vue'
 

@@ -1,3 +1,8 @@
+<!--
+  @file 通用状态标签
+  @description 通过 status 编码与映射表自动渲染带色彩的 el-tag，用于状态/审批/工作流节点等枚举展示
+  @module components/common/StatusTag
+-->
 <script setup lang="ts">
 /**
  * 通用状态标签

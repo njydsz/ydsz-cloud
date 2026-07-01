@@ -1,3 +1,8 @@
+<!--
+  @file 侧边栏菜单
+  @description 基于 permissionStore.sidebarRoutes 渲染 el-menu，支持折叠/展开与子菜单嵌套
+  @module layout/default/components/Sidebar
+-->
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
@@ -9,13 +14,23 @@ const route = useRoute()
 const appStore = useAppStore()
 const permissionStore = usePermissionStore()
 
+/** 菜单项数据结构 */
 interface MenuItem {
+  /** 路由路径 */
   path: string
+  /** 菜单标题 */
   title: string
+  /** 图标名（Element Plus 图标） */
   icon?: string
+  /** 子菜单 */
   children?: MenuItem[]
 }
 
+/**
+ * 将 RouteRecordRaw 转换为菜单项
+ * @param routes - 路由记录
+ * @returns 过滤 hidden 后的菜单项列表
+ */
 function convertRoutes(routes: RouteRecordRaw[]): MenuItem[] {
   return routes
     .filter((r) => !r.meta?.hidden)
@@ -27,8 +42,10 @@ function convertRoutes(routes: RouteRecordRaw[]): MenuItem[] {
     }))
 }
 
+/** 当前可见菜单（响应式，路由变化时自动更新） */
 const menus = computed(() => convertRoutes(permissionStore.sidebarRoutes as RouteRecordRaw[]))
 
+/** 当前激活菜单（支持 meta.activeMenu 自定义高亮） */
 const activeMenu = computed<string>(() => {
   const meta = route.meta as { activeMenu?: string } | undefined
   return meta?.activeMenu || route.path
