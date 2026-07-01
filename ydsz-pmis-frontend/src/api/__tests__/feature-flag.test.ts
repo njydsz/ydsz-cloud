@@ -5,6 +5,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// Mock @/utils/request: 拦截 HTTP 请求, 通过 requestMock 断言 method / url / params
 vi.mock('@/utils/request', () => ({
   request: vi.fn(),
 }))

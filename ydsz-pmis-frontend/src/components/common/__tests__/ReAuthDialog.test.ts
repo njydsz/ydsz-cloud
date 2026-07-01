@@ -1,3 +1,9 @@
+/**
+ * @file ReAuthDialog 敏感操作二次认证弹窗组件 单元测试
+ * @description 覆盖 props 透传、显隐渲染、errorMessage 告警、2FA 方式单选、
+ *   密码 / OTP / 备份码凭据输入、update:visible 与 confirm 事件派发及 loading 防抖等场景.
+ * @module components/common/__tests__/ReAuthDialog
+ */
 import { describe, it, expect, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'

@@ -8,6 +8,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// Mock @/utils/request: 拦截所有 HTTP 请求, 通过 requestMock 断言 url / method / params
 vi.mock('@/utils/request', () => ({
   request: vi.fn(),
 }))
@@ -31,14 +32,6 @@ import {
 const { request } = await import('@/utils/request')
 const requestMock = request as unknown as ReturnType<typeof vi.fn>
 
-/**
- * 经营驾驶舱 API 调用层测试
- *
- * 验证驾驶舱、高管看板、预警、趋势相关 REST 调用都正确触发。
- *
- * @author ydsz-pmis-team
- * @since 1.0.0 (批次18)
- */
 describe('cockpit API 调用层', () => {
   beforeEach(() => {
     vi.clearAllMocks()

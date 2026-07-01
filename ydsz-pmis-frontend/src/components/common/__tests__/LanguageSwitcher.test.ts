@@ -1,5 +1,8 @@
 /**
- * LanguageSwitcher 组件测试 (批次 20 P2-2)
+ * @file LanguageSwitcher 语言切换组件 单元测试 (批次 20 P2-2)
+ * @description 验证当前 locale 缩写渲染、supportedLocales 下拉列表、
+ *   点击切换 setLocale、当前项禁用及切换后禁用态互换等行为.
+ * @module components/common/__tests__/LanguageSwitcher
  *
  * 验证:
  *   1. 渲染时显示当前 locale 缩写

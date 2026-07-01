@@ -1,3 +1,8 @@
+/**
+ * @file StatusTag 通用状态标签组件 单元测试
+ * @description 覆盖 map 匹配渲染、value 缺失回退 "-"、显式 label/type 优先级等场景.
+ * @module components/common/__tests__/StatusTag
+ */
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import StatusTag from '@/components/common/StatusTag.vue'

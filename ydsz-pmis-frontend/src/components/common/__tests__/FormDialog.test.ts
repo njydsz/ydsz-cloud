@@ -1,3 +1,9 @@
+/**
+ * @file FormDialog 通用表单弹窗组件 单元测试
+ * @description 覆盖 FormDialog 的 modelValue 双向绑定、title props 透传、
+ *   以及 exposed 的 validate / clearValidate / resetFields 在 formRef 缺失时的兜底行为.
+ * @module components/common/__tests__/FormDialog
+ */
 import { describe, it, expect } from 'vitest'
 import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'

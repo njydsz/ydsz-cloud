@@ -1,4 +1,9 @@
-// 样式重置
+/**
+ * @file 样式重置
+ * @description 统一浏览器默认样式：box-sizing/margin/padding 归零、链接/列表/图片/按钮/输入框重置、
+ *              自定义 WebKit 滚动条样式，确保跨浏览器表现一致。
+ * @module styles/reset
+ */
 * {
   box-sizing: border-box;
   margin: 0;

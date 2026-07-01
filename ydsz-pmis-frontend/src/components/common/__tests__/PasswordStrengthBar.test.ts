@@ -1,3 +1,9 @@
+/**
+ * @file PasswordStrengthBar 密码强度条组件 单元测试
+ * @description 覆盖 v-model 双向绑定、5 段强度条点亮逻辑、规则明细展示、
+ *   compact 模式、change 事件派发及纯展示模式等场景.
+ * @module components/common/__tests__/PasswordStrengthBar
+ */
 import { describe, it, expect, vi } from 'vitest'
 import { nextTick } from 'vue'
 import { mount } from '@vue/test-utils'

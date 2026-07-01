@@ -1,5 +1,10 @@
-// PMIS 响应式 mixin（批次 19 P3-2 落地）
-// 用法：@include respond-to(tablet) { ... }
+/**
+ * @file 响应式 mixin 工具集
+ * @description 提供断点判断 mixin（respond-to/respond-above）与设备类型 mixin（mobile/tablet/desktop），
+ *              统一管理响应式断点，避免在业务样式中硬编码 @media 查询。
+ *              用法示例：@include respond-to(tablet) { ... } / @include mobile { ... }
+ * @module styles/responsive
+ */
 
 $breakpoints: (
   xs: 480px,

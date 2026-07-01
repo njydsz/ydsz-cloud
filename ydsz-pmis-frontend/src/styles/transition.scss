@@ -1,4 +1,11 @@
-// 全局过渡
+/**
+ * @file 全局过渡动画
+ * @description 定义 Vue 内置 transition 组件使用的 fade/slide-fade/route 过渡动画，
+ *              以及 NProgress 顶部进度条的主题色覆盖。
+ * @module styles/transition
+ */
+
+// ===== 淡入淡出 =====
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.25s ease;

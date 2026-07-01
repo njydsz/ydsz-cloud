@@ -1,4 +1,9 @@
-// 全局样式入口
+/**
+ * @file 全局样式入口
+ * @description 按顺序聚合 variables → reset → transition → element-overrides，
+ *              由 main.ts 在应用启动时一次性引入，确保设计令牌先于业务样式加载。
+ * @module styles/index
+ */
 @import './variables.scss';
 @import './reset.scss';
 @import './transition.scss';

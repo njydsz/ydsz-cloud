@@ -1,3 +1,9 @@
+/**
+ * @file 路由表定义
+ * @description 定义前端静态路由（constantRoutes）与动态业务路由（asyncRoutes），
+ *              静态路由包含登录/404/根布局默认页，动态路由按业务模块分组并通过权限码控制访问。
+ * @module router/routes
+ */
 import type { RouteRecordRaw } from 'vue-router'
 import { PC } from '@/constants/permissionCodes'
 

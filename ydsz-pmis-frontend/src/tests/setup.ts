@@ -24,6 +24,11 @@ import {
   ElMessageBox,
 } from 'element-plus'
 
+/**
+ * 全局初始化: 以 inline factory mock element-plus,
+ * 保留真实组件导出, 仅替换 ElMessage / ElMessageBox 为 vi.fn,
+ * 避免测试运行时弹出真实 UI 干扰断言.
+ */
 beforeAll(() => {
   // 在 importOriginal 中保留 ElMessage/ElMessageBox 的导出, 业务代码按 named import 引用
   vi.mock('element-plus', async (importOriginal) => {
@@ -45,6 +50,9 @@ beforeAll(() => {
   })
 })
 
+/**
+ * 每个用例执行后清理所有 mock 调用记录, 防止用例间状态污染.
+ */
 afterEach(() => {
   vi.clearAllMocks()
 })

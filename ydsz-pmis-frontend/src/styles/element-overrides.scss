@@ -1,4 +1,9 @@
-// Element Plus 主题覆盖
+/**
+ * @file Element Plus 主题覆盖
+ * @description 通过 CSS 变量覆盖 Element Plus 默认主题色与圆角，并对表单 label、卡片标题、
+ *              表格表头、对话框等高频组件做细节样式调优，保持企业级管理后台视觉一致性。
+ * @module styles/element-overrides
+ */
 :root {
   --el-color-primary: #{$primary-color};
   --el-color-success: #{$success-color};

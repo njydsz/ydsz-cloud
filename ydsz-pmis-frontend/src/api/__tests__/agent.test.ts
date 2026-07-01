@@ -8,6 +8,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// Mock @/utils/request: 拦截所有 HTTP 请求, 通过 requestMock 断言 url / method / params / data
 vi.mock('@/utils/request', () => ({
   request: vi.fn(),
 }))
@@ -18,14 +19,6 @@ import * as predictionApi from '@/api/agent/prediction'
 const { request } = await import('@/utils/request')
 const requestMock = request as unknown as ReturnType<typeof vi.fn>
 
-/**
- * AI Agent API 调用层测试
- *
- * 验证编排 / 预测相关 REST 调用都正确触发且方法名/URL/Method 一一对应。
- *
- * @author ydsz-pmis-team
- * @since 1.0.0
- */
 describe('agent API 调用层 (orchestration)', () => {
   beforeEach(() => {
     vi.clearAllMocks()

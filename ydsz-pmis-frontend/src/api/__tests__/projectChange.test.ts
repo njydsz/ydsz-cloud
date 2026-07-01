@@ -1,13 +1,13 @@
 /**
- * 项目变更 API 调用层测试（批次 19 补全）
- *
- * 验证 8 个 REST 调用都正确触发且方法名/URL/Method 一一对应。
- *
+ * @file 项目变更 API 调用层测试（批次 19 补全）
+ * @description 验证 8 个 REST 调用都正确触发且方法名 / URL / Method 一一对应.
+ * @module api/__tests__/projectChange
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
+// Mock @/utils/request: 拦截 HTTP 请求, 通过 requestMock 断言 url / method / params / data
 vi.mock('@/utils/request', () => ({
   request: vi.fn(),
 }))

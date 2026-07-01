@@ -1,4 +1,11 @@
-// SCSS 变量（对标 Element Plus 默认主题）
+/**
+ * @file SCSS 全局变量定义
+ * @description 对标 Element Plus 默认主题，集中声明主题色、文字、边框、背景、布局尺寸、
+ *              字号、圆角、阴影、间距、响应式断点与 z-index 等设计令牌，供全局样式与业务页面复用。
+ * @module styles/variables
+ */
+
+// ===== 主题色 =====
 
 // 主题色
 $primary-color: #1890ff;

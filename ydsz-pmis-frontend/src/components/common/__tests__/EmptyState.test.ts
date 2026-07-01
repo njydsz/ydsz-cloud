@@ -1,3 +1,9 @@
+/**
+ * @file EmptyState 通用空状态组件 单元测试
+ * @description 覆盖 EmptyState 组件的 preset 预设文案、自定义 title/description、
+ *   CTA 按钮事件、imageUrl、extra 插槽、blockHeight 高度、iconSize 透传等场景.
+ * @module components/common/__tests__/EmptyState
+ */
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
 import EmptyState from '@/components/common/EmptyState.vue'
