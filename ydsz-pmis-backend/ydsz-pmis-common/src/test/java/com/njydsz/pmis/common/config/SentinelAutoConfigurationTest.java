@@ -39,7 +39,7 @@ class SentinelAutoConfigurationTest {
 
         MockHttpServletResponse response = new MockHttpServletResponse();
         handler.handle(null, response,
-                new com.alibaba.csp.sentinel.slots.block.degrade.DegradeException("test", "default", 1));
+                new com.alibaba.csp.sentinel.slots.block.degrade.DegradeException("default"));
 
         assertThat(response.getStatus()).isEqualTo(503);
         String body = response.getContentAsString();
