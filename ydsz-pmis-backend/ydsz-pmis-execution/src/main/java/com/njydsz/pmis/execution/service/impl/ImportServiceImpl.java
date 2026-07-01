@@ -18,7 +18,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -88,6 +87,10 @@ public class ImportServiceImpl implements ImportService {
         int total = rows == null ? 0 : rows.size();
         int success = 0;
         List<FailureRow> failures = new ArrayList<>();
+
+        if (rows == null) {
+            return new ImportResult(0, 0, 0, failures);
+        }
 
         for (int i = 0; i < rows.size(); i++) {
             RateCardImportDTO dto = rows.get(i);

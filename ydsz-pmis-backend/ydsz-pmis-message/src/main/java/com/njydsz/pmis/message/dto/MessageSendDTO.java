@@ -1,6 +1,7 @@
 package com.njydsz.pmis.message.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import lombok.Data;
 
 import java.io.Serial;
@@ -20,13 +21,13 @@ public class MessageSendDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "通道: SMS/EMAIL/PUSH", required = true)
+    @Schema(description = "通道: SMS/EMAIL/PUSH", requiredMode = RequiredMode.REQUIRED)
     private String channel;
 
     @Schema(description = "模板编码（使用模板时必填）")
     private String templateCode;
 
-    @Schema(description = "接收人", required = true)
+    @Schema(description = "接收人", requiredMode = RequiredMode.REQUIRED)
     private String receiver;
 
     @Schema(description = "模板参数")

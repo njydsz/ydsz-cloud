@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -23,11 +24,11 @@ public class BudgetItemDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    @Schema(description = "立项 ID", required = true)
+    @Schema(description = "立项 ID", requiredMode = RequiredMode.REQUIRED)
     private Long initiationId;
 
     @NotBlank
-    @Schema(description = "分类: LABOR/PURCHASE/EXPENSE/OUTSOURCE/OTHER", required = true)
+    @Schema(description = "分类: LABOR/PURCHASE/EXPENSE/OUTSOURCE/OTHER", requiredMode = RequiredMode.REQUIRED)
     private String category;
 
     @Schema(description = "子分类")

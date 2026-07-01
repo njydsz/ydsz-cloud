@@ -6,16 +6,16 @@
  */
 import type { MockHandler } from './types'
 
-import { authHandlers } from './handlers/auth'
-import { dashboardHandlers } from './handlers/dashboard'
-import { projectHandlers } from './handlers/project'
-import { executionHandlers } from './handlers/execution'
-import { financeHandlers } from './handlers/finance'
-import { reportHandlers } from './handlers/report'
-import { cockpitHandlers } from './handlers/cockpit'
-import { resourceHandlers } from './handlers/resource'
-import { userHandlers } from './handlers/user'
-import { systemHandlers } from './handlers/system'
+import { authHandlers } from './auth'
+import { dashboardHandlers } from './dashboard'
+import { projectHandlers } from './project'
+import { executionHandlers } from './execution'
+import { financeHandlers } from './finance'
+import { reportHandlers } from './report'
+import { cockpitHandlers } from './cockpit'
+import { resourceHandlers } from './resource'
+import { userHandlers } from './user'
+import { systemHandlers } from './system'
 
 export const mockHandlers: MockHandler[] = [
   ...authHandlers,

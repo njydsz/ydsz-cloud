@@ -3,6 +3,7 @@ import { useAppStore } from '@/store/modules/app'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
+import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
 
 const appStore = useAppStore()
 const userStore = useUserStore()
@@ -39,6 +40,7 @@ function handleToggleTheme() {
       <Breadcrumb />
     </div>
     <div class="header-right">
+      <LanguageSwitcher />
       <el-tooltip content="主题切换">
         <el-button text @click="handleToggleTheme">
           <el-icon :size="18">

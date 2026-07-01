@@ -1,7 +1,5 @@
 package com.njydsz.pmis.execution.service.impl;
 
-import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
-import com.njydsz.pmis.execution.mapper.ProfitSnapshotMapper;
 import com.njydsz.pmis.execution.service.AdvancedReportService;
 import com.njydsz.pmis.execution.service.ReportExportService;
 import com.njydsz.pmis.execution.service.ReportService;
@@ -32,18 +30,13 @@ class ReportExportServiceImplTest {
 
     private ReportService reportService;
     private AdvancedReportService advancedReportService;
-    private ProfitSnapshotMapper profitSnapshotMapper;
-    private EvmMeasureMapper evmMapper;
     private ReportExportServiceImpl service;
 
     @BeforeEach
     void setUp() {
         reportService = mock(ReportService.class);
         advancedReportService = mock(AdvancedReportService.class);
-        profitSnapshotMapper = mock(ProfitSnapshotMapper.class);
-        evmMapper = mock(EvmMeasureMapper.class);
-        service = new ReportExportServiceImpl(reportService, advancedReportService,
-                profitSnapshotMapper, evmMapper);
+        service = new ReportExportServiceImpl(reportService, advancedReportService);
     }
 
     // ----------------- columnsOf -----------------

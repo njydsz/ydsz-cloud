@@ -6,10 +6,12 @@ export interface MockContext {
   body: unknown
 }
 
+export type MockMethod = 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+
 export type MockHandlerFn = (ctx: MockContext) => Promise<unknown> | unknown
 
 export interface MockHandler {
-  method: 'GET' | 'POST'
+  method: MockMethod
   path: string
   handler: MockHandlerFn
   description?: string

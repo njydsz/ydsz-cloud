@@ -84,6 +84,12 @@ export const constantRoutes: RouteRecordRaw[] = [
         meta: { title: '参数配置', icon: 'Tools', keepAlive: true },
       },
       {
+        path: 'feature-flag',
+        name: 'SystemFeatureFlag',
+        component: () => import('@/views/system/feature-flag/index.vue'),
+        meta: { title: '特性开关', icon: 'Flag', keepAlive: true },
+      },
+      {
         path: 'session',
         name: 'SystemSession',
         component: () => import('@/views/system/session/index.vue'),

@@ -53,6 +53,12 @@ public final class PermissionCodes {
     public static final String SYS_CONFIG_DELETE = "sys:config:delete";
     public static final String SYS_CONFIG_REFRESH = "sys:config:refresh";
 
+    // ==================== 特性开关 (批次 20 P2-3) ====================
+
+    public static final String SYS_FEATURE_FLAG_VIEW = "sys:feature-flag:view";
+    public static final String SYS_FEATURE_FLAG_UPDATE = "sys:feature-flag:update";
+    public static final String SYS_FEATURE_FLAG_CHECK = "sys:feature-flag:check";
+
     // ==================== 考勤 ====================
 
     public static final String ATTENDANCE_RECORD_CREATE = "attendance:record:create";

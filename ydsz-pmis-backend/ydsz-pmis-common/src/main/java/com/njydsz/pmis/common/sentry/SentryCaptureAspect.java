@@ -1,0 +1,60 @@
+package com.njydsz.pmis.common.sentry;
+
+import lombok.extern.slf4j.Slf4j;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Sentry 上报切面
+ *
+ * 工作流:
+ *   1. 拦截 @SentryCapture 注解的方法
+ *   2. 捕获业务异常, 异步上报到 Sentry
+ *   3. 重新抛出原异常 (不能改变业务行为)
+ */
+@Slf4j
+@Aspect
+@Component
+@ConditionalOnProperty(prefix = "pmis.sentry", name = "enabled", havingValue = "true")
+public class SentryCaptureAspect {
+
+    @Around("@annotation(sentryCapture)")
+    public Object around(ProceedingJoinPoint pjp, SentryCapture sentryCapture) throws Throwable {
+        try {
+            return pjp.proceed();
+        } catch (Throwable t) {
+            try {
+                report(pjp, sentryCapture, t);
+            } catch (Exception e) {
+                log.warn("[sentry-aspect] 上报失败, 降级到 log", e);
+                log.error("[sentry-fallback] {} - {}: {}", sentryCapture.module(), sentryCapture.bizType(), t.getMessage(), t);
+            }
+            throw t;
+        }
+    }
+
+    private void report(ProceedingJoinPoint pjp, SentryCapture sentryCapture, Throwable t) {
+        // 通过反射调用 Sentry SDK (避免硬依赖)
+        try {
+            Class<?> sentryClz = Class.forName("io.sentry.Sentry");
+            java.lang.reflect.Method captureExceptionMethod = sentryClz.getMethod("captureException", Throwable.class, java.util.Map.class);
+            Map<String, Object> hint = new HashMap<>();
+            hint.put("module", sentryCapture.module());
+            hint.put("bizType", sentryCapture.bizType());
+            hint.put("level", sentryCapture.level());
+            hint.put("method", pjp.getSignature().toShortString());
+            captureExceptionMethod.invoke(null, t, hint);
+        } catch (ClassNotFoundException e) {
+            // Sentry SDK 未引入, 走 log
+            log.error("[sentry-not-installed] {}/{}: {}", sentryCapture.module(), sentryCapture.bizType(), t.getMessage(), t);
+        } catch (Exception e) {
+            log.error("[sentry-aspect-error]", e);
+        }
+    }
+}

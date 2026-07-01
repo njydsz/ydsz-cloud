@@ -74,7 +74,7 @@ class IdempotentAspectTest {
 
     @Test
     @DisplayName("keyFromArg SpEL 解析为参数值")
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings("unchecked")
     void spelExtract() throws Throwable {
         when(redis.execute(any(RedisScript.class), anyList(), any(), any())).thenReturn(1L);
         when(pjp.proceed()).thenReturn("OK");

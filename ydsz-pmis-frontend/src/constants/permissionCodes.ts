@@ -42,6 +42,11 @@ export const PC = {
   SYS_CONFIG_DELETE: 'sys:config:delete',
   SYS_CONFIG_REFRESH: 'sys:config:refresh',
 
+  // 特性开关
+  SYS_FEATURE_FLAG_VIEW: 'sys:feature-flag:view',
+  SYS_FEATURE_FLAG_UPDATE: 'sys:feature-flag:update',
+  SYS_FEATURE_FLAG_CHECK: 'sys:feature-flag:check',
+
   // 考勤
   ATTENDANCE_RECORD_CREATE: 'attendance:record:create',
   ATTENDANCE_RECORD_LIST: 'attendance:record:list',

@@ -222,14 +222,13 @@ public class PaymentServiceImpl implements PaymentService {
         // 1) 历史按月回款均值
         List<Map<String, Object>> history = paymentMapper.aggregateByMonth(initiationId);
         BigDecimal avg = BigDecimal.ZERO;
-        int histCount = history == null ? 0 : history.size();
-        if (histCount > 0) {
+        if (history != null && !history.isEmpty()) {
             BigDecimal total = BigDecimal.ZERO;
             for (Map<String, Object> h : history) {
                 Object amt = h.get("amount");
                 if (amt != null) total = total.add(new BigDecimal(amt.toString()));
             }
-            avg = total.divide(new BigDecimal(histCount), 2, RoundingMode.HALF_UP);
+            avg = total.divide(new BigDecimal(history.size()), 2, RoundingMode.HALF_UP);
         }
         // 2) 应收余额
         List<InvoiceDO> invoices = invoiceMapper.selectByInitiation(initiationId);
@@ -248,7 +247,7 @@ public class PaymentServiceImpl implements PaymentService {
         // 3) 简单线性预测：未来 N 个月每月 = min(均值, 应收余额剩余/N)
         List<Map<String, Object>> result = new ArrayList<>();
         LocalDate base = LocalDate.now().withDayOfMonth(1);
-        BigDecimal perMonth = histCount > 0
+        BigDecimal perMonth = history != null && !history.isEmpty()
                 ? avg
                 : receivable.divide(new BigDecimal(months), 2, RoundingMode.HALF_UP);
         for (int i = 1; i <= months; i++) {

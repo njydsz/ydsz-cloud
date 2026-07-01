@@ -43,8 +43,11 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class PmisFeignLogger extends Logger {
 
-    @Autowired(required = false)
-    private MeterRegistry meterRegistry;
+    private final MeterRegistry meterRegistry;
+
+    public PmisFeignLogger(@Autowired(required = false) MeterRegistry meterRegistry) {
+        this.meterRegistry = meterRegistry;
+    }
 
     @Bean
     public Logger.Level pmisFeignLogLevel() {

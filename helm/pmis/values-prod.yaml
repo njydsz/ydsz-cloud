@@ -1,0 +1,51 @@
+# PMIS 运营管理系统 - 阿里云 ACK 部署配置
+# 适用于生产环境
+
+global:
+  imageRegistry: registry.cn-hangzhou.aliyuncs.com/ydsz
+  imageTag: v1.0.0
+  imagePullPolicy: Always
+  storageClass: alicloud-disk-ssd
+
+imageCredentials:
+  enabled: true
+
+spring:
+  profiles: prod
+  nacos:
+    serverAddr: nacos.pmis-prod.svc.cluster.local:8848
+    namespace: pmis-prod
+
+# 生产环境扩容
+microservices:
+  gateway:     { enabled: true, port: 9000, replicas: 3, jvmOpts: "-Xms1g -Xmx2g -XX:+UseG1GC" }
+  auth:        { enabled: true, port: 9001, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  user:        { enabled: true, port: 9002, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  project:     { enabled: true, port: 9003, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  execution:   { enabled: true, port: 9004, replicas: 5, jvmOpts: "-Xms1g -Xmx2g -XX:+UseG1GC" }
+  agent:       { enabled: true, port: 9005, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  audit:       { enabled: true, port: 9006, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  message:     { enabled: true, port: 9007, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  notification:{ enabled: true, port: 9008, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  workflow:    { enabled: true, port: 9009, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  config:      { enabled: true, port: 9010, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
+  scheduler:   { enabled: true, port: 9011, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
+  file:        { enabled: true, port: 9012, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+
+frontend:
+  enabled: true
+  replicas: 3
+  image: ydsz-pmis-frontend
+  ingress:
+    enabled: true
+    host: pmis.ydsz-pmis.cn
+    tls: true
+
+# 生产级资源限制
+resources:
+  requests:
+    cpu: 500m
+    memory: 1Gi
+  limits:
+    cpu: 2000m
+    memory: 2Gi

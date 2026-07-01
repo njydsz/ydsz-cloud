@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 /**
  * 高级报表 Service 实现
  */
+@SuppressWarnings("null")
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -1075,7 +1076,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         return o == null ? null : o.toString();
     }
 
-    private <T, R> List<R> safeAll(T mapper, java.util.function.Function<T, List<R>> fn) {
+    private <T, U> List<U> safeAll(T mapper, java.util.function.Function<T, List<U>> fn) {
         try {
             return fn.apply(mapper);
         } catch (Exception e) {
@@ -1084,7 +1085,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         }
     }
 
-    private <T, R> R safeOne(T mapper, java.util.function.Function<T, R> fn) {
+    private <T, U> U safeOne(T mapper, java.util.function.Function<T, U> fn) {
         try {
             return fn.apply(mapper);
         } catch (Exception e) {

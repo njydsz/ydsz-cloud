@@ -5,44 +5,76 @@
  * 1. 后端未启动时, 前端可独立运行 (开发联调、UI 调试、CI 截图测试)
  * 2. 不需要真实后端, 降低新成员 onboarding 成本
  * 3. 与 Vite dev server 集成, 不污染 build 产物
+ * 4. 拦截真实路径 /api/v1/*, 与生产环境完全一致, 关闭时自动 fallback 到 proxy
  *
- * 实现:
- * - 拦截 /mock-api/* 请求, 路由到 mock/handlers/ 下的处理器
- * - 默认所有模块都 mock, 关闭方式: env.VITE_USE_MOCK=false
- * - mock 响应延迟可配置 (env.VITE_MOCK_DELAY)
+ * 路由策略:
+ * - 启用 mock: 直接在 dev server 中间件里响应 /api/v1/* 请求
+ * - 关闭 mock: 请求原样透传给 proxy, 由 vite.config.ts 中的 proxy 配置转发
+ *
+ * 控制:
+ * - 启用: env.VITE_USE_MOCK=true
+ * - 关闭: env.VITE_USE_MOCK=false
+ * - 模拟延迟: env.VITE_MOCK_DELAY (ms, 默认 200)
  */
 import { Plugin } from 'vite'
 import { mockHandlers } from './handlers'
 
 export interface MockPluginOptions {
-  /** 启用 mock 模式, 默认 true */
+  /** 启用 mock 模式, 默认从 env.VITE_USE_MOCK 读取 */
   enabled?: boolean
   /** 模拟网络延迟 (ms), 默认 200ms */
   delay?: number
-  /** mock 前缀, 默认 /mock-api */
+  /** mock 前缀, 默认 /api/v1 (与生产后端一致, 前端代码 0 改动) */
   prefix?: string
+  /** 是否打印 mock 请求日志, 默认 false */
+  verbose?: boolean
 }
 
 export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
-  const { enabled = true, delay = 200, prefix = '/mock-api' } = options
+  const {
+    enabled = (import.meta.env?.VITE_USE_MOCK ?? 'true') === 'true',
+    delay: defaultDelay = Number(import.meta.env?.VITE_MOCK_DELAY ?? 200),
+    prefix = '/api/v1',
+    verbose = false,
+  } = options
 
   return {
     name: 'vite-plugin-pmis-mock',
     apply: 'serve',
     configureServer(server) {
       if (!enabled) {
+        if (verbose) {
+          server.config.logger.info('[mock] disabled, requests will go to proxy')
+        }
         return
       }
 
-      server.middlewares.use(`${prefix}`, async (req, res, next) => {
-        // 仅处理 GET / POST
-        if (req.method !== 'GET' && req.method !== 'POST') {
+      const delay = defaultDelay
+      const logger = server.config.logger
+
+      // 移除前缀, 拿到与后端 controller 一致的路径
+      const stripPrefix = (url: string): string => {
+        if (url.startsWith(prefix + '/') || url === prefix) {
+          return url.slice(prefix.length) || '/'
+        }
+        return url
+      }
+
+      server.middlewares.use(async (req, res, next) => {
+        const rawUrl = req.url || ''
+        // 只接管 /api/v1 开头
+        if (!rawUrl.startsWith('/api/v1')) {
           return next()
         }
 
-        const url = req.url || ''
-        // 解析路径与查询参数
-        const [pathname, queryString] = url.split('?')
+        // 仅处理 GET / POST / PUT / DELETE / PATCH
+        const method = (req.method || 'GET').toUpperCase()
+        if (!['GET', 'POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+          return next()
+        }
+
+        const [pathWithQuery, queryString] = rawUrl.split('?')
+        const path = stripPrefix(pathWithQuery)
         const query: Record<string, string> = {}
         if (queryString) {
           for (const pair of queryString.split('&')) {
@@ -51,13 +83,14 @@ export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
           }
         }
 
-        // 匹配 handler
-        const handler = mockHandlers.find((h) => h.method === req.method && h.path === pathname)
+        // 匹配 handler (path 已剥离 prefix, 与 handler.path 一致)
+        const handler = mockHandlers.find((h) => h.method === method && h.path === path)
         if (!handler) {
-          res.statusCode = 404
-          res.setHeader('Content-Type', 'application/json;charset=UTF-8')
-          res.end(JSON.stringify({ code: 404, message: `Mock handler not found: ${req.method} ${pathname}` }))
-          return
+          // 未匹配, fallback 到 proxy
+          if (verbose) {
+            logger.info(`[mock] miss ${method} ${path} -> proxy`)
+          }
+          return next()
         }
 
         // 模拟延迟
@@ -66,12 +99,26 @@ export function viteMockPlugin(options: MockPluginOptions = {}): Plugin {
         }
 
         try {
-          const body: unknown = req.method === 'POST' ? await readBody(req) : null
+          const body: unknown =
+            method === 'GET' || method === 'DELETE' ? null : await readBody(req)
+
+          if (verbose) {
+            logger.info(`[mock] ${method} ${path} hit`)
+          }
+
           const result = await handler.handler({ query, body })
           res.statusCode = 200
           res.setHeader('Content-Type', 'application/json;charset=UTF-8')
           res.setHeader('X-Mock-Source', 'vite-plugin-pmis-mock')
-          res.end(JSON.stringify({ code: 0, message: 'success', data: result, timestamp: Date.now() }))
+          res.end(
+            JSON.stringify({
+              code: 0,
+              message: 'success',
+              data: result,
+              traceId: `mock-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+              timestamp: Date.now(),
+            }),
+          )
         } catch (err) {
           res.statusCode = 500
           res.setHeader('Content-Type', 'application/json;charset=UTF-8')
@@ -93,11 +140,15 @@ function readBody(req: any): Promise<unknown> {
     const chunks: Buffer[] = []
     req.on('data', (chunk: Buffer) => chunks.push(chunk))
     req.on('end', () => {
-      try {
-        const text = Buffer.concat(chunks).toString('utf-8')
-        resolve(text ? JSON.parse(text) : null)
-      } catch {
+      const text = Buffer.concat(chunks).toString('utf-8')
+      if (!text) {
         resolve(null)
+        return
+      }
+      try {
+        resolve(JSON.parse(text))
+      } catch {
+        resolve(text)
       }
     })
   })

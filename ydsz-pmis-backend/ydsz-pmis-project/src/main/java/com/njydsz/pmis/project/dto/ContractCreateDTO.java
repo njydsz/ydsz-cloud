@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -24,18 +25,18 @@ public class ContractCreateDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotBlank
-    @Schema(description = "合同编号", required = true)
+    @Schema(description = "合同编号", requiredMode = RequiredMode.REQUIRED)
     private String contractCode;
 
     @NotBlank
-    @Schema(description = "合同名称", required = true)
+    @Schema(description = "合同名称", requiredMode = RequiredMode.REQUIRED)
     private String contractName;
 
     @Schema(description = "来源立项 ID")
     private Long initiationId;
 
     @NotNull
-    @Schema(description = "客户 ID", required = true)
+    @Schema(description = "客户 ID", requiredMode = RequiredMode.REQUIRED)
     private Long customerId;
 
     @Schema(description = "客户名称")
@@ -55,7 +56,7 @@ public class ContractCreateDTO implements Serializable {
     private LocalDate expireDate;
 
     @NotNull
-    @Schema(description = "合同总额", required = true)
+    @Schema(description = "合同总额", requiredMode = RequiredMode.REQUIRED)
     private BigDecimal totalAmount;
 
     @Schema(description = "币种", example = "CNY")
@@ -71,7 +72,7 @@ public class ContractCreateDTO implements Serializable {
     private BigDecimal taxRate;
 
     @NotNull
-    @Schema(description = "负责人 ID", required = true)
+    @Schema(description = "负责人 ID", requiredMode = RequiredMode.REQUIRED)
     private Long ownerId;
 
     @Schema(description = "负责人姓名")

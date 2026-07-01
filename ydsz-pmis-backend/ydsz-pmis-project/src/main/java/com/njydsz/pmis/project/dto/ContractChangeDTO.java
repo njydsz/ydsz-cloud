@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.media.Schema.RequiredMode;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -23,15 +24,15 @@ public class ContractChangeDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    @Schema(description = "合同 ID", required = true)
+    @Schema(description = "合同 ID", requiredMode = RequiredMode.REQUIRED)
     private Long contractId;
 
     @NotBlank
-    @Schema(description = "变更编号", required = true)
+    @Schema(description = "变更编号", requiredMode = RequiredMode.REQUIRED)
     private String changeCode;
 
     @NotBlank
-    @Schema(description = "变更类型 SCOPE/AMOUNT/TERM/PERSONNEL/PROGRESS", required = true)
+    @Schema(description = "变更类型 SCOPE/AMOUNT/TERM/PERSONNEL/PROGRESS", requiredMode = RequiredMode.REQUIRED)
     private String changeType;
 
     @Schema(description = "变更原因")

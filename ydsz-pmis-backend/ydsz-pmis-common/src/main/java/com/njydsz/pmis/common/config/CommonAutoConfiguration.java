@@ -1,10 +1,12 @@
 package com.njydsz.pmis.common.config;
 
+import com.njydsz.pmis.common.featureflag.FeatureFlagAutoConfiguration;
 import com.njydsz.pmis.common.interceptor.AuthInterceptor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
@@ -20,6 +22,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @Configuration
 @ComponentScan("com.njydsz.pmis.common")
+@Import(FeatureFlagAutoConfiguration.class)
 @EnableAsync
 public class CommonAutoConfiguration {
 

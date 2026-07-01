@@ -1,0 +1,148 @@
+# =============================================================================
+# PMIS 默认配置 (开发环境)
+# 生产环境请使用 values-prod.yaml 覆盖
+# =============================================================================
+global:
+  imageRegistry: registry.cn-hangzhou.aliyuncs.com/ydsz
+  imageTag: latest
+  imagePullPolicy: IfNotPresent
+  storageClass: alicloud-disk-ssd
+  # 内部服务发现域名 (Pod 之间通过 Kubernetes Service 通信)
+  internalDomain: pmis.svc.cluster.local
+
+# 默认值, 可被 values-*.yaml 覆盖
+nameOverride: ""
+fullnameOverride: ""
+
+imageCredentials:
+  enabled: false
+  registry: registry.cn-hangzhou.aliyuncs.com
+  username: ""
+  password: ""
+  email: ops@ydsz-pmis.cn
+
+# Spring Cloud Alibaba 公共配置
+spring:
+  profiles: dev
+  nacos:
+    enabled: true
+    serverAddr: nacos.pmis-dev.svc.cluster.local:8848
+    namespace: pmis-dev
+    username: nacos
+    password: ""
+
+# 14 个微服务共享配置
+microservices:
+  # 每个服务: { enabled, port, replicas, jvmOpts, env }
+  gateway:
+    enabled: true
+    port: 9000
+    replicas: 2
+    jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC"
+    env: {}
+  auth:
+    enabled: true
+    port: 9001
+    replicas: 2
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+  user:
+    enabled: true
+    port: 9002
+    replicas: 2
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+  project:
+    enabled: true
+    port: 9003
+    replicas: 2
+    jvmOpts: "-Xms256m -Xmx768m -XX:+UseG1GC"
+  execution:
+    enabled: true
+    port: 9004
+    replicas: 3
+    jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC"
+  agent:
+    enabled: true
+    port: 9005
+    replicas: 2
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+  audit:
+    enabled: true
+    port: 9006
+    replicas: 1
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+  message:
+    enabled: true
+    port: 9007
+    replicas: 1
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+  notification:
+    enabled: true
+    port: 9008
+    replicas: 1
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+  workflow:
+    enabled: true
+    port: 9009
+    replicas: 2
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+  config:
+    enabled: true
+    port: 9010
+    replicas: 1
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+  scheduler:
+    enabled: true
+    port: 9011
+    replicas: 1
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+  file:
+    enabled: true
+    port: 9012
+    replicas: 1
+    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+
+# 前端
+frontend:
+  enabled: true
+  replicas: 2
+  image: ydsz-pmis-frontend
+  # 通过 Nginx Ingress 暴露
+  ingress:
+    enabled: true
+    host: pmis-dev.ydsz-pmis.cn
+    tls: false
+
+# 资源限制默认值
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+
+# 监控
+monitoring:
+  enabled: true
+  serviceMonitor:
+    enabled: true
+    interval: 30s
+  prometheusRules: true
+
+# 网络
+network:
+  # 服务间通过 ClusterIP
+  serviceType: ClusterIP
+
+# 健康检查
+healthcheck:
+  livenessProbe:
+    initialDelaySeconds: 60
+    periodSeconds: 10
+    timeoutSeconds: 5
+    failureThreshold: 3
+  readinessProbe:
+    initialDelaySeconds: 30
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3

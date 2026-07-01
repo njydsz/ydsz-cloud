@@ -5,7 +5,6 @@ import com.njydsz.pmis.execution.dto.CreditAssessmentDTO;
 import com.njydsz.pmis.execution.entity.CustomerCreditDO;
 import com.njydsz.pmis.execution.enums.CreditLevel;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
