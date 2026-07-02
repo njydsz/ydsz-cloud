@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
  *
  * <p>用于预算/EVM/Bench/质量/可计费利用率等模块的预警消息
  * 按黄/红等级分发到不同层级角色（PM/PMO/GM/CFO）。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_alert_dispatch")

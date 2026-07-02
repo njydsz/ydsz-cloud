@@ -14,13 +14,16 @@ import java.util.UUID;
  */
 public final class TraceIdUtil {
 
+    /** MDC 中 traceId 的 key */
     public static final String TRACE_ID_KEY = "traceId";
 
     private TraceIdUtil() {
     }
 
     /**
-     * 生成 traceId
+     * 生成 16 位 traceId
+     *
+     * @return traceId 字符串
      */
     public static String generate() {
         return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
@@ -28,6 +31,8 @@ public final class TraceIdUtil {
 
     /**
      * 获取当前线程的 traceId
+     *
+     * @return traceId；未设置时返回空字符串
      */
     public static String get() {
         String id = MDC.get(TRACE_ID_KEY);
@@ -35,14 +40,16 @@ public final class TraceIdUtil {
     }
 
     /**
-     * 设置 traceId
+     * 设置 traceId 到当前线程 MDC
+     *
+     * @param traceId traceId
      */
     public static void set(String traceId) {
         MDC.put(TRACE_ID_KEY, traceId);
     }
 
     /**
-     * 清除 traceId
+     * 清除当前线程的 traceId
      */
     public static void clear() {
         MDC.remove(TRACE_ID_KEY);

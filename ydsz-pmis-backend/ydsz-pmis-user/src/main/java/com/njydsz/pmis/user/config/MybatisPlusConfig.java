@@ -17,6 +17,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class MybatisPlusConfig {
 
+    /**
+     * 分页拦截器（PostgreSQL 方言）
+     *
+     * @return MyBatis-Plus 拦截器
+     */
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
@@ -24,6 +29,11 @@ public class MybatisPlusConfig {
         return interceptor;
     }
 
+    /**
+     * 审计字段自动填充处理器
+     *
+     * @return 元对象填充处理器
+     */
     @Bean
     public MetaObjectHandler metaObjectHandler() {
         return new AuditFieldFiller();

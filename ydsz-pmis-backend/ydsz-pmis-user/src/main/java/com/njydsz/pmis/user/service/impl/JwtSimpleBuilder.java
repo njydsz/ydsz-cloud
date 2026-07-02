@@ -22,6 +22,13 @@ final class JwtSimpleBuilder {
     private JwtSimpleBuilder() {
     }
 
+    /**
+     * 构造 JWT Token（兼容 JWT 格式，仅用于测试/演示）
+     *
+     * @param claims        载荷声明
+     * @param expireSeconds 过期秒数
+     * @return JWT Token 字符串
+     */
     static String build(Map<String, Object> claims, int expireSeconds) {
         long now = System.currentTimeMillis() / 1000L;
         claims.putIfAbsent("iat", now);

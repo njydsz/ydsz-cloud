@@ -22,6 +22,10 @@ public interface ExecutionClient {
 
     /**
      * 触发可计费利用率快照重算
+     *
+     * @param period      期间（如 2024-01），为 null 时取当前期间
+     * @param recomputeAll 是否全量重算
+     * @return 重算结果
      */
     @PostMapping("/api/v1/execution/billable-utilization/recompute")
     R<Map<String, Object>> recomputeBillableUtilization(
@@ -30,6 +34,9 @@ public interface ExecutionClient {
 
     /**
      * 健康检查
+     *
+     * @param period 期间，为 null 时取当前期间
+     * @return 平均快照统计
      */
     @GetMapping("/api/v1/execution/billable-utilization/snapshot-average")
     R<Map<String, Object>> snapshotAverage(@RequestParam(value = "period", required = false) String period);

@@ -15,11 +15,18 @@ import java.util.Map;
  * snapshotAverage 返回空 map + source=DOWN 让调用方走兜底逻辑。
  *
  * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component
 public class ExecutionClientFallback implements FallbackFactory<ExecutionClient> {
 
+    /**
+     * 创建降级代理
+     *
+     * @param cause 触发降级的异常
+     * @return ExecutionClient 降级实现
+     */
     @Override
     public ExecutionClient create(Throwable cause) {
         log.warn("[ExecutionClientFallback] 触发降级：{}", cause == null ? "unknown" : cause.toString());

@@ -40,13 +40,20 @@ import java.util.Map;
  */
 public final class PdfUtil {
 
+    /** 标题字体 */
     private static final Font TITLE_FONT = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 18);
+    /** 二级标题字体 */
     private static final Font H2_FONT    = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14);
+    /** KV 表 Key 字体 */
     private static final Font KV_KEY     = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 11);
+    /** KV 表 Value 字体 */
     private static final Font KV_VALUE   = FontFactory.getFont(FontFactory.HELVETICA, 11);
+    /** 表头字体 */
     private static final Font TABLE_HEAD = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10);
+    /** 表体字体 */
     private static final Font TABLE_BODY = FontFactory.getFont(FontFactory.HELVETICA, 10);
 
+    /** 页脚时间格式 */
     private static final DateTimeFormatter TS = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private PdfUtil() {
@@ -73,6 +80,12 @@ public final class PdfUtil {
 
     /**
      * 直接写入输出流（适合大文件）
+     *
+     * @param out     输出流
+     * @param title   文档标题
+     * @param fields  KV 字段（顺序按 LinkedHashMap 保持）
+     * @param sections 段落（标题 + 内容）列表
+     * @throws IOException 写入失败时抛出
      */
     public static void writeSimpleReport(OutputStream out, String title,
                                           Map<String, String> fields,
@@ -126,6 +139,7 @@ public final class PdfUtil {
      * @param title   文档标题
      * @param headers 表头
      * @param rows    数据行（每行字段顺序与 headers 一致）
+     * @return PDF 字节流
      */
     public static byte[] buildTableReport(String title, List<String> headers, List<List<String>> rows) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
@@ -136,6 +150,15 @@ public final class PdfUtil {
         }
     }
 
+    /**
+     * 直接写入表格型 PDF 到输出流（适合大文件）
+     *
+     * @param out     输出流
+     * @param title   文档标题
+     * @param headers 表头
+     * @param rows    数据行
+     * @throws IOException 写入失败时抛出
+     */
     public static void writeTableReport(OutputStream out, String title,
                                          List<String> headers,
                                          List<List<String>> rows) throws IOException {
@@ -201,6 +224,9 @@ public final class PdfUtil {
 
     /**
      * PDF 段落（标题 + 内容）
+     *
+     * @param heading 段落标题
+     * @param content 段落内容
      */
     public record Section(String heading, String content) {
     }
@@ -231,6 +257,8 @@ public final class PdfUtil {
 
     /**
      * 便捷：构造 LinkedHashMap 保证字段顺序
+     *
+     * @return 保持插入顺序的 Map
      */
     public static Map<String, String> kv() {
         return new LinkedHashMap<>();

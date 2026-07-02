@@ -18,6 +18,9 @@ import java.time.LocalDateTime;
  *
  * <p>按 (date, type, initiationId) 唯一；每天自动跑一次成本/收入/回款/开票/利润
  * 与上游业务账的差异校验，落库为差异记录。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 @TableName("pmis_reconcile_daily")

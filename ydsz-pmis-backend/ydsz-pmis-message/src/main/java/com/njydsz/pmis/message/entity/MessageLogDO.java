@@ -11,6 +11,9 @@ import java.io.Serial;
 
 /**
  * 消息发送日志
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -20,6 +23,7 @@ public class MessageLogDO extends BaseDO {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 

@@ -16,6 +16,9 @@ import java.util.UUID;
 
 /**
  * 邮件通道实现
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component

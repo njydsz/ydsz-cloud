@@ -12,6 +12,9 @@ import java.util.UUID;
  * 短信通道 - Mock 实现
  *
  * <p>仅在控制台输出，实际生产应替换为阿里云/腾讯云等 SDK 实现。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component

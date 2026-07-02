@@ -14,13 +14,44 @@ import java.util.List;
  */
 public interface ContractSupplementService {
 
+    /**
+     * 创建合同补充协议。
+     *
+     * @param dto 补充协议参数
+     * @return 补充协议 ID
+     */
     Long create(ContractSupplementDTO dto);
 
+    /**
+     * 删除补充协议（逻辑删除）。
+     *
+     * @param id 补充协议 ID
+     */
     void delete(Long id);
 
+    /**
+     * 根据补充协议 ID 查询详情。
+     *
+     * @param id 补充协议 ID
+     * @return 补充协议实体；不存在返回 null
+     */
     ContractSupplementDO getById(Long id);
 
+    /**
+     * 按合同查询补充协议列表。
+     *
+     * @param contractId 合同 ID
+     * @return 补充协议列表
+     */
     List<ContractSupplementDO> listByContract(Long contractId);
 
+    /**
+     * 分页查询补充协议。
+     *
+     * @param page       页码（从 1 开始）
+     * @param size       每页大小
+     * @param contractId 合同 ID，可空
+     * @return 分页结果
+     */
     Page<ContractSupplementDO> page(int page, int size, Long contractId);
 }

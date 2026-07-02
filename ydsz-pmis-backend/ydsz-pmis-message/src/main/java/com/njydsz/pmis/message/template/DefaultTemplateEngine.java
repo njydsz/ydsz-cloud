@@ -17,6 +17,7 @@ import java.util.regex.Pattern;
 @Component
 public class DefaultTemplateEngine implements TemplateEngine {
 
+    /** 占位符正则：匹配 ${var} 或 ${a.b.c} 形式的变量 */
     private static final Pattern PATTERN = Pattern.compile("\\$\\{([\\w.]+)\\}");
 
     @Override

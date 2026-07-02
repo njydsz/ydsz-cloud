@@ -18,30 +18,79 @@ import java.util.Map;
  */
 public interface OpportunityService {
 
+    /**
+     * 创建商机。
+     *
+     * @param dto 商机创建参数
+     * @return 商机 ID
+     */
     Long create(OpportunityCreateDTO dto);
 
+    /**
+     * 更新商机信息。
+     *
+     * @param dto 商机更新参数
+     */
     void update(OpportunityUpdateDTO dto);
 
+    /**
+     * 变更商机状态（遵循 OpportunityStatus 状态机）。
+     *
+     * @param dto 状态迁移参数
+     */
     void changeStatus(OpportunityStatusDTO dto);
 
+    /**
+     * 删除商机（逻辑删除）。
+     *
+     * @param id 商机 ID
+     */
     void delete(Long id);
 
+    /**
+     * 根据商机 ID 查询商机详情。
+     *
+     * @param id 商机 ID
+     * @return 商机实体；不存在返回 null
+     */
     OpportunityDO getById(Long id);
 
+    /**
+     * 分页查询商机列表。
+     *
+     * @param page     页码（从 1 开始）
+     * @param size     每页大小
+     * @param keyword  关键词（商机编号/名称模糊匹配），可空
+     * @param status   状态码，可空
+     * @param level    分级（A/B/C），可空
+     * @param ownerId  责任人 ID，可空
+     * @return 分页结果
+     */
     Page<OpportunityDO> page(int page, int size, String keyword, String status, String level, Long ownerId);
 
     /**
-     * 计算并返回赢率（带模型）
+     * 计算并返回赢率（带模型）。
+     *
+     * @param id             商机 ID
+     * @param customerCredit 客户信用等级，可空
+     * @param hasHistory     是否有历史合作
+     * @return 赢单率（0-1）
      */
     BigDecimal evaluateWinRate(Long id, String customerCredit, boolean hasHistory);
 
     /**
-     * 状态分布
+     * 状态分布。
+     *
+     * @param tenantId 租户 ID，可空
+     * @return 每种状态对应的数量列表
      */
     List<Map<String, Object>> aggregateByStatus(Long tenantId);
 
     /**
-     * 分级分布
+     * 分级分布。
+     *
+     * @param tenantId 租户 ID，可空
+     * @return 每种分级对应的数量列表
      */
     List<Map<String, Object>> aggregateByLevel(Long tenantId);
 

@@ -10,6 +10,9 @@ import java.util.UUID;
 
 /**
  * App 推送通道 - Mock 实现
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component
