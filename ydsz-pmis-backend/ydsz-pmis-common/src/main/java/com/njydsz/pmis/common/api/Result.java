@@ -17,7 +17,7 @@ import java.io.Serializable;
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(description = "统一响应")
-public class R<T> implements Serializable {
+public class Result<T> implements Serializable {
 
     /** 序列化版本号 */
     @Serial
@@ -52,7 +52,7 @@ public class R<T> implements Serializable {
      * @param <T> 数据类型
      * @return 成功响应
      */
-    public static <T> R<T> ok() {
+    public static <T> Result<T> ok() {
         return ok(null);
     }
 
@@ -63,8 +63,8 @@ public class R<T> implements Serializable {
      * @param <T>  数据类型
      * @return 成功响应
      */
-    public static <T> R<T> ok(T data) {
-        R<T> r = new R<>();
+    public static <T> Result<T> ok(T data) {
+        Result<T> r = new Result<>();
         r.setCode(CODE_SUCCESS);
         r.setMessage("ok");
         r.setData(data);
@@ -79,8 +79,8 @@ public class R<T> implements Serializable {
      * @param <T>     数据类型
      * @return 成功响应
      */
-    public static <T> R<T> ok(T data, String message) {
-        R<T> r = ok(data);
+    public static <T> Result<T> ok(T data, String message) {
+        Result<T> r = ok(data);
         r.setMessage(message);
         return r;
     }
@@ -93,8 +93,8 @@ public class R<T> implements Serializable {
      * @param <T>     数据类型
      * @return 失败响应
      */
-    public static <T> R<T> failed(int code, String message) {
-        R<T> r = new R<>();
+    public static <T> Result<T> failed(int code, String message) {
+        Result<T> r = new Result<>();
         r.setCode(code);
         r.setMessage(message);
         return r;
@@ -107,7 +107,7 @@ public class R<T> implements Serializable {
      * @param <T>       数据类型
      * @return 失败响应
      */
-    public static <T> R<T> failed(BizErrorCode errorCode) {
+    public static <T> Result<T> failed(BizErrorCode errorCode) {
         return failed(errorCode.getCode(), errorCode.getMessage());
     }
 
@@ -119,7 +119,7 @@ public class R<T> implements Serializable {
      * @param <T>       数据类型
      * @return 失败响应
      */
-    public static <T> R<T> failed(BizErrorCode errorCode, String message) {
+    public static <T> Result<T> failed(BizErrorCode errorCode, String message) {
         return failed(errorCode.getCode(), message);
     }
 
