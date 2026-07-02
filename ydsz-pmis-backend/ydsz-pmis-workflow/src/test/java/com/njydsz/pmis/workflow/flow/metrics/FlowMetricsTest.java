@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -158,7 +159,7 @@ class FlowMetricsTest {
         assertThat(t).isNotNull();
         assertThat(t.count()).isEqualTo(1L);
         // 5 分钟 ≈ 300_000 ms
-        assertThat(t.totalTime(java.util.concurrent.TimeUnit.MILLISECONDS)).isBetween(290_000d, 310_000d);
+        assertThat(t.totalTime(TimeUnit.MILLISECONDS)).isBetween(290_000d, 310_000d);
     }
 
     @Test
@@ -185,7 +186,7 @@ class FlowMetricsTest {
                 .tag("result", "PASSED")
                 .timer();
         assertThat(t).isNotNull();
-        assertThat(t.totalTime(java.util.concurrent.TimeUnit.MILLISECONDS)).isBetween(170_000d, 190_000d);
+        assertThat(t.totalTime(TimeUnit.MILLISECONDS)).isBetween(170_000d, 190_000d);
     }
 
     @Test

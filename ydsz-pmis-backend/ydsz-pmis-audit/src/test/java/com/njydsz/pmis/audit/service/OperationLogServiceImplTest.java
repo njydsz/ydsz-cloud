@@ -48,8 +48,8 @@ class OperationLogServiceImplTest {
         when(mapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
         service.page(1, 20, 100L, "USER", "SUCCESS", "用户管理", null, null);
         ArgumentCaptor<Page<OperationLogDO>> pageCap = ArgumentCaptor.forClass(Page.class);
-        ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper<OperationLogDO>> wCap =
-                ArgumentCaptor.forClass((Class) com.baomidou.mybatisplus.core.conditions.Wrapper.class);
+        ArgumentCaptor<Wrapper<OperationLogDO>> wCap =
+                ArgumentCaptor.forClass((Class) Wrapper.class);
         verify(mapper).selectPage(pageCap.capture(), wCap.capture());
         assertThat(pageCap.getValue().getCurrent()).isEqualTo(1);
         assertThat(pageCap.getValue().getSize()).isEqualTo(20);

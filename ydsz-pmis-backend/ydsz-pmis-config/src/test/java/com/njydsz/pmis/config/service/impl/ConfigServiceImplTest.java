@@ -20,6 +20,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -71,7 +74,7 @@ class ConfigServiceImplTest {
         ConfigFormDTO dto = form("g", "k", "v");
         Long id = service.create(dto);
         assertThat(id).isEqualTo(99L);
-        org.mockito.Mockito.verify(redis).delete(eq("pmis:cfg:group:g"));
+        verify(redis).delete(eq("pmis:cfg:group:g"));
     }
 
     @Test
@@ -90,7 +93,7 @@ class ConfigServiceImplTest {
         when(mapper.selectByGroupAndKey("g", "k")).thenReturn(config(1L, "g", "k", "v"));
         ConfigDO r = service.getByKey("g", "k");
         assertThat(r.getConfigValue()).isEqualTo("v");
-        org.mockito.Mockito.verify(redis.opsForValue()).set(eq("pmis:cfg:g:k"), anyString(), any());
+        verify(redis.opsForValue()).set(eq("pmis:cfg:g:k"), anyString(), any());
     }
 
     @Test
@@ -129,8 +132,8 @@ class ConfigServiceImplTest {
         when(redis.keys("pmis:cfg:group:*")).thenReturn(Set.of("c"));
         service.refreshCache();
         // delete 被调用两次：cfg 单 key + cfg group
-        org.mockito.Mockito.verify(redis, org.mockito.Mockito.times(2))
-                .delete(org.mockito.ArgumentMatchers.<Set<String>>any());
+        verify(redis, times(2))
+                .delete(any(Set.class));
     }
 
     @Test
@@ -244,7 +247,7 @@ class ConfigServiceImplTest {
         when(mapper.deleteByGroup("g")).thenReturn(3);
         int n = service.deleteByGroup("g");
         assertThat(n).isEqualTo(3);
-        org.mockito.Mockito.verify(redis).delete(eq("pmis:cfg:group:g"));
+        verify(redis).delete(eq("pmis:cfg:group:g"));
     }
 
     @Test
@@ -253,7 +256,7 @@ class ConfigServiceImplTest {
         when(mapper.deleteByGroup("g")).thenReturn(0);
         int n = service.deleteByGroup("g");
         assertThat(n).isEqualTo(0);
-        org.mockito.Mockito.verify(redis, org.mockito.Mockito.never())
+        verify(redis, never())
                 .delete(eq("pmis:cfg:group:g"));
     }
 
@@ -277,7 +280,7 @@ class ConfigServiceImplTest {
         when(mapper.updateStatusByGroup("g", "ENABLED")).thenReturn(5);
         int n = service.updateStatusByGroup("g", "ENABLED");
         assertThat(n).isEqualTo(5);
-        org.mockito.Mockito.verify(redis).delete(eq("pmis:cfg:group:g"));
+        verify(redis).delete(eq("pmis:cfg:group:g"));
     }
 
     @Test

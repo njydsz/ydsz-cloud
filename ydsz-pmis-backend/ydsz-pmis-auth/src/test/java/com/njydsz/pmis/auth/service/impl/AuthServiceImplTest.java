@@ -26,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -200,7 +201,7 @@ class AuthServiceImplTest {
     @DisplayName("构造期设置 Redis 过期时间")
     void captchaExpire() {
         service.generateCaptcha();
-        org.mockito.Mockito.verify(valueOps)
+        verify(valueOps)
                 .set(anyString(), anyString(), anyLong(), eq(TimeUnit.MINUTES));
     }
 }

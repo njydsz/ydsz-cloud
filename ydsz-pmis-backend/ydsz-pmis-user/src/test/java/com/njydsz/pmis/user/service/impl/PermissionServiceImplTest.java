@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 import java.util.List;
 
@@ -69,7 +68,7 @@ class PermissionServiceImplTest {
         assertThat(id).isEqualTo(10L);
 
         ArgumentCaptor<PermissionDO> cap = ArgumentCaptor.forClass(PermissionDO.class);
-        Mockito.verify(mapper).insert(cap.capture());
+        verify(mapper).insert(cap.capture());
         PermissionDO p = cap.getValue();
         assertThat(p.getVisible()).isEqualTo(1);
         assertThat(p.getParentId()).isEqualTo(0L);
@@ -90,7 +89,7 @@ class PermissionServiceImplTest {
     void delete_ok() {
         when(mapper.selectCount(any())).thenReturn(0L);
         service.delete(1L);
-        Mockito.verify(mapper).deleteById(1L);
+        verify(mapper).deleteById(1L);
     }
 
     @Test

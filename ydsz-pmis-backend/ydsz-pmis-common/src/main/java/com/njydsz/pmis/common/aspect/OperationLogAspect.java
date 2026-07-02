@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.aspect;
 
 import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.event.OperationLogEvent;
 import com.njydsz.pmis.common.security.LoginUser;
@@ -184,7 +185,7 @@ public class OperationLogAspect {
         if (args == null) return null;
         for (Object arg : args) {
             if (arg == null) continue;
-            if (arg instanceof com.baomidou.mybatisplus.core.metadata.IPage) continue;
+            if (arg instanceof IPage) continue;
             if (arg instanceof Long) {
                 long val = (Long) arg;
                 if (val > 0) return String.valueOf(val);

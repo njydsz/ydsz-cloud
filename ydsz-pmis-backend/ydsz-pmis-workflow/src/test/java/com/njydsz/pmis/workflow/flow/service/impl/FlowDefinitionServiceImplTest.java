@@ -24,8 +24,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -97,17 +100,17 @@ class FlowDefinitionServiceImplTest {
     @DisplayName("deploy JSON 模式：成功部署 + 写库")
     void testDeployJson() {
         when(definitionMapper.selectPublished(any(), any(), anyLong())).thenReturn(null);
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             FlowDefinitionDO arg = inv.getArgument(0);
             arg.setId(10L);
             return 1;
         }).when(definitionMapper).insert((FlowDefinitionDO) any());
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             FlowNodeDO arg = inv.getArgument(0);
             arg.setId(System.nanoTime());
             return 1;
         }).when(nodeMapper).insert((FlowNodeDO) any());
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             FlowSkipDO arg = inv.getArgument(0);
             arg.setId(System.nanoTime());
             return 1;
@@ -180,12 +183,12 @@ class FlowDefinitionServiceImplTest {
     @DisplayName("deploy BPMN 模式：成功解析并写库")
     void testDeployBpmn() {
         when(definitionMapper.selectPublished(any(), any(), anyLong())).thenReturn(null);
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             FlowDefinitionDO arg = inv.getArgument(0);
             arg.setId(20L);
             return 1;
         }).when(definitionMapper).insert((FlowDefinitionDO) any());
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             if (inv.getArgument(0) instanceof FlowNodeDO) {
                 ((FlowNodeDO) inv.getArgument(0)).setId(System.nanoTime());
             } else if (inv.getArgument(0) instanceof FlowSkipDO) {
@@ -193,7 +196,7 @@ class FlowDefinitionServiceImplTest {
             }
             return 1;
         }).when(nodeMapper).insert((FlowNodeDO) any());
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowSkipDO) inv.getArgument(0)).setId(System.nanoTime());
             return 1;
         }).when(skipMapper).insert((FlowSkipDO) any());
@@ -569,9 +572,9 @@ class FlowDefinitionServiceImplTest {
     @Test
     @DisplayName("importDefinition GAP-V2-06: 解析 JSON 并调用 deploy 创建草稿")
     void testImportDefinition() {
-        FlowDefinitionServiceImpl spy = org.mockito.Mockito.spy(service);
+        FlowDefinitionServiceImpl spy = spy(service);
         // 桩掉 deploy，避免重复部署检查等副作用
-        org.mockito.Mockito.doReturn(42L).when(spy).deploy(any(FlowDeployProcessDTO.class));
+        doReturn(42L).when(spy).deploy(any(FlowDeployProcessDTO.class));
 
         String json = "{\"definition\":{\"flowCode\":\"f1\",\"flowName\":\"F1\",\"version\":\"1.0\"},"
                 + "\"nodes\":[{\"nodeCode\":\"s1\",\"nodeName\":\"开始\",\"nodeType\":0}],"

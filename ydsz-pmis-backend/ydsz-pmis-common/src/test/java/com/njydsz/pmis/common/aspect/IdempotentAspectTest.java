@@ -7,9 +7,11 @@ import org.aspectj.lang.reflect.MethodSignature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.script.RedisScript;
 
+import java.lang.annotation.Annotation;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -88,7 +90,7 @@ class IdempotentAspectTest {
         when(pjp.proceed()).thenReturn("OK");
         aspect.around(pjp, annOf("test:", "#name", 5));
         // 验证 key 中包含参数值 'hello'
-        org.mockito.ArgumentCaptor<List<String>> captor = org.mockito.ArgumentCaptor.forClass(List.class);
+        ArgumentCaptor<List<String>> captor = ArgumentCaptor.forClass(List.class);
         verify(redis).execute(any(RedisScript.class), captor.capture(), any(), any());
         String k = captor.getValue().get(0);
         assertThat(k).contains("test:").contains("hello");
@@ -100,7 +102,7 @@ class IdempotentAspectTest {
 
     private Idempotent annOf(String key, String keyFromArg, int ttl) {
         return new Idempotent() {
-            @Override public Class<? extends java.lang.annotation.Annotation> annotationType() {
+            @Override public Class<? extends Annotation> annotationType() {
                 return Idempotent.class;
             }
             @Override public String key() { return key; }

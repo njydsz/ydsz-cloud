@@ -7,8 +7,7 @@
 -- =====================================================
 -- 1. 出勤记录表 pmis_attendance
 -- =====================================================
-DROP TABLE IF EXISTS pmis_attendance;
-CREATE TABLE pmis_attendance (
+CREATE TABLE IF NOT EXISTS pmis_attendance (
     id                  BIGSERIAL PRIMARY KEY,
     employee_id         BIGINT       NOT NULL,
     employee_name       VARCHAR(64),
@@ -48,8 +47,7 @@ CREATE INDEX idx_pa_status ON pmis_attendance(status);
 -- =====================================================
 -- 2. 加班申请表 pmis_overtime
 -- =====================================================
-DROP TABLE IF EXISTS pmis_overtime;
-CREATE TABLE pmis_overtime (
+CREATE TABLE IF NOT EXISTS pmis_overtime (
     id                  BIGSERIAL PRIMARY KEY,
     overtime_code       VARCHAR(64)  NOT NULL,
     employee_id         BIGINT       NOT NULL,
@@ -101,8 +99,7 @@ CREATE INDEX idx_pot_status ON pmis_overtime(approval_status);
 -- =====================================================
 -- 3. 请假申请表 pmis_leave
 -- =====================================================
-DROP TABLE IF EXISTS pmis_leave;
-CREATE TABLE pmis_leave (
+CREATE TABLE IF NOT EXISTS pmis_leave (
     id                  BIGSERIAL PRIMARY KEY,
     leave_code          VARCHAR(64)  NOT NULL,
     employee_id         BIGINT       NOT NULL,

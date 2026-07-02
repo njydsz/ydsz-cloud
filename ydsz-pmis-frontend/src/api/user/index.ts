@@ -56,7 +56,15 @@ export const getUserInfoApi = () => request<UserInfo>({ url: '/users/me', method
  * @returns 新的登录结果（含新的 accessToken / refreshToken）
  */
 export const refreshTokenApi = (refreshToken: string) =>
-  request<LoginResult>({ url: '/auth/refresh', method: 'POST', params: { refreshToken } })
+  request<LoginResult>({
+    url: '/auth/refresh',
+    method: 'POST',
+    params: { refreshToken },
+    // 标记为刷新请求：跳过响应拦截器的无感刷新逻辑，避免递归
+    _isRefreshTokenRequest: true,
+    // 刷新请求不展示全局 loading
+    silent: true,
+  })
 
 /**
  * 修改自己的密码

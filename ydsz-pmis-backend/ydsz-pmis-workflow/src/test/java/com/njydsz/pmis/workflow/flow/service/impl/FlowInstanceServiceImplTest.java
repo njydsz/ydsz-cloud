@@ -38,8 +38,11 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -158,7 +161,7 @@ class FlowInstanceServiceImplTest {
         when(canaryService.resolveEffectiveDefinition(eq("f1"), anyString(), any(), any()))
                 .thenReturn(def);
         // 模拟 insert 后回填 id
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             FlowInstanceDO arg = inv.getArgument(0);
             arg.setId(101L);
             return 1;
@@ -200,7 +203,7 @@ class FlowInstanceServiceImplTest {
         when(instanceMapper.selectByBusiness(anyString(), anyString())).thenReturn(null);
         when(canaryService.resolveEffectiveDefinition(anyString(), anyString(), any(), any()))
                 .thenReturn(def);
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             FlowInstanceDO arg = inv.getArgument(0);
             arg.setId(200L);
             return 1;
@@ -252,7 +255,7 @@ class FlowInstanceServiceImplTest {
         FlowInstanceDO ins = new FlowInstanceDO();
         ins.setId(1L);
         ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
-        ins.setStartAt(java.time.LocalDateTime.now().minusMinutes(5));
+        ins.setStartAt(LocalDateTime.now().minusMinutes(5));
         when(instanceMapper.selectById(1L)).thenReturn(ins);
         service.terminate(1L, "管理员撤回");
         verify(instanceMapper).updateStatus(eq(1L), eq(FlowInstanceStatus.TERMINATED.name()),
@@ -266,7 +269,7 @@ class FlowInstanceServiceImplTest {
         FlowInstanceDO ins = new FlowInstanceDO();
         ins.setId(1L);
         ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
-        ins.setStartAt(java.time.LocalDateTime.now().minusMinutes(1));
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
         ins.setVariable("{\"k\":\"v\"}");
         when(instanceMapper.selectById(1L)).thenReturn(ins);
 
@@ -287,7 +290,7 @@ class FlowInstanceServiceImplTest {
         FlowInstanceDO ins = new FlowInstanceDO();
         ins.setId(1L);
         ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
-        ins.setStartAt(java.time.LocalDateTime.now().minusMinutes(1));
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
         ins.setVariable(null);
         when(instanceMapper.selectById(1L)).thenReturn(ins);
 
@@ -304,7 +307,7 @@ class FlowInstanceServiceImplTest {
         FlowInstanceDO ins = new FlowInstanceDO();
         ins.setId(1L);
         ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
-        ins.setStartAt(java.time.LocalDateTime.now().minusMinutes(1));
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
         when(instanceMapper.selectById(1L)).thenReturn(ins);
 
         service.terminate(1L, null);
@@ -417,7 +420,7 @@ class FlowInstanceServiceImplTest {
         FlowInstanceDO ins = new FlowInstanceDO();
         ins.setId(1L);
         ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
-        ins.setStartAt(java.time.LocalDateTime.now().minusMinutes(10));
+        ins.setStartAt(LocalDateTime.now().minusMinutes(10));
         when(instanceMapper.selectById(1L)).thenReturn(ins);
 
         FlowEventListener listener = mock(FlowEventListener.class);
@@ -436,11 +439,11 @@ class FlowInstanceServiceImplTest {
         FlowInstanceDO ins = new FlowInstanceDO();
         ins.setId(1L);
         ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
-        ins.setStartAt(java.time.LocalDateTime.now().minusMinutes(1));
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
         when(instanceMapper.selectById(1L)).thenReturn(ins);
 
         FlowEventListener bad = mock(FlowEventListener.class);
-        org.mockito.Mockito.doThrow(new RuntimeException("boom")).when(bad).onInstanceCompleted(1L);
+        doThrow(new RuntimeException("boom")).when(bad).onInstanceCompleted(1L);
         eventListeners.add(bad);
 
         // 不应抛异常
@@ -474,8 +477,8 @@ class FlowInstanceServiceImplTest {
         ins.setCurrentNodeName("审批");
         ins.setFlowStatus("RUNNING");
         ins.setActivityStatus(1);
-        ins.setStartAt(java.time.LocalDateTime.of(2026, 1, 1, 0, 0));
-        ins.setEndAt(java.time.LocalDateTime.of(2026, 1, 2, 0, 0));
+        ins.setStartAt(LocalDateTime.of(2026, 1, 1, 0, 0));
+        ins.setEndAt(LocalDateTime.of(2026, 1, 2, 0, 0));
         ins.setDurationMs(86400000L);
         ins.setVariable("{\"k\":\"v\"}");
 
@@ -539,7 +542,7 @@ class FlowInstanceServiceImplTest {
         FlowInstanceDO ins = new FlowInstanceDO();
         ins.setId(1L);
         ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
-        ins.setStartAt(java.time.LocalDateTime.now());
+        ins.setStartAt(LocalDateTime.now());
         when(instanceMapper.selectById(1L)).thenReturn(ins);
 
         FlowNodeDO startNode = new FlowNodeDO();
@@ -571,7 +574,7 @@ class FlowInstanceServiceImplTest {
         FlowInstanceDO ins = new FlowInstanceDO();
         ins.setId(1L);
         ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
-        ins.setStartAt(java.time.LocalDateTime.now().minusSeconds(1));
+        ins.setStartAt(LocalDateTime.now().minusSeconds(1));
         when(instanceMapper.selectById(1L)).thenReturn(ins);
         FlowNodeDO end = new FlowNodeDO();
         end.setNodeCode("end1");
@@ -705,7 +708,7 @@ class FlowInstanceServiceImplTest {
     @DisplayName("page P2-23: 非法 pageNo/pageSize 兜底（page<1→1, size<=0→20）")
     void testPageMultiDimensionInvalidPaging() {
         when(instanceMapper.selectPage(any(), any(), any(), any(), any(), any(),
-                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt()))
+                anyInt(), anyInt()))
                 .thenReturn(Collections.emptyList());
         when(instanceMapper.countPage(any(), any(), any(), any(), any(), any())).thenReturn(0L);
 
@@ -721,7 +724,7 @@ class FlowInstanceServiceImplTest {
     @DisplayName("page P2-23: 全空过滤条件也能查询")
     void testPageMultiDimensionAllNullFilters() {
         when(instanceMapper.selectPage(any(), any(), any(), any(), any(), any(),
-                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt()))
+                anyInt(), anyInt()))
                 .thenReturn(Collections.emptyList());
         when(instanceMapper.countPage(any(), any(), any(), any(), any(), any())).thenReturn(0L);
 

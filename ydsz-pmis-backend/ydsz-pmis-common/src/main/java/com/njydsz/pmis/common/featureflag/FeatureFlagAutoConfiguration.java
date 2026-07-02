@@ -24,6 +24,6 @@ public class FeatureFlagAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(FeatureFlagService.class)
     public FeatureFlagService featureFlagService() {
-        return new LocalFeatureFlagService(Optional.empty());
+        return new LocalFeatureFlagService();
     }
 }

@@ -64,7 +64,7 @@ public class RealtimePushService {
             message.put("type", type);
             message.put("data", payload);
             message.put("timestamp", System.currentTimeMillis());
-            messagingTemplate.convertAndSend("/topic/broadcast", message);
+            messagingTemplate.convertAndSend("/topic/broadcast", (Object) message);
             log.debug("[WebSocket] 广播消息: type={}", type);
         } catch (Exception e) {
             log.warn("[WebSocket] 广播消息失败，降级忽略: type={}, error={}", type, e.getMessage());

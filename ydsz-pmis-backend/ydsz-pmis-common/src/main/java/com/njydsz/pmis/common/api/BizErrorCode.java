@@ -1,6 +1,5 @@
 package com.njydsz.pmis.common.api;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
@@ -24,7 +23,6 @@ import lombok.Getter;
  * @since 1.0.0
  */
 @Getter
-@AllArgsConstructor
 public enum BizErrorCode {
 
     OK(0, "ok"),
@@ -102,4 +100,22 @@ public enum BizErrorCode {
 
     /** 错误码对应的可读提示信息 */
     private final String message;
+
+    /** 国际化消息 key，格式为 error.{ENUM_NAME} */
+    private final String messageKey;
+
+    /**
+     * 枚举构造函数
+     *
+     * <p>自动根据枚举名生成 messageKey，格式为 {@code error.{枚举名}}，
+     * 例如 {@code BAD_REQUEST} 对应 {@code error.BAD_REQUEST}。
+     *
+     * @param code    业务错误码
+     * @param message 错误码对应的可读提示信息
+     */
+    BizErrorCode(int code, String message) {
+        this.code = code;
+        this.message = message;
+        this.messageKey = "error." + this.name();
+    }
 }

@@ -9,7 +9,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -97,7 +96,7 @@ class ProfitSimulationServiceImplTest {
         // version 应为 3
         ArgumentCaptor<ProfitSimulationDO> captor =
                 ArgumentCaptor.forClass(ProfitSimulationDO.class);
-        Mockito.verify(mapper).insert(captor.capture());
+        verify(mapper).insert(captor.capture());
         assertThat(captor.getValue().getVersion()).isEqualTo(3);
         assertThat(captor.getValue().getScenarioType()).isEqualTo("OPTIMISTIC");
     }

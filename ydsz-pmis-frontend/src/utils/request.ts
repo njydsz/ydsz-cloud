@@ -8,8 +8,10 @@
  *  - 响应拦截器：
  *    - blob 直接返回（文件下载场景）
  *    - code 0/200 视为成功，返回 ApiResponse
- *    - code 20001/20002/20003 视为 Token 失效，跳登录
- *    - HTTP 401 跳登录；其他错误 ElMessage 提示
+ *    - code 20001/20002/20003 / HTTP 401 视为 Token 失效，尝试 refreshToken 无感续期并重试原始请求
+ *    - 并发 401 通过 Promise 队列合并为一次刷新请求，刷新成功后统一重试
+ *    - 续期失败（refreshToken 也过期）才清空登录态并跳转登录页
+ *    - 其他错误 ElMessage 提示
  *    - 全局 loading 关闭
  *
  * P1-7 改进：
@@ -25,7 +27,7 @@ import axios, {
 } from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
-import { getToken } from './auth'
+import { getToken, getRefreshToken, setToken } from './auth'
 import { generateTraceId } from './trace'
 import { BizException, HttpException } from './error'
 
@@ -54,6 +56,10 @@ declare module 'axios' {
     silent?: boolean
     /** 重试计数（内部使用，用于 GET 请求自动重试） */
     _retryCount?: number
+    /** 标记为刷新 Token 请求，跳过响应拦截器的无感刷新逻辑，避免递归 */
+    _isRefreshTokenRequest?: boolean
+    /** 标记请求是否已因 Token 过期重试过，防止刷新后仍 401 造成死循环 */
+    _tokenRefreshed?: boolean
   }
 }
 
@@ -168,10 +174,16 @@ service.interceptors.response.use(
       return res
     }
 
+    // 刷新 Token 请求自身返回业务错误：静默拒绝（handled=false），
+    // 由调用方 doRefreshToken 的 catch 统一处理跳转，避免重复弹错
+    if (response.config._isRefreshTokenRequest) {
+      return Promise.reject(new BizException(res.message || '刷新失败', res.code, false))
+    }
+
     // Token 失效业务码：20001 未登录 / 20002 Token 过期 / 20003 Token 无效
+    // 不直接跳登录，尝试使用 refreshToken 无感续期并重试原始请求
     if (res.code === 20001 || res.code === 20002 || res.code === 20003) {
-      handleUnauthorized(res.message)
-      return Promise.reject(new BizException(res.message, res.code, true))
+      return handleTokenExpired(response.config, res.message)
     }
 
     // 其他业务错误：统一弹错 + 抛 BizException（handled=true 标记拦截器已处理）
@@ -182,6 +194,14 @@ service.interceptors.response.use(
     // 非静默请求关闭全局 loading
     if (!error.config?.silent) {
       hideLoading()
+    }
+
+    // 刷新 Token 请求自身失败：静默拒绝（handled=false），由调用方处理跳转
+    if (error.config?._isRefreshTokenRequest) {
+      const refreshMessage = error.response?.data?.message || error.message
+      return Promise.reject(
+        new HttpException(refreshMessage || '刷新失败', error.response?.status || 0, false),
+      )
     }
 
     // P2-7: 网络错误/超时/5xx 自动重试（仅 GET 请求，避免非幂等操作重复提交）
@@ -200,6 +220,10 @@ service.interceptors.response.use(
     const message = error.response?.data?.message || error.message
 
     if (status === 401) {
+      // Access Token 失效，尝试无感续期；config 缺失时直接跳登录
+      if (error.config) {
+        return handleTokenExpired(error.config, message)
+      }
       handleUnauthorized(message)
     } else if (error.code === 'ECONNABORTED') {
       ElMessage.error('请求超时，请稍后重试')
@@ -211,6 +235,131 @@ service.interceptors.response.use(
     return Promise.reject(new HttpException(message || '网络异常', status || 0, true))
   },
 )
+
+// ==================== Token 无感刷新 ====================
+
+/** 是否正在刷新 Token（防止并发刷新，多个 401 合并为一次 refresh 请求） */
+let isRefreshing = false
+
+/** 刷新期间等待重试的请求队列 */
+interface PendingRequest {
+  resolve: (token: string) => void
+  reject: (error: unknown) => void
+}
+let pendingQueue: PendingRequest[] = []
+
+/** 将请求加入等待队列，待刷新完成后统一重试 */
+function addPendingRequest(): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
+    pendingQueue.push({ resolve, reject })
+  })
+}
+
+/** 刷新成功：通知队列中所有请求使用新 token 重试 */
+function flushPendingQueue(token: string): void {
+  pendingQueue.forEach((item) => item.resolve(token))
+  pendingQueue = []
+}
+
+/** 刷新失败：拒绝队列中所有请求 */
+function rejectPendingQueue(error: unknown): void {
+  pendingQueue.forEach((item) => item.reject(error))
+  pendingQueue = []
+}
+
+/**
+ * 调用 /auth/refresh 接口换取新的 accessToken
+ *
+ * 直接使用 service 实例发起请求，并标记 _isRefreshTokenRequest，
+ * 使其跳过响应拦截器的无感刷新逻辑，避免递归调用。
+ *
+ * @returns 新的 accessToken
+ */
+async function doRefreshToken(): Promise<string> {
+  const refreshToken = getRefreshToken()
+  if (!refreshToken) {
+    throw new Error('refresh token 不存在')
+  }
+
+  const res = (await service({
+    url: '/auth/refresh',
+    method: 'POST',
+    params: { refreshToken },
+    silent: true,
+    _isRefreshTokenRequest: true,
+  })) as ApiResponse<{ accessToken?: string; refreshToken?: string; token?: string }>
+
+  const newToken = res.data.accessToken || res.data.token || ''
+  const newRefreshToken = res.data.refreshToken || refreshToken
+  if (!newToken) {
+    throw new Error('刷新返回的 token 为空')
+  }
+
+  // 持久化新 token（同时更新 localStorage 中的 accessToken / refreshToken）
+  setToken(newToken, newRefreshToken)
+
+  // 同步更新 user store（容错：store 未初始化时忽略）
+  try {
+    const userStore = useUserStore()
+    userStore.token = newToken
+    userStore.refreshToken = newRefreshToken
+  } catch (_e) {
+    // permission store 未初始化等场景忽略
+  }
+
+  return newToken
+}
+
+/**
+ * 处理 Token 过期：尝试刷新并重试原始请求
+ *
+ * 流程：
+ *  1. 已重试过的请求再次 401 → 直接跳登录（防止死循环）
+ *  2. 正在刷新中 → 加入队列等待，刷新完成后自动重试
+ *  3. 未刷新 → 发起一次刷新，成功后重试自身并消费队列；失败则拒绝队列并跳登录
+ *
+ * @param config - 原始请求配置
+ * @param message - 错误提示文案
+ * @returns 重试后的响应 Promise
+ */
+function handleTokenExpired(config: AxiosRequestConfig, message?: string): Promise<unknown> {
+  // 防止死循环：已刷新重试过的请求再次 401，直接跳登录
+  if (config._tokenRefreshed) {
+    handleUnauthorized(message)
+    return Promise.reject(new BizException(message || '登录已过期', 401, true))
+  }
+  config._tokenRefreshed = true
+
+  // 已有刷新在进行中，排队等待
+  if (isRefreshing) {
+    return addPendingRequest().then(() => service(config))
+  }
+
+  // 无 refresh token，无法续期，直接跳登录
+  if (!getRefreshToken()) {
+    handleUnauthorized(message)
+    return Promise.reject(new BizException(message || '登录已过期', 401, true))
+  }
+
+  isRefreshing = true
+
+  return doRefreshToken()
+    .then((newToken) => {
+      // 刷新成功：消费队列中的待重试请求
+      flushPendingQueue(newToken)
+      // 重试原始请求（请求拦截器会自动注入新 token）
+      return service(config)
+    })
+    .catch((err) => {
+      // 刷新失败：拒绝队列中所有请求并跳登录
+      rejectPendingQueue(err)
+      handleUnauthorized('登录已过期，请重新登录')
+      return Promise.reject(new BizException('登录已过期，请重新登录', 401, true))
+    })
+    .finally(() => {
+      isRefreshing = false
+    })
+}
 
 /**
  * 处理 401 未授权：弹错 + 清空登录态 + 跳转登录页

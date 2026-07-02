@@ -11,7 +11,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -20,7 +19,9 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DisplayName("ReportServiceImpl 报表服务测试")
@@ -213,7 +214,7 @@ class ReportServiceImplTest {
         // 不传 period 时 wrapper 不应含 period 过滤
         ArgumentCaptor<LambdaQueryWrapper<ProfitSnapshotDO>> captor =
                 ArgumentCaptor.forClass(LambdaQueryWrapper.class);
-        Mockito.verify(profitSnapshotMapper, Mockito.atLeastOnce()).selectList(captor.capture());
+        verify(profitSnapshotMapper, atLeastOnce()).selectList(captor.capture());
         // 不传 period 时 wrapper 不应含 period 过滤
         assertThat(captor.getAllValues().get(0).getClass().getSimpleName()).isNotEmpty();
     }
