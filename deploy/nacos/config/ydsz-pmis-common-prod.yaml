@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # 公共基础配置：pmis-common-PROD
 # DataId  : pmis-common-prod.yaml
 # Group   : PMIS_GROUP_PROD
@@ -78,3 +78,16 @@ logging:
     com.njydsz.pmis: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
+  file:
+    name: /var/log/pmis/common
+
+# ------------------------------------------------------------
+# 轻量规则引擎（ydsz-pmis-literule）共享配置
+# PROD 阶段：仅启用热加载和统计，关闭自动注册（规则以 DB 为准）与 dry-run
+# ------------------------------------------------------------
+pmis:
+  literule:
+    auto-register-builtin-rules: false
+    hot-reload-enabled: true
+    stats-enabled: true
+    dry-run-enabled: false

@@ -227,16 +227,16 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="编码/名称" clearable />
+      <el-form-item :label="$t('project.opportunity.search.keyword')">
+        <el-input v-model="query.keyword" :placeholder="$t('project.opportunity.search.keywordPlaceholder')" clearable />
       </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+      <el-form-item :label="$t('project.opportunity.search.status')">
+        <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="分级">
-        <el-select v-model="query.level" placeholder="全部" clearable style="width: 120px">
+      <el-form-item :label="$t('project.opportunity.search.level')">
+        <el-select v-model="query.level" :placeholder="$t('common.all')" clearable style="width: 120px">
           <el-option v-for="(v, k) in levelMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
@@ -244,55 +244,55 @@ onMounted(fetchList)
 
     <template #toolbar>
       <el-button v-permission="[PC.PROJECT_OPPORTUNITY_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新增商机
+        {{ $t('project.opportunity.buttons.create') }}
       </el-button>
     </template>
 
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="opportunityCode" title="编码" width="160" />
-        <vxe-column field="opportunityName" title="商机名称" min-width="200" show-overflow />
-        <vxe-column field="customerName" title="客户" width="160" show-overflow />
-        <vxe-column field="ownerName" title="负责人" width="100" />
-        <vxe-column field="level" title="分级" width="80" align="center">
+        <vxe-column field="opportunityCode" :title="$t('project.opportunity.columns.opportunityCode')" width="160" />
+        <vxe-column field="opportunityName" :title="$t('project.opportunity.columns.opportunityName')" min-width="200" show-overflow />
+        <vxe-column field="customerName" :title="$t('project.opportunity.columns.customerName')" width="160" show-overflow />
+        <vxe-column field="ownerName" :title="$t('project.opportunity.columns.ownerName')" width="100" />
+        <vxe-column field="level" :title="$t('project.opportunity.columns.level')" width="80" align="center">
           <template #default="{ row }">
             <StatusTag :value="row.level" :map="levelMap" fallback-type="info" />
           </template>
         </vxe-column>
-        <vxe-column field="estimatedAmount" title="预计金额" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="winRate" title="赢率" width="80" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(0)}%` : '-'" />
-        <vxe-column field="expectedSignDate" title="预计签约" width="110" />
-        <vxe-column field="status" title="状态" width="110">
+        <vxe-column field="estimatedAmount" :title="$t('project.opportunity.columns.estimatedAmount')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="winRate" :title="$t('project.opportunity.columns.winRate')" width="80" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(0)}%` : '-'" />
+        <vxe-column field="expectedSignDate" :title="$t('project.opportunity.columns.expectedSignDate')" width="110" />
+        <vxe-column field="status" :title="$t('project.opportunity.columns.status')" width="110">
           <template #default="{ row }">
             <StatusTag :value="row.status" :map="statusMap" />
           </template>
         </vxe-column>
-        <vxe-column title="操作" width="280" fixed="right">
+        <vxe-column :title="$t('project.opportunity.columns.action')" width="280" fixed="right">
           <template #default="{ row }">
             <el-button v-permission="[PC.PROJECT_OPPORTUNITY_UPDATE]" link type="primary" size="small" @click="openEdit(row)">
-              编辑
+              {{ $t('project.opportunity.buttons.edit') }}
             </el-button>
             <el-button v-if="row.status === 'WON'" v-permission="[PC.PROJECT_OPPORTUNITY_CONVERT]" link type="success" size="small" @click="handleConvert(row)">
-              转立项
+              {{ $t('project.opportunity.buttons.convert') }}
             </el-button>
             <el-button v-permission="[PC.PROJECT_OPPORTUNITY_EVALUATE]" link type="primary" size="small" @click="handleEvaluate(row)">
-              评估赢率
+              {{ $t('project.opportunity.buttons.evaluate') }}
             </el-button>
             <el-button v-if="row.status === 'FOLLOWING'" v-permission="[PC.PROJECT_OPPORTUNITY_UPDATE]" link type="warning" size="small" @click="handleChangeStatus(row, 'QUOTED')">
-              转报价
+              {{ $t('project.opportunity.buttons.toQuoted') }}
             </el-button>
             <el-button v-if="row.status === 'QUOTED'" v-permission="[PC.PROJECT_OPPORTUNITY_UPDATE]" link type="warning" size="small" @click="handleChangeStatus(row, 'NEGOTIATING')">
-              转谈判
+              {{ $t('project.opportunity.buttons.toNegotiating') }}
             </el-button>
             <el-button v-if="row.status === 'NEGOTIATING'" v-permission="[PC.PROJECT_OPPORTUNITY_UPDATE]" link type="success" size="small" @click="handleChangeStatus(row, 'WON')">
-              赢单
+              {{ $t('project.opportunity.buttons.win') }}
             </el-button>
             <el-button v-if="['FOLLOWING', 'QUOTED', 'NEGOTIATING'].includes(row.status || '')" v-permission="[PC.PROJECT_OPPORTUNITY_UPDATE]" link type="danger" size="small" @click="handleChangeStatus(row, 'LOST')">
-              输单
+              {{ $t('project.opportunity.buttons.lose') }}
             </el-button>
             <el-button v-permission="[PC.PROJECT_OPPORTUNITY_DELETE]" link type="danger" size="small" @click="handleDelete(row)">
-              删除
+              {{ $t('common.delete') }}
             </el-button>
           </template>
         </vxe-column>
@@ -300,77 +300,77 @@ onMounted(fetchList)
     </template>
 
     <template #footer>
-      <el-dialog v-model="dialogVisible" :title="formMode === 'create' ? '新增商机' : '编辑商机'" width="720px">
+      <el-dialog v-model="dialogVisible" :title="formMode === 'create' ? $t('project.opportunity.dialog.createTitle') : $t('project.opportunity.dialog.editTitle')" width="720px">
         <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
           <el-row :gutter="16">
             <el-col :span="12">
-              <el-form-item label="商机编码" prop="opportunityCode">
+              <el-form-item :label="$t('project.opportunity.form.opportunityCode')" prop="opportunityCode">
                 <el-input v-model="form.opportunityCode" :disabled="formMode === 'edit'" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="商机名称" prop="opportunityName">
+              <el-form-item :label="$t('project.opportunity.form.opportunityName')" prop="opportunityName">
                 <el-input v-model="form.opportunityName" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="16">
             <el-col :span="12">
-              <el-form-item label="客户 ID" prop="customerId">
+              <el-form-item :label="$t('project.opportunity.form.customerId')" prop="customerId">
                 <el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="客户名称">
+              <el-form-item :label="$t('project.opportunity.form.customerName')">
                 <el-input v-model="form.customerName" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="16">
             <el-col :span="12">
-              <el-form-item label="负责人 ID" prop="ownerId">
+              <el-form-item :label="$t('project.opportunity.form.ownerId')" prop="ownerId">
                 <el-input-number v-model="form.ownerId" :min="1" :controls="false" style="width: 100%" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="负责人名称">
+              <el-form-item :label="$t('project.opportunity.form.ownerName')">
                 <el-input v-model="form.ownerName" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="16">
             <el-col :span="12">
-              <el-form-item label="分级">
+              <el-form-item :label="$t('project.opportunity.form.level')">
                 <el-select v-model="form.level" style="width: 100%">
                   <el-option v-for="(v, k) in levelMap" :key="k" :label="v.label" :value="k" />
                 </el-select>
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="预计金额">
+              <el-form-item :label="$t('project.opportunity.form.estimatedAmount')">
                 <el-input-number v-model="form.estimatedAmount" :min="0" :controls="false" style="width: 100%" />
               </el-form-item>
             </el-col>
           </el-row>
           <el-row :gutter="16">
             <el-col :span="12">
-              <el-form-item label="商机来源">
+              <el-form-item :label="$t('project.opportunity.form.source')">
                 <el-input v-model="form.source" />
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="行业">
+              <el-form-item :label="$t('project.opportunity.form.industry')">
                 <el-input v-model="form.industry" />
               </el-form-item>
             </el-col>
           </el-row>
-          <el-form-item label="备注">
+          <el-form-item :label="$t('project.opportunity.form.remark')">
             <el-input v-model="form.remark" type="textarea" :rows="2" />
           </el-form-item>
         </el-form>
         <template #footer>
-          <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="submitForm">确定</el-button>
+          <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+          <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
         </template>
       </el-dialog>
     </template>

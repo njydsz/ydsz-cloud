@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # 公共基础配置：pmis-common-DEV
 # DataId  : pmis-common-dev.yaml
 # Group   : PMIS_GROUP_DEV
@@ -78,3 +78,18 @@ logging:
     com.njydsz.pmis: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
+
+# ------------------------------------------------------------
+# 轻量规则引擎（ydsz-pmis-literule）共享配置
+# 由 execution / project / agent 等消费方通过 common 配置继承
+# ------------------------------------------------------------
+pmis:
+  literule:
+    # 是否启用自动注册内置规则
+    auto-register-builtin-rules: true
+    # 是否启用热加载（监听 RuleConfigRefreshEvent）
+    hot-reload-enabled: true
+    # 是否启用执行统计（命中率/耗时）
+    stats-enabled: true
+    # 是否启用 dry-run 仿真（不改业务结果，仅打点）
+    dry-run-enabled: true

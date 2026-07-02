@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # 公共基础配置：pmis-common-SIT
 # DataId  : pmis-common-sit.yaml
 # Group   : PMIS_GROUP_SIT
@@ -78,3 +78,14 @@ logging:
     com.njydsz.pmis: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
+
+# ------------------------------------------------------------
+# 轻量规则引擎（ydsz-pmis-literule）共享配置
+# SIT 阶段：全功能开启，便于联调验证
+# ------------------------------------------------------------
+pmis:
+  literule:
+    auto-register-builtin-rules: true
+    hot-reload-enabled: true
+    stats-enabled: true
+    dry-run-enabled: true
