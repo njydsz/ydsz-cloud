@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.flow.metrics;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowCcMapper;
@@ -15,6 +16,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,13 +51,13 @@ class FlowMetricsTest {
         flowMetrics = new FlowMetrics(registry);
         // 反射注入 mapper（模拟 Spring 自动装配）
         try {
-            java.lang.reflect.Field f1 = FlowMetrics.class.getDeclaredField("instanceMapper");
+            Field f1 = FlowMetrics.class.getDeclaredField("instanceMapper");
             f1.setAccessible(true);
             f1.set(flowMetrics, instanceMapper);
-            java.lang.reflect.Field f2 = FlowMetrics.class.getDeclaredField("taskMapper");
+            Field f2 = FlowMetrics.class.getDeclaredField("taskMapper");
             f2.setAccessible(true);
             f2.set(flowMetrics, taskMapper);
-            java.lang.reflect.Field f3 = FlowMetrics.class.getDeclaredField("ccMapper");
+            Field f3 = FlowMetrics.class.getDeclaredField("ccMapper");
             f3.setAccessible(true);
             f3.set(flowMetrics, ccMapper);
         } catch (Exception e) {
@@ -189,7 +191,7 @@ class FlowMetricsTest {
     @Test
     @DisplayName("Gauge instance_running 从 mapper 拉取")
     void testInstanceRunningGauge() {
-        when(instanceMapper.selectCount(any(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class)))
+        when(instanceMapper.selectCount(any(LambdaQueryWrapper.class)))
                 .thenReturn(7L);
         Gauge gauge = registry.find("pmis_flow_instance_running").gauge();
         assertThat(gauge).isNotNull();
@@ -199,7 +201,7 @@ class FlowMetricsTest {
     @Test
     @DisplayName("Gauge task_pending 拉取 PENDING/CLAIMED 任务数")
     void testTaskPendingGauge() {
-        when(taskMapper.selectCount(any(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class)))
+        when(taskMapper.selectCount(any(LambdaQueryWrapper.class)))
                 .thenReturn(15L);
         Gauge gauge = registry.find("pmis_flow_task_pending").gauge();
         assertThat(gauge).isNotNull();
@@ -227,7 +229,7 @@ class FlowMetricsTest {
     @Test
     @DisplayName("Gauge mapper 抛异常时返回 0，不抛")
     void testGaugeResilience() {
-        when(instanceMapper.selectCount(any(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class)))
+        when(instanceMapper.selectCount(any(LambdaQueryWrapper.class)))
                 .thenThrow(new RuntimeException("db down"));
         Gauge gauge = registry.find("pmis_flow_instance_running").gauge();
         assertThat(gauge).isNotNull();

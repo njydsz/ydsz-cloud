@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.5.16</version>
+        <version>4.0.7</version>
         <relativePath/>
     </parent>
 
@@ -161,23 +161,23 @@
                 <version>${druid.version}</version>
             </dependency>
 
-            <!-- Sentinel (适配 Spring Boot 3.x Jakarta EE 9+) -->
+            <!-- Sentinel (Spring Cloud Alibaba 2025.1.0.0 内置版本 1.8.9) -->
             <dependency>
                 <groupId>com.alibaba.csp</groupId>
                 <artifactId>sentinel-core</artifactId>
-                <version>1.8.8</version>
+                <version>1.8.9</version>
             </dependency>
-            <!-- Spring Boot 3.x WebMVC 适配器 (Jakarta EE 9+) -->
+            <!-- Spring Boot 4.x WebMVC 适配器 (Jakarta EE 10+) -->
             <dependency>
                 <groupId>com.alibaba.csp</groupId>
                 <artifactId>sentinel-spring-webmvc-v6x-adapter</artifactId>
-                <version>1.8.8</version>
+                <version>1.8.9</version>
             </dependency>
             <!-- Spring Cloud Gateway 适配器 -->
             <dependency>
                 <groupId>com.alibaba.csp</groupId>
                 <artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
-                <version>1.8.8</version>
+                <version>1.8.9</version>
             </dependency>
 
             <!-- Hutool 工具 -->

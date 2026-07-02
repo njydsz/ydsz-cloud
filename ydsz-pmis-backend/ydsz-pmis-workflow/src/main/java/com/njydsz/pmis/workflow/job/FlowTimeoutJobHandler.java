@@ -95,34 +95,43 @@ public class FlowTimeoutJobHandler implements JobHandler {
             return err;
         }
 
-        if (overdueTasks == null || overdueTasks.isEmpty()) {
-            log.info("[FlowTimeout] 当前无超期任务");
-            Map<String, Object> empty = new HashMap<>();
-            empty.put("ok", true);
-            empty.put("processed", 0);
-            empty.put("costMs", System.currentTimeMillis() - start);
-            return empty;
-        }
-
+        // 处理任务超时
         int processed = 0;
         int errors = 0;
-        for (FlowTaskDO task : overdueTasks) {
-            try {
-                handleOverdueTask(task);
-                processed++;
-            } catch (Exception e) {
-                errors++;
-                log.error("[FlowTimeout] 处理超期任务异常 taskId={} instanceId={} err={}",
-                        task.getId(), task.getInstanceId(), e.getMessage(), e);
+        if (overdueTasks != null && !overdueTasks.isEmpty()) {
+            for (FlowTaskDO task : overdueTasks) {
+                try {
+                    handleOverdueTask(task);
+                    processed++;
+                } catch (Exception e) {
+                    errors++;
+                    log.error("[FlowTimeout] 处理超期任务异常 taskId={} instanceId={} err={}",
+                            task.getId(), task.getInstanceId(), e.getMessage(), e);
+                }
             }
         }
 
-        log.info("FlowTimeoutJobHandler: processed {} overdue tasks", processed);
+        // 子流程超时检测
+        int subProcessProcessed = 0;
+        int subProcessErrors = 0;
+        try {
+            Map<String, Object> subResult = handleSubProcessTimeout(tenantId);
+            subProcessProcessed = (int) subResult.getOrDefault("processed", 0);
+            subProcessErrors = (int) subResult.getOrDefault("errors", 0);
+        } catch (Exception e) {
+            log.error("[FlowTimeout] 子流程超时检测异常: {}", e.getMessage(), e);
+            subProcessErrors = 1;
+        }
+
+        log.info("FlowTimeoutJobHandler: processed {} overdue tasks, {} subProcess timeouts",
+                processed, subProcessProcessed);
         Map<String, Object> result = new HashMap<>();
         result.put("ok", true);
-        result.put("total", overdueTasks.size());
+        result.put("total", overdueTasks == null ? 0 : overdueTasks.size());
         result.put("processed", processed);
         result.put("errors", errors);
+        result.put("subProcessProcessed", subProcessProcessed);
+        result.put("subProcessErrors", subProcessErrors);
         result.put("costMs", System.currentTimeMillis() - start);
         return result;
     }
@@ -256,6 +265,89 @@ public class FlowTimeoutJobHandler implements JobHandler {
                 null, null, now, instanceDurationMs);
         log.info("[FlowTimeout] SLA 自动驳回并终止实例 taskId={} instanceId={} node={}",
                 task.getId(), task.getInstanceId(), task.getNodeCode());
+    }
+
+    // ============================== 子流程超时检测 ==============================
+
+    /**
+     * 处理子流程实例超时：扫描 pmis_flow_instance 中 due_at 已超期且状态为 RUNNING 的子流程实例
+     *
+     * <p>对于超时子流程，自动终止子流程实例并取消其下活跃任务，
+     * 同时回调父流程推进（通过 onSubProcessTerminated 终止父流程）。
+     *
+     * @param tenantId 租户 ID（可空）
+     * @return 处理计数
+     */
+    private Map<String, Object> handleSubProcessTimeout(Long tenantId) {
+        List<FlowInstanceDO> overdueInstances = instanceMapper.selectOverdueInstances(tenantId);
+        int processed = 0;
+        int errors = 0;
+        if (overdueInstances == null || overdueInstances.isEmpty()) {
+            log.info("[FlowTimeout] 当前无超期子流程实例");
+            Map<String, Object> result = new HashMap<>();
+            result.put("processed", 0);
+            result.put("errors", 0);
+            return result;
+        }
+        for (FlowInstanceDO instance : overdueInstances) {
+            try {
+                handleOverdueSubProcess(instance);
+                processed++;
+            } catch (Exception e) {
+                errors++;
+                log.error("[FlowTimeout] 处理超期子流程异常 instanceId={} err={}",
+                        instance.getId(), e.getMessage(), e);
+            }
+        }
+        log.info("[FlowTimeout] 子流程超时处理完成: processed={} errors={}", processed, errors);
+        Map<String, Object> result = new HashMap<>();
+        result.put("processed", processed);
+        result.put("errors", errors);
+        return result;
+    }
+
+    /**
+     * 处理单个超期子流程实例：终止子流程，取消其任务，并同步终止父流程
+     *
+     * @param instance 超期子流程实例
+     */
+    private void handleOverdueSubProcess(FlowInstanceDO instance) {
+        Long instanceId = instance.getId();
+        LocalDateTime now = LocalDateTime.now();
+        // 二次校验：避免并发的状态变更
+        FlowInstanceDO latest = instanceMapper.selectById(instanceId);
+        if (latest == null || !FlowInstanceStatus.RUNNING.name().equals(latest.getFlowStatus())) {
+            log.info("[FlowTimeout] 子流程实例状态已变更，跳过: instanceId={} status={}",
+                    instanceId, latest == null ? "null" : latest.getFlowStatus());
+            return;
+        }
+        // 终止子流程实例
+        long instanceDurationMs = latest.getStartAt() == null
+                ? 0L : Duration.between(latest.getStartAt(), now).toMillis();
+        instanceMapper.updateStatus(instanceId,
+                FlowInstanceStatus.TERMINATED.name(),
+                null, null, now, instanceDurationMs);
+        // 取消子流程下所有活跃任务
+        taskMapper.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
+        log.info("[FlowTimeout] 子流程超时，已终止子流程实例: instanceId={} flowCode={} dueAt={}",
+                instanceId, latest.getFlowCode(), latest.getDueAt());
+        // 清除 dueAt 标记
+        instanceMapper.updateDueAt(instanceId, null);
+        // 如果存在父流程，同步终止父流程
+        Long parentId = latest.getParentInstanceId();
+        if (parentId != null) {
+            FlowInstanceDO parent = instanceMapper.selectById(parentId);
+            if (parent != null && FlowInstanceStatus.RUNNING.name().equals(parent.getFlowStatus())) {
+                long parentDurationMs = parent.getStartAt() == null
+                        ? 0L : Duration.between(parent.getStartAt(), now).toMillis();
+                instanceMapper.updateStatus(parentId,
+                        FlowInstanceStatus.TERMINATED.name(),
+                        null, null, now, parentDurationMs);
+                taskMapper.cancelByInstance(parentId, FlowTaskStatus.CANCELLED.name());
+                log.info("[FlowTimeout] 子流程超时触发父流程终止: parentId={} childId={}",
+                        parentId, instanceId);
+            }
+        }
     }
 
     // ============================== 私有辅助 ==============================

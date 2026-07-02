@@ -9,6 +9,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -48,7 +49,7 @@ class EncryptedFieldSerializerTest {
     @DisplayName("AES-GCM 序列化应输出密文且与原文不同")
     void serialize_aes() throws Exception {
         serializer.serialize("13800001234", gen, prov);
-        org.mockito.ArgumentCaptor<String> captor = org.mockito.ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(gen).writeString(captor.capture());
         String written = captor.getValue();
         assertThat(written).isNotEqualTo("13800001234");
@@ -68,7 +69,7 @@ class EncryptedFieldSerializerTest {
         EncryptedFieldKeyRegistry.registerSm4("sm4-key", CryptoUtil.randomBytes(16));
         EncryptedFieldSerializer sm4 = new EncryptedFieldSerializer("sm4-key", EncryptedField.Algorithm.SM4_GCM);
         sm4.serialize("secret-data", gen, prov);
-        org.mockito.ArgumentCaptor<String> captor = org.mockito.ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
         verify(gen).writeString(captor.capture());
         assertThat(captor.getValue()).isNotEqualTo("secret-data");
         assertThat(captor.getValue()).isNotEmpty();

@@ -8,6 +8,8 @@ import com.njydsz.pmis.execution.mapper.ProfitSimulationMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -17,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @DisplayName("ProfitSimulationServiceImpl 利润测算")
@@ -92,9 +95,9 @@ class ProfitSimulationServiceImplTest {
         dto.setScenarioType("OPTIMISTIC");
         service.create(dto);
         // version 应为 3
-        org.mockito.ArgumentCaptor<ProfitSimulationDO> captor =
-                org.mockito.ArgumentCaptor.forClass(ProfitSimulationDO.class);
-        org.mockito.Mockito.verify(mapper).insert(captor.capture());
+        ArgumentCaptor<ProfitSimulationDO> captor =
+                ArgumentCaptor.forClass(ProfitSimulationDO.class);
+        Mockito.verify(mapper).insert(captor.capture());
         assertThat(captor.getValue().getVersion()).isEqualTo(3);
         assertThat(captor.getValue().getScenarioType()).isEqualTo("OPTIMISTIC");
     }

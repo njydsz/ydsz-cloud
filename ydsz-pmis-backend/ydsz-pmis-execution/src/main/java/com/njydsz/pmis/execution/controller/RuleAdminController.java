@@ -1,24 +1,32 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.execution.entity.DecisionTableDO;
 import com.njydsz.pmis.execution.entity.RuleDefinitionDO;
+import com.njydsz.pmis.execution.entity.RuleExecutionTraceDO;
 import com.njydsz.pmis.execution.entity.RuleTemplateDO;
 import com.njydsz.pmis.execution.entity.RuleTestCaseDO;
 import com.njydsz.pmis.execution.literule.RuleConflictDetector;
 import com.njydsz.pmis.execution.literule.RuleGenerationService;
 import com.njydsz.pmis.execution.literule.RuleTemplateService;
+import com.njydsz.pmis.execution.mapper.DecisionTableMapper;
+import com.njydsz.pmis.execution.mapper.RuleExecutionTraceMapper;
 import com.njydsz.pmis.execution.mapper.RuleTestCaseMapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
 import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.spi.RuleVersion;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -42,6 +50,9 @@ public class RuleAdminController {
     private final RuleGenerationService ruleGenerationService;
     private final RuleConflictDetector ruleConflictDetector;
     private final RuleTestCaseMapper ruleTestCaseMapper;
+    private final RuleExecutionTraceMapper ruleExecutionTraceMapper;
+    private final DecisionTableMapper decisionTableMapper;
+    private final ObjectMapper objectMapper;
 
     /**
      * 查询全部规则定义
@@ -316,5 +327,175 @@ public class RuleAdminController {
             results.put(tc.getName(), result);
         }
         return Result.ok(results);
+    }
+
+    // ==================== 生命周期管理 ====================
+
+    /**
+     * 规则状态变更
+     *
+     * @param ruleCode   规则编码
+     * @param request    请求体，包含 targetStatus/comment
+     * @param operator   操作人
+     * @return 操作结果
+     */
+    @PutMapping("/{ruleCode}/status")
+    public Result<RuleDefinition> changeStatus(@PathVariable String ruleCode,
+                                               @RequestBody Map<String, String> request,
+                                               @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        String targetStatus = request.get("targetStatus");
+        String comment = request.getOrDefault("comment", "");
+        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        RuleStatus current = RuleStatus.valueOf(def.getStatus());
+        RuleStatus target = RuleStatus.valueOf(targetStatus);
+        if (!current.canTransitionTo(target)) {
+            throw new IllegalArgumentException("不允许从 " + current.getDesc() + " 变更到 " + target.getDesc());
+        }
+        def.setStatus(targetStatus);
+        if (target == RuleStatus.PUBLISHED) {
+            def.setReviewedBy(operator);
+            def.setReviewedAt(java.time.LocalDateTime.now().toString());
+            def.setReviewComment(comment);
+        }
+        return Result.ok(ruleAdminService.save(def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc()));
+    }
+
+    // ==================== 执行链路追踪 ====================
+
+    /**
+     * 按 traceId 查询执行链路
+     */
+    @GetMapping("/traces/{traceId}")
+    public Result<List<RuleExecutionTraceDO>> getTrace(@PathVariable String traceId) {
+        return Result.ok(ruleExecutionTraceMapper.selectList(
+            new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                .eq(RuleExecutionTraceDO::getTraceId, traceId)
+                .orderByAsc(RuleExecutionTraceDO::getCreatedAt)));
+    }
+
+    /**
+     * 按规则编码查询最近链路
+     */
+    @GetMapping("/traces/rule/{ruleCode}")
+    public Result<List<RuleExecutionTraceDO>> getTracesByRule(@PathVariable String ruleCode,
+                                                               @RequestParam(defaultValue = "20") int limit) {
+        return Result.ok(ruleExecutionTraceMapper.selectList(
+            new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
+                .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+                .last("LIMIT " + limit)));
+    }
+
+    // ==================== 决策表管理 ====================
+
+    /**
+     * 查询全部决策表
+     */
+    @GetMapping("/decision-tables")
+    public Result<List<DecisionTableDO>> listDecisionTables() {
+        return Result.ok(decisionTableMapper.selectList(null));
+    }
+
+    /**
+     * 查询单条决策表
+     */
+    @GetMapping("/decision-tables/{tableCode}")
+    public Result<DecisionTableDO> getDecisionTable(@PathVariable String tableCode) {
+        DecisionTableDO dt = decisionTableMapper.selectOne(
+            new LambdaQueryWrapper<DecisionTableDO>().eq(DecisionTableDO::getTableCode, tableCode));
+        return Result.ok(dt);
+    }
+
+    /**
+     * 保存决策表
+     */
+    @PostMapping("/decision-tables")
+    public Result<DecisionTableDO> saveDecisionTable(@RequestBody DecisionTableDO decisionTable) {
+        if (decisionTable.getId() != null) {
+            decisionTableMapper.updateById(decisionTable);
+        } else {
+            decisionTableMapper.insert(decisionTable);
+        }
+        return Result.ok(decisionTable);
+    }
+
+    /**
+     * 删除决策表
+     */
+    @DeleteMapping("/decision-tables/{id}")
+    public Result<Void> deleteDecisionTable(@PathVariable Long id) {
+        decisionTableMapper.deleteById(id);
+        return Result.ok();
+    }
+
+    // ==================== 规则导入导出 ====================
+
+    /**
+     * 导出全部规则为 JSON
+     */
+    @GetMapping("/export")
+    public Result<Map<String, Object>> exportRules() {
+        List<RuleDefinition> rules = ruleAdminService.listAll();
+        // 过滤掉内部字段，只导出核心配置
+        List<Map<String, Object>> exportData = rules.stream().map(r -> {
+            Map<String, Object> map = new java.util.LinkedHashMap<>();
+            map.put("code", r.getCode());
+            map.put("name", r.getName());
+            map.put("category", r.getCategory());
+            map.put("description", r.getDescription());
+            map.put("conditionExpression", r.getConditionExpression());
+            map.put("severityExpression", r.getSeverityExpression());
+            map.put("defaultSeverity", r.getDefaultSeverity() != null ? r.getDefaultSeverity().name() : null);
+            map.put("titleTemplate", r.getTitleTemplate());
+            map.put("descriptionTemplate", r.getDescriptionTemplate());
+            map.put("priority", r.getPriority());
+            map.put("scope", r.getScope());
+            map.put("drilldownAvailable", r.isDrilldownAvailable());
+            map.put("status", r.getStatus());
+            map.put("version", r.getVersion());
+            return map;
+        }).collect(java.util.stream.Collectors.toList());
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("exportTime", LocalDateTime.now().toString());
+        result.put("ruleCount", rules.size());
+        result.put("rules", exportData);
+        return Result.ok(result);
+    }
+
+    /**
+     * 导入规则（JSON 格式）
+     */
+    @PostMapping("/import")
+    public Result<Map<String, Object>> importRules(@RequestBody Map<String, Object> request,
+                                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> rules = (List<Map<String, Object>>) request.get("rules");
+        if (rules == null || rules.isEmpty()) {
+            return Result.ok(Map.of("imported", 0, "skipped", 0));
+        }
+        int imported = 0;
+        int skipped = 0;
+        for (Map<String, Object> ruleMap : rules) {
+            try {
+                String code = (String) ruleMap.get("code");
+                if (code == null || code.isBlank()) {
+                    skipped++;
+                    continue;
+                }
+                RuleDefinition def = objectMapper.convertValue(ruleMap, RuleDefinition.class);
+                // 导入时重置版本和状态
+                def.setVersion(1);
+                def.setStatus("DRAFT");
+                ruleAdminService.save(def, operator, "导入规则");
+                imported++;
+            } catch (Exception e) {
+                log.warn("[LiteRule] 导入规则失败: {}", e.getMessage());
+                skipped++;
+            }
+        }
+        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        result.put("imported", imported);
+        result.put("skipped", skipped);
+        return Result.ok(result);
     }
 }

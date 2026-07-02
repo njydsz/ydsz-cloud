@@ -1,5 +1,7 @@
 package com.njydsz.pmis.audit.service;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.audit.entity.OperationLogDO;
 import com.njydsz.pmis.audit.mapper.OperationLogMapper;
@@ -52,7 +54,7 @@ class OperationLogServiceImplTest {
         assertThat(pageCap.getValue().getCurrent()).isEqualTo(1);
         assertThat(pageCap.getValue().getSize()).isEqualTo(20);
         // 验证传入的 wrapper 是 LambdaQueryWrapper 实例
-        assertThat(wCap.getValue()).isInstanceOf(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class);
+        assertThat(wCap.getValue()).isInstanceOf(LambdaQueryWrapper.class);
     }
 
     @Test
@@ -64,12 +66,12 @@ class OperationLogServiceImplTest {
         LocalDateTime end = LocalDateTime.of(2026, 6, 30, 23, 59, 59);
         service.page(1, 20, null, null, null, null, start, end);
         ArgumentCaptor<Page<OperationLogDO>> pageCap = ArgumentCaptor.forClass(Page.class);
-        ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper<OperationLogDO>> wCap =
-                ArgumentCaptor.forClass((Class) com.baomidou.mybatisplus.core.conditions.Wrapper.class);
+        ArgumentCaptor<Wrapper<OperationLogDO>> wCap =
+                ArgumentCaptor.forClass((Class) Wrapper.class);
         verify(mapper).selectPage(pageCap.capture(), wCap.capture());
         // wrapper 包含时间范围条件（LambdaQueryWrapper 的 sqlSegment 不为空）
         // 由于 LambdaQueryWrapper 内部 sqlSegment 拼接较复杂，这里仅断言 mapper 被调用且 wrapper 实例类型正确
-        assertThat(wCap.getValue()).isInstanceOf(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class);
+        assertThat(wCap.getValue()).isInstanceOf(LambdaQueryWrapper.class);
     }
 
     @Test

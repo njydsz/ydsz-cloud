@@ -93,14 +93,29 @@ public class RuleChain {
      * @param conditionExpression 条件表达式
      * @param branchKey           分支 key 字段名
      * @param branchMap           分支映射
+     * @param elifBranches        多分支条件列表
+     * @param elseNode            ELSE 分支节点
+     * @param iterableExpression  遍历集合表达式
+     * @param iterationVar        迭代变量名
+     * @param maxIterations       最大迭代次数
+     * @param isBreak             是否终止
      */
     private RuleChain(RuleChainType chainType, List<RuleNode> nodes, String conditionExpression,
-                      String branchKey, Map<String, RuleNode> branchMap) {
+                      String branchKey, Map<String, RuleNode> branchMap,
+                      List<Map.Entry<String, RuleNode>> elifBranches, RuleNode elseNode,
+                      String iterableExpression, String iterationVar,
+                      int maxIterations, boolean isBreak) {
         this.chainType = chainType;
         this.nodes = nodes;
         this.conditionExpression = conditionExpression;
         this.branchKey = branchKey;
         this.branchMap = branchMap;
+        this.elifBranches = elifBranches;
+        this.elseNode = elseNode;
+        this.iterableExpression = iterableExpression;
+        this.iterationVar = iterationVar;
+        this.maxIterations = maxIterations;
+        this.isBreak = isBreak;
     }
 
     /**
@@ -118,7 +133,7 @@ public class RuleChain {
             }
         }
         return new RuleChain(RuleChainType.THEN,
-                Collections.unmodifiableList(nodeList), null, null, null);
+                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, 0, false);
     }
 
     /**
@@ -136,7 +151,7 @@ public class RuleChain {
             }
         }
         return new RuleChain(RuleChainType.WHEN,
-                Collections.unmodifiableList(nodeList), null, null, null);
+                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, 0, false);
     }
 
     /**
@@ -151,7 +166,7 @@ public class RuleChain {
         Objects.requireNonNull(actionRule, "actionRule 不能为 null");
         List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(actionRule));
         return new RuleChain(RuleChainType.IF,
-                nodeList, conditionExpression, null, null);
+                nodeList, conditionExpression, null, null, null, null, null, null, 0, false);
     }
 
     /**
@@ -171,7 +186,87 @@ public class RuleChain {
             }
         }
         return new RuleChain(RuleChainType.SWITCH,
-                null, null, branchKey, Collections.unmodifiableMap(nodeMap));
+                null, null, branchKey, Collections.unmodifiableMap(nodeMap), null, null, null, null, 0, false);
+    }
+
+    /**
+     * 构建多分支条件链（ELIF）
+     *
+     * @param branches 条件-动作映射（按顺序求值，匹配第一个为 true 的分支）
+     * @param elseRule 默认分支规则（可选，所有条件都不匹配时执行）
+     * @return ELIF 类型规则链
+     */
+    public static RuleChain elif(Map<String, Rule> branches, Rule elseRule) {
+        Objects.requireNonNull(branches, "branches 不能为 null");
+        List<Map.Entry<String, RuleNode>> branchList = new ArrayList<>();
+        for (Map.Entry<String, Rule> entry : branches.entrySet()) {
+            if (entry.getKey() != null && entry.getValue() != null) {
+                branchList.add(Map.entry(entry.getKey(), RuleNode.of(entry.getValue())));
+            }
+        }
+        RuleNode elseNode = elseRule != null ? RuleNode.of(elseRule) : null;
+        return new RuleChain(RuleChainType.ELIF,
+                null, null, null, null, Collections.unmodifiableList(branchList), elseNode, null, null, 0, false);
+    }
+
+    /**
+     * 构建循环执行链（FOR）
+     *
+     * @param iterableExpression 遍历集合的表达式（从 facts 中取值），如 "items"
+     * @param iterationVar       迭代变量名，每个元素会以该变量名注入上下文，如 "item"
+     * @param actionRule         对每个元素执行的规则
+     * @return FOR 类型规则链
+     */
+    public static RuleChain forEach(String iterableExpression, String iterationVar, Rule actionRule) {
+        Objects.requireNonNull(iterableExpression, "iterableExpression 不能为 null");
+        Objects.requireNonNull(iterationVar, "iterationVar 不能为 null");
+        Objects.requireNonNull(actionRule, "actionRule 不能为 null");
+        List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(actionRule));
+        return new RuleChain(RuleChainType.FOR,
+                nodeList, null, null, null, null, null, iterableExpression, iterationVar, 0, false);
+    }
+
+    /**
+     * 构建条件循环链（WHILE）
+     *
+     * @param conditionExpression 循环条件表达式，为 true 时持续执行
+     * @param actionRule          对每次迭代执行的规则
+     * @return WHILE 类型规则链
+     */
+    public static RuleChain whileDo(String conditionExpression, Rule actionRule) {
+        return whileDo(conditionExpression, actionRule, 100);
+    }
+
+    /**
+     * 构建条件循环链（WHILE），指定最大迭代次数
+     *
+     * @param conditionExpression 循环条件表达式
+     * @param actionRule          对每次迭代执行的规则
+     * @param maxIterations       最大迭代次数（防止死循环）
+     * @return WHILE 类型规则链
+     */
+    public static RuleChain whileDo(String conditionExpression, Rule actionRule, int maxIterations) {
+        Objects.requireNonNull(conditionExpression, "conditionExpression 不能为 null");
+        Objects.requireNonNull(actionRule, "actionRule 不能为 null");
+        if (maxIterations <= 0) {
+            throw new IllegalArgumentException("maxIterations 必须 > 0");
+        }
+        List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(actionRule));
+        return new RuleChain(RuleChainType.WHILE,
+                nodeList, conditionExpression, null, null, null, null, null, null, maxIterations, false);
+    }
+
+    /**
+     * 构建终止执行链（BREAK）
+     *
+     * <p>BREAK 链本身不执行任何规则，仅作为循环中的终止信号。
+     * 在 FOR/WHILE 循环中遇到 BREAK 链时，立即终止当前循环。
+     *
+     * @return BREAK 类型规则链
+     */
+    public static RuleChain breakChain() {
+        return new RuleChain(RuleChainType.BREAK,
+                null, null, null, null, null, null, null, null, 0, true);
     }
 
     /**
@@ -190,7 +285,11 @@ public class RuleChain {
             case THEN -> evaluateThen(context, evaluator);
             case WHEN -> evaluateWhen(context, evaluator);
             case IF -> evaluateIf(context, evaluator);
+            case ELIF -> evaluateElif(context, evaluator);
             case SWITCH -> evaluateSwitch(context, evaluator);
+            case FOR -> evaluateFor(context, evaluator);
+            case WHILE -> evaluateWhile(context, evaluator);
+            case BREAK -> evaluateBreak(context, evaluator);
         };
     }
 
@@ -291,6 +390,131 @@ public class RuleChain {
         }
         results.addAll(evaluateNode(branch, context, evaluator));
         return results;
+    }
+
+    /**
+     * ELIF 语义：依次求值多个条件表达式，执行第一个匹配的分支；无匹配则执行 else 分支
+     */
+    private List<RuleResult> evaluateElif(RuleContext context, ExpressionEvaluator evaluator) {
+        List<RuleResult> results = new ArrayList<>();
+        if (evaluator == null) {
+            log.warn("[LiteRule-Chain] ELIF 链缺少 ExpressionEvaluator，跳过求值");
+            return results;
+        }
+        if (elifBranches != null) {
+            for (Map.Entry<String, RuleNode> branch : elifBranches) {
+                try {
+                    boolean matched = evaluator.evalBoolean(branch.getKey(), context);
+                    if (matched) {
+                        results.addAll(evaluateNode(branch.getValue(), context, evaluator));
+                        return results;
+                    }
+                } catch (Exception e) {
+                    log.warn("[LiteRule-Chain] ELIF 分支求值异常: expr='{}', error={}", branch.getKey(), e.getMessage());
+                }
+            }
+        }
+        // 所有条件都不匹配，执行 else 分支
+        if (elseNode != null) {
+            results.addAll(evaluateNode(elseNode, context, evaluator));
+        }
+        return results;
+    }
+
+    /**
+     * FOR 语义：遍历集合中的每个元素，注入迭代变量后执行规则链
+     */
+    @SuppressWarnings("unchecked")
+    private List<RuleResult> evaluateFor(RuleContext context, ExpressionEvaluator evaluator) {
+        List<RuleResult> results = new ArrayList<>();
+        if (iterableExpression == null || iterationVar == null) {
+            return results;
+        }
+        Object iterable = context.getFacts().get(iterableExpression);
+        if (!(iterable instanceof Iterable)) {
+            log.warn("[LiteRule-Chain] FOR 遍历表达式 '{}' 不是可迭代对象: class={}", iterableExpression,
+                    iterable != null ? iterable.getClass().getName() : "null");
+            return results;
+        }
+        int count = 0;
+        for (Object item : (Iterable<Object>) iterable) {
+            // 注入迭代变量到上下文
+            context.getFacts().put(iterationVar, item);
+            // 执行规则链
+            if (nodes != null) {
+                for (RuleNode node : nodes) {
+                    List<RuleResult> nodeResults = evaluateNode(node, context, evaluator);
+                    // 检查是否遇到 BREAK
+                    for (RuleResult r : nodeResults) {
+                        if (r != null && r.isTriggered() && "BREAK".equals(r.getRuleCode())) {
+                            log.debug("[LiteRule-Chain] FOR 循环遇到 BREAK，终止迭代");
+                            context.getFacts().remove(iterationVar);
+                            return results;
+                        }
+                    }
+                    results.addAll(nodeResults);
+                }
+            }
+            count++;
+        }
+        // 清理迭代变量
+        context.getFacts().remove(iterationVar);
+        log.debug("[LiteRule-Chain] FOR 循环完成: 迭代 {} 次", count);
+        return results;
+    }
+
+    /**
+     * WHILE 语义：条件为 true 时持续执行规则链，最多执行 maxIterations 次
+     */
+    private List<RuleResult> evaluateWhile(RuleContext context, ExpressionEvaluator evaluator) {
+        List<RuleResult> results = new ArrayList<>();
+        if (evaluator == null) {
+            log.warn("[LiteRule-Chain] WHILE 链缺少 ExpressionEvaluator，跳过求值");
+            return results;
+        }
+        int iteration = 0;
+        while (iteration < maxIterations) {
+            try {
+                boolean matched = evaluator.evalBoolean(conditionExpression, context);
+                if (!matched) {
+                    break;
+                }
+            } catch (Exception e) {
+                log.warn("[LiteRule-Chain] WHILE 条件求值异常: expr='{}', error={}", conditionExpression, e.getMessage());
+                break;
+            }
+            if (nodes != null) {
+                for (RuleNode node : nodes) {
+                    List<RuleResult> nodeResults = evaluateNode(node, context, evaluator);
+                    for (RuleResult r : nodeResults) {
+                        if (r != null && r.isTriggered() && "BREAK".equals(r.getRuleCode())) {
+                            log.debug("[LiteRule-Chain] WHILE 循环遇到 BREAK，终止迭代");
+                            return results;
+                        }
+                    }
+                    results.addAll(nodeResults);
+                }
+            }
+            iteration++;
+        }
+        if (iteration >= maxIterations) {
+            log.warn("[LiteRule-Chain] WHILE 循环达到最大迭代次数 {}，已终止", maxIterations);
+        }
+        log.debug("[LiteRule-Chain] WHILE 循环完成: 迭代 {} 次", iteration);
+        return results;
+    }
+
+    /**
+     * BREAK 语义：返回一个特殊的 BREAK 结果，由上层循环（FOR/WHILE）检测后终止
+     */
+    private List<RuleResult> evaluateBreak(RuleContext context, ExpressionEvaluator evaluator) {
+        // 返回一个标记为 BREAK 的特殊结果
+        com.njydsz.pmis.literule.api.RuleResult breakResult = new com.njydsz.pmis.literule.api.RuleResult();
+        breakResult.setRuleCode("BREAK");
+        breakResult.setTriggered(true);
+        breakResult.setSeverity(com.njydsz.pmis.literule.api.RuleSeverity.INFO);
+        breakResult.setTitle("BREAK 终止循环");
+        return Collections.singletonList(breakResult);
     }
 
     /**

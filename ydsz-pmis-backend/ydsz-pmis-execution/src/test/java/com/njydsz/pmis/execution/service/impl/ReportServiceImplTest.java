@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
 import com.njydsz.pmis.execution.mapper.ExpenseMapper;
@@ -9,6 +10,8 @@ import com.njydsz.pmis.execution.mapper.RevenueMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -207,10 +210,10 @@ class ReportServiceImplTest {
         List<Map<String, Object>> out1 = service.profitRank(10, null, null);
         assertThat(out1).hasSize(1);
         assertThat(out1.get(0).get("period")).isEqualTo("2026-02");
-        // 校验 period 入参已传递给 wrapper
-        org.mockito.ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProfitSnapshotDO>> captor =
-                org.mockito.ArgumentCaptor.forClass(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class);
-        org.mockito.Mockito.verify(profitSnapshotMapper, org.mockito.Mockito.atLeastOnce()).selectList(captor.capture());
+        // 不传 period 时 wrapper 不应含 period 过滤
+        ArgumentCaptor<LambdaQueryWrapper<ProfitSnapshotDO>> captor =
+                ArgumentCaptor.forClass(LambdaQueryWrapper.class);
+        Mockito.verify(profitSnapshotMapper, Mockito.atLeastOnce()).selectList(captor.capture());
         // 不传 period 时 wrapper 不应含 period 过滤
         assertThat(captor.getAllValues().get(0).getClass().getSimpleName()).isNotEmpty();
     }

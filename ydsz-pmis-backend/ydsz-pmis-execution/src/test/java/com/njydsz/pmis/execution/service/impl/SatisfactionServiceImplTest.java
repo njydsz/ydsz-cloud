@@ -9,6 +9,7 @@ import com.njydsz.pmis.execution.mapper.SatisfactionMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -132,7 +133,7 @@ class SatisfactionServiceImplTest {
         });
         Long id = service.submit(dto);
         assertThat(id).isEqualTo(100L);
-        org.mockito.ArgumentCaptor<SatisfactionDO> cap = org.mockito.ArgumentCaptor.forClass(SatisfactionDO.class);
+        ArgumentCaptor<SatisfactionDO> cap = ArgumentCaptor.forClass(SatisfactionDO.class);
         verify(mapper).insert(cap.capture());
         SatisfactionDO saved = cap.getValue();
         assertThat(saved.getLevel()).isEqualTo(SatisfactionLevel.VERY_SATISFIED.getCode());
@@ -150,7 +151,7 @@ class SatisfactionServiceImplTest {
             return 1;
         });
         service.submit(dto);
-        org.mockito.ArgumentCaptor<SatisfactionDO> cap = org.mockito.ArgumentCaptor.forClass(SatisfactionDO.class);
+        ArgumentCaptor<SatisfactionDO> cap = ArgumentCaptor.forClass(SatisfactionDO.class);
         verify(mapper).insert(cap.capture());
         SatisfactionDO saved = cap.getValue();
         assertThat(saved.getLevel()).isEqualTo(SatisfactionLevel.NEUTRAL.getCode());
@@ -168,7 +169,7 @@ class SatisfactionServiceImplTest {
             return 1;
         });
         service.submit(dto);
-        org.mockito.ArgumentCaptor<SatisfactionDO> cap = org.mockito.ArgumentCaptor.forClass(SatisfactionDO.class);
+        ArgumentCaptor<SatisfactionDO> cap = ArgumentCaptor.forClass(SatisfactionDO.class);
         verify(mapper).insert(cap.capture());
         SatisfactionDO saved = cap.getValue();
         assertThat(saved.getLevel()).isEqualTo(SatisfactionLevel.VERY_DISSATISFIED.getCode());
@@ -186,7 +187,7 @@ class SatisfactionServiceImplTest {
             return 1;
         });
         service.submit(dto);
-        org.mockito.ArgumentCaptor<SatisfactionDO> cap = org.mockito.ArgumentCaptor.forClass(SatisfactionDO.class);
+        ArgumentCaptor<SatisfactionDO> cap = ArgumentCaptor.forClass(SatisfactionDO.class);
         verify(mapper).insert(cap.capture());
         SatisfactionDO saved = cap.getValue();
         assertThat(saved.getFollowUp()).isTrue();
@@ -217,7 +218,7 @@ class SatisfactionServiceImplTest {
         s.setFollowUp(false);
         when(mapper.selectById(1L)).thenReturn(s);
         service.markFollowUp(1L, "客户不满");
-        org.mockito.ArgumentCaptor<SatisfactionDO> cap = org.mockito.ArgumentCaptor.forClass(SatisfactionDO.class);
+        ArgumentCaptor<SatisfactionDO> cap = ArgumentCaptor.forClass(SatisfactionDO.class);
         verify(mapper).updateById(cap.capture());
         SatisfactionDO saved = cap.getValue();
         assertThat(saved.getFollowUp()).isTrue();
@@ -232,7 +233,7 @@ class SatisfactionServiceImplTest {
         s.setFollowUp(true);
         when(mapper.selectById(1L)).thenReturn(s);
         service.closeFollowUp(1L);
-        org.mockito.ArgumentCaptor<SatisfactionDO> cap = org.mockito.ArgumentCaptor.forClass(SatisfactionDO.class);
+        ArgumentCaptor<SatisfactionDO> cap = ArgumentCaptor.forClass(SatisfactionDO.class);
         verify(mapper).updateById(cap.capture());
         assertThat(cap.getValue().getFollowUp()).isFalse();
     }

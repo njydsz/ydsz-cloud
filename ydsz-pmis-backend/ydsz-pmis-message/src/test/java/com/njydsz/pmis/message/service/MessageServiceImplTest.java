@@ -1,5 +1,7 @@
 package com.njydsz.pmis.message.service;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.message.channel.MessageChannel;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -111,10 +114,10 @@ class MessageServiceImplTest {
         req.setTemplateCode("DIS");
         req.setReceiver("1");
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.send(req))
-                .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class)
+        assertThatThrownBy(() -> service.send(req))
+                .isInstanceOf(BizException.class)
                 .extracting("code")
-                .isEqualTo(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST.getCode());
+                .isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
     }
 
     @Test
@@ -126,10 +129,10 @@ class MessageServiceImplTest {
         req.setTemplateCode("NOPE");
         req.setReceiver("1");
 
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.send(req))
-                .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class)
+        assertThatThrownBy(() -> service.send(req))
+                .isInstanceOf(BizException.class)
                 .extracting("code")
-                .isEqualTo(com.njydsz.pmis.common.api.BizErrorCode.NOT_FOUND.getCode());
+                .isEqualTo(BizErrorCode.NOT_FOUND.getCode());
     }
 
     @Test
@@ -139,10 +142,10 @@ class MessageServiceImplTest {
         req.setChannel("FAX");
         req.setReceiver("1");
         req.setContent("x");
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.send(req))
-                .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class)
+        assertThatThrownBy(() -> service.send(req))
+                .isInstanceOf(BizException.class)
                 .extracting("code")
-                .isEqualTo(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST.getCode());
+                .isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
     }
 
     @Test
@@ -185,10 +188,10 @@ class MessageServiceImplTest {
         req.setChannel("SMS");
         req.setReceiver("");
         req.setContent("hi");
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.send(req))
-                .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class)
+        assertThatThrownBy(() -> service.send(req))
+                .isInstanceOf(BizException.class)
                 .extracting("code")
-                .isEqualTo(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST.getCode());
+                .isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
     }
 
     @Test

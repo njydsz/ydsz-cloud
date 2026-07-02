@@ -9,6 +9,7 @@ import com.njydsz.pmis.workflow.engine.FlowAssigneeResolver;
 import com.njydsz.pmis.workflow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.engine.FlowUrgeLimiter;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
+import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
@@ -26,6 +27,8 @@ import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
+import com.njydsz.pmis.workflow.service.FlowSlaService;
+import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,6 +50,7 @@ import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -81,8 +85,8 @@ class FlowTaskServiceImplTest {
     private FlowUrgeLimiter urgeLimiter;
     private FlowDelegateAuthService delegateAuthService;
     private FlowDelegateLogMapper delegateLogMapper;
-    private com.njydsz.pmis.workflow.service.FlowSlaService slaService;
-    private com.njydsz.pmis.workflow.service.FlowTodoCountPushService todoCountPushService;
+    private FlowSlaService slaService;
+    private FlowTodoCountPushService todoCountPushService;
     private FlowMetrics flowMetrics;
     private FlowTaskServiceImpl service;
 
@@ -111,9 +115,9 @@ class FlowTaskServiceImplTest {
         delegateAuthService = mock(FlowDelegateAuthService.class);
         delegateLogMapper = mock(FlowDelegateLogMapper.class);
         // P1-6: SLA 服务 mock（默认 no-op，测试不期望任何调用副作用）
-        slaService = mock(com.njydsz.pmis.workflow.service.FlowSlaService.class);
+        slaService = mock(FlowSlaService.class);
         // P1-7: 待办数推送服务 mock（默认 no-op，测试不期望副作用）
-        todoCountPushService = mock(com.njydsz.pmis.workflow.service.FlowTodoCountPushService.class);
+        todoCountPushService = mock(FlowTodoCountPushService.class);
         // P2-3: Prometheus 指标 mock（测试不需要真实指标）
         flowMetrics = mock(FlowMetrics.class);
         service = new FlowTaskServiceImpl(taskMapper, hisTaskMapper, instanceMapper,
@@ -178,7 +182,7 @@ class FlowTaskServiceImplTest {
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("user:1001"), any())).thenReturn("user:1001");
         // P2-15: user: 前缀在 expandAssignees 中直接展开，不走 SPI / fallback
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(99L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -217,7 +221,7 @@ class FlowTaskServiceImplTest {
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("role:hr"), any())).thenReturn("role:hr");
         when(assigneeResolver.expandUsers(eq("role:hr"), any())).thenReturn(Collections.emptyList());
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(1L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -243,7 +247,7 @@ class FlowTaskServiceImplTest {
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("dept:10"), any())).thenReturn("dept:10");
         when(assigneeResolver.expandUsers(eq("dept:10"), any())).thenReturn(Collections.emptyList());
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(1L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -269,7 +273,7 @@ class FlowTaskServiceImplTest {
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("${initiatorId}"), any())).thenReturn("${initiatorId}");
         when(assigneeResolver.expandUsers(eq("${initiatorId}"), any())).thenReturn(Collections.emptyList());
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(1L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -292,7 +296,7 @@ class FlowTaskServiceImplTest {
         FlowInstanceDO ins = simpleInstance(10L);
         ins.setInitiatorId(7L);  // 发起人
         when(instanceMapper.selectById(10L)).thenReturn(ins);
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(1L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -320,7 +324,7 @@ class FlowTaskServiceImplTest {
         // 模拟 resolver 展开 role:hr → [1001L, 1002L, 1003L]
         when(assigneeResolver.expandUsers(eq("role:hr"), any()))
                 .thenReturn(List.of(1001L, 1002L, 1003L));
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(88L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -352,7 +356,7 @@ class FlowTaskServiceImplTest {
         when(variableStrategy.resolveAssignee(eq("user:1,user:2,user:3"), any()))
                 .thenReturn("user:1,user:2,user:3");
         // user: 前缀不需要 SPI 展开
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(89L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -384,7 +388,7 @@ class FlowTaskServiceImplTest {
         // role:hr 展开 → [1L, 2L]（注意 1L 与 user:1 重复，应被去重）
         when(assigneeResolver.expandUsers(eq("role:hr"), any()))
                 .thenReturn(List.of(1L, 2L));
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(90L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -415,8 +419,8 @@ class FlowTaskServiceImplTest {
         when(variableStrategy.resolveAssignee(eq("role:unknown1,role:unknown2"), any()))
                 .thenReturn("role:unknown1,role:unknown2");
         when(assigneeResolver.expandUsers(any(), any()))
-                .thenReturn(java.util.Collections.emptyList());
-        org.mockito.Mockito.doAnswer(inv -> {
+                .thenReturn(Collections.emptyList());
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(91L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -449,7 +453,7 @@ class FlowTaskServiceImplTest {
         // leader:1001 → 直属上级为 [2001L]
         when(assigneeResolver.expandUsers(eq("leader:1001"), any()))
                 .thenReturn(List.of(2001L));
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(92L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -481,7 +485,7 @@ class FlowTaskServiceImplTest {
         // position:PM → 岗位为 PM 的所有用户 [3001L, 3002L]
         when(assigneeResolver.expandUsers(eq("position:PM"), any()))
                 .thenReturn(List.of(3001L, 3002L));
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(93L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -513,7 +517,7 @@ class FlowTaskServiceImplTest {
         // SPI 不展开（resolver 返回空），走 fallback 单人路径
         when(assigneeResolver.expandUsers(eq("leader:1001"), any()))
                 .thenReturn(Collections.emptyList());
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(94L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -544,7 +548,7 @@ class FlowTaskServiceImplTest {
                 .thenReturn("position:PM");
         when(assigneeResolver.expandUsers(eq("position:PM"), any()))
                 .thenReturn(Collections.emptyList());
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(95L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -578,7 +582,7 @@ class FlowTaskServiceImplTest {
         // position:PM → [6001L, 6002L]
         when(assigneeResolver.expandUsers(eq("position:PM"), any()))
                 .thenReturn(List.of(6001L, 6002L));
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(96L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -607,7 +611,7 @@ class FlowTaskServiceImplTest {
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("self_select:approvers"), any()))
                 .thenReturn("self_select:approvers");
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(97L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -642,7 +646,7 @@ class FlowTaskServiceImplTest {
         // multi_leader:3 从发起人 1001 开始展开 3 级上级 → [2001L, 2002L, 2003L]
         when(assigneeResolver.expandMultiLeader(eq(1001L), eq(3), any()))
                 .thenReturn(List.of(2001L, 2002L, 2003L));
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(98L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -763,7 +767,7 @@ class FlowTaskServiceImplTest {
         verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.COMPLETED.name()),
                 eq("OK"), any(), any());
         // 2. 归档到历史表
-        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.entity.FlowHisTaskDO) any());
+        verify(hisTaskMapper).insert((FlowHisTaskDO) any());
         // 3. advancer.advance 被调用
         verify(advancer).advance(any(), eq("t1"), eq("PASS"), eq(null), any());
         // 4. generateTasksForNodes 被调用
@@ -962,7 +966,7 @@ class FlowTaskServiceImplTest {
         // 任务标记 REJECTED + 归档
         verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.REJECTED.name()),
                 eq("不同意"), any(), any());
-        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.entity.FlowHisTaskDO) any());
+        verify(hisTaskMapper).insert((FlowHisTaskDO) any());
         // 流程进入 REJECTED 终态
         verify(instanceMapper).updateStatus(eq(10L), eq("REJECTED"),
                 eq(null), eq(null), any(), any());
@@ -1221,7 +1225,7 @@ class FlowTaskServiceImplTest {
         List<String> urged = service.urge(10L, 7L, "请尽快处理");
         assertThat(urged).containsExactly("1001", "1002");
         // 每个任务都应该写审计
-        verify(auditLogMapper, times(2)).insert((com.njydsz.pmis.workflow.entity.FlowAuditLogDO) any());
+        verify(auditLogMapper, times(2)).insert((FlowAuditLogDO) any());
     }
 
     // ============== cancelByInstance / list* ==============
@@ -1452,7 +1456,7 @@ class FlowTaskServiceImplTest {
         targetNode.setPermissionFlag("user:1002");
         when(nodeMapper.selectByCode(eq(1L), eq("t2"))).thenReturn(targetNode);
         when(variableStrategy.resolveAssignee(eq("user:1002"), any())).thenReturn("user:1002");
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(99L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -1468,7 +1472,7 @@ class FlowTaskServiceImplTest {
         verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.COMPLETED.name()),
                 eq("管理员跳转"), any(), any());
         // 2. 归档到历史表
-        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.entity.FlowHisTaskDO) any());
+        verify(hisTaskMapper).insert((FlowHisTaskDO) any());
         // 3. 取消同实例其他 PENDING 任务
         verify(taskMapper).cancelByInstance(eq(10L), eq(FlowTaskStatus.CANCELLED.name()));
         // 4. 更新实例当前节点为目标节点
@@ -1756,7 +1760,7 @@ class FlowTaskServiceImplTest {
                 eq("审批超时"), any(), any());
         // 2. 写审计日志 action=TIMEOUT
         verify(auditLogMapper, times(1)).insert(
-                (com.njydsz.pmis.workflow.entity.FlowAuditLogDO) any());
+                (FlowAuditLogDO) any());
         // 3. 触发 onTaskTimeout 事件
         verify(listener, times(1)).onTaskTimeout(1L, 10L);
         // 4. 发布 Spring 异步事件
@@ -1823,10 +1827,10 @@ class FlowTaskServiceImplTest {
         service.pass(dto);
 
         // 验证审计日志包含 commentType
-        ArgumentCaptor<com.njydsz.pmis.workflow.entity.FlowAuditLogDO> auditCaptor =
-                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class);
+        ArgumentCaptor<FlowAuditLogDO> auditCaptor =
+                ArgumentCaptor.forClass(FlowAuditLogDO.class);
         verify(auditLogMapper).insert(auditCaptor.capture());
-        com.njydsz.pmis.workflow.entity.FlowAuditLogDO auditLog = auditCaptor.getValue();
+        FlowAuditLogDO auditLog = auditCaptor.getValue();
         assertThat(auditLog.getComment()).isEqualTo("同意该申请");
         assertThat(auditLog.getCommentType()).isEqualTo("AGREE");
         assertThat(auditLog.getAction()).isEqualTo("PASS");
@@ -1849,10 +1853,10 @@ class FlowTaskServiceImplTest {
         dto.setCommentType("DISAGREE");
         service.reject(dto);
 
-        ArgumentCaptor<com.njydsz.pmis.workflow.entity.FlowAuditLogDO> auditCaptor =
-                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class);
+        ArgumentCaptor<FlowAuditLogDO> auditCaptor =
+                ArgumentCaptor.forClass(FlowAuditLogDO.class);
         verify(auditLogMapper).insert(auditCaptor.capture());
-        com.njydsz.pmis.workflow.entity.FlowAuditLogDO auditLog = auditCaptor.getValue();
+        FlowAuditLogDO auditLog = auditCaptor.getValue();
         assertThat(auditLog.getComment()).isEqualTo("不同意，金额过大");
         assertThat(auditLog.getCommentType()).isEqualTo("DISAGREE");
         assertThat(auditLog.getAction()).isEqualTo("REJECT");
@@ -1866,7 +1870,7 @@ class FlowTaskServiceImplTest {
         FlowTaskDO task = baseTask();
         task.setApproveCount(3);
         when(taskMapper.selectById(1L)).thenReturn(task);
-        when(userMapper.deleteByMap(any(java.util.Map.class))).thenReturn(1);
+        when(userMapper.deleteByMap(any(Map.class))).thenReturn(1);
 
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(1L);
@@ -1878,7 +1882,7 @@ class FlowTaskServiceImplTest {
         // approveCount 应减 1
         assertThat(task.getApproveCount()).isEqualTo(2);
         verify(taskMapper).updateById(any(FlowTaskDO.class));
-        verify(auditLogMapper).insert(any(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class));
+        verify(auditLogMapper).insert(any(FlowAuditLogDO.class));
     }
 
     @Test
@@ -1892,7 +1896,7 @@ class FlowTaskServiceImplTest {
         dto.setTaskId(1L);
         dto.setTargetUserId(200L);
         assertThatThrownBy(() -> service.countersignRemove(dto))
-                .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class)
+                .isInstanceOf(BizException.class)
                 .hasMessageContaining("任务已完成");
     }
 
@@ -1905,7 +1909,7 @@ class FlowTaskServiceImplTest {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(1L);
         assertThatThrownBy(() -> service.countersignRemove(dto))
-                .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class)
+                .isInstanceOf(BizException.class)
                 .hasMessageContaining("减签需指定");
     }
 
@@ -1917,7 +1921,7 @@ class FlowTaskServiceImplTest {
 
         service.markRead(1L, 1001L);
 
-        com.njydsz.pmis.workflow.entity.FlowAuditLogDO log =
+        FlowAuditLogDO log =
                 verifyAuditAction("READ");
         assertThat(log.getOperatorId()).isEqualTo(1001L);
     }
@@ -1935,18 +1939,18 @@ class FlowTaskServiceImplTest {
         dto.setCommentType("INQUIRE");
         service.communicate(dto);
 
-        com.njydsz.pmis.workflow.entity.FlowAuditLogDO log =
+        FlowAuditLogDO log =
                 verifyAuditAction("COMMUNICATE");
         assertThat(log.getComment()).isEqualTo("请补充合同金额明细");
         assertThat(log.getCommentType()).isEqualTo("INQUIRE");
     }
 
     /** 辅助：验证审计日志的 action 字段并返回捕获的日志 */
-    private com.njydsz.pmis.workflow.entity.FlowAuditLogDO verifyAuditAction(String action) {
-        ArgumentCaptor<com.njydsz.pmis.workflow.entity.FlowAuditLogDO> captor =
-                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class);
+    private FlowAuditLogDO verifyAuditAction(String action) {
+        ArgumentCaptor<FlowAuditLogDO> captor =
+                ArgumentCaptor.forClass(FlowAuditLogDO.class);
         verify(auditLogMapper).insert(captor.capture());
-        com.njydsz.pmis.workflow.entity.FlowAuditLogDO log = captor.getValue();
+        FlowAuditLogDO log = captor.getValue();
         assertThat(log.getAction()).isEqualTo(action);
         return log;
     }
@@ -2007,7 +2011,7 @@ class FlowTaskServiceImplTest {
         when(taskMapper.selectList(any())).thenReturn(List.of(prevTask));
 
         // insert 回填 ID
-        org.mockito.Mockito.doAnswer(inv -> {
+        doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(99L);
             return 1;
         }).when(taskMapper).insert((FlowTaskDO) any());
@@ -2035,7 +2039,7 @@ class FlowTaskServiceImplTest {
         assertThat(inserted.getDurationMs()).isEqualTo(0L);
 
         // 验证审计日志被写入
-        verify(auditLogMapper).insert(any(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class));
+        verify(auditLogMapper).insert(any(FlowAuditLogDO.class));
         // 验证历史表归档
         verify(hisTaskMapper).insert(any(FlowHisTaskDO.class));
     }

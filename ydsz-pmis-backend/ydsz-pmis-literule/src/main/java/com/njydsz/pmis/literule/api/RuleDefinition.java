@@ -77,4 +77,23 @@ public class RuleDefinition implements Serializable {
     /** 当前版本号 */
     @Builder.Default
     private int version = 1;
+
+    /** 生命周期状态 */
+    @Builder.Default
+    private String status = "PUBLISHED";
+
+    /** 生效时间 */
+    private String effectiveFrom;
+
+    /** 失效时间 */
+    private String effectiveTo;
+
+    /** 审核人 */
+    private String reviewedBy;
+
+    /** 审核时间 */
+    private String reviewedAt;
+
+    /** 审核意见 */
+    private String reviewComment;
 }

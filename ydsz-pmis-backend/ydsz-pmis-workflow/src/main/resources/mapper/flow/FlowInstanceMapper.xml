@@ -153,4 +153,18 @@
         WHERE id = #{id}
           AND deleted = 0
     </update>
+
+    <!-- Query overdue subprocess instances (due_at < now, RUNNING, has parentInstanceId) -->
+    <select id="selectOverdueInstances" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_instance
+        WHERE due_at IS NOT NULL
+          AND due_at &lt; CURRENT_TIMESTAMP
+          AND flow_status = 'RUNNING'
+          AND parent_instance_id IS NOT NULL
+          AND status = 'ENABLED'
+          AND deleted = 0
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+        ORDER BY due_at ASC
+    </select>
 </mapper>

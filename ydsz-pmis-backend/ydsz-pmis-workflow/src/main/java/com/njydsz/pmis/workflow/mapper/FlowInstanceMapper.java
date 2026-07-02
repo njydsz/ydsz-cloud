@@ -98,4 +98,12 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      */
     int updateDueAt(@Param("id") Long id,
                     @Param("dueAt") LocalDateTime dueAt);
+
+    /**
+     * 查询超期的子流程实例（dueAt < now 且状态为 RUNNING 且有 parentInstanceId）
+     *
+     * @param tenantId 租户 ID（可空）
+     * @return 超期子流程实例列表
+     */
+    List<FlowInstanceDO> selectOverdueInstances(@Param("tenantId") Long tenantId);
 }

@@ -12,6 +12,7 @@ import com.njydsz.pmis.user.service.SessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.context.ApplicationEventPublisher;
 
 import java.util.List;
@@ -123,7 +124,7 @@ class UserAccountServiceImplTest {
 
         service.update(patch);
 
-        org.mockito.ArgumentCaptor<UserAccountDO> cap = org.mockito.ArgumentCaptor.forClass(UserAccountDO.class);
+        ArgumentCaptor<UserAccountDO> cap = ArgumentCaptor.forClass(UserAccountDO.class);
         verify(userMapper).updateById(cap.capture());
         UserAccountDO saved = cap.getValue();
         assertThat(saved.getUsername()).isNull();
@@ -136,7 +137,7 @@ class UserAccountServiceImplTest {
     void resetPassword() {
         when(userMapper.selectById(5L)).thenReturn(account(5L, "u5"));
         service.resetPassword(5L, "newPwd@2026");
-        org.mockito.ArgumentCaptor<UserAccountDO> cap = org.mockito.ArgumentCaptor.forClass(UserAccountDO.class);
+        ArgumentCaptor<UserAccountDO> cap = ArgumentCaptor.forClass(UserAccountDO.class);
         verify(userMapper).updateById(cap.capture());
         UserAccountDO saved = cap.getValue();
         assertThat(saved.getLoginFailCount()).isZero();

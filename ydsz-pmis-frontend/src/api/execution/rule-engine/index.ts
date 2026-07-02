@@ -370,3 +370,116 @@ export const batchRunTestCases = (ids: number[]) =>
     method: 'POST',
     data: { ids },
   })
+
+// ==================== 生命周期管理 ====================
+
+/**
+ * 变更规则状态
+ */
+export const changeRuleStatus = (ruleCode: string, targetStatus: string, comment?: string) =>
+  request<RuleDefinition>({
+    url: `/execution/api/v1/rules/${ruleCode}/status`,
+    method: 'PUT',
+    data: { targetStatus, comment },
+  })
+
+// ==================== 执行链路追踪 ====================
+
+/** 执行链路追踪记录 */
+export interface ExecutionTrace {
+  id: number
+  traceId: string
+  ruleCode: string
+  ruleName: string
+  scenario: string
+  triggered: boolean
+  severity: string
+  conditionResult: string
+  elapsedMs: number
+  factsSnapshot: Record<string, unknown>
+  resultSnapshot: Record<string, unknown>
+  errorMessage: string
+  createdAt: string
+}
+
+/**
+ * 按 traceId 查询执行链路
+ */
+export const getTrace = (traceId: string) =>
+  request<ExecutionTrace[]>({
+    url: `/execution/api/v1/rules/traces/${traceId}`,
+    method: 'GET',
+  })
+
+/**
+ * 按规则编码查询最近链路
+ */
+export const getTracesByRule = (ruleCode: string, limit = 20) =>
+  request<ExecutionTrace[]>({
+    url: `/execution/api/v1/rules/traces/rule/${ruleCode}`,
+    method: 'GET',
+    params: { limit },
+  })
+
+// ==================== 决策表管理 ====================
+
+/** 决策表 */
+export interface DecisionTable {
+  id?: number
+  tableCode: string
+  tableName: string
+  description?: string
+  category?: string
+  conditionColumns: Record<string, unknown>[]
+  actionColumns: Record<string, unknown>[]
+  rows: Record<string, unknown>[]
+  defaultActions?: Record<string, unknown>
+  enabled: boolean
+  priority: number
+  version: number
+}
+
+/**
+ * 查询全部决策表
+ */
+export const listDecisionTables = () =>
+  request<DecisionTable[]>({ url: '/execution/api/v1/rules/decision-tables', method: 'GET' })
+
+/**
+ * 查询单条决策表
+ */
+export const getDecisionTable = (tableCode: string) =>
+  request<DecisionTable>({ url: `/execution/api/v1/rules/decision-tables/${tableCode}`, method: 'GET' })
+
+/**
+ * 保存决策表
+ */
+export const saveDecisionTable = (data: DecisionTable) =>
+  request<DecisionTable>({ url: '/execution/api/v1/rules/decision-tables', method: 'POST', data })
+
+/**
+ * 删除决策表
+ */
+export const deleteDecisionTable = (id: number) =>
+  request<void>({ url: `/execution/api/v1/rules/decision-tables/${id}`, method: 'DELETE' })
+
+// ==================== 导入导出 ====================
+
+/**
+ * 导出全部规则
+ */
+export const exportRules = () =>
+  request<{ exportTime: string; ruleCount: number; rules: Record<string, unknown>[] }>({
+    url: '/execution/api/v1/rules/export',
+    method: 'GET',
+  })
+
+/**
+ * 导入规则
+ */
+export const importRules = (rules: Record<string, unknown>[]) =>
+  request<{ imported: number; skipped: number }>({
+    url: '/execution/api/v1/rules/import',
+    method: 'POST',
+    data: { rules },
+  })

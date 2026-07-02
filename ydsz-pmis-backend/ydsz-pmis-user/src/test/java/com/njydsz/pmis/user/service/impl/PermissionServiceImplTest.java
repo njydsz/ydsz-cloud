@@ -8,6 +8,8 @@ import com.njydsz.pmis.user.mapper.PermissionMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mockito;
 
 import java.util.List;
 
@@ -15,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -65,8 +68,8 @@ class PermissionServiceImplTest {
         Long id = service.create(dto);
         assertThat(id).isEqualTo(10L);
 
-        org.mockito.ArgumentCaptor<PermissionDO> cap = org.mockito.ArgumentCaptor.forClass(PermissionDO.class);
-        org.mockito.Mockito.verify(mapper).insert(cap.capture());
+        ArgumentCaptor<PermissionDO> cap = ArgumentCaptor.forClass(PermissionDO.class);
+        Mockito.verify(mapper).insert(cap.capture());
         PermissionDO p = cap.getValue();
         assertThat(p.getVisible()).isEqualTo(1);
         assertThat(p.getParentId()).isEqualTo(0L);
@@ -87,7 +90,7 @@ class PermissionServiceImplTest {
     void delete_ok() {
         when(mapper.selectCount(any())).thenReturn(0L);
         service.delete(1L);
-        org.mockito.Mockito.verify(mapper).deleteById(1L);
+        Mockito.verify(mapper).deleteById(1L);
     }
 
     @Test

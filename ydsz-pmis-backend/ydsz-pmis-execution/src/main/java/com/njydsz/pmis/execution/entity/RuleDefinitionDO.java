@@ -41,6 +41,25 @@ public class RuleDefinitionDO implements Serializable {
     private String scope;
     private Boolean drilldownAvailable;
     private Integer version;
+
+    /** 生命周期状态 */
+    private String status;
+
+    /** 生效时间 */
+    private LocalDateTime effectiveFrom;
+
+    /** 失效时间 */
+    private LocalDateTime effectiveTo;
+
+    /** 审核人 */
+    private String reviewedBy;
+
+    /** 审核时间 */
+    private LocalDateTime reviewedAt;
+
+    /** 审核意见 */
+    private String reviewComment;
+
     private String createdBy;
     private LocalDateTime createdAt;
     private String updatedBy;

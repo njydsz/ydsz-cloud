@@ -28,10 +28,28 @@ public final class RuleContext implements Serializable {
     /** 触发来源（如定时任务/接口调用/事件监听，用于审计追踪） */
     private final String source;
 
-    private RuleContext(Map<String, Object> facts, String scenario, String source) {
+    /** 追踪 ID（同一批次评估共享，用于链路追踪） */
+    private final String traceId;
+
+    private RuleContext(Map<String, Object> facts, String scenario, String source, String traceId) {
         this.facts = Collections.unmodifiableMap(new LinkedHashMap<>(facts));
         this.scenario = scenario;
         this.source = source;
+        this.traceId = traceId;
+    }
+
+    /**
+     * 从 Map 构建上下文
+     *
+     * @param facts    事实数据
+     * @param scenario 业务场景
+     * @param source   触发来源
+     * @param traceId  追踪 ID
+     * @return RuleContext 实例
+     */
+    public static RuleContext of(Map<String, Object> facts, String scenario, String source, String traceId) {
+        Objects.requireNonNull(facts, "facts 不能为 null");
+        return new RuleContext(facts, scenario, source, traceId);
     }
 
     /**
@@ -43,8 +61,7 @@ public final class RuleContext implements Serializable {
      * @return RuleContext 实例
      */
     public static RuleContext of(Map<String, Object> facts, String scenario, String source) {
-        Objects.requireNonNull(facts, "facts 不能为 null");
-        return new RuleContext(facts, scenario, source);
+        return of(facts, scenario, source, java.util.UUID.randomUUID().toString());
     }
 
     /**
@@ -54,7 +71,7 @@ public final class RuleContext implements Serializable {
      * @return RuleContext 实例
      */
     public static RuleContext of(Map<String, Object> facts) {
-        return of(facts, "DEFAULT", "UNKNOWN");
+        return of(facts, "DEFAULT", "UNKNOWN", java.util.UUID.randomUUID().toString());
     }
 
     /**
@@ -78,6 +95,7 @@ public final class RuleContext implements Serializable {
 
     public String getScenario() { return scenario; }
     public String getSource() { return source; }
+    public String getTraceId() { return traceId; }
 
     @Override
     public String toString() {
