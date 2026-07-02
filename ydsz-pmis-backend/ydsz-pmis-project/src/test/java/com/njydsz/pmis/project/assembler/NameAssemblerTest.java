@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.assembler;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.feign.UserServiceClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,7 +30,7 @@ class NameAssemblerTest {
     @DisplayName("resolveEmployee - 成功获取 name")
     void resolveEmployeeName() {
         when(userServiceClient.getEmployee(1L))
-                .thenReturn(R.ok(Map.of("name", "张三", "userId", 1)));
+                .thenReturn(Result.ok(Map.of("name", "张三", "userId", 1)));
         String n = assembler.resolveEmployee(1L);
         assertThat(n).isEqualTo("张三");
     }
@@ -39,7 +39,7 @@ class NameAssemblerTest {
     @DisplayName("resolveEmployee - 兼容 realName 字段")
     void resolveEmployeeRealName() {
         when(userServiceClient.getEmployee(2L))
-                .thenReturn(R.ok(Map.of("realName", "李四")));
+                .thenReturn(Result.ok(Map.of("realName", "李四")));
         String n = assembler.resolveEmployee(2L);
         assertThat(n).isEqualTo("李四");
     }
@@ -62,7 +62,7 @@ class NameAssemblerTest {
     @Test
     @DisplayName("resolveCustomer - 成功")
     void resolveCustomer() {
-        when(userServiceClient.getCustomerName(100L)).thenReturn(R.ok("客户甲"));
+        when(userServiceClient.getCustomerName(100L)).thenReturn(Result.ok("客户甲"));
         String n = assembler.resolveCustomer(100L);
         assertThat(n).isEqualTo("客户甲");
     }
@@ -85,7 +85,7 @@ class NameAssemblerTest {
     @DisplayName("batchEmployeeName - 成功")
     void batchEmployeeNameOk() {
         when(userServiceClient.batchEmployeeName(List.of(1L, 2L)))
-                .thenReturn(R.ok(Map.of(1L, "A", 2L, "B")));
+                .thenReturn(Result.ok(Map.of(1L, "A", 2L, "B")));
         Map<Long, String> m = assembler.batchEmployeeName(List.of(1L, 2L));
         assertThat(m).containsEntry(1L, "A").containsEntry(2L, "B");
     }

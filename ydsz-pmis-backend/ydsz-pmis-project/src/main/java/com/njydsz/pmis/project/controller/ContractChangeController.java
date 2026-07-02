@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ContractChangeDTO;
 import com.njydsz.pmis.project.entity.ContractChangeDO;
 import com.njydsz.pmis.project.service.ContractChangeService;
@@ -33,66 +33,117 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContractChangeController {
 
+    /** 合同变更服务 */
     private final ContractChangeService service;
 
+    /**
+     * 提交合同变更申请。
+     *
+     * @param dto 变更申请参数
+     * @return 变更记录 ID
+     */
     @Operation(summary = "提交变更申请")
     @PrePermission("project:contract-change:create")
     @PostMapping
-    public R<Long> apply(@Valid @RequestBody ContractChangeDTO dto) {
-        return R.ok(service.apply(dto));
+    public Result<Long> apply(@Valid @RequestBody ContractChangeDTO dto) {
+        return Result.ok(service.apply(dto));
     }
 
+    /**
+     * 提交变更进入审批流。
+     *
+     * @param id 变更 ID
+     * @return 空结果
+     */
     @Operation(summary = "提交审批")
     @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/submit")
-    public R<Void> submit(@PathVariable Long id) {
+    public Result<Void> submit(@PathVariable Long id) {
         service.submit(id);
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * 审批通过。
+     *
+     * @param id           变更 ID
+     * @param approverId   审批人 ID
+     * @param approverName 审批人名称
+     * @return 空结果
+     */
     @Operation(summary = "审批通过")
     @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/approve")
-    public R<Void> approve(@PathVariable Long id,
+    public Result<Void> approve(@PathVariable Long id,
                            @RequestParam Long approverId,
                            @RequestParam String approverName) {
         service.approve(id, approverId, approverName);
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * 驳回变更。
+     *
+     * @param id           变更 ID
+     * @param approverId   审批人 ID
+     * @param approverName 审批人名称
+     * @param reason       驳回原因，可空
+     * @return 空结果
+     */
     @Operation(summary = "驳回")
     @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/reject")
-    public R<Void> reject(@PathVariable Long id,
+    public Result<Void> reject(@PathVariable Long id,
                           @RequestParam Long approverId,
                           @RequestParam String approverName,
                           @RequestParam(required = false) String reason) {
         service.reject(id, approverId, approverName, reason);
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * 查询变更详情。
+     *
+     * @param id 变更 ID
+     * @return 变更实体
+     */
     @Operation(summary = "变更详情")
     @PrePermission("project:contract-change:list")
     @GetMapping("/{id}")
-    public R<ContractChangeDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<ContractChangeDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询合同变更列表。
+     *
+     * @param page       页码（从 1 开始）
+     * @param size       每页大小
+     * @param contractId 合同 ID，可空
+     * @param status     状态码，可空
+     * @return 分页结果
+     */
     @Operation(summary = "分页查询")
     @PrePermission("project:contract-change:list")
     @GetMapping("/page")
-    public R<Page<ContractChangeDO>> page(
+    public Result<Page<ContractChangeDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long contractId,
             @RequestParam(required = false) String status) {
-        return R.ok(service.page(page, size, contractId, status));
+        return Result.ok(service.page(page, size, contractId, status));
     }
 
+    /**
+     * 按合同查询变更记录列表。
+     *
+     * @param contractId 合同 ID
+     * @return 变更记录列表
+     */
     @Operation(summary = "按合同列出")
     @PrePermission("project:contract-change:list")
     @GetMapping("/list")
-    public R<List<ContractChangeDO>> listByContract(@RequestParam Long contractId) {
-        return R.ok(service.listByContract(contractId));
+    public Result<List<ContractChangeDO>> listByContract(@RequestParam Long contractId) {
+        return Result.ok(service.listByContract(contractId));
     }
 }

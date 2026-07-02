@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.AlertDispatchDTO;
 import com.njydsz.pmis.execution.entity.AlertDispatchDO;
 import com.njydsz.pmis.execution.service.AlertDispatchService;
@@ -38,45 +38,45 @@ public class AlertDispatchController {
 
     @Operation(summary = "提交预警（自动按 level 解析目标角色）")
     @PostMapping
-    public R<Long> submit(@Valid @RequestBody AlertDispatchDTO dto) {
-        return R.ok(service.submit(dto));
+    public Result<Long> submit(@Valid @RequestBody AlertDispatchDTO dto) {
+        return Result.ok(service.submit(dto));
     }
 
     @Operation(summary = "立即分发")
     @PutMapping("/{id}/dispatch")
-    public R<Boolean> dispatchNow(@PathVariable Long id) {
-        return R.ok(service.dispatchNow(id));
+    public Result<Boolean> dispatchNow(@PathVariable Long id) {
+        return Result.ok(service.dispatchNow(id));
     }
 
     @Operation(summary = "重试失败预警")
     @PostMapping("/retry")
-    public R<Integer> retryFailed(@RequestParam(defaultValue = "3") int maxRetry) {
-        return R.ok(service.retryFailed(maxRetry));
+    public Result<Integer> retryFailed(@RequestParam(defaultValue = "3") int maxRetry) {
+        return Result.ok(service.retryFailed(maxRetry));
     }
 
     @Operation(summary = "取消预警")
     @PutMapping("/{id}/cancel")
-    public R<Void> cancel(@PathVariable Long id, @RequestParam(required = false) String reason) {
+    public Result<Void> cancel(@PathVariable Long id, @RequestParam(required = false) String reason) {
         service.cancel(id, reason);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "按等级+状态查询")
     @GetMapping("/list")
-    public R<List<AlertDispatchDO>> list(@RequestParam(required = false) String level,
+    public Result<List<AlertDispatchDO>> list(@RequestParam(required = false) String level,
                                          @RequestParam(required = false) String status) {
-        return R.ok(service.listByLevelAndStatus(level, status));
+        return Result.ok(service.listByLevelAndStatus(level, status));
     }
 
     @Operation(summary = "按类型 × 等级 聚合统计")
     @GetMapping("/aggregate")
-    public R<List<Map<String, Object>>> aggregate(@RequestParam(required = false) Long tenantId) {
-        return R.ok(service.aggregateByTypeAndLevel(tenantId));
+    public Result<List<Map<String, Object>>> aggregate(@RequestParam(required = false) Long tenantId) {
+        return Result.ok(service.aggregateByTypeAndLevel(tenantId));
     }
 
     @Operation(summary = "解析等级对应目标角色（黄 → PM/PMO；红 → PMO/GM/CFO）")
     @GetMapping("/resolve-roles")
-    public R<List<String>> resolveRoles(@RequestParam String level) {
-        return R.ok(service.resolveTargetRoles(level));
+    public Result<List<String>> resolveRoles(@RequestParam String level) {
+        return Result.ok(service.resolveTargetRoles(level));
     }
 }

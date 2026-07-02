@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import lombok.Data;
 
 import java.io.Serial;
@@ -90,6 +91,11 @@ public class WbsTaskDO implements Serializable {
     /** 链路追踪ID */
     private String providerTraceId;
 
+    /** 乐观锁版本号（P1-12） */
+    @Version
+    private Integer version;
+
+    /** 创建人ID */
     @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
@@ -97,6 +103,7 @@ public class WbsTaskDO implements Serializable {
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新人ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 

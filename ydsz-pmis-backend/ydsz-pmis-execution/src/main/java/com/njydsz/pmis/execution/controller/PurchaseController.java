@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.ApprovalDTO;
 import com.njydsz.pmis.execution.dto.PurchaseCreateDTO;
 import com.njydsz.pmis.execution.entity.PurchaseDO;
@@ -40,42 +40,42 @@ public class PurchaseController {
     @Operation(summary = "创建采购单")
     @PrePermission("execution:purchase:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody PurchaseCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody PurchaseCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "状态迁移")
     @PrePermission("execution:purchase:status")
     @PutMapping("/status")
-    public R<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
+    public Result<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
         service.changeStatus(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除")
     @PrePermission("execution:purchase:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "详情")
     @PrePermission("execution:purchase:list")
     @GetMapping("/{id}")
-    public R<PurchaseDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<PurchaseDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "分页")
     @PrePermission("execution:purchase:list")
     @GetMapping("/page")
-    public R<Page<PurchaseDO>> page(
+    public Result<Page<PurchaseDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long initiationId) {
-        return R.ok(service.page(page, size, keyword, status, initiationId));
+        return Result.ok(service.page(page, size, keyword, status, initiationId));
     }
 }

@@ -6,7 +6,7 @@ import com.njydsz.pmis.audit.entity.DataExportAuditDO;
 import com.njydsz.pmis.audit.mapper.DataExportAuditMapper;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class DataExportAuditController {
     @Operation(summary = "分页查询")
     @PrePermission("audit:export:view")
     @GetMapping("/page")
-    public R<PageResult<DataExportAuditDO>> page(
+    public Result<PageResult<DataExportAuditDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long userId,
@@ -47,14 +47,14 @@ public class DataExportAuditController {
         if (StringUtils.hasText(exportModule)) w.eq(DataExportAuditDO::getExportModule, exportModule);
         if (StringUtils.hasText(exportAction)) w.like(DataExportAuditDO::getExportAction, exportAction);
         w.orderByDesc(DataExportAuditDO::getExportedAt);
-        return R.ok(PageResult.ofPage(mapper.selectPage(p, w)));
+        return Result.ok(PageResult.ofPage(mapper.selectPage(p, w)));
     }
 
     @Operation(summary = "按用户查询导出历史")
     @PrePermission("audit:export:view")
     @GetMapping("/by-user")
-    public R<List<DataExportAuditDO>> byUser(@RequestParam Long userId,
+    public Result<List<DataExportAuditDO>> byUser(@RequestParam Long userId,
                                              @RequestParam(defaultValue = "50") int limit) {
-        return R.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
+        return Result.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
     }
 }

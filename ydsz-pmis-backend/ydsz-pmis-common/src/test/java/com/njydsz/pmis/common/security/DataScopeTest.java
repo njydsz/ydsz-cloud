@@ -10,7 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * DataScope 枚举测试
  *
+ * <p>覆盖 parse 解析、isCrossDept 判定与 DataScopeContext 构造。
+ *
  * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 class DataScopeTest {
 

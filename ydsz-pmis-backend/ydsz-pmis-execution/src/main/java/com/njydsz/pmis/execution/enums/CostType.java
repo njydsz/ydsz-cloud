@@ -23,7 +23,9 @@ public enum CostType {
     ALLOCATION("ALLOCATION", "分摊费用"),
     OTHER("OTHER", "其他");
 
+    /** 类型编码（大小写不敏感） */
     private final String code;
+    /** 类型中文描述 */
     private final String desc;
 
     CostType(String code, String desc) {
@@ -31,9 +33,26 @@ public enum CostType {
         this.desc = desc;
     }
 
+    /**
+     * 获取类型编码
+     *
+     * @return 类型编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取类型中文描述
+     *
+     * @return 类型中文描述
+     */
     public String getDesc() { return desc; }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 成本类型编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static CostType fromCode(String code) {
         if (code == null) return null;
         for (CostType c : values()) {

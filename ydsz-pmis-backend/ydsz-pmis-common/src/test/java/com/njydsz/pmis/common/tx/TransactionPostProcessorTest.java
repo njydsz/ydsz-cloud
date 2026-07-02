@@ -23,6 +23,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * 3. 不在事务中：立即执行
  * 4. afterCommit 异常不影响事务
  * </p>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("TransactionPostProcessor 事务后处理器测试")
 class TransactionPostProcessorTest {

@@ -10,6 +10,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * PageResult 单元测试（扩充）
+ *
+ * <p>补充整除、向上取整、空 total 等边界场景。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("PageResult 分页结果测试")
 class PageResultExtraTest {

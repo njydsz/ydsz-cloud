@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.dto.AlertDispatchDTO;
 import com.njydsz.pmis.execution.engine.AlertCodeGen;
@@ -169,7 +169,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
         req.setReceiver(resolveReceiver(d));
 
         try {
-            R<MessageResult> r = messageClient.send(req);
+            Result<MessageResult> r = messageClient.send(req);
             if (r == null || !r.isSuccess() || r.getData() == null) {
                 return MessageResult.fail(channel, r == null ? "null response"
                         : (r.getCode() + ":" + r.getMessage()));

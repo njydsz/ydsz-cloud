@@ -7,6 +7,14 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * PageResult 分页结果单元测试
+ *
+ * <p>覆盖 empty/of 工厂方法、总页数计算与除零保护。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("PageResult 分页结果测试")
 class PageResultTest {
 

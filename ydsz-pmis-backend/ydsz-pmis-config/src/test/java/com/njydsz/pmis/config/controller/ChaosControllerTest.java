@@ -23,12 +23,18 @@ import static org.mockito.Mockito.when;
  * ChaosController 单元测试 (批次 20 P3-3)
  *
  * <p>绕过 @PrePermission 切面, 直接通过反射调用 controller 方法, 验证业务行为.
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ChaosController 混沌工程接口")
 class ChaosControllerTest {
 
+    /** 特性开关服务（Mock） */
     private FeatureFlagService featureFlagService;
+    /** 混沌工程服务 */
     private ChaosService chaosService;
+    /** 待测控制器 */
     private ChaosController controller;
 
     @BeforeEach

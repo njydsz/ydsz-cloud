@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.engine;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.feign.InitiationServiceClient;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
@@ -69,7 +69,7 @@ class BudgetGuardTest {
     @Test
     @DisplayName("check - 项目服务降级 自动放行")
     void checkDegraded() {
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.failed(503, "降级"));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.failed(503, "降级"));
         guard.check(1L, new BigDecimal("100"), "PURCHASE");
         // 降级不抛异常
         verify(eventPublisher, never()).publishEvent(any());
@@ -81,7 +81,7 @@ class BudgetGuardTest {
         Map<String, Object> snap = new HashMap<>();
         snap.put("projectCode", "P-1");
         snap.put("budgetAmount", null);
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.ok(snap));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.ok(snap));
         guard.check(1L, new BigDecimal("9999999"), "PURCHASE");
         verify(eventPublisher, never()).publishEvent(any());
     }
@@ -92,7 +92,7 @@ class BudgetGuardTest {
         Map<String, Object> snap = new HashMap<>();
         snap.put("projectCode", "P-1");
         snap.put("budgetAmount", new BigDecimal("10000"));
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.ok(snap));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.ok(snap));
         when(purchaseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("3000"));
         when(expenseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("2000"));
         when(costAllocationMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("0"));
@@ -107,7 +107,7 @@ class BudgetGuardTest {
         Map<String, Object> snap = new HashMap<>();
         snap.put("projectCode", "P-1");
         snap.put("budgetAmount", new BigDecimal("10000"));
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.ok(snap));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.ok(snap));
         when(purchaseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("8000"));
         when(expenseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("0"));
         // 8000 + 3000 = 11000 > 10000 → 抛异常
@@ -123,7 +123,7 @@ class BudgetGuardTest {
         Map<String, Object> snap = new HashMap<>();
         snap.put("projectCode", "P-1");
         snap.put("budgetAmount", new BigDecimal("10000"));
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.ok(snap));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.ok(snap));
         when(purchaseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("7000"));
         when(expenseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("0"));
         // 7000 + 3000 = 10000  == 10000 → 放行
@@ -138,7 +138,7 @@ class BudgetGuardTest {
         snap.put("projectCode", "P-Y");
         snap.put("projectName", "黄色项目");
         snap.put("budgetAmount", new BigDecimal("10000"));
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.ok(snap));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.ok(snap));
         when(purchaseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("6000"));
         // 6000 + 3000 = 9000 / 10000 = 90% → YELLOW
         guard.check(1L, new BigDecimal("3000"), "PURCHASE");
@@ -158,7 +158,7 @@ class BudgetGuardTest {
         snap.put("projectCode", "P-R");
         snap.put("projectName", "红色项目");
         snap.put("budgetAmount", new BigDecimal("10000"));
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.ok(snap));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.ok(snap));
         when(purchaseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("7000"));
         when(expenseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("2000"));
         // 7000 + 2000 + 1000 = 10000 / 10000 = 100% → RED
@@ -177,7 +177,7 @@ class BudgetGuardTest {
         snap.put("projectCode", "P-RED");
         snap.put("projectName", "红色项目");
         snap.put("budgetAmount", new BigDecimal("10000"));
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.ok(snap));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.ok(snap));
         when(purchaseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("9000"));
         when(expenseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("0"));
         when(costAllocationMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("500"));
@@ -194,7 +194,7 @@ class BudgetGuardTest {
         snap.put("projectCode", "P-Y");
         snap.put("projectName", "黄色项目");
         snap.put("budgetAmount", new BigDecimal("10000"));
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.ok(snap));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.ok(snap));
         when(purchaseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("8000"));
         when(expenseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("0"));
         when(costAllocationMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("0"));
@@ -209,7 +209,7 @@ class BudgetGuardTest {
         Map<String, Object> snap = new HashMap<>();
         snap.put("projectCode", "P-N");
         snap.put("budgetAmount", new BigDecimal("10000"));
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.ok(snap));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.ok(snap));
         when(purchaseMapper.sumByInitiation(1L)).thenReturn(new BigDecimal("5000"));
         // 5000/10000 = 50% → NORMAL
         Map<String, Object> r = guard.occupancy(1L);
@@ -219,7 +219,7 @@ class BudgetGuardTest {
     @Test
     @DisplayName("occupancy - 降级时返回 UNKNOWN")
     void occupancyDegraded() {
-        when(initiationClient.budgetSnapshot(1L)).thenReturn(R.failed(503, "降级"));
+        when(initiationClient.budgetSnapshot(1L)).thenReturn(Result.failed(503, "降级"));
         Map<String, Object> r = guard.occupancy(1L);
         assertThat(r.get("alertLevel")).isEqualTo("UNKNOWN");
     }

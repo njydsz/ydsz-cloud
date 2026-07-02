@@ -17,7 +17,9 @@ public enum EvmAlertLevel {
     YELLOW("YELLOW", "预警"),
     RED("RED", "严重");
 
+    /** 告警等级编码（大小写不敏感） */
     private final String code;
+    /** 告警等级中文描述 */
     private final String desc;
 
     EvmAlertLevel(String code, String desc) {
@@ -25,7 +27,18 @@ public enum EvmAlertLevel {
         this.desc = desc;
     }
 
+    /**
+     * 获取告警等级编码
+     *
+     * @return 告警等级编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取告警等级中文描述
+     *
+     * @return 告警等级中文描述
+     */
     public String getDesc() { return desc; }
 
     /**

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import lombok.Data;
 
 import java.io.Serial;
@@ -23,9 +24,11 @@ import java.time.LocalDateTime;
 @TableName("pmis_project_initiation")
 public class InitiationDO implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -77,6 +80,15 @@ public class InitiationDO implements Serializable {
     private String workflowId;
     /** 租户 ID */
     private Long tenantId;
+
+    /**
+     * 乐观锁版本号（P1-12）
+     *
+     * <p>MyBatis-Plus 在 UPDATE 时自动 SET version = version + 1 并 WHERE version = #{原 version}。
+     * 若记录已被其他事务修改，UPDATE 影响行数为 0，抛出 OptimisticLockerException。
+     */
+    @Version
+    private Integer version;
 
     /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)

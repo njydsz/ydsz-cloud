@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.service.ReportExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,8 +40,8 @@ public class ReportExportController {
 
     @Operation(summary = "查询可导出的列定义")
     @GetMapping("/columns")
-    public R<List<ReportExportService.ColumnDef>> columns(@RequestParam String type) {
-        return R.ok(exportService.columnsOf(type));
+    public Result<List<ReportExportService.ColumnDef>> columns(@RequestParam String type) {
+        return Result.ok(exportService.columnsOf(type));
     }
 
     @Operation(summary = "下载报表（XLSX/CSV，P2-6）")

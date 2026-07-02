@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -28,7 +28,7 @@ public interface ExecutionClient {
      * @return 重算结果
      */
     @PostMapping("/api/v1/execution/billable-utilization/recompute")
-    R<Map<String, Object>> recomputeBillableUtilization(
+    Result<Map<String, Object>> recomputeBillableUtilization(
             @RequestParam(value = "period", required = false) String period,
             @RequestParam(value = "recomputeAll", defaultValue = "false") boolean recomputeAll);
 
@@ -39,5 +39,5 @@ public interface ExecutionClient {
      * @return 平均快照统计
      */
     @GetMapping("/api/v1/execution/billable-utilization/snapshot-average")
-    R<Map<String, Object>> snapshotAverage(@RequestParam(value = "period", required = false) String period);
+    Result<Map<String, Object>> snapshotAverage(@RequestParam(value = "period", required = false) String period);
 }

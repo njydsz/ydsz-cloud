@@ -72,4 +72,24 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
     int skipByNode(@Param("instanceId") Long instanceId,
                    @Param("nodeCode") String nodeCode,
                    @Param("taskStatus") String taskStatus);
+
+    /**
+     * 统计某实例某节点的未完成任务数（用于并行网关 join 判断）
+     */
+    int countPendingByNode(@Param("instanceId") Long instanceId,
+                           @Param("nodeCode") String nodeCode);
+
+    /**
+     * 更新会签计数（设置 approveFinished）
+     */
+    int updateApproveFinished(@Param("id") Long id,
+                              @Param("approveFinished") Integer approveFinished);
+
+    /**
+     * 更新任务办理人信息（用于会签场景下多人共用一个任务时切换办理人）
+     */
+    int updateAssignee(@Param("id") Long id,
+                       @Param("assigneeId") String assigneeId,
+                       @Param("assigneeName") String assigneeName,
+                       @Param("assigneeType") String assigneeType);
 }

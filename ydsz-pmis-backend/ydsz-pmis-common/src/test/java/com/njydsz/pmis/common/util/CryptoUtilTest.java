@@ -6,6 +6,14 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * CryptoUtil 加密工具单元测试
+ *
+ * <p>覆盖 MD5/SHA256、AES-256-GCM、SM4-GCM、PBKDF2、HMAC 与恒定时间比较。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("CryptoUtil 加密工具测试")
 class CryptoUtilTest {
 

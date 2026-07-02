@@ -30,4 +30,21 @@ public interface FlowUserMapper extends BaseMapper<FlowUserDO> {
                       @Param("userId") String userId,
                       @Param("comment") String comment,
                       @Param("processAt") java.time.LocalDateTime processAt);
+
+    /**
+     * 查某实例某节点未处理的用户（会签场景）
+     */
+    List<FlowUserDO> selectUnprocessedByInstanceAndNode(@Param("instanceId") Long instanceId,
+                                                         @Param("nodeCode") String nodeCode);
+
+    /**
+     * 查某用户待办关联的任务 ID（通过 pmis_flow_user 表）
+     */
+    List<Long> selectTaskIdsByUser(@Param("userId") String userId,
+                                   @Param("tenantId") Long tenantId);
+
+    /**
+     * 批量插入
+     */
+    int batchInsert(@Param("list") List<FlowUserDO> list);
 }

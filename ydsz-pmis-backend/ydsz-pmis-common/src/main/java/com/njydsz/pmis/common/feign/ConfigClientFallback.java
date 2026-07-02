@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -32,18 +32,18 @@ public class ConfigClientFallback implements FallbackFactory<ConfigClient> {
         log.warn("[ConfigClientFallback] 触发降级：{}", cause == null ? "unknown" : cause.toString());
         return new ConfigClient() {
             @Override
-            public R<Map<String, String>> getGroup(String group) {
-                return R.ok(Collections.emptyMap());
+            public Result<Map<String, String>> getGroup(String group) {
+                return Result.ok(Collections.emptyMap());
             }
 
             @Override
-            public R<String> getValue(String group, String key) {
-                return R.ok(null);
+            public Result<String> getValue(String group, String key) {
+                return Result.ok(null);
             }
 
             @Override
-            public R<List<Map<String, Object>>> listPublic() {
-                return R.ok(Collections.emptyList());
+            public Result<List<Map<String, Object>>> listPublic() {
+                return Result.ok(Collections.emptyList());
             }
         };
     }

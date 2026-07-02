@@ -18,6 +18,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * OperationLogAspect 操作日志切面单元测试
+ *
+ * <p>覆盖正常执行、异常透传、登录用户/请求上下文记录与参数采集开关。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("OperationLogAspect 操作日志切面测试")
 class OperationLogAspectTest {

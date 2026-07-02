@@ -6,7 +6,7 @@ import com.njydsz.pmis.audit.entity.SensitiveOperationDO;
 import com.njydsz.pmis.audit.mapper.SensitiveOperationMapper;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -35,7 +35,7 @@ public class SensitiveOperationController {
     @Operation(summary = "分页查询")
     @PrePermission("audit:sensitive:view")
     @GetMapping("/page")
-    public R<PageResult<SensitiveOperationDO>> page(
+    public Result<PageResult<SensitiveOperationDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long userId,
@@ -45,14 +45,14 @@ public class SensitiveOperationController {
         if (userId != null) w.eq(SensitiveOperationDO::getUserId, userId);
         if (StringUtils.hasText(opType)) w.eq(SensitiveOperationDO::getBizType, opType);
         w.orderByDesc(SensitiveOperationDO::getVerifiedAt);
-        return R.ok(PageResult.ofPage(mapper.selectPage(p, w)));
+        return Result.ok(PageResult.ofPage(mapper.selectPage(p, w)));
     }
 
     @Operation(summary = "按用户查询敏感操作历史")
     @PrePermission("audit:sensitive:view")
     @GetMapping("/by-user")
-    public R<List<SensitiveOperationDO>> byUser(@RequestParam Long userId,
+    public Result<List<SensitiveOperationDO>> byUser(@RequestParam Long userId,
                                                 @RequestParam(defaultValue = "50") int limit) {
-        return R.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
+        return Result.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
     }
 }

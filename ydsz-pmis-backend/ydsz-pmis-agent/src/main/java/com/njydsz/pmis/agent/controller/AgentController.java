@@ -8,7 +8,7 @@ import com.njydsz.pmis.agent.entity.AgentPredictionDO;
 import com.njydsz.pmis.agent.mapper.AgentPredictionMapper;
 import com.njydsz.pmis.agent.service.AgentService;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -44,37 +44,37 @@ public class AgentController {
     @Operation(summary = "执行 Agent（同步）")
     @PrePermission("agent:task:run")
     @PostMapping("/run")
-    public R<AgentPredictionDO> run(@Valid @RequestBody AgentRunRequestDTO req) {
-        return R.ok(service.run(req));
+    public Result<AgentPredictionDO> run(@Valid @RequestBody AgentRunRequestDTO req) {
+        return Result.ok(service.run(req));
     }
 
     @Operation(summary = "执行 Agent（异步）")
     @PrePermission("agent:task:run")
     @PostMapping("/run-async")
-    public R<Void> runAsync(@Valid @RequestBody AgentRunRequestDTO req) {
+    public Result<Void> runAsync(@Valid @RequestBody AgentRunRequestDTO req) {
         service.runAsync(req);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "内存执行（不落库）")
     @PrePermission("agent:task:run")
     @PostMapping("/in-memory")
-    public R<AgentResult> inMemory(@RequestParam String agentType,
+    public Result<AgentResult> inMemory(@RequestParam String agentType,
                                     @RequestBody AgentContext ctx) {
-        return R.ok(service.executeInMemory(agentType, ctx));
+        return Result.ok(service.executeInMemory(agentType, ctx));
     }
 
     @Operation(summary = "记录详情")
     @PrePermission("agent:task:view")
     @GetMapping("/{id}")
-    public R<AgentPredictionDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<AgentPredictionDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "分页查询")
     @PrePermission("agent:task:list")
     @GetMapping("/page")
-    public R<Page<AgentPredictionDO>> page(
+    public Result<Page<AgentPredictionDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String agentType,
@@ -82,34 +82,34 @@ public class AgentController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) Long bizId) {
-        return R.ok(service.page(page, size, agentType, alertLevel, status, bizType, bizId));
+        return Result.ok(service.page(page, size, agentType, alertLevel, status, bizType, bizId));
     }
 
     @Operation(summary = "最近记录")
     @PrePermission("agent:task:list")
     @GetMapping("/recent")
-    public R<List<AgentPredictionDO>> recent(
+    public Result<List<AgentPredictionDO>> recent(
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) String alertLevel,
             @RequestParam(defaultValue = "20") Integer limit) {
-        return R.ok(service.listRecent(agentType, alertLevel, limit));
+        return Result.ok(service.listRecent(agentType, alertLevel, limit));
     }
 
     @Operation(summary = "按类型/告警等级聚合")
     @PrePermission("agent:task:list")
     @GetMapping("/aggregate/type")
-    public R<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
-        return R.ok(service.aggregateByType(tenantId));
+    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
+        return Result.ok(service.aggregateByType(tenantId));
     }
 
     @Operation(summary = "告警计数")
     @PrePermission("agent:task:list")
     @GetMapping("/count")
-    public R<Long> countByAlertLevel(
+    public Result<Long> countByAlertLevel(
             @RequestParam(required = false) String alertLevel,
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) Long tenantId) {
-        return R.ok(service.countByAlertLevel(alertLevel, agentType, tenantId));
+        return Result.ok(service.countByAlertLevel(alertLevel, agentType, tenantId));
     }
 
     /**
@@ -119,12 +119,12 @@ public class AgentController {
     @Operation(summary = "AI Agent 执行耗时统计 (P50/P90/P95)")
     @PrePermission("agent:task:list")
     @GetMapping("/duration-stats")
-    public R<Map<String, Object>> durationStats(
+    public Result<Map<String, Object>> durationStats(
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
             @RequestParam(required = false) Long tenantId) {
-        return R.ok(predictionMapper.selectDurationStats(agentType, from, to, tenantId));
+        return Result.ok(predictionMapper.selectDurationStats(agentType, from, to, tenantId));
     }
 
     /**
@@ -133,10 +133,10 @@ public class AgentController {
     @Operation(summary = "按 Agent 类型统计耗时")
     @PrePermission("agent:task:list")
     @GetMapping("/duration-stats/by-agent-type")
-    public R<List<Map<String, Object>>> durationStatsByAgentType(
+    public Result<List<Map<String, Object>>> durationStatsByAgentType(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
             @RequestParam(required = false) Long tenantId) {
-        return R.ok(predictionMapper.selectDurationStatsByAgentType(from, to, tenantId));
+        return Result.ok(predictionMapper.selectDurationStatsByAgentType(from, to, tenantId));
     }
 }

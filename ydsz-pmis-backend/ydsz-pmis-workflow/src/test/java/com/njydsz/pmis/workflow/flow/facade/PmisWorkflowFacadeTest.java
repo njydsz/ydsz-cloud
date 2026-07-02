@@ -3,8 +3,10 @@ package com.njydsz.pmis.workflow.flow.facade;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import org.junit.jupiter.api.BeforeEach;
@@ -12,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,19 +33,23 @@ import static org.mockito.Mockito.when;
  * PmisWorkflowFacade 单元测试
  *
  * <p>验证 Facade 对自建工作流服务的委托与转换逻辑。
+ *
+ * <p>1.1.0 新增：加签 / 撤回 / 催办 / 审计轨迹。
  */
 @DisplayName("PmisWorkflowFacade 单元测试")
 class PmisWorkflowFacadeTest {
 
     private FlowInstanceService instanceService;
     private FlowTaskService taskService;
+    private FlowAuditLogMapper auditLogMapper;
     private PmisWorkflowFacade facade;
 
     @BeforeEach
     void setUp() {
         instanceService = mock(FlowInstanceService.class);
         taskService = mock(FlowTaskService.class);
-        facade = new PmisWorkflowFacade(instanceService, taskService);
+        auditLogMapper = mock(FlowAuditLogMapper.class);
+        facade = new PmisWorkflowFacade(instanceService, taskService, auditLogMapper);
     }
 
     @Test
@@ -227,5 +234,92 @@ class PmisWorkflowFacadeTest {
         verify(instanceService).start(captor.capture());
         assertThat(captor.getValue().getFlowCode()).isEqualTo("contract_change");
         assertThat(captor.getValue().getBusinessId()).isEqualTo("C-001");
+    }
+
+    // ============== P1-7: 加签 ==============
+
+    @Test
+    @DisplayName("countersignBeforeTask 应委托 taskService.countersignBefore")
+    void testCountersignBeforeTask() {
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetUserId(888L);
+        facade.countersignBeforeTask(dto);
+        verify(taskService, times(1)).countersignBefore(dto);
+    }
+
+    @Test
+    @DisplayName("countersignAfterTask 应委托 taskService.countersignAfter")
+    void testCountersignAfterTask() {
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetUserId(999L);
+        facade.countersignAfterTask(dto);
+        verify(taskService, times(1)).countersignAfter(dto);
+    }
+
+    // ============== P1-9: 催办 ==============
+
+    @Test
+    @DisplayName("urgeTask 应委托 taskService.urge 并返回被催办人列表")
+    void testUrgeTask() {
+        when(taskService.urge(eq(100L), eq(7L), eq("请尽快处理")))
+                .thenReturn(List.of("1001", "1002"));
+        List<String> urged = facade.urgeTask(100L, 7L, "请尽快处理");
+        assertThat(urged).containsExactly("1001", "1002");
+        verify(taskService, times(1)).urge(100L, 7L, "请尽快处理");
+    }
+
+    // ============== P1-8: 撤回 ==============
+
+    @Test
+    @DisplayName("recallProcess 应解析 String id 为 Long 并委托 instanceService.recall")
+    void testRecallProcess() {
+        when(instanceService.recall(eq(100L), eq(7L))).thenReturn(true);
+        boolean result = facade.recallProcess("100", 7L);
+        assertThat(result).isTrue();
+        verify(instanceService, times(1)).recall(100L, 7L);
+    }
+
+    @Test
+    @DisplayName("recallProcess 失败时返回 false")
+    void testRecallProcessFailed() {
+        when(instanceService.recall(eq(100L), eq(7L))).thenReturn(false);
+        boolean result = facade.recallProcess("100", 7L);
+        assertThat(result).isFalse();
+    }
+
+    // ============== P1-13: 审计轨迹 ==============
+
+    @Test
+    @DisplayName("listAuditTrail 应委托 auditLogMapper 并转换为 Map 列表")
+    void testListAuditTrail() {
+        FlowAuditLogDO log1 = new FlowAuditLogDO();
+        log1.setId(1L);
+        log1.setInstanceId(100L);
+        log1.setTaskId(10L);
+        log1.setAction("PASS");
+        log1.setOperatorId(7L);
+        log1.setComment("同意");
+        log1.setOperatedAt(LocalDateTime.now());
+        when(auditLogMapper.selectByInstanceId(100L)).thenReturn(List.of(log1));
+
+        List<Map<String, Object>> result = facade.listAuditTrail("100");
+        assertThat(result).hasSize(1);
+        Map<String, Object> m = result.get(0);
+        assertThat(m.get("id")).isEqualTo(1L);
+        assertThat(m.get("instanceId")).isEqualTo(100L);
+        assertThat(m.get("taskId")).isEqualTo(10L);
+        assertThat(m.get("action")).isEqualTo("PASS");
+        assertThat(m.get("operatorId")).isEqualTo(7L);
+        assertThat(m.get("comment")).isEqualTo("同意");
+    }
+
+    @Test
+    @DisplayName("listAuditTrail 无记录时返回空列表")
+    void testListAuditTrailEmpty() {
+        when(auditLogMapper.selectByInstanceId(99L)).thenReturn(List.of());
+        List<Map<String, Object>> result = facade.listAuditTrail("99");
+        assertThat(result).isEmpty();
     }
 }

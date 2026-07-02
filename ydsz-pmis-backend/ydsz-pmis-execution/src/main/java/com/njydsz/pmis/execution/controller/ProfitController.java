@@ -1,7 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.ProfitSnapshotDTO;
 import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;
 import com.njydsz.pmis.execution.service.ProfitService;
@@ -31,35 +31,35 @@ public class ProfitController {
     @Operation(summary = "生成/更新项目月度利润快照")
     @PrePermission("execution:profit:snapshot")
     @PostMapping("/snapshot")
-    public R<Long> snapshot(@Valid @RequestBody ProfitSnapshotDTO dto) {
-        return R.ok(service.generateSnapshot(dto));
+    public Result<Long> snapshot(@Valid @RequestBody ProfitSnapshotDTO dto) {
+        return Result.ok(service.generateSnapshot(dto));
     }
 
     @Operation(summary = "查询项目某月快照")
     @PrePermission("execution:profit:list")
     @GetMapping("/snapshot")
-    public R<ProfitSnapshotDO> get(@RequestParam Long initiationId, @RequestParam String period) {
-        return R.ok(service.getByInitiationAndPeriod(initiationId, period));
+    public Result<ProfitSnapshotDO> get(@RequestParam Long initiationId, @RequestParam String period) {
+        return Result.ok(service.getByInitiationAndPeriod(initiationId, period));
     }
 
     @Operation(summary = "项目所有快照")
     @PrePermission("execution:profit:list")
     @GetMapping("/snapshots/{initiationId}")
-    public R<List<ProfitSnapshotDO>> list(@PathVariable Long initiationId) {
-        return R.ok(service.listByInitiation(initiationId));
+    public Result<List<ProfitSnapshotDO>> list(@PathVariable Long initiationId) {
+        return Result.ok(service.listByInitiation(initiationId));
     }
 
     @Operation(summary = "趋势")
     @PrePermission("execution:profit:list")
     @GetMapping("/trend/{initiationId}")
-    public R<List<Map<String, Object>>> trend(@PathVariable Long initiationId) {
-        return R.ok(service.trendByPeriod(initiationId));
+    public Result<List<Map<String, Object>>> trend(@PathVariable Long initiationId) {
+        return Result.ok(service.trendByPeriod(initiationId));
     }
 
     @Operation(summary = "项目健康度评分")
     @PrePermission("execution:profit:list")
     @GetMapping("/health-score")
-    public R<Integer> healthScore(@RequestParam Long initiationId, @RequestParam String period) {
-        return R.ok(service.healthScore(initiationId, period));
+    public Result<Integer> healthScore(@RequestParam Long initiationId, @RequestParam String period) {
+        return Result.ok(service.healthScore(initiationId, period));
     }
 }

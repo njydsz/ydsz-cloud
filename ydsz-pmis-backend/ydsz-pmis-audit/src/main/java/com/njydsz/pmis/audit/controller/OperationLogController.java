@@ -4,7 +4,7 @@ import com.njydsz.pmis.audit.entity.OperationLogDO;
 import com.njydsz.pmis.audit.service.OperationLogServiceImpl;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -36,7 +36,7 @@ public class OperationLogController {
     @Operation(summary = "分页查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/page")
-    public R<PageResult<OperationLogDO>> page(
+    public Result<PageResult<OperationLogDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long userId,
@@ -49,30 +49,30 @@ public class OperationLogController {
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime endTime) {
-        return R.ok(PageResult.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
+        return Result.ok(PageResult.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
     }
 
     @Operation(summary = "按用户查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/by-user")
-    public R<List<OperationLogDO>> byUser(@RequestParam Long userId,
+    public Result<List<OperationLogDO>> byUser(@RequestParam Long userId,
                                           @RequestParam(defaultValue = "50") int limit) {
-        return R.ok(service.listByUser(userId, limit));
+        return Result.ok(service.listByUser(userId, limit));
     }
 
     @Operation(summary = "按业务查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/by-biz")
-    public R<List<OperationLogDO>> byBiz(@RequestParam String bizType,
+    public Result<List<OperationLogDO>> byBiz(@RequestParam String bizType,
                                          @RequestParam String bizId,
                                          @RequestParam(defaultValue = "50") int limit) {
-        return R.ok(service.listByBiz(bizType, bizId, limit));
+        return Result.ok(service.listByBiz(bizType, bizId, limit));
     }
 
     @Operation(summary = "清理 N 天前日志")
     @PrePermission(PermissionCodes.AUDIT_LOG_CLEAN)
     @PostMapping("/clean")
-    public R<Integer> clean(@RequestParam(defaultValue = "90") int days) {
-        return R.ok(service.cleanBefore(days));
+    public Result<Integer> clean(@RequestParam(defaultValue = "90") int days) {
+        return Result.ok(service.cleanBefore(days));
     }
 }

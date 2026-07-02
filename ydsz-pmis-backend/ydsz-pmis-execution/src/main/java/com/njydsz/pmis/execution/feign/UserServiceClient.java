@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +28,7 @@ public interface UserServiceClient {
      * @return 员工信息（含姓名 / 部门 / 职级等）
      */
     @GetMapping("/api/v1/user/employee/{id}")
-    R<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
+    Result<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
 
     /**
      * 按职级编码查询内部成本费率
@@ -37,5 +37,5 @@ public interface UserServiceClient {
      * @return 内部日费率；服务降级时返回 0
      */
     @GetMapping("/api/v1/user/employee/level-rate")
-    R<BigDecimal> getLevelRate(@RequestParam("levelCode") String levelCode);
+    Result<BigDecimal> getLevelRate(@RequestParam("levelCode") String levelCode);
 }

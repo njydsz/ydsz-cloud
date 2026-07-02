@@ -36,6 +36,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * RequireReAuthAspect 敏感操作二次认证切面测试
+ *
+ * <p>覆盖未登录拦截、token 缺失/失效、token 消费、事件发布与 IP 回退逻辑。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("RequireReAuthAspect 二次认证切面测试")
 class RequireReAuthAspectTest {

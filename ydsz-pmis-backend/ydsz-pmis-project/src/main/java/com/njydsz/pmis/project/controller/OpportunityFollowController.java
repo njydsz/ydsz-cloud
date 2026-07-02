@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.OpportunityFollowDTO;
 import com.njydsz.pmis.project.entity.OpportunityFollowDO;
 import com.njydsz.pmis.project.service.OpportunityFollowService;
@@ -32,16 +32,16 @@ public class OpportunityFollowController {
 
     @Operation(summary = "记录跟进")
     @PostMapping
-    public R<Long> record(@Valid @RequestBody OpportunityFollowDTO dto) {
-        return R.ok(service.record(dto));
+    public Result<Long> record(@Valid @RequestBody OpportunityFollowDTO dto) {
+        return Result.ok(service.record(dto));
     }
 
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public R<Page<OpportunityFollowDO>> page(
+    public Result<Page<OpportunityFollowDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long opportunityId) {
-        return R.ok(service.page(page, size, opportunityId));
+        return Result.ok(service.page(page, size, opportunityId));
     }
 }

@@ -4,7 +4,7 @@ import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 import com.njydsz.pmis.agent.service.AgentOrchestrationService;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +32,7 @@ public class AgentOrchestrationController {
     @Operation(summary = "协调多 Agent 编排执行")
     @PrePermission("agent:orchestration:run")
     @PostMapping("/coordinate")
-    public R<OrchestrationResult> coordinate(@RequestBody OrchestrationRequest req) {
-        return R.ok(service.orchestrate(req));
+    public Result<OrchestrationResult> coordinate(@RequestBody OrchestrationRequest req) {
+        return Result.ok(service.orchestrate(req));
     }
 }

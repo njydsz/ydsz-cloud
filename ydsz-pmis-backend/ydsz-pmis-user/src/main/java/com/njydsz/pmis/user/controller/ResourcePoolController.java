@@ -3,7 +3,7 @@ package com.njydsz.pmis.user.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.user.dto.ResourcePoolCreateDTO;
 import com.njydsz.pmis.user.entity.ResourcePoolDO;
 import com.njydsz.pmis.user.service.ResourcePoolService;
@@ -43,53 +43,53 @@ public class ResourcePoolController {
     @PrePermission("resource:pool:create")
     @OperationLog(module = "资源池", action = "创建资源池", bizType = "RESOURCE_POOL")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
-        return R.ok(poolService.create(dto));
+    public Result<Long> create(@Valid @RequestBody ResourcePoolCreateDTO dto) {
+        return Result.ok(poolService.create(dto));
     }
 
     @Operation(summary = "更新资源池")
     @PrePermission("resource:pool:update")
     @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
     @PutMapping("/{id}")
-    public R<Void> update(@PathVariable Long id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
+    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
         poolService.update(id, dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除资源池")
     @PrePermission("resource:pool:delete")
     @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         poolService.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "资源池详情")
     @GetMapping("/{id}")
-    public R<ResourcePoolDO> get(@PathVariable Long id) {
-        return R.ok(poolService.getById(id));
+    public Result<ResourcePoolDO> get(@PathVariable Long id) {
+        return Result.ok(poolService.getById(id));
     }
 
     @Operation(summary = "按类型查询")
     @GetMapping("/by-type")
-    public R<List<ResourcePoolDO>> listByType(@RequestParam String poolType) {
-        return R.ok(poolService.listByType(poolType));
+    public Result<List<ResourcePoolDO>> listByType(@RequestParam String poolType) {
+        return Result.ok(poolService.listByType(poolType));
     }
 
     @Operation(summary = "按部门查询")
     @GetMapping("/by-dept/{departmentId}")
-    public R<List<ResourcePoolDO>> listByDept(@PathVariable Long departmentId) {
-        return R.ok(poolService.listByDept(departmentId));
+    public Result<List<ResourcePoolDO>> listByDept(@PathVariable Long departmentId) {
+        return Result.ok(poolService.listByDept(departmentId));
     }
 
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public R<Page<ResourcePoolDO>> page(
+    public Result<Page<ResourcePoolDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String poolType,
             @RequestParam(required = false) String status) {
-        return R.ok(poolService.page(page, size, poolType, status));
+        return Result.ok(poolService.page(page, size, poolType, status));
     }
 }

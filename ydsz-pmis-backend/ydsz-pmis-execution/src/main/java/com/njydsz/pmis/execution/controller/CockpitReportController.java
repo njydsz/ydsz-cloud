@@ -1,7 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.execution.dto.CockpitDrillDownDTO;
 import com.njydsz.pmis.execution.dto.CockpitKpiVO;
@@ -37,59 +37,59 @@ public class CockpitReportController {
     @Operation(summary = "驾驶舱总览 KPI")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/overview")
-    public R<CockpitKpiVO> overview(@RequestParam(required = false) String period,
+    public Result<CockpitKpiVO> overview(@RequestParam(required = false) String period,
                                      CockpitDrillDownDTO drillDown) {
-        return R.ok(service.overview(period, drillDown));
+        return Result.ok(service.overview(period, drillDown));
     }
 
     @Operation(summary = "EVM 健康分布")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/evm-health")
-    public R<Map<String, Integer>> evmHealth(@RequestParam(required = false) String period,
+    public Result<Map<String, Integer>> evmHealth(@RequestParam(required = false) String period,
                                              CockpitDrillDownDTO drillDown) {
-        return R.ok(service.evmHealthDistribution(period, drillDown));
+        return Result.ok(service.evmHealthDistribution(period, drillDown));
     }
 
     @Operation(summary = "Bench 闲置成本汇总")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/bench-cost")
-    public R<Map<String, Object>> benchCost(CockpitDrillDownDTO drillDown) {
-        return R.ok(service.benchCostSummary(drillDown));
+    public Result<Map<String, Object>> benchCost(CockpitDrillDownDTO drillDown) {
+        return Result.ok(service.benchCostSummary(drillDown));
     }
 
     @Operation(summary = "可计费利用率汇总")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/utilization")
-    public R<Map<String, Object>> utilization(CockpitDrillDownDTO drillDown) {
-        return R.ok(service.utilizationSummary(drillDown));
+    public Result<Map<String, Object>> utilization(CockpitDrillDownDTO drillDown) {
+        return Result.ok(service.utilizationSummary(drillDown));
     }
 
     @Operation(summary = "按事业部下钻")
     @PrePermission("cockpit:drilldown:view")
     @GetMapping("/drill/dept")
-    public R<List<Map<String, Object>>> drillDept(@RequestParam(required = false) String period) {
-        return R.ok(service.drillByDept(period));
+    public Result<List<Map<String, Object>>> drillDept(@RequestParam(required = false) String period) {
+        return Result.ok(service.drillByDept(period));
     }
 
     @Operation(summary = "按项目类型下钻")
     @PrePermission("cockpit:drilldown:view")
     @GetMapping("/drill/project-type")
-    public R<List<Map<String, Object>>> drillProjectType(@RequestParam(required = false) String period) {
-        return R.ok(service.drillByProjectType(period));
+    public Result<List<Map<String, Object>>> drillProjectType(@RequestParam(required = false) String period) {
+        return Result.ok(service.drillByProjectType(period));
     }
 
     @Operation(summary = "按客户下钻")
     @PrePermission("cockpit:drilldown:view")
     @GetMapping("/drill/customer")
-    public R<List<Map<String, Object>>> drillCustomer(@RequestParam(required = false) String period) {
-        return R.ok(service.drillByCustomer(period));
+    public Result<List<Map<String, Object>>> drillCustomer(@RequestParam(required = false) String period) {
+        return Result.ok(service.drillByCustomer(period));
     }
 
     @Operation(summary = "合同总额年度趋势")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/contract-yearly-trend")
-    public R<Map<String, Object>> contractYearlyTrend() {
-        return R.ok(service.contractAmountYearlyTrend());
+    public Result<Map<String, Object>> contractYearlyTrend() {
+        return Result.ok(service.contractAmountYearlyTrend());
     }
 
     // ========== 批次18 增量端点 ==========
@@ -97,31 +97,31 @@ public class CockpitReportController {
     @Operation(summary = "预警事件摘要（批次18）")
     @PrePermission("cockpit:alert:view")
     @GetMapping("/alerts")
-    public R<CockpitAlertSummaryVO> alerts(@RequestParam(required = false) String period,
+    public Result<CockpitAlertSummaryVO> alerts(@RequestParam(required = false) String period,
                                             CockpitDrillDownDTO drillDown) {
-        return R.ok(service.alertSummary(period, drillDown));
+        return Result.ok(service.alertSummary(period, drillDown));
     }
 
     @Operation(summary = "项目群驾驶舱（批次18）")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/project-group")
-    public R<List<ProjectGroupKpiDTO>> projectGroup(@RequestParam(required = false) String period,
+    public Result<List<ProjectGroupKpiDTO>> projectGroup(@RequestParam(required = false) String period,
                                                       CockpitDrillDownDTO drillDown) {
-        return R.ok(service.projectGroupOverview(period, drillDown));
+        return Result.ok(service.projectGroupOverview(period, drillDown));
     }
 
     @Operation(summary = "高管看板（批次18）")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/executive")
-    public R<ExecutiveOverviewVO> executive(@RequestParam(required = false) String period,
+    public Result<ExecutiveOverviewVO> executive(@RequestParam(required = false) String period,
                                              CockpitDrillDownDTO drillDown) {
-        return R.ok(service.executiveOverview(period, drillDown));
+        return Result.ok(service.executiveOverview(period, drillDown));
     }
 
     @Operation(summary = "KPI 趋势（最近 N 个月，批次18）")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/kpi-trend")
-    public R<KpiTrendVO> kpiTrend(@RequestParam(required = false, defaultValue = "12") Integer months) {
-        return R.ok(service.kpiTrend(months));
+    public Result<KpiTrendVO> kpiTrend(@RequestParam(required = false, defaultValue = "12") Integer months) {
+        return Result.ok(service.kpiTrend(months));
     }
 }

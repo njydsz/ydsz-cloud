@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.featureflag;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.ConfigClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -26,6 +26,9 @@ import static org.mockito.Mockito.when;
  *   <li>Feign 异常降级到本地缓存</li>
  *   <li>刷新缓存立即生效</li>
  * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("FeatureFlag 特性开关")
 class FeatureFlagTest {
@@ -44,7 +47,7 @@ class FeatureFlagTest {
     @DisplayName("SAFETY 类 flag 永远返回 true")
     void safetyFlagsAlwaysEnabled() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         FeatureFlag.AUDIT_LOG_MANDATORY.configKey(), "false",
                         FeatureFlag.SENSITIVE_REAUTH.configKey(), "false"
                 )));
@@ -58,7 +61,7 @@ class FeatureFlagTest {
     @DisplayName("未配置时, 业务类 flag 默认关闭")
     void businessFlagsDefaultDisabled() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of()));
+                .thenReturn(Result.ok(Map.of()));
         assertThat(service.isEnabled(FeatureFlag.AGENT_ORCHESTRATION)).isFalse();
         assertThat(service.isEnabled(FeatureFlag.ADVANCED_PROFIT_SIMULATION)).isFalse();
         assertThat(service.isEnabled(FeatureFlag.COCKPIT_V2)).isFalse();
@@ -68,7 +71,7 @@ class FeatureFlagTest {
     @DisplayName("config 显式 true 后, flag 启用")
     void configOverrideTrue() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         FeatureFlag.AGENT_ORCHESTRATION.configKey(), "true",
                         FeatureFlag.COCKPIT_V2.configKey(), "1"
                 )));
@@ -80,7 +83,7 @@ class FeatureFlagTest {
     @DisplayName("config 显式 false 后, flag 关闭")
     void configOverrideFalse() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(FeatureFlag.I18N_LOCALIZATION.configKey(), "false")));
+                .thenReturn(Result.ok(Map.of(FeatureFlag.I18N_LOCALIZATION.configKey(), "false")));
         // I18N 业务默认 false, 再显式 false → 仍 false
         assertThat(service.isEnabled(FeatureFlag.I18N_LOCALIZATION)).isFalse();
     }
@@ -89,7 +92,7 @@ class FeatureFlagTest {
     @DisplayName("灰度发布 50% 时, 一部分 userId 命中, 一部分未命中")
     void rolloutHalf() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         FeatureFlag.AGENT_ORCHESTRATION.configKey(), "true",
                         FeatureFlag.AGENT_ORCHESTRATION.configKey() + ".rollout", "50"
                 )));
@@ -107,7 +110,7 @@ class FeatureFlagTest {
     @DisplayName("灰度发布 0% 时, 任何用户都不命中")
     void rolloutZero() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         FeatureFlag.AGENT_ORCHESTRATION.configKey(), "true",
                         FeatureFlag.AGENT_ORCHESTRATION.configKey() + ".rollout", "0"
                 )));
@@ -120,7 +123,7 @@ class FeatureFlagTest {
     @DisplayName("灰度发布 100% 时, 任何用户都命中")
     void rolloutFull() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         FeatureFlag.AGENT_ORCHESTRATION.configKey(), "true",
                         FeatureFlag.AGENT_ORCHESTRATION.configKey() + ".rollout", "100"
                 )));
@@ -133,14 +136,14 @@ class FeatureFlagTest {
     @DisplayName("灰度发布但 userId=null 时, 视为不在白名单")
     void rolloutWithNullUserId() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         FeatureFlag.AGENT_ORCHESTRATION.configKey(), "true",
                         FeatureFlag.AGENT_ORCHESTRATION.configKey() + ".rollout", "100"
                 )));
         // userId=null + rollout<100 → false
         // 验证: rollout=50 + null user → false
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         FeatureFlag.AGENT_ORCHESTRATION.configKey(), "true",
                         FeatureFlag.AGENT_ORCHESTRATION.configKey() + ".rollout", "50"
                 )));
@@ -152,7 +155,7 @@ class FeatureFlagTest {
     @DisplayName("同一 userId 多次调用结果一致 (粘性)")
     void rolloutSticky() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         FeatureFlag.AGENT_ORCHESTRATION.configKey(), "true",
                         FeatureFlag.AGENT_ORCHESTRATION.configKey() + ".rollout", "30"
                 )));
@@ -176,7 +179,7 @@ class FeatureFlagTest {
     @DisplayName("snapshot 包含所有 flag 的当前状态")
     void snapshotComplete() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         FeatureFlag.AGENT_ORCHESTRATION.configKey(), "true",
                         FeatureFlag.COCKPIT_V2.configKey(), "true",
                         FeatureFlag.COCKPIT_V2.configKey() + ".rollout", "25"
@@ -200,7 +203,7 @@ class FeatureFlagTest {
     @DisplayName("snapshotByCategory 按 4 个分类聚合")
     void snapshotGrouped() {
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of()));
+                .thenReturn(Result.ok(Map.of()));
         Map<String, List<FeatureFlagSnapshot>> grouped = service.snapshotByCategory();
         assertThat(grouped).containsKeys("INFRASTRUCTURE", "BUSINESS", "UI", "SAFETY");
         // SAFETY 至少 4 个
@@ -212,7 +215,7 @@ class FeatureFlagTest {
     void setEnabledImmediate() {
         // 首次: 未配置 → 默认 false
         when(configClient.getGroup(eq(FeatureFlagService.CONFIG_GROUP)))
-                .thenReturn(R.ok(Map.of()));
+                .thenReturn(Result.ok(Map.of()));
         assertThat(service.isEnabled(FeatureFlag.AGENT_ORCHESTRATION)).isFalse();
         // 写入本地 store
         service.setEnabled(FeatureFlag.AGENT_ORCHESTRATION, true);

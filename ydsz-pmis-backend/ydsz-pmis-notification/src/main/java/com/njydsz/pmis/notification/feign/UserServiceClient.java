@@ -1,6 +1,6 @@
 package com.njydsz.pmis.notification.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,5 +22,5 @@ public interface UserServiceClient {
      * 获取员工基本信息（含 email/phone）
      */
     @GetMapping("/api/v1/user/employee/{id}")
-    R<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
+    Result<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
 }

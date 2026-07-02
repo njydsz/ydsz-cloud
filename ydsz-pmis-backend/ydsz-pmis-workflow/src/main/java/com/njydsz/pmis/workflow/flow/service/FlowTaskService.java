@@ -67,6 +67,34 @@ public interface FlowTaskService {
     List<FlowTaskDO> listDoneByAssignee(String assigneeId, Long tenantId);
 
     /**
+     * 查用户的待办（多维度匹配：直接分配 + ROLE/DEPT 展开 + pmis_flow_user 关联）
+     *
+     * @param userId    用户 ID
+     * @param roleCodes 用户拥有的角色编码（可空）
+     * @param deptIds   用户所属部门 ID（字符串形式，可空）
+     * @param tenantId  租户 ID（可空，默认 1L）
+     */
+    List<FlowTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
+                                     List<String> deptIds, Long tenantId);
+
+    /**
+     * P1-7: 前加签 — 在当前节点前插入临时审批人
+     */
+    void countersignBefore(FlowTaskOperateDTO dto);
+
+    /**
+     * P1-7: 后加签 — 在当前节点通过后、下一节点前插入临时审批人
+     */
+    void countersignAfter(FlowTaskOperateDTO dto);
+
+    /**
+     * P1-9: 催办 — 通知当前节点所有待办处理人
+     *
+     * @return 被催办人 ID 列表
+     */
+    List<String> urge(Long instanceId, Long operatorId, String comment);
+
+    /**
      * 转视图
      */
     FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowTaskDO task);

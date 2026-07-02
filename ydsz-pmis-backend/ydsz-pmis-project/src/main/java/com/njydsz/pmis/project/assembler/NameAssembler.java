@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.assembler;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.feign.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +33,7 @@ public class NameAssembler {
     public String resolveEmployee(Long id) {
         if (id == null) return null;
         try {
-            R<Map<String, Object>> r = userServiceClient.getEmployee(id);
+            Result<Map<String, Object>> r = userServiceClient.getEmployee(id);
             if (r != null && r.getData() != null) {
                 Object name = r.getData().get("name");
                 if (name == null) name = r.getData().get("realName");
@@ -54,7 +54,7 @@ public class NameAssembler {
     public String resolveCustomer(Long id) {
         if (id == null) return null;
         try {
-            R<String> r = userServiceClient.getCustomerName(id);
+            Result<String> r = userServiceClient.getCustomerName(id);
             if (r != null && r.getData() != null) {
                 return r.getData();
             }
@@ -73,7 +73,7 @@ public class NameAssembler {
     public Map<Long, String> batchEmployeeName(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return Map.of();
         try {
-            R<Map<Long, String>> r = userServiceClient.batchEmployeeName(ids);
+            Result<Map<Long, String>> r = userServiceClient.batchEmployeeName(ids);
             if (r != null && r.getData() != null) {
                 return r.getData();
             }

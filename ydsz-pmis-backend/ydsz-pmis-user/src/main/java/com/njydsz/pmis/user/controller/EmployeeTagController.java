@@ -2,7 +2,7 @@ package com.njydsz.pmis.user.controller;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.user.dto.EmployeeTagCreateDTO;
 import com.njydsz.pmis.user.entity.EmployeeTagDO;
@@ -41,39 +41,39 @@ public class EmployeeTagController {
     @PrePermission(PermissionCodes.RESOURCE_TAG_CREATE)
     @OperationLog(module = "人员标签", action = "添加标签", bizType = "EMPLOYEE_TAG")
     @PostMapping
-    public R<Long> add(@Valid @RequestBody EmployeeTagCreateDTO dto) {
-        return R.ok(tagService.add(dto));
+    public Result<Long> add(@Valid @RequestBody EmployeeTagCreateDTO dto) {
+        return Result.ok(tagService.add(dto));
     }
 
     @Operation(summary = "删除标签")
     @PrePermission(PermissionCodes.RESOURCE_TAG_DELETE)
     @OperationLog(module = "人员标签", action = "删除标签", bizType = "EMPLOYEE_TAG")
     @DeleteMapping("/{id}")
-    public R<Void> remove(@PathVariable Long id) {
+    public Result<Void> remove(@PathVariable Long id) {
         tagService.remove(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "覆盖式设置员工标签")
     @PrePermission(PermissionCodes.RESOURCE_TAG_UPDATE)
     @OperationLog(module = "人员标签", action = "覆盖员工标签", bizType = "EMPLOYEE_TAG")
     @PutMapping("/replace/{employeeId}")
-    public R<Void> replaceByEmployee(@PathVariable Long employeeId,
+    public Result<Void> replaceByEmployee(@PathVariable Long employeeId,
                                      @RequestBody List<EmployeeTagCreateDTO> tags) {
         tagService.replaceByEmployee(employeeId, tags);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "按员工查询")
     @GetMapping("/by-employee/{employeeId}")
-    public R<List<EmployeeTagDO>> listByEmployee(@PathVariable Long employeeId) {
-        return R.ok(tagService.listByEmployee(employeeId));
+    public Result<List<EmployeeTagDO>> listByEmployee(@PathVariable Long employeeId) {
+        return Result.ok(tagService.listByEmployee(employeeId));
     }
 
     @Operation(summary = "按标签筛选候选人")
     @GetMapping("/candidates")
-    public R<List<EmployeeTagDO>> candidates(@RequestParam String tagType,
+    public Result<List<EmployeeTagDO>> candidates(@RequestParam String tagType,
                                              @RequestParam(required = false) String tagCode) {
-        return R.ok(tagService.findCandidates(tagType, tagCode));
+        return Result.ok(tagService.findCandidates(tagType, tagCode));
     }
 }

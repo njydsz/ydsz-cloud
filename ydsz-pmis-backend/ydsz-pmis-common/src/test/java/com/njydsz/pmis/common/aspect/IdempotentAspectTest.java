@@ -22,6 +22,14 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * IdempotentAspect 幂等切面单元测试
+ *
+ * <p>覆盖首次放行、重复拦截、异常释放锁、SpEL 解析等场景。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("IdempotentAspect 幂等 AOP 测试")
 class IdempotentAspectTest {
 

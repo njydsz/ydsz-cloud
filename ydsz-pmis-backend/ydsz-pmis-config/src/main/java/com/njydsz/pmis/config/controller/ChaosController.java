@@ -2,7 +2,7 @@ package com.njydsz.pmis.config.controller;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.chaos.ChaosExperiment;
 import com.njydsz.pmis.common.chaos.ChaosOutcome;
 import com.njydsz.pmis.common.chaos.ChaosService;
@@ -55,51 +55,83 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ChaosController {
 
+    /** 混沌工程服务 */
     private final ChaosService chaosService;
 
+    /**
+     * 列出全部已注册实验
+     *
+     * @return 统一响应结果，包含实验列表
+     */
     @Operation(summary = "列出全部已注册实验")
     @PrePermission("sys:chaos:view")
     @GetMapping("/experiments")
-    public R<List<ChaosExperiment>> list() {
-        return R.ok(chaosService.list());
+    public Result<List<ChaosExperiment>> list() {
+        return Result.ok(chaosService.list());
     }
 
+    /**
+     * 按 target 查询实验
+     *
+     * @param target 实验目标标识
+     * @return 统一响应结果，包含实验信息
+     */
     @Operation(summary = "按 target 查询实验")
     @PrePermission("sys:chaos:view")
     @GetMapping("/experiments/{target}")
-    public R<ChaosExperiment> get(@PathVariable @NotBlank String target) {
+    public Result<ChaosExperiment> get(@PathVariable @NotBlank String target) {
         ChaosExperiment found = chaosService.list().stream()
                 .filter(e -> target.equals(e.getTarget()))
                 .findFirst()
                 .orElse(null);
-        return R.ok(found);
+        return Result.ok(found);
     }
 
+    /**
+     * 注册新实验
+     *
+     * @param experiment 实验配置
+     * @return 统一响应结果
+     */
     @Operation(summary = "注册新实验")
     @PrePermission("sys:chaos:create")
     @OperationLog(module = "混沌工程", action = "注册实验", bizType = "CHAOS_EXPERIMENT")
     @PostMapping("/experiments")
-    public R<Void> register(@RequestBody @Valid ChaosExperiment experiment) {
+    public Result<Void> register(@RequestBody @Valid ChaosExperiment experiment) {
         chaosService.register(experiment);
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * 修改实验（按 target 覆盖）
+     *
+     * @param target     实验目标标识
+     * @param experiment 实验配置
+     * @return 统一响应结果
+     */
     @Operation(summary = "修改实验 (按 target 覆盖)")
     @PrePermission("sys:chaos:create")
     @OperationLog(module = "混沌工程", action = "更新实验", bizType = "CHAOS_EXPERIMENT")
     @PutMapping("/experiments/{target}")
-    public R<Void> update(@PathVariable @NotBlank String target,
+    public Result<Void> update(@PathVariable @NotBlank String target,
                           @RequestBody @Valid ChaosExperiment experiment) {
         experiment.setTarget(target);
         chaosService.register(experiment);
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * 启停实验
+     *
+     * @param target  实验目标标识
+     * @param enabled 是否启用
+     * @return 统一响应结果
+     */
     @Operation(summary = "启停实验")
     @PrePermission("sys:chaos:trigger")
     @OperationLog(module = "混沌工程", action = "启停实验", bizType = "CHAOS_EXPERIMENT")
     @PutMapping("/experiments/{target}/enabled")
-    public R<Void> toggle(@PathVariable @NotBlank String target,
+    public Result<Void> toggle(@PathVariable @NotBlank String target,
                           @RequestParam boolean enabled) {
         ChaosExperiment exp = chaosService.list().stream()
                 .filter(e -> target.equals(e.getTarget()))
@@ -107,37 +139,59 @@ public class ChaosController {
                 .orElseThrow(() -> new IllegalArgumentException("实验不存在: " + target));
         exp.setEnabled(enabled);
         chaosService.register(exp);
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * 注销实验
+     *
+     * @param target 实验目标标识
+     * @return 统一响应结果
+     */
     @Operation(summary = "注销实验")
     @PrePermission("sys:chaos:delete")
     @OperationLog(module = "混沌工程", action = "注销实验", bizType = "CHAOS_EXPERIMENT")
     @DeleteMapping("/experiments/{target}")
-    public R<Void> unregister(@PathVariable @NotBlank String target) {
+    public Result<Void> unregister(@PathVariable @NotBlank String target) {
         chaosService.unregister(target);
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * 查看最近 100 条实验历史
+     *
+     * @return 统一响应结果，包含事件历史列表
+     */
     @Operation(summary = "查看最近 100 条实验历史")
     @PrePermission("sys:chaos:view")
     @GetMapping("/history")
-    public R<List<ChaosService.ChaosEvent>> history() {
-        return R.ok(chaosService.recentHistory());
+    public Result<List<ChaosService.ChaosEvent>> history() {
+        return Result.ok(chaosService.recentHistory());
     }
 
+    /**
+     * 清空实验历史
+     *
+     * @return 统一响应结果
+     */
     @Operation(summary = "清空历史")
     @PrePermission("sys:chaos:trigger")
     @PostMapping("/history/clear")
-    public R<Void> clearHistory() {
+    public Result<Void> clearHistory() {
         chaosService.clearHistory();
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * dry-run：主动触发一次注入以验证容错（需 captureMode 包裹异常）
+     *
+     * @param target 实验目标标识
+     * @return 统一响应结果，包含 target、outcome、error 信息
+     */
     @Operation(summary = "dry-run: 主动触发一次注入以验证容错 (需 captureMode 包裹异常)")
     @PrePermission("sys:chaos:trigger")
     @PostMapping("/dry-run")
-    public R<Map<String, Object>> dryRun(@RequestParam @NotBlank String target) {
+    public Result<Map<String, Object>> dryRun(@RequestParam @NotBlank String target) {
         // 包装异常: ChaosService 注入时会抛, 这里把异常转成 outcome 字符串
         ChaosOutcome outcome;
         String error = null;
@@ -147,7 +201,7 @@ public class ChaosController {
             outcome = ChaosOutcome.INJECTED;
             error = ex.getClass().getName() + ": " + ex.getMessage();
         }
-        return R.ok(Map.of(
+        return Result.ok(Map.of(
                 "target", target,
                 "outcome", outcome.name(),
                 "error", error == null ? "" : error

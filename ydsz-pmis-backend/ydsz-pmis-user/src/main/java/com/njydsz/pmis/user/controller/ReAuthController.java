@@ -1,6 +1,6 @@
 package com.njydsz.pmis.user.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.user.dto.ReAuthRequest;
 import com.njydsz.pmis.user.dto.ReAuthResult;
@@ -33,8 +33,8 @@ public class ReAuthController {
 
     @Operation(summary = "颁发二次认证 token")
     @PostMapping("/token")
-    public R<ReAuthResult> issueToken(@Valid @RequestBody ReAuthRequest request) {
+    public Result<ReAuthResult> issueToken(@Valid @RequestBody ReAuthRequest request) {
         Long userId = SecurityContext.getUserId();
-        return R.ok(reAuthService.issueToken(userId, request));
+        return Result.ok(reAuthService.issueToken(userId, request));
     }
 }

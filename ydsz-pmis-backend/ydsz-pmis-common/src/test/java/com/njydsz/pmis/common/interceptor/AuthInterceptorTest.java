@@ -26,6 +26,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * AuthInterceptor 鉴权拦截器单元测试
+ *
+ * <p>覆盖多种 Token 来源（Authorization / X-Access-Token / query）、非法 Token 拦截与上下文清理。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("AuthInterceptor 鉴权拦截器测试")
 class AuthInterceptorTest {

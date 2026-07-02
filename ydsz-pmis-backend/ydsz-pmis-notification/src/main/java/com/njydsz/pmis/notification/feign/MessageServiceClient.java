@@ -1,6 +1,6 @@
 package com.njydsz.pmis.notification.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -24,13 +24,13 @@ public interface MessageServiceClient {
      * 发送消息（支持模板渲染）
      */
     @PostMapping("/api/v1/message/send")
-    R<Object> send(@RequestBody MessageFeignDTO dto);
+    Result<Object> send(@RequestBody MessageFeignDTO dto);
 
     /**
      * 已注册通道列表
      */
     @GetMapping("/api/v1/message/channels")
-    R<List<String>> channels();
+    Result<List<String>> channels();
 
     /**
      * 通知发送所需的最小 DTO

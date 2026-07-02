@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import lombok.Data;
 
 import java.io.Serial;
@@ -95,6 +96,10 @@ public class InvoiceDO implements Serializable {
     private Long tenantId;
     /** 链路追踪ID */
     private String providerTraceId;
+
+    /** 乐观锁版本号（P1-12） */
+    @Version
+    private Integer version;
 
     /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)

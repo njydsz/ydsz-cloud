@@ -8,9 +8,11 @@ import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import org.junit.jupiter.api.BeforeEach;
@@ -47,6 +49,7 @@ class FlowInstanceServiceImplTest {
     private FlowDefinitionService definitionService;
     private FlowAdvancer advancer;
     private FlowTaskService taskService;
+    private FlowTaskMapper taskMapper;
     private List<FlowEventListener> eventListeners;
     private FlowInstanceServiceImpl service;
 
@@ -56,9 +59,10 @@ class FlowInstanceServiceImplTest {
         definitionService = mock(FlowDefinitionService.class);
         advancer = mock(FlowAdvancer.class);
         taskService = mock(FlowTaskService.class);
+        taskMapper = mock(FlowTaskMapper.class);
         eventListeners = new ArrayList<>();
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
-                advancer, taskService, eventListeners);
+                advancer, taskService, taskMapper, eventListeners);
     }
 
     @Test
@@ -462,5 +466,83 @@ class FlowInstanceServiceImplTest {
         t.setNodeType(1);
         ((FlowInstanceServiceImpl) service).generateTasksForNodes(1L, List.of(t), Map.of());
         verify(taskService, times(1)).createTask(eq(1L), eq(t), any());
+    }
+
+    // ============== P1-8: 撤回 recall ==============
+
+    @Test
+    @DisplayName("recall 实例不存在应抛 NOT_FOUND")
+    void testRecallNotFound() {
+        when(instanceMapper.selectById(99L)).thenReturn(null);
+        assertThatThrownBy(() -> service.recall(99L, 7L))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    @DisplayName("recall 非发起人应抛 FORBIDDEN")
+    void testRecallNotInitiator() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setInitiatorId(7L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        assertThatThrownBy(() -> service.recall(1L, 999L))  // 999 不是发起人
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    @DisplayName("recall 非运行中流程应抛 BAD_REQUEST")
+    void testRecallNotRunning() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setInitiatorId(7L);
+        ins.setFlowStatus(FlowInstanceStatus.COMPLETED.name());
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        assertThatThrownBy(() -> service.recall(1L, 7L))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    @DisplayName("recall 审批人已签收/已处理应抛 BAD_REQUEST")
+    void testRecallAlreadyProcessed() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setInitiatorId(7L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+
+        FlowTaskDO claimedTask = new FlowTaskDO();
+        claimedTask.setId(10L);
+        claimedTask.setTaskStatus(FlowTaskStatus.CLAIMED.name());  // 已签收
+
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+        when(taskMapper.selectPendingByInstance(1L)).thenReturn(List.of(claimedTask));
+
+        assertThatThrownBy(() -> service.recall(1L, 7L))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    @DisplayName("recall 成功：取消当前待办 + 重新推进")
+    void testRecallSuccess() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setInitiatorId(7L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+
+        FlowTaskDO pendingTask = new FlowTaskDO();
+        pendingTask.setId(10L);
+        pendingTask.setTaskStatus(FlowTaskStatus.PENDING.name());  // 未签收，可撤回
+
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+        when(taskMapper.selectPendingByInstance(1L)).thenReturn(List.of(pendingTask));
+
+        boolean result = service.recall(1L, 7L);
+        assertThat(result).isTrue();
+        // 取消当前待办
+        verify(taskService).cancelByInstance(1L, FlowTaskStatus.CANCELLED.name());
+        // 重新推进
+        verify(advancer, times(1)).start(1L);
     }
 }

@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.message.dto.MessageSendDTO;
@@ -37,31 +37,31 @@ public class MessageController {
     @Operation(summary = "发送消息（支持模板渲染）")
     @PrePermission("notif:message:send")
     @PostMapping("/send")
-    public R<MessageResult> send(@RequestBody MessageSendDTO dto) {
+    public Result<MessageResult> send(@RequestBody MessageSendDTO dto) {
         if (dto == null) {
-            return R.failed(10001, "请求不能为空");
+            return Result.failed(10001, "请求不能为空");
         }
         MessageResult r = messageService.send(toRequest(dto));
-        return r.isSuccess() ? R.ok(r, "发送成功") : R.failed(10001, r.getErrorMessage());
+        return r.isSuccess() ? Result.ok(r, "发送成功") : Result.failed(10001, r.getErrorMessage());
     }
 
     @Operation(summary = "分页查询发送日志")
     @PrePermission("notif:message:send")
     @GetMapping("/log/page")
-    public R<Page<MessageLogDO>> pageLog(
+    public Result<Page<MessageLogDO>> pageLog(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) String status) {
-        return R.ok(messageService.pageLog(page, size, channel, bizType, status));
+        return Result.ok(messageService.pageLog(page, size, channel, bizType, status));
     }
 
     @Operation(summary = "已注册通道列表")
     @PrePermission("notif:message:send")
     @GetMapping("/channels")
-    public R<List<String>> channels() {
-        return R.ok(messageService.listChannelTypes());
+    public Result<List<String>> channels() {
+        return Result.ok(messageService.listChannelTypes());
     }
 
     private MessageRequest toRequest(MessageSendDTO dto) {

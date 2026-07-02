@@ -19,18 +19,22 @@ import java.io.Serializable;
 @Schema(description = "商机状态变更")
 public class OpportunityStatusDTO implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 商机 ID */
     @NotNull
     @Schema(description = "商机 ID", requiredMode = RequiredMode.REQUIRED)
     private Long id;
 
+    /** 目标状态（FOLLOWING/QUOTED/NEGOTIATING/WON/LOST/INVALID） */
     @NotBlank
     @Schema(description = "目标状态", requiredMode = RequiredMode.REQUIRED,
             allowableValues = {"FOLLOWING", "QUOTED", "NEGOTIATING", "WON", "LOST", "INVALID"})
     private String targetStatus;
 
+    /** 输单原因（LOST 时必填） */
     @Schema(description = "输单原因（LOST 时必填）")
     private String lostReason;
 }

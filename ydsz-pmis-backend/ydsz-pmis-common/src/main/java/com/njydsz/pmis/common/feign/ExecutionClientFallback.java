@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -32,18 +32,18 @@ public class ExecutionClientFallback implements FallbackFactory<ExecutionClient>
         log.warn("[ExecutionClientFallback] 触发降级：{}", cause == null ? "unknown" : cause.toString());
         return new ExecutionClient() {
             @Override
-            public R<Map<String, Object>> recomputeBillableUtilization(String period, boolean recomputeAll) {
+            public Result<Map<String, Object>> recomputeBillableUtilization(String period, boolean recomputeAll) {
                 Map<String, Object> data = new HashMap<>();
                 data.put("ok", false);
                 data.put("period", period);
                 data.put("recomputeAll", recomputeAll);
                 data.put("error", "execution 模块不可用");
                 data.put("source", "FALLBACK");
-                return R.ok(data);
+                return Result.ok(data);
             }
 
             @Override
-            public R<Map<String, Object>> snapshotAverage(String period) {
+            public Result<Map<String, Object>> snapshotAverage(String period) {
                 Map<String, Object> data = new HashMap<>();
                 data.put("avg_pct", 0);
                 data.put("sum_total", 0);
@@ -52,7 +52,7 @@ public class ExecutionClientFallback implements FallbackFactory<ExecutionClient>
                 data.put("headcount", 0);
                 data.put("source", "DOWN");
                 data.put("period", period);
-                return R.ok(data);
+                return Result.ok(data);
             }
         };
     }

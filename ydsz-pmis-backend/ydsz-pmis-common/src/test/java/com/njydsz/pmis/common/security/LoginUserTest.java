@@ -9,6 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * LoginUser 登录用户上下文单元测试
+ *
+ * <p>覆盖超管判定、权限校验与 Builder 全字段填充。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("LoginUser 登录用户测试")
 class LoginUserTest {

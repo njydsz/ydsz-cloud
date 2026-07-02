@@ -7,6 +7,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 业务错误码单元测试
+ *
+ * <p>验证错误码段位规划、唯一性与提示信息完整性。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("BizErrorCode 错误码测试")
 class BizErrorCodeTest {

@@ -16,6 +16,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  *
  * <p>验证 MDC key 已从 {@code provider_trace_id} 统一为 {@code traceId}，
  * 与全局 logback {@code %X{traceId:-}} 一致，确保 Job 日志能与请求链路关联。</p>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("JobRunRecorder Job 运行记录器测试")
 class JobRunRecorderTest {

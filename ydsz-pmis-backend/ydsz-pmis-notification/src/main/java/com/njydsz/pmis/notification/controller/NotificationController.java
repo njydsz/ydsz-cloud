@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
 import com.njydsz.pmis.notification.dto.NotificationSendDTO;
@@ -30,44 +30,79 @@ import java.util.List;
 @RequiredArgsConstructor
 public class NotificationController {
 
+    /** 通知服务 */
     private final NotificationService notificationService;
 
+    /**
+     * 发送通知
+     *
+     * @param dto 通知发送表单
+     * @return 统一响应结果，包含实际插入条数
+     */
     @Operation(summary = "发送通知")
     @PrePermission(PermissionCodes.NOTIF_MESSAGE_SEND)
     @OperationLog(module = "通知中心", action = "发送通知", bizType = "NOTIF")
     @PostMapping("/send")
-    public R<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
-        return R.ok(notificationService.send(dto));
+    public Result<Integer> send(@Valid @RequestBody NotificationSendDTO dto) {
+        return Result.ok(notificationService.send(dto));
     }
 
+    /**
+     * 我的收件箱分页查询
+     *
+     * @param query 查询条件
+     * @return 统一响应结果，包含通知分页数据
+     */
     @Operation(summary = "我的收件箱")
     @GetMapping("/inbox")
-    public R<Page<NotificationDO>> inbox(NotificationQueryDTO query) {
-        return R.ok(notificationService.inbox(SecurityContext.getUserId(), query));
+    public Result<Page<NotificationDO>> inbox(NotificationQueryDTO query) {
+        return Result.ok(notificationService.inbox(SecurityContext.getUserId(), query));
     }
 
+    /**
+     * 查询当前用户未读通知数量
+     *
+     * @return 统一响应结果，包含未读数量
+     */
     @Operation(summary = "未读数量")
     @GetMapping("/unread-count")
-    public R<Long> unreadCount() {
-        return R.ok(notificationService.countUnread(SecurityContext.getUserId()));
+    public Result<Long> unreadCount() {
+        return Result.ok(notificationService.countUnread(SecurityContext.getUserId()));
     }
 
+    /**
+     * 标记单条通知已读
+     *
+     * @param id 通知 ID
+     * @return 统一响应结果，包含是否标记成功
+     */
     @Operation(summary = "标记已读")
     @PostMapping("/{id}/read")
-    public R<Boolean> markRead(@PathVariable Long id) {
-        return R.ok(notificationService.markRead(SecurityContext.getUserId(), id));
+    public Result<Boolean> markRead(@PathVariable Long id) {
+        return Result.ok(notificationService.markRead(SecurityContext.getUserId(), id));
     }
 
+    /**
+     * 全部标记已读
+     *
+     * @return 统一响应结果，包含实际标记条数
+     */
     @Operation(summary = "全部标记已读")
     @PostMapping("/read-all")
-    public R<Integer> markAllRead() {
-        return R.ok(notificationService.markAllRead(SecurityContext.getUserId()));
+    public Result<Integer> markAllRead() {
+        return Result.ok(notificationService.markAllRead(SecurityContext.getUserId()));
     }
 
+    /**
+     * 删除通知（逻辑删除，仅允许删除属于自己的通知）
+     *
+     * @param ids 通知 ID 列表
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除通知")
     @DeleteMapping
-    public R<Void> delete(@RequestBody List<Long> ids) {
+    public Result<Void> delete(@RequestBody List<Long> ids) {
         notificationService.delete(SecurityContext.getUserId(), ids);
-        return R.ok();
+        return Result.ok();
     }
 }

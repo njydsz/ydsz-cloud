@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.assembler;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.feign.UserServiceClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,7 +28,7 @@ class NameAssemblerTest {
     @Test
     @DisplayName("resolveEmployee - 成功")
     void ok() {
-        when(client.getEmployee(1L)).thenReturn(R.ok(Map.of("name", "张三")));
+        when(client.getEmployee(1L)).thenReturn(Result.ok(Map.of("name", "张三")));
         assertThat(assembler.resolveEmployee(1L)).isEqualTo("张三");
     }
 

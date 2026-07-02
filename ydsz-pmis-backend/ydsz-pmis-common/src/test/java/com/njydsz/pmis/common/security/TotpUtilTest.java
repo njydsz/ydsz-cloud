@@ -8,7 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * TOTP 工具测试
  *
+ * <p>覆盖 secret 生成、Base32 编解码、OTP 校验、otpauth URI 与备份码。
+ *
  * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 class TotpUtilTest {
 

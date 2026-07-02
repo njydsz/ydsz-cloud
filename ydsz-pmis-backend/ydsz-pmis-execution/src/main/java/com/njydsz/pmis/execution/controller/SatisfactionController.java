@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.SatisfactionCreateDTO;
 import com.njydsz.pmis.execution.entity.SatisfactionDO;
 import com.njydsz.pmis.execution.service.SatisfactionService;
@@ -37,49 +37,49 @@ public class SatisfactionController {
     @Operation(summary = "提交评价")
     @PrePermission("aftersales:satisfaction:submit")
     @PostMapping
-    public R<Long> submit(@Valid @RequestBody SatisfactionCreateDTO dto) {
-        return R.ok(service.submit(dto));
+    public Result<Long> submit(@Valid @RequestBody SatisfactionCreateDTO dto) {
+        return Result.ok(service.submit(dto));
     }
 
     @Operation(summary = "标记跟进")
     @PrePermission("aftersales:satisfaction:follow-up")
     @PostMapping("/follow-up")
-    public R<Void> markFollowUp(@RequestParam Long id, @RequestParam(required = false) String note) {
+    public Result<Void> markFollowUp(@RequestParam Long id, @RequestParam(required = false) String note) {
         service.markFollowUp(id, note);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "关闭跟进")
     @PrePermission("aftersales:satisfaction:follow-up")
     @PostMapping("/follow-up/close")
-    public R<Void> closeFollowUp(@RequestParam Long id) {
+    public Result<Void> closeFollowUp(@RequestParam Long id) {
         service.closeFollowUp(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "整体满意度均值")
     @PrePermission("aftersales:satisfaction:list")
     @GetMapping("/overall")
-    public R<Map<String, Object>> overall() {
-        return R.ok(service.overall());
+    public Result<Map<String, Object>> overall() {
+        return Result.ok(service.overall());
     }
 
     @Operation(summary = "等级分布")
     @PrePermission("aftersales:satisfaction:list")
     @GetMapping("/level-distribution")
-    public R<List<Map<String, Object>>> levelDistribution() {
-        return R.ok(service.levelDistribution());
+    public Result<List<Map<String, Object>>> levelDistribution() {
+        return Result.ok(service.levelDistribution());
     }
 
     @Operation(summary = "分页")
     @PrePermission("aftersales:satisfaction:list")
     @GetMapping("/page")
-    public R<PageResult<SatisfactionDO>> page(
+    public Result<PageResult<SatisfactionDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String level,
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) String keyword) {
-        return R.ok(PageResult.ofPage(service.page(page, size, level, initiationId, keyword)));
+        return Result.ok(PageResult.ofPage(service.page(page, size, level, initiationId, keyword)));
     }
 }

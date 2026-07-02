@@ -27,13 +27,20 @@ import static org.mockito.Mockito.when;
 
 /**
  * FileServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("FileServiceImpl 文件存储测试")
 class FileServiceImplTest {
 
+    /** 文件 Mapper（Mock） */
     private FileMapper fileMapper;
+    /** MinIO 客户端（Mock） */
     private MinioClient minioClient;
+    /** MinIO 配置 */
     private MinioConfig minioConfig;
+    /** 待测服务实例 */
     private FileServiceImpl service;
 
     @BeforeEach

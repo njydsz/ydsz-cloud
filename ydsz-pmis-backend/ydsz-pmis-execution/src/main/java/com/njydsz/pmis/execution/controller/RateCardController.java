@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.RateCardCreateDTO;
 import com.njydsz.pmis.execution.entity.RateCardDO;
 import com.njydsz.pmis.execution.service.RateCardService;
@@ -35,59 +35,59 @@ public class RateCardController {
     @Operation(summary = "创建对外报价费率")
     @PrePermission("execution:rate-card:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody RateCardCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody RateCardCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "更新")
     @PrePermission("execution:rate-card:update")
     @PutMapping("/{id}")
-    public R<Void> update(@PathVariable Long id, @Valid @RequestBody RateCardCreateDTO dto) {
+    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody RateCardCreateDTO dto) {
         service.update(id, dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除")
     @PrePermission("execution:rate-card:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "详情")
     @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
-    public R<RateCardDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<RateCardDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "命中有效费率（职级+项目类型+客户等级+日期）")
     @PrePermission("execution:rate:list")
     @GetMapping("/match")
-    public R<RateCardDO> match(
+    public Result<RateCardDO> match(
             @RequestParam String levelCode,
             @RequestParam(required = false) String projectType,
             @RequestParam(required = false) String customerLevel,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return R.ok(service.matchEffective(levelCode, projectType, customerLevel, date));
+        return Result.ok(service.matchEffective(levelCode, projectType, customerLevel, date));
     }
 
     @Operation(summary = "按职级查询")
     @PrePermission("execution:rate:list")
     @GetMapping("/by-level")
-    public R<List<RateCardDO>> listByLevel(@RequestParam String levelCode) {
-        return R.ok(service.listByLevel(levelCode));
+    public Result<List<RateCardDO>> listByLevel(@RequestParam String levelCode) {
+        return Result.ok(service.listByLevel(levelCode));
     }
 
     @Operation(summary = "分页")
     @PrePermission("execution:rate:list")
     @GetMapping("/page")
-    public R<Page<RateCardDO>> page(
+    public Result<Page<RateCardDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String levelCode,
             @RequestParam(required = false) String status) {
-        return R.ok(service.page(page, size, levelCode, status));
+        return Result.ok(service.page(page, size, levelCode, status));
     }
 }

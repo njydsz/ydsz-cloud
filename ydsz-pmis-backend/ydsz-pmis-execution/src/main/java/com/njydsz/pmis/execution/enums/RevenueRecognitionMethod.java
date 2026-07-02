@@ -21,7 +21,9 @@ public enum RevenueRecognitionMethod {
     POINTS("POINTS", "人天点数法"),
     MANUAL("MANUAL", "手工确认");
 
+    /** 方法编码（大小写不敏感） */
     private final String code;
+    /** 方法中文描述 */
     private final String desc;
 
     RevenueRecognitionMethod(String code, String desc) {
@@ -29,9 +31,26 @@ public enum RevenueRecognitionMethod {
         this.desc = desc;
     }
 
+    /**
+     * 获取方法编码
+     *
+     * @return 方法编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取方法中文描述
+     *
+     * @return 方法中文描述
+     */
     public String getDesc() { return desc; }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 方法编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static RevenueRecognitionMethod fromCode(String code) {
         if (code == null) return null;
         for (RevenueRecognitionMethod r : values()) {

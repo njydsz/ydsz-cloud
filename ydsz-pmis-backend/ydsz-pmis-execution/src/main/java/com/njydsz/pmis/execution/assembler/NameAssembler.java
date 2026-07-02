@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.assembler;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.feign.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,7 +32,7 @@ public class NameAssembler {
     public String resolveEmployee(Long id) {
         if (id == null) return null;
         try {
-            R<Map<String, Object>> r = userServiceClient.getEmployee(id);
+            Result<Map<String, Object>> r = userServiceClient.getEmployee(id);
             if (r != null && r.getData() != null) {
                 Object name = r.getData().get("name");
                 if (name == null) name = r.getData().get("realName");

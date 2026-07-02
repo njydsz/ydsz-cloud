@@ -21,7 +21,9 @@ public enum FlowTaskStatus {
     /** 已取消（流程终止/撤回时连带取消） */
     CANCELLED,
     /** 超时（自动处理） */
-    TIMEOUT;
+    TIMEOUT,
+    /** 已委派（被委派人处理完后回到原办理人） */
+    DELEGATED;
 
     public boolean isFinished() {
         return this == COMPLETED

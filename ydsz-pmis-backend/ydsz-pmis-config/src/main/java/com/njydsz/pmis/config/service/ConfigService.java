@@ -18,8 +18,11 @@ import java.util.Map;
  *   <li>公开配置（前端可见）查询</li>
  *   <li>Redis 缓存（TTL 10 分钟）</li>
  *   <li>类型安全取值（String/Number/Boolean/JSON）</li>
- *   <li>热发布：变更后通过 Redis Pub/Sub 通知所有服务节点</li>
+ * <li>热发布：变更后通过 Redis Pub/Sub 通知所有服务节点</li>
  * </ul>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public interface ConfigService {
 
@@ -50,11 +53,16 @@ public interface ConfigService {
 
     /**
      * 获取某组全部配置（key → value 映射）
+     *
+     * @param group 配置分组
+     * @return key-value 映射
      */
     Map<String, String> getGroupAsMap(String group);
 
     /**
      * 公开配置（前端可见）
+     *
+     * @return 公开配置列表
      */
     List<ConfigDO> listPublic();
 
@@ -82,11 +90,18 @@ public interface ConfigService {
 
     /**
      * 批量按 group 删除（清理整个分组的配置）
+     *
+     * @param group 配置分组
+     * @return 删除条数
      */
     int deleteByGroup(String group);
 
     /**
      * 批量按 group 启用/停用
+     *
+     * @param group  配置分组
+     * @param status 目标状态（ENABLED/DISABLED）
+     * @return 更新条数
      */
     int updateStatusByGroup(String group, String status);
 
@@ -97,6 +112,11 @@ public interface ConfigService {
 
     /**
      * 解析配置值（按 valueType 转）
+     *
+     * @param config 配置实体
+     * @param type   目标类型
+     * @param <T>    目标类型泛型
+     * @return 解析后的值
      */
     <T> T parseValue(ConfigDO config, Class<T> type);
 }

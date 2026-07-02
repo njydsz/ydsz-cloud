@@ -18,16 +18,26 @@ package com.njydsz.pmis.project.enums;
  * @since 1.0.0
  */
 public enum ChangeStatus {
+    /** 草稿 */
     DRAFT("DRAFT", "草稿"),
+    /** 已提交 */
     SUBMITTED("SUBMITTED", "已提交"),
+    /** 评审中 */
     UNDER_REVIEW("UNDER_REVIEW", "评审中"),
+    /** 已批准 */
     APPROVED("APPROVED", "已批准"),
+    /** 已驳回 */
     REJECTED("REJECTED", "已驳回"),
+    /** 执行中 */
     EXECUTING("EXECUTING", "执行中"),
+    /** 已执行 */
     EXECUTED("EXECUTED", "已执行"),
+    /** 已取消 */
     CANCELLED("CANCELLED", "已取消");
 
+    /** 状态码 */
     private final String code;
+    /** 描述 */
     private final String desc;
 
     ChangeStatus(String code, String desc) {
@@ -35,7 +45,18 @@ public enum ChangeStatus {
         this.desc = desc;
     }
 
+    /**
+     * 获取状态码。
+     *
+     * @return 状态码
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取描述。
+     *
+     * @return 描述
+     */
     public String getDesc() { return desc; }
 
     /**

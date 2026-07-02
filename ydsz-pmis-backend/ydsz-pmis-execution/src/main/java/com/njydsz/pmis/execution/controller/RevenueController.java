@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.RevenueCreateDTO;
 import com.njydsz.pmis.execution.entity.RevenueDO;
 import com.njydsz.pmis.execution.service.RevenueService;
@@ -42,45 +42,45 @@ public class RevenueController {
     @Operation(summary = "录入收入")
     @PrePermission("execution:revenue:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody RevenueCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody RevenueCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "确认收入")
     @PrePermission("execution:revenue:update")
     @PutMapping("/{id}/confirm")
-    public R<Void> confirm(@PathVariable Long id, @RequestParam Long confirmedBy) {
+    public Result<Void> confirm(@PathVariable Long id, @RequestParam Long confirmedBy) {
         service.confirm(id, confirmedBy);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "冲销收入")
     @PrePermission("execution:revenue:update")
     @PutMapping("/{id}/reverse")
-    public R<Void> reverse(@PathVariable Long id) {
+    public Result<Void> reverse(@PathVariable Long id) {
         service.reverse(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除")
     @PrePermission("execution:revenue:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "详情")
     @PrePermission("execution:revenue:list")
     @GetMapping("/{id}")
-    public R<RevenueDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<RevenueDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "分页")
     @PrePermission("execution:revenue:list")
     @GetMapping("/page")
-    public R<Page<RevenueDO>> page(
+    public Result<Page<RevenueDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
@@ -88,20 +88,20 @@ public class RevenueController {
             @RequestParam(required = false) Long contractId,
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) String period) {
-        return R.ok(service.page(page, size, keyword, status, contractId, initiationId, period));
+        return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, period));
     }
 
     @Operation(summary = "按合同汇总")
     @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/by-contract")
-    public R<List<Map<String, Object>>> sumByContract(@RequestParam Long contractId) {
-        return R.ok(service.sumByContract(contractId));
+    public Result<List<Map<String, Object>>> sumByContract(@RequestParam Long contractId) {
+        return Result.ok(service.sumByContract(contractId));
     }
 
     @Operation(summary = "按期间汇总")
     @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/by-period")
-    public R<List<Map<String, Object>>> sumByPeriod(@RequestParam Long initiationId) {
-        return R.ok(service.sumByPeriod(initiationId));
+    public Result<List<Map<String, Object>>> sumByPeriod(@RequestParam Long initiationId) {
+        return Result.ok(service.sumByPeriod(initiationId));
     }
 }

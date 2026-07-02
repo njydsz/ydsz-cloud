@@ -23,9 +23,11 @@ import java.time.LocalDateTime;
 @TableName("pmis_project_contract_template")
 public class ContractTemplateDO implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -61,20 +63,26 @@ public class ContractTemplateDO implements Serializable {
     private String authorName;
     /** 备注 */
     private String remark;
+    /** 租户 ID */
     private Long tenantId;
 
+    /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新人 ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标识（0 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

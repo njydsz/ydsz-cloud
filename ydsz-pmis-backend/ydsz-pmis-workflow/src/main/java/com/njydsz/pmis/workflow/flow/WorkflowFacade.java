@@ -84,6 +84,31 @@ public interface WorkflowFacade {
     List<Map<String, Object>> listDoneTasks(Long userId, int page, int size);
 
     /**
+     * 前加签
+     */
+    void countersignBeforeTask(FlowTaskOperateDTO dto);
+
+    /**
+     * 后加签
+     */
+    void countersignAfterTask(FlowTaskOperateDTO dto);
+
+    /**
+     * 催办
+     */
+    List<String> urgeTask(Long instanceId, Long operatorId, String comment);
+
+    /**
+     * 撤回流程
+     */
+    boolean recallProcess(String processInstanceId, Long initiatorId);
+
+    /**
+     * 查询审批轨迹（审计日志）
+     */
+    List<Map<String, Object>> listAuditTrail(String processInstanceId);
+
+    /**
      * 引擎类型：PMIS（自研）
      */
     String engineType();

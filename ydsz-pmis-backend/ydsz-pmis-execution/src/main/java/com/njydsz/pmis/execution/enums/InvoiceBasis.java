@@ -21,7 +21,9 @@ public enum InvoiceBasis {
     FINAL("FINAL", "终验/尾款"),
     OTHER("OTHER", "其他");
 
+    /** 开票依据编码（大小写不敏感） */
     private final String code;
+    /** 开票依据中文描述 */
     private final String desc;
 
     InvoiceBasis(String code, String desc) {
@@ -29,7 +31,18 @@ public enum InvoiceBasis {
         this.desc = desc;
     }
 
+    /**
+     * 获取开票依据编码
+     *
+     * @return 开票依据编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取开票依据中文描述
+     *
+     * @return 开票依据中文描述
+     */
     public String getDesc() { return desc; }
 
     /**

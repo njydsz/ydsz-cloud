@@ -18,6 +18,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * <p>验证 CommonAutoConfiguration 注册的 TaskDecorator 能将主线程 MDC 上下文
  * （traceId 等）正确传递到 @Async 异步线程，解决 OperationLogAspect、事件监听器
  * 等异步方法丢失 traceId 的问题。</p>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("MDC TaskDecorator 异步线程上下文传递测试")
 class MdcTaskDecoratorTest {

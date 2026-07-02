@@ -18,6 +18,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * TraceIdFilter 单元测试
+ *
+ * <p>覆盖 traceId 自动生成、请求头透传与异常情况下 MDC 清理。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("TraceIdFilter 链路追踪过滤器测试")
 class TraceIdFilterTest {

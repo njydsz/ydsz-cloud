@@ -1,6 +1,6 @@
 package com.njydsz.pmis.user.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.user.dto.TwoFactorBindResult;
 import com.njydsz.pmis.user.entity.User2FADO;
@@ -32,52 +32,52 @@ public class TwoFactorController {
 
     @Operation(summary = "发起 TOTP 绑定")
     @PostMapping("/bind")
-    public R<TwoFactorBindResult> bind() {
+    public Result<TwoFactorBindResult> bind() {
         Long userId = SecurityContext.getUserId();
         String account = SecurityContext.getUsername();
-        return R.ok(service.bindTotp(userId, account));
+        return Result.ok(service.bindTotp(userId, account));
     }
 
     @Operation(summary = "校验 OTP 完成绑定")
     @PostMapping("/confirm")
-    public R<Boolean> confirm(@RequestParam String otp) {
+    public Result<Boolean> confirm(@RequestParam String otp) {
         Long userId = SecurityContext.getUserId();
-        return R.ok(service.confirmBind(userId, otp));
+        return Result.ok(service.confirmBind(userId, otp));
     }
 
     @Operation(summary = "校验 2FA 码（用于登录第二步）")
     @PostMapping("/verify")
-    public R<Boolean> verify(@RequestParam String otp) {
+    public Result<Boolean> verify(@RequestParam String otp) {
         Long userId = SecurityContext.getUserId();
-        return R.ok(service.verify(userId, otp));
+        return Result.ok(service.verify(userId, otp));
     }
 
     @Operation(summary = "使用备份码")
     @PostMapping("/verify-backup")
-    public R<Boolean> verifyBackup(@RequestParam String code) {
+    public Result<Boolean> verifyBackup(@RequestParam String code) {
         Long userId = SecurityContext.getUserId();
-        return R.ok(service.verifyBackup(userId, code));
+        return Result.ok(service.verifyBackup(userId, code));
     }
 
     @Operation(summary = "关闭 2FA")
     @PostMapping("/disable")
-    public R<Void> disable() {
+    public Result<Void> disable() {
         Long userId = SecurityContext.getUserId();
         service.disable(userId);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "查询我的 2FA 状态")
     @GetMapping("/me")
-    public R<User2FADO> me() {
+    public Result<User2FADO> me() {
         Long userId = SecurityContext.getUserId();
-        return R.ok(service.find(userId));
+        return Result.ok(service.find(userId));
     }
 
     @Operation(summary = "查询备份码（脱敏）")
     @GetMapping("/backup-codes")
-    public R<List<String>> backupCodes() {
+    public Result<List<String>> backupCodes() {
         Long userId = SecurityContext.getUserId();
-        return R.ok(service.listBackupCodesMasked(userId));
+        return Result.ok(service.listBackupCodesMasked(userId));
     }
 }

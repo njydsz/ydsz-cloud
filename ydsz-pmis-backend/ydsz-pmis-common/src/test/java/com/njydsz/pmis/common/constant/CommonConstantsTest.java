@@ -7,6 +7,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * 公共常量单元测试
+ *
+ * <p>验证 Header、逻辑删除、业务状态与 MDC 键值符合规范。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("CommonConstants 常量测试")
 class CommonConstantsTest {

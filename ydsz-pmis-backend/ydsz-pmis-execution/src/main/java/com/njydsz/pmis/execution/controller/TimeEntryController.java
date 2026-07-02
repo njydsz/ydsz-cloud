@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.TimeEntryApprovalDTO;
 import com.njydsz.pmis.execution.dto.TimeEntryCreateDTO;
 import com.njydsz.pmis.execution.entity.TimeEntryDO;
@@ -45,45 +45,45 @@ public class TimeEntryController {
     @Operation(summary = "录入工时")
     @PrePermission("execution:time:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody TimeEntryCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "提交工时审批")
     @PrePermission("execution:time:approve")
     @PutMapping("/{id}/submit")
-    public R<Void> submit(@PathVariable Long id) {
+    public Result<Void> submit(@PathVariable Long id) {
         service.submit(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "审批工时")
     @PrePermission("execution:time:approve")
     @PutMapping("/approve")
-    public R<Void> approve(@Valid @RequestBody TimeEntryApprovalDTO dto) {
+    public Result<Void> approve(@Valid @RequestBody TimeEntryApprovalDTO dto) {
         service.approve(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除工时")
     @PrePermission("execution:time:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "工时详情")
     @PrePermission("execution:time:list")
     @GetMapping("/{id}")
-    public R<TimeEntryDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<TimeEntryDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "分页查询")
     @PrePermission("execution:time:list")
     @GetMapping("/page")
-    public R<Page<TimeEntryDO>> page(
+    public Result<Page<TimeEntryDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
@@ -93,25 +93,25 @@ public class TimeEntryController {
             @RequestParam(required = false) Long taskId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return R.ok(service.page(page, size, keyword, status, employeeId, initiationId, taskId, from, to));
+        return Result.ok(service.page(page, size, keyword, status, employeeId, initiationId, taskId, from, to));
     }
 
     @Operation(summary = "项目工时按人员+职级聚合")
     @PrePermission("execution:time:list")
     @GetMapping("/aggregate/by-employee-level")
-    public R<List<Map<String, Object>>> aggregateByEmployeeLevel(
+    public Result<List<Map<String, Object>>> aggregateByEmployeeLevel(
             @RequestParam Long initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return R.ok(service.aggregateHoursByEmployeeAndLevel(initiationId, from, to));
+        return Result.ok(service.aggregateHoursByEmployeeAndLevel(initiationId, from, to));
     }
 
     @Operation(summary = "跨项目冲突检测")
     @PrePermission("execution:time:list")
     @GetMapping("/conflict")
-    public R<List<Map<String, Object>>> detectCrossProject(
+    public Result<List<Map<String, Object>>> detectCrossProject(
             @RequestParam Long employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate entryDate) {
-        return R.ok(service.detectCrossProject(employeeId, entryDate));
+        return Result.ok(service.detectCrossProject(employeeId, entryDate));
     }
 }

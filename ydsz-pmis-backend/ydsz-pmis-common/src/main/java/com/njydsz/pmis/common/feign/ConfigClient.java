@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,7 +28,7 @@ public interface ConfigClient {
      * @return 配置项 Map
      */
     @GetMapping("/api/v1/configs/group/{group}")
-    R<Map<String, String>> getGroup(@PathVariable("group") String group);
+    Result<Map<String, String>> getGroup(@PathVariable("group") String group);
 
     /**
      * 按 group+key 取单条配置
@@ -38,7 +38,7 @@ public interface ConfigClient {
      * @return 配置值
      */
     @GetMapping("/api/v1/configs/by-key")
-    R<String> getValue(@RequestParam("group") String group, @RequestParam("key") String key);
+    Result<String> getValue(@RequestParam("group") String group, @RequestParam("key") String key);
 
     /**
      * 公开配置（前端可见）
@@ -46,5 +46,5 @@ public interface ConfigClient {
      * @return 公开配置列表
      */
     @GetMapping("/api/v1/configs/public")
-    R<List<Map<String, Object>>> listPublic();
+    Result<List<Map<String, Object>>> listPublic();
 }

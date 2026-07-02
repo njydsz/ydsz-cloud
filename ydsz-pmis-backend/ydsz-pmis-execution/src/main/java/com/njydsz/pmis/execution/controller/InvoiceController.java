@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.InvoiceApprovalDTO;
 import com.njydsz.pmis.execution.dto.InvoiceCreateDTO;
 import com.njydsz.pmis.execution.entity.InvoiceDO;
@@ -44,81 +44,81 @@ public class InvoiceController {
     @Operation(summary = "创建发票申请")
     @PrePermission("finance:invoice:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody InvoiceCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody InvoiceCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "提交审批")
     @PrePermission("finance:invoice:approve")
     @PutMapping("/{id}/submit")
-    public R<Void> submit(@PathVariable Long id, @RequestParam Long operatorId) {
+    public Result<Void> submit(@PathVariable Long id, @RequestParam Long operatorId) {
         service.submit(id, operatorId);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "审批通过")
     @PrePermission("finance:invoice:approve")
     @PutMapping("/{id}/approve")
-    public R<Void> approve(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> approve(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.approve(id, dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "审批驳回")
     @PrePermission("finance:invoice:approve")
     @PutMapping("/{id}/reject")
-    public R<Void> reject(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> reject(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.reject(id, dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "财务开具")
     @PrePermission("finance:invoice:issue")
     @PutMapping("/{id}/issue")
-    public R<Void> issue(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> issue(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.issue(id, dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "红冲")
     @PrePermission("finance:invoice:reverse")
     @PutMapping("/{id}/reverse")
-    public R<Void> redReverse(@PathVariable Long id,
+    public Result<Void> redReverse(@PathVariable Long id,
                               @RequestParam Long operatorId,
                               @RequestParam(required = false) String comment) {
         service.redReverse(id, operatorId, comment);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "取消")
     @PrePermission("finance:invoice:status")
     @PutMapping("/{id}/cancel")
-    public R<Void> cancel(@PathVariable Long id,
+    public Result<Void> cancel(@PathVariable Long id,
                           @RequestParam Long operatorId,
                           @RequestParam(required = false) String comment) {
         service.cancel(id, operatorId, comment);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除")
     @PrePermission("finance:invoice:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "详情")
     @PrePermission("finance:invoice:list")
     @GetMapping("/{id}")
-    public R<InvoiceDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<InvoiceDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "分页")
     @PrePermission("finance:invoice:list")
     @GetMapping("/page")
-    public R<Page<InvoiceDO>> page(
+    public Result<Page<InvoiceDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
@@ -127,20 +127,20 @@ public class InvoiceController {
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) String invoiceType) {
-        return R.ok(service.page(page, size, keyword, status, contractId, initiationId, customerId, invoiceType));
+        return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, customerId, invoiceType));
     }
 
     @Operation(summary = "按合同汇总开票金额")
     @PrePermission("finance:invoice:list")
     @GetMapping("/sum/by-contract")
-    public R<BigDecimal> sumByContract(@RequestParam Long contractId) {
-        return R.ok(service.sumInvoicedByContract(contractId));
+    public Result<BigDecimal> sumByContract(@RequestParam Long contractId) {
+        return Result.ok(service.sumInvoicedByContract(contractId));
     }
 
     @Operation(summary = "按状态分组台账")
     @PrePermission("finance:invoice:list")
     @GetMapping("/aggregate/by-status")
-    public R<List<Map<String, Object>>> aggregateByStatus(@RequestParam Long contractId) {
-        return R.ok(service.aggregateByStatus(contractId));
+    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam Long contractId) {
+        return Result.ok(service.aggregateByStatus(contractId));
     }
 }

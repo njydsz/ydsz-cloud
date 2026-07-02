@@ -27,6 +27,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * RateLimiterAspect 限流切面单元测试
+ *
+ * <p>覆盖放行/超限拦截、首次过期时间设置、匿名 IP 与登录用户限流维度。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("RateLimiterAspect 限流切面测试")
 class RateLimiterAspectTest {

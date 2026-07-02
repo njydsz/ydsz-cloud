@@ -3,7 +3,7 @@ package com.njydsz.pmis.user.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.user.dto.BenchRecordCreateDTO;
 import com.njydsz.pmis.user.entity.BenchRecordDO;
 import com.njydsz.pmis.user.service.BenchService;
@@ -45,61 +45,61 @@ public class BenchController {
     @PrePermission("resource:bench:act")
     @OperationLog(module = "Bench 池", action = "入/出池", bizType = "BENCH_RECORD")
     @PostMapping("/act")
-    public R<Long> act(@Valid @RequestBody BenchRecordCreateDTO dto) {
-        return R.ok(benchService.act(dto));
+    public Result<Long> act(@Valid @RequestBody BenchRecordCreateDTO dto) {
+        return Result.ok(benchService.act(dto));
     }
 
     @Operation(summary = "Bench 详情")
     @GetMapping("/{id}")
-    public R<BenchRecordDO> get(@PathVariable Long id) {
-        return R.ok(benchService.getById(id));
+    public Result<BenchRecordDO> get(@PathVariable Long id) {
+        return Result.ok(benchService.getById(id));
     }
 
     @Operation(summary = "员工当前 Bench 记录")
     @GetMapping("/active/{employeeId}")
-    public R<BenchRecordDO> getActiveByEmployee(@PathVariable Long employeeId) {
-        return R.ok(benchService.getActiveByEmployee(employeeId));
+    public Result<BenchRecordDO> getActiveByEmployee(@PathVariable Long employeeId) {
+        return Result.ok(benchService.getActiveByEmployee(employeeId));
     }
 
     @Operation(summary = "按池汇总")
     @GetMapping("/aggregate/by-pool")
-    public R<List<Map<String, Object>>> aggregateByPool() {
-        return R.ok(benchService.aggregateByPool());
+    public Result<List<Map<String, Object>>> aggregateByPool() {
+        return Result.ok(benchService.aggregateByPool());
     }
 
     @Operation(summary = "流动统计（按日期区间）")
     @GetMapping("/flow")
-    public R<List<Map<String, Object>>> flowByDateRange(
+    public Result<List<Map<String, Object>>> flowByDateRange(
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return R.ok(benchService.flowByDateRange(from, to));
+        return Result.ok(benchService.flowByDateRange(from, to));
     }
 
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public R<Page<BenchRecordDO>> page(
+    public Result<Page<BenchRecordDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long poolId,
             @RequestParam(required = false) String status) {
-        return R.ok(benchService.page(page, size, poolId, status));
+        return Result.ok(benchService.page(page, size, poolId, status));
     }
 
     @Operation(summary = "累计闲置成本")
     @GetMapping("/total-idle-cost")
-    public R<BigDecimal> totalIdleCost() {
-        return R.ok(benchService.totalIdleCost());
+    public Result<BigDecimal> totalIdleCost() {
+        return Result.ok(benchService.totalIdleCost());
     }
 
     @Operation(summary = "Bench 仪表盘汇总")
     @GetMapping("/dashboard")
-    public R<Map<String, Object>> dashboard() {
+    public Result<Map<String, Object>> dashboard() {
         if (benchService instanceof BenchServiceImpl impl) {
-            return R.ok(impl.dashboard());
+            return Result.ok(impl.dashboard());
         }
         Map<String, Object> out = new HashMap<>();
         out.put("activePools", benchService.aggregateByPool());
         out.put("totalIdleCost", benchService.totalIdleCost());
-        return R.ok(out);
+        return Result.ok(out);
     }
 }

@@ -141,4 +141,37 @@
           AND task_status = 'PENDING'
           AND deleted = 0
     </update>
+
+    <!-- P0-5: 统计某实例某节点的未完成任务数（用于并行网关 join 判断） -->
+    <select id="countPendingByNode" resultType="int">
+        SELECT COUNT(1)
+        FROM pmis_flow_task
+        WHERE instance_id = #{instanceId}
+          AND node_code = #{nodeCode}
+          AND task_status IN ('PENDING', 'CLAIMED')
+          AND status = 'ENABLED'
+          AND deleted = 0
+    </select>
+
+    <!-- P0-1: 更新会签计数（设置 approveFinished） -->
+    <update id="updateApproveFinished">
+        UPDATE pmis_flow_task
+        SET approve_finished = #{approveFinished},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
+
+    <!-- P1-12: 更新任务办理人信息（用于顺序会签切换办理人） -->
+    <update id="updateAssignee">
+        UPDATE pmis_flow_task
+        SET assignee_id = #{assigneeId},
+            assignee_name = #{assigneeName},
+            assignee_type = #{assigneeType},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
 </mapper>

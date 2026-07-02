@@ -42,10 +42,21 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class FileServiceImpl implements FileService {
 
+    /** 文件 Mapper */
     private final FileMapper fileMapper;
+    /** MinIO 客户端 */
     private final MinioClient minioClient;
+    /** MinIO 配置 */
     private final MinioConfig minioConfig;
 
+    /**
+     * 上传文件
+     *
+     * @param file 上传的文件
+     * @param dto  上传附加参数
+     * @return 文件元信息
+     * @throws Exception 上传过程中发生异常
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public FileDO upload(MultipartFile file, FileUploadDTO dto) throws Exception {
@@ -60,6 +71,16 @@ public class FileServiceImpl implements FileService {
         );
     }
 
+    /**
+     * 上传字节流
+     *
+     * @param originalName 原始文件名
+     * @param content      文件内容
+     * @param contentType  MIME 类型
+     * @param dto          上传附加参数
+     * @return 文件元信息
+     * @throws Exception 上传过程中发生异常
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public FileDO uploadBytes(String originalName, byte[] content, String contentType, FileUploadDTO dto) throws Exception {
@@ -69,6 +90,16 @@ public class FileServiceImpl implements FileService {
         return uploadInternal(originalName, content, contentType, dto);
     }
 
+    /**
+     * 内部上传实现：计算哈希、生成对象 key、上传至 MinIO、写入元信息
+     *
+     * @param originalName 原始文件名
+     * @param content      文件内容
+     * @param contentType  MIME 类型
+     * @param dto          上传附加参数
+     * @return 文件元信息
+     * @throws Exception 上传过程中发生异常
+     */
     private FileDO uploadInternal(String originalName, byte[] content, String contentType,
                                   FileUploadDTO dto) throws Exception {
         String bucket = StringUtils.hasText(dto.getBucket()) ? dto.getBucket() : minioConfig.getDefaultBucket();
@@ -128,6 +159,12 @@ public class FileServiceImpl implements FileService {
         return entity;
     }
 
+    /**
+     * 删除文件
+     *
+     * @param id 文件 ID
+     * @throws Exception 删除过程中发生异常
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) throws Exception {
@@ -140,6 +177,12 @@ public class FileServiceImpl implements FileService {
         log.info("[File] 删除: id={} key={}", id, f.getFilePath());
     }
 
+    /**
+     * 批量删除文件（单条失败不影响其他文件）
+     *
+     * @param ids 文件 ID 列表
+     * @throws Exception 删除过程中发生异常
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteBatch(List<Long> ids) throws Exception {
@@ -155,6 +198,13 @@ public class FileServiceImpl implements FileService {
         }
     }
 
+    /**
+     * 获取文件元信息
+     *
+     * @param id 文件 ID
+     * @return 文件元信息
+     * @throws BizException 当文件不存在时抛出
+     */
     @Override
     public FileDO getById(Long id) {
         FileDO f = fileMapper.selectById(id);
@@ -164,6 +214,14 @@ public class FileServiceImpl implements FileService {
         return f;
     }
 
+    /**
+     * 获取预签名下载 URL
+     *
+     * @param id            文件 ID
+     * @param expireSeconds URL 有效期（秒），为 null 时使用默认值
+     * @return 预签名下载 URL
+     * @throws BizException 当生成预签名 URL 失败时抛出
+     */
     @Override
     public String getPresignedUrl(Long id, Integer expireSeconds) {
         FileDO f = getById(id);
@@ -186,6 +244,13 @@ public class FileServiceImpl implements FileService {
         }
     }
 
+    /**
+     * 下载文件字节流
+     *
+     * @param id 文件 ID
+     * @return 文件输入流
+     * @throws Exception 下载过程中发生异常
+     */
     @Override
     public InputStream download(Long id) throws Exception {
         FileDO f = getById(id);
@@ -195,11 +260,28 @@ public class FileServiceImpl implements FileService {
                 .build());
     }
 
+    /**
+     * 按业务查询文件
+     *
+     * @param bizType 业务类型
+     * @param bizId   业务单据 ID
+     * @return 文件元信息列表
+     */
     @Override
     public List<FileDO> listByBiz(String bizType, String bizId) {
         return fileMapper.selectByBiz(bizType, bizId);
     }
 
+    /**
+     * 分页查询文件
+     *
+     * @param page    页码
+     * @param size    每页大小
+     * @param bizType 业务类型（可选）
+     * @param bizId   业务单据 ID（可选）
+     * @param keyword 关键词（可选）
+     * @return 分页结果
+     */
     @Override
     public Page<FileDO> page(int page, int size, String bizType, String bizId, String keyword) {
         Page<FileDO> p = new Page<>(page, size);
@@ -220,6 +302,12 @@ public class FileServiceImpl implements FileService {
 
     // ==================== 私有方法 ====================
 
+    /**
+     * 确保 Bucket 存在，不存在则创建
+     *
+     * @param bucket Bucket 名称
+     * @throws Exception 检查或创建过程中发生异常
+     */
     private void ensureBucket(String bucket) throws Exception {
         boolean exists = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucket).build());
         if (!exists) {
@@ -228,6 +316,12 @@ public class FileServiceImpl implements FileService {
         }
     }
 
+    /**
+     * 从 MinIO 删除对象（失败仅记录日志，不抛异常）
+     *
+     * @param f 文件元信息
+     * @throws Exception 删除过程中发生异常
+     */
     private void deleteFromMinio(FileDO f) throws Exception {
         try {
             minioClient.removeObject(RemoveObjectArgs.builder()
@@ -239,6 +333,12 @@ public class FileServiceImpl implements FileService {
         }
     }
 
+    /**
+     * 计算字节流的 SHA-256 哈希（十六进制字符串）
+     *
+     * @param content 文件内容
+     * @return SHA-256 哈希值，失败时返回 MD5
+     */
     private String sha256Hex(byte[] content) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -253,6 +353,12 @@ public class FileServiceImpl implements FileService {
         }
     }
 
+    /**
+     * 清洗文件名，替换非法字符
+     *
+     * @param name 原始文件名
+     * @return 清洗后的文件名
+     */
     private String sanitizeName(String name) {
         if (!StringUtils.hasText(name)) {
             return "file";

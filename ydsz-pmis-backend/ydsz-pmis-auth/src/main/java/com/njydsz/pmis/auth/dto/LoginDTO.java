@@ -17,21 +17,26 @@ import lombok.Data;
 @Schema(description = "登录参数")
 public class LoginDTO {
 
+    /** 用户名 */
     @NotBlank(message = "用户名不能为空")
     @Schema(description = "用户名", example = "admin")
     private String username;
 
+    /** 密码（明文，服务端加盐后哈希校验） */
     @NotBlank(message = "密码不能为空")
     @Size(min = 6, message = "密码长度不能少于 6 位")
     @Schema(description = "密码", example = "admin123")
     private String password;
 
+    /** 记住我（用于延长 Token 有效期） */
     @Schema(description = "记住我")
     private Boolean rememberMe;
 
+    /** 图形验证码 Key（由 captcha 接口返回） */
     @Schema(description = "图形验证码 Key")
     private String captchaKey;
 
+    /** 图形验证码（用户输入） */
     @Schema(description = "图形验证码")
     private String captchaCode;
 }

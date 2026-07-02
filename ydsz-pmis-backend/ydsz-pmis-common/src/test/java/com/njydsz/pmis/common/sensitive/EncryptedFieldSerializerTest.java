@@ -16,6 +16,11 @@ import static org.mockito.Mockito.verify;
 
 /**
  * EncryptedField 加密字段序列化器测试
+ *
+ * <p>覆盖 AES-GCM/SM4-GCM 序列化、null 处理与 End-to-End Jackson 输出。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("EncryptedField 加密字段测试")
 class EncryptedFieldSerializerTest {

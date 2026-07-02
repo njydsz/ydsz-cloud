@@ -1,6 +1,6 @@
 package com.njydsz.pmis.notification.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -24,13 +24,13 @@ public class MessageServiceClientFallback implements FallbackFactory<MessageServ
         log.warn("[Feign] message 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new MessageServiceClient() {
             @Override
-            public R<Object> send(MessageFeignDTO dto) {
-                return R.failed(503, "消息服务暂不可用, 邮件未发送: receiver=" + dto.getReceiver());
+            public Result<Object> send(MessageFeignDTO dto) {
+                return Result.failed(503, "消息服务暂不可用, 邮件未发送: receiver=" + dto.getReceiver());
             }
 
             @Override
-            public R<List<String>> channels() {
-                return R.ok(List.of());
+            public Result<List<String>> channels() {
+                return Result.ok(List.of());
             }
         };
     }

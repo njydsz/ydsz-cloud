@@ -26,6 +26,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * DataExportAuditAspect 数据导出审计切面测试
+ *
+ * <p>覆盖集合/数字结果行数采集、IP 解析、异常吞掉与未登录兼容。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("DataExportAuditAspect 导出审计切面测试")
 class DataExportAuditAspectTest {

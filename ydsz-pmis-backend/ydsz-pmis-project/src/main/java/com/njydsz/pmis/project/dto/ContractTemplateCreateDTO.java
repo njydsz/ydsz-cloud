@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 @Data
 public class ContractTemplateCreateDTO implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 

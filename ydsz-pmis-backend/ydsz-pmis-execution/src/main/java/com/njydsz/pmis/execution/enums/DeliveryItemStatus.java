@@ -23,7 +23,9 @@ public enum DeliveryItemStatus {
     REJECTED("REJECTED", "已驳回"),
     WAIVED("WAIVED", "已豁免");
 
+    /** 状态编码（大小写不敏感） */
     private final String code;
+    /** 状态中文描述 */
     private final String desc;
 
     DeliveryItemStatus(String code, String desc) {
@@ -31,13 +33,35 @@ public enum DeliveryItemStatus {
         this.desc = desc;
     }
 
+    /**
+     * 获取状态编码
+     *
+     * @return 状态编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取状态中文描述
+     *
+     * @return 状态中文描述
+     */
     public String getDesc() { return desc; }
 
+    /**
+     * 判断是否为终态
+     *
+     * @return true 表示当前状态为终态（已验收/已豁免），不可再迁移
+     */
     public boolean isTerminal() {
         return this == ACCEPTED || this == WAIVED;
     }
 
+    /**
+     * 校验状态迁移合法性
+     *
+     * @param target 目标状态
+     * @return true 表示允许从当前状态迁移到目标状态
+     */
     public boolean canTransitTo(DeliveryItemStatus target) {
         if (target == null) return false;
         if (this == target) return true;

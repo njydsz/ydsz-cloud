@@ -145,13 +145,16 @@ public interface InitiationService {
     String startProcess(Long id, Long initiatorId);
 
     /**
-     * 装配客户/PM/发起人名称（按需调用 Feign 客户端）
+     * 装配客户/PM/发起人名称（按需调用 Feign 客户端）。
+     *
+     * @param initiation 立项实体，为 null 时安全返回
      */
     void assembleNames(InitiationDO initiation);
 
     /**
-     * 预算快照（供其他模块 Feign 调用）
+     * 预算快照（供其他模块 Feign 调用）。
      *
+     * @param id 立项 ID
      * @return {initiationId, projectCode, projectName, budgetAmount, estimatedAmount, stage}
      */
     java.util.Map<String, Object> budgetSnapshot(Long id);

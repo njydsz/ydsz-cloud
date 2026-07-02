@@ -1,6 +1,6 @@
 package com.njydsz.pmis.auth.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.user.dto.LoginContextDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -18,19 +18,25 @@ import org.springframework.stereotype.Component;
 @Component
 public class UserAuthClientFallback implements FallbackFactory<UserAuthClient> {
 
+    /**
+     * 创建降级代理
+     *
+     * @param cause 触发降级的异常
+     * @return 降级后的 UserAuthClient 实例，所有方法返回服务不可用响应
+     */
     @Override
     public UserAuthClient create(Throwable cause) {
         log.error("[Feign] user 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new UserAuthClient() {
             @Override
-            public R<LoginContextDTO> getLoginContextByUsername(String username) {
-                return R.failed(com.njydsz.pmis.common.api.BizErrorCode.SERVICE_UNAVAILABLE,
+            public Result<LoginContextDTO> getLoginContextByUsername(String username) {
+                return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.SERVICE_UNAVAILABLE,
                         "用户服务不可用，请稍后重试");
             }
 
             @Override
-            public R<LoginContextDTO> getLoginContextById(Long userId) {
-                return R.failed(com.njydsz.pmis.common.api.BizErrorCode.SERVICE_UNAVAILABLE,
+            public Result<LoginContextDTO> getLoginContextById(Long userId) {
+                return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.SERVICE_UNAVAILABLE,
                         "用户服务不可用，请稍后重试");
             }
         };

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.service.impl;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
 import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;
@@ -60,12 +60,12 @@ class AdvancedReportServiceImplTest {
         when(thresholdProvider.benchYellowDays()).thenReturn(7);
         when(thresholdProvider.benchRedDays()).thenReturn(15);
         // 默认 user 服务降级：返回空数据，不让现有测试受 Feign 影响
-        when(benchResourceClient.getBenchDashboard()).thenReturn(R.ok(Map.of(
+        when(benchResourceClient.getBenchDashboard()).thenReturn(Result.ok(Map.of(
                 "totalIdleCost", BigDecimal.ZERO,
                 "activePools", Collections.emptyList(),
                 "source", "DOWN")));
         when(benchResourceClient.listResourceAssignmentsByInitiation(any()))
-                .thenReturn(R.ok(Collections.emptyList()));
+                .thenReturn(Result.ok(Collections.emptyList()));
         service = new AdvancedReportServiceImpl(evmMapper, rateCardMapper,
                 rateInternalMapper, riskMapper, timeEntryMapper, thresholdProvider,
                 benchResourceClient, profitSnapshotMapper);
@@ -356,7 +356,7 @@ class AdvancedReportServiceImplTest {
     @DisplayName("resourceGantt Feign 返回空数据时返回空列表")
     void gantt_empty() {
         when(benchResourceClient.listResourceAssignmentsByInitiation(any()))
-                .thenReturn(R.ok(Collections.emptyList()));
+                .thenReturn(Result.ok(Collections.emptyList()));
         assertThat(service.resourceGantt(1L)).isEmpty();
     }
 
@@ -376,7 +376,7 @@ class AdvancedReportServiceImplTest {
         a1.put("plannedStartDate", "2026-06-01");
         a1.put("plannedEndDate", "2026-08-31");
         when(benchResourceClient.listResourceAssignmentsByInitiation(1L))
-                .thenReturn(R.ok(List.of(a1)));
+                .thenReturn(Result.ok(List.of(a1)));
 
         List<Map<String, Object>> out = service.resourceGantt(1L);
         assertThat(out).hasSize(1);
@@ -400,7 +400,7 @@ class AdvancedReportServiceImplTest {
         a1.put("actualStartDate", "2026-07-01");
         a1.put("actualEndDate", "2026-11-30");
         when(benchResourceClient.listResourceAssignmentsByInitiation(any()))
-                .thenReturn(R.ok(List.of(a1)));
+                .thenReturn(Result.ok(List.of(a1)));
         List<Map<String, Object>> out = service.resourceGantt(2L);
         assertThat(out.get(0).get("startDate")).isEqualTo("2026-07-01");
         assertThat(out.get(0).get("endDate")).isEqualTo("2026-11-30");
@@ -421,7 +421,7 @@ class AdvancedReportServiceImplTest {
                 "176", "88", "0", "8", "16");
         when(timeEntryMapper.aggregateBillableByEmployee(any(), any())).thenReturn(List.of(r1));
         when(rateInternalMapper.selectAll()).thenReturn(List.of(internal("L5", "1000")));
-        when(benchResourceClient.getBenchDashboard()).thenReturn(R.ok(Map.of(
+        when(benchResourceClient.getBenchDashboard()).thenReturn(Result.ok(Map.of(
                 "totalIdleCost", new BigDecimal("12345.67"),
                 "activePools", List.of(),
                 "source", "USER")));

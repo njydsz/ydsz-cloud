@@ -13,8 +13,11 @@ public enum AlertSeverity {
     YELLOW("YELLOW", 2, "黄色预警"),
     RED("RED", 3, "红色严重");
 
+    /** 严重度编码（大小写不敏感） */
     private final String code;
+    /** 严重度权重（数值越大越严重） */
     private final int weight;
+    /** 严重度中文描述 */
     private final String desc;
 
     AlertSeverity(String code, int weight, String desc) {
@@ -23,8 +26,25 @@ public enum AlertSeverity {
         this.desc = desc;
     }
 
+    /**
+     * 获取严重度编码
+     *
+     * @return 严重度编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取严重度权重
+     *
+     * @return 严重度权重数值
+     */
     public int getWeight() { return weight; }
+
+    /**
+     * 获取严重度中文描述
+     *
+     * @return 严重度中文描述
+     */
     public String getDesc() { return desc; }
 
     /**

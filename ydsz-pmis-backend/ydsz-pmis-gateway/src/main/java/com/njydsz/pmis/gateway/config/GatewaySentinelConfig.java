@@ -3,7 +3,7 @@ package com.njydsz.pmis.gateway.config;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.BlockRequestHandler;
 import com.alibaba.csp.sentinel.adapter.gateway.sc.callback.GatewayCallbackManager;
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import jakarta.annotation.PostConstruct;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -30,7 +30,7 @@ public class GatewaySentinelConfig {
     @PostConstruct
     public void init() {
         BlockRequestHandler handler = (exchange, ex) -> {
-            R<?> body = R.failed(429, "网关限流: " + ex.getClass().getSimpleName());
+            Result<?> body = Result.failed(429, "网关限流: " + ex.getClass().getSimpleName());
             return ServerResponse.status(HttpStatus.TOO_MANY_REQUESTS)
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE + ";charset=" + StandardCharsets.UTF_8)

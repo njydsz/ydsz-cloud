@@ -1,6 +1,6 @@
 package com.njydsz.pmis.user.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.user.entity.DictItemDO;
 import com.njydsz.pmis.user.entity.DictTypeDO;
 import com.njydsz.pmis.user.service.DictService;
@@ -27,20 +27,20 @@ public class DictController {
 
     @Operation(summary = "查询所有字典类型")
     @GetMapping("/types")
-    public R<List<DictTypeDO>> listTypes() {
-        return R.ok(dictService.listAllTypes());
+    public Result<List<DictTypeDO>> listTypes() {
+        return Result.ok(dictService.listAllTypes());
     }
 
     @Operation(summary = "按 typeCode 查询字典项")
     @GetMapping("/items")
-    public R<List<DictItemDO>> listItems(@RequestParam String typeCode) {
-        return R.ok(dictService.listItems(typeCode));
+    public Result<List<DictItemDO>> listItems(@RequestParam String typeCode) {
+        return Result.ok(dictService.listItems(typeCode));
     }
 
     @Operation(summary = "刷新字典缓存")
     @PostMapping("/refresh")
-    public R<Void> refresh(@RequestParam String typeCode) {
+    public Result<Void> refresh(@RequestParam String typeCode) {
         dictService.refreshCache(typeCode);
-        return R.ok();
+        return Result.ok();
     }
 }

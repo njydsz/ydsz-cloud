@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.OpsTicketAssignDTO;
 import com.njydsz.pmis.execution.dto.OpsTicketCreateDTO;
 import com.njydsz.pmis.execution.dto.OpsTicketStatusDTO;
@@ -40,45 +40,45 @@ public class OpsTicketController {
     @Operation(summary = "创建工单")
     @PrePermission("aftersales:ops-ticket:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody OpsTicketCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody OpsTicketCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "派单")
     @PrePermission("aftersales:ops-ticket:assign")
     @PostMapping("/assign")
-    public R<Void> assign(@Valid @RequestBody OpsTicketAssignDTO dto) {
+    public Result<Void> assign(@Valid @RequestBody OpsTicketAssignDTO dto) {
         service.assign(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "状态变更")
     @PrePermission("aftersales:ops-ticket:status")
     @PostMapping("/status")
-    public R<Void> changeStatus(@Valid @RequestBody OpsTicketStatusDTO dto) {
+    public Result<Void> changeStatus(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.changeStatus(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "关闭工单并评价")
     @PrePermission("aftersales:ops-ticket:evaluate")
     @PostMapping("/close-evaluate")
-    public R<Void> closeAndEvaluate(@Valid @RequestBody OpsTicketStatusDTO dto) {
+    public Result<Void> closeAndEvaluate(@Valid @RequestBody OpsTicketStatusDTO dto) {
         service.closeAndEvaluate(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "SLA 扫描")
     @PrePermission("aftersales:ops-ticket:scan")
     @PostMapping("/scan/sla")
-    public R<Integer> scanSla() {
-        return R.ok(service.scanSlaBreaches());
+    public Result<Integer> scanSla() {
+        return Result.ok(service.scanSlaBreaches());
     }
 
     @Operation(summary = "工单分页")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/page")
-    public R<PageResult<OpsTicketDO>> page(
+    public Result<PageResult<OpsTicketDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String status,
@@ -86,35 +86,35 @@ public class OpsTicketController {
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) Long assigneeId,
             @RequestParam(required = false) String keyword) {
-        return R.ok(PageResult.ofPage(service.page(page, size, status, priority,
+        return Result.ok(PageResult.ofPage(service.page(page, size, status, priority,
                 initiationId, assigneeId, keyword)));
     }
 
     @Operation(summary = "SLA 达成率")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/sla-summary")
-    public R<List<Map<String, Object>>> slaSummary() {
-        return R.ok(service.slaSummary());
+    public Result<List<Map<String, Object>>> slaSummary() {
+        return Result.ok(service.slaSummary());
     }
 
     @Operation(summary = "按状态聚合")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/aggregate/status")
-    public R<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long initiationId) {
-        return R.ok(service.aggregateByStatus(initiationId));
+    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long initiationId) {
+        return Result.ok(service.aggregateByStatus(initiationId));
     }
 
     /** 工单详情 */
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/{id}")
-    public R<OpsTicketDO> getById(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<OpsTicketDO> getById(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     /** 按项目查询工单 */
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/by-initiation/{initiationId}")
-    public R<List<OpsTicketDO>> listByInitiation(@PathVariable Long initiationId) {
-        return R.ok(service.listByInitiation(initiationId));
+    public Result<List<OpsTicketDO>> listByInitiation(@PathVariable Long initiationId) {
+        return Result.ok(service.listByInitiation(initiationId));
     }
 }

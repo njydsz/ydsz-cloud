@@ -3,7 +3,7 @@ package com.njydsz.pmis.file.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.file.dto.FileUploadDTO;
@@ -40,7 +40,7 @@ public class FileController {
     @PrePermission(PermissionCodes.FILE_STORAGE_UPLOAD)
     @OperationLog(module = "文件存储", action = "上传文件", bizType = "FILE")
     @PostMapping("/upload")
-    public R<FileDO> upload(@RequestPart("file") MultipartFile file,
+    public Result<FileDO> upload(@RequestPart("file") MultipartFile file,
                             FileUploadDTO dto) throws Exception {
         if (dto == null) {
             dto = new FileUploadDTO();
@@ -51,39 +51,73 @@ public class FileController {
         if (dto.getUploaderName() == null) {
             dto.setUploaderName(SecurityContext.getUsername());
         }
-        return R.ok(fileService.upload(file, dto));
+        return Result.ok(fileService.upload(file, dto));
     }
 
+    /**
+     * 删除文件
+     *
+     * @param id 文件 ID
+     * @return 统一响应结果
+     * @throws Exception 删除过程中发生异常
+     */
     @Operation(summary = "删除文件")
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "删除文件", bizType = "FILE")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) throws Exception {
+    public Result<Void> delete(@PathVariable Long id) throws Exception {
         fileService.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * 批量删除文件
+     *
+     * @param ids 文件 ID 列表
+     * @return 统一响应结果
+     * @throws Exception 删除过程中发生异常
+     */
     @Operation(summary = "批量删除")
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @DeleteMapping("/batch")
-    public R<Void> deleteBatch(@RequestBody List<Long> ids) throws Exception {
+    public Result<Void> deleteBatch(@RequestBody List<Long> ids) throws Exception {
         fileService.deleteBatch(ids);
-        return R.ok();
+        return Result.ok();
     }
 
+    /**
+     * 查询文件详情
+     *
+     * @param id 文件 ID
+     * @return 统一响应结果，包含文件元信息
+     */
     @Operation(summary = "文件详情")
     @GetMapping("/{id}")
-    public R<FileDO> getById(@PathVariable Long id) {
-        return R.ok(fileService.getById(id));
+    public Result<FileDO> getById(@PathVariable Long id) {
+        return Result.ok(fileService.getById(id));
     }
 
+    /**
+     * 获取预签名下载 URL
+     *
+     * @param id            文件 ID
+     * @param expireSeconds URL 有效期（秒），可选
+     * @return 统一响应结果，包含预签名 URL
+     */
     @Operation(summary = "获取预签名下载 URL")
     @GetMapping("/{id}/presigned-url")
-    public R<String> presignedUrl(@PathVariable Long id,
+    public Result<String> presignedUrl(@PathVariable Long id,
                                   @RequestParam(required = false) Integer expireSeconds) {
-        return R.ok(fileService.getPresignedUrl(id, expireSeconds));
+        return Result.ok(fileService.getPresignedUrl(id, expireSeconds));
     }
 
+    /**
+     * 下载文件
+     *
+     * @param id       文件 ID
+     * @param response HTTP 响应对象
+     * @throws Exception 下载过程中发生异常
+     */
     @Operation(summary = "下载文件")
     @GetMapping("/{id}/download")
     public void download(@PathVariable Long id, HttpServletResponse response) throws Exception {
@@ -101,21 +135,38 @@ public class FileController {
         }
     }
 
+    /**
+     * 按业务类型与业务 ID 查询文件列表
+     *
+     * @param bizType 业务类型
+     * @param bizId   业务单据 ID
+     * @return 统一响应结果，包含文件元信息列表
+     */
     @Operation(summary = "按业务查询")
     @GetMapping("/by-biz")
-    public R<List<FileDO>> listByBiz(@RequestParam String bizType,
+    public Result<List<FileDO>> listByBiz(@RequestParam String bizType,
                                      @RequestParam String bizId) {
-        return R.ok(fileService.listByBiz(bizType, bizId));
+        return Result.ok(fileService.listByBiz(bizType, bizId));
     }
 
+    /**
+     * 分页查询文件
+     *
+     * @param page    页码
+     * @param size    每页大小
+     * @param bizType 业务类型（可选）
+     * @param bizId   业务单据 ID（可选）
+     * @param keyword 关键词（可选）
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public R<Page<FileDO>> page(
+    public Result<Page<FileDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) String bizId,
             @RequestParam(required = false) String keyword) {
-        return R.ok(fileService.page(page, size, bizType, bizId, keyword));
+        return Result.ok(fileService.page(page, size, bizType, bizId, keyword));
     }
 }

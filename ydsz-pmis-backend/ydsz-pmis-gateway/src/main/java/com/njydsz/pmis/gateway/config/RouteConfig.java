@@ -16,6 +16,12 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class RouteConfig {
 
+    /**
+     * 自定义路由定位器，配置各微服务的网关路由规则
+     *
+     * @param builder 路由定位器构建器
+     * @return 路由定位器
+     */
     @Bean
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()

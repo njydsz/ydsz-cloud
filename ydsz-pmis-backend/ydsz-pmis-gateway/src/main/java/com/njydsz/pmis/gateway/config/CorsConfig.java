@@ -18,6 +18,11 @@ import java.util.List;
 @Configuration
 public class CorsConfig {
 
+    /**
+     * 创建跨域过滤器 Bean
+     *
+     * @return 跨域 Web 过滤器
+     */
     @Bean
     public CorsWebFilter corsWebFilter() {
         CorsConfiguration config = new CorsConfiguration();

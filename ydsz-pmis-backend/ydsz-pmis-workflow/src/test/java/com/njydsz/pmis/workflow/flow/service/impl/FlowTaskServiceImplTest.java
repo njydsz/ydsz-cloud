@@ -3,16 +3,23 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
+import com.njydsz.pmis.workflow.flow.engine.FlowAssigneeResolver;
+import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.flow.engine.FlowVariableStrategy;
+import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowUserDO;
 import com.njydsz.pmis.workflow.flow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.flow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
+import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.flow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.flow.mapper.FlowUserMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +36,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -38,8 +46,9 @@ import static org.mockito.Mockito.when;
 /**
  * FlowTaskServiceImpl 单元测试
  *
- * <p>覆盖：createTask / claim / pass / reject / transfer / delegate / cancelByInstance /
- * listPendingByInstance / listTodoByAssignee / listDoneByAssignee / toView。
+ * <p>1.1.0 覆盖：createTask / claim / pass (含会签) / reject / transfer / delegate (含委派回归) /
+ * countersignBefore / countersignAfter / urge / cancelByInstance / listPendingByInstance /
+ * listTodoByAssignee / listTodoByUser / listDoneByAssignee (历史表) / toView。
  */
 @DisplayName("FlowTaskServiceImpl 单元测试")
 class FlowTaskServiceImplTest {
@@ -50,6 +59,11 @@ class FlowTaskServiceImplTest {
     private FlowInstanceServiceImpl instanceService;
     private FlowAdvancer advancer;
     private FlowVariableStrategy variableStrategy;
+    private FlowUserMapper userMapper;
+    private FlowAuditLogMapper auditLogMapper;
+    private FlowNodeMapper nodeMapper;
+    private FlowAssigneeResolver assigneeResolver;
+    private List<FlowEventListener> eventListeners;
     private FlowTaskServiceImpl service;
 
     @BeforeEach
@@ -61,8 +75,14 @@ class FlowTaskServiceImplTest {
         instanceService = mock(FlowInstanceServiceImpl.class);
         advancer = mock(FlowAdvancer.class);
         variableStrategy = mock(FlowVariableStrategy.class);
+        userMapper = mock(FlowUserMapper.class);
+        auditLogMapper = mock(FlowAuditLogMapper.class);
+        nodeMapper = mock(FlowNodeMapper.class);
+        assigneeResolver = mock(FlowAssigneeResolver.class);
+        eventListeners = Collections.emptyList();
         service = new FlowTaskServiceImpl(taskMapper, hisTaskMapper, instanceMapper,
-                instanceService, advancer, variableStrategy);
+                instanceService, advancer, variableStrategy,
+                userMapper, auditLogMapper, nodeMapper, assigneeResolver, eventListeners);
     }
 
     // ============== createTask ==============
@@ -90,6 +110,8 @@ class FlowTaskServiceImplTest {
         ins.setTenantId(2L);
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("user:1001"), any())).thenReturn("user:1001");
+        // resolver 不展开，走 fallback
+        when(assigneeResolver.expandUsers(eq("user:1001"), any())).thenReturn(Collections.emptyList());
         org.mockito.Mockito.doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(99L);
             return 1;
@@ -126,6 +148,7 @@ class FlowTaskServiceImplTest {
         FlowInstanceDO ins = simpleInstance(10L);
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("role:hr"), any())).thenReturn("role:hr");
+        when(assigneeResolver.expandUsers(eq("role:hr"), any())).thenReturn(Collections.emptyList());
         org.mockito.Mockito.doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(1L);
             return 1;
@@ -151,6 +174,7 @@ class FlowTaskServiceImplTest {
         FlowInstanceDO ins = simpleInstance(10L);
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("dept:10"), any())).thenReturn("dept:10");
+        when(assigneeResolver.expandUsers(eq("dept:10"), any())).thenReturn(Collections.emptyList());
         org.mockito.Mockito.doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(1L);
             return 1;
@@ -176,6 +200,7 @@ class FlowTaskServiceImplTest {
         FlowInstanceDO ins = simpleInstance(10L);
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("${initiatorId}"), any())).thenReturn("${initiatorId}");
+        when(assigneeResolver.expandUsers(eq("${initiatorId}"), any())).thenReturn(Collections.emptyList());
         org.mockito.Mockito.doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(1L);
             return 1;
@@ -218,6 +243,38 @@ class FlowTaskServiceImplTest {
         assertThat(saved.getAssigneeName()).isEqualTo("INITIATOR");
     }
 
+    @Test
+    @DisplayName("createTask P0-4: ROLE 展开 → 多用户写入 pmis_flow_user")
+    void testCreateTaskRoleExpanded() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("role:hr"), any())).thenReturn("role:hr");
+        // 模拟 resolver 展开 role:hr → [1001L, 1002L, 1003L]
+        when(assigneeResolver.expandUsers(eq("role:hr"), any()))
+                .thenReturn(List.of(1001L, 1002L, 1003L));
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(88L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("会签审批");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("role:hr");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.USER.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("1001");  // 第一个用户
+        assertThat(saved.getApproveCount()).isEqualTo(3);  // 总人数
+        // 应该写入 3 条 pmis_flow_user
+        verify(userMapper, times(3)).insert((FlowUserDO) any());
+    }
+
     // ============== claim ==============
 
     @Test
@@ -250,9 +307,9 @@ class FlowTaskServiceImplTest {
         when(taskMapper.selectById(1L)).thenReturn(task);
 
         service.claim(1L, 999L);
-        verify(taskMapper).updateById((FlowTaskDO) any());
+        verify(taskMapper, atLeastOnce()).updateById((FlowTaskDO) any());
         ArgumentCaptor<FlowTaskDO> captor = ArgumentCaptor.forClass(FlowTaskDO.class);
-        verify(taskMapper).updateById(captor.capture());
+        verify(taskMapper, atLeastOnce()).updateById(captor.capture());
         FlowTaskDO updated = captor.getValue();
         assertThat(updated.getAssigneeId()).isEqualTo("999");
         assertThat(updated.getTaskStatus()).isEqualTo(FlowTaskStatus.CLAIMED.name());
@@ -350,6 +407,133 @@ class FlowTaskServiceImplTest {
                 anyString(), any(), any());
     }
 
+    @Test
+    @DisplayName("pass P1-10: 委派回归 — 被委派人通过后任务回到原办理人")
+    void testPassDelegateReturn() {
+        FlowTaskDO task = baseTask();
+        task.setTaskStatus(FlowTaskStatus.DELEGATED.name());
+        task.setAssignorId(500L);
+        task.setAssignorName("原办理人");
+        task.setAssigneeId("600");
+        task.setAssigneeName("被委派人");
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setUserId(600L);
+        dto.setComment("委派人已处理");
+        service.pass(dto);
+
+        ArgumentCaptor<FlowTaskDO> captor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).updateById(captor.capture());
+        FlowTaskDO updated = captor.getValue();
+        assertThat(updated.getAssigneeId()).isEqualTo("500");  // 回到原办理人
+        assertThat(updated.getAssigneeName()).isEqualTo("原办理人");
+        assertThat(updated.getAssignorId()).isNull();  // 清空 assignor
+        assertThat(updated.getTaskStatus()).isEqualTo(FlowTaskStatus.CLAIMED.name());
+        // 不应该推进流程
+        verify(advancer, never()).advance(any(), anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    @DisplayName("pass P0-1: 并行会签 — 全部通过才推进")
+    void testPassParallelNotAllFinished() {
+        FlowTaskDO task = baseTask();
+        task.setPerformType("PARALLEL");
+        task.setApproveCount(3);
+        task.setApproveFinished(0);  // 仅 1 人通过
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        when(instanceMapper.selectById(10L)).thenReturn(simpleInstance(10L));
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setUserId(1001L);
+        dto.setComment("同意");
+        service.pass(dto);
+
+        // 应该更新计数但不推进
+        verify(taskMapper).updateApproveFinished(eq(1L), eq(1));
+        verify(advancer, never()).advance(any(), anyString(), anyString(), any(), any());
+        verify(taskMapper, never()).completeTask(anyLong(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("pass P0-1: 并行会签 — 全部通过后推进")
+    void testPassParallelAllFinished() {
+        FlowTaskDO task = baseTask();
+        task.setPerformType("PARALLEL");
+        task.setApproveCount(2);
+        task.setApproveFinished(1);  // 已 1 人通过，再 1 人 = 2，达到阈值
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        FlowInstanceDO ins = simpleInstance(10L);
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(advancer.advance(any(), anyString(), anyString(), any(), any()))
+                .thenReturn(Collections.emptyList());
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setUserId(1002L);
+        service.pass(dto);
+
+        // 应该跳过剩余 + 完成 + 推进
+        verify(taskMapper).skipByNode(eq(10L), eq("t1"), eq(FlowTaskStatus.SKIPPED.name()));
+        verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.COMPLETED.name()),
+                any(), any(), any());
+        verify(advancer).advance(any(), anyString(), anyString(), any(), any());
+    }
+
+    @Test
+    @DisplayName("pass P1-12: 票签 — 达到阈值即推进")
+    void testPassVoteThreshold() {
+        FlowTaskDO task = baseTask();
+        task.setPerformType("VOTE");
+        task.setApproveCount(5);
+        task.setApproveFinished(2);  // 已 2 人通过，再 1 人 = 3，达到阈值 (5/2+1=3)
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        FlowInstanceDO ins = simpleInstance(10L);
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(advancer.advance(any(), anyString(), anyString(), any(), any()))
+                .thenReturn(Collections.emptyList());
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setUserId(1003L);
+        service.pass(dto);
+
+        verify(taskMapper).skipByNode(eq(10L), eq("t1"), eq(FlowTaskStatus.SKIPPED.name()));
+        verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.COMPLETED.name()),
+                any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("pass P1-12: 顺序会签 — 切换到下一个办理人")
+    void testPassSequentialSwitchNext() {
+        FlowTaskDO task = baseTask();
+        task.setPerformType("SEQUENTIAL");
+        task.setApproveCount(3);
+        task.setApproveFinished(0);
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+
+        FlowUserDO nextUser = new FlowUserDO();
+        nextUser.setUserId("1002");
+        nextUser.setUserName("李四");
+        when(userMapper.selectUnprocessedByInstanceAndNode(eq(10L), eq("t1")))
+                .thenReturn(List.of(nextUser));
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setUserId(1001L);
+        service.pass(dto);
+
+        verify(taskMapper).updateAssignee(eq(1L), eq("1002"), eq("李四"),
+                eq(FlowAssigneeType.USER.name()));
+        verify(advancer, never()).advance(any(), anyString(), anyString(), any(), any());
+    }
+
     // ============== reject ==============
 
     @Test
@@ -394,7 +578,7 @@ class FlowTaskServiceImplTest {
     }
 
     @Test
-    @DisplayName("reject 有退回目标：生成新任务 + 更新当前节点")
+    @DisplayName("reject P1-11: 有退回目标 — 生成新任务 + 更新当前节点")
     void testRejectWithTarget() {
         FlowTaskDO task = baseTask();
         FlowInstanceDO ins = simpleInstance(10L);
@@ -459,12 +643,13 @@ class FlowTaskServiceImplTest {
     }
 
     @Test
-    @DisplayName("delegate 复用 transfer 实现")
+    @DisplayName("delegate P1-10: 委派 — 保存原办理人 + 状态改为 DELEGATED")
     void testDelegate() {
         FlowTaskDO task = new FlowTaskDO();
         task.setId(1L);
         task.setTaskStatus(FlowTaskStatus.PENDING.name());
         task.setAssigneeId("100");
+        task.setAssigneeName("原办理人");
         when(taskMapper.selectById(1L)).thenReturn(task);
 
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -473,7 +658,14 @@ class FlowTaskServiceImplTest {
         dto.setTargetUserName("被委派人");
         service.delegate(dto);
 
-        verify(taskMapper, times(1)).updateById(any(FlowTaskDO.class));
+        ArgumentCaptor<FlowTaskDO> captor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).updateById(captor.capture());
+        FlowTaskDO updated = captor.getValue();
+        assertThat(updated.getAssigneeId()).isEqualTo("300");
+        assertThat(updated.getAssigneeName()).isEqualTo("被委派人");
+        assertThat(updated.getAssignorId()).isEqualTo(100L);
+        assertThat(updated.getAssignorName()).isEqualTo("原办理人");
+        assertThat(updated.getTaskStatus()).isEqualTo(FlowTaskStatus.DELEGATED.name());
     }
 
     @Test
@@ -493,6 +685,82 @@ class FlowTaskServiceImplTest {
         ArgumentCaptor<FlowTaskDO> captor = ArgumentCaptor.forClass(FlowTaskDO.class);
         verify(taskMapper).updateById(captor.capture());
         assertThat(captor.getValue().getAssignorId()).isNull();
+    }
+
+    // ============== P1-7: 加签 ==============
+
+    @Test
+    @DisplayName("countersignBefore 已完成任务应抛 BAD_REQUEST")
+    void testCountersignBeforeFinished() {
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(1L);
+        task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        assertThatThrownBy(() -> {
+            FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+            dto.setTaskId(1L);
+            service.countersignBefore(dto);
+        }).isInstanceOf(BizException.class);
+    }
+
+    @Test
+    @DisplayName("countersignBefore 成功：写入 pmis_flow_user + approveCount+1")
+    void testCountersignBeforeSuccess() {
+        FlowTaskDO task = baseTask();
+        task.setApproveCount(2);
+        task.setApproveFinished(0);
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetUserId(888L);
+        dto.setTargetUserName("加签人");
+        service.countersignBefore(dto);
+
+        ArgumentCaptor<FlowUserDO> userCaptor = ArgumentCaptor.forClass(FlowUserDO.class);
+        verify(userMapper).insert(userCaptor.capture());
+        FlowUserDO saved = userCaptor.getValue();
+        assertThat(saved.getTaskId()).isEqualTo(1L);
+        assertThat(saved.getUserId()).isEqualTo("888");
+        assertThat(saved.getUserName()).isEqualTo("加签人");
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).updateById(taskCaptor.capture());
+        assertThat(taskCaptor.getValue().getApproveCount()).isEqualTo(3);  // 2+1
+    }
+
+    @Test
+    @DisplayName("countersignAfter 复用 countersignBefore 实现")
+    void testCountersignAfter() {
+        FlowTaskDO task = baseTask();
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetUserId(999L);
+        dto.setTargetUserName("后加签人");
+        service.countersignAfter(dto);
+
+        verify(userMapper).insert((FlowUserDO) any());
+    }
+
+    // ============== P1-9: 催办 ==============
+
+    @Test
+    @DisplayName("urge 返回当前 PENDING 任务的办理人 ID 列表")
+    void testUrge() {
+        FlowTaskDO t1 = new FlowTaskDO();
+        t1.setId(1L);
+        t1.setAssigneeId("1001");
+        FlowTaskDO t2 = new FlowTaskDO();
+        t2.setId(2L);
+        t2.setAssigneeId("1002");
+        when(taskMapper.selectPendingByInstance(10L)).thenReturn(List.of(t1, t2));
+
+        List<String> urged = service.urge(10L, 7L, "请尽快处理");
+        assertThat(urged).containsExactly("1001", "1002");
+        // 每个任务都应该写审计
+        verify(auditLogMapper, times(2)).insert((com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO) any());
     }
 
     // ============== cancelByInstance / list* ==============
@@ -529,10 +797,39 @@ class FlowTaskServiceImplTest {
     }
 
     @Test
-    @DisplayName("listDoneByAssignee tenantId 为 null 时默认 1L")
-    void testListDoneByAssigneeDefaultTenant() {
-        service.listDoneByAssignee("1001", null);
-        verify(taskMapper).selectDoneByAssignee("1001", 1L);
+    @DisplayName("listTodoByUser P0-4: 多维度匹配（直接 + flow_user + ROLE + DEPT）")
+    void testListTodoByUser() {
+        FlowTaskDO direct = new FlowTaskDO();
+        direct.setId(1L);
+        direct.setTaskStatus(FlowTaskStatus.PENDING.name());
+        when(taskMapper.selectTodoByAssignee(eq("1001"), eq(1L)))
+                .thenReturn(List.of(direct))
+                .thenReturn(Collections.emptyList());  // 第二次（ROLE 匹配）返回空
+        when(userMapper.selectTaskIdsByUser(eq("1001"), eq(1L)))
+                .thenReturn(Collections.emptyList());
+
+        List<FlowTaskDO> result = service.listTodoByUser(1001L,
+                List.of("hr"), List.of("10"), 1L);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+    }
+
+    @Test
+    @DisplayName("listDoneByAssignee P0-3: 走历史表 FlowHisTaskMapper")
+    void testListDoneByAssigneeFromHistory() {
+        FlowHisTaskDO his = new FlowHisTaskDO();
+        his.setTaskId(99L);
+        his.setAssigneeId("1001");
+        his.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        when(hisTaskMapper.selectDoneByAssignee(eq("1001"), eq(1L)))
+                .thenReturn(List.of(his));
+
+        List<FlowTaskDO> result = service.listDoneByAssignee("1001", null);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(99L);
+        assertThat(result.get(0).getTaskStatus()).isEqualTo(FlowTaskStatus.COMPLETED.name());
+        // 不应该查 task 表
+        verify(taskMapper, never()).selectDoneByAssignee(anyString(), anyLong());
     }
 
     // ============== toView ==============

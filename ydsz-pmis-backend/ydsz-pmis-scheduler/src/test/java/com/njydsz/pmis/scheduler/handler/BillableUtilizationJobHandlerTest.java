@@ -1,6 +1,6 @@
 package com.njydsz.pmis.scheduler.handler;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.ExecutionClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -36,7 +36,7 @@ class BillableUtilizationJobHandlerTest {
         data.put("ok", true);
         data.put("affectedCount", 30);
         when(executionClient.recomputeBillableUtilization(eq("2026-06"), anyBoolean()))
-                .thenReturn(R.ok(data));
+                .thenReturn(Result.ok(data));
 
         Object r = handler.execute("{\"period\":\"2026-06\",\"recomputeAll\":false}");
         assertThat(r).isInstanceOf(Map.class);
@@ -54,7 +54,7 @@ class BillableUtilizationJobHandlerTest {
         data.put("ok", true);
         data.put("affectedCount", 0);
         when(executionClient.recomputeBillableUtilization(eq("2026-05"), eq(true)))
-                .thenReturn(R.ok(data));
+                .thenReturn(Result.ok(data));
 
         Object r = handler.execute("{\"period\":\"2026-05\",\"recomputeAll\":true}");
         Map<String, Object> m = (Map<String, Object>) r;
@@ -67,7 +67,7 @@ class BillableUtilizationJobHandlerTest {
         Map<String, Object> data = new HashMap<>();
         data.put("ok", true);
         when(executionClient.recomputeBillableUtilization(anyString(), anyBoolean()))
-                .thenReturn(R.ok(data));
+                .thenReturn(Result.ok(data));
 
         Object r = handler.execute(null);
         Map<String, Object> m = (Map<String, Object>) r;
@@ -82,7 +82,7 @@ class BillableUtilizationJobHandlerTest {
         Map<String, Object> data = new HashMap<>();
         data.put("ok", true);
         when(executionClient.recomputeBillableUtilization(anyString(), anyBoolean()))
-                .thenReturn(R.ok(data));
+                .thenReturn(Result.ok(data));
 
         Object r = handler.execute("not a json {");
         Map<String, Object> m = (Map<String, Object>) r;
@@ -105,7 +105,7 @@ class BillableUtilizationJobHandlerTest {
     @DisplayName("data 为空时仍返回基础结果")
     void execute_emptyData() throws Exception {
         when(executionClient.recomputeBillableUtilization(anyString(), anyBoolean()))
-                .thenReturn(R.ok(new HashMap<>()));
+                .thenReturn(Result.ok(new HashMap<>()));
 
         Object r = handler.execute("{\"period\":\"2026-06\"}");
         Map<String, Object> m = (Map<String, Object>) r;

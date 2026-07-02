@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,12 +27,12 @@ public interface BenchResourceClient {
      * Bench 仪表盘汇总（活跃池分布 + 累计闲置成本）
      */
     @GetMapping("/api/v1/bench/dashboard")
-    R<Map<String, Object>> getBenchDashboard();
+    Result<Map<String, Object>> getBenchDashboard();
 
     /**
      * 按项目查询资源分配（甘特图数据源）
      */
     @GetMapping("/api/v1/resource-assignments/by-initiation/{initiationId}")
-    R<List<Map<String, Object>>> listResourceAssignmentsByInitiation(
+    Result<List<Map<String, Object>>> listResourceAssignmentsByInitiation(
             @PathVariable("initiationId") Long initiationId);
 }

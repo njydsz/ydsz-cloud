@@ -1,6 +1,6 @@
 package com.njydsz.pmis.gateway.filter;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.constant.CommonConstants;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
@@ -55,9 +55,18 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/v1/health"
     );
 
+    /** JWT Token 生成与校验工具 */
     private final JwtTokenProvider jwtTokenProvider;
+    /** Redis 响应式模板（用于 Token 黑名单检查） */
     private final ReactiveStringRedisTemplate redisTemplate;
 
+    /**
+     * 核心过滤逻辑：链路追踪 → 白名单放行 → Token 校验 → 黑名单检查 → 用户信息透传
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param chain    网关过滤器链
+     * @return 完成信号 Mono
+     */
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
@@ -142,17 +151,31 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                 });
     }
 
+    /**
+     * 判断请求路径是否在白名单中
+     *
+     * @param path 请求路径
+     * @return true 表示在白名单中（无需鉴权），false 表示需要鉴权
+     */
     private boolean isWhiteList(String path) {
         return WHITE_LIST.stream().anyMatch(path::startsWith);
     }
 
+    /**
+     * 返回 401 未授权响应
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param traceId  链路追踪 ID
+     * @param msg      错误消息
+     * @return 完成信号 Mono
+     */
     private Mono<Void> unauthorized(ServerWebExchange exchange, String traceId, String msg) {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
         // traceId 已在 filter 开头统一写入响应头，此处无需重复设置
 
-        R<Void> body = R.failed(20001, msg);
+        Result<Void> body = Result.failed(20001, msg);
         body.setTraceId(traceId);
         byte[] bytes = com.alibaba.fastjson2.JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
 
@@ -160,6 +183,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         return response.writeWith(Mono.just(buffer));
     }
 
+    /**
+     * 过滤器执行顺序（高优先级，确保最先执行鉴权）
+     *
+     * @return 过滤器顺序值
+     */
     @Override
     public int getOrder() {
         return Ordered.HIGHEST_PRECEDENCE + 10;

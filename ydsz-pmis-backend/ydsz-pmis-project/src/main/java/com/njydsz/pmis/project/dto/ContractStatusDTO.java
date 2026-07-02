@@ -19,19 +19,23 @@ import java.io.Serializable;
 @Schema(description = "合同状态变更")
 public class ContractStatusDTO implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 合同 ID */
     @NotNull
     @Schema(description = "合同 ID", requiredMode = RequiredMode.REQUIRED)
     private Long id;
 
+    /** 目标状态（DRAFT/SUBMITTED/APPROVING/ACTIVE/SUSPENDED/EXPIRED/TERMINATED） */
     @NotBlank
     @Schema(description = "目标状态", requiredMode = RequiredMode.REQUIRED,
             allowableValues = {"DRAFT", "SUBMITTED", "APPROVING", "ACTIVE",
                     "SUSPENDED", "EXPIRED", "TERMINATED"})
     private String targetStatus;
 
+    /** 备注 */
     @Schema(description = "备注")
     private String remark;
 }

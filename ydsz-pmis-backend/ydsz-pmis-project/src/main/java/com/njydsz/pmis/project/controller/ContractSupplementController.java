@@ -1,7 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ContractSupplementDTO;
 import com.njydsz.pmis.project.entity.ContractSupplementDO;
 import com.njydsz.pmis.project.service.ContractSupplementService;
@@ -36,35 +36,35 @@ public class ContractSupplementController {
 
     @Operation(summary = "创建补充协议")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody ContractSupplementDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody ContractSupplementDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "删除补充协议")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "补充协议详情")
     @GetMapping("/{id}")
-    public R<ContractSupplementDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<ContractSupplementDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "按合同列出")
     @GetMapping("/list")
-    public R<List<ContractSupplementDO>> listByContract(@RequestParam Long contractId) {
-        return R.ok(service.listByContract(contractId));
+    public Result<List<ContractSupplementDO>> listByContract(@RequestParam Long contractId) {
+        return Result.ok(service.listByContract(contractId));
     }
 
     @Operation(summary = "分页查询")
     @GetMapping("/page")
-    public R<Page<ContractSupplementDO>> page(
+    public Result<Page<ContractSupplementDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long contractId) {
-        return R.ok(service.page(page, size, contractId));
+        return Result.ok(service.page(page, size, contractId));
     }
 }

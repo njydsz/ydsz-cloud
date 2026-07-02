@@ -23,7 +23,9 @@ public enum OpsTicketStatus {
     CLOSED("CLOSED", "已关闭"),
     CANCELLED("CANCELLED", "已取消");
 
+    /** 状态编码（大小写不敏感） */
     private final String code;
+    /** 状态中文描述 */
     private final String desc;
 
     OpsTicketStatus(String code, String desc) {
@@ -31,7 +33,18 @@ public enum OpsTicketStatus {
         this.desc = desc;
     }
 
+    /**
+     * 获取状态编码
+     *
+     * @return 状态编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取状态中文描述
+     *
+     * @return 状态中文描述
+     */
     public String getDesc() { return desc; }
 
     /**

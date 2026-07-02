@@ -15,10 +15,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * JwtTokenProvider 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("JwtTokenProvider JWT 工具测试")
 class JwtTokenProviderTest {
 
+    /** 待测 JWT 工具实例 */
     private JwtTokenProvider provider;
 
     @BeforeEach

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.config;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.ConfigClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -15,6 +15,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * ThresholdProvider 单元测试
+ *
+ * <p>覆盖默认值、配置覆盖、格式错误回退与远端异常兜底场景。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ThresholdProvider 阈值提供器")
 class ThresholdProviderTest {
@@ -32,7 +37,7 @@ class ThresholdProviderTest {
     @DisplayName("未配置时使用默认值")
     void defaultWhenNoConfig() {
         when(configClient.getGroup(eq(ThresholdProvider.GROUP)))
-                .thenReturn(R.ok(Map.of()));
+                .thenReturn(Result.ok(Map.of()));
         assertThat(provider.cpiYellow()).isEqualTo(0.95);
         assertThat(provider.cpiRed()).isEqualTo(0.85);
         assertThat(provider.spiYellow()).isEqualTo(0.90);
@@ -45,7 +50,7 @@ class ThresholdProviderTest {
     @DisplayName("配置覆盖时使用配置值")
     void overrideFromConfig() {
         when(configClient.getGroup(eq(ThresholdProvider.GROUP)))
-                .thenReturn(R.ok(Map.of(
+                .thenReturn(Result.ok(Map.of(
                         "alert.cpi.yellow", "0.97",
                         "alert.cpi.red", "0.90",
                         "alert.bench.days.yellow", "5",
@@ -61,7 +66,7 @@ class ThresholdProviderTest {
     @DisplayName("格式错误时回退默认")
     void fallbackOnInvalidValue() {
         when(configClient.getGroup(eq(ThresholdProvider.GROUP)))
-                .thenReturn(R.ok(Map.of("alert.cpi.yellow", "not-a-number")));
+                .thenReturn(Result.ok(Map.of("alert.cpi.yellow", "not-a-number")));
         assertThat(provider.cpiYellow()).isEqualTo(0.95);
     }
 

@@ -13,6 +13,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * SecurityContext 登录上下文单元测试
+ *
+ * <p>覆盖线程上下文存取、未登录异常、快捷方法与权限校验。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("SecurityContext 线程上下文测试")
 class SecurityContextTest {

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.notification.service.impl;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
 import com.njydsz.pmis.notification.dto.NotificationSendDTO;
@@ -169,7 +169,7 @@ class NotificationServiceImplTest {
         Map<String, Object> data = new HashMap<>();
         data.put("providerTraceId", "EMAIL-abcdef0123456789");
         when(messageClient.send(any(MessageServiceClient.MessageFeignDTO.class)))
-                .thenReturn(R.ok(data));
+                .thenReturn(Result.ok(data));
 
         NotificationSendDTO dto = new NotificationSendDTO();
         dto.setTitle("欢迎");
@@ -191,11 +191,11 @@ class NotificationServiceImplTest {
         when(mapper.insert(any(NotificationDO.class))).thenReturn(1);
         Map<String, Object> emp = new HashMap<>();
         emp.put("email", "user@x.com");
-        when(userClient.getEmployee(10L)).thenReturn(R.ok(emp));
+        when(userClient.getEmployee(10L)).thenReturn(Result.ok(emp));
         Map<String, Object> data = new HashMap<>();
         data.put("providerTraceId", "EMAIL-zzz");
         when(messageClient.send(any(MessageServiceClient.MessageFeignDTO.class)))
-                .thenReturn(R.ok(data));
+                .thenReturn(Result.ok(data));
 
         NotificationSendDTO dto = new NotificationSendDTO();
         dto.setTitle("欢迎");
@@ -211,7 +211,7 @@ class NotificationServiceImplTest {
     @DisplayName("sendWithEmail 邮箱解析为空应跳过邮件, 错误信息明确")
     void sendWithEmail_emailEmpty() {
         when(mapper.insert(any(NotificationDO.class))).thenReturn(1);
-        when(userClient.getEmployee(10L)).thenReturn(R.ok(new HashMap<>()));
+        when(userClient.getEmployee(10L)).thenReturn(Result.ok(new HashMap<>()));
 
         NotificationSendDTO dto = new NotificationSendDTO();
         dto.setTitle("欢迎");
@@ -248,7 +248,7 @@ class NotificationServiceImplTest {
     void sendWithEmail_messageFailCode() {
         when(mapper.insert(any(NotificationDO.class))).thenReturn(1);
         when(messageClient.send(any(MessageServiceClient.MessageFeignDTO.class)))
-                .thenReturn(R.failed(10001, "模板不存在"));
+                .thenReturn(Result.failed(10001, "模板不存在"));
 
         NotificationSendDTO dto = new NotificationSendDTO();
         dto.setTitle("欢迎");

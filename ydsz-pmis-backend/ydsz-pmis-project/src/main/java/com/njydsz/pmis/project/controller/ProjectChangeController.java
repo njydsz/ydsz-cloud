@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ProjectChangeCreateDTO;
 import com.njydsz.pmis.project.dto.ProjectChangeStatusDTO;
 import com.njydsz.pmis.project.entity.ProjectChangeDO;
@@ -45,72 +45,72 @@ public class ProjectChangeController {
     @Operation(summary = "创建项目变更")
     @PrePermission("project:change:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "状态迁移")
     @PrePermission("project:change:status")
     @PutMapping("/status")
-    public R<Void> changeStatus(@Valid @RequestBody ProjectChangeStatusDTO dto) {
+    public Result<Void> changeStatus(@Valid @RequestBody ProjectChangeStatusDTO dto) {
         service.changeStatus(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除变更")
     @PrePermission("project:change:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "变更详情")
     @PrePermission("project:change:list")
     @GetMapping("/{id}")
-    public R<ProjectChangeDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<ProjectChangeDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "分页查询")
     @PrePermission("project:change:list")
     @GetMapping("/page")
-    public R<Page<ProjectChangeDO>> page(
+    public Result<Page<ProjectChangeDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String changeType,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long initiationId) {
-        return R.ok(service.page(page, size, keyword, changeType, status, initiationId));
+        return Result.ok(service.page(page, size, keyword, changeType, status, initiationId));
     }
 
     @Operation(summary = "按项目查询变更列表")
     @PrePermission("project:change:list")
     @GetMapping("/list-by-initiation/{initiationId}")
-    public R<List<ProjectChangeDO>> listByInitiation(@PathVariable Long initiationId) {
-        return R.ok(service.listByInitiation(initiationId));
+    public Result<List<ProjectChangeDO>> listByInitiation(@PathVariable Long initiationId) {
+        return Result.ok(service.listByInitiation(initiationId));
     }
 
     @Operation(summary = "按变更类型聚合")
     @PrePermission("project:change:list")
     @GetMapping("/aggregate/type")
-    public R<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
-        return R.ok(service.aggregateByType(tenantId));
+    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
+        return Result.ok(service.aggregateByType(tenantId));
     }
 
     @Operation(summary = "按状态聚合")
     @PrePermission("project:change:list")
     @GetMapping("/aggregate/status")
-    public R<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long tenantId) {
-        return R.ok(service.aggregateByStatus(tenantId));
+    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long tenantId) {
+        return Result.ok(service.aggregateByStatus(tenantId));
     }
 
     @Operation(summary = "统计项目重大变更数")
     @PrePermission("project:change:list")
     @GetMapping("/major-count/{initiationId}")
-    public R<Long> countMajor(@PathVariable Long initiationId) {
-        return R.ok(service.countMajorByInitiation(initiationId));
+    public Result<Long> countMajor(@PathVariable Long initiationId) {
+        return Result.ok(service.countMajorByInitiation(initiationId));
     }
 
     /**
@@ -126,20 +126,20 @@ public class ProjectChangeController {
     @Operation(summary = "获取合法状态迁移列表")
     @PrePermission("project:change:list")
     @GetMapping("/{id}/allowed-transitions")
-    public R<List<String>> getAllowedTransitions(@PathVariable Long id) {
+    public Result<List<String>> getAllowedTransitions(@PathVariable Long id) {
         ProjectChangeDO change = service.getById(id);
         if (change == null) {
-            return R.ok(List.of());
+            return Result.ok(List.of());
         }
         ChangeStatus current = ChangeStatus.fromCode(change.getStatus());
         if (current == null || current.isTerminal()) {
-            return R.ok(List.of());
+            return Result.ok(List.of());
         }
         List<String> allowed = Arrays.stream(ChangeStatus.values())
                 .filter(s -> current.canTransitTo(s))
                 .map(ChangeStatus::getCode)
                 .collect(Collectors.toList());
-        return R.ok(allowed);
+        return Result.ok(allowed);
     }
 
     /**
@@ -149,7 +149,7 @@ public class ProjectChangeController {
     @Operation(summary = "获取所有变更状态字典")
     @PrePermission("project:change:list")
     @GetMapping("/status-dict")
-    public R<List<Map<String, String>>> getStatusDict() {
+    public Result<List<Map<String, String>>> getStatusDict() {
         List<Map<String, String>> list = new ArrayList<>();
         for (ChangeStatus s : ChangeStatus.values()) {
             list.add(Map.of(
@@ -158,6 +158,6 @@ public class ProjectChangeController {
                 "terminal", String.valueOf(s.isTerminal())
             ));
         }
-        return R.ok(list);
+        return Result.ok(list);
     }
 }

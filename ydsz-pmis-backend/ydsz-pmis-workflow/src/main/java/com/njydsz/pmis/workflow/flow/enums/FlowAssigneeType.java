@@ -17,5 +17,9 @@ public enum FlowAssigneeType {
     /** SpEL 表达式：assignee_id = ${expression}，由 VariableStrategy 解析 */
     SPEL,
     /** 发起人本人 */
-    INITIATOR
+    INITIATOR,
+    /** 直属上级：assignee_id = 发起人的 leader userId */
+    LEADER,
+    /** 岗位：assignee_id = positionCode */
+    POSITION
 }

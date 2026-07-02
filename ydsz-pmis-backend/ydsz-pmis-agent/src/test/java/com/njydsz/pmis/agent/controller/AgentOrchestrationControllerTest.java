@@ -7,7 +7,7 @@ import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.service.AgentOrchestrationService;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -62,7 +62,7 @@ class AgentOrchestrationControllerTest {
         req.setMode(OrchestrationMode.VOTING);
         req.setAgentTypes(List.of("RISK_WARNING"));
         req.setFacts(new HashMap<>());
-        R<OrchestrationResult> r = controller.coordinate(req);
+        Result<OrchestrationResult> r = controller.coordinate(req);
         assertThat(r).isNotNull();
         assertThat(r.getData()).isNotNull();
         assertThat(r.getData().getFinalResult().getAlertLevel()).isEqualTo(AgentAlertLevel.RED);

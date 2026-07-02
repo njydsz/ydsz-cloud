@@ -28,9 +28,11 @@ public class EvmMeasureDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 项目立项ID */
     private Long initiationId;
     /** WBS 任务ID（可空：项目级度量） */
     private Long wbsTaskId;
@@ -68,10 +70,14 @@ public class EvmMeasureDO implements Serializable {
     /** 预警原因 */
     private String alertReason;
 
+    /** 度量日期 */
     private LocalDate measureDate;
+    /** 备注 */
     private String remark;
 
+    /** 租户ID */
     private Long tenantId;
+    /** 链路追踪ID */
     private String providerTraceId;
 
     /** 创建时间 */

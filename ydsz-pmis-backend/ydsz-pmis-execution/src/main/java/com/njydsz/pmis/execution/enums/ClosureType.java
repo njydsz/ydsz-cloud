@@ -17,7 +17,9 @@ public enum ClosureType {
     PRE_CLOSURE("PRE_CLOSURE", "预结项"),
     FORCED("FORCED", "强制结项");
 
+    /** 类型编码（大小写不敏感） */
     private final String code;
+    /** 类型中文描述 */
     private final String desc;
 
     ClosureType(String code, String desc) {
@@ -25,7 +27,18 @@ public enum ClosureType {
         this.desc = desc;
     }
 
+    /**
+     * 获取类型编码
+     *
+     * @return 类型编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取类型中文描述
+     *
+     * @return 类型中文描述
+     */
     public String getDesc() { return desc; }
 
     /**

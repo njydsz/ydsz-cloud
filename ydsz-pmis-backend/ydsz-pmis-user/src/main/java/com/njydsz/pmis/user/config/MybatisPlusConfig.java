@@ -3,6 +3,7 @@ package com.njydsz.pmis.user.config;
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.njydsz.pmis.common.config.AuditFieldFiller;
 import org.springframework.context.annotation.Bean;
@@ -18,7 +19,10 @@ import org.springframework.context.annotation.Configuration;
 public class MybatisPlusConfig {
 
     /**
-     * 分页拦截器（PostgreSQL 方言）
+     * 分页 + 乐观锁拦截器（PostgreSQL 方言）
+     *
+     * <p>P1-12 新增 OptimisticLockerInnerInterceptor，与 common 模块默认配置保持一致，
+     * 支持实体 @Version 字段自动校验和自增。
      *
      * @return MyBatis-Plus 拦截器
      */
@@ -26,6 +30,7 @@ public class MybatisPlusConfig {
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.POSTGRE_SQL));
+        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
         return interceptor;
     }
 

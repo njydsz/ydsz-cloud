@@ -3,7 +3,7 @@ package com.njydsz.pmis.user.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.user.dto.AttendanceCreateDTO;
 import com.njydsz.pmis.user.dto.LeaveCreateDTO;
 import com.njydsz.pmis.user.dto.OvertimeCreateDTO;
@@ -44,29 +44,29 @@ public class AttendanceController {
     @PrePermission("attendance:record:create")
     @OperationLog(module = "考勤", action = "登记出勤", bizType = "ATTENDANCE")
     @PostMapping("/record")
-    public R<Long> recordAttendance(@Valid @RequestBody AttendanceCreateDTO dto) {
-        return R.ok(attendanceService.recordAttendance(dto));
+    public Result<Long> recordAttendance(@Valid @RequestBody AttendanceCreateDTO dto) {
+        return Result.ok(attendanceService.recordAttendance(dto));
     }
 
     @Operation(summary = "出勤分页")
     @PrePermission("attendance:record:list")
     @GetMapping("/record/page")
-    public R<Page<AttendanceDO>> pageAttendance(
+    public Result<Page<AttendanceDO>> pageAttendance(
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return R.ok(attendanceService.pageAttendance(employeeId, startDate, endDate, page, size));
+        return Result.ok(attendanceService.pageAttendance(employeeId, startDate, endDate, page, size));
     }
 
     @Operation(summary = "出勤状态统计")
     @GetMapping("/record/stat")
-    public R<List<Map<String, Object>>> statByStatus(
+    public Result<List<Map<String, Object>>> statByStatus(
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return R.ok(attendanceService.statByStatus(employeeId, startDate, endDate));
+        return Result.ok(attendanceService.statByStatus(employeeId, startDate, endDate));
     }
 
     // ============== 加班 ==============
@@ -75,39 +75,39 @@ public class AttendanceController {
     @PrePermission("attendance:overtime:create")
     @OperationLog(module = "考勤", action = "提交加班", bizType = "OVERTIME")
     @PostMapping("/overtime")
-    public R<Long> submitOvertime(@Valid @RequestBody OvertimeCreateDTO dto) {
-        return R.ok(attendanceService.submitOvertime(dto));
+    public Result<Long> submitOvertime(@Valid @RequestBody OvertimeCreateDTO dto) {
+        return Result.ok(attendanceService.submitOvertime(dto));
     }
 
     @Operation(summary = "审批加班")
     @PrePermission("attendance:overtime:approve")
     @OperationLog(module = "考勤", action = "审批加班", bizType = "OVERTIME")
     @PostMapping("/overtime/{id}/approve")
-    public R<Void> approveOvertime(
+    public Result<Void> approveOvertime(
             @PathVariable Long id,
             @RequestParam String action,
             @RequestHeader(value = "X-User-Id", required = false) String approverId,
             @RequestHeader(value = "X-Username", required = false) String approverName,
             @RequestParam(required = false) String remark) {
         attendanceService.approveOvertime(id, action, approverId, approverName, remark);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "加班分页")
     @PrePermission("attendance:overtime:list")
     @GetMapping("/overtime/page")
-    public R<Page<OvertimeDO>> pageOvertime(
+    public Result<Page<OvertimeDO>> pageOvertime(
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return R.ok(attendanceService.pageOvertime(employeeId, approvalStatus, page, size));
+        return Result.ok(attendanceService.pageOvertime(employeeId, approvalStatus, page, size));
     }
 
     @Operation(summary = "加班详情")
     @GetMapping("/overtime/{id}")
-    public R<OvertimeDO> getOvertime(@PathVariable Long id) {
-        return R.ok(attendanceService.getOvertime(id));
+    public Result<OvertimeDO> getOvertime(@PathVariable Long id) {
+        return Result.ok(attendanceService.getOvertime(id));
     }
 
     // ============== 请假 ==============
@@ -116,47 +116,47 @@ public class AttendanceController {
     @PrePermission("attendance:leave:create")
     @OperationLog(module = "考勤", action = "提交请假", bizType = "LEAVE")
     @PostMapping("/leave")
-    public R<Long> submitLeave(@Valid @RequestBody LeaveCreateDTO dto) {
-        return R.ok(attendanceService.submitLeave(dto));
+    public Result<Long> submitLeave(@Valid @RequestBody LeaveCreateDTO dto) {
+        return Result.ok(attendanceService.submitLeave(dto));
     }
 
     @Operation(summary = "审批请假")
     @PrePermission("attendance:leave:approve")
     @OperationLog(module = "考勤", action = "审批请假", bizType = "LEAVE")
     @PostMapping("/leave/{id}/approve")
-    public R<Void> approveLeave(
+    public Result<Void> approveLeave(
             @PathVariable Long id,
             @RequestParam String action,
             @RequestHeader(value = "X-User-Id", required = false) String approverId,
             @RequestHeader(value = "X-Username", required = false) String approverName,
             @RequestParam(required = false) String remark) {
         attendanceService.approveLeave(id, action, approverId, approverName, remark);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "请假分页")
     @PrePermission("attendance:leave:list")
     @GetMapping("/leave/page")
-    public R<Page<LeaveDO>> pageLeave(
+    public Result<Page<LeaveDO>> pageLeave(
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size) {
-        return R.ok(attendanceService.pageLeave(employeeId, approvalStatus, page, size));
+        return Result.ok(attendanceService.pageLeave(employeeId, approvalStatus, page, size));
     }
 
     @Operation(summary = "请假详情")
     @GetMapping("/leave/{id}")
-    public R<LeaveDO> getLeave(@PathVariable Long id) {
-        return R.ok(attendanceService.getLeave(id));
+    public Result<LeaveDO> getLeave(@PathVariable Long id) {
+        return Result.ok(attendanceService.getLeave(id));
     }
 
     @Operation(summary = "员工在指定日期内已批准的请假")
     @GetMapping("/leave/approved")
-    public R<List<LeaveDO>> listApprovedLeaves(
+    public Result<List<LeaveDO>> listApprovedLeaves(
             @RequestParam Long employeeId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
-        return R.ok(attendanceService.listApprovedLeaves(employeeId, startDate, endDate));
+        return Result.ok(attendanceService.listApprovedLeaves(employeeId, startDate, endDate));
     }
 }

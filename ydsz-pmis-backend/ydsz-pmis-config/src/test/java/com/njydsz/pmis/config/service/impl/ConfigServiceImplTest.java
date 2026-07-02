@@ -24,13 +24,19 @@ import static org.mockito.Mockito.when;
 
 /**
  * ConfigServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @SuppressWarnings("unchecked")
 @DisplayName("ConfigServiceImpl 配置中心测试")
 class ConfigServiceImplTest {
 
+    /** 配置 Mapper（Mock） */
     private ConfigMapper mapper;
+    /** Redis 操作模板（Mock） */
     private StringRedisTemplate redis;
+    /** 待测服务实例 */
     private ConfigServiceImpl service;
 
     @BeforeEach
@@ -304,6 +310,15 @@ class ConfigServiceImplTest {
                 .isInstanceOf(BizException.class);
     }
 
+    /**
+     * 构造测试用配置实体
+     *
+     * @param id    配置 ID
+     * @param group 配置分组
+     * @param key   配置键
+     * @param value 配置值
+     * @return 配置实体
+     */
     private ConfigDO config(Long id, String group, String key, String value) {
         ConfigDO c = new ConfigDO();
         c.setId(id);
@@ -315,6 +330,14 @@ class ConfigServiceImplTest {
         return c;
     }
 
+    /**
+     * 构造测试用配置表单
+     *
+     * @param group 配置分组
+     * @param key   配置键
+     * @param value 配置值
+     * @return 配置表单
+     */
     private ConfigFormDTO form(String group, String key, String value) {
         ConfigFormDTO dto = new ConfigFormDTO();
         dto.setConfigGroup(group);

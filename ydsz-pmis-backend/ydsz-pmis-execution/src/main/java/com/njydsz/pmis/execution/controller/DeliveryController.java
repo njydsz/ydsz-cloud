@@ -1,7 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.DeliveryItemCreateDTO;
 import com.njydsz.pmis.execution.dto.DeliveryItemStatusDTO;
 import com.njydsz.pmis.execution.dto.DeliveryStandardCreateDTO;
@@ -45,40 +45,40 @@ public class DeliveryController {
     @Operation(summary = "创建交付物标准")
     @PrePermission("execution:delivery:create")
     @PostMapping("/standard")
-    public R<Long> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
-        return R.ok(service.createStandard(dto));
+    public Result<Long> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
+        return Result.ok(service.createStandard(dto));
     }
 
     @Operation(summary = "删除交付物标准")
     @PrePermission("execution:delivery:delete")
     @DeleteMapping("/standard/{id}")
-    public R<Void> deleteStandard(@PathVariable Long id) {
+    public Result<Void> deleteStandard(@PathVariable Long id) {
         service.deleteStandard(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "交付物标准详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/{id}")
-    public R<DeliveryStandardDO> getStandard(@PathVariable Long id) {
-        return R.ok(service.getStandardById(id));
+    public Result<DeliveryStandardDO> getStandard(@PathVariable Long id) {
+        return Result.ok(service.getStandardById(id));
     }
 
     @Operation(summary = "按类型/阶段查询交付物标准")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/list")
-    public R<List<DeliveryStandardDO>> listStandards(
+    public Result<List<DeliveryStandardDO>> listStandards(
             @RequestParam(required = false) String projectType,
             @RequestParam(required = false) String projectLevel,
             @RequestParam(required = false) String stage) {
-        return R.ok(service.listStandards(projectType, projectLevel, stage));
+        return Result.ok(service.listStandards(projectType, projectLevel, stage));
     }
 
     @Operation(summary = "统计项目类型的标准数")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/count")
-    public R<Long> countStandardsByType(@RequestParam String projectType) {
-        return R.ok(service.countStandardsByType(projectType));
+    public Result<Long> countStandardsByType(@RequestParam String projectType) {
+        return Result.ok(service.countStandardsByType(projectType));
     }
 
     // ========== 实例管理 ==========
@@ -86,62 +86,62 @@ public class DeliveryController {
     @Operation(summary = "创建项目交付物实例")
     @PrePermission("execution:delivery:create")
     @PostMapping("/item")
-    public R<Long> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
-        return R.ok(service.createItem(dto));
+    public Result<Long> createItem(@Valid @RequestBody DeliveryItemCreateDTO dto) {
+        return Result.ok(service.createItem(dto));
     }
 
     @Operation(summary = "交付物状态迁移")
     @PrePermission("execution:delivery:status")
     @PutMapping("/item/status")
-    public R<Void> changeItemStatus(@Valid @RequestBody DeliveryItemStatusDTO dto) {
+    public Result<Void> changeItemStatus(@Valid @RequestBody DeliveryItemStatusDTO dto) {
         service.changeItemStatus(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "标记 TR 完成")
     @PrePermission("execution:delivery:status")
     @PutMapping("/item/{id}/tr-completed")
-    public R<Void> markTrCompleted(@PathVariable Long id,
+    public Result<Void> markTrCompleted(@PathVariable Long id,
                                    @RequestParam Integer completed) {
         service.markTrCompleted(id, completed);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除交付物实例")
     @PrePermission("execution:delivery:delete")
     @DeleteMapping("/item/{id}")
-    public R<Void> deleteItem(@PathVariable Long id) {
+    public Result<Void> deleteItem(@PathVariable Long id) {
         service.deleteItem(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "交付物实例详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/{id}")
-    public R<DeliveryItemDO> getItem(@PathVariable Long id) {
-        return R.ok(service.getItemById(id));
+    public Result<DeliveryItemDO> getItem(@PathVariable Long id) {
+        return Result.ok(service.getItemById(id));
     }
 
     @Operation(summary = "按项目查询所有交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-initiation/{initiationId}")
-    public R<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable Long initiationId) {
-        return R.ok(service.listItemsByInitiation(initiationId));
+    public Result<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable Long initiationId) {
+        return Result.ok(service.listItemsByInitiation(initiationId));
     }
 
     @Operation(summary = "按项目+阶段查询交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-stage")
-    public R<List<DeliveryItemDO>> listItemsByStage(@RequestParam Long initiationId,
+    public Result<List<DeliveryItemDO>> listItemsByStage(@RequestParam Long initiationId,
                                                     @RequestParam String stage) {
-        return R.ok(service.listItemsByStage(initiationId, stage));
+        return Result.ok(service.listItemsByStage(initiationId, stage));
     }
 
     @Operation(summary = "按状态聚合交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/aggregate/status")
-    public R<List<Map<String, Object>>> aggregateItemStatus(@RequestParam Long initiationId) {
-        return R.ok(service.aggregateItemStatus(initiationId));
+    public Result<List<Map<String, Object>>> aggregateItemStatus(@RequestParam Long initiationId) {
+        return Result.ok(service.aggregateItemStatus(initiationId));
     }
 
     // ========== 阶段门控 ==========
@@ -149,10 +149,10 @@ public class DeliveryController {
     @Operation(summary = "阶段门控校验")
     @PrePermission("execution:delivery:status")
     @GetMapping("/stage-gate/check")
-    public R<StageGateValidator.GateCheckResult> checkStageGate(
+    public Result<StageGateValidator.GateCheckResult> checkStageGate(
             @RequestParam Long initiationId,
             @RequestParam String targetStage,
             @RequestParam(required = false) String projectLevel) {
-        return R.ok(service.checkStageGate(initiationId, targetStage, projectLevel));
+        return Result.ok(service.checkStageGate(initiationId, targetStage, projectLevel));
     }
 }

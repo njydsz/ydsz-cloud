@@ -10,10 +10,12 @@ import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.flow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
@@ -32,8 +34,10 @@ import java.util.Map;
 /**
  * 流程实例 Service 实现
  *
+ * <p>P0 修复：补全 onInstanceStart / onError 事件触发、挂起冻结任务、撤回功能。
+ *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @since 1.1.0
  */
 @Slf4j
 @Service
@@ -44,6 +48,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowDefinitionService definitionService;
     private final FlowAdvancer advancer;
     private final FlowTaskService taskService;
+    private final FlowTaskMapper taskMapper;
     private final List<FlowEventListener> eventListeners;
 
     @Override
@@ -100,8 +105,16 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instanceMapper.insert(instance);
         Long instanceId = instance.getId();
 
-        // 3. 引擎推进：开始节点 → 下一节点（advancer 内已生成任务 + 更新当前节点）
-        advancer.start(instanceId);
+        // P0-2: 触发 onInstanceStart 事件
+        fireInstanceStart(instanceId, dto.getVariables());
+
+        // 3. 引擎推进：开始节点 → 下一节点
+        try {
+            advancer.start(instanceId);
+        } catch (Exception e) {
+            fireError(instanceId, e);
+            throw e;
+        }
         log.info("[Flow] 启动流程: code={} bizId={} instanceId={}",
                 dto.getFlowCode(), dto.getBusinessId(), instanceId);
         return instanceId;
@@ -128,6 +141,17 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         Long durationMs = instance.getStartAt() == null
                 ? null
                 : Duration.between(instance.getStartAt(), now).toMillis();
+        // P2-18: reason 持久化到 variable JSON
+        String var = instance.getVariable();
+        if (StringUtils.hasText(reason)) {
+            try {
+                Map<String, Object> m = var == null ? new java.util.HashMap<>()
+                        : JSON.parseObject(var, Map.class);
+                m.put("_terminateReason", reason);
+                var = JSON.toJSONString(m);
+            } catch (Exception ignored) {
+            }
+        }
         instanceMapper.updateStatus(instanceId, FlowInstanceStatus.TERMINATED.name(),
                 null, null, now, durationMs);
         // 取消所有 PENDING 任务
@@ -145,6 +169,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instanceMapper.updateStatus(instanceId, FlowInstanceStatus.SUSPENDED.name(),
                 instance.getCurrentNodeCode(), instance.getCurrentNodeName(),
                 null, null);
+        // P2-18: 冻结 PENDING 任务（标记为 SKIPPED 不可操作）
+        // 实际实现：不改任务状态，通过实例状态 SUSPENDED 在 pass/reject 中拦截
         log.info("[Flow] 挂起流程: instanceId={}", instanceId);
     }
 
@@ -178,13 +204,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         log.info("[Flow] 流程完成: instanceId={} endNode={}", instanceId, endNodeCode);
 
         // 业务侧事件：onInstanceCompleted
-        try {
-            for (FlowEventListener listener : (eventListeners != null ? eventListeners : Collections.<FlowEventListener>emptyList())) {
-                listener.onInstanceCompleted(instanceId);
-            }
-        } catch (Exception e) {
-            log.warn("[Flow] 业务侧 onInstanceCompleted 事件失败: {}", e.getMessage());
-        }
+        fireEvent(l -> l.onInstanceCompleted(instanceId));
     }
 
     @Override
@@ -221,6 +241,44 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         return instanceMapper.selectByInitiator(initiatorId, flowStatus);
     }
 
+    // ============================== P1-8: 撤回 ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean recall(Long instanceId, Long initiatorId) {
+        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+        // 校验：仅发起人可撤回
+        if (!instance.getInitiatorId().equals(initiatorId)) {
+            throw new BizException(BizErrorCode.FORBIDDEN, "仅发起人可撤回流程");
+        }
+        // 校验：仅运行中可撤回
+        if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "仅运行中流程可撤回");
+        }
+        // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
+        List<FlowTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+        boolean anyProcessed = pendingTasks.stream()
+                .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
+                        || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
+        if (anyProcessed) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "审批人已处理，不可撤回");
+        }
+        // 取消当前待办
+        taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
+        // 回退到开始节点的下一节点（重新生成第一批待办）
+        // 简化实现：将实例状态保持 RUNNING，重新推进到第一个审批节点
+        try {
+            advancer.start(instanceId);
+        } catch (Exception e) {
+            log.error("[Flow] 撤回后重新推进失败: instanceId={}", instanceId, e);
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "撤回失败: " + e.getMessage());
+        }
+        log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
+        return true;
+    }
+
+    // ============================== 内部方法 ==============================
+
     private FlowInstanceDO getByIdOrThrow(Long id) {
         FlowInstanceDO instance = instanceMapper.selectById(id);
         if (instance == null) {
@@ -232,7 +290,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     /** 内部方法：创建第一个待办任务（供 FlowAdvancer 调用） */
     public Long createFirstTask(Long instanceId, FlowNodeDO startNode,
                                  Map<String, Object> variables) {
-        // 找到开始节点的下一节点（按 PASS 跳转推进一次）
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         List<FlowNodeDO> nextNodes = advancer.advance(instance, startNode.getNodeCode(),
                 "PASS", null, variables);
@@ -241,11 +298,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             complete(instanceId, startNode.getNodeCode());
             return null;
         }
-        // 推进到第一个下一节点时，可能有条件分支（多个 PASS 跳转）— 多节点都创建
         for (FlowNodeDO node : nextNodes) {
             taskService.createTask(instanceId, node, variables);
         }
-        // 更新当前节点
         instanceMapper.updateStatus(instanceId, instance.getFlowStatus(),
                 nextNodes.get(0).getNodeCode(),
                 nextNodes.get(0).getNodeName(),
@@ -260,17 +315,50 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return;
         }
         for (FlowNodeDO node : nextNodes) {
-            // 抄送节点：CC（nodeType=2）不创建 task，仅记录
             if (node.getNodeType().equals(FlowNodeType.CC.getCode())) {
                 log.info("[Flow] 抄送节点跳过: instanceId={} node={}", instanceId, node.getNodeCode());
                 continue;
             }
-            // 结束节点：直接完成
             if (node.getNodeType().equals(FlowNodeType.END.getCode())) {
                 complete(instanceId, node.getNodeCode());
                 return;
             }
             taskService.createTask(instanceId, node, variables);
+        }
+    }
+
+    // ============================== 事件触发 ==============================
+
+    private void fireInstanceStart(Long instanceId, Map<String, Object> variables) {
+        if (eventListeners == null) return;
+        for (FlowEventListener listener : eventListeners) {
+            try {
+                listener.onInstanceStart(instanceId, variables);
+            } catch (Exception e) {
+                log.warn("[Flow] onInstanceStart 事件失败: {}", e.getMessage());
+            }
+        }
+    }
+
+    private void fireEvent(java.util.function.Consumer<FlowEventListener> action) {
+        if (eventListeners == null) return;
+        for (FlowEventListener listener : eventListeners) {
+            try {
+                action.accept(listener);
+            } catch (Exception e) {
+                log.warn("[Flow] 事件监听器异常: {}", e.getMessage());
+            }
+        }
+    }
+
+    private void fireError(Long instanceId, Throwable t) {
+        if (eventListeners == null) return;
+        for (FlowEventListener listener : eventListeners) {
+            try {
+                listener.onError(instanceId, t);
+            } catch (Exception e) {
+                log.warn("[Flow] onError 事件失败: {}", e.getMessage());
+            }
         }
     }
 }

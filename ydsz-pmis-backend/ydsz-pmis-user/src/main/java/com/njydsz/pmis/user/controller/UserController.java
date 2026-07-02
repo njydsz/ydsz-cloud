@@ -5,7 +5,7 @@ import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.annotation.RequireReAuth;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.user.dto.UserQueryDTO;
@@ -37,39 +37,39 @@ public class UserController {
     @Operation(summary = "用户分页")
     @PrePermission("auth:user:list")
     @GetMapping
-    public R<Page<UserAccountDO>> page(UserQueryDTO query) {
-        return R.ok(userAccountService.page(query));
+    public Result<Page<UserAccountDO>> page(UserQueryDTO query) {
+        return Result.ok(userAccountService.page(query));
     }
 
     @Operation(summary = "用户详情")
     @GetMapping("/{id}")
-    public R<UserAccountDO> get(@PathVariable Long id) {
-        return R.ok(userAccountService.findById(id));
+    public Result<UserAccountDO> get(@PathVariable Long id) {
+        return Result.ok(userAccountService.findById(id));
     }
 
     @Operation(summary = "当前用户信息")
     @GetMapping("/me")
-    public R<UserAccountDO> me() {
-        return R.ok(userAccountService.findById(SecurityContext.getUserId()));
+    public Result<UserAccountDO> me() {
+        return Result.ok(userAccountService.findById(SecurityContext.getUserId()));
     }
 
     @Operation(summary = "修改自己的密码")
     @PostMapping("/me/password")
-    public R<Void> changeMyPassword(@RequestBody Map<String, String> body) {
+    public Result<Void> changeMyPassword(@RequestBody Map<String, String> body) {
         String oldPassword = body.get("oldPassword");
         String newPassword = body.get("newPassword");
         if (oldPassword == null || newPassword == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "原密码或新密码不能为空");
         }
         userAccountService.changePassword(SecurityContext.getUserId(), oldPassword, newPassword);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "创建用户")
     @PrePermission("auth:user:create")
     @OperationLog(module = "权限管理", action = "创建用户", bizType = "USER")
     @PostMapping
-    public R<Long> create(@RequestBody Map<String, Object> body) {
+    public Result<Long> create(@RequestBody Map<String, Object> body) {
         String username = (String) body.get("username");
         String password = (String) body.get("password");
         Long employeeId = body.get("employeeId") == null ? null : Long.valueOf(body.get("employeeId").toString());
@@ -80,16 +80,16 @@ public class UserController {
         u.setUsername(username);
         u.setEmployeeId(employeeId);
         u.setStatus("ENABLED");
-        return R.ok(userAccountService.create(u, password));
+        return Result.ok(userAccountService.create(u, password));
     }
 
     @Operation(summary = "更新用户")
     @PrePermission("auth:user:update")
     @OperationLog(module = "权限管理", action = "更新用户", bizType = "USER")
     @PutMapping
-    public R<Void> update(@RequestBody UserAccountDO user) {
+    public Result<Void> update(@RequestBody UserAccountDO user) {
         userAccountService.update(user);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除用户")
@@ -97,9 +97,9 @@ public class UserController {
     @RequireReAuth(code = "USER_DELETE", name = "删除用户")
     @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         userAccountService.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "重置密码")
@@ -107,32 +107,32 @@ public class UserController {
     @RequireReAuth(code = "USER_RESET_PASSWORD", name = "重置用户密码")
     @OperationLog(module = "权限管理", action = "重置密码", bizType = "USER")
     @PostMapping("/{id}/reset-password")
-    public R<Void> resetPassword(@PathVariable Long id, @RequestParam @NotBlank String password) {
+    public Result<Void> resetPassword(@PathVariable Long id, @RequestParam @NotBlank String password) {
         userAccountService.resetPassword(id, password);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "启用/禁用用户")
     @PrePermission("auth:user:toggle")
     @OperationLog(module = "权限管理", action = "切换状态", bizType = "USER")
     @PostMapping("/{id}/status")
-    public R<Void> toggleStatus(@PathVariable Long id, @RequestParam String status) {
+    public Result<Void> toggleStatus(@PathVariable Long id, @RequestParam String status) {
         userAccountService.toggleStatus(id, status);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "为用户分配角色")
     @PrePermission("auth:user:assign")
     @OperationLog(module = "权限管理", action = "分配角色", bizType = "USER")
     @PutMapping("/{id}/roles")
-    public R<Void> assignRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
+    public Result<Void> assignRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
         userAccountService.assignRoles(id, roleIds);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "查询用户角色 ID 列表")
     @GetMapping("/{id}/roles")
-    public R<List<Long>> listRoles(@PathVariable Long id) {
-        return R.ok(userAccountService.listRoleIds(id));
+    public Result<List<Long>> listRoles(@PathVariable Long id) {
+        return Result.ok(userAccountService.listRoleIds(id));
     }
 }

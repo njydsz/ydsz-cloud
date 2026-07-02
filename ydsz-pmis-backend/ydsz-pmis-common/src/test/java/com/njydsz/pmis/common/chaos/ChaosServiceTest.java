@@ -17,6 +17,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * ChaosService 单元测试 (批次 20 P3-1)
+ *
+ * <p>覆盖延迟、异常、网络分区、错误率、资源耗尽等混沌实验类型与历史记录边界。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ChaosService 混沌工程")
 class ChaosServiceTest {

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -25,18 +25,18 @@ public class UserServiceClientFallback implements FallbackFactory<UserServiceCli
         log.warn("[Feign] user 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new UserServiceClient() {
             @Override
-            public R<Map<String, Object>> getEmployee(Long id) {
-                return R.ok(null);
+            public Result<Map<String, Object>> getEmployee(Long id) {
+                return Result.ok(null);
             }
 
             @Override
-            public R<String> getCustomerName(Long customerId) {
-                return R.ok("");
+            public Result<String> getCustomerName(Long customerId) {
+                return Result.ok("");
             }
 
             @Override
-            public R<Map<Long, String>> batchEmployeeName(List<Long> ids) {
-                return R.ok(Map.of());
+            public Result<Map<Long, String>> batchEmployeeName(List<Long> ids) {
+                return Result.ok(Map.of());
             }
         };
     }

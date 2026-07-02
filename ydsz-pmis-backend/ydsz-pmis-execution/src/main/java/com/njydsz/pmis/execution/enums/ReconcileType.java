@@ -31,7 +31,9 @@ public enum ReconcileType {
     /** 成本已分配(allocated=1)但工时仍非 APPROVED */
     ALLOCATED_BEFORE_APPROVAL;
 
+    /** 校验类型编码 */
     private final String code;
+    /** 校验类型描述 */
     private final String desc;
 
     ReconcileType() {
@@ -39,7 +41,18 @@ public enum ReconcileType {
         this.desc = name();
     }
 
+    /**
+     * 获取校验类型编码
+     *
+     * @return 校验类型编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取校验类型描述
+     *
+     * @return 校验类型描述字符串
+     */
     public String getDesc() { return desc; }
 
     /**

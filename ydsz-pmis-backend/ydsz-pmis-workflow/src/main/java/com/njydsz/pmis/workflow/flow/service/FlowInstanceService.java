@@ -58,4 +58,13 @@ public interface FlowInstanceService {
      * 发起人维度查询
      */
     List<FlowInstanceDO> listByInitiator(Long initiatorId, String flowStatus);
+
+    /**
+     * P1-8: 撤回流程（仅发起人可撤回，仅运行中可撤回，下一节点未被处理才可撤回）
+     *
+     * @param instanceId  实例 ID
+     * @param initiatorId 发起人 ID
+     * @return 是否撤回成功
+     */
+    boolean recall(Long instanceId, Long initiatorId);
 }

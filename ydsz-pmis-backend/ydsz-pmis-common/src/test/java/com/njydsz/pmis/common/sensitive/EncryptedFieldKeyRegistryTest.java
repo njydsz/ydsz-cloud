@@ -10,6 +10,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * EncryptedFieldKeyRegistry 密钥注册中心测试
+ *
+ * <p>覆盖 AES/SM4 密钥注册、默认密钥回退、长度校验与清空逻辑。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("EncryptedFieldKeyRegistry 密钥注册中心测试")
 class EncryptedFieldKeyRegistryTest {

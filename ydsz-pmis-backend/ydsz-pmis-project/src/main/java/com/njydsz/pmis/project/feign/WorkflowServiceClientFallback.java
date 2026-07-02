@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -22,18 +22,18 @@ public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowSe
         log.warn("[Feign] workflow 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new WorkflowServiceClient() {
             @Override
-            public R<String> startProcess(Map<String, Object> body) {
-                return R.failed(503, "工作流服务暂不可用");
+            public Result<String> startProcess(Map<String, Object> body) {
+                return Result.failed(503, "工作流服务暂不可用");
             }
 
             @Override
-            public R<Map<String, Object>> getByBusiness(String businessType, String businessId) {
-                return R.ok(null);
+            public Result<Map<String, Object>> getByBusiness(String businessType, String businessId) {
+                return Result.ok(null);
             }
 
             @Override
-            public R<Void> terminate(String processInstanceId, String reason) {
-                return R.ok();
+            public Result<Void> terminate(String processInstanceId, String reason) {
+                return Result.ok();
             }
         };
     }

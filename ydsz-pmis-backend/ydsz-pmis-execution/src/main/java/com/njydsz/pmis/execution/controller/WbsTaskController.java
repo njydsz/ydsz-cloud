@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.WbsTaskCreateDTO;
 import com.njydsz.pmis.execution.dto.WbsTaskStatusDTO;
 import com.njydsz.pmis.execution.entity.WbsTaskDO;
@@ -44,47 +44,47 @@ public class WbsTaskController {
     @Operation(summary = "创建 WBS 任务")
     @PrePermission("execution:wbs:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "变更任务状态")
     @PrePermission("execution:wbs:status")
     @PutMapping("/status")
-    public R<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
+    public Result<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
         service.changeStatus(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "更新任务进度")
     @PrePermission("execution:wbs:update")
     @PutMapping("/{id}/progress")
-    public R<Void> updateProgress(@PathVariable Long id,
+    public Result<Void> updateProgress(@PathVariable Long id,
                                    @RequestParam BigDecimal progressPct,
                                    @RequestParam(required = false) BigDecimal actualEffort) {
         service.updateProgress(id, progressPct, actualEffort);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除任务")
     @PrePermission("execution:wbs:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "任务详情")
     @PrePermission("execution:wbs:list")
     @GetMapping("/{id}")
-    public R<WbsTaskDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<WbsTaskDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "分页查询")
     @PrePermission("execution:wbs:list")
     @GetMapping("/page")
-    public R<Page<WbsTaskDO>> page(
+    public Result<Page<WbsTaskDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
@@ -92,34 +92,34 @@ public class WbsTaskController {
             @RequestParam(required = false) String taskType,
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) Long ownerId) {
-        return R.ok(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
+        return Result.ok(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
     }
 
     @Operation(summary = "项目下的任务列表")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}")
-    public R<List<WbsTaskDO>> listByInitiation(@PathVariable Long initiationId) {
-        return R.ok(service.listByInitiation(initiationId));
+    public Result<List<WbsTaskDO>> listByInitiation(@PathVariable Long initiationId) {
+        return Result.ok(service.listByInitiation(initiationId));
     }
 
     @Operation(summary = "项目里程碑")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/milestones")
-    public R<List<WbsTaskDO>> listMilestones(@PathVariable Long initiationId) {
-        return R.ok(service.listMilestones(initiationId));
+    public Result<List<WbsTaskDO>> listMilestones(@PathVariable Long initiationId) {
+        return Result.ok(service.listMilestones(initiationId));
     }
 
     @Operation(summary = "项目整体进度（按工时加权）")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/overall-progress")
-    public R<BigDecimal> overallProgress(@PathVariable Long initiationId) {
-        return R.ok(service.calcOverallProgress(initiationId));
+    public Result<BigDecimal> overallProgress(@PathVariable Long initiationId) {
+        return Result.ok(service.calcOverallProgress(initiationId));
     }
 
     @Operation(summary = "状态分布")
     @PrePermission("execution:wbs:list")
     @GetMapping("/aggregate/status")
-    public R<List<Map<String, Object>>> aggregateByStatus(@RequestParam Long initiationId) {
-        return R.ok(service.aggregateByStatus(initiationId));
+    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam Long initiationId) {
+        return Result.ok(service.aggregateByStatus(initiationId));
     }
 }

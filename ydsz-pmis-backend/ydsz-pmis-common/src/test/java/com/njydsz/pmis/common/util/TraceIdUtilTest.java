@@ -9,6 +9,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * TraceId 工具单元测试
+ *
+ * <p>覆盖 traceId 生成、MDC 存取与常量定义。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("TraceIdUtil 链路追踪测试")
 class TraceIdUtilTest {

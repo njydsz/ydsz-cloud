@@ -14,6 +14,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  */
 class CorsConfigTest {
 
+    /** 待测跨域配置实例 */
     private final CorsConfig corsConfig = new CorsConfig();
 
     @Test

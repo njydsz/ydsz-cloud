@@ -19,9 +19,13 @@ public enum CreditLevel {
     C("C", "一般客户", 60, 74),
     D("D", "风险客户", 0, 59);
 
+    /** 等级编码（大小写不敏感） */
     private final String code;
+    /** 等级中文描述 */
     private final String desc;
+    /** 信用分下界（包含） */
     private final int minScore;
+    /** 信用分上界（包含） */
     private final int maxScore;
 
     CreditLevel(String code, String desc, int minScore, int maxScore) {
@@ -31,9 +35,32 @@ public enum CreditLevel {
         this.maxScore = maxScore;
     }
 
+    /**
+     * 获取等级编码
+     *
+     * @return 等级编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取等级中文描述
+     *
+     * @return 等级中文描述
+     */
     public String getDesc() { return desc; }
+
+    /**
+     * 获取信用分下界
+     *
+     * @return 信用分下界（包含）
+     */
     public int getMinScore() { return minScore; }
+
+    /**
+     * 获取信用分上界
+     *
+     * @return 信用分上界（包含）
+     */
     public int getMaxScore() { return maxScore; }
 
     /**

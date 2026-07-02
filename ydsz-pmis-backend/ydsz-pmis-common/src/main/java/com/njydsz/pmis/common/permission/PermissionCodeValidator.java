@@ -37,7 +37,9 @@ public final class PermissionCodeValidator {
             "convert", "gate", "budget", "start-process",
             "save", "dashboard", "snapshot", "run",
             "issue", "reverse", "allocate", "assess",
-            "publish", "reject", "review"
+            "publish", "reject", "review",
+            // P1-11 扩充: 审计日志清理
+            "clean"
     );
 
     private PermissionCodeValidator() {}

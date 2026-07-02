@@ -8,9 +8,11 @@ import com.njydsz.pmis.workflow.flow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowSkipDO;
+import com.njydsz.pmis.workflow.flow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowSkipMapper;
+import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
@@ -25,10 +27,10 @@ import java.util.Map;
 /**
  * 流程推进器默认实现
  *
- * <p>核心逻辑：当前节点 → 查 PASS 跳转 → 过滤条件 → 取目标节点 → 生成任务。
+ * <p>P0 修复：排他网关互斥（CONDITION 只取第一条匹配）、并行网关 join 聚合。
  *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @since 1.1.0
  */
 @Slf4j
 @Component
@@ -41,6 +43,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     private final FlowTaskService taskService;
     private final FlowInstanceService instanceService;
     private final FlowVariableStrategy variableStrategy;
+    private final FlowTaskMapper taskMapper;
 
     @Override
     public FlowInstanceViewDTO start(Long instanceId) {
@@ -48,13 +51,11 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         if (instance == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
         }
-        // 找开始节点
         FlowNodeDO startNode = nodeMapper.selectStartNode(instance.getDefinitionId());
         if (startNode == null) {
             throw new BizException(BizErrorCode.INTERNAL_ERROR,
                     "流程定义缺少开始节点: definitionId=" + instance.getDefinitionId());
         }
-        // 1. 推进到下一节点
         List<FlowNodeDO> nextNodes = advance(instance, startNode.getNodeCode(),
                 "PASS", null, parseVariable(instance.getVariable()));
         if (nextNodes.isEmpty()) {
@@ -63,12 +64,10 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return instanceService.toView(instanceService.getById(instanceId),
                     loadCurrentTasks(instanceId));
         }
-        // 2. 生成下一节点任务 + 更新实例当前节点
         com.njydsz.pmis.workflow.flow.service.impl.FlowInstanceServiceImpl impl =
                 (com.njydsz.pmis.workflow.flow.service.impl.FlowInstanceServiceImpl) instanceService;
         impl.generateTasksForNodes(instanceId, nextNodes, parseVariable(instance.getVariable()));
-        // 3. 更新实例当前节点
-        if (nextNodes.get(0).getNodeType() != com.njydsz.pmis.workflow.flow.enums.FlowNodeType.END.getCode()) {
+        if (nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
             instanceMapper.updateStatus(instanceId,
                     instance.getFlowStatus(),
                     nextNodes.get(0).getNodeCode(),
@@ -85,7 +84,6 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                                      String skipType,
                                      String targetNodeCode,
                                      Map<String, Object> variables) {
-        // 1. 找到当前节点
         FlowNodeDO currentNode = nodeMapper.selectByCode(
                 currentInstance.getDefinitionId(), currentNodeCode);
         if (currentNode == null) {
@@ -93,8 +91,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                     "当前节点不存在: nodeCode=" + currentNodeCode);
         }
 
-        // 2. 查跳转：REJECT 时取目标前驱节点；PASS 时取所有满足条件的出边
-        List<FlowSkipDO> skips;
+        // REJECT 退回
         if ("REJECT".equalsIgnoreCase(skipType)) {
             String rejectTarget = targetNodeCode != null
                     ? targetNodeCode
@@ -107,17 +104,16 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                 throw new BizException(BizErrorCode.NOT_FOUND, "退回目标节点不存在: " + rejectTarget);
             }
             return List.of(target);
-        } else {
-            skips = resolvePassSkips(currentInstance, currentNode, variables);
         }
 
+        // PASS 推进
+        List<FlowSkipDO> skips = resolvePassSkips(currentInstance, currentNode, variables);
         if (skips.isEmpty()) {
             log.info("[Flow] 流程无下一节点，结束: instanceId={} nodeCode={}",
                     currentInstance.getId(), currentNodeCode);
             return Collections.emptyList();
         }
 
-        // 3. 找下一节点
         List<FlowNodeDO> nextNodes = new ArrayList<>();
         for (FlowSkipDO skip : skips) {
             FlowNodeDO next = nodeMapper.selectByCode(
@@ -126,6 +122,17 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                 log.warn("[Flow] 跳转目标节点不存在: skipId={} nextNode={}",
                         skip.getId(), skip.getNextNodeCode());
                 continue;
+            }
+            // P0-5: 网关 join 聚合 — 如果下一节点是并行/包容网关且有多个入边，
+            // 检查是否还有其他分支的未完成任务
+            if (isJoinNode(next) && hasMultipleIncoming(currentInstance.getDefinitionId(), next.getNodeCode())) {
+                int pending = taskMapper.countPendingByNode(
+                        currentInstance.getId(), next.getNodeCode());
+                if (pending > 0) {
+                    log.info("[Flow] 并行网关 join 等待: instanceId={} node={} pending={}",
+                            currentInstance.getId(), next.getNodeCode(), pending);
+                    continue; // 不推进到 join 节点，等待其他分支完成
+                }
             }
             nextNodes.add(next);
         }
@@ -141,29 +148,56 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         if (all.isEmpty()) {
             return Collections.emptyList();
         }
-        // 无条件 → 取第一个；有条件 → 全部满足
+
+        // P0-6: 排他网关互斥 — CONDITION 节点只取第一条匹配
+        boolean isExclusive = currentNode.getNodeType() != null
+                && currentNode.getNodeType() == FlowNodeType.CONDITION.getCode();
+
         List<FlowSkipDO> matched = new ArrayList<>();
         for (FlowSkipDO skip : all) {
             String cond = skip.getSkipCondition();
             if (cond == null || cond.isBlank() || variableStrategy.evaluate(cond, variables)) {
                 matched.add(skip);
+                if (isExclusive) {
+                    break; // 排他网关：只取第一条匹配
+                }
             }
         }
+
+        // 排他网关兜底：如果无匹配且有默认出边，取第一条
+        if (isExclusive && matched.isEmpty()) {
+            log.info("[Flow] 排他网关无匹配条件，取默认出边: node={}", currentNode.getNodeCode());
+            matched.add(all.get(0));
+        }
+
         return matched;
     }
 
     @Override
     public String resolveRejectTarget(Long definitionId, String currentNodeCode) {
-        // 默认退回：找指向当前节点的前一个 PASS 跳转
         List<FlowSkipDO> incoming = skipMapper.selectByNextNode(definitionId, currentNodeCode);
         if (!incoming.isEmpty()) {
             return incoming.get(0).getSkipName() == null
                     ? currentNodeCode
                     : lookupNodeCodeByName(definitionId, incoming.get(0).getSkipName());
         }
-        // 若无入边，返回开始节点
         FlowNodeDO start = nodeMapper.selectStartNode(definitionId);
         return start == null ? null : start.getNodeCode();
+    }
+
+    // ============================== 私有 ==============================
+
+    /** 判断是否为 join 节点（并行/包容网关） */
+    private boolean isJoinNode(FlowNodeDO node) {
+        return node.getNodeType() != null
+                && (node.getNodeType() == FlowNodeType.PARALLEL.getCode()
+                || node.getNodeType() == FlowNodeType.INCLUSIVE.getCode());
+    }
+
+    /** 判断节点是否有多个入边 */
+    private boolean hasMultipleIncoming(Long definitionId, String nodeCode) {
+        List<FlowSkipDO> incoming = skipMapper.selectByNextNode(definitionId, nodeCode);
+        return incoming != null && incoming.size() > 1;
     }
 
     private String lookupNodeCodeByName(Long definitionId, String skipName) {

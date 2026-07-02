@@ -3,7 +3,7 @@ package com.njydsz.pmis.notification.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
 import com.njydsz.pmis.notification.dto.NotificationSendDTO;
@@ -33,10 +33,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
+    /** 通知 Mapper */
     private final NotificationMapper notificationMapper;
+    /** 消息服务 Feign 客户端 */
     private final MessageServiceClient messageServiceClient;
+    /** 用户服务 Feign 客户端 */
     private final UserServiceClient userServiceClient;
 
+    /**
+     * 发送通知（支持单接收/批量）
+     *
+     * @param dto 通知发送表单
+     * @return 实际插入条数
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int send(NotificationSendDTO dto) {
@@ -50,6 +59,13 @@ public class NotificationServiceImpl implements NotificationService {
         return count;
     }
 
+    /**
+     * 发送通知 + 邮件投递（仅单接收人）
+     *
+     * @param dto 通知发送表单（仅支持单接收人）
+     * @return EmailDispatchResult 邮件投递结果（成功/失败/降级）
+     * @throws BizException 当接收人非单人时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public EmailDispatchResult sendWithEmail(NotificationSendDTO dto) {
@@ -84,7 +100,7 @@ public class NotificationServiceImpl implements NotificationService {
             msg.setContent(buildHtmlContent(dto));
             msg.setBizType(dto.getBizType() == null ? "NOTIF" : dto.getBizType());
             msg.setBizId(dto.getBizId());
-            R<Object> resp = messageServiceClient.send(msg);
+            Result<Object> resp = messageServiceClient.send(msg);
             if (resp != null && resp.getCode() == 0 && resp.getData() != null) {
                 result.setEmailSent(true);
                 Object trace = extractTraceId(resp.getData());
@@ -126,12 +142,25 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationMapper.selectPage(page, w);
     }
 
+    /**
+     * 未读数量
+     *
+     * @param userId 接收人 ID
+     * @return 未读通知数
+     */
     @Override
     public long countUnread(Long userId) {
         Long count = notificationMapper.countUnread(userId);
         return count == null ? 0L : count;
     }
 
+    /**
+     * 标记已读
+     *
+     * @param userId 接收人 ID
+     * @param id     通知 ID
+     * @return 是否标记成功（通知不存在或不属于该用户时返回 false）
+     */
     @Override
     public boolean markRead(Long userId, Long id) {
         return notificationMapper.markRead(id, userId) > 0;
@@ -142,6 +171,12 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationMapper.markAllRead(userId);
     }
 
+    /**
+     * 删除通知（逻辑删除，仅允许删除属于自己的通知）
+     *
+     * @param userId 接收人 ID
+     * @param ids    通知 ID 列表
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long userId, List<Long> ids) {
@@ -196,7 +231,7 @@ public class NotificationServiceImpl implements NotificationService {
             return null;
         }
         try {
-            R<Map<String, Object>> resp = userServiceClient.getEmployee(uid);
+            Result<Map<String, Object>> resp = userServiceClient.getEmployee(uid);
             if (resp == null || resp.getCode() != 0 || resp.getData() == null) {
                 return null;
             }

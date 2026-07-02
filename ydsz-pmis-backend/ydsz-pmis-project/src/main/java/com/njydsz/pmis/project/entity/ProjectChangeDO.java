@@ -24,9 +24,11 @@ import java.time.LocalDateTime;
 @TableName("pmis_project_change")
 public class ProjectChangeDO implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -89,6 +91,10 @@ public class ProjectChangeDO implements Serializable {
     private Long tenantId;
     /** LLM Provider 跟踪 ID */
     private String providerTraceId;
+
+    /** 乐观锁版本号（P1-12） */
+    @Version
+    private Integer version;
 
     /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)

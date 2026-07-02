@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.service.ImportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -61,16 +61,16 @@ public class ImportExportController {
 
     @Operation(summary = "批量导入（限频 1 次/秒）")
     @PostMapping("/{bizType}")
-    public R<ImportService.ImportResult> importFile(
+    public Result<ImportService.ImportResult> importFile(
             @PathVariable String bizType,
             @RequestParam("file") MultipartFile file) throws IOException {
         if (file == null || file.isEmpty()) {
-            return R.failed(400, "上传文件为空");
+            return Result.failed(400, "上传文件为空");
         }
         ImportService.ImportResult result = importService.importFile(bizType, file);
         log.info("[ImportFile] bizType={} fileSize={} success={} failed={}",
                 bizType, file.getSize(), result.successCount(), result.failedCount());
-        return R.ok(result);
+        return Result.ok(result);
     }
 
     /**

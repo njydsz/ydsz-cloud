@@ -1,6 +1,6 @@
 package com.njydsz.pmis.user.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.user.entity.JobLevelDO;
 import com.njydsz.pmis.user.entity.JobLevelRateDO;
 import com.njydsz.pmis.user.service.JobLevelService;
@@ -29,21 +29,21 @@ public class JobLevelController {
 
     @Operation(summary = "所有职级 (L1-L18)")
     @GetMapping
-    public R<List<JobLevelDO>> list() {
-        return R.ok(jobLevelService.listAllLevels());
+    public Result<List<JobLevelDO>> list() {
+        return Result.ok(jobLevelService.listAllLevels());
     }
 
     @Operation(summary = "查询生效的职级费率")
     @GetMapping("/rate")
-    public R<JobLevelRateDO> getRate(@RequestParam String levelCode,
+    public Result<JobLevelRateDO> getRate(@RequestParam String levelCode,
                                      @RequestParam(required = false)
                                      @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
-        return R.ok(jobLevelService.getEffectiveRate(levelCode, date));
+        return Result.ok(jobLevelService.getEffectiveRate(levelCode, date));
     }
 
     @Operation(summary = "查询某职级所有版本")
     @GetMapping("/rate/versions")
-    public R<List<JobLevelRateDO>> listVersions(@RequestParam String levelCode) {
-        return R.ok(jobLevelService.listAllVersions(levelCode));
+    public Result<List<JobLevelRateDO>> listVersions(@RequestParam String levelCode) {
+        return Result.ok(jobLevelService.listAllVersions(levelCode));
     }
 }

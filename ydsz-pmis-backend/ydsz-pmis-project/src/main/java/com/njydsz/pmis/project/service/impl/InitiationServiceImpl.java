@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.assembler.NameAssembler;
 import com.njydsz.pmis.project.dto.BudgetItemDTO;
@@ -296,7 +296,7 @@ public class InitiationServiceImpl implements InitiationService {
 
         String processInstanceId = null;
         try {
-            R<String> r = workflowServiceClient.startProcess(body);
+            Result<String> r = workflowServiceClient.startProcess(body);
             if (r != null && r.isSuccess() && r.getData() != null) {
                 processInstanceId = r.getData();
             } else {

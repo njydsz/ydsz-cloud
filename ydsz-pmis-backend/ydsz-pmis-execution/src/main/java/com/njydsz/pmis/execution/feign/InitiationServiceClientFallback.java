@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -26,9 +26,9 @@ public class InitiationServiceClientFallback implements FallbackFactory<Initiati
         log.warn("[Feign] project 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new InitiationServiceClient() {
             @Override
-            public R<Map<String, Object>> budgetSnapshot(Long id) {
+            public Result<Map<String, Object>> budgetSnapshot(Long id) {
                 // 返回 code=503 + 空数据；BudgetGuard 将识别后跳过强管控
-                return R.failed(503, "项目服务暂不可用，预算强管控已自动降级");
+                return Result.failed(503, "项目服务暂不可用，预算强管控已自动降级");
             }
         };
     }

@@ -21,8 +21,11 @@ public enum DeliveryStage {
     CD4_UAT("CD4_UAT", "UAT 验收", 4),
     CD5_GO_LIVE("CD5_GO_LIVE", "上线/终验", 5);
 
+    /** 阶段编码（大小写不敏感） */
     private final String code;
+    /** 阶段中文描述 */
     private final String desc;
+    /** 阶段序号（从 1 开始递增） */
     private final int seq;
 
     DeliveryStage(String code, String desc, int seq) {
@@ -31,8 +34,25 @@ public enum DeliveryStage {
         this.seq = seq;
     }
 
+    /**
+     * 获取阶段编码
+     *
+     * @return 阶段编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取阶段中文描述
+     *
+     * @return 阶段中文描述
+     */
     public String getDesc() { return desc; }
+
+    /**
+     * 获取阶段序号
+     *
+     * @return 阶段序号（从 1 开始）
+     */
     public int getSeq() { return seq; }
 
     /**

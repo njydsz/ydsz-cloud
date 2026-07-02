@@ -10,6 +10,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * ReconcileEngine 单元测试
+ *
+ * <p>覆盖对账码注册、单次/全量执行、未知 code 与异常捕获场景。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ReconcileEngine 对账引擎测试")
 class ReconcileEngineTest {

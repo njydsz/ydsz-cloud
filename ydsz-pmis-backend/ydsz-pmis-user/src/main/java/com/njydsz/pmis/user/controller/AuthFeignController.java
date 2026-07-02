@@ -1,6 +1,6 @@
 package com.njydsz.pmis.user.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.user.dto.LoginContextDTO;
 import com.njydsz.pmis.user.entity.RoleDO;
 import com.njydsz.pmis.user.entity.UserAccountDO;
@@ -38,15 +38,15 @@ public class AuthFeignController {
 
     @Operation(summary = "根据用户名加载登录上下文")
     @GetMapping("/context/by-username")
-    public R<LoginContextDTO> getLoginContextByUsername(@RequestParam String username) {
+    public Result<LoginContextDTO> getLoginContextByUsername(@RequestParam String username) {
         UserAccountDO user = userAccountService.findByUsername(username);
-        return R.ok(buildContext(user));
+        return Result.ok(buildContext(user));
     }
 
     @Operation(summary = "根据用户 ID 加载登录上下文")
     @GetMapping("/context/by-id")
-    public R<LoginContextDTO> getLoginContextById(@RequestParam Long userId) {
-        return R.ok(buildContext(userAccountService.findById(userId)));
+    public Result<LoginContextDTO> getLoginContextById(@RequestParam Long userId) {
+        return Result.ok(buildContext(userAccountService.findById(userId)));
     }
 
     private LoginContextDTO buildContext(UserAccountDO user) {

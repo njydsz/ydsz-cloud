@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.dto.AlertDispatchDTO;
 import com.njydsz.pmis.execution.entity.AlertDispatchDO;
@@ -137,7 +137,7 @@ class AlertDispatchServiceImplTest {
         d.setPushChannels("IN_APP");
         when(mapper.selectById(1L)).thenReturn(d);
         when(messageClient.send(any(MessageRequest.class)))
-                .thenReturn(R.ok(MessageResult.ok("IN_APP", "trace-1")));
+                .thenReturn(Result.ok(MessageResult.ok("IN_APP", "trace-1")));
         when(mapper.markSent(ArgumentMatchers.eq(1L), any())).thenReturn(1);
         boolean ok = service.dispatchNow(1L);
         assertThat(ok).isTrue();
@@ -166,7 +166,7 @@ class AlertDispatchServiceImplTest {
         d.setPushChannels("IN_APP");
         when(mapper.selectById(1L)).thenReturn(d);
         when(messageClient.send(any(MessageRequest.class)))
-                .thenReturn(R.ok(MessageResult.fail("IN_APP", "net err")));
+                .thenReturn(Result.ok(MessageResult.fail("IN_APP", "net err")));
         boolean ok = service.dispatchNow(1L);
         assertThat(ok).isFalse();
         verify(mapper).markFailed(ArgumentMatchers.eq(1L), ArgumentMatchers.contains("net err"));
@@ -200,7 +200,7 @@ class AlertDispatchServiceImplTest {
         when(mapper.selectById(1L)).thenReturn(d1);
         when(mapper.selectById(2L)).thenReturn(d2);
         when(messageClient.send(any(MessageRequest.class)))
-                .thenReturn(R.ok(MessageResult.ok("IN_APP", "trace-x")));
+                .thenReturn(Result.ok(MessageResult.ok("IN_APP", "trace-x")));
         when(mapper.markSent(any(), any())).thenReturn(1);
         int n = service.retryFailed(3);
         assertThat(n).isEqualTo(2);
@@ -261,10 +261,10 @@ class AlertDispatchServiceImplTest {
         // IN_APP 成功, EMAIL 失败
         when(messageClient.send(ArgumentMatchers.argThat(req ->
                 req != null && "IN_APP".equals(req.getChannel()))))
-                .thenReturn(R.ok(MessageResult.ok("IN_APP", "t-1")));
+                .thenReturn(Result.ok(MessageResult.ok("IN_APP", "t-1")));
         when(messageClient.send(ArgumentMatchers.argThat(req ->
                 req != null && "EMAIL".equals(req.getChannel()))))
-                .thenReturn(R.ok(MessageResult.fail("EMAIL", "smtp 521")));
+                .thenReturn(Result.ok(MessageResult.fail("EMAIL", "smtp 521")));
         boolean ok = service.dispatchNow(5L);
         assertThat(ok).isFalse();
         verify(mapper).markFailed(ArgumentMatchers.eq(5L), ArgumentMatchers.contains("smtp 521"));
@@ -302,7 +302,7 @@ class AlertDispatchServiceImplTest {
         d.setTargetRole("PM,PMO");
         when(mapper.selectById(7L)).thenReturn(d);
         when(messageClient.send(any(MessageRequest.class)))
-                .thenReturn(R.ok(MessageResult.ok("IN_APP", "t")));
+                .thenReturn(Result.ok(MessageResult.ok("IN_APP", "t")));
         when(mapper.markSent(any(), any())).thenReturn(1);
         service.dispatchNow(7L);
         ArgumentCaptor<MessageRequest> cap = ArgumentCaptor.forClass(MessageRequest.class);

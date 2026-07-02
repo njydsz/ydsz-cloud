@@ -12,7 +12,7 @@ ydsz-pmis-backend/
 │   ├── pom.xml
 │   └── src/main/java/com/njydsz/pmis/common/
 │       ├── annotation/              # 自定义注解
-│       ├── api/                     # 统一响应 R<T>
+│       ├── api/                     # 统一响应 Result<T>
 │       ├── constant/                # 公共常量
 │       ├── enums/                   # 通用枚举 (BizErrorCode 等)
 │       ├── exception/               # 业务异常
@@ -81,7 +81,7 @@ import java.io.Serializable;
  * @param <T> 数据类型
  */
 @Data
-public class R<T> implements Serializable {
+public class Result<T> implements Serializable {
 
     /** 状态码: 0=成功, 其他=失败 */
     private int code;
@@ -94,26 +94,26 @@ public class R<T> implements Serializable {
     /** 服务器时间戳 */
     private long timestamp = System.currentTimeMillis();
 
-    public static <T> R<T> ok() {
+    public static <T> Result<T> ok() {
         return ok(null);
     }
 
-    public static <T> R<T> ok(T data) {
-        R<T> r = new R<>();
+    public static <T> Result<T> ok(T data) {
+        Result<T> r = new Result<>();
         r.setCode(0);
         r.setMessage("ok");
         r.setData(data);
         return r;
     }
 
-    public static <T> R<T> failed(int code, String message) {
-        R<T> r = new R<>();
+    public static <T> Result<T> failed(int code, String message) {
+        Result<T> r = new Result<>();
         r.setCode(code);
         r.setMessage(message);
         return r;
     }
 
-    public static <T> R<T> failed(BizErrorCode errorCode) {
+    public static <T> Result<T> failed(BizErrorCode errorCode) {
         return failed(errorCode.getCode(), errorCode.getMessage());
     }
 }
@@ -154,7 +154,7 @@ public class BizException extends RuntimeException {
 ```java
 package com.njydsz.pmis.common.exception;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.enums.BizErrorCode;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -166,20 +166,20 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BizException.class)
-    public R<Void> handleBiz(BizException e, HttpServletRequest req) {
+    public Result<Void> handleBiz(BizException e, HttpServletRequest req) {
         log.warn("业务异常 [{}] {}: {}", req.getRequestURI(), e.getCode(), e.getMessage());
-        return R.failed(e.getCode(), e.getMessage());
+        return Result.failed(e.getCode(), e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
-    public R<Void> handleIllegalArg(IllegalArgumentException e) {
-        return R.failed(BizErrorCode.BAD_REQUEST.getCode(), e.getMessage());
+    public Result<Void> handleIllegalArg(IllegalArgumentException e) {
+        return Result.failed(BizErrorCode.BAD_REQUEST.getCode(), e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
-    public R<Void> handleException(Exception e, HttpServletRequest req) {
+    public Result<Void> handleException(Exception e, HttpServletRequest req) {
         log.error("系统异常 [{}]", req.getRequestURI(), e);
-        return R.failed(BizErrorCode.INTERNAL_ERROR);
+        return Result.failed(BizErrorCode.INTERNAL_ERROR);
     }
 }
 ```
@@ -239,21 +239,21 @@ public class ProjectController {
     @Operation(summary = "创建项目")
     @PostMapping
     @PreAuthorize("hasAuthority('project:create')")
-    public R<Long> create(@Valid @RequestBody ProjectCreateDTO dto) {
+    public Result<Long> create(@Valid @RequestBody ProjectCreateDTO dto) {
         Long id = projectService.create(dto);
-        return R.ok(id);
+        return Result.ok(id);
     }
 
     @Operation(summary = "分页查询项目")
     @GetMapping
-    public R<PageResult<ProjectVO>> page(ProjectQuery query) {
-        return R.ok(projectService.page(query));
+    public Result<PageResult<ProjectVO>> page(ProjectQuery query) {
+        return Result.ok(projectService.page(query));
     }
 
     @Operation(summary = "获取项目详情")
     @GetMapping("/{id}")
-    public R<ProjectVO> getById(@PathVariable Long id) {
-        return R.ok(projectService.getById(id));
+    public Result<ProjectVO> getById(@PathVariable Long id) {
+        return Result.ok(projectService.getById(id));
     }
 }
 ```

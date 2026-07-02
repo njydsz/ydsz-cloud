@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import lombok.Data;
 
 import java.io.Serial;
@@ -23,9 +24,11 @@ import java.time.LocalDateTime;
 @TableName("pmis_project_contract")
 public class ContractDO implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -75,6 +78,14 @@ public class ContractDO implements Serializable {
     private String remark;
     /** 租户 ID */
     private Long tenantId;
+
+    /**
+     * 乐观锁版本号（P1-12）
+     *
+     * <p>合同金额、状态等关键字段并发更新时，通过 version 防止覆盖。
+     */
+    @Version
+    private Integer version;
 
     /** 创建人 ID */
     @TableField(fill = FieldFill.INSERT)

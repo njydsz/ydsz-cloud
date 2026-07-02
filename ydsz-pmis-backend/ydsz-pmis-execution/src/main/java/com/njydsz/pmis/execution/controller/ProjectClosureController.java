@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.ProjectClosureCreateDTO;
 import com.njydsz.pmis.execution.dto.ProjectClosureStatusDTO;
 import com.njydsz.pmis.execution.engine.ClosureAdmissionValidator;
@@ -42,70 +42,70 @@ public class ProjectClosureController {
     @Operation(summary = "创建项目结项")
     @PrePermission("closure:project:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody ProjectClosureCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody ProjectClosureCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "状态迁移")
     @PrePermission("closure:project:status")
     @PutMapping("/status")
-    public R<Void> changeStatus(@Valid @RequestBody ProjectClosureStatusDTO dto) {
+    public Result<Void> changeStatus(@Valid @RequestBody ProjectClosureStatusDTO dto) {
         service.changeStatus(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除结项记录")
     @PrePermission("closure:project:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "结项详情")
     @PrePermission("closure:project:list")
     @GetMapping("/{id}")
-    public R<ProjectClosureDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<ProjectClosureDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "按项目查询结项")
     @PrePermission("closure:project:list")
     @GetMapping("/by-initiation/{initiationId}")
-    public R<ProjectClosureDO> getByInitiation(@PathVariable Long initiationId) {
-        return R.ok(service.getByInitiation(initiationId));
+    public Result<ProjectClosureDO> getByInitiation(@PathVariable Long initiationId) {
+        return Result.ok(service.getByInitiation(initiationId));
     }
 
     @Operation(summary = "分页查询")
     @PrePermission("closure:project:list")
     @GetMapping("/page")
-    public R<Page<ProjectClosureDO>> page(
+    public Result<Page<ProjectClosureDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String closureType,
             @RequestParam(required = false) String status) {
-        return R.ok(service.page(page, size, keyword, closureType, status));
+        return Result.ok(service.page(page, size, keyword, closureType, status));
     }
 
     @Operation(summary = "按结项类型查询")
     @PrePermission("closure:project:list")
     @GetMapping("/list-by-type")
-    public R<List<ProjectClosureDO>> listByType(@RequestParam(required = false) String closureType) {
-        return R.ok(service.listByType(closureType));
+    public Result<List<ProjectClosureDO>> listByType(@RequestParam(required = false) String closureType) {
+        return Result.ok(service.listByType(closureType));
     }
 
     @Operation(summary = "按结项类型聚合")
     @PrePermission("closure:project:list")
     @GetMapping("/aggregate/type")
-    public R<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
-        return R.ok(service.aggregateByType(tenantId));
+    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
+        return Result.ok(service.aggregateByType(tenantId));
     }
 
     @Operation(summary = "结项准入校验")
     @PrePermission("closure:project:list")
     @GetMapping("/{id}/admission-check")
-    public R<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable Long id) {
-        return R.ok(service.checkAdmission(id));
+    public Result<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable Long id) {
+        return Result.ok(service.checkAdmission(id));
     }
 }

@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.ProfitSimulationCreateDTO;
 import com.njydsz.pmis.execution.dto.SimulationStatusDTO;
 import com.njydsz.pmis.execution.entity.ProfitSimulationDO;
@@ -35,56 +35,56 @@ public class ProfitSimulationController {
     @Operation(summary = "创建测算版本")
     @PrePermission("execution:simulation:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody ProfitSimulationCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody ProfitSimulationCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "状态迁移")
     @PrePermission("execution:simulation:approve")
     @PutMapping("/status")
-    public R<Void> changeStatus(@Valid @RequestBody SimulationStatusDTO dto) {
+    public Result<Void> changeStatus(@Valid @RequestBody SimulationStatusDTO dto) {
         service.changeStatus(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除")
     @PrePermission("execution:simulation:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "详情")
     @PrePermission("execution:simulation:list")
     @GetMapping("/{id}")
-    public R<ProfitSimulationDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<ProfitSimulationDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "按项目查询所有版本")
     @PrePermission("execution:simulation:list")
     @GetMapping("/by-initiation")
-    public R<List<ProfitSimulationDO>> listByInitiation(@RequestParam Long initiationId) {
-        return R.ok(service.listByInitiation(initiationId));
+    public Result<List<ProfitSimulationDO>> listByInitiation(@RequestParam Long initiationId) {
+        return Result.ok(service.listByInitiation(initiationId));
     }
 
     @Operation(summary = "多版本对比")
     @PrePermission("execution:simulation:list")
     @GetMapping("/compare")
-    public R<List<Map<String, Object>>> compare(@RequestParam Long initiationId) {
-        return R.ok(service.compare(initiationId));
+    public Result<List<Map<String, Object>>> compare(@RequestParam Long initiationId) {
+        return Result.ok(service.compare(initiationId));
     }
 
     @Operation(summary = "分页")
     @PrePermission("execution:simulation:list")
     @GetMapping("/page")
-    public R<Page<ProfitSimulationDO>> page(
+    public Result<Page<ProfitSimulationDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) String scenarioType,
             @RequestParam(required = false) String status) {
-        return R.ok(service.page(page, size, initiationId, scenarioType, status));
+        return Result.ok(service.page(page, size, initiationId, scenarioType, status));
     }
 }

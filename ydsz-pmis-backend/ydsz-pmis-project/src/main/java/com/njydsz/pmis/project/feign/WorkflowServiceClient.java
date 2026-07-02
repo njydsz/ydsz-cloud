@@ -1,6 +1,6 @@
 package com.njydsz.pmis.project.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +27,7 @@ public interface WorkflowServiceClient {
      * <p>对应自研引擎: POST /api/workflow/engine/instance/start
      */
     @PostMapping("/api/workflow/engine/instance/start")
-    R<String> startProcess(@RequestBody Map<String, Object> body);
+    Result<String> startProcess(@RequestBody Map<String, Object> body);
 
     /**
      * 通过业务单据反查流程状态
@@ -35,7 +35,7 @@ public interface WorkflowServiceClient {
      * <p>对应自研引擎: GET /api/workflow/engine/instance/byBusiness
      */
     @GetMapping("/api/workflow/engine/instance/byBusiness")
-    R<Map<String, Object>> getByBusiness(@RequestParam("businessType") String businessType,
+    Result<Map<String, Object>> getByBusiness(@RequestParam("businessType") String businessType,
                                           @RequestParam("businessId") String businessId);
 
     /**
@@ -44,6 +44,6 @@ public interface WorkflowServiceClient {
      * <p>对应自研引擎: POST /api/workflow/engine/instance/{id}/terminate
      */
     @PostMapping("/api/workflow/engine/instance/{id}/terminate")
-    R<Void> terminate(@PathVariable("id") String processInstanceId,
+    Result<Void> terminate(@PathVariable("id") String processInstanceId,
                       @RequestParam(value = "reason", required = false) String reason);
 }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.execution.engine;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.feign.InitiationServiceClient;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
@@ -145,7 +145,7 @@ public class BudgetGuard {
 
     private Map<String, Object> safeBudgetSnapshot(Long initiationId) {
         try {
-            R<Map<String, Object>> r = initiationClient.budgetSnapshot(initiationId);
+            Result<Map<String, Object>> r = initiationClient.budgetSnapshot(initiationId);
             if (r == null || !r.isSuccess() || r.getData() == null) {
                 log.warn("[BudgetGuard] budgetSnapshot 返回空: code={} msg={}",
                         r == null ? "null" : r.getCode(), r == null ? "?" : r.getMessage());

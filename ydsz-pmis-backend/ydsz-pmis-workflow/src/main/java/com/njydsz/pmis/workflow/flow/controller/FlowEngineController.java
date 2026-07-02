@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.flow.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.flow.WorkflowFacade;
 import com.njydsz.pmis.workflow.flow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
@@ -36,8 +36,8 @@ public class FlowEngineController {
     // ============== 引擎信息 ==============
 
     @GetMapping("/info")
-    public R<Map<String, Object>> info() {
-        return R.ok(Map.of(
+    public Result<Map<String, Object>> info() {
+        return Result.ok(Map.of(
                 "engineType", workflowFacade.engineType(),
                 "available", true
         ));
@@ -46,67 +46,79 @@ public class FlowEngineController {
     // ============== 流程定义（管理） ==============
 
     @PostMapping("/definition/deploy")
-    public R<Long> deploy(@RequestBody FlowDeployProcessDTO dto) {
+    public Result<Long> deploy(@RequestBody FlowDeployProcessDTO dto) {
         Long id = definitionService.deploy(dto);
-        return R.ok(id);
+        return Result.ok(id);
     }
 
     @PostMapping("/definition/{id}/publish")
-    public R<Void> publish(@PathVariable Long id) {
+    public Result<Void> publish(@PathVariable Long id) {
         definitionService.publish(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @PostMapping("/definition/{id}/deprecate")
-    public R<Void> deprecate(@PathVariable Long id) {
+    public Result<Void> deprecate(@PathVariable Long id) {
         definitionService.deprecate(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @GetMapping("/definition/code/{code}")
-    public R<FlowDefinitionDO> getByCode(@PathVariable String code,
+    public Result<FlowDefinitionDO> getByCode(@PathVariable String code,
                                           @RequestParam(required = false) String version,
                                           @RequestParam(required = false) Long tenantId) {
-        return R.ok(definitionService.getPublished(code, version, tenantId));
+        return Result.ok(definitionService.getPublished(code, version, tenantId));
     }
 
     @GetMapping("/definition/page")
-    public R<List<FlowDefinitionDO>> page(@RequestParam(defaultValue = "1") int pageNo,
+    public Result<List<FlowDefinitionDO>> page(@RequestParam(defaultValue = "1") int pageNo,
                                           @RequestParam(defaultValue = "20") int pageSize,
                                           @RequestParam(required = false) String category,
                                           @RequestParam(required = false) String flowCode) {
-        return R.ok(definitionService.page(pageNo, pageSize, category, flowCode));
+        return Result.ok(definitionService.page(pageNo, pageSize, category, flowCode));
     }
 
     // ============== 流程实例 ==============
 
     @PostMapping("/instance/start")
-    public R<String> startProcess(@RequestBody FlowStartProcessDTO dto) {
-        return R.ok(workflowFacade.startProcess(dto));
+    public Result<String> startProcess(@RequestBody FlowStartProcessDTO dto) {
+        return Result.ok(workflowFacade.startProcess(dto));
     }
 
     @GetMapping("/instance/byBusiness")
-    public R<FlowInstanceViewDTO> getByBusiness(@RequestParam String businessType,
+    public Result<FlowInstanceViewDTO> getByBusiness(@RequestParam String businessType,
                                                  @RequestParam String businessId) {
-        return R.ok(workflowFacade.getByBusiness(businessType, businessId));
+        return Result.ok(workflowFacade.getByBusiness(businessType, businessId));
     }
 
     @PostMapping("/instance/{id}/terminate")
-    public R<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
+    public Result<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
         workflowFacade.terminateProcess(id, reason);
-        return R.ok();
+        return Result.ok();
     }
 
     @PostMapping("/instance/{id}/suspend")
-    public R<Void> suspend(@PathVariable String id) {
+    public Result<Void> suspend(@PathVariable String id) {
         workflowFacade.suspendProcess(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @PostMapping("/instance/{id}/activate")
     public R<Void> activate(@PathVariable String id) {
         workflowFacade.activateProcess(id);
         return R.ok();
+    }
+
+    // P1-8: 撤回流程（仅发起人可撤回，仅运行中可撤回）
+    @PostMapping("/instance/{id}/recall")
+    public R<Boolean> recall(@PathVariable String id, @RequestParam Long initiatorId) {
+        return R.ok(workflowFacade.recallProcess(id, initiatorId));
+    }
+
+    // P1-13: 审计轨迹查询
+    @GetMapping("/instance/{id}/auditTrail")
+    public R<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
+        return R.ok(workflowFacade.listAuditTrail(id));
     }
 
     // ============== 任务操作 ==============
@@ -139,6 +151,28 @@ public class FlowEngineController {
     public R<Void> delegate(@RequestBody FlowTaskOperateDTO dto) {
         workflowFacade.delegateTask(dto);
         return R.ok();
+    }
+
+    // P1-7: 前加签
+    @PostMapping("/task/countersignBefore")
+    public R<Void> countersignBefore(@RequestBody FlowTaskOperateDTO dto) {
+        workflowFacade.countersignBeforeTask(dto);
+        return R.ok();
+    }
+
+    // P1-7: 后加签
+    @PostMapping("/task/countersignAfter")
+    public R<Void> countersignAfter(@RequestBody FlowTaskOperateDTO dto) {
+        workflowFacade.countersignAfterTask(dto);
+        return R.ok();
+    }
+
+    // P1-9: 催办
+    @PostMapping("/instance/{id}/urge")
+    public R<List<String>> urge(@PathVariable Long id,
+                                 @RequestParam Long operatorId,
+                                 @RequestParam(required = false) String comment) {
+        return R.ok(workflowFacade.urgeTask(id, operatorId, comment));
     }
 
     @GetMapping("/task/todo")

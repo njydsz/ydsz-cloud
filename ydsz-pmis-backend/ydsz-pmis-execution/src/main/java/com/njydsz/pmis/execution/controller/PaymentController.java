@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.PaymentAllocationDTO;
 import com.njydsz.pmis.execution.dto.PaymentCreateDTO;
 import com.njydsz.pmis.execution.entity.PaymentDO;
@@ -44,71 +44,71 @@ public class PaymentController {
     @Operation(summary = "录入回款")
     @PrePermission("finance:payment:create")
     @PostMapping
-    public R<Long> record(@Valid @RequestBody PaymentCreateDTO dto) {
-        return R.ok(service.record(dto));
+    public Result<Long> record(@Valid @RequestBody PaymentCreateDTO dto) {
+        return Result.ok(service.record(dto));
     }
 
     @Operation(summary = "确认到账")
     @PrePermission("finance:payment:status")
     @PutMapping("/{id}/confirm")
-    public R<Void> confirm(@PathVariable Long id, @RequestParam Long operatorId) {
+    public Result<Void> confirm(@PathVariable Long id, @RequestParam Long operatorId) {
         service.confirm(id, operatorId);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "取消")
     @PrePermission("finance:payment:status")
     @PutMapping("/{id}/cancel")
-    public R<Void> cancel(@PathVariable Long id,
+    public Result<Void> cancel(@PathVariable Long id,
                           @RequestParam Long operatorId,
                           @RequestParam(required = false) String reason) {
         service.cancel(id, operatorId, reason);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除")
     @PrePermission("finance:payment:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "核销到发票")
     @PrePermission("finance:payment:allocate")
     @PostMapping("/allocate")
-    public R<Void> allocate(@Valid @RequestBody PaymentAllocationDTO dto) {
+    public Result<Void> allocate(@Valid @RequestBody PaymentAllocationDTO dto) {
         service.allocate(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "自动核销（按客户）")
     @PrePermission("finance:payment:allocate")
     @PostMapping("/auto-allocate")
-    public R<Integer> autoAllocate(@RequestParam Long customerId,
+    public Result<Integer> autoAllocate(@RequestParam Long customerId,
                                    @RequestParam Long operatorId) {
-        return R.ok(service.autoAllocate(customerId, operatorId));
+        return Result.ok(service.autoAllocate(customerId, operatorId));
     }
 
     @Operation(summary = "现金流预测")
     @PrePermission("finance:payment:list")
     @GetMapping("/forecast")
-    public R<List<Map<String, Object>>> forecast(@RequestParam Long initiationId,
+    public Result<List<Map<String, Object>>> forecast(@RequestParam Long initiationId,
                                                  @RequestParam(defaultValue = "3") int months) {
-        return R.ok(service.forecastCashFlow(initiationId, months));
+        return Result.ok(service.forecastCashFlow(initiationId, months));
     }
 
     @Operation(summary = "详情")
     @PrePermission("finance:payment:list")
     @GetMapping("/{id}")
-    public R<PaymentDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<PaymentDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "分页")
     @PrePermission("finance:payment:list")
     @GetMapping("/page")
-    public R<Page<PaymentDO>> page(
+    public Result<Page<PaymentDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
@@ -116,20 +116,20 @@ public class PaymentController {
             @RequestParam(required = false) Long contractId,
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) Long initiationId) {
-        return R.ok(service.page(page, size, keyword, status, contractId, customerId, initiationId));
+        return Result.ok(service.page(page, size, keyword, status, contractId, customerId, initiationId));
     }
 
     @Operation(summary = "按合同汇总回款")
     @PrePermission("finance:payment:list")
     @GetMapping("/sum/by-contract")
-    public R<BigDecimal> sumByContract(@RequestParam Long contractId) {
-        return R.ok(service.sumReceivedByContract(contractId));
+    public Result<BigDecimal> sumByContract(@RequestParam Long contractId) {
+        return Result.ok(service.sumReceivedByContract(contractId));
     }
 
     @Operation(summary = "按月汇总")
     @PrePermission("finance:payment:list")
     @GetMapping("/aggregate/by-month")
-    public R<List<Map<String, Object>>> aggregateByMonth(@RequestParam Long initiationId) {
-        return R.ok(service.aggregateByMonth(initiationId));
+    public Result<List<Map<String, Object>>> aggregateByMonth(@RequestParam Long initiationId) {
+        return Result.ok(service.aggregateByMonth(initiationId));
     }
 }

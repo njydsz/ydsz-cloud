@@ -8,7 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * LoginStatus 枚举测试
  *
+ * <p>覆盖 isSuccess 判定与 code/desc 非空校验。
+ *
  * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 class LoginStatusTest {
 

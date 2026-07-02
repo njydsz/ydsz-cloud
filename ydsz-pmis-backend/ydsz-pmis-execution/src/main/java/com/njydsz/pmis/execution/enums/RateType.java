@@ -15,7 +15,9 @@ public enum RateType {
     EXTERNAL("EXTERNAL", "对外报价费率"),
     INTERNAL("INTERNAL", "对内成本费率");
 
+    /** 类型编码（大小写不敏感） */
     private final String code;
+    /** 类型中文描述 */
     private final String desc;
 
     RateType(String code, String desc) {
@@ -23,7 +25,18 @@ public enum RateType {
         this.desc = desc;
     }
 
+    /**
+     * 获取类型编码
+     *
+     * @return 类型编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取类型中文描述
+     *
+     * @return 类型中文描述
+     */
     public String getDesc() { return desc; }
 
     /**

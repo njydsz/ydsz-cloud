@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.exception;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
@@ -26,6 +26,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * GlobalExceptionHandler 全局异常处理单元测试
+ *
+ * <p>覆盖业务异常、参数校验、缺失参数、方法不支持、404 与兜底异常的转换逻辑。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("GlobalExceptionHandler 全局异常测试")
 class GlobalExceptionHandlerTest {
@@ -51,7 +56,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("BizException 应被转换为 R 失败响应")
     void handleBizException() {
         BizException ex = new BizException(BizErrorCode.NOT_FOUND, "找不到资源");
-        R<Void> r = handler.handleBizException(ex, request);
+        Result<Void> r = handler.handleBizException(ex, request);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.NOT_FOUND.getCode());
         assertThat(r.getMessage()).isEqualTo("找不到资源");
         assertThat(r.getTraceId()).isEqualTo("test-trace-id");
@@ -65,7 +70,7 @@ class GlobalExceptionHandlerTest {
         br.addError(new FieldError("target", "password", "密码长度至少 6 位"));
         MethodArgumentNotValidException ex = new MethodArgumentNotValidException(null, br);
 
-        R<Void> r = handler.handleValidException(ex);
+        Result<Void> r = handler.handleValidException(ex);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.VALIDATION_FAILED.getCode());
         assertThat(r.getMessage()).contains("用户名不能为空").contains("密码长度至少 6 位");
     }
@@ -78,7 +83,7 @@ class GlobalExceptionHandlerTest {
         br.addError(new FieldError("t", "f", "字段错误"));
         when(ex.getBindingResult()).thenReturn(br);
 
-        R<Void> r = handler.handleBindException(ex);
+        Result<Void> r = handler.handleBindException(ex);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.VALIDATION_FAILED.getCode());
         assertThat(r.getMessage()).contains("字段错误");
     }
@@ -93,7 +98,7 @@ class GlobalExceptionHandlerTest {
         set.add(v);
         ConstraintViolationException ex = new ConstraintViolationException(set);
 
-        R<Void> r = handler.handleConstraintViolation(ex);
+        Result<Void> r = handler.handleConstraintViolation(ex);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.VALIDATION_FAILED.getCode());
         assertThat(r.getMessage()).contains("ID 必须大于 0");
     }
@@ -103,7 +108,7 @@ class GlobalExceptionHandlerTest {
     void handleMissing() {
         MissingServletRequestParameterException ex =
                 new MissingServletRequestParameterException("id", "Long");
-        R<Void> r = handler.handleMissingParam(ex);
+        Result<Void> r = handler.handleMissingParam(ex);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.MISSING_PARAMETER.getCode());
         assertThat(r.getMessage()).contains("id");
     }
@@ -114,7 +119,7 @@ class GlobalExceptionHandlerTest {
     void handleNotReadable() {
         HttpMessageNotReadableException ex =
                 new HttpMessageNotReadableException("JSON parse error");
-        R<Void> r = handler.handleNotReadable(ex);
+        Result<Void> r = handler.handleNotReadable(ex);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
     }
 
@@ -123,7 +128,7 @@ class GlobalExceptionHandlerTest {
     void handleMethodNotSupported() {
         HttpRequestMethodNotSupportedException ex =
                 new HttpRequestMethodNotSupportedException("PUT");
-        R<Void> r = handler.handleMethodNotSupported(ex);
+        Result<Void> r = handler.handleMethodNotSupported(ex);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.METHOD_NOT_ALLOWED.getCode());
     }
 
@@ -131,7 +136,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("NoHandlerFoundException 应返回 NOT_FOUND")
     void handleNotFound() {
         NoHandlerFoundException ex = new NoHandlerFoundException("GET", "/x", new org.springframework.http.HttpHeaders());
-        R<Void> r = handler.handleNotFound(ex);
+        Result<Void> r = handler.handleNotFound(ex);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.NOT_FOUND.getCode());
     }
 
@@ -139,7 +144,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("IllegalArgumentException 应被转换为 BAD_REQUEST")
     void handleIllegal() {
         IllegalArgumentException ex = new IllegalArgumentException("非法参数");
-        R<Void> r = handler.handleIllegalArgument(ex);
+        Result<Void> r = handler.handleIllegalArgument(ex);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
         assertThat(r.getMessage()).isEqualTo("非法参数");
     }
@@ -148,7 +153,7 @@ class GlobalExceptionHandlerTest {
     @DisplayName("兜底 Exception 应返回 INTERNAL_ERROR")
     void handleGeneric() {
         Exception ex = new RuntimeException("boom");
-        R<Void> r = handler.handleException(ex, request);
+        Result<Void> r = handler.handleException(ex, request);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.INTERNAL_ERROR.getCode());
         assertThat(r.getTraceId()).isEqualTo("test-trace-id");
     }

@@ -1,7 +1,7 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.engine.ReconcileReport;
 import com.njydsz.pmis.execution.engine.ReconcileResult;
 import com.njydsz.pmis.execution.service.ReconcileService;
@@ -34,27 +34,27 @@ public class ReconcileController {
     @Operation(summary = "全量对账报告")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/report")
-    public R<ReconcileReport> report(
+    public Result<ReconcileReport> report(
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return R.ok(reconcileService.reconcileAll(initiationId, from, to));
+        return Result.ok(reconcileService.reconcileAll(initiationId, from, to));
     }
 
     @Operation(summary = "工时漏算 / 幽灵成本")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/missing-cost")
-    public R<List<ReconcileResult>> missingCost(@RequestParam(required = false) Long initiationId) {
-        return R.ok(reconcileService.checkMissingCost(initiationId));
+    public Result<List<ReconcileResult>> missingCost(@RequestParam(required = false) Long initiationId) {
+        return Result.ok(reconcileService.checkMissingCost(initiationId));
     }
 
     @Operation(summary = "工时异常(单日/单周/跨项目)")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/time-anomaly")
-    public R<List<ReconcileResult>> timeAnomaly(
+    public Result<List<ReconcileResult>> timeAnomaly(
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
-        return R.ok(reconcileService.checkTimeEntryAnomaly(initiationId, from, to));
+        return Result.ok(reconcileService.checkTimeEntryAnomaly(initiationId, from, to));
     }
 }

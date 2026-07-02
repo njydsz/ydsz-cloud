@@ -24,7 +24,9 @@ public enum UtilizationGrade {
     WARN("WARN", "预警", 30, 50),
     CRITICAL("CRITICAL", "严重", 0, 30);
 
+    /** 等级编码（大小写不敏感） */
     private final String code;
+    /** 等级中文描述 */
     private final String desc;
     @SuppressWarnings("unused")
     /** 阈值下界（包含） */
@@ -40,10 +42,20 @@ public enum UtilizationGrade {
         this.upperBound = upperBound;
     }
 
+    /**
+     * 获取等级编码
+     *
+     * @return 等级编码字符串
+     */
     public String getCode() {
         return code;
     }
 
+    /**
+     * 获取等级中文描述
+     *
+     * @return 等级中文描述
+     */
     public String getDesc() {
         return desc;
     }

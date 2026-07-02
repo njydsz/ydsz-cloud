@@ -21,8 +21,11 @@ public enum SatisfactionLevel {
     DISSATISFIED("DISSATISFIED", "不满意", 2),
     VERY_DISSATISFIED("VERY_DISSATISFIED", "非常不满意", 1);
 
+    /** 等级编码（大小写不敏感） */
     private final String code;
+    /** 等级中文描述 */
     private final String desc;
+    /** 满意度评分（1-5，5 为最高） */
     private final int score;
 
     SatisfactionLevel(String code, String desc, int score) {
@@ -31,8 +34,25 @@ public enum SatisfactionLevel {
         this.score = score;
     }
 
+    /**
+     * 获取等级编码
+     *
+     * @return 等级编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取等级中文描述
+     *
+     * @return 等级中文描述
+     */
     public String getDesc() { return desc; }
+
+    /**
+     * 获取满意度评分
+     *
+     * @return 满意度评分（1-5）
+     */
     public int getScore() { return score; }
 
     /**

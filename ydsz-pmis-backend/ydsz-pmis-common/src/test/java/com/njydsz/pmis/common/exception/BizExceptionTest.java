@@ -6,6 +6,14 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * BizException 业务异常单元测试
+ *
+ * <p>覆盖基于 BizErrorCode、自定义 message 与任意 code 的构造方式。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("BizException 业务异常测试")
 class BizExceptionTest {
 

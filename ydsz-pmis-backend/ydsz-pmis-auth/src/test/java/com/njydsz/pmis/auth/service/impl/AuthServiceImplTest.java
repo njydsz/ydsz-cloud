@@ -5,7 +5,7 @@ import com.njydsz.pmis.auth.dto.LoginDTO;
 import com.njydsz.pmis.auth.dto.LoginResultVO;
 import com.njydsz.pmis.auth.feign.UserAuthClient;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.util.CryptoUtil;
@@ -30,19 +30,35 @@ import static org.mockito.Mockito.when;
 
 /**
  * AuthServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("AuthServiceImpl 认证服务测试")
 class AuthServiceImplTest {
 
+    /** 测试用密码 */
     private static final String TEST_PASSWORD = "123456";
+    /** 测试用盐值 */
     private static final String TEST_SALT = "abcd1234";
 
+    /** Redis 操作模板（Mock） */
     private StringRedisTemplate redisTemplate;
+    /** Redis 值操作（Mock） */
     private ValueOperations<String, String> valueOps;
+    /** JWT Token 工具（Mock） */
     private JwtTokenProvider jwtTokenProvider;
+    /** user 服务 Feign 客户端（Mock） */
     private UserAuthClient userAuthClient;
+    /** 待测服务实例 */
     private AuthServiceImpl service;
 
+    /**
+     * 构造模拟登录上下文
+     *
+     * @param username 用户名
+     * @return 模拟的登录上下文
+     */
     private LoginContextDTO mockContext(String username) {
         String hashed = CryptoUtil.md5(TEST_PASSWORD + TEST_SALT);
         return LoginContextDTO.builder()
@@ -82,9 +98,9 @@ class AuthServiceImplTest {
 
         userAuthClient = mock(UserAuthClient.class);
         when(userAuthClient.getLoginContextByUsername("admin"))
-                .thenReturn(R.ok(mockContext("admin")));
+                .thenReturn(Result.ok(mockContext("admin")));
         when(userAuthClient.getLoginContextById(1L))
-                .thenReturn(R.ok(mockContext("admin")));
+                .thenReturn(Result.ok(mockContext("admin")));
 
         service = new AuthServiceImpl(redisTemplate, jwtTokenProvider, userAuthClient);
     }

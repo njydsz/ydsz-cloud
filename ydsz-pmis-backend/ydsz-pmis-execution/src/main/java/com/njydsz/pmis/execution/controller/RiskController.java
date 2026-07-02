@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.RiskCreateDTO;
 import com.njydsz.pmis.execution.dto.RiskStatusDTO;
 import com.njydsz.pmis.execution.entity.RiskDO;
@@ -43,50 +43,50 @@ public class RiskController {
     @Operation(summary = "登记风险")
     @PrePermission("execution:risk:create")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody RiskCreateDTO dto) {
-        return R.ok(service.create(dto));
+    public Result<Long> create(@Valid @RequestBody RiskCreateDTO dto) {
+        return Result.ok(service.create(dto));
     }
 
     @Operation(summary = "状态迁移")
     @PrePermission("execution:risk:status")
     @PutMapping("/status")
-    public R<Void> changeStatus(@Valid @RequestBody RiskStatusDTO dto) {
+    public Result<Void> changeStatus(@Valid @RequestBody RiskStatusDTO dto) {
         service.changeStatus(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除")
     @PrePermission("execution:risk:delete")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "详情")
     @PrePermission("execution:risk:list")
     @GetMapping("/{id}")
-    public R<RiskDO> get(@PathVariable Long id) {
-        return R.ok(service.getById(id));
+    public Result<RiskDO> get(@PathVariable Long id) {
+        return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "分页")
     @PrePermission("execution:risk:list")
     @GetMapping("/page")
-    public R<Page<RiskDO>> page(
+    public Result<Page<RiskDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String riskLevel,
             @RequestParam(required = false) Long initiationId) {
-        return R.ok(service.page(page, size, keyword, status, riskLevel, initiationId));
+        return Result.ok(service.page(page, size, keyword, status, riskLevel, initiationId));
     }
 
     @Operation(summary = "按等级聚合")
     @PrePermission("execution:risk:list")
     @GetMapping("/aggregate/by-level")
-    public R<List<Map<String, Object>>> aggregateByLevel(@RequestParam Long initiationId) {
-        return R.ok(service.aggregateByLevel(initiationId));
+    public Result<List<Map<String, Object>>> aggregateByLevel(@RequestParam Long initiationId) {
+        return Result.ok(service.aggregateByLevel(initiationId));
     }
 }

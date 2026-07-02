@@ -18,7 +18,9 @@ public enum ProjectType {
     TRAINING("TRAINING", "培训服务"),
     OTHER("OTHER", "其他");
 
+    /** 类型编码（大小写不敏感） */
     private final String code;
+    /** 类型中文描述 */
     private final String desc;
 
     ProjectType(String code, String desc) {
@@ -26,7 +28,18 @@ public enum ProjectType {
         this.desc = desc;
     }
 
+    /**
+     * 获取类型编码
+     *
+     * @return 类型编码字符串
+     */
     public String getCode() { return code; }
+
+    /**
+     * 获取类型中文描述
+     *
+     * @return 类型中文描述
+     */
     public String getDesc() { return desc; }
 
     /**

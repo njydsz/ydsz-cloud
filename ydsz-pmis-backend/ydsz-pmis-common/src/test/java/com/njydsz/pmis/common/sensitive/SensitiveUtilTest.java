@@ -5,6 +5,14 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * SensitiveUtil 脱敏工具单元测试
+ *
+ * <p>覆盖姓名/身份证/手机号/邮箱/银行卡/地址等脱敏策略与自定义函数注册。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("SensitiveUtil 脱敏工具测试")
 class SensitiveUtilTest {
 

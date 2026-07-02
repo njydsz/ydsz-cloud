@@ -3,7 +3,7 @@ package com.njydsz.pmis.user.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.user.dto.RoleFormDTO;
 import com.njydsz.pmis.user.dto.RoleQueryDTO;
 import com.njydsz.pmis.user.entity.RoleDO;
@@ -33,60 +33,60 @@ public class RoleController {
     @Operation(summary = "角色分页")
     @PrePermission("auth:role:list")
     @GetMapping
-    public R<Page<RoleDO>> page(RoleQueryDTO query) {
-        return R.ok(roleService.page(query));
+    public Result<Page<RoleDO>> page(RoleQueryDTO query) {
+        return Result.ok(roleService.page(query));
     }
 
     @Operation(summary = "所有启用的角色")
     @GetMapping("/all")
-    public R<List<RoleDO>> listAll() {
-        return R.ok(roleService.listAllEnabled());
+    public Result<List<RoleDO>> listAll() {
+        return Result.ok(roleService.listAllEnabled());
     }
 
     @Operation(summary = "角色详情")
     @GetMapping("/{id}")
-    public R<RoleDO> get(@PathVariable Long id) {
-        return R.ok(roleService.getById(id));
+    public Result<RoleDO> get(@PathVariable Long id) {
+        return Result.ok(roleService.getById(id));
     }
 
     @Operation(summary = "创建角色")
     @PrePermission("auth:role:create")
     @OperationLog(module = "权限管理", action = "创建角色", bizType = "ROLE")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody RoleFormDTO dto) {
-        return R.ok(roleService.create(dto));
+    public Result<Long> create(@Valid @RequestBody RoleFormDTO dto) {
+        return Result.ok(roleService.create(dto));
     }
 
     @Operation(summary = "更新角色")
     @PrePermission("auth:role:update")
     @OperationLog(module = "权限管理", action = "更新角色", bizType = "ROLE")
     @PutMapping
-    public R<Void> update(@Valid @RequestBody RoleFormDTO dto) {
+    public Result<Void> update(@Valid @RequestBody RoleFormDTO dto) {
         roleService.update(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除角色")
     @PrePermission("auth:role:delete")
     @OperationLog(module = "权限管理", action = "删除角色", bizType = "ROLE")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         roleService.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "为角色分配权限")
     @PrePermission("auth:role:assign")
     @OperationLog(module = "权限管理", action = "分配权限", bizType = "ROLE")
     @PutMapping("/{id}/permissions")
-    public R<Void> assignPermissions(@PathVariable Long id, @RequestBody List<Long> permissionIds) {
+    public Result<Void> assignPermissions(@PathVariable Long id, @RequestBody List<Long> permissionIds) {
         roleService.assignPermissions(id, permissionIds);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "查询角色的权限 ID 列表")
     @GetMapping("/{id}/permissions")
-    public R<List<Long>> listPermissions(@PathVariable Long id) {
-        return R.ok(roleService.listPermissionIds(id));
+    public Result<List<Long>> listPermissions(@PathVariable Long id) {
+        return Result.ok(roleService.listPermissionIds(id));
     }
 }

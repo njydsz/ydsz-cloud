@@ -50,4 +50,42 @@
           AND processed = 0
           AND deleted = 0
     </update>
+
+    <!-- P1-12: 查某实例某节点未处理的用户（顺序会签场景下取下一个办理人） -->
+    <select id="selectUnprocessedByInstanceAndNode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_user
+        WHERE instance_id = #{instanceId}
+          AND node_code = #{nodeCode}
+          AND processed = 0
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY id ASC
+    </select>
+
+    <!-- P0-4: 查某用户待办关联的任务 ID（通过 pmis_flow_user 表） -->
+    <select id="selectTaskIdsByUser" resultType="java.lang.Long">
+        SELECT DISTINCT task_id
+        FROM pmis_flow_user
+        WHERE user_id = #{userId}
+          AND processed = 0
+          AND status = 'ENABLED'
+          AND deleted = 0
+          AND tenant_id = #{tenantId}
+    </select>
+
+    <!-- 批量插入 -->
+    <insert id="batchInsert">
+        INSERT INTO pmis_flow_user
+            (task_id, instance_id, node_code, user_type, user_id, user_name,
+             processed, process_at, comment, status, created_by, created_at,
+             updated_by, updated_at, deleted, tenant_id, provider_trace_id)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.taskId}, #{item.instanceId}, #{item.nodeCode}, #{item.userType},
+             #{item.userId}, #{item.userName}, #{item.processed}, #{item.processAt},
+             #{item.comment}, 'ENABLED', 0, CURRENT_TIMESTAMP, 0, CURRENT_TIMESTAMP, 0,
+             #{item.tenantId}, #{item.providerTraceId})
+        </foreach>
+    </insert>
 </mapper>

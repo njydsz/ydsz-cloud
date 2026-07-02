@@ -3,7 +3,7 @@ package com.njydsz.pmis.config.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.config.dto.ConfigFormDTO;
 import com.njydsz.pmis.config.dto.ConfigQueryDTO;
 import com.njydsz.pmis.config.entity.ConfigDO;
@@ -34,76 +34,76 @@ public class ConfigController {
     @Operation(summary = "配置分页")
     @PrePermission("sys:config:list")
     @GetMapping
-    public R<Page<ConfigDO>> page(ConfigQueryDTO query) {
-        return R.ok(configService.page(query));
+    public Result<Page<ConfigDO>> page(ConfigQueryDTO query) {
+        return Result.ok(configService.page(query));
     }
 
     @Operation(summary = "按 group+key 查配置")
     @GetMapping("/by-key")
-    public R<ConfigDO> getByKey(@RequestParam String group, @RequestParam String key) {
-        return R.ok(configService.getByKey(group, key));
+    public Result<ConfigDO> getByKey(@RequestParam String group, @RequestParam String key) {
+        return Result.ok(configService.getByKey(group, key));
     }
 
     @Operation(summary = "按 group 查全部配置（key-value 形式）")
     @GetMapping("/group/{group}")
-    public R<Map<String, String>> getGroup(@PathVariable String group) {
-        return R.ok(configService.getGroupAsMap(group));
+    public Result<Map<String, String>> getGroup(@PathVariable String group) {
+        return Result.ok(configService.getGroupAsMap(group));
     }
 
     @Operation(summary = "公开配置（前端可见）")
     @GetMapping("/public")
-    public R<List<ConfigDO>> publicConfigs() {
-        return R.ok(configService.listPublic());
+    public Result<List<ConfigDO>> publicConfigs() {
+        return Result.ok(configService.listPublic());
     }
 
     @Operation(summary = "创建配置")
     @PrePermission("sys:config:create")
     @OperationLog(module = "系统配置", action = "创建配置", bizType = "CONFIG")
     @PostMapping
-    public R<Long> create(@Valid @RequestBody ConfigFormDTO dto) {
-        return R.ok(configService.create(dto));
+    public Result<Long> create(@Valid @RequestBody ConfigFormDTO dto) {
+        return Result.ok(configService.create(dto));
     }
 
     @Operation(summary = "更新配置")
     @PrePermission("sys:config:update")
     @OperationLog(module = "系统配置", action = "更新配置", bizType = "CONFIG")
     @PutMapping
-    public R<Void> update(@Valid @RequestBody ConfigFormDTO dto) {
+    public Result<Void> update(@Valid @RequestBody ConfigFormDTO dto) {
         configService.update(dto);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除配置")
     @PrePermission("sys:config:delete")
     @OperationLog(module = "系统配置", action = "删除配置", bizType = "CONFIG")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         configService.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "按分组批量删除")
     @PrePermission("sys:config:delete")
     @OperationLog(module = "系统配置", action = "按分组删除", bizType = "CONFIG")
     @DeleteMapping("/group/{group}")
-    public R<Integer> deleteByGroup(@PathVariable String group) {
-        return R.ok(configService.deleteByGroup(group));
+    public Result<Integer> deleteByGroup(@PathVariable String group) {
+        return Result.ok(configService.deleteByGroup(group));
     }
 
     @Operation(summary = "按分组批量启停")
     @PrePermission("sys:config:update")
     @OperationLog(module = "系统配置", action = "按分组启停", bizType = "CONFIG")
     @PutMapping("/group/{group}/status/{status}")
-    public R<Integer> updateStatusByGroup(@PathVariable String group, @PathVariable String status) {
-        return R.ok(configService.updateStatusByGroup(group, status));
+    public Result<Integer> updateStatusByGroup(@PathVariable String group, @PathVariable String status) {
+        return Result.ok(configService.updateStatusByGroup(group, status));
     }
 
     @Operation(summary = "刷新缓存")
     @PrePermission("sys:config:refresh")
     @OperationLog(module = "系统配置", action = "刷新缓存", bizType = "CONFIG")
     @PostMapping("/refresh")
-    public R<Void> refresh() {
+    public Result<Void> refresh() {
         configService.refreshCache();
-        return R.ok();
+        return Result.ok();
     }
 }

@@ -19,6 +19,11 @@ import static org.mockito.Mockito.when;
 
 /**
  * PermissionAspect 权限切面单元测试
+ *
+ * <p>覆盖未登录拦截、AND/OR 模式、超管放行与空值兼容。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("PermissionAspect 权限切面测试")
 class PermissionAspectTest {

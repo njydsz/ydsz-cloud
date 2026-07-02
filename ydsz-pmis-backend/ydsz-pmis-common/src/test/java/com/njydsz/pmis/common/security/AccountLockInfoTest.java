@@ -10,7 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 账号锁定策略测试
  *
+ * <p>覆盖默认策略、shouldLock 阈值判定、lockUntil 计算与剩余分钟数。
+ *
  * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 class AccountLockInfoTest {
 

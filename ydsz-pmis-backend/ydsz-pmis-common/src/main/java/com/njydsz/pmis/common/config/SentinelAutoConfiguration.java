@@ -7,7 +7,7 @@ import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -49,19 +49,19 @@ public class SentinelAutoConfiguration {
     @ConditionalOnMissingBean
     public BlockExceptionHandler sentinelBlockExceptionHandler() {
         return (request, response, e) -> {
-            R<?> body;
+            Result<?> body;
             if (e instanceof FlowException) {
                 response.setStatus(429);
-                body = R.failed(BizErrorCode.RATE_LIMIT, "请求频率超限，请稍后再试");
+                body = Result.failed(BizErrorCode.RATE_LIMIT, "请求频率超限，请稍后再试");
             } else if (e instanceof DegradeException) {
                 response.setStatus(503);
-                body = R.failed(BizErrorCode.SERVICE_UNAVAILABLE, "服务降级保护中，请稍后再试");
+                body = Result.failed(BizErrorCode.SERVICE_UNAVAILABLE, "服务降级保护中，请稍后再试");
             } else if (e instanceof SystemBlockException) {
                 response.setStatus(503);
-                body = R.failed(BizErrorCode.SERVICE_UNAVAILABLE, "系统负载过高，已触发保护");
+                body = Result.failed(BizErrorCode.SERVICE_UNAVAILABLE, "系统负载过高，已触发保护");
             } else {
                 response.setStatus(429);
-                body = R.failed(BizErrorCode.RATE_LIMIT, "请求被限流: " + e.getClass().getSimpleName());
+                body = Result.failed(BizErrorCode.RATE_LIMIT, "请求被限流: " + e.getClass().getSimpleName());
             }
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());

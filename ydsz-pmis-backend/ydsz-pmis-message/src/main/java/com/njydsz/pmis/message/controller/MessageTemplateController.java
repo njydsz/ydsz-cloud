@@ -2,7 +2,7 @@ package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.message.entity.MessageTemplateDO;
 import com.njydsz.pmis.message.service.MessageTemplateServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
@@ -37,51 +37,51 @@ public class MessageTemplateController {
     @Operation(summary = "创建模板")
     @PrePermission("notif:message:send")
     @PostMapping
-    public R<Long> create(@RequestBody MessageTemplateDTO dto) {
-        return R.ok(templateService.create(dto.toDO()));
+    public Result<Long> create(@RequestBody MessageTemplateDTO dto) {
+        return Result.ok(templateService.create(dto.toDO()));
     }
 
     @Operation(summary = "更新模板")
     @PrePermission("notif:message:send")
     @PutMapping
-    public R<Void> update(@RequestBody MessageTemplateDTO dto) {
+    public Result<Void> update(@RequestBody MessageTemplateDTO dto) {
         MessageTemplateDO t = dto.toDO();
         t.setId(dto.getId());
         templateService.update(t);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "删除模板")
     @PrePermission("notif:message:send")
     @DeleteMapping("/{id}")
-    public R<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable Long id) {
         templateService.delete(id);
-        return R.ok();
+        return Result.ok();
     }
 
     @Operation(summary = "模板详情")
     @PrePermission("notif:message:send")
     @GetMapping("/{id}")
-    public R<MessageTemplateDO> get(@PathVariable Long id) {
-        return R.ok(templateService.getById(id));
+    public Result<MessageTemplateDO> get(@PathVariable Long id) {
+        return Result.ok(templateService.getById(id));
     }
 
     @Operation(summary = "模板分页")
     @PrePermission("notif:message:send")
     @GetMapping("/page")
-    public R<Page<MessageTemplateDO>> page(
+    public Result<Page<MessageTemplateDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String keyword) {
-        return R.ok(templateService.page(page, size, channel, keyword));
+        return Result.ok(templateService.page(page, size, channel, keyword));
     }
 
     @Operation(summary = "按通道列出模板")
     @PrePermission("notif:message:send")
     @GetMapping("/list")
-    public R<List<MessageTemplateDO>> listByChannel(@RequestParam String channel) {
-        return R.ok(templateService.listByChannel(channel));
+    public Result<List<MessageTemplateDO>> listByChannel(@RequestParam String channel) {
+        return Result.ok(templateService.listByChannel(channel));
     }
 
     @lombok.Data

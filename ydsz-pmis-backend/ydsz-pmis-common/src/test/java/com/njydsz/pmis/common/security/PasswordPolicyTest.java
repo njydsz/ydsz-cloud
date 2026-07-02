@@ -8,7 +8,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 /**
  * 密码策略测试
  *
+ * <p>覆盖强/弱密码判定、字符种类校验、强度评分与过期判定。
+ *
  * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 class PasswordPolicyTest {
 

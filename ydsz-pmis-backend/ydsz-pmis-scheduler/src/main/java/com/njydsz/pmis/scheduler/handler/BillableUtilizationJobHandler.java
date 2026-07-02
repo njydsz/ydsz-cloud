@@ -1,6 +1,6 @@
 package com.njydsz.pmis.scheduler.handler;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.ExecutionClient;
 import com.njydsz.pmis.common.job.JobHandler;
 import lombok.RequiredArgsConstructor;
@@ -67,7 +67,7 @@ public class BillableUtilizationJobHandler implements JobHandler {
         result.put("period", period);
         result.put("recomputeAll", recomputeAll);
         try {
-            R<Map<String, Object>> r =
+            Result<Map<String, Object>> r =
                     executionClient.recomputeBillableUtilization(period, recomputeAll);
             if (r != null && r.getData() != null) {
                 result.putAll(r.getData());

@@ -1,6 +1,6 @@
 package com.njydsz.pmis.execution.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,5 +26,5 @@ public interface InitiationServiceClient {
      * @return {initiationId, projectCode, projectName, budgetAmount, estimatedAmount, stage}
      */
     @GetMapping("/api/v1/project/initiation/{id}/budget/snapshot")
-    R<Map<String, Object>> budgetSnapshot(@PathVariable("id") Long id);
+    Result<Map<String, Object>> budgetSnapshot(@PathVariable("id") Long id);
 }

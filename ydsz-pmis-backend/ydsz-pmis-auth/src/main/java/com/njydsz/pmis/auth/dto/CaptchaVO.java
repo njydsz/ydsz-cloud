@@ -17,9 +17,11 @@ import lombok.Data;
 @Schema(description = "图形验证码")
 public class CaptchaVO {
 
+    /** 验证码 Key（用于登录时校验） */
     @Schema(description = "验证码 Key（用于登录时校验）")
     private String captchaKey;
 
+    /** 验证码图片 Base64 */
     @Schema(description = "验证码图片 Base64")
     private String captchaImage;
 }

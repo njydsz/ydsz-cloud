@@ -1,7 +1,7 @@
 package com.njydsz.pmis.execution.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
 import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;
@@ -437,7 +437,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
      */
     private BigDecimal fetchUserBenchIdleCost() {
         try {
-            R<Map<String, Object>> resp = benchResourceClient.getBenchDashboard();
+            Result<Map<String, Object>> resp = benchResourceClient.getBenchDashboard();
             if (resp == null || resp.getData() == null) {
                 return ZERO;
             }
@@ -490,7 +490,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         // 跨模块真实聚合：调用 user 服务获取资源分配
         List<Map<String, Object>> assignments;
         try {
-            R<List<Map<String, Object>>> resp = benchResourceClient.listResourceAssignmentsByInitiation(initiationId);
+            Result<List<Map<String, Object>>> resp = benchResourceClient.listResourceAssignmentsByInitiation(initiationId);
             assignments = (resp == null || resp.getData() == null) ? List.of() : resp.getData();
         } catch (Exception e) {
             log.warn("[AdvancedReport] 资源分配 Feign 调用失败 initiationId={} err={}",

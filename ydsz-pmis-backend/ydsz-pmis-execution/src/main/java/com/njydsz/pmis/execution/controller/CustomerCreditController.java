@@ -2,7 +2,7 @@ package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.CreditAssessmentDTO;
 import com.njydsz.pmis.execution.entity.CustomerCreditDO;
 import com.njydsz.pmis.execution.enums.CreditLevel;
@@ -41,46 +41,46 @@ public class CustomerCreditController {
     @Operation(summary = "评估客户信用")
     @PrePermission("finance:credit:assess")
     @PostMapping("/assess")
-    public R<CustomerCreditDO> assess(@Valid @RequestBody CreditAssessmentDTO dto) {
-        return R.ok(service.assess(dto));
+    public Result<CustomerCreditDO> assess(@Valid @RequestBody CreditAssessmentDTO dto) {
+        return Result.ok(service.assess(dto));
     }
 
     @Operation(summary = "获取客户信用")
     @PrePermission("finance:credit:list")
     @GetMapping("/customer/{customerId}")
-    public R<CustomerCreditDO> getByCustomer(@PathVariable Long customerId) {
-        return R.ok(service.getByCustomer(customerId));
+    public Result<CustomerCreditDO> getByCustomer(@PathVariable Long customerId) {
+        return Result.ok(service.getByCustomer(customerId));
     }
 
     @Operation(summary = "客户风险画像")
     @PrePermission("finance:credit:list")
     @GetMapping("/profile/{customerId}")
-    public R<Map<String, Object>> profile(@PathVariable Long customerId) {
-        return R.ok(service.profile(customerId));
+    public Result<Map<String, Object>> profile(@PathVariable Long customerId) {
+        return Result.ok(service.profile(customerId));
     }
 
     @Operation(summary = "信用分布")
     @PrePermission("finance:credit:list")
     @GetMapping("/distribution")
-    public R<List<Map<String, Object>>> distribution() {
-        return R.ok(service.distribution());
+    public Result<List<Map<String, Object>>> distribution() {
+        return Result.ok(service.distribution());
     }
 
     @Operation(summary = "按等级列出")
     @PrePermission("finance:credit:list")
     @GetMapping("/by-level")
-    public R<List<CustomerCreditDO>> listByLevel(@RequestParam CreditLevel level) {
-        return R.ok(service.listByLevel(level));
+    public Result<List<CustomerCreditDO>> listByLevel(@RequestParam CreditLevel level) {
+        return Result.ok(service.listByLevel(level));
     }
 
     @Operation(summary = "分页")
     @PrePermission("finance:credit:list")
     @GetMapping("/page")
-    public R<Page<CustomerCreditDO>> page(
+    public Result<Page<CustomerCreditDO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String level) {
-        return R.ok(service.page(page, size, keyword, level));
+        return Result.ok(service.page(page, size, keyword, level));
     }
 }

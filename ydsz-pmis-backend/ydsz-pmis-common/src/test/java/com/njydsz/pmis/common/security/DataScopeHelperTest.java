@@ -16,7 +16,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 /**
  * DataScopeHelper 测试
  *
+ * <p>覆盖 ALL/SELF/DEPT/CUSTOM 模式下的越权校验与 SQL 片段构建。
+ *
  * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 class DataScopeHelperTest {
 
