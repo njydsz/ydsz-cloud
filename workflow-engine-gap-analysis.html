@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PMIS 自研工作流引擎对标差距分析报告</title>
+<style>
+  :root {
+    --bg: #f8f9fb;
+    --card: #ffffff;
+    --border: #e4e7ec;
+    --text: #1a1a2e;
+    --text-secondary: #6b7280;
+    --primary: #2563eb;
+    --primary-light: #dbeafe;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --yellow: #d97706;
+    --yellow-light: #fef3c7;
+    --red: #dc2626;
+    --red-light: #fee2e2;
+    --purple: #7c3aed;
+    --purple-light: #ede9fe;
+    --code-bg: #f3f4f6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px 80px; }
+
+  /* Header */
+  .report-header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #2563eb 100%);
+    color: white;
+    padding: 48px 40px;
+    border-radius: 16px;
+    margin-bottom: 32px;
+    box-shadow: 0 4px 24px rgba(37,99,235,0.15);
+  }
+  .report-header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .report-header .subtitle { font-size: 16px; opacity: 0.85; }
+  .report-header .meta {
+    display: flex; gap: 24px; margin-top: 20px; font-size: 13px; opacity: 0.8;
+  }
+  .report-header .meta span { display: flex; align-items: center; gap: 6px; }
+
+  /* Sections */
+  section { margin-bottom: 36px; }
+  h2 {
+    font-size: 22px; font-weight: 700; color: var(--text);
+    padding-bottom: 10px; border-bottom: 2px solid var(--primary);
+    margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
+  }
+  h2 .num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; background: var(--primary); color: white;
+    border-radius: 6px; font-size: 14px; font-weight: 700;
+  }
+  h3 { font-size: 17px; font-weight: 600; margin: 20px 0 12px; color: var(--text); }
+  p { margin-bottom: 10px; color: var(--text-secondary); }
+  strong { color: var(--text); font-weight: 600; }
+
+  /* Cards */
+  .card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 12px; padding: 24px; margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+
+  /* Summary stats */
+  .stats-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
+  }
+  .stat-box {
+    background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+    padding: 20px; text-align: center;
+  }
+  .stat-box .num { font-size: 32px; font-weight: 700; }
+  .stat-box .label { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+  .stat-box.green .num { color: var(--green); }
+  .stat-box.yellow .num { color: var(--yellow); }
+  .stat-box.red .num { color: var(--red); }
+  .stat-box.blue .num { color: var(--primary); }
+
+  /* Tables */
+  table {
+    width: 100%; border-collapse: collapse; font-size: 13px;
+    background: var(--card); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04); margin-bottom: 16px;
+  }
+  th {
+    background: #f1f5f9; padding: 10px 12px; text-align: left;
+    font-weight: 600; color: var(--text); border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 9px 12px; border-bottom: 1px solid var(--border);
+    color: var(--text-secondary); vertical-align: top;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #f8fafc; }
+  td:first-child, th:first-child { font-weight: 600; color: var(--text); }
+
+  /* Badges */
+  .badge {
+    display: inline-block; padding: 2px 10px; border-radius: 4px;
+    font-size: 12px; font-weight: 600; white-space: nowrap;
+  }
+  .badge.full { background: var(--green-light); color: var(--green); }
+  .badge.basic { background: var(--yellow-light); color: var(--yellow); }
+  .badge.none { background: var(--red-light); color: var(--red); }
+  .badge.planned { background: var(--purple-light); color: var(--purple); }
+
+  /* Gap items */
+  .gap-item {
+    display: flex; gap: 16px; padding: 16px; border-radius: 10px; margin-bottom: 12px;
+    border: 1px solid var(--border); background: var(--card);
+  }
+  .gap-item.p0 { border-left: 4px solid var(--red); }
+  .gap-item.p1 { border-left: 4px solid var(--yellow); }
+  .gap-item.p2 { border-left: 4px solid var(--primary); }
+  .gap-item .gap-icon {
+    flex-shrink: 0; width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700; color: white;
+  }
+  .gap-item.p0 .gap-icon { background: var(--red); }
+  .gap-item.p1 .gap-icon { background: var(--yellow); }
+  .gap-item.p2 .gap-icon { background: var(--primary); }
+  .gap-item .gap-body { flex: 1; }
+  .gap-item .gap-title { font-weight: 600; font-size: 15px; margin-bottom: 4px; }
+  .gap-item .gap-desc { font-size: 13px; color: var(--text-secondary); margin-bottom: 6px; }
+  .gap-item .gap-action {
+    font-size: 13px; background: var(--code-bg); padding: 8px 12px;
+    border-radius: 6px; color: var(--text);
+  }
+  .gap-item .gap-action strong { color: var(--primary); }
+
+  /* Roadmap */
+  .roadmap-phase {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 20px; margin-bottom: 16px;
+  }
+  .roadmap-phase .phase-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+  }
+  .roadmap-phase .phase-tag {
+    padding: 4px 12px; border-radius: 6px; font-size: 13px; font-weight: 700; color: white;
+  }
+  .roadmap-phase.p0 .phase-tag { background: var(--red); }
+  .roadmap-phase.p1 .phase-tag { background: var(--yellow); }
+  .roadmap-phase.p2 .phase-tag { background: var(--primary); }
+  .roadmap-phase .phase-title { font-size: 16px; font-weight: 600; }
+  .roadmap-phase .phase-desc { font-size: 13px; color: var(--text-secondary); }
+
+  .task-list { list-style: none; }
+  .task-list li {
+    padding: 8px 0; border-bottom: 1px solid var(--border);
+    display: flex; align-items: flex-start; gap: 8px; font-size: 14px;
+  }
+  .task-list li:last-child { border-bottom: none; }
+  .task-list li::before {
+    content: ""; flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--primary); margin-top: 9px;
+  }
+  .task-list li .effort {
+    margin-left: auto; flex-shrink: 0; font-size: 12px;
+    padding: 2px 8px; border-radius: 4px; background: var(--code-bg); color: var(--text-secondary);
+  }
+
+  /* SWOT */
+  .swot-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  }
+  .swot-box {
+    border-radius: 10px; padding: 16px; border: 1px solid var(--border);
+  }
+  .swot-box.s { background: var(--green-light); border-color: var(--green); }
+  .swot-box.w { background: var(--red-light); border-color: var(--red); }
+  .swot-box.o { background: var(--blue-light, var(--primary-light)); border-color: var(--primary); }
+  .swot-box.t { background: var(--yellow-light); border-color: var(--yellow); }
+  .swot-box h4 { font-size: 14px; margin-bottom: 8px; }
+  .swot-box ul { list-style: none; font-size: 13px; }
+  .swot-box ul li { padding: 3px 0; color: var(--text); }
+
+  /* Code */
+  code {
+    background: var(--code-bg); padding: 2px 6px; border-radius: 4px;
+    font-family: "Fira Code", "Cascadia Code", Consolas, monospace; font-size: 13px;
+    color: var(--primary);
+  }
+
+  /* Architecture diagram */
+  .arch-diagram {
+    background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+    padding: 24px; margin-bottom: 16px;
+  }
+  .arch-layer {
+    display: flex; gap: 8px; margin-bottom: 8px; align-items: stretch;
+  }
+  .arch-layer-label {
+    flex-shrink: 0; width: 100px; font-size: 12px; font-weight: 600;
+    color: var(--text-secondary); display: flex; align-items: center;
+  }
+  .arch-blocks { display: flex; gap: 8px; flex-wrap: wrap; flex: 1; }
+  .arch-block {
+    padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 500;
+    border: 1px solid var(--border); background: #f8fafc;
+  }
+  .arch-block.core { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+  .arch-block.gap { background: var(--red-light); color: var(--red); border-color: var(--red); border-style: dashed; }
+
+  /* Citations */
+  .sources { font-size: 12px; color: var(--text-secondary); }
+  .sources a { color: var(--primary); text-decoration: none; }
+  .sources a:hover { text-decoration: underline; }
+  sup a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); }
+    .swot-grid { grid-template-columns: 1fr; }
+    table { font-size: 12px; }
+    th, td { padding: 6px 8px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ===================== HEADER ===================== -->
+<div class="report-header">
+  <h1>PMIS 自研工作流引擎对标差距分析报告</h1>
+  <div class="subtitle">对标国内主流自研工作流引擎，识别核心能力与细节体验差距，给出优化路线图</div>
+  <div class="meta">
+    <span>分析日期：2026-07-02</span>
+    <span>对标对象：Warm-Flow / FlowLong / ruoyi-vue-pro / JeecgBoot / 钉钉审批 / 飞书审批</span>
+    <span>引擎版本：1.1.0</span>
+  </div>
+</div>
+
+<!-- ===================== 1. 执行摘要 ===================== -->
+<section>
+  <h2><span class="num">1</span>执行摘要</h2>
+
+  <div class="stats-grid">
+    <div class="stat-box green">
+      <div class="num">22</div>
+      <div class="label">已实现能力项</div>
+    </div>
+    <div class="stat-box red">
+      <div class="num">2</div>
+      <div class="label">P0 关键差距</div>
+    </div>
+    <div class="stat-box yellow">
+      <div class="num">6</div>
+      <div class="label">P1 重要差距</div>
+    </div>
+    <div class="stat-box blue">
+      <div class="num">8</div>
+      <div class="label">P2 增强差距</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <p>PMIS 自研工作流引擎采用 <strong>7+1 表极简设计</strong>（对标 Warm-Flow），以零第三方 BPMN 依赖的 DOM 解析器为核心，已覆盖<strong>审批流核心链路</strong>的 22 项能力，包括 4 种会签类型（或签/顺序/并行/票签）、10 种审批操作（通过/驳回/转办/委派/前加签/后加签/跳转/批量审批/撤回/催办）、双层事件机制（同步监听器 + 异步 Spring 事件）、多租户全链路、SPI 办理人解析（9 种类型）、版本管理、历史归档、审计轨迹与时间线。</p>
+    <p>对标国内主流引擎后，核心审批操作覆盖度约 <strong>80%</strong>，但在<strong>流程设计器、表单引擎、SLA 自动化、消息通知、效率分析</strong>五大领域存在明显差距。其中流程设计器与表单引擎为 P0 关键差距——所有竞品（含开源 Warm-Flow/FlowLong 和 SaaS 钉钉/飞书）均已标配可视化拖拽设计器与动态表单，而当前引擎仅有节点坐标存储接口，无实际设计器。</p>
+    <h3>Top 3 行动项</h3>
+    <div class="task-list">
+      <li><strong>集成可视化流程设计器</strong>（前端）：引入 bpmn.js 或仿钉钉 SIMPLE 设计器，对接已有 <code>updateNodeCoordinate</code> / <code>deploy</code> / <code>updateDefinition</code> 接口 <span class="effort">P0 / 2-3 周</span></li>
+      <li><strong>补全 SLA 自动化链路</strong>：接入已有 scheduler 模块的 JobHandler，实现到期自动催办 + 超时自动升级/自动通过/拒绝 <span class="effort">P1 / 1-2 周</span></li>
+      <li><strong>实现抄送(CC)节点与消息通知通道</strong>：激活已有 <code>FlowNodeType.CC(2)</code> 枚举，对接站内信/邮件/企业微信推送 <span class="effort">P1 / 1-2 周</span></li>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 2. 分析范围与方法 ===================== -->
+<section>
+  <h2><span class="num">2</span>分析范围与方法</h2>
+  <div class="card">
+    <h3>对标对象选取</h3>
+    <table>
+      <thead>
+        <tr><th>类别</th><th>引擎</th><th>选取理由</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="3">国产开源轻量引擎</td><td>Warm-Flow（温暖流程）</td><td>7 表极简设计，本项目直接对标对象，Gitee ~8.6k Star</td></tr>
+        <tr><td>FlowLong（菠萝工作流）</td><td>8 表设计，中国特色审批功能最完整的轻量引擎</td></tr>
+        <tr><td>ruoyi-vue-pro（芋道）</td><td>Flowable 深度定制最佳实践，GitHub 30k+ Star，双设计器模式</td></tr>
+        <tr><td>国产低代码平台</td><td>JeecgBoot</td><td>低代码一体化（表单+流程+报表），基于 Flowable 改造</td></tr>
+        <tr><td rowspan="2">SaaS 审批产品</td><td>钉钉审批</td><td>国内用户量最大的审批产品，审批人路由类型最丰富</td></tr>
+        <tr><td>飞书审批</td><td>表单能力最强，效率诊断看板为行业标杆</td></tr>
+      </tbody>
+    </table>
+    <h3>分析维度（16 项）</h3>
+    <p>流程设计器 / 表单引擎 / BPMN 支持 / 会签类型 / 审批操作 / 办理人路由 / SLA 超时 / 消息通知 / 抄送 / 子流程 / 网关语义 / 事件监听 / 版本管理 / 历史审计 / 效率分析 / 多租户</p>
+    <h3>数据来源与可信度</h3>
+    <p>本项目代码基于源码直接分析（最高可信度）；竞品数据来自各引擎官网、Gitee/GitHub README、技术博客评测（P1-P2 级），SaaS 产品数据来自官方文档与产品手册。数据截止 2026-07-02。</p>
+  </div>
+</section>
+
+<!-- ===================== 3. 当前引擎能力盘点 ===================== -->
+<section>
+  <h2><span class="num">3</span>当前引擎能力盘点</h2>
+
+  <div class="arch-diagram">
+    <h3>架构概览</h3>
+    <div class="arch-layer">
+      <div class="arch-layer-label">API 层</div>
+      <div class="arch-blocks">
+        <div class="arch-block core">FlowEngineController (40+ 接口)</div>
+        <div class="arch-block core">WorkflowFacade (业务唯一入口)</div>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <div class="arch-layer-label">Service 层</div>
+      <div class="arch-blocks">
+        <div class="arch-block core">FlowDefinitionService</div>
+        <div class="arch-block core">FlowInstanceService</div>
+        <div class="arch-block core">FlowTaskService (1186 行)</div>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <div class="arch-layer-label">引擎核心</div>
+      <div class="arch-blocks">
+        <div class="arch-block core">DefaultFlowAdvancer (状态机)</div>
+        <div class="arch-block core">BpmnXmlParser (DOM 解析)</div>
+        <div class="arch-block core">DefaultFlowVariableStrategy (SpEL)</div>
+        <div class="arch-block gap">FlowAssigneeResolver (空实现兜底)</div>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <div class="arch-layer-label">事件机制</div>
+      <div class="arch-blocks">
+        <div class="arch-block core">FlowEventListener (同步回调)</div>
+        <div class="arch-block core">FlowWorkflowEvent (@Async)</div>
+        <div class="arch-block gap">消息通知通道 (缺失)</div>
+      </div>
+    </div>
+    <div class="arch-layer">
+      <div class="arch-layer-label">数据层</div>
+      <div class="arch-blocks">
+        <div class="arch-block core">pmis_flow_definition</div>
+        <div class="arch-block core">pmis_flow_node</div>
+        <div class="arch-block core">pmis_flow_skip</div>
+        <div class="arch-block core">pmis_flow_instance</div>
+        <div class="arch-block core">pmis_flow_task</div>
+        <div class="arch-block core">pmis_flow_his_task</div>
+        <div class="arch-block core">pmis_flow_user</div>
+        <div class="arch-block core">pmis_flow_audit_log</div>
+      </div>
+    </div>
+    <p style="margin-top:12px;font-size:12px;color:var(--text-secondary)">
+      <span style="color:var(--primary)">蓝色</span> = 已实现核心能力　
+      <span style="color:var(--red)">红色虚线</span> = 存在差距待补全
+    </p>
+  </div>
+
+  <div class="card">
+    <h3>已实现能力清单（22 项）</h3>
+    <table>
+      <thead>
+        <tr><th>能力域</th><th>已实现能力</th><th>实现细节</th></tr>
+      </thead>
+      <tbody>
+        <tr><td rowspan="2">流程定义</td><td>双模式部署</td><td>BPMN 2.0 XML（DOM 解析）+ 轻量 JSON，零第三方依赖</td></tr>
+        <tr><td>版本管理</td><td>发布/停用/切换激活版本/启用/停用/草稿编辑/节点坐标更新</td></tr>
+        <tr><td rowspan="4">会签类型</td><td>OR 或签</td><td>任一通过即推进</td></tr>
+        <tr><td>SEQUENTIAL 顺序会签</td><td>按序逐一切换办理人</td></tr>
+        <tr><td>PARALLEL 并行会签</td><td>全部通过才推进（approveFinished &ge; approveCount）</td></tr>
+        <tr><td>VOTE 票签</td><td>达阈值（required/2+1）即推进</td></tr>
+        <tr><td rowspan="10">审批操作</td><td>通过 pass</td><td>按 performType 分发到 4 种会签逻辑</td></tr>
+        <tr><td>驳回 reject</td><td>支持退回任意历史节点（targetNodeCode）</td></tr>
+        <tr><td>转办 transfer</td><td>先保存原 assignee 再覆盖</td></tr>
+        <tr><td>委派 delegate</td><td>被委派人处理后回到原办理人</td></tr>
+        <tr><td>前加签 countersignBefore</td><td>在当前任务前插入审批人</td></tr>
+        <tr><td>后加签 countersignAfter</td><td>切换为顺序会签模式</td></tr>
+        <tr><td>自由跳转 jump</td><td>管理员强制跳转到任意节点</td></tr>
+        <tr><td>批量审批 batchPass</td><td>对多个任务逐一通过</td></tr>
+        <tr><td>撤回 recall</td><td>仅发起人、仅运行中、下一节点未处理</td></tr>
+        <tr><td>催办 urge</td><td>返回被催办人列表</td></tr>
+        <tr><td rowspan="2">网关</td><td>排他网关（互斥）</td><td>CONDITION 只取第一条匹配，无匹配取默认出边</td></tr>
+        <tr><td>并行网关（join 聚合）</td><td>countPendingByNode 等待其他分支完成</td></tr>
+        <tr><td>办理人路由</td><td>9 种类型</td><td>USER/ROLE/DEPT/SPEL/INITIATOR/LEADER/POSITION/SELF_SELECT/MULTI_LEADER</td></tr>
+        <tr><td>事件机制</td><td>双层事件</td><td>同步 FlowEventListener（15+ 回调）+ 异步 FlowWorkflowEvent（@EventListener+@Async）</td></tr>
+        <tr><td>多租户</td><td>全链路</td><td>所有表含 tenant_id，Service 层自动注入</td></tr>
+        <tr><td>历史审计</td><td>归档 + 审计 + 时间线</td><td>flow_his_task 归档 / flow_audit_log 全操作记录 / getTimeline 合并展示</td></tr>
+        <tr><td>流程图</td><td>高亮当前节点</td><td>getDiagram 返回节点列表带 active 标记</td></tr>
+        <tr><td>统计分析</td><td>节点耗时 + 超期查询</td><td>nodeDurationStats / listOverdue / countOverdue / 多维已办筛选</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===================== 4. 多维对比矩阵 ===================== -->
+<section>
+  <h2><span class="num">4</span>多维对比矩阵</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th>能力维度</th>
+        <th>PMIS 自研</th>
+        <th>Warm-Flow</th>
+        <th>FlowLong</th>
+        <th>ruoyi-vue-pro</th>
+        <th>钉钉审批</th>
+        <th>飞书审批</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>表数量</td><td>7+1</td><td>7</td><td>8</td><td>40+</td><td>—</td><td>—</td>
+      </tr>
+      <tr>
+        <td>流程设计器</td>
+        <td><span class="badge none">无</span></td>
+        <td><span class="badge full">jar 集成+双模式</span></td>
+        <td><span class="badge full">仿飞书/钉钉</span></td>
+        <td><span class="badge full">双设计器</span></td>
+        <td><span class="badge full">可视化拖拽</span></td>
+        <td><span class="badge full">可视化拖拽</span></td>
+      </tr>
+      <tr>
+        <td>表单引擎</td>
+        <td><span class="badge none">仅 form_path</span></td>
+        <td><span class="badge none">解耦不绑定</span></td>
+        <td><span class="badge none">解耦</span></td>
+        <td><span class="badge full">动态表单设计器</span></td>
+        <td><span class="badge full">控件+套件+字段权限</span></td>
+        <td><span class="badge full">最丰富(公式/外部源/智能显示)</span></td>
+      </tr>
+      <tr>
+        <td>BPMN 2.0</td>
+        <td><span class="badge full">XML 解析</span></td>
+        <td><span class="badge none">JSON</span></td>
+        <td><span class="badge none">JSON</span></td>
+        <td><span class="badge full">完整支持</span></td>
+        <td><span class="badge none">非 BPMN</span></td>
+        <td><span class="badge none">非 BPMN</span></td>
+      </tr>
+      <tr>
+        <td>会签类型</td>
+        <td><span class="badge full">4 种(含票签)</span></td>
+        <td><span class="badge full">票签</span></td>
+        <td><span class="badge full">全部+权重</span></td>
+        <td><span class="badge full">全部+比例</span></td>
+        <td><span class="badge full">会签/或签/依次</span></td>
+        <td><span class="badge full">会签/或签/依次</span></td>
+      </tr>
+      <tr>
+        <td>加签(前/后)</td>
+        <td><span class="badge full">前+后</span></td>
+        <td><span class="badge full">加减签</span></td>
+        <td><span class="badge full">前+后+减签</span></td>
+        <td><span class="badge full">前+后+减签</span></td>
+        <td><span class="badge full">前+后</span></td>
+        <td><span class="badge full">支持</span></td>
+      </tr>
+      <tr>
+        <td>减签</td>
+        <td><span class="badge none">无</span></td>
+        <td><span class="badge full">支持</span></td>
+        <td><span class="badge full">支持</span></td>
+        <td><span class="badge full">支持</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge none">—</span></td>
+      </tr>
+      <tr>
+        <td>驳回任意节点</td>
+        <td><span class="badge full">支持</span></td>
+        <td><span class="badge full">支持</span></td>
+        <td><span class="badge full">支持+策略</span></td>
+        <td><span class="badge full">自由驳回</span></td>
+        <td><span class="badge basic">退回发起人</span></td>
+        <td><span class="badge basic">退回发起人</span></td>
+      </tr>
+      <tr>
+        <td>撤回/拿回</td>
+        <td><span class="badge full">撤回</span></td>
+        <td><span class="badge full">拿回</span></td>
+        <td><span class="badge full">拿回+唤醒</span></td>
+        <td><span class="badge full">撤回</span></td>
+        <td><span class="badge full">撤回</span></td>
+        <td><span class="badge full">撤回</span></td>
+      </tr>
+      <tr>
+        <td>转办/委派</td>
+        <td><span class="badge full">转办+委派</span></td>
+        <td><span class="badge full">转办+委派</span></td>
+        <td><span class="badge full">+离职转办+代理</span></td>
+        <td><span class="badge full">转办+委派</span></td>
+        <td><span class="badge full">转交</span></td>
+        <td><span class="badge full">转交</span></td>
+      </tr>
+      <tr>
+        <td>自由跳转</td>
+        <td><span class="badge full">支持</span></td>
+        <td><span class="badge full">任意跳转</span></td>
+        <td><span class="badge full">跳转</span></td>
+        <td><span class="badge full">—</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge none">—</span></td>
+      </tr>
+      <tr>
+        <td>催办</td>
+        <td><span class="badge basic">仅返回列表</span></td>
+        <td><span class="badge none">无</span></td>
+        <td><span class="badge full">短信/邮件/微信/钉钉</span></td>
+        <td><span class="badge none">无</span></td>
+        <td><span class="badge full">自动催办</span></td>
+        <td><span class="badge full">自动催办</span></td>
+      </tr>
+      <tr>
+        <td>抄送(CC)</td>
+        <td><span class="badge none">枚举未实现</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge full">沟通</span></td>
+        <td><span class="badge full">抄送</span></td>
+        <td><span class="badge full">抄送节点</span></td>
+        <td><span class="badge full">抄送节点</span></td>
+      </tr>
+      <tr>
+        <td>子流程</td>
+        <td><span class="badge none">枚举未实现</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge full">同步/异步+自动回跳</span></td>
+        <td><span class="badge full">Call Activity</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge full">子流程触发</span></td>
+      </tr>
+      <tr>
+        <td>包容网关</td>
+        <td><span class="badge basic">枚举+部分 join</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge full">包容分支</span></td>
+        <td><span class="badge full">完整</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge none">—</span></td>
+      </tr>
+      <tr>
+        <td>SLA 超时自动化</td>
+        <td><span class="badge none">仅手动标记</span></td>
+        <td><span class="badge none">无</span></td>
+        <td><span class="badge full">自动通过/拒绝+提醒</span></td>
+        <td><span class="badge none">无</span></td>
+        <td><span class="badge full">自动催办</span></td>
+        <td><span class="badge full">效率诊断</span></td>
+      </tr>
+      <tr>
+        <td>消息通知通道</td>
+        <td><span class="badge none">无</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge full">短信/邮件/微信/钉钉</span></td>
+        <td><span class="badge basic">站内信</span></td>
+        <td><span class="badge full">App 推送</span></td>
+        <td><span class="badge full">三端推送</span></td>
+      </tr>
+      <tr>
+        <td>办理人路由</td>
+        <td><span class="badge full">9 种类型</span></td>
+        <td><span class="badge full">SpEL+动态</span></td>
+        <td><span class="badge full">角色/部门/代理</span></td>
+        <td><span class="badge full">表单+变量+表达式</span></td>
+        <td><span class="badge full">最丰富(多级主管/表单控件)</span></td>
+        <td><span class="badge full">条件+外部数据</span></td>
+      </tr>
+      <tr>
+        <td>审批人为空处理</td>
+        <td><span class="badge none">无</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge full">自动通过/转管理员</span></td>
+        <td><span class="badge full">—</span></td>
+      </tr>
+      <tr>
+        <td>事件监听</td>
+        <td><span class="badge full">同步+异步双层</span></td>
+        <td><span class="badge full">4 种+SpEL</span></td>
+        <td><span class="badge full">触发器(定时/立即)</span></td>
+        <td><span class="badge full">taskListener</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge none">—</span></td>
+      </tr>
+      <tr>
+        <td>版本管理</td>
+        <td><span class="badge full">切换+启停</span></td>
+        <td><span class="badge full">版本切换</span></td>
+        <td><span class="badge full">3 态版本</span></td>
+        <td><span class="badge full">完整</span></td>
+        <td><span class="badge full">—</span></td>
+        <td><span class="badge full">—</span></td>
+      </tr>
+      <tr>
+        <td>历史审计</td>
+        <td><span class="badge full">归档+审计+时间线</span></td>
+        <td><span class="badge full">历史表</span></td>
+        <td><span class="badge full">双历史表+状态</span></td>
+        <td><span class="badge full">归档+分区</span></td>
+        <td><span class="badge full">—</span></td>
+        <td><span class="badge full">—</span></td>
+      </tr>
+      <tr>
+        <td>效率分析</td>
+        <td><span class="badge basic">节点耗时+超期</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge basic">管理后台报表</span></td>
+        <td><span class="badge full">效率诊断(代批率/瓶颈)</span></td>
+      </tr>
+      <tr>
+        <td>多租户</td>
+        <td><span class="badge full">全链路</span></td>
+        <td><span class="badge full">原生</span></td>
+        <td><span class="badge full">原生</span></td>
+        <td><span class="badge full">SaaS</span></td>
+        <td><span class="badge full">—</span></td>
+        <td><span class="badge full">—</span></td>
+      </tr>
+      <tr>
+        <td>动态流程</td>
+        <td><span class="badge none">无</span></td>
+        <td><span class="badge none">—</span></td>
+        <td><span class="badge full">追加+动态构建+暂存</span></td>
+        <td><span class="badge full">自由指定下一审批人</span></td>
+        <td><span class="badge full">发起人自选</span></td>
+        <td><span class="badge full">—</span></td>
+      </tr>
+    </tbody>
+  </table>
+  <p style="font-size:12px;color:var(--text-secondary);margin-top:4px">
+    <span class="badge full">Full</span> 完整支持　
+    <span class="badge basic">Basic</span> 基础/不完整　
+    <span class="badge none">None</span> 未实现　
+    <span class="badge planned">Planned</span> 规划中　
+    "—" 表示该维度不适用或公开资料未提及
+  </p>
+</section>
+
+<!-- ===================== 5. 核心能力差距分析 ===================== -->
+<section>
+  <h2><span class="num">5</span>核心能力差距分析</h2>
+
+  <h3>P0 关键差距（阻塞核心使用场景）</h3>
+
+  <div class="gap-item p0">
+    <div class="gap-icon">P0</div>
+    <div class="gap-body">
+      <div class="gap-title">1. 可视化流程设计器缺失</div>
+      <div class="gap-desc">当前仅有 <code>updateNodeCoordinate</code> 坐标存储接口和 <code>model_value</code> 字段（CLASSICS/MIMIC），无实际设计器前端。所有竞品（含开源 Warm-Flow 的 jar 集成设计器、FlowLong 的仿飞书设计器、ruoyi-vue-pro 的双设计器）均已标配可视化拖拽设计器。流程定义只能通过手写 BPMN XML 或 JSON 完成，非开发人员无法使用。<sup><a href="#cite-1">[1]</a></sup><sup><a href="#cite-2">[2]</a></sup><sup><a href="#cite-3">[3]</a></sup></div>
+      <div class="gap-action"><strong>建议：</strong>前端引入 <strong>bpmn.js</strong>（标准 BPMN 设计器）或基于 <strong>LogicFlow/AntV X6</strong> 自研仿钉钉 SIMPLE 设计器，对接已有 deploy/updateDefinition/updateNodeCoordinate 三个后端接口。可参考 ruoyi-vue-pro 的双设计器模式（SIMPLE 日常 + BPMN 复杂场景）。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p0">
+    <div class="gap-icon">P0</div>
+    <div class="gap-body">
+      <div class="gap-title">2. 表单引擎缺失</div>
+      <div class="gap-desc">当前仅有 <code>form_path</code>（前端路由）和 <code>form_custom</code>（Y/N）两个字段，无表单设计器、无动态表单、无字段级权限控制。钉钉支持按节点设置字段可编辑/只读/隐藏<sup><a href="#cite-7">[7]</a></sup>，飞书提供计算公式、外部数据源关联选项、智能显示条件等最丰富的表单控件<sup><a href="#cite-8">[8]</a></sup>，ruoyi-vue-pro 和 JeecgBoot 均有动态表单设计器<sup><a href="#cite-4">[4]</a></sup><sup><a href="#cite-6">[6]</a></sup>。表单与流程的联动（如表单字段决定审批路由、按节点控制字段权限）是审批系统的核心体验。</div>
+      <div class="gap-action"><strong>建议：</strong>P0 阶段先实现<strong>表单字段权限</strong>（按节点配置可编辑/只读/隐藏），在 <code>pmis_flow_node</code> 增加 <code>form_fields_config</code> JSON 字段；P1 阶段引入轻量表单设计器（可基于 FormMaking/VForm 等开源方案），实现拖拽式表单设计与流程绑定。</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:28px">P1 重要差距（影响用户体验）</h3>
+
+  <div class="gap-item p1">
+    <div class="gap-icon">P1</div>
+    <div class="gap-body">
+      <div class="gap-title">3. SLA 超时自动化链路缺失</div>
+      <div class="gap-desc"><code>pmis_flow_task</code> 表已有 <code>due_at</code> 字段和 <code>listOverdue</code> 查询，但仅支持 <code>timeoutTask</code> 手动标记。无到期自动催办、无超时自动升级、无超时自动通过/拒绝。FlowLong 支持超时自动通过或拒绝 + 自动提醒（短信/邮件/微信/钉钉，可设提醒次数）<sup><a href="#cite-2">[2]</a></sup>，JeecgBoot 支持超时提醒推送<sup><a href="#cite-5">[5]</a></sup>，行业惯例为 24h 自动提醒、48h 升级<sup><a href="#cite-11">[11]</a></sup>。项目已有 scheduler 模块的 JobHandler 机制可复用。</div>
+      <div class="gap-action"><strong>建议：</strong>在 scheduler 模块新增 <code>FlowTimeoutJobHandler</code>，定时扫描 <code>due_at &lt; now AND task_status = 'PENDING'</code> 的任务，按配置策略执行：催办通知 &rarr; 升级上级 &rarr; 自动通过/拒绝。在 <code>pmis_flow_node</code> 增加 <code>sla_config</code> JSON 字段（含 timeout_minutes/action/reminder_count）。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p1">
+    <div class="gap-icon">P1</div>
+    <div class="gap-body">
+      <div class="gap-title">4. 消息通知通道未对接</div>
+      <div class="gap-desc"><code>urge()</code> 方法仅返回被催办人 ID 列表，未实际发送通知。无站内信、邮件、企业微信/钉钉推送。FlowLong 支持短信/邮件/微信/钉钉多通道通知<sup><a href="#cite-2">[2]</a></sup>，钉钉/飞书均支持 App 推送通知<sup><a href="#cite-7">[7]</a></sup><sup><a href="#cite-8">[8]</a></sup>。项目已有 message 模块（@EnableAsync 异步消息）可复用。</div>
+      <div class="gap-action"><strong>建议：</strong>定义 <code>FlowNotificationService</code> 接口，在 <code>FlowEventListener</code> 的 onTaskCreated/onTaskUrged 回调中调用，通过已有 message 模块发送站内信 + 邮件。预留企业微信/钉钉 Webhook 扩展点。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p1">
+    <div class="gap-icon">P1</div>
+    <div class="gap-body">
+      <div class="gap-title">5. 抄送(CC)节点未实现</div>
+      <div class="gap-desc"><code>FlowNodeType.CC(2)</code> 枚举已定义，但 <code>DefaultFlowAdvancer</code> 和 <code>FlowTaskService</code> 中无抄送节点处理逻辑——不生成抄送通知、不跳过、不阻塞流程。钉钉/飞书/企业微信均将抄送节点作为标配<sup><a href="#cite-7">[7]</a></sup><sup><a href="#cite-8">[8]</a></sup><sup><a href="#cite-9">[9]</a></sup>，FlowLong 有"沟通"能力<sup><a href="#cite-2">[2]</a></sup>。</div>
+      <div class="gap-action"><strong>建议：</strong>在 <code>DefaultFlowAdvancer.advance()</code> 中增加 CC 节点判断：遇到 CC 类型节点时，生成抄送记录（复用 <code>pmis_flow_audit_log</code> 或新增 <code>pmis_flow_cc_record</code> 表），触发通知事件后自动跳过，不阻塞主流程。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p1">
+    <div class="gap-icon">P1</div>
+    <div class="gap-body">
+      <div class="gap-title">6. 子流程未实现</div>
+      <div class="gap-desc"><code>FlowNodeType.SUBPROCESS(7)</code> 枚举已定义，BpmnXmlParser 可解析 callActivity，但 <code>DefaultFlowAdvancer</code> 无子流程启动/等待/回跳逻辑。FlowLong 支持同步/异步子流程 + 结束自动回跳主流程<sup><a href="#cite-2">[2]</a></sup>，飞书支持子流程自动触发<sup><a href="#cite-8">[8]</a></sup>，Flowable 原生支持 Call Activity<sup><a href="#cite-10">[10]</a></sup>。</div>
+      <div class="gap-action"><strong>建议：</strong>在 <code>DefaultFlowAdvancer</code> 增加子流程处理：遇到 SUBPROCESS 节点时，通过 <code>WorkflowFacade.startProcess()</code> 启动子流程实例，在 <code>pmis_flow_instance</code> 增加 <code>parent_instance_id</code> / <code>parent_node_code</code> 字段记录父子关系，子流程完成时通过事件回调推进主流程。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p1">
+    <div class="gap-icon">P1</div>
+    <div class="gap-body">
+      <div class="gap-title">7. 审批人为空时无兜底处理</div>
+      <div class="gap-desc">当 ROLE/DEPT/POSITION 展开后实际办理人为空时，任务会卡在 PENDING 状态无法推进。钉钉提供"自动通过/转交给管理员/指定人员审批"三种策略<sup><a href="#cite-7">[7]</a></sup>，这是避免流程卡死的关键兜底机制。</div>
+      <div class="gap-action"><strong>建议：</strong>在 <code>FlowTaskServiceImpl.createTask()</code> 的 <code>resolveAssignee</code> 之后增加空值检查：若展开结果为空，按 <code>pmis_flow_node.ext</code> 中配置的 <code>emptyStrategy</code>（AUTO_PASS / TRANSFER_ADMIN / ASSIGN_SPECIFIED）处理。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p1">
+    <div class="gap-icon">P1</div>
+    <div class="gap-body">
+      <div class="gap-title">8. 减签操作缺失</div>
+      <div class="gap-desc">已实现前加签（countersignBefore）和后加签（countersignAfter），但缺少减签——从会签任务中移除某个审批人。Warm-Flow、FlowLong、ruoyi-vue-pro 均支持加减签<sup><a href="#cite-1">[1]</a></sup><sup><a href="#cite-2">[2]</a></sup><sup><a href="#cite-3">[3]</a></sup>。</div>
+      <div class="gap-action"><strong>建议：</strong>在 <code>FlowTaskService</code> 增加 <code>countersignRemove(FlowTaskOperateDTO dto)</code> 方法：从 <code>pmis_flow_user</code> 中标记指定用户为 SKIPPED，若移除后 approveCount 需同步调整。</div>
+    </div>
+  </div>
+
+  <h3 style="margin-top:28px">P2 增强差距（提升竞争力）</h3>
+
+  <div class="gap-item p2">
+    <div class="gap-icon">P2</div>
+    <div class="gap-body">
+      <div class="gap-title">9. 审批效率分析看板不足</div>
+      <div class="gap-desc">已有 <code>nodeDurationStats</code>（节点平均耗时）和 <code>listOverdue</code>（超期任务），但缺少审批效率看板。飞书的效率诊断看板支持单量/平均耗时/<strong>代批率</strong>/瓶颈分析（团队+个人双视角）<sup><a href="#cite-8">[8]</a></sup>，是行业标杆。</div>
+      <div class="gap-action"><strong>建议：</strong>基于已有 <code>pmis_flow_his_task</code> 聚合统计，新增 API：审批单量趋势、平均审批时长、代批率（非本人完成比例）、节点瓶颈排名（耗时 Top N）。前端用 ECharts 渲染。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p2">
+    <div class="gap-icon">P2</div>
+    <div class="gap-body">
+      <div class="gap-title">10. 包容网关语义不完整</div>
+      <div class="gap-desc"><code>FlowNodeType.INCLUSIVE(5)</code> 已定义且 <code>isJoinNode</code> 包含该类型，但 <code>resolvePassSkips</code> 未区分包容网关与排他网关的语义差异——包容网关应允许多条匹配的出边同时通过（类似并行），而当前排他网关互斥逻辑会截断。FlowLong 和 Flowable 均完整支持包容网关<sup><a href="#cite-2">[2]</a></sup><sup><a href="#cite-10">[10]</a></sup>。</div>
+      <div class="gap-action"><strong>建议：</strong>在 <code>resolvePassSkips</code> 中增加节点类型判断：CONDITION 排他互斥（break），INCLUSIVE 包容不 break（允许多条匹配），其余节点取全部匹配。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p2">
+    <div class="gap-icon">P2</div>
+    <div class="gap-body">
+      <div class="gap-title">11. 并行网关 join 逻辑边界场景</div>
+      <div class="gap-desc">当前 join 聚合通过 <code>countPendingByNode(instanceId, nodeCode)</code> 判断是否有未完成任务，但仅按 nodeCode 统计可能遗漏跨分支场景。此外缺少对"分支已完成但 join 节点未激活"的显式状态跟踪。</div>
+      <div class="gap-action"><strong>建议：</strong>引入 <code>pmis_flow_token</code> 令牌表或在 <code>pmis_flow_instance.variable</code> 中维护分支完成计数器，确保 join 聚合的精确性。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p2">
+    <div class="gap-icon">P2</div>
+    <div class="gap-body">
+      <div class="gap-title">12. 动态流程/自由流程缺失</div>
+      <div class="gap-desc">当前流程定义必须预先部署，运行时不可动态修改。FlowLong 支持追加（发起后动态追加节点处理人）+ 动态构建任务 + 暂存待审<sup><a href="#cite-2">[2]</a></sup>，ruoyi-vue-pro 支持自由指定下一环节审批人<sup><a href="#cite-3">[3]</a></sup>，钉钉支持发起人自选审批人<sup><a href="#cite-7">[7]</a></sup>。</div>
+      <div class="gap-action"><strong>建议：</strong>P2 阶段实现"发起人自选审批人"（在 <code>FlowStartProcessDTO</code> 增加 <code>nodeAssignees</code> Map 参数，启动时按节点注入），满足灵活审批场景。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p2">
+    <div class="gap-icon">P2</div>
+    <div class="gap-body">
+      <div class="gap-title">13. 会签并发安全</div>
+      <div class="gap-desc"><code>incrementFinished</code> 使用 SQL <code>UPDATE SET approve_finished = approve_finished + 1</code> 虽然是原子操作，但缺少<strong>完成条件判断的并发保护</strong>——两个线程同时读取 approve_finished=2（阈值=3），各自+1 后都判断未达阈值，导致多推进一次。Flowable 使用乐观锁（version 字段）解决此问题<sup><a href="#cite-10">[10]</a></sup>。</div>
+      <div class="gap-action"><strong>建议：</strong>在 <code>doParallelPass</code> / <code>doVotePass</code> 推进判断处加分布式锁（Redis SET NX EX，项目已有幂等锁基础设施），或使用 <code>SELECT ... FOR UPDATE</code> 行锁确保 approve_finished 读取-判断-推进的原子性。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p2">
+    <div class="gap-icon">P2</div>
+    <div class="gap-body">
+      <div class="gap-title">14. 已阅/沟通能力缺失</div>
+      <div class="gap-desc">无"已阅"（标记已查看但不审批）和"沟通"（向他人征询意见但不转移审批权）能力。FlowLong 支持已阅 + 沟通<sup><a href="#cite-2">[2]</a></sup>。</div>
+      <div class="gap-action"><strong>建议：</strong>在 <code>FlowTaskService</code> 增加 <code>markRead(taskId, userId)</code> 和 <code>communicate(taskId, targetUserId, comment)</code> 方法，复用 <code>pmis_flow_audit_log</code> 记录。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p2">
+    <div class="gap-icon">P2</div>
+    <div class="gap-body">
+      <div class="gap-title">15. 流程模板库缺失</div>
+      <div class="gap-desc">当前预置 4 个业务流定义（立项/合同变更/销项/请假），但无通用模板库。飞书提供 100+ 模板覆盖 10+ 行业<sup><a href="#cite-8">[8]</a></sup>。</div>
+      <div class="gap-action"><strong>建议：</strong>沉淀 PMIS 领域常用流程模板（采购审批/费用报销/出差申请/用印申请等），支持一键导入。</div>
+    </div>
+  </div>
+
+  <div class="gap-item p2">
+    <div class="gap-icon">P2</div>
+    <div class="gap-body">
+      <div class="gap-title">16. 历史数据归档策略优化</div>
+      <div class="gap-desc">当前任务完成后立即归档到 <code>pmis_flow_his_task</code>，但无定时清理策略和分区优化。ruoyi-vue-pro 支持定时归档 30 天前数据 + 按 tenant_id HASH 分区<sup><a href="#cite-3">[3]</a></sup>。</div>
+      <div class="gap-action"><strong>建议：</strong>在 scheduler 模块增加 <code>FlowHistoryArchiveJobHandler</code>，定期将已完成实例+历史任务迁移到冷存储表或归档库，保持热表性能。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 6. SWOT 分析 ===================== -->
+<section>
+  <h2><span class="num">6</span>SWOT 分析</h2>
+  <div class="swot-grid">
+    <div class="swot-box s">
+      <h4>优势 (Strengths)</h4>
+      <ul>
+        <li>7+1 表极简设计，零第三方 BPMN 依赖，维护成本低</li>
+        <li>BPMN 2.0 XML 解析能力（多数轻量引擎仅 JSON），兼容标准流程图</li>
+        <li>4 种会签类型完整覆盖，含票签权重</li>
+        <li>双层事件机制（同步+异步），SPI 扩展点设计良好</li>
+        <li>9 种办理人路由类型，含 SELF_SELECT/MULTI_LEADER</li>
+        <li>多租户全链路、provider_trace_id 链路追踪</li>
+        <li>Facade 门面模式隔离业务，110 个单元测试覆盖核心逻辑</li>
+      </ul>
+    </div>
+    <div class="swot-box w">
+      <h4>劣势 (Weaknesses)</h4>
+      <ul>
+        <li>无可视化流程设计器，非开发人员无法配置流程</li>
+        <li>无表单引擎，表单与流程联动能力缺失</li>
+        <li>SLA 仅手动标记，无自动化超时处理</li>
+        <li>无消息通知通道，催办仅返回列表</li>
+        <li>抄送/子流程枚举已定义但未实现</li>
+        <li>会签并发安全缺乏分布式锁保护</li>
+        <li>审批效率分析仅基础统计，无看板</li>
+      </ul>
+    </div>
+    <div class="swot-box o">
+      <h4>机会 (Opportunities)</h4>
+      <ul>
+        <li>项目已有 scheduler 模块和 message 模块可直接复用</li>
+        <li>前端已集成 ECharts，可快速搭建效率看板</li>
+        <li>已有 FlowAssigneeResolver SPI 接口，业务模块可注入实现</li>
+        <li>国产权信创趋势下，自研引擎无 License 风险</li>
+        <li>PMIS 项目管理领域流程相对标准化，模板可复用性高</li>
+      </ul>
+    </div>
+    <div class="swot-box t">
+      <h4>威胁 (Threats)</h4>
+      <ul>
+        <li>Warm-Flow/FlowLong 社区活跃迭代快，功能差距可能扩大</li>
+        <li>钉钉/飞书审批免费且体验优秀，客户可能要求对接而非自建</li>
+        <li>若流程设计器/表单引擎迟迟不补，业务方可能绕过工作流模块</li>
+        <li>会签并发问题在高并发场景下可能引发数据不一致</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== 7. 优化路线图 ===================== -->
+<section>
+  <h2><span class="num">7</span>优化路线图</h2>
+
+  <div class="roadmap-phase p0">
+    <div class="phase-header">
+      <span class="phase-tag">P0</span>
+      <span class="phase-title">第一阶段：补全核心可用性（2-4 周）</span>
+    </div>
+    <div class="phase-desc">目标：让非开发人员能够可视化设计流程并配置表单权限，达到"可用"门槛</div>
+    <ul class="task-list">
+      <li>集成可视化流程设计器（bpmn.js 或 LogicFlow 仿钉钉 SIMPLE 设计器），对接 deploy/updateDefinition/updateNodeCoordinate <span class="effort">2-3 周</span></li>
+      <li>表单字段权限：pmis_flow_node 增加 form_fields_config 字段，按节点配置字段可编辑/只读/隐藏 <span class="effort">3-5 天</span></li>
+      <li>审批人为空兜底处理：createTask 中增加空值检查 + emptyStrategy 策略 <span class="effort">2-3 天</span></li>
+      <li>包容网关语义修正：resolvePassSkips 区分 CONDITION(互斥) vs INCLUSIVE(多匹配) <span class="effort">1 天</span></li>
+    </ul>
+  </div>
+
+  <div class="roadmap-phase p1">
+    <div class="phase-header">
+      <span class="phase-tag">P1</span>
+      <span class="phase-title">第二阶段：补全审批体验链路（3-4 周）</span>
+    </div>
+    <div class="phase-desc">目标：SLA 自动化、消息通知、抄送/子流程/减签全面落地，达到"好用"水平</div>
+    <ul class="task-list">
+      <li>SLA 自动化：scheduler 新增 FlowTimeoutJobHandler，实现到期催办 + 超时升级/自动通过/拒绝 <span class="effort">1-2 周</span></li>
+      <li>消息通知通道：定义 FlowNotificationService，对接 message 模块发站内信+邮件，预留企微/钉钉 Webhook <span class="effort">1 周</span></li>
+      <li>抄送(CC)节点实现：DefaultFlowAdvancer 增加 CC 处理逻辑，生成抄送记录+通知后自动跳过 <span class="effort">3-5 天</span></li>
+      <li>子流程实现：advance 增加 SUBPROCESS 处理，parent_instance_id 字段，子流程完成事件回调推进主流程 <span class="effort">1 周</span></li>
+      <li>减签操作：FlowTaskService 增加 countersignRemove 方法 <span class="effort">2-3 天</span></li>
+      <li>会签并发安全：doParallelPass/doVotePass 增加分布式锁或行锁 <span class="effort">2-3 天</span></li>
+    </ul>
+  </div>
+
+  <div class="roadmap-phase p2">
+    <div class="phase-header">
+      <span class="phase-tag">P2</span>
+      <span class="phase-title">第三阶段：差异化与竞争力提升（4-6 周）</span>
+    </div>
+    <div class="phase-desc">目标：效率分析看板、动态流程、表单设计器、流程模板库，达到"领先"水平</div>
+    <ul class="task-list">
+      <li>审批效率分析看板：基于 his_task 聚合，新增单量趋势/平均耗时/代批率/瓶颈排名 API + ECharts 前端 <span class="effort">1-2 周</span></li>
+      <li>轻量表单设计器：引入 VForm/FormMaking 等开源方案，实现拖拽式表单设计与流程绑定 <span class="effort">2-3 周</span></li>
+      <li>发起人自选审批人：FlowStartProcessDTO 增加 nodeAssignees 参数，启动时按节点注入 <span class="effort">3-5 天</span></li>
+      <li>已阅/沟通能力：markRead + communicate 方法 <span class="effort">2-3 天</span></li>
+      <li>流程模板库：沉淀 PMIS 领域 8-10 个常用模板，支持一键导入 <span class="effort">1 周</span></li>
+      <li>历史数据归档策略：scheduler 新增 FlowHistoryArchiveJobHandler 定期归档 <span class="effort">3-5 天</span></li>
+      <li>并行网关 join 令牌机制优化：引入分支完成计数器确保精确聚合 <span class="effort">1 周</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- ===================== 8. 差异化策略 ===================== -->
+<section>
+  <h2><span class="num">8</span>差异化策略</h2>
+  <div class="card">
+    <table>
+      <thead>
+        <tr><th>策略层</th><th>含义</th><th>具体行动</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Catch-up 追赶</td>
+          <td>竞品普遍已有但本项目缺失的能力</td>
+          <td>流程设计器、表单引擎、SLA 自动化、消息通知、抄送、子流程、减签——P0/P1 阶段全部补齐</td>
+        </tr>
+        <tr>
+          <td>Differentiate 差异化</td>
+          <td>本项目已有优势或可领先的领域</td>
+          <td><strong>BPMN 2.0 XML 双模式部署</strong>（Warm-Flow/FlowLong 仅 JSON）、<strong>PMIS 领域流程模板库</strong>（项目管理专用审批场景沉淀）、<strong>provider_trace_id 全链路追踪</strong>（微服务可观测性优势）</td>
+        </tr>
+        <tr>
+          <td>Innovate 创新</td>
+          <td>蓝海机会，竞品未覆盖</td>
+          <td><strong>AI 审批辅助</strong>（项目已有 Agent 模块，可接入智能路由决策/风险预警/自动审批建议）、<strong>项目-流程联动</strong>（基于 PMIS 预算/合同/成本数据驱动审批条件路由，非通用 OA 可实现）</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ===================== Sources ===================== -->
+<section>
+  <h2><span class="num">9</span>参考资料</h2>
+  <div class="sources">
+    <a id="cite-1"></a>[1] [官方] Warm-Flow Gitee README — 7 表极简工作流引擎，jar 集成设计器+仿钉钉双模式<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://gitee.com/dromara/warm-flow<br><br>
+
+    <a id="cite-2"></a>[2] [官方] FlowLong GitHub README — 8 表轻量引擎，中国特色审批功能最完整（离职转办/唤醒/暂存/AI 审批）<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://github.com/aizuda/flowlong<br><br>
+
+    <a id="cite-3"></a>[3] [官方] ruoyi-vue-pro GitHub — Flowable 深度定制，双设计器（SIMPLE+BPMN），会签/加签/减签/撤回源码完整<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://github.com/YunaiV/ruoyi-vue-pro<br><br>
+
+    <a id="cite-4"></a>[4] [官方] FlowLong 表结构文档 — flw_* 8 张表设计，含 expire_time/remind_time/remind_repeat SLA 字段<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://flowlong.aizuda.com/docs/tables<br><br>
+
+    <a id="cite-5"></a>[5] [官方] JeecgBoot 流程设计器 — 可视化拖拽设计+Online 表单+超时提醒推送<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://www.jeecg.com/processIndex<br><br>
+
+    <a id="cite-6"></a>[6] [官方] JeecgBoot 表单设计 — Online 表单设计器，拖拽即开发<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://www.jeecg.com/formIndex<br><br>
+
+    <a id="cite-7"></a>[7] [官方] 钉钉审批产品文档 — 可视化设计器/审批人路由（多级主管/表单控件）/加签/撤回/自动催办/字段权限<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://www.feishu.cn/hc/zh-CN/articles/360033971554 （飞书管理员手册，含钉钉对比）<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://open.dingtalk.com/document/orgapp/api-premiumappendtask （加签 API）<br><br>
+
+    <a id="cite-8"></a>[8] [官方] 飞书审批官网 — 表单控件最丰富（云文档/公式/外部选项/智能显示），效率诊断看板（代批率/瓶颈分析）<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://www.feishu.cn/product/approval<br><br>
+
+    <a id="cite-9"></a>[9] [行业报道] 企业微信审批功能 — 预设模板/会签或签/通过驳回转发<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://wescrm.com/siyuzhishiku/qiweiyunying/6618.html<br><br>
+
+    <a id="cite-10"></a>[10] [官方] Flowable 开源页 — 完整 BPMN 2.0/CMMN/DMN 三引擎，REST API，多实例会签<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;https://www.flowable.com/open-source<br><br>
+
+    <a id="cite-11"></a>[11] [行业报道] 企业文件审批流 5 种模式 — 24h 自动提醒/48h 升级行业惯例<br>
+    &nbsp;&nbsp;&nbsp;&nbsp;http://m.toutiao.com/group/7647105859079651881/<br>
+  </div>
+</section>
+
+</div>
+</body>
+</html>

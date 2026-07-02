@@ -1,6 +1,6 @@
 package com.njydsz.pmis.common.config;
 
-import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.BlockExceptionHandler;
+import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.BlockExceptionHandler;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,7 +24,7 @@ class SentinelAutoConfigurationTest {
         BlockExceptionHandler handler = config.sentinelBlockExceptionHandler();
 
         MockHttpServletResponse response = new MockHttpServletResponse();
-        handler.handle(null, response, new FlowException("test", "default"));
+        handler.handle(null, response, "test-origin", new FlowException("test", "default"));
 
         assertThat(response.getStatus()).isEqualTo(429);
         String body = response.getContentAsString();
@@ -38,7 +38,7 @@ class SentinelAutoConfigurationTest {
         BlockExceptionHandler handler = config.sentinelBlockExceptionHandler();
 
         MockHttpServletResponse response = new MockHttpServletResponse();
-        handler.handle(null, response,
+        handler.handle(null, response, "test-origin",
                 new com.alibaba.csp.sentinel.slots.block.degrade.DegradeException("default"));
 
         assertThat(response.getStatus()).isEqualTo(503);
@@ -53,7 +53,7 @@ class SentinelAutoConfigurationTest {
         BlockExceptionHandler handler = config.sentinelBlockExceptionHandler();
 
         MockHttpServletResponse response = new MockHttpServletResponse();
-        handler.handle(null, response, new FlowException("test", "default"));
+        handler.handle(null, response, "test-origin", new FlowException("test", "default"));
 
         String body = response.getContentAsString();
         assertThat(body).contains("\"code\"");

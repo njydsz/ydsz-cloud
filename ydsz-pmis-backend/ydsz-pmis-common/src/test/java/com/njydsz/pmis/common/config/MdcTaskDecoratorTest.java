@@ -156,8 +156,11 @@ class MdcTaskDecoratorTest {
 
         // 第一次捕获
         MDC.put("traceId", "trace-A");
+        CountDownLatch latchA = new CountDownLatch(1);
+        AtomicReference<String> traceIdA = new AtomicReference<>();
         Runnable decoratedA = decorator.decorate(() -> {
-            // decoratedA 捕获的是 trace-A
+            traceIdA.set(MDC.get("traceId"));
+            latchA.countDown();
         });
 
         // 改变 MDC 后第二次捕获
@@ -170,10 +173,16 @@ class MdcTaskDecoratorTest {
             latch.countDown();
         });
 
-        Thread thread = new Thread(decoratedB);
-        thread.start();
+        // 启动两个异步线程分别执行，应各自捕获到 decorate 调用时的 MDC
+        Thread threadA = new Thread(decoratedA);
+        threadA.start();
+        Thread threadB = new Thread(decoratedB);
+        threadB.start();
+        latchA.await();
         latch.await();
 
+        // decoratedA 捕获的是 trace-A（第一次 decorate 时）
+        assertThat(traceIdA.get()).isEqualTo("trace-A");
         // decoratedB 捕获的是 trace-B（在 decorate 调用时捕获）
         assertThat(asyncTraceId.get()).isEqualTo("trace-B");
     }

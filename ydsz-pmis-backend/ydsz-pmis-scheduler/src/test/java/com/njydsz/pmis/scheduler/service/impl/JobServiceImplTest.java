@@ -5,7 +5,6 @@ import com.njydsz.pmis.scheduler.entity.JobDO;
 import com.njydsz.pmis.scheduler.entity.JobLogDO;
 import com.njydsz.pmis.scheduler.mapper.JobLogMapper;
 import com.njydsz.pmis.scheduler.mapper.JobMapper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,7 +15,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
-import org.springframework.scheduling.support.CronExpression;
 
 import java.lang.reflect.Method;
 import java.time.Duration;
@@ -41,6 +39,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("JobServiceImpl 调度服务测试")
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class JobServiceImplTest {
 
     /** 任务定义 Mapper（Mock） */
@@ -148,7 +147,7 @@ class JobServiceImplTest {
         // 通过反射调用 executeJob(job, false)
         Method method = JobServiceImpl.class.getDeclaredMethod("executeJob", JobDO.class, boolean.class);
         method.setAccessible(true);
-        Long logId = (Long) method.invoke(service, job, false);
+        method.invoke(service, job, false);
 
         // 验证: 获取了锁
         verify(valueOps).setIfAbsent(eq("pmis:job:lock:scheduled-job"), anyString(), any(Duration.class));

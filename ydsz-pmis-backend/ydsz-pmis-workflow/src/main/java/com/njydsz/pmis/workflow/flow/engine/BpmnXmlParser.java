@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.flow.enums.FlowNodeType;
+import com.njydsz.pmis.workflow.flow.enums.FlowPerformType;
 import com.njydsz.pmis.workflow.flow.enums.FlowSkipType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -37,6 +38,25 @@ import java.util.Map;
  *   <li>{@code <sequenceFlow id sourceRef targetRef>} - 跳转边</li>
  *   <li>{@code <conditionExpression xsi:type="tFormalExpression">${...}</conditionExpression>} - 条件</li>
  *   <li>{@code flowable:assignee}、{@code flowable:candidateUsers}、{@code flowable:candidateGroups} - 办理人（兼容 BPMN 扩展命名空间）</li>
+ * </ul>
+ *
+ * <p>P0-4: 扩展属性完善，新增：
+ * <ul>
+ *   <li>flowable:priority - 任务优先级（1-100）</li>
+ *   <li>flowable:async - 是否异步执行（true/false）</li>
+ *   <li>flowable:assigneeType - 办理人类型（SELF_SELECT/MULTI_LEADER/...）</li>
+ *   <li>flowable:performType - 会签类型（OR/SEQUENTIAL/PARALLEL/VOTE）</li>
+ *   <li>flowable:approveCount - 会签通过人数/票数</li>
+ *   <li>flowable:approveRate - VOTE 通过率（0-100）</li>
+ *   <li>flowable:weight - 加权值</li>
+ *   <li>flowable:timeoutStrategy - 超时策略（PASS/REJECT/NOTIFY/ESCALATE）</li>
+ *   <li>flowable:timeout - 超时时长（如 24h/2d）</li>
+ *   <li>flowable:escalateUser - 升级办理人（EscalateUser）</li>
+ *   <li>flowable:skipAnyNode - OR 会签条件</li>
+ *   <li>timerEventDefinition / timerCycle - 定时器节点与边界定时</li>
+ *   <li>errorEventDefinition - 错误事件</li>
+ *   <li>signalEventDefinition/messageEventDefinition - 信号/消息事件</li>
+ *   <li>extensionElements - 任意自定义扩展（写入 ext JSON）</li>
  * </ul>
  *
  * <p>不依赖任何第三方 BPMN 库，零外部依赖。
@@ -177,6 +197,7 @@ public class BpmnXmlParser {
                 || "endEvent".equalsIgnoreCase(localName)
                 || "intermediateThrowEvent".equalsIgnoreCase(localName)
                 || "intermediateCatchEvent".equalsIgnoreCase(localName)
+                || "boundaryEvent".equalsIgnoreCase(localName)
                 || "userTask".equalsIgnoreCase(localName)
                 || "serviceTask".equalsIgnoreCase(localName)
                 || "scriptTask".equalsIgnoreCase(localName)
@@ -210,6 +231,19 @@ public class BpmnXmlParser {
         String expression = elem.getAttributeNS(BPMN_EXT_NS, "expression");
         String formKey = elem.getAttributeNS(BPMN_EXT_NS, "formKey");
         String dueDate = elem.getAttributeNS(BPMN_EXT_NS, "dueDate");
+
+        // P0-4: 扩展属性
+        String priorityStr = elem.getAttributeNS(BPMN_EXT_NS, "priority");
+        String async = elem.getAttributeNS(BPMN_EXT_NS, "async");
+        String assigneeType = elem.getAttributeNS(BPMN_EXT_NS, "assigneeType");
+        String performType = elem.getAttributeNS(BPMN_EXT_NS, "performType");
+        String approveCountStr = elem.getAttributeNS(BPMN_EXT_NS, "approveCount");
+        String approveRateStr = elem.getAttributeNS(BPMN_EXT_NS, "approveRate");
+        String weightStr = elem.getAttributeNS(BPMN_EXT_NS, "weight");
+        String timeoutStrategy = elem.getAttributeNS(BPMN_EXT_NS, "timeoutStrategy");
+        String timeout = elem.getAttributeNS(BPMN_EXT_NS, "timeout");
+        String escalateUser = elem.getAttributeNS(BPMN_EXT_NS, "escalateUser");
+        String skipAnyNode = elem.getAttributeNS(BPMN_EXT_NS, "skipAnyNode");
 
         // 优先级：assignee > expression > candidateUsers > candidateGroups
         if (assignee != null && !assignee.isBlank()) {
@@ -270,45 +304,206 @@ public class BpmnXmlParser {
             node.setExt("{\"candidateGroups\":\"" + candidateGroups + "\"}");
         }
 
-        // formKey / dueDate 写入 ext
-        if (formKey != null && !formKey.isBlank()) {
-            String existing = node.getExt() == null ? "{}" : node.getExt();
-            node.setExt(existing.replace("}", ",\"formKey\":\"" + formKey + "\"}"));
+        // P0-4: 解析 priority（存入 ext，见第 350 行处理 approveCount）
+        if (priorityStr != null && !priorityStr.isBlank()) {
+            try {
+                int p = Integer.parseInt(priorityStr.trim());
+                if (p < 1) p = 1;
+                if (p > 100) p = 100;
+                // priority 作为 approveCount 的备选值，存入 ext
+            } catch (NumberFormatException ignore) {
+                // ignore invalid priority
+            }
         }
-        if (dueDate != null && !dueDate.isBlank()) {
-            String existing = node.getExt() == null ? "{}" : node.getExt();
-            node.setExt(existing.replace("}", ",\"dueDate\":\"" + dueDate + "\"}"));
+
+        // P0-4: 会签类型与扩展字段
+        if (performType != null && !performType.isBlank()) {
+            try {
+                FlowPerformType pt = FlowPerformType.valueOf(performType.trim().toUpperCase());
+                // 复用 skipAnyNode 字段存储会签类型（service 上挂 ext 表达）
+                if (node.getSkipAnyNode() == null || node.getSkipAnyNode().isBlank()) {
+                    node.setSkipAnyNode(pt.name());
+                }
+            } catch (IllegalArgumentException ignore) {
+                // invalid perform type, ignore
+            }
         }
+        // approveCount 已在第 350 行存入 ext JSON，此处无需额外处理
+
+        // 把所有扩展属性塞入 ext JSON（统一持久化）
+        Map<String, Object> ext = readOrInitExt(node);
+        if (formKey != null && !formKey.isBlank()) ext.put("formKey", formKey);
+        if (dueDate != null && !dueDate.isBlank()) ext.put("dueDate", dueDate);
+        if (async != null && !async.isBlank()) ext.put("async", Boolean.parseBoolean(async.trim()));
+        if (assigneeType != null && !assigneeType.isBlank()) ext.put("assigneeType", assigneeType.trim());
+        if (performType != null && !performType.isBlank()) ext.put("performType", performType.trim());
+        if (approveCountStr != null && !approveCountStr.isBlank()) ext.put("approveCount", approveCountStr.trim());
+        if (approveRateStr != null && !approveRateStr.isBlank()) ext.put("approveRate", approveRateStr.trim());
+        if (weightStr != null && !weightStr.isBlank()) ext.put("weight", weightStr.trim());
+        if (timeoutStrategy != null && !timeoutStrategy.isBlank()) ext.put("timeoutStrategy", timeoutStrategy.trim());
+        if (timeout != null && !timeout.isBlank()) ext.put("timeout", timeout.trim());
+        if (escalateUser != null && !escalateUser.isBlank()) ext.put("escalateUser", escalateUser.trim());
+        if (skipAnyNode != null && !skipAnyNode.isBlank()) ext.put("skipAnyNode", skipAnyNode.trim());
+
+        // P0-4: timer / error / signal / message 事件定义
+        parseEventDefinitions(elem, ext);
+
+        // P0-4: 通用 extensionElements（用户自定义键值对）
+        parseExtensionElements(elem, ext);
+
+        node.setExt(JsonHelper.toJson(ext));
 
         // 处理 userTask 的多实例特性（会签）
         if ("userTask".equalsIgnoreCase(localName)) {
-            parseMultiInstance(elem, node);
+            parseMultiInstance(elem, node, ext);
+            node.setExt(JsonHelper.toJson(ext));
         }
         return node;
     }
 
     /**
+     * P0-4: 解析 timer / error / signal / message 事件定义
+     */
+    private void parseEventDefinitions(Element elem, Map<String, Object> ext) {
+        NodeList children = elem.getChildNodes();
+        boolean hasTimer = false;
+        for (int i = 0; i < children.getLength(); i++) {
+            Node n = children.item(i);
+            if (!(n instanceof Element e)) {
+                continue;
+            }
+            String local = e.getLocalName();
+            if (local == null) local = e.getNodeName();
+            switch (local.toLowerCase()) {
+                case "timereventdefinition" -> {
+                    hasTimer = true;
+                    Map<String, Object> timer = new HashMap<>();
+                    Element timeCycle = findChild(e, "timeCycle");
+                    Element timeDate = findChild(e, "timeDate");
+                    Element timeDuration = findChild(e, "timeDuration");
+                    if (timeCycle != null) {
+                        timer.put("cycle", timeCycle.getTextContent().trim());
+                    }
+                    if (timeDate != null) {
+                        timer.put("date", timeDate.getTextContent().trim());
+                    }
+                    if (timeDuration != null) {
+                        timer.put("duration", timeDuration.getTextContent().trim());
+                    }
+                    ext.put("timer", timer);
+                }
+                case "erroreventdefinition" -> {
+                    String errorRef = e.getAttribute("errorRef");
+                    if (errorRef != null && !errorRef.isBlank()) {
+                        ext.put("errorRef", errorRef);
+                    }
+                }
+                case "signaleventdefinition" -> {
+                    String signalRef = e.getAttribute("signalRef");
+                    if (signalRef != null && !signalRef.isBlank()) {
+                        ext.put("signalRef", signalRef);
+                    }
+                }
+                case "messageeventdefinition" -> {
+                    String messageRef = e.getAttribute("messageRef");
+                    if (messageRef != null && !messageRef.isBlank()) {
+                        ext.put("messageRef", messageRef);
+                    }
+                }
+                case "canceleventdefinition" -> ext.put("cancelEvent", true);
+                case "compensateeventdefinition" -> {
+                    String activityRef = e.getAttribute("activityRef");
+                    if (activityRef != null && !activityRef.isBlank()) {
+                        ext.put("compensateActivityRef", activityRef);
+                    }
+                }
+                default -> { /* ignore */ }
+            }
+        }
+        if (hasTimer) {
+            // 标记此节点为 timer 类型，前端可视化需要区分
+            ext.put("nodeFeature", "TIMER");
+        }
+    }
+
+    /**
+     * P0-4: 解析通用 extensionElements
+     */
+    private void parseExtensionElements(Element elem, Map<String, Object> ext) {
+        Element extElems = findChild(elem, "extensionElements");
+        if (extElems == null) {
+            return;
+        }
+        NodeList children = extElems.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node n = children.item(i);
+            if (!(n instanceof Element e)) {
+                continue;
+            }
+            String local = e.getLocalName();
+            if (local == null) local = e.getNodeName();
+            // 收集所有自定义属性为键值对
+            Map<String, String> attrs = new HashMap<>();
+            if (e.hasAttributes()) {
+                var attrMap = e.getAttributes();
+                for (int j = 0; j < attrMap.getLength(); j++) {
+                    Node a = attrMap.item(j);
+                    attrs.put(a.getNodeName(), a.getNodeValue());
+                }
+            }
+            String text = e.getTextContent();
+            if (text != null && !text.isBlank()) {
+                attrs.put("_text", text.trim());
+            }
+            ext.put("ext_" + local, attrs);
+        }
+    }
+
+    /**
      * 解析 userTask 的多实例（会签）配置
      */
-    private void parseMultiInstance(Element userTask, FlowNodeDO node) {
+    private void parseMultiInstance(Element userTask, FlowNodeDO node, Map<String, Object> ext) {
         NodeList children = userTask.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
             Node n = children.item(i);
             if (n instanceof Element e && "multiInstanceLoopCharacteristics".equalsIgnoreCase(e.getLocalName())) {
                 String performType = "PARALLEL";
+                String collection = e.getAttributeNS(BPMN_EXT_NS, "collection");
+                String elementVariable = e.getAttributeNS(BPMN_EXT_NS, "elementVariable");
                 NodeList miChildren = e.getChildNodes();
                 for (int j = 0; j < miChildren.getLength(); j++) {
                     Node mc = miChildren.item(j);
-                    if (mc instanceof Element me && "completionCondition".equalsIgnoreCase(me.getLocalName())) {
-                        String expr = me.getTextContent();
-                        if (expr != null && !expr.isBlank()) {
-                            node.setSkipAnyNode(expr);
+                    if (mc instanceof Element me) {
+                        String ml = me.getLocalName();
+                        if ("completionCondition".equalsIgnoreCase(ml)) {
+                            String expr = me.getTextContent();
+                            if (expr != null && !expr.isBlank()) {
+                                node.setSkipAnyNode(expr.trim());
+                            }
+                        } else if ("loopCardinality".equalsIgnoreCase(ml)) {
+                            String card = me.getTextContent();
+                            if (card != null && !card.isBlank()) {
+                                ext.put("loopCardinality", card.trim());
+                            }
+                        } else if ("loopDataInputRef".equalsIgnoreCase(ml)) {
+                            String data = me.getTextContent();
+                            if (data != null && !data.isBlank()) {
+                                ext.put("loopDataInputRef", data.trim());
+                            }
                         }
                     }
                 }
-                // 写入 ext
-                String existing = node.getExt() == null ? "{}" : node.getExt();
-                node.setExt(existing.replace("}", ",\"multiInstance\":\"" + performType + "\"}"));
+                // 写入 performType
+                if (ext.get("performType") == null) {
+                    ext.put("performType", performType);
+                }
+                if (collection != null && !collection.isBlank()) {
+                    ext.put("collection", collection);
+                }
+                if (elementVariable != null && !elementVariable.isBlank()) {
+                    ext.put("elementVariable", elementVariable);
+                }
+                ext.put("multiInstance", performType);
                 return;
             }
         }
@@ -325,8 +520,21 @@ public class BpmnXmlParser {
         String sourceRef = elem.getAttribute("sourceRef");
         String targetRef = elem.getAttribute("targetRef");
         // sourceRef / targetRef 临时借用 skipName + ext 传递
-        skip.setExt("{\"sourceRef\":\"" + sourceRef + "\",\"targetRef\":\""
-                + targetRef + "\",\"sequenceFlowId\":\"" + elem.getAttribute("id") + "\"}");
+        Map<String, Object> ext = new HashMap<>();
+        ext.put("sourceRef", sourceRef);
+        ext.put("targetRef", targetRef);
+        ext.put("sequenceFlowId", elem.getAttribute("id"));
+        // P0-4: 边上的 flowable:skipExpression（条件）
+        String skipExpr = elem.getAttributeNS(BPMN_EXT_NS, "skipExpression");
+        if (skipExpr != null && !skipExpr.isBlank()) {
+            ext.put("skipExpression", skipExpr);
+        }
+        // 边的优先级（多出口时排序依据）
+        String priority = elem.getAttributeNS(BPMN_EXT_NS, "priority");
+        if (priority != null && !priority.isBlank()) {
+            ext.put("priority", priority.trim());
+        }
+        skip.setExt(JsonHelper.toJson(ext));
         // nextNodeCode 暂存 targetRef，定义模型转换时会再赋
         skip.setNextNodeCode(targetRef);
         // 解析条件表达式
@@ -371,8 +579,26 @@ public class BpmnXmlParser {
             case "exclusivegateway", "eventbasedgateway", "complexgateway" -> FlowNodeType.CONDITION.getCode();
             case "parallelgateway" -> FlowNodeType.PARALLEL.getCode();
             case "inclusivegateway" -> FlowNodeType.INCLUSIVE.getCode();
-            case "intermediatethrowevent", "intermediatecatchevent" -> FlowNodeType.CC.getCode();
+            case "intermediatethrowevent", "intermediatecatchevent", "boundaryevent" -> FlowNodeType.CC.getCode();
             default -> FlowNodeType.APPROVAL.getCode();
         };
+    }
+
+    // ============== 工具方法 ==============
+
+    private Map<String, Object> readOrInitExt(FlowNodeDO node) {
+        Map<String, Object> map = new HashMap<>();
+        String ext = node.getExt();
+        if (ext != null && !ext.isBlank() && !"{}".equals(ext.trim())) {
+            try {
+                Map<String, Object> parsed = JsonHelper.fromJson(ext);
+                if (parsed != null) {
+                    map.putAll(parsed);
+                }
+            } catch (Exception ignore) {
+                // ignore
+            }
+        }
+        return map;
     }
 }

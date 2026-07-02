@@ -18,6 +18,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.apache.seata.spring.annotation.GlobalTransactional;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -93,6 +94,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     }
 
     @Override
+    @GlobalTransactional(name = "pmis-alert-dispatch-now", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
     public boolean dispatchNow(Long id) {
         if (id == null) {

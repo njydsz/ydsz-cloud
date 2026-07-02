@@ -12,6 +12,7 @@ import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.flow.engine.FlowAssigneeResolver;
 import com.njydsz.pmis.workflow.flow.engine.FlowEventContext;
 import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
+import com.njydsz.pmis.workflow.flow.engine.FlowUrgeLimiter;
 import com.njydsz.pmis.workflow.flow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.flow.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.flow.entity.*;
@@ -59,6 +60,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     private final List<FlowEventListener> eventListeners;
     /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
     private final ApplicationEventPublisher eventPublisher;
+    /** P0-2: 催办限流器（Redis Lua 冷却 30 分钟） */
+    private final FlowUrgeLimiter urgeLimiter;
 
     // ============================== 创建任务 ==============================
 
@@ -378,6 +381,12 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
     @Override
     public List<String> urge(Long instanceId, Long operatorId, String comment) {
+        // P0-2: 催办限流：同一催办人对同一实例 30 分钟内只允许一次
+        if (operatorId != null && instanceId != null
+                && !urgeLimiter.tryAcquire(operatorId, instanceId, "INSTANCE")) {
+            throw new BizException(BizErrorCode.RATE_LIMIT,
+                    "催办过于频繁，请稍后再试（同一实例 30 分钟内仅可催办一次）");
+        }
         List<FlowTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
         List<String> urged = new ArrayList<>();
         for (FlowTaskDO task : pendingTasks) {
@@ -954,9 +963,9 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     private FlowPerformType resolvePerformType(FlowNodeDO node) {
         if (node.getExt() != null) {
             try {
-                Map<String, Object> ext = JSON.parseObject(node.getExt(), Map.class);
-                String pt = (String) ext.get("performType");
-                if (pt != null) {
+                Map<?, ?> ext = JSON.parseObject(node.getExt(), Map.class);
+                Object ptObj = ext.get("performType");
+                if (ptObj instanceof String pt) {
                     return FlowPerformType.valueOf(pt);
                 }
             } catch (Exception ignored) {
@@ -965,7 +974,6 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         return FlowPerformType.OR;
     }
 
-    @SuppressWarnings("unchecked")
     private void resolveAssignee(FlowTaskDO task, FlowNodeDO node,
                                   Map<String, Object> variables,
                                   FlowAssigneeDTO explicit,

@@ -27,6 +27,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
+import org.apache.seata.spring.annotation.GlobalTransactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -385,6 +386,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @throws BizException 立项不存在时抛出
      */
     @Override
+    @GlobalTransactional(name = "pmis-initiation-start-process", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
     public String startProcess(Long id, Long initiatorId) {
         InitiationDO o = getById(id);

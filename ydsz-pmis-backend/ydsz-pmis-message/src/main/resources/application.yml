@@ -64,18 +64,9 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
-message:
-  sms:
-    provider: ${SMS_PROVIDER:ALIYUN}  # ALIYUN / TENCENT / MOCK
-    access-key: ${SMS_AK:}
-    secret-key: ${SMS_SK:}
-    sign-name: ${SMS_SIGN:PMIS}
-  push:
-    provider: ${PUSH_PROVIDER:MOCK}
-
 logging:
   level:
     root: INFO
-    com.njydsz.pmis: DEBUG
+    "[com.njydsz.pmis]": DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"

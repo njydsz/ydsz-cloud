@@ -152,6 +152,9 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         // P0-6: 排他网关互斥 — CONDITION 节点只取第一条匹配
         boolean isExclusive = currentNode.getNodeType() != null
                 && currentNode.getNodeType() == FlowNodeType.CONDITION.getCode();
+        // GAP-P0: 包容网关 — INCLUSIVE 节点取所有匹配，无匹配时取默认出边
+        boolean isInclusive = currentNode.getNodeType() != null
+                && currentNode.getNodeType() == FlowNodeType.INCLUSIVE.getCode();
 
         List<FlowSkipDO> matched = new ArrayList<>();
         for (FlowSkipDO skip : all) {
@@ -161,12 +164,14 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                 if (isExclusive) {
                     break; // 排他网关：只取第一条匹配
                 }
+                // 包容网关：不 break，继续收集所有匹配分支
             }
         }
 
-        // 排他网关兜底：如果无匹配且有默认出边，取第一条
-        if (isExclusive && matched.isEmpty()) {
-            log.info("[Flow] 排他网关无匹配条件，取默认出边: node={}", currentNode.getNodeCode());
+        // 排他/包容网关兜底：如果无匹配且有默认出边，取第一条
+        if ((isExclusive || isInclusive) && matched.isEmpty()) {
+            log.info("[Flow] {}无匹配条件，取默认出边: node={}",
+                    isExclusive ? "排他网关" : "包容网关", currentNode.getNodeCode());
             matched.add(all.get(0));
         }
 

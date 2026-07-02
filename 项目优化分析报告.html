@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YDSZ PMIS 项目优化分析报告 — 对标互联网大厂标准</title>
+<style>
+  :root {
+    --bg: #0f1117;
+    --bg-card: #181b24;
+    --bg-card-hover: #1e2230;
+    --border: #2a2f3e;
+    --text: #e4e7ed;
+    --text-muted: #8b909f;
+    --text-dim: #5c6378;
+    --accent: #4fc3f7;
+    --accent-dim: #1a3a4a;
+    --p0: #ff5252;
+    --p1: #ff9800;
+    --p2: #4caf50;
+    --p3: #9e9e9e;
+    --score-high: #4caf50;
+    --score-mid: #ff9800;
+    --score-low: #ff5252;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 24px 80px; }
+
+  /* Header */
+  .header {
+    background: linear-gradient(135deg, #1a1f35, #0f1117);
+    border-bottom: 1px solid var(--border);
+    padding: 48px 0 36px;
+  }
+  .header .container { padding: 0 24px; }
+  .header h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+  .header .subtitle { color: var(--text-muted); font-size: 15px; }
+  .header .meta { display: flex; gap: 24px; margin-top: 16px; flex-wrap: wrap; }
+  .header .meta-item { font-size: 13px; color: var(--text-dim); }
+  .header .meta-item strong { color: var(--text-muted); }
+
+  /* Score Cards */
+  .score-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin: 32px 0;
+  }
+  .score-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+  }
+  .score-card .label { font-size: 13px; color: var(--text-muted); margin-bottom: 8px; }
+  .score-card .value { font-size: 32px; font-weight: 700; }
+  .score-card .bar {
+    height: 6px; border-radius: 3px; margin-top: 12px; background: var(--border); overflow: hidden;
+  }
+  .score-card .bar-fill { height: 100%; border-radius: 3px; transition: width 0.6s; }
+  .score-high .value, .score-high .bar-fill { color: var(--score-high); background: var(--score-high); }
+  .score-mid .value, .score-mid .bar-fill { color: var(--score-mid); background: var(--score-mid); }
+  .score-low .value, .score-low .bar-fill { color: var(--score-low); background: var(--score-low); }
+  .score-card .desc { font-size: 12px; color: var(--text-dim); margin-top: 8px; }
+
+  /* Sections */
+  section { margin-top: 48px; }
+  h2 {
+    font-size: 22px; font-weight: 700; margin-bottom: 20px;
+    padding-bottom: 12px; border-bottom: 2px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+  }
+  h2 .icon { font-size: 24px; }
+  h3 { font-size: 17px; font-weight: 600; margin: 24px 0 12px; color: var(--accent); }
+
+  /* Gap Cards */
+  .gap-list { display: flex; flex-direction: column; gap: 16px; }
+  .gap-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--p3);
+    border-radius: 8px;
+    padding: 20px 24px;
+    transition: background 0.2s;
+  }
+  .gap-card:hover { background: var(--bg-card-hover); }
+  .gap-card.p0 { border-left-color: var(--p0); }
+  .gap-card.p1 { border-left-color: var(--p1); }
+  .gap-card.p2 { border-left-color: var(--p2); }
+  .gap-card.p3 { border-left-color: var(--p3); }
+  .gap-card .gap-header {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 10px;
+  }
+  .gap-card .gap-title { font-size: 16px; font-weight: 600; flex: 1; }
+  .gap-card .priority-tag {
+    font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 4px; white-space: nowrap;
+  }
+  .priority-tag.p0 { background: rgba(255,82,82,0.15); color: var(--p0); }
+  .priority-tag.p1 { background: rgba(255,152,0,0.15); color: var(--p1); }
+  .priority-tag.p2 { background: rgba(76,175,80,0.15); color: var(--p2); }
+  .priority-tag.p3 { background: rgba(158,158,158,0.15); color: var(--p3); }
+  .gap-card .gap-body { font-size: 14px; color: var(--text-muted); }
+  .gap-card .gap-body p { margin-bottom: 8px; }
+  .gap-card .gap-body strong { color: var(--text); }
+  .gap-card .gap-meta {
+    display: flex; gap: 16px; margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid var(--border); font-size: 13px;
+  }
+  .gap-card .gap-meta-item { display: flex; gap: 6px; }
+  .gap-card .gap-meta-item .key { color: var(--text-dim); }
+  .gap-card .gap-meta-item .val { color: var(--text); }
+  .gap-card .recommendation {
+    margin-top: 12px; padding: 12px 16px;
+    background: rgba(79,195,247,0.06); border-radius: 6px;
+    font-size: 13px; border: 1px solid rgba(79,195,247,0.15);
+  }
+  .gap-card .recommendation::before {
+    content: "建议方案"; display: inline-block; font-weight: 700;
+    color: var(--accent); margin-right: 8px; font-size: 12px;
+  }
+
+  /* Tables */
+  table {
+    width: 100%; border-collapse: collapse; margin: 16px 0;
+    font-size: 14px;
+  }
+  th, td {
+    padding: 10px 14px; text-align: left;
+    border-bottom: 1px solid var(--border);
+  }
+  th { color: var(--text-muted); font-weight: 600; font-size: 13px; background: rgba(255,255,255,0.02); }
+  td { color: var(--text); }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* Timeline */
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before {
+    content: ''; position: absolute; left: 10px; top: 0; bottom: 0;
+    width: 2px; background: var(--border);
+  }
+  .timeline-item { position: relative; margin-bottom: 24px; }
+  .timeline-item::before {
+    content: ''; position: absolute; left: -28px; top: 4px;
+    width: 12px; height: 12px; border-radius: 50%;
+    border: 2px solid var(--border); background: var(--bg);
+  }
+  .timeline-item.p0::before { border-color: var(--p0); background: var(--p0); }
+  .timeline-item.p1::before { border-color: var(--p1); background: var(--p1); }
+  .timeline-item.p2::before { border-color: var(--p2); background: var(--p2); }
+  .timeline-item .time-label { font-size: 12px; color: var(--text-dim); margin-bottom: 4px; }
+  .timeline-item .time-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+  .timeline-item .time-desc { font-size: 13px; color: var(--text-muted); }
+
+  /* Highlight box */
+  .highlight-box {
+    background: rgba(79,195,247,0.06);
+    border: 1px solid rgba(79,195,247,0.2);
+    border-radius: 8px; padding: 16px 20px; margin: 16px 0;
+    font-size: 14px;
+  }
+  .highlight-box strong { color: var(--accent); }
+
+  /* Strength list */
+  .strength-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 12px; margin: 16px 0;
+  }
+  .strength-item {
+    background: var(--bg-card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 14px 18px;
+    display: flex; gap: 10px; align-items: flex-start;
+  }
+  .strength-item .check { color: var(--score-high); font-weight: 700; flex-shrink: 0; }
+  .strength-item .text { font-size: 14px; }
+  .strength-item .text strong { display: block; margin-bottom: 2px; }
+  .strength-item .text span { color: var(--text-muted); font-size: 13px; }
+
+  /* Badge */
+  .badge {
+    display: inline-block; font-size: 11px; padding: 2px 8px;
+    border-radius: 4px; font-weight: 600; margin-left: 6px;
+  }
+  .badge.green { background: rgba(76,175,80,0.15); color: var(--score-high); }
+  .badge.yellow { background: rgba(255,152,0,0.15); color: var(--score-mid); }
+  .badge.red { background: rgba(255,82,82,0.15); color: var(--score-low); }
+
+  /* Footer */
+  .footer {
+    margin-top: 60px; padding-top: 24px; border-top: 1px solid var(--border);
+    font-size: 13px; color: var(--text-dim); text-align: center;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .header h1 { font-size: 22px; }
+    .score-grid { grid-template-columns: repeat(2, 1fr); }
+    .gap-card .gap-header { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="container">
+    <h1>YDSZ PMIS 项目优化分析报告</h1>
+    <div class="subtitle">对标互联网大厂标准 · 识别核心能力与细节体验差距 · 制定优先级优化路线图</div>
+    <div class="meta">
+      <div class="meta-item"><strong>项目版本：</strong>v1.0.0 GA</div>
+      <div class="meta-item"><strong>分析日期：</strong>2026-07-02</div>
+      <div class="meta-item"><strong>后端规模：</strong>14 模块 / 720 源文件 / 1086 测试</div>
+      <div class="meta-item"><strong>前端规模：</strong>52 页面 / 37 测试文件 / 4 E2E</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+<!-- ===== 总体评估 ===== -->
+<section>
+  <h2><span class="icon">📊</span> 总体成熟度评估</h2>
+  <div class="score-grid">
+    <div class="score-card score-high">
+      <div class="label">安全合规</div>
+      <div class="value">95</div>
+      <div class="bar"><div class="bar-fill" style="width:95%"></div></div>
+      <div class="desc">等保三级 73 项 · 国密加密 · 4 类审计</div>
+    </div>
+    <div class="score-card score-high">
+      <div class="label">文档完整性</div>
+      <div class="value">92</div>
+      <div class="bar"><div class="bar-fill" style="width:92%"></div></div>
+      <div class="desc">9 份规范 · 运维 SOP · 性能基线</div>
+    </div>
+    <div class="score-card score-high">
+      <div class="label">业务功能覆盖</div>
+      <div class="value">90</div>
+      <div class="bar"><div class="bar-fill" style="width:90%"></div></div>
+      <div class="desc">商机→立项→合同→执行→财务→售后全链路</div>
+    </div>
+    <div class="score-card score-mid">
+      <div class="label">DevOps 实践</div>
+      <div class="value">72</div>
+      <div class="bar"><div class="bar-fill" style="width:72%"></div></div>
+      <div class="desc">Docker/Helm/Argo 就绪 · CI 缺质量门禁与 CD</div>
+    </div>
+    <div class="score-card score-mid">
+      <div class="label">用户体验</div>
+      <div class="value">68</div>
+      <div class="bar"><div class="bar-fill" style="width:68%"></div></div>
+      <div class="desc">基础组件完善 · 缺骨架屏/批量操作/实时推送</div>
+    </div>
+    <div class="score-card score-mid">
+      <div class="label">架构健壮性</div>
+      <div class="value">70</div>
+      <div class="bar"><div class="bar-fill" style="width:70%"></div></div>
+      <div class="desc">微服务拆分合理 · Seata 未启用 · 无实时通信</div>
+    </div>
+  </div>
+
+  <div class="highlight-box">
+    <strong>核心判断：</strong>项目在安全合规、文档体系、业务功能覆盖三个维度已达到互联网大厂标准，是突出的优势项。但在 <strong>DevOps 质量门禁闭环、前端交互体验、分布式事务一致性、实时通信能力</strong> 四个维度存在明显差距，是下一阶段优化的重点方向。以下按四个维度逐项分析，并给出 P0-P3 优先级排序的优化建议。
+  </div>
+</section>
+
+<!-- ===== 项目优势 ===== -->
+<section>
+  <h2><span class="icon">✅</span> 已达大厂标准的优势项</h2>
+  <div class="strength-grid">
+    <div class="strength-item">
+      <span class="check">✓</span>
+      <div class="text"><strong>全链路业务覆盖</strong><span>14 模块 / 68 Controller / 584 API 端点，覆盖商机→售后完整生命周期</span></div>
+    </div>
+    <div class="strength-item">
+      <span class="check">✓</span>
+      <div class="text"><strong>等保三级安全体系</strong><span>JWT+TOTP 双因子 / AES+SM4 国密加密 / 6 模式数据权限 / 4 类审计日志</span></div>
+    </div>
+    <div class="strength-item">
+      <span class="check">✓</span>
+      <div class="text"><strong>完善的测试体系</strong><span>后端 1086 单元测试 100% 通过 / 前端 37 测试文件 + 4 E2E 跨浏览器</span></div>
+    </div>
+    <div class="strength-item">
+      <span class="check">✓</span>
+      <div class="text"><strong>容器化与金丝雀发布</strong><span>Docker + Helm + Ansible + Argo Rollouts 四步渐进灰度 (5%→25%→50%→100%)</span></div>
+    </div>
+    <div class="strength-item">
+      <span class="check">✓</span>
+      <div class="text"><strong>AI Agent 编排能力</strong><span>4 种编排策略 (顺序/并行/投票/级联) + 黑板模式 + 多 LLM 提供商热切换</span></div>
+    </div>
+    <div class="strength-item">
+      <span class="check">✓</span>
+      <div class="text"><strong>数据库工程化</strong><span>Flyway 25 脚本版本化 / 聚合 View 零大表 JOIN / 索引调优 / PG 内核调优</span></div>
+    </div>
+    <div class="strength-item">
+      <span class="check">✓</span>
+      <div class="text"><strong>可观测性基础设施</strong><span>ELK 6 类 Appender + Sentry AOP + Prometheus 14 服务抓取 + Grafana 4 仪表盘</span></div>
+    </div>
+    <div class="strength-item">
+      <span class="check">✓</span>
+      <div class="text"><strong>前端工程化体系</strong><span>9 公共组件 + 8 Composables + v-permission 指令 + Mock 插件 + i18n + 暗黑模式</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 核心能力差距 ===== -->
+<section>
+  <h2><span class="icon">🔧</span> 核心能力差距分析</h2>
+
+  <div class="gap-list">
+
+    <div class="gap-card p0">
+      <div class="gap-header">
+        <div class="gap-title">1. 分布式事务未启用 — Seata 依赖引入但 @GlobalTransactional 缺失</div>
+        <span class="priority-tag p0">P0 · 必须修复</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>Seata 2.0.0 依赖已引入 pom.xml，deploy/seata/ 有部署配置，但代码中<strong>未使用任何 @GlobalTransactional 注解</strong>。跨服务写操作（如商机转立项、执行模块发消息、对账冲销）仅依赖本地事务 + Feign 调用 + 补偿模式。</p>
+        <p><strong>大厂标准：</strong>关键跨服务写路径必须使用 Seata AT 模式或 TCC/Saga 模式保证最终一致性。阿里、美团等大厂的订单/财务类系统均强制要求分布式事务覆盖。<sup><a href="#cite-1">[1]</a></sup></p>
+        <p><strong>风险：</strong>Feign 调用失败后上游已提交、下游未执行，导致数据不一致（如立项已创建但流程未启动、发票已开具但消息未发送）。</p>
+      </div>
+      <div class="gap-meta">
+        <div class="gap-meta-item"><span class="key">影响范围：</span><span class="val">商机转立项 / 合同签订 → 流程启动 / 对账冲销</span></div>
+        <div class="gap-meta-item"><span class="key">预估工时：</span><span class="val">3-5 人日</span></div>
+      </div>
+      <div class="recommendation">识别 5-8 个关键跨服务写路径，添加 @GlobalTransactional；在 deploy/seata/ 下完善 Nacos 配置注册；编写分布式事务回滚测试验证 AT 模式 undo_log 正常。</div>
+    </div>
+
+    <div class="gap-card p0">
+      <div class="gap-header">
+        <div class="gap-title">2. 无实时通信能力 — 缺失 WebSocket 推送</div>
+        <span class="priority-tag p0">P0 · 必须修复</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>全系统无 WebSocket 实现。通知中心 (notification) 和消息中心 (message) 均为拉取式 API；告警派发 (AlertDispatch) 依赖定时轮询；驾驶舱报表无实时刷新。</p>
+        <p><strong>大厂标准：</strong>企业级管理系统必须具备实时推送能力：通知即时到达、告警秒级触达、看板数据实时刷新、多人协作状态同步。WebSocket 是大厂标配的实时通信方案。<sup><a href="#cite-2">[2]</a></sup><sup><a href="#cite-3">[3]</a></sup></p>
+        <p><strong>影响：</strong>用户需手动刷新查看新通知；告警延迟可达轮询间隔 (5s-60s)；驾驶舱数据非实时影响决策效率。</p>
+      </div>
+      <div class="gap-meta">
+        <div class="gap-meta-item"><span class="key">影响范围：</span><span class="val">通知中心 / 告警中心 / 驾驶舱 / 工单协作</span></div>
+        <div class="gap-meta-item"><span class="key">预估工时：</span><span class="val">5-8 人日</span></div>
+      </div>
+      <div class="recommendation">在 gateway 或 notification 模块集成 Spring WebSocket + STOMP；前端封装 useWebSocket composable 自动重连 + 心跳；告警/通知通过 WebSocket 实时推送到前端消息中心组件。</div>
+    </div>
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">3. Elasticsearch 已配置但未集成 — 全文检索能力缺失</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>docker-compose.base.yml 中配置了 Elasticsearch 8.15，但后端代码中无 ES 客户端集成，无索引定义，无同步逻辑。所有搜索依赖 PostgreSQL LIKE 查询。</p>
+        <p><strong>大厂标准：</strong>项目管理系统的项目/合同/任务/审计日志等核心实体应支持全文检索、组合过滤、高亮匹配。ES 是大厂搜索标配，通过 Canal/Logstash 同步 MySQL/PG 数据到 ES。</p>
+        <p><strong>影响：</strong>大数据量下 LIKE 查询性能急剧下降；无法支持中文分词、同义词、纠错等高级搜索；审计日志检索效率低。</p>
+      </div>
+      <div class="gap-meta">
+        <div class="gap-meta-item"><span class="key">影响范围：</span><span class="val">全局搜索 / 审计日志 / 项目/合同检索</span></div>
+        <div class="gap-meta-item"><span class="key">预估工时：</span><span class="val">8-12 人日</span></div>
+      </div>
+      <div class="recommendation">引入 spring-data-elasticsearch；为项目/合同/任务/审计日志建立 ES 索引；通过 RocketMQ 延迟消息或定时任务同步增量数据到 ES；前端添加全局搜索栏 (Cmd+K 快捷键)。</div>
+    </div>
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">4. 文件处理能力薄弱 — 缺失病毒扫描/分片上传/在线预览</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>file 模块仅实现 MinIO 上传/下载/元数据管理，无病毒扫描、无分片上传、无在线预览、无文件类型限制校验。</p>
+        <p><strong>大厂标准：</strong>企业级文件服务必须包含：ClamAV 病毒扫描、大文件分片上传 + 断点续传、Office/PDF 在线预览、文件类型白名单、文件大小限制。</p>
+        <p><strong>影响：</strong>恶意文件上传安全风险；大文件上传失败后无法续传；用户需下载后才能查看附件内容。</p>
+      </div>
+      <div class="gap-meta">
+        <div class="gap-meta-item"><span class="key">影响范围：</span><span class="val">合同附件 / 交付物 / 发票凭证 / 项目文档</span></div>
+        <div class="gap-meta-item"><span class="key">预估工时：</span><span class="val">6-10 人日</span></div>
+      </div>
+      <div class="recommendation">集成 ClamAV daemon 做异步病毒扫描；前端实现分片上传组件 (slice + MD5 秒传)；集成 kkFileView 或 OnlyOffice 实现在线预览；file 模块添加文件类型白名单 + 大小限制配置。</div>
+    </div>
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">5. 无定时报表生成与分发机制</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>所有报表 (驾驶舱/高管看板/EVM/利用率) 均为按需拉取式 API，无定时生成、无邮件/钉钉分发、无报表订阅机制。</p>
+        <p><strong>大厂标准：</strong>关键运营报表应支持定时生成 (日/周/月)、自动推送到邮箱/钉钉/企微、支持订阅与自定义推送规则。</p>
+        <p><strong>影响：</strong>管理层需手动登录系统查看报表；无主动数据洞察推送；报表生成高峰期可能影响在线查询性能。</p>
+      </div>
+      <div class="gap-meta">
+        <div class="gap-meta-item"><span class="key">影响范围：</span><span class="val">驾驶舱 / 高管看板 / EVM / 利润报表</span></div>
+        <div class="gap-meta-item"><span class="key">预估工时：</span><span class="val">5-8 人日</span></div>
+      </div>
+      <div class="recommendation">在 scheduler 模块新增 ReportScheduleJob；报表生成后通过 message 模块发送邮件/钉钉；前端添加报表订阅页面 (选择报表 + 频率 + 接收人)；利用已有 EasyExcel 导出能力生成 PDF/Excel 附件。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">6. 无数据一致性校验机制</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>模块间数据一致性 (如发票总额 vs 回款总额、预算 vs 实际成本、WBS 进度 vs 工时完成率) 依赖人工对账页面查看，无定时自动校验 + 告警。</p>
+        <p><strong>大厂标准：</strong>关键财务数据应有定时对账任务自动校验一致性，差异超阈值自动告警。已有 ReconcileService (日对账/月对账) 但未接入定时调度 + 告警链路。</p>
+      </div>
+      <div class="gap-meta">
+        <div class="gap-meta-item"><span class="key">影响范围：</span><span class="val">财务对账 / 预算执行 / EVM 数据准确性</span></div>
+        <div class="gap-meta-item"><span class="key">预估工时：</span><span class="val">3-5 人日</span></div>
+      </div>
+      <div class="recommendation">在 scheduler 注册 DailyReconcileJob 调用已有 ReconcileService；差异超阈值时调用 AlertDispatchService 派发告警；前端对账页面增加差异标红 + 一键重算功能。</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 细节体验差距 ===== -->
+<section>
+  <h2><span class="icon">🎨</span> 细节体验差距分析</h2>
+
+  <div class="gap-list">
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">7. 缺失骨架屏 — 内容区白屏闪烁</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>页面加载时仅有全局 NProgress 进度条 + ElLoading 遮罩，内容区在数据返回前为空白状态，视觉上出现"白屏闪烁"。</p>
+        <p><strong>大厂标准：</strong>内容密集型页面 (列表/卡片/详情) 应使用骨架屏 (Skeleton) 占位，消除白屏感、提升感知性能。Element Plus 已提供 el-skeleton 组件但项目未使用。<sup><a href="#cite-4">[4]</a></sup></p>
+      </div>
+      <div class="recommendation">封装 SkeletonCard / SkeletonTable / SkeletonDetail 三个骨架组件；在 PageLayout 中增加 loading="skeleton" 模式；列表页首次加载使用骨架屏，翻页使用遮罩。</div>
+    </div>
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">8. 列表页无批量操作</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>所有列表页仅支持单行操作 (编辑/删除/审批)，vxe-table 的 selection 能力未启用。用户处理 50 条工时审批需点击 50 次。</p>
+        <p><strong>大厂标准：</strong>列表页必须支持批量操作：批量审批、批量导出、批量删除、批量状态变更。vxe-table 原生支持 checkbox 列 + 批量操作工具栏。</p>
+      </div>
+      <div class="recommendation">在 PageLayout 中增加 selection 模式配置；封装 BatchToolbar 组件 (选中数提示 + 操作按钮组)；为工时审批/任务分配/发票管理/风险处理等高频列表添加批量操作。</div>
+    </div>
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">9. 大数据量表格无虚拟滚动</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>vxe-table 已引入但业务页面未配置虚拟滚动 (scroll-y)。工时明细、审计日志、对账记录等页面在数据量超 500 行时可能出现卡顿。</p>
+        <p><strong>大厂标准：</strong>1000+ 行表格必须启用虚拟滚动，DOM 节点数固定在可视区域 + 缓冲区，性能不随数据量增长而下降。<sup><a href="#cite-5">[5]</a></sup></p>
+      </div>
+      <div class="recommendation">为审计日志、工时明细、对账记录等高频大数据表格配置 vxe-table scroll-y；封装虚拟滚动配置预设；性能测试验证 5000 行渲染 FPS ≥ 55。</div>
+    </div>
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">10. 数据变更历史无 UI 呈现 — 审计日志仅简单列表</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>后端有完善的 4 类审计日志 (操作/登录/敏感/导出)，但前端审计页面仅为简单时间线列表，无字段级 diff 可视化、无实体变更时间轴。</p>
+        <p><strong>大厂标准：</strong>关键业务实体 (合同/预算/发票) 应支持"变更历史"标签页，展示字段级修改前后对比 (before/after diff)，类似 Jira 的 Issue History。</p>
+      </div>
+      <div class="recommendation">后端 OperationLog 扩展 beforeData/afterData JSON 字段；前端封装 EntityHistoryDrawer 组件，渲染字段级 diff (绿色新增/红色删除/黄色修改)；合同/预算/发票详情页增加"变更历史"Tab。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">11. 数据导出无进度反馈 — 同步导出导致 UI 冻结</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>数据导出为同步调用，后端生成 Excel/PDF 后直接返回文件流。大数据量导出 (如全量工时、全量审计日志) 时前端长时间无响应。</p>
+        <p><strong>大厂标准：</strong>大数据量导出应改为异步任务：提交导出请求 → 后端异步生成 → WebSocket/轮询通知完成 → 下载中心下载。</p>
+      </div>
+      <div class="recommendation">后端 ReportExportService 改为异步生成 + 存储到 MinIO；前端导出按钮改为提交任务 → 显示进度条 → 完成后通知下载；新增"下载中心"页面管理导出文件。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">12. 仪表盘不可定制 — 固定布局</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>Dashboard 和 Cockpit 页面为固定布局，所有角色看到相同的 KPI 卡片和图表。项目经理、财务、高管关注的指标完全不同。</p>
+        <p><strong>大厂标准：</strong>仪表盘应支持拖拽布局、组件选择、个性化配置 (类似 Grafana 面板)。至少提供 3-4 种角色预设布局。</p>
+      </div>
+      <div class="recommendation">引入 vue-grid-layout 实现拖拽布局；后端新增 DashboardLayoutDO 存储用户自定义布局 JSON；提供 PM/财务/高管/资源经理 4 种预设布局模板。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">13. 表单无草稿/自动保存 — 长表单数据丢失风险</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>所有表单 (立项申请、合同录入、预算编制) 均为即时提交模式，无草稿保存、无自动保存、无页面刷新恢复。</p>
+        <p><strong>大厂标准：</strong>长表单应支持自动保存草稿 (localStorage + 后端草稿表)、页面刷新后恢复未提交内容、定时保存提示。</p>
+      </div>
+      <div class="recommendation">封装 useFormDraft composable (防抖自动保存到 localStorage)；后端新增草稿表支持按 entity_type + user_id 存储；FormDialog 增加"存为草稿"按钮和草稿恢复提示。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">14. 无收藏/快速访问机制</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>用户每次使用系统都需通过完整菜单导航。无收藏功能、无最近访问记录、无快捷入口。</p>
+        <p><strong>大厂标准：</strong>支持收藏常用页面/常用项目、显示最近访问记录、首页快捷入口卡片。</p>
+      </div>
+      <div class="recommendation">后端新增 UserFavoriteDO 和 RecentAccessDO；前端 Layout 侧边栏顶部增加收藏区；Dashboard 首页增加"最近访问"和"我的收藏"卡片；浏览器 Cmd+K 快捷搜索。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">15. 无行内编辑 — 简单字段更新需打开弹窗</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>所有字段编辑均需点击"编辑"打开 FormDialog 弹窗，修改后提交关闭。对于状态变更、指派人员、日期调整等简单操作，交互成本高。</p>
+        <p><strong>大厂标准：</strong>状态、指派人、优先级、日期等字段应支持表格内行内编辑 (inline edit)，点击即改、回车确认。</p>
+      </div>
+      <div class="recommendation">vxe-table 启用 edit-config (trigger: click, mode: cell)；为 WBS 任务状态/指派人、工时审批状态、风险等级等字段配置行内编辑组件；保存时调用单字段更新 API。</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 工程实践差距 ===== -->
+<section>
+  <h2><span class="icon">⚙️</span> 工程实践差距分析</h2>
+
+  <div class="gap-list">
+
+    <div class="gap-card p0">
+      <div class="gap-header">
+        <div class="gap-title">16. CI 缺失质量门禁 — SonarQube/安全扫描未集成到流水线</div>
+        <span class="priority-tag p0">P0 · 必须修复</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>CI 流水线 (backend-ci.yml / frontend-ci.yml) 仅执行 build + test，<strong>未集成</strong> SonarQube 静态分析、OWASP dependency-check、ZAP 安全扫描。Checkstyle 和 JaCoCo 插件在 pom 中配置但 <code>skip=true</code>。然而 README 和 code-quality.md 声称这些工具"已集成到 CI"，存在<strong>文档与实现不一致</strong>。<sup><a href="#cite-6">[6]</a></sup><sup><a href="#cite-7">[7]</a></sup></p>
+        <p><strong>大厂标准：</strong>CI 必须包含质量门禁 (Quality Gate)：静态分析 + 安全扫描 + 覆盖率检查，门禁不通过禁止合并。SonarQube 质量门禁是 DevSecOps 标配。</p>
+      </div>
+      <div class="gap-meta">
+        <div class="gap-meta-item"><span class="key">影响范围：</span><span class="val">全部代码质量保障</span></div>
+        <div class="gap-meta-item"><span class="key">预估工时：</span><span class="val">3-5 人日</span></div>
+      </div>
+      <div class="recommendation">CI 新增 quality job：mvn verify 启用 Checkstyle + JaCoCo → SonarQube scan → OWASP dep-check (CVSS≥7 失败) → 前端 eslint + vue-tsc 严格模式；PR 合并必须质量门禁通过；修正 README 与实际不一致的描述。</div>
+    </div>
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">17. 无 CD 流水线 — 部署依赖手动操作</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>CI 仅完成 build + test，镜像构建/推送/部署均需手动执行 Ansible/Helm。Argo Rollouts 配置已就绪但未与 CI 串联。</p>
+        <p><strong>大厂标准：</strong>CI/CD 应一体化：代码合并 → 自动构建镜像 → 推送镜像仓库 → Argo Rollouts 自动灰度发布 → Prometheus SLO 验证 → 全量/回滚。</p>
+      </div>
+      <div class="recommendation">CI 增加 build-push job (docker build + push to registry.cn-hangzhou.aliyuncs.com)；Argo Rollouts ImageUpdater 自动监听镜像新版本触发灰度；部署后自动运行健康检查 + 冒烟测试。</div>
+    </div>
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">18. 契约测试与性能测试未纳入 CI</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>Postman 契约测试集合 (32 端点) 和 JMeter 性能基线脚本 (6 场景) 已存在但未纳入 CI 流水线，仅手动运行。</p>
+        <p><strong>大厂标准：</strong>契约测试应在每次 PR 中自动运行 (Newman CLI)；性能基线应定期 ( nightly or weekly ) 执行，结果与基线对比，回归 >10% 告警。</p>
+      </div>
+      <div class="recommendation">CI 增加 contract job (newman run pmis-contract.postman_collection.json)；新增 nightly 性能测试 cron job (JMeter headless + 结果上传 Grafana)；性能回归 >10% 自动创建 Issue。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">19. 仓库存在调试残留文件</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>ydsz-pmis-backend/logs/ 下存在 .bat / .ps1 / .err / .out 等调试脚本和输出文件，疑似本地调试残留，应加入 .gitignore 或清理。</p>
+        <p><strong>大厂标准：</strong>代码仓库应保持整洁，日志/临时文件通过 .gitignore 排除，CI 中增加 repository cleanliness 检查。</p>
+      </div>
+      <div class="recommendation">完善 .gitignore 排除 logs/*.err / logs/*.out / *.bat / *.ps1；执行 git rm --cached 清理已跟踪的调试文件；CI 增加 lint 检查禁止提交日志文件。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">20. 前端业务页面测试覆盖不足</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>前端 37 个测试文件中，页面组件测试仅 5 个 (Dashboard/Cockpit/Chaos/Executive/OrchestrationPipeline)。约 40 个业务页面 (system/execution/project 等模块的 index.vue) <strong>无组件级单元测试</strong>。API 层测试仅覆盖 5 个模块。</p>
+        <p><strong>大厂标准：</strong>每个业务页面应有基础组件测试 (渲染验证 + 交互验证 + 权限验证)；API 层 100% 覆盖；关键页面有 E2E 覆盖。</p>
+      </div>
+      <div class="recommendation">按模块优先级补充测试：P1 执行管理 (15 页) → P2 项目管理 (6 页) → P3 系统管理 (9 页)；每个页面至少 3-5 个测试用例 (渲染/搜索/表单提交/权限)；API 层补全剩余 7 个模块。</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 架构设计差距 ===== -->
+<section>
+  <h2><span class="icon">🏗️</span> 架构设计差距分析</h2>
+
+  <div class="gap-list">
+
+    <div class="gap-card p1">
+      <div class="gap-header">
+        <div class="gap-title">21. 自研工作流引擎的维护风险</div>
+        <span class="priority-tag p1">P1 · 高优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>自研轻量级 BPMN 流程引擎 (BpmnXmlParser / FlowAdvancer / FlowAssigneeResolver)，8 个流程表 + 110 个单元测试。功能覆盖流程定义/实例/任务/历史/跳转/审计。</p>
+        <p><strong>大厂标准：</strong>大厂通常使用成熟的 Flowable/Activiti/Camunda 引擎，经过大规模生产验证。自研引擎在复杂场景 (会签/或签/委派/加签/退回任意节点/子流程/定时边界事件) 可能存在边界缺陷。</p>
+        <p><strong>评估：</strong>当前自研引擎满足基本审批需求 (项目立项审批流)，但若未来需要复杂流程编排 (如多分支并行审批、超时自动审批、流程版本迁移)，自研引擎的投入产出比下降。</p>
+      </div>
+      <div class="recommendation">短期保持自研引擎但补充边界场景测试 (会签/或签/超时/退回)；中期评估迁移到 Flowable 的成本收益；若业务复杂度增长则逐步替换，保留 PmisWorkflowFacade 接口不变实现平滑切换。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">22. 无 BFF/聚合层 — 前端多次请求组装复合视图</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>前端加载一个复合页面 (如项目详情含立项+合同+WBS+EVM) 需分别调用 4-5 个后端 API，在网络延迟叠加下首屏加载较慢。</p>
+        <p><strong>大厂标准：</strong>通过 BFF (Backend for Frontend) 层或 Gateway 聚合接口，一次请求返回复合数据，减少网络往返。</p>
+      </div>
+      <div class="recommendation">在 gateway 或 execution 模块新增聚合 Controller (如 /api/v1/project-detail/{id} 一次返回立项+合同+WBS概览+EVM摘要)；前端封装 useAggregateData composable 并行请求 + 客户端聚合作为过渡方案。</div>
+    </div>
+
+    <div class="gap-card p2">
+      <div class="gap-header">
+        <div class="gap-title">23. 无 API 版本管理策略</div>
+        <span class="priority-tag p2">P2 · 中优先级</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>所有 API 统一在 /api/v1/ 下，但无版本协商机制、无废弃策略、无向后兼容性约束文档。</p>
+        <p><strong>大厂标准：</strong>API 应有明确的版本管理策略 (URL path versioning / Header versioning)，旧版本有 deprecation notice + sunset date，新版本保持向后兼容至少 2 个版本。</p>
+      </div>
+      <div class="recommendation">制定 API 版本管理规范 (docs/api/ 下新增 api-versioning.md)；破坏性变更需新增 /api/v2/ 并保留 v1 至少 6 个月；在 OpenAPI 文档中标注 deprecated 接口 + sunset header。</div>
+    </div>
+
+    <div class="gap-card p3">
+      <div class="gap-header">
+        <div class="gap-title">24. 无多租户架构 — SaaS 化前置条件缺失</div>
+        <span class="priority-tag p3">P3 · 远期规划</span>
+      </div>
+      <div class="gap-body">
+        <p><strong>现状：</strong>单租户设计，所有数据共享同一 schema，无 tenant_id 隔离字段。若未来需要 SaaS 化运营，改造成本极高。</p>
+        <p><strong>大厂标准：</strong>SaaS 级 PMIS 应支持多租户隔离 (行级 tenant_id 或 schema 级隔离)，租户间数据完全隔离，支持租户级配置 (品牌/流程/权限)。</p>
+      </div>
+      <div class="recommendation">若 SaaS 化在路线图中，尽早为核心表添加 tenant_id 字段 + MyBatis-Plus 租户拦截器；若保持私有化部署则标注为非目标，避免过度设计。</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ===== 优化路线图 ===== -->
+<section>
+  <h2><span class="icon">🗺️</span> 优先级优化路线图</h2>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:60px">优先级</th>
+        <th style="width:50px">编号</th>
+        <th>优化项</th>
+        <th style="width:90px">维度</th>
+        <th style="width:90px">预估工时</th>
+        <th style="width:100px">建议批次</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><span class="priority-tag p0">P0</span></td><td>1</td><td>启用 Seata 分布式事务</td><td>核心能力</td><td>3-5 人日</td><td>批次 27</td></tr>
+      <tr><td><span class="priority-tag p0">P0</span></td><td>2</td><td>WebSocket 实时推送</td><td>核心能力</td><td>5-8 人日</td><td>批次 27</td></tr>
+      <tr><td><span class="priority-tag p0">P0</span></td><td>16</td><td>CI 质量门禁 (SonarQube + 安全扫描)</td><td>工程实践</td><td>3-5 人日</td><td>批次 27</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>3</td><td>Elasticsearch 全文检索集成</td><td>核心能力</td><td>8-12 人日</td><td>批次 28</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>4</td><td>文件病毒扫描 + 分片上传 + 在线预览</td><td>核心能力</td><td>6-10 人日</td><td>批次 28</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>5</td><td>定时报表生成与分发</td><td>核心能力</td><td>5-8 人日</td><td>批次 28</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>7</td><td>骨架屏组件</td><td>细节体验</td><td>2-3 人日</td><td>批次 28</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>8</td><td>列表页批量操作</td><td>细节体验</td><td>3-5 人日</td><td>批次 28</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>9</td><td>虚拟滚动大数据表格</td><td>细节体验</td><td>2-3 人日</td><td>批次 28</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>10</td><td>审计日志字段级 diff 可视化</td><td>细节体验</td><td>4-6 人日</td><td>批次 29</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>17</td><td>CD 流水线自动化</td><td>工程实践</td><td>3-5 人日</td><td>批次 29</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>18</td><td>契约测试 + 性能测试纳入 CI</td><td>工程实践</td><td>3-4 人日</td><td>批次 29</td></tr>
+      <tr><td><span class="priority-tag p1">P1</span></td><td>21</td><td>工作流引擎边界场景补测</td><td>架构设计</td><td>3-5 人日</td><td>批次 29</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>6</td><td>数据一致性校验机制</td><td>核心能力</td><td>3-5 人日</td><td>批次 30</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>11</td><td>异步导出 + 下载中心</td><td>细节体验</td><td>4-6 人日</td><td>批次 30</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>12</td><td>可定制仪表盘</td><td>细节体验</td><td>5-8 人日</td><td>批次 30</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>13</td><td>表单草稿/自动保存</td><td>细节体验</td><td>3-4 人日</td><td>批次 30</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>14</td><td>收藏/快速访问</td><td>细节体验</td><td>2-3 人日</td><td>批次 30</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>15</td><td>行内编辑</td><td>细节体验</td><td>3-4 人日</td><td>批次 31</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>19</td><td>仓库清理 + .gitignore 完善</td><td>工程实践</td><td>0.5 人日</td><td>批次 27</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>20</td><td>前端业务页面测试补全</td><td>工程实践</td><td>8-12 人日</td><td>批次 31-32</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>22</td><td>BFF 聚合接口</td><td>架构设计</td><td>4-6 人日</td><td>批次 31</td></tr>
+      <tr><td><span class="priority-tag p2">P2</span></td><td>23</td><td>API 版本管理策略</td><td>架构设计</td><td>2-3 人日</td><td>批次 31</td></tr>
+      <tr><td><span class="priority-tag p3">P3</span></td><td>24</td><td>多租户架构 (按需)</td><td>架构设计</td><td>15-20 人日</td><td>v2.0 规划</td></tr>
+    </tbody>
+  </table>
+
+  <h3>批次实施计划</h3>
+  <div class="timeline">
+    <div class="timeline-item p0">
+      <div class="time-label">批次 27 · P0 紧急修复 · 约 2 周</div>
+      <div class="time-title">分布式事务 + 实时通信 + CI 质量门禁</div>
+      <div class="time-desc">启用 Seata @GlobalTransactional 覆盖 5-8 个关键跨服务写路径；集成 WebSocket 实现通知/告警实时推送；CI 流水线接入 SonarQube + OWASP + Checkstyle 质量门禁；清理仓库调试残留文件。</div>
+    </div>
+    <div class="timeline-item p1">
+      <div class="time-label">批次 28 · P1 核心能力 + 体验优化 · 约 3 周</div>
+      <div class="time-title">ES 全文检索 + 文件处理增强 + 报表分发 + 骨架屏 + 批量操作 + 虚拟滚动</div>
+      <div class="time-desc">集成 Elasticsearch 实现全局搜索；文件服务增加病毒扫描/分片上传/在线预览；定时报表生成+邮件分发；前端骨架屏组件 + 列表批量操作 + vxe-table 虚拟滚动。</div>
+    </div>
+    <div class="timeline-item p1">
+      <div class="time-label">批次 29 · P1 工程闭环 + 审计可视化 · 约 2-3 周</div>
+      <div class="time-title">审计 diff 可视化 + CD 自动化 + 契约/性能测试 CI + 工作流补测</div>
+      <div class="time-desc">审计日志字段级 before/after diff 展示；CD 流水线串联 CI→镜像→Argo 灰度；Postman 契约测试 + JMeter 性能基线纳入 CI；自研工作流引擎边界场景测试补全。</div>
+    </div>
+    <div class="timeline-item p2">
+      <div class="time-label">批次 30-31 · P2 体验完善 + 架构增强 · 约 3-4 周</div>
+      <div class="time-title">异步导出 + 可定制仪表盘 + 表单草稿 + 收藏 + 行内编辑 + BFF 聚合 + API 版本策略</div>
+      <div class="time-desc">导出改异步+下载中心；仪表盘拖拽定制；长表单自动草稿；收藏/最近访问；表格行内编辑；BFF 聚合接口减少网络往返；API 版本管理规范制定。</div>
+    </div>
+    <div class="timeline-item p2">
+      <div class="time-label">批次 31-32 · P2 测试补全 · 约 2-3 周</div>
+      <div class="time-title">前端业务页面测试覆盖</div>
+      <div class="time-desc">按 P1 执行管理 (15 页) → P2 项目管理 (6 页) → P3 系统管理 (9 页) 顺序补全组件测试；API 层 100% 覆盖；关键页面增加 E2E 场景。</div>
+    </div>
+    <div class="timeline-item p3">
+      <div class="time-label">v2.0 远期规划 · P3</div>
+      <div class="time-title">多租户架构评估</div>
+      <div class="time-desc">根据业务发展评估 SaaS 化需求；若需要则为核心表添加 tenant_id + MyBatis-Plus 租户拦截器；否则标注为非目标。</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 总结 ===== -->
+<section>
+  <h2><span class="icon">📝</span> 总结</h2>
+  <div class="highlight-box">
+    <strong>核心判断：</strong>YDSZ PMIS 项目在业务功能覆盖度 (90 分)、安全合规 (95 分)、文档体系 (92 分) 三个维度已达到互联网大厂标准，是一个功能完整、安全可靠的企业级项目管理系统。全链路 14 模块 / 584 API / 1086 后端测试 / 52 前端页面 / 4 E2E 的体量体现了扎实的工程基础。
+  </div>
+  <div class="highlight-box">
+    <strong>主要短板：</strong>项目在 <strong>分布式事务一致性 (Seata 未启用)、实时通信 (无 WebSocket)、CI 质量门禁闭环、前端交互体验细节</strong> 四个方面与互联网大厂标准存在明显差距。其中 P0 级 3 项 (Seata/WebSocket/CI 门禁) 应在 2 周内紧急修复，P1 级 10 项应在 5-6 周内完成，P2 级 10 项在 6-8 周内完成。
+  </div>
+  <div class="highlight-box">
+    <strong>优化策略：</strong>遵循"先修核心缺陷 → 再补能力短板 → 后优化体验细节"的顺序，按 P0→P1→P2→P3 优先级推进。每个批次完成后同步更新 开发计划.md，确保交付可追踪。预计通过 5 个批次 (约 12-16 周) 的持续优化，项目整体成熟度可从当前 78 分提升至 90 分以上，全面对标互联网大厂标准。
+  </div>
+</section>
+
+<div class="footer">
+  <p>YDSZ PMIS 项目优化分析报告 · 2026-07-02 · 基于代码审计与互联网大厂标准对标分析</p>
+  <p style="margin-top:8px;">
+    <a id="cite-1"></a>[1] [行业报道] Spring Cloud Alibaba Seata 分布式事务最佳实践: <a href="http://m.toutiao.com/group/7237426063813460517/">头条/Seata教程</a><br>
+    <a id="cite-2"></a>[2] [专业社区] uWebSockets 构建企业级实时通知系统指南: <a href="https://blog.csdn.net/gitblog_00583/article/details/151700507">CSDN/实时通知系统</a><br>
+    <a id="cite-3"></a>[3] [专业社区] WebSocket 实战：构建实时消息推送系统: <a href="http://m.toutiao.com/group/7618571880567472640/">头条/WebSocket推送</a><br>
+    <a id="cite-4"></a>[4] [专业社区] Vue 中的懒加载、虚拟滚动与骨架屏技术: <a href="https://blog.csdn.net/qq_34490582/article/details/153773190">CSDN/前端性能优化</a><br>
+    <a id="cite-5"></a>[5] [专业社区] Vue3 大型列表渲染优化终极指南:虚拟滚动技术: <a href="https://blog.csdn.net/gitblog_00198/article/details/153082219">CSDN/虚拟滚动</a><br>
+    <a id="cite-6"></a>[6] [专业社区] CI/CD 质量门禁 (Quality Gate) 介绍: <a href="https://blog.csdn.net/Dontla/article/details/160309812">CSDN/质量门禁</a><br>
+    <a id="cite-7"></a>[7] [专业社区] SonarQube 全流程实战：从开发到 CI/CD 质量门禁: <a href="http://www.51testing.com/mobile/view.php?itemid=7810344">51Testing/SonarQube实战</a>
+  </p>
+</div>
+
+</div>
+</body>
+</html>

@@ -4,13 +4,16 @@ import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.WorkflowFacade;
+import com.njydsz.pmis.workflow.flow.dto.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.flow.entity.FlowCcDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.flow.service.FlowCcService;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
@@ -45,6 +48,8 @@ public class FlowEngineController {
     private final FlowInstanceService instanceService;
     /** 任务服务（P2-31/32/33 耗时统计/超期统计/多维筛选） */
     private final FlowTaskService taskService;
+    /** P0-3: 抄送服务 */
+    private final FlowCcService ccService;
 
     // ============== 引擎信息 ==============
 
@@ -615,5 +620,54 @@ public class FlowEngineController {
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
         return Result.ok(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize));
+    }
+
+    // ============== P0-3: 抄送中心 ==============
+
+    /**
+     * P0-3: 抄送中心 - 分页查询
+     *
+     * @param query 查询条件
+     * @return 抄送分页结果
+     */
+    @PostMapping("/cc/page")
+    public Result<PageResult<FlowCcDO>> pageCc(@RequestBody FlowCcQueryDTO query) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        Long userId = SecurityContext.getUserId();
+        List<FlowCcDO> rows = ccService.pageMyCc(tenantId, userId, query);
+        long total = ccService.countMyCc(tenantId, userId, query);
+        return Result.ok(PageResult.of(rows, total,
+                query.getPageNum() == null ? 1 : query.getPageNum(),
+                query.getPageSize() == null ? 20 : query.getPageSize()));
+    }
+
+    /**
+     * P0-3: 抄送未读数（前端导航栏徽标）
+     */
+    @GetMapping("/cc/unread-count")
+    public Result<Long> ccUnreadCount() {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        Long userId = SecurityContext.getUserId();
+        return Result.ok(ccService.countUnread(tenantId, userId));
+    }
+
+    /**
+     * P0-3: 抄送标记已读
+     */
+    @PostMapping("/cc/{id}/read")
+    public Result<Boolean> ccMarkRead(@PathVariable Long id) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        Long userId = SecurityContext.getUserId();
+        return Result.ok(ccService.markRead(tenantId, userId, id));
+    }
+
+    /**
+     * P0-3: 抄送全部标记已读
+     */
+    @PostMapping("/cc/read-all")
+    public Result<Integer> ccMarkAllRead() {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        Long userId = SecurityContext.getUserId();
+        return Result.ok(ccService.markAllRead(tenantId, userId));
     }
 }

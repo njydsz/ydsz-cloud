@@ -167,8 +167,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         String var = instance.getVariable();
         if (StringUtils.hasText(reason)) {
             try {
-                Map<String, Object> m = var == null ? new java.util.HashMap<>()
-                        : JSON.parseObject(var, Map.class);
+                Map<String, Object> m = parseVariables(var);
                 m.put("_terminateReason", reason);
                 var = JSON.toJSONString(m);
                 // 修复 P2-18: 写回 DB（之前仅改局部变量未持久化）
@@ -365,7 +364,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @SuppressWarnings("unchecked")
     public void setVariable(Long instanceId, String key, Object value) {
         // P2-24: 合并写入单个变量并持久化
         if (!StringUtils.hasText(key)) {
@@ -383,7 +381,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    @SuppressWarnings("unchecked")
     public void setVariables(Long instanceId, Map<String, Object> variables) {
         // P2-24: 批量合并写入变量并持久化
         if (variables == null || variables.isEmpty()) {

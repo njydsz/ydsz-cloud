@@ -284,6 +284,20 @@ export const PC = {
   AGENT_ORCHESTRATION_RUN: 'agent:orchestration:run',
   AGENT_ORCHESTRATION_VIEW: 'agent:orchestration:view',
   AGENT_PREDICTION_VIEW: 'agent:prediction:view',
+
+  // ============= 工作流(workflow) =============
+  WORKFLOW_DEFINITION_LIST: 'workflow:definition:list',
+  WORKFLOW_DEFINITION_CREATE: 'workflow:definition:create',
+  WORKFLOW_DEFINITION_UPDATE: 'workflow:definition:update',
+  WORKFLOW_DEFINITION_DELETE: 'workflow:definition:delete',
+  WORKFLOW_DEFINITION_PUBLISH: 'workflow:definition:publish',
+  WORKFLOW_DEFINITION_DEPLOY: 'workflow:definition:deploy',
+  WORKFLOW_APPROVAL_CENTER: 'workflow:approval-center:view',
+  WORKFLOW_CC_VIEW: 'workflow:cc:view',
+  WORKFLOW_MONITOR: 'workflow:monitor:view',
+  WORKFLOW_STATS: 'workflow:stats:view',
+  WORKFLOW_DIAGRAM: 'workflow:diagram:view',
+  WORKFLOW_TIMELINE: 'workflow:timeline:view',
 } as const
 
 /** 权限码字面量联合类型（用于参数类型约束） */

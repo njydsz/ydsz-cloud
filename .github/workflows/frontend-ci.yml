@@ -51,6 +51,21 @@ jobs:
       - name: Type Check & Build
         run: pnpm run build
 
+      - name: SonarQube Scan
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          if [ -n "$SONAR_TOKEN" ]; then
+            npx sonar-scanner \
+              -Dsonar.projectKey=ydsz-pmis-frontend \
+              -Dsonar.organization=ydsz \
+              -Dsonar.sources=src \
+              -Dsonar.tests=src/__tests__ \
+              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
+          else
+            echo "SONAR_TOKEN not set, skipping SonarQube scan"
+          fi
+
       - name: Upload Coverage
         if: always()
         uses: actions/upload-artifact@v4

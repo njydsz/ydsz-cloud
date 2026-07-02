@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
+import org.apache.seata.spring.annotation.GlobalTransactional;
 
 import java.util.List;
 import java.util.Map;
@@ -67,6 +68,7 @@ public class NotificationServiceImpl implements NotificationService {
      * @throws BizException 当接收人非单人时抛出
      */
     @Override
+    @GlobalTransactional(name = "pmis-notification-send-with-email", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
     public EmailDispatchResult sendWithEmail(NotificationSendDTO dto) {
         // 1. 站内通知入库（仅支持单接收人）

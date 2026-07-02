@@ -40,6 +40,20 @@ public final class TraceIdUtil {
     }
 
     /**
+     * 获取或创建：未设置时自动生成 16 位
+     *
+     * @return 非空 traceId
+     */
+    public static String getOrCreate() {
+        String id = MDC.get(TRACE_ID_KEY);
+        if (id == null || id.isEmpty()) {
+            id = generate();
+            MDC.put(TRACE_ID_KEY, id);
+        }
+        return id;
+    }
+
+    /**
      * 设置 traceId 到当前线程 MDC
      *
      * @param traceId traceId

@@ -1,15 +1,12 @@
 package com.njydsz.pmis.common.config;
 
-import com.alibaba.csp.sentinel.adapter.spring.webmvc.callback.BlockExceptionHandler;
-import com.alibaba.csp.sentinel.slots.block.BlockException;
+import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.BlockExceptionHandler;
 import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import com.alibaba.csp.sentinel.slots.system.SystemBlockException;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication;
@@ -48,7 +45,7 @@ public class SentinelAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public BlockExceptionHandler sentinelBlockExceptionHandler() {
-        return (request, response, e) -> {
+        return (request, response, origin, e) -> {
             Result<?> body;
             if (e instanceof FlowException) {
                 response.setStatus(429);
