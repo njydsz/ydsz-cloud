@@ -84,7 +84,7 @@ onMounted(loadCc)
       <el-button type="primary" @click="loadCc">查询</el-button>
       <el-button type="warning" @click="markAllCcRead">全部标为已读</el-button>
     </div>
-    <el-table :data="ccList" v-loading="ccLoading" stripe>
+    <el-table v-loading="ccLoading" :data="ccList" stripe>
       <el-table-column prop="title" label="抄送标题" min-width="220" show-overflow-tooltip />
       <el-table-column prop="flowName" label="流程" width="160" />
       <el-table-column prop="nodeName" label="触发节点" width="120" />

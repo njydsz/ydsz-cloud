@@ -373,8 +373,8 @@ onMounted(() => {
 
     <!-- 待办表格 -->
     <el-table
-      :data="todoList"
       v-loading="todoLoading"
+      :data="todoList"
       stripe
       :row-class-name="tableRowClassName"
       @selection-change="(v: FlowTaskDTO[]) => (todoSelection = v)"

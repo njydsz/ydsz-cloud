@@ -311,7 +311,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return Collections.emptyMap();
         }
         try {
-            return com.alibaba.fastjson2.JSON.parseObject(json, Map.class);
+            return JSON.parseObject(json, Map.class);
         } catch (Exception e) {
             log.warn("[Flow] 变量解析失败: {}", e.getMessage());
             return Collections.emptyMap();

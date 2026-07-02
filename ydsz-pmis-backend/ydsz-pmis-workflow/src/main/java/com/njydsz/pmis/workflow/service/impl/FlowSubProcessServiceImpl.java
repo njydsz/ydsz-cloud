@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
@@ -422,7 +423,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             return new HashMap<>();
         }
         try {
-            Map<String, Object> map = com.alibaba.fastjson2.JSON.parseObject(variableJson, Map.class);
+            Map<String, Object> map = JSON.parseObject(variableJson, Map.class);
             return map == null ? new HashMap<>() : map;
         } catch (Exception e) {
             return new HashMap<>();

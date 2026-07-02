@@ -8,19 +8,21 @@ import { useAppStore } from '@/store/modules/app'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
 import NotificationBell from '@/components/common/NotificationBell.vue'
 
 const appStore = useAppStore()
 const userStore = useUserStore()
 const router = useRouter()
+const { t } = useI18n()
 
 /** 退出登录：二次确认后调用 userStore.logout 并跳登录页 */
 async function handleLogout() {
   try {
-    await ElMessageBox.confirm('确认退出登录吗？', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
+    await ElMessageBox.confirm(t('common.confirmLogout'), t('common.tip'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
       type: 'warning',
     })
     await userStore.logout()
@@ -50,7 +52,7 @@ function handleToggleTheme() {
     <div class="header-right">
       <NotificationBell />
       <LanguageSwitcher />
-      <el-tooltip content="主题切换">
+      <el-tooltip :content="t('common.theme')">
         <el-button text @click="handleToggleTheme">
           <el-icon :size="18">
             <Sunny v-if="appStore.theme === 'light'" />
@@ -58,7 +60,7 @@ function handleToggleTheme() {
           </el-icon>
         </el-button>
       </el-tooltip>
-      <el-tooltip content="全屏">
+      <el-tooltip :content="t('common.fullscreen')">
         <el-button text>
           <el-icon :size="18"><FullScreen /></el-icon>
         </el-button>
@@ -73,10 +75,10 @@ function handleToggleTheme() {
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item @click="router.push('/profile/security')">
-              <el-icon><Lock /></el-icon>安全设置
+              <el-icon><Lock /></el-icon>{{ t('common.securitySettings') }}
             </el-dropdown-item>
             <el-dropdown-item divided @click="handleLogout">
-              <el-icon><SwitchButton /></el-icon>退出登录
+              <el-icon><SwitchButton /></el-icon>{{ t('common.logout') }}
             </el-dropdown-item>
           </el-dropdown-menu>
         </template>

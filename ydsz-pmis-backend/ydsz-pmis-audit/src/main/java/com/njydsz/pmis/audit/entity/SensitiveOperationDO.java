@@ -53,6 +53,6 @@ public class SensitiveOperationDO implements Serializable {
     /** 租户 ID */
     private Long tenantId;
 
-    @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

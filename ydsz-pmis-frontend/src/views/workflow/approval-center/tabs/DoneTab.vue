@@ -52,7 +52,7 @@ onMounted(loadDone)
       />
       <el-button type="primary" @click="loadDone">查询</el-button>
     </div>
-    <el-table :data="doneList" v-loading="doneLoading" stripe>
+    <el-table v-loading="doneLoading" :data="doneList" stripe>
       <el-table-column prop="title" label="审批事项" min-width="220" show-overflow-tooltip />
       <el-table-column prop="flowName" label="流程" width="160" />
       <el-table-column prop="nodeName" label="节点" width="120" />

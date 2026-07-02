@@ -13,6 +13,8 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+
+import java.util.LinkedHashMap;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -218,7 +220,7 @@ public class AgentController {
     @PostMapping("/internal/execute")
     public Result<Map<String, Object>> internalExecute(@RequestBody Map<String, Object> body) {
         if (body == null) {
-            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
+            return Result.failed(BizErrorCode.BAD_REQUEST, "请求体不能为空");
         }
         String agentType = body.get("agentType") == null ? null : body.get("agentType").toString();
         if (agentType == null) {

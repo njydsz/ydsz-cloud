@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
@@ -15,11 +16,16 @@ import com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.service.FlowAiAssistService;
 import com.njydsz.pmis.workflow.service.FlowCcService;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
+import com.njydsz.pmis.workflow.service.FlowEfficiencyService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.service.FlowSlaService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
+import com.njydsz.pmis.workflow.service.FlowTemplateService;
+import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -58,15 +64,15 @@ public class FlowEngineController {
     /** P1-4: 长期授权委派服务 */
     private final FlowDelegateAuthService delegateAuthService;
     /** GAP-P2: 审批效率分析服务 */
-    private final com.njydsz.pmis.workflow.service.FlowEfficiencyService efficiencyService;
+    private final FlowEfficiencyService efficiencyService;
     /** GAP-P2: 流程模板服务 */
-    private final com.njydsz.pmis.workflow.service.FlowTemplateService templateService;
+    private final FlowTemplateService templateService;
     /** P1-6: SLA 超时自动策略服务 */
-    private final com.njydsz.pmis.workflow.service.FlowSlaService slaService;
+    private final FlowSlaService slaService;
     /** P1-7: WebSocket 待办数实时推送服务 */
-    private final com.njydsz.pmis.workflow.service.FlowTodoCountPushService todoCountPushService;
+    private final FlowTodoCountPushService todoCountPushService;
     /** P2-1: 智能审批辅助服务（推荐审批人 / 起草意见） */
-    private final com.njydsz.pmis.workflow.service.FlowAiAssistService aiAssistService;
+    private final FlowAiAssistService aiAssistService;
 
     // ============== 引擎信息 ==============
 
@@ -1035,7 +1041,7 @@ public class FlowEngineController {
     public Result<List<Map<String, Object>>> recommendApprovers(
             @RequestBody Map<String, Object> body) {
         if (body == null) {
-            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
+            return Result.failed(BizErrorCode.BAD_REQUEST, "请求体不能为空");
         }
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> candidates = body.get("candidates") instanceof List<?>
@@ -1058,7 +1064,7 @@ public class FlowEngineController {
     @PostMapping("/ai/draft-comment")
     public Result<Map<String, Object>> draftComment(@RequestBody Map<String, Object> body) {
         if (body == null) {
-            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
+            return Result.failed(BizErrorCode.BAD_REQUEST, "请求体不能为空");
         }
         Map<String, Object> result = aiAssistService.draftComment(body);
         return Result.ok(result);

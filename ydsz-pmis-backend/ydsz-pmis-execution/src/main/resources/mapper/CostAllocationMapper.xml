@@ -95,4 +95,19 @@
         GROUP BY COALESCE(NULLIF(level_code, ''), 'UNKNOWN')
         ORDER BY total_amount DESC
     </select>
+
+    <!--
+      批次18 增量：跨项目按月汇总成本（最近 N 个月）
+      用于 KPI 趋势的"累计成本"序列。period 格式 YYYY-MM，返回 month / total_amount。
+    -->
+    <select id="sumByRecentMonth" resultType="java.util.Map">
+        SELECT period                              AS month,
+               COALESCE(SUM(amount), 0)            AS total_amount
+        FROM pmis_cost_allocation
+        WHERE deleted = 0
+          AND period IS NOT NULL
+        GROUP BY period
+        ORDER BY period DESC
+        LIMIT #{limit}
+    </select>
 </mapper>

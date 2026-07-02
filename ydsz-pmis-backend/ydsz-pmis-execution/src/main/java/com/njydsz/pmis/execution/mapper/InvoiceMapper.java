@@ -131,6 +131,16 @@ public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
     List<Map<String, Object>> sumByDepartment();
 
     /**
+     * 项目类型维度下钻
+     *
+     * <p>JOIN pmis_project_initiation 获取项目类型，按项目类型聚合开票金额。
+     * 返回字段：project_type / cnt / total_amount
+     *
+     * @return 项目类型维度开票汇总列表
+     */
+    List<Map<String, Object>> sumByProjectType();
+
+    /**
      * 统计独立项目数
      *
      * @return 独立项目数

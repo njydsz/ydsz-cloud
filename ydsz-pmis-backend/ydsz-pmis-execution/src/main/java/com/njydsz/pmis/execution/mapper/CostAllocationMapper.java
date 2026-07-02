@@ -93,4 +93,15 @@ public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
      * 返回字段：levelCode / totalAmount / entryCount
      */
     List<Map<String, Object>> sumByLevelCode();
+
+    /**
+     * 批次18 增量：跨项目按月汇总成本（最近 N 个月）
+     *
+     * <p>用于 KPI 趋势的"累计成本"序列。按 period（YYYY-MM）聚合全部项目的成本金额。
+     * 返回字段：month / total_amount
+     *
+     * @param limit 限定返回最近的 N 个月
+     * @return 月度成本汇总列表
+     */
+    List<Map<String, Object>> sumByRecentMonth(@Param("limit") Integer limit);
 }

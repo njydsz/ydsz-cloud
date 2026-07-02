@@ -45,10 +45,10 @@ public class OpportunityFollowDO implements Serializable {
     private LocalDate nextFollowDate;
 
     /** 创建时间 */
-    @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     /** 逻辑删除标识（0 未删除，1 已删除） */
-    @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
+    @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

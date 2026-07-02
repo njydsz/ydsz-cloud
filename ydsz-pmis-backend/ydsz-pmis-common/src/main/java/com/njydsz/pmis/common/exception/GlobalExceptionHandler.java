@@ -67,9 +67,12 @@ public class GlobalExceptionHandler {
                 req.getMethod(), req.getRequestURI(), e.getCode(), e.getMessage());
         String message = e.getErrorMessage();
         BizErrorCode errorCode = findErrorCode(e.getCode());
-        // 仅当异常使用 BizErrorCode 默认 message 构造（无自定义 message）时，走 i18n 解析
         if (errorCode != null && errorCode.getMessage().equals(message)) {
+            // 仅当异常使用 BizErrorCode 默认 message 构造（无自定义 message）时，走 i18n 解析
             message = resolveMessage(errorCode);
+        } else if (message != null && message.startsWith("error.")) {
+            // 自定义 message 看起来是 i18n key（以 "error." 开头），尝试通过 MessageSource 解析
+            message = resolveMessage(message, null, message);
         }
         Result<Void> r = Result.failed(e.getCode(), message);
         r.setTraceId(TraceIdUtil.get());

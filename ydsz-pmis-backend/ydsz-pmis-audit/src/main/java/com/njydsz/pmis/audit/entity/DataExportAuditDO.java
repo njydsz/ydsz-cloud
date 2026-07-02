@@ -1,5 +1,6 @@
 package com.njydsz.pmis.audit.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -57,6 +58,6 @@ public class DataExportAuditDO implements Serializable {
     private LocalDateTime exportedAt;
 
     /** 创建时间 */
-    @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

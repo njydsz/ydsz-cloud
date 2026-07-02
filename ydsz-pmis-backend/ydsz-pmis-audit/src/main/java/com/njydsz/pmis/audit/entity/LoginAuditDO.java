@@ -50,6 +50,6 @@ public class LoginAuditDO implements Serializable {
     private Long tenantId;
 
     /** 创建时间 */
-    @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

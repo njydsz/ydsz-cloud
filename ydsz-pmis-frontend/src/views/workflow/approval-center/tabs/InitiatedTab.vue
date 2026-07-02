@@ -69,7 +69,7 @@ onMounted(loadMy)
       </el-select>
       <el-button type="primary" @click="loadMy">查询</el-button>
     </div>
-    <el-table :data="myList" v-loading="myLoading" stripe>
+    <el-table v-loading="myLoading" :data="myList" stripe>
       <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip />
       <el-table-column prop="flowName" label="流程" width="160" />
       <el-table-column prop="businessNo" label="业务单号" width="160" />

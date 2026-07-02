@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.service.impl;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.dto.EmbeddedApprovalViewDTO;
@@ -21,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -132,7 +134,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     @Override
     public void quickAction(EmbeddedApprovalActionDTO dto) {
         if (dto == null) {
-            throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "请求体不能为空");
         }
         String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
         FlowInstanceDO instance = instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
@@ -140,7 +142,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.NOT_FOUND, "流程实例不存在");
         }
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
-            throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BIZ_ERROR, "流程已结束，不能操作");
+            throw new BizException(BizErrorCode.BIZ_ERROR, "流程已结束，不能操作");
         }
 
         switch (action) {
@@ -150,7 +152,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             case "DELEGATE": {
                 FlowTaskDO mine = findMyTask(instance.getId(), dto.getUserId());
                 if (mine == null) {
-                    throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.FORBIDDEN,
+                    throw new BizException(BizErrorCode.FORBIDDEN,
                             "当前用户在该流程没有待办任务");
                 }
                 FlowTaskOperateDTO op = new FlowTaskOperateDTO();
@@ -169,7 +171,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                     taskService.reject(op);
                 } else if ("TRANSFER".equals(action)) {
                     if (dto.getTargetUserId() == null) {
-                        throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST,
+                        throw new BizException(BizErrorCode.BAD_REQUEST,
                                 "转办操作必须指定 targetUserId");
                     }
                     taskService.transfer(op);

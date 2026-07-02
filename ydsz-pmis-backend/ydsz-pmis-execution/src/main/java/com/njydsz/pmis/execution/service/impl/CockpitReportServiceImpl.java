@@ -94,6 +94,9 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
+    @Cacheable(value = "cockpit:overview",
+            key = "(#period ?: 'all') + '::' + (#drillDown == null ? 'none' : (#drillDown.dimension ?: '') + '_' + (#drillDown.value ?: ''))",
+            unless = "#result == null")
     public CockpitKpiVO overview(String period, CockpitDrillDownDTO drillDown) {
         CockpitKpiVO kpi = new CockpitKpiVO();
 
@@ -214,6 +217,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
+    @Cacheable(value = "cockpit:drill:dept", key = "(#period ?: 'all')",
+            unless = "#result == null || #result.isEmpty()")
     public List<Map<String, Object>> drillByDept(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
         try {
@@ -225,11 +230,21 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
+    @Cacheable(value = "cockpit:drill:projectType", key = "(#period ?: 'all')",
+            unless = "#result == null || #result.isEmpty()")
     public List<Map<String, Object>> drillByProjectType(String period) {
-        return new ArrayList<>();
+        List<Map<String, Object>> out = new ArrayList<>();
+        try {
+            out = invoiceMapper.sumByProjectType();
+        } catch (Exception e) {
+            log.warn("[Cockpit] 项目类型下钻失败: {}", e.getMessage());
+        }
+        return out;
     }
 
     @Override
+    @Cacheable(value = "cockpit:drill:customer", key = "(#period ?: 'all')",
+            unless = "#result == null || #result.isEmpty()")
     public List<Map<String, Object>> drillByCustomer(String period) {
         List<Map<String, Object>> out = new ArrayList<>();
         try {
@@ -241,6 +256,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
+    @Cacheable(value = "cockpit:contractYearlyTrend", unless = "#result == null")
     public Map<String, Object> contractAmountYearlyTrend() {
         Map<String, Object> out = new HashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -289,37 +305,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
             previousAmount = amt;
         }
 
-        // series 配置（柱图 = 合同总额；折线 = 项目数）
-        List<Map<String, Object>> series = new ArrayList<>();
-        Map<String, Object> sAmount = new LinkedHashMap<>();
-        sAmount.put("name", "合同总额");
-        sAmount.put("type", "bar");
-        sAmount.put("data", amountSeries);
-        sAmount.put("unit", "元");
-        sAmount.put("yAxisIndex", 0);
-        series.add(sAmount);
-        Map<String, Object> sProj = new LinkedHashMap<>();
-        sProj.put("name", "项目数");
-        sProj.put("type", "line");
-        sProj.put("data", projectCountSeries);
-        sProj.put("unit", "个");
-        sProj.put("yAxisIndex", 1);
-        sProj.put("smooth", true);
-        series.add(sProj);
-
-        List<Map<String, Object>> yAxis = new ArrayList<>();
-        Map<String, Object> ya0 = new LinkedHashMap<>();
-        ya0.put("name", "合同总额（元）");
-        ya0.put("position", "left");
-        ya0.put("type", "value");
-        yAxis.add(ya0);
-        Map<String, Object> ya1 = new LinkedHashMap<>();
-        ya1.put("name", "项目数");
-        ya1.put("position", "right");
-        ya1.put("type", "value");
-        ya1.put("min", 0);
-        yAxis.add(ya1);
-
+        // 纯数据返回：前端据此组装 ECharts 配置（series/yAxis），Service 层不再耦合展示逻辑
         Map<String, Object> summary = new LinkedHashMap<>();
         summary.put("yearCount", years.size());
         summary.put("totalAmount", totalAmount);
@@ -332,8 +318,9 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         summary.put("totalInvoices", totalInvoices);
 
         out.put("years", years);
-        out.put("series", series);
-        out.put("yAxisConfig", yAxis);
+        out.put("amountSeries", amountSeries);
+        out.put("projectCountSeries", projectCountSeries);
+        out.put("invoiceCountSeries", invoiceCountSeries);
         out.put("summary", summary);
         return out;
     }
@@ -368,8 +355,16 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     private BigDecimal benchIdleCostSafe() {
-        // 用户模块 Feign 集成在阶段二补充，此处返回 0 占位
-        return ZERO;
+        try {
+            Result<Map<String, Object>> resp = benchResourceClient.getBenchDashboard();
+            if (resp == null || resp.getData() == null) {
+                return ZERO;
+            }
+            return toDecimal(resp.getData().get("totalIdleCost"));
+        } catch (Exception e) {
+            log.warn("[Cockpit] Bench 闲置成本获取失败: {}", e.getMessage());
+            return ZERO;
+        }
     }
 
     private BigDecimal nz(BigDecimal v) {
@@ -623,12 +618,14 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     @Override
+    @Cacheable(value = "cockpit:kpiTrend", key = "(#months == null ? 12 : #months)", unless = "#result == null")
     public KpiTrendVO kpiTrend(Integer months) {
         int limit = months == null || months <= 0 ? 12 : Math.min(months, 36);
 
-        // 1) 倒序拉数据
+        // 1) 倒序拉数据：合同 / 回款 / 成本
         List<Map<String, Object>> contractRowsDesc = new ArrayList<>();
         List<Map<String, Object>> paymentRowsDesc = new ArrayList<>();
+        List<Map<String, Object>> costRowsDesc = new ArrayList<>();
         try {
             contractRowsDesc = invoiceMapper.sumByRecentMonth(Integer.valueOf(limit));
         } catch (Exception e) {
@@ -639,11 +636,17 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         } catch (Exception e) {
             log.warn("[Cockpit] KPI 趋势-回款查询失败: {}", e.getMessage());
         }
+        try {
+            costRowsDesc = costAllocationMapper.sumByRecentMonth(limit);
+        } catch (Exception e) {
+            log.warn("[Cockpit] KPI 趋势-成本查询失败: {}", e.getMessage());
+        }
 
-        // 2) 升序排序 + 月份对齐
+        // 2) 升序排序 + 月份对齐（合同/回款/成本三源合并）
         List<String> contractMonths = extractMonths(contractRowsDesc);
         List<String> paymentMonths = extractMonths(paymentRowsDesc);
-        List<String> periods = mergeAndSortMonths(contractMonths, paymentMonths, limit);
+        List<String> costMonths = extractMonths(costRowsDesc);
+        List<String> periods = mergeAndSortMonths(contractMonths, paymentMonths, costMonths, limit);
         Collections.reverse(periods); // 升序输出
 
         List<BigDecimal> contractSeries = new ArrayList<>();
@@ -655,6 +658,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
 
         Map<String, BigDecimal> contractMap = toMonthMap(contractRowsDesc, "total_amount");
         Map<String, BigDecimal> paymentMap = toMonthMap(paymentRowsDesc, "amount");
+        Map<String, BigDecimal> costMap = toMonthMap(costRowsDesc, "total_amount");
+        Map<String, Integer> projectCountMap = toMonthIntMap(contractRowsDesc, "project_count");
 
         BigDecimal prevContract = null;
         BigDecimal prevRevenue = null;
@@ -667,9 +672,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
             String m = periods.get(i);
             BigDecimal amt = contractMap.getOrDefault(m, ZERO);
             BigDecimal rev = paymentMap.getOrDefault(m, ZERO);
-            // 成本 = 同月成本归集（用 cost_allocation.monthlySummary 暂不可得，先用 0 + 由前端解释）
-            // 此处保守用 0 占位，避免无谓的 SQL 流量
-            BigDecimal cost = ZERO;
+            // 成本 = 同月成本归集（cost_allocation.period 按月聚合）
+            BigDecimal cost = costMap.getOrDefault(m, ZERO);
             BigDecimal profit = rev.subtract(cost);
             BigDecimal margin = rev.signum() == 0
                     ? ZERO
@@ -682,8 +686,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
             costSeries.add(cost);
             profitSeries.add(profit);
             marginSeries.add(margin);
-            // 项目数：用最近 3 个月的活跃数做近似（避免高基数查询）
-            projectSeries.add(0);
+            // 项目数 = 当月有开票记录的独立立项数（COUNT(DISTINCT initiation_id)）
+            projectSeries.add(projectCountMap.getOrDefault(m, 0));
 
             if (i > 0) {
                 if (prevContract != null && prevContract.signum() > 0) {
@@ -825,22 +829,37 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     }
 
     /**
-     * 合并两个月份列表并去重倒序截断
+     * 从 SQL 聚合结果中按月提取整型指标（如项目数）
      */
-    private List<String> mergeAndSortMonths(List<String> a, List<String> b, int limit) {
-        List<String> all = new ArrayList<>();
-        all.addAll(a);
-        all.addAll(b);
-        // 去重
-        List<String> dedup = new ArrayList<>();
-        for (String s : all) {
-            if (!dedup.contains(s)) dedup.add(s);
+    private Map<String, Integer> toMonthIntMap(List<Map<String, Object>> rows, String field) {
+        Map<String, Integer> out = new HashMap<>();
+        if (rows == null) return out;
+        for (Map<String, Object> r : rows) {
+            Object m = r.get("month");
+            if (m == null) m = r.get("MONTH");
+            if (m == null) continue;
+            String key = String.valueOf(m);
+            if (key.isEmpty() || "null".equalsIgnoreCase(key)) continue;
+            out.put(key, toIntOrZero(r.get(field)));
         }
-        // 倒序
-        dedup.sort((x, y) -> y.compareTo(x));
-        if (dedup.size() > limit) {
-            dedup = dedup.subList(0, limit);
+        return out;
+    }
+
+    /**
+     * 合并多个月份列表并去重倒序截断
+     *
+     * <p>使用 LinkedHashSet 去重，将原 List.contains() 的 O(n²) 降为 O(n)。
+     */
+    private List<String> mergeAndSortMonths(List<String> a, List<String> b, List<String> c, int limit) {
+        LinkedHashSet<String> dedup = new LinkedHashSet<>();
+        if (a != null) dedup.addAll(a);
+        if (b != null) dedup.addAll(b);
+        if (c != null) dedup.addAll(c);
+        List<String> result = new ArrayList<>(dedup);
+        result.sort((x, y) -> y.compareTo(x));
+        if (result.size() > limit) {
+            result = result.subList(0, limit);
         }
-        return dedup;
+        return result;
     }
 }

@@ -117,19 +117,14 @@
       批次18 增量：跨项目按月汇总已确认回款（最近 N 个月）
     -->
     <select id="aggregateByRecentMonth" resultType="java.util.Map">
-        SELECT t.month,
-               t.amount,
-               t.cnt
-        FROM (
-            SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month,
-                   COALESCE(SUM(amount), 0)         AS amount,
-                   COUNT(1)                         AS cnt
-            FROM pmis_finance_payment
-            WHERE status IN ('CONFIRMED', 'ALLOCATED') AND deleted = 0
-              AND payment_date IS NOT NULL
-            GROUP BY TO_CHAR(payment_date, 'YYYY-MM')
-            ORDER BY month DESC
-        ) t
-        WHERE ROWNUM &lt;= #{limit}
+        SELECT TO_CHAR(payment_date, 'YYYY-MM') AS month,
+               COALESCE(SUM(amount), 0)         AS amount,
+               COUNT(1)                         AS cnt
+        FROM pmis_finance_payment
+        WHERE status IN ('CONFIRMED', 'ALLOCATED') AND deleted = 0
+          AND payment_date IS NOT NULL
+        GROUP BY TO_CHAR(payment_date, 'YYYY-MM')
+        ORDER BY month DESC
+        LIMIT #{limit}
     </select>
 </mapper>
