@@ -26,6 +26,7 @@ public class UtilizationCalculator {
      *
      * @param billableHours 已计费人时
      * @param totalHours    投入人时
+     * @return 计费利用率（0-1，保留 4 位小数）；投入人时为 0 时返回 0
      */
     public static BigDecimal billableUtilization(BigDecimal billableHours, BigDecimal totalHours) {
         if (billableHours == null) billableHours = BigDecimal.ZERO;
@@ -35,6 +36,9 @@ public class UtilizationCalculator {
 
     /**
      * 是否过载
+     *
+     * @param activeProjectCount 活跃项目数
+     * @return 达到过载阈值返回 true
      */
     public static boolean isOverloaded(int activeProjectCount) {
         return activeProjectCount >= OVERLOAD_PROJECT_THRESHOLD;
@@ -47,6 +51,9 @@ public class UtilizationCalculator {
      *   <li>60%~85% NORMAL</li>
      *   <li>≥ 85% HIGH</li>
      * </ul>
+     *
+     * @param utilization 计费利用率
+     * @return 评级 LOW/NORMAL/HIGH
      */
     public static String utilizationLevel(BigDecimal utilization) {
         if (utilization == null) return "LOW";

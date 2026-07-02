@@ -35,14 +35,21 @@ import java.util.Base64;
  */
 public final class CryptoUtil {
 
+    /** 安全随机数生成器 */
     private static final SecureRandom RANDOM = new SecureRandom();
+    /** 盐字符表 */
     private static final String SALT_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
+    /** AES/GCM 算法变换名 */
     private static final String AES_TRANSFORM = "AES/GCM/NoPadding";
+    /** SM4/GCM 算法变换名 */
     private static final String SM4_TRANSFORM = "SM4/GCM/NoPadding";
+    /** GCM IV 长度（字节） */
     private static final int GCM_IV_LEN = 12;
+    /** GCM 认证 tag 位数 */
     private static final int GCM_TAG_BITS = 128;
 
+    /** BouncyCastle 是否已注册（volatile 双重检查） */
     private static volatile boolean bcRegistered = false;
 
     static {
@@ -62,6 +69,12 @@ public final class CryptoUtil {
 
     // ==================== 摘要 ====================
 
+    /**
+     * 计算 MD5 摘要（32 位十六进制字符串）
+     *
+     * @param input 原文
+     * @return 十六进制摘要；输入为空时返回 null
+     */
     public static String md5(String input) {
         if (StrUtil.isBlank(input)) {
             return null;
@@ -69,6 +82,12 @@ public final class CryptoUtil {
         return DigestUtils.md5DigestAsHex(input.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * 计算 SHA-256 摘要（64 位十六进制字符串）
+     *
+     * @param input 原文
+     * @return 十六进制摘要；输入为空时返回 null
+     */
     public static String sha256(String input) {
         if (StrUtil.isBlank(input)) {
             return null;
@@ -82,6 +101,12 @@ public final class CryptoUtil {
         }
     }
 
+    /**
+     * 字节数组转十六进制字符串
+     *
+     * @param data 字节数组
+     * @return 十六进制字符串
+     */
     public static String toHex(byte[] data) {
         StringBuilder sb = new StringBuilder(data.length * 2);
         for (byte b : data) {
@@ -97,6 +122,7 @@ public final class CryptoUtil {
      *
      * <p>兼容历史数据，新系统建议改用 {@link #hashPasswordPBKDF2(String, byte[], int)}。
      *
+     * @param rawPassword 明文密码
      * @return [加密密码, 盐]
      */
     public static String[] encryptPassword(String rawPassword) {
@@ -105,6 +131,14 @@ public final class CryptoUtil {
         return new String[]{encrypted, salt};
     }
 
+    /**
+     * 校验 MD5 加盐密码
+     *
+     * @param rawPassword 明文密码
+     * @param encrypted   已加密密码
+     * @param salt        盐
+     * @return true 表示校验通过
+     */
     public static boolean verifyPassword(String rawPassword, String encrypted, String salt) {
         if (StrUtil.hasBlank(rawPassword, encrypted, salt)) {
             return false;
@@ -135,12 +169,28 @@ public final class CryptoUtil {
         }
     }
 
+    /**
+     * 校验 PBKDF2 密码哈希
+     *
+     * @param rawPassword  明文密码
+     * @param salt         盐
+     * @param iterations   迭代次数
+     * @param expectedHash 期望的哈希（Base64）
+     * @return true 表示校验通过
+     */
     public static boolean verifyPasswordPBKDF2(String rawPassword, byte[] salt, int iterations, String expectedHash) {
         if (StrUtil.isBlank(rawPassword) || expectedHash == null) return false;
         String actual = hashPasswordPBKDF2(rawPassword, salt, iterations);
         return constantTimeEquals(expectedHash, actual);
     }
 
+    /**
+     * 常量时间字符串比较，防止时序攻击
+     *
+     * @param a 字符串 a
+     * @param b 字符串 b
+     * @return true 表示相等
+     */
     public static boolean constantTimeEquals(String a, String b) {
         if (a == null || b == null) return false;
         byte[] ab = a.getBytes(StandardCharsets.UTF_8);
@@ -151,6 +201,12 @@ public final class CryptoUtil {
 
     // ==================== 随机 ====================
 
+    /**
+     * 生成指定长度随机盐（字符表为 SALT_CHARS）
+     *
+     * @param length 长度
+     * @return 随机盐字符串
+     */
     public static String randomSalt(int length) {
         StringBuilder sb = new StringBuilder(length);
         for (int i = 0; i < length; i++) {
@@ -159,6 +215,12 @@ public final class CryptoUtil {
         return sb.toString();
     }
 
+    /**
+     * 生成指定长度的随机字节数组
+     *
+     * @param length 长度
+     * @return 随机字节数组
+     */
     public static byte[] randomBytes(int length) {
         byte[] b = new byte[length];
         RANDOM.nextBytes(b);
@@ -167,18 +229,42 @@ public final class CryptoUtil {
 
     // ==================== Base64 ====================
 
+    /**
+     * Base64 编码
+     *
+     * @param data 字节数组
+     * @return Base64 字符串
+     */
     public static String base64Encode(byte[] data) {
         return Base64.getEncoder().encodeToString(data);
     }
 
+    /**
+     * Base64 解码
+     *
+     * @param data Base64 字符串
+     * @return 字节数组
+     */
     public static byte[] base64Decode(String data) {
         return Base64.getDecoder().decode(data);
     }
 
+    /**
+     * Base64Url 编码（无填充）
+     *
+     * @param data 字节数组
+     * @return Base64Url 字符串
+     */
     public static String base64UrlEncode(byte[] data) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(data);
     }
 
+    /**
+     * Base64Url 解码
+     *
+     * @param data Base64Url 字符串
+     * @return 字节数组
+     */
     public static byte[] base64UrlDecode(String data) {
         return Base64.getUrlDecoder().decode(data);
     }
@@ -210,6 +296,13 @@ public final class CryptoUtil {
         }
     }
 
+    /**
+     * AES-256-GCM 解密
+     *
+     * @param ciphertextB64 Base64 密文
+     * @param key           32 字节密钥
+     * @return 明文
+     */
     public static String aesGcmDecrypt(String ciphertextB64, byte[] key) {
         if (StrUtil.isBlank(ciphertextB64)) return null;
         validateAesKey(key);
@@ -246,6 +339,7 @@ public final class CryptoUtil {
      *
      * @param plaintext 明文
      * @param key       16 字节密钥
+     * @return Base64 密文
      */
     public static String sm4GcmEncrypt(String plaintext, byte[] key) {
         if (plaintext == null) return null;
@@ -267,6 +361,13 @@ public final class CryptoUtil {
         }
     }
 
+    /**
+     * SM4-GCM 解密 (国密)
+     *
+     * @param ciphertextB64 Base64 密文
+     * @param key           16 字节密钥
+     * @return 明文
+     */
     public static String sm4GcmDecrypt(String ciphertextB64, byte[] key) {
         if (StrUtil.isBlank(ciphertextB64)) return null;
         if (key == null || key.length != 16) {
@@ -291,6 +392,13 @@ public final class CryptoUtil {
 
     // ==================== HMAC ====================
 
+    /**
+     * 计算 HMAC-SHA256 签名
+     *
+     * @param data 原文
+     * @param key  密钥
+     * @return Base64 签名
+     */
     public static String hmacSha256(String data, byte[] key) {
         if (StrUtil.isBlank(data) || key == null) return null;
         try {

@@ -16,6 +16,12 @@ import org.springframework.util.StringUtils;
 
 import java.util.List;
 
+/**
+ * 人员标签服务实现
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

@@ -23,6 +23,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Bench 闲置池服务实现
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

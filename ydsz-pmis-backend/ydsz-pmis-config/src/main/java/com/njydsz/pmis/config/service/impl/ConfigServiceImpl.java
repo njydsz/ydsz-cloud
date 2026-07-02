@@ -38,8 +38,11 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ConfigServiceImpl implements ConfigService {
 
+    /** 单条配置缓存 Key 前缀 */
     private static final String CACHE_PREFIX = "pmis:cfg:";
+    /** 分组配置缓存 Key 前缀 */
     private static final String CACHE_GROUP_PREFIX = "pmis:cfg:group:";
+    /** 缓存有效期 */
     private static final Duration CACHE_TTL = Duration.ofMinutes(10);
 
     private final ConfigMapper configMapper;

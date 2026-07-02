@@ -15,16 +15,23 @@ public interface DictService {
 
     /**
      * 查询所有字典类型
+     *
+     * @return 字典类型列表
      */
     List<DictTypeDO> listAllTypes();
 
     /**
      * 根据 typeCode 查询字典项
+     *
+     * @param typeCode 字典类型编码
+     * @return 字典项列表
      */
     List<DictItemDO> listItems(String typeCode);
 
     /**
      * 刷新缓存
+     *
+     * @param typeCode 字典类型编码
      */
     void refreshCache(String typeCode);
 }

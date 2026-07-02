@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
  * <p>验证 CorsWebFilter 正确创建且不抛异常。
  *
  * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 class CorsConfigTest {
 

@@ -23,6 +23,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 资源分配服务实现
+ *
+ * <p>通过单一 {@code act()} 入口分发 RESERVE/START/TRANSFER/RELEASE/CANCEL 五种业务动作。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

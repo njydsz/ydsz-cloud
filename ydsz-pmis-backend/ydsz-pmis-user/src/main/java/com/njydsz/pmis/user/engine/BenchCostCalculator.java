@@ -18,6 +18,10 @@ public class BenchCostCalculator {
 
     /**
      * 计算闲置天数（入池到出池或当前）
+     *
+     * @param benchDate 入池日期
+     * @param exitDate  出池日期（未出池传 null，按当前日期计算）
+     * @return 闲置天数；入池日期为 null 或出池早于入池时返回 0
      */
     public static int idleDays(LocalDate benchDate, LocalDate exitDate) {
         if (benchDate == null) return 0;
@@ -28,6 +32,10 @@ public class BenchCostCalculator {
 
     /**
      * 计算累计闲置成本
+     *
+     * @param dailyCost 每日成本
+     * @param idleDays  闲置天数
+     * @return 累计闲置成本（保留 2 位小数）
      */
     public static BigDecimal totalIdleCost(BigDecimal dailyCost, int idleDays) {
         if (dailyCost == null) dailyCost = BigDecimal.ZERO;
@@ -36,6 +44,9 @@ public class BenchCostCalculator {
 
     /**
      * 培训期是否仍在可接受窗口内
+     *
+     * @param benchDate 入池日期
+     * @return 闲置天数未超过 {@value #TRAINING_MAX_DAYS} 天返回 true
      */
     public static boolean withinTrainingWindow(LocalDate benchDate) {
         if (benchDate == null) return false;

@@ -13,6 +13,12 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 职级费率服务实现
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Service
 @RequiredArgsConstructor
 public class JobLevelServiceImpl implements JobLevelService {

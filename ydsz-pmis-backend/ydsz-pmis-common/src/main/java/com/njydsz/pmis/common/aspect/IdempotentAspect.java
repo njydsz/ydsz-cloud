@@ -56,6 +56,15 @@ public class IdempotentAspect {
     private final SpelExpressionParser parser = new SpelExpressionParser();
     private final ParameterNameDiscoverer paramNames = new DefaultParameterNameDiscoverer();
 
+    /**
+     * 环绕增强：基于 Redis SETNX 抢占幂等 key，重复提交抛出 BAD_REQUEST
+     *
+     * @param pjp        连接点
+     * @param idempotent 幂等注解
+     * @return 目标方法返回值
+     * @throws Throwable    目标方法抛出的异常
+     * @throws BizException 重复提交时抛出
+     */
     @Around("@annotation(idempotent)")
     public Object around(ProceedingJoinPoint pjp, Idempotent idempotent) throws Throwable {
         String key = buildKey(pjp, idempotent);

@@ -30,6 +30,14 @@ public class DataScopeAspect {
 
     private static final ThreadLocal<DataScopeContext> CTX = new ThreadLocal<>();
 
+    /**
+     * 环绕增强：将数据权限上下文放入 ThreadLocal，方法执行完毕后清理
+     *
+     * @param pjp       连接点
+     * @param dataScope 数据权限注解
+     * @return 目标方法返回值
+     * @throws Throwable 目标方法抛出的异常
+     */
     @Around("@annotation(dataScope)")
     public Object around(ProceedingJoinPoint pjp, DataScope dataScope) throws Throwable {
         try {
@@ -45,6 +53,8 @@ public class DataScopeAspect {
 
     /**
      * 获取当前线程数据权限上下文（供业务层使用）
+     *
+     * @return 数据权限上下文；为空时从 SecurityContext 兜底构造
      */
     public static DataScopeContext peek() {
         DataScopeContext ctx = CTX.get();
@@ -56,7 +66,10 @@ public class DataScopeAspect {
     }
 
     /**
-     * 越权检查：抛出异常
+     * 越权检查：当前用户若无权访问目标部门则抛出 DATA_SCOPE_FORBIDDEN 异常
+     *
+     * @param targetDeptId 目标部门 ID
+     * @throws BizException 无权限访问时抛出
      */
     public static void assertAllow(Long targetDeptId) {
         DataScopeContext ctx = peek();
