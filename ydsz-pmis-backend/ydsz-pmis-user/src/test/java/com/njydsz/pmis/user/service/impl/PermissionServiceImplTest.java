@@ -19,6 +19,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * PermissionServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("PermissionServiceImpl 权限服务测试")
 class PermissionServiceImplTest {

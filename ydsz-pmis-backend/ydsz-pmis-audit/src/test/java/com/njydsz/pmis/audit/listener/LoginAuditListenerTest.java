@@ -17,6 +17,9 @@ import static org.mockito.Mockito.verify;
 
 /**
  * LoginAuditListener 落库监听器测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("LoginAuditListener 登录审计测试")
 class LoginAuditListenerTest {

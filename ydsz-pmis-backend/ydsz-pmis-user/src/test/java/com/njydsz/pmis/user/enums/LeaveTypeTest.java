@@ -7,6 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * LeaveType 枚举测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("LeaveType 枚举")
 class LeaveTypeTest {

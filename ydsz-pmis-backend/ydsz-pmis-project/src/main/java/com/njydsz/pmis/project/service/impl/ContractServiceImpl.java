@@ -34,9 +34,20 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ContractServiceImpl implements ContractService {
 
+    /** 合同 Mapper */
     private final ContractMapper contractMapper;
+    /** 名称装配器（用于 Feign 补齐客户/负责人名称） */
     private final NameAssembler nameAssembler;
 
+    /**
+     * 创建合同。
+     * <p>处理流程：参数校验 → 编号唯一性预检 → 属性拷贝 →
+     * 默认状态 DRAFT、默认币种 CNY、默认租户 → 自动风险评估 → 持久化。</p>
+     *
+     * @param dto 合同创建参数
+     * @return 合同 ID
+     * @throws BizException 编号重复或参数非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(ContractCreateDTO dto) {

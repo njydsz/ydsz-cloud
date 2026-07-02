@@ -33,6 +33,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class DataExportAuditAspect {
 
+    /** Spring 事件发布器 */
     private final ApplicationEventPublisher publisher;
 
     /**

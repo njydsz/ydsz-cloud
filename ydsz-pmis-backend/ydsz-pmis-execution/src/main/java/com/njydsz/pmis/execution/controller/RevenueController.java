@@ -39,6 +39,12 @@ public class RevenueController {
 
     private final RevenueService service;
 
+    /**
+     * 录入收入
+     *
+     * @param dto 收入创建参数
+     * @return 新建收入记录 ID
+     */
     @Operation(summary = "录入收入")
     @PrePermission("execution:revenue:create")
     @PostMapping
@@ -46,6 +52,13 @@ public class RevenueController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 确认收入
+     *
+     * @param id          收入记录 ID
+     * @param confirmedBy 确认人 ID
+     * @return 空结果
+     */
     @Operation(summary = "确认收入")
     @PrePermission("execution:revenue:update")
     @PutMapping("/{id}/confirm")
@@ -54,6 +67,12 @@ public class RevenueController {
         return Result.ok();
     }
 
+    /**
+     * 冲销收入
+     *
+     * @param id 收入记录 ID
+     * @return 空结果
+     */
     @Operation(summary = "冲销收入")
     @PrePermission("execution:revenue:update")
     @PutMapping("/{id}/reverse")
@@ -62,6 +81,12 @@ public class RevenueController {
         return Result.ok();
     }
 
+    /**
+     * 删除收入
+     *
+     * @param id 收入记录 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除")
     @PrePermission("execution:revenue:delete")
     @DeleteMapping("/{id}")
@@ -70,6 +95,12 @@ public class RevenueController {
         return Result.ok();
     }
 
+    /**
+     * 查询收入详情
+     *
+     * @param id 收入记录 ID
+     * @return 收入实体
+     */
     @Operation(summary = "详情")
     @PrePermission("execution:revenue:list")
     @GetMapping("/{id}")
@@ -77,6 +108,18 @@ public class RevenueController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询收入
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param contractId   合同 ID
+     * @param initiationId 项目立项 ID
+     * @param period       所属期间（YYYY-MM）
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("execution:revenue:list")
     @GetMapping("/page")
@@ -91,6 +134,12 @@ public class RevenueController {
         return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, period));
     }
 
+    /**
+     * 按合同汇总收入
+     *
+     * @param contractId 合同 ID
+     * @return 汇总结果列表
+     */
     @Operation(summary = "按合同汇总")
     @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/by-contract")
@@ -98,6 +147,12 @@ public class RevenueController {
         return Result.ok(service.sumByContract(contractId));
     }
 
+    /**
+     * 按期间汇总收入
+     *
+     * @param initiationId 项目立项 ID
+     * @return 汇总结果列表
+     */
     @Operation(summary = "按期间汇总")
     @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/by-period")

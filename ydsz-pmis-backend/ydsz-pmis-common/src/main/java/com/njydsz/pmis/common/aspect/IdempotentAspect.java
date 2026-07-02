@@ -47,13 +47,18 @@ import java.util.Collections;
 @RequiredArgsConstructor
 public class IdempotentAspect {
 
+    /** Redis SETNX 原子脚本 */
     private static final String LUA = "if redis.call('SET', KEYS[1], ARGV[1], 'NX', 'EX', ARGV[2]) then return 1 else return 0 end";
 
+    /** Redis 脚本对象 */
     private static final RedisScript<Long> SCRIPT = new DefaultRedisScript<>(LUA, Long.class);
 
+    /** Redis 操作模板 */
     private final StringRedisTemplate redisTemplate;
 
+    /** SpEL 表达式解析器 */
     private final SpelExpressionParser parser = new SpelExpressionParser();
+    /** 参数名发现器 */
     private final ParameterNameDiscoverer paramNames = new DefaultParameterNameDiscoverer();
 
     /**

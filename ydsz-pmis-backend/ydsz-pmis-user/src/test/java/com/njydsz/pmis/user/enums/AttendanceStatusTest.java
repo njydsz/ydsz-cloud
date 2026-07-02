@@ -7,6 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * AttendanceStatus 枚举测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("AttendanceStatus 枚举")
 class AttendanceStatusTest {

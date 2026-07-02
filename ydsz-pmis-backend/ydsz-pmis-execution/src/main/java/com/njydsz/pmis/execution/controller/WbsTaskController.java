@@ -41,6 +41,12 @@ public class WbsTaskController {
 
     private final WbsTaskService service;
 
+    /**
+     * 创建 WBS 任务
+     *
+     * @param dto 任务创建参数
+     * @return 新建任务 ID
+     */
     @Operation(summary = "创建 WBS 任务")
     @PrePermission("execution:wbs:create")
     @PostMapping
@@ -48,6 +54,12 @@ public class WbsTaskController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 变更任务状态
+     *
+     * @param dto 状态变更参数
+     * @return 空结果
+     */
     @Operation(summary = "变更任务状态")
     @PrePermission("execution:wbs:status")
     @PutMapping("/status")
@@ -56,6 +68,14 @@ public class WbsTaskController {
         return Result.ok();
     }
 
+    /**
+     * 更新任务进度
+     *
+     * @param id           任务 ID
+     * @param progressPct  进度百分比（0-100）
+     * @param actualEffort 实际工时（人天），可选
+     * @return 空结果
+     */
     @Operation(summary = "更新任务进度")
     @PrePermission("execution:wbs:update")
     @PutMapping("/{id}/progress")
@@ -66,6 +86,12 @@ public class WbsTaskController {
         return Result.ok();
     }
 
+    /**
+     * 删除任务
+     *
+     * @param id 任务 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除任务")
     @PrePermission("execution:wbs:delete")
     @DeleteMapping("/{id}")
@@ -74,6 +100,12 @@ public class WbsTaskController {
         return Result.ok();
     }
 
+    /**
+     * 查询任务详情
+     *
+     * @param id 任务 ID
+     * @return 任务实体
+     */
     @Operation(summary = "任务详情")
     @PrePermission("execution:wbs:list")
     @GetMapping("/{id}")
@@ -81,6 +113,18 @@ public class WbsTaskController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询任务
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词（任务名称/编号）
+     * @param status       状态过滤
+     * @param taskType     任务类型
+     * @param initiationId 项目立项 ID
+     * @param ownerId      责任人 ID
+     * @return 分页结果
+     */
     @Operation(summary = "分页查询")
     @PrePermission("execution:wbs:list")
     @GetMapping("/page")
@@ -95,6 +139,12 @@ public class WbsTaskController {
         return Result.ok(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
     }
 
+    /**
+     * 查询项目下的任务列表
+     *
+     * @param initiationId 项目立项 ID
+     * @return 任务列表
+     */
     @Operation(summary = "项目下的任务列表")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}")
@@ -102,6 +152,12 @@ public class WbsTaskController {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
+    /**
+     * 查询项目下的里程碑任务列表
+     *
+     * @param initiationId 项目立项 ID
+     * @return 里程碑任务列表
+     */
     @Operation(summary = "项目里程碑")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/milestones")
@@ -109,6 +165,12 @@ public class WbsTaskController {
         return Result.ok(service.listMilestones(initiationId));
     }
 
+    /**
+     * 计算项目整体进度（按工时加权）
+     *
+     * @param initiationId 项目立项 ID
+     * @return 整体进度百分比（0-100）
+     */
     @Operation(summary = "项目整体进度（按工时加权）")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/overall-progress")
@@ -116,6 +178,12 @@ public class WbsTaskController {
         return Result.ok(service.calcOverallProgress(initiationId));
     }
 
+    /**
+     * 统计项目任务状态分布
+     *
+     * @param initiationId 项目立项 ID
+     * @return 各状态任务数量列表
+     */
     @Operation(summary = "状态分布")
     @PrePermission("execution:wbs:list")
     @GetMapping("/aggregate/status")

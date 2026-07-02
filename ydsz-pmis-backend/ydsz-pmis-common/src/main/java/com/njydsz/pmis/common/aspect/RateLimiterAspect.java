@@ -34,6 +34,7 @@ import java.util.concurrent.TimeUnit;
 @RequiredArgsConstructor
 public class RateLimiterAspect {
 
+    /** Redis 操作模板 */
     private final StringRedisTemplate redisTemplate;
 
     /**

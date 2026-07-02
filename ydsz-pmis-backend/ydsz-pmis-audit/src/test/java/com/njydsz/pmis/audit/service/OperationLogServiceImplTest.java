@@ -19,6 +19,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * OperationLogServiceImpl 查询服务测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("OperationLogServiceImpl 查询服务测试")
 class OperationLogServiceImplTest {
 

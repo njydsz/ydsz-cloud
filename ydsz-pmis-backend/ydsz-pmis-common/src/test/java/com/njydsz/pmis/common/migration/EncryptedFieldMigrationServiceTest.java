@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.migration;
+package com.njydsz.pmis.common.migration;
 
 import com.njydsz.pmis.common.sensitive.EncryptedFieldKeyRegistry;
 import com.njydsz.pmis.common.util.CryptoUtil;

@@ -38,12 +38,32 @@ public class ReportExportController {
 
     private final ReportExportService exportService;
 
+    /**
+     * 查询可导出的列定义
+     *
+     * @param type 报表类型
+     * @return 列定义列表
+     */
     @Operation(summary = "查询可导出的列定义")
     @GetMapping("/columns")
     public Result<List<ReportExportService.ColumnDef>> columns(@RequestParam String type) {
         return Result.ok(exportService.columnsOf(type));
     }
 
+    /**
+     * 下载报表（XLSX/CSV，P2-6）
+     *
+     * @param type         报表类型
+     * @param format       导出格式（XLSX/CSV）
+     * @param initiationId 项目立项 ID
+     * @param period       所属期间
+     * @param department   部门
+     * @param riskType     风险类型
+     * @param status       状态
+     * @param health       健康度
+     * @param response     HTTP 响应对象
+     * @throws IOException 写入响应流时发生 I/O 异常
+     */
     @Operation(summary = "下载报表（XLSX/CSV，P2-6）")
     @GetMapping("/download")
     public void download(

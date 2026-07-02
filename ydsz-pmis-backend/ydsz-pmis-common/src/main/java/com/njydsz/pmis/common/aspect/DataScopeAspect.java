@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class DataScopeAspect {
 
+    /** 当前线程数据权限上下文 */
     private static final ThreadLocal<DataScopeContext> CTX = new ThreadLocal<>();
 
     /**

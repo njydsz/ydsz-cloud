@@ -116,7 +116,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         }
         log.info("[Flow] 创建任务: instanceId={} node={} performType={} assigneeCount={}",
                 instanceId, node.getNodeCode(), performType, userIds.size());
-        fireEvent(FlowEventListener::onTaskCreated, task.getId());
+        fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
         return task.getId();
     }
 

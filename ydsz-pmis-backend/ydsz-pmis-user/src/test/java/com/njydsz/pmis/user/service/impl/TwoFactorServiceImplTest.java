@@ -26,6 +26,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * TwoFactorServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("TwoFactorServiceImpl 双因素认证测试")
 class TwoFactorServiceImplTest {

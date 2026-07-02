@@ -20,6 +20,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * SessionServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("SessionServiceImpl 会话管理测试")
 class SessionServiceImplTest {

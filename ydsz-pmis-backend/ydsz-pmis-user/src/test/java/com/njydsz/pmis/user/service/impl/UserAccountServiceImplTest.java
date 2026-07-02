@@ -27,6 +27,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * UserAccountServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("UserAccountServiceImpl 用户服务测试")
 class UserAccountServiceImplTest {

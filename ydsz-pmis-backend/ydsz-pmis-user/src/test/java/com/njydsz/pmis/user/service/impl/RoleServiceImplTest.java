@@ -25,6 +25,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * RoleServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @SuppressWarnings("unchecked")
 @DisplayName("RoleServiceImpl 角色服务测试")

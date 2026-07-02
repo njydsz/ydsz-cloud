@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.common.migration;
+package com.njydsz.pmis.common.migration;
 
 import lombok.extern.slf4j.Slf4j;
 

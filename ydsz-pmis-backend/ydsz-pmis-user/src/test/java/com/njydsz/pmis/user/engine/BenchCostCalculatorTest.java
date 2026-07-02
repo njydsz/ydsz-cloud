@@ -10,6 +10,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * BenchCostCalculator 引擎测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("BenchCostCalculator 闲置成本计算")
 class BenchCostCalculatorTest {

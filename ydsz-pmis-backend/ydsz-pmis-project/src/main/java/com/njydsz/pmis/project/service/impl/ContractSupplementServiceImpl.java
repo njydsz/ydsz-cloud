@@ -142,6 +142,12 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
         return supplementMapper.selectPage(p, w);
     }
 
+    /**
+     * 校验补充协议参数。
+     *
+     * @param dto 补充协议参数
+     * @throws BizException 参数为空、合同 ID 缺失、编号/名称缺失或类型非法时抛出
+     */
     private void validate(ContractSupplementDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");

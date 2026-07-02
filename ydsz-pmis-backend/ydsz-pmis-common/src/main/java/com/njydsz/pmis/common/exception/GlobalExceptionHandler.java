@@ -45,7 +45,7 @@ public class GlobalExceptionHandler {
         log.warn("[BizException] {} {} - code={} message={}",
                 req.getMethod(), req.getRequestURI(), e.getCode(), e.getMessage());
         Result<Void> r = Result.failed(e.getCode(), e.getErrorMessage());
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 
@@ -63,7 +63,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
         log.warn("[ValidationFailed] {}", msg);
         Result<Void> r = Result.failed(BizErrorCode.VALIDATION_FAILED.getCode(), msg);
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 
@@ -80,7 +80,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
         log.warn("[BindException] {}", msg);
         Result<Void> r = Result.failed(BizErrorCode.VALIDATION_FAILED.getCode(), msg);
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 
@@ -97,7 +97,7 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
         log.warn("[ConstraintViolation] {}", msg);
         Result<Void> r = Result.failed(BizErrorCode.VALIDATION_FAILED.getCode(), msg);
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 
@@ -111,7 +111,7 @@ public class GlobalExceptionHandler {
     public Result<Void> handleMissingParam(MissingServletRequestParameterException e) {
         String msg = String.format("缺少必填参数: %s", e.getParameterName());
         Result<Void> r = Result.failed(BizErrorCode.MISSING_PARAMETER.getCode(), msg);
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 

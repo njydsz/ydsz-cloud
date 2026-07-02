@@ -18,6 +18,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+/**
+ * OperationLogListener 落库监听器测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("OperationLogListener 落库监听器测试")
 class OperationLogListenerTest {
 

@@ -29,6 +29,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * ReAuthServiceImpl 二次认证 token 颁发测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ReAuthServiceImpl 二次认证颁发测试")
 class ReAuthServiceImplTest {

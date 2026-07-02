@@ -43,12 +43,24 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class RequireReAuthAspect {
 
+    /** 二次认证请求头名称 */
     private static final String HEADER = "X-Re-Auth-Token";
+    /** Redis key 前缀 */
     private static final String KEY_PREFIX = "pmis:reauth:";
 
+    /** Redis 操作模板 */
     private final StringRedisTemplate redisTemplate;
+    /** Spring 事件发布器 */
     private final ApplicationEventPublisher publisher;
 
+    /**
+     * 环绕增强：校验二次认证 token，通过后执行目标方法并发布审计事件
+     *
+     * @param pjp 连接点
+     * @param ann 二次认证注解
+     * @return 目标方法返回值
+     * @throws Throwable 目标方法抛出的异常
+     */
     @Around("@annotation(ann)")
     public Object around(ProceedingJoinPoint pjp, RequireReAuth ann) throws Throwable {
         LoginUser user = SecurityContext.getCurrentOrNull();

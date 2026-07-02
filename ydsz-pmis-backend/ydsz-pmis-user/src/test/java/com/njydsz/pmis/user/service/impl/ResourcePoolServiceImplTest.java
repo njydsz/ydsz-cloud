@@ -19,6 +19,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * ResourcePoolServiceImpl 测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ResourcePoolServiceImpl 资源池")
 class ResourcePoolServiceImplTest {

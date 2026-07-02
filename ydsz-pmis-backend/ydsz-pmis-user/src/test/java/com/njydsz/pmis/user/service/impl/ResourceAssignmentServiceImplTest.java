@@ -21,6 +21,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * ResourceAssignmentServiceImpl 测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ResourceAssignmentServiceImpl 资源分配")
 class ResourceAssignmentServiceImplTest {

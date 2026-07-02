@@ -31,6 +31,14 @@ public class ReconcileController {
 
     private final ReconcileService reconcileService;
 
+    /**
+     * 查询全量对账报告
+     *
+     * @param initiationId 项目立项 ID，可选
+     * @param from         起始日期，可选
+     * @param to           截止日期，可选
+     * @return 对账报告
+     */
     @Operation(summary = "全量对账报告")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/report")
@@ -41,6 +49,12 @@ public class ReconcileController {
         return Result.ok(reconcileService.reconcileAll(initiationId, from, to));
     }
 
+    /**
+     * 检查工时漏算/幽灵成本
+     *
+     * @param initiationId 项目立项 ID，可选
+     * @return 对账差异结果列表
+     */
     @Operation(summary = "工时漏算 / 幽灵成本")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/missing-cost")
@@ -48,6 +62,14 @@ public class ReconcileController {
         return Result.ok(reconcileService.checkMissingCost(initiationId));
     }
 
+    /**
+     * 检查工时异常（单日/单周/跨项目）
+     *
+     * @param initiationId 项目立项 ID，可选
+     * @param from         起始日期，可选
+     * @param to           截止日期，可选
+     * @return 对账差异结果列表
+     */
     @Operation(summary = "工时异常(单日/单周/跨项目)")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/time-anomaly")

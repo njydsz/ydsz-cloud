@@ -7,6 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * AssignmentStatus 状态机测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("AssignmentStatus 资源分配状态机")
 class AssignmentStatusTest {

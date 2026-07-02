@@ -40,6 +40,7 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class OperationLogAspect {
 
+    /** Spring 事件发布器 */
     private final ApplicationEventPublisher publisher;
 
     /**
@@ -86,6 +87,12 @@ public class OperationLogAspect {
      * {@code @Async} 形同虚设。真正的异步由 {@link OperationLogListener} 端的
      * {@code @Async + @EventListener} 实现。此方法仅负责构造事件 + 发布，
      * 由 Spring 事件机制将事件投递到异步监听器。</p>
+     *
+     * @param pjp          连接点
+     * @param operationLog 操作日志注解
+     * @param result       目标方法返回值（可为 null）
+     * @param error        目标方法抛出的异常（可为 null）
+     * @param cost         方法执行耗时（毫秒）
      */
     void publishEvent(ProceedingJoinPoint pjp, OperationLog operationLog,
                       Object result, Throwable error, long cost) {

@@ -7,6 +7,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * LeaveStatus 状态机测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("LeaveStatus 状态机")
 class LeaveStatusTest {

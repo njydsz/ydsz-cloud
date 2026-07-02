@@ -18,6 +18,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * PasswordScanServiceImpl 测试（P3-3）
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("PasswordScanServiceImpl 弱密码扫描")
 class PasswordScanServiceImplTest {

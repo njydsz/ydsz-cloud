@@ -42,6 +42,12 @@ public class TimeEntryController {
 
     private final TimeEntryService service;
 
+    /**
+     * 录入工时
+     *
+     * @param dto 工时录入参数
+     * @return 新建工时记录 ID
+     */
     @Operation(summary = "录入工时")
     @PrePermission("execution:time:create")
     @PostMapping
@@ -49,6 +55,12 @@ public class TimeEntryController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 提交工时审批
+     *
+     * @param id 工时记录 ID
+     * @return 空结果
+     */
     @Operation(summary = "提交工时审批")
     @PrePermission("execution:time:approve")
     @PutMapping("/{id}/submit")
@@ -57,6 +69,12 @@ public class TimeEntryController {
         return Result.ok();
     }
 
+    /**
+     * 审批工时
+     *
+     * @param dto 工时审批参数
+     * @return 空结果
+     */
     @Operation(summary = "审批工时")
     @PrePermission("execution:time:approve")
     @PutMapping("/approve")
@@ -65,6 +83,12 @@ public class TimeEntryController {
         return Result.ok();
     }
 
+    /**
+     * 删除工时
+     *
+     * @param id 工时记录 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除工时")
     @PrePermission("execution:time:delete")
     @DeleteMapping("/{id}")
@@ -73,6 +97,12 @@ public class TimeEntryController {
         return Result.ok();
     }
 
+    /**
+     * 查询工时详情
+     *
+     * @param id 工时记录 ID
+     * @return 工时实体
+     */
     @Operation(summary = "工时详情")
     @PrePermission("execution:time:list")
     @GetMapping("/{id}")
@@ -80,6 +110,20 @@ public class TimeEntryController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询工时
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param employeeId   员工 ID
+     * @param initiationId 项目立项 ID
+     * @param taskId       任务 ID
+     * @param from         起始日期
+     * @param to           截止日期
+     * @return 分页结果
+     */
     @Operation(summary = "分页查询")
     @PrePermission("execution:time:list")
     @GetMapping("/page")
@@ -96,6 +140,14 @@ public class TimeEntryController {
         return Result.ok(service.page(page, size, keyword, status, employeeId, initiationId, taskId, from, to));
     }
 
+    /**
+     * 按人员+职级聚合项目工时
+     *
+     * @param initiationId 项目立项 ID
+     * @param from         起始日期
+     * @param to           截止日期
+     * @return 聚合结果列表
+     */
     @Operation(summary = "项目工时按人员+职级聚合")
     @PrePermission("execution:time:list")
     @GetMapping("/aggregate/by-employee-level")
@@ -106,6 +158,13 @@ public class TimeEntryController {
         return Result.ok(service.aggregateHoursByEmployeeAndLevel(initiationId, from, to));
     }
 
+    /**
+     * 跨项目工时冲突检测
+     *
+     * @param employeeId 员工 ID
+     * @param entryDate  工时日期
+     * @return 冲突列表
+     */
     @Operation(summary = "跨项目冲突检测")
     @PrePermission("execution:time:list")
     @GetMapping("/conflict")

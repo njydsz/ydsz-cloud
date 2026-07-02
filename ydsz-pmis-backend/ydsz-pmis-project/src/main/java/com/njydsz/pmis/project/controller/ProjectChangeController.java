@@ -40,8 +40,15 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectChangeController {
 
+    /** 项目变更服务 */
     private final ProjectChangeService service;
 
+    /**
+     * 创建项目变更。
+     *
+     * @param dto 变更创建参数
+     * @return 变更记录 ID
+     */
     @Operation(summary = "创建项目变更")
     @PrePermission("project:change:create")
     @PostMapping
@@ -49,6 +56,12 @@ public class ProjectChangeController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 项目变更状态迁移（遵循 ChangeStatus 状态机）。
+     *
+     * @param dto 状态迁移参数
+     * @return 空结果
+     */
     @Operation(summary = "状态迁移")
     @PrePermission("project:change:status")
     @PutMapping("/status")
@@ -57,6 +70,12 @@ public class ProjectChangeController {
         return Result.ok();
     }
 
+    /**
+     * 删除项目变更（逻辑删除）。
+     *
+     * @param id 变更 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除变更")
     @PrePermission("project:change:delete")
     @DeleteMapping("/{id}")
@@ -65,6 +84,12 @@ public class ProjectChangeController {
         return Result.ok();
     }
 
+    /**
+     * 查询变更详情。
+     *
+     * @param id 变更 ID
+     * @return 变更实体
+     */
     @Operation(summary = "变更详情")
     @PrePermission("project:change:list")
     @GetMapping("/{id}")
@@ -72,6 +97,17 @@ public class ProjectChangeController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询项目变更列表。
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词（编号/名称），可空
+     * @param changeType   变更类型，可空
+     * @param status       状态码，可空
+     * @param initiationId 立项 ID，可空
+     * @return 分页结果
+     */
     @Operation(summary = "分页查询")
     @PrePermission("project:change:list")
     @GetMapping("/page")
@@ -85,6 +121,12 @@ public class ProjectChangeController {
         return Result.ok(service.page(page, size, keyword, changeType, status, initiationId));
     }
 
+    /**
+     * 按立项查询变更记录列表。
+     *
+     * @param initiationId 立项 ID
+     * @return 变更记录列表
+     */
     @Operation(summary = "按项目查询变更列表")
     @PrePermission("project:change:list")
     @GetMapping("/list-by-initiation/{initiationId}")
@@ -92,6 +134,12 @@ public class ProjectChangeController {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
+    /**
+     * 按变更类型聚合计数。
+     *
+     * @param tenantId 租户 ID，可空
+     * @return 每种变更类型对应的数量列表
+     */
     @Operation(summary = "按变更类型聚合")
     @PrePermission("project:change:list")
     @GetMapping("/aggregate/type")
@@ -99,6 +147,12 @@ public class ProjectChangeController {
         return Result.ok(service.aggregateByType(tenantId));
     }
 
+    /**
+     * 按状态聚合计数。
+     *
+     * @param tenantId 租户 ID，可空
+     * @return 每种状态对应的数量列表
+     */
     @Operation(summary = "按状态聚合")
     @PrePermission("project:change:list")
     @GetMapping("/aggregate/status")
@@ -106,6 +160,12 @@ public class ProjectChangeController {
         return Result.ok(service.aggregateByStatus(tenantId));
     }
 
+    /**
+     * 统计项目的重大变更数量。
+     *
+     * @param initiationId 立项 ID
+     * @return 重大变更数量
+     */
     @Operation(summary = "统计项目重大变更数")
     @PrePermission("project:change:list")
     @GetMapping("/major-count/{initiationId}")

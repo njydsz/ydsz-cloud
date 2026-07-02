@@ -40,6 +40,12 @@ public class RiskController {
 
     private final RiskService service;
 
+    /**
+     * 登记项目风险
+     *
+     * @param dto 风险创建参数
+     * @return 新建风险 ID
+     */
     @Operation(summary = "登记风险")
     @PrePermission("execution:risk:create")
     @PostMapping
@@ -47,6 +53,12 @@ public class RiskController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 风险状态迁移
+     *
+     * @param dto 状态变更参数
+     * @return 空结果
+     */
     @Operation(summary = "状态迁移")
     @PrePermission("execution:risk:status")
     @PutMapping("/status")
@@ -55,6 +67,12 @@ public class RiskController {
         return Result.ok();
     }
 
+    /**
+     * 删除风险
+     *
+     * @param id 风险 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除")
     @PrePermission("execution:risk:delete")
     @DeleteMapping("/{id}")
@@ -63,6 +81,12 @@ public class RiskController {
         return Result.ok();
     }
 
+    /**
+     * 查询风险详情
+     *
+     * @param id 风险 ID
+     * @return 风险实体
+     */
     @Operation(summary = "详情")
     @PrePermission("execution:risk:list")
     @GetMapping("/{id}")
@@ -70,6 +94,17 @@ public class RiskController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询风险
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param riskLevel    风险等级过滤
+     * @param initiationId 项目立项 ID
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("execution:risk:list")
     @GetMapping("/page")
@@ -83,6 +118,12 @@ public class RiskController {
         return Result.ok(service.page(page, size, keyword, status, riskLevel, initiationId));
     }
 
+    /**
+     * 按风险等级聚合统计
+     *
+     * @param initiationId 项目立项 ID
+     * @return 各等级风险数量列表
+     */
     @Operation(summary = "按等级聚合")
     @PrePermission("execution:risk:list")
     @GetMapping("/aggregate/by-level")
