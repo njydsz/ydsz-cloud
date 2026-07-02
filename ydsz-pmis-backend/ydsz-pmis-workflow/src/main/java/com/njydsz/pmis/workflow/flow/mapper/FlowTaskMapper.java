@@ -145,4 +145,33 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
      */
     long countOverdue(@Param("assigneeId") String assigneeId,
                       @Param("tenantId") Long tenantId);
+
+    /**
+     * P1-6: SLA 扫描 — 拉取所有设置了 dueAt 且未完成的任务（用于 SLA 调度器扫描）
+     *
+     * <p>扫描条件：task_status IN (PENDING, CLAIMED) AND due_at IS NOT NULL AND deleted = 0
+     *
+     * @param limit 单次扫描上限
+     * @return 候选 SLA 任务列表
+     */
+    List<FlowTaskDO> selectSlaCandidates(@Param("limit") int limit);
+
+    /**
+     * P1-6: 增加 SLA 催办计数
+     *
+     * @param id             任务 ID
+     * @param reminderCount  新的催办计数
+     * @param lastRemindedAt 最近催办时间
+     * @return 受影响行数
+     */
+    int incrementReminderCount(@Param("id") Long id,
+                               @Param("reminderCount") int reminderCount,
+                               @Param("lastRemindedAt") java.time.LocalDateTime lastRemindedAt);
+
+    /**
+     * P1-6: 标记 SLA 动作（用于审计：AUTO_PASS / AUTO_REJECT / ESCALATE 等）
+     */
+    int markSlaAction(@Param("id") Long id,
+                      @Param("slaAction") String slaAction,
+                      @Param("slaEscalated") Integer slaEscalated);
 }

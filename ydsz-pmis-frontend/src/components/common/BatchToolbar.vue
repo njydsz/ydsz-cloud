@@ -3,7 +3,7 @@
   @description 列表选中行后顶部滑入展示的批量操作条，支持自定义操作按钮与清空选择
   @module components/common/BatchToolbar
 -->
-<script setup lang="ts">
+<script lang="ts">
 /**
  * 批量操作工具栏
  *
@@ -21,11 +21,8 @@
  *     @clear="selectedRows = []"
  *   />
  */
-import { computed } from 'vue'
-import { Check } from '@element-plus/icons-vue'
 
-defineOptions({ name: 'BatchToolbar' })
-
+/** 批量操作按钮配置 */
 export interface BatchAction {
   /** 按钮文案 */
   label: string
@@ -38,6 +35,13 @@ export interface BatchAction {
   /** 点击处理函数 */
   handler: () => void
 }
+
+export default { name: 'BatchToolbar' }
+</script>
+
+<script setup lang="ts">
+import { computed } from 'vue'
+import { Check } from '@element-plus/icons-vue'
 
 const props = defineProps<{
   /** 当前选中行数 */

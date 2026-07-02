@@ -160,6 +160,24 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
         }
     }
 
+    /**
+     * 检查 join 令牌是否已初始化（total key 是否存在）
+     */
+    @Override
+    public boolean isInitialized(Long instanceId, String joinNodeCode) {
+        if (!isValidParam(instanceId, joinNodeCode)) {
+            return false;
+        }
+        try {
+            Boolean exists = redisTemplate.hasKey(buildTotalKey(instanceId, joinNodeCode));
+            return Boolean.TRUE.equals(exists);
+        } catch (Exception e) {
+            log.warn("[FlowJoinToken] 检查初始化状态失败 instanceId={} node={} err={}",
+                    instanceId, joinNodeCode, e.getMessage());
+            return false;
+        }
+    }
+
     // ============================== 私有辅助 ==============================
 
     /** 读取分支总数，未初始化时返回 Integer.MAX_VALUE（避免误判为已全部到达） */

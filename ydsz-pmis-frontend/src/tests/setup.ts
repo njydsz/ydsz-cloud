@@ -7,6 +7,7 @@
  * @module tests/setup
  */
 import { beforeAll, afterEach, vi } from 'vitest'
+import { config } from '@vue/test-utils'
 import {
   ElButton,
   ElTable,
@@ -22,6 +23,12 @@ import {
   ElDialog,
   ElMessage,
   ElMessageBox,
+  ElIcon,
+  ElCard,
+  ElRow,
+  ElCol,
+  ElSkeleton,
+  ElSkeletonItem,
 } from 'element-plus'
 
 /**
@@ -58,6 +65,23 @@ afterEach(() => {
 })
 
 /**
+ * 全局注册常用 Element Plus 组件, 使各测试用例的 mount() 无需逐个声明 global.components.
+ *
+ * 仅注册「无副作用、jsdom 友好」的展示型组件 (按钮 / 图标 / 卡片 / 栅格 / 骨架屏),
+ * 避免引入依赖 teleport / 浏览器 API 的复杂组件. 需要不同行为的用例仍可通过
+ * global.stubs / global.components 覆盖 (局部声明优先级高于全局).
+ */
+config.global.components = {
+  ElButton,
+  ElIcon,
+  ElCard,
+  ElRow,
+  ElCol,
+  ElSkeleton,
+  ElSkeletonItem,
+}
+
+/**
  * 导出 Element Plus 组件映射, 供测试通过 global.components 注册
  * 用法:
  *   import { elComponents } from '@/tests/setup'
@@ -78,4 +102,10 @@ export const elComponents = {
   ElDialog,
   ElMessage,
   ElMessageBox,
+  ElIcon,
+  ElCard,
+  ElRow,
+  ElCol,
+  ElSkeleton,
+  ElSkeletonItem,
 }

@@ -36,6 +36,17 @@
  */
 import type { PropType } from 'vue'
 import { computed } from 'vue'
+import SkeletonTable from './SkeletonTable.vue'
+import BatchToolbar from './BatchToolbar.vue'
+
+/** 批量操作按钮配置 */
+interface BatchAction {
+  label: string
+  type?: 'primary' | 'warning' | 'danger' | 'info'
+  icon?: string
+  permission?: string
+  handler: () => void
+}
 
 const props = defineProps({
   query: { type: Object as PropType<Record<string, any>>, default: () => ({ page: 1, size: 10 }) },
@@ -57,6 +68,16 @@ const props = defineProps({
   hideToolbar: { type: Boolean, default: false },
   /** 卡片是否无内边距（适用于自带 padding 的自定义内容） */
   noPadding: { type: Boolean, default: false },
+  /** 加载态展示模式：mask=遮罩（翻页时使用），skeleton=骨架屏（首次加载时使用） */
+  loadingType: { type: String as PropType<'mask' | 'skeleton'>, default: 'mask' },
+  /** 骨架屏行数（loadingType='skeleton' 时生效） */
+  skeletonRows: { type: Number, default: 5 },
+  /** 骨架屏列数（loadingType='skeleton' 时生效） */
+  skeletonColumns: { type: Number, default: 6 },
+  /** 当前选中的行数据，非空时在表格上方展示批量操作工具栏 */
+  selection: { type: Array as PropType<any[]>, default: () => [] },
+  /** 批量操作按钮配置，传给 BatchToolbar 的 actions */
+  batchActions: { type: Array as PropType<BatchAction[]>, default: () => [] },
 })
 
 const emit = defineEmits<{
@@ -65,6 +86,8 @@ const emit = defineEmits<{
   (e: 'page-change'): void
   (e: 'refresh'): void
   (e: 'update:query', value: Record<string, any>): void
+  /** 清空选择（点击 BatchToolbar「清空选择」时触发） */
+  (e: 'clear-selection'): void
 }>()
 
 // el-pagination 不允许直接 v-model 外部 prop，
@@ -90,6 +113,18 @@ function onPageChange() {
 function onRefresh() {
   emit('refresh')
 }
+function onClearSelection() {
+  emit('clear-selection')
+}
+
+/**
+ * 骨架屏展示条件：
+ *   loadingType='skeleton' 且处于加载中 且当前列表为空（首次加载）。
+ * 翻页时 list 非空，此时表格区走 slot 自身的遮罩 loading，不再展示骨架屏。
+ */
+const showSkeleton = computed(
+  () => props.loadingType === 'skeleton' && props.loading && props.list.length === 0,
+)
 </script>
 
 <template>
@@ -122,9 +157,25 @@ function onRefresh() {
         </div>
       </div>
 
-      <!-- 表格区 -->
+      <!-- 批量操作工具栏：选中行时在表格上方展示 -->
+      <div v-if="selection.length > 0" class="batch-area">
+        <slot name="batch-actions" :selection="selection" :count="selection.length">
+          <BatchToolbar
+            :selected-count="selection.length"
+            :actions="batchActions"
+            @clear="onClearSelection"
+          />
+        </slot>
+      </div>
+
+      <!-- 表格区：首次加载且开启骨架模式时以骨架屏占位，其余情况渲染 table 插槽 -->
       <div class="table-area" :style="{ minHeight: typeof tableMinHeight === 'number' ? `${tableMinHeight}px` : tableMinHeight }">
-        <slot name="table" />
+        <SkeletonTable
+          v-if="showSkeleton"
+          :rows="skeletonRows"
+          :columns="skeletonColumns"
+        />
+        <slot v-else name="table" />
       </div>
 
       <!-- 分页 -->

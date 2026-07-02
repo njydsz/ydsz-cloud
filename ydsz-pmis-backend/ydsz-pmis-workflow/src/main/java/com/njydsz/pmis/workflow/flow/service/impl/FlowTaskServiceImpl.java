@@ -67,6 +67,9 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     private final FlowDelegateAuthService delegateAuthService;
     /** P1-4: 委派代理日志 Mapper（用于记录代理操作审计） */
     private final com.njydsz.pmis.workflow.flow.mapper.FlowDelegateLogMapper delegateLogMapper;
+    /** P1-6: SLA 服务（任务创建时应用 SLA 配置 + 超时自动策略） */
+    @org.springframework.context.annotation.Lazy
+    private final com.njydsz.pmis.workflow.flow.service.FlowSlaService slaService;
 
     // ============================== 创建任务 ==============================
 
@@ -110,6 +113,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         task.setTaskStatus(FlowTaskStatus.PENDING.name());
         task.setTenantId(instance.getTenantId());
         task.setProviderTraceId(instance.getProviderTraceId());
+        // P1-6: 应用 SLA 配置 — 解析 node.slaConfig 设置 dueAt
+        if (slaService != null) {
+            slaService.applySlaConfig(task, node);
+        }
 
         // 设置首个办理人
         if (userIds.isEmpty()) {
@@ -166,8 +173,12 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             task.setAssigneeType(FlowAssigneeType.USER.name());
             task.setAssigneeId(userIds.get(0));
             task.setAssigneeName("USER:" + userIds.get(0));
+            // P1-5: 解析 node.ext.votePassRate / userWeights，配置加权票签
+            applyVoteConfig(task, node);
             taskMapper.insert(task);
             // 写入 pmis_flow_user
+            // P1-5: 从 ext 中读取 userWeights（userId -> weight）映射
+            java.util.Map<String, Integer> userWeights = parseUserWeights(node.getExt());
             for (String uid : userIds) {
                 FlowUserDO fu = new FlowUserDO();
                 fu.setTaskId(task.getId());
@@ -177,6 +188,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                 fu.setUserId(uid);
                 fu.setUserName("USER:" + uid);
                 fu.setProcessed(0);
+                fu.setWeight(userWeights == null ? 1
+                        : userWeights.getOrDefault(uid, 1));
                 fu.setTenantId(instance.getTenantId());
                 fu.setProviderTraceId(instance.getProviderTraceId());
                 userMapper.insert(fu);
@@ -305,6 +318,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             case PARALLEL -> doParallelPass(task, instance, mergedVars, dto);
             case SEQUENTIAL -> doSequentialPass(task, instance, mergedVars, dto);
             case VOTE -> doVotePass(task, instance, mergedVars, dto);
+            case WEIGHTED_VOTE -> doWeightedVotePass(task, instance, mergedVars, dto);
         }
     }
 
@@ -538,6 +552,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         log.info("[Flow] 沟通: taskId={} userId={} comment={}",
                 dto.getTaskId(), dto.getUserId(), dto.getComment());
     }
+
+    // ============================== 催办（P1-9） ==============================
 
     @Override
     public List<String> urge(Long instanceId, Long operatorId, String comment) {
@@ -877,13 +893,18 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         log.info("[Flow] 通过任务: taskId={} action=PASS next={}", task.getId(), nextNodes.size());
     }
 
-    /** P0-1: 并行会签 — 全部通过才推进 */
+    /** P0-1: 并行会签 — 全部通过才推进（GAP-P1: 乐观锁防并发） */
     private void doParallelPass(FlowTaskDO task, FlowInstanceDO instance,
                                  Map<String, Object> vars, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
         int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
-        taskMapper.updateApproveFinished(task.getId(), finished);
+        // GAP-P1: 乐观锁 — updateById 携带 @Version 自动检查版本号
         task.setApproveFinished(finished);
+        int updated = taskMapper.updateById(task);
+        if (updated == 0) {
+            throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
+                    "任务已被其他操作修改，请刷新后重试: taskId=" + task.getId());
+        }
         if (finished < required) {
             // 未全部通过：任务保持 PENDING，不推进
             audit(task, "PARALLEL_PASS", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
@@ -904,13 +925,18 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         log.info("[Flow] 并行会签全部通过: taskId={} finished={}/{}", task.getId(), finished, required);
     }
 
-    /** P1-12: 顺序会签 — 按序逐一处理 */
+    /** P1-12: 顺序会签 — 按序逐一处理（GAP-P1: 乐观锁防并发） */
     private void doSequentialPass(FlowTaskDO task, FlowInstanceDO instance,
                                    Map<String, Object> vars, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
         int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
-        taskMapper.updateApproveFinished(task.getId(), finished);
+        // GAP-P1: 乐观锁 — updateById 携带 @Version 自动检查版本号
         task.setApproveFinished(finished);
+        int updated = taskMapper.updateById(task);
+        if (updated == 0) {
+            throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
+                    "任务已被其他操作修改，请刷新后重试: taskId=" + task.getId());
+        }
         if (finished < required) {
             // 还有下一个用户：切换办理人
             List<FlowUserDO> unprocessed = userMapper.selectUnprocessedByInstanceAndNode(
@@ -936,18 +962,35 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         log.info("[Flow] 顺序会签全部通过: taskId={}", task.getId());
     }
 
-    /** P1-12: 票签 — 达到阈值即推进 */
+    /** P1-12 + P1-5: 票签 — 可配置通过率（默认 50%+1，支持 0~1 之间任意阈值） */
     private void doVotePass(FlowTaskDO task, FlowInstanceDO instance,
                              Map<String, Object> vars, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
         int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
-        taskMapper.updateApproveFinished(task.getId(), finished);
+        // GAP-P1: 乐观锁 — updateById 携带 @Version 自动检查版本号
         task.setApproveFinished(finished);
-        // 阈值：默认 50% + 1（即过半数通过）
+        int updated = taskMapper.updateById(task);
+        if (updated == 0) {
+            throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
+                    "任务已被其他操作修改，请刷新后重试: taskId=" + task.getId());
+        }
+        // P1-5: 通过率可配置 — 默认 50% + 1（即过半数）
         int threshold = (required / 2) + 1;
+        if (task.getVotePassRate() != null) {
+            // votePassRate 是 0~1 之间的小数
+            double rate = task.getVotePassRate().doubleValue();
+            if (rate > 0 && rate <= 1.0) {
+                // 通过率向上取整（例如 5 人 * 0.6 = 3）
+                threshold = (int) Math.ceil(required * rate);
+                if (threshold < 1) {
+                    threshold = 1;
+                }
+            }
+        }
         if (finished < threshold) {
             audit(task, "VOTE_PASS", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
-            log.info("[Flow] 票签部分通过: taskId={} finished={}/{}", task.getId(), finished, threshold);
+            log.info("[Flow] 票签部分通过: taskId={} finished={}/{} (rate={})",
+                    task.getId(), finished, threshold, task.getVotePassRate());
             return;
         }
         // 达到阈值：完成 + 推进 + 跳过剩余
@@ -961,7 +1004,85 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
         audit(task, "VOTE_PASS_THRESHOLD", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
-        log.info("[Flow] 票签达到阈值: taskId={} finished={}/{}", task.getId(), finished, threshold);
+        log.info("[Flow] 票签达到阈值: taskId={} finished={}/{} (rate={})",
+                task.getId(), finished, threshold, task.getVotePassRate());
+    }
+
+    /**
+     * P1-5: 加权票签 — 按办理人 weight 累加，权重达到阈值才推进。
+     *
+     * <p>使用场景：财务总监 3 票，普通员工 1 票；3 人共 5 票权重，
+     * 设置 votePassRate=0.6 即 ≥3 票即通过。
+     *
+     * <p>实现：
+     * <ol>
+     *   <li>从 pmis_flow_user 读取所有该任务的办理人及其 weight</li>
+     *   <li>标记当前用户 processed=1，记录 comment</li>
+     *   <li>统计已通过的总 weight（processed=1）</li>
+     *   <li>与总 weight 对比，达标即推进</li>
+     * </ol>
+     */
+    private void doWeightedVotePass(FlowTaskDO task, FlowInstanceDO instance,
+                                     Map<String, Object> vars, FlowTaskOperateDTO dto) {
+        // 1. 查询所有办理人（含 weight）
+        List<FlowUserDO> users = userMapper.selectByTaskId(task.getId());
+        if (users == null || users.isEmpty()) {
+            // 无扩展数据：回退到简单票签
+            doVotePass(task, instance, vars, dto);
+            return;
+        }
+        // 2. 计算总权重
+        int totalWeight = users.stream()
+                .mapToInt(u -> u.getWeight() == null ? 1 : Math.max(1, u.getWeight()))
+                .sum();
+        // 3. 标记当前用户已处理
+        if (dto.getUserId() != null) {
+            userMapper.markProcessed(task.getId(), String.valueOf(dto.getUserId()),
+                    dto.getComment(), LocalDateTime.now());
+        }
+        // 4. 累加已通过的权重（processed=1）
+        int passedWeight = users.stream()
+                .filter(u -> Integer.valueOf(1).equals(u.getProcessed()))
+                .mapToInt(u -> u.getWeight() == null ? 1 : Math.max(1, u.getWeight()))
+                .sum();
+        // 乐观锁更新 approveFinished（这里存已通过人数而不是权重，便于前端展示）
+        int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
+        task.setApproveFinished(finished);
+        int updated = taskMapper.updateById(task);
+        if (updated == 0) {
+            throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
+                    "任务已被其他操作修改，请刷新后重试: taskId=" + task.getId());
+        }
+        // 5. 阈值（默认 50%）
+        int threshold = (totalWeight / 2) + 1;
+        if (task.getVotePassRate() != null) {
+            double rate = task.getVotePassRate().doubleValue();
+            if (rate > 0 && rate <= 1.0) {
+                threshold = (int) Math.ceil(totalWeight * rate);
+                if (threshold < 1) {
+                    threshold = 1;
+                }
+            }
+        }
+        if (passedWeight < threshold) {
+            audit(task, "WEIGHTED_VOTE_PASS", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
+            log.info("[Flow] 加权票签部分通过: taskId={} passedWeight={}/{} totalWeight={} (rate={})",
+                    task.getId(), passedWeight, threshold, totalWeight, task.getVotePassRate());
+            return;
+        }
+        // 6. 达到阈值：完成 + 推进 + 跳过剩余
+        taskMapper.skipByNode(instance.getId(), task.getNodeCode(),
+                FlowTaskStatus.SKIPPED.name());
+        completeAndArchive(task, dto.getComment());
+        List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
+                "PASS", null, vars);
+        ((FlowInstanceServiceImpl) instanceService).generateTasksForNodes(
+                task.getInstanceId(), nextNodes, vars);
+        updateInstanceNode(instance, nextNodes);
+        fireTaskCompleted(task.getId(), "PASS", vars);
+        audit(task, "WEIGHTED_VOTE_THRESHOLD", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
+        log.info("[Flow] 加权票签达到阈值: taskId={} passedWeight={}/{} totalWeight={} (rate={})",
+                task.getId(), passedWeight, threshold, totalWeight, task.getVotePassRate());
     }
 
     // ============================== 私有辅助 ==============================
@@ -1410,6 +1531,96 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             auditLogMapper.insert(log);
         } catch (Exception e) {
             FlowTaskServiceImpl.log.warn("[Flow] 审计日志写入失败: {}", e.getMessage());
+        }
+    }
+
+    // ============================== P1-5: 加权票签辅助 ==============================
+
+    /**
+     * P1-5: 应用投票配置 — 从 node.ext 读取 votePassRate 写入 task
+     */
+    private void applyVoteConfig(FlowTaskDO task, FlowNodeDO node) {
+        if (node == null || !StringUtils.hasText(node.getExt())) {
+            return;
+        }
+        try {
+            Map<String, Object> ext = parseExtConfig(node.getExt());
+            Object rate = ext.get("votePassRate");
+            if (rate != null) {
+                java.math.BigDecimal rateValue = toBigDecimal(rate);
+                if (rateValue != null && rateValue.doubleValue() > 0
+                        && rateValue.doubleValue() <= 1.0) {
+                    task.setVotePassRate(rateValue);
+                }
+            }
+            // 如果配置了 userWeights，自动切换 performType=WEIGHTED_VOTE
+            Object userWeights = ext.get("userWeights");
+            if (userWeights != null && FlowPerformType.VOTE.name().equals(task.getPerformType())) {
+                task.setPerformType(FlowPerformType.WEIGHTED_VOTE.name());
+            }
+        } catch (Exception e) {
+            log.warn("[Flow] 解析投票配置失败: node={} err={}", node.getNodeCode(), e.getMessage());
+        }
+    }
+
+    /**
+     * P1-5: 解析 node.ext.userWeights JSON 为 Map
+     *
+     * <p>配置示例：
+     * <pre>
+     * "userWeights": {
+     *   "1001": 3,  // 财务总监 3 票
+     *   "1002": 1,  // 普通员工 1 票
+     *   "1003": 1
+     * }
+     * </pre>
+     */
+    @SuppressWarnings("unchecked")
+    private java.util.Map<String, Integer> parseUserWeights(String ext) {
+        if (!StringUtils.hasText(ext)) {
+            return null;
+        }
+        try {
+            Map<String, Object> extMap = parseExtConfig(ext);
+            Object uw = extMap.get("userWeights");
+            if (uw == null) {
+                return null;
+            }
+            if (uw instanceof Map<?, ?> m) {
+                java.util.Map<String, Integer> result = new java.util.HashMap<>();
+                for (Map.Entry<?, ?> e : m.entrySet()) {
+                    String key = e.getKey() == null ? null : String.valueOf(e.getKey());
+                    Object val = e.getValue();
+                    if (key != null && val != null) {
+                        try {
+                            int w = (val instanceof Number n) ? n.intValue()
+                                    : Integer.parseInt(String.valueOf(val));
+                            if (w < 1) w = 1;
+                            result.put(key, w);
+                        } catch (NumberFormatException ignored) {
+                        }
+                    }
+                }
+                return result;
+            }
+            return null;
+        } catch (Exception e) {
+            log.warn("[Flow] 解析 userWeights 失败: err={}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 安全转换为 BigDecimal
+     */
+    private java.math.BigDecimal toBigDecimal(Object val) {
+        if (val == null) return null;
+        if (val instanceof java.math.BigDecimal bd) return bd;
+        if (val instanceof Number n) return java.math.BigDecimal.valueOf(n.doubleValue());
+        try {
+            return new java.math.BigDecimal(String.valueOf(val));
+        } catch (NumberFormatException e) {
+            return null;
         }
     }
 

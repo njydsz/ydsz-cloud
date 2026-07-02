@@ -35,6 +35,10 @@
         <result column="finish_at" property="finishAt"/>
         <result column="duration_ms" property="durationMs"/>
         <result column="due_at" property="dueAt"/>
+        <result column="reminder_count" property="reminderCount"/>
+        <result column="last_reminded_at" property="lastRemindedAt"/>
+        <result column="sla_action" property="slaAction"/>
+        <result column="sla_escalated" property="slaEscalated"/>
         <result column="deleted" property="deleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
@@ -46,6 +50,7 @@
         assignor_id, assignor_name, assignee_type, assignee_id, assignee_name, permission_flag,
         perform_type, approve_count, approve_finished, task_status, comment, status,
         created_by, created_at, updated_by, updated_at, claim_at, finish_at, duration_ms, due_at,
+        reminder_count, last_reminded_at, sla_action, sla_escalated,
         deleted, tenant_id, provider_trace_id
     </sql>
 
@@ -242,4 +247,38 @@
           <if test="assigneeId != null and assigneeId != ''">AND assignee_id = #{assigneeId}</if>
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
     </select>
+
+    <!-- P1-6: SLA 扫描候选 — 所有设置过 dueAt 且未完成的任务 -->
+    <select id="selectSlaCandidates" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_task
+        WHERE due_at IS NOT NULL
+          AND task_status IN ('PENDING', 'CLAIMED')
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY due_at ASC
+        LIMIT #{limit}
+    </select>
+
+    <!-- P1-6: 增加 SLA 催办计数 -->
+    <update id="incrementReminderCount">
+        UPDATE pmis_flow_task
+        SET reminder_count = #{reminderCount},
+            last_reminded_at = #{lastRemindedAt},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
+
+    <!-- P1-6: 标记 SLA 动作（用于审计） -->
+    <update id="markSlaAction">
+        UPDATE pmis_flow_task
+        SET sla_action = #{slaAction},
+            sla_escalated = #{slaEscalated},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
 </mapper>

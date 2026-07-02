@@ -50,4 +50,13 @@ public interface FlowJoinTokenService {
      * @param joinNodeCode join 节点编码
      */
     void clearTokens(Long instanceId, String joinNodeCode);
+
+    /**
+     * 检查 join 令牌是否已初始化
+     *
+     * @param instanceId   流程实例 ID
+     * @param joinNodeCode join 节点编码
+     * @return true=已初始化（total key 存在）；false=未初始化或 Redis 异常
+     */
+    boolean isInitialized(Long instanceId, String joinNodeCode);
 }

@@ -90,6 +90,9 @@ public class FlowTaskDO extends BaseDO {
     /** 会签当前已通过人数 */
     private Integer approveFinished;
 
+    /** P1-5: VOTE 模式通过率阈值（0~1，默认 0.5 表示过半数） */
+    private java.math.BigDecimal votePassRate;
+
     /** 任务状态（FlowTaskStatus.name） */
     private String taskStatus;
 
@@ -107,6 +110,18 @@ public class FlowTaskDO extends BaseDO {
 
     /** 截止时间 */
     private LocalDateTime dueAt;
+
+    /** P1-6: 已发送的 SLA 催办次数 */
+    private Integer reminderCount;
+
+    /** P1-6: 最近一次催办时间 */
+    private LocalDateTime lastRemindedAt;
+
+    /** P1-6: 最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT） */
+    private String slaAction;
+
+    /** P1-6: 是否已升级（0 否 / 1 是，避免重复升级） */
+    private Integer slaEscalated;
 
     /** GAP-P1: 乐观锁版本号 — 会签并发安全 */
     @Version

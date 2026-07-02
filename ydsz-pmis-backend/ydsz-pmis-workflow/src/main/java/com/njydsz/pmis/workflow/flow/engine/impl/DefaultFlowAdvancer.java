@@ -44,6 +44,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     private final FlowInstanceService instanceService;
     private final FlowVariableStrategy variableStrategy;
     private final FlowTaskMapper taskMapper;
+    /** GAP-P2: 并行网关 join 令牌服务（精确跟踪分支到达状态） */
+    private final com.njydsz.pmis.workflow.flow.service.FlowJoinTokenService joinTokenService;
 
     @Override
     public com.njydsz.pmis.workflow.flow.service.FlowInstanceService getInstanceService() {
@@ -128,15 +130,39 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                         skip.getId(), skip.getNextNodeCode());
                 continue;
             }
-            // P0-5: 网关 join 聚合 — 如果下一节点是并行/包容网关且有多个入边，
-            // 检查是否还有其他分支的未完成任务
+            // P0-5 / GAP-P2: 网关 join 聚合 — 使用 Redis join 令牌精确跟踪分支到达状态
             if (isJoinNode(next) && hasMultipleIncoming(currentInstance.getDefinitionId(), next.getNodeCode())) {
-                int pending = taskMapper.countPendingByNode(
-                        currentInstance.getId(), next.getNodeCode());
-                if (pending > 0) {
-                    log.info("[Flow] 并行网关 join 等待: instanceId={} node={} pending={}",
-                            currentInstance.getId(), next.getNodeCode(), pending);
-                    continue; // 不推进到 join 节点，等待其他分支完成
+                int incomingCount = skipMapper.selectByNextNode(
+                        currentInstance.getDefinitionId(), next.getNodeCode()).size();
+                Long instId = currentInstance.getId();
+                String joinCode = next.getNodeCode();
+                try {
+                    // 懒初始化：首次到达时初始化令牌（branchCount = 入边数）
+                    if (!joinTokenService.isInitialized(instId, joinCode)) {
+                        joinTokenService.initTokens(instId, joinCode, incomingCount);
+                    }
+                    // 标记本次到达
+                    boolean allArrived = joinTokenService.arriveToken(instId, joinCode);
+                    if (allArrived) {
+                        // 全部分支到达：清理令牌，继续推进
+                        joinTokenService.clearTokens(instId, joinCode);
+                        log.info("[Flow] 并行网关 join 聚合通过（令牌）: instanceId={} node={}",
+                                instId, joinCode);
+                    } else {
+                        log.info("[Flow] 并行网关 join 等待（令牌）: instanceId={} node={} arrived<{}",
+                                instId, joinCode, incomingCount);
+                        continue; // 等待其他分支
+                    }
+                } catch (Exception e) {
+                    // Redis 异常降级：回退到 countPendingByNode 逻辑
+                    log.warn("[Flow] join 令牌异常，降级到 countPending: instanceId={} node={} err={}",
+                            instId, joinCode, e.getMessage());
+                    int pending = taskMapper.countPendingByNode(instId, joinCode);
+                    if (pending > 0) {
+                        log.info("[Flow] 并行网关 join 等待（降级）: instanceId={} node={} pending={}",
+                                instId, joinCode, pending);
+                        continue;
+                    }
                 }
             }
             nextNodes.add(next);

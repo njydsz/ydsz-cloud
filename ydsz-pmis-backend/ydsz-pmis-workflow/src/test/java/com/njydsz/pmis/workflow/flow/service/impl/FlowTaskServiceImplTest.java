@@ -79,6 +79,7 @@ class FlowTaskServiceImplTest {
     private FlowUrgeLimiter urgeLimiter;
     private FlowDelegateAuthService delegateAuthService;
     private FlowDelegateLogMapper delegateLogMapper;
+    private com.njydsz.pmis.workflow.flow.service.FlowSlaService slaService;
     private FlowTaskServiceImpl service;
 
     @BeforeEach
@@ -100,13 +101,17 @@ class FlowTaskServiceImplTest {
         // P0-2: 催办限流器 mock（默认放行）
         urgeLimiter = mock(FlowUrgeLimiter.class);
         when(urgeLimiter.tryAcquire(anyLong(), anyLong(), anyString())).thenReturn(true);
+        // GAP-P1: 乐观锁 — updateById 默认返回 1（表示更新成功）
+        when(taskMapper.updateById(any(FlowTaskDO.class))).thenReturn(1);
         // P1-5: 委派授权服务 mock
         delegateAuthService = mock(FlowDelegateAuthService.class);
         delegateLogMapper = mock(FlowDelegateLogMapper.class);
+        // P1-6: SLA 服务 mock（默认 no-op，测试不期望任何调用副作用）
+        slaService = mock(com.njydsz.pmis.workflow.flow.service.FlowSlaService.class);
         service = new FlowTaskServiceImpl(taskMapper, hisTaskMapper, instanceMapper,
                 instanceService, advancer, variableStrategy,
                 userMapper, auditLogMapper, nodeMapper, assigneeResolver, eventListeners,
-                eventPublisher, urgeLimiter, delegateAuthService, delegateLogMapper);
+                eventPublisher, urgeLimiter, delegateAuthService, delegateLogMapper, slaService);
     }
 
     // ============== createTask ==============
@@ -830,8 +835,8 @@ class FlowTaskServiceImplTest {
         dto.setComment("同意");
         service.pass(dto);
 
-        // 应该更新计数但不推进
-        verify(taskMapper).updateApproveFinished(eq(1L), eq(1));
+        // 应该更新计数（乐观锁 updateById）但不推进
+        verify(taskMapper).updateById(any(FlowTaskDO.class));
         verify(advancer, never()).advance(any(), anyString(), anyString(), any(), any());
         verify(taskMapper, never()).completeTask(anyLong(), anyString(), any(), any(), any());
     }
@@ -1183,7 +1188,7 @@ class FlowTaskServiceImplTest {
         service.pass(dto);
 
         // 当前人 pass 后：approveFinished+1（1 < 2），切换到加签人，不推进
-        verify(taskMapper).updateApproveFinished(eq(1L), eq(1));
+        verify(taskMapper).updateById(any(FlowTaskDO.class));
         verify(taskMapper).updateAssignee(eq(1L), eq("999"), eq("后加签人"),
                 eq(FlowAssigneeType.USER.name()));
         // 不应该完成当前任务或推进

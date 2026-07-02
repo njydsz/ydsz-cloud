@@ -15,6 +15,7 @@ import com.njydsz.pmis.workflow.flow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.flow.service.FlowCcService;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowSubProcessService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
@@ -62,6 +63,7 @@ class FlowInstanceServiceImplTest {
     private List<FlowEventListener> eventListeners;
     private ApplicationEventPublisher eventPublisher;
     private FlowSubProcessService subProcessService;
+    private FlowCcService ccService;
     private FlowInstanceServiceImpl service;
 
     @BeforeEach
@@ -76,8 +78,10 @@ class FlowInstanceServiceImplTest {
         eventPublisher = mock(ApplicationEventPublisher.class);
         // P1-3: 注入 FlowSubProcessService mock
         subProcessService = mock(FlowSubProcessService.class);
+        // GAP-P1: 注入 FlowCcService mock
+        ccService = mock(FlowCcService.class);
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
-                advancer, taskService, taskMapper, eventListeners, eventPublisher, subProcessService);
+                advancer, taskService, taskMapper, eventListeners, eventPublisher, subProcessService, ccService);
     }
 
     @Test

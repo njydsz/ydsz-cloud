@@ -50,6 +50,10 @@ public class FlowUserDO extends BaseDO {
     private LocalDateTime processAt;
     /** 审批意见 */
     private String comment;
+
+    /** P1-5: 办理人权重（默认 1，可配置 2/3 等，用于加权会签） */
+    private Integer weight;
+
     /** 租户 ID */
     private Long tenantId;
     /** 链路追踪 ID */

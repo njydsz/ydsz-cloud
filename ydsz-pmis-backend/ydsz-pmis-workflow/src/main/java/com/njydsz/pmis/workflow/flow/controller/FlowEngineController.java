@@ -57,6 +57,10 @@ public class FlowEngineController {
     private final FlowHisTaskMapper hisTaskMapper;
     /** P1-4: 长期授权委派服务 */
     private final FlowDelegateAuthService delegateAuthService;
+    /** GAP-P2: 审批效率分析服务 */
+    private final com.njydsz.pmis.workflow.flow.service.FlowEfficiencyService efficiencyService;
+    /** GAP-P2: 流程模板服务 */
+    private final com.njydsz.pmis.workflow.flow.service.FlowTemplateService templateService;
 
     // ============== 引擎信息 ==============
 
@@ -789,5 +793,147 @@ public class FlowEngineController {
             @RequestParam(defaultValue = "20") int size) {
         Long ownerUserId = SecurityContext.getUserId();
         return Result.ok(delegateAuthService.listOwnerLog(ownerUserId, page, size));
+    }
+
+    // ============== GAP-P1: 减签 / GAP-P2: 已阅 / 沟通 ==============
+
+    /**
+     * GAP-P1: 减签 — 从会签任务中移除指定审批人
+     *
+     * @param dto 任务操作参数（需含 taskId + targetUserId）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/countersignRemove")
+    public Result<Void> countersignRemove(@RequestBody FlowTaskOperateDTO dto) {
+        taskService.countersignRemove(dto);
+        return Result.ok();
+    }
+
+    /**
+     * GAP-P2: 已阅 — 标记任务已阅
+     *
+     * @param taskId 任务 ID
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/{taskId}/read")
+    public Result<Void> markRead(@PathVariable Long taskId) {
+        Long userId = SecurityContext.getUserId();
+        taskService.markRead(taskId, userId);
+        return Result.ok();
+    }
+
+    /**
+     * GAP-P2: 沟通 — 在任务下添加沟通评论
+     *
+     * @param dto 任务操作参数（需含 taskId + userId + comment）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/communicate")
+    public Result<Void> communicate(@RequestBody FlowTaskOperateDTO dto) {
+        taskService.communicate(dto);
+        return Result.ok();
+    }
+
+    // ============== GAP-P2: 审批效率分析 ==============
+
+    /**
+     * GAP-P2: 审批效率统计 — 单量/平均耗时/代批率/超期率
+     *
+     * @param startTime 开始时间（可选）
+     * @param endTime   结束时间（可选）
+     * @return 统计结果
+     */
+    @GetMapping("/efficiency/stats")
+    public Result<Map<String, Object>> efficiencyStats(
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(efficiencyService.efficiencyStats(tenantId, startTime, endTime));
+    }
+
+    /**
+     * GAP-P2: 节点瓶颈排名
+     *
+     * @param flowCode 流程编码（可选）
+     * @param limit    返回条数上限
+     * @return 瓶颈节点列表
+     */
+    @GetMapping("/efficiency/bottleneck")
+    public Result<List<Map<String, Object>>> bottleneckRanking(
+            @RequestParam(required = false) String flowCode,
+            @RequestParam(defaultValue = "10") int limit) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(efficiencyService.bottleneckRanking(tenantId, flowCode, limit));
+    }
+
+    /**
+     * GAP-P2: 审批人效率排名
+     *
+     * @param startTime 开始时间（可选）
+     * @param endTime   结束时间（可选）
+     * @param limit     返回条数上限
+     * @return 审批人排名列表
+     */
+    @GetMapping("/efficiency/approver-ranking")
+    public Result<List<Map<String, Object>>> approverRanking(
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime,
+            @RequestParam(defaultValue = "10") int limit) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(efficiencyService.approverRanking(tenantId, startTime, endTime, limit));
+    }
+
+    /**
+     * GAP-P2: 审批趋势
+     *
+     * @param interval  聚合粒度：DAY / WEEK / MONTH
+     * @param startTime 开始时间（可选）
+     * @param endTime   结束时间（可选）
+     * @return 趋势列表
+     */
+    @GetMapping("/efficiency/trend")
+    public Result<List<Map<String, Object>>> approvalTrend(
+            @RequestParam(defaultValue = "DAY") String interval,
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(efficiencyService.approvalTrend(tenantId, interval, startTime, endTime));
+    }
+
+    // ============== GAP-P2: 流程模板库 ==============
+
+    /**
+     * GAP-P2: 列出所有可用模板
+     *
+     * @param category 模板分类（可选）
+     * @return 模板列表
+     */
+    @GetMapping("/template/list")
+    public Result<List<Map<String, Object>>> listTemplates(
+            @RequestParam(required = false) String category) {
+        return Result.ok(templateService.listTemplates(category));
+    }
+
+    /**
+     * GAP-P2: 一键导入模板
+     *
+     * @param templateCode 模板编码
+     * @return 新创建的流程定义 ID
+     */
+    @PostMapping("/template/{templateCode}/import")
+    public Result<Long> importTemplate(@PathVariable String templateCode) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(templateService.importTemplate(templateCode, tenantId));
+    }
+
+    /**
+     * GAP-P2: 预览模板内容
+     *
+     * @param templateCode 模板编码
+     * @return 模板详情
+     */
+    @GetMapping("/template/{templateCode}/preview")
+    public Result<Map<String, Object>> previewTemplate(@PathVariable String templateCode) {
+        return Result.ok(templateService.previewTemplate(templateCode));
     }
 }

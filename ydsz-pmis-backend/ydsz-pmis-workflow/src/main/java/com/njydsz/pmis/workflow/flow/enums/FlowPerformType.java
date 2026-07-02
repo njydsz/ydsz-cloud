@@ -15,5 +15,7 @@ public enum FlowPerformType {
     /** 并行会签：所有办理人全部通过才推进 */
     PARALLEL,
     /** 票签：通过率达到 approveCount / 总数 阈值才推进 */
-    VOTE
+    VOTE,
+    /** P1-5: 加权票签 — 按办理人 weight 累加，权重达到阈值才推进 */
+    WEIGHTED_VOTE
 }

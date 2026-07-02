@@ -20,6 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -46,6 +47,14 @@ class FlowDelegateAuthServiceImplTest {
     void setUp() {
         authMapper = mock(FlowDelegateAuthMapper.class);
         logMapper = mock(FlowDelegateLogMapper.class);
+        // 模拟 MyBatis-Plus insert 后自动回填 id
+        doAnswer(invocation -> {
+            FlowDelegateAuthDO auth = invocation.getArgument(0);
+            if (auth.getId() == null) {
+                auth.setId(1L);
+            }
+            return 1;
+        }).when(authMapper).insert(any(FlowDelegateAuthDO.class));
         service = new FlowDelegateAuthServiceImpl(authMapper, logMapper);
     }
 
