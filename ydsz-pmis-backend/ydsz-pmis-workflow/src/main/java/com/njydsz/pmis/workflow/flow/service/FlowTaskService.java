@@ -128,6 +128,24 @@ public interface FlowTaskService {
     List<String> urge(Long instanceId, Long operatorId, String comment);
 
     /**
+     * P2-25: 自由跳转 — 管理员强制跳转到任意节点
+     *
+     * <p>完成当前任务、取消同实例其他 PENDING 任务、在目标节点创建新任务。
+     *
+     * @param dto 任务操作参数（需含 taskId + targetNodeCode）
+     */
+    void jump(FlowTaskOperateDTO dto);
+
+    /**
+     * P2-26: 批量审批 — 对多个任务逐一执行 pass，@Transactional 保证原子性
+     *
+     * @param taskIds 任务 ID 列表
+     * @param userId  操作人 ID
+     * @param comment 审批意见
+     */
+    void batchPass(List<Long> taskIds, Long userId, String comment);
+
+    /**
      * 转视图
      */
     FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowTaskDO task);

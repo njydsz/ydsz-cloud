@@ -55,4 +55,27 @@ public interface FlowDefinitionService {
      * @return Map 包含 definition / nodes / skips 三个 key；定义不存在返回 null
      */
     Map<String, Object> getDetail(Long definitionId);
+
+    /**
+     * P2-27: 切换流程定义的激活版本 — 失效同 flowCode 其他已发布版本，激活目标版本
+     *
+     * @param flowCode      流程编码
+     * @param definitionId  目标流程定义 ID
+     * @param tenantId      租户 ID（可空，默认 1L）
+     */
+    void switchActiveVersion(String flowCode, Long definitionId, Long tenantId);
+
+    /**
+     * P2-28: 启用流程定义（activityStatus = 1）
+     *
+     * @param definitionId 流程定义 ID
+     */
+    void enable(Long definitionId);
+
+    /**
+     * P2-28: 停用流程定义（activityStatus = 0）
+     *
+     * @param definitionId 流程定义 ID
+     */
+    void disable(Long definitionId);
 }

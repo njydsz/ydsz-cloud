@@ -33,4 +33,26 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      * 发布（更新 is_publish）
      */
     int publish(@Param("id") Long id, @Param("isPublish") Integer isPublish);
+
+    /**
+     * P2-27: 失效同 flowCode 的其他已发布版本（is_publish 置 9）
+     *
+     * @param flowCode 流程编码
+     * @param exceptId 排除的 definitionId（目标版本）
+     * @param tenantId 租户 ID
+     * @return 受影响行数
+     */
+    int deactivateByFlowCode(@Param("flowCode") String flowCode,
+                             @Param("exceptId") Long exceptId,
+                             @Param("tenantId") Long tenantId);
+
+    /**
+     * P2-28: 更新流程定义激活状态（0 挂起 / 1 激活）
+     *
+     * @param id             流程定义 ID
+     * @param activityStatus 激活状态
+     * @return 受影响行数
+     */
+    int updateActivityStatus(@Param("id") Long id,
+                             @Param("activityStatus") Integer activityStatus);
 }

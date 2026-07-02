@@ -336,4 +336,61 @@ class FlowDefinitionServiceImplTest {
         verify(nodeMapper).selectByDefinitionId(1L);
         verify(skipMapper).selectByDefinitionId(1L);
     }
+
+    // ============== P2-27: 流程定义版本切换 ==============
+
+    @Test
+    @DisplayName("switchActiveVersion P2-27: 失效其他版本 + 激活目标版本")
+    void testSwitchActiveVersion() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(10L);
+        def.setFlowCode("f1");
+        when(definitionMapper.selectById(10L)).thenReturn(def);
+
+        service.switchActiveVersion("f1", 10L, 1L);
+
+        // 失效同 flowCode 的其他已发布版本
+        verify(definitionMapper).deactivateByFlowCode("f1", 10L, 1L);
+        // 激活目标版本
+        verify(definitionMapper).publish(10L, 1);
+    }
+
+    @Test
+    @DisplayName("switchActiveVersion P2-27: 定义不存在抛 NOT_FOUND")
+    void testSwitchActiveVersionNotFound() {
+        when(definitionMapper.selectById(99L)).thenReturn(null);
+        assertThatThrownBy(() -> service.switchActiveVersion("f1", 99L, 1L))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("不存在");
+        verify(definitionMapper, never()).deactivateByFlowCode(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("switchActiveVersion P2-27: flowCode 不匹配抛 BAD_REQUEST")
+    void testSwitchActiveVersionCodeMismatch() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(10L);
+        def.setFlowCode("f2");
+        when(definitionMapper.selectById(10L)).thenReturn(def);
+        assertThatThrownBy(() -> service.switchActiveVersion("f1", 10L, 1L))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("不匹配");
+        verify(definitionMapper, never()).deactivateByFlowCode(any(), any(), any());
+    }
+
+    // ============== P2-28: 流程定义启用/停用 ==============
+
+    @Test
+    @DisplayName("enable P2-28: 设置 activityStatus=1")
+    void testEnable() {
+        service.enable(10L);
+        verify(definitionMapper).updateActivityStatus(10L, 1);
+    }
+
+    @Test
+    @DisplayName("disable P2-28: 设置 activityStatus=0")
+    void testDisable() {
+        service.disable(10L);
+        verify(definitionMapper).updateActivityStatus(10L, 0);
+    }
 }

@@ -1021,7 +1021,7 @@ class FlowTaskServiceImplTest {
     }
 
     @Test
-    @DisplayName("countersignAfter 复用 countersignBefore 实现")
+    @DisplayName("countersignAfter P2-29: 后加签 — 新增审批人 + 切换为顺序会签")
     void testCountersignAfter() {
         FlowTaskDO task = baseTask();
         when(taskMapper.selectById(1L)).thenReturn(task);
@@ -1033,6 +1033,74 @@ class FlowTaskServiceImplTest {
         service.countersignAfter(dto);
 
         verify(userMapper).insert((FlowUserDO) any());
+        // P2-29: 后加签会切换 performType 为 SEQUENTIAL 并 approveCount+1
+        verify(taskMapper).updateById((FlowTaskDO) any());
+    }
+
+    @Test
+    @DisplayName("countersignAfter P2-29: 后加签真实实现 — 切换为顺序会签 + approveCount+1")
+    void testCountersignAfter_RealImplementation() {
+        FlowTaskDO task = baseTask();
+        task.setPerformType("OR");
+        task.setApproveCount(1);
+        task.setApproveFinished(0);
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetUserId(999L);
+        dto.setTargetUserName("后加签人");
+        service.countersignAfter(dto);
+
+        // 1. 新增审批人写入 pmis_flow_user
+        ArgumentCaptor<FlowUserDO> userCaptor = ArgumentCaptor.forClass(FlowUserDO.class);
+        verify(userMapper).insert(userCaptor.capture());
+        FlowUserDO savedUser = userCaptor.getValue();
+        assertThat(savedUser.getTaskId()).isEqualTo(1L);
+        assertThat(savedUser.getUserId()).isEqualTo("999");
+        assertThat(savedUser.getUserName()).isEqualTo("后加签人");
+        assertThat(savedUser.getProcessed()).isEqualTo(0);
+
+        // 2. 任务切换为顺序会签 + approveCount+1
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).updateById(taskCaptor.capture());
+        FlowTaskDO updated = taskCaptor.getValue();
+        assertThat(updated.getPerformType()).isEqualTo("SEQUENTIAL");
+        assertThat(updated.getApproveCount()).isEqualTo(2);  // 1+1
+    }
+
+    @Test
+    @DisplayName("countersignAfter P2-29: 后加签后当前人 pass 会切换到加签人而非直接推进")
+    void testCountersignAfter_PassSwitchesToCountersignUser() {
+        // 模拟后加签后的任务状态：SEQUENTIAL, approveCount=2, approveFinished=0
+        FlowTaskDO task = baseTask();
+        task.setPerformType("SEQUENTIAL");
+        task.setApproveCount(2);
+        task.setApproveFinished(0);
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+
+        // 加签人在 pmis_flow_user 中未处理
+        FlowUserDO countersignUser = new FlowUserDO();
+        countersignUser.setUserId("999");
+        countersignUser.setUserName("后加签人");
+        when(userMapper.selectUnprocessedByInstanceAndNode(eq(10L), eq("t1")))
+                .thenReturn(List.of(countersignUser));
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setUserId(1001L);
+        dto.setComment("同意");
+        service.pass(dto);
+
+        // 当前人 pass 后：approveFinished+1（1 < 2），切换到加签人，不推进
+        verify(taskMapper).updateApproveFinished(eq(1L), eq(1));
+        verify(taskMapper).updateAssignee(eq(1L), eq("999"), eq("后加签人"),
+                eq(FlowAssigneeType.USER.name()));
+        // 不应该完成当前任务或推进
+        verify(taskMapper, never()).completeTask(anyLong(), anyString(), any(), any(), any());
+        verify(advancer, never()).advance(any(), anyString(), anyString(), any(), any());
     }
 
     // ============== P1-9: 催办 ==============
@@ -1261,6 +1329,148 @@ class FlowTaskServiceImplTest {
         assertThat(view.getComment()).isEqualTo("备注");
         assertThat(view.getCreateAt()).isEqualTo(LocalDateTime.of(2026, 1, 1, 0, 0));
         assertThat(view.getDurationMs()).isEqualTo(3600000L);
+    }
+
+    // ============== P2-25: 自由跳转 ==============
+
+    @Test
+    @DisplayName("jump P2-25: 自由跳转 — 完成当前任务 + 取消其他 PENDING + 创建目标节点任务")
+    void testJump_Success() {
+        FlowTaskDO task = baseTask();
+        task.setDefinitionId(1L);
+        FlowInstanceDO ins = simpleInstance(10L);
+        ins.setStartAt(LocalDateTime.now().minusMinutes(2));
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+
+        FlowNodeDO targetNode = new FlowNodeDO();
+        targetNode.setNodeCode("t2");
+        targetNode.setNodeName("目标节点");
+        targetNode.setNodeType(FlowNodeType.APPROVAL.getCode());
+        targetNode.setPermissionFlag("user:1002");
+        when(nodeMapper.selectByCode(eq(1L), eq("t2"))).thenReturn(targetNode);
+        when(variableStrategy.resolveAssignee(eq("user:1002"), any())).thenReturn("user:1002");
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(99L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setUserId(1001L);
+        dto.setTargetNodeCode("t2");
+        dto.setComment("管理员跳转");
+        service.jump(dto);
+
+        // 1. 完成当前任务（COMPLETED）
+        verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.COMPLETED.name()),
+                eq("管理员跳转"), any(), any());
+        // 2. 归档到历史表
+        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO) any());
+        // 3. 取消同实例其他 PENDING 任务
+        verify(taskMapper).cancelByInstance(eq(10L), eq(FlowTaskStatus.CANCELLED.name()));
+        // 4. 更新实例当前节点为目标节点
+        verify(instanceMapper).updateStatus(eq(10L), eq("RUNNING"),
+                eq("t2"), eq("目标节点"), eq(null), eq(null));
+        // 5. 在目标节点创建新任务（taskMapper.insert 至少被调用一次）
+        verify(taskMapper, atLeastOnce()).insert((FlowTaskDO) any());
+    }
+
+    @Test
+    @DisplayName("jump P2-25: 目标节点不存在应抛 NOT_FOUND")
+    void testJump_TargetNodeNotFound() {
+        FlowTaskDO task = baseTask();
+        task.setDefinitionId(1L);
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(nodeMapper.selectByCode(eq(1L), eq("unknown"))).thenReturn(null);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetNodeCode("unknown");
+        assertThatThrownBy(() -> service.jump(dto))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("目标节点不存在");
+        // 不应该完成当前任务
+        verify(taskMapper, never()).completeTask(anyLong(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("jump P2-25: 已完成任务不可跳转")
+    void testJump_AlreadyFinished() {
+        FlowTaskDO task = baseTask();
+        task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetNodeCode("t2");
+        assertThatThrownBy(() -> service.jump(dto))
+                .isInstanceOf(BizException.class);
+        verify(taskMapper, never()).completeTask(anyLong(), anyString(), any(), any(), any());
+    }
+
+    // ============== P2-26: 批量审批 ==============
+
+    @Test
+    @DisplayName("batchPass P2-26: 全部成功 — 逐个调用 pass")
+    void testBatchPass_AllSuccess() {
+        FlowTaskDO task1 = baseTask();
+        task1.setId(1L);
+        FlowTaskDO task2 = baseTask();
+        task2.setId(2L);
+        FlowInstanceDO ins = simpleInstance(10L);
+        ins.setStartAt(LocalDateTime.now().minusMinutes(2));
+
+        when(taskMapper.selectById(1L)).thenReturn(task1);
+        when(taskMapper.selectById(2L)).thenReturn(task2);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(advancer.advance(any(), anyString(), eq("PASS"), any(), any()))
+                .thenReturn(Collections.emptyList());
+
+        service.batchPass(List.of(1L, 2L), 1001L, "批量同意");
+
+        // 应该对每个任务调用 completeTask
+        verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.COMPLETED.name()),
+                eq("批量同意"), any(), any());
+        verify(taskMapper).completeTask(eq(2L), eq(FlowTaskStatus.COMPLETED.name()),
+                eq("批量同意"), any(), any());
+    }
+
+    @Test
+    @DisplayName("batchPass P2-26: 部分失败 — 抛异常，后续任务不处理")
+    void testBatchPass_PartialFailRollback() {
+        FlowTaskDO task1 = baseTask();
+        task1.setId(1L);
+        FlowTaskDO task2 = baseTask();
+        task2.setId(2L);
+        task2.setTaskStatus(FlowTaskStatus.COMPLETED.name());  // 第二个任务已完成，pass 会抛异常
+
+        FlowInstanceDO ins = simpleInstance(10L);
+        ins.setStartAt(LocalDateTime.now().minusMinutes(2));
+        when(taskMapper.selectById(1L)).thenReturn(task1);
+        when(taskMapper.selectById(2L)).thenReturn(task2);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(advancer.advance(any(), anyString(), eq("PASS"), any(), any()))
+                .thenReturn(Collections.emptyList());
+
+        assertThatThrownBy(() -> service.batchPass(List.of(1L, 2L), 1001L, "批量同意"))
+                .isInstanceOf(BizException.class);
+
+        // 第一个任务应该被完成
+        verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.COMPLETED.name()),
+                any(), any(), any());
+        // 第二个任务不应被完成（completeTask 不应针对 taskId=2 调用）
+        verify(taskMapper, never()).completeTask(eq(2L), anyString(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("batchPass P2-26: 空 taskIds 抛 BAD_REQUEST")
+    void testBatchPass_EmptyTaskIds() {
+        assertThatThrownBy(() -> service.batchPass(Collections.emptyList(), 1001L, "同意"))
+                .isInstanceOf(BizException.class);
+        verify(taskMapper, never()).completeTask(anyLong(), anyString(), any(), any(), any());
     }
 
     // ============== 工具方法 ==============

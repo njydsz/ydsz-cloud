@@ -318,11 +318,33 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可加签");
         }
-        // 后加签：在当前节点通过后、下一节点前插入临时审批人
-        // 实现：在 ext 字段记录后加签人，pass 完成后由 advancer 处理
-        // 简化实现：直接在当前节点增加一个审批人（同前加签）
-        countersignBefore(dto);
+        // P2-29: 后加签真实实现 — 当前审批人通过后，新加签人需要审批，两人都通过后才推进到下一节点
+        // 实现方式：
+        // 1. 将当前任务切换为顺序会签（performType=SEQUENTIAL）
+        // 2. approveCount +1（当前人 + 加签人）
+        // 3. 新增审批人写入 pmis_flow_user（processed=0）
+        // 这样当前审批人 pass 时，doSequentialPass 检测到 approveFinished < approveCount，
+        // 会切换到加签人而非推进到下一节点；加签人 pass 后才真正推进
+        if (dto.getTargetUserId() != null) {
+            FlowUserDO fu = new FlowUserDO();
+            fu.setTaskId(task.getId());
+            fu.setInstanceId(task.getInstanceId());
+            fu.setNodeCode(task.getNodeCode());
+            fu.setUserType(FlowAssigneeType.USER.name());
+            fu.setUserId(String.valueOf(dto.getTargetUserId()));
+            fu.setUserName(dto.getTargetUserName());
+            fu.setProcessed(0);
+            fu.setTenantId(task.getTenantId());
+            fu.setProviderTraceId(task.getProviderTraceId());
+            userMapper.insert(fu);
+            // 切换为顺序会签：当前人 pass 后切换到加签人，加签人 pass 后才推进
+            task.setPerformType(FlowPerformType.SEQUENTIAL.name());
+            task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
+            taskMapper.updateById(task);
+        }
         audit(task, "COUNTERSIGN_AFTER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
+        log.info("[Flow] 后加签: taskId={} → 新增审批人={} (切换为顺序会签)",
+                task.getId(), dto.getTargetUserId());
     }
 
     // ============================== 催办（P1-9） ==============================
@@ -337,6 +359,62 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         }
         log.info("[Flow] 催办: instanceId={} 被催办人={}", instanceId, urged);
         return urged;
+    }
+
+    // ============================== 自由跳转（P2-25） ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void jump(FlowTaskOperateDTO dto) {
+        FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
+        if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可跳转: " + task.getTaskStatus());
+        }
+        if (!StringUtils.hasText(dto.getTargetNodeCode())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "跳转目标节点不能为空");
+        }
+        FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
+        if (instance == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "实例不存在: " + task.getInstanceId());
+        }
+        // 校验目标节点存在
+        FlowNodeDO targetNode = nodeMapper.selectByCode(task.getDefinitionId(), dto.getTargetNodeCode());
+        if (targetNode == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "目标节点不存在: " + dto.getTargetNodeCode());
+        }
+        // 完成当前任务（状态 COMPLETED，审计 action=JUMP）
+        completeAndArchive(task, dto.getComment());
+        // 取消同实例其他 PENDING 任务
+        taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
+        // 更新实例当前节点为目标节点
+        instanceMapper.updateStatus(instance.getId(), instance.getFlowStatus(),
+                targetNode.getNodeCode(), targetNode.getNodeName(), null, null);
+        // 在目标节点创建新任务
+        Map<String, Object> vars = mergeVariables(instance, dto.getVariables());
+        createTask(instance.getId(), targetNode, vars);
+        // 触发任务完成事件
+        fireTaskCompleted(task.getId(), "JUMP", vars);
+        audit(task, "JUMP", dto.getUserId(), null, dto.getComment());
+        log.info("[Flow] 自由跳转: taskId={} → targetNode={}", task.getId(), dto.getTargetNodeCode());
+    }
+
+    // ============================== 批量审批（P2-26） ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void batchPass(List<Long> taskIds, Long userId, String comment) {
+        if (taskIds == null || taskIds.isEmpty()) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "taskIds 不能为空");
+        }
+        for (Long taskId : taskIds) {
+            FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+            dto.setTaskId(taskId);
+            dto.setUserId(userId);
+            dto.setComment(comment);
+            dto.setAction("PASS");
+            this.pass(dto);
+        }
+        log.info("[Flow] 批量审批: taskIds={} userId={} count={}", taskIds, userId, taskIds.size());
     }
 
     // ============================== 取消 / 查询 ==============================

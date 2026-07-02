@@ -138,6 +138,46 @@ public class FlowEngineController {
         return Result.ok(definitionService.getDetail(id));
     }
 
+    /**
+     * P2-27: 切换流程定义的激活版本
+     *
+     * @param code         流程编码
+     * @param definitionId 目标流程定义 ID
+     * @param tenantId     租户 ID（可选）
+     * @return 统一响应结果
+     */
+    @PostMapping("/definition/{code}/switchVersion")
+    public Result<Void> switchVersion(@PathVariable String code,
+                                      @RequestParam Long definitionId,
+                                      @RequestParam(required = false) Long tenantId) {
+        definitionService.switchActiveVersion(code, definitionId, tenantId);
+        return Result.ok();
+    }
+
+    /**
+     * P2-28: 启用流程定义
+     *
+     * @param id 流程定义 ID
+     * @return 统一响应结果
+     */
+    @PostMapping("/definition/{id}/enable")
+    public Result<Void> enable(@PathVariable Long id) {
+        definitionService.enable(id);
+        return Result.ok();
+    }
+
+    /**
+     * P2-28: 停用流程定义
+     *
+     * @param id 流程定义 ID
+     * @return 统一响应结果
+     */
+    @PostMapping("/definition/{id}/disable")
+    public Result<Void> disable(@PathVariable Long id) {
+        definitionService.disable(id);
+        return Result.ok();
+    }
+
     // ============== 流程实例 ==============
 
     /**
@@ -383,6 +423,34 @@ public class FlowEngineController {
     @PostMapping("/task/countersignAfter")
     public Result<Void> countersignAfter(@RequestBody FlowTaskOperateDTO dto) {
         workflowFacade.countersignAfterTask(dto);
+        return Result.ok();
+    }
+
+    /**
+     * P2-25: 自由跳转 — 管理员强制跳转到任意节点
+     *
+     * @param dto 任务操作参数（需含 taskId + targetNodeCode）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/jump")
+    public Result<Void> jump(@RequestBody FlowTaskOperateDTO dto) {
+        workflowFacade.jumpTask(dto);
+        return Result.ok();
+    }
+
+    /**
+     * P2-26: 批量审批 — 对多个任务逐一通过
+     *
+     * @param taskIds 任务 ID 列表
+     * @param userId  操作人 ID
+     * @param comment 审批意见（可选）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/batchPass")
+    public Result<Void> batchPass(@RequestParam List<Long> taskIds,
+                                  @RequestParam Long userId,
+                                  @RequestParam(required = false) String comment) {
+        workflowFacade.batchPassTasks(taskIds, userId, comment);
         return Result.ok();
     }
 

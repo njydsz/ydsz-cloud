@@ -64,4 +64,27 @@
         WHERE id = #{id}
           AND deleted = 0
     </update>
+
+    <!-- P2-27: 失效同 flowCode 的其他已发布版本（is_publish 置 9） -->
+    <update id="deactivateByFlowCode">
+        UPDATE pmis_flow_definition
+        SET is_publish = 9,
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE flow_code = #{flowCode}
+          AND tenant_id = #{tenantId}
+          AND id != #{exceptId}
+          AND is_publish = 1
+          AND deleted = 0
+    </update>
+
+    <!-- P2-28: 更新流程定义激活状态 -->
+    <update id="updateActivityStatus">
+        UPDATE pmis_flow_definition
+        SET activity_status = #{activityStatus},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
 </mapper>

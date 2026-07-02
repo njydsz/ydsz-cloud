@@ -128,4 +128,20 @@ public interface WorkflowFacade {
      * @return 包含 definition / nodes / skips 的 Map，nodes 中每个节点带 active 标记
      */
     Map<String, Object> getDiagram(String instanceId);
+
+    /**
+     * P2-25: 自由跳转 — 管理员强制跳转到任意节点
+     *
+     * @param dto 任务操作参数（需含 taskId + targetNodeCode）
+     */
+    void jumpTask(FlowTaskOperateDTO dto);
+
+    /**
+     * P2-26: 批量审批 — 对多个任务逐一执行 pass，保证原子性
+     *
+     * @param taskIds 任务 ID 列表
+     * @param userId  操作人 ID
+     * @param comment 审批意见
+     */
+    void batchPassTasks(List<Long> taskIds, Long userId, String comment);
 }

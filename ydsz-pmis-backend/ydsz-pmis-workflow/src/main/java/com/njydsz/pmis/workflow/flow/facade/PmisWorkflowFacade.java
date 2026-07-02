@@ -160,6 +160,18 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         return taskViewToMap(view);
     }
 
+    // ============================== P2-25: 自由跳转 / P2-26: 批量审批 ==============================
+
+    @Override
+    public void jumpTask(FlowTaskOperateDTO dto) {
+        taskService.jump(dto);
+    }
+
+    @Override
+    public void batchPassTasks(List<Long> taskIds, Long userId, String comment) {
+        taskService.batchPass(taskIds, userId, comment);
+    }
+
     // ============================== P2-22: 流程图查询（高亮当前节点） ==============================
 
     /**

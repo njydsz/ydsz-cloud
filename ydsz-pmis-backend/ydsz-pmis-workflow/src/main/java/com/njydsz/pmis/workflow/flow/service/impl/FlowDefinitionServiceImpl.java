@@ -236,4 +236,44 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         result.put("skips", skips);
         return result;
     }
+
+    // ============================== P2-27: 版本切换 ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void switchActiveVersion(String flowCode, Long definitionId, Long tenantId) {
+        if (!StringUtils.hasText(flowCode)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode 不能为空");
+        }
+        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        if (def == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+        }
+        if (!flowCode.equals(def.getFlowCode())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "flowCode 不匹配: 期望=" + flowCode + " 实际=" + def.getFlowCode());
+        }
+        // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        // 失效同 flowCode 的其他已发布版本
+        definitionMapper.deactivateByFlowCode(flowCode, definitionId, tid);
+        // 激活目标版本
+        definitionMapper.publish(definitionId, 1);
+        log.info("[Flow] 切换流程定义版本: flowCode={} → defId={} tenantId={}",
+                flowCode, definitionId, tid);
+    }
+
+    // ============================== P2-28: 启用/停用 ==============================
+
+    @Override
+    public void enable(Long definitionId) {
+        definitionMapper.updateActivityStatus(definitionId, 1);
+        log.info("[Flow] 启用流程定义: defId={}", definitionId);
+    }
+
+    @Override
+    public void disable(Long definitionId) {
+        definitionMapper.updateActivityStatus(definitionId, 0);
+        log.info("[Flow] 停用流程定义: defId={}", definitionId);
+    }
 }
