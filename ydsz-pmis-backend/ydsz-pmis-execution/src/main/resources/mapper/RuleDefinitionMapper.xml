@@ -3,7 +3,7 @@
 <mapper namespace="com.njydsz.pmis.execution.mapper.RuleDefinitionMapper">
 
     <select id="selectByCode" resultType="com.njydsz.pmis.execution.entity.RuleDefinitionDO">
-        SELECT * FROM pm_rule_def WHERE rule_code = #{ruleCode}
+        SELECT * FROM pmis_rule_def WHERE rule_code = #{ruleCode}
     </select>
 
 </mapper>

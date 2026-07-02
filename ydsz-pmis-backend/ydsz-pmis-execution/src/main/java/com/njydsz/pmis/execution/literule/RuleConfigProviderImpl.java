@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 /**
  * 规则配置提供者实现（execution 模块）
  *
- * <p>从 pm_rule_def 表加载规则定义，转换为 literule API 的 {@link RuleDefinition}。
+ * <p>从 pmis_rule_def 表加载规则定义，转换为 literule API 的 {@link RuleDefinition}。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0

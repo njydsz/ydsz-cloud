@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
 /**
  * 规则版本仓库实现（execution 模块）
  *
- * <p>使用 pm_rule_version_history 表存储版本快照，支持变更追踪和回滚。
+ * <p>使用 pmis_rule_version_history 表存储版本快照，支持变更追踪和回滚。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0

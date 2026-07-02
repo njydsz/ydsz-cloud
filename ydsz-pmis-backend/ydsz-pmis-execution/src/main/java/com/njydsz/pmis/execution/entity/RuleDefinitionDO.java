@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 /**
  * LiteRule 规则定义 DO
  *
- * <p>映射 pm_rule_def 表，存储可配置规则的全部元信息。
+ * <p>映射 pmis_rule_def 表，存储可配置规则的全部元信息。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
 @Data
-@TableName("pm_rule_def")
+@TableName("pmis_rule_def")
 public class RuleDefinitionDO implements Serializable {
 
     @Serial

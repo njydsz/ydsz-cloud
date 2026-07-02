@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 /**
  * LiteRule 规则版本历史 DO
  *
- * <p>映射 pm_rule_version_history 表，存储规则变更的版本快照。
+ * <p>映射 pmis_rule_version_history 表，存储规则变更的版本快照。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
 @Data
-@TableName("pm_rule_version_history")
+@TableName("pmis_rule_version_history")
 public class RuleVersionHistoryDO implements Serializable {
 
     @Serial

@@ -25,6 +25,11 @@ import java.util.function.Supplier;
  *   <li>alert.spi.yellow / alert.spi.red</li>
  *   <li>alert.bench.days.yellow / alert.bench.days.red</li>
  *   <li>alert.bench.cost.ratio（闲置成本占总人力成本阈值，百分比）</li>
+ *   <li>alert.evm.red.count（EVM 红色项目数阈值）</li>
+ *   <li>alert.margin.yellow / alert.margin.red（毛利率阈值）</li>
+ *   <li>alert.bench.yellow.cost / alert.bench.red.cost（Bench 闲置成本阈值，元）</li>
+ *   <li>alert.utilization.yellow / alert.utilization.red（可计费利用率阈值）</li>
+ *   <li>alert.budget.yellow / alert.budget.red（预算使用率阈值）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -110,6 +115,92 @@ public class ThresholdProvider {
      */
     public BigDecimal benchCostRatio() {
         return BigDecimal.valueOf(getDouble("bench.cost.ratio", 0.08));
+    }
+
+    // ============= EVM 红色项目数 =============
+    /**
+     * EVM 红色项目数预警阈值（默认 3）
+     *
+     * @return EVM 红色项目数阈值
+     */
+    public int evmRedCount() {
+        return (int) Math.round(getDouble("evm.red.count", 3.0));
+    }
+
+    // ============= 毛利率 =============
+    /**
+     * 毛利率黄色预警阈值（默认 0.10，即 10%）
+     *
+     * @return 毛利率黄色阈值
+     */
+    public double marginYellow() {
+        return getDouble("margin.yellow", 0.10);
+    }
+
+    /**
+     * 毛利率红色预警阈值（默认 0.05，即 5%）
+     *
+     * @return 毛利率红色阈值
+     */
+    public double marginRed() {
+        return getDouble("margin.red", 0.05);
+    }
+
+    // ============= Bench 闲置成本 =============
+    /**
+     * Bench 闲置成本黄色预警阈值（默认 500000 元）
+     *
+     * @return Bench 闲置成本黄色阈值
+     */
+    public BigDecimal benchYellowCost() {
+        return BigDecimal.valueOf(getDouble("bench.yellow.cost", 500000.0));
+    }
+
+    /**
+     * Bench 闲置成本红色预警阈值（默认 1000000 元）
+     *
+     * @return Bench 闲置成本红色阈值
+     */
+    public BigDecimal benchRedCost() {
+        return BigDecimal.valueOf(getDouble("bench.red.cost", 1000000.0));
+    }
+
+    // ============= 利用率 =============
+    /**
+     * 可计费利用率黄色预警阈值（默认 0.70，即 70%）
+     *
+     * @return 可计费利用率黄色阈值
+     */
+    public double utilizationYellow() {
+        return getDouble("utilization.yellow", 0.70);
+    }
+
+    /**
+     * 可计费利用率红色预警阈值（默认 0.50，即 50%）
+     *
+     * @return 可计费利用率红色阈值
+     */
+    public double utilizationRed() {
+        return getDouble("utilization.red", 0.50);
+    }
+
+    // ============= 预算 =============
+    /**
+     * 预算使用率黄色预警阈值（默认 0.80，即 80%）
+     *
+     * @return 预算使用率黄色阈值
+     */
+    public double budgetYellow() {
+        return getDouble("budget.yellow", 0.80);
+    }
+
+    /**
+     * 预算使用率红色预警阈值（默认 0.95，即 95%）
+     *
+     * @return 预算使用率红色阈值
+     */
+    public double budgetRed() {
+        return getDouble("budget.red", 0.95);
     }
 
     // ============= internal =============
