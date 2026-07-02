@@ -25,6 +25,11 @@ import type {
   FlowTaskOperateDTO,
   FlowDeployDTO,
   FlowNodeDurationStatDTO,
+  MonitorOverviewDTO,
+  AnomalyInstanceDTO,
+  InstanceTrendItemDTO,
+  ApproverEfficiencyDTO,
+  FlowTypeDistributionDTO,
 } from './types'
 
 /** 引擎信息 */
@@ -500,5 +505,63 @@ export function embeddedQuickAction(payload: {
   variables?: Record<string, unknown>
 }) {
   return http.post<ApiResponse<null>>('/workflow/embedded/action', payload)
+}
+
+// ===========================================
+// 监控仪表盘
+// ===========================================
+
+/** 获取监控概览统计数据 */
+export function getMonitorOverview() {
+  return http.get<ApiResponse<MonitorOverviewDTO>>(
+    '/workflow/engine/monitor/overview',
+  )
+}
+
+/** 获取异常流程列表 */
+export function getAnomalyInstances(params: {
+  anomalyType?: string
+  warnLevel?: string
+  pageNum?: number
+  pageSize?: number
+}) {
+  return http.get<ApiResponse<PageResult<AnomalyInstanceDTO>>>(
+    '/workflow/engine/monitor/anomaly',
+    { params },
+  )
+}
+
+/** 获取流程实例趋势（新增 vs 完成） */
+export function getInstanceTrend(params: {
+  days?: number
+  flowCode?: string
+}) {
+  return http.get<ApiResponse<InstanceTrendItemDTO[]>>(
+    '/workflow/engine/monitor/instance-trend',
+    { params },
+  )
+}
+
+/** 获取审批人效率排名 */
+export function getApproverEfficiency(params: {
+  topN?: number
+  startTime?: string
+  endTime?: string
+}) {
+  return http.get<ApiResponse<ApproverEfficiencyDTO[]>>(
+    '/workflow/engine/monitor/approver-efficiency',
+    { params },
+  )
+}
+
+/** 获取流程类型分布 */
+export function getFlowTypeDistribution(params: {
+  startTime?: string
+  endTime?: string
+}) {
+  return http.get<ApiResponse<FlowTypeDistributionDTO[]>>(
+    '/workflow/engine/monitor/flow-type-distribution',
+    { params },
+  )
 }
 

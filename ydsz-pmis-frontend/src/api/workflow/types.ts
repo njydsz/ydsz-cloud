@@ -213,6 +213,66 @@ export interface FlowNodeDurationStatDTO {
   overdueCount: number
 }
 
+// ===========================================
+// 监控仪表盘 DTO
+// ===========================================
+
+/** 监控概览统计数据 */
+export interface MonitorOverviewDTO {
+  /** 运行中实例数 */
+  runningCount: number
+  /** 今日新增实例 */
+  todayNewCount: number
+  /** 待办任务总数 */
+  pendingTaskCount: number
+  /** 超时任务数 */
+  overdueTaskCount: number
+  /** 今日完成数 */
+  todayCompletedCount: number
+}
+
+/** 异常流程实例 */
+export interface AnomalyInstanceDTO {
+  id: number
+  flowCode: string
+  flowName?: string
+  title?: string
+  initiatorName?: string
+  status: string
+  currentNodeName?: string
+  anomalyType: 'TIMEOUT' | 'STUCK' | 'CIRCULAR_APPROVAL' | 'REPEATED_REJECT'
+  anomalyTypeLabel?: string
+  overdueDays?: number
+  startTime?: string
+  dueAt?: string
+  warnLevel: 'RED' | 'YELLOW' | 'ORANGE'
+}
+
+/** 实例趋势数据点 */
+export interface InstanceTrendItemDTO {
+  date: string
+  newCount: number
+  completedCount: number
+}
+
+/** 审批人效率统计 */
+export interface ApproverEfficiencyDTO {
+  userId: number
+  userName: string
+  department?: string
+  completedCount: number
+  avgDurationMs: number
+  totalDurationMs: number
+}
+
+/** 流程类型分布 */
+export interface FlowTypeDistributionDTO {
+  flowCode: string
+  flowName: string
+  count: number
+  percentage?: number
+}
+
 /** P2-4: 流程回放步骤 */
 export interface FlowReplayStepDTO {
   /** 步骤序号（从 0 开始） */

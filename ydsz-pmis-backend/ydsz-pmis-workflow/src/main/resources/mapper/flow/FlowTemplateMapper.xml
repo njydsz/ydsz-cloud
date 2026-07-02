@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.workflow.mapper.FlowTemplateMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.workflow.entity.FlowTemplateDO">
+        <id column="id" property="id"/>
+        <result column="template_code" property="templateCode"/>
+        <result column="template_name" property="templateName"/>
+        <result column="category" property="category"/>
+        <result column="description" property="description"/>
+        <result column="icon" property="icon"/>
+        <result column="bpmn_xml" property="bpmnXml"/>
+        <result column="form_path" property="formPath"/>
+        <result column="use_count" property="useCount"/>
+        <result column="sort_order" property="sortOrder"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, template_code, template_name, category, description, icon, bpmn_xml,
+        form_path, use_count, sort_order
+    </sql>
+
+    <select id="selectByCategory" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_template
+        WHERE deleted = 0
+        <if test="category != null and category != ''">
+            AND category = #{category}
+        </if>
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+    <select id="selectByTemplateCode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_template
+        WHERE template_code = #{templateCode}
+          AND deleted = 0
+    </select>
+
+    <update id="incrementUseCount">
+        UPDATE pmis_flow_template
+        SET use_count = use_count + 1
+        WHERE template_code = #{templateCode}
+          AND deleted = 0
+    </update>
+
+</mapper>
