@@ -38,7 +38,7 @@ interface DraftOptions {
  * @param formData 表单数据对象(reactive 或 ref.value), 会就地写入恢复的数据
  * @param options 草稿配置
  */
-export function useFormDraft<T extends Record<string, any>>(
+export function useFormDraft<T extends Record<string, unknown>>(
   formData: T,
   options: DraftOptions,
 ) {

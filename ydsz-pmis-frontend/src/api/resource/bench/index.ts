@@ -56,7 +56,7 @@ export const getActiveBench = (employeeId: number) =>
  * @returns 按池汇总的统计列表
  */
 export const aggregateByPool = () =>
-  request<Array<Record<string, any>>>({
+  request<Array<Record<string, unknown>>>({
     url: '/bench/aggregate/by-pool',
     method: 'GET',
   })
@@ -68,7 +68,7 @@ export const aggregateByPool = () =>
  * @returns 流动统计列表
  */
 export const flowByDateRange = (from?: string, to?: string) =>
-  request<Array<Record<string, any>>>({
+  request<Array<Record<string, unknown>>>({
     url: '/bench/flow',
     method: 'GET',
     params: { from, to },

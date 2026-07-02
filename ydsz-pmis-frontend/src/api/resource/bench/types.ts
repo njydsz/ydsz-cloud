@@ -69,7 +69,7 @@ export interface BenchRecordCreateDTO {
 
 export interface BenchDashboardVO {
   /** 活跃资源池列表 */
-  activePools: Array<Record<string, any>>
+  activePools: Array<Record<string, unknown>>
   /** 累计闲置成本 */
   totalIdleCost?: number
   /** 当前在池人数 */
@@ -77,5 +77,5 @@ export interface BenchDashboardVO {
   /** 已出池人数 */
   exitedCount?: number
   /** 流动统计列表 */
-  flow?: Array<Record<string, any>>
+  flow?: Array<Record<string, unknown>>
 }

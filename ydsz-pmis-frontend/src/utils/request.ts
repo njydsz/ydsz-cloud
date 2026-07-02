@@ -52,6 +52,8 @@ declare module 'axios' {
   interface AxiosRequestConfig {
     /** 是否静默请求（不显示全局 loading），默认 false */
     silent?: boolean
+    /** 重试计数（内部使用，用于 GET 请求自动重试） */
+    _retryCount?: number
   }
 }
 
@@ -148,7 +150,7 @@ service.interceptors.request.use(
 
 // 响应拦截器：统一处理业务码与 HTTP 错误
 service.interceptors.response.use(
-  (response: AxiosResponse): any => {
+  (response: AxiosResponse): unknown => {
     // 非静默请求关闭全局 loading
     if (!response.config.silent) {
       hideLoading()
@@ -183,10 +185,10 @@ service.interceptors.response.use(
     }
 
     // P2-7: 网络错误/超时/5xx 自动重试（仅 GET 请求，避免非幂等操作重复提交）
-    const retryCount = (error.config as any)?._retryCount || 0
+    const retryCount = error.config?._retryCount || 0
     const isGet = error.config?.method?.toLowerCase() === 'get'
     if (isGet && retryCount < MAX_RETRIES && isRetryableError(error)) {
-      ;(error.config as any)._retryCount = retryCount + 1
+      if (error.config) error.config._retryCount = retryCount + 1
       const delay = getRetryDelay(retryCount)
       // eslint-disable-next-line no-console
       console.debug(`[request] 第 ${retryCount + 1} 次重试（${delay}ms 后）: ${error.config?.url}`)

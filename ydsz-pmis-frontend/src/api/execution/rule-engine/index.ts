@@ -204,7 +204,7 @@ export const rollbackRule = (ruleCode: string, version: number) =>
  * @param facts 事实数据（键值对）
  * @returns 各规则的触发结果列表
  */
-export const dryRun = (ruleCode: string | null, facts: Record<string, any>) =>
+export const dryRun = (ruleCode: string | null, facts: Record<string, unknown>) =>
   request<RuleResult[]>({
     url: '/execution/api/v1/rules/dry-run',
     method: 'POST',

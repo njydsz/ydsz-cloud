@@ -136,9 +136,9 @@ export function useReAuth(options: UseReAuthOptions) {
         return ''
       }
       return data.token
-    } catch (e: any) {
+    } catch (e: unknown) {
       // 捕获 API 错误，转换成错误提示而非抛出
-      dialog.errorMessage = e?.message || '二次认证失败'
+      dialog.errorMessage = e instanceof Error ? e.message : '二次认证失败'
       return ''
     } finally {
       dialog.loading = false
@@ -161,10 +161,10 @@ export function useReAuth(options: UseReAuthOptions) {
       pending.value = null
       dialog.visible = false
       p?.resolve(token)
-    } catch (e: any) {
+    } catch (e: unknown) {
       // 表单内已显示错误，catch 静默
       if (!dialog.errorMessage) {
-        if (!options.silentOnError) ElMessage.error(e?.message || '二次认证失败')
+        if (!options.silentOnError) ElMessage.error(e instanceof Error ? e.message : '二次认证失败')
       }
     }
   }
@@ -184,11 +184,12 @@ export function useReAuth(options: UseReAuthOptions) {
     try {
       const token = await requestToken()
       return await biz(token)
-    } catch (e: any) {
-      if (e?.message && e.message !== '用户取消二次认证' && !options.silentOnError) {
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : ''
+      if (msg && msg !== '用户取消二次认证' && !options.silentOnError) {
         // 后端 FORBIDDEN（含 20004 等）已在 request 拦截器提示
       }
-      if (e?.message === '用户取消二次认证') {
+      if (msg === '用户取消二次认证') {
         // 用户主动取消，吞掉
         return undefined
       }

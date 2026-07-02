@@ -35,13 +35,13 @@ export interface UseTableOptions<Q extends UseTableQuery> {
  * @returns 包含 loading/list/total/query 与分页操作方法的对象
  */
 export function useTable<Q extends UseTableQuery>(
-  fetcher: (query: Q) => Promise<PageResult<any>>,
+  fetcher: (query: Q) => Promise<PageResult<unknown>>,
   options: UseTableOptions<Q> = {},
 ) {
   /** 加载中标志 */
   const loading = ref(false)
   /** 当前列表数据 */
-  const list = ref<any[]>([]) as Ref<any[]>
+  const list = ref<unknown[]>([]) as Ref<unknown[]>
   /** 总条数（用于分页器显示） */
   const total = ref(0)
 
@@ -56,7 +56,11 @@ export function useTable<Q extends UseTableQuery>(
   async function fetchData(): Promise<void> {
     loading.value = true
     try {
-      const res: any = await fetcher(query as unknown as Q)
+      const res = await fetcher(query as unknown as Q) as {
+        data?: { list?: unknown[]; total?: number }
+        list?: unknown[]
+        total?: number
+      }
       list.value = res?.data?.list ?? res?.list ?? []
       total.value = res?.data?.total ?? res?.total ?? 0
     } finally {
@@ -79,9 +83,9 @@ export function useTable<Q extends UseTableQuery>(
       const key = k as keyof Q
       if (k === 'page' || k === 'size') return
       if (defaults && k in defaults) {
-        ;(query as any)[key] = defaults[k]
+        ;(query as Record<string, unknown>)[key] = defaults[k]
       } else {
-        ;(query as any)[key] = undefined
+        ;(query as Record<string, unknown>)[key] = undefined
       }
     })
     query.page = 1

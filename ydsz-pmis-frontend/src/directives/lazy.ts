@@ -38,6 +38,12 @@ interface LazyOptions {
 
 type LazyValue = string | LazyOptions
 
+/** 扩展 HTMLImageElement，存储懒加载指令的内部状态 */
+interface LazyImageElement extends HTMLImageElement {
+  __lazyObserver?: IntersectionObserver
+  __lazyLastSrc?: string
+}
+
 /** 存储在元素上的 observer 引用 key */
 const OBSERVER_KEY = '__lazyObserver'
 /** 存储在元素上的上次 src，用于 updated 钩子判断是否需要重新观察 */
@@ -116,7 +122,7 @@ function applyLazy(el: HTMLImageElement, binding: DirectiveBinding<LazyValue>): 
   if ('loading' in HTMLImageElement.prototype) {
     el.loading = 'lazy'
     loadImage(el, options.src)
-    ;(el as any)[LAST_SRC_KEY] = options.src
+    ;(el as LazyImageElement)[LAST_SRC_KEY] = options.src
     return
   }
 
@@ -127,19 +133,19 @@ function applyLazy(el: HTMLImageElement, binding: DirectiveBinding<LazyValue>): 
     () => loadImage(el, options.src),
   )
   if (observer) {
-    ;(el as any)[OBSERVER_KEY] = observer
+    ;(el as LazyImageElement)[OBSERVER_KEY] = observer
   }
-  ;(el as any)[LAST_SRC_KEY] = options.src
+  ;(el as LazyImageElement)[LAST_SRC_KEY] = options.src
 }
 
 /**
  * 清理元素上的 observer
  */
 function cleanupObserver(el: HTMLImageElement): void {
-  const observer = (el as any)[OBSERVER_KEY] as IntersectionObserver | undefined
+  const observer = (el as LazyImageElement)[OBSERVER_KEY] as IntersectionObserver | undefined
   if (observer) {
     observer.disconnect()
-    delete (el as any)[OBSERVER_KEY]
+    delete (el as LazyImageElement)[OBSERVER_KEY]
   }
 }
 
@@ -150,7 +156,7 @@ const lazyDirective: Directive<HTMLImageElement, LazyValue> = {
   updated(el: HTMLImageElement, binding: DirectiveBinding<LazyValue>) {
     // src 未变化时跳过，避免重复加载
     const options = parseOptions(binding.value)
-    if ((el as any)[LAST_SRC_KEY] === options.src) return
+    if ((el as LazyImageElement)[LAST_SRC_KEY] === options.src) return
     applyLazy(el, binding)
   },
   unmounted(el: HTMLImageElement) {
