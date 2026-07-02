@@ -1,7 +1,10 @@
 package com.njydsz.pmis.workflow.flow.listener;
 
 import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
+import com.njydsz.pmis.workflow.flow.engine.FlowWorkflowEvent;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -10,7 +13,9 @@ import java.util.Map;
  * 项目立项流程事件监听器（业务侧示例）
  *
  * <p>对接 PMIS 立项审批：在关键生命周期埋点。
- * 生产环境应通过 @Async + ApplicationEventPublisher 解耦。
+ *
+ * <p>P2-35: 新增 @EventListener + @Async 方法，异步监听 FlowWorkflowEvent，
+ * 解耦主流程事务（对标用友 BPM / 钉钉审批的异步通知能力）。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -57,5 +62,27 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     public void onError(Long instanceId, Throwable t) {
         log.error("[FlowListener] 立项流程异常: instanceId={}", instanceId, t);
         // TODO: 告警 + 重试
+    }
+
+    // ============================== P2-35: 异步事件监听 ==============================
+
+    /**
+     * P2-35: 异步监听 FlowWorkflowEvent，解耦主流程事务
+     *
+     * <p>通过 ApplicationEventPublisher 发布的事件在此异步处理，
+     * 不影响主流程事务提交与性能。
+     *
+     * @param event 工作流事件
+     */
+    @EventListener
+    @Async
+    public void onFlowWorkflowEvent(FlowWorkflowEvent event) {
+        log.info("[FlowListener] 异步事件: type={} instanceId={} taskId={}",
+                event.getEventType(), event.getInstanceId(), event.getTaskId());
+        // TODO: 根据事件类型分发到不同处理器
+        //   INSTANCE_TERMINATED → 通知发起人流程已终止
+        //   TASK_URGED → 推送催办消息（站内信 / 钉钉 / 邮件）
+        //   TASK_TIMEOUT → 通知办理人任务已超时 + 触发超时策略
+        //   TASK_TRANSFERRED → 通知新办理人有新待办
     }
 }

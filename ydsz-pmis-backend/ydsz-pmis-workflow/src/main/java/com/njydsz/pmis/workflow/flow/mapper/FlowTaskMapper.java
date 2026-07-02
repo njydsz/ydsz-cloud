@@ -125,4 +125,24 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
                        @Param("assigneeId") String assigneeId,
                        @Param("assigneeName") String assigneeName,
                        @Param("assigneeType") String assigneeType);
+
+    /**
+     * P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED）
+     *
+     * @param assigneeId 办理人 ID（可空，为空时查全部）
+     * @param tenantId   租户 ID（可空）
+     * @return 超期任务列表
+     */
+    List<FlowTaskDO> selectOverdue(@Param("assigneeId") String assigneeId,
+                                   @Param("tenantId") Long tenantId);
+
+    /**
+     * P2-32: 统计超期任务数量
+     *
+     * @param assigneeId 办理人 ID（可空，为空时统计全部）
+     * @param tenantId   租户 ID（可空）
+     * @return 超期任务数量
+     */
+    long countOverdue(@Param("assigneeId") String assigneeId,
+                      @Param("tenantId") Long tenantId);
 }

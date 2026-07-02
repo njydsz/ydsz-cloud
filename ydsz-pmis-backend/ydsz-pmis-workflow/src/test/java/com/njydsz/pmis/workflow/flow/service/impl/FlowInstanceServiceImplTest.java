@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
+import com.njydsz.pmis.workflow.flow.engine.FlowEventContext;
 import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
@@ -20,6 +21,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -57,6 +59,7 @@ class FlowInstanceServiceImplTest {
     private FlowTaskService taskService;
     private FlowTaskMapper taskMapper;
     private List<FlowEventListener> eventListeners;
+    private ApplicationEventPublisher eventPublisher;
     private FlowInstanceServiceImpl service;
 
     @BeforeEach
@@ -67,8 +70,10 @@ class FlowInstanceServiceImplTest {
         taskService = mock(FlowTaskService.class);
         taskMapper = mock(FlowTaskMapper.class);
         eventListeners = new ArrayList<>();
+        // P2-35: 注入 ApplicationEventPublisher mock
+        eventPublisher = mock(ApplicationEventPublisher.class);
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
-                advancer, taskService, taskMapper, eventListeners);
+                advancer, taskService, taskMapper, eventListeners, eventPublisher);
     }
 
     @Test
@@ -831,5 +836,123 @@ class FlowInstanceServiceImplTest {
         when(instanceMapper.selectById(99L)).thenReturn(null);
         assertThatThrownBy(() -> service.setVariables(99L, Map.of("k", "v")))
                 .isInstanceOf(BizException.class);
+    }
+
+    // ============== P2-34: 关键操作事件触发 ==============
+
+    @Test
+    @DisplayName("testTerminateFiresEvent P2-34: terminate 触发 onInstanceTerminated 事件")
+    void testTerminateFiresEvent() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        FlowEventListener listener = mock(FlowEventListener.class);
+        eventListeners.add(listener);
+
+        service.terminate(1L, "管理员终止");
+        // 验证 onInstanceTerminated 被调用
+        verify(listener, times(1)).onInstanceTerminated(1L, "管理员终止");
+    }
+
+    @Test
+    @DisplayName("testSuspendFiresEvent P2-34: suspend 触发 onInstanceSuspended 事件")
+    void testSuspendFiresEvent() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        ins.setCurrentNodeCode("n1");
+        ins.setCurrentNodeName("审批");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        FlowEventListener listener = mock(FlowEventListener.class);
+        eventListeners.add(listener);
+
+        service.suspend(1L);
+        // 验证 onInstanceSuspended 被调用
+        verify(listener, times(1)).onInstanceSuspended(1L);
+    }
+
+    @Test
+    @DisplayName("testActivateFiresEvent P2-34: activate 触发 onInstanceActivated 事件")
+    void testActivateFiresEvent() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.SUSPENDED.name());
+        ins.setCurrentNodeCode("n1");
+        ins.setCurrentNodeName("审批");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        FlowEventListener listener = mock(FlowEventListener.class);
+        eventListeners.add(listener);
+
+        service.activate(1L);
+        // 验证 onInstanceActivated 被调用
+        verify(listener, times(1)).onInstanceActivated(1L);
+    }
+
+    // ============== P2-35: 异步事件机制 ==============
+
+    @Test
+    @DisplayName("testAsyncEventPublished P2-35: complete 时发布 Spring 异步事件")
+    void testAsyncEventPublished() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        service.complete(1L, "end");
+
+        // P2-35: 验证 ApplicationEventPublisher.publishEvent 被调用
+        verify(eventPublisher, times(1)).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("testAsyncEventPublished P2-35: terminate 时也发布 Spring 异步事件")
+    void testAsyncEventPublishedOnTerminate() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        service.terminate(1L, "终止原因");
+
+        // P2-35: 验证 ApplicationEventPublisher.publishEvent 被调用
+        verify(eventPublisher, times(1)).publishEvent(any());
+    }
+
+    // ============== P2-37: 事件元数据携带 ==============
+
+    @Test
+    @DisplayName("testTerminateFiresEventWithContext P2-37: terminate 同时触发携带上下文的重载版本")
+    void testTerminateFiresEventWithContext() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        ins.setStartAt(LocalDateTime.now().minusMinutes(1));
+        ins.setTenantId(2L);
+        ins.setProviderTraceId("trace-001");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        FlowEventListener listener = mock(FlowEventListener.class);
+        eventListeners.add(listener);
+
+        service.terminate(1L, "管理员终止");
+
+        // P2-37: 验证携带上下文的重载版本被调用
+        ArgumentCaptor<FlowEventContext> ctxCaptor = ArgumentCaptor.forClass(FlowEventContext.class);
+        verify(listener, times(1)).onInstanceTerminated(eq(1L), eq("管理员终止"), ctxCaptor.capture());
+        FlowEventContext ctx = ctxCaptor.getValue();
+        assertThat(ctx).isNotNull();
+        assertThat(ctx.getInstanceId()).isEqualTo(1L);
+        assertThat(ctx.getAction()).isEqualTo("TERMINATE");
+        assertThat(ctx.getOperatedAt()).isNotNull();
+        // 上下文应携带租户与链路追踪 ID
+        assertThat(ctx.getTenantId()).isEqualTo("2");
+        assertThat(ctx.getTraceId()).isEqualTo("trace-001");
     }
 }

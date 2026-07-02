@@ -10,8 +10,10 @@ import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -41,6 +43,8 @@ public class FlowEngineController {
     private final FlowDefinitionService definitionService;
     /** 流程实例服务（P2-23/P2-24 分页查询与变量读写） */
     private final FlowInstanceService instanceService;
+    /** 任务服务（P2-31/32/33 耗时统计/超期统计/多维筛选） */
+    private final FlowTaskService taskService;
 
     // ============== 引擎信息 ==============
 
@@ -262,6 +266,17 @@ public class FlowEngineController {
     @GetMapping("/instance/{id}/auditTrail")
     public Result<List<Map<String, Object>>> auditTrail(@PathVariable String id) {
         return Result.ok(workflowFacade.listAuditTrail(id));
+    }
+
+    /**
+     * P2-30: 审批轨迹时间线查询 — 合并历史任务 + 审计日志 + 当前待办为统一时间线
+     *
+     * @param id 流程实例 ID
+     * @return 统一响应结果，包含时间线列表
+     */
+    @GetMapping("/instance/{id}/timeline")
+    public Result<List<Map<String, Object>>> timeline(@PathVariable String id) {
+        return Result.ok(workflowFacade.getTimeline(id));
     }
 
     /**
@@ -497,5 +512,78 @@ public class FlowEngineController {
                                               @RequestParam(defaultValue = "1") int page,
                                               @RequestParam(defaultValue = "20") int size) {
         return Result.ok(workflowFacade.listDoneTasks(userId, page, size));
+    }
+
+    // ============== P2-31/32/33: 审计运营统计 ==============
+
+    /**
+     * P2-31: 按节点统计平均耗时
+     *
+     * @param flowCode 流程编码
+     * @param tenantId 租户 ID（可选）
+     * @return 统一响应结果，包含每个节点的平均耗时统计
+     */
+    @GetMapping("/stats/nodeDuration")
+    public Result<List<Map<String, Object>>> nodeDurationStats(
+            @RequestParam String flowCode,
+            @RequestParam(required = false) Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(taskService.nodeDurationStats(flowCode, tid));
+    }
+
+    /**
+     * P2-32: 查询超期任务
+     *
+     * @param assigneeId 办理人 ID（可选，为空时查全部）
+     * @param tenantId   租户 ID（可选）
+     * @return 统一响应结果，包含超期任务列表
+     */
+    @GetMapping("/task/overdue")
+    public Result<List<FlowTaskDO>> overdue(@RequestParam(required = false) String assigneeId,
+                                         @RequestParam(required = false) Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(taskService.listOverdue(assigneeId, tid));
+    }
+
+    /**
+     * P2-36: 标记任务超时（管理员手动标记）
+     *
+     * @param taskId 任务 ID
+     * @param reason 超时原因（可选）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/{taskId}/timeout")
+    public Result<Void> timeoutTask(@PathVariable Long taskId,
+                                    @RequestParam(required = false) String reason) {
+        taskService.timeoutTask(taskId, reason);
+        return Result.ok();
+    }
+
+    /**
+     * P2-33: 已办多维筛选分页查询
+     *
+     * @param assigneeId   办理人 ID（可选）
+     * @param businessType 业务类型（可选）
+     * @param flowCode     流程编码（可选）
+     * @param startTime    完成时间下界（可选）
+     * @param endTime      完成时间上界（可选）
+     * @param tenantId     租户 ID（可选）
+     * @param pageNo       页码
+     * @param pageSize     每页大小
+     * @return 统一响应结果，包含分页已办列表
+     */
+    @GetMapping("/task/done/search")
+    public Result<PageResult<FlowTaskDO>> doneSearch(
+            @RequestParam(required = false) String assigneeId,
+            @RequestParam(required = false) String businessType,
+            @RequestParam(required = false) String flowCode,
+            @RequestParam(required = false) LocalDateTime startTime,
+            @RequestParam(required = false) LocalDateTime endTime,
+            @RequestParam(required = false) Long tenantId,
+            @RequestParam(defaultValue = "1") int pageNo,
+            @RequestParam(defaultValue = "20") int pageSize) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
+                flowCode, startTime, endTime, tid, pageNo, pageSize));
     }
 }

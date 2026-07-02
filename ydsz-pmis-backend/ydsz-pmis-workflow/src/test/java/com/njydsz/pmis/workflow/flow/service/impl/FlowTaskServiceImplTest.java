@@ -24,9 +24,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -68,6 +71,7 @@ class FlowTaskServiceImplTest {
     private FlowNodeMapper nodeMapper;
     private FlowAssigneeResolver assigneeResolver;
     private List<FlowEventListener> eventListeners;
+    private ApplicationEventPublisher eventPublisher;
     private FlowTaskServiceImpl service;
 
     @BeforeEach
@@ -83,10 +87,13 @@ class FlowTaskServiceImplTest {
         auditLogMapper = mock(FlowAuditLogMapper.class);
         nodeMapper = mock(FlowNodeMapper.class);
         assigneeResolver = mock(FlowAssigneeResolver.class);
-        eventListeners = Collections.emptyList();
+        eventListeners = new ArrayList<>();
+        // P2-35: 注入 ApplicationEventPublisher mock
+        eventPublisher = mock(ApplicationEventPublisher.class);
         service = new FlowTaskServiceImpl(taskMapper, hisTaskMapper, instanceMapper,
                 instanceService, advancer, variableStrategy,
-                userMapper, auditLogMapper, nodeMapper, assigneeResolver, eventListeners);
+                userMapper, auditLogMapper, nodeMapper, assigneeResolver, eventListeners,
+                eventPublisher);
     }
 
     // ============== createTask ==============
@@ -1471,6 +1478,228 @@ class FlowTaskServiceImplTest {
         assertThatThrownBy(() -> service.batchPass(Collections.emptyList(), 1001L, "同意"))
                 .isInstanceOf(BizException.class);
         verify(taskMapper, never()).completeTask(anyLong(), anyString(), any(), any(), any());
+    }
+
+    // ============== P2-31: 审批耗时统计 ==============
+
+    @Test
+    @DisplayName("nodeDurationStats P2-31: 按节点统计平均耗时")
+    void testNodeDurationStats() {
+        Map<String, Object> stat = new HashMap<>();
+        stat.put("nodeCode", "t1");
+        stat.put("nodeName", "审批");
+        stat.put("avgDurationMs", 3600000L);
+        stat.put("count", 5L);
+        when(hisTaskMapper.nodeDurationStats(eq("f1"), eq(1L))).thenReturn(List.of(stat));
+
+        List<Map<String, Object>> result = service.nodeDurationStats("f1", 1L);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).get("nodeCode")).isEqualTo("t1");
+        assertThat(result.get(0).get("nodeName")).isEqualTo("审批");
+        assertThat(result.get(0).get("avgDurationMs")).isEqualTo(3600000L);
+        assertThat(result.get(0).get("count")).isEqualTo(5L);
+        verify(hisTaskMapper).nodeDurationStats("f1", 1L);
+    }
+
+    // ============== P2-32: 超期任务统计 ==============
+
+    @Test
+    @DisplayName("listOverdue P2-32: 查询超期任务，tenantId 为 null 时默认 1L")
+    void testListOverdue() {
+        FlowTaskDO t = new FlowTaskDO();
+        t.setId(1L);
+        t.setTaskStatus(FlowTaskStatus.PENDING.name());
+        when(taskMapper.selectOverdue(eq("1001"), eq(1L))).thenReturn(List.of(t));
+
+        List<FlowTaskDO> result = service.listOverdue("1001", null);
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getId()).isEqualTo(1L);
+        verify(taskMapper).selectOverdue("1001", 1L);
+    }
+
+    @Test
+    @DisplayName("countOverdue P2-32: 统计超期任务数量")
+    void testCountOverdue() {
+        when(taskMapper.countOverdue(eq("1001"), eq(1L))).thenReturn(3L);
+        long count = service.countOverdue("1001", null);
+        assertThat(count).isEqualTo(3L);
+        verify(taskMapper).countOverdue("1001", 1L);
+    }
+
+    // ============== P2-33: 历史任务多维筛选分页 ==============
+
+    @Test
+    @DisplayName("listDoneByAssigneePageMulti P2-33: 多维筛选分页查询")
+    void testListDoneByAssigneePageMulti() {
+        FlowHisTaskDO his = new FlowHisTaskDO();
+        his.setTaskId(88L);
+        his.setInstanceId(10L);
+        his.setFlowCode("f1");
+        his.setNodeCode("t1");
+        his.setNodeName("审批");
+        his.setAssigneeId("1001");
+        his.setAssigneeName("张三");
+        his.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        his.setBusinessType("initiation");
+        when(hisTaskMapper.selectDonePage(eq("1001"), eq("initiation"), eq("f1"),
+                any(), any(), eq(1L), eq(0), eq(10))).thenReturn(List.of(his));
+        when(hisTaskMapper.countDone(eq("1001"), eq("initiation"), eq("f1"),
+                any(), any(), eq(1L))).thenReturn(1L);
+
+        var page = service.listDoneByAssigneePageMulti("1001", "initiation", "f1",
+                null, null, null, 1, 10);
+        assertThat(page.getList()).hasSize(1);
+        assertThat(page.getTotal()).isEqualTo(1L);
+        assertThat(page.getPage()).isEqualTo(1);
+        assertThat(page.getSize()).isEqualTo(10);
+        FlowTaskDO converted = page.getList().get(0);
+        assertThat(converted.getId()).isEqualTo(88L);
+        assertThat(converted.getInstanceId()).isEqualTo(10L);
+        assertThat(converted.getFlowCode()).isEqualTo("f1");
+        assertThat(converted.getAssigneeId()).isEqualTo("1001");
+        assertThat(converted.getBusinessType()).isEqualTo("initiation");
+    }
+
+    // ============== P2-34: 关键操作事件触发 ==============
+
+    @Test
+    @DisplayName("testUrgeFiresEvent P2-34: urge 触发 onTaskUrged 事件")
+    void testUrgeFiresEvent() {
+        FlowTaskDO t1 = new FlowTaskDO();
+        t1.setId(1L);
+        t1.setAssigneeId("1001");
+        when(taskMapper.selectPendingByInstance(10L)).thenReturn(List.of(t1));
+
+        FlowEventListener listener = mock(FlowEventListener.class);
+        eventListeners.add(listener);
+
+        service.urge(10L, 7L, "请尽快处理");
+        // 验证 onTaskUrged 被调用（实例级催办，taskId 传 null）
+        verify(listener, times(1)).onTaskUrged(10L, null);
+    }
+
+    @Test
+    @DisplayName("testTransferFiresEvent P2-34: transfer 触发 onTaskTransferred 事件")
+    void testTransferFiresEvent() {
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(1L);
+        task.setInstanceId(10L);
+        task.setTaskStatus(FlowTaskStatus.PENDING.name());
+        task.setAssigneeId("100");
+        task.setAssigneeName("原办理人");
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowEventListener listener = mock(FlowEventListener.class);
+        eventListeners.add(listener);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetUserId(200L);
+        dto.setTargetUserName("新办理人");
+        service.transfer(dto);
+
+        // 验证 onTaskTransferred 被调用：fromUserId=100, toUserId=200
+        verify(listener, times(1)).onTaskTransferred(1L, 100L, 200L);
+    }
+
+    @Test
+    @DisplayName("testDelegateFiresEvent P2-34: delegate 触发 onTaskDelegated 事件")
+    void testDelegateFiresEvent() {
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(1L);
+        task.setInstanceId(10L);
+        task.setTaskStatus(FlowTaskStatus.PENDING.name());
+        task.setAssigneeId("100");
+        task.setAssigneeName("原办理人");
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowEventListener listener = mock(FlowEventListener.class);
+        eventListeners.add(listener);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetUserId(300L);
+        dto.setTargetUserName("被委派人");
+        service.delegate(dto);
+
+        // 验证 onTaskDelegated 被调用：fromUserId=100, toUserId=300
+        verify(listener, times(1)).onTaskDelegated(1L, 100L, 300L);
+    }
+
+    // ============== P2-35: 异步事件机制 ==============
+
+    @Test
+    @DisplayName("testAsyncEventPublished P2-35: urge 时发布 Spring 异步事件")
+    void testAsyncEventPublished() {
+        FlowTaskDO t1 = new FlowTaskDO();
+        t1.setId(1L);
+        t1.setAssigneeId("1001");
+        when(taskMapper.selectPendingByInstance(10L)).thenReturn(List.of(t1));
+
+        service.urge(10L, 7L, "催办");
+
+        // P2-35: 验证 ApplicationEventPublisher.publishEvent 被调用
+        verify(eventPublisher, atLeastOnce()).publishEvent(any());
+    }
+
+    // ============== P2-36: 超时任务 ==============
+
+    @Test
+    @DisplayName("testTimeoutTask P2-36: 标记 PENDING 任务为 TIMEOUT + 写审计 + 触发事件")
+    void testTimeoutTask() {
+        FlowTaskDO task = baseTask();
+        task.setCreatedAt(LocalDateTime.now().minusMinutes(30));
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowEventListener listener = mock(FlowEventListener.class);
+        eventListeners.add(listener);
+
+        service.timeoutTask(1L, "审批超时");
+
+        // 1. 任务状态更新为 TIMEOUT
+        verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.TIMEOUT.name()),
+                eq("审批超时"), any(), any());
+        // 2. 写审计日志 action=TIMEOUT
+        verify(auditLogMapper, times(1)).insert(
+                (com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO) any());
+        // 3. 触发 onTaskTimeout 事件
+        verify(listener, times(1)).onTaskTimeout(1L, 10L);
+        // 4. 发布 Spring 异步事件
+        verify(eventPublisher, atLeastOnce()).publishEvent(any());
+    }
+
+    @Test
+    @DisplayName("testTimeoutTask P2-36: 已完成任务不可标记超时")
+    void testTimeoutTaskAlreadyFinished() {
+        FlowTaskDO task = baseTask();
+        task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        assertThatThrownBy(() -> service.timeoutTask(1L, "超时"))
+                .isInstanceOf(BizException.class);
+        verify(taskMapper, never()).completeTask(anyLong(), anyString(), any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("testTimeoutTask P2-36: 任务不存在抛 NOT_FOUND")
+    void testTimeoutTaskNotFound() {
+        when(taskMapper.selectById(99L)).thenReturn(null);
+        assertThatThrownBy(() -> service.timeoutTask(99L, "超时"))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    @DisplayName("testTimeoutTask P2-36: CLAIMED 任务也可标记超时")
+    void testTimeoutTaskClaimed() {
+        FlowTaskDO task = baseTask();
+        task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
+        task.setCreatedAt(LocalDateTime.now().minusMinutes(30));
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        service.timeoutTask(1L, "签收后超时");
+
+        verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.TIMEOUT.name()),
+                eq("签收后超时"), any(), any());
     }
 
     // ============== 工具方法 ==============

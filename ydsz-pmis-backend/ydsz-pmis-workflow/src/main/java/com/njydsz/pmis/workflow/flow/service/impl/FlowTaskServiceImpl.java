@@ -10,8 +10,10 @@ import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.flow.engine.FlowAssigneeResolver;
+import com.njydsz.pmis.workflow.flow.engine.FlowEventContext;
 import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.flow.engine.FlowVariableStrategy;
+import com.njydsz.pmis.workflow.flow.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.flow.entity.*;
 import com.njydsz.pmis.workflow.flow.enums.*;
 import com.njydsz.pmis.workflow.flow.mapper.*;
@@ -19,6 +21,7 @@ import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -54,6 +57,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     private final FlowNodeMapper nodeMapper;
     private final FlowAssigneeResolver assigneeResolver;
     private final List<FlowEventListener> eventListeners;
+    /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
+    private final ApplicationEventPublisher eventPublisher;
 
     // ============================== 创建任务 ==============================
 
@@ -128,6 +133,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         log.info("[Flow] 创建任务: instanceId={} node={} performType={} assigneeCount={}",
                 instanceId, node.getNodeCode(), performType, userIds.size());
         fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("TASK_CREATED", instanceId, task.getId());
         return task.getId();
     }
 
@@ -253,6 +260,11 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         taskMapper.updateById(task);
         audit(task, "TRANSFER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
         log.info("[Flow] 转办任务: taskId={} → userId={}", task.getId(), dto.getTargetUserId());
+        // P2-34: 触发 onTaskTransferred 事件
+        fireEvent(l -> l.onTaskTransferred(task.getId(), originalAssignorId, dto.getTargetUserId()),
+                task.getId());
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("TASK_TRANSFERRED", task.getInstanceId(), task.getId());
     }
 
     // ============================== 委派（P1-10: 修正语义） ==============================
@@ -277,6 +289,11 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         audit(task, "DELEGATE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
         log.info("[Flow] 委派任务: taskId={} → 被委派人={} (处理完回到 {})",
                 task.getId(), dto.getTargetUserId(), originalAssigneeName);
+        // P2-34: 触发 onTaskDelegated 事件
+        fireEvent(l -> l.onTaskDelegated(task.getId(), originalAssigneeId, dto.getTargetUserId()),
+                task.getId());
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("TASK_DELEGATED", task.getInstanceId(), task.getId());
     }
 
     // ============================== 加签（P1-7） ==============================
@@ -309,6 +326,11 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         }
         audit(task, "COUNTERSIGN_BEFORE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
         log.info("[Flow] 前加签: taskId={} → 新增审批人={}", task.getId(), dto.getTargetUserId());
+        // P2-34: 触发 onTaskCountersigned 事件
+        fireEvent(l -> l.onTaskCountersigned(task.getId(), dto.getTargetUserId(), "BEFORE"),
+                task.getId());
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("TASK_COUNTERSIGNED", task.getInstanceId(), task.getId());
     }
 
     @Override
@@ -345,6 +367,11 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         audit(task, "COUNTERSIGN_AFTER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
         log.info("[Flow] 后加签: taskId={} → 新增审批人={} (切换为顺序会签)",
                 task.getId(), dto.getTargetUserId());
+        // P2-34: 触发 onTaskCountersigned 事件
+        fireEvent(l -> l.onTaskCountersigned(task.getId(), dto.getTargetUserId(), "AFTER"),
+                task.getId());
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("TASK_COUNTERSIGNED", task.getInstanceId(), task.getId());
     }
 
     // ============================== 催办（P1-9） ==============================
@@ -358,6 +385,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             audit(task, "URGE", operatorId, null, comment);
         }
         log.info("[Flow] 催办: instanceId={} 被催办人={}", instanceId, urged);
+        // P2-34: 触发 onTaskUrged 事件（实例级催办，taskId 传 null）
+        fireEvent(l -> l.onTaskUrged(instanceId, null), null);
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("TASK_URGED", instanceId, null);
         return urged;
     }
 
@@ -396,6 +427,11 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         fireTaskCompleted(task.getId(), "JUMP", vars);
         audit(task, "JUMP", dto.getUserId(), null, dto.getComment());
         log.info("[Flow] 自由跳转: taskId={} → targetNode={}", task.getId(), dto.getTargetNodeCode());
+        // P2-34: 触发 onTaskJumped 事件
+        fireEvent(l -> l.onTaskJumped(task.getId(), task.getNodeCode(), dto.getTargetNodeCode()),
+                task.getId());
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("TASK_JUMPED", instance.getId(), task.getId());
     }
 
     // ============================== 批量审批（P2-26） ==============================
@@ -581,6 +617,81 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                 .build();
     }
 
+    // ============================== P2-31: 审批耗时统计 ==============================
+
+    @Override
+    public List<Map<String, Object>> nodeDurationStats(String flowCode, Long tenantId) {
+        return hisTaskMapper.nodeDurationStats(flowCode, tenantId);
+    }
+
+    // ============================== P2-32: 超期任务统计 ==============================
+
+    @Override
+    public List<FlowTaskDO> listOverdue(String assigneeId, Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return taskMapper.selectOverdue(assigneeId, tid);
+    }
+
+    @Override
+    public long countOverdue(String assigneeId, Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return taskMapper.countOverdue(assigneeId, tid);
+    }
+
+    // ============================== P2-33: 历史任务多维筛选分页 ==============================
+
+    @Override
+    public PageResult<FlowTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+                                                               String flowCode, LocalDateTime startTime,
+                                                               LocalDateTime endTime, Long tenantId,
+                                                               int page, int size) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        int safePage = Math.max(1, page);
+        int safeSize = size > 0 ? size : 20;
+        int offset = (safePage - 1) * safeSize;
+        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectDonePage(assigneeId, businessType,
+                flowCode, startTime, endTime, tid, offset, safeSize);
+        List<FlowTaskDO> list = new ArrayList<>();
+        for (FlowHisTaskDO his : hisTasks) {
+            list.add(hisToTask(his));
+        }
+        long total = hisTaskMapper.countDone(assigneeId, businessType, flowCode,
+                startTime, endTime, tid);
+        return PageResult.of(list, total, safePage, safeSize);
+    }
+
+    // ============================== P2-36: 超时标记 ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void timeoutTask(Long taskId, String reason) {
+        FlowTaskDO task = getTaskOrThrow(taskId);
+        // 校验状态为 PENDING/CLAIMED
+        String status = task.getTaskStatus();
+        if (!FlowTaskStatus.PENDING.name().equals(status)
+                && !FlowTaskStatus.CLAIMED.name().equals(status)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "任务状态不可标记超时: " + status);
+        }
+        // 更新任务状态为 TIMEOUT
+        LocalDateTime now = LocalDateTime.now();
+        Long durationMs = task.getCreatedAt() == null
+                ? null
+                : Duration.between(task.getCreatedAt(), now).toMillis();
+        taskMapper.completeTask(task.getId(), FlowTaskStatus.TIMEOUT.name(),
+                reason, now, durationMs);
+        task.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
+        task.setComment(reason);
+        task.setFinishAt(now);
+        task.setDurationMs(durationMs);
+        // 写审计日志 action=TIMEOUT
+        audit(task, "TIMEOUT", null, null, reason);
+        log.info("[Flow] 任务超时: taskId={} reason={}", taskId, reason);
+        // P2-36: 触发 onTaskTimeout 事件
+        fireEvent(l -> l.onTaskTimeout(task.getId(), task.getInstanceId()), task.getId());
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("TASK_TIMEOUT", task.getInstanceId(), task.getId());
+    }
+
     // ============================== 会签推进逻辑 ==============================
 
     /** OR 或签：直接完成 + 推进 */
@@ -685,6 +796,34 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     // ============================== 私有辅助 ==============================
+
+    /** 将历史任务 DO 转换为待办任务 DO（用于已办查询结果统一） */
+    private FlowTaskDO hisToTask(FlowHisTaskDO his) {
+        FlowTaskDO t = new FlowTaskDO();
+        t.setId(his.getTaskId());
+        t.setInstanceId(his.getInstanceId());
+        t.setFlowCode(his.getFlowCode());
+        t.setDefinitionId(his.getDefinitionId());
+        t.setNodeCode(his.getNodeCode());
+        t.setNodeName(his.getNodeName());
+        t.setNodeType(his.getNodeType());
+        t.setBusinessType(his.getBusinessType());
+        t.setBusinessId(his.getBusinessId());
+        t.setBusinessNo(his.getBusinessNo());
+        t.setFlowName(his.getFlowName());
+        t.setTitle(his.getTitle());
+        t.setAssigneeType(his.getAssigneeType());
+        t.setAssigneeId(his.getAssigneeId());
+        t.setAssigneeName(his.getAssigneeName());
+        t.setPerformType(his.getPerformType());
+        t.setTaskStatus(his.getTaskStatus());
+        t.setComment(his.getComment());
+        t.setCreatedAt(his.getCreatedAt());
+        t.setClaimAt(his.getClaimAt());
+        t.setFinishAt(his.getFinishAt());
+        t.setDurationMs(his.getDurationMs());
+        return t;
+    }
 
     private FlowTaskDO getTaskOrThrow(Long id) {
         FlowTaskDO task = taskMapper.selectById(id);
@@ -905,6 +1044,30 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
     private void fireTaskCompleted(Long taskId, String action, Map<String, Object> vars) {
         fireEvent(l -> l.onTaskCompleted(taskId, action, vars), taskId);
+        // P2-37: 同时调用携带上下文的重载版本
+        FlowEventContext ctx = new FlowEventContext();
+        ctx.setTaskId(taskId);
+        ctx.setAction(action);
+        ctx.setOperatedAt(LocalDateTime.now());
+        fireEvent(l -> l.onTaskCompleted(taskId, ctx), taskId);
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("TASK_COMPLETED", null, taskId);
+    }
+
+    /**
+     * P2-35: 发布 Spring 异步事件（ApplicationEventPublisher 可能为 null，需检查）
+     *
+     * @param eventType  事件类型
+     * @param instanceId 实例 ID（可空）
+     * @param taskId     任务 ID（可空）
+     */
+    private void publishWorkflowEvent(String eventType, Long instanceId, Long taskId) {
+        if (eventPublisher == null) return;
+        try {
+            eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, taskId, null));
+        } catch (Exception e) {
+            log.warn("[Flow] 发布 Spring 事件失败: type={} err={}", eventType, e.getMessage());
+        }
     }
 
     private void fireInstanceRejected(Long instanceId, String reason) {

@@ -5,6 +5,10 @@ package com.njydsz.pmis.workflow.flow.engine;
  *
  * <p>在关键节点发布事件，监听方实现本接口即可。
  *
+ * <p>P2-34: 补全关键操作事件（催办/终止/挂起/激活/撤回/转办/委派/加签/跳转）。
+ * <p>P2-36: 超时事件 onTaskTimeout。
+ * <p>P2-37: 事件元数据携带 FlowEventContext（新增重载方法，保留旧签名兼容）。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -27,4 +31,46 @@ public interface FlowEventListener {
 
     /** 流程异常时 */
     default void onError(Long instanceId, Throwable t) {}
+
+    // ============================== P2-34: 关键操作事件 ==============================
+
+    /** 催办时触发（实例级催办，taskId 可传 null） */
+    default void onTaskUrged(Long instanceId, Long taskId) {}
+
+    /** 实例终止时触发 */
+    default void onInstanceTerminated(Long instanceId, String reason) {}
+
+    /** 实例挂起时触发 */
+    default void onInstanceSuspended(Long instanceId) {}
+
+    /** 实例激活时触发 */
+    default void onInstanceActivated(Long instanceId) {}
+
+    /** 实例撤回时触发 */
+    default void onInstanceRecalled(Long instanceId, Long initiatorId) {}
+
+    /** 任务转办时触发 */
+    default void onTaskTransferred(Long taskId, Long fromUserId, Long toUserId) {}
+
+    /** 任务委派时触发 */
+    default void onTaskDelegated(Long taskId, Long fromUserId, Long toUserId) {}
+
+    /** 任务加签时触发（action=BEFORE/AFTER） */
+    default void onTaskCountersigned(Long taskId, Long targetUserId, String action) {}
+
+    /** 任务自由跳转时触发 */
+    default void onTaskJumped(Long taskId, String fromNodeCode, String toNodeCode) {}
+
+    // ============================== P2-36: 超时事件 ==============================
+
+    /** 任务超时时触发 */
+    default void onTaskTimeout(Long taskId, Long instanceId) {}
+
+    // ============================== P2-37: 携带上下文的重载方法 ==============================
+
+    /** 任务完成后（携带上下文元数据） */
+    default void onTaskCompleted(Long taskId, FlowEventContext ctx) {}
+
+    /** 实例终止时（携带上下文元数据） */
+    default void onInstanceTerminated(Long instanceId, String reason, FlowEventContext ctx) {}
 }

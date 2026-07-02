@@ -217,4 +217,29 @@
         WHERE id = #{id}
           AND deleted = 0
     </update>
+
+    <!-- P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED） -->
+    <select id="selectOverdue" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_task
+        WHERE due_at &lt; CURRENT_TIMESTAMP
+          AND task_status IN ('PENDING', 'CLAIMED')
+          AND status = 'ENABLED'
+          AND deleted = 0
+          <if test="assigneeId != null and assigneeId != ''">AND assignee_id = #{assigneeId}</if>
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+        ORDER BY due_at ASC
+    </select>
+
+    <!-- P2-32: 统计超期任务数量 -->
+    <select id="countOverdue" resultType="long">
+        SELECT COUNT(*)
+        FROM pmis_flow_task
+        WHERE due_at &lt; CURRENT_TIMESTAMP
+          AND task_status IN ('PENDING', 'CLAIMED')
+          AND status = 'ENABLED'
+          AND deleted = 0
+          <if test="assigneeId != null and assigneeId != ''">AND assignee_id = #{assigneeId}</if>
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+    </select>
 </mapper>

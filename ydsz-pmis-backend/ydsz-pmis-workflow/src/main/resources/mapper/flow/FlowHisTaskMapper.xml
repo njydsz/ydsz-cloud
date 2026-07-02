@@ -82,4 +82,46 @@
           AND deleted = 0
         ORDER BY finish_at ASC
     </select>
+
+    <!-- P2-31: 按节点统计平均耗时 -->
+    <select id="nodeDurationStats" resultType="java.util.Map">
+        SELECT node_code AS "nodeCode", node_name AS "nodeName",
+               AVG(duration_ms) AS "avgDurationMs", COUNT(*) AS "count"
+        FROM pmis_flow_his_task
+        WHERE flow_code = #{flowCode}
+          AND deleted = 0
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+        GROUP BY node_code, node_name
+        ORDER BY "avgDurationMs" DESC
+    </select>
+
+    <!-- P2-33: 多维筛选已办分页查询 -->
+    <select id="selectDonePage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_his_task
+        WHERE status = 'ENABLED'
+          AND deleted = 0
+          <if test="assigneeId != null and assigneeId != ''">AND assignee_id = #{assigneeId}</if>
+          <if test="businessType != null and businessType != ''">AND business_type = #{businessType}</if>
+          <if test="flowCode != null and flowCode != ''">AND flow_code = #{flowCode}</if>
+          <if test="startTime != null">AND finish_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND finish_at &lt;= #{endTime}</if>
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+        ORDER BY finish_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- P2-33: 多维筛选已办总数统计 -->
+    <select id="countDone" resultType="long">
+        SELECT COUNT(*)
+        FROM pmis_flow_his_task
+        WHERE status = 'ENABLED'
+          AND deleted = 0
+          <if test="assigneeId != null and assigneeId != ''">AND assignee_id = #{assigneeId}</if>
+          <if test="businessType != null and businessType != ''">AND business_type = #{businessType}</if>
+          <if test="flowCode != null and flowCode != ''">AND flow_code = #{flowCode}</if>
+          <if test="startTime != null">AND finish_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND finish_at &lt;= #{endTime}</if>
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+    </select>
 </mapper>

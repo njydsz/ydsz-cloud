@@ -4,9 +4,11 @@ import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
@@ -47,6 +49,7 @@ class PmisWorkflowFacadeTest {
     private FlowInstanceService instanceService;
     private FlowTaskService taskService;
     private FlowAuditLogMapper auditLogMapper;
+    private FlowHisTaskMapper hisTaskMapper;
     private FlowDefinitionService definitionService;
     private PmisWorkflowFacade facade;
 
@@ -55,8 +58,10 @@ class PmisWorkflowFacadeTest {
         instanceService = mock(FlowInstanceService.class);
         taskService = mock(FlowTaskService.class);
         auditLogMapper = mock(FlowAuditLogMapper.class);
+        hisTaskMapper = mock(FlowHisTaskMapper.class);
         definitionService = mock(FlowDefinitionService.class);
-        facade = new PmisWorkflowFacade(instanceService, taskService, auditLogMapper, definitionService);
+        facade = new PmisWorkflowFacade(instanceService, taskService, auditLogMapper,
+                hisTaskMapper, definitionService);
     }
 
     @Test
@@ -435,5 +440,94 @@ class PmisWorkflowFacadeTest {
         when(definitionService.getDetail(1L)).thenReturn(null);
 
         assertThat(facade.getDiagram("100")).isNull();
+    }
+
+    // ============== P2-30: 审批轨迹时间线查询 ==============
+
+    @Test
+    @DisplayName("getTimeline 实例不存在应返回空列表")
+    void testGetTimelineInstanceNotFound() {
+        when(instanceService.getById(99L)).thenReturn(null);
+        assertThat(facade.getTimeline("99")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getTimeline 应合并历史任务+审计日志+当前待办为统一时间线并按时间排序")
+    void testGetTimeline() {
+        // 实例存在
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(100L);
+        when(instanceService.getById(100L)).thenReturn(instance);
+
+        // 历史任务（finishAt = 10:00）
+        FlowHisTaskDO hisTask = new FlowHisTaskDO();
+        hisTask.setTaskId(10L);
+        hisTask.setNodeCode("t1");
+        hisTask.setNodeName("审批");
+        hisTask.setAssigneeId("1001");
+        hisTask.setAssigneeName("张三");
+        hisTask.setTaskStatus("COMPLETED");
+        hisTask.setComment("同意");
+        hisTask.setFinishAt(LocalDateTime.of(2026, 1, 1, 10, 0));
+        when(hisTaskMapper.selectByInstanceId(100L)).thenReturn(List.of(hisTask));
+
+        // 审计日志（operatedAt = 10:05）
+        FlowAuditLogDO log = new FlowAuditLogDO();
+        log.setId(1L);
+        log.setInstanceId(100L);
+        log.setNodeCode("t1");
+        log.setNodeName("审批");
+        log.setAction("PASS");
+        log.setOperatorId(7L);
+        log.setComment("同意");
+        log.setOperatedAt(LocalDateTime.of(2026, 1, 1, 10, 5));
+        when(auditLogMapper.selectByInstanceId(100L)).thenReturn(List.of(log));
+
+        // 当前待办（createdAt = 11:00）
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(20L);
+        task.setNodeCode("t2");
+        task.setNodeName("复审");
+        task.setAssigneeId("1002");
+        task.setAssigneeName("李四");
+        task.setTaskStatus("PENDING");
+        task.setCreatedAt(LocalDateTime.of(2026, 1, 1, 11, 0));
+        when(taskService.listPendingByInstance(100L)).thenReturn(List.of(task));
+
+        List<Map<String, Object>> timeline = facade.getTimeline("100");
+        assertThat(timeline).hasSize(3);
+
+        // 按时间排序：HIS_TASK(10:00) → AUDIT_LOG(10:05) → CURRENT_TASK(11:00)
+        Map<String, Object> hisEntry = timeline.get(0);
+        assertThat(hisEntry.get("type")).isEqualTo("HIS_TASK");
+        assertThat(hisEntry.get("nodeCode")).isEqualTo("t1");
+        assertThat(hisEntry.get("assigneeId")).isEqualTo("1001");
+        assertThat(hisEntry.get("action")).isEqualTo("COMPLETED");
+        assertThat(hisEntry.get("taskStatus")).isEqualTo("COMPLETED");
+
+        Map<String, Object> logEntry = timeline.get(1);
+        assertThat(logEntry.get("type")).isEqualTo("AUDIT_LOG");
+        assertThat(logEntry.get("action")).isEqualTo("PASS");
+        assertThat(logEntry.get("assigneeId")).isEqualTo("7");
+        assertThat(logEntry.get("taskStatus")).isNull();
+
+        Map<String, Object> taskEntry = timeline.get(2);
+        assertThat(taskEntry.get("type")).isEqualTo("CURRENT_TASK");
+        assertThat(taskEntry.get("nodeCode")).isEqualTo("t2");
+        assertThat(taskEntry.get("taskStatus")).isEqualTo("PENDING");
+    }
+
+    @Test
+    @DisplayName("getTimeline 无历史/日志/待办时返回空列表")
+    void testGetTimelineEmpty() {
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(100L);
+        when(instanceService.getById(100L)).thenReturn(instance);
+        when(hisTaskMapper.selectByInstanceId(100L)).thenReturn(List.of());
+        when(auditLogMapper.selectByInstanceId(100L)).thenReturn(List.of());
+        when(taskService.listPendingByInstance(100L)).thenReturn(List.of());
+
+        List<Map<String, Object>> timeline = facade.getTimeline("100");
+        assertThat(timeline).isEmpty();
     }
 }

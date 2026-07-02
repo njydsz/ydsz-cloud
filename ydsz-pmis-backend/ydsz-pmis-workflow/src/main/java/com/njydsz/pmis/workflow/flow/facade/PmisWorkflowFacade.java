@@ -6,9 +6,11 @@ import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
@@ -16,6 +18,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +43,8 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     private final FlowInstanceService instanceService;
     private final FlowTaskService taskService;
     private final FlowAuditLogMapper auditLogMapper;
+    /** P2-30: 审批轨迹时间线需要查询历史任务 */
+    private final FlowHisTaskMapper hisTaskMapper;
     /** P2-22: 流程图查询需要查询流程定义详情 */
     private final FlowDefinitionService definitionService;
 
@@ -209,6 +216,97 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         result.put("currentNodeCode", currentNodeCode);
         result.put("currentNodeName", instance.getCurrentNodeName());
         return result;
+    }
+
+    // ============================== P2-30: 审批轨迹时间线查询 ==============================
+
+    /**
+     * P2-30: 审批轨迹时间线查询 — 合并历史任务 + 审计日志 + 当前待办为统一时间线
+     *
+     * <p>每条记录包含：type（HIS_TASK/AUDIT_LOG/CURRENT_TASK）、timestamp、nodeCode、nodeName、
+     * assigneeId、assigneeName、action、comment、taskStatus。
+     * 按 timestamp 排序（历史任务用 finishAt，审计日志用 operatedAt，当前待办用 createdAt）。
+     *
+     * @param instanceId 实例 ID（字符串形式）
+     * @return 统一时间线列表，实例不存在时返回空列表
+     */
+    @Override
+    public List<Map<String, Object>> getTimeline(String instanceId) {
+        Long id = Long.parseLong(instanceId);
+        // 1. 获取实例信息
+        FlowInstanceDO instance = instanceService.getById(id);
+        if (instance == null) {
+            return Collections.emptyList();
+        }
+
+        List<Map<String, Object>> timeline = new ArrayList<>();
+
+        // 2. 获取历史任务列表
+        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(id);
+        for (FlowHisTaskDO his : hisTasks) {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("type", "HIS_TASK");
+            entry.put("timestamp", his.getFinishAt());
+            entry.put("nodeCode", his.getNodeCode());
+            entry.put("nodeName", his.getNodeName());
+            entry.put("assigneeId", his.getAssigneeId());
+            entry.put("assigneeName", his.getAssigneeName());
+            entry.put("action", his.getTaskStatus());
+            entry.put("comment", his.getComment());
+            entry.put("taskStatus", his.getTaskStatus());
+            timeline.add(entry);
+        }
+
+        // 3. 获取审计日志列表
+        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(id);
+        for (FlowAuditLogDO log : logs) {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("type", "AUDIT_LOG");
+            entry.put("timestamp", log.getOperatedAt());
+            entry.put("nodeCode", log.getNodeCode());
+            entry.put("nodeName", log.getNodeName());
+            entry.put("assigneeId", log.getOperatorId() == null ? null
+                    : String.valueOf(log.getOperatorId()));
+            entry.put("assigneeName", log.getOperatorName());
+            entry.put("action", log.getAction());
+            entry.put("comment", log.getComment());
+            entry.put("taskStatus", null);
+            timeline.add(entry);
+        }
+
+        // 4. 获取当前待办任务
+        List<FlowTaskDO> currentTasks = taskService.listPendingByInstance(id);
+        for (FlowTaskDO task : currentTasks) {
+            Map<String, Object> entry = new HashMap<>();
+            entry.put("type", "CURRENT_TASK");
+            entry.put("timestamp", task.getCreatedAt());
+            entry.put("nodeCode", task.getNodeCode());
+            entry.put("nodeName", task.getNodeName());
+            entry.put("assigneeId", task.getAssigneeId());
+            entry.put("assigneeName", task.getAssigneeName());
+            entry.put("action", task.getTaskStatus());
+            entry.put("comment", task.getComment());
+            entry.put("taskStatus", task.getTaskStatus());
+            timeline.add(entry);
+        }
+
+        // 5. 按 timestamp 排序（null 排最后），保持同时间戳的插入顺序（稳定排序）
+        timeline.sort((a, b) -> {
+            LocalDateTime ta = (LocalDateTime) a.get("timestamp");
+            LocalDateTime tb = (LocalDateTime) b.get("timestamp");
+            if (ta == null && tb == null) {
+                return 0;
+            }
+            if (ta == null) {
+                return 1;
+            }
+            if (tb == null) {
+                return -1;
+            }
+            return ta.compareTo(tb);
+        });
+
+        return timeline;
     }
 
     // ============================== 私有辅助 ==============================

@@ -6,6 +6,7 @@ import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -149,4 +150,60 @@ public interface FlowTaskService {
      * 转视图
      */
     FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowTaskDO task);
+
+    /**
+     * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）
+     *
+     * @param flowCode 流程编码
+     * @param tenantId 租户 ID（可空）
+     * @return 每个节点一行统计：nodeCode, nodeName, avgDurationMs, count
+     */
+    List<Map<String, Object>> nodeDurationStats(String flowCode, Long tenantId);
+
+    /**
+     * P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED）
+     *
+     * @param assigneeId 办理人 ID（可空，为空时查全部）
+     * @param tenantId   租户 ID（可空）
+     * @return 超期任务列表
+     */
+    List<FlowTaskDO> listOverdue(String assigneeId, Long tenantId);
+
+    /**
+     * P2-32: 统计超期任务数量
+     *
+     * @param assigneeId 办理人 ID（可空，为空时统计全部）
+     * @param tenantId   租户 ID（可空）
+     * @return 超期任务数量
+     */
+    long countOverdue(String assigneeId, Long tenantId);
+
+    /**
+     * P2-33: 已办多维筛选分页查询（真分页：SQL LIMIT/OFFSET）
+     *
+     * @param assigneeId   办理人 ID（可空）
+     * @param businessType 业务类型（可空）
+     * @param flowCode     流程编码（可空）
+     * @param startTime    完成时间下界（可空）
+     * @param endTime      完成时间上界（可空）
+     * @param tenantId     租户 ID（可空）
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @return 分页结果
+     */
+    PageResult<FlowTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+                                                       String flowCode, LocalDateTime startTime,
+                                                       LocalDateTime endTime, Long tenantId,
+                                                       int page, int size);
+
+    /**
+     * P2-36: 标记任务超时
+     *
+     * <p>校验任务状态为 PENDING/CLAIMED，更新为 TIMEOUT，写审计日志并触发 onTaskTimeout 事件。
+     * 当前仅实现标记超时 + 触发事件，节点超时策略（自动通过/自动驳回/仅提醒）后续扩展。
+     *
+     * @param taskId 任务 ID
+     * @param reason 超时原因（可选）
+     */
+    void timeoutTask(Long taskId, String reason);
 }

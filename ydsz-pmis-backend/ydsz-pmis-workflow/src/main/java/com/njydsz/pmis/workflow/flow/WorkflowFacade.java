@@ -144,4 +144,12 @@ public interface WorkflowFacade {
      * @param comment 审批意见
      */
     void batchPassTasks(List<Long> taskIds, Long userId, String comment);
+
+    /**
+     * P2-30: 审批轨迹时间线查询 — 合并历史任务 + 审计日志 + 当前待办为统一时间线
+     *
+     * @param instanceId 实例 ID（字符串形式）
+     * @return 时间线列表，每条记录包含 type/timestamp/nodeCode/nodeName/assigneeId/assigneeName/action/comment/taskStatus
+     */
+    List<Map<String, Object>> getTimeline(String instanceId);
 }

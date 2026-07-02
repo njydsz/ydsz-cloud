@@ -8,7 +8,9 @@ import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
+import com.njydsz.pmis.workflow.flow.engine.FlowEventContext;
 import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
+import com.njydsz.pmis.workflow.flow.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
@@ -23,6 +25,7 @@ import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -53,6 +56,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowTaskService taskService;
     private final FlowTaskMapper taskMapper;
     private final List<FlowEventListener> eventListeners;
+    /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
+    private final ApplicationEventPublisher eventPublisher;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -167,6 +172,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 取消所有 PENDING 任务
         taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
         log.info("[Flow] 终止流程: instanceId={} reason={}", instanceId, reason);
+        // P2-34: 触发 onInstanceTerminated 事件
+        fireEvent(l -> l.onInstanceTerminated(instanceId, reason));
+        // P2-37: 同时调用携带上下文的重载版本
+        FlowEventContext ctx = buildContext(instanceId, null, null, "TERMINATE", instance);
+        fireEvent(l -> l.onInstanceTerminated(instanceId, reason, ctx));
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("INSTANCE_TERMINATED", instanceId, null);
     }
 
     @Override
@@ -182,6 +194,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P2-18: 冻结 PENDING/CLAIMED 任务为 FROZEN，禁止办理
         taskMapper.freezeByInstance(instanceId);
         log.info("[Flow] 挂起流程: instanceId={}", instanceId);
+        // P2-34: 触发 onInstanceSuspended 事件
+        fireEvent(l -> l.onInstanceSuspended(instanceId));
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("INSTANCE_SUSPENDED", instanceId, null);
     }
 
     @Override
@@ -197,6 +213,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P2-18: 解冻 FROZEN 任务，回到 PENDING 可办理
         taskMapper.unfreezeByInstance(instanceId);
         log.info("[Flow] 激活流程: instanceId={}", instanceId);
+        // P2-34: 触发 onInstanceActivated 事件
+        fireEvent(l -> l.onInstanceActivated(instanceId));
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("INSTANCE_ACTIVATED", instanceId, null);
     }
 
     @Override
@@ -217,6 +237,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
         // 业务侧事件：onInstanceCompleted
         fireEvent(l -> l.onInstanceCompleted(instanceId));
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("INSTANCE_COMPLETED", instanceId, null);
     }
 
     @Override
@@ -286,6 +308,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             throw new BizException(BizErrorCode.INTERNAL_ERROR, "撤回失败: " + e.getMessage());
         }
         log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
+        // P2-34: 触发 onInstanceRecalled 事件
+        fireEvent(l -> l.onInstanceRecalled(instanceId, initiatorId));
+        // P2-35: 发布 Spring 异步事件
+        publishWorkflowEvent("INSTANCE_RECALLED", instanceId, null);
         return true;
     }
 
@@ -460,5 +486,47 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 log.warn("[Flow] onError 事件失败: {}", e.getMessage());
             }
         }
+    }
+
+    /**
+     * P2-35: 发布 Spring 异步事件（ApplicationEventPublisher 可能为 null，需检查）
+     *
+     * @param eventType  事件类型
+     * @param instanceId 实例 ID
+     * @param taskId     任务 ID（可空）
+     */
+    private void publishWorkflowEvent(String eventType, Long instanceId, Long taskId) {
+        if (eventPublisher == null) return;
+        try {
+            eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, taskId, null));
+        } catch (Exception e) {
+            log.warn("[Flow] 发布 Spring 事件失败: type={} err={}", eventType, e.getMessage());
+        }
+    }
+
+    /**
+     * P2-37: 构建事件上下文元数据
+     *
+     * @param instanceId 实例 ID
+     * @param taskId     任务 ID
+     * @param operatorId 操作人 ID
+     * @param action     操作动作
+     * @param instance   流程实例（用于提取 tenantId/traceId，可空）
+     * @return 事件上下文
+     */
+    private FlowEventContext buildContext(Long instanceId, Long taskId, Long operatorId,
+                                          String action, FlowInstanceDO instance) {
+        FlowEventContext ctx = new FlowEventContext();
+        ctx.setInstanceId(instanceId);
+        ctx.setTaskId(taskId);
+        ctx.setOperatorId(operatorId);
+        ctx.setAction(action);
+        ctx.setOperatedAt(LocalDateTime.now());
+        if (instance != null) {
+            ctx.setTenantId(instance.getTenantId() == null
+                    ? null : String.valueOf(instance.getTenantId()));
+            ctx.setTraceId(instance.getProviderTraceId());
+        }
+        return ctx;
     }
 }
