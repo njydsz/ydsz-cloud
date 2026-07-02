@@ -87,14 +87,26 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         // 跨域预检直接放行
         if ("OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
             return chain.filter(exchange.mutate()
-                    .request(r -> r.header(CommonConstants.HEADER_TRACE_ID, traceId))
+                    .request(r -> {
+                        r.header(CommonConstants.HEADER_TRACE_ID, traceId);
+                        String acceptLang = request.getHeaders().getFirst("Accept-Language");
+                        if (acceptLang != null && !acceptLang.isEmpty()) {
+                            r.header("Accept-Language", acceptLang);
+                        }
+                    })
                     .build());
         }
 
         // 白名单直接放行
         if (isWhiteList(path)) {
             return chain.filter(exchange.mutate()
-                    .request(r -> r.header(CommonConstants.HEADER_TRACE_ID, traceId))
+                    .request(r -> {
+                        r.header(CommonConstants.HEADER_TRACE_ID, traceId);
+                        String acceptLang = request.getHeaders().getFirst("Accept-Language");
+                        if (acceptLang != null && !acceptLang.isEmpty()) {
+                            r.header("Accept-Language", acceptLang);
+                        }
+                    })
                     .build());
         }
 
@@ -145,6 +157,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                             .header("X-User-Roles", roles == null ? "" : String.join(",", roles))
                             .header("X-User-Permissions", permissions == null ? "" : String.join(",", permissions))
                             .header("Authorization", authHeader)
+                            .header("Accept-Language", request.getHeaders().getFirst("Accept-Language") != null
+                                    ? request.getHeaders().getFirst("Accept-Language") : "zh-CN")
                             .build();
 
                     return chain.filter(exchange.mutate().request(mutated).build());
