@@ -25,14 +25,27 @@ import java.util.List;
 @RequiredArgsConstructor
 public class JobLevelController {
 
+    /** 职级服务 */
     private final JobLevelService jobLevelService;
 
+    /**
+     * 查询所有职级 (L1-L18)
+     *
+     * @return 统一响应结果，包含职级列表
+     */
     @Operation(summary = "所有职级 (L1-L18)")
     @GetMapping
     public Result<List<JobLevelDO>> list() {
         return Result.ok(jobLevelService.listAllLevels());
     }
 
+    /**
+     * 查询指定日期生效的职级费率
+     *
+     * @param levelCode 职级编码
+     * @param date      生效日期（为空时取当前日期）
+     * @return 统一响应结果，包含职级费率
+     */
     @Operation(summary = "查询生效的职级费率")
     @GetMapping("/rate")
     public Result<JobLevelRateDO> getRate(@RequestParam String levelCode,
@@ -41,6 +54,12 @@ public class JobLevelController {
         return Result.ok(jobLevelService.getEffectiveRate(levelCode, date));
     }
 
+    /**
+     * 查询某职级的所有费率版本
+     *
+     * @param levelCode 职级编码
+     * @return 统一响应结果，包含费率版本列表
+     */
     @Operation(summary = "查询某职级所有版本")
     @GetMapping("/rate/versions")
     public Result<List<JobLevelRateDO>> listVersions(@RequestParam String levelCode) {

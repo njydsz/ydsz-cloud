@@ -23,8 +23,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class PasswordScanController {
 
+    /** 密码扫描服务 */
     private final PasswordScanService scanService;
 
+    /**
+     * 扫描密码健康度（过期/即将过期/初始密码）
+     *
+     * @param expireDays 密码过期天数阈值，默认 90 天
+     * @return 统一响应结果，包含扫描结果
+     */
     @Operation(summary = "扫描密码健康度（过期/即将过期/初始密码）")
     @GetMapping("/scan")
     public Result<PasswordScanResultDTO> scan(

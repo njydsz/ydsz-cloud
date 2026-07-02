@@ -32,10 +32,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AuthFeignController {
 
+    /** 用户账号服务 */
     private final UserAccountService userAccountService;
+    /** 权限服务 */
     private final PermissionService permissionService;
+    /** 角色服务 */
     private final RoleService roleService;
 
+    /**
+     * 根据用户名加载登录上下文
+     *
+     * @param username 用户名
+     * @return 统一响应结果，包含登录上下文
+     */
     @Operation(summary = "根据用户名加载登录上下文")
     @GetMapping("/context/by-username")
     public Result<LoginContextDTO> getLoginContextByUsername(@RequestParam String username) {
@@ -43,12 +52,24 @@ public class AuthFeignController {
         return Result.ok(buildContext(user));
     }
 
+    /**
+     * 根据用户 ID 加载登录上下文
+     *
+     * @param userId 用户 ID
+     * @return 统一响应结果，包含登录上下文
+     */
     @Operation(summary = "根据用户 ID 加载登录上下文")
     @GetMapping("/context/by-id")
     public Result<LoginContextDTO> getLoginContextById(@RequestParam Long userId) {
         return Result.ok(buildContext(userAccountService.findById(userId)));
     }
 
+    /**
+     * 根据用户实体构建登录上下文（含角色与权限编码）
+     *
+     * @param user 用户实体
+     * @return 登录上下文，用户为空时返回 null
+     */
     private LoginContextDTO buildContext(UserAccountDO user) {
         if (user == null) {
             return null;

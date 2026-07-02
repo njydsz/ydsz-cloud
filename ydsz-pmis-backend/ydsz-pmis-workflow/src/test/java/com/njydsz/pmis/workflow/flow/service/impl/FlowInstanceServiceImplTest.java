@@ -41,6 +41,9 @@ import static org.mockito.Mockito.when;
  *
  * <p>覆盖：start / getById / getByBusiness / terminate / suspend / activate /
  * complete / toView / listByInitiator / 幂等等核心逻辑。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("FlowInstanceServiceImpl 单元测试")
 class FlowInstanceServiceImplTest {

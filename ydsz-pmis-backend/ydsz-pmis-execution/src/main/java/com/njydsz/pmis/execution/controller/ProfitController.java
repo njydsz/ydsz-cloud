@@ -20,6 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 利润核算 Controller
+ *
+ * <p>负责项目月度利润快照生成、查询、趋势分析及健康度评分。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "利润核算")
 @RestController
 @RequestMapping("/api/v1/execution/profit")
@@ -28,6 +36,12 @@ public class ProfitController {
 
     private final ProfitService service;
 
+    /**
+     * 生成/更新项目月度利润快照
+     *
+     * @param dto 利润快照参数
+     * @return 快照 ID
+     */
     @Operation(summary = "生成/更新项目月度利润快照")
     @PrePermission("execution:profit:snapshot")
     @PostMapping("/snapshot")
@@ -35,6 +49,13 @@ public class ProfitController {
         return Result.ok(service.generateSnapshot(dto));
     }
 
+    /**
+     * 查询项目某月快照
+     *
+     * @param initiationId 项目立项 ID
+     * @param period       所属期间（YYYY-MM）
+     * @return 利润快照实体
+     */
     @Operation(summary = "查询项目某月快照")
     @PrePermission("execution:profit:list")
     @GetMapping("/snapshot")
@@ -42,6 +63,12 @@ public class ProfitController {
         return Result.ok(service.getByInitiationAndPeriod(initiationId, period));
     }
 
+    /**
+     * 查询项目所有快照
+     *
+     * @param initiationId 项目立项 ID
+     * @return 快照列表
+     */
     @Operation(summary = "项目所有快照")
     @PrePermission("execution:profit:list")
     @GetMapping("/snapshots/{initiationId}")
@@ -49,6 +76,12 @@ public class ProfitController {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
+    /**
+     * 查询项目利润趋势
+     *
+     * @param initiationId 项目立项 ID
+     * @return 趋势数据列表
+     */
     @Operation(summary = "趋势")
     @PrePermission("execution:profit:list")
     @GetMapping("/trend/{initiationId}")
@@ -56,6 +89,13 @@ public class ProfitController {
         return Result.ok(service.trendByPeriod(initiationId));
     }
 
+    /**
+     * 查询项目健康度评分
+     *
+     * @param initiationId 项目立项 ID
+     * @param period       所属期间（YYYY-MM）
+     * @return 健康度评分
+     */
     @Operation(summary = "项目健康度评分")
     @PrePermission("execution:profit:list")
     @GetMapping("/health-score")

@@ -35,6 +35,9 @@ import static org.mockito.Mockito.when;
  * <p>验证 Facade 对自建工作流服务的委托与转换逻辑。
  *
  * <p>1.1.0 新增：加签 / 撤回 / 催办 / 审计轨迹。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("PmisWorkflowFacade 单元测试")
 class PmisWorkflowFacadeTest {

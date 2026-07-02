@@ -93,10 +93,10 @@ public class EncryptedFieldMigrationCli {
         for (EncryptedFieldMigrationService.MigrationResult r : results) {
             System.out.printf("  %s.%-15s success=%-6d skipped=%-6d failed=%-6d cost=%dms%n",
                     r.column().table(), r.column().cipherColumn(),
-                    r.success(), r.skipped(), Result.failed(), r.costMs());
+                    r.success(), r.skipped(), r.failed(), r.costMs());
             totalSuccess += r.success();
             totalSkipped += r.skipped();
-            totalFailed += Result.failed();
+            totalFailed += r.failed();
         }
         System.out.println("-------------------------------------------------------");
         System.out.printf("  TOTAL: success=%d skipped=%d failed=%d%n", totalSuccess, totalSkipped, totalFailed);

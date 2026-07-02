@@ -15,6 +15,12 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * MessageTemplateServiceImpl 模板管理测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("MessageTemplateServiceImpl 模板管理测试")
 class MessageTemplateServiceImplTest {
 

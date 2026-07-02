@@ -12,6 +12,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * DefaultFlowVariableStrategy 单元测试
  *
  * <p>覆盖：${var} / ${var op value} 表达式解析与办理人角色解析。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("DefaultFlowVariableStrategy 单元测试")
 class DefaultFlowVariableStrategyTest {

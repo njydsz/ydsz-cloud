@@ -40,6 +40,12 @@ public class RateInternalController {
 
     private final RateInternalService service;
 
+    /**
+     * 创建对内成本费率
+     *
+     * @param dto 费率创建参数
+     * @return 新建费率 ID
+     */
     @Operation(summary = "创建对内成本费率")
     @PrePermission("execution:rate-internal:create")
     @PostMapping
@@ -47,6 +53,13 @@ public class RateInternalController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 更新对内成本费率
+     *
+     * @param id  费率 ID
+     * @param dto 费率更新参数
+     * @return 空结果
+     */
     @Operation(summary = "更新")
     @PrePermission("execution:rate-internal:update")
     @PutMapping("/{id}")
@@ -55,6 +68,12 @@ public class RateInternalController {
         return Result.ok();
     }
 
+    /**
+     * 删除对内成本费率
+     *
+     * @param id 费率 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除")
     @PrePermission("execution:rate-internal:delete")
     @DeleteMapping("/{id}")
@@ -63,6 +82,12 @@ public class RateInternalController {
         return Result.ok();
     }
 
+    /**
+     * 查询对内成本费率详情
+     *
+     * @param id 费率 ID
+     * @return 费率实体
+     */
     @Operation(summary = "详情")
     @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
@@ -70,6 +95,14 @@ public class RateInternalController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 命中有效成本费率（职级+部门+日期）
+     *
+     * @param levelCode    职级编码
+     * @param departmentId 部门 ID，可选
+     * @param date         生效日期，可选
+     * @return 命中的费率实体
+     */
     @Operation(summary = "命中有效成本费率（职级+部门+日期）")
     @PrePermission("execution:rate:list")
     @GetMapping("/match")
@@ -80,6 +113,13 @@ public class RateInternalController {
         return Result.ok(service.matchEffective(levelCode, departmentId, date));
     }
 
+    /**
+     * 按职级+部门查询费率
+     *
+     * @param levelCode    职级编码
+     * @param departmentId 部门 ID，可选
+     * @return 费率列表
+     */
     @Operation(summary = "按职级+部门查询")
     @PrePermission("execution:rate:list")
     @GetMapping("/by-level-dept")
@@ -89,6 +129,16 @@ public class RateInternalController {
         return Result.ok(service.listByLevelAndDept(levelCode, departmentId));
     }
 
+    /**
+     * 分页查询对内成本费率
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param levelCode    职级编码
+     * @param departmentId 部门 ID
+     * @param status       状态过滤
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("execution:rate:list")
     @GetMapping("/page")

@@ -17,6 +17,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * BpmnXmlParser 单元测试
  *
  * <p>覆盖标准 BPMN 2.0 流程的解析能力：startEvent / endEvent / userTask / gateway / sequenceFlow / condition。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("BpmnXmlParser 单元测试")
 class BpmnXmlParserTest {

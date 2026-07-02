@@ -125,7 +125,7 @@ public class GlobalExceptionHandler {
     public Result<Void> handleNotReadable(HttpMessageNotReadableException e) {
         log.warn("[HttpMessageNotReadable] {}", e.getMessage());
         Result<Void> r = Result.failed(BizErrorCode.BAD_REQUEST);
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 
@@ -139,7 +139,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.METHOD_NOT_ALLOWED)
     public Result<Void> handleMethodNotSupported(HttpRequestMethodNotSupportedException e) {
         Result<Void> r = Result.failed(BizErrorCode.METHOD_NOT_ALLOWED);
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 
@@ -153,7 +153,7 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public Result<Void> handleNotFound(NoHandlerFoundException e) {
         Result<Void> r = Result.failed(BizErrorCode.NOT_FOUND);
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 
@@ -167,7 +167,7 @@ public class GlobalExceptionHandler {
     public Result<Void> handleIllegalArgument(IllegalArgumentException e) {
         log.warn("[IllegalArgument] {}", e.getMessage());
         Result<Void> r = Result.failed(BizErrorCode.BAD_REQUEST.getCode(), e.getMessage());
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 
@@ -183,7 +183,7 @@ public class GlobalExceptionHandler {
     public Result<Void> handleException(Exception e, HttpServletRequest req) {
         log.error("[SystemError] {} {}", req.getMethod(), req.getRequestURI(), e);
         Result<Void> r = Result.failed(BizErrorCode.INTERNAL_ERROR);
-        R.setTraceId(TraceIdUtil.get());
+        r.setTraceId(TraceIdUtil.get());
         return r;
     }
 }

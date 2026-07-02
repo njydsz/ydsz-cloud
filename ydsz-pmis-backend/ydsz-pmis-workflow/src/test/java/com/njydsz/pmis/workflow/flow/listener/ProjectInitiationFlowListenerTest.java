@@ -15,6 +15,9 @@ import static org.mockito.Mockito.verify;
  * ProjectInitiationFlowListener 单元测试
  *
  * <p>验证监听器在生命周期事件中正确触发且不影响主流程。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ProjectInitiationFlowListener 单元测试")
 class ProjectInitiationFlowListenerTest {

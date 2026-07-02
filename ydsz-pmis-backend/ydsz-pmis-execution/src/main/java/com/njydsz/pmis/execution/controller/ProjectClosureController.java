@@ -39,6 +39,12 @@ public class ProjectClosureController {
 
     private final ProjectClosureService service;
 
+    /**
+     * 创建项目结项
+     *
+     * @param dto 结项创建参数
+     * @return 新建结项 ID
+     */
     @Operation(summary = "创建项目结项")
     @PrePermission("closure:project:create")
     @PostMapping
@@ -46,6 +52,12 @@ public class ProjectClosureController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 结项状态迁移
+     *
+     * @param dto 状态变更参数
+     * @return 空结果
+     */
     @Operation(summary = "状态迁移")
     @PrePermission("closure:project:status")
     @PutMapping("/status")
@@ -54,6 +66,12 @@ public class ProjectClosureController {
         return Result.ok();
     }
 
+    /**
+     * 删除结项记录
+     *
+     * @param id 结项 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除结项记录")
     @PrePermission("closure:project:delete")
     @DeleteMapping("/{id}")
@@ -62,6 +80,12 @@ public class ProjectClosureController {
         return Result.ok();
     }
 
+    /**
+     * 查询结项详情
+     *
+     * @param id 结项 ID
+     * @return 结项实体
+     */
     @Operation(summary = "结项详情")
     @PrePermission("closure:project:list")
     @GetMapping("/{id}")
@@ -69,6 +93,12 @@ public class ProjectClosureController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 按项目立项 ID 查询结项
+     *
+     * @param initiationId 项目立项 ID
+     * @return 结项实体
+     */
     @Operation(summary = "按项目查询结项")
     @PrePermission("closure:project:list")
     @GetMapping("/by-initiation/{initiationId}")
@@ -76,6 +106,16 @@ public class ProjectClosureController {
         return Result.ok(service.getByInitiation(initiationId));
     }
 
+    /**
+     * 分页查询结项
+     *
+     * @param page        页码（从 1 开始）
+     * @param size        每页大小
+     * @param keyword     关键词
+     * @param closureType 结项类型
+     * @param status      状态过滤
+     * @return 分页结果
+     */
     @Operation(summary = "分页查询")
     @PrePermission("closure:project:list")
     @GetMapping("/page")
@@ -88,6 +128,12 @@ public class ProjectClosureController {
         return Result.ok(service.page(page, size, keyword, closureType, status));
     }
 
+    /**
+     * 按结项类型查询列表
+     *
+     * @param closureType 结项类型，可选
+     * @return 结项列表
+     */
     @Operation(summary = "按结项类型查询")
     @PrePermission("closure:project:list")
     @GetMapping("/list-by-type")
@@ -95,6 +141,12 @@ public class ProjectClosureController {
         return Result.ok(service.listByType(closureType));
     }
 
+    /**
+     * 按结项类型聚合统计
+     *
+     * @param tenantId 租户 ID，可选
+     * @return 各类型数量列表
+     */
     @Operation(summary = "按结项类型聚合")
     @PrePermission("closure:project:list")
     @GetMapping("/aggregate/type")
@@ -102,6 +154,12 @@ public class ProjectClosureController {
         return Result.ok(service.aggregateByType(tenantId));
     }
 
+    /**
+     * 结项准入校验
+     *
+     * @param id 结项 ID
+     * @return 准入校验结果
+     */
     @Operation(summary = "结项准入校验")
     @PrePermission("closure:project:list")
     @GetMapping("/{id}/admission-check")

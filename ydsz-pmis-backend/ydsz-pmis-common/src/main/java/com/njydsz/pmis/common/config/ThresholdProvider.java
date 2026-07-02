@@ -113,6 +113,13 @@ public class ThresholdProvider {
     }
 
     // ============= internal =============
+    /**
+     * 读取配置并解析为 double，解析失败时回退到默认值
+     *
+     * @param key          配置键
+     * @param defaultValue 默认值
+     * @return 解析后的 double 值
+     */
     private double getDouble(String key, double defaultValue) {
         String value = read(key);
         if (value == null) return defaultValue;
@@ -125,6 +132,12 @@ public class ThresholdProvider {
         }
     }
 
+    /**
+     * 读取配置值，优先走本地缓存（TTL 60s），缓存失效后从配置中心拉取并回填
+     *
+     * @param key 配置键
+     * @return 配置值，不存在或调用失败时返回 null
+     */
     private String read(String key) {
         CacheEntry e = cache.computeIfAbsent(key, k -> new CacheEntry(0L, null));
         long now = System.currentTimeMillis();
@@ -143,6 +156,11 @@ public class ThresholdProvider {
         }
     }
 
+    /**
+     * 通过 Feign 从配置中心拉取指定分组下全部配置项
+     *
+     * @return 分组配置 Map，调用失败时返回空 Map
+     */
     private Map<String, String> fetchGroup() {
         try {
             return configClient.getGroup(GROUP).getData();

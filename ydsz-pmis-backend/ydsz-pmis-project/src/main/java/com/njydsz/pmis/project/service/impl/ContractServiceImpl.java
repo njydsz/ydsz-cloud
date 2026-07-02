@@ -73,6 +73,12 @@ public class ContractServiceImpl implements ContractService {
         return c.getId();
     }
 
+    /**
+     * 合同状态迁移（遵循 ContractStatus 状态机）。
+     *
+     * @param dto 状态迁移参数
+     * @throws BizException 合同不存在、目标状态未知或迁移路径非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(ContractStatusDTO dto) {
@@ -93,6 +99,12 @@ public class ContractServiceImpl implements ContractService {
         log.info("[Contract] 状态迁移: id={} {} -> {}", c.getId(), from.getCode(), to.getCode());
     }
 
+    /**
+     * 删除合同（逻辑删除）。
+     *
+     * @param id 合同 ID
+     * @throws BizException 合同不存在时抛出
+     */
     @Override
     public void delete(Long id) {
         ContractDO c = getById(id);
@@ -100,6 +112,14 @@ public class ContractServiceImpl implements ContractService {
         log.info("[Contract] 删除合同: id={}", id);
     }
 
+    /**
+     * 根据合同 ID 查询合同详情。
+     * <p>查询结果会通过 Feign 补齐客户/负责人名称。</p>
+     *
+     * @param id 合同 ID
+     * @return 合同实体
+     * @throws BizException 合同不存在时抛出
+     */
     @Override
     public ContractDO getById(Long id) {
         ContractDO c = contractMapper.selectById(id);
@@ -110,6 +130,18 @@ public class ContractServiceImpl implements ContractService {
         return c;
     }
 
+    /**
+     * 分页查询合同列表，按创建时间倒序。
+     * <p>结果集中的每条记录会通过 Feign 补齐客户/负责人名称。</p>
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词（编号/名称/客户名），可空
+     * @param status       状态码，可空
+     * @param contractType 合同类型，可空
+     * @param riskLevel    风险等级，可空
+     * @return 分页结果
+     */
     @Override
     public Page<ContractDO> page(int page, int size, String keyword, String status,
                                  String contractType, String riskLevel) {
@@ -133,6 +165,13 @@ public class ContractServiceImpl implements ContractService {
         return result;
     }
 
+    /**
+     * 重新计算风险等级并落库。
+     *
+     * @param id 合同 ID
+     * @return 风险等级码（RiskLevel.code）
+     * @throws BizException 合同不存在时抛出
+     */
     @Override
     public String evaluateRisk(Long id) {
         ContractDO c = getById(id);
@@ -142,18 +181,36 @@ public class ContractServiceImpl implements ContractService {
         return level.name();
     }
 
+    /**
+     * 按状态聚合计数。
+     *
+     * @param tenantId 租户 ID，为空时填充默认值 1
+     * @return 每种状态对应的数量列表
+     */
     @Override
     public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return contractMapper.aggregateByStatus(tenantId);
     }
 
+    /**
+     * 按风险等级聚合计数。
+     *
+     * @param tenantId 租户 ID，为空时填充默认值 1
+     * @return 每种风险等级对应的数量列表
+     */
     @Override
     public List<Map<String, Object>> aggregateByRisk(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return contractMapper.aggregateByRisk(tenantId);
     }
 
+    /**
+     * 校验合同创建参数。
+     *
+     * @param dto 合同创建参数
+     * @throws BizException 参数为空、编号/名称/类型/客户/负责人缺失、金额为负或日期不合法时抛出
+     */
     private void validate(ContractCreateDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
@@ -182,6 +239,12 @@ public class ContractServiceImpl implements ContractService {
         }
     }
 
+    /**
+     * 装配客户/负责人名称。
+     * <p>仅当名称为空且对应 ID 不为空时通过 Feign 调用用户服务补齐；调用失败静默忽略。</p>
+     *
+     * @param c 合同实体，为空或装配器为空时直接返回
+     */
     private void assembleNames(ContractDO c) {
         if (c == null || nameAssembler == null) return;
         if (!StringUtils.hasText(c.getCustomerName()) && c.getCustomerId() != null) {

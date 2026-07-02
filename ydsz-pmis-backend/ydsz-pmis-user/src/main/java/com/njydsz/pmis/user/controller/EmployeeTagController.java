@@ -35,8 +35,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EmployeeTagController {
 
+    /** 人员标签服务 */
     private final EmployeeTagService tagService;
 
+    /**
+     * 添加标签
+     *
+     * @param dto 标签创建参数
+     * @return 统一响应结果，包含新建标签 ID
+     */
     @Operation(summary = "添加标签")
     @PrePermission(PermissionCodes.RESOURCE_TAG_CREATE)
     @OperationLog(module = "人员标签", action = "添加标签", bizType = "EMPLOYEE_TAG")
@@ -45,6 +52,12 @@ public class EmployeeTagController {
         return Result.ok(tagService.add(dto));
     }
 
+    /**
+     * 删除标签
+     *
+     * @param id 标签 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除标签")
     @PrePermission(PermissionCodes.RESOURCE_TAG_DELETE)
     @OperationLog(module = "人员标签", action = "删除标签", bizType = "EMPLOYEE_TAG")
@@ -54,6 +67,13 @@ public class EmployeeTagController {
         return Result.ok();
     }
 
+    /**
+     * 覆盖式设置员工标签
+     *
+     * @param employeeId 员工 ID
+     * @param tags       标签列表
+     * @return 统一响应结果
+     */
     @Operation(summary = "覆盖式设置员工标签")
     @PrePermission(PermissionCodes.RESOURCE_TAG_UPDATE)
     @OperationLog(module = "人员标签", action = "覆盖员工标签", bizType = "EMPLOYEE_TAG")
@@ -64,12 +84,25 @@ public class EmployeeTagController {
         return Result.ok();
     }
 
+    /**
+     * 按员工查询标签列表
+     *
+     * @param employeeId 员工 ID
+     * @return 统一响应结果，包含标签列表
+     */
     @Operation(summary = "按员工查询")
     @GetMapping("/by-employee/{employeeId}")
     public Result<List<EmployeeTagDO>> listByEmployee(@PathVariable Long employeeId) {
         return Result.ok(tagService.listByEmployee(employeeId));
     }
 
+    /**
+     * 按标签筛选候选人
+     *
+     * @param tagType 标签类型
+     * @param tagCode 标签编码（可选）
+     * @return 统一响应结果，包含候选人标签列表
+     */
     @Operation(summary = "按标签筛选候选人")
     @GetMapping("/candidates")
     public Result<List<EmployeeTagDO>> candidates(@RequestParam String tagType,

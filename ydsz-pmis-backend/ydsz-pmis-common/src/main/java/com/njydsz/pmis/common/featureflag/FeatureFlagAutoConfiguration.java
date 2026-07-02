@@ -16,6 +16,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class FeatureFlagAutoConfiguration {
 
+    /**
+     * 注册特性开关服务默认实现
+     *
+     * @return LocalFeatureFlagService 实例
+     */
     @Bean
     @ConditionalOnMissingBean(FeatureFlagService.class)
     public FeatureFlagService featureFlagService() {

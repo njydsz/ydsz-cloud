@@ -24,6 +24,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 对外报价费率 Rate Card Controller
+ *
+ * <p>负责对外报价费率的创建、匹配（职级+项目类型+客户等级+日期）、分页查询。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "对外报价费率 Rate Card")
 @RestController
 @RequestMapping("/api/v1/execution/rate-card")
@@ -32,6 +40,12 @@ public class RateCardController {
 
     private final RateCardService service;
 
+    /**
+     * 创建对外报价费率
+     *
+     * @param dto 费率创建参数
+     * @return 新建费率 ID
+     */
     @Operation(summary = "创建对外报价费率")
     @PrePermission("execution:rate-card:create")
     @PostMapping
@@ -39,6 +53,13 @@ public class RateCardController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 更新对外报价费率
+     *
+     * @param id  费率 ID
+     * @param dto 费率更新参数
+     * @return 空结果
+     */
     @Operation(summary = "更新")
     @PrePermission("execution:rate-card:update")
     @PutMapping("/{id}")
@@ -47,6 +68,12 @@ public class RateCardController {
         return Result.ok();
     }
 
+    /**
+     * 删除对外报价费率
+     *
+     * @param id 费率 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除")
     @PrePermission("execution:rate-card:delete")
     @DeleteMapping("/{id}")
@@ -55,6 +82,12 @@ public class RateCardController {
         return Result.ok();
     }
 
+    /**
+     * 查询对外报价费率详情
+     *
+     * @param id 费率 ID
+     * @return 费率实体
+     */
     @Operation(summary = "详情")
     @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
@@ -62,6 +95,15 @@ public class RateCardController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 命中有效费率（职级+项目类型+客户等级+日期）
+     *
+     * @param levelCode     职级编码
+     * @param projectType   项目类型，可选
+     * @param customerLevel 客户等级，可选
+     * @param date          生效日期，可选
+     * @return 命中的费率实体
+     */
     @Operation(summary = "命中有效费率（职级+项目类型+客户等级+日期）")
     @PrePermission("execution:rate:list")
     @GetMapping("/match")
@@ -73,6 +115,12 @@ public class RateCardController {
         return Result.ok(service.matchEffective(levelCode, projectType, customerLevel, date));
     }
 
+    /**
+     * 按职级查询费率
+     *
+     * @param levelCode 职级编码
+     * @return 费率列表
+     */
     @Operation(summary = "按职级查询")
     @PrePermission("execution:rate:list")
     @GetMapping("/by-level")
@@ -80,6 +128,15 @@ public class RateCardController {
         return Result.ok(service.listByLevel(levelCode));
     }
 
+    /**
+     * 分页查询对外报价费率
+     *
+     * @param page      页码（从 1 开始）
+     * @param size      每页大小
+     * @param levelCode 职级编码
+     * @param status    状态过滤
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("execution:rate:list")
     @GetMapping("/page")

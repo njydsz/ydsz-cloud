@@ -50,11 +50,21 @@ public class LocalFeatureFlagService implements FeatureFlagService {
     /** 本地快照缓存 */
     private final Map<String, CacheEntry> snapshotCache = new ConcurrentHashMap<>();
 
+    /** 配置中心 Feign 客户端（可选，单测时可为 null） */
     @Autowired(required = false)
     private ConfigClient configClient;
 
     // ============== 查询 ==============
 
+    /**
+     * {@inheritDoc}
+     *
+     * <p>实现：mandatory flag 永远返回 true；否则读取 config 值 + 灰度比例判断。
+     *
+     * @param flag   特性开关
+     * @param userId 用户 ID，为 null 时不应用灰度
+     * @return true 表示该用户可使用此特性
+     */
     @Override
     public boolean isEnabled(FeatureFlag flag, Long userId) {
         if (flag.isMandatory()) {

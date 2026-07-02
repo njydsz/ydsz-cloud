@@ -67,6 +67,10 @@ public class PmisFeignLogger extends Logger {
 
     /**
      * 重写抽象方法: 静默, 由 logRequest/logAndRebufferResponse 输出, 避免重复日志
+     *
+     * @param configKey Feign 配置键
+     * @param format    日志格式
+     * @param args      日志参数
      */
     @Override
     protected void log(String configKey, String format, Object... args) {

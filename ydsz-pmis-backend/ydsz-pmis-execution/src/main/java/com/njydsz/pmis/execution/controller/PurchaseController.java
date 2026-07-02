@@ -37,6 +37,12 @@ public class PurchaseController {
 
     private final PurchaseService service;
 
+    /**
+     * 创建采购单
+     *
+     * @param dto 采购单创建参数
+     * @return 新建采购单 ID
+     */
     @Operation(summary = "创建采购单")
     @PrePermission("execution:purchase:create")
     @PostMapping
@@ -44,6 +50,12 @@ public class PurchaseController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 采购单状态迁移
+     *
+     * @param dto 审批/状态变更参数
+     * @return 空结果
+     */
     @Operation(summary = "状态迁移")
     @PrePermission("execution:purchase:status")
     @PutMapping("/status")
@@ -52,6 +64,12 @@ public class PurchaseController {
         return Result.ok();
     }
 
+    /**
+     * 删除采购单
+     *
+     * @param id 采购单 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除")
     @PrePermission("execution:purchase:delete")
     @DeleteMapping("/{id}")
@@ -60,6 +78,12 @@ public class PurchaseController {
         return Result.ok();
     }
 
+    /**
+     * 查询采购单详情
+     *
+     * @param id 采购单 ID
+     * @return 采购单实体
+     */
     @Operation(summary = "详情")
     @PrePermission("execution:purchase:list")
     @GetMapping("/{id}")
@@ -67,6 +91,16 @@ public class PurchaseController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询采购单
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param initiationId 项目立项 ID
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("execution:purchase:list")
     @GetMapping("/page")

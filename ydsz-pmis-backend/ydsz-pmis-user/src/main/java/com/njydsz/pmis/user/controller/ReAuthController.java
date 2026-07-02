@@ -29,8 +29,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class ReAuthController {
 
+    /** 二次认证服务 */
     private final ReAuthService reAuthService;
 
+    /**
+     * 颁发二次认证 token
+     *
+     * @param request 二次认证请求参数
+     * @return 统一响应结果，包含二次认证 token
+     */
     @Operation(summary = "颁发二次认证 token")
     @PostMapping("/token")
     public Result<ReAuthResult> issueToken(@Valid @RequestBody ReAuthRequest request) {

@@ -33,6 +33,9 @@ public interface FeatureFlagService {
 
     /**
      * 通用判断: 某 flag 是否启用 (不带用户维度, 即 rolloutPercentage=100 时才返回 true).
+     *
+     * @param flag 特性开关
+     * @return true 表示启用
      */
     default boolean isEnabled(FeatureFlag flag) {
         return isEnabled(flag, null);
@@ -54,6 +57,8 @@ public interface FeatureFlagService {
 
     /**
      * 按分类聚合快照.
+     *
+     * @return 按分类分组的快照 Map
      */
     Map<String, List<FeatureFlagSnapshot>> snapshotByCategory();
 
@@ -68,6 +73,10 @@ public interface FeatureFlagService {
 
     /**
      * Admin: 设置灰度发布比例 0-100.
+     *
+     * @param flag       特性开关
+     * @param percentage 灰度比例 (0-100)
+     * @return 实际生效的灰度比例 (经过 clamp)
      */
     int setRolloutPercentage(FeatureFlag flag, int percentage);
 

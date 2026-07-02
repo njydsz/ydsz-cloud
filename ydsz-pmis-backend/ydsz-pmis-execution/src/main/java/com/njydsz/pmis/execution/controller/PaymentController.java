@@ -41,6 +41,12 @@ public class PaymentController {
 
     private final PaymentService service;
 
+    /**
+     * 录入回款
+     *
+     * @param dto 回款创建参数
+     * @return 新建回款 ID
+     */
     @Operation(summary = "录入回款")
     @PrePermission("finance:payment:create")
     @PostMapping
@@ -48,6 +54,13 @@ public class PaymentController {
         return Result.ok(service.record(dto));
     }
 
+    /**
+     * 确认回款到账
+     *
+     * @param id         回款 ID
+     * @param operatorId 操作人 ID
+     * @return 空结果
+     */
     @Operation(summary = "确认到账")
     @PrePermission("finance:payment:status")
     @PutMapping("/{id}/confirm")
@@ -56,6 +69,14 @@ public class PaymentController {
         return Result.ok();
     }
 
+    /**
+     * 取消回款
+     *
+     * @param id         回款 ID
+     * @param operatorId 操作人 ID
+     * @param reason     取消原因，可选
+     * @return 空结果
+     */
     @Operation(summary = "取消")
     @PrePermission("finance:payment:status")
     @PutMapping("/{id}/cancel")
@@ -66,6 +87,12 @@ public class PaymentController {
         return Result.ok();
     }
 
+    /**
+     * 删除回款
+     *
+     * @param id 回款 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除")
     @PrePermission("finance:payment:delete")
     @DeleteMapping("/{id}")
@@ -74,6 +101,12 @@ public class PaymentController {
         return Result.ok();
     }
 
+    /**
+     * 核销到发票
+     *
+     * @param dto 核销分配参数
+     * @return 空结果
+     */
     @Operation(summary = "核销到发票")
     @PrePermission("finance:payment:allocate")
     @PostMapping("/allocate")
@@ -82,6 +115,13 @@ public class PaymentController {
         return Result.ok();
     }
 
+    /**
+     * 按客户自动核销
+     *
+     * @param customerId 客户 ID
+     * @param operatorId 操作人 ID
+     * @return 已核销的回款数量
+     */
     @Operation(summary = "自动核销（按客户）")
     @PrePermission("finance:payment:allocate")
     @PostMapping("/auto-allocate")
@@ -90,6 +130,13 @@ public class PaymentController {
         return Result.ok(service.autoAllocate(customerId, operatorId));
     }
 
+    /**
+     * 现金流预测
+     *
+     * @param initiationId 项目立项 ID
+     * @param months       预测月份数
+     * @return 预测结果列表
+     */
     @Operation(summary = "现金流预测")
     @PrePermission("finance:payment:list")
     @GetMapping("/forecast")
@@ -98,6 +145,12 @@ public class PaymentController {
         return Result.ok(service.forecastCashFlow(initiationId, months));
     }
 
+    /**
+     * 查询回款详情
+     *
+     * @param id 回款 ID
+     * @return 回款实体
+     */
     @Operation(summary = "详情")
     @PrePermission("finance:payment:list")
     @GetMapping("/{id}")
@@ -105,6 +158,18 @@ public class PaymentController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询回款
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param contractId   合同 ID
+     * @param customerId   客户 ID
+     * @param initiationId 项目立项 ID
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("finance:payment:list")
     @GetMapping("/page")
@@ -119,6 +184,12 @@ public class PaymentController {
         return Result.ok(service.page(page, size, keyword, status, contractId, customerId, initiationId));
     }
 
+    /**
+     * 按合同汇总回款
+     *
+     * @param contractId 合同 ID
+     * @return 已回款金额
+     */
     @Operation(summary = "按合同汇总回款")
     @PrePermission("finance:payment:list")
     @GetMapping("/sum/by-contract")
@@ -126,6 +197,12 @@ public class PaymentController {
         return Result.ok(service.sumReceivedByContract(contractId));
     }
 
+    /**
+     * 按月汇总回款
+     *
+     * @param initiationId 项目立项 ID
+     * @return 各月汇总列表
+     */
     @Operation(summary = "按月汇总")
     @PrePermission("finance:payment:list")
     @GetMapping("/aggregate/by-month")

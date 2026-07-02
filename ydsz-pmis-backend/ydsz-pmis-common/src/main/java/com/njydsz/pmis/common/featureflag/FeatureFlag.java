@@ -80,7 +80,9 @@ public enum FeatureFlag {
     /** TOTP 双因素认证 */
     TOTP_TWO_FACTOR("SAFETY", "TOTP 双因素认证");
 
+    /** 特性分类 (INFRASTRUCTURE/BUSINESS/UI/SAFETY) */
     private final String category;
+    /** 特性中文描述 */
     private final String description;
 
     FeatureFlag(String category, String description) {
