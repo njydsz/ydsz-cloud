@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # Nacos 配置：ydsz-pmis-workflow-uat
 # DataId  : ydsz-pmis-workflow-uat.yaml
 # Group   : PMIS_GROUP_UAT
@@ -41,13 +41,13 @@ spring:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
         namespace: ${NACOS_NAMESPACE:pmis}
-        group: UAT
+        group: uat
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         extension-configs:
           - dataId: pmis-common-uat.yaml
-            group: UAT
+            group: uat
             refresh: true
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

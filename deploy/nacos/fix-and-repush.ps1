@@ -48,34 +48,46 @@ try {
     exit 1
 }
 
-# 2. 删除 public 命名空间下的 56 个错误配置
-Write-Host "[2/4] Deleting 56 wrong configs from public namespace ..." -ForegroundColor Cyan
+# 2. 删除 public 命名空间下的 56 个错误配置 + pmis 命名空间下的旧 PMIS_GROUP_XXX 配置
+Write-Host "[2/4] Deleting old configs (public & pmis/PMIS_GROUP_XXX) ..." -ForegroundColor Cyan
 $deleted = 0
 $deleteFail = 0
+
+# 2a) pmis 命名空间下 PMIS_GROUP_XXX 旧配置
+foreach ($svc in $services) {
+    foreach ($envOld in @("DEV","SIT","UAT","PROD")) {
+        $dataId = "$svc-$envOld.yaml".ToLower()
+        $group  = "PMIS_GROUP_$envOld"
+        $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=$Namespace&accessToken=$token"
+        try { Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null; $deleted++ } catch { $deleteFail++ }
+    }
+}
+foreach ($envOld in @("DEV","SIT","UAT","PROD")) {
+    $dataId = "pmis-common-$($envOld.ToLower()).yaml"
+    $group  = "PMIS_GROUP_$envOld"
+    $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=$Namespace&accessToken=$token"
+    try { Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null; $deleted++ } catch { $deleteFail++ }
+}
+
+# 2b) pmis 命名空间下当前新 group 的旧配置（重新推送前先清空）
 foreach ($svc in $services) {
     foreach ($env in $envs) {
         $dataId = "$svc-$env.yaml"
         $group  = $env
         $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=$Namespace&accessToken=$token"
         try {
-            $r = Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10
+            Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null
             $deleted++
         } catch {
             $deleteFail++
         }
     }
 }
-# common
 foreach ($env in $envs) {
     $dataId = "pmis-common-$env.yaml"
     $group  = $env
     $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=$Namespace&accessToken=$token"
-    try {
-        Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null
-        $deleted++
-    } catch {
-        $deleteFail++
-    }
+    try { Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null; $deleted++ } catch { $deleteFail++ }
 }
 Write-Host "      Deleted: $deleted (fail: $deleteFail)" -ForegroundColor Green
 

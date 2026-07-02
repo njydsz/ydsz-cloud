@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # Nacos 配置：ydsz-pmis-notification-dev
 # DataId  : ydsz-pmis-notification-dev.yaml
 # Group   : PMIS_GROUP_DEV
@@ -38,13 +38,13 @@ spring:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         file-extension: yaml
         namespace: ${NACOS_NAMESPACE:pmis}
-        group: DEV
+        group: dev
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
         refresh-enabled: true
         extension-configs:
           - dataId: pmis-common-dev.yaml
-            group: DEV
+            group: dev
             refresh: true
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

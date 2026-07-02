@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # Nacos 配置：ydsz-pmis-audit-prod
 # DataId  : ydsz-pmis-audit-prod.yaml
 # Group   : PMIS_GROUP_PROD
@@ -41,14 +41,14 @@ spring:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
         namespace: ${NACOS_NAMESPACE:pmis}
-        group: PROD
+        group: prod
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         fail-fast: true
         extension-configs:
           - dataId: pmis-common-prod.yaml
-            group: PROD
+            group: prod
             refresh: true
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

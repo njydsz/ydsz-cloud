@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # Nacos 配置：ydsz-pmis-workflow-sit
 # DataId  : ydsz-pmis-workflow-sit.yaml
 # Group   : PMIS_GROUP_SIT
@@ -41,13 +41,13 @@ spring:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
         namespace: ${NACOS_NAMESPACE:pmis}
-        group: SIT
+        group: sit
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         extension-configs:
           - dataId: pmis-common-sit.yaml
-            group: SIT
+            group: sit
             refresh: true
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
