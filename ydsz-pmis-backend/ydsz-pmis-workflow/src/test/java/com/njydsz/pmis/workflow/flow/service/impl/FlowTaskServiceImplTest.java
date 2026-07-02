@@ -2035,8 +2035,8 @@ class FlowTaskServiceImplTest {
         assertThat(inserted.getDurationMs()).isEqualTo(0L);
 
         // 验证审计日志被写入
-        verify(auditLogMapper).insert(any());
+        verify(auditLogMapper).insert(any(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class));
         // 验证历史表归档
-        verify(hisTaskMapper).insert(any());
+        verify(hisTaskMapper).insert(any(FlowHisTaskDO.class));
     }
 }
