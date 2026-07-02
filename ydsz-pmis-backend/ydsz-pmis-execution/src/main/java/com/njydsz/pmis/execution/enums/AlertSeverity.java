@@ -27,6 +27,12 @@ public enum AlertSeverity {
     public int getWeight() { return weight; }
     public String getDesc() { return desc; }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 严重度编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static AlertSeverity fromCode(String code) {
         if (code == null) return null;
         for (AlertSeverity v : values()) {

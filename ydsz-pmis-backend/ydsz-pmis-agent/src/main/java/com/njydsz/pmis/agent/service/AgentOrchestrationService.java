@@ -23,7 +23,9 @@ public interface AgentOrchestrationService {
     OrchestrationResult orchestrate(OrchestrationRequest req);
 
     /**
-     * 取当前已注册的 Agent 映射（agentType -> Agent）
+     * 取当前已注册的 Agent 映射（agentType -> Agent）。
+     *
+     * @return Agent 类型码到 Agent 实例的映射
      */
     Map<String, Agent> agentRegistry();
 }

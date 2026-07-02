@@ -45,6 +45,12 @@ public class ReconcileEngine {
         log.info("[Reconcile] 已注册对账处理器: {}", handlers.keySet());
     }
 
+    /**
+     * 按编码执行单个对账处理器；找不到处理器或执行抛异常时返回失败结果，不向外抛
+     *
+     * @param code 对账项编码
+     * @return 对账结果（始终非 null，失败信息封装在 message 字段）
+     */
     public ReconcileResult run(String code) {
         ReconcileHandler h = handlers.get(code);
         if (h == null) {
@@ -72,6 +78,11 @@ public class ReconcileEngine {
         }
     }
 
+    /**
+     * 执行全部已注册的对账处理器
+     *
+     * @return 所有处理器的对账结果列表（顺序不保证）
+     */
     public List<ReconcileResult> runAll() {
         List<ReconcileResult> results = new ArrayList<>();
         for (String code : handlers.keySet()) {
@@ -80,6 +91,11 @@ public class ReconcileEngine {
         return results;
     }
 
+    /**
+     * 列出所有已注册的对账项编码
+     *
+     * @return 对账编码列表
+     */
     public List<String> listCodes() {
         return new ArrayList<>(handlers.keySet());
     }

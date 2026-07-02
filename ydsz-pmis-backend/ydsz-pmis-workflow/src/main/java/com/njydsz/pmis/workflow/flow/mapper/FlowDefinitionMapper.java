@@ -7,6 +7,11 @@ import org.apache.ibatis.annotations.Param;
 
 /**
  * 流程定义 Mapper
+ *
+ * <p>对应 pmis_flow_definition 表，提供按 flowCode/version 查询及发布状态维护。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {

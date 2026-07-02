@@ -44,14 +44,20 @@ public class OrchestrationResult implements Serializable {
     private String note;
 
     /**
-     * 等级转字符串（兼容：枚举 null → "NORMAL"）
+     * 等级转字符串（兼容：枚举 null → "NORMAL"）。
+     *
+     * @param l 告警等级，可空
+     * @return 等级码；为 null 时返回 "NORMAL"
      */
     public static String safeLevel(AgentAlertLevel l) {
         return l == null ? "NORMAL" : l.getCode();
     }
 
     /**
-     * BigDecimal 安全 toString
+     * BigDecimal 安全 toString。
+     *
+     * @param b 数值，可空
+     * @return 保留两位小数的字符串；为 null 时返回 "0.00"
      */
     public static String safeBd(BigDecimal b) {
         return b == null ? "0.00" : b.setScale(2, java.math.RoundingMode.HALF_UP).toString();

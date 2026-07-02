@@ -50,6 +50,9 @@ public enum UtilizationGrade {
 
     /**
      * 根据百分比 (0-100) 返回对应考核等级
+     *
+     * @param utilizationPct 可计费利用率百分比
+     * @return 对应的考核等级（NaN 或负值返回 CRITICAL）
      */
     public static UtilizationGrade of(double utilizationPct) {
         if (Double.isNaN(utilizationPct) || utilizationPct < 0) {
@@ -62,10 +65,21 @@ public enum UtilizationGrade {
         return CRITICAL;
     }
 
+    /**
+     * 判断是否为告警等级
+     *
+     * @return true 表示当前等级为预警或严重
+     */
     public boolean isAlert() {
         return this == WARN || this == CRITICAL;
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 等级编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static UtilizationGrade fromCode(String code) {
         if (code == null) return null;
         for (UtilizationGrade g : values()) {

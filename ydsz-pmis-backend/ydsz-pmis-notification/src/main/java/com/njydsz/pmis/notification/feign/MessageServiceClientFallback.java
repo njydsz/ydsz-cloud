@@ -11,6 +11,9 @@ import java.util.List;
  * 消息服务 Feign Fallback
  *
  * <p>消息服务不可用时返回安全降级结果：邮件通道视为失败（不影响站内消息持久化）。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component

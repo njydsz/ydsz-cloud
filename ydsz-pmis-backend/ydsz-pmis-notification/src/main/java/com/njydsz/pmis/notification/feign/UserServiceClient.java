@@ -11,6 +11,9 @@ import java.util.Map;
  * 用户服务 Feign 客户端（通知模块专用）
  *
  * <p>用于通知发送时获取接收人邮箱（邮件通道）。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @FeignClient(name = "ydsz-pmis-user", fallbackFactory = UserServiceClientFallback.class)
 public interface UserServiceClient {

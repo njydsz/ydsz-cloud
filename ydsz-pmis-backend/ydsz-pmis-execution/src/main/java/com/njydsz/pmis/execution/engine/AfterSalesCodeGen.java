@@ -20,6 +20,12 @@ public final class AfterSalesCodeGen {
 
     private AfterSalesCodeGen() {}
 
+    /**
+     * 生成质保单编码
+     *
+     * @param today 日期；为空时使用当前日期
+     * @return 质保单编码（WY-yyyyMMdd-XXXX）
+     */
     public static String warrantyCode(LocalDate today) {
         return "WY-" + (today != null ? today : LocalDate.now()).format(DATE)
                 + "-" + random4();
@@ -30,6 +36,12 @@ public final class AfterSalesCodeGen {
                 + "-" + random4();
     }
 
+    /**
+     * 生成满意度调查编码
+     *
+     * @param today 日期；为空时使用当前日期
+     * @return 调查编码（SV-yyyyMMdd-XXXX）
+     */
     public static String surveyCode(LocalDate today) {
         return "SV-" + (today != null ? today : LocalDate.now()).format(DATE)
                 + "-" + random4();

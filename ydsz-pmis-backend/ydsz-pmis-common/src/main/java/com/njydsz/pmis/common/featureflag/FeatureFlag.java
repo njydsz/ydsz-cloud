@@ -88,10 +88,20 @@ public enum FeatureFlag {
         this.description = description;
     }
 
+    /**
+     * 获取特性分类
+     *
+     * @return 分类标识，如 INFRASTRUCTURE / BUSINESS / UI / SAFETY
+     */
     public String getCategory() {
         return category;
     }
 
+    /**
+     * 获取特性描述
+     *
+     * @return 中文描述
+     */
     public String getDescription() {
         return description;
     }
@@ -99,6 +109,8 @@ public enum FeatureFlag {
     /**
      * 默认开关值. SAFETY 类默认 true, 其它默认 false.
      * SAFETY 类不允许通过 config 关闭, 防止误操作.
+     *
+     * @return true 表示默认开启
      */
     public boolean isEnabledByDefault() {
         return "SAFETY".equals(category);
@@ -106,6 +118,8 @@ public enum FeatureFlag {
 
     /**
      * 是否强制开启 (即 config 中的开关值无效, 永远 true)
+     *
+     * @return true 表示该特性为强制开启，不可关闭
      */
     public boolean isMandatory() {
         return "SAFETY".equals(category);
@@ -113,6 +127,8 @@ public enum FeatureFlag {
 
     /**
      * 转 config key (大写下划线)
+     *
+     * @return 对应 config 中心的键名
      */
     public String configKey() {
         return name();

@@ -9,6 +9,11 @@ import java.util.List;
 
 /**
  * 任务定义 Mapper
+ *
+ * <p>对应 pmis_job 表，提供按 jobKey 查询、启动加载 NORMAL 任务、统计字段更新。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Mapper
 public interface JobMapper extends BaseMapper<JobDO> {

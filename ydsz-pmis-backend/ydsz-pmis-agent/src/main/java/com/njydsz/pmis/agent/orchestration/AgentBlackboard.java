@@ -43,28 +43,43 @@ public class AgentBlackboard implements Serializable {
     }
 
     /**
-     * 取事实
+     * 取事实。
+     *
+     * @param key 事实键
+     * @return 事实值；不存在返回 null
      */
     public Object fact(String key) {
         return facts.get(key);
     }
 
     /**
-     * 取中间结果
+     * 取中间结果。
+     *
+     * @param agentType Agent 类型
+     * @return 该 Agent 的中间结果；不存在返回 null
      */
     public Object scratch(String agentType) {
         return scratch.get(agentType);
     }
 
     /**
-     * 写入中间结果
+     * 写入中间结果。
+     *
+     * @param agentType Agent 类型
+     * @param result    中间结果
      */
     public void putScratch(String agentType, Object result) {
         scratch.put(agentType, result);
     }
 
     /**
-     * 追加决策路径
+     * 追加决策路径。
+     *
+     * @param agentType  Agent 类型
+     * @param mode       编排模式，可空
+     * @param score      得分，可空
+     * @param confidence 置信度，可空
+     * @param note       备注
      */
     public void appendTrace(String agentType, OrchestrationMode mode, BigDecimal score,
                             BigDecimal confidence, String note) {
@@ -83,11 +98,17 @@ public class AgentBlackboard implements Serializable {
     public static class TraceEntry implements Serializable {
         @Serial
         private static final long serialVersionUID = 1L;
+        /** Agent 类型 */
         private String agentType;
+        /** 编排模式码（OrchestrationMode.code） */
         private String mode;
+        /** 得分 */
         private BigDecimal score;
+        /** 置信度 */
         private BigDecimal confidence;
+        /** 备注 */
         private String note;
+        /** 时间戳（毫秒） */
         private long ts;
     }
 }

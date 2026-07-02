@@ -7,6 +7,11 @@ import org.springframework.stereotype.Component;
 
 /**
  * 用户服务 Feign Fallback
+ *
+ * <p>用户服务不可用时返回 503 降级结果，避免通知发送流程被阻塞。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component

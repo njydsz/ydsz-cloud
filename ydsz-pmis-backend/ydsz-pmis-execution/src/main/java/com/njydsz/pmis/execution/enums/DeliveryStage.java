@@ -35,6 +35,11 @@ public enum DeliveryStage {
     public String getDesc() { return desc; }
     public int getSeq() { return seq; }
 
+    /**
+     * 获取下一个门径阶段
+     *
+     * @return 下一阶段枚举；当前为最后一个阶段返回 null
+     */
     public DeliveryStage next() {
         return switch (this) {
             case CD1_KICKOFF -> CD2_DESIGN;
@@ -45,6 +50,12 @@ public enum DeliveryStage {
         };
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 阶段编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static DeliveryStage fromCode(String code) {
         if (code == null) return null;
         for (DeliveryStage s : values()) {

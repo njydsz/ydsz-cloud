@@ -30,6 +30,11 @@ public enum WarrantyStatus {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 判断是否为终态
+     *
+     * @return true 表示当前状态为终态（已过期/已终止），不可再迁移
+     */
     public boolean isTerminal() {
         return this == EXPIRED || this == TERMINATED;
     }
@@ -40,6 +45,9 @@ public enum WarrantyStatus {
      * - ACTIVE → TERMINATED（手动提前终止）
      * - EXPIRING_SOON → TERMINATED（手动提前终止）
      * - 终态不可再迁移
+     *
+     * @param target 目标状态
+     * @return true 表示允许从当前状态迁移到目标状态
      */
     public boolean canTransitTo(WarrantyStatus target) {
         if (target == null) return false;
@@ -52,6 +60,12 @@ public enum WarrantyStatus {
         };
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 状态编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static WarrantyStatus fromCode(String code) {
         if (code == null) return null;
         for (WarrantyStatus s : values()) {

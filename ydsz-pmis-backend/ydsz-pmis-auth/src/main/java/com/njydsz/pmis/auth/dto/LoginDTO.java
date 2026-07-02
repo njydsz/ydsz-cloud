@@ -5,6 +5,14 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
+/**
+ * 登录请求 DTO
+ *
+ * <p>携带用户名/密码以及图形验证码（启用时校验）。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Data
 @Schema(description = "登录参数")
 public class LoginDTO {

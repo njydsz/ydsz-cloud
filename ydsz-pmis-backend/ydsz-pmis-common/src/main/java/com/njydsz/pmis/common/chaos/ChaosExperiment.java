@@ -61,9 +61,14 @@ public class ChaosExperiment implements Serializable {
     /** 实验创建者 */
     private String createdBy;
 
+    /** 实验类型：注入延迟（sleep 指定毫秒数） */
     public static final String TYPE_LATENCY = "LATENCY";
+    /** 实验类型：抛出指定异常类 */
     public static final String TYPE_EXCEPTION = "EXCEPTION";
+    /** 实验类型：按 errorRate 概率返回错误 */
     public static final String TYPE_ERROR_RATE = "ERROR_RATE";
+    /** 实验类型：模拟资源耗尽（抛 OutOfMemoryError） */
     public static final String TYPE_RESOURCE_EXHAUSTION = "RESOURCE_EXHAUSTION";
+    /** 实验类型：模拟网络分区（抛 ConnectException） */
     public static final String TYPE_NETWORK_PARTITION = "NETWORK_PARTITION";
 }

@@ -91,6 +91,10 @@ public class DualRateProfitCalculator {
 
     /**
      * 利润达成判断：实际毛利率 vs 目标毛利率
+     *
+     * @param actual 实际毛利率
+     * @param target 目标毛利率
+     * @return true 表示实际毛利率大于等于目标毛利率
      */
     public static boolean marginAchieved(BigDecimal actual, BigDecimal target) {
         if (actual == null || target == null) return false;

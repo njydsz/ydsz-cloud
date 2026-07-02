@@ -9,6 +9,11 @@ import java.util.List;
 
 /**
  * 流程实例 Mapper
+ *
+ * <p>对应 pmis_flow_instance 表，提供按业务关联查询、状态推进、发起人维度查询。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {

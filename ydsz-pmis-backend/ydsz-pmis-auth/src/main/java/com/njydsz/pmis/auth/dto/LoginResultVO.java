@@ -4,6 +4,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * 登录结果 VO
+ *
+ * <p>登录/刷新成功后返回访问 Token 与刷新 Token。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Data
 @Builder
 @Schema(description = "登录结果")

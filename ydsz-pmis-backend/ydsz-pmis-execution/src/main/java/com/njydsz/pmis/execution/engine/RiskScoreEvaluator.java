@@ -20,6 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class RiskScoreEvaluator {
 
+    /**
+     * 根据概率与影响评估风险等级
+     *
+     * @param probability 概率等级（LOW/MEDIUM/HIGH）
+     * @param impact      影响等级（LOW/MEDIUM/HIGH）
+     * @return 风险等级
+     */
     public static RiskLevel evaluate(String probability, String impact) {
         int p = weightOf(probability);
         int i = weightOf(impact);
@@ -29,6 +36,12 @@ public class RiskScoreEvaluator {
         return level;
     }
 
+    /**
+     * 根据风险实体评估风险等级
+     *
+     * @param risk 风险实体
+     * @return 风险等级（入参为 null 时返回 LOW）
+     */
     public static RiskLevel evaluate(RiskDO risk) {
         if (risk == null) return RiskLevel.LOW;
         return evaluate(risk.getProbability(), risk.getImpact());

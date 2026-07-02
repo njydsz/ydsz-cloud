@@ -56,6 +56,9 @@ public class SentryConfig {
     /**
      * 返回 Sentry 初始化属性 Map
      * 业务层在 Sentry.init() 之前调用, 把这些属性传入
+     *
+     * @param env Spring 环境上下文，用于读取激活的 profiles
+     * @return Sentry 初始化配置对象
      */
     @Bean
     @Primary

@@ -23,9 +23,13 @@ import java.util.List;
 @Slf4j
 public class TimeEntryValidator {
 
+    /** 单日工时上限（小时） */
     public static final BigDecimal MAX_DAILY_HOURS = new BigDecimal("24");
+    /** 单周工时上限（小时） */
     public static final BigDecimal MAX_WEEKLY_HOURS = new BigDecimal("60");
+    /** 单日加班工时上限（小时） */
     public static final BigDecimal MAX_OVERTIME_HOURS = new BigDecimal("12");
+    /** 连续未填报天数告警阈值 */
     public static final int CONSECUTIVE_MISSING_DAYS = 3;
 
     public static class ValidationResult {
@@ -43,6 +47,9 @@ public class TimeEntryValidator {
 
     /**
      * 校验单条工时
+     *
+     * @param entry 工时录入
+     * @return 校验结果
      */
     public static ValidationResult validate(TimeEntryDO entry) {
         if (entry == null) return ValidationResult.fail("工时为空");
@@ -63,6 +70,10 @@ public class TimeEntryValidator {
 
     /**
      * 校验周工时累计
+     *
+     * @param newEntry    待新增的工时
+     * @param weekEntries 本周已有工时列表
+     * @return 校验结果
      */
     public static ValidationResult validateWeekly(TimeEntryDO newEntry, List<TimeEntryDO> weekEntries) {
         if (newEntry == null || newEntry.getHours() == null) return ValidationResult.ok();

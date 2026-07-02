@@ -59,6 +59,11 @@ public class ReconcileHandler {
 
     /**
      * 完整对账 - 包含所有检查项
+     *
+     * @param initiationId 项目立项 ID
+     * @param from         起始日期
+     * @param to           结束日期
+     * @return 对账结果列表
      */
     public List<ReconcileResult> reconcile(Long initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> results = new ArrayList<>();
@@ -74,6 +79,10 @@ public class ReconcileHandler {
 
     /**
      * 构建报告
+     *
+     * @param initiationId 项目立项 ID
+     * @param results      对账结果列表
+     * @return 汇总后的对账报告
      */
     public ReconcileReport buildReport(Long initiationId, List<ReconcileResult> results) {
         ReconcileReport report = new ReconcileReport();
@@ -238,6 +247,14 @@ public class ReconcileHandler {
     // 4. 单人单周工时超 60h
     // ----------------------------------------------------------------
 
+    /**
+     * 检查单人单周工时超 60h
+     *
+     * @param initiationId 项目立项 ID
+     * @param from         起始日期
+     * @param to           结束日期
+     * @return 异常结果列表
+     */
     public List<ReconcileResult> reconcileWeeklyOverload(Long initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
@@ -278,6 +295,14 @@ public class ReconcileHandler {
     // 5. 跨项目冲突
     // ----------------------------------------------------------------
 
+    /**
+     * 检查跨项目冲突（同一员工同一天在多个项目填报工时）
+     *
+     * @param initiationId 项目立项 ID
+     * @param from         起始日期
+     * @param to           结束日期
+     * @return 异常结果列表
+     */
     public List<ReconcileResult> reconcileCrossProject(Long initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
@@ -313,6 +338,14 @@ public class ReconcileHandler {
     // 6. 金额漂移（工时×费率 vs 实际归集金额）
     // ----------------------------------------------------------------
 
+    /**
+     * 检查金额漂移（工时×费率 vs 实际归集金额）
+     *
+     * @param initiationId 项目立项 ID
+     * @param from         起始日期
+     * @param to           结束日期
+     * @return 异常结果列表
+     */
     public List<ReconcileResult> reconcileAmountDrift(Long initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
@@ -366,6 +399,12 @@ public class ReconcileHandler {
     // 7. 成本已分配但工时未审批
     // ----------------------------------------------------------------
 
+    /**
+     * 检查成本已分配但工时未审批
+     *
+     * @param initiationId 项目立项 ID
+     * @return 异常结果列表
+     */
     public List<ReconcileResult> reconcileAllocatedBeforeApproval(Long initiationId) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
@@ -397,6 +436,10 @@ public class ReconcileHandler {
 
     /**
      * 工具方法: 安全相加(BigDecimal 累加)
+     *
+     * @param a 被加数
+     * @param b 加数
+     * @return 和；任一为 null 时返回另一值
      */
     public static BigDecimal safeAdd(BigDecimal a, BigDecimal b) {
         if (a == null) return b;

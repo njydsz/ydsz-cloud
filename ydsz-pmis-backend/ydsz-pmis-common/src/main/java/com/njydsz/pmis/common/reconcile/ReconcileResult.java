@@ -21,6 +21,7 @@ public class ReconcileResult implements Serializable {
     /** 对账项编码 */
     private String code;
 
+    /** 对账项名称 */
     private String name;
 
     /** 检测到的不一致数 */
@@ -32,7 +33,9 @@ public class ReconcileResult implements Serializable {
     /** 是否完成 */
     private boolean success = true;
 
+    /** 结果消息（失败时填充错误原因） */
     private String message;
 
+    /** 对账完成时间 */
     private LocalDateTime finishedAt = LocalDateTime.now();
 }

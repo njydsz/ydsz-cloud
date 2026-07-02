@@ -29,6 +29,12 @@ public enum ProjectType {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 项目类型编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static ProjectType fromCode(String code) {
         if (code == null) return null;
         for (ProjectType t : values()) {

@@ -59,6 +59,8 @@ public class ChaosService {
 
     /**
      * 注册一个混沌实验.
+     *
+     * @param experiment 实验配置（target 必填，否则抛 IllegalArgumentException）
      */
     public void register(ChaosExperiment experiment) {
         if (experiment == null || experiment.getTarget() == null) {
@@ -71,6 +73,8 @@ public class ChaosService {
 
     /**
      * 注销一个实验.
+     *
+     * @param target 实验目标标识；为 null 时直接返回
      */
     public void unregister(String target) {
         if (target == null) return;
@@ -82,6 +86,8 @@ public class ChaosService {
 
     /**
      * 列出当前所有实验.
+     *
+     * @return 当前已注册实验的不可变快照
      */
     public List<ChaosExperiment> list() {
         return List.copyOf(experiments.values());
@@ -174,7 +180,11 @@ public class ChaosService {
         }
     }
 
-    /** 获取最近 100 条实验历史 */
+    /**
+     * 获取最近 100 条实验历史
+     *
+     * @return 实验历史的不可变快照
+     */
     public List<ChaosEvent> recentHistory() {
         return List.copyOf(history);
     }

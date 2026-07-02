@@ -38,6 +38,9 @@ public enum CreditLevel {
 
     /**
      * 根据信用分评估等级
+     *
+     * @param score 信用分（&lt;0 视为 0）
+     * @return 对应的信用等级
      */
     public static CreditLevel fromScore(int score) {
         if (score < 0) score = 0;
@@ -47,6 +50,12 @@ public enum CreditLevel {
         return D;
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 等级编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static CreditLevel fromCode(String code) {
         if (code == null) return null;
         for (CreditLevel c : values()) {

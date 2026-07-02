@@ -7,6 +7,11 @@ import java.util.List;
 
 /**
  * 流程定义 Service
+ *
+ * <p>提供流程部署、发布、停用、查询等能力，是工作流引擎的入口服务。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public interface FlowDefinitionService {
 

@@ -10,6 +10,9 @@ import java.util.Map;
  * 示例任务处理器 - 心跳上报
  *
  * <p>Bean 名称 = handler，配置任务 handler = heartbeatHandler 即可。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component("heartbeatHandler")

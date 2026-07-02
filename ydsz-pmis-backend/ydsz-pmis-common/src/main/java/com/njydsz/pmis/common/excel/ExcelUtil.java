@@ -34,6 +34,14 @@ public final class ExcelUtil {
 
     /**
      * 导出到 HTTP 响应（浏览器下载）
+     *
+     * @param response  HTTP 响应对象
+     * @param fileName  下载文件名（会被 URL 编码）
+     * @param sheetName Sheet 名称，为 null 时使用 "Sheet1"
+     * @param headClass 表头类型（{@code @ExcelProperty} 标注的 DTO）
+     * @param data      数据列表
+     * @param <T>       数据类型
+     * @throws IOException 写入响应流失败时抛出
      */
     public static <T> void export(HttpServletResponse response, String fileName,
                                   String sheetName, Class<T> headClass, List<T> data) throws IOException {
@@ -48,6 +56,13 @@ public final class ExcelUtil {
 
     /**
      * 导出到字节数组
+     *
+     * @param sheetName Sheet 名称，为 null 时使用 "Sheet1"
+     * @param headClass 表头类型
+     * @param data      数据列表
+     * @param <T>       数据类型
+     * @return 生成的 xlsx 字节数组
+     * @throws IOException 写入流失败时抛出
      */
     public static <T> byte[] exportToBytes(String sheetName, Class<T> headClass, List<T> data) throws IOException {
         try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
@@ -61,6 +76,11 @@ public final class ExcelUtil {
 
     /**
      * 分 Sheet 导出大数据量
+     *
+     * @param out       输出流（由调用方负责关闭）
+     * @param headClass 表头类型
+     * @param sheets    多个 Sheet 数据
+     * @param <T>       数据类型
      */
     public static <T> void exportMultiSheet(OutputStream out, Class<T> headClass,
                                             List<ExcelSheet<T>> sheets) {
@@ -78,6 +98,12 @@ public final class ExcelUtil {
 
     /**
      * 读取所有行（适合小数据量）
+     *
+     * @param file      上传的 Excel 文件
+     * @param headClass 表头类型
+     * @param <T>       数据类型
+     * @return 全部数据行列表
+     * @throws IOException 读取文件失败时抛出
      */
     @SuppressWarnings({"unchecked", "rawtypes"})
     public static <T> List<T> readAll(MultipartFile file, Class<T> headClass) throws IOException {
@@ -91,6 +117,12 @@ public final class ExcelUtil {
 
     /**
      * 流式读取（适合大数据量）
+     *
+     * @param file      上传的 Excel 文件
+     * @param headClass 表头类型
+     * @param consumer  每行数据的回调消费器
+     * @param <T>       数据类型
+     * @throws IOException 读取文件失败时抛出
      */
     @SuppressWarnings("unchecked")
     public static <T> void readStreaming(MultipartFile file, Class<T> headClass,

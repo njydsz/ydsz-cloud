@@ -16,6 +16,11 @@ import java.util.Map;
 
 /**
  * 任务调度 Controller
+ *
+ * <p>提供任务的新增/更新/删除/暂停/恢复/触发/查询/重载等 HTTP 接口。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Tag(name = "任务调度")
 @RestController

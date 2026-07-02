@@ -42,6 +42,12 @@ public enum ReconcileType {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 校验类型编码（大小写敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static ReconcileType fromCode(String code) {
         if (code == null) return null;
         for (ReconcileType t : values()) {

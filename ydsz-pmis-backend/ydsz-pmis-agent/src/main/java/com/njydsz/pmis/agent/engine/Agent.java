@@ -13,12 +13,17 @@ import com.njydsz.pmis.agent.enums.AgentType;
 public interface Agent {
 
     /**
-     * Agent 类型
+     * Agent 类型。
+     *
+     * @return Agent 类型枚举
      */
     AgentType type();
 
     /**
-     * 同步执行
+     * 同步执行 Agent。
+     *
+     * @param context Agent 执行上下文
+     * @return Agent 执行结果
      */
     AgentResult execute(AgentContext context);
 }

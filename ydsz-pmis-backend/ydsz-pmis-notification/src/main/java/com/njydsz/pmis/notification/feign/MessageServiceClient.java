@@ -13,6 +13,9 @@ import java.util.Map;
  * 消息服务 Feign 客户端（通知模块专用）
  *
  * <p>用于通知发送时调用消息服务（邮件/短信/推送）进行实际投递。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @FeignClient(name = "ydsz-pmis-message", fallbackFactory = MessageServiceClientFallback.class)
 public interface MessageServiceClient {

@@ -20,22 +20,31 @@ import com.njydsz.pmis.agent.engine.AgentResult;
 public interface LlmProvider {
 
     /**
-     * Provider 名称
+     * Provider 名称。
+     *
+     * @return Provider 标识（如 "mock"、"spring-ai-openai"、"dashscope"、"qianfan"）
      */
     String name();
 
     /**
-     * 调用 LLM 推理
+     * 调用 LLM 推理。
      *
-     * @param systemPrompt  系统提示词（PMIS Agent 角色定义）
-     * @param userPrompt    用户提示词（业务上下文 + 问题）
-     * @param context       Agent 上下文（用于 traceId / provider_trace_id 追踪）
+     * @param systemPrompt 系统提示词（PMIS Agent 角色定义）
+     * @param userPrompt   用户提示词（业务上下文 + 问题）
+     * @param context      Agent 上下文（用于 traceId / provider_trace_id 追踪）
      * @return 推理结果（JSON 格式，包含 score / level / reasoning / recommendations）
      */
     String chat(String systemPrompt, String userPrompt, AgentContext context);
 
     /**
-     * 解析 LLM 输出为 AgentResult
+     * 解析 LLM 输出为 AgentResult。
+     *
+     * <p>子类可重写以支持结构化输出（Spring AI 的 BeanOutputParser）。
+     * 默认实现：返回原始文本 + RECOMMEND 等级。
+     *
+     * @param llmOutput LLM 原始输出
+     * @param context   Agent 上下文
+     * @return 解析后的 AgentResult
      */
     default AgentResult parse(String llmOutput, AgentContext context) {
         // 子类可重写以支持结构化输出（Spring AI 的 BeanOutputParser）

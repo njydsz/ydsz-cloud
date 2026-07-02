@@ -4,6 +4,14 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 
+/**
+ * 图形验证码返回 VO
+ *
+ * <p>登录页拉取验证码后，前端保存 captchaKey 并在登录请求中回传。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Data
 @Builder
 @Schema(description = "图形验证码")

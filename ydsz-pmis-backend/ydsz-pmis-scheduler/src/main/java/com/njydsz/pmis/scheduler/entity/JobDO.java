@@ -12,6 +12,11 @@ import java.time.LocalDateTime;
 
 /**
  * 定时任务定义
+ *
+ * <p>对应 pmis_job 表，描述一个调度任务的处理器、Cron 表达式、参数及执行统计。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

@@ -9,6 +9,11 @@ import java.util.List;
 
 /**
  * 待办任务 Mapper
+ *
+ * <p>对应 pmis_flow_task 表，提供待办/已办查询、任务完成、会签计数、批量取消等能力。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {

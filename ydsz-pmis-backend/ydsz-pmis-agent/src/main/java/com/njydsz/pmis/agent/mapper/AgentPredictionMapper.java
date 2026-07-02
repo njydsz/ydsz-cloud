@@ -8,23 +8,72 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Agent 预测记录数据访问层
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
 
+    /**
+     * 根据任务编码查询预测记录。
+     *
+     * @param code 任务编码
+     * @return 预测记录实体；不存在返回 null
+     */
     AgentPredictionDO selectByTaskCode(@Param("code") String code);
 
+    /**
+     * 更新执行状态。
+     *
+     * @param id     记录 ID
+     * @param status 目标状态码（AgentRunStatus.code）
+     * @return 受影响行数
+     */
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
+    /**
+     * 按业务维度查询预测记录列表。
+     *
+     * @param bizType   业务类型，可空
+     * @param bizId     业务 ID，可空
+     * @param agentType Agent 类型码，可空
+     * @return 预测记录列表
+     */
     List<AgentPredictionDO> selectByBiz(@Param("bizType") String bizType,
                                         @Param("bizId") Long bizId,
                                         @Param("agentType") String agentType);
 
+    /**
+     * 按 Agent 类型与告警等级查询最近的预测记录。
+     *
+     * @param agentType  Agent 类型码，可空
+     * @param alertLevel 告警等级码，可空
+     * @param limit      返回条数
+     * @return 预测记录列表
+     */
     List<AgentPredictionDO> selectByAgentType(@Param("agentType") String agentType,
                                               @Param("alertLevel") String alertLevel,
                                               @Param("limit") Integer limit);
 
+    /**
+     * 按 Agent 类型聚合计数（用于看板）。
+     *
+     * @param tenantId 租户 ID
+     * @return 每种 Agent 类型对应的数量列表
+     */
     List<Map<String, Object>> aggregateByType(@Param("tenantId") Long tenantId);
 
+    /**
+     * 按告警等级统计 Agent 记录数量。
+     *
+     * @param alertLevel 告警等级码，可空
+     * @param agentType  Agent 类型码，可空
+     * @param tenantId   租户 ID
+     * @return 数量
+     */
     long countByAlertLevel(@Param("alertLevel") String alertLevel,
                            @Param("agentType") String agentType,
                            @Param("tenantId") Long tenantId);
@@ -48,7 +97,13 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
 
     /**
      * 按 Agent 类型分组, 计算每类 Agent 的耗时 P50/P95
+     *
      * <p>用于驾驶舱"AI 执行耗时"分 Agent 趋势展示</p>
+     *
+     * @param from     起始时间，可空
+     * @param to       结束时间，可空
+     * @param tenantId 租户 ID，可空
+     * @return 每类 Agent 的 P50/P95 耗时统计列表
      */
     List<Map<String, Object>> selectDurationStatsByAgentType(@Param("from") java.time.LocalDateTime from,
                                                               @Param("to") java.time.LocalDateTime to,

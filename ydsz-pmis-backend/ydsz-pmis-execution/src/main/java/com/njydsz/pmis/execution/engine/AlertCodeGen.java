@@ -20,6 +20,13 @@ public final class AlertCodeGen {
 
     private AlertCodeGen() {}
 
+    /**
+     * 生成下一个预警编码
+     *
+     * @param type  预警类型（如 BUDGET/EVM/MARGIN）；为空时使用 GEN
+     * @param level 预警等级（如 YELLOW/RED）；为空时省略
+     * @return 预警编码
+     */
     public static String next(String type, String level) {
         LocalDateTime now = LocalDateTime.now();
         String typePart = type == null ? "GEN" : type.toUpperCase();

@@ -25,10 +25,21 @@ public enum WbsTaskStatus {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 判断是否为终态
+     *
+     * @return true 表示当前状态为终态（已完成/已取消），不可再迁移
+     */
     public boolean isTerminal() {
         return this == COMPLETED || this == CANCELLED;
     }
 
+    /**
+     * 校验状态迁移合法性
+     *
+     * @param target 目标状态
+     * @return true 表示允许从当前状态迁移到目标状态
+     */
     public boolean canTransitTo(WbsTaskStatus target) {
         if (target == null) return false;
         if (this == target) return true;
@@ -44,6 +55,12 @@ public enum WbsTaskStatus {
         };
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 状态编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static WbsTaskStatus fromCode(String code) {
         if (code == null) return null;
         for (WbsTaskStatus s : values()) {

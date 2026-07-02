@@ -47,6 +47,19 @@ public class EvmCalculator {
                 DEFAULT_CPI_YELLOW, DEFAULT_CPI_RED, DEFAULT_SPI_YELLOW, DEFAULT_SPI_RED);
     }
 
+    /**
+     * 计算完整 EVM 指标（自定义阈值）
+     *
+     * @param pv        计划值
+     * @param ev        挣值
+     * @param ac        实际成本
+     * @param bac       完工预算
+     * @param cpiYellow CPI 黄色阈值
+     * @param cpiRed    CPI 红色阈值
+     * @param spiYellow SPI 黄色阈值
+     * @param spiRed    SPI 红色阈值
+     * @return EVMResult 包含 CV/SV/CPI/SPI/EAC/VAC/ETC/TCPI/alertLevel
+     */
     public static EVMResult calculate(BigDecimal pv, BigDecimal ev, BigDecimal ac, BigDecimal bac,
                                       double cpiYellow, double cpiRed,
                                       double spiYellow, double spiRed) {

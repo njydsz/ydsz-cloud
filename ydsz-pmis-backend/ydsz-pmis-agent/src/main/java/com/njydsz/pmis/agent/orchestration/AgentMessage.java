@@ -38,14 +38,36 @@ public class AgentMessage implements Serializable {
     /** 时间戳 */
     private long ts;
 
+    /**
+     * 构造输入消息（协调器 → 黑板）。
+     *
+     * @param from    发送方（通常为 "COORDINATOR"）
+     * @param payload 输入载荷
+     * @return INPUT 类型消息
+     */
     public static AgentMessage input(String from, Map<String, Object> payload) {
         return new AgentMessage("INPUT", from, null, null, payload, System.currentTimeMillis());
     }
 
+    /**
+     * 构造输出消息（Agent → 黑板）。
+     *
+     * @param from   发送方 Agent 类型
+     * @param result Agent 执行结果
+     * @return OUTPUT 类型消息
+     */
     public static AgentMessage output(String from, AgentResult result) {
         return new AgentMessage("OUTPUT", from, null, result, null, System.currentTimeMillis());
     }
 
+    /**
+     * 构造控制消息（协调器 → 指定 Agent）。
+     *
+     * @param from    发送方（通常为 "COORDINATOR"）
+     * @param to      接收方 Agent 类型
+     * @param payload 控制指令载荷
+     * @return CONTROL 类型消息
+     */
     public static AgentMessage control(String from, String to, Map<String, Object> payload) {
         return new AgentMessage("CONTROL", from, to, null, payload, System.currentTimeMillis());
     }

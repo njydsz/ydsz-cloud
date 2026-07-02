@@ -17,6 +17,9 @@ import java.util.Map;
  *   1. 拦截 @SentryCapture 注解的方法
  *   2. 捕获业务异常, 异步上报到 Sentry
  *   3. 重新抛出原异常 (不能改变业务行为)
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Aspect
@@ -24,6 +27,14 @@ import java.util.Map;
 @ConditionalOnProperty(prefix = "pmis.sentry", name = "enabled", havingValue = "true")
 public class SentryCaptureAspect {
 
+    /**
+     * 环绕拦截 {@link SentryCapture} 标记的方法，捕获异常后异步上报 Sentry，并重新抛出原异常
+     *
+     * @param pjp            AOP 连接点
+     * @param sentryCapture  当前方法上的 {@link SentryCapture} 注解实例
+     * @return 目标方法原始返回值
+     * @throws Throwable 目标方法抛出的原始异常（不吞异常，仅上报后重新抛出）
+     */
     @Around("@annotation(sentryCapture)")
     public Object around(ProceedingJoinPoint pjp, SentryCapture sentryCapture) throws Throwable {
         try {

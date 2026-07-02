@@ -52,6 +52,12 @@ public enum DeliveryItemStatus {
         };
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 状态编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static DeliveryItemStatus fromCode(String code) {
         if (code == null) return null;
         for (DeliveryItemStatus s : values()) {

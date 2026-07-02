@@ -30,6 +30,14 @@ public enum EvmAlertLevel {
 
     /**
      * 根据 CPI/SPI 与阈值评估告警等级
+     *
+     * @param cpi       成本绩效指数
+     * @param spi       进度绩效指数
+     * @param cpiYellow CPI 黄色阈值
+     * @param cpiRed    CPI 红色阈值
+     * @param spiYellow SPI 黄色阈值
+     * @param spiRed    SPI 红色阈值
+     * @return 告警等级（任一指标跌破红色阈值返回 RED；任一跌破黄色阈值返回 YELLOW；否则 NORMAL）
      */
     public static EvmAlertLevel evaluate(double cpi, double spi,
                                          double cpiYellow, double cpiRed,
@@ -41,6 +49,12 @@ public enum EvmAlertLevel {
         return NORMAL;
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 告警等级编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static EvmAlertLevel fromCode(String code) {
         if (code == null) return null;
         for (EvmAlertLevel v : values()) {

@@ -9,6 +9,11 @@ import java.util.List;
 
 /**
  * 节点跳转 Mapper
+ *
+ * <p>对应 pmis_flow_skip 表，记录节点之间的跳转关系（正向流转/退回），供引擎查找前驱/后继。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowSkipMapper extends BaseMapper<FlowSkipDO> {

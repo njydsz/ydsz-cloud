@@ -76,6 +76,12 @@ public class StageGateValidator {
         return GateCheckResult.ok("通过");
     }
 
+    /**
+     * 获取前置阶段
+     *
+     * @param s 当前阶段
+     * @return 前置阶段枚举；无前置时返回 null
+     */
     public static DeliveryStage previousStage(DeliveryStage s) {
         if (s == null) return null;
         return switch (s) {
@@ -87,6 +93,12 @@ public class StageGateValidator {
         };
     }
 
+    /**
+     * 判断是否为高级项目（L13 及以上）
+     *
+     * @param level 项目级别编码（如 L13、L14）
+     * @return true 表示高级项目
+     */
     public static boolean isHighLevel(String level) {
         if (level == null || level.isBlank()) return false;
         // L13+ 视为高级项目

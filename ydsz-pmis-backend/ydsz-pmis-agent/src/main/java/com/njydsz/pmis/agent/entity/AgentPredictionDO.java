@@ -70,15 +70,20 @@ public class AgentPredictionDO implements Serializable {
     /** 来源（MANUAL/SCHEDULED/EVENT） */
     private String source;
 
+    /** 租户 ID */
     private Long tenantId;
+    /** 第三方大模型 provider trace ID（用于审计/账单核对） */
     private String providerTraceId;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标识（0 未删除，1 已删除） */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

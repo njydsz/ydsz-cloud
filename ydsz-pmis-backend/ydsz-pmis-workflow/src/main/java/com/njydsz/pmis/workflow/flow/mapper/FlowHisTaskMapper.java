@@ -9,6 +9,11 @@ import java.util.List;
 
 /**
  * 历史任务 Mapper
+ *
+ * <p>对应 pmis_flow_his_task 表，归档已完成的流程任务，供已办查询与审计追溯。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {

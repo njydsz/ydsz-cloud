@@ -9,6 +9,11 @@ import java.util.List;
 
 /**
  * 流程节点 Mapper
+ *
+ * <p>对应 pmis_flow_node 表，维护流程定义中每个节点（开始/审批/分支/结束）的元数据。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowNodeMapper extends BaseMapper<FlowNodeDO> {

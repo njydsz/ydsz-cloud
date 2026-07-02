@@ -39,6 +39,12 @@ public enum OpsTicketPriority {
     public int getResponseMinutes() { return responseMinutes; }
     public int getResolveMinutes() { return resolveMinutes; }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 优先级编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static OpsTicketPriority fromCode(String code) {
         if (code == null) return null;
         for (OpsTicketPriority p : values()) {

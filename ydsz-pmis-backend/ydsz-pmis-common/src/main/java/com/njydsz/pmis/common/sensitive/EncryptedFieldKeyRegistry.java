@@ -8,6 +8,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>集中管理 {@link EncryptedField} 引用 key 到实际字节密钥的映射。
  * 业务启动时按需注册: {@code EncryptedFieldKeyRegistry.register("pmis.crypto.aes-key", secret32Bytes)}
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public final class EncryptedFieldKeyRegistry {
 

@@ -7,6 +7,14 @@ import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
+/**
+ * 通知 Mapper
+ *
+ * <p>对应 pmis_notification 表，提供已读标记、未读计数等站内通知持久化能力。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface NotificationMapper extends BaseMapper<NotificationDO> {
 

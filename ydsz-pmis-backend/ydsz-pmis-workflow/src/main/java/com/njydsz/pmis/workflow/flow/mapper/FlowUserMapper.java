@@ -9,6 +9,11 @@ import java.util.List;
 
 /**
  * 流程用户 Mapper
+ *
+ * <p>对应 pmis_flow_user 表，记录会签/或签场景下每个任务的处理人与处理状态。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Mapper
 public interface FlowUserMapper extends BaseMapper<FlowUserDO> {

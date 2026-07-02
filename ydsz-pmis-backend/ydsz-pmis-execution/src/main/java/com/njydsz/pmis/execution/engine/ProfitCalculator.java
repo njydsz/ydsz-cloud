@@ -24,6 +24,13 @@ import java.util.List;
 @Slf4j
 public class ProfitCalculator {
 
+    /**
+     * 计算毛利率
+     *
+     * @param grossProfit 毛利
+     * @param revenue     收入
+     * @return 毛利率（收入为 0 时返回 0）
+     */
     public static BigDecimal grossMargin(BigDecimal grossProfit, BigDecimal revenue) {
         if (grossProfit == null || revenue == null || revenue.signum() == 0) {
             return BigDecimal.ZERO.setScale(4, RoundingMode.HALF_UP);
@@ -31,6 +38,12 @@ public class ProfitCalculator {
         return grossProfit.divide(revenue, 4, RoundingMode.HALF_UP);
     }
 
+    /**
+     * 汇总成本列表
+     *
+     * @param costs 成本列表（允许 null 元素）
+     * @return 成本合计
+     */
     public static BigDecimal totalCost(List<BigDecimal> costs) {
         BigDecimal sum = BigDecimal.ZERO;
         if (costs == null) return sum;
@@ -40,6 +53,13 @@ public class ProfitCalculator {
         return sum;
     }
 
+    /**
+     * 计算毛利
+     *
+     * @param revenue 收入
+     * @param cost    成本
+     * @return 毛利（收入 - 成本）
+     */
     public static BigDecimal grossProfit(BigDecimal revenue, BigDecimal cost) {
         if (revenue == null) revenue = BigDecimal.ZERO;
         if (cost == null) cost = BigDecimal.ZERO;
@@ -101,6 +121,9 @@ public class ProfitCalculator {
 
     /**
      * 回填快照的派生字段
+     *
+     * @param snap 利润快照
+     * @return 回填后的快照（入参为 null 时返回 null）
      */
     public static ProfitSnapshotDO fillDerived(ProfitSnapshotDO snap) {
         if (snap == null) return null;

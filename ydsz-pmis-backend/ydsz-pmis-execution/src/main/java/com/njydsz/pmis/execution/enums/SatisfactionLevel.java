@@ -35,6 +35,12 @@ public enum SatisfactionLevel {
     public String getDesc() { return desc; }
     public int getScore() { return score; }
 
+    /**
+     * 根据评分反查枚举
+     *
+     * @param s 评分（1-5）
+     * @return 对应的满意度等级；非 1-5 返回 null
+     */
     public static SatisfactionLevel fromScore(Integer s) {
         if (s == null) return null;
         return switch (s) {
@@ -47,6 +53,12 @@ public enum SatisfactionLevel {
         };
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 等级编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static SatisfactionLevel fromCode(String code) {
         if (code == null) return null;
         for (SatisfactionLevel l : values()) {

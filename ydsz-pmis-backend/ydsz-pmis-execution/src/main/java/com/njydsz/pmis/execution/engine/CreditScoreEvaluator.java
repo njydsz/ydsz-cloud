@@ -28,6 +28,15 @@ public class CreditScoreEvaluator {
         LOG_1001 = BigDecimal.valueOf(Math.log10(1001));
     }
 
+    /**
+     * 计算客户信用分
+     *
+     * @param onTimeRate         回款及时率（0-1）
+     * @param totalContractAmount 累计合同金额
+     * @param contractCount      合作合同数
+     * @param overdueCount       逾期次数
+     * @return 信用分（0-100）
+     */
     public static int score(BigDecimal onTimeRate, BigDecimal totalContractAmount,
                             int contractCount, int overdueCount) {
         if (onTimeRate == null) onTimeRate = BigDecimal.ZERO;

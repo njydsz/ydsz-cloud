@@ -32,10 +32,21 @@ public enum SimulationStatus {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 判断是否为终态
+     *
+     * @return true 表示当前状态为终态（已审批/已归档/已驳回），不可再迁移
+     */
     public boolean isTerminal() {
         return this == APPROVED || this == ARCHIVED || this == REJECTED;
     }
 
+    /**
+     * 校验状态迁移合法性
+     *
+     * @param target 目标状态
+     * @return true 表示允许从当前状态迁移到目标状态
+     */
     public boolean canTransitTo(SimulationStatus target) {
         if (target == null) return false;
         if (this == target) return true;
@@ -48,6 +59,12 @@ public enum SimulationStatus {
         };
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 状态编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static SimulationStatus fromCode(String code) {
         if (code == null) return null;
         for (SimulationStatus s : values()) {

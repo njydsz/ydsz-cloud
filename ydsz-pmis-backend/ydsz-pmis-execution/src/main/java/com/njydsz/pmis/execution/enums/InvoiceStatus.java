@@ -36,11 +36,24 @@ public enum InvoiceStatus {
     public String getCode() { return code; }
     public String getDesc() { return desc; }
 
+    /**
+     * 判断是否为终态
+     *
+     * <p>ISSUED 虽为终态但允许红冲，因此不视为纯终态；RED_REVERSED/CANCELLED 不可再迁移
+     *
+     * @return true 表示当前状态为终态，不可再迁移
+     */
     public boolean isTerminal() {
         // ISSUED 虽为终态但允许红冲，因此不视为纯终态；RED_REVERSED/CANCELLED 不可再迁移
         return this == RED_REVERSED || this == CANCELLED;
     }
 
+    /**
+     * 校验状态迁移合法性
+     *
+     * @param target 目标状态
+     * @return true 表示允许从当前状态迁移到目标状态
+     */
     public boolean canTransitTo(InvoiceStatus target) {
         if (target == null) return false;
         if (this == target) return true;
@@ -54,6 +67,12 @@ public enum InvoiceStatus {
         };
     }
 
+    /**
+     * 根据编码反查枚举
+     *
+     * @param code 状态编码（大小写不敏感）
+     * @return 枚举值；未匹配返回 null
+     */
     public static InvoiceStatus fromCode(String code) {
         if (code == null) return null;
         for (InvoiceStatus s : values()) {

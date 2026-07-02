@@ -37,6 +37,14 @@ public class LlmProviderRouter {
 
     private volatile LlmProvider activeProvider = null;
 
+    /**
+     * 获取当前生效的 LLM Provider。
+     *
+     * <p>选择策略：优先取 name 以 "spring-ai" 开头的 Provider，否则降级到 MockLlmProvider。
+     * 结果会缓存到 {@link #activeProvider}，避免每次扫描 Bean。
+     *
+     * @return 当前生效的 LLM Provider
+     */
     public LlmProvider active() {
         if (activeProvider != null) {
             return activeProvider;
@@ -63,7 +71,11 @@ public class LlmProviderRouter {
     }
 
     /**
-     * 强制切换（用于热更新）
+     * 强制切换 LLM Provider（用于热更新）。
+     *
+     * <p>按 provider name 匹配，未匹配到时降级到 MockLlmProvider。
+     *
+     * @param providerName 目标 Provider 名称（如 "spring-ai-openai"、"dashscope"、"mock"）
      */
     public void reload(String providerName) {
         Map<String, LlmProvider> providers = applicationContext.getBeansOfType(LlmProvider.class);

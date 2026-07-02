@@ -6,6 +6,11 @@ import com.njydsz.pmis.scheduler.entity.JobLogDO;
 
 /**
  * 任务调度服务
+ *
+ * <p>提供任务的 CRUD、暂停/恢复、立即触发、调度器注册/取消、分页查询及启动加载等能力。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public interface JobService {
 
