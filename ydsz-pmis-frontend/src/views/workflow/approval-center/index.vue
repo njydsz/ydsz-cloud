@@ -16,6 +16,7 @@ import {
   pageCc,
   passTask,
   rejectTask,
+  rejectableNodes,
   transferTask,
   delegateTask,
   urgeTask,
@@ -155,10 +156,10 @@ const opForm = reactive({
   targetUserName: '',
   targetNodeCode: '',
   /** 驳回目标节点列表（任意历史节点） */
-  rejectTargets: [] as string[],
+  rejectTargets: [] as Array<{ nodeCode: string; nodeName?: string }>,
 })
 
-function openOpDialog(type: typeof opType.value, task: FlowTaskDTO) {
+async function openOpDialog(type: typeof opType.value, task: FlowTaskDTO) {
   opType.value = type
   opTask.value = task
   opForm.comment = ''
@@ -167,6 +168,20 @@ function openOpDialog(type: typeof opType.value, task: FlowTaskDTO) {
   opForm.targetNodeCode = ''
   opForm.rejectTargets = []
   opDialog.value = true
+  // P1-1: 驳回时异步加载可驳回节点列表
+  if (type === 'reject') {
+    try {
+      const res = await rejectableNodes(task.id)
+      if (res.data?.code === 0) {
+        opForm.rejectTargets = (res.data.data || []).map((n) => ({
+          nodeCode: n.nodeCode,
+          nodeName: n.nodeName,
+        }))
+      }
+    } catch {
+      // 静默失败，使用空列表（用户仍可手填）
+    }
+  }
 }
 
 async function submitOp() {
@@ -643,10 +658,20 @@ function onTabChange(tab: string) {
           <el-input v-model="opForm.targetUserName" placeholder="可选，便于显示" />
         </el-form-item>
         <el-form-item label="驳回到节点" v-if="opType === 'reject'">
-          <el-input
+          <el-select
             v-model="opForm.targetNodeCode"
-            placeholder="可选：留空则驳回到上一节点；填写则驳回到指定节点"
-          />
+            placeholder="可选：留空则驳回到上一节点；选择则驳回到指定历史节点"
+            clearable
+            filterable
+            style="width: 100%"
+          >
+            <el-option
+              v-for="n in opForm.rejectTargets"
+              :key="n.nodeCode"
+              :label="n.nodeName || n.nodeCode"
+              :value="n.nodeCode"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>

@@ -50,4 +50,11 @@ public interface FlowAdvancer {
      * 解析退回时的目标节点（默认：当前节点的前驱节点）
      */
     String resolveRejectTarget(Long definitionId, String currentNodeCode);
+
+    /**
+     * 暴露 instanceService 供外部触发（如定时器触发后需要 generateTasksForNodes）
+     *
+     * @return 流程实例服务
+     */
+    com.njydsz.pmis.workflow.flow.service.FlowInstanceService getInstanceService();
 }

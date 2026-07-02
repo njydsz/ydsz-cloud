@@ -46,6 +46,11 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     private final FlowTaskMapper taskMapper;
 
     @Override
+    public com.njydsz.pmis.workflow.flow.service.FlowInstanceService getInstanceService() {
+        return instanceService;
+    }
+
+    @Override
     public FlowInstanceViewDTO start(Long instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
         if (instance == null) {

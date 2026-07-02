@@ -158,6 +158,18 @@ export function rejectTask(payload: FlowTaskOperateDTO) {
   return http.post<ApiResponse<null>>('/workflow/engine/task/reject', payload)
 }
 
+/**
+ * P1-1: 查询任务所属实例经过的历史节点（驳回候选目标）
+ */
+export function rejectableNodes(taskId: number) {
+  return http.get<ApiResponse<Array<{
+    nodeCode: string
+    nodeName: string
+    firstFinishAt?: string
+    visitCount?: number
+  }>>>(`/workflow/engine/task/${taskId}/rejectable-nodes`)
+}
+
 /** 转办任务 */
 export function transferTask(payload: FlowTaskOperateDTO) {
   return http.post<ApiResponse<null>>('/workflow/engine/task/transfer', payload)

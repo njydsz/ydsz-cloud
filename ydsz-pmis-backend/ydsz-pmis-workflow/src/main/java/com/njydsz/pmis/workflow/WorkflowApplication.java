@@ -5,6 +5,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * 工作流服务启动类
@@ -16,6 +17,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  *   <li>任务管理（待办 / 已办 / 签收 / 完成 / 退回 / 转办 / 委派）</li>
  *   <li>流程业务关联（业务单据 ↔ 流程实例）</li>
  *   <li>事件监听器（项目立项等业务联动）</li>
+ *   <li>P1-2: 中间/边界定时器（@EnableScheduling 启用 @Scheduled 扫描）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -25,6 +27,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.njydsz.pmis.workflow.feign")
 @MapperScan({"com.njydsz.pmis.workflow.mapper", "com.njydsz.pmis.workflow.flow.mapper"})
+@EnableScheduling
 public class WorkflowApplication {
 
     public static void main(String[] args) {

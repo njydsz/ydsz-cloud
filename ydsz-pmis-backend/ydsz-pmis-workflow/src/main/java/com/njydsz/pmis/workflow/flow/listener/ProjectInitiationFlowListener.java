@@ -7,6 +7,7 @@ import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.flow.service.FlowSubProcessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -41,6 +42,8 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     private final FlowNotificationHelper notificationHelper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowTaskMapper taskMapper;
+    /** P1-3: 子流程服务（监听器作为子流程完成回调的入口） */
+    private final FlowSubProcessService subProcessService;
 
     @Override
     public void onInstanceStart(Long instanceId, Map<String, Object> variables) {
@@ -92,6 +95,15 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (instance == null || instance.getInitiatorId() == null) {
             return;
         }
+        // P1-3: 子流程完成 → 回调父流程
+        if (instance.getParentInstanceId() != null) {
+            try {
+                subProcessService.onSubProcessCompleted(instanceId);
+            } catch (Exception e) {
+                log.error("[FlowListener] 子流程完成回调父流程失败: child={} parent={} err={}",
+                        instanceId, instance.getParentInstanceId(), e.getMessage(), e);
+            }
+        }
         notificationHelper.notifyInstanceCompleted(instance.getInitiatorId(),
                 "您的审批已通过",
                 String.format("【%s】 您发起的 %s 已审批通过",
@@ -112,6 +124,15 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null || instance.getInitiatorId() == null) {
             return;
+        }
+        // P1-3: 子流程驳回 → 同步父流程驳回
+        if (instance.getParentInstanceId() != null) {
+            try {
+                subProcessService.onSubProcessTerminated(instanceId, reason, false);
+            } catch (Exception e) {
+                log.error("[FlowListener] 子流程驳回同步父流程失败: child={} parent={} err={}",
+                        instanceId, instance.getParentInstanceId(), e.getMessage(), e);
+            }
         }
         notificationHelper.notifyInstanceRejected(instance.getInitiatorId(),
                 "您的审批被驳回",

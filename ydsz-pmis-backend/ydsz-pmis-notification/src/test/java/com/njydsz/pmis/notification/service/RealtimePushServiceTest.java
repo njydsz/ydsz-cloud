@@ -36,14 +36,14 @@ class RealtimePushServiceTest {
     @DisplayName("pushToUser 应发送到用户私有队列")
     void pushToUser_shouldSendToUserQueue() {
         realtimePushService.pushToUser(1L, "NOTIFICATION", "test-payload");
-        verify(messagingTemplate).convertAndSendToUser(eq("1"), eq("/queue/notifications"), any());
+        verify(messagingTemplate).convertAndSendToUser(eq("1"), eq("/queue/notifications"), any(Object.class));
     }
 
     @Test
     @DisplayName("pushToUser 消息代理异常时应降级不抛出")
     void pushToUser_shouldNotThrowWhenMessagingFails() {
         doThrow(new RuntimeException("connection closed"))
-                .when(messagingTemplate).convertAndSendToUser(anyString(), anyString(), any());
+                .when(messagingTemplate).convertAndSendToUser(anyString(), anyString(), any(Object.class));
         // 不抛出异常即视为通过
         realtimePushService.pushToUser(1L, "NOTIFICATION", "test");
     }
@@ -52,21 +52,21 @@ class RealtimePushServiceTest {
     @DisplayName("broadcast 应发送到广播主题")
     void broadcast_shouldSendToTopic() {
         realtimePushService.broadcast("ALERT", "alert-data");
-        verify(messagingTemplate).convertAndSend(eq("/topic/broadcast"), any());
+        verify(messagingTemplate).convertAndSend(eq("/topic/broadcast"), any(Object.class));
     }
 
     @Test
     @DisplayName("pushToTopic 应发送到指定主题")
     void pushToTopic_shouldSendToSpecifiedTopic() {
         realtimePushService.pushToTopic("dashboard-refresh", "data");
-        verify(messagingTemplate).convertAndSend(eq("/topic/dashboard-refresh"), any());
+        verify(messagingTemplate).convertAndSend(eq("/topic/dashboard-refresh"), any(Object.class));
     }
 
     @Test
     @DisplayName("broadcast 消息代理异常时应降级不抛出")
     void broadcast_shouldNotThrowWhenMessagingFails() {
         doThrow(new RuntimeException("broker unavailable"))
-                .when(messagingTemplate).convertAndSend(anyString(), any());
+                .when(messagingTemplate).convertAndSend(anyString(), any(Object.class));
         // 不抛出异常即视为通过
         realtimePushService.broadcast("ALERT", "test");
     }

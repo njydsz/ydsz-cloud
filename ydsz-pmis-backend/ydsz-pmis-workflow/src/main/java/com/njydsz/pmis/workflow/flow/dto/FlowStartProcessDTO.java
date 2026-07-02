@@ -63,4 +63,10 @@ public class FlowStartProcessDTO implements Serializable {
 
     /** 链路追踪 ID */
     private String providerTraceId;
+
+    /** P1-3: 父流程实例 ID（子流程场景，可空） */
+    private Long parentInstanceId;
+
+    /** P1-3: 父流程中触发子流程的节点编码（可空） */
+    private String parentNodeCode;
 }

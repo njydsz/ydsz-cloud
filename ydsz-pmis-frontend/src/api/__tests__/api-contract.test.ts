@@ -176,6 +176,9 @@ const CONTRACTS: Contract[] = [
   { controller: 'NotificationController', path: '/notifications/inbox', method: 'GET' },
   { controller: 'NotificationController', path: '/notifications/unread-count', method: 'GET' },
   { controller: 'NotificationController', path: '/notifications/read-all', method: 'POST' },
+  { controller: 'NotificationController', path: '/notifications/send', method: 'POST' },
+  { controller: 'NotificationController', path: '/notifications/{id}/read', method: 'POST' },
+  { controller: 'NotificationController', path: '/notifications', method: 'DELETE' },
   { controller: 'JobController', path: '/job/page', method: 'GET' },
   { controller: 'JobController', path: '/job/log/page', method: 'GET' },
 

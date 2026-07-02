@@ -113,6 +113,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 : JSON.toJSONString(dto.getVariables()));
         instance.setTenantId(tenantId);
         instance.setProviderTraceId(dto.getProviderTraceId());
+        // P1-3: 子流程场景：填充父实例信息
+        instance.setParentInstanceId(dto.getParentInstanceId());
+        instance.setParentNodeCode(dto.getParentNodeCode());
         instanceMapper.insert(instance);
         Long instanceId = instance.getId();
 
@@ -457,7 +460,44 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 complete(instanceId, node.getNodeCode());
                 return;
             }
+            // P1-3: callActivity 节点触发子流程
+            if (isCallActivity(node)) {
+                try {
+                    FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+                    subProcessService.startSubProcess(instance, node, variables);
+                    // 子流程启动后，父流程"停在" callActivity 节点，更新 currentNodeCode
+                    instanceMapper.updateStatus(instanceId, instance.getFlowStatus(),
+                            node.getNodeCode(), node.getNodeName(), null, null);
+                    log.info("[Flow] callActivity 触发子流程: instanceId={} node={}",
+                            instanceId, node.getNodeCode());
+                } catch (Exception e) {
+                    log.error("[Flow] callActivity 启动子流程失败: instanceId={} node={} err={}",
+                            instanceId, node.getNodeCode(), e.getMessage(), e);
+                    throw new BizException(BizErrorCode.INTERNAL_ERROR,
+                            "子流程启动失败: " + e.getMessage());
+                }
+                continue;
+            }
             taskService.createTask(instanceId, node, variables);
+        }
+    }
+
+    /**
+     * P1-3: 判断节点是否为 callActivity（子流程）
+     * <p>识别条件：节点 ext JSON 中包含 callActivityFlowCode 字段
+     */
+    private boolean isCallActivity(FlowNodeDO node) {
+        if (node == null || !StringUtils.hasText(node.getExt())) {
+            return false;
+        }
+        try {
+            java.util.Map<String, Object> ext = com.alibaba.fastjson2.JSON.parseObject(
+                    node.getExt(), java.util.Map.class);
+            if (ext == null) return false;
+            return ext.containsKey("callActivityFlowCode")
+                    || ext.containsKey("subProcessFlowCode");
+        } catch (Exception e) {
+            return false;
         }
     }
 
