@@ -185,6 +185,13 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             task.setAssigneeName("USER:" + userIds.get(0));
             // P1-5: 解析 node.ext.votePassRate / userWeights，配置加权票签
             applyVoteConfig(task, node);
+            // GAP-V2-05: 审批人自动去重 — 仅 OR（单人审批）触发，会签/票签不去重
+            if (performType == FlowPerformType.OR) {
+                Long dedupTaskId = tryAutoDedup(task, instance, node, variables, userIds.get(0));
+                if (dedupTaskId != null) {
+                    return dedupTaskId;
+                }
+            }
             taskMapper.insert(task);
             // 写入 pmis_flow_user
             // P1-5: 从 ext 中读取 userWeights（userId -> weight）映射
@@ -1243,6 +1250,67 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             }
         } finally {
             AUTO_PASS_DEPTH.set(depth);
+        }
+    }
+
+    /**
+     * GAP-V2-05: 审批人自动去重检查
+     *
+     * <p>当 performType == OR（单人审批）时，查询当前实例上一已完成任务的 assigneeId
+     * 是否与当前任务相同。若相同且上一任务非 AUTO_PASS（assigneeName=SYSTEM_AUTO_PASS），
+     * 则将当前任务标记为 COMPLETED（自动跳过），写 AUTO_DEDUP 审计日志，并推进到下一节点，
+     * 避免同一人连续审批不同节点。
+     *
+     * <p>语义同 AUTO_PASS：复用 advanceAfterAutoPass 推进（含递归深度保护，可处理连续多节点去重）。
+     * 整体 try-catch 吞异常：去重检查出错时返回 null，由主流程继续正常创建任务（尽力而为）。
+     *
+     * @param task              已 setAssigneeId 但尚未 insert 的任务
+     * @param instance          流程实例
+     * @param node              当前节点
+     * @param variables         流程变量
+     * @param currentAssigneeId 当前任务首办理人 ID（userIds.get(0)）
+     * @return 去重命中时返回已自动完成任务 ID；未命中/异常返回 null
+     */
+    private Long tryAutoDedup(FlowTaskDO task, FlowInstanceDO instance, FlowNodeDO node,
+                              Map<String, Object> variables, String currentAssigneeId) {
+        try {
+            // 查询同实例下最近一条已完成任务（按主键倒序取最新一条）
+            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowTaskDO> qw =
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            qw.eq(FlowTaskDO::getInstanceId, instance.getId())
+                    .eq(FlowTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name())
+                    .orderByDesc(FlowTaskDO::getId)
+                    .last("LIMIT 1");
+            List<FlowTaskDO> prevTasks = taskMapper.selectList(qw);
+            if (prevTasks.isEmpty()) {
+                return null;
+            }
+            FlowTaskDO prevTask = prevTasks.get(0);
+            String prevAssigneeId = prevTask.getAssigneeId();
+            // 上一任务为 AUTO_PASS（assigneeName=SYSTEM_AUTO_PASS）不参与去重；
+            // assigneeId 不同也不去重
+            if (prevAssigneeId == null
+                    || !prevAssigneeId.equals(currentAssigneeId)
+                    || "SYSTEM_AUTO_PASS".equals(prevTask.getAssigneeName())) {
+                return null;
+            }
+            log.info("[Flow] 审批人自动去重: instanceId={} node={} assigneeId={}",
+                    instance.getId(), node.getNodeCode(), currentAssigneeId);
+            // 命中：将当前任务标记为 COMPLETED（自动跳过）
+            task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+            LocalDateTime now = LocalDateTime.now();
+            task.setFinishAt(now);
+            task.setDurationMs(0L);
+            taskMapper.insert(task);
+            archiveTask(task, FlowTaskStatus.COMPLETED);
+            audit(task, "AUTO_DEDUP", 0L, null, "审批人与上一节点相同，自动去重跳过");
+            // 推进到下一节点（复用 AUTO_PASS 推进逻辑，含递归深度保护）
+            advanceAfterAutoPass(instance, node, variables);
+            return task.getId();
+        } catch (Exception e) {
+            log.warn("[Flow] 审批人自动去重检查异常: instanceId={} node={} err={}",
+                    instance.getId(), node.getNodeCode(), e.getMessage());
+            return null;
         }
     }
 

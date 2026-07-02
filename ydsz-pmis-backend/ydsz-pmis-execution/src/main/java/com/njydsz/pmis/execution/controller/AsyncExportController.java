@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.execution.service.AsyncExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,6 +38,8 @@ public class AsyncExportController {
 
     @PostMapping("/submit")
     @Operation(summary = "提交异步导出任务")
+    @RateLimit(key = "export", qps = 3, windowSeconds = 60,
+            message = "导出请求过于频繁，请 60 秒后再试")
     public Map<String, Object> submitExport(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam String exportType,

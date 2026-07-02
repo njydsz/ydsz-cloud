@@ -34,4 +34,15 @@ public interface ReportScheduleService {
      * @return 文件 key
      */
     String generateReport(String reportType, Map<String, Object> params);
+
+    /**
+     * 分发报表：落库 pmis_report_export_record 并发送邮件通知。
+     *
+     * @param subId      订阅 ID
+     * @param reportType 报表类型
+     * @param fileKey    MinIO 对象 key
+     * @param recipients 接收人
+     * @param channels   分发通道
+     */
+    void distributeReport(Long subId, String reportType, String fileKey, String recipients, String channels);
 }

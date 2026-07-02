@@ -95,4 +95,55 @@ public interface FlowDefinitionService {
      * @param dto          部署参数（含更新后的元数据与节点/跳转）
      */
     void updateDefinition(Long definitionId, FlowDeployProcessDTO dto);
+
+    /**
+     * GAP-V2-06: 导出流程定义为 JSON（含定义元数据 + 节点 + 跳转）
+     *
+     * @param definitionId 流程定义 ID
+     * @return JSON 字符串，包含 definition / nodes / skips 三个部分
+     */
+    String exportDefinition(Long definitionId);
+
+    /**
+     * GAP-V2-06: 从 JSON 导入流程定义（创建为草稿）
+     *
+     * @param json     导出的 JSON 字符串
+     * @param tenantId 租户 ID（可空，默认从上下文获取）
+     * @return 新创建的流程定义 ID
+     */
+    Long importDefinition(String json, Long tenantId);
+
+    /**
+     * GAP-V2-01: 获取设计器数据 — 返回完整流程图（节点+边+坐标），供前端设计器加载
+     *
+     * @param definitionId 流程定义 ID
+     * @return Map 包含 definition / nodes（含 coordinate）/ edges（含 condition）
+     */
+    Map<String, Object> getDesignerData(Long definitionId);
+
+    /**
+     * GAP-V2-01: 批量保存设计器数据 — 一次性保存节点坐标 + 边 + 节点属性
+     *
+     * @param definitionId 流程定义 ID
+     * @param designerData 设计器数据（nodes + edges + definition 元数据）
+     */
+    void saveDesignerData(Long definitionId, Map<String, Object> designerData);
+
+    /**
+     * GAP-V2-02: 获取节点表单字段配置
+     *
+     * @param definitionId 流程定义 ID
+     * @param nodeCode     节点编码
+     * @return formFieldsConfig JSON 字符串（如 {"fieldKey":"EDIT|READONLY|HIDDEN",...}）
+     */
+    String getFormConfig(Long definitionId, String nodeCode);
+
+    /**
+     * GAP-V2-02: 保存节点表单字段配置
+     *
+     * @param definitionId      流程定义 ID
+     * @param nodeCode          节点编码
+     * @param formFieldsConfig  字段权限 JSON 字符串
+     */
+    void saveFormConfig(Long definitionId, String nodeCode, String formFieldsConfig);
 }

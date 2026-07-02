@@ -3,6 +3,7 @@ package com.njydsz.pmis.user.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.annotation.RequireReAuth;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
@@ -100,6 +101,8 @@ public class UserController {
     @Operation(summary = "创建用户")
     @PrePermission("auth:user:create")
     @OperationLog(module = "权限管理", action = "创建用户", bizType = "USER")
+    @RateLimit(key = "register", qps = 3, windowSeconds = 60,
+            message = "用户创建过于频繁，请 60 秒后再试")
     @PostMapping
     public Result<Long> create(@RequestBody Map<String, Object> body) {
         String username = (String) body.get("username");
@@ -157,6 +160,8 @@ public class UserController {
     @PrePermission("auth:user:reset-password")
     @RequireReAuth(code = "USER_RESET_PASSWORD", name = "重置用户密码")
     @OperationLog(module = "权限管理", action = "重置密码", bizType = "USER")
+    @RateLimit(key = "register", qps = 3, windowSeconds = 60,
+            message = "密码重置过于频繁，请 60 秒后再试")
     @PostMapping("/{id}/reset-password")
     public Result<Void> resetPassword(@PathVariable Long id, @RequestParam @NotBlank String password) {
         userAccountService.resetPassword(id, password);

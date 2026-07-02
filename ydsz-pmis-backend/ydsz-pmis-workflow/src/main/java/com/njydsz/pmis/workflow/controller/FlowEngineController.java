@@ -234,6 +234,49 @@ public class FlowEngineController {
         return Result.ok();
     }
 
+    /**
+     * GAP-V2-06: 导出流程定义为 JSON（含定义元数据 + 节点 + 跳转）
+     *
+     * @param id 流程定义 ID
+     * @return 统一响应结果，包含 JSON 字符串
+     */
+    @GetMapping("/definition/{id}/export")
+    public Result<String> exportDefinition(@PathVariable Long id) {
+        return Result.ok(definitionService.exportDefinition(id));
+    }
+
+    /**
+     * GAP-V2-06: 从 JSON 导入流程定义（创建为草稿）
+     *
+     * @param json     导出的 JSON 字符串
+     * @param tenantId 租户 ID（可选，默认从上下文获取）
+     * @return 统一响应结果，包含新创建的流程定义 ID
+     */
+    @PostMapping("/definition/import")
+    public Result<Long> importDefinition(@RequestBody String json,
+                                         @RequestParam(required = false) Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(definitionService.importDefinition(json, tid));
+    }
+
+    /**
+     * GAP-V2-08: 流程模拟运行 — 使用模拟变量驱动引擎走一遍流程，不创建实际实例
+     *
+     * @param flowCode  流程编码
+     * @param version   版本号（可选，默认查最新已发布版本）
+     * @param variables 模拟变量
+     * @param tenantId  租户 ID（可选）
+     * @return 统一响应结果，包含模拟路径列表
+     */
+    @PostMapping("/definition/simulate")
+    public Result<List<Map<String, Object>>> simulate(@RequestParam String flowCode,
+                                                       @RequestParam(required = false) String version,
+                                                       @RequestBody Map<String, Object> variables,
+                                                       @RequestParam(required = false) Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(instanceService.simulate(flowCode, version, variables, tid));
+    }
+
     // ============== 流程实例 ==============
 
     /**
@@ -1188,5 +1231,77 @@ public class FlowEngineController {
             @RequestParam(required = false) Long tenantId) {
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
         return Result.ok(canaryService.listCanaryRolloutLog(flowCode, tid));
+    }
+
+    // ============== GAP-V2-01: 可视化流程设计器 API ==============
+
+    /**
+     * GAP-V2-01: 获取设计器数据 — 返回完整流程图（节点+边+坐标）
+     *
+     * @param id 流程定义 ID
+     * @return 设计器数据（definition / nodes / edges）
+     */
+    @GetMapping("/definition/{id}/designer")
+    public Result<Map<String, Object>> getDesignerData(@PathVariable Long id) {
+        return Result.ok(definitionService.getDesignerData(id));
+    }
+
+    /**
+     * GAP-V2-01: 批量保存设计器数据 — 一次性保存节点坐标 + 属性
+     *
+     * @param id           流程定义 ID
+     * @param designerData 设计器数据（nodes + edges）
+     * @return 统一响应结果
+     */
+    @PostMapping("/definition/{id}/designer")
+    public Result<Void> saveDesignerData(@PathVariable Long id,
+                                          @RequestBody Map<String, Object> designerData) {
+        definitionService.saveDesignerData(id, designerData);
+        return Result.ok();
+    }
+
+    // ============== GAP-V2-02: 表单引擎字段配置 ==============
+
+    /**
+     * GAP-V2-02: 获取节点表单字段配置
+     *
+     * @param id       流程定义 ID
+     * @param nodeCode 节点编码
+     * @return 字段权限 JSON 字符串
+     */
+    @GetMapping("/definition/{id}/form-config/{nodeCode}")
+    public Result<String> getFormConfig(@PathVariable Long id,
+                                         @PathVariable String nodeCode) {
+        return Result.ok(definitionService.getFormConfig(id, nodeCode));
+    }
+
+    /**
+     * GAP-V2-02: 保存节点表单字段配置
+     *
+     * @param id              流程定义 ID
+     * @param nodeCode        节点编码
+     * @param formFieldsConfig 字段权限 JSON 字符串
+     * @return 统一响应结果
+     */
+    @PostMapping("/definition/{id}/form-config/{nodeCode}")
+    public Result<Void> saveFormConfig(@PathVariable Long id,
+                                        @PathVariable String nodeCode,
+                                        @RequestBody String formFieldsConfig) {
+        definitionService.saveFormConfig(id, nodeCode, formFieldsConfig);
+        return Result.ok();
+    }
+
+    /**
+     * GAP-V2-02: 获取表单渲染数据 — 审批人打开待办时获取字段权限
+     *
+     * @param instanceId 流程实例 ID
+     * @param taskId     任务 ID（可选，为空取当前节点）
+     * @return 渲染数据（nodeCode / formFieldsConfig / variables）
+     */
+    @GetMapping("/instance/{instanceId}/form-render")
+    public Result<Map<String, Object>> getFormRenderData(
+            @PathVariable Long instanceId,
+            @RequestParam(required = false) Long taskId) {
+        return Result.ok(instanceService.getFormRenderData(instanceId, taskId));
     }
 }

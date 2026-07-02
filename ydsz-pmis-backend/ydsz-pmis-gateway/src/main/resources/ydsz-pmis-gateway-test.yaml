@@ -1,0 +1,151 @@
+# ============================================================
+# Nacos 配置：ydsz-pmis-gateway-test
+# DataId  : ydsz-pmis-gateway-test.yaml
+# Group   : PMIS_GROUP
+# Namespace: pmis-test
+# 环境     : TEST（测试环境）
+# 用途     : 该文件可直接导入 Nacos 配置中心
+# 规范     : 互联网大厂标准 - 环境隔离 / 配置外置 / 密钥不入库
+# ============================================================
+
+server:
+  port: 9000
+  compression:
+    enabled: true
+    mime-types: application/json,application/xml,text/html,text/xml,text/plain
+  forward-headers-strategy: framework
+  netty:
+    access-log: enabled
+
+spring:
+  application:
+    name: ydsz-pmis-gateway
+  profiles:
+    active: test
+  main:
+    web-application-type: reactive
+    banner-mode: log
+  cloud:
+    nacos:
+      discovery:
+        server-addr: ${NACOS_SERVER_ADDR}
+        namespace: ${NACOS_NAMESPACE:pmis-test}
+        username: ${NACOS_USERNAME}
+        password: ${NACOS_PASSWORD}
+        watch:
+          enabled: true
+        heart-beat-interval: 5000
+        heart-beat-timeout: 15000
+        ip-delete-timeout: 30000
+      config:
+        server-addr: ${NACOS_SERVER_ADDR}
+        file-extension: yaml
+        namespace: ${NACOS_NAMESPACE:pmis-test}
+        group: PMIS_GROUP
+        username: ${NACOS_USERNAME}
+        password: ${NACOS_PASSWORD}
+        refresh-enabled: true
+        extension-configs:
+          - dataId: pmis-common-test.yaml
+            group: PMIS_GROUP
+            refresh: true
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOriginPatterns: "https://test-pmis.example.com"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+            exposedHeaders:
+              - Authorization
+              - X-Trace-Id
+              - Content-Disposition
+            allowCredentials: true
+            maxAge: 3600
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+        - StripPrefix=1
+      httpclient:
+        websocket:
+          max-frame-payload-length: 65536
+        connect-timeout: 3000
+        response-timeout: 20s
+        pool:
+          type: elastic
+          max-idle-time: 15s
+    sentinel:
+      transport:
+        dashboard: ${SENTINEL_DASHBOARD}
+        port: ${SENTINEL_TRANSPORT_PORT:8719}
+        heartbeat-interval-ms: 5000
+      eager: true
+      filter:
+        enabled: true
+      scg:
+        fallback:
+          mode: response
+          response-status: 429
+          response-body: '{"code":429,"message":"请求频率超限，请稍后再试","traceId":"${X-Trace-Id}"}'
+
+feign:
+  sentinel:
+    enabled: true
+  client:
+    config:
+      default:
+        connectTimeout: 3000
+        readTimeout: 20000
+        loggerLevel: BASIC
+  compression:
+    request:
+      enabled: true
+      mime-types: application/json
+      min-request-size: 2048
+    response:
+      enabled: true
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus,gateway
+  endpoint:
+    health:
+      show-details: when-authorized
+      probes:
+        enabled: true
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http:
+          server:
+            requests: true
+      percentiles:
+        http:
+          server:
+            requests: 0.5,0.75,0.9,0.95,0.99
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+
+logging:
+  level:
+    root: INFO
+    com.njydsz.pmis: INFO
+    org.springframework.cloud.gateway: INFO
+    reactor.netty: WARN
+    io.netty: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
+  file:
+    name: /var/log/pmis/gateway

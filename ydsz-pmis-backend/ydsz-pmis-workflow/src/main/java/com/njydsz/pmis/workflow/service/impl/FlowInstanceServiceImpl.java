@@ -10,15 +10,19 @@ import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.engine.FlowEventContext;
 import com.njydsz.pmis.workflow.engine.FlowEventListener;
+import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
+import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
@@ -34,10 +38,14 @@ import org.springframework.util.StringUtils;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 流程实例 Service 实现
@@ -59,6 +67,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowAdvancer advancer;
     private final FlowTaskService taskService;
     private final FlowTaskMapper taskMapper;
+    /** GAP-V2-08: 流程节点 Mapper（模拟运行时查询节点） */
+    private final FlowNodeMapper nodeMapper;
+    /** GAP-V2-08: 流程跳转 Mapper（模拟运行时查询跳转） */
+    private final FlowSkipMapper skipMapper;
+    /** GAP-V2-08: 条件求值策略（模拟运行时复用 SpEL 条件解析） */
+    private final FlowVariableStrategy variableStrategy;
     private final List<FlowEventListener> eventListeners;
     /** P2-3: Prometheus 指标收集（可能为 null：测试环境） */
     private final FlowMetrics flowMetrics;
@@ -562,6 +576,194 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
     }
 
+    // ============================== GAP-V2-08: 流程模拟运行 ==============================
+
+    @Override
+    public List<Map<String, Object>> simulate(String flowCode, String version,
+                                               Map<String, Object> variables, Long tenantId) {
+        if (!StringUtils.hasText(flowCode)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode 不能为空");
+        }
+        // 解析租户
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        // 查询已发布流程定义
+        FlowDefinitionDO def = definitionService.getPublished(flowCode, version, tid);
+        if (def == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "流程定义未发布: code=" + flowCode + " version=" + version);
+        }
+        // 查询节点 + 跳转
+        List<FlowNodeDO> nodes = nodeMapper.selectByDefinitionId(def.getId());
+        List<FlowSkipDO> skips = skipMapper.selectByDefinitionId(def.getId());
+
+        // 构建节点查找 Map
+        Map<String, FlowNodeDO> nodeMap = new HashMap<>();
+        for (FlowNodeDO node : nodes) {
+            nodeMap.put(node.getNodeCode(), node);
+        }
+
+        // 构建跳转查找 Map: fromNodeCode -> List<FlowSkipDO>
+        Map<String, List<FlowSkipDO>> skipMap = new HashMap<>();
+        for (FlowSkipDO skip : skips) {
+            String fromNodeCode = extractFromNodeCode(skip);
+            if (fromNodeCode != null) {
+                skipMap.computeIfAbsent(fromNodeCode, k -> new ArrayList<>()).add(skip);
+            }
+        }
+
+        // 查找开始节点
+        FlowNodeDO startNode = null;
+        for (FlowNodeDO node : nodes) {
+            if (node.getNodeType() != null && node.getNodeType() == FlowNodeType.START.getCode()) {
+                startNode = node;
+                break;
+            }
+        }
+        if (startNode == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "流程定义缺少开始节点");
+        }
+
+        // 模拟遍历
+        List<Map<String, Object>> result = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+        FlowNodeDO currentNode = startNode;
+        int step = 0;
+        final int MAX_STEPS = 50;
+
+        while (currentNode != null && step < MAX_STEPS) {
+            step++;
+
+            // 循环检测
+            if (visited.contains(currentNode.getNodeCode())) {
+                Map<String, Object> cycleStep = new LinkedHashMap<>();
+                cycleStep.put("step", step);
+                cycleStep.put("nodeCode", currentNode.getNodeCode());
+                cycleStep.put("nodeName", currentNode.getNodeName());
+                cycleStep.put("nodeType", currentNode.getNodeType());
+                cycleStep.put("assignee", currentNode.getPermissionFlag());
+                cycleStep.put("condition", null);
+                cycleStep.put("skipped", false);
+                cycleStep.put("warning", "检测到循环，模拟终止");
+                result.add(cycleStep);
+                log.warn("[Flow-Simulate] 检测到循环，终止模拟: flowCode={} nodeCode={}",
+                        flowCode, currentNode.getNodeCode());
+                break;
+            }
+            visited.add(currentNode.getNodeCode());
+
+            // 记录当前节点
+            Map<String, Object> stepMap = new LinkedHashMap<>();
+            stepMap.put("step", step);
+            stepMap.put("nodeCode", currentNode.getNodeCode());
+            stepMap.put("nodeName", currentNode.getNodeName());
+            stepMap.put("nodeType", currentNode.getNodeType());
+            stepMap.put("assignee", currentNode.getPermissionFlag());
+            stepMap.put("condition", null);
+            stepMap.put("skipped", false);
+            result.add(stepMap);
+
+            // 遇到 END 节点终止
+            if (currentNode.getNodeType() != null
+                    && currentNode.getNodeType() == FlowNodeType.END.getCode()) {
+                break;
+            }
+
+            // 查找当前节点的出边（PASS 类型）
+            List<FlowSkipDO> outgoingSkips = skipMap.getOrDefault(
+                    currentNode.getNodeCode(), Collections.emptyList());
+            List<FlowSkipDO> passSkips = new ArrayList<>();
+            for (FlowSkipDO skip : outgoingSkips) {
+                if (skip.getSkipType() == null || "PASS".equalsIgnoreCase(skip.getSkipType())) {
+                    passSkips.add(skip);
+                }
+            }
+
+            if (passSkips.isEmpty()) {
+                // 无出边，终止
+                break;
+            }
+
+            // 条件求值，寻找匹配的跳转
+            boolean isExclusive = currentNode.getNodeType() != null
+                    && currentNode.getNodeType() == FlowNodeType.CONDITION.getCode();
+            boolean isInclusive = currentNode.getNodeType() != null
+                    && currentNode.getNodeType() == FlowNodeType.INCLUSIVE.getCode();
+
+            FlowSkipDO matchedSkip = null;
+            for (FlowSkipDO skip : passSkips) {
+                String cond = skip.getSkipCondition();
+                if (cond == null || cond.isBlank()
+                        || variableStrategy.evaluate(cond, variables)) {
+                    matchedSkip = skip;
+                    // 记录匹配的条件
+                    if (cond != null && !cond.isBlank()) {
+                        stepMap.put("condition", cond);
+                    }
+                    // 排他网关：只取第一条匹配
+                    if (isExclusive) {
+                        break;
+                    }
+                    // 包容网关：取所有匹配，模拟时取第一条
+                    if (isInclusive) {
+                        break;
+                    }
+                    break;
+                }
+            }
+
+            // 排他/包容网关兜底：无匹配取默认出边
+            if (matchedSkip == null && (isExclusive || isInclusive)) {
+                matchedSkip = passSkips.get(0);
+                stepMap.put("condition", "default（无匹配条件，取默认出边）");
+                log.info("[Flow-Simulate] 网关无匹配条件，取默认出边: nodeCode={}",
+                        currentNode.getNodeCode());
+            }
+
+            // 普通节点无条件匹配，取第一条
+            if (matchedSkip == null) {
+                matchedSkip = passSkips.get(0);
+            }
+
+            if (matchedSkip == null || matchedSkip.getNextNodeCode() == null) {
+                break;
+            }
+
+            // 前进到下一节点
+            currentNode = nodeMap.get(matchedSkip.getNextNodeCode());
+        }
+
+        if (step >= MAX_STEPS) {
+            log.warn("[Flow-Simulate] 超过最大步数 {}，终止模拟: flowCode={}", MAX_STEPS, flowCode);
+        }
+
+        log.info("[Flow-Simulate] 模拟完成: flowCode={} version={} steps={}",
+                flowCode, def.getVersion(), result.size());
+        return result;
+    }
+
+    /**
+     * GAP-V2-08: 从 FlowSkipDO.ext 字段中提取源节点编码（sourceRef）
+     *
+     * @param skip 跳转 DO
+     * @return 源节点编码，解析失败返回 null
+     */
+    @SuppressWarnings("unchecked")
+    private String extractFromNodeCode(FlowSkipDO skip) {
+        if (skip.getExt() == null || skip.getExt().isBlank()) {
+            return null;
+        }
+        try {
+            Map<String, Object> ext = JSON.parseObject(skip.getExt(), Map.class);
+            if (ext != null && ext.containsKey("sourceRef")) {
+                return (String) ext.get("sourceRef");
+            }
+        } catch (Exception e) {
+            log.warn("[Flow-Simulate] skip ext 解析失败: skipId={} err={}",
+                    skip.getId(), e.getMessage());
+        }
+        return null;
+    }
+
     // ============================== 事件触发 ==============================
 
     private void fireInstanceStart(Long instanceId, Map<String, Object> variables) {
@@ -637,5 +839,52 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             ctx.setTraceId(instance.getProviderTraceId());
         }
         return ctx;
+    }
+
+    // ============================== GAP-V2-02: 表单渲染数据 ==============================
+
+    @Override
+    public Map<String, Object> getFormRenderData(Long instanceId, Long taskId) {
+        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        if (instance == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "实例不存在: " + instanceId);
+        }
+        String nodeCode;
+        String nodeName;
+        String formFieldsConfig = null;
+        if (taskId != null) {
+            // 优先从任务获取节点信息
+            FlowTaskDO task = taskMapper.selectById(taskId);
+            if (task == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND, "任务不存在: " + taskId);
+            }
+            nodeCode = task.getNodeCode();
+            nodeName = task.getNodeName();
+        } else {
+            // 回退到实例当前节点
+            nodeCode = instance.getCurrentNodeCode();
+            nodeName = instance.getCurrentNodeName();
+        }
+        // 查节点表获取 formFieldsConfig
+        if (nodeCode != null) {
+            FlowNodeDO node = nodeMapper.selectByDefinitionAndCode(
+                    instance.getDefinitionId(), nodeCode);
+            if (node != null) {
+                formFieldsConfig = node.getFormFieldsConfig();
+                if (nodeName == null) {
+                    nodeName = node.getNodeName();
+                }
+            }
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("instanceId", instanceId);
+        result.put("taskId", taskId);
+        result.put("nodeCode", nodeCode);
+        result.put("nodeName", nodeName);
+        result.put("formFieldsConfig", formFieldsConfig);
+        result.put("variables", getVariables(instanceId));
+        result.put("flowStatus", instance.getFlowStatus());
+        result.put("title", instance.getTitle());
+        return result;
     }
 }

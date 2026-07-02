@@ -1,5 +1,8 @@
 package com.njydsz.pmis.workflow.service.impl;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
@@ -25,6 +28,7 @@ import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -408,5 +412,215 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         log.info("[Flow] 编辑流程定义草稿: defId={} flowCode={}", definitionId, def.getFlowCode());
+    }
+
+    // ============================== GAP-V2-06: 导入/导出 ==============================
+
+    @Override
+    public String exportDefinition(Long definitionId) {
+        Map<String, Object> detail = getDetail(definitionId);
+        if (detail == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+        }
+        return JSON.toJSONString(detail);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long importDefinition(String json, Long tenantId) {
+        if (!StringUtils.hasText(json)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "导入 JSON 不能为空");
+        }
+        JSONObject root;
+        try {
+            root = JSON.parseObject(json);
+        } catch (Exception e) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "JSON 解析失败: " + e.getMessage());
+        }
+        if (root == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "JSON 内容为空");
+        }
+
+        // 1. 提取 definition 元数据
+        JSONObject defJson = root.getJSONObject("definition");
+        if (defJson == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "JSON 缺少 definition 字段");
+        }
+        String flowCode = defJson.getString("flowCode");
+        String flowName = defJson.getString("flowName");
+        if (!StringUtils.hasText(flowCode) || !StringUtils.hasText(flowName)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "definition 中 flowCode/flowName 不能为空");
+        }
+
+        // 2. 构建 FlowDeployProcessDTO
+        FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
+        dto.setFlowCode(flowCode);
+        dto.setFlowName(flowName);
+        dto.setVersion(defJson.getString("version"));
+        dto.setCategory(defJson.getString("category"));
+        dto.setDescription(defJson.getString("description"));
+        dto.setFormPath(defJson.getString("formPath"));
+        dto.setTenantId(tenantId);
+        dto.setProviderTraceId(defJson.getString("providerTraceId"));
+
+        // 3. 提取 nodes
+        JSONArray nodesJson = root.getJSONArray("nodes");
+        if (nodesJson != null && !nodesJson.isEmpty()) {
+            List<FlowDeployProcessDTO.FlowNodeDTO> nodes = new ArrayList<>();
+            for (int i = 0; i < nodesJson.size(); i++) {
+                JSONObject n = nodesJson.getJSONObject(i);
+                FlowDeployProcessDTO.FlowNodeDTO node = new FlowDeployProcessDTO.FlowNodeDTO();
+                node.setNodeCode(n.getString("nodeCode"));
+                node.setNodeName(n.getString("nodeName"));
+                node.setNodeType(n.getInteger("nodeType"));
+                node.setPermissionFlag(n.getString("permissionFlag"));
+                node.setSkipAnyNode(n.getString("skipAnyNode"));
+                nodes.add(node);
+            }
+            dto.setNodes(nodes);
+        }
+
+        // 4. 提取 skips（从 ext.sourceRef 还原 fromNodeCode）
+        JSONArray skipsJson = root.getJSONArray("skips");
+        if (skipsJson != null && !skipsJson.isEmpty()) {
+            List<FlowDeployProcessDTO.FlowSkipDTO> skips = new ArrayList<>();
+            for (int i = 0; i < skipsJson.size(); i++) {
+                JSONObject s = skipsJson.getJSONObject(i);
+                FlowDeployProcessDTO.FlowSkipDTO skip = new FlowDeployProcessDTO.FlowSkipDTO();
+                skip.setSkipName(s.getString("skipName"));
+                skip.setSkipType(s.getString("skipType"));
+                skip.setSkipCondition(s.getString("skipCondition"));
+                skip.setToNodeCode(s.getString("nextNodeCode"));
+                // 从 ext 字段还原 fromNodeCode
+                String ext = s.getString("ext");
+                if (StringUtils.hasText(ext)) {
+                    try {
+                        JSONObject extJson = JSON.parseObject(ext);
+                        if (extJson != null) {
+                            skip.setFromNodeCode(extJson.getString("sourceRef"));
+                        }
+                    } catch (Exception e) {
+                        log.warn("[Flow] 导入跳转 ext 解析失败: skipName={} err={}",
+                                s.getString("skipName"), e.getMessage());
+                    }
+                }
+                skips.add(skip);
+            }
+            dto.setSkips(skips);
+        }
+
+        // 5. 调用 deploy 创建为草稿（isPublish=0）
+        Long newDefinitionId = deploy(dto);
+        log.info("[Flow] 导入流程定义成功: flowCode={} version={} newDefId={}",
+                dto.getFlowCode(), dto.getVersion(), newDefinitionId);
+        return newDefinitionId;
+    }
+
+    // ============================== GAP-V2-01: 设计器数据 API ==============================
+
+    @Override
+    public Map<String, Object> getDesignerData(Long definitionId) {
+        Map<String, Object> detail = getDetail(definitionId);
+        if (detail == null) {
+            return null;
+        }
+        // 在 getDetail 基础上增加 edges 格式（供前端 VueFlow/LogicFlow 直接使用）
+        Map<String, Object> result = new LinkedHashMap<>(detail);
+        @SuppressWarnings("unchecked")
+        List<FlowSkipDO> skips = (List<FlowSkipDO>) detail.get("skips");
+        if (skips != null) {
+            List<Map<String, Object>> edges = new ArrayList<>();
+            for (FlowSkipDO skip : skips) {
+                Map<String, Object> edge = new LinkedHashMap<>();
+                edge.put("id", skip.getId());
+                edge.put("source", skip.getFromNodeCode());
+                edge.put("target", skip.getNextNodeCode());
+                edge.put("label", skip.getSkipName());
+                edge.put("condition", skip.getSkipCondition());
+                edge.put("skipType", skip.getSkipType());
+                edges.add(edge);
+            }
+            result.put("edges", edges);
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveDesignerData(Long definitionId, Map<String, Object> designerData) {
+        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        if (def == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+        }
+        if (def.getIsPublish() != null && def.getIsPublish() == 1) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "已发布的流程定义不可编辑，请先创建新版本");
+        }
+
+        // 1. 批量更新节点坐标 + 属性
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> nodes = (List<Map<String, Object>>) designerData.get("nodes");
+        if (nodes != null) {
+            for (Map<String, Object> nodeData : nodes) {
+                String nodeCode = (String) nodeData.get("nodeCode");
+                if (nodeCode == null) {
+                    continue;
+                }
+                // 更新坐标
+                Object coord = nodeData.get("coordinate");
+                if (coord != null) {
+                    String coordStr = coord instanceof String
+                            ? (String) coord : JSON.toJSONString(coord);
+                    nodeMapper.updateCoordinate(definitionId, nodeCode, coordStr);
+                }
+                // 更新节点名称（如前端修改了）
+                Object nodeName = nodeData.get("nodeName");
+                if (nodeName != null) {
+                    FlowNodeDO node = nodeMapper.selectByDefinitionAndCode(definitionId, nodeCode);
+                    if (node != null) {
+                        node.setNodeName((String) nodeName);
+                        Object permFlag = nodeData.get("permissionFlag");
+                        if (permFlag != null) {
+                            node.setPermissionFlag((String) permFlag);
+                        }
+                        Object ext = nodeData.get("ext");
+                        if (ext != null) {
+                            node.setExt(ext instanceof String ? (String) ext : JSON.toJSONString(ext));
+                        }
+                        nodeMapper.updateById(node);
+                    }
+                }
+            }
+        }
+
+        // 2. 批量更新边（skips）— 目前仅支持坐标和属性更新，不支持增删边
+        // 边的增删需要通过 updateDefinition 端点处理
+        log.info("[Flow] 设计器数据已保存: definitionId={} nodes={}",
+                definitionId, nodes != null ? nodes.size() : 0);
+    }
+
+    // ============================== GAP-V2-02: 表单字段配置 ==============================
+
+    @Override
+    public String getFormConfig(Long definitionId, String nodeCode) {
+        FlowNodeDO node = nodeMapper.selectByDefinitionAndCode(definitionId, nodeCode);
+        if (node == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
+        }
+        return node.getFormFieldsConfig();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveFormConfig(Long definitionId, String nodeCode, String formFieldsConfig) {
+        FlowNodeDO node = nodeMapper.selectByDefinitionAndCode(definitionId, nodeCode);
+        if (node == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
+        }
+        node.setFormFieldsConfig(formFieldsConfig);
+        nodeMapper.updateById(node);
+        log.info("[Flow] 表单字段配置已保存: definitionId={} nodeCode={}",
+                definitionId, nodeCode);
     }
 }

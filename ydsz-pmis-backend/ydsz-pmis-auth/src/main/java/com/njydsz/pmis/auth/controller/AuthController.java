@@ -5,6 +5,7 @@ import com.njydsz.pmis.auth.dto.LoginResultVO;
 import com.njydsz.pmis.auth.dto.CaptchaVO;
 import com.njydsz.pmis.auth.service.AuthService;
 import com.njydsz.pmis.auth.service.impl.AuthServiceImpl;
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,6 +46,8 @@ public class AuthController {
      * @return 统一响应结果，包含访问 Token 与刷新 Token
      */
     @Operation(summary = "登录")
+    @RateLimit(key = "login", qps = 5, windowSeconds = 60,
+            message = "登录尝试过于频繁，请 60 秒后再试")
     @PostMapping("/login")
     public Result<LoginResultVO> login(@Valid @RequestBody LoginDTO dto) {
         return Result.ok(authService.login(dto));

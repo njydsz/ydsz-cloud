@@ -1,5 +1,6 @@
 package com.njydsz.pmis.file.controller;
 
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.file.service.FileEnhanceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +40,8 @@ public class FileEnhanceController {
      * @return 扫描结果，包含 safe 和 filename
      */
     @Operation(summary = "病毒扫描")
+    @RateLimit(key = "file-upload", qps = 10, windowSeconds = 60,
+            message = "文件上传过于频繁，请 60 秒后再试")
     @PostMapping("/scan")
     public Result<Map<String, Object>> scanVirus(@RequestParam("file") MultipartFile file) {
         boolean safe = fileEnhanceService.scanVirus(file);
@@ -57,6 +60,8 @@ public class FileEnhanceController {
      * @return uploadId
      */
     @Operation(summary = "初始化分片上传")
+    @RateLimit(key = "file-upload", qps = 10, windowSeconds = 60,
+            message = "文件上传过于频繁，请 60 秒后再试")
     @PostMapping("/multipart/init")
     public Result<Map<String, Object>> initMultipartUpload(
             @RequestParam String filename,

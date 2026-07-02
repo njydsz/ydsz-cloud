@@ -123,4 +123,31 @@ public interface FlowInstanceService {
      */
     void generateTasksForNodes(Long instanceId, List<FlowNodeDO> nextNodes,
                                 Map<String, Object> variables);
+
+    /**
+     * GAP-V2-08: 流程模拟运行 — 使用模拟变量驱动引擎走一遍流程，不创建实际实例
+     *
+     * <p>从开始节点出发，按照 variables 中的条件变量模拟条件判断，依次走过每个节点并记录路径。
+     * 遇到 END 节点终止；遇到循环或超过 50 个节点时终止（防死循环）。不写数据库，不创建实例/任务。
+     *
+     * @param flowCode  流程编码
+     * @param version   版本号（可空，默认查最新已发布版本）
+     * @param variables 模拟变量
+     * @param tenantId  租户 ID（可空，默认从上下文获取）
+     * @return 模拟路径列表，每个 Map 包含 step, nodeCode, nodeName, nodeType, assignee, condition, skipped
+     */
+    List<Map<String, Object>> simulate(String flowCode, String version,
+                                        Map<String, Object> variables, Long tenantId);
+
+    /**
+     * GAP-V2-02: 获取表单渲染数据 — 根据当前任务所在节点返回字段权限配置
+     *
+     * <p>审批人打开待办时，前端调用本接口获取当前节点的表单字段权限（EDIT/READONLY/HIDDEN），
+     * 结合业务表单实现运行时表单渲染。
+     *
+     * @param instanceId 流程实例 ID
+     * @param taskId     当前任务 ID（可空，为空则取实例当前节点的配置）
+     * @return Map 包含 nodeCode / nodeName / formFieldsConfig / variables
+     */
+    Map<String, Object> getFormRenderData(Long instanceId, Long taskId);
 }

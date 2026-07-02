@@ -1,0 +1,21 @@
+{{- if .Values.monitoring.serviceMonitor.enabled }}
+{{- range $name, $svc := .Values.microservices }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "pmis.fullname" $ }}-{{ $name }}
+  labels:
+    {{- include "pmis.labels" $ | nindent 4 }}
+    release: {{ $.Values.monitoring.serviceMonitor.release | default "prometheus" }}
+spec:
+  selector:
+    matchLabels:
+      {{- include "pmis.selectorLabels" $ | nindent 6 }}
+      app.kubernetes.io/component: {{ $name }}
+  endpoints:
+    - port: http
+      path: /actuator/prometheus
+      interval: 15s
+---
+{{- end }}
+{{- end }}

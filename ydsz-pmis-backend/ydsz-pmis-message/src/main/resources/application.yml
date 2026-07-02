@@ -64,6 +64,19 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
+# RocketMQ 配置（P1-12）
+# name-server: NameServer 地址，默认本地开发环境
+# producer.group: 生产者组名，用于消息发送
+# producer.send-message-timeout: 消息发送超时时间（毫秒）
+# consumer.enabled: 是否启用消费者（MessageConsumer 使用 @ConditionalOnProperty 控制激活）
+rocketmq:
+  name-server: ${ROCKETMQ_NAME_SERVER:127.0.0.1:9876}
+  producer:
+    group: ${ROCKETMQ_PRODUCER_GROUP:pmis-producer-group}
+    send-message-timeout: 5000
+  consumer:
+    enabled: ${ROCKETMQ_CONSUMER_ENABLED:true}
+
 logging:
   level:
     root: INFO

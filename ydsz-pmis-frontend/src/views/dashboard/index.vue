@@ -15,11 +15,14 @@
  */
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import type { EChartsOption } from 'echarts'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { formatDate } from '@/utils/format'
-import { getCockpitOverview } from '@/api/execution/cockpit'
+import { getCockpitOverview, getKpiTrend } from '@/api/execution/cockpit'
+import type { KpiTrendVO } from '@/api/execution/cockpit'
 import { getCockpitAlertTopN } from '@/api/execution/alert'
 import { useECharts } from '@/composables/useECharts'
+import { isHandledError } from '@/utils/error'
 
 // ===== 数据状态 =====
 /** Cockpit KPI 数据结构 */
@@ -45,6 +48,8 @@ const loading = ref(false)
 const kpi = ref<CockpitKpi | null>(null)
 /** 查询期间（YYYY-MM） */
 const period = ref(new Date().toISOString().slice(0, 7))
+/** 近 6 月收入/毛利趋势数据（来自后端 kpi-trend 接口） */
+const trendData = ref<KpiTrendVO | null>(null)
 
 // ===== 图表容器 ref =====
 /** 项目健康度饼图容器 */
