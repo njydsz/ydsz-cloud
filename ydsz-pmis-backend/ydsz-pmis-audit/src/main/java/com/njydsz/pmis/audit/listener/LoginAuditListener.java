@@ -23,8 +23,14 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class LoginAuditListener {
 
+    /** 登录审计 Mapper */
     private final LoginAuditMapper loginAuditMapper;
 
+    /**
+     * 异步消费登录审计事件并落库，落库异常被吞掉以避免影响主登录流程。
+     *
+     * @param event 登录审计事件
+     */
     @Async
     @EventListener
     public void onLoginAudit(LoginAuditEvent event) {

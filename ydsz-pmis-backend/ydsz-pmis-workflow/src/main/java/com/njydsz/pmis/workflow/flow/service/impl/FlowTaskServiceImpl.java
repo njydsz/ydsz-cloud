@@ -577,16 +577,36 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         if (!StringUtils.hasText(perm)) {
             return Collections.emptyList();
         }
+        // P2-15: 支持逗号分隔的多人展开（如 "user:1,user:2,role:hr"）
         String resolved = variableStrategy.resolveAssignee(perm, variables);
         if (resolved == null) {
             return Collections.emptyList();
         }
-        // 尝试通过 SPI 展开
-        List<Long> userIds = assigneeResolver.expandUsers(resolved, variables);
-        if (userIds != null && !userIds.isEmpty()) {
-            return userIds.stream().map(String::valueOf).toList();
+        List<String> result = new ArrayList<>();
+        java.util.Set<String> seen = new java.util.HashSet<>();
+        for (String token : resolved.split(",")) {
+            String t = token.trim();
+            if (t.isEmpty()) continue;
+            // user: 前缀直接作为用户 ID 加入结果
+            if (t.startsWith("user:")) {
+                String uid = t.substring(5).trim();
+                if (!uid.isEmpty() && seen.add(uid)) {
+                    result.add(uid);
+                }
+                continue;
+            }
+            // role:/dept:/leader:/position: 前缀通过 SPI 展开
+            List<Long> expanded = assigneeResolver.expandUsers(t, variables);
+            if (expanded != null) {
+                for (Long uid : expanded) {
+                    String s = String.valueOf(uid);
+                    if (seen.add(s)) {
+                        result.add(s);
+                    }
+                }
+            }
         }
-        return Collections.emptyList();
+        return result;
     }
 
     /** 解析会签类型 */
@@ -629,6 +649,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             task.setAssigneeType(FlowAssigneeType.USER.name());
             task.setAssigneeId(perm);
             return;
+        }
+        // P2-15: 逗号分隔的多人 permissionFlag，取第一段作为主办理人
+        if (resolved.contains(",")) {
+            resolved = resolved.split(",")[0].trim();
         }
         if (resolved.startsWith("role:")) {
             task.setAssigneeType(FlowAssigneeType.ROLE.name());

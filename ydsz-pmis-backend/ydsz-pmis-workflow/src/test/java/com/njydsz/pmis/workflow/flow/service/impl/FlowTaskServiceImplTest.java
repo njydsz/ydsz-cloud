@@ -278,6 +278,102 @@ class FlowTaskServiceImplTest {
         verify(userMapper, times(3)).insert((FlowUserDO) any());
     }
 
+    @Test
+    @DisplayName("createTask P2-15: user:1,user:2,user:3 多人逗号分隔 → 3 个用户写入 pmis_flow_user")
+    void testCreateTaskMultipleCandidateUsers() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        // resolveAssignee 原样返回（无变量替换）
+        when(variableStrategy.resolveAssignee(eq("user:1,user:2,user:3"), any()))
+                .thenReturn("user:1,user:2,user:3");
+        // user: 前缀不需要 SPI 展开
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(89L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("多人会签");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("user:1,user:2,user:3");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.USER.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("1");  // 第一个用户
+        assertThat(saved.getApproveCount()).isEqualTo(3);
+        verify(userMapper, times(3)).insert((FlowUserDO) any());
+    }
+
+    @Test
+    @DisplayName("createTask P2-15: user:1,role:hr 混合 → user 直接展开 + role SPI 展开，去重合并")
+    void testCreateTaskMixedCandidateUsersAndRoles() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("user:1,role:hr"), any()))
+                .thenReturn("user:1,role:hr");
+        // role:hr 展开 → [1L, 2L]（注意 1L 与 user:1 重复，应被去重）
+        when(assigneeResolver.expandUsers(eq("role:hr"), any()))
+                .thenReturn(List.of(1L, 2L));
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(90L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("混合会签");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("user:1,role:hr");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        assertThat(saved.getAssigneeId()).isEqualTo("1");  // user:1 第一个
+        // 去重后：user:1 + role:hr→[1,2] = {1,2} 共 2 个用户
+        assertThat(saved.getApproveCount()).isEqualTo(2);
+        verify(userMapper, times(2)).insert((FlowUserDO) any());
+    }
+
+    @Test
+    @DisplayName("createTask P2-15: 逗号分隔 permissionFlag 但无法展开 → fallback 取第一段")
+    void testCreateTaskCommaSeparatedFallback() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        // resolveAssignee 返回逗号分隔，但 SPI 不展开（resolver 返回空）
+        when(variableStrategy.resolveAssignee(eq("user:1,user:2"), any()))
+                .thenReturn("user:1,user:2");
+        when(assigneeResolver.expandUsers(any(), any()))
+                .thenReturn(java.util.Collections.emptyList());
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(91L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("Fallback");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("user:1,user:2");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        // fallback 路径：取第一段 user:1 作为主办理人
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.USER.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("1");
+        // approveCount 默认 1（fallback 路径不展开）
+        assertThat(saved.getApproveCount()).isEqualTo(1);
+    }
+
     // ============== claim ==============
 
     @Test

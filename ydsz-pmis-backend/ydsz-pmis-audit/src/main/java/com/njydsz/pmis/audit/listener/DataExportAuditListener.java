@@ -22,8 +22,14 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class DataExportAuditListener {
 
+    /** 数据导出审计 Mapper */
     private final DataExportAuditMapper mapper;
 
+    /**
+     * 异步消费数据导出审计事件并落库，落库异常被吞掉以避免影响主业务流程。
+     *
+     * @param e 数据导出审计事件
+     */
     @Async
     @EventListener
     public void onExport(DataExportAuditEvent e) {

@@ -86,6 +86,32 @@ public final class SecurityContext {
     }
 
     /**
+     * 当前租户 ID（P2-16：多租户上下文）
+     *
+     * <p>从登录用户上下文获取 tenantId。未登录或上下文为空时返回默认值 1L。
+     * 适用于后台任务、单元测试等无 HTTP 请求上下文的场景。
+     *
+     * @return 当前租户 ID；未登录时返回 1L
+     */
+    public static Long getTenantIdOrDefault() {
+        return getTenantIdOrDefault(1L);
+    }
+
+    /**
+     * 当前租户 ID（带自定义默认值）
+     *
+     * @param defaultTenantId 默认租户 ID（未登录时使用）
+     * @return 当前租户 ID；未登录时返回 defaultTenantId
+     */
+    public static Long getTenantIdOrDefault(Long defaultTenantId) {
+        LoginUser user = getCurrentOrNull();
+        if (user == null || user.getTenantId() == null) {
+            return defaultTenantId == null ? 1L : defaultTenantId;
+        }
+        return user.getTenantId();
+    }
+
+    /**
      * 校验权限
      *
      * @param perm 权限编码

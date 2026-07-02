@@ -30,6 +30,12 @@ public class BudgetController {
 
     private final BudgetGuard budgetGuard;
 
+    /**
+     * 查询项目预算占用率与告警级别
+     *
+     * @param initiationId 项目立项 ID
+     * @return 占用率与告警级别数据
+     */
     @Operation(summary = "查询项目预算占用率与告警级别")
     @PrePermission("execution:budget:view")
     @GetMapping("/occupancy")

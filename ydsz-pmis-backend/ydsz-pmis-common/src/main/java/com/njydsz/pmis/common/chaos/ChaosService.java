@@ -55,6 +55,7 @@ public class ChaosService {
     /** 实验历史: 仅保留最近 100 条 */
     private final List<ChaosEvent> history = new CopyOnWriteArrayList<>();
 
+    /** 特性开关服务，用于 CANARY_DEPLOY 二次保护 */
     private final FeatureFlagService featureFlagService;
 
     /**
@@ -124,6 +125,11 @@ public class ChaosService {
         return ChaosOutcome.INJECTED;
     }
 
+    /**
+     * 实际执行故障注入：按实验类型分发到延迟 / 异常 / 网络分区 / 资源耗尽 / 错误率分支
+     *
+     * @param exp 混沌实验配置
+     */
     private void inject(ChaosExperiment exp) {
         switch (exp.getType()) {
             case ChaosExperiment.TYPE_LATENCY -> {
@@ -160,6 +166,13 @@ public class ChaosService {
         }
     }
 
+    /**
+     * 反射实例化异常类；非 RuntimeException 时回退为 RuntimeException 包装
+     *
+     * @param className 异常类全限定名
+     * @param message   异常消息
+     * @return 构造完成的 RuntimeException 实例
+     */
     private static RuntimeException instantiate(String className, String message) {
         try {
             Class<?> cls = Class.forName(className);
@@ -173,6 +186,13 @@ public class ChaosService {
         }
     }
 
+    /**
+     * 记录一条实验历史，超过 100 条时丢弃最旧的一条
+     *
+     * @param target  实验目标标识
+     * @param outcome 实验结果
+     * @param detail  附加说明
+     */
     private void recordHistory(String target, ChaosOutcome outcome, String detail) {
         history.add(new ChaosEvent(System.currentTimeMillis(), target, outcome, detail));
         if (history.size() > 100) {
@@ -198,9 +218,13 @@ public class ChaosService {
     @lombok.Data
     @lombok.AllArgsConstructor
     public static class ChaosEvent {
+        /** 事件时间戳（毫秒） */
         private final long timestamp;
+        /** 实验目标标识 */
         private final String target;
+        /** 实验结果 */
         private final ChaosOutcome outcome;
+        /** 附加说明 */
         private final String detail;
     }
 }

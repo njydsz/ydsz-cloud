@@ -32,8 +32,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageController {
 
+    /** 消息发送服务 */
     private final MessageServiceImpl messageService;
 
+    /**
+     * 发送消息（支持模板渲染）
+     *
+     * @param dto 消息发送参数
+     * @return 统一响应结果，包含发送结果
+     */
     @Operation(summary = "发送消息（支持模板渲染）")
     @PrePermission("notif:message:send")
     @PostMapping("/send")
@@ -45,6 +52,16 @@ public class MessageController {
         return r.isSuccess() ? Result.ok(r, "发送成功") : Result.failed(10001, r.getErrorMessage());
     }
 
+    /**
+     * 分页查询消息发送日志
+     *
+     * @param page    页码
+     * @param size    每页大小
+     * @param channel 通道（可选）
+     * @param bizType 业务类型（可选）
+     * @param status  发送状态（可选）
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "分页查询发送日志")
     @PrePermission("notif:message:send")
     @GetMapping("/log/page")
@@ -57,6 +74,11 @@ public class MessageController {
         return Result.ok(messageService.pageLog(page, size, channel, bizType, status));
     }
 
+    /**
+     * 查询已注册的消息通道列表
+     *
+     * @return 统一响应结果，包含通道类型列表
+     */
     @Operation(summary = "已注册通道列表")
     @PrePermission("notif:message:send")
     @GetMapping("/channels")
@@ -64,6 +86,12 @@ public class MessageController {
         return Result.ok(messageService.listChannelTypes());
     }
 
+    /**
+     * 将消息发送 DTO 转换为消息请求对象。
+     *
+     * @param dto 消息发送参数
+     * @return 消息请求对象
+     */
     private MessageRequest toRequest(MessageSendDTO dto) {
         MessageRequest req = new MessageRequest();
         req.setChannel(dto.getChannel());

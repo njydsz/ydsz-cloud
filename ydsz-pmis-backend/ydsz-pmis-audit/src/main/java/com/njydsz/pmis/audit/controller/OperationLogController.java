@@ -31,8 +31,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OperationLogController {
 
+    /** 操作日志服务 */
     private final OperationLogServiceImpl service;
 
+    /**
+     * 分页查询操作日志
+     *
+     * @param page      页码
+     * @param size      每页大小
+     * @param userId    用户 ID（可选）
+     * @param bizType   业务类型（可选）
+     * @param status    状态（可选）
+     * @param module    模块名（可选）
+     * @param startTime 起始时间（可选）
+     * @param endTime   截止时间（可选）
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "分页查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/page")
@@ -52,6 +66,13 @@ public class OperationLogController {
         return Result.ok(PageResult.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
     }
 
+    /**
+     * 按用户查询操作日志
+     *
+     * @param userId 用户 ID
+     * @param limit  最大条数
+     * @return 统一响应结果，包含操作日志列表
+     */
     @Operation(summary = "按用户查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/by-user")
@@ -60,6 +81,14 @@ public class OperationLogController {
         return Result.ok(service.listByUser(userId, limit));
     }
 
+    /**
+     * 按业务查询操作日志
+     *
+     * @param bizType 业务类型
+     * @param bizId   业务单据 ID
+     * @param limit   最大条数
+     * @return 统一响应结果，包含操作日志列表
+     */
     @Operation(summary = "按业务查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/by-biz")
@@ -69,6 +98,12 @@ public class OperationLogController {
         return Result.ok(service.listByBiz(bizType, bizId, limit));
     }
 
+    /**
+     * 清理 N 天前的操作日志
+     *
+     * @param days 保留天数
+     * @return 统一响应结果，包含删除条数
+     */
     @Operation(summary = "清理 N 天前日志")
     @PrePermission(PermissionCodes.AUDIT_LOG_CLEAN)
     @PostMapping("/clean")

@@ -20,6 +20,12 @@ import java.util.Map;
 @Component
 public class UserServiceClientFallback implements FallbackFactory<UserServiceClient> {
 
+    /**
+     * 创建降级实例。
+     *
+     * @param cause 触发降级的异常
+     * @return 降级 UserServiceClient，所有方法返回空数据
+     */
     @Override
     public UserServiceClient create(Throwable cause) {
         log.warn("[Feign] user 服务降级: {}", cause == null ? "?" : cause.getMessage());

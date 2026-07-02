@@ -40,6 +40,13 @@ public class ImportExportController {
 
     private final ImportService importService;
 
+    /**
+     * 下载空白模板（带样例数据）
+     *
+     * @param bizType  业务类型
+     * @param response HTTP 响应对象
+     * @throws IOException 写入响应流时发生 I/O 异常
+     */
     @Operation(summary = "下载空白模板（带样例数据）")
     @GetMapping("/template/{bizType}")
     public void downloadTemplate(@PathVariable String bizType, HttpServletResponse response) throws IOException {
@@ -59,6 +66,14 @@ public class ImportExportController {
         log.info("[ImportTemplate] bizType={} size={} bytes", bizType, bundle.bytes().length);
     }
 
+    /**
+     * 批量导入（限频 1 次/秒）
+     *
+     * @param bizType 业务类型
+     * @param file    上传的文件
+     * @return 导入结果
+     * @throws IOException 读取文件时发生 I/O 异常
+     */
     @Operation(summary = "批量导入（限频 1 次/秒）")
     @PostMapping("/{bizType}")
     public Result<ImportService.ImportResult> importFile(

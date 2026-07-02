@@ -41,6 +41,9 @@ public class LoginUser implements Serializable {
     /** 部门名称 */
     private String deptName;
 
+    /** 租户 ID（P2-16：多租户上下文，默认 1L） */
+    private Long tenantId;
+
     /** 职级编码 */
     private String levelCode;
 

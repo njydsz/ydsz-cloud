@@ -37,8 +37,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ResourcePoolController {
 
+    /** 资源池服务 */
     private final ResourcePoolService poolService;
 
+    /**
+     * 创建资源池
+     *
+     * @param dto 资源池创建参数
+     * @return 统一响应结果，包含新建资源池 ID
+     */
     @Operation(summary = "创建资源池")
     @PrePermission("resource:pool:create")
     @OperationLog(module = "资源池", action = "创建资源池", bizType = "RESOURCE_POOL")
@@ -47,6 +54,13 @@ public class ResourcePoolController {
         return Result.ok(poolService.create(dto));
     }
 
+    /**
+     * 更新资源池
+     *
+     * @param id  资源池 ID
+     * @param dto 资源池更新参数
+     * @return 统一响应结果
+     */
     @Operation(summary = "更新资源池")
     @PrePermission("resource:pool:update")
     @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
@@ -56,6 +70,12 @@ public class ResourcePoolController {
         return Result.ok();
     }
 
+    /**
+     * 删除资源池
+     *
+     * @param id 资源池 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除资源池")
     @PrePermission("resource:pool:delete")
     @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
@@ -65,24 +85,51 @@ public class ResourcePoolController {
         return Result.ok();
     }
 
+    /**
+     * 查询资源池详情
+     *
+     * @param id 资源池 ID
+     * @return 统一响应结果，包含资源池信息
+     */
     @Operation(summary = "资源池详情")
     @GetMapping("/{id}")
     public Result<ResourcePoolDO> get(@PathVariable Long id) {
         return Result.ok(poolService.getById(id));
     }
 
+    /**
+     * 按类型查询资源池
+     *
+     * @param poolType 资源池类型
+     * @return 统一响应结果，包含资源池列表
+     */
     @Operation(summary = "按类型查询")
     @GetMapping("/by-type")
     public Result<List<ResourcePoolDO>> listByType(@RequestParam String poolType) {
         return Result.ok(poolService.listByType(poolType));
     }
 
+    /**
+     * 按部门查询资源池
+     *
+     * @param departmentId 部门 ID
+     * @return 统一响应结果，包含资源池列表
+     */
     @Operation(summary = "按部门查询")
     @GetMapping("/by-dept/{departmentId}")
     public Result<List<ResourcePoolDO>> listByDept(@PathVariable Long departmentId) {
         return Result.ok(poolService.listByDept(departmentId));
     }
 
+    /**
+     * 分页查询资源池
+     *
+     * @param page     页码
+     * @param size     每页大小
+     * @param poolType 资源池类型（可选）
+     * @param status   状态（可选）
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public Result<Page<ResourcePoolDO>> page(

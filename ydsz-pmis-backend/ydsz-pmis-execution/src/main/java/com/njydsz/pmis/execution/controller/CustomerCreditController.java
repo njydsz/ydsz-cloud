@@ -38,6 +38,12 @@ public class CustomerCreditController {
 
     private final CustomerCreditService service;
 
+    /**
+     * 评估客户信用
+     *
+     * @param dto 信用评估参数
+     * @return 客户信用实体
+     */
     @Operation(summary = "评估客户信用")
     @PrePermission("finance:credit:assess")
     @PostMapping("/assess")
@@ -45,6 +51,12 @@ public class CustomerCreditController {
         return Result.ok(service.assess(dto));
     }
 
+    /**
+     * 获取客户信用
+     *
+     * @param customerId 客户 ID
+     * @return 客户信用实体
+     */
     @Operation(summary = "获取客户信用")
     @PrePermission("finance:credit:list")
     @GetMapping("/customer/{customerId}")
@@ -52,6 +64,12 @@ public class CustomerCreditController {
         return Result.ok(service.getByCustomer(customerId));
     }
 
+    /**
+     * 查询客户风险画像
+     *
+     * @param customerId 客户 ID
+     * @return 风险画像数据
+     */
     @Operation(summary = "客户风险画像")
     @PrePermission("finance:credit:list")
     @GetMapping("/profile/{customerId}")
@@ -59,6 +77,11 @@ public class CustomerCreditController {
         return Result.ok(service.profile(customerId));
     }
 
+    /**
+     * 查询信用分布
+     *
+     * @return 各信用等级数量列表
+     */
     @Operation(summary = "信用分布")
     @PrePermission("finance:credit:list")
     @GetMapping("/distribution")
@@ -66,6 +89,12 @@ public class CustomerCreditController {
         return Result.ok(service.distribution());
     }
 
+    /**
+     * 按等级列出客户信用
+     *
+     * @param level 信用等级
+     * @return 客户信用列表
+     */
     @Operation(summary = "按等级列出")
     @PrePermission("finance:credit:list")
     @GetMapping("/by-level")
@@ -73,6 +102,15 @@ public class CustomerCreditController {
         return Result.ok(service.listByLevel(level));
     }
 
+    /**
+     * 分页查询客户信用
+     *
+     * @param page    页码（从 1 开始）
+     * @param size    每页大小
+     * @param keyword 关键词
+     * @param level   信用等级过滤
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("finance:credit:list")
     @GetMapping("/page")

@@ -37,6 +37,12 @@ public class ExpenseController {
 
     private final ExpenseService service;
 
+    /**
+     * 创建费用
+     *
+     * @param dto 费用创建参数
+     * @return 新建费用 ID
+     */
     @Operation(summary = "创建费用")
     @PrePermission("execution:expense:create")
     @PostMapping
@@ -44,6 +50,12 @@ public class ExpenseController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 费用状态迁移
+     *
+     * @param dto 审批/状态变更参数
+     * @return 空结果
+     */
     @Operation(summary = "状态迁移")
     @PrePermission("execution:expense:status")
     @PutMapping("/status")
@@ -52,6 +64,12 @@ public class ExpenseController {
         return Result.ok();
     }
 
+    /**
+     * 删除费用
+     *
+     * @param id 费用 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除")
     @PrePermission("execution:expense:delete")
     @DeleteMapping("/{id}")
@@ -60,6 +78,12 @@ public class ExpenseController {
         return Result.ok();
     }
 
+    /**
+     * 查询费用详情
+     *
+     * @param id 费用 ID
+     * @return 费用实体
+     */
     @Operation(summary = "详情")
     @PrePermission("execution:expense:list")
     @GetMapping("/{id}")
@@ -67,6 +91,18 @@ public class ExpenseController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询费用
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param expenseType  费用类型
+     * @param employeeId   员工 ID
+     * @param initiationId 项目立项 ID
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("execution:expense:list")
     @GetMapping("/page")

@@ -138,6 +138,13 @@ public final class ExcelUtil {
 
     // ==================== 工具 ====================
 
+    /**
+     * 设置 HTTP 下载响应头（Content-Type / Content-Disposition）
+     *
+     * @param response HTTP 响应对象
+     * @param fileName 下载文件名（会被 URL 编码）
+     * @throws IOException 设置响应头失败时抛出
+     */
     private static void setDownloadHeader(HttpServletResponse response, String fileName) throws IOException {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
@@ -150,14 +157,26 @@ public final class ExcelUtil {
      * 简单的读监听器：每 100 行触发一次 batch
      */
     public static class SimpleReadListener implements ReadListener<Object> {
+        /** 批量数据回调消费器 */
         private final java.util.function.Consumer<List<Object>> sink;
+        /** 当前批次缓冲区 */
         private final List<Object> buffer = new ArrayList<>(128);
+        /** 触发批量回调的阈值行数 */
         private static final int BATCH = 100;
 
+        /**
+         * @param sink 批量数据回调消费器
+         */
         public SimpleReadListener(java.util.function.Consumer<List<Object>> sink) {
             this.sink = sink;
         }
 
+        /**
+         * 每解析一行调用一次，缓冲达到 BATCH 阈值时触发批量回调
+         *
+         * @param data    当前行数据
+         * @param context 解析上下文
+         */
         @Override
         public void invoke(Object data, AnalysisContext context) {
             buffer.add(data);
@@ -166,11 +185,19 @@ public final class ExcelUtil {
             }
         }
 
+        /**
+         * 全部解析完成后触发剩余数据的批量回调
+         *
+         * @param context 解析上下文
+         */
         @Override
         public void doAfterAllAnalysed(AnalysisContext context) {
             flush();
         }
 
+        /**
+         * 将缓冲区数据交给回调并清空缓冲
+         */
         private void flush() {
             if (!buffer.isEmpty()) {
                 sink.accept(new ArrayList<>(buffer));
@@ -183,18 +210,30 @@ public final class ExcelUtil {
      * Sheet 数据
      */
     public static class ExcelSheet<T> {
+        /** Sheet 名 */
         private final String name;
+        /** Sheet 数据 */
         private final List<T> data;
 
+        /**
+         * @param name Sheet 名
+         * @param data Sheet 数据
+         */
         public ExcelSheet(String name, List<T> data) {
             this.name = name;
             this.data = data;
         }
 
+        /**
+         * @return Sheet 名
+         */
         public String getName() {
             return name;
         }
 
+        /**
+         * @return Sheet 数据
+         */
         public List<T> getData() {
             return data;
         }

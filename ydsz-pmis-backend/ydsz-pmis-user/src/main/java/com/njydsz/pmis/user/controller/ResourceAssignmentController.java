@@ -36,8 +36,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ResourceAssignmentController {
 
+    /** 资源分配服务 */
     private final ResourceAssignmentService assignmentService;
 
+    /**
+     * 资源分配动作（RESERVE/START/TRANSFER/RELEASE/CANCEL）
+     *
+     * @param dto 分配动作参数
+     * @return 统一响应结果，包含分配记录 ID
+     */
     @Operation(summary = "分配动作（RESERVE/START/TRANSFER/RELEASE/CANCEL）")
     @PrePermission("resource:assign:act")
     @OperationLog(module = "资源分配", action = "分配动作", bizType = "RESOURCE_ASSIGN")
@@ -46,36 +53,76 @@ public class ResourceAssignmentController {
         return Result.ok(assignmentService.act(dto));
     }
 
+    /**
+     * 查询分配详情
+     *
+     * @param id 分配记录 ID
+     * @return 统一响应结果，包含分配记录
+     */
     @Operation(summary = "分配详情")
     @GetMapping("/{id}")
     public Result<ResourceAssignmentDO> get(@PathVariable Long id) {
         return Result.ok(assignmentService.getById(id));
     }
 
+    /**
+     * 按员工查询分配记录
+     *
+     * @param employeeId 员工 ID
+     * @return 统一响应结果，包含分配记录列表
+     */
     @Operation(summary = "按员工查询")
     @GetMapping("/by-employee/{employeeId}")
     public Result<List<ResourceAssignmentDO>> listByEmployee(@PathVariable Long employeeId) {
         return Result.ok(assignmentService.listByEmployee(employeeId));
     }
 
+    /**
+     * 按项目查询分配记录
+     *
+     * @param initiationId 立项 ID
+     * @return 统一响应结果，包含分配记录列表
+     */
     @Operation(summary = "按项目查询")
     @GetMapping("/by-initiation/{initiationId}")
     public Result<List<ResourceAssignmentDO>> listByInitiation(@PathVariable Long initiationId) {
         return Result.ok(assignmentService.listByInitiation(initiationId));
     }
 
+    /**
+     * 查询员工活跃项目数
+     *
+     * @param employeeId 员工 ID
+     * @return 统一响应结果，包含活跃项目数
+     */
     @Operation(summary = "员工活跃项目数")
     @GetMapping("/active-count/{employeeId}")
     public Result<Integer> activeCount(@PathVariable Long employeeId) {
         return Result.ok(assignmentService.activeCount(employeeId));
     }
 
+    /**
+     * 查询员工利用率
+     *
+     * @param employeeId 员工 ID
+     * @return 统一响应结果，包含利用率统计
+     */
     @Operation(summary = "员工利用率")
     @GetMapping("/utilization/{employeeId}")
     public Result<Map<String, Object>> utilization(@PathVariable Long employeeId) {
         return Result.ok(assignmentService.utilization(employeeId));
     }
 
+    /**
+     * 分页查询分配记录
+     *
+     * @param page         页码
+     * @param size         每页大小
+     * @param employeeId   员工 ID（可选）
+     * @param initiationId 立项 ID（可选）
+     * @param status       状态（可选）
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public Result<Page<ResourceAssignmentDO>> page(

@@ -18,6 +18,7 @@ import java.io.Serializable;
 @Builder
 public class SensitiveOperationEvent implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 

@@ -95,6 +95,12 @@ public class WinRateEvaluator {
         return rate;
     }
 
+    /**
+     * 根据商机状态计算跟进阶段得分。
+     *
+     * @param status 商机状态码，可空
+     * @return 阶段得分（0-1）；越接近赢单状态得分越高
+     */
     private static BigDecimal stageScore(String status) {
         OpportunityStatus s = OpportunityStatus.fromCode(status);
         if (s == null) return new BigDecimal("0.30");
@@ -108,6 +114,12 @@ public class WinRateEvaluator {
         };
     }
 
+    /**
+     * 根据商机分级计算得分。
+     *
+     * @param level 商机分级（A/B/C），可空
+     * @return 分级得分（0-1）；A 最高、C 最低
+     */
     private static BigDecimal levelScore(String level) {
         OpportunityLevel l = OpportunityLevel.fromCode(level);
         return switch (l) {
@@ -117,6 +129,12 @@ public class WinRateEvaluator {
         };
     }
 
+    /**
+     * 根据客户信用等级计算得分。
+     *
+     * @param credit 客户信用等级（A/B/C/D），可空
+     * @return 信用得分（0-1）；为空按 0.6 计
+     */
     private static BigDecimal creditScore(String credit) {
         if (credit == null) return new BigDecimal("0.6");
         return switch (credit.trim().toUpperCase()) {
@@ -128,6 +146,12 @@ public class WinRateEvaluator {
         };
     }
 
+    /**
+     * 根据竞争对手数量计算竞争态势得分。
+     *
+     * @param competitor 竞争对手描述（多个用逗号/分号分隔），可空
+     * @return 竞争得分（0-1）；竞争对手越多分数越低
+     */
     private static BigDecimal competitionScore(String competitor) {
         if (competitor == null || competitor.isBlank()) {
             return new BigDecimal("0.7");

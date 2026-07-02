@@ -92,4 +92,31 @@ class LlmProviderRouterTest {
         assertThat(r.getScore()).isEqualByComparingTo("0.5");
         assertThat(r.getAlertLevel().name()).isEqualTo("RECOMMEND");
     }
+
+    // ========== P1-13 新增 ==========
+
+    @Test
+    @DisplayName("getActiveProviderName 返回当前 Provider 名称")
+    void getActiveProviderName() {
+        ApplicationContext ctx = mock(ApplicationContext.class);
+        MockLlmProvider mock = new MockLlmProvider();
+        when(ctx.getBeansOfType(LlmProvider.class)).thenReturn(Map.of("mock", mock));
+        LlmProviderRouter router = new LlmProviderRouter(ctx, mock);
+        assertThat(router.getActiveProviderName()).isEqualTo("mock");
+    }
+
+    @Test
+    @DisplayName("reload 后 getActiveProviderName 反映新 Provider")
+    void getActiveProviderNameAfterReload() {
+        ApplicationContext ctx = mock(ApplicationContext.class);
+        MockLlmProvider mock = new MockLlmProvider();
+        SpringAiLlmProvider spring = new SpringAiLlmProvider(null, 1000L, 0, true);
+        when(ctx.getBeansOfType(LlmProvider.class)).thenReturn(Map.of("mock", mock, "spring", spring));
+        LlmProviderRouter router = new LlmProviderRouter(ctx, mock);
+        // 初始为 spring-ai-openai（优先选择）
+        assertThat(router.getActiveProviderName()).isEqualTo("spring-ai-openai");
+        // reload 到 mock
+        router.reload("mock");
+        assertThat(router.getActiveProviderName()).isEqualTo("mock");
+    }
 }

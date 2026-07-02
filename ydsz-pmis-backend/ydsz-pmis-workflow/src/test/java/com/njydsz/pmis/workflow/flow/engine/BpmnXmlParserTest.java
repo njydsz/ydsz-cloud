@@ -165,7 +165,7 @@ class BpmnXmlParserTest {
     }
 
     @Test
-    @DisplayName("userTask candidateUsers 解析为候选组")
+    @DisplayName("userTask candidateUsers 多人全部写入 permissionFlag（P2-15）")
     void testParseCandidateUsers() {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
@@ -181,9 +181,50 @@ class BpmnXmlParserTest {
 
         BpmnModel model = parser.parse(xml);
         FlowNodeDO t1 = findNode(model.getNodes(), "t1");
-        // 第一人作为主 assignee，其余写入 ext
-        assertThat(t1.getPermissionFlag()).isEqualTo("user:1001");
-        assertThat(t1.getExt()).contains("candidateUsers").contains("1002");
+        // P2-15: 三人均带 user: 前缀写入 permissionFlag，由 expandAssignees 展开为多人
+        assertThat(t1.getPermissionFlag()).isEqualTo("user:1001,user:1002,user:1003");
+        assertThat(t1.getExt()).contains("candidateUsers").contains("1001,1002,1003");
+    }
+
+    @Test
+    @DisplayName("userTask candidateUsers 含已带前缀的混合形式（P2-15）")
+    void testParseCandidateUsersMixedPrefix() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:flowable=\"http://flowable.org/bpmn\">\n" +
+                "  <process id=\"p1\" name=\"混合\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <userTask id=\"t1\" name=\"混合\" flowable:candidateUsers=\"user:1001,role:hr,1002\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        FlowNodeDO t1 = findNode(model.getNodes(), "t1");
+        // 已带前缀原样保留，无前缀补 user:
+        assertThat(t1.getPermissionFlag()).isEqualTo("user:1001,role:hr,user:1002");
+    }
+
+    @Test
+    @DisplayName("userTask candidateGroups 多组全部写入 permissionFlag（P2-15）")
+    void testParseCandidateGroups() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:flowable=\"http://flowable.org/bpmn\">\n" +
+                "  <process id=\"p1\" name=\"多组\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <userTask id=\"t1\" name=\"多组\" flowable:candidateGroups=\"hr,finance\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        FlowNodeDO t1 = findNode(model.getNodes(), "t1");
+        assertThat(t1.getPermissionFlag()).isEqualTo("role:hr,role:finance");
     }
 
     @Test

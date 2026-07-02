@@ -44,3 +44,37 @@ logging:
     com.njydsz.pmis: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+
+# P1-13: Spring AI 集成配置（生产环境通过 Nacos 覆盖）
+pmis:
+  agent:
+    llm:
+      # Provider 选择: mock(默认) | spring-ai-openai | dashscope | qianfan
+      provider: ${LLM_PROVIDER:mock}
+      # LLM 调用超时(ms)
+      timeout-millis: ${LLM_TIMEOUT_MILLIS:10000}
+      # 失败重试次数(不含首次)
+      max-retries: ${LLM_MAX_RETRIES:2}
+      # 失败时是否降级到 mock
+      fallback-to-mock: ${LLM_FALLBACK_TO_MOCK:true}
+
+# Spring AI OpenAI 配置（provider=spring-ai-openai 时生效）
+spring:
+  ai:
+    openai:
+      api-key: ${OPENAI_API_KEY:sk-placeholder}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+      chat:
+        options:
+          model: ${OPENAI_MODEL:gpt-4o-mini}
+          temperature: 0.3
+
+# Actuator 端点暴露（P1-13 LLM 健康检查）
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized

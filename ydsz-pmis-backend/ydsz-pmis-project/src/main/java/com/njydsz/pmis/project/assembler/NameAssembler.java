@@ -22,6 +22,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class NameAssembler {
 
+    /** 用户服务 Feign 客户端 */
     private final UserServiceClient userServiceClient;
 
     /**

@@ -32,8 +32,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageTemplateController {
 
+    /** 消息模板服务 */
     private final MessageTemplateServiceImpl templateService;
 
+    /**
+     * 创建消息模板
+     *
+     * @param dto 模板参数
+     * @return 统一响应结果，包含新建模板 ID
+     */
     @Operation(summary = "创建模板")
     @PrePermission("notif:message:send")
     @PostMapping
@@ -41,6 +48,12 @@ public class MessageTemplateController {
         return Result.ok(templateService.create(dto.toDO()));
     }
 
+    /**
+     * 更新消息模板
+     *
+     * @param dto 模板参数
+     * @return 统一响应结果
+     */
     @Operation(summary = "更新模板")
     @PrePermission("notif:message:send")
     @PutMapping
@@ -51,6 +64,12 @@ public class MessageTemplateController {
         return Result.ok();
     }
 
+    /**
+     * 删除消息模板
+     *
+     * @param id 模板 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除模板")
     @PrePermission("notif:message:send")
     @DeleteMapping("/{id}")
@@ -59,6 +78,12 @@ public class MessageTemplateController {
         return Result.ok();
     }
 
+    /**
+     * 查询模板详情
+     *
+     * @param id 模板 ID
+     * @return 统一响应结果，包含模板信息
+     */
     @Operation(summary = "模板详情")
     @PrePermission("notif:message:send")
     @GetMapping("/{id}")
@@ -66,6 +91,15 @@ public class MessageTemplateController {
         return Result.ok(templateService.getById(id));
     }
 
+    /**
+     * 模板分页查询
+     *
+     * @param page    页码
+     * @param size    每页大小
+     * @param channel 通道（可选）
+     * @param keyword 关键字（可选）
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "模板分页")
     @PrePermission("notif:message:send")
     @GetMapping("/page")
@@ -77,6 +111,12 @@ public class MessageTemplateController {
         return Result.ok(templateService.page(page, size, channel, keyword));
     }
 
+    /**
+     * 按通道列出模板
+     *
+     * @param channel 通道
+     * @return 统一响应结果，包含模板列表
+     */
     @Operation(summary = "按通道列出模板")
     @PrePermission("notif:message:send")
     @GetMapping("/list")
@@ -84,19 +124,37 @@ public class MessageTemplateController {
         return Result.ok(templateService.listByChannel(channel));
     }
 
+    /**
+     * 消息模板表单 DTO
+     */
     @lombok.Data
     public static class MessageTemplateDTO {
+        /** 模板 ID */
         private Long id;
+        /** 模板编码 */
         private String templateCode;
+        /** 通道 */
         private String channel;
+        /** 主题 */
         private String subject;
+        /** 内容 */
         private String content;
+        /** 供应商 */
         private String provider;
+        /** 供应商密钥 */
         private String providerKey;
+        /** 签名 */
         private String signName;
+        /** 状态 */
         private String status;
+        /** 描述 */
         private String description;
 
+        /**
+         * 将 DTO 转换为持久化对象。
+         *
+         * @return 消息模板持久化对象
+         */
         public MessageTemplateDO toDO() {
             MessageTemplateDO t = new MessageTemplateDO();
             t.setTemplateCode(templateCode);

@@ -42,6 +42,12 @@ public class DeliveryController {
 
     // ========== 标准管理 ==========
 
+    /**
+     * 创建交付物标准
+     *
+     * @param dto 标准创建参数
+     * @return 新建标准 ID
+     */
     @Operation(summary = "创建交付物标准")
     @PrePermission("execution:delivery:create")
     @PostMapping("/standard")
@@ -49,6 +55,12 @@ public class DeliveryController {
         return Result.ok(service.createStandard(dto));
     }
 
+    /**
+     * 删除交付物标准
+     *
+     * @param id 标准 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除交付物标准")
     @PrePermission("execution:delivery:delete")
     @DeleteMapping("/standard/{id}")
@@ -57,6 +69,12 @@ public class DeliveryController {
         return Result.ok();
     }
 
+    /**
+     * 查询交付物标准详情
+     *
+     * @param id 标准 ID
+     * @return 标准实体
+     */
     @Operation(summary = "交付物标准详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/{id}")
@@ -64,6 +82,14 @@ public class DeliveryController {
         return Result.ok(service.getStandardById(id));
     }
 
+    /**
+     * 按类型/阶段查询交付物标准
+     *
+     * @param projectType 项目类型，可选
+     * @param projectLevel 项目等级，可选
+     * @param stage       阶段，可选
+     * @return 标准列表
+     */
     @Operation(summary = "按类型/阶段查询交付物标准")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/list")
@@ -74,6 +100,12 @@ public class DeliveryController {
         return Result.ok(service.listStandards(projectType, projectLevel, stage));
     }
 
+    /**
+     * 统计项目类型的标准数
+     *
+     * @param projectType 项目类型
+     * @return 标准数量
+     */
     @Operation(summary = "统计项目类型的标准数")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/count")
@@ -83,6 +115,12 @@ public class DeliveryController {
 
     // ========== 实例管理 ==========
 
+    /**
+     * 创建项目交付物实例
+     *
+     * @param dto 实例创建参数
+     * @return 新建实例 ID
+     */
     @Operation(summary = "创建项目交付物实例")
     @PrePermission("execution:delivery:create")
     @PostMapping("/item")
@@ -90,6 +128,12 @@ public class DeliveryController {
         return Result.ok(service.createItem(dto));
     }
 
+    /**
+     * 交付物状态迁移
+     *
+     * @param dto 状态变更参数
+     * @return 空结果
+     */
     @Operation(summary = "交付物状态迁移")
     @PrePermission("execution:delivery:status")
     @PutMapping("/item/status")
@@ -98,6 +142,13 @@ public class DeliveryController {
         return Result.ok();
     }
 
+    /**
+     * 标记 TR 完成
+     *
+     * @param id        交付物实例 ID
+     * @param completed 是否完成（1 是 / 0 否）
+     * @return 空结果
+     */
     @Operation(summary = "标记 TR 完成")
     @PrePermission("execution:delivery:status")
     @PutMapping("/item/{id}/tr-completed")
@@ -107,6 +158,12 @@ public class DeliveryController {
         return Result.ok();
     }
 
+    /**
+     * 删除交付物实例
+     *
+     * @param id 实例 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除交付物实例")
     @PrePermission("execution:delivery:delete")
     @DeleteMapping("/item/{id}")
@@ -115,6 +172,12 @@ public class DeliveryController {
         return Result.ok();
     }
 
+    /**
+     * 查询交付物实例详情
+     *
+     * @param id 实例 ID
+     * @return 实例实体
+     */
     @Operation(summary = "交付物实例详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/{id}")
@@ -122,6 +185,12 @@ public class DeliveryController {
         return Result.ok(service.getItemById(id));
     }
 
+    /**
+     * 按项目查询所有交付物
+     *
+     * @param initiationId 项目立项 ID
+     * @return 交付物列表
+     */
     @Operation(summary = "按项目查询所有交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-initiation/{initiationId}")
@@ -129,6 +198,13 @@ public class DeliveryController {
         return Result.ok(service.listItemsByInitiation(initiationId));
     }
 
+    /**
+     * 按项目+阶段查询交付物
+     *
+     * @param initiationId 项目立项 ID
+     * @param stage        阶段
+     * @return 交付物列表
+     */
     @Operation(summary = "按项目+阶段查询交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-stage")
@@ -137,6 +213,12 @@ public class DeliveryController {
         return Result.ok(service.listItemsByStage(initiationId, stage));
     }
 
+    /**
+     * 按状态聚合交付物
+     *
+     * @param initiationId 项目立项 ID
+     * @return 各状态数量列表
+     */
     @Operation(summary = "按状态聚合交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/aggregate/status")
@@ -146,6 +228,14 @@ public class DeliveryController {
 
     // ========== 阶段门控 ==========
 
+    /**
+     * 阶段门控校验
+     *
+     * @param initiationId 项目立项 ID
+     * @param targetStage  目标阶段
+     * @param projectLevel 项目等级，可选
+     * @return 门控校验结果
+     */
     @Operation(summary = "阶段门控校验")
     @PrePermission("execution:delivery:status")
     @GetMapping("/stage-gate/check")

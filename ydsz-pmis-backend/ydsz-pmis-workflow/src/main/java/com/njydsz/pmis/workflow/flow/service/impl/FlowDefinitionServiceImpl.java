@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.flow.engine.BpmnModel;
 import com.njydsz.pmis.workflow.flow.engine.BpmnXmlParser;
@@ -51,7 +52,10 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         }
 
         String version = StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0";
-        Long tenantId = dto.getTenantId() == null ? 1L : dto.getTenantId();
+        // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取，最后兜底 1L
+        Long tenantId = dto.getTenantId() != null
+                ? dto.getTenantId()
+                : SecurityContext.getTenantIdOrDefault(1L);
 
         // 1. 检查重名：同 flowCode + version + tenant 只能有一条
         FlowDefinitionDO existing = definitionMapper.selectPublished(
@@ -190,14 +194,16 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         if (!StringUtils.hasText(version)) {
             version = "1.0";
         }
-        return definitionMapper.selectPublished(flowCode, version,
-                tenantId == null ? 1L : tenantId);
+        // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return definitionMapper.selectPublished(flowCode, version, tid);
     }
 
     @Override
     public FlowDefinitionDO getLatestByCode(String flowCode, Long tenantId) {
-        return definitionMapper.selectLatestByCode(flowCode,
-                tenantId == null ? 1L : tenantId);
+        // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return definitionMapper.selectLatestByCode(flowCode, tid);
     }
 
     @Override

@@ -34,8 +34,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class FileController {
 
+    /** 文件服务 */
     private final FileService fileService;
 
+    /**
+     * 上传文件
+     *
+     * @param file multipart 文件
+     * @param dto  上传附加参数（可选，自动填充当前登录人信息）
+     * @return 统一响应结果，包含文件元信息
+     * @throws Exception 上传过程中发生异常
+     */
     @Operation(summary = "上传文件")
     @PrePermission(PermissionCodes.FILE_STORAGE_UPLOAD)
     @OperationLog(module = "文件存储", action = "上传文件", bizType = "FILE")

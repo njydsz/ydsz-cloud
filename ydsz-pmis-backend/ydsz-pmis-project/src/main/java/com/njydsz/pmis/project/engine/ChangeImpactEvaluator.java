@@ -134,6 +134,12 @@ public class ChangeImpactEvaluator {
         return new ImpactResult(level, major, profitPct);
     }
 
+    /**
+     * 计算利润影响百分比（相对于重大利润影响阈值）。
+     *
+     * @param profitImpact 利润影响金额，可空
+     * @return 影响百分比（0-1）；为空或 0 返回 0，超过阈值返回 1
+     */
     private static BigDecimal computeProfitImpactPct(BigDecimal profitImpact) {
         if (profitImpact == null || profitImpact.signum() == 0) {
             return BigDecimal.ZERO;

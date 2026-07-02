@@ -38,6 +38,12 @@ public class EvmController {
 
     private final EvmMeasureService service;
 
+    /**
+     * 录入/更新 EVM 测量（按 initiation+wbs+period 幂等）
+     *
+     * @param dto EVM 测量参数
+     * @return 测量记录 ID
+     */
     @Operation(summary = "录入/更新 EVM 测量（按 initiation+wbs+period 幂等）")
     @PrePermission("execution:evm:save")
     @PostMapping
@@ -45,6 +51,12 @@ public class EvmController {
         return Result.ok(service.save(dto));
     }
 
+    /**
+     * 查询 EVM 测量详情
+     *
+     * @param id 测量 ID
+     * @return 测量实体
+     */
     @Operation(summary = "详情")
     @PrePermission("execution:evm:list")
     @GetMapping("/{id}")
@@ -52,6 +64,12 @@ public class EvmController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 按项目查询 EVM 测量列表
+     *
+     * @param initiationId 项目立项 ID
+     * @return 测量列表
+     */
     @Operation(summary = "按项目查询")
     @PrePermission("execution:evm:list")
     @GetMapping("/by-initiation")
@@ -59,6 +77,12 @@ public class EvmController {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
+    /**
+     * 按 WBS 任务查询 EVM 测量列表
+     *
+     * @param wbsTaskId WBS 任务 ID
+     * @return 测量列表
+     */
     @Operation(summary = "按 WBS 查询")
     @PrePermission("execution:evm:list")
     @GetMapping("/by-wbs")
@@ -66,6 +90,12 @@ public class EvmController {
         return Result.ok(service.listByWbs(wbsTaskId));
     }
 
+    /**
+     * 查询项目偏差趋势（按周期）
+     *
+     * @param initiationId 项目立项 ID
+     * @return 趋势数据列表
+     */
     @Operation(summary = "项目偏差趋势（按周期）")
     @PrePermission("execution:evm:list")
     @GetMapping("/trend")
@@ -73,6 +103,12 @@ public class EvmController {
         return Result.ok(service.trend(initiationId));
     }
 
+    /**
+     * 查询项目 EVM 健康仪表盘
+     *
+     * @param initiationId 项目立项 ID
+     * @return 仪表盘数据
+     */
     @Operation(summary = "项目 EVM 健康仪表盘")
     @PrePermission("execution:evm:dashboard")
     @GetMapping("/dashboard")
@@ -80,6 +116,15 @@ public class EvmController {
         return Result.ok(service.dashboard(initiationId));
     }
 
+    /**
+     * 分页查询 EVM 测量
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param initiationId 项目立项 ID
+     * @param alertLevel   预警等级过滤
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("execution:evm:list")
     @GetMapping("/page")
@@ -91,6 +136,12 @@ public class EvmController {
         return Result.ok(service.page(page, size, initiationId, alertLevel));
     }
 
+    /**
+     * 删除 EVM 测量
+     *
+     * @param id 测量 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除")
     @PrePermission("execution:evm:delete")
     @DeleteMapping("/{id}")

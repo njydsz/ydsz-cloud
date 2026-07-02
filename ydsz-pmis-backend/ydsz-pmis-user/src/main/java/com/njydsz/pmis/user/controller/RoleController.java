@@ -28,8 +28,15 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RoleController {
 
+    /** 角色服务 */
     private final RoleService roleService;
 
+    /**
+     * 角色分页查询
+     *
+     * @param query 查询参数
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "角色分页")
     @PrePermission("auth:role:list")
     @GetMapping
@@ -37,18 +44,35 @@ public class RoleController {
         return Result.ok(roleService.page(query));
     }
 
+    /**
+     * 查询所有启用的角色
+     *
+     * @return 统一响应结果，包含角色列表
+     */
     @Operation(summary = "所有启用的角色")
     @GetMapping("/all")
     public Result<List<RoleDO>> listAll() {
         return Result.ok(roleService.listAllEnabled());
     }
 
+    /**
+     * 查询角色详情
+     *
+     * @param id 角色 ID
+     * @return 统一响应结果，包含角色信息
+     */
     @Operation(summary = "角色详情")
     @GetMapping("/{id}")
     public Result<RoleDO> get(@PathVariable Long id) {
         return Result.ok(roleService.getById(id));
     }
 
+    /**
+     * 创建角色
+     *
+     * @param dto 角色创建参数
+     * @return 统一响应结果，包含新建角色 ID
+     */
     @Operation(summary = "创建角色")
     @PrePermission("auth:role:create")
     @OperationLog(module = "权限管理", action = "创建角色", bizType = "ROLE")
@@ -57,6 +81,12 @@ public class RoleController {
         return Result.ok(roleService.create(dto));
     }
 
+    /**
+     * 更新角色
+     *
+     * @param dto 角色更新参数
+     * @return 统一响应结果
+     */
     @Operation(summary = "更新角色")
     @PrePermission("auth:role:update")
     @OperationLog(module = "权限管理", action = "更新角色", bizType = "ROLE")
@@ -66,6 +96,12 @@ public class RoleController {
         return Result.ok();
     }
 
+    /**
+     * 删除角色
+     *
+     * @param id 角色 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除角色")
     @PrePermission("auth:role:delete")
     @OperationLog(module = "权限管理", action = "删除角色", bizType = "ROLE")
@@ -75,6 +111,13 @@ public class RoleController {
         return Result.ok();
     }
 
+    /**
+     * 为角色分配权限
+     *
+     * @param id            角色 ID
+     * @param permissionIds 权限 ID 列表
+     * @return 统一响应结果
+     */
     @Operation(summary = "为角色分配权限")
     @PrePermission("auth:role:assign")
     @OperationLog(module = "权限管理", action = "分配权限", bizType = "ROLE")
@@ -84,6 +127,12 @@ public class RoleController {
         return Result.ok();
     }
 
+    /**
+     * 查询角色的权限 ID 列表
+     *
+     * @param id 角色 ID
+     * @return 统一响应结果，包含权限 ID 列表
+     */
     @Operation(summary = "查询角色的权限 ID 列表")
     @GetMapping("/{id}/permissions")
     public Result<List<Long>> listPermissions(@PathVariable Long id) {

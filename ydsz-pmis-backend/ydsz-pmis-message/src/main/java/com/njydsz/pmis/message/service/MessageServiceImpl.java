@@ -44,14 +44,21 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class MessageServiceImpl implements MessageService {
 
+    /** 消息日志 Mapper */
     private final MessageLogMapper messageLogMapper;
+    /** 消息模板 Mapper */
     private final MessageTemplateMapper messageTemplateMapper;
+    /** 模板引擎 */
     private final TemplateEngine templateEngine;
+    /** Spring 应用上下文，用于初始化阶段收集通道 Bean */
     private final ApplicationContext applicationContext;
 
     /** channel -> MessageChannel 缓存 */
     private final Map<String, MessageChannel> channelCache = new ConcurrentHashMap<>();
 
+    /**
+     * 初始化阶段收集所有 {@link MessageChannel} 实现并按通道类型注册到缓存。
+     */
     @PostConstruct
     public void initChannels() {
         Map<String, MessageChannel> beans = applicationContext.getBeansOfType(MessageChannel.class);
@@ -61,6 +68,13 @@ public class MessageServiceImpl implements MessageService {
         log.info("[Message] 通道初始化完成, 共加载 {} 个: {}", channelCache.size(), channelCache.keySet());
     }
 
+    /**
+     * 发送消息：校验入参 → 加载渲染模板 → 选择通道 → 执行发送并记录日志。
+     *
+     * @param request 消息发送请求
+     * @return 消息发送结果
+     * @throws BizException 入参非法、模板不存在/停用、通道不支持时抛出
+     */
     @Override
     public MessageResult send(MessageRequest request) {
         if (request == null) {
@@ -105,6 +119,12 @@ public class MessageServiceImpl implements MessageService {
         return executeWithLog(channel, request);
     }
 
+    /**
+     * 直接发送消息（忽略模板，仅使用 content）。
+     *
+     * @param request 消息发送请求
+     * @return 消息发送结果
+     */
     @Override
     public MessageResult sendDirect(MessageRequest request) {
         if (request != null) {
@@ -113,6 +133,16 @@ public class MessageServiceImpl implements MessageService {
         return send(request);
     }
 
+    /**
+     * 分页查询消息发送日志，支持按通道/业务类型/状态过滤。
+     *
+     * @param page    页码
+     * @param size    每页大小
+     * @param channel 通道（可选）
+     * @param bizType 业务类型（可选）
+     * @param status  发送状态（可选）
+     * @return 消息日志分页结果
+     */
     @Override
     public Page<MessageLogDO> pageLog(int page, int size, String channel, String bizType, String status) {
         Page<MessageLogDO> p = new Page<>(page, size);
@@ -124,6 +154,14 @@ public class MessageServiceImpl implements MessageService {
         return messageLogMapper.selectPage(p, w);
     }
 
+    /**
+     * 加载消息模板，tenantId 为空时默认 1。
+     *
+     * @param templateCode 模板编码
+     * @param channel      通道（大小写不敏感）
+     * @param tenantId     租户 ID（可选）
+     * @return 模板对象，不存在时返回 null
+     */
     @Override
     public MessageTemplateDO loadTemplate(String templateCode, String channel, Long tenantId) {
         if (!StringUtils.hasText(templateCode) || !StringUtils.hasText(channel)) {
@@ -135,6 +173,13 @@ public class MessageServiceImpl implements MessageService {
 
     // ==================== 内部 ====================
 
+    /**
+     * 执行通道发送并记录发送日志，发送异常被捕获转为失败结果，日志写入异常被吞掉。
+     *
+     * @param channel 消息通道
+     * @param request 消息发送请求
+     * @return 消息发送结果
+     */
     private MessageResult executeWithLog(MessageChannel channel, MessageRequest request) {
         MessageLogDO log0 = new MessageLogDO();
         log0.setChannel(channel.channelType());

@@ -34,6 +34,7 @@ import java.io.Serializable;
 @AllArgsConstructor
 public class ChaosExperiment implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 

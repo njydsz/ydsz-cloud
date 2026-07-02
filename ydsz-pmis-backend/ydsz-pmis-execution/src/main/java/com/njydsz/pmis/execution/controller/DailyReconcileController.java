@@ -30,12 +30,26 @@ public class DailyReconcileController {
 
     private final DailyReconcileService service;
 
+    /**
+     * 运行某天的对账（默认今天）
+     *
+     * @param date 对账日期，可选
+     * @return 处理的对账记录数量
+     */
     @Operation(summary = "运行某天的对账（默认今天）")
     @PostMapping("/run")
     public Result<Integer> run(@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return Result.ok(service.runDaily(date));
     }
 
+    /**
+     * 按日期范围查询对账记录
+     *
+     * @param from   起始日期，可选
+     * @param to     截止日期，可选
+     * @param status 状态过滤
+     * @return 对账记录列表
+     */
     @Operation(summary = "按日期范围查询对账记录")
     @GetMapping("/query")
     public Result<List<Map<String, Object>>> query(
@@ -45,6 +59,13 @@ public class DailyReconcileController {
         return Result.ok(service.queryByDateRange(from, to, status));
     }
 
+    /**
+     * 状态统计 OK / WARN / ERROR
+     *
+     * @param from 起始日期，可选
+     * @param to   截止日期，可选
+     * @return 各状态数量列表
+     */
     @Operation(summary = "状态统计 OK / WARN / ERROR")
     @GetMapping("/aggregate")
     public Result<List<Map<String, Object>>> aggregate(
@@ -53,6 +74,15 @@ public class DailyReconcileController {
         return Result.ok(service.aggregateStatus(from, to));
     }
 
+    /**
+     * 纯计算：按阈值分类差异（OK / WARN / ERROR）
+     *
+     * @param expected 期望值
+     * @param actual   实际值
+     * @param warnPct  告警阈值百分比
+     * @param errorPct 错误阈值百分比
+     * @return 分类结果
+     */
     @Operation(summary = "纯计算：按阈值分类差异（OK / WARN / ERROR）")
     @GetMapping("/classify")
     public Result<String> classify(

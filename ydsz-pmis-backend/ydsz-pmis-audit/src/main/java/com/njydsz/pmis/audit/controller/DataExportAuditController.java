@@ -30,8 +30,19 @@ import java.util.List;
 @RequiredArgsConstructor
 public class DataExportAuditController {
 
+    /** 数据导出审计 Mapper */
     private final DataExportAuditMapper mapper;
 
+    /**
+     * 分页查询数据导出审计记录
+     *
+     * @param page         页码
+     * @param size         每页大小
+     * @param userId       用户 ID（可选）
+     * @param exportModule 导出模块（可选）
+     * @param exportAction 导出动作（可选，模糊匹配）
+     * @return 统一响应结果，包含分页数据
+     */
     @Operation(summary = "分页查询")
     @PrePermission("audit:export:view")
     @GetMapping("/page")
@@ -50,6 +61,13 @@ public class DataExportAuditController {
         return Result.ok(PageResult.ofPage(mapper.selectPage(p, w)));
     }
 
+    /**
+     * 按用户查询导出历史
+     *
+     * @param userId 用户 ID
+     * @param limit  最大条数
+     * @return 统一响应结果，包含导出审计列表
+     */
     @Operation(summary = "按用户查询导出历史")
     @PrePermission("audit:export:view")
     @GetMapping("/by-user")

@@ -41,6 +41,12 @@ public class InvoiceController {
 
     private final InvoiceService service;
 
+    /**
+     * 创建发票申请
+     *
+     * @param dto 发票创建参数
+     * @return 新建发票 ID
+     */
     @Operation(summary = "创建发票申请")
     @PrePermission("finance:invoice:create")
     @PostMapping
@@ -48,6 +54,13 @@ public class InvoiceController {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 提交发票审批
+     *
+     * @param id         发票 ID
+     * @param operatorId 操作人 ID
+     * @return 空结果
+     */
     @Operation(summary = "提交审批")
     @PrePermission("finance:invoice:approve")
     @PutMapping("/{id}/submit")
@@ -56,6 +69,13 @@ public class InvoiceController {
         return Result.ok();
     }
 
+    /**
+     * 审批通过
+     *
+     * @param id  发票 ID
+     * @param dto 审批参数
+     * @return 空结果
+     */
     @Operation(summary = "审批通过")
     @PrePermission("finance:invoice:approve")
     @PutMapping("/{id}/approve")
@@ -64,6 +84,13 @@ public class InvoiceController {
         return Result.ok();
     }
 
+    /**
+     * 审批驳回
+     *
+     * @param id  发票 ID
+     * @param dto 审批参数
+     * @return 空结果
+     */
     @Operation(summary = "审批驳回")
     @PrePermission("finance:invoice:approve")
     @PutMapping("/{id}/reject")
@@ -72,6 +99,13 @@ public class InvoiceController {
         return Result.ok();
     }
 
+    /**
+     * 财务开具发票
+     *
+     * @param id  发票 ID
+     * @param dto 开具参数
+     * @return 空结果
+     */
     @Operation(summary = "财务开具")
     @PrePermission("finance:invoice:issue")
     @PutMapping("/{id}/issue")
@@ -80,6 +114,14 @@ public class InvoiceController {
         return Result.ok();
     }
 
+    /**
+     * 红冲发票
+     *
+     * @param id         发票 ID
+     * @param operatorId 操作人 ID
+     * @param comment    红冲备注，可选
+     * @return 空结果
+     */
     @Operation(summary = "红冲")
     @PrePermission("finance:invoice:reverse")
     @PutMapping("/{id}/reverse")
@@ -90,6 +132,14 @@ public class InvoiceController {
         return Result.ok();
     }
 
+    /**
+     * 取消发票
+     *
+     * @param id         发票 ID
+     * @param operatorId 操作人 ID
+     * @param comment    取消备注，可选
+     * @return 空结果
+     */
     @Operation(summary = "取消")
     @PrePermission("finance:invoice:status")
     @PutMapping("/{id}/cancel")
@@ -100,6 +150,12 @@ public class InvoiceController {
         return Result.ok();
     }
 
+    /**
+     * 删除发票
+     *
+     * @param id 发票 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除")
     @PrePermission("finance:invoice:delete")
     @DeleteMapping("/{id}")
@@ -108,6 +164,12 @@ public class InvoiceController {
         return Result.ok();
     }
 
+    /**
+     * 查询发票详情
+     *
+     * @param id 发票 ID
+     * @return 发票实体
+     */
     @Operation(summary = "详情")
     @PrePermission("finance:invoice:list")
     @GetMapping("/{id}")
@@ -115,6 +177,19 @@ public class InvoiceController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询发票
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param contractId   合同 ID
+     * @param initiationId 项目立项 ID
+     * @param customerId   客户 ID
+     * @param invoiceType  发票类型
+     * @return 分页结果
+     */
     @Operation(summary = "分页")
     @PrePermission("finance:invoice:list")
     @GetMapping("/page")
@@ -130,6 +205,12 @@ public class InvoiceController {
         return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, customerId, invoiceType));
     }
 
+    /**
+     * 按合同汇总开票金额
+     *
+     * @param contractId 合同 ID
+     * @return 已开票金额
+     */
     @Operation(summary = "按合同汇总开票金额")
     @PrePermission("finance:invoice:list")
     @GetMapping("/sum/by-contract")
@@ -137,6 +218,12 @@ public class InvoiceController {
         return Result.ok(service.sumInvoicedByContract(contractId));
     }
 
+    /**
+     * 按状态分组查询发票台账
+     *
+     * @param contractId 合同 ID
+     * @return 各状态发票汇总列表
+     */
     @Operation(summary = "按状态分组台账")
     @PrePermission("finance:invoice:list")
     @GetMapping("/aggregate/by-status")

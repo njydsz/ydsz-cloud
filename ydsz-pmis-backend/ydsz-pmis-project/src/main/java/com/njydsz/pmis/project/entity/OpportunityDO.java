@@ -23,9 +23,11 @@ import java.time.LocalDateTime;
 @TableName("pmis_project_opportunity")
 public class OpportunityDO implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 

@@ -226,13 +226,40 @@ public class BpmnXmlParser {
             node.setPermissionFlag(expression.startsWith("${")
                     ? expression : "${" + expression + "}");
         } else if (candidateUsers != null && !candidateUsers.isBlank()) {
-            // 多候选人：取第一个作为主办理人，其余放到 ext 字段
+            // P2-15: 多候选人全部写入 permissionFlag（逗号分隔），由 expandAssignees 展开为多人
+            // 例如 candidateUsers="u1,u2,u3" → permissionFlag="user:u1,user:u2,user:u3"
             String[] users = candidateUsers.split(",");
-            node.setPermissionFlag("user:" + users[0].trim());
+            StringBuilder perm = new StringBuilder();
+            for (int i = 0; i < users.length; i++) {
+                String u = users[i].trim();
+                if (u.isEmpty()) continue;
+                if (perm.length() > 0) perm.append(",");
+                // 已带前缀则原样保留，否则补 user:
+                if (u.startsWith("user:") || u.startsWith("role:")
+                        || u.startsWith("dept:") || u.startsWith("leader:")
+                        || u.startsWith("position:") || u.startsWith("${")) {
+                    perm.append(u);
+                } else {
+                    perm.append("user:").append(u);
+                }
+            }
+            node.setPermissionFlag(perm.toString());
             node.setExt("{\"candidateUsers\":\"" + candidateUsers + "\"}");
         } else if (candidateGroups != null && !candidateGroups.isBlank()) {
+            // P2-15: 候选组同样支持多组逗号分隔，全部写入 permissionFlag
             String[] groups = candidateGroups.split(",");
-            node.setPermissionFlag("role:" + groups[0].trim());
+            StringBuilder perm = new StringBuilder();
+            for (int i = 0; i < groups.length; i++) {
+                String g = groups[i].trim();
+                if (g.isEmpty()) continue;
+                if (perm.length() > 0) perm.append(",");
+                if (g.startsWith("role:") || g.startsWith("dept:") || g.startsWith("${")) {
+                    perm.append(g);
+                } else {
+                    perm.append("role:").append(g);
+                }
+            }
+            node.setPermissionFlag(perm.toString());
             node.setExt("{\"candidateGroups\":\"" + candidateGroups + "\"}");
         }
 

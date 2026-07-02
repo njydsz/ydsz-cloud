@@ -68,6 +68,122 @@ class DefaultFlowVariableStrategyTest {
         assertThat(strategy.evaluate("@#$%", v)).isFalse();
     }
 
+    // ============== P2-14: 逻辑组合表达式 ==============
+
+    @Test
+    @DisplayName("&& 逻辑与：两边均为 true 返回 true")
+    void evaluate_and_bothTrue() {
+        Map<String, Object> v = Map.of("amount", 200, "level", 5);
+        assertThat(strategy.evaluate("${amount > 100} && ${level > 3}", v)).isTrue();
+    }
+
+    @Test
+    @DisplayName("&& 逻辑与：任一为 false 返回 false")
+    void evaluate_and_oneFalse() {
+        Map<String, Object> v = Map.of("amount", 50, "level", 5);
+        assertThat(strategy.evaluate("${amount > 100} && ${level > 3}", v)).isFalse();
+    }
+
+    @Test
+    @DisplayName("|| 逻辑或：任一为 true 返回 true")
+    void evaluate_or_oneTrue() {
+        Map<String, Object> v = Map.of("amount", 50, "level", 5);
+        assertThat(strategy.evaluate("${amount > 100} || ${level > 3}", v)).isTrue();
+    }
+
+    @Test
+    @DisplayName("|| 逻辑或：两边均为 false 返回 false")
+    void evaluate_or_bothFalse() {
+        Map<String, Object> v = Map.of("amount", 50, "level", 1);
+        assertThat(strategy.evaluate("${amount > 100} || ${level > 3}", v)).isFalse();
+    }
+
+    @Test
+    @DisplayName("&& 与 || 混合：优先级 && 高于 ||")
+    void evaluate_mixedAndOr() {
+        // (false && true) || true => true
+        Map<String, Object> v = Map.of("a", 1, "b", 10, "c", 100);
+        assertThat(strategy.evaluate("${a > 5} && ${b > 5} || ${c > 5}", v)).isTrue();
+        // (true && false) || false => false
+        Map<String, Object> v2 = Map.of("a", 10, "b", 1, "c", 1);
+        assertThat(strategy.evaluate("${a > 5} && ${b > 5} || ${c > 5}", v2)).isFalse();
+    }
+
+    @Test
+    @DisplayName("! 逻辑非：取反布尔变量")
+    void evaluate_not_boolean() {
+        Map<String, Object> v = Map.of("flag", true, "skip", false);
+        assertThat(strategy.evaluate("!${flag}", v)).isFalse();
+        assertThat(strategy.evaluate("!${skip}", v)).isTrue();
+    }
+
+    @Test
+    @DisplayName("! 逻辑非：取反比较表达式")
+    void evaluate_not_comparison() {
+        Map<String, Object> v = Map.of("amount", 50);
+        assertThat(strategy.evaluate("!${amount > 100}", v)).isTrue();
+        assertThat(strategy.evaluate("!${amount < 100}", v)).isFalse();
+    }
+
+    @Test
+    @DisplayName("!! 双重取反：还原原值")
+    void evaluate_doubleNot() {
+        Map<String, Object> v = Map.of("flag", true);
+        assertThat(strategy.evaluate("!!${flag}", v)).isTrue();
+    }
+
+    @Test
+    @DisplayName("! 与 && 组合：!flag && amount > 100")
+    void evaluate_notAndCombination() {
+        Map<String, Object> v = Map.of("flag", false, "amount", 200);
+        assertThat(strategy.evaluate("!${flag} && ${amount > 100}", v)).isTrue();
+    }
+
+    @Test
+    @DisplayName("字符串字面量内的 || 不被分割")
+    void evaluate_stringLiteralContainsOr() {
+        // 字符串 'a || b' 内的 || 不应被识别为逻辑或
+        Map<String, Object> v = Map.of("type", "a || b");
+        assertThat(strategy.evaluate("${type == 'a || b'}", v)).isTrue();
+    }
+
+    // ============== P2-14: 三元运算符 ==============
+
+    @Test
+    @DisplayName("三元运算符：条件为 true 返回 trueVal（字符串字面量）")
+    void resolveAssignee_ternary_trueBranch() {
+        Map<String, Object> v = Map.of("amount", 200);
+        String result = strategy.resolveAssignee("${amount > 100 ? 'leader' : 'manager'}", v);
+        assertThat(result).isEqualTo("leader");
+    }
+
+    @Test
+    @DisplayName("三元运算符：条件为 false 返回 falseVal（字符串字面量）")
+    void resolveAssignee_ternary_falseBranch() {
+        Map<String, Object> v = Map.of("amount", 50);
+        String result = strategy.resolveAssignee("${amount > 100 ? 'leader' : 'manager'}", v);
+        assertThat(result).isEqualTo("manager");
+    }
+
+    @Test
+    @DisplayName("三元运算符：分支为 ${var} 引用")
+    void resolveAssignee_ternary_variableBranch() {
+        Map<String, Object> v = new HashMap<>();
+        v.put("amount", 200);
+        v.put("leaderId", "user:999");
+        v.put("managerId", "user:888");
+        String result = strategy.resolveAssignee("${amount > 100 ? ${leaderId} : ${managerId}}", v);
+        assertThat(result).isEqualTo("user:999");
+    }
+
+    @Test
+    @DisplayName("三元运算符：分支为裸标识符")
+    void resolveAssignee_ternary_bareIdentifier() {
+        Map<String, Object> v = Map.of("amount", 50);
+        String result = strategy.resolveAssignee("${amount > 100 ? leader : manager}", v);
+        assertThat(result).isEqualTo("manager");
+    }
+
     // ============== resolveAssignee() 角色解析 ==============
 
     @Test

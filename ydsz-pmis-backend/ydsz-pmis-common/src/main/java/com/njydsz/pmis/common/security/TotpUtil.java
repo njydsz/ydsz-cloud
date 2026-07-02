@@ -137,6 +137,13 @@ public final class TotpUtil {
         return false;
     }
 
+    /**
+     * 常量时间字符串比较，避免计时攻击
+     *
+     * @param a 字符串 A
+     * @param b 字符串 B
+     * @return true 表示相等
+     */
     private static boolean constantTimeEquals(String a, String b) {
         if (a.length() != b.length()) return false;
         int result = 0;

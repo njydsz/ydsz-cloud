@@ -96,6 +96,11 @@ public class LocalFeatureFlagService implements FeatureFlagService {
         return isUserInRollout(userId, rollout);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 全量特性开关快照列表
+     */
     @Override
     public List<FeatureFlagSnapshot> snapshot() {
         Map<String, String> cfg = readGroup();
@@ -120,6 +125,11 @@ public class LocalFeatureFlagService implements FeatureFlagService {
         return R;
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @return 按分类分组的快照 Map
+     */
     @Override
     public Map<String, List<FeatureFlagSnapshot>> snapshotByCategory() {
         Map<String, List<FeatureFlagSnapshot>> grouped = new HashMap<>();
@@ -131,6 +141,13 @@ public class LocalFeatureFlagService implements FeatureFlagService {
 
     // ============== 管理 ==============
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param flag    特性开关
+     * @param enabled 启用/禁用
+     * @return 实际生效值（mandatory 永远 true）
+     */
     @Override
     public boolean setEnabled(FeatureFlag flag, boolean enabled) {
         if (flag.isMandatory()) {
@@ -146,6 +163,13 @@ public class LocalFeatureFlagService implements FeatureFlagService {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * @param flag       特性开关
+     * @param percentage 灰度比例 (0-100)
+     * @return 实际生效的灰度比例（经过 clamp）
+     */
     @Override
     public int setRolloutPercentage(FeatureFlag flag, int percentage) {
         int clamped = clamp(percentage, 0, 100);
@@ -158,6 +182,7 @@ public class LocalFeatureFlagService implements FeatureFlagService {
         return clamped;
     }
 
+    /** {@inheritDoc} */
     @Override
     public void refresh() {
         snapshotCache.clear();
@@ -168,6 +193,8 @@ public class LocalFeatureFlagService implements FeatureFlagService {
 
     /**
      * 读取 config group, 优先本地缓存, 失败时回退到 testStore (单测用)
+     *
+     * @return 配置项 Map
      */
     private Map<String, String> readGroup() {
         CacheEntry e = snapshotCache.computeIfAbsent(CONFIG_GROUP, k -> new CacheEntry(0L, null));
@@ -180,6 +207,11 @@ public class LocalFeatureFlagService implements FeatureFlagService {
         return group;
     }
 
+    /**
+     * 通过 Feign 拉取 config 分组，失败时降级到本地 testStore
+     *
+     * @return 配置项 Map
+     */
     private Map<String, String> fetchGroup() {
         // 单测模式: 没有 configClient
         if (configClient == null) {
@@ -200,6 +232,12 @@ public class LocalFeatureFlagService implements FeatureFlagService {
         }
     }
 
+    /**
+     * 写入配置值到本地 testStore 并失效快照缓存
+     *
+     * @param key   配置键
+     * @param value 配置值
+     */
     private void writeValue(String key, String value) {
         testStore.put(key, value);
         if (configClient != null) {
@@ -236,6 +274,10 @@ public class LocalFeatureFlagService implements FeatureFlagService {
     /**
      * 灰度发布: 基于 userId 哈希取模判定是否在白名单.
      * 同一用户多次调用结果一致 (粘性).
+     *
+     * @param userId            用户 ID
+     * @param rolloutPercentage 灰度比例 (0-100)
+     * @return true 表示该用户命中灰度白名单
      */
     static boolean isUserInRollout(long userId, int rolloutPercentage) {
         long bucket = Math.floorMod(userId, ROLLOUT_HASH_BASE);
@@ -272,10 +314,19 @@ public class LocalFeatureFlagService implements FeatureFlagService {
         }
     }
 
+    /** 缓存条目：记录配置分组的加载时间戳与值 */
     private static class CacheEntry {
+        /** 加载时间戳（毫秒） */
         final long loadedAt;
+        /** 配置项 Map */
         final Map<String, String> value;
 
+        /**
+         * 构造方法
+         *
+         * @param loadedAt 加载时间戳
+         * @param value    配置项 Map
+         */
         CacheEntry(long loadedAt, Map<String, String> value) {
             this.loadedAt = loadedAt;
             this.value = value;

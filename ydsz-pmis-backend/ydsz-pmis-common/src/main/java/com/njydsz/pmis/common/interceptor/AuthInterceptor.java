@@ -31,16 +31,30 @@ import java.util.List;
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
 
+    /** JWT 签名密钥（明文，来自配置） */
     @Value("${pmis.jwt.secret:pmis-default-jwt-secret-key-please-change-in-production-environment-must-be-256-bits}")
     private String secret;
 
+    /** 签名密钥对象 */
     private SecretKey key;
 
+    /**
+     * 初始化签名密钥对象
+     */
     @jakarta.annotation.PostConstruct
     public void init() {
         this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
+    /**
+     * 请求预处理：解析 Token 并构造 LoginUser 放入 SecurityContext
+     *
+     * @param request  HTTP 请求
+     * @param response HTTP 响应
+     * @param handler  处理器
+     * @return true 表示放行
+     * @throws BizException 未携带 Token / Token 无效时抛出
+     */
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String token = extractToken(request);
@@ -61,12 +75,26 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
     }
 
+    /**
+     * 请求完成后清理线程上下文，避免内存泄漏与跨请求串号
+     *
+     * @param request  HTTP 请求
+     * @param response HTTP 响应
+     * @param handler  处理器
+     * @param ex       请求处理过程中抛出的异常（可为 null）
+     */
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                 Object handler, Exception ex) {
         SecurityContext.clear();
     }
 
+    /**
+     * 从请求中提取 Token，依次尝试 Authorization Bearer / X-Access-Token / query 参数
+     *
+     * @param request HTTP 请求
+     * @return Token 字符串，可能为 null
+     */
     private String extractToken(HttpServletRequest request) {
         // 1. 优先从 Authorization 头读取
         String auth = request.getHeader("Authorization");
@@ -83,6 +111,13 @@ public class AuthInterceptor implements HandlerInterceptor {
         return queryToken;
     }
 
+    /**
+     * 根据 Claims 构造登录用户对象
+     *
+     * @param claims JWT Claims
+     * @param token  原始 Token 字符串
+     * @return 登录用户对象
+     */
     private LoginUser buildLoginUser(Claims claims, String token) {
         Long userId = Long.parseLong(claims.getSubject());
         String username = (String) claims.get("username");

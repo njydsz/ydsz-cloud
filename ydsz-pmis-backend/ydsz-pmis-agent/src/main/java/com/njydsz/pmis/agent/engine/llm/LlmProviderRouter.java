@@ -12,10 +12,10 @@ import java.util.Map;
  *
  * <p>根据 Nacos 配置 {@code pmis.agent.llm.provider} 选择实际 LLM 实现：
  * <ul>
- *   <li>{@code mock} - {@link MockLlmProvider}（默认）</li>
- *   <li>{@code spring-ai-openai} - {@link SpringAiLlmProvider}</li>
- *   <li>{@code spring-ai-dashscope} - 通义千问（待实现）</li>
- *   <li>{@code spring-ai-qianfan} - 百度千帆（待实现）</li>
+ *   <li>{@code mock} - {@link MockLlmProvider}（默认，开发/测试用）</li>
+ *   <li>{@code spring-ai-openai} - {@link SpringAiLlmProvider}（Spring AI OpenAI）</li>
+ *   <li>{@code dashscope} - {@link DashScopeLlmProvider}（阿里通义千问）</li>
+ *   <li>{@code qianfan} - {@link QianfanLlmProvider}（百度千帆）</li>
  * </ul>
  *
  * <p>切换方式（生产环境热更新）：
@@ -85,5 +85,14 @@ public class LlmProviderRouter {
                 .orElse(mockLlmProvider);
         this.activeProvider = target;
         log.info("[LlmRouter] switched to: {}", target.name());
+    }
+
+    /**
+     * 获取当前生效的 Provider 名称（P1-13 新增，供健康检查/监控使用）。
+     *
+     * @return 当前 Provider 名称（如 "mock"、"spring-ai-openai"）
+     */
+    public String getActiveProviderName() {
+        return active().name();
     }
 }

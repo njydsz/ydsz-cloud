@@ -23,8 +23,14 @@ import java.time.ZoneOffset;
 @RequiredArgsConstructor
 public class SensitiveOperationListener {
 
+    /** 敏感操作 Mapper */
     private final SensitiveOperationMapper mapper;
 
+    /**
+     * 异步消费敏感操作审计事件并落库，落库异常被吞掉以避免影响主业务流程。
+     *
+     * @param e 敏感操作审计事件
+     */
     @Async
     @EventListener
     public void onOp(SensitiveOperationEvent e) {
