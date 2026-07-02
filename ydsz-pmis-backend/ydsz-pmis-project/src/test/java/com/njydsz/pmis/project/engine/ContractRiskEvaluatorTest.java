@@ -10,6 +10,12 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * ContractRiskEvaluator 合同风险评估器单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("ContractRiskEvaluator 风险评估器测试")
 class ContractRiskEvaluatorTest {
 

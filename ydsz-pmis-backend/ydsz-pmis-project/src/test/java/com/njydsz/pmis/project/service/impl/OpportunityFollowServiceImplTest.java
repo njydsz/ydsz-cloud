@@ -18,6 +18,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * OpportunityFollowServiceImpl 商机跟进服务单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("OpportunityFollowServiceImpl 跟进服务测试")
 class OpportunityFollowServiceImplTest {
 

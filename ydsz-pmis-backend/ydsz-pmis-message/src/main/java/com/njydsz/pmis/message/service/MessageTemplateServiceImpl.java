@@ -24,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MessageTemplateServiceImpl {
 
+    /** 消息模板 Mapper */
     private final MessageTemplateMapper templateMapper;
 
     /**
@@ -133,6 +134,12 @@ public class MessageTemplateServiceImpl {
         return templateMapper.selectByChannel(channel.toUpperCase(), 1L);
     }
 
+    /**
+     * 校验模板必填字段：templateCode/channel/content 均不能为空。
+     *
+     * @param t 模板实体
+     * @throws BizException 任一必填字段为空时抛出
+     */
     private void validate(MessageTemplateDO t) {
         if (!StringUtils.hasText(t.getTemplateCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "templateCode 不能为空");

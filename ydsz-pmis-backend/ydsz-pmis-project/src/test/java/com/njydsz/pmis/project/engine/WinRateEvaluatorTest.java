@@ -8,6 +8,12 @@ import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * WinRateEvaluator 赢率评估器单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("WinRateEvaluator 赢率评估器测试")
 class WinRateEvaluatorTest {
 

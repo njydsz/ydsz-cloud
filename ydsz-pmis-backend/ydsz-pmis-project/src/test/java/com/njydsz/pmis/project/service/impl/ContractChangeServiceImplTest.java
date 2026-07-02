@@ -20,7 +20,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * ContractChangeServiceImpl 单元测试
+ * ContractChangeServiceImpl 合同变更服务单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ContractChangeServiceImpl 合同变更测试")
 class ContractChangeServiceImplTest {

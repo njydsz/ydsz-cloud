@@ -62,7 +62,9 @@ import java.util.Collections;
 )
 public class MessageConsumer implements RocketMQListener<String> {
 
+    /** 消息服务 */
     private final MessageService messageService;
+    /** Redis 模板，用于幂等防重 */
     private final StringRedisTemplate redisTemplate;
 
     // ==================== 幂等防重常量 ====================
@@ -79,11 +81,21 @@ public class MessageConsumer implements RocketMQListener<String> {
     /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete） */
     private static final DefaultRedisScript<Long> RELEASE_SCRIPT = initReleaseScript();
 
+    /**
+     * 初始化当前实例标识，取自 JVM 运行时名称（hostname:pid）。
+     *
+     * @return 实例标识字符串
+     */
     private static String initInstanceId() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
         return name != null ? name : "unknown:" + ProcessHandle.current().pid();
     }
 
+    /**
+     * 初始化安全释放锁的 Lua 脚本（仅当 value 匹配时才 delete）。
+     *
+     * @return Redis 释放锁脚本
+     */
     private static DefaultRedisScript<Long> initReleaseScript() {
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
         script.setScriptText(
@@ -92,6 +104,11 @@ public class MessageConsumer implements RocketMQListener<String> {
         return script;
     }
 
+    /**
+     * 消费消息：解析 → 幂等加锁 → 发送 → 异常分级处理。
+     *
+     * @param body 消息体 JSON 字符串
+     */
     @Override
     public void onMessage(String body) {
         if (body == null || body.isBlank()) {
@@ -182,6 +199,12 @@ public class MessageConsumer implements RocketMQListener<String> {
         }
     }
 
+    /**
+     * 判断字符串是否为空白。
+     *
+     * @param s 字符串
+     * @return 为 null 或空白时返回 true
+     */
     private static boolean isBlank(String s) {
         return s == null || s.isBlank();
     }

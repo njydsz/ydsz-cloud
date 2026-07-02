@@ -23,7 +23,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * ContractTemplateServiceImpl 单元测试
+ * ContractTemplateServiceImpl 合同模板服务单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @SuppressWarnings("unchecked")
 @DisplayName("ContractTemplateServiceImpl 合同模板服务测试")

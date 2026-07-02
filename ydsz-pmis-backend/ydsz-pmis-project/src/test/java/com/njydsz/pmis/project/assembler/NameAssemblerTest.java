@@ -14,6 +14,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * NameAssembler 名称装配器单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("NameAssembler 名称装配器测试")
 class NameAssemblerTest {
 

@@ -20,6 +20,13 @@ public class DefaultTemplateEngine implements TemplateEngine {
     /** 占位符正则：匹配 ${var} 或 ${a.b.c} 形式的变量 */
     private static final Pattern PATTERN = Pattern.compile("\\$\\{([\\w.]+)\\}");
 
+    /**
+     * 渲染模板，将 {@code ${var}} 占位符替换为参数值，未命中时替换为空串。
+     *
+     * @param template 模板内容
+     * @param params   参数映射
+     * @return 渲染后文本
+     */
     @Override
     public String render(String template, Map<String, Object> params) {
         if (template == null || template.isEmpty()) {
@@ -40,6 +47,13 @@ public class DefaultTemplateEngine implements TemplateEngine {
         return sb.toString();
     }
 
+    /**
+     * 解析占位符 key 对应的值，支持 {@code a.b.c} 形式的嵌套 Map 取值。
+     *
+     * @param params 参数映射
+     * @param key    占位符 key
+     * @return 解析到的值，未命中返回 null
+     */
     @SuppressWarnings("unchecked")
     private Object resolve(Map<String, Object> params, String key) {
         if (key.contains(".")) {

@@ -26,6 +26,7 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class ProjectChangeExecutedEvent implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 

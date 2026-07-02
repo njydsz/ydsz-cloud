@@ -35,21 +35,27 @@ import org.springframework.core.env.Environment;
 @ConditionalOnClass(name = "io.sentry.Sentry")
 public class SentryConfig {
 
+    /** 应用名（来自 spring.application.name） */
     @Value("${spring.application.name:pmis-app}")
     private String applicationName;
 
+    /** Sentry DSN 地址 */
     @Value("${pmis.sentry.dsn:}")
     private String dsn;
 
+    /** 环境标识（dev / test / prod） */
     @Value("${pmis.sentry.environment:dev}")
     private String environment;
 
+    /** 发布版本号 */
     @Value("${pmis.sentry.release:1.0.0}")
     private String release;
 
+    /** 性能采样率（0.0 ~ 1.0） */
     @Value("${pmis.sentry.traces-sample-rate:0.1}")
     private Double tracesSampleRate;
 
+    /** 错误采样率（0.0 ~ 1.0） */
     @Value("${pmis.sentry.sample-rate:1.0}")
     private Double sampleRate;
 

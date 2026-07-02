@@ -124,6 +124,13 @@ public class NotificationServiceImpl implements NotificationService {
         return R;
     }
 
+    /**
+     * 收件箱分页查询，支持按分类/级别/已读状态过滤。
+     *
+     * @param userId 接收人 ID
+     * @param query  查询条件
+     * @return 通知分页结果
+     */
     @Override
     public Page<NotificationDO> inbox(Long userId, NotificationQueryDTO query) {
         Page<NotificationDO> page = new Page<>(query.getPage(), query.getSize());
@@ -166,6 +173,12 @@ public class NotificationServiceImpl implements NotificationService {
         return notificationMapper.markRead(id, userId) > 0;
     }
 
+    /**
+     * 全部标记已读
+     *
+     * @param userId 接收人 ID
+     * @return 实际标记条数
+     */
     @Override
     public int markAllRead(Long userId) {
         return notificationMapper.markAllRead(userId);
@@ -211,6 +224,13 @@ public class NotificationServiceImpl implements NotificationService {
         return receiverIds;
     }
 
+    /**
+     * 根据发送表单和接收人 ID 构建通知实体。
+     *
+     * @param dto         通知发送表单
+     * @param receiverId  接收人 ID
+     * @return 通知实体
+     */
     private NotificationDO buildEntity(NotificationSendDTO dto, Long receiverId) {
         NotificationDO n = new NotificationDO();
         n.setTitle(dto.getTitle());
@@ -226,6 +246,12 @@ public class NotificationServiceImpl implements NotificationService {
         return n;
     }
 
+    /**
+     * 解析接收人邮箱：优先使用表单中显式填写的邮箱，否则通过 Feign 查询用户服务获取。
+     *
+     * @param dto 通知发送表单
+     * @return 邮箱地址，无则返回 null
+     */
     private String resolveReceiverEmail(NotificationSendDTO dto) {
         if (StringUtils.hasText(dto.getReceiverEmail())) {
             return dto.getReceiverEmail().trim();

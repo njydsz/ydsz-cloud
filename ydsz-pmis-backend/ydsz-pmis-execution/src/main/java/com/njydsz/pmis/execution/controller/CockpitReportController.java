@@ -34,6 +34,13 @@ public class CockpitReportController {
 
     private final CockpitReportService service;
 
+    /**
+     * 驾驶舱总览 KPI
+     *
+     * @param period    所属期间，可选
+     * @param drillDown 下钻参数
+     * @return 总览 KPI 数据
+     */
     @Operation(summary = "驾驶舱总览 KPI")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/overview")
@@ -42,6 +49,13 @@ public class CockpitReportController {
         return Result.ok(service.overview(period, drillDown));
     }
 
+    /**
+     * EVM 健康分布
+     *
+     * @param period    所属期间，可选
+     * @param drillDown 下钻参数
+     * @return EVM 健康分布（红/黄/绿计数）
+     */
     @Operation(summary = "EVM 健康分布")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/evm-health")
@@ -50,6 +64,12 @@ public class CockpitReportController {
         return Result.ok(service.evmHealthDistribution(period, drillDown));
     }
 
+    /**
+     * Bench 闲置成本汇总
+     *
+     * @param drillDown 下钻参数
+     * @return Bench 闲置成本汇总数据
+     */
     @Operation(summary = "Bench 闲置成本汇总")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/bench-cost")
@@ -57,6 +77,12 @@ public class CockpitReportController {
         return Result.ok(service.benchCostSummary(drillDown));
     }
 
+    /**
+     * 可计费利用率汇总
+     *
+     * @param drillDown 下钻参数
+     * @return 可计费利用率汇总数据
+     */
     @Operation(summary = "可计费利用率汇总")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/utilization")
@@ -64,6 +90,12 @@ public class CockpitReportController {
         return Result.ok(service.utilizationSummary(drillDown));
     }
 
+    /**
+     * 按事业部下钻
+     *
+     * @param period 所属期间，可选
+     * @return 各事业部 KPI 明细列表
+     */
     @Operation(summary = "按事业部下钻")
     @PrePermission("cockpit:drilldown:view")
     @GetMapping("/drill/dept")
@@ -71,6 +103,12 @@ public class CockpitReportController {
         return Result.ok(service.drillByDept(period));
     }
 
+    /**
+     * 按项目类型下钻
+     *
+     * @param period 所属期间，可选
+     * @return 各项目类型 KPI 明细列表
+     */
     @Operation(summary = "按项目类型下钻")
     @PrePermission("cockpit:drilldown:view")
     @GetMapping("/drill/project-type")
@@ -78,6 +116,12 @@ public class CockpitReportController {
         return Result.ok(service.drillByProjectType(period));
     }
 
+    /**
+     * 按客户下钻
+     *
+     * @param period 所属期间，可选
+     * @return 各客户 KPI 明细列表
+     */
     @Operation(summary = "按客户下钻")
     @PrePermission("cockpit:drilldown:view")
     @GetMapping("/drill/customer")
@@ -85,6 +129,11 @@ public class CockpitReportController {
         return Result.ok(service.drillByCustomer(period));
     }
 
+    /**
+     * 合同总额年度趋势
+     *
+     * @return 合同总额年度趋势数据
+     */
     @Operation(summary = "合同总额年度趋势")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/contract-yearly-trend")
@@ -94,6 +143,13 @@ public class CockpitReportController {
 
     // ========== 批次18 增量端点 ==========
 
+    /**
+     * 预警事件摘要
+     *
+     * @param period    所属期间，可选
+     * @param drillDown 下钻参数
+     * @return 预警事件摘要数据
+     */
     @Operation(summary = "预警事件摘要（批次18）")
     @PrePermission("cockpit:alert:view")
     @GetMapping("/alerts")
@@ -102,6 +158,13 @@ public class CockpitReportController {
         return Result.ok(service.alertSummary(period, drillDown));
     }
 
+    /**
+     * 项目群驾驶舱
+     *
+     * @param period    所属期间，可选
+     * @param drillDown 下钻参数
+     * @return 项目群 KPI 列表
+     */
     @Operation(summary = "项目群驾驶舱（批次18）")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/project-group")
@@ -110,6 +173,13 @@ public class CockpitReportController {
         return Result.ok(service.projectGroupOverview(period, drillDown));
     }
 
+    /**
+     * 高管看板
+     *
+     * @param period    所属期间，可选
+     * @param drillDown 下钻参数
+     * @return 高管看板数据
+     */
     @Operation(summary = "高管看板（批次18）")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/executive")
@@ -118,6 +188,12 @@ public class CockpitReportController {
         return Result.ok(service.executiveOverview(period, drillDown));
     }
 
+    /**
+     * KPI 趋势（最近 N 个月）
+     *
+     * @param months 月份数量，默认 12
+     * @return KPI 趋势数据
+     */
     @Operation(summary = "KPI 趋势（最近 N 个月，批次18）")
     @PrePermission("cockpit:overview:view")
     @GetMapping("/kpi-trend")

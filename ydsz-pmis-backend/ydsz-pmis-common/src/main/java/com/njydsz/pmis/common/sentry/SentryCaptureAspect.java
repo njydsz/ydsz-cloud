@@ -50,6 +50,13 @@ public class SentryCaptureAspect {
         }
     }
 
+    /**
+     * 通过反射调用 Sentry SDK 上报异常；SDK 未引入或调用失败时降级为日志
+     *
+     * @param pjp           AOP 连接点
+     * @param sentryCapture 当前方法上的 {@link SentryCapture} 注解实例
+     * @param t             业务方法抛出的异常
+     */
     private void report(ProceedingJoinPoint pjp, SentryCapture sentryCapture, Throwable t) {
         // 通过反射调用 Sentry SDK (避免硬依赖)
         try {

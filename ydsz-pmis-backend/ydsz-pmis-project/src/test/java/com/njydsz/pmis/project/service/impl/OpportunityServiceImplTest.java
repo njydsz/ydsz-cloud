@@ -24,6 +24,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+/**
+ * OpportunityServiceImpl 商机服务单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("OpportunityServiceImpl 商机服务测试")
 @SuppressWarnings("unchecked")
 class OpportunityServiceImplTest {

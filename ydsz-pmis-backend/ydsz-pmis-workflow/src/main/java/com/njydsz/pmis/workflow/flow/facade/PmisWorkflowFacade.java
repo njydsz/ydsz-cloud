@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.flow.facade;
 
+import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.WorkflowFacade;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
@@ -96,14 +97,18 @@ public class PmisWorkflowFacade implements WorkflowFacade {
 
     @Override
     public List<Map<String, Object>> listTodoTasks(Long userId, int page, int size) {
-        List<FlowTaskDO> tasks = taskService.listTodoByAssignee(String.valueOf(userId), 1L);
+        // P2-16: 多租户上下文 - 从 SecurityContext 获取当前租户
+        List<FlowTaskDO> tasks = taskService.listTodoByAssignee(
+                String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L));
         return tasks.stream().map(this::toMap).limit(size).toList();
     }
 
     @Override
     public List<Map<String, Object>> listDoneTasks(Long userId, int page, int size) {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
-        List<FlowTaskDO> tasks = taskService.listDoneByAssignee(String.valueOf(userId), 1L);
+        // P2-16: 多租户上下文 - 从 SecurityContext 获取当前租户
+        List<FlowTaskDO> tasks = taskService.listDoneByAssignee(
+                String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L));
         return tasks.stream().map(this::toMap).limit(size).toList();
     }
 

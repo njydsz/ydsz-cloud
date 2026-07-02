@@ -13,6 +13,11 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class ChaosAutoConfiguration {
 
+    /**
+     * 当容器中不存在 {@link ChaosService} 时注册默认实例（FeatureFlagService 为 null，仅用于本地测试）
+     *
+     * @return ChaosService 实例
+     */
     @Bean
     @ConditionalOnMissingBean(ChaosService.class)
     public ChaosService chaosService() {

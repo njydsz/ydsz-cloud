@@ -5,6 +5,12 @@ import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * GateCode 门径评审点枚举单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("GateCode 门径评审点测试")
 class GateCodeTest {
 

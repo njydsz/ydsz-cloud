@@ -30,7 +30,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
- * InitiationServiceImpl 单元测试
+ * InitiationServiceImpl 立项服务单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("InitiationServiceImpl 立项服务测试")
 class InitiationServiceImplTest {

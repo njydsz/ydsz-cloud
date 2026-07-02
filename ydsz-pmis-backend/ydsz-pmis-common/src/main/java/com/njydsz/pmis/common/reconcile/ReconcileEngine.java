@@ -33,6 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @Component
 public class ReconcileEngine {
 
+    /** 已注册的对账处理器: key=对账项编码, value=处理器实例 */
     private final Map<String, ReconcileHandler> handlers = new ConcurrentHashMap<>();
 
     /**

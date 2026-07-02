@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.dto.FlowAssigneeDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
@@ -342,13 +343,16 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
     @Override
     public List<FlowTaskDO> listTodoByAssignee(String assigneeId, Long tenantId) {
-        return taskMapper.selectTodoByAssignee(assigneeId, tenantId == null ? 1L : tenantId);
+        // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return taskMapper.selectTodoByAssignee(assigneeId, tid);
     }
 
     @Override
     public List<FlowTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
                                             List<String> deptIds, Long tenantId) {
-        Long tid = tenantId == null ? 1L : tenantId;
+        // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
         Set<FlowTaskDO> result = new LinkedHashSet<>();
         // 1. 直接分配给该用户的任务
         result.addAll(taskMapper.selectTodoByAssignee(String.valueOf(userId), tid));
@@ -379,7 +383,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     @Override
     public List<FlowTaskDO> listDoneByAssignee(String assigneeId, Long tenantId) {
         // P0-3: 改查历史表
-        Long tid = tenantId == null ? 1L : tenantId;
+        // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
         List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectDoneByAssignee(assigneeId, tid);
         List<FlowTaskDO> result = new ArrayList<>();
         for (FlowHisTaskDO his : hisTasks) {

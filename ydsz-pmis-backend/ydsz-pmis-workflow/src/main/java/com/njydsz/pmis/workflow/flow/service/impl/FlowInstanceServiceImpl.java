@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
@@ -70,7 +71,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
 
         // 1. 查定义
-        Long tenantId = dto.getTenantId() == null ? 1L : dto.getTenantId();
+        // P2-16: 多租户上下文 - DTO 显式传入优先，否则从 SecurityContext 获取
+        Long tenantId = dto.getTenantId() != null
+                ? dto.getTenantId()
+                : SecurityContext.getTenantIdOrDefault(1L);
         FlowDefinitionDO def = definitionService.getPublished(
                 dto.getFlowCode(),
                 StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0",

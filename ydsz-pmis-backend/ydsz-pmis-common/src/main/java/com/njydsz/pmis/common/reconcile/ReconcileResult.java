@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 @Data
 public class ReconcileResult implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
