@@ -90,4 +90,13 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
                    @Param("startTime") LocalDateTime startTime,
                    @Param("endTime") LocalDateTime endTime,
                    @Param("tenantId") Long tenantId);
+
+    /**
+     * P1-1: 查询实例经过的历史节点（去重，按首次完成时间排序），
+     * 用于驳回时让用户选择驳回到任意历史节点。
+     *
+     * @param instanceId 流程实例 ID
+     * @return 节点列表：nodeCode / nodeName / firstFinishAt / assigneeName
+     */
+    List<Map<String, Object>> listPassedNodes(@Param("instanceId") Long instanceId);
 }

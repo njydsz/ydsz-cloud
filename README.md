@@ -57,7 +57,8 @@
 - **数据**: PostgreSQL 18(主) + Redis 7(缓存/分布式锁/会话) + 聚合 SQL View(零 Java JOIN)
 - **可观测性**: Sentry(异常) + Logback(链路 TraceId) + Prometheus + Grafana + ELK
 - **安全**: 等保 2.0 三级 · AES-256 + SM4 字段加密 · 7 种脱敏策略 · TOTP 2FA · DataScope 6 模式 · 操作/登录/导出/敏感四类审计
-- **质量**: 后端 `mvn test` 100% · 前端 `vitest` 100% · `vue-tsc --noEmit` 0 错 · `eslint` 增量 0 错 · SonarQube / Checkstyle / OWASP dependency-check / ZAP baseline
+- **质量**: 后端 `mvn test` 100% · 前端 `vitest` 100% · `vue-tsc --noEmit` 0 错 · `eslint` 增量 0 错 · Checkstyle 已启用并在 CI 中执行(`failsOnError=true`、`violationSeverity=error`)
+- **CI 质量门禁(P0-3)**: SonarQube 扫描已接入 CI,需配置 `SONAR_TOKEN` secret(未配置时自动跳过,后端 `mvn verify sonar:sonar` / 前端 `npx sonar-scanner`) · OWASP dependency-check 已集成,初期 `continue-on-error` 不阻断构建,后续逐步收紧 · JaCoCo 覆盖率已启用为 SonarQube 提供数据 · ZAP baseline(安全扫描,规划中)
 - **工程化**: OpenFeign + FallbackFactory · 自研工作流引擎(pmis_flow_*) · JobHandler 跨模块调度 · vxe-table 通用列表组件 · vite-plugin-mock 独立开发
 
 ## 四、技术架构

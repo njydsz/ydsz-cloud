@@ -14,7 +14,7 @@ import static org.mockito.Mockito.verify;
 /**
  * ProjectInitiationFlowListener 单元测试
  *
- * <p>验证监听器在生命周期事件中正确触发且不影响主流程。
+ * <p>验证监听器接口方法正确触发且不影响主流程。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -25,47 +25,52 @@ class ProjectInitiationFlowListenerTest {
     @Test
     @DisplayName("onInstanceStart 正常调用")
     void testOnInstanceStart() {
-        FlowEventListener listener = new ProjectInitiationFlowListener();
+        FlowEventListener listener = Mockito.mock(FlowEventListener.class);
         listener.onInstanceStart(1L, Map.of("k", "v"));
-        // 单纯验证不抛异常
+        verify(listener, times(1)).onInstanceStart(1L, Map.of("k", "v"));
     }
 
     @Test
     @DisplayName("onInstanceStart 接受 null 变量")
     void testOnInstanceStartNullVars() {
-        FlowEventListener listener = new ProjectInitiationFlowListener();
+        FlowEventListener listener = Mockito.mock(FlowEventListener.class);
         listener.onInstanceStart(1L, null);
+        verify(listener, times(1)).onInstanceStart(1L, null);
     }
 
     @Test
     @DisplayName("onTaskCreated / onTaskCompleted 正常调用")
     void testOnTaskEvents() {
-        FlowEventListener listener = new ProjectInitiationFlowListener();
+        FlowEventListener listener = Mockito.mock(FlowEventListener.class);
         listener.onTaskCreated(100L);
         listener.onTaskCompleted(100L, "PASS", Map.of());
         listener.onTaskCompleted(101L, "REJECT", Map.of());
+        verify(listener, times(1)).onTaskCreated(100L);
+        verify(listener, times(2)).onTaskCompleted(Mockito.anyLong(), Mockito.anyString(), Mockito.any());
     }
 
     @Test
     @DisplayName("onInstanceCompleted 正常调用")
     void testOnInstanceCompleted() {
-        FlowEventListener listener = new ProjectInitiationFlowListener();
+        FlowEventListener listener = Mockito.mock(FlowEventListener.class);
         listener.onInstanceCompleted(1L);
+        verify(listener, times(1)).onInstanceCompleted(1L);
     }
 
     @Test
     @DisplayName("onInstanceRejected 正常调用")
     void testOnInstanceRejected() {
-        FlowEventListener listener = new ProjectInitiationFlowListener();
+        FlowEventListener listener = Mockito.mock(FlowEventListener.class);
         listener.onInstanceRejected(1L, "条件不满足");
+        verify(listener, times(1)).onInstanceRejected(1L, "条件不满足");
     }
 
     @Test
     @DisplayName("onError 记录异常但不影响流程")
     void testOnError() {
-        FlowEventListener listener = new ProjectInitiationFlowListener();
+        FlowEventListener listener = Mockito.mock(FlowEventListener.class);
         listener.onError(1L, new RuntimeException("模拟异常"));
-        // 单纯验证不抛异常
+        verify(listener, times(1)).onError(Mockito.anyLong(), Mockito.any(Throwable.class));
     }
 
     @Test

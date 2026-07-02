@@ -11,6 +11,7 @@ import com.njydsz.pmis.notification.feign.UserServiceClient;
 import com.njydsz.pmis.notification.mapper.NotificationMapper;
 import com.njydsz.pmis.notification.service.NotificationService;
 import com.njydsz.pmis.notification.service.NotificationService.EmailDispatchResult;
+import com.njydsz.pmis.notification.service.RealtimePushService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -44,6 +45,8 @@ class NotificationServiceImplTest {
     private MessageServiceClient messageClient;
     /** 用户服务 Feign 客户端（Mock） */
     private UserServiceClient userClient;
+    /** 实时推送服务（Mock，P0-2） */
+    private RealtimePushService pushService;
     /** 待测服务实例 */
     private NotificationService service;
 
@@ -52,7 +55,8 @@ class NotificationServiceImplTest {
         mapper = mock(NotificationMapper.class);
         messageClient = mock(MessageServiceClient.class);
         userClient = mock(UserServiceClient.class);
-        service = new NotificationServiceImpl(mapper, messageClient, userClient);
+        pushService = mock(RealtimePushService.class);
+        service = new NotificationServiceImpl(mapper, messageClient, userClient, pushService);
     }
 
     @Test

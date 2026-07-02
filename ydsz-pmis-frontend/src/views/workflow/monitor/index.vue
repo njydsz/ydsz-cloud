@@ -5,7 +5,7 @@
  * @description 管理员视角：监控所有运行中的流程实例 + 强制操作（终止/挂起/激活/跳转）
  * P0-9: 流程运行中心（对标 Activiti Admin / Flowable Admin）。
  */
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
@@ -202,7 +202,6 @@ onUnmounted(() => {
 function resize() {
   chart?.resize()
 }
-import { onUnmounted } from 'vue'
 
 function durationLabel(ms?: number) {
   if (!ms || ms <= 0) return '-'

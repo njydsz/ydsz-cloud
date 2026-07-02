@@ -124,4 +124,19 @@
           <if test="endTime != null">AND finish_at &lt;= #{endTime}</if>
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
     </select>
+
+    <!-- P1-1: 实例经过的历史节点（驳回候选目标） -->
+    <select id="listPassedNodes" resultType="java.util.Map">
+        SELECT node_code AS "nodeCode",
+               MAX(node_name) AS "nodeName",
+               MIN(finish_at) AS "firstFinishAt",
+               COUNT(*) AS "visitCount"
+        FROM pmis_flow_his_task
+        WHERE instance_id = #{instanceId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+          AND node_code IS NOT NULL
+        GROUP BY node_code
+        ORDER BY MIN(finish_at) ASC
+    </select>
 </mapper>

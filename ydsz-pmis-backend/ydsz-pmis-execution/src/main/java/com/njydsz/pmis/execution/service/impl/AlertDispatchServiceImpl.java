@@ -12,6 +12,7 @@ import com.njydsz.pmis.execution.mapper.AlertDispatchMapper;
 import com.njydsz.pmis.execution.service.AlertDispatchService;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.feign.NotificationPushClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -43,6 +44,8 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
 
     private final AlertDispatchMapper mapper;
     private final MessageServiceClient messageClient;
+    /** 通知实时推送 Feign 客户端（P0-2，通过 notification 服务 WebSocket 下发） */
+    private final NotificationPushClient pushClient;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -130,6 +133,8 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
                 int n = mapper.markSent(id, LocalDateTime.now());
                 log.info("[Alert] 分发成功: id={} code={} level={} channels={}",
                         id, d.getAlertCode(), d.getAlertLevel(), d.getPushChannels());
+                // P0-2: 实时推送告警到前端（通过 Feign 调 notification 推送，失败降级不影响主流程）
+                broadcastAlert(d);
                 return n > 0;
             }
             mapper.markFailed(id, firstError);
@@ -180,6 +185,29 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
         } catch (Exception e) {
             log.warn("[Alert] Feign 调用异常: channel={} err={}", channel, e.getMessage());
             return MessageResult.fail(channel, e.getMessage());
+        }
+    }
+
+    /**
+     * P0-2: 通过 Feign 调用 notification 服务实时广播告警。
+     *
+     * <p>告警面向角色而非具体用户，故采用广播；推送失败由 NotificationPushClientFallbackFactory 兜底，
+     * 额外 try-catch 保证绝不影响分发主流程。
+     *
+     * @param d 预警分发实体
+     */
+    private void broadcastAlert(AlertDispatchDO d) {
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("alertId", d.getId());
+            payload.put("alertCode", d.getAlertCode());
+            payload.put("alertType", d.getAlertType());
+            payload.put("alertLevel", d.getAlertLevel());
+            payload.put("title", d.getTitle());
+            payload.put("targetRole", d.getTargetRole());
+            pushClient.broadcast("ALERT", payload);
+        } catch (Exception e) {
+            log.warn("[Alert] 实时推送降级忽略: id={} err={}", d.getId(), e.getMessage());
         }
     }
 

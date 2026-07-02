@@ -108,10 +108,54 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
         // 设置首个办理人
         if (userIds.isEmpty()) {
-            // 无法展开：回退到原有 resolveAssignee 逻辑
-            taskMapper.insert(task);
-            resolveAssignee(task, node, variables, null, instance);
-            taskMapper.updateById(task);
+            // GAP-P0: 审批人为空兜底处理 — 读取 node.ext 中的 emptyStrategy 配置
+            Map<String, Object> extConfig = parseExtConfig(node.getExt());
+            String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", "FALLBACK");
+
+            switch (emptyStrategy) {
+                case "AUTO_PASS" -> {
+                    // 自动通过：创建任务后立即完成并推进
+                    task.setAssigneeType(FlowAssigneeType.USER.name());
+                    task.setAssigneeId("0");
+                    task.setAssigneeName("SYSTEM_AUTO_PASS");
+                    task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+                    LocalDateTime now = LocalDateTime.now();
+                    task.setFinishAt(now);
+                    task.setDurationMs(0L);
+                    taskMapper.insert(task);
+                    archiveTask(task, FlowTaskStatus.COMPLETED);
+                    audit(task, "AUTO_PASS", 0L, null, "审批人为空，自动通过");
+                    log.info("[Flow] 审批人为空自动通过: instanceId={} node={}",
+                            instanceId, node.getNodeCode());
+                    // 推进到下一节点（递归深度保护）
+                    advanceAfterAutoPass(instance, node, variables);
+                    return task.getId();
+                }
+                case "TRANSFER_ADMIN" -> {
+                    Long adminUserId = parseLongConfig(extConfig, "adminUserId", 1L);
+                    task.setAssigneeType(FlowAssigneeType.USER.name());
+                    task.setAssigneeId(String.valueOf(adminUserId));
+                    task.setAssigneeName("ADMIN_FALLBACK");
+                    taskMapper.insert(task);
+                    log.info("[Flow] 审批人为空转管理员: instanceId={} node={} adminId={}",
+                            instanceId, node.getNodeCode(), adminUserId);
+                }
+                case "ASSIGN_SPECIFIED" -> {
+                    Long specifiedUserId = parseLongConfig(extConfig, "specifiedUserId", 1L);
+                    task.setAssigneeType(FlowAssigneeType.USER.name());
+                    task.setAssigneeId(String.valueOf(specifiedUserId));
+                    task.setAssigneeName("SPECIFIED_FALLBACK");
+                    taskMapper.insert(task);
+                    log.info("[Flow] 审批人为空指定人员: instanceId={} node={} userId={}",
+                            instanceId, node.getNodeCode(), specifiedUserId);
+                }
+                default -> {
+                    // 默认：回退到原有 resolveAssignee 逻辑
+                    taskMapper.insert(task);
+                    resolveAssignee(task, node, variables, null, instance);
+                    taskMapper.updateById(task);
+                }
+            }
         } else {
             // 展开成功：设置第一个用户为 assignee，其余写入 pmis_flow_user
             task.setAssigneeType(FlowAssigneeType.USER.name());
@@ -862,6 +906,66 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             instanceMapper.updateStatus(instance.getId(), instance.getFlowStatus(),
                     nextNodes.get(0).getNodeCode(), nextNodes.get(0).getNodeName(),
                     null, null);
+        }
+    }
+
+    // ============================== GAP-P0: 审批人为空兜底辅助方法 ==============================
+
+    /** AUTO_PASS 递归深度保护（防止流程定义环路导致栈溢出） */
+    private static final ThreadLocal<Integer> AUTO_PASS_DEPTH = ThreadLocal.withInitial(() -> 0);
+    private static final int MAX_AUTO_PASS_DEPTH = 20;
+
+    /** AUTO_PASS 后推进到下一节点 */
+    @SuppressWarnings("unchecked")
+    private void advanceAfterAutoPass(FlowInstanceDO instance, FlowNodeDO node,
+                                       Map<String, Object> variables) {
+        int depth = AUTO_PASS_DEPTH.get();
+        if (depth >= MAX_AUTO_PASS_DEPTH) {
+            log.warn("[Flow] AUTO_PASS 递归深度超限: depth={} instanceId={}", depth, instance.getId());
+            throw new BizException(BizErrorCode.INTERNAL_ERROR,
+                    "AUTO_PASS 递归深度超限，可能存在流程定义环路");
+        }
+        AUTO_PASS_DEPTH.set(depth + 1);
+        try {
+            List<FlowNodeDO> nextNodes = advancer.advance(instance, node.getNodeCode(),
+                    "PASS", null, variables);
+            if (nextNodes.isEmpty()) {
+                ((com.njydsz.pmis.workflow.flow.service.impl.FlowInstanceServiceImpl) instanceService)
+                        .complete(instance.getId(), node.getNodeCode());
+            } else {
+                ((com.njydsz.pmis.workflow.flow.service.impl.FlowInstanceServiceImpl) instanceService)
+                        .generateTasksForNodes(instance.getId(), nextNodes, variables);
+                updateInstanceNode(instance, nextNodes);
+            }
+        } finally {
+            AUTO_PASS_DEPTH.set(depth);
+        }
+    }
+
+    /** 解析 node.ext JSON 为 Map */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseExtConfig(String ext) {
+        if (!StringUtils.hasText(ext)) {
+            return Collections.emptyMap();
+        }
+        try {
+            Map<String, Object> map = JSON.parseObject(ext, Map.class);
+            return map == null ? Collections.emptyMap() : map;
+        } catch (Exception e) {
+            log.warn("[Flow] 解析 node.ext JSON 失败: {} err={}", ext, e.getMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+    /** 从 extConfig 中读取 Long 值 */
+    private Long parseLongConfig(Map<String, Object> config, String key, Long defaultValue) {
+        Object val = config.get(key);
+        if (val == null) return defaultValue;
+        if (val instanceof Number n) return n.longValue();
+        try {
+            return Long.parseLong(String.valueOf(val));
+        } catch (NumberFormatException e) {
+            return defaultValue;
         }
     }
 

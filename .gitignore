@@ -118,7 +118,7 @@ screenshots/
 # SonarQube
 # ========================
 .scannerwork/
-sonar-project.properties
+# 注：sonar-project.properties 为团队共享配置（P0-3），需纳入版本控制，故不再忽略
 
 # ========================
 # Docker

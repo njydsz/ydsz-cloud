@@ -10,6 +10,7 @@ import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
 import com.njydsz.pmis.notification.dto.NotificationSendDTO;
 import com.njydsz.pmis.notification.entity.NotificationDO;
 import com.njydsz.pmis.notification.service.NotificationService;
+import com.njydsz.pmis.notification.service.RealtimePushService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -17,6 +18,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 通知接口
@@ -32,6 +34,8 @@ public class NotificationController {
 
     /** 通知服务 */
     private final NotificationService notificationService;
+    /** 实时推送服务（WebSocket，P0-2） */
+    private final RealtimePushService realtimePushService;
 
     /**
      * 发送通知
@@ -104,5 +108,37 @@ public class NotificationController {
     public Result<Void> delete(@RequestBody List<Long> ids) {
         notificationService.delete(SecurityContext.getUserId(), ids);
         return Result.ok();
+    }
+
+    /**
+     * 实时推送消息到指定用户（供其他微服务通过 Feign 调用，P0-2）
+     *
+     * @param userId  接收用户 ID
+     * @param type    消息类型 (NOTIFICATION/ALERT/DASHBOARD)
+     * @param payload 消息内容
+     * @return 推送结果
+     */
+    @Operation(summary = "实时推送（指定用户）")
+    @PostMapping("/push")
+    public Result<Map<String, Object>> push(@RequestParam Long userId,
+                                            @RequestParam String type,
+                                            @RequestBody Object payload) {
+        realtimePushService.pushToUser(userId, type, payload);
+        return Result.ok(Map.of("success", true, "userId", userId, "type", type));
+    }
+
+    /**
+     * 广播消息到所有在线用户（供其他微服务通过 Feign 调用，P0-2）
+     *
+     * @param type    消息类型
+     * @param payload 消息内容
+     * @return 推送结果
+     */
+    @Operation(summary = "实时广播")
+    @PostMapping("/broadcast")
+    public Result<Map<String, Object>> broadcast(@RequestParam String type,
+                                                 @RequestBody Object payload) {
+        realtimePushService.broadcast(type, payload);
+        return Result.ok(Map.of("success", true, "type", type));
     }
 }

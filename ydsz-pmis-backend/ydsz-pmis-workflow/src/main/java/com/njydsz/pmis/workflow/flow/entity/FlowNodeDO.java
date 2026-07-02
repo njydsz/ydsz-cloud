@@ -58,6 +58,12 @@ public class FlowNodeDO extends BaseDO {
     /** 扩展字段 JSON */
     private String ext;
 
+    /** GAP-P0: 表单字段权限配置 JSON — 按节点控制字段可编辑/只读/隐藏，格式: {"fieldKey":"EDIT|READONLY|HIDDEN",...} */
+    private String formFieldsConfig;
+
+    /** GAP-P1: SLA 超时配置 JSON — {"timeoutMinutes":120,"action":"REMIND|ESCALATE|AUTO_PASS|AUTO_REJECT","reminderCount":3,"adminUserId":1} */
+    private String slaConfig;
+
     /** 租户 ID */
     private Long tenantId;
 

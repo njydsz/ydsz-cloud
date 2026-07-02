@@ -10,6 +10,7 @@ import com.njydsz.pmis.execution.feign.MessageServiceClient;
 import com.njydsz.pmis.execution.mapper.AlertDispatchMapper;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.feign.NotificationPushClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,13 +37,15 @@ class AlertDispatchServiceImplTest {
 
     private AlertDispatchMapper mapper;
     private MessageServiceClient messageClient;
+    private NotificationPushClient pushClient;
     private AlertDispatchServiceImpl service;
 
     @BeforeEach
     void setUp() {
         mapper = mock(AlertDispatchMapper.class);
         messageClient = mock(MessageServiceClient.class);
-        service = new AlertDispatchServiceImpl(mapper, messageClient);
+        pushClient = mock(NotificationPushClient.class);
+        service = new AlertDispatchServiceImpl(mapper, messageClient, pushClient);
     }
 
     @Test

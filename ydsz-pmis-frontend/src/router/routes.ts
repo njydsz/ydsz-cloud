@@ -435,4 +435,36 @@ export const asyncRoutes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/workflow',
+    component: () => import('@/layout/default/index.vue'),
+    redirect: '/workflow/approval-center',
+    meta: { title: '工作流中心', icon: 'Connection' },
+    children: [
+      {
+        path: 'approval-center',
+        name: 'WorkflowApprovalCenter',
+        component: () => import('@/views/workflow/approval-center/index.vue'),
+        meta: { title: '审批中心', icon: 'Tickets', keepAlive: true, permCode: PC.WORKFLOW_APPROVAL_CENTER },
+      },
+      {
+        path: 'design',
+        name: 'WorkflowDesign',
+        component: () => import('@/views/workflow/design/index.vue'),
+        meta: { title: '流程设计', icon: 'Edit', keepAlive: true, permCode: PC.WORKFLOW_DEFINITION_LIST },
+      },
+      {
+        path: 'instance',
+        name: 'WorkflowInstance',
+        component: () => import('@/views/workflow/instance/index.vue'),
+        meta: { title: '流程实例', icon: 'View', hidden: true, permCode: PC.WORKFLOW_DIAGRAM },
+      },
+      {
+        path: 'monitor',
+        name: 'WorkflowMonitor',
+        component: () => import('@/views/workflow/monitor/index.vue'),
+        meta: { title: '流程运行中心', icon: 'Monitor', keepAlive: true, permCode: PC.WORKFLOW_MONITOR },
+      },
+    ],
+  },
 ]

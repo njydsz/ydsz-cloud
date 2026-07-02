@@ -38,6 +38,9 @@ spring:
             maxAge: 3600
       default-filters:
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      httpclient:
+        websocket:
+          max-frame-payload-length: 65536
     sentinel:
       transport:
         dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}

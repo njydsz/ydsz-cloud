@@ -12,6 +12,7 @@ import com.njydsz.pmis.notification.feign.MessageServiceClient;
 import com.njydsz.pmis.notification.feign.UserServiceClient;
 import com.njydsz.pmis.notification.mapper.NotificationMapper;
 import com.njydsz.pmis.notification.service.NotificationService;
+import com.njydsz.pmis.notification.service.RealtimePushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,8 @@ public class NotificationServiceImpl implements NotificationService {
     private final MessageServiceClient messageServiceClient;
     /** 用户服务 Feign 客户端 */
     private final UserServiceClient userServiceClient;
+    /** 实时推送服务（WebSocket，P0-2） */
+    private final RealtimePushService realtimePushService;
 
     /**
      * 发送通知（支持单接收/批量）
@@ -53,7 +56,10 @@ public class NotificationServiceImpl implements NotificationService {
         List<Long> receiverIds = resolveReceiverIds(dto);
         int count = 0;
         for (Long rid : receiverIds) {
-            notificationMapper.insert(buildEntity(dto, rid));
+            NotificationDO notificationDO = buildEntity(dto, rid);
+            notificationMapper.insert(notificationDO);
+            // P0-2: 实时推送通知到接收人（推送失败不影响主流程，由 RealtimePushService 内部降级）
+            realtimePushService.pushToUser(rid, "NOTIFICATION", notificationDO);
             count++;
         }
         log.info("[Notification] 发送通知: title={} count={} bizType={}", dto.getTitle(), count, dto.getBizType());
@@ -122,6 +128,13 @@ public class NotificationServiceImpl implements NotificationService {
             R.setEmailSent(false);
             R.setEmailError(e.getClass().getSimpleName() + ": " + e.getMessage());
             log.error("[Notification] 邮件投递异常: receiverId={} reason={}", dto.getReceiverId(), e.getMessage(), e);
+        }
+        // P0-2: 实时推送（含邮件投递结果）到接收人，失败不影响主流程
+        Long pushUserId = dto.getReceiverId() != null ? dto.getReceiverId()
+                : (dto.getReceiverIds() != null && !dto.getReceiverIds().isEmpty()
+                        ? dto.getReceiverIds().get(0) : null);
+        if (pushUserId != null) {
+            realtimePushService.pushToUser(pushUserId, "NOTIFICATION", R);
         }
         return R;
     }

@@ -5,6 +5,7 @@ import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.flow.engine.FlowAssigneeResolver;
 import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
+import com.njydsz.pmis.workflow.flow.engine.FlowUrgeLimiter;
 import com.njydsz.pmis.workflow.flow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
@@ -72,6 +73,7 @@ class FlowTaskServiceImplTest {
     private FlowAssigneeResolver assigneeResolver;
     private List<FlowEventListener> eventListeners;
     private ApplicationEventPublisher eventPublisher;
+    private FlowUrgeLimiter urgeLimiter;
     private FlowTaskServiceImpl service;
 
     @BeforeEach
@@ -90,10 +92,13 @@ class FlowTaskServiceImplTest {
         eventListeners = new ArrayList<>();
         // P2-35: 注入 ApplicationEventPublisher mock
         eventPublisher = mock(ApplicationEventPublisher.class);
+        // P0-2: 催办限流器 mock（默认放行）
+        urgeLimiter = mock(FlowUrgeLimiter.class);
+        when(urgeLimiter.tryAcquire(anyLong(), anyLong(), anyString())).thenReturn(true);
         service = new FlowTaskServiceImpl(taskMapper, hisTaskMapper, instanceMapper,
                 instanceService, advancer, variableStrategy,
                 userMapper, auditLogMapper, nodeMapper, assigneeResolver, eventListeners,
-                eventPublisher);
+                eventPublisher, urgeLimiter);
     }
 
     // ============== createTask ==============

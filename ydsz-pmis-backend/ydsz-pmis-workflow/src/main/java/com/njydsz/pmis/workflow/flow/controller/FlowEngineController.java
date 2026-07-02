@@ -13,6 +13,7 @@ import com.njydsz.pmis.workflow.flow.entity.FlowCcDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowCcService;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
@@ -50,6 +51,8 @@ public class FlowEngineController {
     private final FlowTaskService taskService;
     /** P0-3: 抄送服务 */
     private final FlowCcService ccService;
+    /** P1-1: 历史任务 mapper（驳回候选目标节点） */
+    private final FlowHisTaskMapper hisTaskMapper;
 
     // ============== 引擎信息 ==============
 
@@ -419,13 +422,31 @@ public class FlowEngineController {
     /**
      * 驳回任务
      *
-     * @param dto 任务操作参数
+     * @param dto 任务操作参数（可含 targetNodeCode 指定驳回目标；不填则按流程默认）
      * @return 统一响应结果
      */
     @PostMapping("/task/reject")
     public Result<Void> reject(@RequestBody FlowTaskOperateDTO dto) {
         workflowFacade.rejectTask(dto);
         return Result.ok();
+    }
+
+    /**
+     * P1-1: 查询任务所属实例经过的历史节点（驳回候选目标）
+     *
+     * <p>前端在打开"驳回"弹窗前调用本接口，渲染"驳回到"下拉列表。
+     *
+     * @param taskId 任务 ID
+     * @return 该任务所属实例经过的历史节点列表（按首次完成时间正序）
+     */
+    @GetMapping("/task/{taskId}/rejectable-nodes")
+    public Result<List<Map<String, Object>>> rejectableNodes(@PathVariable Long taskId) {
+        FlowTaskDO task = taskService.getById(taskId);
+        if (task == null) {
+            return Result.ok(List.of());
+        }
+        List<Map<String, Object>> nodes = hisTaskMapper.listPassedNodes(task.getInstanceId());
+        return Result.ok(nodes);
     }
 
     /**

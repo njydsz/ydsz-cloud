@@ -76,6 +76,10 @@ public class RouteConfig {
                 .route("ydsz-pmis-notification", r -> r.path("/api/v1/notifications/**")
                         .uri("lb://ydsz-pmis-notification"))
 
+                // 通知中心 WebSocket（P0-2 实时推送，STOMP/SockJS 端点 /ws）
+                .route("ydsz-pmis-notification-ws", r -> r.path("/ws/**")
+                        .uri("lb://ydsz-pmis-notification"))
+
                 // 配置中心
                 .route("ydsz-pmis-config", r -> r.path("/api/v1/configs/**", "/api/v1/config/**")
                         .uri("lb://ydsz-pmis-config"))

@@ -15,7 +15,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
         "com.njydsz.pmis.execution",
         "com.njydsz.pmis.common"
 })
-@EnableFeignClients(basePackages = "com.njydsz.pmis.execution.feign")
+@EnableFeignClients(basePackages = {"com.njydsz.pmis.execution.feign", "com.njydsz.pmis.common.feign"})
 @MapperScan("com.njydsz.pmis.execution.mapper")
 public class ExecutionApplication {
 

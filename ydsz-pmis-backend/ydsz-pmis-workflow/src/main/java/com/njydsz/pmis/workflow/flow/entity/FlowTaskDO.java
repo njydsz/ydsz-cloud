@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.flow.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -106,6 +107,10 @@ public class FlowTaskDO extends BaseDO {
 
     /** 截止时间 */
     private LocalDateTime dueAt;
+
+    /** GAP-P1: 乐观锁版本号 — 会签并发安全 */
+    @Version
+    private Integer version;
 
     /** 租户 ID */
     private Long tenantId;

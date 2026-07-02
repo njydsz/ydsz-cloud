@@ -88,6 +88,12 @@ public class FlowInstanceDO extends BaseDO {
     @TableField("duration_ms")
     private Long durationMs;
 
+    /** GAP-P1: 父流程实例 ID（子流程场景，可空） */
+    private Long parentInstanceId;
+
+    /** GAP-P1: 父流程中触发子流程的节点编码（可空） */
+    private String parentNodeCode;
+
     /** 租户 ID */
     private Long tenantId;
 
