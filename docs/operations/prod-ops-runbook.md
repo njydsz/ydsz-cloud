@@ -41,16 +41,16 @@
 | gateway | 9000 | 4 | Nacos, Redis | 唯一对外入口 |
 | auth | 9001 | 2 | Nacos, Redis, MySQL | 含 2FA + 会话 |
 | user | 9002 | 3 | Nacos, MySQL | 含资源池/Bench |
-| notification | 9013 | 2 | Nacos, Redis, RabbitMQ | |
-| workflow | 9014 | 2 | Nacos, MySQL | 自研工作流引擎 |
-| project | 9015 | 3 | Nacos, MySQL | 商机/立项/合同 |
-| execution | 9016 | 5 | Nacos, MySQL, Redis, Feign(user) | 核心, 副本最多 |
-| agent | 9017 | 2 | Nacos, Feign(execution) | AI 编排 |
-| config | 9018 | 2 | Nacos, MySQL | 配置中心 |
-| file | 9019 | 2 | MinIO | 文件存储 |
-| audit | 9020 | 2 | MySQL | 审计 |
-| message | 9021 | 2 | Nacos, Redis | 消息模板 |
-| scheduler | 9022 | 1 | XXL-JOB, MySQL | 单实例避免并发 |
+| notification | 9003 | 2 | Nacos, Redis, RabbitMQ | |
+| workflow | 9004 | 2 | Nacos, MySQL | 自研工作流引擎 |
+| project | 9005 | 3 | Nacos, MySQL | 商机/立项/合同 |
+| execution | 9006 | 5 | Nacos, MySQL, Redis, Feign(user) | 核心, 副本最多 |
+| agent | 9007 | 2 | Nacos, Feign(execution) | AI 编排 |
+| config | 9008 | 2 | Nacos, MySQL | 配置中心 |
+| file | 9009 | 2 | MinIO | 文件存储 |
+| audit | 9010 | 2 | MySQL | 审计 |
+| message | 9011 | 2 | Nacos, Redis | 消息模板 |
+| scheduler | 9012 | 1 | XXL-JOB, MySQL | 单实例避免并发 |
 | frontend | 80 | 4 | Nginx | Vue 静态 |
 
 ## 3. 容量规划 (HPA 阈值)
@@ -195,7 +195,7 @@ curl -X POST "http://sentinel-dashboard:8718/degradeRules" \
   -d "grade=1&count=100&timeWindow=10"
 
 # 紧急关闭 AI 编排 (使用 FeatureFlag)
-curl -X PUT "http://pmis-config:9018/api/v1/feature-flags/AGENT_ORCHESTRATION/enabled" \
+curl -X PUT "http://pmis-config:9008/api/v1/feature-flags/AGENT_ORCHESTRATION/enabled" \
   -H "Content-Type: application/json" -d "false"
 ```
 
@@ -203,7 +203,7 @@ curl -X PUT "http://pmis-config:9018/api/v1/feature-flags/AGENT_ORCHESTRATION/en
 ```bash
 # 1. 看当前活跃连接
 kubectl exec -it deployment/pmis-execution -- \
-  curl -s http://localhost:9016/actuator/metrics/hikaricp.connections.active
+  curl -s http://localhost:9006/actuator/metrics/hikaricp.connections.active
 
 # 2. 临时扩容: 加副本 + 调 max-pool-size
 kubectl scale deployment/pmis-execution --replicas=8 -n pmis-prod
@@ -237,10 +237,10 @@ kubectl rollout status deployment/pmis-<service> -n pmis-prod --timeout=300s
 kubectl rollout undo deployment/pmis-<service> --to-revision=<n> -n pmis-prod
 
 # 方案 C: 关闭 FeatureFlag (无需重启)
-curl -X PUT "http://pmis-config:9018/api/v1/feature-flags/<KEY>/enabled?enabled=false"
+curl -X PUT "http://pmis-config:9008/api/v1/feature-flags/<KEY>/enabled?enabled=false"
 
 # 方案 D: 关闭混沌工程
-curl -X POST "http://pmis-config:9018/api/v1/chaos/history/clear"
+curl -X POST "http://pmis-config:9008/api/v1/chaos/history/clear"
 ```
 
 ### 6.5 数据恢复

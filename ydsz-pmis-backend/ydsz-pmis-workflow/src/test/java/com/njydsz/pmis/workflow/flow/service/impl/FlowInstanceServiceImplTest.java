@@ -983,4 +983,78 @@ class FlowInstanceServiceImplTest {
         assertThat(ctx.getTenantId()).isEqualTo("2");
         assertThat(ctx.getTraceId()).isEqualTo("trace-001");
     }
+
+    // ============== GAP-V2-02: 表单渲染数据 ==============
+
+    @Test
+    @DisplayName("getFormRenderData GAP-V2-02: 通过 taskId 获取表单渲染数据")
+    void testGetFormRenderDataWithTaskId() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setDefinitionId(10L);
+        ins.setFlowStatus("RUNNING");
+        ins.setTitle("测试标题");
+        ins.setVariable(null);
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(50L);
+        task.setNodeCode("t1");
+        task.setNodeName("审批");
+        when(taskMapper.selectById(50L)).thenReturn(task);
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("审批");
+        String config = "[{\"field\":\"amount\",\"label\":\"金额\"}]";
+        node.setFormFieldsConfig(config);
+        when(nodeMapper.selectByCode(10L, "t1")).thenReturn(node);
+
+        Map<String, Object> result = service.getFormRenderData(1L, 50L);
+        assertThat(result).isNotNull();
+        assertThat(result.get("instanceId")).isEqualTo(1L);
+        assertThat(result.get("taskId")).isEqualTo(50L);
+        assertThat(result.get("nodeCode")).isEqualTo("t1");
+        assertThat(result.get("nodeName")).isEqualTo("审批");
+        assertThat(result.get("formFieldsConfig")).isEqualTo(config);
+        assertThat(result.get("flowStatus")).isEqualTo("RUNNING");
+        assertThat(result.get("title")).isEqualTo("测试标题");
+    }
+
+    @Test
+    @DisplayName("getFormRenderData GAP-V2-02: 不传 taskId 时回退到实例当前节点")
+    void testGetFormRenderDataWithoutTaskId() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setDefinitionId(10L);
+        ins.setCurrentNodeCode("n1");
+        ins.setCurrentNodeName("部门审批");
+        ins.setFlowStatus("RUNNING");
+        ins.setTitle("测试标题");
+        ins.setVariable(null);
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("n1");
+        node.setNodeName("部门审批");
+        String config = "[{\"field\":\"dept\",\"label\":\"部门\"}]";
+        node.setFormFieldsConfig(config);
+        when(nodeMapper.selectByCode(10L, "n1")).thenReturn(node);
+
+        Map<String, Object> result = service.getFormRenderData(1L, null);
+        assertThat(result).isNotNull();
+        assertThat(result.get("nodeCode")).isEqualTo("n1");
+        assertThat(result.get("nodeName")).isEqualTo("部门审批");
+        assertThat(result.get("formFieldsConfig")).isEqualTo(config);
+        assertThat(result.get("taskId")).isNull();
+    }
+
+    @Test
+    @DisplayName("getFormRenderData GAP-V2-02: 实例不存在抛 NOT_FOUND")
+    void testGetFormRenderDataInstanceNotFound() {
+        when(instanceMapper.selectById(99L)).thenReturn(null);
+        assertThatThrownBy(() -> service.getFormRenderData(99L, null))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("不存在");
+    }
 }

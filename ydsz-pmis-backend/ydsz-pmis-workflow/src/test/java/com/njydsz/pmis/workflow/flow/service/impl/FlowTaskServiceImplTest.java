@@ -1988,4 +1988,55 @@ class FlowTaskServiceImplTest {
         task.setTenantId(1L);
         return task;
     }
+
+    // ============== GAP-V2-05: 审批人自动去重 ==============
+
+    @Test
+    @DisplayName("createTask GAP-V2-05: 审批人自动去重 — 上一任务 assignee 相同则自动完成")
+    void testAutoDedupSameAssignee() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("user:1001"), any())).thenReturn("user:1001");
+
+        // 上一已完成任务，assigneeId 与当前相同
+        FlowTaskDO prevTask = new FlowTaskDO();
+        prevTask.setId(80L);
+        prevTask.setAssigneeId("1001");
+        prevTask.setAssigneeName("USER:1001");
+        prevTask.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        when(taskMapper.selectList(any())).thenReturn(List.of(prevTask));
+
+        // insert 回填 ID
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(99L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        // advancer.advance 返回空列表 → 调用 instanceService.complete
+        when(advancer.advance(any(), eq("t1"), eq("PASS"), eq(null), any()))
+                .thenReturn(Collections.emptyList());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("审批");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("user:1001");
+
+        Long taskId = service.createTask(10L, node, Map.of());
+        assertThat(taskId).isEqualTo(99L);
+
+        // 验证任务被标记为 COMPLETED
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        FlowTaskDO inserted = taskCaptor.getValue();
+        assertThat(inserted.getTaskStatus()).isEqualTo(FlowTaskStatus.COMPLETED.name());
+        assertThat(inserted.getAssigneeId()).isEqualTo("1001");
+        assertThat(inserted.getFinishAt()).isNotNull();
+        assertThat(inserted.getDurationMs()).isEqualTo(0L);
+
+        // 验证审计日志被写入
+        verify(auditLogMapper).insert(any());
+        // 验证历史表归档
+        verify(hisTaskMapper).insert(any());
+    }
 }

@@ -1,24 +1,23 @@
 # ============================================================
-# Nacos 配置：ydsz-pmis-message-staging
-# DataId  : ydsz-pmis-message-staging.yaml
+# Nacos 配置：ydsz-pmis-agent-uat
+# DataId  : ydsz-pmis-agent-uat.yaml
 # Group   : PMIS_GROUP
-# Namespace: pmis-staging
-# 环境     : STAGING（预发环境）
+# Namespace: pmis-uat
+# 环境     : UAT（用户验收测试 / 生产仿真，dashscope 真实 LLM）
 # ============================================================
 
 server:
-  port: 9011
+  port: 9007
   compression:
     enabled: true
-    level: BEST_SPEED
   servlet:
     context-path: /
 
 spring:
   application:
-    name: ydsz-pmis-message
+    name: ydsz-pmis-agent
   profiles:
-    active: staging
+    active: uat
   main:
     web-application-type: servlet
     banner-mode: log
@@ -30,23 +29,21 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         heart-beat-interval: 5000
         heart-beat-timeout: 15000
-        fail-fast: true
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         group: PMIS_GROUP
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
-        fail-fast: true
         extension-configs:
-          - dataId: pmis-common-staging.yaml
+          - dataId: pmis-common-uat.yaml
             group: PMIS_GROUP
             refresh: true
   datasource:
@@ -56,10 +53,10 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     druid:
-      initial-size: 10
-      min-idle: 10
-      max-active: 40
-      max-wait: 30000
+      initial-size: 5
+      min-idle: 5
+      max-active: 20
+      max-wait: 60000
       validation-query: SELECT 1
       filters: stat,wall,slf4j
   data:
@@ -68,53 +65,51 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       database: 0
-      timeout: 3s
+      timeout: 5s
       lettuce:
         pool:
-          max-active: 32
-          max-idle: 16
+          max-active: 24
+          max-idle: 12
           min-idle: 4
-  mail:
-    host: ${MAIL_HOST}
-    port: ${MAIL_PORT:465}
-    username: ${MAIL_USER}
-    password: ${MAIL_PASSWORD}
-    default-encoding: UTF-8
-    properties:
-      mail:
-        smtp:
-          ssl:
-            enable: true
-          auth: true
-          starttls:
-            enable: true
-          connectiontimeout: 10000
-          timeout: 10000
-          writetimeout: 10000
 
-sms:
-  provider: ${SMS_PROVIDER:aliyun}
-  access-key: ${SMS_ACCESS_KEY}
-  secret-key: ${SMS_SECRET_KEY}
-  sign-name: ${SMS_SIGN_NAME:PMIS}
-  template-id: ${SMS_TEMPLATE_ID}
-  region: ${SMS_REGION:cn-hangzhou}
-  endpoint: ${SMS_ENDPOINT:dysmsapi.aliyuncs.com}
+spring.ai:
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+    base-url: ${OPENAI_BASE_URL:https://api.openai.com}
+    chat:
+      options:
+        model: ${OPENAI_MODEL:gpt-4o-mini}
+        temperature: 0.3
+  dashscope:
+    api-key: ${DASHSCOPE_API_KEY}
+    base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
+    chat:
+      options:
+        model: ${DASHSCOPE_MODEL:qwen-plus}
+        temperature: 0.3
 
 pmis:
-  message:
+  agent:
     enabled: true
-    async: true
-    queue-capacity: 10000
-    consumer-threads: 8
-    rate-limit-per-second: 500
-    template-cache-ttl: 3600
-    retry-times: 3
-    retry-interval: 1000
+    llm:
+      provider: ${LLM_PROVIDER:dashscope}
+      timeout-millis: ${LLM_TIMEOUT_MILLIS:30000}
+      max-retries: ${LLM_MAX_RETRIES:3}
+      fallback-to-mock: ${LLM_FALLBACK_TO_MOCK:false}
+    prompt:
+      max-tokens: 4096
+      temperature: 0.3
+      top-p: 0.9
+    rag:
+      enabled: true
+      top-k: 5
+    orchestration:
+      max-steps: 10
+      timeout-seconds: 60
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.message.entity
+  type-aliases-package: com.njydsz.pmis.agent.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
@@ -148,8 +143,6 @@ management:
       enabled: true
     redis:
       enabled: true
-    mail:
-      enabled: false
   metrics:
     tags:
       application: ${spring.application.name}
@@ -162,4 +155,4 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
   file:
-    name: /var/log/pmis/message
+    name: /var/log/pmis/agent

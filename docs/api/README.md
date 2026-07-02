@@ -31,10 +31,10 @@ docs/api/
 ```
 http://localhost:9001/swagger-ui.html  # auth
 http://localhost:9002/swagger-ui.html  # user
-http://localhost:9015/swagger-ui.html  # project
-http://localhost:9016/swagger-ui.html  # execution
+http://localhost:9005/swagger-ui.html  # project
+http://localhost:9006/swagger-ui.html  # execution
 ...
-http://localhost:9020/swagger-ui.html  # audit
+http://localhost:9010/swagger-ui.html  # audit
 ```
 
 Knife4j 增强版（国内访问更稳定）：
@@ -156,7 +156,7 @@ Access token 有效期 2 小时，refresh token 有效期 7 天。
 mvn -pl ydsz-pmis-execution spring-boot:run
 
 # 另开终端导出 OpenAPI JSON
-curl http://localhost:9016/v3/api-docs > docs/api/openapi-execution.json
+curl http://localhost:9006/v3/api-docs > docs/api/openapi-execution.json
 ```
 
 ### Maven 批量生成

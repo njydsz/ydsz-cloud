@@ -1,24 +1,26 @@
 # ============================================================
-# Nacos 配置：ydsz-pmis-scheduler-staging
-# DataId  : ydsz-pmis-scheduler-staging.yaml
+# Nacos 配置：ydsz-pmis-workflow-uat
+# DataId  : ydsz-pmis-workflow-uat.yaml
 # Group   : PMIS_GROUP
-# Namespace: pmis-staging
-# 环境     : STAGING（预发环境）
+# Namespace: pmis-uat
+# 环境     : UAT（用户验收测试 / 生产仿真）
 # ============================================================
 
 server:
-  port: 9012
+  port: 9004
   compression:
     enabled: true
-    level: BEST_SPEED
   servlet:
     context-path: /
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 100MB
 
 spring:
   application:
-    name: ydsz-pmis-scheduler
+    name: ydsz-pmis-workflow
   profiles:
-    active: staging
+    active: uat
   main:
     web-application-type: servlet
     banner-mode: log
@@ -30,23 +32,21 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         heart-beat-interval: 5000
         heart-beat-timeout: 15000
-        fail-fast: true
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         group: PMIS_GROUP
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
-        fail-fast: true
         extension-configs:
-          - dataId: pmis-common-staging.yaml
+          - dataId: pmis-common-uat.yaml
             group: PMIS_GROUP
             refresh: true
   datasource:
@@ -59,7 +59,7 @@ spring:
       initial-size: 10
       min-idle: 10
       max-active: 40
-      max-wait: 30000
+      max-wait: 60000
       validation-query: SELECT 1
       filters: stat,wall,slf4j
   data:
@@ -68,44 +68,41 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       database: 0
-      timeout: 3s
+      timeout: 5s
       lettuce:
         pool:
           max-active: 32
           max-idle: 16
           min-idle: 4
 
-xxl:
-  job:
-    admin:
-      addresses: ${XXL_JOB_ADMIN}
-      access-token: ${XXL_JOB_ACCESS_TOKEN}
-    executor:
-      appname: pmis-scheduler
-      address: ${XXL_JOB_EXECUTOR_ADDRESS:}
-      ip: ${XXL_JOB_EXECUTOR_IP:}
-      port: ${XXL_JOB_EXECUTOR_PORT:9999}
-      logpath: /var/log/pmis/xxl-job
-      logretentiondays: 30
-    access-token: ${XXL_JOB_ACCESS_TOKEN}
-
 pmis:
-  scheduler:
+  flow:
     enabled: true
-    reconcile-job-cron: "0 0 2 * * ?"
-    evm-snapshot-cron: "0 0 1 * * ?"
-    alert-scan-cron: "0 */5 * * * ?"
-    report-subscription-cron: "0 0 8 * * ?"
-    billable-util-snapshot-cron: "0 30 1 * * ?"
-    consistency-check-cron: "0 0 3 * * ?"
-    sharding-enabled: true
-    sharding-count: 3
+    archive-days: 730
+    timer-scan-interval: 60
+    delegate-max-depth: 3
+    cc-max-receivers: 50
+    sla:
+      reminder-enabled: true
+      default-reminder-hours: 24
+      escalation-hours: 48
+    canary:
+      enabled: false
+      ratio: 0.1
+      whitelist-users: ""
+  bpmn:
+    history-level: AUDIT
+    async-executor:
+      core-pool-size: 16
+      max-pool-size: 64
+      queue-capacity: 1000
 
 mybatis-plus:
-  mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.scheduler.entity
+  mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
+  type-aliases-package: com.njydsz.pmis.workflow.entity
   configuration:
     map-underscore-to-camel-case: true
+    cache-enabled: false
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     banner: false
@@ -146,8 +143,7 @@ logging:
   level:
     root: INFO
     com.njydsz.pmis: INFO
-    com.xxl.job: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
   file:
-    name: /var/log/pmis/scheduler
+    name: /var/log/pmis/workflow

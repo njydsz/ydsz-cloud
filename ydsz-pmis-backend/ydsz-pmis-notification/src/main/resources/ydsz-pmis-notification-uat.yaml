@@ -1,13 +1,13 @@
 # ============================================================
-# Nacos 配置：ydsz-pmis-project-test
-# DataId  : ydsz-pmis-project-test.yaml
+# Nacos 配置：ydsz-pmis-notification-uat
+# DataId  : ydsz-pmis-notification-uat.yaml
 # Group   : PMIS_GROUP
-# Namespace: pmis-test
-# 环境     : TEST（测试环境）
+# Namespace: pmis-uat
+# 环境     : UAT（用户验收测试 / 生产仿真）
 # ============================================================
 
 server:
-  port: 9005
+  port: 9003
   compression:
     enabled: true
   servlet:
@@ -15,9 +15,9 @@ server:
 
 spring:
   application:
-    name: ydsz-pmis-project
+    name: ydsz-pmis-notification
   profiles:
-    active: test
+    active: uat
   main:
     web-application-type: servlet
     banner-mode: log
@@ -29,7 +29,7 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-test}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         heart-beat-interval: 5000
@@ -37,13 +37,13 @@ spring:
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-test}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         group: PMIS_GROUP
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         extension-configs:
-          - dataId: pmis-common-test.yaml
+          - dataId: pmis-common-uat.yaml
             group: PMIS_GROUP
             refresh: true
   datasource:
@@ -65,46 +65,51 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       database: 0
-      timeout: 3s
+      timeout: 5s
       lettuce:
         pool:
-          max-active: 16
-          max-idle: 8
-          min-idle: 2
+          max-active: 24
+          max-idle: 12
+          min-idle: 4
+  rocketmq:
+    name-server: ${ROCKETMQ_NAMESRV}
+    producer:
+      group: pmis-notification-prod
+      send-message-timeout: 10000
+      retry-times-when-send-failed: 3
+      retry-times-when-send-async-failed: 3
+      max-message-size: 4194304
+    consumer:
+      group: pmis-notification-consumers
 
 pmis:
-  project:
-    contract-template-path: /var/data/pmis/contract-templates/
-    upload-max-size: 50MB
-    change-require-approval: true
-
-seata:
-  enabled: true
-  application-id: ${spring.application.name}
-  tx-service-group: pmis-tx-group
-  enable-auto-data-source-proxy: true
-  registry:
-    type: nacos
-    nacos:
-      server-addr: ${NACOS_SERVER_ADDR}
-      namespace: pmis
-      group: SEATA_GROUP
-  config:
-    type: nacos
-    nacos:
-      server-addr: ${NACOS_SERVER_ADDR}
-      namespace: pmis
-      group: SEATA_GROUP
-      data-id: seata-client.properties
-  service:
-    vgroup-mapping:
-      pmis-tx-group: default
-    grouplist:
-      default: ${SEATA_SERVER_ADDR}
+  notification:
+    channels:
+      in-site: true
+      email: true
+      sms: true
+      im: false
+    email:
+      host: ${MAIL_SMTP_HOST}
+      port: ${MAIL_SMTP_PORT:465}
+      username: ${MAIL_USERNAME}
+      password: ${MAIL_PASSWORD}
+      ssl-enabled: true
+      from: ${MAIL_FROM:noreply@pmis.example.com}
+    sms:
+      provider: ${SMS_PROVIDER:aliyun}
+      access-key: ${SMS_ACCESS_KEY}
+      secret-key: ${SMS_SECRET_KEY}
+      sign-name: ${SMS_SIGN_NAME:PMIS}
+      template-code: ${SMS_TEMPLATE_CODE}
+    retry:
+      max-attempts: 5
+      backoff-seconds: 60
+    retention-days: 180
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.project.entity
+  type-aliases-package: com.njydsz.pmis.notification.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
@@ -150,4 +155,4 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
   file:
-    name: /var/log/pmis/project
+    name: /var/log/pmis/notification

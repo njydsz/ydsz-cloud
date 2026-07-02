@@ -1,24 +1,23 @@
 # ============================================================
-# Nacos 配置：ydsz-pmis-agent-staging
-# DataId  : ydsz-pmis-agent-staging.yaml
+# Nacos 配置：ydsz-pmis-auth-uat
+# DataId  : ydsz-pmis-auth-uat.yaml
 # Group   : PMIS_GROUP
-# Namespace: pmis-staging
-# 环境     : STAGING（预发环境）
+# Namespace: pmis-uat
+# 环境     : UAT（用户验收测试 / 生产仿真）
 # ============================================================
 
 server:
-  port: 9007
+  port: 9001
   compression:
     enabled: true
-    level: BEST_SPEED
   servlet:
     context-path: /
 
 spring:
   application:
-    name: ydsz-pmis-agent
+    name: ydsz-pmis-auth
   profiles:
-    active: staging
+    active: uat
   main:
     web-application-type: servlet
     banner-mode: log
@@ -30,23 +29,21 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         heart-beat-interval: 5000
         heart-beat-timeout: 15000
-        fail-fast: true
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         group: PMIS_GROUP
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
-        fail-fast: true
         extension-configs:
-          - dataId: pmis-common-staging.yaml
+          - dataId: pmis-common-uat.yaml
             group: PMIS_GROUP
             refresh: true
   datasource:
@@ -59,8 +56,9 @@ spring:
       initial-size: 10
       min-idle: 10
       max-active: 40
-      max-wait: 30000
+      max-wait: 60000
       validation-query: SELECT 1
+      test-while-idle: true
       filters: stat,wall,slf4j
   data:
     redis:
@@ -68,44 +66,39 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       database: 0
-      timeout: 3s
+      timeout: 5s
       lettuce:
         pool:
           max-active: 32
           max-idle: 16
           min-idle: 4
-
-spring.ai:
-  dashscope:
-    api-key: ${DASHSCOPE_API_KEY}
-    base-url: ${DASHSCOPE_BASE_URL:https://dashscope.aliyuncs.com}
-    chat:
-      options:
-        model: ${DASHSCOPE_MODEL:qwen-plus}
-        temperature: 0.3
+          max-wait: 5s
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30m
+      cache-null-values: false
+      key-prefix: "pmis:auth:"
+      use-key-prefix: true
 
 pmis:
-  agent:
+  jwt:
+    secret: ${PMIS_JWT_SECRET}
+    issuer: pmis
+    access-ttl-seconds: ${PMIS_JWT_ACCESS_TTL:7200}
+    refresh-ttl-seconds: ${PMIS_JWT_REFRESH_TTL:604800}
+  captcha:
     enabled: true
-    llm:
-      provider: ${LLM_PROVIDER:dashscope}
-      timeout-millis: ${LLM_TIMEOUT_MILLIS:30000}
-      max-retries: ${LLM_MAX_RETRIES:3}
-      fallback-to-mock: ${LLM_FALLBACK_TO_MOCK:true}
-    prompt:
-      max-tokens: 4096
-      temperature: 0.3
-      top-p: 0.9
-    rag:
-      enabled: true
-      top-k: 5
-    orchestration:
-      max-steps: 10
-      timeout-seconds: 60
+    ttl-seconds: 300
+    length: 4
+  login:
+    max-failures: 5
+    lock-minutes: 30
+    two-factor-required: true
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.agent.entity
+  type-aliases-package: com.njydsz.pmis.auth.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
@@ -151,4 +144,4 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
   file:
-    name: /var/log/pmis/agent
+    name: /var/log/pmis/auth

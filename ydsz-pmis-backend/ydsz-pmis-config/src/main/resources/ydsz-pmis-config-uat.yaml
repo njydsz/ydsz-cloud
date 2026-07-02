@@ -1,13 +1,13 @@
 # ============================================================
-# Nacos 配置：ydsz-pmis-user-test
-# DataId  : ydsz-pmis-user-test.yaml
+# Nacos 配置：ydsz-pmis-config-uat
+# DataId  : ydsz-pmis-config-uat.yaml
 # Group   : PMIS_GROUP
-# Namespace: pmis-test
-# 环境     : TEST（测试环境）
+# Namespace: pmis-uat
+# 环境     : UAT（用户验收测试 / 生产仿真）
 # ============================================================
 
 server:
-  port: 9002
+  port: 9008
   compression:
     enabled: true
   servlet:
@@ -15,9 +15,9 @@ server:
 
 spring:
   application:
-    name: ydsz-pmis-user
+    name: ydsz-pmis-config
   profiles:
-    active: test
+    active: uat
   main:
     web-application-type: servlet
     banner-mode: log
@@ -29,7 +29,7 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-test}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         heart-beat-interval: 5000
@@ -37,13 +37,13 @@ spring:
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-test}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         group: PMIS_GROUP
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         extension-configs:
-          - dataId: pmis-common-test.yaml
+          - dataId: pmis-common-uat.yaml
             group: PMIS_GROUP
             refresh: true
   datasource:
@@ -58,7 +58,6 @@ spring:
       max-active: 20
       max-wait: 60000
       validation-query: SELECT 1
-      test-while-idle: true
       filters: stat,wall,slf4j
   data:
     redis:
@@ -66,43 +65,33 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       database: 0
-      timeout: 3s
+      timeout: 5s
       lettuce:
         pool:
           max-active: 16
           max-idle: 8
           min-idle: 2
-          max-wait: 3s
-  cache:
-    type: redis
-    redis:
-      time-to-live: 30m
-      cache-null-values: false
-      key-prefix: "pmis:user:"
-      use-key-prefix: true
 
 pmis:
-  password:
-    min-length: 8
-    complexity: MEDIUM
-    expire-days: 0
-    history-count: 5
-  totp:
-    enabled: true
-    issuer: ${PMIS_TOTP_ISSUER:PMIS}
-    digits: ${PMIS_TOTP_DIGITS:6}
-    period: ${PMIS_TOTP_PERIOD:30}
-  crypto:
-    aes-key: ${PMIS_AES_KEY}
-    aes-iv: ${PMIS_AES_IV}
-    sm4-key: ${PMIS_SM4_KEY:}
-  session:
-    timeout-minutes: 60
-    concurrent-limit: 5
+  config:
+    feature-flag:
+      cache-ttl-seconds: 60
+      refresh-interval-seconds: 30
+      audit-enabled: true
+    chaos:
+      enabled: false
+      max-experiments-per-hour: 5
+      max-blast-radius: 0.2
+      require-approval: true
+    threshold:
+      cache-ttl-seconds: 30
+      reload-interval-seconds: 60
+    dictionary:
+      cache-ttl-seconds: 300
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.user.entity
+  type-aliases-package: com.njydsz.pmis.config.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
@@ -148,4 +137,4 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
   file:
-    name: /var/log/pmis/user
+    name: /var/log/pmis/config

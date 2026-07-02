@@ -44,16 +44,16 @@ pnpm install && pnpm dev
 | API 网关 | 9000 | HTTP | 统一入口 |
 | 认证服务 | 9001 | HTTP | ydsz-pmis-auth |
 | 用户服务 | 9002 | HTTP | ydsz-pmis-user（含资源池/Bench） |
-| 通知服务 | 9013 | HTTP | ydsz-pmis-notification |
-| 工作流 | 9014 | HTTP | ydsz-pmis-workflow |
-| 项目服务 | 9015 | HTTP | ydsz-pmis-project |
-| 执行服务 | 9016 | HTTP | ydsz-pmis-execution（含财务/报表） |
-| AI Agent | 9017 | HTTP | ydsz-pmis-agent |
-| 配置中心 | 9018 | HTTP | ydsz-pmis-config |
-| 文件服务 | 9019 | HTTP | ydsz-pmis-file |
-| 审计服务 | 9020 | HTTP | ydsz-pmis-audit |
-| 消息模板 | 9021 | HTTP | ydsz-pmis-message |
-| 调度服务 | 9022 | HTTP | ydsz-pmis-scheduler |
+| 通知服务 | 9003 | HTTP | ydsz-pmis-notification |
+| 工作流 | 9004 | HTTP | ydsz-pmis-workflow |
+| 项目服务 | 9005 | HTTP | ydsz-pmis-project |
+| 执行服务 | 9006 | HTTP | ydsz-pmis-execution（含财务/报表） |
+| AI Agent | 9007 | HTTP | ydsz-pmis-agent |
+| 配置中心 | 9008 | HTTP | ydsz-pmis-config |
+| 文件服务 | 9009 | HTTP | ydsz-pmis-file |
+| 审计服务 | 9010 | HTTP | ydsz-pmis-audit |
+| 消息模板 | 9011 | HTTP | ydsz-pmis-message |
+| 调度服务 | 9012 | HTTP | ydsz-pmis-scheduler |
 | Nacos | 8848 | HTTP | 注册/配置中心 |
 | PostgreSQL | 5432 | TCP | 主数据库 |
 | Redis | 6379 | TCP | 缓存/会话 |

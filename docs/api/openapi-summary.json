@@ -17,12 +17,12 @@
     { "name": "gateway",   "description": "API 网关路由表" },
     { "name": "auth",      "description": "认证授权（ydsz-pmis-auth :9001）" },
     { "name": "user",      "description": "用户/权限/部门/资源池（ydsz-pmis-user :9002）" },
-    { "name": "project",   "description": "商机/立项/合同/变更（ydsz-pmis-project :9015）" },
-    { "name": "execution", "description": "执行/成本/财务/报表（ydsz-pmis-execution :9016）" },
-    { "name": "agent",     "description": "AI 智能体（ydsz-pmis-agent :9017）" },
-    { "name": "notification", "description": "通知中心（ydsz-pmis-notification :9013）" },
-    { "name": "workflow",  "description": "工作流（ydsz-pmis-workflow :9014）" },
-    { "name": "audit",     "description": "审计日志（ydsz-pmis-audit :9020）" }
+    { "name": "project",   "description": "商机/立项/合同/变更（ydsz-pmis-project :9005）" },
+    { "name": "execution", "description": "执行/成本/财务/报表（ydsz-pmis-execution :9006）" },
+    { "name": "agent",     "description": "AI 智能体（ydsz-pmis-agent :9007）" },
+    { "name": "notification", "description": "通知中心（ydsz-pmis-notification :9003）" },
+    { "name": "workflow",  "description": "工作流（ydsz-pmis-workflow :9004）" },
+    { "name": "audit",     "description": "审计日志（ydsz-pmis-audit :9010）" }
   ],
   "components": {
     "securitySchemes": {

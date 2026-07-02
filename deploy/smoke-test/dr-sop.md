@@ -39,7 +39,7 @@ tail -100 /var/log/nginx/pmis_error.log
 ssh node2 "sudo reboot"
 
 # 5. 验证自动加入
-curl -s http://node2:9015/actuator/health
+curl -s http://node2:9005/actuator/health
 ```
 
 **通过标准**：

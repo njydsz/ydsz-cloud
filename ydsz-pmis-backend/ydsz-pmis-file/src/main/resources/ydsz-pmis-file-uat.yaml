@@ -1,23 +1,26 @@
 # ============================================================
-# Nacos 配置：ydsz-pmis-scheduler-test
-# DataId  : ydsz-pmis-scheduler-test.yaml
+# Nacos 配置：ydsz-pmis-file-uat
+# DataId  : ydsz-pmis-file-uat.yaml
 # Group   : PMIS_GROUP
-# Namespace: pmis-test
-# 环境     : TEST（测试环境）
+# Namespace: pmis-uat
+# 环境     : UAT（用户验收测试 / 生产仿真）
 # ============================================================
 
 server:
-  port: 9012
+  port: 9009
   compression:
     enabled: true
   servlet:
     context-path: /
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 1GB
 
 spring:
   application:
-    name: ydsz-pmis-scheduler
+    name: ydsz-pmis-file
   profiles:
-    active: test
+    active: uat
   main:
     web-application-type: servlet
     banner-mode: log
@@ -29,7 +32,7 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-test}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         heart-beat-interval: 5000
@@ -37,13 +40,13 @@ spring:
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-test}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         group: PMIS_GROUP
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         extension-configs:
-          - dataId: pmis-common-test.yaml
+          - dataId: pmis-common-uat.yaml
             group: PMIS_GROUP
             refresh: true
   datasource:
@@ -65,42 +68,37 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       database: 0
-      timeout: 3s
+      timeout: 5s
       lettuce:
         pool:
-          max-active: 16
-          max-idle: 8
-          min-idle: 2
+          max-active: 24
+          max-idle: 12
+          min-idle: 4
 
-xxl:
-  job:
-    admin:
-      addresses: ${XXL_JOB_ADMIN}
-      access-token: ${XXL_JOB_ACCESS_TOKEN}
-    executor:
-      appname: pmis-scheduler
-      address: ${XXL_JOB_EXECUTOR_ADDRESS:}
-      ip: ${XXL_JOB_EXECUTOR_IP:}
-      port: ${XXL_JOB_EXECUTOR_PORT:9999}
-      logpath: /var/log/pmis/xxl-job
-      logretentiondays: 30
-    access-token: ${XXL_JOB_ACCESS_TOKEN}
+minio:
+  endpoint: ${MINIO_ENDPOINT}
+  public-endpoint: ${MINIO_PUBLIC_ENDPOINT:${minio.endpoint}}
+  access-key: ${MINIO_ROOT_USER}
+  secret-key: ${MINIO_ROOT_PASSWORD}
+  default-bucket: ${MINIO_BUCKET:pmis-uat}
+  url-expire-seconds: 3600
+  region: ${MINIO_REGION:cn-north-1}
+  part-size: 10485760
+  multipart-threshold: 52428800
 
 pmis:
-  scheduler:
-    enabled: true
-    reconcile-job-cron: "0 0 2 * * ?"
-    evm-snapshot-cron: "0 0 1 * * ?"
-    alert-scan-cron: "0 */5 * * * ?"
-    report-subscription-cron: "0 0 8 * * ?"
-    billable-util-snapshot-cron: "0 30 1 * * ?"
-    consistency-check-cron: "0 0 3 * * ?"
+  file:
+    chunk-size: 5242880
+    enable-md5-verify: true
+    virus-scan: true
+    preview-enabled: true
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.scheduler.entity
+  type-aliases-package: com.njydsz.pmis.file.entity
   configuration:
     map-underscore-to-camel-case: true
+    cache-enabled: false
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     banner: false
@@ -141,8 +139,7 @@ logging:
   level:
     root: INFO
     com.njydsz.pmis: INFO
-    com.xxl.job: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
   file:
-    name: /var/log/pmis/scheduler
+    name: /var/log/pmis/file

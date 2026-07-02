@@ -17,14 +17,14 @@ deploy/nginx/
 | 路径前缀 | 上游服务 | 端口 | 备注 |
 |----------|----------|------|------|
 | `/` | pmis_gateway | 9000 | 网关（统一鉴权） |
-| `/api/v1/project/` | pmis_project_cluster | 9015 | 项目 |
-| `/api/v1/execution/` | pmis_execution_cluster | 9016 | 执行 |
-| `/api/v1/agent/` | pmis_agent_cluster | 9017 | AI Agent |
-| `/api/v1/scheduler/` | pmis_scheduler_cluster | 9022 | 调度 |
-| `/api/v1/audit/` | pmis_audit_cluster | 9020 | 审计 |
-| `/api/v1/notification/` | pmis_notification_cluster | 9013 | 通知 |
-| `/api/v1/workflow/` | pmis_workflow_cluster | 9014 | 工作流 |
-| `/api/v1/file/` | pmis_file_cluster | 9019 | 文件（500M） |
+| `/api/v1/project/` | pmis_project_cluster | 9005 | 项目 |
+| `/api/v1/execution/` | pmis_execution_cluster | 9006 | 执行 |
+| `/api/v1/agent/` | pmis_agent_cluster | 9007 | AI Agent |
+| `/api/v1/scheduler/` | pmis_scheduler_cluster | 9012 | 调度 |
+| `/api/v1/audit/` | pmis_audit_cluster | 9010 | 审计 |
+| `/api/v1/notification/` | pmis_notification_cluster | 9003 | 通知 |
+| `/api/v1/workflow/` | pmis_workflow_cluster | 9004 | 工作流 |
+| `/api/v1/file/` | pmis_file_cluster | 9009 | 文件（500M） |
 | `/ws/` | pmis_gateway | 9000 | WebSocket（1h 长连接） |
 | `/static/` | 本地 | — | 前端静态资源 |
 | `/health` | — | — | 健康检查（不计入限流） |

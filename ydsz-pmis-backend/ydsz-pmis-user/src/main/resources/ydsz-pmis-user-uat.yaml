@@ -1,27 +1,23 @@
 # ============================================================
-# Nacos 配置：ydsz-pmis-file-staging
-# DataId  : ydsz-pmis-file-staging.yaml
+# Nacos 配置：ydsz-pmis-user-uat
+# DataId  : ydsz-pmis-user-uat.yaml
 # Group   : PMIS_GROUP
-# Namespace: pmis-staging
-# 环境     : STAGING（预发环境）
+# Namespace: pmis-uat
+# 环境     : UAT（用户验收测试 / 生产仿真）
 # ============================================================
 
 server:
-  port: 9009
+  port: 9002
   compression:
     enabled: true
-    level: BEST_SPEED
   servlet:
     context-path: /
-    multipart:
-      max-file-size: 200MB
-      max-request-size: 500MB
 
 spring:
   application:
-    name: ydsz-pmis-file
+    name: ydsz-pmis-user
   profiles:
-    active: staging
+    active: uat
   main:
     web-application-type: servlet
     banner-mode: log
@@ -33,23 +29,21 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         heart-beat-interval: 5000
         heart-beat-timeout: 15000
-        fail-fast: true
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         group: PMIS_GROUP
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
-        fail-fast: true
         extension-configs:
-          - dataId: pmis-common-staging.yaml
+          - dataId: pmis-common-uat.yaml
             group: PMIS_GROUP
             refresh: true
   datasource:
@@ -62,8 +56,9 @@ spring:
       initial-size: 10
       min-idle: 10
       max-active: 40
-      max-wait: 30000
+      max-wait: 60000
       validation-query: SELECT 1
+      test-while-idle: true
       filters: stat,wall,slf4j
   data:
     redis:
@@ -71,37 +66,45 @@ spring:
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       database: 0
-      timeout: 3s
+      timeout: 5s
       lettuce:
         pool:
           max-active: 32
           max-idle: 16
           min-idle: 4
-
-minio:
-  endpoint: ${MINIO_ENDPOINT}
-  public-endpoint: ${MINIO_PUBLIC_ENDPOINT:${minio.endpoint}}
-  access-key: ${MINIO_ROOT_USER}
-  secret-key: ${MINIO_ROOT_PASSWORD}
-  default-bucket: ${MINIO_BUCKET:pmis-staging}
-  url-expire-seconds: 1800
-  region: ${MINIO_REGION:cn-north-1}
-  part-size: 10485760
-  multipart-threshold: 52428800
+          max-wait: 5s
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30m
+      cache-null-values: false
+      key-prefix: "pmis:user:"
+      use-key-prefix: true
 
 pmis:
-  file:
-    chunk-size: 5242880
-    enable-md5-verify: true
-    virus-scan: true
-    preview-enabled: true
+  password:
+    min-length: 10
+    complexity: HIGH
+    expire-days: 90
+    history-count: 5
+  totp:
+    enabled: true
+    issuer: ${PMIS_TOTP_ISSUER:PMIS}
+    digits: ${PMIS_TOTP_DIGITS:6}
+    period: ${PMIS_TOTP_PERIOD:30}
+  crypto:
+    aes-key: ${PMIS_AES_KEY}
+    aes-iv: ${PMIS_AES_IV}
+    sm4-key: ${PMIS_SM4_KEY:}
+  session:
+    timeout-minutes: 60
+    concurrent-limit: 3
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.file.entity
+  type-aliases-package: com.njydsz.pmis.user.entity
   configuration:
     map-underscore-to-camel-case: true
-    cache-enabled: false
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
     banner: false
@@ -145,4 +148,4 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
   file:
-    name: /var/log/pmis/file
+    name: /var/log/pmis/user

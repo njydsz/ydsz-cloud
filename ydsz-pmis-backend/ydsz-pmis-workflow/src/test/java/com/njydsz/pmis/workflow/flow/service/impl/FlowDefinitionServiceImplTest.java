@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -531,5 +532,180 @@ class FlowDefinitionServiceImplTest {
         // 没有节点/跳转时不删除
         verify(nodeMapper, never()).deleteByDefinitionId(anyLong());
         verify(skipMapper, never()).deleteByDefinitionId(anyLong());
+    }
+
+    // ============== GAP-V2-06: 导入/导出 ==============
+
+    @Test
+    @DisplayName("exportDefinition GAP-V2-06: 导出流程定义为 JSON 字符串")
+    void testExportDefinition() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(1L);
+        def.setFlowCode("f1");
+        def.setFlowName("F1");
+        when(definitionMapper.selectById(1L)).thenReturn(def);
+
+        FlowNodeDO n1 = new FlowNodeDO();
+        n1.setNodeCode("s1");
+        n1.setNodeName("开始");
+        when(nodeMapper.selectByDefinitionId(1L)).thenReturn(List.of(n1));
+
+        FlowSkipDO sk1 = new FlowSkipDO();
+        sk1.setId(20L);
+        sk1.setNextNodeCode("t1");
+        sk1.setSkipName("通过");
+        when(skipMapper.selectByDefinitionId(1L)).thenReturn(List.of(sk1));
+
+        String json = service.exportDefinition(1L);
+        assertThat(json).isNotNull();
+        assertThat(json).contains("definition");
+        assertThat(json).contains("nodes");
+        assertThat(json).contains("skips");
+        assertThat(json).contains("f1");
+        assertThat(json).contains("s1");
+    }
+
+    @Test
+    @DisplayName("importDefinition GAP-V2-06: 解析 JSON 并调用 deploy 创建草稿")
+    void testImportDefinition() {
+        FlowDefinitionServiceImpl spy = org.mockito.Mockito.spy(service);
+        // 桩掉 deploy，避免重复部署检查等副作用
+        org.mockito.Mockito.doReturn(42L).when(spy).deploy(any(FlowDeployProcessDTO.class));
+
+        String json = "{\"definition\":{\"flowCode\":\"f1\",\"flowName\":\"F1\",\"version\":\"1.0\"},"
+                + "\"nodes\":[{\"nodeCode\":\"s1\",\"nodeName\":\"开始\",\"nodeType\":0}],"
+                + "\"skips\":[{\"skipName\":\"pass\",\"skipType\":\"PASS\","
+                + "\"nextNodeCode\":\"s1\",\"ext\":\"{\\\"sourceRef\\\":\\\"s1\\\"}\"}]}";
+
+        Long result = spy.importDefinition(json, 1L);
+        assertThat(result).isEqualTo(42L);
+
+        ArgumentCaptor<FlowDeployProcessDTO> dtoCaptor =
+                ArgumentCaptor.forClass(FlowDeployProcessDTO.class);
+        verify(spy).deploy(dtoCaptor.capture());
+        FlowDeployProcessDTO deployedDto = dtoCaptor.getValue();
+        assertThat(deployedDto.getFlowCode()).isEqualTo("f1");
+        assertThat(deployedDto.getFlowName()).isEqualTo("F1");
+        assertThat(deployedDto.getVersion()).isEqualTo("1.0");
+        assertThat(deployedDto.getTenantId()).isEqualTo(1L);
+        assertThat(deployedDto.getNodes()).hasSize(1);
+        assertThat(deployedDto.getSkips()).hasSize(1);
+    }
+
+    // ============== GAP-V2-01: 设计器数据 API ==============
+
+    @Test
+    @DisplayName("getDesignerData GAP-V2-01: 返回设计器数据含 edges 数组")
+    void testGetDesignerData() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(1L);
+        def.setFlowCode("f1");
+        when(definitionMapper.selectById(1L)).thenReturn(def);
+
+        FlowNodeDO n1 = new FlowNodeDO();
+        n1.setNodeCode("s1");
+        n1.setNodeName("开始");
+        when(nodeMapper.selectByDefinitionId(1L)).thenReturn(List.of(n1));
+
+        FlowSkipDO sk1 = new FlowSkipDO();
+        sk1.setId(20L);
+        sk1.setNextNodeCode("t1");
+        sk1.setSkipName("通过");
+        sk1.setExt("{\"sourceRef\":\"s1\"}");
+        when(skipMapper.selectByDefinitionId(1L)).thenReturn(List.of(sk1));
+
+        Map<String, Object> result = service.getDesignerData(1L);
+        assertThat(result).isNotNull();
+        assertThat(result).containsKey("edges");
+        assertThat(result).containsKey("definition");
+        assertThat(result).containsKey("nodes");
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> edges = (List<Map<String, Object>>) result.get("edges");
+        assertThat(edges).hasSize(1);
+        assertThat(edges.get(0).get("source")).isEqualTo("s1");
+        assertThat(edges.get(0).get("target")).isEqualTo("t1");
+        assertThat(edges.get(0).get("label")).isEqualTo("通过");
+    }
+
+    @Test
+    @DisplayName("saveDesignerData GAP-V2-01: 未发布定义可保存节点坐标/属性")
+    void testSaveDesignerData() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(10L);
+        def.setIsPublish(0);  // 未发布
+        when(definitionMapper.selectById(10L)).thenReturn(def);
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setId(100L);
+        node.setNodeCode("t1");
+        node.setNodeName("审批");
+        when(nodeMapper.selectByCode(10L, "t1")).thenReturn(node);
+
+        Map<String, Object> designerData = new HashMap<>();
+        Map<String, Object> nodeData = new HashMap<>();
+        nodeData.put("nodeCode", "t1");
+        nodeData.put("coordinate", "{\"x\":100,\"y\":200}");
+        nodeData.put("nodeName", "审批修改");
+        designerData.put("nodes", List.of(nodeData));
+
+        service.saveDesignerData(10L, designerData);
+
+        // coordinate + nodeName 各触发一次 updateById
+        verify(nodeMapper, times(2)).updateById(any(FlowNodeDO.class));
+    }
+
+    @Test
+    @DisplayName("saveDesignerData GAP-V2-01: 已发布定义保存抛 BAD_REQUEST")
+    void testSaveDesignerDataPublishedThrows() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(10L);
+        def.setIsPublish(1);  // 已发布
+        when(definitionMapper.selectById(10L)).thenReturn(def);
+
+        assertThatThrownBy(() -> service.saveDesignerData(10L, Map.of()))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("不可编辑");
+        verify(nodeMapper, never()).updateById(any(FlowNodeDO.class));
+    }
+
+    // ============== GAP-V2-02: 表单字段配置 ==============
+
+    @Test
+    @DisplayName("getFormConfig GAP-V2-02: 返回节点表单字段配置")
+    void testGetFormConfig() {
+        FlowNodeDO node = new FlowNodeDO();
+        node.setId(100L);
+        node.setNodeCode("t1");
+        String config = "[{\"field\":\"amount\",\"label\":\"金额\"}]";
+        node.setFormFieldsConfig(config);
+        when(nodeMapper.selectByCode(10L, "t1")).thenReturn(node);
+
+        String result = service.getFormConfig(10L, "t1");
+        assertThat(result).isEqualTo(config);
+    }
+
+    @Test
+    @DisplayName("getFormConfig GAP-V2-02: 节点不存在抛 NOT_FOUND")
+    void testGetFormConfigNotFound() {
+        when(nodeMapper.selectByCode(10L, "unknown")).thenReturn(null);
+        assertThatThrownBy(() -> service.getFormConfig(10L, "unknown"))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("节点不存在");
+    }
+
+    @Test
+    @DisplayName("saveFormConfig GAP-V2-02: 保存节点表单字段配置")
+    void testSaveFormConfig() {
+        FlowNodeDO node = new FlowNodeDO();
+        node.setId(100L);
+        node.setNodeCode("t1");
+        when(nodeMapper.selectByCode(10L, "t1")).thenReturn(node);
+
+        String config = "[{\"field\":\"amount\",\"label\":\"金额\"}]";
+        service.saveFormConfig(10L, "t1", config);
+
+        ArgumentCaptor<FlowNodeDO> captor = ArgumentCaptor.forClass(FlowNodeDO.class);
+        verify(nodeMapper).updateById(captor.capture());
+        assertThat(captor.getValue().getFormFieldsConfig()).isEqualTo(config);
     }
 }

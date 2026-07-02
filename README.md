@@ -89,16 +89,16 @@
 | 公共 | ydsz-pmis-common | — | 统一响应/AOP/注解/Feign/敏感数据/JobHandler |
 | 认证 | ydsz-pmis-auth | **9001** | 登录/Token/2FA/登录审计 |
 | 用户与资源 | ydsz-pmis-user | **9002** | 用户/角色/部门/考勤/**资源池**/**Bench** |
-| 通知 | ydsz-pmis-notification | **9013** | 站内消息/邮件/短信/推送 |
-| 工作流 | ydsz-pmis-workflow | **9014** | 自研 pmis_flow_* + BPMN 2.0 解析 |
-| 项目 | ydsz-pmis-project | **9015** | 商机/立项/合同/补充/变更/模板 |
-| 执行 + 财务 + 报表 | ydsz-pmis-execution | **9016** | WBS/工时/成本/EVM/双费率/**开票/回款/信用**/**驾驶舱/高级报表** |
-| AI Agent | ydsz-pmis-agent | **9017** | 5 Agent + 4 编排 + 5 LLM Provider |
-| 配置中心 | ydsz-pmis-config | **9018** | 枚举/字典/系统配置/特性开关/混沌配置 |
-| 文件 | ydsz-pmis-file | **9019** | MinIO/OSS 上传下载 |
-| 审计 | ydsz-pmis-audit | **9020** | 操作/登录/导出/敏感 4 类审计 |
-| 消息模板 | ydsz-pmis-message | **9021** | 邮件/短信/站内 ${var} 模板 |
-| 调度 | ydsz-pmis-scheduler | **9022** | XXL-JOB 调度 + JobHandler 注册 |
+| 通知 | ydsz-pmis-notification | **9003** | 站内消息/邮件/短信/推送 |
+| 工作流 | ydsz-pmis-workflow | **9004** | 自研 pmis_flow_* + BPMN 2.0 解析 |
+| 项目 | ydsz-pmis-project | **9005** | 商机/立项/合同/补充/变更/模板 |
+| 执行 + 财务 + 报表 | ydsz-pmis-execution | **9006** | WBS/工时/成本/EVM/双费率/**开票/回款/信用**/**驾驶舱/高级报表** |
+| AI Agent | ydsz-pmis-agent | **9007** | 5 Agent + 4 编排 + 5 LLM Provider |
+| 配置中心 | ydsz-pmis-config | **9008** | 枚举/字典/系统配置/特性开关/混沌配置 |
+| 文件 | ydsz-pmis-file | **9009** | MinIO/OSS 上传下载 |
+| 审计 | ydsz-pmis-audit | **9010** | 操作/登录/导出/敏感 4 类审计 |
+| 消息模板 | ydsz-pmis-message | **9011** | 邮件/短信/站内 ${var} 模板 |
+| 调度 | ydsz-pmis-scheduler | **9012** | XXL-JOB 调度 + JobHandler 注册 |
 
 > **架构决策(2026-07-01 修订)**: 原规划 11 微服务,落地时合并 finance/resource/report 到 execution/user/execution(过度拆分导致运维成本与跨服务调用复杂度反增),最终交付 8 业务 + 6 支撑 = 14 模块,172 测试类 100% 通过。详细映射见 [开发计划 5.1 节](file:///d:/Code/ydsz/ydsz-pmis/开发计划.md#五-1-服务拆分)。
 
@@ -181,16 +181,16 @@ ydsz-pmis/
 │   ├── ydsz-pmis-common/       # 公共组件 (50+ 测试类)
 │   ├── ydsz-pmis-auth/         # 9001 认证
 │   ├── ydsz-pmis-user/         # 9002 用户/资源/Bench (29 Service)
-│   ├── ydsz-pmis-config/       # 9018 枚举/字典/特性开关/混沌
-│   ├── ydsz-pmis-file/         # 9019 文件
-│   ├── ydsz-pmis-audit/        # 9020 4 类审计
-│   ├── ydsz-pmis-message/      # 9021 消息模板
-│   ├── ydsz-pmis-notification/ # 9013 通知
-│   ├── ydsz-pmis-workflow/     # 9014 自研工作流
-│   ├── ydsz-pmis-scheduler/    # 9022 XXL-JOB
-│   ├── ydsz-pmis-project/      # 9015 项目 (8 Service)
-│   ├── ydsz-pmis-execution/    # 9016 执行/财务/报表 (28 Service)
-│   └── ydsz-pmis-agent/        # 9017 AI Agent
+│   ├── ydsz-pmis-config/       # 9008 枚举/字典/特性开关/混沌
+│   ├── ydsz-pmis-file/         # 9009 文件
+│   ├── ydsz-pmis-audit/        # 9010 4 类审计
+│   ├── ydsz-pmis-message/      # 9011 消息模板
+│   ├── ydsz-pmis-notification/ # 9003 通知
+│   ├── ydsz-pmis-workflow/     # 9004 自研工作流
+│   ├── ydsz-pmis-scheduler/    # 9012 XXL-JOB
+│   ├── ydsz-pmis-project/      # 9005 项目 (8 Service)
+│   ├── ydsz-pmis-execution/    # 9006 执行/财务/报表 (28 Service)
+│   └── ydsz-pmis-agent/        # 9007 AI Agent
 ├── ydsz-pmis-frontend/         # 前端 (Vue 3.5 + Vite 5.4)
 │   ├── src/api/                # 1:1 后端 Controller 封装
 │   ├── src/views/              # 35+ 业务页面

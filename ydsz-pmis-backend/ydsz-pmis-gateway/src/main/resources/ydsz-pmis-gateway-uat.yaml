@@ -1,9 +1,9 @@
 # ============================================================
-# Nacos 配置：ydsz-pmis-gateway-staging
-# DataId  : ydsz-pmis-gateway-staging.yaml
+# Nacos 配置：ydsz-pmis-gateway-uat
+# DataId  : ydsz-pmis-gateway-uat.yaml
 # Group   : PMIS_GROUP
-# Namespace: pmis-staging
-# 环境     : STAGING（预发环境）
+# Namespace: pmis-uat
+# 环境     : UAT（用户验收测试 / 生产仿真）
 # 用途     : 该文件可直接导入 Nacos 配置中心
 # 规范     : 互联网大厂标准 - 环境隔离 / 配置外置 / 密钥不入库
 # ============================================================
@@ -21,7 +21,7 @@ spring:
   application:
     name: ydsz-pmis-gateway
   profiles:
-    active: staging
+    active: uat
   main:
     web-application-type: reactive
     banner-mode: log
@@ -29,7 +29,7 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         watch:
@@ -37,18 +37,16 @@ spring:
         heart-beat-interval: 5000
         heart-beat-timeout: 15000
         ip-delete-timeout: 30000
-        fail-fast: true
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-staging}
+        namespace: ${NACOS_NAMESPACE:pmis-uat}
         group: PMIS_GROUP
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
-        fail-fast: true
         extension-configs:
-          - dataId: pmis-common-staging.yaml
+          - dataId: pmis-common-uat.yaml
             group: PMIS_GROUP
             refresh: true
     gateway:
@@ -59,8 +57,8 @@ spring:
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOriginPatterns: "https://stg-pmis.example.com"
-            allowedMethods: GET,POST,PUT,DELETE,OPTIONS,PATCH
+            allowedOriginPatterns: "https://uat-pmis.example.com"
+            allowedMethods: "*"
             allowedHeaders: "*"
             exposedHeaders:
               - Authorization
@@ -74,8 +72,8 @@ spring:
       httpclient:
         websocket:
           max-frame-payload-length: 65536
-        connect-timeout: 3000
-        response-timeout: 15s
+        connect-timeout: 5000
+        response-timeout: 30s
         pool:
           type: elastic
           max-idle-time: 15s
@@ -99,14 +97,14 @@ feign:
   client:
     config:
       default:
-        connectTimeout: 3000
-        readTimeout: 15000
-        loggerLevel: NONE
+        connectTimeout: 5000
+        readTimeout: 30000
+        loggerLevel: BASIC
   compression:
     request:
       enabled: true
       mime-types: application/json
-      min-request-size: 1024
+      min-request-size: 2048
     response:
       enabled: true
 
@@ -145,9 +143,9 @@ logging:
   level:
     root: INFO
     com.njydsz.pmis: INFO
-    org.springframework.cloud.gateway: WARN
+    org.springframework.cloud.gateway: INFO
     reactor.netty: WARN
-    io.netty: ERROR
+    io.netty: WARN
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
   file:
