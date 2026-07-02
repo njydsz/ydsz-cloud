@@ -13,15 +13,15 @@ import lombok.Data;
 public class ResourcePoolCreateDTO {
 
     /** 池编号 */
-    @NotBlank(message = "池编号不能为空")
+    @NotBlank(message = "{validation.user.msg_27b42dc0}")
     private String poolCode;
 
     /** 池名称 */
-    @NotBlank(message = "池名称不能为空")
+    @NotBlank(message = "{validation.user.msg_04617d5a}")
     private String poolName;
 
     /** 池类型：HQ/DIVISION/RESERVE */
-    @NotBlank(message = "池类型不能为空")
+    @NotBlank(message = "{validation.user.msg_92a85357}")
     private String poolType;
 
     /** 部门 ID */

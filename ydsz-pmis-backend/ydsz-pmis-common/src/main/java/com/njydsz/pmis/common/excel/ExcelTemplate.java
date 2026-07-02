@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.excel;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.write.handler.WriteHandler;
 import com.alibaba.excel.write.metadata.style.WriteCellStyle;
+import com.alibaba.excel.write.metadata.style.WriteFont;
 import com.alibaba.excel.write.style.HorizontalCellStyleStrategy;
 import com.alibaba.excel.write.style.column.LongestMatchColumnWidthStyleStrategy;
 import com.alibaba.excel.write.style.row.SimpleRowHeightStyleStrategy;
@@ -143,8 +144,7 @@ public final class ExcelTemplate {
         WriteCellStyle headerStyle = new WriteCellStyle();
         headerStyle.setFillForegroundColor(IndexedColors.PALE_BLUE.getIndex());
         // POI 5.x 中 Font 不能直接实例化；使用 easyexcel 的 WriteFont
-        com.alibaba.excel.write.metadata.style.WriteFont headerFont =
-                new com.alibaba.excel.write.metadata.style.WriteFont();
+        WriteFont headerFont = new WriteFont();
         headerFont.setBold(true);
         headerStyle.setWriteFont(headerFont);
         headerStyle.setHorizontalAlignment(HorizontalAlignment.CENTER);

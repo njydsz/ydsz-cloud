@@ -47,7 +47,7 @@ public class AuthController {
      */
     @Operation(summary = "登录")
     @RateLimit(key = "login", qps = 5, windowSeconds = 60,
-            message = "登录尝试过于频繁，请 60 秒后再试")
+            message = "{validation.auth.msg_aea5163a}")
     @PostMapping("/login")
     public Result<LoginResultVO> login(@Valid @RequestBody LoginDTO dto) {
         return Result.ok(authService.login(dto));

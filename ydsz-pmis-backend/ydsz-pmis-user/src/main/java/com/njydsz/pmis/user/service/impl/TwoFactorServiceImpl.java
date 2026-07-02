@@ -46,7 +46,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
         User2FADO existing = user2FAMapper.selectByUserId(userId);
         String secret;
         if (existing != null && Boolean.TRUE.equals(existing.getEnabled())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已绑定 2FA，请先解绑");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_350ea646");
         }
         secret = TotpUtil.generateSecret();
         String[] codes = TotpUtil.generateBackupCodes(BACKUP_CODE_COUNT);
@@ -77,7 +77,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     public boolean confirmBind(Long userId, String otp) {
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未发起绑定请求");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_b9b014df");
         }
         if (!TotpUtil.verify(e.getSecret(), otp)) {
             return false;

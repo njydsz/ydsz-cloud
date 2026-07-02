@@ -9,6 +9,7 @@ import com.njydsz.pmis.workflow.engine.JsonHelper;
 import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
@@ -556,7 +557,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
             return Collections.emptyMap();
         }
         Map<String, Map<String, Object>> result = new HashMap<>();
-        for (com.njydsz.pmis.workflow.entity.FlowNodeDO n : nodes) {
+        for (FlowNodeDO n : nodes) {
             String coord = n.getCoordinate();
             if (coord == null || coord.isBlank()) {
                 continue;

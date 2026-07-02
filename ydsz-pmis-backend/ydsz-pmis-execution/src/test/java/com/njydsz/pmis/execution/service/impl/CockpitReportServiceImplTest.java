@@ -1,6 +1,7 @@
 package com.njydsz.pmis.execution.service.impl;
 
 import com.njydsz.pmis.execution.dto.CockpitKpiVO;
+import com.njydsz.pmis.execution.feign.BenchResourceClient;
 import com.njydsz.pmis.execution.mapper.BillableUtilizationSnapshotMapper;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
 import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
@@ -40,6 +41,7 @@ class CockpitReportServiceImplTest {
     private RiskMapper riskMapper;
     private BillableUtilizationSnapshotMapper utilizationSnapshotMapper;
     private BillableUtilizationService billableUtilizationService;
+    private BenchResourceClient benchResourceClient;
     private RuleEngine liteRuleEngine;
     private CockpitReportServiceImpl service;
 
@@ -54,12 +56,13 @@ class CockpitReportServiceImplTest {
         riskMapper = mock(RiskMapper.class);
         utilizationSnapshotMapper = mock(BillableUtilizationSnapshotMapper.class);
         billableUtilizationService = mock(BillableUtilizationService.class);
+        benchResourceClient = mock(BenchResourceClient.class);
         liteRuleEngine = mock(RuleEngine.class);
         // 默认返回空规则列表，使 CockpitReportServiceImpl fallback 到 legacyAlertEngine
         when(liteRuleEngine.getRules()).thenReturn(List.of());
         service = new CockpitReportServiceImpl(invoiceMapper, paymentMapper, costAllocationMapper,
                 purchaseMapper, expenseMapper, evmMeasureMapper, riskMapper,
-                utilizationSnapshotMapper, billableUtilizationService, liteRuleEngine);
+                utilizationSnapshotMapper, billableUtilizationService, benchResourceClient, liteRuleEngine);
     }
 
     @Test
@@ -212,8 +215,16 @@ class CockpitReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("drillByProjectType 当前为占位实现返回空")
-    void drillByProjectType() {
+    @DisplayName("drillByProjectType 委托 mapper 成功")
+    void drillByProjectType_success() {
+        when(invoiceMapper.sumByProjectType()).thenReturn(List.of(Map.of("project_type", "FIXED_PRICE")));
+        assertThat(service.drillByProjectType(null)).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("drillByProjectType mapper 异常时降级返回空")
+    void drillByProjectType_exception() {
+        when(invoiceMapper.sumByProjectType()).thenThrow(new RuntimeException("DB down"));
         assertThat(service.drillByProjectType(null)).isEmpty();
     }
 
@@ -256,18 +267,19 @@ class CockpitReportServiceImplTest {
         @SuppressWarnings("unchecked")
         List<String> years = (List<String>) out.get("years");
         assertThat(years).containsExactly("2023", "2024", "2025");
+        // 纯数据序列（前端自行组装 ECharts，Service 不再返回 series/yAxisConfig）
         @SuppressWarnings("unchecked")
-        List<Map<String, Object>> series = (List<Map<String, Object>>) out.get("series");
-        assertThat(series).hasSize(2);
-        // 合同总额 series
-        Map<String, Object> amountSeries = series.get(0);
-        assertThat(amountSeries.get("type")).isEqualTo("bar");
-        @SuppressWarnings("unchecked")
-        List<BigDecimal> amountData = (List<BigDecimal>) amountSeries.get("data");
-        assertThat(amountData).containsExactly(
+        List<BigDecimal> amountSeries = (List<BigDecimal>) out.get("amountSeries");
+        assertThat(amountSeries).containsExactly(
                 new BigDecimal("1000000"),
                 new BigDecimal("1500000"),
                 new BigDecimal("1200000"));
+        @SuppressWarnings("unchecked")
+        List<Integer> projectCountSeries = (List<Integer>) out.get("projectCountSeries");
+        assertThat(projectCountSeries).containsExactly(3, 4, 5);
+        @SuppressWarnings("unchecked")
+        List<Integer> invoiceCountSeries = (List<Integer>) out.get("invoiceCountSeries");
+        assertThat(invoiceCountSeries).containsExactly(5, 8, 6);
 
         // summary
         @SuppressWarnings("unchecked")

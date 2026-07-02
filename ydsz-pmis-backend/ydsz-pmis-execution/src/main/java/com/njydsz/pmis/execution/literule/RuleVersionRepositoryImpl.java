@@ -90,7 +90,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
                 .category(existing.getCategory())
                 .conditionExpression(existing.getConditionExpression())
                 .severityExpression(existing.getSeverityExpression())
-                .defaultSeverity(com.njydsz.pmis.literule.api.RuleSeverity.fromCode(existing.getDefaultSeverity()))
+                .defaultSeverity(RuleSeverity.fromCode(existing.getDefaultSeverity()))
                 .titleTemplate(existing.getTitleTemplate())
                 .descriptionTemplate(existing.getDescriptionTemplate())
                 .priority(existing.getPriority())

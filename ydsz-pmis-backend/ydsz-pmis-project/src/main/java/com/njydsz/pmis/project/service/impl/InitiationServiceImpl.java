@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.assembler.NameAssembler;
 import com.njydsz.pmis.project.dto.BudgetItemDTO;
 import com.njydsz.pmis.project.dto.GateReviewDTO;
@@ -84,7 +85,7 @@ public class InitiationServiceImpl implements InitiationService {
     public Long create(InitiationCreateDTO dto) {
         validate(dto);
         if (initiationMapper.selectByCode(dto.getProjectCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "项目编号已存在: " + dto.getProjectCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_32756e2a" + dto.getProjectCode());
         }
         InitiationDO o = new InitiationDO();
         BeanUtils.copyProperties(dto, o);
@@ -123,14 +124,14 @@ public class InitiationServiceImpl implements InitiationService {
         InitiationStage from = InitiationStage.fromCode(o.getStage());
         InitiationStage to = InitiationStage.fromCode(dto.getTargetStage());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知阶段: " + dto.getTargetStage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8453405e" + dto.getTargetStage());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "当前阶段非法: " + o.getStage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3895d38d" + o.getStage());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "阶段不允许迁移: " + from.getDesc() + " → " + to.getDesc());
+                    "error.project.msg_fc28e9a4" + from.getDesc() + " → " + to.getDesc());
         }
         String gate = to == InitiationStage.APPROVED ? GateCode.CD1.name() : o.getCurrentGate();
         initiationMapper.updateStage(o.getId(), to.getCode(), gate);
@@ -161,7 +162,7 @@ public class InitiationServiceImpl implements InitiationService {
     public InitiationDO getById(Long id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         assembleNames(o);
         return o;
@@ -194,7 +195,7 @@ public class InitiationServiceImpl implements InitiationService {
         if (StringUtils.hasText(projectLevel)) w.eq(InitiationDO::getProjectLevel, projectLevel);
         if (pmId != null) w.eq(InitiationDO::getPmId, pmId);
         // 数据权限 SQL 注入
-        String ds = com.njydsz.pmis.common.security.DataScopeHelper.buildSqlFragment("", "");
+        String ds = DataScopeHelper.buildSqlFragment("", "");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(InitiationDO::getCreatedAt);
         Page<InitiationDO> R = initiationMapper.selectPage(p, w);
@@ -220,7 +221,7 @@ public class InitiationServiceImpl implements InitiationService {
     public Long addBudgetItem(BudgetItemDTO dto) {
         validateBudget(dto);
         if (initiationMapper.selectById(dto.getInitiationId()) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         BudgetItemDO b = new BudgetItemDO();
         BeanUtils.copyProperties(dto, b);
@@ -245,7 +246,7 @@ public class InitiationServiceImpl implements InitiationService {
     public void deleteBudgetItem(Long id) {
         BudgetItemDO b = budgetItemMapper.selectById(id);
         if (b == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "预算明细不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_6b9c2579");
         }
         budgetItemMapper.deleteById(id);
         recomputeBudget(b.getInitiationId());
@@ -316,10 +317,10 @@ public class InitiationServiceImpl implements InitiationService {
         InitiationDO o = getById(dto.getInitiationId());
         GateCode gate = GateCode.fromCode(dto.getGateCode());
         if (gate == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "门径编码非法: " + dto.getGateCode());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_e08dfe9a" + dto.getGateCode());
         }
         if (!GATE_RESULTS.contains(dto.getReviewResult().toUpperCase())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "评审结果非法: " + dto.getReviewResult());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_64b97ca8" + dto.getReviewResult());
         }
         GateReviewDO existing = gateReviewMapper.selectByInitiationAndGate(o.getId(), gate.name());
         GateReviewDO record = existing != null ? existing : new GateReviewDO();
@@ -486,7 +487,7 @@ public class InitiationServiceImpl implements InitiationService {
     public void markProcessing(Long id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         initiationMapper.updateStage(id, InitiationStage.APPROVING.getCode(), o.getCurrentGate());
         log.info("[Initiation] 标记审批中: id={} prevStage={}", id, o.getStage());
@@ -503,7 +504,7 @@ public class InitiationServiceImpl implements InitiationService {
     public void markApproved(Long id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         initiationMapper.updateStage(id, InitiationStage.APPROVED.getCode(), GateCode.CD1.name());
         log.info("[Initiation] 标记已批准: id={} prevStage={}", id, o.getStage());
@@ -521,7 +522,7 @@ public class InitiationServiceImpl implements InitiationService {
     public void markRejected(Long id, String reason) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
         }
         initiationMapper.updateStage(id, InitiationStage.REJECTED.getCode(), o.getCurrentGate());
         log.info("[Initiation] 标记已驳回: id={} prevStage={} reason={}", id, o.getStage(), reason);
@@ -559,23 +560,23 @@ public class InitiationServiceImpl implements InitiationService {
      */
     private void validate(InitiationCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getProjectCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目编号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_5e628290");
         }
         if (!StringUtils.hasText(dto.getProjectName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目名称不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_68b28145");
         }
         if (dto.getCustomerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "客户 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_6de1fd36");
         }
         if (!StringUtils.hasText(dto.getProjectType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目类型不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_40dfe929");
         }
         if (dto.getPlannedStartDate() != null && dto.getPlannedEndDate() != null
                 && dto.getPlannedEndDate().isBefore(dto.getPlannedStartDate())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "结束日期不能早于开始日期");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7e6b1218");
         }
     }
 
@@ -587,13 +588,13 @@ public class InitiationServiceImpl implements InitiationService {
      */
     private void validateBudget(BudgetItemDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "立项 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_779da94d");
         }
         if (!BUDGET_CATEGORIES.contains(dto.getCategory().toUpperCase())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "分类非法: " + dto.getCategory());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_b33fbb09" + dto.getCategory());
         }
     }
 }

@@ -37,18 +37,18 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(ExpenseCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getExpenseCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "费用单号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_01247121");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "金额必须为正数");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2b7b69af");
         }
         if (dto.getEmployeeId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "报销人 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9f487f28");
         }
         if (expenseMapper.selectByCode(dto.getExpenseCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "费用单号已存在: " + dto.getExpenseCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_37f1deeb" + dto.getExpenseCode());
         }
         ExpenseDO e = new ExpenseDO();
         BeanUtils.copyProperties(dto, e);
@@ -76,17 +76,17 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(ApprovalDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         ExpenseDO e = getById(dto.getId());
         ApprovalStatus from = ApprovalStatus.fromCode(e.getStatus());
         ApprovalStatus to = ApprovalStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "费用状态不允许迁移: " + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
+                    "error.execution.msg_ba0d6420" + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
         }
         expenseMapper.updateStatus(dto.getId(), to.getCode(),
                 dto.getApproverId(), dto.getApproverName());
@@ -99,7 +99,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         ExpenseDO e = getById(id);
         ApprovalStatus s = ApprovalStatus.fromCode(e.getStatus());
         if (s == ApprovalStatus.APPROVED || s == ApprovalStatus.PAID) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已批准/已支付费用单不能删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_bf3459b1");
         }
         expenseMapper.deleteById(id);
     }
@@ -107,7 +107,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     public ExpenseDO getById(Long id) {
         ExpenseDO e = expenseMapper.selectById(id);
-        if (e == null) throw new BizException(BizErrorCode.NOT_FOUND, "费用单不存在");
+        if (e == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_fe55e2d1");
         return e;
     }
 

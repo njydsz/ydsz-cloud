@@ -4,8 +4,10 @@ import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.core.DefaultRuleEngine;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.impl.StaticRule;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleVersion;
 import com.njydsz.pmis.literule.spi.RuleVersionRepository;
@@ -43,7 +45,7 @@ class RuleAdminServiceTest {
 
     @BeforeEach
     void setUp() {
-        ruleEngine = new com.njydsz.pmis.literule.core.DefaultRuleEngine();
+        ruleEngine = new DefaultRuleEngine();
         evaluator = new AviatorExpressionEvaluator();
         configProvider = mock(RuleConfigProvider.class);
         versionRepository = mock(RuleVersionRepository.class);
@@ -99,7 +101,7 @@ class RuleAdminServiceTest {
     @DisplayName("dry-run 仿真 - 全部规则")
     void testDryRunAllRules() {
         // 注册一条静态规则
-        ruleEngine.register(new com.njydsz.pmis.literule.impl.StaticRule("R1", "规则1", "TEST", ctx ->
+        ruleEngine.register(new StaticRule("R1", "规则1", "TEST", ctx ->
                 RuleResult.triggered("R1", "规则1", "TEST", RuleSeverity.RED, "触发", "")));
 
         List<RuleResult> results = adminService.dryRun(null, Map.of("x", 1));

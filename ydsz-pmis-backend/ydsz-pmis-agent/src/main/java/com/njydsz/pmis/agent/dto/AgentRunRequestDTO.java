@@ -21,7 +21,7 @@ public class AgentRunRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** Agent 类型（AgentType.code） */
-    @NotBlank(message = "Agent 类型不能为空")
+    @NotBlank(message = "{validation.agent.msg_37cbd8cf}")
     private String agentType;
 
     /** 关联业务类型（PROJECT/OPPORTUNITY/TIMESHEET/STAFF） */

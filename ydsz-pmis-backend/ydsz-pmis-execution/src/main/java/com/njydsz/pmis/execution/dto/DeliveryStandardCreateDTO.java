@@ -18,17 +18,17 @@ public class DeliveryStandardCreateDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @NotBlank(message = "项目类型不能为空")
+    @NotBlank(message = "{validation.execution.msg_40dfe929}")
     private String projectType;
 
     private String projectLevel;
 
-    @NotBlank(message = "交付物名称不能为空")
+    @NotBlank(message = "{validation.execution.msg_ddf1cbe9}")
     private String deliveryName;
 
     private String deliveryCategory;
 
-    @NotBlank(message = "所属阶段不能为空")
+    @NotBlank(message = "{validation.execution.msg_4819a855}")
     private String stage;
 
     private Integer required;

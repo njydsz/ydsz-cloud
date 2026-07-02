@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.config;
 
+import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.event.RuleConfigRefreshEvent;
@@ -53,7 +54,7 @@ public class RuleHotReloader {
         try {
             List<RuleDefinition> definitions = configProvider.loadEnabledRules();
             // 先注销所有表达式规则（保留编程式注册的 StaticRule）
-            for (com.njydsz.pmis.literule.api.Rule existing : ruleEngine.getRules()) {
+            for (Rule existing : ruleEngine.getRules()) {
                 if (existing instanceof ExpressionRule) {
                     ruleEngine.unregister(existing.getCode());
                 }

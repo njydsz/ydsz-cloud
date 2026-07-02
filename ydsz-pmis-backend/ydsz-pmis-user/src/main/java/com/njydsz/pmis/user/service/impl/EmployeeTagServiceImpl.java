@@ -47,14 +47,14 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void remove(Long id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         tagMapper.deleteById(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void replaceByEmployee(Long employeeId, List<EmployeeTagCreateDTO> tags) {
-        if (employeeId == null) throw new BizException(BizErrorCode.BAD_REQUEST, "员工 ID 不能为空");
+        if (employeeId == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         tagMapper.deleteByEmployee(employeeId);
         if (tags == null) return;
         for (EmployeeTagCreateDTO dto : tags) {
@@ -76,21 +76,21 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
     }
 
     private void validate(EmployeeTagCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (dto.getEmployeeId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "员工 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         }
         if (TagType.fromCode(dto.getTagType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "无效标签类型: " + dto.getTagType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_3637b07d" + dto.getTagType());
         }
         if (!StringUtils.hasText(dto.getTagCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "标签编码不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_8faabfac");
         }
         if (!StringUtils.hasText(dto.getTagName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "标签名称不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_16eb3ef6");
         }
         if (dto.getProficiency() != null && (dto.getProficiency() < 1 || dto.getProficiency() > 5)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "熟练度必须 1-5");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_49c5e2b0");
         }
     }
 }

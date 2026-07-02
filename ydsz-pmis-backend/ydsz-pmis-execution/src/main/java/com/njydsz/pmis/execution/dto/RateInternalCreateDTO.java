@@ -17,11 +17,11 @@ import java.time.LocalDate;
 public class RateInternalCreateDTO {
 
     /** 费率业务编号 */
-    @NotBlank(message = "费率编号不能为空")
+    @NotBlank(message = "{validation.execution.msg_3fbd3c07}")
     private String rateCode;
 
     /** 职级 L1-L18 */
-    @NotBlank(message = "职级不能为空")
+    @NotBlank(message = "{validation.execution.msg_11653d4c}")
     private String levelCode;
 
     /** 事业部/部门 ID */
@@ -30,17 +30,17 @@ public class RateInternalCreateDTO {
     private String departmentName;
 
     /** 计费单位：DAY/HOUR */
-    @NotBlank(message = "计费单位不能为空")
+    @NotBlank(message = "{validation.execution.msg_8e68458a}")
     private String billingUnit;
 
     /** 内部成本金额 */
-    @NotNull(message = "成本金额不能为空")
+    @NotNull(message = "{validation.execution.msg_eb814b7e}")
     private BigDecimal costAmount;
 
     /** 币种：CNY */
     private String currency;
     /** 生效日期 */
-    @NotNull(message = "生效日期不能为空")
+    @NotNull(message = "{validation.execution.msg_c10e0b62}")
     private LocalDate effectiveDate;
     /** 失效日期 */
     private LocalDate expiryDate;

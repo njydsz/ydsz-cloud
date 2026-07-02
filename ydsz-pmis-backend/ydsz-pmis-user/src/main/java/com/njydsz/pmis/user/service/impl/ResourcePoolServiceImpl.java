@@ -36,10 +36,10 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     public Long create(ResourcePoolCreateDTO dto) {
         validate(dto);
         if (poolMapper.selectByCode(dto.getPoolCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "池编号已存在: " + dto.getPoolCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_c51c8d33" + dto.getPoolCode());
         }
         if (PoolType.fromCode(dto.getPoolType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "无效池类型: " + dto.getPoolType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_c3e0a19a" + dto.getPoolType());
         }
         ResourcePoolDO p = new ResourcePoolDO();
         BeanUtils.copyProperties(dto, p);
@@ -56,9 +56,9 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(Long id, ResourcePoolCreateDTO dto) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourcePoolDO p = poolMapper.selectById(id);
-        if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "资源池不存在");
+        if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_f0e76f2f");
         if (dto.getPoolName() != null) p.setPoolName(dto.getPoolName());
         if (dto.getDepartmentId() != null) p.setDepartmentId(dto.getDepartmentId());
         if (dto.getDepartmentName() != null) p.setDepartmentName(dto.getDepartmentName());
@@ -73,15 +73,15 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         poolMapper.deleteById(id);
     }
 
     @Override
     public ResourcePoolDO getById(Long id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourcePoolDO p = poolMapper.selectById(id);
-        if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "资源池不存在");
+        if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_f0e76f2f");
         return p;
     }
 
@@ -108,15 +108,15 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     }
 
     private void validate(ResourcePoolCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (!StringUtils.hasText(dto.getPoolCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "池编号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_27b42dc0");
         }
         if (!StringUtils.hasText(dto.getPoolName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "池名称不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_04617d5a");
         }
         if (!StringUtils.hasText(dto.getPoolType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "池类型不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_92a85357");
         }
     }
 }

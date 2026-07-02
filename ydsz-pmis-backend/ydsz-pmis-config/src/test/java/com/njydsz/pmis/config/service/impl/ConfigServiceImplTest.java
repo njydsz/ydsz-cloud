@@ -82,7 +82,7 @@ class ConfigServiceImplTest {
     @DisplayName("getByKey 缓存命中应直接返回")
     void getByKey_cacheHit() {
         ConfigDO c = config(1L, "g", "k", "v");
-        when(redis.opsForValue().get("pmis:cfg:g:k")).thenReturn(com.alibaba.fastjson2.JSON.toJSONString(c));
+        when(redis.opsForValue().get("pmis:cfg:g:k")).thenReturn(JSON.toJSONString(c));
         ConfigDO r = service.getByKey("g", "k");
         assertThat(r.getConfigValue()).isEqualTo("v");
     }

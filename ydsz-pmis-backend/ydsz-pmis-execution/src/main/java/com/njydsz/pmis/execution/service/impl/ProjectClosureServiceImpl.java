@@ -45,7 +45,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
         validate(dto);
         if (closureMapper.selectByCode(dto.getClosureCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "结项编码已存在: " + dto.getClosureCode());
+                    "error.execution.msg_404a2e2f" + dto.getClosureCode());
         }
         ProjectClosureDO c = new ProjectClosureDO();
         BeanUtils.copyProperties(dto, c);
@@ -67,14 +67,14 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
         ClosureStatus from = ClosureStatus.fromCode(c.getStatus());
         ClosureStatus to = ClosureStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "当前状态非法: " + c.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a" + c.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "结项状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
+                    "error.execution.msg_85e97de8" + from.getDesc() + " → " + to.getDesc());
         }
         LocalDateTime now = LocalDateTime.now();
         if (to == ClosureStatus.SUBMITTED) c.setSubmittedAt(now);
@@ -99,10 +99,10 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
         ProjectClosureDO c = getById(id);
         ClosureStatus st = ClosureStatus.fromCode(c.getStatus());
         if (st == ClosureStatus.ARCHIVED) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已归档的结项记录不能删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6039c566");
         }
         if (Integer.valueOf(1).equals(c.getLocked())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "记录已锁定，不能删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_82f90b0e");
         }
         closureMapper.deleteById(id);
     }
@@ -111,7 +111,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
     public ProjectClosureDO getById(Long id) {
         ProjectClosureDO c = closureMapper.selectById(id);
         if (c == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "结项记录不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_d234ab69");
         }
         return c;
     }
@@ -167,16 +167,16 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
 
     private void validate(ProjectClosureCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (ClosureType.fromCode(dto.getClosureType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "结项类型不合法: " + dto.getClosureType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_85b85c9e" + dto.getClosureType());
         }
         if (dto.getApplicantId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "申请人 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");
         }
         if (dto.getWarrantyMonths() != null && dto.getWarrantyMonths().signum() < 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "质保期月数不能为负");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_47202ff0");
         }
     }
 

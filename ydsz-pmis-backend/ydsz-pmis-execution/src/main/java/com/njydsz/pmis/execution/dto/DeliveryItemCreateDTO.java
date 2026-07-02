@@ -20,10 +20,10 @@ public class DeliveryItemCreateDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @NotBlank(message = "交付物编码不能为空")
+    @NotBlank(message = "{validation.execution.msg_1fd28961}")
     private String itemCode;
 
-    @NotNull(message = "项目 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_576c2b5e}")
     private Long initiationId;
 
     private Long standardId;

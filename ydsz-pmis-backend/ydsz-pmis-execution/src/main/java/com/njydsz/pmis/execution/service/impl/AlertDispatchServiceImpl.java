@@ -51,17 +51,17 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     @Transactional(rollbackFor = Exception.class)
     public Long submit(AlertDispatchDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getAlertType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "预警类型不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_fc360b56");
         }
         String level = StringUtils.hasText(dto.getAlertLevel()) ? dto.getAlertLevel().toUpperCase() : "YELLOW";
         if (!isValidLevel(level)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "预警等级不合法: " + level);
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_edec9e26" + level);
         }
         if (!StringUtils.hasText(dto.getTitle())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "预警标题不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a39a1acf");
         }
 
         AlertDispatchDO d = new AlertDispatchDO();
@@ -101,11 +101,11 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     @Transactional(rollbackFor = Exception.class)
     public boolean dispatchNow(Long id) {
         if (id == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         }
         AlertDispatchDO d = mapper.selectById(id);
         if (d == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "预警不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_6a72742d");
         }
         if ("SENT".equals(d.getStatus()) || "CANCELLED".equals(d.getStatus())) {
             return true;
@@ -284,14 +284,14 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     @Transactional(rollbackFor = Exception.class)
     public void cancel(Long id, String reason) {
         if (id == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         }
         AlertDispatchDO d = mapper.selectById(id);
         if (d == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "预警不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_6a72742d");
         }
         if ("SENT".equals(d.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已发送的预警不可取消");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_811c5693");
         }
         AlertDispatchDO update = new AlertDispatchDO();
         update.setId(id);

@@ -7,6 +7,7 @@ import com.njydsz.pmis.project.dto.OpportunityCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityStatusDTO;
 import com.njydsz.pmis.project.dto.OpportunityUpdateDTO;
 import com.njydsz.pmis.project.entity.OpportunityDO;
+import com.njydsz.pmis.project.assembler.NameAssembler;
 import com.njydsz.pmis.project.mapper.OpportunityMapper;
 import com.njydsz.pmis.project.service.InitiationService;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,8 +43,7 @@ class OpportunityServiceImplTest {
     void setUp() {
         mapper = mock(OpportunityMapper.class);
         initiationService = mock(InitiationService.class);
-        com.njydsz.pmis.project.assembler.NameAssembler assembler =
-                mock(com.njydsz.pmis.project.assembler.NameAssembler.class);
+        NameAssembler assembler = mock(NameAssembler.class);
         service = new OpportunityServiceImpl(mapper, assembler, initiationService);
     }
 

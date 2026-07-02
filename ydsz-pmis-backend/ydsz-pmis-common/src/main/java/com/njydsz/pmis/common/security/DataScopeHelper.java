@@ -52,7 +52,7 @@ public final class DataScopeHelper {
         if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
             return;
         }
-        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "无权访问部门: " + targetDeptId);
+        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337" + targetDeptId);
     }
 
     /**
@@ -75,7 +75,7 @@ public final class DataScopeHelper {
         if (ctx.getUserId() != null && ctx.getUserId().equals(ownerUserId)) {
             return;
         }
-        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "无权访问他人数据");
+        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_4982e9ba");
     }
 
     /**

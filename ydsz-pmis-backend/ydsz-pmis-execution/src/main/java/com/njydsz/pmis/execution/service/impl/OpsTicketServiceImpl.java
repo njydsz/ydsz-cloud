@@ -47,10 +47,10 @@ public class OpsTicketServiceImpl implements OpsTicketService {
         validate(dto);
         OpsTicketPriority priority = OpsTicketPriority.fromCode(dto.getPriority());
         if (priority == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "优先级非法: " + dto.getPriority());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d4fa3d01" + dto.getPriority());
         }
         if (!ALLOWED_CATEGORIES.contains(dto.getCategory() == null ? "OTHER" : dto.getCategory())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "工单类型非法: " + dto.getCategory());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a9b85ade" + dto.getCategory());
         }
         OpsTicketDO t = new OpsTicketDO();
         BeanUtils.copyProperties(dto, t);
@@ -76,15 +76,15 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     @Transactional(rollbackFor = Exception.class)
     public void assign(OpsTicketAssignDTO dto) {
         if (dto == null || dto.getId() == null || dto.getAssigneeId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "派单人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_245582df");
         }
         OpsTicketDO t = ticketMapper.selectById(dto.getId());
-        if (t == null) throw new BizException(BizErrorCode.NOT_FOUND, "工单不存在");
+        if (t == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_bbe37281");
         OpsTicketStatus st = OpsTicketStatus.fromCode(t.getStatus());
-        if (st == null) throw new BizException(BizErrorCode.BAD_REQUEST, "工单状态非法");
+        if (st == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9fc0eba4");
         if (!st.canTransitTo(OpsTicketStatus.ASSIGNED)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "当前状态不允许派单: " + st.getDesc());
+                    "error.execution.msg_1893fa52" + st.getDesc());
         }
         ticketMapper.updateAssignee(dto.getId(), dto.getAssigneeId(), dto.getAssigneeName(),
                 OpsTicketStatus.ASSIGNED.getCode(), LocalDateTime.now());
@@ -95,17 +95,17 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(OpsTicketStatusDTO dto) {
         if (dto == null || dto.getId() == null || !StringUtils.hasText(dto.getTargetStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "参数不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_40437174");
         }
         OpsTicketDO t = ticketMapper.selectById(dto.getId());
-        if (t == null) throw new BizException(BizErrorCode.NOT_FOUND, "工单不存在");
+        if (t == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_bbe37281");
         OpsTicketStatus from = OpsTicketStatus.fromCode(t.getStatus());
         OpsTicketStatus to = OpsTicketStatus.fromCode(dto.getTargetStatus());
-        if (from == null) throw new BizException(BizErrorCode.BAD_REQUEST, "当前状态非法");
-        if (to == null) throw new BizException(BizErrorCode.BAD_REQUEST, "目标状态非法: " + dto.getTargetStatus());
+        if (from == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_af717625");
+        if (to == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_57801ca5" + dto.getTargetStatus());
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
+                    "error.execution.msg_01c65a70" + from.getDesc() + " → " + to.getDesc());
         }
         LocalDateTime now = LocalDateTime.now();
         ticketMapper.updateStatus(dto.getId(), to.getCode());
@@ -169,13 +169,13 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     public void closeAndEvaluate(OpsTicketStatusDTO dto) {
         // 校验必须 RESOLVED → CLOSED
         OpsTicketDO t = ticketMapper.selectById(dto.getId());
-        if (t == null) throw new BizException(BizErrorCode.NOT_FOUND, "工单不存在");
+        if (t == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_bbe37281");
         OpsTicketStatus from = OpsTicketStatus.fromCode(t.getStatus());
         if (from != OpsTicketStatus.RESOLVED) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "仅已解决的工单可关闭评价");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_bd700481");
         }
         if (dto.getCustomerScore() == null || dto.getCustomerScore() < 1 || dto.getCustomerScore() > 5) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请给出 1-5 星评价");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_991982a0");
         }
         changeStatus(dto);
     }
@@ -226,24 +226,24 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     @Override
     public OpsTicketDO getById(Long id) {
         if (id == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "id 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_8f2cc72d");
         }
         OpsTicketDO t = ticketMapper.selectById(id);
         if (t == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "工单不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_bbe37281");
         }
         return t;
     }
 
     private void validate(OpsTicketCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (!StringUtils.hasText(dto.getTitle())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "工单标题不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4cfed9e9");
         }
     }
 }

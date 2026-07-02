@@ -17,11 +17,11 @@ import java.time.LocalDate;
 public class ResourceAssignmentCreateDTO {
 
     /** 分配编号 */
-    @NotBlank(message = "分配编号不能为空")
+    @NotBlank(message = "{validation.user.msg_4a557f63}")
     private String assignmentCode;
 
     /** 员工 ID */
-    @NotNull(message = "员工 ID 不能为空")
+    @NotNull(message = "{validation.user.msg_03f5ae35}")
     private Long employeeId;
 
     /** 员工姓名 */
@@ -42,7 +42,7 @@ public class ResourceAssignmentCreateDTO {
     private Long opportunityId;
 
     /** 业务动作：RESERVE/START/TRANSFER/RELEASE/CANCEL */
-    @NotBlank(message = "业务动作不能为空")
+    @NotBlank(message = "{validation.user.msg_ac3aca15}")
     private String action;
 
     /** 投入占比 (0-1) */

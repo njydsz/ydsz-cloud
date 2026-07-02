@@ -85,7 +85,7 @@ public class UserController {
         String oldPassword = body.get("oldPassword");
         String newPassword = body.get("newPassword");
         if (oldPassword == null || newPassword == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "原密码或新密码不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_2b7a520e");
         }
         userAccountService.changePassword(SecurityContext.getUserId(), oldPassword, newPassword);
         return Result.ok();
@@ -102,14 +102,14 @@ public class UserController {
     @PrePermission("auth:user:create")
     @OperationLog(module = "权限管理", action = "创建用户", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
-            message = "用户创建过于频繁，请 60 秒后再试")
+            message = "{validation.user.msg_7aa2293e}")
     @PostMapping
     public Result<Long> create(@RequestBody Map<String, Object> body) {
         String username = (String) body.get("username");
         String password = (String) body.get("password");
         Long employeeId = body.get("employeeId") == null ? null : Long.valueOf(body.get("employeeId").toString());
         if (username == null || password == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "用户名或密码不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_c511ed00");
         }
         UserAccountDO u = new UserAccountDO();
         u.setUsername(username);
@@ -161,7 +161,7 @@ public class UserController {
     @RequireReAuth(code = "USER_RESET_PASSWORD", name = "重置用户密码")
     @OperationLog(module = "权限管理", action = "重置密码", bizType = "USER")
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
-            message = "密码重置过于频繁，请 60 秒后再试")
+            message = "{validation.user.msg_538560c7}")
     @PostMapping("/{id}/reset-password")
     public Result<Void> resetPassword(@PathVariable Long id, @RequestParam @NotBlank String password) {
         userAccountService.resetPassword(id, password);

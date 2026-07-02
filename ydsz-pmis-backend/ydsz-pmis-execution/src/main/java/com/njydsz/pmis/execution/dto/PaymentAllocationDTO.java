@@ -14,13 +14,13 @@ import java.math.BigDecimal;
 @Data
 public class PaymentAllocationDTO {
 
-    @NotNull(message = "回款 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_34b0ac9d}")
     private Long paymentId;
 
-    @NotNull(message = "发票 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_d09bbb99}")
     private Long invoiceId;
 
-    @NotNull(message = "核销金额不能为空")
+    @NotNull(message = "{validation.execution.msg_17d811ec}")
     private BigDecimal amount;
 
     private Long operatorId;

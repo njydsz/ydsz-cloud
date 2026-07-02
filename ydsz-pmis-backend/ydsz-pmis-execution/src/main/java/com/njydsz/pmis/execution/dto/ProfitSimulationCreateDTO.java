@@ -16,29 +16,29 @@ import java.math.BigDecimal;
 public class ProfitSimulationCreateDTO {
 
     /** 测算业务编号 */
-    @NotBlank(message = "测算编号不能为空")
+    @NotBlank(message = "{validation.execution.msg_dd45c4cb}")
     private String simulationCode;
 
     /** 测算名称 */
-    @NotBlank(message = "测算名称不能为空")
+    @NotBlank(message = "{validation.execution.msg_00a76083}")
     private String simulationName;
 
     /** 关联项目立项ID */
-    @NotNull(message = "项目 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_576c2b5e}")
     private Long initiationId;
 
     /** 场景类型：BASE/OPTIMISTIC/PESSIMISTIC/CUSTOM */
     private String scenarioType;      // BASE/OPTIMISTIC/PESSIMISTIC/CUSTOM
 
     /** 合同金额 */
-    @NotNull(message = "合同金额不能为空")
+    @NotNull(message = "{validation.execution.msg_578c757b}")
     private BigDecimal contractAmount;
 
     /** 混合职级配置（JSON 字符串或后端自行拼接） */
     private String assumptions;
 
     /** 目标毛利率 */
-    @NotNull(message = "目标毛利率不能为空")
+    @NotNull(message = "{validation.execution.msg_3dd07a1f}")
     private BigDecimal targetMargin;
 
     /** 备注 */

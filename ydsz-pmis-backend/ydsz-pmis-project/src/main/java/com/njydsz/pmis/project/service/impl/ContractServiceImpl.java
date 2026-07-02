@@ -53,7 +53,7 @@ public class ContractServiceImpl implements ContractService {
     public Long create(ContractCreateDTO dto) {
         validate(dto);
         if (contractMapper.selectByCode(dto.getContractCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "合同编号已存在: " + dto.getContractCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_f038adba" + dto.getContractCode());
         }
         ContractDO c = new ContractDO();
         BeanUtils.copyProperties(dto, c);
@@ -86,14 +86,14 @@ public class ContractServiceImpl implements ContractService {
         ContractStatus from = ContractStatus.fromCode(c.getStatus());
         ContractStatus to = ContractStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6" + dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "当前状态非法: " + c.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_2e33226a" + c.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
+                    "error.project.msg_01c65a70" + from.getDesc() + " → " + to.getDesc());
         }
         contractMapper.updateStatus(c.getId(), to.getCode());
         log.info("[Contract] 状态迁移: id={} {} -> {}", c.getId(), from.getCode(), to.getCode());
@@ -124,7 +124,7 @@ public class ContractServiceImpl implements ContractService {
     public ContractDO getById(Long id) {
         ContractDO c = contractMapper.selectById(id);
         if (c == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "合同不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         assembleNames(c);
         return c;
@@ -213,29 +213,29 @@ public class ContractServiceImpl implements ContractService {
      */
     private void validate(ContractCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (!StringUtils.hasText(dto.getContractCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "合同编号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8d3e1723");
         }
         if (!StringUtils.hasText(dto.getContractName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "合同名称不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_c6c8edbf");
         }
         if (dto.getCustomerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "客户 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_6de1fd36");
         }
         if (!StringUtils.hasText(dto.getContractType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "合同类型不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_fc52e1b0");
         }
         if (dto.getTotalAmount() == null || dto.getTotalAmount().signum() < 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "合同金额必须为非负数");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8ece143c");
         }
         if (dto.getOwnerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "负责人 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_26804acb");
         }
         if (dto.getEffectiveDate() != null && dto.getExpireDate() != null
                 && dto.getExpireDate().isBefore(dto.getEffectiveDate())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "到期日期不能早于生效日期");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_40094d71");
         }
     }
 

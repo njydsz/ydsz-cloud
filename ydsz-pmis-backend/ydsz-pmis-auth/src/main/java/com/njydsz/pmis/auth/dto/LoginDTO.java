@@ -18,13 +18,13 @@ import lombok.Data;
 public class LoginDTO {
 
     /** 用户名 */
-    @NotBlank(message = "用户名不能为空")
+    @NotBlank(message = "{validation.auth.msg_0b62b5ce}")
     @Schema(description = "用户名", example = "admin")
     private String username;
 
     /** 密码（明文，服务端加盐后哈希校验） */
-    @NotBlank(message = "密码不能为空")
-    @Size(min = 6, message = "密码长度不能少于 6 位")
+    @NotBlank(message = "{validation.auth.msg_89b5d3d5}")
+    @Size(min = 6, message = "{validation.auth.msg_4592106f}")
     @Schema(description = "密码", example = "admin123")
     private String password;
 

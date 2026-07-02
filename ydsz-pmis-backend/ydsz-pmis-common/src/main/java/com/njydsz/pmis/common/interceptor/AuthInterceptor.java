@@ -45,7 +45,7 @@ public class AuthInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
         String token = extractToken(request);
         if (!StringUtils.hasText(token)) {
-            throw new BizException(BizErrorCode.UNAUTHORIZED, "缺少认证 Token");
+            throw new BizException(BizErrorCode.UNAUTHORIZED, "error.common.msg_4b43f121");
         }
 
         // 解析 Token，失败统一转为 TOKEN_INVALID

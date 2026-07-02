@@ -84,12 +84,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     public FlowInstanceViewDTO start(Long instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + instanceId);
         }
         FlowNodeDO startNode = nodeMapper.selectStartNode(instance.getDefinitionId());
         if (startNode == null) {
             throw new BizException(BizErrorCode.INTERNAL_ERROR,
-                    "流程定义缺少开始节点: definitionId=" + instance.getDefinitionId());
+                    "error.workflow.msg_560bf118" + instance.getDefinitionId());
         }
         List<FlowNodeDO> nextNodes = advance(instance, startNode.getNodeCode(),
                 "PASS", null, parseVariable(instance.getVariable()));
@@ -99,8 +99,10 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return instanceService.toView(instanceService.getById(instanceId),
                     loadCurrentTasks(instanceId));
         }
-        com.njydsz.pmis.workflow.service.impl.FlowInstanceServiceImpl impl =
-                (com.njydsz.pmis.workflow.service.impl.FlowInstanceServiceImpl) instanceService;
+        com.njydsz.pmis.workflow.service.impl.FlowInstanceServiceImpl impl = null;
+        if (instanceService instanceof FlowInstanceServiceImpl) {
+            impl = (FlowInstanceServiceImpl) instanceService;
+        }
         impl.generateTasksForNodes(instanceId, nextNodes, parseVariable(instance.getVariable()));
         if (nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
             instanceMapper.updateStatus(instanceId,
@@ -123,7 +125,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                 currentInstance.getDefinitionId(), currentNodeCode);
         if (currentNode == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "当前节点不存在: nodeCode=" + currentNodeCode);
+                    "error.workflow.msg_d84d389b" + currentNodeCode);
         }
 
         // REJECT 退回
@@ -132,11 +134,11 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                     ? targetNodeCode
                     : resolveRejectTarget(currentInstance.getDefinitionId(), currentNodeCode);
             if (rejectTarget == null) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "无法找到退回目标节点");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
             }
             FlowNodeDO target = nodeMapper.selectByCode(currentInstance.getDefinitionId(), rejectTarget);
             if (target == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "退回目标节点不存在: " + rejectTarget);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6e66716d" + rejectTarget);
             }
             return List.of(target);
         }

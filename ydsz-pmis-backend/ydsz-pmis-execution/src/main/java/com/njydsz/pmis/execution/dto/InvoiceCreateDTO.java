@@ -20,27 +20,27 @@ public class InvoiceCreateDTO {
 
     private String invoiceNo;
 
-    @NotBlank(message = "发票业务编号不能为空")
+    @NotBlank(message = "{validation.execution.msg_ffebd629}")
     private String invoiceCode;
 
-    @NotBlank(message = "发票类型不能为空")
+    @NotBlank(message = "{validation.execution.msg_f063c858}")
     private String invoiceType;          // NORMAL/RED_REVERSE
 
-    @NotNull(message = "合同 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_af96cf73}")
     private Long contractId;
 
-    @NotNull(message = "项目 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_576c2b5e}")
     private Long initiationId;
 
-    @NotNull(message = "客户 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_6de1fd36}")
     private Long customerId;
 
     private String customerName;
 
-    @NotBlank(message = "开票依据不能为空")
+    @NotBlank(message = "{validation.execution.msg_b0f8bcc9}")
     private String invoiceBasis;         // MILESTONE/OUTSOURCING/MONTHLY/FINAL/OTHER
 
-    @NotNull(message = "金额不能为空")
+    @NotNull(message = "{validation.execution.msg_406c0ea8}")
     private BigDecimal amount;
 
     private BigDecimal taxRate;

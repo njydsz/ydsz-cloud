@@ -34,32 +34,32 @@ public class RateCardImportDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 职级 L1-L18 */
-    @NotBlank(message = "职级不能为空")
+    @NotBlank(message = "{validation.execution.msg_11653d4c}")
     @ExcelProperty(value = "职级", index = 0)
     @ColumnWidth(12)
     private String level;
 
     /** 客户类型：GOV/ENT/SMB/INDIVIDUAL */
-    @NotBlank(message = "客户类型不能为空")
+    @NotBlank(message = "{validation.execution.msg_d5cd6e50}")
     @ExcelProperty(value = "客户类型", index = 1)
     @ColumnWidth(16)
     private String customerType;
 
     /** 项目类型：FIXED_PRICE/T&M/MILESTONE/RETAINER/LICENSE/SaaS/MAINTENANCE/OTHER */
-    @NotBlank(message = "项目类型不能为空")
+    @NotBlank(message = "{validation.execution.msg_40dfe929}")
     @ExcelProperty(value = "项目类型", index = 2)
     @ColumnWidth(20)
     private String projectType;
 
     /** 单价（元/人天） */
-    @NotNull(message = "单价不能为空")
+    @NotNull(message = "{validation.execution.msg_d1b0b464}")
     @ExcelProperty(value = "单价(元/人天)", index = 3)
     @NumberFormat("#.##")
     @ColumnWidth(18)
     private BigDecimal unitPrice;
 
     /** 生效日期 yyyy-MM-dd */
-    @NotBlank(message = "生效日期不能为空")
+    @NotBlank(message = "{validation.execution.msg_c10e0b62}")
     @ExcelProperty(value = "生效日期", index = 4)
     @ColumnWidth(16)
     private String effectiveDate;

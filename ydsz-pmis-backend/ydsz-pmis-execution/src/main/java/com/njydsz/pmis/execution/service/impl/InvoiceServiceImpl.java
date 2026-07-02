@@ -41,42 +41,42 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(InvoiceCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getInvoiceCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "发票编号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0bf89391");
         }
         if (dto.getContractId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "合同 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_af96cf73");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "发票金额必须为正数");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_abaef3a6");
         }
         if (InvoiceType.fromCode(dto.getInvoiceType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "发票类型非法: " + dto.getInvoiceType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_e77a5692" + dto.getInvoiceType());
         }
         if (InvoiceBasis.fromCode(dto.getInvoiceBasis()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "开票依据非法: " + dto.getInvoiceBasis());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a5324fa7" + dto.getInvoiceBasis());
         }
         if (invoiceMapper.selectByCode(dto.getInvoiceCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "发票编号已存在: " + dto.getInvoiceCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_9c944632" + dto.getInvoiceCode());
         }
         if (StringUtils.hasText(dto.getInvoiceNo())
                 && invoiceMapper.selectByInvoiceNo(dto.getInvoiceNo()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "发票号已存在: " + dto.getInvoiceNo());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_bef09851" + dto.getInvoiceNo());
         }
         if ("RED_REVERSE".equalsIgnoreCase(dto.getInvoiceType())) {
             if (dto.getReversedById() == null) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "红冲发票必须指定被红冲的发票 ID");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_571d513d");
             }
             InvoiceDO src = invoiceMapper.selectById(dto.getReversedById());
             if (src == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "被红冲的发票不存在");
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_12b7e014");
             }
             if (!InvoiceStatus.ISSUED.getCode().equals(src.getStatus())) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "仅已开具(ISSUED)的发票可被红冲");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_25f7c916");
             }
             if (dto.getAmount().compareTo(src.getAmount()) > 0) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "红冲金额不能大于原发票金额");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2d897570");
             }
         } else {
             // 正常开票：强制校验依据附件
@@ -84,13 +84,13 @@ public class InvoiceServiceImpl implements InvoiceService {
                     || "FINAL".equalsIgnoreCase(dto.getInvoiceBasis())) {
                 if (!StringUtils.hasText(dto.getAcceptanceProofId())) {
                     throw new BizException(BizErrorCode.BAD_REQUEST,
-                            "里程碑/终验开票必须上传验收报告附件(acceptanceProofId)");
+                            "error.execution.msg_ec948d12");
                 }
             }
             if ("OUTSOURCING".equalsIgnoreCase(dto.getInvoiceBasis())) {
                 if (!StringUtils.hasText(dto.getOutsourcingProofId())) {
                     throw new BizException(BizErrorCode.BAD_REQUEST,
-                            "人力外包开票必须上传客户确认人天单(outsourcingProofId)");
+                            "error.execution.msg_a89c0a16");
                 }
             }
         }
@@ -136,7 +136,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void approve(Long id, InvoiceApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "审批人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
         }
         InvoiceDO inv = getById(id);
         transit(inv, InvoiceStatus.APPROVED, dto.getComment(), dto.getOperatorId());
@@ -150,7 +150,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void reject(Long id, InvoiceApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "审批人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
         }
         InvoiceDO inv = getById(id);
         transit(inv, InvoiceStatus.REJECTED, dto.getComment(), dto.getOperatorId());
@@ -164,19 +164,19 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void issue(Long id, InvoiceApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "开票人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_69724bea");
         }
         InvoiceDO inv = getById(id);
         if (StringUtils.hasText(dto.getInvoiceNo())) {
             if (invoiceMapper.selectByInvoiceNo(dto.getInvoiceNo()) != null
                     && !dto.getInvoiceNo().equals(inv.getInvoiceNo())) {
                 throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                        "发票号已被使用: " + dto.getInvoiceNo());
+                        "error.execution.msg_67174829" + dto.getInvoiceNo());
             }
             inv.setInvoiceNo(dto.getInvoiceNo());
         }
         if (!StringUtils.hasText(inv.getInvoiceNo())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "开具时必须录入发票号(invoiceNo)");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_3ba9d565");
         }
         transit(inv, InvoiceStatus.ISSUED, dto.getComment(), dto.getOperatorId());
         inv.setIssuedBy(dto.getOperatorId());
@@ -188,11 +188,11 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void redReverse(Long id, Long operatorId, String comment) {
         if (operatorId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "操作人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
         }
         InvoiceDO inv = getById(id);
         if (!"NORMAL".equalsIgnoreCase(inv.getInvoiceType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "仅 NORMAL 发票可被红冲");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_8f692e44");
         }
         transit(inv, InvoiceStatus.RED_REVERSED, comment, operatorId);
         // 同时把被红冲的原发票置为 RED_REVERSED
@@ -206,7 +206,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Transactional(rollbackFor = Exception.class)
     public void cancel(Long id, Long operatorId, String comment) {
         if (operatorId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "操作人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
         }
         InvoiceDO inv = getById(id);
         transit(inv, InvoiceStatus.CANCELLED, comment, operatorId);
@@ -220,7 +220,7 @@ public class InvoiceServiceImpl implements InvoiceService {
                 && !InvoiceStatus.REJECTED.getCode().equals(inv.getStatus())
                 && !InvoiceStatus.CANCELLED.getCode().equals(inv.getStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "仅 DRAFT/REJECTED/CANCELLED 状态可删除");
+                    "error.execution.msg_dd7be833");
         }
         invoiceMapper.deleteById(id);
     }
@@ -228,7 +228,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     public InvoiceDO getById(Long id) {
         InvoiceDO inv = invoiceMapper.selectById(id);
-        if (inv == null) throw new BizException(BizErrorCode.NOT_FOUND, "发票不存在");
+        if (inv == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_1b0f0829");
         return inv;
     }
 
@@ -290,11 +290,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         InvoiceStatus from = InvoiceStatus.fromCode(inv.getStatus());
         if (from == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "当前状态非法: " + inv.getStatus());
+                    "error.execution.msg_2e33226a" + inv.getStatus());
         }
         if (!from.canTransitTo(target)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "发票状态不允许从 " + from.getDesc() + " 迁移到 " + target.getDesc());
+                    "error.execution.msg_80c713df" + from.getDesc() + " 迁移到 " + target.getDesc());
         }
         invoiceMapper.updateStatus(inv.getId(), target.getCode(), operatorId, null);
         inv.setStatus(target.getCode());

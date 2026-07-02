@@ -192,7 +192,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         Result<Void> body = Result.failed(20001, msg);
         body.setTraceId(traceId);
-        byte[] bytes = com.alibaba.fastjson2.JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
+        byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
 
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));

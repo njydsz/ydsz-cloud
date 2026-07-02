@@ -61,7 +61,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleDO getById(Long id) {
         RoleDO r = roleMapper.selectById(id);
         if (r == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "角色不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
         return r;
     }
@@ -75,7 +75,7 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(rollbackFor = Exception.class)
     public Long create(RoleFormDTO dto) {
         if (roleMapper.selectByCode(dto.getRoleCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "角色编码已存在");
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_af20e82e");
         }
         RoleDO entity = new RoleDO();
         BeanUtils.copyProperties(dto, entity);
@@ -92,11 +92,11 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(rollbackFor = Exception.class)
     public void update(RoleFormDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "角色 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_6fe5914e");
         }
         RoleDO exists = roleMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "角色不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
         RoleDO entity = new RoleDO();
         BeanUtils.copyProperties(dto, entity);
@@ -110,12 +110,12 @@ public class RoleServiceImpl implements RoleService {
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         if (roleMapper.selectById(id) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "角色不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c3f70e4c");
         }
         // 不允许删除 SUPER_ADMIN
         RoleDO r = roleMapper.selectById(id);
         if ("SUPER_ADMIN".equals(r.getRoleCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "内置角色不可删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_5201576b");
         }
         roleMapper.deleteById(id);
         // 清除角色权限关联

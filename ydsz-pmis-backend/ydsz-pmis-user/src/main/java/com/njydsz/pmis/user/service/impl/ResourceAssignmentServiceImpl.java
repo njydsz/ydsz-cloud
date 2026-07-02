@@ -41,25 +41,25 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long act(ResourceAssignmentCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (!StringUtils.hasText(dto.getAction())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "动作不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_f0494194");
         }
         if (dto.getEmployeeId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "员工 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         }
         if (assignmentMapper.selectByCode(dto.getAssignmentCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "分配编号已存在: " + dto.getAssignmentCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_c59015da" + dto.getAssignmentCode());
         }
         // RESERVE 阶段要求 opportunity 或 initiation 任一存在
         String action = dto.getAction().toUpperCase();
         if ("RESERVE".equals(action) && dto.getOpportunityId() == null && dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "预占必须关联商机或项目");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_278176c3");
         }
         // START/TRANSFER/RELEASE 阶段要求 initiation
         if (("START".equals(action) || "TRANSFER".equals(action) || "RELEASE".equals(action))
                 && dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "入场/调岗/离场必须关联项目");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_52d7045f");
         }
         // 过载检测
         if ("START".equals(action) || "RESERVE".equals(action)) {
@@ -90,9 +90,9 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
 
     @Override
     public ResourceAssignmentDO getById(Long id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourceAssignmentDO a = assignmentMapper.selectById(id);
-        if (a == null) throw new BizException(BizErrorCode.NOT_FOUND, "分配记录不存在");
+        if (a == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_3d429777");
         return a;
     }
 

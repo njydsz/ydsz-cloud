@@ -55,7 +55,7 @@ public class PermissionAspect {
             if (!pass) {
                 log.warn("[Permission] 用户 {} 无权限访问 {} {}",
                         user.getUsername(), pjp.getSignature().toShortString(), Arrays.toString(requiredPerms));
-                throw new BizException(BizErrorCode.FORBIDDEN, "无权限: " + Arrays.toString(requiredPerms));
+                throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_1e40057e" + Arrays.toString(requiredPerms));
             }
         }
 

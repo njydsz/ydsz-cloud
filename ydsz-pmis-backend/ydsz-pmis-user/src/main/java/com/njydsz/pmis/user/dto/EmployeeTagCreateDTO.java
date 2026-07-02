@@ -14,19 +14,19 @@ import lombok.Data;
 public class EmployeeTagCreateDTO {
 
     /** 员工 ID */
-    @NotNull(message = "员工 ID 不能为空")
+    @NotNull(message = "{validation.user.msg_03f5ae35}")
     private Long employeeId;
 
     /** 标签类型：SKILL/INDUSTRY/DOMAIN/CERT */
-    @NotBlank(message = "标签类型不能为空")
+    @NotBlank(message = "{validation.user.msg_969983ae}")
     private String tagType;
 
     /** 标签编码 */
-    @NotBlank(message = "标签编码不能为空")
+    @NotBlank(message = "{validation.user.msg_8faabfac}")
     private String tagCode;
 
     /** 标签名称 */
-    @NotBlank(message = "标签名称不能为空")
+    @NotBlank(message = "{validation.user.msg_16eb3ef6}")
     private String tagName;
 
     /** 熟练度 1-5 */

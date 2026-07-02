@@ -39,7 +39,7 @@ public class AsyncExportController {
     @PostMapping("/submit")
     @Operation(summary = "提交异步导出任务")
     @RateLimit(key = "export", qps = 3, windowSeconds = 60,
-            message = "导出请求过于频繁，请 60 秒后再试")
+            message = "{validation.execution.msg_54683c1c}")
     public Map<String, Object> submitExport(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam String exportType,

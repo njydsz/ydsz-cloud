@@ -54,10 +54,10 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
     public Long create(ContractSupplementDTO dto) {
         validate(dto);
         if (contractMapper.selectById(dto.getContractId()) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "合同不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
         if (supplementMapper.selectByCode(dto.getSupplementCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "补充协议编号已存在");
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_3592a4cc");
         }
         ContractSupplementDO s = new ContractSupplementDO();
         BeanUtils.copyProperties(dto, s);
@@ -92,7 +92,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
     public void delete(Long id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
         if (s == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "补充协议不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_163e0077");
         }
         supplementMapper.deleteById(id);
     }
@@ -108,7 +108,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
     public ContractSupplementDO getById(Long id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
         if (s == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "补充协议不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_163e0077");
         }
         return s;
     }
@@ -150,19 +150,19 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      */
     private void validate(ContractSupplementDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (dto.getContractId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "合同 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_af96cf73");
         }
         if (!StringUtils.hasText(dto.getSupplementCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "补充协议编号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_9b9ada20");
         }
         if (!StringUtils.hasText(dto.getSupplementName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "补充协议名称不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_33d967a0");
         }
         if (!TYPES.contains(dto.getSupplementType().toUpperCase())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "类型非法: " + dto.getSupplementType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3820d28c" + dto.getSupplementType());
         }
     }
 }

@@ -54,15 +54,15 @@ public class ReAuthServiceImpl implements ReAuthService {
             throw new BizException(BizErrorCode.UNAUTHORIZED);
         }
         if (request == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
         }
         String opCode = trimToNull(request.getOperationCode());
         String method = trimToNull(request.getMethod());
         if (opCode == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "operationCode 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_34522254");
         }
         if (method == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "method 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_92565530");
         }
         String methodUpper = method.toUpperCase(Locale.ROOT);
         int ttl = normalizeTtl(request.getTtlSeconds());
@@ -73,10 +73,10 @@ public class ReAuthServiceImpl implements ReAuthService {
             case "TOTP" -> ok = verifyTotp(userId, request.getOtp());
             case "BACKUP_CODE" -> ok = verifyBackupCode(userId, request.getBackupCode());
             default -> throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "不支持的凭据类型: " + method + "（仅 PASSWORD / TOTP / BACKUP_CODE）");
+                    "error.user.msg_0fecfe87" + method + "（仅 PASSWORD / TOTP / BACKUP_CODE）");
         }
         if (!ok) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "二次认证凭据校验失败");
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.user.msg_89bb6348");
         }
 
         String token = requireReAuthAspect.issueToken(opCode, userId, ttl);
@@ -94,7 +94,7 @@ public class ReAuthServiceImpl implements ReAuthService {
 
     private boolean verifyPassword(Long userId, String rawPassword) {
         if (rawPassword == null || rawPassword.isBlank()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "password 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_1a011aca");
         }
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
@@ -109,22 +109,22 @@ public class ReAuthServiceImpl implements ReAuthService {
 
     private boolean verifyTotp(Long userId, String otp) {
         if (otp == null || otp.isBlank()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "otp 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d6ef6b97");
         }
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null || !Boolean.TRUE.equals(e.getEnabled())) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "尚未绑定 TOTP，无法使用 TOTP 二次认证");
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.user.msg_2a4023be");
         }
         return twoFactorService.verify(userId, otp);
     }
 
     private boolean verifyBackupCode(Long userId, String code) {
         if (code == null || code.isBlank()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "backupCode 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_140fe16d");
         }
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null || e.getBackupCodes() == null || e.getBackupCodes().isBlank()) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "尚未生成备份码，无法使用 BACKUP_CODE 二次认证");
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.user.msg_bd347be6");
         }
         return twoFactorService.verifyBackup(userId, code);
     }

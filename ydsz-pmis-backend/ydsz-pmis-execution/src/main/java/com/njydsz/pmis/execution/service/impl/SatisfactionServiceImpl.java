@@ -45,11 +45,11 @@ public class SatisfactionServiceImpl implements SatisfactionService {
             s.setSurveyCode(AfterSalesCodeGen.surveyCode(LocalDate.now()));
         }
         if (s.getScore() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "总体评分不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a3a869d4");
         }
         SatisfactionLevel level = SatisfactionLevel.fromScore(s.getScore());
         if (level == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "评分必须为 1-5");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_37c4fe7e");
         }
         s.setLevel(level.getCode());
         if (s.getEvaluatedAt() == null) s.setEvaluatedAt(LocalDateTime.now());
@@ -68,9 +68,9 @@ public class SatisfactionServiceImpl implements SatisfactionService {
 
     @Override
     public void markFollowUp(Long id, String note) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "评价 ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
         SatisfactionDO s = satisfactionMapper.selectById(id);
-        if (s == null) throw new BizException(BizErrorCode.NOT_FOUND, "评价不存在");
+        if (s == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_4b213f7c");
         s.setFollowUp(true);
         if (StringUtils.hasText(note)) s.setFollowUpNote(note);
         satisfactionMapper.updateById(s);
@@ -78,9 +78,9 @@ public class SatisfactionServiceImpl implements SatisfactionService {
 
     @Override
     public void closeFollowUp(Long id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "评价 ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_35ec26fe");
         SatisfactionDO s = satisfactionMapper.selectById(id);
-        if (s == null) throw new BizException(BizErrorCode.NOT_FOUND, "评价不存在");
+        if (s == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_4b213f7c");
         s.setFollowUp(false);
         satisfactionMapper.updateById(s);
     }
@@ -110,24 +110,24 @@ public class SatisfactionServiceImpl implements SatisfactionService {
     }
 
     private void validate(SatisfactionCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (dto.getScore() == null || dto.getScore() < 1 || dto.getScore() > 5) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "评分必须为 1-5");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_37c4fe7e");
         }
         if (dto.getProfessionalism() != null && (dto.getProfessionalism() < 1 || dto.getProfessionalism() > 5)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "专业度评分 1-5");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_ef96f33e");
         }
         if (dto.getTimeliness() != null && (dto.getTimeliness() < 1 || dto.getTimeliness() > 5)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "及时性评分 1-5");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_86a9a3df");
         }
         if (dto.getQuality() != null && (dto.getQuality() < 1 || dto.getQuality() > 5)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "质量评分 1-5");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6568138a");
         }
         if (dto.getAttitude() != null && (dto.getAttitude() < 1 || dto.getAttitude() > 5)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "态度评分 1-5");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2803de1f");
         }
     }
 }

@@ -136,7 +136,7 @@ public class PermissionServiceImpl implements PermissionService {
     public PermissionDO getById(Long id) {
         PermissionDO p = permissionMapper.selectById(id);
         if (p == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "权限不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_bf562d6f");
         }
         return p;
     }
@@ -145,7 +145,7 @@ public class PermissionServiceImpl implements PermissionService {
     @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE}, allEntries = true)
     public Long create(PermissionFormDTO dto) {
         if (permissionMapper.selectByCode(dto.getPermCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "权限编码已存在");
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_7b343d30");
         }
         PermissionDO entity = new PermissionDO();
         BeanUtils.copyProperties(dto, entity);
@@ -160,11 +160,11 @@ public class PermissionServiceImpl implements PermissionService {
     @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE}, allEntries = true)
     public void update(PermissionFormDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "权限 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_965c9a30");
         }
         PermissionDO exists = permissionMapper.selectById(dto.getId());
         if (exists == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "权限不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_bf562d6f");
         }
         PermissionDO entity = new PermissionDO();
         BeanUtils.copyProperties(dto, entity);
@@ -178,7 +178,7 @@ public class PermissionServiceImpl implements PermissionService {
         Long childCount = permissionMapper.selectCount(new LambdaQueryWrapper<PermissionDO>()
                 .eq(PermissionDO::getParentId, id));
         if (childCount != null && childCount > 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "存在子权限，无法删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_72018d8a");
         }
         permissionMapper.deleteById(id);
     }

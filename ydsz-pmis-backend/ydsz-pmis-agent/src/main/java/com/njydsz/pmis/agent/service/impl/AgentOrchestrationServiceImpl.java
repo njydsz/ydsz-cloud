@@ -35,7 +35,7 @@ public class AgentOrchestrationServiceImpl implements AgentOrchestrationService 
     @Override
     public OrchestrationResult orchestrate(OrchestrationRequest req) {
         if (req == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "编排请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_372ae3c5");
         }
         // 过滤出请求声明的 agentType
         Map<String, Agent> registry = agentRegistry();
@@ -51,7 +51,7 @@ public class AgentOrchestrationServiceImpl implements AgentOrchestrationService 
             }
         }
         if (picked.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "没有可用的 Agent 参与编排");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_319b849b");
         }
         return coordinator.coordinate(req, picked);
     }

@@ -74,14 +74,14 @@ public class DepartmentServiceImpl implements DepartmentService {
         // 编码唯一
         DepartmentDO exists = departmentMapper.selectByCode(dto.getDeptCode());
         if (exists != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "部门编码已存在: " + dto.getDeptCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_58b44529" + dto.getDeptCode());
         }
         // 父部门校验
         Long parentId = dto.getParentId() == null ? 0L : dto.getParentId();
         if (parentId != 0L) {
             DepartmentDO parent = departmentMapper.selectById(parentId);
             if (parent == null) {
-                throw new BizException(BizErrorCode.DEPARTMENT_NOT_FOUND, "父部门不存在");
+                throw new BizException(BizErrorCode.DEPARTMENT_NOT_FOUND, "error.user.msg_b2cadf60");
             }
         }
         DepartmentDO entity = new DepartmentDO();
@@ -106,7 +106,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Transactional(rollbackFor = Exception.class)
     public void update(DepartmentFormDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "部门 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_c04220b1");
         }
         DepartmentDO exists = departmentMapper.selectById(dto.getId());
         if (exists == null) {
@@ -114,7 +114,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         }
         // 不允许将父部门改为自身或子部门
         if (dto.getParentId() != null && Objects.equals(dto.getParentId(), dto.getId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "父部门不能是自身");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_abd06050");
         }
         DepartmentDO entity = new DepartmentDO();
         BeanUtils.copyProperties(dto, entity);
@@ -131,7 +131,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         // 子部门校验
         List<DepartmentDO> children = departmentMapper.selectByParentId(id);
         if (!children.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "存在子部门，无法删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_6b5e31bd");
         }
         departmentMapper.deleteById(id);
     }

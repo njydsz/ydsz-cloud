@@ -87,7 +87,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             w.eq(UserAccountDO::getEmployeeId, query.getEmployeeId());
         }
         // 数据权限 SQL 注入（按员工 dept_id 与 user.id）
-        String ds = com.njydsz.pmis.common.security.DataScopeHelper.buildSqlFragment("", "");
+        String ds = DataScopeHelper.buildSqlFragment("", "");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(UserAccountDO::getId);
         return userAccountMapper.selectPage(page, w);
@@ -97,7 +97,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(rollbackFor = Exception.class)
     public Long create(UserAccountDO user, String rawPassword) {
         if (findByUsername(user.getUsername()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "用户名已存在");
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_a633b7b9");
         }
         PasswordPolicy.PasswordCheckResult r = PasswordPolicy.check(rawPassword, user.getUsername());
         if (!r.pass()) {
@@ -121,7 +121,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Override
     public void update(UserAccountDO user) {
         if (user.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "用户 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_668e9add");
         }
         UserAccountDO exists = userAccountMapper.selectById(user.getId());
         if (exists == null) {
@@ -142,7 +142,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
         }
         if ("admin".equals(u.getUsername())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "内置 admin 不可删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_5b101e42");
         }
         userAccountMapper.deleteById(userId);
         userRoleMapper.delete(new LambdaQueryWrapper<UserRoleDO>()
@@ -206,7 +206,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     @Transactional(rollbackFor = Exception.class)
     public LoginResult login(LoginRequest request) {
         if (request == null || !StringUtils.hasText(request.getUsername())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "用户名不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_0b62b5ce");
         }
         UserAccountDO u = findByUsername(request.getUsername());
         if (u == null) {
@@ -219,7 +219,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                     "账号已锁定至 " + u.getLockedUntil(), false, null);
             long remain = lockPolicy.remainingMinutes(u.getLockedUntil());
             throw new BizException(BizErrorCode.ACCOUNT_LOCKED,
-                    "账号已锁定，请 " + remain + " 分钟后再试");
+                    "error.user.msg_2e463b61" + remain + " 分钟后再试");
         }
 
         if (!"ENABLED".equals(u.getStatus())) {
@@ -290,7 +290,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
         }
         if (!CryptoUtil.verifyPassword(oldPassword, u.getPassword(), u.getSalt())) {
-            throw new BizException(BizErrorCode.PASSWORD_INCORRECT, "原密码错误");
+            throw new BizException(BizErrorCode.PASSWORD_INCORRECT, "error.user.msg_25562cd3");
         }
         PasswordPolicy.PasswordCheckResult r = PasswordPolicy.check(newPassword, u.getUsername());
         if (!r.pass()) {

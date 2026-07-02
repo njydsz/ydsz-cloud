@@ -61,7 +61,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public void deleteStandard(Long id) {
         DeliveryStandardDO s = standardMapper.selectById(id);
         if (s == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "交付物标准不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_ea3dc234");
         }
         standardMapper.deleteById(id);
     }
@@ -70,7 +70,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public DeliveryStandardDO getStandardById(Long id) {
         DeliveryStandardDO s = standardMapper.selectById(id);
         if (s == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "交付物标准不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_ea3dc234");
         }
         return s;
     }
@@ -97,7 +97,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         validateItem(dto);
         if (itemMapper.selectByCode(dto.getItemCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "交付物编码已存在: " + dto.getItemCode());
+                    "error.execution.msg_6f4c0a13" + dto.getItemCode());
         }
         DeliveryItemDO i = new DeliveryItemDO();
         BeanUtils.copyProperties(dto, i);
@@ -122,14 +122,14 @@ public class DeliveryServiceImpl implements DeliveryService {
         DeliveryItemStatus from = DeliveryItemStatus.fromCode(i.getStatus());
         DeliveryItemStatus to = DeliveryItemStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "当前状态非法: " + i.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a" + i.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "交付物状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
+                    "error.execution.msg_ba80cf32" + from.getDesc() + " → " + to.getDesc());
         }
         // LocalDateTime now removed - unused
         LocalDate today = LocalDate.now();
@@ -151,7 +151,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public void markTrCompleted(Long itemId, Integer completed) {
         DeliveryItemDO i = getItemById(itemId);
         if (Integer.valueOf(1).equals(i.getTrRequired()) == false) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "该交付物无需 TR 评审");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_f693a197");
         }
         itemMapper.updateTrCompleted(itemId, completed);
     }
@@ -161,7 +161,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         DeliveryItemDO i = getItemById(id);
         DeliveryItemStatus st = DeliveryItemStatus.fromCode(i.getStatus());
         if (st == DeliveryItemStatus.ACCEPTED) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已验收的交付物不能删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_dfa7a85a");
         }
         itemMapper.deleteById(id);
     }
@@ -170,7 +170,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     public DeliveryItemDO getItemById(Long id) {
         DeliveryItemDO i = itemMapper.selectById(id);
         if (i == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "交付物实例不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_2bb641ec");
         }
         return i;
     }
@@ -210,30 +210,30 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     private void validateStandard(DeliveryStandardCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (ProjectType.fromCode(dto.getProjectType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目类型不合法: " + dto.getProjectType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1942429d" + dto.getProjectType());
         }
         if (DeliveryStage.fromCode(dto.getStage()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "阶段不合法: " + dto.getStage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4fbcd36c" + dto.getStage());
         }
     }
 
     private void validateItem(DeliveryItemCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (StringUtils.hasText(dto.getStage())
                 && DeliveryStage.fromCode(dto.getStage()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "阶段不合法: " + dto.getStage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4fbcd36c" + dto.getStage());
         }
         if (StringUtils.hasText(dto.getProjectType())
                 && ProjectType.fromCode(dto.getProjectType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目类型不合法: " + dto.getProjectType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1942429d" + dto.getProjectType());
         }
     }
 }

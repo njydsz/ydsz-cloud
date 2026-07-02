@@ -46,10 +46,10 @@ public class FileEnhanceController {
      */
     @Operation(summary = "病毒扫描")
     @RateLimit(key = "file-upload", qps = 10, windowSeconds = 60,
-            message = "文件上传过于频繁，请 60 秒后再试")
+            message = "{validation.file.msg_f4ed69d1}")
     @PostMapping("/scan")
     public Result<Map<String, Object>> scanVirus(
-            @RequestParam("file") @NotNull(message = "待扫描文件不能为空") MultipartFile file) {
+            @RequestParam("file") @NotNull(message = "{validation.file.msg_3f00c223}") MultipartFile file) {
         boolean safe = fileEnhanceService.scanVirus(file);
         Map<String, Object> result = new HashMap<>();
         result.put("safe", safe);
@@ -67,12 +67,12 @@ public class FileEnhanceController {
      */
     @Operation(summary = "初始化分片上传")
     @RateLimit(key = "file-upload", qps = 10, windowSeconds = 60,
-            message = "文件上传过于频繁，请 60 秒后再试")
+            message = "{validation.file.msg_f4ed69d1}")
     @PostMapping("/multipart/init")
     public Result<Map<String, Object>> initMultipartUpload(
-            @RequestParam @NotBlank(message = "文件名不能为空") String filename,
-            @RequestParam @Min(value = 1, message = "文件总大小必须大于0") long totalSize,
-            @RequestParam @Min(value = 1, message = "分片总数必须大于0") int totalChunks) {
+            @RequestParam @NotBlank(message = "{validation.file.msg_f185973c}") String filename,
+            @RequestParam @Min(value = 1, message = "{validation.file.msg_a32c726a}") long totalSize,
+            @RequestParam @Min(value = 1, message = "{validation.file.msg_0dddf2c0}") int totalChunks) {
         String uploadId = fileEnhanceService.initMultipartUpload(filename, totalSize, totalChunks);
         Map<String, Object> result = new HashMap<>();
         result.put("uploadId", uploadId);
@@ -91,9 +91,9 @@ public class FileEnhanceController {
     @Operation(summary = "上传分片")
     @PostMapping("/multipart/chunk")
     public Result<Map<String, Object>> uploadChunk(
-            @RequestParam @NotBlank(message = "分片上传ID不能为空") String uploadId,
-            @RequestParam @Min(value = 0, message = "分片序号不能为负数") int chunkIndex,
-            @RequestParam("chunk") @NotNull(message = "分片数据不能为空") MultipartFile chunk) throws Exception {
+            @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId,
+            @RequestParam @Min(value = 0, message = "{validation.file.msg_4b78b69b}") int chunkIndex,
+            @RequestParam("chunk") @NotNull(message = "{validation.file.msg_041e6b98}") MultipartFile chunk) throws Exception {
         boolean success = fileEnhanceService.uploadChunk(uploadId, chunkIndex, chunk.getBytes());
         Map<String, Object> result = new HashMap<>();
         result.put("success", success);
@@ -110,7 +110,7 @@ public class FileEnhanceController {
     @Operation(summary = "完成分片上传")
     @PostMapping("/multipart/complete")
     public Result<Map<String, Object>> completeMultipartUpload(
-            @RequestParam @NotBlank(message = "分片上传ID不能为空") String uploadId) {
+            @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {
         String fileKey = fileEnhanceService.completeMultipartUpload(uploadId);
         Map<String, Object> result = new HashMap<>();
         result.put("fileKey", fileKey != null ? fileKey : "");
@@ -127,7 +127,7 @@ public class FileEnhanceController {
     @Operation(summary = "取消分片上传")
     @DeleteMapping("/multipart/abort")
     public Result<Map<String, Object>> abortMultipartUpload(
-            @RequestParam @NotBlank(message = "分片上传ID不能为空") String uploadId) {
+            @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {
         fileEnhanceService.abortMultipartUpload(uploadId);
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -143,7 +143,7 @@ public class FileEnhanceController {
     @Operation(summary = "生成预览URL")
     @GetMapping("/preview")
     public Result<Map<String, Object>> generatePreviewUrl(
-            @RequestParam @NotBlank(message = "文件key不能为空") String fileKey) {
+            @RequestParam @NotBlank(message = "{validation.file.msg_db802ce3}") String fileKey) {
         String url = fileEnhanceService.generatePreviewUrl(fileKey);
         Map<String, Object> result = new HashMap<>();
         result.put("previewUrl", url);

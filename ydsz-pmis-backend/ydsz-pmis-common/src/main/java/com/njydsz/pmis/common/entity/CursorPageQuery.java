@@ -36,8 +36,8 @@ public class CursorPageQuery implements Serializable {
     public static final long MAX_SIZE = 200;
 
     /** 每页大小（默认 20，最大 200） */
-    @Min(value = 1, message = "每页大小不能小于 1")
-    @Max(value = MAX_SIZE, message = "每页大小不能超过 200")
+    @Min(value = 1, message = "{validation.common.msg_1888441f}")
+    @Max(value = MAX_SIZE, message = "{validation.common.msg_7f3e4739}")
     private long size = 20;
 
     /** 游标（上一页最后一条记录的 token，首次请求不传） */

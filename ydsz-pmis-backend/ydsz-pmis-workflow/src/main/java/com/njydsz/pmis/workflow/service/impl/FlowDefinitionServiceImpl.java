@@ -58,7 +58,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     public Long deploy(FlowDeployProcessDTO dto) {
         if (dto == null || !StringUtils.hasText(dto.getFlowCode())
                 || !StringUtils.hasText(dto.getFlowName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode/flowName 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_64cd1969");
         }
 
         String version = StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0";
@@ -72,14 +72,14 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 dto.getFlowCode(), version, tenantId);
         if (existing != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "流程定义已存在: code=" + dto.getFlowCode() + " version=" + version);
+                    "error.workflow.msg_7ccc6c06" + dto.getFlowCode() + " version=" + version);
         }
 
         // 2. 解析 BPMN / JSON 模型
         boolean hasBpmn = StringUtils.hasText(dto.getBpmnXml());
         boolean hasJson = dto.getNodes() != null && !dto.getNodes().isEmpty();
         if (!hasBpmn && !hasJson) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "bpmnXml / nodes 至少二选一");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_79a0f752");
         }
 
         List<FlowNodeDO> nodes = new ArrayList<>();
@@ -92,7 +92,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             if (StringUtils.hasText(bpmnModel.getProcessId())
                     && !bpmnModel.getProcessId().equals(dto.getFlowCode())) {
                 throw new BizException(BizErrorCode.BAD_REQUEST,
-                        "BPMN process id 与 flowCode 不一致: bpmn=" + bpmnModel.getProcessId()
+                        "error.workflow.msg_8f1bd748" + bpmnModel.getProcessId()
                                 + " dto=" + dto.getFlowCode());
             }
             // 若 dto.flowName 为空，用 BPMN process name
@@ -133,7 +133,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             boolean hasStart = nodes.stream()
                     .anyMatch(n -> FlowNodeType.START.getCode() == n.getNodeType());
             if (!hasStart) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "流程定义必须包含开始节点（nodeType=0）");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d02bf581");
             }
             // 节点编码唯一
             long uniqueCount = nodes.stream()
@@ -141,7 +141,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                     .distinct()
                     .count();
             if (uniqueCount != nodes.size()) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "节点编码 nodeCode 必须唯一");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_fc5e075b");
             }
             if (dto.getSkips() != null) {
                 for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
@@ -203,7 +203,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     public void publish(Long definitionId) {
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
         }
         definitionMapper.publish(definitionId, 1);
         log.info("[Flow] 发布流程: defId={}", definitionId);
@@ -266,15 +266,15 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(rollbackFor = Exception.class)
     public void switchActiveVersion(String flowCode, Long definitionId, Long tenantId) {
         if (!StringUtils.hasText(flowCode)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ebccbe46");
         }
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
         }
         if (!flowCode.equals(def.getFlowCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "flowCode 不匹配: 期望=" + flowCode + " 实际=" + def.getFlowCode());
+                    "error.workflow.msg_764c008f" + flowCode + " 实际=" + def.getFlowCode());
         }
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
@@ -306,12 +306,12 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(rollbackFor = Exception.class)
     public void updateNodeCoordinate(Long definitionId, String nodeCode, String coordinate) {
         if (definitionId == null || !StringUtils.hasText(nodeCode)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId/nodeCode 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d7744d65");
         }
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
+                    "error.workflow.msg_0e6c1d22" + definitionId + " nodeCode=" + nodeCode);
         }
         node.setCoordinate(coordinate);
         nodeMapper.updateById(node);
@@ -325,16 +325,16 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(rollbackFor = Exception.class)
     public void updateDefinition(Long definitionId, FlowDeployProcessDTO dto) {
         if (definitionId == null || dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId/dto 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d34ce506");
         }
         // 1. 校验定义存在且未发布（只有未发布定义才能编辑）
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
         }
         if (def.getIsPublish() != null && def.getIsPublish() == 1) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "已发布的流程定义不可编辑，请创建新版本: " + definitionId);
+                    "error.workflow.msg_386695f3" + definitionId);
         }
 
         // 2. 更新定义元数据（不修改 version 和 flowCode — 核心标识不可变）
@@ -422,7 +422,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     public String exportDefinition(Long definitionId) {
         Map<String, Object> detail = getDetail(definitionId);
         if (detail == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
         }
         return JSON.toJSONString(detail);
     }
@@ -431,27 +431,27 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Transactional(rollbackFor = Exception.class)
     public Long importDefinition(String json, Long tenantId) {
         if (!StringUtils.hasText(json)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "导入 JSON 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c9e73e92");
         }
         JSONObject root;
         try {
             root = JSON.parseObject(json);
         } catch (Exception e) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "JSON 解析失败: " + e.getMessage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_86faa4d8" + e.getMessage());
         }
         if (root == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "JSON 内容为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_88a3adc0");
         }
 
         // 1. 提取 definition 元数据
         JSONObject defJson = root.getJSONObject("definition");
         if (defJson == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "JSON 缺少 definition 字段");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_b43bb41b");
         }
         String flowCode = defJson.getString("flowCode");
         String flowName = defJson.getString("flowName");
         if (!StringUtils.hasText(flowCode) || !StringUtils.hasText(flowName)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "definition 中 flowCode/flowName 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_1f06cb66");
         }
 
         // 2. 构建 FlowDeployProcessDTO
@@ -560,10 +560,10 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     public void saveDesignerData(Long definitionId, Map<String, Object> designerData) {
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
         }
         if (def.getIsPublish() != null && def.getIsPublish() == 1) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已发布的流程定义不可编辑，请先创建新版本");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ddc7206a");
         }
 
         // 1. 批量更新节点坐标 + 属性
@@ -619,7 +619,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
+                    "error.workflow.msg_0e6c1d22" + definitionId + " nodeCode=" + nodeCode);
         }
         return node.getFormFieldsConfig();
     }
@@ -630,7 +630,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
+                    "error.workflow.msg_0e6c1d22" + definitionId + " nodeCode=" + nodeCode);
         }
         node.setFormFieldsConfig(formFieldsConfig);
         nodeMapper.updateById(node);
@@ -644,7 +644,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     public List<Map<String, Object>> listVersions(Long definitionId) {
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
         }
         Long tenantId = def.getTenantId() != null ? def.getTenantId() : 1L;
         List<FlowDefinitionDO> versions = definitionMapper.selectByFlowCode(def.getFlowCode(), tenantId);
@@ -672,7 +672,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         // 1. 获取基础定义，找到 flowCode
         FlowDefinitionDO baseDef = definitionMapper.selectById(definitionId);
         if (baseDef == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
         }
         Long tenantId = baseDef.getTenantId() != null ? baseDef.getTenantId() : 1L;
 
@@ -690,11 +690,11 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
         if (defV1 == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "版本 " + version1 + " 不存在: flowCode=" + baseDef.getFlowCode());
+                    "error.workflow.msg_407ce381" + version1 + " 不存在: flowCode=" + baseDef.getFlowCode());
         }
         if (defV2 == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "版本 " + version2 + " 不存在: flowCode=" + baseDef.getFlowCode());
+                    "error.workflow.msg_407ce381" + version2 + " 不存在: flowCode=" + baseDef.getFlowCode());
         }
 
         // 3. 获取两个版本的节点和跳转

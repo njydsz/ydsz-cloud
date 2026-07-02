@@ -12,7 +12,7 @@ import lombok.Data;
 @Data
 public class InvoiceApprovalDTO {
 
-    @NotNull(message = "审批人不能为空")
+    @NotNull(message = "{validation.execution.msg_52fbfb11}")
     private Long operatorId;
 
     private String comment;

@@ -21,15 +21,15 @@ public class ContractTemplateCreateDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 模板编码（业务唯一） */
-    @NotBlank(message = "模板编码不能为空")
+    @NotBlank(message = "{validation.project.msg_89695105}")
     private String templateCode;
 
     /** 模板名称 */
-    @NotBlank(message = "模板名称不能为空")
+    @NotBlank(message = "{validation.project.msg_a23746e5}")
     private String templateName;
 
     /** 合同类型（ContractTemplateType.code） */
-    @NotBlank(message = "合同类型不能为空")
+    @NotBlank(message = "{validation.project.msg_fc52e1b0}")
     private String contractType;
 
     /** 版本号 */

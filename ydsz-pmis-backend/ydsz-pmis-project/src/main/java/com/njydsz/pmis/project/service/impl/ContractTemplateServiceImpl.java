@@ -49,7 +49,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         validate(dto);
         if (templateMapper.selectByCode(dto.getTemplateCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "模板编码已存在: " + dto.getTemplateCode());
+                    "error.project.msg_ba4811d9" + dto.getTemplateCode());
         }
         ContractTemplateDO t = new ContractTemplateDO();
         BeanUtils.copyProperties(dto, t);
@@ -76,14 +76,14 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         ContractTemplateStatus from = ContractTemplateStatus.fromCode(t.getStatus());
         ContractTemplateStatus to = ContractTemplateStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6" + dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "当前状态非法: " + t.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_2e33226a" + t.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
+                    "error.project.msg_01c65a70" + from.getDesc() + " → " + to.getDesc());
         }
         // PUBLISHED -> DRAFT 视为重新编辑（仍允许）
         templateMapper.updateStatus(t.getId(), to.getCode());
@@ -102,7 +102,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         ContractTemplateDO t = getById(id);
         ContractTemplateStatus st = ContractTemplateStatus.fromCode(t.getStatus());
         if (st == ContractTemplateStatus.PUBLISHED) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已发布模板不能直接删除，请先下线");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_0b4fd49f");
         }
         templateMapper.deleteById(id);
         log.info("[ContractTemplate] 删除模板: id={}", id);
@@ -119,7 +119,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
     public ContractTemplateDO getById(Long id) {
         ContractTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "合同模板不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_e8185aa1");
         }
         return t;
     }
@@ -169,18 +169,18 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      */
     private void validate(ContractTemplateCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (ContractTemplateType.fromCode(dto.getContractType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "合同类型不合法: " + dto.getContractType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d8bb22ac" + dto.getContractType());
         }
         if (dto.getDefaultPaymentDays() != null && dto.getDefaultPaymentDays() < 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "默认账期不能为负数");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_435fcf5a");
         }
         if (dto.getDefaultPenaltyRate() != null) {
             BigDecimal r = dto.getDefaultPenaltyRate();
             if (r.signum() < 0 || r.compareTo(BigDecimal.ONE) > 0) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "违约金比例必须在 [0,1] 之间");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_200cb0f7");
             }
         }
     }

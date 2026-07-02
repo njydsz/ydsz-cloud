@@ -21,13 +21,13 @@ public class ProjectClosureCreateDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @NotBlank(message = "结项编码不能为空")
+    @NotBlank(message = "{validation.execution.msg_baf9cac6}")
     private String closureCode;
 
-    @NotNull(message = "项目 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_576c2b5e}")
     private Long initiationId;
 
-    @NotBlank(message = "结项类型不能为空")
+    @NotBlank(message = "{validation.execution.msg_76ab3833}")
     private String closureType;
 
     private String closureReason;

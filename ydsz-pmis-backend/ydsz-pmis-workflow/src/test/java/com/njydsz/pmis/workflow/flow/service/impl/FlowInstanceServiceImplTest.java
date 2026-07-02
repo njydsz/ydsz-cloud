@@ -2,6 +2,9 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
+import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
+import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.service.impl.FlowInstanceServiceImpl;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
@@ -96,9 +99,9 @@ class FlowInstanceServiceImplTest {
         // P3-1: 灰度发布服务 mock
         canaryService = mock(FlowCanaryService.class);
         // GAP-V2-08: 模拟运行新增依赖
-        nodeMapper = mock(com.njydsz.pmis.workflow.mapper.FlowNodeMapper.class);
-        skipMapper = mock(com.njydsz.pmis.workflow.mapper.FlowSkipMapper.class);
-        variableStrategy = mock(com.njydsz.pmis.workflow.engine.FlowVariableStrategy.class);
+        nodeMapper = mock(FlowNodeMapper.class);
+        skipMapper = mock(FlowSkipMapper.class);
+        variableStrategy = mock(FlowVariableStrategy.class);
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
                 canaryService, advancer, taskService, taskMapper,
                 nodeMapper, skipMapper, variableStrategy,

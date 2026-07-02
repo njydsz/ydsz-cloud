@@ -16,24 +16,24 @@ import java.time.LocalDate;
 @Data
 public class EvmMeasureCreateDTO {
 
-    @NotNull(message = "项目 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_576c2b5e}")
     private Long initiationId;
 
     private Long wbsTaskId;
 
-    @NotBlank(message = "周期 YYYY-MM 不能为空")
+    @NotBlank(message = "{validation.execution.msg_f0414199}")
     private String period;
 
-    @NotNull(message = "PV 不能为空")
+    @NotNull(message = "{validation.execution.msg_35a08bf9}")
     private BigDecimal pv;
 
-    @NotNull(message = "EV 不能为空")
+    @NotNull(message = "{validation.execution.msg_2484f14d}")
     private BigDecimal ev;
 
-    @NotNull(message = "AC 不能为空")
+    @NotNull(message = "{validation.execution.msg_1fe74216}")
     private BigDecimal ac;
 
-    @NotNull(message = "BAC 不能为空")
+    @NotNull(message = "{validation.execution.msg_6fda0b24}")
     private BigDecimal bac;
 
     private LocalDate measureDate;

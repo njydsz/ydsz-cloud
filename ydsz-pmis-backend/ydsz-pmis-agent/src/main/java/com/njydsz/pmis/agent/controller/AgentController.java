@@ -224,7 +224,7 @@ public class AgentController {
         }
         String agentType = body.get("agentType") == null ? null : body.get("agentType").toString();
         if (agentType == null) {
-            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "agentType 必填");
+            return Result.failed(BizErrorCode.BAD_REQUEST, "agentType 必填");
         }
         String bizType = body.get("bizType") == null ? "INTERNAL" : body.get("bizType").toString();
         Long bizId = body.get("bizId") instanceof Number n ? n.longValue() : 0L;

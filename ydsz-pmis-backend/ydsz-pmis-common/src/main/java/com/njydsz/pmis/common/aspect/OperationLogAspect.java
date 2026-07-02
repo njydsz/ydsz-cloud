@@ -46,7 +46,7 @@ public class OperationLogAspect {
     /**
      * 切点：标注 {@code @OperationLog} 的方法
      */
-    @Pointcut("@annotation(com.njydsz.pmis.common.annotation.OperationLog)")
+    @Pointcut("@annotation(OperationLog)")
     public void pointcut() {
     }
 

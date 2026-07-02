@@ -21,10 +21,10 @@ public class ContractTemplateStatusDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 模板 ID */
-    @NotNull(message = "模板 ID 不能为空")
+    @NotNull(message = "{validation.project.msg_ff1828c0}")
     private Long id;
 
     /** 目标状态（ContractTemplateStatus.code） */
-    @NotBlank(message = "目标状态不能为空")
+    @NotBlank(message = "{validation.project.msg_8304cf7d}")
     private String targetStatus;
 }

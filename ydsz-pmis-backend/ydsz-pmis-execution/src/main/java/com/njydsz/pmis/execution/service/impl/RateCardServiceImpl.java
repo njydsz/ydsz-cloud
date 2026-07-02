@@ -40,7 +40,7 @@ public class RateCardServiceImpl implements RateCardService {
     public Long create(RateCardCreateDTO dto) {
         validate(dto);
         if (rateCardMapper.selectByCode(dto.getRateCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "费率编号已存在: " + dto.getRateCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_f713b711" + dto.getRateCode());
         }
         RateCardDO r = new RateCardDO();
         BeanUtils.copyProperties(dto, r);
@@ -58,9 +58,9 @@ public class RateCardServiceImpl implements RateCardService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(Long id, RateCardCreateDTO dto) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateCardDO r = rateCardMapper.selectById(id);
-        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "费率不存在");
+        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c90e3407");
         if (dto.getRateAmount() != null) r.setRateAmount(dto.getRateAmount());
         if (dto.getBillingUnit() != null) r.setBillingUnit(dto.getBillingUnit());
         if (dto.getCurrency() != null) r.setCurrency(dto.getCurrency());
@@ -76,15 +76,15 @@ public class RateCardServiceImpl implements RateCardService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         rateCardMapper.deleteById(id);
     }
 
     @Override
     public RateCardDO getById(Long id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateCardDO r = rateCardMapper.selectById(id);
-        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "费率不存在");
+        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c90e3407");
         return r;
     }
 
@@ -112,21 +112,21 @@ public class RateCardServiceImpl implements RateCardService {
     }
 
     private void validate(RateCardCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getRateCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "费率编号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_3fbd3c07");
         }
         if (!StringUtils.hasText(dto.getLevelCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "职级不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_11653d4c");
         }
         if (!StringUtils.hasText(dto.getBillingUnit())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "计费单位不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_8e68458a");
         }
         if (dto.getRateAmount() == null || dto.getRateAmount().signum() < 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "报价金额不能为负");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4c1c6ba9");
         }
         if (dto.getEffectiveDate() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "生效日期不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_c10e0b62");
         }
     }
 }

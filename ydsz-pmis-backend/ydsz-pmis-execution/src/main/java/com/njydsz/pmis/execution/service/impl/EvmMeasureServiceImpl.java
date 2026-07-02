@@ -48,15 +48,15 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long save(EvmMeasureCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (!StringUtils.hasText(dto.getPeriod())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "周期不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d53b5f27");
         }
         if (dto.getPv() == null || dto.getEv() == null || dto.getAc() == null || dto.getBac() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "PV/EV/AC/BAC 均为必填");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_e52f5250");
         }
         if (dto.getMeasureDate() == null) dto.setMeasureDate(LocalDate.now());
 
@@ -103,9 +103,9 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     public EvmMeasureDO getById(Long id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         EvmMeasureDO m = evmMapper.selectById(id);
-        if (m == null) throw new BizException(BizErrorCode.NOT_FOUND, "EVM 测量不存在");
+        if (m == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c14ffd5d");
         return m;
     }
 
@@ -177,7 +177,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         evmMapper.deleteById(id);
     }
 

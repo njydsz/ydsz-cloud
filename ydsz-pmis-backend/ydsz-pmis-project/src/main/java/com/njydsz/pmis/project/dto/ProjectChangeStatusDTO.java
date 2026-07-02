@@ -21,10 +21,10 @@ public class ProjectChangeStatusDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 变更 ID */
-    @NotNull(message = "变更 ID 不能为空")
+    @NotNull(message = "{validation.project.msg_ad21f8c7}")
     private Long id;
 
     /** 目标状态（ChangeStatus.code） */
-    @NotBlank(message = "目标状态不能为空")
+    @NotBlank(message = "{validation.project.msg_8304cf7d}")
     private String targetStatus;
 }

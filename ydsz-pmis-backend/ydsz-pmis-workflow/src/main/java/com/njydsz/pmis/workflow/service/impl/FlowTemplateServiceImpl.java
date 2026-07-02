@@ -57,18 +57,18 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public Map<String, Object> getTemplate(String templateCode) {
         try {
             if (!StringUtils.hasText(templateCode)) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "templateCode 不能为空");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
             }
             FlowTemplateDO template = templateMapper.selectByTemplateCode(templateCode);
             if (template == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + templateCode);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047" + templateCode);
             }
             return toDetailMap(template);
         } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[FlowTemplate] 获取模板详情异常: templateCode={} err={}", templateCode, e.getMessage(), e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "获取模板详情失败: " + e.getMessage());
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_c2642700" + e.getMessage());
         }
     }
 
@@ -77,14 +77,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public Long importTemplate(String templateCode, String flowName) {
         try {
             if (!StringUtils.hasText(templateCode)) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "templateCode 不能为空");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
             }
             FlowTemplateDO template = templateMapper.selectByTemplateCode(templateCode);
             if (template == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + templateCode);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047" + templateCode);
             }
             if (!StringUtils.hasText(template.getBpmnXml())) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "模板 BPMN XML 为空: " + templateCode);
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f407e561" + templateCode);
             }
 
             // 构建部署 DTO，使用 BPMN XML 模式
@@ -112,7 +112,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         } catch (Exception e) {
             log.error("[FlowTemplate] 模板导入异常: templateCode={} err={}", templateCode, e.getMessage(), e);
             throw new BizException(BizErrorCode.INTERNAL_ERROR,
-                    "模板导入失败: " + templateCode + " — " + e.getMessage());
+                    "error.workflow.msg_ecc1169b" + templateCode + " — " + e.getMessage());
         }
     }
 
@@ -121,21 +121,21 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     public void exportAsTemplate(Long definitionId, String templateName, String category) {
         try {
             if (definitionId == null) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId 不能为空");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_375a4677");
             }
             if (!StringUtils.hasText(templateName)) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "templateName 不能为空");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_bbbf759d");
             }
 
             // 获取流程定义详情
             Map<String, Object> detail = definitionService.getDetail(definitionId);
             if (detail == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
             }
 
             FlowDefinitionDO definition = (FlowDefinitionDO) detail.get("definition");
             if (definition == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
             }
 
             // 生成模板编码
@@ -175,7 +175,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             throw e;
         } catch (Exception e) {
             log.error("[FlowTemplate] 导出模板异常: definitionId={} err={}", definitionId, e.getMessage(), e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "导出模板失败: " + e.getMessage());
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_d119b2ed" + e.getMessage());
         }
     }
 

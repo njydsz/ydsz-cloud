@@ -47,11 +47,11 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         validatePercent(initialPercent);
         FlowDefinitionDO def = mustGetDef(definitionId);
         if (def.getIsPublish() == null || def.getIsPublish() != 1) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "仅已发布的定义可启动灰度");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5bdc1fe3");
         }
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (CanaryStatus.PROMOTED.name().equals(curStatus)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "定义已全量发布，无法再次启动灰度");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_9ff06760");
         }
 
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
@@ -75,7 +75,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (!CanaryStatus.CANARYING.name().equals(curStatus)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "仅灰度中（CAnaryING）可调整比例，当前状态: " + curStatus);
+                    "error.workflow.msg_f5374e71" + curStatus);
         }
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
         if (oldPercent == newPercent) {
@@ -214,17 +214,17 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     private void validatePercent(int percent) {
         if (percent < 0 || percent > 100) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "灰度比例必须在 0-100 之间: " + percent);
+                    "error.workflow.msg_a9bb9120" + percent);
         }
     }
 
     private FlowDefinitionDO mustGetDef(Long definitionId) {
         if (definitionId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_375a4677");
         }
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
         }
         return def;
     }

@@ -91,7 +91,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         if (dto == null || !StringUtils.hasText(dto.getFlowCode())
                 || !StringUtils.hasText(dto.getBusinessType())
                 || !StringUtils.hasText(dto.getBusinessId())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode/businessType/businessId 必填");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_208e3c66");
         }
 
         // 0. 幂等：同 business 已有 RUNNING 实例则直接返回
@@ -116,7 +116,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 dto.getInitiatorId());
         if (def == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "流程定义未发布: code=" + dto.getFlowCode());
+                    "error.workflow.msg_add8d012" + dto.getFlowCode());
         }
 
         // 2. 创建实例
@@ -199,7 +199,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public void terminate(Long instanceId, String reason) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "流程已结束，不可终止");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_2246960b");
         }
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = instance.getStartAt() == null
@@ -243,7 +243,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public void suspend(Long instanceId) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "仅运行中流程可挂起");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_543fc92f");
         }
         instanceMapper.updateStatus(instanceId, FlowInstanceStatus.SUSPENDED.name(),
                 instance.getCurrentNodeCode(), instance.getCurrentNodeName(),
@@ -266,7 +266,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public void activate(Long instanceId) {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         if (!FlowInstanceStatus.SUSPENDED.name().equals(instance.getFlowStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "仅挂起流程可激活");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ab594c75");
         }
         instanceMapper.updateStatus(instanceId, FlowInstanceStatus.RUNNING.name(),
                 instance.getCurrentNodeCode(), instance.getCurrentNodeName(),
@@ -359,11 +359,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         FlowInstanceDO instance = getByIdOrThrow(instanceId);
         // 校验：仅发起人可撤回
         if (!instance.getInitiatorId().equals(initiatorId)) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "仅发起人可撤回流程");
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.workflow.msg_cc712a3a");
         }
         // 校验：仅运行中可撤回
         if (!FlowInstanceStatus.RUNNING.name().equals(instance.getFlowStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "仅运行中流程可撤回");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_3095a676");
         }
         // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
         List<FlowTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
@@ -371,7 +371,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
         if (anyProcessed) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "审批人已处理，不可撤回");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_c55fe642");
         }
         // 取消当前待办
         taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
@@ -381,7 +381,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             advancer.start(instanceId);
         } catch (Exception e) {
             log.error("[Flow] 撤回后重新推进失败: instanceId={}", instanceId, e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "撤回失败: " + e.getMessage());
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_3d726320" + e.getMessage());
         }
         log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
         // P2-3: Prometheus 指标 — 撤回
@@ -437,11 +437,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public void setVariable(Long instanceId, String key, Object value) {
         // P2-24: 合并写入单个变量并持久化
         if (!StringUtils.hasText(key)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "变量名不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_fae06125");
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + instanceId);
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.put(key, value);
@@ -458,7 +458,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + instanceId);
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.putAll(variables);
@@ -486,7 +486,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private FlowInstanceDO getByIdOrThrow(Long id) {
         FlowInstanceDO instance = instanceMapper.selectById(id);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + id);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + id);
         }
         return instance;
     }
@@ -557,7 +557,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                     log.error("[Flow] callActivity 启动子流程失败: instanceId={} node={} err={}",
                             instanceId, node.getNodeCode(), e.getMessage(), e);
                     throw new BizException(BizErrorCode.INTERNAL_ERROR,
-                            "子流程启动失败: " + e.getMessage());
+                            "error.workflow.msg_f2bd498c" + e.getMessage());
                 }
                 continue;
             }
@@ -590,7 +590,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public List<Map<String, Object>> simulate(String flowCode, String version,
                                                Map<String, Object> variables, Long tenantId) {
         if (!StringUtils.hasText(flowCode)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "flowCode 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ebccbe46");
         }
         // 解析租户
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
@@ -598,7 +598,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         FlowDefinitionDO def = definitionService.getPublished(flowCode, version, tid);
         if (def == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "流程定义未发布: code=" + flowCode + " version=" + version);
+                    "error.workflow.msg_add8d012" + flowCode + " version=" + version);
         }
         // 查询节点 + 跳转
         List<FlowNodeDO> nodes = nodeMapper.selectByDefinitionId(def.getId());
@@ -628,7 +628,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             }
         }
         if (startNode == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "流程定义缺少开始节点");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_69a69bcd");
         }
 
         // 模拟遍历
@@ -855,7 +855,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public Map<String, Object> getFormRenderData(Long instanceId, Long taskId) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "实例不存在: " + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16" + instanceId);
         }
         String nodeCode;
         String nodeName;
@@ -864,7 +864,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             // 优先从任务获取节点信息
             FlowTaskDO task = taskMapper.selectById(taskId);
             if (task == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "任务不存在: " + taskId);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08" + taskId);
             }
             nodeCode = task.getNodeCode();
             nodeName = task.getNodeName();

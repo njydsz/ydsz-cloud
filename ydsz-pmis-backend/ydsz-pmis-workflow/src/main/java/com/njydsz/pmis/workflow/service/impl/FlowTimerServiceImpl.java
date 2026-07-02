@@ -56,15 +56,15 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     @Transactional(rollbackFor = Exception.class)
     public Long scheduleIntermediate(Long instanceId, String nodeCode, Duration delay) {
         if (instanceId == null || nodeCode == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "instanceId/nodeCode 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d4a911f2");
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + instanceId);
         }
         FlowNodeDO node = nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode);
         if (node == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "节点不存在: " + nodeCode);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_5d32cedf" + nodeCode);
         }
         FlowTimerDO timer = new FlowTimerDO();
         timer.setTenantId(instance.getTenantId());
@@ -87,11 +87,11 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     @Transactional(rollbackFor = Exception.class)
     public Long scheduleBoundary(Long taskId, Long instanceId, String nodeCode, Duration delay) {
         if (taskId == null || instanceId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "taskId/instanceId 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_57d9f93c");
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + instanceId);
         }
         FlowNodeDO node = nodeCode != null
                 ? nodeMapper.selectByCode(instance.getDefinitionId(), nodeCode) : null;

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.execution.assembler.NameAssembler;
 import com.njydsz.pmis.execution.dto.WbsTaskCreateDTO;
 import com.njydsz.pmis.execution.dto.WbsTaskStatusDTO;
@@ -45,7 +46,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     public Long create(WbsTaskCreateDTO dto) {
         validate(dto);
         if (wbsTaskMapper.selectByCode(dto.getTaskCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "任务编号已存在: " + dto.getTaskCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_aecdf567" + dto.getTaskCode());
         }
         WbsTaskDO t = new WbsTaskDO();
         BeanUtils.copyProperties(dto, t);
@@ -92,14 +93,14 @@ public class WbsTaskServiceImpl implements WbsTaskService {
         WbsTaskStatus from = WbsTaskStatus.fromCode(t.getStatus());
         WbsTaskStatus to = WbsTaskStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "当前状态非法: " + t.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a" + t.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "任务状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
+                    "error.execution.msg_28f70737" + from.getDesc() + " → " + to.getDesc());
         }
         wbsTaskMapper.updateStatus(t.getId(), to.getCode());
         // 同步进度
@@ -127,7 +128,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
         WbsTaskDO t = getById(id);
         if (progressPct != null) {
             if (progressPct.signum() < 0 || progressPct.compareTo(new BigDecimal("100")) > 0) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "进度必须介于 0-100");
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_627bf88e");
             }
             t.setProgressPct(progressPct);
         }
@@ -142,7 +143,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     public void delete(Long id) {
         WbsTaskDO t = getById(id);
         if (WbsTaskStatus.fromCode(t.getStatus()) == WbsTaskStatus.IN_PROGRESS) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "进行中任务不能删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_ce5c0a72");
         }
         wbsTaskMapper.deleteById(id);
         log.info("[WbsTask] 删除任务: id={}", id);
@@ -152,7 +153,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     public WbsTaskDO getById(Long id) {
         WbsTaskDO t = wbsTaskMapper.selectById(id);
         if (t == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "任务不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c0d8369f");
         }
         return t;
     }
@@ -172,7 +173,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
         if (initiationId != null) w.eq(WbsTaskDO::getInitiationId, initiationId);
         if (ownerId != null) w.eq(WbsTaskDO::getOwnerId, ownerId);
         // 数据权限 SQL 注入
-        String ds = com.njydsz.pmis.common.security.DataScopeHelper.buildSqlFragment("", "");
+        String ds = DataScopeHelper.buildSqlFragment("", "");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByAsc(WbsTaskDO::getTaskLevel).orderByAsc(WbsTaskDO::getSortOrder);
         return wbsTaskMapper.selectPage(p, w);
@@ -211,22 +212,22 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     }
 
     private void validate(WbsTaskCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getTaskCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务编号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7839c13b");
         }
         if (!StringUtils.hasText(dto.getTaskName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务名称不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_f96f7bb7");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "立项 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_779da94d");
         }
         if (dto.getOwnerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "负责人 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_26804acb");
         }
         if (dto.getPlannedStartDate() != null && dto.getPlannedEndDate() != null
                 && dto.getPlannedEndDate().isBefore(dto.getPlannedStartDate())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "计划结束日期不能早于开始日期");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_b81e6502");
         }
     }
 }

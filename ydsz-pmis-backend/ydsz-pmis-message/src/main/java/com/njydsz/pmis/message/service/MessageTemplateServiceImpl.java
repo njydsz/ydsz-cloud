@@ -38,7 +38,7 @@ public class MessageTemplateServiceImpl {
         validate(t);
         if (templateMapper.selectByCodeAndChannel(t.getTemplateCode(), t.getChannel().toUpperCase(), 1L) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "模板已存在: code=" + t.getTemplateCode() + " channel=" + t.getChannel());
+                    "error.message.msg_74548ac6" + t.getTemplateCode() + " channel=" + t.getChannel());
         }
         t.setChannel(t.getChannel().toUpperCase());
         if (t.getStatus() == null) t.setStatus("ENABLED");
@@ -56,11 +56,11 @@ public class MessageTemplateServiceImpl {
      */
     public void update(MessageTemplateDO t) {
         if (t.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "模板 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_ff1828c0");
         }
         MessageTemplateDO exists = templateMapper.selectById(t.getId());
         if (exists == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.message.msg_246b57f0");
         }
         if (StringUtils.hasText(t.getContent())) exists.setContent(t.getContent());
         if (StringUtils.hasText(t.getSubject())) exists.setSubject(t.getSubject());
@@ -82,7 +82,7 @@ public class MessageTemplateServiceImpl {
     public void delete(Long id) {
         MessageTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.message.msg_246b57f0");
         }
         templateMapper.deleteById(id);
         log.info("[MessageTemplate] 删除模板: id={}", id);
@@ -98,7 +98,7 @@ public class MessageTemplateServiceImpl {
     public MessageTemplateDO getById(Long id) {
         MessageTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.message.msg_246b57f0");
         }
         return t;
     }
@@ -142,13 +142,13 @@ public class MessageTemplateServiceImpl {
      */
     private void validate(MessageTemplateDO t) {
         if (!StringUtils.hasText(t.getTemplateCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "templateCode 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_f68a3fa3");
         }
         if (!StringUtils.hasText(t.getChannel())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "channel 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_fd9fba6f");
         }
         if (!StringUtils.hasText(t.getContent())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "content 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_7cc2ce0d");
         }
     }
 }

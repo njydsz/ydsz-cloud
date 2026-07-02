@@ -80,7 +80,7 @@ public class NotificationServiceImpl implements NotificationService {
         // 1. 站内通知入库（仅支持单接收人）
         if (dto.getReceiverId() == null
                 && (dto.getReceiverIds() == null || dto.getReceiverIds().size() != 1)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "邮件通知仅支持单接收人");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.common.msg_1bd45dc9");
         }
         int count = send(dto);
 
@@ -234,7 +234,7 @@ public class NotificationServiceImpl implements NotificationService {
             receiverIds = List.of(dto.getReceiverId());
         }
         if (CollectionUtils.isEmpty(receiverIds)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "接收人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.common.msg_35f5875c");
         }
         return receiverIds;
     }

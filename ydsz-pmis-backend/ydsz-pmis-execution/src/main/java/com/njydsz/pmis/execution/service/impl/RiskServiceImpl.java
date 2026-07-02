@@ -39,21 +39,21 @@ public class RiskServiceImpl implements RiskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(RiskCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getRiskCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "风险编号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_cad9859b");
         }
         if (!StringUtils.hasText(dto.getRiskTitle())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "风险标题不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_def770be");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (dto.getOwnerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "负责人 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_26804acb");
         }
         if (riskMapper.selectByCode(dto.getRiskCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "风险编号已存在: " + dto.getRiskCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_25ba60bd" + dto.getRiskCode());
         }
         RiskDO r = new RiskDO();
         BeanUtils.copyProperties(dto, r);
@@ -74,17 +74,17 @@ public class RiskServiceImpl implements RiskService {
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(RiskStatusDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         RiskDO r = getById(dto.getId());
         RiskStatus from = RiskStatus.fromCode(r.getStatus());
         RiskStatus to = RiskStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "风险状态不允许迁移: " + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
+                    "error.execution.msg_95380062" + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
         }
         riskMapper.updateStatus(dto.getId(), to.getCode());
         if (to == RiskStatus.OCCURRED) r.setOccurredAt(LocalDateTime.now());
@@ -98,7 +98,7 @@ public class RiskServiceImpl implements RiskService {
     public void delete(Long id) {
         RiskDO r = getById(id);
         if (RiskStatus.fromCode(r.getStatus()) == RiskStatus.OCCURRED) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已发生的风险不能删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0fa95df6");
         }
         riskMapper.deleteById(id);
     }
@@ -106,7 +106,7 @@ public class RiskServiceImpl implements RiskService {
     @Override
     public RiskDO getById(Long id) {
         RiskDO r = riskMapper.selectById(id);
-        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "风险不存在");
+        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_eed2ed24");
         return r;
     }
 

@@ -16,30 +16,30 @@ import java.time.LocalDate;
 @Data
 public class PaymentCreateDTO {
 
-    @NotBlank(message = "回款编号不能为空")
+    @NotBlank(message = "{validation.execution.msg_d55e99b3}")
     private String paymentCode;
 
     private String paymentNo;
 
-    @NotNull(message = "合同 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_af96cf73}")
     private Long contractId;
 
-    @NotNull(message = "项目 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_576c2b5e}")
     private Long initiationId;
 
-    @NotNull(message = "客户 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_6de1fd36}")
     private Long customerId;
 
     private String customerName;
 
-    @NotNull(message = "金额不能为空")
+    @NotNull(message = "{validation.execution.msg_406c0ea8}")
     private BigDecimal amount;
 
     private String currency = "CNY";
 
     private String paymentMethod = "BANK_TRANSFER";  // BANK_TRANSFER/CHECK/CASH/OTHER
 
-    @NotNull(message = "到账日期不能为空")
+    @NotNull(message = "{validation.execution.msg_4fa8fbb5}")
     private LocalDate paymentDate;
 
     private String bankAccount;

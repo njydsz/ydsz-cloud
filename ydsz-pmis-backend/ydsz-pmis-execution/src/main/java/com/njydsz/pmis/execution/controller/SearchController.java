@@ -44,9 +44,9 @@ public class SearchController {
     @Operation(summary = "全文检索项目")
     @GetMapping("/projects")
     public Result<Page<ProjectSearchDoc>> searchProjects(
-            @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
-            @RequestParam(defaultValue = "0") @Min(value = 0, message = "页码不能为负数") int page,
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "每页条数至少为1") int size) {
+            @RequestParam @NotBlank(message = "{validation.execution.msg_ede12b69}") String keyword,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "{validation.execution.msg_9aaebb77}") int page,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.execution.msg_15154512}") int size) {
         return Result.ok(searchService.searchProjects(keyword,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))));
     }

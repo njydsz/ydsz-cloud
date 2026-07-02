@@ -37,24 +37,24 @@ public class RevenueServiceImpl implements RevenueService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(RevenueCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getRevenueCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "收入编号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_378203d4");
         }
         if (dto.getContractId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "合同 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_af96cf73");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (dto.getAmount() == null || dto.getAmount().signum() <= 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "收入金额必须为正数");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a853c0c6");
         }
         if (RevenueRecognitionMethod.fromCode(dto.getRecognitionMethod()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "收入确认方法非法: " + dto.getRecognitionMethod());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9a58a1bc" + dto.getRecognitionMethod());
         }
         if (revenueMapper.selectByCode(dto.getRevenueCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "收入编号已存在: " + dto.getRevenueCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_52c2d527" + dto.getRevenueCode());
         }
         RevenueDO r = new RevenueDO();
         BeanUtils.copyProperties(dto, r);
@@ -72,7 +72,7 @@ public class RevenueServiceImpl implements RevenueService {
     public void confirm(Long id, Long confirmedBy) {
         RevenueDO r = getById(id);
         if (!"DRAFT".equals(r.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "只有 DRAFT 状态可以确认");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0f0b1394");
         }
         revenueMapper.updateStatus(id, "CONFIRMED", confirmedBy);
         r.setConfirmedBy(confirmedBy);
@@ -86,7 +86,7 @@ public class RevenueServiceImpl implements RevenueService {
     public void reverse(Long id) {
         RevenueDO r = getById(id);
         if (!"CONFIRMED".equals(r.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "只有 CONFIRMED 状态可以冲销");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1971a360");
         }
         revenueMapper.updateStatus(id, "REVERSED", null);
         log.info("[Revenue] 冲销收入: id={}", id);
@@ -97,7 +97,7 @@ public class RevenueServiceImpl implements RevenueService {
     public void delete(Long id) {
         RevenueDO r = getById(id);
         if ("CONFIRMED".equals(r.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已确认收入不能删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6891a16a");
         }
         revenueMapper.deleteById(id);
     }
@@ -105,7 +105,7 @@ public class RevenueServiceImpl implements RevenueService {
     @Override
     public RevenueDO getById(Long id) {
         RevenueDO r = revenueMapper.selectById(id);
-        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "收入记录不存在");
+        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_4924d9b4");
         return r;
     }
 

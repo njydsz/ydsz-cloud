@@ -44,7 +44,7 @@ public class BffAggregateController {
     @GetMapping("/project-detail/{initiationId}")
     @Operation(summary = "项目详情聚合", description = "一次返回立项+合同+WBS概览+EVM摘要")
     public Map<String, Object> projectDetailAggregate(
-            @PathVariable @NotNull(message = "立项ID不能为空") Long initiationId) {
+            @PathVariable @NotNull(message = "{validation.execution.msg_1d72f14c}") Long initiationId) {
         Map<String, Object> result = new HashMap<>();
         // 聚合多维度数据，减少前端多次请求
         try {

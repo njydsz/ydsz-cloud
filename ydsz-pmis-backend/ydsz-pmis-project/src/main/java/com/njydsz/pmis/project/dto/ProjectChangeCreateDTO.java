@@ -22,19 +22,19 @@ public class ProjectChangeCreateDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /** 变更编号 */
-    @NotBlank(message = "变更编号不能为空")
+    @NotBlank(message = "{validation.project.msg_00a4ec00}")
     private String changeCode;
 
     /** 立项 ID */
-    @NotNull(message = "项目 ID 不能为空")
+    @NotNull(message = "{validation.project.msg_576c2b5e}")
     private Long initiationId;
 
     /** 变更类型（ChangeType.code） */
-    @NotBlank(message = "变更类型不能为空")
+    @NotBlank(message = "{validation.project.msg_970fff4b}")
     private String changeType;
 
     /** 变更标题 */
-    @NotBlank(message = "变更标题不能为空")
+    @NotBlank(message = "{validation.project.msg_a38138cf}")
     private String changeTitle;
 
     /** 变更原因 */

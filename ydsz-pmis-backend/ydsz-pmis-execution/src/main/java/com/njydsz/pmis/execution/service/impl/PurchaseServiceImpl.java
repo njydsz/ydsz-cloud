@@ -37,21 +37,21 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(PurchaseCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (!StringUtils.hasText(dto.getPurchaseCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "采购单号不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_5e907df2");
         }
         if (!StringUtils.hasText(dto.getItemName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "物品名称不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_f93c80f1");
         }
         if (dto.getInitiationId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "项目 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (dto.getApplicantId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "申请人 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");
         }
         if (purchaseMapper.selectByCode(dto.getPurchaseCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "采购单号已存在: " + dto.getPurchaseCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_126ca992" + dto.getPurchaseCode());
         }
         PurchaseDO p = new PurchaseDO();
         BeanUtils.copyProperties(dto, p);
@@ -79,17 +79,17 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(ApprovalDTO dto) {
         if (dto == null || dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         PurchaseDO p = getById(dto.getId());
         ApprovalStatus from = ApprovalStatus.fromCode(p.getStatus());
         ApprovalStatus to = ApprovalStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "采购状态不允许迁移: " + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
+                    "error.execution.msg_8d2ee457" + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
         }
         purchaseMapper.updateStatus(dto.getId(), to.getCode(),
                 dto.getApproverId(), dto.getApproverName());
@@ -102,7 +102,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         PurchaseDO p = getById(id);
         ApprovalStatus s = ApprovalStatus.fromCode(p.getStatus());
         if (s == ApprovalStatus.APPROVED || s == ApprovalStatus.PAID) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "已批准/已支付采购单不能删除");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_306554e9");
         }
         purchaseMapper.deleteById(id);
     }
@@ -110,7 +110,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     @Override
     public PurchaseDO getById(Long id) {
         PurchaseDO p = purchaseMapper.selectById(id);
-        if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "采购单不存在");
+        if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_df942bcd");
         return p;
     }
 

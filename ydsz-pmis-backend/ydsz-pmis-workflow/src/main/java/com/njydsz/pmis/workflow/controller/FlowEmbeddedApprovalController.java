@@ -62,7 +62,7 @@ public class FlowEmbeddedApprovalController {
             }
         }
         if (uid == null) {
-            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.UNAUTHORIZED, "未登录");
+            return Result.failed(BizErrorCode.UNAUTHORIZED, "未登录");
         }
         return Result.ok(embeddedApprovalService.loadPanel(businessType, businessId, uid));
     }

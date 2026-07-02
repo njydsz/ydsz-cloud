@@ -78,13 +78,13 @@ public class MessageServiceImpl implements MessageService {
     @Override
     public MessageResult send(MessageRequest request) {
         if (request == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_d9712a58");
         }
         if (!StringUtils.hasText(request.getChannel())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "channel 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_fd9fba6f");
         }
         if (!StringUtils.hasText(request.getReceiver())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "接收人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_35f5875c");
         }
 
         // 加载并渲染模板
@@ -92,10 +92,10 @@ public class MessageServiceImpl implements MessageService {
             MessageTemplateDO template = loadTemplate(
                     request.getTemplateCode(), request.getChannel().toUpperCase(), null);
             if (template == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + request.getTemplateCode());
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.message.msg_c16cb047" + request.getTemplateCode());
             }
             if (!"ENABLED".equalsIgnoreCase(template.getStatus())) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "模板已停用: " + request.getTemplateCode());
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_fe0cc3a8" + request.getTemplateCode());
             }
             Map<String, Object> params = request.getParams() == null ? new HashMap<>() : request.getParams();
             String content = templateEngine.render(template.getContent(), params);
@@ -106,13 +106,13 @@ public class MessageServiceImpl implements MessageService {
         }
 
         if (!StringUtils.hasText(request.getContent())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "消息内容不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_48e93db8");
         }
 
         // 选择通道
         MessageChannel channel = channelCache.get(request.getChannel().toUpperCase());
         if (channel == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "不支持的消息通道: " + request.getChannel());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_3d19e7f2" + request.getChannel());
         }
 
         // 执行发送并记录日志

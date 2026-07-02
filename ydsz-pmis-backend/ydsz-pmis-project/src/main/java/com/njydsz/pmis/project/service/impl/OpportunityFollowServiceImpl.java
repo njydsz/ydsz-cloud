@@ -45,7 +45,7 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
     public Long record(OpportunityFollowDTO dto) {
         validate(dto);
         if (opportunityMapper.selectById(dto.getOpportunityId()) == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "商机不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_69bdeff3");
         }
         OpportunityFollowDO f = new OpportunityFollowDO();
         BeanUtils.copyProperties(dto, f);
@@ -80,13 +80,13 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
      */
     private void validate(OpportunityFollowDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (dto.getOpportunityId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "商机 ID 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_5cdeabc1");
         }
         if (!StringUtils.hasText(dto.getFollowType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "跟进类型不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_5b2e099f");
         }
     }
 }

@@ -132,7 +132,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 3. 锁定检查
         if (ctx.getLockedUntil() != null && ctx.getLockedUntil() > System.currentTimeMillis()) {
-            throw new BizException(BizErrorCode.USER_LOCKED, "账号已锁定,请稍后再试");
+            throw new BizException(BizErrorCode.USER_LOCKED, "error.auth.msg_9d09bb97");
         }
 
         // 4. 状态校验
@@ -255,14 +255,14 @@ public class AuthServiceImpl implements AuthService {
      */
     private void validateCaptcha(String key, String code) {
         if (key == null || key.isBlank() || code == null || code.isBlank()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请输入图形验证码");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.auth.msg_e7006630");
         }
         String stored = redisTemplate.opsForValue().get(CAPTCHA_KEY_PREFIX + key);
         if (stored == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "验证码已过期,请刷新");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.auth.msg_ffa59696");
         }
         if (!stored.equalsIgnoreCase(code)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "验证码错误");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.auth.msg_08e91fbb");
         }
         // 一次性使用
         redisTemplate.delete(CAPTCHA_KEY_PREFIX + key);

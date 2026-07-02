@@ -106,7 +106,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         // 自动计算加班时长
         if (dto.getOvertimeHours() == null && dto.getStartTime() != null && dto.getEndTime() != null) {
             long minutes = Duration.between(dto.getStartTime(), dto.getEndTime()).toMinutes();
-            if (minutes <= 0) throw new BizException(BizErrorCode.BAD_REQUEST, "结束时间必须晚于开始时间");
+            if (minutes <= 0) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_0e756b4f");
             dto.setOvertimeHours(BigDecimal.valueOf(minutes).divide(BigDecimal.valueOf(60), 2, RoundingMode.HALF_UP));
         }
         if (dto.getPayRate() == null) dto.setPayRate(new BigDecimal("1.5"));
@@ -127,14 +127,14 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveOvertime(Long id, String action, String approverId, String approverName, String remark) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         if (!"APPROVED".equalsIgnoreCase(action) && !"REJECTED".equalsIgnoreCase(action)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "审批动作必须为 APPROVED/REJECTED");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_dbf45b98");
         }
         OvertimeDO entity = overtimeMapper.selectById(id);
-        if (entity == null) throw new BizException(BizErrorCode.NOT_FOUND, "加班记录不存在");
+        if (entity == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_09aca734");
         if (!"SUBMITTED".equalsIgnoreCase(entity.getApprovalStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "当前状态不允许审批: " + entity.getApprovalStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_8a0e5737" + entity.getApprovalStatus());
         }
         entity.setApprovalStatus(action.toUpperCase());
         entity.setApproverId(approverId == null ? null : Long.valueOf(approverId));
@@ -169,7 +169,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         // 自动计算请假天数
         if (dto.getLeaveDays() == null && dto.getStartDate() != null && dto.getEndDate() != null) {
             long days = Duration.between(dto.getStartDate().atStartOfDay(), dto.getEndDate().atStartOfDay()).toDays() + 1;
-            if (days <= 0) throw new BizException(BizErrorCode.BAD_REQUEST, "结束日期必须晚于或等于开始日期");
+            if (days <= 0) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_6ea170d7");
             dto.setLeaveDays(BigDecimal.valueOf(days));
         }
 
@@ -189,17 +189,17 @@ public class AttendanceServiceImpl implements AttendanceService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void approveLeave(Long id, String action, String approverId, String approverName, String remark) {
-        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "ID 不能为空");
+        if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         LeaveDO entity = leaveMapper.selectById(id);
-        if (entity == null) throw new BizException(BizErrorCode.NOT_FOUND, "请假记录不存在");
+        if (entity == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_802c6117");
         LeaveStatus current = LeaveStatus.fromCode(entity.getApprovalStatus());
         LeaveStatus target = LeaveStatus.fromCode(action);
         if (current == null || target == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "无效状态: " + action);
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_555b7349" + action);
         }
         if (!current.canTransitTo(target)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "状态不允许从 " + current.getDesc() + " 流转到 " + target.getDesc());
+                    "error.user.msg_e6729e07" + current.getDesc() + " 流转到 " + target.getDesc());
         }
         entity.setApprovalStatus(target.getCode());
         if (approverId != null) entity.setApproverId(Long.valueOf(approverId));
@@ -234,37 +234,37 @@ public class AttendanceServiceImpl implements AttendanceService {
     // ==================== 校验 ====================
 
     private void validateAttendance(AttendanceCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
-        if (dto.getEmployeeId() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "员工 ID 不能为空");
-        if (dto.getAttendanceDate() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "出勤日期不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto.getEmployeeId() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+        if (dto.getAttendanceDate() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_6d57c0a5");
         if (StringUtils.hasText(dto.getStatus()) && AttendanceStatus.fromCode(dto.getStatus()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "无效状态: " + dto.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_555b7349" + dto.getStatus());
         }
     }
 
     private void validateOvertime(OvertimeCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
-        if (dto.getEmployeeId() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "员工 ID 不能为空");
-        if (dto.getOvertimeDate() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "加班日期不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto.getEmployeeId() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
+        if (dto.getOvertimeDate() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_f8aecb6a");
         if (dto.getStartTime() == null || dto.getEndTime() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "开始/结束时间不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_a765717d");
         }
         if (!StringUtils.hasText(dto.getOvertimeType())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "加班类型不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_1f6cd674");
         }
     }
 
     private void validateLeave(LeaveCreateDTO dto) {
-        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
-        if (dto.getEmployeeId() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "员工 ID 不能为空");
+        if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
+        if (dto.getEmployeeId() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         if (LeaveType.fromCode(dto.getLeaveType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "无效请假类型: " + dto.getLeaveType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_867f50ca" + dto.getLeaveType());
         }
         if (dto.getStartDate() == null || dto.getEndDate() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "开始/结束日期不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_9c779eb8");
         }
         if (dto.getEndDate().isBefore(dto.getStartDate())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "结束日期不能早于开始日期");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_7e6b1218");
         }
     }
 }

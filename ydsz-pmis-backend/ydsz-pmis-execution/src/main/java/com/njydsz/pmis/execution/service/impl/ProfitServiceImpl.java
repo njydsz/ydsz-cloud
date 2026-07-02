@@ -37,7 +37,7 @@ public class ProfitServiceImpl implements ProfitService {
     public Long generateSnapshot(ProfitSnapshotDTO dto) {
         if (dto == null || dto.getInitiationId() == null
                 || !StringUtils.hasText(dto.getPeriod())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求参数不完整");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_99e1d335");
         }
         ProfitSnapshotDO snap = snapshotMapper.selectByInitiationAndPeriod(
                 dto.getInitiationId(), dto.getPeriod());

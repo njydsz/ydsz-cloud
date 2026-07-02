@@ -96,7 +96,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "实例不存在: " + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16" + instanceId);
         }
 
         // 解析办理人：尝试展开 ROLE/DEPT 为多人
@@ -289,7 +289,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public void claim(Long taskId, Long userId) {
         FlowTaskDO task = getTaskOrThrow(taskId);
         if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务不可签收: " + task.getTaskStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5873f2ae" + task.getTaskStatus());
         }
         taskMapper.updateById(toClaimTask(task, userId));
         audit(task, "CLAIM", userId, null, null);
@@ -309,7 +309,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public void pass(FlowTaskOperateDTO dto) {
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成: " + task.getTaskStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_7f4098fb" + task.getTaskStatus());
         }
         Map<String, Object> variables = dto.getVariables() == null
                 ? Collections.emptyMap() : dto.getVariables();
@@ -366,7 +366,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public void reject(FlowTaskOperateDTO dto) {
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_b35e6ea3");
         }
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = task.getCreatedAt() == null
@@ -425,7 +425,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     @Transactional(rollbackFor = Exception.class)
     public void transfer(FlowTaskOperateDTO dto) {
         if (dto.getTargetUserId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "转办目标人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_6ddae4d1");
         }
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         Long originalAssignorId = parseAssignorId(task.getAssigneeId());
@@ -456,7 +456,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     @Transactional(rollbackFor = Exception.class)
     public void delegate(FlowTaskOperateDTO dto) {
         if (dto.getTargetUserId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "委派目标人不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d4faa79e");
         }
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         // 保存原办理人
@@ -490,7 +490,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public void countersignBefore(FlowTaskOperateDTO dto) {
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可加签");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
         // 前加签：在当前节点前插入临时审批人
         // 实现：为当前任务新增一个审批人记录到 pmis_flow_user，approveCount+1
@@ -525,7 +525,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public void countersignAfter(FlowTaskOperateDTO dto) {
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可加签");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
         // P2-29: 后加签真实实现 — 当前审批人通过后，新加签人需要审批，两人都通过后才推进到下一节点
         // 实现方式：
@@ -568,10 +568,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public void countersignRemove(FlowTaskOperateDTO dto) {
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可减签");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ff1454e4");
         }
         if (dto.getTargetUserId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "减签需指定 targetUserId");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_7c4a1bdf");
         }
         // 从 pmis_flow_user 中删除指定用户
         Map<String, Object> deleteMap = new HashMap<>();
@@ -581,7 +581,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         int deleted = userMapper.deleteByMap(deleteMap);
         if (deleted == 0) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "未找到待减签用户: userId=" + dto.getTargetUserId());
+                    "error.workflow.msg_a39adc9d" + dto.getTargetUserId());
         }
         // approveCount -1，但不低于 1
         int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();
@@ -621,7 +621,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public void saveDraft(FlowTaskOperateDTO dto) {
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可暂存");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_8913103b");
         }
         // 保存审批意见草稿到 comment 字段，不改变任务状态
         task.setComment(dto.getComment());
@@ -635,10 +635,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public void addApprover(FlowTaskOperateDTO dto) {
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可追加处理人");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_511d4aaa");
         }
         if (dto.getTargetUserId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "追加处理人需指定 targetUserId");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
         }
         // 向 pmis_flow_user 插入新审批人
         FlowUserDO fu = new FlowUserDO();
@@ -666,7 +666,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         if (operatorId != null && instanceId != null
                 && !urgeLimiter.tryAcquire(operatorId, instanceId, "INSTANCE")) {
             throw new BizException(BizErrorCode.RATE_LIMIT,
-                    "催办过于频繁，请稍后再试（同一实例 30 分钟内仅可催办一次）");
+                    "error.workflow.msg_75474a57");
         }
         List<FlowTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
         List<String> urged = new ArrayList<>();
@@ -703,19 +703,19 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     public void jump(FlowTaskOperateDTO dto) {
         FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可跳转: " + task.getTaskStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_1efc5644" + task.getTaskStatus());
         }
         if (!StringUtils.hasText(dto.getTargetNodeCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "跳转目标节点不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_09c299d0");
         }
         FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "实例不存在: " + task.getInstanceId());
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16" + task.getInstanceId());
         }
         // 校验目标节点存在
         FlowNodeDO targetNode = nodeMapper.selectByCode(task.getDefinitionId(), dto.getTargetNodeCode());
         if (targetNode == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "目标节点不存在: " + dto.getTargetNodeCode());
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_a35217ba" + dto.getTargetNodeCode());
         }
         // 完成当前任务（状态 COMPLETED，审计 action=JUMP）
         completeAndArchive(task, dto.getComment());
@@ -744,7 +744,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     @Transactional(rollbackFor = Exception.class)
     public void batchPass(List<Long> taskIds, Long userId, String comment) {
         if (taskIds == null || taskIds.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "taskIds 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_a02f7864");
         }
         for (Long taskId : taskIds) {
             FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
@@ -974,7 +974,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.PENDING.name().equals(status)
                 && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "任务状态不可标记超时: " + status);
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ecc09732" + status);
         }
         // 更新任务状态为 TIMEOUT
         LocalDateTime now = LocalDateTime.now();
@@ -1026,7 +1026,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
-                    "任务已被其他操作修改，请刷新后重试: taskId=" + task.getId());
+                    "error.workflow.msg_199e8ba1" + task.getId());
         }
         if (finished < required) {
             // 未全部通过：任务保持 PENDING，不推进
@@ -1058,7 +1058,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
-                    "任务已被其他操作修改，请刷新后重试: taskId=" + task.getId());
+                    "error.workflow.msg_199e8ba1" + task.getId());
         }
         if (finished < required) {
             // 还有下一个用户：切换办理人
@@ -1095,7 +1095,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
-                    "任务已被其他操作修改，请刷新后重试: taskId=" + task.getId());
+                    "error.workflow.msg_199e8ba1" + task.getId());
         }
         // P1-5: 通过率可配置 — 默认 50% + 1（即过半数）
         int threshold = (required / 2) + 1;
@@ -1174,7 +1174,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
-                    "任务已被其他操作修改，请刷新后重试: taskId=" + task.getId());
+                    "error.workflow.msg_199e8ba1" + task.getId());
         }
         // 5. 阈值（默认 50%）
         int threshold = (totalWeight / 2) + 1;
@@ -1241,7 +1241,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     private FlowTaskDO getTaskOrThrow(Long id) {
         FlowTaskDO task = taskMapper.selectById(id);
         if (task == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "任务不存在: " + id);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08" + id);
         }
         return task;
     }
@@ -1282,7 +1282,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         if (depth >= MAX_AUTO_PASS_DEPTH) {
             log.warn("[Flow] AUTO_PASS 递归深度超限: depth={} instanceId={}", depth, instance.getId());
             throw new BizException(BizErrorCode.INTERNAL_ERROR,
-                    "AUTO_PASS 递归深度超限，可能存在流程定义环路");
+                    "error.workflow.msg_fcd55e62");
         }
         AUTO_PASS_DEPTH.set(depth + 1);
         try {

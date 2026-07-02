@@ -19,10 +19,10 @@ public class DeliveryItemStatusDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @NotNull(message = "交付物 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_da609842}")
     private Long id;
 
-    @NotBlank(message = "目标状态不能为空")
+    @NotBlank(message = "{validation.execution.msg_8304cf7d}")
     private String targetStatus;
 
     private String reviewComment;

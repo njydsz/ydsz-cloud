@@ -44,18 +44,18 @@ public class AgentCoordinatorImpl implements AgentCoordinator {
     @Override
     public OrchestrationResult coordinate(OrchestrationRequest req, Map<String, Agent> agents) {
         if (req == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "编排请求不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_372ae3c5");
         }
         if (req.getMode() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "编排模式不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_934fa86f");
         }
         if (agents == null || agents.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "参与编排的 Agent 不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_1619a3b0");
         }
         OrchestrationStrategy strategy = strategyMap.get(req.getMode());
         if (strategy == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "未实现的编排模式: " + req.getMode().getCode());
+                    "error.agent.msg_2eda11e6" + req.getMode().getCode());
         }
         AgentBlackboard blackboard = new AgentBlackboard(req.getFacts());
         log.info("[Coordinator] 开始编排: mode={} biz={} agents={}",

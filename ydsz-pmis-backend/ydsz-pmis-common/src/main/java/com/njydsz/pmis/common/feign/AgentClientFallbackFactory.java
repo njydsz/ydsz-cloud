@@ -21,8 +21,8 @@ public class AgentClientFallbackFactory implements FallbackFactory<AgentClient> 
         log.warn("[AgentClient] Feign fallback triggered: {}", cause.getMessage());
         return body -> {
             // 返回一个标准的"服务降级"占位响应
-            return com.njydsz.pmis.common.api.Result.failed(
-                    com.njydsz.pmis.common.api.BizErrorCode.SERVICE_UNAVAILABLE,
+            return Result.failed(
+                    BizErrorCode.SERVICE_UNAVAILABLE,
                     "AI Agent 服务暂不可用，请稍后再试");
         };
     }

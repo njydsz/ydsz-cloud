@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.interceptor;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import io.jsonwebtoken.Jwts;
@@ -151,7 +152,7 @@ class AuthInterceptorTest {
     @Test
     @DisplayName("afterCompletion 应清空 SecurityContext")
     void afterCompletion() {
-        SecurityContext.setCurrent(com.njydsz.pmis.common.security.LoginUser.builder().userId(1L).build());
+        SecurityContext.setCurrent(LoginUser.builder().userId(1L).build());
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
         interceptor.afterCompletion(req, resp, new Object(), null);

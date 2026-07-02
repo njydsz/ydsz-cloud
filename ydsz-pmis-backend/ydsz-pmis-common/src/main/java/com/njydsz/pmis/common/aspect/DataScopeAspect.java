@@ -86,6 +86,6 @@ public class DataScopeAspect {
         if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
             return;
         }
-        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "无权访问部门: " + targetDeptId);
+        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337" + targetDeptId);
     }
 }

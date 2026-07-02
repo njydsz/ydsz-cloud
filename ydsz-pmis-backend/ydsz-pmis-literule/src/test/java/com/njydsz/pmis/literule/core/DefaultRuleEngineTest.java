@@ -1,6 +1,7 @@
 package com.njydsz.pmis.literule.core;
 
 import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
@@ -102,7 +103,7 @@ class DefaultRuleEngineTest {
     @Test
     @DisplayName("表达式规则评估 - 条件满足触发")
     void testExpressionRuleTriggered() {
-        var def = com.njydsz.pmis.literule.api.RuleDefinition.builder()
+        var def = RuleDefinition.builder()
                 .code("EXPR_001")
                 .name("表达式规则测试")
                 .category("TEST")
@@ -122,7 +123,7 @@ class DefaultRuleEngineTest {
     @Test
     @DisplayName("表达式规则评估 - 条件不满足不触发")
     void testExpressionRuleNotTriggered() {
-        var def = com.njydsz.pmis.literule.api.RuleDefinition.builder()
+        var def = RuleDefinition.builder()
                 .code("EXPR_002")
                 .name("表达式规则测试")
                 .category("TEST")
@@ -138,7 +139,7 @@ class DefaultRuleEngineTest {
     @Test
     @DisplayName("动态严重度表达式")
     void testDynamicSeverity() {
-        var def = com.njydsz.pmis.literule.api.RuleDefinition.builder()
+        var def = RuleDefinition.builder()
                 .code("EXPR_SEV")
                 .name("动态严重度")
                 .category("TEST")

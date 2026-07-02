@@ -72,7 +72,7 @@ public class JobController {
     @Operation(summary = "删除任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_DELETE)
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
+    public Result<Void> delete(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
         jobService.delete(id);
         return Result.ok();
     }
@@ -86,7 +86,7 @@ public class JobController {
     @Operation(summary = "暂停任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PostMapping("/{id}/pause")
-    public Result<Void> pause(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
+    public Result<Void> pause(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
         jobService.pause(id);
         return Result.ok();
     }
@@ -100,7 +100,7 @@ public class JobController {
     @Operation(summary = "恢复任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PostMapping("/{id}/resume")
-    public Result<Void> resume(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
+    public Result<Void> resume(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
         jobService.resume(id);
         return Result.ok();
     }
@@ -114,7 +114,7 @@ public class JobController {
     @Operation(summary = "立即执行一次")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_TRIGGER)
     @PostMapping("/{id}/trigger")
-    public Result<Long> trigger(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
+    public Result<Long> trigger(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
         return Result.ok(jobService.trigger(id));
     }
 
@@ -126,7 +126,7 @@ public class JobController {
      */
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
-    public Result<JobDO> getById(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
+    public Result<JobDO> getById(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
         return Result.ok(jobService.getById(id));
     }
 
@@ -143,8 +143,8 @@ public class JobController {
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
     public Result<Page<JobDO>> page(
-            @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码至少为1") int page,
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "每页条数至少为1") int size,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.scheduler.msg_e648fb78}") int page,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.scheduler.msg_15154512}") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
@@ -163,8 +163,8 @@ public class JobController {
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
     public Result<Page<JobLogDO>> pageLog(
-            @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码至少为1") int page,
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "每页条数至少为1") int size,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.scheduler.msg_e648fb78}") int page,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.scheduler.msg_15154512}") int size,
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
         return Result.ok(jobService.pageLog(page, size, jobKey, status));

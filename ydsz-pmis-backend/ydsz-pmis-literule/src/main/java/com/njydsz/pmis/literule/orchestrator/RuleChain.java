@@ -509,10 +509,10 @@ public class RuleChain {
      */
     private List<RuleResult> evaluateBreak(RuleContext context, ExpressionEvaluator evaluator) {
         // 返回一个标记为 BREAK 的特殊结果
-        com.njydsz.pmis.literule.api.RuleResult breakResult = new com.njydsz.pmis.literule.api.RuleResult();
+        RuleResult breakResult = new RuleResult();
         breakResult.setRuleCode("BREAK");
         breakResult.setTriggered(true);
-        breakResult.setSeverity(com.njydsz.pmis.literule.api.RuleSeverity.INFO);
+        breakResult.setSeverity(RuleSeverity.INFO);
         breakResult.setTitle("BREAK 终止循环");
         return Collections.singletonList(breakResult);
     }

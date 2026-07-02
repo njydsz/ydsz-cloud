@@ -57,7 +57,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     public EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, Long userId) {
         if (businessType == null || businessType.isBlank()
                 || businessId == null || businessId.isBlank()) {
-            throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST,
+            throw new BizException(BizErrorCode.BAD_REQUEST,
                     "businessType / businessId 不能为空");
         }
 
@@ -134,15 +134,15 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     @Override
     public void quickAction(EmbeddedApprovalActionDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "请求体不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_afb63fa5");
         }
         String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
         FlowInstanceDO instance = instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
         if (instance == null) {
-            throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.NOT_FOUND, "流程实例不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_b72e8598");
         }
         if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BIZ_ERROR, "流程已结束，不能操作");
+            throw new BizException(BizErrorCode.BIZ_ERROR, "error.workflow.msg_8243ec9a");
         }
 
         switch (action) {
@@ -153,7 +153,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                 FlowTaskDO mine = findMyTask(instance.getId(), dto.getUserId());
                 if (mine == null) {
                     throw new BizException(BizErrorCode.FORBIDDEN,
-                            "当前用户在该流程没有待办任务");
+                            "error.workflow.msg_1440b2f2");
                 }
                 FlowTaskOperateDTO op = new FlowTaskOperateDTO();
                 op.setTaskId(mine.getId());
@@ -172,12 +172,12 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                 } else if ("TRANSFER".equals(action)) {
                     if (dto.getTargetUserId() == null) {
                         throw new BizException(BizErrorCode.BAD_REQUEST,
-                                "转办操作必须指定 targetUserId");
+                                "error.workflow.msg_df306e2b");
                     }
                     taskService.transfer(op);
                 } else { // DELEGATE
                     if (dto.getTargetUserId() == null) {
-                        throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST,
+                        throw new BizException(BizErrorCode.BAD_REQUEST,
                                 "委派操作必须指定 targetUserId");
                     }
                     taskService.delegate(op);
@@ -193,14 +193,14 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             case "WITHDRAW": {
                 boolean ok = instanceService.recall(instance.getId(), dto.getUserId());
                 if (!ok) {
-                    throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BIZ_ERROR,
-                            "撤回失败：仅发起人可撤回，且下一节点未被处理时才可撤回");
+                    throw new BizException(BizErrorCode.BIZ_ERROR,
+                            "error.workflow.msg_ad7c50c2");
                 }
                 break;
             }
             default:
-                throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST,
-                        "不支持的 action: " + dto.getAction());
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "error.workflow.msg_3adf9016" + dto.getAction());
         }
     }
 

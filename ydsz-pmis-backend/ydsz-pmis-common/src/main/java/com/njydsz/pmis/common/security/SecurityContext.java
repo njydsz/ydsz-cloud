@@ -37,7 +37,7 @@ public final class SecurityContext {
     public static LoginUser getCurrent() {
         LoginUser user = CONTEXT.get();
         if (user == null) {
-            throw new BizException(BizErrorCode.UNAUTHORIZED, "用户未登录");
+            throw new BizException(BizErrorCode.UNAUTHORIZED, "error.common.msg_1923bd82");
         }
         return user;
     }
@@ -120,7 +120,7 @@ public final class SecurityContext {
     public static void requirePermission(String perm) {
         LoginUser user = getCurrent();
         if (!user.hasPermission(perm)) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "无权限: " + perm);
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_1e40057e" + perm);
         }
     }
 
@@ -137,6 +137,6 @@ public final class SecurityContext {
                 return;
             }
         }
-        throw new BizException(BizErrorCode.FORBIDDEN, "无权限");
+        throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_ad4fff48");
     }
 }

@@ -62,7 +62,7 @@ public class FileServiceImpl implements FileService {
     @Transactional(rollbackFor = Exception.class)
     public FileDO upload(MultipartFile file, FileUploadDTO dto) throws Exception {
         if (file == null || file.isEmpty()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "文件不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.file.msg_6e69656f");
         }
         return uploadInternal(
                 file.getOriginalFilename(),
@@ -86,7 +86,7 @@ public class FileServiceImpl implements FileService {
     @Transactional(rollbackFor = Exception.class)
     public FileDO uploadBytes(String originalName, byte[] content, String contentType, FileUploadDTO dto) throws Exception {
         if (content == null || content.length == 0) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "文件内容不能为空");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.file.msg_0e735e81");
         }
         return uploadInternal(originalName, content, contentType, dto);
     }
@@ -171,7 +171,7 @@ public class FileServiceImpl implements FileService {
     public void delete(Long id) throws Exception {
         FileDO f = fileMapper.selectById(id);
         if (f == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "文件不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.file.msg_d9523e34");
         }
         deleteFromMinio(f);
         fileMapper.deleteById(id);
@@ -210,7 +210,7 @@ public class FileServiceImpl implements FileService {
     public FileDO getById(Long id) {
         FileDO f = fileMapper.selectById(id);
         if (f == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "文件不存在");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.file.msg_d9523e34");
         }
         return f;
     }
@@ -241,7 +241,7 @@ public class FileServiceImpl implements FileService {
             return url;
         } catch (Exception e) {
             log.error("[File] 生成预签名 URL 失败: {}", e.getMessage(), e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "生成预签名 URL 失败: " + e.getMessage());
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.file.msg_c40f4242" + e.getMessage());
         }
     }
 

@@ -12,7 +12,7 @@ import lombok.Data;
 @Data
 public class CreditAssessmentDTO {
 
-    @NotNull(message = "客户 ID 不能为空")
+    @NotNull(message = "{validation.execution.msg_6de1fd36}")
     private Long customerId;
 
     private String customerName;
