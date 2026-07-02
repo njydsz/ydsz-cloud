@@ -1,18 +1,18 @@
-package com.njydsz.pmis.workflow.flow.service.impl;
+package com.njydsz.pmis.workflow.service.impl;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.workflow.flow.dto.EmbeddedApprovalActionDTO;
-import com.njydsz.pmis.workflow.flow.dto.EmbeddedApprovalViewDTO;
-import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
-import com.njydsz.pmis.workflow.flow.enums.FlowInstanceStatus;
-import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
-import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.flow.service.FlowAiAssistService;
-import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
-import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
+import com.njydsz.pmis.workflow.dto.EmbeddedApprovalActionDTO;
+import com.njydsz.pmis.workflow.dto.EmbeddedApprovalViewDTO;
+import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
+import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
+import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.service.FlowAiAssistService;
+import com.njydsz.pmis.workflow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.service.FlowTaskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -98,7 +98,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO.builder()
+            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -124,7 +124,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(true);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO.builder()
+            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -148,7 +148,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO.builder()
+            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -170,7 +170,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO.builder()
+            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -195,7 +195,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO.builder()
+            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -218,7 +218,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO.builder()
+            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -250,7 +250,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO.builder()
+            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();

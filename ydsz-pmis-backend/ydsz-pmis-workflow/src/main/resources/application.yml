@@ -47,7 +47,7 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml,classpath*:mapper/flow/**/*.xml
-  type-aliases-package: com.njydsz.pmis.workflow.entity,com.njydsz.pmis.workflow.flow.entity
+  type-aliases-package: com.njydsz.pmis.workflow.entity,com.njydsz.pmis.workflow.entity
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false

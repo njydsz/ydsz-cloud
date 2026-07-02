@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.workflow.flow.mapper.FlowDelegateLogMapper">
+<mapper namespace="com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper">
 
     <sql id="Base_Column">
         id, tenant_id, auth_id, instance_id, task_id, node_code, owner_user_id,
@@ -9,7 +9,7 @@
         created_by, created_at, updated_by, updated_at, deleted
     </sql>
 
-    <select id="selectByTaskId" resultType="com.njydsz.pmis.workflow.flow.entity.FlowDelegateLogDO">
+    <select id="selectByTaskId" resultType="com.njydsz.pmis.workflow.entity.FlowDelegateLogDO">
         SELECT <include refid="Base_Column"/>
         FROM pmis_flow_delegate_log
         WHERE task_id = #{taskId}
@@ -17,7 +17,7 @@
         ORDER BY created_at ASC
     </select>
 
-    <select id="selectByDelegateUser" resultType="com.njydsz.pmis.workflow.flow.entity.FlowDelegateLogDO">
+    <select id="selectByDelegateUser" resultType="com.njydsz.pmis.workflow.entity.FlowDelegateLogDO">
         SELECT <include refid="Base_Column"/>
         FROM pmis_flow_delegate_log
         WHERE delegate_user_id = #{delegateUserId}
@@ -26,7 +26,7 @@
         LIMIT #{limit} OFFSET #{offset}
     </select>
 
-    <select id="selectByOwnerUser" resultType="com.njydsz.pmis.workflow.flow.entity.FlowDelegateLogDO">
+    <select id="selectByOwnerUser" resultType="com.njydsz.pmis.workflow.entity.FlowDelegateLogDO">
         SELECT <include refid="Base_Column"/>
         FROM pmis_flow_delegate_log
         WHERE owner_user_id = #{ownerUserId}

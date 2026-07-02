@@ -1,31 +1,31 @@
-package com.njydsz.pmis.workflow.flow.service.impl;
+package com.njydsz.pmis.workflow.service.impl;
 
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
-import com.njydsz.pmis.workflow.flow.engine.FlowAssigneeResolver;
-import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
-import com.njydsz.pmis.workflow.flow.engine.FlowUrgeLimiter;
-import com.njydsz.pmis.workflow.flow.engine.FlowVariableStrategy;
-import com.njydsz.pmis.workflow.flow.entity.FlowDelegateAuthDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowUserDO;
-import com.njydsz.pmis.workflow.flow.enums.FlowAssigneeType;
-import com.njydsz.pmis.workflow.flow.enums.FlowNodeType;
-import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
-import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowDelegateLogMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowUserMapper;
-import com.njydsz.pmis.workflow.flow.metrics.FlowMetrics;
-import com.njydsz.pmis.workflow.flow.service.FlowDelegateAuthService;
-import com.njydsz.pmis.workflow.flow.service.FlowSlaService;
+import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.engine.FlowAdvancer;
+import com.njydsz.pmis.workflow.engine.FlowAssigneeResolver;
+import com.njydsz.pmis.workflow.engine.FlowEventListener;
+import com.njydsz.pmis.workflow.engine.FlowUrgeLimiter;
+import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
+import com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO;
+import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowUserDO;
+import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
+import com.njydsz.pmis.workflow.enums.FlowNodeType;
+import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
+import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper;
+import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
+import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
+import com.njydsz.pmis.workflow.metrics.FlowMetrics;
+import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
+import com.njydsz.pmis.workflow.service.FlowSlaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -81,8 +81,8 @@ class FlowTaskServiceImplTest {
     private FlowUrgeLimiter urgeLimiter;
     private FlowDelegateAuthService delegateAuthService;
     private FlowDelegateLogMapper delegateLogMapper;
-    private com.njydsz.pmis.workflow.flow.service.FlowSlaService slaService;
-    private com.njydsz.pmis.workflow.flow.service.FlowTodoCountPushService todoCountPushService;
+    private com.njydsz.pmis.workflow.service.FlowSlaService slaService;
+    private com.njydsz.pmis.workflow.service.FlowTodoCountPushService todoCountPushService;
     private FlowMetrics flowMetrics;
     private FlowTaskServiceImpl service;
 
@@ -111,9 +111,9 @@ class FlowTaskServiceImplTest {
         delegateAuthService = mock(FlowDelegateAuthService.class);
         delegateLogMapper = mock(FlowDelegateLogMapper.class);
         // P1-6: SLA 服务 mock（默认 no-op，测试不期望任何调用副作用）
-        slaService = mock(com.njydsz.pmis.workflow.flow.service.FlowSlaService.class);
+        slaService = mock(com.njydsz.pmis.workflow.service.FlowSlaService.class);
         // P1-7: 待办数推送服务 mock（默认 no-op，测试不期望副作用）
-        todoCountPushService = mock(com.njydsz.pmis.workflow.flow.service.FlowTodoCountPushService.class);
+        todoCountPushService = mock(com.njydsz.pmis.workflow.service.FlowTodoCountPushService.class);
         // P2-3: Prometheus 指标 mock（测试不需要真实指标）
         flowMetrics = mock(FlowMetrics.class);
         service = new FlowTaskServiceImpl(taskMapper, hisTaskMapper, instanceMapper,
@@ -763,7 +763,7 @@ class FlowTaskServiceImplTest {
         verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.COMPLETED.name()),
                 eq("OK"), any(), any());
         // 2. 归档到历史表
-        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO) any());
+        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.entity.FlowHisTaskDO) any());
         // 3. advancer.advance 被调用
         verify(advancer).advance(any(), eq("t1"), eq("PASS"), eq(null), any());
         // 4. generateTasksForNodes 被调用
@@ -962,7 +962,7 @@ class FlowTaskServiceImplTest {
         // 任务标记 REJECTED + 归档
         verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.REJECTED.name()),
                 eq("不同意"), any(), any());
-        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO) any());
+        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.entity.FlowHisTaskDO) any());
         // 流程进入 REJECTED 终态
         verify(instanceMapper).updateStatus(eq(10L), eq("REJECTED"),
                 eq(null), eq(null), any(), any());
@@ -1221,7 +1221,7 @@ class FlowTaskServiceImplTest {
         List<String> urged = service.urge(10L, 7L, "请尽快处理");
         assertThat(urged).containsExactly("1001", "1002");
         // 每个任务都应该写审计
-        verify(auditLogMapper, times(2)).insert((com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO) any());
+        verify(auditLogMapper, times(2)).insert((com.njydsz.pmis.workflow.entity.FlowAuditLogDO) any());
     }
 
     // ============== cancelByInstance / list* ==============
@@ -1468,7 +1468,7 @@ class FlowTaskServiceImplTest {
         verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.COMPLETED.name()),
                 eq("管理员跳转"), any(), any());
         // 2. 归档到历史表
-        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO) any());
+        verify(hisTaskMapper).insert((com.njydsz.pmis.workflow.entity.FlowHisTaskDO) any());
         // 3. 取消同实例其他 PENDING 任务
         verify(taskMapper).cancelByInstance(eq(10L), eq(FlowTaskStatus.CANCELLED.name()));
         // 4. 更新实例当前节点为目标节点
@@ -1756,7 +1756,7 @@ class FlowTaskServiceImplTest {
                 eq("审批超时"), any(), any());
         // 2. 写审计日志 action=TIMEOUT
         verify(auditLogMapper, times(1)).insert(
-                (com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO) any());
+                (com.njydsz.pmis.workflow.entity.FlowAuditLogDO) any());
         // 3. 触发 onTaskTimeout 事件
         verify(listener, times(1)).onTaskTimeout(1L, 10L);
         // 4. 发布 Spring 异步事件
@@ -1823,10 +1823,10 @@ class FlowTaskServiceImplTest {
         service.pass(dto);
 
         // 验证审计日志包含 commentType
-        ArgumentCaptor<com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO> auditCaptor =
-                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO.class);
+        ArgumentCaptor<com.njydsz.pmis.workflow.entity.FlowAuditLogDO> auditCaptor =
+                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class);
         verify(auditLogMapper).insert(auditCaptor.capture());
-        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO auditLog = auditCaptor.getValue();
+        com.njydsz.pmis.workflow.entity.FlowAuditLogDO auditLog = auditCaptor.getValue();
         assertThat(auditLog.getComment()).isEqualTo("同意该申请");
         assertThat(auditLog.getCommentType()).isEqualTo("AGREE");
         assertThat(auditLog.getAction()).isEqualTo("PASS");
@@ -1849,10 +1849,10 @@ class FlowTaskServiceImplTest {
         dto.setCommentType("DISAGREE");
         service.reject(dto);
 
-        ArgumentCaptor<com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO> auditCaptor =
-                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO.class);
+        ArgumentCaptor<com.njydsz.pmis.workflow.entity.FlowAuditLogDO> auditCaptor =
+                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class);
         verify(auditLogMapper).insert(auditCaptor.capture());
-        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO auditLog = auditCaptor.getValue();
+        com.njydsz.pmis.workflow.entity.FlowAuditLogDO auditLog = auditCaptor.getValue();
         assertThat(auditLog.getComment()).isEqualTo("不同意，金额过大");
         assertThat(auditLog.getCommentType()).isEqualTo("DISAGREE");
         assertThat(auditLog.getAction()).isEqualTo("REJECT");
@@ -1878,7 +1878,7 @@ class FlowTaskServiceImplTest {
         // approveCount 应减 1
         assertThat(task.getApproveCount()).isEqualTo(2);
         verify(taskMapper).updateById(any(FlowTaskDO.class));
-        verify(auditLogMapper).insert(any(com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO.class));
+        verify(auditLogMapper).insert(any(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class));
     }
 
     @Test
@@ -1917,7 +1917,7 @@ class FlowTaskServiceImplTest {
 
         service.markRead(1L, 1001L);
 
-        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO log =
+        com.njydsz.pmis.workflow.entity.FlowAuditLogDO log =
                 verifyAuditAction("READ");
         assertThat(log.getOperatorId()).isEqualTo(1001L);
     }
@@ -1935,18 +1935,18 @@ class FlowTaskServiceImplTest {
         dto.setCommentType("INQUIRE");
         service.communicate(dto);
 
-        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO log =
+        com.njydsz.pmis.workflow.entity.FlowAuditLogDO log =
                 verifyAuditAction("COMMUNICATE");
         assertThat(log.getComment()).isEqualTo("请补充合同金额明细");
         assertThat(log.getCommentType()).isEqualTo("INQUIRE");
     }
 
     /** 辅助：验证审计日志的 action 字段并返回捕获的日志 */
-    private com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO verifyAuditAction(String action) {
-        ArgumentCaptor<com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO> captor =
-                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO.class);
+    private com.njydsz.pmis.workflow.entity.FlowAuditLogDO verifyAuditAction(String action) {
+        ArgumentCaptor<com.njydsz.pmis.workflow.entity.FlowAuditLogDO> captor =
+                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.entity.FlowAuditLogDO.class);
         verify(auditLogMapper).insert(captor.capture());
-        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO log = captor.getValue();
+        com.njydsz.pmis.workflow.entity.FlowAuditLogDO log = captor.getValue();
         assertThat(log.getAction()).isEqualTo(action);
         return log;
     }

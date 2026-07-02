@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow.flow.enums;
+package com.njydsz.pmis.workflow.enums;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

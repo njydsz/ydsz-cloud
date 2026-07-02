@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.workflow.flow.mapper.FlowCcMapper">
+<mapper namespace="com.njydsz.pmis.workflow.mapper.FlowCcMapper">
 
     <!-- 基础列 -->
     <sql id="Base_Column">
@@ -12,7 +12,7 @@
     </sql>
 
     <!-- 查"抄送我的"（分页） -->
-    <select id="selectCcByUserPage" resultType="com.njydsz.pmis.workflow.flow.entity.FlowCcDO">
+    <select id="selectCcByUserPage" resultType="com.njydsz.pmis.workflow.entity.FlowCcDO">
         SELECT
             <include refid="Base_Column"/>
         FROM pmis_flow_cc
@@ -87,7 +87,7 @@
     </update>
 
     <!-- 查实例的抄送列表 -->
-    <select id="selectByInstanceId" resultType="com.njydsz.pmis.workflow.flow.entity.FlowCcDO">
+    <select id="selectByInstanceId" resultType="com.njydsz.pmis.workflow.entity.FlowCcDO">
         SELECT
             <include refid="Base_Column"/>
         FROM pmis_flow_cc

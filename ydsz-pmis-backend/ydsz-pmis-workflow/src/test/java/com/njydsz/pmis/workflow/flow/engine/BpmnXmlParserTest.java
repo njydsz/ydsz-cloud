@@ -1,9 +1,9 @@
-package com.njydsz.pmis.workflow.flow.engine;
+package com.njydsz.pmis.workflow.engine;
 
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowSkipDO;
-import com.njydsz.pmis.workflow.flow.enums.FlowNodeType;
+import com.njydsz.pmis.workflow.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.entity.FlowSkipDO;
+import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

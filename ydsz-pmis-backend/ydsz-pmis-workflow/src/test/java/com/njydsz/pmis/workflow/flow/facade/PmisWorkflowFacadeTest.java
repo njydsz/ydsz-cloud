@@ -1,17 +1,17 @@
-package com.njydsz.pmis.workflow.flow.facade;
+package com.njydsz.pmis.workflow.facade;
 
-import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
-import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
-import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
-import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
-import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
-import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
-import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
+import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
+import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
+import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
+import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.service.FlowDefinitionService;
+import com.njydsz.pmis.workflow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.service.FlowTaskService;
 import com.njydsz.pmis.common.api.PageResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -730,10 +730,10 @@ class PmisWorkflowFacadeTest {
         when(taskService.listPendingByInstance(500L)).thenReturn(List.of());
 
         // 4) definitionService.getDetail 返回带 coordinate 的节点
-        com.njydsz.pmis.workflow.flow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.flow.entity.FlowNodeDO();
+        com.njydsz.pmis.workflow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.entity.FlowNodeDO();
         nT1.setNodeCode("t1");
         nT1.setCoordinate("{\"x\":220,\"y\":80,\"width\":100,\"height\":60}");
-        com.njydsz.pmis.workflow.flow.entity.FlowNodeDO nE1 = new com.njydsz.pmis.workflow.flow.entity.FlowNodeDO();
+        com.njydsz.pmis.workflow.entity.FlowNodeDO nE1 = new com.njydsz.pmis.workflow.entity.FlowNodeDO();
         nE1.setNodeCode("e1");
         nE1.setCoordinate("{\"x\":400,\"y\":80,\"width\":50,\"height\":50}");
         Map<String, Object> detail = new HashMap<>();
@@ -791,7 +791,7 @@ class PmisWorkflowFacadeTest {
         when(taskService.listPendingByInstance(600L)).thenReturn(List.of(task));
 
         // 节点无 coordinate
-        com.njydsz.pmis.workflow.flow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.flow.entity.FlowNodeDO();
+        com.njydsz.pmis.workflow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.entity.FlowNodeDO();
         nT1.setNodeCode("t1");
         nT1.setCoordinate(null);
         Map<String, Object> detail = new HashMap<>();
@@ -846,7 +846,7 @@ class PmisWorkflowFacadeTest {
         when(taskService.listPendingByInstance(800L)).thenReturn(List.of(task));
 
         // coordinate 是无效 JSON → 应被解析方法吞掉异常
-        com.njydsz.pmis.workflow.flow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.flow.entity.FlowNodeDO();
+        com.njydsz.pmis.workflow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.entity.FlowNodeDO();
         nT1.setNodeCode("t1");
         nT1.setCoordinate("not-valid-json{");
         Map<String, Object> detail = new HashMap<>();
