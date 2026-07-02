@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
@@ -29,6 +30,7 @@ import org.springframework.util.StringUtils;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -285,6 +287,94 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
         return true;
+    }
+
+    // ============================== P2-23: 实例多维分页查询 ==============================
+
+    @Override
+    public PageResult<FlowInstanceDO> page(String businessType, Long initiatorId, String flowStatus,
+                                           LocalDateTime startTime, LocalDateTime endTime,
+                                           Long tenantId, int pageNo, int pageSize) {
+        // P2-23: 真分页（SQL LIMIT/OFFSET），支持多维度过滤
+        int safePage = Math.max(1, pageNo);
+        int safeSize = pageSize > 0 ? pageSize : 20;
+        int offset = (safePage - 1) * safeSize;
+        List<FlowInstanceDO> list = instanceMapper.selectPage(
+                businessType, initiatorId, flowStatus, startTime, endTime, tenantId, offset, safeSize);
+        long total = instanceMapper.countPage(
+                businessType, initiatorId, flowStatus, startTime, endTime, tenantId);
+        return PageResult.of(list, total, safePage, safeSize);
+    }
+
+    // ============================== P2-24: 流程变量读写 ==============================
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getVariables(Long instanceId) {
+        // P2-24: 读取实例 variable JSON 并解析为 Map
+        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        if (instance == null || !StringUtils.hasText(instance.getVariable())) {
+            return Collections.emptyMap();
+        }
+        try {
+            Map<String, Object> map = JSON.parseObject(instance.getVariable(), Map.class);
+            return map == null ? Collections.emptyMap() : map;
+        } catch (Exception e) {
+            log.warn("[Flow] 解析 variable JSON 失败: instanceId={} err={}",
+                    instanceId, e.getMessage());
+            return Collections.emptyMap();
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @SuppressWarnings("unchecked")
+    public void setVariable(Long instanceId, String key, Object value) {
+        // P2-24: 合并写入单个变量并持久化
+        if (!StringUtils.hasText(key)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "变量名不能为空");
+        }
+        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        if (instance == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+        }
+        Map<String, Object> map = parseVariables(instance.getVariable());
+        map.put(key, value);
+        instanceMapper.updateVariable(instanceId, JSON.toJSONString(map));
+        log.info("[Flow] 设置变量: instanceId={} key={}", instanceId, key);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @SuppressWarnings("unchecked")
+    public void setVariables(Long instanceId, Map<String, Object> variables) {
+        // P2-24: 批量合并写入变量并持久化
+        if (variables == null || variables.isEmpty()) {
+            return;
+        }
+        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        if (instance == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "流程实例不存在: " + instanceId);
+        }
+        Map<String, Object> map = parseVariables(instance.getVariable());
+        map.putAll(variables);
+        instanceMapper.updateVariable(instanceId, JSON.toJSONString(map));
+        log.info("[Flow] 批量设置变量: instanceId={} keys={}", instanceId, variables.keySet());
+    }
+
+    /** 解析 variable JSON 为 Map，空值返回空 Map */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseVariables(String variable) {
+        if (!StringUtils.hasText(variable)) {
+            return new HashMap<>();
+        }
+        try {
+            Map<String, Object> map = JSON.parseObject(variable, Map.class);
+            return map == null ? new HashMap<>() : map;
+        } catch (Exception e) {
+            log.warn("[Flow] 解析 variable JSON 失败，返回空 Map: {}", e.getMessage());
+            return new HashMap<>();
+        }
     }
 
     // ============================== 内部方法 ==============================

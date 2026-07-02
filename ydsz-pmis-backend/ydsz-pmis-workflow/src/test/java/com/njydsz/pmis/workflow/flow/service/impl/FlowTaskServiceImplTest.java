@@ -92,6 +92,35 @@ class FlowTaskServiceImplTest {
     // ============== createTask ==============
 
     @Test
+    @DisplayName("getById P2-20: 委托给 taskMapper.selectById")
+    void testGetTaskDetail() {
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(1L);
+        task.setNodeCode("t1");
+        task.setNodeName("审批");
+        task.setTaskStatus(FlowTaskStatus.PENDING.name());
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowTaskDO result = service.getById(1L);
+        assertThat(result).isSameAs(task);
+        verify(taskMapper).selectById(1L);
+    }
+
+    @Test
+    @DisplayName("getById P2-20: taskId 为 null 时返回 null")
+    void testGetTaskDetailNullId() {
+        assertThat(service.getById(null)).isNull();
+        verify(taskMapper, never()).selectById(any());
+    }
+
+    @Test
+    @DisplayName("getById P2-20: 任务不存在返回 null")
+    void testGetTaskDetailNotFound() {
+        when(taskMapper.selectById(99L)).thenReturn(null);
+        assertThat(service.getById(99L)).isNull();
+    }
+
+    @Test
     @DisplayName("createTask 实例不存在应抛 NOT_FOUND")
     void testCreateTaskInstanceNotFound() {
         when(instanceMapper.selectById(1L)).thenReturn(null);

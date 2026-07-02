@@ -85,4 +85,58 @@
           AND deleted = 0
         ORDER BY start_at DESC
     </select>
+
+    <!-- P2-23: 实例多维分页查询 -->
+    <select id="selectPage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_instance
+        WHERE status = 'ENABLED'
+          AND deleted = 0
+          <if test="businessType != null and businessType != ''">
+            AND business_type = #{businessType}
+          </if>
+          <if test="initiatorId != null">
+            AND initiator_id = #{initiatorId}
+          </if>
+          <if test="flowStatus != null and flowStatus != ''">
+            AND flow_status = #{flowStatus}
+          </if>
+          <if test="startTime != null">
+            AND start_at &gt;= #{startTime}
+          </if>
+          <if test="endTime != null">
+            AND start_at &lt;= #{endTime}
+          </if>
+          <if test="tenantId != null">
+            AND tenant_id = #{tenantId}
+          </if>
+        ORDER BY start_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <!-- P2-23: 实例多维分页计数 -->
+    <select id="countPage" resultType="long">
+        SELECT COUNT(1)
+        FROM pmis_flow_instance
+        WHERE status = 'ENABLED'
+          AND deleted = 0
+          <if test="businessType != null and businessType != ''">
+            AND business_type = #{businessType}
+          </if>
+          <if test="initiatorId != null">
+            AND initiator_id = #{initiatorId}
+          </if>
+          <if test="flowStatus != null and flowStatus != ''">
+            AND flow_status = #{flowStatus}
+          </if>
+          <if test="startTime != null">
+            AND start_at &gt;= #{startTime}
+          </if>
+          <if test="endTime != null">
+            AND start_at &lt;= #{endTime}
+          </if>
+          <if test="tenantId != null">
+            AND tenant_id = #{tenantId}
+          </if>
+    </select>
 </mapper>

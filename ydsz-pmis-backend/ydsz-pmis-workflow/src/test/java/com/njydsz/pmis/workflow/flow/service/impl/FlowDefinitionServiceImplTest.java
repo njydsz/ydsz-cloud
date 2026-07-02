@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -22,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -280,5 +282,58 @@ class FlowDefinitionServiceImplTest {
     void testGetLatestByCode() {
         service.getLatestByCode("f1", 1L);
         verify(definitionMapper).selectLatestByCode("f1", 1L);
+    }
+
+    // ============== P2-21: 流程定义详情查询 ==============
+
+    @Test
+    @DisplayName("getDetail 定义不存在应返回 null")
+    void testGetDetailNotFound() {
+        when(definitionMapper.selectById(99L)).thenReturn(null);
+        assertThat(service.getDetail(99L)).isNull();
+        verify(nodeMapper, never()).selectByDefinitionId(any());
+        verify(skipMapper, never()).selectByDefinitionId(any());
+    }
+
+    @Test
+    @DisplayName("getDetail 应组装 definition + nodes + skips")
+    void testGetDetail() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(1L);
+        def.setFlowCode("f1");
+        def.setFlowName("F1");
+        when(definitionMapper.selectById(1L)).thenReturn(def);
+
+        FlowNodeDO n1 = new FlowNodeDO();
+        n1.setId(10L);
+        n1.setNodeCode("s1");
+        n1.setNodeName("开始");
+        FlowNodeDO n2 = new FlowNodeDO();
+        n2.setId(11L);
+        n2.setNodeCode("t1");
+        n2.setNodeName("审批");
+        when(nodeMapper.selectByDefinitionId(1L)).thenReturn(List.of(n1, n2));
+
+        FlowSkipDO sk1 = new FlowSkipDO();
+        sk1.setId(20L);
+        sk1.setNextNodeCode("t1");
+        when(skipMapper.selectByDefinitionId(1L)).thenReturn(List.of(sk1));
+
+        Map<String, Object> result = service.getDetail(1L);
+        assertThat(result).isNotNull();
+        assertThat(result.get("definition")).isSameAs(def);
+        @SuppressWarnings("unchecked")
+        List<FlowNodeDO> nodes = (List<FlowNodeDO>) result.get("nodes");
+        assertThat(nodes).hasSize(2);
+        assertThat(nodes.get(0).getNodeCode()).isEqualTo("s1");
+        assertThat(nodes.get(1).getNodeCode()).isEqualTo("t1");
+        @SuppressWarnings("unchecked")
+        List<FlowSkipDO> skips = (List<FlowSkipDO>) result.get("skips");
+        assertThat(skips).hasSize(1);
+        assertThat(skips.get(0).getNextNodeCode()).isEqualTo("t1");
+
+        verify(definitionMapper).selectById(1L);
+        verify(nodeMapper).selectByDefinitionId(1L);
+        verify(skipMapper).selectByDefinitionId(1L);
     }
 }

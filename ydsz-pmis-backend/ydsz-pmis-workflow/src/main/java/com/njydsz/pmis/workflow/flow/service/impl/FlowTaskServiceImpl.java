@@ -58,6 +58,15 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 创建任务 ==============================
 
     @Override
+    public FlowTaskDO getById(Long taskId) {
+        // P2-20: 任务详情查询，委托 BaseMapper 自带 selectById
+        if (taskId == null) {
+            return null;
+        }
+        return taskMapper.selectById(taskId);
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);

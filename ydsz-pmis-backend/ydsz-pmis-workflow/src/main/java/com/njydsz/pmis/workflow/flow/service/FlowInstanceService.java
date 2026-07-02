@@ -1,10 +1,13 @@
 package com.njydsz.pmis.workflow.flow.service;
 
+import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 流程实例 Service
@@ -67,4 +70,46 @@ public interface FlowInstanceService {
      * @return 是否撤回成功
      */
     boolean recall(Long instanceId, Long initiatorId);
+
+    /**
+     * P2-23: 实例多维分页查询
+     *
+     * @param businessType 业务类型（可选）
+     * @param initiatorId  发起人 ID（可选）
+     * @param flowStatus   流程状态（可选）
+     * @param startTime    开始时间下界（可选）
+     * @param endTime      开始时间上界（可选）
+     * @param tenantId     租户 ID（可选）
+     * @param pageNo       页码（从 1 开始）
+     * @param pageSize     每页大小
+     * @return 分页结果
+     */
+    PageResult<FlowInstanceDO> page(String businessType, Long initiatorId, String flowStatus,
+                                    LocalDateTime startTime, LocalDateTime endTime,
+                                    Long tenantId, int pageNo, int pageSize);
+
+    /**
+     * P2-24: 读取实例流程变量
+     *
+     * @param instanceId 实例 ID
+     * @return 变量 Map，无变量返回空 Map
+     */
+    Map<String, Object> getVariables(Long instanceId);
+
+    /**
+     * P2-24: 合并写入单个变量并持久化
+     *
+     * @param instanceId 实例 ID
+     * @param key        变量名
+     * @param value      变量值
+     */
+    void setVariable(Long instanceId, String key, Object value);
+
+    /**
+     * P2-24: 批量合并写入变量并持久化
+     *
+     * @param instanceId 实例 ID
+     * @param variables  变量 Map
+     */
+    void setVariables(Long instanceId, Map<String, Object> variables);
 }

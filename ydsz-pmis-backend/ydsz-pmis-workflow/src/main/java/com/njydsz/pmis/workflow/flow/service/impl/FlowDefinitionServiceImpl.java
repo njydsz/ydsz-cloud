@@ -23,7 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 流程定义 Service 实现
@@ -217,5 +219,21 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 .eq(FlowDefinitionDO::getDeleted, 0)
                 .orderByDesc(FlowDefinitionDO::getCreatedAt);
         return definitionMapper.selectPage(page, w).getRecords();
+    }
+
+    @Override
+    public Map<String, Object> getDetail(Long definitionId) {
+        // P2-21: 组装 definition + nodes + skips
+        FlowDefinitionDO definition = definitionMapper.selectById(definitionId);
+        if (definition == null) {
+            return null;
+        }
+        List<FlowNodeDO> nodes = nodeMapper.selectByDefinitionId(definitionId);
+        List<FlowSkipDO> skips = skipMapper.selectByDefinitionId(definitionId);
+        Map<String, Object> result = new HashMap<>();
+        result.put("definition", definition);
+        result.put("nodes", nodes);
+        result.put("skips", skips);
+        return result;
     }
 }

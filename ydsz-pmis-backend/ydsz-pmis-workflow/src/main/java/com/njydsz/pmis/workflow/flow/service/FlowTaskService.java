@@ -23,6 +23,14 @@ public interface FlowTaskService {
     Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables);
 
     /**
+     * P2-20: 按 ID 查任务（任务详情查询）
+     *
+     * @param taskId 任务 ID
+     * @return 任务 DO，不存在返回 null
+     */
+    FlowTaskDO getById(Long taskId);
+
+    /**
      * 签收
      */
     void claim(Long taskId, Long userId);

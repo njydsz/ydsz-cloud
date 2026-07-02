@@ -9,6 +9,7 @@ import com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,8 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     private final FlowInstanceService instanceService;
     private final FlowTaskService taskService;
     private final FlowAuditLogMapper auditLogMapper;
+    /** P2-22: 流程图查询需要查询流程定义详情 */
+    private final FlowDefinitionService definitionService;
 
     @Override
     public String startProcess(FlowStartProcessDTO dto) {
@@ -142,6 +145,81 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     @Override
     public String engineType() {
         return "PMIS";
+    }
+
+    // ============================== P2-20: 任务详情查询 ==============================
+
+    @Override
+    public Map<String, Object> getTaskDetail(Long taskId) {
+        // P2-20: 调用 taskService.getById 获取任务，再用 toView 转换为视图
+        FlowTaskDO task = taskService.getById(taskId);
+        if (task == null) {
+            return null;
+        }
+        FlowInstanceViewDTO.FlowTaskViewDTO view = taskService.toView(task);
+        return taskViewToMap(view);
+    }
+
+    // ============================== P2-22: 流程图查询（高亮当前节点） ==============================
+
+    /**
+     * P2-22: 流程图查询，高亮当前节点
+     *
+     * @param instanceId 实例 ID（字符串形式）
+     * @return 包含 definition / nodes / skips 的 Map，nodes 中每个节点带 active 标记
+     */
+    public Map<String, Object> getDiagram(String instanceId) {
+        Long id = Long.parseLong(instanceId);
+        FlowInstanceDO instance = instanceService.getById(id);
+        if (instance == null) {
+            return null;
+        }
+        // 通过 definitionService.getDetail 组装 definition + nodes + skips
+        Map<String, Object> detail = definitionService.getDetail(instance.getDefinitionId());
+        if (detail == null) {
+            return null;
+        }
+        String currentNodeCode = instance.getCurrentNodeCode();
+        // 在每个 node 上标注 active: true/false（currentNodeCode 匹配则为 active）
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> nodes = (List<Map<String, Object>>) detail.get("nodes");
+        if (nodes != null) {
+            for (Map<String, Object> node : nodes) {
+                boolean active = currentNodeCode != null
+                        && currentNodeCode.equals(node.get("nodeCode"));
+                node.put("active", active);
+            }
+        }
+        // 附带实例当前状态信息
+        Map<String, Object> result = new HashMap<>(detail);
+        result.put("instanceId", instance.getId());
+        result.put("flowStatus", instance.getFlowStatus());
+        result.put("currentNodeCode", currentNodeCode);
+        result.put("currentNodeName", instance.getCurrentNodeName());
+        return result;
+    }
+
+    // ============================== 私有辅助 ==============================
+
+    /** 将 FlowTaskViewDTO 转换为 Map */
+    private Map<String, Object> taskViewToMap(FlowInstanceViewDTO.FlowTaskViewDTO v) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", v.getId());
+        m.put("nodeCode", v.getNodeCode());
+        m.put("nodeName", v.getNodeName());
+        m.put("nodeType", v.getNodeType());
+        m.put("assigneeType", v.getAssigneeType());
+        m.put("assigneeId", v.getAssigneeId());
+        m.put("assigneeName", v.getAssigneeName());
+        m.put("performType", v.getPerformType());
+        m.put("taskStatus", v.getTaskStatus());
+        m.put("comment", v.getComment());
+        m.put("createAt", v.getCreateAt());
+        m.put("claimAt", v.getClaimAt());
+        m.put("finishAt", v.getFinishAt());
+        m.put("durationMs", v.getDurationMs());
+        m.put("dueAt", v.getDueAt());
+        return m;
     }
 
     private Map<String, Object> toMap(FlowTaskDO t) {

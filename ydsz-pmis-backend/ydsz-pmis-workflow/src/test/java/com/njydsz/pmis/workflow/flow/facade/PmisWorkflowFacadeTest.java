@@ -7,6 +7,7 @@ import com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import com.njydsz.pmis.common.api.PageResult;
@@ -46,6 +47,7 @@ class PmisWorkflowFacadeTest {
     private FlowInstanceService instanceService;
     private FlowTaskService taskService;
     private FlowAuditLogMapper auditLogMapper;
+    private FlowDefinitionService definitionService;
     private PmisWorkflowFacade facade;
 
     @BeforeEach
@@ -53,7 +55,8 @@ class PmisWorkflowFacadeTest {
         instanceService = mock(FlowInstanceService.class);
         taskService = mock(FlowTaskService.class);
         auditLogMapper = mock(FlowAuditLogMapper.class);
-        facade = new PmisWorkflowFacade(instanceService, taskService, auditLogMapper);
+        definitionService = mock(FlowDefinitionService.class);
+        facade = new PmisWorkflowFacade(instanceService, taskService, auditLogMapper, definitionService);
     }
 
     @Test
@@ -327,5 +330,110 @@ class PmisWorkflowFacadeTest {
         when(auditLogMapper.selectByInstanceId(99L)).thenReturn(List.of());
         List<Map<String, Object>> result = facade.listAuditTrail("99");
         assertThat(result).isEmpty();
+    }
+
+    // ============== P2-20: 任务详情查询 ==============
+
+    @Test
+    @DisplayName("getTaskDetail 任务不存在应返回 null")
+    void testGetTaskDetailNotFound() {
+        when(taskService.getById(99L)).thenReturn(null);
+        assertThat(facade.getTaskDetail(99L)).isNull();
+    }
+
+    @Test
+    @DisplayName("getTaskDetail 应返回任务详情 Map")
+    void testGetTaskDetail() {
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(1L);
+        task.setNodeCode("t1");
+        task.setNodeName("审批");
+        task.setTaskStatus("PENDING");
+        task.setAssigneeId("1001");
+        when(taskService.getById(1L)).thenReturn(task);
+
+        FlowInstanceViewDTO.FlowTaskViewDTO view = FlowInstanceViewDTO.FlowTaskViewDTO.builder()
+                .id(1L)
+                .nodeCode("t1")
+                .nodeName("审批")
+                .taskStatus("PENDING")
+                .assigneeId("1001")
+                .build();
+        when(taskService.toView(task)).thenReturn(view);
+
+        Map<String, Object> result = facade.getTaskDetail(1L);
+        assertThat(result).isNotNull();
+        assertThat(result.get("id")).isEqualTo(1L);
+        assertThat(result.get("nodeCode")).isEqualTo("t1");
+        assertThat(result.get("nodeName")).isEqualTo("审批");
+        assertThat(result.get("taskStatus")).isEqualTo("PENDING");
+        assertThat(result.get("assigneeId")).isEqualTo("1001");
+    }
+
+    // ============== P2-22: 流程图查询（高亮当前节点） ==============
+
+    @Test
+    @DisplayName("getDiagram 实例不存在应返回 null")
+    void testGetDiagramInstanceNotFound() {
+        when(instanceService.getById(99L)).thenReturn(null);
+        assertThat(facade.getDiagram("99")).isNull();
+    }
+
+    @Test
+    @DisplayName("getDiagram 应返回带 active 标记的节点列表")
+    void testGetDiagram() {
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(100L);
+        instance.setDefinitionId(1L);
+        instance.setFlowStatus("RUNNING");
+        instance.setCurrentNodeCode("t1");
+        instance.setCurrentNodeName("审批");
+        when(instanceService.getById(100L)).thenReturn(instance);
+
+        // 模拟 definitionService.getDetail 返回 definition + nodes + skips
+        Map<String, Object> node1 = new HashMap<>();
+        node1.put("nodeCode", "s1");
+        node1.put("nodeName", "开始");
+        Map<String, Object> node2 = new HashMap<>();
+        node2.put("nodeCode", "t1");
+        node2.put("nodeName", "审批");
+        Map<String, Object> node3 = new HashMap<>();
+        node3.put("nodeCode", "e1");
+        node3.put("nodeName", "结束");
+
+        Map<String, Object> detail = new HashMap<>();
+        detail.put("definition", new Object());
+        detail.put("nodes", new java.util.ArrayList<>(List.of(node1, node2, node3)));
+        detail.put("skips", List.of());
+        when(definitionService.getDetail(1L)).thenReturn(detail);
+
+        Map<String, Object> result = facade.getDiagram("100");
+        assertThat(result).isNotNull();
+        assertThat(result.get("instanceId")).isEqualTo(100L);
+        assertThat(result.get("flowStatus")).isEqualTo("RUNNING");
+        assertThat(result.get("currentNodeCode")).isEqualTo("t1");
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> nodes = (List<Map<String, Object>>) result.get("nodes");
+        assertThat(nodes).hasSize(3);
+        // s1 非当前节点 → active=false
+        assertThat(nodes.get(0).get("active")).isEqualTo(false);
+        // t1 是当前节点 → active=true
+        assertThat(nodes.get(1).get("active")).isEqualTo(true);
+        // e1 非当前节点 → active=false
+        assertThat(nodes.get(2).get("active")).isEqualTo(false);
+    }
+
+    @Test
+    @DisplayName("getDiagram 定义不存在（getDetail 返回 null）应返回 null")
+    void testGetDiagramDefinitionNotFound() {
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(100L);
+        instance.setDefinitionId(1L);
+        instance.setCurrentNodeCode("t1");
+        when(instanceService.getById(100L)).thenReturn(instance);
+        when(definitionService.getDetail(1L)).thenReturn(null);
+
+        assertThat(facade.getDiagram("100")).isNull();
     }
 }

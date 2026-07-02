@@ -112,4 +112,20 @@ public interface WorkflowFacade {
      * 引擎类型：PMIS（自研）
      */
     String engineType();
+
+    /**
+     * P2-20: 任务详情查询
+     *
+     * @param taskId 任务 ID
+     * @return 任务详情 Map（含办理人、状态、节点等），不存在返回 null
+     */
+    Map<String, Object> getTaskDetail(Long taskId);
+
+    /**
+     * P2-22: 流程图查询（高亮当前节点）
+     *
+     * @param instanceId 实例 ID（字符串形式）
+     * @return 包含 definition / nodes / skips 的 Map，nodes 中每个节点带 active 标记
+     */
+    Map<String, Object> getDiagram(String instanceId);
 }

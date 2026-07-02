@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.flow.service.impl;
 
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
@@ -20,8 +21,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -631,5 +634,202 @@ class FlowInstanceServiceImplTest {
         verify(taskService).cancelByInstance(1L, FlowTaskStatus.CANCELLED.name());
         // 重新推进
         verify(advancer, times(1)).start(1L);
+    }
+
+    // ============== P2-23: 实例多维分页查询 ==============
+
+    @Test
+    @DisplayName("page P2-23: 多维度过滤 + 真分页 offset=(page-1)*size")
+    void testPageMultiDimension() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowCode("f1");
+        LocalDateTime start = LocalDateTime.of(2026, 1, 1, 0, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 6, 30, 23, 59);
+        // 模拟第 2 页、每页 10 条：offset = (2-1)*10 = 10
+        when(instanceMapper.selectPage(eq("initiation"), eq(7L), eq("RUNNING"),
+                eq(start), eq(end), eq(1L), eq(10), eq(10)))
+                .thenReturn(List.of(ins));
+        when(instanceMapper.countPage(eq("initiation"), eq(7L), eq("RUNNING"),
+                eq(start), eq(end), eq(1L))).thenReturn(25L);
+
+        PageResult<FlowInstanceDO> page = service.page(
+                "initiation", 7L, "RUNNING", start, end, 1L, 2, 10);
+        assertThat(page.getList()).hasSize(1);
+        assertThat(page.getTotal()).isEqualTo(25L);
+        assertThat(page.getPage()).isEqualTo(2);
+        assertThat(page.getSize()).isEqualTo(10);
+        // 总页数 = (25 + 10 - 1) / 10 = 3
+        assertThat(page.getPages()).isEqualTo(3L);
+        verify(instanceMapper).selectPage("initiation", 7L, "RUNNING",
+                start, end, 1L, 10, 10);
+        verify(instanceMapper).countPage("initiation", 7L, "RUNNING",
+                start, end, 1L);
+    }
+
+    @Test
+    @DisplayName("page P2-23: 非法 pageNo/pageSize 兜底（page<1→1, size<=0→20）")
+    void testPageMultiDimensionInvalidPaging() {
+        when(instanceMapper.selectPage(any(), any(), any(), any(), any(), any(),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt()))
+                .thenReturn(Collections.emptyList());
+        when(instanceMapper.countPage(any(), any(), any(), any(), any(), any())).thenReturn(0L);
+
+        PageResult<FlowInstanceDO> page = service.page(
+                null, null, null, null, null, null, -1, 0);
+        // page<1 → safePage=1, size<=0 → safeSize=20, offset=0
+        assertThat(page.getPage()).isEqualTo(1);
+        assertThat(page.getSize()).isEqualTo(20);
+        verify(instanceMapper).selectPage(null, null, null, null, null, null, 0, 20);
+    }
+
+    @Test
+    @DisplayName("page P2-23: 全空过滤条件也能查询")
+    void testPageMultiDimensionAllNullFilters() {
+        when(instanceMapper.selectPage(any(), any(), any(), any(), any(), any(),
+                org.mockito.ArgumentMatchers.anyInt(), org.mockito.ArgumentMatchers.anyInt()))
+                .thenReturn(Collections.emptyList());
+        when(instanceMapper.countPage(any(), any(), any(), any(), any(), any())).thenReturn(0L);
+
+        PageResult<FlowInstanceDO> page = service.page(
+                null, null, null, null, null, null, 1, 20);
+        assertThat(page.getList()).isEmpty();
+        assertThat(page.getTotal()).isEqualTo(0L);
+    }
+
+    // ============== P2-24: 流程变量读写 ==============
+
+    @Test
+    @DisplayName("getVariables P2-24: 解析 variable JSON 返回 Map")
+    void testGetVariables() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setVariable("{\"amount\":1000,\"initiator\":\"张三\"}");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        Map<String, Object> vars = service.getVariables(1L);
+        assertThat(vars).isNotEmpty();
+        assertThat(vars.get("amount")).isEqualTo(1000);
+        assertThat(vars.get("initiator")).isEqualTo("张三");
+    }
+
+    @Test
+    @DisplayName("getVariables P2-24: 实例不存在或无变量返回空 Map")
+    void testGetVariablesEmpty() {
+        // 实例不存在
+        when(instanceMapper.selectById(99L)).thenReturn(null);
+        assertThat(service.getVariables(99L)).isEmpty();
+
+        // variable 为 null
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setVariable(null);
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+        assertThat(service.getVariables(1L)).isEmpty();
+
+        // variable 为空字符串
+        ins.setVariable("");
+        assertThat(service.getVariables(1L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getVariables P2-24: JSON 解析失败返回空 Map")
+    void testGetVariablesBadJson() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setVariable("not-a-json");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        assertThat(service.getVariables(1L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("setVariable P2-24: 合并写入单个变量并持久化")
+    void testSetVariable() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setVariable("{\"k1\":\"v1\"}");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        service.setVariable(1L, "k2", "v2");
+
+        ArgumentCaptor<String> varCaptor = ArgumentCaptor.forClass(String.class);
+        verify(instanceMapper).updateVariable(eq(1L), varCaptor.capture());
+        String saved = varCaptor.getValue();
+        // 原有变量应保留
+        assertThat(saved).contains("\"k1\":\"v1\"");
+        // 新变量应写入
+        assertThat(saved).contains("\"k2\":\"v2\"");
+    }
+
+    @Test
+    @DisplayName("setVariable P2-24: 无原有变量时也能写入")
+    void testSetVariableNoExisting() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setVariable(null);
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        service.setVariable(1L, "k1", "v1");
+
+        ArgumentCaptor<String> varCaptor = ArgumentCaptor.forClass(String.class);
+        verify(instanceMapper).updateVariable(eq(1L), varCaptor.capture());
+        assertThat(varCaptor.getValue()).contains("\"k1\":\"v1\"");
+    }
+
+    @Test
+    @DisplayName("setVariable P2-24: key 为空抛 BAD_REQUEST")
+    void testSetVariableEmptyKey() {
+        assertThatThrownBy(() -> service.setVariable(1L, "", "v"))
+                .isInstanceOf(BizException.class);
+        assertThatThrownBy(() -> service.setVariable(1L, null, "v"))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    @DisplayName("setVariable P2-24: 实例不存在抛 NOT_FOUND")
+    void testSetVariableNotFound() {
+        when(instanceMapper.selectById(99L)).thenReturn(null);
+        assertThatThrownBy(() -> service.setVariable(99L, "k", "v"))
+                .isInstanceOf(BizException.class);
+    }
+
+    @Test
+    @DisplayName("setVariables P2-24: 批量合并写入并持久化")
+    void testSetVariables() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setVariable("{\"k1\":\"v1\"}");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        Map<String, Object> newVars = new HashMap<>();
+        newVars.put("k2", "v2");
+        newVars.put("k3", "v3");
+        service.setVariables(1L, newVars);
+
+        ArgumentCaptor<String> varCaptor = ArgumentCaptor.forClass(String.class);
+        verify(instanceMapper).updateVariable(eq(1L), varCaptor.capture());
+        String saved = varCaptor.getValue();
+        // 原有变量应保留
+        assertThat(saved).contains("\"k1\":\"v1\"");
+        // 新变量应写入
+        assertThat(saved).contains("\"k2\":\"v2\"");
+        assertThat(saved).contains("\"k3\":\"v3\"");
+    }
+
+    @Test
+    @DisplayName("setVariables P2-24: 空 Map 时不调用 updateVariable")
+    void testSetVariablesEmpty() {
+        service.setVariables(1L, Collections.emptyMap());
+        service.setVariables(1L, null);
+        verify(instanceMapper, never()).updateVariable(any(), any());
+    }
+
+    @Test
+    @DisplayName("setVariables P2-24: 实例不存在抛 NOT_FOUND")
+    void testSetVariablesNotFound() {
+        when(instanceMapper.selectById(99L)).thenReturn(null);
+        assertThatThrownBy(() -> service.setVariables(99L, Map.of("k", "v")))
+                .isInstanceOf(BizException.class);
     }
 }

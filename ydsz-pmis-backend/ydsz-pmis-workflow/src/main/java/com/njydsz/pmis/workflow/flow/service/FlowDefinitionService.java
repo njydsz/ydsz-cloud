@@ -4,6 +4,7 @@ import com.njydsz.pmis.workflow.flow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 流程定义 Service
@@ -46,4 +47,12 @@ public interface FlowDefinitionService {
      * 分页查询
      */
     List<FlowDefinitionDO> page(int pageNo, int pageSize, String category, String flowCode);
+
+    /**
+     * P2-21: 流程定义详情查询（含节点 + 跳转）
+     *
+     * @param definitionId 流程定义 ID
+     * @return Map 包含 definition / nodes / skips 三个 key；定义不存在返回 null
+     */
+    Map<String, Object> getDetail(Long definitionId);
 }

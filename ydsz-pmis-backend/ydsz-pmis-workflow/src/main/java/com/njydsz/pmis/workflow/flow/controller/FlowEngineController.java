@@ -1,17 +1,22 @@
 package com.njydsz.pmis.workflow.flow.controller;
 
+import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.WorkflowFacade;
 import com.njydsz.pmis.workflow.flow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
+import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +39,8 @@ public class FlowEngineController {
     private final WorkflowFacade workflowFacade;
     /** 流程定义服务 */
     private final FlowDefinitionService definitionService;
+    /** 流程实例服务（P2-23/P2-24 分页查询与变量读写） */
+    private final FlowInstanceService instanceService;
 
     // ============== 引擎信息 ==============
 
@@ -118,6 +125,17 @@ public class FlowEngineController {
                                           @RequestParam(required = false) String category,
                                           @RequestParam(required = false) String flowCode) {
         return Result.ok(definitionService.page(pageNo, pageSize, category, flowCode));
+    }
+
+    /**
+     * P2-21: 流程定义详情查询（含节点 + 跳转）
+     *
+     * @param id 流程定义 ID
+     * @return 统一响应结果，包含 definition / nodes / skips
+     */
+    @GetMapping("/definition/{id}")
+    public Result<Map<String, Object>> getDefinitionDetail(@PathVariable Long id) {
+        return Result.ok(definitionService.getDetail(id));
     }
 
     // ============== 流程实例 ==============
@@ -206,7 +224,82 @@ public class FlowEngineController {
         return Result.ok(workflowFacade.listAuditTrail(id));
     }
 
+    /**
+     * P2-22: 流程图查询（高亮当前节点）
+     *
+     * @param id 流程实例 ID
+     * @return 统一响应结果，包含 definition / nodes / skips，nodes 中每个节点带 active 标记
+     */
+    @GetMapping("/instance/{id}/diagram")
+    public Result<Map<String, Object>> diagram(@PathVariable String id) {
+        return Result.ok(workflowFacade.getDiagram(id));
+    }
+
+    /**
+     * P2-23: 实例多维分页查询
+     *
+     * @param pageNo       页码
+     * @param pageSize     每页大小
+     * @param businessType 业务类型（可选）
+     * @param initiatorId  发起人 ID（可选）
+     * @param flowStatus   流程状态（可选）
+     * @param startTime    开始时间下界（可选）
+     * @param endTime      开始时间上界（可选）
+     * @param tenantId     租户 ID（可选）
+     * @return 统一响应结果，包含分页实例列表
+     */
+    @GetMapping("/instance/page")
+    public Result<PageResult<FlowInstanceDO>> instancePage(
+            @RequestParam(defaultValue = "1") int pageNo,
+            @RequestParam(defaultValue = "20") int pageSize,
+            @RequestParam(required = false) String businessType,
+            @RequestParam(required = false) Long initiatorId,
+            @RequestParam(required = false) String flowStatus,
+            @RequestParam(required = false) LocalDateTime startTime,
+            @RequestParam(required = false) LocalDateTime endTime,
+            @RequestParam(required = false) Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(instanceService.page(businessType, initiatorId, flowStatus,
+                startTime, endTime, tid, pageNo, pageSize));
+    }
+
+    /**
+     * P2-24: 读取流程变量
+     *
+     * @param id 流程实例 ID
+     * @return 统一响应结果，包含变量 Map
+     */
+    @GetMapping("/instance/{id}/variables")
+    public Result<Map<String, Object>> getVariables(@PathVariable Long id) {
+        return Result.ok(instanceService.getVariables(id));
+    }
+
+    /**
+     * P2-24: 批量写入流程变量
+     *
+     * @param id        流程实例 ID
+     * @param variables 变量 Map
+     * @return 统一响应结果
+     */
+    @PostMapping("/instance/{id}/variables")
+    public Result<Void> setVariables(@PathVariable Long id,
+                                     @RequestBody Map<String, Object> variables) {
+        instanceService.setVariables(id, variables);
+        return Result.ok();
+    }
+
     // ============== 任务操作 ==============
+
+    /**
+     * P2-20: 任务详情查询
+     *
+     * @param taskId 任务 ID
+     * @return 统一响应结果，包含任务详情
+     */
+    @GetMapping("/task/{taskId}")
+    public Result<Map<String, Object>> taskDetail(@PathVariable Long taskId) {
+        return Result.ok(workflowFacade.getTaskDetail(taskId));
+    }
 
     /**
      * 签收任务
