@@ -575,7 +575,8 @@ public class BpmnXmlParser {
             case "startevent" -> FlowNodeType.START.getCode();
             case "endevent" -> FlowNodeType.END.getCode();
             case "usertask", "servicetask", "scripttask", "manualtask",
-                 "receivetask", "callactivity", "subprocess" -> FlowNodeType.APPROVAL.getCode();
+                 "receivetask" -> FlowNodeType.APPROVAL.getCode();
+            case "callactivity", "subprocess" -> FlowNodeType.SUBPROCESS.getCode();
             case "exclusivegateway", "eventbasedgateway", "complexgateway" -> FlowNodeType.CONDITION.getCode();
             case "parallelgateway" -> FlowNodeType.PARALLEL.getCode();
             case "inclusivegateway" -> FlowNodeType.INCLUSIVE.getCode();

@@ -16,6 +16,7 @@ import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
+import com.njydsz.pmis.workflow.flow.service.FlowSubProcessService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -60,6 +61,7 @@ class FlowInstanceServiceImplTest {
     private FlowTaskMapper taskMapper;
     private List<FlowEventListener> eventListeners;
     private ApplicationEventPublisher eventPublisher;
+    private FlowSubProcessService subProcessService;
     private FlowInstanceServiceImpl service;
 
     @BeforeEach
@@ -72,8 +74,10 @@ class FlowInstanceServiceImplTest {
         eventListeners = new ArrayList<>();
         // P2-35: 注入 ApplicationEventPublisher mock
         eventPublisher = mock(ApplicationEventPublisher.class);
+        // P1-3: 注入 FlowSubProcessService mock
+        subProcessService = mock(FlowSubProcessService.class);
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
-                advancer, taskService, taskMapper, eventListeners, eventPublisher);
+                advancer, taskService, taskMapper, eventListeners, eventPublisher, subProcessService);
     }
 
     @Test

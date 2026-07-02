@@ -122,6 +122,31 @@ public interface FlowTaskService {
     void countersignAfter(FlowTaskOperateDTO dto);
 
     /**
+     * GAP-P1: 减签 — 从会签任务中移除指定审批人
+     *
+     * <p>对标钉钉/飞书的"减签"功能。从 pmis_flow_user 中删除指定用户，
+     * 并更新任务的 approveCount（应到人数）。
+     *
+     * @param dto 任务操作参数（需含 taskId + userId 为被减签人）
+     */
+    void countersignRemove(FlowTaskOperateDTO dto);
+
+    /**
+     * GAP-P2: 已阅 — 标记任务已阅（不改变任务状态，仅记录审计日志）
+     *
+     * @param taskId 任务 ID
+     * @param userId 操作人 ID
+     */
+    void markRead(Long taskId, Long userId);
+
+    /**
+     * GAP-P2: 沟通 — 在任务下添加沟通评论（不改变任务状态）
+     *
+     * @param dto 任务操作参数（需含 taskId + userId + comment）
+     */
+    void communicate(FlowTaskOperateDTO dto);
+
+    /**
      * P1-9: 催办 — 通知当前节点所有待办处理人
      *
      * @return 被催办人 ID 列表

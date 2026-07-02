@@ -95,6 +95,16 @@ public class OperationLogServiceImpl {
     }
 
     /**
+     * 根据 ID 查询操作日志
+     *
+     * @param id 日志 ID
+     * @return 操作日志实体，不存在返回 null
+     */
+    public OperationLogDO getById(Long id) {
+        return operationLogMapper.selectById(id);
+    }
+
+    /**
      * 游标分页查询操作日志（P2-8 深翻优化）
      *
      * <p>使用 keyset pagination 替代 OFFSET，深翻性能 O(1) 不随页码增长。

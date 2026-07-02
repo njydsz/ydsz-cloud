@@ -2,6 +2,7 @@ package com.njydsz.pmis.audit.controller;
 
 import com.njydsz.pmis.audit.entity.OperationLogDO;
 import com.njydsz.pmis.audit.service.OperationLogServiceImpl;
+import com.njydsz.pmis.audit.util.DiffCalculator;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -145,5 +147,20 @@ public class OperationLogController {
     @PostMapping("/clean")
     public Result<Integer> clean(@RequestParam(defaultValue = "90") int days) {
         return Result.ok(service.cleanBefore(days));
+    }
+
+    /**
+     * 查询操作日志的字段级变更差异
+     *
+     * @param id 操作日志 ID
+     * @return 字段差异列表
+     */
+    @Operation(summary = "查询变更差异")
+    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
+    @GetMapping("/{id}/diff")
+    public List<DiffCalculator.FieldDiff> getDiff(@PathVariable Long id) {
+        OperationLogDO log = service.getById(id);
+        if (log == null) return List.of();
+        return DiffCalculator.calculateDiff(log.getBeforeData(), log.getAfterData());
     }
 }

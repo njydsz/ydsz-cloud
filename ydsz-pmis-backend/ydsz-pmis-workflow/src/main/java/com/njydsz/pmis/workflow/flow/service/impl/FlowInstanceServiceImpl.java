@@ -22,6 +22,7 @@ import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.flow.service.FlowSubProcessService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -58,6 +59,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final List<FlowEventListener> eventListeners;
     /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
     private final ApplicationEventPublisher eventPublisher;
+    /** P1-3: 子流程服务（处理 callActivity 子流程启动） */
+    private final FlowSubProcessService subProcessService;
+    /** GAP-P1: 抄送服务（CC 节点处理） */
+    private final com.njydsz.pmis.workflow.flow.service.FlowCcService ccService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -108,9 +113,15 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instance.setFlowStatus(FlowInstanceStatus.RUNNING.name());
         instance.setActivityStatus(1);
         instance.setStartAt(LocalDateTime.now());
-        instance.setVariable(dto.getVariables() == null
-                ? null
-                : JSON.toJSONString(dto.getVariables()));
+        // GAP-P2: 发起人自选审批人 — 将 nodeAssignees 合并到 variables 中
+        Map<String, Object> mergedVars = dto.getVariables() == null
+                ? new HashMap<>() : new HashMap<>(dto.getVariables());
+        if (dto.getNodeAssignees() != null && !dto.getNodeAssignees().isEmpty()) {
+            for (Map.Entry<String, List<Long>> entry : dto.getNodeAssignees().entrySet()) {
+                mergedVars.put("_selfSelect_" + entry.getKey(), entry.getValue());
+            }
+        }
+        instance.setVariable(mergedVars.isEmpty() ? null : JSON.toJSONString(mergedVars));
         instance.setTenantId(tenantId);
         instance.setProviderTraceId(dto.getProviderTraceId());
         // P1-3: 子流程场景：填充父实例信息
@@ -119,19 +130,16 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instanceMapper.insert(instance);
         Long instanceId = instance.getId();
 
-        // P2-38: 发起人自选审批人 — 将 _selfSelect_<nodeCode> 变量写入流程变量供后续节点展开
-        // 变量已在 instance.setVariable 中序列化为 JSON，此处仅记录日志便于排查
-        if (dto.getVariables() != null) {
-            for (String key : dto.getVariables().keySet()) {
-                if (key != null && key.startsWith("_selfSelect_")) {
-                    log.info("[Flow] 发起人自选审批人变量: instanceId={} key={} value={}",
-                            instanceId, key, dto.getVariables().get(key));
-                }
+        // P2-38: 发起人自选审批人 — _selfSelect_<nodeCode> 变量已合并到 mergedVars
+        for (String key : mergedVars.keySet()) {
+            if (key != null && key.startsWith("_selfSelect_")) {
+                log.info("[Flow] 发起人自选审批人变量: instanceId={} key={} value={}",
+                        instanceId, key, mergedVars.get(key));
             }
         }
 
         // P0-2: 触发 onInstanceStart 事件
-        fireInstanceStart(instanceId, dto.getVariables());
+        fireInstanceStart(instanceId, mergedVars);
 
         // 3. 引擎推进：开始节点 → 下一节点
         try {
@@ -453,15 +461,31 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         for (FlowNodeDO node : nextNodes) {
             if (node.getNodeType().equals(FlowNodeType.CC.getCode())) {
-                log.info("[Flow] 抄送节点跳过: instanceId={} node={}", instanceId, node.getNodeCode());
+                // GAP-P1: 抄送节点 — 展开接收人并写入 pmis_flow_cc，然后自动推进到下一节点
+                try {
+                    ccService.handleCcNode(instanceId, node, variables);
+                    log.info("[Flow] 抄送节点处理完成: instanceId={} node={}", instanceId, node.getNodeCode());
+                } catch (Exception e) {
+                    log.warn("[Flow] 抄送节点处理失败，跳过继续: instanceId={} node={} err={}",
+                            instanceId, node.getNodeCode(), e.getMessage());
+                }
+                // 抄送节点是穿透节点：自动推进到下游
+                FlowInstanceDO ccInstance = instanceMapper.selectById(instanceId);
+                if (ccInstance != null) {
+                    List<FlowNodeDO> ccNext = advancer.advance(ccInstance, node.getNodeCode(),
+                            "PASS", null, variables);
+                    if (!ccNext.isEmpty()) {
+                        generateTasksForNodes(instanceId, ccNext, variables);
+                    }
+                }
                 continue;
             }
             if (node.getNodeType().equals(FlowNodeType.END.getCode())) {
                 complete(instanceId, node.getNodeCode());
                 return;
             }
-            // P1-3: callActivity 节点触发子流程
-            if (isCallActivity(node)) {
+            // P1-3 / fix-1: SUBPROCESS 节点或 ext 中含 callActivityFlowCode 的节点触发子流程
+            if (node.getNodeType().equals(FlowNodeType.SUBPROCESS.getCode()) || isCallActivity(node)) {
                 try {
                     FlowInstanceDO instance = instanceMapper.selectById(instanceId);
                     subProcessService.startSubProcess(instance, node, variables);

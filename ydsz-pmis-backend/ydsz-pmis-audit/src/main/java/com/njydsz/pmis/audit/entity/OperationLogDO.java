@@ -66,6 +66,12 @@ public class OperationLogDO implements Serializable {
     /** 响应 JSON */
     private String responseJson;
 
+    /** 变更前数据（JSON） */
+    private String beforeData;
+
+    /** 变更后数据（JSON） */
+    private String afterData;
+
     /** 状态: SUCCESS / FAILED */
     private String status;
 

@@ -7,6 +7,7 @@ import com.njydsz.pmis.workflow.flow.engine.FlowAssigneeResolver;
 import com.njydsz.pmis.workflow.flow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.flow.engine.FlowUrgeLimiter;
 import com.njydsz.pmis.workflow.flow.engine.FlowVariableStrategy;
+import com.njydsz.pmis.workflow.flow.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
@@ -16,11 +17,13 @@ import com.njydsz.pmis.workflow.flow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.flow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
+import com.njydsz.pmis.workflow.flow.mapper.FlowDelegateLogMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowUserMapper;
+import com.njydsz.pmis.workflow.flow.service.FlowDelegateAuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -74,6 +77,8 @@ class FlowTaskServiceImplTest {
     private List<FlowEventListener> eventListeners;
     private ApplicationEventPublisher eventPublisher;
     private FlowUrgeLimiter urgeLimiter;
+    private FlowDelegateAuthService delegateAuthService;
+    private FlowDelegateLogMapper delegateLogMapper;
     private FlowTaskServiceImpl service;
 
     @BeforeEach
@@ -95,10 +100,13 @@ class FlowTaskServiceImplTest {
         // P0-2: 催办限流器 mock（默认放行）
         urgeLimiter = mock(FlowUrgeLimiter.class);
         when(urgeLimiter.tryAcquire(anyLong(), anyLong(), anyString())).thenReturn(true);
+        // P1-5: 委派授权服务 mock
+        delegateAuthService = mock(FlowDelegateAuthService.class);
+        delegateLogMapper = mock(FlowDelegateLogMapper.class);
         service = new FlowTaskServiceImpl(taskMapper, hisTaskMapper, instanceMapper,
                 instanceService, advancer, variableStrategy,
                 userMapper, auditLogMapper, nodeMapper, assigneeResolver, eventListeners,
-                eventPublisher, urgeLimiter);
+                eventPublisher, urgeLimiter, delegateAuthService, delegateLogMapper);
     }
 
     // ============== createTask ==============

@@ -11,11 +11,13 @@ import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowCcDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowCcService;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
+import com.njydsz.pmis.workflow.flow.service.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
@@ -53,6 +55,8 @@ public class FlowEngineController {
     private final FlowCcService ccService;
     /** P1-1: 历史任务 mapper（驳回候选目标节点） */
     private final FlowHisTaskMapper hisTaskMapper;
+    /** P1-4: 长期授权委派服务 */
+    private final FlowDelegateAuthService delegateAuthService;
 
     // ============== 引擎信息 ==============
 
@@ -655,11 +659,10 @@ public class FlowEngineController {
     public Result<PageResult<FlowCcDO>> pageCc(@RequestBody FlowCcQueryDTO query) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         Long userId = SecurityContext.getUserId();
-        List<FlowCcDO> rows = ccService.pageMyCc(tenantId, userId, query);
-        long total = ccService.countMyCc(tenantId, userId, query);
-        return Result.ok(PageResult.of(rows, total,
-                query.getPageNum() == null ? 1 : query.getPageNum(),
-                query.getPageSize() == null ? 20 : query.getPageSize()));
+        int pageNo = query.getPageNum() == null ? 1 : query.getPageNum();
+        int pageSize = query.getPageSize() == null ? 20 : query.getPageSize();
+        return Result.ok(ccService.listCcByUser(userId, query.getReadStatus(),
+                query.getFlowCode(), tenantId, pageNo, pageSize));
     }
 
     /**
@@ -669,7 +672,7 @@ public class FlowEngineController {
     public Result<Long> ccUnreadCount() {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         Long userId = SecurityContext.getUserId();
-        return Result.ok(ccService.countUnread(tenantId, userId));
+        return Result.ok(ccService.countUnread(userId, tenantId));
     }
 
     /**
@@ -679,7 +682,8 @@ public class FlowEngineController {
     public Result<Boolean> ccMarkRead(@PathVariable Long id) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         Long userId = SecurityContext.getUserId();
-        return Result.ok(ccService.markRead(tenantId, userId, id));
+        ccService.markRead(tenantId, userId, id);
+        return Result.ok(Boolean.TRUE);
     }
 
     /**
@@ -690,5 +694,100 @@ public class FlowEngineController {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         Long userId = SecurityContext.getUserId();
         return Result.ok(ccService.markAllRead(tenantId, userId));
+    }
+
+    // ============== P1-4: 长期授权委派 ==============
+
+    /**
+     * P1-4: 创建长期授权委派
+     *
+     * <p>业务示例：用户 A 休假 7 天，希望 B 代理处理所有流程。
+     * 提交时 body 形如：
+     * <pre>
+     * {
+     *   "ownerUserId": 1001,
+     *   "ownerUserName": "张三",
+     *   "delegateUserId": 1002,
+     *   "delegateUserName": "李四",
+     *   "scopeType": "ALL",
+     *   "startTime": "2026-07-02T00:00:00",
+     *   "endTime": "2026-07-09T23:59:59",
+     *   "reason": "年假"
+     * }
+     * </pre>
+     */
+    @PostMapping("/delegate-auth/create")
+    public Result<Long> createDelegateAuth(@RequestBody FlowDelegateAuthDO auth) {
+        // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
+        if (auth.getOwnerUserId() == null) {
+            auth.setOwnerUserId(SecurityContext.getUserId());
+        }
+        Long id = delegateAuthService.create(auth);
+        return Result.ok(id);
+    }
+
+    /**
+     * P1-4: 撤回授权
+     */
+    @PostMapping("/delegate-auth/{id}/revoke")
+    public Result<Void> revokeDelegateAuth(@PathVariable Long id) {
+        Long ownerId = SecurityContext.getUserId();
+        delegateAuthService.revoke(id, ownerId);
+        return Result.ok();
+    }
+
+    /**
+     * P1-4: 启用/停用授权
+     */
+    @PostMapping("/delegate-auth/{id}/status")
+    public Result<Void> updateDelegateAuthStatus(@PathVariable Long id,
+                                                 @RequestParam String status) {
+        Long operatorId = SecurityContext.getUserId();
+        delegateAuthService.updateStatus(id, status, operatorId);
+        return Result.ok();
+    }
+
+    /**
+     * P1-4: 查"我设置的"授权列表
+     */
+    @GetMapping("/delegate-auth/mine")
+    public Result<List<FlowDelegateAuthDO>> listMyDelegateAuths(
+            @RequestParam(required = false) String status) {
+        Long ownerId = SecurityContext.getUserId();
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(delegateAuthService.listMine(ownerId, tenantId, status));
+    }
+
+    /**
+     * P1-4: 查"代理给我的"授权列表
+     */
+    @GetMapping("/delegate-auth/as-delegate")
+    public Result<List<FlowDelegateAuthDO>> listAsDelegate(
+            @RequestParam(required = false) String status) {
+        Long delegateUserId = SecurityContext.getUserId();
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(delegateAuthService.listAsDelegate(delegateUserId, tenantId, status));
+    }
+
+    /**
+     * P1-4: 查"我代理处理了哪些任务"
+     */
+    @GetMapping("/delegate-auth/log/delegate")
+    public Result<PageResult<?>> myDelegateLog(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Long delegateUserId = SecurityContext.getUserId();
+        return Result.ok(delegateAuthService.listDelegateLog(delegateUserId, page, size));
+    }
+
+    /**
+     * P1-4: 查"我的哪些任务被代理了"
+     */
+    @GetMapping("/delegate-auth/log/owner")
+    public Result<PageResult<?>> myOwnerLog(
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        Long ownerUserId = SecurityContext.getUserId();
+        return Result.ok(delegateAuthService.listOwnerLog(ownerUserId, page, size));
     }
 }

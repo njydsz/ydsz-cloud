@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.flow.service;
 
 import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.workflow.flow.dto.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowCcDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 
@@ -49,6 +50,26 @@ public interface FlowCcService {
     void handleCcNode(Long instanceId, FlowNodeDO node, Map<String, Object> variables);
 
     /**
+     * 查"抄送我的"分页（便捷方法，使用 DTO 参数）
+     *
+     * @param tenantId 租户 ID
+     * @param userId   接收人 ID
+     * @param query    查询条件 DTO
+     * @return 抄送记录列表
+     */
+    List<FlowCcDO> pageMyCc(Long tenantId, Long userId, FlowCcQueryDTO query);
+
+    /**
+     * 查"抄送我的"总数（便捷方法，使用 DTO 参数）
+     *
+     * @param tenantId 租户 ID
+     * @param userId   接收人 ID
+     * @param query    查询条件 DTO
+     * @return 总数
+     */
+    long countMyCc(Long tenantId, Long userId, FlowCcQueryDTO query);
+
+    /**
      * 查"抄送我的"分页
      *
      * @param userId     接收人 ID
@@ -65,18 +86,20 @@ public interface FlowCcService {
     /**
      * 标记已读
      *
-     * @param ccId  抄送记录 ID
-     * @param userId 接收人 ID（用于权限校验）
+     * @param tenantId 租户 ID（用于权限校验）
+     * @param userId   接收人 ID（用于权限校验）
+     * @param ccId     抄送记录 ID
      */
-    void markRead(Long ccId, Long userId);
+    void markRead(Long tenantId, Long userId, Long ccId);
 
     /**
      * 全部已读
      *
-     * @param userId   接收人 ID
      * @param tenantId 租户 ID
+     * @param userId   接收人 ID
+     * @return 已标记的记录数
      */
-    void markAllRead(Long userId, Long tenantId);
+    int markAllRead(Long tenantId, Long userId);
 
     /**
      * 未读数

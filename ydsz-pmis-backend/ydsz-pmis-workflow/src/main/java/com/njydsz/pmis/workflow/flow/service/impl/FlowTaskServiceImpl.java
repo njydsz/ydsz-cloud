@@ -18,6 +18,7 @@ import com.njydsz.pmis.workflow.flow.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.flow.entity.*;
 import com.njydsz.pmis.workflow.flow.enums.*;
 import com.njydsz.pmis.workflow.flow.mapper.*;
+import com.njydsz.pmis.workflow.flow.service.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
@@ -62,6 +63,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     private final ApplicationEventPublisher eventPublisher;
     /** P0-2: 催办限流器（Redis Lua 冷却 30 分钟） */
     private final FlowUrgeLimiter urgeLimiter;
+    /** P1-4: 长期授权委派服务（任务创建时自动改写 assignee） */
+    private final FlowDelegateAuthService delegateAuthService;
+    /** P1-4: 委派代理日志 Mapper（用于记录代理操作审计） */
+    private final com.njydsz.pmis.workflow.flow.mapper.FlowDelegateLogMapper delegateLogMapper;
 
     // ============================== 创建任务 ==============================
 
@@ -179,10 +184,66 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         }
         log.info("[Flow] 创建任务: instanceId={} node={} performType={} assigneeCount={}",
                 instanceId, node.getNodeCode(), performType, userIds.size());
+        // P1-4: 应用长期授权委派 — 如果首个 assignee 命中代理规则，改写为 delegate
+        applyDelegateRedirect(task, instance, node);
         fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
         // P2-35: 发布 Spring 异步事件
         publishWorkflowEvent("TASK_CREATED", instanceId, task.getId());
         return task.getId();
+    }
+
+    // ============================== P1-4: 长期授权委派改写 ==============================
+
+    /**
+     * 应用长期授权委派：检查 task.assigneeId 是否为某代理规则的 ownerUserId，
+     * 如果是则改写 assigneeId 为 delegateUserId，并将原 owner 写入 assignorId。
+     *
+     * <p>改写是静默的（写日志 + audit），不抛异常，避免拖垮主流程。
+     *
+     * @param task     已 setAssigneeId 的任务（未持久化 or 已持久化均可）
+     * @param instance 流程实例
+     * @param node     当前节点
+     */
+    private void applyDelegateRedirect(FlowTaskDO task,
+                                       FlowInstanceDO instance,
+                                       FlowNodeDO node) {
+        try {
+            if (delegateAuthService == null) {
+                return;
+            }
+            String currentAssigneeId = task.getAssigneeId();
+            if (!StringUtils.hasText(currentAssigneeId)) {
+                return;
+            }
+            Long currentUserId;
+            try {
+                currentUserId = Long.parseLong(currentAssigneeId.trim());
+            } catch (NumberFormatException nfe) {
+                return; // 非纯数字 assignee（INITIATOR/SYSTEM_*）不参与代理
+            }
+            FlowDelegateAuthDO matched = delegateAuthService.matchAuth(
+                    instance.getTenantId(), currentUserId,
+                    instance.getFlowCode(), node.getNodeCode());
+            if (matched == null) {
+                return;
+            }
+            // 改写：assignorId 记原办理人，assigneeId 改为 delegate
+            task.setAssignorId(currentUserId);
+            task.setAssignorName(matched.getOwnerUserName());
+            task.setAssigneeId(String.valueOf(matched.getDelegateUserId()));
+            task.setAssigneeName(matched.getDelegateUserName());
+            taskMapper.updateById(task);
+            // 写审计日志
+            audit(task, "DELEGATE_AUTH_APPLIED", matched.getDelegateUserId(),
+                    currentUserId,
+                    "长期授权委派生效: " + matched.getId() + " (" + matched.getScopeType() + ")");
+            log.info("[Flow] 长期授权委派改写: taskId={} owner={} → delegate={} authId={} scope={}",
+                    task.getId(), currentUserId, matched.getDelegateUserId(),
+                    matched.getId(), matched.getScopeType());
+        } catch (Exception e) {
+            log.error("[Flow] 长期授权委派改写异常: taskId={} err={}",
+                    task == null ? "null" : task.getId(), e.getMessage(), e);
+        }
     }
 
     // ============================== 签收 ==============================
@@ -195,6 +256,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         }
         taskMapper.updateById(toClaimTask(task, userId));
         audit(task, "CLAIM", userId, null, null);
+        // P1-4: 记录代理签收日志
+        logDelegateOperation(task, "CLAIM", "ACT");
         log.info("[Flow] 签收任务: taskId={} userId={}", taskId, userId);
     }
 
@@ -214,6 +277,8 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
         // P1-10: 委派回归 — 被委派人通过后任务回到原办理人
         if (FlowTaskStatus.DELEGATED.name().equals(task.getTaskStatus()) && task.getAssignorId() != null) {
+            // P1-4: 记录委派回归的代理操作日志
+            logDelegateOperation(task, "DELEGATE_RETURN", "ACT");
             task.setAssigneeId(String.valueOf(task.getAssignorId()));
             task.setAssigneeName(task.getAssignorName());
             task.setAssignorId(null);
@@ -421,7 +486,58 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         publishWorkflowEvent("TASK_COUNTERSIGNED", task.getInstanceId(), task.getId());
     }
 
-    // ============================== 催办（P1-9） ==============================
+    // ============================== GAP-P1: 减签 ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void countersignRemove(FlowTaskOperateDTO dto) {
+        FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
+        if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可减签");
+        }
+        if (dto.getTargetUserId() == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "减签需指定 targetUserId");
+        }
+        // 从 pmis_flow_user 中删除指定用户
+        Map<String, Object> deleteMap = new HashMap<>();
+        deleteMap.put("instance_id", task.getInstanceId());
+        deleteMap.put("node_code", task.getNodeCode());
+        deleteMap.put("user_id", String.valueOf(dto.getTargetUserId()));
+        int deleted = userMapper.deleteByMap(deleteMap);
+        if (deleted == 0) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "未找到待减签用户: userId=" + dto.getTargetUserId());
+        }
+        // approveCount -1，但不低于 1
+        int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();
+        task.setApproveCount(Math.max(1, currentCount - 1));
+        taskMapper.updateById(task);
+        audit(task, "COUNTERSIGN_REMOVE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
+        log.info("[Flow] 减签: taskId={} → 移除审批人={} deleted={}",
+                task.getId(), dto.getTargetUserId(), deleted);
+        fireEvent(l -> l.onTaskCountersigned(task.getId(), dto.getTargetUserId(), "REMOVE"),
+                task.getId());
+        publishWorkflowEvent("TASK_COUNTERSIGNED", task.getInstanceId(), task.getId());
+    }
+
+    // ============================== GAP-P2: 已阅/沟通 ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void markRead(Long taskId, Long userId) {
+        FlowTaskDO task = getTaskOrThrow(taskId);
+        audit(task, "READ", userId, null, null);
+        log.info("[Flow] 已阅: taskId={} userId={}", taskId, userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void communicate(FlowTaskOperateDTO dto) {
+        FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
+        audit(task, "COMMUNICATE", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
+        log.info("[Flow] 沟通: taskId={} userId={} comment={}",
+                dto.getTaskId(), dto.getUserId(), dto.getComment());
+    }
 
     @Override
     public List<String> urge(Long instanceId, Long operatorId, String comment) {
@@ -1294,6 +1410,48 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             auditLogMapper.insert(log);
         } catch (Exception e) {
             FlowTaskServiceImpl.log.warn("[Flow] 审计日志写入失败: {}", e.getMessage());
+        }
+    }
+
+    // ============================== P1-4: 委派代理日志 ==============================
+
+    /**
+     * P1-4: 写入委派代理日志（当被委派人 PASS/REJECT/CLAIM/TRANSFER 时记录）
+     *
+     * <p>仅在 task.assignorId 不为空（即经过长期授权委派改写过的任务）时记录。
+     *
+     * @param task   当前任务
+     * @param action 操作动作
+     * @param opType 操作类型：ACT=办理 / VIEW=查看
+     */
+    private void logDelegateOperation(FlowTaskDO task, String action, String opType) {
+        if (task == null || delegateLogMapper == null) {
+            return;
+        }
+        try {
+            Long ownerId = task.getAssignorId();
+            Long delegateId = parseAssignorId(task.getAssigneeId());
+            if (ownerId == null || delegateId == null) {
+                return; // 非代理场景
+            }
+            FlowDelegateLogDO log = new FlowDelegateLogDO();
+            log.setTenantId(task.getTenantId());
+            log.setAuthId(0L); // 暂不绑定具体 authId（多匹配时无法确定）
+            log.setInstanceId(task.getInstanceId());
+            log.setTaskId(task.getId());
+            log.setNodeCode(task.getNodeCode());
+            log.setOwnerUserId(ownerId);
+            log.setDelegateUserId(delegateId);
+            log.setOpType(opType == null ? "ACT" : opType);
+            log.setAction(action);
+            log.setComment(task.getComment());
+            log.setProviderTraceId(task.getProviderTraceId());
+            log.setCreatedAt(LocalDateTime.now());
+            log.setUpdatedAt(LocalDateTime.now());
+            delegateLogMapper.insert(log);
+        } catch (Exception e) {
+            FlowTaskServiceImpl.log.warn("[Flow] 委派代理日志写入失败: taskId={} err={}",
+                    task.getId(), e.getMessage());
         }
     }
 }

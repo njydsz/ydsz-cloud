@@ -148,7 +148,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                         row.put("avgDurationMs", Math.round(avgMs));
                         return row;
                     })
-                    .sorted(Comparator.comparingInt(row -> (int) row.get("handleCount")).reversed())
+                    .sorted(Comparator.comparingInt((Map<String, Object> r) -> ((Number) r.get("handleCount")).intValue()).reversed())
                     .limit(top)
                     .collect(Collectors.toList());
         } catch (Exception e) {

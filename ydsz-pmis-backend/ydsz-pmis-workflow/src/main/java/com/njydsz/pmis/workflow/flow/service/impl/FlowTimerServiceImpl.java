@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.flow.service.impl;
 
+import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.flow.engine.FlowAdvancer;
@@ -300,8 +301,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         if (variableJson == null || variableJson.isBlank()) {
             return new HashMap<>();
         }
-        Map<String, Object> map = JsonHelper.fromJson(variableJson,
-                new com.alibaba.fastjson2.TypeReference<Map<String, Object>>() {});
+        Map<String, Object> map = JSON.parseObject(variableJson);
         return map == null ? new HashMap<>() : map;
     }
 

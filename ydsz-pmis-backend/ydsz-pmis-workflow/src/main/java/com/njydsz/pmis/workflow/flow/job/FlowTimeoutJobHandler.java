@@ -40,7 +40,7 @@ import java.util.Map;
  * <p>容错策略：每个任务独立 try-catch，单个任务处理失败不影响其余任务。
  *
  * <p>Bean 名称 = {@code flowTimeoutJobHandler}，
- * 可在 pmis_job 表配置：handler=flowTimeoutJobHandler, cron="0 */5 * * * ?"（每 5 分钟扫描一次）。
+ * 可在 pmis_job 表配置：handler=flowTimeoutJobHandler, cron="0 0/5 * * * ?"（每 5 分钟扫描一次）。
  *
  * <p>说明：FlowTaskMapper 暂无 {@code timeoutTask} 专用方法，
  * 此处复用 {@link FlowTaskMapper#completeTask} 以 {@link FlowTaskStatus#TIMEOUT} 状态标记超时，

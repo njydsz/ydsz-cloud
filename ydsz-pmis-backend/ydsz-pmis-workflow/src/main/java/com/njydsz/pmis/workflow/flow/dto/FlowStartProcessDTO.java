@@ -69,4 +69,7 @@ public class FlowStartProcessDTO implements Serializable {
 
     /** P1-3: 父流程中触发子流程的节点编码（可空） */
     private String parentNodeCode;
+
+    /** GAP-P2: 发起人自选审批人 — key=nodeCode, value=审批人ID列表 */
+    private Map<String, List<Long>> nodeAssignees;
 }

@@ -1,0 +1,40 @@
+name: Performance Test
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # 每天 02:00 UTC 执行
+  workflow_dispatch:
+
+jobs:
+  jmeter-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run JMeter Tests
+        run: |
+          if [ -d deploy/perf/jmeter ]; then
+            echo "开始执行 JMeter 性能测试..."
+            # 安装 JMeter
+            wget -q https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-5.6.3.tgz
+            tar -xzf apache-jmeter-5.6.3.tgz
+            export PATH=$PATH:$(pwd)/apache-jmeter-5.6.3/bin
+
+            for jmx in deploy/perf/jmeter/*.jmx; do
+              echo "执行: $jmx"
+              jmeter -n -t "$jmx" -l "results_$(basename $jmx .jmx).jtl" -e -o "report_$(basename $jmx .jmx)" || true
+            done
+          else
+            echo "JMeter 测试目录不存在，跳过"
+          fi
+        continue-on-error: true
+
+      - name: Upload Performance Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: perf-report
+          path: |
+            report_*
+            results_*.jtl
+          retention-days: 30

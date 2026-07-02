@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.workflow.flow.dto.FlowCcQueryDTO;
 import com.njydsz.pmis.workflow.flow.engine.FlowAssigneeResolver;
 import com.njydsz.pmis.workflow.flow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.flow.entity.FlowCcDO;
@@ -118,6 +119,36 @@ public class FlowCcServiceImpl implements FlowCcService {
     // ============================== 分页查询 ==============================
 
     @Override
+    public List<FlowCcDO> pageMyCc(Long tenantId, Long userId, FlowCcQueryDTO query) {
+        try {
+            if (userId == null || query == null) {
+                return List.of();
+            }
+            int page = query.getPageNum() == null || query.getPageNum() < 1 ? 1 : query.getPageNum();
+            int size = query.getPageSize() == null || query.getPageSize() < 1 ? 20 : query.getPageSize();
+            int offset = (page - 1) * size;
+            return ccMapper.selectCcByUserPage(tenantId, userId,
+                    query.getReadStatus(), query.getFlowCode(), offset, size);
+        } catch (Exception e) {
+            log.error("[FlowCc] pageMyCc 异常: userId={} err={}", userId, e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public long countMyCc(Long tenantId, Long userId, FlowCcQueryDTO query) {
+        try {
+            if (userId == null || query == null) {
+                return 0L;
+            }
+            return ccMapper.countCcByUser(tenantId, userId, query.getReadStatus(), query.getFlowCode());
+        } catch (Exception e) {
+            log.error("[FlowCc] countMyCc 异常: userId={} err={}", userId, e.getMessage(), e);
+            return 0L;
+        }
+    }
+
+    @Override
     public PageResult<FlowCcDO> listCcByUser(Long userId, String readStatus, String flowCode,
                                              Long tenantId, int pageNo, int pageSize) {
         try {
@@ -142,7 +173,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void markRead(Long ccId, Long userId) {
+    public void markRead(Long tenantId, Long userId, Long ccId) {
         try {
             if (ccId == null || userId == null) {
                 return;
@@ -156,16 +187,18 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void markAllRead(Long userId, Long tenantId) {
+    public int markAllRead(Long tenantId, Long userId) {
         try {
             if (userId == null || tenantId == null) {
-                return;
+                return 0;
             }
             int n = ccMapper.markAllRead(tenantId, userId, LocalDateTime.now());
             log.info("[FlowCc] 全部已读: userId={} tenantId={} affected={}", userId, tenantId, n);
+            return n;
         } catch (Exception e) {
             log.error("[FlowCc] 全部已读异常: userId={} tenantId={} err={}",
                     userId, tenantId, e.getMessage(), e);
+            return 0;
         }
     }
 
