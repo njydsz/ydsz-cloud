@@ -25,6 +25,7 @@ import type {
   ProfitSimulationVO,
   ProfitSimulationCreateDTO,
 } from '@/api/execution/profit-simulation'
+import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
 
@@ -126,8 +127,11 @@ async function fetchCompare() {
   try {
     const { data } = await compareSimulations(query.initiationId)
     compareData.value = data || []
-  } catch {
+  } catch (e) {
     compareData.value = []
+    if (!isHandledError(e)) {
+      ElMessage.error('版本对比数据加载失败，请刷新重试')
+    }
   }
 }
 

@@ -22,6 +22,7 @@ import {
   drillByProjectType,
   drillByCustomer,
 } from '@/api/execution/cockpit'
+import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 
 defineOptions({ name: 'Cockpit' })
@@ -68,8 +69,10 @@ async function loadOverview() {
   try {
     const { data } = await getCockpitOverview(query.value.period)
     overview.value = data ?? {}
-  } catch {
-    /* 静默 */
+  } catch (e) {
+    if (!isHandledError(e)) {
+      ElMessage.error('KPI 总览数据加载失败，请刷新重试')
+    }
   }
 }
 
@@ -95,8 +98,10 @@ async function loadHealth() {
         },
       ],
     })
-  } catch {
-    /* 静默 */
+  } catch (e) {
+    if (!isHandledError(e)) {
+      ElMessage.error('EVM 健康度数据加载失败，请刷新重试')
+    }
   }
 }
 
@@ -109,8 +114,10 @@ async function loadDrill() {
     else res = await drillByCustomer(query.value.period)
     drillData.value = (res?.data as any[]) || []
     renderDrillChart()
-  } catch {
-    /* 静默 */
+  } catch (e) {
+    if (!isHandledError(e)) {
+      ElMessage.error('下钻分析数据加载失败，请刷新重试')
+    }
   }
 }
 
@@ -149,8 +156,10 @@ async function loadAlert() {
       totalCount: data.totalCount ?? 0,
       topEvent: data.topEvent ?? null,
     }
-  } catch {
-    /* 静默 */
+  } catch (e) {
+    if (!isHandledError(e)) {
+      ElMessage.error('预警数据加载失败，请刷新重试')
+    }
   }
 }
 
@@ -171,8 +180,10 @@ async function loadTrend() {
       grossMarginPctSeries: data.grossMarginPctSeries || [],
     }
     renderTrendChart()
-  } catch {
-    /* 静默 */
+  } catch (e) {
+    if (!isHandledError(e)) {
+      ElMessage.error('KPI 趋势数据加载失败，请刷新重试')
+    }
   }
 }
 

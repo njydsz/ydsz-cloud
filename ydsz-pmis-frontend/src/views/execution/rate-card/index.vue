@@ -21,6 +21,7 @@ import {
 import type { RateCardVO, RateCardCreateDTO } from '@/api/execution/rate-card'
 import { listJobLevels } from '@/api/resource/job-level'
 import type { JobLevelVO } from '@/api/resource/job-level/types'
+import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 import { useUserStore } from '@/store/modules/user'
 
@@ -46,8 +47,11 @@ async function fetchLevels() {
   try {
     const { data } = await listJobLevels()
     levels.value = data || []
-  } catch {
+  } catch (e) {
     levels.value = []
+    if (!isHandledError(e)) {
+      ElMessage.error('职级数据加载失败，请刷新重试')
+    }
   }
 }
 

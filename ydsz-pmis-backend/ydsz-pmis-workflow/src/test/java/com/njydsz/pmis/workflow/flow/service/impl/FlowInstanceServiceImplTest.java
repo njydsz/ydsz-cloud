@@ -68,6 +68,9 @@ class FlowInstanceServiceImplTest {
     private FlowCcService ccService;
     private FlowMetrics flowMetrics;
     private FlowCanaryService canaryService;
+    private com.njydsz.pmis.workflow.mapper.FlowNodeMapper nodeMapper;
+    private com.njydsz.pmis.workflow.mapper.FlowSkipMapper skipMapper;
+    private com.njydsz.pmis.workflow.engine.FlowVariableStrategy variableStrategy;
     private FlowInstanceServiceImpl service;
 
     @BeforeEach
@@ -88,9 +91,14 @@ class FlowInstanceServiceImplTest {
         flowMetrics = mock(FlowMetrics.class);
         // P3-1: 灰度发布服务 mock
         canaryService = mock(FlowCanaryService.class);
+        // GAP-V2-08: 模拟运行新增依赖
+        nodeMapper = mock(com.njydsz.pmis.workflow.mapper.FlowNodeMapper.class);
+        skipMapper = mock(com.njydsz.pmis.workflow.mapper.FlowSkipMapper.class);
+        variableStrategy = mock(com.njydsz.pmis.workflow.engine.FlowVariableStrategy.class);
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
-                canaryService, advancer, taskService, taskMapper, eventListeners,
-                flowMetrics, eventPublisher, subProcessService, ccService);
+                canaryService, advancer, taskService, taskMapper,
+                nodeMapper, skipMapper, variableStrategy,
+                eventListeners, flowMetrics, eventPublisher, subProcessService, ccService);
     }
 
     @Test

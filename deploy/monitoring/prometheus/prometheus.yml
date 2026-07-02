@@ -17,6 +17,13 @@ global:
 rule_files:
   - "rules/*.yml"
 
+# Alertmanager 告警路由 (批次 21 P2-21)
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
 scrape_configs:
   # Prometheus 自身
   - job_name: 'prometheus'

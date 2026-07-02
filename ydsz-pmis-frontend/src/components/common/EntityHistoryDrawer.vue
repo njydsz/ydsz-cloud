@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import request from '@/utils/request'
+import { getOperationLogPage, getOperationLogDiff } from '@/api/audit'
 
 interface FieldDiff {
   field: string
@@ -35,11 +35,13 @@ const fetchHistory = async () => {
   if (!props.entityId) return
   loading.value = true
   try {
-    const resp = await request.get('/api/v1/audit/operation-log/list', {
-      params: { entityType: props.entityType, entityId: props.entityId, page: 1, size: 50 }
+    const { data } = await getOperationLogPage({
+      entityType: props.entityType,
+      entityId: props.entityId,
+      page: 1,
+      size: 50,
     })
-    const data = (resp as { data?: { records?: OperationLog[] } }).data
-    logs.value = data?.records ?? []
+    logs.value = (data?.list as unknown as OperationLog[]) ?? []
   } catch {
     logs.value = []
   } finally {
@@ -51,9 +53,8 @@ const showDiff = async (logId: number) => {
   currentLogId.value = logId
   diffVisible.value = true
   try {
-    const resp = await request.get(`/api/v1/audit/operation-log/${logId}/diff`)
-    const data = (resp as { data?: FieldDiff[] }).data
-    currentDiff.value = data ?? []
+    const { data } = await getOperationLogDiff(logId)
+    currentDiff.value = (data as unknown as FieldDiff[]) ?? []
   } catch {
     currentDiff.value = []
   }

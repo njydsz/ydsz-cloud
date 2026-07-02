@@ -23,6 +23,7 @@ import type {
   DailyReconcileVO,
   DailyReconcileAggregateVO,
 } from '@/api/execution/reconcile/types'
+import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 
 // 列表查询状态
@@ -81,8 +82,11 @@ async function fetchAggregate() {
       from: query.from || undefined,
       to: query.to || undefined,
     }).then((r) => r.data as DailyReconcileAggregateVO[])
-  } catch {
+  } catch (e) {
     aggregate.value = []
+    if (!isHandledError(e)) {
+      ElMessage.error('对账聚合数据加载失败，请刷新重试')
+    }
   }
 }
 

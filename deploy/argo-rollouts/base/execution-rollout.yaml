@@ -120,10 +120,10 @@ metadata:
 spec:
   ports:
     - name: http
-      port: 9001
+      port: 9016
       targetPort: http
     - name: actuator
-      port: 9001
+      port: 9016
       targetPort: actuator
   selector:
     app: pmis-execution   # 同时匹配 stable + canary (按副本数比例分配)

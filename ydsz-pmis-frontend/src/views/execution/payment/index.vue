@@ -257,16 +257,16 @@ onMounted(fetchList)
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="回款单号" prop="paymentCode"><el-input v-model="form.paymentCode" /></el-form-item>
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="客户 ID" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="客户名称"><el-input v-model="form.customerName" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="客户 ID" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="客户名称"><el-input v-model="form.customerName" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合同 ID"><el-input-number v-model="form.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="合同 ID"><el-input-number v-model="form.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="金额" prop="amount"><el-input-number v-model="form.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="支付方式"><el-select v-model="form.paymentMethod" style="width: 100%"><el-option v-for="(v, k) in methodMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="金额" prop="amount"><el-input-number v-model="form.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="支付方式"><el-select v-model="form.paymentMethod" style="width: 100%"><el-option v-for="(v, k) in methodMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
         </el-row>
         <el-form-item label="到账日期">
           <el-date-picker v-model="form.paymentDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />

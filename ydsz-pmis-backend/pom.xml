@@ -33,6 +33,7 @@
         <module>ydsz-pmis-project</module>
         <module>ydsz-pmis-execution</module>
         <module>ydsz-pmis-agent</module>
+        <module>ydsz-pmis-literule</module>
     </modules>
 
     <properties>
@@ -126,6 +127,11 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-message</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-literule</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

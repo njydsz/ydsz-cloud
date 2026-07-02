@@ -1,0 +1,98 @@
+package com.njydsz.pmis.literule.config;
+
+import com.njydsz.pmis.literule.api.RuleEngine;
+import com.njydsz.pmis.literule.core.DefaultRuleEngine;
+import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
+import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.spi.RuleConfigProvider;
+import com.njydsz.pmis.literule.spi.RuleVersionRepository;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/**
+ * LiteRule 自动配置
+ *
+ * <p>自动注册核心组件：表达式求值器、规则引擎、规则管理服务。
+ * 当 classpath 中存在 RuleConfigProvider 实现时，自动启用动态规则加载和热刷新。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.1.0
+ */
+@Slf4j
+@Configuration
+@EnableConfigurationProperties(LiteRuleProperties.class)
+@ConditionalOnProperty(prefix = "pmis.literule", name = "enabled", havingValue = "true", matchIfMissing = true)
+public class LiteRuleAutoConfiguration {
+
+    /**
+     * 表达式求值器（Aviator）
+     *
+     * @return AviatorExpressionEvaluator 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ExpressionEvaluator expressionEvaluator() {
+        log.info("[LiteRule] Aviator 表达式求值器已初始化");
+        return new AviatorExpressionEvaluator();
+    }
+
+    /**
+     * 规则引擎
+     *
+     * @return DefaultRuleEngine 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public RuleEngine ruleEngine() {
+        log.info("[LiteRule] 默认规则引擎已初始化");
+        return new DefaultRuleEngine();
+    }
+
+    /**
+     * 规则热加载管理器（当存在 RuleConfigProvider 时生效）
+     *
+     * @param ruleEngine   规则引擎
+     * @param evaluator    表达式求值器
+     * @param configProvider 规则配置提供者（可选）
+     * @param properties   配置属性
+     * @return RuleHotReloader 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleConfigProvider.class)
+    public RuleHotReloader ruleHotReloader(RuleEngine ruleEngine,
+                                            ExpressionEvaluator evaluator,
+                                            RuleConfigProvider configProvider,
+                                            LiteRuleProperties properties) {
+        log.info("[LiteRule] 规则热加载管理器已初始化（hotReload={}）", properties.isHotReloadEnabled());
+        return new RuleHotReloader(ruleEngine, evaluator, configProvider, properties);
+    }
+
+    /**
+     * 规则管理服务（当存在 RuleConfigProvider 时生效）
+     *
+     * @param ruleEngine     规则引擎
+     * @param evaluator      表达式求值器
+     * @param configProvider 规则配置提供者
+     * @param versionRepo    版本仓库（可选）
+     * @param eventPublisher 事件发布器
+     * @return RuleAdminService 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleConfigProvider.class)
+    public RuleAdminService ruleAdminService(RuleEngine ruleEngine,
+                                              ExpressionEvaluator evaluator,
+                                              RuleConfigProvider configProvider,
+                                              org.springframework.beans.factory.ObjectProvider<RuleVersionRepository> versionRepoProvider,
+                                              ApplicationEventPublisher eventPublisher) {
+        log.info("[LiteRule] 规则管理服务已初始化");
+        return new RuleAdminService(ruleEngine, evaluator, configProvider,
+                versionRepoProvider.getIfAvailable(), eventPublisher);
+    }
+}

@@ -3,6 +3,7 @@
 #  ---------------------------------------------------------------------
 #  包含：
 #    - Prometheus（指标采集 + 告警规则）
+#    - Alertmanager（告警路由与通知，批次 21 P2-21）
 #    - Grafana（可视化 4 套 dashboard）
 #    - Node Exporter（主机指标，可选）
 #  依赖：14 个微服务已部署并暴露 /actuator/prometheus
@@ -63,6 +64,21 @@ services:
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
     volumes:
       - /:/host:ro,rslave
+    networks:
+      - pmis-net
+
+  # Alertmanager（告警路由与通知，批次 21 P2-21）
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    container_name: pmis-alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml
+    command:
+      - '--config.file=/etc/alertmanager/alertmanager.yml'
+      - '--storage.path=/alertmanager'
+    restart: unless-stopped
     networks:
       - pmis-net
 

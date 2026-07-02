@@ -21,6 +21,7 @@ import { get2faStatus } from '@/api/user/two-factor'
 import ReAuthDialog from '@/components/common/ReAuthDialog.vue'
 import PasswordStrengthBar from '@/components/common/PasswordStrengthBar.vue'
 import { useReAuth } from '@/composables/useReAuth'
+import { isHandledError } from '@/utils/error'
 import type { ReAuthMethod } from '@/api/user/reauth'
 import type { UserVO, UserCreateDTO } from '@/api/system/user/types'
 import type { RoleVO } from '@/api/system/role/types'
@@ -46,8 +47,11 @@ async function fetchRoles() {
   try {
     const { data } = await listAllRoles()
     roleList.value = data || []
-  } catch {
-    /* 静默失败 */
+  } catch (e) {
+    roleList.value = []
+    if (!isHandledError(e)) {
+      ElMessage.error('角色列表加载失败，请刷新重试')
+    }
   }
 }
 
@@ -145,8 +149,11 @@ async function openEdit(row: UserVO) {
   try {
     const { data } = await listUserRoles(row.id)
     form.roleIds = data || []
-  } catch {
-    /* 静默 */
+  } catch (e) {
+    form.roleIds = []
+    if (!isHandledError(e)) {
+      ElMessage.error('用户角色加载失败，请刷新重试')
+    }
   }
   formDialogVisible.value = true
 }
@@ -171,8 +178,11 @@ async function submitForm() {
     if (form.roleIds && form.roleIds.length) {
       try {
         await assignUserRoles(userId, form.roleIds)
-      } catch {
-        /* 角色分配失败不阻断 */
+      } catch (e) {
+        /* 角色分配失败不阻断主流程，但需提示用户 */
+        if (!isHandledError(e)) {
+          ElMessage.warning('角色分配失败，请稍后在编辑中重试')
+        }
       }
     }
   } else {
@@ -268,8 +278,11 @@ async function fetch2faStatus() {
   try {
     const { data } = await get2faStatus()
     has2fa.value = data?.enabled || false
-  } catch {
+  } catch (e) {
     has2fa.value = false
+    if (!isHandledError(e)) {
+      ElMessage.error('二次认证状态加载失败，请刷新重试')
+    }
   }
 }
 
@@ -394,19 +407,19 @@ onMounted(() => {
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="用户名" prop="username">
               <el-input v-model="form.username" :disabled="formMode === 'edit'" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="姓名" prop="realName">
               <el-input v-model="form.realName" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row v-if="formMode === 'create'" :gutter="16">
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="密码" prop="password">
               <el-input v-model="form.password" type="password" show-password />
               <PasswordStrengthBar
@@ -419,24 +432,24 @@ onMounted(() => {
           </el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="手机号">
               <el-input v-model="form.phone" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="邮箱">
               <el-input v-model="form.email" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="职级">
               <el-input v-model="form.levelCode" placeholder="例如: L8" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="部门 ID">
               <el-input-number v-model="form.departmentId" :min="0" />
             </el-form-item>

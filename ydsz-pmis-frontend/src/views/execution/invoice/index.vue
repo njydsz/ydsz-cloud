@@ -283,16 +283,16 @@ onMounted(fetchList)
     <el-dialog v-model="dialogVisible" title="新增发票" width="640px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="发票编码" prop="invoiceCode"><el-input v-model="form.invoiceCode" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="发票类型" prop="invoiceType"><el-select v-model="form.invoiceType" style="width: 100%"><el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="发票编码" prop="invoiceCode"><el-input v-model="form.invoiceCode" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="发票类型" prop="invoiceType"><el-select v-model="form.invoiceType" style="width: 100%"><el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="客户 ID" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="客户名称"><el-input v-model="form.customerName" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="客户 ID" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="客户名称"><el-input v-model="form.customerName" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合同 ID"><el-input-number v-model="form.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item label="合同 ID"><el-input-number v-model="form.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
         </el-row>
         <el-form-item label="开票依据" prop="invoiceBasis">
           <el-select v-model="form.invoiceBasis" style="width: 100%">
@@ -300,9 +300,9 @@ onMounted(fetchList)
           </el-select>
         </el-form-item>
         <el-row :gutter="16">
-          <el-col :span="8"><el-form-item label="金额" prop="amount"><el-input-number v-model="form.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="税率"><el-input-number v-model="form.taxRate" :min="0" :max="1" :step="0.01" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="税额"><el-input-number :model-value="Number(form.amount || 0) * Number(form.taxRate || 0)" :min="0" disabled style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12" :md="8"><el-form-item label="金额" prop="amount"><el-input-number v-model="form.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12" :md="8"><el-form-item label="税率"><el-input-number v-model="form.taxRate" :min="0" :max="1" :step="0.01" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12" :md="8"><el-form-item label="税额"><el-input-number :model-value="Number(form.amount || 0) * Number(form.taxRate || 0)" :min="0" disabled style="width: 100%" /></el-form-item></el-col>
         </el-row>
         <el-form-item v-if="form.invoiceBasis === 'MILESTONE'" label="验收证明">
           <el-input v-model="form.acceptanceProof" placeholder="URL 或文件标识" />

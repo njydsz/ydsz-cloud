@@ -1,0 +1,47 @@
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'cluster', 'severity']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default'
+  routes:
+    - match:
+        severity: critical
+      receiver: 'critical'
+      group_wait: 10s
+      repeat_interval: 1h
+    - match:
+        severity: warning
+      receiver: 'warning'
+
+receivers:
+  - name: 'default'
+    email_configs:
+      - to: '${ALERT_EMAIL_TO:ops@njydsz.com}'
+        from: '${ALERT_EMAIL_FROM:alert@njydsz.com}'
+        smarthost: '${SMTP_HOST:smtp.qq.com:587}'
+        auth_username: '${SMTP_USER:alert@njydsz.com}'
+        auth_password: '${SMTP_PASSWORD}'
+        require_tls: true
+  - name: 'critical'
+    email_configs:
+      - to: '${ALERT_EMAIL_TO:ops@njydsz.com}'
+        from: '${ALERT_EMAIL_FROM:alert@njydsz.com}'
+        smarthost: '${SMTP_HOST:smtp.qq.com:587}'
+        auth_username: '${SMTP_USER:alert@njydsz.com}'
+        auth_password: '${SMTP_PASSWORD}'
+        require_tls: true
+    webhook_configs:
+      - url: '${DINGTALK_WEBHOOK_URL}'
+        send_resolved: true
+  - name: 'warning'
+    email_configs:
+      - to: '${ALERT_EMAIL_TO:ops@njydsz.com}'
+        from: '${ALERT_EMAIL_FROM:alert@njydsz.com}'
+        smarthost: '${SMTP_HOST:smtp.qq.com:587}'
+        auth_username: '${SMTP_USER:alert@njydsz.com}'
+        auth_password: '${SMTP_PASSWORD}'
+        require_tls: true

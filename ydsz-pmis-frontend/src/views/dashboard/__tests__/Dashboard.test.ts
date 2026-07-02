@@ -40,6 +40,13 @@ vi.mock('@/api/execution/cockpit', () => ({
       redProjects: 2,
     },
   })),
+  getKpiTrend: vi.fn(async (months: number) => ({
+    data: {
+      periods: ['2月', '3月', '4月', '5月', '6月', '7月'],
+      confirmedRevenueSeries: [420, 480, 530, 580, 620, 685],
+      grossProfitSeries: [120, 140, 158, 170, 185, 198],
+    },
+  })),
 }))
 
 vi.mock('@/api/execution/alert', () => ({
@@ -51,6 +58,15 @@ vi.mock('@/api/execution/alert', () => ({
     ],
   })),
 }))
+
+// Mock ElMessage（避免 jsdom 环境下 element-plus 消息组件副作用）
+vi.mock('element-plus', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('element-plus')>()
+  return {
+    ...actual,
+    ElMessage: { success: vi.fn(), error: vi.fn(), warning: vi.fn(), info: vi.fn() },
+  }
+})
 
 vi.mock('@/store/modules/user', () => ({
   useUserStore: () => ({

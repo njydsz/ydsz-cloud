@@ -52,6 +52,20 @@ export interface OperationLogVO {
 }
 
 /**
+ * 操作日志字段级变更对比（Diff）
+ */
+export interface FieldDiffVO {
+  /** 字段名 */
+  field?: string
+  /** 原值 */
+  oldValue?: string
+  /** 新值 */
+  newValue?: string
+  /** 变更类型：ADD 新增 / DELETE 删除 / MODIFY 修改 */
+  changeType?: 'ADD' | 'DELETE' | 'MODIFY' | string
+}
+
+/**
  * 登录审计视图对象
  */
 export interface LoginAuditVO {
@@ -160,6 +174,36 @@ export const pageOperationLog = (
     url: '/audit/operation/page',
     method: 'GET',
     params: { page, size, ...(params || {}) },
+  })
+
+/**
+ * 按业务实体查询操作日志分页
+ *
+ * 根据业务实体类型与 ID 查询其关联的操作日志（变更历史），
+ * 用于 EntityHistoryDrawer 等组件展示实体变更轨迹。
+ *
+ * @param params 查询条件（entityType / entityId / page / size）
+ * @returns 操作日志分页结果
+ */
+export const getOperationLogPage = (
+  params: { entityType: string; entityId: string | number; page: number; size: number },
+) =>
+  request<PageResult<OperationLogVO>>({
+    url: '/audit/operation-log/list',
+    method: 'GET',
+    params,
+  })
+
+/**
+ * 查询指定操作日志的字段级变更对比（Diff）
+ *
+ * @param logId 操作日志 ID
+ * @returns 字段级变更对比列表
+ */
+export const getOperationLogDiff = (logId: number) =>
+  request<FieldDiffVO[]>({
+    url: `/audit/operation-log/${logId}/diff`,
+    method: 'GET',
   })
 
 /**

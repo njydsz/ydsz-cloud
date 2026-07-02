@@ -31,75 +31,202 @@ spring:
     username: nacos
     password: ""
 
+# =============================================================================
+# 外部化应用配置 (批次 21 P2-20)
+#   - ConfigMap 非敏感配置: 见 templates/configmap.yaml
+#   - Secret  敏感凭据:     见 templates/secret.yaml
+# =============================================================================
+
+# Nacos 注册/配置中心地址 (ConfigMap 引用)
+# 注: spring.nacos 供 Deployment 模板 (_microservice.tpl) 使用;
+#     此处 nacos 供 ConfigMap 外部化使用, 两者保持一致。
+nacos:
+  serverAddr: nacos.pmis-dev.svc.cluster.local:8848
+  namespace: pmis-dev
+
+# 数据库凭据 (Secret)
+db:
+  user: pmis
+  password: "changeme"
+
+# Redis (ConfigMap: host/port; Secret: password)
+redis:
+  host: redis
+  port: 6379
+  password: "changeme"
+
+# JWT 签名密钥 (Secret)
+jwt:
+  secret: "changeme-jwt-secret-key"
+
+# MinIO 对象存储 (ConfigMap: endpoint/bucket; Secret: accessKey/secretKey)
+minio:
+  endpoint: http://minio:9000
+  bucket: pmis
+  accessKey: "minioadmin"
+  secretKey: "minioadmin"
+
 # 14 个微服务共享配置
 microservices:
-  # 每个服务: { enabled, port, replicas, jvmOpts, env }
+  # 每个服务: { enabled, port, replicas, jvmOpts, env, hpa, pdb }
+  # hpa/pdb 为可选子对象, 省略则不生成对应资源 (见 templates/hpa.yaml, templates/pdb.yaml)
   gateway:
     enabled: true
     port: 9000
     replicas: 2
     jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC"
     env: {}
+    hpa:
+      minReplicas: 2
+      maxReplicas: 8
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   auth:
     enabled: true
     port: 9001
     replicas: 2
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   user:
     enabled: true
     port: 9002
     replicas: 2
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   project:
     enabled: true
-    port: 9003
+    port: 9015
     replicas: 2
     jvmOpts: "-Xms256m -Xmx768m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   execution:
     enabled: true
     port: 9004
     replicas: 3
     jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC"
+    hpa:
+      minReplicas: 3
+      maxReplicas: 10
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 2
   agent:
     enabled: true
-    port: 9005
+    port: 9017
     replicas: 2
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   audit:
     enabled: true
     port: 9006
     replicas: 1
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   message:
     enabled: true
     port: 9007
     replicas: 1
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   notification:
     enabled: true
     port: 9008
     replicas: 1
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   workflow:
     enabled: true
-    port: 9009
+    port: 9014
     replicas: 2
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 2
+      maxReplicas: 6
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   config:
     enabled: true
     port: 9010
     replicas: 1
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   scheduler:
     enabled: true
     port: 9011
     replicas: 1
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
   file:
     enabled: true
-    port: 9012
+    port: 9019
     replicas: 1
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    hpa:
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPU: 70
+      targetMemory: 80
+    pdb:
+      minAvailable: 1
 
 # 前端
 frontend:
@@ -126,6 +253,8 @@ monitoring:
   enabled: true
   serviceMonitor:
     enabled: true
+    # release 标签用于 Prometheus Operator 选择 ServiceMonitor
+    release: prometheus
     interval: 30s
   prometheusRules: true
 

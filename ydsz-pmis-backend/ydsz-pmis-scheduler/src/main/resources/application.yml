@@ -1,5 +1,5 @@
 server:
-  port: 9012
+  port: 9022
 spring:
   application:
     name: ydsz-pmis-scheduler

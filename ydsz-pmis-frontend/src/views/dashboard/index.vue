@@ -139,16 +139,20 @@ const healthOption = computed<EChartsOption>(() => ({
 
 /** 近 6 月收入/毛利趋势折线图 option */
 const trendOption = computed<EChartsOption>(() => {
-  // 近 6 月 (基于 period 推断)
+  // 优先使用后端返回的周期标签，回退到基于 period 推断的近 6 月
   const months: string[] = []
-  const baseDate = new Date(period.value + '-01')
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date(baseDate.getFullYear(), baseDate.getMonth() - i, 1)
-    months.push(`${d.getMonth() + 1}月`)
+  if (trendData.value?.periods?.length) {
+    months.push(...trendData.value.periods)
+  } else {
+    const baseDate = new Date(period.value + '-01')
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(baseDate.getFullYear(), baseDate.getMonth() - i, 1)
+      months.push(`${d.getMonth() + 1}月`)
+    }
   }
-  // 演示数据 (生产应来自后端 timeSeries API)
-  const mockRevenue = [420, 480, 530, 580, 620, 685]
-  const mockProfit = [120, 140, 158, 170, 185, 198]
+  // 收入/毛利序列来自后端 kpi-trend 接口（已确认收入 / 毛利）
+  const revenueSeries = trendData.value?.confirmedRevenueSeries ?? []
+  const profitSeries = trendData.value?.grossProfitSeries ?? []
   return {
     title: { text: '近 6 月收入/毛利趋势', left: 'center', textStyle: { fontSize: 14 } },
     tooltip: { trigger: 'axis' },
@@ -162,7 +166,7 @@ const trendOption = computed<EChartsOption>(() => {
         type: 'line',
         smooth: true,
         symbolSize: 8,
-        data: mockRevenue,
+        data: revenueSeries,
         itemStyle: { color: '#409eff' },
         areaStyle: { opacity: 0.15 },
       },
@@ -171,7 +175,7 @@ const trendOption = computed<EChartsOption>(() => {
         type: 'line',
         smooth: true,
         symbolSize: 8,
-        data: mockProfit,
+        data: profitSeries,
         itemStyle: { color: '#67c23a' },
         areaStyle: { opacity: 0.15 },
       },
@@ -239,8 +243,11 @@ async function loadOverview() {
   try {
     const { data } = await getCockpitOverview(period.value)
     kpi.value = data as CockpitKpi
-  } catch {
+  } catch (e) {
     kpi.value = null
+    if (!isHandledError(e)) {
+      ElMessage.error('数据加载失败，请刷新重试')
+    }
   } finally {
     loading.value = false
   }
@@ -251,14 +258,30 @@ async function loadAlertTopN() {
   try {
     const { data } = await getCockpitAlertTopN(period.value, 5)
     alertTopN.value = (data as AlertTopNItem[]) || []
-  } catch {
+  } catch (e) {
     alertTopN.value = []
+    if (!isHandledError(e)) {
+      ElMessage.error('预警数据加载失败，请刷新重试')
+    }
+  }
+}
+
+/** 拉取近 6 月收入/毛利趋势数据并更新图表 */
+async function loadTrendData() {
+  try {
+    const { data } = await getKpiTrend(6)
+    trendData.value = data ?? null
+  } catch (e) {
+    trendData.value = null
+    if (!isHandledError(e)) {
+      ElMessage.error('趋势数据加载失败')
+    }
   }
 }
 
 /** 并发刷新所有数据并重绘所有图表 */
 async function refreshAll() {
-  await Promise.all([loadOverview(), loadAlertTopN()])
+  await Promise.all([loadOverview(), loadAlertTopN(), loadTrendData()])
   await nextTick()
   // useECharts 自动绑定实例, 只需 setOption
   setHealthOption(healthOption.value)
@@ -333,7 +356,7 @@ onMounted(async () => {
     </div>
 
     <el-row :gutter="16" class="metric-row">
-      <el-col v-for="m in metrics" :key="m.title" :span="6">
+      <el-col v-for="m in metrics" :key="m.title" :xs="24" :sm="12" :md="8" :lg="6">
         <el-card class="metric-card" shadow="hover">
           <div class="metric-content">
             <div class="metric-icon" :style="{ background: m.color }">
@@ -354,17 +377,17 @@ onMounted(async () => {
 
     <!-- 第一行图表: 健康度 + 趋势 -->
     <el-row :gutter="16">
-      <el-col :span="8">
+      <el-col :xs="24" :sm="12" :md="8">
         <el-card shadow="never" v-loading="loading">
           <div ref="healthRef" class="chart-area" />
         </el-card>
       </el-col>
-      <el-col :span="10">
+      <el-col :xs="24" :sm="12" :md="10">
         <el-card shadow="never" v-loading="loading">
           <div ref="trendRef" class="chart-area" />
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :xs="24" :sm="12" :md="6">
         <el-card shadow="never">
           <template #header>
             <div class="card-header">
@@ -399,12 +422,12 @@ onMounted(async () => {
 
     <!-- 第二行图表: EVM 柱图 + 预警 TOP 5 -->
     <el-row :gutter="16">
-      <el-col :span="10">
+      <el-col :xs="24" :sm="12" :md="10">
         <el-card shadow="never" v-loading="loading">
           <div ref="evmRef" class="chart-area" />
         </el-card>
       </el-col>
-      <el-col :span="14">
+      <el-col :xs="24" :sm="12" :md="14">
         <el-card shadow="never" v-loading="loading">
           <div ref="alertTopNRef" class="chart-area" />
         </el-card>
