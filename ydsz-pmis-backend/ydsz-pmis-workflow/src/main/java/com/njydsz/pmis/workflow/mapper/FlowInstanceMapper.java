@@ -89,4 +89,13 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
                    @Param("startTime") LocalDateTime startTime,
                    @Param("endTime") LocalDateTime endTime,
                    @Param("tenantId") Long tenantId);
+
+    /**
+     * 更新实例的 dueAt 字段（子流程超时用）
+     *
+     * @param id    实例 ID
+     * @param dueAt 超时时间
+     */
+    int updateDueAt(@Param("id") Long id,
+                    @Param("dueAt") LocalDateTime dueAt);
 }

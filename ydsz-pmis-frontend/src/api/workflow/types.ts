@@ -308,3 +308,35 @@ export interface FlowReplayStepDTO {
     height: number
   }
 }
+
+// ===========================================
+// 表单设计器
+// ===========================================
+
+/** 表单 schema 保存/更新 */
+export interface FormSchemaDTO {
+  /** 表单编码（唯一标识） */
+  formCode: string
+  /** 表单名称 */
+  formName: string
+  /** 表单 schema JSON 字符串 */
+  formSchema: string
+  /** 表单描述 */
+  description?: string
+}
+
+/** 表单 schema 查询结果 */
+export interface FormSchemaVO {
+  /** 表单编码 */
+  formCode: string
+  /** 表单名称 */
+  formName: string
+  /** 表单 schema JSON 字符串 */
+  formSchema: string
+  /** 表单描述 */
+  description?: string
+  /** 创建时间 */
+  createTime?: string
+  /** 更新时间 */
+  updateTime?: string
+}

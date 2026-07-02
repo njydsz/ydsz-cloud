@@ -30,6 +30,8 @@ import type {
   InstanceTrendItemDTO,
   ApproverEfficiencyDTO,
   FlowTypeDistributionDTO,
+  FormSchemaDTO,
+  FormSchemaVO,
 } from './types'
 
 /** 引擎信息 */
@@ -562,6 +564,42 @@ export function getFlowTypeDistribution(params: {
   return http.get<ApiResponse<FlowTypeDistributionDTO[]>>(
     '/workflow/engine/monitor/flow-type-distribution',
     { params },
+  )
+}
+
+// ===========================================
+// 表单设计器 Schema
+// ===========================================
+
+/** 保存/更新表单 schema */
+export function saveFormSchema(payload: FormSchemaDTO) {
+  return http.post<ApiResponse<number>>('/workflow/form/schema/save', payload)
+}
+
+/** 根据表单编码获取表单 schema */
+export function getFormSchema(formCode: string) {
+  return http.get<ApiResponse<FormSchemaVO>>(
+    `/workflow/form/schema/${formCode}`,
+  )
+}
+
+/** 分页查询表单 schema 列表 */
+export function pageFormSchemas(params: {
+  formCode?: string
+  formName?: string
+  pageNum?: number
+  pageSize?: number
+}) {
+  return http.get<ApiResponse<PageResult<FormSchemaVO>>>(
+    '/workflow/form/schema/page',
+    { params },
+  )
+}
+
+/** 删除表单 schema */
+export function deleteFormSchema(formCode: string) {
+  return http.delete<ApiResponse<null>>(
+    `/workflow/form/schema/${formCode}`,
   )
 }
 

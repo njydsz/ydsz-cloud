@@ -45,6 +45,9 @@ import java.util.Map;
  * 此处复用 {@link FlowTaskMapper#completeTask} 以 {@link FlowTaskStatus#TIMEOUT} 状态标记超时，
  * 与 {@code FlowTaskServiceImpl.timeoutTask} 内部实现保持一致。
  *
+ * <p>增强：添加子流程超时检测逻辑，扫描 pmis_flow_instance 中 due_at 已超期且状态为 RUNNING 的子流程实例，
+ * 自动终止子流程并同步父流程。
+ *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */

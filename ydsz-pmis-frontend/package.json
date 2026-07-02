@@ -27,6 +27,13 @@
     "prepare": "husky install"
   },
   "dependencies": {
+    "@codemirror/autocomplete": "^6.20.3",
+    "@codemirror/basic-setup": "^0.20.0",
+    "@codemirror/commands": "^6.10.4",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/state": "^6.7.0",
+    "@codemirror/view": "^6.43.4",
     "@element-plus/icons-vue": "^2.3.1",
     "@form-create/designer": "^3.5.0",
     "@form-create/element-ui": "^3.1.0",
@@ -35,6 +42,7 @@
     "@vueuse/core": "^11.1.0",
     "axios": "^1.7.7",
     "bpmn-js": "^17.11.1",
+    "codemirror": "^6.65.7",
     "dayjs": "^1.11.13",
     "echarts": "^5.5.1",
     "element-plus": "^2.8.4",

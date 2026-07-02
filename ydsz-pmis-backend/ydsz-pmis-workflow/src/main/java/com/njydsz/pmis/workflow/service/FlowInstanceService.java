@@ -150,4 +150,12 @@ public interface FlowInstanceService {
      * @return Map 包含 nodeCode / nodeName / formFieldsConfig / variables
      */
     Map<String, Object> getFormRenderData(Long instanceId, Long taskId);
+
+    /**
+     * 设置实例的 dueAt 字段（子流程超时处理）
+     *
+     * @param instanceId 实例 ID
+     * @param dueAt      超时时间（传 null 清除超时标记）
+     */
+    void setDueAt(Long instanceId, LocalDateTime dueAt);
 }

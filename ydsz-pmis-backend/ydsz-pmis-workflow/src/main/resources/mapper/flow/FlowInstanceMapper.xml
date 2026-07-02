@@ -30,13 +30,17 @@
         <result column="deleted" property="deleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="parent_instance_id" property="parentInstanceId"/>
+        <result column="parent_node_code" property="parentNodeCode"/>
+        <result column="due_at" property="dueAt"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, flow_code, flow_name, definition_id, flow_version, business_type, business_id,
         business_no, title, initiator_id, initiator_name, current_node_code, current_node_name,
         variable, flow_status, activity_status, start_at, end_at, duration_ms, status,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
+        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id,
+        parent_instance_id, parent_node_code, due_at
     </sql>
 
     <select id="selectByBusiness" resultMap="BaseResultMap">
@@ -139,4 +143,14 @@
             AND tenant_id = #{tenantId}
           </if>
     </select>
+
+    <!-- Update due_at for flow instance -->
+    <update id="updateDueAt">
+        UPDATE pmis_flow_instance
+        SET due_at = #{dueAt},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
 </mapper>

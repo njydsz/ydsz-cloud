@@ -293,3 +293,80 @@ export const aiGenerateAndSave = (description: string, availableFields?: string[
     method: 'POST',
     data: { description, availableFields },
   })
+
+// ==================== 冲突检测 ====================
+
+/** 规则冲突信息 */
+export interface RuleConflict {
+  ruleA: string
+  ruleAName: string
+  ruleB: string
+  ruleBName: string
+  overlapFields: string[]
+  severity: 'high' | 'medium' | 'low'
+}
+
+/**
+ * 检测规则冲突
+ * @returns 冲突规则对列表
+ */
+export const detectConflicts = () =>
+  request<RuleConflict[]>({ url: '/execution/api/v1/rules/conflicts', method: 'GET' })
+
+// ==================== 测试用例管理 ====================
+
+/** 测试用例 */
+export interface RuleTestCase {
+  id?: number
+  /** 测试用例名称 */
+  name: string
+  /** 关联规则编码（可选，null 表示通用测试用例） */
+  ruleCode?: string
+  /** 事实数据 JSON */
+  factsData: Record<string, unknown>
+  /** 预期触发规则编码列表 */
+  expectedTriggered?: string[]
+  /** 描述 */
+  description?: string
+  createdAt?: string
+  updatedAt?: string
+}
+
+/**
+ * 查询所有测试用例
+ */
+export const listTestCases = (ruleCode?: string) =>
+  request<RuleTestCase[]>({
+    url: '/execution/api/v1/rules/test-cases',
+    method: 'GET',
+    params: { ruleCode },
+  })
+
+/**
+ * 保存测试用例
+ */
+export const saveTestCase = (data: RuleTestCase) =>
+  request<RuleTestCase>({
+    url: '/execution/api/v1/rules/test-cases',
+    method: 'POST',
+    data,
+  })
+
+/**
+ * 删除测试用例
+ */
+export const deleteTestCase = (id: number) =>
+  request<void>({
+    url: `/execution/api/v1/rules/test-cases/${id}`,
+    method: 'DELETE',
+  })
+
+/**
+ * 批量执行测试用例
+ */
+export const batchRunTestCases = (ids: number[]) =>
+  request<Record<string, RuleResult[]>>({
+    url: '/execution/api/v1/rules/test-cases/batch-run',
+    method: 'POST',
+    data: { ids },
+  })

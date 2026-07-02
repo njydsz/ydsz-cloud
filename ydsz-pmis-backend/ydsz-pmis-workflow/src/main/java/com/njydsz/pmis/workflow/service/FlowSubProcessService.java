@@ -63,10 +63,24 @@ public interface FlowSubProcessService {
      */
     java.util.List<FlowInstanceDO> listChildren(Long parentInstanceId);
 
-    /**
-     * DTO 构造工具：把子流程启动所需参数封装
-     */
+    /** DTO 构造工具：把子流程启动所需参数封装 */
     FlowStartProcessDTO buildSubProcessStartDTO(FlowInstanceDO parentInstance,
                                                 String subFlowCode,
                                                 Map<String, Object> variables);
+
+    /**
+     * 获取子流程完整上下文（父流程变量 + 子流程自身变量）
+     *
+     * @param childInstanceId 子流程实例 ID
+     * @return 合并后的变量 Map
+     */
+    Map<String, Object> getSubProcessContext(Long childInstanceId);
+
+    /**
+     * 递归查询子流程树
+     *
+     * @param parentInstanceId 父流程实例 ID
+     * @return 子流程树列表，格式 [{instanceId, instanceName, flowCode, status, subProcesses: [...]}]
+     */
+    java.util.List<Map<String, Object>> listSubProcessTree(Long parentInstanceId);
 }

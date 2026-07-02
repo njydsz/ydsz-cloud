@@ -2,35 +2,34 @@ package com.njydsz.pmis.workflow.service.impl;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.SecurityContext;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
+import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
+import com.njydsz.pmis.workflow.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.entity.FlowSkipDO;
+import com.njydsz.pmis.workflow.entity.FlowTemplateDO;
+import com.njydsz.pmis.workflow.mapper.FlowTemplateMapper;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.service.FlowTemplateService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * GAP-P1: 流程模板服务实现
+ * 流程模板市场服务实现
  *
- * <p>预置 PMIS 领域常见审批流程模板，使用静态列表维护。
- * 每个模板包含编码、名称、分类、描述以及轻量 JSON 节点/跳转定义。
- * {@link #importTemplate} 通过 {@link FlowDefinitionService#deploy} 部署为草稿。
- *
- * <p>预置模板清单：
- * <ul>
- *   <li>purchase_approval — 采购审批</li>
- *   <li>expense_reimbursement — 费用报销</li>
- *   <li>business_trip — 出差申请</li>
- *   <li>seal_request — 用印申请</li>
- *   <li>contract_approval — 合同审批</li>
- *   <li>project_initiation — 项目立项</li>
- * </ul>
+ * <p>基于 pmis_flow_template 数据库表，提供流程模板的查询、导入、导出能力。
+ * 导入时通过 {@link FlowDefinitionService#deploy} 将模板的 BPMN XML 部署为草稿流程定义。
+ * 导出时将已发布流程定义转换为 BPMN XML 并存入模板表。
  *
  * @author ydsz-pmis-team
  * @since 1.2.0
@@ -40,24 +39,14 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTemplateServiceImpl implements FlowTemplateService {
 
+    private final FlowTemplateMapper templateMapper;
     private final FlowDefinitionService definitionService;
-
-    /** 预置模板列表（类加载时初始化） */
-    private static final List<Map<String, Object>> TEMPLATES = new ArrayList<>();
-
-    static {
-        initTemplates();
-    }
 
     @Override
     public List<Map<String, Object>> listTemplates(String category) {
         try {
-            if (!StringUtils.hasText(category)) {
-                return List.copyOf(TEMPLATES);
-            }
-            return TEMPLATES.stream()
-                    .filter(t -> category.equals(t.get("category")))
-                    .collect(java.util.stream.Collectors.toList());
+            List<FlowTemplateDO> templates = templateMapper.selectByCategory(category);
+            return templates.stream().map(this::toSummaryMap).collect(Collectors.toList());
         } catch (Exception e) {
             log.error("[FlowTemplate] 列出模板异常: category={} err={}", category, e.getMessage(), e);
             return List.of();
@@ -65,276 +54,314 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     }
 
     @Override
-    public Long importTemplate(String templateCode, Long tenantId) {
+    public Map<String, Object> getTemplate(String templateCode) {
         try {
             if (!StringUtils.hasText(templateCode)) {
                 throw new BizException(BizErrorCode.BAD_REQUEST, "templateCode 不能为空");
             }
-
-            Map<String, Object> template = findTemplate(templateCode);
+            FlowTemplateDO template = templateMapper.selectByTemplateCode(templateCode);
             if (template == null) {
                 throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + templateCode);
             }
+            return toDetailMap(template);
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("[FlowTemplate] 获取模板详情异常: templateCode={} err={}", templateCode, e.getMessage(), e);
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "获取模板详情失败: " + e.getMessage());
+        }
+    }
 
-            // 构建 FlowDeployProcessDTO
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long importTemplate(String templateCode, String flowName) {
+        try {
+            if (!StringUtils.hasText(templateCode)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "templateCode 不能为空");
+            }
+            FlowTemplateDO template = templateMapper.selectByTemplateCode(templateCode);
+            if (template == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND, "模板不存在: " + templateCode);
+            }
+            if (!StringUtils.hasText(template.getBpmnXml())) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "模板 BPMN XML 为空: " + templateCode);
+            }
+
+            // 构建部署 DTO，使用 BPMN XML 模式
             FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
-            dto.setFlowCode((String) template.get("code"));
-            dto.setFlowName((String) template.get("name"));
-            dto.setCategory((String) template.get("category"));
-            dto.setDescription((String) template.get("description"));
+            dto.setFlowCode(template.getTemplateCode());
+            dto.setFlowName(StringUtils.hasText(flowName) ? flowName : template.getTemplateName());
+            dto.setCategory(template.getCategory());
+            dto.setDescription(template.getDescription());
             dto.setVersion("1.0");
-            dto.setTenantId(tenantId);
-
-            @SuppressWarnings("unchecked")
-            List<FlowDeployProcessDTO.FlowNodeDTO> nodes =
-                    (List<FlowDeployProcessDTO.FlowNodeDTO>) template.get("nodes");
-            @SuppressWarnings("unchecked")
-            List<FlowDeployProcessDTO.FlowSkipDTO> skips =
-                    (List<FlowDeployProcessDTO.FlowSkipDTO>) template.get("skips");
-            dto.setNodes(nodes);
-            dto.setSkips(skips);
+            dto.setFormPath(template.getFormPath());
+            dto.setBpmnXml(template.getBpmnXml());
+            dto.setTenantId(SecurityContext.getTenantIdOrDefault(1L));
 
             // 部署为草稿
             Long definitionId = definitionService.deploy(dto);
-            log.info("[FlowTemplate] 模板导入成功: templateCode={} definitionId={} tenantId={}",
-                    templateCode, definitionId, tenantId);
+
+            // 增加使用次数
+            templateMapper.incrementUseCount(templateCode);
+
+            log.info("[FlowTemplate] 模板导入成功: templateCode={} definitionId={} flowName={}",
+                    templateCode, definitionId, dto.getFlowName());
             return definitionId;
         } catch (BizException e) {
             throw e;
         } catch (Exception e) {
-            log.error("[FlowTemplate] 模板导入异常: templateCode={} err={}",
-                    templateCode, e.getMessage(), e);
+            log.error("[FlowTemplate] 模板导入异常: templateCode={} err={}", templateCode, e.getMessage(), e);
             throw new BizException(BizErrorCode.INTERNAL_ERROR,
                     "模板导入失败: " + templateCode + " — " + e.getMessage());
         }
     }
 
     @Override
-    public Map<String, Object> previewTemplate(String templateCode) {
+    @Transactional(rollbackFor = Exception.class)
+    public void exportAsTemplate(Long definitionId, String templateName, String category) {
         try {
-            if (!StringUtils.hasText(templateCode)) {
-                return Map.of();
+            if (definitionId == null) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId 不能为空");
             }
-            Map<String, Object> template = findTemplate(templateCode);
-            if (template == null) {
-                return Map.of();
+            if (!StringUtils.hasText(templateName)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "templateName 不能为空");
             }
-            // 返回完整模板信息（含 nodes / skips）
-            Map<String, Object> result = new LinkedHashMap<>(template);
-            return result;
+
+            // 获取流程定义详情
+            Map<String, Object> detail = definitionService.getDetail(definitionId);
+            if (detail == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            }
+
+            FlowDefinitionDO definition = (FlowDefinitionDO) detail.get("definition");
+            if (definition == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+            }
+
+            // 生成模板编码
+            String templateCode = generateTemplateCode(category, templateName);
+
+            // 生成 BPMN XML
+            String bpmnXml = generateBpmnXml(detail);
+
+            // 检查是否已存在
+            FlowTemplateDO existing = templateMapper.selectByTemplateCode(templateCode);
+            if (existing != null) {
+                // 更新已有模板
+                FlowTemplateDO update = new FlowTemplateDO();
+                update.setId(existing.getId());
+                update.setTemplateName(templateName);
+                update.setCategory(StringUtils.hasText(category) ? category : "GENERAL");
+                update.setDescription(definition.getDescription());
+                update.setBpmnXml(bpmnXml);
+                update.setFormPath(definition.getFormPath());
+                templateMapper.updateById(update);
+                log.info("[FlowTemplate] 模板已更新: templateCode={} definitionId={}", templateCode, definitionId);
+            } else {
+                // 新建模板
+                FlowTemplateDO template = new FlowTemplateDO();
+                template.setTemplateCode(templateCode);
+                template.setTemplateName(templateName);
+                template.setCategory(StringUtils.hasText(category) ? category : "GENERAL");
+                template.setDescription(definition.getDescription());
+                template.setBpmnXml(bpmnXml);
+                template.setFormPath(definition.getFormPath());
+                template.setUseCount(0);
+                template.setSortOrder(999);
+                templateMapper.insert(template);
+                log.info("[FlowTemplate] 模板已创建: templateCode={} definitionId={}", templateCode, definitionId);
+            }
+        } catch (BizException e) {
+            throw e;
         } catch (Exception e) {
-            log.error("[FlowTemplate] 预览模板异常: templateCode={} err={}",
-                    templateCode, e.getMessage(), e);
-            return Map.of();
+            log.error("[FlowTemplate] 导出模板异常: definitionId={} err={}", definitionId, e.getMessage(), e);
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "导出模板失败: " + e.getMessage());
         }
     }
 
     // ============================== 私有方法 ==============================
 
     /**
-     * 按编码查找模板
+     * 将 DO 转为摘要 Map（不含 BPMN XML）
      */
-    private Map<String, Object> findTemplate(String code) {
-        return TEMPLATES.stream()
-                .filter(t -> code.equals(t.get("code")))
-                .findFirst()
-                .orElse(null);
-    }
-
-    // ============================== 模板初始化 ==============================
-
-    /**
-     * 初始化预置模板
-     */
-    private static void initTemplates() {
-        // 1. 采购审批
-        TEMPLATES.add(buildTemplate(
-                "purchase_approval", "采购审批", "采购管理",
-                "适用于项目采购、零星采购的审批流程，按金额分级审批",
-                buildNodes(
-                        node("start", "开始", 0, null),
-                        node("applicant", "申请人提交", 1, "user:${initiatorId}"),
-                        node("dept_manager", "部门经理审批", 1, "role:dept_manager"),
-                        node("finance", "财务审批", 1, "role:finance"),
-                        node("gm", "总经理审批", 1, "role:general_manager"),
-                        node("end", "结束", 6, null)
-                ),
-                buildSkips(
-                        skip("start", "applicant", "PASS", null),
-                        skip("applicant", "dept_manager", "PASS", "${amount <= 50000}"),
-                        skip("applicant", "finance", "PASS", "${amount > 50000}"),
-                        skip("dept_manager", "end", "PASS", null),
-                        skip("finance", "gm", "PASS", null),
-                        skip("gm", "end", "PASS", null)
-                )
-        ));
-
-        // 2. 费用报销
-        TEMPLATES.add(buildTemplate(
-                "expense_reimbursement", "费用报销", "财务管理",
-                "适用于员工日常费用报销，按金额分级审批",
-                buildNodes(
-                        node("start", "开始", 0, null),
-                        node("submit", "提交报销", 1, "user:${initiatorId}"),
-                        node("dept_leader", "部门负责人审批", 1, "role:dept_leader"),
-                        node("finance_check", "财务审核", 1, "role:finance"),
-                        node("cashier", "出纳付款", 1, "role:cashier"),
-                        node("end", "结束", 6, null)
-                ),
-                buildSkips(
-                        skip("start", "submit", "PASS", null),
-                        skip("submit", "dept_leader", "PASS", null),
-                        skip("dept_leader", "finance_check", "PASS", null),
-                        skip("finance_check", "cashier", "PASS", null),
-                        skip("cashier", "end", "PASS", null)
-                )
-        ));
-
-        // 3. 出差申请
-        TEMPLATES.add(buildTemplate(
-                "business_trip", "出差申请", "行政管理",
-                "适用于员工出差申请审批，包含出差事由、行程、预算",
-                buildNodes(
-                        node("start", "开始", 0, null),
-                        node("apply", "提交申请", 1, "user:${initiatorId}"),
-                        node("dept_approval", "部门审批", 1, "role:dept_manager"),
-                        node("hr_record", "HR备案", 2, "role:hr"),
-                        node("end", "结束", 6, null)
-                ),
-                buildSkips(
-                        skip("start", "apply", "PASS", null),
-                        skip("apply", "dept_approval", "PASS", null),
-                        skip("dept_approval", "hr_record", "PASS", null),
-                        skip("hr_record", "end", "PASS", null)
-                )
-        ));
-
-        // 4. 用印申请
-        TEMPLATES.add(buildTemplate(
-                "seal_request", "用印申请", "行政管理",
-                "适用于公司印章使用申请审批",
-                buildNodes(
-                        node("start", "开始", 0, null),
-                        node("apply", "提交用印申请", 1, "user:${initiatorId}"),
-                        node("dept_manager", "部门经理审批", 1, "role:dept_manager"),
-                        node("legal_check", "法务审核", 1, "role:legal"),
-                        node("gm_approval", "总经理审批", 1, "role:general_manager"),
-                        node("end", "结束", 6, null)
-                ),
-                buildSkips(
-                        skip("start", "apply", "PASS", null),
-                        skip("apply", "dept_manager", "PASS", null),
-                        skip("dept_manager", "legal_check", "PASS", "${sealType == 'official'}"),
-                        skip("dept_manager", "end", "PASS", "${sealType != 'official'}"),
-                        skip("legal_check", "gm_approval", "PASS", null),
-                        skip("gm_approval", "end", "PASS", null)
-                )
-        ));
-
-        // 5. 合同审批
-        TEMPLATES.add(buildTemplate(
-                "contract_approval", "合同审批", "合同管理",
-                "适用于各类合同签订前的审批流程",
-                buildNodes(
-                        node("start", "开始", 0, null),
-                        node("draft", "起草合同", 1, "user:${initiatorId}"),
-                        node("dept_review", "部门审核", 1, "role:dept_manager"),
-                        node("legal_review", "法务审核", 1, "role:legal"),
-                        node("finance_review", "财务审核", 1, "role:finance"),
-                        node("gm_sign", "总经理签批", 1, "role:general_manager"),
-                        node("end", "结束", 6, null)
-                ),
-                buildSkips(
-                        skip("start", "draft", "PASS", null),
-                        skip("draft", "dept_review", "PASS", null),
-                        skip("dept_review", "legal_review", "PASS", null),
-                        skip("legal_review", "finance_review", "PASS", null),
-                        skip("finance_review", "gm_sign", "PASS", null),
-                        skip("gm_sign", "end", "PASS", null)
-                )
-        ));
-
-        // 6. 项目立项
-        TEMPLATES.add(buildTemplate(
-                "project_initiation", "项目立项", "项目管理",
-                "适用于新项目立项审批流程",
-                buildNodes(
-                        node("start", "开始", 0, null),
-                        node("initiate", "发起立项", 1, "user:${initiatorId}"),
-                        node("pmo_review", "PMO审核", 1, "role:pmo"),
-                        node("finance_review", "财务评估", 1, "role:finance"),
-                        node("gm_approval", "总经理审批", 1, "role:general_manager"),
-                        node("end", "结束", 6, null)
-                ),
-                buildSkips(
-                        skip("start", "initiate", "PASS", null),
-                        skip("initiate", "pmo_review", "PASS", null),
-                        skip("pmo_review", "finance_review", "PASS", null),
-                        skip("finance_review", "gm_approval", "PASS", null),
-                        skip("gm_approval", "end", "PASS", null)
-                )
-        ));
-
-        log.info("[FlowTemplate] 预置模板初始化完成: count={}", TEMPLATES.size());
-    }
-
-    // ============================== 模板构建辅助 ==============================
-
-    /**
-     * 构建模板 Map
-     */
-    private static Map<String, Object> buildTemplate(String code, String name, String category,
-                                                      String description,
-                                                      List<FlowDeployProcessDTO.FlowNodeDTO> nodes,
-                                                      List<FlowDeployProcessDTO.FlowSkipDTO> skips) {
-        Map<String, Object> template = new LinkedHashMap<>();
-        template.put("code", code);
-        template.put("name", name);
-        template.put("category", category);
-        template.put("description", description);
-        template.put("nodes", nodes);
-        template.put("skips", skips);
-        return template;
+    private Map<String, Object> toSummaryMap(FlowTemplateDO t) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("templateCode", t.getTemplateCode());
+        map.put("templateName", t.getTemplateName());
+        map.put("category", t.getCategory());
+        map.put("description", t.getDescription());
+        map.put("icon", t.getIcon());
+        map.put("formPath", t.getFormPath());
+        map.put("useCount", t.getUseCount());
+        map.put("sortOrder", t.getSortOrder());
+        return map;
     }
 
     /**
-     * 构建节点列表
+     * 将 DO 转为详情 Map（含 BPMN XML）
      */
-    private static List<FlowDeployProcessDTO.FlowNodeDTO> buildNodes(FlowDeployProcessDTO.FlowNodeDTO... nodes) {
-        return new ArrayList<>(List.of(nodes));
+    private Map<String, Object> toDetailMap(FlowTemplateDO t) {
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("templateCode", t.getTemplateCode());
+        map.put("templateName", t.getTemplateName());
+        map.put("category", t.getCategory());
+        map.put("description", t.getDescription());
+        map.put("icon", t.getIcon());
+        map.put("formPath", t.getFormPath());
+        map.put("useCount", t.getUseCount());
+        map.put("sortOrder", t.getSortOrder());
+        map.put("bpmnXml", t.getBpmnXml());
+        return map;
     }
 
     /**
-     * 构建跳转列表
+     * 生成模板编码
      */
-    private static List<FlowDeployProcessDTO.FlowSkipDTO> buildSkips(FlowDeployProcessDTO.FlowSkipDTO... skips) {
-        return new ArrayList<>(List.of(skips));
+    private String generateTemplateCode(String category, String templateName) {
+        String prefix = StringUtils.hasText(category)
+                ? category.toLowerCase().replace(" ", "_")
+                : "general";
+        String suffix = templateName.toLowerCase()
+                .replaceAll("[\\s\\p{Punct}]+", "_")
+                .replaceAll("_+", "_")
+                .replaceAll("^_|_$", "");
+        if (suffix.length() > 30) {
+            suffix = suffix.substring(0, 30);
+        }
+        return prefix + "_" + suffix;
     }
 
     /**
-     * 创建节点 DTO
+     * 根据流程定义详情生成 BPMN 2.0 XML
      */
-    private static FlowDeployProcessDTO.FlowNodeDTO node(String nodeCode, String nodeName,
-                                                          int nodeType, String permissionFlag) {
-        FlowDeployProcessDTO.FlowNodeDTO n = new FlowDeployProcessDTO.FlowNodeDTO();
-        n.setNodeCode(nodeCode);
-        n.setNodeName(nodeName);
-        n.setNodeType(nodeType);
-        n.setPermissionFlag(permissionFlag);
-        return n;
+    @SuppressWarnings("unchecked")
+    private String generateBpmnXml(Map<String, Object> detail) {
+        FlowDefinitionDO definition = (FlowDefinitionDO) detail.get("definition");
+        List<FlowNodeDO> nodes = (List<FlowNodeDO>) detail.get("nodes");
+        List<FlowSkipDO> skips = (List<FlowSkipDO>) detail.get("skips");
+
+        String processId = definition.getFlowCode();
+        String processName = definition.getFlowName();
+
+        StringBuilder xml = new StringBuilder();
+        xml.append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
+        xml.append("<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n");
+        xml.append("             xmlns:flowable=\"http://flowable.org/bpmn\"\n");
+        xml.append("             targetNamespace=\"http://pmis.ydsz/flow\">\n");
+        xml.append("  <process id=\"").append(escapeXml(processId))
+                .append("\" name=\"").append(escapeXml(processName))
+                .append("\" isExecutable=\"true\">\n");
+
+        // 输出节点
+        if (nodes != null) {
+            for (FlowNodeDO node : nodes) {
+                String nodeCode = node.getNodeCode();
+                String nodeName = node.getNodeName();
+                Integer nodeType = node.getNodeType();
+                String permissionFlag = node.getPermissionFlag();
+
+                String elementName = mapNodeTypeToElement(nodeType);
+                xml.append("    <").append(elementName)
+                        .append(" id=\"").append(escapeXml(nodeCode)).append("\"");
+                if (nodeName != null && !nodeName.isBlank()) {
+                    xml.append(" name=\"").append(escapeXml(nodeName)).append("\"");
+                }
+                if (permissionFlag != null && !permissionFlag.isBlank() && "userTask".equals(elementName)) {
+                    xml.append(" flowable:assignee=\"").append(escapeXml(permissionFlag)).append("\"");
+                }
+                xml.append("/>\n");
+            }
+        }
+
+        // 输出跳转
+        if (skips != null) {
+            for (FlowSkipDO skip : skips) {
+                // 从 ext JSON 中解析 sourceRef
+                String fromNodeCode = extractSourceRef(skip.getExt());
+                String toNodeCode = skip.getNextNodeCode();
+                String skipName = skip.getSkipName();
+                String skipCondition = skip.getSkipCondition();
+
+                String flowId = "flow_" + (fromNodeCode != null ? fromNodeCode : "") + "_to_"
+                        + (toNodeCode != null ? toNodeCode : "");
+
+                if (skipCondition != null && !skipCondition.isBlank()) {
+                    xml.append("    <sequenceFlow id=\"").append(escapeXml(flowId))
+                            .append("\" sourceRef=\"").append(escapeXml(fromNodeCode))
+                            .append("\" targetRef=\"").append(escapeXml(toNodeCode)).append("\">\n");
+                    xml.append("      <conditionExpression xsi:type=\"tFormalExpression\">")
+                            .append(escapeXml(skipCondition))
+                            .append("</conditionExpression>\n");
+                    xml.append("    </sequenceFlow>\n");
+                } else {
+                    xml.append("    <sequenceFlow id=\"").append(escapeXml(flowId))
+                            .append("\" sourceRef=\"").append(escapeXml(fromNodeCode))
+                            .append("\" targetRef=\"").append(escapeXml(toNodeCode)).append("\"");
+                    if (skipName != null && !skipName.isBlank()) {
+                        xml.append(" name=\"").append(escapeXml(skipName)).append("\"");
+                    }
+                    xml.append("/>\n");
+                }
+            }
+        }
+
+        xml.append("  </process>\n");
+        xml.append("</definitions>\n");
+        return xml.toString();
     }
 
     /**
-     * 创建跳转 DTO
+     * 节点类型码映射为 BPMN 元素名
      */
-    private static FlowDeployProcessDTO.FlowSkipDTO skip(String from, String to,
-                                                          String skipType, String condition) {
-        FlowDeployProcessDTO.FlowSkipDTO s = new FlowDeployProcessDTO.FlowSkipDTO();
-        s.setFromNodeCode(from);
-        s.setToNodeCode(to);
-        s.setSkipType(skipType);
-        s.setSkipCondition(condition);
-        s.setSkipName(from + " → " + to);
-        return s;
+    private String mapNodeTypeToElement(Integer nodeType) {
+        if (nodeType == null) {
+            return "userTask";
+        }
+        return switch (nodeType) {
+            case 0 -> "startEvent";
+            case 1 -> "userTask";
+            case 2 -> "userTask";       // 抄送节点也映射为 userTask
+            case 3 -> "exclusiveGateway";
+            case 4 -> "parallelGateway";
+            case 5 -> "inclusiveGateway";
+            case 6 -> "endEvent";
+            case 7 -> "callActivity";    // 子流程
+            default -> "userTask";
+        };
+    }
+
+    /**
+     * 从 skip 的 ext JSON 中提取 sourceRef（源节点编码）
+     */
+    private String extractSourceRef(String ext) {
+        if (ext == null || ext.isBlank()) {
+            return null;
+        }
+        try {
+            JSONObject extJson = JSON.parseObject(ext);
+            if (extJson != null) {
+                String sourceRef = extJson.getString("sourceRef");
+                if (sourceRef != null && !sourceRef.isBlank()) {
+                    return sourceRef;
+                }
+            }
+        } catch (Exception ignored) {
+            // ignore parse errors
+        }
+        return null;
+    }
+
+    /**
+     * XML 转义
+     */
+    private String escapeXml(String s) {
+        if (s == null) {
+            return "";
+        }
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&apos;");
     }
 }

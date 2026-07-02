@@ -14,17 +14,24 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
- * 规则链，支持 THEN/IF/SWITCH/WHEN 编排
+ * 规则链，支持 THEN/IF/ELIF/SWITCH/WHEN/FOR/WHILE/BREAK 编排
  *
  * <p>规则编排的核心载体，按 {@link RuleChainType} 决定执行语义：
  * <ul>
  *   <li><b>THEN</b> - 顺序执行：节点依次串行执行，收集触发结果</li>
  *   <li><b>WHEN</b> - 并行执行：基于 {@link CompletableFuture#supplyAsync} 并发执行全部节点，收集触发结果</li>
  *   <li><b>IF</b> - 条件执行：先对 {@link #conditionExpression} 求值，为 true 才执行动作规则</li>
+ *   <li><b>ELIF</b> - 多分支条件：依次求值多个条件表达式，执行第一个匹配的分支，无匹配则执行 else 分支</li>
  *   <li><b>SWITCH</b> - 分支选择：从 {@link RuleContext#getFacts()} 中按 {@link #branchKey} 取分支 key，
  *       执行 {@link #branchMap} 中对应的分支节点</li>
+ *   <li><b>FOR</b> - 循环执行：遍历集合中的每个元素，将其作为上下文变量注入后执行规则链</li>
+ *   <li><b>WHILE</b> - 条件循环：条件表达式为 true 时持续执行规则链，支持最大迭代次数限制</li>
+ *   <li><b>BREAK</b> - 终止执行：在循环中遇到 BREAK 链时终止当前循环</li>
  * </ul>
  *
  * <p>使用静态工厂方法构建：
@@ -32,7 +39,11 @@ import java.util.concurrent.CopyOnWriteArrayList;
  *   RuleChain.then(r1, r2, r3)                       // 顺序执行
  *   RuleChain.when(r1, r2)                           // 并行执行
  *   RuleChain.ifThen("amount &gt; 1000", actionRule)   // 条件执行
+ *   RuleChain.elif(branches, elseRule)               // 多分支条件
  *   RuleChain.switchOn("type", branches)             // 分支选择
+ *   RuleChain.forEach("items", "item", actionRule)   // 循环执行
+ *   RuleChain.whileDo("amount &gt; 0", actionRule)     // 条件循环
+ *   RuleChain.breakChain()                           // 终止执行
  * </pre>
  *
  * @author ydsz-pmis-team
@@ -55,6 +66,24 @@ public class RuleChain {
 
     /** 分支映射：分支 key -&gt; 分支节点（SWITCH 使用） */
     private final Map<String, RuleNode> branchMap;
+
+    /** 多分支条件列表（ELIF 使用）：每个元素为 [条件表达式, 动作节点] 对 */
+    private final List<Map.Entry<String, RuleNode>> elifBranches;
+
+    /** ELSE 分支节点（ELIF 使用，可选） */
+    private final RuleNode elseNode;
+
+    /** 遍历集合的表达式（FOR 使用），如 "items" 表示从 facts 中取 items 列表 */
+    private final String iterableExpression;
+
+    /** 迭代变量名（FOR 使用），如 "item"，每个元素会以该变量名注入上下文 */
+    private final String iterationVar;
+
+    /** WHILE 最大迭代次数，防止死循环，默认 100 */
+    private final int maxIterations;
+
+    /** 是否终止循环（BREAK 使用） */
+    private final boolean isBreak;
 
     /**
      * 私有构造，统一通过工厂方法创建

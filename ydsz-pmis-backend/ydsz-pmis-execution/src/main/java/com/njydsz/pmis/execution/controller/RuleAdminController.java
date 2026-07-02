@@ -1,15 +1,20 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.execution.entity.RuleDefinitionDO;
 import com.njydsz.pmis.execution.entity.RuleTemplateDO;
+import com.njydsz.pmis.execution.entity.RuleTestCaseDO;
+import com.njydsz.pmis.execution.literule.RuleConflictDetector;
 import com.njydsz.pmis.execution.literule.RuleGenerationService;
 import com.njydsz.pmis.execution.literule.RuleTemplateService;
+import com.njydsz.pmis.execution.mapper.RuleTestCaseMapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.spi.RuleVersion;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +40,8 @@ public class RuleAdminController {
     private final RuleEngine ruleEngine;
     private final RuleTemplateService ruleTemplateService;
     private final RuleGenerationService ruleGenerationService;
+    private final RuleConflictDetector ruleConflictDetector;
+    private final RuleTestCaseMapper ruleTestCaseMapper;
 
     /**
      * 查询全部规则定义
@@ -227,5 +234,87 @@ public class RuleAdminController {
         List<String> fields = (List<String>) request.get("availableFields");
         if (fields == null) fields = List.of();
         return Result.ok(ruleGenerationService.generateAndSave(description, fields, operator));
+    }
+
+    // ==================== 冲突检测 ====================
+
+    /**
+     * 检测规则冲突
+     *
+     * @return 冲突规则对列表
+     */
+    @GetMapping("/conflicts")
+    public Result<List<RuleConflictDetector.RuleConflictInfo>> detectConflicts() {
+        return Result.ok(ruleConflictDetector.detectConflicts());
+    }
+
+    // ==================== 测试用例管理 ====================
+
+    /**
+     * 查询测试用例（可选按规则编码过滤）
+     *
+     * @param ruleCode 规则编码（可选）
+     * @return 测试用例列表
+     */
+    @GetMapping("/test-cases")
+    public Result<List<RuleTestCaseDO>> listTestCases(@RequestParam(required = false) String ruleCode) {
+        LambdaQueryWrapper<RuleTestCaseDO> wrapper = new LambdaQueryWrapper<>();
+        if (ruleCode != null && !ruleCode.isBlank()) {
+            wrapper.eq(RuleTestCaseDO::getRuleCode, ruleCode);
+        }
+        wrapper.orderByDesc(RuleTestCaseDO::getUpdatedAt);
+        return Result.ok(ruleTestCaseMapper.selectList(wrapper));
+    }
+
+    /**
+     * 保存测试用例
+     *
+     * @param testCase 测试用例
+     * @return 保存后的测试用例
+     */
+    @PostMapping("/test-cases")
+    public Result<RuleTestCaseDO> saveTestCase(@RequestBody RuleTestCaseDO testCase) {
+        if (testCase.getId() != null) {
+            ruleTestCaseMapper.updateById(testCase);
+        } else {
+            ruleTestCaseMapper.insert(testCase);
+        }
+        return Result.ok(testCase);
+    }
+
+    /**
+     * 删除测试用例
+     *
+     * @param id 测试用例 ID
+     * @return 操作结果
+     */
+    @DeleteMapping("/test-cases/{id}")
+    public Result<Void> deleteTestCase(@PathVariable Long id) {
+        ruleTestCaseMapper.deleteById(id);
+        return Result.ok();
+    }
+
+    /**
+     * 批量执行测试用例
+     *
+     * @param request 请求体，包含 ids（测试用例 ID 列表）
+     * @return 每个测试用例的执行结果
+     */
+    @PostMapping("/test-cases/batch-run")
+    public Result<Map<String, List<RuleResult>>> batchRunTestCases(@RequestBody Map<String, Object> request) {
+        @SuppressWarnings("unchecked")
+        List<Integer> ids = (List<Integer>) request.get("ids");
+        if (ids == null || ids.isEmpty()) {
+            return Result.ok(Map.of());
+        }
+
+        Map<String, List<RuleResult>> results = new java.util.LinkedHashMap<>();
+        for (Integer id : ids) {
+            RuleTestCaseDO tc = ruleTestCaseMapper.selectById(id);
+            if (tc == null) continue;
+            List<RuleResult> result = ruleAdminService.dryRun(null, tc.getFactsData());
+            results.put(tc.getName(), result);
+        }
+        return Result.ok(results);
     }
 }

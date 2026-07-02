@@ -82,6 +82,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowSubProcessService subProcessService;
     /** GAP-P1: 抄送服务（CC 节点处理） */
     private final com.njydsz.pmis.workflow.service.FlowCcService ccService;
+    /** 流程自动触发服务（实例完成时检查是否需要自动发起下一流程） */
+    private final com.njydsz.pmis.workflow.service.FlowAutoTriggerService autoTriggerService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -307,6 +309,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         fireEvent(l -> l.onInstanceCompleted(instanceId));
         // P2-35: 发布 Spring 异步事件
         publishWorkflowEvent("INSTANCE_COMPLETED", instanceId, null);
+        // 自动触发：检查是否需要自动发起下一流程
+        try {
+            autoTriggerService.onInstanceCompleted(instanceId);
+        } catch (Exception e) {
+            log.warn("[Flow] 自动触发检查失败: instanceId={} err={}", instanceId, e.getMessage());
+        }
     }
 
     @Override
@@ -886,5 +894,14 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         result.put("flowStatus", instance.getFlowStatus());
         result.put("title", instance.getTitle());
         return result;
+    }
+
+    // ============================== 子流程超时处理 ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setDueAt(Long instanceId, LocalDateTime dueAt) {
+        instanceMapper.updateDueAt(instanceId, dueAt);
+        log.info("[Flow] 设置实例到期时间: instanceId={} dueAt={}", instanceId, dueAt);
     }
 }

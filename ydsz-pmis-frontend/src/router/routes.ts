@@ -471,6 +471,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/workflow/monitor/index.vue'),
         meta: { title: '流程运行中心', icon: 'Monitor', keepAlive: true, permCode: PC.WORKFLOW_MONITOR },
       },
+      {
+        path: 'form-design',
+        name: 'WorkflowFormDesign',
+        component: () => import('@/views/workflow/form-design/index.vue'),
+        meta: { title: '表单设计', icon: 'Document', keepAlive: true, permCode: PC.WORKFLOW_DEFINITION_CREATE },
+      },
     ],
   },
 ]

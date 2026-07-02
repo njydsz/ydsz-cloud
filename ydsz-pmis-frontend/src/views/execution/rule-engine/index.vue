@@ -18,9 +18,10 @@
  *  6. 版本历史对话框：版本列表 + 回滚
  *  7. 执行统计概览
  */
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick, shallowRef } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import * as echarts from 'echarts'
 import * as ruleApi from '@/api/execution/rule-engine'
 import type {
   RuleDefinition,
@@ -29,6 +30,7 @@ import type {
   RuleVersion,
   RuleEngineStats,
 } from '@/api/execution/rule-engine'
+import ExpressionEditor from '@/components/common/ExpressionEditor.vue'
 
 // ==================== 严重度映射 ====================
 
@@ -51,6 +53,148 @@ function severityOf(severity?: string) {
   if (!severity) return { label: '-', type: 'info' as const }
   return severityMap[severity] || { label: severity, type: 'info' as const }
 }
+
+// ==================== 可用字段 ====================
+
+/** 常用可用字段列表（用于表达式编辑器自动补全） */
+const availableFields = [
+  'budgetUsedRatio', 'budgetTotal', 'budgetUsed', 'budgetRemaining',
+  'spi', 'cpi', 'ev', 'pv', 'ac', 'sv', 'cv',
+  'progress', 'daysRemaining', 'daysElapsed',
+  'riskScore', 'utilizationRate', 'avgBillableUtilization',
+  'overdueDays', 'activeProjects', 'evmRedCount',
+  'confirmedRevenue', 'grossMargin', 'benchIdleCost',
+  'budgetUsageRatio', 'slaBreachedCount',
+  'actualCost', 'plannedCost', 'costVariance',
+  'scheduleVariance', 'estimateAtCompletion',
+  'resourceCount', 'allocatedHours', 'actualHours',
+  'milestoneCount', 'completedMilestoneCount',
+  'changeRequestCount', 'openIssueCount',
+]
+
+// ==================== 冲突检测 ====================
+
+/** 冲突检测结果 */
+interface RuleConflict {
+  ruleA: string
+  ruleAName: string
+  ruleB: string
+  ruleBName: string
+  overlapFields: string[]
+  severity: 'high' | 'medium' | 'low'
+}
+
+/** 冲突列表 */
+const conflicts = ref<RuleConflict[]>([])
+/** 冲突检测 loading */
+const conflictLoading = ref(false)
+/** 冲突对话框可见性 */
+const conflictDialogVisible = ref(false)
+
+/** 执行冲突检测 */
+async function detectConflicts() {
+  conflictLoading.value = true
+  try {
+    const { data } = await ruleApi.detectConflicts()
+    conflicts.value = data || []
+    if (conflicts.value.length > 0) {
+      conflictDialogVisible.value = true
+    } else {
+      ElMessage.success('未检测到规则冲突')
+    }
+  } catch {
+    ElMessage.warning('冲突检测失败，请稍后重试')
+  } finally {
+    conflictLoading.value = false
+  }
+}
+
+// ==================== 统计图表 ====================
+
+/** 统计图表容器 ref */
+const statsChartRef = shallowRef<HTMLDivElement>()
+let statsChartInstance: echarts.ECharts | null = null
+
+/** 初始化统计图表 */
+function initStatsChart() {
+  if (!statsChartRef.value) return
+  if (statsChartInstance) statsChartInstance.dispose()
+  statsChartInstance = echarts.init(statsChartRef.value, null, { renderer: 'svg' })
+  updateStatsChart()
+}
+
+/** 更新统计图表数据 */
+function updateStatsChart() {
+  if (!statsChartInstance || !stats.value) return
+  const perRule = stats.value.perRuleStats || {}
+  const ruleNames = Object.keys(perRule)
+  const triggerData = ruleNames.map((k) => perRule[k].triggered || 0)
+  const execData = ruleNames.map((k) => perRule[k].executions || 0)
+  const errorData = ruleNames.map((k) => perRule[k].errors || 0)
+
+  statsChartInstance.setOption({
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: { type: 'shadow' },
+      appendToBody: true,
+    },
+    legend: {
+      data: ['执行次数', '触发次数', '错误次数'],
+      bottom: 0,
+      textStyle: { color: '#6b7280', fontSize: 11 },
+    },
+    grid: { left: 10, right: 10, top: 10, bottom: 30 },
+    xAxis: {
+      type: 'category',
+      data: ruleNames,
+      axisLabel: { rotate: 30, fontSize: 10, color: '#6b7280' },
+    },
+    yAxis: {
+      type: 'value',
+      axisLabel: { fontSize: 10, color: '#6b7280' },
+      splitLine: { lineStyle: { color: '#f0f0f0' } },
+    },
+    series: [
+      {
+        name: '执行次数',
+        type: 'bar',
+        data: execData,
+        itemStyle: { color: '#2563eb', borderRadius: [4, 4, 0, 0] },
+        barMaxWidth: 20,
+      },
+      {
+        name: '触发次数',
+        type: 'bar',
+        data: triggerData,
+        itemStyle: { color: '#d97706', borderRadius: [4, 4, 0, 0] },
+        barMaxWidth: 20,
+      },
+      {
+        name: '错误次数',
+        type: 'bar',
+        data: errorData,
+        itemStyle: { color: '#dc2626', borderRadius: [4, 4, 0, 0] },
+        barMaxWidth: 20,
+      },
+    ],
+    animation: false,
+  }, true)
+}
+
+// 监听 stats 变化更新图表
+watch(
+  () => stats.value,
+  () => {
+    nextTick(() => {
+      if (statsChartRef.value && !statsChartInstance) {
+        initStatsChart()
+      } else {
+        updateStatsChart()
+      }
+    })
+  },
+  { deep: true },
+)
 
 // ==================== 规则列表 ====================
 
@@ -508,7 +652,9 @@ function loadAiResultToEdit() {
 
 onMounted(() => {
   fetchRules()
-  fetchStats()
+  fetchStats().then(() => {
+    nextTick(() => initStatsChart())
+  })
 })
 </script>
 
@@ -542,6 +688,15 @@ onMounted(() => {
       </el-col>
     </el-row>
 
+    <!-- 统计图表 -->
+    <el-card
+      v-if="stats?.perRuleStats && Object.keys(stats.perRuleStats).length > 0"
+      shadow="hover"
+      class="stats-chart-card"
+    >
+      <div ref="statsChartRef" style="width:100%;min-height:300px"></div>
+    </el-card>
+
     <!-- 主卡片：工具栏 + 规则列表 -->
     <el-card shadow="never" class="main-card">
       <div class="toolbar">
@@ -557,6 +712,9 @@ onMounted(() => {
           </el-button>
           <el-button @click="openDryRun()">
             <el-icon><VideoPlay /></el-icon>Dry-run 仿真
+          </el-button>
+          <el-button :loading="conflictLoading" @click="detectConflicts">
+            <el-icon><WarningFilled /></el-icon>冲突检测
           </el-button>
         </div>
         <div class="toolbar-right">
@@ -681,15 +839,16 @@ onMounted(() => {
 
         <el-form-item label="条件表达式" prop="conditionExpression">
           <div class="expr-block">
-            <el-input
+            <ExpressionEditor
               v-model="editForm.conditionExpression"
-              type="textarea"
-              :rows="4"
-              placeholder="#budgetUsedRatio > 0.9 && #spi < 0.9"
+              :fields="availableFields"
+              placeholder="如: budgetUsageRatio >= 0.80 &amp;&amp; spi < 0.90"
+              :validate-on-input="true"
+              @validate="(v: boolean | null) => conditionValid = v"
             />
             <div class="expr-actions">
               <el-button size="small" :loading="validating" @click="handleValidate(editForm.conditionExpression, 'condition')">
-                <el-icon><Check /></el-icon>校验表达式
+                <el-icon><Check /></el-icon>后端校验
               </el-button>
               <el-tag
                 v-if="conditionValid === true"
@@ -707,15 +866,16 @@ onMounted(() => {
 
         <el-form-item label="严重度表达式">
           <div class="expr-block">
-            <el-input
+            <ExpressionEditor
               v-model="editForm.severityExpression"
-              type="textarea"
-              :rows="3"
-              placeholder="#budgetUsedRatio > 1.0 ? 'RED' : 'YELLOW'"
+              :fields="availableFields"
+              placeholder="如: budgetUsageRatio >= 0.95 ? 'RED' : 'YELLOW'"
+              :validate-on-input="true"
+              @validate="(v: boolean | null) => severityValid = v"
             />
             <div class="expr-actions">
               <el-button size="small" :loading="validating" @click="handleValidate(editForm.severityExpression || '', 'severity')">
-                <el-icon><Check /></el-icon>校验表达式
+                <el-icon><Check /></el-icon>后端校验
               </el-button>
               <el-tag v-if="severityValid === true" type="success" size="small">语法合法</el-tag>
               <el-tag v-else-if="severityValid === false" type="danger" size="small">语法不合法</el-tag>
@@ -969,6 +1129,57 @@ onMounted(() => {
         <el-button @click="versionDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
+
+    <!-- ==================== 冲突检测对话框 ==================== -->
+    <el-dialog v-model="conflictDialogVisible" title="规则冲突检测" width="780px">
+      <el-alert
+        v-if="conflicts.length > 0"
+        :title="`检测到 ${conflicts.length} 个潜在冲突`"
+        type="warning"
+        :closable="false"
+        show-icon
+        class="mb-3"
+      />
+      <el-table :data="conflicts" border stripe size="small">
+        <el-table-column label="严重程度" width="90">
+          <template #default="{ row }">
+            <el-tag
+              :type="row.severity === 'high' ? 'danger' : row.severity === 'medium' ? 'warning' : 'info'"
+              size="small"
+            >
+              {{ row.severity === 'high' ? '高' : row.severity === 'medium' ? '中' : '低' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="规则 A" width="160">
+          <template #default="{ row }">
+            <div>{{ row.ruleAName }}</div>
+            <div style="font-size:11px;color:#999">{{ row.ruleA }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="规则 B" width="160">
+          <template #default="{ row }">
+            <div>{{ row.ruleBName }}</div>
+            <div style="font-size:11px;color:#999">{{ row.ruleB }}</div>
+          </template>
+        </el-table-column>
+        <el-table-column label="重叠字段" min-width="180">
+          <template #default="{ row }">
+            <el-tag
+              v-for="f in row.overlapFields"
+              :key="f"
+              size="small"
+              type="info"
+              effect="plain"
+              style="margin-right:4px;margin-bottom:2px"
+            >{{ f }}</el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+      <template #footer>
+        <el-button @click="conflictDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -997,6 +1208,10 @@ onMounted(() => {
         }
       }
     }
+  }
+
+  .stats-chart-card {
+    margin-bottom: $spacing-md;
   }
 
   .main-card {

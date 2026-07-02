@@ -99,4 +99,8 @@ public class FlowInstanceDO extends BaseDO {
 
     /** 链路追踪 ID */
     private String providerTraceId;
+
+    /** 子流程超时时间（超时自动终止子流程，可空） */
+    @TableField("due_at")
+    private LocalDateTime dueAt;
 }

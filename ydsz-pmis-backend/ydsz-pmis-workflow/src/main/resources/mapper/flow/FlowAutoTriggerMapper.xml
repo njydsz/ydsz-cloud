@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.workflow.mapper.FlowAutoTriggerMapper">
+
+    <!-- 按源流程编码查询所有启用的触发规则 -->
+    <select id="selectEnabledBySourceFlowCode" resultType="com.njydsz.pmis.workflow.entity.FlowAutoTriggerDO">
+        SELECT id, source_flow_code, target_flow_code, condition_expression,
+               description, enabled, sort_order,
+               created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_flow_auto_trigger
+        WHERE source_flow_code = #{sourceFlowCode}
+          AND enabled = 1
+          AND deleted = 0
+        ORDER BY sort_order ASC, id ASC
+    </select>
+
+</mapper>

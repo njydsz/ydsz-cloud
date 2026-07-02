@@ -16,7 +16,6 @@ import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowRoutingService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -36,7 +35,6 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class DefaultFlowAdvancer implements FlowAdvancer {
 
     private final FlowSkipMapper skipMapper;
@@ -55,8 +53,27 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      * <p>当 ydsz-pmis-literule 模块在 classpath 中且 RuleEngine/ExpressionEvaluator Bean 存在时，
      * Spring 会自动注入 FlowRoutingService；否则本字段为 null，回退到 variableStrategy。
      */
-    @Autowired(required = false)
-    private FlowRoutingService routingService;
+    private final FlowRoutingService routingService;
+
+    public DefaultFlowAdvancer(FlowSkipMapper skipMapper,
+                                FlowNodeMapper nodeMapper,
+                                FlowInstanceMapper instanceMapper,
+                                FlowTaskService taskService,
+                                FlowInstanceService instanceService,
+                                FlowVariableStrategy variableStrategy,
+                                FlowTaskMapper taskMapper,
+                                com.njydsz.pmis.workflow.service.FlowJoinTokenService joinTokenService,
+                                @Autowired(required = false) FlowRoutingService routingService) {
+        this.skipMapper = skipMapper;
+        this.nodeMapper = nodeMapper;
+        this.instanceMapper = instanceMapper;
+        this.taskService = taskService;
+        this.instanceService = instanceService;
+        this.variableStrategy = variableStrategy;
+        this.taskMapper = taskMapper;
+        this.joinTokenService = joinTokenService;
+        this.routingService = routingService;
+    }
 
     @Override
     public com.njydsz.pmis.workflow.service.FlowInstanceService getInstanceService() {

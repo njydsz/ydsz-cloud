@@ -45,8 +45,8 @@
         <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
 
         <!-- 框架版本 -->
-        <spring-cloud.version>2025.0.0</spring-cloud.version>
-        <spring-cloud-alibaba.version>2025.0.0.0</spring-cloud-alibaba.version>
+        <spring-cloud.version>2025.1.1</spring-cloud.version>
+        <spring-cloud-alibaba.version>2025.1.0.0</spring-cloud-alibaba.version>
 
         <!-- 组件版本 -->
         <mybatis-plus.version>3.5.16</mybatis-plus.version>

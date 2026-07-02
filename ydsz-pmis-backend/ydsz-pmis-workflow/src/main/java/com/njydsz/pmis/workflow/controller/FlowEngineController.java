@@ -1159,23 +1159,24 @@ public class FlowEngineController {
      * GAP-P2: 一键导入模板
      *
      * @param templateCode 模板编码
+     * @param flowName     自定义流程名称（可选，为空则使用模板名称）
      * @return 新创建的流程定义 ID
      */
     @PostMapping("/template/{templateCode}/import")
-    public Result<Long> importTemplate(@PathVariable String templateCode) {
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
-        return Result.ok(templateService.importTemplate(templateCode, tenantId));
+    public Result<Long> importTemplate(@PathVariable String templateCode,
+                                       @RequestParam(required = false) String flowName) {
+        return Result.ok(templateService.importTemplate(templateCode, flowName));
     }
 
     /**
-     * GAP-P2: 预览模板内容
+     * GAP-P2: 获取模板详情（含 BPMN XML）
      *
      * @param templateCode 模板编码
      * @return 模板详情
      */
-    @GetMapping("/template/{templateCode}/preview")
-    public Result<Map<String, Object>> previewTemplate(@PathVariable String templateCode) {
-        return Result.ok(templateService.previewTemplate(templateCode));
+    @GetMapping("/template/{templateCode}")
+    public Result<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
+        return Result.ok(templateService.getTemplate(templateCode));
     }
 
     // ============== P3-1: 灰度发布 ==============

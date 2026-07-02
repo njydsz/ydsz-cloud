@@ -15,7 +15,6 @@ import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisVariableMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -51,7 +50,6 @@ import java.util.Set;
  */
 @Slf4j
 @Component("flowHistoryArchiveJobHandler")
-@RequiredArgsConstructor
 public class FlowHistoryArchiveJobHandler implements JobHandler {
 
     /** 默认归档阈值天数 */
@@ -64,10 +62,20 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     private final FlowInstanceMapper instanceMapper;
     private final FlowHisTaskMapper hisTaskMapper;
     private final FlowTaskMapper taskMapper;
-    @Autowired(required = false)
-    private FlowHisInstanceMapper hisInstanceMapper;
-    @Autowired(required = false)
-    private FlowHisVariableMapper hisVariableMapper;
+    private final FlowHisInstanceMapper hisInstanceMapper;
+    private final FlowHisVariableMapper hisVariableMapper;
+
+    public FlowHistoryArchiveJobHandler(FlowInstanceMapper instanceMapper,
+                                         FlowHisTaskMapper hisTaskMapper,
+                                         FlowTaskMapper taskMapper,
+                                         @Autowired(required = false) FlowHisInstanceMapper hisInstanceMapper,
+                                         @Autowired(required = false) FlowHisVariableMapper hisVariableMapper) {
+        this.instanceMapper = instanceMapper;
+        this.hisTaskMapper = hisTaskMapper;
+        this.taskMapper = taskMapper;
+        this.hisInstanceMapper = hisInstanceMapper;
+        this.hisVariableMapper = hisVariableMapper;
+    }
 
     /**
      * 扫描并归档历史实例
