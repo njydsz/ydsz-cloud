@@ -1,6 +1,6 @@
-package com.njydsz.pmis.user.controller;
+﻿package com.njydsz.pmis.user.controller;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.user.dto.PasswordScanResultDTO;
 import com.njydsz.pmis.user.service.PasswordScanService;
 import io.swagger.v3.oas.annotations.Operation;

@@ -31,11 +31,24 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ContractSupplementServiceImpl implements ContractSupplementService {
 
+    /** 允许的补充协议类型集合：金额/范围/期限/其他 */
     private static final Set<String> TYPES = Set.of("AMOUNT", "SCOPE", "TERM", "OTHER");
 
+    /** 补充协议 Mapper */
     private final ContractSupplementMapper supplementMapper;
+    /** 合同 Mapper（用于校验合同存在性并联动主合同金额） */
     private final ContractMapper contractMapper;
 
+    /**
+     * 创建合同补充协议。
+     * <p>处理流程：参数校验 → 合同存在性校验 → 编号唯一性预检 → 属性拷贝 →
+     * 默认状态 DRAFT → 持久化。金额类型(AMOUNT)且 changeAmount 非零时，
+     * 自动联动调整主合同 totalAmount 并回填 newTotalAmount。</p>
+     *
+     * @param dto 补充协议参数
+     * @return 补充协议 ID
+     * @throws BizException 合同不存在、编号重复或参数非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(ContractSupplementDTO dto) {
@@ -69,6 +82,12 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
         return s.getId();
     }
 
+    /**
+     * 删除补充协议（按主键）。
+     *
+     * @param id 补充协议 ID
+     * @throws BizException 补充协议不存在时抛出
+     */
     @Override
     public void delete(Long id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
@@ -78,6 +97,13 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
         supplementMapper.deleteById(id);
     }
 
+    /**
+     * 根据主键查询补充协议详情。
+     *
+     * @param id 补充协议 ID
+     * @return 补充协议实体
+     * @throws BizException 补充协议不存在时抛出
+     */
     @Override
     public ContractSupplementDO getById(Long id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
@@ -87,12 +113,26 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
         return s;
     }
 
+    /**
+     * 按合同查询补充协议列表。
+     *
+     * @param contractId 合同 ID
+     * @return 补充协议列表，合同 ID 为空时返回空列表
+     */
     @Override
     public List<ContractSupplementDO> listByContract(Long contractId) {
         if (contractId == null) return List.of();
         return supplementMapper.selectByContractId(contractId);
     }
 
+    /**
+     * 分页查询补充协议，按创建时间倒序。
+     *
+     * @param page       页码（从 1 开始）
+     * @param size       每页大小
+     * @param contractId 合同 ID，可空
+     * @return 分页结果
+     */
     @Override
     public Page<ContractSupplementDO> page(int page, int size, Long contractId) {
         Page<ContractSupplementDO> p = new Page<>(page, size);

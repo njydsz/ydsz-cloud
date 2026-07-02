@@ -23,6 +23,7 @@ public class DataExportAuditDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -55,6 +56,7 @@ public class DataExportAuditDO implements Serializable {
     /** 导出时间 */
     private LocalDateTime exportedAt;
 
+    /** 创建时间 */
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

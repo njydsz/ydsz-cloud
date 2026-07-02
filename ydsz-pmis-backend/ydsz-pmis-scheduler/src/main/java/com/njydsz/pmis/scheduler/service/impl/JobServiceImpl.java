@@ -140,6 +140,9 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
     }
 
+    /**
+     * 应用启动时加载所有 NORMAL 任务
+     */
     @Override
     public void loadOnStartup() {
         List<JobDO> list = jobMapper.selectAllNormal();
@@ -153,6 +156,13 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
     }
 
+    /**
+     * 新增任务
+     *
+     * @param job 任务定义
+     * @return 新增任务 ID
+     * @throws BizException 当 jobKey 已存在或参数非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(JobDO job) {
@@ -180,6 +190,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         return job.getId();
     }
 
+    /**
+     * 更新任务
+     *
+     * @param job 任务定义
+     * @throws BizException 当任务不存在或 cron 表达式非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(JobDO job) {
@@ -213,6 +229,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log.info("[Scheduler] 更新任务: key={}", exists.getJobKey());
     }
 
+    /**
+     * 删除任务
+     *
+     * @param id 任务 ID
+     * @throws BizException 当任务不存在时抛出
+     */
     @Override
     public void delete(Long id) {
         JobDO j = jobMapper.selectById(id);
@@ -224,6 +246,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log.info("[Scheduler] 删除任务: key={}", j.getJobKey());
     }
 
+    /**
+     * 暂停任务
+     *
+     * @param id 任务 ID
+     * @throws BizException 当任务不存在时抛出
+     */
     @Override
     public void pause(Long id) {
         JobDO j = getById(id);
@@ -233,6 +261,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log.info("[Scheduler] 暂停任务: key={}", j.getJobKey());
     }
 
+    /**
+     * 恢复任务
+     *
+     * @param id 任务 ID
+     * @throws BizException 当任务不存在时抛出
+     */
     @Override
     public void resume(Long id) {
         JobDO j = getById(id);
@@ -248,12 +282,25 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log.info("[Scheduler] 恢复任务: key={}", j.getJobKey());
     }
 
+    /**
+     * 立即执行一次
+     *
+     * @param id 任务 ID
+     * @return 执行日志 ID
+     * @throws BizException 当任务不存在时抛出
+     */
     @Override
     public Long trigger(Long id) {
         JobDO j = getById(id);
         return executeJob(j, true);
     }
 
+    /**
+     * 注册到调度器（从 DB 加载/动态新增）
+     *
+     * @param job 任务定义
+     * @return 注册成功返回 true，否则返回 false
+     */
     @Override
     public boolean register(JobDO job) {
         if (!"NORMAL".equals(job.getStatus())) {
@@ -281,6 +328,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
     }
 
+    /**
+     * 取消注册
+     *
+     * @param jobKey 任务 KEY
+     * @return 取消成功返回 true，任务未注册返回 false
+     */
     @Override
     public boolean unregister(String jobKey) {
         ScheduledFuture<?> f = scheduledMap.remove(jobKey);
@@ -292,12 +345,25 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         return false;
     }
 
+    /**
+     * 重新注册（用于更新 Cron）
+     *
+     * @param job 任务定义
+     * @return 重新注册成功返回 true，否则返回 false
+     */
     @Override
     public boolean reschedule(JobDO job) {
         unregister(job.getJobKey());
         return register(job);
     }
 
+    /**
+     * 详情
+     *
+     * @param id 任务 ID
+     * @return 任务定义
+     * @throws BizException 当任务不存在时抛出
+     */
     @Override
     public JobDO getById(Long id) {
         JobDO j = jobMapper.selectById(id);
@@ -307,6 +373,16 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         return j;
     }
 
+    /**
+     * 分页查询任务
+     *
+     * @param page    页码
+     * @param size    每页条数
+     * @param keyword 关键字（任务名/KEY/处理器，可选）
+     * @param status  状态过滤（可选）
+     * @param group   分组过滤（可选）
+     * @return 任务分页数据
+     */
     @Override
     public Page<JobDO> page(int page, int size, String keyword, String status, String group) {
         Page<JobDO> p = new Page<>(page, size);
@@ -326,6 +402,15 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         return jobMapper.selectPage(p, w);
     }
 
+    /**
+     * 分页查询执行日志
+     *
+     * @param page   页码
+     * @param size   每页条数
+     * @param jobKey 任务 KEY 过滤（可选）
+     * @param status 状态过滤（可选）
+     * @return 执行日志分页数据
+     */
     @Override
     public Page<JobLogDO> pageLog(int page, int size, String jobKey, String status) {
         Page<JobLogDO> p = new Page<>(page, size);
@@ -342,6 +427,16 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
 
     // ==================== 内部执行逻辑 ====================
 
+    /**
+     * 执行任务内部逻辑
+     *
+     * <p>定时触发（非手动）时通过 Redis 分布式锁防止多实例重复执行；
+     * 记录执行日志（开始/结束/耗时/状态/结果）并更新任务统计字段。
+     *
+     * @param job    任务定义
+     * @param manual 是否手动触发（手动触发不加分布式锁）
+     * @return 执行日志 ID；定时触发且锁已被持有时返回 null
+     */
     private Long executeJob(JobDO job, boolean manual) {
         // 定时触发（非手动）时获取分布式锁，防止多实例重复执行
         String lockKey = null;
@@ -412,6 +507,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         return log0.getId();
     }
 
+    /**
+     * 校验任务必填字段
+     *
+     * @param job 任务定义
+     * @throws BizException 当 jobKey/handler/cronExpression 为空或非法时抛出
+     */
     private void validate(JobDO job) {
         if (!StringUtils.hasText(job.getJobKey())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "jobKey 不能为空");
@@ -422,6 +523,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         validateCron(job.getCronExpression());
     }
 
+    /**
+     * 校验 cron 表达式合法性
+     *
+     * @param cron cron 表达式
+     * @throws BizException 当 cron 为空或非法时抛出
+     */
     private void validateCron(String cron) {
         if (!StringUtils.hasText(cron)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "cron 表达式不能为空");
@@ -433,10 +540,25 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
     }
 
+    /**
+     * 构造 CronTrigger（使用系统默认时区）
+     *
+     * @param cron cron 表达式
+     * @return CronTrigger 实例
+     */
     private CronTrigger buildTrigger(String cron) {
         return new CronTrigger(cron, TimeZone.getDefault());
     }
 
+    /**
+     * 计算下次触发时间
+     *
+     * <p>P0-5 修复: 仅调用一次 expr.next() 避免竞态条件。
+     * CronExpression 基于 LocalDateTime 直接计算，无需时区转换。
+     *
+     * @param cron cron 表达式
+     * @return 下次触发时间；表达式非法时返回 null
+     */
     private LocalDateTime nextFireTime(String cron) {
         try {
             CronExpression expr = CronExpression.parse(cron);

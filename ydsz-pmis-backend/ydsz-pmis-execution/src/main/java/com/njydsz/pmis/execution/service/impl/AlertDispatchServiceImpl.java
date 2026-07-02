@@ -1,8 +1,8 @@
-package com.njydsz.pmis.execution.service.impl;
+﻿package com.njydsz.pmis.execution.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.dto.AlertDispatchDTO;
 import com.njydsz.pmis.execution.engine.AlertCodeGen;
@@ -115,7 +115,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
                     if (r == null || !r.isSuccess()) {
                         allOk = false;
                         if (firstError == null) {
-                            firstError = r == null ? "null result" : r.getErrorMessage();
+                            firstError = r == null ? "null R" : r.getErrorMessage();
                         }
                     }
                 } catch (Exception ex) {

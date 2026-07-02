@@ -1,6 +1,6 @@
-package com.njydsz.pmis.auth.feign;
+﻿package com.njydsz.pmis.auth.feign;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.user.dto.LoginContextDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;

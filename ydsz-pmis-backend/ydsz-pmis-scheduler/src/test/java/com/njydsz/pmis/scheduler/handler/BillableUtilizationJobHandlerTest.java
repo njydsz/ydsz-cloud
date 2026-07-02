@@ -1,6 +1,6 @@
-package com.njydsz.pmis.scheduler.handler;
+﻿package com.njydsz.pmis.scheduler.handler;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.feign.ExecutionClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -16,11 +16,19 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * BillableUtilizationJobHandler 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @DisplayName("BillableUtilizationJobHandler 定时任务测试")
 @SuppressWarnings("unchecked")
 class BillableUtilizationJobHandlerTest {
 
+    /** 执行模块 Feign 客户端（Mock） */
     private ExecutionClient executionClient;
+    /** 待测处理器实例 */
     private BillableUtilizationJobHandler handler;
 
     @BeforeEach

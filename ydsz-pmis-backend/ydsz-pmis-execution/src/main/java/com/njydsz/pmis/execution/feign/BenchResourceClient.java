@@ -1,6 +1,6 @@
-package com.njydsz.pmis.execution.feign;
+﻿package com.njydsz.pmis.execution.feign;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

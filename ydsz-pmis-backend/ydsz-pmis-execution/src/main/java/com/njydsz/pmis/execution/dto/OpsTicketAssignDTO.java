@@ -10,7 +10,10 @@ import lombok.Data;
  */
 @Data
 public class OpsTicketAssignDTO {
+    /** 工单ID */
     private Long id;
+    /** 处理人ID */
     private Long assigneeId;
+    /** 处理人姓名 */
     private String assigneeName;
 }

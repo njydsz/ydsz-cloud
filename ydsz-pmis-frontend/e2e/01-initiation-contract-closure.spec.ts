@@ -20,15 +20,25 @@
 import { test, expect, waitForTableLoaded, dismissMessages, waitForDialog, confirmDialog, expectToast } from './fixtures/utils'
 import { E2EUser } from './fixtures/auth.fixture'
 
+/** 立项编号前缀 */
 const PROJECT_CODE_PREFIX = 'E2E-PROJ'
+/** 合同编号前缀 */
 const CONTRACT_CODE_PREFIX = 'E2E-CT'
+/** 测试项目名称（附带时间戳保证唯一） */
 const PROJECT_NAME = `E2E 测试项目 ${Date.now()}`
 
+/**
+ * 全链路 E2E 测试套件：覆盖立项 → 合同 → 结项的完整业务闭环。
+ */
 test.describe('立项 → 合同 → 结项 全链路 E2E', () => {
+  /** 每个 test 执行前以 PM 身份登录 */
   test.beforeEach(async ({ loginAs }) => {
     await loginAs('pm' as E2EUser)
   })
 
+  /**
+   * 验证完整业务闭环：PM 新建立项 → 提交 → admin 审批 → 创建合同 → 结项 → 项目状态 CLOSED。
+   */
   test('完整业务闭环', async ({ page }) => {
     // ========== 步骤 1: 立项 ==========
     await test.step('PM 访问立项页', async () => {
@@ -168,6 +178,9 @@ test.describe('立项 → 合同 → 结项 全链路 E2E', () => {
     })
   })
 
+  /**
+   * 校验表单必填项：不填写任何字段直接保存时应显示 el-form-item__error。
+   */
   test('表单校验: 必填项缺失应提示', async ({ page }) => {
     await page.goto('/project/initiation')
     await waitForTableLoaded(page)
@@ -179,6 +192,9 @@ test.describe('立项 → 合同 → 结项 全链路 E2E', () => {
     await expect(dlg.locator('.el-form-item__error').first()).toBeVisible({ timeout: 3_000 })
   })
 
+  /**
+   * 校验权限隔离：CFO 角色不应能新增立项（按钮不可见或被禁用）。
+   */
   test('权限校验: 销售角色不能新增立项', async ({ page, loginAs }) => {
     // 销售角色 (假设 username=sales), 此处复用一个普通用户测试
     await page.context().clearCookies()

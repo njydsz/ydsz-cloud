@@ -1,6 +1,6 @@
-package com.njydsz.pmis.gateway.filter;
+﻿package com.njydsz.pmis.gateway.filter;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.constant.CommonConstants;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import io.jsonwebtoken.Claims;

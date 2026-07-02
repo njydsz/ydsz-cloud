@@ -1,8 +1,8 @@
-package com.njydsz.pmis.execution.controller;
+﻿package com.njydsz.pmis.execution.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.PaymentAllocationDTO;
 import com.njydsz.pmis.execution.dto.PaymentCreateDTO;
 import com.njydsz.pmis.execution.entity.PaymentDO;

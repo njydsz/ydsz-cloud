@@ -10,6 +10,7 @@ import lombok.Data;
  */
 @Data
 public class WarrantyTerminateDTO {
+    /** 质保单ID */
     private Long id;
     /** 提前终止原因 */
     private String reason;

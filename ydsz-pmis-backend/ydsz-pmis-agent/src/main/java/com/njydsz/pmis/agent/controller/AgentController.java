@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.controller;
+﻿package com.njydsz.pmis.agent.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.agent.dto.AgentRunRequestDTO;
@@ -8,7 +8,7 @@ import com.njydsz.pmis.agent.entity.AgentPredictionDO;
 import com.njydsz.pmis.agent.mapper.AgentPredictionMapper;
 import com.njydsz.pmis.agent.service.AgentService;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

@@ -1,6 +1,6 @@
-package com.njydsz.pmis.scheduler.handler;
+﻿package com.njydsz.pmis.scheduler.handler;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.feign.ExecutionClient;
 import com.njydsz.pmis.common.job.JobHandler;
 import lombok.RequiredArgsConstructor;
@@ -71,24 +71,24 @@ public class BillableUtilizationJobHandler implements JobHandler {
 
         log.info("[BillableUtilization] 触发快照重算 period={} recomputeAll={}", period, recomputeAll);
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("period", period);
-        result.put("recomputeAll", recomputeAll);
+        Map<String, Object> R = new HashMap<>();
+        R.put("period", period);
+        R.put("recomputeAll", recomputeAll);
         try {
             Result<Map<String, Object>> r =
                     executionClient.recomputeBillableUtilization(period, recomputeAll);
             if (r != null && r.getData() != null) {
-                result.putAll(r.getData());
+                R.putAll(r.getData());
             }
-            result.put("ok", true);
-            result.put("costMs", System.currentTimeMillis() - start);
-            return result;
+            R.put("ok", true);
+            R.put("costMs", System.currentTimeMillis() - start);
+            return R;
         } catch (Exception e) {
             log.error("[BillableUtilization] 调用 execution 重算失败: {}", e.getMessage(), e);
             // Feign fallback 已经返回 ok=false；这里捕获异常避免调度框架认为任务失败
-            result.put("ok", false);
-            result.put("error", e.getMessage());
-            return result;
+            R.put("ok", false);
+            R.put("error", e.getMessage());
+            return R;
         }
     }
 }

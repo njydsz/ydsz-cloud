@@ -16,25 +16,36 @@ import java.time.LocalDate;
 @Data
 public class RateCardCreateDTO {
 
+    /** 费率业务编号 */
     @NotBlank(message = "费率编号不能为空")
     private String rateCode;
 
+    /** 职级 L1-L18 */
     @NotBlank(message = "职级不能为空")
     private String levelCode;
 
+    /** 项目类型：ProjectType.code（可空） */
     private String projectType;       // 可空
+    /** 客户等级：A/B/C/D（可空） */
     private String customerLevel;     // 可空
 
+    /** 计费单位：DAY/HOUR */
     @NotBlank(message = "计费单位不能为空")
     private String billingUnit;       // DAY/HOUR
 
+    /** 报价金额 */
     @NotNull(message = "报价金额不能为空")
     private BigDecimal rateAmount;
 
+    /** 币种：CNY/USD/EUR */
     private String currency;
+    /** 生效日期 */
     @NotNull(message = "生效日期不能为空")
     private LocalDate effectiveDate;
+    /** 失效日期 */
     private LocalDate expiryDate;
+    /** 状态：ACTIVE/INACTIVE */
     private String status;            // ACTIVE/INACTIVE
+    /** 备注 */
     private String remark;
 }

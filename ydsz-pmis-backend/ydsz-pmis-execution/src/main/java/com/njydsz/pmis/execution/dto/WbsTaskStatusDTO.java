@@ -11,8 +11,12 @@ import java.math.BigDecimal;
  */
 @Data
 public class WbsTaskStatusDTO {
+    /** 任务ID */
     private Long id;
+    /** 目标状态：WbsTaskStatus.code */
     private String targetStatus;
+    /** 进度百分比（0-100） */
     private BigDecimal progressPct;
+    /** 实际工时（人天） */
     private BigDecimal actualEffort;
 }

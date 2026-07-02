@@ -10,6 +10,8 @@ import lombok.Data;
  */
 @Data
 public class RiskStatusDTO {
+    /** 风险ID */
     private Long id;
+    /** 目标状态：RiskStatus.code */
     private String targetStatus;
 }

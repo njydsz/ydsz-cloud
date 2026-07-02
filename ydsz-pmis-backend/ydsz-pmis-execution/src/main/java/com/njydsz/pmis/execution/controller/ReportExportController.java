@@ -1,6 +1,6 @@
-package com.njydsz.pmis.execution.controller;
+﻿package com.njydsz.pmis.execution.controller;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.service.ReportExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -78,21 +78,21 @@ public class ReportExportController {
         }
 
         // 2) 调用导出
-        ReportExportService.ExportResult result = exportService.export(type, format, params);
+        ReportExportService.ExportResult R = exportService.export(type, format, params);
 
         // 3) 写入 HTTP 响应
-        String filename = URLEncoder.encode(result.filename(), StandardCharsets.UTF_8).replace("+", "%20");
-        response.setContentType(result.contentType());
+        String filename = URLEncoder.encode(R.filename(), StandardCharsets.UTF_8).replace("+", "%20");
+        response.setContentType(R.contentType());
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
         response.setHeader(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"");
         response.setHeader(HttpHeaders.CACHE_CONTROL, "no-store, no-cache, must-revalidate");
         response.setHeader("X-Content-Type-Options", "nosniff");
-        response.setContentLength(result.data().length);
+        response.setContentLength(R.data().length);
 
         try (OutputStream out = response.getOutputStream()) {
-            out.write(result.data());
+            out.write(R.data());
             out.flush();
         }
-        log.info("[ReportExport] type={} format={} size={} bytes", type, format, result.data().length);
+        log.info("[ReportExport] type={} format={} size={} bytes", type, format, R.data().length);
     }
 }

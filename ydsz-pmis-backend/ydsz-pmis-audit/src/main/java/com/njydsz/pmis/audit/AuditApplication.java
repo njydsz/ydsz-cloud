@@ -16,6 +16,11 @@ import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 @MapperScan("com.njydsz.pmis.audit.mapper")
 public class AuditApplication {
 
+    /**
+     * 应用入口方法
+     *
+     * @param args 启动参数
+     */
     public static void main(String[] args) {
         SpringApplication.run(AuditApplication.class, args);
     }

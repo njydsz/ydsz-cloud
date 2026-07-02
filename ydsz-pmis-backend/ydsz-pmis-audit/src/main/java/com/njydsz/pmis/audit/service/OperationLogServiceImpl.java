@@ -23,6 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class OperationLogServiceImpl {
 
+    /** 操作日志 Mapper */
     private final OperationLogMapper operationLogMapper;
 
     /**

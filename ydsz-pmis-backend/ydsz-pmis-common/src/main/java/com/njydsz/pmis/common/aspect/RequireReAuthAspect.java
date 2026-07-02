@@ -78,6 +78,14 @@ public class RequireReAuthAspect {
         return result;
     }
 
+    /**
+     * 构造并发布敏感操作审计事件。
+     *
+     * @param pjp     连接点
+     * @param ann     二次认证注解
+     * @param user    当前登录用户
+     * @param request HTTP 请求（可为 null）
+     */
     private void publishEvent(ProceedingJoinPoint pjp, RequireReAuth ann, LoginUser user, HttpServletRequest request) {
         SensitiveOperationEvent event = SensitiveOperationEvent.builder()
                 .userId(user.getUserId())
@@ -94,6 +102,14 @@ public class RequireReAuthAspect {
         publisher.publishEvent(event);
     }
 
+    /**
+     * 解析客户端真实 IP。
+     *
+     * <p>优先级：X-Forwarded-For（取第一个）&gt; X-Real-IP &gt; remoteAddr，兜底 "unknown"。</p>
+     *
+     * @param request HTTP 请求
+     * @return 客户端 IP 字符串
+     */
     private String clientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {

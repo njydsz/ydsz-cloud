@@ -1,6 +1,6 @@
-package com.njydsz.pmis.user.controller;
+﻿package com.njydsz.pmis.user.controller;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.user.dto.LoginContextDTO;
 import com.njydsz.pmis.user.entity.RoleDO;
 import com.njydsz.pmis.user.entity.UserAccountDO;

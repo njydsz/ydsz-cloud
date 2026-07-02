@@ -1,4 +1,4 @@
-package com.njydsz.pmis.common.migration;
+﻿package com.njydsz.pmis.common.migration;
 
 import com.njydsz.pmis.common.sensitive.EncryptedFieldKeyRegistry;
 import com.njydsz.pmis.common.util.CryptoUtil;
@@ -110,7 +110,7 @@ class EncryptedFieldMigrationServiceTest {
         assertThat(r.column()).isEqualTo(col);
         assertThat(r.success()).isEqualTo(100);
         assertThat(r.skipped()).isEqualTo(50);
-        assertThat(r.failed()).isEqualTo(2);
+        assertThat(Result.failed()).isEqualTo(2);
         assertThat(r.costMs()).isEqualTo(1234);
     }
 

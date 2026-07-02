@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.featureflag;
+﻿package com.njydsz.pmis.common.featureflag;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.feign.ConfigClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -226,8 +226,8 @@ class FeatureFlagTest {
     @Test
     @DisplayName("SAFETY 类 flag setEnabled(false) 实际保持 true")
     void safetyFlagCantBeDisabled() {
-        boolean result = service.setEnabled(FeatureFlag.AUDIT_LOG_MANDATORY, false);
-        assertThat(result).isTrue();
+        boolean R = service.setEnabled(FeatureFlag.AUDIT_LOG_MANDATORY, false);
+        assertThat(R).isTrue();
         // 再次读取必须仍为 true
         assertThat(service.isEnabled(FeatureFlag.AUDIT_LOG_MANDATORY)).isTrue();
     }

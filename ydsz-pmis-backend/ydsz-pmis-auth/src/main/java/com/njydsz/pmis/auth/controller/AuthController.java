@@ -1,11 +1,11 @@
-package com.njydsz.pmis.auth.controller;
+﻿package com.njydsz.pmis.auth.controller;
 
 import com.njydsz.pmis.auth.dto.LoginDTO;
 import com.njydsz.pmis.auth.dto.LoginResultVO;
 import com.njydsz.pmis.auth.dto.CaptchaVO;
 import com.njydsz.pmis.auth.service.AuthService;
 import com.njydsz.pmis.auth.service.impl.AuthServiceImpl;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

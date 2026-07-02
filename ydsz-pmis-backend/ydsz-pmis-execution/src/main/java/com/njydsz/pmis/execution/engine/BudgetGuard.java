@@ -1,7 +1,7 @@
-package com.njydsz.pmis.execution.engine;
+﻿package com.njydsz.pmis.execution.engine;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.feign.InitiationServiceClient;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
@@ -115,13 +115,13 @@ public class BudgetGuard {
      */
     public Map<String, Object> occupancy(Long initiationId) {
         Map<String, Object> snap = safeBudgetSnapshot(initiationId);
-        Map<String, Object> result = new LinkedHashMap<>();
+        Map<String, Object> R = new LinkedHashMap<>();
         if (snap == null) {
-            result.put("used", BigDecimal.ZERO);
-            result.put("budget", BigDecimal.ZERO);
-            result.put("ratio", BigDecimal.ZERO);
-            result.put("alertLevel", "UNKNOWN");
-            return result;
+            R.put("used", BigDecimal.ZERO);
+            R.put("budget", BigDecimal.ZERO);
+            R.put("ratio", BigDecimal.ZERO);
+            R.put("alertLevel", "UNKNOWN");
+            return R;
         }
         BigDecimal budget = toBigDecimal(snap.get("budgetAmount"));
         BigDecimal used = nz(purchaseMapper.sumByInitiation(initiationId))
@@ -133,14 +133,14 @@ public class BudgetGuard {
         String alert = "NORMAL";
         if (ratio.compareTo(RED_RATIO) >= 0) alert = "RED";
         else if (ratio.compareTo(YELLOW_RATIO) >= 0) alert = "YELLOW";
-        result.put("initiationId", initiationId);
-        result.put("projectCode", snap.get("projectCode"));
-        result.put("projectName", snap.get("projectName"));
-        result.put("used", used);
-        result.put("budget", budget);
-        result.put("ratio", ratio);
-        result.put("alertLevel", alert);
-        return result;
+        R.put("initiationId", initiationId);
+        R.put("projectCode", snap.get("projectCode"));
+        R.put("projectName", snap.get("projectName"));
+        R.put("used", used);
+        R.put("budget", budget);
+        R.put("ratio", ratio);
+        R.put("alertLevel", alert);
+        return R;
     }
 
     private Map<String, Object> safeBudgetSnapshot(Long initiationId) {

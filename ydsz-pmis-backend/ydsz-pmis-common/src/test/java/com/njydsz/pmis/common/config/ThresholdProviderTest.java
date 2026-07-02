@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.config;
+﻿package com.njydsz.pmis.common.config;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.feign.ConfigClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

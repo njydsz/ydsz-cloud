@@ -1,8 +1,8 @@
-package com.njydsz.pmis.config.controller;
+﻿package com.njydsz.pmis.config.controller;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.chaos.ChaosExperiment;
 import com.njydsz.pmis.common.chaos.ChaosOutcome;
 import com.njydsz.pmis.common.chaos.ChaosService;

@@ -1,9 +1,9 @@
-package com.njydsz.pmis.user.controller;
+﻿package com.njydsz.pmis.user.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.user.dto.ResourcePoolCreateDTO;
 import com.njydsz.pmis.user.entity.ResourcePoolDO;
 import com.njydsz.pmis.user.service.ResourcePoolService;

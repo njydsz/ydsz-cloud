@@ -43,17 +43,23 @@ import static org.mockito.Mockito.when;
 @ExtendWith(MockitoExtension.class)
 class JobServiceImplTest {
 
+    /** 任务定义 Mapper（Mock） */
     @Mock
     private JobMapper jobMapper;
+    /** 任务日志 Mapper（Mock） */
     @Mock
     private JobLogMapper jobLogMapper;
+    /** Spring 应用上下文（Mock） */
     @Mock
     private ApplicationContext applicationContext;
+    /** Redis 模板（Mock） */
     @Mock
     private StringRedisTemplate redisTemplate;
+    /** Redis Value 操作（Mock） */
     @Mock
     private ValueOperations<String, String> valueOps;
 
+    /** 待测服务实例 */
     @InjectMocks
     private JobServiceImpl service;
 

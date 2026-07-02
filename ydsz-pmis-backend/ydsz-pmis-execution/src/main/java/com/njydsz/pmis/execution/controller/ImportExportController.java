@@ -1,6 +1,6 @@
-package com.njydsz.pmis.execution.controller;
+﻿package com.njydsz.pmis.execution.controller;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.service.ImportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -67,10 +67,10 @@ public class ImportExportController {
         if (file == null || file.isEmpty()) {
             return Result.failed(400, "上传文件为空");
         }
-        ImportService.ImportResult result = importService.importFile(bizType, file);
+        ImportService.ImportResult R = importService.importFile(bizType, file);
         log.info("[ImportFile] bizType={} fileSize={} success={} failed={}",
-                bizType, file.getSize(), result.successCount(), result.failedCount());
-        return Result.ok(result);
+                bizType, file.getSize(), R.successCount(), R.failedCount());
+        return Result.ok(R);
     }
 
     /**

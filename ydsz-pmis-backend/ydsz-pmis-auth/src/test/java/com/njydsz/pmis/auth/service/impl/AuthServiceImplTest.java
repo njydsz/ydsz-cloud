@@ -1,11 +1,11 @@
-package com.njydsz.pmis.auth.service.impl;
+﻿package com.njydsz.pmis.auth.service.impl;
 
 import com.njydsz.pmis.auth.dto.CaptchaVO;
 import com.njydsz.pmis.auth.dto.LoginDTO;
 import com.njydsz.pmis.auth.dto.LoginResultVO;
 import com.njydsz.pmis.auth.feign.UserAuthClient;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.util.CryptoUtil;
@@ -122,10 +122,10 @@ class AuthServiceImplTest {
         dto.setUsername("admin");
         dto.setPassword(TEST_PASSWORD);
 
-        LoginResultVO result = service.login(dto);
-        assertThat(result.getToken()).isEqualTo("access-token-xxx");
-        assertThat(result.getRefreshToken()).isEqualTo("refresh-token-xxx");
-        assertThat(result.getExpiresIn()).isPositive();
+        LoginResultVO R = service.login(dto);
+        assertThat(R.getToken()).isEqualTo("access-token-xxx");
+        assertThat(R.getRefreshToken()).isEqualTo("refresh-token-xxx");
+        assertThat(R.getExpiresIn()).isPositive();
     }
 
     @Test

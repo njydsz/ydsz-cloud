@@ -23,6 +23,7 @@ public class OperationLogDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -80,6 +81,7 @@ public class OperationLogDO implements Serializable {
     /** 租户 ID */
     private Long tenantId;
 
+    /** 创建时间 */
     @TableField(fill = com.baomidou.mybatisplus.annotation.FieldFill.INSERT)
     private LocalDateTime createdAt;
 }

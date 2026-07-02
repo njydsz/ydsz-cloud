@@ -1,4 +1,4 @@
-package com.njydsz.pmis.agent.controller;
+﻿package com.njydsz.pmis.agent.controller;
 
 import com.njydsz.pmis.agent.enums.AgentAlertLevel;
 import com.njydsz.pmis.agent.enums.AgentType;
@@ -7,7 +7,7 @@ import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.service.AgentOrchestrationService;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

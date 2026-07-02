@@ -36,6 +36,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProjectChangeServiceImpl implements ProjectChangeService {
 
+    /** 项目变更 Mapper */
     private final ProjectChangeMapper changeMapper;
     /**
      * Spring 事件发布器, 用于变更执行后发布 ProjectChangeExecutedEvent
@@ -43,6 +44,16 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      */
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * 创建项目变更申请。
+     * <p>处理流程：参数校验 → 变更编号唯一性预检 → 属性拷贝 →
+     * 自动调用 {@link ChangeImpactEvaluator} 评估影响（风险等级/是否重大/利润影响） →
+     * 按重大/非重大自动装配审批角色 → 默认状态 DRAFT → 持久化。</p>
+     *
+     * @param dto 变更创建参数
+     * @return 变更记录 ID
+     * @throws BizException 编号重复或参数非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(ProjectChangeCreateDTO dto) {
@@ -72,6 +83,15 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         return c.getId();
     }
 
+    /**
+     * 项目变更状态迁移。
+     * <p>校验 {@link ChangeStatus#canTransitTo}，按目标状态自动填充提交/审批/执行时间戳；
+     * 迁移至 EXECUTING 或 EXECUTED 时发布 {@link ProjectChangeExecutedEvent}
+     * 触发 EVM 基线重算等下游联动（事件发布失败不影响主流程）。</p>
+     *
+     * @param dto 状态迁移参数
+     * @throws BizException 状态非法或迁移路径不允许时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(ProjectChangeStatusDTO dto) {
@@ -104,6 +124,12 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         }
     }
 
+    /**
+     * 删除变更申请，仅 DRAFT/REJECTED/CANCELLED 状态允许删除。
+     *
+     * @param id 变更 ID
+     * @throws BizException 变更不存在或当前状态不允许删除时抛出
+     */
     @Override
     public void delete(Long id) {
         ProjectChangeDO c = getById(id);
@@ -115,6 +141,13 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         log.info("[ProjectChange] 删除变更: id={}", id);
     }
 
+    /**
+     * 根据主键查询变更详情。
+     *
+     * @param id 变更 ID
+     * @return 变更实体
+     * @throws BizException 变更不存在时抛出
+     */
     @Override
     public ProjectChangeDO getById(Long id) {
         ProjectChangeDO c = changeMapper.selectById(id);
@@ -124,6 +157,17 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         return c;
     }
 
+    /**
+     * 分页查询项目变更，支持关键词、变更类型、状态、立项 ID 过滤。
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词（编号/标题/原因），可空
+     * @param changeType   变更类型，可空
+     * @param status       状态码，可空
+     * @param initiationId 立项 ID，可空
+     * @return 分页结果
+     */
     @Override
     public Page<ProjectChangeDO> page(int page, int size, String keyword,
                                       String changeType, String status, Long initiationId) {
@@ -141,30 +185,60 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         return changeMapper.selectPage(p, w);
     }
 
+    /**
+     * 按立项查询变更记录列表。
+     *
+     * @param initiationId 立项 ID
+     * @return 变更记录列表，立项 ID 为空时返回空列表
+     */
     @Override
     public List<ProjectChangeDO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
         return changeMapper.selectByInitiation(initiationId);
     }
 
+    /**
+     * 按变更类型聚合计数（租户维度）。
+     *
+     * @param tenantId 租户 ID，可空（默认 1L）
+     * @return 每种变更类型对应的数量列表
+     */
     @Override
     public List<Map<String, Object>> aggregateByType(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return changeMapper.aggregateByType(tenantId);
     }
 
+    /**
+     * 按状态聚合计数（租户维度）。
+     *
+     * @param tenantId 租户 ID，可空（默认 1L）
+     * @return 每种状态对应的数量列表
+     */
     @Override
     public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return changeMapper.aggregateByStatus(tenantId);
     }
 
+    /**
+     * 统计某立项下的重大变更数量。
+     *
+     * @param initiationId 立项 ID
+     * @return 重大变更数量，立项 ID 为空时返回 0
+     */
     @Override
     public long countMajorByInitiation(Long initiationId) {
         if (initiationId == null) return 0L;
         return changeMapper.countMajorByInitiation(initiationId);
     }
 
+    /**
+     * 校验变更创建参数：变更类型合法、申请人必填、进度影响天数合理。
+     *
+     * @param dto 变更创建参数
+     * @throws BizException 参数非法时抛出
+     */
     private void validate(ProjectChangeCreateDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
@@ -180,6 +254,14 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         }
     }
 
+    /**
+     * 发布变更执行事件。
+     * <p>事件发布失败会被捕获并降级为 warn 日志，不影响主业务流；
+     * eventPublisher 为 null 时跳过（单测场景）。</p>
+     *
+     * @param c           变更实体
+     * @param finalStatus 最终状态码
+     */
     private void publishExecutedEvent(ProjectChangeDO c, ChangeStatus finalStatus) {
         if (eventPublisher == null) {
             return; // 单测场景

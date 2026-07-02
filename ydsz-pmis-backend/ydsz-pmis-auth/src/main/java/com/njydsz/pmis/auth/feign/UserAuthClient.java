@@ -1,6 +1,6 @@
-package com.njydsz.pmis.auth.feign;
+﻿package com.njydsz.pmis.auth.feign;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.user.dto.LoginContextDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +24,7 @@ public interface UserAuthClient {
      * @return 统一响应结果，包含登录上下文（密码、角色、权限等）
      */
     @GetMapping("/api/v1/feign/auth/context/by-username")
-    R<LoginContextDTO> getLoginContextByUsername(@RequestParam("username") String username);
+    Result<LoginContextDTO> getLoginContextByUsername(@RequestParam("username") String username);
 
     /**
      * 根据用户 ID 加载登录上下文
@@ -33,5 +33,5 @@ public interface UserAuthClient {
      * @return 统一响应结果，包含登录上下文（密码、角色、权限等）
      */
     @GetMapping("/api/v1/feign/auth/context/by-id")
-    R<LoginContextDTO> getLoginContextById(@RequestParam("userId") Long userId);
+    Result<LoginContextDTO> getLoginContextById(@RequestParam("userId") Long userId);
 }

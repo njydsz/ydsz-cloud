@@ -1,9 +1,9 @@
-package com.njydsz.pmis.notification.service.impl;
+﻿package com.njydsz.pmis.notification.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
 import com.njydsz.pmis.notification.dto.NotificationSendDTO;
@@ -77,19 +77,19 @@ public class NotificationServiceImpl implements NotificationService {
         int count = send(dto);
 
         // 2. 邮件投递
-        EmailDispatchResult result = new EmailDispatchResult();
-        result.setInboxCount(count);
+        EmailDispatchResult R = new EmailDispatchResult();
+        R.setInboxCount(count);
 
         if (!Boolean.TRUE.equals(dto.getEmailEnabled())) {
-            return result;
+            return R;
         }
 
         String email = resolveReceiverEmail(dto);
         if (!StringUtils.hasText(email)) {
             log.warn("[Notification] 邮件投递跳过: 接收人邮箱为空 receiverId={}", dto.getReceiverId());
-            result.setEmailSent(false);
-            result.setEmailError("接收人邮箱为空");
-            return result;
+            R.setEmailSent(false);
+            R.setEmailError("接收人邮箱为空");
+            return R;
         }
 
         try {
@@ -102,26 +102,26 @@ public class NotificationServiceImpl implements NotificationService {
             msg.setBizId(dto.getBizId());
             Result<Object> resp = messageServiceClient.send(msg);
             if (resp != null && resp.getCode() == 0 && resp.getData() != null) {
-                result.setEmailSent(true);
+                R.setEmailSent(true);
                 Object trace = extractTraceId(resp.getData());
                 if (trace != null) {
-                    result.setProviderTraceId(String.valueOf(trace));
+                    R.setProviderTraceId(String.valueOf(trace));
                 }
                 log.info("[Notification] 邮件投递成功: receiverId={} email={} traceId={}",
-                        dto.getReceiverId(), email, result.getProviderTraceId());
+                        dto.getReceiverId(), email, R.getProviderTraceId());
             } else {
                 String err = resp == null ? "消息服务无响应" : ("code=" + resp.getCode() + " msg=" + resp.getMessage());
-                result.setEmailSent(false);
-                result.setEmailError(err);
+                R.setEmailSent(false);
+                R.setEmailError(err);
                 log.warn("[Notification] 邮件投递失败: receiverId={} email={} reason={}",
                         dto.getReceiverId(), email, err);
             }
         } catch (Exception e) {
-            result.setEmailSent(false);
-            result.setEmailError(e.getClass().getSimpleName() + ": " + e.getMessage());
+            R.setEmailSent(false);
+            R.setEmailError(e.getClass().getSimpleName() + ": " + e.getMessage());
             log.error("[Notification] 邮件投递异常: receiverId={} reason={}", dto.getReceiverId(), e.getMessage(), e);
         }
-        return result;
+        return R;
     }
 
     @Override

@@ -1,6 +1,6 @@
-package com.njydsz.pmis.project.feign;
+﻿package com.njydsz.pmis.project.feign;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;

@@ -1,10 +1,10 @@
-package com.njydsz.pmis.project.service.impl;
+﻿package com.njydsz.pmis.project.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.assembler.NameAssembler;
 import com.njydsz.pmis.project.dto.BudgetItemDTO;
@@ -195,17 +195,25 @@ public class InitiationServiceImpl implements InitiationService {
         String ds = com.njydsz.pmis.common.security.DataScopeHelper.buildSqlFragment("", "");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(InitiationDO::getCreatedAt);
-        Page<InitiationDO> result = initiationMapper.selectPage(p, w);
-        if (result != null && result.getRecords() != null) {
-            for (InitiationDO rec : result.getRecords()) {
+        Page<InitiationDO> R = initiationMapper.selectPage(p, w);
+        if (R != null && R.getRecords() != null) {
+            for (InitiationDO rec : R.getRecords()) {
                 assembleNames(rec);
             }
         }
-        return result;
+        return R;
     }
 
     // ============= 预算 =============
 
+    /**
+     * 新增预算明细，并触发预算总额重算。
+     * <p>若金额为空但有数量×单价，则自动计算金额。</p>
+     *
+     * @param dto 预算明细参数
+     * @return 预算明细 ID
+     * @throws BizException 立项不存在或参数非法时抛出
+     */
     @Override
     public Long addBudgetItem(BudgetItemDTO dto) {
         validateBudget(dto);
@@ -225,6 +233,12 @@ public class InitiationServiceImpl implements InitiationService {
         return b.getId();
     }
 
+    /**
+     * 删除预算明细，并触发预算总额重算。
+     *
+     * @param id 预算明细 ID
+     * @throws BizException 预算明细不存在时抛出
+     */
     @Override
     public void deleteBudgetItem(Long id) {
         BudgetItemDO b = budgetItemMapper.selectById(id);
@@ -235,18 +249,37 @@ public class InitiationServiceImpl implements InitiationService {
         recomputeBudget(b.getInitiationId());
     }
 
+    /**
+     * 查询立项的所有预算明细。
+     *
+     * @param initiationId 立项 ID
+     * @return 预算明细列表，立项 ID 为空时返回空列表
+     */
     @Override
     public List<BudgetItemDO> listBudget(Long initiationId) {
         if (initiationId == null) return List.of();
         return budgetItemMapper.selectByInitiationId(initiationId);
     }
 
+    /**
+     * 按分类汇总预算金额。
+     *
+     * @param initiationId 立项 ID
+     * @return 每种分类对应的汇总金额列表，立项 ID 为空时返回空列表
+     */
     @Override
     public List<Map<String, Object>> sumBudgetByCategory(Long initiationId) {
         if (initiationId == null) return List.of();
         return budgetItemMapper.sumByCategory(initiationId);
     }
 
+    /**
+     * 重新计算立项的预算总额并回写主表。
+     * <p>累加所有明细的金额（null 跳过），更新到 InitiationDO.budgetAmount。</p>
+     *
+     * @param initiationId 立项 ID
+     * @return 重算后的预算总额
+     */
     @Override
     public BigDecimal recomputeBudget(Long initiationId) {
         List<BudgetItemDO> items = budgetItemMapper.selectByInitiationId(initiationId);
@@ -266,6 +299,15 @@ public class InitiationServiceImpl implements InitiationService {
 
     // ============= 门径 =============
 
+    /**
+     * 提交一次门径评审。
+     * <p>校验门径编码与评审结果合法性 → 复用或新建评审记录 → 持久化 →
+     * 若评审通过则推进立项的 currentGate 到下一门径。</p>
+     *
+     * @param dto 门径评审参数
+     * @return 评审记录 ID
+     * @throws BizException 门径编码非法或评审结果非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long reviewGate(GateReviewDTO dto) {
@@ -299,11 +341,17 @@ public class InitiationServiceImpl implements InitiationService {
             o.setCurrentGate(next.name());
             initiationMapper.updateById(o);
         }
-        log.info("[Initiation] 门径评审: init={} gate={} result={}",
+        log.info("[Initiation] 门径评审: init={} gate={} R={}",
                 o.getId(), gate.name(), dto.getReviewResult());
         return record.getId();
     }
 
+    /**
+     * 查询立项的所有门径评审记录。
+     *
+     * @param initiationId 立项 ID
+     * @return 评审记录列表，立项 ID 为空时返回空列表
+     */
     @Override
     public List<GateReviewDO> listGateReviews(Long initiationId) {
         if (initiationId == null) return List.of();
@@ -312,6 +360,12 @@ public class InitiationServiceImpl implements InitiationService {
 
     // ============= 统计 =============
 
+    /**
+     * 按阶段聚合计数（租户维度）。
+     *
+     * @param tenantId 租户 ID，可空（默认 1L）
+     * @return 每种阶段对应的数量列表
+     */
     @Override
     public List<Map<String, Object>> aggregateByStage(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
@@ -320,6 +374,16 @@ public class InitiationServiceImpl implements InitiationService {
 
     // ============= 流程集成 =============
 
+    /**
+     * 启动立项审批流程（Feign 调用 workflow 服务）。
+     * <p>若已存在 workflowId 则跳过；Feign 调用失败时返回 null 不抛异常，
+     * 以保证主业务流不被工作流故障阻塞。</p>
+     *
+     * @param id          立项 ID
+     * @param initiatorId 发起人 ID
+     * @return 流程实例 ID；已存在或调用失败时返回 null
+     * @throws BizException 立项不存在时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String startProcess(Long id, Long initiatorId) {
@@ -363,6 +427,11 @@ public class InitiationServiceImpl implements InitiationService {
         return processInstanceId;
     }
 
+    /**
+     * 装配客户/PM/发起人名称（仅在原值为空时填充），Feign 调用失败容错。
+     *
+     * @param initiation 立项实体（将被原地修改）
+     */
     @Override
     public void assembleNames(InitiationDO initiation) {
         if (initiation == null) return;
@@ -381,6 +450,13 @@ public class InitiationServiceImpl implements InitiationService {
         }
     }
 
+    /**
+     * 生成预算快照（用于报表/导出），包含立项核心字段与预算/估算金额。
+     *
+     * @param id 立项 ID
+     * @return 快照 Map（按插入顺序保留）
+     * @throws BizException 立项不存在时抛出
+     */
     @Override
     public java.util.Map<String, Object> budgetSnapshot(Long id) {
         InitiationDO o = getById(id);
@@ -394,11 +470,23 @@ public class InitiationServiceImpl implements InitiationService {
         return snap;
     }
 
+    /**
+     * 容错解析客户名称，Feign 调用失败时返回 null。
+     *
+     * @param id 客户 ID
+     * @return 客户名称，调用失败返回 null
+     */
     private String safeCustomerName(Long id) {
         try { return nameAssembler.resolveCustomer(id); }
         catch (Exception e) { return null; }
     }
 
+    /**
+     * 容错解析员工名称，Feign 调用失败时返回 null。
+     *
+     * @param id 员工 ID
+     * @return 员工名称，调用失败返回 null
+     */
     private String safeEmployeeName(Long id) {
         try { return nameAssembler.resolveEmployee(id); }
         catch (Exception e) { return null; }
@@ -406,6 +494,12 @@ public class InitiationServiceImpl implements InitiationService {
 
     // ============= 校验 =============
 
+    /**
+     * 校验立项创建参数：编号/名称/客户/类型必填，结束日期不早于开始日期。
+     *
+     * @param dto 立项创建参数
+     * @throws BizException 参数非法时抛出
+     */
     private void validate(InitiationCreateDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
@@ -428,6 +522,12 @@ public class InitiationServiceImpl implements InitiationService {
         }
     }
 
+    /**
+     * 校验预算明细参数：立项 ID 必填，分类必须在 {@link #BUDGET_CATEGORIES} 范围内。
+     *
+     * @param dto 预算明细参数
+     * @throws BizException 参数非法时抛出
+     */
     private void validateBudget(BudgetItemDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");

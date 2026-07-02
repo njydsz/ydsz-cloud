@@ -1,6 +1,6 @@
-package com.njydsz.pmis.execution.controller;
+﻿package com.njydsz.pmis.execution.controller;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.execution.dto.AlertDispatchDTO;
 import com.njydsz.pmis.execution.entity.AlertDispatchDO;
 import com.njydsz.pmis.execution.service.AlertDispatchService;

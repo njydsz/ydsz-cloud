@@ -1,6 +1,6 @@
-package com.njydsz.pmis.common.featureflag;
+﻿package com.njydsz.pmis.common.featureflag;
 
-import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.api.R;
 import com.njydsz.pmis.common.feign.ConfigClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -89,14 +89,14 @@ public class LocalFeatureFlagService implements FeatureFlagService {
     @Override
     public List<FeatureFlagSnapshot> snapshot() {
         Map<String, String> cfg = readGroup();
-        List<FeatureFlagSnapshot> result = new ArrayList<>();
+        List<FeatureFlagSnapshot> R = new ArrayList<>();
         for (FeatureFlag flag : FeatureFlag.values()) {
             String value = cfg.get(flag.configKey());
             Boolean configured = value == null ? null : parseBoolean(value);
             boolean effective = flag.isMandatory() || (configured != null ? configured : flag.isEnabledByDefault());
             String rolloutStr = cfg.get(flag.configKey() + ".rollout");
             Integer rollout = rolloutStr == null ? null : clamp(parseInt(rolloutStr, 100), 0, 100);
-            result.add(FeatureFlagSnapshot.builder()
+            R.add(FeatureFlagSnapshot.builder()
                     .key(flag.name())
                     .category(flag.getCategory())
                     .description(flag.getDescription())
@@ -107,7 +107,7 @@ public class LocalFeatureFlagService implements FeatureFlagService {
                     .updatedAt(Instant.now())
                     .build());
         }
-        return result;
+        return R;
     }
 
     @Override

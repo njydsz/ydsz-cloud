@@ -13,12 +13,16 @@ import lombok.Data;
 @Data
 public class SimulationStatusDTO {
 
+    /** 测算版本ID */
     @NotNull(message = "测算 ID 不能为空")
     private Long id;
 
+    /** 目标状态：SimulationStatus.code */
     @NotBlank(message = "目标状态不能为空")
     private String targetStatus;
 
+    /** 审批人姓名 */
     private String approverName;
+    /** 审批意见 */
     private String approvalComment;
 }

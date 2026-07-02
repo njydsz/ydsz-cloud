@@ -40,7 +40,14 @@ const PAGES = [
   { path: '/attendance',         name: '考勤' },
 ]
 
+/**
+ * 冒烟测试套件：覆盖所有关键顶层路由的可访问性校验。
+ */
 test.describe('E2E Smoke - 关键页面', () => {
+  /**
+   * 以 admin 身份登录后，逐一访问所有顶层路由，
+   * 校验返回状态码为 200/304、页面无白屏且未跳转至登录页。
+   */
   test('所有顶层路由可访问 (admin)', async ({ page, loginAs }) => {
     await loginAs('admin' as E2EUser)
 
@@ -64,6 +71,10 @@ test.describe('E2E Smoke - 关键页面', () => {
     }
   })
 
+  /**
+   * 清除 Cookie 与 localStorage 后访问受保护页面，
+   * 校验路由守卫将其重定向至登录页。
+   */
   test('未登录访问应跳转到登录页', async ({ page }) => {
     await page.context().clearCookies()
     await page.evaluate(() => {
