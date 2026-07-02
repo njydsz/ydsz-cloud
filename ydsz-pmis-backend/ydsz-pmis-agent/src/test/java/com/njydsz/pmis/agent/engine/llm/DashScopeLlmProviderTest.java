@@ -5,6 +5,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * DashScopeLlmProvider 单元测试 (批次 22 P1-5)
@@ -58,7 +59,7 @@ class DashScopeLlmProviderTest {
         // 使用无效 URL: 127.0.0.1:1 必然 connection refused
         DashScopeLlmProvider p = new DashScopeLlmProvider("sk-fake", "qwen-turbo",
                 "http://127.0.0.1:1", 200L, 0, false);
-        org.assertj.core.api.Assertions.assertThatThrownBy(() -> p.chat("s", "u", ctx))
+        assertThatThrownBy(() -> p.chat("s", "u", ctx))
                 .isInstanceOf(RuntimeException.class);
     }
 

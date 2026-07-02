@@ -8,6 +8,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.concurrent.Callable;
 
 /**
@@ -117,8 +118,8 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
         Class<?> promptClass = Class.forName("org.springframework.ai.prompt.Prompt");
         Object userMessage = Class.forName("org.springframework.ai.messages.UserMessage")
                 .getConstructor(String.class).newInstance(prompt);
-        Object promptInstance = promptClass.getConstructor(java.util.List.class)
-                .newInstance(java.util.Collections.singletonList(userMessage));
+        Object promptInstance = promptClass.getConstructor(List.class)
+                .newInstance(Collections.singletonList(userMessage));
         Object response = chatClient.getClass()
                 .getMethod("call", promptClass)
                 .invoke(chatClient, promptInstance);

@@ -304,7 +304,7 @@ public class FileEnhanceServiceImpl implements FileEnhanceService {
      * 读取 clamd 响应直至连接关闭。
      */
     private String readResponse(InputStream in) throws IOException {
-        java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] buf = new byte[256];
         int n;
         while ((n = in.read(buf)) != -1) {
@@ -406,7 +406,7 @@ public class FileEnhanceServiceImpl implements FileEnhanceService {
     }
 
     private static byte[] readAllBytes(InputStream in) throws IOException {
-        java.io.ByteArrayOutputStream buffer = new java.io.ByteArrayOutputStream();
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
         byte[] buf = new byte[4096];
         int n;
         while ((n = in.read(buf)) != -1) {

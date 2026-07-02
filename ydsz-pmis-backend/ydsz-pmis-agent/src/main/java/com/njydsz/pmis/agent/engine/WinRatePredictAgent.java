@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -82,7 +83,7 @@ public class WinRatePredictAgent implements Agent {
 
         BigDecimal confidence = BigDecimal.valueOf(0.6 + stageWeight).setScale(4, RoundingMode.HALF_UP);
         log.info("[WinRatePredict] biz={} winRate={} level={}", ctx.getBizRef(), winRate, level);
-        Map<String, Object> payload = new java.util.HashMap<>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("winRate", winRate);
         payload.put("stage", stage);
         return new AgentResult(AgentType.WIN_RATE_PREDICT, level, winRate, confidence,

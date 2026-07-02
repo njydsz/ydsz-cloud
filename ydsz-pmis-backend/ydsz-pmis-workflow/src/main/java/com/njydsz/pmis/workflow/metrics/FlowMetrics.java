@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.metrics;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowCcMapper;
@@ -282,14 +283,14 @@ public class FlowMetrics {
 
     private Long queryRunningInstanceCount() {
         return instanceMapper.selectCount(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowInstanceDO>()
+                new LambdaQueryWrapper<FlowInstanceDO>()
                         .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
                         .eq(FlowInstanceDO::getDeleted, 0));
     }
 
     private Long queryPendingTaskCount() {
         return taskMapper.selectCount(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowTaskDO>()
+                new LambdaQueryWrapper<FlowTaskDO>()
                         .in(FlowTaskDO::getTaskStatus, "PENDING", "CLAIMED")
                         .eq(FlowTaskDO::getDeleted, 0));
     }

@@ -133,7 +133,7 @@ public class EncryptedFieldMigrationCli {
      * @return 解析后的参数 Map
      */
     private static Map<String, String> parseArgs(String[] args) {
-        java.util.Map<String, String> m = new java.util.LinkedHashMap<>();
+        Map<String, String> m = new LinkedHashMap<>();
         for (String a : args) {
             if (a == null || a.isEmpty() || !a.startsWith("--")) continue;
             int eq = a.indexOf('=');

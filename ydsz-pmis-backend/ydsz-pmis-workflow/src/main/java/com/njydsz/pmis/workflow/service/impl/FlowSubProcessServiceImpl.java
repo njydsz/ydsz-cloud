@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.WorkflowFacade;
@@ -229,7 +230,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
         if (parentInstanceId == null) {
             return List.of();
         }
-        return instanceMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<FlowInstanceDO>()
+        return instanceMapper.selectList(new QueryWrapper<FlowInstanceDO>()
                 .eq("parent_instance_id", parentInstanceId)
                 .eq("deleted", 0)
                 .orderByDesc("start_at"));

@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -37,7 +39,7 @@ public class AgentBlackboard implements Serializable {
     /** 中间结果：agentType -> result（任何 Agent 写完即对其他 Agent 可见） */
     private Map<String, Object> scratch = new HashMap<>();
     /** 决策路径追踪：每一步一个 entry */
-    private java.util.List<TraceEntry> trace = new java.util.ArrayList<>();
+    private List<TraceEntry> trace = new ArrayList<>();
 
     /**
      * 构造黑板并初始化事实。

@@ -319,7 +319,7 @@ public class RuleAdminController {
             return Result.ok(Map.of());
         }
 
-        Map<String, List<RuleResult>> results = new java.util.LinkedHashMap<>();
+        Map<String, List<RuleResult>> results = new LinkedHashMap<>();
         for (Integer id : ids) {
             RuleTestCaseDO tc = ruleTestCaseMapper.selectById(id);
             if (tc == null) continue;
@@ -438,7 +438,7 @@ public class RuleAdminController {
         List<RuleDefinition> rules = ruleAdminService.listAll();
         // 过滤掉内部字段，只导出核心配置
         List<Map<String, Object>> exportData = rules.stream().map(r -> {
-            Map<String, Object> map = new java.util.LinkedHashMap<>();
+            Map<String, Object> map = new LinkedHashMap<>();
             map.put("code", r.getCode());
             map.put("name", r.getName());
             map.put("category", r.getCategory());
@@ -455,7 +455,7 @@ public class RuleAdminController {
             map.put("version", r.getVersion());
             return map;
         }).collect(java.util.stream.Collectors.toList());
-        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put("exportTime", LocalDateTime.now().toString());
         result.put("ruleCount", rules.size());
         result.put("rules", exportData);
@@ -493,7 +493,7 @@ public class RuleAdminController {
                 skipped++;
             }
         }
-        Map<String, Object> result = new java.util.LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
         result.put("imported", imported);
         result.put("skipped", skipped);
         return Result.ok(result);

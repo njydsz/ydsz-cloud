@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -95,7 +96,7 @@ public class ProfitForecastAgent implements Agent {
         BigDecimal confidence = BigDecimal.valueOf(0.8);
         log.info("[ProfitForecast] biz={} EAC={} margin={} health={} level={}",
                 ctx.getBizRef(), eac, forecastMargin, healthScore, level);
-        Map<String, Object> payload = new java.util.HashMap<>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("eac", eac);
         payload.put("forecastMargin", forecastMargin);
         payload.put("healthScore", healthScore);

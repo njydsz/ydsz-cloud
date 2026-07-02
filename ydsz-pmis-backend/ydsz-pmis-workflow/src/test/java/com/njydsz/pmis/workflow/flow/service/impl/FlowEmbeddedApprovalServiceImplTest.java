@@ -99,7 +99,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
+            return FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -125,7 +125,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(true);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
+            return FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -149,7 +149,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
+            return FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -171,7 +171,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
+            return FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -196,7 +196,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
+            return FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -219,7 +219,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
+            return FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();
@@ -251,7 +251,7 @@ class FlowEmbeddedApprovalServiceImplTest {
         when(aiAssistService.isAiAvailable()).thenReturn(false);
         when(instanceService.toView(any(), any())).thenAnswer(inv -> {
             FlowInstanceDO i = inv.getArgument(0);
-            return com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO.builder()
+            return FlowInstanceViewDTO.builder()
                     .id(i.getId())
                     .flowStatus(i.getFlowStatus())
                     .build();

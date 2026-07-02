@@ -2,6 +2,9 @@ package com.njydsz.pmis.agent.engine.llm;
 
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
+import com.njydsz.pmis.agent.enums.AgentAlertLevel;
+
+import java.math.BigDecimal;
 
 /**
  * LLM 接入抽象接口（批次 19 P3-1 落地）
@@ -51,8 +54,8 @@ public interface LlmProvider {
         // 默认实现：返回原始文本 + RECOMMEND 等级
         return new AgentResult(
                 null,
-                com.njydsz.pmis.agent.enums.AgentAlertLevel.RECOMMEND,
-                new java.math.BigDecimal("0.5"),
+                AgentAlertLevel.RECOMMEND,
+                new BigDecimal("0.5"),
                 null,
                 llmOutput,
                 null,

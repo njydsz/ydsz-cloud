@@ -33,6 +33,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -460,9 +461,9 @@ public class InitiationServiceImpl implements InitiationService {
      * @throws BizException 立项不存在时抛出
      */
     @Override
-    public java.util.Map<String, Object> budgetSnapshot(Long id) {
+    public Map<String, Object> budgetSnapshot(Long id) {
         InitiationDO o = getById(id);
-        java.util.Map<String, Object> snap = new java.util.LinkedHashMap<>();
+        Map<String, Object> snap = new LinkedHashMap<>();
         snap.put("initiationId", o.getId());
         snap.put("projectCode", o.getProjectCode());
         snap.put("projectName", o.getProjectName());

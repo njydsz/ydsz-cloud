@@ -25,6 +25,7 @@ import org.springframework.util.DigestUtils;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
@@ -117,7 +118,7 @@ public class FileServiceImpl implements FileService {
                 sanitizeName(originalName));
 
         // 上传
-        try (InputStream in = new java.io.ByteArrayInputStream(content)) {
+        try (InputStream in = new ByteArrayInputStream(content)) {
             minioClient.putObject(PutObjectArgs.builder()
                     .bucket(bucket)
                     .object(key)

@@ -9,6 +9,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -118,7 +119,7 @@ public class ResourceRecommendAgent implements Agent {
 
         log.info("[ResourceRecommend] biz={} top1Score={} level={}",
                 ctx.getBizRef(), top1, level);
-        Map<String, Object> payload = new java.util.HashMap<>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("top", top);
         return new AgentResult(AgentType.RESOURCE_RECOMMEND, level, top1,
                 BigDecimal.valueOf(0.75), suggestion, matched, payload);

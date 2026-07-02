@@ -83,7 +83,7 @@ public class GlobalExceptionHandler {
      * @return 统一响应
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.OK)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleValidException(MethodArgumentNotValidException e) {
         String msg = e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
@@ -101,6 +101,7 @@ public class GlobalExceptionHandler {
      * @return 统一响应
      */
     @ExceptionHandler(BindException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleBindException(BindException e) {
         String msg = e.getBindingResult().getFieldErrors().stream()
                 .map(FieldError::getDefaultMessage)
@@ -118,6 +119,7 @@ public class GlobalExceptionHandler {
      * @return 统一响应
      */
     @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleConstraintViolation(ConstraintViolationException e) {
         String msg = e.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
@@ -213,8 +215,10 @@ public class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public Result<Void> handleException(Exception e, HttpServletRequest req) {
         log.error("[SystemError] {} {}", req.getMethod(), req.getRequestURI(), e);
-        Result<Void> r = Result.failed(BizErrorCode.INTERNAL_ERROR.getCode(), resolveMessage(BizErrorCode.INTERNAL_ERROR));
-        r.setTraceId(TraceIdUtil.get());
+        String traceId = TraceIdUtil.get();
+        String message = resolveMessage(BizErrorCode.INTERNAL_ERROR) + " (TraceId: " + traceId + ")";
+        Result<Void> r = Result.failed(BizErrorCode.INTERNAL_ERROR.getCode(), message);
+        r.setTraceId(traceId);
         return r;
     }
 

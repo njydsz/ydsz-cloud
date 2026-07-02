@@ -1,32 +1,39 @@
 <!--
   @file 顶部语言切换组件
-  @description 下拉式语言切换，支持 zh-CN / en-US；基于 useI18n composable 实现
+  @description 下拉式语言切换，支持 zh-CN / en-US；基于 vue-i18n 实现，切换全站生效
   @module components/common/LanguageSwitcher
-  (批次 20 P2-2)
 -->
 <script setup lang="ts">
-import { useI18n, supportedLocales } from '@/composables/useI18n'
-import type { Locale } from '@/composables/useI18n'
+import { useI18n } from 'vue-i18n'
+import { setLocale, getLocale, type LocaleType } from '@/locales'
 import { ElTooltip } from 'element-plus'
 
-const { locale, setLocale, t } = useI18n()
+const { t } = useI18n()
+
+/** 支持的语言列表 */
+const supportedLocales: ReadonlyArray<{ code: LocaleType; label: string }> = [
+  { code: 'zh-CN', label: '简体中文' },
+  { code: 'en-US', label: 'English' },
+]
+
+/** 当前 locale（响应式，随 vue-i18n global locale 变化） */
+const currentLocale = computed(() => getLocale())
 
 /** 切换语言回调 */
-function handleSelect(next: Locale) {
-  if (next === locale.value) return
+function handleSelect(next: LocaleType) {
+  if (next === currentLocale.value) return
   setLocale(next)
-  // 触发轻量提示
   // eslint-disable-next-line no-console
   console.info(`[i18n] switched to ${next}`)
 }
 </script>
 
 <template>
-  <el-tooltip :content="t('user.profile')" placement="bottom">
+  <el-tooltip :content="t('common.language') || 'Language'" placement="bottom">
     <el-dropdown trigger="click" @command="handleSelect">
-      <el-button text :aria-label="t('user.profile')">
+      <el-button text :aria-label="t('common.language') || 'Language'">
         <el-icon :size="18"><Position /></el-icon>
-        <span class="lang-label">{{ locale }}</span>
+        <span class="lang-label">{{ currentLocale }}</span>
       </el-button>
       <template #dropdown>
         <el-dropdown-menu>
@@ -34,10 +41,10 @@ function handleSelect(next: Locale) {
             v-for="item in supportedLocales"
             :key="item.code"
             :command="item.code"
-            :disabled="item.code === locale"
+            :disabled="item.code === currentLocale"
           >
             <span class="lang-option">
-              <el-icon v-if="item.code === locale"><Check /></el-icon>
+              <el-icon v-if="item.code === currentLocale"><Check /></el-icon>
               <span class="lang-option-label">{{ item.label }}</span>
               <span class="lang-option-code">{{ item.code }}</span>
             </span>

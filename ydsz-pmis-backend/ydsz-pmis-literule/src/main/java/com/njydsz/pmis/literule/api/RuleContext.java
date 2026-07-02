@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 规则评估上下文
@@ -61,7 +62,7 @@ public final class RuleContext implements Serializable {
      * @return RuleContext 实例
      */
     public static RuleContext of(Map<String, Object> facts, String scenario, String source) {
-        return of(facts, scenario, source, java.util.UUID.randomUUID().toString());
+        return of(facts, scenario, source, UUID.randomUUID().toString());
     }
 
     /**
@@ -71,7 +72,7 @@ public final class RuleContext implements Serializable {
      * @return RuleContext 实例
      */
     public static RuleContext of(Map<String, Object> facts) {
-        return of(facts, "DEFAULT", "UNKNOWN", java.util.UUID.randomUUID().toString());
+        return of(facts, "DEFAULT", "UNKNOWN", UUID.randomUUID().toString());
     }
 
     /**

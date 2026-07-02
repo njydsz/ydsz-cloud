@@ -6,6 +6,7 @@ import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
@@ -408,7 +409,7 @@ class PmisWorkflowFacadeTest {
 
         Map<String, Object> detail = new HashMap<>();
         detail.put("definition", new Object());
-        detail.put("nodes", new java.util.ArrayList<>(List.of(node1, node2, node3)));
+        detail.put("nodes", new ArrayList<>(List.of(node1, node2, node3)));
         detail.put("skips", List.of());
         when(definitionService.getDetail(1L)).thenReturn(detail);
 
@@ -731,10 +732,10 @@ class PmisWorkflowFacadeTest {
         when(taskService.listPendingByInstance(500L)).thenReturn(List.of());
 
         // 4) definitionService.getDetail 返回带 coordinate 的节点
-        com.njydsz.pmis.workflow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.entity.FlowNodeDO();
+        FlowNodeDO nT1 = new FlowNodeDO();
         nT1.setNodeCode("t1");
         nT1.setCoordinate("{\"x\":220,\"y\":80,\"width\":100,\"height\":60}");
-        com.njydsz.pmis.workflow.entity.FlowNodeDO nE1 = new com.njydsz.pmis.workflow.entity.FlowNodeDO();
+        FlowNodeDO nE1 = new FlowNodeDO();
         nE1.setNodeCode("e1");
         nE1.setCoordinate("{\"x\":400,\"y\":80,\"width\":50,\"height\":50}");
         Map<String, Object> detail = new HashMap<>();
@@ -792,7 +793,7 @@ class PmisWorkflowFacadeTest {
         when(taskService.listPendingByInstance(600L)).thenReturn(List.of(task));
 
         // 节点无 coordinate
-        com.njydsz.pmis.workflow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.entity.FlowNodeDO();
+        FlowNodeDO nT1 = new FlowNodeDO();
         nT1.setNodeCode("t1");
         nT1.setCoordinate(null);
         Map<String, Object> detail = new HashMap<>();
@@ -847,7 +848,7 @@ class PmisWorkflowFacadeTest {
         when(taskService.listPendingByInstance(800L)).thenReturn(List.of(task));
 
         // coordinate 是无效 JSON → 应被解析方法吞掉异常
-        com.njydsz.pmis.workflow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.entity.FlowNodeDO();
+        FlowNodeDO nT1 = new FlowNodeDO();
         nT1.setNodeCode("t1");
         nT1.setCoordinate("not-valid-json{");
         Map<String, Object> detail = new HashMap<>();

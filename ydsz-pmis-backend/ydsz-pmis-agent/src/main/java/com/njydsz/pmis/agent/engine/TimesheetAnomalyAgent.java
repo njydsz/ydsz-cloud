@@ -55,8 +55,8 @@ public class TimesheetAnomalyAgent implements Agent {
         double totalHours = 0.0;
 
         // 简单按 employeeId+date 分组检测
-        Map<String, Double> dailyHours = new java.util.HashMap<>();
-        Map<String, Integer> projectCount = new java.util.HashMap<>();
+        Map<String, Double> dailyHours = new HashMap<>();
+        Map<String, Integer> projectCount = new HashMap<>();
         for (Map<String, Object> t : timesheets) {
             String employee = String.valueOf(t.get("employeeId"));
             String date = String.valueOf(t.get("workDate"));
@@ -108,7 +108,7 @@ public class TimesheetAnomalyAgent implements Agent {
 
         log.info("[TimesheetAnomaly] biz={} anomalyCount={} level={}",
                 ctx.getBizRef(), anomalyCount, level);
-        Map<String, Object> payload = new java.util.HashMap<>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("anomalyCount", anomalyCount);
         payload.put("totalHours", totalHours);
         return new AgentResult(AgentType.TIMESHEET_ANOMALY, level, score, confidence,

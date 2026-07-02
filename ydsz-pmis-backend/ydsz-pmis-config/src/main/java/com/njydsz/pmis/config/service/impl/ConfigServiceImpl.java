@@ -126,7 +126,7 @@ public class ConfigServiceImpl implements ConfigService {
         String cacheKey = CACHE_GROUP_PREFIX + group;
         String cached = redisTemplate.opsForValue().get(cacheKey);
         if (cached != null) {
-            return JSON.parseObject(cached, new com.alibaba.fastjson2.TypeReference<Map<String, String>>() {});
+            return JSON.parseObject(cached, new TypeReference<Map<String, String>>() {});
         }
         List<ConfigDO> list = configMapper.selectByGroup(group);
         Map<String, String> map = new HashMap<>();

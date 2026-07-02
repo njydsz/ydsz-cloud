@@ -95,7 +95,7 @@ public class RiskWarningAgent implements Agent {
 
         log.info("[RiskWarning] biz={} score={} level={} matched={}",
                 ctx.getBizRef(), scoreBd, level, matched);
-        Map<String, Object> payload = new java.util.HashMap<>();
+        Map<String, Object> payload = new HashMap<>();
         payload.put("score", score);
         payload.put("cpi", cpi);
         payload.put("spi", spi);

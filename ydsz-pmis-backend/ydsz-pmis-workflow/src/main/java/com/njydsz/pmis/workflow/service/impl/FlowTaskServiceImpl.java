@@ -1318,8 +1318,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                               Map<String, Object> variables, String currentAssigneeId) {
         try {
             // 查询同实例下最近一条已完成任务（按主键倒序取最新一条）
-            com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowTaskDO> qw =
-                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+            LambdaQueryWrapper<FlowTaskDO> qw = new LambdaQueryWrapper<>();
             qw.eq(FlowTaskDO::getInstanceId, instance.getId())
                     .eq(FlowTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name())
                     .orderByDesc(FlowTaskDO::getId)
@@ -1396,7 +1395,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             return Collections.emptyList();
         }
         List<String> result = new ArrayList<>();
-        java.util.Set<String> seen = new java.util.HashSet<>();
+        Set<String> seen = new HashSet<>();
         for (String token : resolved.split(",")) {
             String t = token.trim();
             if (t.isEmpty()) continue;
@@ -1764,7 +1763,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                 return null;
             }
             if (uw instanceof Map<?, ?> m) {
-                java.util.Map<String, Integer> result = new java.util.HashMap<>();
+                Map<String, Integer> result = new HashMap<>();
                 for (Map.Entry<?, ?> e : m.entrySet()) {
                     String key = e.getKey() == null ? null : String.valueOf(e.getKey());
                     Object val = e.getValue();

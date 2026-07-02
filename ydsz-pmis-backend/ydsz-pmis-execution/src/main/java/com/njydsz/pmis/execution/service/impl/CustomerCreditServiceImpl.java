@@ -25,6 +25,7 @@ import org.springframework.util.StringUtils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -164,7 +165,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
 
     @Override
     public List<Map<String, Object>> distribution() {
-        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        List<Map<String, Object>> result = new ArrayList<>();
         for (CreditLevel l : CreditLevel.values()) {
             Map<String, Object> m = new HashMap<>();
             m.put("level", l.getCode());

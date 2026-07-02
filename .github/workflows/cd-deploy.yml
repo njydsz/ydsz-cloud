@@ -6,6 +6,8 @@ on:
     paths:
       - 'ydsz-pmis-backend/**'
       - 'ydsz-pmis-frontend/**'
+      - 'deploy/docker/**'
+      - 'helm/**'
   workflow_dispatch:
     inputs:
       target:
@@ -17,11 +19,32 @@ on:
           - staging
           - production
 
+env:
+  REGISTRY: registry.cn-hangzhou.aliyuncs.com
+  NAMESPACE: ydsz
+  IMAGE_TAG: ${{ github.sha }}
+
 jobs:
-  build-and-push:
+  # ==================== 构建后端镜像 ====================
+  build-backend:
     runs-on: ubuntu-latest
-    outputs:
-      image-tag: ${{ steps.meta.outputs.tags }}
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - { name: gateway,   port: 9000,  jar: ydsz-pmis-gateway }
+          - { name: auth,      port: 9001,  jar: ydsz-pmis-auth }
+          - { name: user,      port: 9002,  jar: ydsz-pmis-user }
+          - { name: notification, port: 9003, jar: ydsz-pmis-notification }
+          - { name: workflow,  port: 9004,  jar: ydsz-pmis-workflow }
+          - { name: project,   port: 9005,  jar: ydsz-pmis-project }
+          - { name: execution, port: 9006,  jar: ydsz-pmis-execution }
+          - { name: agent,     port: 9007,  jar: ydsz-pmis-agent }
+          - { name: config,    port: 9008,  jar: ydsz-pmis-config }
+          - { name: file,      port: 9009,  jar: ydsz-pmis-file }
+          - { name: audit,     port: 9010,  jar: ydsz-pmis-audit }
+          - { name: message,   port: 9011,  jar: ydsz-pmis-message }
+          - { name: scheduler, port: 9012,  jar: ydsz-pmis-scheduler }
     steps:
       - uses: actions/checkout@v4
 
@@ -30,10 +53,43 @@ jobs:
         with:
           java-version: '21'
           distribution: 'temurin'
+          cache: 'maven'
 
-      - name: Build Backend
+      - name: Build Backend Module
         working-directory: ydsz-pmis-backend
-        run: mvn -B -ntp -DskipTests package
+        run: mvn -B -ntp -pl ${{ matrix.service.jar }} -am -DskipTests package
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to AliCloud Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
+          password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
+
+      - name: Build and Push ${{ matrix.service.name }}
+        uses: docker/build-push-action@v5
+        with:
+          context: ydsz-pmis-backend
+          file: deploy/docker/Dockerfile.service
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:latest
+          build-args: |
+            APP_NAME=pmis-${{ matrix.service.name }}
+            SERVER_PORT=${{ matrix.service.port }}
+            JAR_FILE=${{ matrix.service.jar }}/target/${{ matrix.service.jar }}-*.jar
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:cache,mode=max
+
+  # ==================== 构建前端镜像 ====================
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
       - name: Set up Node 20
         uses: actions/setup-node@v4
@@ -48,70 +104,132 @@ jobs:
         working-directory: ydsz-pmis-frontend
         run: |
           pnpm install --frozen-lockfile
-          pnpm build
+          pnpm build:prod
 
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: registry.cn-hangzhou.aliyuncs.com/ydsz/pmis
-          tags: |
-            type=sha,prefix={{branch}}-
-            type=raw,value=latest,enable={{is_default_branch}}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
       - name: Login to AliCloud Registry
-        if: github.ref == 'refs/heads/main'
         uses: docker/login-action@v3
         with:
-          registry: registry.cn-hangzhou.aliyuncs.com
+          registry: ${{ env.REGISTRY }}
           username: ${{ secrets.ALIYUN_REGISTRY_USERNAME }}
           password: ${{ secrets.ALIYUN_REGISTRY_PASSWORD }}
 
-      - name: Build and Push Docker Images
-        if: github.ref == 'refs/heads/main'
-        run: |
-          for svc in gateway user auth config notification workflow file scheduler message audit project execution agent; do
-            docker build -t registry.cn-hangzhou.aliyuncs.com/ydsz/pmis-${svc}:${{ github.sha }} \
-              -f deploy/docker/Dockerfile.app \
-              --build-arg JAR_FILE=ydsz-pmis-${svc}/target/ydsz-pmis-${svc}-*.jar \
-              ydsz-pmis-backend/
-            docker push registry.cn-hangzhou.aliyuncs.com/ydsz/pmis-${svc}:${{ github.sha }}
-          done
-          # 前端镜像
-          docker build -t registry.cn-hangzhou.aliyuncs.com/ydsz/pmis-frontend:${{ github.sha }} \
-            -f deploy/docker/Dockerfile.frontend \
-            ydsz-pmis-frontend/
-          docker push registry.cn-hangzhou.aliyuncs.com/ydsz/pmis-frontend:${{ github.sha }}
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deploy/docker/Dockerfile.frontend
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }}
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:latest
+          cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:cache
+          cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:cache,mode=max
 
+  # ==================== 部署 Staging ====================
   deploy-staging:
-    needs: build-and-push
+    needs: [build-backend, build-frontend]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: staging
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy to Staging (Argo Rollouts)
+      - name: Configure kubectl
         run: |
-          echo "触发 Argo Rollouts 镜像更新"
-          echo "kubectl argo rollouts set image execution-rollout execution=registry.cn-hangzhou.aliyuncs.com/ydsz/pmis-execution:${{ github.sha }}"
-          echo "Argo Rollouts 将自动执行 5%→25%→50%→100% 灰度发布"
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_STAGING }}" | base64 -d > $HOME/.kube/config
 
-      - name: Post-deploy Smoke Test
+      - name: Deploy to Staging
         run: |
-          echo "等待服务就绪后执行冒烟测试..."
-          sleep 30
-          # kubectl wait --for=condition=ready pods -l app=pmis-gateway --timeout=300s
-          echo "冒烟测试完成"
+          # 更新所有微服务镜像
+          for svc in gateway auth user notification workflow project execution agent config file audit message scheduler; do
+            kubectl set image deployment/pmis-${svc} \
+              pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
+              -n pmis-staging
+          done
+          # 更新前端镜像
+          kubectl set image deployment/pmis-frontend \
+            pmis-frontend=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }} \
+            -n pmis-staging
 
+      - name: Wait for Rollout
+        run: |
+          for svc in gateway auth user notification workflow project execution agent config file audit message scheduler frontend; do
+            echo "Waiting for pmis-${svc} rollout..."
+            kubectl rollout status deployment/pmis-${svc} -n pmis-staging --timeout=300s
+          done
+
+      - name: Smoke Test
+        run: |
+          chmod +x deploy/smoke-test/run.sh
+          STAGING_URL=https://staging.pmis.ydsz.cn ./deploy/smoke-test/run.sh
+
+  # ==================== 部署 Production（金丝雀） ====================
   deploy-production:
     needs: deploy-staging
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'workflow_dispatch' && inputs.target == 'production'
-    environment: production
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'production'
+    environment:
+      name: production
+      url: https://pmis.ydsz.cn
     steps:
-      - name: Promote to Production
+      - uses: actions/checkout@v4
+
+      - name: Configure kubectl
         run: |
-          echo "手动确认后推广到生产环境"
-          echo "kubectl argo rollouts promote execution-rollout --full"
-          echo "生产环境部署完成"
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+
+      - name: Canary Deploy (5% → 25% → 50% → 100%)
+        run: |
+          # 使用 Argo Rollouts 金丝雀发布
+          for svc in gateway auth user notification workflow project execution agent config file audit message scheduler frontend; do
+            # 更新镜像并启动金丝雀
+            kubectl argo rollouts set image rollout/pmis-${svc} \
+              pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
+              -n pmis-production
+
+            # 5% 金丝雀
+            kubectl argo rollouts set image rollout/pmis-${svc} \
+              pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
+              -n pmis-production
+            echo "Canary 5% for pmis-${svc}, waiting 60s for observation..."
+            sleep 60
+
+            # 检查错误率
+            ERROR_RATE=$(kubectl argo rollouts get rollout pmis-${svc} -n pmis-production -o jsonpath='{.status.canary.currentStepAnalysis}' 2>/dev/null || echo "0")
+            if [ "$ERROR_RATE" != "0" ]; then
+              echo "ERROR: High error rate detected for pmis-${svc}, aborting!"
+              kubectl argo rollouts abort rollout/pmis-${svc} -n pmis-production
+              exit 1
+            fi
+
+            # 推进到 25%
+            kubectl argo rollouts promote rollout/pmis-${svc} -n pmis-production
+            echo "Canary 25% for pmis-${svc}, waiting 60s..."
+            sleep 60
+
+            # 推进到 50%
+            kubectl argo rollouts promote rollout/pmis-${svc} -n pmis-production
+            echo "Canary 50% for pmis-${svc}, waiting 90s..."
+            sleep 90
+
+            # 完全推广
+            kubectl argo rollouts promote rollout/pmis-${svc} -n pmis-production --full
+            echo "pmis-${svc} fully promoted to 100%"
+          done
+
+      - name: Production Smoke Test
+        run: |
+          chmod +x deploy/smoke-test/run.sh
+          PRODUCTION_URL=https://pmis.ydsz.cn ./deploy/smoke-test/run.sh
+
+      - name: Notify Deploy Success
+        if: success()
+        run: |
+          echo "✅ Production deployment completed successfully"
+          echo "Image tag: ${{ env.IMAGE_TAG }}"
+          echo "Deploy time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"

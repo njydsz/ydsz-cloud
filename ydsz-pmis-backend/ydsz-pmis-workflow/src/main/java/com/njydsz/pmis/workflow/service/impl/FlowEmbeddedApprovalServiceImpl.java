@@ -374,7 +374,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             }
             List<Map<String, Object>> out = new ArrayList<>(his.size());
             for (FlowHisTaskDO t : his) {
-                Map<String, Object> m = new java.util.LinkedHashMap<>();
+                Map<String, Object> m = new LinkedHashMap<>();
                 m.put("type", "TASK");
                 m.put("taskId", t.getId());
                 m.put("nodeCode", t.getNodeCode());
@@ -402,7 +402,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      * 仅返回最简的节点信息用于高亮当前节点。
      */
     private Map<String, Object> loadDiagram(FlowInstanceDO instance) {
-        Map<String, Object> light = new java.util.LinkedHashMap<>();
+        Map<String, Object> light = new LinkedHashMap<>();
         light.put("currentNodeCode", instance.getCurrentNodeCode());
         light.put("currentNodeName", instance.getCurrentNodeName());
         light.put("flowCode", instance.getFlowCode());

@@ -243,7 +243,7 @@ public class AgentController {
 
         AgentResult result = service.executeInMemory(agentType, ctx);
 
-        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        Map<String, Object> data = new LinkedHashMap<>();
         data.put("agentType", result.getAgentType() == null ? null : result.getAgentType().getCode());
         data.put("alertLevel", result.getAlertLevel() == null ? null : result.getAlertLevel().getCode());
         data.put("score", result.getScore());

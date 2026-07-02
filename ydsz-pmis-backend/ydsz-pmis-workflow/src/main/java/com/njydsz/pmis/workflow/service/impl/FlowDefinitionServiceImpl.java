@@ -234,8 +234,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     public List<FlowDefinitionDO> page(int pageNo, int pageSize, String category, String flowCode) {
         Page<FlowDefinitionDO> page = new Page<>(pageNo, pageSize);
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowDefinitionDO> w =
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        LambdaQueryWrapper<FlowDefinitionDO> w = new LambdaQueryWrapper<>();
         w.eq(StringUtils.hasText(category), FlowDefinitionDO::getCategory, category)
                 .like(StringUtils.hasText(flowCode), FlowDefinitionDO::getFlowCode, flowCode)
                 .eq(FlowDefinitionDO::getActivityStatus, 1)

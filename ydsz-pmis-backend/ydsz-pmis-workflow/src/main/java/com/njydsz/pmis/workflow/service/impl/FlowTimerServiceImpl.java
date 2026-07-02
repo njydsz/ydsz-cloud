@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
@@ -269,7 +270,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     @Override
     public List<FlowTimerDO> listByInstance(Long instanceId) {
-        return timerMapper.selectList(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<FlowTimerDO>()
+        return timerMapper.selectList(new QueryWrapper<FlowTimerDO>()
                 .eq("instance_id", instanceId)
                 .eq("deleted", 0)
                 .orderByDesc("created_at"));

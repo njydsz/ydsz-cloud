@@ -14,6 +14,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -89,7 +90,7 @@ public final class ExcelTemplate {
      */
     public ExcelTemplate addRequiredMark(String... fieldNames) {
         if (this.requiredMarks == null) {
-            this.requiredMarks = new java.util.HashMap<>();
+            this.requiredMarks = new HashMap<>();
         }
         for (String f : fieldNames) {
             this.requiredMarks.put(f, "*");
