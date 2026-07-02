@@ -1,6 +1,7 @@
-package com.njydsz.pmis.workflow.service.impl;
+package com.njydsz.pmis.workflow.flow.service.impl;
 
 import com.njydsz.pmis.common.feign.NotificationClient;
+import com.njydsz.pmis.workflow.service.impl.FlowNotificationServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

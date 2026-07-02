@@ -1,10 +1,11 @@
-package com.njydsz.pmis.workflow.service.impl;
+package com.njydsz.pmis.workflow.flow.service.impl;
 
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.entity.FlowDelegateLogDO;
 import com.njydsz.pmis.workflow.mapper.FlowDelegateAuthMapper;
 import com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper;
+import com.njydsz.pmis.workflow.service.impl.FlowDelegateAuthServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

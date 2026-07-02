@@ -1,4 +1,4 @@
-package com.njydsz.pmis.workflow;
+package com.njydsz.pmis.workflow.flow;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;

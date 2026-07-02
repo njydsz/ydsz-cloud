@@ -231,4 +231,26 @@ public interface FlowTaskService {
      * @param reason 超时原因（可选）
      */
     void timeoutTask(Long taskId, String reason);
+
+    // ======================== P0-03: 暂存待审 / 追加处理人 ========================
+
+    /**
+     * GAP-P0: 暂存待审 — 审批人保存审批意见草稿（不改变任务主状态）
+     *
+     * <p>将审批意见保存到任务 comment 字段，任务状态保持 PENDING/CLAIMED 不变，
+     * 写审计日志记录 SAVE_DRAFT 操作。对标飞书/钉钉审批的"暂存"功能。
+     *
+     * @param dto 任务操作参数（需含 taskId + userId + comment）
+     */
+    void saveDraft(FlowTaskOperateDTO dto);
+
+    /**
+     * GAP-P0: 追加处理人 — 在已有会签任务中追加一个审批人
+     *
+     * <p>对标 FlowLong 的"追加处理人"功能。向 pmis_flow_user 插入新审批人，
+     * approveCount +1，保持当前会签模式不变。比加签更轻量，不改变 performType。
+     *
+     * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
+     */
+    void addApprover(FlowTaskOperateDTO dto);
 }

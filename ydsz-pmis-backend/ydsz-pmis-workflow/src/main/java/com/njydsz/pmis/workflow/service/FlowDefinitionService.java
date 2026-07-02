@@ -146,4 +146,22 @@ public interface FlowDefinitionService {
      * @param formFieldsConfig  字段权限 JSON 字符串
      */
     void saveFormConfig(Long definitionId, String nodeCode, String formFieldsConfig);
+
+    /**
+     * 列出流程定义的所有历史版本
+     *
+     * @param definitionId 流程定义 ID（用于获取 flowCode）
+     * @return 版本列表，每项包含 id / version / flowName / isPublish / activityStatus / createdAt / updatedAt
+     */
+    List<Map<String, Object>> listVersions(Long definitionId);
+
+    /**
+     * 对比两个版本的节点和连线差异
+     *
+     * @param definitionId 流程定义 ID（用于获取 flowCode）
+     * @param version1     版本号 1（整数）
+     * @param version2     版本号 2（整数）
+     * @return Map 包含 version1 / version2 / nodeChanges / skipChanges
+     */
+    Map<String, Object> diffVersions(Long definitionId, Integer version1, Integer version2);
 }

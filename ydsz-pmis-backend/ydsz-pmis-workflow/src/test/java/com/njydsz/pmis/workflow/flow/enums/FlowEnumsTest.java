@@ -1,5 +1,10 @@
-package com.njydsz.pmis.workflow.enums;
+package com.njydsz.pmis.workflow.flow.enums;
 
+import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
+import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
+import com.njydsz.pmis.workflow.enums.FlowNodeType;
+import com.njydsz.pmis.workflow.enums.FlowSkipType;
+import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 

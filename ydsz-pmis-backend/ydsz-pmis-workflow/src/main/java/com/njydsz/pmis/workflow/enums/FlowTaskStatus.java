@@ -25,7 +25,9 @@ public enum FlowTaskStatus {
     /** 已委派（被委派人处理完后回到原办理人） */
     DELEGATED,
     /** 已冻结（流程挂起时连带冻结 PENDING/CLAIMED，激活后回到 PENDING） */
-    FROZEN;
+    FROZEN,
+    /** 暂存（审批人暂存审批意见草稿，不改变任务主状态，可随时提交） */
+    DRAFT;
 
     public boolean isFinished() {
         return this == COMPLETED

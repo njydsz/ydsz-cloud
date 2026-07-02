@@ -22,8 +22,17 @@ import {
   delegateTask,
   urgeTask,
   claimTask,
+  batchPass,
+  saveDraft,
+  addApprover,
+  markReadTask,
+  communicateTask,
+  countersignBefore,
+  countersignAfter,
+  countersignRemove,
   ccMarkRead,
   ccMarkAllRead,
+  ccUnreadCount,
 } from '@/api/workflow'
 import type {
   FlowTaskDTO,
@@ -149,7 +158,7 @@ async function loadCcUnread() {
 // 任务操作弹窗
 // ===========================================
 const opDialog = ref(false)
-const opType = ref<'pass' | 'reject' | 'transfer' | 'delegate' | 'urge'>('pass')
+const opType = ref<'pass' | 'reject' | 'transfer' | 'delegate' | 'urge' | 'saveDraft' | 'addApprover' | 'countersignBefore' | 'countersignAfter' | 'countersignRemove' | 'markRead' | 'communicate'>('pass')
 const opTask = ref<FlowTaskDTO | null>(null)
 const opForm = reactive({
   comment: '',
@@ -165,6 +174,9 @@ const opForm = reactive({
   /** 提及列表（P1-9: CommentEditor @人） */
   mentions: [] as Array<{ userId: number; name: string }>,
 })
+
+/** P0: 批量审批多选 */
+const todoSelection = ref<FlowTaskDTO[]>([])
 
 /** P1-9: 审批常用语 */
 const commentPhrases = [
@@ -235,7 +247,7 @@ async function submitOp() {
     ElMessage.warning('请填写驳回意见')
     return
   }
-  if ((opType.value === 'transfer' || opType.value === 'delegate') && !opForm.targetUserId) {
+  if ((opType.value === 'transfer' || opType.value === 'delegate' || opType.value === 'addApprover' || opType.value === 'countersignBefore' || opType.value === 'countersignAfter' || opType.value === 'countersignRemove') && !opForm.targetUserId) {
     ElMessage.warning('请选择目标用户')
     return
   }
@@ -261,6 +273,13 @@ async function submitOp() {
     else if (opType.value === 'reject') res = await rejectTask(dto)
     else if (opType.value === 'transfer') res = await transferTask(dto)
     else if (opType.value === 'delegate') res = await delegateTask(dto)
+    else if (opType.value === 'saveDraft') res = await saveDraft(dto)
+    else if (opType.value === 'addApprover') res = await addApprover(dto)
+    else if (opType.value === 'countersignBefore') res = await countersignBefore(dto)
+    else if (opType.value === 'countersignAfter') res = await countersignAfter(dto)
+    else if (opType.value === 'countersignRemove') res = await countersignRemove(dto)
+    else if (opType.value === 'markRead') res = await markReadTask({ taskId: opTask.value.id, userId: dto.userId! })
+    else if (opType.value === 'communicate') res = await communicateTask(dto)
     if (res?.data?.code === 0) {
       ElMessage.success('操作成功')
       opDialog.value = false
@@ -302,6 +321,46 @@ async function quickUrge(task: FlowTaskDTO) {
     }).catch(() => {})
   } catch (e) {
     // user cancel
+  }
+}
+
+/** P0: 批量审批 */
+async function quickBatchPass() {
+  if (todoSelection.value.length === 0) {
+    ElMessage.warning('请先勾选待审批项')
+    return
+  }
+  try {
+    await ElMessageBox.prompt('请输入批量审批意见', '批量审批', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+    }).then(async ({ value }) => {
+      const res = await batchPass({
+        taskIds: todoSelection.value.map((t) => t.id),
+        comment: value || undefined,
+      })
+      if (res.data?.code === 0) {
+        ElMessage.success(`批量审批成功，共处理 ${res.data.data || todoSelection.value.length} 项`)
+        todoSelection.value = []
+        loadTodo()
+      } else {
+        ElMessage.error(res.data?.message || '批量审批失败')
+      }
+    }).catch(() => {})
+  } catch (e) {
+    // user cancel
+  }
+}
+
+/** P0: 暂存待审快捷操作 */
+async function quickSaveDraft(task: FlowTaskDTO) {
+  try {
+    const res = await saveDraft({ taskId: task.id, comment: '' })
+    if (res.data?.code === 0) {
+      ElMessage.success('已暂存')
+    }
+  } catch (e) {
+    ElMessage.error('暂存失败：' + (e as Error).message)
   }
 }
 
@@ -438,8 +497,16 @@ function onTabChange(tab: string) {
           />
           <el-button type="primary" @click="loadTodo">查询</el-button>
           <el-button @click="() => { todoQuery.flowCode = undefined; todoQuery.pageNum = 1; loadTodo() }">重置</el-button>
+          <el-button
+            type="success"
+            :disabled="todoSelection.length === 0"
+            @click="quickBatchPass"
+          >
+            批量通过（{{ todoSelection.length }}）
+          </el-button>
         </div>
-        <el-table :data="todoList" v-loading="todoLoading" stripe>
+        <el-table :data="todoList" v-loading="todoLoading" stripe @selection-change="(v: FlowTaskDTO[]) => todoSelection = v">
+          <el-table-column type="selection" width="50" />
           <el-table-column prop="title" label="审批事项" min-width="220" show-overflow-tooltip />
           <el-table-column prop="flowName" label="流程" width="160" show-overflow-tooltip />
           <el-table-column prop="nodeName" label="当前节点" width="120" />
@@ -489,6 +556,13 @@ function onTabChange(tab: string) {
                     <el-dropdown-item v-if="row.taskStatus === 'PENDING'" @click="quickClaim(row)">签收</el-dropdown-item>
                     <el-dropdown-item @click="openOpDialog('transfer', row)">转办</el-dropdown-item>
                     <el-dropdown-item @click="openOpDialog('delegate', row)">委派</el-dropdown-item>
+                    <el-dropdown-item @click="openOpDialog('saveDraft', row)">暂存</el-dropdown-item>
+                    <el-dropdown-item divided @click="openOpDialog('addApprover', row)">追加处理人</el-dropdown-item>
+                    <el-dropdown-item @click="openOpDialog('countersignBefore', row)">前加签</el-dropdown-item>
+                    <el-dropdown-item @click="openOpDialog('countersignAfter', row)">后加签</el-dropdown-item>
+                    <el-dropdown-item @click="openOpDialog('countersignRemove', row)">减签</el-dropdown-item>
+                    <el-dropdown-item divided @click="openOpDialog('markRead', row)">已阅</el-dropdown-item>
+                    <el-dropdown-item @click="openOpDialog('communicate', row)">沟通</el-dropdown-item>
                     <el-dropdown-item @click="quickUrge(row)">催办</el-dropdown-item>
                     <el-dropdown-item @click="goInstance(row.instanceId)">查看流程</el-dropdown-item>
                   </el-dropdown-menu>

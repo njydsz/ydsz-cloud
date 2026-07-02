@@ -218,11 +218,11 @@ public class AgentController {
     @PostMapping("/internal/execute")
     public Result<Map<String, Object>> internalExecute(@RequestBody Map<String, Object> body) {
         if (body == null) {
-            return Result.error(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
+            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
         }
         String agentType = body.get("agentType") == null ? null : body.get("agentType").toString();
         if (agentType == null) {
-            return Result.error(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "agentType 必填");
+            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "agentType 必填");
         }
         String bizType = body.get("bizType") == null ? "INTERNAL" : body.get("bizType").toString();
         Long bizId = body.get("bizId") instanceof Number n ? n.longValue() : 0L;

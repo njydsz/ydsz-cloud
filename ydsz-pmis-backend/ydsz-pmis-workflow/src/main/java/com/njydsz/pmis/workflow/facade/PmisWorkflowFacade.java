@@ -587,4 +587,31 @@ public class PmisWorkflowFacade implements WorkflowFacade {
             default -> "ENTERED";
         };
     }
+
+    // ======================== P0-03: 暂存待审 / 追加处理人 / 减签 / 已阅 / 沟通 ========================
+
+    @Override
+    public void saveDraft(FlowTaskOperateDTO dto) {
+        taskService.saveDraft(dto);
+    }
+
+    @Override
+    public void addApprover(FlowTaskOperateDTO dto) {
+        taskService.addApprover(dto);
+    }
+
+    @Override
+    public void countersignRemoveTask(FlowTaskOperateDTO dto) {
+        taskService.countersignRemove(dto);
+    }
+
+    @Override
+    public void markReadTask(Long taskId, Long userId) {
+        taskService.markRead(taskId, userId);
+    }
+
+    @Override
+    public void communicateTask(FlowTaskOperateDTO dto) {
+        taskService.communicate(dto);
+    }
 }

@@ -184,7 +184,7 @@ export function delegateTask(payload: FlowTaskOperateDTO) {
 /** 前加签 */
 export function countersignBefore(payload: FlowTaskOperateDTO) {
   return http.post<ApiResponse<null>>(
-    '/workflow/engine/task/countersign/before',
+    '/workflow/engine/task/countersignBefore',
     payload,
   )
 }
@@ -192,7 +192,15 @@ export function countersignBefore(payload: FlowTaskOperateDTO) {
 /** 后加签 */
 export function countersignAfter(payload: FlowTaskOperateDTO) {
   return http.post<ApiResponse<null>>(
-    '/workflow/engine/task/countersign/after',
+    '/workflow/engine/task/countersignAfter',
+    payload,
+  )
+}
+
+/** 减签 */
+export function countersignRemove(payload: FlowTaskOperateDTO) {
+  return http.post<ApiResponse<null>>(
+    '/workflow/engine/task/countersignRemove',
     payload,
   )
 }
@@ -225,7 +233,27 @@ export function batchPass(payload: {
   taskIds: number[]
   comment?: string
 }) {
-  return http.post<ApiResponse<number>>('/workflow/engine/task/batch-pass', payload)
+  return http.post<ApiResponse<number>>('/workflow/engine/task/batchPass', payload)
+}
+
+/** GAP-P0: 暂存待审 */
+export function saveDraft(payload: FlowTaskOperateDTO) {
+  return http.post<ApiResponse<null>>('/workflow/engine/task/saveDraft', payload)
+}
+
+/** GAP-P0: 追加处理人 */
+export function addApprover(payload: FlowTaskOperateDTO) {
+  return http.post<ApiResponse<null>>('/workflow/engine/task/addApprover', payload)
+}
+
+/** GAP-P0: 已阅 */
+export function markReadTask(payload: { taskId: number; userId: number }) {
+  return http.post<ApiResponse<null>>(`/workflow/engine/task/${payload.taskId}/read`, payload)
+}
+
+/** GAP-P0: 沟通 */
+export function communicateTask(payload: FlowTaskOperateDTO) {
+  return http.post<ApiResponse<null>>('/workflow/engine/task/communicate', payload)
 }
 
 // ===========================================

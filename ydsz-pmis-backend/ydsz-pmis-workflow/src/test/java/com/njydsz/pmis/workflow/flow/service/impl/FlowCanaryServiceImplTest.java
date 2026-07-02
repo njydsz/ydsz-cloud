@@ -1,9 +1,10 @@
-package com.njydsz.pmis.workflow.service.impl;
+package com.njydsz.pmis.workflow.flow.service.impl;
 
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.enums.CanaryStatus;
 import com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper;
+import com.njydsz.pmis.workflow.service.impl.FlowCanaryServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

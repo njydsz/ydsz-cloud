@@ -897,6 +897,30 @@ public class FlowEngineController {
         return Result.ok();
     }
 
+    /**
+     * GAP-P0: 暂存待审 — 审批人保存审批意见草稿
+     *
+     * @param dto 任务操作参数（需含 taskId + userId + comment）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/saveDraft")
+    public Result<Void> saveDraft(@RequestBody FlowTaskOperateDTO dto) {
+        workflowFacade.saveDraft(dto);
+        return Result.ok();
+    }
+
+    /**
+     * GAP-P0: 追加处理人 — 在已有会签任务中追加审批人
+     *
+     * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/addApprover")
+    public Result<Void> addApprover(@RequestBody FlowTaskOperateDTO dto) {
+        workflowFacade.addApprover(dto);
+        return Result.ok();
+    }
+
     // ============== P1-6: SLA 超时自动策略 ==============
 
     /**

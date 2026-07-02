@@ -50,8 +50,35 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
 
     @Override
     public void executeDailyReports() {
-        String sql = "SELECT * FROM pmis_report_subscription WHERE status = 1 AND deleted = 0";
-        List<Map<String, Object>> subs = jdbcTemplate.queryForList(sql);
+        executeReportsByFrequency("DAILY");
+    }
+
+    @Override
+    public void executeWeeklyReports() {
+        executeReportsByFrequency("WEEKLY");
+    }
+
+    @Override
+    public void executeMonthlyReports() {
+        executeReportsByFrequency("MONTHLY");
+    }
+
+    /**
+     * 按 frequency 字段拉取订阅并逐条生成/分发报表。
+     *
+     * <p>无对应频率订阅时静默返回；单条异常不影响其他订阅。
+     *
+     * @param frequency 订阅频率（DAILY / WEEKLY / MONTHLY）
+     */
+    private void executeReportsByFrequency(String frequency) {
+        String sql = "SELECT * FROM pmis_report_subscription "
+                + "WHERE status = 1 AND deleted = 0 AND frequency = ?";
+        List<Map<String, Object>> subs = jdbcTemplate.queryForList(sql, frequency);
+        if (subs.isEmpty()) {
+            log.info("[ReportSchedule] 无 {} 订阅，跳过", frequency);
+            return;
+        }
+        log.info("[ReportSchedule] 开始处理 {} 订阅: count={}", frequency, subs.size());
         for (Map<String, Object> sub : subs) {
             try {
                 Long subId = ((Number) sub.get("id")).longValue();
@@ -82,7 +109,12 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
         log.info("[ReportSchedule] 生成报表: type={}", reportType);
         ReportData data = buildReportData(reportType, params);
         byte[] bytes = writeExcel(reportType, data);
-        String fileKey = uploadToMinio(reportType, bytes);
+        String fileKey;
+        try {
+            fileKey = uploadToMinio(reportType, bytes);
+        } catch (Exception e) {
+            throw new IllegalStateException("[ReportSchedule] MinIO 上传报表失败: type=" + reportType, e);
+        }
         log.info("[ReportSchedule] 报表生成完成: type={}, fileKey={}, size={}", reportType, fileKey, bytes.length);
         return fileKey;
     }

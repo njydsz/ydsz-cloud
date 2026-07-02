@@ -611,6 +611,50 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                 dto.getTaskId(), dto.getUserId(), dto.getComment());
     }
 
+    // ======================== P0-03: 暂存待审 / 追加处理人 ========================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveDraft(FlowTaskOperateDTO dto) {
+        FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
+        if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可暂存");
+        }
+        // 保存审批意见草稿到 comment 字段，不改变任务状态
+        task.setComment(dto.getComment());
+        taskMapper.updateById(task);
+        audit(task, "SAVE_DRAFT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
+        log.info("[Flow] 暂存待审: taskId={} userId={}", dto.getTaskId(), dto.getUserId());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void addApprover(FlowTaskOperateDTO dto) {
+        FlowTaskDO task = getTaskOrThrow(dto.getTaskId());
+        if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "任务已完成，不可追加处理人");
+        }
+        if (dto.getTargetUserId() == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "追加处理人需指定 targetUserId");
+        }
+        // 向 pmis_flow_user 插入新审批人
+        FlowUserDO fu = new FlowUserDO();
+        fu.setTaskId(task.getId());
+        fu.setUserId(String.valueOf(dto.getTargetUserId()));
+        fu.setProcessed(0);
+        fu.setWeight(1); // 默认权重 1
+        userMapper.insert(fu);
+        // approveCount +1
+        int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();
+        task.setApproveCount(currentCount + 1);
+        taskMapper.updateById(task);
+        audit(task, "ADD_APPROVER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
+        log.info("[Flow] 追加处理人: taskId={} targetUserId={}", task.getId(), dto.getTargetUserId());
+        fireEvent(l -> l.onTaskCountersigned(task.getId(), dto.getTargetUserId(), "ADD"),
+                task.getId());
+        publishWorkflowEvent("TASK_ADD_APPROVER", task.getInstanceId(), task.getId());
+    }
+
     // ============================== 催办（P1-9） ==============================
 
     @Override

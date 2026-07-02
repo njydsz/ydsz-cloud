@@ -161,4 +161,31 @@ public interface WorkflowFacade {
      * @return 步骤列表（按 timestamp 升序），实例不存在时返回空列表
      */
     List<Map<String, Object>> getReplaySteps(String instanceId);
+
+    // ======================== P0-03: 暂存待审 / 追加处理人 / 减签 / 已阅 / 沟通 ========================
+
+    /**
+     * GAP-P0: 暂存待审 — 审批人保存审批意见草稿
+     */
+    void saveDraft(FlowTaskOperateDTO dto);
+
+    /**
+     * GAP-P0: 追加处理人 — 在已有会签任务中追加审批人
+     */
+    void addApprover(FlowTaskOperateDTO dto);
+
+    /**
+     * GAP-P0: 减签 — 从会签任务中移除指定审批人
+     */
+    void countersignRemoveTask(FlowTaskOperateDTO dto);
+
+    /**
+     * GAP-P0: 已阅 — 标记任务已阅
+     */
+    void markReadTask(Long taskId, Long userId);
+
+    /**
+     * GAP-P0: 沟通 — 在任务下添加沟通评论
+     */
+    void communicateTask(FlowTaskOperateDTO dto);
 }
