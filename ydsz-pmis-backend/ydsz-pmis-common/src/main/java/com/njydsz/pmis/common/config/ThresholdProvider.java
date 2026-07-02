@@ -28,46 +28,86 @@ import java.util.function.Supplier;
  * </ul>
  *
  * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
 public class ThresholdProvider {
 
+    /** 配置组名 */
     public static final String GROUP = "alert";
 
+    /** 本地缓存过期时间（毫秒） */
     private static final long CACHE_TTL_MS = 60_000L;
 
+    /** 配置中心 Feign 客户端 */
     private final ConfigClient configClient;
 
+    /** key → 缓存条目 */
     private final Map<String, CacheEntry> cache = new ConcurrentHashMap<>();
 
     // ============= CPI / SPI =============
+    /**
+     * CPI 黄色预警阈值（默认 0.95）
+     *
+     * @return CPI 黄色阈值
+     */
     public double cpiYellow() {
         return getDouble("cpi.yellow", 0.95);
     }
 
+    /**
+     * CPI 红色预警阈值（默认 0.85）
+     *
+     * @return CPI 红色阈值
+     */
     public double cpiRed() {
         return getDouble("cpi.red", 0.85);
     }
 
+    /**
+     * SPI 黄色预警阈值（默认 0.90）
+     *
+     * @return SPI 黄色阈值
+     */
     public double spiYellow() {
         return getDouble("spi.yellow", 0.90);
     }
 
+    /**
+     * SPI 红色预警阈值（默认 0.80）
+     *
+     * @return SPI 红色阈值
+     */
     public double spiRed() {
         return getDouble("spi.red", 0.80);
     }
 
     // ============= Bench =============
+    /**
+     * 闲置人员黄色预警天数（默认 7 天）
+     *
+     * @return 黄色预警天数
+     */
     public int benchYellowDays() {
         return (int) Math.round(getDouble("bench.days.yellow", 7.0));
     }
 
+    /**
+     * 闲置人员红色预警天数（默认 15 天）
+     *
+     * @return 红色预警天数
+     */
     public int benchRedDays() {
         return (int) Math.round(getDouble("bench.days.red", 15.0));
     }
 
+    /**
+     * 闲置成本占总人力成本的比例阈值（默认 0.08，即 8%）
+     *
+     * @return 闲置成本比例阈值
+     */
     public BigDecimal benchCostRatio() {
         return BigDecimal.valueOf(getDouble("bench.cost.ratio", 0.08));
     }
@@ -112,15 +152,28 @@ public class ThresholdProvider {
         }
     }
 
-    /** 强制刷新缓存（用于配置更新后即时生效） */
+    /**
+     * 强制刷新缓存（用于配置更新后即时生效）
+     */
     public void refresh() {
         cache.clear();
     }
 
+    /**
+     * 缓存条目：记录配置项的加载时间戳与值
+     */
     private static class CacheEntry {
+        /** 加载时间戳（毫秒） */
         final long loadedAt;
+        /** 配置值（可为 null） */
         final String value;
 
+        /**
+         * 构造方法
+         *
+         * @param loadedAt 加载时间戳
+         * @param value    配置值
+         */
         CacheEntry(long loadedAt, String value) {
             this.loadedAt = loadedAt;
             this.value = value;
@@ -128,13 +181,23 @@ public class ThresholdProvider {
     }
 
     // ============= 测试钩子 =============
-    /** 单元测试注入：替换 ConfigClient 实现 */
+    /**
+     * 单元测试注入：替换 ConfigClient 实现
+     *
+     * @param client 替换用的 ConfigClient
+     */
     public void setConfigClientForTest(ConfigClient client) {
         cache.clear();
         // 因为 final，无法直接替换；保留 hook 供将来通过 Spring profile 切换
     }
 
-    /** 单元测试入口：使用 Supplier 注入读取逻辑 */
+    /**
+     * 单元测试入口：使用 Supplier 注入读取逻辑
+     *
+     * @param key    配置键
+     * @param reader 读取逻辑
+     * @return 读取到的配置值
+     */
     public String readForTest(String key, Supplier<String> reader) {
         cache.clear();
         String v = reader.get();

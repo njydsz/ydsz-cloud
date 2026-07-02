@@ -27,24 +27,45 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @EnableAsync
 public class CommonAutoConfiguration {
 
+    /**
+     * 注册 MyBatis-Plus 审计字段填充器
+     *
+     * @return AuditFieldFiller 实例
+     */
     @Bean
     @ConditionalOnMissingBean
     public AuditFieldFiller auditFieldFiller() {
         return new AuditFieldFiller();
     }
 
+    /**
+     * 注册鉴权拦截器
+     *
+     * @return AuthInterceptor 实例
+     */
     @Bean
     @ConditionalOnMissingBean
     public AuthInterceptor authInterceptor() {
         return new AuthInterceptor();
     }
 
+    /**
+     * 注册 Web MVC 配置（注入鉴权拦截器）
+     *
+     * @param authInterceptor 鉴权拦截器
+     * @return WebMvcConfig 实例
+     */
     @Bean
     @ConditionalOnMissingBean
     public WebMvcConfig webMvcConfig(AuthInterceptor authInterceptor) {
         return new WebMvcConfig(authInterceptor);
     }
 
+    /**
+     * 注册 OpenAPI 3.0 配置
+     *
+     * @return OpenApiConfig 实例
+     */
     @Bean
     @ConditionalOnMissingBean
     public OpenApiConfig openApiConfig() {

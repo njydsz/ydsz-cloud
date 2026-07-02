@@ -20,12 +20,30 @@ import java.util.Map;
 @FeignClient(name = "ydsz-pmis-user", fallbackFactory = UserServiceClientFallback.class)
 public interface UserServiceClient {
 
+    /**
+     * 根据员工 ID 查询员工信息。
+     *
+     * @param id 员工 ID
+     * @return 员工信息（包含 name/realName 等字段）；服务降级时返回 null
+     */
     @GetMapping("/api/v1/user/employee/{id}")
     R<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
 
+    /**
+     * 根据客户 ID 查询客户名称。
+     *
+     * @param customerId 客户 ID
+     * @return 客户名称；服务降级时返回空字符串
+     */
     @GetMapping("/api/v1/user/customers/name")
     R<String> getCustomerName(@RequestParam("customerId") Long customerId);
 
+    /**
+     * 批量查询员工姓名。
+     *
+     * @param ids 员工 ID 列表
+     * @return 员工 ID 到姓名的映射；服务降级时返回空 Map
+     */
     @GetMapping("/api/v1/user/employees/batch")
     R<Map<Long, String>> batchEmployeeName(@RequestParam("ids") List<Long> ids);
 }

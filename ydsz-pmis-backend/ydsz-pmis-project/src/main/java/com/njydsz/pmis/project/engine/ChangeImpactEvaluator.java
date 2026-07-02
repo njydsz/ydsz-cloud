@@ -27,11 +27,31 @@ import java.math.RoundingMode;
 @Slf4j
 public class ChangeImpactEvaluator {
 
+    /** 重大变更预算影响阈值（50 万） */
     private static final BigDecimal MAJOR_BUDGET = new BigDecimal("500000");
+    /** 重大变更合同金额影响阈值（100 万） */
     private static final BigDecimal MAJOR_CONTRACT = new BigDecimal("1000000");
+    /** 重大变更进度影响阈值（30 天） */
     private static final int MAJOR_SCHEDULE_DAYS = 30;
+    /** 重大变更利润影响百分比阈值（10%） */
     private static final BigDecimal MAJOR_PROFIT_PCT = new BigDecimal("0.10");
 
+    /**
+     * 评估项目变更影响。
+     *
+     * <p>多维度加权计算综合风险等级与是否重大变更：
+     * <ul>
+     *   <li>预算影响（>=50 万判定为重大）</li>
+     *   <li>合同金额影响（>=100 万判定为重大）</li>
+     *   <li>进度影响（>=30 天判定为重大）</li>
+     *   <li>利润影响</li>
+     *   <li>影响范围（WBS 任务数/人员数）</li>
+     *   <li>变更类型（CONTRACT 自动判定为重大）</li>
+     * </ul>
+     *
+     * @param dto 变更创建参数，为 null 返回 LOW 等级
+     * @return 评估结果，包含风险等级、是否重大变更、利润影响百分比
+     */
     public static ImpactResult evaluate(ProjectChangeCreateDTO dto) {
         if (dto == null) {
             return new ImpactResult(RiskLevel.LOW, false, BigDecimal.ZERO);
@@ -125,7 +145,11 @@ public class ChangeImpactEvaluator {
     }
 
     /**
-     * 评估结果
+     * 评估结果。
+     *
+     * @param level           综合风险等级
+     * @param major           是否重大变更（需双审批）
+     * @param profitImpactPct 利润影响百分比
      */
     public record ImpactResult(RiskLevel level, boolean major, BigDecimal profitImpactPct) { }
 }

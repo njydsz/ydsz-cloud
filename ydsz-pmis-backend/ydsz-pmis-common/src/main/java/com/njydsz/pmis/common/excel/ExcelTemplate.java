@@ -38,23 +38,44 @@ import java.util.Map;
  */
 public final class ExcelTemplate {
 
+    /** 表头类（带 @ExcelProperty 注解） */
     private Class<?> headClass;
+    /** 样例数据（第 2 行） */
     private List<?> sampleData;
+    /** 必填列标记（字段名 → 标记符号） */
     private Map<String, String> requiredMarks;
+    /** Sheet 名 */
     private String sheetName = "Sheet1";
 
     private ExcelTemplate() {
     }
 
+    /**
+     * 创建构建器
+     *
+     * @return ExcelTemplate 构建器实例
+     */
     public static ExcelTemplate builder() {
         return new ExcelTemplate();
     }
 
+    /**
+     * 设置表头类
+     *
+     * @param headClass 表头类
+     * @return this
+     */
     public ExcelTemplate head(Class<?> headClass) {
         this.headClass = headClass;
         return this;
     }
 
+    /**
+     * 设置样例数据
+     *
+     * @param data 样例数据列表
+     * @return this
+     */
     public ExcelTemplate sampleData(List<?> data) {
         this.sampleData = data;
         return this;
@@ -62,6 +83,9 @@ public final class ExcelTemplate {
 
     /**
      * 标记必填列（与 @ExcelProperty value 一致）
+     *
+     * @param fieldNames 必填字段名
+     * @return this
      */
     public ExcelTemplate addRequiredMark(String... fieldNames) {
         if (this.requiredMarks == null) {
@@ -73,11 +97,24 @@ public final class ExcelTemplate {
         return this;
     }
 
+    /**
+     * 设置 Sheet 名
+     *
+     * @param name Sheet 名
+     * @return this
+     */
     public ExcelTemplate sheetName(String name) {
         this.sheetName = name;
         return this;
     }
 
+    /**
+     * 构建模板字节数组
+     *
+     * @return 模板文件字节数组
+     * @throws IllegalArgumentException 未设置表头类时抛出
+     * @throws IllegalStateException    写入失败时抛出
+     */
     public byte[] build() {
         if (headClass == null) {
             throw new IllegalArgumentException("head class is required");
@@ -90,6 +127,12 @@ public final class ExcelTemplate {
         }
     }
 
+    /**
+     * 构建模板并写入输出流
+     *
+     * @param out 输出流
+     * @throws IOException 写入失败时抛出
+     */
     public void buildTo(OutputStream out) throws IOException {
         writeTo(out);
     }

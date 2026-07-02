@@ -24,6 +24,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * EmailChannel 邮件通道单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("EmailChannel 邮件通道测试")
 class EmailChannelTest {

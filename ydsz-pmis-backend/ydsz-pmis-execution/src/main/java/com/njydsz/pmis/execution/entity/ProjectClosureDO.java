@@ -33,28 +33,41 @@ public class ProjectClosureDO implements Serializable {
 
     private String closureCode;
     private Long initiationId;
-    private String closureType;        // ClosureType.code
+    /** 结项类型：ClosureType.code */
+    private String closureType;
     private String closureReason;
 
     // 准入指标
-    private BigDecimal contractAmount;     // 合同总额
-    private BigDecimal receivedAmount;     // 已回款
-    private BigDecimal receivedRatio;      // 回款比例 0-1
-    private BigDecimal cpi;                // CPI（成本绩效指数）
-    private BigDecimal spi;                // SPI（进度绩效指数）
-    private BigDecimal grossMargin;        // 当前毛利率
-    private BigDecimal progressPct;        // 当前进度
-    private BigDecimal totalCost;          // 累计成本
-    private BigDecimal warrantyMonths;     // 质保期月数
+    /** 合同总额 */
+    private BigDecimal contractAmount;
+    /** 已回款金额 */
+    private BigDecimal receivedAmount;
+    /** 回款比例（0-1） */
+    private BigDecimal receivedRatio;
+    /** CPI（成本绩效指数） */
+    private BigDecimal cpi;
+    /** SPI（进度绩效指数） */
+    private BigDecimal spi;
+    /** 当前毛利率 */
+    private BigDecimal grossMargin;
+    /** 当前进度（0-100） */
+    private BigDecimal progressPct;
+    /** 累计成本 */
+    private BigDecimal totalCost;
+    /** 质保期月数 */
+    private BigDecimal warrantyMonths;
     private LocalDate warrantyStartDate;
     private LocalDate warrantyEndDate;
 
     // 归档信息
     private LocalDate plannedArchiveDate;
     private LocalDate actualArchiveDate;
-    private String archiveFileIds;         // 归档文件 ID 列表（JSON）
-    private Integer locked;                // 是否锁定（归档后不可改）
-    private String status;                 // ClosureStatus.code
+    /** 归档文件 ID 列表（JSON） */
+    private String archiveFileIds;
+    /** 是否锁定（归档后不可改）：1 是 / 0 否 */
+    private Integer locked;
+    /** 状态：ClosureStatus.code */
+    private String status;
     private String remark;
 
     // 审批
@@ -73,15 +86,18 @@ public class ProjectClosureDO implements Serializable {
     @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

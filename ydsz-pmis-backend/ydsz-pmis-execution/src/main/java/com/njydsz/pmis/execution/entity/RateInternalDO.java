@@ -31,26 +31,42 @@ public class RateInternalDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String rateCode;           // 业务编号
-    private String levelCode;          // 职级 L1-L18
-    private Long departmentId;         // 事业部/部门 ID
+    /** 业务编号 */
+    private String rateCode;
+    /** 职级 L1-L18 */
+    private String levelCode;
+    /** 事业部/部门 ID */
+    private Long departmentId;
+    /** 部门名称 */
     private String departmentName;
-    private String billingUnit;        // DAY/HOUR
-    private BigDecimal costAmount;     // 内部成本
-    private String currency;           // CNY
+    /** 计费单位：DAY/HOUR */
+    private String billingUnit;
+    /** 内部成本金额 */
+    private BigDecimal costAmount;
+    /** 币种：CNY */
+    private String currency;
+    /** 生效日期 */
     private LocalDate effectiveDate;
+    /** 失效日期 */
     private LocalDate expiryDate;
-    private String status;             // ACTIVE/INACTIVE
+    /** 状态：ACTIVE/INACTIVE */
+    private String status;
+    /** 备注 */
     private String remark;
+    /** 租户ID */
     private Long tenantId;
+    /** 链路追踪ID */
     private String providerTraceId;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

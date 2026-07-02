@@ -26,21 +26,28 @@ import java.math.RoundingMode;
 @Slf4j
 public class WinRateEvaluator {
 
+    /** 赢单率上限（1.0） */
     private static final BigDecimal MAX = BigDecimal.ONE;
 
     /**
-     * 默认评估（无客户资质/历史合作加成）
+     * 默认评估（无客户资质/历史合作加成）。
+     *
+     * @param opp 商机实体
+     * @return 赢单率（0-1）；商机为 null 返回 0
      */
     public static BigDecimal evaluate(OpportunityDO opp) {
         return evaluate(opp, null, false);
     }
 
     /**
-     * 完整评估
+     * 完整评估。
      *
-     * @param opp                商机
+     * <p>终态商机直接返回：WON/CONVERTED 返回 1，LOST/INVALID 返回 0。
+     *
+     * @param opp                商机实体，为 null 返回 0
      * @param customerCredit     客户信用等级：A/B/C/D，null 时按 B 计
      * @param hasHistoricalCoop  是否有历史合作
+     * @return 赢单率（0-1）
      */
     public static BigDecimal evaluate(OpportunityDO opp, String customerCredit, boolean hasHistoricalCoop) {
         if (opp == null) {

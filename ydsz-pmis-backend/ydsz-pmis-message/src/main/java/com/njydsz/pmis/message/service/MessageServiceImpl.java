@@ -179,6 +179,8 @@ public class MessageServiceImpl implements MessageService {
 
     /**
      * 已注册通道列表（供监控/管理端使用）
+     *
+     * @return 通道类型列表（不可变副本）
      */
     public List<String> listChannelTypes() {
         return List.copyOf(channelCache.keySet());

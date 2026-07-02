@@ -15,6 +15,9 @@ import java.util.List;
  * <p>支持单接收 / 批量接收：
  * 单接收：传 receiverId
  * 批量：传 receiverIds
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 @Schema(description = "通知发送表单")
@@ -23,9 +26,11 @@ public class NotificationSendDTO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 通知标题 */
     @NotBlank
     private String title;
 
+    /** 通知内容 */
     private String content;
 
     /** INFO/WARN/ERROR/URGENT */
@@ -34,6 +39,7 @@ public class NotificationSendDTO implements Serializable {
     /** SYSTEM/WORKFLOW/ALERT/TODO */
     private String category = "SYSTEM";
 
+    /** 发送人 ID（系统通知为 null） */
     private Long senderId;
 
     /** 单接收 */
@@ -44,6 +50,8 @@ public class NotificationSendDTO implements Serializable {
 
     /** 业务关联 */
     private String bizType;
+
+    /** 业务单据 ID */
     private String bizId;
 
     /** 过期时间（可选） */

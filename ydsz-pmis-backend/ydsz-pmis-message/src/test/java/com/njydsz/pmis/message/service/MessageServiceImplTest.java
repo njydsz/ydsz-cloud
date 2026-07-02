@@ -27,6 +27,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * MessageServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("MessageServiceImpl 消息服务测试")
 class MessageServiceImplTest {

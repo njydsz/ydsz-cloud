@@ -31,36 +31,62 @@ public class PaymentDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String paymentNo;             // 流水号
-    private String paymentCode;           // 业务编号
+    /** 流水号 */
+    private String paymentNo;
+    /** 业务编号 */
+    private String paymentCode;
+    /** 合同ID */
     private Long contractId;
+    /** 项目立项ID */
     private Long initiationId;
+    /** 客户ID */
     private Long customerId;
+    /** 客户名称 */
     private String customerName;
-    private BigDecimal amount;            // 回款金额
+    /** 回款金额 */
+    private BigDecimal amount;
+    /** 币种 */
     private String currency;
-    private String paymentMethod;         // BANK_TRANSFER/CHECK/CASH/OTHER
-    private LocalDate paymentDate;        // 到账日期
-    private String bankAccount;           // 客户付款账户
-    private String ourBankAccount;        // 我方收款账户
-    private String bankReference;         // 银行流水号
-    private String invoiceAllocation;     // 已分配发票ID列表（JSON/逗号分隔）
-    private BigDecimal allocatedAmount;   // 已核销金额
-    private BigDecimal unallocatedAmount; // 未核销金额
-    private String status;                // PaymentStatus.code
+    /** 付款方式：BANK_TRANSFER/CHECK/CASH/OTHER */
+    private String paymentMethod;
+    /** 到账日期 */
+    private LocalDate paymentDate;
+    /** 客户付款账户 */
+    private String bankAccount;
+    /** 我方收款账户 */
+    private String ourBankAccount;
+    /** 银行流水号 */
+    private String bankReference;
+    /** 已分配发票ID列表（JSON/逗号分隔） */
+    private String invoiceAllocation;
+    /** 已核销金额 */
+    private BigDecimal allocatedAmount;
+    /** 未核销金额 */
+    private BigDecimal unallocatedAmount;
+    /** 状态：PaymentStatus.code */
+    private String status;
+    /** 备注 */
     private String remark;
+    /** 确认人ID */
     private Long confirmedBy;
+    /** 确认时间 */
     private LocalDateTime confirmedAt;
-    private Long recordedBy;              // 录入人
+    /** 录入人ID */
+    private Long recordedBy;
+    /** 租户ID */
     private Long tenantId;
+    /** 链路追踪ID */
     private String providerTraceId;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

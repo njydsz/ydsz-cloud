@@ -43,12 +43,23 @@ import java.util.concurrent.TimeUnit;
 @Configuration
 public class PmisFeignLogger extends Logger {
 
+    /** Micrometer 指标注册中心，可为 null（无监控环境时） */
     private final MeterRegistry meterRegistry;
 
+    /**
+     * 构造方法
+     *
+     * @param meterRegistry Micrometer 指标注册中心（可选）
+     */
     public PmisFeignLogger(@Autowired(required = false) MeterRegistry meterRegistry) {
         this.meterRegistry = meterRegistry;
     }
 
+    /**
+     * 声明 Feign 日志级别为 BASIC
+     *
+     * @return Feign 日志级别
+     */
     @Bean
     public Logger.Level pmisFeignLogLevel() {
         return Logger.Level.BASIC;
@@ -62,6 +73,13 @@ public class PmisFeignLogger extends Logger {
         // no-op: BASIC 级别下, 我们只关心 request/response 摘要, 不要全量日志
     }
 
+    /**
+     * 记录 Feign 请求日志（BASIC 级别及以上输出）
+     *
+     * @param configKey Feign 配置键（target）
+     * @param logLevel  当前日志级别
+     * @param request   Feign 请求对象
+     */
     @Override
     protected void logRequest(String configKey, Level logLevel, Request request) {
         if (logLevel.ordinal() >= Level.BASIC.ordinal()) {
@@ -71,6 +89,16 @@ public class PmisFeignLogger extends Logger {
         }
     }
 
+    /**
+     * 记录 Feign 响应日志并上报耗时指标
+     *
+     * @param configKey   Feign 配置键（target）
+     * @param logLevel    当前日志级别
+     * @param response    Feign 响应对象
+     * @param elapsedTime 调用耗时（毫秒）
+     * @return 原响应对象（重新缓冲后）
+     * @throws IOException 读取响应体时可能抛出
+     */
     @Override
     protected Response logAndRebufferResponse(String configKey, Level logLevel, Response response,
                                               long elapsedTime) throws IOException {
@@ -85,6 +113,15 @@ public class PmisFeignLogger extends Logger {
         return response;
     }
 
+    /**
+     * 记录 Feign 调用异常日志并上报失败指标
+     *
+     * @param configKey   Feign 配置键（target）
+     * @param logLevel    当前日志级别
+     * @param ioe         触发的 IOException
+     * @param elapsedTime 调用耗时（毫秒）
+     * @return 原异常对象（向上抛出）
+     */
     @Override
     protected IOException logIOException(String configKey, Level logLevel, IOException ioe, long elapsedTime) {
         recordMetric(configKey, false, elapsedTime);
@@ -93,6 +130,13 @@ public class PmisFeignLogger extends Logger {
         return ioe;
     }
 
+    /**
+     * 获取请求中指定 Header 的首个值
+     *
+     * @param request Feign 请求对象
+     * @param name    Header 名称
+     * @return Header 值，不存在时返回空字符串
+     */
     private String firstHeader(Request request, String name) {
         if (request == null || request.headers() == null) {
             return "";
@@ -104,6 +148,13 @@ public class PmisFeignLogger extends Logger {
         return values.iterator().next();
     }
 
+    /**
+     * 上报 Feign 调用耗时与状态指标到 Micrometer
+     *
+     * @param target      Feign 配置键（target），作为 tag
+     * @param success     是否调用成功
+     * @param elapsedTime 调用耗时（毫秒）
+     */
     private void recordMetric(String target, boolean success, long elapsedTime) {
         if (meterRegistry == null) {
             return;

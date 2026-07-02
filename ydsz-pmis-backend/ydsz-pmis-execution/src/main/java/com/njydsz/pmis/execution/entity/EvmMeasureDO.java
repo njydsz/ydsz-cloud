@@ -32,25 +32,41 @@ public class EvmMeasureDO implements Serializable {
     private Long id;
 
     private Long initiationId;
-    private Long wbsTaskId;        // 可空：项目级度量
-    private String period;         // YYYY-MM
+    /** WBS 任务ID（可空：项目级度量） */
+    private Long wbsTaskId;
+    /** 所属期间（YYYY-MM） */
+    private String period;
 
-    private BigDecimal pv;         // 计划值（Budgeted Cost of Work Scheduled）
-    private BigDecimal ev;         // 挣值（Budgeted Cost of Work Performed）
-    private BigDecimal ac;         // 实际成本（Actual Cost of Work Performed）
-    private BigDecimal bac;        // 完工预算（Budget at Completion）
+    /** 计划值（Budgeted Cost of Work Scheduled） */
+    private BigDecimal pv;
+    /** 挣值（Budgeted Cost of Work Performed） */
+    private BigDecimal ev;
+    /** 实际成本（Actual Cost of Work Performed） */
+    private BigDecimal ac;
+    /** 完工预算（Budget at Completion） */
+    private BigDecimal bac;
 
-    private BigDecimal cpi;        // 成本绩效指数 = EV/AC
-    private BigDecimal spi;        // 进度绩效指数 = EV/PV
-    private BigDecimal cv;         // 成本偏差 = EV-AC
-    private BigDecimal sv;         // 进度偏差 = EV-PV
-    private BigDecimal eac;        // 完工估算 = BAC/CPI
-    private BigDecimal vac;        // 完工偏差 = BAC-EAC
-    private BigDecimal etc;        // 完工尚需 = EAC-AC
-    private BigDecimal tcpi;       // 完工绩效指数 = (BAC-EV)/(BAC-AC)
+    /** 成本绩效指数 = EV/AC */
+    private BigDecimal cpi;
+    /** 进度绩效指数 = EV/PV */
+    private BigDecimal spi;
+    /** 成本偏差 = EV-AC */
+    private BigDecimal cv;
+    /** 进度偏差 = EV-PV */
+    private BigDecimal sv;
+    /** 完工估算 = BAC/CPI */
+    private BigDecimal eac;
+    /** 完工偏差 = BAC-EAC */
+    private BigDecimal vac;
+    /** 完工尚需 = EAC-AC */
+    private BigDecimal etc;
+    /** 完工绩效指数 = (BAC-EV)/(BAC-AC) */
+    private BigDecimal tcpi;
 
-    private String alertLevel;     // EvmAlertLevel
-    private String alertReason;    // 预警原因
+    /** 预警等级：EvmAlertLevel.code */
+    private String alertLevel;
+    /** 预警原因 */
+    private String alertReason;
 
     private LocalDate measureDate;
     private String remark;
@@ -58,12 +74,15 @@ public class EvmMeasureDO implements Serializable {
     private Long tenantId;
     private String providerTraceId;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

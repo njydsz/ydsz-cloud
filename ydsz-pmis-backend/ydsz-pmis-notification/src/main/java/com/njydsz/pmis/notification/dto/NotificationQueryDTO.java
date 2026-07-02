@@ -9,6 +9,9 @@ import java.io.Serial;
 
 /**
  * 通知分页查询
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -18,8 +21,10 @@ public class NotificationQueryDTO extends PageQuery {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 分类过滤: SYSTEM/WORKFLOW/ALERT/TODO（可空） */
     private String category;
 
+    /** 级别过滤: INFO/WARN/ERROR/URGENT（可空） */
     private String level;
 
     /** 0=未读, 1=已读, null=全部 */

@@ -37,15 +37,23 @@ import java.util.List;
 @ConditionalOnProperty(prefix = "pmis.openapi", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class OpenApiConfig {
 
+    /** 当前微服务应用名 */
     @Value("${spring.application.name:pmis-app}")
     private String applicationName;
 
+    /** OpenAPI 规范版本号 */
     @Value("${pmis.openapi.version:1.0.0}")
     private String apiVersion;
 
+    /** API 网关地址，用于 OpenAPI Server 声明 */
     @Value("${pmis.openapi.gateway-url:http://localhost:9000}")
     private String gatewayUrl;
 
+    /**
+     * 构建 PMIS OpenAPI 3.0 规范
+     *
+     * @return OpenAPI 实例
+     */
     @Bean
     public OpenAPI pmisOpenApi() {
         return new OpenAPI()

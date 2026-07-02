@@ -25,7 +25,10 @@ public class NameAssembler {
     private final UserServiceClient userServiceClient;
 
     /**
-     * 拉取员工姓名，失败返回 null
+     * 拉取员工姓名，失败返回 null。
+     *
+     * @param id 员工 ID
+     * @return 员工姓名；失败或不存在返回 null
      */
     public String resolveEmployee(Long id) {
         if (id == null) return null;
@@ -42,6 +45,12 @@ public class NameAssembler {
         return null;
     }
 
+    /**
+     * 拉取客户名称，失败返回 null。
+     *
+     * @param id 客户 ID
+     * @return 客户名称；失败或不存在返回 null
+     */
     public String resolveCustomer(Long id) {
         if (id == null) return null;
         try {
@@ -55,6 +64,12 @@ public class NameAssembler {
         return null;
     }
 
+    /**
+     * 批量拉取员工姓名。
+     *
+     * @param ids 员工 ID 列表
+     * @return 员工 ID 到姓名的映射；失败返回空 Map
+     */
     public Map<Long, String> batchEmployeeName(List<Long> ids) {
         if (ids == null || ids.isEmpty()) return Map.of();
         try {

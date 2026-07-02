@@ -25,9 +25,20 @@ import java.time.temporal.ChronoUnit;
 @Slf4j
 public class ContractRiskEvaluator {
 
+    /** 高风险合同金额阈值（500 万） */
     private static final BigDecimal HIGH_AMOUNT = new BigDecimal("5000000");
+    /** 中风险合同金额阈值（50 万） */
     private static final BigDecimal MEDIUM_AMOUNT = new BigDecimal("500000");
 
+    /**
+     * 评估合同风险等级。
+     *
+     * <p>多因子加权计算：合同金额（30%）、账期（25%）、合同类型（10%）、
+     * 付款条款（15%）、币种（5%）等。
+     *
+     * @param c 合同实体，为 null 返回 LOW
+     * @return 风险等级（LOW/MEDIUM/HIGH）
+     */
     public static RiskLevel evaluate(ContractDO c) {
         if (c == null) return RiskLevel.LOW;
         double score = 0.0;

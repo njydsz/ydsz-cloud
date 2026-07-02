@@ -19,8 +19,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    /** 鉴权拦截器 */
     private final AuthInterceptor authInterceptor;
 
+    /**
+     * 注册鉴权拦截器并配置白名单路径
+     *
+     * @param registry 拦截器注册器
+     */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
@@ -43,6 +49,11 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 );
     }
 
+    /**
+     * 配置 CORS 跨域策略
+     *
+     * @param registry CORS 注册器
+     */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")

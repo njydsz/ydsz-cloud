@@ -21,6 +21,11 @@ import java.time.LocalDateTime;
 @Slf4j
 public class AuditFieldFiller implements MetaObjectHandler {
 
+    /**
+     * INSERT 时自动填充审计字段
+     *
+     * @param metaObject MyBatis-Plus 元对象
+     */
     @Override
     public void insertFill(MetaObject metaObject) {
         LocalDateTime now = LocalDateTime.now();
@@ -33,6 +38,11 @@ public class AuditFieldFiller implements MetaObjectHandler {
         strictInsertFill(metaObject, "deleted", Integer.class, 0);
     }
 
+    /**
+     * UPDATE 时自动填充审计字段
+     *
+     * @param metaObject MyBatis-Plus 元对象
+     */
     @Override
     public void updateFill(MetaObject metaObject) {
         Long userId = currentUserId();

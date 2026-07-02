@@ -14,6 +14,9 @@ import org.springframework.context.annotation.Bean;
 
 /**
  * 通知中心启动类
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.notification", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient

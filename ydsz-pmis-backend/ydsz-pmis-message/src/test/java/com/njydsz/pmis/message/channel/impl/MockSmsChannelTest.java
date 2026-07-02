@@ -9,6 +9,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * MockSmsChannel 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("MockSmsChannel 短信通道测试")
 class MockSmsChannelTest {

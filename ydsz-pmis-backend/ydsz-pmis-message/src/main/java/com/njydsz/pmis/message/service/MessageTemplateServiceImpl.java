@@ -26,6 +26,13 @@ public class MessageTemplateServiceImpl {
 
     private final MessageTemplateMapper templateMapper;
 
+    /**
+     * 创建模板（code + channel 唯一性校验）
+     *
+     * @param t 模板实体（templateCode/channel/content 必填）
+     * @return 新建模板 ID
+     * @throws BizException templateCode/channel/content 为空或 (code, channel) 已存在时抛出
+     */
     public Long create(MessageTemplateDO t) {
         validate(t);
         if (templateMapper.selectByCodeAndChannel(t.getTemplateCode(), t.getChannel().toUpperCase(), 1L) != null) {
@@ -40,6 +47,12 @@ public class MessageTemplateServiceImpl {
         return t.getId();
     }
 
+    /**
+     * 更新模板（按非空字段选择性更新）
+     *
+     * @param t 模板实体（id 必填，其余字段非空则更新）
+     * @throws BizException id 为空或模板不存在时抛出
+     */
     public void update(MessageTemplateDO t) {
         if (t.getId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "模板 ID 不能为空");
@@ -59,6 +72,12 @@ public class MessageTemplateServiceImpl {
         log.info("[MessageTemplate] 更新模板: id={}", exists.getId());
     }
 
+    /**
+     * 删除模板
+     *
+     * @param id 模板 ID
+     * @throws BizException 模板不存在时抛出
+     */
     public void delete(Long id) {
         MessageTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
@@ -68,6 +87,13 @@ public class MessageTemplateServiceImpl {
         log.info("[MessageTemplate] 删除模板: id={}", id);
     }
 
+    /**
+     * 按 ID 查询模板
+     *
+     * @param id 模板 ID
+     * @return 模板实体
+     * @throws BizException 模板不存在时抛出
+     */
     public MessageTemplateDO getById(Long id) {
         MessageTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
@@ -76,6 +102,15 @@ public class MessageTemplateServiceImpl {
         return t;
     }
 
+    /**
+     * 分页查询模板
+     *
+     * @param page    页码（从 1 开始）
+     * @param size    每页条数
+     * @param channel 通道过滤（可空）
+     * @param keyword 关键字（模糊匹配 templateCode 或 description，可空）
+     * @return 模板分页结果
+     */
     public Page<MessageTemplateDO> page(int page, int size, String channel, String keyword) {
         Page<MessageTemplateDO> p = new Page<>(page, size);
         LambdaQueryWrapper<MessageTemplateDO> w = new LambdaQueryWrapper<>();
@@ -88,6 +123,12 @@ public class MessageTemplateServiceImpl {
         return templateMapper.selectPage(p, w);
     }
 
+    /**
+     * 按通道列出全部模板
+     *
+     * @param channel 通道（自动转大写）
+     * @return 模板列表
+     */
     public List<MessageTemplateDO> listByChannel(String channel) {
         return templateMapper.selectByChannel(channel.toUpperCase(), 1L);
     }

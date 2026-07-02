@@ -32,13 +32,16 @@ public class DeliveryItemDO implements Serializable {
 
     private String itemCode;
     private Long initiationId;
-    private Long standardId;            // 关联交付物标准
+    /** 关联交付物标准ID */
+    private Long standardId;
     private String projectType;
     private String projectLevel;
     private String deliveryName;
     private String deliveryCategory;
-    private String stage;                // DeliveryStage.code
-    private Integer required;            // 1=必交付
+    /** 所属门径阶段：DeliveryStage.code */
+    private String stage;
+    /** 是否必交付：1 是 / 0 否 */
+    private Integer required;
     private LocalDate plannedSubmitDate;
     private LocalDate actualSubmitDate;
     private LocalDate acceptedDate;
@@ -47,10 +50,14 @@ public class DeliveryItemDO implements Serializable {
     private Long reviewerId;
     private String reviewerName;
     private String reviewComment;
-    private String status;               // DeliveryItemStatus.code
-    private Integer trRequired;          // 是否触发 TR
-    private Integer trCompleted;         // TR 是否完成
-    private String fileIds;              // 附件 ID 列表（JSON 数组）
+    /** 状态：DeliveryItemStatus.code */
+    private String status;
+    /** 是否触发技术评审 TR：1 是 / 0 否 */
+    private Integer trRequired;
+    /** TR 是否完成：1 是 / 0 否 */
+    private Integer trCompleted;
+    /** 附件 ID 列表（JSON 数组） */
+    private String fileIds;
     private String remark;
     private Long tenantId;
     private String providerTraceId;
@@ -58,15 +65,18 @@ public class DeliveryItemDO implements Serializable {
     @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

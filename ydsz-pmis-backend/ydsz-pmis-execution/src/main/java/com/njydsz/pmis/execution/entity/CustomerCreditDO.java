@@ -30,28 +30,46 @@ public class CustomerCreditDO implements Serializable {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 客户ID */
     private Long customerId;
+    /** 客户名称 */
     private String customerName;
-    private String creditLevel;           // CreditLevel.code (A/B/C/D)
-    private Integer creditScore;          // 0-100
-    private BigDecimal totalContractAmount;   // 累计合同金额
-    private BigDecimal totalInvoicedAmount;   // 累计开票金额
-    private BigDecimal totalReceivedAmount;   // 累计回款金额
-    private BigDecimal onTimeRate;            // 及时回款率（0-1）
-    private Integer contractCount;            // 合作合同数
-    private Integer overdueCount;             // 逾期次数
-    private LocalDateTime lastEvaluationAt;   // 上次评估时间
-    private String evaluator;                 // 评估人
+    /** 信用等级：CreditLevel.code (A/B/C/D) */
+    private String creditLevel;
+    /** 信用评分（0-100） */
+    private Integer creditScore;
+    /** 累计合同金额 */
+    private BigDecimal totalContractAmount;
+    /** 累计开票金额 */
+    private BigDecimal totalInvoicedAmount;
+    /** 累计回款金额 */
+    private BigDecimal totalReceivedAmount;
+    /** 及时回款率（0-1） */
+    private BigDecimal onTimeRate;
+    /** 合作合同数 */
+    private Integer contractCount;
+    /** 逾期次数 */
+    private Integer overdueCount;
+    /** 上次评估时间 */
+    private LocalDateTime lastEvaluationAt;
+    /** 评估人 */
+    private String evaluator;
+    /** 备注 */
     private String remark;
+    /** 租户ID */
     private Long tenantId;
+    /** 链路追踪ID */
     private String providerTraceId;
 
+    /** 创建时间 */
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新时间 */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updatedAt;
 
+    /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }
