@@ -1,6 +1,5 @@
 package com.njydsz.pmis.workflow.service.impl;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.dto.EmbeddedApprovalViewDTO;
@@ -402,7 +401,6 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      * GET /api/workflow/engine/instance/{id}/diagram 单独拉取，本接口不返回以保持轻量。
      * 仅返回最简的节点信息用于高亮当前节点。
      */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> loadDiagram(FlowInstanceDO instance) {
         Map<String, Object> light = new java.util.LinkedHashMap<>();
         light.put("currentNodeCode", instance.getCurrentNodeCode());

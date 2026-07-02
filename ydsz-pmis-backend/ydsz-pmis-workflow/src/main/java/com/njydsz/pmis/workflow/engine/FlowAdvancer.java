@@ -47,6 +47,21 @@ public interface FlowAdvancer {
                                        Map<String, Object> variables);
 
     /**
+     * 评估跳转条件表达式
+     *
+     * <p>默认实现：条件为空时返回 true，否则委托给 {@link FlowVariableStrategy#evaluate(String, Map)}。
+     * 子类可覆写以优先使用 {@link com.njydsz.pmis.workflow.service.FlowRoutingService} 评估。
+     *
+     * @param condition 跳转条件表达式
+     * @param variables 流程变量
+     * @return true=条件成立，false=不成立
+     * @since 1.2.0
+     */
+    default boolean evaluateSkipCondition(String condition, Map<String, Object> variables) {
+        return condition == null || condition.isBlank();
+    }
+
+    /**
      * 解析退回时的目标节点（默认：当前节点的前驱节点）
      */
     String resolveRejectTarget(Long definitionId, String currentNodeCode);

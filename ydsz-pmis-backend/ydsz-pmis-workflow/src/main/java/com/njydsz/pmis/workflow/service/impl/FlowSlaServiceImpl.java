@@ -3,7 +3,6 @@ package com.njydsz.pmis.workflow.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.engine.FlowNotificationHelper;
-import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowSlaAction;
@@ -24,7 +23,6 @@ import org.springframework.util.StringUtils;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,6 +48,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
     private final FlowTaskMapper taskMapper;
     private final FlowNodeMapper nodeMapper;
+    @SuppressWarnings("unused")
     private final FlowInstanceMapper instanceMapper;
     /** P1-6: 用 @Lazy 打破 FlowSlaService ↔ FlowTaskService 循环依赖 */
     @org.springframework.context.annotation.Lazy

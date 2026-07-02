@@ -36,9 +36,6 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     private final FlowDelegateAuthMapper authMapper;
     private final FlowDelegateLogMapper logMapper;
 
-    /** 扫描批大小 */
-    private static final int SCAN_BATCH_SIZE = 200;
-
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(FlowDelegateAuthDO auth) {

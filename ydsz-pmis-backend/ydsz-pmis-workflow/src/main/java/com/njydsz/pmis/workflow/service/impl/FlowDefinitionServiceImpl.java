@@ -637,4 +637,230 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         log.info("[Flow] 表单字段配置已保存: definitionId={} nodeCode={}",
                 definitionId, nodeCode);
     }
+
+    // ============================== 版本历史与差异对比 ==============================
+
+    @Override
+    public List<Map<String, Object>> listVersions(Long definitionId) {
+        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        if (def == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+        }
+        Long tenantId = def.getTenantId() != null ? def.getTenantId() : 1L;
+        List<FlowDefinitionDO> versions = definitionMapper.selectByFlowCode(def.getFlowCode(), tenantId);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (FlowDefinitionDO v : versions) {
+            Map<String, Object> map = new LinkedHashMap<>();
+            map.put("id", v.getId());
+            map.put("version", v.getVersion());
+            map.put("flowName", v.getFlowName());
+            map.put("isPublish", v.getIsPublish());
+            map.put("activityStatus", v.getActivityStatus());
+            map.put("category", v.getCategory());
+            map.put("description", v.getDescription());
+            map.put("createdAt", v.getCreatedAt());
+            map.put("updatedAt", v.getUpdatedAt());
+            result.add(map);
+        }
+        log.info("[Flow] 查询版本历史: flowCode={} count={}",
+                def.getFlowCode(), result.size());
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> diffVersions(Long definitionId, Integer version1, Integer version2) {
+        // 1. 获取基础定义，找到 flowCode
+        FlowDefinitionDO baseDef = definitionMapper.selectById(definitionId);
+        if (baseDef == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+        }
+        Long tenantId = baseDef.getTenantId() != null ? baseDef.getTenantId() : 1L;
+
+        // 2. 查找两个版本的定义
+        List<FlowDefinitionDO> allVersions = definitionMapper.selectByFlowCode(
+                baseDef.getFlowCode(), tenantId);
+        String v1Str = String.valueOf(version1);
+        String v2Str = String.valueOf(version2);
+        FlowDefinitionDO defV1 = allVersions.stream()
+                .filter(d -> v1Str.equals(d.getVersion()))
+                .findFirst().orElse(null);
+        FlowDefinitionDO defV2 = allVersions.stream()
+                .filter(d -> v2Str.equals(d.getVersion()))
+                .findFirst().orElse(null);
+
+        if (defV1 == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "版本 " + version1 + " 不存在: flowCode=" + baseDef.getFlowCode());
+        }
+        if (defV2 == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "版本 " + version2 + " 不存在: flowCode=" + baseDef.getFlowCode());
+        }
+
+        // 3. 获取两个版本的节点和跳转
+        List<FlowNodeDO> nodesV1 = nodeMapper.selectByDefinitionId(defV1.getId());
+        List<FlowNodeDO> nodesV2 = nodeMapper.selectByDefinitionId(defV2.getId());
+        List<FlowSkipDO> skipsV1 = skipMapper.selectByDefinitionId(defV1.getId());
+        List<FlowSkipDO> skipsV2 = skipMapper.selectByDefinitionId(defV2.getId());
+
+        // 4. 构建节点 nodeCode -> FlowNodeDO 映射
+        Map<String, FlowNodeDO> nodeMapV1 = nodesV1.stream()
+                .collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
+        Map<String, FlowNodeDO> nodeMapV2 = nodesV2.stream()
+                .collect(Collectors.toMap(FlowNodeDO::getNodeCode, n -> n, (a, b) -> a));
+
+        // 5. 对比节点差异
+        List<Map<String, Object>> addedNodes = new ArrayList<>();
+        List<Map<String, Object>> removedNodes = new ArrayList<>();
+        List<Map<String, Object>> modifiedNodes = new ArrayList<>();
+
+        // v2 有而 v1 没有 -> 新增
+        for (Map.Entry<String, FlowNodeDO> entry : nodeMapV2.entrySet()) {
+            if (!nodeMapV1.containsKey(entry.getKey())) {
+                FlowNodeDO n = entry.getValue();
+                addedNodes.add(Map.of("nodeCode", n.getNodeCode(),
+                        "nodeName", n.getNodeName() != null ? n.getNodeName() : ""));
+            }
+        }
+        // v1 有而 v2 没有 -> 删除
+        for (Map.Entry<String, FlowNodeDO> entry : nodeMapV1.entrySet()) {
+            if (!nodeMapV2.containsKey(entry.getKey())) {
+                FlowNodeDO n = entry.getValue();
+                removedNodes.add(Map.of("nodeCode", n.getNodeCode(),
+                        "nodeName", n.getNodeName() != null ? n.getNodeName() : ""));
+            }
+        }
+        // 两者都有 -> 检查修改
+        for (Map.Entry<String, FlowNodeDO> entry : nodeMapV1.entrySet()) {
+            String code = entry.getKey();
+            if (nodeMapV2.containsKey(code)) {
+                FlowNodeDO n1 = entry.getValue();
+                FlowNodeDO n2 = nodeMapV2.get(code);
+                Map<String, Map<String, Object>> changes = new LinkedHashMap<>();
+                if (!Objects.equals(n1.getNodeName(), n2.getNodeName())) {
+                    changes.put("nodeName", Map.of("old",
+                            n1.getNodeName() != null ? n1.getNodeName() : "",
+                            "new", n2.getNodeName() != null ? n2.getNodeName() : ""));
+                }
+                if (!Objects.equals(n1.getNodeType(), n2.getNodeType())) {
+                    changes.put("nodeType", Map.of("old",
+                            n1.getNodeType() != null ? n1.getNodeType() : "",
+                            "new", n2.getNodeType() != null ? n2.getNodeType() : ""));
+                }
+                if (!Objects.equals(n1.getPermissionFlag(), n2.getPermissionFlag())) {
+                    changes.put("permissionFlag", Map.of("old",
+                            n1.getPermissionFlag() != null ? n1.getPermissionFlag() : "",
+                            "new", n2.getPermissionFlag() != null ? n2.getPermissionFlag() : ""));
+                }
+                if (!changes.isEmpty()) {
+                    Map<String, Object> modEntry = new LinkedHashMap<>();
+                    modEntry.put("nodeCode", code);
+                    modEntry.put("changes", changes);
+                    modifiedNodes.add(modEntry);
+                }
+            }
+        }
+
+        // 6. 构建连线 key 映射（sourceRef -> targetNodeCode）
+        // sourceRef 存储在 ext JSON 的 sourceRef 字段中
+        Map<String, FlowSkipDO> skipMapV1 = buildSkipKeyMap(skipsV1);
+        Map<String, FlowSkipDO> skipMapV2 = buildSkipKeyMap(skipsV2);
+
+        // 7. 对比连线差异
+        List<Map<String, Object>> addedSkips = new ArrayList<>();
+        List<Map<String, Object>> removedSkips = new ArrayList<>();
+
+        for (Map.Entry<String, FlowSkipDO> entry : skipMapV2.entrySet()) {
+            if (!skipMapV1.containsKey(entry.getKey())) {
+                FlowSkipDO s = entry.getValue();
+                addedSkips.add(skipToMap(s));
+            }
+        }
+        for (Map.Entry<String, FlowSkipDO> entry : skipMapV1.entrySet()) {
+            if (!skipMapV2.containsKey(entry.getKey())) {
+                FlowSkipDO s = entry.getValue();
+                removedSkips.add(skipToMap(s));
+            }
+        }
+
+        // 8. 组装结果
+        Map<String, Object> nodeChanges = new LinkedHashMap<>();
+        nodeChanges.put("added", addedNodes);
+        nodeChanges.put("removed", removedNodes);
+        nodeChanges.put("modified", modifiedNodes);
+
+        Map<String, Object> skipChanges = new LinkedHashMap<>();
+        skipChanges.put("added", addedSkips);
+        skipChanges.put("removed", removedSkips);
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("version1", version1);
+        result.put("version2", version2);
+        result.put("nodeChanges", nodeChanges);
+        result.put("skipChanges", skipChanges);
+
+        log.info("[Flow] 版本差异对比: flowCode={} v1={} v2={} "
+                        + "nodeAdded={} nodeRemoved={} nodeModified={} "
+                        + "skipAdded={} skipRemoved={}",
+                baseDef.getFlowCode(), version1, version2,
+                addedNodes.size(), removedNodes.size(), modifiedNodes.size(),
+                addedSkips.size(), removedSkips.size());
+
+        return result;
+    }
+
+    /**
+     * 构建连线 key 映射：sourceRef + "->" + nextNodeCode
+     */
+    private Map<String, FlowSkipDO> buildSkipKeyMap(List<FlowSkipDO> skips) {
+        Map<String, FlowSkipDO> map = new LinkedHashMap<>();
+        for (FlowSkipDO skip : skips) {
+            String key = buildSkipKey(skip);
+            if (key != null) {
+                map.put(key, skip);
+            }
+        }
+        return map;
+    }
+
+    /**
+     * 从 ext JSON 中提取 sourceRef，拼接 key
+     */
+    private String buildSkipKey(FlowSkipDO skip) {
+        String sourceRef = null;
+        if (StringUtils.hasText(skip.getExt())) {
+            try {
+                JSONObject extJson = JSON.parseObject(skip.getExt());
+                sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
+            } catch (Exception ignored) {
+                // ignore parse error
+            }
+        }
+        if (sourceRef != null && skip.getNextNodeCode() != null) {
+            return sourceRef + "->" + skip.getNextNodeCode();
+        }
+        return skip.getId() != null ? String.valueOf(skip.getId()) : null;
+    }
+
+    /**
+     * 将连线转为 Map 表示
+     */
+    private Map<String, Object> skipToMap(FlowSkipDO skip) {
+        String sourceRef = null;
+        if (StringUtils.hasText(skip.getExt())) {
+            try {
+                JSONObject extJson = JSON.parseObject(skip.getExt());
+                sourceRef = extJson != null ? extJson.getString("sourceRef") : null;
+            } catch (Exception ignored) {
+                // ignore
+            }
+        }
+        Map<String, Object> map = new LinkedHashMap<>();
+        map.put("sourceRef", sourceRef != null ? sourceRef : "");
+        map.put("nextNodeCode", skip.getNextNodeCode() != null ? skip.getNextNodeCode() : "");
+        map.put("skipName", skip.getSkipName() != null ? skip.getSkipName() : "");
+        map.put("skipType", skip.getSkipType() != null ? skip.getSkipType() : "");
+        map.put("skipCondition", skip.getSkipCondition() != null ? skip.getSkipCondition() : "");
+        return map;
+    }
 }

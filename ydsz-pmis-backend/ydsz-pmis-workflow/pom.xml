@@ -73,6 +73,13 @@
             <groupId>com.alibaba.fastjson2</groupId>
             <artifactId>fastjson2</artifactId>
         </dependency>
+
+        <!-- 自研规则引擎：智能路由与异常检测（可选依赖，不可用时回退到 DefaultFlowVariableStrategy） -->
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-literule</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>

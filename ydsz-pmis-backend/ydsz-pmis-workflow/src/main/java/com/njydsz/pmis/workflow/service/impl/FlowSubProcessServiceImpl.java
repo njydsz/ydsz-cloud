@@ -10,7 +10,6 @@ import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
-import com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
@@ -39,7 +38,6 @@ import java.util.Map;
 public class FlowSubProcessServiceImpl implements FlowSubProcessService {
 
     private final FlowInstanceMapper instanceMapper;
-    private final FlowDefinitionMapper definitionMapper;
     private final FlowDefinitionService definitionService;
     private final FlowInstanceService instanceService;
     private final FlowAdvancer advancer;

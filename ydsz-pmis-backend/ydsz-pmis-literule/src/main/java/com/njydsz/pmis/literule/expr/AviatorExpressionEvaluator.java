@@ -7,8 +7,6 @@ import com.googlecode.aviator.Options;
 import com.njydsz.pmis.literule.api.RuleContext;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**

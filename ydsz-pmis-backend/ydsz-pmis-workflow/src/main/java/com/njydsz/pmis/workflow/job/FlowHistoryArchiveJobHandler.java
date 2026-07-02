@@ -258,7 +258,6 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
     /**
      * 解析 variable JSON 字符串为变量行列表
      */
-    @SuppressWarnings("unchecked")
     private List<FlowHisVariableDO> parseVariables(Long instanceId, String variableJson) {
         List<FlowHisVariableDO> out = new ArrayList<>();
         try {

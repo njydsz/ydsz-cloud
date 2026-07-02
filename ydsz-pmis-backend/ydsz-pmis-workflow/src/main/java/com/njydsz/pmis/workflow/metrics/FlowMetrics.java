@@ -340,10 +340,8 @@ public class FlowMetrics {
      * 通用执行包装：自动捕获异常并记录到错误指标
      */
     public <T> T withMetrics(String flowCode, String operation, Supplier<T> action) {
-        long start = System.nanoTime();
         try {
-            T result = action.get();
-            return result;
+            return action.get();
         } catch (Exception e) {
             incStartError(flowCode, operation + ":" + e.getClass().getSimpleName());
             throw e;

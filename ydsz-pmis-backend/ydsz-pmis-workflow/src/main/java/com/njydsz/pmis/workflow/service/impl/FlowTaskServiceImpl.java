@@ -1273,7 +1273,6 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     private static final int MAX_AUTO_PASS_DEPTH = 20;
 
     /** AUTO_PASS 后推进到下一节点 */
-    @SuppressWarnings("unchecked")
     private void advanceAfterAutoPass(FlowInstanceDO instance, FlowNodeDO node,
                                        Map<String, Object> variables) {
         int depth = AUTO_PASS_DEPTH.get();
@@ -1754,7 +1753,6 @@ public class FlowTaskServiceImpl implements FlowTaskService {
      * }
      * </pre>
      */
-    @SuppressWarnings("unchecked")
     private java.util.Map<String, Integer> parseUserWeights(String ext) {
         if (!StringUtils.hasText(ext)) {
             return null;

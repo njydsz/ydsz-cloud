@@ -22,7 +22,6 @@ public class DiffCalculator {
      * @param afterJson 变更后 JSON
      * @return 差异列表
      */
-    @SuppressWarnings("unchecked")
     public static List<FieldDiff> calculateDiff(String beforeJson, String afterJson) {
         if (beforeJson == null && afterJson == null) {
             return Collections.emptyList();

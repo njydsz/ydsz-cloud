@@ -14,9 +14,11 @@ import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.service.FlowRoutingService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -46,6 +48,15 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     private final FlowTaskMapper taskMapper;
     /** GAP-P2: 并行网关 join 令牌服务（精确跟踪分支到达状态） */
     private final com.njydsz.pmis.workflow.service.FlowJoinTokenService joinTokenService;
+
+    /**
+     * 智能路由服务（可选注入，literule 不可用时为 null）
+     *
+     * <p>当 ydsz-pmis-literule 模块在 classpath 中且 RuleEngine/ExpressionEvaluator Bean 存在时，
+     * Spring 会自动注入 FlowRoutingService；否则本字段为 null，回退到 variableStrategy。
+     */
+    @Autowired(required = false)
+    private FlowRoutingService routingService;
 
     @Override
     public com.njydsz.pmis.workflow.service.FlowInstanceService getInstanceService() {
@@ -190,7 +201,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         List<FlowSkipDO> matched = new ArrayList<>();
         for (FlowSkipDO skip : all) {
             String cond = skip.getSkipCondition();
-            if (cond == null || cond.isBlank() || variableStrategy.evaluate(cond, variables)) {
+            if (evaluateSkipCondition(cond, variables)) {
                 matched.add(skip);
                 if (isExclusive) {
                     break; // 排他网关：只取第一条匹配
@@ -207,6 +218,38 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         }
 
         return matched;
+    }
+
+    /**
+     * 评估跳转条件表达式
+     *
+     * <p>优先使用 FlowRoutingService（literule Aviator 引擎），
+     * 如果 routingService 不可用或评估失败，回退到 DefaultFlowVariableStrategy（SpEL）。
+     *
+     * @param condition 跳转条件表达式
+     * @param variables 流程变量
+     * @return true=条件成立，false=不成立
+     */
+    @Override
+    public boolean evaluateSkipCondition(String condition, Map<String, Object> variables) {
+        if (condition == null || condition.isBlank()) {
+            return true;
+        }
+
+        // 优先使用 literule FlowRoutingService 评估
+        if (routingService != null) {
+            try {
+                boolean result = routingService.evaluateCondition(condition, variables);
+                log.debug("[Flow] 使用 FlowRoutingService 评估条件: expr={} -> {}", condition, result);
+                return result;
+            } catch (Exception e) {
+                log.warn("[Flow] FlowRoutingService 评估失败，回退到 variableStrategy: expr={} err={}",
+                        condition, e.getMessage());
+            }
+        }
+
+        // 回退到原有 SpEL 变量策略
+        return variableStrategy.evaluate(condition, variables);
     }
 
     @Override

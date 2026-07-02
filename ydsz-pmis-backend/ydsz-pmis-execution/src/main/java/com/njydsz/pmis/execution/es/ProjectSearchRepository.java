@@ -1,7 +1,6 @@
 package com.njydsz.pmis.execution.es;
 
 import org.springframework.data.elasticsearch.repository.ElasticsearchRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
@@ -11,7 +10,6 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Repository
 public interface ProjectSearchRepository extends ElasticsearchRepository<ProjectSearchDoc, String> {
 
     /**

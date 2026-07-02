@@ -260,6 +260,32 @@ public class FlowEngineController {
     }
 
     /**
+     * 列出流程定义的所有历史版本
+     *
+     * @param id 流程定义 ID
+     * @return 统一响应结果，包含版本列表
+     */
+    @GetMapping("/definition/{id}/versions")
+    public Result<List<Map<String, Object>>> listVersions(@PathVariable Long id) {
+        return Result.ok(definitionService.listVersions(id));
+    }
+
+    /**
+     * 版本差异对比
+     *
+     * @param id 流程定义 ID
+     * @param v1 版本号 1
+     * @param v2 版本号 2
+     * @return 统一响应结果，包含 nodeChanges 和 skipChanges
+     */
+    @GetMapping("/definition/{id}/diff")
+    public Result<Map<String, Object>> diffVersions(@PathVariable Long id,
+                                                     @RequestParam Integer v1,
+                                                     @RequestParam Integer v2) {
+        return Result.ok(definitionService.diffVersions(id, v1, v2));
+    }
+
+    /**
      * GAP-V2-08: 流程模拟运行 — 使用模拟变量驱动引擎走一遍流程，不创建实际实例
      *
      * @param flowCode  流程编码

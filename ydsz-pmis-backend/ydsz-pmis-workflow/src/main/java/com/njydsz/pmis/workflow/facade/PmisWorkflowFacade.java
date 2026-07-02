@@ -562,7 +562,6 @@ public class PmisWorkflowFacade implements WorkflowFacade {
                 continue;
             }
             try {
-                @SuppressWarnings("unchecked")
                 Map<String, Object> parsed = JsonHelper.fromJson(coord);
                 if (parsed != null && !parsed.isEmpty()) {
                     result.put(n.getNodeCode(), parsed);

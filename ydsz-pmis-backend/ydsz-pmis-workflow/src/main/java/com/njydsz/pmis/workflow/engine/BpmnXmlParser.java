@@ -68,18 +68,8 @@ import java.util.Map;
 @Component
 public class BpmnXmlParser {
 
-    /** BPMN 默认命名空间 */
-    private static final String BPMN_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL";
-    /** BPMNDI 命名空间（用于解析节点/边的坐标 — P3-1 BPMN 回放） */
-    private static final String BPMNDI_NS = "http://www.omg.org/spec/BPMN/20100524/DI";
-    /** DC 命名空间（Dimension/Coordinate，x/y/width/height） */
-    private static final String DC_NS = "http://www.omg.org/spec/DD/20100524/DC";
-    /** DI 命名空间（Diagram Interchange 基础） */
-    private static final String DI_NS = "http://www.omg.org/spec/DD/20100524/DI";
     /** BPMN 扩展属性命名空间（兼容 flowable/camunda/activiti 约定） */
     private static final String BPMN_EXT_NS = "http://flowable.org/bpmn";
-    /** xsi 命名空间（用于 conditionExpression type） */
-    private static final String XSI_NS = "http://www.w3.org/2001/XMLSchema-instance";
 
     /**
      * 解析 BPMN 2.0 XML

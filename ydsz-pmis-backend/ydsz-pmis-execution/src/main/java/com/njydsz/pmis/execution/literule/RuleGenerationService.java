@@ -95,7 +95,6 @@ public class RuleGenerationService {
     /**
      * 解析 AI 生成结果
      */
-    @SuppressWarnings("unchecked")
     private RuleDefinition parseGenerationResult(Map<String, Object> data, String description) {
         try {
             // agent 返回的 payload 中包含规则 JSON

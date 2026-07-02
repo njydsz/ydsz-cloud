@@ -9,7 +9,6 @@ import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
-import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
@@ -66,7 +65,6 @@ public class FlowTimeoutJobHandler implements JobHandler {
     private final FlowTaskMapper taskMapper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowNodeMapper nodeMapper;
-    private final FlowHisTaskMapper hisTaskMapper;
 
     /**
      * 扫描并处理超期任务

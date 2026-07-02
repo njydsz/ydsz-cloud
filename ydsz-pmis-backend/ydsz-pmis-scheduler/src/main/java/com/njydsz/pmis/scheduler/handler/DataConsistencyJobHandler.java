@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -27,7 +26,6 @@ import java.util.Map;
 public class DataConsistencyJobHandler implements JobHandler {
 
     private static final Logger log = LoggerFactory.getLogger(DataConsistencyJobHandler.class);
-    private static final BigDecimal THRESHOLD = new BigDecimal("0.01");
 
     private final JdbcTemplate jdbcTemplate;
 
