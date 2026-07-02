@@ -89,6 +89,12 @@ public class WinRatePredictAgent implements Agent {
                 suggestion, matched, payload);
     }
 
+    /**
+     * 根据合同金额计算规模得分。
+     *
+     * @param amount 合同金额，可空
+     * @return 规模得分（0-1）；500万-5000万得分最高
+     */
     private double computeAmountScore(BigDecimal amount) {
         if (amount == null || amount.signum() <= 0) return 0.5;
         // 中型项目最易赢：500万-5000万得分最高
@@ -102,6 +108,12 @@ public class WinRatePredictAgent implements Agent {
         return 0.3;
     }
 
+    /**
+     * 将 BigDecimal 值限制在 [0, 1] 区间。
+     *
+     * @param v 输入值，可空
+     * @return 限制后的值；为空返回 0
+     */
     private static BigDecimal clamp01(BigDecimal v) {
         if (v == null) return BigDecimal.ZERO;
         if (v.signum() < 0) return BigDecimal.ZERO;
@@ -109,6 +121,13 @@ public class WinRatePredictAgent implements Agent {
         return v;
     }
 
+    /**
+     * 将任意对象转换为 BigDecimal。
+     *
+     * @param o   输入对象（Number/BigDecimal/字符串），可空
+     * @param def 默认值
+     * @return 转换后的 BigDecimal；为空或转换失败返回 def
+     */
     private static BigDecimal toBd(Object o, BigDecimal def) {
         if (o == null) return def;
         if (o instanceof BigDecimal b) return b;

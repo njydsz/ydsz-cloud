@@ -105,6 +105,13 @@ public class RiskWarningAgent implements Agent {
                 suggestion, matched, payload);
     }
 
+    /**
+     * 根据告警等级与命中规则构建建议文本。
+     *
+     * @param level   告警等级
+     * @param matched 命中规则列表
+     * @return 建议文本
+     */
     private String buildSuggestion(AgentAlertLevel level, List<String> matched) {
         if (matched.isEmpty()) {
             return "项目各项指标正常，请保持当前节奏。";
@@ -121,6 +128,13 @@ public class RiskWarningAgent implements Agent {
         return sb.toString();
     }
 
+    /**
+     * 将任意对象转换为 BigDecimal。
+     *
+     * @param o   输入对象（Number/BigDecimal/字符串），可空
+     * @param def 默认值
+     * @return 转换后的 BigDecimal；为空或转换失败返回 def
+     */
     private static BigDecimal toBd(Object o, BigDecimal def) {
         if (o == null) return def;
         if (o instanceof BigDecimal b) return b;

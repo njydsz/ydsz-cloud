@@ -18,32 +18,98 @@ import java.util.Map;
 @Mapper
 public interface PaymentMapper extends BaseMapper<PaymentDO> {
 
+    /**
+     * 按回款编码查询回款记录
+     *
+     * @param code 回款编码
+     * @return 回款对象，未找到返回 null
+     */
     PaymentDO selectByCode(@Param("code") String code);
 
+    /**
+     * 更新回款状态
+     *
+     * @param id          回款 ID
+     * @param status      目标状态
+     * @param confirmedBy 确认人 ID
+     * @return 受影响行数
+     */
     int updateStatus(@Param("id") Long id, @Param("status") String status,
                      @Param("confirmedBy") Long confirmedBy);
 
+    /**
+     * 更新分配信息
+     *
+     * @param id                回款 ID
+     * @param allocation        分配明细
+     * @param allocatedAmount   已分配金额
+     * @param unallocatedAmount 未分配金额
+     * @return 受影响行数
+     */
     int updateAllocation(@Param("id") Long id,
                          @Param("allocation") String allocation,
                          @Param("allocatedAmount") BigDecimal allocatedAmount,
                          @Param("unallocatedAmount") BigDecimal unallocatedAmount);
 
+    /**
+     * 按合同 ID 查询回款列表
+     *
+     * @param contractId 合同 ID
+     * @return 回款列表
+     */
     List<PaymentDO> selectByContract(@Param("contractId") Long contractId);
 
+    /**
+     * 按客户 ID 查询回款列表
+     *
+     * @param customerId 客户 ID
+     * @return 回款列表
+     */
     List<PaymentDO> selectByCustomer(@Param("customerId") Long customerId);
 
+    /**
+     * 查询客户未分配的回款列表
+     *
+     * @param customerId 客户 ID
+     * @return 未分配回款列表
+     */
     List<PaymentDO> selectUnallocated(@Param("customerId") Long customerId);
 
+    /**
+     * 按合同汇总已收回款金额
+     *
+     * @param contractId 合同 ID
+     * @return 已收回款金额
+     */
     BigDecimal sumReceivedByContract(@Param("contractId") Long contractId);
 
+    /**
+     * 按月聚合回款金额
+     *
+     * @param initiationId 立项 ID
+     * @return 月度聚合列表
+     */
     List<Map<String, Object>> aggregateByMonth(@Param("initiationId") Long initiationId);
 
+    /**
+     * 按客户聚合回款金额
+     *
+     * @return 客户聚合列表
+     */
     List<Map<String, Object>> aggregateByCustomer();
 
-    /** 跨项目汇总已分配（确认）回款金额 */
+    /**
+     * 跨项目汇总已分配（确认）回款金额
+     *
+     * @return 已分配回款总额
+     */
     BigDecimal sumAllocatedAmount();
 
-    /** P6 每日对账：跨项目汇总已分配金额（兼容 sumAmountAllocated） */
+    /**
+     * P6 每日对账：跨项目汇总已分配金额（兼容 sumAmountAllocated）
+     *
+     * @return 已分配回款总额
+     */
     BigDecimal sumAmountAllocated();
 
     /**

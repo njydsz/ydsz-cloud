@@ -58,6 +58,7 @@ import java.util.concurrent.Callable;
 @ConditionalOnProperty(prefix = "pmis.agent.llm", name = "provider", havingValue = "spring-ai-openai")
 public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
 
+    /** Spring AI ChatClient 实例（可能为 null，由条件注入决定） */
     private final Object chatClient;
 
     public SpringAiLlmProvider(@Autowired(required = false) Object chatClient,
@@ -104,6 +105,13 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
         }
     }
 
+    /**
+     * 降级调用 ChatModel.call(Prompt)（兼容 spring-ai 1.0.0+ API）。
+     *
+     * @param prompt 用户提示词
+     * @return 推理结果文本
+     * @throws Exception 反射调用异常
+     */
     private String invokeChatModelFallback(String prompt) throws Exception {
         // 尝试 Prompt 类: org.springframework.ai.prompt.Prompt
         Class<?> promptClass = Class.forName("org.springframework.ai.prompt.Prompt");
@@ -117,6 +125,13 @@ public class SpringAiLlmProvider extends AbstractHttpLlmProvider {
         return extractContent(response);
     }
 
+    /**
+     * 从 ChatResponse 中提取文本内容。
+     *
+     * @param response ChatResponse 对象
+     * @return 文本内容；为空返回空字符串
+     * @throws Exception 反射调用异常
+     */
     private String extractContent(Object response) throws Exception {
         // ChatResponse.getResult().getOutput().getContent()
         Object result = response.getClass().getMethod("getResult").invoke(response);

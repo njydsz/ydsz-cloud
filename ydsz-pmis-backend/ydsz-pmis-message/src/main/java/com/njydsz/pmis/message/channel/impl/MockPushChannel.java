@@ -18,11 +18,22 @@ import java.util.UUID;
 @Component
 public class MockPushChannel implements MessageChannel {
 
+    /**
+     * 通道类型
+     *
+     * @return 通道类型字符串 PUSH
+     */
     @Override
     public String channelType() {
         return "PUSH";
     }
 
+    /**
+     * 模拟推送发送，仅记录日志并返回成功结果。
+     *
+     * @param request 消息请求
+     * @return 发送结果（含模拟追踪 ID）
+     */
     @Override
     public MessageResult send(MessageRequest request) {
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {

@@ -57,8 +57,12 @@ public class EncryptedFieldMigrationService {
             new MigrationColumn("pmis_user_account", "address",   "address_cipher",   "pmis.crypto.aes-key")
     );
 
+    /** 数据源（由 Spring 容器或 fromJdbcUrl 静态工厂注入） */
     private final DataSource dataSource;
 
+    /**
+     * @param dataSource JDBC 数据源
+     */
     public EncryptedFieldMigrationService(DataSource dataSource) {
         this.dataSource = dataSource;
     }
@@ -107,6 +111,15 @@ public class EncryptedFieldMigrationService {
 
     // ==================== 单列加密 ====================
 
+    /**
+     * 加密单列：分批读取明文 → 跳过空值/已加密行 → 加密写回密文列，每批独立事务
+     *
+     * @param batchCode 迁移批次号
+     * @param col       迁移列配置
+     * @param batchSize 每批行数
+     * @return 该列的迁移结果（成功/跳过/失败计数 + 耗时）
+     * @throws SQLException SQL 执行异常
+     */
     private MigrationResult encryptColumn(String batchCode, MigrationColumn col, int batchSize) throws SQLException {
         long start = System.currentTimeMillis();
         long logId = startLog(batchCode, "ENCRYPT", col.table, col.plainColumn);
@@ -171,6 +184,15 @@ public class EncryptedFieldMigrationService {
 
     // ==================== 校验 ====================
 
+    /**
+     * 校验单列：抽样 N 行明文与解密结果对比，统计匹配/不匹配数量
+     *
+     * @param batchCode  迁移批次号
+     * @param col        迁移列配置
+     * @param sampleSize 抽样行数
+     * @return 该列的校验结果
+     * @throws SQLException SQL 执行异常
+     */
     private VerifyResult verifyColumn(String batchCode, MigrationColumn col, int sampleSize) throws SQLException {
         long start = System.currentTimeMillis();
         long logId = startLog(batchCode, "VERIFY", col.table, col.cipherColumn);
@@ -224,6 +246,16 @@ public class EncryptedFieldMigrationService {
 
     // ==================== SQL Helper ====================
 
+    /**
+     * 分页读取一批明文/密文行（用于 encryptColumn 逐批处理）
+     *
+     * @param conn   数据库连接
+     * @param col    迁移列配置
+     * @param offset 偏移量
+     * @param limit  每批行数
+     * @return 当前批次的行数据列表
+     * @throws SQLException SQL 执行异常
+     */
     private List<RowData> readPlainBatch(Connection conn, MigrationColumn col, int offset, int limit) throws SQLException {
         List<RowData> out = new ArrayList<>();
         String sql = String.format(
@@ -250,6 +282,15 @@ public class EncryptedFieldMigrationService {
         return out;
     }
 
+    /**
+     * 更新指定行的密文列
+     *
+     * @param conn   数据库连接
+     * @param col    迁移列配置
+     * @param id     行主键
+     * @param cipher 密文值
+     * @throws SQLException SQL 执行异常
+     */
     private void updateCipher(Connection conn, MigrationColumn col, long id, String cipher) throws SQLException {
         String sql = String.format("UPDATE %s SET \"%s\" = ? WHERE id = ?", col.table, col.cipherColumn);
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -259,6 +300,16 @@ public class EncryptedFieldMigrationService {
         }
     }
 
+    /**
+     * 在 pmis_migration_log 表插入一条 RUNNING 记录，返回自增主键
+     *
+     * @param batchCode 迁移批次号，为空时返回 -1（不记录日志）
+     * @param phase     阶段（ENCRYPT / VERIFY）
+     * @param table     表名
+     * @param column    列名
+     * @return 日志记录主键；未记录时返回 -1
+     * @throws SQLException SQL 执行异常
+     */
     private long startLog(String batchCode, String phase, String table, String column) throws SQLException {
         if (!StringUtils.hasText(batchCode)) return -1;
         try (Connection conn = dataSource.getConnection();
@@ -277,6 +328,14 @@ public class EncryptedFieldMigrationService {
         return -1;
     }
 
+    /**
+     * 更新迁移日志记录为最终状态（SUCCESS / FAILED），写入影响行数与备注
+     *
+     * @param logId    日志主键，小于 0 时直接返回
+     * @param affected 影响行数
+     * @param status   最终状态
+     * @param remark   备注信息
+     */
     private void finishLog(long logId, long affected, String status, String remark) {
         if (logId < 0) return;
         try (Connection conn = dataSource.getConnection();
@@ -295,10 +354,21 @@ public class EncryptedFieldMigrationService {
 
     // ==================== 工具方法 ====================
 
+    /**
+     * 判断字符串是否为空（null 或空串）
+     *
+     * @param s 字符串
+     * @return true 表示为空
+     */
     private static boolean isBlank(String s) {
         return s == null || s.isEmpty();
     }
 
+    /**
+     * 若 options.aesKeyBase64 非空，则注册到 EncryptedFieldKeyRegistry；否则使用默认密钥
+     *
+     * @param options 迁移选项
+     */
     private void registerKeyIfNeeded(MigrationOptions options) {
         if (options.aesKeyBase64 == null || options.aesKeyBase64.isEmpty()) {
             log.info("[EncryptedField] 未提供 aesKeyBase64, 使用 EncryptedFieldKeyRegistry 默认密钥");
@@ -356,9 +426,13 @@ public class EncryptedFieldMigrationService {
 
     // ==================== 内部类 ====================
 
+    /** 单行明文/密文数据（内部读取/比对用） */
     private static class RowData {
+        /** 行主键 */
         long id;
+        /** 明文值 */
         String plainValue;
+        /** 密文值 */
         String cipherValue;
     }
 
@@ -372,11 +446,18 @@ public class EncryptedFieldMigrationService {
      * 迁移选项
      */
     public static class MigrationOptions {
+        /** 迁移批次号（写入 pmis_migration_log） */
         public String batchCode = "V1.0.0_018_ENCRYPTED_FIELD";
+        /** 每批处理行数 */
         public int batchSize = 500;
+        /** AES 密钥（Base64，32 字节）；为空时使用默认密钥 */
         public String aesKeyBase64;
+        /** 自定义迁移列配置；为空时使用 DEFAULT_COLUMNS */
         public List<MigrationColumn> columns;
 
+        /**
+         * @return 默认选项实例
+         */
         public static MigrationOptions defaults() {
             return new MigrationOptions();
         }
@@ -392,9 +473,16 @@ public class EncryptedFieldMigrationService {
      * 校验结果
      */
     public record VerifyResult(MigrationColumn column, long sample, long match, long mismatch, long costMs) {
+        /**
+         * @return 匹配率（sample 为 0 时返回 0.0）
+         */
         public double matchRate() {
             return sample == 0 ? 0.0 : (double) match / sample;
         }
+
+        /**
+         * @return true 表示全部抽样均匹配（mismatch 为 0 且 sample 大于 0）
+         */
         public boolean isAllOk() {
             return mismatch == 0 && sample > 0;
         }

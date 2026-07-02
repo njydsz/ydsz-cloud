@@ -27,8 +27,15 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class AgentOrchestrationController {
 
+    /** 多智能体编排服务 */
     private final AgentOrchestrationService service;
 
+    /**
+     * 协调多 Agent 编排执行。
+     *
+     * @param req 编排请求（包含模式、Agent 列表、输入等）
+     * @return 编排结果
+     */
     @Operation(summary = "协调多 Agent 编排执行")
     @PrePermission("agent:orchestration:run")
     @PostMapping("/coordinate")

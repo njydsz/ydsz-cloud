@@ -18,42 +18,123 @@ import java.util.Map;
 @Mapper
 public interface InvoiceMapper extends BaseMapper<InvoiceDO> {
 
+    /**
+     * 按发票编码查询发票
+     *
+     * @param code 发票编码
+     * @return 发票对象，未找到返回 null
+     */
     InvoiceDO selectByCode(@Param("code") String code);
 
+    /**
+     * 按发票号查询发票
+     *
+     * @param invoiceNo 发票号
+     * @return 发票对象，未找到返回 null
+     */
     InvoiceDO selectByInvoiceNo(@Param("invoiceNo") String invoiceNo);
 
+    /**
+     * 更新发票状态
+     *
+     * @param id         发票 ID
+     * @param status     目标状态
+     * @param approvedBy 审批人 ID
+     * @param issuedBy   开票人 ID
+     * @return 受影响行数
+     */
     int updateStatus(@Param("id") Long id, @Param("status") String status,
                      @Param("approvedBy") Long approvedBy,
                      @Param("issuedBy") Long issuedBy);
 
+    /**
+     * 按合同 ID 查询发票列表
+     *
+     * @param contractId 合同 ID
+     * @return 发票列表
+     */
     List<InvoiceDO> selectByContract(@Param("contractId") Long contractId);
 
+    /**
+     * 按立项 ID 查询发票列表
+     *
+     * @param initiationId 立项 ID
+     * @return 发票列表
+     */
     List<InvoiceDO> selectByInitiation(@Param("initiationId") Long initiationId);
 
+    /**
+     * 按客户 ID 查询发票列表
+     *
+     * @param customerId 客户 ID
+     * @return 发票列表
+     */
     List<InvoiceDO> selectByCustomer(@Param("customerId") Long customerId);
 
+    /**
+     * 按合同汇总已开票金额
+     *
+     * @param contractId 合同 ID
+     * @return 已开票金额
+     */
     BigDecimal sumInvoicedByContract(@Param("contractId") Long contractId);
 
+    /**
+     * 按状态聚合合同下的发票计数
+     *
+     * @param contractId 合同 ID
+     * @return 状态聚合结果列表
+     */
     List<Map<String, Object>> aggregateByStatus(@Param("contractId") Long contractId);
 
+    /**
+     * 按月汇总开票金额
+     *
+     * @param initiationId 立项 ID
+     * @return 月度汇总列表
+     */
     List<Map<String, Object>> sumByMonth(@Param("initiationId") Long initiationId);
 
-    /** 跨合同汇总已开票金额 */
+    /**
+     * 跨合同汇总已开票金额
+     *
+     * @return 已开票总额
+     */
     BigDecimal sumInvoicedAmount();
 
-    /** P6 每日对账：跨合同汇总已开票金额（ISSUED 状态，兼容 sumAmountIssued） */
+    /**
+     * P6 每日对账：跨合同汇总已开票金额（ISSUED 状态，兼容 sumAmountIssued）
+     *
+     * @return ISSUED 状态已开票总额
+     */
     BigDecimal sumAmountIssued();
 
-    /** 跨合同汇总已确认收入（ALLOCATED 状态的 payment） */
+    /**
+     * 跨合同汇总已确认收入（ALLOCATED 状态的 payment）
+     *
+     * @return 已确认收入总额
+     */
     BigDecimal sumConfirmedAmount();
 
-    /** 客户维度下钻 */
+    /**
+     * 客户维度下钻
+     *
+     * @return 客户维度开票汇总列表
+     */
     List<Map<String, Object>> sumByCustomer();
 
-    /** 部门维度下钻 */
+    /**
+     * 部门维度下钻
+     *
+     * @return 部门维度开票汇总列表
+     */
     List<Map<String, Object>> sumByDepartment();
 
-    /** 统计独立项目数 */
+    /**
+     * 统计独立项目数
+     *
+     * @return 独立项目数
+     */
     Integer countDistinctInitiation();
 
     /**

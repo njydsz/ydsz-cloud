@@ -86,6 +86,11 @@ public class EncryptedFieldMigrationCli {
         }
     }
 
+    /**
+     * 打印 ENCRYPT 阶段的汇总信息（每列成功/跳过/失败计数 + 总计）
+     *
+     * @param results 各列迁移结果
+     */
     private static void printEncryptSummary(List<EncryptedFieldMigrationService.MigrationResult> results) {
         System.out.println();
         System.out.println("==================== ENCRYPT 汇总 ====================");
@@ -104,6 +109,11 @@ public class EncryptedFieldMigrationCli {
         System.out.println();
     }
 
+    /**
+     * 打印 VERIFY 阶段的汇总信息（每列抽样/匹配/不匹配计数 + 匹配率）
+     *
+     * @param results 各列校验结果
+     */
     private static void printVerifySummary(List<EncryptedFieldMigrationService.VerifyResult> results) {
         System.out.println();
         System.out.println("==================== VERIFY 汇总 ======================");
@@ -116,6 +126,12 @@ public class EncryptedFieldMigrationCli {
         System.out.println();
     }
 
+    /**
+     * 解析 {@code --key=value} 形式的命令行参数为 Map；无 = 时 value 置为 "true"
+     *
+     * @param args 原始命令行参数
+     * @return 解析后的参数 Map
+     */
     private static Map<String, String> parseArgs(String[] args) {
         java.util.Map<String, String> m = new java.util.LinkedHashMap<>();
         for (String a : args) {
@@ -130,6 +146,9 @@ public class EncryptedFieldMigrationCli {
         return m;
     }
 
+    /**
+     * 打印用法说明到标准错误流
+     */
     private static void printUsage() {
         System.err.println();
         System.err.println("Usage: java -cp ydsz-pmis-common.jar com.njydsz.pmis.common.migration.EncryptedFieldMigrationCli \\");

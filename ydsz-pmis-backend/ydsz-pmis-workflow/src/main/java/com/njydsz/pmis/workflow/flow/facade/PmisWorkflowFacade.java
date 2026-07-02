@@ -97,19 +97,19 @@ public class PmisWorkflowFacade implements WorkflowFacade {
 
     @Override
     public List<Map<String, Object>> listTodoTasks(Long userId, int page, int size) {
-        // P2-16: 多租户上下文 - 从 SecurityContext 获取当前租户
-        List<FlowTaskDO> tasks = taskService.listTodoByAssignee(
-                String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L));
-        return tasks.stream().map(this::toMap).limit(size).toList();
+        // P2-17: 真分页（SQL LIMIT/OFFSET）
+        com.njydsz.pmis.common.api.PageResult<FlowTaskDO> pageResult = taskService.listTodoByAssigneePage(
+                String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L), page, size);
+        return pageResult.getList().stream().map(this::toMap).toList();
     }
 
     @Override
     public List<Map<String, Object>> listDoneTasks(Long userId, int page, int size) {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
-        // P2-16: 多租户上下文 - 从 SecurityContext 获取当前租户
-        List<FlowTaskDO> tasks = taskService.listDoneByAssignee(
-                String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L));
-        return tasks.stream().map(this::toMap).limit(size).toList();
+        // P2-17: 真分页（SQL LIMIT/OFFSET）
+        com.njydsz.pmis.common.api.PageResult<FlowTaskDO> pageResult = taskService.listDoneByAssigneePage(
+                String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L), page, size);
+        return pageResult.getList().stream().map(this::toMap).toList();
     }
 
     @Override

@@ -17,15 +17,41 @@ import java.util.Map;
 @Mapper
 public interface SatisfactionMapper extends BaseMapper<SatisfactionDO> {
 
+    /**
+     * 按编码查询满意度评价
+     *
+     * @param code 满意度编码
+     * @return 满意度对象，未找到返回 null
+     */
     SatisfactionDO selectByCode(@Param("code") String code);
 
+    /**
+     * 按立项 ID 查询满意度评价列表
+     *
+     * @param initiationId 立项 ID
+     * @return 满意度列表
+     */
     List<SatisfactionDO> selectByInitiation(@Param("initiationId") Long initiationId);
 
+    /**
+     * 按工单 ID 查询满意度评价列表
+     *
+     * @param ticketId 工单 ID
+     * @return 满意度列表
+     */
     List<SatisfactionDO> selectByTicket(@Param("ticketId") Long ticketId);
 
-    /** 整体满意度均值：score / professionalism / timeliness / quality / attitude */
+    /**
+     * 整体满意度均值：score / professionalism / timeliness / quality / attitude
+     *
+     * @return 整体满意度均值数据
+     */
     Map<String, Object> aggregateOverall();
 
-    /** 各等级分布 */
+    /**
+     * 各等级分布
+     *
+     * @return 等级分布列表
+     */
     List<Map<String, Object>> aggregateByLevel();
 }

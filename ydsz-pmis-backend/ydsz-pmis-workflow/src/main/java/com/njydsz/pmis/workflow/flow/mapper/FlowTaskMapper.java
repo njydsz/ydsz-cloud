@@ -41,6 +41,25 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
                                           @Param("tenantId") Long tenantId);
 
     /**
+     * 查用户的待办（真分页：LIMIT/OFFSET）
+     *
+     * @param assigneeId 办理人 ID
+     * @param tenantId   租户 ID
+     * @param offset     偏移量（从 0 开始）
+     * @param limit      每页大小
+     */
+    List<FlowTaskDO> selectTodoByAssigneePage(@Param("assigneeId") String assigneeId,
+                                              @Param("tenantId") Long tenantId,
+                                              @Param("offset") int offset,
+                                              @Param("limit") int limit);
+
+    /**
+     * 统计用户待办总数（用于分页计算总页数）
+     */
+    long countTodoByAssignee(@Param("assigneeId") String assigneeId,
+                             @Param("tenantId") Long tenantId);
+
+    /**
      * 查用户已办
      */
     List<FlowTaskDO> selectDoneByAssignee(@Param("assigneeId") String assigneeId,

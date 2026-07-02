@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.flow.service;
 
+import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
@@ -62,9 +63,33 @@ public interface FlowTaskService {
     List<FlowTaskDO> listTodoByAssignee(String assigneeId, Long tenantId);
 
     /**
+     * P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET）
+     *
+     * @param assigneeId 办理人 ID
+     * @param tenantId   租户 ID
+     * @param page       页码（从 1 开始）
+     * @param size       每页大小
+     * @return 分页结果
+     */
+    PageResult<FlowTaskDO> listTodoByAssigneePage(String assigneeId, Long tenantId,
+                                                   int page, int size);
+
+    /**
      * 查用户的已办
      */
     List<FlowTaskDO> listDoneByAssignee(String assigneeId, Long tenantId);
+
+    /**
+     * P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET）
+     *
+     * @param assigneeId 办理人 ID
+     * @param tenantId   租户 ID
+     * @param page       页码（从 1 开始）
+     * @param size       每页大小
+     * @return 分页结果
+     */
+    PageResult<FlowTaskDO> listDoneByAssigneePage(String assigneeId, Long tenantId,
+                                                   int page, int size);
 
     /**
      * 查用户的待办（多维度匹配：直接分配 + ROLE/DEPT 展开 + pmis_flow_user 关联）

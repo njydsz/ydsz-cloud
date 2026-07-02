@@ -18,17 +18,53 @@ import java.util.Map;
 @Mapper
 public interface RevenueMapper extends BaseMapper<RevenueDO> {
 
+    /**
+     * 按编码查询收入确认记录
+     *
+     * @param code 收入编码
+     * @return 收入对象，未找到返回 null
+     */
     RevenueDO selectByCode(@Param("code") String code);
 
+    /**
+     * 更新收入确认状态
+     *
+     * @param id          收入 ID
+     * @param status      目标状态
+     * @param confirmedBy 确认人 ID
+     * @return 受影响行数
+     */
     int updateStatus(@Param("id") Long id, @Param("status") String status,
                      @Param("confirmedBy") Long confirmedBy);
 
+    /**
+     * 按立项 ID 查询收入确认列表
+     *
+     * @param initiationId 立项 ID
+     * @return 收入确认列表
+     */
     List<RevenueDO> selectByInitiation(@Param("initiationId") Long initiationId);
 
+    /**
+     * 按期间汇总收入
+     *
+     * @param initiationId 立项 ID
+     * @return 期间汇总列表
+     */
     List<Map<String, Object>> sumByPeriod(@Param("initiationId") Long initiationId);
 
+    /**
+     * 按合同汇总收入
+     *
+     * @param contractId 合同 ID
+     * @return 合同汇总列表
+     */
     List<Map<String, Object>> sumByContract(@Param("contractId") Long contractId);
 
-    /** P6 每日对账：跨项目汇总全部已确认收入 */
+    /**
+     * P6 每日对账：跨项目汇总全部已确认收入
+     *
+     * @return 已确认收入总额
+     */
     BigDecimal sumAll();
 }

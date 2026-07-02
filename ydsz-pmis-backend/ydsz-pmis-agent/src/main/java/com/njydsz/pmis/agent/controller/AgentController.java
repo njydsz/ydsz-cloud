@@ -38,9 +38,17 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AgentController {
 
+    /** Agent 服务 */
     private final AgentService service;
+    /** Agent 预测记录 Mapper */
     private final AgentPredictionMapper predictionMapper;
 
+    /**
+     * 同步执行 Agent，结果落库。
+     *
+     * @param req Agent 执行请求
+     * @return 落库后的 Agent 预测记录
+     */
     @Operation(summary = "执行 Agent（同步）")
     @PrePermission("agent:task:run")
     @PostMapping("/run")
@@ -48,6 +56,12 @@ public class AgentController {
         return Result.ok(service.run(req));
     }
 
+    /**
+     * 异步执行 Agent，立即返回，结果落库后通过查询获取。
+     *
+     * @param req Agent 执行请求
+     * @return 空结果
+     */
     @Operation(summary = "执行 Agent（异步）")
     @PrePermission("agent:task:run")
     @PostMapping("/run-async")
@@ -56,6 +70,13 @@ public class AgentController {
         return Result.ok();
     }
 
+    /**
+     * 内存执行 Agent（不落库），用于实时交互场景。
+     *
+     * @param agentType Agent 类型（AgentType.code）
+     * @param ctx       Agent 执行上下文
+     * @return Agent 执行结果
+     */
     @Operation(summary = "内存执行（不落库）")
     @PrePermission("agent:task:run")
     @PostMapping("/in-memory")
@@ -64,6 +85,12 @@ public class AgentController {
         return Result.ok(service.executeInMemory(agentType, ctx));
     }
 
+    /**
+     * 查询 Agent 预测记录详情。
+     *
+     * @param id 记录 ID
+     * @return Agent 预测记录
+     */
     @Operation(summary = "记录详情")
     @PrePermission("agent:task:view")
     @GetMapping("/{id}")
@@ -71,6 +98,18 @@ public class AgentController {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 分页查询 Agent 预测记录。
+     *
+     * @param page        页码（从 1 开始）
+     * @param size        每页大小
+     * @param agentType   Agent 类型（可空）
+     * @param alertLevel  告警等级（可空）
+     * @param status      执行状态（可空）
+     * @param bizType     关联业务类型（可空）
+     * @param bizId       关联业务 ID（可空）
+     * @return 分页结果
+     */
     @Operation(summary = "分页查询")
     @PrePermission("agent:task:list")
     @GetMapping("/page")
@@ -85,6 +124,14 @@ public class AgentController {
         return Result.ok(service.page(page, size, agentType, alertLevel, status, bizType, bizId));
     }
 
+    /**
+     * 查询最近的 Agent 预测记录。
+     *
+     * @param agentType  Agent 类型（可空）
+     * @param alertLevel 告警等级（可空）
+     * @param limit      返回条数，默认 20
+     * @return 最近记录列表
+     */
     @Operation(summary = "最近记录")
     @PrePermission("agent:task:list")
     @GetMapping("/recent")
@@ -95,6 +142,12 @@ public class AgentController {
         return Result.ok(service.listRecent(agentType, alertLevel, limit));
     }
 
+    /**
+     * 按 Agent 类型与告警等级聚合计数。
+     *
+     * @param tenantId 租户 ID（可空）
+     * @return 聚合结果列表
+     */
     @Operation(summary = "按类型/告警等级聚合")
     @PrePermission("agent:task:list")
     @GetMapping("/aggregate/type")
@@ -102,6 +155,14 @@ public class AgentController {
         return Result.ok(service.aggregateByType(tenantId));
     }
 
+    /**
+     * 按告警等级统计 Agent 记录数量。
+     *
+     * @param alertLevel 告警等级（可空）
+     * @param agentType  Agent 类型（可空）
+     * @param tenantId   租户 ID（可空）
+     * @return 记录数量
+     */
     @Operation(summary = "告警计数")
     @PrePermission("agent:task:list")
     @GetMapping("/count")

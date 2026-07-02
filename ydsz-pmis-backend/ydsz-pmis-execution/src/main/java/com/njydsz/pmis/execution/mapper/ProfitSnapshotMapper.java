@@ -18,13 +18,36 @@ import java.util.Map;
 @Mapper
 public interface ProfitSnapshotMapper extends BaseMapper<ProfitSnapshotDO> {
 
+    /**
+     * 按立项 + 期间查询利润快照
+     *
+     * @param initiationId 立项 ID
+     * @param period       期间
+     * @return 利润快照对象，未找到返回 null
+     */
     ProfitSnapshotDO selectByInitiationAndPeriod(@Param("initiationId") Long initiationId,
                                                  @Param("period") String period);
 
+    /**
+     * 按立项 ID 查询利润快照列表
+     *
+     * @param initiationId 立项 ID
+     * @return 利润快照列表
+     */
     List<ProfitSnapshotDO> selectByInitiation(@Param("initiationId") Long initiationId);
 
+    /**
+     * 按期间查询利润趋势
+     *
+     * @param initiationId 立项 ID
+     * @return 利润趋势列表
+     */
     List<Map<String, Object>> trendByPeriod(@Param("initiationId") Long initiationId);
 
-    /** P4-3 跨项目汇总所有快照利润 */
+    /**
+     * P4-3 跨项目汇总所有快照利润
+     *
+     * @return 利润总额
+     */
     BigDecimal sumAll();
 }

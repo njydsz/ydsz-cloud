@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * ContractStatus 状态机测试
+ * ContractStatus 合同状态机单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("ContractStatus 合同状态机测试")
 class ContractStatusTest {

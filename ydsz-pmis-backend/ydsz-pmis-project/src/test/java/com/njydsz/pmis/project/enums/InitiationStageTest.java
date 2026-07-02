@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * InitiationStage 状态机测试
+ * InitiationStage 立项阶段状态机单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("InitiationStage 立项阶段状态机测试")
 class InitiationStageTest {

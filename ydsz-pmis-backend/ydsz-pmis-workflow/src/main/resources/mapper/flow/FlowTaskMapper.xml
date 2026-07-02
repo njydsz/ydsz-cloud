@@ -89,6 +89,27 @@
         ORDER BY created_at DESC
     </select>
 
+    <!-- P2-17: 真分页查询 -->
+    <select id="selectTodoByAssigneePage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_task
+        WHERE assignee_id = #{assigneeId}
+          AND task_status IN ('PENDING', 'CLAIMED')
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY created_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countTodoByAssignee" resultType="long">
+        SELECT COUNT(*)
+        FROM pmis_flow_task
+        WHERE assignee_id = #{assigneeId}
+          AND task_status IN ('PENDING', 'CLAIMED')
+          AND status = 'ENABLED'
+          AND deleted = 0
+    </select>
+
     <select id="selectDoneByAssignee" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM pmis_flow_task

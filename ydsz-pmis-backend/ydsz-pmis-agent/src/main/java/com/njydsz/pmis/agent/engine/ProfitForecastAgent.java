@@ -103,6 +103,13 @@ public class ProfitForecastAgent implements Agent {
                 suggestion.toString(), matched, payload);
     }
 
+    /**
+     * 将任意对象转换为 BigDecimal。
+     *
+     * @param o   输入对象（Number/BigDecimal/字符串），可空
+     * @param def 默认值
+     * @return 转换后的 BigDecimal；为空或转换失败返回 def
+     */
     private static BigDecimal toBd(Object o, BigDecimal def) {
         if (o == null) return def;
         if (o instanceof BigDecimal b) return b;

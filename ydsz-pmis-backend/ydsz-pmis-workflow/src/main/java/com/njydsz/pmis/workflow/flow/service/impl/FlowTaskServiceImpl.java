@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.dto.FlowAssigneeDTO;
@@ -414,6 +415,59 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             result.add(t);
         }
         return result;
+    }
+
+    @Override
+    public PageResult<FlowTaskDO> listTodoByAssigneePage(String assigneeId, Long tenantId,
+                                                          int page, int size) {
+        // P2-17: 真分页（SQL LIMIT/OFFSET）
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        int safePage = Math.max(1, page);
+        int safeSize = size > 0 ? size : 20;
+        int offset = (safePage - 1) * safeSize;
+        List<FlowTaskDO> list = taskMapper.selectTodoByAssigneePage(assigneeId, tid, offset, safeSize);
+        long total = taskMapper.countTodoByAssignee(assigneeId, tid);
+        return PageResult.of(list, total, safePage, safeSize);
+    }
+
+    @Override
+    public PageResult<FlowTaskDO> listDoneByAssigneePage(String assigneeId, Long tenantId,
+                                                          int page, int size) {
+        // P2-17: 真分页（SQL LIMIT/OFFSET） — 走历史表
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        int safePage = Math.max(1, page);
+        int safeSize = size > 0 ? size : 20;
+        int offset = (safePage - 1) * safeSize;
+        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectDoneByAssigneePage(assigneeId, tid, offset, safeSize);
+        List<FlowTaskDO> list = new ArrayList<>();
+        for (FlowHisTaskDO his : hisTasks) {
+            FlowTaskDO t = new FlowTaskDO();
+            t.setId(his.getTaskId());
+            t.setInstanceId(his.getInstanceId());
+            t.setFlowCode(his.getFlowCode());
+            t.setDefinitionId(his.getDefinitionId());
+            t.setNodeCode(his.getNodeCode());
+            t.setNodeName(his.getNodeName());
+            t.setNodeType(his.getNodeType());
+            t.setBusinessType(his.getBusinessType());
+            t.setBusinessId(his.getBusinessId());
+            t.setBusinessNo(his.getBusinessNo());
+            t.setFlowName(his.getFlowName());
+            t.setTitle(his.getTitle());
+            t.setAssigneeType(his.getAssigneeType());
+            t.setAssigneeId(his.getAssigneeId());
+            t.setAssigneeName(his.getAssigneeName());
+            t.setPerformType(his.getPerformType());
+            t.setTaskStatus(his.getTaskStatus());
+            t.setComment(his.getComment());
+            t.setCreatedAt(his.getCreatedAt());
+            t.setClaimAt(his.getClaimAt());
+            t.setFinishAt(his.getFinishAt());
+            t.setDurationMs(his.getDurationMs());
+            list.add(t);
+        }
+        long total = hisTaskMapper.countDoneByAssignee(assigneeId, tid);
+        return PageResult.of(list, total, safePage, safeSize);
     }
 
     @Override

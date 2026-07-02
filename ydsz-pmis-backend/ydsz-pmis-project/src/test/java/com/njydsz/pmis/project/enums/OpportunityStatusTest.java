@@ -6,7 +6,10 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * OpportunityStatus 状态机测试
+ * OpportunityStatus 商机状态机单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("OpportunityStatus 商机状态机测试")
 class OpportunityStatusTest {

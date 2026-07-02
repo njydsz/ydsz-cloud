@@ -46,3 +46,18 @@ app.use(router)
 
 // 挂载应用
 app.mount('#app')
+
+// P2-1: 生产环境启用 Sentry 错误监控 + 全局 Promise rejection 捕获
+if (import.meta.env.PROD) {
+  initSentry({
+    dsn: import.meta.env.VITE_SENTRY_DSN || '',
+    environment: import.meta.env.MODE,
+    release: import.meta.env.VITE_APP_VERSION,
+    tracesSampleRate: 0.1,
+  }, app, router)
+
+  // 捕获未处理的 Promise rejection
+  window.addEventListener('unhandledrejection', (event) => {
+    captureError(event.reason, { type: 'unhandledrejection' })
+  })
+}

@@ -44,6 +44,12 @@ public final class PermissionCodeValidator {
 
     private PermissionCodeValidator() {}
 
+    /**
+     * 校验权限码是否合法（三段式 + action 在允许词表内）
+     *
+     * @param code 权限码字符串
+     * @return true 表示合法
+     */
     public static boolean isValid(String code) {
         if (code == null) return false;
         if (!PATTERN.matcher(code).matches()) return false;
@@ -53,7 +59,10 @@ public final class PermissionCodeValidator {
     }
 
     /**
-     * 校验并返回错误信息,合法时返回 null
+     * 校验并返回错误信息，合法时返回 null
+     *
+     * @param code 权限码字符串
+     * @return 错误信息；合法时返回 null
      */
     public static String validate(String code) {
         if (code == null || code.isEmpty()) return "权限码不能为空";

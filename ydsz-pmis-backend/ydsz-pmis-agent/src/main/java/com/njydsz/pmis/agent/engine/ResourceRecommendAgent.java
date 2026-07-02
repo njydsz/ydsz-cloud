@@ -124,6 +124,13 @@ public class ResourceRecommendAgent implements Agent {
                 BigDecimal.valueOf(0.75), suggestion, matched, payload);
     }
 
+    /**
+     * 计算职级匹配度。
+     *
+     * @param actual   实际职级（如 "L5"），可空
+     * @param required 要求职级（如 "L5"），可空
+     * @return 匹配度（0-1）；完全匹配返回 1，相邻级别返回 0.5，相隔 2 级返回 0.25
+     */
     private BigDecimal computeLevelMatch(String actual, String required) {
         if (required == null || required.isBlank()) return BigDecimal.ONE;
         if (actual == null) return BigDecimal.ZERO;
@@ -140,6 +147,12 @@ public class ResourceRecommendAgent implements Agent {
         }
     }
 
+    /**
+     * 将 BigDecimal 值限制在 [0, 1] 区间。
+     *
+     * @param v 输入值，可空
+     * @return 限制后的值；为空返回 0
+     */
     private static BigDecimal clamp01(BigDecimal v) {
         if (v == null) return BigDecimal.ZERO;
         if (v.signum() < 0) return BigDecimal.ZERO;
@@ -147,6 +160,13 @@ public class ResourceRecommendAgent implements Agent {
         return v;
     }
 
+    /**
+     * 将任意对象转换为 BigDecimal。
+     *
+     * @param o   输入对象（Number/BigDecimal/字符串），可空
+     * @param def 默认值
+     * @return 转换后的 BigDecimal；为空或转换失败返回 def
+     */
     private static BigDecimal toBd(Object o, BigDecimal def) {
         if (o == null) return def;
         if (o instanceof BigDecimal b) return b;

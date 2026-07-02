@@ -18,18 +18,63 @@ import java.util.Map;
 @Mapper
 public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
 
+    /**
+     * 按任务编码查询 WBS 任务
+     *
+     * @param code 任务编码
+     * @return WBS 任务对象，未找到返回 null
+     */
     WbsTaskDO selectByCode(@Param("code") String code);
 
+    /**
+     * 更新任务状态
+     *
+     * @param id     任务 ID
+     * @param status 目标状态
+     * @return 受影响行数
+     */
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
+    /**
+     * 更新任务进度
+     *
+     * @param id            任务 ID
+     * @param progressPct   进度百分比
+     * @param actualEffort  实际工时
+     * @return 受影响行数
+     */
     int updateProgress(@Param("id") Long id, @Param("progressPct") BigDecimal progressPct,
                        @Param("actualEffort") BigDecimal actualEffort);
 
+    /**
+     * 按立项 ID 查询 WBS 任务列表
+     *
+     * @param initiationId 立项 ID
+     * @return WBS 任务列表
+     */
     List<WbsTaskDO> selectByInitiation(@Param("initiationId") Long initiationId);
 
+    /**
+     * 查询子任务列表
+     *
+     * @param parentId 父任务 ID
+     * @return 子任务列表
+     */
     List<WbsTaskDO> selectChildren(@Param("parentId") Long parentId);
 
+    /**
+     * 查询里程碑任务列表
+     *
+     * @param initiationId 立项 ID
+     * @return 里程碑任务列表
+     */
     List<WbsTaskDO> selectMilestones(@Param("initiationId") Long initiationId);
 
+    /**
+     * 按状态聚合同一立项下的任务计数
+     *
+     * @param initiationId 立项 ID
+     * @return 状态聚合结果列表
+     */
     List<Map<String, Object>> aggregateByStatus(@Param("initiationId") Long initiationId);
 }

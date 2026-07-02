@@ -55,6 +55,25 @@
         ORDER BY finish_at DESC
     </select>
 
+    <!-- P2-17: 真分页查询 -->
+    <select id="selectDoneByAssigneePage" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_his_task
+        WHERE assignee_id = #{assigneeId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY finish_at DESC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countDoneByAssignee" resultType="long">
+        SELECT COUNT(*)
+        FROM pmis_flow_his_task
+        WHERE assignee_id = #{assigneeId}
+          AND status = 'ENABLED'
+          AND deleted = 0
+    </select>
+
     <select id="selectByInstanceId" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM pmis_flow_his_task

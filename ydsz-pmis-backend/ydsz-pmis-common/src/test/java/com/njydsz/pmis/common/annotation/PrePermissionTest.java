@@ -9,6 +9,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * PrePermission 注解单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("PrePermission 注解测试")
 class PrePermissionTest {

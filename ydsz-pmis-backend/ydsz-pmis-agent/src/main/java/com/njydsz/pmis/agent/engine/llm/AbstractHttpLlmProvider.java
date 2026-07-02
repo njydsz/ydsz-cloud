@@ -83,6 +83,14 @@ public abstract class AbstractHttpLlmProvider implements LlmProvider {
         }
     }
 
+    /**
+     * 在独立线程执行调用并设置超时。
+     *
+     * @param call      可调用任务
+     * @param timeoutMs 超时毫秒数
+     * @return 调用结果
+     * @throws Exception 调用异常或超时
+     */
     private String invokeWithTimeout(Callable<String> call, long timeoutMs) throws Exception {
         long start = System.currentTimeMillis();
         // 把当前线程的 MDC 复制到子线程, 避免跨线程上下文丢失
@@ -115,6 +123,12 @@ public abstract class AbstractHttpLlmProvider implements LlmProvider {
         }
     }
 
+    /**
+     * 将对象安全转为字符串。
+     *
+     * @param o 输入对象，可空
+     * @return 字符串表示；为空返回空字符串
+     */
     private static String safeStr(Object o) {
         return o == null ? "" : o.toString();
     }

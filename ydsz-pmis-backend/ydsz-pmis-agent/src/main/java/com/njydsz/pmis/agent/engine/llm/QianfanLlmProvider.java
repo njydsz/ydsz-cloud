@@ -39,8 +39,11 @@ import java.util.concurrent.Callable;
 @ConditionalOnProperty(prefix = "pmis.agent.llm", name = "provider", havingValue = "qianfan")
 public class QianfanLlmProvider extends AbstractHttpLlmProvider {
 
+    /** 千帆 API Key */
     private final String apiKey;
+    /** 模型名称（如 ernie-3.5-8k） */
     private final String model;
+    /** HTTP 客户端 */
     private final RestClient http;
 
     public QianfanLlmProvider(
@@ -73,6 +76,13 @@ public class QianfanLlmProvider extends AbstractHttpLlmProvider {
         return executeWithGuard(call, context);
     }
 
+    /**
+     * 调用千帆 v2 chat/completions API 进行推理。
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt   用户提示词
+     * @return 推理结果文本
+     */
     private String invokeQianfan(String systemPrompt, String userPrompt) {
         // 千帆 v2 chat/completions 格式 (OpenAI 兼容)
         Map<String, Object> body = new HashMap<>();

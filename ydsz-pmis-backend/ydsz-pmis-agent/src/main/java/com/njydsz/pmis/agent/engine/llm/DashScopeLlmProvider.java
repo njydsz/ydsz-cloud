@@ -47,8 +47,11 @@ import java.util.concurrent.Callable;
 @ConditionalOnProperty(prefix = "pmis.agent.llm", name = "provider", havingValue = "dashscope")
 public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
 
+    /** DashScope API Key */
     private final String apiKey;
+    /** 模型名称（如 qwen-turbo） */
     private final String model;
+    /** HTTP 客户端 */
     private final RestClient http;
 
     public DashScopeLlmProvider(
@@ -81,6 +84,13 @@ public class DashScopeLlmProvider extends AbstractHttpLlmProvider {
         return executeWithGuard(call, context);
     }
 
+    /**
+     * 调用 DashScope OpenAI-兼容 API 进行推理。
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt   用户提示词
+     * @return 推理结果文本
+     */
     private String invokeDashScope(String systemPrompt, String userPrompt) {
         Map<String, Object> body = Map.of(
                 "model", model,

@@ -31,7 +31,9 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class LlmHealthIndicator implements HealthIndicator {
 
+    /** LLM Provider 路由器 */
     private final LlmProviderRouter llmProviderRouter;
+    /** Mock LLM Provider（降级兜底） */
     private final MockLlmProvider mockLlmProvider;
 
     @Override

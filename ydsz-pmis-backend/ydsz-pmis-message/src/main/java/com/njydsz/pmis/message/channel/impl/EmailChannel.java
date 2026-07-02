@@ -24,20 +24,38 @@ import java.util.UUID;
 @Component
 public class EmailChannel implements MessageChannel {
 
+    /** JavaMail 发送器（未配置邮件时为 null） */
     private final JavaMailSender mailSender;
 
+    /**
+     * 构造方法，邮件发送器可选注入。
+     *
+     * @param mailSender JavaMail 发送器
+     */
     public EmailChannel(@Autowired(required = false) JavaMailSender mailSender) {
         this.mailSender = mailSender;
     }
 
+    /** 发件人地址 */
     @Value("${spring.mail.username:noreply@example.com}")
     private String from;
 
+    /**
+     * 通道类型
+     *
+     * @return 通道类型字符串 EMAIL
+     */
     @Override
     public String channelType() {
         return "EMAIL";
     }
 
+    /**
+     * 发送邮件，自动识别 HTML/纯文本格式。
+     *
+     * @param request 消息请求
+     * @return 发送结果（含供应商侧追踪 ID）
+     */
     @Override
     public MessageResult send(MessageRequest request) {
         if (mailSender == null) {

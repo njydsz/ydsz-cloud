@@ -32,9 +32,12 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class LlmProviderRouter {
 
+    /** Spring 应用上下文（用于动态查找 LlmProvider Bean） */
     private final ApplicationContext applicationContext;
+    /** Mock LLM Provider（降级兜底） */
     private final MockLlmProvider mockLlmProvider;
 
+    /** 当前生效的 LLM Provider（懒加载，volatile 保证可见性） */
     private volatile LlmProvider activeProvider = null;
 
     /**
