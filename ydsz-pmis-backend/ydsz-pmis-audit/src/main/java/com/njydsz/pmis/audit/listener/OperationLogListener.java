@@ -1,6 +1,7 @@
 package com.njydsz.pmis.audit.listener;
 
 import com.njydsz.pmis.audit.entity.OperationLogDO;
+import com.njydsz.pmis.audit.fallback.OperationLogFallbackLogger;
 import com.njydsz.pmis.audit.mapper.OperationLogMapper;
 import com.njydsz.pmis.common.event.OperationLogEvent;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +15,15 @@ import java.time.LocalDateTime;
 /**
  * 操作日志事件监听器
  *
- * <p>异步消费 OperationLogEvent 并落库到 pmis_operation_log。
+ * <p>异步消费 {@link OperationLogEvent} 并落库到 pmis_operation_log。
+ *
+ * <p>补偿机制（P1-11）：
+ * <ul>
+ *   <li>第 1 次落库失败后，立即重试 1 次（间隔 100ms），应对瞬时网络抖动</li>
+ *   <li>第 2 次仍失败则通过 {@link OperationLogFallbackLogger} 将事件 JSON 写入
+ *       独立的 {@code logs/audit-fallback.log}，避免审计数据丢失</li>
+ *   <li>所有异常均被 catch，不向上抛出，避免影响主业务流程</li>
+ * </ul>
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -24,16 +33,54 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class OperationLogListener {
 
+    /** 第 1 次失败后重试前的等待时间（毫秒） */
+    private static final long RETRY_DELAY_MS = 100L;
+
     private final OperationLogMapper operationLogMapper;
+    private final OperationLogFallbackLogger fallbackLogger;
 
     @Async
     @EventListener
     public void onOperationLog(OperationLogEvent event) {
+        OperationLogDO entity = toDO(event);
         try {
-            OperationLogDO l = toDO(event);
-            operationLogMapper.insertLog(l);
-        } catch (Exception e) {
-            log.error("[Audit] 落库失败: {}", e.getMessage(), e);
+            operationLogMapper.insertLog(entity);
+        } catch (Exception firstErr) {
+            log.warn("[Audit] 落库失败，100ms 后重试一次: {}", firstErr.getMessage());
+            if (!retryInsert(entity)) {
+                log.error("[Audit] 重试仍失败，写入 fallback log 进行补偿", firstErr);
+                safeFallback(event, firstErr);
+            }
+        }
+    }
+
+    /**
+     * 调用 fallback logger，并保证其自身异常不影响监听器线程。
+     */
+    private void safeFallback(OperationLogEvent event, Throwable err) {
+        try {
+            fallbackLogger.log(event, err);
+        } catch (Exception fallbackErr) {
+            log.error("[Audit] fallback 记录器自身异常: {}", fallbackErr.getMessage(), fallbackErr);
+        }
+    }
+
+    /**
+     * 重试一次落库，返回是否成功
+     */
+    private boolean retryInsert(OperationLogDO entity) {
+        try {
+            Thread.sleep(RETRY_DELAY_MS);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
+        try {
+            operationLogMapper.insertLog(entity);
+            return true;
+        } catch (Exception retryErr) {
+            log.error("[Audit] 重试落库仍失败: {}", retryErr.getMessage());
+            return false;
         }
     }
 

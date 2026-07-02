@@ -78,7 +78,15 @@ public class OperationLogAspect {
         }
     }
 
-    @Async
+    /**
+     * 构造操作日志事件并同步发布。
+     *
+     * <p>注意：此方法不再标注 {@code @Async}。原因：
+     * Spring AOP 代理对同类内部调用（{@code this.publishEvent()}）不生效，
+     * {@code @Async} 形同虚设。真正的异步由 {@link OperationLogListener} 端的
+     * {@code @Async + @EventListener} 实现。此方法仅负责构造事件 + 发布，
+     * 由 Spring 事件机制将事件投递到异步监听器。</p>
+     */
     void publishEvent(ProceedingJoinPoint pjp, OperationLog operationLog,
                       Object result, Throwable error, long cost) {
         try {
@@ -143,11 +151,29 @@ public class OperationLogAspect {
                 .build();
     }
 
+    /**
+     * 从方法参数中提取业务 ID（bizId）。
+     *
+     * <p>提取策略：遍历方法参数，优先取第一个 Long/Integer 类型且值 > 0 的参数，
+     * 常见于 {@code create(Long id)}、{@code update(Long id, DTO)}、{@code delete(Long id)} 等。
+     * 跳过分页对象（IPage）。</p>
+     *
+     * @param args 方法参数数组
+     * @return bizId 字符串，未找到时返回 null
+     */
     private String extractBizId(Object[] args) {
         if (args == null) return null;
-        for (Object a : args) {
-            if (a == null) continue;
-            if (a instanceof com.baomidou.mybatisplus.core.metadata.IPage) continue;
+        for (Object arg : args) {
+            if (arg == null) continue;
+            if (arg instanceof com.baomidou.mybatisplus.core.metadata.IPage) continue;
+            if (arg instanceof Long) {
+                long val = (Long) arg;
+                if (val > 0) return String.valueOf(val);
+            }
+            if (arg instanceof Integer) {
+                int val = (Integer) arg;
+                if (val > 0) return String.valueOf(val);
+            }
         }
         return null;
     }

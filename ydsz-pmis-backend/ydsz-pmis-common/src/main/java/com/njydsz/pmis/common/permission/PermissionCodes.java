@@ -149,6 +149,7 @@ public final class PermissionCodes {
     // ==================== 审计日志 ====================
 
     public static final String AUDIT_LOG_VIEW = "audit:log:view";
+    public static final String AUDIT_LOG_CLEAN = "audit:log:clean";
     public static final String AUDIT_LOGIN_VIEW = "audit:login:view";
     public static final String AUDIT_EXPORT_VIEW = "audit:export:view";
     public static final String AUDIT_SENSITIVE_VIEW = "audit:sensitive:view";

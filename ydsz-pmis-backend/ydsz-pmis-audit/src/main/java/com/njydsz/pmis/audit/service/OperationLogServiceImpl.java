@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -27,22 +28,27 @@ public class OperationLogServiceImpl {
     /**
      * 分页查询操作日志
      *
-     * @param page    页码
-     * @param size    每页条数
-     * @param userId  用户 ID
-     * @param bizType 业务类型
-     * @param status  状态
-     * @param module  模块名
+     * @param page      页码
+     * @param size      每页条数
+     * @param userId    用户 ID
+     * @param bizType   业务类型
+     * @param status    状态
+     * @param module    模块名
+     * @param startTime 起始时间（包含），可为 null
+     * @param endTime   截止时间（包含），可为 null
      * @return 分页结果
      */
     public Page<OperationLogDO> page(int page, int size, Long userId, String bizType,
-                                     String status, String module) {
+                                     String status, String module,
+                                     LocalDateTime startTime, LocalDateTime endTime) {
         Page<OperationLogDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OperationLogDO> w = new LambdaQueryWrapper<>();
         if (userId != null) w.eq(OperationLogDO::getUserId, userId);
         if (StringUtils.hasText(bizType)) w.eq(OperationLogDO::getBizType, bizType);
         if (StringUtils.hasText(status)) w.eq(OperationLogDO::getStatus, status);
         if (StringUtils.hasText(module)) w.eq(OperationLogDO::getModule, module);
+        if (startTime != null) w.ge(OperationLogDO::getCreatedAt, startTime);
+        if (endTime != null) w.le(OperationLogDO::getCreatedAt, endTime);
         w.orderByDesc(OperationLogDO::getCreatedAt);
         return operationLogMapper.selectPage(p, w);
     }

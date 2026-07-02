@@ -5,15 +5,18 @@ import com.njydsz.pmis.audit.service.OperationLogServiceImpl;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -31,7 +34,7 @@ public class OperationLogController {
     private final OperationLogServiceImpl service;
 
     @Operation(summary = "分页查询")
-    @PrePermission("audit:log:view")
+    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/page")
     public R<PageResult<OperationLogDO>> page(
             @RequestParam(defaultValue = "1") int page,
@@ -39,12 +42,18 @@ public class OperationLogController {
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) String module) {
-        return R.ok(PageResult.ofPage(service.page(page, size, userId, bizType, status, module)));
+            @RequestParam(required = false) String module,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startTime,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endTime) {
+        return R.ok(PageResult.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
     }
 
     @Operation(summary = "按用户查询")
-    @PrePermission("audit:log:view")
+    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/by-user")
     public R<List<OperationLogDO>> byUser(@RequestParam Long userId,
                                           @RequestParam(defaultValue = "50") int limit) {
@@ -52,7 +61,7 @@ public class OperationLogController {
     }
 
     @Operation(summary = "按业务查询")
-    @PrePermission("audit:log:view")
+    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/by-biz")
     public R<List<OperationLogDO>> byBiz(@RequestParam String bizType,
                                          @RequestParam String bizId,
@@ -61,7 +70,7 @@ public class OperationLogController {
     }
 
     @Operation(summary = "清理 N 天前日志")
-    @PrePermission("audit:log:view")
+    @PrePermission(PermissionCodes.AUDIT_LOG_CLEAN)
     @PostMapping("/clean")
     public R<Integer> clean(@RequestParam(defaultValue = "90") int days) {
         return R.ok(service.cleanBefore(days));

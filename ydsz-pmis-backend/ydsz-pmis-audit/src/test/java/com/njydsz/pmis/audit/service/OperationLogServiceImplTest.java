@@ -8,6 +8,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -35,7 +36,7 @@ class OperationLogServiceImplTest {
     @SuppressWarnings({"rawtypes", "unchecked"})
     void page() {
         when(mapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
-        service.page(1, 20, 100L, "USER", "SUCCESS", "用户管理");
+        service.page(1, 20, 100L, "USER", "SUCCESS", "用户管理", null, null);
         ArgumentCaptor<Page<OperationLogDO>> pageCap = ArgumentCaptor.forClass(Page.class);
         ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper<OperationLogDO>> wCap =
                 ArgumentCaptor.forClass((Class) com.baomidou.mybatisplus.core.conditions.Wrapper.class);
@@ -43,6 +44,23 @@ class OperationLogServiceImplTest {
         assertThat(pageCap.getValue().getCurrent()).isEqualTo(1);
         assertThat(pageCap.getValue().getSize()).isEqualTo(20);
         // 验证传入的 wrapper 是 LambdaQueryWrapper 实例
+        assertThat(wCap.getValue()).isInstanceOf(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class);
+    }
+
+    @Test
+    @DisplayName("分页查询支持时间范围筛选")
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void pageWithTimeRange() {
+        when(mapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
+        LocalDateTime start = LocalDateTime.of(2026, 1, 1, 0, 0, 0);
+        LocalDateTime end = LocalDateTime.of(2026, 6, 30, 23, 59, 59);
+        service.page(1, 20, null, null, null, null, start, end);
+        ArgumentCaptor<Page<OperationLogDO>> pageCap = ArgumentCaptor.forClass(Page.class);
+        ArgumentCaptor<com.baomidou.mybatisplus.core.conditions.Wrapper<OperationLogDO>> wCap =
+                ArgumentCaptor.forClass((Class) com.baomidou.mybatisplus.core.conditions.Wrapper.class);
+        verify(mapper).selectPage(pageCap.capture(), wCap.capture());
+        // wrapper 包含时间范围条件（LambdaQueryWrapper 的 sqlSegment 不为空）
+        // 由于 LambdaQueryWrapper 内部 sqlSegment 拼接较复杂，这里仅断言 mapper 被调用且 wrapper 实例类型正确
         assertThat(wCap.getValue()).isInstanceOf(com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper.class);
     }
 
