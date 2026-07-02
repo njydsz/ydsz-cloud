@@ -5,6 +5,7 @@ import com.njydsz.pmis.audit.service.OperationLogServiceImpl;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.entity.CursorPageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,6 +65,41 @@ public class OperationLogController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime endTime) {
         return Result.ok(PageResult.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
+    }
+
+    /**
+     * 游标分页查询操作日志（P2-8 深翻优化）
+     *
+     * <p>使用 keyset pagination 替代 OFFSET，适用于审计日志等大表深翻场景。
+     * 首次请求不传 cursor，后续请求传入上一次返回的 nextCursor。
+     *
+     * @param size      每页大小（默认 20，最大 200）
+     * @param cursor    游标（首次请求不传）
+     * @param userId    用户 ID（可选）
+     * @param bizType   业务类型（可选）
+     * @param status    状态（可选）
+     * @param module    模块名（可选）
+     * @param startTime 起始时间（可选）
+     * @param endTime   截止时间（可选）
+     * @return 游标分页结果
+     */
+    @Operation(summary = "游标分页查询（深翻优化）")
+    @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
+    @GetMapping("/cursor-page")
+    public Result<CursorPageResult<OperationLogDO>> cursorPage(
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) String bizType,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String module,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime startTime,
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
+            LocalDateTime endTime) {
+        return Result.ok(service.pageByCursor(size, cursor, userId, bizType, status, module, startTime, endTime));
     }
 
     /**

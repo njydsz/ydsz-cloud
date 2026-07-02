@@ -12,7 +12,7 @@
  *   - confirmDialog      : 在当前可见 dialog 中点击主按钮
  *   - expectToast        : 断言 ElMessage toast 文本
  */
-import { expect, type Page, type Locator } from '@playwright/test'
+import { test, expect, type Page, type Locator } from './auth.fixture'
 
 /** 等待 loading 消失 */
 export async function waitForTableLoaded(page: Page, tableSelector = '.vxe-table') {
@@ -62,4 +62,4 @@ export async function expectToast(page: Page, text: string | RegExp, timeout = 5
   return msg
 }
 
-export { expect, type Page, type Locator }
+export { test, expect, type Page, type Locator }

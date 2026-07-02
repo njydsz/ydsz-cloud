@@ -41,26 +41,48 @@ public interface BillableUtilizationService {
 
     /**
      * 个人利用率（汇总 from-to 区间）
+     *
+     * @param employeeId 员工 ID
+     * @param from       起始日期（含）
+     * @param to         截止日期（含）
+     * @return 个人利用率数据
      */
     Map<String, Object> personal(Long employeeId, LocalDate from, LocalDate to);
 
     /**
      * 排行榜（按 utilizationPct 降序，取前 N）
+     *
+     * @param from 起始日期（含）
+     * @param to   截止日期（含）
+     * @param top  返回 Top N
+     * @return 排行榜列表
      */
     List<Map<String, Object>> rank(LocalDate from, LocalDate to, int top);
 
     /**
      * 团队/公司整体均值
+     *
+     * @param from 起始日期（含）
+     * @param to   截止日期（含）
+     * @return 整体利用率数据
      */
     Map<String, Object> overall(LocalDate from, LocalDate to);
 
     /**
      * 扫描利用率预警：WARN/CRITICAL 的员工
+     *
+     * @param from 起始日期（含）
+     * @param to   截止日期（含）
+     * @return 预警员工列表
      */
     List<Map<String, Object>> scanAlerts(LocalDate from, LocalDate to);
 
     /**
      * 计算（不依赖数据库）：给一个 total/billable 数字直接得评估
+     *
+     * @param totalHours   总工时
+     * @param billableHours 可计费工时
+     * @return 利用率评估数据
      */
     Map<String, Object> evaluate(double totalHours, double billableHours);
 
@@ -80,6 +102,9 @@ public interface BillableUtilizationService {
      * 读取最新一期快照均值（驾驶舱取数）
      *
      * <p>优先从快照表读取，无数据时实时聚合兜底，保证驾驶舱 KPI 永远有数。
+     *
+     * @param period 期间（yyyy-MM）
+     * @return 快照均值数据
      */
     Map<String, Object> snapshotAverage(String period);
 }

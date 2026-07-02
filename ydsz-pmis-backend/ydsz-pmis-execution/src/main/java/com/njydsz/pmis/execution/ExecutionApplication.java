@@ -19,6 +19,11 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 @MapperScan("com.njydsz.pmis.execution.mapper")
 public class ExecutionApplication {
 
+    /**
+     * 服务启动入口
+     *
+     * @param args 启动参数
+     */
     public static void main(String[] args) {
         SpringApplication.run(ExecutionApplication.class, args);
     }

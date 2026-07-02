@@ -17,7 +17,12 @@ import java.util.Map;
  */
 public interface EvmMeasureService {
 
-    /** 录入或更新 EVM 测量（按 initiation+wbs+period 唯一） */
+    /**
+     * 录入或更新 EVM 测量（按 initiation+wbs+period 唯一）
+     *
+     * @param dto 测量录入参数
+     * @return 测量记录 ID
+     */
     Long save(EvmMeasureCreateDTO dto);
 
     /**
@@ -44,10 +49,20 @@ public interface EvmMeasureService {
      */
     List<EvmMeasureDO> listByWbs(Long wbsTaskId);
 
-    /** WBS 节点级偏差趋势 */
+    /**
+     * WBS 节点级偏差趋势
+     *
+     * @param initiationId 项目立项 ID
+     * @return 偏差趋势列表
+     */
     List<Map<String, Object>> trend(Long initiationId);
 
-    /** 项目 EVM 健康汇总（最新一期） */
+    /**
+     * 项目 EVM 健康汇总（最新一期）
+     *
+     * @param initiationId 项目立项 ID
+     * @return EVM 健康汇总数据
+     */
     Map<String, Object> dashboard(Long initiationId);
 
     /**
@@ -82,6 +97,9 @@ public interface EvmMeasureService {
 
     /**
      * 查询项目当前 EVM 基线版本号, 不存在返回 0
+     *
+     * @param initiationId 项目立项 ID
+     * @return 基线版本号
      */
     int currentBaselineVersion(Long initiationId);
 }

@@ -1,0 +1,783 @@
+{
+  "config": {
+    "argv": [
+      "C:\\Program Files\\nodejs\\node.exe",
+      "D:\\Code\\ydsz\\ydsz-pmis\\ydsz-pmis-frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "--list"
+    ],
+    "configFile": "D:\\Code\\ydsz\\ydsz-pmis\\ydsz-pmis-frontend\\playwright.config.ts",
+    "rootDir": "D:/Code/ydsz/ydsz-pmis/ydsz-pmis-frontend/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": true,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {},
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "D:/Code/ydsz/ydsz-pmis/ydsz-pmis-frontend/e2e-report/test-results",
+        "repeatEach": 1,
+        "retries": 2,
+        "metadata": {},
+        "id": "chromium",
+        "name": "chromium",
+        "testDir": "D:/Code/ydsz/ydsz-pmis/ydsz-pmis-frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/Code/ydsz/ydsz-pmis/ydsz-pmis-frontend/e2e-report/test-results",
+        "repeatEach": 1,
+        "retries": 2,
+        "metadata": {},
+        "id": "firefox",
+        "name": "firefox",
+        "testDir": "D:/Code/ydsz/ydsz-pmis/ydsz-pmis-frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 30000
+      },
+      {
+        "outputDir": "D:/Code/ydsz/ydsz-pmis/ydsz-pmis-frontend/e2e-report/test-results",
+        "repeatEach": 1,
+        "retries": 2,
+        "metadata": {},
+        "id": "mobile-chrome",
+        "name": "mobile-chrome",
+        "testDir": "D:/Code/ydsz/ydsz-pmis/ydsz-pmis-frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "/.*\\.spec\\.ts/"
+        ],
+        "timeout": 30000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "github",
+        null
+      ],
+      [
+        "html",
+        {
+          "open": "never"
+        }
+      ],
+      [
+        "json",
+        {
+          "outputFile": "e2e-report/report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.61.1",
+    "workers": 1,
+    "webServer": {
+      "command": "pnpm run dev --mode e2e",
+      "url": "http://localhost:5173",
+      "reuseExistingServer": false,
+      "timeout": 120000,
+      "stdout": "pipe",
+      "stderr": "pipe"
+    }
+  },
+  "suites": [
+    {
+      "title": "01-initiation-contract-closure.spec.ts",
+      "file": "01-initiation-contract-closure.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "立项 → 合同 → 结项 全链路 E2E",
+          "file": "01-initiation-contract-closure.spec.ts",
+          "line": 33,
+          "column": 6,
+          "specs": [
+            {
+              "title": "完整业务闭环",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aac7cba9f0431d0950ed-4ebe4004b5e9c446fee3",
+              "file": "01-initiation-contract-closure.spec.ts",
+              "line": 42,
+              "column": 3
+            },
+            {
+              "title": "表单校验: 必填项缺失应提示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aac7cba9f0431d0950ed-63ef30e03ff9ebd0a6f2",
+              "file": "01-initiation-contract-closure.spec.ts",
+              "line": 184,
+              "column": 3
+            },
+            {
+              "title": "权限校验: 销售角色不能新增立项",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aac7cba9f0431d0950ed-937e2a38068ecb58f20a",
+              "file": "01-initiation-contract-closure.spec.ts",
+              "line": 198,
+              "column": 3
+            },
+            {
+              "title": "完整业务闭环",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aac7cba9f0431d0950ed-e6e69ed68170215e2de6",
+              "file": "01-initiation-contract-closure.spec.ts",
+              "line": 42,
+              "column": 3
+            },
+            {
+              "title": "表单校验: 必填项缺失应提示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aac7cba9f0431d0950ed-5fc555cd5c0a642f0919",
+              "file": "01-initiation-contract-closure.spec.ts",
+              "line": 184,
+              "column": 3
+            },
+            {
+              "title": "权限校验: 销售角色不能新增立项",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aac7cba9f0431d0950ed-3dc52c16b4c197afdb67",
+              "file": "01-initiation-contract-closure.spec.ts",
+              "line": 198,
+              "column": 3
+            },
+            {
+              "title": "完整业务闭环",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aac7cba9f0431d0950ed-5f536f49bea9b57a49e5",
+              "file": "01-initiation-contract-closure.spec.ts",
+              "line": 42,
+              "column": 3
+            },
+            {
+              "title": "表单校验: 必填项缺失应提示",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aac7cba9f0431d0950ed-2c6ee57a924d6102b827",
+              "file": "01-initiation-contract-closure.spec.ts",
+              "line": 184,
+              "column": 3
+            },
+            {
+              "title": "权限校验: 销售角色不能新增立项",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "aac7cba9f0431d0950ed-598683469b13c8666d5f",
+              "file": "01-initiation-contract-closure.spec.ts",
+              "line": 198,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "02-risk-alert.spec.ts",
+      "file": "02-risk-alert.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "风险预警 E2E",
+          "file": "02-risk-alert.spec.ts",
+          "line": 24,
+          "column": 6,
+          "specs": [
+            {
+              "title": "登记风险 → AI 评估 → 预警列表 → 处理",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3ae6dd0f4a132facfec3-95d78c9f41f938dc8b25",
+              "file": "02-risk-alert.spec.ts",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "风险等级校验: LOW 字段缺失时, 评估结果应为 LOW",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3ae6dd0f4a132facfec3-5038216fabc64d67fb42",
+              "file": "02-risk-alert.spec.ts",
+              "line": 137,
+              "column": 3
+            },
+            {
+              "title": "登记风险 → AI 评估 → 预警列表 → 处理",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3ae6dd0f4a132facfec3-e53b0c4af259b78ac9b0",
+              "file": "02-risk-alert.spec.ts",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "风险等级校验: LOW 字段缺失时, 评估结果应为 LOW",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3ae6dd0f4a132facfec3-cf87b5fa38a6bef9c536",
+              "file": "02-risk-alert.spec.ts",
+              "line": 137,
+              "column": 3
+            },
+            {
+              "title": "登记风险 → AI 评估 → 预警列表 → 处理",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3ae6dd0f4a132facfec3-2e6b360d7b8bf20092bc",
+              "file": "02-risk-alert.spec.ts",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "风险等级校验: LOW 字段缺失时, 评估结果应为 LOW",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "3ae6dd0f4a132facfec3-3eeaab005117889acb06",
+              "file": "02-risk-alert.spec.ts",
+              "line": 137,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "03-ai-orchestration.spec.ts",
+      "file": "03-ai-orchestration.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "AI Agent 编排 E2E",
+          "file": "03-ai-orchestration.spec.ts",
+          "line": 24,
+          "column": 6,
+          "specs": [
+            {
+              "title": "SEQUENTIAL 编排完整流程",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c32ea368b766d3570028-ffcf4057b48a27301276",
+              "file": "03-ai-orchestration.spec.ts",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "PARALLEL 模式: 并行协调器节点渲染",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c32ea368b766d3570028-e25aa7eb6e2043792f78",
+              "file": "03-ai-orchestration.spec.ts",
+              "line": 123,
+              "column": 3
+            },
+            {
+              "title": "VOTING 模式: 融合器 + 最终结果节点",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c32ea368b766d3570028-dae924eb3691f25f55ca",
+              "file": "03-ai-orchestration.spec.ts",
+              "line": 156,
+              "column": 3
+            },
+            {
+              "title": "SEQUENTIAL 编排完整流程",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c32ea368b766d3570028-1152cbc3a300be424da9",
+              "file": "03-ai-orchestration.spec.ts",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "PARALLEL 模式: 并行协调器节点渲染",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c32ea368b766d3570028-90409d55516887b5d4ea",
+              "file": "03-ai-orchestration.spec.ts",
+              "line": 123,
+              "column": 3
+            },
+            {
+              "title": "VOTING 模式: 融合器 + 最终结果节点",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c32ea368b766d3570028-c1368630af80020b9833",
+              "file": "03-ai-orchestration.spec.ts",
+              "line": 156,
+              "column": 3
+            },
+            {
+              "title": "SEQUENTIAL 编排完整流程",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c32ea368b766d3570028-906d7478332c432770fd",
+              "file": "03-ai-orchestration.spec.ts",
+              "line": 25,
+              "column": 3
+            },
+            {
+              "title": "PARALLEL 模式: 并行协调器节点渲染",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c32ea368b766d3570028-d41d0609eec89ba12b88",
+              "file": "03-ai-orchestration.spec.ts",
+              "line": 123,
+              "column": 3
+            },
+            {
+              "title": "VOTING 模式: 融合器 + 最终结果节点",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "c32ea368b766d3570028-0d0b74ed206d2f724669",
+              "file": "03-ai-orchestration.spec.ts",
+              "line": 156,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "smoke.spec.ts",
+      "file": "smoke.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [],
+      "suites": [
+        {
+          "title": "E2E Smoke - 关键页面",
+          "file": "smoke.spec.ts",
+          "line": 46,
+          "column": 6,
+          "specs": [
+            {
+              "title": "所有顶层路由可访问 (admin)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-f76b53b72d2745086e7b",
+              "file": "smoke.spec.ts",
+              "line": 51,
+              "column": 3
+            },
+            {
+              "title": "未登录访问应跳转到登录页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "chromium",
+                  "projectName": "chromium",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-a17333c2a8c9e137b0fc",
+              "file": "smoke.spec.ts",
+              "line": 78,
+              "column": 3
+            },
+            {
+              "title": "所有顶层路由可访问 (admin)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-a0d62ec0b87f52bb3db6",
+              "file": "smoke.spec.ts",
+              "line": 51,
+              "column": 3
+            },
+            {
+              "title": "未登录访问应跳转到登录页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "firefox",
+                  "projectName": "firefox",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-9fc6fb94fb120da511aa",
+              "file": "smoke.spec.ts",
+              "line": 78,
+              "column": 3
+            },
+            {
+              "title": "所有顶层路由可访问 (admin)",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-a10e830be006373e8de4",
+              "file": "smoke.spec.ts",
+              "line": 51,
+              "column": 3
+            },
+            {
+              "title": "未登录访问应跳转到登录页",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "mobile-chrome",
+                  "projectName": "mobile-chrome",
+                  "results": [],
+                  "status": "skipped"
+                }
+              ],
+              "id": "4219922fea2e2bd3c691-acfe08b92a70b5582ee8",
+              "file": "smoke.spec.ts",
+              "line": 78,
+              "column": 3
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-07-02T06:21:43.969Z",
+    "duration": 169.07300000000004,
+    "expected": 0,
+    "skipped": 30,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}
