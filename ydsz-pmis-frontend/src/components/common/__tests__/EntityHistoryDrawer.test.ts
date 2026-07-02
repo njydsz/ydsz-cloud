@@ -11,12 +11,12 @@ vi.mock('@/api/audit', () => ({
 // 桩 Element Plus 组件：ElTableColumn 不渲染默认插槽，避免无数据时
 // `#default="{ row }"` 因缺少作用域对象而触发解构报错
 const elStubs = {
-  ElDrawer: { template: '<div><slot /></div>' },
-  ElTable: { template: '<div><slot /></div>' },
-  ElTableColumn: { template: '<div />' },
-  ElDialog: { template: '<div><slot /></div>' },
-  ElButton: { template: '<button><slot /></button>' },
-  ElTag: { template: '<span><slot /></span>' },
+  ElDrawer: { name: 'ElDrawer', template: '<div><slot /></div>' },
+  ElTable: { name: 'ElTable', template: '<div><slot /></div>' },
+  ElTableColumn: { name: 'ElTableColumn', template: '<div />' },
+  ElDialog: { name: 'ElDialog', template: '<div><slot /></div>' },
+  ElButton: { name: 'ElButton', template: '<button><slot /></button>' },
+  ElTag: { name: 'ElTag', template: '<span><slot /></span>' },
 }
 
 describe('EntityHistoryDrawer', () => {

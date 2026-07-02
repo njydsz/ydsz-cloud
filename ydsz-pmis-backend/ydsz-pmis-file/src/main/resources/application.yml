@@ -25,6 +25,8 @@ spring:
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         file-extension: yml
+        group: PMIS_GROUP_${spring.profiles.active}
+        namespace: ${NACOS_NAMESPACE:pmis}
         refresh-enabled: true
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

@@ -1,8 +1,8 @@
-# ============================================================
+﻿# ============================================================
 # Nacos 配置：ydsz-pmis-gateway-sit
 # DataId  : ydsz-pmis-gateway-sit.yaml
-# Group   : PMIS_GROUP
-# Namespace: pmis-sit
+# Group   : PMIS_GROUP_SIT
+# Namespace: pmis
 # 环境     : SIT（系统集成测试）
 # 用途     : 该文件可直接导入 Nacos 配置中心
 # 规范     : 互联网大厂标准 - 环境隔离 / 配置外置 / 密钥不入库
@@ -29,7 +29,7 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-sit}
+        namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         watch:
@@ -40,14 +40,14 @@ spring:
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-sit}
-        group: PMIS_GROUP
+        namespace: ${NACOS_NAMESPACE:pmis}
+        group: PMIS_GROUP_SIT
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         extension-configs:
           - dataId: pmis-common-sit.yaml
-            group: PMIS_GROUP
+            group: PMIS_GROUP_SIT
             refresh: true
     gateway:
       discovery:

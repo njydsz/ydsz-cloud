@@ -1,8 +1,8 @@
-# ============================================================
+﻿# ============================================================
 # Nacos 配置：ydsz-pmis-scheduler-uat
 # DataId  : ydsz-pmis-scheduler-uat.yaml
-# Group   : PMIS_GROUP
-# Namespace: pmis-uat
+# Group   : PMIS_GROUP_UAT
+# Namespace: pmis
 # 环境     : UAT（用户验收测试 / 生产仿真）
 # ============================================================
 
@@ -29,7 +29,7 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-uat}
+        namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         heart-beat-interval: 5000
@@ -37,14 +37,14 @@ spring:
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-uat}
-        group: PMIS_GROUP
+        namespace: ${NACOS_NAMESPACE:pmis}
+        group: PMIS_GROUP_UAT
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         extension-configs:
           - dataId: pmis-common-uat.yaml
-            group: PMIS_GROUP
+            group: PMIS_GROUP_UAT
             refresh: true
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

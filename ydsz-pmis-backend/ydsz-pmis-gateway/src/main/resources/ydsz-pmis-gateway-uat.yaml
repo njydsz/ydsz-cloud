@@ -1,8 +1,8 @@
-# ============================================================
+﻿# ============================================================
 # Nacos 配置：ydsz-pmis-gateway-uat
 # DataId  : ydsz-pmis-gateway-uat.yaml
-# Group   : PMIS_GROUP
-# Namespace: pmis-uat
+# Group   : PMIS_GROUP_UAT
+# Namespace: pmis
 # 环境     : UAT（用户验收测试 / 生产仿真）
 # 用途     : 该文件可直接导入 Nacos 配置中心
 # 规范     : 互联网大厂标准 - 环境隔离 / 配置外置 / 密钥不入库
@@ -29,7 +29,7 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-uat}
+        namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         watch:
@@ -40,14 +40,14 @@ spring:
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-uat}
-        group: PMIS_GROUP
+        namespace: ${NACOS_NAMESPACE:pmis}
+        group: PMIS_GROUP_UAT
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         extension-configs:
           - dataId: pmis-common-uat.yaml
-            group: PMIS_GROUP
+            group: PMIS_GROUP_UAT
             refresh: true
     gateway:
       discovery:

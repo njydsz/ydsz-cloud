@@ -1,51 +1,17 @@
 ﻿# ============================================================
-# Nacos 配置：ydsz-pmis-config-sit
-# DataId  : ydsz-pmis-config-sit.yaml
-# Group   : PMIS_GROUP_SIT
+# 公共基础配置：pmis-common-DEV
+# DataId  : pmis-common-dev.yaml
+# Group   : PMIS_GROUP_DEV
 # Namespace: pmis
-# 环境     : SIT（系统集成测试）
+# 环境     : 开发（本地开发联调）
+# 用途     : 各微服务共享的 DB / Redis / MyBatis-Plus / Logging 配置
 # ============================================================
 
-server:
-  port: 9008
-  compression:
-    enabled: true
-  servlet:
-    context-path: /
-
 spring:
-  application:
-    name: ydsz-pmis-config
-  profiles:
-    active: sit
-  main:
-    web-application-type: servlet
-    banner-mode: log
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
     default-property-inclusion: NON_NULL
-  cloud:
-    nacos:
-      discovery:
-        server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis}
-        username: ${NACOS_USERNAME}
-        password: ${NACOS_PASSWORD}
-        heart-beat-interval: 5000
-        heart-beat-timeout: 15000
-      config:
-        server-addr: ${NACOS_SERVER_ADDR}
-        file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis}
-        group: PMIS_GROUP_SIT
-        username: ${NACOS_USERNAME}
-        password: ${NACOS_PASSWORD}
-        refresh-enabled: true
-        extension-configs:
-          - dataId: pmis-common-sit.yaml
-            group: PMIS_GROUP_SIT
-            refresh: true
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.postgresql.Driver
@@ -58,6 +24,7 @@ spring:
       max-active: 20
       max-wait: 60000
       validation-query: SELECT 1
+      test-while-idle: true
       filters: stat,wall,slf4j
   data:
     redis:
@@ -71,17 +38,10 @@ spring:
           max-active: 16
           max-idle: 8
           min-idle: 2
-
-pmis:
-  config:
-    feature-flag-cache-ttl: 60
-    dict-cache-ttl: 1800
-    threshold-reload-interval: 30
-    publish-event: true
+          max-wait: 3s
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.config.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
@@ -92,13 +52,6 @@ mybatis-plus:
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
-    enabled: true
 
 management:
   endpoints:
@@ -117,14 +70,11 @@ management:
       enabled: true
   metrics:
     tags:
-      application: ${spring.application.name}
       env: ${spring.profiles.active}
 
 logging:
   level:
     root: INFO
-    com.njydsz.pmis: INFO
+    com.njydsz.pmis: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
-  file:
-    name: /var/log/pmis/config

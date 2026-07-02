@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: 9000
 
 spring:
@@ -10,13 +10,14 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:}
+        namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME:}
         password: ${NACOS_PASSWORD}
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:}
+        group: PMIS_GROUP_${spring.profiles.active}
+        namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME:}
         password: ${NACOS_PASSWORD}
     gateway:

@@ -1,8 +1,8 @@
-# ============================================================
+﻿# ============================================================
 # Nacos 配置：ydsz-pmis-gateway-prod
 # DataId  : ydsz-pmis-gateway-prod.yaml
-# Group   : PMIS_GROUP
-# Namespace: pmis-prod
+# Group   : PMIS_GROUP_PROD
+# Namespace: pmis
 # 环境     : PROD（生产环境）
 # 用途     : 该文件可直接导入 Nacos 配置中心
 # 规范     : 互联网大厂标准 - 环境隔离 / 配置外置 / 密钥不入库 / 性能优先
@@ -30,7 +30,7 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR}
-        namespace: ${NACOS_NAMESPACE:pmis-prod}
+        namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         watch:
@@ -42,15 +42,15 @@ spring:
       config:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:pmis-prod}
-        group: PMIS_GROUP
+        namespace: ${NACOS_NAMESPACE:pmis}
+        group: PMIS_GROUP_PROD
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         fail-fast: true
         extension-configs:
           - dataId: pmis-common-prod.yaml
-            group: PMIS_GROUP
+            group: PMIS_GROUP_PROD
             refresh: true
     gateway:
       discovery:

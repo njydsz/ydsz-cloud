@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: 9003
 
 spring:
@@ -10,11 +10,12 @@ spring:
     nacos:
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        namespace: ${NACOS_NAMESPACE:}
+        namespace: ${NACOS_NAMESPACE:pmis}
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         file-extension: yaml
-        namespace: ${NACOS_NAMESPACE:}
+        group: PMIS_GROUP_${spring.profiles.active}
+        namespace: ${NACOS_NAMESPACE:pmis}
   datasource:
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?useUnicode=true&characterEncoding=utf8
     username: ${DB_USER:postgres}
