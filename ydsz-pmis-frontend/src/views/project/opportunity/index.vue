@@ -5,7 +5,8 @@
  * 提供商机的查询、新增、编辑、状态流转、赢率评估、转立项等操作。
  * 状态机: FOLLOWING -> QUOTED -> NEGOTIATING -> WON -> CONVERTED / LOST
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -21,6 +22,8 @@ import {
 import type { OpportunityVO, OpportunityCreateDTO, OpportunityUpdateDTO } from '@/api/project/opportunity/types'
 import { PC } from '@/constants/permissionCodes'
 
+const { t } = useI18n()
+
 const loading = ref(false)
 const list = ref<OpportunityVO[]>([])
 const total = ref(0)
@@ -33,22 +36,22 @@ const query = reactive({
   ownerId: undefined as number | undefined,
 })
 
-const statusMap = {
-  FOLLOWING: { label: '跟进中', type: 'info' as const },
-  QUOTED: { label: '已报价', type: 'warning' as const },
-  NEGOTIATING: { label: '商务谈判', type: 'primary' as const },
-  WON: { label: '已赢单', type: 'success' as const },
-  CONVERTED: { label: '已转立项', type: 'success' as const },
-  LOST: { label: '已输单', type: 'danger' as const },
-  INVALID: { label: '无效', type: 'info' as const },
-}
+const statusMap = computed(() => ({
+  FOLLOWING: { label: t('project.opportunity.status.FOLLOWING'), type: 'info' as const },
+  QUOTED: { label: t('project.opportunity.status.QUOTED'), type: 'warning' as const },
+  NEGOTIATING: { label: t('project.opportunity.status.NEGOTIATING'), type: 'primary' as const },
+  WON: { label: t('project.opportunity.status.WON'), type: 'success' as const },
+  CONVERTED: { label: t('project.opportunity.status.CONVERTED'), type: 'success' as const },
+  LOST: { label: t('project.opportunity.status.LOST'), type: 'danger' as const },
+  INVALID: { label: t('project.opportunity.status.INVALID'), type: 'info' as const },
+}))
 
-const levelMap = {
-  A: { label: 'A 级', type: 'danger' as const },
-  B: { label: 'B 级', type: 'warning' as const },
-  C: { label: 'C 级', type: 'info' as const },
-  D: { label: 'D 级', type: 'info' as const },
-}
+const levelMap = computed(() => ({
+  A: { label: t('project.opportunity.level.A'), type: 'danger' as const },
+  B: { label: t('project.opportunity.level.B'), type: 'warning' as const },
+  C: { label: t('project.opportunity.level.C'), type: 'info' as const },
+  D: { label: t('project.opportunity.level.D'), type: 'info' as const },
+}))
 
 async function fetchList() {
   loading.value = true
@@ -139,7 +142,7 @@ async function submitForm() {
       industry: form.industry,
     }
     await createOpportunity(dto)
-    ElMessage.success('创建成功')
+    ElMessage.success(t('project.opportunity.messages.createSuccess'))
   } else if (form.id) {
     const dto: OpportunityUpdateDTO = {
       id: form.id,
@@ -156,7 +159,7 @@ async function submitForm() {
       tags: form.tags,
     }
     await updateOpportunity(dto)
-    ElMessage.success('更新成功')
+    ElMessage.success(t('project.opportunity.messages.updateSuccess'))
   }
   dialogVisible.value = false
   fetchList()
@@ -164,9 +167,9 @@ async function submitForm() {
 
 async function handleDelete(row: OpportunityVO) {
   try {
-    await ElMessageBox.confirm(`确认删除商机「${row.opportunityName}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('project.opportunity.messages.confirmDelete', { name: row.opportunityName }), t('common.confirm'), { type: 'warning' })
     await deleteOpportunity(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('project.opportunity.messages.deleteSuccess'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -177,11 +180,11 @@ async function handleDelete(row: OpportunityVO) {
  * @param target 目标状态编码
  */
 async function handleChangeStatus(row: OpportunityVO, target: string) {
-  const targetText = (statusMap as any)[target]?.label || target
+  const targetText = statusMap.value[target as keyof typeof statusMap.value]?.label || target
   try {
-    await ElMessageBox.confirm(`确认将状态变更为「${targetText}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('project.opportunity.messages.confirmStatusChange', { target: targetText }), t('common.confirm'), { type: 'warning' })
     await changeOpportunityStatus({ id: row.id, targetStatus: target })
-    ElMessage.success('状态已更新')
+    ElMessage.success(t('project.opportunity.messages.statusUpdated'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -189,22 +192,22 @@ async function handleChangeStatus(row: OpportunityVO, target: string) {
 async function handleEvaluate(row: OpportunityVO) {
   try {
     const { data } = await evaluateWinRate(row.id, (row as any).customerCredit, false)
-    ElMessage.success(`赢率评估结果: ${(data * 100).toFixed(1)}%`)
+    ElMessage.success(t('project.opportunity.messages.evaluateResult', { rate: (data * 100).toFixed(1) }))
     fetchList()
   } catch (e: any) {
-    ElMessage.error(e?.message || '评估失败')
+    ElMessage.error(e?.message || t('project.opportunity.messages.evaluateFailed'))
   }
 }
 
 async function handleConvert(row: OpportunityVO) {
   try {
     await ElMessageBox.confirm(
-      `确认将商机「${row.opportunityName}」转立项吗？将自动创建预立项草稿。`,
-      '商机转立项',
+      t('project.opportunity.messages.confirmConvert', { name: row.opportunityName }),
+      t('project.opportunity.dialog.convertTitle'),
       { type: 'info' },
     )
     const { data } = await convertToInitiation(row.id)
-    ElMessage.success(`立项草稿已创建 (ID: ${data})`)
+    ElMessage.success(t('project.opportunity.messages.convertSuccess', { id: data }))
     fetchList()
   } catch { /* 取消 */ }
 }

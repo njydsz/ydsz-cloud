@@ -79,6 +79,9 @@ jobs:
       - name: Run Checkstyle
         working-directory: ydsz-pmis-backend
         run: mvn -B -ntp checkstyle:check
+      - name: SpotBugs Analysis
+        working-directory: ydsz-pmis-backend
+        run: mvn -B -ntp spotbugs:check -DskipTests
       - name: SonarQube Scan
         working-directory: ydsz-pmis-backend
         env:

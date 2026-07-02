@@ -10,7 +10,8 @@
  * 状态: DRAFT -> SUBMITTED -> APPROVED / REJECTED
  * 审批通过后会自动触发成本分摊。
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -23,6 +24,8 @@ import {
 } from '@/api/execution/time-entry'
 import type { TimeEntryVO, TimeEntryCreateDTO } from '@/api/execution/time-entry/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 // 列表查询状态
 const loading = ref(false)
@@ -40,20 +43,20 @@ const query = reactive({
 })
 
 // 状态字典：工时审批状态映射到标签文案与色值
-const statusMap = {
-  DRAFT: { label: '草稿', type: 'info' as const },
-  SUBMITTED: { label: '已提交', type: 'warning' as const },
-  APPROVED: { label: '已通过', type: 'success' as const },
-  REJECTED: { label: '已驳回', type: 'danger' as const },
-}
+const statusMap = computed(() => ({
+  DRAFT: { label: t('execution.timeEntry.status.DRAFT'), type: 'info' as const },
+  SUBMITTED: { label: t('execution.timeEntry.status.SUBMITTED'), type: 'warning' as const },
+  APPROVED: { label: t('execution.timeEntry.status.APPROVED'), type: 'success' as const },
+  REJECTED: { label: t('execution.timeEntry.status.REJECTED'), type: 'danger' as const },
+}))
 
 // 工作类型字典：常规/加班/培训/请假
-const workTypeMap = {
-  REGULAR: { label: '常规' },
-  OVERTIME: { label: '加班' },
-  TRAINING: { label: '培训' },
-  LEAVE: { label: '请假' },
-}
+const workTypeMap = computed(() => ({
+  REGULAR: { label: t('execution.timeEntry.workType.REGULAR') },
+  OVERTIME: { label: t('execution.timeEntry.workType.OVERTIME') },
+  TRAINING: { label: t('execution.timeEntry.workType.TRAINING') },
+  LEAVE: { label: t('execution.timeEntry.workType.LEAVE') },
+}))
 
 /** 拉取工时分页数据 */
 async function fetchList() {
@@ -128,7 +131,7 @@ function openCreate() {
 async function submitForm() {
   await formRef.value?.validate()
   await createTimeEntry(form as TimeEntryCreateDTO)
-  ElMessage.success('已提交（待审批）')
+  ElMessage.success(t('execution.timeEntry.messages.submitSuccess'))
   dialogVisible.value = false
   fetchList()
 }
@@ -136,9 +139,9 @@ async function submitForm() {
 /** 审批通过：二次确认后推进状态，通过后自动触发成本分摊 */
 async function handleApprove(row: TimeEntryVO) {
   try {
-    await ElMessageBox.confirm(`确认通过该工时记录？审批通过将自动触发成本分摊。`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('execution.timeEntry.messages.confirmApprove'), t('common.confirm'), { type: 'warning' })
     await approveTimeEntry({ id: row.id, approverId: 1, approverName: '系统' })
-    ElMessage.success('已通过')
+    ElMessage.success(t('execution.timeEntry.messages.approveSuccess'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -146,9 +149,9 @@ async function handleApprove(row: TimeEntryVO) {
 /** 审批驳回：需输入驳回原因（必填）后推进状态 */
 async function handleReject(row: TimeEntryVO) {
   try {
-    const { value } = await ElMessageBox.prompt('请输入驳回原因', '驳回工时', { inputValidator: (v) => !!v || '原因必填' })
+    const { value } = await ElMessageBox.prompt(t('execution.timeEntry.messages.rejectPrompt'), t('execution.timeEntry.messages.rejectTitle'), { inputValidator: (v) => !!v || t('execution.timeEntry.messages.rejectReasonRequired') })
     await rejectTimeEntry({ id: row.id, approverId: 1, approverName: '系统', reason: value })
-    ElMessage.success('已驳回')
+    ElMessage.success(t('execution.timeEntry.messages.rejectSuccess'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -156,9 +159,9 @@ async function handleReject(row: TimeEntryVO) {
 /** 删除工时记录（二次确认） */
 async function handleDelete(row: TimeEntryVO) {
   try {
-    await ElMessageBox.confirm(`确认删除该工时记录？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('execution.timeEntry.messages.confirmDelete'), t('common.confirm'), { type: 'warning' })
     await deleteTimeEntry(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('execution.timeEntry.messages.deleteSuccess'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -178,21 +181,21 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="员工/项目" clearable /></el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+      <el-form-item :label="$t('execution.timeEntry.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.timeEntry.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="$t('execution.timeEntry.search.status')">
+        <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="员工 ID"><el-input-number v-model="query.employeeId" :min="0" :controls="false" /></el-form-item>
-      <el-form-item label="项目 ID"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
-      <el-form-item label="日期">
+      <el-form-item :label="$t('execution.timeEntry.search.employeeId')"><el-input-number v-model="query.employeeId" :min="0" :controls="false" /></el-form-item>
+      <el-form-item :label="$t('execution.timeEntry.search.initiationId')"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
+      <el-form-item :label="$t('execution.timeEntry.search.dateRange')">
         <el-date-picker
           v-model="query.startDate"
           type="daterange"
-          range-separator="至"
-          start-placeholder="开始"
-          end-placeholder="结束"
+          range-separator="-"
+          start-placeholder="Start"
+          end-placeholder="End"
           value-format="YYYY-MM-DD"
           unlink-panels
         />
@@ -201,73 +204,73 @@ onMounted(fetchList)
 
     <template #toolbar>
       <el-button v-permission="[PC.EXECUTION_TIME_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        填写工时
+        {{ $t('execution.timeEntry.buttons.create') }}
       </el-button>
     </template>
 
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="entryDate" title="日期" width="110" />
-        <vxe-column field="employeeName" title="员工" width="100" />
-        <vxe-column field="levelCode" title="职级" width="80" align="center" />
-        <vxe-column field="initiationName" title="项目" width="160" show-overflow />
-        <vxe-column field="taskName" title="任务" width="140" show-overflow />
-        <vxe-column field="hours" title="工时(h)" width="90" align="right" />
-        <vxe-column field="overtime" title="加班(h)" width="90" align="right" />
-        <vxe-column field="workType" title="类型" width="80" align="center">
+        <vxe-column field="entryDate" :title="$t('execution.timeEntry.columns.entryDate')" width="110" />
+        <vxe-column field="employeeName" :title="$t('execution.timeEntry.columns.employeeName')" width="100" />
+        <vxe-column field="levelCode" :title="$t('execution.timeEntry.columns.levelCode')" width="80" align="center" />
+        <vxe-column field="initiationName" :title="$t('execution.timeEntry.columns.initiationName')" width="160" show-overflow />
+        <vxe-column field="taskName" :title="$t('execution.timeEntry.columns.taskName')" width="140" show-overflow />
+        <vxe-column field="hours" :title="$t('execution.timeEntry.columns.hours')" width="90" align="right" />
+        <vxe-column field="overtime" :title="$t('execution.timeEntry.columns.overtime')" width="90" align="right" />
+        <vxe-column field="workType" :title="$t('execution.timeEntry.columns.workType')" width="80" align="center">
           <template #default="{ row }">{{ workTypeMap[row.workType as keyof typeof workTypeMap]?.label || row.workType || '-' }}</template>
         </vxe-column>
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="status" :title="$t('execution.timeEntry.columns.status')" width="100">
           <template #default="{ row }"><StatusTag :value="row.status" :map="statusMap" /></template>
         </vxe-column>
-        <vxe-column field="approverName" title="审批人" width="100" />
-        <vxe-column field="description" title="说明" min-width="180" show-overflow />
-        <vxe-column title="操作" width="240" fixed="right">
+        <vxe-column field="approverName" :title="$t('execution.timeEntry.columns.approverName')" width="100" />
+        <vxe-column field="description" :title="$t('execution.timeEntry.columns.description')" min-width="180" show-overflow />
+        <vxe-column :title="$t('execution.timeEntry.columns.action')" width="240" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.EXECUTION_TIME_APPROVE]" link type="success" size="small" @click="handleApprove(row)">通过</el-button>
-            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.EXECUTION_TIME_REJECT]" link type="danger" size="small" @click="handleReject(row)">驳回</el-button>
-            <el-button v-if="['DRAFT', 'REJECTED'].includes(row.status || '')" link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.EXECUTION_TIME_APPROVE]" link type="success" size="small" @click="handleApprove(row)">{{ $t('execution.timeEntry.buttons.approve') }}</el-button>
+            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.EXECUTION_TIME_REJECT]" link type="danger" size="small" @click="handleReject(row)">{{ $t('execution.timeEntry.buttons.reject') }}</el-button>
+            <el-button v-if="['DRAFT', 'REJECTED'].includes(row.status || '')" link type="danger" size="small" @click="handleDelete(row)">{{ $t('common.delete') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
-    <el-dialog v-model="dialogVisible" title="填写工时" width="520px">
+    <el-dialog v-model="dialogVisible" :title="$t('execution.timeEntry.dialog.createTitle')" width="520px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="日期" prop="entryDate">
+        <el-form-item :label="$t('execution.timeEntry.form.entryDate')" prop="entryDate">
           <el-date-picker v-model="form.entryDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="员工 ID" prop="employeeId">
+        <el-form-item :label="$t('execution.timeEntry.form.employeeId')" prop="employeeId">
           <el-input-number v-model="form.employeeId" :min="1" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="职级">
+        <el-form-item :label="$t('execution.timeEntry.form.levelCode')">
           <el-input v-model="form.levelCode" placeholder="如: L8" />
         </el-form-item>
-        <el-form-item label="项目 ID" prop="initiationId">
+        <el-form-item :label="$t('execution.timeEntry.form.initiationId')" prop="initiationId">
           <el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="任务 ID">
+        <el-form-item :label="$t('execution.timeEntry.form.taskId')">
           <el-input-number v-model="form.taskId" :min="0" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="工时(h)" prop="hours">
+        <el-form-item :label="$t('execution.timeEntry.form.hours')" prop="hours">
           <el-input-number v-model="form.hours" :min="0" :max="24" :step="0.5" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="加班(h)">
+        <el-form-item :label="$t('execution.timeEntry.form.overtime')">
           <el-input-number v-model="form.overtime" :min="0" :max="24" :step="0.5" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="类型">
+        <el-form-item :label="$t('execution.timeEntry.form.workType')">
           <el-select v-model="form.workType" style="width: 100%">
             <el-option v-for="(v, k) in workTypeMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
-        <el-form-item label="说明">
+        <el-form-item :label="$t('execution.timeEntry.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

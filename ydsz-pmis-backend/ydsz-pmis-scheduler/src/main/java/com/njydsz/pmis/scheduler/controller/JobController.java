@@ -9,7 +9,11 @@ import com.njydsz.pmis.scheduler.entity.JobLogDO;
 import com.njydsz.pmis.scheduler.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -26,6 +30,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/job")
 @RequiredArgsConstructor
+@Validated
 public class JobController {
 
     /** 任务调度服务 */
@@ -40,7 +45,7 @@ public class JobController {
     @Operation(summary = "新增任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_CREATE)
     @PostMapping
-    public Result<Long> create(@RequestBody JobDO job) {
+    public Result<Long> create(@Valid @RequestBody JobDO job) {
         return Result.ok(jobService.create(job));
     }
 
@@ -53,7 +58,7 @@ public class JobController {
     @Operation(summary = "更新任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PutMapping
-    public Result<Void> update(@RequestBody JobDO job) {
+    public Result<Void> update(@Valid @RequestBody JobDO job) {
         jobService.update(job);
         return Result.ok();
     }
@@ -67,7 +72,7 @@ public class JobController {
     @Operation(summary = "删除任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_DELETE)
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
         jobService.delete(id);
         return Result.ok();
     }
@@ -81,7 +86,7 @@ public class JobController {
     @Operation(summary = "暂停任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PostMapping("/{id}/pause")
-    public Result<Void> pause(@PathVariable Long id) {
+    public Result<Void> pause(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
         jobService.pause(id);
         return Result.ok();
     }
@@ -95,7 +100,7 @@ public class JobController {
     @Operation(summary = "恢复任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PostMapping("/{id}/resume")
-    public Result<Void> resume(@PathVariable Long id) {
+    public Result<Void> resume(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
         jobService.resume(id);
         return Result.ok();
     }
@@ -109,7 +114,7 @@ public class JobController {
     @Operation(summary = "立即执行一次")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_TRIGGER)
     @PostMapping("/{id}/trigger")
-    public Result<Long> trigger(@PathVariable Long id) {
+    public Result<Long> trigger(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
         return Result.ok(jobService.trigger(id));
     }
 
@@ -121,7 +126,7 @@ public class JobController {
      */
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
-    public Result<JobDO> getById(@PathVariable Long id) {
+    public Result<JobDO> getById(@PathVariable @NotNull(message = "任务ID不能为空") Long id) {
         return Result.ok(jobService.getById(id));
     }
 
@@ -138,8 +143,8 @@ public class JobController {
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
     public Result<Page<JobDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码至少为1") int page,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "每页条数至少为1") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
@@ -158,8 +163,8 @@ public class JobController {
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
     public Result<Page<JobLogDO>> pageLog(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "页码至少为1") int page,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "每页条数至少为1") int size,
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
         return Result.ok(jobService.pageLog(page, size, jobKey, status));

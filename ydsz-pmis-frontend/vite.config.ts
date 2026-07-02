@@ -11,6 +11,7 @@ import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import { visualizer } from 'rollup-plugin-visualizer'
 import viteCompression from 'vite-plugin-compression'
+import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 import { viteMockPlugin } from './src/mock/vite-plugin-mock'
 
@@ -59,6 +60,29 @@ export default defineConfig(({ mode }) => {
         brotliSize: true,
         template: 'treemap',
         enabled: analyze,
+      }),
+      // P3-28: PWA 离线缓存与可安装性
+      // registerType: 'auto-update' 自动更新 Service Worker
+      // manifest 定义应用图标、主题色等, 支持添加到主屏幕
+      // workbox 缓存静态资源, 实现离线访问
+      VitePWA({
+        registerType: 'auto-update',
+        includeAssets: ['favicon.ico', 'robots.txt'],
+        manifest: {
+          name: 'YDSZ PMIS 项目管理系统',
+          short_name: 'PMIS',
+          description: '企业级项目管理系统',
+          theme_color: '#409eff',
+          background_color: '#ffffff',
+          icons: [
+            { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+            { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          ],
+        },
+        workbox: {
+          globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          navigateFallback: '/index.html',
+        },
       }),
       // P2-5: 生产构建 gzip + brotli 压缩
       // 生成 .gz 和 .br 静态文件, 配合 Nginx gzip_static/brotli_static 可减少 60-80% 传输体积

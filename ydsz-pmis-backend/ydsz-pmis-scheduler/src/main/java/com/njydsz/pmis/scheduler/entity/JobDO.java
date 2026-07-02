@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.njydsz.pmis.common.entity.BaseDO;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -31,18 +32,22 @@ public class JobDO extends BaseDO {
     private Long id;
 
     /** 任务名称 */
+    @NotBlank(message = "任务名称不能为空")
     private String jobName;
 
     /** 任务分组 */
     private String jobGroup;
 
     /** 任务 KEY（唯一） */
+    @NotBlank(message = "任务KEY不能为空")
     private String jobKey;
 
     /** 任务处理器 Bean 名称 */
+    @NotBlank(message = "任务处理器不能为空")
     private String handler;
 
     /** Cron 表达式 */
+    @NotBlank(message = "Cron表达式不能为空")
     private String cronExpression;
 
     /** 参数 JSON */

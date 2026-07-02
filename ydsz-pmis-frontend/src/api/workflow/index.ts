@@ -9,8 +9,8 @@
  *   - 流程图、审批轨迹
  *   - 运营统计：节点耗时、超期任务、流程监控
  */
-import http from '@/utils/http'
-import type { ApiResponse, PageResult } from '@/utils/http'
+import http from '@/utils/request'
+import type { ApiResponse, PageResult } from '@/utils/request'
 import type {
   FlowDefinitionDTO,
   FlowInstanceDTO,

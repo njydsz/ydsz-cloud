@@ -9,7 +9,8 @@ param(
     [string]$Username   = "nacos",
     [string]$Password   = "Limw1020",
     [string]$Namespace  = "pmis",
-    [string]$BackendRoot = "d:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend"
+    [string]$BackendRoot = "d:\Code\ydsz\ydsz-pmis\ydsz-pmis-backend",
+    [string]$ConfigRoot  = "d:\Code\ydsz\ydsz-pmis\deploy\nacos\config"
 )
 
 $ErrorActionPreference = "Continue"
@@ -54,19 +55,32 @@ $deleted = 0
 $deleteFail = 0
 
 # 2a) pmis 命名空间下 PMIS_GROUP_XXX 旧配置
+$oldGroups = @("PMIS_GROUP_DEV","PMIS_GROUP_SIT","PMIS_GROUP_UAT","PMIS_GROUP_PROD")
 foreach ($svc in $services) {
-    foreach ($envOld in @("DEV","SIT","UAT","PROD")) {
-        $dataId = "$svc-$envOld.yaml".ToLower()
-        $group  = "PMIS_GROUP_$envOld"
-        $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=$Namespace&accessToken=$token"
-        try { Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null; $deleted++ } catch { $deleteFail++ }
+    foreach ($envOld in $envs) {
+        $dataId = "$svc-$envOld.yaml"
+        foreach ($oldGrp in $oldGroups) {
+            $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$oldGrp&tenant=$Namespace&accessToken=$token"
+            try {
+                Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null
+                $deleted++
+            } catch {
+                $deleteFail++
+            }
+        }
     }
 }
-foreach ($envOld in @("DEV","SIT","UAT","PROD")) {
-    $dataId = "pmis-common-$($envOld.ToLower()).yaml"
-    $group  = "PMIS_GROUP_$envOld"
-    $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=$Namespace&accessToken=$token"
-    try { Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null; $deleted++ } catch { $deleteFail++ }
+foreach ($envOld in $envs) {
+    $dataId = "pmis-common-$envOld.yaml"
+    foreach ($oldGrp in $oldGroups) {
+        $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$oldGrp&tenant=$Namespace&accessToken=$token"
+        try {
+            Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null
+            $deleted++
+        } catch {
+            $deleteFail++
+        }
+    }
 }
 
 # 2b) pmis 命名空间下当前新 group 的旧配置（重新推送前先清空）
@@ -87,16 +101,21 @@ foreach ($env in $envs) {
     $dataId = "pmis-common-$env.yaml"
     $group  = $env
     $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=$Namespace&accessToken=$token"
-    try { Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null; $deleted++ } catch { $deleteFail++ }
+    try {
+        Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null
+        $deleted++
+    } catch {
+        $deleteFail++
+    }
 }
 Write-Host "      Deleted: $deleted (fail: $deleteFail)" -ForegroundColor Green
 
-# 3. 收集所有 56 个配置文件路径 + 公共配置
-Write-Host "[3/4] Preparing 56 configs ..." -ForegroundColor Cyan
+# 3. 收集所有 56 个配置文件路径（全部从 deploy/nacos/config 读取）
+Write-Host "[3/4] Preparing 56 configs from $ConfigRoot ..." -ForegroundColor Cyan
 $configList = @()
 foreach ($svc in $services) {
     foreach ($env in $envs) {
-        $filePath = Join-Path $BackendRoot "$svc\src\main\resources\$svc-$env.yaml"
+        $filePath = Join-Path $ConfigRoot "$svc-$env.yaml"
         if (Test-Path $filePath) {
             $configList += [pscustomobject]@{
                 DataId  = "$svc-$env.yaml"
@@ -109,7 +128,7 @@ foreach ($svc in $services) {
     }
 }
 foreach ($env in $envs) {
-    $filePath = Join-Path $BackendRoot "..\deploy\nacos\common\pmis-common-$env.yaml"
+    $filePath = Join-Path $ConfigRoot "pmis-common-$env.yaml"
     if (Test-Path $filePath) {
         $configList += [pscustomobject]@{
             DataId  = "pmis-common-$env.yaml"

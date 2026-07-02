@@ -6,8 +6,10 @@ import com.njydsz.pmis.execution.service.CockpitReportService;
 import com.njydsz.pmis.execution.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -32,6 +34,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/execution/aggregate")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "BFF聚合", description = "前端聚合接口，一次请求返回复合数据")
 public class BffAggregateController {
 
@@ -40,7 +43,8 @@ public class BffAggregateController {
 
     @GetMapping("/project-detail/{initiationId}")
     @Operation(summary = "项目详情聚合", description = "一次返回立项+合同+WBS概览+EVM摘要")
-    public Map<String, Object> projectDetailAggregate(@PathVariable Long initiationId) {
+    public Map<String, Object> projectDetailAggregate(
+            @PathVariable @NotNull(message = "立项ID不能为空") Long initiationId) {
         Map<String, Object> result = new HashMap<>();
         // 聚合多维度数据，减少前端多次请求
         try {

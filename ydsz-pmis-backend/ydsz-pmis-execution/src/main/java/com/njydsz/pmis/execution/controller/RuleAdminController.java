@@ -1,6 +1,9 @@
 package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.execution.entity.RuleTemplateDO;
+import com.njydsz.pmis.execution.literule.RuleGenerationService;
+import com.njydsz.pmis.execution.literule.RuleTemplateService;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
@@ -30,6 +33,8 @@ public class RuleAdminController {
 
     private final RuleAdminService ruleAdminService;
     private final RuleEngine ruleEngine;
+    private final RuleTemplateService ruleTemplateService;
+    private final RuleGenerationService ruleGenerationService;
 
     /**
      * 查询全部规则定义
@@ -141,5 +146,86 @@ public class RuleAdminController {
     @GetMapping("/stats")
     public Result<RuleEngineStats> stats() {
         return Result.ok(ruleEngine.getStats());
+    }
+
+    // ==================== 规则模板市场 ====================
+
+    /**
+     * 查询全部规则模板
+     *
+     * @return 模板列表
+     */
+    @GetMapping("/templates")
+    public Result<List<RuleTemplateDO>> listTemplates() {
+        return Result.ok(ruleTemplateService.listAll());
+    }
+
+    /**
+     * 按类别查询规则模板
+     *
+     * @param category 模板类别
+     * @return 模板列表
+     */
+    @GetMapping("/templates/category/{category}")
+    public Result<List<RuleTemplateDO>> listTemplatesByCategory(@PathVariable String category) {
+        return Result.ok(ruleTemplateService.listByCategory(category));
+    }
+
+    /**
+     * 按行业查询规则模板
+     *
+     * @param industry 行业编码
+     * @return 模板列表
+     */
+    @GetMapping("/templates/industry/{industry}")
+    public Result<List<RuleTemplateDO>> listTemplatesByIndustry(@PathVariable String industry) {
+        return Result.ok(ruleTemplateService.listByIndustry(industry));
+    }
+
+    /**
+     * 一键导入模板为规则定义
+     *
+     * @param templateCode 模板编码
+     * @param operator     操作人（从 Header 获取）
+     * @return 保存后的规则定义
+     */
+    @PostMapping("/templates/{templateCode}/import")
+    public Result<RuleDefinition> importTemplate(@PathVariable String templateCode,
+                                                  @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        return Result.ok(ruleTemplateService.importTemplate(templateCode, operator));
+    }
+
+    // ==================== AI 辅助规则生成 ====================
+
+    /**
+     * AI 辅助生成规则定义（仅生成建议，不保存）
+     *
+     * @param request 请求体，包含 description（自然语言描述）和 availableFields（可用字段列表）
+     * @return 生成的规则定义
+     */
+    @PostMapping("/ai-generate")
+    public Result<RuleDefinition> aiGenerate(@RequestBody Map<String, Object> request) {
+        String description = (String) request.get("description");
+        @SuppressWarnings("unchecked")
+        List<String> fields = (List<String>) request.get("availableFields");
+        if (fields == null) fields = List.of();
+        return Result.ok(ruleGenerationService.generate(description, fields));
+    }
+
+    /**
+     * AI 辅助生成并保存规则定义
+     *
+     * @param request  请求体，包含 description（自然语言描述）和 availableFields（可用字段列表）
+     * @param operator 操作人（从 Header 获取）
+     * @return 保存后的规则定义
+     */
+    @PostMapping("/ai-generate-and-save")
+    public Result<RuleDefinition> aiGenerateAndSave(@RequestBody Map<String, Object> request,
+                                                      @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        String description = (String) request.get("description");
+        @SuppressWarnings("unchecked")
+        List<String> fields = (List<String>) request.get("availableFields");
+        if (fields == null) fields = List.of();
+        return Result.ok(ruleGenerationService.generateAndSave(description, fields, operator));
     }
 }

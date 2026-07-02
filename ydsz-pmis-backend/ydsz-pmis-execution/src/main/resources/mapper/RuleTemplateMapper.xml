@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.execution.mapper.RuleTemplateMapper">
+
+    <select id="selectByCategory" resultType="com.njydsz.pmis.execution.entity.RuleTemplateDO">
+        SELECT * FROM pmis_rule_template WHERE category = #{category} ORDER BY priority ASC
+    </select>
+
+    <select id="selectByIndustry" resultType="com.njydsz.pmis.execution.entity.RuleTemplateDO">
+        SELECT * FROM pmis_rule_template WHERE industry = #{industry} ORDER BY priority ASC
+    </select>
+
+    <select id="selectByCode" resultType="com.njydsz.pmis.execution.entity.RuleTemplateDO">
+        SELECT * FROM pmis_rule_template WHERE template_code = #{templateCode}
+    </select>
+
+</mapper>

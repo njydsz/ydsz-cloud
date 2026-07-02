@@ -5,6 +5,7 @@
 -->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   listRoles,
@@ -18,6 +19,8 @@ import {
 import { getAllPermissionsApi } from '@/api/menu'
 import type { RoleVO, RoleFormDTO } from '@/api/system/role/types'
 import type { MenuTreeNode } from '@/api/menu/types'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const list = ref<RoleVO[]>([])
@@ -100,10 +103,10 @@ async function submitForm() {
   await formRef.value?.validate()
   if (dialogMode.value === 'create') {
     await createRole(form)
-    ElMessage.success('创建成功')
+    ElMessage.success(t('system.role.messages.createSuccess'))
   } else {
     await updateRole(form)
-    ElMessage.success('更新成功')
+    ElMessage.success(t('system.role.messages.updateSuccess'))
   }
   dialogVisible.value = false
   fetchList()
@@ -115,9 +118,9 @@ async function submitForm() {
  */
 async function handleDelete(row: RoleVO) {
   try {
-    await ElMessageBox.confirm(`确认删除角色「${row.roleName}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('system.role.messages.confirmDelete', { name: row.roleName }), t('common.confirm'), { type: 'warning' })
     await deleteRole(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('system.role.messages.deleteSuccess'))
     fetchList()
   } catch {
     /* 用户取消 */
@@ -162,7 +165,7 @@ async function submitPermAssign() {
   const all = [...checked, ...halfChecked]
   const ids = collectCheckedIds(all as MenuTreeNode[])
   await assignPermissions(permDialogRoleId.value, ids)
-  ElMessage.success('权限分配成功')
+  ElMessage.success(t('system.role.messages.permAssignSuccess'))
   permDialogVisible.value = false
 }
 
@@ -173,51 +176,51 @@ onMounted(fetchList)
   <div class="role-page">
     <el-card shadow="never">
       <el-form inline :model="query" class="search-form">
-        <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="角色编码/名称" clearable />
+        <el-form-item :label="$t('system.role.search.keyword')">
+          <el-input v-model="query.keyword" :placeholder="$t('system.role.search.keywordPlaceholder')" clearable />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="query.page = 1; fetchList()">查询</el-button>
-          <el-button @click="query.keyword = ''; fetchList()">重置</el-button>
+          <el-button type="primary" @click="query.page = 1; fetchList()">{{ $t('common.search') }}</el-button>
+          <el-button @click="query.keyword = ''; fetchList()">{{ $t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
       <div class="toolbar">
         <el-button v-permission="['auth:role:create']" type="primary" :icon="'Plus'" @click="openCreate">
-          新增角色
+          {{ $t('system.role.buttons.create') }}
         </el-button>
-        <el-button :icon="'Refresh'" @click="fetchList">刷新</el-button>
+        <el-button :icon="'Refresh'" @click="fetchList">{{ $t('common.refresh') }}</el-button>
       </div>
 
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="roleCode" title="角色编码" width="160" />
-        <vxe-column field="roleName" title="角色名称" />
-        <vxe-column field="dataScope" title="数据权限" width="120">
+        <vxe-column field="roleCode" :title="$t('system.role.columns.roleCode')" width="160" />
+        <vxe-column field="roleName" :title="$t('system.role.columns.roleName')" />
+        <vxe-column field="dataScope" :title="$t('system.role.columns.dataScope')" width="120">
           <template #default="{ row }">
             <el-tag size="small">
-              {{ ({ ALL: '全部', DEPT: '本部门', SELF: '本人', CUSTOM: '自定义' } as any)[row.dataScope] || row.dataScope }}
+              {{ $t(`system.role.dataScope.${row.dataScope}`) }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column field="description" title="描述" />
-        <vxe-column field="status" title="状态" width="80">
+        <vxe-column field="description" :title="$t('system.role.columns.description')" />
+        <vxe-column field="status" :title="$t('system.role.columns.status')" width="80">
           <template #default="{ row }">
             <el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'">
-              {{ row.status === 'ENABLED' ? '启用' : '停用' }}
+              {{ $t(`system.role.status.${row.status}`) }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column title="操作" width="240" fixed="right">
+        <vxe-column :title="$t('system.role.columns.action')" width="240" fixed="right">
           <template #default="{ row }">
             <el-button v-permission="['auth:role:assign']" type="primary" link @click="openPermDialog(row)">
-              分配权限
+              {{ $t('system.role.buttons.assignPermissions') }}
             </el-button>
             <el-button v-permission="['auth:role:update']" type="primary" link @click="openEdit(row)">
-              编辑
+              {{ $t('system.role.buttons.edit') }}
             </el-button>
             <el-button v-permission="['auth:role:delete']" type="danger" link @click="handleDelete(row)">
-              删除
+              {{ $t('common.delete') }}
             </el-button>
           </template>
         </vxe-column>
@@ -238,45 +241,45 @@ onMounted(fetchList)
     <!-- 创建/编辑 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogMode === 'create' ? '新增角色' : '编辑角色'"
+      :title="dialogMode === 'create' ? $t('system.role.dialog.createTitle') : $t('system.role.dialog.editTitle')"
       width="560px"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="角色编码" prop="roleCode">
+        <el-form-item :label="$t('system.role.form.roleCode')" prop="roleCode">
           <el-input v-model="form.roleCode" placeholder="例如: PM" :disabled="dialogMode === 'edit'" />
         </el-form-item>
-        <el-form-item label="角色名称" prop="roleName">
+        <el-form-item :label="$t('system.role.form.roleName')" prop="roleName">
           <el-input v-model="form.roleName" placeholder="例如: 项目经理" />
         </el-form-item>
-        <el-form-item label="数据权限" prop="dataScope">
+        <el-form-item :label="$t('system.role.form.dataScope')" prop="dataScope">
           <el-select v-model="form.dataScope" style="width: 100%">
-            <el-option label="全部" value="ALL" />
-            <el-option label="本部门" value="DEPT" />
-            <el-option label="本人" value="SELF" />
-            <el-option label="自定义" value="CUSTOM" />
+            <el-option :label="$t('system.role.dataScope.ALL')" value="ALL" />
+            <el-option :label="$t('system.role.dataScope.DEPT')" value="DEPT" />
+            <el-option :label="$t('system.role.dataScope.SELF')" value="SELF" />
+            <el-option :label="$t('system.role.dataScope.CUSTOM')" value="CUSTOM" />
           </el-select>
         </el-form-item>
-        <el-form-item label="排序">
+        <el-form-item :label="$t('system.role.form.sortOrder')">
           <el-input-number v-model="form.sortOrder" :min="0" :max="999" />
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item :label="$t('system.role.form.status')">
           <el-radio-group v-model="form.status">
-            <el-radio value="ENABLED">启用</el-radio>
-            <el-radio value="DISABLED">停用</el-radio>
+            <el-radio value="ENABLED">{{ $t('system.role.status.ENABLED') }}</el-radio>
+            <el-radio value="DISABLED">{{ $t('system.role.status.DISABLED') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="$t('system.role.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 分配权限 -->
-    <el-dialog v-model="permDialogVisible" title="分配权限" width="500px">
+    <el-dialog v-model="permDialogVisible" :title="$t('system.role.dialog.permTitle')" width="500px">
       <el-tree
         ref="permTreeRef"
         :data="permTree"
@@ -287,8 +290,8 @@ onMounted(fetchList)
         :default-expand-all="true"
       />
       <template #footer>
-        <el-button @click="permDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitPermAssign">确定</el-button>
+        <el-button @click="permDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitPermAssign">{{ $t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>

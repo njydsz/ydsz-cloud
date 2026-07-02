@@ -5,6 +5,7 @@
 -->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   listUsers,
@@ -25,6 +26,8 @@ import { isHandledError } from '@/utils/error'
 import type { ReAuthMethod } from '@/api/user/reauth'
 import type { UserVO, UserCreateDTO } from '@/api/system/user/types'
 import type { RoleVO } from '@/api/system/role/types'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const list = ref<UserVO[]>([])
@@ -50,7 +53,7 @@ async function fetchRoles() {
   } catch (e) {
     roleList.value = []
     if (!isHandledError(e)) {
-      ElMessage.error('角色列表加载失败，请刷新重试')
+      ElMessage.error(t('system.user.messages.roleLoadFailed'))
     }
   }
 }
@@ -174,14 +177,14 @@ async function submitForm() {
       roleIds: form.roleIds,
       status: form.status,
     } as any)
-    ElMessage.success('创建成功')
+    ElMessage.success(t('system.user.messages.createSuccess'))
     if (form.roleIds && form.roleIds.length) {
       try {
         await assignUserRoles(userId, form.roleIds)
       } catch (e) {
         /* 角色分配失败不阻断主流程，但需提示用户 */
         if (!isHandledError(e)) {
-          ElMessage.warning('角色分配失败，请稍后在编辑中重试')
+          ElMessage.warning(t('system.user.messages.roleAssignFailed'))
         }
       }
     }
@@ -198,7 +201,7 @@ async function submitForm() {
         roleIds: form.roleIds,
       } as any)
       await assignUserRoles(form.id, form.roleIds ?? [])
-      ElMessage.success('更新成功')
+      ElMessage.success(t('system.user.messages.updateSuccess'))
     }
   }
   formDialogVisible.value = false
@@ -211,13 +214,13 @@ async function submitForm() {
  */
 async function handleDelete(row: UserVO) {
   try {
-    await ElMessageBox.confirm(`确认删除用户「${row.realName}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('system.user.messages.confirmDelete', { name: row.realName }), t('common.confirm'), { type: 'warning' })
   } catch {
     return
   }
   await deleteReAuth.withReAuth(async (token) => {
     await deleteUser(row.id, token)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('system.user.messages.deleteSuccess'))
     await fetchList()
   })
 }
@@ -230,12 +233,12 @@ async function handleToggleStatus(row: UserVO) {
   const next = (row as any).status === 'ENABLED' ? 'DISABLED' : 'ENABLED'
   try {
     await ElMessageBox.confirm(
-      `确认${next === 'ENABLED' ? '启用' : '停用'}用户「${row.realName}」吗？`,
-      '提示',
+      t('system.user.messages.confirmToggle', { action: next === 'ENABLED' ? t('system.user.buttons.enable') : t('system.user.buttons.disable'), name: row.realName }),
+      t('common.confirm'),
       { type: 'warning' },
     )
     await toggleUserStatus(row.id, next)
-    ElMessage.success('状态已更新')
+    ElMessage.success(t('system.user.messages.statusUpdated'))
     fetchList()
   } catch {
     /* 取消 */
@@ -259,14 +262,14 @@ async function openResetPwd(row: UserVO) {
 async function submitResetPwd() {
   if (!resetUserId.value) return
   if (!newPassword.value || newPassword.value.length < 6) {
-    ElMessage.warning('密码长度至少 6 位')
+    ElMessage.warning(t('system.user.messages.passwordMinLength'))
     return
   }
   const id = resetUserId.value
   const pwd = newPassword.value
   await resetPwdReAuth.withReAuth(async (token) => {
     await resetPassword(id, pwd, token)
-    ElMessage.success('密码已重置')
+    ElMessage.success(t('system.user.messages.passwordReset'))
     resetDialogVisible.value = false
   })
 }
@@ -281,7 +284,7 @@ async function fetch2faStatus() {
   } catch (e) {
     has2fa.value = false
     if (!isHandledError(e)) {
-      ElMessage.error('二次认证状态加载失败，请刷新重试')
+      ElMessage.error(t('system.user.messages.twoFaLoadFailed'))
     }
   }
 }
@@ -330,57 +333,57 @@ onMounted(() => {
   <div class="user-page">
     <el-card shadow="never">
       <el-form ref="queryForm" inline :model="query" class="search-form">
-        <el-form-item label="关键字">
-          <el-input v-model="query.keyword" placeholder="用户名/姓名" clearable />
+        <el-form-item :label="$t('system.user.search.keyword')">
+          <el-input v-model="query.keyword" :placeholder="$t('system.user.search.keywordPlaceholder')" clearable />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
-            <el-option label="启用" value="ENABLED" />
-            <el-option label="停用" value="DISABLED" />
-            <el-option label="锁定" value="LOCKED" />
+        <el-form-item :label="$t('system.user.search.status')">
+          <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">
+            <el-option :label="$t('system.user.status.ENABLED')" value="ENABLED" />
+            <el-option :label="$t('system.user.status.DISABLED')" value="DISABLED" />
+            <el-option :label="$t('system.user.status.LOCKED')" value="LOCKED" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="query.page = 1; fetchList()">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" @click="query.page = 1; fetchList()">{{ $t('common.search') }}</el-button>
+          <el-button @click="handleReset">{{ $t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
       <div class="toolbar">
         <el-button v-permission="['auth:user:create']" type="primary" :icon="'Plus'" @click="openCreate">
-          新增用户
+          {{ $t('system.user.buttons.create') }}
         </el-button>
-        <el-button :icon="'Refresh'" @click="fetchList">刷新</el-button>
+        <el-button :icon="'Refresh'" @click="fetchList">{{ $t('common.refresh') }}</el-button>
       </div>
 
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="username" title="用户名" width="140" />
-        <vxe-column field="realName" title="姓名" width="120" />
-        <vxe-column field="levelName" title="职级" width="100" />
-        <vxe-column field="departmentName" title="部门" min-width="160" />
-        <vxe-column field="phone" title="手机号" width="140" />
-        <vxe-column field="email" title="邮箱" min-width="180" />
-        <vxe-column field="status" title="状态" width="80">
+        <vxe-column field="username" :title="$t('system.user.columns.username')" width="140" />
+        <vxe-column field="realName" :title="$t('system.user.columns.realName')" width="120" />
+        <vxe-column field="levelName" :title="$t('system.user.columns.levelName')" width="100" />
+        <vxe-column field="departmentName" :title="$t('system.user.columns.departmentName')" min-width="160" />
+        <vxe-column field="phone" :title="$t('system.user.columns.phone')" width="140" />
+        <vxe-column field="email" :title="$t('system.user.columns.email')" min-width="180" />
+        <vxe-column field="status" :title="$t('system.user.columns.status')" width="80">
           <template #default="{ row }">
             <el-tag :type="(row as any).status === 'ENABLED' ? 'success' : 'info'">
-              {{ ({ ENABLED: '启用', DISABLED: '停用', LOCKED: '锁定' } as any)[(row as any).status] || (row as any).status }}
+              {{ $t(`system.user.status.${(row as any).status}`) }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column title="操作" width="300" fixed="right">
+        <vxe-column :title="$t('system.user.columns.action')" width="300" fixed="right">
           <template #default="{ row }">
             <el-button v-permission="['auth:user:update']" link type="primary" size="small" @click="openEdit(row)">
-              编辑
+              {{ $t('system.user.buttons.edit') }}
             </el-button>
             <el-button v-permission="['auth:user:reset-password']" link type="primary" size="small" @click="openResetPwd(row)">
-              重置密码
+              {{ $t('system.user.buttons.resetPassword') }}
             </el-button>
             <el-button v-permission="['auth:user:toggle']" link type="primary" size="small" @click="handleToggleStatus(row)">
-              {{ (row as any).status === 'ENABLED' ? '停用' : '启用' }}
+              {{ (row as any).status === 'ENABLED' ? $t('system.user.buttons.disable') : $t('system.user.buttons.enable') }}
             </el-button>
             <el-button v-permission="['auth:user:delete']" link type="danger" size="small" @click="handleDelete(row)">
-              删除
+              {{ $t('common.delete') }}
             </el-button>
           </template>
         </vxe-column>
@@ -402,25 +405,25 @@ onMounted(() => {
     <!-- 新增/编辑弹窗 -->
     <el-dialog
       v-model="formDialogVisible"
-      :title="formMode === 'create' ? '新增用户' : '编辑用户'"
+      :title="formMode === 'create' ? $t('system.user.dialog.createTitle') : $t('system.user.dialog.editTitle')"
       width="640px"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
           <el-col :xs="24" :sm="12">
-            <el-form-item label="用户名" prop="username">
+            <el-form-item :label="$t('system.user.form.username')" prop="username">
               <el-input v-model="form.username" :disabled="formMode === 'edit'" />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">
-            <el-form-item label="姓名" prop="realName">
+            <el-form-item :label="$t('system.user.form.realName')" prop="realName">
               <el-input v-model="form.realName" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row v-if="formMode === 'create'" :gutter="16">
           <el-col :xs="24" :sm="12">
-            <el-form-item label="密码" prop="password">
+            <el-form-item :label="$t('system.user.form.password')" prop="password">
               <el-input v-model="form.password" type="password" show-password />
               <PasswordStrengthBar
                 :password="form.password || ''"
@@ -433,50 +436,50 @@ onMounted(() => {
         </el-row>
         <el-row :gutter="16">
           <el-col :xs="24" :sm="12">
-            <el-form-item label="手机号">
+            <el-form-item :label="$t('system.user.form.phone')">
               <el-input v-model="form.phone" />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">
-            <el-form-item label="邮箱">
+            <el-form-item :label="$t('system.user.form.email')">
               <el-input v-model="form.email" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :xs="24" :sm="12">
-            <el-form-item label="职级">
+            <el-form-item :label="$t('system.user.form.levelCode')">
               <el-input v-model="form.levelCode" placeholder="例如: L8" />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">
-            <el-form-item label="部门 ID">
+            <el-form-item :label="$t('system.user.form.departmentId')">
               <el-input-number v-model="form.departmentId" :min="0" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="角色">
-          <el-select v-model="form.roleIds" multiple style="width: 100%" placeholder="选择角色">
+        <el-form-item :label="$t('system.user.form.role')">
+          <el-select v-model="form.roleIds" multiple style="width: 100%" :placeholder="$t('system.user.form.role')">
             <el-option v-for="r in roleList" :key="r.id" :label="r.roleName" :value="r.id" />
           </el-select>
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item :label="$t('system.user.form.status')">
           <el-radio-group v-model="form.status">
-            <el-radio value="ENABLED">启用</el-radio>
-            <el-radio value="DISABLED">停用</el-radio>
+            <el-radio value="ENABLED">{{ $t('system.user.status.ENABLED') }}</el-radio>
+            <el-radio value="DISABLED">{{ $t('system.user.status.DISABLED') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="formDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="formDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 重置密码弹窗 -->
-    <el-dialog v-model="resetDialogVisible" title="重置密码" width="420px">
+    <el-dialog v-model="resetDialogVisible" :title="$t('system.user.dialog.resetPwdTitle')" width="420px">
       <el-form label-width="80px">
-        <el-form-item label="新密码">
+        <el-form-item :label="$t('system.user.form.password')">
           <el-input v-model="newPassword" type="password" show-password placeholder="至少 6 位" />
           <PasswordStrengthBar
             :password="newPassword"
@@ -487,8 +490,8 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="resetDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitResetPwd">确定</el-button>
+        <el-button @click="resetDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitResetPwd">{{ $t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 

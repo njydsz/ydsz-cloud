@@ -5,10 +5,13 @@ import com.njydsz.pmis.execution.es.ProjectSearchDoc;
 import com.njydsz.pmis.execution.service.SearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/execution/search")
 @RequiredArgsConstructor
+@Validated
 public class SearchController {
 
     private final SearchService searchService;
@@ -40,9 +44,9 @@ public class SearchController {
     @Operation(summary = "全文检索项目")
     @GetMapping("/projects")
     public Result<Page<ProjectSearchDoc>> searchProjects(
-            @RequestParam String keyword,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam @NotBlank(message = "搜索关键词不能为空") String keyword,
+            @RequestParam(defaultValue = "0") @Min(value = 0, message = "页码不能为负数") int page,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "每页条数至少为1") int size) {
         return Result.ok(searchService.searchProjects(keyword,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))));
     }

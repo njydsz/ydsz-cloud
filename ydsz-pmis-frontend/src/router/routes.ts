@@ -275,6 +275,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/execution/reconcile/index.vue'),
         meta: { title: '每日对账', icon: 'Document', keepAlive: true, permCode: PC.EXECUTION_RECONCILE_VIEW },
       },
+      {
+        path: 'rule-engine',
+        name: 'RuleEngine',
+        component: () => import('@/views/execution/rule-engine/index.vue'),
+        meta: { title: '规则引擎', icon: 'Setting', affix: false, keepAlive: true },
+      },
     ],
   },
   {
