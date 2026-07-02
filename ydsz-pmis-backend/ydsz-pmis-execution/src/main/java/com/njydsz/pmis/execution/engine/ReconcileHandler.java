@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -87,7 +88,7 @@ public class ReconcileHandler {
     public ReconcileReport buildReport(Long initiationId, List<ReconcileResult> results) {
         ReconcileReport report = new ReconcileReport();
         report.setInitiationId(initiationId);
-        report.setCheckAt(java.time.LocalDateTime.now());
+        report.setCheckAt(LocalDateTime.now());
         report.setTotal(results == null ? 0 : results.size());
         int info = 0, warn = 0, err = 0;
         Map<String, Long> countByType = new HashMap<>();

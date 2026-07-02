@@ -7,6 +7,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -61,7 +62,7 @@ public class SentryCaptureAspect {
         // 通过反射调用 Sentry SDK (避免硬依赖)
         try {
             Class<?> sentryClz = Class.forName("io.sentry.Sentry");
-            java.lang.reflect.Method captureExceptionMethod = sentryClz.getMethod("captureException", Throwable.class, java.util.Map.class);
+            Method captureExceptionMethod = sentryClz.getMethod("captureException", Throwable.class, Map.class);
             Map<String, Object> hint = new HashMap<>();
             hint.put("module", sentryCapture.module());
             hint.put("bizType", sentryCapture.bizType());

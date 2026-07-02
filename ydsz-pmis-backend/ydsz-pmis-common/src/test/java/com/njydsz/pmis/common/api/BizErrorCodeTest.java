@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.api;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Arrays;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -74,7 +76,7 @@ class BizErrorCodeTest {
     @DisplayName("所有错误码 code 不重复")
     void codeUnique() {
         BizErrorCode[] codes = BizErrorCode.values();
-        long distinct = java.util.Arrays.stream(codes).mapToInt(BizErrorCode::getCode).distinct().count();
+        long distinct = Arrays.stream(codes).mapToInt(BizErrorCode::getCode).distinct().count();
         assertThat(distinct).isEqualTo(codes.length);
     }
 

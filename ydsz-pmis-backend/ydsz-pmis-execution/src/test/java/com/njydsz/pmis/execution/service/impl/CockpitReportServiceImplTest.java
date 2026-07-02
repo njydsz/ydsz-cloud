@@ -56,7 +56,7 @@ class CockpitReportServiceImplTest {
         billableUtilizationService = mock(BillableUtilizationService.class);
         liteRuleEngine = mock(RuleEngine.class);
         // 默认返回空规则列表，使 CockpitReportServiceImpl fallback 到 legacyAlertEngine
-        when(liteRuleEngine.getRules()).thenReturn(java.util.List.of());
+        when(liteRuleEngine.getRules()).thenReturn(List.of());
         service = new CockpitReportServiceImpl(invoiceMapper, paymentMapper, costAllocationMapper,
                 purchaseMapper, expenseMapper, evmMeasureMapper, riskMapper,
                 utilizationSnapshotMapper, billableUtilizationService, liteRuleEngine);

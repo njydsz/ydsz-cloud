@@ -219,7 +219,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
             // 驳回：父流程状态置为 REJECTED
             instanceMapper.updateStatus(parent.getId(),
                     FlowInstanceStatus.REJECTED.name(), null, null,
-                    java.time.LocalDateTime.now(), null);
+                    LocalDateTime.now(), null);
             log.info("[SubProcess] 子流程驳回触发父流程驳回: parent={} child={} reason={}",
                     parentId, childInstanceId, reason);
         }

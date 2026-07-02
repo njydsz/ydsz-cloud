@@ -267,7 +267,7 @@ class ReportExportServiceImplTest {
         ReportExportService.ExportResult out = service.export("PROFIT", "XLSX",
                 Map.of("initiationId", 1L, "period", "2026-03"));
         // yyyyMMdd format
-        java.time.LocalDate today = java.time.LocalDate.now();
+        LocalDate today = LocalDate.now();
         String dateStr = String.format("%04d%02d%02d",
                 today.getYear(), today.getMonthValue(), today.getDayOfMonth());
         assertThat(out.filename()).contains("_" + dateStr);

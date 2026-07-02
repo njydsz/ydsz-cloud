@@ -45,16 +45,8 @@ public class CommonAutoConfiguration {
         return new AuditFieldFiller();
     }
 
-    /**
-     * 注册鉴权拦截器
-     *
-     * @return AuthInterceptor 实例
-     */
-    @Bean
-    @ConditionalOnMissingBean
-    public AuthInterceptor authInterceptor() {
-        return new AuthInterceptor();
-    }
+    // AuthInterceptor 已标注 @Component 且依赖 JwtTokenProvider（同为 @Component），
+    // 由 @ComponentScan 自动注入，此处不再显式 @Bean 重复声明，以避免构造器签名冲突。
 
     /**
      * 注册 Web MVC 配置（注入鉴权拦截器）

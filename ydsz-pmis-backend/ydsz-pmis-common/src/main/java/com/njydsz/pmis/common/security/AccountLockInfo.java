@@ -69,7 +69,7 @@ public class AccountLockInfo implements Serializable {
      */
     public long remainingMinutes(LocalDateTime lockedUntil) {
         if (lockedUntil == null) return 0;
-        long m = java.time.Duration.between(LocalDateTime.now(), lockedUntil).toMinutes();
+        long m = Duration.between(LocalDateTime.now(), lockedUntil).toMinutes();
         return Math.max(m, 1);
     }
 

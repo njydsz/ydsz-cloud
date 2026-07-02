@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.security;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.time.LocalDateTime;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -106,7 +108,7 @@ class PasswordPolicyTest {
     void expired() {
         assertThat(PasswordPolicy.isExpired(null, 90)).isTrue();
 
-        var now = java.time.LocalDateTime.now();
+        var now = LocalDateTime.now();
         assertThat(PasswordPolicy.isExpired(now.minusDays(100), 90)).isTrue();
         assertThat(PasswordPolicy.isExpired(now.minusDays(30), 90)).isFalse();
     }

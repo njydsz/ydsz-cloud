@@ -574,8 +574,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return false;
         }
         try {
-            java.util.Map<String, Object> ext = com.alibaba.fastjson2.JSON.parseObject(
-                    node.getExt(), java.util.Map.class);
+            Map<String, Object> ext = com.alibaba.fastjson2.JSON.parseObject(
+                    node.getExt(), Map.class);
             if (ext == null) return false;
             return ext.containsKey("callActivityFlowCode")
                     || ext.containsKey("subProcessFlowCode");

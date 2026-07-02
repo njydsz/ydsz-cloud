@@ -354,7 +354,7 @@ public class RuleAdminController {
         def.setStatus(targetStatus);
         if (target == RuleStatus.PUBLISHED) {
             def.setReviewedBy(operator);
-            def.setReviewedAt(java.time.LocalDateTime.now().toString());
+            def.setReviewedAt(LocalDateTime.now().toString());
             def.setReviewComment(comment);
         }
         return Result.ok(ruleAdminService.save(def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc()));

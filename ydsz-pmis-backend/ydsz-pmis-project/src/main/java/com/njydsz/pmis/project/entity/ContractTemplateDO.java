@@ -9,6 +9,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -44,7 +45,7 @@ public class ContractTemplateDO implements Serializable {
     /** 标准账期（天） */
     private Integer defaultPaymentDays;
     /** 违约金比例（0-1） */
-    private java.math.BigDecimal defaultPenaltyRate;
+    private BigDecimal defaultPenaltyRate;
     /** SLA 描述（多行） */
     private String slaDescription;
     /** 交付物清单（多行） */

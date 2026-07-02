@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.interceptor;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.token.JwtTokenProvider;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +28,8 @@ import static org.mockito.Mockito.when;
 /**
  * AuthInterceptor 鉴权拦截器单元测试
  *
- * <p>覆盖多种 Token 来源（Authorization / X-Access-Token / query）、非法 Token 拦截与上下文清理。
+ * <p>覆盖多种 Token 来源（Authorization / X-Access-Token / query）、非法 Token 拦截、
+ * refresh token 拒绝与上下文清理。Token 解析委托给真实的 {@link JwtTokenProvider}。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -36,14 +38,18 @@ import static org.mockito.Mockito.when;
 class AuthInterceptorTest {
 
     private static final String SECRET = "pmis-default-jwt-secret-key-please-change-in-production-environment-must-be-256-bits";
+    private JwtTokenProvider jwtTokenProvider;
     private AuthInterceptor interceptor;
     private SecretKey key;
 
     @BeforeEach
     void setUp() {
-        interceptor = new AuthInterceptor();
-        ReflectionTestUtils.setField(interceptor, "secret", SECRET);
-        ReflectionTestUtils.invokeMethod(interceptor, "init");
+        // 构造真实的 JwtTokenProvider 并初始化（构建缓存 parser），再注入拦截器
+        jwtTokenProvider = new JwtTokenProvider();
+        ReflectionTestUtils.setField(jwtTokenProvider, "secret", SECRET);
+        ReflectionTestUtils.setField(jwtTokenProvider, "issuer", "pmis");
+        ReflectionTestUtils.invokeMethod(jwtTokenProvider, "init");
+        interceptor = new AuthInterceptor(jwtTokenProvider);
         key = Keys.hmacShaKeyFor(SECRET.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -69,7 +75,7 @@ class AuthInterceptorTest {
     @Test
     @DisplayName("Bearer Token 解析后应放入 SecurityContext")
     void bearerToken() {
-        String token = buildToken(100L, "zhangsan");
+        String token = buildAccessToken(100L, "zhangsan");
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
         when(req.getHeader("Authorization")).thenReturn("Bearer " + token);
@@ -84,7 +90,7 @@ class AuthInterceptorTest {
     @Test
     @DisplayName("X-Access-Token 头应被识别")
     void accessTokenHeader() {
-        String token = buildToken(200L, "lisi");
+        String token = buildAccessToken(200L, "lisi");
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
         when(req.getHeader("Authorization")).thenReturn(null);
@@ -98,7 +104,7 @@ class AuthInterceptorTest {
     @Test
     @DisplayName("access_token 查询参数应被识别")
     void queryParam() {
-        String token = buildToken(300L, "wangwu");
+        String token = buildAccessToken(300L, "wangwu");
         HttpServletRequest req = mock(HttpServletRequest.class);
         HttpServletResponse resp = mock(HttpServletResponse.class);
         when(req.getHeader("Authorization")).thenReturn(null);
@@ -123,6 +129,26 @@ class AuthInterceptorTest {
     }
 
     @Test
+    @DisplayName("refresh token 应被拒绝（仅允许 access token 访问业务接口）")
+    void refreshTokenRejected() {
+        String token = Jwts.builder()
+                .claims(Map.of("userId", 100L, "type", "refresh"))
+                .subject(String.valueOf(100L))
+                .issuer("pmis")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + 3600 * 1000))
+                .signWith(key)
+                .compact();
+        HttpServletRequest req = mock(HttpServletRequest.class);
+        HttpServletResponse resp = mock(HttpServletResponse.class);
+        when(req.getHeader("Authorization")).thenReturn("Bearer " + token);
+
+        assertThatThrownBy(() -> interceptor.preHandle(req, resp, new Object()))
+                .isInstanceOf(BizException.class)
+                .extracting("code").isEqualTo(BizErrorCode.TOKEN_INVALID.getCode());
+    }
+
+    @Test
     @DisplayName("afterCompletion 应清空 SecurityContext")
     void afterCompletion() {
         SecurityContext.setCurrent(com.njydsz.pmis.common.security.LoginUser.builder().userId(1L).build());
@@ -132,11 +158,12 @@ class AuthInterceptorTest {
         assertThat(SecurityContext.getCurrentOrNull()).isNull();
     }
 
-    private String buildToken(Long userId, String username) {
+    private String buildAccessToken(Long userId, String username) {
         return Jwts.builder()
                 .claims(Map.of("userId", userId, "username", username,
                         "roles", List.of("ADMIN"),
-                        "permissions", List.of("user:list", "user:create")))
+                        "permissions", List.of("user:list", "user:create"),
+                        "type", "access"))
                 .subject(String.valueOf(userId))
                 .issuer("pmis")
                 .issuedAt(new Date())

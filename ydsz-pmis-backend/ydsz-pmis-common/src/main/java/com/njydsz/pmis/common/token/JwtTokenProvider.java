@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.token;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtParser;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -60,15 +61,21 @@ public class JwtTokenProvider {
 
     /** 签名密钥对象 */
     private SecretKey key;
+    /** 缓存的 JwtParser 实例，避免每次请求重新创建（线程安全） */
+    private JwtParser jwtParser;
     /** 是否使用默认密钥（启动时检测） */
     private boolean defaultKeyUsed = false;
 
     /**
-     * 初始化签名密钥并打印配置日志
+     * 初始化签名密钥与 JwtParser 并打印配置日志
+     *
+     * <p>JwtParser 构建成本较高且实例本身线程安全，故在启动时一次性构建并缓存，
+     * 避免每次请求都重复执行 {@code Jwts.parser().verifyWith(key).build()}。
      */
     @PostConstruct
     public void init() {
         this.key = buildKey();
+        this.jwtParser = Jwts.parser().verifyWith(key).build();
         log.info("[JWT] 初始化完成, issuer={}, access={}s, refresh={}s, defaultKey={}",
                 issuer, accessExpireSeconds, refreshExpireSeconds, defaultKeyUsed);
     }
@@ -179,7 +186,7 @@ public class JwtTokenProvider {
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parser().verifyWith(key).build().parseSignedClaims(token);
+            jwtParser.parseSignedClaims(token);
             return true;
         } catch (Exception e) {
             log.warn("[JWT] Token 验证失败: {}", e.getMessage());
@@ -190,11 +197,13 @@ public class JwtTokenProvider {
     /**
      * 解析 Token 的 Claims
      *
+     * <p>使用启动时缓存的 {@link #jwtParser}，避免每次调用重复构建解析器。
+     *
      * @param token JWT Token
      * @return Claims
      */
     public Claims parseClaims(String token) {
-        return Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
+        return jwtParser.parseSignedClaims(token).getPayload();
     }
 
     /**

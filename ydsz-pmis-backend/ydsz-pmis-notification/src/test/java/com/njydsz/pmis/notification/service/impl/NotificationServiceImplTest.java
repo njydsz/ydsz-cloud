@@ -288,7 +288,7 @@ class NotificationServiceImplTest {
     @Test
     @DisplayName("inbox 应按 receiverId + category + level + readStatus 过滤")
     void inbox_filter() {
-        when(mapper.selectPage(any(), any())).thenReturn(new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>());
+        when(mapper.selectPage(any(), any())).thenReturn(new Page<>());
         NotificationQueryDTO q = new NotificationQueryDTO();
         q.setPage(1);
         q.setSize(10);

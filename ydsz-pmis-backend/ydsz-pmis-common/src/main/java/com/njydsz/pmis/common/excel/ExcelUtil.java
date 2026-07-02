@@ -66,7 +66,7 @@ public final class ExcelUtil {
      * @throws IOException 写入流失败时抛出
      */
     public static <T> byte[] exportToBytes(String sheetName, Class<T> headClass, List<T> data) throws IOException {
-        try (java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream()) {
+        try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             EasyExcel.write(out, headClass)
                     .registerWriteHandler(new LongestMatchColumnWidthStyleStrategy())
                     .sheet(sheetName == null ? "Sheet1" : sheetName)

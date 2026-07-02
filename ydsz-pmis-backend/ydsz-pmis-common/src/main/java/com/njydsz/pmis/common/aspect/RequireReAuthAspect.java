@@ -20,7 +20,9 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.time.Duration;
 import java.util.Objects;
+import java.util.UUID;
 
 /**
  * 敏感操作二次认证 AOP
@@ -144,9 +146,9 @@ public class RequireReAuthAspect {
      * @return 二次认证 token
      */
     public String issueToken(String operationCode, Long userId, int ttlSeconds) {
-        String token = java.util.UUID.randomUUID().toString().replace("-", "");
+        String token = UUID.randomUUID().toString().replace("-", "");
         String key = KEY_PREFIX + operationCode + ":" + userId + ":" + token;
-        redisTemplate.opsForValue().set(key, "1", java.time.Duration.ofSeconds(ttlSeconds));
+        redisTemplate.opsForValue().set(key, "1", Duration.ofSeconds(ttlSeconds));
         return token;
     }
 }

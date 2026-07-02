@@ -1724,7 +1724,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             Map<String, Object> ext = parseExtConfig(node.getExt());
             Object rate = ext.get("votePassRate");
             if (rate != null) {
-                java.math.BigDecimal rateValue = toBigDecimal(rate);
+                BigDecimal rateValue = toBigDecimal(rate);
                 if (rateValue != null && rateValue.doubleValue() > 0
                         && rateValue.doubleValue() <= 1.0) {
                     task.setVotePassRate(rateValue);

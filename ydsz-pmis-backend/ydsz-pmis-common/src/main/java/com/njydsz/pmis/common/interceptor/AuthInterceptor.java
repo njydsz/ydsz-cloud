@@ -4,47 +4,33 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.token.JwtTokenProvider;
 import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 
-import javax.crypto.SecretKey;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
  * 鉴权拦截器
  *
  * <p>解析请求头中的 JWT Token，构造 LoginUser 并放入 SecurityContext。
+ * Token 的解析统一委托给 {@link JwtTokenProvider}，避免重复的密钥初始化与解析逻辑。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class AuthInterceptor implements HandlerInterceptor {
 
-    /** JWT 签名密钥（明文，来自配置） */
-    @Value("${pmis.jwt.secret:pmis-default-jwt-secret-key-please-change-in-production-environment-must-be-256-bits}")
-    private String secret;
-
-    /** 签名密钥对象 */
-    private SecretKey key;
-
-    /**
-     * 初始化签名密钥对象
-     */
-    @jakarta.annotation.PostConstruct
-    public void init() {
-        this.key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
-    }
+    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * 请求预处理：解析 Token 并构造 LoginUser 放入 SecurityContext
@@ -62,17 +48,32 @@ public class AuthInterceptor implements HandlerInterceptor {
             throw new BizException(BizErrorCode.UNAUTHORIZED, "缺少认证 Token");
         }
 
+        // 解析 Token，失败统一转为 TOKEN_INVALID
+        Claims claims;
         try {
-            Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(token).getPayload();
-            LoginUser user = buildLoginUser(claims, token);
-            SecurityContext.setCurrent(user);
-            return true;
-        } catch (BizException e) {
-            throw e;
+            claims = jwtTokenProvider.parseClaims(token);
         } catch (Exception e) {
             log.warn("[Auth] Token 解析失败: {}", e.getMessage());
             throw new BizException(BizErrorCode.TOKEN_INVALID);
         }
+
+        // 校验 Token 类型，仅允许 access token 访问业务接口（拒绝 refresh token）
+        String tokenType = claims.get("type", String.class);
+        if (!"access".equals(tokenType)) {
+            log.warn("[Auth] Token 类型非法, 期望 access, 实际: {}", tokenType);
+            throw new BizException(BizErrorCode.TOKEN_INVALID);
+        }
+
+        // 构造登录用户对象，字段缺失/格式异常同样视为 Token 无效
+        LoginUser user;
+        try {
+            user = buildLoginUser(claims, token);
+        } catch (Exception e) {
+            log.warn("[Auth] LoginUser 构造失败: {}", e.getMessage());
+            throw new BizException(BizErrorCode.TOKEN_INVALID);
+        }
+        SecurityContext.setCurrent(user);
+        return true;
     }
 
     /**

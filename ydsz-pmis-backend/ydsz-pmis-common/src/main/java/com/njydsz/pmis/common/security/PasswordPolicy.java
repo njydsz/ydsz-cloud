@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import java.time.LocalDateTime;
+
 /**
  * 密码策略校验器
  *
@@ -111,9 +113,9 @@ public final class PasswordPolicy {
      * @param maxDays    最大有效天数
      * @return true 表示密码已过期
      */
-    public static boolean isExpired(java.time.LocalDateTime lastChange, int maxDays) {
+    public static boolean isExpired(LocalDateTime lastChange, int maxDays) {
         if (lastChange == null) return true;
-        return lastChange.plusDays(maxDays).isBefore(java.time.LocalDateTime.now());
+        return lastChange.plusDays(maxDays).isBefore(LocalDateTime.now());
     }
 
     /**

@@ -7,6 +7,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -73,7 +74,7 @@ class AfterSalesScanJobHandlerTest {
 
         Object r = handler.execute(null);
         @SuppressWarnings("unchecked")
-        java.util.Map<String, Object> map = (java.util.Map<String, Object>) r;
+        Map<String, Object> map = (Map<String, Object>) r;
         assertThat(map.get("expiringCount")).isEqualTo(0);
         assertThat(map.get("expiredCount")).isEqualTo(0);
         assertThat(map.get("slaBreachCount")).isEqualTo(0);
