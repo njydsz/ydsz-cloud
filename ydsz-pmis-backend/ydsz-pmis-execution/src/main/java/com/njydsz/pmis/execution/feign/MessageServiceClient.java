@@ -1,6 +1,6 @@
-﻿package com.njydsz.pmis.execution.feign;
+package com.njydsz.pmis.execution.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import org.springframework.cloud.openfeign.FeignClient;

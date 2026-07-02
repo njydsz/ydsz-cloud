@@ -1,11 +1,11 @@
-﻿package com.njydsz.pmis.auth.service.impl;
+package com.njydsz.pmis.auth.service.impl;
 
 import com.njydsz.pmis.auth.dto.CaptchaVO;
 import com.njydsz.pmis.auth.dto.LoginDTO;
 import com.njydsz.pmis.auth.dto.LoginResultVO;
 import com.njydsz.pmis.auth.feign.UserAuthClient;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.util.CryptoUtil;

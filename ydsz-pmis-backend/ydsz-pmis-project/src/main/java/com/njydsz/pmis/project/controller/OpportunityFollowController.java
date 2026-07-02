@@ -1,7 +1,7 @@
-﻿package com.njydsz.pmis.project.controller;
+package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.OpportunityFollowDTO;
 import com.njydsz.pmis.project.entity.OpportunityFollowDO;
 import com.njydsz.pmis.project.service.OpportunityFollowService;

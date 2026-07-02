@@ -1,9 +1,9 @@
-﻿package com.njydsz.pmis.config.controller;
+package com.njydsz.pmis.config.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.config.dto.ConfigFormDTO;
 import com.njydsz.pmis.config.dto.ConfigQueryDTO;
 import com.njydsz.pmis.config.entity.ConfigDO;

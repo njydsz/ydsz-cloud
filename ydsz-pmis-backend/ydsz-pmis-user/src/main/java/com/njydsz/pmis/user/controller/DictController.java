@@ -1,6 +1,6 @@
-﻿package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.user.controller;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.user.entity.DictItemDO;
 import com.njydsz.pmis.user.entity.DictTypeDO;
 import com.njydsz.pmis.user.service.DictService;

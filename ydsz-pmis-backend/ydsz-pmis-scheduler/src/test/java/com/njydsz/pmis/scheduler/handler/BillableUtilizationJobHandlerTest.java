@@ -1,6 +1,6 @@
-﻿package com.njydsz.pmis.scheduler.handler;
+package com.njydsz.pmis.scheduler.handler;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.ExecutionClient;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

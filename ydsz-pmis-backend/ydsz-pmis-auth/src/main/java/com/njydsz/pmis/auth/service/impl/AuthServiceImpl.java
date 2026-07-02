@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.auth.service.impl;
+package com.njydsz.pmis.auth.service.impl;
 
 import cn.hutool.core.util.IdUtil;
 import com.njydsz.pmis.auth.dto.CaptchaVO;
@@ -8,7 +8,7 @@ import com.njydsz.pmis.auth.feign.UserAuthClient;
 import com.njydsz.pmis.auth.service.AuthService;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.user.dto.LoginContextDTO;

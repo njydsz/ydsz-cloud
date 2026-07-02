@@ -1,7 +1,7 @@
-﻿package com.njydsz.pmis.common.exception;
+package com.njydsz.pmis.common.exception;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;

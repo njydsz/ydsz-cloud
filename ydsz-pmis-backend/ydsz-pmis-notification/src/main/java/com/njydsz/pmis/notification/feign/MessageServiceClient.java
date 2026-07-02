@@ -1,6 +1,6 @@
-﻿package com.njydsz.pmis.notification.feign;
+package com.njydsz.pmis.notification.feign;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;

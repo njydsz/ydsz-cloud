@@ -1,7 +1,7 @@
-﻿package com.njydsz.pmis.notification.service.impl;
+package com.njydsz.pmis.notification.service.impl;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
 import com.njydsz.pmis.notification.dto.NotificationSendDTO;

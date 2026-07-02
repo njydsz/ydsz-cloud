@@ -1,8 +1,8 @@
-﻿package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.user.controller;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.user.dto.EmployeeTagCreateDTO;
 import com.njydsz.pmis.user.entity.EmployeeTagDO;

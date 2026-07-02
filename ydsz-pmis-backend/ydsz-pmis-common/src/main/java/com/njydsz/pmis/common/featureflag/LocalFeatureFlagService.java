@@ -1,6 +1,6 @@
-﻿package com.njydsz.pmis.common.featureflag;
+package com.njydsz.pmis.common.featureflag;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.ConfigClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

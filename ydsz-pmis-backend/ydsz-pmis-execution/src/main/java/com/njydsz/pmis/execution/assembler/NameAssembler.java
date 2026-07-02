@@ -1,6 +1,6 @@
-﻿package com.njydsz.pmis.execution.assembler;
+package com.njydsz.pmis.execution.assembler;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.feign.UserServiceClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

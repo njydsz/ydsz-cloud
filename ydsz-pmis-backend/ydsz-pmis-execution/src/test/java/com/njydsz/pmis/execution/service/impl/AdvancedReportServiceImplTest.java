@@ -1,6 +1,6 @@
-﻿package com.njydsz.pmis.execution.service.impl;
+package com.njydsz.pmis.execution.service.impl;
 
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.config.ThresholdProvider;
 import com.njydsz.pmis.execution.entity.EvmMeasureDO;
 import com.njydsz.pmis.execution.entity.ProfitSnapshotDO;

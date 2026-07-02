@@ -1,10 +1,10 @@
-﻿package com.njydsz.pmis.audit.controller;
+package com.njydsz.pmis.audit.controller;
 
 import com.njydsz.pmis.audit.entity.OperationLogDO;
 import com.njydsz.pmis.audit.service.OperationLogServiceImpl;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;

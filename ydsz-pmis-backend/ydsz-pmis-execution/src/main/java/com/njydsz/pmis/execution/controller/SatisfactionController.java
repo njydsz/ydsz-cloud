@@ -1,8 +1,8 @@
-﻿package com.njydsz.pmis.execution.controller;
+package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.SatisfactionCreateDTO;
 import com.njydsz.pmis.execution.entity.SatisfactionDO;
 import com.njydsz.pmis.execution.service.SatisfactionService;

@@ -1,8 +1,8 @@
-﻿package com.njydsz.pmis.message.controller;
+package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.R;
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.message.entity.MessageTemplateDO;
 import com.njydsz.pmis.message.service.MessageTemplateServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
