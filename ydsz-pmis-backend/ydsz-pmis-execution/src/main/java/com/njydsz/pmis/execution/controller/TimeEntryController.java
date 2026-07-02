@@ -26,6 +26,14 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 工时管理 Controller
+ *
+ * <p>负责工时录入、审批、聚合查询及跨项目冲突检测。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "工时管理")
 @RestController
 @RequestMapping("/api/v1/execution/time-entry")

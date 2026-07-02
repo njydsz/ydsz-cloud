@@ -25,6 +25,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 基础报表服务实现
+ *
+ * <p>聚合 RevenueDO + InvoiceDO 计算收入，聚合 Labor/Purchase/Expense 分摊计算成本，
+ * 提供项目利润报表、成本明细报表、回款台账与全生命周期台账。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

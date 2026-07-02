@@ -23,6 +23,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 收入确认 Controller
+ *
+ * <p>负责收入录入、确认、状态迁移及按项目/合同/周期的聚合查询。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "收入确认")
 @RestController
 @RequestMapping("/api/v1/execution/revenue")

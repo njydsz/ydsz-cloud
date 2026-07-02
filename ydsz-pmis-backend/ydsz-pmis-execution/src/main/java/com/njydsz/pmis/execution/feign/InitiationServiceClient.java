@@ -12,6 +12,9 @@ import java.util.Map;
  * <p>
  * 用途：采购/费用强管控需要读取立项预算金额，避免在执行模块直接访问项目表
  * </p>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @FeignClient(name = "ydsz-pmis-project", fallbackFactory = InitiationServiceClientFallback.class)
 public interface InitiationServiceClient {

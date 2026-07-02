@@ -5,6 +5,9 @@ import java.math.BigDecimal;
 
 /**
  * 利润快照 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class ProfitSnapshotDTO {

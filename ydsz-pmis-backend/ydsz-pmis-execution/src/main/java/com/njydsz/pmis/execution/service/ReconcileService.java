@@ -8,6 +8,11 @@ import java.util.List;
 
 /**
  * 对账服务
+ *
+ * <p>执行-财务对账：工时漏算成本、工时异常（单日/单周/跨项目）等维度校验。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public interface ReconcileService {
 

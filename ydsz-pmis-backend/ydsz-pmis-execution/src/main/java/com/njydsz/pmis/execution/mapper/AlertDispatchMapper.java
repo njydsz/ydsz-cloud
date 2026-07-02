@@ -9,6 +9,12 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 预警派发 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface AlertDispatchMapper extends BaseMapper<AlertDispatchDO> {
 

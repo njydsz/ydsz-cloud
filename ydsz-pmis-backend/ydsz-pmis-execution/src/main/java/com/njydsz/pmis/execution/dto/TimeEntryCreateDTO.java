@@ -6,6 +6,9 @@ import java.time.LocalDate;
 
 /**
  * 工时录入 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class TimeEntryCreateDTO {

@@ -9,16 +9,39 @@ import java.util.Map;
 
 /**
  * EVM 挣值测量服务
+ *
+ * <p>提供挣值测量数据的录入/更新（幂等）、偏差趋势及驾驶舱健康度查询。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public interface EvmMeasureService {
 
     /** 录入或更新 EVM 测量（按 initiation+wbs+period 唯一） */
     Long save(EvmMeasureCreateDTO dto);
 
+    /**
+     * 根据ID查询测量记录
+     *
+     * @param id 记录ID
+     * @return 测量实体
+     */
     EvmMeasureDO getById(Long id);
 
+    /**
+     * 查询项目下所有测量记录
+     *
+     * @param initiationId 项目立项ID
+     * @return 测量列表
+     */
     List<EvmMeasureDO> listByInitiation(Long initiationId);
 
+    /**
+     * 查询 WBS 节点下所有测量记录
+     *
+     * @param wbsTaskId WBS任务ID
+     * @return 测量列表
+     */
     List<EvmMeasureDO> listByWbs(Long wbsTaskId);
 
     /** WBS 节点级偏差趋势 */
@@ -27,8 +50,22 @@ public interface EvmMeasureService {
     /** 项目 EVM 健康汇总（最新一期） */
     Map<String, Object> dashboard(Long initiationId);
 
+    /**
+     * 分页查询测量记录
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param initiationId 项目立项ID
+     * @param alertLevel   告警级别
+     * @return 分页结果
+     */
     Page<EvmMeasureDO> page(int page, int size, Long initiationId, String alertLevel);
 
+    /**
+     * 删除测量记录
+     *
+     * @param id 记录ID
+     */
     void delete(Long id);
 
     /**

@@ -8,6 +8,12 @@ import org.apache.ibatis.annotations.Param;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 对外费率卡片 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface RateCardMapper extends BaseMapper<RateCardDO> {
 

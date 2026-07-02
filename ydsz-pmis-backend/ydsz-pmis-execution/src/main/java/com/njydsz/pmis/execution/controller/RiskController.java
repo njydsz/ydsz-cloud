@@ -24,6 +24,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 项目风险 Controller
+ *
+ * <p>负责风险登记、状态迁移、分页查询及按等级聚合统计。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "项目风险")
 @RestController
 @RequestMapping("/api/v1/execution/risk")

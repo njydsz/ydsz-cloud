@@ -8,6 +8,12 @@ import org.apache.ibatis.annotations.Param;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 质保期 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface WarrantyMapper extends BaseMapper<WarrantyDO> {
 

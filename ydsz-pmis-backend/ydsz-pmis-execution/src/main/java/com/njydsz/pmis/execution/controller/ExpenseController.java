@@ -21,6 +21,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * 费用报销 Controller
+ *
+ * <p>负责费用创建、审批、状态迁移及分页查询；受预算强管控约束。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "费用报销")
 @RestController
 @RequestMapping("/api/v1/execution/expense")

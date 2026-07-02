@@ -10,6 +10,12 @@ import java.util.List;
 import java.math.BigDecimal;
 import java.util.Map;
 
+/**
+ * 工时录入 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface TimeEntryMapper extends BaseMapper<TimeEntryDO> {
 

@@ -8,6 +8,12 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 交付项 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface DeliveryItemMapper extends BaseMapper<DeliveryItemDO> {
 

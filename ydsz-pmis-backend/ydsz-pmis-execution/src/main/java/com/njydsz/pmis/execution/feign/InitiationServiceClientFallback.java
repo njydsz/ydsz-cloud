@@ -13,6 +13,9 @@ import java.util.Map;
  * 这会导致 {@code BudgetGuard} 跳过预算校验（安全降级），并记录告警日志，
  * 不会因为项目服务临时不可用而阻断业务流。
  * </p>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Component

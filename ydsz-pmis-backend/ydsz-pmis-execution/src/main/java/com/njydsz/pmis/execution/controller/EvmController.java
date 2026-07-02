@@ -22,6 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * EVM 挣值管理 Controller
+ *
+ * <p>负责挣值测量数据的录入/更新（幂等）、偏差趋势及驾驶舱健康度查询。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "EVM 挣值管理")
 @RestController
 @RequestMapping("/api/v1/execution/evm")

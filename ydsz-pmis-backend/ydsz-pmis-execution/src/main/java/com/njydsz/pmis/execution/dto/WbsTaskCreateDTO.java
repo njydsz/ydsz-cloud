@@ -6,6 +6,9 @@ import java.time.LocalDate;
 
 /**
  * WBS 任务创建 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class WbsTaskCreateDTO {

@@ -9,6 +9,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 成本归集 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
 

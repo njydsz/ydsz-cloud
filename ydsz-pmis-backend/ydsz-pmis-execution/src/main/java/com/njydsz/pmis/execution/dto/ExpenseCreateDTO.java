@@ -6,6 +6,9 @@ import java.time.LocalDate;
 
 /**
  * 费用报销 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class ExpenseCreateDTO {

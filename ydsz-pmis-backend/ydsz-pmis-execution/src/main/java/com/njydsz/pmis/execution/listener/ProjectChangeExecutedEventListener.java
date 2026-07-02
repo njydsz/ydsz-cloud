@@ -32,6 +32,13 @@ public class ProjectChangeExecutedEventListener {
     private final EvmMeasureService evmMeasureService;
     private final AlertDispatchService alertDispatchService;
 
+    /**
+     * 处理项目变更执行事件
+     *
+     * <p>异步触发 EVM 基线重算；失败时发布 RED 级告警，不影响主业务流。
+     *
+     * @param event 项目变更执行事件
+     */
     @Async
     @EventListener
     public void onProjectChangeExecuted(ProjectChangeExecutedEvent event) {

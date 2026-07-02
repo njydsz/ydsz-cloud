@@ -8,6 +8,12 @@ import org.apache.ibatis.annotations.Param;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 内部成本费率 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface RateInternalMapper extends BaseMapper<RateInternalDO> {
 

@@ -9,6 +9,12 @@ import java.util.List;
 import java.math.BigDecimal;
 import java.util.Map;
 
+/**
+ * WBS 任务 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface WbsTaskMapper extends BaseMapper<WbsTaskDO> {
 

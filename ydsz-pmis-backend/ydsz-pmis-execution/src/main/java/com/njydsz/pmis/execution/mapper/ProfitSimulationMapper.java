@@ -7,6 +7,12 @@ import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
+/**
+ * 利润模拟 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface ProfitSimulationMapper extends BaseMapper<ProfitSimulationDO> {
 

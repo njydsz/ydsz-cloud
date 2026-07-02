@@ -6,6 +6,9 @@ import java.time.LocalDate;
 
 /**
  * 采购申请 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class PurchaseCreateDTO {

@@ -25,6 +25,14 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * WBS 任务管理 Controller
+ *
+ * <p>负责任务的创建、状态迁移、进度更新、分页查询及项目整体进度计算。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "WBS 任务管理")
 @RestController
 @RequestMapping("/api/v1/execution/wbs")

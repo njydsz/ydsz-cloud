@@ -24,6 +24,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 对内成本费率 Controller
+ *
+ * <p>负责对内成本费率的创建、匹配（职级+部门优先）、分页查询及生效费率命中。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "对内成本费率")
 @RestController
 @RequestMapping("/api/v1/execution/rate-internal")

@@ -72,6 +72,9 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             traceId = traceIdTmp;
         }
 
+        // 统一写入 traceId 到响应头，确保所有响应（成功/失败/OPTIONS/白名单）都携带链路追踪 ID
+        exchange.getResponse().getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+
         // 跨域预检直接放行
         if ("OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
             return chain.filter(exchange.mutate()
@@ -147,7 +150,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         ServerHttpResponse response = exchange.getResponse();
         response.setStatusCode(HttpStatus.UNAUTHORIZED);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-        response.getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
+        // traceId 已在 filter 开头统一写入响应头，此处无需重复设置
 
         R<Void> body = R.failed(20001, msg);
         body.setTraceId(traceId);

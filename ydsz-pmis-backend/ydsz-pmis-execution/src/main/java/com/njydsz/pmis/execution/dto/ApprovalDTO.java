@@ -4,6 +4,9 @@ import lombok.Data;
 
 /**
  * 通用审批 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class ApprovalDTO {

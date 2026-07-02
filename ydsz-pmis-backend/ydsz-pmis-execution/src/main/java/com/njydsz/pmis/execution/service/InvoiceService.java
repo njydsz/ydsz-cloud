@@ -57,14 +57,45 @@ public interface InvoiceService {
      */
     void delete(Long id);
 
+    /**
+     * 根据ID查询发票
+     *
+     * @param id 发票ID
+     * @return 发票实体
+     */
     InvoiceDO getById(Long id);
 
+    /**
+     * 分页查询发票
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param contractId   合同ID
+     * @param initiationId 项目立项ID
+     * @param customerId   客户ID
+     * @param invoiceType  发票类型
+     * @return 分页结果
+     */
     Page<InvoiceDO> page(int page, int size, String keyword, String status,
                          Long contractId, Long initiationId, Long customerId,
                          String invoiceType);
 
+    /**
+     * 查询合同下所有发票
+     *
+     * @param contractId 合同ID
+     * @return 发票列表
+     */
     List<InvoiceDO> listByContract(Long contractId);
 
+    /**
+     * 查询项目下所有发票
+     *
+     * @param initiationId 项目立项ID
+     * @return 发票列表
+     */
     List<InvoiceDO> listByInitiation(Long initiationId);
 
     /**

@@ -52,8 +52,26 @@ public interface PaymentService {
      */
     List<Map<String, Object>> forecastCashFlow(Long initiationId, int months);
 
+    /**
+     * 根据ID查询回款记录
+     *
+     * @param id 回款ID
+     * @return 回款实体
+     */
     PaymentDO getById(Long id);
 
+    /**
+     * 分页查询回款记录
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param keyword      关键词
+     * @param status       状态过滤
+     * @param contractId   合同ID
+     * @param customerId   客户ID
+     * @param initiationId 项目立项ID
+     * @return 分页结果
+     */
     Page<PaymentDO> page(int page, int size, String keyword, String status,
                          Long contractId, Long customerId, Long initiationId);
 

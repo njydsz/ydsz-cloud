@@ -14,6 +14,12 @@ import java.util.List;
 
 /**
  * 对账服务实现
+ *
+ * <p>委托 {@link ReconcileHandler} 完成执行-财务对账，输出 ReconcileReport。
+ * 支持全量对账、缺失成本检测、幽灵成本检测与回款缺口检测。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Slf4j
 @Service

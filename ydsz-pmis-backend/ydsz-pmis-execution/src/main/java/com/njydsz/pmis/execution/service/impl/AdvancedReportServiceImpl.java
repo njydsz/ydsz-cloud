@@ -35,6 +35,12 @@ import java.util.stream.Collectors;
 
 /**
  * 高级报表 Service 实现
+ *
+ * <p>提供 EVM 报表、利用率排名、待岗成本、双费率利润对比、资源甘特图、风险看板六类高级报表。
+ * 跨模块数据通过 Feign + try-catch 回退到 0，避免单模块故障导致报表整体不可用。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @SuppressWarnings("null")
 @Slf4j

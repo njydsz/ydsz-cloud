@@ -9,6 +9,9 @@ import java.time.LocalDate;
 
 /**
  * EVM 测量创建 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class EvmMeasureCreateDTO {

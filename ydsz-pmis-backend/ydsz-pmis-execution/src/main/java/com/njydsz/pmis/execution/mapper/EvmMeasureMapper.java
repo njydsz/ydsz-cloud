@@ -8,6 +8,12 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * EVM 挣值度量 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface EvmMeasureMapper extends BaseMapper<EvmMeasureDO> {
 

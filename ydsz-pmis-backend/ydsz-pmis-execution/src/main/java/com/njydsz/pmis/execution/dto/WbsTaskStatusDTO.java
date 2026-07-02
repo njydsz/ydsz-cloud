@@ -5,6 +5,9 @@ import java.math.BigDecimal;
 
 /**
  * WBS 任务状态迁移 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class WbsTaskStatusDTO {

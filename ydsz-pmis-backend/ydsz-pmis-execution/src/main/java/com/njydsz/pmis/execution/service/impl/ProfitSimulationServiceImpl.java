@@ -25,6 +25,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 利润测算服务实现
+ *
+ * <p>负责利润测算方案的创建、状态迁移、版本管理与多版本对比。
+ * 状态机：DRAFT → SUBMITTED → APPROVED/REJECTED → ARCHIVED。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

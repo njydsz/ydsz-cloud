@@ -13,6 +13,15 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 成本分摊服务实现
+ *
+ * <p>负责将工时、采购、费用等源头数据同步为统一的成本分摊记录，
+ * 支持按期间、项目、成本类型多维查询与聚合。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

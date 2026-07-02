@@ -29,6 +29,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 客户信用服务实现
+ *
+ * <p>负责客户信用评估、信用档案查询、风险等级映射与信用分布统计。
+ * 信用等级映射：A(90-100)/B(75-89)/C(60-74)/D(0-59)，新客户默认 30 基础分。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

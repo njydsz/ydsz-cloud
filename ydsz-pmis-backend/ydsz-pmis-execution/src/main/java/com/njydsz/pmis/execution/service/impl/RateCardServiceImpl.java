@@ -19,6 +19,15 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 报价费率卡服务实现
+ *
+ * <p>负责对外报价费率的创建、更新、匹配与分页查询。
+ * matchEffective 采用三级回退：(level+project+customer) > (level+project) > (level)。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

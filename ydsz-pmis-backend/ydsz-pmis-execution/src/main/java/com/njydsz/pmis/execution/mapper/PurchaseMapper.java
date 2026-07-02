@@ -7,6 +7,12 @@ import org.apache.ibatis.annotations.Param;
 
 import java.math.BigDecimal;
 
+/**
+ * 采购 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface PurchaseMapper extends BaseMapper<PurchaseDO> {
 

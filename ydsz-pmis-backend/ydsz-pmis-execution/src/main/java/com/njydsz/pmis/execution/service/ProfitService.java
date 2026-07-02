@@ -8,6 +8,11 @@ import java.util.Map;
 
 /**
  * 利润核算服务
+ *
+ * <p>提供项目月度利润快照生成、趋势分析及健康度评估能力。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public interface ProfitService {
 

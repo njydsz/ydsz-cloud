@@ -3,12 +3,16 @@ package com.njydsz.pmis.common.config;
 import com.njydsz.pmis.common.chaos.ChaosAutoConfiguration;
 import com.njydsz.pmis.common.featureflag.FeatureFlagAutoConfiguration;
 import com.njydsz.pmis.common.interceptor.AuthInterceptor;
+import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.task.TaskDecorator;
 import org.springframework.scheduling.annotation.EnableAsync;
+
+import java.util.Map;
 
 /**
  * 公共模块自动配置
@@ -70,5 +74,35 @@ public class CommonAutoConfiguration {
     @ConditionalOnMissingBean
     public OpenApiConfig openApiConfig() {
         return new OpenApiConfig();
+    }
+
+    /**
+     * 注册 MDC 传递装饰器
+     *
+     * <p>Spring Boot 的 {@code TaskExecutionAutoConfiguration} 会自动将此 {@link TaskDecorator}
+     * 应用到默认的 {@code applicationTaskExecutor}，从而让所有 {@code @Async} 方法（如
+     * OperationLogAspect、事件监听器等）都能继承主线程的 MDC 上下文（traceId 等）。</p>
+     *
+     * <p>修复问题：异步线程丢失 traceId 导致审计日志无法与请求链路关联。</p>
+     *
+     * @return TaskDecorator 实例，负责将主线程 MDC 复制到异步线程
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public TaskDecorator mdcTaskDecorator() {
+        return runnable -> {
+            // 捕获主线程 MDC 上下文
+            Map<String, String> context = MDC.getCopyOfContextMap();
+            return () -> {
+                if (context != null) {
+                    MDC.setContextMap(context);
+                }
+                try {
+                    runnable.run();
+                } finally {
+                    MDC.clear();
+                }
+            };
+        };
     }
 }

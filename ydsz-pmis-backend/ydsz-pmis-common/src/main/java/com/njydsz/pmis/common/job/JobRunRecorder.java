@@ -12,12 +12,12 @@ import java.util.function.Supplier;
 /**
  * Job 运行记录器（批次 21 / P2）
  *
- * <p>统一封装 Job 执行过程: 自动注入 provider_trace_id、记录开始/结束/异常、
+ * <p>统一封装 Job 执行过程: 自动注入 traceId、记录开始/结束/异常、
  * 输出统一格式日志, 便于运维追踪 + 告警系统按 trace 聚合。</p>
  *
  * <h3>设计要点</h3>
  * <ul>
- *   <li>MDC 注入: 当前线程的 provider_trace_id 可被日志框架 (logback) 自动采集</li>
+ *   <li>MDC 注入: 当前线程的 traceId 可被日志框架 (logback) 自动采集, 与请求链路统一</li>
  *   <li>结果统一: 任意业务返回值自动包装为 {@link JobRunResult}</li>
  *   <li>失败兜底: 异常被记录但**不吞掉**, 由调度器决定重试策略</li>
  *   <li>零依赖: 只用 SLF4J, 不依赖 Spring / MyBatis / 数据库</li>
@@ -43,7 +43,9 @@ import java.util.function.Supplier;
 @Slf4j
 public final class JobRunRecorder {
 
-    public static final String MDC_TRACE_ID = "provider_trace_id";
+    /** MDC 中 traceId 的键名（与全局 TraceIdFilter 统一），供日志框架 %X{traceId:-} 自动采集 */
+    public static final String MDC_TRACE_ID = "traceId";
+    /** MDC 中 job_key 的键名，用于按任务聚合日志 */
     public static final String MDC_JOB_KEY  = "job_key";
 
     private JobRunRecorder() { /* 工具类, 不允许实例化 */ }
@@ -112,8 +114,10 @@ public final class JobRunRecorder {
     }
 
     /**
-     * 生成或复用 provider_trace_id
+     * 生成或复用 traceId
      * <p>优先从 MDC 复用 (调度器已注入), 否则生成新的</p>
+     *
+     * @return 当前线程有效的 traceId
      */
     public static String ensureTraceId() {
         String existing = MDC.get(MDC_TRACE_ID);
@@ -141,17 +145,33 @@ public final class JobRunRecorder {
 
     /**
      * Job 执行结果包装
+     *
+     * @param <T> 业务返回值类型
      */
     public static class JobRunResult<T> {
+        /** 业务返回数据（失败时为 null） */
         private final T data;
+        /** 业务异常（成功时为 null） */
         private final Exception error;
+        /** 执行耗时（毫秒） */
         private final long costMs;
+        /** 关联的 provider_trace_id */
         private final String traceId;
 
+        /**
+         * @param data  业务返回数据
+         * @param error 业务异常（成功时为 null）
+         */
         public JobRunResult(T data, Exception error) {
             this(data, error, 0, ensureTraceId());
         }
 
+        /**
+         * @param data    业务返回数据
+         * @param error   业务异常（成功时为 null）
+         * @param costMs  执行耗时（毫秒）
+         * @param traceId 关联的 provider_trace_id
+         */
         public JobRunResult(T data, Exception error, long costMs, String traceId) {
             this.data = data;
             this.error = error;
@@ -159,21 +179,46 @@ public final class JobRunRecorder {
             this.traceId = traceId;
         }
 
+        /**
+         * 构造失败结果
+         *
+         * @param e      业务异常
+         * @param costMs 执行耗时（毫秒）
+         * @param <T>    业务返回值类型
+         * @return 失败结果包装
+         */
         public static <T> JobRunResult<T> failure(Exception e, long costMs) {
             return new JobRunResult<>(null, e, costMs, ensureTraceId());
         }
 
+        /**
+         * 构造成功结果
+         *
+         * @param data   业务返回数据
+         * @param costMs 执行耗时（毫秒）
+         * @param <T>    业务返回值类型
+         * @return 成功结果包装
+         */
         public static <T> JobRunResult<T> success(T data, long costMs) {
             return new JobRunResult<>(data, null, costMs, ensureTraceId());
         }
 
+        /** @return true 表示执行成功（无异常） */
         public boolean isSuccess() { return error == null; }
+        /** @return 业务返回数据（失败时为 null） */
         public T getData() { return data; }
+        /** @return 业务异常（成功时为 null） */
         public Exception getError() { return error; }
+        /** @return 执行耗时（毫秒） */
         public long getCostMs() { return costMs; }
+        /** @return 关联的 provider_trace_id */
         public String getTraceId() { return traceId; }
 
-        /** 转 Map (供 JobHandler 返回给调度器序列化) */
+        /**
+         * 转 Map (供 JobHandler 返回给调度器序列化)
+         *
+         * @return 包含 traceId/costMs/success/data/error 的 Map
+         */
         public Map<String, Object> toMap() {
             Map<String, Object> m = new HashMap<>();
             m.put("traceId", traceId);

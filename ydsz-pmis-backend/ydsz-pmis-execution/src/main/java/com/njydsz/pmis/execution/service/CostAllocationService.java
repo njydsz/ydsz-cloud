@@ -8,6 +8,11 @@ import java.util.Map;
 
 /**
  * 成本归集服务
+ *
+ * <p>按项目/期间/成本类型归集人力/采购/费用/外包/分摊成本，用于利润核算与对账。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 public interface CostAllocationService {
 

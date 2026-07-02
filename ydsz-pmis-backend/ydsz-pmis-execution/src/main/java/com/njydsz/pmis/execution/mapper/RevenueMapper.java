@@ -9,6 +9,12 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 收入确认 Mapper
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Mapper
 public interface RevenueMapper extends BaseMapper<RevenueDO> {
 

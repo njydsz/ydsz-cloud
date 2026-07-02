@@ -19,6 +19,15 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/**
+ * 内部结算费率服务实现
+ *
+ * <p>负责内部成本费率的创建、更新、匹配与分页查询。
+ * matchEffective 优先匹配 (level+department)，其次回退到 (level)。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor

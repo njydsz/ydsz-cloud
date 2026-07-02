@@ -22,6 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 客户信用 Controller
+ *
+ * <p>负责客户信用评估、等级查询及信用分布统计。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "客户信用")
 @RestController
 @RequestMapping("/api/v1/execution/credit")

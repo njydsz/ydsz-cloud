@@ -325,6 +325,12 @@ public class EncryptedFieldMigrationService {
      * <p>由于 common 模块不依赖 postgresql 驱动 (避免污染公共类路径),
      * 本方法通过反射创建 {@code org.postgresql.ds.PGSimpleDataSource}。
      * 若运行时 postgresql 驱动不在 classpath, 抛 IllegalStateException。
+     *
+     * @param jdbcUrl  JDBC 连接 URL
+     * @param username 数据库用户名
+     * @param password 数据库密码
+     * @return 已初始化的迁移服务实例
+     * @throws IllegalStateException 当 postgresql 驱动不在 classpath 时抛出
      */
     public static EncryptedFieldMigrationService fromJdbcUrl(String jdbcUrl, String username, String password) {
         try {

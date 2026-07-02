@@ -25,6 +25,14 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 回款管理 Controller
+ *
+ * <p>负责回款录入、确认到账、核销发票、自动核销及现金流预测。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "回款管理")
 @RestController
 @RequestMapping("/api/v1/execution/payment")

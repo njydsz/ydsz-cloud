@@ -23,6 +23,12 @@ public class NameAssembler {
 
     private final UserServiceClient userServiceClient;
 
+    /**
+     * 解析员工姓名（Feign + try-catch 降级）
+     *
+     * @param id 员工ID
+     * @return 员工姓名；服务不可用或未找到时返回 null
+     */
     public String resolveEmployee(Long id) {
         if (id == null) return null;
         try {

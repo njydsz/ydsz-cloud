@@ -25,6 +25,14 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 发票管理 Controller
+ *
+ * <p>负责发票的创建、审批、开具、红冲、取消及台账查询。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
 @Tag(name = "发票管理")
 @RestController
 @RequestMapping("/api/v1/execution/invoice")

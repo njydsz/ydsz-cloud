@@ -32,6 +32,11 @@ import java.util.Map;
 @Slf4j
 public class EncryptedFieldMigrationCli {
 
+    /**
+     * 命令行入口：解析参数后按 phase 执行加密或校验，并通过退出码反映执行结果
+     *
+     * @param args 命令行参数，格式 {@code --key=value}，必填项 {@code --jdbcUrl}
+     */
     public static void main(String[] args) {
         Map<String, String> opts = parseArgs(args);
         String phase = opts.getOrDefault("phase", "ENCRYPT").toUpperCase();

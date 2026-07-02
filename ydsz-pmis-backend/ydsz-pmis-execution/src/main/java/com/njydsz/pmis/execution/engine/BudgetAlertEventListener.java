@@ -27,6 +27,11 @@ public class BudgetAlertEventListener {
 
     private final AlertDispatchService alertDispatchService;
 
+    /**
+     * 异步处理预算告警事件
+     *
+     * @param event 预算告警事件
+     */
     @Async
     @EventListener
     public void onBudgetAlert(BudgetAlertEvent event) {
