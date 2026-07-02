@@ -1,5 +1,6 @@
 package com.njydsz.pmis.execution.service.impl;
 
+import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.dto.AlertEventDTO;
 import com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.execution.dto.CockpitDrillDownDTO;
@@ -17,6 +18,7 @@ import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.execution.feign.BenchResourceClient;
 import com.njydsz.pmis.execution.mapper.BillableUtilizationSnapshotMapper;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
 import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
@@ -29,6 +31,7 @@ import com.njydsz.pmis.execution.service.BillableUtilizationService;
 import com.njydsz.pmis.execution.service.CockpitReportService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -40,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -65,6 +69,8 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     private final RiskMapper riskMapper;
     private final BillableUtilizationSnapshotMapper utilizationSnapshotMapper;
     private final BillableUtilizationService billableUtilizationService;
+    /** Bench 资源 Feign 客户端，用于查询闲置人员成本（用户模块） */
+    private final BenchResourceClient benchResourceClient;
 
     /** 预警规则引擎（旧）：硬编码 4 条规则，作为 DB 无规则时的 fallback */
     private final AlertRuleEngine legacyAlertEngine = buildDefaultEngine();

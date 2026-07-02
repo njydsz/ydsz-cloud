@@ -41,9 +41,9 @@ class AfterSalesScanJobHandlerTest {
         when(opsTicketService.scanSlaBreaches(any(LocalDate.class))).thenReturn(3);
 
         Object r = handler.execute(null);
-        assertThat(r).isInstanceOf(java.util.Map.class);
+        assertThat(r).isInstanceOf(Map.class);
         @SuppressWarnings("unchecked")
-        java.util.Map<String, Object> map = (java.util.Map<String, Object>) r;
+        Map<String, Object> map = (Map<String, Object>) r;
         assertThat(map.get("expiringCount")).isEqualTo(2);
         assertThat(map.get("expiredCount")).isEqualTo(1);
         assertThat(map.get("slaBreachCount")).isEqualTo(3);

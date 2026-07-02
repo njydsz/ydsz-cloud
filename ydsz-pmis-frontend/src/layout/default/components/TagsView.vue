@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import i18n from '@/locales'
 
 /** 标签项数据结构 */
 interface TagItem {
@@ -37,7 +38,10 @@ function addTag(): void {
       path: route.path,
       fullPath: route.fullPath,
       name: String(name),
-      title: (route.meta?.title as string) || String(name),
+      title: (() => {
+        const t = (route.meta?.title as string) || String(name)
+        return t.startsWith('route.') ? i18n.global.t(t) : t
+      })(),
       affix: !!route.meta?.affix,
     })
   }

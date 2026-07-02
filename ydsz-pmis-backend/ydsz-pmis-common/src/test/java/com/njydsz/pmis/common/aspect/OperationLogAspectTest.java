@@ -11,6 +11,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.lang.reflect.Proxy;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
@@ -96,7 +98,7 @@ class OperationLogAspectTest {
     }
 
     private OperationLog sampleAnnotation(boolean saveParams, boolean saveResult) {
-        return (OperationLog) java.lang.reflect.Proxy.newProxyInstance(
+        return (OperationLog) Proxy.newProxyInstance(
                 OperationLog.class.getClassLoader(),
                 new Class[]{OperationLog.class},
                 (proxy, method, args) -> {

@@ -53,7 +53,7 @@ class PrePermissionAnnotationScanTest {
         for (Method m : SelfAnnotated.class.getDeclaredMethods()) {
             PrePermission p = m.getAnnotation(PrePermission.class);
             if (p != null) {
-                codes.addAll(java.util.Arrays.asList(p.value()));
+                codes.addAll(Arrays.asList(p.value()));
             }
         }
         assertThat(codes).contains("auth:user:create", "auth:user:update");

@@ -8,6 +8,7 @@ import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAppStore } from '@/store/modules/app'
 import { usePermissionStore } from '@/store/modules/permission'
+import i18n from '@/locales'
 import type { RouteRecordRaw } from 'vue-router'
 
 const route = useRoute()
@@ -34,12 +35,15 @@ interface MenuItem {
 function convertRoutes(routes: RouteRecordRaw[]): MenuItem[] {
   return routes
     .filter((r) => !r.meta?.hidden)
-    .map((r) => ({
-      path: r.path,
-      title: (r.meta?.title as string) || '',
-      icon: (r.meta?.icon as string) || '',
-      children: r.children ? convertRoutes(r.children) : undefined,
-    }))
+    .map((r) => {
+      const rawTitle = (r.meta?.title as string) || ''
+      return {
+        path: r.path,
+        title: rawTitle.startsWith('route.') ? i18n.global.t(rawTitle) : rawTitle,
+        icon: (r.meta?.icon as string) || '',
+        children: r.children ? convertRoutes(r.children) : undefined,
+      }
+    })
 }
 
 /** 当前可见菜单（响应式，路由变化时自动更新） */

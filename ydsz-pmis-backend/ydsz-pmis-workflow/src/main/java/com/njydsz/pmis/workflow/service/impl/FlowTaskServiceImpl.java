@@ -1789,12 +1789,12 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     /**
      * 安全转换为 BigDecimal
      */
-    private java.math.BigDecimal toBigDecimal(Object val) {
+    private BigDecimal toBigDecimal(Object val) {
         if (val == null) return null;
-        if (val instanceof java.math.BigDecimal bd) return bd;
-        if (val instanceof Number n) return java.math.BigDecimal.valueOf(n.doubleValue());
+        if (val instanceof BigDecimal bd) return bd;
+        if (val instanceof Number n) return BigDecimal.valueOf(n.doubleValue());
         try {
-            return new java.math.BigDecimal(String.valueOf(val));
+            return new BigDecimal(String.valueOf(val));
         } catch (NumberFormatException e) {
             return null;
         }

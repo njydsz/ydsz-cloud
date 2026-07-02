@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 /**
  * 登录审计事件监听器
@@ -39,7 +40,7 @@ public class LoginAuditListener {
             l.setUsername(event.getUsername());
             l.setUserId(event.getUserId());
             l.setLoginAt(event.getLoginAt() != null
-                    ? LocalDateTime.ofEpochSecond(event.getLoginAt() / 1000, 0, java.time.ZoneOffset.ofHours(8))
+                    ? LocalDateTime.ofEpochSecond(event.getLoginAt() / 1000, 0, ZoneOffset.ofHours(8))
                     : LocalDateTime.now());
             l.setLoginIp(event.getLoginIp());
             l.setUserAgent(event.getUserAgent());

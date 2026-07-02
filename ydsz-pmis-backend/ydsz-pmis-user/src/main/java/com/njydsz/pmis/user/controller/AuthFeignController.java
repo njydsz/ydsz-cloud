@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
 
@@ -82,7 +83,7 @@ public class AuthFeignController {
                 .status(user.getStatus())
                 .loginFailCount(user.getLoginFailCount() == null ? 0 : user.getLoginFailCount())
                 .lockedUntil(user.getLockedUntil() == null ? null
-                        : user.getLockedUntil().atZone(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli());
+                        : user.getLockedUntil().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
 
         // 角色编码列表
         try {

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
+import java.net.ConnectException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -151,7 +152,7 @@ public class ChaosService {
                 log.warn("[Chaos] 模拟网络分区 @ {}", exp.getTarget());
                 throw new RuntimeException(
                         "Chaos: network partition at " + exp.getTarget(),
-                        new java.net.ConnectException("simulated"));
+                        new ConnectException("simulated"));
             }
             case ChaosExperiment.TYPE_RESOURCE_EXHAUSTION -> {
                 log.warn("[Chaos] 模拟资源耗尽 @ {}", exp.getTarget());

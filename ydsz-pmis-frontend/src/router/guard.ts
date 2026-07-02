@@ -15,12 +15,22 @@ import NProgress from 'nprogress'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { usePermissionStore } from '@/store/modules/permission'
+import i18n from '@/locales'
 
 // 关闭右上角转圈动画，仅保留顶部进度条
 NProgress.configure({ showSpinner: false })
 
 /** 白名单路径：无需登录即可访问 */
 const whiteList = ['/login', '/404']
+
+/**
+ * 解析路由标题：如果 title 是 i18n key（以 'route.' 开头）则通过 i18n 翻译，
+ * 否则直接返回原始值
+ */
+function resolveRouteTitle(title: string | undefined): string {
+  if (!title) return ''
+  return title.startsWith('route.') ? i18n.global.t(title) : title
+}
 
 /**
  * 注册路由守卫
@@ -72,7 +82,7 @@ export function setupRouterGuard(router: Router): void {
       // 缺失权限时跳转 /404，避免 URL 直接访问绕过后端菜单授权
       const permCode = to.meta?.permCode as string | undefined
       if (permCode && !userStore.hasPermission(permCode)) {
-        ElMessage.error(`无权限访问该页面：${(to.meta?.title as string) || to.path}`)
+        ElMessage.error(i18n.global.t('common.noPermission', { title: resolveRouteTitle(to.meta?.title as string) }))
         next({ path: '/404', replace: true })
         NProgress.done()
         return
@@ -94,8 +104,9 @@ export function setupRouterGuard(router: Router): void {
   // 后置守卫：关闭进度条 + 设置文档标题
   router.afterEach((to) => {
     NProgress.done()
-    const title = (to.meta.title as string) || ''
-    document.title = title ? `${title} - PMIS 运营管理系统` : 'PMIS 运营管理系统'
+    const title = resolveRouteTitle(to.meta.title as string)
+    const appTitle = i18n.global.t('common.appTitle')
+    document.title = title ? `${title} - ${appTitle}` : appTitle
   })
 
   // 错误守卫：路由异常时关闭进度条，避免卡死

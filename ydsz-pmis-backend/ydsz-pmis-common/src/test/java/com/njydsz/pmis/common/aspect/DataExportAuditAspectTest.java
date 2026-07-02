@@ -133,7 +133,7 @@ class DataExportAuditAspectTest {
     }
 
     private DataExportAudit annotation(String module, String action) {
-        return (DataExportAudit) java.lang.reflect.Proxy.newProxyInstance(
+        return (DataExportAudit) Proxy.newProxyInstance(
                 DataExportAudit.class.getClassLoader(),
                 new Class[]{DataExportAudit.class},
                 (proxy, method, args) -> {

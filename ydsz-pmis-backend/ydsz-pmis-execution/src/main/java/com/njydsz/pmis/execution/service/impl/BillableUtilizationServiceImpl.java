@@ -214,7 +214,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
         out.put("affectedCount", affected);
         out.put("rangeFrom", from.toString());
         out.put("rangeTo", to.toString());
-        out.put("recomputeAt", java.time.LocalDateTime.now().toString());
+        out.put("recomputeAt", LocalDateTime.now().toString());
         out.put("costMs", System.currentTimeMillis() - start);
         return out;
     }

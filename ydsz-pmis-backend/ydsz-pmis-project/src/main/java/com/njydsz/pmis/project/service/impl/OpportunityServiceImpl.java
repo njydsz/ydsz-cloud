@@ -376,7 +376,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      * @return 项目编号
      */
     private String buildProjectCode(OpportunityDO opp) {
-        String ts = java.time.LocalDateTime.now().format(CODE_FMT);
+        String ts = LocalDateTime.now().format(CODE_FMT);
         return PROJECT_CODE_PREFIX + ts;
     }
 

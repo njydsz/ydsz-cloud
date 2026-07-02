@@ -10,6 +10,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.InvocationHandler;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -155,8 +156,8 @@ class PermissionAspectTest {
 
     private static class Proxy {
         static Object newProxyInstance(ClassLoader loader, Class<?>[] interfaces,
-                                       java.lang.reflect.InvocationHandler h) {
-            return java.lang.reflect.Proxy.newProxyInstance(loader, interfaces, h);
+                                       InvocationHandler h) {
+            return Proxy.newProxyInstance(loader, interfaces, h);
         }
     }
 }

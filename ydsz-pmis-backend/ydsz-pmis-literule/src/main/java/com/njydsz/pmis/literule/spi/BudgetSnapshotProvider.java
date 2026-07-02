@@ -50,7 +50,7 @@ public interface BudgetSnapshotProvider {
         BigDecimal budget = getTotalBudget(projectId);
         if (budget == null || budget.compareTo(BigDecimal.ZERO) == 0) return 1.0;
         BigDecimal total = getIncurredCost(projectId).add(pendingAmount == null ? BigDecimal.ZERO : pendingAmount);
-        return total.divide(budget, 4, java.math.RoundingMode.HALF_UP).doubleValue();
+        return total.divide(budget, 4, RoundingMode.HALF_UP).doubleValue();
     }
 
     /**

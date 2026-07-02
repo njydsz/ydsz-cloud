@@ -5,15 +5,22 @@
 -->
 <script setup lang="ts">
 import { useRoute } from 'vue-router'
+import i18n from '@/locales'
 
 const route = useRoute()
+
+/** 解析路由标题：i18n key 则翻译，否则原样返回 */
+function resolveTitle(title: string | undefined, fallback: string): string {
+  if (!title) return fallback
+  return title.startsWith('route.') ? i18n.global.t(title) : title
+}
 </script>
 
 <template>
   <el-breadcrumb separator="/" class="breadcrumb">
-    <el-breadcrumb-item :to="{ path: '/dashboard' }">首页</el-breadcrumb-item>
+    <el-breadcrumb-item :to="{ path: '/dashboard' }">{{ resolveTitle('route.dashboard', '首页') }}</el-breadcrumb-item>
     <el-breadcrumb-item v-for="item in route.matched" :key="item.path">
-      {{ item.meta?.title || item.name }}
+      {{ resolveTitle(item.meta?.title as string, String(item.name)) }}
     </el-breadcrumb-item>
   </el-breadcrumb>
 </template>

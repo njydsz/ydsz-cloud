@@ -15,6 +15,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.lang.reflect.Proxy;
 import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -121,7 +122,7 @@ class RateLimiterAspectTest {
     }
 
     private RateLimit sampleAnnotation(int qps, String key, int window, String message) {
-        return (RateLimit) java.lang.reflect.Proxy.newProxyInstance(
+        return (RateLimit) Proxy.newProxyInstance(
                 RateLimit.class.getClassLoader(),
                 new Class[]{RateLimit.class},
                 (proxy, method, args) -> {

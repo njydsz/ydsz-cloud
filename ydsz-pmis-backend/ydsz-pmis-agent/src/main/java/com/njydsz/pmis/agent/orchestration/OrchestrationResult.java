@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 
@@ -61,6 +62,6 @@ public class OrchestrationResult implements Serializable {
      * @return 保留两位小数的字符串；为 null 时返回 "0.00"
      */
     public static String safeBd(BigDecimal b) {
-        return b == null ? "0.00" : b.setScale(2, java.math.RoundingMode.HALF_UP).toString();
+        return b == null ? "0.00" : b.setScale(2, RoundingMode.HALF_UP).toString();
     }
 }

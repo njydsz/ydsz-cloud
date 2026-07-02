@@ -50,7 +50,7 @@
         <!-- MyBatis-Plus（规则配置持久化，可选，由消费方提供 Mapper 实现） -->
         <dependency>
             <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-spring-boot3-starter</artifactId>
+            <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
             <optional>true</optional>
         </dependency>
 

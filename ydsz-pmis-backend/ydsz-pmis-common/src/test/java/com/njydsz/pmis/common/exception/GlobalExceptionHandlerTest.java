@@ -94,7 +94,7 @@ class GlobalExceptionHandlerTest {
         @SuppressWarnings("unchecked")
         ConstraintViolation<Object> v = mock(ConstraintViolation.class);
         when(v.getMessage()).thenReturn("ID 必须大于 0");
-        Set<ConstraintViolation<?>> set = new java.util.HashSet<>();
+        Set<ConstraintViolation<?>> set = new HashSet<>();
         set.add(v);
         ConstraintViolationException ex = new ConstraintViolationException(set);
 

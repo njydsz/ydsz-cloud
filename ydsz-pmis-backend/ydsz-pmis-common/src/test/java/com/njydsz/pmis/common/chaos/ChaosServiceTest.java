@@ -123,7 +123,7 @@ class ChaosServiceTest {
                 .build());
         assertThatThrownBy(() -> chaosService.maybeInject("X.y"))
                 .isInstanceOf(RuntimeException.class)
-                .hasCauseInstanceOf(java.net.ConnectException.class);
+                .hasCauseInstanceOf(ConnectException.class);
     }
 
     @Test

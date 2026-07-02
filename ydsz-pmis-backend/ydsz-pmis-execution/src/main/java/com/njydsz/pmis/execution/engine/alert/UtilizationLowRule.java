@@ -4,6 +4,7 @@ import com.njydsz.pmis.execution.dto.AlertEventDTO;
 import com.njydsz.pmis.execution.enums.AlertSeverity;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.UUID;
@@ -94,7 +95,7 @@ public class UtilizationLowRule implements AlertRule {
             severity = AlertSeverity.YELLOW;
         }
         if (severity == null) return null;
-        BigDecimal pct = util.multiply(new BigDecimal("100")).setScale(2, java.math.RoundingMode.HALF_UP);
+        BigDecimal pct = util.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
         return AlertEventDTO.builder()
                 .eventId(UUID.randomUUID().toString())
                 .ruleCode(getCode())

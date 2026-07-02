@@ -190,7 +190,7 @@ public class FlowMetrics {
             millis = Duration.between(instance.getStartAt(), instance.getEndAt()).toMillis();
         } else {
             // 未结束：用 now 临时记录
-            millis = Duration.between(instance.getStartAt(), java.time.LocalDateTime.now()).toMillis();
+            millis = Duration.between(instance.getStartAt(), LocalDateTime.now()).toMillis();
         }
         if (millis < 0) {
             return;
@@ -212,7 +212,7 @@ public class FlowMetrics {
         if (task.getFinishAt() != null) {
             millis = Duration.between(task.getCreatedAt(), task.getFinishAt()).toMillis();
         } else {
-            millis = Duration.between(task.getCreatedAt(), java.time.LocalDateTime.now()).toMillis();
+            millis = Duration.between(task.getCreatedAt(), LocalDateTime.now()).toMillis();
         }
         if (millis < 0) {
             return;
