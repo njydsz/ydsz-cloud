@@ -55,4 +55,24 @@ public interface FlowDefinitionMapper extends BaseMapper<FlowDefinitionDO> {
      */
     int updateActivityStatus(@Param("id") Long id,
                              @Param("activityStatus") Integer activityStatus);
+
+    /**
+     * P3-1: 查询同 flowCode + tenant 下处于灰度中（CANARYING）的所有定义，按 version 倒序
+     *
+     * @param flowCode 流程编码
+     * @param tenantId 租户 ID
+     * @return 灰度中定义列表（按 version desc）
+     */
+    java.util.List<FlowDefinitionDO> selectCanaryingByCode(@Param("flowCode") String flowCode,
+                                                           @Param("tenantId") Long tenantId);
+
+    /**
+     * P3-1: 查询同 flowCode + tenant 下的所有定义（含历史版本），按 version 倒序
+     *
+     * @param flowCode 流程编码
+     * @param tenantId 租户 ID
+     * @return 所有定义列表
+     */
+    java.util.List<FlowDefinitionDO> selectByFlowCode(@Param("flowCode") String flowCode,
+                                                      @Param("tenantId") Long tenantId);
 }

@@ -61,6 +61,12 @@ public class FlowEngineController {
     private final com.njydsz.pmis.workflow.flow.service.FlowEfficiencyService efficiencyService;
     /** GAP-P2: 流程模板服务 */
     private final com.njydsz.pmis.workflow.flow.service.FlowTemplateService templateService;
+    /** P1-6: SLA 超时自动策略服务 */
+    private final com.njydsz.pmis.workflow.flow.service.FlowSlaService slaService;
+    /** P1-7: WebSocket 待办数实时推送服务 */
+    private final com.njydsz.pmis.workflow.flow.service.FlowTodoCountPushService todoCountPushService;
+    /** P2-1: 智能审批辅助服务（推荐审批人 / 起草意见） */
+    private final com.njydsz.pmis.workflow.flow.service.FlowAiAssistService aiAssistService;
 
     // ============== 引擎信息 ==============
 
@@ -334,6 +340,20 @@ public class FlowEngineController {
     @GetMapping("/instance/{id}/diagram")
     public Result<Map<String, Object>> diagram(@PathVariable String id) {
         return Result.ok(workflowFacade.getDiagram(id));
+    }
+
+    /**
+     * P2-4: 流程回放步骤序列
+     *
+     * <p>按时间顺序合并历史任务 + 审计日志 + 当前待办为统一步骤序列，驱动前端
+     * {@code FlowDiagramReplay} 组件依次高亮节点。
+     *
+     * @param id 流程实例 ID
+     * @return 步骤列表（按 timestamp 升序）
+     */
+    @GetMapping("/instance/{id}/replay")
+    public Result<List<Map<String, Object>>> replay(@PathVariable String id) {
+        return Result.ok(workflowFacade.getReplaySteps(id));
     }
 
     /**
@@ -834,6 +854,134 @@ public class FlowEngineController {
         return Result.ok();
     }
 
+    // ============== P1-6: SLA 超时自动策略 ==============
+
+    /**
+     * P1-6: 手动触发 SLA 扫描（管理后台调试用，scheduler 默认每 60s 自动扫描）
+     *
+     * @return 本轮扫描处理的任务数
+     */
+    @PostMapping("/sla/scan")
+    public Result<Integer> slaScan() {
+        int processed = slaService.scanAndProcess();
+        return Result.ok(processed);
+    }
+
+    /**
+     * P1-6: 手动触发单条任务的 SLA 处理
+     *
+     * @param taskId 任务 ID
+     * @return 是否处理成功
+     */
+    @PostMapping("/sla/process/{taskId}")
+    public Result<Boolean> slaProcess(@PathVariable Long taskId) {
+        FlowTaskDO task = taskService.getById(taskId);
+        if (task == null) {
+            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.NOT_FOUND, "任务不存在: " + taskId);
+        }
+        boolean ok = slaService.processOverdue(task);
+        return Result.ok(ok);
+    }
+
+    // ============== P1-7: WebSocket 待办数实时推送 ==============
+
+    /**
+     * P1-7: 查询当前用户的待办数（HTTP 拉模式，作为 WebSocket 推送的兜底）
+     *
+     * @return 包含 todoCount、userId、timestamp 的响应
+     */
+    @GetMapping("/todo/count")
+    public Result<Map<String, Object>> myTodoCount() {
+        Long userId = SecurityContext.getUserId();
+        if (userId == null) {
+            return Result.ok(Map.of("userId", 0, "todoCount", 0));
+        }
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        long count = taskService.countOverdue(null, tenantId) // 占位调用，避免使用未读字段
+                + 0;
+        // 直接用 taskService.listTodoByUser 计算
+        var tasks = taskService.listTodoByUser(userId, null, null, tenantId);
+        count = tasks == null ? 0 : tasks.size();
+        return Result.ok(Map.of(
+                "userId", userId,
+                "todoCount", count,
+                "timestamp", System.currentTimeMillis()
+        ));
+    }
+
+    /**
+     * P1-7: 手动触发推送当前用户待办数到 WebSocket（前端重连后调一次同步）
+     *
+     * @return 是否成功
+     */
+    @PostMapping("/todo/push-mine")
+    public Result<Boolean> pushMyTodoCount() {
+        Long userId = SecurityContext.getUserId();
+        if (userId == null) {
+            return Result.ok(false);
+        }
+        todoCountPushService.pushTodoCount(userId);
+        return Result.ok(true);
+    }
+
+    // ============== P2-1: 智能审批辅助 ==============
+
+    /**
+     * P2-1: 推荐审批人
+     *
+     * <p>请求体：{
+     *   flowCode, nodeCode, businessType, businessId, businessTitle,
+     *   requiredLevel, requiredRole, requiredDepartment,
+     *   candidates: [ {userId, name, department, level, role, activeTasks, avgApprovalMs} ],
+     *   topN
+     * }
+     *
+     * @return Top N 推荐审批人列表
+     */
+    @PostMapping("/ai/recommend-approvers")
+    public Result<List<Map<String, Object>>> recommendApprovers(
+            @RequestBody Map<String, Object> body) {
+        if (body == null) {
+            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
+        }
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> candidates = body.get("candidates") instanceof List<?>
+                ? (List<Map<String, Object>>) body.get("candidates") : List.of();
+        int topN = body.get("topN") instanceof Number n ? n.intValue() : 3;
+        List<Map<String, Object>> top = aiAssistService.recommendApprovers(body, candidates, topN);
+        return Result.ok(top);
+    }
+
+    /**
+     * P2-1: 起草审批意见
+     *
+     * <p>请求体：{
+     *   action (PASS/REJECT/TRANSFER/DELEGATE/URGE),
+     *   flowCode, flowName, nodeCode, nodeName,
+     *   title, riskLevel, overdueDays, tone, maxLength,
+     *   historicalComments: [String]
+     * }
+     */
+    @PostMapping("/ai/draft-comment")
+    public Result<Map<String, Object>> draftComment(@RequestBody Map<String, Object> body) {
+        if (body == null) {
+            return Result.failed(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
+        }
+        Map<String, Object> result = aiAssistService.draftComment(body);
+        return Result.ok(result);
+    }
+
+    /**
+     * P2-1: 检查 AI Agent 服务是否可用
+     */
+    @GetMapping("/ai/status")
+    public Result<Map<String, Object>> aiStatus() {
+        return Result.ok(Map.of(
+                "available", aiAssistService.isAiAvailable(),
+                "agents", List.of("APPROVER_RECOMMEND", "COMMENT_DRAFT")
+        ));
+    }
+
     // ============== GAP-P2: 审批效率分析 ==============
 
     /**
@@ -935,5 +1083,110 @@ public class FlowEngineController {
     @GetMapping("/template/{templateCode}/preview")
     public Result<Map<String, Object>> previewTemplate(@PathVariable String templateCode) {
         return Result.ok(templateService.previewTemplate(templateCode));
+    }
+
+    // ============== P3-1: 灰度发布 ==============
+
+    /** P3-1: 灰度发布服务 */
+    private final com.njydsz.pmis.workflow.flow.service.FlowCanaryService canaryService;
+
+    /**
+     * P3-1: 启动灰度发布
+     *
+     * <p>将指定定义标记为灰度版，按 initialPercent 切流。
+     *
+     * @param definitionId   灰度版定义 ID
+     * @param initialPercent 初始灰度比例（0-100）
+     * @param strategy       切流策略：USER_HASH / RANDOM / WHITELIST
+     * @param operatorId     操作人 ID
+     * @param operatorName   操作人姓名
+     * @param note           备注
+     * @return 统一响应结果
+     */
+    @PostMapping("/canary/{definitionId}/publish")
+    public Result<Void> publishCanary(
+            @PathVariable Long definitionId,
+            @RequestParam(defaultValue = "10") int initialPercent,
+            @RequestParam(defaultValue = "USER_HASH") String strategy,
+            @RequestParam(required = false) Long operatorId,
+            @RequestParam(required = false) String operatorName,
+            @RequestParam(required = false) String note) {
+        canaryService.publishCanary(definitionId, initialPercent, strategy,
+                operatorId, operatorName, note);
+        return Result.ok();
+    }
+
+    /**
+     * P3-1: 调整灰度比例（逐步放量/缩量）
+     *
+     * @param definitionId 定义 ID
+     * @param newPercent   新比例（0-100）
+     * @param operatorId   操作人 ID
+     * @param operatorName 操作人姓名
+     * @param note         备注
+     * @return 统一响应结果
+     */
+    @PostMapping("/canary/{definitionId}/adjust")
+    public Result<Void> adjustCanary(
+            @PathVariable Long definitionId,
+            @RequestParam int newPercent,
+            @RequestParam(required = false) Long operatorId,
+            @RequestParam(required = false) String operatorName,
+            @RequestParam(required = false) String note) {
+        canaryService.adjustCanaryPercent(definitionId, newPercent, operatorId, operatorName, note);
+        return Result.ok();
+    }
+
+    /**
+     * P3-1: 全量发布 - 灰度版晋升为稳定版
+     *
+     * @param definitionId 灰度版定义 ID
+     * @param operatorId   操作人 ID
+     * @param operatorName 操作人姓名
+     * @param note         备注
+     * @return 统一响应结果
+     */
+    @PostMapping("/canary/{definitionId}/promote")
+    public Result<Void> promoteCanary(
+            @PathVariable Long definitionId,
+            @RequestParam(required = false) Long operatorId,
+            @RequestParam(required = false) String operatorName,
+            @RequestParam(required = false) String note) {
+        canaryService.promoteCanary(definitionId, operatorId, operatorName, note);
+        return Result.ok();
+    }
+
+    /**
+     * P3-1: 灰度回滚
+     *
+     * @param definitionId 灰度版定义 ID
+     * @param operatorId   操作人 ID
+     * @param operatorName 操作人姓名
+     * @param note         备注（含回滚原因）
+     * @return 统一响应结果
+     */
+    @PostMapping("/canary/{definitionId}/rollback")
+    public Result<Void> rollbackCanary(
+            @PathVariable Long definitionId,
+            @RequestParam(required = false) Long operatorId,
+            @RequestParam(required = false) String operatorName,
+            @RequestParam(required = false) String note) {
+        canaryService.rollbackCanary(definitionId, operatorId, operatorName, note);
+        return Result.ok();
+    }
+
+    /**
+     * P3-1: 查询某 flowCode 的灰度发布历史
+     *
+     * @param flowCode 流程编码
+     * @param tenantId 租户 ID（可选）
+     * @return rollout 日志列表
+     */
+    @GetMapping("/canary/{flowCode}/rollout-log")
+    public Result<List<Map<String, Object>>> rolloutLog(
+            @PathVariable String flowCode,
+            @RequestParam(required = false) Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(canaryService.listCanaryRolloutLog(flowCode, tid));
     }
 }

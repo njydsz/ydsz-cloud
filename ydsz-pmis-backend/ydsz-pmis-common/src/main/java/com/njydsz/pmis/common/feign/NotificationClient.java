@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.api.Result;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.Map;
 
@@ -27,4 +28,20 @@ public interface NotificationClient {
      */
     @PostMapping("/api/v1/notification/send")
     Result<Integer> send(@RequestBody Map<String, Object> payload);
+
+    /**
+     * P1-7: 实时推送消息到指定用户（WebSocket）
+     *
+     * <p>工作流引擎通过本接口在任务创建/完成时向办理人推送实时消息，
+     * 包括待办数更新 / 通知消息等。前端订阅 /user/{userId}/queue/notifications 即可接收。
+     *
+     * @param userId  接收用户 ID
+     * @param type    消息类型 (TASK_ASSIGNED/TASK_COMPLETED/TODO_COUNT/NOTIFICATION)
+     * @param payload 消息内容
+     * @return 推送结果
+     */
+    @PostMapping("/api/v1/notifications/push")
+    Result<Map<String, Object>> pushRealtime(@RequestParam("userId") Long userId,
+                                             @RequestParam("type") String type,
+                                             @RequestBody Object payload);
 }

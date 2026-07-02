@@ -15,10 +15,12 @@ import com.njydsz.pmis.workflow.flow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.flow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.flow.service.FlowCcService;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowSubProcessService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
+import com.njydsz.pmis.workflow.flow.service.FlowCanaryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,6 +66,8 @@ class FlowInstanceServiceImplTest {
     private ApplicationEventPublisher eventPublisher;
     private FlowSubProcessService subProcessService;
     private FlowCcService ccService;
+    private FlowMetrics flowMetrics;
+    private FlowCanaryService canaryService;
     private FlowInstanceServiceImpl service;
 
     @BeforeEach
@@ -80,8 +84,13 @@ class FlowInstanceServiceImplTest {
         subProcessService = mock(FlowSubProcessService.class);
         // GAP-P1: 注入 FlowCcService mock
         ccService = mock(FlowCcService.class);
+        // P2-3: Prometheus 指标 mock（测试不需要真实指标）
+        flowMetrics = mock(FlowMetrics.class);
+        // P3-1: 灰度发布服务 mock
+        canaryService = mock(FlowCanaryService.class);
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
-                advancer, taskService, taskMapper, eventListeners, eventPublisher, subProcessService, ccService);
+                canaryService, advancer, taskService, taskMapper, eventListeners,
+                flowMetrics, eventPublisher, subProcessService, ccService);
     }
 
     @Test
@@ -120,7 +129,8 @@ class FlowInstanceServiceImplTest {
         dto.setBusinessType("initiation");
         dto.setBusinessId("100");
         when(instanceMapper.selectByBusiness(anyString(), anyString())).thenReturn(null);
-        when(definitionService.getPublished(eq("unknown"), eq("1.0"), any())).thenReturn(null);
+        when(canaryService.resolveEffectiveDefinition(eq("unknown"), eq("1.0"), any(), any()))
+                .thenReturn(null);
 
         assertThatThrownBy(() -> service.start(dto))
                 .isInstanceOf(BizException.class)
@@ -136,7 +146,8 @@ class FlowInstanceServiceImplTest {
         def.setFlowName("测试流程");
         def.setVersion("1.0");
         when(instanceMapper.selectByBusiness(anyString(), anyString())).thenReturn(null);
-        when(definitionService.getPublished(eq("f1"), anyString(), any())).thenReturn(def);
+        when(canaryService.resolveEffectiveDefinition(eq("f1"), anyString(), any(), any()))
+                .thenReturn(def);
         // 模拟 insert 后回填 id
         org.mockito.Mockito.doAnswer(inv -> {
             FlowInstanceDO arg = inv.getArgument(0);
@@ -178,7 +189,8 @@ class FlowInstanceServiceImplTest {
         def.setFlowCode("f1");
         def.setFlowName("测试");
         when(instanceMapper.selectByBusiness(anyString(), anyString())).thenReturn(null);
-        when(definitionService.getPublished(anyString(), anyString(), any())).thenReturn(def);
+        when(canaryService.resolveEffectiveDefinition(anyString(), anyString(), any(), any()))
+                .thenReturn(def);
         org.mockito.Mockito.doAnswer(inv -> {
             FlowInstanceDO arg = inv.getArgument(0);
             arg.setId(200L);

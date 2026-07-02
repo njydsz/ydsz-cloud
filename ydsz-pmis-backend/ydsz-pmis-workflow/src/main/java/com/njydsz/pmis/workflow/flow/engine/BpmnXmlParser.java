@@ -68,16 +68,17 @@ import java.util.Map;
 @Component
 public class BpmnXmlParser {
 
-    /** BPMN 默认命名空间（保留供未来扩展） */
-    @SuppressWarnings("unused")
+    /** BPMN 默认命名空间 */
     private static final String BPMN_NS = "http://www.omg.org/spec/BPMN/20100524/MODEL";
-    /** BPMNDI 命名空间（用于坐标，可选解析，保留供未来扩展） */
-    @SuppressWarnings("unused")
+    /** BPMNDI 命名空间（用于解析节点/边的坐标 — P3-1 BPMN 回放） */
     private static final String BPMNDI_NS = "http://www.omg.org/spec/BPMN/20100524/DI";
+    /** DC 命名空间（Dimension/Coordinate，x/y/width/height） */
+    private static final String DC_NS = "http://www.omg.org/spec/DD/20100524/DC";
+    /** DI 命名空间（Diagram Interchange 基础） */
+    private static final String DI_NS = "http://www.omg.org/spec/DD/20100524/DI";
     /** BPMN 扩展属性命名空间（兼容 flowable/camunda/activiti 约定） */
     private static final String BPMN_EXT_NS = "http://flowable.org/bpmn";
-    /** xsi 命名空间（用于 conditionExpression type，保留供未来扩展） */
-    @SuppressWarnings("unused")
+    /** xsi 命名空间（用于 conditionExpression type） */
     private static final String XSI_NS = "http://www.w3.org/2001/XMLSchema-instance";
 
     /**
@@ -161,8 +162,18 @@ public class BpmnXmlParser {
 
         model.setNodes(nodes);
         model.setSkips(skips);
-        log.info("[BpmnParser] 解析完成: processId={} nodes={} skips={}",
-                model.getProcessId(), nodes.size(), skips.size());
+
+        // P3-1: 解析 BPMN 2.0 BPMNDI 段，提取节点/边的可视化坐标
+        // （用于驱动流程图回放与 SVG 可视化高亮）
+        Map<String, BpmnModel.NodeCoordinate> nodeCoords = new HashMap<>();
+        Map<String, List<BpmnModel.NodeCoordinate>> skipCoords = new HashMap<>();
+        parseBpmnDiagram(root, nodeCoords, skipCoords);
+        model.setNodeCoordinates(nodeCoords);
+        model.setSkipCoordinates(skipCoords);
+
+        log.info("[BpmnParser] 解析完成: processId={} nodes={} skips={} withCoords={} edgeCoords={}",
+                model.getProcessId(), nodes.size(), skips.size(),
+                nodeCoords.size(), skipCoords.size());
         return model;
     }
 
@@ -601,5 +612,179 @@ public class BpmnXmlParser {
             }
         }
         return map;
+    }
+
+    // ============== P3-1: BPMNDI 坐标解析 ==============
+
+    /**
+     * P3-1: 解析 BPMN 2.0 BPMNDI 段（Diagram Interchange），提取节点和边的可视化坐标。
+     *
+     * <p>BPMN XML 顶层结构（节选）：
+     * <pre>
+     * &lt;definitions ...&gt;
+     *   &lt;process id="..."&gt;...&lt;/process&gt;
+     *   &lt;BPMNDiagram id="..."&gt;
+     *     &lt;BPMNPlane bpmnElement="..."&gt;
+     *       &lt;BPMNShape id="..." bpmnElement="node1"&gt;
+     *         &lt;Bounds x="100" y="80" width="100" height="60"/&gt;
+     *       &lt;/BPMNShape&gt;
+     *       &lt;BPMNEdge id="..." bpmnElement="flow1"&gt;
+     *         &lt;waypoint x="200" y="110"/&gt;
+     *         &lt;waypoint x="300" y="110"/&gt;
+     *       &lt;/BPMNEdge&gt;
+     *     &lt;/BPMNPlane&gt;
+     *   &lt;/BPMNDiagram&gt;
+     * &lt;/definitions&gt;
+     * </pre>
+     *
+     * <p>解析过程：
+     * <ol>
+     *   <li>遍历根 &lt;definitions&gt; 找 &lt;BPMNDiagram&gt; / &lt;BPMNPlane&gt;</li>
+     *   <li>遍历 &lt;BPMNShape&gt; 读取 Bounds（x/y/width/height），key = bpmnElement（节点 id）</li>
+     *   <li>遍历 &lt;BPMNEdge&gt; 读取所有 waypoint（折线拐点），key = bpmnElement（边 id）</li>
+     * </ol>
+     *
+     * <p>无 BPMNDI 段时（手写或简化 BPMN）跳过，map 保持为空，调用方需降级到自动布局。
+     *
+     * @param root          &lt;definitions&gt; 根节点
+     * @param nodeCoords    输出：节点坐标映射（key = nodeCode）
+     * @param skipCoords    输出：边坐标映射（key = sequenceFlowId）
+     */
+    private void parseBpmnDiagram(Element root,
+                                  Map<String, BpmnModel.NodeCoordinate> nodeCoords,
+                                  Map<String, List<BpmnModel.NodeCoordinate>> skipCoords) {
+        if (root == null) {
+            return;
+        }
+        // 找 <BPMNDiagram>
+        Element bpmnDiagram = findChildByLocalName(root, "BPMNDiagram");
+        if (bpmnDiagram == null) {
+            bpmnDiagram = findChildByLocalName(root, "bpmndiagram");
+        }
+        if (bpmnDiagram == null) {
+            log.debug("[BpmnParser] BPMN XML 未包含 <BPMNDiagram> 段，跳过坐标解析");
+            return;
+        }
+        // 找 <BPMNPlane>
+        Element bpmnPlane = findChildByLocalName(bpmnDiagram, "BPMNPlane");
+        if (bpmnPlane == null) {
+            bpmnPlane = findChildByLocalName(bpmnDiagram, "bpmnplane");
+        }
+        if (bpmnPlane == null) {
+            return;
+        }
+        // 遍历 BPMNShape（节点）和 BPMNEdge（边）
+        NodeList children = bpmnPlane.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node n = children.item(i);
+            if (!(n instanceof Element child)) {
+                continue;
+            }
+            String local = child.getLocalName();
+            if (local == null) {
+                local = child.getNodeName();
+            }
+            if ("BPMNShape".equalsIgnoreCase(local) || "bpmnshape".equals(local)) {
+                parseBpmnShape(child, nodeCoords);
+            } else if ("BPMNEdge".equalsIgnoreCase(local) || "bpmnedge".equals(local)) {
+                parseBpmnEdge(child, skipCoords);
+            }
+        }
+    }
+
+    /**
+     * 解析 BPMNShape：提取 Bounds，key = bpmnElement（节点 id）
+     */
+    private void parseBpmnShape(Element shape, Map<String, BpmnModel.NodeCoordinate> nodeCoords) {
+        String bpmnElement = shape.getAttribute("bpmnElement");
+        if (bpmnElement == null || bpmnElement.isBlank()) {
+            return;
+        }
+        // 找 <Bounds x y width height>
+        Element bounds = findChildByLocalName(shape, "Bounds");
+        if (bounds == null) {
+            return;
+        }
+        try {
+            double x = parseDouble(bounds.getAttribute("x"));
+            double y = parseDouble(bounds.getAttribute("y"));
+            double w = parseDouble(bounds.getAttribute("width"));
+            double h = parseDouble(bounds.getAttribute("height"));
+            nodeCoords.put(bpmnElement, new BpmnModel.NodeCoordinate(x, y, w, h));
+        } catch (NumberFormatException nfe) {
+            log.warn("[BpmnParser] BPMNShape Bounds 解析失败: bpmnElement={}", bpmnElement);
+        }
+    }
+
+    /**
+     * 解析 BPMNEdge：提取所有 waypoint，key = bpmnElement（边 id）
+     */
+    private void parseBpmnEdge(Element edge, Map<String, List<BpmnModel.NodeCoordinate>> skipCoords) {
+        String bpmnElement = edge.getAttribute("bpmnElement");
+        if (bpmnElement == null || bpmnElement.isBlank()) {
+            return;
+        }
+        List<BpmnModel.NodeCoordinate> waypoints = new ArrayList<>();
+        NodeList children = edge.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node n = children.item(i);
+            if (!(n instanceof Element wp)) {
+                continue;
+            }
+            String local = wp.getLocalName();
+            if (local == null) {
+                local = wp.getNodeName();
+            }
+            if ("waypoint".equalsIgnoreCase(local) || "di:waypoint".equalsIgnoreCase(local)) {
+                try {
+                    double x = parseDouble(wp.getAttribute("x"));
+                    double y = parseDouble(wp.getAttribute("y"));
+                    waypoints.add(new BpmnModel.NodeCoordinate(x, y));
+                } catch (NumberFormatException nfe) {
+                    log.warn("[BpmnParser] waypoint 解析失败: bpmnElement={}", bpmnElement);
+                }
+            }
+        }
+        if (!waypoints.isEmpty()) {
+            skipCoords.put(bpmnElement, waypoints);
+        }
+    }
+
+    /**
+     * 通用子元素查找（大小写不敏感、忽略命名空间前缀）
+     */
+    private Element findChildByLocalName(Element parent, String localName) {
+        if (parent == null) {
+            return null;
+        }
+        NodeList children = parent.getChildNodes();
+        for (int i = 0; i < children.getLength(); i++) {
+            Node n = children.item(i);
+            if (n instanceof Element e) {
+                String local = e.getLocalName();
+                if (local == null) {
+                    local = e.getNodeName();
+                    // 去掉命名空间前缀（di:waypoint → waypoint）
+                    int colon = local.indexOf(':');
+                    if (colon >= 0 && colon + 1 < local.length()) {
+                        local = local.substring(colon + 1);
+                    }
+                }
+                if (localName.equalsIgnoreCase(local)) {
+                    return e;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 安全解析 double，空字符串或 null 返回 0
+     */
+    private double parseDouble(String value) {
+        if (value == null || value.isBlank()) {
+            return 0d;
+        }
+        return Double.parseDouble(value.trim());
     }
 }

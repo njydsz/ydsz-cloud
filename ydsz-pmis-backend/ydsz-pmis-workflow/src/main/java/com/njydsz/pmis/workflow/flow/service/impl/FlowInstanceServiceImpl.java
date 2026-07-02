@@ -20,6 +20,7 @@ import com.njydsz.pmis.workflow.flow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.flow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.flow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowSubProcessService;
@@ -53,10 +54,14 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     private final FlowInstanceMapper instanceMapper;
     private final FlowDefinitionService definitionService;
+    /** P3-1: 灰度发布服务（启动流程时按 canary 配置切流） */
+    private final com.njydsz.pmis.workflow.flow.service.FlowCanaryService canaryService;
     private final FlowAdvancer advancer;
     private final FlowTaskService taskService;
     private final FlowTaskMapper taskMapper;
     private final List<FlowEventListener> eventListeners;
+    /** P2-3: Prometheus 指标收集（可能为 null：测试环境） */
+    private final FlowMetrics flowMetrics;
     /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
     private final ApplicationEventPublisher eventPublisher;
     /** P1-3: 子流程服务（处理 callActivity 子流程启动） */
@@ -87,10 +92,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         Long tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
                 : SecurityContext.getTenantIdOrDefault(1L);
-        FlowDefinitionDO def = definitionService.getPublished(
+        // P3-1: 灰度发布 - 启动时按 canary 配置切流到稳定版或灰度版
+        FlowDefinitionDO def = canaryService.resolveEffectiveDefinition(
                 dto.getFlowCode(),
                 StringUtils.hasText(dto.getVersion()) ? dto.getVersion() : "1.0",
-                tenantId);
+                tenantId,
+                dto.getInitiatorId());
         if (def == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
                     "流程定义未发布: code=" + dto.getFlowCode());
@@ -141,11 +148,19 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P0-2: 触发 onInstanceStart 事件
         fireInstanceStart(instanceId, mergedVars);
 
+        // P2-3: Prometheus 指标 — 实例创建
+        if (flowMetrics != null) {
+            flowMetrics.incInstanceCreated(def.getFlowCode());
+        }
+
         // 3. 引擎推进：开始节点 → 下一节点
         try {
             advancer.start(instanceId);
         } catch (Exception e) {
             fireError(instanceId, e);
+            if (flowMetrics != null) {
+                flowMetrics.incStartError(def.getFlowCode(), e.getClass().getSimpleName());
+            }
             throw e;
         }
         log.info("[Flow] 启动流程: code={} bizId={} instanceId={}",
@@ -193,6 +208,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 取消所有 PENDING 任务
         taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
         log.info("[Flow] 终止流程: instanceId={} reason={}", instanceId, reason);
+        // P2-3: Prometheus 指标 — 实例终止 + 耗时
+        if (flowMetrics != null) {
+            flowMetrics.incInstanceFinished(instance.getFlowCode(), "TERMINATED");
+            flowMetrics.recordInstanceDuration(instance, "TERMINATED");
+        }
         // P2-34: 触发 onInstanceTerminated 事件
         fireEvent(l -> l.onInstanceTerminated(instanceId, reason));
         // P2-37: 同时调用携带上下文的重载版本
@@ -215,6 +235,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P2-18: 冻结 PENDING/CLAIMED 任务为 FROZEN，禁止办理
         taskMapper.freezeByInstance(instanceId);
         log.info("[Flow] 挂起流程: instanceId={}", instanceId);
+        // P2-3: Prometheus 指标
+        if (flowMetrics != null) {
+            flowMetrics.incInstanceSuspended(instance.getFlowCode());
+        }
         // P2-34: 触发 onInstanceSuspended 事件
         fireEvent(l -> l.onInstanceSuspended(instanceId));
         // P2-35: 发布 Spring 异步事件
@@ -234,6 +258,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // P2-18: 解冻 FROZEN 任务，回到 PENDING 可办理
         taskMapper.unfreezeByInstance(instanceId);
         log.info("[Flow] 激活流程: instanceId={}", instanceId);
+        // P2-3: Prometheus 指标
+        if (flowMetrics != null) {
+            flowMetrics.incInstanceActivated(instance.getFlowCode());
+        }
         // P2-34: 触发 onInstanceActivated 事件
         fireEvent(l -> l.onInstanceActivated(instanceId));
         // P2-35: 发布 Spring 异步事件
@@ -255,6 +283,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 endNodeCode, null, now, durationMs);
         taskService.cancelByInstance(instanceId, FlowTaskStatus.SKIPPED.name());
         log.info("[Flow] 流程完成: instanceId={} endNode={}", instanceId, endNodeCode);
+        // P2-3: Prometheus 指标 — 实例完成 + 耗时
+        if (flowMetrics != null) {
+            flowMetrics.incInstanceFinished(instance.getFlowCode(), "COMPLETED");
+            flowMetrics.recordInstanceDuration(instance, "COMPLETED");
+        }
 
         // 业务侧事件：onInstanceCompleted
         fireEvent(l -> l.onInstanceCompleted(instanceId));
@@ -329,6 +362,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             throw new BizException(BizErrorCode.INTERNAL_ERROR, "撤回失败: " + e.getMessage());
         }
         log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
+        // P2-3: Prometheus 指标 — 撤回
+        if (flowMetrics != null) {
+            flowMetrics.incRecall(instance.getFlowCode());
+        }
         // P2-34: 触发 onInstanceRecalled 事件
         fireEvent(l -> l.onInstanceRecalled(instanceId, initiatorId));
         // P2-35: 发布 Spring 异步事件

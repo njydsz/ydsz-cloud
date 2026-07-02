@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -112,4 +113,14 @@ public interface FlowInstanceService {
      * @param variables  变量 Map
      */
     void setVariables(Long instanceId, Map<String, Object> variables);
+
+    /**
+     * 引擎内部方法：推进后批量生成任务（供 FlowAdvancer / FlowTaskService 调用）
+     *
+     * @param instanceId 流程实例 ID
+     * @param nextNodes  推进后的下一节点列表
+     * @param variables  流程变量
+     */
+    void generateTasksForNodes(Long instanceId, List<FlowNodeDO> nextNodes,
+                                Map<String, Object> variables);
 }

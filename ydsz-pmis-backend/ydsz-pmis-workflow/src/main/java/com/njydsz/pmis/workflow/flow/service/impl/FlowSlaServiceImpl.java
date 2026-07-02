@@ -10,6 +10,7 @@ import com.njydsz.pmis.workflow.flow.enums.FlowSlaAction;
 import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.flow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.flow.service.FlowSlaService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +55,8 @@ public class FlowSlaServiceImpl implements FlowSlaService {
     @org.springframework.context.annotation.Lazy
     private final FlowTaskService taskService;
     private final FlowNotificationHelper notificationHelper;
+    /** P2-3: Prometheus 指标（可能为 null：测试环境） */
+    private final FlowMetrics flowMetrics;
 
     /** 单次扫描上限（避免大表全表扫描） */
     private static final int SCAN_BATCH_SIZE = 500;
@@ -281,6 +284,11 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             taskService.pass(dto);
             taskMapper.markSlaAction(task.getId(), FlowSlaAction.AUTO_PASS.name(), 0);
             log.info("[FlowSla] 自动通过: taskId={} comment={}", task.getId(), comment);
+            // P2-3: Prometheus 指标
+            if (flowMetrics != null) {
+                flowMetrics.incSlaTimeout(task.getFlowCode(), "AUTO_PASS");
+                flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "AUTO_PASS");
+            }
             return true;
         } catch (Exception e) {
             log.error("[FlowSla] 自动通过失败: taskId={} err={}", task.getId(), e.getMessage(), e);
@@ -303,6 +311,11 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             taskService.reject(dto);
             taskMapper.markSlaAction(task.getId(), FlowSlaAction.AUTO_REJECT.name(), 0);
             log.info("[FlowSla] 自动驳回: taskId={} comment={}", task.getId(), comment);
+            // P2-3: Prometheus 指标
+            if (flowMetrics != null) {
+                flowMetrics.incSlaTimeout(task.getFlowCode(), "AUTO_REJECT");
+                flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "AUTO_REJECT");
+            }
             return true;
         } catch (Exception e) {
             log.error("[FlowSla] 自动驳回失败: taskId={} err={}", task.getId(), e.getMessage(), e);
@@ -349,6 +362,11 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                     taskMapper.updateById(afterTransfer);
                 }
                 log.info("[FlowSla] 升级成功: taskId={} escalateUserId={}", task.getId(), escalateUserId);
+                // P2-3: Prometheus 指标
+                if (flowMetrics != null) {
+                    flowMetrics.incSlaTimeout(task.getFlowCode(), "ESCALATE");
+                    flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "ESCALATE");
+                }
                 return true;
             } catch (Exception transferEx) {
                 // transfer 失败时降级：仅通知目标用户，标记升级

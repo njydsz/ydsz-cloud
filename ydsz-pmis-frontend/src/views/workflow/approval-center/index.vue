@@ -9,6 +9,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
+import { UserPicker, CommentEditor } from '@/components/common'
 import {
   pageTodoTasks,
   pageDoneTasks,
@@ -152,21 +153,65 @@ const opType = ref<'pass' | 'reject' | 'transfer' | 'delegate' | 'urge'>('pass')
 const opTask = ref<FlowTaskDTO | null>(null)
 const opForm = reactive({
   comment: '',
+  /** 目标用户对象（P1-8: UserPicker 选择） */
+  targetUser: null as { id: number; realName?: string; username?: string } | null,
   targetUserId: undefined as number | undefined,
   targetUserName: '',
   targetNodeCode: '',
   /** 驳回目标节点列表（任意历史节点） */
   rejectTargets: [] as Array<{ nodeCode: string; nodeName?: string }>,
+  /** 附件列表（P1-9: CommentEditor 附件） */
+  attachments: [] as Array<{ uid: string; fileId?: string | number; name: string; url: string }>,
+  /** 提及列表（P1-9: CommentEditor @人） */
+  mentions: [] as Array<{ userId: number; name: string }>,
 })
+
+/** P1-9: 审批常用语 */
+const commentPhrases = [
+  '同意',
+  '同意，请按计划推进',
+  '同意，注意控制风险',
+  '请补充资料后再议',
+  '请修改后重新提交',
+  '驳回，理由不充分',
+  '已了解',
+]
+
+/** P1-9: 有人被 @ 时，给被 @ 用户发通知（占位，留待后端实现） */
+function onOpMention(m: { userId: number; name: string }) {
+  // 占位：当前仅记录到 mentions 列表
+  // 后续可扩展为：@了谁，谁就会在抄送列表/被通知人里收到额外提醒
+  // eslint-disable-next-line no-console
+  console.debug('[ApprovalCenter] @ 提及用户:', m)
+}
+
+/**
+ * P1-8: UserPicker 变更同步 id/name
+ */
+function onTargetUserChange(v: unknown) {
+  if (v && typeof v === 'object') {
+    opForm.targetUserId = (v as { id: number }).id
+    opForm.targetUserName =
+      (v as { realName?: string; username?: string }).realName ||
+      (v as { username?: string }).username ||
+      ''
+  } else {
+    opForm.targetUserId = undefined
+    opForm.targetUserName = ''
+  }
+}
 
 async function openOpDialog(type: typeof opType.value, task: FlowTaskDTO) {
   opType.value = type
   opTask.value = task
   opForm.comment = ''
+  opForm.targetUser = null
   opForm.targetUserId = undefined
   opForm.targetUserName = ''
   opForm.targetNodeCode = ''
   opForm.rejectTargets = []
+  opForm.attachments = []
+  opForm.mentions = []
   opDialog.value = true
   // P1-1: 驳回时异步加载可驳回节点列表
   if (type === 'reject') {
@@ -200,6 +245,15 @@ async function submitOp() {
     targetUserId: opForm.targetUserId,
     targetUserName: opForm.targetUserName,
     targetNodeCode: opForm.targetNodeCode || undefined,
+    variables: {
+      // P1-9: 携带附件 fileId 列表与提及用户列表
+      attachments: opForm.attachments.map((a) => ({
+        fileId: a.fileId,
+        name: a.name,
+        url: a.url,
+      })),
+      mentions: opForm.mentions,
+    },
   }
   try {
     let res
@@ -644,18 +698,23 @@ function onTabChange(tab: string) {
     >
       <el-form label-position="top">
         <el-form-item label="审批意见" v-if="opType === 'pass' || opType === 'reject' || opType === 'transfer' || opType === 'delegate'">
-          <el-input
+          <CommentEditor
             v-model="opForm.comment"
-            type="textarea"
+            :phrases="commentPhrases"
             :rows="3"
-            placeholder="请输入审批意见"
+            :maxlength="1000"
+            placeholder="请输入审批意见（支持常用语 / @人 / 图片）"
+            @mention="onOpMention"
           />
         </el-form-item>
-        <el-form-item label="目标用户 ID" v-if="opType === 'transfer' || opType === 'delegate'">
-          <el-input v-model.number="opForm.targetUserId" placeholder="请输入用户 ID" />
-        </el-form-item>
-        <el-form-item label="目标用户姓名" v-if="opType === 'transfer' || opType === 'delegate'">
-          <el-input v-model="opForm.targetUserName" placeholder="可选，便于显示" />
+        <el-form-item label="目标用户" v-if="opType === 'transfer' || opType === 'delegate'">
+          <UserPicker
+            v-model="opForm.targetUser"
+            :placeholder="'请选择目标用户（搜索姓名/用户名）'"
+            :show-dialog="true"
+            :dialog-title="opType === 'transfer' ? '选择转办人' : '选择委派人'"
+            @change="onTargetUserChange"
+          />
         </el-form-item>
         <el-form-item label="驳回到节点" v-if="opType === 'reject'">
           <el-select

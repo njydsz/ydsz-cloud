@@ -529,4 +529,334 @@ class PmisWorkflowFacadeTest {
         List<Map<String, Object>> timeline = facade.getTimeline("100");
         assertThat(timeline).isEmpty();
     }
+
+    // ============== P2-4: 流程回放步骤序列 ==============
+
+    @Test
+    @DisplayName("getReplaySteps 实例不存在应返回空列表")
+    void testGetReplayStepsInstanceNotFound() {
+        when(instanceService.getById(99L)).thenReturn(null);
+        assertThat(facade.getReplaySteps("99")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getReplaySteps 非法 ID 应返回空列表")
+    void testGetReplayStepsInvalidId() {
+        assertThat(facade.getReplaySteps("not-a-number")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("getReplaySteps 完整流程 - 起始+历史+审计+当前+结束按时间排序")
+    void testGetReplayStepsFull() {
+        // 1) 实例（已完成的流程）
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(100L);
+        instance.setInitiatorId(7L);
+        instance.setInitiatorName("发起人");
+        instance.setStartAt(LocalDateTime.of(2026, 1, 1, 9, 0));
+        instance.setEndAt(LocalDateTime.of(2026, 1, 1, 10, 0));
+        instance.setFlowStatus("COMPLETED");
+        instance.setCurrentNodeCode("e1");
+        instance.setCurrentNodeName("结束");
+        instance.setDurationMs(3600000L);
+        when(instanceService.getById(100L)).thenReturn(instance);
+
+        // 2) 历史任务（finishAt = 09:30）
+        FlowHisTaskDO hisTask = new FlowHisTaskDO();
+        hisTask.setTaskId(10L);
+        hisTask.setNodeCode("t1");
+        hisTask.setNodeName("审批");
+        hisTask.setAssigneeId("1001");
+        hisTask.setAssigneeName("张三");
+        hisTask.setTaskStatus("PASSED");
+        hisTask.setComment("同意");
+        hisTask.setFinishAt(LocalDateTime.of(2026, 1, 1, 9, 30));
+        hisTask.setDurationMs(1500000L);
+        when(hisTaskMapper.selectByInstanceId(100L)).thenReturn(List.of(hisTask));
+
+        // 3) 审计日志（operatedAt = 09:35，URGE 非任务操作，纳入 AUDIT_LOG）
+        FlowAuditLogDO log = new FlowAuditLogDO();
+        log.setId(1L);
+        log.setInstanceId(100L);
+        log.setNodeCode("t1");
+        log.setNodeName("审批");
+        log.setAction("URGE");
+        log.setOperatorId(7L);
+        log.setOperatorName("发起人");
+        log.setComment("请尽快处理");
+        log.setOperatedAt(LocalDateTime.of(2026, 1, 1, 9, 35));
+        when(auditLogMapper.selectByInstanceId(100L)).thenReturn(List.of(log));
+
+        // 4) 实例已完成 → 不应有 currentTasks 参与回放
+        when(taskService.listPendingByInstance(100L)).thenReturn(List.of());
+
+        List<Map<String, Object>> steps = facade.getReplaySteps("100");
+        // START(9:00) + HIS_TASK(9:30) + AUDIT_LOG(9:35) + END(10:00) = 4 步
+        assertThat(steps).hasSize(4);
+
+        // 验证按时间排序
+        assertThat(steps.get(0).get("type")).isEqualTo("START");
+        assertThat(steps.get(0).get("action")).isEqualTo("START");
+        assertThat(steps.get(0).get("nodeState")).isEqualTo("ENTERED");
+
+        assertThat(steps.get(1).get("type")).isEqualTo("HIS_TASK");
+        assertThat(steps.get(1).get("nodeCode")).isEqualTo("t1");
+        assertThat(steps.get(1).get("action")).isEqualTo("PASSED");
+        assertThat(steps.get(1).get("nodeState")).isEqualTo("PASSED");
+        assertThat(steps.get(1).get("durationMs")).isEqualTo(1500000L);
+
+        assertThat(steps.get(2).get("type")).isEqualTo("AUDIT_LOG");
+        assertThat(steps.get(2).get("action")).isEqualTo("URGE");
+        assertThat(steps.get(2).get("nodeState")).isEqualTo("OBSERVED");
+
+        assertThat(steps.get(3).get("type")).isEqualTo("END");
+        assertThat(steps.get(3).get("action")).isEqualTo("COMPLETED");
+        assertThat(steps.get(3).get("nodeState")).isEqualTo("FINISHED");
+    }
+
+    @Test
+    @DisplayName("getReplaySteps RUNNING 流程应包含 CURRENT_TASK 步骤")
+    void testGetReplayStepsRunning() {
+        // 1) 实例（运行中）
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(200L);
+        instance.setInitiatorId(7L);
+        instance.setInitiatorName("发起人");
+        instance.setStartAt(LocalDateTime.of(2026, 1, 1, 9, 0));
+        instance.setFlowStatus("RUNNING");
+        instance.setCurrentNodeCode("t1");
+        instance.setCurrentNodeName("审批");
+        when(instanceService.getById(200L)).thenReturn(instance);
+
+        // 2) 无历史任务、无审计日志
+        when(hisTaskMapper.selectByInstanceId(200L)).thenReturn(List.of());
+        when(auditLogMapper.selectByInstanceId(200L)).thenReturn(List.of());
+
+        // 3) 当前待办（createdAt = 09:30）
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(20L);
+        task.setNodeCode("t1");
+        task.setNodeName("审批");
+        task.setAssigneeId("1002");
+        task.setAssigneeName("李四");
+        task.setTaskStatus("PENDING");
+        task.setCreatedAt(LocalDateTime.of(2026, 1, 1, 9, 30));
+        when(taskService.listPendingByInstance(200L)).thenReturn(List.of(task));
+
+        List<Map<String, Object>> steps = facade.getReplaySteps("200");
+        // START + CURRENT_TASK = 2 步（无 END）
+        assertThat(steps).hasSize(2);
+        assertThat(steps.get(0).get("type")).isEqualTo("START");
+        assertThat(steps.get(1).get("type")).isEqualTo("CURRENT_TASK");
+        assertThat(steps.get(1).get("nodeState")).isEqualTo("ACTIVE");
+        assertThat(steps.get(1).get("actorName")).isEqualTo("李四");
+    }
+
+    @Test
+    @DisplayName("getReplaySteps 过滤任务内置操作（PASS/REJECT/CLAIM/COMPLETED）的审计日志")
+    void testGetReplayStepsFilterTaskActions() {
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(300L);
+        instance.setStartAt(LocalDateTime.of(2026, 1, 1, 9, 0));
+        instance.setEndAt(LocalDateTime.of(2026, 1, 1, 10, 0));
+        instance.setFlowStatus("COMPLETED");
+        when(instanceService.getById(300L)).thenReturn(instance);
+        when(hisTaskMapper.selectByInstanceId(300L)).thenReturn(List.of());
+        when(taskService.listPendingByInstance(300L)).thenReturn(List.of());
+
+        // 全部为任务内置操作 → 应当被过滤
+        FlowAuditLogDO passLog = new FlowAuditLogDO();
+        passLog.setAction("PASS");
+        passLog.setOperatedAt(LocalDateTime.of(2026, 1, 1, 9, 30));
+        FlowAuditLogDO rejectLog = new FlowAuditLogDO();
+        rejectLog.setAction("REJECT");
+        rejectLog.setOperatedAt(LocalDateTime.of(2026, 1, 1, 9, 35));
+        FlowAuditLogDO taskLog = new FlowAuditLogDO();
+        taskLog.setAction("TASK_CLAIM");
+        taskLog.setOperatedAt(LocalDateTime.of(2026, 1, 1, 9, 40));
+        FlowAuditLogDO completedLog = new FlowAuditLogDO();
+        completedLog.setAction("COMPLETED");
+        completedLog.setOperatedAt(LocalDateTime.of(2026, 1, 1, 9, 45));
+        // 非任务内置操作 → 应保留
+        FlowAuditLogDO transferLog = new FlowAuditLogDO();
+        transferLog.setAction("TRANSFER");
+        transferLog.setOperatedAt(LocalDateTime.of(2026, 1, 1, 9, 50));
+        transferLog.setNodeCode("t1");
+        transferLog.setNodeName("审批");
+        transferLog.setOperatorId(7L);
+        transferLog.setOperatorName("发起人");
+        when(auditLogMapper.selectByInstanceId(300L))
+                .thenReturn(List.of(passLog, rejectLog, taskLog, completedLog, transferLog));
+
+        List<Map<String, Object>> steps = facade.getReplaySteps("300");
+        // START + TRANSFER + END = 3 步（其他审计日志被过滤）
+        assertThat(steps).hasSize(3);
+        assertThat(steps.get(0).get("type")).isEqualTo("START");
+        assertThat(steps.get(1).get("type")).isEqualTo("AUDIT_LOG");
+        assertThat(steps.get(1).get("action")).isEqualTo("TRANSFER");
+        assertThat(steps.get(2).get("type")).isEqualTo("END");
+    }
+
+    // ============== P3-1: 节点坐标注入到回放步骤 ==============
+
+    @Test
+    @DisplayName("P3-1: getReplaySteps 应为每个 step 携带节点 coordinate")
+    void testGetReplayStepsWithCoordinates() {
+        // 1) 实例
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(500L);
+        instance.setDefinitionId(1L);
+        instance.setInitiatorId(7L);
+        instance.setInitiatorName("发起人");
+        instance.setStartAt(LocalDateTime.of(2026, 1, 1, 9, 0));
+        instance.setEndAt(LocalDateTime.of(2026, 1, 1, 10, 0));
+        instance.setFlowStatus("COMPLETED");
+        instance.setCurrentNodeCode("e1");
+        instance.setCurrentNodeName("结束");
+        when(instanceService.getById(500L)).thenReturn(instance);
+
+        // 2) 历史任务 t1（finishAt = 09:30）
+        FlowHisTaskDO hisTask = new FlowHisTaskDO();
+        hisTask.setTaskId(10L);
+        hisTask.setNodeCode("t1");
+        hisTask.setNodeName("审批");
+        hisTask.setAssigneeId("1001");
+        hisTask.setTaskStatus("PASSED");
+        hisTask.setFinishAt(LocalDateTime.of(2026, 1, 1, 9, 30));
+        when(hisTaskMapper.selectByInstanceId(500L)).thenReturn(List.of(hisTask));
+
+        // 3) 无审计日志
+        when(auditLogMapper.selectByInstanceId(500L)).thenReturn(List.of());
+        when(taskService.listPendingByInstance(500L)).thenReturn(List.of());
+
+        // 4) definitionService.getDetail 返回带 coordinate 的节点
+        com.njydsz.pmis.workflow.flow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.flow.entity.FlowNodeDO();
+        nT1.setNodeCode("t1");
+        nT1.setCoordinate("{\"x\":220,\"y\":80,\"width\":100,\"height\":60}");
+        com.njydsz.pmis.workflow.flow.entity.FlowNodeDO nE1 = new com.njydsz.pmis.workflow.flow.entity.FlowNodeDO();
+        nE1.setNodeCode("e1");
+        nE1.setCoordinate("{\"x\":400,\"y\":80,\"width\":50,\"height\":50}");
+        Map<String, Object> detail = new HashMap<>();
+        detail.put("nodes", List.of(nT1, nE1));
+        detail.put("skips", List.of());
+        when(definitionService.getDetail(1L)).thenReturn(detail);
+
+        List<Map<String, Object>> steps = facade.getReplaySteps("500");
+        // START + HIS_TASK + END = 3 步
+        assertThat(steps).hasSize(3);
+
+        // HIS_TASK 步骤应携带 t1 的 coordinate
+        Map<String, Object> hisStep = steps.get(1);
+        assertThat(hisStep.get("type")).isEqualTo("HIS_TASK");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> t1Coord = (Map<String, Object>) hisStep.get("coordinate");
+        assertThat(t1Coord).isNotNull();
+        // JsonHelper 通常将整数解析为 Integer；用 Number 统一比较
+        assertThat(((Number) t1Coord.get("x")).intValue()).isEqualTo(220);
+        assertThat(((Number) t1Coord.get("y")).intValue()).isEqualTo(80);
+        assertThat(((Number) t1Coord.get("width")).intValue()).isEqualTo(100);
+        assertThat(((Number) t1Coord.get("height")).intValue()).isEqualTo(60);
+
+        // END 步骤应携带 e1 的 coordinate
+        Map<String, Object> endStep = steps.get(2);
+        assertThat(endStep.get("type")).isEqualTo("END");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> e1Coord = (Map<String, Object>) endStep.get("coordinate");
+        assertThat(e1Coord).isNotNull();
+        assertThat(((Number) e1Coord.get("x")).intValue()).isEqualTo(400);
+
+        // START 步骤 coordinate 为 null
+        assertThat(steps.get(0).get("coordinate")).isNull();
+    }
+
+    @Test
+    @DisplayName("P3-1: getReplaySteps 节点无 coordinate 时该 step coordinate 为 null")
+    void testGetReplayStepsNoCoordinates() {
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(600L);
+        instance.setDefinitionId(1L);
+        instance.setStartAt(LocalDateTime.of(2026, 1, 1, 9, 0));
+        instance.setFlowStatus("RUNNING");
+        instance.setCurrentNodeCode("t1");
+        when(instanceService.getById(600L)).thenReturn(instance);
+        when(hisTaskMapper.selectByInstanceId(600L)).thenReturn(List.of());
+        when(auditLogMapper.selectByInstanceId(600L)).thenReturn(List.of());
+
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(20L);
+        task.setNodeCode("t1");
+        task.setNodeName("审批");
+        task.setTaskStatus("PENDING");
+        task.setCreatedAt(LocalDateTime.of(2026, 1, 1, 9, 30));
+        when(taskService.listPendingByInstance(600L)).thenReturn(List.of(task));
+
+        // 节点无 coordinate
+        com.njydsz.pmis.workflow.flow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.flow.entity.FlowNodeDO();
+        nT1.setNodeCode("t1");
+        nT1.setCoordinate(null);
+        Map<String, Object> detail = new HashMap<>();
+        detail.put("nodes", List.of(nT1));
+        detail.put("skips", List.of());
+        when(definitionService.getDetail(1L)).thenReturn(detail);
+
+        List<Map<String, Object>> steps = facade.getReplaySteps("600");
+        assertThat(steps).hasSize(2);
+        // CURRENT_TASK 的 coordinate 应为 null（无 BPMNDI 段或未注入）
+        assertThat(steps.get(1).get("coordinate")).isNull();
+    }
+
+    @Test
+    @DisplayName("P3-1: getReplaySteps definitionId 为 null 时不抛错")
+    void testGetReplayStepsNullDefinitionId() {
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(700L);
+        instance.setDefinitionId(null);
+        instance.setStartAt(LocalDateTime.of(2026, 1, 1, 9, 0));
+        instance.setFlowStatus("RUNNING");
+        when(instanceService.getById(700L)).thenReturn(instance);
+        when(hisTaskMapper.selectByInstanceId(700L)).thenReturn(List.of());
+        when(auditLogMapper.selectByInstanceId(700L)).thenReturn(List.of());
+        when(taskService.listPendingByInstance(700L)).thenReturn(List.of());
+
+        // 即使 definitionId 为 null，getReplaySteps 也不应抛错
+        List<Map<String, Object>> steps = facade.getReplaySteps("700");
+        assertThat(steps).hasSize(1);
+        assertThat(steps.get(0).get("type")).isEqualTo("START");
+    }
+
+    @Test
+    @DisplayName("P3-1: getReplaySteps coordinate JSON 解析失败时该 step coordinate 为 null（优雅降级）")
+    void testGetReplayStepsInvalidCoordJson() {
+        FlowInstanceDO instance = new FlowInstanceDO();
+        instance.setId(800L);
+        instance.setDefinitionId(1L);
+        instance.setStartAt(LocalDateTime.of(2026, 1, 1, 9, 0));
+        instance.setFlowStatus("RUNNING");
+        instance.setCurrentNodeCode("t1");
+        when(instanceService.getById(800L)).thenReturn(instance);
+        when(hisTaskMapper.selectByInstanceId(800L)).thenReturn(List.of());
+        when(auditLogMapper.selectByInstanceId(800L)).thenReturn(List.of());
+
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(20L);
+        task.setNodeCode("t1");
+        task.setNodeName("审批");
+        task.setTaskStatus("PENDING");
+        task.setCreatedAt(LocalDateTime.of(2026, 1, 1, 9, 30));
+        when(taskService.listPendingByInstance(800L)).thenReturn(List.of(task));
+
+        // coordinate 是无效 JSON → 应被解析方法吞掉异常
+        com.njydsz.pmis.workflow.flow.entity.FlowNodeDO nT1 = new com.njydsz.pmis.workflow.flow.entity.FlowNodeDO();
+        nT1.setNodeCode("t1");
+        nT1.setCoordinate("not-valid-json{");
+        Map<String, Object> detail = new HashMap<>();
+        detail.put("nodes", List.of(nT1));
+        detail.put("skips", List.of());
+        when(definitionService.getDetail(1L)).thenReturn(detail);
+
+        List<Map<String, Object>> steps = facade.getReplaySteps("800");
+        assertThat(steps).hasSize(2);
+        // coordinate 解析失败 → null
+        assertThat(steps.get(1).get("coordinate")).isNull();
+    }
 }

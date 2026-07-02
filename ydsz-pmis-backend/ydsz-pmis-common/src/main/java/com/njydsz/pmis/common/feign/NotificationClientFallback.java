@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
 import java.util.Map;
 
 /**
@@ -22,11 +23,20 @@ public class NotificationClientFallback implements FallbackFactory<NotificationC
 
     @Override
     public NotificationClient create(Throwable cause) {
-        log.warn("[Feign] NotificationClient 降级: cause={}", cause == null ? "null" : cause.getMessage());
-        return payload -> {
-            log.warn("[Feign] NotificationClient 降级返回 0: title={}",
-                    payload == null ? "null" : payload.get("title"));
-            return Result.ok(0);
+        return new NotificationClient() {
+            @Override
+            public Result<Integer> send(Map<String, Object> payload) {
+                log.warn("[Feign] NotificationClient 降级 send: title={}",
+                        payload == null ? "null" : payload.get("title"));
+                return Result.ok(0);
+            }
+
+            @Override
+            public Result<Map<String, Object>> pushRealtime(Long userId, String type, Object payload) {
+                log.warn("[Feign] NotificationClient 降级 pushRealtime: userId={} type={} cause={}",
+                        userId, type, cause == null ? "null" : cause.getMessage());
+                return Result.ok(Collections.emptyMap());
+            }
         };
     }
 }

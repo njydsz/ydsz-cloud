@@ -7,6 +7,7 @@
  */
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
 import {
@@ -30,15 +31,17 @@ import type {
 } from '@/api/workflow/types'
 import FlowDiagramViewer from '../components/FlowDiagramViewer.vue'
 import FlowTimeline from '../components/FlowTimeline.vue'
+import FlowDiagramReplay from '../components/FlowDiagramReplay.vue'
 
 const route = useRoute()
+const { t } = useI18n()
 
 const instance = ref<FlowInstanceDTO | null>(null)
 const diagram = ref<FlowDiagramDTO | null>(null)
 const timeline = ref<FlowTimelineDTO | null>(null)
 const loading = ref(false)
 
-const activeTab = ref<'diagram' | 'timeline' | 'detail'>('diagram')
+const activeTab = ref<'diagram' | 'timeline' | 'replay' | 'detail'>('diagram')
 
 // 操作弹窗
 const opDialog = ref(false)
@@ -217,19 +220,27 @@ watch(() => route.query.id, () => loadAll())
     </div>
 
     <el-tabs v-model="activeTab" class="detail-tabs">
-      <el-tab-pane label="流程图" name="diagram">
+      <el-tab-pane :label="t('workflow.instance.diagram')" name="diagram">
         <div v-if="diagram" class="diagram-wrap">
           <FlowDiagramViewer :diagram="diagram" />
         </div>
-        <el-empty v-else description="暂无流程图" />
+        <el-empty v-else :description="t('common.empty') || '暂无流程图'" />
       </el-tab-pane>
-      <el-tab-pane label="审批轨迹" name="timeline">
+      <el-tab-pane :label="t('workflow.instance.timeline')" name="timeline">
         <div v-if="timeline">
           <FlowTimeline :timeline="timeline" />
         </div>
-        <el-empty v-else description="暂无审批轨迹" />
+        <el-empty v-else :description="t('common.empty') || '暂无审批轨迹'" />
       </el-tab-pane>
-      <el-tab-pane label="实例详情" name="detail">
+      <el-tab-pane :label="t('workflow.instance.replay')" name="replay">
+        <FlowDiagramReplay
+          v-if="instanceId"
+          :instance-id="instanceId"
+          :auto-play="false"
+        />
+        <el-empty v-else :description="t('workflow.replay.empty')" />
+      </el-tab-pane>
+      <el-tab-pane :label="t('workflow.instance.detail')" name="detail">
         <el-descriptions v-if="instance" :column="2" border>
           <el-descriptions-item label="实例 ID">{{ instance.id }}</el-descriptions-item>
           <el-descriptions-item label="流程编码">{{ instance.flowCode }}</el-descriptions-item>

@@ -23,7 +23,9 @@ import com.njydsz.pmis.workflow.flow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.flow.mapper.FlowUserMapper;
+import com.njydsz.pmis.workflow.flow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.flow.service.FlowDelegateAuthService;
+import com.njydsz.pmis.workflow.flow.service.FlowSlaService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -80,6 +82,8 @@ class FlowTaskServiceImplTest {
     private FlowDelegateAuthService delegateAuthService;
     private FlowDelegateLogMapper delegateLogMapper;
     private com.njydsz.pmis.workflow.flow.service.FlowSlaService slaService;
+    private com.njydsz.pmis.workflow.flow.service.FlowTodoCountPushService todoCountPushService;
+    private FlowMetrics flowMetrics;
     private FlowTaskServiceImpl service;
 
     @BeforeEach
@@ -108,10 +112,15 @@ class FlowTaskServiceImplTest {
         delegateLogMapper = mock(FlowDelegateLogMapper.class);
         // P1-6: SLA 服务 mock（默认 no-op，测试不期望任何调用副作用）
         slaService = mock(com.njydsz.pmis.workflow.flow.service.FlowSlaService.class);
+        // P1-7: 待办数推送服务 mock（默认 no-op，测试不期望副作用）
+        todoCountPushService = mock(com.njydsz.pmis.workflow.flow.service.FlowTodoCountPushService.class);
+        // P2-3: Prometheus 指标 mock（测试不需要真实指标）
+        flowMetrics = mock(FlowMetrics.class);
         service = new FlowTaskServiceImpl(taskMapper, hisTaskMapper, instanceMapper,
                 instanceService, advancer, variableStrategy,
                 userMapper, auditLogMapper, nodeMapper, assigneeResolver, eventListeners,
-                eventPublisher, urgeLimiter, delegateAuthService, delegateLogMapper, slaService);
+                eventPublisher, urgeLimiter, delegateAuthService, delegateLogMapper, slaService,
+                todoCountPushService, flowMetrics);
     }
 
     // ============== createTask ==============
@@ -1847,6 +1856,99 @@ class FlowTaskServiceImplTest {
         assertThat(auditLog.getComment()).isEqualTo("不同意，金额过大");
         assertThat(auditLog.getCommentType()).isEqualTo("DISAGREE");
         assertThat(auditLog.getAction()).isEqualTo("REJECT");
+    }
+
+    // ============== GAP-P1/P2: 减签/已阅/沟通 测试 ==============
+
+    @Test
+    @DisplayName("countersignRemove 正常减签")
+    void testCountersignRemoveNormal() {
+        FlowTaskDO task = baseTask();
+        task.setApproveCount(3);
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        when(userMapper.deleteByMap(any(java.util.Map.class))).thenReturn(1);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setUserId(1000L);
+        dto.setTargetUserId(200L);
+        dto.setComment("减签人员");
+        service.countersignRemove(dto);
+
+        // approveCount 应减 1
+        assertThat(task.getApproveCount()).isEqualTo(2);
+        verify(taskMapper).updateById(any(FlowTaskDO.class));
+        verify(auditLogMapper).insert(any(com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO.class));
+    }
+
+    @Test
+    @DisplayName("countersignRemove 已完成任务抛异常")
+    void testCountersignRemoveFinishedTask() {
+        FlowTaskDO task = baseTask();
+        task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setTargetUserId(200L);
+        assertThatThrownBy(() -> service.countersignRemove(dto))
+                .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class)
+                .hasMessageContaining("任务已完成");
+    }
+
+    @Test
+    @DisplayName("countersignRemove 未指定 targetUserId 抛异常")
+    void testCountersignRemoveNoTargetUser() {
+        FlowTaskDO task = baseTask();
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        assertThatThrownBy(() -> service.countersignRemove(dto))
+                .isInstanceOf(com.njydsz.pmis.common.exception.BizException.class)
+                .hasMessageContaining("减签需指定");
+    }
+
+    @Test
+    @DisplayName("markRead 正常标记已阅")
+    void testMarkReadNormal() {
+        FlowTaskDO task = baseTask();
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        service.markRead(1L, 1001L);
+
+        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO log =
+                verifyAuditAction("READ");
+        assertThat(log.getOperatorId()).isEqualTo(1001L);
+    }
+
+    @Test
+    @DisplayName("communicate 正常添加沟通评论")
+    void testCommunicateNormal() {
+        FlowTaskDO task = baseTask();
+        when(taskMapper.selectById(1L)).thenReturn(task);
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setUserId(1001L);
+        dto.setComment("请补充合同金额明细");
+        dto.setCommentType("INQUIRE");
+        service.communicate(dto);
+
+        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO log =
+                verifyAuditAction("COMMUNICATE");
+        assertThat(log.getComment()).isEqualTo("请补充合同金额明细");
+        assertThat(log.getCommentType()).isEqualTo("INQUIRE");
+    }
+
+    /** 辅助：验证审计日志的 action 字段并返回捕获的日志 */
+    private com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO verifyAuditAction(String action) {
+        ArgumentCaptor<com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO> captor =
+                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO.class);
+        verify(auditLogMapper).insert(captor.capture());
+        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO log = captor.getValue();
+        assertThat(log.getAction()).isEqualTo(action);
+        return log;
     }
 
     // ============== 工具方法 ==============

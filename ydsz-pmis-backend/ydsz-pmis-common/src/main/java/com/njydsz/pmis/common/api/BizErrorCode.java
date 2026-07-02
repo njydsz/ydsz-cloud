@@ -36,6 +36,7 @@ public enum BizErrorCode {
     METHOD_NOT_ALLOWED(10004, "请求方法不允许"),
     NOT_FOUND(10101, "资源不存在"),
     DUPLICATE_KEY(10102, "资源已存在"),
+    BIZ_ERROR(10103, "业务规则校验失败"),
     INTERNAL_ERROR(10201, "系统内部错误"),
     SERVICE_UNAVAILABLE(10202, "服务暂不可用"),
     REQUEST_TIMEOUT(10203, "请求超时"),

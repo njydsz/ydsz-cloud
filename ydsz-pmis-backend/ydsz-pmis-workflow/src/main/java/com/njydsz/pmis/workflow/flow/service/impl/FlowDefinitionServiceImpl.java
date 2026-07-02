@@ -7,6 +7,7 @@ import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.flow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.flow.engine.BpmnModel;
 import com.njydsz.pmis.workflow.flow.engine.BpmnXmlParser;
+import com.njydsz.pmis.workflow.flow.engine.JsonHelper;
 import com.njydsz.pmis.workflow.flow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowSkipDO;
@@ -93,6 +94,22 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             }
             nodes.addAll(bpmnModel.getNodes());
             skips.addAll(bpmnModel.getSkips());
+            // P3-1: 自动注入 BPMNDI 坐标到节点 coordinate 字段（覆盖现有值）
+            Map<String, BpmnModel.NodeCoordinate> nodeCoords = bpmnModel.getNodeCoordinates();
+            if (nodeCoords != null && !nodeCoords.isEmpty()) {
+                for (FlowNodeDO n : nodes) {
+                    BpmnModel.NodeCoordinate coord = nodeCoords.get(n.getNodeCode());
+                    if (coord != null) {
+                        n.setCoordinate(JsonHelper.toJson(Map.of(
+                                "x", coord.getX(),
+                                "y", coord.getY(),
+                                "width", coord.getWidth(),
+                                "height", coord.getHeight()
+                        )));
+                    }
+                }
+                log.info("[Flow] 从 BPMNDI 注入节点坐标: defId-pending count={}", nodeCoords.size());
+            }
         } else {
             // 模式 B：轻量 JSON
             for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {

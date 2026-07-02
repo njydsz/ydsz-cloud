@@ -25,12 +25,17 @@
         <result column="deleted" property="deleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="canary_percent" property="canaryPercent"/>
+        <result column="canary_status" property="canaryStatus"/>
+        <result column="canary_strategy" property="canaryStrategy"/>
+        <result column="canary_rollout_log" property="canaryRolloutLog"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, flow_code, flow_name, category, version, model_value, form_custom, form_path,
         activity_status, is_publish, listener_type, listener_path, ext, description, status,
-        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
+        created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id,
+        canary_percent, canary_status, canary_strategy, canary_rollout_log
     </sql>
 
     <select id="selectPublished" resultMap="BaseResultMap">
@@ -87,4 +92,29 @@
         WHERE id = #{id}
           AND deleted = 0
     </update>
+
+    <!-- P3-1: 查询同 flowCode + tenant 下处于灰度中（CANARYING）的所有定义 -->
+    <select id="selectCanaryingByCode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_definition
+        WHERE flow_code = #{flowCode}
+          AND tenant_id = #{tenantId}
+          AND canary_status = 'CANARYING'
+          AND canary_percent > 0
+          AND canary_percent < 100
+          AND is_publish = 1
+          AND status = 'ENABLED'
+          AND deleted = 0
+        ORDER BY version DESC
+    </select>
+
+    <!-- P3-1: 查询同 flowCode + tenant 下的所有定义（含历史版本） -->
+    <select id="selectByFlowCode" resultMap="BaseResultMap">
+        SELECT <include refid="Base_Column_List"/>
+        FROM pmis_flow_definition
+        WHERE flow_code = #{flowCode}
+          AND tenant_id = #{tenantId}
+          AND deleted = 0
+        ORDER BY version DESC, created_at DESC
+    </select>
 </mapper>

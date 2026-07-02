@@ -5,6 +5,7 @@ import com.njydsz.pmis.workflow.flow.WorkflowFacade;
 import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.flow.engine.JsonHelper;
 import com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
@@ -367,5 +368,223 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         m.put("comment", log.getComment());
         m.put("operatedAt", log.getOperatedAt());
         return m;
+    }
+
+    // ============================== P2-4: 流程回放步骤序列 ==============================
+
+    /**
+     * P2-4: 生成流程回放步骤序列 — 按时间顺序合并历史任务 + 审计日志 + 当前待办为回放步骤。
+     *
+     * <p>每一步包含：
+     * <ul>
+     *   <li>stepIndex — 步骤序号（从 0 开始）</li>
+     *   <li>type — HIS_TASK / AUDIT_LOG / CURRENT_TASK / START / END</li>
+     *   <li>timestamp — 发生时间</li>
+     *   <li>nodeCode / nodeName — 节点</li>
+     *   <li>actor / actorName — 操作人</li>
+     *   <li>action — 操作动作（PASS/REJECT/AUTO_PASS ...）</li>
+     *   <li>comment — 意见</li>
+     *   <li>nodeState — 节点回放后状态：ENTERED / PASSED / REJECTED / ACTIVE / SKIPPED</li>
+     *   <li>durationMs — 本步耗时（可选）</li>
+     * </ul>
+     *
+     * <p>回放步骤用于驱动前端 FlowDiagramReplay 组件，依次高亮节点 + 展示轨迹事件。
+     *
+     * @param instanceId 实例 ID（字符串形式）
+     * @return 步骤列表（按 timestamp 升序），实例不存在时返回空列表
+     */
+    public List<Map<String, Object>> getReplaySteps(String instanceId) {
+        Long id;
+        try {
+            id = Long.parseLong(instanceId);
+        } catch (NumberFormatException nfe) {
+            return Collections.emptyList();
+        }
+        FlowInstanceDO instance = instanceService.getById(id);
+        if (instance == null) {
+            return Collections.emptyList();
+        }
+
+        // P3-1: 预加载节点坐标映射（key = nodeCode），用于步骤中携带 coordinate 字段
+        // 这样前端 FlowDiagramViewer 可以根据坐标自动滚屏到高亮节点
+        Map<String, Map<String, Object>> nodeCoordMap = loadNodeCoordinates(instance.getDefinitionId());
+
+        // 1. 起始步骤
+        List<Map<String, Object>> steps = new ArrayList<>();
+        Map<String, Object> startStep = new HashMap<>();
+        startStep.put("stepIndex", 0);
+        startStep.put("type", "START");
+        startStep.put("timestamp", instance.getStartAt());
+        startStep.put("nodeCode", null);
+        startStep.put("nodeName", null);
+        startStep.put("actor", instance.getInitiatorId());
+        startStep.put("actorName", instance.getInitiatorName());
+        startStep.put("action", "START");
+        startStep.put("comment", null);
+        startStep.put("nodeState", "ENTERED");
+        startStep.put("durationMs", null);
+        startStep.put("coordinate", null);
+        steps.add(startStep);
+
+        // 2. 历史任务步骤
+        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(id);
+        for (FlowHisTaskDO his : hisTasks) {
+            Map<String, Object> step = new HashMap<>();
+            step.put("type", "HIS_TASK");
+            step.put("timestamp", his.getFinishAt());
+            step.put("nodeCode", his.getNodeCode());
+            step.put("nodeName", his.getNodeName());
+            step.put("actor", his.getAssigneeId());
+            step.put("actorName", his.getAssigneeName());
+            step.put("action", his.getTaskStatus());
+            step.put("comment", his.getComment());
+            step.put("nodeState", mapNodeState(his.getTaskStatus()));
+            step.put("durationMs", his.getDurationMs());
+            // P3-1: 携带节点坐标（BPMNDI 解析结果或设计器保存值）
+            step.put("coordinate", nodeCoordMap.get(his.getNodeCode()));
+            steps.add(step);
+        }
+
+        // 3. 审计日志步骤（URGE/TRANSFER/DELEGATE/JUMP/RECALL 等任务外操作）
+        List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(id);
+        for (FlowAuditLogDO log : logs) {
+            String action = log.getAction();
+            if (action == null) continue;
+            // 只回放任务外操作（任务自身操作已在 HIS_TASK 中体现）
+            if (action.startsWith("TASK_") || action.equals("PASS")
+                    || action.equals("REJECT") || action.equals("CLAIM")
+                    || action.equals("COMPLETED")) {
+                continue;
+            }
+            Map<String, Object> step = new HashMap<>();
+            step.put("type", "AUDIT_LOG");
+            step.put("timestamp", log.getOperatedAt());
+            step.put("nodeCode", log.getNodeCode());
+            step.put("nodeName", log.getNodeName());
+            step.put("actor", log.getOperatorId());
+            step.put("actorName", log.getOperatorName());
+            step.put("action", action);
+            step.put("comment", log.getComment());
+            step.put("nodeState", "OBSERVED");
+            step.put("durationMs", null);
+            step.put("coordinate", log.getNodeCode() != null
+                    ? nodeCoordMap.get(log.getNodeCode()) : null);
+            steps.add(step);
+        }
+
+        // 4. 当前待办（RUNNING 实例的最后状态）
+        if ("RUNNING".equals(instance.getFlowStatus())
+                || "SUSPENDED".equals(instance.getFlowStatus())) {
+            List<FlowTaskDO> currentTasks = taskService.listPendingByInstance(id);
+            for (FlowTaskDO task : currentTasks) {
+                Map<String, Object> step = new HashMap<>();
+                step.put("type", "CURRENT_TASK");
+                step.put("timestamp", task.getCreatedAt());
+                step.put("nodeCode", task.getNodeCode());
+                step.put("nodeName", task.getNodeName());
+                step.put("actor", task.getAssigneeId());
+                step.put("actorName", task.getAssigneeName());
+                step.put("action", task.getTaskStatus());
+                step.put("comment", task.getComment());
+                step.put("nodeState", "ACTIVE");
+                step.put("durationMs", task.getDurationMs());
+                step.put("coordinate", nodeCoordMap.get(task.getNodeCode()));
+                steps.add(step);
+            }
+        }
+
+        // 5. 终止步骤（COMPLETED/TERMINATED/REJECTED）
+        if (instance.getEndAt() != null) {
+            Map<String, Object> endStep = new HashMap<>();
+            endStep.put("type", "END");
+            endStep.put("timestamp", instance.getEndAt());
+            endStep.put("nodeCode", instance.getCurrentNodeCode());
+            endStep.put("nodeName", instance.getCurrentNodeName());
+            endStep.put("actor", null);
+            endStep.put("actorName", null);
+            endStep.put("action", instance.getFlowStatus());
+            endStep.put("comment", null);
+            endStep.put("nodeState", "FINISHED");
+            endStep.put("durationMs", instance.getDurationMs());
+            endStep.put("coordinate", instance.getCurrentNodeCode() != null
+                    ? nodeCoordMap.get(instance.getCurrentNodeCode()) : null);
+            steps.add(endStep);
+        }
+
+        // 6. 按 timestamp 升序排序，null 排最后
+        steps.sort((a, b) -> {
+            LocalDateTime ta = (LocalDateTime) a.get("timestamp");
+            LocalDateTime tb = (LocalDateTime) b.get("timestamp");
+            if (ta == null && tb == null) return 0;
+            if (ta == null) return 1;
+            if (tb == null) return -1;
+            return ta.compareTo(tb);
+        });
+
+        // 7. 重新分配 stepIndex
+        for (int i = 0; i < steps.size(); i++) {
+            steps.get(i).put("stepIndex", i);
+        }
+
+        return steps;
+    }
+
+    /**
+     * P3-1: 加载流程定义下所有节点的坐标映射。
+     *
+     * <p>key = nodeCode，value = {x, y, width, height}。
+     * 来源：pmis_flow_node.coordinate JSON 字段（BPMN 部署时由 BPMNDI 段自动注入，
+     * 或前端设计器保存）。
+     *
+     * <p>解析失败或字段为空时降级为 null，前端回放将不自动滚屏。
+     *
+     * @param definitionId 流程定义 ID
+     * @return 节点坐标映射，无定义时返回空 Map
+     */
+    private Map<String, Map<String, Object>> loadNodeCoordinates(Long definitionId) {
+        if (definitionId == null) {
+            return Collections.emptyMap();
+        }
+        Map<String, Object> detail = definitionService.getDetail(definitionId);
+        if (detail == null) {
+            return Collections.emptyMap();
+        }
+        @SuppressWarnings("unchecked")
+        List<com.njydsz.pmis.workflow.flow.entity.FlowNodeDO> nodes =
+                (List<com.njydsz.pmis.workflow.flow.entity.FlowNodeDO>) detail.get("nodes");
+        if (nodes == null || nodes.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, Map<String, Object>> result = new HashMap<>();
+        for (com.njydsz.pmis.workflow.flow.entity.FlowNodeDO n : nodes) {
+            String coord = n.getCoordinate();
+            if (coord == null || coord.isBlank()) {
+                continue;
+            }
+            try {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> parsed = JsonHelper.fromJson(coord);
+                if (parsed != null && !parsed.isEmpty()) {
+                    result.put(n.getNodeCode(), parsed);
+                }
+            } catch (Exception ignore) {
+                // coordinate 解析失败：跳过此节点
+            }
+        }
+        return result;
+    }
+
+    /** 根据任务状态映射到回放节点状态 */
+    private String mapNodeState(String taskStatus) {
+        if (taskStatus == null) return "ENTERED";
+        return switch (taskStatus) {
+            case "PASSED", "COMPLETED" -> "PASSED";
+            case "REJECTED" -> "REJECTED";
+            case "SKIPPED" -> "SKIPPED";
+            case "CANCELLED" -> "SKIPPED";
+            case "TIMEOUT" -> "SKIPPED";
+            case "PENDING", "CLAIMED" -> "ACTIVE";
+            default -> "ENTERED";
+        };
     }
 }

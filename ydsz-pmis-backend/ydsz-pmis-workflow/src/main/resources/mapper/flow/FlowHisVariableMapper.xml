@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.workflow.flow.mapper.FlowHisVariableMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.workflow.flow.entity.FlowHisVariableDO">
+        <id column="id" property="id"/>
+        <result column="instance_id" property="instanceId"/>
+        <result column="var_key" property="varKey"/>
+        <result column="var_value" property="varValue"/>
+        <result column="archived_at" property="archivedAt"/>
+    </resultMap>
+
+    <insert id="batchInsert">
+        INSERT INTO pmis_flow_his_variable (
+            instance_id, var_key, var_value, archived_at
+        ) VALUES
+        <foreach collection="list" item="it" separator=",">
+            (#{it.instanceId}, #{it.varKey}, #{it.varValue},
+             COALESCE(#{it.archivedAt}, CURRENT_TIMESTAMP))
+        </foreach>
+    </insert>
+
+    <select id="selectByInstanceId" resultMap="BaseResultMap">
+        SELECT id, instance_id, var_key, var_value, archived_at
+        FROM pmis_flow_his_variable
+        WHERE instance_id = #{instanceId}
+        ORDER BY id ASC
+    </select>
+
+</mapper>

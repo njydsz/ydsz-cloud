@@ -16,7 +16,11 @@ public enum AgentType {
     /** 商机赢率预测 */
     WIN_RATE_PREDICT("WIN_RATE_PREDICT", "商机赢率预测"),
     /** 工时异常识别 */
-    TIMESHEET_ANOMALY("TIMESHEET_ANOMALY", "工时异常识别");
+    TIMESHEET_ANOMALY("TIMESHEET_ANOMALY", "工时异常识别"),
+    /** P2-1: 审批人推荐（流程引擎） */
+    APPROVER_RECOMMEND("APPROVER_RECOMMEND", "审批人推荐"),
+    /** P2-1: 意见起草（流程引擎） */
+    COMMENT_DRAFT("COMMENT_DRAFT", "意见起草");
 
     /** 枚举编码 */
     private final String code;

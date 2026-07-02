@@ -20,6 +20,7 @@ import type {
   FlowTaskQuery,
   FlowDiagramDTO,
   FlowTimelineDTO,
+  FlowReplayStepDTO,
   FlowStartProcessDTO,
   FlowTaskOperateDTO,
   FlowDeployDTO,
@@ -296,6 +297,13 @@ export function getTimeline(instanceId: number) {
   )
 }
 
+/** P2-4: 流程回放步骤序列 */
+export function getReplaySteps(instanceId: number) {
+  return http.get<ApiResponse<FlowReplayStepDTO[]>>(
+    `/workflow/engine/instance/${instanceId}/replay`,
+  )
+}
+
 // ===========================================
 // 运营统计 / 监控
 // ===========================================
@@ -324,3 +332,145 @@ export function listOverdueTasks(params: {
     { params },
   )
 }
+
+// ===========================================
+// P2-1: 智能审批辅助
+// ===========================================
+
+/** P2-1: 推荐审批人（调用 Agent 服务） */
+export function recommendApprovers(payload: {
+  flowCode?: string
+  nodeCode?: string
+  businessType?: string
+  businessId?: number
+  businessTitle?: string
+  requiredLevel?: string
+  requiredRole?: string
+  requiredDepartment?: string
+  topN?: number
+  candidates: Array<{
+    userId: number
+    name?: string
+    department?: string
+    level?: string
+    role?: string
+    activeTasks?: number
+    avgApprovalMs?: number
+  }>
+}) {
+  return http.post<ApiResponse<Array<Record<string, unknown>>>>(
+    '/workflow/engine/ai/recommend-approvers',
+    payload,
+  )
+}
+
+/** P2-1: 起草审批意见（调用 Agent 服务） */
+export function draftComment(payload: {
+  action: 'PASS' | 'REJECT' | 'TRANSFER' | 'DELEGATE' | 'URGE'
+  taskId?: number
+  flowCode?: string
+  flowName?: string
+  nodeCode?: string
+  nodeName?: string
+  title?: string
+  riskLevel?: 'RED' | 'YELLOW' | 'GREEN'
+  overdueDays?: number
+  tone?: 'FORMAL' | 'FRIENDLY'
+  maxLength?: number
+  historicalComments?: string[]
+}) {
+  return http.post<ApiResponse<{
+    primary: string
+    alternatives: string[]
+    reasons: string[]
+    action: string
+    tone: string
+  }>>(
+    '/workflow/engine/ai/draft-comment',
+    payload,
+  )
+}
+
+/** P2-1: 检查 AI Agent 服务是否可用 */
+export function aiStatus() {
+  return http.get<ApiResponse<{ available: boolean; agents: string[] }>>(
+    '/workflow/engine/ai/status',
+  )
+}
+
+// ===========================================
+// P2-2: 嵌入式审批（业务页内嵌审批面板）
+// ===========================================
+
+/** 嵌入式审批面板视图 */
+export interface EmbeddedApprovalView {
+  businessType: string
+  businessId: string
+  instance: Record<string, unknown> | null
+  diagram: Record<string, unknown> | null
+  currentTasks: EmbeddedCurrentTask[]
+  history: EmbeddedHistoryItem[]
+  myRole: 'INITIATOR' | 'APPROVER' | 'OBSERVER'
+  actions: string[]
+  aiAvailable: boolean
+  canRecall: boolean
+  finished: boolean
+  message: string
+}
+
+export interface EmbeddedCurrentTask {
+  taskId: number
+  nodeCode: string
+  nodeName: string
+  nodeType: number
+  assigneeType: string
+  assigneeId: string
+  assigneeName: string
+  performType: string
+  taskStatus: string
+  createAt?: string
+  dueAt?: string
+  mine: boolean
+}
+
+export interface EmbeddedHistoryItem {
+  type: string
+  taskId?: number
+  nodeCode?: string
+  nodeName?: string
+  assigneeId?: string
+  assigneeName?: string
+  action?: string
+  comment?: string
+  timestamp?: string
+  taskStatus?: string
+}
+
+/** P2-2: 加载嵌入式审批面板 */
+export function loadEmbeddedPanel(params: {
+  businessType: string
+  businessId: string | number
+  userId?: number
+}) {
+  return http.get<ApiResponse<EmbeddedApprovalView>>(
+    '/workflow/embedded/panel',
+    { params },
+  )
+}
+
+/** P2-2: 嵌入式快捷操作 */
+export function embeddedQuickAction(payload: {
+  businessType: string
+  businessId: string | number
+  action: 'PASS' | 'REJECT' | 'TRANSFER' | 'DELEGATE' | 'URGE' | 'WITHDRAW'
+  userId?: number
+  userName?: string
+  comment?: string
+  commentType?: string
+  targetUserId?: number
+  targetUserName?: string
+  variables?: Record<string, unknown>
+}) {
+  return http.post<ApiResponse<null>>('/workflow/embedded/action', payload)
+}
+

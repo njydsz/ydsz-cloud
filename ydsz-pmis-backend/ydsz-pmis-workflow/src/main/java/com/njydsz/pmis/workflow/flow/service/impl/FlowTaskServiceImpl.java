@@ -18,6 +18,7 @@ import com.njydsz.pmis.workflow.flow.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.flow.entity.*;
 import com.njydsz.pmis.workflow.flow.enums.*;
 import com.njydsz.pmis.workflow.flow.mapper.*;
+import com.njydsz.pmis.workflow.flow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.flow.service.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
@@ -70,6 +71,11 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     /** P1-6: SLA 服务（任务创建时应用 SLA 配置 + 超时自动策略） */
     @org.springframework.context.annotation.Lazy
     private final com.njydsz.pmis.workflow.flow.service.FlowSlaService slaService;
+    /** P1-7: 待办数 WebSocket 推送服务（任务创建/通过/驳回时实时推送给办理人） */
+    @org.springframework.context.annotation.Lazy
+    private final com.njydsz.pmis.workflow.flow.service.FlowTodoCountPushService todoCountPushService;
+    /** P2-3: Prometheus 指标收集（可能为 null：测试环境） */
+    private final FlowMetrics flowMetrics;
 
     // ============================== 创建任务 ==============================
 
@@ -113,6 +119,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         task.setTaskStatus(FlowTaskStatus.PENDING.name());
         task.setTenantId(instance.getTenantId());
         task.setProviderTraceId(instance.getProviderTraceId());
+        // P2-3: Prometheus 指标 — 任务创建（在 insert 前预先计数，便于回滚感知）
+        if (flowMetrics != null) {
+            flowMetrics.incTaskCreated(instance.getFlowCode(), node.getNodeCode());
+        }
         // P1-6: 应用 SLA 配置 — 解析 node.slaConfig 设置 dueAt
         if (slaService != null) {
             slaService.applySlaConfig(task, node);
@@ -202,6 +212,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
         // P2-35: 发布 Spring 异步事件
         publishWorkflowEvent("TASK_CREATED", instanceId, task.getId());
+        // P1-7: WebSocket 推送任务分配 + 待办数更新
+        if (todoCountPushService != null) {
+            todoCountPushService.pushTaskAssigned(task);
+        }
         return task.getId();
     }
 
@@ -272,6 +286,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         // P1-4: 记录代理签收日志
         logDelegateOperation(task, "CLAIM", "ACT");
         log.info("[Flow] 签收任务: taskId={} userId={}", taskId, userId);
+        // P2-3: Prometheus 指标
+        if (flowMetrics != null) {
+            flowMetrics.incTaskClaimed(task.getFlowCode(), task.getNodeCode());
+        }
     }
 
     // ============================== 通过（P0-1: 会签修复） ==============================
@@ -320,6 +338,15 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             case VOTE -> doVotePass(task, instance, mergedVars, dto);
             case WEIGHTED_VOTE -> doWeightedVotePass(task, instance, mergedVars, dto);
         }
+        // P1-7: WebSocket 推送任务完成 + 操作人待办数更新
+        if (todoCountPushService != null) {
+            todoCountPushService.pushTaskCompleted(task, dto.getUserId());
+        }
+        // P2-3: Prometheus 指标 — 任务通过 + 耗时
+        if (flowMetrics != null) {
+            flowMetrics.incTaskPassed(task.getFlowCode(), task.getNodeCode());
+            flowMetrics.recordTaskDuration(task, "PASSED");
+        }
     }
 
     // ============================== 驳回（P1-11: 任意历史节点） ==============================
@@ -354,9 +381,16 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
             fireInstanceRejected(instance.getId(), dto.getComment());
             audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
+            // P2-3: Prometheus 指标 — 任务驳回 + 实例 REJECTED 终止
+            if (flowMetrics != null) {
+                flowMetrics.incTaskRejected(task.getFlowCode(), task.getNodeCode());
+                flowMetrics.recordTaskDuration(task, "REJECTED");
+                flowMetrics.incInstanceFinished(instance.getFlowCode(), "REJECTED");
+                flowMetrics.recordInstanceDuration(instance, "REJECTED");
+            }
             return;
         }
-        ((FlowInstanceServiceImpl) instanceService).generateTasksForNodes(
+        instanceService.generateTasksForNodes(
                 instance.getId(), rejectTargets, mergedVars);
         instanceMapper.updateStatus(instance.getId(), instance.getFlowStatus(),
                 rejectTargets.get(0).getNodeCode(), rejectTargets.get(0).getNodeName(),
@@ -364,6 +398,15 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
         log.info("[Flow] 退回任务: taskId={} target={}", task.getId(),
                 rejectTargets.get(0).getNodeCode());
+        // P1-7: WebSocket 推送任务驳回 + 操作人待办数更新
+        if (todoCountPushService != null) {
+            todoCountPushService.pushTaskRejected(task, dto.getUserId(), dto.getComment());
+        }
+        // P2-3: Prometheus 指标 — 任务驳回 + 耗时
+        if (flowMetrics != null) {
+            flowMetrics.incTaskRejected(task.getFlowCode(), task.getNodeCode());
+            flowMetrics.recordTaskDuration(task, "REJECTED");
+        }
     }
 
     // ============================== 转办 ==============================
@@ -386,6 +429,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         taskMapper.updateById(task);
         audit(task, "TRANSFER", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
         log.info("[Flow] 转办任务: taskId={} → userId={}", task.getId(), dto.getTargetUserId());
+        // P2-3: Prometheus 指标
+        if (flowMetrics != null) {
+            flowMetrics.incTaskTransferred(task.getFlowCode(), task.getNodeCode());
+        }
         // P2-34: 触发 onTaskTransferred 事件
         fireEvent(l -> l.onTaskTransferred(task.getId(), originalAssignorId, dto.getTargetUserId()),
                 task.getId());
@@ -415,6 +462,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         audit(task, "DELEGATE", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
         log.info("[Flow] 委派任务: taskId={} → 被委派人={} (处理完回到 {})",
                 task.getId(), dto.getTargetUserId(), originalAssigneeName);
+        // P2-3: Prometheus 指标
+        if (flowMetrics != null) {
+            flowMetrics.incTaskDelegated(task.getFlowCode(), task.getNodeCode());
+        }
         // P2-34: 触发 onTaskDelegated 事件
         fireEvent(l -> l.onTaskDelegated(task.getId(), originalAssigneeId, dto.getTargetUserId()),
                 task.getId());
@@ -570,6 +621,20 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             audit(task, "URGE", operatorId, null, comment);
         }
         log.info("[Flow] 催办: instanceId={} 被催办人={}", instanceId, urged);
+        // P2-3: Prometheus 指标 — 催办
+        if (flowMetrics != null) {
+            // 用 flowCode 维度计数（如能查到实例就用实例的 code，否则用 unknown）
+            try {
+                FlowInstanceDO ins = instanceMapper.selectById(instanceId);
+                if (ins != null) {
+                    flowMetrics.incTaskUrged(ins.getFlowCode());
+                } else {
+                    flowMetrics.incTaskUrged("unknown");
+                }
+            } catch (Exception e) {
+                flowMetrics.incTaskUrged("unknown");
+            }
+        }
         // P2-34: 触发 onTaskUrged 事件（实例级催办，taskId 传 null）
         fireEvent(l -> l.onTaskUrged(instanceId, null), null);
         // P2-35: 发布 Spring 异步事件
@@ -871,6 +936,10 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         // 写审计日志 action=TIMEOUT
         audit(task, "TIMEOUT", null, null, reason);
         log.info("[Flow] 任务超时: taskId={} reason={}", taskId, reason);
+        // P2-3: Prometheus 指标
+        if (flowMetrics != null) {
+            flowMetrics.incTaskAutoHandled(task.getFlowCode(), task.getNodeCode(), "TIMEOUT");
+        }
         // P2-36: 触发 onTaskTimeout 事件
         fireEvent(l -> l.onTaskTimeout(task.getId(), task.getInstanceId()), task.getId());
         // P2-35: 发布 Spring 异步事件
@@ -885,7 +954,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         completeAndArchive(task, dto.getComment());
         List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
                 "PASS", null, vars);
-        ((FlowInstanceServiceImpl) instanceService).generateTasksForNodes(
+        instanceService.generateTasksForNodes(
                 task.getInstanceId(), nextNodes, vars);
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
@@ -917,7 +986,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         completeAndArchive(task, dto.getComment());
         List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
                 "PASS", null, vars);
-        ((FlowInstanceServiceImpl) instanceService).generateTasksForNodes(
+        instanceService.generateTasksForNodes(
                 task.getInstanceId(), nextNodes, vars);
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
@@ -954,7 +1023,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         completeAndArchive(task, dto.getComment());
         List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
                 "PASS", null, vars);
-        ((FlowInstanceServiceImpl) instanceService).generateTasksForNodes(
+        instanceService.generateTasksForNodes(
                 task.getInstanceId(), nextNodes, vars);
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
@@ -999,7 +1068,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         completeAndArchive(task, dto.getComment());
         List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
                 "PASS", null, vars);
-        ((FlowInstanceServiceImpl) instanceService).generateTasksForNodes(
+        instanceService.generateTasksForNodes(
                 task.getInstanceId(), nextNodes, vars);
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
@@ -1076,7 +1145,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         completeAndArchive(task, dto.getComment());
         List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
                 "PASS", null, vars);
-        ((FlowInstanceServiceImpl) instanceService).generateTasksForNodes(
+        instanceService.generateTasksForNodes(
                 task.getInstanceId(), nextNodes, vars);
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
@@ -1167,11 +1236,9 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             List<FlowNodeDO> nextNodes = advancer.advance(instance, node.getNodeCode(),
                     "PASS", null, variables);
             if (nextNodes.isEmpty()) {
-                ((com.njydsz.pmis.workflow.flow.service.impl.FlowInstanceServiceImpl) instanceService)
-                        .complete(instance.getId(), node.getNodeCode());
+                instanceService.complete(instance.getId(), node.getNodeCode());
             } else {
-                ((com.njydsz.pmis.workflow.flow.service.impl.FlowInstanceServiceImpl) instanceService)
-                        .generateTasksForNodes(instance.getId(), nextNodes, variables);
+                instanceService.generateTasksForNodes(instance.getId(), nextNodes, variables);
                 updateInstanceNode(instance, nextNodes);
             }
         } finally {

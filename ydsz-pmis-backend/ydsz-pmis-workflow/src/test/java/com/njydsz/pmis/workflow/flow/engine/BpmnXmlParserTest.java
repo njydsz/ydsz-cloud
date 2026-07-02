@@ -424,6 +424,192 @@ class BpmnXmlParserTest {
                 .isInstanceOf(BizException.class);
     }
 
+    // ============================== P3-1: BPMNDI 坐标解析测试 ==============================
+
+    @Test
+    @DisplayName("P3-1: 解析带 BPMNDI 段的流程，节点坐标正确提取")
+    void testParseBpmndiCoordinates() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\"\n" +
+                "             xmlns:dc=\"http://www.omg.org/spec/DD/20100524/DC\"\n" +
+                "             xmlns:di=\"http://www.omg.org/spec/DD/20100524/DI\"\n" +
+                "             xmlns:flowable=\"http://flowable.org/bpmn\">\n" +
+                "  <process id=\"p1\" name=\"带坐标流程\">\n" +
+                "    <startEvent id=\"start1\" name=\"提交\"/>\n" +
+                "    <userTask id=\"t1\" name=\"审批\" flowable:assignee=\"user:1001\"/>\n" +
+                "    <endEvent id=\"end1\" name=\"结束\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"start1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"end1\"/>\n" +
+                "  </process>\n" +
+                "  <bpmndi:BPMNDiagram id=\"BPMNDiagram_1\">\n" +
+                "    <bpmndi:BPMNPlane id=\"BPMNPlane_1\" bpmnElement=\"p1\">\n" +
+                "      <bpmndi:BPMNShape id=\"shape_start\" bpmnElement=\"start1\">\n" +
+                "        <dc:Bounds x=\"100\" y=\"80\" width=\"50\" height=\"50\"/>\n" +
+                "      </bpmndi:BPMNShape>\n" +
+                "      <bpmndi:BPMNShape id=\"shape_t1\" bpmnElement=\"t1\">\n" +
+                "        <dc:Bounds x=\"220\" y=\"80\" width=\"100\" height=\"60\"/>\n" +
+                "      </bpmndi:BPMNShape>\n" +
+                "      <bpmndi:BPMNShape id=\"shape_end\" bpmnElement=\"end1\">\n" +
+                "        <dc:Bounds x=\"400\" y=\"80\" width=\"50\" height=\"50\"/>\n" +
+                "      </bpmndi:BPMNShape>\n" +
+                "      <bpmndi:BPMNEdge id=\"edge_f1\" bpmnElement=\"f1\">\n" +
+                "        <di:waypoint x=\"150\" y=\"105\"/>\n" +
+                "        <di:waypoint x=\"220\" y=\"110\"/>\n" +
+                "      </bpmndi:BPMNEdge>\n" +
+                "      <bpmndi:BPMNEdge id=\"edge_f2\" bpmnElement=\"f2\">\n" +
+                "        <di:waypoint x=\"320\" y=\"110\"/>\n" +
+                "        <di:waypoint x=\"400\" y=\"105\"/>\n" +
+                "      </bpmndi:BPMNEdge>\n" +
+                "    </bpmndi:BPMNPlane>\n" +
+                "  </bpmndi:BPMNDiagram>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        // 节点坐标解析
+        assertThat(model.getNodeCoordinates()).isNotNull().hasSize(3);
+        BpmnModel.NodeCoordinate t1Coord = model.getNodeCoordinates().get("t1");
+        assertThat(t1Coord).isNotNull();
+        assertThat(t1Coord.getX()).isEqualTo(220d);
+        assertThat(t1Coord.getY()).isEqualTo(80d);
+        assertThat(t1Coord.getWidth()).isEqualTo(100d);
+        assertThat(t1Coord.getHeight()).isEqualTo(60d);
+        BpmnModel.NodeCoordinate startCoord = model.getNodeCoordinates().get("start1");
+        assertThat(startCoord.getX()).isEqualTo(100d);
+        assertThat(startCoord.getWidth()).isEqualTo(50d);
+        // 边坐标解析（waypoint）
+        assertThat(model.getSkipCoordinates()).isNotNull().hasSize(2);
+        assertThat(model.getSkipCoordinates().get("f1")).hasSize(2);
+        assertThat(model.getSkipCoordinates().get("f1").get(0).getX()).isEqualTo(150d);
+        assertThat(model.getSkipCoordinates().get("f1").get(1).getY()).isEqualTo(110d);
+    }
+
+    @Test
+    @DisplayName("P3-1: 无 BPMNDI 段时坐标 map 应为空（优雅降级）")
+    void testParseNoBpmndi() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\">\n" +
+                "  <process id=\"p1\" name=\"无坐标\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <userTask id=\"t1\" name=\"t\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        // 无 BPMNDI 段时坐标 map 为空，前端回放应降级到自动布局
+        assertThat(model.getNodeCoordinates()).isNotNull().isEmpty();
+        assertThat(model.getSkipCoordinates()).isNotNull().isEmpty();
+        // 但节点和跳转本身仍应正常解析
+        assertThat(model.getNodes()).hasSize(3);
+        assertThat(model.getSkips()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("P3-1: BPMNEdge 缺 waypoint 时不加入 skipCoordinates")
+    void testParseBpmnEdgeNoWaypoint() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\"\n" +
+                "             xmlns:di=\"http://www.omg.org/spec/DD/20100524/DI\">\n" +
+                "  <process id=\"p1\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "  <bpmndi:BPMNDiagram>\n" +
+                "    <bpmndi:BPMNPlane bpmnElement=\"p1\">\n" +
+                "      <bpmndi:BPMNEdge id=\"edge_f1\" bpmnElement=\"f1\"/>\n" +
+                "    </bpmndi:BPMNPlane>\n" +
+                "  </bpmndi:BPMNDiagram>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        // 缺 waypoint 时不应加入 skipCoordinates
+        assertThat(model.getSkipCoordinates()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("P3-1: BPMNShape 缺 Bounds 时不加入 nodeCoordinates")
+    void testParseBpmnShapeNoBounds() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\">\n" +
+                "  <process id=\"p1\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "  <bpmndi:BPMNDiagram>\n" +
+                "    <bpmndi:BPMNPlane bpmnElement=\"p1\">\n" +
+                "      <bpmndi:BPMNShape id=\"shape_s1\" bpmnElement=\"s1\"/>\n" +
+                "    </bpmndi:BPMNPlane>\n" +
+                "  </bpmndi:BPMNDiagram>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        // 缺 Bounds 时不加入 nodeCoordinates
+        assertThat(model.getNodeCoordinates()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("P3-1: BPMNShape bpmnElement 缺失时跳过该 shape")
+    void testParseBpmnShapeNoBpmnElement() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\"\n" +
+                "             xmlns:dc=\"http://www.omg.org/spec/DD/20100524/DC\">\n" +
+                "  <process id=\"p1\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "  <bpmndi:BPMNDiagram>\n" +
+                "    <bpmndi:BPMNPlane bpmnElement=\"p1\">\n" +
+                "      <bpmndi:BPMNShape id=\"shape_orphan\">\n" +
+                "        <dc:Bounds x=\"0\" y=\"0\" width=\"50\" height=\"50\"/>\n" +
+                "      </bpmndi:BPMNShape>\n" +
+                "    </bpmndi:BPMNPlane>\n" +
+                "  </bpmndi:BPMNDiagram>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        // 缺 bpmnElement 时 shape 整体被忽略
+        assertThat(model.getNodeCoordinates()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("P3-1: 部分节点有坐标部分没有时，分别正确放入/不放入坐标 map")
+    void testParsePartialCoordinates() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:bpmndi=\"http://www.omg.org/spec/BPMN/20100524/DI\"\n" +
+                "             xmlns:dc=\"http://www.omg.org/spec/DD/20100524/DC\">\n" +
+                "  <process id=\"p1\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <userTask id=\"t1\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "  <bpmndi:BPMNDiagram>\n" +
+                "    <bpmndi:BPMNPlane bpmnElement=\"p1\">\n" +
+                "      <bpmndi:BPMNShape id=\"shape_s1\" bpmnElement=\"s1\">\n" +
+                "        <dc:Bounds x=\"100\" y=\"50\" width=\"40\" height=\"40\"/>\n" +
+                "      </bpmndi:BPMNShape>\n" +
+                "    </bpmndi:BPMNPlane>\n" +
+                "  </bpmndi:BPMNDiagram>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        // 只有 s1 有坐标，t1/e1 没有
+        assertThat(model.getNodeCoordinates()).hasSize(1);
+        assertThat(model.getNodeCoordinates().get("s1")).isNotNull();
+        assertThat(model.getNodeCoordinates().get("t1")).isNull();
+    }
+
     private FlowNodeDO findNode(List<FlowNodeDO> nodes, String code) {
         return nodes.stream()
                 .filter(n -> code.equals(n.getNodeCode()))

@@ -50,6 +50,13 @@ public interface FlowCcMapper extends BaseMapper<FlowCcDO> {
                              @Param("ccUserId") Long ccUserId);
 
     /**
+     * P2-3: 统计全局未读抄送数（Prometheus Gauge 监控指标）
+     *
+     * <p>无 tenant/ccUser 过滤，统计 pmis_flow_cc 表所有未读记录数。
+     */
+    long countUnread();
+
+    /**
      * 标记抄送为已读
      */
     int markRead(@Param("id") Long id,

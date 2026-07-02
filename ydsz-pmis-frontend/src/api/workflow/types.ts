@@ -212,3 +212,39 @@ export interface FlowNodeDurationStatDTO {
   minDurationMs: number
   overdueCount: number
 }
+
+/** P2-4: 流程回放步骤 */
+export interface FlowReplayStepDTO {
+  /** 步骤序号（从 0 开始） */
+  stepIndex: number
+  /** 步骤类型：START / HIS_TASK / AUDIT_LOG / CURRENT_TASK / END */
+  type: 'START' | 'HIS_TASK' | 'AUDIT_LOG' | 'CURRENT_TASK' | 'END'
+  /** 发生时间（ISO 字符串） */
+  timestamp?: string
+  /** 节点编码 */
+  nodeCode?: string
+  /** 节点名称 */
+  nodeName?: string
+  /** 操作人 ID（数字或字符串） */
+  actor?: number | string
+  /** 操作人姓名 */
+  actorName?: string
+  /** 操作动作：PASS / REJECT / TRANSFER / DELEGATE / URGE / ... */
+  action?: string
+  /** 审批意见 */
+  comment?: string
+  /** 节点回放后状态：ENTERED / PASSED / REJECTED / ACTIVE / SKIPPED / OBSERVED / FINISHED */
+  nodeState?: string
+  /** 本步耗时（毫秒） */
+  durationMs?: number
+  /**
+   * P3-1: 节点坐标 {x, y, width, height}，来自 BPMNDI 段或前端设计器
+   * 用于回放时自动滚屏到当前节点
+   */
+  coordinate?: {
+    x: number
+    y: number
+    width: number
+    height: number
+  }
+}

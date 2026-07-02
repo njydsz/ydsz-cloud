@@ -75,4 +75,45 @@ public class FlowDefinitionDO extends BaseDO {
 
     /** 链路追踪 ID */
     private String providerTraceId;
+
+    // ============================== P3-1: 灰度发布 ==============================
+
+    /**
+     * 灰度比例 0-100。
+     * <ul>
+     *   <li>0 — 全量走稳定版（不灰度）</li>
+     *   <li>100 — 全量走灰度版（已完成全量发布）</li>
+     *   <li>1-99 — 按 canaryStrategy 切流</li>
+     * </ul>
+     */
+    private Integer canaryPercent;
+
+    /**
+     * 灰度状态：
+     * <ul>
+     *   <li>NONE — 未启用灰度</li>
+     *   <li>CANARYING — 灰度中</li>
+     *   <li>PROMOTED — 已全量（灰度版晋升为稳定版）</li>
+     *   <li>ROLLED_BACK — 已回滚</li>
+     * </ul>
+     */
+    private String canaryStatus;
+
+    /**
+     * 灰度切流策略：
+     * <ul>
+     *   <li>USER_HASH — 按发起人 ID 取模，相同发起人始终走同一版本（一致性）</li>
+     *   <li>RANDOM — 每次随机</li>
+     *   <li>WHITELIST — 强制白名单内走灰度（其他走稳定版）</li>
+     * </ul>
+     */
+    private String canaryStrategy;
+
+    /**
+     * 灰度发布历史，JSON 数组。
+     * <pre>
+     *   [{operatorId,operatorName,fromPercent,toPercent,operateAt,note}]
+     * </pre>
+     */
+    private String canaryRolloutLog;
 }

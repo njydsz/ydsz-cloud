@@ -18,6 +18,7 @@ import App from './App.vue'
 import router from './router'
 import pinia from './store'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
+import i18n from './locales'
 
 // 样式（顺序敏感：基础框架样式先加载，业务 SCSS 后加载以覆盖默认值）
 import 'element-plus/dist/index.css'
@@ -45,6 +46,8 @@ setupLazyDirective(app)
 
 // 状态管理（必须先于 router 安装，路由守卫依赖 pinia store）
 app.use(pinia)
+// 国际化（注册全局 $t 与 useI18n 组合式 API）
+app.use(i18n)
 // 路由（守卫内部会使用 userStore / permissionStore）
 app.use(router)
 

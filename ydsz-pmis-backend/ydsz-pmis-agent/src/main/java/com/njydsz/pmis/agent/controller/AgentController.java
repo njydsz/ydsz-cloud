@@ -200,4 +200,57 @@ public class AgentController {
             @RequestParam(required = false) Long tenantId) {
         return Result.ok(predictionMapper.selectDurationStatsByAgentType(from, to, tenantId));
     }
+
+    // ===========================================
+    // P2-1: 内部供 Feign 调用的 execute 接口
+    // ===========================================
+
+    /**
+     * P2-1: 内部 execute 端点（供其他模块 Feign 调用，不走落库）
+     *
+     * <p>与 {@link #inMemory} 区别：直接接收 Map 形式参数，内部构造 AgentContext，
+     * 方便跨模块调用，避免各业务方都去学习 AgentContext 结构。
+     *
+     * @param body 必填字段：agentType / bizType / bizId；可选：bizRef / params
+     * @return Agent 执行结果（payload 字段承载结构化输出）
+     */
+    @Operation(summary = "[内部] 同步执行 Agent（Feign 入口）")
+    @PostMapping("/internal/execute")
+    public Result<Map<String, Object>> internalExecute(@RequestBody Map<String, Object> body) {
+        if (body == null) {
+            return Result.error(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
+        }
+        String agentType = body.get("agentType") == null ? null : body.get("agentType").toString();
+        if (agentType == null) {
+            return Result.error(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "agentType 必填");
+        }
+        String bizType = body.get("bizType") == null ? "INTERNAL" : body.get("bizType").toString();
+        Long bizId = body.get("bizId") instanceof Number n ? n.longValue() : 0L;
+        String bizRef = body.get("bizRef") == null ? "" : body.get("bizRef").toString();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> params = body.get("params") instanceof Map<?, ?>
+                ? (Map<String, Object>) body.get("params")
+                : Map.of();
+
+        AgentContext ctx = new AgentContext();
+        ctx.setBizType(bizType);
+        ctx.setBizId(bizId);
+        ctx.setBizRef(bizRef);
+        ctx.setCallerId(null);
+        ctx.setCallerName(null);
+        ctx.setSource("FEIGN");
+        ctx.setParams(params);
+
+        AgentResult result = service.executeInMemory(agentType, ctx);
+
+        Map<String, Object> data = new java.util.LinkedHashMap<>();
+        data.put("agentType", result.getAgentType() == null ? null : result.getAgentType().getCode());
+        data.put("alertLevel", result.getAlertLevel() == null ? null : result.getAlertLevel().getCode());
+        data.put("score", result.getScore());
+        data.put("confidence", result.getConfidence());
+        data.put("suggestion", result.getSuggestion());
+        data.put("matchedRules", result.getMatchedRules());
+        data.put("payload", result.getPayload());
+        return Result.ok(data);
+    }
 }

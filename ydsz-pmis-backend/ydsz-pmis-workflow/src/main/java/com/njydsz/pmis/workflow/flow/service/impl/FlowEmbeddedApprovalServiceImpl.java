@@ -1,0 +1,425 @@
+package com.njydsz.pmis.workflow.flow.service.impl;
+
+import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.workflow.flow.dto.EmbeddedApprovalActionDTO;
+import com.njydsz.pmis.workflow.flow.dto.EmbeddedApprovalViewDTO;
+import com.njydsz.pmis.workflow.flow.dto.FlowInstanceViewDTO;
+import com.njydsz.pmis.workflow.flow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.flow.entity.FlowHisTaskDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.flow.enums.FlowInstanceStatus;
+import com.njydsz.pmis.workflow.flow.enums.FlowTaskStatus;
+import com.njydsz.pmis.workflow.flow.mapper.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.flow.service.FlowAiAssistService;
+import com.njydsz.pmis.workflow.flow.service.FlowEmbeddedApprovalService;
+import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * P2-2 嵌入式审批服务实现
+ *
+ * <p>业务页内嵌场景：单次接口拉齐"实例+图+待办+历史"，并通过快捷操作
+ * 免去业务方感知 taskId。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalService {
+
+    private final FlowInstanceService instanceService;
+    private final FlowTaskService taskService;
+    private final FlowAiAssistService aiAssistService;
+    /** P2-2: 历史任务 mapper（嵌入式审批面板加载审批轨迹） */
+    private final FlowHisTaskMapper hisTaskMapper;
+
+    /** 操作人角色：发起人 */
+    private static final String ROLE_INITIATOR = "INITIATOR";
+    /** 操作人角色：当前审批人 */
+    private static final String ROLE_APPROVER = "APPROVER";
+    /** 操作人角色：观察者（无操作权限） */
+    private static final String ROLE_OBSERVER = "OBSERVER";
+
+    @Override
+    public EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, Long userId) {
+        if (businessType == null || businessType.isBlank()
+                || businessId == null || businessId.isBlank()) {
+            throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST,
+                    "businessType / businessId 不能为空");
+        }
+
+        // 1. 查流程实例
+        FlowInstanceDO instance = instanceService.getByBusiness(businessType, businessId);
+        if (instance == null) {
+            // 未发起流程，返回空面板（前端可点击"发起审批"按钮）
+            return EmbeddedApprovalViewDTO.builder()
+                    .businessType(businessType)
+                    .businessId(businessId)
+                    .instance(null)
+                    .diagram(null)
+                    .currentTasks(Collections.emptyList())
+                    .history(Collections.emptyList())
+                    .myRole(ROLE_OBSERVER)
+                    .actions(List.of("SUBMIT"))
+                    .aiAvailable(safeCheckAi())
+                    .canRecall(false)
+                    .finished(false)
+                    .message("未发起流程")
+                    .build();
+        }
+
+        // 2. 查当前待办
+        List<FlowTaskDO> pending = taskService.listPendingByInstance(instance.getId());
+
+        // 3. 计算 myRole / mine / actions
+        String myRole = computeMyRole(instance, pending, userId);
+        List<EmbeddedApprovalViewDTO.CurrentTaskView> currentTaskViews = buildCurrentTaskViews(pending, userId);
+        List<String> actions = computeActions(instance, pending, userId);
+        boolean canRecall = canRecall(instance, pending, userId);
+        boolean finished = FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished();
+
+        // 4. 查历史轨迹（合并历史任务 + 审计日志）
+        List<Map<String, Object>> history = loadHistory(instance.getId());
+
+        // 5. 流程图（带高亮当前节点）
+        Map<String, Object> diagram = loadDiagram(instance);
+
+        // 6. 转 instance view
+        List<FlowInstanceViewDTO.FlowTaskViewDTO> taskViews = currentTaskViews.stream()
+                .map(t -> FlowInstanceViewDTO.FlowTaskViewDTO.builder()
+                        .id(t.getTaskId())
+                        .nodeCode(t.getNodeCode())
+                        .nodeName(t.getNodeName())
+                        .nodeType(t.getNodeType())
+                        .assigneeType(t.getAssigneeType())
+                        .assigneeId(t.getAssigneeId())
+                        .assigneeName(t.getAssigneeName())
+                        .performType(t.getPerformType())
+                        .taskStatus(t.getTaskStatus())
+                        .createAt(t.getCreateAt())
+                        .dueAt(t.getDueAt())
+                        .build())
+                .toList();
+        FlowInstanceViewDTO instanceView = instanceService.toView(instance, taskViews);
+
+        return EmbeddedApprovalViewDTO.builder()
+                .businessType(businessType)
+                .businessId(businessId)
+                .instance(instanceView)
+                .diagram(diagram)
+                .currentTasks(currentTaskViews)
+                .history(history)
+                .myRole(myRole)
+                .actions(actions)
+                .aiAvailable(safeCheckAi())
+                .canRecall(canRecall)
+                .finished(finished)
+                .message(finished ? "流程已结束" : "流程进行中")
+                .build();
+    }
+
+    @Override
+    public void quickAction(EmbeddedApprovalActionDTO dto) {
+        if (dto == null) {
+            throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST, "请求体不能为空");
+        }
+        String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
+        FlowInstanceDO instance = instanceService.getByBusiness(dto.getBusinessType(), dto.getBusinessId());
+        if (instance == null) {
+            throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.NOT_FOUND, "流程实例不存在");
+        }
+        if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
+            throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BIZ_ERROR, "流程已结束，不能操作");
+        }
+
+        switch (action) {
+            case "PASS":
+            case "REJECT":
+            case "TRANSFER":
+            case "DELEGATE": {
+                FlowTaskDO mine = findMyTask(instance.getId(), dto.getUserId());
+                if (mine == null) {
+                    throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.FORBIDDEN,
+                            "当前用户在该流程没有待办任务");
+                }
+                FlowTaskOperateDTO op = new FlowTaskOperateDTO();
+                op.setTaskId(mine.getId());
+                op.setUserId(dto.getUserId());
+                op.setUserName(dto.getUserName());
+                op.setComment(dto.getComment());
+                op.setCommentType(dto.getCommentType());
+                op.setTargetUserId(dto.getTargetUserId());
+                op.setTargetUserName(dto.getTargetUserName());
+                op.setVariables(dto.getVariables());
+                op.setTenantId(dto.getTenantId());
+                if ("PASS".equals(action)) {
+                    taskService.pass(op);
+                } else if ("REJECT".equals(action)) {
+                    taskService.reject(op);
+                } else if ("TRANSFER".equals(action)) {
+                    if (dto.getTargetUserId() == null) {
+                        throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST,
+                                "转办操作必须指定 targetUserId");
+                    }
+                    taskService.transfer(op);
+                } else { // DELEGATE
+                    if (dto.getTargetUserId() == null) {
+                        throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST,
+                                "委派操作必须指定 targetUserId");
+                    }
+                    taskService.delegate(op);
+                }
+                break;
+            }
+            case "URGE": {
+                List<String> urged = taskService.urge(instance.getId(), dto.getUserId(), dto.getComment());
+                log.info("[EmbeddedApproval] URGE instance={} operator={} count={}",
+                        instance.getId(), dto.getUserId(), urged.size());
+                break;
+            }
+            case "WITHDRAW": {
+                boolean ok = instanceService.recall(instance.getId(), dto.getUserId());
+                if (!ok) {
+                    throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BIZ_ERROR,
+                            "撤回失败：仅发起人可撤回，且下一节点未被处理时才可撤回");
+                }
+                break;
+            }
+            default:
+                throw new BizException(com.njydsz.pmis.common.api.BizErrorCode.BAD_REQUEST,
+                        "不支持的 action: " + dto.getAction());
+        }
+    }
+
+    // ============ 私有方法 ============
+
+    /**
+     * 计算当前用户在流程中的角色
+     */
+    private String computeMyRole(FlowInstanceDO instance, List<FlowTaskDO> pending, Long userId) {
+        if (userId == null) {
+            return ROLE_OBSERVER;
+        }
+        if (userId.equals(instance.getInitiatorId())) {
+            return ROLE_INITIATOR;
+        }
+        if (pending != null) {
+            for (FlowTaskDO t : pending) {
+                if (isMine(t, userId) && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
+                    return ROLE_APPROVER;
+                }
+            }
+        }
+        return ROLE_OBSERVER;
+    }
+
+    /**
+     * 计算当前用户可执行的操作
+     */
+    private List<String> computeActions(FlowInstanceDO instance, List<FlowTaskDO> pending, Long userId) {
+        List<String> actions = new ArrayList<>();
+        if (userId == null) {
+            return actions;
+        }
+        boolean isInitiator = userId.equals(instance.getInitiatorId());
+        boolean isFinished = FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished();
+        boolean canActAsApprover = false;
+        if (pending != null) {
+            for (FlowTaskDO t : pending) {
+                if (isMine(t, userId) && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
+                    canActAsApprover = true;
+                    break;
+                }
+            }
+        }
+
+        if (isFinished) {
+            // 流程已结束，只能查看
+            return actions;
+        }
+
+        if (canActAsApprover) {
+            actions.add("PASS");
+            actions.add("REJECT");
+            actions.add("TRANSFER");
+            actions.add("DELEGATE");
+            actions.add("URGE");
+        }
+        if (isInitiator) {
+            // 发起人可催办
+            if (!actions.contains("URGE")) {
+                actions.add("URGE");
+            }
+            // 撤回（仅当下一节点未处理）
+            if (canRecall(instance, pending, userId)) {
+                actions.add("WITHDRAW");
+            }
+        }
+        return actions;
+    }
+
+    /**
+     * 当前用户是否可撤回
+     */
+    private boolean canRecall(FlowInstanceDO instance, List<FlowTaskDO> pending, Long userId) {
+        if (userId == null) {
+            return false;
+        }
+        if (!userId.equals(instance.getInitiatorId())) {
+            return false;
+        }
+        if (FlowInstanceStatus.valueOf(instance.getFlowStatus()).isFinished()) {
+            return false;
+        }
+        // 撤回前置条件：当前节点的 PENDING 任务全部属于发起人（没有真实审批人介入）
+        // 简化判断：所有 PENDING 任务均未签收（CLAIMED）
+        if (pending == null) {
+            return false;
+        }
+        for (FlowTaskDO t : pending) {
+            if (FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 判定 task 是否属于指定 userId（USER/ROLE/DEPT 等多种 assigneeType 均纳入判断）
+     */
+    private boolean isMine(FlowTaskDO t, Long userId) {
+        if (t == null || userId == null) {
+            return false;
+        }
+        String assigneeType = t.getAssigneeType();
+        String assigneeId = t.getAssigneeId();
+        String uid = String.valueOf(userId);
+        if (assigneeType == null || "USER".equalsIgnoreCase(assigneeType)) {
+            return uid.equals(assigneeId);
+        }
+        // ROLE / DEPT 场景：assigneeId 形如 "1,2,3"，简化判断：包含即可（实际由 assignee resolver 解析）
+        if (assigneeId != null) {
+            for (String s : assigneeId.split(",")) {
+                if (uid.equals(s.trim())) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 找到当前用户 mine 的第一个未完成任务
+     */
+    private FlowTaskDO findMyTask(Long instanceId, Long userId) {
+        if (userId == null) {
+            return null;
+        }
+        List<FlowTaskDO> pending = taskService.listPendingByInstance(instanceId);
+        for (FlowTaskDO t : pending) {
+            if (isMine(t, userId) && !FlowTaskStatus.valueOf(t.getTaskStatus()).isFinished()) {
+                return t;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 构造当前待办视图
+     */
+    private List<EmbeddedApprovalViewDTO.CurrentTaskView> buildCurrentTaskViews(
+            List<FlowTaskDO> pending, Long userId) {
+        if (pending == null || pending.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<EmbeddedApprovalViewDTO.CurrentTaskView> out = new ArrayList<>(pending.size());
+        for (FlowTaskDO t : pending) {
+            out.add(EmbeddedApprovalViewDTO.CurrentTaskView.builder()
+                    .taskId(t.getId())
+                    .nodeCode(t.getNodeCode())
+                    .nodeName(t.getNodeName())
+                    .nodeType(t.getNodeType())
+                    .assigneeType(t.getAssigneeType())
+                    .assigneeId(t.getAssigneeId())
+                    .assigneeName(t.getAssigneeName())
+                    .performType(t.getPerformType())
+                    .taskStatus(t.getTaskStatus())
+                    .createAt(t.getCreatedAt())
+                    .dueAt(t.getDueAt())
+                    .mine(isMine(t, userId))
+                    .build());
+        }
+        return out;
+    }
+
+    /**
+     * 加载审批轨迹（历史任务 + 审计日志）
+     */
+    private List<Map<String, Object>> loadHistory(Long instanceId) {
+        try {
+            List<FlowHisTaskDO> his = hisTaskMapper.selectByInstanceId(instanceId);
+            if (his == null || his.isEmpty()) {
+                return Collections.emptyList();
+            }
+            List<Map<String, Object>> out = new ArrayList<>(his.size());
+            for (FlowHisTaskDO t : his) {
+                Map<String, Object> m = new java.util.LinkedHashMap<>();
+                m.put("type", "TASK");
+                m.put("taskId", t.getId());
+                m.put("nodeCode", t.getNodeCode());
+                m.put("nodeName", t.getNodeName());
+                m.put("assigneeId", t.getAssigneeId());
+                m.put("assigneeName", t.getAssigneeName());
+                m.put("action", t.getPerformType());
+                m.put("comment", t.getComment());
+                m.put("timestamp", t.getFinishAt());
+                m.put("taskStatus", t.getTaskStatus());
+                out.add(m);
+            }
+            return out;
+        } catch (Exception e) {
+            log.warn("[EmbeddedApproval] 加载历史轨迹失败: {}", e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 加载流程图（含高亮当前节点）
+     *
+     * <p>嵌入式场景下流程图较大（包含 definition/nodes/skips），由前端按需通过
+     * GET /api/workflow/engine/instance/{id}/diagram 单独拉取，本接口不返回以保持轻量。
+     * 仅返回最简的节点信息用于高亮当前节点。
+     */
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> loadDiagram(FlowInstanceDO instance) {
+        Map<String, Object> light = new java.util.LinkedHashMap<>();
+        light.put("currentNodeCode", instance.getCurrentNodeCode());
+        light.put("currentNodeName", instance.getCurrentNodeName());
+        light.put("flowCode", instance.getFlowCode());
+        light.put("flowStatus", instance.getFlowStatus());
+        return light;
+    }
+
+    /**
+     * 安全检测 AI 服务可用性（不抛异常）
+     */
+    private boolean safeCheckAi() {
+        try {
+            return aiAssistService.isAiAvailable();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+}

@@ -152,4 +152,13 @@ public interface WorkflowFacade {
      * @return 时间线列表，每条记录包含 type/timestamp/nodeCode/nodeName/assigneeId/assigneeName/action/comment/taskStatus
      */
     List<Map<String, Object>> getTimeline(String instanceId);
+
+    /**
+     * P2-4: 流程回放步骤序列 — 按时间顺序合并历史任务 + 审计日志 + 当前待办为统一步骤序列，
+     * 驱动前端 {@code FlowDiagramReplay} 组件依次高亮节点并展示轨迹事件。
+     *
+     * @param instanceId 实例 ID（字符串形式）
+     * @return 步骤列表（按 timestamp 升序），实例不存在时返回空列表
+     */
+    List<Map<String, Object>> getReplaySteps(String instanceId);
 }

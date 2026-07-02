@@ -54,6 +54,14 @@
           AND read_status = 'UNREAD'
     </select>
 
+    <!-- P2-3: 全局未读抄送总数（Prometheus 指标） -->
+    <select id="countUnread" resultType="long">
+        SELECT COUNT(1)
+        FROM pmis_flow_cc
+        WHERE deleted = 0
+          AND read_status = 'UNREAD'
+    </select>
+
     <!-- 标记抄送为已读 -->
     <update id="markRead">
         UPDATE pmis_flow_cc
