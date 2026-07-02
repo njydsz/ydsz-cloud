@@ -41,6 +41,13 @@ public class BillableUtilizationJobHandler implements JobHandler {
 
     private final ExecutionClient executionClient;
 
+    /**
+     * 执行可计费利用率重算任务
+     *
+     * @param paramsJson 任务参数 JSON，可指定 period/recomputeAll
+     * @return 任务执行结果
+     * @throws Exception 任务执行异常
+     */
     @Override
     public Object execute(String paramsJson) throws Exception {
         long start = System.currentTimeMillis();

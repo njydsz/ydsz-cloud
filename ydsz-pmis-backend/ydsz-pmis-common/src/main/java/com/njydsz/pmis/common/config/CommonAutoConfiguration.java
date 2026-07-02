@@ -11,6 +11,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.task.TaskDecorator;
+import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.Map;
 @ComponentScan("com.njydsz.pmis.common")
 @Import({FeatureFlagAutoConfiguration.class, ChaosAutoConfiguration.class, SentinelAutoConfiguration.class})
 @EnableAsync
+@EnableCaching
 public class CommonAutoConfiguration {
 
     /**

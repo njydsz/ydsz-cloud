@@ -10,6 +10,8 @@ import com.njydsz.pmis.user.service.PermissionService;
 import com.njydsz.pmis.user.vo.MenuTreeVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -21,6 +23,16 @@ import java.util.Map;
 /**
  * 权限服务实现
  *
+ * <p>P2-6 改进：对高频读路径启用 Spring Cache：
+ * <ul>
+ *   <li>{@link #listAllEnabled()} — 管理端菜单树构建基础数据</li>
+ *   <li>{@link #listPermCodesByUserId(Long)} — 鉴权拦截器/前端菜单加载高频调用</li>
+ *   <li>{@link #listMenuTreeByUserId(Long)} — 用户登录后菜单树</li>
+ *   <li>{@link #listAllMenuTree()} — 管理端菜单树</li>
+ * </ul>
+ * 写操作（create/update/delete）触发 {@code @CacheEvict(allEntries=true)} 清空所有缓存条目，
+ * 避免脏数据。缓存 TTL 由 Redisson Spring Cache 配置统一管理（默认 30 分钟）。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -28,9 +40,19 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PermissionServiceImpl implements PermissionService {
 
+    /** 全部启用权限缓存名称 */
+    public static final String CACHE_ALL_ENABLED = "perm:all_enabled";
+    /** 用户权限编码缓存名称 */
+    public static final String CACHE_PERM_CODES = "perm:codes";
+    /** 用户菜单树缓存名称 */
+    public static final String CACHE_MENU_TREE = "perm:menu_tree";
+    /** 全部菜单树缓存名称 */
+    public static final String CACHE_ALL_MENU_TREE = "perm:all_menu_tree";
+
     private final PermissionMapper permissionMapper;
 
     @Override
+    @Cacheable(value = CACHE_ALL_ENABLED, unless = "#result == null || #result.isEmpty()")
     public List<PermissionDO> listAllEnabled() {
         return permissionMapper.selectList(new LambdaQueryWrapper<PermissionDO>()
                 .eq(PermissionDO::getStatus, "ENABLED")
@@ -38,11 +60,13 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Cacheable(value = CACHE_PERM_CODES, key = "#userId", unless = "#result == null || #result.isEmpty()")
     public List<String> listPermCodesByUserId(Long userId) {
         return permissionMapper.selectPermCodesByUserId(userId);
     }
 
     @Override
+    @Cacheable(value = CACHE_MENU_TREE, key = "#userId", unless = "#result == null || #result.isEmpty()")
     public List<MenuTreeVO> listMenuTreeByUserId(Long userId) {
         // 1. 拉取该用户所有权限
         List<PermissionDO> perms = permissionMapper.selectByUserId(userId);
@@ -53,6 +77,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Cacheable(value = CACHE_ALL_MENU_TREE, unless = "#result == null || #result.isEmpty()")
     public List<MenuTreeVO> listAllMenuTree() {
         return buildMenuTree(listAllEnabled());
     }
@@ -117,6 +142,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE}, allEntries = true)
     public Long create(PermissionFormDTO dto) {
         if (permissionMapper.selectByCode(dto.getPermCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "权限编码已存在");
@@ -131,6 +157,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE}, allEntries = true)
     public void update(PermissionFormDTO dto) {
         if (dto.getId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "权限 ID 不能为空");
@@ -145,6 +172,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE}, allEntries = true)
     public void delete(Long id) {
         // 存在子权限则不允许删除
         Long childCount = permissionMapper.selectCount(new LambdaQueryWrapper<PermissionDO>()

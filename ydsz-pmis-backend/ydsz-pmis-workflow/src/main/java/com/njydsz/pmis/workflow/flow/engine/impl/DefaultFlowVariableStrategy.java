@@ -174,8 +174,13 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
         }
         String trimmed = expression.trim();
         // P2-14: 支持三元运算符 ${cond ? trueVal : falseVal}
-        Matcher ternary = TERNARY_INNER.matcher(trimmed);
-        if (ternary.matches() && trimmed.startsWith("${") && trimmed.endsWith("}")) {
+        // 剥离外层 ${} 后匹配 TERNARY_INNER，避免 cond 残留 ${ 前缀
+        String ternaryExpr = trimmed;
+        if (ternaryExpr.startsWith("${") && ternaryExpr.endsWith("}")) {
+            ternaryExpr = ternaryExpr.substring(2, ternaryExpr.length() - 1).trim();
+        }
+        Matcher ternary = TERNARY_INNER.matcher(ternaryExpr);
+        if (ternary.matches()) {
             String cond = ternary.group(1).trim();
             String trueVal = ternary.group(2).trim();
             String falseVal = ternary.group(3).trim();

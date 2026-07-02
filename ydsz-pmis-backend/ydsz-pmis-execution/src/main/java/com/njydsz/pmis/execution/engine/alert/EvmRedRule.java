@@ -20,31 +20,53 @@ public class EvmRedRule implements AlertRule {
     /** 缺省红色项目数阈值 */
     public static final int DEFAULT_THRESHOLD = 3;
 
+    /** 红色项目数阈值 */
     private final int threshold;
 
+    /** 默认构造（使用缺省阈值） */
     public EvmRedRule() {
         this(DEFAULT_THRESHOLD);
     }
 
+    /**
+     * 自定义阈值构造
+     *
+     * @param threshold 红色项目数阈值
+     */
     public EvmRedRule(int threshold) {
         this.threshold = threshold;
     }
 
+    /**
+     * @return 规则编码
+     */
     @Override
     public String getCode() {
         return "EVM_RED_EXCESS";
     }
 
+    /**
+     * @return 规则中文名
+     */
     @Override
     public String getName() {
         return "EVM 红色告警项目过多";
     }
 
+    /**
+     * @return 规则类别
+     */
     @Override
     public String getCategory() {
         return "EVM";
     }
 
+    /**
+     * 评估 EVM 红色告警项目数是否超过阈值
+     *
+     * @param snapshot KPI 快照
+     * @return 预警事件；未触发返回 null
+     */
     @Override
     public AlertEventDTO evaluate(Map<String, Object> snapshot) {
         if (snapshot == null) return null;
@@ -67,6 +89,12 @@ public class EvmRedRule implements AlertRule {
                 .build();
     }
 
+    /**
+     * 将对象转换为 int
+     *
+     * @param o 原始对象
+     * @return 转换后的 int；无法转换返回 0
+     */
     private int toInt(Object o) {
         if (o == null) return 0;
         if (o instanceof Number) return ((Number) o).intValue();

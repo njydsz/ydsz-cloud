@@ -217,7 +217,9 @@ public class BpmnXmlParser {
             if (assignee.startsWith("${")) {
                 node.setPermissionFlag(assignee);
             } else if (assignee.startsWith("user:") || assignee.startsWith("role:")
-                    || assignee.startsWith("dept:")) {
+                    || assignee.startsWith("dept:")
+                    // P2-19: 支持 leader:/position: 前缀
+                    || assignee.startsWith("leader:") || assignee.startsWith("position:")) {
                 node.setPermissionFlag(assignee);
             } else {
                 node.setPermissionFlag("user:" + assignee);

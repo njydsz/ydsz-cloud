@@ -68,6 +68,10 @@ public class ProfitCalculator {
 
     /**
      * EAC（完工估算）= totalCost / progressPct
+     *
+     * @param totalCost   当前总成本
+     * @param progressPct 完成进度百分比
+     * @return 完工估算成本
      */
     public static BigDecimal eac(BigDecimal totalCost, BigDecimal progressPct) {
         if (totalCost == null) totalCost = BigDecimal.ZERO;
@@ -83,6 +87,13 @@ public class ProfitCalculator {
      *
      * <p>综合毛利率（50%）+ 进度偏差（30%）+ 成本偏差（20%）
      * <p>毛利率 >= 20% 即得满分 50 分；0-20% 线性映射；&lt;0 不得分
+     *
+     * @param grossMargin         毛利率
+     * @param plannedProgressPct  计划进度百分比
+     * @param actualProgressPct   实际进度百分比
+     * @param plannedCost         计划成本
+     * @param actualCost          实际成本
+     * @return 健康度评分（0-100）
      */
     public static int healthScore(BigDecimal grossMargin, BigDecimal plannedProgressPct,
                                   BigDecimal actualProgressPct, BigDecimal plannedCost,
@@ -142,6 +153,12 @@ public class ProfitCalculator {
         return snap;
     }
 
+    /**
+     * 空值转零
+     *
+     * @param v 原始值
+     * @return 非空原值；null 返回 ZERO
+     */
     private static BigDecimal nz(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
     }

@@ -47,6 +47,11 @@
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
         </dependency>
+        <!-- P2-6: Spring Cache 抽象，配合 Redisson 提供 @Cacheable/@CacheEvict 声明式缓存 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot3-starter</artifactId>

@@ -248,6 +248,71 @@ class BpmnXmlParserTest {
     }
 
     @Test
+    @DisplayName("userTask assignee = leader:1001 原样保留（P2-19）")
+    void testParseLeaderAssignee() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:flowable=\"http://flowable.org/bpmn\">\n" +
+                "  <process id=\"p1\" name=\"上级审批\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <userTask id=\"t1\" name=\"直属上级\" flowable:assignee=\"leader:1001\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        FlowNodeDO t1 = findNode(model.getNodes(), "t1");
+        // P2-19: leader: 前缀原样保留，由 SPI 展开为具体上级用户
+        assertThat(t1.getPermissionFlag()).isEqualTo("leader:1001");
+    }
+
+    @Test
+    @DisplayName("userTask assignee = position:PM 原样保留（P2-19）")
+    void testParsePositionAssignee() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:flowable=\"http://flowable.org/bpmn\">\n" +
+                "  <process id=\"p1\" name=\"岗位审批\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <userTask id=\"t1\" name=\"PM审批\" flowable:assignee=\"position:PM\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        FlowNodeDO t1 = findNode(model.getNodes(), "t1");
+        // P2-19: position: 前缀原样保留，由 SPI 展开为该岗位所有用户
+        assertThat(t1.getPermissionFlag()).isEqualTo("position:PM");
+    }
+
+    @Test
+    @DisplayName("userTask candidateUsers 含 leader:/position: 混合（P2-19）")
+    void testParseCandidateUsersWithLeaderPosition() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:flowable=\"http://flowable.org/bpmn\">\n" +
+                "  <process id=\"p1\" name=\"混合找人\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <userTask id=\"t1\" name=\"会签\"\n" +
+                "              flowable:candidateUsers=\"leader:1001,position:PM,user:2001\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        FlowNodeDO t1 = findNode(model.getNodes(), "t1");
+        // 三种前缀均原样保留，由 expandAssignees 分别展开
+        assertThat(t1.getPermissionFlag())
+                .isEqualTo("leader:1001,position:PM,user:2001");
+    }
+
+    @Test
     @DisplayName("节点 ID 重复应抛 BAD_REQUEST")
     void testDuplicateNodeId() {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +

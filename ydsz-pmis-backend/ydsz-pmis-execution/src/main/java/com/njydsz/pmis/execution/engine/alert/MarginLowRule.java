@@ -24,33 +24,57 @@ public class MarginLowRule implements AlertRule {
     /** 红色阈值（0.05 = 5%） */
     public static final BigDecimal DEFAULT_RED = new BigDecimal("0.05");
 
+    /** 黄色阈值 */
     private final BigDecimal yellowThreshold;
+    /** 红色阈值 */
     private final BigDecimal redThreshold;
 
+    /** 默认构造（使用缺省阈值） */
     public MarginLowRule() {
         this(DEFAULT_YELLOW, DEFAULT_RED);
     }
 
+    /**
+     * 自定义阈值构造
+     *
+     * @param yellowThreshold 黄色阈值
+     * @param redThreshold    红色阈值
+     */
     public MarginLowRule(BigDecimal yellowThreshold, BigDecimal redThreshold) {
         this.yellowThreshold = yellowThreshold;
         this.redThreshold = redThreshold;
     }
 
+    /**
+     * @return 规则编码
+     */
     @Override
     public String getCode() {
         return "MARGIN_LOW";
     }
 
+    /**
+     * @return 规则中文名
+     */
     @Override
     public String getName() {
         return "毛利率过低";
     }
 
+    /**
+     * @return 规则类别
+     */
     @Override
     public String getCategory() {
         return "COST";
     }
 
+    /**
+     * 评估毛利率是否低于阈值
+     *
+     * @param snapshot KPI 快照
+     * @return 预警事件；未触发返回 null
+     */
     @Override
     public AlertEventDTO evaluate(Map<String, Object> snapshot) {
         if (snapshot == null) return null;
@@ -83,6 +107,12 @@ public class MarginLowRule implements AlertRule {
                 .build();
     }
 
+    /**
+     * 将对象转换为 BigDecimal
+     *
+     * @param o 原始对象
+     * @return 转换后的 BigDecimal；无法转换返回 ZERO
+     */
     private BigDecimal toDecimal(Object o) {
         if (o == null) return BigDecimal.ZERO;
         if (o instanceof BigDecimal) return (BigDecimal) o;

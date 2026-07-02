@@ -16,6 +16,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * AbstractHttpLlmProvider 单元测试 (批次 22 P1-5)
  *
  * <p>覆盖: 超时 / 重试 / TraceId 透传 / 降级 / 指数退避 / 失败时不降级
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("AbstractHttpLlmProvider 调用守卫")
 class AbstractHttpLlmProviderTest {

@@ -111,6 +111,7 @@ public class BudgetGuard {
     /**
      * 查询预算占用率（供报表使用）
      *
+     * @param initiationId 项目立项 ID
      * @return {used, budget, ratio, alertLevel}；alertLevel: NORMAL/YELLOW/RED
      */
     public Map<String, Object> occupancy(Long initiationId) {
@@ -143,6 +144,12 @@ public class BudgetGuard {
         return R;
     }
 
+    /**
+     * 安全获取预算快照（Feign + try-catch 降级）
+     *
+     * @param initiationId 项目立项 ID
+     * @return 预算快照；服务不可用或返回空时返回 null
+     */
     private Map<String, Object> safeBudgetSnapshot(Long initiationId) {
         try {
             Result<Map<String, Object>> r = initiationClient.budgetSnapshot(initiationId);
@@ -158,6 +165,18 @@ public class BudgetGuard {
         }
     }
 
+    /**
+     * 发布预算告警事件
+     *
+     * @param snap       预算快照
+     * @param initiationId 项目立项 ID
+     * @param bizType    业务类型
+     * @param delta      本次新增金额
+     * @param usedAfter  累计使用金额
+     * @param budget     预算总额
+     * @param ratio      占用率
+     * @param level      告警级别
+     */
     private void publishAlert(Map<String, Object> snap, Long initiationId, String bizType,
                               BigDecimal delta, BigDecimal usedAfter, BigDecimal budget,
                               BigDecimal ratio, BudgetAlertEvent.Level level) {
@@ -185,13 +204,38 @@ public class BudgetGuard {
         }
     }
 
+    /**
+     * 对象转字符串
+     *
+     * @param o 原始对象
+     * @return 字符串；null 返回 null
+     */
     private static String str(Object o) { return o == null ? null : String.valueOf(o); }
 
+    /**
+     * 占用率转百分比
+     *
+     * @param ratio 占用率
+     * @return 百分比数值
+     */
     private static BigDecimal percent(BigDecimal ratio) {
         return ratio.multiply(BigDecimal.valueOf(100)).setScale(2, RoundingMode.HALF_UP);
     }
 
+    /**
+     * 空值转零
+     *
+     * @param v 原始值
+     * @return 非空原值；null 返回 ZERO
+     */
     private static BigDecimal nz(BigDecimal v) { return v == null ? BigDecimal.ZERO : v; }
+
+    /**
+     * 对象转 BigDecimal
+     *
+     * @param o 原始对象
+     * @return BigDecimal 值；无法转换返回 null
+     */
     private static BigDecimal toBigDecimal(Object o) {
         if (o == null) return null;
         if (o instanceof BigDecimal b) return b;

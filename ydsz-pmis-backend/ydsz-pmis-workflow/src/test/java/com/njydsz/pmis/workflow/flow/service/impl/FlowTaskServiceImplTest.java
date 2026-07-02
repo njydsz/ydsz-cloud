@@ -375,6 +375,167 @@ class FlowTaskServiceImplTest {
         assertThat(saved.getApproveCount()).isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("createTask P2-19: leader:1001 通过 SPI 展开为多人")
+    void testCreateTaskLeaderExpanded() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("leader:1001"), any()))
+                .thenReturn("leader:1001");
+        // leader:1001 → 直属上级为 [2001L]
+        when(assigneeResolver.expandUsers(eq("leader:1001"), any()))
+                .thenReturn(List.of(2001L));
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(92L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("上级审批");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("leader:1001");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.USER.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("2001");  // 展开后的上级 userId
+        assertThat(saved.getApproveCount()).isEqualTo(1);
+        verify(userMapper, times(1)).insert((FlowUserDO) any());
+    }
+
+    @Test
+    @DisplayName("createTask P2-19: position:PM 通过 SPI 展开为多人会签")
+    void testCreateTaskPositionExpanded() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("position:PM"), any()))
+                .thenReturn("position:PM");
+        // position:PM → 岗位为 PM 的所有用户 [3001L, 3002L]
+        when(assigneeResolver.expandUsers(eq("position:PM"), any()))
+                .thenReturn(List.of(3001L, 3002L));
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(93L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("PM 会签");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("position:PM");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.USER.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("3001");  // 第一个 PM
+        assertThat(saved.getApproveCount()).isEqualTo(2);  // 两个 PM
+        verify(userMapper, times(2)).insert((FlowUserDO) any());
+    }
+
+    @Test
+    @DisplayName("createTask P2-19: leader:1001 SPI 不展开 → fallback assigneeType=LEADER")
+    void testCreateTaskLeaderSingleFallback() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("leader:1001"), any()))
+                .thenReturn("leader:1001");
+        // SPI 不展开（resolver 返回空），走 fallback 单人路径
+        when(assigneeResolver.expandUsers(eq("leader:1001"), any()))
+                .thenReturn(Collections.emptyList());
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(94L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("上级审批");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("leader:1001");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        verify(taskMapper).updateById(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        // fallback 路径：保留 leader: 类型，assigneeId 为 1001
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.LEADER.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("1001");
+    }
+
+    @Test
+    @DisplayName("createTask P2-19: position:PM SPI 不展开 → fallback assigneeType=POSITION")
+    void testCreateTaskPositionSingleFallback() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("position:PM"), any()))
+                .thenReturn("position:PM");
+        when(assigneeResolver.expandUsers(eq("position:PM"), any()))
+                .thenReturn(Collections.emptyList());
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(95L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("岗位审批");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("position:PM");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        verify(taskMapper).updateById(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.POSITION.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("PM");
+    }
+
+    @Test
+    @DisplayName("createTask P2-19: leader:/position:/user: 混合展开 + 去重")
+    void testCreateTaskMixedLeaderPositionUser() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("leader:1001,position:PM,user:5001"), any()))
+                .thenReturn("leader:1001,position:PM,user:5001");
+        // leader:1001 → [5001L]（与 user:5001 重复）
+        when(assigneeResolver.expandUsers(eq("leader:1001"), any()))
+                .thenReturn(List.of(5001L));
+        // position:PM → [6001L, 6002L]
+        when(assigneeResolver.expandUsers(eq("position:PM"), any()))
+                .thenReturn(List.of(6001L, 6002L));
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(96L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("混合找人会签");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("leader:1001,position:PM,user:5001");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        // 去重合并：user:5001 + leader:1001→[5001]（去重） + position:PM→[6001,6002] = {5001,6001,6002}
+        assertThat(saved.getAssigneeId()).isEqualTo("5001");  // user:5001 第一个
+        assertThat(saved.getApproveCount()).isEqualTo(3);  // 去重后 3 人
+        verify(userMapper, times(3)).insert((FlowUserDO) any());
+    }
+
     // ============== claim ==============
 
     @Test

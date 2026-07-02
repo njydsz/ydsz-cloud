@@ -29,9 +29,10 @@ public interface DictService {
     List<DictItemDO> listItems(String typeCode);
 
     /**
-     * 刷新缓存
+     * 刷新缓存（P2-6: 返回最新字典项，由 @CachePut 写入缓存）
      *
      * @param typeCode 字典类型编码
+     * @return 最新字典项列表
      */
-    void refreshCache(String typeCode);
+    List<DictItemDO> refreshCache(String typeCode);
 }

@@ -22,10 +22,14 @@ import java.util.Map;
 @Slf4j
 public class AlertRuleEngine {
 
+    /** 已注册规则列表 */
     private final List<AlertRule> rules = new ArrayList<>();
 
     /**
      * 注册一条规则
+     *
+     * @param rule 预警规则
+     * @return 当前引擎实例（链式调用）
      */
     public AlertRuleEngine register(AlertRule rule) {
         if (rule != null) {
@@ -36,6 +40,9 @@ public class AlertRuleEngine {
 
     /**
      * 批量注册
+     *
+     * @param ruleList 规则列表
+     * @return 当前引擎实例（链式调用）
      */
     public AlertRuleEngine registerAll(List<AlertRule> ruleList) {
         if (ruleList != null) {
@@ -46,6 +53,8 @@ public class AlertRuleEngine {
 
     /**
      * 获取全部已注册规则（只读）
+     *
+     * @return 不可修改的规则列表
      */
     public List<AlertRule> getRules() {
         return Collections.unmodifiableList(rules);
@@ -78,6 +87,9 @@ public class AlertRuleEngine {
 
     /**
      * 仅返回最高严重度的预警（用于顶部 banner 摘要）
+     *
+     * @param snapshot KPI 快照
+     * @return 最高严重度预警事件；无预警返回 null
      */
     public AlertEventDTO topAlert(Map<String, Object> snapshot) {
         List<AlertEventDTO> all = evaluate(snapshot);
@@ -87,6 +99,9 @@ public class AlertRuleEngine {
 
     /**
      * 严重度数值化（用于排序）
+     *
+     * @param e 预警事件
+     * @return 严重度权重值
      */
     public static int severityWeight(AlertEventDTO e) {
         if (e == null || e.getSeverity() == null) return 0;
@@ -95,6 +110,9 @@ public class AlertRuleEngine {
 
     /**
      * 严重度数值化（字符串 code）
+     *
+     * @param code 严重度编码
+     * @return 严重度权重值
      */
     public static int severityWeightByCode(String code) {
         AlertSeverity s = AlertSeverity.fromCode(code);

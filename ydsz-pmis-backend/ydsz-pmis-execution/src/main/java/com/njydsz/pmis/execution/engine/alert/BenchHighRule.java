@@ -23,33 +23,57 @@ public class BenchHighRule implements AlertRule {
     /** 缺省黄色阈值 = 500,000 元 */
     public static final BigDecimal DEFAULT_YELLOW = new BigDecimal("500000");
 
+    /** 黄色阈值 */
     private final BigDecimal yellowThreshold;
+    /** 红色阈值 */
     private final BigDecimal redThreshold;
 
+    /** 默认构造（使用缺省阈值） */
     public BenchHighRule() {
         this(DEFAULT_YELLOW, DEFAULT_RED);
     }
 
+    /**
+     * 自定义阈值构造
+     *
+     * @param yellowThreshold 黄色阈值
+     * @param redThreshold    红色阈值
+     */
     public BenchHighRule(BigDecimal yellowThreshold, BigDecimal redThreshold) {
         this.yellowThreshold = yellowThreshold;
         this.redThreshold = redThreshold;
     }
 
+    /**
+     * @return 规则编码
+     */
     @Override
     public String getCode() {
         return "BENCH_IDLE_COST_HIGH";
     }
 
+    /**
+     * @return 规则中文名
+     */
     @Override
     public String getName() {
         return "Bench 闲置成本过高";
     }
 
+    /**
+     * @return 规则类别
+     */
     @Override
     public String getCategory() {
         return "BENCH";
     }
 
+    /**
+     * 评估 Bench 闲置成本是否超过阈值
+     *
+     * @param snapshot KPI 快照
+     * @return 预警事件；未触发返回 null
+     */
     @Override
     public AlertEventDTO evaluate(Map<String, Object> snapshot) {
         if (snapshot == null) return null;
@@ -78,6 +102,12 @@ public class BenchHighRule implements AlertRule {
                 .build();
     }
 
+    /**
+     * 将对象转换为 BigDecimal
+     *
+     * @param o 原始对象
+     * @return 转换后的 BigDecimal；无法转换返回 ZERO
+     */
     private BigDecimal toDecimal(Object o) {
         if (o == null) return BigDecimal.ZERO;
         if (o instanceof BigDecimal) return (BigDecimal) o;

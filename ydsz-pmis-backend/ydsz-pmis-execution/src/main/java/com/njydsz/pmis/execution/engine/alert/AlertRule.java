@@ -16,16 +16,22 @@ public interface AlertRule {
 
     /**
      * 规则编码（唯一）
+     *
+     * @return 规则编码
      */
     String getCode();
 
     /**
      * 规则中文名
+     *
+     * @return 规则中文名
      */
     String getName();
 
     /**
      * 规则类别
+     *
+     * @return 规则类别
      */
     String getCategory();
 

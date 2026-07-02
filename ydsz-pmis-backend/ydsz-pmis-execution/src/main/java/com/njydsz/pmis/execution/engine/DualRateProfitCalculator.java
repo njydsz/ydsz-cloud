@@ -101,6 +101,12 @@ public class DualRateProfitCalculator {
         return actual.compareTo(target) >= 0;
     }
 
+    /**
+     * 空值转零
+     *
+     * @param v 原始值
+     * @return 非空原值；null 返回 ZERO
+     */
     private static BigDecimal nz(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
     }
@@ -109,11 +115,24 @@ public class DualRateProfitCalculator {
      * 混合输入
      */
     public static class BlendedInput {
+        /** 职级编码 */
         public String levelCode;
+        /** 对外费率 */
         public BigDecimal externalRate;
+        /** 对内成本 */
         public BigDecimal internalCost;
+        /** 投入人时 */
         public BigDecimal hours;
 
+        /**
+         * 构造混合输入实例
+         *
+         * @param level 职级编码
+         * @param ext   对外费率
+         * @param cost  对内成本
+         * @param hours 投入人时
+         * @return 混合输入实例
+         */
         public static BlendedInput of(String level, BigDecimal ext, BigDecimal cost, BigDecimal hours) {
             BlendedInput b = new BlendedInput();
             b.levelCode = level;
@@ -128,11 +147,17 @@ public class DualRateProfitCalculator {
      * 利润测算结果
      */
     public static class ProfitResult {
+        /** 预期人时 */
         public BigDecimal expectedHours;
+        /** 对外收入 */
         public BigDecimal externalRevenue;
+        /** 内部成本 */
         public BigDecimal internalCost;
+        /** 毛利润 */
         public BigDecimal grossProfit;
+        /** 毛利率 */
         public BigDecimal grossMargin;
+        /** 混合费率 */
         public BigDecimal blendedRate;
     }
 }

@@ -27,10 +27,13 @@ import java.math.RoundingMode;
  */
 public class EvmCalculator {
 
-    /** 默认告警阈值 */
+    /** CPI 黄色阈值 */
     public static final double DEFAULT_CPI_YELLOW = 0.95;
+    /** CPI 红色阈值 */
     public static final double DEFAULT_CPI_RED = 0.85;
+    /** SPI 黄色阈值 */
     public static final double DEFAULT_SPI_YELLOW = 0.95;
+    /** SPI 红色阈值 */
     public static final double DEFAULT_SPI_RED = 0.85;
 
     /**
@@ -115,10 +118,27 @@ public class EvmCalculator {
         return r;
     }
 
+    /**
+     * 空值转零
+     *
+     * @param v 原始值
+     * @return 非空原值；null 返回 ZERO
+     */
     private static BigDecimal nz(BigDecimal v) {
         return v == null ? BigDecimal.ZERO : v;
     }
 
+    /**
+     * 构建告警原因描述
+     *
+     * @param cpi  成本绩效指数
+     * @param spi  进度绩效指数
+     * @param cpiY CPI 黄色阈值
+     * @param cpiR CPI 红色阈值
+     * @param spiY SPI 黄色阈值
+     * @param spiR SPI 红色阈值
+     * @return 告警原因字符串；无告警返回 null
+     */
     private static String buildReason(double cpi, double spi,
                                       double cpiY, double cpiR,
                                       double spiY, double spiR) {
@@ -133,19 +153,33 @@ public class EvmCalculator {
      * EVM 指标结果集
      */
     public static class EVMResult {
+        /** 计划值 */
         public BigDecimal pv;
+        /** 挣值 */
         public BigDecimal ev;
+        /** 实际成本 */
         public BigDecimal ac;
+        /** 完工预算 */
         public BigDecimal bac;
+        /** 成本偏差 */
         public BigDecimal cv;
+        /** 进度偏差 */
         public BigDecimal sv;
+        /** 成本绩效指数 */
         public BigDecimal cpi;
+        /** 进度绩效指数 */
         public BigDecimal spi;
+        /** 完工估算 */
         public BigDecimal eac;
+        /** 完工偏差 */
         public BigDecimal vac;
+        /** 完工尚需 */
         public BigDecimal etc;
+        /** 完工绩效指数 */
         public BigDecimal tcpi;
+        /** 告警级别 */
         public EvmAlertLevel alertLevel;
+        /** 告警原因 */
         public String alertReason;
     }
 }

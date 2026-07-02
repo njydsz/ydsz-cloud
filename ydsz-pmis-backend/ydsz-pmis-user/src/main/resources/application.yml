@@ -26,6 +26,15 @@ spring:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
+  # P2-6: Spring Cache 配置，由 Redisson Spring Boot Starter 自动装配 RedisCacheManager
+  # TTL 30 分钟，与字典数据变更频率匹配；缓存 null 防止缓存穿透由 @Cacheable unless 控制
+  cache:
+    type: redis
+    redis:
+      time-to-live: 30m
+      cache-null-values: false
+      key-prefix: pmis:
+      use-key-prefix: true
 
 mybatis-plus:
   configuration:

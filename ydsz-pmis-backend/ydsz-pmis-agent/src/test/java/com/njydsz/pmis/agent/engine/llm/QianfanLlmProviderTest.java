@@ -11,6 +11,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * QianfanLlmProvider 单元测试 (批次 22 P1-5)
  *
  * <p>覆盖: name / API Key 缺失降级 / 不可达 fallback / 不可达 throw
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("QianfanLlmProvider 百度千帆")
 class QianfanLlmProviderTest {
