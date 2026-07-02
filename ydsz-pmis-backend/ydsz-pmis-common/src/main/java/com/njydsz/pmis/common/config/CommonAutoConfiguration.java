@@ -3,6 +3,7 @@ package com.njydsz.pmis.common.config;
 import com.njydsz.pmis.common.chaos.ChaosAutoConfiguration;
 import com.njydsz.pmis.common.featureflag.FeatureFlagAutoConfiguration;
 import com.njydsz.pmis.common.interceptor.AuthInterceptor;
+import com.njydsz.pmis.common.tx.TransactionPostProcessor;
 import org.slf4j.MDC;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -104,5 +105,19 @@ public class CommonAutoConfiguration {
                 }
             };
         };
+    }
+
+    /**
+     * 注册事务后处理器（P1-10 分布式事务降级方案）
+     *
+     * <p>提供 {@code executeAfterCommit(Runnable)} 能力，让 Feign 远程写操作
+     * 在本地事务提交后执行，避免悬挂事务。详见 {@link TransactionPostProcessor}。</p>
+     *
+     * @return TransactionPostProcessor 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public TransactionPostProcessor transactionPostProcessor() {
+        return new TransactionPostProcessor();
     }
 }
