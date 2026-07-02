@@ -393,4 +393,143 @@ class FlowDefinitionServiceImplTest {
         service.disable(10L);
         verify(definitionMapper).updateActivityStatus(10L, 0);
     }
+
+    // ============== P2-40: 节点坐标更新 ==============
+
+    @Test
+    @DisplayName("updateNodeCoordinate P2-40: 成功更新节点坐标")
+    void testUpdateNodeCoordinate() {
+        FlowNodeDO node = new FlowNodeDO();
+        node.setId(100L);
+        node.setDefinitionId(10L);
+        node.setNodeCode("t1");
+        node.setNodeName("审批");
+        when(nodeMapper.selectByCode(10L, "t1")).thenReturn(node);
+
+        String coordinate = "{\"x\":100,\"y\":200}";
+        service.updateNodeCoordinate(10L, "t1", coordinate);
+
+        ArgumentCaptor<FlowNodeDO> captor = ArgumentCaptor.forClass(FlowNodeDO.class);
+        verify(nodeMapper).updateById(captor.capture());
+        FlowNodeDO updated = captor.getValue();
+        assertThat(updated.getCoordinate()).isEqualTo(coordinate);
+    }
+
+    @Test
+    @DisplayName("updateNodeCoordinate P2-40: 节点不存在抛 NOT_FOUND")
+    void testUpdateNodeCoordinate_NodeNotFound() {
+        when(nodeMapper.selectByCode(10L, "unknown")).thenReturn(null);
+        assertThatThrownBy(() -> service.updateNodeCoordinate(10L, "unknown", "{}"))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("节点不存在");
+        verify(nodeMapper, never()).updateById(any(FlowNodeDO.class));
+    }
+
+    // ============== P2-41: 流程定义草稿编辑 ==============
+
+    @Test
+    @DisplayName("updateDefinition P2-41: 成功编辑未发布定义的元数据 + 节点/跳转")
+    void testUpdateDefinition_Success() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(10L);
+        def.setFlowCode("f1");
+        def.setFlowName("旧名称");
+        def.setVersion("1.0");
+        def.setIsPublish(0);  // 未发布
+        def.setTenantId(1L);
+        when(definitionMapper.selectById(10L)).thenReturn(def);
+
+        FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
+        dto.setFlowName("新名称");
+        dto.setCategory("新分类");
+        dto.setDescription("新描述");
+        dto.setFormPath("/form/new");
+        // 包含节点和跳转
+        FlowDeployProcessDTO.FlowNodeDTO n1 = new FlowDeployProcessDTO.FlowNodeDTO();
+        n1.setNodeCode("s1");
+        n1.setNodeName("开始");
+        n1.setNodeType(0);
+        FlowDeployProcessDTO.FlowNodeDTO n2 = new FlowDeployProcessDTO.FlowNodeDTO();
+        n2.setNodeCode("t1");
+        n2.setNodeName("审批");
+        n2.setNodeType(1);
+        dto.setNodes(List.of(n1, n2));
+        FlowDeployProcessDTO.FlowSkipDTO sk = new FlowDeployProcessDTO.FlowSkipDTO();
+        sk.setFromNodeCode("s1");
+        sk.setToNodeCode("t1");
+        dto.setSkips(List.of(sk));
+
+        service.updateDefinition(10L, dto);
+
+        // 1. 元数据更新
+        ArgumentCaptor<FlowDefinitionDO> defCaptor = ArgumentCaptor.forClass(FlowDefinitionDO.class);
+        verify(definitionMapper).updateById(defCaptor.capture());
+        FlowDefinitionDO updatedDef = defCaptor.getValue();
+        assertThat(updatedDef.getFlowName()).isEqualTo("新名称");
+        assertThat(updatedDef.getCategory()).isEqualTo("新分类");
+        assertThat(updatedDef.getDescription()).isEqualTo("新描述");
+        assertThat(updatedDef.getFormPath()).isEqualTo("/form/new");
+        // version 和 flowCode 不变
+        assertThat(updatedDef.getFlowCode()).isEqualTo("f1");
+        assertThat(updatedDef.getVersion()).isEqualTo("1.0");
+        // 2. 删除旧节点/跳转
+        verify(skipMapper).deleteByDefinitionId(10L);
+        verify(nodeMapper).deleteByDefinitionId(10L);
+        // 3. 插入新节点/跳转
+        verify(nodeMapper, times(2)).insert(any(FlowNodeDO.class));
+        verify(skipMapper, times(1)).insert(any(FlowSkipDO.class));
+    }
+
+    @Test
+    @DisplayName("updateDefinition P2-41: 已发布定义不可编辑抛 BAD_REQUEST")
+    void testUpdateDefinition_AlreadyPublished() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(10L);
+        def.setIsPublish(1);  // 已发布
+        when(definitionMapper.selectById(10L)).thenReturn(def);
+
+        FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
+        dto.setFlowName("新名称");
+        assertThatThrownBy(() -> service.updateDefinition(10L, dto))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("不可编辑");
+        // 不应该更新任何内容
+        verify(definitionMapper, never()).updateById(any(FlowDefinitionDO.class));
+        verify(nodeMapper, never()).deleteByDefinitionId(anyLong());
+        verify(skipMapper, never()).deleteByDefinitionId(anyLong());
+    }
+
+    @Test
+    @DisplayName("updateDefinition P2-41: 定义不存在抛 NOT_FOUND")
+    void testUpdateDefinition_NotFound() {
+        when(definitionMapper.selectById(99L)).thenReturn(null);
+        FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
+        dto.setFlowName("新名称");
+        assertThatThrownBy(() -> service.updateDefinition(99L, dto))
+                .isInstanceOf(BizException.class)
+                .hasMessageContaining("不存在");
+    }
+
+    @Test
+    @DisplayName("updateDefinition P2-41: 仅更新元数据（无 nodes/skips 时不删除旧节点）")
+    void testUpdateDefinition_MetadataOnly() {
+        FlowDefinitionDO def = new FlowDefinitionDO();
+        def.setId(10L);
+        def.setFlowCode("f1");
+        def.setFlowName("旧名称");
+        def.setIsPublish(0);
+        def.setTenantId(1L);
+        when(definitionMapper.selectById(10L)).thenReturn(def);
+
+        FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
+        dto.setFlowName("仅改名");
+        // 不设置 nodes/skips
+
+        service.updateDefinition(10L, dto);
+
+        verify(definitionMapper).updateById(any(FlowDefinitionDO.class));
+        // 没有节点/跳转时不删除
+        verify(nodeMapper, never()).deleteByDefinitionId(anyLong());
+        verify(skipMapper, never()).deleteByDefinitionId(anyLong());
+    }
 }

@@ -116,6 +116,17 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instanceMapper.insert(instance);
         Long instanceId = instance.getId();
 
+        // P2-38: 发起人自选审批人 — 将 _selfSelect_<nodeCode> 变量写入流程变量供后续节点展开
+        // 变量已在 instance.setVariable 中序列化为 JSON，此处仅记录日志便于排查
+        if (dto.getVariables() != null) {
+            for (String key : dto.getVariables().keySet()) {
+                if (key != null && key.startsWith("_selfSelect_")) {
+                    log.info("[Flow] 发起人自选审批人变量: instanceId={} key={} value={}",
+                            instanceId, key, dto.getVariables().get(key));
+                }
+            }
+        }
+
         // P0-2: 触发 onInstanceStart 事件
         fireInstanceStart(instanceId, dto.getVariables());
 

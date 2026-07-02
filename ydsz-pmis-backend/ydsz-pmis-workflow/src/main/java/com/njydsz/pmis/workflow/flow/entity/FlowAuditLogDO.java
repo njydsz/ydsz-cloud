@@ -55,6 +55,8 @@ public class FlowAuditLogDO extends BaseDO {
     private String targetName;
     /** 审批意见 */
     private String comment;
+    /** P2-42: 审批意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE */
+    private String commentType;
     /** 操作时间 */
     private LocalDateTime operatedAt;
     /** 租户 ID */

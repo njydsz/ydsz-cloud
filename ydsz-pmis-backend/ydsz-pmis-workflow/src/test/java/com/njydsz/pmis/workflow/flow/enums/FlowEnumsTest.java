@@ -60,4 +60,38 @@ class FlowEnumsTest {
         assertThat(FlowSkipType.FORWARD.name()).isEqualTo("FORWARD");
         assertThat(FlowSkipType.BACK.name()).isEqualTo("BACK");
     }
+
+    @Test
+    @DisplayName("FlowAssigneeType 枚举值完整")
+    void testAssigneeTypeValues() {
+        // P2-38/P2-39: 新增 SELF_SELECT 和 MULTI_LEADER 追加到末尾，不破坏已有枚举序号
+        assertThat(FlowAssigneeType.values())
+                .contains(FlowAssigneeType.USER, FlowAssigneeType.ROLE,
+                        FlowAssigneeType.DEPT, FlowAssigneeType.SPEL,
+                        FlowAssigneeType.INITIATOR, FlowAssigneeType.LEADER,
+                        FlowAssigneeType.POSITION,
+                        FlowAssigneeType.SELF_SELECT, FlowAssigneeType.MULTI_LEADER);
+        // SELF_SELECT 名称正确
+        assertThat(FlowAssigneeType.SELF_SELECT.name()).isEqualTo("SELF_SELECT");
+        // MULTI_LEADER 名称正确
+        assertThat(FlowAssigneeType.MULTI_LEADER.name()).isEqualTo("MULTI_LEADER");
+    }
+
+    @Test
+    @DisplayName("P2-38: FlowAssigneeType.SELF_SELECT 枚举存在且可序列化")
+    void testSelfSelectEnum() {
+        assertThat(FlowAssigneeType.valueOf("SELF_SELECT"))
+                .isEqualTo(FlowAssigneeType.SELF_SELECT);
+        assertThat(FlowAssigneeType.SELF_SELECT.ordinal())
+                .isGreaterThan(FlowAssigneeType.POSITION.ordinal());
+    }
+
+    @Test
+    @DisplayName("P2-39: FlowAssigneeType.MULTI_LEADER 枚举存在且可序列化")
+    void testMultiLeaderEnum() {
+        assertThat(FlowAssigneeType.valueOf("MULTI_LEADER"))
+                .isEqualTo(FlowAssigneeType.MULTI_LEADER);
+        assertThat(FlowAssigneeType.MULTI_LEADER.ordinal())
+                .isGreaterThan(FlowAssigneeType.SELF_SELECT.ordinal());
+    }
 }

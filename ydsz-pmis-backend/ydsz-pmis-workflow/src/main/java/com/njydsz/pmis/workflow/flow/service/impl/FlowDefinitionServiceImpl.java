@@ -276,4 +276,120 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         definitionMapper.updateActivityStatus(definitionId, 0);
         log.info("[Flow] 停用流程定义: defId={}", definitionId);
     }
+
+    // ============================== P2-40: 节点坐标更新 ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateNodeCoordinate(Long definitionId, String nodeCode, String coordinate) {
+        if (definitionId == null || !StringUtils.hasText(nodeCode)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId/nodeCode 不能为空");
+        }
+        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+        if (node == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
+        }
+        node.setCoordinate(coordinate);
+        nodeMapper.updateById(node);
+        log.info("[Flow] 更新节点坐标: defId={} node={} coordinate={}",
+                definitionId, nodeCode, coordinate);
+    }
+
+    // ============================== P2-41: 流程定义草稿编辑 ==============================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateDefinition(Long definitionId, FlowDeployProcessDTO dto) {
+        if (definitionId == null || dto == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId/dto 不能为空");
+        }
+        // 1. 校验定义存在且未发布（只有未发布定义才能编辑）
+        FlowDefinitionDO def = definitionMapper.selectById(definitionId);
+        if (def == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "流程定义不存在: " + definitionId);
+        }
+        if (def.getIsPublish() != null && def.getIsPublish() == 1) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "已发布的流程定义不可编辑，请创建新版本: " + definitionId);
+        }
+
+        // 2. 更新定义元数据（不修改 version 和 flowCode — 核心标识不可变）
+        if (StringUtils.hasText(dto.getFlowName())) {
+            def.setFlowName(dto.getFlowName());
+        }
+        if (StringUtils.hasText(dto.getCategory())) {
+            def.setCategory(dto.getCategory());
+        }
+        if (dto.getDescription() != null) {
+            def.setDescription(dto.getDescription());
+        }
+        if (StringUtils.hasText(dto.getFormPath())) {
+            def.setFormPath(dto.getFormPath());
+        }
+        // ext 字段透传（FlowDeployProcessDTO 暂无 ext 字段，跳过）
+        definitionMapper.updateById(def);
+
+        // 3. 如果 dto 中包含 nodes/skips，先删除旧节点/跳转，再插入新的
+        boolean hasNodes = dto.getNodes() != null && !dto.getNodes().isEmpty();
+        boolean hasSkips = dto.getSkips() != null && !dto.getSkips().isEmpty();
+        boolean hasBpmn = StringUtils.hasText(dto.getBpmnXml());
+        if (hasBpmn || hasNodes || hasSkips) {
+            skipMapper.deleteByDefinitionId(definitionId);
+            nodeMapper.deleteByDefinitionId(definitionId);
+
+            List<FlowNodeDO> nodes = new ArrayList<>();
+            List<FlowSkipDO> skips = new ArrayList<>();
+
+            if (hasBpmn) {
+                // BPMN 模式：解析 XML
+                BpmnModel bpmnModel = bpmnXmlParser.parse(dto.getBpmnXml());
+                nodes.addAll(bpmnModel.getNodes());
+                skips.addAll(bpmnModel.getSkips());
+            } else {
+                // JSON 模式：从 DTO 构造节点
+                for (FlowDeployProcessDTO.FlowNodeDTO n : dto.getNodes()) {
+                    FlowNodeDO node = new FlowNodeDO();
+                    node.setNodeCode(n.getNodeCode());
+                    node.setNodeName(n.getNodeName() == null ? n.getNodeCode() : n.getNodeName());
+                    node.setNodeType(n.getNodeType() == null
+                            ? FlowNodeType.APPROVAL.getCode() : n.getNodeType());
+                    node.setPermissionFlag(n.getPermissionFlag());
+                    node.setSkipAnyNode(n.getSkipAnyNode());
+                    nodes.add(node);
+                }
+                if (dto.getSkips() != null) {
+                    for (FlowDeployProcessDTO.FlowSkipDTO s : dto.getSkips()) {
+                        FlowSkipDO skip = new FlowSkipDO();
+                        skip.setSkipName(s.getSkipName());
+                        skip.setSkipType(StringUtils.hasText(s.getSkipType())
+                                ? s.getSkipType() : FlowSkipType.PASS.name());
+                        skip.setSkipCondition(s.getSkipCondition());
+                        skip.setNextNodeCode(s.getToNodeCode());
+                        skip.setExt("{\"sourceRef\":\"" + s.getFromNodeCode() + "\"}");
+                        skips.add(skip);
+                    }
+                }
+            }
+
+            // 写入节点
+            for (FlowNodeDO node : nodes) {
+                node.setDefinitionId(definitionId);
+                node.setFlowCode(def.getFlowCode());
+                node.setTenantId(def.getTenantId());
+                node.setProviderTraceId(dto.getProviderTraceId());
+                nodeMapper.insert(node);
+            }
+            // 写入跳转
+            for (FlowSkipDO skip : skips) {
+                skip.setDefinitionId(definitionId);
+                skip.setFlowCode(def.getFlowCode());
+                skip.setTenantId(def.getTenantId());
+                skip.setProviderTraceId(dto.getProviderTraceId());
+                skipMapper.insert(skip);
+            }
+        }
+
+        log.info("[Flow] 编辑流程定义草稿: defId={} flowCode={}", definitionId, def.getFlowCode());
+    }
 }

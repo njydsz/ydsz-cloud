@@ -182,6 +182,36 @@ public class FlowEngineController {
         return Result.ok();
     }
 
+    /**
+     * P2-40: 更新节点坐标（供前端设计器保存布局）
+     *
+     * @param definitionId 流程定义 ID
+     * @param nodeCode     节点编码
+     * @param coordinate   坐标 JSON 字符串
+     * @return 统一响应结果
+     */
+    @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
+    public Result<Void> updateNodeCoordinate(@PathVariable Long definitionId,
+                                             @PathVariable String nodeCode,
+                                             @RequestBody String coordinate) {
+        definitionService.updateNodeCoordinate(definitionId, nodeCode, coordinate);
+        return Result.ok();
+    }
+
+    /**
+     * P2-41: 编辑未发布的流程定义草稿
+     *
+     * @param id  流程定义 ID
+     * @param dto 部署参数（含更新后的元数据与节点/跳转）
+     * @return 统一响应结果
+     */
+    @PutMapping("/definition/{id}")
+    public Result<Void> updateDefinition(@PathVariable Long id,
+                                         @RequestBody FlowDeployProcessDTO dto) {
+        definitionService.updateDefinition(id, dto);
+        return Result.ok();
+    }
+
     // ============== 流程实例 ==============
 
     /**

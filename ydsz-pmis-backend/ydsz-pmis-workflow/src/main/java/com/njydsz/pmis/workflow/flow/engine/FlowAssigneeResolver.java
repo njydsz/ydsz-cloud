@@ -44,4 +44,19 @@ public interface FlowAssigneeResolver {
     default List<String> getDeptIds(Long userId) {
         return List.of();
     }
+
+    /**
+     * P2-39: 展开多级上级（连续 N 级主管）
+     *
+     * <p>从指定用户开始逐级向上查找上级，返回各级上级的用户 ID 列表。
+     * 例如 userId=1001, levels=3 → [直属上级, 上上级, 上上上级]
+     *
+     * @param userId    起始用户 ID（通常为发起人）
+     * @param levels    向上级数（≥1）
+     * @param variables 流程变量（可用于动态解析）
+     * @return 多级上级用户 ID 列表（空列表表示无法展开，引擎将原样保留）
+     */
+    default List<Long> expandMultiLeader(Long userId, int levels, Map<String, Object> variables) {
+        return List.of();
+    }
 }

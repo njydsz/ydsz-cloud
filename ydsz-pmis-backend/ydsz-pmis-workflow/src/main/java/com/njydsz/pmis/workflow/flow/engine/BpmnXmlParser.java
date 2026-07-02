@@ -219,7 +219,9 @@ public class BpmnXmlParser {
             } else if (assignee.startsWith("user:") || assignee.startsWith("role:")
                     || assignee.startsWith("dept:")
                     // P2-19: 支持 leader:/position: 前缀
-                    || assignee.startsWith("leader:") || assignee.startsWith("position:")) {
+                    || assignee.startsWith("leader:") || assignee.startsWith("position:")
+                    // P2-38/P2-39: 支持 self_select:/multi_leader: 前缀，原样保留
+                    || assignee.startsWith("self_select:") || assignee.startsWith("multi_leader:")) {
                 node.setPermissionFlag(assignee);
             } else {
                 node.setPermissionFlag("user:" + assignee);
@@ -239,7 +241,10 @@ public class BpmnXmlParser {
                 // 已带前缀则原样保留，否则补 user:
                 if (u.startsWith("user:") || u.startsWith("role:")
                         || u.startsWith("dept:") || u.startsWith("leader:")
-                        || u.startsWith("position:") || u.startsWith("${")) {
+                        || u.startsWith("position:")
+                        // P2-38/P2-39: 支持 self_select:/multi_leader: 前缀原样保留
+                        || u.startsWith("self_select:") || u.startsWith("multi_leader:")
+                        || u.startsWith("${")) {
                     perm.append(u);
                 } else {
                     perm.append("user:").append(u);

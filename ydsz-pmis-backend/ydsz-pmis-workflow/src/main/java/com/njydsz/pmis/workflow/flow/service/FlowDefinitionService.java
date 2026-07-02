@@ -78,4 +78,21 @@ public interface FlowDefinitionService {
      * @param definitionId 流程定义 ID
      */
     void disable(Long definitionId);
+
+    /**
+     * P2-40: 更新节点坐标（供前端设计器保存布局）
+     *
+     * @param definitionId 流程定义 ID
+     * @param nodeCode     节点编码
+     * @param coordinate   坐标 JSON 字符串（如 {"x":100,"y":200}）
+     */
+    void updateNodeCoordinate(Long definitionId, String nodeCode, String coordinate);
+
+    /**
+     * P2-41: 编辑未发布的流程定义草稿（更新元数据 + 可选更新节点/跳转）
+     *
+     * @param definitionId 流程定义 ID
+     * @param dto          部署参数（含更新后的元数据与节点/跳转）
+     */
+    void updateDefinition(Long definitionId, FlowDeployProcessDTO dto);
 }

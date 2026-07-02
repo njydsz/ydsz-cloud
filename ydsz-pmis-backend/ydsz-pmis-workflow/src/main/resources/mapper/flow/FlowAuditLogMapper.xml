@@ -17,6 +17,7 @@
         <result column="target_id" property="targetId"/>
         <result column="target_name" property="targetName"/>
         <result column="comment" property="comment"/>
+        <result column="comment_type" property="commentType"/>
         <result column="operated_at" property="operatedAt"/>
         <result column="status" property="status"/>
         <result column="created_by" property="createdBy"/>
@@ -31,7 +32,7 @@
     <sql id="Base_Column_List">
         id, instance_id, task_id, flow_code, business_type, business_id,
         node_code, node_name, action, operator_id, operator_name,
-        target_id, target_name, comment, operated_at, status,
+        target_id, target_name, comment, comment_type, operated_at, status,
         created_by, created_at, updated_by, updated_at, deleted, tenant_id, provider_trace_id
     </sql>
 

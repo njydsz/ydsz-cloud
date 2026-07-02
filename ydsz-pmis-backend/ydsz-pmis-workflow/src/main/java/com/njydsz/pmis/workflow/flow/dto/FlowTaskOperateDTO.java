@@ -36,6 +36,9 @@ public class FlowTaskOperateDTO implements Serializable {
     /** 审批意见 */
     private String comment;
 
+    /** P2-42: 审批意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE（可选） */
+    private String commentType;
+
     /** 流程变量 */
     private Map<String, Object> variables;
 

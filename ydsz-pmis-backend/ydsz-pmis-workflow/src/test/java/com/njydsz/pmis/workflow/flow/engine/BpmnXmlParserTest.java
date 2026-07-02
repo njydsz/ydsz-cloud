@@ -313,6 +313,48 @@ class BpmnXmlParserTest {
     }
 
     @Test
+    @DisplayName("P2-38: userTask assignee = self_select:approvers 原样保留")
+    void testParseSelfSelectAssignee() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:flowable=\"http://flowable.org/bpmn\">\n" +
+                "  <process id=\"p1\" name=\"发起人自选\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <userTask id=\"t1\" name=\"自选审批人\" flowable:assignee=\"self_select:approvers\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        FlowNodeDO t1 = findNode(model.getNodes(), "t1");
+        // P2-38: self_select: 前缀原样保留到 permissionFlag
+        assertThat(t1.getPermissionFlag()).isEqualTo("self_select:approvers");
+    }
+
+    @Test
+    @DisplayName("P2-39: userTask assignee = multi_leader:3 原样保留")
+    void testParseMultiLeaderAssignee() {
+        String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
+                "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
+                "             xmlns:flowable=\"http://flowable.org/bpmn\">\n" +
+                "  <process id=\"p1\" name=\"多级上级\">\n" +
+                "    <startEvent id=\"s1\"/>\n" +
+                "    <userTask id=\"t1\" name=\"连续多级主管\" flowable:assignee=\"multi_leader:3\"/>\n" +
+                "    <endEvent id=\"e1\"/>\n" +
+                "    <sequenceFlow id=\"f1\" sourceRef=\"s1\" targetRef=\"t1\"/>\n" +
+                "    <sequenceFlow id=\"f2\" sourceRef=\"t1\" targetRef=\"e1\"/>\n" +
+                "  </process>\n" +
+                "</definitions>";
+
+        BpmnModel model = parser.parse(xml);
+        FlowNodeDO t1 = findNode(model.getNodes(), "t1");
+        // P2-39: multi_leader: 前缀原样保留到 permissionFlag（3 表示连续 3 级上级）
+        assertThat(t1.getPermissionFlag()).isEqualTo("multi_leader:3");
+    }
+
+    @Test
     @DisplayName("节点 ID 重复应抛 BAD_REQUEST")
     void testDuplicateNodeId() {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +

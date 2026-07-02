@@ -573,6 +573,74 @@ class FlowTaskServiceImplTest {
         verify(userMapper, times(3)).insert((FlowUserDO) any());
     }
 
+    @Test
+    @DisplayName("createTask P2-38: self_select:approvers 不在展开阶段处理 → fallback SELF_SELECT")
+    void testCreateTaskSelfSelect() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("self_select:approvers"), any()))
+                .thenReturn("self_select:approvers");
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(97L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("发起人自选审批人");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("self_select:approvers");
+
+        service.createTask(10L, node, Map.of());
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        verify(taskMapper).updateById(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        // P2-38: self_select: 走 fallback，assigneeType=SELF_SELECT，assigneeId=变量名 approvers
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.SELF_SELECT.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("approvers");
+        // 不应该写入 pmis_flow_user（未展开）
+        verify(userMapper, never()).insert((FlowUserDO) any());
+    }
+
+    @Test
+    @DisplayName("createTask P2-39: multi_leader:3 通过 SPI expandMultiLeader 展开为多级上级")
+    void testCreateTaskMultiLeaderExpanded() {
+        FlowInstanceDO ins = simpleInstance(10L);
+        ins.setInitiatorId(1001L);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(variableStrategy.resolveAssignee(eq("multi_leader:3"), any()))
+                .thenReturn("multi_leader:3");
+        // multi_leader:3 从发起人 1001 开始展开 3 级上级 → [2001L, 2002L, 2003L]
+        when(assigneeResolver.expandMultiLeader(eq(1001L), eq(3), any()))
+                .thenReturn(List.of(2001L, 2002L, 2003L));
+        org.mockito.Mockito.doAnswer(inv -> {
+            ((FlowTaskDO) inv.getArgument(0)).setId(98L);
+            return 1;
+        }).when(taskMapper).insert((FlowTaskDO) any());
+
+        FlowNodeDO node = new FlowNodeDO();
+        node.setNodeCode("t1");
+        node.setNodeName("连续多级主管审批");
+        node.setNodeType(FlowNodeType.APPROVAL.getCode());
+        node.setPermissionFlag("multi_leader:3");
+
+        service.createTask(10L, node, Map.of("initiatorId", 1001L));
+
+        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        verify(taskMapper).insert(taskCaptor.capture());
+        FlowTaskDO saved = taskCaptor.getValue();
+        // P2-39: multi_leader 展开后 assigneeType=USER，assigneeId=第一个上级 2001
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.USER.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("2001");
+        assertThat(saved.getApproveCount()).isEqualTo(3);  // 3 级上级
+        // 应该写入 3 条 pmis_flow_user
+        verify(userMapper, times(3)).insert((FlowUserDO) any());
+        // 验证 expandMultiLeader 被正确调用
+        verify(assigneeResolver).expandMultiLeader(eq(1001L), eq(3), any());
+    }
+
     // ============== claim ==============
 
     @Test
@@ -1700,6 +1768,67 @@ class FlowTaskServiceImplTest {
 
         verify(taskMapper).completeTask(eq(1L), eq(FlowTaskStatus.TIMEOUT.name()),
                 eq("签收后超时"), any(), any());
+    }
+
+    // ============== P2-42: 任务审批意见分类 ==============
+
+    @Test
+    @DisplayName("testPassWithCommentType P2-42: pass 时 commentType 写入审计日志")
+    void testPassWithCommentType() {
+        FlowTaskDO task = baseTask();
+        FlowInstanceDO ins = simpleInstance(10L);
+        ins.setStartAt(LocalDateTime.now().minusMinutes(2));
+        ins.setVariable("{\"k\":\"v\"}");
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+
+        FlowNodeDO next = new FlowNodeDO();
+        next.setNodeCode("t2");
+        next.setNodeName("下个审批");
+        next.setNodeType(FlowNodeType.APPROVAL.getCode());
+        when(advancer.advance(any(), eq("t1"), eq("PASS"), eq(null), any()))
+                .thenReturn(List.of(next));
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setComment("同意该申请");
+        dto.setCommentType("AGREE");
+        service.pass(dto);
+
+        // 验证审计日志包含 commentType
+        ArgumentCaptor<com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO> auditCaptor =
+                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO.class);
+        verify(auditLogMapper).insert(auditCaptor.capture());
+        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO auditLog = auditCaptor.getValue();
+        assertThat(auditLog.getComment()).isEqualTo("同意该申请");
+        assertThat(auditLog.getCommentType()).isEqualTo("AGREE");
+        assertThat(auditLog.getAction()).isEqualTo("PASS");
+    }
+
+    @Test
+    @DisplayName("testRejectWithCommentType P2-42: reject 时 commentType 写入审计日志")
+    void testRejectWithCommentType() {
+        FlowTaskDO task = baseTask();
+        FlowInstanceDO ins = simpleInstance(10L);
+        ins.setStartAt(LocalDateTime.now().minusMinutes(3));
+        when(taskMapper.selectById(1L)).thenReturn(task);
+        when(instanceMapper.selectById(10L)).thenReturn(ins);
+        when(advancer.advance(any(), eq("t1"), eq("REJECT"), any(), any()))
+                .thenReturn(Collections.emptyList());
+
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(1L);
+        dto.setComment("不同意，金额过大");
+        dto.setCommentType("DISAGREE");
+        service.reject(dto);
+
+        ArgumentCaptor<com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO> auditCaptor =
+                ArgumentCaptor.forClass(com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO.class);
+        verify(auditLogMapper).insert(auditCaptor.capture());
+        com.njydsz.pmis.workflow.flow.entity.FlowAuditLogDO auditLog = auditCaptor.getValue();
+        assertThat(auditLog.getComment()).isEqualTo("不同意，金额过大");
+        assertThat(auditLog.getCommentType()).isEqualTo("DISAGREE");
+        assertThat(auditLog.getAction()).isEqualTo("REJECT");
     }
 
     // ============== 工具方法 ==============

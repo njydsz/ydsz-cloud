@@ -174,7 +174,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             task.setTaskStatus(FlowTaskStatus.CLAIMED.name());
             task.setUpdatedAt(LocalDateTime.now());
             taskMapper.updateById(task);
-            audit(task, "DELEGATE_RETURN", dto.getUserId(), null, dto.getComment());
+            audit(task, "DELEGATE_RETURN", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
             log.info("[Flow] 委派回归: taskId={} → 原办理人={}", task.getId(), task.getAssigneeId());
             return;
         }
@@ -227,7 +227,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                             : Duration.between(instance.getStartAt(), now).toMillis());
             taskMapper.cancelByInstance(instance.getId(), FlowTaskStatus.CANCELLED.name());
             fireInstanceRejected(instance.getId(), dto.getComment());
-            audit(task, "REJECT", dto.getUserId(), null, dto.getComment());
+            audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
             return;
         }
         ((FlowInstanceServiceImpl) instanceService).generateTasksForNodes(
@@ -235,7 +235,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         instanceMapper.updateStatus(instance.getId(), instance.getFlowStatus(),
                 rejectTargets.get(0).getNodeCode(), rejectTargets.get(0).getNodeName(),
                 null, null);
-        audit(task, "REJECT", dto.getUserId(), null, dto.getComment());
+        audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
         log.info("[Flow] 退回任务: taskId={} target={}", task.getId(),
                 rejectTargets.get(0).getNodeCode());
     }
@@ -704,7 +704,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                 task.getInstanceId(), nextNodes, vars);
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
-        audit(task, "PASS", dto.getUserId(), null, dto.getComment());
+        audit(task, "PASS", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
         log.info("[Flow] 通过任务: taskId={} action=PASS next={}", task.getId(), nextNodes.size());
     }
 
@@ -717,7 +717,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         task.setApproveFinished(finished);
         if (finished < required) {
             // 未全部通过：任务保持 PENDING，不推进
-            audit(task, "PARALLEL_PASS", dto.getUserId(), null, dto.getComment());
+            audit(task, "PARALLEL_PASS", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
             log.info("[Flow] 并行会签部分通过: taskId={} finished={}/{}", task.getId(), finished, required);
             return;
         }
@@ -731,7 +731,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                 task.getInstanceId(), nextNodes, vars);
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
-        audit(task, "PARALLEL_PASS_ALL", dto.getUserId(), null, dto.getComment());
+        audit(task, "PARALLEL_PASS_ALL", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
         log.info("[Flow] 并行会签全部通过: taskId={} finished={}/{}", task.getId(), finished, required);
     }
 
@@ -750,7 +750,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                 FlowUserDO next = unprocessed.get(0);
                 taskMapper.updateAssignee(task.getId(), next.getUserId(), next.getUserName(),
                         FlowAssigneeType.USER.name());
-                audit(task, "SEQUENTIAL_PASS", dto.getUserId(), null, dto.getComment());
+                audit(task, "SEQUENTIAL_PASS", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
                 log.info("[Flow] 顺序会签切换下一人: taskId={} → {}", task.getId(), next.getUserId());
                 return;
             }
@@ -763,7 +763,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                 task.getInstanceId(), nextNodes, vars);
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
-        audit(task, "SEQUENTIAL_PASS_ALL", dto.getUserId(), null, dto.getComment());
+        audit(task, "SEQUENTIAL_PASS_ALL", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
         log.info("[Flow] 顺序会签全部通过: taskId={}", task.getId());
     }
 
@@ -777,7 +777,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         // 阈值：默认 50% + 1（即过半数通过）
         int threshold = (required / 2) + 1;
         if (finished < threshold) {
-            audit(task, "VOTE_PASS", dto.getUserId(), null, dto.getComment());
+            audit(task, "VOTE_PASS", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
             log.info("[Flow] 票签部分通过: taskId={} finished={}/{}", task.getId(), finished, threshold);
             return;
         }
@@ -791,7 +791,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
                 task.getInstanceId(), nextNodes, vars);
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
-        audit(task, "VOTE_PASS_THRESHOLD", dto.getUserId(), null, dto.getComment());
+        audit(task, "VOTE_PASS_THRESHOLD", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
         log.info("[Flow] 票签达到阈值: taskId={} finished={}/{}", task.getId(), finished, threshold);
     }
 
@@ -872,11 +872,37 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         for (String token : resolved.split(",")) {
             String t = token.trim();
             if (t.isEmpty()) continue;
+            // P2-38: self_select: 前缀不在展开阶段处理（需从流程变量读取发起人指定的用户列表），保留原样走 fallback
+            if (t.startsWith("self_select:")) {
+                continue;
+            }
             // user: 前缀直接作为用户 ID 加入结果
             if (t.startsWith("user:")) {
                 String uid = t.substring(5).trim();
                 if (!uid.isEmpty() && seen.add(uid)) {
                     result.add(uid);
+                }
+                continue;
+            }
+            // P2-39: multi_leader: 前缀通过 SPI 调用 expandMultiLeader 展开（从发起人开始逐级向上）
+            if (t.startsWith("multi_leader:")) {
+                String levelStr = t.substring("multi_leader:".length()).trim();
+                int levels = 1;
+                try {
+                    levels = Integer.parseInt(levelStr);
+                } catch (NumberFormatException ignored) {
+                }
+                Long startUserId = resolveInitiatorId(variables);
+                if (startUserId != null) {
+                    List<Long> expanded = assigneeResolver.expandMultiLeader(startUserId, levels, variables);
+                    if (expanded != null) {
+                        for (Long uid : expanded) {
+                            String s = String.valueOf(uid);
+                            if (seen.add(s)) {
+                                result.add(s);
+                            }
+                        }
+                    }
                 }
                 continue;
             }
@@ -892,6 +918,36 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             }
         }
         return result;
+    }
+
+    /**
+     * P2-39: 从流程变量中解析发起人 ID（用于 multi_leader 展开的起始用户）
+     *
+     * @param variables 流程变量
+     * @return 发起人 ID，找不到返回 null
+     */
+    private Long resolveInitiatorId(Map<String, Object> variables) {
+        if (variables == null || variables.isEmpty()) {
+            return null;
+        }
+        Object val = variables.get("initiatorId");
+        if (val == null) {
+            val = variables.get("_initiatorId");
+        }
+        if (val == null) {
+            return null;
+        }
+        if (val instanceof Long l) {
+            return l;
+        }
+        if (val instanceof Number n) {
+            return n.longValue();
+        }
+        try {
+            return Long.parseLong(String.valueOf(val));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /** 解析会签类型 */
@@ -954,6 +1010,14 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         } else if (resolved.startsWith("position:")) {
             task.setAssigneeType(FlowAssigneeType.POSITION.name());
             task.setAssigneeId(resolved.substring(9));
+        } else if (resolved.startsWith("self_select:")) {
+            // P2-38: 发起人自选审批人，assigneeId 为变量名（如 self_select:approvers → approvers）
+            task.setAssigneeType(FlowAssigneeType.SELF_SELECT.name());
+            task.setAssigneeId(resolved.substring("self_select:".length()));
+        } else if (resolved.startsWith("multi_leader:")) {
+            // P2-39: 多级上级，assigneeId 为级数（如 multi_leader:3 → 3）
+            task.setAssigneeType(FlowAssigneeType.MULTI_LEADER.name());
+            task.setAssigneeId(resolved.substring("multi_leader:".length()));
         } else if (resolved.startsWith("${")) {
             task.setAssigneeType(FlowAssigneeType.SPEL.name());
             task.setAssigneeId(resolved);
@@ -1083,6 +1147,21 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
     private void audit(FlowTaskDO task, String action, Long operatorId,
                        Long targetId, String comment) {
+        audit(task, action, operatorId, targetId, comment, null);
+    }
+
+    /**
+     * P2-42: 审计日志写入（带意见分类）
+     *
+     * @param task        任务
+     * @param action      操作类型
+     * @param operatorId  操作人 ID
+     * @param targetId    目标人 ID
+     * @param comment     审批意见
+     * @param commentType 意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE
+     */
+    private void audit(FlowTaskDO task, String action, Long operatorId,
+                       Long targetId, String comment, String commentType) {
         try {
             FlowAuditLogDO log = new FlowAuditLogDO();
             log.setInstanceId(task.getInstanceId());
@@ -1096,6 +1175,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
             log.setOperatorId(operatorId);
             log.setTargetId(targetId);
             log.setComment(comment);
+            log.setCommentType(commentType);
             log.setOperatedAt(LocalDateTime.now());
             log.setTenantId(task.getTenantId());
             log.setProviderTraceId(task.getProviderTraceId());
