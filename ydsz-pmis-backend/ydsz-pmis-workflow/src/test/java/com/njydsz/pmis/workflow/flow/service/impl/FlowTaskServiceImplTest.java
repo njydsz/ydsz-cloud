@@ -114,8 +114,7 @@ class FlowTaskServiceImplTest {
         ins.setTenantId(2L);
         when(instanceMapper.selectById(10L)).thenReturn(ins);
         when(variableStrategy.resolveAssignee(eq("user:1001"), any())).thenReturn("user:1001");
-        // resolver 不展开，走 fallback
-        when(assigneeResolver.expandUsers(eq("user:1001"), any())).thenReturn(Collections.emptyList());
+        // P2-15: user: 前缀在 expandAssignees 中直接展开，不走 SPI / fallback
         org.mockito.Mockito.doAnswer(inv -> {
             ((FlowTaskDO) inv.getArgument(0)).setId(99L);
             return 1;
@@ -132,7 +131,9 @@ class FlowTaskServiceImplTest {
 
         ArgumentCaptor<FlowTaskDO> captor = ArgumentCaptor.forClass(FlowTaskDO.class);
         verify(taskMapper).insert(captor.capture());
-        verify(taskMapper).updateById(captor.capture());
+        // P2-15: user: 直接展开，不走 fallback，不调用 updateById
+        verify(taskMapper, never()).updateById((FlowTaskDO) any());
+        verify(userMapper, times(1)).insert((FlowUserDO) any());
         FlowTaskDO saved = captor.getValue();
         assertThat(saved.getInstanceId()).isEqualTo(10L);
         assertThat(saved.getNodeCode()).isEqualTo("t1");
@@ -347,9 +348,9 @@ class FlowTaskServiceImplTest {
     void testCreateTaskCommaSeparatedFallback() {
         FlowInstanceDO ins = simpleInstance(10L);
         when(instanceMapper.selectById(10L)).thenReturn(ins);
-        // resolveAssignee 返回逗号分隔，但 SPI 不展开（resolver 返回空）
-        when(variableStrategy.resolveAssignee(eq("user:1,user:2"), any()))
-                .thenReturn("user:1,user:2");
+        // P2-15: user: 前缀会被直接展开，因此用 role: 前缀 + SPI 返回空来测试真正的 fallback 路径
+        when(variableStrategy.resolveAssignee(eq("role:unknown1,role:unknown2"), any()))
+                .thenReturn("role:unknown1,role:unknown2");
         when(assigneeResolver.expandUsers(any(), any()))
                 .thenReturn(java.util.Collections.emptyList());
         org.mockito.Mockito.doAnswer(inv -> {
@@ -361,16 +362,16 @@ class FlowTaskServiceImplTest {
         node.setNodeCode("t1");
         node.setNodeName("Fallback");
         node.setNodeType(FlowNodeType.APPROVAL.getCode());
-        node.setPermissionFlag("user:1,user:2");
+        node.setPermissionFlag("role:unknown1,role:unknown2");
 
         service.createTask(10L, node, Map.of());
 
         ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
         verify(taskMapper).insert(taskCaptor.capture());
         FlowTaskDO saved = taskCaptor.getValue();
-        // fallback 路径：取第一段 user:1 作为主办理人
-        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.USER.name());
-        assertThat(saved.getAssigneeId()).isEqualTo("1");
+        // fallback 路径：取第一段 role:unknown1 作为主办理人
+        assertThat(saved.getAssigneeType()).isEqualTo(FlowAssigneeType.ROLE.name());
+        assertThat(saved.getAssigneeId()).isEqualTo("unknown1");
         // approveCount 默认 1（fallback 路径不展开）
         assertThat(saved.getApproveCount()).isEqualTo(1);
     }

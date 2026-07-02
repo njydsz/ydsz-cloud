@@ -139,6 +139,17 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
             }
             return true;
         }
+        // P2-14: 裸变量比较（如 "amount > 100"，不要求 ${} 包裹）
+        // 通过 lookupValue 获取变量值，避免被当作字符串字面量做字符串比较
+        Matcher bareCmp = COMPARE_INNER.matcher(expr);
+        if (bareCmp.matches()) {
+            String varName = bareCmp.group(1).trim();
+            String op = bareCmp.group(2);
+            String rawValue = bareCmp.group(3).trim();
+            Object actual = lookupValue(varName, variables);
+            Object expected = parseLiteral(rawValue);
+            return compare(actual, op, expected);
+        }
         // 1. 先做变量替换（${var} -> 实际值）
         String resolved = replacePlaceholders(expr, variables);
         // 2. 解析比较表达式 lhs op rhs

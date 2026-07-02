@@ -32,16 +32,36 @@ public class TimeEntryValidator {
     /** 连续未填报天数告警阈值 */
     public static final int CONSECUTIVE_MISSING_DAYS = 3;
 
+    /** 校验结果 */
     public static class ValidationResult {
+        /** 是否通过 */
         public final boolean ok;
+        /** 失败原因（通过时为 null） */
         public final String message;
 
+        /**
+         * 构造校验结果
+         *
+         * @param ok      是否通过
+         * @param message 失败原因
+         */
         public ValidationResult(boolean ok, String message) {
             this.ok = ok;
             this.message = message;
         }
 
+        /**
+         * 构造通过结果
+         *
+         * @return 通过结果
+         */
         public static ValidationResult ok() { return new ValidationResult(true, null); }
+        /**
+         * 构造失败结果
+         *
+         * @param msg 失败原因
+         * @return 失败结果
+         */
         public static ValidationResult fail(String msg) { return new ValidationResult(false, msg); }
     }
 
@@ -93,6 +113,9 @@ public class TimeEntryValidator {
 
     /**
      * 折算人天（按 8h/天）
+     *
+     * @param hours 工时小时数
+     * @return 人天数
      */
     public static BigDecimal toDays(BigDecimal hours) {
         if (hours == null) return BigDecimal.ZERO;

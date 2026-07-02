@@ -36,14 +36,27 @@ import java.util.List;
 @Slf4j
 public class ClosureAdmissionValidator {
 
+    /** 正式结项回款比例阈值 */
     private static final BigDecimal FORMAL_RECEIVED_RATIO = new BigDecimal("0.95");
+    /** 正式结项 CPI 阈值 */
     private static final BigDecimal FORMAL_CPI = new BigDecimal("0.95");
+    /** 正式结项进度阈值 */
     private static final BigDecimal FORMAL_PROGRESS = new BigDecimal("100");
 
+    /** 预结项回款比例阈值 */
     private static final BigDecimal PRE_RECEIVED_RATIO = new BigDecimal("0.60");
+    /** 预结项 CPI 阈值 */
     private static final BigDecimal PRE_CPI = new BigDecimal("0.85");
+    /** 预结项进度阈值 */
     private static final BigDecimal PRE_PROGRESS = new BigDecimal("80");
 
+    /**
+     * 校验项目结项准入
+     *
+     * @param type 结项类型
+     * @param m    准入指标
+     * @return 校验结果
+     */
     public static AdmissionCheck check(ClosureType type, ClosureMetrics m) {
         if (type == null) {
             return AdmissionCheck.fail(List.of("结项类型不能为空"));
@@ -107,6 +120,12 @@ public class ClosureAdmissionValidator {
         return AdmissionCheck.fail(fails);
     }
 
+    /**
+     * BigDecimal 格式化
+     *
+     * @param v 数值
+     * @return 格式化字符串；null 返回 "N/A"
+     */
     private static String fmt(BigDecimal v) {
         if (v == null) return "N/A";
         return v.setScale(4, RoundingMode.HALF_UP).toPlainString();
@@ -123,9 +142,22 @@ public class ClosureAdmissionValidator {
      * 校验结果
      */
     public record AdmissionCheck(boolean passed, List<String> messages, boolean specialApprovalRequired) {
+        /**
+         * 构造通过结果
+         *
+         * @param msgs    描述信息
+         * @param special 是否需特批
+         * @return 通过结果
+         */
         public static AdmissionCheck ok(List<String> msgs, boolean special) {
             return new AdmissionCheck(true, msgs, special);
         }
+        /**
+         * 构造失败结果
+         *
+         * @param msgs 失败原因列表
+         * @return 失败结果
+         */
         public static AdmissionCheck fail(List<String> msgs) {
             return new AdmissionCheck(false, msgs, false);
         }

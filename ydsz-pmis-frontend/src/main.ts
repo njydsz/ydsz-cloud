@@ -28,6 +28,8 @@ import '@/styles/index.scss'
 
 // 权限指令
 import { setupPermissionDirective } from './directives/permission'
+// 图片懒加载指令
+import { setupLazyDirective } from './directives/lazy'
 
 const app = createApp(App)
 
@@ -38,6 +40,8 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
 
 // 注册权限指令 v-permission，用于按钮级权限控制
 setupPermissionDirective(app)
+// 注册图片懒加载指令 v-lazy，用于长列表图片性能优化
+setupLazyDirective(app)
 
 // 状态管理（必须先于 router 安装，路由守卫依赖 pinia store）
 app.use(pinia)

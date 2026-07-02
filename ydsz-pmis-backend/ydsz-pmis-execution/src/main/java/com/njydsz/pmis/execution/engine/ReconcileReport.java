@@ -29,9 +29,11 @@ public class ReconcileReport implements Serializable {
     /** 总记录数 */
     private int total;
 
-    /** INFO / WARN / ERROR 计数 */
+    /** INFO 计数 */
     private int infoCount;
+    /** WARN 计数 */
     private int warnCount;
+    /** ERROR 计数 */
     private int errorCount;
 
     /** 按类型分组的计数 */

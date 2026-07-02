@@ -112,6 +112,12 @@ public class ReconcileHandler {
     // 1. 工时已 APPROVED 但缺失成本归集 (漏算)
     // ----------------------------------------------------------------
 
+    /**
+     * 检查工时已 APPROVED 但缺失成本归集（漏算）
+     *
+     * @param initiationId 项目立项 ID
+     * @return 异常结果列表
+     */
     public List<ReconcileResult> reconcileMissingCost(Long initiationId) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
@@ -156,6 +162,12 @@ public class ReconcileHandler {
     // 2. 工时已 REJECTED 但存在成本归集 (幽灵成本)
     // ----------------------------------------------------------------
 
+    /**
+     * 检查工时已 REJECTED 但存在成本归集（幽灵成本）
+     *
+     * @param initiationId 项目立项 ID
+     * @return 异常结果列表
+     */
     public List<ReconcileResult> reconcileGhostCost(Long initiationId) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
@@ -206,6 +218,14 @@ public class ReconcileHandler {
     // 3. 单人单日工时超 24h
     // ----------------------------------------------------------------
 
+    /**
+     * 检查单人单日工时超 24h
+     *
+     * @param initiationId 项目立项 ID
+     * @param from         起始日期
+     * @param to           结束日期
+     * @return 异常结果列表
+     */
     public List<ReconcileResult> reconcileDailyOverflow(Long initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;

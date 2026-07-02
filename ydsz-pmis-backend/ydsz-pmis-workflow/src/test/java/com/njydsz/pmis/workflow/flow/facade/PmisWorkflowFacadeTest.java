@@ -9,6 +9,7 @@ import com.njydsz.pmis.workflow.flow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.flow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.flow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.flow.service.FlowTaskService;
+import com.njydsz.pmis.common.api.PageResult;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -188,7 +189,8 @@ class PmisWorkflowFacadeTest {
         t1.setAssigneeId("1001");
         t1.setBusinessType("initiation");
         t1.setBusinessId("1");
-        when(taskService.listTodoByAssignee(eq("1001"), anyLong())).thenReturn(List.of(t1));
+        when(taskService.listTodoByAssigneePage(eq("1001"), any(), eq(1), eq(20)))
+                .thenReturn(PageResult.of(List.of(t1), 1L, 1, 20));
 
         List<Map<String, Object>> result = facade.listTodoTasks(1001L, 1, 20);
         assertThat(result).hasSize(1);
@@ -207,7 +209,8 @@ class PmisWorkflowFacadeTest {
         t1.setId(1L);
         t1.setTaskStatus("COMPLETED");
         t1.setAssigneeId("1001");
-        when(taskService.listDoneByAssignee(eq("1001"), anyLong())).thenReturn(List.of(t1));
+        when(taskService.listDoneByAssigneePage(eq("1001"), any(), eq(1), eq(20)))
+                .thenReturn(PageResult.of(List.of(t1), 1L, 1, 20));
 
         List<Map<String, Object>> result = facade.listDoneTasks(1001L, 1, 20);
         assertThat(result).hasSize(1);

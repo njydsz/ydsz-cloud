@@ -115,7 +115,19 @@ public class StageGateValidator {
      * 校验结果
      */
     public record GateCheckResult(boolean passed, String message) {
+        /**
+         * 构造校验通过结果
+         *
+         * @param msg 描述信息
+         * @return 通过结果
+         */
         public static GateCheckResult ok(String msg) { return new GateCheckResult(true, msg); }
+        /**
+         * 构造校验失败结果
+         *
+         * @param msg 描述信息
+         * @return 失败结果
+         */
         public static GateCheckResult fail(String msg) { return new GateCheckResult(false, msg); }
     }
 }

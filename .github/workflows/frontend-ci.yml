@@ -58,3 +58,46 @@ jobs:
           name: frontend-coverage
           path: ydsz-pmis-frontend/coverage/
           retention-days: 7
+
+  e2e:
+    # P2-14: E2E 跨浏览器测试（Chromium + Firefox）
+    # 使用 mock 模式运行，无需后端服务
+    name: E2E Tests (Chromium + Firefox)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+          cache-dependency-path: ydsz-pmis-frontend/pnpm-lock.yaml
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Browsers
+        # P2-14: 安装 chromium + firefox 两个浏览器引擎
+        run: pnpm exec playwright install --with-deps chromium firefox
+
+      - name: Run E2E Tests
+        run: pnpm run test:e2e
+        env:
+          CI: 'true'
+
+      - name: Upload E2E Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-report
+          path: ydsz-pmis-frontend/e2e-report/
+          retention-days: 7

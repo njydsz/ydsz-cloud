@@ -24,26 +24,39 @@ public interface ReportService {
      *
      * @param initiationId 项目 ID
      * @param period       期间（YYYY-MM，可空，空表示累计）
+     * @return 利润报表数据
      */
     Map<String, Object> projectProfitReport(Long initiationId, String period);
 
     /**
      * 项目成本归集明细表
+     *
+     * @param initiationId 项目 ID
+     * @param period       期间（YYYY-MM，可空，空表示累计）
+     * @return 成本明细报表数据
      */
     Map<String, Object> costDetailReport(Long initiationId, String period);
 
     /**
      * 项目回款台账
+     *
+     * @param initiationId 项目 ID
+     * @return 回款台账数据
      */
     Map<String, Object> paymentLedgerReport(Long initiationId);
 
     /**
      * 项目全生命周期台账
+     *
+     * @param initiationId 项目 ID
+     * @return 全生命周期台账数据
      */
     Map<String, Object> projectLifecycleReport(Long initiationId);
 
     /**
      * 跨项目利润表（汇总）
+     *
+     * @return 所有项目利润汇总列表
      */
     List<Map<String, Object>> profitSummaryAll();
 
@@ -57,6 +70,7 @@ public interface ReportService {
      * @param top      返回 Top N（默认 10）
      * @param sortBy   排序维度，默认 grossMargin
      * @param period   期间过滤（YYYY-MM，可空，空表示不按期间过滤）
+     * @return 利润排行榜列表
      */
     List<Map<String, Object>> profitRank(int top, String sortBy, String period);
 }

@@ -22,6 +22,7 @@ import java.math.RoundingMode;
 @Slf4j
 public class CreditScoreEvaluator {
 
+    /** log10(1001) 常量，用于合同规模得分归一化 */
     private static final BigDecimal LOG_1001;
 
     static {

@@ -55,11 +55,25 @@ public class ReconcileResult implements Serializable {
     /** 建议处理动作 */
     private String suggestion;
 
+    /**
+     * 构建 INFO 级别结果
+     *
+     * @param type 校验类型
+     * @param desc 描述
+     * @return 对账结果
+     */
     public static ReconcileResult info(ReconcileType type, String desc) {
         return ReconcileResult.builder()
                 .type(type).level(ReconcileLevel.INFO).description(desc).build();
     }
 
+    /**
+     * 构建 WARN 级别结果
+     *
+     * @param type 校验类型
+     * @param desc 描述
+     * @return 对账结果
+     */
     public static ReconcileResult warn(ReconcileType type, String desc) {
         return ReconcileResult.builder()
                 .type(type).level(ReconcileLevel.WARN).description(desc).build();
@@ -78,6 +92,13 @@ public class ReconcileResult implements Serializable {
                 .type(type).level(ReconcileLevel.WARN).description(desc).suggestion(suggestion).build();
     }
 
+    /**
+     * 构建 ERROR 级别结果
+     *
+     * @param type 校验类型
+     * @param desc 描述
+     * @return 对账结果
+     */
     public static ReconcileResult error(ReconcileType type, String desc) {
         return ReconcileResult.builder()
                 .type(type).level(ReconcileLevel.ERROR).description(desc).build();

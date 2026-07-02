@@ -15,9 +15,12 @@ import java.util.concurrent.ThreadLocalRandom;
  */
 public final class AlertCodeGen {
 
+    /** 日期格式化器（yyyyMMdd） */
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("yyyyMMdd");
+    /** 时间格式化器（HHmmss） */
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HHmmss");
 
+    /** 私有构造，工具类不可实例化 */
     private AlertCodeGen() {}
 
     /**

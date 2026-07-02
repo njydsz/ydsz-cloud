@@ -45,8 +45,29 @@ export default defineConfig({
         timezoneId: 'Asia/Shanghai', // 时区锁定, 避免时间相关断言因时区漂移
       },
     },
+    // P2-14: Firefox 跨浏览器覆盖
+    // Firefox 渲染引擎与 Chromium 不同（Gecko vs Blink），可暴露 CSS 兼容性、
+    // 日期格式化、localStorage 序列化等差异。CI 中并行执行不增加墙钟时间。
+    {
+      name: 'firefox', // 桌面 Firefox 工程
+      use: {
+        ...devices['Desktop Firefox'],
+        viewport: { width: 1440, height: 900 },
+        locale: 'zh-CN',
+        timezoneId: 'Asia/Shanghai',
+      },
+    },
+    // P2-14: 移动端响应式覆盖（iPhone 14 视口）
+    // 验证 vxe-table/Element Plus 在窄屏下的横向滚动、抽屉式筛选、底部导航等适配
+    {
+      name: 'mobile-chrome', // 移动 Chrome 工程
+      use: {
+        ...devices['Pixel 7'],
+        locale: 'zh-CN',
+        timezoneId: 'Asia/Shanghai',
+      },
+    },
     // 未来扩展:
-    // { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
     // { name: 'webkit',  use: { ...devices['Desktop Safari'] } },
   ],
   // 自动拉起 dev server (除非显式设置 E2E_NO_WEBSERVER); CI 中不复用既有 server

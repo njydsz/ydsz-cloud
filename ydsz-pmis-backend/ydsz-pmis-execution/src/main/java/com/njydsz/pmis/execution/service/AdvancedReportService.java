@@ -26,11 +26,15 @@ public interface AdvancedReportService {
      * EVM 挣值管理报表
      *
      * @param initiationId 项目 ID
+     * @return EVM 指标列表
      */
     List<Map<String, Object>> evmReport(Long initiationId);
 
     /**
      * 人效排行榜（按可计费利用率倒序，默认近 3 个月）
+     *
+     * @param top 返回 Top N
+     * @return 人效排行榜列表
      */
     List<Map<String, Object>> utilizationRank(int top);
 
@@ -44,26 +48,42 @@ public interface AdvancedReportService {
      * @param from        起始日期（含）
      * @param to          结束日期（含）
      * @param department  事业部过滤（可选）
+     * @return 人效排行榜列表
      */
     List<Map<String, Object>> utilizationRank(int top, LocalDate from, LocalDate to, String department);
 
     /**
      * 单员工可计费利用率
+     *
+     * @param employeeId 员工 ID
+     * @param from       起始日期（含）
+     * @param to         结束日期（含）
+     * @return 利用率数据
      */
     Map<String, Object> utilizationOf(Long employeeId, LocalDate from, LocalDate to);
 
     /**
      * 事业部级可计费利用率
+     *
+     * @param from 起始日期（含）
+     * @param to   结束日期（含）
+     * @return 事业部利用率列表
      */
     List<Map<String, Object>> utilizationByDepartment(LocalDate from, LocalDate to);
 
     /**
      * Bench 闲置成本报表（近 N 天）
+     *
+     * @return Bench 闲置成本列表
      */
     List<Map<String, Object>> benchCostReport();
 
     /**
      * Bench 闲置成本报表（自定义时间窗口）
+     *
+     * @param from 起始日期（含）
+     * @param to   结束日期（含）
+     * @return Bench 闲置成本列表
      */
     List<Map<String, Object>> benchCostReport(LocalDate from, LocalDate to);
 
@@ -71,6 +91,9 @@ public interface AdvancedReportService {
      * 双费率利润对比表
      *
      * <p>对比内部成本（成本费率）与外部收费（收入费率）的差额。
+     *
+     * @param period 期间（YYYY-MM）
+     * @return 双费率利润对比列表
      */
     List<Map<String, Object>> dualRateProfitCompare(String period);
 
@@ -78,11 +101,16 @@ public interface AdvancedReportService {
      * 资源负载甘特图数据
      *
      * <p>返回每个项目 × 人员的 时间段 + allocation 列表。
+     *
+     * @param initiationId 项目 ID
+     * @return 甘特图数据列表
      */
     List<Map<String, Object>> resourceGantt(Long initiationId);
 
     /**
      * 项目风险预警看板
+     *
+     * @return 风险预警列表
      */
     List<Map<String, Object>> riskDashboard();
 
@@ -103,6 +131,7 @@ public interface AdvancedReportService {
      * @param initiationId 项目 ID（可选；为空时全局统计）
      * @param riskType     风险类型过滤（SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER，可空）
      * @param status       风险状态过滤（OPEN/IN_PROGRESS/CLOSED 等，可空）
+     * @return 风险矩阵数据
      */
     Map<String, Object> riskMatrix(Long initiationId, String riskType, String status);
 
@@ -120,6 +149,7 @@ public interface AdvancedReportService {
      * @param from        起始日期（含）
      * @param to          结束日期（含）
      * @param department  事业部过滤（可空）
+     * @return 资源占用趋势数据
      */
     Map<String, Object> resourceUtilizationTrend(LocalDate from, LocalDate to, String department);
 
@@ -138,6 +168,7 @@ public interface AdvancedReportService {
      *
      * @param initiationIds 可选项目 ID 列表（空 = 全局）
      * @param health        可选健康度过滤（GREEN/YELLOW/RED/UNKNOWN）
+     * @return 项目健康仪表盘数据
      */
     Map<String, Object> projectHealthDashboard(List<Long> initiationIds, String health);
 }

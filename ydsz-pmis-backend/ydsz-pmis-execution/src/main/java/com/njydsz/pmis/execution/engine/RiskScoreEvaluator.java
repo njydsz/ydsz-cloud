@@ -47,6 +47,12 @@ public class RiskScoreEvaluator {
         return evaluate(risk.getProbability(), risk.getImpact());
     }
 
+    /**
+     * 将概率/影响等级转换为权重值
+     *
+     * @param level 等级编码（LOW/MEDIUM/HIGH）
+     * @return 权重值（LOW=1, MEDIUM=2, HIGH=3）；null 返回 2
+     */
     private static int weightOf(String level) {
         if (level == null) return 2;
         return switch (level.trim().toUpperCase()) {
