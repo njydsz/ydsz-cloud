@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.execution.dto.CreditAssessmentDTO;
-import com.njydsz.pmis.execution.engine.CreditScoreEvaluator;
+import com.njydsz.pmis.literule.calc.CreditScoreEvaluator;
 import com.njydsz.pmis.execution.entity.CustomerCreditDO;
 import com.njydsz.pmis.execution.entity.InvoiceDO;
 import com.njydsz.pmis.execution.entity.PaymentDO;
