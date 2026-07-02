@@ -14,6 +14,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class CommonApplication {
 
+    /**
+     * 占位启动入口（实际为 Library，不应独立启动）。
+     *
+     * @param args 启动参数
+     */
     public static void main(String[] args) {
         SpringApplication.run(CommonApplication.class, args);
     }

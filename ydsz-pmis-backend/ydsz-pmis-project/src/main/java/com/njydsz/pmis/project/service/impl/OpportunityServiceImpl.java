@@ -40,7 +40,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class OpportunityServiceImpl implements OpportunityService {
 
+    /** 商机 Mapper */
     private final OpportunityMapper opportunityMapper;
+    /** 名称装配器，用于跨服务解析客户/员工名称（Feign + try-catch 降级） */
     private final com.njydsz.pmis.project.assembler.NameAssembler nameAssembler;
     /**
      * 使用 @Lazy 注入 InitiationService，避免与本服务的循环依赖(InitiationService 暂不引用本服务，但保留扩展性)
@@ -48,9 +50,20 @@ public class OpportunityServiceImpl implements OpportunityService {
     @Lazy
     private final InitiationService initiationService;
 
+    /** 项目编号前缀（商机转立项时生成的项目编号） */
     private static final String PROJECT_CODE_PREFIX = "PRJ-OPP-";
+    /** 项目编号时间戳格式 */
     private static final DateTimeFormatter CODE_FMT = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
+    /**
+     * 创建商机。
+     * <p>处理流程：参数校验 → 编号唯一性预检 → 属性拷贝 → 默认值兜底（状态/级别/租户/赢单率）
+     * → 名称装配（容错） → 持久化。</p>
+     *
+     * @param dto 商机创建参数
+     * @return 商机主键 ID
+     * @throws BizException 编号重复或参数非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(OpportunityCreateDTO dto) {
@@ -87,6 +100,12 @@ public class OpportunityServiceImpl implements OpportunityService {
         return o.getId();
     }
 
+    /**
+     * 更新商机信息（按非空字段覆盖）。
+     *
+     * @param dto 商机更新参数，必须携带 id
+     * @throws BizException 商机不存在或参数非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(OpportunityUpdateDTO dto) {
@@ -112,6 +131,14 @@ public class OpportunityServiceImpl implements OpportunityService {
         log.info("[Opportunity] 更新商机: id={}", o.getId());
     }
 
+    /**
+     * 商机状态迁移。
+     * <p>校验当前状态与目标状态的合法性（{@link OpportunityStatus#canTransitTo}），
+     * 输单(LOST)需附带原因。</p>
+     *
+     * @param dto 状态迁移参数
+     * @throws BizException 状态非法或迁移路径不允许时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void changeStatus(OpportunityStatusDTO dto) {
@@ -135,6 +162,12 @@ public class OpportunityServiceImpl implements OpportunityService {
         log.info("[Opportunity] 状态迁移: id={} {} -> {}", o.getId(), from.getCode(), to.getCode());
     }
 
+    /**
+     * 删除商机（按主键）。
+     *
+     * @param id 商机 ID
+     * @throws BizException 商机不存在时抛出
+     */
     @Override
     public void delete(Long id) {
         OpportunityDO o = getById(id);
@@ -142,6 +175,13 @@ public class OpportunityServiceImpl implements OpportunityService {
         log.info("[Opportunity] 删除商机: id={}", id);
     }
 
+    /**
+     * 根据主键查询商机详情。
+     *
+     * @param id 商机 ID
+     * @return 商机实体
+     * @throws BizException 商机不存在时抛出
+     */
     @Override
     public OpportunityDO getById(Long id) {
         OpportunityDO o = opportunityMapper.selectById(id);
@@ -151,6 +191,17 @@ public class OpportunityServiceImpl implements OpportunityService {
         return o;
     }
 
+    /**
+     * 分页查询商机，支持关键词、状态、级别、负责人过滤，并自动注入数据权限 SQL。
+     *
+     * @param page    页码（从 1 开始）
+     * @param size    每页大小
+     * @param keyword 关键词（编号/名称/客户名），可空
+     * @param status  状态码，可空
+     * @param level   级别（A/B/C/D），可空
+     * @param ownerId 负责人 ID，可空
+     * @return 分页结果
+     */
     @Override
     @DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
     public Page<OpportunityDO> page(int page, int size, String keyword, String status, String level, Long ownerId) {
@@ -171,6 +222,15 @@ public class OpportunityServiceImpl implements OpportunityService {
         return opportunityMapper.selectPage(p, w);
     }
 
+    /**
+     * 重新评估赢单率并回写。
+     *
+     * @param id             商机 ID
+     * @param customerCredit 客户信用等级码（A/B/C/D），可空
+     * @param hasHistory     是否存在历史合作记录
+     * @return 评估后的赢单率（百分比）
+     * @throws BizException 商机不存在时抛出
+     */
     @Override
     public BigDecimal evaluateWinRate(Long id, String customerCredit, boolean hasHistory) {
         OpportunityDO o = getById(id);
@@ -180,18 +240,36 @@ public class OpportunityServiceImpl implements OpportunityService {
         return rate;
     }
 
+    /**
+     * 按状态聚合计数（租户维度）。
+     *
+     * @param tenantId 租户 ID，可空（默认 1L）
+     * @return 每种状态对应的数量列表
+     */
     @Override
     public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return opportunityMapper.aggregateByStatus(tenantId);
     }
 
+    /**
+     * 按级别聚合计数（租户维度）。
+     *
+     * @param tenantId 租户 ID，可空（默认 1L）
+     * @return 每种级别对应的数量列表
+     */
     @Override
     public List<Map<String, Object>> aggregateByLevel(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return opportunityMapper.aggregateByLevel(tenantId);
     }
 
+    /**
+     * 校验商机创建参数，确保编号/名称/客户/负责人等必填字段非空。
+     *
+     * @param dto 商机创建参数
+     * @throws BizException 参数非法时抛出
+     */
     private void validate(OpportunityCreateDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
@@ -210,16 +288,39 @@ public class OpportunityServiceImpl implements OpportunityService {
         }
     }
 
+    /**
+     * 容错解析客户名称，Feign 调用失败时返回 null 不阻塞主流程。
+     *
+     * @param id 客户 ID
+     * @return 客户名称，调用失败返回 null
+     */
     private String safeCustomerName(Long id) {
         try { return nameAssembler == null ? null : nameAssembler.resolveCustomer(id); }
         catch (Exception e) { return null; }
     }
 
+    /**
+     * 容错解析员工名称，Feign 调用失败时返回 null 不阻塞主流程。
+     *
+     * @param id 员工 ID
+     * @return 员工名称，调用失败返回 null
+     */
     private String safeEmployeeName(Long id) {
         try { return nameAssembler == null ? null : nameAssembler.resolveEmployee(id); }
         catch (Exception e) { return null; }
     }
 
+    /**
+     * 将已赢单(WON)商机自动转换为立项草稿。
+     * <p>处理流程：商机状态校验(WON) → 装配立项草稿 → 调用 InitiationService.create →
+     * 商机状态推进至 CONVERTED。客户/PM/发起人/预算/日期自动从商机字段填充。</p>
+     *
+     * @param opportunityId 商机 ID
+     * @param sponsorId     立项发起人 ID
+     * @param pmId          项目经理 ID
+     * @return 新创建的立项 ID
+     * @throws BizException 商机不存在、状态非 WON 或客户为空时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long convertToInitiation(Long opportunityId, Long sponsorId, Long pmId) {
@@ -267,11 +368,23 @@ public class OpportunityServiceImpl implements OpportunityService {
         return initiationId;
     }
 
+    /**
+     * 基于时间戳生成项目编号（PRJ-OPP-yyyyMMddHHmmss）。
+     *
+     * @param opp 商机实体（保留参数以便后续扩展）
+     * @return 项目编号
+     */
     private String buildProjectCode(OpportunityDO opp) {
         String ts = java.time.LocalDateTime.now().format(CODE_FMT);
         return PROJECT_CODE_PREFIX + ts;
     }
 
+    /**
+     * 基于商机名称生成立项名称，超过 200 字符则截断。
+     *
+     * @param opp 商机实体
+     * @return 立项名称
+     */
     private String buildProjectName(OpportunityDO opp) {
         String name = opp.getOpportunityName() == null ? "" : opp.getOpportunityName();
         return name.length() > 200 ? name.substring(0, 200) : name;

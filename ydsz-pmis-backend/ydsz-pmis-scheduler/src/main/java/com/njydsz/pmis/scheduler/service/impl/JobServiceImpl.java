@@ -50,9 +50,13 @@ import java.util.concurrent.ScheduledFuture;
 @RequiredArgsConstructor
 public class JobServiceImpl implements JobService, ApplicationRunner {
 
+    /** 任务定义 Mapper */
     private final JobMapper jobMapper;
+    /** 任务日志 Mapper */
     private final JobLogMapper jobLogMapper;
+    /** Spring 应用上下文（用于按 Bean 名称获取 JobHandler） */
     private final ApplicationContext applicationContext;
+    /** Redis 模板（用于分布式锁） */
     private final StringRedisTemplate redisTemplate;
 
     /** 调度器 */
@@ -75,11 +79,21 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     /** Lua 脚本: 安全释放锁（仅当 value 匹配时才 delete） */
     private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = initReleaseScript();
 
+    /**
+     * 初始化当前实例标识
+     *
+     * @return 实例标识（hostname:pid）
+     */
     private static String initInstanceId() {
         String name = ManagementFactory.getRuntimeMXBean().getName();
         return name != null ? name : "unknown:" + ProcessHandle.current().pid();
     }
 
+    /**
+     * 初始化安全释放锁的 Lua 脚本（仅当 value 匹配时才 delete）
+     *
+     * @return Redis Lua 脚本
+     */
     private static DefaultRedisScript<Long> initReleaseScript() {
         DefaultRedisScript<Long> script = new DefaultRedisScript<>();
         script.setScriptText("if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end");
@@ -87,6 +101,9 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         return script;
     }
 
+    /**
+     * 初始化任务调度器（线程池大小 8，关闭时等待任务完成）
+     */
     @PostConstruct
     public void initScheduler() {
         ThreadPoolTaskScheduler s = new ThreadPoolTaskScheduler();
@@ -99,6 +116,9 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log.info("[Scheduler] 任务调度器初始化完成, poolSize=8");
     }
 
+    /**
+     * 销毁调度器，取消所有已调度任务
+     */
     @PreDestroy
     public void destroy() {
         scheduledMap.values().forEach(f -> f.cancel(true));
@@ -106,6 +126,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         log.info("[Scheduler] 任务调度器已关闭");
     }
 
+    /**
+     * 应用启动回调，加载所有 NORMAL 任务到调度器
+     *
+     * @param args 启动参数
+     */
     @Override
     public void run(ApplicationArguments args) {
         try {

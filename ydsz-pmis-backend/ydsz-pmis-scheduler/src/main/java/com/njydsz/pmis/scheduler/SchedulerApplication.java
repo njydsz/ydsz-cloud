@@ -18,6 +18,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @MapperScan("com.njydsz.pmis.scheduler.mapper")
 public class SchedulerApplication {
 
+    /**
+     * 应用入口方法
+     *
+     * @param args 启动参数
+     */
     public static void main(String[] args) {
         SpringApplication.run(SchedulerApplication.class, args);
     }

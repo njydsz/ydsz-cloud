@@ -20,21 +20,27 @@ import java.util.List;
 @Schema(description = "分页结果")
 public class PageResult<T> implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 数据列表 */
     @Schema(description = "数据列表")
     private List<T> list;
 
+    /** 总数 */
     @Schema(description = "总数")
     private long total;
 
+    /** 当前页码 */
     @Schema(description = "当前页码")
     private long page;
 
+    /** 每页大小 */
     @Schema(description = "每页大小")
     private long size;
 
+    /** 总页数 */
     @Schema(description = "总页数")
     private long pages;
 

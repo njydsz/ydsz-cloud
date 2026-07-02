@@ -28,9 +28,19 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class OpportunityFollowServiceImpl implements OpportunityFollowService {
 
+    /** 商机跟进 Mapper */
     private final OpportunityFollowMapper followMapper;
+    /** 商机 Mapper（用于校验商机是否存在） */
     private final OpportunityMapper opportunityMapper;
 
+    /**
+     * 记录一次商机跟进。
+     * <p>校验商机存在性 → 属性拷贝 → 设置跟进时间 → 持久化。</p>
+     *
+     * @param dto 跟进记录参数
+     * @return 跟进记录 ID
+     * @throws BizException 商机不存在或参数非法时抛出
+     */
     @Override
     public Long record(OpportunityFollowDTO dto) {
         validate(dto);
@@ -45,6 +55,14 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
         return f.getId();
     }
 
+    /**
+     * 分页查询商机跟进记录，按跟进时间倒序。
+     *
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @param opportunityId 商机 ID，可空（为空则查全部）
+     * @return 分页结果
+     */
     @Override
     public Page<OpportunityFollowDO> page(int page, int size, Long opportunityId) {
         Page<OpportunityFollowDO> p = new Page<>(page, size);
@@ -54,6 +72,12 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
         return followMapper.selectPage(p, w);
     }
 
+    /**
+     * 校验跟进记录参数，确保商机 ID 与跟进类型非空。
+     *
+     * @param dto 跟进记录参数
+     * @throws BizException 参数非法时抛出
+     */
     private void validate(OpportunityFollowDTO dto) {
         if (dto == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");

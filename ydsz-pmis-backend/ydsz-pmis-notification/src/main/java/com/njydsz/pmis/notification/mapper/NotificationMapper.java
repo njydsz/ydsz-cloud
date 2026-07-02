@@ -20,6 +20,10 @@ public interface NotificationMapper extends BaseMapper<NotificationDO> {
 
     /**
      * 标记单条已读
+     *
+     * @param id     通知 ID
+     * @param userId 接收人 ID
+     * @return 实际更新条数（0 表示通知不存在或不属于该用户）
      */
     @Update("UPDATE pmis_notification SET read_status = 1, read_time = CURRENT_TIMESTAMP " +
             "WHERE id = #{id} AND receiver_id = #{userId} AND read_status = 0 AND deleted = 0")
@@ -27,6 +31,9 @@ public interface NotificationMapper extends BaseMapper<NotificationDO> {
 
     /**
      * 全部标记已读
+     *
+     * @param userId 接收人 ID
+     * @return 实际标记条数
      */
     @Update("UPDATE pmis_notification SET read_status = 1, read_time = CURRENT_TIMESTAMP " +
             "WHERE receiver_id = #{userId} AND read_status = 0 AND deleted = 0")
@@ -34,6 +41,9 @@ public interface NotificationMapper extends BaseMapper<NotificationDO> {
 
     /**
      * 未读数量
+     *
+     * @param userId 接收人 ID
+     * @return 未读通知数
      */
     @Select("SELECT COUNT(*) FROM pmis_notification " +
             "WHERE receiver_id = #{userId} AND read_status = 0 AND deleted = 0")

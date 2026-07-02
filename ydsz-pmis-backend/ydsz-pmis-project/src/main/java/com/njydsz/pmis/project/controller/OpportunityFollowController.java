@@ -28,14 +28,29 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class OpportunityFollowController {
 
+    /** 商机跟进服务 */
     private final OpportunityFollowService service;
 
+    /**
+     * 记录一次商机跟进。
+     *
+     * @param dto 跟进记录参数
+     * @return 跟进记录 ID
+     */
     @Operation(summary = "记录跟进")
     @PostMapping
     public Result<Long> record(@Valid @RequestBody OpportunityFollowDTO dto) {
         return Result.ok(service.record(dto));
     }
 
+    /**
+     * 分页查询商机跟进记录。
+     *
+     * @param page          页码（从 1 开始）
+     * @param size          每页大小
+     * @param opportunityId 商机 ID，可空
+     * @return 分页结果
+     */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public Result<Page<OpportunityFollowDO>> page(

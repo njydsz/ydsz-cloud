@@ -19,6 +19,12 @@ import java.util.List;
 @Component
 public class MessageServiceClientFallback implements FallbackFactory<MessageServiceClient> {
 
+    /**
+     * 创建降级代理
+     *
+     * @param cause 触发降级的异常
+     * @return 降级后的 MessageServiceClient 实例，邮件发送返回失败，通道列表返回空
+     */
     @Override
     public MessageServiceClient create(Throwable cause) {
         log.warn("[Feign] message 服务降级: {}", cause == null ? "?" : cause.getMessage());

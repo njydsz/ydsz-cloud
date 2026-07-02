@@ -18,6 +18,12 @@ import java.util.Map;
 @Component("heartbeatHandler")
 public class HeartbeatJobHandler implements JobHandler {
 
+    /**
+     * 执行心跳上报
+     *
+     * @param paramsJson 参数 JSON（可选）
+     * @return 心跳结果，包含时间戳和节点标识
+     */
     @Override
     public Object execute(String paramsJson) {
         log.info("[HeartbeatJob] 节点心跳 params={}", paramsJson);

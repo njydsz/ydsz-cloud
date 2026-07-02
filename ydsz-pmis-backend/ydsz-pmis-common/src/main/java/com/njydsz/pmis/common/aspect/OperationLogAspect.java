@@ -97,6 +97,19 @@ public class OperationLogAspect {
         }
     }
 
+    /**
+     * 构造操作日志事件。
+     *
+     * <p>采集请求 URL、HTTP 方法、方法签名、客户端 IP、UA、入参（脱敏）、
+     * 响应结果、状态、耗时与链路 traceId，组装为 {@link OperationLogEvent}。</p>
+     *
+     * @param pjp    连接点
+     * @param ann    操作日志注解
+     * @param result 目标方法返回值（可为 null）
+     * @param error  目标方法抛出的异常（可为 null）
+     * @param cost   方法执行耗时（毫秒）
+     * @return 已填充完成的操作日志事件
+     */
     private OperationLogEvent buildEvent(ProceedingJoinPoint pjp, OperationLog ann,
                                          Object result, Throwable error, long cost) {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -178,6 +191,15 @@ public class OperationLogAspect {
         return null;
     }
 
+    /**
+     * 解析客户端真实 IP。
+     *
+     * <p>优先级：X-Forwarded-For（取第一个）&gt; X-Real-IP &gt; remoteAddr。
+     * 兜底返回 "unknown" 以避免空值。</p>
+     *
+     * @param request HTTP 请求
+     * @return 客户端 IP 字符串
+     */
     private String getIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {

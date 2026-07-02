@@ -28,13 +28,17 @@ public class ProjectClosureDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 结项业务编号 */
     private String closureCode;
+    /** 项目立项ID */
     private Long initiationId;
     /** 结项类型：ClosureType.code */
     private String closureType;
+    /** 结项原因 */
     private String closureReason;
 
     // 准入指标
@@ -56,11 +60,15 @@ public class ProjectClosureDO implements Serializable {
     private BigDecimal totalCost;
     /** 质保期月数 */
     private BigDecimal warrantyMonths;
+    /** 质保期开始日期 */
     private LocalDate warrantyStartDate;
+    /** 质保期结束日期 */
     private LocalDate warrantyEndDate;
 
     // 归档信息
+    /** 计划归档日期 */
     private LocalDate plannedArchiveDate;
+    /** 实际归档日期 */
     private LocalDate actualArchiveDate;
     /** 归档文件 ID 列表（JSON） */
     private String archiveFileIds;
@@ -68,21 +76,33 @@ public class ProjectClosureDO implements Serializable {
     private Integer locked;
     /** 状态：ClosureStatus.code */
     private String status;
+    /** 备注 */
     private String remark;
 
     // 审批
+    /** 申请人ID */
     private Long applicantId;
+    /** 申请人姓名 */
     private String applicantName;
+    /** 审批人ID */
     private Long approverId;
+    /** 审批人姓名 */
     private String approverName;
+    /** 提交时间 */
     private LocalDateTime submittedAt;
+    /** 审批时间 */
     private LocalDateTime approvedAt;
+    /** 归档时间 */
     private LocalDateTime archivedAt;
+    /** 审批意见 */
     private String approvalComment;
 
+    /** 租户ID */
     private Long tenantId;
+    /** 链路追踪ID */
     private String providerTraceId;
 
+    /** 创建人ID */
     @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
@@ -90,6 +110,7 @@ public class ProjectClosureDO implements Serializable {
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新人ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 

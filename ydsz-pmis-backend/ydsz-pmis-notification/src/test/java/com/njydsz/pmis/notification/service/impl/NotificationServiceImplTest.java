@@ -31,13 +31,20 @@ import static org.mockito.Mockito.when;
 
 /**
  * NotificationServiceImpl 单元测试
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("NotificationServiceImpl 通知服务测试")
 class NotificationServiceImplTest {
 
+    /** 通知 Mapper（Mock） */
     private NotificationMapper mapper;
+    /** 消息服务 Feign 客户端（Mock） */
     private MessageServiceClient messageClient;
+    /** 用户服务 Feign 客户端（Mock） */
     private UserServiceClient userClient;
+    /** 待测服务实例 */
     private NotificationService service;
 
     @BeforeEach
@@ -287,6 +294,13 @@ class NotificationServiceImplTest {
         verify(mapper, times(1)).selectPage(any(), any());
     }
 
+    /**
+     * 构造测试用通知实体
+     *
+     * @param id         通知 ID
+     * @param receiverId 接收人 ID
+     * @return 通知实体
+     */
     private NotificationDO notif(Long id, Long receiverId) {
         NotificationDO n = new NotificationDO();
         n.setId(id);

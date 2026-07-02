@@ -31,6 +31,7 @@ public class BillableUtilizationSnapshotDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
@@ -85,8 +86,10 @@ public class BillableUtilizationSnapshotDO implements Serializable {
     /** 触发来源：SCHEDULER / MANUAL / RETRO */
     private String source;
 
+    /** 租户ID */
     private Long tenantId;
 
+    /** 逻辑删除标志：1 已删除 / 0 未删除 */
     @TableField(fill = FieldFill.INSERT)
     private Integer deleted;
 }

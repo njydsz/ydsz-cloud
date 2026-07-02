@@ -37,8 +37,16 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class BillableUtilizationJobHandler implements JobHandler {
 
+    /** 执行模块 Feign 客户端 */
     private final ExecutionClient executionClient;
 
+    /**
+     * 执行可计费利用率快照重算
+     *
+     * @param paramsJson 参数 JSON，可包含 period（周期，默认上一月）和 recomputeAll（是否强制重算）
+     * @return 执行结果，包含 period/recomputeAll/ok/costMs 等字段
+     * @throws Exception 当执行过程中发生异常时抛出
+     */
     @Override
     public Object execute(String paramsJson) throws Exception {
         long start = System.currentTimeMillis();

@@ -47,20 +47,36 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class InitiationServiceImpl implements InitiationService {
 
+    /** 允许的预算分类集合：人工/采购/费用/外包/其他 */
     private static final Set<String> BUDGET_CATEGORIES =
             Set.of("LABOR", "PURCHASE", "EXPENSE", "OUTSOURCE", "OTHER");
 
+    /** 允许的门径评审结果集合 */
     private static final Set<String> GATE_RESULTS =
             Set.of("PENDING", "PASSED", "REJECTED", "CONDITIONAL");
 
+    /** 立项 Mapper */
     private final InitiationMapper initiationMapper;
+    /** 预算明细 Mapper */
     private final BudgetItemMapper budgetItemMapper;
+    /** 门径评审 Mapper */
     private final GateReviewMapper gateReviewMapper;
+    /** 名称装配器，用于跨服务解析客户/PM/发起人名称（Feign + try-catch 降级） */
     private final NameAssembler nameAssembler;
+    /** 工作流 Feign 客户端，用于启动立项审批流程 */
     private final WorkflowServiceClient workflowServiceClient;
 
     // ============= 立项主表 =============
 
+    /**
+     * 创建立项。
+     * <p>处理流程：参数校验 → 项目编号唯一性预检 → 属性拷贝 → 默认值兜底（阶段/级别/租户）
+     * → 工期计算 → 名称装配 → 持久化。</p>
+     *
+     * @param dto 立项创建参数
+     * @return 立项 ID
+     * @throws BizException 项目编号重复或参数非法时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long create(InitiationCreateDTO dto) {
@@ -90,6 +106,14 @@ public class InitiationServiceImpl implements InitiationService {
         return o.getId();
     }
 
+    /**
+     * 立项阶段迁移。
+     * <p>校验当前阶段与目标阶段的合法性（{@link InitiationStage#canTransitTo}），
+     * 迁移至 APPROVED 时自动设置门径为 CD1。</p>
+     *
+     * @param dto 阶段迁移参数
+     * @throws BizException 阶段非法或迁移路径不允许时抛出
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void changeStage(InitiationStageDTO dto) {
@@ -111,6 +135,12 @@ public class InitiationServiceImpl implements InitiationService {
         log.info("[Initiation] 阶段迁移: id={} {} -> {}", o.getId(), from.getCode(), to.getCode());
     }
 
+    /**
+     * 删除立项（按主键）。
+     *
+     * @param id 立项 ID
+     * @throws BizException 立项不存在时抛出
+     */
     @Override
     public void delete(Long id) {
         InitiationDO o = getById(id);
@@ -118,6 +148,13 @@ public class InitiationServiceImpl implements InitiationService {
         log.info("[Initiation] 删除立项: id={}", id);
     }
 
+    /**
+     * 根据主键查询立项详情，并装配客户/PM/发起人名称。
+     *
+     * @param id 立项 ID
+     * @return 立项实体（含名称）
+     * @throws BizException 立项不存在时抛出
+     */
     @Override
     public InitiationDO getById(Long id) {
         InitiationDO o = initiationMapper.selectById(id);
@@ -128,6 +165,18 @@ public class InitiationServiceImpl implements InitiationService {
         return o;
     }
 
+    /**
+     * 分页查询立项，支持关键词、阶段、级别、PM 过滤，自动注入数据权限 SQL，
+     * 并对结果集中每条记录装配名称。
+     *
+     * @param page        页码（从 1 开始）
+     * @param size        每页大小
+     * @param keyword     关键词（编号/名称/客户名），可空
+     * @param stage       阶段码，可空
+     * @param projectLevel 项目级别，可空
+     * @param pmId        PM ID，可空
+     * @return 分页结果（每条记录已装配名称）
+     */
     @Override
     @DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
     public Page<InitiationDO> page(int page, int size, String keyword, String stage,

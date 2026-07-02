@@ -28,7 +28,7 @@ export interface PageData<T> {
   pages?: number
 }
 
-/** 统一 Result 包装响应（与后端 com.njydsz.pmis.common.api.Result<T> 一致） */
+/** 统一 R 包装响应（与后端 com.njydsz.pmis.common.api.R<T> 一致） */
 export interface ApiResponse<T> {
   code: number
   message: string

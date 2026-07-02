@@ -87,6 +87,16 @@ public class IdempotentAspect {
         }
     }
 
+    /**
+     * 构造幂等 key。
+     *
+     * <p>组成：前缀 {@code pmis:idempotent:{key}} + 可选 userId 维度 + 可选 SpEL 提取值；
+     * 若未指定 keyFromArg，则兜底使用方法签名 + 参数 hash 作为区分维度。</p>
+     *
+     * @param pjp 连接点
+     * @param ann 幂等注解
+     * @return 完整 Redis key
+     */
     private String buildKey(ProceedingJoinPoint pjp, Idempotent ann) {
         StringBuilder sb = new StringBuilder("pmis:idempotent:");
         sb.append(ann.key());
@@ -117,6 +127,15 @@ public class IdempotentAspect {
         return sb.toString();
     }
 
+    /**
+     * 使用 SpEL 从方法参数中提取 key 片段。
+     *
+     * <p>解析失败时返回 "spel-error" 以保证 key 仍可生成，并打印 warn 日志。</p>
+     *
+     * @param pjp  连接点
+     * @param expr SpEL 表达式，如 {@code #dto.username}
+     * @return 提取到的字符串值
+     */
     private String extractSpEL(ProceedingJoinPoint pjp, String expr) {
         try {
             MethodSignature sig = (MethodSignature) pjp.getSignature();
@@ -137,6 +156,12 @@ public class IdempotentAspect {
         }
     }
 
+    /**
+     * 计算方法参数 hash，作为未指定 keyFromArg 时的兜底区分维度。
+     *
+     * @param args 方法参数数组
+     * @return hash 值
+     */
     private int argsHash(Object[] args) {
         if (args == null) return 0;
         int h = 1;

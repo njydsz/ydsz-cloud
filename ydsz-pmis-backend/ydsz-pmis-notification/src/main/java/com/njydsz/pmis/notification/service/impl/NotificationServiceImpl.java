@@ -193,6 +193,13 @@ public class NotificationServiceImpl implements NotificationService {
 
     // ==================== 内部 ====================
 
+    /**
+     * 解析接收人 ID 列表（优先 receiverIds，其次 receiverId）
+     *
+     * @param dto 通知发送表单
+     * @return 接收人 ID 列表
+     * @throws BizException 当接收人为空时抛出
+     */
     private List<Long> resolveReceiverIds(NotificationSendDTO dto) {
         List<Long> receiverIds = dto.getReceiverIds();
         if (CollectionUtils.isEmpty(receiverIds) && dto.getReceiverId() != null) {
@@ -243,6 +250,12 @@ public class NotificationServiceImpl implements NotificationService {
         }
     }
 
+    /**
+     * 构建邮件 HTML 内容
+     *
+     * @param dto 通知发送表单
+     * @return HTML 内容字符串
+     */
     private String buildHtmlContent(NotificationSendDTO dto) {
         StringBuilder sb = new StringBuilder();
         sb.append("<div style=\"font-family:Microsoft YaHei,Arial,sans-serif;line-height:1.6;color:#333;\">");
@@ -255,6 +268,12 @@ public class NotificationServiceImpl implements NotificationService {
         return sb.toString();
     }
 
+    /**
+     * HTML 特殊字符转义
+     *
+     * @param input 原始字符串
+     * @return 转义后的字符串
+     */
     private String escapeHtml(String input) {
         if (input == null) return "";
         return input.replace("&", "&amp;")
@@ -263,6 +282,12 @@ public class NotificationServiceImpl implements NotificationService {
                 .replace("\"", "&quot;");
     }
 
+    /**
+     * 从响应数据中提取供应商追踪 ID
+     *
+     * @param data 响应数据
+     * @return 追踪 ID，无则返回 null
+     */
     @SuppressWarnings("unchecked")
     private Object extractTraceId(Object data) {
         if (data == null) return null;

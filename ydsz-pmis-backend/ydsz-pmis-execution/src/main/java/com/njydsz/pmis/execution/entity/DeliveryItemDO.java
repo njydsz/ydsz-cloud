@@ -27,28 +27,43 @@ public class DeliveryItemDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 交付物业务编号 */
     private String itemCode;
+    /** 项目立项ID */
     private Long initiationId;
     /** 关联交付物标准ID */
     private Long standardId;
+    /** 项目类型：ProjectType.code */
     private String projectType;
+    /** 项目等级 */
     private String projectLevel;
+    /** 交付物名称 */
     private String deliveryName;
+    /** 交付物分类 */
     private String deliveryCategory;
     /** 所属门径阶段：DeliveryStage.code */
     private String stage;
     /** 是否必交付：1 是 / 0 否 */
     private Integer required;
+    /** 计划提交日期 */
     private LocalDate plannedSubmitDate;
+    /** 实际提交日期 */
     private LocalDate actualSubmitDate;
+    /** 验收日期 */
     private LocalDate acceptedDate;
+    /** 提交人ID */
     private Long submitterId;
+    /** 提交人姓名 */
     private String submitterName;
+    /** 评审人ID */
     private Long reviewerId;
+    /** 评审人姓名 */
     private String reviewerName;
+    /** 评审意见 */
     private String reviewComment;
     /** 状态：DeliveryItemStatus.code */
     private String status;
@@ -58,10 +73,14 @@ public class DeliveryItemDO implements Serializable {
     private Integer trCompleted;
     /** 附件 ID 列表（JSON 数组） */
     private String fileIds;
+    /** 备注 */
     private String remark;
+    /** 租户ID */
     private Long tenantId;
+    /** 链路追踪ID */
     private String providerTraceId;
 
+    /** 创建人ID */
     @TableField(fill = FieldFill.INSERT)
     private Long createdBy;
 
@@ -69,6 +88,7 @@ public class DeliveryItemDO implements Serializable {
     @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createdAt;
 
+    /** 更新人ID */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updatedBy;
 

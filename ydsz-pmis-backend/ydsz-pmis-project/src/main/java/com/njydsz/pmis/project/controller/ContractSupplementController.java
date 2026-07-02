@@ -32,14 +32,27 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ContractSupplementController {
 
+    /** 合同补充协议服务 */
     private final ContractSupplementService service;
 
+    /**
+     * 创建合同补充协议。
+     *
+     * @param dto 补充协议参数
+     * @return 补充协议 ID
+     */
     @Operation(summary = "创建补充协议")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody ContractSupplementDTO dto) {
         return Result.ok(service.create(dto));
     }
 
+    /**
+     * 删除补充协议（逻辑删除）。
+     *
+     * @param id 补充协议 ID
+     * @return 空结果
+     */
     @Operation(summary = "删除补充协议")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
@@ -47,18 +60,38 @@ public class ContractSupplementController {
         return Result.ok();
     }
 
+    /**
+     * 查询补充协议详情。
+     *
+     * @param id 补充协议 ID
+     * @return 补充协议实体
+     */
     @Operation(summary = "补充协议详情")
     @GetMapping("/{id}")
     public Result<ContractSupplementDO> get(@PathVariable Long id) {
         return Result.ok(service.getById(id));
     }
 
+    /**
+     * 按合同查询补充协议列表。
+     *
+     * @param contractId 合同 ID
+     * @return 补充协议列表
+     */
     @Operation(summary = "按合同列出")
     @GetMapping("/list")
     public Result<List<ContractSupplementDO>> listByContract(@RequestParam Long contractId) {
         return Result.ok(service.listByContract(contractId));
     }
 
+    /**
+     * 分页查询补充协议。
+     *
+     * @param page       页码（从 1 开始）
+     * @param size       每页大小
+     * @param contractId 合同 ID，可空
+     * @return 分页结果
+     */
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public Result<Page<ContractSupplementDO>> page(

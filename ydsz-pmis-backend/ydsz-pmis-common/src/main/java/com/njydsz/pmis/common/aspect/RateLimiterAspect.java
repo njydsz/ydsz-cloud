@@ -60,6 +60,15 @@ public class RateLimiterAspect {
         return pjp.proceed();
     }
 
+    /**
+     * 构造限流 key。
+     *
+     * <p>组成：前缀 {@code pmis:ratelimit:{bizKey}} + 维度（登录用户 userId 或匿名 IP）。
+     * 无业务 key 时回退到 "default"。</p>
+     *
+     * @param rateLimit 限流注解
+     * @return 完整 Redis key
+     */
     private String buildKey(RateLimit rateLimit) {
         String prefix = "pmis:ratelimit:";
         String bizKey = rateLimit.key();
@@ -89,11 +98,24 @@ public class RateLimiterAspect {
         return prefix + bizKey + ":" + dimension;
     }
 
+    /**
+     * 兜底业务 key：当注解未指定 key 时使用固定前缀。
+     *
+     * @return "default"
+     */
     private String pjpClassName() {
         // 简单使用固定前缀，实际可拼接方法签名
         return "default";
     }
 
+    /**
+     * 解析客户端真实 IP。
+     *
+     * <p>优先取 X-Forwarded-For 第一个值，否则回退到 remoteAddr，兜底 "unknown"。</p>
+     *
+     * @param request HTTP 请求
+     * @return 客户端 IP 字符串
+     */
     private String getIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {

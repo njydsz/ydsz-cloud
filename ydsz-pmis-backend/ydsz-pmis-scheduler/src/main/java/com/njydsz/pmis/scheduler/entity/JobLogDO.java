@@ -24,6 +24,7 @@ public class JobLogDO implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 主键 ID */
     @TableId(type = IdType.AUTO)
     private Long id;
 

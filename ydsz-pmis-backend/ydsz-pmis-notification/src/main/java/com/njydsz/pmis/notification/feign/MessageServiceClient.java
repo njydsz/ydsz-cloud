@@ -22,12 +22,17 @@ public interface MessageServiceClient {
 
     /**
      * 发送消息（支持模板渲染）
+     *
+     * @param dto 消息发送 DTO
+     * @return 统一响应结果，包含供应商追踪 ID
      */
     @PostMapping("/api/v1/message/send")
     Result<Object> send(@RequestBody MessageFeignDTO dto);
 
     /**
      * 已注册通道列表
+     *
+     * @return 统一响应结果，包含通道名称列表
      */
     @GetMapping("/api/v1/message/channels")
     Result<List<String>> channels();
@@ -37,13 +42,21 @@ public interface MessageServiceClient {
      */
     @lombok.Data
     class MessageFeignDTO {
+        /** 投递通道（EMAIL/SMS/PUSH） */
         private String channel;
+        /** 模板编码（可选） */
         private String templateCode;
+        /** 接收人（邮箱/手机号/用户 ID） */
         private String receiver;
+        /** 模板参数 */
         private Map<String, Object> params;
+        /** 文本内容（无模板时使用） */
         private String content;
+        /** 主题（邮件使用） */
         private String subject;
+        /** 业务类型 */
         private String bizType;
+        /** 业务单据 ID */
         private String bizId;
     }
 }

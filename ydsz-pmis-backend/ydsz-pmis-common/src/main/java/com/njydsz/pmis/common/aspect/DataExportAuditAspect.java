@@ -54,6 +54,16 @@ public class DataExportAuditAspect {
         return result;
     }
 
+    /**
+     * 异步发布数据导出审计事件。
+     *
+     * <p>根据返回结果类型推断导出行数：Collection 取 size，Number 取 intValue，其他记为 0。
+     * 事件包含用户、模块、动作、行数、IP、traceId 与租户信息。</p>
+     *
+     * @param pjp    连接点
+     * @param ann    数据导出审计注解
+     * @param result 目标方法返回值
+     */
     @Async
     void publish(ProceedingJoinPoint pjp, DataExportAudit ann, Object result) {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
@@ -82,6 +92,14 @@ public class DataExportAuditAspect {
         publisher.publishEvent(event);
     }
 
+    /**
+     * 解析客户端真实 IP。
+     *
+     * <p>优先级：X-Forwarded-For（取第一个）&gt; X-Real-IP &gt; remoteAddr，兜底 "unknown"。</p>
+     *
+     * @param request HTTP 请求
+     * @return 客户端 IP 字符串
+     */
     private String clientIp(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (ip != null && !ip.isEmpty() && !"unknown".equalsIgnoreCase(ip)) {

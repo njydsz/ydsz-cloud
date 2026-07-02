@@ -28,8 +28,15 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class JobController {
 
+    /** 任务调度服务 */
     private final JobService jobService;
 
+    /**
+     * 新增任务
+     *
+     * @param job 任务定义
+     * @return 统一响应结果，包含新增任务 ID
+     */
     @Operation(summary = "新增任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_CREATE)
     @PostMapping
@@ -37,6 +44,12 @@ public class JobController {
         return Result.ok(jobService.create(job));
     }
 
+    /**
+     * 更新任务
+     *
+     * @param job 任务定义
+     * @return 统一响应结果
+     */
     @Operation(summary = "更新任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PutMapping
@@ -45,6 +58,12 @@ public class JobController {
         return Result.ok();
     }
 
+    /**
+     * 删除任务
+     *
+     * @param id 任务 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "删除任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_DELETE)
     @DeleteMapping("/{id}")
@@ -53,6 +72,12 @@ public class JobController {
         return Result.ok();
     }
 
+    /**
+     * 暂停任务
+     *
+     * @param id 任务 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "暂停任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PostMapping("/{id}/pause")
@@ -61,6 +86,12 @@ public class JobController {
         return Result.ok();
     }
 
+    /**
+     * 恢复任务
+     *
+     * @param id 任务 ID
+     * @return 统一响应结果
+     */
     @Operation(summary = "恢复任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
     @PostMapping("/{id}/resume")
@@ -69,6 +100,12 @@ public class JobController {
         return Result.ok();
     }
 
+    /**
+     * 立即执行一次
+     *
+     * @param id 任务 ID
+     * @return 统一响应结果，包含执行日志 ID
+     */
     @Operation(summary = "立即执行一次")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_TRIGGER)
     @PostMapping("/{id}/trigger")
@@ -76,12 +113,28 @@ public class JobController {
         return Result.ok(jobService.trigger(id));
     }
 
+    /**
+     * 任务详情
+     *
+     * @param id 任务 ID
+     * @return 统一响应结果，包含任务定义
+     */
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
     public Result<JobDO> getById(@PathVariable Long id) {
         return Result.ok(jobService.getById(id));
     }
 
+    /**
+     * 分页查询任务
+     *
+     * @param page    页码（默认 1）
+     * @param size    每页条数（默认 20）
+     * @param keyword 关键字（任务名/KEY/处理器，可选）
+     * @param status  状态过滤（可选）
+     * @param group   分组过滤（可选）
+     * @return 统一响应结果，包含任务分页数据
+     */
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
     public Result<Page<JobDO>> page(
@@ -93,6 +146,15 @@ public class JobController {
         return Result.ok(jobService.page(page, size, keyword, status, group));
     }
 
+    /**
+     * 分页查询任务执行日志
+     *
+     * @param page   页码（默认 1）
+     * @param size   每页条数（默认 20）
+     * @param jobKey 任务 KEY 过滤（可选）
+     * @param status 状态过滤（可选）
+     * @return 统一响应结果，包含执行日志分页数据
+     */
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
     public Result<Page<JobLogDO>> pageLog(
@@ -103,6 +165,11 @@ public class JobController {
         return Result.ok(jobService.pageLog(page, size, jobKey, status));
     }
 
+    /**
+     * 重新加载所有任务
+     *
+     * @return 统一响应结果，包含操作结果信息
+     */
     @Operation(summary = "重新加载所有任务")
     @PrePermission(PermissionCodes.SCHEDULER_JOB_RELOAD)
     @PostMapping("/reload")

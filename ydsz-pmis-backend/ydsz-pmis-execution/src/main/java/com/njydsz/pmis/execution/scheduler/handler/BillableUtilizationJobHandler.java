@@ -69,7 +69,7 @@ public class BillableUtilizationJobHandler implements JobHandler {
         result.put("period", period);
         result.put("recomputeAll", recomputeAll);
         try {
-            com.njydsz.pmis.common.api.Result<Map<String, Object>> r =
+            com.njydsz.pmis.common.api.R<Map<String, Object>> r =
                     executionClient.recomputeBillableUtilization(period, recomputeAll);
             if (r != null && r.getData() != null) {
                 result.putAll(r.getData());
