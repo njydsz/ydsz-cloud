@@ -8,6 +8,14 @@
 import { ref, onErrorCaptured } from 'vue'
 import { captureError } from '@/utils/sentry'
 
+/**
+ * 组件事件
+ * - error: 子组件树抛出异常时触发，便于父组件做额外处理（如日志记录、上报等）
+ */
+const emit = defineEmits<{
+  (e: 'error', err: unknown, info: string): void
+}>()
+
 /** 是否出现错误 */
 const hasError = ref(false)
 /** 错误信息 */
@@ -17,10 +25,14 @@ const errorMessage = ref('')
  * onErrorCaptured 捕获子组件树抛出的异常
  * - 返回 false 阻止异常继续向上传播
  * - 生产环境通过 Sentry captureError 上报
+ * - 向父组件 emit error 事件，便于上层感知
  */
 onErrorCaptured((err, _instance, info) => {
   hasError.value = true
   errorMessage.value = err instanceof Error ? err.message : String(err)
+
+  // 通知父组件
+  emit('error', err, info)
 
   // 生产环境上报到 Sentry
   if (import.meta.env.PROD) {

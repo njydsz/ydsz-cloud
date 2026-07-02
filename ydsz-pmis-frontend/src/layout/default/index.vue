@@ -8,9 +8,19 @@ import Sidebar from './components/Sidebar.vue'
 import AppHeader from './components/AppHeader.vue'
 import TagsView from './components/TagsView.vue'
 import MainContent from './components/MainContent.vue'
+import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import { useAppStore } from '@/store/modules/app'
 
 const appStore = useAppStore()
+
+/**
+ * ErrorBoundary 捕获页面级渲染异常时的回调
+ * ErrorBoundary 内部已处理 Sentry 上报，此处仅做开发环境日志输出
+ */
+function onError(err: unknown, info: string) {
+  // eslint-disable-next-line no-console
+  console.error('[Layout ErrorBoundary]', err, info)
+}
 </script>
 
 <template>
@@ -24,13 +34,15 @@ const appStore = useAppStore()
         <TagsView />
       </div>
       <MainContent>
-        <RouterView v-slot="{ Component, route }">
-          <Transition name="route" mode="out-in">
-            <KeepAlive>
-              <component :is="Component" :key="route.fullPath" />
-            </KeepAlive>
-          </Transition>
-        </RouterView>
+        <ErrorBoundary @error="onError">
+          <RouterView v-slot="{ Component, route }">
+            <Transition name="route" mode="out-in">
+              <KeepAlive>
+                <component :is="Component" :key="route.fullPath" />
+              </KeepAlive>
+            </Transition>
+          </RouterView>
+        </ErrorBoundary>
       </MainContent>
     </section>
   </div>

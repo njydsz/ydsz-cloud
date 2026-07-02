@@ -1,10 +1,13 @@
 package com.njydsz.pmis.execution.controller;
 
+import com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO;
+import com.njydsz.pmis.execution.dto.CockpitKpiVO;
 import com.njydsz.pmis.execution.service.CockpitReportService;
 import com.njydsz.pmis.execution.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -25,6 +28,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/execution/aggregate")
 @RequiredArgsConstructor
@@ -40,23 +44,31 @@ public class BffAggregateController {
         Map<String, Object> result = new HashMap<>();
         // 聚合多维度数据，减少前端多次请求
         try {
-            result.put("initiation", Map.of("id", initiationId, "loaded", true));
+            // 立项信息（全生命周期台账：商机 → 立项 → 合同 → 变更 → 结项）
+            result.put("initiation", reportService.projectLifecycleReport(initiationId));
         } catch (Exception e) {
+            log.warn("聚合查询立项信息失败, initiationId={}", initiationId, e);
             result.put("initiation", Map.of("error", e.getMessage()));
         }
         try {
-            result.put("evm", Map.of("initiationId", initiationId, "cpi", 1.0, "spi", 1.0));
+            // EVM 摘要（利润表含 CPI/SPI 等挣值指标）
+            result.put("evm", reportService.projectProfitReport(initiationId, null));
         } catch (Exception e) {
+            log.warn("聚合查询 EVM 数据失败, initiationId={}", initiationId, e);
             result.put("evm", Map.of("error", e.getMessage()));
         }
         try {
-            result.put("contracts", List.of());
+            // 合同 / 回款台账列表
+            result.put("contracts", reportService.paymentLedgerReport(initiationId));
         } catch (Exception e) {
+            log.warn("聚合查询合同台账失败, initiationId={}", initiationId, e);
             result.put("contracts", List.of());
         }
         try {
-            result.put("wbsOverview", Map.of("totalTasks", 0, "completedTasks", 0));
+            // WBS 概览（成本归集明细含人力/采购/费用/分摊拆解）
+            result.put("wbsOverview", reportService.costDetailReport(initiationId, null));
         } catch (Exception e) {
+            log.warn("聚合查询 WBS 概览失败, initiationId={}", initiationId, e);
             result.put("wbsOverview", Map.of("error", e.getMessage()));
         }
         return result;
@@ -67,23 +79,26 @@ public class BffAggregateController {
     public Map<String, Object> dashboardSummary(@RequestHeader(value = "X-User-Id", required = false) Long userId) {
         Map<String, Object> result = new HashMap<>();
         try {
-            result.put("kpi", Map.of(
-                    "activeProjects", 0,
-                    "totalContractAmount", 0,
-                    "confirmedRevenue", 0,
-                    "totalCost", 0
-            ));
+            // KPI 核心指标（驾驶舱总览）
+            CockpitKpiVO kpi = cockpitReportService.overview(null, null);
+            result.put("kpi", kpi);
         } catch (Exception e) {
+            log.warn("聚合查询 KPI 数据失败", e);
             result.put("kpi", Map.of("error", e.getMessage()));
         }
         try {
-            result.put("alerts", List.of());
+            // 告警事件摘要（严重度计数 + 顶部事件）
+            CockpitAlertSummaryVO alerts = cockpitReportService.alertSummary(null, null);
+            result.put("alerts", alerts);
         } catch (Exception e) {
+            log.warn("聚合查询告警摘要失败", e);
             result.put("alerts", List.of());
         }
         try {
+            // 待办计数（当前模块无独立待办服务，返回空列表占位，保证聚合结构完整）
             result.put("todos", List.of());
         } catch (Exception e) {
+            log.warn("聚合查询待办数据失败", e);
             result.put("todos", List.of());
         }
         return result;

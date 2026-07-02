@@ -92,6 +92,12 @@
             <artifactId>commons-csv</artifactId>
         </dependency>
 
+        <!-- MinIO 对象存储（异步导出文件上传） -->
+        <dependency>
+            <groupId>io.minio</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
+
         <!-- 分布式事务 Seata -->
         <dependency>
             <groupId>org.apache.seata</groupId>

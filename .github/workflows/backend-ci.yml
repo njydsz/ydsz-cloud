@@ -120,7 +120,6 @@ jobs:
             -DfailBuildOnCVSS=7 \
             -Dformats=HTML,JSON \
             -DoutputDirectory=target/dependency-check-report
-        continue-on-error: true  # 初期不阻断构建，后续收紧
       - name: Upload Security Report
         uses: actions/upload-artifact@v4
         with:
@@ -148,4 +147,3 @@ jobs:
           else
             echo "Postman collection not found, skipping"
           fi
-        continue-on-error: true  # 初期不阻断

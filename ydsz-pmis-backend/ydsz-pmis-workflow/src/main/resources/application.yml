@@ -31,12 +31,12 @@ spring:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:Limw1020}
+    password: ${DB_PASSWORD}
   data:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD}
       database: 0
       timeout: 5s
       lettuce:

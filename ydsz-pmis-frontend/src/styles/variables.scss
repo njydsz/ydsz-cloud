@@ -2,10 +2,18 @@
  * @file SCSS 全局变量定义
  * @description 对标 Element Plus 默认主题，集中声明主题色、文字、边框、背景、布局尺寸、
  *              字号、圆角、阴影、间距、响应式断点与 z-index 等设计令牌，供全局样式与业务页面复用。
+ *
+ * 暗黑模式策略（P1-10）：
+ *  - 文字颜色、边框颜色、背景色、阴影等需要随主题切换的令牌，以 CSS 自定义属性（CSS Variables）
+ *    形式定义在 index.scss 的 :root / .dark 块中。
+ *  - 此文件中的同名 SCSS 变量引用这些 CSS 变量（如 $text-primary: var(--text-primary)），
+ *    使得所有使用 $text-primary 的组件样式自动获得暗黑模式支持。
+ *  - 主题色、布局尺寸、字号、圆角、间距、z-index 等无需随主题变化的令牌保持为纯 SCSS 值。
+ *
  * @module styles/variables
  */
 
-// ===== 主题色 =====
+// ===== 主题色（纯 SCSS 值，Element Plus 暗黑模式自行处理主题色变量） =====
 
 // 主题色
 $primary-color: #1890ff;
@@ -14,24 +22,31 @@ $warning-color: #faad14;
 $danger-color: #ff4d4f;
 $info-color: #909399;
 
-// 文字颜色
-$text-primary: #303133;
-$text-regular: #606266;
-$text-secondary: #909399;
-$text-placeholder: #c0c4cc;
+// ===== 文字颜色（引用 CSS 变量，支持暗黑模式切换） =====
 
-// 边框颜色
-$border-base: #dcdfe6;
-$border-light: #e4e7ed;
-$border-lighter: #ebeef5;
-$border-extra-light: #f2f6fc;
+$text-primary: var(--text-primary);
+$text-regular: var(--text-regular);
+$text-secondary: var(--text-secondary);
+$text-placeholder: var(--text-placeholder);
 
-// 背景色
-$bg-base: #f5f7fa;
-$bg-page: #f0f2f5;
-$bg-white: #ffffff;
+// ===== 边框颜色（引用 CSS 变量，支持暗黑模式切换） =====
 
-// 布局
+$border-base: var(--border-base);
+$border-light: var(--border-light);
+$border-lighter: var(--border-lighter);
+$border-extra-light: var(--border-extra-light);
+
+// ===== 背景色（引用 CSS 变量，支持暗黑模式切换） =====
+
+$bg-base: var(--bg-base);
+$bg-page: var(--bg-page);
+$bg-white: var(--bg-white);
+
+// ===== 阴影（引用 CSS 变量，暗黑模式下加深） =====
+
+$shadow-light: var(--shadow-light);
+
+// 布局（纯 SCSS 值，不随主题变化）
 $header-height: 56px;
 $sidebar-width: 220px;
 $sidebar-collapse-width: 64px;
@@ -54,9 +69,8 @@ $border-radius-base: 4px;
 $border-radius-lg: 8px;
 $border-radius-xl: 16px;
 
-// 阴影
+// 基础阴影（多层组合，不随主题变化）
 $shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
-$shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 
 // 间距
 $spacing-xs: 4px;

@@ -472,6 +472,60 @@ public class InitiationServiceImpl implements InitiationService {
         return snap;
     }
 
+    // ============= 流程状态联动（供 workflow 模块 Feign 调用） =============
+
+    /**
+     * 标记立项为审批中（APPROVING），保留当前门径不变。
+     *
+     * @param id 立项 ID
+     * @throws BizException 立项不存在时抛出
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void markProcessing(Long id) {
+        InitiationDO o = initiationMapper.selectById(id);
+        if (o == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+        }
+        initiationMapper.updateStage(id, InitiationStage.APPROVING.getCode(), o.getCurrentGate());
+        log.info("[Initiation] 标记审批中: id={} prevStage={}", id, o.getStage());
+    }
+
+    /**
+     * 标记立项为已批准（APPROVED），并设置门径为 CD1。
+     *
+     * @param id 立项 ID
+     * @throws BizException 立项不存在时抛出
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void markApproved(Long id) {
+        InitiationDO o = initiationMapper.selectById(id);
+        if (o == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+        }
+        initiationMapper.updateStage(id, InitiationStage.APPROVED.getCode(), GateCode.CD1.name());
+        log.info("[Initiation] 标记已批准: id={} prevStage={}", id, o.getStage());
+    }
+
+    /**
+     * 标记立项为已驳回（REJECTED），保留当前门径不变。
+     *
+     * @param id     立项 ID
+     * @param reason 驳回原因（可空，仅用于日志）
+     * @throws BizException 立项不存在时抛出
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void markRejected(Long id, String reason) {
+        InitiationDO o = initiationMapper.selectById(id);
+        if (o == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND, "立项不存在");
+        }
+        initiationMapper.updateStage(id, InitiationStage.REJECTED.getCode(), o.getCurrentGate());
+        log.info("[Initiation] 标记已驳回: id={} prevStage={} reason={}", id, o.getStage(), reason);
+    }
+
     /**
      * 容错解析客户名称，Feign 调用失败时返回 null。
      *

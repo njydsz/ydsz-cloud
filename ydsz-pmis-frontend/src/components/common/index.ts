@@ -10,6 +10,8 @@ export { default as BatchToolbar } from './BatchToolbar.vue'
 export type { BatchAction } from './BatchToolbar.vue'
 export { default as VirtualTable } from './VirtualTable.vue'
 export { default as PageLayout } from './PageLayout.vue'
+// P2-1: 全局错误边界（基于 onErrorCaptured 捕获子组件树渲染异常）
+export { default as ErrorBoundary } from './ErrorBoundary.vue'
 // P2 前端体验优化: 可定制仪表盘 / 快速访问 / 行内编辑
 export { default as CustomDashboard } from './CustomDashboard.vue'
 export { default as QuickAccess } from './QuickAccess.vue'

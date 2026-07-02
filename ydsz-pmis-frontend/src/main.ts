@@ -31,6 +31,8 @@ import '@/styles/index.scss'
 import { setupPermissionDirective } from './directives/permission'
 // 图片懒加载指令
 import { setupLazyDirective } from './directives/lazy'
+// Sentry 错误监控（生产环境动态加载）
+import { initSentry, captureError } from './utils/sentry'
 
 const app = createApp(App)
 

@@ -18,14 +18,14 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?useUnicode=true&characterEncoding=utf8
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:Limw1020}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     type: com.alibaba.druid.pool.DruidDataSource
   data:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD}
   # P2-6: Spring Cache 配置，由 Redisson Spring Boot Starter 自动装配 RedisCacheManager
   # TTL 30 分钟，与字典数据变更频率匹配；缓存 null 防止缓存穿透由 @Cacheable unless 控制
   cache:

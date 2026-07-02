@@ -245,4 +245,50 @@ public class InitiationController {
     public Result<Map<String, Object>> budgetSnapshot(@PathVariable Long id) {
         return Result.ok(service.budgetSnapshot(id));
     }
+
+    // ============= 流程状态联动（供 workflow 模块 Feign 调用） =============
+
+    /**
+     * 标记立项为审批中。
+     *
+     * @param id 立项 ID
+     * @return 空结果
+     */
+    @Operation(summary = "标记审批中")
+    @PrePermission("project:initiation:update")
+    @PostMapping("/{id}/mark-processing")
+    public Result<Void> markProcessing(@PathVariable Long id) {
+        service.markProcessing(id);
+        return Result.ok();
+    }
+
+    /**
+     * 标记立项为已批准。
+     *
+     * @param id 立项 ID
+     * @return 空结果
+     */
+    @Operation(summary = "标记已批准")
+    @PrePermission("project:initiation:update")
+    @PostMapping("/{id}/mark-approved")
+    public Result<Void> markApproved(@PathVariable Long id) {
+        service.markApproved(id);
+        return Result.ok();
+    }
+
+    /**
+     * 标记立项为已驳回。
+     *
+     * @param id     立项 ID
+     * @param reason 驳回原因（可空）
+     * @return 空结果
+     */
+    @Operation(summary = "标记已驳回")
+    @PrePermission("project:initiation:update")
+    @PostMapping("/{id}/mark-rejected")
+    public Result<Void> markRejected(@PathVariable Long id,
+                                     @RequestParam(required = false) String reason) {
+        service.markRejected(id, reason);
+        return Result.ok();
+    }
 }

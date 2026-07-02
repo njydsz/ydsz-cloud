@@ -158,4 +158,31 @@ public interface InitiationService {
      * @return {initiationId, projectCode, projectName, budgetAmount, estimatedAmount, stage}
      */
     java.util.Map<String, Object> budgetSnapshot(Long id);
+
+    // ============= 流程状态联动（供 workflow 模块 Feign 调用） =============
+
+    /**
+     * 标记立项为审批中（APPROVING）。
+     *
+     * @param id 立项 ID
+     * @throws BizException 立项不存在时抛出
+     */
+    void markProcessing(Long id);
+
+    /**
+     * 标记立项为已批准（APPROVED），并设置门径为 CD1。
+     *
+     * @param id 立项 ID
+     * @throws BizException 立项不存在时抛出
+     */
+    void markApproved(Long id);
+
+    /**
+     * 标记立项为已驳回（REJECTED）。
+     *
+     * @param id     立项 ID
+     * @param reason 驳回原因（可空）
+     * @throws BizException 立项不存在时抛出
+     */
+    void markRejected(Long id, String reason);
 }

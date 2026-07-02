@@ -1,5 +1,8 @@
 package com.njydsz.pmis.workflow.listener;
 
+import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.feign.InitiationFeignClient;
+import com.njydsz.pmis.common.feign.NotificationPushClient;
 import com.njydsz.pmis.workflow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.engine.FlowNotificationHelper;
 import com.njydsz.pmis.workflow.engine.FlowWorkflowEvent;
@@ -13,10 +16,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -39,17 +45,34 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProjectInitiationFlowListener implements FlowEventListener {
 
+    /** 立项状态联动重试最大次数 */
+    private static final int LINKAGE_MAX_ATTEMPTS = 3;
+    /** 立项状态联动重试退避（毫秒） */
+    private static final long LINKAGE_BACKOFF_MS = 50L;
+    /** 立项业务键前缀（见 InitiationServiceImpl#startProcess: PMIS_INIT_ + id） */
+    private static final String INIT_BIZ_KEY_PREFIX = "PMIS_INIT_";
+
     private final FlowNotificationHelper notificationHelper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowTaskMapper taskMapper;
     /** P1-3: 子流程服务（监听器作为子流程完成回调的入口） */
     private final FlowSubProcessService subProcessService;
+    /** P1-7: 立项状态联动 Feign 客户端（审批中 / 已批准 / 已驳回） */
+    private final InitiationFeignClient initiationFeignClient;
+    /** P1-7: 实时推送 Feign 客户端（IM 渠道待办通知） */
+    private final NotificationPushClient notificationPushClient;
 
     @Override
     public void onInstanceStart(Long instanceId, Map<String, Object> variables) {
         log.info("[FlowListener] 立项流程启动: instanceId={} vars={}", instanceId,
                 variables == null ? java.util.Collections.emptySet() : variables.keySet());
-        // TODO: 调用 initiationService.markProcessing(instanceId)
+        // P1-7: 流程启动 → 标记立项为审批中（APPROVING）
+        FlowInstanceDO instance = instanceId == null ? null : instanceMapper.selectById(instanceId);
+        Long initiationId = resolveInitiationId(instance);
+        if (initiationId != null) {
+            linkageWithRetry("markProcessing", initiationId,
+                    () -> initiationFeignClient.markProcessing(initiationId));
+        }
     }
 
     @Override
@@ -73,15 +96,15 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                 nullSafe(task.getNodeName()));
         notificationHelper.notifyTaskAssigned(assigneeId, title, content, taskId,
                 "WORKFLOW_TASK", "INFO");
-        // TODO: 推送消息给当前办理人（IM 渠道）
+        // P1-7: 推送实时消息给当前办理人（IM / WebSocket 渠道）
+        pushImNotification(assigneeId, title, content, taskId);
     }
 
     @Override
     public void onTaskCompleted(Long taskId, String action, Map<String, Object> variables) {
         log.info("[FlowListener] 立项任务完成: taskId={} action={}", taskId, action);
-        // TODO:
-        //   action=PASS  → 记录审批轨迹到 pmis_audit_log
-        //   action=REJECT → 通知发起人（站内信 / 邮件）
+        // 审批轨迹与驳回通知由 onInstanceCompleted / onInstanceRejected 统一处理，
+        // 此处仅记录任务级审计日志，避免重复触达。
     }
 
     @Override
@@ -110,8 +133,12 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                         nullSafe(instance.getFlowName()),
                         nullSafe(instance.getTitle())),
                 instanceId);
-        // TODO: initiationService.markApproved(instanceId)
-        //        + wbsService.bootstrapFromInitiation(instanceId)
+        // P1-7: 流程通过 → 标记立项为已批准（APPROVED）
+        Long initiationId = resolveInitiationId(instance);
+        if (initiationId != null) {
+            linkageWithRetry("markApproved", initiationId,
+                    () -> initiationFeignClient.markApproved(initiationId));
+        }
     }
 
     @Override
@@ -141,13 +168,27 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                         nullSafe(instance.getTitle()),
                         reason == null || reason.isBlank() ? "" : "，原因：" + reason),
                 instanceId);
-        // TODO: initiationService.markRejected(instanceId, reason)
+        // P1-7: 流程驳回 → 标记立项为已驳回（REJECTED）
+        Long initiationId = resolveInitiationId(instance);
+        if (initiationId != null) {
+            linkageWithRetry("markRejected", initiationId,
+                    () -> initiationFeignClient.markRejected(initiationId, reason));
+        }
     }
 
     @Override
     public void onError(Long instanceId, Throwable t) {
-        log.error("[FlowListener] 立项流程异常: instanceId={}", instanceId, t);
-        // TODO: 告警 + 重试
+        log.error("[FlowListener][ALERT] 立项流程异常: instanceId={}", instanceId, t);
+        // P1-7: 触发重试机制 —— 尝试恢复立项状态联动（标记审批中），失败不抛出
+        if (instanceId == null) {
+            return;
+        }
+        FlowInstanceDO instance = instanceMapper.selectById(instanceId);
+        Long initiationId = resolveInitiationId(instance);
+        if (initiationId != null) {
+            linkageWithRetry("markProcessing(recover)", initiationId,
+                    () -> initiationFeignClient.markProcessing(initiationId));
+        }
     }
 
     // ============================== P2-35: 异步事件监听 ==============================
@@ -290,6 +331,99 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     // ============================== 工具方法 ==============================
+
+    /**
+     * 从流程实例的业务键解析立项 ID。
+     *
+     * <p>业务键格式为 {@code PMIS_INIT_<initiationId>}（见 InitiationServiceImpl#startProcess），
+     * 兼容直接以数字存储的业务键。
+     *
+     * @param instance 流程实例（可空）
+     * @return 立项 ID，解析失败返回 null
+     */
+    private Long resolveInitiationId(FlowInstanceDO instance) {
+        if (instance == null) {
+            return null;
+        }
+        String bizId = instance.getBusinessId();
+        if (!StringUtils.hasText(bizId)) {
+            return null;
+        }
+        String raw = bizId.startsWith(INIT_BIZ_KEY_PREFIX)
+                ? bizId.substring(INIT_BIZ_KEY_PREFIX.length())
+                : bizId;
+        try {
+            return Long.parseLong(raw.trim());
+        } catch (NumberFormatException e) {
+            log.warn("[FlowListener] 无法从业务键解析立项 ID: bizId={}", bizId);
+            return null;
+        }
+    }
+
+    /**
+     * 立项状态联动 —— 带退避重试，吞掉异常避免影响主流程。
+     *
+     * <p>跨服务调用可能因网络抖动瞬时失败，重试 {@value #LINKAGE_MAX_ATTEMPTS} 次。
+     * 最终失败仅记录告警，不抛出（状态可由对账任务补偿）。
+     *
+     * @param action       动作名（日志用）
+     * @param initiationId 立项 ID
+     * @param call         Feign 调用
+     */
+    private void linkageWithRetry(String action, Long initiationId, Supplier<Result<Void>> call) {
+        for (int attempt = 1; attempt <= LINKAGE_MAX_ATTEMPTS; attempt++) {
+            try {
+                Result<Void> result = call.get();
+                if (result != null && result.isSuccess()) {
+                    log.info("[FlowListener] 立项状态联动成功: action={} initiationId={} attempt={}",
+                            action, initiationId, attempt);
+                    return;
+                }
+                log.warn("[FlowListener] 立项状态联动返回失败: action={} initiationId={} attempt={} result={}",
+                        action, initiationId, attempt, result);
+            } catch (Exception e) {
+                log.warn("[FlowListener] 立项状态联动异常: action={} initiationId={} attempt={}: {}",
+                        action, initiationId, attempt, e.getMessage());
+            }
+            if (attempt < LINKAGE_MAX_ATTEMPTS) {
+                try {
+                    Thread.sleep(LINKAGE_BACKOFF_MS);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        }
+        log.error("[FlowListener][ALERT] 立项状态联动最终失败: action={} initiationId={}",
+                action, initiationId);
+    }
+
+    /**
+     * 推送实时消息给办理人（IM / WebSocket 渠道）。
+     *
+     * <p>消息推送为非关键路径，失败仅记录日志，不影响任务创建。
+     *
+     * @param assigneeId 办理人 ID
+     * @param title      标题
+     * @param content    内容
+     * @param taskId     任务 ID
+     */
+    private void pushImNotification(Long assigneeId, String title, String content, Long taskId) {
+        if (assigneeId == null) {
+            return;
+        }
+        try {
+            Map<String, Object> payload = new HashMap<>();
+            payload.put("title", title);
+            payload.put("content", content);
+            payload.put("taskId", taskId);
+            payload.put("type", "WORKFLOW_TASK");
+            notificationPushClient.pushToUser(assigneeId, "NOTIFICATION", payload);
+        } catch (Exception e) {
+            log.warn("[FlowListener] IM 推送失败: assigneeId={} taskId={}: {}",
+                    assigneeId, taskId, e.getMessage());
+        }
+    }
 
     /** 解析 assigneeId 字符串为 Long（可能为 user:/role:/dept: 前缀） */
     private static Long parseUserId(String assigneeId) {

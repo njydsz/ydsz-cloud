@@ -33,7 +33,7 @@
 | AI Agent | **5 + 4 编排** | RiskWarning / ResourceRecommend / ProfitForecast / WinRatePredict / TimesheetAnomaly · 4 策略(SEQUENTIAL/PARALLEL/VOTING/CASCADE) |
 | LLM Provider | **5** | Mock / DashScope(通义千问) / Qianfan(文心) / SpringAI / LlmProviderRouter |
 | 业务页面 | **35+** | 一/二/三期全部交付 |
-| SQL Flyway 脚本 | **25 个** | V1.0.0_001 ~ V1.0.0_025 |
+| SQL Flyway 脚本 | **39 个** | V1.0.0_001 ~ V1.0.0_040 |
 | 聚合 SQL 视图 | **5 张** | pmis_view_initiation_revenue_cost / pmis_view_initiation_evm / pmis_view_cockpit_overview / pmis_view_risk_dashboard / pmis_view_employee_utilization |
 | 批次交付 | **26 批次** | 批次 1-25 已完成 ✅ · 批次 26 (等保测评) 待 SRE 启动 |
 
@@ -136,7 +136,7 @@ scheduler → common.feign(ExecutionClient)        # 批次 17: JobHandler 迁�
 # 1. 启动基础设施 (Nacos / Postgres / Redis / MinIO)
 cd deploy/docker && docker compose -f docker-compose.base.yml up -d
 
-# 2. 初始化数据库 (25 个 Flyway 脚本自动执行)
+# 2. 初始化数据库 (39 个 Flyway 脚本自动执行)
 psql -U pmis -d pmis -f deploy/sql/V1.0.0_001__init_pmis_schema.sql
 # ... 或通过 Spring Boot 启动时 Flyway 自动迁移
 
@@ -202,7 +202,7 @@ ydsz-pmis/
 │   ├── docker/                 # 14 模块 Dockerfile
 │   ├── ansible/                # 多环境编排
 │   ├── argo-rollouts/          # 金丝雀(批次 23)
-│   ├── sql/                    # 25 Flyway 脚本
+│   ├── sql/                    # 39 Flyway 脚本
 │   ├── functional-test/        # UAT + Postman 32 端点
 │   ├── perf/jmeter/            # 6 性能场景
 │   ├── security/               # 等保 / OWASP / crypto-verify

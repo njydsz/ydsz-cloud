@@ -1,6 +1,6 @@
 # PostgreSQL 部署与调优目录（批次 19 补全）
 
-PMIS 生产环境 PostgreSQL 16 的调优参数与索引脚本。
+PMIS 生产环境 PostgreSQL 18 的调优参数与索引脚本。
 
 ## 目录结构
 
@@ -61,14 +61,14 @@ deploy/sql/
 ## 部署步骤
 
 ```bash
-# 1. 安装 PostgreSQL 16
-apt install postgresql-16
+# 1. 安装 PostgreSQL 18
+apt install postgresql-18
 
 # 2. 替换配置文件
-cp deploy/sql/postgresql.conf /etc/postgresql/16/main/postgresql.conf
-cp deploy/sql/pg_hba.conf /etc/postgresql/16/main/pg_hba.conf
-chown postgres:postgres /etc/postgresql/16/main/*.conf
-chmod 640 /etc/postgresql/16/main/*.conf
+cp deploy/sql/postgresql.conf /etc/postgresql/18/main/postgresql.conf
+cp deploy/sql/pg_hba.conf /etc/postgresql/18/main/pg_hba.conf
+chown postgres:postgres /etc/postgresql/18/main/*.conf
+chmod 640 /etc/postgresql/18/main/*.conf
 
 # 3. 重启并初始化索引
 systemctl restart postgresql

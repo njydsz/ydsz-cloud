@@ -1,10 +1,69 @@
 /**
  * @file 全局样式入口
- * @description 按顺序聚合 variables → reset → transition → element-overrides，
+ * @description 按顺序聚合 variables → 主题 CSS 变量 → reset → transition → element-overrides → responsive，
  *              由 main.ts 在应用启动时一次性引入，确保设计令牌先于业务样式加载。
+ *
+ * 暗黑模式（P1-10）：
+ *  - :root 块定义浅色主题（默认）的 CSS 自定义属性值。
+ *  - .dark 块定义暗色主题覆盖值，当 <html> 拥有 .dark class 时生效
+ *    （由 app store 的 toggleTheme / initTheme 控制）。
+ *  - variables.scss 中的 SCSS 变量引用这些 CSS 变量，实现全局自动切换。
+ *
  * @module styles/index
  */
 @import './variables.scss';
+
+// ===== 主题 CSS 自定义属性（CSS Variables） =====
+
+// 浅色主题（默认）
+:root {
+  // 文字颜色
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  --text-placeholder: #c0c4cc;
+
+  // 边框颜色
+  --border-base: #dcdfe6;
+  --border-light: #e4e7ed;
+  --border-lighter: #ebeef5;
+  --border-extra-light: #f2f6fc;
+
+  // 背景色
+  --bg-base: #f5f7fa;
+  --bg-page: #f0f2f5;
+  --bg-white: #ffffff;
+
+  // 阴影
+  --shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+}
+
+// 暗色主题（<html class="dark"> 时生效）
+.dark {
+  // 文字颜色
+  --text-primary: #e5eaf3;
+  --text-regular: #cfd3dc;
+  --text-secondary: #a3a6ad;
+  --text-placeholder: #8d9095;
+
+  // 边框颜色
+  --border-base: #414243;
+  --border-light: #414243;
+  --border-lighter: #414243;
+  --border-extra-light: #38393a;
+
+  // 背景色
+  --bg-base: #141414;
+  --bg-page: #141414;
+  --bg-white: #1e1e1e;
+
+  // 阴影（暗色模式下加深）
+  --shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.3);
+}
+
+// ===== 全局样式模块 =====
+
 @import './reset.scss';
 @import './transition.scss';
 @import './element-overrides.scss';
+@import './responsive.scss';

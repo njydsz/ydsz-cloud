@@ -6,9 +6,13 @@
  * 与业务 store 区分：
  *  - app store 只管 UI 状态（不参与权限与数据持久化）
  *  - 主题切换会直接操作 document.documentElement.classList，影响 Element Plus 暗黑模式
+ *  - 主题选择持久化到 localStorage，刷新后通过 initTheme() 恢复
  */
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
+
+/** localStorage 中存储主题的 key */
+const THEME_STORAGE_KEY = 'theme'
 
 export const useAppStore = defineStore('app', () => {
   /** 侧边栏是否折叠（窄模式） */
@@ -38,11 +42,38 @@ export const useAppStore = defineStore('app', () => {
   /**
    * 切换主题（light ↔ dark）
    *
-   * 同时操作 document.documentElement.classList 以触发 Element Plus 暗黑模式 CSS 变量
+   * 同时操作 document.documentElement.classList 以触发 Element Plus 暗黑模式 CSS 变量，
+   * 并将新主题持久化到 localStorage，刷新后通过 initTheme() 恢复。
    */
   function toggleTheme(): void {
-    theme.value = theme.value === 'light' ? 'dark' : 'light'
-    document.documentElement.classList.toggle('dark', theme.value === 'dark')
+    const newTheme = theme.value === 'light' ? 'dark' : 'light'
+    theme.value = newTheme
+    document.documentElement.classList.toggle('dark', newTheme === 'dark')
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, newTheme)
+    } catch {
+      /* localStorage 可能不可用（如隐私模式） */
+    }
+  }
+
+  /**
+   * 初始化主题（应用启动时调用）
+   *
+   * 从 localStorage 读取用户上次选择的主题，若无记录则默认 light。
+   * 若为 dark 则给 <html> 添加 dark class，触发 Element Plus 暗黑模式与自定义 CSS 变量覆盖。
+   */
+  function initTheme(): void {
+    let saved: 'light' | 'dark' = 'light'
+    try {
+      const stored = localStorage.getItem(THEME_STORAGE_KEY)
+      if (stored === 'dark' || stored === 'light') {
+        saved = stored
+      }
+    } catch {
+      /* localStorage 可能不可用 */
+    }
+    theme.value = saved
+    document.documentElement.classList.toggle('dark', saved === 'dark')
   }
 
   return {
@@ -54,5 +85,6 @@ export const useAppStore = defineStore('app', () => {
     setDevice,
     setSize,
     toggleTheme,
+    initTheme,
   }
 })

@@ -25,7 +25,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @SpringBootApplication(scanBasePackages = {"com.njydsz.pmis.workflow", "com.njydsz.pmis.common"})
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = "com.njydsz.pmis.workflow.feign")
+@EnableFeignClients(basePackages = {"com.njydsz.pmis.workflow.feign", "com.njydsz.pmis.common.feign"})
 @MapperScan({"com.njydsz.pmis.workflow.mapper", "com.njydsz.pmis.workflow.mapper"})
 @EnableScheduling
 public class WorkflowApplication {

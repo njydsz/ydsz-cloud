@@ -19,12 +19,12 @@ spring:
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:Limw1020}
+    password: ${DB_PASSWORD}
   mail:
     host: ${MAIL_HOST:smtp.example.com}
     port: ${MAIL_PORT:465}
     username: ${MAIL_USER:no-reply@example.com}
-    password: ${MAIL_PASSWORD:secret}
+    password: ${MAIL_PASSWORD}
     default-encoding: UTF-8
     properties:
       mail:
@@ -41,7 +41,7 @@ spring:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD}
       database: ${REDIS_DB:0}
       timeout: 3s
       lettuce:
