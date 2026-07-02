@@ -41,13 +41,13 @@ spring:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         file-extension: yaml
         namespace: ${NACOS_NAMESPACE:pmis}
-        group: PMIS_GROUP_DEV
+        group: DEV
         username: ${NACOS_USERNAME:nacos}
         password: ${NACOS_PASSWORD:nacos}
         refresh-enabled: true
         extension-configs:
           - dataId: pmis-common-dev.yaml
-            group: PMIS_GROUP_DEV
+            group: DEV
             refresh: true
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

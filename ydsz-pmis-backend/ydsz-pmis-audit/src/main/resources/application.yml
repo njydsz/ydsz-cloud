@@ -1,4 +1,4 @@
-server:
+﻿server:
   port: 9010
 spring:
   application:
@@ -14,7 +14,7 @@ spring:
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         file-extension: yml
-        group: PMIS_GROUP_${spring.profiles.active}
+        group: ${spring.profiles.active}
         namespace: ${NACOS_NAMESPACE:pmis}
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

@@ -55,8 +55,8 @@ $deleteFail = 0
 foreach ($svc in $services) {
     foreach ($env in $envs) {
         $dataId = "$svc-$env.yaml"
-        $group  = "PMIS_GROUP_$($env.ToUpper())"
-        $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=&accessToken=$token"
+        $group  = $env
+        $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=$Namespace&accessToken=$token"
         try {
             $r = Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10
             $deleted++
@@ -68,8 +68,8 @@ foreach ($svc in $services) {
 # common
 foreach ($env in $envs) {
     $dataId = "pmis-common-$env.yaml"
-    $group  = "PMIS_GROUP_$($env.ToUpper())"
-    $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=&accessToken=$token"
+    $group  = $env
+    $uri = "$NacosUrl/nacos/v1/cs/configs?dataId=$dataId&group=$group&tenant=$Namespace&accessToken=$token"
     try {
         Invoke-WebRequest -Uri $uri -Method DELETE -UseBasicParsing -TimeoutSec 10 | Out-Null
         $deleted++
@@ -88,7 +88,7 @@ foreach ($svc in $services) {
         if (Test-Path $filePath) {
             $configList += [pscustomobject]@{
                 DataId  = "$svc-$env.yaml"
-                Group   = "PMIS_GROUP_$($env.ToUpper())"
+                Group   = $env
                 FilePath = $filePath
             }
         } else {
@@ -101,7 +101,7 @@ foreach ($env in $envs) {
     if (Test-Path $filePath) {
         $configList += [pscustomobject]@{
             DataId  = "pmis-common-$env.yaml"
-            Group   = "PMIS_GROUP_$($env.ToUpper())"
+            Group   = $env
             FilePath = $filePath
         }
     } else {

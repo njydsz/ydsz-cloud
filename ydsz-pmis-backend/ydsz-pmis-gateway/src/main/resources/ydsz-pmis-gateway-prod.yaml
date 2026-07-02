@@ -43,14 +43,14 @@ spring:
         server-addr: ${NACOS_SERVER_ADDR}
         file-extension: yaml
         namespace: ${NACOS_NAMESPACE:pmis}
-        group: PMIS_GROUP_PROD
+        group: PROD
         username: ${NACOS_USERNAME}
         password: ${NACOS_PASSWORD}
         refresh-enabled: true
         fail-fast: true
         extension-configs:
           - dataId: pmis-common-prod.yaml
-            group: PMIS_GROUP_PROD
+            group: PROD
             refresh: true
     gateway:
       discovery:
