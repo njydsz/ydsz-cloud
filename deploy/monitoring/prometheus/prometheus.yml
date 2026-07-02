@@ -67,7 +67,7 @@ scrape_configs:
   - job_name: 'pmis-notification'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-notification:9013']
+      - targets: ['pmis-notification:9003']
         labels:
           service: pmis-notification
           tier: business
@@ -75,7 +75,7 @@ scrape_configs:
   - job_name: 'pmis-workflow'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-workflow:9014']
+      - targets: ['pmis-workflow:9004']
         labels:
           service: pmis-workflow
           tier: business
@@ -83,7 +83,7 @@ scrape_configs:
   - job_name: 'pmis-project'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-project:9015']
+      - targets: ['pmis-project:9005']
         labels:
           service: pmis-project
           tier: business
@@ -91,7 +91,7 @@ scrape_configs:
   - job_name: 'pmis-execution'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-execution:9016']
+      - targets: ['pmis-execution:9006']
         labels:
           service: pmis-execution
           tier: business
@@ -99,7 +99,7 @@ scrape_configs:
   - job_name: 'pmis-agent'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-agent:9017']
+      - targets: ['pmis-agent:9007']
         labels:
           service: pmis-agent
           tier: business
@@ -107,7 +107,7 @@ scrape_configs:
   - job_name: 'pmis-config'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-config:9018']
+      - targets: ['pmis-config:9008']
         labels:
           service: pmis-config
           tier: business
@@ -115,7 +115,7 @@ scrape_configs:
   - job_name: 'pmis-file'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-file:9019']
+      - targets: ['pmis-file:9009']
         labels:
           service: pmis-file
           tier: business
@@ -123,7 +123,7 @@ scrape_configs:
   - job_name: 'pmis-audit'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-audit:9020']
+      - targets: ['pmis-audit:9010']
         labels:
           service: pmis-audit
           tier: business
@@ -131,7 +131,7 @@ scrape_configs:
   - job_name: 'pmis-message'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-message:9021']
+      - targets: ['pmis-message:9011']
         labels:
           service: pmis-message
           tier: business
@@ -139,7 +139,7 @@ scrape_configs:
   - job_name: 'pmis-scheduler'
     metrics_path: /actuator/prometheus
     static_configs:
-      - targets: ['pmis-scheduler:9022']
+      - targets: ['pmis-scheduler:9012']
         labels:
           service: pmis-scheduler
           tier: business

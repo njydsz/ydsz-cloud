@@ -1,11 +1,11 @@
 # ====================================================================
 # 南京云顶 PMIS 14 个微服务 + 周边组件编排（批次 19 落地）
 # ---------------------------------------------------------------------
-# 14 个微服务：
-#   gateway :9000  / auth :9001     / user :9002      / notification :9013
-#   workflow :9014 / project :9015  / execution :9016 / agent :9017
-#   config :9018   / file :9019     / audit :9020     / message :9021
-#   scheduler :9022
+# 14 个微服务（按启动顺序 9000 起 +1 连续编排）:
+#   gateway :9000  / auth :9001     / user :9002      / notification :9003
+#   workflow :9004 / project :9005  / execution :9006 / agent :9007
+#   config :9008   / file :9009     / audit :9010     / message :9011
+#   scheduler :9012
 # 周边组件：
 #   xxl-job-admin :9100（分布式任务调度）
 #   seata-server :8091（分布式事务协调器）
@@ -111,10 +111,10 @@ services:
     container_name: pmis-notification
     <<: *microservice-common
     ports:
-      - "9013:9013"
+      - "9003:9003"
     environment:
       APP_NAME: pmis-notification
-      SERVER_PORT: 9013
+      SERVER_PORT: 9003
 
   # 5) workflow - 工作流
   workflow:
@@ -122,10 +122,10 @@ services:
     container_name: pmis-workflow
     <<: *microservice-common
     ports:
-      - "9014:9014"
+      - "9004:9004"
     environment:
       APP_NAME: pmis-workflow
-      SERVER_PORT: 9014
+      SERVER_PORT: 9004
 
   # 6) project - 商机/立项/合同/变更
   project:
@@ -133,10 +133,10 @@ services:
     container_name: pmis-project
     <<: *microservice-common
     ports:
-      - "9015:9015"
+      - "9005:9005"
     environment:
       APP_NAME: pmis-project
-      SERVER_PORT: 9015
+      SERVER_PORT: 9005
 
   # 7) execution - 执行/成本/财务/报表/驾驶舱
   execution:
@@ -144,10 +144,10 @@ services:
     container_name: pmis-execution
     <<: *microservice-common
     ports:
-      - "9016:9016"
+      - "9006:9006"
     environment:
       APP_NAME: pmis-execution
-      SERVER_PORT: 9016
+      SERVER_PORT: 9006
 
   # 8) agent - AI 智能体
   agent:
@@ -155,10 +155,10 @@ services:
     container_name: pmis-agent
     <<: *microservice-common
     ports:
-      - "9017:9017"
+      - "9007:9007"
     environment:
       APP_NAME: pmis-agent
-      SERVER_PORT: 9017
+      SERVER_PORT: 9007
 
   # 9) config - 配置中心
   config:
@@ -166,10 +166,10 @@ services:
     container_name: pmis-config
     <<: *microservice-common
     ports:
-      - "9018:9018"
+      - "9008:9008"
     environment:
       APP_NAME: pmis-config
-      SERVER_PORT: 9018
+      SERVER_PORT: 9008
 
   # 10) file - 文件存储
   file:
@@ -177,10 +177,10 @@ services:
     container_name: pmis-file
     <<: *microservice-common
     ports:
-      - "9019:9019"
+      - "9009:9009"
     environment:
       APP_NAME: pmis-file
-      SERVER_PORT: 9019
+      SERVER_PORT: 9009
 
   # 11) audit - 审计日志
   audit:
@@ -188,10 +188,10 @@ services:
     container_name: pmis-audit
     <<: *microservice-common
     ports:
-      - "9020:9020"
+      - "9010:9010"
     environment:
       APP_NAME: pmis-audit
-      SERVER_PORT: 9020
+      SERVER_PORT: 9010
 
   # 12) message - 消息模板
   message:
@@ -199,10 +199,10 @@ services:
     container_name: pmis-message
     <<: *microservice-common
     ports:
-      - "9021:9021"
+      - "9011:9011"
     environment:
       APP_NAME: pmis-message
-      SERVER_PORT: 9021
+      SERVER_PORT: 9011
 
   # 13) scheduler - 分布式任务调度
   scheduler:
@@ -210,10 +210,10 @@ services:
     container_name: pmis-scheduler
     <<: *microservice-common
     ports:
-      - "9022:9022"
+      - "9012:9012"
     environment:
       APP_NAME: pmis-scheduler
-      SERVER_PORT: 9022
+      SERVER_PORT: 9012
 
   # ============ 周边组件（独立部署）============
 

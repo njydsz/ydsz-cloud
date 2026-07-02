@@ -6,6 +6,7 @@ import com.njydsz.pmis.literule.event.RuleConfigRefreshEvent;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.impl.ExpressionRule;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -34,6 +35,7 @@ public class RuleHotReloader {
     /**
      * 启动时全量加载规则
      */
+    @PostConstruct
     public void initLoad() {
         if (!properties.isHotReloadEnabled()) {
             log.info("[LiteRule] 热加载已禁用，跳过初始加载");

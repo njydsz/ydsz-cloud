@@ -110,7 +110,7 @@
 ### 4.1 验证熔断器 (Sentinel)
 ```bash
 # 实验 1: 单次慢调用
-curl -X POST http://pmis-config:9010/api/v1/chaos/experiments \
+curl -X POST http://pmis-config:9018/api/v1/chaos/experiments \
   -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" \
   -d '{
     "target": "ContractService.getContract",
@@ -125,7 +125,7 @@ curl -X POST http://pmis-config:9010/api/v1/chaos/experiments \
 ### 4.2 验证 FallbackFactory
 ```bash
 # 实验 2: 网络分区
-curl -X POST http://pmis-config:9010/api/v1/chaos/experiments \
+curl -X POST http://pmis-config:9018/api/v1/chaos/experiments \
   -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" \
   -d '{
     "target": "UserService.getById",
@@ -139,9 +139,9 @@ curl -X POST http://pmis-config:9010/api/v1/chaos/experiments \
 ### 4.3 紧急回滚
 ```bash
 # 关闭所有实验
-curl -X POST http://pmis-config:9010/api/v1/chaos/history/clear
+curl -X POST http://pmis-config:9018/api/v1/chaos/history/clear
 # 通过 feature flag 整体关停
-curl -X PUT http://pmis-config:9010/api/v1/feature-flags/CANARY_DEPLOY/enabled?enabled=false
+curl -X PUT http://pmis-config:9018/api/v1/feature-flags/CANARY_DEPLOY/enabled?enabled=false
 ```
 
 ## 5. 自动化 (进阶)
@@ -166,11 +166,11 @@ spec:
             command: ["/bin/sh","-c"]
             args:
             - |
-              curl -X POST http://pmis-config:9010/api/v1/chaos/experiments \
+              curl -X POST http://pmis-config:9018/api/v1/chaos/experiments \
                 -H "Content-Type: application/json" -H "Authorization: Bearer $TOKEN" \
                 -d '{"target":"ContractService.getContract","type":"LATENCY","latencyMs":100,"enabled":true}'
               sleep 300
-              curl -X DELETE http://pmis-config:9010/api/v1/chaos/experiments/ContractService.getContract
+              curl -X DELETE http://pmis-config:9018/api/v1/chaos/experiments/ContractService.getContract
           restartPolicy: OnFailure
 ```
 

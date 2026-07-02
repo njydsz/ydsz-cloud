@@ -7,7 +7,7 @@
 # ============================================================
 
 server:
-  port: 9018
+  port: 9008
   compression:
     enabled: true
   servlet:

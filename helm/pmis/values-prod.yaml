@@ -21,16 +21,16 @@ microservices:
   gateway:     { enabled: true, port: 9000, replicas: 3, jvmOpts: "-Xms1g -Xmx2g -XX:+UseG1GC" }
   auth:        { enabled: true, port: 9001, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
   user:        { enabled: true, port: 9002, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
-  project:     { enabled: true, port: 9015, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
-  execution:   { enabled: true, port: 9016, replicas: 5, jvmOpts: "-Xms1g -Xmx2g -XX:+UseG1GC" }
-  agent:       { enabled: true, port: 9017, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
-  audit:       { enabled: true, port: 9020, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
-  message:     { enabled: true, port: 9021, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
-  notification:{ enabled: true, port: 9013, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
-  workflow:    { enabled: true, port: 9014, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
-  config:      { enabled: true, port: 9018, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
-  scheduler:   { enabled: true, port: 9022, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
-  file:        { enabled: true, port: 9019, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  notification:{ enabled: true, port: 9003, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  workflow:    { enabled: true, port: 9004, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  project:     { enabled: true, port: 9005, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  execution:   { enabled: true, port: 9006, replicas: 5, jvmOpts: "-Xms1g -Xmx2g -XX:+UseG1GC" }
+  agent:       { enabled: true, port: 9007, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  config:      { enabled: true, port: 9008, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
+  file:        { enabled: true, port: 9009, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  audit:       { enabled: true, port: 9010, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  message:     { enabled: true, port: 9011, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC" }
+  scheduler:   { enabled: true, port: 9012, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
 
 frontend:
   enabled: true

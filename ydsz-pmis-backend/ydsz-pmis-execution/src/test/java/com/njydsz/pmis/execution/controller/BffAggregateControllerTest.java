@@ -91,10 +91,10 @@ class BffAggregateControllerTest {
 
         // then - 单维度异常不影响整体结构返回
         assertThat(result).containsKeys("initiation", "evm", "contracts", "wbsOverview");
-        assertThat((Map<?, ?>) result.get("initiation")).containsKey("error");
-        assertThat((Map<?, ?>) result.get("evm")).containsKey("error");
+        assertThat((Map<Object, Object>) result.get("initiation")).containsKey("error");
+        assertThat((Map<Object, Object>) result.get("evm")).containsKey("error");
         assertThat((List<?>) result.get("contracts")).isEmpty();
-        assertThat((Map<?, ?>) result.get("wbsOverview")).containsKey("error");
+        assertThat((Map<Object, Object>) result.get("wbsOverview")).containsKey("error");
     }
 
     @Test
@@ -142,7 +142,7 @@ class BffAggregateControllerTest {
 
         // then
         assertThat(result).containsKeys("kpi", "alerts", "todos");
-        assertThat((Map<?, ?>) result.get("kpi")).containsKey("error");
+        assertThat((Map<Object, Object>) result.get("kpi")).containsKey("error");
         assertThat((List<?>) result.get("alerts")).isEmpty();
         assertThat((List<?>) result.get("todos")).isEmpty();
     }

@@ -7,7 +7,7 @@
 # ============================================================
 
 server:
-  port: 9021
+  port: 9011
   compression:
     enabled: true
     level: BEST_SPEED

@@ -10,6 +10,7 @@ import com.njydsz.pmis.execution.mapper.PaymentMapper;
 import com.njydsz.pmis.execution.mapper.PurchaseMapper;
 import com.njydsz.pmis.execution.mapper.RiskMapper;
 import com.njydsz.pmis.execution.service.BillableUtilizationService;
+import com.njydsz.pmis.literule.api.RuleEngine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,6 +40,7 @@ class CockpitReportServiceImplTest {
     private RiskMapper riskMapper;
     private BillableUtilizationSnapshotMapper utilizationSnapshotMapper;
     private BillableUtilizationService billableUtilizationService;
+    private RuleEngine liteRuleEngine;
     private CockpitReportServiceImpl service;
 
     @BeforeEach
@@ -52,9 +54,12 @@ class CockpitReportServiceImplTest {
         riskMapper = mock(RiskMapper.class);
         utilizationSnapshotMapper = mock(BillableUtilizationSnapshotMapper.class);
         billableUtilizationService = mock(BillableUtilizationService.class);
+        liteRuleEngine = mock(RuleEngine.class);
+        // 默认返回空规则列表，使 CockpitReportServiceImpl fallback 到 legacyAlertEngine
+        when(liteRuleEngine.getRules()).thenReturn(java.util.List.of());
         service = new CockpitReportServiceImpl(invoiceMapper, paymentMapper, costAllocationMapper,
                 purchaseMapper, expenseMapper, evmMeasureMapper, riskMapper,
-                utilizationSnapshotMapper, billableUtilizationService);
+                utilizationSnapshotMapper, billableUtilizationService, liteRuleEngine);
     }
 
     @Test

@@ -1,5 +1,5 @@
 server:
-  port: 9021
+  port: 9011
 spring:
   application:
     name: ydsz-pmis-message

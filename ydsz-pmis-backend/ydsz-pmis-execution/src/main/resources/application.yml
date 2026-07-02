@@ -1,5 +1,5 @@
 server:
-  port: 9016
+  port: 9006
 spring:
   application:
     name: ydsz-pmis-execution

@@ -867,7 +867,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         // 查节点表获取 formFieldsConfig
         if (nodeCode != null) {
-            FlowNodeDO node = nodeMapper.selectByDefinitionAndCode(
+            FlowNodeDO node = nodeMapper.selectByCode(
                     instance.getDefinitionId(), nodeCode);
             if (node != null) {
                 formFieldsConfig = node.getFormFieldsConfig();

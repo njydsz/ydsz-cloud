@@ -21,6 +21,10 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
+            <artifactId>ydsz-pmis-literule</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-project</artifactId>
         </dependency>
         <dependency>

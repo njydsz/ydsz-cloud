@@ -533,7 +533,15 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             for (FlowSkipDO skip : skips) {
                 Map<String, Object> edge = new LinkedHashMap<>();
                 edge.put("id", skip.getId());
-                edge.put("source", skip.getFromNodeCode());
+                // sourceRef 存储在 ext JSON 中
+                String source = null;
+                if (StringUtils.hasText(skip.getExt())) {
+                    try {
+                        JSONObject extJson = JSON.parseObject(skip.getExt());
+                        source = extJson != null ? extJson.getString("sourceRef") : null;
+                    } catch (Exception ignored) { }
+                }
+                edge.put("source", source);
                 edge.put("target", skip.getNextNodeCode());
                 edge.put("label", skip.getSkipName());
                 edge.put("condition", skip.getSkipCondition());
@@ -570,12 +578,16 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 if (coord != null) {
                     String coordStr = coord instanceof String
                             ? (String) coord : JSON.toJSONString(coord);
-                    nodeMapper.updateCoordinate(definitionId, nodeCode, coordStr);
+                    FlowNodeDO nodeForCoord = nodeMapper.selectByCode(definitionId, nodeCode);
+                    if (nodeForCoord != null) {
+                        nodeForCoord.setCoordinate(coordStr);
+                        nodeMapper.updateById(nodeForCoord);
+                    }
                 }
                 // 更新节点名称（如前端修改了）
                 Object nodeName = nodeData.get("nodeName");
                 if (nodeName != null) {
-                    FlowNodeDO node = nodeMapper.selectByDefinitionAndCode(definitionId, nodeCode);
+                    FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
                     if (node != null) {
                         node.setNodeName((String) nodeName);
                         Object permFlag = nodeData.get("permissionFlag");
@@ -602,7 +614,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
 
     @Override
     public String getFormConfig(Long definitionId, String nodeCode) {
-        FlowNodeDO node = nodeMapper.selectByDefinitionAndCode(definitionId, nodeCode);
+        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
                     "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
@@ -613,7 +625,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveFormConfig(Long definitionId, String nodeCode, String formFieldsConfig) {
-        FlowNodeDO node = nodeMapper.selectByDefinitionAndCode(definitionId, nodeCode);
+        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
                     "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);

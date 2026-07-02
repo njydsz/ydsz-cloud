@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.execution.mapper.RuleVersionHistoryMapper">
+
+    <select id="listByCode" resultType="com.njydsz.pmis.execution.entity.RuleVersionHistoryDO">
+        SELECT * FROM pm_rule_version_history WHERE rule_code = #{ruleCode} ORDER BY version DESC
+    </select>
+
+</mapper>

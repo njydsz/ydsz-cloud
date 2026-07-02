@@ -77,9 +77,9 @@ spec:
           image: registry.ydsz-pmis.cn/ydsz/ydsz-pmis-execution:latest
           ports:
             - name: http
-              containerPort: 9001
+              containerPort: 9006
             - name: actuator
-              containerPort: 9001
+              containerPort: 9006
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: prod
@@ -120,10 +120,10 @@ metadata:
 spec:
   ports:
     - name: http
-      port: 9016
+      port: 9006
       targetPort: http
     - name: actuator
-      port: 9016
+      port: 9006
       targetPort: actuator
   selector:
     app: pmis-execution   # 同时匹配 stable + canary (按副本数比例分配)

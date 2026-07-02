@@ -13,6 +13,10 @@ import com.njydsz.pmis.execution.engine.alert.EvmRedRule;
 import com.njydsz.pmis.execution.engine.alert.MarginLowRule;
 import com.njydsz.pmis.execution.engine.alert.UtilizationLowRule;
 import com.njydsz.pmis.execution.enums.AlertSeverity;
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.api.RuleEngine;
+import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.execution.mapper.BillableUtilizationSnapshotMapper;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
 import com.njydsz.pmis.execution.mapper.EvmMeasureMapper;
@@ -62,8 +66,11 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     private final BillableUtilizationSnapshotMapper utilizationSnapshotMapper;
     private final BillableUtilizationService billableUtilizationService;
 
-    /** 预警规则引擎：单例不可变，注册 4 条内置规则 */
-    private final AlertRuleEngine alertEngine = buildDefaultEngine();
+    /** 预警规则引擎（旧）：硬编码 4 条规则，作为 DB 无规则时的 fallback */
+    private final AlertRuleEngine legacyAlertEngine = buildDefaultEngine();
+
+    /** LiteRule 规则引擎（新）：表达式驱动 + DB 动态配置 + 热加载 */
+    private final RuleEngine liteRuleEngine;
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
     private static final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
@@ -428,7 +435,15 @@ public class CockpitReportServiceImpl implements CockpitReportService {
     public CockpitAlertSummaryVO alertSummary(String period, CockpitDrillDownDTO drillDown) {
         CockpitAlertSummaryVO out = new CockpitAlertSummaryVO();
         Map<String, Object> snapshot = buildKpiSnapshot(period, drillDown);
-        List<AlertEventDTO> events = alertEngine.evaluate(snapshot);
+
+        // 优先使用 LiteRule 引擎（DB 动态规则），无规则时 fallback 到旧引擎
+        List<AlertEventDTO> events;
+        if (liteRuleEngine != null && !liteRuleEngine.getRules().isEmpty()) {
+            events = evaluateWithLiteRule(snapshot);
+        } else {
+            events = legacyAlertEngine.evaluate(snapshot);
+        }
+
         int red = 0, yellow = 0, info = 0;
         for (AlertEventDTO e : events) {
             if (e.getSeverity() == AlertSeverity.RED) red++;
@@ -442,6 +457,48 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         out.setEvents(events);
         out.setTopEvent(events.isEmpty() ? null : events.get(0));
         return out;
+    }
+
+    /**
+     * 使用 LiteRule 引擎评估预警，将 RuleResult 转换为 AlertEventDTO（向后兼容）
+     *
+     * @param snapshot KPI 快照
+     * @return 预警事件列表
+     */
+    private List<AlertEventDTO> evaluateWithLiteRule(Map<String, Object> snapshot) {
+        RuleContext context = RuleContext.of(snapshot, "COCKPIT", "ALERT_SUMMARY");
+        List<RuleResult> results = liteRuleEngine.evaluate(context);
+        List<AlertEventDTO> events = new ArrayList<>();
+        for (RuleResult r : results) {
+            if (!r.isTriggered()) continue;
+            AlertEventDTO dto = new AlertEventDTO();
+            dto.setRuleCode(r.getRuleCode());
+            dto.setRuleName(r.getRuleName() != null ? r.getRuleName() : r.getRuleCode());
+            dto.setCategory(r.getCategory() != null ? r.getCategory() : "GENERAL");
+            dto.setSeverity(toLegacySeverity(r.getSeverity()));
+            dto.setTitle(r.getTitle());
+            dto.setDescription(r.getDescription());
+            dto.setCurrentValue(r.getCurrentValue());
+            dto.setThreshold(r.getThreshold());
+            dto.setTriggeredAt(r.getTriggeredAt());
+            events.add(dto);
+        }
+        return events;
+    }
+
+    /**
+     * LiteRule RuleSeverity → execution AlertSeverity
+     *
+     * @param severity literule 严重度
+     * @return execution 严重度
+     */
+    private AlertSeverity toLegacySeverity(RuleSeverity severity) {
+        if (severity == null) return AlertSeverity.INFO;
+        return switch (severity) {
+            case RED -> AlertSeverity.RED;
+            case YELLOW -> AlertSeverity.YELLOW;
+            case INFO -> AlertSeverity.INFO;
+        };
     }
 
     @Override
