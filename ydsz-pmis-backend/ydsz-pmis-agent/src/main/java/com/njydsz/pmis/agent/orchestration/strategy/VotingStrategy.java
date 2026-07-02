@@ -109,7 +109,11 @@ public class VotingStrategy implements OrchestrationStrategy {
     }
 
     /**
-     * 加权融合：score / confidence 按权重平均，level 取最高，suggestion 拼接
+     * 加权融合：score / confidence 按权重平均，level 取最高，suggestion 拼接。
+     *
+     * @param agentResults 各 Agent 的执行结果
+     * @param weights      权重表（key=agentType value=权重 0-1）
+     * @return 融合后的 AgentResult；无有效结果返回 null
      */
     public AgentResult fuse(Map<String, AgentResult> agentResults, Map<String, Double> weights) {
         if (agentResults == null || agentResults.isEmpty()) {

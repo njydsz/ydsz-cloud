@@ -28,6 +28,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class AgentBlackboard implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 
@@ -38,6 +39,11 @@ public class AgentBlackboard implements Serializable {
     /** 决策路径追踪：每一步一个 entry */
     private java.util.List<TraceEntry> trace = new java.util.ArrayList<>();
 
+    /**
+     * 构造黑板并初始化事实。
+     *
+     * @param facts 初始事实，可空
+     */
     public AgentBlackboard(Map<String, Object> facts) {
         if (facts != null) this.facts = new HashMap<>(facts);
     }
@@ -96,6 +102,7 @@ public class AgentBlackboard implements Serializable {
     @Data
     @NoArgsConstructor
     public static class TraceEntry implements Serializable {
+        /** 序列化版本号 */
         @Serial
         private static final long serialVersionUID = 1L;
         /** Agent 类型 */

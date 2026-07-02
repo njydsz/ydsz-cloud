@@ -35,7 +35,7 @@ jobs:
           cache: maven
 
       - name: Maven Build & Test
-        run: mvn -B -ntp -DskipITs=true test
+        run: mvn -B -ntp -DskipITs=true -Djacoco.skip=false test
 
       - name: Upload Test Results
         if: always()
@@ -44,4 +44,14 @@ jobs:
           name: backend-test-results
           path: |
             ydsz-pmis-backend/**/target/surefire-reports/*.xml
+          retention-days: 7
+
+      - name: Upload JaCoCo Coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage
+          path: |
+            ydsz-pmis-backend/**/target/site/jacoco/**
+            ydsz-pmis-backend/**/target/jacoco.exec
           retention-days: 7

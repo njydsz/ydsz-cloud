@@ -11,6 +11,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * LLM 健康检查指标单元测试（P1-13 新增）
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("LlmHealthIndicator 健康检查")
 class LlmHealthIndicatorTest {

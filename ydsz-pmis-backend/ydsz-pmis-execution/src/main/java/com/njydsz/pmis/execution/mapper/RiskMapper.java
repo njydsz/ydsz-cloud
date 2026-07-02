@@ -17,15 +17,44 @@ import java.util.Map;
 @Mapper
 public interface RiskMapper extends BaseMapper<RiskDO> {
 
+    /**
+     * 按编码查询项目风险
+     *
+     * @param code 风险编码
+     * @return 风险对象，未找到返回 null
+     */
     RiskDO selectByCode(@Param("code") String code);
 
+    /**
+     * 更新风险状态
+     *
+     * @param id     风险 ID
+     * @param status 目标状态
+     * @return 受影响行数
+     */
     int updateStatus(@Param("id") Long id, @Param("status") String status);
 
+    /**
+     * 按立项 ID 查询风险列表
+     *
+     * @param initiationId 立项 ID
+     * @return 风险列表
+     */
     List<RiskDO> selectByInitiation(@Param("initiationId") Long initiationId);
 
+    /**
+     * 按风险等级聚合统计
+     *
+     * @param initiationId 立项 ID
+     * @return 等级聚合列表
+     */
     List<Map<String, Object>> aggregateByLevel(@Param("initiationId") Long initiationId);
 
-    /** 查询所有未结风险 */
+    /**
+     * 查询所有未结风险
+     *
+     * @return 未结风险列表
+     */
     List<RiskDO> selectAll();
 
     /**

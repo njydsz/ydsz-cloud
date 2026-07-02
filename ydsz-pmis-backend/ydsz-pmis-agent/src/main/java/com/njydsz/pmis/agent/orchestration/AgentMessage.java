@@ -22,6 +22,7 @@ import java.util.Map;
 @AllArgsConstructor
 public class AgentMessage implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 

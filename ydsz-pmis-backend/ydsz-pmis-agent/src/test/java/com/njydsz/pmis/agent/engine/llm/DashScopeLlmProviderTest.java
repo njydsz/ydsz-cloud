@@ -10,6 +10,9 @@ import static org.assertj.core.api.Assertions.assertThat;
  * DashScopeLlmProvider 单元测试 (批次 22 P1-5)
  *
  * <p>覆盖: API Key 缺失降级 / API Key 已配置但 endpoint 不可达 (会重试 N 次后降级到 mock)
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("DashScopeLlmProvider 通义千问")
 class DashScopeLlmProviderTest {

@@ -153,7 +153,11 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                         : JSON.parseObject(var, Map.class);
                 m.put("_terminateReason", reason);
                 var = JSON.toJSONString(m);
-            } catch (Exception ignored) {
+                // 修复 P2-18: 写回 DB（之前仅改局部变量未持久化）
+                instanceMapper.updateVariable(instanceId, var);
+            } catch (Exception e) {
+                log.warn("[Flow] terminate reason 持久化失败: instanceId={} reason={}",
+                        instanceId, e.getMessage());
             }
         }
         instanceMapper.updateStatus(instanceId, FlowInstanceStatus.TERMINATED.name(),
@@ -173,8 +177,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instanceMapper.updateStatus(instanceId, FlowInstanceStatus.SUSPENDED.name(),
                 instance.getCurrentNodeCode(), instance.getCurrentNodeName(),
                 null, null);
-        // P2-18: 冻结 PENDING 任务（标记为 SKIPPED 不可操作）
-        // 实际实现：不改任务状态，通过实例状态 SUSPENDED 在 pass/reject 中拦截
+        // P2-18: 冻结 PENDING/CLAIMED 任务为 FROZEN，禁止办理
+        taskMapper.freezeByInstance(instanceId);
         log.info("[Flow] 挂起流程: instanceId={}", instanceId);
     }
 
@@ -188,6 +192,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instanceMapper.updateStatus(instanceId, FlowInstanceStatus.RUNNING.name(),
                 instance.getCurrentNodeCode(), instance.getCurrentNodeName(),
                 null, null);
+        // P2-18: 解冻 FROZEN 任务，回到 PENDING 可办理
+        taskMapper.unfreezeByInstance(instanceId);
         log.info("[Flow] 激活流程: instanceId={}", instanceId);
     }
 

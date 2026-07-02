@@ -33,6 +33,7 @@ import java.util.Map;
 @Slf4j
 public class CascadeStrategy implements OrchestrationStrategy {
 
+    /** 默认置信度阈值（0.85） */
     private static final double DEFAULT_THRESHOLD = 0.85d;
 
     @Override

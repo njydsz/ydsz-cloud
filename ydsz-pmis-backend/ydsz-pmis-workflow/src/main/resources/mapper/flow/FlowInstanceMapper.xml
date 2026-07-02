@@ -64,6 +64,16 @@
           AND deleted = 0
     </update>
 
+    <!-- P2-18: 更新流程变量 JSON（持久化 terminate reason 等） -->
+    <update id="updateVariable">
+        UPDATE pmis_flow_instance
+        SET variable = #{variable},
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND deleted = 0
+    </update>
+
     <select id="selectByInitiator" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
         FROM pmis_flow_instance

@@ -34,6 +34,9 @@ class FlowEnumsTest {
         assertThat(FlowTaskStatus.TIMEOUT.isFinished()).isTrue();
         assertThat(FlowTaskStatus.PENDING.isFinished()).isFalse();
         assertThat(FlowTaskStatus.CLAIMED.isFinished()).isFalse();
+        // P2-18: FROZEN 不是终态（可解冻回 PENDING）
+        assertThat(FlowTaskStatus.FROZEN.isFinished()).isFalse();
+        assertThat(FlowTaskStatus.DELEGATED.isFinished()).isFalse();
     }
 
     @Test

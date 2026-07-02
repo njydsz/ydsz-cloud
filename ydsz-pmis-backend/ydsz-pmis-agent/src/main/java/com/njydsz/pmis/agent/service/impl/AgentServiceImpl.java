@@ -40,7 +40,9 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class AgentServiceImpl implements AgentService {
 
+    /** 已注册的 Agent 列表（Spring 自动注入） */
     private final List<Agent> agents;
+    /** Agent 预测记录 Mapper */
     private final AgentPredictionMapper predictionMapper;
 
     @Override

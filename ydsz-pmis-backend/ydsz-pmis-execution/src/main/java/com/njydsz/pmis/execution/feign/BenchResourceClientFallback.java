@@ -27,6 +27,12 @@ import java.util.Map;
 @Component
 public class BenchResourceClientFallback implements FallbackFactory<BenchResourceClient> {
 
+    /**
+     * 创建降级客户端实例
+     *
+     * @param cause 触发降级的异常
+     * @return 降级后的 BenchResourceClient 实例
+     */
     @Override
     public BenchResourceClient create(Throwable cause) {
         log.warn("[BenchResourceClientFallback] 触发降级：{}",

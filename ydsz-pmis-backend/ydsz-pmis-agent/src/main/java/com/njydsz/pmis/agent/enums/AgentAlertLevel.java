@@ -9,13 +9,20 @@ package com.njydsz.pmis.agent.enums;
  * @since 1.0.0
  */
 public enum AgentAlertLevel {
+    /** 提示信息 */
     INFO("INFO", "提示"),
+    /** 黄色预警 */
     YELLOW("YELLOW", "黄色预警"),
+    /** 红色预警（最高严重度） */
     RED("RED", "红色预警"),
+    /** 正常 */
     NORMAL("NORMAL", "正常"),
+    /** 推荐 */
     RECOMMEND("RECOMMEND", "推荐");
 
+    /** 枚举编码 */
     private final String code;
+    /** 枚举描述 */
     private final String desc;
 
     AgentAlertLevel(String code, String desc) {
@@ -23,7 +30,17 @@ public enum AgentAlertLevel {
         this.desc = desc;
     }
 
+    /**
+     * 获取枚举编码。
+     *
+     * @return 枚举编码
+     */
     public String getCode() { return code; }
+    /**
+     * 获取枚举描述。
+     *
+     * @return 枚举描述
+     */
     public String getDesc() { return desc; }
 
     /**

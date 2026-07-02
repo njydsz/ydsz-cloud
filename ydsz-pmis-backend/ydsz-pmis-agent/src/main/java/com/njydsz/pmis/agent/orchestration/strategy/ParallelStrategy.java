@@ -37,12 +37,19 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Slf4j
 public class ParallelStrategy implements OrchestrationStrategy {
 
+    /** 并行执行线程池 */
     private final ExecutorService executor;
 
+    /** 默认构造器（并行度 5） */
     public ParallelStrategy() {
         this(5);
     }
 
+    /**
+     * 指定并行度构造器。
+     *
+     * @param parallelism 并行度
+     */
     public ParallelStrategy(int parallelism) {
         AtomicInteger seq = new AtomicInteger(0);
         ThreadFactory tf = r -> {
@@ -139,6 +146,9 @@ public class ParallelStrategy implements OrchestrationStrategy {
         return a.getConfidence() == null ? 0 : a.getConfidence().compareTo(b.getConfidence() == null ? BigDecimal.ZERO : b.getConfidence());
     }
 
+    /**
+     * 关闭线程池。
+     */
     public void shutdown() {
         executor.shutdown();
     }

@@ -163,6 +163,28 @@
           AND deleted = 0
     </update>
 
+    <!-- P2-18: 冻结某实例下所有 PENDING/CLAIMED 任务（流程挂起时调用） -->
+    <update id="freezeByInstance">
+        UPDATE pmis_flow_task
+        SET task_status = 'FROZEN',
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE instance_id = #{instanceId}
+          AND task_status IN ('PENDING', 'CLAIMED')
+          AND deleted = 0
+    </update>
+
+    <!-- P2-18: 解冻某实例下所有 FROZEN 任务（流程激活时调用，回到 PENDING） -->
+    <update id="unfreezeByInstance">
+        UPDATE pmis_flow_task
+        SET task_status = 'PENDING',
+            updated_by = 0,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE instance_id = #{instanceId}
+          AND task_status = 'FROZEN'
+          AND deleted = 0
+    </update>
+
     <!-- P0-5: 统计某实例某节点的未完成任务数（用于并行网关 join 判断） -->
     <select id="countPendingByNode" resultType="int">
         SELECT COUNT(1)

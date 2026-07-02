@@ -27,6 +27,11 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @MapperScan("com.njydsz.pmis.agent.mapper")
 public class AgentApplication {
 
+    /**
+     * 应用入口方法。
+     *
+     * @param args 启动参数
+     */
     public static void main(String[] args) {
         SpringApplication.run(AgentApplication.class, args);
     }

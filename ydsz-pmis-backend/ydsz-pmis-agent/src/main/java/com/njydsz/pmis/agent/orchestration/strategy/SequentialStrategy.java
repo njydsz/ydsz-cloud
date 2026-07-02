@@ -107,6 +107,12 @@ public class SequentialStrategy implements OrchestrationStrategy {
         return AgentType.fromCode(code);
     }
 
+    /**
+     * 工具：根据 code 解析告警等级（兼容大小写）。
+     *
+     * @param code 等级码，可空
+     * @return 告警等级；为空或未匹配返回 NORMAL
+     */
     @SuppressWarnings("unused")
     private AgentAlertLevel parseLevel(String code) {
         if (code == null) return AgentAlertLevel.NORMAL;
@@ -116,6 +122,12 @@ public class SequentialStrategy implements OrchestrationStrategy {
         return AgentAlertLevel.NORMAL;
     }
 
+    /**
+     * 构造输入消息（工具方法）。
+     *
+     * @param from 发送方
+     * @return INPUT 类型消息
+     */
     @SuppressWarnings("unused")
     private AgentMessage inputMessage(String from) {
         return AgentMessage.input(from, null);

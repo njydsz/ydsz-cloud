@@ -25,12 +25,17 @@ public interface BenchResourceClient {
 
     /**
      * Bench 仪表盘汇总（活跃池分布 + 累计闲置成本）
+     *
+     * @return Bench 仪表盘汇总数据
      */
     @GetMapping("/api/v1/bench/dashboard")
     Result<Map<String, Object>> getBenchDashboard();
 
     /**
      * 按项目查询资源分配（甘特图数据源）
+     *
+     * @param initiationId 立项 ID
+     * @return 资源分配列表（每条记录为一个 Map）
      */
     @GetMapping("/api/v1/resource-assignments/by-initiation/{initiationId}")
     Result<List<Map<String, Object>>> listResourceAssignmentsByInitiation(

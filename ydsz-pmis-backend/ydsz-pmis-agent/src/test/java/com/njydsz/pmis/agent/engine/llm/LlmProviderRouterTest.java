@@ -13,6 +13,9 @@ import static org.mockito.Mockito.when;
 
 /**
  * LlmProviderRouter 单元测试 (批次 22 P1-5)
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @DisplayName("LlmProviderRouter 路由器")
 class LlmProviderRouterTest {

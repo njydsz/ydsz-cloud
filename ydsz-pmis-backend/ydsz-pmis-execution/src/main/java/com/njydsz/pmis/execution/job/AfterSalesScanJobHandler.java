@@ -39,8 +39,15 @@ public class AfterSalesScanJobHandler implements JobHandler {
     private final WarrantyService warrantyService;
     private final OpsTicketService opsTicketService;
 
+    /** 默认提前通知天数 */
     private static final int DEFAULT_NOTICE_DAYS = 30;
 
+    /**
+     * 执行售后巡检任务
+     *
+     * @param paramsJson 任务参数 JSON，可指定 noticeDays
+     * @return 任务执行结果，包含即将到期/已过期/SLA 违约数量
+     */
     @Override
     public Object execute(String paramsJson) {
         long start = System.currentTimeMillis();
@@ -80,6 +87,12 @@ public class AfterSalesScanJobHandler implements JobHandler {
         return result;
     }
 
+    /**
+     * 解析提前通知天数参数
+     *
+     * @param paramsJson 任务参数 JSON
+     * @return 解析得到的提前通知天数；解析失败返回默认值
+     */
     private int parseNoticeDays(String paramsJson) {
         if (paramsJson == null || paramsJson.isEmpty()) {
             return DEFAULT_NOTICE_DAYS;

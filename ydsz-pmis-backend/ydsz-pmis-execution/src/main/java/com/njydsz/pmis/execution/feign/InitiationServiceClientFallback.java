@@ -21,6 +21,12 @@ import java.util.Map;
 @Component
 public class InitiationServiceClientFallback implements FallbackFactory<InitiationServiceClient> {
 
+    /**
+     * 创建降级客户端实例
+     *
+     * @param cause 触发降级的异常
+     * @return 降级后的 InitiationServiceClient 实例
+     */
     @Override
     public InitiationServiceClient create(Throwable cause) {
         log.warn("[Feign] project 服务降级: {}", cause == null ? "?" : cause.getMessage());

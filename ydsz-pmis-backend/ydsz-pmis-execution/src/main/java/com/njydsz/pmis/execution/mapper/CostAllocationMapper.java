@@ -18,34 +18,71 @@ import java.util.Map;
 @Mapper
 public interface CostAllocationMapper extends BaseMapper<CostAllocationDO> {
 
+    /**
+     * 按立项 + 期间查询成本归集列表
+     *
+     * @param initiationId 立项 ID
+     * @param period       期间
+     * @return 成本归集列表
+     */
     List<CostAllocationDO> selectByInitiationAndPeriod(@Param("initiationId") Long initiationId,
                                                        @Param("period") String period);
 
+    /**
+     * 按成本类型汇总
+     *
+     * @param initiationId 立项 ID
+     * @param period       期间
+     * @return 类型汇总列表
+     */
     List<Map<String, Object>> sumByType(@Param("initiationId") Long initiationId,
                                         @Param("period") String period);
 
     /**
      * 月度成本合计
+     *
+     * @param initiationId 立项 ID
+     * @return 月度成本合计列表
      */
     List<Map<String, Object>> monthlySummary(@Param("initiationId") Long initiationId);
 
     /**
      * 按来源类型汇总
+     *
+     * @param initiationId 立项 ID
+     * @param period       期间
+     * @return 来源类型汇总列表
      */
     List<Map<String, Object>> sumBySourceType(@Param("initiationId") Long initiationId,
                                               @Param("period") String period);
 
-    /** 跨项目汇总所有成本金额 */
+    /**
+     * 跨项目汇总所有成本金额
+     *
+     * @return 成本总金额
+     */
     BigDecimal sumAllAmount();
 
-    /** P6 每日对账：跨项目汇总全部成本（兼容 sumAll） */
+    /**
+     * P6 每日对账：跨项目汇总全部成本（兼容 sumAll）
+     *
+     * @return 成本总金额
+     */
     BigDecimal sumAll();
 
-    /** P6 每日对账：按 costType 汇总（与 sumByType(initId, period) 区分） */
+    /**
+     * P6 每日对账：按 costType 汇总（与 sumByType(initId, period) 区分）
+     *
+     * @param costType 成本类型
+     * @return 指定成本类型金额
+     */
     BigDecimal sumByCostType(@Param("costType") String costType);
 
     /**
      * 按项目汇总所有已归集成本（强管控用）
+     *
+     * @param initiationId 立项 ID
+     * @return 项目成本总金额
      */
     BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
 

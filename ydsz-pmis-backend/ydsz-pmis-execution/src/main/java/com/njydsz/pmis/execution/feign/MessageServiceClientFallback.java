@@ -18,6 +18,12 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 @Slf4j
 public class MessageServiceClientFallback implements FallbackFactory<MessageServiceClient> {
 
+    /**
+     * 创建降级客户端实例
+     *
+     * @param cause 触发降级的异常
+     * @return 降级后的 MessageServiceClient 实例
+     */
     @Override
     public MessageServiceClient create(Throwable cause) {
         log.warn("[MessageClientFallback] 消息中心降级: {}", cause == null ? "?" : cause.getMessage());

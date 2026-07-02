@@ -10,6 +10,7 @@ import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import { visualizer } from 'rollup-plugin-visualizer'
+import viteCompression from 'vite-plugin-compression'
 import { fileURLToPath, URL } from 'node:url'
 import { viteMockPlugin } from './src/mock/vite-plugin-mock'
 
@@ -59,6 +60,24 @@ export default defineConfig(({ mode }) => {
         template: 'treemap',
         enabled: analyze,
       }),
+      // P2-5: 生产构建 gzip + brotli 压缩
+      // 生成 .gz 和 .br 静态文件, 配合 Nginx gzip_static/brotli_static 可减少 60-80% 传输体积
+      ...(mode === 'production'
+        ? [
+            viteCompression({
+              algorithm: 'gzip',
+              ext: '.gz',
+              threshold: 10240, // 仅压缩 >10KB 的文件
+              deleteOriginFile: false, // 保留原始文件
+            }),
+            viteCompression({
+              algorithm: 'brotliCompress',
+              ext: '.br',
+              threshold: 10240,
+              deleteOriginFile: false,
+            }),
+          ]
+        : []),
     ],
 
     resolve: {

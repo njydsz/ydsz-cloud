@@ -17,8 +17,8 @@ import type { DictItemVO } from '@/api/system/dict/types'
 
 /** localStorage 缓存前缀 */
 const STORAGE_PREFIX = 'pmis_dict_'
-/** localStorage 缓存 TTL: 5 分钟 */
-const STORAGE_TTL = 5 * 60 * 1000
+/** localStorage 缓存 TTL: 30 分钟（P2-12 提升，字典数据变更频率极低） */
+const STORAGE_TTL = 30 * 60 * 1000
 
 interface CachedDict {
   items: DictItemVO[]

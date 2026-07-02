@@ -19,6 +19,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 @FeignClient(name = "ydsz-pmis-message", fallbackFactory = MessageServiceClientFallback.class)
 public interface MessageServiceClient {
 
+    /**
+     * 发送消息
+     *
+     * @param request 消息请求体
+     * @return 消息发送结果
+     */
     @PostMapping("/api/v1/message/send")
     Result<MessageResult> send(@RequestBody MessageRequest request);
 }

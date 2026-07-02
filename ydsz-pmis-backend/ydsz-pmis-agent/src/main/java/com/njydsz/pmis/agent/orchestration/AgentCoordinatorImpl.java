@@ -27,8 +27,12 @@ import java.util.Map;
 @Component
 public class AgentCoordinatorImpl implements AgentCoordinator {
 
+    /** 策略表（模式 -> 策略实例） */
     private final Map<OrchestrationMode, OrchestrationStrategy> strategyMap;
 
+    /**
+     * 构造协调器，初始化 4 种编排策略。
+     */
     public AgentCoordinatorImpl() {
         this.strategyMap = new EnumMap<>(OrchestrationMode.class);
         this.strategyMap.put(OrchestrationMode.SEQUENTIAL, new SequentialStrategy());

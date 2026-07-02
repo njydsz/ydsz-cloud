@@ -93,6 +93,20 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
                    @Param("taskStatus") String taskStatus);
 
     /**
+     * P2-18: 冻结某实例下所有 PENDING/CLAIMED 任务（流程挂起时调用）
+     *
+     * @param instanceId 实例 ID
+     */
+    int freezeByInstance(@Param("instanceId") Long instanceId);
+
+    /**
+     * P2-18: 解冻某实例下所有 FROZEN 任务（流程激活时调用，回到 PENDING）
+     *
+     * @param instanceId 实例 ID
+     */
+    int unfreezeByInstance(@Param("instanceId") Long instanceId);
+
+    /**
      * 统计某实例某节点的未完成任务数（用于并行网关 join 判断）
      */
     int countPendingByNode(@Param("instanceId") Long instanceId,

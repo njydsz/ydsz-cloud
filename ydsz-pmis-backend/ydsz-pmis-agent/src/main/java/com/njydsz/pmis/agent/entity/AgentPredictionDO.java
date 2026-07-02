@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 @TableName("pmis_agent_prediction")
 public class AgentPredictionDO implements Serializable {
 
+    /** 序列化版本号 */
     @Serial
     private static final long serialVersionUID = 1L;
 

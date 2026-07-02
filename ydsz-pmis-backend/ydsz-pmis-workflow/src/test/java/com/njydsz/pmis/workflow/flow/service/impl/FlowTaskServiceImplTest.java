@@ -33,6 +33,7 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -929,6 +930,107 @@ class FlowTaskServiceImplTest {
         assertThat(result.get(0).getTaskStatus()).isEqualTo(FlowTaskStatus.COMPLETED.name());
         // 不应该查 task 表
         verify(taskMapper, never()).selectDoneByAssignee(anyString(), anyLong());
+    }
+
+    // ============== P2-17: 真分页 ==============
+
+    @Test
+    @DisplayName("listTodoByAssigneePage P2-17: tenantId 为 null 时取默认 1L，offset=0")
+    void testListTodoByAssigneePageDefaultTenant() {
+        FlowTaskDO t = new FlowTaskDO();
+        t.setId(1L);
+        t.setAssigneeId("1001");
+        when(taskMapper.selectTodoByAssigneePage(eq("1001"), eq(1L), eq(0), eq(20)))
+                .thenReturn(List.of(t));
+        when(taskMapper.countTodoByAssignee(eq("1001"), eq(1L))).thenReturn(1L);
+
+        var page = service.listTodoByAssigneePage("1001", null, 1, 20);
+        assertThat(page.getList()).hasSize(1);
+        assertThat(page.getTotal()).isEqualTo(1L);
+        assertThat(page.getPage()).isEqualTo(1);
+        assertThat(page.getSize()).isEqualTo(20);
+        verify(taskMapper).selectTodoByAssigneePage("1001", 1L, 0, 20);
+        verify(taskMapper).countTodoByAssignee("1001", 1L);
+    }
+
+    @Test
+    @DisplayName("listTodoByAssigneePage P2-17: 自定义 tenantId，offset=(page-1)*size")
+    void testListTodoByAssigneePageCustomTenant() {
+        when(taskMapper.selectTodoByAssigneePage(eq("1001"), eq(5L), eq(20), eq(10)))
+                .thenReturn(Collections.emptyList());
+        when(taskMapper.countTodoByAssignee(eq("1001"), eq(5L))).thenReturn(25L);
+
+        var page = service.listTodoByAssigneePage("1001", 5L, 3, 10);
+        assertThat(page.getList()).isEmpty();
+        assertThat(page.getTotal()).isEqualTo(25L);
+        assertThat(page.getPage()).isEqualTo(3);
+        assertThat(page.getSize()).isEqualTo(10);
+        // 总页数 = (25 + 10 - 1) / 10 = 3
+        assertThat(page.getPages()).isEqualTo(3L);
+        verify(taskMapper).selectTodoByAssigneePage("1001", 5L, 20, 10);
+    }
+
+    @Test
+    @DisplayName("listTodoByAssigneePage P2-17: 非法 page/size 兜底（page<1→1, size<=0→20）")
+    void testListTodoByAssigneePageInvalidPaging() {
+        when(taskMapper.selectTodoByAssigneePage(any(), any(), anyInt(), anyInt()))
+                .thenReturn(Collections.emptyList());
+        when(taskMapper.countTodoByAssignee(any(), any())).thenReturn(0L);
+
+        var page = service.listTodoByAssigneePage("1001", 1L, -1, 0);
+        // page<1 → safePage=1, size<=0 → safeSize=20, offset=0
+        assertThat(page.getPage()).isEqualTo(1);
+        assertThat(page.getSize()).isEqualTo(20);
+        verify(taskMapper).selectTodoByAssigneePage("1001", 1L, 0, 20);
+    }
+
+    @Test
+    @DisplayName("listDoneByAssigneePage P2-17: 走历史表，真分页 + 字段映射")
+    void testListDoneByAssigneePageFromHistory() {
+        FlowHisTaskDO his = new FlowHisTaskDO();
+        his.setTaskId(88L);
+        his.setInstanceId(10L);
+        his.setFlowCode("f1");
+        his.setNodeCode("t1");
+        his.setNodeName("审批");
+        his.setAssigneeId("1001");
+        his.setAssigneeName("张三");
+        his.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        his.setComment("同意");
+        when(hisTaskMapper.selectDoneByAssigneePage(eq("1001"), eq(1L), eq(0), eq(10)))
+                .thenReturn(List.of(his));
+        when(hisTaskMapper.countDoneByAssignee(eq("1001"), eq(1L))).thenReturn(1L);
+
+        var page = service.listDoneByAssigneePage("1001", null, 1, 10);
+        assertThat(page.getList()).hasSize(1);
+        assertThat(page.getTotal()).isEqualTo(1L);
+        FlowTaskDO converted = page.getList().get(0);
+        assertThat(converted.getId()).isEqualTo(88L);
+        assertThat(converted.getInstanceId()).isEqualTo(10L);
+        assertThat(converted.getFlowCode()).isEqualTo("f1");
+        assertThat(converted.getNodeCode()).isEqualTo("t1");
+        assertThat(converted.getNodeName()).isEqualTo("审批");
+        assertThat(converted.getAssigneeId()).isEqualTo("1001");
+        assertThat(converted.getAssigneeName()).isEqualTo("张三");
+        assertThat(converted.getTaskStatus()).isEqualTo(FlowTaskStatus.COMPLETED.name());
+        assertThat(converted.getComment()).isEqualTo("同意");
+        verify(hisTaskMapper).selectDoneByAssigneePage("1001", 1L, 0, 10);
+        verify(hisTaskMapper).countDoneByAssignee("1001", 1L);
+    }
+
+    @Test
+    @DisplayName("listDoneByAssigneePage P2-17: offset=(page-1)*size 正确计算")
+    void testListDoneByAssigneePageOffset() {
+        when(hisTaskMapper.selectDoneByAssigneePage(eq("1001"), eq(2L), eq(30), eq(15)))
+                .thenReturn(Collections.emptyList());
+        when(hisTaskMapper.countDoneByAssignee(eq("1001"), eq(2L))).thenReturn(50L);
+
+        var page = service.listDoneByAssigneePage("1001", 2L, 3, 15);
+        assertThat(page.getPage()).isEqualTo(3);
+        assertThat(page.getSize()).isEqualTo(15);
+        // 总页数 = (50 + 15 - 1) / 15 = 4
+        assertThat(page.getPages()).isEqualTo(4L);
+        verify(hisTaskMapper).selectDoneByAssigneePage("1001", 2L, 30, 15);
     }
 
     // ============== toView ==============

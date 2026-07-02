@@ -224,6 +224,60 @@ class FlowInstanceServiceImplTest {
     }
 
     @Test
+    @DisplayName("terminate P2-18: reason 持久化到 variable JSON")
+    void testTerminatePersistsReason() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        ins.setStartAt(java.time.LocalDateTime.now().minusMinutes(1));
+        ins.setVariable("{\"k\":\"v\"}");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        service.terminate(1L, "管理员强制终止");
+
+        // 验证 updateVariable 被调用，且 variable 包含 _terminateReason
+        ArgumentCaptor<String> varCaptor = ArgumentCaptor.forClass(String.class);
+        verify(instanceMapper).updateVariable(eq(1L), varCaptor.capture());
+        String savedVar = varCaptor.getValue();
+        assertThat(savedVar).contains("_terminateReason").contains("管理员强制终止");
+        // 原有变量应保留
+        assertThat(savedVar).contains("\"k\":\"v\"");
+    }
+
+    @Test
+    @DisplayName("terminate P2-18: 无 variable 时也能正确写入 reason")
+    void testTerminatePersistsReasonNoExistingVar() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        ins.setStartAt(java.time.LocalDateTime.now().minusMinutes(1));
+        ins.setVariable(null);
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        service.terminate(1L, "意外终止");
+
+        ArgumentCaptor<String> varCaptor = ArgumentCaptor.forClass(String.class);
+        verify(instanceMapper).updateVariable(eq(1L), varCaptor.capture());
+        assertThat(varCaptor.getValue()).contains("_terminateReason").contains("意外终止");
+    }
+
+    @Test
+    @DisplayName("terminate P2-18: reason 为空时不调用 updateVariable")
+    void testTerminateNoReason() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        ins.setStartAt(java.time.LocalDateTime.now().minusMinutes(1));
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        service.terminate(1L, null);
+        // 没有 reason，不应该调用 updateVariable
+        verify(instanceMapper, never()).updateVariable(any(), any());
+        verify(instanceMapper).updateStatus(eq(1L), eq(FlowInstanceStatus.TERMINATED.name()),
+                eq(null), eq(null), any(), any());
+    }
+
+    @Test
     @DisplayName("terminate 不存在的实例应抛 NOT_FOUND")
     void testTerminateNotFound() {
         when(instanceMapper.selectById(99L)).thenReturn(null);
@@ -256,6 +310,21 @@ class FlowInstanceServiceImplTest {
     }
 
     @Test
+    @DisplayName("suspend P2-18: 冻结 PENDING/CLAIMED 任务为 FROZEN")
+    void testSuspendFreezesTasks() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.RUNNING.name());
+        ins.setCurrentNodeCode("n1");
+        ins.setCurrentNodeName("审批");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        service.suspend(1L);
+        // 验证冻结任务的 mapper 被调用
+        verify(taskMapper).freezeByInstance(1L);
+    }
+
+    @Test
     @DisplayName("activate 非挂起流程应抛 BAD_REQUEST")
     void testActivateNotSuspended() {
         FlowInstanceDO ins = new FlowInstanceDO();
@@ -277,6 +346,21 @@ class FlowInstanceServiceImplTest {
         service.activate(1L);
         verify(instanceMapper).updateStatus(eq(1L), eq(FlowInstanceStatus.RUNNING.name()),
                 eq("n1"), eq("审批"), eq(null), eq(null));
+    }
+
+    @Test
+    @DisplayName("activate P2-18: 解冻 FROZEN 任务回到 PENDING")
+    void testActivateUnfreezesTasks() {
+        FlowInstanceDO ins = new FlowInstanceDO();
+        ins.setId(1L);
+        ins.setFlowStatus(FlowInstanceStatus.SUSPENDED.name());
+        ins.setCurrentNodeCode("n1");
+        ins.setCurrentNodeName("审批");
+        when(instanceMapper.selectById(1L)).thenReturn(ins);
+
+        service.activate(1L);
+        // 验证解冻任务的 mapper 被调用
+        verify(taskMapper).unfreezeByInstance(1L);
     }
 
     @Test

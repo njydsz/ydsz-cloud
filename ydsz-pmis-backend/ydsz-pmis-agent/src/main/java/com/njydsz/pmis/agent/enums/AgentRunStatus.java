@@ -7,12 +7,18 @@ package com.njydsz.pmis.agent.enums;
  * @since 1.0.0
  */
 public enum AgentRunStatus {
+    /** 等待执行 */
     PENDING("PENDING", "等待执行"),
+    /** 执行中 */
     RUNNING("RUNNING", "执行中"),
+    /** 成功（终态） */
     SUCCESS("SUCCESS", "成功"),
+    /** 失败（终态） */
     FAILED("FAILED", "失败");
 
+    /** 枚举编码 */
     private final String code;
+    /** 枚举描述 */
     private final String desc;
 
     AgentRunStatus(String code, String desc) {
@@ -20,7 +26,17 @@ public enum AgentRunStatus {
         this.desc = desc;
     }
 
+    /**
+     * 获取枚举编码。
+     *
+     * @return 枚举编码
+     */
     public String getCode() { return code; }
+    /**
+     * 获取枚举描述。
+     *
+     * @return 枚举描述
+     */
     public String getDesc() { return desc; }
 
     /**

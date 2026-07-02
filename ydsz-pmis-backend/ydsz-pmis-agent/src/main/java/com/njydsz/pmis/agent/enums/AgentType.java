@@ -7,13 +7,20 @@ package com.njydsz.pmis.agent.enums;
  * @since 1.0.0
  */
 public enum AgentType {
+    /** 项目风险预警 */
     RISK_WARNING("RISK_WARNING", "项目风险预警"),
+    /** 资源调度推荐 */
     RESOURCE_RECOMMEND("RESOURCE_RECOMMEND", "资源调度推荐"),
+    /** 利润预测 */
     PROFIT_FORECAST("PROFIT_FORECAST", "利润预测"),
+    /** 商机赢率预测 */
     WIN_RATE_PREDICT("WIN_RATE_PREDICT", "商机赢率预测"),
+    /** 工时异常识别 */
     TIMESHEET_ANOMALY("TIMESHEET_ANOMALY", "工时异常识别");
 
+    /** 枚举编码 */
     private final String code;
+    /** 枚举描述 */
     private final String desc;
 
     AgentType(String code, String desc) {
@@ -21,7 +28,17 @@ public enum AgentType {
         this.desc = desc;
     }
 
+    /**
+     * 获取枚举编码。
+     *
+     * @return 枚举编码
+     */
     public String getCode() { return code; }
+    /**
+     * 获取枚举描述。
+     *
+     * @return 枚举描述
+     */
     public String getDesc() { return desc; }
 
     /**

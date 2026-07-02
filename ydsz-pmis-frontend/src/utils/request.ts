@@ -83,6 +83,38 @@ function hideLoading(): void {
   }
 }
 
+// ==================== P2-7: 自动重试配置 ====================
+
+/** 最大重试次数（不含首次请求） */
+const MAX_RETRIES = 2
+/** 重试基础延迟（ms），指数退避: 1s → 2s */
+const RETRY_BASE_DELAY = 1000
+
+/**
+ * 判断错误是否可重试
+ * - 网络断开（!error.response）→ 可重试
+ * - 请求超时（ECONNABORTED）→ 可重试
+ * - 服务端 5xx 错误 → 可重试
+ * - 4xx 客户端错误、401 未授权、业务错误 → 不可重试
+ */
+function isRetryableError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+  const err = error as { code?: string; response?: { status?: number } }
+  // 网络断开
+  if (!err.response) return true
+  // 超时
+  if (err.code === 'ECONNABORTED') return true
+  // 5xx 服务端错误
+  const status = err.response?.status
+  if (status && status >= 500 && status < 600) return true
+  return false
+}
+
+/** 指数退避延迟计算 */
+function getRetryDelay(retryCount: number): number {
+  return RETRY_BASE_DELAY * Math.pow(2, retryCount)
+}
+
 // ==================== Axios 实例 ====================
 
 /** Axios 实例（统一 baseURL、超时、Content-Type） */
@@ -148,6 +180,18 @@ service.interceptors.response.use(
     // 非静默请求关闭全局 loading
     if (!error.config?.silent) {
       hideLoading()
+    }
+
+    // P2-7: 网络错误/超时/5xx 自动重试（仅 GET 请求，避免非幂等操作重复提交）
+    const retryCount = (error.config as any)?._retryCount || 0
+    const isGet = error.config?.method?.toLowerCase() === 'get'
+    if (isGet && retryCount < MAX_RETRIES && isRetryableError(error)) {
+      ;(error.config as any)._retryCount = retryCount + 1
+      const delay = getRetryDelay(retryCount)
+      // eslint-disable-next-line no-console
+      console.debug(`[request] 第 ${retryCount + 1} 次重试（${delay}ms 后）: ${error.config?.url}`)
+      return new Promise((resolve) => setTimeout(resolve, delay))
+        .then(() => service(error.config!))
     }
 
     const status = error.response?.status

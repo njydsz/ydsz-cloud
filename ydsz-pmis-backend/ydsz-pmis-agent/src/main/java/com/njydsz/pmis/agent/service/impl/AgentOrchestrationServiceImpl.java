@@ -27,7 +27,9 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AgentOrchestrationServiceImpl implements AgentOrchestrationService {
 
+    /** 已注册的 Agent 列表（Spring 自动注入） */
     private final List<Agent> agents;
+    /** 多智能体协调器 */
     private final AgentCoordinator coordinator;
 
     @Override

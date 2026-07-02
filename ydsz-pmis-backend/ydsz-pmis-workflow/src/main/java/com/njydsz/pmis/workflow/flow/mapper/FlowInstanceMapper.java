@@ -35,6 +35,15 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
                      @Param("durationMs") Long durationMs);
 
     /**
+     * P2-18: 更新流程变量 JSON（用于持久化 terminate reason 等元信息）
+     *
+     * @param id       实例 ID
+     * @param variable 流程变量 JSON
+     */
+    int updateVariable(@Param("id") Long id,
+                       @Param("variable") String variable);
+
+    /**
      * 发起人维度查询
      */
     List<FlowInstanceDO> selectByInitiator(@Param("initiatorId") Long initiatorId,

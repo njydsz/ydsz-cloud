@@ -36,6 +36,13 @@ public class DailyReconcileJobHandler implements JobHandler {
 
     private final DailyReconcileService dailyReconcileService;
 
+    /**
+     * 执行每日对账任务
+     *
+     * @param paramsJson 任务参数 JSON，可指定 date/reconcileDate
+     * @return 任务执行结果
+     * @throws Exception 任务执行异常
+     */
     @Override
     public Object execute(String paramsJson) throws Exception {
         return JobRunRecorder.run("dailyReconcileJob", paramsJson, () -> {
@@ -53,6 +60,13 @@ public class DailyReconcileJobHandler implements JobHandler {
         });
     }
 
+    /**
+     * 解析对账日期参数
+     *
+     * @param paramsJson 任务参数 JSON
+     * @param dflt 默认日期
+     * @return 解析得到的对账日期；解析失败返回默认值
+     */
     private LocalDate parseDate(String paramsJson, LocalDate dflt) {
         if (paramsJson == null || paramsJson.isEmpty()) {
             return dflt;

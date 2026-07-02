@@ -35,8 +35,16 @@ public class AlertDispatchRetryJobHandler implements JobHandler {
 
     private final AlertDispatchService alertDispatchService;
 
+    /** 默认最大重试次数 */
     private static final int DEFAULT_MAX_RETRY = 3;
 
+    /**
+     * 执行预警重试任务
+     *
+     * @param paramsJson 任务参数 JSON，可指定 maxRetry
+     * @return 任务执行结果
+     * @throws Exception 任务执行异常
+     */
     @Override
     public Object execute(String paramsJson) throws Exception {
         return JobRunRecorder.run("alertDispatchRetryJob", paramsJson, () -> {
@@ -53,6 +61,12 @@ public class AlertDispatchRetryJobHandler implements JobHandler {
         });
     }
 
+    /**
+     * 解析最大重试次数参数
+     *
+     * @param paramsJson 任务参数 JSON
+     * @return 解析得到的最大重试次数；解析失败返回默认值
+     */
     private int parseMaxRetry(String paramsJson) {
         if (paramsJson == null || paramsJson.isEmpty()) {
             return DEFAULT_MAX_RETRY;
