@@ -4,6 +4,9 @@ import lombok.Data;
 
 /**
  * 满意度评价 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class SatisfactionCreateDTO {

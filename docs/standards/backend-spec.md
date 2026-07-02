@@ -1,7 +1,7 @@
 # 后端工程规范
 
 > 文档版本: V1.0 | 编制日期: 2026-06-30
-> 技术栈: Spring Boot 3.3+ / Spring Cloud Alibaba 2023+ / MyBatis-Plus 3.5+ / PostgreSQL 18 / Redis 7 / Flowable 7 / Nacos 2
+> 技术栈: Spring Boot 3.3+ / Spring Cloud Alibaba 2023+ / MyBatis-Plus 3.5+ / PostgreSQL 18 / Redis 7 / 自研工作流引擎 / Nacos 2
 
 ## 1. 多模块结构
 

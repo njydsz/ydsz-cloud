@@ -313,7 +313,7 @@
     "/api/v1/workflow/processes/start": {
       "post": {
         "tags": ["workflow"],
-        "summary": "发起 Flowable 流程实例",
+        "summary": "发起工作流流程实例",
         "responses": { "200": { "description": "processInstanceId" } }
       }
     },

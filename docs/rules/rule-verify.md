@@ -36,7 +36,7 @@
 **状态**：✅
 
 ### R-003 商机转立项自动注入字段
-**规则**：WON 状态调用 `convertToInitiation(id)` 时自动注入 budget / PM / customer / Flowable 流程  
+**规则**：WON 状态调用 `convertToInitiation(id)` 时自动注入 budget / PM / customer / 自研工作流流程
 **实现**：`OpportunityServiceImpl.convertToInitiation()`  
 **单测**：`OpportunityServiceImplTest.convertToInitiation`  
 **状态**：✅

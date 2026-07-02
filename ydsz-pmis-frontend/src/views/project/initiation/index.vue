@@ -1,6 +1,6 @@
 <!--
   @file 项目立项管理
-  @description 立项的查询、新增、阶段流转、预算管理与门径评审；阶段机 DRAFT/UNDER_REVIEW/APPROVED/REJECTED/EXECUTING/CLOSED，门径 CD1_KICKOFF → CD2_DESIGN → CD3_BUILD → CD4_UAT → CD5_GO_LIVE；对接 Flowable 审批流与 @/api/project/initiation
+  @description 立项的查询、新增、阶段流转、预算管理与门径评审；阶段机 DRAFT/UNDER_REVIEW/APPROVED/REJECTED/EXECUTING/CLOSED，门径 CD1_KICKOFF → CD2_DESIGN → CD3_BUILD → CD4_UAT → CD5_GO_LIVE；对接自研工作流审批流与 @/api/project/initiation
   @module views/project/initiation
 -->
 <script setup lang="ts">

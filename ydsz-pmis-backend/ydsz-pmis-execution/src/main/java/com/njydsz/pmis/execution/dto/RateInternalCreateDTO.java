@@ -9,6 +9,9 @@ import java.time.LocalDate;
 
 /**
  * 对内成本费率 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class RateInternalCreateDTO {

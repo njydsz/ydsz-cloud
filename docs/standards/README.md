@@ -31,7 +31,7 @@ ydsz-pmis/
 │   ├── ydsz-pmis-project/  # 项目/商机/合同/执行
 │   ├── ydsz-pmis-finance/  # 财务/成本/收入/利润
 │   ├── ydsz-pmis-resource/ # 资源池/Bench
-│   ├── ydsz-pmis-workflow/ # Flowable 工作流
+│   ├── ydsz-pmis-workflow/ # 自研工作流引擎
 │   ├── ydsz-pmis-report/   # 报表/驾驶舱
 │   ├── ydsz-pmis-agent/    # AI 服务
 │   └── ydsz-pmis-notification/ # 通知中心

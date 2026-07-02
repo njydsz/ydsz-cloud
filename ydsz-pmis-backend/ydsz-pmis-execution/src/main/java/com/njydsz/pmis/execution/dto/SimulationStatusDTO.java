@@ -6,6 +6,9 @@ import lombok.Data;
 
 /**
  * 利润测算状态迁移 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class SimulationStatusDTO {

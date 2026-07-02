@@ -4,6 +4,9 @@ import lombok.Data;
 
 /**
  * 预警分发 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class AlertDispatchDTO {

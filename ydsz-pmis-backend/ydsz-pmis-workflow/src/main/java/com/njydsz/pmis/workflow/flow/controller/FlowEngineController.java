@@ -16,9 +16,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 自建工作流引擎 HTTP API
+ * 自研工作流引擎 HTTP API
  *
- * <p>独立于原 Flowable WorkflowController，用于管理 pmis_flow_* 表和自建引擎操作。
+ * <p>用于管理 pmis_flow_* 表和自建引擎操作。
  * 业务调用方（project/execution/closure）应使用 WorkflowFacade 而非直接调用本 Controller。
  *
  * @author ydsz-pmis-team

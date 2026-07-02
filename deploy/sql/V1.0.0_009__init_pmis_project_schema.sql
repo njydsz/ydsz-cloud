@@ -133,7 +133,7 @@ CREATE TABLE pmis_project_initiation (
     description       TEXT,
     business_case     TEXT,                              -- 立项依据
     risk_assessment   TEXT,                              -- 风险评估
-    workflow_id       VARCHAR(64),                       -- 关联 Flowable 流程实例
+    workflow_id       VARCHAR(64),                       -- 关联自研工作流流程实例
     tenant_id         BIGINT        NOT NULL DEFAULT 1,
     created_by        BIGINT        NOT NULL DEFAULT 0,
     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -166,7 +166,7 @@ COMMENT ON COLUMN pmis_project_initiation.current_gate IS '当前 CDCP 门径: C
 COMMENT ON COLUMN pmis_project_initiation.description IS '项目描述';
 COMMENT ON COLUMN pmis_project_initiation.business_case IS '立项依据(业务价值/ROI 分析)';
 COMMENT ON COLUMN pmis_project_initiation.risk_assessment IS '风险评估';
-COMMENT ON COLUMN pmis_project_initiation.workflow_id IS '关联 Flowable 流程实例 ID';
+COMMENT ON COLUMN pmis_project_initiation.workflow_id IS '关联自研工作流流程实例 ID';
 COMMENT ON COLUMN pmis_project_initiation.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_project_initiation.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_project_initiation.created_at IS '创建时间';

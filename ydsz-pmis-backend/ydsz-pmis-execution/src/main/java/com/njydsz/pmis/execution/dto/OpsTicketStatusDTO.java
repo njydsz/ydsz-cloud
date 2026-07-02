@@ -4,6 +4,9 @@ import lombok.Data;
 
 /**
  * 运维工单状态变更 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class OpsTicketStatusDTO {

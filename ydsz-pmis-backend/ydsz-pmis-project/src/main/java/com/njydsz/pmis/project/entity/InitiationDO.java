@@ -73,7 +73,7 @@ public class InitiationDO implements Serializable {
     private String businessCase;
     /** 风险评估 */
     private String riskAssessment;
-    /** Flowable 工作流实例 ID */
+    /** 自研工作流实例 ID */
     private String workflowId;
     /** 租户 ID */
     private Long tenantId;

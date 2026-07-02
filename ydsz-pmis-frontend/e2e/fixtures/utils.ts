@@ -1,5 +1,16 @@
 /**
- * E2E 通用工具
+ * @file utils.ts
+ * @description E2E 测试通用工具集, 封装与 Element Plus / vxe-table UI 库耦合的等待、断言、交互辅助函数.
+ *              通过统一封装降低 spec 文件中重复的等待逻辑, 提升用例稳定性与可读性.
+ * @module ydsz-pmis-frontend/e2e/fixtures/utils
+ *
+ * 主要导出:
+ *   - waitForTableLoaded : 等待表格 loading 消失
+ *   - clickRowAction     : 按行文本定位并点击行内操作按钮
+ *   - dismissMessages    : 关闭 ElMessage 通知, 避免遮挡后续操作
+ *   - waitForDialog      : 等待并返回指定标题的 dialog
+ *   - confirmDialog      : 在当前可见 dialog 中点击主按钮
+ *   - expectToast        : 断言 ElMessage toast 文本
  */
 import { expect, type Page, type Locator } from '@playwright/test'
 

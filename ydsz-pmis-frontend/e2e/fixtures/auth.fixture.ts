@@ -1,7 +1,12 @@
 import { test as base, expect, type Page } from '@playwright/test'
 
 /**
- * E2E 测试基类
+ * @file auth.fixture.ts
+ * @description E2E 测试基类, 基于 Playwright fixture 模式扩展 test 对象,
+ *              提供 loginAs / logout / authenticatedPage 等通用 fixtures, 屏蔽登录细节.
+ *              支持通过 UI 登录 (默认) 或 API 直登 (E2E_LOGIN_VIA_API=1, 速度更快).
+ * @module ydsz-pmis-frontend/e2e/fixtures/auth.fixture
+ *
  * 批次 21 / P1 - 通用 fixtures: 登录、登出
  *
  * 默认账号 (E2E 环境):

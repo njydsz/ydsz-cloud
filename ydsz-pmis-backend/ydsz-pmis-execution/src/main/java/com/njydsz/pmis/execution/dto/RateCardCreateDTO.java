@@ -9,6 +9,9 @@ import java.time.LocalDate;
 
 /**
  * 对外报价费率 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class RateCardCreateDTO {

@@ -36,7 +36,7 @@ import java.util.Map;
  *   <li>{@code <exclusiveGateway>}、{@code <parallelGateway>}、{@code <inclusiveGateway>} - 网关</li>
  *   <li>{@code <sequenceFlow id sourceRef targetRef>} - 跳转边</li>
  *   <li>{@code <conditionExpression xsi:type="tFormalExpression">${...}</conditionExpression>} - 条件</li>
- *   <li>{@code flowable:assignee}、{@code flowable:candidateUsers}、{@code flowable:candidateGroups} - 办理人</li>
+ *   <li>{@code flowable:assignee}、{@code flowable:candidateUsers}、{@code flowable:candidateGroups} - 办理人（兼容 BPMN 扩展命名空间）</li>
  * </ul>
  *
  * <p>不依赖任何第三方 BPMN 库，零外部依赖。
@@ -54,8 +54,8 @@ public class BpmnXmlParser {
     /** BPMNDI 命名空间（用于坐标，可选解析，保留供未来扩展） */
     @SuppressWarnings("unused")
     private static final String BPMNDI_NS = "http://www.omg.org/spec/BPMN/20100524/DI";
-    /** Flowable 扩展命名空间 */
-    private static final String FLOWABLE_NS = "http://flowable.org/bpmn";
+    /** BPMN 扩展属性命名空间（兼容 flowable/camunda/activiti 约定） */
+    private static final String BPMN_EXT_NS = "http://flowable.org/bpmn";
     /** xsi 命名空间（用于 conditionExpression type，保留供未来扩展） */
     @SuppressWarnings("unused")
     private static final String XSI_NS = "http://www.w3.org/2001/XMLSchema-instance";
@@ -203,13 +203,13 @@ public class BpmnXmlParser {
         }
         node.setNodeType(mapNodeType(localName));
 
-        // 解析扩展属性：flowable:assignee / candidateUsers / candidateGroups / dueDate 等
-        String assignee = elem.getAttributeNS(FLOWABLE_NS, "assignee");
-        String candidateUsers = elem.getAttributeNS(FLOWABLE_NS, "candidateUsers");
-        String candidateGroups = elem.getAttributeNS(FLOWABLE_NS, "candidateGroups");
-        String expression = elem.getAttributeNS(FLOWABLE_NS, "expression");
-        String formKey = elem.getAttributeNS(FLOWABLE_NS, "formKey");
-        String dueDate = elem.getAttributeNS(FLOWABLE_NS, "dueDate");
+        // 解析 BPMN 扩展属性：assignee / candidateUsers / candidateGroups / dueDate 等
+        String assignee = elem.getAttributeNS(BPMN_EXT_NS, "assignee");
+        String candidateUsers = elem.getAttributeNS(BPMN_EXT_NS, "candidateUsers");
+        String candidateGroups = elem.getAttributeNS(BPMN_EXT_NS, "candidateGroups");
+        String expression = elem.getAttributeNS(BPMN_EXT_NS, "expression");
+        String formKey = elem.getAttributeNS(BPMN_EXT_NS, "formKey");
+        String dueDate = elem.getAttributeNS(BPMN_EXT_NS, "dueDate");
 
         // 优先级：assignee > expression > candidateUsers > candidateGroups
         if (assignee != null && !assignee.isBlank()) {

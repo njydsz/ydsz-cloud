@@ -42,7 +42,7 @@
 | auth | 9001 | 2 | Nacos, Redis, MySQL | 含 2FA + 会话 |
 | user | 9002 | 3 | Nacos, MySQL | 含资源池/Bench |
 | notification | 9013 | 2 | Nacos, Redis, RabbitMQ | |
-| workflow | 9014 | 2 | Nacos, MySQL, Flowable | |
+| workflow | 9014 | 2 | Nacos, MySQL | 自研工作流引擎 |
 | project | 9015 | 3 | Nacos, MySQL | 商机/立项/合同 |
 | execution | 9016 | 5 | Nacos, MySQL, Redis, Feign(user) | 核心, 副本最多 |
 | agent | 9017 | 2 | Nacos, Feign(execution) | AI 编排 |

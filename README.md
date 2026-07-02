@@ -33,7 +33,7 @@ PMIS 是面向"软件定制开发 + 人力外包（T&M）"双业态的项目运�
 | MyBatis-Plus | - | ORM 框架 |
 | PostgreSQL | 18 | 主数据库 |
 | Redis | - | 缓存 / 会话管理 |
-| Flowable | - | 工作流引擎 |
+| 自研工作流引擎 | - | 工作流引擎（基于 pmis_flow_* 表 + BPMN 2.0 解析器） |
 | Nacos | 2.x | 服务注册发现 + 配置中心 |
 | RocketMQ | - | 消息队列 |
 

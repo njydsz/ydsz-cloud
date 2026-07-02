@@ -8,6 +8,9 @@ import java.math.BigDecimal;
 
 /**
  * 利润测算 DTO
+ *
+ * @author ydsz-pmis-team
+ * @since 1.0.0
  */
 @Data
 public class ProfitSimulationCreateDTO {

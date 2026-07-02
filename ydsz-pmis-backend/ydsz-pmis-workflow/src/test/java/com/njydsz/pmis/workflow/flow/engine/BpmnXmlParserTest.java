@@ -162,7 +162,7 @@ class BpmnXmlParserTest {
     }
 
     @Test
-    @DisplayName("userTask flowable:candidateUsers 解析为候选组")
+    @DisplayName("userTask candidateUsers 解析为候选组")
     void testParseCandidateUsers() {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +
@@ -184,7 +184,7 @@ class BpmnXmlParserTest {
     }
 
     @Test
-    @DisplayName("userTask flowable:assignee = SpEL 表达式原样保留")
+    @DisplayName("userTask assignee = SpEL 表达式原样保留")
     void testParseSpelAssignee() {
         String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
                 "<definitions xmlns=\"http://www.omg.org/spec/BPMN/20100524/MODEL\"\n" +

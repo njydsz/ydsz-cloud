@@ -56,7 +56,7 @@ public class ContractChangeDO implements Serializable {
     private String approverName;
     /** 审批时间 */
     private LocalDateTime approvedAt;
-    /** Flowable 工作流实例 ID */
+    /** 自研工作流实例 ID */
     private String workflowId;
     /** 租户 ID */
     private Long tenantId;
