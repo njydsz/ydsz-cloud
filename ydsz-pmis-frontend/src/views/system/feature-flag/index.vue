@@ -5,6 +5,7 @@
 -->
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   getFeatureFlagSnapshot,
@@ -14,17 +15,19 @@ import {
 } from '@/api/feature-flag'
 import type { FeatureFlagSnapshot } from '@/api/feature-flag/types'
 
+const { t } = useI18n()
+
 const loading = ref(false)
 const snapshots = ref<FeatureFlagSnapshot[]>([])
 const search = ref('')
 
 /** 分类中文标签 */
-const categoryLabel: Record<string, string> = {
-  INFRASTRUCTURE: '基础设施',
-  BUSINESS: '业务能力',
-  UI: '界面特性',
-  SAFETY: '安全合规',
-}
+const categoryLabel = computed<Record<string, string>>(() => ({
+  INFRASTRUCTURE: t('system.featureFlag.category.INFRASTRUCTURE'),
+  BUSINESS: t('system.featureFlag.category.BUSINESS'),
+  UI: t('system.featureFlag.category.UI'),
+  SAFETY: t('system.featureFlag.category.SAFETY'),
+}))
 
 /** 分类顺序 */
 const categoryOrder = ['INFRASTRUCTURE', 'BUSINESS', 'UI', 'SAFETY']
@@ -77,7 +80,7 @@ async function fetchSnapshot() {
     const { data } = await getFeatureFlagSnapshot()
     snapshots.value = data
   } catch (e: any) {
-    ElMessage.error(e?.message || '加载失败')
+    ElMessage.error(e?.message || t('system.featureFlag.messages.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -89,22 +92,27 @@ async function fetchSnapshot() {
  */
 async function handleToggle(s: FeatureFlagSnapshot) {
   if (s.mandatory) {
-    ElMessage.warning(`「${s.key}」属于安全合规类, 强制开启, 不可关闭`)
+    ElMessage.warning(t('system.featureFlag.messages.mandatoryTip', { key: s.key }))
     return
   }
   const next = !s.effectiveValue
   try {
     await ElMessageBox.confirm(
-      `确认将「${s.key}」${next ? '启用' : '禁用'}?`,
-      '提示',
+      t('system.featureFlag.messages.confirmToggle', {
+        key: s.key,
+        action: next ? t('system.featureFlag.messages.toggleActionEnable') : t('system.featureFlag.messages.toggleActionDisable'),
+      }),
+      t('common.tip'),
       { type: 'warning' },
     )
     const { data } = await setFeatureFlagEnabled(s.key, next)
     s.effectiveValue = data
     s.configuredValue = data
-    ElMessage.success(`已${next ? '启用' : '禁用'}`)
+    ElMessage.success(t('system.featureFlag.messages.toggled', {
+      action: next ? t('system.featureFlag.messages.toggleActionEnable') : t('system.featureFlag.messages.toggleActionDisable'),
+    }))
   } catch (e: any) {
-    if (e !== 'cancel') ElMessage.error(e?.message || '操作失败')
+    if (e !== 'cancel') ElMessage.error(e?.message || t('system.featureFlag.messages.operationFailed'))
   }
 }
 
@@ -117,9 +125,9 @@ async function handleRolloutChange(s: FeatureFlagSnapshot, val: number) {
   try {
     const { data } = await setFeatureFlagRollout(s.key, val)
     s.rolloutPercentage = data
-    ElMessage.success(`「${s.key}」灰度已设为 ${data}%`)
+    ElMessage.success(t('system.featureFlag.messages.rolloutSet', { key: s.key, percent: data }))
   } catch (e: any) {
-    ElMessage.error(e?.message || '设置失败')
+    ElMessage.error(e?.message || t('system.featureFlag.messages.rolloutSetFailed'))
   }
 }
 
@@ -128,9 +136,9 @@ async function handleRefresh() {
   try {
     await refreshFeatureFlagCache()
     await fetchSnapshot()
-    ElMessage.success('缓存已刷新')
+    ElMessage.success(t('system.featureFlag.messages.cacheRefreshed'))
   } catch (e: any) {
-    ElMessage.error(e?.message || '刷新失败')
+    ElMessage.error(e?.message || t('system.featureFlag.messages.refreshFailed'))
   }
 }
 
@@ -140,9 +148,9 @@ async function handleRefresh() {
  * @returns 灰度比例描述（如 '全量' / '0% (关闭)' / '85%'）
  */
 function rolloutText(s: FeatureFlagSnapshot): string {
-  if (s.rolloutPercentage == null) return '全量'
-  if (s.rolloutPercentage === 0) return '0% (关闭)'
-  if (s.rolloutPercentage === 100) return '100% (全量)'
+  if (s.rolloutPercentage == null) return t('system.featureFlag.rolloutText.full')
+  if (s.rolloutPercentage === 0) return t('system.featureFlag.rolloutText.closed')
+  if (s.rolloutPercentage === 100) return t('system.featureFlag.rolloutText.full100')
   return `${s.rolloutPercentage}%`
 }
 
@@ -161,23 +169,23 @@ onMounted(fetchSnapshot)
       <div class="overview">
         <div class="stat-card stat-total">
           <div class="stat-value">{{ stats.total }}</div>
-          <div class="stat-label">总开关数</div>
+          <div class="stat-label">{{ t('system.featureFlag.stats.total') }}</div>
         </div>
         <div class="stat-card stat-enabled">
           <div class="stat-value">{{ stats.enabled }}</div>
-          <div class="stat-label">已启用</div>
+          <div class="stat-label">{{ t('system.featureFlag.stats.enabled') }}</div>
         </div>
         <div class="stat-card stat-disabled">
           <div class="stat-value">{{ stats.disabled }}</div>
-          <div class="stat-label">已禁用</div>
+          <div class="stat-label">{{ t('system.featureFlag.stats.disabled') }}</div>
         </div>
         <div class="stat-card stat-mandatory">
           <div class="stat-value">{{ stats.mandatory }}</div>
-          <div class="stat-label">强制开启</div>
+          <div class="stat-label">{{ t('system.featureFlag.stats.mandatory') }}</div>
         </div>
         <div class="stat-card stat-rollout">
           <div class="stat-value">{{ stats.inRollout }}</div>
-          <div class="stat-label">灰度中</div>
+          <div class="stat-label">{{ t('system.featureFlag.stats.inRollout') }}</div>
         </div>
       </div>
 
@@ -185,11 +193,11 @@ onMounted(fetchSnapshot)
       <div class="toolbar">
         <el-input
           v-model="search"
-          placeholder="搜索 key 或描述"
+          :placeholder="t('system.featureFlag.search.placeholder')"
           clearable
           style="width: 240px"
         />
-        <el-button :icon="'Refresh'" @click="handleRefresh">刷新</el-button>
+        <el-button :icon="'Refresh'" @click="handleRefresh">{{ t('system.featureFlag.buttons.refresh') }}</el-button>
       </div>
 
       <!-- 分类展示 -->
@@ -201,33 +209,33 @@ onMounted(fetchSnapshot)
             <el-tag size="small" type="info">{{ filteredGrouped[cat]?.length || 0 }}</el-tag>
           </div>
           <el-table :data="filteredGrouped[cat]" border stripe>
-            <el-table-column prop="key" label="Key" width="240">
+            <el-table-column prop="key" :label="t('system.featureFlag.columns.key')" width="240">
               <template #default="{ row }">
                 <span class="key-text">{{ row.key }}</span>
               </template>
             </el-table-column>
-            <el-table-column prop="description" label="描述" min-width="200" show-overflow-tooltip />
-            <el-table-column label="强制" width="80" align="center">
+            <el-table-column prop="description" :label="t('system.featureFlag.columns.description')" min-width="200" show-overflow-tooltip />
+            <el-table-column :label="t('system.featureFlag.columns.mandatory')" width="80" align="center">
               <template #default="{ row }">
-                <el-tag v-if="(row as FeatureFlagSnapshot).mandatory" size="small" type="danger">强制</el-tag>
+                <el-tag v-if="(row as FeatureFlagSnapshot).mandatory" size="small" type="danger">{{ t('system.featureFlag.columns.mandatory') }}</el-tag>
                 <span v-else class="muted">-</span>
               </template>
             </el-table-column>
-            <el-table-column label="开关" width="100" align="center">
+            <el-table-column :label="t('system.featureFlag.columns.switch')" width="100" align="center">
               <template #default="{ row }">
                 <el-switch
                   :model-value="(row as FeatureFlagSnapshot).effectiveValue"
                   :disabled="(row as FeatureFlagSnapshot).mandatory"
                   inline-prompt
-                  active-text="开"
-                  inactive-text="关"
+                  :active-text="t('system.featureFlag.switch.on')"
+                  :inactive-text="t('system.featureFlag.switch.off')"
                   @change="() => handleToggle(row as FeatureFlagSnapshot)"
                 />
               </template>
             </el-table-column>
-            <el-table-column label="灰度发布" min-width="280">
+            <el-table-column :label="t('system.featureFlag.columns.rollout')" min-width="280">
               <template #default="{ row }">
-                <div v-if="(row as FeatureFlagSnapshot).mandatory" class="muted">强制开启, 不支持灰度</div>
+                <div v-if="(row as FeatureFlagSnapshot).mandatory" class="muted">{{ t('system.featureFlag.rolloutMandatoryHint') }}</div>
                 <div v-else class="rollout-cell">
                   <el-slider
                     :model-value="(row as FeatureFlagSnapshot).rolloutPercentage ?? 100"

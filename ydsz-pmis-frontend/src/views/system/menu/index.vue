@@ -5,6 +5,7 @@
 -->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   listPermissionTree,
@@ -13,6 +14,8 @@ import {
   deletePermission,
 } from '@/api/system/menu'
 import type { MenuTreeVO, PermissionFormDTO } from '@/api/system/menu/types'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 // 菜单权限树形数据
@@ -36,9 +39,9 @@ const form = reactive<PermissionFormDTO & { parentName?: string }>({
 })
 
 const formRules = {
-  permCode: [{ required: true, message: '权限编码必填', trigger: 'blur' }],
-  permName: [{ required: true, message: '权限名称必填', trigger: 'blur' }],
-  permType: [{ required: true, message: '权限类型必填', trigger: 'change' }],
+  permCode: [{ required: true, message: t('system.menu.rules.permCodeRequired'), trigger: 'blur' }],
+  permName: [{ required: true, message: t('system.menu.rules.permNameRequired'), trigger: 'blur' }],
+  permType: [{ required: true, message: t('system.menu.rules.permTypeRequired'), trigger: 'change' }],
 }
 
 /** 拉取菜单/权限树形数据 */
@@ -101,7 +104,7 @@ function openEdit(node: MenuTreeVO) {
  * @returns 上级菜单名称，未找到时返回 '#parentId' 或 '根'
  */
 function findParentName(parentId?: number): string {
-  if (!parentId) return '根'
+  if (!parentId) return t('system.menu.form.parentRoot')
   let name = ''
   function dfs(list: MenuTreeVO[]) {
     for (const n of list) {
@@ -121,10 +124,10 @@ async function submitForm() {
   await formRef.value?.validate()
   if (dialogMode.value === 'create') {
     await createPermission(form)
-    ElMessage.success('创建成功')
+    ElMessage.success(t('system.menu.messages.createSuccess'))
   } else {
     await updatePermission(form)
-    ElMessage.success('更新成功')
+    ElMessage.success(t('system.menu.messages.updateSuccess'))
   }
   dialogVisible.value = false
   fetchTree()
@@ -136,13 +139,13 @@ async function submitForm() {
  */
 async function handleDelete(node: MenuTreeVO) {
   if (node.children && node.children.length > 0) {
-    ElMessage.warning('该菜单下存在子菜单,请先删除子菜单')
+    ElMessage.warning(t('system.menu.messages.hasChildren'))
     return
   }
   try {
-    await ElMessageBox.confirm(`确认删除菜单「${node.permName}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('system.menu.messages.confirmDelete', { name: node.permName }), t('common.tip'), { type: 'warning' })
     await deletePermission(node.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('system.menu.messages.deleteSuccess'))
     fetchTree()
   } catch {
     /* 取消 */
@@ -157,9 +160,9 @@ onMounted(fetchTree)
     <el-card shadow="never">
       <div class="toolbar">
         <el-button v-permission="['auth:perm:create']" type="primary" :icon="'Plus'" @click="openCreate()">
-          新增根菜单
+          {{ t('system.menu.buttons.createRoot') }}
         </el-button>
-        <el-button :icon="'Refresh'" @click="fetchTree">刷新</el-button>
+        <el-button :icon="'Refresh'" @click="fetchTree">{{ t('system.menu.buttons.refresh') }}</el-button>
       </div>
 
       <el-table
@@ -170,36 +173,36 @@ onMounted(fetchTree)
         :default-expand-all="true"
         border
       >
-        <el-table-column prop="permName" label="菜单名称" min-width="220" />
-        <el-table-column prop="permCode" label="权限编码" min-width="220" />
-        <el-table-column label="类型" width="100" align="center">
+        <el-table-column prop="permName" :label="t('system.menu.columns.permName')" min-width="220" />
+        <el-table-column prop="permCode" :label="t('system.menu.columns.permCode')" min-width="220" />
+        <el-table-column :label="t('system.menu.columns.type')" width="100" align="center">
           <template #default="{ row }">
             <el-tag :type="row.permType === 'MENU' ? 'success' : row.permType === 'BUTTON' ? 'warning' : 'info'">
-              {{ ({ MENU: '菜单', BUTTON: '按钮', API: '接口' } as any)[row.permType] || row.permType }}
+              {{ t(`system.menu.type.${row.permType}`) }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="path" label="路由路径" width="220" />
-        <el-table-column prop="component" label="组件路径" min-width="220" />
-        <el-table-column prop="icon" label="图标" width="100" align="center" />
-        <el-table-column prop="sortOrder" label="排序" width="80" align="center" />
-        <el-table-column label="状态" width="80" align="center">
+        <el-table-column prop="path" :label="t('system.menu.columns.path')" width="220" />
+        <el-table-column prop="component" :label="t('system.menu.columns.component')" min-width="220" />
+        <el-table-column prop="icon" :label="t('system.menu.columns.icon')" width="100" align="center" />
+        <el-table-column prop="sortOrder" :label="t('system.menu.columns.sortOrder')" width="80" align="center" />
+        <el-table-column :label="t('system.menu.columns.status')" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="(row as any).visible === 0 ? 'info' : 'success'">
-              {{ (row as any).visible === 0 ? '隐藏' : '显示' }}
+              {{ (row as any).visible === 0 ? t('system.menu.visible.hide') : t('system.menu.visible.show') }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="260" fixed="right">
+        <el-table-column :label="t('system.menu.columns.action')" width="260" fixed="right">
           <template #default="{ row }">
             <el-button v-permission="['auth:perm:create']" type="primary" link @click="openCreate(row as MenuTreeVO)">
-              新增下级
+              {{ t('system.dept.buttons.createSub') }}
             </el-button>
             <el-button v-permission="['auth:perm:update']" type="primary" link @click="openEdit(row as MenuTreeVO)">
-              编辑
+              {{ t('common.edit') }}
             </el-button>
             <el-button v-permission="['auth:perm:delete']" type="danger" link @click="handleDelete(row as MenuTreeVO)">
-              删除
+              {{ t('common.delete') }}
             </el-button>
           </template>
         </el-table-column>
@@ -208,48 +211,48 @@ onMounted(fetchTree)
 
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogMode === 'create' ? '新增菜单' : '编辑菜单'"
+      :title="dialogMode === 'create' ? t('system.menu.dialog.createTitle') : t('system.menu.dialog.editTitle')"
       width="640px"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="上级菜单">
-          <el-input :model-value="form.parentName || (form.parentId === 0 ? '根' : `#${form.parentId}`)" disabled />
+        <el-form-item :label="t('system.menu.form.parentMenu')">
+          <el-input :model-value="form.parentName || (form.parentId === 0 ? t('system.menu.form.parentRoot') : `#${form.parentId}`)" disabled />
         </el-form-item>
-        <el-form-item label="权限编码" prop="permCode">
-          <el-input v-model="form.permCode" placeholder="例如: system:user:create" />
+        <el-form-item :label="t('system.menu.form.permCode')" prop="permCode">
+          <el-input v-model="form.permCode" :placeholder="t('system.menu.form.permCodePlaceholder')" />
         </el-form-item>
-        <el-form-item label="菜单名称" prop="permName">
-          <el-input v-model="form.permName" placeholder="例如: 用户管理" />
+        <el-form-item :label="t('system.menu.form.permName')" prop="permName">
+          <el-input v-model="form.permName" :placeholder="t('system.menu.form.permNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="类型" prop="permType">
+        <el-form-item :label="t('system.menu.form.type')" prop="permType">
           <el-radio-group v-model="form.permType">
-            <el-radio value="MENU">菜单</el-radio>
-            <el-radio value="BUTTON">按钮</el-radio>
-            <el-radio value="API">接口</el-radio>
+            <el-radio value="MENU">{{ t('system.menu.type.MENU') }}</el-radio>
+            <el-radio value="BUTTON">{{ t('system.menu.type.BUTTON') }}</el-radio>
+            <el-radio value="API">{{ t('system.menu.type.API') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item v-if="form.permType !== 'BUTTON'" label="路由路径">
-          <el-input v-model="form.path" placeholder="例如: /system/user" />
+        <el-form-item v-if="form.permType !== 'BUTTON'" :label="t('system.menu.form.path')">
+          <el-input v-model="form.path" :placeholder="t('system.menu.form.pathPlaceholder')" />
         </el-form-item>
-        <el-form-item v-if="form.permType === 'MENU'" label="组件路径">
-          <el-input v-model="form.component" placeholder="例如: system/user/index" />
+        <el-form-item v-if="form.permType === 'MENU'" :label="t('system.menu.form.component')">
+          <el-input v-model="form.component" :placeholder="t('system.menu.form.componentPlaceholder')" />
         </el-form-item>
-        <el-form-item v-if="form.permType === 'MENU'" label="图标">
-          <el-input v-model="form.icon" placeholder="Element Plus 图标名" />
+        <el-form-item v-if="form.permType === 'MENU'" :label="t('system.menu.form.icon')">
+          <el-input v-model="form.icon" :placeholder="t('system.menu.form.iconPlaceholder')" />
         </el-form-item>
-        <el-form-item label="排序">
+        <el-form-item :label="t('system.menu.form.sortOrder')">
           <el-input-number v-model="form.sortOrder" :min="0" :max="9999" />
         </el-form-item>
-        <el-form-item v-if="form.permType !== 'BUTTON'" label="是否显示">
+        <el-form-item v-if="form.permType !== 'BUTTON'" :label="t('system.menu.form.visible')">
           <el-radio-group v-model="form.visible">
-            <el-radio :value="1">显示</el-radio>
-            <el-radio :value="0">隐藏</el-radio>
+            <el-radio :value="1">{{ t('system.menu.visible.show') }}</el-radio>
+            <el-radio :value="0">{{ t('system.menu.visible.hide') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>

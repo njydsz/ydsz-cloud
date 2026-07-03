@@ -12,6 +12,7 @@
  * 3) 强制下线任意会话
  */
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   adminPageSessions,
@@ -19,6 +20,8 @@ import {
 } from '@/api/user/session'
 import type { UserSessionVO } from '@/api/user/session'
 import { parseUserAgent } from '@/utils/device'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const list = ref<UserSessionVO[]>([])
@@ -31,12 +34,12 @@ const query = reactive({
   clientIp: '',
 })
 
-const statusMap: Record<string, { label: string; type: 'success' | 'info' | 'warning' | 'danger' }> = {
-  ACTIVE: { label: '活跃', type: 'success' },
-  LOGOUT: { label: '已登出', type: 'info' },
-  EXPIRED: { label: '已过期', type: 'warning' },
-  KICKED: { label: '已踢出', type: 'danger' },
-}
+const statusMap = computed<Record<string, { label: string; type: 'success' | 'info' | 'warning' | 'danger' }>>(() => ({
+  ACTIVE: { label: t('system.session.status.ACTIVE'), type: 'success' },
+  LOGOUT: { label: t('system.session.status.LOGOUT'), type: 'info' },
+  EXPIRED: { label: t('system.session.status.EXPIRED'), type: 'warning' },
+  KICKED: { label: t('system.session.status.KICKED'), type: 'danger' },
+}))
 
 /**
  * 时间字符串格式化（ISO → 'YYYY-MM-DD HH:mm:ss'）
@@ -69,17 +72,17 @@ async function fetchList() {
  */
 async function onKick(row: UserSessionVO) {
   if (row.status !== 'ACTIVE') {
-    ElMessage.warning('该会话已不活跃')
+    ElMessage.warning(t('system.session.messages.notActive'))
     return
   }
   try {
     await ElMessageBox.confirm(
-      `确认强制下线会话 [${row.username || row.userId} @ ${row.clientIp || '-'}] ？下线后该设备需重新登录。`,
-      '强制下线',
+      t('system.session.messages.confirmKick', { user: row.username || row.userId, ip: row.clientIp || '-' }),
+      t('system.session.messages.kickTitle'),
       { type: 'warning' },
     )
     await adminKickSession(row.sessionId)
-    ElMessage.success('已下线')
+    ElMessage.success(t('system.session.messages.kicked'))
     await fetchList()
   } catch { /* 用户取消 */ }
 }

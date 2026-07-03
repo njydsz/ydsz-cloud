@@ -5,6 +5,7 @@
 -->
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   listDictTypes,
@@ -17,6 +18,8 @@ import {
   refreshDictCache,
 } from '@/api/system/dict'
 import type { DictTypeVO, DictItemVO, DictTypeFormDTO, DictItemFormDTO } from '@/api/system/dict/types'
+
+const { t } = useI18n()
 
 const types = ref<DictTypeVO[]>([])
 const items = ref<DictItemVO[]>([])
@@ -46,12 +49,12 @@ const itemForm = reactive<DictItemFormDTO>({
 })
 
 const typeFormRules = {
-  typeCode: [{ required: true, message: '类型编码必填', trigger: 'blur' }],
-  typeName: [{ required: true, message: '类型名称必填', trigger: 'blur' }],
+  typeCode: [{ required: true, message: t('system.dict.type.rules.typeCodeRequired'), trigger: 'blur' }],
+  typeName: [{ required: true, message: t('system.dict.type.rules.typeNameRequired'), trigger: 'blur' }],
 }
 const itemFormRules = {
-  itemCode: [{ required: true, message: '项编码必填', trigger: 'blur' }],
-  itemValue: [{ required: true, message: '项值必填', trigger: 'blur' }],
+  itemCode: [{ required: true, message: t('system.dict.item.rules.itemCodeRequired'), trigger: 'blur' }],
+  itemValue: [{ required: true, message: t('system.dict.item.rules.itemValueRequired'), trigger: 'blur' }],
 }
 
 /** 拉取字典类型列表，并默认选中首个类型 */
@@ -64,11 +67,11 @@ async function fetchTypes() {
 }
 
 /** 选中某个字典类型，拉取其下的字典项 */
-async function selectType(t: DictTypeVO) {
-  currentType.value = t
+async function selectType(selected: DictTypeVO) {
+  currentType.value = selected
   itemsLoading.value = true
   try {
-    const { data } = await listDictItems(t.typeCode)
+    const { data } = await listDictItems(selected.typeCode)
     items.value = data || []
   } finally {
     itemsLoading.value = false
@@ -82,8 +85,8 @@ function openTypeCreate() {
 }
 
 /** 打开字典类型编辑弹窗，回填数据 */
-function openTypeEdit(t: DictTypeVO) {
-  Object.assign(typeForm, { typeCode: t.typeCode, typeName: t.typeName, description: t.description })
+function openTypeEdit(selected: DictTypeVO) {
+  Object.assign(typeForm, { typeCode: selected.typeCode, typeName: selected.typeName, description: selected.description })
   typeDialogVisible.value = true
 }
 
@@ -93,9 +96,9 @@ async function submitType() {
   if (!typeForm.typeCode) return
   try {
     await createDictType(typeForm)
-    ElMessage.success('创建成功')
+    ElMessage.success(t('system.dict.type.messages.createSuccess'))
   } catch (e: any) {
-    ElMessage.error(e?.message || '创建失败')
+    ElMessage.error(e?.message || t('system.dict.type.messages.createFailed'))
     return
   }
   typeDialogVisible.value = false
@@ -103,12 +106,12 @@ async function submitType() {
 }
 
 /** 删除字典类型（其下字典项一并删除），二次确认后执行 */
-async function handleDeleteType(t: DictTypeVO) {
+async function handleDeleteType(selected: DictTypeVO) {
   try {
-    await ElMessageBox.confirm(`确认删除字典类型「${t.typeName}」?该项下的字典项也会被删除`, '提示', { type: 'warning' })
-    await deleteDictType(t.typeCode)
-    ElMessage.success('删除成功')
-    if (currentType.value?.typeCode === t.typeCode) {
+    await ElMessageBox.confirm(t('system.dict.type.messages.confirmDelete', { name: selected.typeName }), t('common.tip'), { type: 'warning' })
+    await deleteDictType(selected.typeCode)
+    ElMessage.success(t('system.dict.type.messages.deleteSuccess'))
+    if (currentType.value?.typeCode === selected.typeCode) {
       currentType.value = null
       items.value = []
     }
@@ -121,7 +124,7 @@ async function handleDeleteType(t: DictTypeVO) {
 /** 打开字典项新增弹窗（需先选中字典类型） */
 function openItemCreate() {
   if (!currentType.value) {
-    ElMessage.warning('请先选择字典类型')
+    ElMessage.warning(t('system.dict.item.messages.selectTypeFirst'))
     return
   }
   itemDialogMode.value = 'create'
@@ -155,10 +158,10 @@ async function submitItem() {
   await itemFormRef.value?.validate()
   if (itemDialogMode.value === 'create') {
     await createDictItem(itemForm)
-    ElMessage.success('创建成功')
+    ElMessage.success(t('system.dict.item.messages.createSuccess'))
   } else {
     await updateDictItem(itemForm.id!, itemForm)
-    ElMessage.success('更新成功')
+    ElMessage.success(t('system.dict.item.messages.updateSuccess'))
   }
   itemDialogVisible.value = false
   if (currentType.value) selectType(currentType.value)
@@ -167,9 +170,9 @@ async function submitItem() {
 /** 删除字典项，二次确认后执行 */
 async function handleDeleteItem(item: DictItemVO) {
   try {
-    await ElMessageBox.confirm(`确认删除字典项「${item.itemValue}」?`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('system.dict.item.messages.confirmDelete', { name: item.itemValue }), t('common.tip'), { type: 'warning' })
     await deleteDictItem(item.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('system.dict.item.messages.deleteSuccess'))
     if (currentType.value) selectType(currentType.value)
   } catch {
     /* 取消 */
@@ -180,7 +183,7 @@ async function handleDeleteItem(item: DictItemVO) {
 async function handleRefresh() {
   if (!currentType.value) return
   await refreshDictCache(currentType.value.typeCode)
-  ElMessage.success('缓存已刷新')
+  ElMessage.success(t('system.dict.item.messages.cacheRefreshed'))
 }
 
 onMounted(fetchTypes)
@@ -191,107 +194,107 @@ onMounted(fetchTypes)
     <el-card shadow="never" class="left-card">
       <template #header>
         <div class="card-header">
-          <span>字典类型</span>
-          <el-button type="primary" link :icon="'Plus'" @click="openTypeCreate">新增</el-button>
+          <span>{{ t('system.dict.type.title') }}</span>
+          <el-button type="primary" link :icon="'Plus'" @click="openTypeCreate">{{ t('system.dict.type.add') }}</el-button>
         </div>
       </template>
       <div
-        v-for="t in types"
-        :key="t.typeCode"
+        v-for="tp in types"
+        :key="tp.typeCode"
         class="type-item"
-        :class="{ active: currentType?.typeCode === t.typeCode }"
-        @click="selectType(t)"
+        :class="{ active: currentType?.typeCode === tp.typeCode }"
+        @click="selectType(tp)"
       >
-        <span class="type-name">{{ t.typeName }}</span>
-        <el-tag size="small" type="info">{{ t.typeCode }}</el-tag>
+        <span class="type-name">{{ tp.typeName }}</span>
+        <el-tag size="small" type="info">{{ tp.typeCode }}</el-tag>
         <span class="type-actions">
-          <el-button type="primary" link size="small" @click.stop="openTypeEdit(t)">编辑</el-button>
-          <el-button type="danger" link size="small" @click.stop="handleDeleteType(t)">删除</el-button>
+          <el-button type="primary" link size="small" @click.stop="openTypeEdit(tp)">{{ t('common.edit') }}</el-button>
+          <el-button type="danger" link size="small" @click.stop="handleDeleteType(tp)">{{ t('common.delete') }}</el-button>
         </span>
       </div>
-      <el-empty v-if="types.length === 0" description="暂无字典类型" :image-size="60" />
+      <el-empty v-if="types.length === 0" :description="t('system.dict.type.empty')" :image-size="60" />
     </el-card>
 
     <el-card shadow="never" class="right-card">
       <template #header>
         <div class="card-header">
-          <span>{{ currentType ? currentType.typeName + ' / 字典项' : '字典项' }}</span>
+          <span>{{ currentType ? currentType.typeName + ' / ' + t('system.dict.item.title') : t('system.dict.item.title') }}</span>
           <div>
-            <el-button :icon="'Refresh'" :disabled="!currentType" @click="handleRefresh">刷新缓存</el-button>
-            <el-button type="primary" :icon="'Plus'" :disabled="!currentType" @click="openItemCreate">新增项</el-button>
+            <el-button :icon="'Refresh'" :disabled="!currentType" @click="handleRefresh">{{ t('system.dict.item.refreshCache') }}</el-button>
+            <el-button type="primary" :icon="'Plus'" :disabled="!currentType" @click="openItemCreate">{{ t('system.dict.item.add') }}</el-button>
           </div>
         </div>
       </template>
 
       <vxe-table :data="items" :loading="itemsLoading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="itemCode" title="项编码" width="200" />
-        <vxe-column field="itemValue" title="项值" />
-        <vxe-column field="sortOrder" title="排序" width="80" align="center" />
-        <vxe-column field="status" title="状态" width="80" align="center">
+        <vxe-column field="itemCode" :title="t('system.dict.item.itemCode')" width="200" />
+        <vxe-column field="itemValue" :title="t('system.dict.item.itemValue')" />
+        <vxe-column field="sortOrder" :title="t('system.dict.item.sortOrder')" width="80" align="center" />
+        <vxe-column field="status" :title="t('system.dict.item.status')" width="80" align="center">
           <template #default="{ row }">
             <el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'">
-              {{ row.status === 'ENABLED' ? '启用' : '停用' }}
+              {{ row.status === 'ENABLED' ? t('system.dict.item.statusEnabled') : t('system.dict.item.statusDisabled') }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column title="操作" width="180" fixed="right">
+        <vxe-column :title="t('system.dict.item.action')" width="180" fixed="right">
           <template #default="{ row }">
-            <el-button type="primary" link @click="openItemEdit(row)">编辑</el-button>
-            <el-button type="danger" link @click="handleDeleteItem(row)">删除</el-button>
+            <el-button type="primary" link @click="openItemEdit(row)">{{ t('common.edit') }}</el-button>
+            <el-button type="danger" link @click="handleDeleteItem(row)">{{ t('common.delete') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </el-card>
 
     <!-- 字典类型表单 -->
-    <el-dialog v-model="typeDialogVisible" title="字典类型" width="500px">
+    <el-dialog v-model="typeDialogVisible" :title="t('system.dict.type.dialogTitle')" width="500px">
       <el-form ref="typeFormRef" :model="typeForm" :rules="typeFormRules" label-width="100px">
-        <el-form-item label="类型编码" prop="typeCode">
-          <el-input v-model="typeForm.typeCode" placeholder="例如: project_type" />
+        <el-form-item :label="t('system.dict.type.typeCode')" prop="typeCode">
+          <el-input v-model="typeForm.typeCode" :placeholder="t('system.dict.type.typeCodePlaceholder')" />
         </el-form-item>
-        <el-form-item label="类型名称" prop="typeName">
-          <el-input v-model="typeForm.typeName" placeholder="例如: 项目类型" />
+        <el-form-item :label="t('system.dict.type.typeName')" prop="typeName">
+          <el-input v-model="typeForm.typeName" :placeholder="t('system.dict.type.typeNamePlaceholder')" />
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="t('system.dict.type.description')">
           <el-input v-model="typeForm.description" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="typeDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitType">确定</el-button>
+        <el-button @click="typeDialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitType">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 字典项表单 -->
     <el-dialog
       v-model="itemDialogVisible"
-      :title="itemDialogMode === 'create' ? '新增字典项' : '编辑字典项'"
+      :title="itemDialogMode === 'create' ? t('system.dict.item.createTitle') : t('system.dict.item.editTitle')"
       width="500px"
     >
       <el-form ref="itemFormRef" :model="itemForm" :rules="itemFormRules" label-width="100px">
-        <el-form-item label="所属类型">
+        <el-form-item :label="t('system.dict.item.belongType')">
           <el-input v-model="itemForm.typeCode" disabled />
         </el-form-item>
-        <el-form-item label="项编码" prop="itemCode">
+        <el-form-item :label="t('system.dict.item.itemCode')" prop="itemCode">
           <el-input v-model="itemForm.itemCode" :disabled="itemDialogMode === 'edit'" />
         </el-form-item>
-        <el-form-item label="项值" prop="itemValue">
+        <el-form-item :label="t('system.dict.item.itemValue')" prop="itemValue">
           <el-input v-model="itemForm.itemValue" />
         </el-form-item>
-        <el-form-item label="排序">
+        <el-form-item :label="t('system.dict.item.sortOrder')">
           <el-input-number v-model="itemForm.sortOrder" :min="0" :max="9999" />
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item :label="t('system.dict.item.status')">
           <el-radio-group v-model="itemForm.status">
-            <el-radio value="ENABLED">启用</el-radio>
-            <el-radio value="DISABLED">停用</el-radio>
+            <el-radio value="ENABLED">{{ t('system.dict.item.statusEnabled') }}</el-radio>
+            <el-radio value="DISABLED">{{ t('system.dict.item.statusDisabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="itemDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitItem">确定</el-button>
+        <el-button @click="itemDialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitItem">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>

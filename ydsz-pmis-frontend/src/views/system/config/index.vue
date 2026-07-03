@@ -4,7 +4,8 @@
   @module views/system/config
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   pageConfigs,
@@ -16,6 +17,8 @@ import {
   refreshConfigCache,
 } from '@/api/system/config'
 import type { ConfigVO, ConfigFormDTO } from '@/api/system/config/types'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const list = ref<ConfigVO[]>([])
@@ -30,14 +33,14 @@ const query = reactive({
 })
 
 // 预置分组
-const presetGroups = [
-  { value: 'system', label: '系统' },
-  { value: 'rate', label: '费率' },
-  { value: 'workflow', label: '工作流' },
-  { value: 'alert', label: '预警阈值' },
-  { value: 'business', label: '业务' },
-  { value: 'integration', label: '集成' },
-]
+const presetGroups = computed(() => [
+  { value: 'system', label: t('system.config.presetGroups.system') },
+  { value: 'rate', label: t('system.config.presetGroups.rate') },
+  { value: 'workflow', label: t('system.config.presetGroups.workflow') },
+  { value: 'alert', label: t('system.config.presetGroups.alert') },
+  { value: 'business', label: t('system.config.presetGroups.business') },
+  { value: 'integration', label: t('system.config.presetGroups.integration') },
+])
 
 // 表单
 const dialogVisible = ref(false)
@@ -57,30 +60,30 @@ const form = reactive<ConfigFormDTO>({
 })
 
 const formRules = {
-  configGroup: [{ required: true, message: '分组必填', trigger: 'blur' }],
+  configGroup: [{ required: true, message: t('system.config.rules.configGroupRequired'), trigger: 'blur' }],
   configKey: [
-    { required: true, message: '键必填', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9._-]+$/, message: '仅支持字母数字 . _ -', trigger: 'blur' },
+    { required: true, message: t('system.config.rules.configKeyRequired'), trigger: 'blur' },
+    { pattern: /^[a-zA-Z0-9._-]+$/, message: t('system.config.rules.configKeyPattern'), trigger: 'blur' },
   ],
-  valueType: [{ required: true, message: '类型必填', trigger: 'change' }],
+  valueType: [{ required: true, message: t('system.config.rules.valueTypeRequired'), trigger: 'change' }],
 }
 
-const valueTypeOptions = [
-  { label: '字符串', value: 'STRING' },
-  { label: '数字', value: 'NUMBER' },
-  { label: '布尔', value: 'BOOLEAN' },
-  { label: 'JSON', value: 'JSON' },
-]
+const valueTypeOptions = computed(() => [
+  { label: t('system.config.valueType.STRING'), value: 'STRING' },
+  { label: t('system.config.valueType.NUMBER'), value: 'NUMBER' },
+  { label: t('system.config.valueType.BOOLEAN'), value: 'BOOLEAN' },
+  { label: t('system.config.valueType.JSON'), value: 'JSON' },
+])
 
-const statusOptions = [
-  { label: '启用', value: 'ENABLED' },
-  { label: '停用', value: 'DISABLED' },
-]
+const statusOptions = computed(() => [
+  { label: t('system.config.form.statusEnabled'), value: 'ENABLED' },
+  { label: t('system.config.form.statusDisabled'), value: 'DISABLED' },
+])
 
-const publicOptions = [
-  { label: '公开（前端可见）', value: 1 },
-  { label: '私有', value: 0 },
-]
+const publicOptions = computed(() => [
+  { label: t('system.config.visibility.public'), value: 1 },
+  { label: t('system.config.visibility.private'), value: 0 },
+])
 
 // 当前选中 group (用于批量操作)
 const selectedGroup = ref<string>('')
@@ -147,15 +150,15 @@ async function submitForm() {
   try {
     if (dialogMode.value === 'create') {
       await createConfig(form)
-      ElMessage.success('创建成功')
+      ElMessage.success(t('system.config.messages.createSuccess'))
     } else {
       await updateConfig(form)
-      ElMessage.success('更新成功')
+      ElMessage.success(t('system.config.messages.updateSuccess'))
     }
     dialogVisible.value = false
     fetchList()
   } catch (e: any) {
-    ElMessage.error(e?.message || '操作失败')
+    ElMessage.error(e?.message || t('system.config.messages.operationFailed'))
   }
 }
 
@@ -166,12 +169,12 @@ async function submitForm() {
 async function handleDelete(row: ConfigVO) {
   try {
     await ElMessageBox.confirm(
-      `确认删除配置「${row.configGroup}.${row.configKey}」?`,
-      '提示',
+      t('system.config.messages.confirmDelete', { group: row.configGroup, key: row.configKey }),
+      t('common.tip'),
       { type: 'warning' }
     )
     await deleteConfig(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('system.config.messages.deleteSuccess'))
     fetchList()
   } catch {
     /* 取消 */
@@ -186,12 +189,12 @@ async function handleDeleteByGroup(group: string) {
   if (!group) return
   try {
     await ElMessageBox.confirm(
-      `确认删除分组「${group}」下的全部配置?此操作不可恢复`,
-      '警告',
+      t('system.config.messages.confirmDeleteByGroup', { group }),
+      t('common.tip'),
       { type: 'error' }
     )
     const { data } = await deleteByGroup(group)
-    ElMessage.success(`已删除 ${data} 条配置`)
+    ElMessage.success(t('system.config.messages.deletedByGroup', { count: data }))
     fetchList()
   } catch {
     /* 取消 */
@@ -208,17 +211,21 @@ async function handleToggleGroupStatus(group: string, currentStatus: string) {
   const next = currentStatus === 'ENABLED' ? 'DISABLED' : 'ENABLED'
   try {
     const { data } = await updateStatusByGroup(group, next)
-    ElMessage.success(`已${next === 'ENABLED' ? '启用' : '停用'} ${data} 条配置`)
+    ElMessage.success(
+      next === 'ENABLED'
+        ? t('system.config.messages.toggledGroupEnabled', { count: data })
+        : t('system.config.messages.toggledGroupDisabled', { count: data })
+    )
     fetchList()
   } catch (e: any) {
-    ElMessage.error(e?.message || '操作失败')
+    ElMessage.error(e?.message || t('system.config.messages.operationFailed'))
   }
 }
 
 /** 刷新配置缓存 */
 async function handleRefresh() {
   await refreshConfigCache()
-  ElMessage.success('缓存已刷新')
+  ElMessage.success(t('system.config.messages.cacheRefreshed'))
 }
 
 /**
@@ -246,7 +253,7 @@ function displayValue(row: ConfigVO): string {
  */
 // 解析后的值类型中文
 function valueTypeLabel(type: string): string {
-  return valueTypeOptions.find((o) => o.value === type)?.label || type
+  return valueTypeOptions.value.find((o) => o.value === type)?.label || type
 }
 
 onMounted(fetchList)
@@ -256,21 +263,21 @@ onMounted(fetchList)
   <div class="config-page">
     <el-card shadow="never">
       <el-form inline :model="query" class="search-form">
-        <el-form-item label="关键字">
+        <el-form-item :label="t('system.config.search.keyword')">
           <el-input
             v-model="query.keyword"
-            placeholder="键/值/描述"
+            :placeholder="t('system.config.search.keywordPlaceholder')"
             clearable
             style="width: 200px"
           />
         </el-form-item>
-        <el-form-item label="分组">
+        <el-form-item :label="t('system.config.search.group')">
           <el-select
             v-model="query.configGroup"
             clearable
             filterable
             allow-create
-            placeholder="全部"
+            :placeholder="t('common.all')"
             style="width: 160px"
           >
             <el-option
@@ -281,8 +288,8 @@ onMounted(fetchList)
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="query.status" clearable placeholder="全部" style="width: 120px">
+        <el-form-item :label="t('system.config.search.status')">
+          <el-select v-model="query.status" clearable :placeholder="t('common.all')" style="width: 120px">
             <el-option
               v-for="s in statusOptions"
               :key="s.value"
@@ -291,8 +298,8 @@ onMounted(fetchList)
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="可见性">
-          <el-select v-model="query.isPublic" clearable placeholder="全部" style="width: 130px">
+        <el-form-item :label="t('system.config.search.visibility')">
+          <el-select v-model="query.isPublic" clearable :placeholder="t('common.all')" style="width: 130px">
             <el-option
               v-for="p in publicOptions"
               :key="String(p.value)"
@@ -302,23 +309,23 @@ onMounted(fetchList)
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="'Search'" @click="query.page = 1; fetchList()">查询</el-button>
-          <el-button @click="reset">重置</el-button>
+          <el-button type="primary" :icon="'Search'" @click="query.page = 1; fetchList()">{{ t('common.search') }}</el-button>
+          <el-button @click="reset">{{ t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
       <div class="toolbar">
         <el-button v-permission="['sys:config:create']" type="primary" :icon="'Plus'" @click="openCreate">
-          新增配置
+          {{ t('system.config.buttons.create') }}
         </el-button>
-        <el-button :icon="'Refresh'" @click="handleRefresh">刷新缓存</el-button>
+        <el-button :icon="'Refresh'" @click="handleRefresh">{{ t('system.config.buttons.refreshCache') }}</el-button>
         <el-button
           v-if="selectedGroup"
           v-permission="['sys:config:update']"
           :icon="(list.find((c) => c.configGroup === selectedGroup)?.status || 'ENABLED') === 'ENABLED' ? 'VideoPause' : 'VideoPlay'"
           @click="handleToggleGroupStatus(selectedGroup, (list.find((c) => c.configGroup === selectedGroup)?.status || 'ENABLED'))"
         >
-          启停当前分组
+          {{ t('system.config.buttons.toggleGroup') }}
         </el-button>
         <el-button
           v-if="selectedGroup"
@@ -327,10 +334,10 @@ onMounted(fetchList)
           :icon="'Delete'"
           @click="handleDeleteByGroup(selectedGroup)"
         >
-          清空当前分组
+          {{ t('system.config.buttons.clearGroup') }}
         </el-button>
         <span v-if="selectedGroup" class="group-tag">
-          当前分组:
+          {{ t('system.config.groupTag') }}
           <el-tag size="small" type="info">{{ selectedGroup }}</el-tag>
         </span>
       </div>
@@ -344,43 +351,43 @@ onMounted(fetchList)
         @row-click="(row: ConfigVO) => (selectedGroup = row.configGroup)"
       >
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="configGroup" title="分组" width="120">
+        <vxe-column field="configGroup" :title="t('system.config.columns.configGroup')" width="120">
           <template #default="{ row }">
             <el-tag size="small" type="info">{{ row.configGroup }}</el-tag>
           </template>
         </vxe-column>
-        <vxe-column field="configKey" title="配置键" width="220" />
-        <vxe-column field="configValue" title="配置值" min-width="200">
+        <vxe-column field="configKey" :title="t('system.config.columns.configKey')" width="220" />
+        <vxe-column field="configValue" :title="t('system.config.columns.configValue')" min-width="200">
           <template #default="{ row }">
             <span class="value-text" :title="row.configValue">{{ displayValue(row) }}</span>
           </template>
         </vxe-column>
-        <vxe-column field="valueType" title="类型" width="90" align="center">
+        <vxe-column field="valueType" :title="t('system.config.columns.valueType')" width="90" align="center">
           <template #default="{ row }">
             <el-tag size="small" :type="(row.valueType === 'JSON' ? 'warning' : row.valueType === 'NUMBER' ? 'success' : row.valueType === 'BOOLEAN' ? 'danger' : 'info')">
               {{ valueTypeLabel(row.valueType) }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column field="isPublic" title="可见" width="80" align="center">
+        <vxe-column field="isPublic" :title="t('system.config.columns.isPublic')" width="80" align="center">
           <template #default="{ row }">
             <el-tag size="small" :type="row.isPublic === 1 ? 'success' : 'info'">
-              {{ row.isPublic === 1 ? '公开' : '私有' }}
+              {{ row.isPublic === 1 ? t('system.config.visibility.public') : t('system.config.visibility.private') }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column field="description" title="描述" min-width="180" show-overflow />
-        <vxe-column field="status" title="状态" width="80" align="center">
+        <vxe-column field="description" :title="t('system.config.columns.description')" min-width="180" show-overflow />
+        <vxe-column field="status" :title="t('system.config.columns.status')" width="80" align="center">
           <template #default="{ row }">
             <el-tag size="small" :type="row.status === 'ENABLED' ? 'success' : 'info'">
-              {{ row.status === 'ENABLED' ? '启用' : '停用' }}
+              {{ row.status === 'ENABLED' ? t('system.config.form.statusEnabled') : t('system.config.form.statusDisabled') }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column title="操作" width="160" fixed="right">
+        <vxe-column :title="t('system.config.columns.action')" width="160" fixed="right">
           <template #default="{ row }">
-            <el-button v-permission="['sys:config:update']" type="primary" link @click="openEdit(row)">编辑</el-button>
-            <el-button v-permission="['sys:config:delete']" type="danger" link @click="handleDelete(row)">删除</el-button>
+            <el-button v-permission="['sys:config:update']" type="primary" link @click="openEdit(row)">{{ t('common.edit') }}</el-button>
+            <el-button v-permission="['sys:config:delete']" type="danger" link @click="handleDelete(row)">{{ t('common.delete') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
@@ -400,14 +407,14 @@ onMounted(fetchList)
     <!-- 创建/编辑 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogMode === 'create' ? '新增配置' : '编辑配置'"
+      :title="dialogMode === 'create' ? t('system.config.dialog.createTitle') : t('system.config.dialog.editTitle')"
       width="640px"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="配置分组" prop="configGroup">
+        <el-form-item :label="t('system.config.form.configGroup')" prop="configGroup">
           <el-input
             v-model="form.configGroup"
-            placeholder="例如: system / rate / workflow"
+            :placeholder="t('system.config.form.configGroupPlaceholder')"
             :disabled="dialogMode === 'edit'"
           >
             <template #append>
@@ -426,14 +433,14 @@ onMounted(fetchList)
             </template>
           </el-input>
         </el-form-item>
-        <el-form-item label="配置键" prop="configKey">
+        <el-form-item :label="t('system.config.form.configKey')" prop="configKey">
           <el-input
             v-model="form.configKey"
-            placeholder="例如: alert.cpi.yellow"
+            :placeholder="t('system.config.form.configKeyPlaceholder')"
             :disabled="dialogMode === 'edit'"
           />
         </el-form-item>
-        <el-form-item label="值类型" prop="valueType">
+        <el-form-item :label="t('system.config.form.valueType')" prop="valueType">
           <el-radio-group v-model="form.valueType">
             <el-radio
               v-for="o in valueTypeOptions"
@@ -445,11 +452,11 @@ onMounted(fetchList)
             </el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="配置值">
+        <el-form-item :label="t('system.config.form.configValue')">
           <el-input
             v-if="form.valueType === 'BOOLEAN'"
             v-model="form.configValue"
-            placeholder="true / false"
+            :placeholder="t('system.config.form.booleanPlaceholder')"
           />
           <el-input-number
             v-else-if="form.valueType === 'NUMBER'"
@@ -468,34 +475,34 @@ onMounted(fetchList)
           <el-input
             v-else
             v-model="form.configValue"
-            placeholder="字符串值"
+            :placeholder="t('system.config.form.stringPlaceholder')"
           />
         </el-form-item>
-        <el-form-item label="默认值">
-          <el-input v-model="form.defaultValue" placeholder="回退时的默认值(可选)" />
+        <el-form-item :label="t('system.config.form.defaultValue')">
+          <el-input v-model="form.defaultValue" :placeholder="t('system.config.form.defaultValuePlaceholder')" />
         </el-form-item>
-        <el-form-item label="可见性">
+        <el-form-item :label="t('system.config.form.visibility')">
           <el-radio-group v-model="form.isPublic">
-            <el-radio :value="0">私有</el-radio>
-            <el-radio :value="1">公开（前端可见）</el-radio>
+            <el-radio :value="0">{{ t('system.config.visibility.private') }}</el-radio>
+            <el-radio :value="1">{{ t('system.config.visibility.public') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="排序">
+        <el-form-item :label="t('system.config.form.sortOrder')">
           <el-input-number v-model="form.sortOrder" :min="0" :max="9999" />
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item :label="t('system.config.form.status')">
           <el-radio-group v-model="form.status">
-            <el-radio value="ENABLED">启用</el-radio>
-            <el-radio value="DISABLED">停用</el-radio>
+            <el-radio value="ENABLED">{{ t('system.config.form.statusEnabled') }}</el-radio>
+            <el-radio value="DISABLED">{{ t('system.config.form.statusDisabled') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="t('system.config.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>
