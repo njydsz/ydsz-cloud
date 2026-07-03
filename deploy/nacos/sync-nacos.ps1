@@ -53,17 +53,21 @@ $ConfigDir = Join-Path $ScriptDir "config"
 #   user + auth             -> userinfo (9002)
 #   file + config + audit
 #     + notification
-#     + message             -> system (9008)
-#   project + execution     -> project (9005)
+#     + message             -> system (9001)
+#   project + execution     -> project (9003)
+#
+# 端口分配（2026-07-03 修订）:
+#   9000 gateway / 9001 system / 9002 userinfo / 9003 project
+#   9004 cronjob / 9005 workflow / 9006 agent
 # ============================================================
 $services = @(
     "ydsz-pmis-gateway",
-    "ydsz-pmis-userinfo",
     "ydsz-pmis-system",
-    "ydsz-pmis-workflow",
+    "ydsz-pmis-userinfo",
     "ydsz-pmis-project",
-    "ydsz-pmis-agent",
-    "ydsz-pmis-cronjob"
+    "ydsz-pmis-cronjob",
+    "ydsz-pmis-workflow",
+    "ydsz-pmis-agent"
 )
 
 # ============================================================

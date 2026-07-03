@@ -145,16 +145,18 @@ YDSZ PMIS · 项目运营管理系统 · README
 | 模块 | artifactId | 端口 | 职责 |
 |---|---|---|---|
 | API 网关 | ydsz-pmis-gateway | **9000** | 路由 + 鉴权 + 限流 + CORS |
+| 系统基础 | ydsz-pmis-system | **9001** | 文件 / 配置 / 审计 / 通知 / 消息模板（file + config + audit + notification + message 合并，包名 com.njydsz.pmis.system） |
 | 用户信息 | ydsz-pmis-userinfo | **9002** | 登录 / Token / 2FA / 登录审计 / 二次认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签（user + auth 合并，包名 com.njydsz.pmis.userinfo） |
-| 工作流 | ydsz-pmis-workflow | **9004** | 自研 `pmis_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 |
-| 项目 | ydsz-pmis-project | **9005** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润（project + execution 合并，包名 com.njydsz.pmis.project） |
-| AI Agent | ydsz-pmis-agent | **9007** | 5 Agent + 4 编排 + 5 LLM Provider |
-| 系统 | ydsz-pmis-system | **9008** | 文件 / 配置 / 审计 / 通知 / 消息模板（file + config + audit + notification + message 合并，包名 com.njydsz.pmis.system） |
-| 调度 | ydsz-pmis-cronjob | **9012** | XXL-JOB 调度 + JobHandler 注册 |
+| 项目 | ydsz-pmis-project | **9003** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润（project + execution 合并，包名 com.njydsz.pmis.project） |
+| 调度 | ydsz-pmis-cronjob | **9004** | XXL-JOB 调度 + JobHandler 注册 |
+| 工作流 | ydsz-pmis-workflow | **9005** | 自研 `pmis_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 |
+| AI Agent | ydsz-pmis-agent | **9006** | 5 Agent + 4 编排 + 5 LLM Provider |
 | 公共（库） | ydsz-pmis-common | — | 统一响应 / AOP / 注解 / Feign / 敏感数据 / JobHandler / Sentry / I18n / 权限码 / 混沌（不独立部署） |
 | 轻量规则引擎（库） | ydsz-pmis-literule | — | 表达式驱动 + 规则链 + 阈值注入 + dry-run（批次 21 引入，不独立部署） |
 
-> **架构决策（2026-07-03 修订）**: 服务合并重构——user + auth → userinfo（9002，包名 com.njydsz.pmis.userinfo）；file + config + audit + notification + message → system（9008，包名 com.njydsz.pmis.system）；project + execution → project（9005，包名 com.njydsz.pmis.project）。合并后共 7 个可部署服务 + 2 个库（common / literule 不独立部署），降低运维成本与跨服务调用复杂度。原规划 11 微服务曾落地为 15 模块，本次合并收敛为 9 模块。
+> **架构决策（2026-07-03 修订）**: 服务合并重构——user + auth → userinfo（9002，包名 com.njydsz.pmis.userinfo）；file + config + audit + notification + message → system（9001，包名 com.njydsz.pmis.system）；project + execution → project（9003，包名 com.njydsz.pmis.project）。合并后共 7 个可部署服务 + 2 个库（common / literule 不独立部署），降低运维成本与跨服务调用复杂度。原规划 11 微服务曾落地为 15 模块，本次合并收敛为 9 模块。
+>
+> **端口分配原则（2026-07-03 修订）**: 9000 网关固定；9001-9006 按"基础→用户→业务→调度→流程→AI"依赖顺序连续编排，便于防火墙批量放行、CI 端口检测、运维 SOP 编写；9007-9099 保留给未来模块（财务独立、报表引擎、BI）。
 
 ### 4.3 模块依赖拓扑
 
@@ -238,12 +240,12 @@ ydsz-pmis/
 ├── ydsz-pmis-backend/          # 后端 9 模块聚合工程（7 部署 + 2 库）
 │   ├── ydsz-pmis-gateway/      # 9000 API 网关
 │   ├── ydsz-pmis-common/       # 公共组件库 (80+ 测试类, 不独立部署)
-│   ├── ydsz-pmis-userinfo/    # 9002 用户信息/RBAC/部门/人员/职级/字典/资源池/Bench/员工标签
-│   ├── ydsz-pmis-system/       # 9008 文件/配置/审计/通知/消息模板
-│   ├── ydsz-pmis-workflow/     # 9004 自研工作流 + BPMN
-│   ├── ydsz-pmis-project/      # 9005 项目/执行/财务/报表 (商机→售后全生命周期)
-│   ├── ydsz-pmis-agent/        # 9007 AI Agent
-│   ├── ydsz-pmis-cronjob/    # 9012 XXL-JOB
+│   ├── ydsz-pmis-system/       # 9001 文件/配置/审计/通知/消息模板
+│   ├── ydsz-pmis-userinfo/     # 9002 用户信息/RBAC/部门/人员/职级/字典/资源池/Bench/员工标签
+│   ├── ydsz-pmis-project/      # 9003 项目/执行/财务/报表 (商机→售后全生命周期)
+│   ├── ydsz-pmis-cronjob/      # 9004 XXL-JOB
+│   ├── ydsz-pmis-workflow/     # 9005 自研工作流 + BPMN
+│   ├── ydsz-pmis-agent/        # 9006 AI Agent
 │   └── ydsz-pmis-literule/     # --  轻量规则引擎 (库, 不独立部署)
 ├── ydsz-pmis-frontend/         # 前端 (Vue 3.5 + Vite 5.4)
 │   ├── src/api/                # 1:1 后端 Controller 封装

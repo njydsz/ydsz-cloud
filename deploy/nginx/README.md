@@ -12,19 +12,17 @@ deploy/nginx/
 └── README.md            # 本文件
 ```
 
-## 14 个微服务路由
+## 7 个微服务路由 (2026-07-03 服务合并后)
 
 | 路径前缀 | 上游服务 | 端口 | 备注 |
 |----------|----------|------|------|
 | `/` | pmis_gateway | 9000 | 网关（统一鉴权） |
-| `/api/v1/project/` | pmis_project_cluster | 9005 | 项目 |
-| `/api/v1/execution/` | pmis_execution_cluster | 9006 | 执行 |
-| `/api/v1/agent/` | pmis_agent_cluster | 9007 | AI Agent |
-| `/api/v1/cronjob/` | pmis_cronjob_cluster | 9012 | 定时任务 |
-| `/api/v1/audit/` | pmis_audit_cluster | 9010 | 审计 |
-| `/api/v1/notification/` | pmis_notification_cluster | 9003 | 通知 |
-| `/api/v1/workflow/` | pmis_workflow_cluster | 9004 | 工作流 |
-| `/api/v1/file/` | pmis_file_cluster | 9009 | 文件（500M） |
+| `/api/v1/file/` `/api/v1/audit/` `/api/v1/notification/` `/api/v1/message/` | pmis_system_cluster | 9001 | 系统基础服务（file + config + audit + notification + message 合并） |
+| `/api/v1/user/` `/api/v1/auth/` `/api/v1/role/` `/api/v1/dept/` | pmis_userinfo_cluster | 9002 | 用户信息中心（user + auth 合并） |
+| `/api/v1/project/` `/api/v1/execution/` `/api/v1/finance/` | pmis_project_cluster | 9003 | 项目 + 执行 + 财务（合并） |
+| `/api/v1/cronjob/` `/api/v1/job/` | pmis_cronjob_cluster | 9004 | 调度（XXL-JOB） |
+| `/api/v1/workflow/` | pmis_workflow_cluster | 9005 | 工作流 |
+| `/api/v1/agent/` | pmis_agent_cluster | 9006 | AI Agent |
 | `/ws/` | pmis_gateway | 9000 | WebSocket（1h 长连接） |
 | `/static/` | 本地 | — | 前端静态资源 |
 | `/health` | — | — | 健康检查（不计入限流） |

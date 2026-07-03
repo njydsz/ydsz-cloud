@@ -21,7 +21,7 @@ import i18n from '@/locales'
 NProgress.configure({ showSpinner: false })
 
 /** 白名单路径：无需登录即可访问 */
-const whiteList = ['/login', '/404']
+const whiteList = ['/login', '/404', '/500']
 
 /**
  * 解析路由标题：如果 title 是 i18n key（以 'route.' 开头）则通过 i18n 翻译，
@@ -109,9 +109,14 @@ export function setupRouterGuard(router: Router): void {
     document.title = title ? `${title} - ${appTitle}` : appTitle
   })
 
-  // 错误守卫：路由异常时关闭进度条，避免卡死
+  // 错误守卫：路由异常时关闭进度条；chunk 加载失败跳 /500，避免白屏
   router.onError((error) => {
     console.error('[Router Error]', error)
     NProgress.done()
+    // 路由懒加载失败（chunk 缓存失效 / 部署中文件被删）→ 跳 500 兜底
+    const msg = error?.message || ''
+    if (/Loading chunk|Failed to fetch dynamically imported module|ChunkLoadError/i.test(msg)) {
+      router.replace({ path: '/500' })
+    }
   })
 }

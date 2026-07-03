@@ -60,12 +60,14 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final AccountLockInfo lockPolicy = AccountLockInfo.defaultPolicy();
 
     @Override
+    @Transactional(readOnly = true)
     public UserAccountDO findByUsername(String username) {
         return userAccountMapper.selectOne(new LambdaQueryWrapper<UserAccountDO>()
                 .eq(UserAccountDO::getUsername, username));
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserAccountDO findById(Long userId) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
@@ -75,12 +77,14 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserVO findVoById(Long userId) {
         return toVo(findById(userId));
     }
 
     @Override
     @DataScope(deptColumn = "dept_id", userColumn = "id")
+    @Transactional(readOnly = true)
     public Page<UserAccountDO> page(UserQueryDTO query) {
         Page<UserAccountDO> page = new Page<>(query.getPage(), query.getSize());
         LambdaQueryWrapper<UserAccountDO> w = new LambdaQueryWrapper<>();
@@ -101,6 +105,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<UserVO> pageVo(UserQueryDTO query) {
         Page<UserAccountDO> doPage = page(query);
         Page<UserVO> voPage = new Page<>(doPage.getCurrent(), doPage.getSize(), doPage.getTotal());
@@ -236,6 +241,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Long> listRoleIds(Long userId) {
         return userRoleMapper.selectRoleIdsByUserId(userId);
     }

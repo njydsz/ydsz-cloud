@@ -31,20 +31,16 @@ spring:
     namespace: pmis-prod
 
 # 生产环境扩容
+# 端口分配（2026-07-03 修订）：9000 网关；9001 system；9002 userinfo；9003 project
+#                        9004 cronjob；9005 workflow；9006 agent
 microservices:
   gateway:     { enabled: true, port: 9000, replicas: 3, jvmOpts: "-Xms1g -Xmx2g -XX:+UseG1GC", hpa: { minReplicas: 3, maxReplicas: 8, targetCPU: 65, targetMemory: 75 }, pdb: { minAvailable: 2 } }
-  auth:        { enabled: true, port: 9001, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 3, maxReplicas: 6, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 2 } }
-  user:        { enabled: true, port: 9002, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 5, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
-  notification:{ enabled: true, port: 9003, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 4, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
-  workflow:    { enabled: true, port: 9004, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 5, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
-  project:     { enabled: true, port: 9005, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 3, maxReplicas: 6, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 2 } }
-  execution:   { enabled: true, port: 9006, replicas: 5, jvmOpts: "-Xms1g -Xmx2g -XX:+UseG1GC", hpa: { minReplicas: 5, maxReplicas: 12, targetCPU: 65, targetMemory: 75 }, pdb: { minAvailable: 3 } }
-  agent:       { enabled: true, port: 9007, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 3, maxReplicas: 6, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 2 } }
-  config:      { enabled: true, port: 9008, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
-  file:        { enabled: true, port: 9009, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 4, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
-  audit:       { enabled: true, port: 9010, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 4, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
-  message:     { enabled: true, port: 9011, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 4, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
-  cronjob:     { enabled: true, port: 9012, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
+  system:      { enabled: true, port: 9001, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 5, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
+  userinfo:    { enabled: true, port: 9002, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 5, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
+  project:     { enabled: true, port: 9003, replicas: 5, jvmOpts: "-Xms1g -Xmx2g -XX:+UseG1GC", hpa: { minReplicas: 5, maxReplicas: 12, targetCPU: 65, targetMemory: 75 }, pdb: { minAvailable: 3 } }
+  cronjob:     { enabled: true, port: 9004, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
+  workflow:    { enabled: true, port: 9005, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 5, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
+  agent:       { enabled: true, port: 9006, replicas: 3, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 3, maxReplicas: 6, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 2 } }
 
 frontend:
   enabled: true

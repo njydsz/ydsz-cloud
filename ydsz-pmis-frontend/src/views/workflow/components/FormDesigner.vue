@@ -8,6 +8,7 @@
 import { ref, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import FcDesigner from '@form-create/designer'
+import JsonEditor from '@/components/common/JsonEditor.vue'
 import type { Rule, Options } from '@form-create/element-ui'
 
 // ==================== Props ====================
@@ -261,9 +262,9 @@ defineExpose({
         :height="'100%'"
         :config="{
           showSaveBtn: false,
-          showPreviewBtn: false,
-          showJsonPreview: false,
-          showDevice: false,
+          showPreviewBtn: true,
+          showJsonPreview: true,
+          showDevice: true,
           showLanguage: false,
           autoActive: true,
           autoResetField: true,
@@ -273,7 +274,7 @@ defineExpose({
       />
     </div>
 
-    <!-- JSON 预览弹窗 -->
+    <!-- JSON 预览弹窗（P2-7: 使用 CodeMirror 只读模式） -->
     <el-dialog
       v-model="jsonPreviewVisible"
       title="JSON Schema 预览"
@@ -281,7 +282,12 @@ defineExpose({
       :close-on-click-modal="false"
     >
       <div class="json-preview-wrapper">
-        <pre class="json-preview-content"><code>{{ jsonPreviewContent }}</code></pre>
+        <JsonEditor
+          :model-value="jsonPreviewContent"
+          :readonly="true"
+          :min-height="'300px'"
+          :max-height="'500px'"
+        />
       </div>
       <template #footer>
         <el-button @click="jsonPreviewVisible = false">关闭</el-button>
@@ -348,18 +354,6 @@ defineExpose({
 .json-preview-wrapper {
   max-height: 500px;
   overflow: auto;
-  background: #1e293b;
   border-radius: 6px;
-  padding: 16px;
-}
-
-.json-preview-content {
-  margin: 0;
-  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  color: #e2e8f0;
-  white-space: pre-wrap;
-  word-break: break-all;
 }
 </style>

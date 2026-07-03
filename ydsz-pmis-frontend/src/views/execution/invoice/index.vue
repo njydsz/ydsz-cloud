@@ -30,6 +30,8 @@ import { PC } from '@/constants/permissionCodes'
 
 /** 列表加载状态 */
 const loading = ref(false)
+/** H17.1 修复：提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
 /** 发票记录列表 */
 const list = ref<InvoiceVO[]>([])
 /** 记录总数（分页用） */
@@ -84,6 +86,10 @@ async function fetchList() {
     })
     list.value = data.list
     total.value = data.total
+  } catch {
+    // H16.1 修复：查询失败时清空陈旧数据，避免用户误以为是当前页结果
+    list.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
@@ -147,11 +153,19 @@ function openCreate() {
 
 /** 提交新建发票，校验通过后创建并刷新列表 */
 async function submitForm() {
-  await formRef.value?.validate()
-  await createInvoice(form as InvoiceCreateDTO)
-  ElMessage.success('已创建')
-  dialogVisible.value = false
-  fetchList()
+  // H16.2 修复：用 try/catch 包裹，失败时不弹 success；H17.1 修复：submitting 防重复
+  try {
+    submitting.value = true
+    await formRef.value?.validate()
+    await createInvoice(form as InvoiceCreateDTO)
+    ElMessage.success('已创建')
+    dialogVisible.value = false
+    fetchList()
+  } catch {
+    // 校验失败或创建失败：拦截器已弹错，此处保持弹窗打开供用户修正
+  } finally {
+    submitting.value = false
+  }
 }
 
 /**
@@ -223,13 +237,15 @@ onMounted(fetchList)
     :list="list"
     :total="total"
     :loading="loading"
+    loading-type="skeleton"
+    empty-preset="list"
     @query="query.page = 1; fetchList()"
     @reset="handleReset"
     @page-change="fetchList"
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="编码/发票号" clearable /></el-form-item>
+      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="编码/发票号" clearable @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item label="状态">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
@@ -319,7 +335,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
   </PageLayout>

@@ -1,5 +1,8 @@
 # pmis-finance 微服务 Rollout (财务模块, 错误率阈值更严格 < 0.3%)
 # 适用: 发票/付款/客户信用
+# 状态: 预留模板（2026-07-03 服务合并后归入 ydsz-pmis-project）
+#       当前财务能力由 ydsz-pmis-project (9003) 提供；
+#       本文件作为未来独立财务服务的灰度发布参考，端口预占 9009
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:
@@ -35,7 +38,7 @@ spec:
       containers:
         - name: finance
           image: registry.ydsz-pmis.cn/ydsz/ydsz-pmis-finance:latest
-          ports: [{ name: http, containerPort: 9004 }]
+          ports: [{ name: http, containerPort: 9009 }]
           readinessProbe:
             httpGet: { path: /actuator/health/readiness, port: http }
             initialDelaySeconds: 30
@@ -48,5 +51,5 @@ apiVersion: v1
 kind: Service
 metadata: { name: pmis-finance, namespace: pmis-prod }
 spec:
-  ports: [{ name: http, port: 9004, targetPort: http }]
+  ports: [{ name: http, port: 9009, targetPort: http }]
   selector: { app: pmis-finance }

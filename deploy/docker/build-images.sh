@@ -26,14 +26,16 @@ cd "$(dirname "$0")"
 docker build -f Dockerfile.base -t "pmis-base:${TAG}" .
 
 # 2. 定义微服务的 artifactId → Dockerfile 映射（合并后 7 个可部署服务）
+# 端口分配（2026-07-03 修订）: 9000 gateway / 9001 system / 9002 userinfo
+#                              9003 project / 9004 cronjob / 9005 workflow / 9006 agent
 declare -A SERVICES=(
     ["ydsz-pmis-gateway"]="Dockerfile.gateway:9000"
+    ["ydsz-pmis-system"]="Dockerfile.service:9001"
     ["ydsz-pmis-userinfo"]="Dockerfile.service:9002"
-    ["ydsz-pmis-workflow"]="Dockerfile.service:9004"
-    ["ydsz-pmis-project"]="Dockerfile.service:9005"
-    ["ydsz-pmis-agent"]="Dockerfile.service:9007"
-    ["ydsz-pmis-system"]="Dockerfile.service:9008"
-    ["ydsz-pmis-cronjob"]="Dockerfile.service:9012"
+    ["ydsz-pmis-project"]="Dockerfile.service:9003"
+    ["ydsz-pmis-cronjob"]="Dockerfile.service:9004"
+    ["ydsz-pmis-workflow"]="Dockerfile.service:9005"
+    ["ydsz-pmis-agent"]="Dockerfile.service:9006"
     # ydsz-pmis-common / ydsz-pmis-literule 为库，不独立部署
 )
 

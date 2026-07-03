@@ -9,7 +9,7 @@
 # =====================================================================
 
 server:
-  port: 9002  # HTTP 监听端口
+  port: 9002  # HTTP 监听端口（与 gateway 鉴权、feign 调用）
 
 spring:
   application:

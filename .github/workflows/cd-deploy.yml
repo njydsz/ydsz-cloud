@@ -45,13 +45,15 @@ jobs:
       fail-fast: false
       matrix:
         service:
+          # 端口分配（2026-07-03 修订）: 9000 gateway / 9001 system / 9002 userinfo
+          #                              9003 project / 9004 cronjob / 9005 workflow / 9006 agent
           - { name: gateway,   port: 9000,  jar: ydsz-pmis-gateway }
-          - { name: userinfo, port: 9002,  jar: ydsz-pmis-userinfo }
-          - { name: workflow,  port: 9004,  jar: ydsz-pmis-workflow }
-          - { name: project,   port: 9005,  jar: ydsz-pmis-project }
-          - { name: agent,     port: 9007,  jar: ydsz-pmis-agent }
-          - { name: system,    port: 9008,  jar: ydsz-pmis-system }
-          - { name: cronjob,  port: 9012,  jar: ydsz-pmis-cronjob }
+          - { name: system,    port: 9001,  jar: ydsz-pmis-system }
+          - { name: userinfo,  port: 9002,  jar: ydsz-pmis-userinfo }
+          - { name: project,   port: 9003,  jar: ydsz-pmis-project }
+          - { name: cronjob,   port: 9004,  jar: ydsz-pmis-cronjob }
+          - { name: workflow,  port: 9005,  jar: ydsz-pmis-workflow }
+          - { name: agent,     port: 9006,  jar: ydsz-pmis-agent }
     steps:
       - uses: actions/checkout@v4
 

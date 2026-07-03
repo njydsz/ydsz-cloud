@@ -270,6 +270,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PaymentDO getById(Long id) {
         PaymentDO p = paymentMapper.selectById(id);
         if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_22203a1e");
@@ -277,6 +278,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PaymentDO> page(int page, int size, String keyword, String status,
                                 Long contractId, Long customerId, Long initiationId) {
         Page<PaymentDO> p = new Page<>(page, size);

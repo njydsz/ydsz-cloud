@@ -75,6 +75,8 @@ const alert = ref<{ redCount: number; yellowCount: number; totalCount: number; t
 const trend = ref<{ periods: string[]; contractAmountSeries: number[]; confirmedRevenueSeries: number[]; totalCostSeries: number[]; grossProfitSeries: number[]; grossMarginPctSeries: number[] } | null>(null)
 /** 最后一次刷新时间 */
 const lastUpdated = ref('')
+/** H15.2 修复：整体加载状态，控制 KPI/图表骨架与按钮 loading */
+const loading = ref(false)
 
 // 自动刷新
 let pollTimer: number | null = null
@@ -251,13 +253,21 @@ function renderTrendChart() {
   })
 }
 
-/** 并发刷新所有驾驶舱数据并更新最后刷新时间 */
+/**
+ * 并发刷新所有驾驶舱数据并更新最后刷新时间
+ *
+ * H15.2 修复：
+ *  - 用 Promise.allSettled 替换 Promise.all，任一接口失败不影响其他接口的独立错误提示，
+ *    避免单个 load 函数未捕获 reject 时中断整体刷新；
+ *  - 新增 loading 状态，KPI/图表区域展示骨架反馈，refresh 按钮置 loading。
+ */
 async function refresh() {
+  loading.value = true
   try {
-    await Promise.all([loadOverview(), loadHealth(), loadDrill(), loadAlert(), loadTrend()])
+    await Promise.allSettled([loadOverview(), loadHealth(), loadDrill(), loadAlert(), loadTrend()])
     lastUpdated.value = new Date().toLocaleTimeString(locale.value)
-  } catch (e: any) {
-    ElMessage.error(t('cockpit.messages.refreshFailed', { message: e?.message || '' }))
+  } finally {
+    loading.value = false
   }
 }
 
@@ -350,7 +360,7 @@ onBeforeUnmount(() => stopPolling())
             :inactive-text="t('cockpit.autoRefresh.manual')"
             @change="toggleAutoRefresh"
           />
-          <el-button :icon="'Refresh'" @click="refresh">{{ t('cockpit.autoRefresh.refreshNow') }}</el-button>
+          <el-button :icon="'Refresh'" :loading="loading" @click="refresh">{{ t('cockpit.autoRefresh.refreshNow') }}</el-button>
         </div>
       </div>
     </el-card>
@@ -385,13 +395,13 @@ onBeforeUnmount(() => stopPolling())
           <el-input v-model="query.period" :placeholder="t('cockpit.query.periodPlaceholder')" style="width: 160px" />
         </el-form-item>
         <el-form-item>
-          <el-button v-permission="[PC.COCKPIT_OVERVIEW_VIEW]" type="primary" :icon="'Refresh'" @click="refresh">{{ t('cockpit.query.refresh') }}</el-button>
+          <el-button v-permission="[PC.COCKPIT_OVERVIEW_VIEW]" type="primary" :icon="'Refresh'" :loading="loading" @click="refresh">{{ t('cockpit.query.refresh') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
 
     <!-- KPI 卡片 -->
-    <el-row :gutter="16" class="kpi-row">
+    <el-row :gutter="16" v-loading="loading" class="kpi-row">
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="kpi-card">
           <div class="kpi-title">{{ t('cockpit.kpi.totalContractAmount') }}</div>
@@ -444,12 +454,12 @@ onBeforeUnmount(() => stopPolling())
               </el-radio-group>
             </div>
           </template>
-          <div ref="chartRef" class="chart-area" />
+          <div v-loading="loading" ref="chartRef" class="chart-area" />
         </el-card>
       </el-col>
       <el-col :xs="24" :md="8">
         <el-card shadow="never" class="chart-card">
-          <div ref="healthRef" class="chart-area" />
+          <div v-loading="loading" ref="healthRef" class="chart-area" />
         </el-card>
       </el-col>
     </el-row>
@@ -458,7 +468,7 @@ onBeforeUnmount(() => stopPolling())
     <el-row :gutter="16" class="chart-row">
       <el-col :span="24">
         <el-card shadow="never" :header="t('cockpit.trend.title')">
-          <div ref="trendRef" class="chart-area" style="height: 320px" />
+          <div v-loading="loading" ref="trendRef" class="chart-area" style="height: 320px" />
         </el-card>
       </el-col>
     </el-row>

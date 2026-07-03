@@ -145,6 +145,10 @@ export default {
     networkError: 'Network connection error, please check your network',
     requestFailed: 'Request failed',
     networkAbnormal: 'Network error',
+    forbidden: 'No permission to access this resource',
+    notFound: 'The requested resource was not found',
+    serverError: 'Server error, please try again later',
+    badRequest: 'Invalid request parameters',
     loginExpired: 'Session expired',
     loginExpiredRelogin: 'Session expired, please login again',
     refreshFailed: 'Refresh failed',
@@ -154,6 +158,7 @@ export default {
   route: {
     login: 'Login',
     notFound: '404',
+    serverError: '500',
     dashboard: 'Dashboard',
     securitySettings: 'Security Settings',
     cockpit: 'Cockpit',

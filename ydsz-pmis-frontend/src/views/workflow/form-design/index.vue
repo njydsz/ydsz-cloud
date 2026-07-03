@@ -4,10 +4,13 @@
  * @module views/workflow/form-design
  * @description 双模式表单设计器 —— 可视化拖拽模式（form-create-designer） + JSON 编辑模式。
  *   支持保存表单 schema 到后端。
+ *   P2-7: 新增 CodeMirror JSON 编辑器 + 表单模板库。
  */
 import { ref } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import FormDesigner from '../components/FormDesigner.vue'
+import FormTemplateLibrary from '../components/FormTemplateLibrary.vue'
+import JsonEditor from '@/components/common/JsonEditor.vue'
 import { saveFormSchema, getFormSchema } from '@/api/workflow'
 import type { Rule, Options } from '@form-create/element-ui'
 
@@ -24,6 +27,10 @@ const loading = ref(false)
 // JSON 编辑模式相关
 const jsonEditorContent = ref('')
 const jsonEditorError = ref('')
+const jsonValid = ref(true)
+
+// P2-7: 表单模板库弹窗
+const templateLibraryVisible = ref(false)
 
 // 当前表单信息
 const formInfo = ref({
@@ -126,6 +133,28 @@ function handleSyncFromDesigner() {
   }
 }
 
+/** P2-7: JsonEditor 校验回调 */
+function handleJsonValidate(valid: boolean) {
+  jsonValid.value = valid
+  if (!valid && jsonEditorContent.value.trim()) {
+    jsonEditorError.value = 'JSON 格式错误，请检查语法'
+  } else {
+    jsonEditorError.value = ''
+  }
+}
+
+/** P2-7: 从模板库选择模板后导入设计器 */
+function handleTemplateSelect(template: { rule: Record<string, unknown>[]; options: Record<string, unknown> }) {
+  if (formDesignerRef.value) {
+    formDesignerRef.value.setRule(template.rule as Rule[])
+    formDesignerRef.value.setOptions(template.options as Options)
+    // 同步到 JSON 编辑区
+    jsonEditorContent.value = JSON.stringify({ rule: template.rule, options: template.options }, null, 2)
+    jsonEditorError.value = ''
+    editorMode.value = 'design'
+  }
+}
+
 // ==================== 后端保存 ====================
 
 async function doSaveToBackend(json: string) {
@@ -217,6 +246,10 @@ async function handleLoadForm() {
         <el-button size="small" type="primary" @click="handleLoadForm" :loading="loading">
           加载已有表单
         </el-button>
+        <!-- P2-7: 从模板创建 -->
+        <el-button size="small" type="success" @click="templateLibraryVisible = true">
+          <el-icon><Files /></el-icon>从模板创建
+        </el-button>
       </div>
     </div>
 
@@ -244,12 +277,11 @@ async function handleLoadForm() {
           </div>
         </div>
         <div class="json-editor-content">
-          <el-input
+          <!-- P2-7: 替换 textarea 为 CodeMirror JsonEditor -->
+          <JsonEditor
             v-model="jsonEditorContent"
-            type="textarea"
-            :rows="20"
             placeholder='请输入 JSON schema，格式：{ "rule": [...], "options": {...} }'
-            class="json-editor-textarea"
+            @validate="handleJsonValidate"
           />
         </div>
         <div v-if="jsonEditorError" class="json-editor-error">
@@ -257,6 +289,12 @@ async function handleLoadForm() {
         </div>
       </div>
     </div>
+
+    <!-- P2-7: 表单模板库弹窗 -->
+    <FormTemplateLibrary
+      v-model:visible="templateLibraryVisible"
+      @select="handleTemplateSelect"
+    />
   </div>
 </template>
 
@@ -345,22 +383,6 @@ async function handleLoadForm() {
   flex: 1;
   padding: 12px;
   overflow: hidden;
-}
-
-.json-editor-textarea {
-  height: 100%;
-
-  :deep(.el-textarea__inner) {
-    height: 100% !important;
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 13px;
-    line-height: 1.6;
-    background: #1e293b;
-    color: #e2e8f0;
-    border: none;
-    border-radius: 6px;
-    resize: none;
-  }
 }
 
 .json-editor-error {

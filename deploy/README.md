@@ -136,19 +136,21 @@ pnpm install && pnpm dev
 
 > 服务合并重构后保留 7 个核心微服务（+ 1 调度）：
 > - `user` + `auth` → `userinfo`（端口 9002）
-> - `file` + `config` + `audit` + `notification` + `message` → `system`（端口 9008）
-> - `project` + `execution` → `project`（端口 9005）
+> - `file` + `config` + `audit` + `notification` + `message` → `system`（端口 9001）
+> - `project` + `execution` → `project`（端口 9003）
+>
+> **端口分配原则（2026-07-03 修订）**: 9000 网关固定；9001-9006 按"基础→用户→业务→调度→流程→AI"依赖顺序连续编排；9007-9099 保留给未来模块。
 
 | 服务 | 端口 | 协议 | 说明 |
 |------|------|------|------|
 | 前端 (Vite) | 5173 | HTTP | 开发服务器 |
 | API 网关 | 9000 | HTTP | ydsz-pmis-gateway（统一入口） |
+| 系统基础服务 | 9001 | HTTP | ydsz-pmis-system（原 file + config + audit + notification + message） |
 | 用户信息中心 | 9002 | HTTP | ydsz-pmis-userinfo（原 user + auth） |
-| 工作流 | 9004 | HTTP | ydsz-pmis-workflow |
-| 项目服务 | 9005 | HTTP | ydsz-pmis-project（原 project + execution） |
-| AI Agent | 9007 | HTTP | ydsz-pmis-agent |
-| 系统服务 | 9008 | HTTP | ydsz-pmis-system（原 file + config + audit + notification + message） |
-| 调度服务 | 9012 | HTTP | ydsz-pmis-cronjob |
+| 项目服务 | 9003 | HTTP | ydsz-pmis-project（原 project + execution） |
+| 调度服务 | 9004 | HTTP | ydsz-pmis-cronjob（XXL-JOB Executor） |
+| 工作流 | 9005 | HTTP | ydsz-pmis-workflow |
+| AI Agent | 9006 | HTTP | ydsz-pmis-agent |
 | Nacos | 8848 | HTTP | 注册/配置中心 |
 | Seata | 8091/7091 | HTTP | 分布式事务（7091=Admin） |
 | XXL-Job | 9100 | HTTP | 调度管理后台 |

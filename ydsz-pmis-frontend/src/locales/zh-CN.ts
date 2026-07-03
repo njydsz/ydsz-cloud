@@ -147,6 +147,10 @@ export default {
     networkError: '网络连接异常，请检查网络',
     requestFailed: '请求失败',
     networkAbnormal: '网络异常',
+    forbidden: '无权限访问该资源',
+    notFound: '请求的资源不存在',
+    serverError: '服务器异常，请稍后重试',
+    badRequest: '请求参数有误',
     loginExpired: '登录已过期',
     loginExpiredRelogin: '登录已过期，请重新登录',
     refreshFailed: '刷新失败',
@@ -156,6 +160,7 @@ export default {
   route: {
     login: '登录',
     notFound: '404',
+    serverError: '500',
     dashboard: '仪表盘',
     securitySettings: '安全设置',
     cockpit: '经营驾驶舱',

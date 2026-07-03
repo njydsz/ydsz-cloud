@@ -1,7 +1,7 @@
 # =====================================================================
 #  PMIS 工作流服务配置
 #  --------------------------------------------------------------------
-#  端口：9004
+#  端口：9005
 #  职责：自研轻量流程引擎
 #    - 流程定义（PMIS-Flow XML / JSON）
 #    - 流程发起 / 审批 / 驳回 / 加签 / 减签 / 转交
@@ -12,7 +12,7 @@
 # =====================================================================
 
 server:
-  port: 9004
+  port: 9005
   servlet:
     context-path: /
 
@@ -105,3 +105,26 @@ logging:
     "[com.njydsz.pmis]": DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+
+# ---------- PMIS 工作流业务配置 ----------
+pmis:
+  flow:
+    # -----------------------------------------------------------------
+    # 历史数据归档配置（P2-8）
+    # -----------------------------------------------------------------
+    # archiveEnabled       : 是否启用自动归档（false 则 JobHandler 跳过执行）
+    # retentionDays        : 归档阈值天数（已结束实例结束时间超过该天数后归档）
+    # batchSize            : 单次归档批量大小（每次扫描最多处理的实例数）
+    # maxProcessMs         : 单次归档最大耗时（毫秒，达到上限后剩余实例留待下次）
+    # cronExpression       : 归档任务 cron 表达式（用于 pmis_job 表配置参考）
+    # purgeEnabled         : 是否启用归档数据清理（清理已归档超过 purgeDays 的冷数据）
+    # purgeDays            : 归档数据清理阈值天数（默认 5 年 = 1825 天）
+    # -----------------------------------------------------------------
+    history:
+      archive-enabled: true
+      retention-days: 30
+      batch-size: 100
+      max-process-ms: 30000
+      cron-expression: "0 0 3 * * ?"
+      purge-enabled: false
+      purge-days: 1825

@@ -28,6 +28,10 @@ import { PC } from '@/constants/permissionCodes'
 
 /** 列表加载状态 */
 const loading = ref(false)
+/** H17.1 修复：提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
+/** H17.1 修复：核销按钮 loading 状态 */
+const allocating = ref(false)
 /** 回款记录列表 */
 const list = ref<PaymentVO[]>([])
 /** 记录总数（分页用） */
@@ -70,6 +74,10 @@ async function fetchList() {
     })
     list.value = data.list
     total.value = data.total
+  } catch {
+    // H16.1 修复：查询失败时清空陈旧数据
+    list.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
@@ -127,11 +135,19 @@ function openCreate() {
 
 /** 提交新建回款，校验通过后创建并刷新列表 */
 async function submitForm() {
-  await formRef.value?.validate()
-  await createPayment(form as PaymentCreateDTO)
-  ElMessage.success('已创建')
-  dialogVisible.value = false
-  fetchList()
+  // H16.2 修复：try/catch 包裹避免 success 误报；H17.1 修复：submitting 防重复
+  try {
+    submitting.value = true
+    await formRef.value?.validate()
+    await createPayment(form as PaymentCreateDTO)
+    ElMessage.success('已创建')
+    dialogVisible.value = false
+    fetchList()
+  } catch {
+    // 校验或创建失败：拦截器已弹错，保持弹窗打开
+  } finally {
+    submitting.value = false
+  }
 }
 
 /**
@@ -172,13 +188,17 @@ async function submitAllocate() {
     ElMessage.warning('请填写发票 ID 和金额')
     return
   }
+  // H17.1 修复：allocating 防重复提交
   try {
+    allocating.value = true
     await allocatePayment(allocForm)
     ElMessage.success('核销成功')
     allocDialogVisible.value = false
     fetchList()
   } catch (e: any) {
     ElMessage.error(e?.message || '核销失败')
+  } finally {
+    allocating.value = false
   }
 }
 
@@ -205,13 +225,15 @@ onMounted(fetchList)
     :list="list"
     :total="total"
     :loading="loading"
+    loading-type="skeleton"
+    empty-preset="list"
     @query="query.page = 1; fetchList()"
     @reset="handleReset"
     @page-change="fetchList"
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="单号/银行流水" clearable /></el-form-item>
+      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="单号/银行流水" clearable @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item label="状态">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
@@ -277,7 +299,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
 
@@ -295,7 +317,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="allocDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitAllocate">确认核销</el-button>
+        <el-button type="primary" :loading="allocating" @click="submitAllocate">确认核销</el-button>
       </template>
     </el-dialog>
   </PageLayout>

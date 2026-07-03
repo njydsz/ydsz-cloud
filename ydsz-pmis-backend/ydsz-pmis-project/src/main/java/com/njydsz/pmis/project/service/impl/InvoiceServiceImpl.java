@@ -228,6 +228,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public InvoiceDO getById(Long id) {
         InvoiceDO inv = invoiceMapper.selectById(id);
         if (inv == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_1b0f0829");
@@ -235,6 +236,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<InvoiceDO> page(int page, int size, String keyword, String status,
                                 Long contractId, Long initiationId, Long customerId,
                                 String invoiceType) {
@@ -255,12 +257,14 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<InvoiceDO> listByContract(Long contractId) {
         if (contractId == null) return List.of();
         return invoiceMapper.selectByContract(contractId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<InvoiceDO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
         return invoiceMapper.selectByInitiation(initiationId);

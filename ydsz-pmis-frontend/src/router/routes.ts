@@ -27,6 +27,12 @@ export const constantRoutes: RouteRecordRaw[] = [
     meta: { title: 'route.notFound', hidden: true },
   },
   {
+    path: '/500',
+    name: 'ServerError',
+    component: () => import('@/views/error/500.vue'),
+    meta: { title: 'route.serverError', hidden: true },
+  },
+  {
     path: '/',
     component: () => import('@/layout/default/index.vue'),
     redirect: '/dashboard',

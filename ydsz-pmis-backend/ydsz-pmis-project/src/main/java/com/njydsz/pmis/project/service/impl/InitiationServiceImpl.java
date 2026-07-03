@@ -159,6 +159,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @throws BizException 立项不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public InitiationDO getById(Long id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
@@ -182,6 +183,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
+    @Transactional(readOnly = true)
     public Page<InitiationDO> page(int page, int size, String keyword, String stage,
                                    String projectLevel, Long pmId) {
         Page<InitiationDO> p = new Page<>(page, size);

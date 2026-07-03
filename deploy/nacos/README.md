@@ -32,17 +32,19 @@
 | 微服务 | DataId | 端口 |
 |--------|--------|------|
 | ydsz-pmis-gateway | ydsz-pmis-gateway-{dev\|sit\|uat\|prod}.yaml | 9000 |
+| ydsz-pmis-system | ydsz-pmis-system-{dev\|sit\|uat\|prod}.yaml | 9001 |
 | ydsz-pmis-userinfo | ydsz-pmis-userinfo-{dev\|sit\|uat\|prod}.yaml | 9002 |
-| ydsz-pmis-system | ydsz-pmis-system-{dev\|sit\|uat\|prod}.yaml | 9008 |
-| ydsz-pmis-workflow | ydsz-pmis-workflow-{dev\|sit\|uat\|prod}.yaml | 9004 |
-| ydsz-pmis-project | ydsz-pmis-project-{dev\|sit\|uat\|prod}.yaml | 9005 |
-| ydsz-pmis-agent | ydsz-pmis-agent-{dev\|sit\|uat\|prod}.yaml | 9007 |
-| ydsz-pmis-cronjob | ydsz-pmis-cronjob-{dev\|sit\|uat\|prod}.yaml | 9012 |
+| ydsz-pmis-project | ydsz-pmis-project-{dev\|sit\|uat\|prod}.yaml | 9003 |
+| ydsz-pmis-cronjob | ydsz-pmis-cronjob-{dev\|sit\|uat\|prod}.yaml | 9004 |
+| ydsz-pmis-workflow | ydsz-pmis-workflow-{dev\|sit\|uat\|prod}.yaml | 9005 |
+| ydsz-pmis-agent | ydsz-pmis-agent-{dev\|sit\|uat\|prod}.yaml | 9006 |
 
 > 服务合并重构后仅保留 7 个微服务：
 > - `user` + `auth` → `userinfo`（端口 9002）
-> - `file` + `config` + `audit` + `notification` + `message` → `system`（端口 9008）
-> - `project` + `execution` → `project`（端口 9005）
+> - `file` + `config` + `audit` + `notification` + `message` → `system`（端口 9001）
+> - `project` + `execution` → `project`（端口 9003）
+>
+> **端口分配原则（2026-07-03 修订）**: 9000 网关固定；9001-9006 按"基础→用户→业务→调度→流程→AI"依赖顺序连续编排；9007-9099 保留给未来模块。
 
 ## 4. 共享配置（推荐）
 
@@ -199,11 +201,11 @@ curl http://<service-host>:<port>/actuator/refresh
 | 序号 | 模块 | 端口 | DataId 前缀 |
 |------|------|------|-------------|
 | 1 | ydsz-pmis-gateway | 9000 | ydsz-pmis-gateway- |
-| 2 | ydsz-pmis-userinfo | 9002 | ydsz-pmis-userinfo- |
-| 3 | ydsz-pmis-system | 9008 | ydsz-pmis-system- |
-| 4 | ydsz-pmis-workflow | 9004 | ydsz-pmis-workflow- |
-| 5 | ydsz-pmis-project | 9005 | ydsz-pmis-project- |
-| 6 | ydsz-pmis-agent | 9007 | ydsz-pmis-agent- |
-| 7 | ydsz-pmis-cronjob | 9012 | ydsz-pmis-cronjob- |
+| 2 | ydsz-pmis-system | 9001 | ydsz-pmis-system- |
+| 3 | ydsz-pmis-userinfo | 9002 | ydsz-pmis-userinfo- |
+| 4 | ydsz-pmis-project | 9003 | ydsz-pmis-project- |
+| 5 | ydsz-pmis-cronjob | 9004 | ydsz-pmis-cronjob- |
+| 6 | ydsz-pmis-workflow | 9005 | ydsz-pmis-workflow- |
+| 7 | ydsz-pmis-agent | 9006 | ydsz-pmis-agent- |
 
 > 每个模块在 `src/main/resources/` 下保留 4 个环境配置：`*-dev.yaml` / `*-sit.yaml` / `*-uat.yaml` / `*-prod.yaml`。

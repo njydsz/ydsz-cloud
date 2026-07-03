@@ -66,8 +66,11 @@ RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 # ---- 切到非 root 用户 ----
 USER appuser
 
-# ---- 暴露应用端口（具体微服务在子镜像 Dockerfile 中覆盖） ----
-EXPOSE 9000 9001 9002 9003 9004 9005 9006 9007 9008 9009 9010 9011 9012
+# ---- 暴露应用端口（2026-07-03 服务合并后 7 部署单元） ----
+# 端口分配: 9000 gateway / 9001 system / 9002 userinfo / 9003 project
+#           9004 cronjob  / 9005 workflow / 9006 agent
+# 9007-9099 保留给未来模块（财务独立、报表引擎、BI）
+EXPOSE 9000 9001 9002 9003 9004 9005 9006
 
 # ---- 健康检查（具体微服务子镜像可覆盖） ----
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \

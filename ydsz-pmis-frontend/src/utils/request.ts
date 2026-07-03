@@ -248,6 +248,18 @@ service.interceptors.response.use(
       ElMessage.error(i18n.global.t('request.timeout'))
     } else if (!error.response) {
       ElMessage.error(i18n.global.t('request.networkError'))
+    } else if (status === 403) {
+      // H16.5 修复：403 无权限差异化提示（后端未返回 message 时用 i18n 兜底）
+      ElMessage.error(resolveErrorMessage(message) || i18n.global.t('request.forbidden'))
+    } else if (status === 404) {
+      // H16.5 修复：404 资源不存在差异化提示
+      ElMessage.error(resolveErrorMessage(message) || i18n.global.t('request.notFound'))
+    } else if (status && status >= 500 && status < 600) {
+      // H16.5 修复：5xx 服务端异常差异化提示（重试耗尽后仍失败才走到这里）
+      ElMessage.error(resolveErrorMessage(message) || i18n.global.t('request.serverError'))
+    } else if (status === 400) {
+      // H16.5 修复：400 参数错误差异化提示
+      ElMessage.error(resolveErrorMessage(message) || i18n.global.t('request.badRequest'))
     } else {
       ElMessage.error(resolveErrorMessage(message) || i18n.global.t('request.networkAbnormal'))
     }

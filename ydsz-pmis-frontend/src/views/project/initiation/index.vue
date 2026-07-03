@@ -25,6 +25,10 @@ import { PC } from '@/constants/permissionCodes'
 const { t } = useI18n()
 
 const loading = ref(false)
+/** H17.1 修复：3 个提交按钮共享 loading 状态，防止重复提交 */
+const submitting = ref(false)
+const submittingBudget = ref(false)
+const submittingGate = ref(false)
 const list = ref<InitiationVO[]>([])
 const total = ref(0)
 const query = reactive({
@@ -72,6 +76,10 @@ async function fetchList() {
     })
     list.value = data.list
     total.value = data.total
+  } catch {
+    // H16.1 修复：查询失败时清空陈旧数据
+    list.value = []
+    total.value = 0
   } finally {
     loading.value = false
   }
@@ -134,11 +142,19 @@ function openCreate() {
 
 /** 提交立项表单：校验通过后创建并刷新列表 */
 async function submitForm() {
-  await formRef.value?.validate()
-  await createInitiation(form as InitiationCreateDTO)
-  ElMessage.success(t('project.initiation.messages.createSuccess'))
-  dialogVisible.value = false
-  fetchList()
+  // H16.2 修复：try/catch 包裹避免 success 误报；H17.1 修复：submitting 防重复
+  try {
+    submitting.value = true
+    await formRef.value?.validate()
+    await createInitiation(form as InitiationCreateDTO)
+    ElMessage.success(t('project.initiation.messages.createSuccess'))
+    dialogVisible.value = false
+    fetchList()
+  } catch {
+    // 校验或创建失败：拦截器已弹错，保持弹窗打开
+  } finally {
+    submitting.value = false
+  }
 }
 
 /**
@@ -207,19 +223,27 @@ async function openBudget(row: InitiationVO) {
 /** 提交预算明细：追加一条预算项并刷新预算列表 */
 async function submitBudget() {
   if (!budgetInitiationId.value) return
-  await addBudgetItem({
-    initiationId: budgetInitiationId.value,
-    category: budgetForm.category,
-    itemName: budgetForm.itemName,
-    amount: budgetForm.amount,
-    remark: budgetForm.remark,
-  })
-  ElMessage.success(t('project.initiation.messages.budgetAdded'))
-  const { data } = await listBudget(budgetInitiationId.value)
-  budgetList.value = data || []
-  budgetForm.itemName = ''
-  budgetForm.amount = 0
-  budgetForm.remark = ''
+  // H16.2 修复：try/catch 包裹；H17.1 修复：submittingBudget 防重复
+  try {
+    submittingBudget.value = true
+    await addBudgetItem({
+      initiationId: budgetInitiationId.value,
+      category: budgetForm.category,
+      itemName: budgetForm.itemName,
+      amount: budgetForm.amount,
+      remark: budgetForm.remark,
+    })
+    ElMessage.success(t('project.initiation.messages.budgetAdded'))
+    const { data } = await listBudget(budgetInitiationId.value)
+    budgetList.value = data || []
+    budgetForm.itemName = ''
+    budgetForm.amount = 0
+    budgetForm.remark = ''
+  } catch {
+    // 失败：拦截器已弹错
+  } finally {
+    submittingBudget.value = false
+  }
 }
 
 // 门径评审弹窗
@@ -238,14 +262,22 @@ function openGate(row: InitiationVO) {
 /** 提交门径评审结果：PASS / CONDITIONAL / FAIL */
 async function submitGate() {
   if (!gateInitiationId.value) return
-  await reviewGate({
-    initiationId: gateInitiationId.value,
-    gateCode: gateForm.gateCode,
-    reviewResult: gateForm.reviewResult,
-    comment: gateForm.comment,
-  })
-  ElMessage.success(t('project.initiation.messages.gateSubmitted'))
-  gateDialogVisible.value = false
+  // H16.2 修复：try/catch 包裹；H17.1 修复：submittingGate 防重复
+  try {
+    submittingGate.value = true
+    await reviewGate({
+      initiationId: gateInitiationId.value,
+      gateCode: gateForm.gateCode,
+      reviewResult: gateForm.reviewResult,
+      comment: gateForm.comment,
+    })
+    ElMessage.success(t('project.initiation.messages.gateSubmitted'))
+    gateDialogVisible.value = false
+  } catch {
+    // 失败：拦截器已弹错
+  } finally {
+    submittingGate.value = false
+  }
 }
 
 onMounted(fetchList)
@@ -257,6 +289,8 @@ onMounted(fetchList)
     :list="list"
     :total="total"
     :loading="loading"
+    loading-type="skeleton"
+    empty-preset="list"
     @query="query.page = 1; fetchList()"
     @reset="handleReset"
     @page-change="fetchList"
@@ -264,7 +298,7 @@ onMounted(fetchList)
   >
     <template #search>
       <el-form-item :label="t('project.initiation.search.keyword')">
-        <el-input v-model="query.keyword" :placeholder="t('project.initiation.search.keywordPlaceholder')" clearable />
+        <el-input v-model="query.keyword" :placeholder="t('project.initiation.search.keywordPlaceholder')" clearable @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" />
       </el-form-item>
       <el-form-item :label="t('project.initiation.search.stage')">
         <el-select v-model="query.stage" :placeholder="t('common.all')" clearable style="width: 140px">
@@ -435,7 +469,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 
@@ -461,7 +495,7 @@ onMounted(fetchList)
           <el-input v-model="budgetForm.remark" style="width: 200px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="submitBudget">{{ t('project.initiation.budget.add') }}</el-button>
+          <el-button type="primary" :loading="submittingBudget" @click="submitBudget">{{ t('project.initiation.budget.add') }}</el-button>
         </el-form-item>
       </el-form>
       <vxe-table :data="budgetList" border stripe max-height="300">
@@ -497,7 +531,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="gateDialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitGate">{{ t('common.submit') }}</el-button>
+        <el-button type="primary" :loading="submittingGate" @click="submitGate">{{ t('common.submit') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

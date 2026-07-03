@@ -1,11 +1,11 @@
 # ====================================================================
-# 南京云顶 PMIS 14 个微服务 + 周边组件编排（批次 19 落地）
+# 南京云顶 PMIS 7 个微服务 + 周边组件编排（2026-07-03 合并后）
 # ---------------------------------------------------------------------
-# 14 个微服务（按启动顺序 9000 起 +1 连续编排）:
-#   gateway :9000  / auth :9001     / user :9002      / notification :9003
-#   workflow :9004 / project :9005  / execution :9006 / agent :9007
-#   config :9008   / file :9009     / audit :9010     / message :9011
-#   cronjob :9012
+# 7 个微服务（按启动顺序 9000 连续编排）:
+#   gateway  :9000  / system   :9001 / userinfo :9002 / project  :9003
+#   cronjob  :9004  / workflow :9005 / agent    :9006
+# 端口分配原则: 9000 网关；9001-9006 按"基础→用户→业务→调度→流程→AI"依赖顺序
+#              9007-9099 保留给未来模块（财务独立、报表引擎、BI）
 # 周边组件：
 #   xxl-job-admin :9100（分布式任务调度）
 #   seata-server :8091（分布式事务协调器）
@@ -57,7 +57,7 @@ x-microservice-common: &microservice-common
       condition: service_healthy
 
 services:
-  # ============ 14 个微服务（按依赖顺序启动）============
+  # ============ 7 个微服务（按依赖顺序启动）============
 
   # 1) gateway - API 网关
   gateway:
@@ -70,150 +70,78 @@ services:
       APP_NAME: pmis-gateway
       SERVER_PORT: 9000
     depends_on:
-      - auth
-      - user
+      - system
+      - userinfo
       - project
-      - execution
-      - agent
-      - notification
       - workflow
-      - file
-      - audit
-      - config
-      - message
+      - agent
       - cronjob
 
-  # 2) auth - 认证授权
-  auth:
-    image: pmis-auth:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-auth
+  # 2) system - 文件/配置/审计/通知/消息模板（合并）
+  system:
+    image: pmis-system:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-system
     <<: *microservice-common
     ports:
       - "9001:9001"
     environment:
-      APP_NAME: pmis-auth
+      APP_NAME: pmis-system
       SERVER_PORT: 9001
 
-  # 3) user - 用户/权限/部门/资源池
-  user:
-    image: pmis-user:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-user
+  # 3) userinfo - 用户/权限/认证/资源（合并）
+  userinfo:
+    image: pmis-userinfo:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-userinfo
     <<: *microservice-common
     ports:
       - "9002:9002"
     environment:
-      APP_NAME: pmis-user
+      APP_NAME: pmis-userinfo
       SERVER_PORT: 9002
 
-  # 4) notification - 通知中心
-  notification:
-    image: pmis-notification:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-notification
-    <<: *microservice-common
-    ports:
-      - "9003:9003"
-    environment:
-      APP_NAME: pmis-notification
-      SERVER_PORT: 9003
-
-  # 5) workflow - 工作流
-  workflow:
-    image: pmis-workflow:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-workflow
-    <<: *microservice-common
-    ports:
-      - "9004:9004"
-    environment:
-      APP_NAME: pmis-workflow
-      SERVER_PORT: 9004
-
-  # 6) project - 商机/立项/合同/变更
+  # 4) project - 项目/执行/财务/报表（合并）
   project:
     image: pmis-project:${IMAGE_TAG:-1.0.0}
     container_name: pmis-project
     <<: *microservice-common
     ports:
-      - "9005:9005"
+      - "9003:9003"
     environment:
       APP_NAME: pmis-project
-      SERVER_PORT: 9005
+      SERVER_PORT: 9003
 
-  # 7) execution - 执行/成本/财务/报表/驾驶舱
-  execution:
-    image: pmis-execution:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-execution
-    <<: *microservice-common
-    ports:
-      - "9006:9006"
-    environment:
-      APP_NAME: pmis-execution
-      SERVER_PORT: 9006
-
-  # 8) agent - AI 智能体
-  agent:
-    image: pmis-agent:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-agent
-    <<: *microservice-common
-    ports:
-      - "9007:9007"
-    environment:
-      APP_NAME: pmis-agent
-      SERVER_PORT: 9007
-
-  # 9) config - 配置中心
-  config:
-    image: pmis-config:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-config
-    <<: *microservice-common
-    ports:
-      - "9008:9008"
-    environment:
-      APP_NAME: pmis-config
-      SERVER_PORT: 9008
-
-  # 10) file - 文件存储
-  file:
-    image: pmis-file:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-file
-    <<: *microservice-common
-    ports:
-      - "9009:9009"
-    environment:
-      APP_NAME: pmis-file
-      SERVER_PORT: 9009
-
-  # 11) audit - 审计日志
-  audit:
-    image: pmis-audit:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-audit
-    <<: *microservice-common
-    ports:
-      - "9010:9010"
-    environment:
-      APP_NAME: pmis-audit
-      SERVER_PORT: 9010
-
-  # 12) message - 消息模板
-  message:
-    image: pmis-message:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-message
-    <<: *microservice-common
-    ports:
-      - "9011:9011"
-    environment:
-      APP_NAME: pmis-message
-      SERVER_PORT: 9011
-
-  # 13) cronjob - 分布式任务调度
+  # 5) cronjob - 分布式任务调度
   cronjob:
     image: pmis-cronjob:${IMAGE_TAG:-1.0.0}
     container_name: pmis-cronjob
     <<: *microservice-common
     ports:
-      - "9012:9012"
+      - "9004:9004"
     environment:
       APP_NAME: pmis-cronjob
-      SERVER_PORT: 9012
+      SERVER_PORT: 9004
+
+  # 6) workflow - 工作流
+  workflow:
+    image: pmis-workflow:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-workflow
+    <<: *microservice-common
+    ports:
+      - "9005:9005"
+    environment:
+      APP_NAME: pmis-workflow
+      SERVER_PORT: 9005
+
+  # 7) agent - AI 智能体
+  agent:
+    image: pmis-agent:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-agent
+    <<: *microservice-common
+    ports:
+      - "9006:9006"
+    environment:
+      APP_NAME: pmis-agent
+      SERVER_PORT: 9006
 
   # ============ 周边组件（独立部署）============
 

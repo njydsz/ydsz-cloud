@@ -66,7 +66,9 @@ minio:
   accessKey: "minioadmin"
   secretKey: "minioadmin"
 
-# 14 个微服务共享配置
+# 7 个微服务共享配置 (2026-07-03 服务合并后)
+# 端口分配: 9000 gateway / 9001 system / 9002 userinfo / 9003 project
+#           9004 cronjob  / 9005 workflow / 9006 agent
 microservices:
   # 每个服务: { enabled, port, replicas, jvmOpts, env, hpa, pdb }
   # hpa/pdb 为可选子对象, 省略则不生成对应资源 (见 templates/hpa.yaml, templates/pdb.yaml)
@@ -83,11 +85,12 @@ microservices:
       targetMemory: 80
     pdb:
       minAvailable: 1
-  auth:
+  # system: file + config + audit + notification + message 合并
+  system:
     enabled: true
     port: 9001
     replicas: 2
-    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
+    jvmOpts: "-Xms256m -Xmx768m -XX:+UseG1GC"
     hpa:
       minReplicas: 2
       maxReplicas: 6
@@ -95,7 +98,8 @@ microservices:
       targetMemory: 80
     pdb:
       minAvailable: 1
-  user:
+  # userinfo: user + auth 合并
+  userinfo:
     enabled: true
     port: 9002
     replicas: 2
@@ -107,21 +111,10 @@ microservices:
       targetMemory: 80
     pdb:
       minAvailable: 1
+  # project: project + execution 合并 (含财务/报表/驾驶舱)
   project:
     enabled: true
-    port: 9005
-    replicas: 2
-    jvmOpts: "-Xms256m -Xmx768m -XX:+UseG1GC"
-    hpa:
-      minReplicas: 2
-      maxReplicas: 6
-      targetCPU: 70
-      targetMemory: 80
-    pdb:
-      minAvailable: 1
-  execution:
-    enabled: true
-    port: 9006
+    port: 9003
     replicas: 3
     jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC"
     hpa:
@@ -131,45 +124,9 @@ microservices:
       targetMemory: 80
     pdb:
       minAvailable: 2
-  agent:
+  cronjob:
     enabled: true
-    port: 9007
-    replicas: 2
-    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
-    hpa:
-      minReplicas: 2
-      maxReplicas: 6
-      targetCPU: 70
-      targetMemory: 80
-    pdb:
-      minAvailable: 1
-  audit:
-    enabled: true
-    port: 9010
-    replicas: 1
-    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
-    hpa:
-      minReplicas: 1
-      maxReplicas: 3
-      targetCPU: 70
-      targetMemory: 80
-    pdb:
-      minAvailable: 1
-  message:
-    enabled: true
-    port: 9011
-    replicas: 1
-    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
-    hpa:
-      minReplicas: 1
-      maxReplicas: 3
-      targetCPU: 70
-      targetMemory: 80
-    pdb:
-      minAvailable: 1
-  notification:
-    enabled: true
-    port: 9003
+    port: 9004
     replicas: 1
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
     hpa:
@@ -181,8 +138,8 @@ microservices:
       minAvailable: 1
   workflow:
     enabled: true
-    port: 9004
-    replicas: 1
+    port: 9005
+    replicas: 2
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
     hpa:
       minReplicas: 2
@@ -191,38 +148,14 @@ microservices:
       targetMemory: 80
     pdb:
       minAvailable: 1
-  config:
+  agent:
     enabled: true
-    port: 9008
-    replicas: 1
+    port: 9006
+    replicas: 2
     jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
     hpa:
-      minReplicas: 1
-      maxReplicas: 3
-      targetCPU: 70
-      targetMemory: 80
-    pdb:
-      minAvailable: 1
-  cronjob:
-    enabled: true
-    port: 9012
-    replicas: 1
-    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
-    hpa:
-      minReplicas: 1
-      maxReplicas: 3
-      targetCPU: 70
-      targetMemory: 80
-    pdb:
-      minAvailable: 1
-  file:
-    enabled: true
-    port: 9009
-    replicas: 1
-    jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC"
-    hpa:
-      minReplicas: 1
-      maxReplicas: 3
+      minReplicas: 2
+      maxReplicas: 6
       targetCPU: 70
       targetMemory: 80
     pdb:
@@ -281,7 +214,7 @@ healthcheck:
 # 仅在生产 (pmis-prod) 启用, staging 走 SCG 权重方案 (deploy/canary/canary-shift.sh)
 canary:
   enabled: false
-  serviceName: execution
+  serviceName: project   # 2026-07-03 修订: 原 execution 已并入 project
   stableTag: latest
   canaryTag: ""
   weight: 10

@@ -38,6 +38,7 @@ import type { PropType } from 'vue'
 import { computed } from 'vue'
 import SkeletonTable from './SkeletonTable.vue'
 import BatchToolbar from './BatchToolbar.vue'
+import EmptyState from './EmptyState.vue'
 
 /** 批量操作按钮配置 */
 interface BatchAction {
@@ -78,6 +79,10 @@ const props = defineProps({
   selection: { type: Array as PropType<any[]>, default: () => [] },
   /** 批量操作按钮配置，传给 BatchToolbar 的 actions */
   batchActions: { type: Array as PropType<BatchAction[]>, default: () => [] },
+  /** H16.4：空状态预设场景；空字符串表示不启用（使用 table 自带空状态），可选值 list/search/network/noPermission */
+  emptyPreset: { type: String as PropType<'' | 'list' | 'search' | 'network' | 'noPermission'>, default: '' },
+  /** H16.4：空状态 CTA 按钮文本；不传则隐藏 */
+  emptyActionText: { type: String, default: '' },
 })
 
 const emit = defineEmits<{
@@ -88,6 +93,8 @@ const emit = defineEmits<{
   (e: 'update:query', value: Record<string, any>): void
   /** 清空选择（点击 BatchToolbar「清空选择」时触发） */
   (e: 'clear-selection'): void
+  /** H16.4：空状态 CTA 按钮点击 */
+  (e: 'empty-action'): void
 }>()
 
 // el-pagination 不允许直接 v-model 外部 prop，
@@ -116,6 +123,9 @@ function onRefresh() {
 function onClearSelection() {
   emit('clear-selection')
 }
+function onEmptyAction() {
+  emit('empty-action')
+}
 
 /**
  * 骨架屏展示条件：
@@ -124,6 +134,15 @@ function onClearSelection() {
  */
 const showSkeleton = computed(
   () => props.loadingType === 'skeleton' && props.loading && props.list.length === 0,
+)
+
+/**
+ * H16.4：空状态展示条件
+ *   配置了 emptyPreset 且非加载中 且列表为空。
+ * 骨架屏优先级更高，加载中不展示空状态。
+ */
+const showEmpty = computed(
+  () => props.emptyPreset !== '' && !props.loading && props.list.length === 0,
 )
 </script>
 
@@ -168,12 +187,19 @@ const showSkeleton = computed(
         </slot>
       </div>
 
-      <!-- 表格区：首次加载且开启骨架模式时以骨架屏占位，其余情况渲染 table 插槽 -->
+      <!-- 表格区：首次加载且开启骨架模式时以骨架屏占位；空状态展示 EmptyState；其余渲染 table 插槽 -->
       <div class="table-area" :style="{ minHeight: typeof tableMinHeight === 'number' ? `${tableMinHeight}px` : tableMinHeight }">
         <SkeletonTable
           v-if="showSkeleton"
           :rows="skeletonRows"
           :columns="skeletonColumns"
+        />
+        <EmptyState
+          v-else-if="showEmpty"
+          :preset="emptyPreset"
+          :action-text="emptyActionText"
+          :block-height="Number(tableMinHeight) || 0"
+          @action="onEmptyAction"
         />
         <slot v-else name="table" />
       </div>
