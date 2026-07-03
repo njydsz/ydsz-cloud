@@ -9,6 +9,7 @@ import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.engine.FlowAssigneeResolver;
 import com.njydsz.pmis.workflow.engine.FlowEventContext;
+import com.njydsz.pmis.workflow.engine.FlowServiceNodeExecutor;
 import com.njydsz.pmis.workflow.engine.FlowUrgeLimiter;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO;
@@ -102,6 +103,8 @@ public class FlowTaskCompleteServiceImpl {
     private final FlowUrgeLimiter urgeLimiter;
     /** 跨子 Service 共享的任务校验/审计/事件辅助 */
     private final FlowTaskSupport support;
+    /** P1-4: 服务节点执行器（HTTP/SCRIPT/AUTO_PASS 自动执行） */
+    private final FlowServiceNodeExecutor serviceNodeExecutor;
 
     // ============================== 创建任务 ==============================
 
@@ -115,9 +118,21 @@ public class FlowTaskCompleteServiceImpl {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16" + instanceId);
         }
 
+        // P1-4: SERVICE 服务节点 — 自动执行（HTTP/SCRIPT/AUTO_PASS），不创建人工任务
+        if (node.getNodeType() != null
+                && node.getNodeType() == FlowNodeType.SERVICE.getCode()) {
+            return executeServiceNode(instance, node, variables);
+        }
+
         // 解析办理人：尝试展开 ROLE/DEPT 为多人
         List<String> userIds = expandAssignees(node, variables);
         FlowPerformType performType = resolvePerformType(node);
+
+        // P1-5: 跨节点办理人去重 — 排除同实例下已审批过的人员
+        boolean autoDedup = isAutoDedupEnabled(node);
+        if (autoDedup && !userIds.isEmpty()) {
+            userIds = applyCrossNodeDedup(userIds, instanceId, node);
+        }
 
         FlowTaskDO task = new FlowTaskDO();
         task.setInstanceId(instanceId);
@@ -149,6 +164,24 @@ public class FlowTaskCompleteServiceImpl {
 
         // 设置首个办理人
         if (userIds.isEmpty()) {
+            // P1-5: 跨节点去重后候选人为空 — 自动跳过该节点（记录审计日志）
+            if (autoDedup) {
+                task.setAssigneeType(FlowAssigneeType.USER.name());
+                task.setAssigneeId("0");
+                task.setAssigneeName("SYSTEM_DEDUP_SKIP");
+                task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+                LocalDateTime now = LocalDateTime.now();
+                task.setFinishAt(now);
+                task.setDurationMs(0L);
+                taskMapper.insert(task);
+                archiveTask(task, FlowTaskStatus.COMPLETED);
+                support.audit(task, "DEDUP_SKIP", 0L, null, "办理人去重后为空，自动跳过");
+                log.info("[Flow] 办理人去重后为空，自动跳过: instanceId={} node={}",
+                        instanceId, node.getNodeCode());
+                // 推进到下一节点（复用 AUTO_PASS 推进逻辑，含递归深度保护）
+                advanceAfterAutoPass(instance, node, variables);
+                return task.getId();
+            }
             // GAP-P0: 审批人为空兜底处理 — 读取 node.ext 中的 emptyStrategy 配置
             Map<String, Object> extConfig = parseExtConfig(node.getExt());
             String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", "FALLBACK");
@@ -954,6 +987,148 @@ public class FlowTaskCompleteServiceImpl {
             }
         } finally {
             AUTO_PASS_DEPTH.set(depth);
+        }
+    }
+
+    // ============================== P1-4: 服务节点自动执行 ==============================
+
+    /**
+     * P1-4: 执行 SERVICE 服务节点 — 自动执行不创建人工任务
+     *
+     * <p>从节点 ext JSON 读取 serviceType（HTTP/SCRIPT/AUTO_PASS）配置并执行：
+     * <ul>
+     *   <li>成功：创建 COMPLETED 任务记录（审计追溯），归档，审计，推进到下一节点</li>
+     *   <li>失败：创建任务记录，归档，审计，标记实例为 ERROR 异常状态</li>
+     * </ul>
+     *
+     * @param instance  流程实例
+     * @param node      服务节点
+     * @param variables 流程变量
+     * @return 任务 ID（COMPLETED 状态，仅用于审计追溯）
+     */
+    private Long executeServiceNode(FlowInstanceDO instance, FlowNodeDO node,
+                                     Map<String, Object> variables) {
+        // 1. 执行服务节点逻辑（HTTP/SCRIPT/AUTO_PASS）
+        FlowServiceNodeExecutor.ServiceExecutionResult result =
+                serviceNodeExecutor.execute(node, variables);
+
+        // 2. 创建任务记录（COMPLETED/TIMEOUT，用于审计追溯，非人工任务）
+        FlowTaskDO task = new FlowTaskDO();
+        task.setInstanceId(instance.getId());
+        task.setFlowCode(instance.getFlowCode());
+        task.setDefinitionId(instance.getDefinitionId());
+        task.setNodeCode(node.getNodeCode());
+        task.setNodeName(node.getNodeName());
+        task.setNodeType(node.getNodeType());
+        task.setBusinessType(instance.getBusinessType());
+        task.setBusinessId(instance.getBusinessId());
+        task.setBusinessNo(instance.getBusinessNo());
+        task.setFlowName(instance.getFlowName());
+        task.setTitle(instance.getTitle());
+        task.setPermissionFlag(node.getPermissionFlag());
+        task.setPerformType(FlowPerformType.OR.name());
+        task.setApproveCount(1);
+        task.setApproveFinished(1);
+        task.setAssigneeType(FlowAssigneeType.USER.name());
+        task.setAssigneeId("0");
+        task.setAssigneeName("SYSTEM_SERVICE");
+        task.setTenantId(instance.getTenantId());
+        task.setProviderTraceId(instance.getProviderTraceId());
+        LocalDateTime now = LocalDateTime.now();
+        task.setFinishAt(now);
+        task.setDurationMs(0L);
+
+        if (result.success()) {
+            // 3a. 成功：标记 COMPLETED，归档，审计，推进
+            task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+            task.setComment(result.message());
+            taskMapper.insert(task);
+            archiveTask(task, FlowTaskStatus.COMPLETED);
+            support.audit(task, "SERVICE_EXECUTE", 0L, null,
+                    "服务节点执行成功: " + result.message());
+            log.info("[Flow] 服务节点执行成功: instanceId={} node={} msg={}",
+                    instance.getId(), node.getNodeCode(), result.message());
+            // 推进到下一节点（复用 AUTO_PASS 推进逻辑，含递归深度保护）
+            advanceAfterAutoPass(instance, node, variables);
+        } else {
+            // 3b. 失败：标记 TIMEOUT，归档，审计，实例标记为异常
+            task.setTaskStatus(FlowTaskStatus.TIMEOUT.name());
+            task.setComment("服务节点执行失败: " + result.message());
+            taskMapper.insert(task);
+            archiveTask(task, FlowTaskStatus.TIMEOUT);
+            support.audit(task, "SERVICE_ERROR", 0L, null,
+                    "服务节点执行失败: " + result.message());
+            // 标记实例为异常状态，需人工介入处理
+            instanceMapper.updateStatus(instance.getId(),
+                    FlowInstanceStatus.ERROR.name(),
+                    node.getNodeCode(), node.getNodeName(), null, null);
+            log.error("[Flow] 服务节点执行失败，实例标记为异常: instanceId={} node={} msg={}",
+                    instance.getId(), node.getNodeCode(), result.message());
+        }
+        return task.getId();
+    }
+
+    // ============================== P1-5: 跨节点办理人去重 ==============================
+
+    /**
+     * P1-5: 判断节点是否启用跨节点去重（ext JSON 中 autoDedup=true）
+     *
+     * @param node 流程节点
+     * @return true=启用跨节点去重
+     */
+    private boolean isAutoDedupEnabled(FlowNodeDO node) {
+        if (node == null || !StringUtils.hasText(node.getExt())) {
+            return false;
+        }
+        try {
+            Map<String, Object> ext = parseExtConfig(node.getExt());
+            Object val = ext.get("autoDedup");
+            if (val == null) {
+                return false;
+            }
+            if (val instanceof Boolean b) {
+                return b;
+            }
+            return Boolean.parseBoolean(String.valueOf(val));
+        } catch (Exception e) {
+            log.warn("[Flow] 解析 autoDedup 配置失败: node={} err={}",
+                    node.getNodeCode(), e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * P1-5: 跨节点办理人去重 — 从候选办理人中排除同实例下已审批过的人员
+     *
+     * <p>查询 his_task 中 task_status=COMPLETED 的办理人列表，
+     * 从当前节点的候选办理人中排除已审批过的人员。
+     * 支持钉钉"一人多环节只审批一次"场景。
+     *
+     * @param userIds    当前节点的候选办理人列表
+     * @param instanceId 流程实例 ID
+     * @param node       流程节点（用于日志）
+     * @return 去重后的候选办理人列表
+     */
+    private List<String> applyCrossNodeDedup(List<String> userIds, Long instanceId,
+                                              FlowNodeDO node) {
+        try {
+            List<String> completedAssignees = hisTaskMapper.selectCompletedAssigneeIds(instanceId);
+            if (completedAssignees == null || completedAssignees.isEmpty()) {
+                return userIds;
+            }
+            Set<String> completedSet = new HashSet<>(completedAssignees);
+            int beforeSize = userIds.size();
+            List<String> deduped = userIds.stream()
+                    .filter(uid -> !completedSet.contains(uid))
+                    .collect(Collectors.toList());
+            log.info("[Flow] 跨节点办理人去重: instanceId={} node={} before={} after={} excluded={}",
+                    instanceId, node.getNodeCode(), beforeSize, deduped.size(),
+                    beforeSize - deduped.size());
+            return deduped;
+        } catch (Exception e) {
+            log.warn("[Flow] 跨节点办理人去重异常，跳过去重: instanceId={} node={} err={}",
+                    instanceId, node.getNodeCode(), e.getMessage());
+            return userIds;
         }
     }
 

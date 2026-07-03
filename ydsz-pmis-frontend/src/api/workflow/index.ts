@@ -32,6 +32,18 @@ import type {
   FlowTypeDistributionDTO,
   FormSchemaDTO,
   FormSchemaVO,
+  FormRenderDataDTO,
+  NodeFormConfigDTO,
+  DelegateAuthDTO,
+  CreateDelegateAuthDTO,
+  DelegateLogDTO,
+  SlaOverdueTaskDTO,
+  CanaryRolloutDTO,
+  CanaryRolloutLogDTO,
+  PublishCanaryDTO,
+  FlowVersionDTO,
+  VersionDiffDTO,
+  SimulateResultDTO,
 } from './types'
 
 /** 引擎信息 */
@@ -600,6 +612,163 @@ export function pageFormSchemas(params: {
 export function deleteFormSchema(formCode: string) {
   return http.delete<ApiResponse<null>>(
     `/workflow/form/schema/${formCode}`,
+  )
+}
+
+// ===========================================
+// P1-1: 运行时表单引擎
+// ===========================================
+
+/** 获取表单渲染数据（含字段权限） */
+export function getFormRenderData(instanceId: number) {
+  return http.get<ApiResponse<FormRenderDataDTO>>(
+    `/workflow/engine/instance/${instanceId}/form-render`,
+  )
+}
+
+/** 获取节点表单字段配置 */
+export function getFormConfig(definitionId: number, nodeCode: string) {
+  return http.get<ApiResponse<NodeFormConfigDTO>>(
+    `/workflow/engine/definition/${definitionId}/form-config/${nodeCode}`,
+  )
+}
+
+/** 保存节点表单字段配置 */
+export function saveFormConfig(definitionId: number, nodeCode: string, config: Partial<NodeFormConfigDTO>) {
+  return http.post<ApiResponse<null>>(
+    `/workflow/engine/definition/${definitionId}/form-config/${nodeCode}`,
+    config,
+  )
+}
+
+// ===========================================
+// P1-2: 委托授权（delegate-auth）
+// ===========================================
+
+/** 创建委托授权 */
+export function createDelegateAuth(payload: CreateDelegateAuthDTO) {
+  return http.post<ApiResponse<number>>('/workflow/engine/delegate-auth/create', payload)
+}
+
+/** 撤回委托授权 */
+export function revokeDelegateAuth(id: number) {
+  return http.post<ApiResponse<null>>(`/workflow/engine/delegate-auth/${id}/revoke`)
+}
+
+/** 启停委托授权 */
+export function toggleDelegateAuth(id: number, enabled: boolean) {
+  return http.post<ApiResponse<null>>(`/workflow/engine/delegate-auth/${id}/status`, { enabled })
+}
+
+/** 我设置的委托授权（分页） */
+export function pageMyDelegateAuth(params: { page?: number; size?: number }) {
+  return http.get<ApiResponse<PageResult<DelegateAuthDTO>>>(
+    '/workflow/engine/delegate-auth/mine',
+    { params },
+  )
+}
+
+/** 代理给我的委托授权 */
+export function pageDelegateAuthToMe(params: { page?: number; size?: number }) {
+  return http.get<ApiResponse<PageResult<DelegateAuthDTO>>>(
+    '/workflow/engine/delegate-auth/as-delegate',
+    { params },
+  )
+}
+
+/** 代理处理记录 */
+export function pageDelegateLogs(params: { page?: number; size?: number }) {
+  return http.get<ApiResponse<PageResult<DelegateLogDTO>>>(
+    '/workflow/engine/delegate-auth/log/delegate',
+    { params },
+  )
+}
+
+/** 被代理记录 */
+export function pageOwnerLogs(params: { page?: number; size?: number }) {
+  return http.get<ApiResponse<PageResult<DelegateLogDTO>>>(
+    '/workflow/engine/delegate-auth/log/owner',
+    { params },
+  )
+}
+
+// ===========================================
+// P1-2: SLA
+// ===========================================
+
+/** 手动扫描 SLA 超时任务 */
+export function scanSla() {
+  return http.post<ApiResponse<number>>('/workflow/engine/sla/scan')
+}
+
+/** 单任务 SLA 处理 */
+export function processSlaTask(taskId: number) {
+  return http.post<ApiResponse<null>>(`/workflow/engine/sla/process/${taskId}`)
+}
+
+// ===========================================
+// P1-2: 灰度发布（canary）
+// ===========================================
+
+/** 启动灰度发布 */
+export function publishCanary(definitionId: number, payload: PublishCanaryDTO) {
+  return http.post<ApiResponse<null>>(`/workflow/engine/canary/${definitionId}/publish`, payload)
+}
+
+/** 调整灰度比例 */
+export function adjustCanary(definitionId: number, percentage: number) {
+  return http.post<ApiResponse<null>>(`/workflow/engine/canary/${definitionId}/adjust`, { percentage })
+}
+
+/** 全量发布（灰度转正） */
+export function promoteCanary(definitionId: number) {
+  return http.post<ApiResponse<null>>(`/workflow/engine/canary/${definitionId}/promote`)
+}
+
+/** 回滚灰度发布 */
+export function rollbackCanary(definitionId: number) {
+  return http.post<ApiResponse<null>>(`/workflow/engine/canary/${definitionId}/rollback`)
+}
+
+/** 获取灰度发布历史日志 */
+export function getCanaryRolloutLog(flowCode: string) {
+  return http.get<ApiResponse<CanaryRolloutLogDTO[]>>(
+    `/workflow/engine/canary/${flowCode}/rollout-log`,
+  )
+}
+
+// ===========================================
+// P1-3: 版本管理 + 模拟运行
+// ===========================================
+
+/** 获取流程定义版本列表 */
+export function listVersions(definitionId: number) {
+  return http.get<ApiResponse<FlowVersionDTO[]>>(
+    `/workflow/engine/definition/${definitionId}/versions`,
+  )
+}
+
+/** 版本差异对比 */
+export function diffVersions(definitionId: number, v1: number, v2: number) {
+  return http.get<ApiResponse<VersionDiffDTO>>(
+    `/workflow/engine/definition/${definitionId}/diff`,
+    { params: { v1, v2 } },
+  )
+}
+
+/** 切换激活版本 */
+export function switchVersion(code: string, version: number) {
+  return http.post<ApiResponse<null>>(
+    `/workflow/engine/definition/${code}/switchVersion`,
+    { version },
+  )
+}
+
+/** 模拟运行流程 */
+export function simulateFlow(flowCode: string, variables: Record<string, unknown>) {
+  return http.post<ApiResponse<SimulateResultDTO>>(
+    '/workflow/engine/definition/simulate',
+    { flowCode, variables },
   )
 }
 

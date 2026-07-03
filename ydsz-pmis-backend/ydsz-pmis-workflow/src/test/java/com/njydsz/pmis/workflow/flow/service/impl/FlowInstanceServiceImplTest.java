@@ -78,6 +78,7 @@ class FlowInstanceServiceImplTest {
     private com.njydsz.pmis.workflow.mapper.FlowNodeMapper nodeMapper;
     private com.njydsz.pmis.workflow.mapper.FlowSkipMapper skipMapper;
     private com.njydsz.pmis.workflow.engine.FlowVariableStrategy variableStrategy;
+    private com.njydsz.pmis.workflow.service.FlowAutoTriggerService autoTriggerService;
     private FlowInstanceServiceImpl service;
 
     @BeforeEach
@@ -102,6 +103,8 @@ class FlowInstanceServiceImplTest {
         nodeMapper = mock(FlowNodeMapper.class);
         skipMapper = mock(FlowSkipMapper.class);
         variableStrategy = mock(FlowVariableStrategy.class);
+        // P3-2: 自动触发服务 mock
+        autoTriggerService = mock(com.njydsz.pmis.workflow.service.FlowAutoTriggerService.class);
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
                 canaryService, advancer, taskService, taskMapper,
                 nodeMapper, skipMapper, variableStrategy,

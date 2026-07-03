@@ -51,6 +51,9 @@ public class ExpressionRule implements Rule {
     public int getPriority() { return definition.getPriority(); }
 
     @Override
+    public String getScope() { return definition.getScope(); }
+
+    @Override
     public RuleResult evaluate(RuleContext context) {
         long start = System.nanoTime();
         try {

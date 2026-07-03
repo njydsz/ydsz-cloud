@@ -94,7 +94,7 @@ class ConfigServiceImplTest {
         when(mapper.selectByGroupAndKey("g", "k")).thenReturn(config(1L, "g", "k", "v"));
         ConfigDO r = service.getByKey("g", "k");
         assertThat(r.getConfigValue()).isEqualTo("v");
-        verify(redis.opsForValue()).set(eq("pmis:cfg:g:k"), anyString(), any());
+        verify(redis.opsForValue()).set(eq("pmis:cfg:g:k"), anyString(), any(java.time.Duration.class));
     }
 
     @Test

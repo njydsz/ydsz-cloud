@@ -575,8 +575,10 @@ public class BpmnXmlParser {
         return switch (localName.toLowerCase()) {
             case "startevent" -> FlowNodeType.START.getCode();
             case "endevent" -> FlowNodeType.END.getCode();
-            case "usertask", "servicetask", "scripttask", "manualtask",
-                 "receivetask" -> FlowNodeType.APPROVAL.getCode();
+            // P1-4: serviceTask / scriptTask 映射为 SERVICE(8)，自动执行不创建人工任务
+            case "servicetask", "scripttask" -> FlowNodeType.SERVICE.getCode();
+            // manualTask / receiveTask 确实需要人工处理，保持映射为 APPROVAL(1)
+            case "usertask", "manualtask", "receivetask" -> FlowNodeType.APPROVAL.getCode();
             case "callactivity", "subprocess" -> FlowNodeType.SUBPROCESS.getCode();
             case "exclusivegateway", "eventbasedgateway", "complexgateway" -> FlowNodeType.CONDITION.getCode();
             case "parallelgateway" -> FlowNodeType.PARALLEL.getCode();

@@ -191,6 +191,7 @@ class FlowMetricsTest {
 
     @Test
     @DisplayName("Gauge instance_running 从 mapper 拉取")
+    @SuppressWarnings("unchecked")
     void testInstanceRunningGauge() {
         when(instanceMapper.selectCount(any(LambdaQueryWrapper.class)))
                 .thenReturn(7L);
@@ -201,6 +202,7 @@ class FlowMetricsTest {
 
     @Test
     @DisplayName("Gauge task_pending 拉取 PENDING/CLAIMED 任务数")
+    @SuppressWarnings("unchecked")
     void testTaskPendingGauge() {
         when(taskMapper.selectCount(any(LambdaQueryWrapper.class)))
                 .thenReturn(15L);
@@ -229,6 +231,7 @@ class FlowMetricsTest {
 
     @Test
     @DisplayName("Gauge mapper 抛异常时返回 0，不抛")
+    @SuppressWarnings("unchecked")
     void testGaugeResilience() {
         when(instanceMapper.selectCount(any(LambdaQueryWrapper.class)))
                 .thenThrow(new RuntimeException("db down"));

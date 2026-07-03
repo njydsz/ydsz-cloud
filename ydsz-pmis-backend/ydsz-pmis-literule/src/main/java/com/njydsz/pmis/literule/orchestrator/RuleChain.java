@@ -4,20 +4,19 @@ import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.api.StatsRecorder;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 /**
  * 规则链，支持 THEN/IF/ELIF/SWITCH/WHEN/FOR/WHILE/BREAK 编排
@@ -65,8 +64,11 @@ public class RuleChain {
     /** 分支 key 取值字段名（SWITCH 使用） */
     private final String branchKey;
 
-    /** 分支映射：分支 key -&gt; 分支节点（SWITCH 使用） */
+    /** 分支映射：分支 key -> 分支节点（SWITCH 使用） */
     private final Map<String, RuleNode> branchMap;
+
+    /** SWITCH 默认分支节点（未命中任何分支时执行，可选） */
+    private final RuleNode defaultBranch;
 
     /** 多分支条件列表（ELIF 使用）：每个元素为 [条件表达式, 动作节点] 对 */
     private final List<Map.Entry<String, RuleNode>> elifBranches;
@@ -84,6 +86,7 @@ public class RuleChain {
     private final int maxIterations;
 
     /** 是否终止循环（BREAK 使用） */
+    @SuppressWarnings("unused")
     private final boolean isBreak;
 
     /**
@@ -102,7 +105,7 @@ public class RuleChain {
      * @param isBreak             是否终止
      */
     private RuleChain(RuleChainType chainType, List<RuleNode> nodes, String conditionExpression,
-                      String branchKey, Map<String, RuleNode> branchMap,
+                      String branchKey, Map<String, RuleNode> branchMap, RuleNode defaultBranch,
                       List<Map.Entry<String, RuleNode>> elifBranches, RuleNode elseNode,
                       String iterableExpression, String iterationVar,
                       int maxIterations, boolean isBreak) {
@@ -111,6 +114,7 @@ public class RuleChain {
         this.conditionExpression = conditionExpression;
         this.branchKey = branchKey;
         this.branchMap = branchMap;
+        this.defaultBranch = defaultBranch;
         this.elifBranches = elifBranches;
         this.elseNode = elseNode;
         this.iterableExpression = iterableExpression;
@@ -134,7 +138,7 @@ public class RuleChain {
             }
         }
         return new RuleChain(RuleChainType.THEN,
-                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, 0, false);
+                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, null, 0, false);
     }
 
     /**
@@ -152,7 +156,7 @@ public class RuleChain {
             }
         }
         return new RuleChain(RuleChainType.WHEN,
-                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, 0, false);
+                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, null, 0, false);
     }
 
     /**
@@ -167,7 +171,7 @@ public class RuleChain {
         Objects.requireNonNull(actionRule, "actionRule 不能为 null");
         List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(actionRule));
         return new RuleChain(RuleChainType.IF,
-                nodeList, conditionExpression, null, null, null, null, null, null, 0, false);
+                nodeList, conditionExpression, null, null, null, null, null, null, null, 0, false);
     }
 
     /**
@@ -178,6 +182,19 @@ public class RuleChain {
      * @return SWITCH 类型规则链
      */
     public static RuleChain switchOn(String branchKey, Map<String, Rule> branches) {
+        return switchOn(branchKey, branches, null);
+    }
+
+    /**
+     * 构建分支选择链（SWITCH），指定默认分支
+     *
+     * @param branchKey   分支 key 字段名（从上下文事实中取值）
+     * @param branches    分支映射：分支 key -&gt; 分支规则
+     * @param defaultRule 默认分支规则（未命中任何分支时执行，可为 null）
+     * @return SWITCH 类型规则链
+     * @since 1.3.0
+     */
+    public static RuleChain switchOn(String branchKey, Map<String, Rule> branches, Rule defaultRule) {
         Objects.requireNonNull(branchKey, "branchKey 不能为 null");
         Objects.requireNonNull(branches, "branches 不能为 null");
         Map<String, RuleNode> nodeMap = new LinkedHashMap<>();
@@ -186,8 +203,10 @@ public class RuleChain {
                 nodeMap.put(entry.getKey(), RuleNode.of(entry.getValue()));
             }
         }
+        RuleNode defaultNode = defaultRule != null ? RuleNode.of(defaultRule) : null;
         return new RuleChain(RuleChainType.SWITCH,
-                null, null, branchKey, Collections.unmodifiableMap(nodeMap), null, null, null, null, 0, false);
+                null, null, branchKey, Collections.unmodifiableMap(nodeMap), defaultNode,
+                null, null, null, null, 0, false);
     }
 
     /**
@@ -207,7 +226,7 @@ public class RuleChain {
         }
         RuleNode elseNode = elseRule != null ? RuleNode.of(elseRule) : null;
         return new RuleChain(RuleChainType.ELIF,
-                null, null, null, null, Collections.unmodifiableList(branchList), elseNode, null, null, 0, false);
+                null, null, null, null, null, Collections.unmodifiableList(branchList), elseNode, null, null, 0, false);
     }
 
     /**
@@ -224,7 +243,7 @@ public class RuleChain {
         Objects.requireNonNull(actionRule, "actionRule 不能为 null");
         List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(actionRule));
         return new RuleChain(RuleChainType.FOR,
-                nodeList, null, null, null, null, null, iterableExpression, iterationVar, 0, false);
+                nodeList, null, null, null, null, null, null, iterableExpression, iterationVar, 0, false);
     }
 
     /**
@@ -254,7 +273,7 @@ public class RuleChain {
         }
         List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(actionRule));
         return new RuleChain(RuleChainType.WHILE,
-                nodeList, conditionExpression, null, null, null, null, null, null, maxIterations, false);
+                nodeList, conditionExpression, null, null, null, null, null, null, null, maxIterations, false);
     }
 
     /**
@@ -267,7 +286,7 @@ public class RuleChain {
      */
     public static RuleChain breakChain() {
         return new RuleChain(RuleChainType.BREAK,
-                null, null, null, null, null, null, null, null, 0, true);
+                null, null, null, null, null, null, null, null, null, 0, true);
     }
 
     /**
@@ -281,15 +300,31 @@ public class RuleChain {
      * @return 已触发的规则结果列表；无触发返回空列表
      */
     public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator) {
+        return evaluate(context, evaluator, null);
+    }
+
+    /**
+     * 评估规则链（带统计记录）
+     *
+     * <p>按链类型分派执行语义，返回已触发（triggered=true）的结果列表。
+     * 若提供 {@link StatsRecorder}，将对 SINGLE 节点的规则评估记录执行统计。
+     *
+     * @param context       规则上下文
+     * @param evaluator     表达式求值器（IF/SWITCH 嵌套链需要）
+     * @param statsRecorder 统计记录器（可为 null，表示不记录统计）
+     * @return 已触发的规则结果列表；无触发返回空列表
+     * @since 1.3.0
+     */
+    public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         Objects.requireNonNull(context, "context 不能为 null");
         return switch (chainType) {
-            case THEN -> evaluateThen(context, evaluator);
-            case WHEN -> evaluateWhen(context, evaluator);
-            case IF -> evaluateIf(context, evaluator);
-            case ELIF -> evaluateElif(context, evaluator);
-            case SWITCH -> evaluateSwitch(context, evaluator);
-            case FOR -> evaluateFor(context, evaluator);
-            case WHILE -> evaluateWhile(context, evaluator);
+            case THEN -> evaluateThen(context, evaluator, statsRecorder);
+            case WHEN -> evaluateWhen(context, evaluator, statsRecorder);
+            case IF -> evaluateIf(context, evaluator, statsRecorder);
+            case ELIF -> evaluateElif(context, evaluator, statsRecorder);
+            case SWITCH -> evaluateSwitch(context, evaluator, statsRecorder);
+            case FOR -> evaluateFor(context, evaluator, statsRecorder);
+            case WHILE -> evaluateWhile(context, evaluator, statsRecorder);
             case BREAK -> evaluateBreak(context, evaluator);
         };
     }
@@ -301,13 +336,13 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateThen(RuleContext context, ExpressionEvaluator evaluator) {
+    private List<RuleResult> evaluateThen(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (nodes == null) {
             return results;
         }
         for (RuleNode node : nodes) {
-            results.addAll(evaluateNode(node, context, evaluator));
+            results.addAll(evaluateNode(node, context, evaluator, statsRecorder));
         }
         return results;
     }
@@ -322,7 +357,7 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateWhen(RuleContext context, ExpressionEvaluator evaluator) {
+    private List<RuleResult> evaluateWhen(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (nodes == null || nodes.isEmpty()) {
             return results;
@@ -330,7 +365,7 @@ public class RuleChain {
         // 并行执行所有节点，使用 ForkJoinPool.commonPool
         List<CompletableFuture<List<RuleResult>>> futures = new ArrayList<>();
         for (RuleNode node : nodes) {
-            futures.add(CompletableFuture.supplyAsync(() -> evaluateNode(node, context, evaluator)));
+            futures.add(CompletableFuture.supplyAsync(() -> evaluateNode(node, context, evaluator, statsRecorder)));
         }
         // 等待全部完成并合并结果
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
@@ -347,7 +382,7 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateIf(RuleContext context, ExpressionEvaluator evaluator) {
+    private List<RuleResult> evaluateIf(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (evaluator == null) {
             log.warn("[LiteRule-Chain] IF 链缺少 ExpressionEvaluator，跳过求值");
@@ -360,20 +395,21 @@ public class RuleChain {
         }
         if (nodes != null) {
             for (RuleNode node : nodes) {
-                results.addAll(evaluateNode(node, context, evaluator));
+                results.addAll(evaluateNode(node, context, evaluator, statsRecorder));
             }
         }
         return results;
     }
 
     /**
-     * SWITCH 语义：从 context.getFacts().get(branchKey) 取分支 key，执行对应分支
+     * SWITCH 语义：从 context.getFacts().get(branchKey) 取分支 key，执行对应分支；
+     * 未命中任何分支时执行 defaultBranch（如果存在）
      *
      * @param context   规则上下文
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateSwitch(RuleContext context, ExpressionEvaluator evaluator) {
+    private List<RuleResult> evaluateSwitch(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (branchMap == null || branchKey == null) {
             return results;
@@ -382,21 +418,29 @@ public class RuleChain {
         log.debug("[LiteRule-Chain] SWITCH 分支选择: branchKey='{}', value={}", branchKey, key);
         if (key == null) {
             log.warn("[LiteRule-Chain] SWITCH 分支 key '{}' 在上下文中不存在", branchKey);
+            // key 不存在时走默认分支
+            if (defaultBranch != null) {
+                results.addAll(evaluateNode(defaultBranch, context, evaluator, statsRecorder));
+            }
             return results;
         }
         RuleNode branch = branchMap.get(String.valueOf(key));
         if (branch == null) {
-            log.warn("[LiteRule-Chain] SWITCH 未匹配到分支: key='{}'", key);
+            log.warn("[LiteRule-Chain] SWITCH 未匹配到分支: key='{}', 执行默认分支", key);
+            // 未匹配到分支时走默认分支
+            if (defaultBranch != null) {
+                results.addAll(evaluateNode(defaultBranch, context, evaluator, statsRecorder));
+            }
             return results;
         }
-        results.addAll(evaluateNode(branch, context, evaluator));
+        results.addAll(evaluateNode(branch, context, evaluator, statsRecorder));
         return results;
     }
 
     /**
      * ELIF 语义：依次求值多个条件表达式，执行第一个匹配的分支；无匹配则执行 else 分支
      */
-    private List<RuleResult> evaluateElif(RuleContext context, ExpressionEvaluator evaluator) {
+    private List<RuleResult> evaluateElif(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (evaluator == null) {
             log.warn("[LiteRule-Chain] ELIF 链缺少 ExpressionEvaluator，跳过求值");
@@ -407,7 +451,7 @@ public class RuleChain {
                 try {
                     boolean matched = evaluator.evalBoolean(branch.getKey(), context);
                     if (matched) {
-                        results.addAll(evaluateNode(branch.getValue(), context, evaluator));
+                        results.addAll(evaluateNode(branch.getValue(), context, evaluator, statsRecorder));
                         return results;
                     }
                 } catch (Exception e) {
@@ -417,16 +461,20 @@ public class RuleChain {
         }
         // 所有条件都不匹配，执行 else 分支
         if (elseNode != null) {
-            results.addAll(evaluateNode(elseNode, context, evaluator));
+            results.addAll(evaluateNode(elseNode, context, evaluator, statsRecorder));
         }
         return results;
     }
 
     /**
      * FOR 语义：遍历集合中的每个元素，注入迭代变量后执行规则链
+     *
+     * <p>修复：使用可变副本注入迭代变量，避免对不可变 facts Map 调用 put/remove 抛出异常。
+     *
+     * @since 1.3.0 修复 FOR 循环不可变 Map bug
      */
     @SuppressWarnings("unchecked")
-    private List<RuleResult> evaluateFor(RuleContext context, ExpressionEvaluator evaluator) {
+    private List<RuleResult> evaluateFor(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (iterableExpression == null || iterationVar == null) {
             return results;
@@ -439,17 +487,19 @@ public class RuleChain {
         }
         int count = 0;
         for (Object item : (Iterable<Object>) iterable) {
-            // 注入迭代变量到上下文
-            context.getFacts().put(iterationVar, item);
+            // 创建可变副本并注入迭代变量（避免修改不可变的 facts Map）
+            Map<String, Object> mutableFacts = new HashMap<>(context.getFacts());
+            mutableFacts.put(iterationVar, item);
+            RuleContext iterContext = RuleContext.of(mutableFacts, context.getScenario(),
+                    context.getSource(), context.getTraceId());
             // 执行规则链
             if (nodes != null) {
                 for (RuleNode node : nodes) {
-                    List<RuleResult> nodeResults = evaluateNode(node, context, evaluator);
+                    List<RuleResult> nodeResults = evaluateNode(node, iterContext, evaluator, statsRecorder);
                     // 检查是否遇到 BREAK
                     for (RuleResult r : nodeResults) {
                         if (r != null && r.isTriggered() && "BREAK".equals(r.getRuleCode())) {
                             log.debug("[LiteRule-Chain] FOR 循环遇到 BREAK，终止迭代");
-                            context.getFacts().remove(iterationVar);
                             return results;
                         }
                     }
@@ -458,8 +508,6 @@ public class RuleChain {
             }
             count++;
         }
-        // 清理迭代变量
-        context.getFacts().remove(iterationVar);
         log.debug("[LiteRule-Chain] FOR 循环完成: 迭代 {} 次", count);
         return results;
     }
@@ -467,7 +515,7 @@ public class RuleChain {
     /**
      * WHILE 语义：条件为 true 时持续执行规则链，最多执行 maxIterations 次
      */
-    private List<RuleResult> evaluateWhile(RuleContext context, ExpressionEvaluator evaluator) {
+    private List<RuleResult> evaluateWhile(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (evaluator == null) {
             log.warn("[LiteRule-Chain] WHILE 链缺少 ExpressionEvaluator，跳过求值");
@@ -486,7 +534,7 @@ public class RuleChain {
             }
             if (nodes != null) {
                 for (RuleNode node : nodes) {
-                    List<RuleResult> nodeResults = evaluateNode(node, context, evaluator);
+                    List<RuleResult> nodeResults = evaluateNode(node, context, evaluator, statsRecorder);
                     for (RuleResult r : nodeResults) {
                         if (r != null && r.isTriggered() && "BREAK".equals(r.getRuleCode())) {
                             log.debug("[LiteRule-Chain] WHILE 循环遇到 BREAK，终止迭代");
@@ -534,7 +582,7 @@ public class RuleChain {
      * @param evaluator 表达式求值器
      * @return 已触发的结果列表
      */
-    private List<RuleResult> evaluateNode(RuleNode node, RuleContext context, ExpressionEvaluator evaluator) {
+    private List<RuleResult> evaluateNode(RuleNode node, RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
         List<RuleResult> results = new ArrayList<>();
         if (node == null) {
             return results;
@@ -542,7 +590,22 @@ public class RuleChain {
         try {
             switch (node.getNodeType()) {
                 case SINGLE -> {
-                    RuleResult result = node.getRule().evaluate(context);
+                    long start = System.nanoTime();
+                    RuleResult result;
+                    boolean error = false;
+                    try {
+                        result = node.getRule().evaluate(context);
+                    } catch (Exception e) {
+                        result = null;
+                        error = true;
+                        log.warn("[LiteRule-Chain] 规则 {} 评估异常: {}", node.getRule().getCode(), e.getMessage());
+                    }
+                    long elapsed = (System.nanoTime() - start) / 1_000_000;
+                    // 记录统计到引擎
+                    if (statsRecorder != null) {
+                        statsRecorder.record(node.getRule().getCode(),
+                                result != null && result.isTriggered(), error, elapsed);
+                    }
                     if (result != null && result.isTriggered()) {
                         results.add(result);
                     }
@@ -550,13 +613,13 @@ public class RuleChain {
                 case CHAIN -> {
                     RuleChain sub = node.getChain();
                     if (sub != null) {
-                        results.addAll(sub.evaluate(context, evaluator));
+                        results.addAll(sub.evaluate(context, evaluator, statsRecorder));
                     }
                 }
                 case GROUP -> {
                     if (node.getChildren() != null) {
                         for (RuleNode child : node.getChildren()) {
-                            results.addAll(evaluateNode(child, context, evaluator));
+                            results.addAll(evaluateNode(child, context, evaluator, statsRecorder));
                         }
                     }
                 }

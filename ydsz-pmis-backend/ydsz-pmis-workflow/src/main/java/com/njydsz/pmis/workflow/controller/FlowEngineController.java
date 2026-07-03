@@ -1147,6 +1147,150 @@ public class FlowEngineController {
         return Result.ok(efficiencyService.approvalTrend(tenantId, interval, startTime, endTime));
     }
 
+    // ============== P0-3: 监控看板聚合端点 ==============
+
+    /**
+     * P0-3: 监控概览 — 聚合实例/任务/效率统计
+     *
+     * <p>前端监控仪表盘首页数据，包含实例总数、各状态计数、超期任务数、平均耗时等。
+     *
+     * @return 概览统计数据
+     */
+    @GetMapping("/monitor/overview")
+    public Result<Map<String, Object>> monitorOverview() {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        Map<String, Object> overview = new java.util.LinkedHashMap<>();
+
+        // 实例状态计数
+        long running = instanceService.page(null, null, "RUNNING", null, null, tenantId, 1, 1).getTotal();
+        long completed = instanceService.page(null, null, "COMPLETED", null, null, tenantId, 1, 1).getTotal();
+        long rejected = instanceService.page(null, null, "REJECTED", null, null, tenantId, 1, 1).getTotal();
+        long terminated = instanceService.page(null, null, "TERMINATED", null, null, tenantId, 1, 1).getTotal();
+        long suspended = instanceService.page(null, null, "SUSPENDED", null, null, tenantId, 1, 1).getTotal();
+        long total = running + completed + rejected + terminated + suspended;
+
+        overview.put("totalInstances", total);
+        overview.put("running", running);
+        overview.put("completed", completed);
+        overview.put("rejected", rejected);
+        overview.put("terminated", terminated);
+        overview.put("suspended", suspended);
+
+        // 超期任务数
+        long overdueCount = taskService.countOverdue(null, tenantId);
+        overview.put("overdueCount", overdueCount);
+
+        // 效率统计（复用 efficiencyService）
+        try {
+            Map<String, Object> eff = efficiencyService.efficiencyStats(tenantId, null, null);
+            overview.putAll(eff);
+        } catch (Exception e) {
+            log.warn("[Monitor] 效率统计查询失败: {}", e.getMessage());
+        }
+
+        return Result.ok(overview);
+    }
+
+    /**
+     * P0-3: 异常流程列表 — 超期/卡单实例
+     *
+     * @param limit 返回条数上限
+     * @return 异常实例列表
+     */
+    @GetMapping("/monitor/anomaly")
+    public Result<List<Map<String, Object>>> monitorAnomaly(
+            @RequestParam(defaultValue = "20") int limit) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        List<Map<String, Object>> anomalies = new java.util.ArrayList<>();
+
+        // 超期任务
+        List<FlowTaskDO> overdueTasks = taskService.listOverdue(null, tenantId);
+        if (overdueTasks != null) {
+            for (FlowTaskDO task : overdueTasks) {
+                if (anomalies.size() >= limit) break;
+                Map<String, Object> item = new java.util.LinkedHashMap<>();
+                item.put("type", "OVERDUE");
+                item.put("taskId", task.getId());
+                item.put("instanceId", task.getInstanceId());
+                item.put("nodeCode", task.getNodeCode());
+                item.put("nodeName", task.getNodeName());
+                item.put("assigneeId", task.getAssigneeId());
+                item.put("dueAt", task.getDueAt());
+                item.put("createdAt", task.getCreatedAt());
+                anomalies.add(item);
+            }
+        }
+
+        return Result.ok(anomalies);
+    }
+
+    /**
+     * P0-3: 实例趋势 — 每日/每周/每月创建与完成趋势
+     *
+     * @param interval 聚合粒度：DAY / WEEK / MONTH
+     * @return 趋势列表
+     */
+    @GetMapping("/monitor/instance-trend")
+    public Result<List<Map<String, Object>>> monitorInstanceTrend(
+            @RequestParam(defaultValue = "DAY") String interval) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(efficiencyService.approvalTrend(tenantId, interval, null, null));
+    }
+
+    /**
+     * P0-3: 审批人效率排名 — 复用 efficiencyService
+     *
+     * @param limit 返回条数上限
+     * @return 审批人排名列表
+     */
+    @GetMapping("/monitor/approver-efficiency")
+    public Result<List<Map<String, Object>>> monitorApproverEfficiency(
+            @RequestParam(defaultValue = "10") int limit) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(efficiencyService.approverRanking(tenantId, null, null, limit));
+    }
+
+    /**
+     * P0-3: 流程类型分布 — 按流程编码统计实例数
+     *
+     * @return 分布列表
+     */
+    @GetMapping("/monitor/flow-type-distribution")
+    public Result<List<Map<String, Object>>> monitorFlowTypeDistribution() {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        // 查询全量实例（分页取前 500 条），按 flowCode 聚合
+        PageResult<FlowInstanceDO> page = instanceService.page(
+                null, null, null, null, null, tenantId, 1, 500);
+        Map<String, Long> distribution = new java.util.LinkedHashMap<>();
+        if (page != null && page.getList() != null) {
+            for (FlowInstanceDO inst : page.getList()) {
+                String code = inst.getFlowCode() == null ? "UNKNOWN" : inst.getFlowCode();
+                distribution.merge(code, 1L, (a, b) -> a + b);
+            }
+        }
+        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        distribution.forEach((code, count) -> {
+            Map<String, Object> item = new java.util.LinkedHashMap<>();
+            item.put("flowCode", code);
+            item.put("count", count);
+            result.add(item);
+        });
+        return Result.ok(result);
+    }
+
+    /**
+     * P0-3: 超期任务列表（stats/overdue 别名，前端兼容）
+     *
+     * @param assigneeId 办理人 ID（可空）
+     * @return 超期任务列表
+     */
+    @GetMapping("/stats/overdue")
+    public Result<List<FlowTaskDO>> statsOverdue(
+            @RequestParam(required = false) String assigneeId) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(taskService.listOverdue(assigneeId, tenantId));
+    }
+
     // ============== GAP-P2: 流程模板库 ==============
 
     /**

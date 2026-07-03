@@ -99,4 +99,15 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * @return 节点列表：nodeCode / nodeName / firstFinishAt / assigneeName
      */
     List<Map<String, Object>> listPassedNodes(@Param("instanceId") Long instanceId);
+
+    /**
+     * P1-5: 查询同实例下已审批过（task_status=COMPLETED）的办理人 ID 列表（去重）。
+     *
+     * <p>用于跨节点办理人去重：排除已审批过的人员，支持"一人多环节只审批一次"。
+     * 排除 assignee_id = '0'（SYSTEM_AUTO_PASS / SERVICE 节点等系统生成的记录）。
+     *
+     * @param instanceId 流程实例 ID
+     * @return 已审批过的办理人 ID 列表（去重）
+     */
+    List<String> selectCompletedAssigneeIds(@Param("instanceId") Long instanceId);
 }

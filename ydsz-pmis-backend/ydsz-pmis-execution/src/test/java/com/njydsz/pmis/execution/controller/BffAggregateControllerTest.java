@@ -91,10 +91,16 @@ class BffAggregateControllerTest {
 
         // then - 单维度异常不影响整体结构返回
         assertThat(result).containsKeys("initiation", "evm", "contracts", "wbsOverview");
-        assertThat((Map<Object, Object>) result.get("initiation")).containsKey("error");
-        assertThat((Map<Object, Object>) result.get("evm")).containsKey("error");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> initiation = (Map<String, Object>) result.get("initiation");
+        assertThat(initiation).containsKey("error");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> evm = (Map<String, Object>) result.get("evm");
+        assertThat(evm).containsKey("error");
         assertThat((List<?>) result.get("contracts")).isEmpty();
-        assertThat((Map<Object, Object>) result.get("wbsOverview")).containsKey("error");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> wbsOverview = (Map<String, Object>) result.get("wbsOverview");
+        assertThat(wbsOverview).containsKey("error");
     }
 
     @Test
@@ -142,7 +148,9 @@ class BffAggregateControllerTest {
 
         // then
         assertThat(result).containsKeys("kpi", "alerts", "todos");
-        assertThat((Map<Object, Object>) result.get("kpi")).containsKey("error");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> kpi = (Map<String, Object>) result.get("kpi");
+        assertThat(kpi).containsKey("error");
         assertThat((List<?>) result.get("alerts")).isEmpty();
         assertThat((List<?>) result.get("todos")).isEmpty();
     }

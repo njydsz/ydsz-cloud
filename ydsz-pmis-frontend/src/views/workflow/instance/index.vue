@@ -22,16 +22,19 @@ import {
   suspendInstance,
   activateInstance,
   recallInstance,
+  getFormRenderData,
 } from '@/api/workflow'
 import type {
   FlowInstanceDTO,
   FlowDiagramDTO,
   FlowTimelineDTO,
   FlowTaskOperateDTO,
+  FormRenderDataDTO,
 } from '@/api/workflow/types'
 import FlowDiagramViewer from '../components/FlowDiagramViewer.vue'
 import FlowTimeline from '../components/FlowTimeline.vue'
 import FlowDiagramReplay from '../components/FlowDiagramReplay.vue'
+import FormRenderer from '../components/FormRenderer.vue'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -41,7 +44,11 @@ const diagram = ref<FlowDiagramDTO | null>(null)
 const timeline = ref<FlowTimelineDTO | null>(null)
 const loading = ref(false)
 
-const activeTab = ref<'diagram' | 'timeline' | 'replay' | 'detail'>('diagram')
+// 表单渲染数据
+const formRenderData = ref<FormRenderDataDTO | null>(null)
+const formRendererRef = ref<InstanceType<typeof FormRenderer> | null>(null)
+
+const activeTab = ref<'diagram' | 'timeline' | 'replay' | 'form' | 'detail'>('diagram')
 
 // 操作弹窗
 const opDialog = ref(false)
@@ -69,6 +76,16 @@ async function loadAll() {
     if (ins.data?.code === 0) instance.value = ins.data.data
     if (dia.data?.code === 0) diagram.value = dia.data.data
     if (tl.data?.code === 0) timeline.value = tl.data.data
+
+    // 加载表单渲染数据（非阻塞，失败不影响主流程）
+    try {
+      const fr = await getFormRenderData(instanceId.value)
+      if (fr.data?.code === 0 && fr.data?.data) {
+        formRenderData.value = fr.data.data
+      }
+    } catch {
+      // 表单渲染数据加载失败时静默处理
+    }
   } finally {
     loading.value = false
   }
@@ -94,6 +111,15 @@ async function submitOp() {
     ElMessage.warning(t('workflow.instance.messages.terminateReasonRequired'))
     return
   }
+
+  // 若存在动态表单，先校验并获取表单数据
+  let formVariables: Record<string, unknown> | undefined
+  if (formRenderData.value?.formSchema && formRendererRef.value?.hasForm) {
+    const valid = await formRendererRef.value.validate()
+    if (!valid) return
+    formVariables = formRendererRef.value.getFormData()
+  }
+
   try {
     let res
     if (opType.value === 'pass' || opType.value === 'reject' || opType.value === 'transfer') {
@@ -103,6 +129,7 @@ async function submitOp() {
         targetUserId: opForm.targetUserId,
         targetUserName: opForm.targetUserName,
         targetNodeCode: opForm.targetNodeCode || undefined,
+        variables: formVariables,
       }
       if (opType.value === 'pass') res = await passTask(dto)
       else if (opType.value === 'reject') res = await rejectTask(dto)
@@ -240,6 +267,16 @@ watch(() => route.query.id, () => loadAll())
         />
         <el-empty v-else :description="t('workflow.replay.empty')" />
       </el-tab-pane>
+      <el-tab-pane label="审批表单" name="form">
+        <FormRenderer
+          v-if="formRenderData?.formSchema"
+          ref="formRendererRef"
+          :instance-id="instanceId"
+          :form-schema="formRenderData.formSchema"
+          :readonly="!canOperate"
+        />
+        <el-empty v-else description="当前流程未配置动态表单，请使用下方通用审批操作" />
+      </el-tab-pane>
       <el-tab-pane :label="t('workflow.instance.detail')" name="detail">
         <el-descriptions v-if="instance" :column="2" border>
           <el-descriptions-item :label="t('workflow.instance.detailLabels.instanceId')">{{ instance.id }}</el-descriptions-item>
@@ -276,6 +313,15 @@ watch(() => route.query.id, () => loadAll())
       <el-form label-position="top">
         <el-form-item :label="t('workflow.instance.opForm.taskId')" v-if="opType === 'pass' || opType === 'reject' || opType === 'transfer'">
           <el-input v-model.number="opForm.taskId" :placeholder="t('workflow.instance.opForm.taskIdPlaceholder')" />
+        </el-form-item>
+        <!-- 动态表单区域：当有 formSchema 且操作类型为通过/驳回时显示 -->
+        <el-form-item v-if="formRenderData?.formSchema && (opType === 'pass' || opType === 'reject')" label="审批表单">
+          <FormRenderer
+            ref="formRendererRef"
+            :instance-id="instanceId"
+            :form-schema="formRenderData.formSchema"
+            :readonly="false"
+          />
         </el-form-item>
         <el-form-item :label="t('workflow.instance.opForm.comment')" v-if="opType === 'pass' || opType === 'reject'">
           <el-input v-model="opForm.comment" type="textarea" :rows="3" />

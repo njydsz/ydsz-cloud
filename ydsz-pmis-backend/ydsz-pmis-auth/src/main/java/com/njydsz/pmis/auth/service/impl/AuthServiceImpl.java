@@ -19,11 +19,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 认证服务实现
@@ -100,7 +100,7 @@ public class AuthServiceImpl implements AuthService {
 
         // 2. 写入 Redis (5 分钟过期)
         String key = IdUtil.fastSimpleUUID();
-        redisTemplate.opsForValue().set(CAPTCHA_KEY_PREFIX + key, code, CAPTCHA_EXPIRE_MINUTES, TimeUnit.MINUTES);
+        redisTemplate.opsForValue().set(CAPTCHA_KEY_PREFIX + key, code, Duration.ofMinutes(CAPTCHA_EXPIRE_MINUTES));
 
         return CaptchaVO.builder()
                 .captchaKey(key)
@@ -230,7 +230,7 @@ public class AuthServiceImpl implements AuthService {
     public void blacklistToken(String token, long expireSeconds) {
         if (token == null || token.isBlank()) return;
         redisTemplate.opsForValue().set(
-                TOKEN_BLACKLIST_PREFIX + token, "1", expireSeconds, TimeUnit.SECONDS);
+                TOKEN_BLACKLIST_PREFIX + token, "1", Duration.ofSeconds(expireSeconds));
     }
 
     /**
@@ -276,7 +276,7 @@ public class AuthServiceImpl implements AuthService {
     private void recordLoginFailure(String username) {
         String key = LOGIN_FAIL_PREFIX + username;
         Long count = redisTemplate.opsForValue().increment(key);
-        redisTemplate.expire(key, LOGIN_LOCK_MINUTES, TimeUnit.MINUTES);
+        redisTemplate.expire(key, Duration.ofMinutes(LOGIN_LOCK_MINUTES));
         if (count != null && count >= LOGIN_FAIL_THRESHOLD) {
             log.warn("[Auth] 账号 {} 登录失败 {} 次,触发锁定", username, count);
             // 锁定账号: 通过调用 user 服务更新 locked_until

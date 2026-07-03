@@ -52,7 +52,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
     @Transactional(rollbackFor = Exception.class)
     public CustomerCreditDO assess(CreditAssessmentDTO dto) {
         if (dto == null || dto.getCustomerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6de1fd36");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "客户 ID 不能为空");
         }
         // 1) 累计合同/开票/回款金额
         List<InvoiceDO> invoices = invoiceMapper.selectByCustomer(dto.getCustomerId());
@@ -144,7 +144,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
     @Override
     public Map<String, Object> profile(Long customerId) {
         if (customerId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6de1fd36");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "客户 ID 不能为空");
         }
         CustomerCreditDO credit = getByCustomer(customerId);
         Map<String, Object> p = new HashMap<>();

@@ -73,26 +73,26 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
                                 FlowNodeDO callActivityNode,
                                 Map<String, Object> variables) {
         if (parentInstance == null || callActivityNode == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_b7eaf944");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "父实例/callActivity 节点不能为空");
         }
         // 1. 从节点 ext JSON 提取子流程编码
         String subFlowCode = extractSubFlowCode(callActivityNode);
         if (subFlowCode == null || subFlowCode.isBlank()) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.workflow.msg_8107ace9" + callActivityNode.getNodeCode());
+                    "callActivity 节点未配置子流程编码: nodeCode=" + callActivityNode.getNodeCode());
         }
         // 2. 校验子流程定义存在且已发布
         FlowDefinitionDO subDef = definitionService.getPublished(subFlowCode, null,
                 parentInstance.getTenantId());
         if (subDef == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "error.workflow.msg_50e23e60" + subFlowCode);
+                    "子流程定义未发布或不存在: flowCode=" + subFlowCode);
         }
         // 3. 检查嵌套深度（最大 3 层）
         int nestingDepth = getNestingDepth(parentInstance.getId());
         if (nestingDepth >= MAX_NESTING_DEPTH) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.workflow.msg_14aff96e" + MAX_NESTING_DEPTH + "层），当前深度=" + nestingDepth
+                    "子流程嵌套层级已达上限（" + MAX_NESTING_DEPTH + "层），当前深度=" + nestingDepth
                     + " 父流程: instanceId=" + parentInstance.getId());
         }
         log.info("[SubProcess] 嵌套深度检查: parentInstance={} depth={} max={}",

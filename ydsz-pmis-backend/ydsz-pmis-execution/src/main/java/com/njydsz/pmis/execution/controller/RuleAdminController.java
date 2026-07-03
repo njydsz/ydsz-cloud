@@ -2,7 +2,6 @@ package com.njydsz.pmis.execution.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.execution.entity.DecisionTableDO;
-import com.njydsz.pmis.execution.entity.RuleDefinitionDO;
 import com.njydsz.pmis.execution.entity.RuleExecutionTraceDO;
 import com.njydsz.pmis.execution.entity.RuleTemplateDO;
 import com.njydsz.pmis.execution.entity.RuleTestCaseDO;
@@ -26,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.time.LocalDateTime;
 import java.util.List;

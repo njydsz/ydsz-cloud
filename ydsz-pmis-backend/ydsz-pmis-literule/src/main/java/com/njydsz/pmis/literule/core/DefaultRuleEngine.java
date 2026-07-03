@@ -5,6 +5,7 @@ import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
 import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.StatsRecorder;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -32,10 +33,13 @@ import java.util.concurrent.atomic.AtomicLong;
  * @since 1.1.0
  */
 @Slf4j
-public class DefaultRuleEngine implements RuleEngine {
+public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
 
     /** 已注册规则列表（按优先级排序） */
     private final CopyOnWriteArrayList<Rule> rules = new CopyOnWriteArrayList<>();
+
+    /** 是否启用统计（对应 pmis.literule.statsEnabled 配置） */
+    private volatile boolean statsEnabled = true;
 
     /** 统计计数器 */
     private final AtomicLong totalEvaluations = new AtomicLong(0);
@@ -68,18 +72,23 @@ public class DefaultRuleEngine implements RuleEngine {
     @Override
     public List<RuleResult> evaluate(RuleContext context) {
         List<RuleResult> triggered = new ArrayList<>();
+        String scenario = context.getScenario();
         for (Rule rule : rules) {
+            // 场景过滤：非 DEFAULT 场景下，跳过 scope 不匹配的规则
+            if (!shouldEvaluate(rule, scenario)) {
+                continue;
+            }
             long start = System.nanoTime();
             try {
                 RuleResult result = rule.evaluate(context);
                 long elapsed = (System.nanoTime() - start) / 1_000_000;
-                recordStat(rule.getCode(), result != null && result.isTriggered(), false, elapsed);
+                record(rule.getCode(), result != null && result.isTriggered(), false, elapsed);
                 if (result != null && result.isTriggered()) {
                     triggered.add(result);
                 }
             } catch (Exception e) {
                 long elapsed = (System.nanoTime() - start) / 1_000_000;
-                recordStat(rule.getCode(), false, true, elapsed);
+                record(rule.getCode(), false, true, elapsed);
                 log.warn("[LiteRule] 规则 {} 评估异常: {}", rule.getCode(), e.getMessage());
             }
         }
@@ -150,14 +159,74 @@ public class DefaultRuleEngine implements RuleEngine {
     }
 
     /**
-     * 记录统计
+     * 设置是否启用统计
+     *
+     * @param statsEnabled 是否启用
+     * @since 1.3.0
+     */
+    public void setStatsEnabled(boolean statsEnabled) {
+        this.statsEnabled = statsEnabled;
+    }
+
+    /**
+     * 获取是否启用统计
+     *
+     * @return 是否启用
+     * @since 1.3.0
+     */
+    public boolean isStatsEnabled() {
+        return statsEnabled;
+    }
+
+    /**
+     * 将引擎作为统计记录器暴露给编排层使用
+     *
+     * @return StatsRecorder 实例
+     * @since 1.3.0
+     */
+    public StatsRecorder asStatsRecorder() {
+        return this;
+    }
+
+    /**
+     * 判断规则是否应在当前场景下评估
+     *
+     * <p>过滤规则：
+     * <ul>
+     *   <li>scenario 为 null 或 "DEFAULT" 时，评估全部规则（向后兼容）</li>
+     *   <li>rule.getScope() 为 null 或 "ALL" 时，适用于全部场景</li>
+     *   <li>否则仅当 rule.getScope() 与 scenario 匹配时评估</li>
+     * </ul>
+     *
+     * @param rule     规则
+     * @param scenario 当前场景
+     * @return 是否应评估
+     * @since 1.3.0
+     */
+    private boolean shouldEvaluate(Rule rule, String scenario) {
+        if (scenario == null || "DEFAULT".equals(scenario)) {
+            return true;
+        }
+        String scope = rule.getScope();
+        if (scope == null || "ALL".equalsIgnoreCase(scope)) {
+            return true;
+        }
+        return scope.equalsIgnoreCase(scenario);
+    }
+
+    /**
+     * 记录统计（实现 {@link StatsRecorder}）
      *
      * @param ruleCode   规则编码
      * @param triggered  是否触发
      * @param error      是否异常
      * @param elapsedMs  耗时
      */
-    private void recordStat(String ruleCode, boolean triggered, boolean error, long elapsedMs) {
+    @Override
+    public void record(String ruleCode, boolean triggered, boolean error, long elapsedMs) {
+        if (!statsEnabled) {
+            return;
+        }
         totalEvaluations.incrementAndGet();
         totalElapsedMs.addAndGet(elapsedMs);
         if (triggered) totalTriggered.incrementAndGet();

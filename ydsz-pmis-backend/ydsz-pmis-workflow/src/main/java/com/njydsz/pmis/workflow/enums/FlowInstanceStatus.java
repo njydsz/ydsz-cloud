@@ -17,7 +17,9 @@ public enum FlowInstanceStatus {
     /** 已终止（管理员强制） */
     TERMINATED,
     /** 已驳回（被退回并最终结束） */
-    REJECTED;
+    REJECTED,
+    /** P1-4: 异常（服务节点执行失败等异常状态，需人工介入处理） */
+    ERROR;
 
     public boolean isFinished() {
         return this == COMPLETED

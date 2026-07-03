@@ -105,7 +105,9 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         if (instanceService instanceof FlowInstanceServiceImpl) {
             impl = (FlowInstanceServiceImpl) instanceService;
         }
-        impl.generateTasksForNodes(instanceId, nextNodes, parseVariable(instance.getVariable()));
+        if (impl != null) {
+            impl.generateTasksForNodes(instanceId, nextNodes, parseVariable(instance.getVariable()));
+        }
         if (nextNodes.get(0).getNodeType() != FlowNodeType.END.getCode()) {
             instanceMapper.updateStatus(instanceId,
                     instance.getFlowStatus(),

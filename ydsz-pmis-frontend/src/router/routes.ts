@@ -477,6 +477,24 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/workflow/form-design/index.vue'),
         meta: { title: 'route.workflowFormDesign', icon: 'Document', keepAlive: true, permCode: PC.WORKFLOW_DEFINITION_CREATE },
       },
+      {
+        path: 'delegate-auth',
+        name: 'WorkflowDelegateAuth',
+        component: () => import('@/views/workflow/delegate-auth/index.vue'),
+        meta: { title: 'route.workflowDelegateAuth', icon: 'Switch', keepAlive: true, permCode: PC.WORKFLOW_DELEGATE_AUTH_VIEW },
+      },
+      {
+        path: 'sla',
+        name: 'WorkflowSla',
+        component: () => import('@/views/workflow/sla/index.vue'),
+        meta: { title: 'route.workflowSla', icon: 'Timer', keepAlive: true, permCode: PC.WORKFLOW_SLA_VIEW },
+      },
+      {
+        path: 'canary',
+        name: 'WorkflowCanary',
+        component: () => import('@/views/workflow/canary/index.vue'),
+        meta: { title: 'route.workflowCanary', icon: 'Promotion', keepAlive: true, permCode: PC.WORKFLOW_CANARY_VIEW },
+      },
     ],
   },
 ]

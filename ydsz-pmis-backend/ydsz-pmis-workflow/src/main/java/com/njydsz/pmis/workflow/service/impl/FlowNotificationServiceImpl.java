@@ -247,7 +247,8 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
 
     /**
      * EMAIL 通道：同样通过 NotificationClient 投递（channel=EMAIL），
-     * 由 notification 服务负责实际邮件发送。receiver 优先取自 extra，否则用 userId 拼接占位邮箱。
+     * 由 notification 服务负责实际邮件发送。receiver 优先取自 extra，
+     * 未配置时不设占位邮箱，由 notification 服务按 userId 查询真实邮箱（P0-2 修复）。
      */
     private void sendEmail(Long userId, String title, String content,
                            Object bizType, Map<String, Object> extra, String traceId) {
@@ -260,12 +261,11 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         payload.put("content", content);
         payload.put("bizType", bizType);
         payload.put("channel", "EMAIL");
-        // receiver：优先从 extra 读取，否则用 userId 拼接占位邮箱
+        // P0-2 修复：receiver 优先从 extra 读取，未配置时不拼占位邮箱，由 notification 服务按 userId 查询
         Object receiver = extra == null ? null : extra.get("receiver");
-        if (receiver == null) {
-            receiver = userId + "@company.com";
+        if (receiver != null) {
+            payload.put("receiver", receiver);
         }
-        payload.put("receiver", receiver);
         try {
             notificationClient.send(payload);
         } catch (Exception e) {

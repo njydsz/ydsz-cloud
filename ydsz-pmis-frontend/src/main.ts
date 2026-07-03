@@ -19,6 +19,7 @@ import router from './router'
 import pinia from './store'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import i18n from './locales'
+import formCreate from '@form-create/element-ui'
 
 // 样式（顺序敏感：基础框架样式先加载，业务 SCSS 后加载以覆盖默认值）
 import 'element-plus/dist/index.css'
@@ -50,6 +51,8 @@ setupLazyDirective(app)
 app.use(pinia)
 // 国际化（注册全局 $t 与 useI18n 组合式 API）
 app.use(i18n)
+// 动态表单引擎（form-create + Element Plus 适配）
+app.use(formCreate)
 // 路由（守卫内部会使用 userStore / permissionStore）
 app.use(router)
 

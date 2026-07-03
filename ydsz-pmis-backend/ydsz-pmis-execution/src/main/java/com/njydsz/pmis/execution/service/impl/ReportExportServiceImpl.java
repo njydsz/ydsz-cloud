@@ -333,7 +333,6 @@ public class ReportExportServiceImpl implements ReportExportService {
 
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             wb.write(baos);
-            wb.dispose();
             return baos.toByteArray();
         }
     }

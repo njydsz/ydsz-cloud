@@ -36,9 +36,9 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public ExpressionEvaluator expressionEvaluator() {
-        log.info("[LiteRule] Aviator 表达式求值器已初始化");
-        return new AviatorExpressionEvaluator();
+    public ExpressionEvaluator expressionEvaluator(LiteRuleProperties properties) {
+        log.info("[LiteRule] Aviator 表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
+        return new AviatorExpressionEvaluator(properties.isSandboxEnabled());
     }
 
     /**
@@ -48,9 +48,11 @@ public class LiteRuleAutoConfiguration {
      */
     @Bean
     @ConditionalOnMissingBean
-    public RuleEngine ruleEngine() {
-        log.info("[LiteRule] 默认规则引擎已初始化");
-        return new DefaultRuleEngine();
+    public RuleEngine ruleEngine(LiteRuleProperties properties) {
+        DefaultRuleEngine engine = new DefaultRuleEngine();
+        engine.setStatsEnabled(properties.isStatsEnabled());
+        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}）", properties.isStatsEnabled());
+        return engine;
     }
 
     /**
@@ -90,9 +92,12 @@ public class LiteRuleAutoConfiguration {
                                               ExpressionEvaluator evaluator,
                                               RuleConfigProvider configProvider,
                                               org.springframework.beans.factory.ObjectProvider<RuleVersionRepository> versionRepoProvider,
-                                              ApplicationEventPublisher eventPublisher) {
-        log.info("[LiteRule] 规则管理服务已初始化");
-        return new RuleAdminService(ruleEngine, evaluator, configProvider,
+                                              ApplicationEventPublisher eventPublisher,
+                                              LiteRuleProperties properties) {
+        RuleAdminService service = new RuleAdminService(ruleEngine, evaluator, configProvider,
                 versionRepoProvider.getIfAvailable(), eventPublisher);
+        service.setDryRunEnabled(properties.isDryRunEnabled());
+        log.info("[LiteRule] 规则管理服务已初始化（dryRun={}）", properties.isDryRunEnabled());
+        return service;
     }
 }

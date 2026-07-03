@@ -24,4 +24,7 @@ public class LiteRuleProperties {
 
     /** 是否启用 dry-run 仿真 */
     private boolean dryRunEnabled = true;
+
+    /** 是否启用表达式沙箱（限制危险函数和类访问） */
+    private boolean sandboxEnabled = true;
 }

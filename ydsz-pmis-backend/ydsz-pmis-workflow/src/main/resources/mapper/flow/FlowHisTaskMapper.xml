@@ -139,4 +139,16 @@
         GROUP BY node_code
         ORDER BY MIN(finish_at) ASC
     </select>
+
+    <!-- P1-5: 查询同实例下已审批过的办理人 ID（去重，排除系统生成的 assignee_id='0'） -->
+    <select id="selectCompletedAssigneeIds" resultType="java.lang.String">
+        SELECT DISTINCT assignee_id
+        FROM pmis_flow_his_task
+        WHERE instance_id = #{instanceId}
+          AND task_status = 'COMPLETED'
+          AND assignee_id IS NOT NULL
+          AND assignee_id != '0'
+          AND status = 'ENABLED'
+          AND deleted = 0
+    </select>
 </mapper>

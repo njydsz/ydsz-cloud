@@ -3,6 +3,10 @@ package com.njydsz.pmis.workflow.enums;
 /**
  * 办理人类型
  *
+ * <p>P1-5: 跨节点办理人去重 — 在 {@code pmis_flow_node.ext} JSON 中配置 {@code autoDedup: true}
+ * 可启用跨节点去重。启用后，同实例下已审批过（his_task 中 task_status=COMPLETED）的办理人
+ * 将从当前节点候选办理人中排除；若排除后候选人为空，则自动跳过该节点（记录审计日志）。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */

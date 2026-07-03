@@ -340,3 +340,271 @@ export interface FormSchemaVO {
   /** 更新时间 */
   updateTime?: string
 }
+
+// ===========================================
+// P1-1: 运行时表单引擎
+// ===========================================
+
+/** 字段权限类型 */
+export type FieldPermission = 'EDIT' | 'READONLY' | 'HIDDEN'
+
+/** 表单渲染数据（后端 form-render 接口返回） */
+export interface FormRenderDataDTO {
+  /** 表单 schema（form-create rule JSON） */
+  formSchema: Record<string, unknown> | string
+  /** 字段权限映射：fieldName -> 权限 */
+  fieldPermissions: Record<string, FieldPermission>
+}
+
+/** 节点表单字段配置 */
+export interface NodeFormConfigDTO {
+  /** 流程定义 ID */
+  definitionId: number
+  /** 节点编码 */
+  nodeCode: string
+  /** 字段权限配置：fieldName -> 权限 */
+  fieldPermissions: Record<string, FieldPermission>
+  /** 表单 schema（可选） */
+  formSchema?: string
+}
+
+// ===========================================
+// P1-2: 委托授权
+// ===========================================
+
+/** 委托授权范围类型 */
+export type DelegateScopeType = 'ALL' | 'FLOW' | 'FLOW_NODE' | 'ROLE'
+
+/** 委托授权记录 */
+export interface DelegateAuthDTO {
+  id: number
+  /** 授权人 ID */
+  ownerId: number
+  /** 授权人姓名 */
+  ownerName?: string
+  /** 代理人 ID */
+  delegateId: number
+  /** 代理人姓名 */
+  delegateName?: string
+  /** 授权范围类型 */
+  scopeType: DelegateScopeType
+  /** 范围值（ALL 时为空；FLOW 时为 flowCode；FLOW_NODE 时为 flowCode:nodeCode；ROLE 时为 roleCode） */
+  scopeValue?: string
+  /** 开始时间 */
+  startTime?: string
+  /** 结束时间 */
+  endTime?: string
+  /** 是否启用 */
+  enabled: boolean
+  /** 是否已撤回 */
+  revoked?: boolean
+  createTime?: string
+  updateTime?: string
+}
+
+/** 创建委托授权请求 */
+export interface CreateDelegateAuthDTO {
+  /** 代理人 ID */
+  delegateId: number
+  /** 代理人姓名 */
+  delegateName?: string
+  /** 授权范围类型 */
+  scopeType: DelegateScopeType
+  /** 范围值 */
+  scopeValue?: string
+  /** 开始时间 */
+  startTime?: string
+  /** 结束时间 */
+  endTime?: string
+}
+
+/** 委托处理记录 */
+export interface DelegateLogDTO {
+  id: number
+  /** 原授权人 ID */
+  ownerId: number
+  ownerName?: string
+  /** 代理人 ID */
+  delegateId: number
+  delegateName?: string
+  /** 任务 ID */
+  taskId?: number
+  /** 流程编码 */
+  flowCode?: string
+  /** 流程名称 */
+  flowName?: string
+  /** 节点名称 */
+  nodeName?: string
+  /** 操作动作 */
+  action?: string
+  /** 操作时间 */
+  operateTime?: string
+}
+
+// ===========================================
+// P1-2: SLA
+// ===========================================
+
+/** SLA 策略类型 */
+export type SlaStrategy = 'REMIND' | 'ESCALATE' | 'AUTO_PASS' | 'AUTO_REJECT'
+
+/** SLA 超时任务 */
+export interface SlaOverdueTaskDTO {
+  taskId: number
+  instanceId: number
+  flowCode: string
+  flowName?: string
+  nodeCode: string
+  nodeName?: string
+  assigneeId?: string
+  assigneeName?: string
+  /** 任务创建时间 */
+  createTime?: string
+  /** 截止时间 */
+  dueAt?: string
+  /** 超时天数 */
+  overdueDays?: number
+  /** SLA 策略 */
+  strategy?: SlaStrategy
+  /** 任务标题 */
+  title?: string
+}
+
+// ===========================================
+// P1-2: 灰度发布
+// ===========================================
+
+/** 灰度策略类型 */
+export type CanaryStrategy = 'PERCENTAGE' | 'WHITELIST' | 'PERCENTAGE_AND_WHITELIST'
+
+/** 灰度发布状态 */
+export type CanaryStatus = 'DRAFT' | 'ROLLING_OUT' | 'PROMOTED' | 'ROLLED_BACK'
+
+/** 灰度发布记录 */
+export interface CanaryRolloutDTO {
+  id: number
+  /** 流程定义 ID */
+  definitionId: number
+  /** 流程编码 */
+  flowCode: string
+  /** 流程名称 */
+  flowName?: string
+  /** 灰度策略 */
+  strategy: CanaryStrategy
+  /** 灰度比例（0-100） */
+  percentage?: number
+  /** 白名单用户 ID 列表 */
+  whitelist?: number[]
+  /** 灰度状态 */
+  status: CanaryStatus
+  /** 开始时间 */
+  startTime?: string
+  /** 结束时间 */
+  endTime?: string
+  createBy?: number
+  createTime?: string
+}
+
+/** 灰度发布日志 */
+export interface CanaryRolloutLogDTO {
+  id: number
+  /** 流程编码 */
+  flowCode: string
+  /** 流程名称 */
+  flowName?: string
+  /** 操作类型：PUBLISH / ADJUST / PROMOTE / ROLLBACK */
+  action: string
+  /** 灰度比例 */
+  percentage?: number
+  /** 操作人 */
+  operatorId?: number
+  operatorName?: string
+  /** 操作详情 */
+  detail?: string
+  /** 操作时间 */
+  operateTime?: string
+}
+
+/** 启动灰度请求 */
+export interface PublishCanaryDTO {
+  strategy: CanaryStrategy
+  percentage?: number
+  whitelist?: number[]
+}
+
+// ===========================================
+// P1-3: 版本管理 + 模拟运行
+// ===========================================
+
+/** 流程定义版本信息 */
+export interface FlowVersionDTO {
+  /** 版本号 */
+  version: number
+  /** 流程定义 ID */
+  definitionId: number
+  /** 流程编码 */
+  flowCode: string
+  /** 流程名称 */
+  flowName?: string
+  /** 状态 */
+  status: string
+  /** 是否当前激活版本 */
+  active: boolean
+  /** BPMN XML（差异对比时可能返回） */
+  bpmnXml?: string
+  /** 部署时间 */
+  deployTime?: string
+  /** 创建人 */
+  createBy?: number
+  createTime?: string
+}
+
+/** 版本差异对比结果 */
+export interface VersionDiffDTO {
+  /** 版本 1 */
+  v1: number
+  /** 版本 2 */
+  v2: number
+  /** 差异内容（文本格式） */
+  diffContent: string
+  /** 新增节点 */
+  addedNodes?: string[]
+  /** 删除节点 */
+  removedNodes?: string[]
+  /** 修改节点 */
+  modifiedNodes?: string[]
+}
+
+/** 模拟运行步骤结果 */
+export interface SimulateStepDTO {
+  /** 步骤序号 */
+  stepIndex: number
+  /** 节点编码 */
+  nodeCode: string
+  /** 节点名称 */
+  nodeName?: string
+  /** 节点类型 */
+  nodeType?: string
+  /** 处理结果：PASS / REJECT / SKIP / ERROR */
+  result: string
+  /** 处理人 */
+  assignee?: string
+  /** 处理说明 */
+  comment?: string
+  /** 是否通过 */
+  passed: boolean
+}
+
+/** 模拟运行结果 */
+export interface SimulateResultDTO {
+  /** 流程编码 */
+  flowCode: string
+  /** 是否成功完成 */
+  success: boolean
+  /** 模拟步骤列表 */
+  steps: SimulateStepDTO[]
+  /** 最终结果 */
+  finalResult?: string
+  /** 错误信息 */
+  errorMessage?: string
+}

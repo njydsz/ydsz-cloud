@@ -16,12 +16,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.lang.reflect.Proxy;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -86,7 +84,7 @@ class RateLimiterAspectTest {
         when(pjp.proceed()).thenReturn("ok");
 
         aspect.around(pjp, sampleAnnotation(5, "exp:", 2, "限流"));
-        org.mockito.Mockito.verify(redisTemplate).expire(anyString(), anyLong(), any(TimeUnit.class));
+        org.mockito.Mockito.verify(redisTemplate).expire(anyString(), any(java.time.Duration.class));
     }
 
     @Test

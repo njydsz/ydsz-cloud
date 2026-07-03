@@ -20,6 +20,7 @@ public class StaticRule implements Rule {
     private final String name;
     private final String category;
     private final int priority;
+    private final String scope;
     private final Function<RuleContext, RuleResult> evaluator;
 
     /**
@@ -33,10 +34,27 @@ public class StaticRule implements Rule {
      */
     public StaticRule(String code, String name, String category, int priority,
                       Function<RuleContext, RuleResult> evaluator) {
+        this(code, name, category, priority, null, evaluator);
+    }
+
+    /**
+     * 构造静态规则（指定作用域）
+     *
+     * @param code      规则编码
+     * @param name      规则名称
+     * @param category  类别
+     * @param priority  优先级
+     * @param scope     作用域（null 表示全部场景）
+     * @param evaluator 评估函数
+     * @since 1.3.0
+     */
+    public StaticRule(String code, String name, String category, int priority, String scope,
+                      Function<RuleContext, RuleResult> evaluator) {
         this.code = code;
         this.name = name;
         this.category = category;
         this.priority = priority;
+        this.scope = scope;
         this.evaluator = evaluator;
     }
 
@@ -64,6 +82,9 @@ public class StaticRule implements Rule {
 
     @Override
     public int getPriority() { return priority; }
+
+    @Override
+    public String getScope() { return scope; }
 
     @Override
     public RuleResult evaluate(RuleContext context) {

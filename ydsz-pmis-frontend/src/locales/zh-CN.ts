@@ -224,6 +224,9 @@ export default {
     workflowInstance: '流程实例',
     workflowMonitor: '流程运行中心',
     workflowFormDesign: '表单设计',
+    workflowDelegateAuth: '委托授权',
+    workflowSla: 'SLA 管理',
+    workflowCanary: '灰度发布',
   },
   dashboard: {
     welcome: {

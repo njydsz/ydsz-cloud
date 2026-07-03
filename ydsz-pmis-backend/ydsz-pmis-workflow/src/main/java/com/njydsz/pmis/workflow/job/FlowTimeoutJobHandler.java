@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.job;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.job.JobHandler;
+import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
@@ -12,6 +13,8 @@ import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.service.FlowNotificationService;
+import com.njydsz.pmis.workflow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -68,6 +71,10 @@ public class FlowTimeoutJobHandler implements JobHandler {
     private final FlowTaskMapper taskMapper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowNodeMapper nodeMapper;
+    /** P0-1/P0-2: 任务服务（AUTO_PASS 真正推进流程） */
+    private final FlowTaskService taskService;
+    /** P0-2: 通知服务（REMIND 真实触达） */
+    private final FlowNotificationService notificationService;
 
     /**
      * 扫描并处理超期任务
@@ -192,17 +199,36 @@ public class FlowTimeoutJobHandler implements JobHandler {
     // ============================== SLA 动作实现 ==============================
 
     /**
-     * REMIND：发送催办通知（占位实现）
+     * REMIND：发送催办通知（P0-2 修复：真实触达）
      *
      * <p>任务保持 PENDING/CLAIMED 不变，办理人仍可继续处理。
-     * 此处仅记录审计日志与通知占位，生产环境应接入消息中心。
+     * 通过 FlowNotificationService 发送站内信 + 邮件通知，确保催办消息真实触达办理人。
+     * 同时更新任务的 reminder_count 和 last_reminded_at 字段。
      */
     private void doRemind(FlowTaskDO task, JSONObject slaConfig) {
         int reminderCount = slaConfig.getIntValue("reminderCount", 1);
-        // 占位：记录催办通知日志（生产环境接入消息中心 / 站内信 / 邮件）
-        log.info("[FlowTimeout] SLA 催办提醒 taskId={} instanceId={} assignee={} reminderCount={}",
-                task.getId(), task.getInstanceId(), task.getAssigneeId(), reminderCount);
-        // 任务保持活跃，不标记超时，便于办理人继续处理
+        String assigneeId = task.getAssigneeId();
+
+        // P0-2: 真实发送催办通知（站内信 + 邮件），通知服务内部 try-catch 不会拖垮定时任务
+        try {
+            notificationService.notifySlaTimeout(
+                    task.getInstanceId(), task.getId(), assigneeId, ACTION_REMIND);
+        } catch (Exception e) {
+            log.warn("[FlowTimeout] 催办通知发送失败（不影响后续处理）taskId={} err={}",
+                    task.getId(), e.getMessage());
+        }
+
+        // 更新任务催办计数与最后催办时间
+        try {
+            taskMapper.incrementReminderCount(task.getId(),
+                    (task.getReminderCount() == null ? 0 : task.getReminderCount()) + 1,
+                    LocalDateTime.now());
+        } catch (Exception e) {
+            log.warn("[FlowTimeout] 更新催办计数失败 taskId={} err={}", task.getId(), e.getMessage());
+        }
+
+        log.info("[FlowTimeout] SLA 催办提醒已发送 taskId={} instanceId={} assignee={} reminderCount={}",
+                task.getId(), task.getInstanceId(), assigneeId, reminderCount);
     }
 
     /**
@@ -227,19 +253,51 @@ public class FlowTimeoutJobHandler implements JobHandler {
     }
 
     /**
-     * AUTO_PASS：自动通过任务
+     * AUTO_PASS：自动通过任务并推进流程（P0-1 修复：真正联动 FlowAdvancer）
      *
-     * <p>完成任务（COMPLETED）并记录。
-     * 真实推进到下一节点需联动 FlowAdvancer / FlowInstanceService，
-     * 此处完成占位并记录日志，避免在定时任务中引入复杂的事务与递归推进。
+     * <p>通过 FlowTaskService.pass() 完成任务并推进到下一节点，
+     * 确保流程不会因 SLA 超时而卡死。使用系统用户身份执行，
+     * 审计日志中记录"SLA 超时自动通过"。
+     *
+     * <p>容错策略：pass() 失败时降级为仅标记 COMPLETED（不推进），避免定时任务异常中断。
      */
     private void doAutoPass(FlowTaskDO task, JSONObject slaConfig) {
-        LocalDateTime now = LocalDateTime.now();
-        Long durationMs = calcDuration(task, now);
-        taskMapper.completeTask(task.getId(), FlowTaskStatus.COMPLETED.name(),
-                "SLA 超时自动通过", now, durationMs);
-        log.info("[FlowTimeout] SLA 自动通过 taskId={} instanceId={} node={} （后续推进需联动 Advancer）",
-                task.getId(), task.getInstanceId(), task.getNodeCode());
+        // 二次校验：扫描窗口内任务可能已被人工处理
+        FlowTaskDO latest = taskMapper.selectById(task.getId());
+        if (latest == null) {
+            log.warn("[FlowTimeout] AUTO_PASS 任务不存在 taskId={}", task.getId());
+            return;
+        }
+        String status = latest.getTaskStatus();
+        if (!FlowTaskStatus.PENDING.name().equals(status)
+                && !FlowTaskStatus.CLAIMED.name().equals(status)) {
+            log.info("[FlowTimeout] 任务状态已变更，跳过 AUTO_PASS taskId={} status={}",
+                    task.getId(), status);
+            return;
+        }
+
+        // 构造系统用户操作 DTO，通过 taskService.pass() 完成任务 + 推进流程
+        FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
+        dto.setTaskId(latest.getId());
+        dto.setUserId(0L);
+        dto.setUserName("SLA系统自动通过");
+        dto.setAction("PASS");
+        dto.setComment("SLA 超时自动通过");
+        dto.setTenantId(latest.getTenantId());
+
+        try {
+            taskService.pass(dto);
+            log.info("[FlowTimeout] SLA 自动通过并推进成功 taskId={} instanceId={} node={}",
+                    latest.getId(), latest.getInstanceId(), latest.getNodeCode());
+        } catch (Exception e) {
+            log.error("[FlowTimeout] SLA 自动通过推进失败，降级为仅标记完成 taskId={} err={}",
+                    latest.getId(), e.getMessage(), e);
+            // 降级：至少标记为 COMPLETED，避免任务永久卡在 PENDING
+            LocalDateTime now = LocalDateTime.now();
+            Long durationMs = calcDuration(latest, now);
+            taskMapper.completeTask(latest.getId(), FlowTaskStatus.COMPLETED.name(),
+                    "SLA 超时自动通过(降级-推进失败)", now, durationMs);
+        }
     }
 
     /**

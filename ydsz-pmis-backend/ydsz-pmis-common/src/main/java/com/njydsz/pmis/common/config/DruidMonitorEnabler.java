@@ -27,9 +27,14 @@ import java.util.Map;
  *
  * <p>注册：{@code META-INF/spring/org.springframework.boot.env.EnvironmentPostProcessor.imports}
  *
+ * <p>注：{@code EnvironmentPostProcessor} 在 Spring Boot 4.0+ 标记为 for-removal，
+ * 但当前仍为唯一稳定的「在 SpringApplication 启动前注入默认配置」的官方扩展点。
+ * 待 Spring Boot 提供正式替代 API 后再迁移。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
+@SuppressWarnings("removal")
 public class DruidMonitorEnabler implements EnvironmentPostProcessor {
 
     /** 默认慢 SQL 阈值（毫秒），生产环境建议 3 秒 */

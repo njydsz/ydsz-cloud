@@ -71,7 +71,7 @@ public class OpportunityServiceImpl implements OpportunityService {
         validate(dto);
         if (opportunityMapper.selectByCode(dto.getOpportunityCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "error.project.msg_f0ea9b96" + dto.getOpportunityCode());
+                    "商机编号已存在: " + dto.getOpportunityCode());
         }
         OpportunityDO o = new OpportunityDO();
         BeanUtils.copyProperties(dto, o);
@@ -111,11 +111,11 @@ public class OpportunityServiceImpl implements OpportunityService {
     @Transactional(rollbackFor = Exception.class)
     public void update(OpportunityUpdateDTO dto) {
         if (dto.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_5cdeabc1");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "商机 ID 不能为空");
         }
         OpportunityDO o = opportunityMapper.selectById(dto.getId());
         if (o == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_69bdeff3");
+            throw new BizException(BizErrorCode.NOT_FOUND, "商机不存在");
         }
         if (StringUtils.hasText(dto.getOpportunityName())) o.setOpportunityName(dto.getOpportunityName());
         if (StringUtils.hasText(dto.getLevel())) o.setLevel(dto.getLevel());
@@ -147,17 +147,17 @@ public class OpportunityServiceImpl implements OpportunityService {
         OpportunityStatus from = OpportunityStatus.fromCode(o.getStatus());
         OpportunityStatus to = OpportunityStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "未知状态: " + dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3b6b03a0" + o.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "商机当前状态非法: " + o.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.project.msg_01c65a70" + from.getDesc() + " → " + to.getDesc());
+                    "状态不允许迁移: " + from.getDesc() + " → " + to.getDesc());
         }
         if (to == OpportunityStatus.LOST && !StringUtils.hasText(dto.getLostReason())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d89d0f80");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "输单原因不能为空");
         }
         opportunityMapper.updateStatus(o.getId(), to.getCode(), dto.getLostReason());
         log.info("[Opportunity] 状态迁移: id={} {} -> {}", o.getId(), from.getCode(), to.getCode());
@@ -187,7 +187,7 @@ public class OpportunityServiceImpl implements OpportunityService {
     public OpportunityDO getById(Long id) {
         OpportunityDO o = opportunityMapper.selectById(id);
         if (o == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_69bdeff3");
+            throw new BizException(BizErrorCode.NOT_FOUND, "商机不存在");
         }
         return o;
     }
@@ -273,19 +273,19 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     private void validate(OpportunityCreateDTO dto) {
         if (dto == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "请求不能为空");
         }
         if (!StringUtils.hasText(dto.getOpportunityCode())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_b6b27fe4");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "商机编号不能为空");
         }
         if (!StringUtils.hasText(dto.getOpportunityName())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3080e53a");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "商机名称不能为空");
         }
         if (dto.getCustomerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_6de1fd36");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "客户 ID 不能为空");
         }
         if (dto.getOwnerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_26804acb");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "负责人 ID 不能为空");
         }
     }
 
@@ -326,19 +326,19 @@ public class OpportunityServiceImpl implements OpportunityService {
     @Transactional(rollbackFor = Exception.class)
     public Long convertToInitiation(Long opportunityId, Long sponsorId, Long pmId) {
         if (opportunityId == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_5cdeabc1");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "商机 ID 不能为空");
         }
         OpportunityDO opp = opportunityMapper.selectById(opportunityId);
         if (opp == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_d070d67d" + opportunityId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "商机不存在: " + opportunityId);
         }
         OpportunityStatus cur = OpportunityStatus.fromCode(opp.getStatus());
         if (cur != OpportunityStatus.WON) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.project.msg_605acf2c" + (cur == null ? "未知" : cur.getDesc()));
+                    "仅已赢单(WON)状态的商机可转立项，当前状态: " + (cur == null ? "未知" : cur.getDesc()));
         }
         if (opp.getCustomerId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_1ebb4a09");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "商机客户为空，无法转立项");
         }
 
         // 1. 装配立项草稿

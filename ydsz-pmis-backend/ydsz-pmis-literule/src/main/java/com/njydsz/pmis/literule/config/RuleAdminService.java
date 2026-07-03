@@ -3,6 +3,7 @@ package com.njydsz.pmis.literule.config;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.event.RuleConfigRefreshEvent;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.impl.ExpressionRule;
@@ -34,6 +35,19 @@ public class RuleAdminService {
     private final RuleConfigProvider configProvider;
     private final RuleVersionRepository versionRepository;
     private final ApplicationEventPublisher eventPublisher;
+
+    /** 是否启用 dry-run 仿真（对应 pmis.literule.dryRunEnabled 配置） */
+    private boolean dryRunEnabled = true;
+
+    /**
+     * 设置是否启用 dry-run 仿真
+     *
+     * @param dryRunEnabled 是否启用
+     * @since 1.3.0
+     */
+    public void setDryRunEnabled(boolean dryRunEnabled) {
+        this.dryRunEnabled = dryRunEnabled;
+    }
 
     /**
      * 查询全部规则定义
@@ -73,6 +87,15 @@ public class RuleAdminService {
             }
         }
 
+        // 校验生命周期状态合法性（若 status 非空）
+        if (definition.getStatus() != null && !definition.getStatus().isBlank()) {
+            RuleStatus status = RuleStatus.fromCode(definition.getStatus());
+            if (status == null) {
+                throw new IllegalArgumentException("非法的规则状态: " + definition.getStatus()
+                        + "，合法值: DRAFT/REVIEW/PUBLISHED/DISABLED/ARCHIVED");
+            }
+        }
+
         RuleDefinition saved = configProvider.save(definition, operator);
 
         // 保存版本快照
@@ -84,11 +107,12 @@ public class RuleAdminService {
             }
         }
 
-        // 发布热刷新事件
+        // 发布热刷新事件（基于持久化后的 version 判断 CREATE/UPDATE）
+        RuleConfigRefreshEvent.ChangeType changeType = saved.getVersion() > 1
+                ? RuleConfigRefreshEvent.ChangeType.UPDATE
+                : RuleConfigRefreshEvent.ChangeType.CREATE;
         eventPublisher.publishEvent(RuleConfigRefreshEvent.of(
-                saved.getCode(),
-                definition.getVersion() > 1 ? RuleConfigRefreshEvent.ChangeType.UPDATE : RuleConfigRefreshEvent.ChangeType.CREATE,
-                operator));
+                saved.getCode(), changeType, operator));
 
         log.info("[LiteRule] 规则已保存: code={}, version={}, operator={}", saved.getCode(), saved.getVersion(), operator);
         return saved;
@@ -143,11 +167,18 @@ public class RuleAdminService {
     /**
      * Dry-run 仿真（不发布事件、不记录统计）
      *
+     * <p>当 {@code dryRunEnabled=false} 时抛出 {@link IllegalStateException}，
+     * 消费 pmis.literule.dryRunEnabled 配置开关。
+     *
      * @param ruleCode 规则编码（null 表示仿真全部规则）
      * @param facts    事实数据
      * @return 仿真结果列表
+     * @throws IllegalStateException dry-run 功能被禁用
      */
     public List<RuleResult> dryRun(String ruleCode, Map<String, Object> facts) {
+        if (!dryRunEnabled) {
+            throw new IllegalStateException("Dry-run 功能已被禁用（pmis.literule.dryRunEnabled=false）");
+        }
         com.njydsz.pmis.literule.api.RuleContext context =
                 com.njydsz.pmis.literule.api.RuleContext.of(facts, "DRY_RUN", "MANUAL");
 

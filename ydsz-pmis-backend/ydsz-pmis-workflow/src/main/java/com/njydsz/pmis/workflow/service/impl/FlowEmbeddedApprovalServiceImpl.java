@@ -272,7 +272,15 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     }
 
     /**
-     * 当前用户是否可撤回
+     * 当前用户是否可撤回（P0-4 修复：补全下游已处理判断）
+     *
+     * <p>撤回条件：
+     * <ol>
+     *   <li>操作人是发起人</li>
+     *   <li>实例未结束（RUNNING）</li>
+     *   <li>所有 PENDING 任务均未签收（CLAIMED）</li>
+     *   <li>【P0-4 新增】无已完成的历史任务 — 如果有审批人已处理过任务，说明流程已推进到下游，不可撤回</li>
+     * </ol>
      */
     private boolean canRecall(FlowInstanceDO instance, List<FlowTaskDO> pending, Long userId) {
         if (userId == null) {
@@ -293,6 +301,13 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             if (FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())) {
                 return false;
             }
+        }
+        // P0-4: 检查是否有已完成的历史任务 — 有则说明审批人已处理过，流程已推进，不可撤回
+        List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instance.getId());
+        if (hisTasks != null && !hisTasks.isEmpty()) {
+            log.debug("[EmbeddedApproval] 实例已有 {} 条历史任务，不可撤回 instanceId={}",
+                    hisTasks.size(), instance.getId());
+            return false;
         }
         return true;
     }

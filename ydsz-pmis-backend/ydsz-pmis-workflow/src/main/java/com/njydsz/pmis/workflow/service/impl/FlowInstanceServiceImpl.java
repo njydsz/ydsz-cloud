@@ -574,8 +574,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return false;
         }
         try {
-            Map<String, Object> ext = JSON.parseObject(
-                    node.getExt(), Map.class);
+            @SuppressWarnings("unchecked")
+            Map<String, Object> ext = JSON.parseObject(node.getExt(), Map.class);
             if (ext == null) return false;
             return ext.containsKey("callActivityFlowCode")
                     || ext.containsKey("subProcessFlowCode");

@@ -73,12 +73,12 @@ public class RequireReAuthAspect {
         HttpServletRequest request = attrs != null ? attrs.getRequest() : null;
         String token = request == null ? null : request.getHeader(HEADER);
         if (!StringUtils.hasText(token)) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_05d36407" + ann.name());
+            throw new BizException(BizErrorCode.FORBIDDEN, "敏感操作需要二次认证: " + ann.name());
         }
         String redisKey = KEY_PREFIX + ann.code() + ":" + user.getUserId() + ":" + token;
         String op = redisTemplate.opsForValue().get(redisKey);
         if (!StringUtils.hasText(op)) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_b6006fa2");
+            throw new BizException(BizErrorCode.FORBIDDEN, "二次认证 token 无效或已过期");
         }
         // 一次性 token，使用后立即失效
         redisTemplate.delete(redisKey);

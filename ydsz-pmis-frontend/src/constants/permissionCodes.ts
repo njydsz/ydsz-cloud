@@ -298,6 +298,29 @@ export const PC = {
   WORKFLOW_STATS: 'workflow:stats:view',
   WORKFLOW_DIAGRAM: 'workflow:diagram:view',
   WORKFLOW_TIMELINE: 'workflow:timeline:view',
+
+  // 委托授权
+  WORKFLOW_DELEGATE_AUTH_VIEW: 'workflow:delegate-auth:view',
+  WORKFLOW_DELEGATE_AUTH_CREATE: 'workflow:delegate-auth:create',
+  WORKFLOW_DELEGATE_AUTH_REVOKE: 'workflow:delegate-auth:revoke',
+  WORKFLOW_DELEGATE_AUTH_TOGGLE: 'workflow:delegate-auth:toggle',
+
+  // SLA 管理
+  WORKFLOW_SLA_VIEW: 'workflow:sla:view',
+  WORKFLOW_SLA_SCAN: 'workflow:sla:scan',
+  WORKFLOW_SLA_PROCESS: 'workflow:sla:process',
+
+  // 灰度发布
+  WORKFLOW_CANARY_VIEW: 'workflow:canary:view',
+  WORKFLOW_CANARY_PUBLISH: 'workflow:canary:publish',
+  WORKFLOW_CANARY_ADJUST: 'workflow:canary:adjust',
+  WORKFLOW_CANARY_PROMOTE: 'workflow:canary:promote',
+  WORKFLOW_CANARY_ROLLBACK: 'workflow:canary:rollback',
+
+  // 版本管理 + 模拟运行
+  WORKFLOW_VERSION_VIEW: 'workflow:version:view',
+  WORKFLOW_VERSION_SWITCH: 'workflow:version:switch',
+  WORKFLOW_VERSION_SIMULATE: 'workflow:version:simulate',
 } as const
 
 /** 权限码字面量联合类型（用于参数类型约束） */

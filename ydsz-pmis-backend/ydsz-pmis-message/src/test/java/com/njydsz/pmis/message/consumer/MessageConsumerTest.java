@@ -13,7 +13,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.data.redis.core.script.RedisScript;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -117,6 +116,7 @@ class MessageConsumerTest {
 
     @Test
     @DisplayName("onMessage 业务异常 → 保留锁，不重试，不释放锁")
+    @SuppressWarnings("unchecked")
     void onMessage_bizException_keepLock() {
         MessageRequest req = buildRequest("SMS", "NOT-EXIST", "13800138000",
                 "OPPORTUNITY", "OPP-002", null);
@@ -131,11 +131,12 @@ class MessageConsumerTest {
 
         verify(messageService, times(1)).send(any(MessageRequest.class));
         // BizException 不应释放锁
-        verify(redisTemplate, never()).execute(any(RedisScript.class), any(), any());
+        verify(redisTemplate, never()).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(), any());
     }
 
     @Test
     @DisplayName("onMessage 系统异常 → 释放锁，抛出 RuntimeException 触发重投")
+    @SuppressWarnings("unchecked")
     void onMessage_systemException_releaseAndRethrow() {
         MessageRequest req = buildRequest("EMAIL", "TPL-001", "test@ydsz-pmis.cn",
                 "OPPORTUNITY", "OPP-003", null);
@@ -152,7 +153,7 @@ class MessageConsumerTest {
 
         verify(messageService, times(1)).send(any(MessageRequest.class));
         // 系统异常应释放锁
-        verify(redisTemplate, times(1)).execute(any(RedisScript.class), any(), any());
+        verify(redisTemplate, times(1)).execute(any(org.springframework.data.redis.core.script.RedisScript.class), any(), any());
     }
 
     // ==================== 幂等键缺失场景 ====================

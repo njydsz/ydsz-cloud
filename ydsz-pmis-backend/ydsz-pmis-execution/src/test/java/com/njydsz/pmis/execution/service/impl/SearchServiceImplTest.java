@@ -101,8 +101,11 @@ class SearchServiceImplTest {
 
     @Test
     @DisplayName("searchProjects 在 ES 失败时应降级返回空结果")
+    @SuppressWarnings("unchecked")
     void searchProjects_shouldReturnEmptyWhenEsFails() {
-        when(elasticsearchOperations.search(any(org.springframework.data.elasticsearch.core.query.Query.class), any(Class.class)))
+        when(elasticsearchOperations.search(
+                any(org.springframework.data.elasticsearch.core.query.Query.class),
+                any(Class.class)))
                 .thenThrow(new RuntimeException("ES down"));
         Page<ProjectSearchDoc> result = searchService.searchProjects("测试", PageRequest.of(0, 10));
         assertThat(result).isEmpty();

@@ -17,7 +17,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -202,6 +201,6 @@ class AuthServiceImplTest {
     void captchaExpire() {
         service.generateCaptcha();
         verify(valueOps)
-                .set(anyString(), anyString(), anyLong(), eq(TimeUnit.MINUTES));
+                .set(anyString(), anyString(), any(java.time.Duration.class));
     }
 }

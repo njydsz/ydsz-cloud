@@ -222,6 +222,9 @@ export default {
     workflowInstance: 'Flow Instance',
     workflowMonitor: 'Flow Monitor',
     workflowFormDesign: 'Form Design',
+    workflowDelegateAuth: 'Delegate Auth',
+    workflowSla: 'SLA Management',
+    workflowCanary: 'Canary Release',
   },
   dashboard: {
     welcome: {

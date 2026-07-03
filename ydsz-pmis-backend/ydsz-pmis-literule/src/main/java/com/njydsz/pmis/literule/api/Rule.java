@@ -45,6 +45,20 @@ public interface Rule {
     }
 
     /**
+     * 作用域（影响范围）
+     *
+     * <p>用于场景过滤：当 {@link RuleContext#getScenario()} 非空且非 "DEFAULT" 时，
+     * 仅评估 scope 为 null/"ALL" 或与 scenario 匹配的规则。
+     * 默认返回 null 表示适用于全部场景。
+     *
+     * @return 作用域；null 表示适用于全部场景
+     * @since 1.3.0
+     */
+    default String getScope() {
+        return null;
+    }
+
+    /**
      * 评估规则
      *
      * @param context 规则上下文（事实数据）
