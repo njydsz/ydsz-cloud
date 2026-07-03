@@ -361,11 +361,36 @@ export const deleteTestCase = (id: number) =>
     method: 'DELETE',
   })
 
+/** 回归测试单个用例结果 */
+export interface RegressionCaseResult {
+  testCaseId: number
+  testCaseName: string
+  ruleCode: string
+  pass: boolean
+  expectedTriggered: string[]
+  actualTriggered: string[]
+  missing: string[]
+  unexpected: string[]
+  results: RuleResult[]
+}
+
+/** 回归测试报告 */
+export interface RegressionReport {
+  total: number
+  passed: number
+  failed: number
+  passRate: string
+  allPassed: boolean
+  caseResults: RegressionCaseResult[]
+}
+
 /**
- * 批量执行测试用例
+ * 批量执行测试用例（回归测试）
+ * @param ids 测试用例 ID 列表，为空则执行全部
+ * @returns 回归测试报告（含通过率、缺失/意外触发等）
  */
-export const batchRunTestCases = (ids: number[]) =>
-  request<Record<string, RuleResult[]>>({
+export const batchRunTestCases = (ids: number[] = []) =>
+  request<RegressionReport>({
     url: '/execution/api/v1/rules/test-cases/batch-run',
     method: 'POST',
     data: { ids },
@@ -419,6 +444,45 @@ export const getTracesByRule = (ruleCode: string, limit = 20) =>
     url: `/execution/api/v1/rules/traces/rule/${ruleCode}`,
     method: 'GET',
     params: { limit },
+  })
+
+/**
+ * 查询最近执行链路（按时间倒序）
+ * @param limit 返回条数（默认 50）
+ */
+export const listRecentTraces = (limit = 50) =>
+  request<ExecutionTrace[]>({
+    url: '/execution/api/v1/rules/traces',
+    method: 'GET',
+    params: { limit },
+  })
+
+/** 执行回放差异分析 */
+export interface ReplayDiff {
+  added: string[]
+  removed: string[]
+  unchanged: string[]
+  summary: string
+}
+
+/** 执行回放结果 */
+export interface ReplayResult {
+  traceId: string
+  factsSnapshot: Record<string, unknown>
+  historicalTraces: ExecutionTrace[]
+  currentResults: RuleResult[]
+  diff: ReplayDiff
+}
+
+/**
+ * 执行回放：基于 traceId 重放历史执行链路
+ * @param traceId 追踪 ID
+ * @returns 回放结果（含历史快照 + 当前评估 + 差异分析）
+ */
+export const replayTrace = (traceId: string) =>
+  request<ReplayResult>({
+    url: `/execution/api/v1/rules/traces/${traceId}/replay`,
+    method: 'POST',
   })
 
 // ==================== 决策表管理 ====================

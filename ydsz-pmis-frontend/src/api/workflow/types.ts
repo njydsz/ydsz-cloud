@@ -626,3 +626,17 @@ export interface TaskCommentDTO {
   createdAt?: string
   updatedAt?: string
 }
+
+/** P2-6: 流程模板 */
+export interface FlowTemplateDTO {
+  templateCode: string
+  templateName: string
+  category?: string
+  description?: string
+  icon?: string
+  useCount?: number
+  formPath?: string
+  bpmnXml?: string
+  createdAt?: string
+  updatedAt?: string
+}

@@ -20,6 +20,7 @@ import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
+import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
 import com.njydsz.pmis.workflow.service.FlowCanaryService;
 import com.njydsz.pmis.workflow.service.FlowCcService;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;

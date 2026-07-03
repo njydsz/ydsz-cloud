@@ -784,7 +784,7 @@ function applyTemplate(tpl: (typeof templates)[0]) {
   flex-wrap: wrap;
 }
 
-// P2-4: 移动端响应式适配
+/* P2-4: 移动端响应式适配 */
 @media (max-width: 768px) {
   .bpmn-designer {
     .bpmn-toolbar {

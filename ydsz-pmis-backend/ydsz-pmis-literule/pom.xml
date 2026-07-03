@@ -16,6 +16,7 @@
 
     <properties>
         <aviator.version>5.4.3</aviator.version>
+        <groovy.version>4.0.22</groovy.version>
     </properties>
 
     <dependencies>
@@ -30,6 +31,13 @@
             <groupId>com.googlecode.aviator</groupId>
             <artifactId>aviator</artifactId>
             <version>${aviator.version}</version>
+        </dependency>
+
+        <!-- Groovy 脚本引擎（脚本规则支持，JSR-223） -->
+        <dependency>
+            <groupId>org.apache.groovy</groupId>
+            <artifactId>groovy-jsr223</artifactId>
+            <version>${groovy.version}</version>
         </dependency>
 
         <!-- Spring Context（自动配置 + 事件驱动热加载） -->

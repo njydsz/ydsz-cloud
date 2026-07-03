@@ -306,27 +306,91 @@ public class RuleAdminController {
     }
 
     /**
-     * 批量执行测试用例
+     * 批量执行测试用例（回归测试）
      *
-     * @param request 请求体，包含 ids（测试用例 ID 列表）
-     * @return 每个测试用例的执行结果
+     * <p>对每个测试用例执行 dry-run，对比实际触发规则与预期触发规则，
+     * 返回通过率报告。支持 CI 集成：当 anyFail=true 时 HTTP 状态码仍为 200，
+     * CI 脚本通过 response body 中的 passRate 判断是否阻断流水线。
+     *
+     * @param request 请求体，包含 ids（测试用例 ID 列表，为空则执行全部）
+     * @return 回归测试报告（含每个用例的 pass/fail + 通过率统计）
      */
     @PostMapping("/test-cases/batch-run")
-    public Result<Map<String, List<RuleResult>>> batchRunTestCases(@RequestBody Map<String, Object> request) {
+    public Result<Map<String, Object>> batchRunTestCases(@RequestBody Map<String, Object> request) {
         @SuppressWarnings("unchecked")
         List<Integer> ids = (List<Integer>) request.get("ids");
+
+        List<RuleTestCaseDO> testCases;
         if (ids == null || ids.isEmpty()) {
-            return Result.ok(Map.of());
+            // 执行全部测试用例
+            testCases = ruleTestCaseMapper.selectList(null);
+        } else {
+            testCases = ids.stream()
+                .map(id -> ruleTestCaseMapper.selectById(id.longValue()))
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toList());
         }
 
-        Map<String, List<RuleResult>> results = new LinkedHashMap<>();
-        for (Integer id : ids) {
-            RuleTestCaseDO tc = ruleTestCaseMapper.selectById(id);
-            if (tc == null) continue;
-            List<RuleResult> result = ruleAdminService.dryRun(null, tc.getFactsData());
-            results.put(tc.getName(), result);
+        if (testCases.isEmpty()) {
+            return Result.ok(Map.of("total", 0, "passed", 0, "failed", 0, "passRate", "100%"));
         }
-        return Result.ok(results);
+
+        List<Map<String, Object>> caseResults = new java.util.ArrayList<>();
+        int passed = 0;
+        int failed = 0;
+
+        for (RuleTestCaseDO tc : testCases) {
+            List<RuleResult> results = ruleAdminService.dryRun(null, tc.getFactsData());
+
+            // 获取实际触发的规则编码集合
+            java.util.Set<String> actualTriggered = results.stream()
+                .map(RuleResult::getRuleCode)
+                .collect(java.util.stream.Collectors.toSet());
+
+            // 获取预期触发的规则编码集合
+            java.util.Set<String> expectedTriggered = new java.util.HashSet<>();
+            if (tc.getExpectedTriggered() != null) {
+                expectedTriggered.addAll(tc.getExpectedTriggered());
+            }
+
+            // 对比
+            boolean isPass = actualTriggered.equals(expectedTriggered);
+            if (isPass) {
+                passed++;
+            } else {
+                failed++;
+            }
+
+            java.util.Set<String> missing = new java.util.LinkedHashSet<>(expectedTriggered);
+            missing.removeAll(actualTriggered);
+
+            java.util.Set<String> unexpected = new java.util.LinkedHashSet<>(actualTriggered);
+            unexpected.removeAll(expectedTriggered);
+
+            Map<String, Object> caseResult = new LinkedHashMap<>();
+            caseResult.put("testCaseId", tc.getId());
+            caseResult.put("testCaseName", tc.getName());
+            caseResult.put("ruleCode", tc.getRuleCode());
+            caseResult.put("pass", isPass);
+            caseResult.put("expectedTriggered", expectedTriggered);
+            caseResult.put("actualTriggered", actualTriggered);
+            caseResult.put("missing", missing);
+            caseResult.put("unexpected", unexpected);
+            caseResult.put("results", results);
+            caseResults.add(caseResult);
+        }
+
+        double passRate = (double) passed / testCases.size() * 100;
+
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("total", testCases.size());
+        report.put("passed", passed);
+        report.put("failed", failed);
+        report.put("passRate", String.format("%.1f%%", passRate));
+        report.put("allPassed", failed == 0);
+        report.put("caseResults", caseResults);
+
+        return Result.ok(report);
     }
 
     // ==================== 生命周期管理 ====================
@@ -382,6 +446,86 @@ public class RuleAdminController {
         return Result.ok(ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
+                .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+                .last("LIMIT " + limit)));
+    }
+
+    /**
+     * 执行回放：基于 traceId 重放历史执行链路
+     *
+     * <p>从历史 trace 记录中读取 factsSnapshot，用当前规则集重新评估，
+     * 对比历史结果与当前结果，展示规则变更后的差异。
+     *
+     * @param traceId 追踪 ID
+     * @return 回放结果（含历史快照 + 当前评估 + 差异分析）
+     */
+    @PostMapping("/traces/{traceId}/replay")
+    public Result<Map<String, Object>> replayTrace(@PathVariable String traceId) {
+        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
+            new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                .eq(RuleExecutionTraceDO::getTraceId, traceId)
+                .orderByAsc(RuleExecutionTraceDO::getCreatedAt));
+
+        if (traces.isEmpty()) {
+            return Result.fail("未找到 traceId=" + traceId + " 的执行记录");
+        }
+
+        // 取第一条 trace 的 factsSnapshot 作为回放输入
+        Map<String, Object> facts = traces.get(0).getFactsSnapshot();
+        if (facts == null || facts.isEmpty()) {
+            return Result.fail("traceId=" + traceId + " 的事实快照为空，无法回放");
+        }
+
+        // 用当前规则集重新评估
+        List<RuleResult> currentResults = ruleAdminService.dryRun(null, facts);
+
+        // 构建历史触发规则编码集合
+        java.util.Set<String> historicalTriggered = traces.stream()
+            .filter(t -> Boolean.TRUE.equals(t.getTriggered()))
+            .map(RuleExecutionTraceDO::getRuleCode)
+            .collect(java.util.stream.Collectors.toSet());
+
+        // 构建当前触发规则编码集合
+        java.util.Set<String> currentTriggered = currentResults.stream()
+            .map(RuleResult::getRuleCode)
+            .collect(java.util.stream.Collectors.toSet());
+
+        // 差异分析
+        java.util.Set<String> added = new java.util.LinkedHashSet<>(currentTriggered);
+        added.removeAll(historicalTriggered);
+
+        java.util.Set<String> removed = new java.util.LinkedHashSet<>(historicalTriggered);
+        removed.removeAll(currentTriggered);
+
+        java.util.Set<String> unchanged = new java.util.LinkedHashSet<>(currentTriggered);
+        unchanged.retainAll(historicalTriggered);
+
+        Map<String, Object> replay = new LinkedHashMap<>();
+        replay.put("traceId", traceId);
+        replay.put("factsSnapshot", facts);
+        replay.put("historicalTraces", traces);
+        replay.put("currentResults", currentResults);
+        replay.put("diff", Map.of(
+            "added", added,
+            "removed", removed,
+            "unchanged", unchanged,
+            "summary", String.format("新增触发 %d 条，移除触发 %d 条，保持不变 %d 条",
+                added.size(), removed.size(), unchanged.size())
+        ));
+
+        return Result.ok(replay);
+    }
+
+    /**
+     * 查询最近执行链路（按时间倒序）
+     *
+     * @param limit 返回条数（默认 50）
+     * @return 最近的执行链路列表
+     */
+    @GetMapping("/traces")
+    public Result<List<RuleExecutionTraceDO>> listRecentTraces(@RequestParam(defaultValue = "50") int limit) {
+        return Result.ok(ruleExecutionTraceMapper.selectList(
+            new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
                 .last("LIMIT " + limit)));
     }

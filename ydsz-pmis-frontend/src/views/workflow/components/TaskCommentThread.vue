@@ -219,7 +219,7 @@ onMounted(() => {
               v-model="replyContent"
               type="textarea"
               :rows="2"
-              placeholder={`回复 ${comment.userName || `用户${comment.userId}`}...`}
+              :placeholder="`回复 ${comment.userName || ('用户' + comment.userId)}...`"
               maxlength="500"
             />
             <div class="reply-actions">

@@ -29,6 +29,9 @@ import type {
   RuleTemplate,
   RuleVersion,
   RuleEngineStats,
+  ExecutionTrace,
+  ReplayResult,
+  RegressionReport,
 } from '@/api/execution/rule-engine'
 import ExpressionEditor from '@/components/common/ExpressionEditor.vue'
 
@@ -648,6 +651,84 @@ function loadAiResultToEdit() {
   editDialogVisible.value = true
 }
 
+// ==================== 执行链路回放 ====================
+
+/** 执行回放对话框可见性 */
+const traceDialogVisible = ref(false)
+/** 最近链路列表 */
+const recentTraces = ref<ExecutionTrace[]>([])
+/** 链路加载状态 */
+const traceLoading = ref(false)
+/** 回放结果 */
+const replayResult = ref<ReplayResult | null>(null)
+/** 回放加载状态 */
+const replayLoading = ref(false)
+/** 当前选中的 traceId */
+const selectedTraceId = ref('')
+
+/** 打开执行回放对话框 */
+async function openTraceReplay() {
+  traceDialogVisible.value = true
+  replayResult.value = null
+  selectedTraceId.value = ''
+  traceLoading.value = true
+  try {
+    const { data } = await ruleApi.listRecentTraces(50)
+    recentTraces.value = data || []
+  } catch {
+    recentTraces.value = []
+  } finally {
+    traceLoading.value = false
+  }
+}
+
+/**
+ * 执行回放
+ * @param traceId 追踪 ID
+ */
+async function handleReplay(traceId: string) {
+  selectedTraceId.value = traceId
+  replayLoading.value = true
+  try {
+    const { data } = await ruleApi.replayTrace(traceId)
+    replayResult.value = data
+  } catch {
+    ElMessage.error('回放失败，请检查 traceId 是否有效')
+    replayResult.value = null
+  } finally {
+    replayLoading.value = false
+  }
+}
+
+// ==================== 回归测试 ====================
+
+/** 回归测试对话框可见性 */
+const regressionDialogVisible = ref(false)
+/** 回归测试报告 */
+const regressionReport = ref<RegressionReport | null>(null)
+/** 回归测试加载状态 */
+const regressionLoading = ref(false)
+
+/** 执行回归测试（全部测试用例） */
+async function openRegressionTest() {
+  regressionDialogVisible.value = true
+  regressionReport.value = null
+  regressionLoading.value = true
+  try {
+    const { data } = await ruleApi.batchRunTestCases([])
+    regressionReport.value = data
+    if (data.allPassed) {
+      ElMessage.success(`回归测试全部通过（${data.total} 个用例）`)
+    } else {
+      ElMessage.warning(`回归测试通过率 ${data.passRate}（${data.failed} 个失败）`)
+    }
+  } catch {
+    ElMessage.error('回归测试执行失败')
+  } finally {
+    regressionLoading.value = false
+  }
+}
+
 // ==================== 页面初始化 ====================
 
 onMounted(() => {
@@ -715,6 +796,12 @@ onMounted(() => {
           </el-button>
           <el-button :loading="conflictLoading" @click="detectConflicts">
             <el-icon><WarningFilled /></el-icon>冲突检测
+          </el-button>
+          <el-button type="info" @click="openTraceReplay">
+            <el-icon><View /></el-icon>执行回放
+          </el-button>
+          <el-button type="primary" plain @click="openRegressionTest">
+            <el-icon><CircleCheck /></el-icon>回归测试
           </el-button>
         </div>
         <div class="toolbar-right">
@@ -1180,6 +1267,183 @@ onMounted(() => {
         <el-button @click="conflictDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
+
+    <!-- ==================== 执行回放对话框 ==================== -->
+    <el-dialog v-model="traceDialogVisible" title="执行链路回放" width="960px" :close-on-click-modal="false">
+      <el-row :gutter="16">
+        <!-- 左侧：链路列表 -->
+        <el-col :span="10">
+          <div class="trace-list-header">最近执行链路</div>
+          <el-table
+            v-loading="traceLoading"
+            :data="recentTraces"
+            border
+            stripe
+            size="small"
+            height="400"
+            highlight-current-row
+            @row-click="(row: ExecutionTrace) => handleReplay(row.traceId)"
+          >
+            <el-table-column prop="traceId" label="Trace ID" width="140" show-overflow-tooltip />
+            <el-table-column prop="ruleCode" label="规则编码" width="140" show-overflow-tooltip />
+            <el-table-column label="触发" width="60" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.triggered ? 'danger' : 'info'" size="small">
+                  {{ row.triggered ? '是' : '否' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="createdAt" label="时间" width="160" />
+          </el-table>
+        </el-col>
+
+        <!-- 右侧：回放结果 -->
+        <el-col :span="14">
+          <div v-loading="replayLoading">
+            <template v-if="replayResult">
+              <!-- 差异摘要 -->
+              <el-alert :title="replayResult.diff.summary" type="info" :closable="false" show-icon class="mb-3" />
+
+              <!-- 差异详情 -->
+              <el-row :gutter="8" class="diff-row">
+                <el-col :span="8">
+                  <el-card shadow="hover" class="diff-card diff-added">
+                    <div class="diff-card-title">新增触发</div>
+                    <div class="diff-card-count">{{ replayResult.diff.added.length }}</div>
+                    <div class="diff-card-list">
+                      <el-tag v-for="code in replayResult.diff.added" :key="code" type="danger" size="small" style="margin:2px">
+                        {{ code }}
+                      </el-tag>
+                      <span v-if="replayResult.diff.added.length === 0" class="diff-empty">无</span>
+                    </div>
+                  </el-card>
+                </el-col>
+                <el-col :span="8">
+                  <el-card shadow="hover" class="diff-card diff-removed">
+                    <div class="diff-card-title">移除触发</div>
+                    <div class="diff-card-count">{{ replayResult.diff.removed.length }}</div>
+                    <div class="diff-card-list">
+                      <el-tag v-for="code in replayResult.diff.removed" :key="code" type="warning" size="small" style="margin:2px">
+                        {{ code }}
+                      </el-tag>
+                      <span v-if="replayResult.diff.removed.length === 0" class="diff-empty">无</span>
+                    </div>
+                  </el-card>
+                </el-col>
+                <el-col :span="8">
+                  <el-card shadow="hover" class="diff-card diff-unchanged">
+                    <div class="diff-card-title">保持不变</div>
+                    <div class="diff-card-count">{{ replayResult.diff.unchanged.length }}</div>
+                    <div class="diff-card-list">
+                      <el-tag v-for="code in replayResult.diff.unchanged" :key="code" type="success" size="small" style="margin:2px">
+                        {{ code }}
+                      </el-tag>
+                      <span v-if="replayResult.diff.unchanged.length === 0" class="diff-empty">无</span>
+                    </div>
+                  </el-card>
+                </el-col>
+              </el-row>
+
+              <!-- 当前评估结果 -->
+              <el-divider content-position="left">当前规则评估结果</el-divider>
+              <el-table :data="replayResult.currentResults" border stripe size="small" max-height="200">
+                <el-table-column prop="ruleCode" label="规则编码" width="140" show-overflow-tooltip />
+                <el-table-column prop="ruleName" label="规则名称" min-width="140" show-overflow-tooltip />
+                <el-table-column label="触发" width="60" align="center">
+                  <template #default="{ row }">
+                    <el-tag :type="row.triggered ? 'danger' : 'info'" size="small">
+                      {{ row.triggered ? '是' : '否' }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column label="严重度" width="80">
+                  <template #default="{ row }">
+                    <el-tag :type="severityOf(row.severity).type" size="small">
+                      {{ severityOf(row.severity).label }}
+                    </el-tag>
+                  </template>
+                </el-table-column>
+                <el-table-column prop="elapsedMs" label="耗时(ms)" width="80" />
+              </el-table>
+            </template>
+            <el-empty v-else description="选择左侧链路进行回放" />
+          </div>
+        </el-col>
+      </el-row>
+      <template #footer>
+        <el-button @click="traceDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- ==================== 回归测试对话框 ==================== -->
+    <el-dialog v-model="regressionDialogVisible" title="回归测试报告" width="900px" :close-on-click-modal="false">
+      <div v-loading="regressionLoading">
+        <template v-if="regressionReport">
+          <!-- 通过率概览 -->
+          <el-row :gutter="12" class="stats-row">
+            <el-col :span="6">
+              <el-card shadow="hover" class="stat-card">
+                <div class="stat-label">总用例数</div>
+                <div class="stat-value">{{ regressionReport.total }}</div>
+              </el-card>
+            </el-col>
+            <el-col :span="6">
+              <el-card shadow="hover" class="stat-card">
+                <div class="stat-label">通过</div>
+                <div class="stat-value" style="color:#67c23a">{{ regressionReport.passed }}</div>
+              </el-card>
+            </el-col>
+            <el-col :span="6">
+              <el-card shadow="hover" class="stat-card">
+                <div class="stat-label">失败</div>
+                <div class="stat-value" style="color:#f56c6c">{{ regressionReport.failed }}</div>
+              </el-card>
+            </el-col>
+            <el-col :span="6">
+              <el-card shadow="hover" class="stat-card">
+                <div class="stat-label">通过率</div>
+                <div class="stat-value" :style="{ color: regressionReport.allPassed ? '#67c23a' : '#f56c6c' }">
+                  {{ regressionReport.passRate }}
+                </div>
+              </el-card>
+            </el-col>
+          </el-row>
+
+          <!-- 用例详情 -->
+          <el-table :data="regressionReport.caseResults" border stripe size="small" max-height="400">
+            <el-table-column label="结果" width="70" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.pass ? 'success' : 'danger'" size="small">
+                  {{ row.pass ? '通过' : '失败' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="testCaseName" label="用例名称" min-width="140" show-overflow-tooltip />
+            <el-table-column prop="ruleCode" label="关联规则" width="140" show-overflow-tooltip />
+            <el-table-column label="缺失触发" min-width="120">
+              <template #default="{ row }">
+                <el-tag v-for="code in row.missing" :key="code" type="warning" size="small" style="margin:1px">
+                  {{ code }}
+                </el-tag>
+                <span v-if="row.missing.length === 0" style="color:#999">-</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="意外触发" min-width="120">
+              <template #default="{ row }">
+                <el-tag v-for="code in row.unexpected" :key="code" type="danger" size="small" style="margin:1px">
+                  {{ code }}
+                </el-tag>
+                <span v-if="row.unexpected.length === 0" style="color:#999">-</span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </template>
+        <el-empty v-else description="正在执行回归测试..." />
+      </div>
+      <template #footer>
+        <el-button @click="regressionDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -1273,6 +1537,53 @@ onMounted(() => {
 
   .mb-3 {
     margin-bottom: $spacing-md;
+  }
+
+  .trace-list-header {
+    font-size: $font-size-sm;
+    font-weight: 600;
+    color: $text-secondary;
+    margin-bottom: $spacing-sm;
+  }
+
+  .diff-row {
+    margin-bottom: $spacing-md;
+
+    .diff-card {
+      text-align: center;
+
+      .diff-card-title {
+        font-size: $font-size-sm;
+        color: $text-secondary;
+      }
+
+      .diff-card-count {
+        font-size: $font-size-2xl;
+        font-weight: 700;
+        margin: $spacing-xs 0;
+      }
+
+      .diff-card-list {
+        min-height: 30px;
+      }
+
+      .diff-empty {
+        color: $text-placeholder;
+        font-size: $font-size-sm;
+      }
+
+      &.diff-added .diff-card-count {
+        color: $danger-color;
+      }
+
+      &.diff-removed .diff-card-count {
+        color: $warning-color;
+      }
+
+      &.diff-unchanged .diff-card-count {
+        color: $success-color;
+      }
+    }
   }
 }
 </style>

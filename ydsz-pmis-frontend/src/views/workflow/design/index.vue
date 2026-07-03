@@ -9,7 +9,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Version, VideoPlay, Refresh, Search } from '@element-plus/icons-vue'
+import { Version, VideoPlay, Refresh, Search, Files } from '@element-plus/icons-vue'
 import FlowDesigner from '../components/FlowDesigner.vue'
 import BpmnDesigner from '../components/BpmnDesigner.vue'
 import {
@@ -18,12 +18,16 @@ import {
   diffVersions,
   switchVersion,
   simulateFlow,
+  listFlowTemplates,
+  importFlowTemplate,
+  exportAsTemplate,
 } from '@/api/workflow'
 import type {
   FlowDefinitionDTO,
   FlowVersionDTO,
   VersionDiffDTO,
   SimulateResultDTO,
+  FlowTemplateDTO,
 } from '@/api/workflow/types'
 
 // ==================== 设计器模式 ====================
@@ -196,6 +200,104 @@ function stepTagType(result: string): string {
   }
 }
 
+// ==================== 模板库 ====================
+const templateDialog = ref(false)
+const templateLoading = ref(false)
+const templateList = ref<FlowTemplateDTO[]>([])
+const templateCategory = ref('')
+
+const categoryOptions = [
+  { label: '全部', value: '' },
+  { label: '人事', value: 'HR' },
+  { label: '财务', value: 'FINANCE' },
+  { label: '行政', value: 'ADMIN' },
+  { label: '项目', value: 'PROJECT' },
+  { label: '通用', value: 'GENERAL' },
+]
+
+async function openTemplateDialog() {
+  templateDialog.value = true
+  await loadTemplates()
+}
+
+async function loadTemplates() {
+  templateLoading.value = true
+  try {
+    const res = await listFlowTemplates(templateCategory.value || undefined)
+    templateList.value = res.data ?? []
+  } catch {
+    ElMessage.error('加载模板列表失败')
+  } finally {
+    templateLoading.value = false
+  }
+}
+
+async function handleImportTemplate(tpl: FlowTemplateDTO) {
+  try {
+    await ElMessageBox.confirm(
+      `确认从模板「${tpl.templateName}」创建新流程定义？`,
+      '导入模板',
+      { type: 'info' },
+    )
+    const res = await importFlowTemplate(tpl.templateCode)
+    ElMessage.success(`模板导入成功，新定义 ID: ${res.data}`)
+    templateDialog.value = false
+    await loadDefinitions()
+  } catch (e) {
+    if (e !== 'cancel') ElMessage.error('模板导入失败')
+  }
+}
+
+// 导出为模板
+const exportDialog = ref(false)
+const exportForm = reactive({
+  templateName: '',
+  category: 'GENERAL',
+})
+
+function openExportDialog() {
+  if (!selectedDefinitionId.value) {
+    ElMessage.warning('请先选择流程定义')
+    return
+  }
+  exportForm.templateName = selectedDefinition.value?.flowName || ''
+  exportForm.category = 'GENERAL'
+  exportDialog.value = true
+}
+
+async function doExport() {
+  if (!exportForm.templateName.trim()) {
+    ElMessage.warning('请输入模板名称')
+    return
+  }
+  try {
+    await exportAsTemplate(
+      selectedDefinitionId.value!,
+      exportForm.templateName.trim(),
+      exportForm.category,
+    )
+    ElMessage.success('导出模板成功')
+    exportDialog.value = false
+  } catch {
+    ElMessage.error('导出失败')
+  }
+}
+
+function categoryLabel(cat?: string): string {
+  const found = categoryOptions.find((c) => c.value === cat)
+  return found?.label || cat || '通用'
+}
+
+function categoryTagType(cat?: string): string {
+  switch (cat) {
+    case 'HR': return 'danger'
+    case 'FINANCE': return 'warning'
+    case 'ADMIN': return 'info'
+    case 'PROJECT': return 'success'
+    default: return ''
+  }
+}
+
 // ==================== 初始化 ====================
 onMounted(() => {
   loadDefinitions()
@@ -241,6 +343,8 @@ onMounted(() => {
 
       <div class="toolbar-spacer" />
 
+      <el-button :icon="Files" @click="openTemplateDialog">模板库</el-button>
+      <el-button @click="openExportDialog">导出为模板</el-button>
       <el-button :icon="Version" @click="openVersionDrawer">版本管理</el-button>
       <el-button type="primary" :icon="VideoPlay" @click="openSimulateDialog">
         模拟运行
@@ -448,6 +552,70 @@ onMounted(() => {
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 模板库弹窗 -->
+    <el-dialog v-model="templateDialog" title="流程模板库" width="800px">
+      <div class="template-filter">
+        <el-radio-group v-model="templateCategory" @change="loadTemplates">
+          <el-radio-button
+            v-for="opt in categoryOptions"
+            :key="opt.value"
+            :value="opt.value"
+          >
+            {{ opt.label }}
+          </el-radio-button>
+        </el-radio-group>
+      </div>
+
+      <div v-loading="templateLoading" class="template-grid">
+        <div
+          v-for="tpl in templateList"
+          :key="tpl.templateCode"
+          class="template-card"
+          @click="handleImportTemplate(tpl)"
+        >
+          <div class="card-header">
+            <span class="card-name">{{ tpl.templateName }}</span>
+            <el-tag :type="categoryTagType(tpl.category)" size="small">
+              {{ categoryLabel(tpl.category) }}
+            </el-tag>
+          </div>
+          <p class="card-desc">{{ tpl.description || '暂无描述' }}</p>
+          <div class="card-footer">
+            <span class="card-uses">使用 {{ tpl.useCount || 0 }} 次</span>
+            <el-button type="primary" link size="small">导入</el-button>
+          </div>
+        </div>
+        <el-empty
+          v-if="!templateLoading && templateList.length === 0"
+          description="暂无模板"
+          :image-size="60"
+        />
+      </div>
+    </el-dialog>
+
+    <!-- 导出为模板弹窗 -->
+    <el-dialog v-model="exportDialog" title="导出为模板" width="480px">
+      <el-form label-width="80px">
+        <el-form-item label="模板名称">
+          <el-input v-model="exportForm.templateName" placeholder="输入模板名称" />
+        </el-form-item>
+        <el-form-item label="分类">
+          <el-select v-model="exportForm.category" style="width: 100%">
+            <el-option
+              v-for="opt in categoryOptions.filter((o) => o.value)"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="exportDialog = false">取消</el-button>
+        <el-button type="primary" @click="doExport">确认导出</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -568,6 +736,66 @@ onMounted(() => {
 
 .simulate-result {
   margin-top: 16px;
+}
+
+// 模板库
+.template-filter {
+  margin-bottom: 16px;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  min-height: 200px;
+}
+
+.template-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #1890ff;
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.12);
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+
+  .card-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
+  }
+
+  .card-desc {
+    font-size: 12px;
+    color: #64748b;
+    line-height: 1.5;
+    margin: 0 0 8px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .card-uses {
+    font-size: 11px;
+    color: #94a3b8;
+  }
 }
 
 // P2-4: 移动端响应式适配

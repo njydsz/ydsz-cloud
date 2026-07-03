@@ -45,6 +45,7 @@ import type {
   VersionDiffDTO,
   SimulateResultDTO,
   TaskCommentDTO,
+  FlowTemplateDTO,
 } from './types'
 
 /** 引擎信息 */
@@ -810,6 +811,45 @@ export function listInstanceComments(instanceId: number) {
 export function deleteTaskComment(commentId: number) {
   return http.delete<ApiResponse<null>>(
     `/workflow/engine/task-comment/${commentId}`,
+  )
+}
+
+// ==================== P2-6: 模板库 ====================
+
+/** 查询模板列表 */
+export function listFlowTemplates(category?: string) {
+  return http.get<ApiResponse<FlowTemplateDTO[]>>(
+    '/workflow/template/list',
+    { params: { category } },
+  )
+}
+
+/** 获取模板详情（含 BPMN XML） */
+export function getFlowTemplate(templateCode: string) {
+  return http.get<ApiResponse<FlowTemplateDTO>>(
+    `/workflow/template/${templateCode}`,
+  )
+}
+
+/** 导入模板为草稿流程定义 */
+export function importFlowTemplate(templateCode: string, flowName?: string) {
+  return http.post<ApiResponse<number>>(
+    `/workflow/template/${templateCode}/import`,
+    undefined,
+    { params: { flowName } },
+  )
+}
+
+/** 导出流程定义为模板 */
+export function exportAsTemplate(
+  definitionId: number,
+  templateName: string,
+  category?: string,
+) {
+  return http.post<ApiResponse<null>>(
+    `/workflow/template/export/${definitionId}`,
+    undefined,
+    { params: { templateName, category: category || 'GENERAL' } },
   )
 }
 
