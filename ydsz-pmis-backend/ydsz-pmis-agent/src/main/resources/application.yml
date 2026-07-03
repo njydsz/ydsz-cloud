@@ -34,7 +34,7 @@ spring:
     # currentSchema=public 显式指定 schema，兼容多租户
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:Limw1020}
 
   # ---------- Redis ----------
   data:

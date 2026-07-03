@@ -5,7 +5,8 @@
  * @description 管理员视角：流程运行监控仪表盘，含统计卡片、趋势图、瓶颈分析、
  *   审批效率排名、异常流程列表、流程类型分布。每 30 秒自动轮询概览数据。
  */
-import { ref, reactive, onMounted, onUnmounted, watch, nextTick } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
@@ -55,6 +56,7 @@ echarts.use([
 ])
 
 const router = useRouter()
+const { t } = useI18n()
 
 // ===========================================
 // 统计概览
@@ -72,16 +74,16 @@ const overviewLoading = ref(false)
 // P2-4: 全局时间范围选择器（驱动趋势/瓶颈/审批人/分布图）
 // ===========================================
 const dateRange = ref<[string, string] | null>(null)
-const dateShortcuts = [
+const dateShortcuts = computed(() => [
   {
-    text: '今日',
+    text: t('workflow.monitor.rangeToday'),
     value: () => {
       const today = dayjs().format('YYYY-MM-DD 00:00:00')
       return [today, dayjs().format('YYYY-MM-DD 23:59:59')]
     },
   },
   {
-    text: '近 7 天',
+    text: t('workflow.monitor.range7Days'),
     value: () => {
       return [
         dayjs().subtract(6, 'day').format('YYYY-MM-DD 00:00:00'),
@@ -90,7 +92,7 @@ const dateShortcuts = [
     },
   },
   {
-    text: '近 30 天',
+    text: t('workflow.monitor.range30Days'),
     value: () => {
       return [
         dayjs().subtract(29, 'day').format('YYYY-MM-DD 00:00:00'),
@@ -98,7 +100,7 @@ const dateShortcuts = [
       ]
     },
   },
-]
+])
 
 /** 返回当前时间范围的 {startTime, endTime}，未选择则返回空对象 */
 function currentTimeRange() {
@@ -210,7 +212,7 @@ function renderTrendChart() {
       trigger: 'axis',
     },
     legend: {
-      data: ['新增实例', '完成实例'],
+      data: [t('workflow.monitor.charts.newSeries'), t('workflow.monitor.charts.doneSeries')],
       bottom: 0,
     },
     grid: {
@@ -232,7 +234,7 @@ function renderTrendChart() {
     },
     series: [
       {
-        name: '新增实例',
+        name: t('workflow.monitor.charts.newSeries'),
         type: 'line',
         data: data.map((d) => d.newCount),
         smooth: true,
@@ -246,7 +248,7 @@ function renderTrendChart() {
         },
       },
       {
-        name: '完成实例',
+        name: t('workflow.monitor.charts.doneSeries'),
         type: 'line',
         data: data.map((d) => d.completedCount),
         smooth: true,
@@ -305,13 +307,17 @@ function renderBottleneckChart() {
       axisPointer: { type: 'shadow' },
       formatter: (params: AxisTooltipParam | AxisTooltipParam[]) => {
         const p = Array.isArray(params) ? params[0] : params
-        return `${p?.name ?? ''}<br/>平均耗时: ${formatDuration(p?.value)}<br/>实例数: ${top[p?.dataIndex ?? -1]?.instanceCount || 0}`
+        return t('workflow.monitor.charts.bottleneckTooltip', {
+          name: p?.name ?? '',
+          duration: formatDuration(p?.value),
+          count: top[p?.dataIndex ?? -1]?.instanceCount || 0,
+        })
       },
     },
     grid: { left: 120, right: 80, top: 10, bottom: 20 },
     xAxis: {
       type: 'value',
-      name: '耗时',
+      name: t('workflow.monitor.charts.costSeries'),
       axisLabel: {
         formatter: (val: number) => formatDuration(val),
       },
@@ -388,20 +394,24 @@ function renderApproverChart() {
         const p = Array.isArray(params) ? params[0] : params
         const idx = data.length - 1 - (p?.dataIndex || 0)
         const item = data[idx]
-        return `${item?.userName || p?.name || ''}<br/>平均处理时长: ${formatDuration(p?.value)}<br/>完成数: ${item?.completedCount || 0}`
+        return t('workflow.monitor.charts.approverTooltip', {
+          name: item?.userName || p?.name || '',
+          duration: formatDuration(p?.value),
+          count: item?.completedCount || 0,
+        })
       },
     },
     grid: { left: 120, right: 80, top: 10, bottom: 20 },
     xAxis: {
       type: 'value',
-      name: '平均时长',
+      name: t('workflow.monitor.charts.avgDurationSeries'),
       axisLabel: {
         formatter: (val: number) => formatDuration(val),
       },
     },
     yAxis: {
       type: 'category',
-      data: data.map((s) => s.userName || `用户${s.userId}`).reverse(),
+      data: data.map((s) => s.userName || t('workflow.monitor.charts.anonymousUser', { n: s.userId })).reverse(),
       axisLabel: {
         width: 100,
         overflow: 'truncate',
@@ -462,18 +472,18 @@ async function loadAnomaly() {
   }
 }
 
-const anomalyTypeMap: Record<string, { label: string; color: string }> = {
-  TIMEOUT: { label: '超时', color: '#f5222d' },
-  STUCK: { label: '卡单', color: '#fa8c16' },
-  CIRCULAR_APPROVAL: { label: '循环审批', color: '#722ed1' },
-  REPEATED_REJECT: { label: '重复驳回', color: '#eb2f96' },
-}
+const anomalyTypeMap = computed<Record<string, { label: string; color: string }>>(() => ({
+  TIMEOUT: { label: t('workflow.monitor.anomaly.type.TIMEOUT'), color: '#f5222d' },
+  STUCK: { label: t('workflow.monitor.anomaly.type.STUCK'), color: '#fa8c16' },
+  CIRCULAR_APPROVAL: { label: t('workflow.monitor.anomaly.type.CIRCULAR_APPROVAL'), color: '#722ed1' },
+  REPEATED_REJECT: { label: t('workflow.monitor.anomaly.type.REPEATED_REJECT'), color: '#eb2f96' },
+}))
 
-const warnLevelMap: Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }> = {
-  RED: { label: '严重', type: 'danger' },
-  YELLOW: { label: '警告', type: 'warning' },
-  ORANGE: { label: '注意', type: 'info' },
-}
+const warnLevelMap = computed<Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }>>(() => ({
+  RED: { label: t('workflow.monitor.anomaly.warnLevel.RED'), type: 'danger' as const },
+  YELLOW: { label: t('workflow.monitor.anomaly.warnLevel.YELLOW'), type: 'warning' as const },
+  ORANGE: { label: t('workflow.monitor.anomaly.warnLevel.ORANGE'), type: 'info' as const },
+}))
 
 function goInstance(row: AnomalyInstanceDTO) {
   router.push({ path: '/workflow/instance', query: { id: String(row.id) } })
@@ -487,20 +497,27 @@ function goInstance(row: AnomalyInstanceDTO) {
  */
 function exportAnomalyCsv() {
   if (!anomalyList.value.length) {
-    ElMessage.warning('当前无可导出的异常数据')
+    ElMessage.warning(t('workflow.monitor.csv.empty'))
     return
   }
   const headers = [
-    '实例ID', '标题', '流程', '发起人', '异常类型', '预警级别',
-    '当前节点', '超期天数', '发起时间',
+    t('workflow.monitor.anomaly.colId'),
+    t('workflow.monitor.anomaly.colTitle'),
+    t('workflow.monitor.anomaly.colFlow'),
+    t('workflow.monitor.anomaly.colInitiator'),
+    t('workflow.monitor.anomaly.colAnomalyType'),
+    t('workflow.monitor.anomaly.colWarnLevel'),
+    t('workflow.monitor.anomaly.colCurrentNode'),
+    t('workflow.monitor.anomaly.colOverdueDays'),
+    t('workflow.monitor.anomaly.colStartTime'),
   ]
   const rows = anomalyList.value.map((r) => [
     r.id ?? '',
     r.title ?? '',
     r.flowName ?? '',
     r.initiatorName ?? '',
-    anomalyTypeMap[r.anomalyType]?.label ?? r.anomalyType ?? '',
-    warnLevelMap[r.warnLevel]?.label ?? r.warnLevel ?? '',
+    anomalyTypeMap.value[r.anomalyType]?.label ?? r.anomalyType ?? '',
+    warnLevelMap.value[r.warnLevel]?.label ?? r.warnLevel ?? '',
     r.currentNodeName ?? '',
     r.overdueDays ?? '',
     r.startTime ? dayjs(r.startTime).format('YYYY-MM-DD HH:mm:ss') : '',
@@ -522,12 +539,12 @@ function exportAnomalyCsv() {
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
-  link.download = `异常流程_${dayjs().format('YYYYMMDD_HHmmss')}.csv`
+  link.download = t('workflow.monitor.csv.fileName', { time: dayjs().format('YYYYMMDD_HHmmss') })
   document.body.appendChild(link)
   link.click()
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
-  ElMessage.success(`已导出 ${anomalyList.value.length} 条异常数据`)
+  ElMessage.success(t('workflow.monitor.csv.exportSuccess', { n: anomalyList.value.length }))
 }
 
 // ===========================================
@@ -605,14 +622,14 @@ function renderDistributionChart() {
 // 工具函数
 // ===========================================
 function formatDuration(ms?: number): string {
-  if (!ms || ms <= 0) return '0 秒'
+  if (!ms || ms <= 0) return t('workflow.monitor.duration.zero')
   const s = Math.floor(ms / 1000)
-  if (s < 60) return `${s} 秒`
+  if (s < 60) return t('workflow.monitor.duration.second', { n: s })
   const m = Math.floor(s / 60)
-  if (m < 60) return `${m} 分 ${s % 60} 秒`
+  if (m < 60) return t('workflow.monitor.duration.minute', { n: m, s: s % 60 })
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h} 时 ${m % 60} 分`
-  return `${Math.floor(h / 24)} 天 ${h % 24} 时`
+  if (h < 24) return t('workflow.monitor.duration.hour', { n: h, m: m % 60 })
+  return t('workflow.monitor.duration.day', { n: Math.floor(h / 24), h: h % 24 })
 }
 
 // ===========================================
@@ -636,7 +653,7 @@ function recordPollFailure() {
       '[WorkflowMonitor]',
       `轮询连续失败 ${pollFailCount} 次，停止自动刷新。请手动刷新页面恢复。`,
     )
-    ElMessage.warning('监控数据自动刷新已停止（连续失败），请检查网络或后端服务后手动刷新')
+    ElMessage.warning(t('workflow.monitor.messages.pollStopped'))
     stopPolling()
     pollStatus.value = 'stopped'
   } else {
@@ -709,398 +726,11 @@ onUnmounted(() => {
 // ===========================================
 // 统计卡片配置
 // ===========================================
-const statCards = [
+const statCards = computed(() => [
   {
     key: 'runningCount' as const,
-    title: '运行中实例',
+    title: t('workflow.monitor.stat.running'),
     icon: 'el-icon-loading',
     color: '#1890ff',
     bgColor: 'rgba(24,144,255,0.08)',
   },
-  {
-    key: 'todayNewCount' as const,
-    title: '今日新增',
-    icon: 'el-icon-plus',
-    color: '#52c41a',
-    bgColor: 'rgba(82,196,26,0.08)',
-  },
-  {
-    key: 'pendingTaskCount' as const,
-    title: '待办任务',
-    icon: 'el-icon-s-order',
-    color: '#fa8c16',
-    bgColor: 'rgba(250,140,22,0.08)',
-  },
-  {
-    key: 'overdueTaskCount' as const,
-    title: '超时任务',
-    icon: 'el-icon-warning',
-    color: '#f5222d',
-    bgColor: 'rgba(245,34,45,0.08)',
-  },
-  {
-    key: 'todayCompletedCount' as const,
-    title: '今日完成',
-    icon: 'el-icon-circle-check',
-    color: '#13c2c2',
-    bgColor: 'rgba(19,194,194,0.08)',
-  },
-]
-</script>
-
-<template>
-  <div class="monitor-dashboard">
-    <!-- 页面标题 -->
-    <div class="page-header">
-      <div class="page-header__left">
-        <h2>实时监控仪表盘</h2>
-        <p class="page-header__sub">
-          流程运行状态实时监控，数据每 30 秒自动刷新
-          <el-tag
-            v-if="pollStatus === 'running'"
-            size="small"
-            type="success"
-            effect="plain"
-            style="margin-left: 8px"
-          >自动刷新中</el-tag>
-          <el-tag
-            v-else-if="pollStatus === 'backing-off'"
-            size="small"
-            type="warning"
-            effect="plain"
-            style="margin-left: 8px"
-          >刷新退避中</el-tag>
-          <el-tag
-            v-else
-            size="small"
-            type="danger"
-            effect="plain"
-            style="margin-left: 8px"
-          >已停止刷新</el-tag>
-        </p>
-      </div>
-      <div class="page-header__right">
-        <el-date-picker
-          v-model="dateRange"
-          type="datetimerange"
-          range-separator="至"
-          start-placeholder="开始时间"
-          end-placeholder="结束时间"
-          format="YYYY-MM-DD HH:mm:ss"
-          value-format="YYYY-MM-DD HH:mm:ss"
-          :shortcuts="dateShortcuts"
-          size="default"
-          clearable
-          style="width: 360px"
-        />
-      </div>
-    </div>
-
-    <!-- 统计卡片行 -->
-    <div class="stat-cards">
-      <div
-        v-for="card in statCards"
-        :key="card.key"
-        class="stat-card"
-        :style="{ borderTopColor: card.color }"
-      >
-        <div class="stat-card__icon" :style="{ backgroundColor: card.bgColor, color: card.color }">
-          <i :class="card.icon" />
-        </div>
-        <div class="stat-card__info">
-          <div class="stat-card__title">{{ card.title }}</div>
-          <div class="stat-card__value" :style="{ color: card.color }">
-            {{ displayStats[card.key] }}
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 第一行：趋势图 + 流程类型分布 -->
-    <div class="chart-row">
-      <el-card shadow="never" class="chart-card">
-        <template #header>
-          <div class="card-header">
-            <span>流程运行趋势</span>
-            <el-radio-group v-model="trendDays" size="small">
-              <el-radio-button :value="7">近 7 天</el-radio-button>
-              <el-radio-button :value="30">近 30 天</el-radio-button>
-            </el-radio-group>
-          </div>
-        </template>
-        <div ref="trendChartRef" class="chart-box" v-loading="trendLoading" />
-      </el-card>
-
-      <el-card shadow="never" class="chart-card">
-        <template #header>
-          <span>流程类型分布</span>
-        </template>
-        <div ref="distributionChartRef" class="chart-box" v-loading="distributionLoading" />
-      </el-card>
-    </div>
-
-    <!-- 第二行：节点耗时瓶颈 + 审批人效率 -->
-    <div class="chart-row">
-      <el-card shadow="never" class="chart-card">
-        <template #header>
-          <span>节点耗时瓶颈 TOP 10</span>
-        </template>
-        <div ref="bottleneckChartRef" class="chart-box" v-loading="bottleneckLoading" />
-      </el-card>
-
-      <el-card shadow="never" class="chart-card">
-        <template #header>
-          <span>审批效率排名 TOP 10</span>
-        </template>
-        <div ref="approverChartRef" class="chart-box" v-loading="approverLoading" />
-      </el-card>
-    </div>
-
-    <!-- 异常流程列表 -->
-    <el-card shadow="never" class="section">
-      <template #header>
-        <div class="card-header">
-          <span>异常流程列表</span>
-          <div>
-            <el-button size="small" text @click="loadAnomaly">刷新</el-button>
-            <el-button size="small" type="primary" plain @click="exportAnomalyCsv" :disabled="!anomalyList.length">
-              导出 CSV
-            </el-button>
-          </div>
-        </div>
-      </template>
-      <div class="filter-bar">
-        <el-select
-          v-model="anomalyQuery.anomalyType"
-          placeholder="异常类型"
-          clearable
-          style="width: 140px"
-          @change="anomalyQuery.pageNum = 1; loadAnomaly()"
-        >
-          <el-option label="超时" value="TIMEOUT" />
-          <el-option label="卡单" value="STUCK" />
-          <el-option label="循环审批" value="CIRCULAR_APPROVAL" />
-          <el-option label="重复驳回" value="REPEATED_REJECT" />
-        </el-select>
-        <el-select
-          v-model="anomalyQuery.warnLevel"
-          placeholder="预警级别"
-          clearable
-          style="width: 120px"
-          @change="anomalyQuery.pageNum = 1; loadAnomaly()"
-        >
-          <el-option label="严重" value="RED" />
-          <el-option label="警告" value="YELLOW" />
-          <el-option label="注意" value="ORANGE" />
-        </el-select>
-        <el-button type="primary" @click="anomalyQuery.pageNum = 1; loadAnomaly()">查询</el-button>
-      </div>
-      <el-table :data="anomalyList" v-loading="anomalyLoading" stripe>
-        <el-table-column prop="id" label="实例 ID" width="80" />
-        <el-table-column prop="title" label="标题" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="flowName" label="流程" width="140" show-overflow-tooltip />
-        <el-table-column prop="initiatorName" label="发起人" width="100" />
-        <el-table-column label="异常类型" width="120">
-          <template #default="{ row }">
-            <el-tag
-              :color="anomalyTypeMap[row.anomalyType]?.color"
-              size="small"
-              effect="dark"
-              style="border: none"
-            >
-              {{ anomalyTypeMap[row.anomalyType]?.label || row.anomalyType }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="预警级别" width="100">
-          <template #default="{ row }">
-            <el-tag
-              :type="warnLevelMap[row.warnLevel]?.type || 'info'"
-              size="small"
-            >
-              {{ warnLevelMap[row.warnLevel]?.label || row.warnLevel }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="currentNodeName" label="当前节点" width="120" />
-        <el-table-column label="超期天数" width="100">
-          <template #default="{ row }">
-            <span v-if="row.overdueDays != null" style="color: #f5222d; font-weight: 600">
-              {{ row.overdueDays }} 天
-            </span>
-            <span v-else>-</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="发起时间" width="160">
-          <template #default="{ row }">
-            {{ row.startTime ? dayjs(row.startTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="100" fixed="right">
-          <template #default="{ row }">
-            <el-button size="small" text type="primary" @click="goInstance(row)">查看详情</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <el-pagination
-        v-model:current-page="anomalyQuery.pageNum"
-        v-model:page-size="anomalyQuery.pageSize"
-        :total="anomalyTotal"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next, jumper"
-        class="pagination"
-        @current-change="loadAnomaly"
-        @size-change="loadAnomaly"
-      />
-    </el-card>
-  </div>
-</template>
-
-<style scoped lang="scss">
-.monitor-dashboard {
-  padding: 16px;
-}
-
-.page-header {
-  margin-bottom: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-
-  &__left {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__right {
-    flex-shrink: 0;
-  }
-
-  h2 {
-    margin: 0;
-    font-size: 20px;
-    color: #1e293b;
-  }
-
-  &__sub {
-    margin: 4px 0 0;
-    color: #64748b;
-    font-size: 13px;
-    display: flex;
-    align-items: center;
-  }
-}
-
-/* ========== 统计卡片 ========== */
-.stat-cards {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
-}
-
-.stat-card {
-  background: #fff;
-  border-radius: 8px;
-  padding: 20px 16px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  border-top: 3px solid;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  transition: box-shadow 0.2s, transform 0.2s;
-
-  &:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    transform: translateY(-2px);
-  }
-
-  &__icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 22px;
-    flex-shrink: 0;
-
-    i {
-      font-size: 22px;
-    }
-  }
-
-  &__info {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__title {
-    font-size: 13px;
-    color: #64748b;
-    margin-bottom: 4px;
-  }
-
-  &__value {
-    font-size: 28px;
-    font-weight: 700;
-    line-height: 1.2;
-    font-variant-numeric: tabular-nums;
-  }
-}
-
-/* ========== 图表行 ========== */
-.chart-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 16px;
-}
-
-.chart-card {
-  .chart-box {
-    width: 100%;
-    height: 340px;
-  }
-}
-
-/* ========== 通用区域 ========== */
-.section {
-  margin-bottom: 16px;
-}
-
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.filter-bar {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-
-.pagination {
-  margin-top: 16px;
-  justify-content: flex-end;
-}
-
-/* ========== 响应式 ========== */
-@media (max-width: 1400px) {
-  .stat-cards {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-@media (max-width: 900px) {
-  .stat-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .chart-row {
-    grid-template-columns: 1fr;
-  }
-}
-</style>

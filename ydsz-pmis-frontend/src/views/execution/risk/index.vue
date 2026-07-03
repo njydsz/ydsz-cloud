@@ -11,7 +11,8 @@
  * 等级: 1-2 LOW / 3-5 MEDIUM / 6-9 HIGH
  * 状态: OPEN -> MITIGATING -> CLOSED / ACCEPTED
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -22,6 +23,8 @@ import {
 } from '@/api/execution/risk'
 import type { RiskVO, RiskCreateDTO } from '@/api/execution/risk/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 // 列表查询状态
 const loading = ref(false)
@@ -37,28 +40,28 @@ const query = reactive({
 })
 
 // 状态字典：风险处理状态映射到标签文案与色值
-const statusMap = {
-  OPEN: { label: '待处理', type: 'danger' as const },
-  MITIGATING: { label: '缓解中', type: 'warning' as const },
-  CLOSED: { label: '已关闭', type: 'info' as const },
-  ACCEPTED: { label: '已接受', type: 'success' as const },
-}
+const statusMap = computed(() => ({
+  OPEN: { label: t('execution.risk.status.OPEN'), type: 'danger' as const },
+  MITIGATING: { label: t('execution.risk.status.MITIGATING'), type: 'warning' as const },
+  CLOSED: { label: t('execution.risk.status.CLOSED'), type: 'info' as const },
+  ACCEPTED: { label: t('execution.risk.status.ACCEPTED'), type: 'success' as const },
+}))
 
 // 等级字典：风险等级(LOW/MEDIUM/HIGH)映射到标签文案与色值
-const levelMap = {
-  LOW: { label: '低', type: 'success' as const },
-  MEDIUM: { label: '中', type: 'warning' as const },
-  HIGH: { label: '高', type: 'danger' as const },
-}
+const levelMap = computed(() => ({
+  LOW: { label: t('execution.risk.level.LOW'), type: 'success' as const },
+  MEDIUM: { label: t('execution.risk.level.MEDIUM'), type: 'warning' as const },
+  HIGH: { label: t('execution.risk.level.HIGH'), type: 'danger' as const },
+}))
 
 // 分类字典：风险分类(技术/商务/资源/外部/其他)
-const categoryMap = {
-  TECHNICAL: { label: '技术' },
-  COMMERCE: { label: '商务' },
-  RESOURCE: { label: '资源' },
-  EXTERNAL: { label: '外部' },
-  OTHER: { label: '其他' },
-}
+const categoryMap = computed(() => ({
+  TECHNICAL: { label: t('execution.risk.category.TECHNICAL') },
+  COMMERCE: { label: t('execution.risk.category.COMMERCE') },
+  RESOURCE: { label: t('execution.risk.category.RESOURCE') },
+  EXTERNAL: { label: t('execution.risk.category.EXTERNAL') },
+  OTHER: { label: t('execution.risk.category.OTHER') },
+}))
 
 /** 拉取风险分页数据 */
 async function fetchList() {
@@ -100,12 +103,12 @@ const form = reactive<Partial<RiskCreateDTO>>({
   mitigation: '',
 })
 
-const formRules = {
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  riskName: [{ required: true, message: '风险名称必填', trigger: 'blur' }],
-  probability: [{ required: true, message: '概率必填', trigger: 'blur' }],
-  impact: [{ required: true, message: '影响必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  initiationId: [{ required: true, message: t('execution.risk.rules.initiationIdRequired'), trigger: 'blur' }],
+  riskName: [{ required: true, message: t('execution.risk.rules.riskNameRequired'), trigger: 'blur' }],
+  probability: [{ required: true, message: t('execution.risk.rules.probabilityRequired'), trigger: 'blur' }],
+  impact: [{ required: true, message: t('execution.risk.rules.impactRequired'), trigger: 'blur' }],
+}))
 
 /** 打开新建弹窗：重置表单为默认值 */
 function openCreate() {
@@ -126,18 +129,18 @@ function openCreate() {
 async function submitForm() {
   await formRef.value?.validate()
   await createRisk(form as RiskCreateDTO)
-  ElMessage.success('已创建')
+  ElMessage.success(t('execution.risk.messages.createSuccess'))
   dialogVisible.value = false
   fetchList()
 }
 
 /** 状态流转：根据目标状态推进风险处理流程（启动缓解/关闭/接受） */
 async function handleStatus(row: RiskVO, target: string) {
-  const targetText = (statusMap as any)[target]?.label || target
+  const targetText = (statusMap.value as any)[target]?.label || target
   try {
-    await ElMessageBox.confirm(`确认将状态变更为「${targetText}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('execution.risk.messages.confirmStatusChange', { target: targetText }), t('common.tip'), { type: 'warning' })
     await changeRiskStatus({ id: row.id, targetStatus: target })
-    ElMessage.success('状态已更新')
+    ElMessage.success(t('execution.risk.messages.statusUpdated'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -157,81 +160,81 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="名称" clearable /></el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+      <el-form-item :label="t('execution.risk.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('execution.risk.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="t('execution.risk.search.status')">
+        <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="等级">
-        <el-select v-model="query.level" placeholder="全部" clearable style="width: 120px">
+      <el-form-item :label="t('execution.risk.search.level')">
+        <el-select v-model="query.level" :placeholder="t('common.all')" clearable style="width: 120px">
           <el-option v-for="(v, k) in levelMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="项目 ID"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
+      <el-form-item :label="t('execution.risk.search.initiationId')"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
     </template>
 
     <template #toolbar>
       <el-button v-permission="[PC.EXECUTION_RISK_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新增风险
+        {{ t('execution.risk.buttons.create') }}
       </el-button>
     </template>
 
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="riskCode" title="编号" width="120" />
-        <vxe-column field="riskName" title="风险名称" min-width="200" show-overflow />
-        <vxe-column field="initiationName" title="项目" width="160" show-overflow />
-        <vxe-column field="category" title="分类" width="100">
+        <vxe-column field="riskCode" :title="t('execution.risk.columns.riskCode')" width="120" />
+        <vxe-column field="riskName" :title="t('execution.risk.columns.riskName')" min-width="200" show-overflow />
+        <vxe-column field="initiationName" :title="t('execution.risk.columns.initiationName')" width="160" show-overflow />
+        <vxe-column field="category" :title="t('execution.risk.columns.category')" width="100">
           <template #default="{ row }">{{ categoryMap[row.category as keyof typeof categoryMap]?.label || row.category || '-' }}</template>
         </vxe-column>
-        <vxe-column field="probability" title="概率" width="80" align="center" />
-        <vxe-column field="impact" title="影响" width="80" align="center" />
-        <vxe-column field="riskScore" title="评分" width="80" align="center" />
-        <vxe-column field="level" title="等级" width="80" align="center">
+        <vxe-column field="probability" :title="t('execution.risk.columns.probability')" width="80" align="center" />
+        <vxe-column field="impact" :title="t('execution.risk.columns.impact')" width="80" align="center" />
+        <vxe-column field="riskScore" :title="t('execution.risk.columns.riskScore')" width="80" align="center" />
+        <vxe-column field="level" :title="t('execution.risk.columns.level')" width="80" align="center">
           <template #default="{ row }"><StatusTag :value="row.level" :map="levelMap" /></template>
         </vxe-column>
-        <vxe-column field="ownerName" title="负责人" width="100" />
-        <vxe-column field="mitigation" title="应对措施" min-width="200" show-overflow />
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="ownerName" :title="t('execution.risk.columns.ownerName')" width="100" />
+        <vxe-column field="mitigation" :title="t('execution.risk.columns.mitigation')" min-width="200" show-overflow />
+        <vxe-column field="status" :title="t('execution.risk.columns.status')" width="100">
           <template #default="{ row }"><StatusTag :value="row.status" :map="statusMap" /></template>
         </vxe-column>
-        <vxe-column title="操作" width="240" fixed="right">
+        <vxe-column :title="t('execution.risk.columns.action')" width="240" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'OPEN'" v-permission="[PC.EXECUTION_RISK_STATUS]" link type="warning" size="small" @click="handleStatus(row, 'MITIGATING')">启动缓解</el-button>
-            <el-button v-if="row.status === 'MITIGATING'" v-permission="[PC.EXECUTION_RISK_STATUS]" link type="info" size="small" @click="handleStatus(row, 'CLOSED')">关闭</el-button>
-            <el-button v-if="row.status === 'OPEN'" v-permission="[PC.EXECUTION_RISK_STATUS]" link type="success" size="small" @click="handleStatus(row, 'ACCEPTED')">接受</el-button>
+            <el-button v-if="row.status === 'OPEN'" v-permission="[PC.EXECUTION_RISK_STATUS]" link type="warning" size="small" @click="handleStatus(row, 'MITIGATING')">{{ t('execution.risk.buttons.startMitigating') }}</el-button>
+            <el-button v-if="row.status === 'MITIGATING'" v-permission="[PC.EXECUTION_RISK_STATUS]" link type="info" size="small" @click="handleStatus(row, 'CLOSED')">{{ t('execution.risk.buttons.close') }}</el-button>
+            <el-button v-if="row.status === 'OPEN'" v-permission="[PC.EXECUTION_RISK_STATUS]" link type="success" size="small" @click="handleStatus(row, 'ACCEPTED')">{{ t('execution.risk.buttons.accept') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
-    <el-dialog v-model="dialogVisible" title="新增风险" width="640px">
+    <el-dialog v-model="dialogVisible" :title="t('execution.risk.dialog.createTitle')" width="640px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="风险编号"><el-input v-model="form.riskCode" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('execution.risk.form.initiationId')" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('execution.risk.form.riskCode')"><el-input v-model="form.riskCode" /></el-form-item></el-col>
         </el-row>
-        <el-form-item label="风险名称" prop="riskName"><el-input v-model="form.riskName" /></el-form-item>
+        <el-form-item :label="t('execution.risk.form.riskName')" prop="riskName"><el-input v-model="form.riskName" /></el-form-item>
         <el-row :gutter="16">
-          <el-col :span="8"><el-form-item label="分类"><el-select v-model="form.category" style="width: 100%"><el-option v-for="(v, k) in categoryMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="概率(1-3)" prop="probability"><el-input-number v-model="form.probability" :min="1" :max="3" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="8"><el-form-item label="影响(1-3)" prop="impact"><el-input-number v-model="form.impact" :min="1" :max="3" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item :label="t('execution.risk.form.category')"><el-select v-model="form.category" style="width: 100%"><el-option v-for="(v, k) in categoryMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
+          <el-col :span="8"><el-form-item :label="t('execution.risk.form.probability')" prop="probability"><el-input-number v-model="form.probability" :min="1" :max="3" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="8"><el-form-item :label="t('execution.risk.form.impact')" prop="impact"><el-input-number v-model="form.impact" :min="1" :max="3" :controls="false" style="width: 100%" /></el-form-item></el-col>
         </el-row>
-        <el-form-item label="负责人 ID">
+        <el-form-item :label="t('execution.risk.form.ownerId')">
           <el-input-number v-model="form.ownerId" :min="0" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="应对措施">
+        <el-form-item :label="t('execution.risk.form.mitigation')">
           <el-input v-model="form.mitigation" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="t('execution.risk.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

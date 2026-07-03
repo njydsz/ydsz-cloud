@@ -295,7 +295,7 @@ watch(() => route.query.id, () => loadAll())
         />
         <el-empty v-else :description="t('workflow.replay.empty')" />
       </el-tab-pane>
-      <el-tab-pane label="审批表单" name="form">
+      <el-tab-pane :label="t('workflow.instance.tabForm')" name="form">
         <FormRenderer
           v-if="formRenderData?.formSchema"
           ref="formRendererRef"
@@ -303,9 +303,9 @@ watch(() => route.query.id, () => loadAll())
           :form-schema="formRenderData.formSchema"
           :readonly="!canOperate"
         />
-        <el-empty v-else description="当前流程未配置动态表单，请使用下方通用审批操作" />
+        <el-empty v-else :description="t('workflow.instance.formEmpty')" />
       </el-tab-pane>
-      <el-tab-pane label="评论讨论" name="comment">
+      <el-tab-pane :label="t('workflow.instance.tabComment')" name="comment">
         <TaskCommentThread
           v-if="instanceId"
           :instance-id="instanceId"
@@ -350,7 +350,7 @@ watch(() => route.query.id, () => loadAll())
           <el-input v-model.number="opForm.taskId" :placeholder="t('workflow.instance.opForm.taskIdPlaceholder')" />
         </el-form-item>
         <!-- 动态表单区域：当有 formSchema 且操作类型为通过/驳回时显示 -->
-        <el-form-item v-if="formRenderData?.formSchema && (opType === 'pass' || opType === 'reject')" label="审批表单">
+        <el-form-item v-if="formRenderData?.formSchema && (opType === 'pass' || opType === 'reject')" :label="t('workflow.instance.opForm.approvalForm')">
           <FormRenderer
             ref="formRendererRef"
             :instance-id="instanceId"
@@ -361,10 +361,10 @@ watch(() => route.query.id, () => loadAll())
         <el-form-item :label="t('workflow.instance.opForm.comment')" v-if="opType === 'pass' || opType === 'reject'">
           <el-input v-model="opForm.comment" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item label="转办给" v-if="opType === 'transfer'">
+        <el-form-item :label="t('workflow.instance.opForm.transferTo')" v-if="opType === 'transfer'">
           <UserPicker
             :model-value="opForm.targetUserId"
-            placeholder="搜索并选择转办人"
+            :placeholder="t('workflow.instance.opForm.transferUserPlaceholder')"
             @change="(_v, user) => onTransferUserPicked(user)"
           />
         </el-form-item>

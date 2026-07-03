@@ -39,7 +39,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?useUnicode=true&characterEncoding=utf8
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD}
+    password: ${DB_PASSWORD:Limw1020}
     driver-class-name: org.postgresql.Driver
     type: com.alibaba.druid.pool.DruidDataSource  # 阿里 Druid 连接池（含 SQL 监控）
   # ---------- Redis ----------
