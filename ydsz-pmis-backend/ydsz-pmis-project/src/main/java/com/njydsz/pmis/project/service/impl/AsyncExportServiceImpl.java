@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -74,6 +75,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<Map<String, Object>> getExportRecords(Long userId, Pageable pageable) {
         String countSql = "SELECT COUNT(*) FROM pmis_export_record WHERE user_id = ? AND deleted = 0";
         Long total = jdbcTemplate.queryForObject(countSql, Long.class, userId);
@@ -88,6 +90,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String getDownloadUrl(Long recordId) {
         String sql = "SELECT file_url FROM pmis_export_record WHERE id = ? AND deleted = 0 AND status = 'COMPLETED'";
         try {

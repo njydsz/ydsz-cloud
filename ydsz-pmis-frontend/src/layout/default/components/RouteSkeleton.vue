@@ -5,7 +5,7 @@
   @module layout/default/components/RouteSkeleton
 -->
 <template>
-  <div class="route-skeleton" role="status" aria-label="页面加载中">
+  <div class="route-skeleton" role="status" :aria-label="$t('common.pageLoading')">
     <!-- 标题栏占位 -->
     <div class="skeleton-header">
       <div class="skeleton-bar skeleton-title" />

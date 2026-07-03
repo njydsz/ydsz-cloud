@@ -6,7 +6,10 @@
 -->
 <script setup lang="ts">
 import { ref, onErrorCaptured } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { captureError } from '@/utils/sentry'
+
+const { t } = useI18n()
 
 /**
  * 组件事件
@@ -61,14 +64,14 @@ function handleGoHome() {
   <!-- 错误状态：展示降级 UI -->
   <div v-if="hasError" class="error-boundary">
     <div class="error-boundary__content">
-      <el-result icon="error" title="页面渲染异常" sub-title="抱歉，页面发生了未知错误，请重试或返回首页">
+      <el-result icon="error" :title="t('common.pageRenderError')" :sub-title="t('common.pageErrorSubtitle')">
         <template #extra>
-          <el-button type="primary" @click="handleRetry">重试</el-button>
-          <el-button @click="handleGoHome">返回首页</el-button>
+          <el-button type="primary" @click="handleRetry">{{ t('common.retry') }}</el-button>
+          <el-button @click="handleGoHome">{{ t('common.backHome') }}</el-button>
         </template>
       </el-result>
       <details class="error-boundary__details" v-if="errorMessage">
-        <summary>查看错误详情</summary>
+        <summary>{{ t('common.viewErrorDetails') }}</summary>
         <pre class="error-boundary__trace">{{ errorMessage }}</pre>
       </details>
     </div>

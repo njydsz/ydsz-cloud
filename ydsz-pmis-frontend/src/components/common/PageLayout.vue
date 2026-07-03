@@ -36,9 +36,12 @@
  */
 import type { PropType } from 'vue'
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import SkeletonTable from './SkeletonTable.vue'
 import BatchToolbar from './BatchToolbar.vue'
 import EmptyState from './EmptyState.vue'
+
+const { t } = useI18n()
 
 /** 批量操作按钮配置 */
 interface BatchAction {
@@ -162,8 +165,8 @@ const showEmpty = computed(
       >
         <slot name="search" />
         <el-form-item>
-          <el-button type="primary" :icon="'Search'" aria-label="查询" @click="onQuery">查询</el-button>
-          <el-button :icon="'RefreshLeft'" aria-label="重置查询条件" @click="onReset">重置</el-button>
+          <el-button type="primary" :icon="'Search'" :aria-label="t('common.query')" @click="onQuery">{{ t('common.query') }}</el-button>
+          <el-button :icon="'RefreshLeft'" :aria-label="t('common.resetQuery')" @click="onReset">{{ t('common.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
@@ -172,7 +175,7 @@ const showEmpty = computed(
         <slot name="toolbar" />
         <div class="toolbar-right">
           <slot name="toolbar-right">
-            <el-button :icon="'Refresh'" circle aria-label="刷新列表" @click="onRefresh" />
+            <el-button :icon="'Refresh'" circle :aria-label="t('common.refreshList')" @click="onRefresh" />
           </slot>
         </div>
       </div>

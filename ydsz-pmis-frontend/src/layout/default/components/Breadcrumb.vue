@@ -18,7 +18,7 @@ function resolveTitle(title: string | undefined, fallback: string): string {
 
 <template>
   <el-breadcrumb separator="/" class="breadcrumb">
-    <el-breadcrumb-item :to="{ path: '/dashboard' }">{{ resolveTitle('route.dashboard', '首页') }}</el-breadcrumb-item>
+    <el-breadcrumb-item :to="{ path: '/dashboard' }">{{ resolveTitle('route.dashboard', i18n.global.t('common.home')) }}</el-breadcrumb-item>
     <el-breadcrumb-item v-for="item in route.matched" :key="item.path">
       {{ resolveTitle(item.meta?.title as string, String(item.name)) }}
     </el-breadcrumb-item>

@@ -23,6 +23,7 @@
  */
 import { ref, computed, nextTick, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import {
   ChatLineSquare,
   Promotion,
@@ -31,6 +32,8 @@ import {
   View,
 } from '@element-plus/icons-vue'
 import { UserPicker } from '@/components/common'
+
+const { t } = useI18n()
 
 /** 附件项 */
 export interface CommentAttachment {
@@ -97,7 +100,7 @@ const props = withDefaults(
   }>(),
   {
     modelValue: '',
-    placeholder: '请输入审批意见（支持常用语 / @人 / 图片）',
+    placeholder: '',
     rows: 4,
     disabled: false,
     readonly: false,
@@ -105,15 +108,7 @@ const props = withDefaults(
     enableImage: true,
     enableMention: true,
     enablePhrases: true,
-    phrases: () => [
-      '同意',
-      '同意，请按计划推进',
-      '同意，注意控制风险',
-      '请补充资料后再议',
-      '请修改后重新提交',
-      '驳回，理由不充分',
-      '已了解',
-    ],
+    phrases: () => [],
     maxSize: 10,
     accept: 'image/png,image/jpeg,image/gif,image/webp',
     attachments: () => [],
@@ -155,6 +150,21 @@ watch(
 )
 
 const charCount = computed(() => (props.modelValue || '').length)
+
+const placeholderText = computed(() => props.placeholder || t('common.comment.placeholder'))
+
+const phraseList = computed(() => {
+  if (props.phrases && props.phrases.length > 0) return props.phrases
+  return [
+    t('workflow.approval.phrases.agree'),
+    t('workflow.approval.phrases.agreeProceed'),
+    t('workflow.approval.phrases.agreeRisk'),
+    t('workflow.approval.phrases.supplementLater'),
+    t('workflow.approval.phrases.modifyResubmit'),
+    t('workflow.approval.phrases.rejectInsufficient'),
+    t('workflow.approval.phrases.acknowledged'),
+  ]
+})
 
 // ===========================================
 // 内部写入：在光标处插入文本
@@ -245,14 +255,14 @@ function defaultUpload(file: File): Promise<{
         size: file.size,
         type: file.type,
       })
-    reader.onerror = () => reject(new Error('文件读取失败'))
+    reader.onerror = () => reject(new Error(t('common.comment.fileReadFailed')))
     reader.readAsDataURL(file)
   })
 }
 
 async function handleFile(file: File) {
   if (props.maxSize > 0 && file.size > props.maxSize * 1024 * 1024) {
-    ElMessage.error(`文件大小不能超过 ${props.maxSize}MB`)
+    ElMessage.error(t('common.comment.fileTooLarge', { size: props.maxSize }))
     return
   }
   uploading.value = true
@@ -274,7 +284,7 @@ async function handleFile(file: File) {
     emit('upload-success', att)
   } catch (e) {
     const err = e as Error
-    ElMessage.error('上传失败：' + err.message)
+    ElMessage.error(t('common.comment.uploadFailed', { message: err.message }))
     emit('upload-error', err)
   } finally {
     uploading.value = false
@@ -322,7 +332,7 @@ function sizeLabel(bytes?: number) {
 }
 
 function clearAll() {
-  ElMessageBox.confirm('确认清空已输入的内容和附件？', '清空确认', {
+  ElMessageBox.confirm(t('common.comment.clearConfirm'), t('common.comment.clearTitle'), {
     type: 'warning',
   })
     .then(() => {
@@ -357,12 +367,12 @@ defineExpose({
         <template #reference>
           <el-button size="small" :disabled="disabled">
             <el-icon><ChatLineSquare /></el-icon>
-            常用语
+            {{ t('common.comment.phrases') }}
           </el-button>
         </template>
         <div class="phrase-list">
           <div
-            v-for="p in phrases"
+            v-for="p in phraseList"
             :key="p"
             class="phrase-item"
             @click="pickPhrase(p)"
@@ -383,13 +393,13 @@ defineExpose({
         <template #reference>
           <el-button size="small" :disabled="disabled">
             <el-icon><Promotion /></el-icon>
-            @人
+            {{ t('common.comment.mention') }}
           </el-button>
         </template>
         <div class="mention-picker">
           <UserPicker
             v-model="mentionSearch"
-            placeholder="搜索用户以 @"
+            :placeholder="t('common.comment.searchUserPlaceholder')"
             :show-dialog="false"
             @change="onMentionPick"
           />
@@ -401,7 +411,7 @@ defineExpose({
         <el-button size="small" :disabled="disabled || uploading" :loading="uploading">
           <label class="upload-trigger">
             <el-icon><Picture /></el-icon>
-            图片
+            {{ t('common.comment.image') }}
             <input
               type="file"
               :accept="accept"
@@ -425,7 +435,7 @@ defineExpose({
         @click="clearAll"
       >
         <el-icon><Delete /></el-icon>
-        清空
+        {{ t('common.comment.clear') }}
       </el-button>
     </div>
 
@@ -435,7 +445,7 @@ defineExpose({
       :model-value="modelValue"
       type="textarea"
       :rows="rows"
-      :placeholder="placeholder"
+      :placeholder="placeholderText"
       :disabled="disabled"
       :readonly="readonly"
       :maxlength="maxlength > 0 ? maxlength : undefined"
@@ -456,7 +466,7 @@ defineExpose({
 
     <!-- 提及列表 -->
     <div v-if="enableMention && internalMentions.length > 0" class="mention-bar">
-      <span class="mention-bar__label">已 @：</span>
+      <span class="mention-bar__label">{{ t('common.comment.mentioned') }}</span>
       <el-tag
         v-for="m in internalMentions"
         :key="m.userId"
@@ -471,7 +481,7 @@ defineExpose({
 
     <!-- 附件列表 -->
     <div v-if="enableImage && internalAttachments.length > 0" class="attachment-bar">
-      <div class="attachment-bar__title">附件（{{ internalAttachments.length }}）：</div>
+      <div class="attachment-bar__title">{{ t('common.comment.attachments', { n: internalAttachments.length }) }}</div>
       <div class="attachment-list">
         <div
           v-for="att in internalAttachments"

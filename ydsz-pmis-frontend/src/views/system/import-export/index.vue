@@ -130,6 +130,7 @@
       </el-result>
 
       <!-- 错误详情 -->
+      <!-- TODO P3: 待评估迁移 VirtualTable（导入文件最多 10000 行，错误明细可能 >100；但 value 列使用 el-tag 强调错误值，迁移为 formatter 文本会丢失视觉区分，需先扩展组件支持插槽后再迁移） -->
       <el-table
         v-if="importResult.errors?.length"
         :data="importResult.errors"

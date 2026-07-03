@@ -11,6 +11,9 @@
  * 避免每个页面重复实现弹窗样板代码。
  */
 import { ref, watch, type Ref } from 'vue'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   modelValue: boolean
@@ -96,8 +99,8 @@ function onClosed() {
     </div>
     <template v-if="showFooter !== false" #footer>
       <slot name="footer">
-        <el-button @click="onCancel">取消</el-button>
-        <el-button type="primary" :loading="loading" @click="onSubmit">确定</el-button>
+        <el-button @click="onCancel">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="loading" @click="onSubmit">{{ t('common.ok') }}</el-button>
       </slot>
     </template>
   </el-dialog>

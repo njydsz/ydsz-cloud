@@ -1049,6 +1049,7 @@ onMounted(() => {
       </div>
 
       <!-- 规则列表表格 -->
+      <!-- TODO P3: 待评估迁移 VirtualTable（listRules 全量返回，规则数可能 >100；但含 selection/switch/6 个操作按钮/Tag 插槽，VirtualTable 不支持，需先扩展组件支持插槽后再迁移） -->
       <el-table
         v-loading="loading"
         :data="filteredRules"

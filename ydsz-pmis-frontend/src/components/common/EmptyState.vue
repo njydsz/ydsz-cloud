@@ -21,6 +21,7 @@
  *   </EmptyState>
  */
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 
 export type EmptyPreset = 'list' | 'search' | 'network' | 'noPermission' | 'custom'
 
@@ -30,28 +31,30 @@ interface PresetConfig {
   description: string
 }
 
-const PRESETS: Record<Exclude<EmptyPreset, 'custom'>, PresetConfig> = {
+const { t } = useI18n()
+
+const PRESETS = computed<Record<Exclude<EmptyPreset, 'custom'>, PresetConfig>>(() => ({
   list: {
     icon: 'Document',
-    title: '暂无数据',
-    description: '当前列表为空, 可以点击下方按钮创建第一条记录',
+    title: t('common.emptyState.list.title'),
+    description: t('common.emptyState.list.description'),
   },
   search: {
     icon: 'Search',
-    title: '未找到匹配的数据',
-    description: '请尝试调整筛选条件或清空搜索关键字',
+    title: t('common.emptyState.search.title'),
+    description: t('common.emptyState.search.description'),
   },
   network: {
     icon: 'Warning',
-    title: '数据加载失败',
-    description: '网络异常或服务暂时不可用, 请稍后重试',
+    title: t('common.emptyState.network.title'),
+    description: t('common.emptyState.network.description'),
   },
   noPermission: {
     icon: 'Lock',
-    title: '无访问权限',
-    description: '当前账号没有访问该资源的权限, 如需访问请联系管理员',
+    title: t('common.emptyState.noPermission.title'),
+    description: t('common.emptyState.noPermission.description'),
   },
-}
+}))
 
 const props = withDefaults(
   defineProps<{
@@ -90,11 +93,11 @@ const resolved = computed<PresetConfig>(() => {
   if (props.preset === 'custom') {
     return {
       icon: props.icon || 'Document',
-      title: props.title || '暂无数据',
+      title: props.title || t('common.empty'),
       description: props.description || '',
     }
   }
-  const def = PRESETS[props.preset]
+  const def = PRESETS.value[props.preset]
   return {
     icon: props.icon || def.icon,
     title: props.title || def.title,

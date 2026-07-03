@@ -27,26 +27,26 @@
  * </template>
  * ```
  */
-import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, type Ref } from 'vue'
 
 /** 设备类型枚举 */
 export type DeviceType = 'mobile' | 'tablet' | 'desktop' | 'wide'
 
 export interface UseResponsiveReturn {
   /** 是否移动端 (<768px) */
-  isMobile: import('vue').Ref<boolean>
+  isMobile: Ref<boolean>
   /** 是否平板 (768-1200px) */
-  isTablet: import('vue').Ref<boolean>
+  isTablet: Ref<boolean>
   /** 是否桌面端 (1200-1920px) */
-  isDesktop: import('vue').Ref<boolean>
+  isDesktop: Ref<boolean>
   /** 是否大屏 (≥1920px) */
-  isWide: import('vue').Ref<boolean>
+  isWide: Ref<boolean>
   /** 当前窗口宽度（px） */
-  screenWidth: import('vue').Ref<number>
+  screenWidth: Ref<number>
   /** 当前窗口高度（px） */
-  screenHeight: import('vue').Ref<number>
+  screenHeight: Ref<number>
   /** 当前设备类型 */
-  device: import('vue').Ref<DeviceType>
+  device: Ref<DeviceType>
 }
 
 /**
@@ -73,19 +73,14 @@ export function useResponsive(): UseResponsiveReturn {
     window.removeEventListener('resize', update)
   })
 
-  const isMobile = ref(screenWidth.value < 768)
-  const isTablet = ref(screenWidth.value >= 768 && screenWidth.value < 1200)
-  const isDesktop = ref(screenWidth.value >= 1200 && screenWidth.value < 1920)
-  const isWide = ref(screenWidth.value >= 1920)
-
-  // 响应式更新（监听 screenWidth 变化后重新计算标志位）
-  const refresh = () => {
-    isMobile.value = screenWidth.value < 768
-    isTablet.value = screenWidth.value >= 768 && screenWidth.value < 1200
-    isDesktop.value = screenWidth.value >= 1200 && screenWidth.value < 1920
-    isWide.value = screenWidth.value >= 1920
-  }
-  refresh()
+  // 使用 computed 自动响应 screenWidth 变化，修复窗口缩放时断点标志位不更新的 bug
+  const isMobile = computed(() => screenWidth.value < 768)
+  const isTablet = computed(() => screenWidth.value >= 768 && screenWidth.value < 1200)
+  const isDesktop = computed(() => screenWidth.value >= 1200 && screenWidth.value < 1920)
+  const isWide = computed(() => screenWidth.value >= 1920)
+  const device = computed<DeviceType>(() =>
+    isMobile.value ? 'mobile' : isTablet.value ? 'tablet' : isWide.value ? 'wide' : 'desktop',
+  )
 
   return {
     isMobile,
@@ -94,8 +89,6 @@ export function useResponsive(): UseResponsiveReturn {
     isWide,
     screenWidth,
     screenHeight,
-    device: ref<'mobile' | 'tablet' | 'desktop' | 'wide'>(
-      isMobile.value ? 'mobile' : isTablet.value ? 'tablet' : isWide.value ? 'wide' : 'desktop'
-    )
+    device,
   }
 }

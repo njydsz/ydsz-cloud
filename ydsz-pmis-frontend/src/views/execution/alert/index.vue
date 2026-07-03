@@ -235,6 +235,7 @@ onMounted(() => {
     </el-row>
 
     <!-- 预警分发列表 -->
+    <!-- TODO P3: 待评估迁移 VirtualTable（listAlerts 全量返回，预警记录可能 >100；但含 StatusTag/el-link/操作按钮插槽，VirtualTable 不支持，需先扩展组件支持插槽后再迁移） -->
     <el-table v-loading="loading" :data="list" border stripe>
       <el-table-column prop="alertCode" label="预警编号" width="220" />
       <el-table-column label="类型" width="100">

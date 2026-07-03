@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -64,6 +65,7 @@ public class OpportunityFollowServiceImpl implements OpportunityFollowService {
      * @return 分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<OpportunityFollowDO> page(int page, int size, Long opportunityId) {
         Page<OpportunityFollowDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OpportunityFollowDO> w = new LambdaQueryWrapper<>();

@@ -27,9 +27,12 @@
  */
 import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import { Search, User, OfficeBuilding } from '@element-plus/icons-vue'
 import { listUsers } from '@/api/system/user'
 import type { UserVO } from '@/api/system/user/types'
+
+const { t } = useI18n()
 
 type UserModel = number | string | UserVO | null | undefined
 
@@ -68,7 +71,7 @@ const props = withDefaults(
   {
     modelValue: undefined,
     multiple: false,
-    placeholder: '请输入姓名 / 用户名搜索',
+    placeholder: '',
     disabled: false,
     clearable: true,
     debounce: 300,
@@ -77,7 +80,7 @@ const props = withDefaults(
     departmentId: undefined,
     levelCode: undefined,
     showDialog: true,
-    dialogTitle: '选择用户',
+    dialogTitle: '',
     options: () => [],
     valueKey: 'id',
   },
@@ -134,6 +137,9 @@ const selectedUsers = computed<UserVO[]>(() => {
   return normalizeToArray(props.modelValue)
 })
 
+const placeholderText = computed(() => props.placeholder || t('common.userPicker.placeholder'))
+const dialogTitleText = computed(() => props.dialogTitle || t('common.userPicker.dialogTitle'))
+
 // ===========================================
 // 搜索逻辑
 // ===========================================
@@ -157,7 +163,7 @@ async function doSearch(kw: string) {
     mergeCandidates(records)
   } catch (e) {
     // 全局拦截器已弹错，这里只兜底
-    ElMessage.error('用户搜索失败：' + (e as Error).message)
+    ElMessage.error(t('common.userPicker.searchFailed', { message: (e as Error).message }))
   } finally {
     loading.value = false
   }
@@ -261,7 +267,7 @@ async function loadDialogList(reset = false) {
     dialogTotal.value = res.data?.data?.total || 0
     mergeCandidates(records)
   } catch (e) {
-    ElMessage.error('用户加载失败：' + (e as Error).message)
+    ElMessage.error(t('common.userPicker.loadFailed', { message: (e as Error).message }))
   } finally {
     dialogLoading.value = false
   }
@@ -371,7 +377,7 @@ onMounted(() => {
               : (modelValue as number | string | undefined))
       "
       :multiple="multiple"
-      :placeholder="placeholder"
+      :placeholder="placeholderText"
       :disabled="disabled"
       :clearable="clearable"
       :filterable="true"
@@ -418,7 +424,7 @@ onMounted(() => {
         <div class="picker-footer">
           <el-button text type="primary" @click="openDialog">
             <el-icon><Search /></el-icon>
-            高级选择
+            {{ t('common.advancedSelect') }}
           </el-button>
         </div>
       </template>
@@ -427,7 +433,7 @@ onMounted(() => {
     <!-- 高级选择弹窗 -->
     <el-dialog
       v-model="dialogVisible"
-      :title="dialogTitle"
+      :title="dialogTitleText"
       width="720px"
       :close-on-click-modal="false"
       append-to-body
@@ -436,14 +442,14 @@ onMounted(() => {
         <div class="user-dialog__filters">
           <el-input
             v-model="dialogKeyword"
-            placeholder="搜索姓名 / 用户名"
+            :placeholder="t('common.userPicker.searchPlaceholder')"
             clearable
             :prefix-icon="Search"
             @input="loadDialogList(true)"
           />
           <el-select
             v-model="dialogDept"
-            placeholder="部门"
+            :placeholder="t('common.userPicker.deptPlaceholder')"
             clearable
             style="width: 200px"
             @change="loadDialogList(true)"
@@ -454,7 +460,7 @@ onMounted(() => {
         </div>
 
         <div v-if="recent.length > 0 && dialogSelected.length === 0" class="user-dialog__recent">
-          <div class="user-dialog__section-title">最近选择</div>
+          <div class="user-dialog__section-title">{{ t('common.userPicker.recent') }}</div>
           <div class="user-dialog__recent-list">
             <el-tag
               v-for="u in recent"
@@ -485,7 +491,7 @@ onMounted(() => {
               />
             </template>
           </el-table-column>
-          <el-table-column label="姓名" min-width="120">
+          <el-table-column :label="t('common.userPicker.colName')" min-width="120">
             <template #default="{ row }">
               <div class="dialog-user-name">
                 <el-avatar :size="22">{{ (row.realName || row.username || '?').slice(0, 1) }}</el-avatar>
@@ -493,10 +499,10 @@ onMounted(() => {
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="username" label="账号" min-width="100" />
-          <el-table-column prop="departmentName" label="部门" min-width="140" show-overflow-tooltip />
-          <el-table-column prop="levelName" label="职级" width="100" />
-          <el-table-column prop="email" label="邮箱" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="username" :label="t('common.userPicker.colUsername')" min-width="100" />
+          <el-table-column prop="departmentName" :label="t('common.userPicker.colDept')" min-width="140" show-overflow-tooltip />
+          <el-table-column prop="levelName" :label="t('common.userPicker.colLevel')" width="100" />
+          <el-table-column prop="email" :label="t('common.userPicker.colEmail')" min-width="160" show-overflow-tooltip />
         </el-table>
 
         <div class="user-dialog__pagination">
@@ -513,8 +519,8 @@ onMounted(() => {
 
         <div v-if="dialogSelected.length > 0" class="user-dialog__selected">
           <span class="user-dialog__section-title">
-            已选 {{ dialogSelected.length }} 人
-            <el-button text type="danger" size="small" @click="clearDialogSelection">清空</el-button>
+            {{ t('common.userPicker.selected', { n: dialogSelected.length }) }}
+            <el-button text type="danger" size="small" @click="clearDialogSelection">{{ t('common.userPicker.clear') }}</el-button>
           </span>
           <el-tag
             v-for="u in dialogSelected"
@@ -529,9 +535,9 @@ onMounted(() => {
       </div>
 
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
         <el-button type="primary" @click="confirmDialog">
-          确定{{ dialogSelected.length > 0 ? `（${dialogSelected.length}）` : '' }}
+          {{ t('common.ok') }}{{ dialogSelected.length > 0 ? `（${dialogSelected.length}）` : '' }}
         </el-button>
       </template>
     </el-dialog>

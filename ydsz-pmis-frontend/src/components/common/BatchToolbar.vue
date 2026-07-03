@@ -41,7 +41,10 @@ export default { name: 'BatchToolbar' }
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { Check } from '@element-plus/icons-vue'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   /** 当前选中行数 */
@@ -63,8 +66,8 @@ const visible = computed(() => props.selectedCount > 0)
     <div v-if="visible" class="batch-toolbar">
       <div class="batch-info">
         <el-icon><Check /></el-icon>
-        <span>已选择 <strong>{{ selectedCount }}</strong> 项</span>
-        <el-button link type="primary" @click="emit('clear')">清空选择</el-button>
+        <span v-html="t('common.selectedItems', { n: '<strong>' + selectedCount + '</strong>' })"></span>
+        <el-button link type="primary" @click="emit('clear')">{{ t('common.clearSelection') }}</el-button>
       </div>
       <div class="batch-actions">
         <el-button

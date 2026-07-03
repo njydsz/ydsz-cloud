@@ -309,6 +309,76 @@ async function handleExportXml() {
   ElMessage.success('BPMN XML 已导出')
 }
 
+/**
+ * P1: 导出流程图为 SVG 文件
+ *
+ * <p>对标钉钉/飞书审批流设计器，支持将流程图导出为 SVG 矢量图，用于文档归档。
+ * bpmn-js 的 saveSVG 结果已缓存在 currentSvg，直接下载即可。
+ */
+async function handleExportSvg() {
+  if (!currentSvg.value) {
+    ElMessage.warning('请先设计流程')
+    return
+  }
+  const blob = new Blob([currentSvg.value], { type: 'image/svg+xml' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `${deployForm.value.flowCode || 'process'}.svg`
+  a.click()
+  URL.revokeObjectURL(url)
+  ElMessage.success('流程图 SVG 已导出')
+}
+
+/**
+ * P1: 导出流程图为 PNG 文件
+ *
+ * <p>将 SVG 转为 Canvas 再导出 PNG，适用于非矢量场景的截图分享。
+ * 通过 Image 加载 SVG data URL → drawImage 到 canvas → toDataURL('image/png') 下载。
+ */
+async function handleExportPng() {
+  if (!currentSvg.value) {
+    ElMessage.warning('请先设计流程')
+    return
+  }
+  try {
+    const svgDataUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(currentSvg.value)
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width = img.naturalWidth || img.width
+      canvas.height = img.naturalHeight || img.height
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        ElMessage.error('Canvas 2D 上下文不可用，无法导出 PNG')
+        return
+      }
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvas.width, canvas.height)
+      ctx.drawImage(img, 0, 0)
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          ElMessage.error('PNG 生成失败')
+          return
+        }
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `${deployForm.value.flowCode || 'process'}.png`
+        a.click()
+        URL.revokeObjectURL(url)
+        ElMessage.success('流程图 PNG 已导出')
+      }, 'image/png')
+    }
+    img.onerror = () => {
+      ElMessage.error('SVG 加载失败，无法导出 PNG')
+    }
+    img.src = svgDataUrl
+  } catch (e) {
+    ElMessage.error('PNG 导出失败：' + (e as Error).message)
+  }
+}
+
 async function handleImportXml() {
   const input = document.createElement('input')
   input.type = 'file'
@@ -521,7 +591,18 @@ function applyTemplate(tpl: (typeof templates)[0]) {
       </div>
       <div class="bpmn-toolbar-right">
         <el-button size="small" @click="handleImportXml">导入 XML</el-button>
-        <el-button size="small" @click="handleExportXml" :disabled="!currentXml">导出 XML</el-button>
+        <el-dropdown @command="(cmd: string) => { switch (cmd) { case 'xml': handleExportXml(); break; case 'svg': handleExportSvg(); break; case 'png': handleExportPng(); break } }" :disabled="!currentXml">
+          <el-button size="small" :disabled="!currentXml">
+            导出 <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+          </el-button>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item command="xml">BPMN XML</el-dropdown-item>
+              <el-dropdown-item command="svg">SVG 矢量图</el-dropdown-item>
+              <el-dropdown-item command="png">PNG 图片</el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
         <el-button-group class="zoom-group">
           <el-button size="small" @click="handleZoomOut" :disabled="!currentXml" title="缩小">－</el-button>
           <el-button size="small" @click="handleFitView" :disabled="!currentXml" title="适配画布">适配</el-button>

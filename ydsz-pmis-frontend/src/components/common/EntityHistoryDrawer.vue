@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { getOperationLogPage, getOperationLogDiff } from '@/api/audit'
+
+const { t } = useI18n()
 
 interface FieldDiff {
   field: string
@@ -71,9 +74,9 @@ const getChangeTypeColor = (type: string) => {
 
 const getChangeTypeLabel = (type: string) => {
   switch (type) {
-    case 'ADD': return '新增'
-    case 'DELETE': return '删除'
-    case 'MODIFY': return '修改'
+    case 'ADD': return t('common.entityHistory.typeAdd')
+    case 'DELETE': return t('common.entityHistory.typeDelete')
+    case 'MODIFY': return t('common.entityHistory.typeModify')
     default: return type
   }
 }
@@ -86,36 +89,36 @@ watch(() => props.visible, (val) => {
 <template>
   <el-drawer
     :model-value="visible"
-    title="变更历史"
+    :title="t('common.entityHistory.title')"
     size="50%"
     @update:model-value="emit('update:visible', $event)"
   >
     <el-table v-loading="loading" :data="logs" stripe>
-      <el-table-column prop="operatedAt" label="时间" width="180" />
-      <el-table-column prop="operatorName" label="操作人" width="120" />
-      <el-table-column prop="operationType" label="操作类型" width="100" />
-      <el-table-column prop="description" label="描述" show-overflow-tooltip />
-      <el-table-column label="变更详情" width="100" fixed="right">
+      <el-table-column prop="operatedAt" :label="t('common.entityHistory.colTime')" width="180" />
+      <el-table-column prop="operatorName" :label="t('common.entityHistory.colOperator')" width="120" />
+      <el-table-column prop="operationType" :label="t('common.entityHistory.colOperationType')" width="100" />
+      <el-table-column prop="description" :label="t('common.entityHistory.colDescription')" show-overflow-tooltip />
+      <el-table-column :label="t('common.entityHistory.colChangeDetail')" width="100" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="showDiff(row.id)">查看 Diff</el-button>
+          <el-button link type="primary" @click="showDiff(row.id)">{{ t('common.entityHistory.viewDiff') }}</el-button>
         </template>
       </el-table-column>
     </el-table>
 
-    <el-dialog v-model="diffVisible" title="字段级变更对比" width="700px" append-to-body>
+    <el-dialog v-model="diffVisible" :title="t('common.entityHistory.diffTitle')" width="700px" append-to-body>
       <el-table :data="currentDiff" stripe>
-        <el-table-column prop="field" label="字段" width="150" />
-        <el-table-column prop="oldValue" label="原值" show-overflow-tooltip>
+        <el-table-column prop="field" :label="t('common.entityHistory.colField')" width="150" />
+        <el-table-column prop="oldValue" :label="t('common.entityHistory.colOldValue')" show-overflow-tooltip>
           <template #default="{ row }">
             <span :class="{ 'diff-old': row.changeType !== 'ADD' }">{{ row.oldValue || '-' }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="newValue" label="新值" show-overflow-tooltip>
+        <el-table-column prop="newValue" :label="t('common.entityHistory.colNewValue')" show-overflow-tooltip>
           <template #default="{ row }">
             <span :class="{ 'diff-new': row.changeType !== 'DELETE' }">{{ row.newValue || '-' }}</span>
           </template>
         </el-table-column>
-        <el-table-column prop="changeType" label="变更类型" width="100">
+        <el-table-column prop="changeType" :label="t('common.entityHistory.colChangeType')" width="100">
           <template #default="{ row }">
             <el-tag :type="getChangeTypeColor(row.changeType)" size="small">
               {{ getChangeTypeLabel(row.changeType) }}

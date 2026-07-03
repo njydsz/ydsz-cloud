@@ -40,6 +40,7 @@
       </el-form>
 
       <!-- 链路列表 -->
+      <!-- TODO P3: 待评估迁移 VirtualTable（listRecentTraces 上限 200 条，可能 >100；但含操作按钮/Tag 插槽，VirtualTable 仅支持 formatter 文本渲染，需先扩展组件支持插槽后再迁移） -->
       <el-table v-loading="loading" :data="filteredTraces" border stripe max-height="520">
         <el-table-column prop="traceId" label="Trace ID" width="220" show-overflow-tooltip />
         <el-table-column prop="ruleCode" label="规则编码" width="180" show-overflow-tooltip />

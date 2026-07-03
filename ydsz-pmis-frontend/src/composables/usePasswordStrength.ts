@@ -18,11 +18,13 @@
  *  - 4 - 强（绿）
  */
 
+import i18n from '@/locales'
+
 const STRENGTH_RULES = [
-  { re: /[A-Z]/, label: '大写字母' },
-  { re: /[a-z]/, label: '小写字母' },
-  { re: /\d/, label: '数字' },
-  { re: /[^\w\s]/, label: '特殊字符' },
+  { re: /[A-Z]/, labelKey: 'common.password.rule.uppercase' },
+  { re: /[a-z]/, labelKey: 'common.password.rule.lowercase' },
+  { re: /\d/, labelKey: 'common.password.rule.digit' },
+  { re: /[^\w\s]/, labelKey: 'common.password.rule.special' },
 ] as const
 
 export interface StrengthRule {
@@ -52,8 +54,9 @@ export interface StrengthResult {
  */
 export function calcPasswordStrength(password: string | null | undefined): StrengthResult {
   const pwd = password ?? ''
+  const t = i18n.global.t
   const rules: StrengthRule[] = STRENGTH_RULES.map((r) => ({
-    label: r.label,
+    label: t(r.labelKey),
     pass: r.re.test(pwd),
   }))
 
@@ -65,28 +68,28 @@ export function calcPasswordStrength(password: string | null | undefined): Stren
   if (/[^\w\s]/.test(pwd)) score++
   if (score > 4) score = 4
 
-  const map: Record<number, { level: StrengthResult['level']; color: string; text: string; percent: number }> = {
-    0: { level: 'WEAKEST', color: '#f56c6c', text: '极弱', percent: 10 },
-    1: { level: 'WEAK', color: '#e6a23c', text: '弱', percent: 30 },
-    2: { level: 'MEDIUM', color: '#f0c40c', text: '中', percent: 55 },
-    3: { level: 'STRONG', color: '#409eff', text: '良', percent: 80 },
-    4: { level: 'STRONGEST', color: '#67c23a', text: '强', percent: 100 },
+  const map: Record<number, { level: StrengthResult['level']; color: string; textKey: string; percent: number }> = {
+    0: { level: 'WEAKEST', color: '#f56c6c', textKey: 'common.password.level.weakest', percent: 10 },
+    1: { level: 'WEAK', color: '#e6a23c', textKey: 'common.password.level.weak', percent: 30 },
+    2: { level: 'MEDIUM', color: '#f0c40c', textKey: 'common.password.level.medium', percent: 55 },
+    3: { level: 'STRONG', color: '#409eff', textKey: 'common.password.level.good', percent: 80 },
+    4: { level: 'STRONGEST', color: '#67c23a', textKey: 'common.password.level.strong', percent: 100 },
   }
   const meta = map[score] ?? map[0]
 
   const suggestions: string[] = []
-  if (pwd.length < 8) suggestions.push('至少 8 位')
-  else if (pwd.length < 12) suggestions.push('延长到 12 位以上更佳')
-  if (!rules[0].pass) suggestions.push('加入大写字母')
-  if (!rules[1].pass) suggestions.push('加入小写字母')
-  if (!rules[2].pass) suggestions.push('加入数字')
-  if (!rules[3].pass) suggestions.push('加入特殊字符')
+  if (pwd.length < 8) suggestions.push(t('common.password.suggestionText.min8'))
+  else if (pwd.length < 12) suggestions.push(t('common.password.suggestionText.min12'))
+  if (!rules[0].pass) suggestions.push(t('common.password.suggestionText.addUpper'))
+  if (!rules[1].pass) suggestions.push(t('common.password.suggestionText.addLower'))
+  if (!rules[2].pass) suggestions.push(t('common.password.suggestionText.addDigit'))
+  if (!rules[3].pass) suggestions.push(t('common.password.suggestionText.addSpecial'))
 
   return {
     score,
     level: meta.level,
     color: meta.color,
-    text: meta.text,
+    text: t(meta.textKey),
     percent: meta.percent,
     rules,
     suggestions,

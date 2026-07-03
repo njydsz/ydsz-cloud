@@ -26,7 +26,10 @@
  * ```
  */
 import { computed, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { calcPasswordStrength, type StrengthResult } from '@/composables/usePasswordStrength'
+
+const { t } = useI18n()
 
 interface Props {
   /** 双向绑定：v-model 传入密码字符串 */
@@ -52,7 +55,7 @@ const props = withDefaults(defineProps<Props>(), {
   showSuggestions: true,
   compact: false,
   showInput: true,
-  placeholder: '请输入密码',
+  placeholder: '',
 })
 
 const emit = defineEmits<{
@@ -78,6 +81,8 @@ watch(
 
 const result = computed<StrengthResult>(() => calcPasswordStrength(inner.value))
 
+const placeholderText = computed(() => props.placeholder || t('common.password.placeholder'))
+
 const segCount = 5
 const segs = computed(() => {
   // score 0..4 → 0..5 段点亮
@@ -99,7 +104,7 @@ function onInput(v: string) {
       :model-value="inner"
       type="password"
       show-password
-      :placeholder="placeholder"
+      :placeholder="placeholderText"
       @update:model-value="onInput"
     >
       <template v-if="$slots.prefix" #prefix>
@@ -107,7 +112,7 @@ function onInput(v: string) {
       </template>
     </el-input>
 
-    <div class="bar" :title="`强度：${result.text}`">
+    <div class="bar" :title="t('common.password.strength', { text: result.text })">
       <div
         v-for="(active, i) in segs"
         :key="i"
@@ -119,7 +124,7 @@ function onInput(v: string) {
 
     <div v-if="!compact" class="meta">
       <span class="level" :style="{ color: result.color }">{{ result.text }}</span>
-      <span class="score">（{{ result.score }} / 4）</span>
+      <span class="score">{{ t('common.password.score', { score: result.score }) }}</span>
     </div>
 
     <ul v-if="showRules" class="rules">
@@ -132,7 +137,7 @@ function onInput(v: string) {
 
     <div v-if="showSuggestions && result.suggestions.length" class="suggestions">
       <el-icon><InfoFilled /></el-icon>
-      <span>建议：{{ result.suggestions.join('；') }}</span>
+      <span>{{ t('common.password.suggestion', { text: result.suggestions.join('；') }) }}</span>
     </div>
   </div>
 </template>

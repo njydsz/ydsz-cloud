@@ -360,6 +360,7 @@ function fmtHours(v: number | undefined) {
         <span style="color: #f56c6c">预警员工（WARN/CRITICAL）</span>
         <span class="muted">（按 utilizationPct 升序）</span>
       </template>
+      <!-- TODO P3: 待评估迁移 VirtualTable（大型组织预警员工可能 >100；但含 StatusTag/彩色文本插槽，VirtualTable 仅支持 formatter 文本渲染，需先扩展组件支持插槽后再迁移） -->
       <el-table v-loading="loading" :data="alerts" border size="small">
         <el-table-column type="index" label="#" width="50" />
         <el-table-column prop="employeeName" label="员工" min-width="120" />

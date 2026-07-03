@@ -29,7 +29,10 @@
  * ```
  */
 import { ref, watch, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { ReAuthMethod } from '@/api/user/reauth'
+
+const { t } = useI18n()
 
 interface Props {
   visible: boolean
@@ -121,7 +124,7 @@ function onClosed() {
 <template>
   <el-dialog
     v-model="visible"
-    :title="`敏感操作二次认证 — ${operationName} (${operationCode})`"
+    :title="t('common.reauth.title', { name: operationName, code: operationCode })"
     width="460px"
     :close-on-click-modal="false"
     :close-on-press-escape="!loading"
@@ -134,17 +137,17 @@ function onClosed() {
       type="warning"
       :closable="false"
       show-icon
-      :title="`即将执行：${operationName}`"
-      description="为保障系统安全，本次操作需要二次认证。认证通过后 5 分钟内 token 有效，且只能使用一次。"
+      :title="t('common.reauth.aboutToExecute', { name: operationName })"
+      :description="t('common.reauth.description')"
       style="margin-bottom: 16px"
     />
 
     <el-form label-width="0" @submit.prevent>
       <el-form-item>
         <el-radio-group v-model="method">
-          <el-radio-button value="PASSWORD">当前密码</el-radio-button>
-          <el-radio-button v-if="has2fa" value="TOTP">TOTP 动态码</el-radio-button>
-          <el-radio-button v-if="has2fa" value="BACKUP_CODE">备份码</el-radio-button>
+          <el-radio-button value="PASSWORD">{{ t('common.reauth.currentPassword') }}</el-radio-button>
+          <el-radio-button v-if="has2fa" value="TOTP">{{ t('common.reauth.totpCode') }}</el-radio-button>
+          <el-radio-button v-if="has2fa" value="BACKUP_CODE">{{ t('common.reauth.backupCode') }}</el-radio-button>
         </el-radio-group>
       </el-form-item>
 
@@ -153,7 +156,7 @@ function onClosed() {
           v-model="password"
           type="password"
           show-password
-          placeholder="请输入当前登录密码"
+          :placeholder="t('common.reauth.passwordPlaceholder')"
           :disabled="loading"
           @keyup.enter="onConfirm"
         />
@@ -163,7 +166,7 @@ function onClosed() {
         <el-input
           v-model="otp"
           maxlength="6"
-          placeholder="6 位 TOTP 动态码"
+          :placeholder="t('common.reauth.totpPlaceholder')"
           :disabled="loading"
           style="letter-spacing: 4px; font-family: monospace"
           @keyup.enter="onConfirm"
@@ -173,12 +176,12 @@ function onClosed() {
       <el-form-item v-else>
         <el-input
           v-model="backupCode"
-          placeholder="请输入 8 位一次性备份码"
+          :placeholder="t('common.reauth.backupPlaceholder')"
           :disabled="loading"
           style="font-family: monospace"
           @keyup.enter="onConfirm"
         />
-        <div class="hint">备份码使用后将立即失效，每个备份码只能使用一次</div>
+        <div class="hint">{{ t('common.reauth.backupHint') }}</div>
       </el-form-item>
 
       <el-alert
@@ -192,13 +195,13 @@ function onClosed() {
     </el-form>
 
     <template #footer>
-      <el-button :disabled="loading" @click="onCancel">取消</el-button>
+      <el-button :disabled="loading" @click="onCancel">{{ t('common.cancel') }}</el-button>
       <el-button
         type="primary"
         :loading="loading"
         @click="onConfirm"
       >
-        确认并继续
+        {{ t('common.confirmContinue') }}
       </el-button>
     </template>
   </el-dialog>

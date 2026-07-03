@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 import { Bell } from '@element-plus/icons-vue'
+import { useI18n } from 'vue-i18n'
 import {
   getUnreadCount,
   getInbox,
@@ -16,6 +17,8 @@ import {
 } from '@/api/notification'
 import { useWebSocket } from '@/composables/useWebSocket'
 import type { NotificationVO } from '@/api/notification/types'
+
+const { t } = useI18n()
 
 /** 未读数 */
 const unreadCount = ref(0)
@@ -92,13 +95,13 @@ onUnmounted(() => {
     </template>
     <div class="notification-panel">
       <div class="notification-header">
-        <span>通知中心</span>
+        <span>{{ t('notification.title') }}</span>
         <el-button v-if="unreadCount > 0" link type="primary" @click="handleMarkAllRead">
-          全部已读
+          {{ t('notification.markAllRead') }}
         </el-button>
       </div>
       <el-scrollbar max-height="400px">
-        <div v-if="notifications.length === 0" class="empty-tip">暂无通知</div>
+        <div v-if="notifications.length === 0" class="empty-tip">{{ t('notification.empty') }}</div>
         <div
           v-for="n in notifications"
           :key="n.id"
