@@ -17,9 +17,9 @@ import java.util.Map;
 /**
  * 可计费利用率定时任务处理器
  *
- * <p>每日凌晨 02:30 触发，调用 ydsz-pmis-execution 的
+ * <p>每日凌晨 02:30 触发，调用 ydsz-pmis-project 的
  * {@code /api/v1/execution/billable-utilization/recompute?period=yyyy-MM} 接口，
- * 由执行模块内部聚合 pmis_execution_time_entry 并写入快照表
+ * 由项目业务模块内部聚合 pmis_execution_time_entry 并写入快照表
  * pmis_billable_utilization_snapshot。
  *
  * <p>参数 JSON 格式：{@code {"period":"2026-06","recomputeAll":false}}
@@ -31,8 +31,8 @@ import java.util.Map;
  * <p>Bean 名称 = {@code billableUtilizationJobHandler}，
  * 可在 pmis_job 表插入一条记录：handler=billableUtilizationJobHandler, cron="0 30 2 * * ?"
  *
- * <p>本类从 {@code ydsz-pmis-scheduler} 迁出至本模块，避免 scheduler→execution 的循环依赖
- * （execution 已依赖 scheduler）。由 Spring 在执行模块启动时扫描本 Bean，并按名称匹配 pmis_job.handler。
+ * <p>本类从 {@code ydsz-pmis-scheduler} 迁出至本模块，避免 scheduler→project 的循环依赖
+ * （project 已依赖 scheduler）。由 Spring 在项目业务模块启动时扫描本 Bean，并按名称匹配 pmis_job.handler。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
