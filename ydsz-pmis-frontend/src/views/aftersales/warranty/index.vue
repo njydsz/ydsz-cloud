@@ -11,6 +11,7 @@
  * 操作: 创建 / 终止 / 扫描即将到期 / 扫描已过期
  */
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -23,6 +24,8 @@ import {
 } from '@/api/execution/aftersales/warranty'
 import type { WarrantyVO, WarrantyCreateDTO } from '@/api/execution/aftersales/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 /** 列表加载状态 */
 const loading = ref(false)
@@ -39,12 +42,12 @@ const query = reactive({
   initiationId: undefined as number | undefined,
 })
 
-const statusMap = {
-  ACTIVE: { label: '生效中', type: 'success' as const },
-  EXPIRING_SOON: { label: '即将到期', type: 'warning' as const },
-  EXPIRED: { label: '已过期', type: 'info' as const },
-  TERMINATED: { label: '已终止', type: 'danger' as const },
-}
+const statusMap = computed(() => ({
+  ACTIVE: { label: t('aftersales.warranty.status.ACTIVE'), type: 'success' as const },
+  EXPIRING_SOON: { label: t('aftersales.warranty.status.EXPIRING_SOON'), type: 'warning' as const },
+  EXPIRED: { label: t('aftersales.warranty.status.EXPIRED'), type: 'info' as const },
+  TERMINATED: { label: t('aftersales.warranty.status.TERMINATED'), type: 'danger' as const },
+}))
 
 /** 拉取质保期分页列表 */
 async function fetchList() {
@@ -96,8 +99,8 @@ const form = reactive<Partial<WarrantyCreateDTO>>({
 })
 
 const formRules = {
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  durationMonths: [{ required: true, message: '质保期(月)必填', trigger: 'blur' }],
+  initiationId: [{ required: true, message: t('aftersales.warranty.rules.initiationIdRequired'), trigger: 'blur' }],
+  durationMonths: [{ required: true, message: t('aftersales.warranty.rules.durationMonthsRequired'), trigger: 'blur' }],
 }
 
 /** 打开新增质保期弹窗，重置表单为默认值 */
@@ -118,7 +121,7 @@ function openCreate() {
 async function submitForm() {
   await formRef.value?.validate()
   await createWarranty(form as WarrantyCreateDTO)
-  ElMessage.success('已创建')
+  ElMessage.success(t('aftersales.warranty.messages.created'))
   dialogVisible.value = false
   fetchList()
 }
@@ -129,11 +132,11 @@ async function submitForm() {
  */
 async function handleTerminate(row: WarrantyVO) {
   try {
-    const { value } = await ElMessageBox.prompt('请输入提前终止原因', '终止质保期', {
-      inputValidator: (v) => !!v || '原因必填',
+    const { value } = await ElMessageBox.prompt(t('aftersales.warranty.messages.terminatePrompt'), t('aftersales.warranty.messages.terminateTitle'), {
+      inputValidator: (v) => !!v || t('aftersales.warranty.messages.reasonRequired'),
     })
     await terminateWarranty({ id: row.id, reason: value })
-    ElMessage.success('已终止')
+    ElMessage.success(t('aftersales.warranty.messages.terminated'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -145,10 +148,10 @@ async function handleTerminate(row: WarrantyVO) {
 async function handleScan(type: 'expiring' | 'overdue') {
   if (type === 'expiring') {
     const n = await scanExpiringWarranty(30)
-    ElMessage.success(`扫描到 ${n} 条即将到期质保期`)
+    ElMessage.success(t('aftersales.warranty.messages.scannedExpiring', { count: n }))
   } else {
     const n = await scanOverdueWarranty()
-    ElMessage.success(`扫描到 ${n} 条已过期质保期`)
+    ElMessage.success(t('aftersales.warranty.messages.scannedOverdue', { count: n }))
   }
   fetchList()
 }
@@ -168,24 +171,24 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="编号/描述" clearable /></el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 130px">
+      <el-form-item :label="t('aftersales.warranty.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('aftersales.warranty.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="t('aftersales.warranty.search.status')">
+        <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="项目 ID"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
+      <el-form-item :label="t('aftersales.warranty.search.initiationId')"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
     </template>
 
     <template #toolbar>
       <el-button v-permission="[PC.AFTERSALES_WARRANTY_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新增质保期
+        {{ t('aftersales.warranty.buttons.create') }}
       </el-button>
       <el-button v-permission="[PC.AFTERSALES_WARRANTY_SCAN]" type="warning" :icon="'Bell'" @click="handleScan('expiring')">
-        扫描即将到期
+        {{ t('aftersales.warranty.buttons.scanExpiring') }}
       </el-button>
       <el-button v-permission="[PC.AFTERSALES_WARRANTY_SCAN]" type="danger" :icon="'Warning'" @click="handleScan('overdue')">
-        扫描已过期
+        {{ t('aftersales.warranty.buttons.scanOverdue') }}
       </el-button>
     </template>
 
@@ -193,28 +196,28 @@ onMounted(fetchList)
       <EmptyState
         v-if="isEmpty"
         preset="search"
-        :title="query.keyword || query.status || query.initiationId ? '未找到匹配的质保期' : '暂无质保期记录'"
-        :description="query.keyword || query.status || query.initiationId ? '请尝试调整筛选条件或清空搜索关键字' : '当前还没有任何质保期, 可以为已结项项目创建质保期'"
-        action-text="新增质保期"
+        :title="query.keyword || query.status || query.initiationId ? t('aftersales.warranty.empty.searchTitle') : t('aftersales.warranty.empty.listTitle')"
+        :description="query.keyword || query.status || query.initiationId ? t('aftersales.warranty.empty.searchDesc') : t('aftersales.warranty.empty.listDesc')"
+        :action-text="t('aftersales.warranty.empty.actionCreate')"
         @action="openCreate"
       />
       <vxe-table v-else :data="list" :loading="loading" border stripe @checkbox-change="onSelectionChange" @checkbox-all="onSelectionChange">
         <vxe-column type="checkbox" width="50" />
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="warrantyCode" title="质保期编号" width="200" />
-        <vxe-column field="initiationName" title="项目" min-width="200" show-overflow />
-        <vxe-column field="startDate" title="开始日期" width="110" />
-        <vxe-column field="endDate" title="结束日期" width="110" />
-        <vxe-column field="durationMonths" title="时长(月)" width="90" align="center" />
-        <vxe-column field="noticeDays" title="提前提醒(天)" width="100" align="center" />
-        <vxe-column field="contactName" title="联系人" width="100" />
-        <vxe-column field="contactPhone" title="联系电话" width="130" />
-        <vxe-column field="status" title="状态" width="110">
+        <vxe-column field="warrantyCode" :title="t('aftersales.warranty.columns.warrantyCode')" width="200" />
+        <vxe-column field="initiationName" :title="t('aftersales.warranty.columns.initiationName')" min-width="200" show-overflow />
+        <vxe-column field="startDate" :title="t('aftersales.warranty.columns.startDate')" width="110" />
+        <vxe-column field="endDate" :title="t('aftersales.warranty.columns.endDate')" width="110" />
+        <vxe-column field="durationMonths" :title="t('aftersales.warranty.columns.durationMonths')" width="90" align="center" />
+        <vxe-column field="noticeDays" :title="t('aftersales.warranty.columns.noticeDays')" width="100" align="center" />
+        <vxe-column field="contactName" :title="t('aftersales.warranty.columns.contactName')" width="100" />
+        <vxe-column field="contactPhone" :title="t('aftersales.warranty.columns.contactPhone')" width="130" />
+        <vxe-column field="status" :title="t('aftersales.warranty.columns.status')" width="110">
           <template #default="{ row }"><StatusTag :value="row.status" :map="statusMap" /></template>
         </vxe-column>
-        <vxe-column field="terminatedAt" title="终止时间" width="170" />
-        <vxe-column field="terminationReason" title="终止原因" min-width="180" show-overflow />
-        <vxe-column title="操作" width="160" fixed="right">
+        <vxe-column field="terminatedAt" :title="t('aftersales.warranty.columns.terminatedAt')" width="170" />
+        <vxe-column field="terminationReason" :title="t('aftersales.warranty.columns.terminationReason')" min-width="180" show-overflow />
+        <vxe-column :title="t('aftersales.warranty.columns.action')" width="160" fixed="right">
           <template #default="{ row }">
             <el-button
               v-if="row.status === 'ACTIVE' || row.status === 'EXPIRING_SOON'"
@@ -224,36 +227,36 @@ onMounted(fetchList)
               size="small"
               @click="handleTerminate(row)"
             >
-              提前终止
+              {{ t('aftersales.warranty.buttons.terminate') }}
             </el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
-    <el-dialog v-model="dialogVisible" title="新增质保期" width="560px">
+    <el-dialog v-model="dialogVisible" :title="t('aftersales.warranty.dialog.createTitle')" width="560px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="项目 ID" prop="initiationId">
+        <el-form-item :label="t('aftersales.warranty.form.initiationId')" prop="initiationId">
           <el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="质保期(月)" prop="durationMonths">
+        <el-form-item :label="t('aftersales.warranty.form.durationMonths')" prop="durationMonths">
           <el-input-number v-model="form.durationMonths" :min="1" :max="120" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="提前提醒(天)">
+        <el-form-item :label="t('aftersales.warranty.form.noticeDays')">
           <el-input-number v-model="form.noticeDays" :min="1" :max="180" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="开始日期">
+        <el-form-item :label="t('aftersales.warranty.form.startDate')">
           <el-date-picker v-model="form.startDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="联系人"><el-input v-model="form.contactName" /></el-form-item>
-        <el-form-item label="联系电话"><el-input v-model="form.contactPhone" /></el-form-item>
-        <el-form-item label="说明">
+        <el-form-item :label="t('aftersales.warranty.form.contactName')"><el-input v-model="form.contactName" /></el-form-item>
+        <el-form-item :label="t('aftersales.warranty.form.contactPhone')"><el-input v-model="form.contactPhone" /></el-form-item>
+        <el-form-item :label="t('aftersales.warranty.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

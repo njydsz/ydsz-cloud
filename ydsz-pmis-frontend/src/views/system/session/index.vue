@@ -117,25 +117,25 @@ onMounted(fetchList)
       <el-col :span="6">
         <el-card shadow="never" class="summary-card">
           <div class="num">{{ summary.total }}</div>
-          <div class="label">当前页会话数</div>
+          <div class="label">{{ t('system.session.summary.total') }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="never" class="summary-card active">
           <div class="num">{{ summary.active }}</div>
-          <div class="label">活跃中</div>
+          <div class="label">{{ t('system.session.summary.active') }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="never" class="summary-card">
           <div class="num">{{ summary.devices }}</div>
-          <div class="label">设备类型</div>
+          <div class="label">{{ t('system.session.summary.devices') }}</div>
         </el-card>
       </el-col>
       <el-col :span="6">
         <el-card shadow="never" class="summary-card">
           <div class="num">{{ summary.ips }}</div>
-          <div class="label">不同 IP</div>
+          <div class="label">{{ t('system.session.summary.ips') }}</div>
         </el-card>
       </el-col>
     </el-row>
@@ -143,23 +143,23 @@ onMounted(fetchList)
     <!-- 过滤栏 -->
     <el-card shadow="never" class="filter-card">
       <el-form inline :model="query" @submit.prevent>
-        <el-form-item label="用户 ID">
+        <el-form-item :label="t('system.session.search.userId')">
           <el-input-number v-model="query.userId" :min="0" :controls="false" style="width: 140px" />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="query.status" clearable placeholder="全部" style="width: 120px">
-            <el-option value="ACTIVE" label="活跃" />
-            <el-option value="LOGOUT" label="已登出" />
-            <el-option value="EXPIRED" label="已过期" />
-            <el-option value="KICKED" label="已踢出" />
+        <el-form-item :label="t('system.session.search.status')">
+          <el-select v-model="query.status" clearable :placeholder="t('common.all')" style="width: 120px">
+            <el-option value="ACTIVE" :label="t('system.session.status.ACTIVE')" />
+            <el-option value="LOGOUT" :label="t('system.session.status.LOGOUT')" />
+            <el-option value="EXPIRED" :label="t('system.session.status.EXPIRED')" />
+            <el-option value="KICKED" :label="t('system.session.status.KICKED')" />
           </el-select>
         </el-form-item>
-        <el-form-item label="IP">
-          <el-input v-model="query.clientIp" placeholder="如 10.0.0.1" clearable />
+        <el-form-item :label="t('system.session.search.ip')">
+          <el-input v-model="query.clientIp" :placeholder="t('system.session.search.ipPlaceholder')" clearable />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="query.page = 1; fetchList()">查询</el-button>
-          <el-button @click="onReset">重置</el-button>
+          <el-button type="primary" @click="query.page = 1; fetchList()">{{ t('system.session.buttons.query') }}</el-button>
+          <el-button @click="onReset">{{ t('system.session.buttons.reset') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -168,12 +168,12 @@ onMounted(fetchList)
     <el-card shadow="never">
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="55" />
-        <vxe-column field="userId" title="用户" width="100">
+        <vxe-column field="userId" :title="t('system.session.columns.user')" width="100">
           <template #default="{ row }">
             <span>{{ row.username || row.userId }}</span>
           </template>
         </vxe-column>
-        <vxe-column title="设备" width="120">
+        <vxe-column :title="t('system.session.columns.device')" width="120">
           <template #default="{ row }">
             <el-icon v-if="parseUserAgent(row.userAgent).device === 'DESKTOP'"><Monitor /></el-icon>
             <el-icon v-else-if="parseUserAgent(row.userAgent).device === 'MOBILE'"><Iphone /></el-icon>
@@ -182,17 +182,17 @@ onMounted(fetchList)
             <span class="device-label">
               {{
                 parseUserAgent(row.userAgent).device === 'DESKTOP'
-                  ? '电脑'
+                  ? t('system.session.device.DESKTOP')
                   : parseUserAgent(row.userAgent).device === 'MOBILE'
-                  ? '手机'
+                  ? t('system.session.device.MOBILE')
                   : parseUserAgent(row.userAgent).device === 'TABLET'
-                  ? '平板'
-                  : '未知'
+                  ? t('system.session.device.TABLET')
+                  : t('system.session.device.unknown')
               }}
             </span>
           </template>
         </vxe-column>
-        <vxe-column title="系统 / 浏览器" min-width="200">
+        <vxe-column :title="t('system.session.columns.osBrowser')" min-width="200">
           <template #default="{ row }">
             <div class="ua-line">
               <el-tag size="small" type="info">{{ parseUserAgent(row.userAgent).os }}</el-tag>
@@ -201,25 +201,25 @@ onMounted(fetchList)
             <div class="ua-raw">{{ row.userAgent || '-' }}</div>
           </template>
         </vxe-column>
-        <vxe-column field="clientIp" title="IP" width="130" />
-        <vxe-column field="loginAt" title="登录时间" width="170">
+        <vxe-column field="clientIp" :title="t('system.session.columns.ip')" width="130" />
+        <vxe-column field="loginAt" :title="t('system.session.columns.loginAt')" width="170">
           <template #default="{ row }">{{ fmt(row.loginAt) }}</template>
         </vxe-column>
-        <vxe-column field="lastActiveAt" title="最近活跃" width="170">
+        <vxe-column field="lastActiveAt" :title="t('system.session.columns.lastActiveAt')" width="170">
           <template #default="{ row }">{{ fmt(row.lastActiveAt) }}</template>
         </vxe-column>
-        <vxe-column field="expireAt" title="过期时间" width="170">
+        <vxe-column field="expireAt" :title="t('system.session.columns.expireAt')" width="170">
           <template #default="{ row }">{{ fmt(row.expireAt) }}</template>
         </vxe-column>
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="status" :title="t('system.session.columns.status')" width="100">
           <template #default="{ row }">
             <el-tag :type="(statusMap[row.status]?.type || 'info') as any" size="small">
               {{ statusMap[row.status]?.label || row.status || '-' }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column field="logoutReason" title="下线原因" min-width="160" show-overflow="tooltip" />
-        <vxe-column title="操作" width="100" fixed="right">
+        <vxe-column field="logoutReason" :title="t('system.session.columns.logoutReason')" min-width="160" show-overflow="tooltip" />
+        <vxe-column :title="t('system.session.columns.action')" width="100" fixed="right">
           <template #default="{ row }">
             <el-button
               link
@@ -228,12 +228,12 @@ onMounted(fetchList)
               :disabled="row.status !== 'ACTIVE'"
               @click="onKick(row)"
             >
-              强制下线
+              {{ t('system.session.buttons.kick') }}
             </el-button>
           </template>
         </vxe-column>
         <template #empty>
-          <el-empty description="暂无会话记录" />
+          <el-empty :description="t('system.session.messages.empty')" />
         </template>
       </vxe-table>
 

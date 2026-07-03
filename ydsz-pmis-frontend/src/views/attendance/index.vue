@@ -4,7 +4,8 @@
   @module views/attendance
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   recordAttendance,
@@ -18,6 +19,8 @@ import {
   pageLeave,
 } from '@/api/attendance'
 import type { AttendanceCreateDTO, AttendanceVO, OvertimeCreateDTO, OvertimeVO, LeaveCreateDTO, LeaveVO } from '@/api/attendance/types'
+
+const { t } = useI18n()
 
 /** 当前激活的 Tab：attendance-出勤 / overtime-加班 / leave-请假 */
 const tab = ref<'attendance' | 'overtime' | 'leave'>('attendance')
@@ -34,16 +37,20 @@ const attQuery = reactive({ employeeId: undefined as number | undefined, startDa
 /** 出勤状态聚合统计 */
 const attStat = ref<Array<Record<string, unknown>>>([])
 
-const statusMap: Record<string, { label: string; type: string }> = {
-  NORMAL: { label: '正常', type: 'success' },
-  LATE: { label: '迟到', type: 'warning' },
-  EARLY: { label: '早退', type: 'warning' },
-  ABSENT: { label: '缺勤', type: 'danger' },
-  LEAVE: { label: '请假', type: 'info' },
-  OVERTIME: { label: '加班', type: 'primary' },
-}
+const statusMap = computed<Record<string, { label: string; type: string }>>(() => ({
+  NORMAL: { label: t('attendance.attendance.status.NORMAL'), type: 'success' },
+  LATE: { label: t('attendance.attendance.status.LATE'), type: 'warning' },
+  EARLY: { label: t('attendance.attendance.status.EARLY'), type: 'warning' },
+  ABSENT: { label: t('attendance.attendance.status.ABSENT'), type: 'danger' },
+  LEAVE: { label: t('attendance.attendance.status.LEAVE'), type: 'info' },
+  OVERTIME: { label: t('attendance.attendance.status.OVERTIME'), type: 'primary' },
+}))
 
-const workTypeMap: Record<string, string> = { WORKDAY: '工作日', WEEKEND: '周末', HOLIDAY: '节假日' }
+const workTypeMap = computed<Record<string, string>>(() => ({
+  WORKDAY: t('attendance.attendance.workType.WORKDAY'),
+  WEEKEND: t('attendance.attendance.workType.WEEKEND'),
+  HOLIDAY: t('attendance.attendance.workType.HOLIDAY'),
+}))
 
 /** 拉取出勤分页列表及按状态聚合统计 */
 async function fetchAttendance() {
@@ -75,10 +82,10 @@ const attForm = reactive<AttendanceCreateDTO>({
   workType: 'WORKDAY',
   remark: '',
 })
-const attFormRules = {
-  employeeId: [{ required: true, message: '员工 ID 必填', trigger: 'blur' }],
-  attendanceDate: [{ required: true, message: '日期必填', trigger: 'change' }],
-}
+const attFormRules = computed(() => ({
+  employeeId: [{ required: true, message: t('attendance.attendance.rules.employeeIdRequired'), trigger: 'blur' }],
+  attendanceDate: [{ required: true, message: t('attendance.attendance.rules.dateRequired'), trigger: 'change' }],
+}))
 
 /** 打开出勤登记弹窗，重置表单为默认值 */
 function openAttCreate() {
@@ -96,7 +103,7 @@ function openAttCreate() {
 /** 提交出勤登记，调用后端登记接口并刷新列表 */
 async function submitAtt() {
   await recordAttendance(attForm)
-  ElMessage.success('登记成功')
+  ElMessage.success(t('attendance.attendance.messages.recorded'))
   attDialogVisible.value = false
   fetchAttendance()
 }
@@ -111,14 +118,18 @@ const otTotal = ref(0)
 /** 加班查询条件 */
 const otQuery = reactive({ employeeId: undefined as number | undefined, approvalStatus: '', page: 1, size: 10 })
 
-const otTypeMap: Record<string, string> = { WORKDAY: '工作日', WEEKEND: '周末', HOLIDAY: '节假日' }
-const otStatusMap: Record<string, { label: string; type: string }> = {
-  DRAFT: { label: '草稿', type: 'info' },
-  SUBMITTED: { label: '已提交', type: 'warning' },
-  APPROVED: { label: '已通过', type: 'success' },
-  REJECTED: { label: '已驳回', type: 'danger' },
-  CANCELLED: { label: '已取消', type: 'info' },
-}
+const otTypeMap = computed<Record<string, string>>(() => ({
+  WORKDAY: t('attendance.overtime.type.WORKDAY'),
+  WEEKEND: t('attendance.overtime.type.WEEKEND'),
+  HOLIDAY: t('attendance.overtime.type.HOLIDAY'),
+}))
+const otStatusMap = computed<Record<string, { label: string; type: string }>>(() => ({
+  DRAFT: { label: t('attendance.common.status.DRAFT'), type: 'info' },
+  SUBMITTED: { label: t('attendance.common.status.SUBMITTED'), type: 'warning' },
+  APPROVED: { label: t('attendance.common.status.APPROVED'), type: 'success' },
+  REJECTED: { label: t('attendance.common.status.REJECTED'), type: 'danger' },
+  CANCELLED: { label: t('attendance.common.status.CANCELLED'), type: 'info' },
+}))
 
 /** 拉取加班申请分页列表 */
 async function fetchOvertime() {
@@ -162,7 +173,7 @@ function openOtCreate() {
 /** 提交加班申请，调用后端提交接口并刷新列表 */
 async function submitOt() {
   await submitOvertime(otForm)
-  ElMessage.success('已提交')
+  ElMessage.success(t('attendance.overtime.messages.submitted'))
   otDialogVisible.value = false
   fetchOvertime()
 }
@@ -174,9 +185,15 @@ async function submitOt() {
  */
 async function handleApproveOt(row: OvertimeVO, action: 'APPROVED' | 'REJECTED') {
   try {
-    await ElMessageBox.confirm(`确认${action === 'APPROVED' ? '通过' : '驳回'}该加班申请?`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(
+      t('attendance.overtime.messages.confirmApprove', {
+        action: action === 'APPROVED' ? t('attendance.overtime.messages.actionPass') : t('attendance.overtime.messages.actionReject'),
+      }),
+      t('common.tip'),
+      { type: 'warning' },
+    )
     await approveOvertime(row.id, action)
-    ElMessage.success('已审批')
+    ElMessage.success(t('attendance.overtime.messages.approved'))
     fetchOvertime()
   } catch {
     /* 取消 */
@@ -193,16 +210,16 @@ const lvTotal = ref(0)
 /** 请假查询条件 */
 const lvQuery = reactive({ employeeId: undefined as number | undefined, approvalStatus: '', page: 1, size: 10 })
 
-const lvTypeMap: Record<string, string> = {
-  ANNUAL: '年假',
-  SICK: '病假',
-  PERSONAL: '事假',
-  MARRIAGE: '婚假',
-  MATERNITY: '产假/陪产假',
-  BEREAVEMENT: '丧假',
-  OTHER: '其他',
-}
-const lvStatusMap: Record<string, { label: string; type: string }> = otStatusMap
+const lvTypeMap = computed<Record<string, string>>(() => ({
+  ANNUAL: t('attendance.leave.type.ANNUAL'),
+  SICK: t('attendance.leave.type.SICK'),
+  PERSONAL: t('attendance.leave.type.PERSONAL'),
+  MARRIAGE: t('attendance.leave.type.MARRIAGE'),
+  MATERNITY: t('attendance.leave.type.MATERNITY'),
+  BEREAVEMENT: t('attendance.leave.type.BEREAVEMENT'),
+  OTHER: t('attendance.leave.type.OTHER'),
+}))
+const lvStatusMap = computed<Record<string, { label: string; type: string }>>(() => otStatusMap.value)
 
 /** 拉取请假申请分页列表 */
 async function fetchLeave() {
@@ -242,7 +259,7 @@ function openLvCreate() {
 /** 提交请假申请，调用后端提交接口并刷新列表 */
 async function submitLv() {
   await submitLeave(lvForm)
-  ElMessage.success('已提交')
+  ElMessage.success(t('attendance.leave.messages.submitted'))
   lvDialogVisible.value = false
   fetchLeave()
 }
@@ -254,10 +271,18 @@ async function submitLv() {
  */
 async function handleApproveLv(row: LeaveVO, action: 'SUBMITTED' | 'APPROVED' | 'REJECTED') {
   try {
-    const actionText = action === 'SUBMITTED' ? '提交' : action === 'APPROVED' ? '通过' : '驳回'
-    await ElMessageBox.confirm(`确认${actionText}该请假申请?`, '提示', { type: 'warning' })
+    const actionText = action === 'SUBMITTED'
+      ? t('attendance.leave.messages.actionSubmit')
+      : action === 'APPROVED'
+        ? t('attendance.leave.messages.actionPass')
+        : t('attendance.leave.messages.actionReject')
+    await ElMessageBox.confirm(
+      t('attendance.leave.messages.confirmAction', { action: actionText }),
+      t('common.tip'),
+      { type: 'warning' },
+    )
     await approveLeave(row.id, action)
-    ElMessage.success('已操作')
+    ElMessage.success(t('attendance.leave.messages.operated'))
     fetchLeave()
   } catch {
     /* 取消 */

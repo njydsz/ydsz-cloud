@@ -104,14 +104,14 @@ public class OpsTicketController {
         return Result.ok(service.aggregateByStatus(initiationId));
     }
 
-    /** 工单详情 */
+    @Operation(summary = "工单详情")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/{id}")
     public Result<OpsTicketDO> getById(@PathVariable Long id) {
         return Result.ok(service.getById(id));
     }
 
-    /** 按项目查询工单 */
+    @Operation(summary = "按项目查询工单")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/by-initiation/{initiationId}")
     public Result<List<OpsTicketDO>> listByInitiation(@PathVariable Long initiationId) {

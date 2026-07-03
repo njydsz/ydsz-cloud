@@ -11,6 +11,7 @@
  * 状态: OPEN/ASSIGNED/IN_PROGRESS/RESOLVED/CLOSED/CANCELLED
  */
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -33,6 +34,8 @@ import type {
 } from '@/api/execution/aftersales/types'
 import { PC } from '@/constants/permissionCodes'
 
+const { t } = useI18n()
+
 /** 列表加载状态 */
 const loading = ref(false)
 /** 工单列表数据 */
@@ -54,29 +57,29 @@ const query = reactive({
   assigneeId: undefined as number | undefined,
 })
 
-const statusMap = {
-  OPEN: { label: '待派单', type: 'warning' as const },
-  ASSIGNED: { label: '已派单', type: 'primary' as const },
-  IN_PROGRESS: { label: '处理中', type: 'primary' as const },
-  RESOLVED: { label: '已解决', type: 'success' as const },
-  CLOSED: { label: '已关闭', type: 'info' as const },
-  CANCELLED: { label: '已取消', type: 'danger' as const },
-}
+const statusMap = computed(() => ({
+  OPEN: { label: t('aftersales.opsTicket.status.OPEN'), type: 'warning' as const },
+  ASSIGNED: { label: t('aftersales.opsTicket.status.ASSIGNED'), type: 'primary' as const },
+  IN_PROGRESS: { label: t('aftersales.opsTicket.status.IN_PROGRESS'), type: 'primary' as const },
+  RESOLVED: { label: t('aftersales.opsTicket.status.RESOLVED'), type: 'success' as const },
+  CLOSED: { label: t('aftersales.opsTicket.status.CLOSED'), type: 'info' as const },
+  CANCELLED: { label: t('aftersales.opsTicket.status.CANCELLED'), type: 'danger' as const },
+}))
 
-const priorityMap = {
-  P1: { label: 'P1 紧急', type: 'danger' as const },
-  P2: { label: 'P2 高', type: 'warning' as const },
-  P3: { label: 'P3 中', type: 'primary' as const },
-  P4: { label: 'P4 低', type: 'info' as const },
-}
+const priorityMap = computed(() => ({
+  P1: { label: t('aftersales.opsTicket.priority.P1'), type: 'danger' as const },
+  P2: { label: t('aftersales.opsTicket.priority.P2'), type: 'warning' as const },
+  P3: { label: t('aftersales.opsTicket.priority.P3'), type: 'primary' as const },
+  P4: { label: t('aftersales.opsTicket.priority.P4'), type: 'info' as const },
+}))
 
-const categoryMap: Record<string, string> = {
-  BUG: '缺陷',
-  DATA: '数据',
-  CONFIG: '配置',
-  PROCESS: '流程',
-  OTHER: '其他',
-}
+const categoryMap = computed<Record<string, string>>(() => ({
+  BUG: t('aftersales.opsTicket.category.BUG'),
+  DATA: t('aftersales.opsTicket.category.DATA'),
+  CONFIG: t('aftersales.opsTicket.category.CONFIG'),
+  PROCESS: t('aftersales.opsTicket.category.PROCESS'),
+  OTHER: t('aftersales.opsTicket.category.OTHER'),
+}))
 
 /** 拉取运维工单分页列表 */
 async function fetchList() {
@@ -138,9 +141,9 @@ const form = reactive<Partial<OpsTicketCreateDTO>>({
 })
 
 const formRules = {
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  title: [{ required: true, message: '工单标题必填', trigger: 'blur' }],
-  priority: [{ required: true, message: '优先级必填', trigger: 'change' }],
+  initiationId: [{ required: true, message: t('aftersales.opsTicket.rules.initiationIdRequired'), trigger: 'blur' }],
+  title: [{ required: true, message: t('aftersales.opsTicket.rules.titleRequired'), trigger: 'blur' }],
+  priority: [{ required: true, message: t('aftersales.opsTicket.rules.priorityRequired'), trigger: 'change' }],
 }
 
 /** 打开新增工单弹窗，重置表单为默认值 */
@@ -161,7 +164,7 @@ function openCreate() {
 async function submitForm() {
   await formRef.value?.validate()
   await createOpsTicket(form as OpsTicketCreateDTO)
-  ElMessage.success('已创建')
+  ElMessage.success(t('aftersales.opsTicket.messages.created'))
   dialogVisible.value = false
   fetchList()
 }
@@ -186,12 +189,12 @@ function openAssign(row: OpsTicketVO) {
 /** 提交派单，将工单指派给指定处理人 */
 async function submitAssign() {
   if (!assignForm.id || !assignForm.assigneeId) {
-    ElMessage.warning('请填写处理人 ID')
+    ElMessage.warning(t('aftersales.opsTicket.messages.assigneeRequired'))
     return
   }
   const dto: OpsTicketAssignDTO = { id: assignForm.id, assigneeId: assignForm.assigneeId, comment: assignForm.comment }
   await assignOpsTicket(dto)
-  ElMessage.success('已派单')
+  ElMessage.success(t('aftersales.opsTicket.messages.assigned'))
   assignVisible.value = false
   fetchList()
 }
@@ -202,12 +205,12 @@ async function submitAssign() {
  * @param target 目标状态（RESOLVED/CANCELLED 等需补充说明）
  */
 async function handleStatus(row: OpsTicketVO, target: string) {
-  const targetText = (statusMap as any)[target]?.label || target
+  const targetText = (statusMap.value as any)[target]?.label || target
   try {
     let dto: OpsTicketStatusDTO = { id: row.id, targetStatus: target }
     if (target === 'RESOLVED') {
-      const { value } = await ElMessageBox.prompt('请输入解决说明', '工单已解决', {
-        inputValidator: (v) => !!v || '说明必填',
+      const { value } = await ElMessageBox.prompt(t('aftersales.opsTicket.messages.resolvePrompt'), t('aftersales.opsTicket.messages.resolveTitle'), {
+        inputValidator: (v) => !!v || t('aftersales.opsTicket.messages.noteRequired'),
       })
       dto = { ...dto, resolutionNote: value }
       // 通过 changeStatus 提交
@@ -217,14 +220,14 @@ async function handleStatus(row: OpsTicketVO, target: string) {
         resolutionNote: value,
       } as any)
     } else if (target === 'CANCELLED') {
-      const { value } = await ElMessageBox.prompt('请输入取消原因', '取消工单', {
-        inputValidator: (v) => !!v || '原因必填',
+      const { value } = await ElMessageBox.prompt(t('aftersales.opsTicket.messages.cancelPrompt'), t('aftersales.opsTicket.messages.cancelTitle'), {
+        inputValidator: (v) => !!v || t('aftersales.opsTicket.messages.reasonRequired'),
       })
       await changeOpsTicketStatus({ ...dto, comment: value })
     } else {
       await changeOpsTicketStatus(dto)
     }
-    ElMessage.success(`已变更为「${targetText}」`)
+    ElMessage.success(t('aftersales.opsTicket.messages.statusChanged', { target: targetText }))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -255,7 +258,7 @@ async function submitEvaluate() {
     customerScore: evalForm.score,
     customerComment: evalForm.comment,
   } as any)
-  ElMessage.success('已关闭并评价')
+  ElMessage.success(t('aftersales.opsTicket.messages.evaluated'))
   evalVisible.value = false
   fetchList()
 }
@@ -263,7 +266,7 @@ async function submitEvaluate() {
 /** 触发 SLA 超时扫描，并刷新列表与统计 */
 async function handleScan() {
   const n = await scanOpsTicketSlaBreaches()
-  ElMessage.success(`扫描到 ${n} 条 SLA 超时`)
+  ElMessage.success(t('aftersales.opsTicket.messages.scannedSla', { count: n }))
   fetchList()
   fetchStats()
 }
@@ -293,28 +296,28 @@ onMounted(() => {
   >
     <!-- 搜索栏 -->
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="编号/标题" clearable /></el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 130px">
+      <el-form-item :label="t('aftersales.opsTicket.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('aftersales.opsTicket.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="t('aftersales.opsTicket.search.status')">
+        <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="优先级">
-        <el-select v-model="query.priority" placeholder="全部" clearable style="width: 110px">
+      <el-form-item :label="t('aftersales.opsTicket.search.priority')">
+        <el-select v-model="query.priority" :placeholder="t('common.all')" clearable style="width: 110px">
           <el-option v-for="(v, k) in priorityMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="项目 ID"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
-      <el-form-item label="处理人 ID"><el-input-number v-model="query.assigneeId" :min="0" :controls="false" /></el-form-item>
+      <el-form-item :label="t('aftersales.opsTicket.search.initiationId')"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
+      <el-form-item :label="t('aftersales.opsTicket.search.assigneeId')"><el-input-number v-model="query.assigneeId" :min="0" :controls="false" /></el-form-item>
     </template>
 
     <!-- 工具栏 -->
     <template #toolbar>
       <el-button v-permission="[PC.AFTERSALES_OPS_TICKET_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新增工单
+        {{ t('aftersales.opsTicket.buttons.create') }}
       </el-button>
       <el-button v-permission="[PC.AFTERSALES_OPS_TICKET_SCAN]" type="warning" :icon="'Bell'" @click="handleScan">
-        SLA 扫描
+        {{ t('aftersales.opsTicket.buttons.scanSla') }}
       </el-button>
     </template>
 
@@ -324,13 +327,13 @@ onMounted(() => {
         <el-card shadow="hover">
           <div class="text-sm text-gray-500">
             <StatusTag :value="String(row.priority)" :map="priorityMap" />
-            <span class="ml-2">共 {{ row.totalCount }} 条</span>
+            <span class="ml-2">{{ t('aftersales.opsTicket.sla.total', { count: row.totalCount }) }}</span>
           </div>
           <div class="text-xs mt-2">
-            响应 SLA 达成：<b :class="Number(row.responseSlaRate) < 0.8 ? 'text-red-500' : 'text-green-600'">{{ slaRateText(row, 'responseSlaRate') }}</b>
+            {{ t('aftersales.opsTicket.sla.responseRate') }}<b :class="Number(row.responseSlaRate) < 0.8 ? 'text-red-500' : 'text-green-600'">{{ slaRateText(row, 'responseSlaRate') }}</b>
           </div>
           <div class="text-xs">
-            解决 SLA 达成：<b :class="Number(row.resolveSlaRate) < 0.8 ? 'text-red-500' : 'text-green-600'">{{ slaRateText(row, 'resolveSlaRate') }}</b>
+            {{ t('aftersales.opsTicket.sla.resolveRate') }}<b :class="Number(row.resolveSlaRate) < 0.8 ? 'text-red-500' : 'text-green-600'">{{ slaRateText(row, 'resolveSlaRate') }}</b>
           </div>
         </el-card>
       </el-col>
@@ -341,38 +344,38 @@ onMounted(() => {
       <EmptyState
         v-if="isEmpty"
         preset="search"
-        :title="query.keyword || query.status || query.priority || query.initiationId || query.assigneeId ? '未找到匹配的运维工单' : '暂无运维工单'"
-        :description="query.keyword || query.status || query.priority || query.initiationId || query.assigneeId ? '请尝试调整筛选条件或清空搜索关键字' : '当前还没有任何运维工单, 可以创建第一条工单'"
-        action-text="新增工单"
+        :title="query.keyword || query.status || query.priority || query.initiationId || query.assigneeId ? t('aftersales.opsTicket.empty.searchTitle') : t('aftersales.opsTicket.empty.listTitle')"
+        :description="query.keyword || query.status || query.priority || query.initiationId || query.assigneeId ? t('aftersales.opsTicket.empty.searchDesc') : t('aftersales.opsTicket.empty.listDesc')"
+        :action-text="t('aftersales.opsTicket.empty.actionCreate')"
         @action="openCreate"
       />
       <vxe-table v-else :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="ticketCode" title="工单编号" width="180" />
-        <vxe-column field="title" title="标题" min-width="220" show-overflow />
-        <vxe-column field="initiationName" title="项目" min-width="160" show-overflow />
-        <vxe-column field="category" title="类型" width="90">
+        <vxe-column field="ticketCode" :title="t('aftersales.opsTicket.columns.ticketCode')" width="180" />
+        <vxe-column field="title" :title="t('aftersales.opsTicket.columns.title')" min-width="220" show-overflow />
+        <vxe-column field="initiationName" :title="t('aftersales.opsTicket.columns.initiationName')" min-width="160" show-overflow />
+        <vxe-column field="category" :title="t('aftersales.opsTicket.columns.category')" width="90">
           <template #default="{ row }">{{ categoryMap[row.category as string] || row.category || '-' }}</template>
         </vxe-column>
-        <vxe-column field="priority" title="优先级" width="100">
+        <vxe-column field="priority" :title="t('aftersales.opsTicket.columns.priority')" width="100">
           <template #default="{ row }"><StatusTag :value="row.priority" :map="priorityMap" /></template>
         </vxe-column>
-        <vxe-column field="reporterName" title="报修人" width="100" />
-        <vxe-column field="assigneeName" title="处理人" width="100" />
-        <vxe-column field="responseDueAt" title="响应截止" width="170" />
-        <vxe-column field="resolveDueAt" title="解决截止" width="170" />
-        <vxe-column label="SLA" width="160">
+        <vxe-column field="reporterName" :title="t('aftersales.opsTicket.columns.reporterName')" width="100" />
+        <vxe-column field="assigneeName" :title="t('aftersales.opsTicket.columns.assigneeName')" width="100" />
+        <vxe-column field="responseDueAt" :title="t('aftersales.opsTicket.columns.responseDueAt')" width="170" />
+        <vxe-column field="resolveDueAt" :title="t('aftersales.opsTicket.columns.resolveDueAt')" width="170" />
+        <vxe-column :label="t('aftersales.opsTicket.columns.sla')" width="160">
           <template #default="{ row }">
-            <el-tag v-if="row.responseSlaBreached" type="danger" size="small">响应超时</el-tag>
-            <el-tag v-if="row.resolveSlaBreached" type="danger" size="small" class="ml-1">解决超时</el-tag>
-            <span v-if="!row.responseSlaBreached && !row.resolveSlaBreached" class="text-gray-400">正常</span>
+            <el-tag v-if="row.responseSlaBreached" type="danger" size="small">{{ t('aftersales.opsTicket.slaBreach.response') }}</el-tag>
+            <el-tag v-if="row.resolveSlaBreached" type="danger" size="small" class="ml-1">{{ t('aftersales.opsTicket.slaBreach.resolve') }}</el-tag>
+            <span v-if="!row.responseSlaBreached && !row.resolveSlaBreached" class="text-gray-400">{{ t('aftersales.opsTicket.slaBreach.normal') }}</span>
           </template>
         </vxe-column>
-        <vxe-column field="status" title="状态" width="110">
+        <vxe-column field="status" :title="t('aftersales.opsTicket.columns.status')" width="110">
           <template #default="{ row }"><StatusTag :value="row.status" :map="statusMap" /></template>
         </vxe-column>
-        <vxe-column field="customerScore" title="评分" width="70" align="center" />
-        <vxe-column title="操作" width="300" fixed="right">
+        <vxe-column field="customerScore" :title="t('aftersales.opsTicket.columns.customerScore')" width="70" align="center" />
+        <vxe-column :title="t('aftersales.opsTicket.columns.action')" width="300" fixed="right">
           <template #default="{ row }">
             <el-button
               v-if="row.status === 'OPEN'"
@@ -381,7 +384,7 @@ onMounted(() => {
               type="primary"
               size="small"
               @click="openAssign(row)"
-            >派单</el-button>
+            >{{ t('aftersales.opsTicket.actions.assign') }}</el-button>
             <el-button
               v-if="row.status === 'ASSIGNED'"
               v-permission="[PC.AFTERSALES_OPS_TICKET_STATUS]"
@@ -389,7 +392,7 @@ onMounted(() => {
               type="primary"
               size="small"
               @click="handleStatus(row, 'IN_PROGRESS')"
-            >开始处理</el-button>
+            >{{ t('aftersales.opsTicket.actions.startProcess') }}</el-button>
             <el-button
               v-if="row.status === 'IN_PROGRESS'"
               v-permission="[PC.AFTERSALES_OPS_TICKET_STATUS]"
@@ -397,7 +400,7 @@ onMounted(() => {
               type="success"
               size="small"
               @click="handleStatus(row, 'RESOLVED')"
-            >标记解决</el-button>
+            >{{ t('aftersales.opsTicket.actions.markResolved') }}</el-button>
             <el-button
               v-if="row.status === 'RESOLVED'"
               v-permission="[PC.AFTERSALES_OPS_TICKET_EVALUATE]"
@@ -405,7 +408,7 @@ onMounted(() => {
               type="success"
               size="small"
               @click="openEvaluate(row)"
-            >关闭评价</el-button>
+            >{{ t('aftersales.opsTicket.actions.closeEvaluate') }}</el-button>
             <el-button
               v-if="['OPEN', 'ASSIGNED', 'IN_PROGRESS'].includes(row.status || '')"
               v-permission="[PC.AFTERSALES_OPS_TICKET_STATUS]"
@@ -413,76 +416,76 @@ onMounted(() => {
               type="danger"
               size="small"
               @click="handleStatus(row, 'CANCELLED')"
-            >取消</el-button>
+            >{{ t('aftersales.opsTicket.actions.cancel') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
     <!-- 新增工单弹窗 -->
-    <el-dialog v-model="dialogVisible" title="新增工单" width="560px">
+    <el-dialog v-model="dialogVisible" :title="t('aftersales.opsTicket.dialog.createTitle')" width="560px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="项目 ID" prop="initiationId">
+        <el-form-item :label="t('aftersales.opsTicket.form.initiationId')" prop="initiationId">
           <el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="工单标题" prop="title"><el-input v-model="form.title" /></el-form-item>
-        <el-form-item label="类型">
+        <el-form-item :label="t('aftersales.opsTicket.form.title')" prop="title"><el-input v-model="form.title" /></el-form-item>
+        <el-form-item :label="t('aftersales.opsTicket.form.category')">
           <el-select v-model="form.category" style="width: 100%">
             <el-option v-for="(v, k) in categoryMap" :key="k" :label="v" :value="k" />
           </el-select>
         </el-form-item>
-        <el-form-item label="优先级" prop="priority">
+        <el-form-item :label="t('aftersales.opsTicket.form.priority')" prop="priority">
           <el-select v-model="form.priority" style="width: 100%">
             <el-option v-for="(v, k) in priorityMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
-        <el-form-item label="报修人 ID">
+        <el-form-item :label="t('aftersales.opsTicket.form.reporterId')">
           <el-input-number v-model="form.reporterId" :min="0" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="关联质保期">
+        <el-form-item :label="t('aftersales.opsTicket.form.warrantyId')">
           <el-input-number v-model="form.warrantyId" :min="0" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="t('aftersales.opsTicket.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="3" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 派单弹窗 -->
-    <el-dialog v-model="assignVisible" title="派单" width="460px">
+    <el-dialog v-model="assignVisible" :title="t('aftersales.opsTicket.dialog.assignTitle')" width="460px">
       <el-form label-width="100px">
-        <el-form-item label="工单 ID"><el-input :model-value="assignForm.id" disabled /></el-form-item>
-        <el-form-item label="处理人 ID" required>
+        <el-form-item :label="t('aftersales.opsTicket.form.assignId')"><el-input :model-value="assignForm.id" disabled /></el-form-item>
+        <el-form-item :label="t('aftersales.opsTicket.form.assigneeId')" required>
           <el-input-number v-model="assignForm.assigneeId" :min="1" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="备注">
+        <el-form-item :label="t('aftersales.opsTicket.form.comment')">
           <el-input v-model="assignForm.comment" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="assignVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitAssign">派单</el-button>
+        <el-button @click="assignVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitAssign">{{ t('aftersales.opsTicket.actions.assign') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 关闭评价弹窗 -->
-    <el-dialog v-model="evalVisible" title="关闭工单并评价" width="460px">
+    <el-dialog v-model="evalVisible" :title="t('aftersales.opsTicket.dialog.evalTitle')" width="460px">
       <el-form label-width="100px">
-        <el-form-item label="工单 ID"><el-input :model-value="evalForm.id" disabled /></el-form-item>
-        <el-form-item label="评分 (1-5)" required>
+        <el-form-item :label="t('aftersales.opsTicket.form.evalId')"><el-input :model-value="evalForm.id" disabled /></el-form-item>
+        <el-form-item :label="t('aftersales.opsTicket.form.score')" required>
           <el-rate v-model="evalForm.score" :max="5" />
         </el-form-item>
-        <el-form-item label="评价说明">
+        <el-form-item :label="t('aftersales.opsTicket.form.evalComment')">
           <el-input v-model="evalForm.comment" type="textarea" :rows="3" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="evalVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitEvaluate">提交并关闭</el-button>
+        <el-button @click="evalVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitEvaluate">{{ t('aftersales.opsTicket.actions.closeEvaluate') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

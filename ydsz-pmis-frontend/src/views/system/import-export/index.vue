@@ -6,10 +6,9 @@
 <template>
   <div class="import-export-page">
     <el-card class="page-header" shadow="never">
-      <h2>统一数据导入导出</h2>
+      <h2>{{ t('system.importExport.title') }}</h2>
       <p class="desc">
-        支持 PMIS 3 类核心业务数据批量导入：职级费率 / 内部费率 / 工时数据。
-        下载空白模板 → 填写数据 → 上传文件 → 系统校验 → 反馈结果。
+        {{ t('system.importExport.description') }}
       </p>
     </el-card>
 
@@ -27,8 +26,8 @@
           <div class="biz-info">
             <h3>{{ item.name }}</h3>
             <p>{{ item.description }}</p>
-            <el-tag v-for="t in item.tags" :key="t" size="small" effect="plain" class="biz-tag">
-              {{ t }}
+            <el-tag v-for="tp in item.tags" :key="tp" size="small" effect="plain" class="biz-tag">
+              {{ tp }}
             </el-tag>
           </div>
         </el-card>
@@ -38,20 +37,18 @@
     <!-- 模板下载区 -->
     <el-card v-if="selectedBiz" class="action-card" shadow="never">
       <template #header>
-        <span>第一步：下载模板</span>
+        <span>{{ t('system.importExport.step1.title') }}</span>
       </template>
       <el-row :gutter="20" align="middle">
         <el-col :span="16">
           <p>
-            下载
-            <strong>{{ currentBiz?.name }}</strong>
-            模板（.xlsx），模板包含表头 + 1 行样例数据 + 数据格式说明。
+            {{ t('system.importExport.step1.description', { biz: currentBiz?.name }) }}
           </p>
         </el-col>
         <el-col :span="8" style="text-align: right">
           <el-button type="primary" :loading="downloading" @click="handleDownloadTemplate">
             <el-icon><Download /></el-icon>
-            下载模板
+            {{ t('system.importExport.step1.button') }}
           </el-button>
         </el-col>
       </el-row>
@@ -60,7 +57,7 @@
     <!-- 文件上传区 -->
     <el-card v-if="selectedBiz" class="action-card" shadow="never">
       <template #header>
-        <span>第二步：上传文件</span>
+        <span>{{ t('system.importExport.step2.title') }}</span>
       </template>
       <el-upload
         ref="uploadRef"
@@ -73,10 +70,10 @@
         drag
       >
         <el-icon class="el-icon--upload"><upload-filled /></el-icon>
-        <div class="el-upload__text">将文件拖到此处，或<em>点击上传</em></div>
+        <div class="el-upload__text">{{ t('system.importExport.step2.uploadText') }}<em>{{ t('system.importExport.step2.uploadTextClick') }}</em></div>
         <template #tip>
           <div class="el-upload__tip">
-            支持 .xlsx / .xls 格式，文件大小不超过 20MB，最多 10,000 行数据
+            {{ t('system.importExport.step2.tip') }}
           </div>
         </template>
       </el-upload>
@@ -85,19 +82,19 @@
     <!-- 导入操作 -->
     <el-card v-if="selectedBiz && fileList.length" class="action-card" shadow="never">
       <template #header>
-        <span>第三步：执行导入</span>
+        <span>{{ t('system.importExport.step3.title') }}</span>
       </template>
       <el-row :gutter="20" align="middle">
         <el-col :span="16">
           <p>
-            已选择文件：<strong>{{ fileList[0]?.name }}</strong>
+            {{ t('system.importExport.step3.selected') }}<strong>{{ fileList[0]?.name }}</strong>
             （{{ formatSize(fileList[0]?.size ?? 0) }}）
           </p>
         </el-col>
         <el-col :span="8" style="text-align: right">
           <el-button :loading="importing" type="success" @click="handleImport">
             <el-icon><Check /></el-icon>
-            开始导入
+            {{ t('system.importExport.step3.button') }}
           </el-button>
         </el-col>
       </el-row>
@@ -115,16 +112,16 @@
     <!-- 导入结果 -->
     <el-card v-if="importResult" class="result-card" shadow="never">
       <template #header>
-        <span>导入结果</span>
+        <span>{{ t('system.importExport.result.title') }}</span>
       </template>
       <el-result
         :icon="importResult.success ? 'success' : 'warning'"
-        :title="importResult.success ? '导入成功' : '部分失败'"
-        :sub-title="`成功 ${importResult.successCount} 条，失败 ${importResult.failCount} 条`"
+        :title="importResult.success ? t('system.importExport.result.success') : t('system.importExport.result.partialFail')"
+        :sub-title="t('system.importExport.result.subTitle', { success: importResult.successCount, fail: importResult.failCount })"
       >
         <template #extra>
           <el-button v-if="importResult.failCount > 0" type="primary" @click="downloadErrorFile">
-            下载错误报告
+            {{ t('system.importExport.result.downloadError') }}
           </el-button>
         </template>
       </el-result>
@@ -147,6 +144,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import type { UploadFile, UploadFiles, UploadUserFile } from 'element-plus'
 import { Download, UploadFilled, Check, Money, Timer, User } from '@element-plus/icons-vue'
@@ -156,6 +154,8 @@ import type { ColumnConfig } from '@/components/common/VirtualTable.vue'
 
 defineOptions({ name: 'ImportExportIndex' })
 
+const { t } = useI18n()
+
 interface BizType {
   code: 'rate-card' | 'rate-internal' | 'time-entry'
   name: string
@@ -164,32 +164,45 @@ interface BizType {
   tags: string[]
 }
 
-const bizTypes: BizType[] = [
+const bizTypes = computed<BizType[]>(() => [
   {
     code: 'rate-card',
-    name: '职级费率',
-    description: '按职级/项目/客户维护对外报价费率',
+    name: t('system.importExport.bizTypes.rateCard.name'),
+    description: t('system.importExport.bizTypes.rateCard.description'),
     icon: Money,
-    tags: ['报价', '职级', '项目', '客户']
+    tags: [
+      t('system.importExport.bizTypes.rateCard.tags.quote'),
+      t('system.importExport.bizTypes.rateCard.tags.level'),
+      t('system.importExport.bizTypes.rateCard.tags.project'),
+      t('system.importExport.bizTypes.rateCard.tags.customer'),
+    ],
   },
   {
     code: 'rate-internal',
-    name: '内部费率',
-    description: '按职级/部门维护内部核算费率',
+    name: t('system.importExport.bizTypes.rateInternal.name'),
+    description: t('system.importExport.bizTypes.rateInternal.description'),
     icon: Money,
-    tags: ['成本', '职级', '部门']
+    tags: [
+      t('system.importExport.bizTypes.rateInternal.tags.cost'),
+      t('system.importExport.bizTypes.rateInternal.tags.level'),
+      t('system.importExport.bizTypes.rateInternal.tags.dept'),
+    ],
   },
   {
     code: 'time-entry',
-    name: '工时数据',
-    description: '批量导入历史工时数据（仅管理员）',
+    name: t('system.importExport.bizTypes.timeEntry.name'),
+    description: t('system.importExport.bizTypes.timeEntry.description'),
     icon: Timer,
-    tags: ['工时', '项目', '员工']
-  }
-]
+    tags: [
+      t('system.importExport.bizTypes.timeEntry.tags.hours'),
+      t('system.importExport.bizTypes.timeEntry.tags.project'),
+      t('system.importExport.bizTypes.timeEntry.tags.employee'),
+    ],
+  },
+])
 
-const selectedBiz = ref<typeof bizTypes[number]['code'] | null>(null)
-const currentBiz = computed(() => bizTypes.find((b) => b.code === selectedBiz.value))
+const selectedBiz = ref<typeof bizTypes.value[number]['code'] | null>(null)
+const currentBiz = computed(() => bizTypes.value.find((b) => b.code === selectedBiz.value))
 const downloading = ref(false)
 const importing = ref(false)
 const importProgress = ref(0)
@@ -198,12 +211,12 @@ const fileList = ref<UploadUserFile[]>([])
 const importResult = ref<ImportResult | null>(null)
 
 /** 导入错误明细列配置 */
-const errorColumns: ColumnConfig[] = [
-  { field: 'rowIndex', title: '行号', width: 80 },
-  { field: 'field', title: '字段', width: 180 },
-  { field: 'message', title: '错误信息' },
-  { field: 'value', title: '原值', slot: true },
-]
+const errorColumns = computed<ColumnConfig[]>(() => [
+  { field: 'rowIndex', title: t('system.importExport.columns.rowIndex'), width: 80 },
+  { field: 'field', title: t('system.importExport.columns.field'), width: 180 },
+  { field: 'message', title: t('system.importExport.columns.message') },
+  { field: 'value', title: t('system.importExport.columns.value'), slot: true },
+])
 
 /**
  * 文件大小格式化（B / KB / MB）
@@ -222,9 +235,9 @@ async function handleDownloadTemplate() {
   downloading.value = true
   try {
     await downloadTemplate(selectedBiz.value)
-    ElMessage.success('模板下载完成')
+    ElMessage.success(t('system.importExport.messages.templateDownloaded'))
   } catch (e) {
-    ElMessage.error('模板下载失败：' + (e as Error).message)
+    ElMessage.error(t('system.importExport.messages.templateDownloadFailed', { message: (e as Error).message }))
   } finally {
     downloading.value = false
   }
@@ -252,34 +265,34 @@ async function handleImport() {
   if (!selectedBiz.value || !fileList.value.length) return
   importing.value = true
   importProgress.value = 0
-  progressText.value = '正在解析文件...'
+  progressText.value = t('system.importExport.messages.parsing')
   try {
     // 模拟进度
     const timer = setInterval(() => {
       if (importProgress.value < 90) {
         importProgress.value += 10
-        progressText.value = `已处理 ${Math.floor(importProgress.value * 12.5)} 行...`
+        progressText.value = t('system.importExport.messages.processed', { count: Math.floor(importProgress.value * 12.5) })
       }
     }, 200)
 
     const rawFile = fileList.value[0]?.raw
     if (!rawFile) {
-      ElMessage.error('请先选择文件')
+      ElMessage.error(t('system.importExport.messages.noFile'))
       return
     }
     const resp = await importData(selectedBiz.value, rawFile)
     clearInterval(timer)
     importProgress.value = 100
-    progressText.value = '导入完成'
+    progressText.value = t('system.importExport.messages.importComplete')
     const result = (resp as any)?.data ?? resp
     importResult.value = result
     if (result.success) {
-      ElMessage.success(`导入成功 ${result.successCount} 条`)
+      ElMessage.success(t('system.importExport.messages.importSuccess', { count: result.successCount }))
     } else {
-      ElMessage.warning(`部分失败：成功 ${result.successCount}，失败 ${result.failCount}`)
+      ElMessage.warning(t('system.importExport.messages.importPartialFail', { success: result.successCount, fail: result.failCount }))
     }
   } catch (e) {
-    ElMessage.error('导入失败：' + (e as Error).message)
+    ElMessage.error(t('system.importExport.messages.importFailed', { message: (e as Error).message }))
     importProgress.value = 0
   } finally {
     importing.value = false

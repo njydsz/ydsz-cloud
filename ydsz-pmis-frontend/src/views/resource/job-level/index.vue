@@ -4,9 +4,12 @@
   @module views/resource/job-level
 -->
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { listJobLevels, getJobLevelRate, listJobLevelRateVersions } from '@/api/resource/job-level'
 import type { JobLevelVO, JobLevelRateVO } from '@/api/resource/job-level/types'
+
+const { t } = useI18n()
 
 const levels = ref<JobLevelVO[]>([])
 const rate = ref<JobLevelRateVO | null>(null)
@@ -14,13 +17,13 @@ const versions = ref<JobLevelRateVO[]>([])
 const selectedLevel = ref<string>('')
 const loading = ref(false)
 
-const segmentMap: Record<string, string> = {
-  PRIMARY: '初级',
-  MIDDLE: '中级',
-  SENIOR: '高级',
-  EXPERT: '专家',
-  STRATEGIC: '战略',
-}
+const segmentMap = computed<Record<string, string>>(() => ({
+  PRIMARY: t('resource.jobLevel.segment.PRIMARY'),
+  MIDDLE: t('resource.jobLevel.segment.MIDDLE'),
+  SENIOR: t('resource.jobLevel.segment.SENIOR'),
+  EXPERT: t('resource.jobLevel.segment.EXPERT'),
+  STRATEGIC: t('resource.jobLevel.segment.STRATEGIC'),
+}))
 
 /** 拉取职级列表，并默认选中首个职级展示其费率 */
 async function fetchLevels() {
@@ -79,7 +82,7 @@ onMounted(fetchLevels)
         <!-- 职级列表 -->
         <el-card shadow="never" class="level-card">
           <template #header>
-            <span>职级体系 (L1 - L18)</span>
+            <span>{{ t('resource.jobLevel.levelList.title') }}</span>
           </template>
           <div
             v-for="lv in levels"
@@ -98,7 +101,7 @@ onMounted(fetchLevels)
               {{ segmentMap[lv.levelSegment || ''] || lv.levelSegment || '-' }}
             </el-tag>
           </div>
-          <el-empty v-if="!loading && levels.length === 0" description="暂无职级数据" :image-size="60" />
+          <el-empty v-if="!loading && levels.length === 0" :description="t('resource.jobLevel.levelList.empty')" :image-size="60" />
         </el-card>
       </el-col>
 
@@ -107,55 +110,55 @@ onMounted(fetchLevels)
         <el-card shadow="never" class="rate-card">
           <template #header>
             <div class="card-header">
-              <span>{{ selectedLevel ? `${selectedLevel} - 生效费率` : '生效费率' }}</span>
+              <span>{{ selectedLevel ? t('resource.jobLevel.rate.titleWithLevel', { level: selectedLevel }) : t('resource.jobLevel.rate.title') }}</span>
               <el-tag v-if="rate" type="success">V{{ rate.version }}</el-tag>
             </div>
           </template>
 
-          <el-empty v-if="!rate" description="该职级暂未配置生效费率" :image-size="80" />
+          <el-empty v-if="!rate" :description="t('resource.jobLevel.rate.empty')" :image-size="80" />
           <el-descriptions v-else :column="3" border>
-            <el-descriptions-item label="对外报价 (元/天)">
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.externalDaily')">
               <span class="highlight">{{ formatMoney(rate.externalDaily) }}</span>
             </el-descriptions-item>
-            <el-descriptions-item label="对内成本 (元/天)">
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.internalDaily')">
               <span class="highlight">{{ formatMoney(rate.internalDaily) }}</span>
             </el-descriptions-item>
-            <el-descriptions-item label="毛利率(预估)">
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.grossMargin')">
               {{
                 rate.externalDaily && rate.internalDaily
                   ? `${(((Number(rate.externalDaily) - Number(rate.internalDaily)) / Number(rate.externalDaily)) * 100).toFixed(1)}%`
                   : '-'
               }}
             </el-descriptions-item>
-            <el-descriptions-item label="基本工资">{{ formatMoney(rate.baseSalary) }}</el-descriptions-item>
-            <el-descriptions-item label="公司社保">{{ formatMoney(rate.socialCompany) }}</el-descriptions-item>
-            <el-descriptions-item label="个人社保">{{ formatMoney(rate.socialPersonal) }}</el-descriptions-item>
-            <el-descriptions-item label="公司公积金">{{ formatMoney(rate.fundCompany) }}</el-descriptions-item>
-            <el-descriptions-item label="个人公积金">{{ formatMoney(rate.fundPersonal) }}</el-descriptions-item>
-            <el-descriptions-item label="税后到手">{{ formatMoney(rate.takeHome) }}</el-descriptions-item>
-            <el-descriptions-item label="月综合成本">{{ formatMoney(rate.totalCost) }}</el-descriptions-item>
-            <el-descriptions-item label="可计费利用率目标">{{ formatPct(rate.billableTarget) }}</el-descriptions-item>
-            <el-descriptions-item label="生效日期">{{ rate.effectiveDate || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="失效日期" :span="2">{{ rate.expireDate || '长期' }}</el-descriptions-item>
-            <el-descriptions-item v-if="rate.description" label="备注" :span="3">{{ rate.description }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.baseSalary')">{{ formatMoney(rate.baseSalary) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.socialCompany')">{{ formatMoney(rate.socialCompany) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.socialPersonal')">{{ formatMoney(rate.socialPersonal) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.fundCompany')">{{ formatMoney(rate.fundCompany) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.fundPersonal')">{{ formatMoney(rate.fundPersonal) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.takeHome')">{{ formatMoney(rate.takeHome) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.totalCost')">{{ formatMoney(rate.totalCost) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.billableTarget')">{{ formatPct(rate.billableTarget) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.effectiveDate')">{{ rate.effectiveDate || '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="t('resource.jobLevel.rate.fields.expireDate')" :span="2">{{ rate.expireDate || t('resource.jobLevel.rate.fields.longTerm') }}</el-descriptions-item>
+            <el-descriptions-item v-if="rate.description" :label="t('resource.jobLevel.rate.fields.description')" :span="3">{{ rate.description }}</el-descriptions-item>
           </el-descriptions>
         </el-card>
 
         <!-- 历史版本 -->
         <el-card shadow="never" class="version-card" style="margin-top: 16px">
           <template #header>
-            <span>历史版本</span>
+            <span>{{ t('resource.jobLevel.version.title') }}</span>
           </template>
           <vxe-table :data="versions" border>
             <vxe-column type="seq" title="#" width="50" />
-            <vxe-column field="version" title="版本" width="80" align="center" />
-            <vxe-column field="externalDaily" title="对外 (元/天)" width="140" />
-            <vxe-column field="internalDaily" title="对内 (元/天)" width="140" />
-            <vxe-column field="baseSalary" title="基本工资" width="120" />
-            <vxe-column field="totalCost" title="月综合成本" width="120" />
-            <vxe-column field="effectiveDate" title="生效日期" width="120" />
-            <vxe-column field="expireDate" title="失效日期" width="120" />
-            <vxe-column field="description" title="备注" min-width="200" />
+            <vxe-column field="version" :title="t('resource.jobLevel.version.columns.version')" width="80" align="center" />
+            <vxe-column field="externalDaily" :title="t('resource.jobLevel.version.columns.externalDaily')" width="140" />
+            <vxe-column field="internalDaily" :title="t('resource.jobLevel.version.columns.internalDaily')" width="140" />
+            <vxe-column field="baseSalary" :title="t('resource.jobLevel.version.columns.baseSalary')" width="120" />
+            <vxe-column field="totalCost" :title="t('resource.jobLevel.version.columns.totalCost')" width="120" />
+            <vxe-column field="effectiveDate" :title="t('resource.jobLevel.version.columns.effectiveDate')" width="120" />
+            <vxe-column field="expireDate" :title="t('resource.jobLevel.version.columns.expireDate')" width="120" />
+            <vxe-column field="description" :title="t('resource.jobLevel.version.columns.description')" min-width="200" />
           </vxe-table>
         </el-card>
       </el-col>
