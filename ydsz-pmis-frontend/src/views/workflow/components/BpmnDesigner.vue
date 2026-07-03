@@ -4,11 +4,15 @@
  * @file BPMN 2.0 专业流程设计器（基于 bpmn.js）
  * @module components/BpmnDesigner
  * @description P0-01: 引入 bpmn.js 替换自绘 SVG，对标炎黄盈动/奥哲 BPMN 建模工具。
+ *   P1-02: 新增自定义属性面板（Vue 组件式），支持节点名称/审批人/会签/条件表达式等编辑。
  *   支持拖拽式 BPMN 2.0 建模、属性编辑、XML 导入导出、模板加载。
  */
-import { ref, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
+import { ArrowDown } from '@element-plus/icons-vue'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
+import type Modeler from 'bpmn-js/lib/Modeler'
+import type { Element as BpmnElement } from 'bpmn-js/lib/model/Types'
 import 'bpmn-js/dist/assets/diagram-js.css'
 import 'bpmn-js/dist/assets/bpmn-js.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
@@ -46,6 +50,112 @@ const deployForm = ref({
   category: props.category || 'GENERAL',
   formPath: '',
 })
+
+// ==================== 属性面板 ====================
+const selectedElement = ref<BpmnElement | null>(null)
+const panelData = reactive({
+  elementType: '',      // bpmn type (e.g. bpmn:UserTask)
+  elementId: '',        // BPMN id
+  elementName: '',      // 显示名称
+  assignee: '',         // 审批人（flowable:assignee）
+  assigneeType: '',     // 审批人类型（user/role/dept/initiator/leader/superior）
+  performType: '',      // 会签类型（none/sequential/parallel/vote）
+  formKey: '',          // 表单 key
+  dueDate: '',          // 超期时间
+  priority: 0,          // 优先级
+  conditionExpression: '', // 条件表达式（sequenceFlow）
+  documentation: '',    // 节点说明
+})
+
+// 节点类型中文映射
+const elementTypeLabel = (type: string): string => {
+  const map: Record<string, string> = {
+    'bpmn:StartEvent': '开始事件',
+    'bpmn:EndEvent': '结束事件',
+    'bpmn:UserTask': '审批节点',
+    'bpmn:ServiceTask': '服务节点',
+    'bpmn:ScriptTask': '脚本节点',
+    'bpmn:ExclusiveGateway': '排他网关',
+    'bpmn:ParallelGateway': '并行网关',
+    'bpmn:InclusiveGateway': '包容网关',
+    'bpmn:SequenceFlow': '连线',
+    'bpmn:Process': '流程',
+  }
+  return map[type] || type
+}
+
+// 是否显示审批人配置（仅 UserTask）
+const isUserTask = (): boolean => {
+  return selectedElement.value?.type === 'bpmn:UserTask'
+}
+
+// 是否显示条件表达式（仅 SequenceFlow）
+const isSequenceFlow = (): boolean => {
+  return selectedElement.value?.type === 'bpmn:SequenceFlow'
+}
+
+// 是否显示通用属性
+const hasGeneralProps = (): boolean => {
+  return selectedElement.value != null && selectedElement.value.type !== 'bpmn:Process'
+}
+
+// 读取 BPMN 元素属性到面板
+function readElementProperties(element: BpmnElement) {
+  const bo = element.businessObject
+  panelData.elementType = element.type || ''
+  panelData.elementId = bo.id || ''
+  panelData.elementName = bo.name || ''
+  panelData.assignee = bo.get?.('flowable:assignee') || ''
+  panelData.assigneeType = bo.get?.('flowable:assigneeType') || ''
+  panelData.performType = bo.get?.('flowable:performType') || ''
+  panelData.formKey = bo.formKey || ''
+  panelData.dueDate = bo.get?.('flowable:dueDate') || ''
+  panelData.priority = bo.get?.('flowable:priority') || 0
+  panelData.conditionExpression = ''
+  if (element.type === 'bpmn:SequenceFlow' && bo.conditionExpression) {
+    panelData.conditionExpression = bo.conditionExpression.body || ''
+  }
+  // 文档
+  panelData.documentation = ''
+  if (bo.documentation && bo.documentation.length > 0) {
+    panelData.documentation = bo.documentation[0].text || ''
+  }
+}
+
+// 更新 BPMN 元素属性
+function updateElementProperty(propertyName: string, value: string | number) {
+  if (!selectedElement.value || !modeler.value) return
+  const element = selectedElement.value
+  const modeling = modeler.value.get('modeling')
+  const bpmnFactory = modeler.value.get('bpmnFactory')
+
+  if (propertyName === 'elementName') {
+    modeling.updateProperties(element, { name: value })
+  } else if (propertyName === 'elementId') {
+    modeling.updateProperties(element, { id: value })
+  } else if (propertyName === 'conditionExpression') {
+    // 条件表达式需要创建 formalExpression
+    const conditionExpr = bpmnFactory.create('bpmn:FormalExpression', {
+      body: value as string,
+    })
+    modeling.updateProperties(element, { conditionExpression: conditionExpr })
+  } else if (propertyName === 'formKey') {
+    modeling.updateProperties(element, { formKey: value })
+  } else if (propertyName === 'documentation') {
+    const doc = bpmnFactory.create('bpmn:Documentation', { text: value as string })
+    modeling.updateProperties(element, { documentation: [doc] })
+  } else {
+    // flowable: 命名空间扩展属性
+    const attrs: Record<string, unknown> = {}
+    attrs[`flowable:${propertyName}`] = value
+    modeling.updateProperties(element, attrs)
+  }
+}
+
+// 属性变更处理
+function onPropertyChange(propertyName: string, value: string | number) {
+  updateElementProperty(propertyName, value)
+}
 
 // ==================== Lifecycle ====================
 onMounted(async () => {
@@ -96,6 +206,25 @@ function initModeler() {
         currentSvg.value = svgResult.svg || ''
       } catch {
         // ignore
+      }
+    })
+
+    // P1-02: 监听元素选中变化 → 更新属性面板
+    m.on('selection.changed', (event: { newSelection: BpmnElement[] }) => {
+      const selection = event.newSelection
+      if (selection && selection.length > 0) {
+        selectedElement.value = selection[0]
+        readElementProperties(selection[0])
+      } else {
+        selectedElement.value = null
+      }
+    })
+
+    // 监听元素直接点击（不通过 selection）
+    m.on('element.click', (event: { element: BpmnElement }) => {
+      if (event.element && event.element.type !== 'bpmn:Process') {
+        selectedElement.value = event.element
+        readElementProperties(event.element)
       }
     })
   } catch (e) {
@@ -353,10 +482,134 @@ function applyTemplate(tpl: (typeof templates)[0]) {
       </div>
     </div>
 
-    <!-- 画布 -->
-    <div class="bpmn-canvas" ref="containerRef" v-loading="loading">
-      <div v-if="loading" class="bpmn-loading-overlay">
-        <span>正在加载 BPMN 设计器...</span>
+    <!-- 画布 + 属性面板 -->
+    <div class="bpmn-body">
+      <div class="bpmn-canvas" ref="containerRef" v-loading="loading">
+        <div v-if="loading" class="bpmn-loading-overlay">
+          <span>正在加载 BPMN 设计器...</span>
+        </div>
+      </div>
+
+      <!-- P1-02: 自定义属性面板 -->
+      <div class="bpmn-property-panel">
+        <div v-if="!selectedElement" class="panel-empty">
+          <el-empty description="选择一个元素查看属性" :image-size="60" />
+        </div>
+
+        <template v-else>
+          <div class="panel-header">
+            <span class="panel-title">{{ elementTypeLabel(panelData.elementType) }}</span>
+            <el-tag size="small" type="info">{{ panelData.elementType }}</el-tag>
+          </div>
+
+          <el-form label-width="80px" size="small" class="panel-form">
+            <!-- 通用属性 -->
+            <template v-if="hasGeneralProps()">
+              <el-divider content-position="left">基本信息</el-divider>
+              <el-form-item label="节点ID">
+                <el-input
+                  v-model="panelData.elementId"
+                  @change="(v: string) => onPropertyChange('elementId', v)"
+                />
+              </el-form-item>
+              <el-form-item label="节点名称">
+                <el-input
+                  v-model="panelData.elementName"
+                  @change="(v: string) => onPropertyChange('elementName', v)"
+                />
+              </el-form-item>
+            </template>
+
+            <!-- 审批节点属性 -->
+            <template v-if="isUserTask()">
+              <el-divider content-position="left">审批配置</el-divider>
+              <el-form-item label="审批人">
+                <el-input
+                  v-model="panelData.assignee"
+                  placeholder="${leader} 或用户ID"
+                  @change="(v: string) => onPropertyChange('assignee', v)"
+                />
+              </el-form-item>
+              <el-form-item label="审批人类型">
+                <el-select
+                  v-model="panelData.assigneeType"
+                  placeholder="选择审批人类型"
+                  @change="(v: string) => onPropertyChange('assigneeType', v)"
+                >
+                  <el-option label="指定用户" value="user" />
+                  <el-option label="指定角色" value="role" />
+                  <el-option label="指定部门" value="dept" />
+                  <el-option label="发起人自己" value="initiator" />
+                  <el-option label="直属上级" value="leader" />
+                  <el-option label="上级的上级" value="superior" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="会签类型">
+                <el-select
+                  v-model="panelData.performType"
+                  placeholder="选择会签类型"
+                  @change="(v: string) => onPropertyChange('performType', v)"
+                >
+                  <el-option label="单人审批" value="" />
+                  <el-option label="依次审批" value="sequential" />
+                  <el-option label="并行审批" value="parallel" />
+                  <el-option label="投票审批" value="vote" />
+                </el-select>
+              </el-form-item>
+              <el-form-item label="表单Key">
+                <el-input
+                  v-model="panelData.formKey"
+                  placeholder="表单标识"
+                  @change="(v: string) => onPropertyChange('formKey', v)"
+                />
+              </el-form-item>
+              <el-form-item label="超期时间">
+                <el-input
+                  v-model="panelData.dueDate"
+                  placeholder="如 PT48H（48小时）"
+                  @change="(v: string) => onPropertyChange('dueDate', v)"
+                />
+              </el-form-item>
+              <el-form-item label="优先级">
+                <el-input-number
+                  v-model="panelData.priority"
+                  :min="0"
+                  :max="100"
+                  @change="(v: number) => onPropertyChange('priority', v)"
+                />
+              </el-form-item>
+            </template>
+
+            <!-- 连线条件表达式 -->
+            <template v-if="isSequenceFlow()">
+              <el-divider content-position="left">条件路由</el-divider>
+              <el-form-item label="条件表达式">
+                <el-input
+                  v-model="panelData.conditionExpression"
+                  type="textarea"
+                  :rows="3"
+                  placeholder='${amount > 5000}'
+                  @change="(v: string) => onPropertyChange('conditionExpression', v)"
+                />
+                <div class="form-tip">使用 ${expr} 语法，支持 SpEL 表达式</div>
+              </el-form-item>
+            </template>
+
+            <!-- 节点说明 -->
+            <template v-if="hasGeneralProps()">
+              <el-divider content-position="left">其他</el-divider>
+              <el-form-item label="节点说明">
+                <el-input
+                  v-model="panelData.documentation"
+                  type="textarea"
+                  :rows="2"
+                  placeholder="节点备注说明"
+                  @change="(v: string) => onPropertyChange('documentation', v)"
+                />
+              </el-form-item>
+            </template>
+          </el-form>
+        </template>
       </div>
     </div>
 
@@ -427,11 +680,70 @@ function applyTemplate(tpl: (typeof templates)[0]) {
   align-items: center;
 }
 
+.bpmn-body {
+  flex: 1;
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .bpmn-canvas {
   flex: 1;
   min-height: 500px;
   position: relative;
   overflow: hidden;
+}
+
+.bpmn-property-panel {
+  width: 320px;
+  flex-shrink: 0;
+  border-left: 1px solid var(--el-border-color-light);
+  background: #fff;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.panel-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--el-border-color-lighter);
+  background: #fafbfc;
+}
+
+.panel-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.panel-form {
+  padding: 8px 14px 16px;
+}
+
+.panel-form :deep(.el-divider) {
+  margin: 12px 0;
+}
+
+.panel-form :deep(.el-divider__text) {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.form-tip {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+  line-height: 1.4;
 }
 
 .bpmn-canvas :deep(.bjs-powered-by) {

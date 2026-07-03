@@ -302,12 +302,16 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
                 return false;
             }
         }
-        // P0-4: 检查是否有已完成的历史任务 — 有则说明审批人已处理过，流程已推进，不可撤回
+        // P0-4: 检查是否有已完成的历史任务（排除 START 节点）— 有则说明审批人已处理过，流程已推进，不可撤回
         List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instance.getId());
-        if (hisTasks != null && !hisTasks.isEmpty()) {
-            log.debug("[EmbeddedApproval] 实例已有 {} 条历史任务，不可撤回 instanceId={}",
-                    hisTasks.size(), instance.getId());
-            return false;
+        if (hisTasks != null) {
+            // 排除 START(0) 节点归档记录（发起人提交产生的），只检查是否有真实审批人处理过
+            boolean hasApprovalHistory = hisTasks.stream()
+                    .anyMatch(h -> h.getNodeType() != null && h.getNodeType() != 0);
+            if (hasApprovalHistory) {
+                log.debug("[EmbeddedApproval] 实例已有审批历史任务，不可撤回 instanceId={}", instance.getId());
+                return false;
+            }
         }
         return true;
     }

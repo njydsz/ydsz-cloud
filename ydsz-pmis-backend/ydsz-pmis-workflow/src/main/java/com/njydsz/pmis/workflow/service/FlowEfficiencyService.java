@@ -63,4 +63,50 @@ public interface FlowEfficiencyService {
      * @return 趋势列表，每行含 timeLabel / count / avgDurationMs
      */
     List<Map<String, Object>> approvalTrend(Long tenantId, String interval, String startTime, String endTime);
+
+    /**
+     * 综合异常检测 — 检测卡单任务、高驳回率节点、长期运行实例
+     *
+     * <p>聚合三类异常检测结果，按优先级返回：
+     * <ul>
+     *   <li><b>STUCK</b>：任务在同一节点停留超过阈值时间（默认 24 小时）</li>
+     *   <li><b>HIGH_REJECTION</b>：节点在最近 100 个任务中驳回率超过 50%</li>
+     *   <li><b>LONG_RUNNING</b>：流程实例运行时间超过阈值天数（默认 7 天）</li>
+     * </ul>
+     *
+     * @param tenantId        租户 ID
+     * @param limit           返回条数上限
+     * @param stuckHours      卡单阈值（小时），默认 24
+     * @param longRunningDays 长期运行阈值（天），默认 7
+     * @return 异常记录列表，每行含 type / 描述字段
+     */
+    List<Map<String, Object>> detectAnomalies(Long tenantId, int limit, int stuckHours, int longRunningDays);
+
+    /**
+     * 检测卡单任务 — 同一节点停留超过阈值时间的未完成任务
+     *
+     * @param tenantId   租户 ID
+     * @param limit      返回条数上限
+     * @param stuckHours 卡单阈值（小时）
+     * @return 卡单任务列表，每行含 type=STUCK / taskId / nodeCode / nodeName / stuckHours / createdAt
+     */
+    List<Map<String, Object>> detectStuckTasks(Long tenantId, int limit, int stuckHours);
+
+    /**
+     * 检测高驳回率节点 — 最近 100 个任务中驳回率超过 50% 的节点
+     *
+     * @param tenantId 租户 ID
+     * @return 高驳回率节点列表，每行含 type=HIGH_REJECTION / nodeCode / nodeName / totalCount / rejectedCount / rejectionRate
+     */
+    List<Map<String, Object>> detectHighRejectionNodes(Long tenantId);
+
+    /**
+     * 检测长期运行实例 — 运行时间超过阈值天数的实例
+     *
+     * @param tenantId        租户 ID
+     * @param limit           返回条数上限
+     * @param longRunningDays 长期运行阈值（天）
+     * @return 长期运行实例列表，每行含 type=LONG_RUNNING / instanceId / flowCode / flowName / startAt / runningDays
+     */
+    List<Map<String, Object>> detectLongRunningInstances(Long tenantId, int limit, int longRunningDays);
 }

@@ -44,6 +44,7 @@ import type {
   FlowVersionDTO,
   VersionDiffDTO,
   SimulateResultDTO,
+  TaskCommentDTO,
 } from './types'
 
 /** 引擎信息 */
@@ -769,6 +770,46 @@ export function simulateFlow(flowCode: string, variables: Record<string, unknown
   return http.post<ApiResponse<SimulateResultDTO>>(
     '/workflow/engine/definition/simulate',
     { flowCode, variables },
+  )
+}
+
+// ==================== P2-3: 任务评论 ====================
+
+/** 新增任务评论 */
+export function addTaskComment(data: {
+  instanceId: number
+  taskId?: number
+  nodeCode?: string
+  userId?: number
+  userName?: string
+  content: string
+  type?: string
+  parentId?: number
+}) {
+  return http.post<ApiResponse<TaskCommentDTO>>(
+    '/workflow/engine/task-comment/add',
+    data,
+  )
+}
+
+/** 按任务查询评论 */
+export function listTaskComments(taskId: number) {
+  return http.get<ApiResponse<TaskCommentDTO[]>>(
+    `/workflow/engine/task-comment/list/${taskId}`,
+  )
+}
+
+/** 按实例查询评论 */
+export function listInstanceComments(instanceId: number) {
+  return http.get<ApiResponse<TaskCommentDTO[]>>(
+    `/workflow/engine/task-comment/list-by-instance/${instanceId}`,
+  )
+}
+
+/** 删除评论 */
+export function deleteTaskComment(commentId: number) {
+  return http.delete<ApiResponse<null>>(
+    `/workflow/engine/task-comment/${commentId}`,
   )
 }
 

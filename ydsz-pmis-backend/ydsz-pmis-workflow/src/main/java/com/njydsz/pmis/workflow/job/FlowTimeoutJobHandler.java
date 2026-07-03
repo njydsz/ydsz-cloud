@@ -31,9 +31,9 @@ import java.util.Map;
  * <p>定时扫描 pmis_flow_task 中已超期（due_at &lt; now）且状态为 PENDING/CLAIMED 的待办任务，
  * 根据节点 sla_config 配置的 action 执行自动化处理：
  * <ul>
- *   <li>REMIND —— 发送催办通知（占位实现，记录审计日志）</li>
+ *   <li>REMIND —— 发送催办通知（站内信+邮件，调用 notificationService.notifySlaTimeout）</li>
  *   <li>ESCALATE —— 升级办理人，将任务转交给 sla_config.adminUserId</li>
- *   <li>AUTO_PASS —— 自动通过任务并尝试推进（占位记录，真实推进需联动 FlowAdvancer）</li>
+ *   <li>AUTO_PASS —— 自动通过任务并联动 FlowAdvancer 推进流程（taskService.pass）</li>
  *   <li>AUTO_REJECT —— 自动驳回任务并终止流程实例</li>
  * </ul>
  *

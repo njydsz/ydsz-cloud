@@ -28,7 +28,7 @@ import java.math.BigDecimal;
 public class ThresholdProviderBridge implements ThresholdProvider {
 
     /** common 模块阈值提供器（委托目标） */
-    @Qualifier("commonThresholdProvider")
+    @Qualifier("thresholdProvider")
     private final com.njydsz.pmis.common.config.ThresholdProvider delegate;
 
     @Override

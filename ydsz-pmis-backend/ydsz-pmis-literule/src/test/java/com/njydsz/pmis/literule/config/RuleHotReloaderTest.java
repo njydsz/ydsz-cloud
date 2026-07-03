@@ -1,13 +1,13 @@
 package com.njydsz.pmis.literule.config;
 
+import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
-import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.core.DefaultRuleEngine;
 import com.njydsz.pmis.literule.event.RuleConfigRefreshEvent;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
-import com.njydsz.pmis.literule.impl.ExpressionRule;
+import com.njydsz.pmis.literule.impl.StaticRule;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -19,8 +19,6 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 /**
@@ -107,8 +105,8 @@ class RuleHotReloaderTest {
         @DisplayName("fullReload 保留 StaticRule 不被注销")
         void shouldPreserveStaticRules() {
             // 手动注册一条 StaticRule
-            com.njydsz.pmis.literule.impl.StaticRule staticRule =
-                    new com.njydsz.pmis.literule.impl.StaticRule("STATIC", "静态规则", "TEST", ctx ->
+            StaticRule staticRule =
+                    new StaticRule("STATIC", "静态规则", "TEST", ctx ->
                             RuleResult.notTriggered("STATIC"));
             engine.register(staticRule);
 
@@ -290,7 +288,7 @@ class RuleHotReloaderTest {
 
             Map<String, Object> facts = new HashMap<>();
             facts.put("amount", 200);
-            List<RuleResult> results = engine.evaluate(com.njydsz.pmis.literule.api.RuleContext.of(facts));
+            List<RuleResult> results = engine.evaluate(RuleContext.of(facts));
 
             assertEquals(1, results.size());
             assertTrue(results.get(0).isTriggered());

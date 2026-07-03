@@ -1,14 +1,21 @@
 package com.njydsz.pmis.workflow.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.njydsz.pmis.workflow.entity.FlowDelegateLogDO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowEfficiencyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -31,7 +38,7 @@ import java.util.stream.Collectors;
  * <ul>
  *   <li>totalCount — 审批单量</li>
  *   <li>avgDurationMs — 平均耗时（毫秒）</li>
- *   <li>proxyRate — 代批率（简化占位：taskStatus=DELEGATED 的占比）</li>
+ *   <li>proxyRate — 代批率（委派代理人完成 PASS/REJECT 的任务占比，数据来源 pmis_flow_delegate_log）</li>
  *   <li>overdueRate — 超期率（taskStatus=TIMEOUT 的占比）</li>
  * </ul>
  *
@@ -44,6 +51,12 @@ import java.util.stream.Collectors;
 public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
     private final FlowHisTaskMapper hisTaskMapper;
+    /** P0-2: 委派代理日志 Mapper（用于统计真实代批率） */
+    private final FlowDelegateLogMapper delegateLogMapper;
+    /** 待办任务 Mapper（用于卡单检测） */
+    private final FlowTaskMapper taskMapper;
+    /** 流程实例 Mapper（用于长期运行实例检测） */
+    private final FlowInstanceMapper instanceMapper;
 
     /** 日期时间格式 */
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -52,6 +65,13 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
 
     /** 查询上限（防止全表加载 OOM） */
     private static final int MAX_QUERY_LIMIT = 10000;
+
+    /** 高驳回率检测：最近 N 个任务 */
+    private static final int HIGH_REJECTION_SAMPLE_SIZE = 100;
+    /** 高驳回率检测：驳回率阈值（50%） */
+    private static final double HIGH_REJECTION_THRESHOLD = 0.5;
+    /** 高驳回率检测：最少任务数（低于此数不报告，避免样本过小误报） */
+    private static final int HIGH_REJECTION_MIN_SAMPLE = 5;
 
     @Override
     public Map<String, Object> efficiencyStats(Long tenantId, String startTime, String endTime) {
@@ -67,10 +87,8 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                     .average()
                     .orElse(0.0);
 
-            // 代批率（简化占位：委派任务占比）
-            long proxyCount = records.stream()
-                    .filter(r -> "DELEGATED".equals(r.getTaskStatus()))
-                    .count();
+            // P0-2 修复：代批率 = 委派代理人完成 PASS/REJECT 的操作数 / 总任务数（数据来源 delegate_log）
+            long proxyCount = countDelegateActions(tenantId, startTime, endTime);
             double proxyRate = totalCount > 0 ? (double) proxyCount / totalCount : 0.0;
 
             // 超期率（taskStatus=TIMEOUT 的占比）
@@ -96,6 +114,32 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
             result.put("overdueRate", 0.0);
         }
         return result;
+    }
+
+    /**
+     * P0-2: 统计指定时间段内的代批操作数（委派代理人完成 PASS/REJECT 的审批数）
+     *
+     * <p>数据来源为 {@code pmis_flow_delegate_log}，仅统计 action 为 PASS/REJECT 的记录，
+     * 即代理人真正代替原办理人完成审批的操作数。
+     */
+    private long countDelegateActions(Long tenantId, String startTime, String endTime) {
+        try {
+            LambdaQueryWrapper<FlowDelegateLogDO> wrapper = new LambdaQueryWrapper<>();
+            if (tenantId != null) {
+                wrapper.eq(FlowDelegateLogDO::getTenantId, tenantId);
+            }
+            wrapper.in(FlowDelegateLogDO::getAction, "PASS", "REJECT");
+            if (StringUtils.hasText(startTime)) {
+                wrapper.ge(FlowDelegateLogDO::getCreatedAt, LocalDateTime.parse(startTime, DT_FMT));
+            }
+            if (StringUtils.hasText(endTime)) {
+                wrapper.le(FlowDelegateLogDO::getCreatedAt, LocalDateTime.parse(endTime, DT_FMT));
+            }
+            return delegateLogMapper.selectCount(wrapper);
+        } catch (Exception e) {
+            log.warn("[FlowEfficiency] 代批操作统计异常: {}", e.getMessage());
+            return 0;
+        }
     }
 
     @Override
@@ -268,5 +312,221 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                 return null;
             }
         }
+    }
+
+    // ============================== 异常检测 ==============================
+
+    @Override
+    public List<Map<String, Object>> detectAnomalies(Long tenantId, int limit,
+                                                      int stuckHours, int longRunningDays) {
+        int effectiveLimit = limit > 0 ? limit : 20;
+        int effectiveStuckHours = stuckHours > 0 ? stuckHours : 24;
+        int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : 7;
+
+        List<Map<String, Object>> anomalies = new ArrayList<>();
+
+        // 1. 卡单任务（优先级最高）
+        try {
+            anomalies.addAll(detectStuckTasks(tenantId, effectiveLimit, effectiveStuckHours));
+        } catch (Exception e) {
+            log.warn("[FlowEfficiency] 卡单检测异常: tenantId={} err={}", tenantId, e.getMessage());
+        }
+
+        // 2. 高驳回率节点
+        if (anomalies.size() < effectiveLimit) {
+            try {
+                anomalies.addAll(detectHighRejectionNodes(tenantId));
+            } catch (Exception e) {
+                log.warn("[FlowEfficiency] 高驳回率检测异常: tenantId={} err={}", tenantId, e.getMessage());
+            }
+        }
+
+        // 3. 长期运行实例
+        if (anomalies.size() < effectiveLimit) {
+            try {
+                int remaining = effectiveLimit - anomalies.size();
+                anomalies.addAll(detectLongRunningInstances(tenantId, remaining, effectiveLongRunningDays));
+            } catch (Exception e) {
+                log.warn("[FlowEfficiency] 长期运行实例检测异常: tenantId={} err={}", tenantId, e.getMessage());
+            }
+        }
+
+        // 截断到 limit
+        if (anomalies.size() > effectiveLimit) {
+            anomalies = new ArrayList<>(anomalies.subList(0, effectiveLimit));
+        }
+
+        if (!anomalies.isEmpty()) {
+            log.info("[FlowEfficiency] 异常检测完成: tenantId={} 共检测到 {} 项异常",
+                    tenantId, anomalies.size());
+        }
+
+        return anomalies;
+    }
+
+    @Override
+    public List<Map<String, Object>> detectStuckTasks(Long tenantId, int limit, int stuckHours) {
+        int effectiveLimit = limit > 0 ? limit : 20;
+        int effectiveStuckHours = stuckHours > 0 ? stuckHours : 24;
+
+        LocalDateTime threshold = LocalDateTime.now().minusHours(effectiveStuckHours);
+
+        // 查询未完成且创建时间超过阈值的任务
+        LambdaQueryWrapper<FlowTaskDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(tenantId != null, FlowTaskDO::getTenantId, tenantId)
+                .in(FlowTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+                .lt(FlowTaskDO::getCreatedAt, threshold)
+                .orderByAsc(FlowTaskDO::getCreatedAt)
+                .last("LIMIT " + effectiveLimit);
+
+        List<FlowTaskDO> stuckTasks = taskMapper.selectList(wrapper);
+        if (stuckTasks == null || stuckTasks.isEmpty()) {
+            return List.of();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (FlowTaskDO task : stuckTasks) {
+            long hours = task.getCreatedAt() != null
+                    ? Duration.between(task.getCreatedAt(), now).toHours()
+                    : effectiveStuckHours;
+
+            Map<String, Object> anomaly = new LinkedHashMap<>();
+            anomaly.put("type", "STUCK");
+            anomaly.put("taskId", task.getId());
+            anomaly.put("instanceId", task.getInstanceId());
+            anomaly.put("nodeCode", task.getNodeCode());
+            anomaly.put("nodeName", task.getNodeName());
+            anomaly.put("assigneeId", task.getAssigneeId());
+            anomaly.put("assigneeName", task.getAssigneeName());
+            anomaly.put("stuckHours", hours);
+            anomaly.put("createdAt", task.getCreatedAt() != null ? task.getCreatedAt().toString() : null);
+            anomaly.put("taskStatus", task.getTaskStatus());
+            anomaly.put("description", "任务卡单超过 " + hours + " 小时: " + task.getNodeName()
+                    + " (创建时间 " + task.getCreatedAt() + ")");
+            result.add(anomaly);
+        }
+
+        log.info("[FlowEfficiency] 卡单检测: tenantId={} threshold={}h 发现 {} 个卡单任务",
+                tenantId, effectiveStuckHours, result.size());
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> detectHighRejectionNodes(Long tenantId) {
+        // 查询最近 100 个历史任务（按完成时间倒序）
+        LambdaQueryWrapper<FlowHisTaskDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
+                .orderByDesc(FlowHisTaskDO::getFinishAt)
+                .last("LIMIT " + HIGH_REJECTION_SAMPLE_SIZE);
+
+        List<FlowHisTaskDO> recentTasks = hisTaskMapper.selectList(wrapper);
+        if (recentTasks == null || recentTasks.isEmpty()) {
+            return List.of();
+        }
+
+        // 按节点编码分组统计
+        Map<String, List<FlowHisTaskDO>> byNode = recentTasks.stream()
+                .filter(t -> t.getNodeCode() != null)
+                .collect(Collectors.groupingBy(
+                        FlowHisTaskDO::getNodeCode,
+                        LinkedHashMap::new,
+                        Collectors.toList()
+                ));
+
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Map.Entry<String, List<FlowHisTaskDO>> entry : byNode.entrySet()) {
+            List<FlowHisTaskDO> tasks = entry.getValue();
+            int total = tasks.size();
+            // 样本过少不报告，避免误报
+            if (total < HIGH_REJECTION_MIN_SAMPLE) {
+                continue;
+            }
+
+            long rejected = tasks.stream()
+                    .filter(t -> "REJECTED".equals(t.getTaskStatus()))
+                    .count();
+            double rejectionRate = (double) rejected / total;
+
+            if (rejectionRate > HIGH_REJECTION_THRESHOLD) {
+                // 取节点名称（从任务记录中取最近一条的名称）
+                String nodeName = tasks.stream()
+                        .filter(t -> t.getNodeName() != null)
+                        .map(FlowHisTaskDO::getNodeName)
+                        .findFirst()
+                        .orElse(entry.getKey());
+
+                Map<String, Object> anomaly = new LinkedHashMap<>();
+                anomaly.put("type", "HIGH_REJECTION");
+                anomaly.put("nodeCode", entry.getKey());
+                anomaly.put("nodeName", nodeName);
+                anomaly.put("totalCount", total);
+                anomaly.put("rejectedCount", rejected);
+                anomaly.put("rejectionRate", Math.round(rejectionRate * 10000) / 10000.0);
+                anomaly.put("description", "节点驳回率过高: " + nodeName
+                        + " (最近 " + total + " 个任务中 " + rejected + " 个被驳回，驳回率 "
+                        + Math.round(rejectionRate * 100) + "%)");
+                result.add(anomaly);
+            }
+        }
+
+        // 按驳回率降序排序
+        result.sort(Comparator.comparingDouble(
+                (Map<String, Object> a) -> ((Number) a.get("rejectionRate")).doubleValue()
+        ).reversed());
+
+        log.info("[FlowEfficiency] 高驳回率检测: tenantId={} sampleSize={} 发现 {} 个高驳回率节点",
+                tenantId, recentTasks.size(), result.size());
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> detectLongRunningInstances(Long tenantId, int limit, int longRunningDays) {
+        int effectiveLimit = limit > 0 ? limit : 20;
+        int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : 7;
+
+        LocalDateTime threshold = LocalDateTime.now().minusDays(effectiveLongRunningDays);
+
+        // 查询运行中且启动时间超过阈值的实例
+        LambdaQueryWrapper<FlowInstanceDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(tenantId != null, FlowInstanceDO::getTenantId, tenantId)
+                .eq(FlowInstanceDO::getFlowStatus, "RUNNING")
+                .lt(FlowInstanceDO::getStartAt, threshold)
+                .orderByAsc(FlowInstanceDO::getStartAt)
+                .last("LIMIT " + effectiveLimit);
+
+        List<FlowInstanceDO> longRunningInstances = instanceMapper.selectList(wrapper);
+        if (longRunningInstances == null || longRunningInstances.isEmpty()) {
+            return List.of();
+        }
+
+        LocalDateTime now = LocalDateTime.now();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (FlowInstanceDO instance : longRunningInstances) {
+            long days = instance.getStartAt() != null
+                    ? Duration.between(instance.getStartAt(), now).toDays()
+                    : effectiveLongRunningDays;
+
+            Map<String, Object> anomaly = new LinkedHashMap<>();
+            anomaly.put("type", "LONG_RUNNING");
+            anomaly.put("instanceId", instance.getId());
+            anomaly.put("flowCode", instance.getFlowCode());
+            anomaly.put("flowName", instance.getFlowName());
+            anomaly.put("businessType", instance.getBusinessType());
+            anomaly.put("businessId", instance.getBusinessId());
+            anomaly.put("initiatorId", instance.getInitiatorId());
+            anomaly.put("initiatorName", instance.getInitiatorName());
+            anomaly.put("currentNodeCode", instance.getCurrentNodeCode());
+            anomaly.put("currentNodeName", instance.getCurrentNodeName());
+            anomaly.put("startAt", instance.getStartAt() != null ? instance.getStartAt().toString() : null);
+            anomaly.put("runningDays", days);
+            anomaly.put("description", "流程运行时间过长: " + instance.getFlowName()
+                    + " (已运行 " + days + " 天，启动时间 " + instance.getStartAt() + ")");
+            result.add(anomaly);
+        }
+
+        log.info("[FlowEfficiency] 长期运行实例检测: tenantId={} threshold={}d 发现 {} 个长期运行实例",
+                tenantId, effectiveLongRunningDays, result.size());
+        return result;
     }
 }

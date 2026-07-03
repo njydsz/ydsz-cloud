@@ -4,6 +4,7 @@ import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.core.DefaultRuleEngine;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.spi.RuleConfigBroadcaster;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleVersionRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -92,12 +93,19 @@ public class LiteRuleAutoConfiguration {
                                               ExpressionEvaluator evaluator,
                                               RuleConfigProvider configProvider,
                                               org.springframework.beans.factory.ObjectProvider<RuleVersionRepository> versionRepoProvider,
+                                              org.springframework.beans.factory.ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
                                               ApplicationEventPublisher eventPublisher,
                                               LiteRuleProperties properties) {
         RuleAdminService service = new RuleAdminService(ruleEngine, evaluator, configProvider,
                 versionRepoProvider.getIfAvailable(), eventPublisher);
         service.setDryRunEnabled(properties.isDryRunEnabled());
-        log.info("[LiteRule] 规则管理服务已初始化（dryRun={}）", properties.isDryRunEnabled());
+        RuleConfigBroadcaster broadcaster = broadcasterProvider.getIfAvailable();
+        if (broadcaster != null) {
+            service.setBroadcaster(broadcaster);
+            log.info("[LiteRule] 分布式规则广播已启用");
+        }
+        log.info("[LiteRule] 规则管理服务已初始化（dryRun={}, broadcast={}）",
+                properties.isDryRunEnabled(), broadcaster != null);
         return service;
     }
 }

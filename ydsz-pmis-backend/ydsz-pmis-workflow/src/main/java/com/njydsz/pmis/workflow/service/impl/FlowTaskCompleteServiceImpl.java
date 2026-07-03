@@ -48,8 +48,11 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 待办任务 — 完成类 Service 实现
@@ -1486,7 +1489,8 @@ public class FlowTaskCompleteServiceImpl {
             }
             FlowDelegateLogDO log = new FlowDelegateLogDO();
             log.setTenantId(task.getTenantId());
-            log.setAuthId(0L); // 暂不绑定具体 authId（多匹配时无法确定）
+            // P0-3 修复：重新匹配授权规则以获取 authId（不再硬编码 0L）
+            log.setAuthId(resolveDelegateAuthId(task, ownerId));
             log.setInstanceId(task.getInstanceId());
             log.setTaskId(task.getId());
             log.setNodeCode(task.getNodeCode());
@@ -1502,6 +1506,30 @@ public class FlowTaskCompleteServiceImpl {
         } catch (Exception e) {
             FlowTaskCompleteServiceImpl.log.warn("[Flow] 委派代理日志写入失败: taskId={} err={}",
                     task.getId(), e.getMessage());
+        }
+    }
+
+    /**
+     * P0-3: 重新匹配授权规则以获取 authId
+     *
+     * <p>在 {@link #applyDelegateRedirect} 中 authId 仅打印日志未持久化，
+     * 此处通过 ownerId + flowCode + nodeCode 重新匹配授权规则以恢复 authId。
+     * 匹配失败（授权已过期/已撤回）时返回 0L，不影响日志写入。
+     */
+    private Long resolveDelegateAuthId(FlowTaskDO task, Long ownerId) {
+        try {
+            FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
+            if (instance == null) {
+                return 0L;
+            }
+            FlowDelegateAuthDO matched = delegateAuthService.matchAuth(
+                    instance.getTenantId(), ownerId,
+                    instance.getFlowCode(), task.getNodeCode());
+            return matched != null ? matched.getId() : 0L;
+        } catch (Exception e) {
+            FlowTaskCompleteServiceImpl.log.debug("[Flow] 委派 authId 解析失败: taskId={} err={}",
+                    task.getId(), e.getMessage());
+            return 0L;
         }
     }
 }

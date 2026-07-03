@@ -25,6 +25,9 @@ import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
+import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
+import com.njydsz.pmis.workflow.service.FlowCanaryService;
+import com.njydsz.pmis.workflow.service.FlowCcService;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowSubProcessService;
@@ -63,7 +66,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowInstanceMapper instanceMapper;
     private final FlowDefinitionService definitionService;
     /** P3-1: 灰度发布服务（启动流程时按 canary 配置切流） */
-    private final com.njydsz.pmis.workflow.service.FlowCanaryService canaryService;
+    private final FlowCanaryService canaryService;
     private final FlowAdvancer advancer;
     private final FlowTaskService taskService;
     private final FlowTaskMapper taskMapper;
@@ -81,9 +84,9 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     /** P1-3: 子流程服务（处理 callActivity 子流程启动） */
     private final FlowSubProcessService subProcessService;
     /** GAP-P1: 抄送服务（CC 节点处理） */
-    private final com.njydsz.pmis.workflow.service.FlowCcService ccService;
+    private final FlowCcService ccService;
     /** 流程自动触发服务（实例完成时检查是否需要自动发起下一流程） */
-    private final com.njydsz.pmis.workflow.service.FlowAutoTriggerService autoTriggerService;
+    private final FlowAutoTriggerService autoTriggerService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)

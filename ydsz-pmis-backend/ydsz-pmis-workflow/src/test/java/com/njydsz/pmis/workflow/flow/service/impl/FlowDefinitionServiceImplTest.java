@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.engine.BpmnXmlParser;
+import com.njydsz.pmis.workflow.engine.FlowGraphValidator;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowSkipDO;
@@ -48,6 +49,7 @@ class FlowDefinitionServiceImplTest {
     private FlowNodeMapper nodeMapper;
     private FlowSkipMapper skipMapper;
     private BpmnXmlParser bpmnXmlParser;
+    private FlowGraphValidator graphValidator;
     private FlowDefinitionServiceImpl service;
 
     @BeforeEach
@@ -56,7 +58,8 @@ class FlowDefinitionServiceImplTest {
         nodeMapper = mock(FlowNodeMapper.class);
         skipMapper = mock(FlowSkipMapper.class);
         bpmnXmlParser = new BpmnXmlParser();
-        service = new FlowDefinitionServiceImpl(definitionMapper, nodeMapper, skipMapper, bpmnXmlParser);
+        graphValidator = mock(FlowGraphValidator.class);
+        service = new FlowDefinitionServiceImpl(definitionMapper, nodeMapper, skipMapper, bpmnXmlParser, graphValidator);
     }
 
     @Test

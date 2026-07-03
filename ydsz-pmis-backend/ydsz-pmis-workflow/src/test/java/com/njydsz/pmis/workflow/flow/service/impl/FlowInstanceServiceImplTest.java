@@ -20,11 +20,11 @@ import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
+import com.njydsz.pmis.workflow.service.FlowCanaryService;
 import com.njydsz.pmis.workflow.service.FlowCcService;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.service.FlowSubProcessService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
-import com.njydsz.pmis.workflow.service.FlowCanaryService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -75,10 +75,10 @@ class FlowInstanceServiceImplTest {
     private FlowCcService ccService;
     private FlowMetrics flowMetrics;
     private FlowCanaryService canaryService;
-    private com.njydsz.pmis.workflow.mapper.FlowNodeMapper nodeMapper;
-    private com.njydsz.pmis.workflow.mapper.FlowSkipMapper skipMapper;
-    private com.njydsz.pmis.workflow.engine.FlowVariableStrategy variableStrategy;
-    private com.njydsz.pmis.workflow.service.FlowAutoTriggerService autoTriggerService;
+    private FlowNodeMapper nodeMapper;
+    private FlowSkipMapper skipMapper;
+    private FlowVariableStrategy variableStrategy;
+    private FlowAutoTriggerService autoTriggerService;
     private FlowInstanceServiceImpl service;
 
     @BeforeEach
@@ -104,7 +104,7 @@ class FlowInstanceServiceImplTest {
         skipMapper = mock(FlowSkipMapper.class);
         variableStrategy = mock(FlowVariableStrategy.class);
         // P3-2: 自动触发服务 mock
-        autoTriggerService = mock(com.njydsz.pmis.workflow.service.FlowAutoTriggerService.class);
+        autoTriggerService = mock(FlowAutoTriggerService.class);
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
                 canaryService, advancer, taskService, taskMapper,
                 nodeMapper, skipMapper, variableStrategy,

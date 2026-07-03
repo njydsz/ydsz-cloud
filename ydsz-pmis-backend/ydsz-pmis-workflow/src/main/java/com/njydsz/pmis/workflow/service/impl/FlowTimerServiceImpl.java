@@ -14,6 +14,7 @@ import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTimerMapper;
+import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowTimerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -293,7 +294,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     // ============== 内部辅助 ==============
 
     /** 复用 FlowInstanceServiceImpl.generateTasksForNodes（包内访问） */
-    private com.njydsz.pmis.workflow.service.FlowInstanceService instanceService() {
+    private FlowInstanceService instanceService() {
         return advancer.getInstanceService();
     }
 

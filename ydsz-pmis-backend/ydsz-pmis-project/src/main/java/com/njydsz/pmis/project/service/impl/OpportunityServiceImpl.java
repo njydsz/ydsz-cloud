@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
+import com.njydsz.pmis.project.assembler.NameAssembler;
 import com.njydsz.pmis.project.dto.InitiationCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityCreateDTO;
 import com.njydsz.pmis.project.dto.OpportunityStatusDTO;
@@ -44,7 +45,7 @@ public class OpportunityServiceImpl implements OpportunityService {
     /** 商机 Mapper */
     private final OpportunityMapper opportunityMapper;
     /** 名称装配器，用于跨服务解析客户/员工名称（Feign + try-catch 降级） */
-    private final com.njydsz.pmis.project.assembler.NameAssembler nameAssembler;
+    private final NameAssembler nameAssembler;
     /**
      * 使用 @Lazy 注入 InitiationService，避免与本服务的循环依赖(InitiationService 暂不引用本服务，但保留扩展性)
      */

@@ -23,6 +23,7 @@ import type {
   CreateDelegateAuthDTO,
   DelegateScopeType,
 } from '@/api/workflow/types'
+import UserPicker from '@/components/common/UserPicker.vue'
 
 // ==================== Tab 切换 ====================
 const activeTab = ref<'mine' | 'toMe' | 'delegateLog' | 'ownerLog'>('mine')
@@ -123,9 +124,23 @@ function openCreateDialog() {
   createDialog.value = true
 }
 
+// 代理人选择回调
+function onDelegateUserPicked(user: any) {
+  if (user && typeof user === 'object') {
+    createForm.delegateId = user.id
+    createForm.delegateName = user.name || user.nickname || ''
+  } else if (typeof user === 'number') {
+    createForm.delegateId = user
+    createForm.delegateName = ''
+  } else {
+    createForm.delegateId = undefined
+    createForm.delegateName = ''
+  }
+}
+
 async function submitCreate() {
   if (!createForm.delegateId) {
-    ElMessage.warning('请输入代理人 ID')
+    ElMessage.warning('请选择代理人')
     return
   }
   if (createForm.scopeType !== 'ALL' && !createForm.scopeValue?.trim()) {
@@ -357,11 +372,12 @@ onMounted(() => loadData())
     <!-- 创建授权弹窗 -->
     <el-dialog v-model="createDialog" title="创建委托授权" width="520px">
       <el-form :model="createForm" label-width="100px">
-        <el-form-item label="代理人 ID" required>
-          <el-input v-model.number="createForm.delegateId" placeholder="请输入代理人用户 ID" />
-        </el-form-item>
-        <el-form-item label="代理人姓名">
-          <el-input v-model="createForm.delegateName" placeholder="请输入代理人姓名（可选）" />
+        <el-form-item label="代理人" required>
+          <UserPicker
+            :model-value="createForm.delegateId"
+            placeholder="搜索并选择代理人"
+            @change="(_v: any, user: any) => onDelegateUserPicked(user)"
+          />
         </el-form-item>
         <el-form-item label="授权范围" required>
           <el-select v-model="createForm.scopeType" style="width: 100%">

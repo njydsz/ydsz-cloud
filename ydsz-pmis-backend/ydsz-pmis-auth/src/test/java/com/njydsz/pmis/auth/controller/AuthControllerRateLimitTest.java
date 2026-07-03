@@ -1,5 +1,6 @@
 package com.njydsz.pmis.auth.controller;
 
+import com.njydsz.pmis.auth.dto.LoginDTO;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -23,7 +24,7 @@ class AuthControllerRateLimitTest {
     @DisplayName("login 应配置 5 次/60 秒限流")
     void login_shouldBeRateLimited() throws NoSuchMethodException {
         Method login = AuthController.class.getMethod("login",
-                com.njydsz.pmis.auth.dto.LoginDTO.class);
+                LoginDTO.class);
         RateLimit rateLimit = login.getAnnotation(RateLimit.class);
 
         assertThat(rateLimit).as("login 必须标注 @RateLimit").isNotNull();

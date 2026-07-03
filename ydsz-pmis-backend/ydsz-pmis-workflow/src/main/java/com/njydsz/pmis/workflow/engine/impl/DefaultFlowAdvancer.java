@@ -15,6 +15,7 @@ import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.service.FlowJoinTokenService;
 import com.njydsz.pmis.workflow.service.impl.FlowInstanceServiceImpl;
 import com.njydsz.pmis.workflow.service.FlowRoutingService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
@@ -47,7 +48,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     private final FlowVariableStrategy variableStrategy;
     private final FlowTaskMapper taskMapper;
     /** GAP-P2: 并行网关 join 令牌服务（精确跟踪分支到达状态） */
-    private final com.njydsz.pmis.workflow.service.FlowJoinTokenService joinTokenService;
+    private final FlowJoinTokenService joinTokenService;
 
     /**
      * 智能路由服务（可选注入，literule 不可用时为 null）
@@ -64,7 +65,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                                 FlowInstanceService instanceService,
                                 FlowVariableStrategy variableStrategy,
                                 FlowTaskMapper taskMapper,
-                                com.njydsz.pmis.workflow.service.FlowJoinTokenService joinTokenService,
+                                FlowJoinTokenService joinTokenService,
                                 @Autowired(required = false) FlowRoutingService routingService) {
         this.skipMapper = skipMapper;
         this.nodeMapper = nodeMapper;
@@ -78,7 +79,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     }
 
     @Override
-    public com.njydsz.pmis.workflow.service.FlowInstanceService getInstanceService() {
+    public FlowInstanceService getInstanceService() {
         return instanceService;
     }
 
@@ -101,7 +102,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             return instanceService.toView(instanceService.getById(instanceId),
                     loadCurrentTasks(instanceId));
         }
-        com.njydsz.pmis.workflow.service.impl.FlowInstanceServiceImpl impl = null;
+        FlowInstanceServiceImpl impl = null;
         if (instanceService instanceof FlowInstanceServiceImpl) {
             impl = (FlowInstanceServiceImpl) instanceService;
         }

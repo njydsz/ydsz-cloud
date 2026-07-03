@@ -14,23 +14,29 @@ import com.njydsz.pmis.workflow.entity.FlowCcDO;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowTaskCommentDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowAiAssistService;
+import com.njydsz.pmis.workflow.service.FlowCanaryService;
 import com.njydsz.pmis.workflow.service.FlowCcService;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.service.FlowEfficiencyService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowSlaService;
+import com.njydsz.pmis.workflow.service.FlowTaskCommentService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
 import com.njydsz.pmis.workflow.service.FlowTemplateService;
 import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -57,6 +63,8 @@ public class FlowEngineController {
     private final FlowInstanceService instanceService;
     /** 任务服务（P2-31/32/33 耗时统计/超期统计/多维筛选） */
     private final FlowTaskService taskService;
+    /** 任务评论服务（任务下独立沟通评论） */
+    private final FlowTaskCommentService taskCommentService;
     /** P0-3: 抄送服务 */
     private final FlowCcService ccService;
     /** P1-1: 历史任务 mapper（驳回候选目标节点） */
@@ -953,6 +961,87 @@ public class FlowEngineController {
         return Result.ok();
     }
 
+    // ============== 任务评论（独立沟通） ==============
+
+    /**
+     * 添加任务评论
+     *
+     * <p>用于在任务下进行独立沟通，区别于任务操作（通过/驳回）时附带的审批意见。
+     * 请求体形如：
+     * <pre>
+     * {
+     *   "instanceId": 1001,
+     *   "taskId": 2001,
+     *   "nodeCode": "manager_approve",
+     *   "userId": 1001,
+     *   "userName": "张三",
+     *   "content": "请确认合同金额是否含税",
+     *   "type": "QUESTION",
+     *   "parentId": null
+     * }
+     * </pre>
+     * userId/userName 为空时从登录上下文兜底；type 为空时默认 COMMENT。
+     *
+     * @param comment 评论参数
+     * @return 统一响应结果，包含新建的评论记录
+     */
+    @PostMapping("/task-comment/add")
+    public Result<FlowTaskCommentDO> addTaskComment(@RequestBody FlowTaskCommentDO comment) {
+        if (comment == null) {
+            return Result.failed(BizErrorCode.BAD_REQUEST, "请求体不能为空");
+        }
+        // userId / userName 兜底：从登录上下文获取
+        if (comment.getUserId() == null) {
+            comment.setUserId(SecurityContext.getUserId());
+        }
+        if (!StringUtils.hasText(comment.getUserName())) {
+            comment.setUserName(SecurityContext.getUsername());
+        }
+        FlowTaskCommentDO saved = taskCommentService.addComment(
+                comment.getInstanceId(), comment.getTaskId(), comment.getNodeCode(),
+                comment.getUserId(), comment.getUserName(), comment.getContent(),
+                comment.getType(), comment.getParentId());
+        return Result.ok(saved);
+    }
+
+    /**
+     * 按任务查询评论列表
+     *
+     * @param taskId 任务 ID
+     * @return 统一响应结果，包含评论列表（按创建时间正序）
+     */
+    @GetMapping("/task-comment/list/{taskId}")
+    public Result<List<FlowTaskCommentDO>> listTaskComments(@PathVariable Long taskId) {
+        return Result.ok(taskCommentService.listByTaskId(taskId));
+    }
+
+    /**
+     * 按流程实例查询评论列表
+     *
+     * @param instanceId 流程实例 ID
+     * @return 统一响应结果，包含评论列表（按创建时间正序）
+     */
+    @GetMapping("/task-comment/list-by-instance/{instanceId}")
+    public Result<List<FlowTaskCommentDO>> listInstanceComments(@PathVariable Long instanceId) {
+        return Result.ok(taskCommentService.listByInstanceId(instanceId));
+    }
+
+    /**
+     * 删除评论（仅评论发起人可删除）
+     *
+     * @param commentId 评论 ID
+     * @return 统一响应结果，包含是否删除成功
+     */
+    @DeleteMapping("/task-comment/{commentId}")
+    public Result<Boolean> deleteTaskComment(@PathVariable Long commentId) {
+        Long userId = SecurityContext.getUserId();
+        boolean ok = taskCommentService.deleteComment(commentId, userId);
+        if (!ok) {
+            return Result.failed(BizErrorCode.BIZ_ERROR, "删除评论失败：评论不存在或无权限");
+        }
+        return Result.ok(true);
+    }
+
     // ============== P1-6: SLA 超时自动策略 ==============
 
     /**
@@ -996,11 +1085,9 @@ public class FlowEngineController {
             return Result.ok(Map.of("userId", 0, "todoCount", 0));
         }
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
-        long count = taskService.countOverdue(null, tenantId) // 占位调用，避免使用未读字段
-                + 0;
-        // 直接用 taskService.listTodoByUser 计算
+        // P0-1 修复：移除 countOverdue 死代码（结果被覆盖），直接用 listTodoByUser 计算待办数
         var tasks = taskService.listTodoByUser(userId, null, null, tenantId);
-        count = tasks == null ? 0 : tasks.size();
+        long count = tasks == null ? 0 : tasks.size();
         return Result.ok(Map.of(
                 "userId", userId,
                 "todoCount", count,
@@ -1159,7 +1246,7 @@ public class FlowEngineController {
     @GetMapping("/monitor/overview")
     public Result<Map<String, Object>> monitorOverview() {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
-        Map<String, Object> overview = new java.util.LinkedHashMap<>();
+        Map<String, Object> overview = new LinkedHashMap<>();
 
         // 实例状态计数
         long running = instanceService.page(null, null, "RUNNING", null, null, tenantId, 1, 1).getTotal();
@@ -1192,23 +1279,35 @@ public class FlowEngineController {
     }
 
     /**
-     * P0-3: 异常流程列表 — 超期/卡单实例
+     * P0-3: 异常流程列表 — 超期/卡单/高驳回率/长期运行实例
      *
-     * @param limit 返回条数上限
+     * <p>聚合四类异常检测：
+     * <ul>
+     *   <li><b>OVERDUE</b>：任务超过 dueAt 截止时间仍未完成</li>
+     *   <li><b>STUCK</b>：任务在同一节点停留超过阈值时间（默认 24h）</li>
+     *   <li><b>HIGH_REJECTION</b>：节点在最近 100 个任务中驳回率超过 50%</li>
+     *   <li><b>LONG_RUNNING</b>：流程实例运行时间超过阈值天数（默认 7 天）</li>
+     * </ul>
+     *
+     * @param limit           返回条数上限
+     * @param stuckHours      卡单阈值（小时，默认 24）
+     * @param longRunningDays 长期运行阈值（天，默认 7）
      * @return 异常实例列表
      */
     @GetMapping("/monitor/anomaly")
     public Result<List<Map<String, Object>>> monitorAnomaly(
-            @RequestParam(defaultValue = "20") int limit) {
+            @RequestParam(defaultValue = "20") int limit,
+            @RequestParam(defaultValue = "24") int stuckHours,
+            @RequestParam(defaultValue = "7") int longRunningDays) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
-        List<Map<String, Object>> anomalies = new java.util.ArrayList<>();
+        List<Map<String, Object>> anomalies = new ArrayList<>();
 
-        // 超期任务
+        // 1. 超期任务（原有逻辑保持不变）
         List<FlowTaskDO> overdueTasks = taskService.listOverdue(null, tenantId);
         if (overdueTasks != null) {
             for (FlowTaskDO task : overdueTasks) {
                 if (anomalies.size() >= limit) break;
-                Map<String, Object> item = new java.util.LinkedHashMap<>();
+                Map<String, Object> item = new LinkedHashMap<>();
                 item.put("type", "OVERDUE");
                 item.put("taskId", task.getId());
                 item.put("instanceId", task.getInstanceId());
@@ -1218,6 +1317,20 @@ public class FlowEngineController {
                 item.put("dueAt", task.getDueAt());
                 item.put("createdAt", task.getCreatedAt());
                 anomalies.add(item);
+            }
+        }
+
+        // 2. 新增异常检测：卡单任务 + 高驳回率节点 + 长期运行实例
+        if (anomalies.size() < limit) {
+            try {
+                int remaining = limit - anomalies.size();
+                List<Map<String, Object>> detected = efficiencyService.detectAnomalies(
+                        tenantId, remaining, stuckHours, longRunningDays);
+                if (detected != null) {
+                    anomalies.addAll(detected);
+                }
+            } catch (Exception e) {
+                log.warn("[Monitor] 异常检测查询失败: {}", e.getMessage());
             }
         }
 
@@ -1261,16 +1374,16 @@ public class FlowEngineController {
         // 查询全量实例（分页取前 500 条），按 flowCode 聚合
         PageResult<FlowInstanceDO> page = instanceService.page(
                 null, null, null, null, null, tenantId, 1, 500);
-        Map<String, Long> distribution = new java.util.LinkedHashMap<>();
+        Map<String, Long> distribution = new LinkedHashMap<>();
         if (page != null && page.getList() != null) {
             for (FlowInstanceDO inst : page.getList()) {
                 String code = inst.getFlowCode() == null ? "UNKNOWN" : inst.getFlowCode();
                 distribution.merge(code, 1L, (a, b) -> a + b);
             }
         }
-        List<Map<String, Object>> result = new java.util.ArrayList<>();
+        List<Map<String, Object>> result = new ArrayList<>();
         distribution.forEach((code, count) -> {
-            Map<String, Object> item = new java.util.LinkedHashMap<>();
+            Map<String, Object> item = new LinkedHashMap<>();
             item.put("flowCode", code);
             item.put("count", count);
             result.add(item);
@@ -1332,7 +1445,7 @@ public class FlowEngineController {
     // ============== P3-1: 灰度发布 ==============
 
     /** P3-1: 灰度发布服务 */
-    private final com.njydsz.pmis.workflow.service.FlowCanaryService canaryService;
+    private final FlowCanaryService canaryService;
 
     /**
      * P3-1: 启动灰度发布

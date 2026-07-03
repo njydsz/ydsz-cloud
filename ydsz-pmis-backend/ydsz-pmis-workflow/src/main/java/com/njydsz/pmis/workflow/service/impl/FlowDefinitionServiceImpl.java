@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.service.impl;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONArray;
 import com.alibaba.fastjson2.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
@@ -10,6 +11,7 @@ import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.engine.BpmnModel;
 import com.njydsz.pmis.workflow.engine.BpmnXmlParser;
+import com.njydsz.pmis.workflow.engine.FlowGraphValidator;
 import com.njydsz.pmis.workflow.engine.JsonHelper;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
@@ -51,6 +53,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     private final FlowNodeMapper nodeMapper;
     private final FlowSkipMapper skipMapper;
     private final BpmnXmlParser bpmnXmlParser;
+    private final FlowGraphValidator graphValidator;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -155,6 +158,9 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 }
             }
         }
+
+        // P2-1: 流程图结构校验（连通性/死节点/环路）
+        graphValidator.validate(nodes, skips);
 
         // 3. 写入定义
         FlowDefinitionDO def = new FlowDefinitionDO();

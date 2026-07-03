@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.controller;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.dto.EmbeddedApprovalViewDTO;
@@ -56,7 +57,7 @@ public class FlowEmbeddedApprovalController {
                                                      @RequestParam(required = false) Long userId) {
         Long uid = userId;
         if (uid == null) {
-            com.njydsz.pmis.common.security.LoginUser u = SecurityContext.getCurrentOrNull();
+            LoginUser u = SecurityContext.getCurrentOrNull();
             if (u != null) {
                 uid = u.getUserId();
             }
@@ -82,7 +83,7 @@ public class FlowEmbeddedApprovalController {
      */
     @PostMapping("/action")
     public Result<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
-        com.njydsz.pmis.common.security.LoginUser u = SecurityContext.getCurrentOrNull();
+        LoginUser u = SecurityContext.getCurrentOrNull();
         if (dto.getUserId() == null && u != null) {
             dto.setUserId(u.getUserId());
         }
@@ -104,7 +105,7 @@ public class FlowEmbeddedApprovalController {
                                           @RequestBody EmbeddedApprovalActionDTO dto) {
         dto.setBusinessType(businessType);
         dto.setBusinessId(businessId);
-        com.njydsz.pmis.common.security.LoginUser u = SecurityContext.getCurrentOrNull();
+        LoginUser u = SecurityContext.getCurrentOrNull();
         if (dto.getUserId() == null && u != null) {
             dto.setUserId(u.getUserId());
         }

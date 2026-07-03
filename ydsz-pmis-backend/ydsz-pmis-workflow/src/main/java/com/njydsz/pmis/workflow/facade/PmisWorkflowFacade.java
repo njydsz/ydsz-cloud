@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.facade;
 
+import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
@@ -110,7 +111,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     @Override
     public List<Map<String, Object>> listTodoTasks(Long userId, int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        com.njydsz.pmis.common.api.PageResult<FlowTaskDO> pageResult = taskService.listTodoByAssigneePage(
+        PageResult<FlowTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L), page, size);
         return pageResult.getList().stream().map(this::toMap).toList();
     }
@@ -119,7 +120,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     public List<Map<String, Object>> listDoneTasks(Long userId, int page, int size) {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        com.njydsz.pmis.common.api.PageResult<FlowTaskDO> pageResult = taskService.listDoneByAssigneePage(
+        PageResult<FlowTaskDO> pageResult = taskService.listDoneByAssigneePage(
                 String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L), page, size);
         return pageResult.getList().stream().map(this::toMap).toList();
     }
@@ -551,8 +552,8 @@ public class PmisWorkflowFacade implements WorkflowFacade {
             return Collections.emptyMap();
         }
         @SuppressWarnings("unchecked")
-        List<com.njydsz.pmis.workflow.entity.FlowNodeDO> nodes =
-                (List<com.njydsz.pmis.workflow.entity.FlowNodeDO>) detail.get("nodes");
+        List<FlowNodeDO> nodes =
+                (List<FlowNodeDO>) detail.get("nodes");
         if (nodes == null || nodes.isEmpty()) {
             return Collections.emptyMap();
         }

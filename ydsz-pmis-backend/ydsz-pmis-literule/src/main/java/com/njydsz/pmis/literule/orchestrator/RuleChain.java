@@ -316,7 +316,28 @@ public class RuleChain {
      * @since 1.3.0
      */
     public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator, StatsRecorder statsRecorder) {
+        return evaluate(context, evaluator, statsRecorder, null, 0);
+    }
+
+    /**
+     * 评估规则链（带统计记录、并行线程池和超时控制）
+     *
+     * @param context          规则上下文
+     * @param evaluator        表达式求值器
+     * @param statsRecorder    统计记录器（可为 null）
+     * @param parallelExecutor 并行执行线程池（WHEN 链使用，null 则用 ForkJoinPool）
+     * @param timeoutMs        超时毫秒（0=不超时）
+     * @return 已触发的规则结果列表
+     * @since 1.3.0
+     */
+    public List<RuleResult> evaluate(RuleContext context, ExpressionEvaluator evaluator,
+                                     StatsRecorder statsRecorder,
+                                     java.util.concurrent.ExecutorService parallelExecutor,
+                                     long timeoutMs) {
         Objects.requireNonNull(context, "context 不能为 null");
+        // 保存并行参数供 evaluateWhen 使用
+        this.currentParallelExecutor = parallelExecutor;
+        this.currentTimeoutMs = timeoutMs;
         return switch (chainType) {
             case THEN -> evaluateThen(context, evaluator, statsRecorder);
             case WHEN -> evaluateWhen(context, evaluator, statsRecorder);
@@ -328,6 +349,11 @@ public class RuleChain {
             case BREAK -> evaluateBreak(context, evaluator);
         };
     }
+
+    /** 当前并行线程池（WHEN 链执行时使用） */
+    private transient java.util.concurrent.ExecutorService currentParallelExecutor;
+    /** 当前超时（毫秒） */
+    private transient long currentTimeoutMs;
 
     /**
      * THEN 语义：顺序执行全部节点，收集触发结果
@@ -362,15 +388,43 @@ public class RuleChain {
         if (nodes == null || nodes.isEmpty()) {
             return results;
         }
-        // 并行执行所有节点，使用 ForkJoinPool.commonPool
+        // 使用自定义线程池或默认 ForkJoinPool
+        java.util.concurrent.ExecutorService executor = currentParallelExecutor;
+        // 并行执行所有节点
         List<CompletableFuture<List<RuleResult>>> futures = new ArrayList<>();
         for (RuleNode node : nodes) {
-            futures.add(CompletableFuture.supplyAsync(() -> evaluateNode(node, context, evaluator, statsRecorder)));
+            if (executor != null) {
+                futures.add(CompletableFuture.supplyAsync(
+                        () -> evaluateNode(node, context, evaluator, statsRecorder), executor));
+            } else {
+                futures.add(CompletableFuture.supplyAsync(
+                        () -> evaluateNode(node, context, evaluator, statsRecorder)));
+            }
         }
-        // 等待全部完成并合并结果
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+        // 等待全部完成（带超时控制）
+        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+        try {
+            if (currentTimeoutMs > 0) {
+                allOf.get(currentTimeoutMs, java.util.concurrent.TimeUnit.MILLISECONDS);
+            } else {
+                allOf.join();
+            }
+        } catch (java.util.concurrent.TimeoutException e) {
+            log.warn("[LiteRule-Chain] WHEN 并行执行超时: timeoutMs={}", currentTimeoutMs);
+            // 超时后取消未完成的任务
+            futures.forEach(f -> f.cancel(true));
+        } catch (Exception e) {
+            log.warn("[LiteRule-Chain] WHEN 并行执行异常: {}", e.getMessage());
+        }
+        // 合并已完成的结果
         for (CompletableFuture<List<RuleResult>> future : futures) {
-            results.addAll(future.join());
+            if (future.isDone() && !future.isCompletedExceptionally()) {
+                try {
+                    results.addAll(future.join());
+                } catch (Exception ignored) {
+                    // 跳过异常结果
+                }
+            }
         }
         return results;
     }

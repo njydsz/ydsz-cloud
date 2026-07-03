@@ -5,7 +5,7 @@
  * @description 流程图 + 审批轨迹时间线 + 当前任务 + 操作面板
  * P0-7 + P0-8 联调：消费 getDiagram 和 getTimeline。
  */
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -35,6 +35,7 @@ import FlowDiagramViewer from '../components/FlowDiagramViewer.vue'
 import FlowTimeline from '../components/FlowTimeline.vue'
 import FlowDiagramReplay from '../components/FlowDiagramReplay.vue'
 import FormRenderer from '../components/FormRenderer.vue'
+import UserPicker from '@/components/common/UserPicker.vue'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -48,7 +49,7 @@ const loading = ref(false)
 const formRenderData = ref<FormRenderDataDTO | null>(null)
 const formRendererRef = ref<InstanceType<typeof FormRenderer> | null>(null)
 
-const activeTab = ref<'diagram' | 'timeline' | 'replay' | 'form' | 'detail'>('diagram')
+const activeTab = ref<'diagram' | 'timeline' | 'replay' | 'form' | 'comment' | 'detail'>('diagram')
 
 // 操作弹窗
 const opDialog = ref(false)
@@ -100,6 +101,20 @@ function openOp(type: typeof opType.value) {
   opForm.targetNodeCode = ''
   opForm.reason = ''
   opDialog.value = true
+}
+
+// P1-5: 转办用户选择回调
+function onTransferUserPicked(user: any) {
+  if (user && typeof user === 'object') {
+    opForm.targetUserId = user.id
+    opForm.targetUserName = user.name || user.nickname || ''
+  } else if (typeof user === 'number') {
+    opForm.targetUserId = user
+    opForm.targetUserName = ''
+  } else {
+    opForm.targetUserId = undefined
+    opForm.targetUserName = ''
+  }
 }
 
 async function submitOp() {
@@ -326,11 +341,12 @@ watch(() => route.query.id, () => loadAll())
         <el-form-item :label="t('workflow.instance.opForm.comment')" v-if="opType === 'pass' || opType === 'reject'">
           <el-input v-model="opForm.comment" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item :label="t('workflow.instance.opForm.targetUserId')" v-if="opType === 'transfer'">
-          <el-input v-model.number="opForm.targetUserId" />
-        </el-form-item>
-        <el-form-item :label="t('workflow.instance.opForm.targetUserName')" v-if="opType === 'transfer'">
-          <el-input v-model="opForm.targetUserName" />
+        <el-form-item label="转办给" v-if="opType === 'transfer'">
+          <UserPicker
+            :model-value="opForm.targetUserId"
+            placeholder="搜索并选择转办人"
+            @change="(_v: any, user: any) => onTransferUserPicked(user)"
+          />
         </el-form-item>
         <el-form-item :label="t('workflow.instance.opForm.rejectNode')" v-if="opType === 'reject'">
           <el-input v-model="opForm.targetNodeCode" :placeholder="t('workflow.instance.opForm.rejectNodePlaceholder')" />

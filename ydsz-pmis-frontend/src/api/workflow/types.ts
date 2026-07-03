@@ -608,3 +608,21 @@ export interface SimulateResultDTO {
   /** 错误信息 */
   errorMessage?: string
 }
+
+/** P2-3: 任务评论 */
+export interface TaskCommentDTO {
+  id: number
+  tenantId?: number
+  instanceId: number
+  taskId?: number
+  nodeCode?: string
+  userId: number
+  userName?: string
+  content: string
+  /** 评论类型：COMMENT / QUESTION / REPLY */
+  type: string
+  /** 父评论 ID（楼中楼回复） */
+  parentId?: number
+  createdAt?: string
+  updatedAt?: string
+}

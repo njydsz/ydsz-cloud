@@ -4,6 +4,8 @@ import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowSkipDO;
+import com.njydsz.pmis.workflow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.service.FlowRoutingService;
 
 import java.util.List;
 import java.util.Map;
@@ -50,7 +52,7 @@ public interface FlowAdvancer {
      * 评估跳转条件表达式
      *
      * <p>默认实现：条件为空时返回 true，否则委托给 {@link FlowVariableStrategy#evaluate(String, Map)}。
-     * 子类可覆写以优先使用 {@link com.njydsz.pmis.workflow.service.FlowRoutingService} 评估。
+     * 子类可覆写以优先使用 {@link FlowRoutingService} 评估。
      *
      * @param condition 跳转条件表达式
      * @param variables 流程变量
@@ -71,5 +73,5 @@ public interface FlowAdvancer {
      *
      * @return 流程实例服务
      */
-    com.njydsz.pmis.workflow.service.FlowInstanceService getInstanceService();
+    FlowInstanceService getInstanceService();
 }

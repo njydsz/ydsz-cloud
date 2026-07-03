@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.service;
 
 import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 
 import java.util.Map;
 
@@ -36,7 +37,7 @@ public interface FlowSubProcessService {
      * @return 子流程实例 ID
      */
     Long startSubProcess(FlowInstanceDO parentInstance,
-                         com.njydsz.pmis.workflow.entity.FlowNodeDO callActivityNode,
+                         FlowNodeDO callActivityNode,
                          Map<String, Object> variables);
 
     /**

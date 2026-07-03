@@ -12,6 +12,7 @@ import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.engine.FlowAssigneeResolver;
 import com.njydsz.pmis.workflow.engine.FlowEventListener;
+import com.njydsz.pmis.workflow.engine.FlowServiceNodeExecutor;
 import com.njydsz.pmis.workflow.engine.FlowUrgeLimiter;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
@@ -126,8 +127,8 @@ class FlowTaskServiceImplTest {
         // P2-3: Prometheus 指标 mock（测试不需要真实指标）
         flowMetrics = mock(FlowMetrics.class);
         // P1-4: 服务节点执行器 mock（SERVICE 节点测试用例覆盖）
-        com.njydsz.pmis.workflow.engine.FlowServiceNodeExecutor serviceNodeExecutor =
-                mock(com.njydsz.pmis.workflow.engine.FlowServiceNodeExecutor.class);
+        FlowServiceNodeExecutor serviceNodeExecutor =
+                mock(FlowServiceNodeExecutor.class);
         // 拆分后 FlowTaskServiceImpl 为门面，委托 4 个子 Service + 1 个共享辅助
         FlowTaskSupport support = new FlowTaskSupport(taskMapper, auditLogMapper,
                 eventListeners, eventPublisher);

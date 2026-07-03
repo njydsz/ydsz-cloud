@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.dto.ContractChangeDTO;
+import com.njydsz.pmis.project.engine.ContractRiskEvaluator;
 import com.njydsz.pmis.project.entity.ContractChangeDO;
 import com.njydsz.pmis.project.entity.ContractDO;
 import com.njydsz.pmis.project.mapper.ContractChangeMapper;
@@ -113,7 +114,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
         ContractDO contract = contractMapper.selectById(c.getContractId());
         if (contract != null) {
             contract.setRiskLevel(
-                    com.njydsz.pmis.project.engine.ContractRiskEvaluator.evaluate(contract).name());
+                    ContractRiskEvaluator.evaluate(contract).name());
             contractMapper.updateById(contract);
         }
         log.info("[ContractChange] 审批通过: id={} approver={}", id, approverName);

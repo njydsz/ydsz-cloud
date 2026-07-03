@@ -1,19 +1,33 @@
 package com.njydsz.pmis.workflow.engine.impl;
 
+import com.njydsz.pmis.literule.api.RuleContext;
+import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * 默认 SpEL 解析器
+ * 默认流程变量表达式解析策略
  *
- * <p>支持多种语法：
+ * <p>本组件是工作流条件评估的统一入口，内部优先委托 Aviator 表达式引擎（ydsz-pmis-literule 模块）
+ * 进行求值，以统一项目中的表达式引擎，避免双引擎并存导致的语义不一致问题。
+ *
+ * <h3>Aviator 优先策略</h3>
+ * <ol>
+ *   <li>若 Spring 容器中存在 {@link ExpressionEvaluator} Bean，则优先使用 Aviator 求值</li>
+ *   <li>若 Aviator 求值失败（表达式语法不兼容等），自动回退到内置正则解析器</li>
+ *   <li>若 Aviator 不可用（literule 模块未启用），直接使用内置正则解析器</li>
+ * </ol>
+ *
+ * <h3>向后兼容语法</h3>
  * <ul>
  *   <li>${var} - 简单占位符替换</li>
  *   <li>${var > 100} - 简单比较表达式</li>
@@ -22,9 +36,11 @@ import java.util.regex.Pattern;
  *   <li>!${flag} - 逻辑非（P2-14）</li>
  *   <li>${cond ? 'A' : 'B'} - 三元运算符（P2-14）</li>
  *   <li>固定字符串：role:hr / dept:10 / user:1001</li>
+ *   <li>纯 Aviator 表达式：amount > 100 && type == 'VIP'（无 ${} 包裹）</li>
  * </ul>
  *
- * <p>复杂 SpEL（如方法调用、对象属性）可通过替换本组件扩展。
+ * <p>当使用 Aviator 引擎时，${} 包裹会被自动剥离，内部表达式直接交给 Aviator 求值。
+ * 不带 ${} 的表达式视为纯 Aviator 表达式直接求值。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -32,6 +48,17 @@ import java.util.regex.Pattern;
 @Slf4j
 @Component
 public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
+
+    /**
+     * Aviator 表达式求值器（可选注入）。
+     *
+     * <p>当 ydsz-pmis-literule 模块启用时自动注入；未启用时为 null，回退到正则解析。
+     */
+    @Autowired(required = false)
+    private ExpressionEvaluator expressionEvaluator;
+
+    /** 标记 Aviator 不可用的警告是否已输出过（避免日志刷屏） */
+    private volatile boolean aviatorUnavailableLogged = false;
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{([a-zA-Z_][a-zA-Z0-9_\\.]*)}");
     /** 字面量比较：lhs (op) rhs  -- lhs 可为标识符、数字、字符串 */
@@ -53,6 +80,43 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
         if (condition == null || condition.isBlank()) {
             return true;
         }
+        // 优先使用 Aviator 引擎求值（统一表达式引擎）
+        if (expressionEvaluator != null) {
+            try {
+                // 剥离 ${} 包裹，转换为 Aviator 原生语法
+                String aviatorExpr = stripPlaceholders(condition.trim());
+                Map<String, Object> facts = variables != null ? variables : Collections.emptyMap();
+                RuleContext context = RuleContext.of(facts);
+                boolean result = expressionEvaluator.evalBoolean(aviatorExpr, context);
+                log.debug("[Flow] Aviator 条件评估: expr='{}' aviatorExpr='{}' -> {}",
+                        condition, aviatorExpr, result);
+                return result;
+            } catch (Exception e) {
+                log.warn("[Flow] Aviator 求值失败，回退到正则解析器: expr='{}' err={}",
+                        condition, e.getMessage());
+            }
+        } else {
+            // Aviator 不可用，仅警告一次
+            if (!aviatorUnavailableLogged) {
+                log.warn("[Flow] Aviator 表达式引擎不可用，使用传统正则解析器。" +
+                        "建议启用 ydsz-pmis-literule 模块以获得更好的表达式支持。");
+                aviatorUnavailableLogged = true;
+            }
+        }
+        // 回退到传统正则解析
+        return evaluateLegacy(condition, variables);
+    }
+
+    /**
+     * 传统正则解析器（回退方案）。
+     *
+     * <p>当 Aviator 不可用或求值失败时使用，保持原有 ${} 语法兼容。
+     *
+     * @param condition 条件表达式
+     * @param variables 流程变量
+     * @return 评估结果
+     */
+    private boolean evaluateLegacy(String condition, Map<String, Object> variables) {
         String expr = condition.trim();
         try {
             return evaluateOr(expr, variables);
@@ -184,6 +248,41 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
             return null;
         }
         String trimmed = expression.trim();
+
+        // 优先使用 Aviator 引擎解析（仅对 ${} 包裹的表达式尝试）
+        if (expressionEvaluator != null && trimmed.startsWith("${") && trimmed.endsWith("}")) {
+            try {
+                // 剥离所有 ${} 包裹（含嵌套），转换为 Aviator 原生语法
+                String aviatorExpr = stripPlaceholders(trimmed);
+                Map<String, Object> facts = variables != null ? variables : Collections.emptyMap();
+                RuleContext context = RuleContext.of(facts);
+                Object result = expressionEvaluator.eval(aviatorExpr, context);
+                if (result != null) {
+                    String resolved = result.toString();
+                    log.debug("[Flow] Aviator 办理人解析: expr='{}' aviatorExpr='{}' -> '{}'",
+                            expression, aviatorExpr, resolved);
+                    return resolved;
+                }
+            } catch (Exception e) {
+                log.debug("[Flow] Aviator 办理人解析失败，回退到正则解析器: expr='{}' err={}",
+                        expression, e.getMessage());
+            }
+        }
+
+        // 回退到传统解析逻辑
+        return resolveAssigneeLegacy(trimmed, variables);
+    }
+
+    /**
+     * 传统办理人解析逻辑（回退方案）。
+     *
+     * <p>当 Aviator 不可用或求值失败时使用，保持原有三元运算符和占位符替换逻辑。
+     *
+     * @param trimmed   已 trim 的表达式
+     * @param variables 流程变量
+     * @return 解析结果
+     */
+    private String resolveAssigneeLegacy(String trimmed, Map<String, Object> variables) {
         // P2-14: 支持三元运算符 ${cond ? trueVal : falseVal}
         // 剥离外层 ${} 后匹配 TERNARY_INNER，避免 cond 残留 ${ 前缀
         String ternaryExpr = trimmed;
@@ -311,6 +410,76 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
             case "<=" -> cmp <= 0;
             default -> false;
         };
+    }
+
+    /**
+     * 将 ${} 包裹的表达式转换为 Aviator 原生语法。
+     *
+     * <p>遍历表达式字符串，剥离所有 ${ 和匹配的 }，同时保留字符串字面量内部的内容不变。
+     * 支持嵌套 ${} 场景（如 ${cond ? ${varA} : ${varB}}）。
+     *
+     * <p>转换示例：
+     * <ul>
+     *   <li>${amount > 100} → amount > 100</li>
+     *   <li>${a > 100} && ${b < 50} → a > 100 && b < 50</li>
+     *   <li>!${flag} → !flag</li>
+     *   <li>${type == 'a || b'} → type == 'a || b'</li>
+     *   <li>${cond ? ${a} : ${b}} → cond ? a : b</li>
+     *   <li>amount > 100（无 ${}）→ amount > 100（原样返回）</li>
+     * </ul>
+     *
+     * @param expr 原始表达式
+     * @return 剥离 ${} 后的 Aviator 表达式
+     */
+    private String stripPlaceholders(String expr) {
+        StringBuilder sb = new StringBuilder(expr.length());
+        int depth = 0;          // ${} 嵌套深度
+        boolean inSingle = false;
+        boolean inDouble = false;
+        int i = 0;
+        while (i < expr.length()) {
+            char c = expr.charAt(i);
+            // 字符串字面量内部不解析 ${}
+            if (inSingle) {
+                sb.append(c);
+                if (c == '\'') inSingle = false;
+                i++;
+                continue;
+            }
+            if (inDouble) {
+                sb.append(c);
+                if (c == '"') inDouble = false;
+                i++;
+                continue;
+            }
+            if (c == '\'') {
+                inSingle = true;
+                sb.append(c);
+                i++;
+                continue;
+            }
+            if (c == '"') {
+                inDouble = true;
+                sb.append(c);
+                i++;
+                continue;
+            }
+            // ${ 块开始：跳过 ${ 不输出
+            if (c == '$' && i + 1 < expr.length() && expr.charAt(i + 1) == '{') {
+                depth++;
+                i += 2;
+                continue;
+            }
+            // ${ 块结束：跳过匹配的 } 不输出
+            if (c == '}' && depth > 0) {
+                depth--;
+                i++;
+                continue;
+            }
+            sb.append(c);
+            i++;
+        }
+        return sb.toString().trim();
     }
 
     /**

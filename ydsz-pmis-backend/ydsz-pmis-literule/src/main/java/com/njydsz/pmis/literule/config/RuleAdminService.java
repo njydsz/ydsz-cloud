@@ -9,9 +9,9 @@ import com.njydsz.pmis.literule.event.RuleConfigRefreshEvent;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.impl.ExpressionRule;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
+import com.njydsz.pmis.literule.spi.RuleConfigBroadcaster;
 import com.njydsz.pmis.literule.spi.RuleVersion;
 import com.njydsz.pmis.literule.spi.RuleVersionRepository;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 
@@ -24,11 +24,13 @@ import java.util.Map;
  * <p>提供规则 CRUD、启停、版本管理、dry-run 仿真等管理操作。
  * 变更操作完成后发布 {@link RuleConfigRefreshEvent} 触发热刷新。
  *
+ * <p>若配置了 {@link RuleConfigBroadcaster}，变更事件将通过广播器同步到所有节点，
+ * 实现分布式热加载一致性。
+ *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
 @Slf4j
-@RequiredArgsConstructor
 public class RuleAdminService {
 
     private final RuleEngine ruleEngine;
@@ -37,8 +39,54 @@ public class RuleAdminService {
     private final RuleVersionRepository versionRepository;
     private final ApplicationEventPublisher eventPublisher;
 
+    /** 分布式广播器（可选，配置后支持多实例热加载一致性） */
+    private RuleConfigBroadcaster broadcaster;
+
+    /** 当前节点标识（用于广播防循环） */
+    private String nodeId;
+
     /** 是否启用 dry-run 仿真（对应 pmis.literule.dryRunEnabled 配置） */
     private boolean dryRunEnabled = true;
+
+    /**
+     * 构造规则管理服务
+     *
+     * @param ruleEngine      规则引擎
+     * @param evaluator       表达式求值器
+     * @param configProvider  规则配置提供者
+     * @param versionRepository 版本仓库（可为 null）
+     * @param eventPublisher  事件发布器
+     */
+    public RuleAdminService(RuleEngine ruleEngine, ExpressionEvaluator evaluator,
+                            RuleConfigProvider configProvider, RuleVersionRepository versionRepository,
+                            ApplicationEventPublisher eventPublisher) {
+        this.ruleEngine = ruleEngine;
+        this.evaluator = evaluator;
+        this.configProvider = configProvider;
+        this.versionRepository = versionRepository;
+        this.eventPublisher = eventPublisher;
+        this.nodeId = java.util.UUID.randomUUID().toString().substring(0, 8);
+    }
+
+    /**
+     * 设置分布式广播器
+     *
+     * @param broadcaster 广播器实例
+     * @since 1.3.0
+     */
+    public void setBroadcaster(RuleConfigBroadcaster broadcaster) {
+        this.broadcaster = broadcaster;
+    }
+
+    /**
+     * 设置节点标识
+     *
+     * @param nodeId 节点标识
+     * @since 1.3.0
+     */
+    public void setNodeId(String nodeId) {
+        this.nodeId = nodeId;
+    }
 
     /**
      * 设置是否启用 dry-run 仿真
@@ -112,10 +160,11 @@ public class RuleAdminService {
         RuleConfigRefreshEvent.ChangeType changeType = saved.getVersion() > 1
                 ? RuleConfigRefreshEvent.ChangeType.UPDATE
                 : RuleConfigRefreshEvent.ChangeType.CREATE;
-        eventPublisher.publishEvent(RuleConfigRefreshEvent.of(
+        publishRefreshEvent(RuleConfigRefreshEvent.of(
                 saved.getCode(), changeType, operator));
 
-        log.info("[LiteRule] 规则已保存: code={}, version={}, operator={}", saved.getCode(), saved.getVersion(), operator);
+        log.info("[LiteRule] 规则已保存: code={}, version={}, operator={}, broadcast={}",
+                saved.getCode(), saved.getVersion(), operator, broadcaster != null);
         return saved;
     }
 
@@ -128,7 +177,7 @@ public class RuleAdminService {
      */
     public void toggle(String ruleCode, boolean enabled, String operator) {
         configProvider.toggleEnabled(ruleCode, enabled, operator);
-        eventPublisher.publishEvent(RuleConfigRefreshEvent.of(
+        publishRefreshEvent(RuleConfigRefreshEvent.of(
                 ruleCode, RuleConfigRefreshEvent.ChangeType.TOGGLE, operator));
         log.info("[LiteRule] 规则启停切换: code={}, enabled={}, operator={}", ruleCode, enabled, operator);
     }
@@ -159,7 +208,7 @@ public class RuleAdminService {
             throw new IllegalStateException("版本仓库未配置，不支持回滚");
         }
         RuleDefinition restored = versionRepository.rollback(ruleCode, version, operator);
-        eventPublisher.publishEvent(RuleConfigRefreshEvent.of(
+        publishRefreshEvent(RuleConfigRefreshEvent.of(
                 ruleCode, RuleConfigRefreshEvent.ChangeType.UPDATE, operator));
         log.info("[LiteRule] 规则已回滚: code={}, version={}, operator={}", ruleCode, version, operator);
         return restored;
@@ -205,5 +254,27 @@ public class RuleAdminService {
      */
     public boolean validateExpression(String expression) {
         return evaluator.validate(expression);
+    }
+
+    /**
+     * 发布规则刷新事件（本地 + 分布式广播）
+     *
+     * <p>先发布本地 Spring 事件触发热加载，再通过广播器通知其他节点。
+     * 广播器不可用时仅本地生效（向后兼容）。
+     *
+     * @param event 规则变更事件
+     * @since 1.3.0
+     */
+    private void publishRefreshEvent(RuleConfigRefreshEvent event) {
+        // 1. 本地事件（当前节点热加载）
+        eventPublisher.publishEvent(event);
+        // 2. 分布式广播（其他节点热加载）
+        if (broadcaster != null && broadcaster.isAvailable()) {
+            try {
+                broadcaster.broadcast(event, nodeId);
+            } catch (Exception e) {
+                log.warn("[LiteRule] 分布式广播失败，仅当前节点已刷新: {}", e.getMessage());
+            }
+        }
     }
 }
