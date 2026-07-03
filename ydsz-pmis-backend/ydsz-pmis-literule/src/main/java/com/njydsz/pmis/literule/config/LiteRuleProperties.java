@@ -27,4 +27,25 @@ public class LiteRuleProperties {
 
     /** 是否启用表达式沙箱（限制危险函数和类访问） */
     private boolean sandboxEnabled = true;
+
+    /** 是否启用执行轨迹记录（1.4.0） */
+    private boolean traceEnabled = true;
+
+    /** 异步 Trace 队列容量 */
+    private int traceQueueCapacity = 5000;
+
+    /** 异步 Trace 批量写入大小 */
+    private int traceBatchSize = 100;
+
+    /** 异步 Trace 刷新间隔（毫秒） */
+    private long traceFlushIntervalMs = 2000;
+
+    /** 单规则执行超时（毫秒，0 表示不限制，1.4.0） */
+    private long ruleTimeoutMs = 0;
+
+    /** 规则熔断错误率阈值（0~1.0，达到阈值时熔断该规则，1.4.0） */
+    private double circuitBreakerErrorRate = 0.5;
+
+    /** 规则熔断最小评估次数（达到该次数后才计算错误率，1.4.0） */
+    private int circuitBreakerMinEvaluations = 100;
 }

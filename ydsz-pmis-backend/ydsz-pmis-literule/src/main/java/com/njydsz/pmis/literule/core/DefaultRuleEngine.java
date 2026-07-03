@@ -4,12 +4,17 @@ import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
+import com.njydsz.pmis.literule.api.RuleExecutionTrace;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.StatsRecorder;
+import com.njydsz.pmis.literule.spi.TraceRecorder;
 import lombok.extern.slf4j.Slf4j;
+
+import jakarta.annotation.PreDestroy;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -27,6 +32,8 @@ import java.util.concurrent.atomic.AtomicLong;
  *   <li>结果按严重度倒序排列（RED → YELLOW → INFO）</li>
  *   <li>执行统计（执行次数/触发次数/异常次数/耗时）</li>
  *   <li>Dry-run 仿真（返回全部结果含未触发，不记录统计）</li>
+ *   <li>执行轨迹异步记录（1.4.0）</li>
+ *   <li>单规则超时与熔断（1.4.0）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -40,6 +47,18 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
 
     /** 是否启用统计（对应 pmis.literule.statsEnabled 配置） */
     private volatile boolean statsEnabled = true;
+
+    /** 轨迹记录器（可选，1.4.0 起支持） */
+    private volatile TraceRecorder traceRecorder;
+
+    /** 超时执行器（可选，1.4.0 起支持） */
+    private volatile RuleTimeoutExecutor timeoutExecutor;
+
+    /** 熔断器（可选，1.4.0 起支持） */
+    private volatile RuleCircuitBreaker circuitBreaker;
+
+    /** 监控指标（可选，1.4.0 起支持） */
+    private volatile RuleMetrics metrics;
 
     /** 统计计数器 */
     private final AtomicLong totalEvaluations = new AtomicLong(0);
@@ -78,18 +97,63 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             if (!shouldEvaluate(rule, scenario)) {
                 continue;
             }
+
+            // 熔断检查：已被熔断的规则跳过评估
+            if (circuitBreaker != null && !circuitBreaker.allowEvaluate(rule.getCode())) {
+                log.debug("[LiteRule] 规则 {} 已被熔断，跳过评估", rule.getCode());
+                continue;
+            }
+
             long start = System.nanoTime();
+            RuleResult result = null;
+            Exception caughtException = null;
             try {
-                RuleResult result = rule.evaluate(context);
-                long elapsed = (System.nanoTime() - start) / 1_000_000;
-                record(rule.getCode(), result != null && result.isTriggered(), false, elapsed);
-                if (result != null && result.isTriggered()) {
-                    triggered.add(result);
+                // 超时执行：若配置了 timeoutExecutor，则用其包裹；否则直接评估
+                if (timeoutExecutor != null) {
+                    result = timeoutExecutor.evaluateWithTimeout(rule, context, 0);
+                } else {
+                    result = rule.evaluate(context);
                 }
             } catch (Exception e) {
-                long elapsed = (System.nanoTime() - start) / 1_000_000;
-                record(rule.getCode(), false, true, elapsed);
-                log.warn("[LiteRule] 规则 {} 评估异常: {}", rule.getCode(), e.getMessage());
+                caughtException = e;
+            }
+            long elapsed = (System.nanoTime() - start) / 1_000_000;
+            boolean isTriggered = result != null && result.isTriggered();
+            // 异常 + 超时返回的"未触发"也算异常（用于熔断统计）
+            boolean isError = caughtException != null
+                    || (result != null && result.getDescription() != null
+                        && result.getDescription().startsWith("评估超时"));
+            record(rule.getCode(), isTriggered, isError, elapsed);
+
+            // 熔断器记录结果
+            if (circuitBreaker != null) {
+                circuitBreaker.recordResult(rule.getCode(), !isError);
+            }
+
+            // 监控指标记录
+            if (metrics != null) {
+                try {
+                    metrics.recordEvaluation(rule.getCode(), scenario, isTriggered,
+                            result != null ? result.getSeverity() : null, isError, elapsed);
+                } catch (Exception me) {
+                    log.debug("[LiteRule] 指标记录失败: {}", me.getMessage());
+                }
+            }
+
+            if (isError && caughtException != null) {
+                log.warn("[LiteRule] 规则 {} 评估异常: {}", rule.getCode(), caughtException.getMessage());
+            }
+            // 异步记录 Trace（即使异常也记录，便于排查）
+            if (traceRecorder != null && traceRecorder.isEnabled()) {
+                try {
+                    RuleExecutionTrace trace = buildTrace(context, rule, result, elapsed, caughtException);
+                    traceRecorder.record(trace);
+                } catch (Exception te) {
+                    log.debug("[LiteRule] Trace 记录失败: {}", te.getMessage());
+                }
+            }
+            if (isTriggered) {
+                triggered.add(result);
             }
         }
         // 按严重度倒序
@@ -186,6 +250,143 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     public StatsRecorder asStatsRecorder() {
         return this;
+    }
+
+    /**
+     * 设置轨迹记录器
+     *
+     * @param traceRecorder 轨迹记录器；null 表示禁用 Trace
+     * @since 1.4.0
+     */
+    public void setTraceRecorder(TraceRecorder traceRecorder) {
+        this.traceRecorder = traceRecorder;
+    }
+
+    /**
+     * 获取轨迹记录器
+     *
+     * @return 轨迹记录器；未配置返回 null
+     * @since 1.4.0
+     */
+    public TraceRecorder getTraceRecorder() {
+        return traceRecorder;
+    }
+
+    /**
+     * 设置超时执行器
+     *
+     * @param timeoutExecutor 超时执行器；null 表示禁用超时控制
+     * @since 1.4.0
+     */
+    public void setTimeoutExecutor(RuleTimeoutExecutor timeoutExecutor) {
+        this.timeoutExecutor = timeoutExecutor;
+    }
+
+    /**
+     * 获取超时执行器
+     *
+     * @return 超时执行器；未配置返回 null
+     * @since 1.4.0
+     */
+    public RuleTimeoutExecutor getTimeoutExecutor() {
+        return timeoutExecutor;
+    }
+
+    /**
+     * 设置熔断器
+     *
+     * @param circuitBreaker 熔断器；null 表示禁用熔断
+     * @since 1.4.0
+     */
+    public void setCircuitBreaker(RuleCircuitBreaker circuitBreaker) {
+        this.circuitBreaker = circuitBreaker;
+    }
+
+    /**
+     * 获取熔断器
+     *
+     * @return 熔断器；未配置返回 null
+     * @since 1.4.0
+     */
+    public RuleCircuitBreaker getCircuitBreaker() {
+        return circuitBreaker;
+    }
+
+    /**
+     * 设置监控指标
+     *
+     * @param metrics 监控指标；null 表示禁用
+     * @since 1.4.0
+     */
+    public void setMetrics(RuleMetrics metrics) {
+        this.metrics = metrics;
+    }
+
+    /**
+     * 获取监控指标
+     *
+     * @return 监控指标；未配置返回 null
+     * @since 1.4.0
+     */
+    public RuleMetrics getMetrics() {
+        return metrics;
+    }
+
+    /**
+     * 构建执行轨迹记录
+     *
+     * @param context   规则上下文
+     * @param rule      规则
+     * @param result    评估结果（可能为 null）
+     * @param elapsedMs 耗时
+     * @param exception 评估异常（可能为 null）
+     * @return 轨迹记录
+     * @since 1.4.0
+     */
+    private RuleExecutionTrace buildTrace(RuleContext context, Rule rule, RuleResult result,
+                                          long elapsedMs, Exception exception) {
+        String severity = result != null && result.getSeverity() != null
+                ? result.getSeverity().getCode() : null;
+        String conditionResult = result != null && result.getThreshold() != null
+                ? result.getThreshold() : null;
+
+        Map<String, Object> resultSnapshot = new LinkedHashMap<>();
+        if (result != null) {
+            resultSnapshot.put("triggered", result.isTriggered());
+            resultSnapshot.put("severity", severity);
+            resultSnapshot.put("title", result.getTitle());
+            resultSnapshot.put("description", result.getDescription());
+        }
+
+        return new RuleExecutionTrace(
+                context.getTraceId(),
+                rule.getCode(),
+                rule.getName(),
+                context.getScenario(),
+                result != null && result.isTriggered(),
+                severity,
+                conditionResult,
+                elapsedMs,
+                new LinkedHashMap<>(context.getFacts()),
+                resultSnapshot,
+                exception != null ? exception.getMessage() : null
+        );
+    }
+
+    /**
+     * 优雅关闭：释放 TraceRecorder 与超时执行器资源
+     *
+     * @since 1.4.0
+     */
+    @PreDestroy
+    public void destroy() {
+        if (traceRecorder instanceof AsyncTraceRecorder asyncRecorder) {
+            asyncRecorder.shutdown(5);
+            log.info("[LiteRule] 异步 Trace 记录器已关闭");
+        }
+        if (timeoutExecutor != null) {
+            timeoutExecutor.shutdown();
+        }
     }
 
     /**

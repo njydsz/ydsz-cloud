@@ -349,6 +349,21 @@ public class BpmnXmlParser {
         // P0-4: timer / error / signal / message 事件定义
         parseEventDefinitions(elem, ext);
 
+        // P0-1: 标记事件捕获节点 — intermediateCatchEvent / boundaryEvent 为等待态
+        if ("intermediateCatchEvent".equalsIgnoreCase(localName)
+                || "boundaryEvent".equalsIgnoreCase(localName)) {
+            if (ext.containsKey("eventType") || ext.containsKey("timer")) {
+                ext.put("eventCatch", true);
+            }
+            // boundaryEvent 解析 attachedToRef（关联的 userTask ID）
+            if ("boundaryEvent".equalsIgnoreCase(localName)) {
+                String attachedTo = elem.getAttribute("attachedToRef");
+                if (attachedTo != null && !attachedTo.isBlank()) {
+                    ext.put("attachedToRef", attachedTo);
+                }
+            }
+        }
+
         // P0-4: 通用 extensionElements（用户自定义键值对）
         parseExtensionElements(elem, ext);
 
@@ -398,18 +413,21 @@ public class BpmnXmlParser {
                     if (errorRef != null && !errorRef.isBlank()) {
                         ext.put("errorRef", errorRef);
                     }
+                    ext.put("eventType", "ERROR");
                 }
                 case "signaleventdefinition" -> {
                     String signalRef = e.getAttribute("signalRef");
                     if (signalRef != null && !signalRef.isBlank()) {
                         ext.put("signalRef", signalRef);
                     }
+                    ext.put("eventType", "SIGNAL");
                 }
                 case "messageeventdefinition" -> {
                     String messageRef = e.getAttribute("messageRef");
                     if (messageRef != null && !messageRef.isBlank()) {
                         ext.put("messageRef", messageRef);
                     }
+                    ext.put("eventType", "MESSAGE");
                 }
                 case "canceleventdefinition" -> ext.put("cancelEvent", true);
                 case "compensateeventdefinition" -> {

@@ -18,8 +18,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @SpringBootApplication(scanBasePackages = {
         "com.njydsz.pmis.agent",
         "com.njydsz.pmis.common",
-        "com.njydsz.pmis.project",
-        "com.njydsz.pmis.execution"
+        "com.njydsz.pmis.project"
 })
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.njydsz.pmis.agent.feign")

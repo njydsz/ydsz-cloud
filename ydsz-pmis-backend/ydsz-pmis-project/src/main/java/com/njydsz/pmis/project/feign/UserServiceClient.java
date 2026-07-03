@@ -7,13 +7,14 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 /**
- * 用户服务 Feign 客户端（执行模块专用）
+ * 用户服务 Feign 客户端（合并 project + execution 调用需求）
  *
- * <p>用于 NameAssembler 解析员工姓名、内部成本费率查询等跨模块场景；
- * user 服务不可用时由 {@link UserServiceClientFallback} 返回降级值。
+ * <p>用于 NameAssembler 解析员工/客户名称、内部成本费率查询等跨模块场景；
+ * iam 服务不可用时由 {@link UserServiceClientFallback} 返回降级值。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -29,6 +30,24 @@ public interface UserServiceClient {
      */
     @GetMapping("/api/v1/user/employee/{id}")
     Result<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
+
+    /**
+     * 根据客户 ID 查询客户名称
+     *
+     * @param customerId 客户 ID
+     * @return 客户名称；服务降级时返回空字符串
+     */
+    @GetMapping("/api/v1/user/customers/name")
+    Result<String> getCustomerName(@RequestParam("customerId") Long customerId);
+
+    /**
+     * 批量查询员工姓名
+     *
+     * @param ids 员工 ID 列表
+     * @return 员工 ID 到姓名的映射；服务降级时返回空 Map
+     */
+    @GetMapping("/api/v1/user/employees/batch")
+    Result<Map<Long, String>> batchEmployeeName(@RequestParam("ids") List<Long> ids);
 
     /**
      * 按职级编码查询内部成本费率

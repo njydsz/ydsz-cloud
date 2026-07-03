@@ -157,6 +157,18 @@
           AND deleted = 0
     </update>
 
+    <!-- P0-1: 取消单个任务（边界事件触发时使用） -->
+    <update id="cancelTask">
+        UPDATE pmis_flow_task
+        SET task_status = #{taskStatus},
+            comment = #{comment},
+            finish_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND task_status IN ('PENDING', 'CLAIMED')
+          AND deleted = 0
+    </update>
+
     <update id="skipByNode">
         UPDATE pmis_flow_task
         SET task_status = #{taskStatus},

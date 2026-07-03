@@ -1,13 +1,21 @@
 package com.njydsz.pmis.literule.config;
 
 import com.njydsz.pmis.literule.api.RuleEngine;
+import com.njydsz.pmis.literule.core.AsyncTraceRecorder;
 import com.njydsz.pmis.literule.core.DefaultRuleEngine;
+import com.njydsz.pmis.literule.core.MicrometerRuleMetrics;
+import com.njydsz.pmis.literule.core.RuleCircuitBreaker;
+import com.njydsz.pmis.literule.core.RuleMetrics;
+import com.njydsz.pmis.literule.core.RuleTimeoutExecutor;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.spi.DecisionTableConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleConfigBroadcaster;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleVersionRepository;
+import com.njydsz.pmis.literule.spi.TraceRecorder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -45,14 +53,74 @@ public class LiteRuleAutoConfiguration {
     /**
      * 规则引擎
      *
+     * <p>1.4.0 起：
+     * <ul>
+     *   <li>当 traceEnabled=true 时自动装配 {@link AsyncTraceRecorder}，
+     *       若消费方提供了自定义 {@link TraceRecorder} Bean 则作为持久化委托</li>
+     *   <li>当 ruleTimeoutMs > 0 时启用 {@link RuleTimeoutExecutor}</li>
+     *   <li>当 circuitBreakerMinEvaluations > 0 时启用 {@link RuleCircuitBreaker}</li>
+     *   <li>当 MeterRegistry 可用时启用 {@link MicrometerRuleMetrics}</li>
+     * </ul>
+     *
+     * @param properties         配置属性
+     * @param traceDelegateProvider 持久化委托提供者（可选）
+     * @param meterRegistryProvider Micrometer 注册器（可选）
      * @return DefaultRuleEngine 实例
      */
     @Bean
     @ConditionalOnMissingBean
-    public RuleEngine ruleEngine(LiteRuleProperties properties) {
+    public RuleEngine ruleEngine(LiteRuleProperties properties,
+                                  ObjectProvider<TraceRecorder> traceDelegateProvider,
+                                  ObjectProvider<io.micrometer.core.instrument.MeterRegistry> meterRegistryProvider) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
-        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}）", properties.isStatsEnabled());
+
+        if (properties.isTraceEnabled()) {
+            AsyncTraceRecorder asyncRecorder = new AsyncTraceRecorder(
+                    properties.getTraceQueueCapacity(),
+                    properties.getTraceBatchSize(),
+                    properties.getTraceFlushIntervalMs());
+            TraceRecorder delegate = traceDelegateProvider.getIfAvailable();
+            if (delegate != null && !(delegate instanceof AsyncTraceRecorder)) {
+                asyncRecorder.setDelegate(delegate);
+                log.info("[LiteRule] Trace 持久化委托已注入: {}", delegate.getClass().getSimpleName());
+            }
+            engine.setTraceRecorder(asyncRecorder);
+            log.info("[LiteRule] 异步 Trace 记录已启用 (queueCapacity={}, batchSize={}, flushMs={}, delegate={})",
+                    properties.getTraceQueueCapacity(), properties.getTraceBatchSize(),
+                    properties.getTraceFlushIntervalMs(), delegate != null);
+        }
+
+        if (properties.getRuleTimeoutMs() > 0) {
+            int poolSize = Math.max(4, Runtime.getRuntime().availableProcessors());
+            RuleTimeoutExecutor timeoutExecutor = new RuleTimeoutExecutor(properties.getRuleTimeoutMs(), poolSize);
+            engine.setTimeoutExecutor(timeoutExecutor);
+            log.info("[LiteRule] 单规则超时控制已启用 (timeoutMs={}, poolSize={})",
+                    properties.getRuleTimeoutMs(), poolSize);
+        }
+
+        if (properties.getCircuitBreakerMinEvaluations() > 0) {
+            RuleCircuitBreaker breaker = new RuleCircuitBreaker(
+                    properties.getCircuitBreakerErrorRate(),
+                    properties.getCircuitBreakerMinEvaluations(),
+                    30_000L);
+            engine.setCircuitBreaker(breaker);
+            log.info("[LiteRule] 规则熔断器已启用 (errorRateThreshold={}, minEvaluations={})",
+                    properties.getCircuitBreakerErrorRate(), properties.getCircuitBreakerMinEvaluations());
+        }
+
+        io.micrometer.core.instrument.MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
+        if (meterRegistry != null) {
+            MicrometerRuleMetrics metrics = new MicrometerRuleMetrics(meterRegistry);
+            engine.setMetrics(metrics);
+            log.info("[LiteRule] Prometheus 监控指标已启用 (registry={})",
+                    meterRegistry.getClass().getSimpleName());
+        }
+
+        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}）",
+                properties.isStatsEnabled(), properties.isTraceEnabled(),
+                properties.getRuleTimeoutMs(), properties.getCircuitBreakerMinEvaluations() > 0,
+                meterRegistry != null);
         return engine;
     }
 
@@ -73,9 +141,12 @@ public class LiteRuleAutoConfiguration {
     /**
      * 规则热加载管理器（当存在 RuleConfigProvider 时生效）
      *
+     * <p>1.4.0 起：当存在 {@link DecisionTableConfigProvider} 时，决策表也会被自动加载与热刷新。
+     *
      * @param ruleEngine   规则引擎
      * @param evaluator    表达式求值器
-     * @param configProvider 规则配置提供者（可选）
+     * @param configProvider 规则配置提供者
+     * @param dtConfigProviderProvider 决策表配置提供者（可选）
      * @param properties   配置属性
      * @return RuleHotReloader 实例
      */
@@ -85,9 +156,43 @@ public class LiteRuleAutoConfiguration {
     public RuleHotReloader ruleHotReloader(RuleEngine ruleEngine,
                                             ExpressionEvaluator evaluator,
                                             RuleConfigProvider configProvider,
+                                            org.springframework.beans.factory.ObjectProvider<DecisionTableConfigProvider> dtConfigProviderProvider,
                                             LiteRuleProperties properties) {
-        log.info("[LiteRule] 规则热加载管理器已初始化（hotReload={}）", properties.isHotReloadEnabled());
-        return new RuleHotReloader(ruleEngine, evaluator, configProvider, properties);
+        RuleHotReloader reloader = new RuleHotReloader(ruleEngine, evaluator, configProvider, properties);
+        DecisionTableConfigProvider dtProvider = dtConfigProviderProvider.getIfAvailable();
+        if (dtProvider != null) {
+            reloader.setDecisionTableConfigProvider(dtProvider);
+            log.info("[LiteRule] 决策表热加载已启用");
+        }
+        log.info("[LiteRule] 规则热加载管理器已初始化（hotReload={}, decisionTable={}）",
+                properties.isHotReloadEnabled(), dtProvider != null);
+        return reloader;
+    }
+
+    /**
+     * 决策表管理服务（当存在 DecisionTableConfigProvider 时生效）
+     *
+     * @param ruleEngine        规则引擎
+     * @param dtConfigProvider  决策表配置提供者
+     * @param broadcasterProvider 广播器（可选）
+     * @param eventPublisher    事件发布器
+     * @return DecisionTableAdminService 实例
+     * @since 1.4.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(DecisionTableConfigProvider.class)
+    public DecisionTableAdminService decisionTableAdminService(RuleEngine ruleEngine,
+                                                                DecisionTableConfigProvider dtConfigProvider,
+                                                                org.springframework.beans.factory.ObjectProvider<RuleConfigBroadcaster> broadcasterProvider,
+                                                                ApplicationEventPublisher eventPublisher) {
+        DecisionTableAdminService service = new DecisionTableAdminService(ruleEngine, dtConfigProvider, eventPublisher);
+        RuleConfigBroadcaster broadcaster = broadcasterProvider.getIfAvailable();
+        if (broadcaster != null) {
+            service.setBroadcaster(broadcaster);
+        }
+        log.info("[LiteRule] 决策表管理服务已初始化（broadcast={}）", broadcaster != null);
+        return service;
     }
 
     /**

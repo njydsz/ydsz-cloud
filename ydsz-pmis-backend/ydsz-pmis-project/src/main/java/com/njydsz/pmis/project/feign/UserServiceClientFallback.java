@@ -6,12 +6,13 @@ import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 
 /**
  * 用户服务降级工厂
  *
- * <p>user 服务不可用时返回 503 / 零费率，避免 NameAssembler / 成本计算等场景级联失败。
+ * <p>iam 服务不可用时返回 503 / 零费率 / 空映射，避免 NameAssembler / 成本计算等场景级联失败。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -33,6 +34,16 @@ public class UserServiceClientFallback implements FallbackFactory<UserServiceCli
             @Override
             public Result<Map<String, Object>> getEmployee(Long id) {
                 return Result.failed(503, "用户服务暂不可用");
+            }
+
+            @Override
+            public Result<String> getCustomerName(Long customerId) {
+                return Result.ok("");
+            }
+
+            @Override
+            public Result<Map<Long, String>> batchEmployeeName(List<Long> ids) {
+                return Result.ok(Map.of());
             }
 
             @Override

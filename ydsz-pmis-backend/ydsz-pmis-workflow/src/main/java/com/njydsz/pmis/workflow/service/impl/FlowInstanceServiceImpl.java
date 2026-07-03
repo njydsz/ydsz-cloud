@@ -29,12 +29,14 @@ import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
 import com.njydsz.pmis.workflow.service.FlowCanaryService;
 import com.njydsz.pmis.workflow.service.FlowCcService;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
+import com.njydsz.pmis.workflow.service.FlowEventSubscriptionService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowSubProcessService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -87,6 +89,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowCcService ccService;
     /** 流程自动触发服务（实例完成时检查是否需要自动发起下一流程） */
     private final FlowAutoTriggerService autoTriggerService;
+    /**
+     * P0-1: BPMN 事件订阅服务 — 流程推进到事件捕获节点时创建订阅
+     *
+     * <p>使用 @Lazy 避免循环依赖：FlowEventSubscriptionServiceImpl → FlowAdvancer → FlowInstanceService → FlowEventSubscriptionService
+     */
+    @Lazy
+    private final FlowEventSubscriptionService eventSubscriptionService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -226,6 +235,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 null, null, now, durationMs);
         // 取消所有 PENDING 任务
         taskService.cancelByInstance(instanceId, FlowTaskStatus.CANCELLED.name());
+        // P0-1: 取消所有 WAITING 事件订阅
+        eventSubscriptionService.cancelByInstance(instanceId, "INSTANCE_TERMINATED: " + reason);
         log.info("[Flow] 终止流程: instanceId={} reason={}", instanceId, reason);
         // P2-3: Prometheus 指标 — 实例终止 + 耗时
         if (flowMetrics != null) {
@@ -564,7 +575,47 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 }
                 continue;
             }
+            // P0-1: 事件捕获节点（intermediateCatchEvent / boundaryEvent）— 创建订阅，不创建人工任务
+            if (eventSubscriptionService.isEventCatchNode(node)) {
+                Long boundaryTaskId = resolveBoundaryTaskId(node, instanceId);
+                eventSubscriptionService.createSubscription(instanceId, node, variables, boundaryTaskId);
+                // 更新实例当前节点为事件捕获节点（流程在此等待事件触发）
+                instanceMapper.updateStatus(instanceId, null,
+                        node.getNodeCode(), node.getNodeName(), null, null);
+                log.info("[Flow] 事件捕获节点等待触发: instanceId={} node={} type={}",
+                        instanceId, node.getNodeCode(), node.getNodeType());
+                continue;
+            }
             taskService.createTask(instanceId, node, variables);
+        }
+    }
+
+    /**
+     * P0-1: 解析边界事件关联的 userTask ID
+     *
+     * <p>boundaryEvent 节点 ext 中 attachedToRef 指向被附着的节点编码，
+     * 查找该节点的当前 PENDING 任务作为 boundaryTaskId。
+     * intermediateCatchEvent 无 attachedToRef，返回 null。
+     */
+    @SuppressWarnings("unchecked")
+    private Long resolveBoundaryTaskId(FlowNodeDO node, Long instanceId) {
+        if (node == null || !StringUtils.hasText(node.getExt())) {
+            return null;
+        }
+        try {
+            Map<String, Object> ext = JSON.parseObject(node.getExt(), Map.class);
+            if (ext == null) return null;
+            String attachedToRef = (String) ext.get("attachedToRef");
+            if (!StringUtils.hasText(attachedToRef)) {
+                return null;
+            }
+            // 查找被附着节点的当前 PENDING 任务
+            List<FlowTaskDO> tasks = taskMapper.selectPendingByNode(instanceId, attachedToRef);
+            return tasks.isEmpty() ? null : tasks.get(0).getId();
+        } catch (Exception e) {
+            log.warn("[Flow] 解析 boundaryTaskId 失败: nodeCode={} err={}",
+                    node.getNodeCode(), e.getMessage());
+            return null;
         }
     }
 

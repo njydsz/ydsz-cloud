@@ -32,6 +32,7 @@ import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
+import com.njydsz.pmis.workflow.service.FlowEventSubscriptionService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowSlaService;
 import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
@@ -108,6 +109,13 @@ public class FlowTaskCompleteServiceImpl {
     private final FlowTaskSupport support;
     /** P1-4: 服务节点执行器（HTTP/SCRIPT/AUTO_PASS 自动执行） */
     private final FlowServiceNodeExecutor serviceNodeExecutor;
+    /**
+     * P0-1: 事件订阅服务 — 任务完成时取消关联的边界事件订阅
+     *
+     * <p>使用 @Lazy 避免循环依赖：FlowEventSubscriptionServiceImpl → FlowAdvancer → FlowTaskService → FlowTaskCompleteServiceImpl
+     */
+    @Lazy
+    private final FlowEventSubscriptionService eventSubscriptionService;
 
     // ============================== 创建任务 ==============================
 
@@ -886,6 +894,8 @@ public class FlowTaskCompleteServiceImpl {
         task.setFinishAt(now);
         task.setDurationMs(durationMs);
         archiveTask(task, FlowTaskStatus.COMPLETED);
+        // P0-1: 任务完成后取消关联的边界事件订阅（userTask 正常完成，不再等待边界事件触发）
+        eventSubscriptionService.cancelByTask(task.getId(), "TASK_COMPLETED");
     }
 
     private void updateInstanceNode(FlowInstanceDO instance, List<FlowNodeDO> nextNodes) {

@@ -75,4 +75,28 @@
         UPDATE pmis_flow_event_subscription
         SET subscription_status = 'CANCELLED',
             cancel_reason = #{reason},
-            updated
+            updated_at = NOW()
+        WHERE boundary_task_id = #{boundaryTaskId}
+          AND subscription_status = 'WAITING'
+          AND deleted = 0
+    </update>
+
+    <!-- 取消某实例所有 WAITING 订阅 -->
+    <update id="cancelByInstance">
+        UPDATE pmis_flow_event_subscription
+        SET subscription_status = 'CANCELLED',
+            cancel_reason = #{reason},
+            updated_at = NOW()
+        WHERE instance_id = #{instanceId}
+          AND subscription_status = 'WAITING'
+          AND deleted = 0
+    </update>
+
+    <select id="countWaitingByInstance" resultType="long">
+        SELECT COUNT(*)
+        FROM pmis_flow_event_subscription
+        WHERE instance_id = #{instanceId}
+          AND subscription_status = 'WAITING'
+          AND deleted = 0
+    </select>
+</mapper>

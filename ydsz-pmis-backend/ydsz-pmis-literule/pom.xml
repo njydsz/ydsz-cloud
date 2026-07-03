@@ -55,6 +55,13 @@
             <optional>true</optional>
         </dependency>
 
+        <!-- Micrometer Prometheus（监控指标，可选；1.4.0 起） -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-registry-prometheus</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- MyBatis-Plus（规则配置持久化，可选，由消费方提供 Mapper 实现） -->
         <dependency>
             <groupId>com.baomidou</groupId>

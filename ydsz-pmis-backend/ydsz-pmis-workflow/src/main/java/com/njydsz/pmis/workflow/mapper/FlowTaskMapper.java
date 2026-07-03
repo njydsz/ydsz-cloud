@@ -86,6 +86,17 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
                          @Param("taskStatus") String taskStatus);
 
     /**
+     * P0-1: 取消单个任务（边界事件触发时使用）
+     *
+     * @param id         任务 ID
+     * @param taskStatus 目标状态
+     * @param comment    取消原因
+     */
+    int cancelTask(@Param("id") Long id,
+                   @Param("taskStatus") String taskStatus,
+                   @Param("comment") String comment);
+
+    /**
      * 跳过某节点剩余 PENDING（同会签场景）
      */
     int skipByNode(@Param("instanceId") Long instanceId,
