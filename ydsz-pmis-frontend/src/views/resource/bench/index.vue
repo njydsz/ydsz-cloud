@@ -1,6 +1,6 @@
 <!--
   @file Bench 闲置池管理
-  @description Bench 闲置池管理页面：提供闲置概览仪表盘（累计闲置成本、各池人数、Top 成本与池分布）、员工入池/出池操作以及分页筛选查询。闲置天数由后端 ChronoUnit.DAYS.between 计算，培训窗口为 30 天。对应路由 /resource/bench，后端服务 ydsz-pmis-user（端口 9002）。
+  @description Bench 闲置池管理页面：提供闲置概览仪表盘（累计闲置成本、各池人数、Top 成本与池分布）、员工入池/出池操作以及分页筛选查询。闲置天数由后端 ChronoUnit.DAYS.between 计算，培训窗口为 30 天。对应路由 /resource/bench，后端服务 ydsz-pmis-iam（端口 9002）。
   @module views/resource/bench
 -->
 <script setup lang="ts">

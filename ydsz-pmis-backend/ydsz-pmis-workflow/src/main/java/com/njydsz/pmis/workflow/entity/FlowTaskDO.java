@@ -111,6 +111,9 @@ public class FlowTaskDO extends BaseDO {
     /** 截止时间 */
     private LocalDateTime dueAt;
 
+    /** P1-1: 任务优先级（1-100，默认 50）；待办默认按 priority DESC, created_at ASC 排序 */
+    private Integer priority;
+
     /** P1-6: 已发送的 SLA 催办次数 */
     private Integer reminderCount;
 

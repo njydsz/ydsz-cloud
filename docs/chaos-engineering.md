@@ -93,7 +93,7 @@
 
 - **日期**: 2026-07-15
 - **Owner**: sre-team-lead
-- **目标服务**: ydsz-pmis-execution
+- **目标服务**: ydsz-pmis-project
 - **金丝雀版本**: v1.1.0-rc1
 - **实验类型**: LATENCY
 - **注入位置**: ContractService.getContract()

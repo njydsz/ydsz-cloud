@@ -153,10 +153,10 @@ Access token 有效期 2 小时，refresh token 有效期 7 天。
 
 ```bash
 # 启动任一服务
-mvn -pl ydsz-pmis-execution spring-boot:run
+mvn -pl ydsz-pmis-project spring-boot:run
 
 # 另开终端导出 OpenAPI JSON
-curl http://localhost:9006/v3/api-docs > docs/api/openapi-execution.json
+curl http://localhost:9005/v3/api-docs > docs/api/openapi-project.json
 ```
 
 ### Maven 批量生成

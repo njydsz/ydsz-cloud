@@ -4,6 +4,7 @@ import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.api.ScorecardDefinition;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import lombok.Builder;
 import lombok.Data;
@@ -61,6 +62,9 @@ public class ScorecardRule implements Rule {
     private final String scope;
     @Singular
     private final List<ScoreFactor> factors;
+    /** 基础分（命中因子前的基础值，默认 100） */
+    @Builder.Default
+    private final double baseScore = 100;
     private final double redThreshold;
     private final double yellowThreshold;
     private final ExpressionEvaluator evaluator;
@@ -80,11 +84,42 @@ public class ScorecardRule implements Rule {
     @Override
     public String getScope() { return scope; }
 
+    /**
+     * 从 ScorecardDefinition 构造评分卡规则
+     *
+     * @param def       评分卡定义
+     * @param evaluator 表达式求值器
+     * @return ScorecardRule 实例
+     * @since 1.4.0
+     */
+    public static ScorecardRule from(ScorecardDefinition def, ExpressionEvaluator evaluator) {
+        ScorecardRuleBuilder b = ScorecardRule.builder()
+                .code(def.getRuleCode())
+                .name(def.getRuleName())
+                .category(def.getCategory())
+                .priority(def.getPriority())
+                .scope(def.getScope())
+                .baseScore(def.getBaseScore())
+                .redThreshold(def.getRedThreshold())
+                .yellowThreshold(def.getYellowThreshold())
+                .evaluator(evaluator);
+        if (def.getFactors() != null) {
+            for (ScorecardDefinition.ScoreFactor f : def.getFactors()) {
+                b.factor(ScoreFactor.builder()
+                        .conditionExpression(f.getConditionExpression())
+                        .score(f.getScore())
+                        .description(f.getDescription())
+                        .build());
+            }
+        }
+        return b.build();
+    }
+
     @Override
     public RuleResult evaluate(RuleContext context) {
         long start = System.nanoTime();
         try {
-            double totalScore = 100; // 基础分
+            double totalScore = baseScore;
             List<String> hitFactors = new ArrayList<>();
 
             for (ScoreFactor factor : factors) {

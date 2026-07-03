@@ -1,15 +1,24 @@
 package com.njydsz.pmis.literule.config;
 
 import com.njydsz.pmis.literule.api.DecisionTableDefinition;
+import com.njydsz.pmis.literule.api.DecisionTreeDefinition;
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
+import com.njydsz.pmis.literule.api.ScorecardDefinition;
+import com.njydsz.pmis.literule.api.ScriptDefinition;
 import com.njydsz.pmis.literule.event.RuleConfigRefreshEvent;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.impl.DecisionTableRule;
+import com.njydsz.pmis.literule.impl.DecisionTreeRule;
 import com.njydsz.pmis.literule.impl.ExpressionRule;
+import com.njydsz.pmis.literule.impl.ScorecardRule;
+import com.njydsz.pmis.literule.impl.ScriptRule;
 import com.njydsz.pmis.literule.spi.DecisionTableConfigProvider;
+import com.njydsz.pmis.literule.spi.DecisionTreeConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
+import com.njydsz.pmis.literule.spi.ScorecardConfigProvider;
+import com.njydsz.pmis.literule.spi.ScriptConfigProvider;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +30,19 @@ import java.util.List;
 /**
  * 规则热加载管理器
  *
- * <p>监听 {@link RuleConfigRefreshEvent} 事件，从 {@link RuleConfigProvider} 重新加载规则定义，
- * 构建 {@link ExpressionRule} 并注册到引擎，实现运行时规则热刷新。
+ * <p>监听 {@link RuleConfigRefreshEvent} 事件，从 SPI Provider 重新加载规则定义，
+ * 构建对应 {@link Rule} 实例并注册到引擎，实现运行时规则热刷新。
  *
- * <p>1.4.0 起支持决策表热加载：当 {@link DecisionTableConfigProvider} 可用时，
- * 同步加载决策表并注册为 {@link DecisionTableRule}。
+ * <p>1.4.0 起支持以下规则类型的动态加载：
+ * <ul>
+ *   <li>表达式规则（{@link ExpressionRule}，必需 SPI：{@link RuleConfigProvider}）</li>
+ *   <li>决策表规则（{@link DecisionTableRule}，可选 SPI：{@link DecisionTableConfigProvider}）</li>
+ *   <li>评分卡规则（{@link ScorecardRule}，可选 SPI：{@link ScorecardConfigProvider}）</li>
+ *   <li>决策树规则（{@link DecisionTreeRule}，可选 SPI：{@link DecisionTreeConfigProvider}）</li>
+ *   <li>脚本规则（{@link ScriptRule}，可选 SPI：{@link ScriptConfigProvider}）</li>
+ * </ul>
+ *
+ * <p>当 SPI Bean 不存在时，对应规则类型不会被加载（向后兼容）。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
@@ -42,6 +59,15 @@ public class RuleHotReloader {
     /** 决策表配置提供者（可选，1.4.0 起支持） */
     private DecisionTableConfigProvider decisionTableConfigProvider;
 
+    /** 评分卡配置提供者（可选，1.4.0 起支持） */
+    private ScorecardConfigProvider scorecardConfigProvider;
+
+    /** 决策树配置提供者（可选，1.4.0 起支持） */
+    private DecisionTreeConfigProvider decisionTreeConfigProvider;
+
+    /** 脚本规则配置提供者（可选，1.4.0 起支持） */
+    private ScriptConfigProvider scriptConfigProvider;
+
     /**
      * 设置决策表配置提供者
      *
@@ -50,6 +76,36 @@ public class RuleHotReloader {
      */
     public void setDecisionTableConfigProvider(DecisionTableConfigProvider provider) {
         this.decisionTableConfigProvider = provider;
+    }
+
+    /**
+     * 设置评分卡配置提供者
+     *
+     * @param provider 评分卡配置提供者
+     * @since 1.4.0
+     */
+    public void setScorecardConfigProvider(ScorecardConfigProvider provider) {
+        this.scorecardConfigProvider = provider;
+    }
+
+    /**
+     * 设置决策树配置提供者
+     *
+     * @param provider 决策树配置提供者
+     * @since 1.4.0
+     */
+    public void setDecisionTreeConfigProvider(DecisionTreeConfigProvider provider) {
+        this.decisionTreeConfigProvider = provider;
+    }
+
+    /**
+     * 设置脚本规则配置提供者
+     *
+     * @param provider 脚本配置提供者
+     * @since 1.4.0
+     */
+    public void setScriptConfigProvider(ScriptConfigProvider provider) {
+        this.scriptConfigProvider = provider;
     }
 
     /**
@@ -77,46 +133,108 @@ public class RuleHotReloader {
         try {
             // 先注销所有动态加载的规则（保留编程式注册的 StaticRule）
             for (Rule existing : ruleEngine.getRules()) {
-                if (existing instanceof ExpressionRule || existing instanceof DecisionTableRule) {
+                if (isDynamicRule(existing)) {
                     ruleEngine.unregister(existing.getCode());
                 }
             }
 
-            // 加载表达式规则
-            int exprCount = 0;
-            List<RuleDefinition> definitions = configProvider.loadEnabledRules();
-            for (RuleDefinition def : definitions) {
-                if (!def.isEnabled()) continue;
-                try {
-                    ExpressionRule rule = new ExpressionRule(def, evaluator);
-                    ruleEngine.register(rule);
-                    exprCount++;
-                } catch (Exception e) {
-                    log.warn("[LiteRule] 规则 {} 加载失败: {}", def.getCode(), e.getMessage());
-                }
-            }
+            int exprCount = loadExpressionRules();
+            int dtCount = loadDecisionTables();
+            int scCount = loadScorecards();
+            int trCount = loadDecisionTrees();
+            int sc2Count = loadScripts();
 
-            // 加载决策表
-            int dtCount = 0;
-            if (decisionTableConfigProvider != null) {
-                List<DecisionTableDefinition> tables = decisionTableConfigProvider.loadEnabledTables();
-                for (DecisionTableDefinition dt : tables) {
-                    if (!dt.isEnabled()) continue;
-                    try {
-                        DecisionTableRule rule = new DecisionTableRule(dt, evaluator);
-                        ruleEngine.register(rule);
-                        dtCount++;
-                    } catch (Exception e) {
-                        log.warn("[LiteRule-DecisionTable] 决策表 {} 加载失败: {}", dt.getTableCode(), e.getMessage());
-                    }
-                }
-            }
-
-            log.info("[LiteRule] 全量热刷新完成: 表达式规则 {} 条, 决策表 {} 个, operator={}",
-                    exprCount, dtCount, operator);
+            log.info("[LiteRule] 全量热刷新完成: 表达式规则 {}, 决策表 {}, 评分卡 {}, 决策树 {}, 脚本 {}, operator={}",
+                    exprCount, dtCount, scCount, trCount, sc2Count, operator);
         } catch (Exception e) {
             log.error("[LiteRule] 全量热刷新失败: {}", e.getMessage(), e);
         }
+    }
+
+    /**
+     * 判断规则是否为动态加载类型（用于注销时识别）
+     */
+    private boolean isDynamicRule(Rule rule) {
+        return rule instanceof ExpressionRule
+                || rule instanceof DecisionTableRule
+                || rule instanceof ScorecardRule
+                || rule instanceof DecisionTreeRule
+                || rule instanceof ScriptRule;
+    }
+
+    private int loadExpressionRules() {
+        int count = 0;
+        List<RuleDefinition> definitions = configProvider.loadEnabledRules();
+        for (RuleDefinition def : definitions) {
+            if (!def.isEnabled()) continue;
+            try {
+                ruleEngine.register(new ExpressionRule(def, evaluator));
+                count++;
+            } catch (Exception e) {
+                log.warn("[LiteRule] 规则 {} 加载失败: {}", def.getCode(), e.getMessage());
+            }
+        }
+        return count;
+    }
+
+    private int loadDecisionTables() {
+        if (decisionTableConfigProvider == null) return 0;
+        int count = 0;
+        for (DecisionTableDefinition dt : decisionTableConfigProvider.loadEnabledTables()) {
+            if (!dt.isEnabled()) continue;
+            try {
+                ruleEngine.register(new DecisionTableRule(dt, evaluator));
+                count++;
+            } catch (Exception e) {
+                log.warn("[LiteRule-DecisionTable] 决策表 {} 加载失败: {}", dt.getTableCode(), e.getMessage());
+            }
+        }
+        return count;
+    }
+
+    private int loadScorecards() {
+        if (scorecardConfigProvider == null) return 0;
+        int count = 0;
+        for (ScorecardDefinition def : scorecardConfigProvider.loadEnabledScorecards()) {
+            if (!def.isEnabled()) continue;
+            try {
+                ruleEngine.register(ScorecardRule.from(def, evaluator));
+                count++;
+            } catch (Exception e) {
+                log.warn("[LiteRule-Scorecard] 评分卡 {} 加载失败: {}", def.getRuleCode(), e.getMessage());
+            }
+        }
+        return count;
+    }
+
+    private int loadDecisionTrees() {
+        if (decisionTreeConfigProvider == null) return 0;
+        int count = 0;
+        for (DecisionTreeDefinition def : decisionTreeConfigProvider.loadEnabledTrees()) {
+            if (!def.isEnabled()) continue;
+            try {
+                ruleEngine.register(DecisionTreeRule.from(def, evaluator));
+                count++;
+            } catch (Exception e) {
+                log.warn("[LiteRule-DecisionTree] 决策树 {} 加载失败: {}", def.getRuleCode(), e.getMessage());
+            }
+        }
+        return count;
+    }
+
+    private int loadScripts() {
+        if (scriptConfigProvider == null) return 0;
+        int count = 0;
+        for (ScriptDefinition def : scriptConfigProvider.loadEnabledScripts()) {
+            if (!def.isEnabled()) continue;
+            try {
+                ruleEngine.register(ScriptRule.from(def));
+                count++;
+            } catch (Exception e) {
+                log.warn("[LiteRule-Script] 脚本规则 {} 加载失败: {}", def.getRuleCode(), e.getMessage());
+            }
+        }
+        return count;
     }
 
     /**
@@ -135,57 +253,100 @@ public class RuleHotReloader {
             case FULL_RELOAD -> fullReload(event.getOperator());
             case DELETE -> {
                 ruleEngine.unregister(event.getRuleCode());
-                log.info("[LiteRule] 规则/决策表已注销: code={}, operator={}",
-                        event.getRuleCode(), event.getOperator());
+                log.info("[LiteRule] 规则已注销: code={}, operator={}", event.getRuleCode(), event.getOperator());
             }
             default -> reloadSingle(event.getRuleCode(), event.getOperator());
         }
     }
 
     /**
-     * 重新加载单条规则（先尝试表达式规则，再尝试决策表）
+     * 重新加载单条规则（按规则类型顺序尝试）
      *
      * @param ruleCode 规则编码
      * @param operator 操作人
      */
     private void reloadSingle(String ruleCode, String operator) {
         try {
-            // 优先尝试表达式规则
-            RuleDefinition def = configProvider.findByCode(ruleCode);
-            if (def != null) {
-                if (!def.isEnabled()) {
-                    ruleEngine.unregister(ruleCode);
-                    log.info("[LiteRule] 规则 {} 已注销（已禁用）, operator={}", ruleCode, operator);
-                    return;
-                }
-                ExpressionRule rule = new ExpressionRule(def, evaluator);
-                ruleEngine.register(rule);
-                log.info("[LiteRule] 规则 {} 热刷新完成, operator={}", ruleCode, operator);
-                return;
-            }
+            if (tryReloadExpression(ruleCode, operator)) return;
+            if (tryReloadDecisionTable(ruleCode, operator)) return;
+            if (tryReloadScorecard(ruleCode, operator)) return;
+            if (tryReloadDecisionTree(ruleCode, operator)) return;
+            if (tryReloadScript(ruleCode, operator)) return;
 
-            // 回退到决策表
-            if (decisionTableConfigProvider != null) {
-                DecisionTableDefinition dt = decisionTableConfigProvider.findByCode(ruleCode);
-                if (dt != null) {
-                    if (!dt.isEnabled()) {
-                        ruleEngine.unregister(ruleCode);
-                        log.info("[LiteRule-DecisionTable] 决策表 {} 已注销（已禁用）, operator={}",
-                                ruleCode, operator);
-                        return;
-                    }
-                    DecisionTableRule rule = new DecisionTableRule(dt, evaluator);
-                    ruleEngine.register(rule);
-                    log.info("[LiteRule-DecisionTable] 决策表 {} 热刷新完成, operator={}", ruleCode, operator);
-                    return;
-                }
-            }
-
-            // 既非表达式规则也非决策表：注销
+            // 既非表达式规则也非其他类型：注销
             ruleEngine.unregister(ruleCode);
             log.info("[LiteRule] 规则 {} 未找到，已注销, operator={}", ruleCode, operator);
         } catch (Exception e) {
             log.error("[LiteRule] 规则 {} 热刷新失败: {}", ruleCode, e.getMessage(), e);
         }
+    }
+
+    private boolean tryReloadExpression(String ruleCode, String operator) {
+        RuleDefinition def = configProvider.findByCode(ruleCode);
+        if (def == null) return false;
+        if (!def.isEnabled()) {
+            ruleEngine.unregister(ruleCode);
+            log.info("[LiteRule] 规则 {} 已注销（已禁用）, operator={}", ruleCode, operator);
+            return true;
+        }
+        ruleEngine.register(new ExpressionRule(def, evaluator));
+        log.info("[LiteRule] 规则 {} 热刷新完成, operator={}", ruleCode, operator);
+        return true;
+    }
+
+    private boolean tryReloadDecisionTable(String ruleCode, String operator) {
+        if (decisionTableConfigProvider == null) return false;
+        DecisionTableDefinition dt = decisionTableConfigProvider.findByCode(ruleCode);
+        if (dt == null) return false;
+        if (!dt.isEnabled()) {
+            ruleEngine.unregister(ruleCode);
+            log.info("[LiteRule-DecisionTable] 决策表 {} 已注销（已禁用）, operator={}", ruleCode, operator);
+            return true;
+        }
+        ruleEngine.register(new DecisionTableRule(dt, evaluator));
+        log.info("[LiteRule-DecisionTable] 决策表 {} 热刷新完成, operator={}", ruleCode, operator);
+        return true;
+    }
+
+    private boolean tryReloadScorecard(String ruleCode, String operator) {
+        if (scorecardConfigProvider == null) return false;
+        ScorecardDefinition def = scorecardConfigProvider.findByCode(ruleCode);
+        if (def == null) return false;
+        if (!def.isEnabled()) {
+            ruleEngine.unregister(ruleCode);
+            log.info("[LiteRule-Scorecard] 评分卡 {} 已注销（已禁用）, operator={}", ruleCode, operator);
+            return true;
+        }
+        ruleEngine.register(ScorecardRule.from(def, evaluator));
+        log.info("[LiteRule-Scorecard] 评分卡 {} 热刷新完成, operator={}", ruleCode, operator);
+        return true;
+    }
+
+    private boolean tryReloadDecisionTree(String ruleCode, String operator) {
+        if (decisionTreeConfigProvider == null) return false;
+        DecisionTreeDefinition def = decisionTreeConfigProvider.findByCode(ruleCode);
+        if (def == null) return false;
+        if (!def.isEnabled()) {
+            ruleEngine.unregister(ruleCode);
+            log.info("[LiteRule-DecisionTree] 决策树 {} 已注销（已禁用）, operator={}", ruleCode, operator);
+            return true;
+        }
+        ruleEngine.register(DecisionTreeRule.from(def, evaluator));
+        log.info("[LiteRule-DecisionTree] 决策树 {} 热刷新完成, operator={}", ruleCode, operator);
+        return true;
+    }
+
+    private boolean tryReloadScript(String ruleCode, String operator) {
+        if (scriptConfigProvider == null) return false;
+        ScriptDefinition def = scriptConfigProvider.findByCode(ruleCode);
+        if (def == null) return false;
+        if (!def.isEnabled()) {
+            ruleEngine.unregister(ruleCode);
+            log.info("[LiteRule-Script] 脚本规则 {} 已注销（已禁用）, operator={}", ruleCode, operator);
+            return true;
+        }
+        ruleEngine.register(ScriptRule.from(def));
+        log.info("[LiteRule-Script] 脚本规则 {} 热刷新完成, operator={}", ruleCode, operator);
+        return true;
     }
 }

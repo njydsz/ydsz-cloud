@@ -4,6 +4,7 @@ import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.api.ScriptDefinition;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.script.Bindings;
@@ -138,6 +139,29 @@ public class ScriptRule implements Rule {
     public ScriptRule(String code, String name, String category,
                       RuleSeverity defaultSeverity, String script, boolean sandboxEnabled) {
         this(code, name, category, DEFAULT_PRIORITY, null, defaultSeverity, script, sandboxEnabled);
+    }
+
+    /**
+     * 从 ScriptDefinition 构造脚本规则
+     *
+     * @param def 脚本规则定义
+     * @return ScriptRule 实例
+     * @since 1.4.0
+     */
+    public static ScriptRule from(ScriptDefinition def) {
+        RuleSeverity severity = def.getDefaultSeverity() != null
+                ? RuleSeverity.fromCode(def.getDefaultSeverity())
+                : RuleSeverity.INFO;
+        return new ScriptRule(
+                def.getRuleCode(),
+                def.getRuleName(),
+                def.getCategory(),
+                def.getPriority(),
+                def.getScope(),
+                severity,
+                def.getScript(),
+                def.isSandboxEnabled()
+        );
     }
 
     @Override

@@ -328,7 +328,7 @@ CommonConstants.DELETED            // 1
 
 ```bash
 mvn -pl ydsz-pmis-common test
-mvn -pl ydsz-pmis-auth -am test
+mvn -pl ydsz-pmis-iam -am test
 ```
 
 ## 15. 开发规范
@@ -380,24 +380,20 @@ public class UserController {
 
 ## 16. 附录：模块清单
 
-> 端口统一编排（按服务启动顺序 9000 起 +1 连续，共 13 个微服务），
+> 服务合并重构后共 7 个可部署服务 + 2 个库（common / literule 不独立部署），
 > 与 `application.yml` / `helm/values*.yaml` / `docker-compose.apps.yml` / `prometheus.yml` 完全一致。
 
 | # | 模块 | 端口 | 职责 |
 |---|------|------|------|
 | 1 | ydsz-pmis-gateway | 9000 | API 网关（路由、鉴权透传、CORS） |
-| 2 | ydsz-pmis-auth | 9001 | 认证授权（登录、Token、验证码、2FA） |
-| 3 | ydsz-pmis-user | 9002 | 用户/权限/部门/资源池（含 Bench） |
-| 4 | ydsz-pmis-notification | 9003 | 通知中心（站内消息、邮件、推送） |
-| 5 | ydsz-pmis-workflow | 9004 | 自研工作流引擎（审批流、门径评审、SLA） |
-| 6 | ydsz-pmis-project | 9005 | 商机/立项/合同/变更/结项 |
-| 7 | ydsz-pmis-execution | 9006 | 执行/成本/财务/报表/驾驶舱（核心域，副本最多） |
-| 8 | ydsz-pmis-agent | 9007 | AI 智能体（编排、风险预警、利润预测） |
-| 9 | ydsz-pmis-config | 9008 | 配置中心（Feature Flag、Chaos、字典） |
-| 10 | ydsz-pmis-file | 9009 | 文件存储（MinIO 封装、签名 URL） |
-| 11 | ydsz-pmis-audit | 9010 | 审计日志（操作/数据/登录/审批全链路） |
-| 12 | ydsz-pmis-message | 9011 | 消息模板（IM/邮件/短信 模板与渲染） |
-| 13 | ydsz-pmis-scheduler | 9012 | 分布式任务调度（XXL-JOB 客户端） |
+| 2 | ydsz-pmis-iam | 9002 | 认证授权 + 用户/权限/部门/资源池（含 Bench，user + auth 合并，包名 com.njydsz.pmis.iam） |
+| 3 | ydsz-pmis-workflow | 9004 | 自研工作流引擎（审批流、门径评审、SLA） |
+| 4 | ydsz-pmis-project | 9005 | 商机/立项/合同/变更/执行/成本/财务/报表/驾驶舱（project + execution 合并，核心域，包名 com.njydsz.pmis.project） |
+| 5 | ydsz-pmis-agent | 9007 | AI 智能体（编排、风险预警、利润预测） |
+| 6 | ydsz-pmis-system | 9008 | 文件/配置/审计/通知/消息模板（file + config + audit + notification + message 合并，包名 com.njydsz.pmis.system） |
+| 7 | ydsz-pmis-scheduler | 9012 | 分布式任务调度（XXL-JOB 客户端） |
+| — | ydsz-pmis-common | — | 公共组件库（响应/异常/工具/常量，不独立部署） |
+| — | ydsz-pmis-literule | — | 轻量规则引擎库（表达式/规则链，不独立部署） |
 
 > 周边组件端口保持业界默认：xxl-job-admin 9100、seata 8091/7091、sentinel 8719、
 > nacos 8848/9848、minio 9000/9001、postgres 5432、redis 6379、rocketmq 9876/10909/10911/10912、elasticsearch 9200。

@@ -11,9 +11,12 @@ import com.njydsz.pmis.literule.core.RuleTimeoutExecutor;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.spi.DecisionTableConfigProvider;
+import com.njydsz.pmis.literule.spi.DecisionTreeConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleConfigBroadcaster;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleVersionRepository;
+import com.njydsz.pmis.literule.spi.ScorecardConfigProvider;
+import com.njydsz.pmis.literule.spi.ScriptConfigProvider;
 import com.njydsz.pmis.literule.spi.TraceRecorder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -188,13 +191,16 @@ public class LiteRuleAutoConfiguration {
     /**
      * 规则热加载管理器（当存在 RuleConfigProvider 时生效）
      *
-     * <p>1.4.0 起：当存在 {@link DecisionTableConfigProvider} 时，决策表也会被自动加载与热刷新。
+     * <p>1.4.0 起支持以下可选 SPI：决策表/评分卡/决策树/脚本规则的动态加载。
      *
-     * @param ruleEngine   规则引擎
-     * @param evaluator    表达式求值器
-     * @param configProvider 规则配置提供者
-     * @param dtConfigProviderProvider 决策表配置提供者（可选）
-     * @param properties   配置属性
+     * @param ruleEngine       规则引擎
+     * @param evaluator        表达式求值器
+     * @param configProvider   规则配置提供者
+     * @param dtConfigProvider 决策表配置提供者（可选）
+     * @param scConfigProvider 评分卡配置提供者（可选）
+     * @param trConfigProvider 决策树配置提供者（可选）
+     * @param scriptConfigProvider 脚本规则配置提供者（可选）
+     * @param properties       配置属性
      * @return RuleHotReloader 实例
      */
     @Bean
@@ -203,16 +209,35 @@ public class LiteRuleAutoConfiguration {
     public RuleHotReloader ruleHotReloader(RuleEngine ruleEngine,
                                             ExpressionEvaluator evaluator,
                                             RuleConfigProvider configProvider,
-                                            org.springframework.beans.factory.ObjectProvider<DecisionTableConfigProvider> dtConfigProviderProvider,
+                                            org.springframework.beans.factory.ObjectProvider<DecisionTableConfigProvider> dtConfigProvider,
+                                            org.springframework.beans.factory.ObjectProvider<ScorecardConfigProvider> scConfigProvider,
+                                            org.springframework.beans.factory.ObjectProvider<DecisionTreeConfigProvider> trConfigProvider,
+                                            org.springframework.beans.factory.ObjectProvider<ScriptConfigProvider> scriptConfigProvider,
                                             LiteRuleProperties properties) {
         RuleHotReloader reloader = new RuleHotReloader(ruleEngine, evaluator, configProvider, properties);
-        DecisionTableConfigProvider dtProvider = dtConfigProviderProvider.getIfAvailable();
-        if (dtProvider != null) {
-            reloader.setDecisionTableConfigProvider(dtProvider);
-            log.info("[LiteRule] 决策表热加载已启用");
+
+        DecisionTableConfigProvider dt = dtConfigProvider.getIfAvailable();
+        if (dt != null) {
+            reloader.setDecisionTableConfigProvider(dt);
         }
-        log.info("[LiteRule] 规则热加载管理器已初始化（hotReload={}, decisionTable={}）",
-                properties.isHotReloadEnabled(), dtProvider != null);
+
+        ScorecardConfigProvider sc = scConfigProvider.getIfAvailable();
+        if (sc != null) {
+            reloader.setScorecardConfigProvider(sc);
+        }
+
+        DecisionTreeConfigProvider tr = trConfigProvider.getIfAvailable();
+        if (tr != null) {
+            reloader.setDecisionTreeConfigProvider(tr);
+        }
+
+        ScriptConfigProvider script = scriptConfigProvider.getIfAvailable();
+        if (script != null) {
+            reloader.setScriptConfigProvider(script);
+        }
+
+        log.info("[LiteRule] 规则热加载管理器已初始化（hotReload={}, decisionTable={}, scorecard={}, decisionTree={}, script={}）",
+                properties.isHotReloadEnabled(), dt != null, sc != null, tr != null, script != null);
         return reloader;
     }
 

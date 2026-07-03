@@ -2,7 +2,7 @@
  * @file 特性开关 API (批次 20 P2-3)
  * @description 提供特性开关（Feature Flag）的全量快照、按分类聚合、业务方判断、启停、灰度比例设置与缓存刷新能力。
  *
- * 后端接口位于 ydsz-pmis-config 服务 (端口 9008):
+ * 后端接口位于 ydsz-pmis-system 服务 (端口 9008):
  *   GET    /api/v1/feature-flags/snapshot        - 全量快照
  *   GET    /api/v1/feature-flags/snapshot/grouped - 按分类聚合
  *   GET    /api/v1/feature-flags/check          - 判断某 flag 是否启用 (业务方)

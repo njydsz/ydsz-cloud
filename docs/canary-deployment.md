@@ -26,20 +26,20 @@
 
 ### 3.1 前置条件
 1. 微服务 namespace 已开启 sidecar 注入: `kubectl label namespace pmis-prod istio-injection=enabled`
-2. `gateway` 服务本身不参与金丝雀 (它路由到后端), 仅对 backend (execution/project/...) 切分
+2. `gateway` 服务本身不参与金丝雀 (它路由到后端), 仅对 backend (project/iam/...) 切分
 3. 当前版本 (stable) 的 Deployment labels 必须包含 `version: <tag>`
 
 ### 3.2 执行步骤
 
 ```bash
 # 1. 部署 canary 版本 (与 stable 共存, 但暂时无流量)
-kubectl set image deployment/pmis-execution execution=registry/.../ydsz-pmis-execution:v1.1.0-rc1 -n pmis-prod
-kubectl rollout status deployment/pmis-execution -n pmis-prod --timeout=300s
+kubectl set image deployment/pmis-project project=registry/.../ydsz-pmis-project:v1.1.0-rc1 -n pmis-prod
+kubectl rollout status deployment/pmis-project -n pmis-prod --timeout=300s
 
 # 2. 启用 VirtualService (5% 流量到 canary)
 helm upgrade pmis helm/pmis --reuse-values \
   --set canary.enabled=true \
-  --set canary.serviceName=execution \
+  --set canary.serviceName=project \
   --set canary.stableTag=v1.0.0 \
   --set canary.canaryTag=v1.1.0-rc1 \
   --set canary.weight=5 \
@@ -118,17 +118,17 @@ kubectl apply -k deploy/argo-rollouts/overlays/prod
 
 ```bash
 # 1. 启动金丝雀: 推送新镜像
-kubectl argo rollouts set image pmis-execution \
-  execution=registry.ydsz-pmis.cn/ydsz/ydsz-pmis-execution:v1.2.0-rc1 \
+kubectl argo rollouts set image pmis-project \
+  project=registry.ydsz-pmis.cn/ydsz/ydsz-pmis-project:v1.2.0-rc1 \
   -n pmis-prod
 
 # 2. 实时观察 (Argo 自动执行 pause + analysis 5%→25%→50%→100%)
-kubectl argo rollouts status pmis-execution -n pmis-prod -w
+kubectl argo rollouts status pmis-project -n pmis-prod -w
 
 # 3. 紧急回滚 (< 5s)
-kubectl argo rollouts abort pmis-execution -n pmis-prod
+kubectl argo rollouts abort pmis-project -n pmis-prod
 # 或直接回退到上一个版本
-kubectl argo rollouts undo pmis-execution -n pmis-prod
+kubectl argo rollouts undo pmis-project -n pmis-prod
 
 # 4. Web Dashboard
 kubectl argo rollouts dashboard   # 默认 http://localhost:3100

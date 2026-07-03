@@ -23,15 +23,9 @@ ydsz-pmis-backend/
 │       ├── filter/                  # 全局过滤器
 │       ├── config/                  # 路由配置
 │       └── GatewayApplication.java
-├── ydsz-pmis-auth/                  # 认证授权
-│   └── src/main/java/com/njydsz/pmis/auth/
-│       ├── controller/
-│       ├── service/
-│       ├── token/                   # JWT 工具
-│       └── AuthApplication.java
-├── ydsz-pmis-user/                  # 用户/组织
+├── ydsz-pmis-iam/                    # 认证授权 + 用户/组织（user + auth 合并）
 │   ├── pom.xml
-│   └── src/main/java/com/njydsz/pmis/user/
+│   └── src/main/java/com/njydsz/pmis/iam/
 │       ├── controller/
 │       ├── service/
 │       ├── mapper/
@@ -39,8 +33,9 @@ ydsz-pmis-backend/
 │       ├── dto/
 │       ├── vo/
 │       ├── convert/
-│       └── UserApplication.java
-├── ... (其他微服务结构同 user)
+│       ├── token/                   # JWT 工具
+│       └── IamApplication.java
+├── ... (其他微服务结构同 iam)
 └── sql/                              # 业务 SQL 文件
     ├── user/
     └── project/

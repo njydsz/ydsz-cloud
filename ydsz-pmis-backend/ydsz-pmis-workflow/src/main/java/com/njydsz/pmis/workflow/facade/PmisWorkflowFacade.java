@@ -351,6 +351,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         m.put("businessNo", t.getBusinessNo());
         m.put("createdAt", t.getCreatedAt());
         m.put("finishAt", t.getFinishAt());
+        m.put("priority", t.getPriority());
         return m;
     }
 

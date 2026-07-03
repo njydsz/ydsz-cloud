@@ -1,0 +1,80 @@
+package com.njydsz.pmis.literule.api;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.io.Serializable;
+
+/**
+ * 决策树规则定义（DTO）
+ *
+ * <p>由嵌套的 {@link DecisionNode} 构成树形条件判断结构：
+ * <ul>
+ *   <li>内部节点：包含 Aviator 条件表达式，true 走 trueBranch，false 走 falseBranch</li>
+ *   <li>叶子节点：包含 severity / title / description 决策结果</li>
+ * </ul>
+ *
+ * <p>持久化于 {@code pmis_rule_decision_tree}（见 V048，root_node 字段存储 JSON），
+ * 由 {@code DecisionTreeConfigProvider} SPI 加载，
+ * 通过 {@link com.njydsz.pmis.literule.impl.DecisionTreeRule#from(DecisionTreeDefinition, com.njydsz.pmis.literule.expr.ExpressionEvaluator)}
+ * 转换为可执行规则。
+ *
+ * <p>JSON 示例：
+ * <pre>
+ * {
+ *   "ruleCode": "RISK_LEVEL",
+ *   "ruleName": "项目风险分级",
+ *   "category": "RISK",
+ *   "root": {
+ *     "conditionExpression": "budgetUsedRatio > 0.9",
+ *     "leaf": false,
+ *     "trueBranch": {
+ *       "leaf": true,
+ *       "severity": "RED",
+ *       "title": "严重超支",
+ *       "description": "预算使用率超过 90%"
+ *     },
+ *     "falseBranch": {
+ *       "conditionExpression": "budgetUsedRatio > 0.7",
+ *       "leaf": false,
+ *       "trueBranch": {"leaf": true, "severity": "YELLOW", "title": "中度超支", "description": "预算使用率超过 70%"},
+ *       "falseBranch": {"leaf": true, "severity": "INFO", "title": "正常", "description": "预算使用正常"}
+ *     }
+ *   }
+ * }
+ * </pre>
+ *
+ * @author ydsz-pmis-team
+ * @since 1.4.0
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class DecisionTreeDefinition implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    /** 规则编码（唯一） */
+    private String ruleCode;
+
+    /** 规则名称 */
+    private String ruleName;
+
+    /** 类别（如 RISK / GENERAL） */
+    private String category;
+
+    /** 描述 */
+    private String description;
+
+    /** 根节点 */
+    private DecisionNode root;
+
+    /** 是否启用 */
+    @Builder.Default
+    private boolean enabled = true;
+
+    /** 优先级（数值越小越先执行） */
+    @Builder

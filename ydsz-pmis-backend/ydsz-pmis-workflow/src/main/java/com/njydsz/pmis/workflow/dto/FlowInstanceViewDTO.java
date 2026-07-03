@@ -101,5 +101,7 @@ public class FlowInstanceViewDTO implements Serializable {
         private Long durationMs;
         /** 截止时间 */
         private LocalDateTime dueAt;
+        /** P1-1: 任务优先级（1-100，默认 50） */
+        private Integer priority;
     }
 }

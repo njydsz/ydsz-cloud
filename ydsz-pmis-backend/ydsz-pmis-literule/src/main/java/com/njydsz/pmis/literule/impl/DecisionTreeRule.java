@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.impl;
 
+import com.njydsz.pmis.literule.api.DecisionTreeDefinition;
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
@@ -62,6 +63,53 @@ public class DecisionTreeRule implements Rule {
         this.scope = scope;
         this.root = root;
         this.evaluator = evaluator;
+    }
+
+    /**
+     * 从 DecisionTreeDefinition 构造决策树规则
+     *
+     * @param def       决策树定义
+     * @param evaluator 表达式求值器
+     * @return DecisionTreeRule 实例
+     * @since 1.4.0
+     */
+    public static DecisionTreeRule from(DecisionTreeDefinition def, ExpressionEvaluator evaluator) {
+        return new DecisionTreeRule(
+                def.getRuleCode(),
+                def.getRuleName(),
+                def.getCategory(),
+                def.getPriority(),
+                def.getScope(),
+                convertNode(def.getRoot()),
+                evaluator
+        );
+    }
+
+    /**
+     * 递归转换 Definition 节点为内部 DecisionNode
+     *
+     * @param src 源节点
+     * @return 内部节点
+     */
+    private static DecisionNode convertNode(DecisionTreeDefinition.DecisionNode src) {
+        if (src == null) return null;
+        return DecisionNode.builder()
+                .conditionExpression(src.getConditionExpression())
+                .severity(parseSeverity(src.getSeverity()))
+                .title(src.getTitle())
+                .description(src.getDescription())
+                .leaf(src.isLeaf())
+                .trueBranch(convertNode(src.getTrueBranch()))
+                .falseBranch(convertNode(src.getFalseBranch()))
+                .build();
+    }
+
+    /**
+     * 解析严重度字符串（容错处理）
+     */
+    private static RuleSeverity parseSeverity(String code) {
+        if (code == null || code.isBlank()) return null;
+        return RuleSeverity.fromCode(code);
     }
 
     @Override

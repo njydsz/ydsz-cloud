@@ -305,18 +305,6 @@ public class BpmnXmlParser {
             node.setExt("{\"candidateGroups\":\"" + candidateGroups + "\"}");
         }
 
-        // P0-4: 解析 priority（存入 ext，见第 350 行处理 approveCount）
-        if (priorityStr != null && !priorityStr.isBlank()) {
-            try {
-                int p = Integer.parseInt(priorityStr.trim());
-                if (p < 1) p = 1;
-                if (p > 100) p = 100;
-                // priority 作为 approveCount 的备选值，存入 ext
-            } catch (NumberFormatException ignore) {
-                // ignore invalid priority
-            }
-        }
-
         // P0-4: 会签类型与扩展字段
         if (performType != null && !performType.isBlank()) {
             try {
@@ -345,6 +333,18 @@ public class BpmnXmlParser {
         if (timeout != null && !timeout.isBlank()) ext.put("timeout", timeout.trim());
         if (escalateUser != null && !escalateUser.isBlank()) ext.put("escalateUser", escalateUser.trim());
         if (skipAnyNode != null && !skipAnyNode.isBlank()) ext.put("skipAnyNode", skipAnyNode.trim());
+
+        // P1-1: 解析 priority 写入 ext（任务节点优先级，1-100，待办默认按 priority DESC 排序）
+        if (priorityStr != null && !priorityStr.isBlank()) {
+            try {
+                int p = Integer.parseInt(priorityStr.trim());
+                if (p < 1) p = 1;
+                if (p > 100) p = 100;
+                ext.put("priority", p);
+            } catch (NumberFormatException ignore) {
+                // ignore invalid priority
+            }
+        }
 
         // P0-4: timer / error / signal / message 事件定义
         parseEventDefinitions(elem, ext);

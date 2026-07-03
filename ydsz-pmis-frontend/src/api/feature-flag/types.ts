@@ -1,7 +1,7 @@
 /**
  * @file 特性开关类型定义 (批次 20 P2-3)
  * @description 定义特性开关分类、快照结构等类型，
- *              与后端 ydsz-pmis-config 服务返回结构对齐。
+ *              与后端 ydsz-pmis-system 服务返回结构对齐。
  * @module api/feature-flag/types
  */
 

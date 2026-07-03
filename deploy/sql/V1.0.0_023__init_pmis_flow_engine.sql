@@ -256,6 +256,7 @@ CREATE TABLE pmis_flow_task (
     finish_at          TIMESTAMP,
     duration_ms        BIGINT,
     due_at             TIMESTAMP,
+    priority           INT          NOT NULL DEFAULT 50,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id  VARCHAR(64)
@@ -289,6 +290,7 @@ COMMENT ON COLUMN pmis_flow_task.claim_at IS '签收时间';
 COMMENT ON COLUMN pmis_flow_task.finish_at IS '完成时间';
 COMMENT ON COLUMN pmis_flow_task.duration_ms IS '处理耗时(毫秒)';
 COMMENT ON COLUMN pmis_flow_task.due_at IS '截止时间: SLA 预警依据';
+COMMENT ON COLUMN pmis_flow_task.priority IS 'P1-1: 任务优先级(1-100,默认50),待办默认按 priority DESC, created_at ASC 排序';
 COMMENT ON COLUMN pmis_flow_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
 CREATE INDEX idx_pft_instance   ON pmis_flow_task(instance_id);

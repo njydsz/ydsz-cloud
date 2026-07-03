@@ -1,6 +1,6 @@
 <!--
   @file 职级管理
-  @description 职级管理页面：左侧展示职级体系（L1-L18）并按段位（初级/中级/高级/专家/战略）分类，右侧展示所选职级的生效费率（对外报价、对内成本、毛利率、社保公积金、月综合成本等）及历史版本。对应路由 /resource/job-level，后端服务 ydsz-pmis-user（端口 9002）。
+  @description 职级管理页面：左侧展示职级体系（L1-L18）并按段位（初级/中级/高级/专家/战略）分类，右侧展示所选职级的生效费率（对外报价、对内成本、毛利率、社保公积金、月综合成本等）及历史版本。对应路由 /resource/job-level，后端服务 ydsz-pmis-iam（端口 9002）。
   @module views/resource/job-level
 -->
 <script setup lang="ts">

@@ -244,6 +244,7 @@ public class FlowTaskQueryServiceImpl {
                 .finishAt(task.getFinishAt())
                 .durationMs(task.getDurationMs())
                 .dueAt(task.getDueAt())
+                .priority(task.getPriority())
                 .build();
     }
 

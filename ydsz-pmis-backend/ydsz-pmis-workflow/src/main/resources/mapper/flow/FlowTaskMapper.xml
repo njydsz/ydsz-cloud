@@ -35,6 +35,7 @@
         <result column="finish_at" property="finishAt"/>
         <result column="duration_ms" property="durationMs"/>
         <result column="due_at" property="dueAt"/>
+        <result column="priority" property="priority"/>
         <result column="reminder_count" property="reminderCount"/>
         <result column="last_reminded_at" property="lastRemindedAt"/>
         <result column="sla_action" property="slaAction"/>
@@ -49,7 +50,7 @@
         business_type, business_id, business_no, flow_name, title,
         assignor_id, assignor_name, assignee_type, assignee_id, assignee_name, permission_flag,
         perform_type, approve_count, approve_finished, task_status, comment, status,
-        created_by, created_at, updated_by, updated_at, claim_at, finish_at, duration_ms, due_at,
+        created_by, created_at, updated_by, updated_at, claim_at, finish_at, duration_ms, due_at, priority,
         reminder_count, last_reminded_at, sla_action, sla_escalated,
         deleted, tenant_id, provider_trace_id
     </sql>
@@ -91,7 +92,7 @@
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
           AND deleted = 0
-        ORDER BY created_at DESC
+        ORDER BY priority DESC, created_at ASC
     </select>
 
     <!-- P2-17: 真分页查询 -->
@@ -102,7 +103,7 @@
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
           AND deleted = 0
-        ORDER BY created_at DESC
+        ORDER BY priority DESC, created_at ASC
         LIMIT #{limit} OFFSET #{offset}
     </select>
 

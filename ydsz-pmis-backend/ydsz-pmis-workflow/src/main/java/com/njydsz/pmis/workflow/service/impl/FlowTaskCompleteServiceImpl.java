@@ -168,6 +168,18 @@ public class FlowTaskCompleteServiceImpl {
         if (flowMetrics != null) {
             flowMetrics.incTaskCreated(instance.getFlowCode(), node.getNodeCode());
         }
+        // P1-1: 从 node.ext.priority 读取优先级写入任务（默认 50）
+        Map<String, Object> nodeExt = parseExtConfig(node.getExt());
+        Object priorityVal = nodeExt.get("priority");
+        if (priorityVal instanceof Number n) {
+            task.setPriority(n.intValue());
+        } else if (priorityVal instanceof String s && !s.isBlank()) {
+            try {
+                task.setPriority(Integer.parseInt(s.trim()));
+            } catch (NumberFormatException ignore) {
+                // keep default
+            }
+        }
         // P1-6: 应用 SLA 配置 — 解析 node.slaConfig 设置 dueAt
         if (slaService != null) {
             slaService.applySlaConfig(task, node);

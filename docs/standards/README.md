@@ -23,18 +23,16 @@ PMIS 采用 **Monorepo** 模式集中管理前后端与基础设施代码：
 ```
 ydsz-pmis/
 ├── ydsz-pmis-frontend/      # 前端工程 (Vue 3 + Vite + TS)
-├── ydsz-pmis-backend/      # 后端微服务聚合 (Spring Cloud Alibaba)
-│   ├── ydsz-pmis-common/   # 公共模块 (响应/异常/工具/常量)
+├── ydsz-pmis-backend/      # 后端微服务聚合 (Spring Cloud Alibaba, 7 部署 + 2 库)
+│   ├── ydsz-pmis-common/   # 公共组件库 (响应/异常/工具/常量, 不独立部署)
 │   ├── ydsz-pmis-gateway/  # API 网关
-│   ├── ydsz-pmis-auth/     # 认证授权
-│   ├── ydsz-pmis-user/     # 用户/组织/人员
-│   ├── ydsz-pmis-project/  # 项目/商机/合同/执行
-│   ├── ydsz-pmis-finance/  # 财务/成本/收入/利润
-│   ├── ydsz-pmis-resource/ # 资源池/Bench
+│   ├── ydsz-pmis-iam/      # 认证/RBAC/部门/人员/职级/字典/资源池/Bench (user + auth 合并)
 │   ├── ydsz-pmis-workflow/ # 自研工作流引擎
-│   ├── ydsz-pmis-report/   # 报表/驾驶舱
+│   ├── ydsz-pmis-project/  # 项目/商机/合同/执行/财务/报表 (project + execution 合并)
 │   ├── ydsz-pmis-agent/    # AI 服务
-│   └── ydsz-pmis-notification/ # 通知中心
+│   ├── ydsz-pmis-system/   # 文件/配置/审计/通知/消息模板 (file + config + audit + notification + message 合并)
+│   ├── ydsz-pmis-scheduler/ # 分布式任务调度
+│   └── ydsz-pmis-literule/ # 轻量规则引擎 (库, 不独立部署)
 ├── deploy/                 # 部署与基础设施 (docker/sql/nacos)
 ├── docs/                   # 文档
 ├── scripts/                # 运维脚本
