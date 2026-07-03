@@ -107,6 +107,24 @@ public class Result<T> implements Serializable {
      * @param <T>       数据类型
      * @return 失败响应
      */
+    /**
+     * 失败响应（快捷别名，等价 failed(-1, message)）
+     *
+     * @param message 错误信息
+     * @param <T>     数据类型
+     * @return 失败结果
+     */
+    public static <T> Result<T> fail(String message) {
+        return failed(-1, message);
+    }
+
+    /**
+     * 失败响应（基于业务错误码）
+     *
+     * @param errorCode 业务错误码
+     * @param <T>       数据类型
+     * @return 失败结果
+     */
     public static <T> Result<T> failed(BizErrorCode errorCode) {
         return failed(errorCode.getCode(), errorCode.getMessage());
     }

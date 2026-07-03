@@ -32,6 +32,7 @@ import type {
   ExecutionTrace,
   ReplayResult,
   RegressionReport,
+  ABTestReport,
 } from '@/api/execution/rule-engine'
 import ExpressionEditor from '@/components/common/ExpressionEditor.vue'
 
@@ -700,6 +701,70 @@ async function handleReplay(traceId: string) {
   }
 }
 
+// ==================== A/B 测试 ====================
+
+/** A/B 测试对话框可见性 */
+const abTestDialogVisible = ref(false)
+/** A/B 测试加载状态 */
+const abTestLoading = ref(false)
+/** A/B 测试报告 */
+const abTestReport = ref<ABTestReport | null>(null)
+/** A/B 测试当前规则 */
+const abTestRule = ref<RuleDefinition | null>(null)
+/** A/B 测试候选条件表达式 */
+const abTestCandidateCondition = ref('')
+/** A/B 测试候选严重度表达式 */
+const abTestCandidateSeverityExpr = ref('')
+/** A/B 测试事实数据（JSON 文本） */
+const abTestFactsJson = ref('{}')
+
+/**
+ * 打开 A/B 测试对话框
+ * @param rule 规则定义
+ */
+function openABTest(rule: RuleDefinition) {
+  abTestRule.value = rule
+  abTestCandidateCondition.value = rule.conditionExpression || ''
+  abTestCandidateSeverityExpr.value = rule.severityExpression || ''
+  abTestFactsJson.value = '{}'
+  abTestReport.value = null
+  abTestDialogVisible.value = true
+}
+
+/** 执行 A/B 测试 */
+async function runABTest() {
+  if (!abTestRule.value) return
+
+  let facts: Record<string, unknown>
+  try {
+    facts = JSON.parse(abTestFactsJson.value)
+  } catch {
+    ElMessage.error('事实数据 JSON 格式错误')
+    return
+  }
+
+  const candidate: Partial<RuleDefinition> = {
+    ...abTestRule.value,
+    conditionExpression: abTestCandidateCondition.value,
+    severityExpression: abTestCandidateSeverityExpr.value,
+  }
+
+  abTestLoading.value = true
+  try {
+    const { data } = await ruleApi.abTest(abTestRule.value.code, candidate, facts)
+    abTestReport.value = data
+    if (data.diff.hasDiff) {
+      ElMessage.warning('A/B 测试检测到差异，请查看详情')
+    } else {
+      ElMessage.success('A/B 测试完成，无差异')
+    }
+  } catch {
+    ElMessage.error('A/B 测试执行失败')
+  } finally {
+    abTestLoading.value = false
+  }
+}
+
 // ==================== 回归测试 ====================
 
 /** 回归测试对话框可见性 */
@@ -855,13 +920,16 @@ onMounted(() => {
             <el-tag type="info" size="small">v{{ row.version }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="260" fixed="right">
+        <el-table-column label="操作" width="320" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openEdit(row)">
               <el-icon><Edit /></el-icon>编辑
             </el-button>
             <el-button link type="primary" size="small" @click="openDryRun(row)">
               <el-icon><VideoPlay /></el-icon>仿真
+            </el-button>
+            <el-button link type="warning" size="small" @click="openABTest(row)">
+              <el-icon><Switch /></el-icon>A/B
             </el-button>
             <el-button link type="info" size="small" @click="openVersions(row)">
               <el-icon><Clock /></el-icon>版本
@@ -1442,6 +1510,86 @@ onMounted(() => {
       </div>
       <template #footer>
         <el-button @click="regressionDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- ==================== A/B 测试对话框 ==================== -->
+    <el-dialog v-model="abTestDialogVisible" title="规则 A/B 测试" width="900px" :close-on-click-modal="false">
+      <template v-if="abTestRule">
+        <el-alert
+          :title="`当前规则: ${abTestRule.name}（${abTestRule.code}）v${abTestRule.version}`"
+          type="info"
+          :closable="false"
+          show-icon
+          class="mb-3"
+        />
+
+        <el-form label-width="120px" label-position="right">
+          <el-form-item label="候选条件表达式">
+            <el-input
+              v-model="abTestCandidateCondition"
+              type="textarea"
+              :rows="2"
+              placeholder="输入候选条件表达式（Aviator）"
+            />
+          </el-form-item>
+          <el-form-item label="候选严重度表达式">
+            <el-input
+              v-model="abTestCandidateSeverityExpr"
+              type="textarea"
+              :rows="2"
+              placeholder="输入候选严重度表达式（可选）"
+            />
+          </el-form-item>
+          <el-form-item label="事实数据 (JSON)">
+            <el-input
+              v-model="abTestFactsJson"
+              type="textarea"
+              :rows="5"
+              placeholder='{"amount": 1000, "budgetUsedRatio": 0.9}'
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" :loading="abTestLoading" @click="runABTest">
+              <el-icon><VideoPlay /></el-icon>执行 A/B 测试
+            </el-button>
+          </el-form-item>
+        </el-form>
+
+        <!-- A/B 测试结果 -->
+        <template v-if="abTestReport">
+          <el-divider content-position="left">对比结果</el-divider>
+          <el-alert :title="abTestReport.summary" :type="abTestReport.diff.hasDiff ? 'warning' : 'success'" :closable="false" show-icon class="mb-3" />
+
+          <el-table :data="[
+            { label: '触发状态', before: abTestReport.currentResult.triggered, after: abTestReport.candidateResult.triggered, changed: abTestReport.diff.triggeredChanged },
+            { label: '严重度', before: abTestReport.currentResult.severity, after: abTestReport.candidateResult.severity, changed: abTestReport.diff.severityChanged },
+            { label: '标题', before: abTestReport.currentResult.title, after: abTestReport.candidateResult.title, changed: abTestReport.diff.titleChanged },
+            { label: '描述', before: abTestReport.currentResult.description, after: abTestReport.candidateResult.description, changed: abTestReport.diff.descriptionChanged },
+          ]" border stripe size="small">
+            <el-table-column prop="label" label="对比维度" width="120" />
+            <el-table-column label="当前版本" min-width="180">
+              <template #default="{ row }">
+                <span>{{ row.before ?? '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="候选版本" min-width="180">
+              <template #default="{ row }">
+                <span>{{ row.after ?? '-' }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column label="差异" width="80" align="center">
+              <template #default="{ row }">
+                <el-tag :type="row.changed ? 'danger' : 'success'" size="small">
+                  {{ row.changed ? '有差异' : '一致' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+          </el-table>
+        </template>
+      </template>
+      <template #footer>
+        <el-button @click="abTestDialogVisible = false">关闭</el-button>
       </template>
     </el-dialog>
   </div>

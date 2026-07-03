@@ -1,10 +1,8 @@
 package com.njydsz.pmis.workflow.engine;
 
-import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.common.feign.NotificationClient;
-import com.njydsz.pmis.common.util.TraceIdUtil;
-import lombok.RequiredArgsConstructor;
+import com.njydsz.pmis.workflow.service.FlowNotificationService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -12,24 +10,29 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 工作流 → 通知中心 适配器
+ * 工作流 -> 通知中心 适配器
  *
- * <p>把工作流关键事件（任务创建/催办/驳回/转办/委派/超时/完成/挂起/激活/撤回）转写为
- * 通知中心可消费的 payload 并通过 Feign 投递。任何 Feign 异常被 try-catch 吞掉，
- * 主流程事务不被拖垮。
+ * <p>把工作流关键事件（任务创建/催办/驳回/转办/委派/超时/完成/撤回/终止）转写为
+ * 通知中心可消费的 payload 并通过 {@link FlowNotificationService} 投递。所有方法
+ * 委托给 FlowNotificationService 统一处理通道分发（IN_APP/EMAIL/WEBHOOK），
+ * 任何异常被 try-catch 吞掉，主流程事务不被拖垮。
  *
  * <p>P0-1: 站内信打通（对标钉钉/飞书审批的实时通知能力）。
+ * <p>P2-重构: 统一委托 FlowNotificationService，消除双服务直接调用 Feign 的重复逻辑。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
 @Slf4j
 @Component
-@RequiredArgsConstructor
 public class FlowNotificationHelper {
 
-    /** 通知 Feign 客户端，notification 模块不可用时由 FallbackFactory 兜底为 0 */
-    private final NotificationClient notificationClient;
+    /** 默认通知通道：站内信 */
+    private static final String CHANNEL_IN_APP = "IN_APP";
+
+    /** 工作流通知服务，统一管理多通道投递（IN_APP/EMAIL/WEBHOOK） */
+    @Autowired
+    private FlowNotificationService notificationService;
 
     /**
      * 任务待办通知：谁有新的待办需要处理
@@ -46,9 +49,14 @@ public class FlowNotificationHelper {
         if (receiverId == null) {
             return;
         }
-        Map<String, Object> payload = buildPayload(title, content, level,
-                "WORKFLOW", bizType, String.valueOf(taskId), receiverId, null);
-        sendQuietly(payload, "TASK_ASSIGNED");
+        try {
+            Map<String, Object> extra = buildExtra(bizType, level);
+            extra.put("taskId", taskId);
+            notificationService.send(CHANNEL_IN_APP, receiverId, title, content, extra);
+        } catch (Exception e) {
+            log.warn("[FlowNotify] 任务待办通知异常 receiverId={} taskId={} err={}",
+                    receiverId, taskId, e.getMessage());
+        }
     }
 
     /**
@@ -63,9 +71,16 @@ public class FlowNotificationHelper {
         if (receiverIds == null || receiverIds.isEmpty()) {
             return;
         }
-        Map<String, Object> payload = buildPayload(title, content, "URGENT",
-                "WORKFLOW", "WORKFLOW_URGE", String.valueOf(instanceId), null, receiverIds);
-        sendQuietly(payload, "URGE");
+        for (Long receiverId : receiverIds) {
+            try {
+                Map<String, Object> extra = buildExtra("WORKFLOW_URGE", "URGENT");
+                extra.put("instanceId", instanceId);
+                notificationService.send(CHANNEL_IN_APP, receiverId, title, content, extra);
+            } catch (Exception e) {
+                log.warn("[FlowNotify] 催办通知异常 receiverId={} instanceId={} err={}",
+                        receiverId, instanceId, e.getMessage());
+            }
+        }
     }
 
     /**
@@ -75,9 +90,14 @@ public class FlowNotificationHelper {
         if (receiverId == null) {
             return;
         }
-        Map<String, Object> payload = buildPayload(title, content, "INFO",
-                "WORKFLOW", "WORKFLOW_COMPLETED", String.valueOf(instanceId), receiverId, null);
-        sendQuietly(payload, "INSTANCE_COMPLETED");
+        try {
+            Map<String, Object> extra = buildExtra("WORKFLOW_COMPLETED", "INFO");
+            extra.put("instanceId", instanceId);
+            notificationService.send(CHANNEL_IN_APP, receiverId, title, content, extra);
+        } catch (Exception e) {
+            log.warn("[FlowNotify] 流程完成通知异常 receiverId={} instanceId={} err={}",
+                    receiverId, instanceId, e.getMessage());
+        }
     }
 
     /**
@@ -87,9 +107,14 @@ public class FlowNotificationHelper {
         if (receiverId == null) {
             return;
         }
-        Map<String, Object> payload = buildPayload(title, content, "WARN",
-                "WORKFLOW", "WORKFLOW_REJECTED", String.valueOf(instanceId), receiverId, null);
-        sendQuietly(payload, "INSTANCE_REJECTED");
+        try {
+            Map<String, Object> extra = buildExtra("WORKFLOW_REJECTED", "WARN");
+            extra.put("instanceId", instanceId);
+            notificationService.send(CHANNEL_IN_APP, receiverId, title, content, extra);
+        } catch (Exception e) {
+            log.warn("[FlowNotify] 流程驳回通知异常 receiverId={} instanceId={} err={}",
+                    receiverId, instanceId, e.getMessage());
+        }
     }
 
     /**
@@ -99,9 +124,16 @@ public class FlowNotificationHelper {
         if (receiverIds == null || receiverIds.isEmpty()) {
             return;
         }
-        Map<String, Object> payload = buildPayload(title, content, "WARN",
-                "WORKFLOW", "WORKFLOW_RECALLED", String.valueOf(instanceId), null, receiverIds);
-        sendQuietly(payload, "INSTANCE_RECALLED");
+        for (Long receiverId : receiverIds) {
+            try {
+                Map<String, Object> extra = buildExtra("WORKFLOW_RECALLED", "WARN");
+                extra.put("instanceId", instanceId);
+                notificationService.send(CHANNEL_IN_APP, receiverId, title, content, extra);
+            } catch (Exception e) {
+                log.warn("[FlowNotify] 流程撤回通知异常 receiverId={} instanceId={} err={}",
+                        receiverId, instanceId, e.getMessage());
+            }
+        }
     }
 
     /**
@@ -111,9 +143,14 @@ public class FlowNotificationHelper {
         if (receiverId == null) {
             return;
         }
-        Map<String, Object> payload = buildPayload(title, content, "WARN",
-                "WORKFLOW", "WORKFLOW_TERMINATED", String.valueOf(instanceId), receiverId, null);
-        sendQuietly(payload, "INSTANCE_TERMINATED");
+        try {
+            Map<String, Object> extra = buildExtra("WORKFLOW_TERMINATED", "WARN");
+            extra.put("instanceId", instanceId);
+            notificationService.send(CHANNEL_IN_APP, receiverId, title, content, extra);
+        } catch (Exception e) {
+            log.warn("[FlowNotify] 流程终止通知异常 receiverId={} instanceId={} err={}",
+                    receiverId, instanceId, e.getMessage());
+        }
     }
 
     /**
@@ -123,9 +160,14 @@ public class FlowNotificationHelper {
         if (receiverId == null) {
             return;
         }
-        Map<String, Object> payload = buildPayload(title, content, "INFO",
-                "WORKFLOW", "WORKFLOW_TRANSFERRED", String.valueOf(taskId), receiverId, null);
-        sendQuietly(payload, "TASK_TRANSFERRED");
+        try {
+            Map<String, Object> extra = buildExtra("WORKFLOW_TRANSFERRED", "INFO");
+            extra.put("taskId", taskId);
+            notificationService.send(CHANNEL_IN_APP, receiverId, title, content, extra);
+        } catch (Exception e) {
+            log.warn("[FlowNotify] 任务转办通知异常 receiverId={} taskId={} err={}",
+                    receiverId, taskId, e.getMessage());
+        }
     }
 
     /**
@@ -135,9 +177,14 @@ public class FlowNotificationHelper {
         if (receiverId == null) {
             return;
         }
-        Map<String, Object> payload = buildPayload(title, content, "INFO",
-                "WORKFLOW", "WORKFLOW_DELEGATED", String.valueOf(taskId), receiverId, null);
-        sendQuietly(payload, "TASK_DELEGATED");
+        try {
+            Map<String, Object> extra = buildExtra("WORKFLOW_DELEGATED", "INFO");
+            extra.put("taskId", taskId);
+            notificationService.send(CHANNEL_IN_APP, receiverId, title, content, extra);
+        } catch (Exception e) {
+            log.warn("[FlowNotify] 任务委派通知异常 receiverId={} taskId={} err={}",
+                    receiverId, taskId, e.getMessage());
+        }
     }
 
     /**
@@ -147,52 +194,30 @@ public class FlowNotificationHelper {
         if (receiverId == null) {
             return;
         }
-        Map<String, Object> payload = buildPayload(title, content, "WARN",
-                "WORKFLOW", "WORKFLOW_TIMEOUT", String.valueOf(taskId), receiverId, null);
-        sendQuietly(payload, "TASK_TIMEOUT");
+        try {
+            Map<String, Object> extra = buildExtra("WORKFLOW_TIMEOUT", "WARN");
+            extra.put("taskId", taskId);
+            notificationService.send(CHANNEL_IN_APP, receiverId, title, content, extra);
+        } catch (Exception e) {
+            log.warn("[FlowNotify] 任务超时通知异常 receiverId={} taskId={} err={}",
+                    receiverId, taskId, e.getMessage());
+        }
     }
 
     // ============================== 私有 ==============================
 
-    private Map<String, Object> buildPayload(String title, String content, String level,
-                                              String category, String bizType, String bizId,
-                                              Long receiverId, List<Long> receiverIds) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("title", title);
-        payload.put("content", content);
-        payload.put("level", level);
-        payload.put("category", category);
-        payload.put("bizType", bizType);
-        payload.put("bizId", bizId);
-        if (receiverId != null) {
-            payload.put("receiverId", receiverId);
-        }
-        if (receiverIds != null && !receiverIds.isEmpty()) {
-            payload.put("receiverIds", receiverIds);
-        }
-        String traceId = TraceIdUtil.getOrCreate();
-        if (traceId != null) {
-            payload.put("providerTraceId", traceId);
-        }
-        return payload;
-    }
-
     /**
-     * 静默发送：catch 住所有异常，避免拖垮主流程
+     * 构建扩展参数 Map（统一填充 category / bizType / level）
+     *
+     * @param bizType 业务类型
+     * @param level   级别
+     * @return 扩展参数 Map
      */
-    private void sendQuietly(Map<String, Object> payload, String action) {
-        try {
-            Result<Integer> result = notificationClient.send(payload);
-            if (result == null || !result.isSuccess()) {
-                log.warn("[FlowNotify] 通知发送失败 action={} code={} msg={}",
-                        action,
-                        result == null ? "null" : result.getCode(),
-                        result == null ? "null" : result.getMessage());
-            } else {
-                log.debug("[FlowNotify] 通知发送成功 action={} count={}", action, result.getData());
-            }
-        } catch (Exception e) {
-            log.warn("[FlowNotify] 通知发送异常 action={} err={}", action, e.getMessage());
-        }
+    private Map<String, Object> buildExtra(String bizType, String level) {
+        Map<String, Object> extra = new HashMap<>();
+        extra.put("category", "WORKFLOW");
+        extra.put("bizType", bizType);
+        extra.put("level", level);
+        return extra;
     }
 }

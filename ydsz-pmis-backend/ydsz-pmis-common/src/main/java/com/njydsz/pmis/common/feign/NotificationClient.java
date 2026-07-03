@@ -26,7 +26,7 @@ public interface NotificationClient {
      * @param payload 通知发送参数（兼容 NotificationSendDTO 字段）
      * @return 实际入库条数
      */
-    @PostMapping("/api/v1/notification/send")
+    @PostMapping("/api/v1/notifications/send")
     Result<Integer> send(@RequestBody Map<String, Object> payload);
 
     /**

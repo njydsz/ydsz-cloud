@@ -57,6 +57,20 @@ public class LiteRuleAutoConfiguration {
     }
 
     /**
+     * A/B 测试服务
+     *
+     * @param evaluator 表达式求值器
+     * @return ABTestService 实例
+     * @since 1.3.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public ABTestService abTestService(ExpressionEvaluator evaluator) {
+        log.info("[LiteRule] A/B 测试服务已初始化");
+        return new ABTestService(evaluator);
+    }
+
+    /**
      * 规则热加载管理器（当存在 RuleConfigProvider 时生效）
      *
      * @param ruleEngine   规则引擎

@@ -10,10 +10,13 @@ import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
+import com.njydsz.pmis.workflow.dto.InstanceMigrationDTO;
+import com.njydsz.pmis.workflow.dto.InstanceMigrationResultDTO;
 import com.njydsz.pmis.workflow.entity.FlowCcDO;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowNotifyChannelDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowAiAssistService;
@@ -22,7 +25,9 @@ import com.njydsz.pmis.workflow.service.FlowCcService;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
 import com.njydsz.pmis.workflow.service.FlowEfficiencyService;
+import com.njydsz.pmis.workflow.service.FlowInstanceMigrationService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
+import com.njydsz.pmis.workflow.service.FlowNotifyChannelService;
 import com.njydsz.pmis.workflow.service.FlowSlaService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
 import com.njydsz.pmis.workflow.service.FlowTemplateService;
@@ -32,6 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,6 +81,10 @@ public class FlowEngineController {
     private final FlowTodoCountPushService todoCountPushService;
     /** P2-1: 智能审批辅助服务（推荐审批人 / 起草意见） */
     private final FlowAiAssistService aiAssistService;
+    /** GAP-V2-09: 流程实例迁移服务（新版本部署后迁移运行中实例） */
+    private final FlowInstanceMigrationService instanceMigrationService;
+    /** GAP-V2: 通知通道配置服务 */
+    private final FlowNotifyChannelService notifyChannelService;
 
     // ============== 引擎信息 ==============
 
@@ -1504,5 +1514,109 @@ public class FlowEngineController {
             @PathVariable Long instanceId,
             @RequestParam(required = false) Long taskId) {
         return Result.ok(instanceService.getFormRenderData(instanceId, taskId));
+    }
+
+    // ============== GAP-V2: 通知通道配置 ==============
+
+    /**
+     * 查询所有通知通道配置
+     *
+     * @param tenantId 租户 ID（可选，默认从上下文获取）
+     * @return 通道配置列表
+     */
+    @GetMapping("/notify-channel/list")
+    public Result<List<FlowNotifyChannelDO>> listNotifyChannels(
+            @RequestParam(required = false) Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(notifyChannelService.listChannels(tid));
+    }
+
+    /**
+     * 新增或更新通知通道配置
+     *
+     * @param dto 通道配置（id 为空时新增，非空时更新）
+     * @return 保存后的通道配置
+     */
+    @PostMapping("/notify-channel/save")
+    public Result<FlowNotifyChannelDO> saveNotifyChannel(@RequestBody FlowNotifyChannelDO dto) {
+        if (dto.getTenantId() == null) {
+            dto.setTenantId(SecurityContext.getTenantIdOrDefault(1L));
+        }
+        return Result.ok(notifyChannelService.saveChannel(dto));
+    }
+
+    /**
+     * 启用/停用通知通道
+     *
+     * @param id      通道配置 ID
+     * @param enabled 是否启用
+     * @return 统一响应结果
+     */
+    @PutMapping("/notify-channel/{id}/toggle")
+    public Result<Void> toggleNotifyChannel(@PathVariable Long id,
+                                             @RequestParam Boolean enabled) {
+        notifyChannelService.toggleChannel(id, enabled);
+        return Result.ok();
+    }
+
+    /**
+     * 删除通知通道配置
+     *
+     * @param id 通道配置 ID
+     * @return 统一响应结果
+     */
+    @DeleteMapping("/notify-channel/{id}")
+    public Result<Void> deleteNotifyChannel(@PathVariable Long id) {
+        notifyChannelService.deleteChannel(id);
+        return Result.ok();
+    }
+
+    // ============== GAP-V2-09: 流程实例迁移 ==============
+
+    /**
+     * GAP-V2-09: 执行实例迁移 — 将源定义下运行中实例迁移到目标定义。
+     *
+     * <p>请求体 {@link InstanceMigrationDTO}：
+     * <ul>
+     *   <li>sourceDefinitionId / targetDefinitionId：源/目标定义 ID（必填）</li>
+     *   <li>tenantId：租户 ID（可选，默认从上下文获取）</li>
+     *   <li>nodeMapping：旧节点编码 -> 新节点编码 映射（可选）</li>
+     *   <li>dryRun：是否试运行（可选，true 时仅模拟不落库）</li>
+     * </ul>
+     *
+     * @param dto 迁移参数
+     * @return 统一响应结果，包含迁移结果报告
+     */
+    @PostMapping("/instance/migrate")
+    public Result<InstanceMigrationResultDTO> migrateInstances(@RequestBody InstanceMigrationDTO dto) {
+        return Result.ok(instanceMigrationService.migrate(dto));
+    }
+
+    /**
+     * GAP-V2-09: 预览实例迁移（试运行 / dry run）— 不实际更新数据库，仅返回迁移报告。
+     *
+     * @param dto 迁移参数（dryRun 字段将被忽略，强制为试运行）
+     * @return 统一响应结果，包含迁移结果报告
+     */
+    @PostMapping("/instance/migrate/preview")
+    public Result<InstanceMigrationResultDTO> previewMigration(@RequestBody InstanceMigrationDTO dto) {
+        return Result.ok(instanceMigrationService.previewMigration(dto));
+    }
+
+    /**
+     * GAP-V2-09: 自动映射节点编码 — 对比源/目标定义节点，按编码自动匹配。
+     *
+     * <p>返回的映射可作为 {@link InstanceMigrationDTO#setNodeMapping(Map)} 的预填值，
+     * 编码不同的节点需人工补充映射。
+     *
+     * @param sourceDefinitionId 源定义 ID
+     * @param targetDefinitionId 目标定义 ID
+     * @return 统一响应结果，包含 旧节点编码 -> 新节点编码 的映射
+     */
+    @GetMapping("/instance/migrate/auto-map")
+    public Result<Map<String, String>> autoMapNodes(
+            @RequestParam Long sourceDefinitionId,
+            @RequestParam Long targetDefinitionId) {
+        return Result.ok(instanceMigrationService.autoMapNodes(sourceDefinitionId, targetDefinitionId));
     }
 }

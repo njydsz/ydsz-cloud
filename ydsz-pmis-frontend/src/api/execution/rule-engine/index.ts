@@ -485,6 +485,44 @@ export const replayTrace = (traceId: string) =>
     method: 'POST',
   })
 
+/** A/B 测试差异详情 */
+export interface ABTestDiff {
+  triggeredChanged: boolean
+  severityChanged: boolean
+  titleChanged: boolean
+  descriptionChanged: boolean
+  hasDiff: boolean
+  triggeredBefore?: boolean
+  triggeredAfter?: boolean
+  severityBefore?: string
+  severityAfter?: string
+}
+
+/** A/B 测试报告 */
+export interface ABTestReport {
+  ruleCode: string
+  currentVersion: number
+  candidateVersion: number
+  currentResult: RuleResult
+  candidateResult: RuleResult
+  diff: ABTestDiff
+  summary: string
+}
+
+/**
+ * 规则 A/B 测试
+ * @param ruleCode 规则编码
+ * @param candidate 候选规则定义
+ * @param facts 事实数据
+ * @returns A/B 测试报告
+ */
+export const abTest = (ruleCode: string, candidate: Partial<RuleDefinition>, facts: Record<string, unknown>) =>
+  request<ABTestReport>({
+    url: `/execution/api/v1/rules/${ruleCode}/ab-test`,
+    method: 'POST',
+    data: { candidate, facts },
+  })
+
 // ==================== 决策表管理 ====================
 
 /** 决策表 */
