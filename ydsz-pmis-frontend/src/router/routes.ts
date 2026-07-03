@@ -530,6 +530,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/workflow/history/index.vue'),
         meta: { title: 'route.workflowHistory', icon: 'Files', keepAlive: true, permCode: PC.WORKFLOW_HISTORY_ARCHIVE_VIEW },
       },
+      {
+        path: 'instance-migration',
+        name: 'Workflow_InstanceMigration',
+        component: () => import('@/views/workflow/instance-migration/index.vue'),
+        meta: { title: 'workflow.instanceMigration.title', icon: 'Switch', keepAlive: true, permCode: PC.WORKFLOW_DEFINITION_LIST },
+      },
     ],
   },
 ]
