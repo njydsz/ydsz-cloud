@@ -4,7 +4,7 @@
   @module views/project/contract
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -17,6 +17,7 @@ import {
 } from '@/api/project/contract'
 import type { ContractVO, ContractCreateDTO, ContractStatusDTO } from '@/api/project/contract/types'
 import { PC } from '@/constants/permissionCodes'
+import { useFormDraft } from '@/composables/useFormDraft'
 
 // ===== 列表查询状态 =====
 const loading = ref(false)
@@ -109,8 +110,49 @@ const formRules = {
   amount: [{ required: true, message: '金额必填', trigger: 'blur' }],
 }
 
-/** 打开新增合同弹窗，重置表单为初始值 */
+// ===== 表单草稿 =====
+const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form, {
+  key: 'contract-create',
+  debounce: 3000,
+})
+
+const draftTimeText = computed(() => {
+  if (!lastSavedAt.value) return ''
+  return lastSavedAt.value.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+})
+
+/** 打开新增合同弹窗，重置表单为初始值；若检测到草稿则提示恢复 */
 function openCreate() {
+  if (hasDraft.value) {
+    ElMessageBox.confirm('检测到未提交的草稿，是否恢复？', '提示', { type: 'info' })
+      .then(() => {
+        restore()
+        ElMessage.success('草稿已恢复')
+        formMode.value = 'create'
+        dialogVisible.value = true
+      })
+      .catch(() => {
+        clearDraft()
+        formMode.value = 'create'
+        Object.assign(form, {
+          id: undefined,
+          contractCode: '',
+          contractName: '',
+          customerId: 0,
+          customerName: '',
+          contractType: 'FIXED_PRICE',
+          amount: 0,
+          currency: 'CNY',
+          signDate: '',
+          effectiveDate: '',
+          expireDate: '',
+          paymentTerms: '',
+          description: '',
+        })
+        dialogVisible.value = true
+      })
+    return
+  }
   formMode.value = 'create'
   Object.assign(form, {
     id: undefined,
@@ -135,6 +177,7 @@ function openCreate() {
  * @param row 选中的合同行数据
  */
 async function openEdit(row: ContractVO) {
+  clearDraft()
   formMode.value = 'edit'
   Object.assign(form, { ...row })
   dialogVisible.value = true
@@ -159,6 +202,7 @@ async function submitForm() {
       description: form.description,
     }
     await createContract(dto)
+    clearDraft()
     ElMessage.success('创建成功')
   } else if (form.id) {
     await updateContract({

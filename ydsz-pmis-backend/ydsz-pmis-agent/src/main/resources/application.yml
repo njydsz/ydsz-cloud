@@ -133,7 +133,13 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics  # 暴露健康/指标
+        include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
   endpoint:
     health:
       show-details: when-authorized  # 仅授权用户可看详情

@@ -16,6 +16,7 @@ import java.util.Map;
  *
  * <p>启用项：
  * <ul>
+ *   <li>{@code filters} — 过滤器列表：stat(SQL统计) + wall(SQL防火墙) + slf4j(日志)</li>
  *   <li>{@code stat-filter} — SQL 执行统计，慢 SQL 阈值 1 秒（与 PG log_min_duration_statement 对齐），自动记录到日志</li>
  *   <li>{@code web-stat-filter} — URL 访问统计（请求次数/执行时间）</li>
  *   <li>{@code stat-view-servlet} — 监控页面 /druid/* <b>默认关闭</b>，需显式启用并强制配置账号密码 + IP 白名单</li>
@@ -78,6 +79,9 @@ public class DruidMonitorEnabler implements EnvironmentPostProcessor {
      */
     protected Map<String, Object> buildDefaults() {
         Map<String, Object> defaults = new HashMap<>();
+        // Druid 过滤器列表：stat(SQL统计) + wall(SQL防火墙) + slf4j(日志)
+        defaults.put("spring.datasource.druid.filters", "stat,wall,slf4j");
+
         // SQL 执行统计
         defaults.put("spring.datasource.druid.stat-filter.enabled", true);
         defaults.put("spring.datasource.druid.stat-filter.slow-sql-millis", SLOW_SQL_MILLIS_DEFAULT);

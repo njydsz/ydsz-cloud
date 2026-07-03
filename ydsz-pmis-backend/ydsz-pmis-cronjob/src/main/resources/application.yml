@@ -119,3 +119,21 @@ xxl:
       logretentiondays: 30
     # 访问令牌（生产必须设置，与 Admin 端保持一致）
     accessToken: ${XXL_JOB_ACCESS_TOKEN:default-token}
+
+# =====================================================================
+# Actuator 监控
+# =====================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
+  endpoint:
+    health:
+      show-details: when-authorized

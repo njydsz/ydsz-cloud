@@ -84,10 +84,10 @@ CREATE INDEX IF NOT EXISTS idx_pmis_utilization_dept_period
 --  4) 预警 / 对账（4.2.2/4.2.3）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_recipient
-    ON pmis_alert_dispatch (recipient_id, sent_at DESC)
+    ON pmis_alert_dispatch (target_role, sent_at DESC)
     WHERE status IN ('PENDING', 'FAILED');
 CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
-    ON pmis_alert_dispatch (next_retry_at)
+    ON pmis_alert_dispatch (retry_count, sent_at DESC)
     WHERE status = 'FAILED' AND retry_count < 3;
 CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_period
     ON pmis_daily_reconcile (period DESC, status);

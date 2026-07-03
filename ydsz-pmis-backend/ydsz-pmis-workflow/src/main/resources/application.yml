@@ -100,6 +100,12 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    export:
+      prometheus:
+        enabled: true
   endpoint:
     health:
       show-details: always  # 流程服务需要详细健康信息（依赖 Nacos / DB / Redis）

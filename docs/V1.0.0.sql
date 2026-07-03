@@ -7025,9 +7025,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_provider_trace
 --  3) 利用率快照（4.2.1）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_utilization_user_period
-    ON pmis_billable_utilization_snapshot (user_id, period DESC);
+    ON pmis_billable_utilization_snapshot (employee_id, period DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_utilization_dept_period
-    ON pmis_billable_utilization_snapshot (department_id, period DESC);
+    ON pmis_billable_utilization_snapshot (department, period DESC);
 
 -- =====================================================================
 --  4) 预警 / 对账（4.2.2/4.2.3）
