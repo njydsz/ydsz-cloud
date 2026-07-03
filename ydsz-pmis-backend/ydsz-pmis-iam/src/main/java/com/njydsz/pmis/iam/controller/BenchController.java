@@ -1,13 +1,13 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.user.dto.BenchRecordCreateDTO;
-import com.njydsz.pmis.user.entity.BenchRecordDO;
-import com.njydsz.pmis.user.service.BenchService;
-import com.njydsz.pmis.user.service.impl.BenchServiceImpl;
+import com.njydsz.pmis.iam.dto.BenchRecordCreateDTO;
+import com.njydsz.pmis.iam.entity.BenchRecordDO;
+import com.njydsz.pmis.iam.service.BenchService;
+import com.njydsz.pmis.iam.service.impl.BenchServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

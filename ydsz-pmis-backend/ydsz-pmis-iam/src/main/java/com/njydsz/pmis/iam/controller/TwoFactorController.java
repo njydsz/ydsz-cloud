@@ -1,10 +1,10 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
-import com.njydsz.pmis.user.dto.TwoFactorBindResult;
-import com.njydsz.pmis.user.entity.User2FADO;
-import com.njydsz.pmis.user.service.TwoFactorService;
+import com.njydsz.pmis.iam.dto.TwoFactorBindResult;
+import com.njydsz.pmis.iam.entity.User2FADO;
+import com.njydsz.pmis.iam.service.TwoFactorService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

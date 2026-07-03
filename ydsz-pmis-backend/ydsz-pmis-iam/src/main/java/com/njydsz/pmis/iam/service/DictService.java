@@ -1,7 +1,7 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
-import com.njydsz.pmis.user.entity.DictItemDO;
-import com.njydsz.pmis.user.entity.DictTypeDO;
+import com.njydsz.pmis.iam.entity.DictItemDO;
+import com.njydsz.pmis.iam.entity.DictTypeDO;
 
 import java.util.List;
 

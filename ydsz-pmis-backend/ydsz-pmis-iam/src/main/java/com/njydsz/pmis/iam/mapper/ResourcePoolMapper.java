@@ -1,7 +1,7 @@
-package com.njydsz.pmis.user.mapper;
+package com.njydsz.pmis.iam.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.user.entity.ResourcePoolDO;
+import com.njydsz.pmis.iam.entity.ResourcePoolDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

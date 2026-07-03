@@ -1,7 +1,7 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
-import com.njydsz.pmis.user.dto.TwoFactorBindResult;
-import com.njydsz.pmis.user.entity.User2FADO;
+import com.njydsz.pmis.iam.dto.TwoFactorBindResult;
+import com.njydsz.pmis.iam.entity.User2FADO;
 
 import java.util.List;
 

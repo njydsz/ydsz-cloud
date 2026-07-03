@@ -1,4 +1,4 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
@@ -9,9 +9,9 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
-import com.njydsz.pmis.user.dto.UserQueryDTO;
-import com.njydsz.pmis.user.entity.UserAccountDO;
-import com.njydsz.pmis.user.service.UserAccountService;
+import com.njydsz.pmis.iam.dto.UserQueryDTO;
+import com.njydsz.pmis.iam.entity.UserAccountDO;
+import com.njydsz.pmis.iam.service.UserAccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;

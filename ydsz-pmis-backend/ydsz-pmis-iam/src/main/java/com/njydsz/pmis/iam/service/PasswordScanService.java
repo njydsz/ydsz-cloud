@@ -1,7 +1,7 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
-import com.njydsz.pmis.user.dto.PasswordScanResultDTO;
-import com.njydsz.pmis.user.entity.UserAccountDO;
+import com.njydsz.pmis.iam.dto.PasswordScanResultDTO;
+import com.njydsz.pmis.iam.entity.UserAccountDO;
 
 import java.util.List;
 

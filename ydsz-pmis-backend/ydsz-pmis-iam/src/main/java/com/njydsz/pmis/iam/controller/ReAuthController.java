@@ -1,10 +1,10 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
-import com.njydsz.pmis.user.dto.ReAuthRequest;
-import com.njydsz.pmis.user.dto.ReAuthResult;
-import com.njydsz.pmis.user.service.ReAuthService;
+import com.njydsz.pmis.iam.dto.ReAuthRequest;
+import com.njydsz.pmis.iam.dto.ReAuthResult;
+import com.njydsz.pmis.iam.service.ReAuthService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

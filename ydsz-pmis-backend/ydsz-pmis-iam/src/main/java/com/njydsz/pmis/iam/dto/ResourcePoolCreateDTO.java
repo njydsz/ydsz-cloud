@@ -1,4 +1,4 @@
-package com.njydsz.pmis.user.dto;
+package com.njydsz.pmis.iam.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.user.config;
+package com.njydsz.pmis.iam.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;

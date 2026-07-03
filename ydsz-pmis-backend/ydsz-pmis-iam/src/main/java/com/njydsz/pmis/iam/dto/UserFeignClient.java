@@ -1,7 +1,7 @@
-package com.njydsz.pmis.user.dto;
+package com.njydsz.pmis.iam.dto;
 
 import com.njydsz.pmis.common.api.PageResult;
-import com.njydsz.pmis.user.vo.UserVO;
+import com.njydsz.pmis.iam.vo.UserVO;
 
 import java.util.List;
 

@@ -1,12 +1,12 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.user.dto.LoginContextDTO;
-import com.njydsz.pmis.user.entity.RoleDO;
-import com.njydsz.pmis.user.entity.UserAccountDO;
-import com.njydsz.pmis.user.service.PermissionService;
-import com.njydsz.pmis.user.service.RoleService;
-import com.njydsz.pmis.user.service.UserAccountService;
+import com.njydsz.pmis.iam.dto.LoginContextDTO;
+import com.njydsz.pmis.iam.entity.RoleDO;
+import com.njydsz.pmis.iam.entity.UserAccountDO;
+import com.njydsz.pmis.iam.service.PermissionService;
+import com.njydsz.pmis.iam.service.RoleService;
+import com.njydsz.pmis.iam.service.UserAccountService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

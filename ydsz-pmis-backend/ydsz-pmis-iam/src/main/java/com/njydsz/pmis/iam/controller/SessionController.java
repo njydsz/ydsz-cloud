@@ -1,13 +1,13 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
-import com.njydsz.pmis.user.entity.UserSessionDO;
-import com.njydsz.pmis.user.mapper.UserSessionMapper;
-import com.njydsz.pmis.user.service.SessionService;
+import com.njydsz.pmis.iam.entity.UserSessionDO;
+import com.njydsz.pmis.iam.mapper.UserSessionMapper;
+import com.njydsz.pmis.iam.service.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

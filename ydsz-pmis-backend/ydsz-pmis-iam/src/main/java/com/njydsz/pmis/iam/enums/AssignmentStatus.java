@@ -1,4 +1,4 @@
-package com.njydsz.pmis.user.enums;
+package com.njydsz.pmis.iam.enums;
 
 /**
  * 资源分配状态

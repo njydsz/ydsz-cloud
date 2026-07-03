@@ -1,6 +1,6 @@
-package com.njydsz.pmis.user.vo;
+package com.njydsz.pmis.iam.vo;
 
-import com.njydsz.pmis.user.entity.DepartmentDO;
+import com.njydsz.pmis.iam.entity.DepartmentDO;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 

@@ -1,8 +1,8 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
-import com.njydsz.pmis.user.dto.DepartmentFormDTO;
-import com.njydsz.pmis.user.entity.DepartmentDO;
-import com.njydsz.pmis.user.vo.DepartmentTreeVO;
+import com.njydsz.pmis.iam.dto.DepartmentFormDTO;
+import com.njydsz.pmis.iam.entity.DepartmentDO;
+import com.njydsz.pmis.iam.vo.DepartmentTreeVO;
 
 import java.util.List;
 

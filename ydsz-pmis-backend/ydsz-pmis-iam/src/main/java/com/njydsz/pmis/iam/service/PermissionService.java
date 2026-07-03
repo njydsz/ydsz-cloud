@@ -1,8 +1,8 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
-import com.njydsz.pmis.user.dto.PermissionFormDTO;
-import com.njydsz.pmis.user.entity.PermissionDO;
-import com.njydsz.pmis.user.vo.MenuTreeVO;
+import com.njydsz.pmis.iam.dto.PermissionFormDTO;
+import com.njydsz.pmis.iam.entity.PermissionDO;
+import com.njydsz.pmis.iam.vo.MenuTreeVO;
 
 import java.util.List;
 

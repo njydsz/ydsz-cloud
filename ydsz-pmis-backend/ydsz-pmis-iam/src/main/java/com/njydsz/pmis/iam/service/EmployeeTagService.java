@@ -1,7 +1,7 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
-import com.njydsz.pmis.user.dto.EmployeeTagCreateDTO;
-import com.njydsz.pmis.user.entity.EmployeeTagDO;
+import com.njydsz.pmis.iam.dto.EmployeeTagCreateDTO;
+import com.njydsz.pmis.iam.entity.EmployeeTagDO;
 
 import java.util.List;
 

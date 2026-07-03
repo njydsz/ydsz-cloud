@@ -1,16 +1,16 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.user.dto.AttendanceCreateDTO;
-import com.njydsz.pmis.user.dto.LeaveCreateDTO;
-import com.njydsz.pmis.user.dto.OvertimeCreateDTO;
-import com.njydsz.pmis.user.entity.AttendanceDO;
-import com.njydsz.pmis.user.entity.LeaveDO;
-import com.njydsz.pmis.user.entity.OvertimeDO;
-import com.njydsz.pmis.user.service.AttendanceService;
+import com.njydsz.pmis.iam.dto.AttendanceCreateDTO;
+import com.njydsz.pmis.iam.dto.LeaveCreateDTO;
+import com.njydsz.pmis.iam.dto.OvertimeCreateDTO;
+import com.njydsz.pmis.iam.entity.AttendanceDO;
+import com.njydsz.pmis.iam.entity.LeaveDO;
+import com.njydsz.pmis.iam.entity.OvertimeDO;
+import com.njydsz.pmis.iam.service.AttendanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

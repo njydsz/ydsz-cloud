@@ -1,8 +1,8 @@
-package com.njydsz.pmis.auth.service;
+package com.njydsz.pmis.iam.service;
 
-import com.njydsz.pmis.auth.dto.CaptchaVO;
-import com.njydsz.pmis.auth.dto.LoginDTO;
-import com.njydsz.pmis.auth.dto.LoginResultVO;
+import com.njydsz.pmis.iam.dto.CaptchaVO;
+import com.njydsz.pmis.iam.dto.LoginDTO;
+import com.njydsz.pmis.iam.dto.LoginResultVO;
 
 /**
  * 认证服务

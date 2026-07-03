@@ -1,7 +1,7 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
-import com.njydsz.pmis.user.dto.ReAuthRequest;
-import com.njydsz.pmis.user.dto.ReAuthResult;
+import com.njydsz.pmis.iam.dto.ReAuthRequest;
+import com.njydsz.pmis.iam.dto.ReAuthResult;
 
 /**
  * 敏感操作二次认证服务

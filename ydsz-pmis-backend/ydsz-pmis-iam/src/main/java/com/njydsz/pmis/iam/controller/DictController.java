@@ -1,9 +1,9 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.user.entity.DictItemDO;
-import com.njydsz.pmis.user.entity.DictTypeDO;
-import com.njydsz.pmis.user.service.DictService;
+import com.njydsz.pmis.iam.entity.DictItemDO;
+import com.njydsz.pmis.iam.entity.DictTypeDO;
+import com.njydsz.pmis.iam.service.DictService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

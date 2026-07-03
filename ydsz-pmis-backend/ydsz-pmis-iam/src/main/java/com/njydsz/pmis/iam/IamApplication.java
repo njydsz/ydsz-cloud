@@ -18,20 +18,12 @@ import org.springframework.scheduling.annotation.EnableAsync;
  */
 @SpringBootApplication(scanBasePackages = {
         "com.njydsz.pmis.iam",
-        "com.njydsz.pmis.user",
-        "com.njydsz.pmis.auth",
         "com.njydsz.pmis.common"
 })
 @EnableDiscoveryClient
-@EnableFeignClients(basePackages = {
-        "com.njydsz.pmis.user.feign",
-        "com.njydsz.pmis.auth.feign"
-})
+@EnableFeignClients(basePackages = "com.njydsz.pmis.iam.feign")
 @EnableAsync
-@MapperScan({
-        "com.njydsz.pmis.user.mapper",
-        "com.njydsz.pmis.auth.mapper"
-})
+@MapperScan("com.njydsz.pmis.iam.mapper")
 public class IamApplication {
 
     public static void main(String[] args) {

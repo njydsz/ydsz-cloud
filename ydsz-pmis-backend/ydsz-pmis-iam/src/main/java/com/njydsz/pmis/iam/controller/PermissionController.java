@@ -1,12 +1,12 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.user.dto.PermissionFormDTO;
-import com.njydsz.pmis.user.entity.PermissionDO;
-import com.njydsz.pmis.user.service.PermissionService;
-import com.njydsz.pmis.user.vo.MenuTreeVO;
+import com.njydsz.pmis.iam.dto.PermissionFormDTO;
+import com.njydsz.pmis.iam.entity.PermissionDO;
+import com.njydsz.pmis.iam.service.PermissionService;
+import com.njydsz.pmis.iam.vo.MenuTreeVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

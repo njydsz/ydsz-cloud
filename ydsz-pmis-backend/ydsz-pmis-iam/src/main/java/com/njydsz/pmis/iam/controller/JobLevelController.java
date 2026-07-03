@@ -1,9 +1,9 @@
-package com.njydsz.pmis.user.controller;
+package com.njydsz.pmis.iam.controller;
 
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.user.entity.JobLevelDO;
-import com.njydsz.pmis.user.entity.JobLevelRateDO;
-import com.njydsz.pmis.user.service.JobLevelService;
+import com.njydsz.pmis.iam.entity.JobLevelDO;
+import com.njydsz.pmis.iam.entity.JobLevelRateDO;
+import com.njydsz.pmis.iam.service.JobLevelService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

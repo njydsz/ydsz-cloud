@@ -1,8 +1,8 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.user.dto.BenchRecordCreateDTO;
-import com.njydsz.pmis.user.entity.BenchRecordDO;
+import com.njydsz.pmis.iam.dto.BenchRecordCreateDTO;
+import com.njydsz.pmis.iam.entity.BenchRecordDO;
 
 import java.math.BigDecimal;
 import java.util.List;

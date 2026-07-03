@@ -1,8 +1,8 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.user.dto.ResourcePoolCreateDTO;
-import com.njydsz.pmis.user.entity.ResourcePoolDO;
+import com.njydsz.pmis.iam.dto.ResourcePoolCreateDTO;
+import com.njydsz.pmis.iam.entity.ResourcePoolDO;
 
 import java.util.List;
 

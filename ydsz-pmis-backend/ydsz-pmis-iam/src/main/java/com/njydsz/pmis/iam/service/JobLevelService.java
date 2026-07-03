@@ -1,7 +1,7 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
-import com.njydsz.pmis.user.entity.JobLevelDO;
-import com.njydsz.pmis.user.entity.JobLevelRateDO;
+import com.njydsz.pmis.iam.entity.JobLevelDO;
+import com.njydsz.pmis.iam.entity.JobLevelRateDO;
 
 import java.time.LocalDate;
 import java.util.List;

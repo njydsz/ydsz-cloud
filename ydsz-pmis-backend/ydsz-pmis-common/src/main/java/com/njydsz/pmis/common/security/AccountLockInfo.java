@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
  * 账号锁定策略结果
  *
  * <p>登录失败达到上限后，账号将被锁定一段时间。
- * 锁定状态由 {@link com.njydsz.pmis.user.entity.UserAccountDO#lockedUntil} 字段承载。
+ * 锁定状态由 {@link com.njydsz.pmis.iam.entity.UserAccountDO#lockedUntil} 字段承载。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

@@ -1,9 +1,9 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.user.dto.RoleFormDTO;
-import com.njydsz.pmis.user.dto.RoleQueryDTO;
-import com.njydsz.pmis.user.entity.RoleDO;
+import com.njydsz.pmis.iam.dto.RoleFormDTO;
+import com.njydsz.pmis.iam.dto.RoleQueryDTO;
+import com.njydsz.pmis.iam.entity.RoleDO;
 
 import java.util.List;
 

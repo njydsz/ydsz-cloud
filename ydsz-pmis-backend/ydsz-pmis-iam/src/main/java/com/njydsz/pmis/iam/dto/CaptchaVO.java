@@ -1,4 +1,4 @@
-package com.njydsz.pmis.auth.dto;
+package com.njydsz.pmis.iam.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

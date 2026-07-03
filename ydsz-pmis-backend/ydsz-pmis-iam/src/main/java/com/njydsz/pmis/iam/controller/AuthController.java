@@ -1,10 +1,10 @@
-package com.njydsz.pmis.auth.controller;
+package com.njydsz.pmis.iam.controller;
 
-import com.njydsz.pmis.auth.dto.LoginDTO;
-import com.njydsz.pmis.auth.dto.LoginResultVO;
-import com.njydsz.pmis.auth.dto.CaptchaVO;
-import com.njydsz.pmis.auth.service.AuthService;
-import com.njydsz.pmis.auth.service.impl.AuthServiceImpl;
+import com.njydsz.pmis.iam.dto.LoginDTO;
+import com.njydsz.pmis.iam.dto.LoginResultVO;
+import com.njydsz.pmis.iam.dto.CaptchaVO;
+import com.njydsz.pmis.iam.service.AuthService;
+import com.njydsz.pmis.iam.service.impl.AuthServiceImpl;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;

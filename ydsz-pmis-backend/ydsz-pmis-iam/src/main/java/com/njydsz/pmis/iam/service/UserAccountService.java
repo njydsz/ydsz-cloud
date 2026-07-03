@@ -1,10 +1,10 @@
-package com.njydsz.pmis.user.service;
+package com.njydsz.pmis.iam.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.user.dto.LoginRequest;
-import com.njydsz.pmis.user.dto.LoginResult;
-import com.njydsz.pmis.user.dto.UserQueryDTO;
-import com.njydsz.pmis.user.entity.UserAccountDO;
+import com.njydsz.pmis.iam.dto.LoginRequest;
+import com.njydsz.pmis.iam.dto.LoginResult;
+import com.njydsz.pmis.iam.dto.UserQueryDTO;
+import com.njydsz.pmis.iam.entity.UserAccountDO;
 
 import java.util.List;
 
