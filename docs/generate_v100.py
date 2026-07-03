@@ -442,22 +442,48 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
             if m:
                 table_defs_seen.add(m.group(1))
     for f in sql_files:
-        for line in f.read_text(encoding='utf-8').splitlines():
+        # Two-pass: identify DDL statement heads and their following
+        # ON/COLUMN/ANALYZE clauses across multiple lines.
+        lines = f.read_text(encoding='utf-8').splitlines()
+        i = 0
+        while i < len(lines):
+            line = lines[i]
             stripped = line.strip()
             if stripped.startswith('--'):
+                i += 1
                 continue
-            for pat in [
-                r'CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?\w+\s+ON\s+(\w+)\b',
-                r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+)\b',
-                r'COMMENT\s+ON\s+COLUMN\s+(\w+)\.\w+\b',
-                r'COMMENT\s+ON\s+TABLE\s+(\w+)\b',
-                r'ANALYZE\s+(\w+)\b',
-            ]:
-                m = re.match(pat, line, re.IGNORECASE)
-                if m and m.group(1) not in table_defs_seen and m.group(1) not in (
-                    'public', 'pg_catalog', 'information_schema'
-                ):
-                    forward_ref_tables.add(m.group(1))
+            tail_refs = []
+            m = re.match(r'CREATE\s+(?:UNIQUE\s+)?INDEX\b', line, re.IGNORECASE)
+            if m:
+                # ON <table> may be on the same line OR in subsequent
+                # non-comment, non-empty lines.
+                for j in range(i, min(i + 5, len(lines))):
+                    m2 = re.search(r'\bON\s+(\w+)\b', lines[j], re.IGNORECASE)
+                    if m2:
+                        tail_refs.append(m2.group(1))
+                        break
+            else:
+                m = re.match(r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+)\b', line, re.IGNORECASE)
+                if m:
+                    tail_refs.append(m.group(1))
+                else:
+                    m = re.match(r'COMMENT\s+ON\s+COLUMN\s+(\w+)\.\w+\b', line, re.IGNORECASE)
+                    if m:
+                        tail_refs.append(m.group(1))
+                    else:
+                        m = re.match(r'COMMENT\s+ON\s+TABLE\s+(\w+)\b', line, re.IGNORECASE)
+                        if m:
+                            tail_refs.append(m.group(1))
+                        else:
+                            m = re.match(r'ANALYZE\s+(\w+)\b', line, re.IGNORECASE)
+                            if m:
+                                tail_refs.append(m.group(1))
+            for t in tail_refs:
+                if t in ('public', 'pg_catalog', 'information_schema'):
+                    continue
+                if t not in table_defs_seen:
+                    forward_ref_tables.add(t)
+            i += 1
 
     if forward_ref_tables:
         out.write('-- ====================================================================\n')
@@ -471,12 +497,15 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
         out.write('-- ====================================================================\n')
         out.write('\n')
 
-    def maybe_comment(line: str) -> str:
+    def is_forward_ref(line: str) -> bool:
+        """Check whether `line` itself is a DDL that references a forward-ref table.
+        Returns True if this is the line containing the table reference
+        (e.g. "    ON pmis_xxx (col);" or "ALTER TABLE pmis_xxx ..."
+        or "COMMENT ON COLUMN pmis_xxx.col ..." or "ANALYZE pmis_xxx;").
+        """
         if not forward_ref_tables or line.strip().startswith('--'):
-            return line
+            return False
         for t in forward_ref_tables:
-            # match: CREATE INDEX ... ON <t> ..., ALTER TABLE <t> ...,
-            #        COMMENT ON COLUMN <t>.col, COMMENT ON TABLE <t>, ANALYZE <t>
             if re.search(
                 rf'\b(ON|TABLE|COLUMN|ANALYZE)\s+{re.escape(t)}\b',
                 line, re.IGNORECASE,
@@ -484,8 +513,8 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                 rf'^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?{re.escape(t)}\s*\(',
                 line, re.IGNORECASE,
             ):
-                return '-- [SKIPPED-FWD-REF] ' + line
-        return line
+                return True
+        return False
 
     for f in sql_files:
         out.write('\n')
@@ -493,8 +522,29 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
         out.write(f'-- >>>>>>>>>> START OF {f.name}\n')
         out.write('-- ====================================================================\n')
         out.write('\n')
-        for line in f.read_text(encoding='utf-8').splitlines(keepends=True):
-            out.write(maybe_comment(line))
+        # First pass: collect lines, mark the index of each line that
+        # needs to be commented out. A DDL that spans multiple lines
+        # (e.g. CREATE INDEX / ALTER TABLE) requires the previous line
+        # (the statement head) to also be marked.
+        raw_lines = f.read_text(encoding='utf-8').splitlines(keepends=True)
+        to_skip = set()
+        for i, raw in enumerate(raw_lines):
+            if is_forward_ref(raw):
+                to_skip.add(i)
+                # If the previous line is a continuation head
+                # (e.g. CREATE INDEX ...), mark it too.
+                if i > 0:
+                    prev = raw_lines[i - 1]
+                    if (
+                        not prev.strip().startswith('--')
+                        and not prev.rstrip().endswith(';')
+                    ):
+                        to_skip.add(i - 1)
+        for i, raw in enumerate(raw_lines):
+            if i in to_skip and not raw.strip().startswith('--'):
+                out.write('-- [SKIPPED-FWD-REF] ' + raw)
+            else:
+                out.write(raw)
         out.write('\n')
         out.write('-- ====================================================================\n')
         out.write(f'-- >>>>>>>>>> END OF {f.name}\n')
@@ -643,6 +693,11 @@ re_idx = re.compile(
 )
 by_name = collections.defaultdict(list)
 for m in re_idx.finditer(text):
+    # Skip SKIPPED-FWD-REF lines (auto-commented by generator)
+    line_start = text.rfind('\n', 0, m.start()) + 1
+    line = text[line_start: text.find('\n', m.start())]
+    if '[SKIPPED-FWD-REF]' in line:
+        continue
     name = m.group(2)
     table = m.group(3)
     by_name[name].append(table)
@@ -693,6 +748,10 @@ for m in _re.finditer(r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+)\b',
     name = m.group(1)
     if '.' in name:  # schema-qualified already checked above
         continue
+    line_start = text.rfind('\n', 0, m.start()) + 1
+    line = text[line_start: text.find('\n', m.start())]
+    if '[SKIPPED-FWD-REF]' in line:
+        continue
     if name not in all_known_tables:
         errors.append(f'  ALTER TABLE unknown table: {name!r}')
 
@@ -704,12 +763,20 @@ for m in _re.finditer(
     name = m.group(1)
     if '.' in name:
         continue
+    line_start = text.rfind('\n', 0, m.start()) + 1
+    line = text[line_start: text.find('\n', m.start())]
+    if '[SKIPPED-FWD-REF]' in line:
+        continue
     if name not in all_known_tables:
         errors.append(f'  CREATE INDEX ON unknown table: {name!r}')
 
 # COMMENT ON COLUMN <table>.<col>
 for m in _re.finditer(r'COMMENT\s+ON\s+COLUMN\s+(\w+)\.([\w]+)\b', text, _re.IGNORECASE):
     name = m.group(1)
+    line_start = text.rfind('\n', 0, m.start()) + 1
+    line = text[line_start: text.find('\n', m.start())]
+    if '[SKIPPED-FWD-REF]' in line:
+        continue
     if name not in all_known_tables:
         errors.append(f'  COMMENT ON COLUMN unknown table: {name!r}')
 
@@ -717,6 +784,10 @@ for m in _re.finditer(r'COMMENT\s+ON\s+COLUMN\s+(\w+)\.([\w]+)\b', text, _re.IGN
 for m in _re.finditer(r'COMMENT\s+ON\s+TABLE\s+(\w+)\b', text, _re.IGNORECASE):
     name = m.group(1)
     if '.' in name:
+        continue
+    line_start = text.rfind('\n', 0, m.start()) + 1
+    line = text[line_start: text.find('\n', m.start())]
+    if '[SKIPPED-FWD-REF]' in line:
         continue
     if name not in all_known_tables:
         errors.append(f'  COMMENT ON TABLE unknown table: {name!r}')

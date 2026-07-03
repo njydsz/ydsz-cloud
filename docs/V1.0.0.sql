@@ -12,9 +12,16 @@
 -- ====================================================================
 -- ====================================================================
 -- [GENERATOR NOTE] Forward references detected and skipped:
+--   - pmis_after_sales_ops_ticket  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
+--   - pmis_after_sales_satisfaction  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
+--   - pmis_after_sales_warranty  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
+--   - pmis_agent_blackboard  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
+--   - pmis_agent_orchestration  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
+--   - pmis_contract_template  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
 --   - pmis_daily_reconcile  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
 --   - pmis_evm_record  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
 --   - pmis_project_closure  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
+--   - pmis_project_delivery  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
 --   The following source files reference these tables (index, comment,
 --   analyze) but the tables are not defined anywhere in the source. They
 --   are commented out in the merged file. Online upgrades via Flyway
@@ -6902,43 +6909,43 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_provider_trace
     WHERE provider_trace_id IS NOT NULL;
 
 -- 项目结项（4.1.4）
-CREATE INDEX IF NOT EXISTS idx_pmis_closure_initiation_status
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_closure_initiation_status
 -- [SKIPPED-FWD-REF]     ON pmis_project_closure (initiation_id, status, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pmis_closure_closure_type
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_closure_closure_type
 -- [SKIPPED-FWD-REF]     ON pmis_project_closure (closure_type, created_at DESC);
 
 -- 合同模板（4.1.5）
-CREATE INDEX IF NOT EXISTS idx_pmis_template_code
-    ON pmis_contract_template (code);
-CREATE INDEX IF NOT EXISTS idx_pmis_template_status_type
-    ON pmis_contract_template (status, type, created_at DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_template_code
+-- [SKIPPED-FWD-REF]     ON pmis_contract_template (code);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_template_status_type
+-- [SKIPPED-FWD-REF]     ON pmis_contract_template (status, type, created_at DESC);
 
 -- 售后表（4.1.3）
-CREATE INDEX IF NOT EXISTS idx_pmis_warranty_initiation_expire
-    ON pmis_after_sales_warranty (initiation_id, expire_date DESC)
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_warranty_initiation_expire
+-- [SKIPPED-FWD-REF]     ON pmis_after_sales_warranty (initiation_id, expire_date DESC)
     WHERE status = 'ACTIVE';
-CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_priority_status
-    ON pmis_after_sales_ops_ticket (priority, status, created_at DESC)
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_priority_status
+-- [SKIPPED-FWD-REF]     ON pmis_after_sales_ops_ticket (priority, status, created_at DESC)
     WHERE status IN ('OPEN', 'IN_PROGRESS');
-CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_sla_due
-    ON pmis_after_sales_ops_ticket (sla_due_at)
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_sla_due
+-- [SKIPPED-FWD-REF]     ON pmis_after_sales_ops_ticket (sla_due_at)
     WHERE status NOT IN ('CLOSED', 'CANCELLED');
-CREATE INDEX IF NOT EXISTS idx_pmis_satisfaction_ticket
-    ON pmis_after_sales_satisfaction (ticket_id, created_at DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_satisfaction_ticket
+-- [SKIPPED-FWD-REF]     ON pmis_after_sales_satisfaction (ticket_id, created_at DESC);
 
 -- 项目交付（4.1.2）
-CREATE INDEX IF NOT EXISTS idx_pmis_delivery_initiation_stage
-    ON pmis_project_delivery (initiation_id, stage, status);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_delivery_initiation_stage
+-- [SKIPPED-FWD-REF]     ON pmis_project_delivery (initiation_id, stage, status);
 
 -- =====================================================================
 --  2) EVM 看板（4.2 联动）
 -- =====================================================================
-CREATE INDEX IF NOT EXISTS idx_pmis_evm_initiation_period
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_evm_initiation_period
 -- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, period DESC);
-CREATE INDEX IF NOT EXISTS idx_pmis_evm_wbs_period
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_evm_wbs_period
 -- [SKIPPED-FWD-REF]     ON pmis_evm_record (wbs_task_id, period DESC);
 -- EVM 周期唯一性（idempotent on initiation+wbs+period）
-CREATE UNIQUE INDEX IF NOT EXISTS uq_pmis_evm_period
+-- [SKIPPED-FWD-REF] CREATE UNIQUE INDEX IF NOT EXISTS uq_pmis_evm_period
 -- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, wbs_task_id, period);
 
 -- =====================================================================
@@ -6958,9 +6965,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_recipient
 CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
     ON pmis_alert_dispatch (next_retry_at)
     WHERE status = 'FAILED' AND retry_count < 3;
-CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_period
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_period
 -- [SKIPPED-FWD-REF]     ON pmis_daily_reconcile (period DESC, status);
-CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_diff_only
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_diff_only
 -- [SKIPPED-FWD-REF]     ON pmis_daily_reconcile (period DESC)
     WHERE diff_count > 0;
 
@@ -6974,10 +6981,10 @@ CREATE INDEX IF NOT EXISTS idx_pmis_agent_prediction_type_alert
 CREATE INDEX IF NOT EXISTS idx_pmis_agent_prediction_trace
     ON pmis_agent_prediction (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pmis_agent_orchestration_biz
-    ON pmis_agent_orchestration (biz_type, biz_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pmis_agent_blackboard_session
-    ON pmis_agent_blackboard (session_id);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_agent_orchestration_biz
+-- [SKIPPED-FWD-REF]     ON pmis_agent_orchestration (biz_type, biz_id, created_at DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_agent_blackboard_session
+-- [SKIPPED-FWD-REF]     ON pmis_agent_blackboard (session_id);
 
 -- =====================================================================
 --  6) 财务对账（voucher / payment / invoice）
