@@ -70,6 +70,8 @@ export interface FlowTaskDTO {
   finishAt?: string
   durationMs?: number
   dueAt?: string
+  /** P1-1: 任务优先级（1-100，默认 50） */
+  priority?: number
   createTime?: string
 }
 

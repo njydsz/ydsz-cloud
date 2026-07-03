@@ -111,11 +111,12 @@ const columnOptions = computed<ColumnOption[]>(() => [
   { key: 'flowName', label: t('workflow.approval.columns.flowName') },
   { key: 'nodeName', label: t('workflow.approval.columns.nodeName') },
   { key: 'assignorName', label: t('workflow.approval.columns.assignorName') },
+  { key: 'priority', label: '优先级' },
   { key: 'createTime', label: t('workflow.approval.columns.createTime') },
   { key: 'status', label: t('workflow.approval.columns.status') },
   { key: 'operation', label: t('workflow.approval.columns.operation'), fixed: true },
 ])
-const visibleColumns = ref<string[]>(['selection', 'pin', 'title', 'flowName', 'nodeName', 'assignorName', 'createTime', 'status', 'operation'])
+const visibleColumns = ref<string[]>(['selection', 'pin', 'title', 'flowName', 'nodeName', 'assignorName', 'priority', 'createTime', 'status', 'operation'])
 
 function loadColumnPrefs() {
   try {
@@ -141,6 +142,15 @@ function isColumnVisible(key: string): boolean {
   return visibleColumns.value.includes(key)
 }
 
+// P1-1: 优先级标签
+function priorityTag(priority?: number): { label: string; type: 'danger' | 'warning' | 'info' | 'success' } {
+  const p = priority ?? 50
+  if (p >= 76) return { label: '紧急', type: 'danger' }
+  if (p >= 51) return { label: '高', type: 'warning' }
+  if (p >= 26) return { label: '中', type: 'info' }
+  return { label: '低', type: 'success' }
+}
+
 // ===========================================
 // 待办列表数据
 // ===========================================
@@ -162,13 +172,17 @@ function tableRowClassName({ row }: { row: FlowTaskDTO }): string {
   return ''
 }
 
-/** 对当前列表排序（置顶优先，然后按到达时间倒序） */
+/** 对当前列表排序（置顶优先 → priority DESC → createTime ASC） */
 function sortTodoList() {
   todoList.value = [...todoList.value].sort((a, b) => {
     const aPinned = pinnedTaskIds.value.has(a.id) ? 1 : 0
     const bPinned = pinnedTaskIds.value.has(b.id) ? 1 : 0
     if (aPinned !== bPinned) return bPinned - aPinned
-    return new Date(b.createTime || 0).getTime() - new Date(a.createTime || 0).getTime()
+    // P1-1: priority DESC（高优先级在前）
+    const bPri = b.priority ?? 50
+    const aPri = a.priority ?? 50
+    if (bPri !== aPri) return bPri - aPri
+    return new Date(a.createTime || 0).getTime() - new Date(b.createTime || 0).getTime()
   })
 }
 
@@ -196,12 +210,16 @@ async function loadTodo() {
         records = records.filter((t) => isOverdue(t))
       }
 
-      // 排序：置顶优先
+      // 排序：置顶优先 → priority DESC → createTime ASC
       records.sort((a, b) => {
         const aPinned = pinnedTaskIds.value.has(a.id) ? 1 : 0
         const bPinned = pinnedTaskIds.value.has(b.id) ? 1 : 0
         if (aPinned !== bPinned) return bPinned - aPinned
-        return new Date(b.createTime || 0).getTime() - new Date(a.createTime || 0).getTime()
+        // P1-1: priority DESC（高优先级在前）
+        const bPri = b.priority ?? 50
+        const aPri = a.priority ?? 50
+        if (bPri !== aPri) return bPri - aPri
+        return new Date(a.createTime || 0).getTime() - new Date(b.createTime || 0).getTime()
       })
 
       todoList.value = records
@@ -429,6 +447,19 @@ onMounted(() => {
         :label="t('workflow.approval.columns.assignorName')"
         width="100"
       />
+      <!-- P1-1: 任务优先级 -->
+      <el-table-column
+        v-if="isColumnVisible('priority')"
+        label="优先级"
+        width="80"
+        align="center"
+      >
+        <template #default="{ row }">
+          <el-tag :type="priorityTag(row.priority).type" size="small" effect="light">
+            {{ priorityTag(row.priority).label }}
+          </el-tag>
+        </template>
+      </el-table-column>
       <el-table-column
         v-if="isColumnVisible('createTime')"
         :label="t('workflow.approval.columns.createTime')"

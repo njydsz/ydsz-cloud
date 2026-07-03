@@ -62,9 +62,12 @@ public class RuleCircuitBreaker {
         if (errorRateThreshold <= 0 || errorRateThreshold > 1) {
             throw new IllegalArgumentException("errorRateThreshold 必须在 (0, 1] 区间");
         }
+        if (openStateMs <= 0) {
+            throw new IllegalArgumentException("openStateMs 必须大于 0");
+        }
         this.errorRateThreshold = errorRateThreshold;
         this.minEvaluations = Math.max(1, minEvaluations);
-        this.openStateMs = Math.max(1000, openStateMs);
+        this.openStateMs = openStateMs;
     }
 
     /**

@@ -77,4 +77,42 @@ public class DecisionTreeDefinition implements Serializable {
     private boolean enabled = true;
 
     /** 优先级（数值越小越先执行） */
+    @Builder.Default
+    private int priority = Rule.DEFAULT_PRIORITY;
+
+    /** 影响范围（用于场景过滤） */
+    private String scope;
+
+    /** 当前版本号 */
+    @Builder.Default
+    private int version = 1;
+
+    /**
+     * 决策树节点（内部节点 / 叶子节点）
+     *
+     * <p>当 {@link #leaf} 为 true 时表示叶子节点，使用 severity/title/description；
+     * 为 false 时表示条件节点，使用 conditionExpression/trueBranch/falseBranch。
+     */
+    @Data
     @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DecisionNode implements Serializable {
+        private static final long serialVersionUID = 1L;
+        /** 条件表达式（仅条件节点使用，Aviator 返回 boolean） */
+        private String conditionExpression;
+        /** true 分支子节点 */
+        private DecisionNode trueBranch;
+        /** false 分支子节点 */
+        private DecisionNode falseBranch;
+        /** 严重度字符串（仅叶子节点使用，"RED"/"YELLOW"/"INFO"） */
+        private String severity;
+        /** 标题（仅叶子节点使用） */
+        private String title;
+        /** 描述（仅叶子节点使用） */
+        private String description;
+        /** 是否为叶子节点 */
+        @Builder.Default
+        private boolean leaf = false;
+    }
+}
