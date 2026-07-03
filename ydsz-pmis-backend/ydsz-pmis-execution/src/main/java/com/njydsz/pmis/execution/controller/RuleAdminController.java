@@ -9,8 +9,9 @@ import com.njydsz.pmis.execution.literule.RuleConflictDetector;
 import com.njydsz.pmis.execution.literule.RuleGenerationService;
 import com.njydsz.pmis.execution.literule.RuleTemplateService;
 import com.njydsz.pmis.execution.mapper.DecisionTableMapper;
-import com.njydsz.pmis.execution.mapper.RuleExecutionTraceMapper;
 import com.njydsz.pmis.execution.mapper.RuleTestCaseMapper;
+import com.njydsz.pmis.execution.mapper.RuleExecutionTraceMapper;
+import com.njydsz.pmis.execution.service.DecisionTableEvalService;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
@@ -55,6 +56,7 @@ public class RuleAdminController {
     private final RuleExecutionTraceMapper ruleExecutionTraceMapper;
     private final DecisionTableMapper decisionTableMapper;
     private final ObjectMapper objectMapper;
+    private final DecisionTableEvalService decisionTableEvalService;
 
     /**
      * 查询全部规则定义
@@ -606,6 +608,27 @@ public class RuleAdminController {
     public Result<Void> deleteDecisionTable(@PathVariable Long id) {
         decisionTableMapper.deleteById(id);
         return Result.ok();
+    }
+
+    /**
+     * 评估决策表
+     *
+     * <p>按 tableCode 加载已启用的决策表，以请求体中的 facts 作为事实数据执行 DMN 评估，
+     * 返回命中行的动作值列表（无命中时返回默认动作或空列表）。
+     *
+     * @param tableCode 决策表编码
+     * @param facts     事实数据（变量名 -> 值）
+     * @return 命中行的动作值列表
+     */
+    @PostMapping("/decision-tables/{tableCode}/evaluate")
+    public Result<List<Map<String, Object>>> evaluateDecisionTable(@PathVariable String tableCode,
+                                                                   @RequestBody Map<String, Object> facts) {
+        try {
+            return Result.ok(decisionTableEvalService.evaluate(tableCode, facts));
+        } catch (Exception e) {
+            log.warn("[DecisionTable] 评估失败: tableCode={}, err={}", tableCode, e.getMessage());
+            return Result.fail(e.getMessage());
+        }
     }
 
     // ==================== 规则导入导出 ====================

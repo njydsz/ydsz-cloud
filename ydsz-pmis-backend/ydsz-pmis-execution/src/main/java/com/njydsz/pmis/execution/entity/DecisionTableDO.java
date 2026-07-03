@@ -55,6 +55,9 @@ public class DecisionTableDO implements Serializable {
     @TableField(typeHandler = JacksonTypeHandler.class)
     private Map<String, Object> defaultActions;
 
+    /** 命中策略：UNIQUE/FIRST/PRIORITY/COLLECT/ANY，默认 FIRST */
+    private String hitPolicy;
+
     /** 是否启用 */
     private Boolean enabled;
 
