@@ -192,7 +192,7 @@ VALUES
     'EVM 红色项目 ${evmRedCount} 个',
     '红色告警项目数 ${evmRedCount}，超过阈值 3',
     100, 'ALL', 'IT_SERVICE', 'EVM,预警,成本'
-) ON CONFLICT (template_code) DO NOTHING,
+),
 (
     'TPL_MARGIN_LOW',
     '毛利率过低模板',
@@ -204,7 +204,7 @@ VALUES
     '毛利率 ${grossMargin} 偏低',
     '毛利率 ${grossMargin} 低于阈值',
     110, 'ALL', 'GENERAL', '毛利,成本,预警'
-) ON CONFLICT (template_code) DO NOTHING,
+),
 (
     'TPL_BENCH_IDLE',
     'Bench 闲置成本模板',
@@ -216,7 +216,7 @@ VALUES
     'Bench 闲置成本 ${benchIdleCost} 元',
     'Bench 闲置成本 ${benchIdleCost} 元，资源利用率不足',
     120, 'RESOURCE_POOL', 'STAFFING', 'Bench,闲置,资源'
-) ON CONFLICT (template_code) DO NOTHING,
+),
 (
     'TPL_UTILIZATION_LOW',
     '利用率偏低模板',
@@ -228,7 +228,7 @@ VALUES
     '利用率 ${avgBillableUtilization} 偏低',
     '可计费利用率 ${avgBillableUtilization} 低于阈值',
     130, 'ALL', 'CONSULTING', '利用率,资源,预警'
-) ON CONFLICT (template_code) DO NOTHING,
+),
 (
     'TPL_BUDGET_OVERRUN',
     '预算超支模板',
@@ -240,7 +240,7 @@ VALUES
     '预算使用率 ${budgetUsageRatio}',
     '预算使用率 ${budgetUsageRatio}，已接近或超出预算',
     105, 'ALL', 'GENERAL', '预算,成本,预警'
-) ON CONFLICT (template_code) DO NOTHING,
+),
 (
     'TPL_SLA_BREACH',
     'SLA 超时模板',
@@ -252,4 +252,7 @@ VALUES
     'SLA 超时 ${slaBreachedCount} 单',
     'SLA 超时工单 ${slaBreachedCount} 个，需关注服务响应时效',
     115, 'ALL', 'IT_SERVICE', 'SLA,超时,运维'
-) ON CONFLICT (template_code) DO NOTHING;
+)
+-- 早期版本在每个 VALUES tuple 后面写 ON CONFLICT，PG 不支持该语法。
+-- 多行 VALUES 必须在整个块之后接 ON CONFLICT 子句。
+ON CONFLICT (template_code) DO NOTHING;

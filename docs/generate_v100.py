@@ -894,6 +894,17 @@ for m in insert_re.finditer(text):
         if c not in actual:
             errors.append(f'  INSERT INTO {tname}: column {c!r} not in table definition')
 
+# 8. No INSERT ... VALUES has ON CONFLICT clause in the middle of a
+#    multi-row VALUES block. PostgreSQL requires ON CONFLICT to appear
+#    AFTER the entire VALUES list, not after each tuple.
+#    Detect pattern: ") ON CONFLICT ... DO NOTHING,\n("
+bad_oc = _re.compile(
+    r'\)\s*ON\s+CONFLICT[^;]*DO\s+(?:NOTHING|UPDATE[^;]*),\s*\n\s*\(',
+    _re.IGNORECASE,
+)
+for m in bad_oc.finditer(text):
+    errors.append(f'  ON CONFLICT in middle of multi-row VALUES (offset {m.start()})')
+
 # Stats
 total_col = len(re_col_body.findall(text))
 total_tbl = len(re_tbl_body.findall(text))
