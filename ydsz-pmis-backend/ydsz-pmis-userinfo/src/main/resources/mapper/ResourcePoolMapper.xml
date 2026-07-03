@@ -22,18 +22,27 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_resource_pool
+        SELECT id, pool_code, pool_name, pool_type, department_id, department_name,
+               level_range, headcount, billable_target, description, status,
+               tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_resource_pool
         WHERE pool_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByType" resultMap="BaseResultMap">
-        SELECT * FROM pmis_resource_pool
+        SELECT id, pool_code, pool_name, pool_type, department_id, department_name,
+               level_range, headcount, billable_target, description, status,
+               tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_resource_pool
         WHERE pool_type = #{poolType} AND deleted = 0
         ORDER BY headcount DESC
     </select>
 
     <select id="selectByDept" resultMap="BaseResultMap">
-        SELECT * FROM pmis_resource_pool
+        SELECT id, pool_code, pool_name, pool_type, department_id, department_name,
+               level_range, headcount, billable_target, description, status,
+               tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_resource_pool
         WHERE department_id = #{departmentId} AND deleted = 0
         ORDER BY created_at DESC
     </select>

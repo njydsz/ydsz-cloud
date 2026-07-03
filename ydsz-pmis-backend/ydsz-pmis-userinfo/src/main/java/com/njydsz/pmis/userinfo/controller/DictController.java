@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.controller;
 
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.userinfo.entity.DictItemDO;
 import com.njydsz.pmis.userinfo.entity.DictTypeDO;
@@ -32,6 +33,7 @@ public class DictController {
      * @return 统一响应结果，包含字典类型列表
      */
     @Operation(summary = "查询所有字典类型")
+    @RateLimit(key = "dict", qps = 50, windowSeconds = 60)
     @GetMapping("/types")
     public Result<List<DictTypeDO>> listTypes() {
         return Result.ok(dictService.listAllTypes());
@@ -44,6 +46,7 @@ public class DictController {
      * @return 统一响应结果，包含字典项列表
      */
     @Operation(summary = "按 typeCode 查询字典项")
+    @RateLimit(key = "dict", qps = 50, windowSeconds = 60)
     @GetMapping("/items")
     public Result<List<DictItemDO>> listItems(@RequestParam String typeCode) {
         return Result.ok(dictService.listItems(typeCode));

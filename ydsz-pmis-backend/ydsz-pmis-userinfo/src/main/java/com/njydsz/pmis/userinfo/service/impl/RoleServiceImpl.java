@@ -13,6 +13,8 @@ import com.njydsz.pmis.userinfo.mapper.RolePermissionMapper;
 import com.njydsz.pmis.userinfo.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -28,6 +30,9 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RoleServiceImpl implements RoleService {
+
+    /** 角色缓存名称 */
+    public static final String CACHE_NAME = "role";
 
     private final RoleMapper roleMapper;
     private final RolePermissionMapper rolePermissionMapper;
@@ -53,6 +58,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "'listAllEnabled'", unless = "#result == null || #result.isEmpty()")
     public List<RoleDO> listAllEnabled() {
         return roleMapper.selectList(new LambdaQueryWrapper<RoleDO>()
                 .eq(RoleDO::getStatus, "ENABLED")
@@ -61,6 +67,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "#id", unless = "#result == null")
     public RoleDO getById(Long id) {
         RoleDO r = roleMapper.selectById(id);
         if (r == null) {
@@ -71,12 +78,14 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "'byUserId:' + #userId", unless = "#result == null || #result.isEmpty()")
     public List<RoleDO> listByUserId(Long userId) {
         return roleMapper.selectByUserId(userId);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public Long create(RoleFormDTO dto) {
         if (roleMapper.selectByCode(dto.getRoleCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_af20e82e");
@@ -94,6 +103,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void update(RoleFormDTO dto) {
         if (dto.getId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_6fe5914e");
@@ -112,6 +122,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void delete(Long id) {
         if (roleMapper.selectById(id) == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c3f70e4c");
@@ -146,6 +157,7 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "'permIds:' + #roleId", unless = "#result == null || #result.isEmpty()")
     public List<Long> listPermissionIds(Long roleId) {
         return rolePermissionMapper.selectPermissionIdsByRoleId(roleId);
     }

@@ -304,30 +304,4 @@ public final class PermissionCodes {
     public static final String AGENT_ORCHESTRATION_VIEW = "agent:orchestration:view";
     public static final String AGENT_PREDICTION_VIEW = "agent:prediction:view";
 
-    // ==================== 兼容旧码(将废弃,仅用于数据迁移) ====================
-
-    /** @deprecated use {@link #CRONJOB_JOB_CREATE} */
-    @Deprecated
-    public static final String LEGACY_JOB_ADD = "job:add";
-    /** @deprecated use {@link #CRONJOB_JOB_UPDATE} */
-    @Deprecated
-    public static final String LEGACY_JOB_EDIT = "job:edit";
-    /** @deprecated use {@link #NOTIF_MESSAGE_SEND} */
-    @Deprecated
-    public static final String LEGACY_NOTIF_SEND = "notif:send";
-    /** @deprecated use {@link #FILE_STORAGE_UPLOAD} */
-    @Deprecated
-    public static final String LEGACY_FILE_UPLOAD = "file:upload";
-    /** @deprecated use {@link #FILE_STORAGE_DELETE} */
-    @Deprecated
-    public static final String LEGACY_FILE_DELETE = "file:delete";
-    /** @deprecated use {@link #RESOURCE_TAG_CREATE} */
-    @Deprecated
-    public static final String LEGACY_TAG_ADD = "resource:tag:add";
-    /** @deprecated use {@link #RESOURCE_TAG_DELETE} */
-    @Deprecated
-    public static final String LEGACY_TAG_REMOVE = "resource:tag:remove";
-    /** @deprecated use {@link #RESOURCE_TAG_UPDATE} */
-    @Deprecated
-    public static final String LEGACY_TAG_REPLACE = "resource:tag:replace";
-}
+    }

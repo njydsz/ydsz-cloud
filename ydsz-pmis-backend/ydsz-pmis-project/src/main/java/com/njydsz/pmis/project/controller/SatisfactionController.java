@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
@@ -36,6 +37,7 @@ public class SatisfactionController {
 
     @Operation(summary = "提交评价")
     @PrePermission("aftersales:satisfaction:submit")
+    @Idempotent(key = "satisfaction:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> submit(@Valid @RequestBody SatisfactionCreateDTO dto) {
         return Result.ok(service.submit(dto));

@@ -36,10 +36,10 @@ function onError(err: unknown, info: string) {
 
 <template>
   <div class="default-layout" :class="{ collapsed: appStore.sidebarCollapsed }">
-    <aside class="layout-sidebar">
+    <aside class="layout-sidebar" aria-label="侧边栏导航">
       <Sidebar />
     </aside>
-    <section class="layout-container">
+    <section class="layout-container" aria-label="主内容区域">
       <AppHeader />
       <div class="layout-tags">
         <TagsView />

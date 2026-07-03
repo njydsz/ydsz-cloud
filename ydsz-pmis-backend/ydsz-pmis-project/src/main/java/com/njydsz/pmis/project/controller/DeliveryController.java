@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.DeliveryItemCreateDTO;
@@ -50,6 +51,7 @@ public class DeliveryController {
      */
     @Operation(summary = "创建交付物标准")
     @PrePermission("execution:delivery:create")
+    @Idempotent(key = "delivery:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/standard")
     public Result<Long> createStandard(@Valid @RequestBody DeliveryStandardCreateDTO dto) {
         return Result.ok(service.createStandard(dto));
@@ -136,6 +138,7 @@ public class DeliveryController {
      */
     @Operation(summary = "交付物状态迁移")
     @PrePermission("execution:delivery:status")
+    @Idempotent(key = "delivery:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/item/status")
     public Result<Void> changeItemStatus(@Valid @RequestBody DeliveryItemStatusDTO dto) {
         service.changeItemStatus(dto);

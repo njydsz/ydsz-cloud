@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.project.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.project.dto.CockpitKpiVO;
 import com.njydsz.pmis.project.service.CockpitReportService;
@@ -42,6 +43,7 @@ public class BffAggregateController {
     private final ReportService reportService;
 
     @GetMapping("/project-detail/{initiationId}")
+    @RateLimit(key = "bff", qps = 20, windowSeconds = 60)
     @Operation(summary = "项目详情聚合", description = "一次返回立项+合同+WBS概览+EVM摘要")
     public Map<String, Object> projectDetailAggregate(
             @PathVariable @NotNull(message = "{validation.execution.msg_1d72f14c}") Long initiationId) {
@@ -79,6 +81,7 @@ public class BffAggregateController {
     }
 
     @GetMapping("/dashboard-summary")
+    @RateLimit(key = "bff", qps = 20, windowSeconds = 60)
     @Operation(summary = "首页仪表盘聚合", description = "一次返回KPI+图表+待办数据")
     public Map<String, Object> dashboardSummary(@RequestHeader(value = "X-User-Id", required = false) Long userId) {
         Map<String, Object> result = new HashMap<>();

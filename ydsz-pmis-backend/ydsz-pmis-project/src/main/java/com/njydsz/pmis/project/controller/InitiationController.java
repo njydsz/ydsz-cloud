@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -54,6 +55,7 @@ public class InitiationController {
     @Operation(summary = "提交立项")
     @PrePermission("project:initiation:create")
     @OperationLog(module = "立项管理", action = "提交立项", bizType = "INITIATION", saveResult = true)
+    @Idempotent(key = "initiation:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody InitiationCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -68,6 +70,7 @@ public class InitiationController {
     @Operation(summary = "阶段迁移")
     @PrePermission("project:initiation:update")
     @OperationLog(module = "立项管理", action = "阶段迁移", bizType = "INITIATION")
+    @Idempotent(key = "initiation:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/stage")
     public Result<Void> changeStage(@Valid @RequestBody InitiationStageDTO dto) {
         service.changeStage(dto);

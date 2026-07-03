@@ -19,6 +19,7 @@
  */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import VirtualTable from '@/components/common/VirtualTable.vue'
@@ -38,6 +39,9 @@ import { useUserStore } from '@/store/modules/user'
 // 权限助手：统一通过 userStore 校验按钮级权限
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
+
+// i18n
+const { t } = useI18n()
 
 // 列表加载状态
 const loading = ref(false)
@@ -234,7 +238,7 @@ function fmtHours(v: number | undefined) {
             v-model="query.from"
             type="date"
             value-format="YYYY-MM-DD"
-            placeholder="开始日期"
+            :placeholder="$t('execution.utilization.filter.startDate')"
           />
         </el-form-item>
         <el-form-item label="结束日期">
@@ -242,11 +246,11 @@ function fmtHours(v: number | undefined) {
             v-model="query.to"
             type="date"
             value-format="YYYY-MM-DD"
-            placeholder="结束日期"
+            :placeholder="$t('execution.utilization.filter.endDate')"
           />
         </el-form-item>
         <el-form-item label="快照周期">
-          <el-input v-model="query.period" placeholder="yyyy-MM" style="width: 140px" />
+          <el-input v-model="query.period" :placeholder="$t('execution.utilization.filter.periodPlaceholder')" style="width: 140px" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" :loading="loading" @click="refresh">查询</el-button>

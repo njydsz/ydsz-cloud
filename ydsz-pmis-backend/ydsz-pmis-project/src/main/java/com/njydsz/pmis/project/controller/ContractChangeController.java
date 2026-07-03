@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ContractChangeDTO;
@@ -44,6 +45,7 @@ public class ContractChangeController {
      */
     @Operation(summary = "提交变更申请")
     @PrePermission("project:contract-change:create")
+    @Idempotent(key = "contract-change:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> apply(@Valid @RequestBody ContractChangeDTO dto) {
         return Result.ok(service.apply(dto));
@@ -57,6 +59,7 @@ public class ContractChangeController {
      */
     @Operation(summary = "提交审批")
     @PrePermission("project:contract-change:approve")
+    @Idempotent(key = "contract-change:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
     public Result<Void> submit(@PathVariable Long id) {
         service.submit(id);

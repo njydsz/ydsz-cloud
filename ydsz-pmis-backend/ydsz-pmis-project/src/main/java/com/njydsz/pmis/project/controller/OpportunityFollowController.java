@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.OpportunityFollowDTO;
 import com.njydsz.pmis.project.entity.OpportunityFollowDO;
@@ -38,6 +39,7 @@ public class OpportunityFollowController {
      * @return 跟进记录 ID
      */
     @Operation(summary = "记录跟进")
+    @Idempotent(key = "opportunity-follow:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> record(@Valid @RequestBody OpportunityFollowDTO dto) {
         return Result.ok(service.record(dto));

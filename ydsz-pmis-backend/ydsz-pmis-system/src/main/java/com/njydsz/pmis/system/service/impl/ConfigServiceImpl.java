@@ -14,6 +14,8 @@ import com.njydsz.pmis.system.service.ConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,9 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class ConfigServiceImpl implements ConfigService {
+
+    /** Spring Cache 配置缓存名称 */
+    public static final String CACHE_NAME = "config";
 
     /** 单条配置缓存 Key 前缀 */
     private static final String CACHE_PREFIX = "pmis:cfg:";
@@ -106,6 +111,7 @@ public class ConfigServiceImpl implements ConfigService {
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "#group + ':' + #key", unless = "#result == null")
     public ConfigDO getByKey(String group, String key) {
         String cacheKey = CACHE_PREFIX + group + ":" + key;
         String cached = redisTemplate.opsForValue().get(cacheKey);
@@ -149,6 +155,7 @@ public class ConfigServiceImpl implements ConfigService {
      */
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "'public'", unless = "#result == null || #result.isEmpty()")
     public List<ConfigDO> listPublic() {
         return configMapper.selectPublic();
     }
@@ -162,6 +169,7 @@ public class ConfigServiceImpl implements ConfigService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public Long create(ConfigFormDTO dto) {
         if (dto.getValueType() == null
                 || !Set.of("STRING", "NUMBER", "BOOLEAN", "JSON").contains(dto.getValueType())) {
@@ -191,6 +199,7 @@ public class ConfigServiceImpl implements ConfigService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void update(ConfigFormDTO dto) {
         if (dto.getId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "配置 ID 不能为空");
@@ -257,6 +266,7 @@ public class ConfigServiceImpl implements ConfigService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void delete(Long id) {
         ConfigDO c = configMapper.selectById(id);
         if (c == null) {
@@ -275,6 +285,7 @@ public class ConfigServiceImpl implements ConfigService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public int deleteByGroup(String group) {
         if (!StringUtils.hasText(group)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "配置分组不能为空");
@@ -297,6 +308,7 @@ public class ConfigServiceImpl implements ConfigService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public int updateStatusByGroup(String group, String status) {
         if (!StringUtils.hasText(group) || !StringUtils.hasText(status)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "分组和状态不能为空");

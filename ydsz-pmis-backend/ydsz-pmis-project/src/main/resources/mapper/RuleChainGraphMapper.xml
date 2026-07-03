@@ -3,7 +3,10 @@
 <mapper namespace="com.njydsz.pmis.project.mapper.RuleChainGraphMapper">
 
     <select id="selectByRuleCode" resultType="com.njydsz.pmis.project.entity.RuleChainGraphDO">
-        SELECT * FROM pmis_rule_chain_graph WHERE rule_code = #{ruleCode} LIMIT 1
+        SELECT id, rule_code, name, description, scenario, tenant_id, graph_version,
+               status, content_json, created_by, created_at, updated_by, updated_at
+        FROM pmis_rule_chain_graph
+        WHERE rule_code = #{ruleCode} LIMIT 1
     </select>
 
     <delete id="deleteByRuleCode">

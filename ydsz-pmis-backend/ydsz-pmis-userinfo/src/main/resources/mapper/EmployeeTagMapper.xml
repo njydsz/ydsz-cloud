@@ -19,13 +19,17 @@
     </resultMap>
 
     <select id="selectByEmployee" resultMap="BaseResultMap">
-        SELECT * FROM pmis_employee_tag
+        SELECT id, employee_id, tag_type, tag_code, tag_name, proficiency, years_exp,
+               remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_employee_tag
         WHERE employee_id = #{employeeId} AND deleted = 0
         ORDER BY tag_type, proficiency DESC
     </select>
 
     <select id="selectByTag" resultMap="BaseResultMap">
-        SELECT * FROM pmis_employee_tag
+        SELECT id, employee_id, tag_type, tag_code, tag_name, proficiency, years_exp,
+               remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_employee_tag
         WHERE tag_type = #{tagType}
           <if test="tagCode != null and tagCode != ''">
               AND tag_code = #{tagCode}

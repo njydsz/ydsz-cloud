@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ContractTemplateCreateDTO;
@@ -46,6 +47,7 @@ public class ContractTemplateController {
      */
     @Operation(summary = "创建合同模板")
     @PrePermission("project:contract-template:create")
+    @Idempotent(key = "contract-template:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody ContractTemplateCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -59,6 +61,7 @@ public class ContractTemplateController {
      */
     @Operation(summary = "状态迁移")
     @PrePermission("project:contract-template:publish")
+    @Idempotent(key = "contract-template:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody ContractTemplateStatusDTO dto) {
         service.changeStatus(dto);
@@ -73,6 +76,7 @@ public class ContractTemplateController {
      */
     @Operation(summary = "删除模板")
     @PrePermission("project:contract-template:delete")
+    @Idempotent(key = "contract-template:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);

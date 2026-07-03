@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
@@ -39,6 +40,7 @@ public class WarrantyController {
 
     @Operation(summary = "创建质保期")
     @PrePermission("aftersales:warranty:create")
+    @Idempotent(key = "warranty:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody WarrantyCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -46,6 +48,7 @@ public class WarrantyController {
 
     @Operation(summary = "手动提前终止质保期")
     @PrePermission("aftersales:warranty:terminate")
+    @Idempotent(key = "warranty:update", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/terminate")
     public Result<Void> terminate(@Valid @RequestBody WarrantyTerminateDTO dto) {
         service.terminate(dto);

@@ -2088,6 +2088,50 @@ export default {
         confirmStatusChange: 'Are you sure to change status to "{target}"?',
       },
     },
+    ruleEngine: {
+      search: {
+        filterByCategory: 'Filter by category',
+        codeOrName: 'Code / Name',
+      },
+      form: {
+        codePlaceholder: 'e.g. BUDGET_OVERRUN',
+        namePlaceholder: 'e.g. Budget Overrun Alert',
+        categoryPlaceholder: 'e.g. BUDGET / RISK / EVM',
+        ownerPlaceholder: 'e.g. zhangsan (employee ID/username)',
+        categoryPathPlaceholder: 'Multi-level category separated by /, e.g. finance/credit/loan',
+        conditionPlaceholder: 'e.g. budgetUsageRatio >= 0.80 && spi < 0.90',
+        severityPlaceholder: "e.g. budgetUsageRatio >= 0.95 ? 'RED' : 'YELLOW'",
+        titleTemplatePlaceholder: 'Budget Overrun Alert: {projectName}',
+        descTemplatePlaceholder: 'Project {projectName} budget used {budgetUsedRatio}',
+        scopePlaceholder: 'Optional, e.g. PROJECT / TASK',
+        changeDescPlaceholder: 'Description of changes (recorded in version history)',
+      },
+      dryRun: {
+        factsPlaceholder: 'Enter JSON fact data, e.g. {"budgetUsedRatio": 0.95}',
+      },
+      batch: {
+        categoryPlaceholder: 'Select or enter new category',
+      },
+      template: {
+        filterByCategory: 'Filter by category',
+      },
+      ai: {
+        descriptionPlaceholder: 'Describe the rule in natural language, e.g. When budget usage exceeds 90% and SPI is below 0.9, trigger a red alert',
+        fieldsPlaceholder: 'Select or enter available fields to assist AI in generating valid expressions',
+      },
+      abTest: {
+        conditionPlaceholder: 'Enter candidate condition expression (Aviator)',
+        severityPlaceholder: 'Enter candidate severity expression (optional)',
+        factsPlaceholder: '{"amount": 1000, "budgetUsedRatio": 0.9}',
+      },
+    },
+    utilization: {
+      filter: {
+        startDate: 'Start Date',
+        endDate: 'End Date',
+        periodPlaceholder: 'yyyy-MM',
+      },
+    },
   },
   audit: {
     title: 'Audit Center',

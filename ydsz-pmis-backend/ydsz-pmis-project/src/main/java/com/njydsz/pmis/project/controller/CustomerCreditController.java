@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.CreditAssessmentDTO;
@@ -46,6 +47,7 @@ public class CustomerCreditController {
      */
     @Operation(summary = "评估客户信用")
     @PrePermission("finance:credit:assess")
+    @Idempotent(key = "customer-credit:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/assess")
     public Result<CustomerCreditDO> assess(@Valid @RequestBody CreditAssessmentDTO dto) {
         return Result.ok(service.assess(dto));

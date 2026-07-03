@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.RiskCreateDTO;
@@ -48,6 +49,7 @@ public class RiskController {
      */
     @Operation(summary = "登记风险")
     @PrePermission("execution:risk:create")
+    @Idempotent(key = "risk:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody RiskCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -61,6 +63,7 @@ public class RiskController {
      */
     @Operation(summary = "状态迁移")
     @PrePermission("execution:risk:status")
+    @Idempotent(key = "risk:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody RiskStatusDTO dto) {
         service.changeStatus(dto);
@@ -75,6 +78,7 @@ public class RiskController {
      */
     @Operation(summary = "删除")
     @PrePermission("execution:risk:delete")
+    @Idempotent(key = "risk:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);

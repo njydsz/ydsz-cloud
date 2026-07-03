@@ -9,6 +9,8 @@ import com.njydsz.pmis.userinfo.service.DepartmentService;
 import com.njydsz.pmis.userinfo.vo.DepartmentTreeVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,10 +30,14 @@ import java.util.Objects;
 @RequiredArgsConstructor
 public class DepartmentServiceImpl implements DepartmentService {
 
+    /** 部门缓存名称 */
+    public static final String CACHE_NAME = "dept";
+
     private final DepartmentMapper departmentMapper;
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "'tree'", unless = "#result == null || #result.isEmpty()")
     public List<DepartmentTreeVO> tree() {
         List<DepartmentDO> all = departmentMapper.selectAllEnabled();
         Map<Long, DepartmentTreeVO> map = new HashMap<>();
@@ -57,12 +63,14 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "'listAllEnabled'", unless = "#result == null || #result.isEmpty()")
     public List<DepartmentDO> listAllEnabled() {
         return departmentMapper.selectAllEnabled();
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "#id", unless = "#result == null")
     public DepartmentDO getById(Long id) {
         DepartmentDO d = departmentMapper.selectById(id);
         if (d == null) {
@@ -73,6 +81,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public Long create(DepartmentFormDTO dto) {
         // 编码唯一
         DepartmentDO exists = departmentMapper.selectByCode(dto.getDeptCode());
@@ -107,6 +116,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void update(DepartmentFormDTO dto) {
         if (dto.getId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_c04220b1");
@@ -126,6 +136,7 @@ public class DepartmentServiceImpl implements DepartmentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = CACHE_NAME, allEntries = true)
     public void delete(Long id) {
         DepartmentDO d = departmentMapper.selectById(id);
         if (d == null) {

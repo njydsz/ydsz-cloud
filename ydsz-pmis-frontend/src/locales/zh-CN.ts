@@ -2090,6 +2090,50 @@ export default {
         confirmStatusChange: '确认将状态变更为「{target}」吗？',
       },
     },
+    ruleEngine: {
+      search: {
+        filterByCategory: '按类别筛选',
+        codeOrName: '编码 / 名称',
+      },
+      form: {
+        codePlaceholder: '如 BUDGET_OVERRUN',
+        namePlaceholder: '如 预算超支预警',
+        categoryPlaceholder: '如 BUDGET / RISK / EVM',
+        ownerPlaceholder: '如 zhangsan（工号/用户名）',
+        categoryPathPlaceholder: '多级分类用 / 分隔，如 finance/credit/loan',
+        conditionPlaceholder: '如: budgetUsageRatio >= 0.80 && spi < 0.90',
+        severityPlaceholder: "如: budgetUsageRatio >= 0.95 ? 'RED' : 'YELLOW'",
+        titleTemplatePlaceholder: '预算超支预警：{projectName}',
+        descTemplatePlaceholder: '项目 {projectName} 预算已使用 {budgetUsedRatio}',
+        scopePlaceholder: '可选，如 PROJECT / TASK',
+        changeDescPlaceholder: '本次变更内容说明（记录到版本历史）',
+      },
+      dryRun: {
+        factsPlaceholder: '请输入 JSON 格式的事实数据，如 {"budgetUsedRatio": 0.95}',
+      },
+      batch: {
+        categoryPlaceholder: '选择或输入新分类',
+      },
+      template: {
+        filterByCategory: '按类别筛选',
+      },
+      ai: {
+        descriptionPlaceholder: '用自然语言描述规则，如：当预算使用率超过 90% 且进度偏差（SPI）低于 0.9 时触发红色预警',
+        fieldsPlaceholder: '选择或输入可用字段，辅助 AI 生成合法表达式',
+      },
+      abTest: {
+        conditionPlaceholder: '输入候选条件表达式（Aviator）',
+        severityPlaceholder: '输入候选严重度表达式（可选）',
+        factsPlaceholder: '{"amount": 1000, "budgetUsedRatio": 0.9}',
+      },
+    },
+    utilization: {
+      filter: {
+        startDate: '开始日期',
+        endDate: '结束日期',
+        periodPlaceholder: 'yyyy-MM',
+      },
+    },
   },
   audit: {
     title: '审计中心',

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
@@ -39,6 +40,7 @@ public class OpsTicketController {
 
     @Operation(summary = "创建工单")
     @PrePermission("aftersales:ops-ticket:create")
+    @Idempotent(key = "ops-ticket:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody OpsTicketCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -46,6 +48,7 @@ public class OpsTicketController {
 
     @Operation(summary = "派单")
     @PrePermission("aftersales:ops-ticket:assign")
+    @Idempotent(key = "ops-ticket:update", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/assign")
     public Result<Void> assign(@Valid @RequestBody OpsTicketAssignDTO dto) {
         service.assign(dto);

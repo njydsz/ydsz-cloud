@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.RevenueCreateDTO;
@@ -47,6 +48,7 @@ public class RevenueController {
      */
     @Operation(summary = "录入收入")
     @PrePermission("execution:revenue:create")
+    @Idempotent(key = "revenue:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody RevenueCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -61,6 +63,7 @@ public class RevenueController {
      */
     @Operation(summary = "确认收入")
     @PrePermission("execution:revenue:update")
+    @Idempotent(key = "revenue:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/confirm")
     public Result<Void> confirm(@PathVariable Long id, @RequestParam Long confirmedBy) {
         service.confirm(id, confirmedBy);

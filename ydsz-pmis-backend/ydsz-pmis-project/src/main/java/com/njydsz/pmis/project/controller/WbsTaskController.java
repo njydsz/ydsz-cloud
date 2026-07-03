@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.WbsTaskCreateDTO;
@@ -49,6 +50,7 @@ public class WbsTaskController {
      */
     @Operation(summary = "创建 WBS 任务")
     @PrePermission("execution:wbs:create")
+    @Idempotent(key = "wbs-task:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody WbsTaskCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -62,6 +64,7 @@ public class WbsTaskController {
      */
     @Operation(summary = "变更任务状态")
     @PrePermission("execution:wbs:status")
+    @Idempotent(key = "wbs-task:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody WbsTaskStatusDTO dto) {
         service.changeStatus(dto);
@@ -94,6 +97,7 @@ public class WbsTaskController {
      */
     @Operation(summary = "删除任务")
     @PrePermission("execution:wbs:delete")
+    @Idempotent(key = "wbs-task:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);

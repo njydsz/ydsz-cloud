@@ -7,6 +7,7 @@ import com.njydsz.pmis.userinfo.mapper.DictTypeMapper;
 import com.njydsz.pmis.userinfo.service.DictService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -43,6 +44,7 @@ public class DictServiceImpl implements DictService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "'allTypes'", unless = "#result == null || #result.isEmpty()")
     public List<DictTypeDO> listAllTypes() {
         return dictTypeMapper.selectList(null);
     }

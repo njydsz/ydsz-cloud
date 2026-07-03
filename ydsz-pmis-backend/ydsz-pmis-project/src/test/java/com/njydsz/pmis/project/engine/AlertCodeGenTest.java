@@ -12,12 +12,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class AlertCodeGenTest {
 
     @Test
-    @DisplayName("生成预警编码 - 格式为 ALT-{TYPE}-{YYYYMMDD}-{HHmmss}-{4位随机}")
+    @DisplayName("生成预警编码 - 格式为 ALT-{LEVEL}-{TYPE}-{YYYYMMDD}-{HHmmssSSS}-{4位随机}-{2位序列}")
     void shouldGenerateAlertCodeWithCorrectFormat() {
         String code = AlertCodeGen.next("BUDGET", "RED");
         assertNotNull(code);
-        assertTrue(code.matches("ALT-RED-BUDGET-\\d{8}-\\d{6}-\\d{4}"),
-                "预警编码格式应为 ALT-RED-BUDGET-yyyyMMdd-HHmmss-XXXX，实际：" + code);
+        assertTrue(code.matches("ALT-RED-BUDGET-\\d{8}-\\d{9}-\\d{4}-\\d{2}"),
+                "预警编码格式不符合预期，实际：" + code);
     }
 
     @Test
@@ -33,7 +33,7 @@ class AlertCodeGenTest {
     void shouldOmitLevelWhenNull() {
         String code = AlertCodeGen.next("EVM", null);
         assertNotNull(code);
-        assertTrue(code.matches("ALT-EVM-\\d{8}-\\d{6}-\\d{4}"),
+        assertTrue(code.matches("ALT-EVM-\\d{8}-\\d{9}-\\d{4}-\\d{2}"),
                 "level 为 null 时应省略等级，实际：" + code);
     }
 
@@ -47,13 +47,13 @@ class AlertCodeGenTest {
     }
 
     @Test
-    @DisplayName("多次调用生成不同编码 - 验证唯一性")
+    @DisplayName("多次调用生成不同编码 - 验证唯一性（毫秒精度+自增序列确保唯一）")
     void shouldGenerateUniqueCodes() {
         Set<String> codes = new HashSet<>();
         for (int i = 0; i < 100; i++) {
             String code = AlertCodeGen.next("BUDGET", "RED");
             codes.add(code);
         }
-        assertEquals(100, codes.size(), "100 次调用应生成 100 个不同的编码");
+        assertEquals(100, codes.size(), "100 次调用应生成 100 个不同的编码，实际：" + codes.size());
     }
 }

@@ -18,3 +18,15 @@ spring:
   main:
     web-application-type: none
     banner-mode: off  # 关闭启动 banner
+
+# =====================================================================
+# Actuator 健康检查
+# =====================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

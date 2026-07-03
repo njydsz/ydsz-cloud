@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.RateCardCreateDTO;
@@ -48,6 +49,7 @@ public class RateCardController {
      */
     @Operation(summary = "创建对外报价费率")
     @PrePermission("execution:rate-card:create")
+    @Idempotent(key = "rate-card:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody RateCardCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -62,6 +64,7 @@ public class RateCardController {
      */
     @Operation(summary = "更新")
     @PrePermission("execution:rate-card:update")
+    @Idempotent(key = "rate-card:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody RateCardCreateDTO dto) {
         service.update(id, dto);
@@ -76,6 +79,7 @@ public class RateCardController {
      */
     @Operation(summary = "删除")
     @PrePermission("execution:rate-card:delete")
+    @Idempotent(key = "rate-card:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);

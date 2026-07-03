@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.RateInternalCreateDTO;
@@ -48,6 +49,7 @@ public class RateInternalController {
      */
     @Operation(summary = "创建对内成本费率")
     @PrePermission("execution:rate-internal:create")
+    @Idempotent(key = "rate-internal:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody RateInternalCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -62,6 +64,7 @@ public class RateInternalController {
      */
     @Operation(summary = "更新")
     @PrePermission("execution:rate-internal:update")
+    @Idempotent(key = "rate-internal:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody RateInternalCreateDTO dto) {
         service.update(id, dto);

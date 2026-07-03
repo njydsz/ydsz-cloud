@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.OpportunityCreateDTO;
@@ -42,6 +43,7 @@ public class OpportunityController {
 
     @Operation(summary = "创建商机")
     @PrePermission("project:opportunity:create")
+    @Idempotent(key = "opportunity:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody OpportunityCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -49,6 +51,7 @@ public class OpportunityController {
 
     @Operation(summary = "更新商机")
     @PrePermission("project:opportunity:update")
+    @Idempotent(key = "opportunity:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping
     public Result<Void> update(@Valid @RequestBody OpportunityUpdateDTO dto) {
         service.update(dto);
@@ -65,6 +68,7 @@ public class OpportunityController {
 
     @Operation(summary = "删除商机")
     @PrePermission("project:opportunity:delete")
+    @Idempotent(key = "opportunity:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);

@@ -29,30 +29,55 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_resource_assignment
+        SELECT id, assignment_code, employee_id, employee_name, level_code, pool_id,
+               pool_type, initiation_id, initiation_name, opportunity_id, status,
+               allocation, planned_start_date, planned_end_date, actual_start_date,
+               actual_end_date, billable, daily_hours, tenant_id, provider_trace_id,
+               created_at, updated_at, deleted
+        FROM pmis_resource_assignment
         WHERE assignment_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByEmployee" resultMap="BaseResultMap">
-        SELECT * FROM pmis_resource_assignment
+        SELECT id, assignment_code, employee_id, employee_name, level_code, pool_id,
+               pool_type, initiation_id, initiation_name, opportunity_id, status,
+               allocation, planned_start_date, planned_end_date, actual_start_date,
+               actual_end_date, billable, daily_hours, tenant_id, provider_trace_id,
+               created_at, updated_at, deleted
+        FROM pmis_resource_assignment
         WHERE employee_id = #{employeeId} AND deleted = 0
         ORDER BY created_at DESC
     </select>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_resource_assignment
+        SELECT id, assignment_code, employee_id, employee_name, level_code, pool_id,
+               pool_type, initiation_id, initiation_name, opportunity_id, status,
+               allocation, planned_start_date, planned_end_date, actual_start_date,
+               actual_end_date, billable, daily_hours, tenant_id, provider_trace_id,
+               created_at, updated_at, deleted
+        FROM pmis_resource_assignment
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY created_at DESC
     </select>
 
     <select id="selectByStatus" resultMap="BaseResultMap">
-        SELECT * FROM pmis_resource_assignment
+        SELECT id, assignment_code, employee_id, employee_name, level_code, pool_id,
+               pool_type, initiation_id, initiation_name, opportunity_id, status,
+               allocation, planned_start_date, planned_end_date, actual_start_date,
+               actual_end_date, billable, daily_hours, tenant_id, provider_trace_id,
+               created_at, updated_at, deleted
+        FROM pmis_resource_assignment
         WHERE status = #{status} AND deleted = 0
         ORDER BY created_at DESC
     </select>
 
     <select id="selectActiveOnDate" resultMap="BaseResultMap">
-        SELECT * FROM pmis_resource_assignment
+        SELECT id, assignment_code, employee_id, employee_name, level_code, pool_id,
+               pool_type, initiation_id, initiation_name, opportunity_id, status,
+               allocation, planned_start_date, planned_end_date, actual_start_date,
+               actual_end_date, billable, daily_hours, tenant_id, provider_trace_id,
+               created_at, updated_at, deleted
+        FROM pmis_resource_assignment
         WHERE employee_id = #{employeeId}
           AND status IN ('RESERVED','ACTIVE','TRANSFERRING')
           AND deleted = 0

@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ProjectClosureCreateDTO;
@@ -47,6 +48,7 @@ public class ProjectClosureController {
      */
     @Operation(summary = "创建项目结项")
     @PrePermission("closure:project:create")
+    @Idempotent(key = "project-closure:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody ProjectClosureCreateDTO dto) {
         return Result.ok(service.create(dto));

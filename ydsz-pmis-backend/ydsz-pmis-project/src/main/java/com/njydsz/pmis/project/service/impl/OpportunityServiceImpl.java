@@ -303,7 +303,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     private String safeCustomerName(Long id) {
         try { return nameAssembler == null ? null : nameAssembler.resolveCustomer(id); }
-        catch (Exception e) { return null; }
+        catch (Exception e) { log.warn("[Opportunity] 容错解析客户名称失败: id={}", id, e); return null; }
     }
 
     /**
@@ -314,7 +314,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     private String safeEmployeeName(Long id) {
         try { return nameAssembler == null ? null : nameAssembler.resolveEmployee(id); }
-        catch (Exception e) { return null; }
+        catch (Exception e) { log.warn("[Opportunity] 容错解析员工名称失败: id={}", id, e); return null; }
     }
 
     /**

@@ -2,6 +2,7 @@ package com.njydsz.pmis.userinfo.controller;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.userinfo.dto.DepartmentFormDTO;
 import com.njydsz.pmis.userinfo.entity.DepartmentDO;
@@ -36,6 +37,7 @@ public class DepartmentController {
      * @return 统一响应结果，包含部门树
      */
     @Operation(summary = "获取部门树")
+    @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping("/tree")
     public Result<List<DepartmentTreeVO>> tree() {
         return Result.ok(departmentService.tree());
@@ -47,6 +49,7 @@ public class DepartmentController {
      * @return 统一响应结果，包含部门列表
      */
     @Operation(summary = "获取所有部门（扁平）")
+    @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping
     public Result<List<DepartmentDO>> list() {
         return Result.ok(departmentService.listAllEnabled());
@@ -59,6 +62,7 @@ public class DepartmentController {
      * @return 统一响应结果，包含部门信息
      */
     @Operation(summary = "部门详情")
+    @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
     public Result<DepartmentDO> get(@PathVariable Long id) {
         return Result.ok(departmentService.getById(id));

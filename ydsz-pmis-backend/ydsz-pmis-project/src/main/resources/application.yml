@@ -141,3 +141,15 @@ seata:
       pmis-tx-group: default                 # 事务分组映射
     grouplist:
       default: ${SEATA_SERVER_ADDR:127.0.0.1:8091}  # Seata Server 地址
+
+# =====================================================================
+# Actuator 健康检查
+# =====================================================================
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized

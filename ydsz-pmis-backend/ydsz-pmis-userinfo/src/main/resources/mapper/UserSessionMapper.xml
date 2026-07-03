@@ -24,12 +24,18 @@
     </resultMap>
 
     <select id="selectBySessionId" resultMap="BaseResultMap">
-        SELECT * FROM pmis_user_session
+        SELECT id, user_id, session_id, token_jti, login_at, last_active_at, expire_at,
+               client_ip, user_agent, device_type, status, logout_at, logout_reason,
+               trace_id, tenant_id, created_at, updated_at, deleted
+        FROM pmis_user_session
         WHERE session_id = #{sessionId} AND deleted = 0
     </select>
 
     <select id="selectActiveByUserId" resultMap="BaseResultMap">
-        SELECT * FROM pmis_user_session
+        SELECT id, user_id, session_id, token_jti, login_at, last_active_at, expire_at,
+               client_ip, user_agent, device_type, status, logout_at, logout_reason,
+               trace_id, tenant_id, created_at, updated_at, deleted
+        FROM pmis_user_session
         WHERE user_id = #{userId} AND status = 'ACTIVE' AND deleted = 0
         ORDER BY login_at DESC
     </select>

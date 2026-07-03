@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ContractSupplementDTO;
 import com.njydsz.pmis.project.entity.ContractSupplementDO;
@@ -42,6 +43,7 @@ public class ContractSupplementController {
      * @return 补充协议 ID
      */
     @Operation(summary = "创建补充协议")
+    @Idempotent(key = "contract-supplement:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody ContractSupplementDTO dto) {
         return Result.ok(service.create(dto));

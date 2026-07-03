@@ -240,6 +240,6 @@ public class BudgetGuard {
         if (o == null) return null;
         if (o instanceof BigDecimal b) return b;
         if (o instanceof Number n) return new BigDecimal(n.toString());
-        try { return new BigDecimal(o.toString()); } catch (Exception e) { return null; }
+        try { return new BigDecimal(o.toString()); } catch (NumberFormatException e) { log.warn("[BudgetGuard] 对象转BigDecimal失败: value={}", o, e); return null; }
     }
 }

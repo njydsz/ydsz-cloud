@@ -45,6 +45,7 @@ public class UserController {
      */
     @Operation(summary = "用户分页")
     @PrePermission("auth:user:list")
+    @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping
     public Result<Page<UserVO>> page(UserQueryDTO query) {
         return Result.ok(userAccountService.pageVo(query));
@@ -57,6 +58,7 @@ public class UserController {
      * @return 统一响应结果，包含用户信息（H13.1 修复：返回 UserVO 已脱敏）
      */
     @Operation(summary = "用户详情")
+    @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}")
     public Result<UserVO> get(@PathVariable Long id) {
         return Result.ok(userAccountService.findVoById(id));
@@ -68,6 +70,7 @@ public class UserController {
      * @return 统一响应结果，包含当前用户信息（H13.1 修复：返回 UserVO 已脱敏）
      */
     @Operation(summary = "当前用户信息")
+    @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/me")
     public Result<UserVO> me() {
         return Result.ok(userAccountService.findVoById(SecurityContext.getUserId()));
@@ -208,6 +211,7 @@ public class UserController {
      * @return 统一响应结果，包含角色 ID 列表
      */
     @Operation(summary = "查询用户角色 ID 列表")
+    @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}/roles")
     public Result<List<Long>> listRoles(@PathVariable Long id) {
         return Result.ok(userAccountService.listRoleIds(id));

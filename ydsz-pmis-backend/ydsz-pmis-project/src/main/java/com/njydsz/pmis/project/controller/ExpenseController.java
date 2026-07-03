@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ApprovalDTO;
@@ -45,6 +46,7 @@ public class ExpenseController {
      */
     @Operation(summary = "创建费用")
     @PrePermission("execution:expense:create")
+    @Idempotent(key = "expense:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody ExpenseCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -58,6 +60,7 @@ public class ExpenseController {
      */
     @Operation(summary = "状态迁移")
     @PrePermission("execution:expense:status")
+    @Idempotent(key = "expense:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody ApprovalDTO dto) {
         service.changeStatus(dto);

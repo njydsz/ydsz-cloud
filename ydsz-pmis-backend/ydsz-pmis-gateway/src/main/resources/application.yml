@@ -114,3 +114,18 @@ logging:
     "[org.springframework.cloud.gateway]": INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
+
+# =====================================================================
+# Actuator 健康检查（含 Gateway 端点）
+# =====================================================================
+management:
+  endpoint:
+    gateway:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,gateway
+  endpoint:
+    health:
+      show-details: when-authorized

@@ -3,13 +3,19 @@
 <mapper namespace="com.njydsz.pmis.project.mapper.RulePackMapper">
 
     <select id="selectByPackCode" resultType="com.njydsz.pmis.project.entity.RulePackDO">
-        SELECT * FROM pmis_rule_pack
+        SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
+               description, author, download_count, rating, enabled, official,
+               created_by, created_at, updated_by, updated_at
+        FROM pmis_rule_pack
         WHERE pack_code = #{packCode}
         ORDER BY created_at DESC
     </select>
 
     <select id="selectByIndustry" resultType="com.njydsz.pmis.project.entity.RulePackDO">
-        SELECT * FROM pmis_rule_pack
+        SELECT id, pack_code, pack_version, pack_name, industry, tags, rule_codes,
+               description, author, download_count, rating, enabled, official,
+               created_by, created_at, updated_by, updated_at
+        FROM pmis_rule_pack
         WHERE industry = #{industry} AND enabled = TRUE
         ORDER BY official DESC, download_count DESC
     </select>

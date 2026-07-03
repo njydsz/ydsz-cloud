@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ProjectChangeCreateDTO;
@@ -51,6 +52,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "创建项目变更")
     @PrePermission("project:change:create")
+    @Idempotent(key = "project-change:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody ProjectChangeCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -64,6 +66,7 @@ public class ProjectChangeController {
      */
     @Operation(summary = "状态迁移")
     @PrePermission("project:change:status")
+    @Idempotent(key = "project-change:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/status")
     public Result<Void> changeStatus(@Valid @RequestBody ProjectChangeStatusDTO dto) {
         service.changeStatus(dto);

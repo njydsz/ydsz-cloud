@@ -3,6 +3,7 @@ package com.njydsz.pmis.system.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.system.dto.ConfigFormDTO;
 import com.njydsz.pmis.system.dto.ConfigQueryDTO;
@@ -33,24 +34,28 @@ public class ConfigController {
 
     @Operation(summary = "配置分页")
     @PrePermission("sys:config:list")
+    @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping
     public Result<Page<ConfigDO>> page(ConfigQueryDTO query) {
         return Result.ok(configService.page(query));
     }
 
     @Operation(summary = "按 group+key 查配置")
+    @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping("/by-key")
     public Result<ConfigDO> getByKey(@RequestParam String group, @RequestParam String key) {
         return Result.ok(configService.getByKey(group, key));
     }
 
     @Operation(summary = "按 group 查全部配置（key-value 形式）")
+    @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping("/group/{group}")
     public Result<Map<String, String>> getGroup(@PathVariable String group) {
         return Result.ok(configService.getGroupAsMap(group));
     }
 
     @Operation(summary = "公开配置（前端可见）")
+    @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping("/public")
     public Result<List<ConfigDO>> publicConfigs() {
         return Result.ok(configService.listPublic());

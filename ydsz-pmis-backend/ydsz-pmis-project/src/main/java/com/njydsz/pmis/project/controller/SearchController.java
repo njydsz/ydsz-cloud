@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.es.ProjectSearchDoc;
 import com.njydsz.pmis.project.service.SearchService;
@@ -42,6 +43,7 @@ public class SearchController {
      * @return 搜索结果分页
      */
     @Operation(summary = "全文检索项目")
+    @RateLimit(key = "search", qps = 10, windowSeconds = 60)
     @GetMapping("/projects")
     public Result<Page<ProjectSearchDoc>> searchProjects(
             @RequestParam @NotBlank(message = "{validation.execution.msg_ede12b69}") String keyword,

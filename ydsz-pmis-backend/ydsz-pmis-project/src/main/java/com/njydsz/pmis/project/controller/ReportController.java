@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.service.ReportService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -39,6 +40,7 @@ public class ReportController {
      */
     @Operation(summary = "项目利润表")
     @PrePermission("report:profit:view")
+    @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profit")
     public Result<Map<String, Object>> profit(@RequestParam Long initiationId,
                                          @RequestParam(required = false) String period) {
@@ -54,6 +56,7 @@ public class ReportController {
      */
     @Operation(summary = "项目成本归集明细表")
     @PrePermission("report:cost:view")
+    @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/cost")
     public Result<Map<String, Object>> cost(@RequestParam Long initiationId,
                                        @RequestParam(required = false) String period) {
@@ -68,6 +71,7 @@ public class ReportController {
      */
     @Operation(summary = "项目回款台账")
     @PrePermission("report:payment-ledger:view")
+    @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/payment-ledger")
     public Result<Map<String, Object>> paymentLedger(@RequestParam Long initiationId) {
         return Result.ok(service.paymentLedgerReport(initiationId));
@@ -81,6 +85,7 @@ public class ReportController {
      */
     @Operation(summary = "项目全生命周期台账")
     @PrePermission("report:lifecycle:view")
+    @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/lifecycle")
     public Result<Map<String, Object>> lifecycle(@RequestParam Long initiationId) {
         return Result.ok(service.projectLifecycleReport(initiationId));
@@ -93,6 +98,7 @@ public class ReportController {
      */
     @Operation(summary = "跨项目利润汇总")
     @PrePermission("report:profit:view")
+    @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profit-summary")
     public Result<List<Map<String, Object>>> profitSummary() {
         return Result.ok(service.profitSummaryAll());
@@ -108,6 +114,7 @@ public class ReportController {
      */
     @Operation(summary = "项目利润排行榜（P2-1）")
     @PrePermission("report:profit:view")
+    @RateLimit(key = "report", qps = 5, windowSeconds = 60)
     @GetMapping("/profit-rank")
     public Result<List<Map<String, Object>>> profitRank(
             @RequestParam(defaultValue = "10") int top,

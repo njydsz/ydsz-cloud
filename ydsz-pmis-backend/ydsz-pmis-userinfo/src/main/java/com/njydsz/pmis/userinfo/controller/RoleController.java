@@ -3,6 +3,7 @@ package com.njydsz.pmis.userinfo.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
+import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.userinfo.dto.RoleFormDTO;
 import com.njydsz.pmis.userinfo.dto.RoleQueryDTO;
@@ -39,6 +40,7 @@ public class RoleController {
      */
     @Operation(summary = "角色分页")
     @PrePermission("auth:role:list")
+    @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping
     public Result<Page<RoleDO>> page(RoleQueryDTO query) {
         return Result.ok(roleService.page(query));
@@ -50,6 +52,7 @@ public class RoleController {
      * @return 统一响应结果，包含角色列表
      */
     @Operation(summary = "所有启用的角色")
+    @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/all")
     public Result<List<RoleDO>> listAll() {
         return Result.ok(roleService.listAllEnabled());
@@ -62,6 +65,7 @@ public class RoleController {
      * @return 统一响应结果，包含角色信息
      */
     @Operation(summary = "角色详情")
+    @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
     public Result<RoleDO> get(@PathVariable Long id) {
         return Result.ok(roleService.getById(id));
@@ -134,6 +138,7 @@ public class RoleController {
      * @return 统一响应结果，包含权限 ID 列表
      */
     @Operation(summary = "查询角色的权限 ID 列表")
+    @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}/permissions")
     public Result<List<Long>> listPermissions(@PathVariable Long id) {
         return Result.ok(roleService.listPermissionIds(id));

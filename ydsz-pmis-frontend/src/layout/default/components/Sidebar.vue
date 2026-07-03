@@ -57,7 +57,7 @@ const activeMenu = computed<string>(() => {
 </script>
 
 <template>
-  <div class="sidebar-wrap">
+  <nav class="sidebar-wrap" role="navigation" aria-label="主导航菜单">
     <div class="sidebar-logo">
       <span v-if="!appStore.sidebarCollapsed">PMIS</span>
       <span v-else>P</span>
@@ -71,28 +71,29 @@ const activeMenu = computed<string>(() => {
         text-color="#303133"
         active-text-color="#1890ff"
         router
+        aria-label="导航菜单列表"
       >
         <template v-for="menu in menus" :key="menu.path">
           <!-- 子菜单 -->
-          <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.path">
+          <el-sub-menu v-if="menu.children && menu.children.length > 0" :index="menu.path" :aria-label="menu.title">
             <template #title>
               <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
               <span>{{ menu.title }}</span>
             </template>
-            <el-menu-item v-for="child in menu.children" :key="child.path" :index="child.path">
+            <el-menu-item v-for="child in menu.children" :key="child.path" :index="child.path" :aria-label="child.title">
               <el-icon v-if="child.icon"><component :is="child.icon" /></el-icon>
               <template #title>{{ child.title }}</template>
             </el-menu-item>
           </el-sub-menu>
           <!-- 单个菜单 -->
-          <el-menu-item v-else :index="menu.path">
+          <el-menu-item v-else :index="menu.path" :aria-label="menu.title">
             <el-icon v-if="menu.icon"><component :is="menu.icon" /></el-icon>
             <template #title>{{ menu.title }}</template>
           </el-menu-item>
         </template>
       </el-menu>
     </el-scrollbar>
-  </div>
+  </nav>
 </template>
 
 <style lang="scss" scoped>

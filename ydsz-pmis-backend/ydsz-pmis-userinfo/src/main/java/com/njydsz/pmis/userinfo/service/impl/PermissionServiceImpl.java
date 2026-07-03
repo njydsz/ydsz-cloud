@@ -49,6 +49,8 @@ public class PermissionServiceImpl implements PermissionService {
     public static final String CACHE_MENU_TREE = "perm:menu_tree";
     /** 全部菜单树缓存名称 */
     public static final String CACHE_ALL_MENU_TREE = "perm:all_menu_tree";
+    /** 通用权限缓存名称 */
+    public static final String CACHE_NAME = "permission";
 
     private final PermissionMapper permissionMapper;
 
@@ -134,12 +136,14 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "#roleId", unless = "#result == null || #result.isEmpty()")
     public List<PermissionDO> listByRoleId(Long roleId) {
         return permissionMapper.selectByRoleId(roleId);
     }
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CACHE_NAME, key = "#id", unless = "#result == null")
     public PermissionDO getById(Long id) {
         PermissionDO p = permissionMapper.selectById(id);
         if (p == null) {
@@ -149,7 +153,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE}, allEntries = true)
+    @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE, CACHE_NAME}, allEntries = true)
     public Long create(PermissionFormDTO dto) {
         if (permissionMapper.selectByCode(dto.getPermCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_7b343d30");
@@ -164,7 +168,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE}, allEntries = true)
+    @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE, CACHE_NAME}, allEntries = true)
     public void update(PermissionFormDTO dto) {
         if (dto.getId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_965c9a30");
@@ -179,7 +183,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
-    @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE}, allEntries = true)
+    @CacheEvict(value = {CACHE_ALL_ENABLED, CACHE_PERM_CODES, CACHE_MENU_TREE, CACHE_ALL_MENU_TREE, CACHE_NAME}, allEntries = true)
     public void delete(Long id) {
         // 存在子权限则不允许删除
         Long childCount = permissionMapper.selectCount(new LambdaQueryWrapper<PermissionDO>()

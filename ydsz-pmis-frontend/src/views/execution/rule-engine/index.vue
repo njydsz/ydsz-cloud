@@ -20,6 +20,7 @@
  */
 import { ref, reactive, computed, onMounted, watch, nextTick, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { CircleCheck, CircleClose, Connection, Expand, Fold, User } from '@element-plus/icons-vue'
@@ -42,6 +43,9 @@ import { logger } from '@/utils/logger'
 
 // 路由实例（P0-1 画布编辑入口）
 const router = useRouter()
+
+// i18n
+const { t } = useI18n()
 
 // ==================== 严重度映射 ====================
 
@@ -1002,49 +1006,51 @@ onMounted(() => {
         <el-card shadow="never" class="main-card">
           <div class="toolbar">
             <div class="toolbar-left">
-              <el-button :icon="sidebarVisible ? Fold : Expand" plain @click="toggleSidebar">
+              <el-button :icon="sidebarVisible ? Fold : Expand" plain :aria-label="sidebarVisible ? '收起目录' : '展开目录'" @click="toggleSidebar">
                 {{ sidebarVisible ? '收起目录' : '展开目录' }}
               </el-button>
-              <el-button type="primary" @click="openCreate">
+              <el-button type="primary" aria-label="创建规则" @click="openCreate">
                 <el-icon><Plus /></el-icon>新建规则
               </el-button>
-          <el-button type="success" @click="openTemplateMarket">
+          <el-button type="success" aria-label="从模板导入规则" @click="openTemplateMarket">
             <el-icon><Files /></el-icon>从模板导入
           </el-button>
-          <el-button type="warning" @click="openAiGenerate">
+          <el-button type="warning" aria-label="AI生成规则" @click="openAiGenerate">
             <el-icon><MagicStick /></el-icon>AI 生成
           </el-button>
-          <el-button @click="openDryRun()">
+          <el-button aria-label="规则仿真" @click="openDryRun()">
             <el-icon><VideoPlay /></el-icon>Dry-run 仿真
           </el-button>
-          <el-button :loading="conflictLoading" @click="detectConflicts">
+          <el-button :loading="conflictLoading" aria-label="冲突检测" @click="detectConflicts">
             <el-icon><WarningFilled /></el-icon>冲突检测
           </el-button>
-          <el-button type="info" @click="openTraceReplay">
+          <el-button type="info" aria-label="执行回放" @click="openTraceReplay">
             <el-icon><View /></el-icon>执行回放
           </el-button>
-          <el-button type="primary" plain @click="openRegressionTest">
+          <el-button type="primary" plain aria-label="回归测试" @click="openRegressionTest">
             <el-icon><CircleCheck /></el-icon>回归测试
           </el-button>
         </div>
         <div class="toolbar-right">
           <el-select
             v-model="categoryFilter"
-            placeholder="按类别筛选"
+            :placeholder="$t('execution.ruleEngine.search.filterByCategory')"
             clearable
             style="width: 160px"
+            aria-label="按类别筛选规则"
             @change="() => {}"
           >
             <el-option v-for="c in categoryOptions" :key="c" :label="c" :value="c" />
           </el-select>
           <el-input
             v-model="keyword"
-            placeholder="编码 / 名称"
+            :placeholder="$t('execution.ruleEngine.search.codeOrName')"
             clearable
             style="width: 200px"
             :prefix-icon="'Search'"
+            aria-label="搜索规则"
           />
-          <el-button :icon="'Refresh'" circle @click="fetchRules" />
+          <el-button :icon="'Refresh'" circle aria-label="刷新规则列表" @click="fetchRules" />
         </div>
       </div>
 
@@ -1103,22 +1109,22 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="380" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openEdit(row)">
+            <el-button link type="primary" size="small" aria-label="编辑规则" @click="openEdit(row)">
               <el-icon><Edit /></el-icon>编辑
             </el-button>
-            <el-button link type="primary" size="small" @click="openDryRun(row)">
+            <el-button link type="primary" size="small" aria-label="仿真规则" @click="openDryRun(row)">
               <el-icon><VideoPlay /></el-icon>仿真
             </el-button>
-            <el-button link type="warning" size="small" @click="openABTest(row)">
+            <el-button link type="warning" size="small" aria-label="A/B测试规则" @click="openABTest(row)">
               <el-icon><Switch /></el-icon>A/B
             </el-button>
-            <el-button link type="info" size="small" @click="openVersions(row)">
+            <el-button link type="info" size="small" aria-label="查看版本历史" @click="openVersions(row)">
               <el-icon><Clock /></el-icon>版本
             </el-button>
-            <el-button link type="success" size="small" @click="openDesigner(row)">
+            <el-button link type="success" size="small" aria-label="画布编辑" @click="openDesigner(row)">
               <el-icon><Connection /></el-icon>画布
             </el-button>
-            <el-button link type="danger" size="small" @click="handleDelete(row)">
+            <el-button link type="danger" size="small" aria-label="删除规则" @click="handleDelete(row)">
               <el-icon><Delete /></el-icon>删除
             </el-button>
           </template>
@@ -1129,12 +1135,12 @@ onMounted(() => {
       <div v-if="selectedRuleCodes.length > 0" class="batch-toolbar">
         <span class="batch-info">已选 {{ selectedRuleCodes.length }} 条</span>
         <el-button-group>
-          <el-button type="success" plain :icon="CircleCheck" @click="handleBatchToggle(true)">批量启用</el-button>
-          <el-button type="warning" plain :icon="CircleClose" @click="handleBatchToggle(false)">批量停用</el-button>
-          <el-button plain @click="handleBatchPriority(10)">优先级 +10</el-button>
-          <el-button plain @click="handleBatchPriority(-10)">优先级 -10</el-button>
-          <el-button plain @click="openBatchCategoryDialog">批量改分类</el-button>
-          <el-button text @click="selectedRuleCodes = []">清空选择</el-button>
+          <el-button type="success" plain aria-label="批量启用规则" :icon="CircleCheck" @click="handleBatchToggle(true)">批量启用</el-button>
+          <el-button type="warning" plain aria-label="批量停用规则" :icon="CircleClose" @click="handleBatchToggle(false)">批量停用</el-button>
+          <el-button plain aria-label="优先级加10" @click="handleBatchPriority(10)">优先级 +10</el-button>
+          <el-button plain aria-label="优先级减10" @click="handleBatchPriority(-10)">优先级 -10</el-button>
+          <el-button plain aria-label="批量修改分类" @click="openBatchCategoryDialog">批量改分类</el-button>
+          <el-button text aria-label="清空选择" @click="selectedRuleCodes = []">清空选择</el-button>
         </el-button-group>
       </div>
     </el-card>
@@ -1161,32 +1167,32 @@ onMounted(() => {
               <el-input
                 v-model="editForm.code"
                 :disabled="editMode === 'edit'"
-                placeholder="如 BUDGET_OVERRUN"
+                :placeholder="$t('execution.ruleEngine.form.codePlaceholder')"
               />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="规则名称" prop="name">
-              <el-input v-model="editForm.name" placeholder="如 预算超支预警" />
+              <el-input v-model="editForm.name" :placeholder="$t('execution.ruleEngine.form.namePlaceholder')" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="类别" prop="category">
-              <el-input v-model="editForm.category" placeholder="如 BUDGET / RISK / EVM" />
+              <el-input v-model="editForm.category" :placeholder="$t('execution.ruleEngine.form.categoryPlaceholder')" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="责任人">
-              <el-input v-model="editForm.owner" placeholder="如 zhangsan（工号/用户名）" />
+              <el-input v-model="editForm.owner" :placeholder="$t('execution.ruleEngine.form.ownerPlaceholder')" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-form-item label="分类路径">
           <el-input
             v-model="editForm.categoryPath"
-            placeholder="多级分类用 / 分隔，如 finance/credit/loan"
+            :placeholder="$t('execution.ruleEngine.form.categoryPathPlaceholder')"
           />
           <div style="font-size:11px;color:#909399;margin-top:4px">
             用于左侧目录树导航；保存后第一段会同步到「类别」字段
@@ -1209,12 +1215,12 @@ onMounted(() => {
             <ExpressionEditor
               v-model="editForm.conditionExpression"
               :fields="availableFields"
-              placeholder="如: budgetUsageRatio >= 0.80 &amp;&amp; spi < 0.90"
+              :placeholder="$t('execution.ruleEngine.form.conditionPlaceholder')"
               :validate-on-input="true"
               @validate="(v: boolean | null) => conditionValid = v"
             />
             <div class="expr-actions">
-              <el-button size="small" :loading="validating" @click="handleValidate(editForm.conditionExpression, 'condition')">
+              <el-button size="small" :loading="validating" aria-label="后端校验条件表达式" @click="handleValidate(editForm.conditionExpression, 'condition')">
                 <el-icon><Check /></el-icon>后端校验
               </el-button>
               <el-tag
@@ -1237,7 +1243,7 @@ onMounted(() => {
               v-model="editForm.severityExpression"
               :fields="availableFields"
               :functions="expressionFunctionDefs"
-              placeholder="如: budgetUsageRatio >= 0.95 ? 'RED' : 'YELLOW'"
+              :placeholder="$t('execution.ruleEngine.form.severityPlaceholder')"
               :validate-on-input="true"
               @validate="(v: boolean | null) => severityValid = v"
             />
@@ -1254,7 +1260,7 @@ onMounted(() => {
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="标题模板">
-              <el-input v-model="editForm.titleTemplate" placeholder="预算超支预警：{projectName}" />
+              <el-input v-model="editForm.titleTemplate" :placeholder="$t('execution.ruleEngine.form.titleTemplatePlaceholder')" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -1269,13 +1275,13 @@ onMounted(() => {
             v-model="editForm.descriptionTemplate"
             type="textarea"
             :rows="2"
-            placeholder="项目 {projectName} 预算已使用 {budgetUsedRatio}"
+            :placeholder="$t('execution.ruleEngine.form.descTemplatePlaceholder')"
           />
         </el-form-item>
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="作用域">
-              <el-input v-model="editForm.scope" placeholder="可选，如 PROJECT / TASK" />
+              <el-input v-model="editForm.scope" :placeholder="$t('execution.ruleEngine.form.scopePlaceholder')" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -1293,7 +1299,7 @@ onMounted(() => {
             v-model="changeDesc"
             type="textarea"
             :rows="2"
-            placeholder="本次变更内容说明（记录到版本历史）"
+            :placeholder="$t('execution.ruleEngine.form.changeDescPlaceholder')"
           />
         </el-form-item>
       </el-form>
@@ -1320,7 +1326,7 @@ onMounted(() => {
             v-model="dryRunFactsText"
             type="textarea"
             :rows="10"
-            placeholder='请输入 JSON 格式的事实数据，如 {"budgetUsedRatio": 0.95}'
+            :placeholder="$t('execution.ruleEngine.dryRun.factsPlaceholder')"
             class="json-input"
           />
         </el-form-item>
@@ -1369,7 +1375,7 @@ onMounted(() => {
             v-model="batchCategoryValue"
             filterable
             allow-create
-            placeholder="选择或输入新分类"
+            :placeholder="$t('execution.ruleEngine.batch.categoryPlaceholder')"
             style="width: 100%"
           >
             <el-option
@@ -1393,7 +1399,7 @@ onMounted(() => {
         <div class="toolbar-left">
           <el-select
             v-model="templateCategoryFilter"
-            placeholder="按类别筛选"
+            :placeholder="$t('execution.ruleEngine.template.filterByCategory')"
             clearable
             style="width: 180px"
           >
@@ -1445,7 +1451,7 @@ onMounted(() => {
             v-model="aiDescription"
             type="textarea"
             :rows="4"
-            placeholder="用自然语言描述规则，如：当预算使用率超过 90% 且进度偏差（SPI）低于 0.9 时触发红色预警"
+            :placeholder="$t('execution.ruleEngine.ai.descriptionPlaceholder')"
           />
         </el-form-item>
         <el-form-item label="可用字段">
@@ -1455,7 +1461,7 @@ onMounted(() => {
             filterable
             allow-create
             default-first-option
-            placeholder="选择或输入可用字段，辅助 AI 生成合法表达式"
+            :placeholder="$t('execution.ruleEngine.ai.fieldsPlaceholder')"
             style="width: 100%"
           >
             <el-option v-for="f in fieldSuggestions" :key="f" :label="f" :value="f" />
@@ -1772,7 +1778,7 @@ onMounted(() => {
               v-model="abTestCandidateCondition"
               type="textarea"
               :rows="2"
-              placeholder="输入候选条件表达式（Aviator）"
+              :placeholder="$t('execution.ruleEngine.abTest.conditionPlaceholder')"
             />
           </el-form-item>
           <el-form-item label="候选严重度表达式">
@@ -1780,7 +1786,7 @@ onMounted(() => {
               v-model="abTestCandidateSeverityExpr"
               type="textarea"
               :rows="2"
-              placeholder="输入候选严重度表达式（可选）"
+              :placeholder="$t('execution.ruleEngine.abTest.severityPlaceholder')"
             />
           </el-form-item>
           <el-form-item label="事实数据 (JSON)">
@@ -1788,7 +1794,7 @@ onMounted(() => {
               v-model="abTestFactsJson"
               type="textarea"
               :rows="5"
-              placeholder='{"amount": 1000, "budgetUsedRatio": 0.9}'
+              :placeholder="$t('execution.ruleEngine.abTest.factsPlaceholder')"
             />
           </el-form-item>
           <el-form-item>

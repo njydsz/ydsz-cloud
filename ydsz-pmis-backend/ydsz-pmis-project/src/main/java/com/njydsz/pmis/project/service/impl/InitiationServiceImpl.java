@@ -590,7 +590,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     private String safeCustomerName(Long id) {
         try { return nameAssembler.resolveCustomer(id); }
-        catch (Exception e) { return null; }
+        catch (Exception e) { log.warn("[Initiation] 容错解析客户名称失败: id={}", id, e); return null; }
     }
 
     /**
@@ -601,7 +601,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     private String safeEmployeeName(Long id) {
         try { return nameAssembler.resolveEmployee(id); }
-        catch (Exception e) { return null; }
+        catch (Exception e) { log.warn("[Initiation] 容错解析员工名称失败: id={}", id, e); return null; }
     }
 
     // ============= 校验 =============

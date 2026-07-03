@@ -18,7 +18,9 @@
     </resultMap>
 
     <select id="selectByUserId" resultMap="BaseResultMap">
-        SELECT * FROM pmis_user_2fa
+        SELECT id, user_id, mfa_type, secret, binding_at, last_used_at, backup_codes,
+               enabled, tenant_id, created_at, updated_at, deleted
+        FROM pmis_user_2fa
         WHERE user_id = #{userId} AND deleted = 0
         ORDER BY id DESC
         LIMIT 1
