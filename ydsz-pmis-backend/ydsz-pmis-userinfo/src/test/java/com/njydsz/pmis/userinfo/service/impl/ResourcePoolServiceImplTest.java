@@ -7,12 +7,13 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.userinfo.dto.ResourcePoolCreateDTO;
 import com.njydsz.pmis.userinfo.entity.ResourcePoolDO;
 import com.njydsz.pmis.userinfo.mapper.ResourcePoolMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -31,51 +32,53 @@ class ResourcePoolServiceImplTest {
     @InjectMocks
     private ResourcePoolServiceImpl resourcePoolService;
 
+    @BeforeEach
+    void setUp() {
+        TenantContext.setTenantId(1L);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     @DisplayName("创建资源池成功")
     void create_shouldInsertResourcePool() {
-        try (MockedStatic<TenantContext> tenantContext = mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getTenantId).thenReturn(1L);
+        ResourcePoolCreateDTO dto = new ResourcePoolCreateDTO();
+        dto.setPoolCode("POOL001");
+        dto.setPoolName("测试资源池");
+        dto.setPoolType("HQ");
 
-            ResourcePoolCreateDTO dto = new ResourcePoolCreateDTO();
-            dto.setPoolCode("POOL001");
-            dto.setPoolName("测试资源池");
-            dto.setPoolType("HQ");
+        when(poolMapper.selectByCode("POOL001")).thenReturn(null);
+        doAnswer(invocation -> {
+            ResourcePoolDO entity = invocation.getArgument(0);
+            entity.setId(300L);
+            return 1;
+        }).when(poolMapper).insert(any(ResourcePoolDO.class));
 
-            when(poolMapper.selectByCode("POOL001")).thenReturn(null);
-            doAnswer(invocation -> {
-                ResourcePoolDO entity = invocation.getArgument(0);
-                entity.setId(300L);
-                return 1;
-            }).when(poolMapper).insert(any(ResourcePoolDO.class));
-
-            Long id = resourcePoolService.create(dto);
-            assertNotNull(id);
-            assertEquals(300L, id);
-            verify(poolMapper).insert(any(ResourcePoolDO.class));
-        }
+        Long id = resourcePoolService.create(dto);
+        assertNotNull(id);
+        assertEquals(300L, id);
+        verify(poolMapper).insert(any(ResourcePoolDO.class));
     }
 
     @Test
     @DisplayName("创建资源池时编码重复抛出异常")
     void create_duplicateCode_shouldThrowException() {
-        try (MockedStatic<TenantContext> tenantContext = mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getTenantId).thenReturn(1L);
+        ResourcePoolCreateDTO dto = new ResourcePoolCreateDTO();
+        dto.setPoolCode("POOL001");
+        dto.setPoolName("测试资源池");
+        dto.setPoolType("HQ");
 
-            ResourcePoolCreateDTO dto = new ResourcePoolCreateDTO();
-            dto.setPoolCode("POOL001");
-            dto.setPoolName("测试资源池");
-            dto.setPoolType("HQ");
+        ResourcePoolDO existing = new ResourcePoolDO();
+        existing.setId(1L);
+        existing.setPoolCode("POOL001");
 
-            ResourcePoolDO existing = new ResourcePoolDO();
-            existing.setId(1L);
-            existing.setPoolCode("POOL001");
+        when(poolMapper.selectByCode("POOL001")).thenReturn(existing);
 
-            when(poolMapper.selectByCode("POOL001")).thenReturn(existing);
-
-            BizException ex = assertThrows(BizException.class, () -> resourcePoolService.create(dto));
-            assertEquals(10102, ex.getCode());
-        }
+        BizException ex = assertThrows(BizException.class, () -> resourcePoolService.create(dto));
+        assertEquals(10102, ex.getCode());
     }
 
     @Test

@@ -7,12 +7,13 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.userinfo.dto.ResourceAssignmentCreateDTO;
 import com.njydsz.pmis.userinfo.entity.ResourceAssignmentDO;
 import com.njydsz.pmis.userinfo.mapper.ResourceAssignmentMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -32,31 +33,37 @@ class ResourceAssignmentServiceImplTest {
     @InjectMocks
     private ResourceAssignmentServiceImpl resourceAssignmentService;
 
+    @BeforeEach
+    void setUp() {
+        TenantContext.setTenantId(1L);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     @DisplayName("RESERVE动作创建资源分配")
     void act_reserve_shouldCreateAssignment() {
-        try (MockedStatic<TenantContext> tenantContext = mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getTenantId).thenReturn(1L);
+        ResourceAssignmentCreateDTO dto = new ResourceAssignmentCreateDTO();
+        dto.setAssignmentCode("ASSIGN001");
+        dto.setEmployeeId(1L);
+        dto.setAction("RESERVE");
+        dto.setOpportunityId(100L);
 
-            ResourceAssignmentCreateDTO dto = new ResourceAssignmentCreateDTO();
-            dto.setAssignmentCode("ASSIGN001");
-            dto.setEmployeeId(1L);
-            dto.setAction("RESERVE");
-            dto.setOpportunityId(100L);
+        when(assignmentMapper.selectByCode("ASSIGN001")).thenReturn(null);
+        when(assignmentMapper.countActiveByEmployee(1L)).thenReturn(0);
+        doAnswer(invocation -> {
+            ResourceAssignmentDO entity = invocation.getArgument(0);
+            entity.setId(400L);
+            return 1;
+        }).when(assignmentMapper).insert(any(ResourceAssignmentDO.class));
 
-            when(assignmentMapper.selectByCode("ASSIGN001")).thenReturn(null);
-            when(assignmentMapper.countActiveByEmployee(1L)).thenReturn(0);
-            doAnswer(invocation -> {
-                ResourceAssignmentDO entity = invocation.getArgument(0);
-                entity.setId(400L);
-                return 1;
-            }).when(assignmentMapper).insert(any(ResourceAssignmentDO.class));
-
-            Long id = resourceAssignmentService.act(dto);
-            assertNotNull(id);
-            assertEquals(400L, id);
-            verify(assignmentMapper).insert(any(ResourceAssignmentDO.class));
-        }
+        Long id = resourceAssignmentService.act(dto);
+        assertNotNull(id);
+        assertEquals(400L, id);
+        verify(assignmentMapper).insert(any(ResourceAssignmentDO.class));
     }
 
     @Test

@@ -10,6 +10,17 @@
 -- Generated at: 2026-07-04
 -- Files merged: 58
 -- ====================================================================
+-- ====================================================================
+-- [GENERATOR NOTE] Forward references detected and skipped:
+--   - pmis_daily_reconcile  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
+--   - pmis_evm_record  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
+--   - pmis_project_closure  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
+--   The following source files reference these tables (index, comment,
+--   analyze) but the tables are not defined anywhere in the source. They
+--   are commented out in the merged file. Online upgrades via Flyway
+--   will need a follow-up migration that creates these tables first.
+-- ====================================================================
+
 
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_001__init_pmis_schema.sql
@@ -4779,23 +4790,29 @@ ALTER TABLE pmis_project_change
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 财务域 ==========
-ALTER TABLE pmis_finance.pmis_finance_invoice
+-- 早期版本误加 pmis_finance. schema 前缀，但所有表均建在 public schema
+-- （与上方 project/execution 域的写法保持一致），执行时会报
+-- "模式 pmis_finance 不存在" 错误，故去除 schema 前缀。
+ALTER TABLE pmis_finance_invoice
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_finance.pmis_finance_payment
+ALTER TABLE pmis_finance_payment
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_finance.pmis_finance_customer_credit
+ALTER TABLE pmis_finance_customer_credit
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 执行域 ==========
+-- 早期版本把 pmis_cost_purchase 误写为 pmis_execution_purchase,
+-- 把 pmis_ops_ticket 误写为 pmis_execution_ops_ticket。修正为实际
+-- 表名（@TableName 定义）以避免 "关系不存在" 错误。
 ALTER TABLE pmis_execution_wbs_task
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_execution_purchase
+ALTER TABLE pmis_cost_purchase
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_execution_ops_ticket
+ALTER TABLE pmis_ops_ticket
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 同步更新 init schema 脚本中的字段注释（仅文档作用，不影响运行） ==========
@@ -4803,12 +4820,12 @@ COMMENT ON COLUMN pmis_project_initiation.version IS '乐观锁版本号（P1-12
 COMMENT ON COLUMN pmis_project_contract.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_project_contract_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_project_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance.pmis_finance_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance.pmis_finance_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance.pmis_finance_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_finance_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_finance_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_finance_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_execution_wbs_task.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_execution_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_execution_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_cost_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_024__add_version_to_core_tables.sql
@@ -6886,9 +6903,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_provider_trace
 
 -- 项目结项（4.1.4）
 CREATE INDEX IF NOT EXISTS idx_pmis_closure_initiation_status
-    ON pmis_project_closure (initiation_id, status, created_at DESC);
+-- [SKIPPED-FWD-REF]     ON pmis_project_closure (initiation_id, status, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_closure_closure_type
-    ON pmis_project_closure (closure_type, created_at DESC);
+-- [SKIPPED-FWD-REF]     ON pmis_project_closure (closure_type, created_at DESC);
 
 -- 合同模板（4.1.5）
 CREATE INDEX IF NOT EXISTS idx_pmis_template_code
@@ -6917,12 +6934,12 @@ CREATE INDEX IF NOT EXISTS idx_pmis_delivery_initiation_stage
 --  2) EVM 看板（4.2 联动）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_evm_initiation_period
-    ON pmis_evm_record (initiation_id, period DESC);
+-- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, period DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_evm_wbs_period
-    ON pmis_evm_record (wbs_task_id, period DESC);
+-- [SKIPPED-FWD-REF]     ON pmis_evm_record (wbs_task_id, period DESC);
 -- EVM 周期唯一性（idempotent on initiation+wbs+period）
 CREATE UNIQUE INDEX IF NOT EXISTS uq_pmis_evm_period
-    ON pmis_evm_record (initiation_id, wbs_task_id, period);
+-- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, wbs_task_id, period);
 
 -- =====================================================================
 --  3) 利用率快照（4.2.1）
@@ -6942,9 +6959,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
     ON pmis_alert_dispatch (next_retry_at)
     WHERE status = 'FAILED' AND retry_count < 3;
 CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_period
-    ON pmis_daily_reconcile (period DESC, status);
+-- [SKIPPED-FWD-REF]     ON pmis_daily_reconcile (period DESC, status);
 CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_diff_only
-    ON pmis_daily_reconcile (period DESC)
+-- [SKIPPED-FWD-REF]     ON pmis_daily_reconcile (period DESC)
     WHERE diff_count > 0;
 
 -- =====================================================================
@@ -7002,12 +7019,12 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_status_lower
 -- =====================================================================
 ANALYZE pmis_project_initiation;
 ANALYZE pmis_project_change;
-ANALYZE pmis_project_closure;
-ANALYZE pmis_evm_record;
+-- [SKIPPED-FWD-REF] ANALYZE pmis_project_closure;
+-- [SKIPPED-FWD-REF] ANALYZE pmis_evm_record;
 ANALYZE pmis_billable_utilization_snapshot;
 ANALYZE pmis_agent_prediction;
 ANALYZE pmis_alert_dispatch;
-ANALYZE pmis_daily_reconcile;
+-- [SKIPPED-FWD-REF] ANALYZE pmis_daily_reconcile;
 ANALYZE pmis_finance_invoice;
 ANALYZE pmis_finance_payment;
 ANALYZE pmis_operation_log;

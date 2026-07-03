@@ -7,12 +7,13 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.userinfo.dto.BenchRecordCreateDTO;
 import com.njydsz.pmis.userinfo.entity.BenchRecordDO;
 import com.njydsz.pmis.userinfo.mapper.BenchRecordMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
@@ -33,31 +34,37 @@ class BenchServiceImplTest {
     @InjectMocks
     private BenchServiceImpl benchService;
 
+    @BeforeEach
+    void setUp() {
+        TenantContext.setTenantId(1L);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     @DisplayName("ENTER动作创建Bench记录")
     void act_enter_shouldCreateBenchRecord() {
-        try (MockedStatic<TenantContext> tenantContext = mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getTenantId).thenReturn(1L);
+        BenchRecordCreateDTO dto = new BenchRecordCreateDTO();
+        dto.setBenchCode("BENCH001");
+        dto.setEmployeeId(1L);
+        dto.setAction("ENTER");
+        dto.setBenchDate(LocalDate.now());
 
-            BenchRecordCreateDTO dto = new BenchRecordCreateDTO();
-            dto.setBenchCode("BENCH001");
-            dto.setEmployeeId(1L);
-            dto.setAction("ENTER");
-            dto.setBenchDate(LocalDate.now());
+        when(benchMapper.selectByCode("BENCH001")).thenReturn(null);
+        when(benchMapper.selectActiveByEmployee(1L)).thenReturn(null);
+        doAnswer(invocation -> {
+            BenchRecordDO entity = invocation.getArgument(0);
+            entity.setId(500L);
+            return 1;
+        }).when(benchMapper).insert(any(BenchRecordDO.class));
 
-            when(benchMapper.selectByCode("BENCH001")).thenReturn(null);
-            when(benchMapper.selectActiveByEmployee(1L)).thenReturn(null);
-            doAnswer(invocation -> {
-                BenchRecordDO entity = invocation.getArgument(0);
-                entity.setId(500L);
-                return 1;
-            }).when(benchMapper).insert(any(BenchRecordDO.class));
-
-            Long id = benchService.act(dto);
-            assertNotNull(id);
-            assertEquals(500L, id);
-            verify(benchMapper).insert(any(BenchRecordDO.class));
-        }
+        Long id = benchService.act(dto);
+        assertNotNull(id);
+        assertEquals(500L, id);
+        verify(benchMapper).insert(any(BenchRecordDO.class));
     }
 
     @Test

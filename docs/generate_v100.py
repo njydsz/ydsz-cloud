@@ -421,13 +421,80 @@ header_lines = [
 
 with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
     out.write('\n'.join(header_lines))
+
+    # ---- pre-pass: collect forward-referenced tables ----
+    # Some Flyway scripts (notably V1.0.0_052__index_tuning) reference
+    # tables that haven't been CREATEd yet. They are valid for online
+    # upgrades once the corresponding table migration lands, but will
+    # fail on a fresh one-shot init. We detect these "forward refs" and
+    # comment out the offending DDL lines in the merged file.
+    forward_ref_tables = set()
+    table_defs_seen = set()
+    for f in sql_files:
+        for line in f.read_text(encoding='utf-8').splitlines():
+            stripped = line.strip()
+            if stripped.startswith('--'):
+                continue
+            m = re.match(
+                r'CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+                line, re.IGNORECASE,
+            )
+            if m:
+                table_defs_seen.add(m.group(1))
+    for f in sql_files:
+        for line in f.read_text(encoding='utf-8').splitlines():
+            stripped = line.strip()
+            if stripped.startswith('--'):
+                continue
+            for pat in [
+                r'CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?\w+\s+ON\s+(\w+)\b',
+                r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+)\b',
+                r'COMMENT\s+ON\s+COLUMN\s+(\w+)\.\w+\b',
+                r'COMMENT\s+ON\s+TABLE\s+(\w+)\b',
+                r'ANALYZE\s+(\w+)\b',
+            ]:
+                m = re.match(pat, line, re.IGNORECASE)
+                if m and m.group(1) not in table_defs_seen and m.group(1) not in (
+                    'public', 'pg_catalog', 'information_schema'
+                ):
+                    forward_ref_tables.add(m.group(1))
+
+    if forward_ref_tables:
+        out.write('-- ====================================================================\n')
+        out.write('-- [GENERATOR NOTE] Forward references detected and skipped:\n')
+        for t in sorted(forward_ref_tables):
+            out.write(f'--   - {t}  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)\n')
+        out.write('--   The following source files reference these tables (index, comment,\n')
+        out.write('--   analyze) but the tables are not defined anywhere in the source. They\n')
+        out.write('--   are commented out in the merged file. Online upgrades via Flyway\n')
+        out.write('--   will need a follow-up migration that creates these tables first.\n')
+        out.write('-- ====================================================================\n')
+        out.write('\n')
+
+    def maybe_comment(line: str) -> str:
+        if not forward_ref_tables or line.strip().startswith('--'):
+            return line
+        for t in forward_ref_tables:
+            # match: CREATE INDEX ... ON <t> ..., ALTER TABLE <t> ...,
+            #        COMMENT ON COLUMN <t>.col, COMMENT ON TABLE <t>, ANALYZE <t>
+            if re.search(
+                rf'\b(ON|TABLE|COLUMN|ANALYZE)\s+{re.escape(t)}\b',
+                line, re.IGNORECASE,
+            ) and not re.match(
+                rf'^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?{re.escape(t)}\s*\(',
+                line, re.IGNORECASE,
+            ):
+                return '-- [SKIPPED-FWD-REF] ' + line
+        return line
+
     for f in sql_files:
         out.write('\n')
         out.write('-- ====================================================================\n')
         out.write(f'-- >>>>>>>>>> START OF {f.name}\n')
         out.write('-- ====================================================================\n')
         out.write('\n')
-        out.write(f.read_text(encoding='utf-8'))
+        for line in f.read_text(encoding='utf-8').splitlines(keepends=True):
+            out.write(maybe_comment(line))
         out.write('\n')
         out.write('-- ====================================================================\n')
         out.write(f'-- >>>>>>>>>> END OF {f.name}\n')
@@ -583,6 +650,76 @@ for name, tables in by_name.items():
     distinct = set(tables)
     if len(distinct) > 1:
         errors.append(f'  index name collision: {name!r} used by {sorted(distinct)}')
+
+# 5. No schema-qualified DDL references (e.g. pmis_finance.pmis_finance_invoice)
+#    would fail with "schema does not exist" in a single-public-schema DB.
+import re as _re
+known_tables = set()
+for m in _re.finditer(
+    r'CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+    text, _re.IGNORECASE,
+):
+    known_tables.add(m.group(1))
+
+for label, pat in [
+    ('ALTER TABLE', _re.compile(r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+(?:\.\w+)+)', _re.IGNORECASE)),
+    ('CREATE TABLE', _re.compile(r'CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+(?:\.\w+)+)', _re.IGNORECASE)),
+    ('CREATE INDEX ON', _re.compile(r'CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?\w+\s+ON\s+(\w+(?:\.\w+)+)', _re.IGNORECASE)),
+    ('CREATE VIEW', _re.compile(r'CREATE\s+(?:OR\s+REPLACE\s+)?VIEW\s+(\w+(?:\.\w+)+)', _re.IGNORECASE)),
+    ('DROP', _re.compile(r'DROP\s+(?:TABLE|INDEX|VIEW)\s+(?:IF\s+EXISTS\s+)?(\w+(?:\.\w+)+)', _re.IGNORECASE)),
+]:
+    for m in pat.finditer(text):
+        ref = m.group(1)
+        schema = ref.split('.')[0]
+        if schema in ('public', 'pg_catalog', 'information_schema'):
+            continue
+        errors.append(f'  schema-qualified DDL ({label}): {ref!r}')
+
+# 6. No ALTER TABLE / CREATE INDEX ON / COMMENT ON COLUMN references an
+#    unknown table. Such a reference will fail at execution time with
+#    "relation <name> does not exist".
+# Build a richer set: include the SUPPLEMENT tables too.
+supplement_text = SUPPLEMENT
+supp_tables = set()
+for m in _re.finditer(
+    r'CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+    supplement_text, _re.IGNORECASE,
+):
+    supp_tables.add(m.group(1))
+all_known_tables = known_tables | supp_tables
+
+# ALTER TABLE
+for m in _re.finditer(r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+)\b', text, _re.IGNORECASE):
+    name = m.group(1)
+    if '.' in name:  # schema-qualified already checked above
+        continue
+    if name not in all_known_tables:
+        errors.append(f'  ALTER TABLE unknown table: {name!r}')
+
+# CREATE [UNIQUE] INDEX ... ON <table>
+for m in _re.finditer(
+    r'CREATE\s+(?:UNIQUE\s+)?INDEX\s+(?:IF\s+NOT\s+EXISTS\s+)?\w+\s+ON\s+(\w+)\b',
+    text, _re.IGNORECASE,
+):
+    name = m.group(1)
+    if '.' in name:
+        continue
+    if name not in all_known_tables:
+        errors.append(f'  CREATE INDEX ON unknown table: {name!r}')
+
+# COMMENT ON COLUMN <table>.<col>
+for m in _re.finditer(r'COMMENT\s+ON\s+COLUMN\s+(\w+)\.([\w]+)\b', text, _re.IGNORECASE):
+    name = m.group(1)
+    if name not in all_known_tables:
+        errors.append(f'  COMMENT ON COLUMN unknown table: {name!r}')
+
+# COMMENT ON TABLE <name>
+for m in _re.finditer(r'COMMENT\s+ON\s+TABLE\s+(\w+)\b', text, _re.IGNORECASE):
+    name = m.group(1)
+    if '.' in name:
+        continue
+    if name not in all_known_tables:
+        errors.append(f'  COMMENT ON TABLE unknown table: {name!r}')
 
 # Stats
 total_col = len(re_col_body.findall(text))

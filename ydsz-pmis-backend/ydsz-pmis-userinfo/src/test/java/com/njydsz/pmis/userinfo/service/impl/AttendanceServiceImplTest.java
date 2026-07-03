@@ -13,12 +13,13 @@ import com.njydsz.pmis.userinfo.entity.OvertimeDO;
 import com.njydsz.pmis.userinfo.mapper.AttendanceMapper;
 import com.njydsz.pmis.userinfo.mapper.LeaveMapper;
 import com.njydsz.pmis.userinfo.mapper.OvertimeMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
@@ -44,28 +45,34 @@ class AttendanceServiceImplTest {
     @InjectMocks
     private AttendanceServiceImpl attendanceService;
 
+    @BeforeEach
+    void setUp() {
+        TenantContext.setTenantId(1L);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     @DisplayName("登记出勤成功")
     void recordAttendance_shouldInsertAttendance() {
-        try (MockedStatic<TenantContext> tenantContext = mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getTenantId).thenReturn(1L);
+        AttendanceCreateDTO dto = new AttendanceCreateDTO();
+        dto.setEmployeeId(1L);
+        dto.setAttendanceDate(LocalDate.now());
+        dto.setStatus("NORMAL");
 
-            AttendanceCreateDTO dto = new AttendanceCreateDTO();
-            dto.setEmployeeId(1L);
-            dto.setAttendanceDate(LocalDate.now());
-            dto.setStatus("NORMAL");
+        doAnswer(invocation -> {
+            AttendanceDO entity = invocation.getArgument(0);
+            entity.setId(700L);
+            return 1;
+        }).when(attendanceMapper).insert(any(AttendanceDO.class));
 
-            doAnswer(invocation -> {
-                AttendanceDO entity = invocation.getArgument(0);
-                entity.setId(700L);
-                return 1;
-            }).when(attendanceMapper).insert(any(AttendanceDO.class));
-
-            Long id = attendanceService.recordAttendance(dto);
-            assertNotNull(id);
-            assertEquals(700L, id);
-            verify(attendanceMapper).insert(any(AttendanceDO.class));
-        }
+        Long id = attendanceService.recordAttendance(dto);
+        assertNotNull(id);
+        assertEquals(700L, id);
+        verify(attendanceMapper).insert(any(AttendanceDO.class));
     }
 
     @Test
@@ -98,27 +105,23 @@ class AttendanceServiceImplTest {
     @Test
     @DisplayName("提交加班申请成功")
     void submitOvertime_shouldInsertOvertime() {
-        try (MockedStatic<TenantContext> tenantContext = mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getTenantId).thenReturn(1L);
+        OvertimeCreateDTO dto = new OvertimeCreateDTO();
+        dto.setEmployeeId(1L);
+        dto.setOvertimeDate(LocalDate.now());
+        dto.setStartTime(LocalDateTime.of(2026, 7, 4, 18, 0));
+        dto.setEndTime(LocalDateTime.of(2026, 7, 4, 21, 0));
+        dto.setOvertimeType("WORKDAY");
 
-            OvertimeCreateDTO dto = new OvertimeCreateDTO();
-            dto.setEmployeeId(1L);
-            dto.setOvertimeDate(LocalDate.now());
-            dto.setStartTime(LocalDateTime.of(2026, 7, 4, 18, 0));
-            dto.setEndTime(LocalDateTime.of(2026, 7, 4, 21, 0));
-            dto.setOvertimeType("WORKDAY");
+        doAnswer(invocation -> {
+            OvertimeDO entity = invocation.getArgument(0);
+            entity.setId(701L);
+            return 1;
+        }).when(overtimeMapper).insert(any(OvertimeDO.class));
 
-            doAnswer(invocation -> {
-                OvertimeDO entity = invocation.getArgument(0);
-                entity.setId(701L);
-                return 1;
-            }).when(overtimeMapper).insert(any(OvertimeDO.class));
-
-            Long id = attendanceService.submitOvertime(dto);
-            assertNotNull(id);
-            assertEquals(701L, id);
-            verify(overtimeMapper).insert(any(OvertimeDO.class));
-        }
+        Long id = attendanceService.submitOvertime(dto);
+        assertNotNull(id);
+        assertEquals(701L, id);
+        verify(overtimeMapper).insert(any(OvertimeDO.class));
     }
 
     @Test
@@ -134,26 +137,22 @@ class AttendanceServiceImplTest {
     @Test
     @DisplayName("提交请假申请成功")
     void submitLeave_shouldInsertLeave() {
-        try (MockedStatic<TenantContext> tenantContext = mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getTenantId).thenReturn(1L);
+        LeaveCreateDTO dto = new LeaveCreateDTO();
+        dto.setEmployeeId(1L);
+        dto.setLeaveType("ANNUAL");
+        dto.setStartDate(LocalDate.of(2026, 7, 6));
+        dto.setEndDate(LocalDate.of(2026, 7, 8));
 
-            LeaveCreateDTO dto = new LeaveCreateDTO();
-            dto.setEmployeeId(1L);
-            dto.setLeaveType("ANNUAL");
-            dto.setStartDate(LocalDate.of(2026, 7, 6));
-            dto.setEndDate(LocalDate.of(2026, 7, 8));
+        doAnswer(invocation -> {
+            LeaveDO entity = invocation.getArgument(0);
+            entity.setId(702L);
+            return 1;
+        }).when(leaveMapper).insert(any(LeaveDO.class));
 
-            doAnswer(invocation -> {
-                LeaveDO entity = invocation.getArgument(0);
-                entity.setId(702L);
-                return 1;
-            }).when(leaveMapper).insert(any(LeaveDO.class));
-
-            Long id = attendanceService.submitLeave(dto);
-            assertNotNull(id);
-            assertEquals(702L, id);
-            verify(leaveMapper).insert(any(LeaveDO.class));
-        }
+        Long id = attendanceService.submitLeave(dto);
+        assertNotNull(id);
+        assertEquals(702L, id);
+        verify(leaveMapper).insert(any(LeaveDO.class));
     }
 
     @Test

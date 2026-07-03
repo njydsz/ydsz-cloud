@@ -153,7 +153,6 @@ class AuthServiceImplTest {
             when(roleService.listByUserId(1L)).thenReturn(Collections.emptyList());
             when(permissionService.listPermCodesByUserId(1L)).thenReturn(Collections.emptyList());
             cryptoUtil.when(() -> CryptoUtil.verifyPassword(anyString(), anyString(), anyString())).thenReturn(false);
-            when(redisTemplate.delete(anyString())).thenReturn(true);
 
             LoginDTO dto = new LoginDTO();
             dto.setUsername("admin");

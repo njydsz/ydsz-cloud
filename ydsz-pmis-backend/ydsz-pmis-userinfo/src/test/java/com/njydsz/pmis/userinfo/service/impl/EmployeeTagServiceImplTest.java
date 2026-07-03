@@ -5,12 +5,13 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.userinfo.dto.EmployeeTagCreateDTO;
 import com.njydsz.pmis.userinfo.entity.EmployeeTagDO;
 import com.njydsz.pmis.userinfo.mapper.EmployeeTagMapper;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
@@ -29,30 +30,36 @@ class EmployeeTagServiceImplTest {
     @InjectMocks
     private EmployeeTagServiceImpl employeeTagService;
 
+    @BeforeEach
+    void setUp() {
+        TenantContext.setTenantId(1L);
+    }
+
+    @AfterEach
+    void tearDown() {
+        TenantContext.clear();
+    }
+
     @Test
     @DisplayName("添加人员标签成功")
     void add_shouldInsertTag() {
-        try (MockedStatic<TenantContext> tenantContext = mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getTenantId).thenReturn(1L);
+        EmployeeTagCreateDTO dto = new EmployeeTagCreateDTO();
+        dto.setEmployeeId(1L);
+        dto.setTagType("SKILL");
+        dto.setTagCode("JAVA");
+        dto.setTagName("Java");
+        dto.setProficiency(4);
 
-            EmployeeTagCreateDTO dto = new EmployeeTagCreateDTO();
-            dto.setEmployeeId(1L);
-            dto.setTagType("SKILL");
-            dto.setTagCode("JAVA");
-            dto.setTagName("Java");
-            dto.setProficiency(4);
+        doAnswer(invocation -> {
+            EmployeeTagDO entity = invocation.getArgument(0);
+            entity.setId(600L);
+            return 1;
+        }).when(tagMapper).insert(any(EmployeeTagDO.class));
 
-            doAnswer(invocation -> {
-                EmployeeTagDO entity = invocation.getArgument(0);
-                entity.setId(600L);
-                return 1;
-            }).when(tagMapper).insert(any(EmployeeTagDO.class));
-
-            Long id = employeeTagService.add(dto);
-            assertNotNull(id);
-            assertEquals(600L, id);
-            verify(tagMapper).insert(any(EmployeeTagDO.class));
-        }
+        Long id = employeeTagService.add(dto);
+        assertNotNull(id);
+        assertEquals(600L, id);
+        verify(tagMapper).insert(any(EmployeeTagDO.class));
     }
 
     @Test
@@ -114,25 +121,21 @@ class EmployeeTagServiceImplTest {
     @Test
     @DisplayName("批量替换员工标签")
     void replaceByEmployee_shouldReplaceAllTags() {
-        try (MockedStatic<TenantContext> tenantContext = mockStatic(TenantContext.class)) {
-            tenantContext.when(TenantContext::getTenantId).thenReturn(1L);
+        EmployeeTagCreateDTO dto = new EmployeeTagCreateDTO();
+        dto.setEmployeeId(1L);
+        dto.setTagType("SKILL");
+        dto.setTagCode("PYTHON");
+        dto.setTagName("Python");
+        dto.setProficiency(3);
 
-            EmployeeTagCreateDTO dto = new EmployeeTagCreateDTO();
-            dto.setEmployeeId(1L);
-            dto.setTagType("SKILL");
-            dto.setTagCode("PYTHON");
-            dto.setTagName("Python");
-            dto.setProficiency(3);
+        doAnswer(invocation -> {
+            EmployeeTagDO entity = invocation.getArgument(0);
+            entity.setId(601L);
+            return 1;
+        }).when(tagMapper).insert(any(EmployeeTagDO.class));
 
-            doAnswer(invocation -> {
-                EmployeeTagDO entity = invocation.getArgument(0);
-                entity.setId(601L);
-                return 1;
-            }).when(tagMapper).insert(any(EmployeeTagDO.class));
-
-            assertDoesNotThrow(() -> employeeTagService.replaceByEmployee(1L, List.of(dto)));
-            verify(tagMapper).deleteByEmployee(1L);
-            verify(tagMapper).insert(any(EmployeeTagDO.class));
-        }
+        assertDoesNotThrow(() -> employeeTagService.replaceByEmployee(1L, List.of(dto)));
+        verify(tagMapper).deleteByEmployee(1L);
+        verify(tagMapper).insert(any(EmployeeTagDO.class));
     }
 }

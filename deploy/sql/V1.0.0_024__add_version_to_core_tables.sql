@@ -28,23 +28,29 @@ ALTER TABLE pmis_project_change
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 财务域 ==========
-ALTER TABLE pmis_finance.pmis_finance_invoice
+-- 早期版本误加 pmis_finance. schema 前缀，但所有表均建在 public schema
+-- （与上方 project/execution 域的写法保持一致），执行时会报
+-- "模式 pmis_finance 不存在" 错误，故去除 schema 前缀。
+ALTER TABLE pmis_finance_invoice
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_finance.pmis_finance_payment
+ALTER TABLE pmis_finance_payment
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_finance.pmis_finance_customer_credit
+ALTER TABLE pmis_finance_customer_credit
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 执行域 ==========
+-- 早期版本把 pmis_cost_purchase 误写为 pmis_execution_purchase,
+-- 把 pmis_ops_ticket 误写为 pmis_execution_ops_ticket。修正为实际
+-- 表名（@TableName 定义）以避免 "关系不存在" 错误。
 ALTER TABLE pmis_execution_wbs_task
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_execution_purchase
+ALTER TABLE pmis_cost_purchase
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_execution_ops_ticket
+ALTER TABLE pmis_ops_ticket
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 同步更新 init schema 脚本中的字段注释（仅文档作用，不影响运行） ==========
@@ -52,9 +58,9 @@ COMMENT ON COLUMN pmis_project_initiation.version IS '乐观锁版本号（P1-12
 COMMENT ON COLUMN pmis_project_contract.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_project_contract_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_project_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance.pmis_finance_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance.pmis_finance_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance.pmis_finance_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_finance_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_finance_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_finance_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_execution_wbs_task.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_execution_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_execution_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_cost_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
