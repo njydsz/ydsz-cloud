@@ -3,8 +3,6 @@ package com.njydsz.pmis.literule.ai;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
 import com.njydsz.pmis.literule.config.LiteRuleProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,8 +33,6 @@ import java.util.regex.Pattern;
  * @since 1.5.0
  */
 public class RuleHealthScoreService {
-
-    private static final Logger log = LoggerFactory.getLogger(RuleHealthScoreService.class);
 
     /** 变量名提取正则（Aviator 标识符，但排除常见关键字） */
     private static final Pattern IDENTIFIER_PATTERN =

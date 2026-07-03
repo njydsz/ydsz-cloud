@@ -41,8 +41,10 @@ public class RulePackService {
 
     private final RulePackMapper rulePackMapper;
     private final RulePackInstallMapper rulePackInstallMapper;
+    @SuppressWarnings("unused")
     private final RuleDefinitionMapper ruleDefinitionMapper;
     private final RuleConfigProvider ruleConfigProvider;
+    @SuppressWarnings("unused")
     private final RuleAdminService ruleAdminService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();

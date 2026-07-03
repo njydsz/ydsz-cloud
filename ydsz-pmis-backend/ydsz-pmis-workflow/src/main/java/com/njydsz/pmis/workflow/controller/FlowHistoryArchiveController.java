@@ -2,6 +2,8 @@ package com.njydsz.pmis.workflow.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowHistoryArchiveService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,6 +31,7 @@ import java.util.Map;
  * @since 1.0.0
  */
 @Slf4j
+@Tag(name = "流程历史归档")
 @RestController
 @RequestMapping("/api/v1/workflow/history")
 @RequiredArgsConstructor
@@ -41,6 +44,7 @@ public class FlowHistoryArchiveController {
      *
      * @return 配置项 Map
      */
+    @Operation(summary = "查询归档配置")
     @GetMapping("/config")
     public Result<Map<String, Object>> getConfig() {
         return Result.ok(archiveService.getArchiveConfig());
@@ -57,6 +61,7 @@ public class FlowHistoryArchiveController {
      * @param maxProcessMs  单次最大耗时毫秒（可选）
      * @return 执行结果摘要
      */
+    @Operation(summary = "手动触发归档")
     @PostMapping("/archive")
     public Result<Map<String, Object>> archive(@RequestParam(required = false) Integer retentionDays,
                                                   @RequestParam(required = false) Integer batchSize,
@@ -75,6 +80,7 @@ public class FlowHistoryArchiveController {
      * @param purgeDays 清理阈值天数（可选，默认使用配置值）
      * @return 执行结果摘要
      */
+    @Operation(summary = "手动触发清理（purge）")
     @PostMapping("/purge")
     public Result<Map<String, Object>> purge(@RequestParam(required = false) Integer purgeDays) {
         log.info("[FlowHistoryArchiveController] 手动触发清理 purgeDays={}", purgeDays);

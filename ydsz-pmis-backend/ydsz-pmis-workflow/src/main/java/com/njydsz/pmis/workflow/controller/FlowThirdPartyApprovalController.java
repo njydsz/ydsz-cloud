@@ -6,6 +6,8 @@ import com.njydsz.pmis.workflow.service.FlowThirdPartyAccountService;
 import com.njydsz.pmis.workflow.thirdparty.DingTalkSignatureUtil;
 import com.njydsz.pmis.workflow.thirdparty.FeishuSignatureUtil;
 import com.njydsz.pmis.workflow.thirdparty.WeComSignatureUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -35,6 +37,7 @@ import java.util.Map;
  * @since 1.1.0
  */
 @Slf4j
+@Tag(name = "三方审批回调")
 @RestController
 @RequestMapping("/api/v1/workflow/third-party")
 @RequiredArgsConstructor
@@ -65,6 +68,7 @@ public class FlowThirdPartyApprovalController {
      * @param body      回调 JSON
      * @return 处理结果
      */
+    @Operation(summary = "钉钉审批回调")
     @PostMapping("/dingtalk/callback")
     public Map<String, Object> dingTalkCallback(
             @RequestHeader(value = "timestamp", required = false) String timestamp,
@@ -89,6 +93,7 @@ public class FlowThirdPartyApprovalController {
      * @param body      回调 JSON
      * @return 处理结果
      */
+    @Operation(summary = "飞书审批回调")
     @PostMapping("/feishu/callback")
     public Map<String, Object> feishuCallback(
             @RequestHeader(value = "X-Lark-Request-Timestamp", required = false) String timestamp,
@@ -113,6 +118,7 @@ public class FlowThirdPartyApprovalController {
      * @param body         回调 JSON
      * @return 处理结果
      */
+    @Operation(summary = "企业微信审批回调")
     @PostMapping("/wecom/callback")
     public Map<String, Object> weComCallback(
             @RequestParam(value = "msg_signature", required = false) String msgSignature,

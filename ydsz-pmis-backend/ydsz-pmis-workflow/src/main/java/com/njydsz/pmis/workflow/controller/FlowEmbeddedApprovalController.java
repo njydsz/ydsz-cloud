@@ -7,6 +7,8 @@ import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.dto.EmbeddedApprovalViewDTO;
 import com.njydsz.pmis.workflow.service.FlowEmbeddedApprovalService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
  * @since 1.0.0
  */
 @Slf4j
+@Tag(name = "嵌入式审批")
 @RestController
 @RequestMapping("/api/v1/workflow/embedded")
 @RequiredArgsConstructor
@@ -51,6 +54,7 @@ public class FlowEmbeddedApprovalController {
      * @param userId       当前用户 ID（可空，空时取 SecurityContext）
      * @return 嵌入式审批面板视图
      */
+    @Operation(summary = "加载嵌入式审批面板")
     @GetMapping("/panel")
     public Result<EmbeddedApprovalViewDTO> loadPanel(@RequestParam String businessType,
                                                      @RequestParam String businessId,
@@ -81,6 +85,7 @@ public class FlowEmbeddedApprovalController {
      *
      * @param dto 嵌入式快捷操作参数
      */
+    @Operation(summary = "嵌入式快捷操作")
     @PostMapping("/action")
     public Result<Void> quickAction(@Valid @RequestBody EmbeddedApprovalActionDTO dto) {
         LoginUser u = SecurityContext.getCurrentOrNull();
@@ -99,6 +104,7 @@ public class FlowEmbeddedApprovalController {
      *
      * <p>URL 形式：/api/v1/workflow/embedded/{businessType}/{businessId}/action
      */
+    @Operation(summary = "嵌入式快捷操作（按业务类型+业务ID）")
     @PostMapping("/{businessType}/{businessId}/action")
     public Result<Void> quickActionByPath(@PathVariable String businessType,
                                           @PathVariable String businessId,

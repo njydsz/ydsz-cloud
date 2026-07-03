@@ -301,54 +301,54 @@ onMounted(() => {
     <el-card shadow="never">
       <el-tabs v-model="tab">
         <!-- 出勤 -->
-        <el-tab-pane label="出勤记录" name="attendance">
+        <el-tab-pane :label="t('attendance.tabs.attendance')" name="attendance">
           <el-form inline :model="attQuery" class="search-form">
-            <el-form-item label="员工 ID">
+            <el-form-item :label="t('attendance.common.search.employeeId')">
               <el-input-number v-model="attQuery.employeeId" :min="0" :controls="false" />
             </el-form-item>
-            <el-form-item label="开始">
+            <el-form-item :label="t('attendance.attendance.search.start')">
               <el-date-picker v-model="attQuery.startDate" type="date" value-format="YYYY-MM-DD" />
             </el-form-item>
-            <el-form-item label="结束">
+            <el-form-item :label="t('attendance.attendance.search.end')">
               <el-date-picker v-model="attQuery.endDate" type="date" value-format="YYYY-MM-DD" />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="attQuery.page = 1; fetchAttendance()">查询</el-button>
-              <el-button @click="attQuery.employeeId = undefined; attQuery.startDate = ''; attQuery.endDate = ''; fetchAttendance()">重置</el-button>
+              <el-button type="primary" @click="attQuery.page = 1; fetchAttendance()">{{ t('attendance.common.buttons.query') }}</el-button>
+              <el-button @click="attQuery.employeeId = undefined; attQuery.startDate = ''; attQuery.endDate = ''; fetchAttendance()">{{ t('attendance.common.buttons.reset') }}</el-button>
             </el-form-item>
           </el-form>
 
           <div class="toolbar">
-            <el-button v-permission="['attendance:record:create']" type="primary" :icon="'Plus'" @click="openAttCreate">登记出勤</el-button>
-            <el-button :icon="'Refresh'" @click="fetchAttendance">刷新</el-button>
+            <el-button v-permission="['attendance:record:create']" type="primary" :icon="'Plus'" @click="openAttCreate">{{ t('attendance.attendance.buttons.create') }}</el-button>
+            <el-button :icon="'Refresh'" @click="fetchAttendance">{{ t('attendance.common.buttons.refresh') }}</el-button>
           </div>
 
           <div v-if="attStat.length > 0" class="stat-row">
             <el-tag v-for="(s, idx) in attStat" :key="idx" :type="(statusMap[(s.status as string) || '']?.type as any) || 'info'" effect="plain" size="large">
-              {{ statusMap[(s.status as string) || '']?.label || s.status || '未知' }}: {{ s.count }}天 / {{ s.total_hours }}h
+              {{ statusMap[(s.status as string) || '']?.label || s.status || t('attendance.attendance.status.unknown') }}{{ t('attendance.attendance.statSuffix', { days: s.count, hours: s.total_hours }) }}
             </el-tag>
           </div>
 
           <vxe-table :data="attList" :loading="attLoading" border>
             <vxe-column type="seq" title="#" width="50" />
-            <vxe-column field="employeeName" title="员工" width="120" />
-            <vxe-column field="employeeId" title="员工 ID" width="100" />
-            <vxe-column field="attendanceDate" title="出勤日期" width="120" />
-            <vxe-column field="checkInTime" title="签到" width="160" />
-            <vxe-column field="checkOutTime" title="签退" width="160" />
-            <vxe-column field="workHours" title="工作时长" width="100" align="right" />
-            <vxe-column field="overtimeHours" title="加班时长" width="100" align="right" />
-            <vxe-column field="workType" title="工作日类型" width="100">
+            <vxe-column field="employeeName" :title="t('attendance.attendance.columns.employeeName')" width="120" />
+            <vxe-column field="employeeId" :title="t('attendance.attendance.columns.employeeId')" width="100" />
+            <vxe-column field="attendanceDate" :title="t('attendance.attendance.columns.attendanceDate')" width="120" />
+            <vxe-column field="checkInTime" :title="t('attendance.attendance.columns.checkInTime')" width="160" />
+            <vxe-column field="checkOutTime" :title="t('attendance.attendance.columns.checkOutTime')" width="160" />
+            <vxe-column field="workHours" :title="t('attendance.attendance.columns.workHours')" width="100" align="right" />
+            <vxe-column field="overtimeHours" :title="t('attendance.attendance.columns.overtimeHours')" width="100" align="right" />
+            <vxe-column field="workType" :title="t('attendance.attendance.columns.workType')" width="100">
               <template #default="{ row }">{{ workTypeMap[row.workType || ''] || row.workType }}</template>
             </vxe-column>
-            <vxe-column field="status" title="状态" width="100">
+            <vxe-column field="status" :title="t('attendance.attendance.columns.status')" width="100">
               <template #default="{ row }">
                 <el-tag :type="(statusMap[row.status]?.type as any) || 'info'">
                   {{ statusMap[row.status]?.label || row.status }}
                 </el-tag>
               </template>
             </vxe-column>
-            <vxe-column field="remark" title="备注" min-width="160" />
+            <vxe-column field="remark" :title="t('attendance.attendance.columns.remark')" min-width="160" />
           </vxe-table>
 
           <div class="pagination">
@@ -364,51 +364,51 @@ onMounted(() => {
         </el-tab-pane>
 
         <!-- 加班 -->
-        <el-tab-pane label="加班申请" name="overtime">
+        <el-tab-pane :label="t('attendance.tabs.overtime')" name="overtime">
           <el-form inline :model="otQuery" class="search-form">
-            <el-form-item label="员工 ID">
+            <el-form-item :label="t('attendance.common.search.employeeId')">
               <el-input-number v-model="otQuery.employeeId" :min="0" :controls="false" />
             </el-form-item>
-            <el-form-item label="审批状态">
-              <el-select v-model="otQuery.approvalStatus" placeholder="全部" clearable style="width: 140px">
+            <el-form-item :label="t('attendance.common.search.approvalStatus')">
+              <el-select v-model="otQuery.approvalStatus" :placeholder="t('common.all')" clearable style="width: 140px">
                 <el-option v-for="(v, k) in otStatusMap" :key="k" :label="v.label" :value="k" />
               </el-select>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="otQuery.page = 1; fetchOvertime()">查询</el-button>
+              <el-button type="primary" @click="otQuery.page = 1; fetchOvertime()">{{ t('attendance.common.buttons.query') }}</el-button>
             </el-form-item>
           </el-form>
 
           <div class="toolbar">
-            <el-button v-permission="['attendance:overtime:create']" type="primary" :icon="'Plus'" @click="openOtCreate">提交加班</el-button>
-            <el-button :icon="'Refresh'" @click="fetchOvertime">刷新</el-button>
+            <el-button v-permission="['attendance:overtime:create']" type="primary" :icon="'Plus'" @click="openOtCreate">{{ t('attendance.overtime.buttons.create') }}</el-button>
+            <el-button :icon="'Refresh'" @click="fetchOvertime">{{ t('attendance.common.buttons.refresh') }}</el-button>
           </div>
 
           <vxe-table :data="otList" :loading="otLoading" border>
             <vxe-column type="seq" title="#" width="50" />
-            <vxe-column field="overtimeCode" title="编码" width="180" />
-            <vxe-column field="employeeName" title="员工" width="100" />
-            <vxe-column field="overtimeDate" title="加班日期" width="120" />
-            <vxe-column field="startTime" title="开始" width="160" />
-            <vxe-column field="endTime" title="结束" width="160" />
-            <vxe-column field="overtimeHours" title="小时数" width="100" align="right" />
-            <vxe-column field="overtimeType" title="类型" width="100">
+            <vxe-column field="overtimeCode" :title="t('attendance.overtime.columns.overtimeCode')" width="180" />
+            <vxe-column field="employeeName" :title="t('attendance.overtime.columns.employeeName')" width="100" />
+            <vxe-column field="overtimeDate" :title="t('attendance.overtime.columns.overtimeDate')" width="120" />
+            <vxe-column field="startTime" :title="t('attendance.overtime.columns.startTime')" width="160" />
+            <vxe-column field="endTime" :title="t('attendance.overtime.columns.endTime')" width="160" />
+            <vxe-column field="overtimeHours" :title="t('attendance.overtime.columns.overtimeHours')" width="100" align="right" />
+            <vxe-column field="overtimeType" :title="t('attendance.overtime.columns.overtimeType')" width="100">
               <template #default="{ row }">{{ otTypeMap[row.overtimeType] || row.overtimeType }}</template>
             </vxe-column>
-            <vxe-column field="payRate" title="倍数" width="80" align="right" />
-            <vxe-column field="approvalStatus" title="状态" width="100">
+            <vxe-column field="payRate" :title="t('attendance.overtime.columns.payRate')" width="80" align="right" />
+            <vxe-column field="approvalStatus" :title="t('attendance.overtime.columns.approvalStatus')" width="100">
               <template #default="{ row }">
                 <el-tag :type="(otStatusMap[row.approvalStatus]?.type as any) || 'info'">
                   {{ otStatusMap[row.approvalStatus]?.label || row.approvalStatus }}
                 </el-tag>
               </template>
             </vxe-column>
-            <vxe-column field="approverName" title="审批人" width="100" />
-            <vxe-column field="reason" title="原因" min-width="180" />
-            <vxe-column title="操作" width="180" fixed="right">
+            <vxe-column field="approverName" :title="t('attendance.overtime.columns.approverName')" width="100" />
+            <vxe-column field="reason" :title="t('attendance.overtime.columns.reason')" min-width="180" />
+            <vxe-column :title="t('attendance.overtime.columns.action')" width="180" fixed="right">
               <template #default="{ row }">
-                <el-button v-if="row.approvalStatus === 'SUBMITTED'" v-permission="['attendance:overtime:approve']" link type="primary" size="small" @click="handleApproveOt(row, 'APPROVED')">通过</el-button>
-                <el-button v-if="row.approvalStatus === 'SUBMITTED'" v-permission="['attendance:overtime:approve']" link type="danger" size="small" @click="handleApproveOt(row, 'REJECTED')">驳回</el-button>
+                <el-button v-if="row.approvalStatus === 'SUBMITTED'" v-permission="['attendance:overtime:approve']" link type="primary" size="small" @click="handleApproveOt(row, 'APPROVED')">{{ t('attendance.common.buttons.pass') }}</el-button>
+                <el-button v-if="row.approvalStatus === 'SUBMITTED'" v-permission="['attendance:overtime:approve']" link type="danger" size="small" @click="handleApproveOt(row, 'REJECTED')">{{ t('attendance.common.buttons.reject') }}</el-button>
               </template>
             </vxe-column>
           </vxe-table>
@@ -426,51 +426,51 @@ onMounted(() => {
         </el-tab-pane>
 
         <!-- 请假 -->
-        <el-tab-pane label="请假申请" name="leave">
+        <el-tab-pane :label="t('attendance.tabs.leave')" name="leave">
           <el-form inline :model="lvQuery" class="search-form">
-            <el-form-item label="员工 ID">
+            <el-form-item :label="t('attendance.common.search.employeeId')">
               <el-input-number v-model="lvQuery.employeeId" :min="0" :controls="false" />
             </el-form-item>
-            <el-form-item label="审批状态">
-              <el-select v-model="lvQuery.approvalStatus" placeholder="全部" clearable style="width: 140px">
+            <el-form-item :label="t('attendance.common.search.approvalStatus')">
+              <el-select v-model="lvQuery.approvalStatus" :placeholder="t('common.all')" clearable style="width: 140px">
                 <el-option v-for="(v, k) in lvStatusMap" :key="k" :label="v.label" :value="k" />
               </el-select>
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="lvQuery.page = 1; fetchLeave()">查询</el-button>
+              <el-button type="primary" @click="lvQuery.page = 1; fetchLeave()">{{ t('attendance.common.buttons.query') }}</el-button>
             </el-form-item>
           </el-form>
 
           <div class="toolbar">
-            <el-button v-permission="['attendance:leave:create']" type="primary" :icon="'Plus'" @click="openLvCreate">提交请假</el-button>
-            <el-button :icon="'Refresh'" @click="fetchLeave">刷新</el-button>
+            <el-button v-permission="['attendance:leave:create']" type="primary" :icon="'Plus'" @click="openLvCreate">{{ t('attendance.leave.buttons.create') }}</el-button>
+            <el-button :icon="'Refresh'" @click="fetchLeave">{{ t('attendance.common.buttons.refresh') }}</el-button>
           </div>
 
           <vxe-table :data="lvList" :loading="lvLoading" border>
             <vxe-column type="seq" title="#" width="50" />
-            <vxe-column field="leaveCode" title="编码" width="180" />
-            <vxe-column field="employeeName" title="员工" width="100" />
-            <vxe-column field="leaveType" title="类型" width="100">
+            <vxe-column field="leaveCode" :title="t('attendance.leave.columns.leaveCode')" width="180" />
+            <vxe-column field="employeeName" :title="t('attendance.leave.columns.employeeName')" width="100" />
+            <vxe-column field="leaveType" :title="t('attendance.leave.columns.leaveType')" width="100">
               <template #default="{ row }">{{ lvTypeMap[row.leaveType] || row.leaveType }}</template>
             </vxe-column>
-            <vxe-column field="startDate" title="开始" width="120" />
-            <vxe-column field="endDate" title="结束" width="120" />
-            <vxe-column field="leaveDays" title="天数" width="80" align="right" />
-            <vxe-column field="approvalStatus" title="状态" width="100">
+            <vxe-column field="startDate" :title="t('attendance.leave.columns.startDate')" width="120" />
+            <vxe-column field="endDate" :title="t('attendance.leave.columns.endDate')" width="120" />
+            <vxe-column field="leaveDays" :title="t('attendance.leave.columns.leaveDays')" width="80" align="right" />
+            <vxe-column field="approvalStatus" :title="t('attendance.leave.columns.approvalStatus')" width="100">
               <template #default="{ row }">
                 <el-tag :type="(lvStatusMap[row.approvalStatus]?.type as any) || 'info'">
                   {{ lvStatusMap[row.approvalStatus]?.label || row.approvalStatus }}
                 </el-tag>
               </template>
             </vxe-column>
-            <vxe-column field="approverName" title="审批人" width="100" />
-            <vxe-column field="approvalRemark" title="审批意见" min-width="160" />
-            <vxe-column field="reason" title="原因" min-width="180" />
-            <vxe-column title="操作" width="240" fixed="right">
+            <vxe-column field="approverName" :title="t('attendance.leave.columns.approverName')" width="100" />
+            <vxe-column field="approvalRemark" :title="t('attendance.leave.columns.approvalRemark')" min-width="160" />
+            <vxe-column field="reason" :title="t('attendance.leave.columns.reason')" min-width="180" />
+            <vxe-column :title="t('attendance.leave.columns.action')" width="240" fixed="right">
               <template #default="{ row }">
-                <el-button v-if="row.approvalStatus === 'DRAFT'" v-permission="['attendance:leave:approve']" link type="primary" size="small" @click="handleApproveLv(row, 'SUBMITTED')">提交</el-button>
-                <el-button v-if="row.approvalStatus === 'SUBMITTED'" v-permission="['attendance:leave:approve']" link type="primary" size="small" @click="handleApproveLv(row, 'APPROVED')">通过</el-button>
-                <el-button v-if="row.approvalStatus === 'SUBMITTED'" v-permission="['attendance:leave:approve']" link type="danger" size="small" @click="handleApproveLv(row, 'REJECTED')">驳回</el-button>
+                <el-button v-if="row.approvalStatus === 'DRAFT'" v-permission="['attendance:leave:approve']" link type="primary" size="small" @click="handleApproveLv(row, 'SUBMITTED')">{{ t('attendance.leave.actions.submit') }}</el-button>
+                <el-button v-if="row.approvalStatus === 'SUBMITTED'" v-permission="['attendance:leave:approve']" link type="primary" size="small" @click="handleApproveLv(row, 'APPROVED')">{{ t('attendance.common.buttons.pass') }}</el-button>
+                <el-button v-if="row.approvalStatus === 'SUBMITTED'" v-permission="['attendance:leave:approve']" link type="danger" size="small" @click="handleApproveLv(row, 'REJECTED')">{{ t('attendance.common.buttons.reject') }}</el-button>
               </template>
             </vxe-column>
           </vxe-table>
@@ -490,103 +490,103 @@ onMounted(() => {
     </el-card>
 
     <!-- 出勤登记 -->
-    <el-dialog v-model="attDialogVisible" title="登记出勤" width="480px">
+    <el-dialog v-model="attDialogVisible" :title="t('attendance.attendance.dialog.title')" width="480px">
       <el-form ref="formRef" :model="attForm" :rules="attFormRules" label-width="100px">
-        <el-form-item label="员工 ID" prop="employeeId">
+        <el-form-item :label="t('attendance.attendance.form.employeeId')" prop="employeeId">
           <el-input-number v-model="attForm.employeeId" :min="1" />
         </el-form-item>
-        <el-form-item label="出勤日期" prop="attendanceDate">
+        <el-form-item :label="t('attendance.attendance.form.attendanceDate')" prop="attendanceDate">
           <el-date-picker v-model="attForm.attendanceDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="签到时间">
+        <el-form-item :label="t('attendance.attendance.form.checkInTime')">
           <el-date-picker v-model="attForm.checkInTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="签退时间">
+        <el-form-item :label="t('attendance.attendance.form.checkOutTime')">
           <el-date-picker v-model="attForm.checkOutTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="工作时长">
+        <el-form-item :label="t('attendance.attendance.form.workHours')">
           <el-input-number v-model="attForm.workHours" :min="0" :max="24" :step="0.5" />
         </el-form-item>
-        <el-form-item label="加班时长">
+        <el-form-item :label="t('attendance.attendance.form.overtimeHours')">
           <el-input-number v-model="attForm.overtimeHours" :min="0" :max="24" :step="0.5" />
         </el-form-item>
-        <el-form-item label="状态">
+        <el-form-item :label="t('attendance.attendance.form.status')">
           <el-select v-model="attForm.status" style="width: 100%">
             <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
-        <el-form-item label="工作日类型">
+        <el-form-item :label="t('attendance.attendance.form.workType')">
           <el-select v-model="attForm.workType" style="width: 100%">
             <el-option v-for="(label, val) in workTypeMap" :key="val" :label="label" :value="val" />
           </el-select>
         </el-form-item>
-        <el-form-item label="备注">
+        <el-form-item :label="t('attendance.attendance.form.remark')">
           <el-input v-model="attForm.remark" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="attDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitAtt">确定</el-button>
+        <el-button @click="attDialogVisible = false">{{ t('attendance.common.buttons.cancel') }}</el-button>
+        <el-button type="primary" @click="submitAtt">{{ t('attendance.common.buttons.ok') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 加班申请 -->
-    <el-dialog v-model="otDialogVisible" title="提交加班" width="520px">
+    <el-dialog v-model="otDialogVisible" :title="t('attendance.overtime.dialog.title')" width="520px">
       <el-form :model="otForm" label-width="100px">
-        <el-form-item label="员工 ID">
+        <el-form-item :label="t('attendance.overtime.form.employeeId')">
           <el-input-number v-model="otForm.employeeId" :min="1" />
         </el-form-item>
-        <el-form-item label="加班日期">
+        <el-form-item :label="t('attendance.overtime.form.overtimeDate')">
           <el-date-picker v-model="otForm.overtimeDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="开始时间">
+        <el-form-item :label="t('attendance.overtime.form.startTime')">
           <el-date-picker v-model="otForm.startTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="结束时间">
+        <el-form-item :label="t('attendance.overtime.form.endTime')">
           <el-date-picker v-model="otForm.endTime" type="datetime" value-format="YYYY-MM-DD HH:mm:ss" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="加班类型">
+        <el-form-item :label="t('attendance.overtime.form.overtimeType')">
           <el-select v-model="otForm.overtimeType" style="width: 100%">
             <el-option v-for="(label, val) in otTypeMap" :key="val" :label="label" :value="val" />
           </el-select>
         </el-form-item>
-        <el-form-item label="倍数">
+        <el-form-item :label="t('attendance.overtime.form.payRate')">
           <el-input-number v-model="otForm.payRate" :min="1" :max="3" :step="0.5" />
         </el-form-item>
-        <el-form-item label="原因">
+        <el-form-item :label="t('attendance.overtime.form.reason')">
           <el-input v-model="otForm.reason" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="otDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitOt">确定</el-button>
+        <el-button @click="otDialogVisible = false">{{ t('attendance.common.buttons.cancel') }}</el-button>
+        <el-button type="primary" @click="submitOt">{{ t('attendance.common.buttons.ok') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 请假申请 -->
-    <el-dialog v-model="lvDialogVisible" title="提交请假" width="520px">
+    <el-dialog v-model="lvDialogVisible" :title="t('attendance.leave.dialog.title')" width="520px">
       <el-form :model="lvForm" label-width="100px">
-        <el-form-item label="员工 ID">
+        <el-form-item :label="t('attendance.leave.form.employeeId')">
           <el-input-number v-model="lvForm.employeeId" :min="1" />
         </el-form-item>
-        <el-form-item label="请假类型">
+        <el-form-item :label="t('attendance.leave.form.leaveType')">
           <el-select v-model="lvForm.leaveType" style="width: 100%">
             <el-option v-for="(label, val) in lvTypeMap" :key="val" :label="label" :value="val" />
           </el-select>
         </el-form-item>
-        <el-form-item label="开始日期">
+        <el-form-item :label="t('attendance.leave.form.startDate')">
           <el-date-picker v-model="lvForm.startDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="结束日期">
+        <el-form-item :label="t('attendance.leave.form.endDate')">
           <el-date-picker v-model="lvForm.endDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="原因">
+        <el-form-item :label="t('attendance.leave.form.reason')">
           <el-input v-model="lvForm.reason" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="lvDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitLv">确定</el-button>
+        <el-button @click="lvDialogVisible = false">{{ t('attendance.common.buttons.cancel') }}</el-button>
+        <el-button type="primary" @click="submitLv">{{ t('attendance.common.buttons.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>

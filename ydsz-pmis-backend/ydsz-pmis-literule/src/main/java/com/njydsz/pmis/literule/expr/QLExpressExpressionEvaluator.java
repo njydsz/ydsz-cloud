@@ -51,6 +51,7 @@ public class QLExpressExpressionEvaluator implements ExpressionEvaluator {
      *   <li>脚本引擎</li>
      * </ul>
      */
+    @SuppressWarnings("unused")
     private static final Pattern DANGEROUS_PATTERN = Pattern.compile(
             "(?i)("
             + "System\\.(exit|getProperties|getenv|setProperty)"

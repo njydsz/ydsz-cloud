@@ -55,6 +55,7 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
      *   <li>脚本引擎：ScriptEngine</li>
      * </ul>
      */
+    @SuppressWarnings("unused")
     private static final Pattern DANGEROUS_PATTERN = Pattern.compile(
             // 类名以完整或部分方式出现即阻断
             "(?i)("

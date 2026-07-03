@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.entity.FlowDmnTableDO;
 import com.njydsz.pmis.workflow.service.FlowDmnTableService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -21,6 +23,7 @@ import java.util.Map;
  * @since 1.3.0
  */
 @Slf4j
+@Tag(name = "DMN 决策表")
 @RestController
 @RequestMapping("/api/v1/workflow/dmn")
 @RequiredArgsConstructor
@@ -36,6 +39,7 @@ public class FlowDmnController {
      * @param tableName 决策表名称模糊过滤（可空）
      * @return 分页结果
      */
+    @Operation(summary = "分页查询决策表")
     @PostMapping("/page")
     public Result<Page<FlowDmnTableDO>> page(@RequestParam(defaultValue = "1") int pageNum,
                                              @RequestParam(defaultValue = "20") int pageSize,
@@ -49,6 +53,7 @@ public class FlowDmnController {
      * @param id 主键 ID
      * @return 决策表定义
      */
+    @Operation(summary = "按 ID 获取决策表详情")
     @GetMapping("/{id}")
     public Result<FlowDmnTableDO> getById(@PathVariable Long id) {
         return Result.ok(dmnTableService.getById(id));
@@ -60,6 +65,7 @@ public class FlowDmnController {
      * @param tableKey 决策表唯一标识
      * @return 决策表定义
      */
+    @Operation(summary = "按 tableKey 获取决策表")
     @GetMapping("/key/{tableKey}")
     public Result<FlowDmnTableDO> getByKey(@PathVariable String tableKey) {
         return Result.ok(dmnTableService.getByKey(tableKey));
@@ -73,6 +79,7 @@ public class FlowDmnController {
      * @param table 决策表定义
      * @return 新建返回主键 ID，更新返回 null
      */
+    @Operation(summary = "新建/更新决策表")
     @PostMapping("/save")
     public Result<Long> save(@RequestBody FlowDmnTableDO table) {
         if (table.getId() != null) {
@@ -88,6 +95,7 @@ public class FlowDmnController {
      * @param id 主键 ID
      * @return 操作结果
      */
+    @Operation(summary = "发布决策表")
     @PostMapping("/{id}/publish")
     public Result<Void> publish(@PathVariable Long id) {
         dmnTableService.publish(id);
@@ -108,6 +116,7 @@ public class FlowDmnController {
      * @param body 请求体，包含 tableKey 与 context
      * @return 输出结果列表（每个匹配规则产生一组输出）
      */
+    @Operation(summary = "执行决策")
     @PostMapping("/execute")
     public Result<List<Map<String, Object>>> execute(@RequestBody Map<String, Object> body) {
         String tableKey = body == null ? null : (String) body.get("tableKey");

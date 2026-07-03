@@ -287,15 +287,6 @@ public class ExpressionSandbox {
     }
 
     /**
-     * 检查标识符是否像变量（小写/下划线开头）
-     */
-    private boolean isVariableLike(String id) {
-        if (id == null || id.isEmpty()) return false;
-        char c = id.charAt(0);
-        return Character.isLowerCase(c) || c == '_' || c == '$';
-    }
-
-    /**
      * 检查标识符是否是链式属性访问（dot chain）的一部分
      *
      * <p>判定规则：当前标识符的紧前一个非空白字符是 "."，

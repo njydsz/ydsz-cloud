@@ -17,29 +17,28 @@
 <template>
   <div class="chaos-dashboard">
     <header class="chaos-dashboard__header">
-      <h2>混沌工程控制台</h2>
+      <h2>{{ t('chaos.title') }}</h2>
       <p class="chaos-dashboard__desc">
-        通过模拟生产故障, 验证系统容错能力. 仅在 <code>dev / staging</code> 环境启用,
-        生产环境必须 <code>pmis.featureflag.CANARY_DEPLOY=false</code>。
+        {{ t('chaos.desc') }}
       </p>
     </header>
 
     <!-- KPI 概览 -->
     <section class="chaos-dashboard__kpis">
       <div class="kpi-card">
-        <div class="kpi-card__label">已注册实验</div>
+        <div class="kpi-card__label">{{ t('chaos.kpi.registered') }}</div>
         <div class="kpi-card__value">{{ experiments.length }}</div>
       </div>
       <div class="kpi-card kpi-card--success">
-        <div class="kpi-card__label">启用中</div>
+        <div class="kpi-card__label">{{ t('chaos.kpi.enabled') }}</div>
         <div class="kpi-card__value">{{ enabledCount }}</div>
       </div>
       <div class="kpi-card kpi-card--warning">
-        <div class="kpi-card__label">已注入 (近 100 条)</div>
+        <div class="kpi-card__label">{{ t('chaos.kpi.injected') }}</div>
         <div class="kpi-card__value">{{ injectedCount }}</div>
       </div>
       <div class="kpi-card kpi-card--info">
-        <div class="kpi-card__label">Feature Flag</div>
+        <div class="kpi-card__label">{{ t('chaos.kpi.flag') }}</div>
         <div class="kpi-card__value kpi-card__value--small">
           {{ canaryDeployFlag ? 'ON' : 'OFF' }}
         </div>
@@ -49,11 +48,11 @@
     <!-- 图表区 -->
     <section class="chaos-dashboard__charts">
       <div class="chart-box">
-        <h4>按 Outcome 分布</h4>
+        <h4>{{ t('chaos.charts.outcomeTitle') }}</h4>
         <div ref="outcomeChartRef" class="chart-canvas" data-test="chart-outcome" />
       </div>
       <div class="chart-box">
-        <h4>按 Target 注入频次 (Top 10)</h4>
+        <h4>{{ t('chaos.charts.targetTitle') }}</h4>
         <div ref="targetChartRef" class="chart-canvas" data-test="chart-target" />
       </div>
     </section>
@@ -61,14 +60,14 @@
     <!-- 实验列表 + 操作 -->
     <section class="chaos-dashboard__experiments">
       <div class="section-header">
-        <h3>实验列表</h3>
+        <h3>{{ t('chaos.experiments.title') }}</h3>
         <el-button
           type="primary"
           :loading="registering"
           @click="onRegister"
           data-test="btn-register"
         >
-          + 注册实验
+          {{ t('chaos.experiments.buttons.register') }}
         </el-button>
       </div>
 
@@ -79,13 +78,13 @@
         data-test="exp-table"
         :loading="loading"
       >
-        <el-table-column prop="target" label="Target" min-width="220" />
-        <el-table-column prop="type" label="类型" width="160">
+        <el-table-column prop="target" :label="t('chaos.experiments.columns.target')" min-width="220" />
+        <el-table-column prop="type" :label="t('chaos.experiments.columns.type')" width="160">
           <template #default="{ row }">
             <el-tag :type="typeTagType(row.type)">{{ row.type }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="参数" min-width="200">
+        <el-table-column :label="t('chaos.experiments.columns.params')" min-width="200">
           <template #default="{ row }">
             <span v-if="row.type === 'LATENCY'">{{ row.latencyMs ?? 0 }} ms</span>
             <span v-else-if="row.type === 'ERROR_RATE'">{{ ((row.errorRate ?? 0) * 100).toFixed(0) }}%</span>
@@ -93,8 +92,8 @@
             <span v-else>-</span>
           </template>
         </el-table-column>
-        <el-table-column prop="description" label="说明" min-width="200" show-overflow-tooltip />
-        <el-table-column label="启用" width="100">
+        <el-table-column prop="description" :label="t('chaos.experiments.columns.description')" min-width="200" show-overflow-tooltip />
+        <el-table-column :label="t('chaos.experiments.columns.enabled')" width="100">
           <template #default="{ row }">
             <el-switch
               :model-value="row.enabled"
@@ -104,7 +103,7 @@
             />
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="220" fixed="right">
+        <el-table-column :label="t('chaos.experiments.columns.action')" width="220" fixed="right">
           <template #default="{ row }">
             <el-button
               size="small"
@@ -113,7 +112,7 @@
               @click="onDryRun(row.target)"
               data-test="btn-dry-run"
             >
-              Dry-Run
+              {{ t('chaos.experiments.buttons.dryRun') }}
             </el-button>
             <el-button
               size="small"
@@ -121,7 +120,7 @@
               :loading="deleting === row.target"
               @click="onUnregister(row.target)"
             >
-              删除
+              {{ t('chaos.experiments.buttons.delete') }}
             </el-button>
           </template>
         </el-table-column>
@@ -131,64 +130,64 @@
     <!-- 历史时间线 -->
     <section class="chaos-dashboard__history">
       <div class="section-header">
-        <h3>注入历史 (最近 {{ history.length }} 条)</h3>
+        <h3>{{ t('chaos.history.title', { count: history.length }) }}</h3>
         <div>
-          <el-button @click="refresh" :loading="loading">刷新</el-button>
+          <el-button @click="refresh" :loading="loading">{{ t('chaos.history.buttons.refresh') }}</el-button>
           <el-button type="danger" plain @click="onClearHistory" data-test="btn-clear-history">
-            清空
+            {{ t('chaos.history.buttons.clear') }}
           </el-button>
         </div>
       </div>
       <el-table :data="history" border max-height="420" data-test="history-table">
-        <el-table-column label="时间" width="200">
+        <el-table-column :label="t('chaos.history.columns.time')" width="200">
           <template #default="{ row }">
             {{ formatTime(row.timestamp) }}
           </template>
         </el-table-column>
-        <el-table-column prop="target" label="Target" min-width="220" />
-        <el-table-column label="Outcome" width="180">
+        <el-table-column prop="target" :label="t('chaos.history.columns.target')" min-width="220" />
+        <el-table-column :label="t('chaos.history.columns.outcome')" width="180">
           <template #default="{ row }">
             <el-tag :type="outcomeTagType(row.outcome)">{{ row.outcome }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="detail" label="详情" min-width="300" show-overflow-tooltip />
+        <el-table-column prop="detail" :label="t('chaos.history.columns.detail')" min-width="300" show-overflow-tooltip />
       </el-table>
     </section>
 
     <!-- 注册弹窗 -->
     <el-dialog
       v-model="dialogVisible"
-      title="注册混沌实验"
+      :title="t('chaos.dialog.registerTitle')"
       width="560px"
       data-test="dialog-register"
     >
       <el-form :model="form" label-width="100px">
-        <el-form-item label="Target" required>
+        <el-form-item :label="t('chaos.dialog.form.target')" required>
           <el-input
             v-model="form.target"
-            placeholder="如: ContractService.getContract"
+            :placeholder="t('chaos.dialog.form.targetPlaceholder')"
             data-test="input-target"
           />
         </el-form-item>
-        <el-form-item label="类型" required>
+        <el-form-item :label="t('chaos.dialog.form.type')" required>
           <el-select v-model="form.type" data-test="select-type">
-            <el-option label="LATENCY (延迟)" value="LATENCY" />
-            <el-option label="EXCEPTION (异常)" value="EXCEPTION" />
-            <el-option label="ERROR_RATE (错误率)" value="ERROR_RATE" />
-            <el-option label="NETWORK_PARTITION (网络分区)" value="NETWORK_PARTITION" />
-            <el-option label="RESOURCE_EXHAUSTION (资源耗尽)" value="RESOURCE_EXHAUSTION" />
+            <el-option :label="t('chaos.dialog.typeOptions.LATENCY')" value="LATENCY" />
+            <el-option :label="t('chaos.dialog.typeOptions.EXCEPTION')" value="EXCEPTION" />
+            <el-option :label="t('chaos.dialog.typeOptions.ERROR_RATE')" value="ERROR_RATE" />
+            <el-option :label="t('chaos.dialog.typeOptions.NETWORK_PARTITION')" value="NETWORK_PARTITION" />
+            <el-option :label="t('chaos.dialog.typeOptions.RESOURCE_EXHAUSTION')" value="RESOURCE_EXHAUSTION" />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="form.type === 'LATENCY'" label="延迟 (ms)">
+        <el-form-item v-if="form.type === 'LATENCY'" :label="t('chaos.dialog.form.latency')">
           <el-input-number v-model="form.latencyMs" :min="0" :max="60_000" />
         </el-form-item>
-        <el-form-item v-if="form.type === 'EXCEPTION'" label="异常类">
+        <el-form-item v-if="form.type === 'EXCEPTION'" :label="t('chaos.dialog.form.exceptionClass')">
           <el-input
             v-model="form.exceptionClass"
             placeholder="java.lang.RuntimeException"
           />
         </el-form-item>
-        <el-form-item v-if="form.type === 'ERROR_RATE'" label="错误率 (0-1)">
+        <el-form-item v-if="form.type === 'ERROR_RATE'" :label="t('chaos.dialog.form.errorRate')">
           <el-input-number
             v-model="form.errorRate"
             :min="0"
@@ -196,22 +195,22 @@
             :step="0.1"
           />
         </el-form-item>
-        <el-form-item label="说明">
+        <el-form-item :label="t('chaos.dialog.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
-        <el-form-item label="启用">
+        <el-form-item :label="t('chaos.dialog.form.enabled')">
           <el-switch v-model="form.enabled" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
         <el-button
           type="primary"
           :loading="registering"
           @click="onSubmitRegister"
           data-test="btn-submit-register"
         >
-          确认注册
+          {{ t('common.ok') }}
         </el-button>
       </template>
     </el-dialog>
@@ -230,6 +229,7 @@
  *   - dryRun:      POST /chaos/dry-run?target=...
  */
 import { computed, onMounted, onBeforeUnmount, reactive, ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useECharts } from '@/composables/useECharts'
 import { useIntervalFn } from '@vueuse/core'
@@ -243,6 +243,8 @@ import {
   clearHistory as apiClearHistory,
 } from '@/api/chaos'
 import type { ChaosExperiment, ChaosEvent, ChaosOutcome, ChaosExperimentType, ChaosDryRunResult } from '@/api/chaos/types'
+
+const { t } = useI18n()
 
 /** 实验列表数据 */
 const experiments = ref<ChaosExperiment[]>([])
@@ -358,7 +360,7 @@ async function refresh() {
     experiments.value = (exps as unknown as { data: ChaosExperiment[] }).data ?? (exps as unknown as ChaosExperiment[])
     history.value = (hist as unknown as { data: ChaosEvent[] }).data ?? (hist as unknown as ChaosEvent[])
   } catch (e) {
-    ElMessage.error('加载混沌数据失败: ' + (e instanceof Error ? e.message : String(e)))
+    ElMessage.error(t('chaos.messages.loadFailed', { message: e instanceof Error ? e.message : String(e) }))
   } finally {
     loading.value = false
   }
@@ -385,10 +387,10 @@ async function onToggle(target: string, enabled: boolean) {
   toggleLoading[target] = true
   try {
     await toggleExperiment(target, enabled)
-    ElMessage.success(`${target} 已${enabled ? '启用' : '停用'}`)
+    ElMessage.success(enabled ? t('chaos.messages.toggleOn', { target }) : t('chaos.messages.toggleOff', { target }))
     await refresh()
   } catch (e) {
-    ElMessage.error('操作失败: ' + (e instanceof Error ? e.message : String(e)))
+    ElMessage.error(t('chaos.messages.opFailed', { message: e instanceof Error ? e.message : String(e) }))
   } finally {
     toggleLoading[target] = false
   }
@@ -399,14 +401,14 @@ async function onToggle(target: string, enabled: boolean) {
  * @param target 实验目标标识
  */
 async function onUnregister(target: string) {
-  await ElMessageBox.confirm(`确定注销实验 ${target} 吗?`, '提示', { type: 'warning' })
+  await ElMessageBox.confirm(t('chaos.messages.confirmUnregister', { target }), t('chaos.messages.unregisterTitle'), { type: 'warning' })
   deleting.value = target
   try {
     await unregisterExperiment(target)
-    ElMessage.success('已注销')
+    ElMessage.success(t('chaos.messages.unregistered'))
     await refresh()
   } catch (e) {
-    ElMessage.error('注销失败: ' + (e instanceof Error ? e.message : String(e)))
+    ElMessage.error(t('chaos.messages.unregisterFailed', { message: e instanceof Error ? e.message : String(e) }))
   } finally {
     deleting.value = null
   }
@@ -422,13 +424,13 @@ async function onDryRun(target: string) {
     const resp = (await dryRun(target)) as unknown as { data?: ChaosDryRunResult } & Partial<ChaosDryRunResult>
     const r: ChaosDryRunResult = resp.data ?? (resp as ChaosDryRunResult)
     if (r.outcome === 'INJECTED') {
-      ElMessage.warning(`Dry-Run 已注入: ${r.error}`)
+      ElMessage.warning(t('chaos.messages.dryRunInjected', { error: r.error }))
     } else {
-      ElMessage.info(`Dry-Run: ${r.outcome}`)
+      ElMessage.info(t('chaos.messages.dryRunOutcome', { outcome: r.outcome }))
     }
     await refresh()
   } catch (e) {
-    ElMessage.error('Dry-Run 失败: ' + (e instanceof Error ? e.message : String(e)))
+    ElMessage.error(t('chaos.messages.dryRunFailed', { message: e instanceof Error ? e.message : String(e) }))
   } finally {
     dryRunning.value = null
   }
@@ -443,17 +445,17 @@ function onRegister() {
 /** 提交注册实验表单，校验 target 必填后调用注册接口 */
 async function onSubmitRegister() {
   if (!form.target.trim()) {
-    ElMessage.warning('Target 必填')
+    ElMessage.warning(t('chaos.messages.targetRequired'))
     return
   }
   registering.value = true
   try {
     await registerExperiment({ ...form })
-    ElMessage.success('已注册')
+    ElMessage.success(t('chaos.messages.registered'))
     dialogVisible.value = false
     await refresh()
   } catch (e) {
-    ElMessage.error('注册失败: ' + (e instanceof Error ? e.message : String(e)))
+    ElMessage.error(t('chaos.messages.registerFailed', { message: e instanceof Error ? e.message : String(e) }))
   } finally {
     registering.value = false
   }
@@ -461,13 +463,13 @@ async function onSubmitRegister() {
 
 /** 清空所有注入历史，需二次确认且不可恢复 */
 async function onClearHistory() {
-  await ElMessageBox.confirm('确定清空所有注入历史? 此操作不可恢复。', '提示', { type: 'warning' })
+  await ElMessageBox.confirm(t('chaos.messages.confirmClear'), t('chaos.messages.clearTitle'), { type: 'warning' })
   try {
     await apiClearHistory()
-    ElMessage.success('已清空')
+    ElMessage.success(t('chaos.messages.cleared'))
     await refresh()
   } catch (e) {
-    ElMessage.error('清空失败: ' + (e instanceof Error ? e.message : String(e)))
+    ElMessage.error(t('chaos.messages.clearFailed', { message: e instanceof Error ? e.message : String(e) }))
   }
 }
 

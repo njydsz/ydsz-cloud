@@ -178,7 +178,6 @@ class FlowHistoryArchiveJobHandlerTest {
 
     // ============ 辅助方法 ============
 
-    @SuppressWarnings("unchecked")
     private void assertNotNullMap(Map<String, Object> parent, String key) {
         Object value = parent.get(key);
         assertTrue(value instanceof Map, key + " 应为 Map 类型");

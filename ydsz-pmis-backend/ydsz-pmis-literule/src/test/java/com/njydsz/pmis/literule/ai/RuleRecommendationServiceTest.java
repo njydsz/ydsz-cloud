@@ -32,7 +32,7 @@ class RuleRecommendationServiceTest {
         aiConfig = new LiteRuleProperties.Ai();
         aiConfig.setRecommendTopN(10);
         healthScoreService = new RuleHealthScoreService(aiConfig);
-        service = new RuleRecommendationService(aiConfig, healthScoreService);
+        service = new RuleRecommendationService(aiConfig);
     }
 
     @Test

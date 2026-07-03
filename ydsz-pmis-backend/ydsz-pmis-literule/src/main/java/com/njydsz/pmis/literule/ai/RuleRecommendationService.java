@@ -3,8 +3,6 @@ package com.njydsz.pmis.literule.ai;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
 import com.njydsz.pmis.literule.config.LiteRuleProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,8 +33,6 @@ import java.util.regex.Pattern;
  */
 public class RuleRecommendationService {
 
-    private static final Logger log = LoggerFactory.getLogger(RuleRecommendationService.class);
-
     /** 变量名提取正则 */
     private static final Pattern IDENTIFIER_PATTERN =
             Pattern.compile("\\b([A-Za-z_][A-Za-z0-9_]{0,63})\\b");
@@ -57,12 +53,9 @@ public class RuleRecommendationService {
     }
 
     private final LiteRuleProperties.Ai aiConfig;
-    private final RuleHealthScoreService healthScoreService;
 
-    public RuleRecommendationService(LiteRuleProperties.Ai aiConfig,
-                                     RuleHealthScoreService healthScoreService) {
+    public RuleRecommendationService(LiteRuleProperties.Ai aiConfig) {
         this.aiConfig = aiConfig;
-        this.healthScoreService = healthScoreService;
     }
 
     /**
@@ -111,7 +104,7 @@ public class RuleRecommendationService {
             }
             Set<String> vars = extractVars(r.getConditionExpression());
             for (String v : vars) {
-                varCount.merge(v, 1, Integer::sum);
+                varCount.merge(v, 1, (a, b) -> a + b);
             }
         }
         if (varCount.isEmpty()) {

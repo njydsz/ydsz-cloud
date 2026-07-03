@@ -8,7 +8,6 @@ import lombok.NoArgsConstructor;
 import java.io.Serial;
 import java.io.Serializable;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -133,6 +132,7 @@ public class CEPPattern implements Serializable {
     /**
      * 从 Map 反序列化（用于 SQL JSON 字段）
      */
+    @SuppressWarnings("unchecked")
     public static CEPPattern fromMap(Map<String, Object> map) {
         if (map == null) return null;
         return CEPPattern.builder()

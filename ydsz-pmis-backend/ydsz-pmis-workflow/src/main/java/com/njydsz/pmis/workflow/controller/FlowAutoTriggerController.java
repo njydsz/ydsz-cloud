@@ -3,6 +3,8 @@ package com.njydsz.pmis.workflow.controller;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.entity.FlowAutoTriggerDO;
 import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.Map;
  * @since 1.3.0
  */
 @Slf4j
+@Tag(name = "流程自动触发规则")
 @RestController
 @RequestMapping("/api/v1/workflow/trigger")
 @RequiredArgsConstructor
@@ -32,6 +35,7 @@ public class FlowAutoTriggerController {
      *
      * @return 触发规则列表
      */
+    @Operation(summary = "列出所有触发规则")
     @GetMapping("/list")
     public Result<List<FlowAutoTriggerDO>> list() {
         return Result.ok(autoTriggerService.listAll());
@@ -43,6 +47,7 @@ public class FlowAutoTriggerController {
      * @param body 请求体，包含 sourceFlowCode / targetFlowCode / conditionExpression / description
      * @return 创建结果
      */
+    @Operation(summary = "创建触发规则")
     @PostMapping
     public Result<Void> create(@RequestBody Map<String, String> body) {
         String sourceFlowCode = body.get("sourceFlowCode");
@@ -58,6 +63,7 @@ public class FlowAutoTriggerController {
      * @param id 规则 ID
      * @return 删除结果
      */
+    @Operation(summary = "删除触发规则")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         autoTriggerService.deleteById(id);
@@ -70,6 +76,7 @@ public class FlowAutoTriggerController {
      * @param id 规则 ID
      * @return 切换后的状态
      */
+    @Operation(summary = "启用/禁用触发规则")
     @PutMapping("/{id}/toggle")
     public Result<Map<String, Object>> toggle(@PathVariable Long id) {
         boolean enabled = autoTriggerService.toggleEnabled(id);

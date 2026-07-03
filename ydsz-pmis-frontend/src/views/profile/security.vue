@@ -13,6 +13,7 @@
  * 4) 修改密码
  */
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   bind2fa,
@@ -33,6 +34,8 @@ import { usePasswordStrength } from '@/composables/usePasswordStrength'
 import { useUserStore } from '@/store/modules/user'
 
 const userStore = useUserStore()
+
+const { t } = useI18n()
 
 // ============= 2FA =============
 /** 2FA 状态信息（是否开启、绑定时间、上次使用时间、备份码剩余数） */
@@ -69,9 +72,9 @@ async function startBind() {
   try {
     const { data } = await bind2fa()
     bindResult.value = data
-    ElMessage.success('已生成密钥，请使用 Authenticator 扫码绑定')
+    ElMessage.success(t('profile.security.twoFA.messages.bindGenerated'))
   } catch (e: any) {
-    ElMessage.error(e?.message || '生成绑定信息失败')
+    ElMessage.error(e?.message || t('profile.security.twoFA.messages.bindFailed'))
   }
 }
 
@@ -85,13 +88,13 @@ async function confirmBind() {
   }
   try {
     await confirm2fa(bindForm.otp)
-    ElMessage.success('绑定成功！建议立即保存下方备份码')
+    ElMessage.success(t('profile.security.twoFA.messages.bindSuccess'))
     bindResult.value = null
     bindForm.otp = ''
     await fetch2faStatus()
     await fetchBackupCodes()
   } catch (e: any) {
-    ElMessage.error(e?.message || '校验失败')
+    ElMessage.error(e?.message || t('profile.security.twoFA.messages.confirmFailed'))
   }
 }
 
@@ -115,12 +118,12 @@ async function fetchBackupCodes() {
 async function onDisable() {
   try {
     await ElMessageBox.confirm(
-      '关闭 2FA 将降低账号安全等级，确定继续？',
-      '关闭双因素认证',
-      { type: 'warning', confirmButtonText: '关闭', cancelButtonText: '取消' },
+      t('profile.security.twoFA.messages.disableTip'),
+      t('profile.security.twoFA.messages.disableTitle'),
+      { type: 'warning', confirmButtonText: t('profile.security.twoFA.messages.disableConfirm'), cancelButtonText: t('profile.security.twoFA.messages.disableCancel') },
     )
     await disable2fa()
-    ElMessage.success('已关闭 2FA')
+    ElMessage.success(t('profile.security.twoFA.messages.disabled'))
     await fetch2faStatus()
   } catch { /* 用户取消 */ }
 }
@@ -149,12 +152,12 @@ async function onKick(row: UserSessionVO) {
   const dev = parseUserAgent(row.userAgent)
   try {
     await ElMessageBox.confirm(
-      `确认下线设备 [${dev.os} · ${dev.browser}]？下线后该设备需重新登录。`,
-      '提示',
+      t('profile.security.session.messages.kickConfirm', { os: dev.os, browser: dev.browser }),
+      t('profile.security.session.messages.kickTitle'),
       { type: 'warning' },
     )
     await invalidateSession(row.sessionId)
-    ElMessage.success('已下线')
+    ElMessage.success(t('profile.security.session.messages.kicked'))
     await fetchSessions()
   } catch { /* 用户取消 */ }
 }
@@ -162,9 +165,13 @@ async function onKick(row: UserSessionVO) {
 /** 下线其他所有设备，仅保留当前会话，需二次确认 */
 async function onKickOthers() {
   try {
-    await ElMessageBox.confirm('确认下线其他所有设备？仅保留当前会话。', '提示', { type: 'warning' })
+    await ElMessageBox.confirm(
+      t('profile.security.session.messages.kickOthersConfirm'),
+      t('profile.security.session.messages.kickTitle'),
+      { type: 'warning' },
+    )
     await kickOtherSessions()
-    ElMessage.success('已下线其他设备')
+    ElMessage.success(t('profile.security.session.messages.kickOthersSuccess'))
     await fetchSessions()
   } catch { /* 用户取消 */ }
 }
@@ -178,16 +185,16 @@ const pwdFormRef = ref<any>()
 const { result: pwdStrength } = usePasswordStrength(
   computed(() => pwdForm.newPassword),
 )
-const pwdRules = {
-  oldPassword: [{ required: true, message: '请输入当前密码', trigger: 'blur' }],
+const pwdRules = computed(() => ({
+  oldPassword: [{ required: true, message: t('profile.security.password.rules.oldRequired'), trigger: 'blur' }],
   newPassword: [
-    { required: true, message: '请输入新密码', trigger: 'blur' },
-    { min: 8, max: 32, message: '密码长度 8-32 位', trigger: 'blur' },
+    { required: true, message: t('profile.security.password.rules.newRequired'), trigger: 'blur' },
+    { min: 8, max: 32, message: t('profile.security.password.rules.newLength'), trigger: 'blur' },
     {
       validator: (_: any, v: string, cb: any) => {
         if (!v) return cb()
         if (pwdStrength.value.score < 3) {
-          return cb(new Error(`密码强度不足（当前：${pwdStrength.value.text}，至少需 3 类规则）`))
+          return cb(new Error(t('profile.security.password.rules.newWeak', { text: pwdStrength.value.text })))
         }
         cb()
       },
@@ -195,16 +202,16 @@ const pwdRules = {
     },
   ],
   confirmPassword: [
-    { required: true, message: '请再次输入新密码', trigger: 'blur' },
+    { required: true, message: t('profile.security.password.rules.confirmRequired'), trigger: 'blur' },
     {
       validator: (_: any, v: string, cb: any) => {
-        if (v !== pwdForm.newPassword) return cb(new Error('两次密码不一致'))
+        if (v !== pwdForm.newPassword) return cb(new Error(t('profile.security.password.rules.confirmMismatch')))
         cb()
       },
       trigger: 'blur',
     },
   ],
-}
+}))
 
 /** 提交修改密码，校验通过后调用后端接口，成功后延时登出并跳转登录页 */
 async function onChangePwd() {
@@ -219,13 +226,13 @@ async function onChangePwd() {
     await import('@/api/user').then(({ changePasswordApi }) =>
       changePasswordApi({ oldPassword: pwdForm.oldPassword, newPassword: pwdForm.newPassword }),
     )
-    ElMessage.success('密码修改成功，请重新登录')
+    ElMessage.success(t('profile.security.password.messages.changed'))
     setTimeout(async () => {
       await userStore.logout()
       location.href = '/#/login'
     }, 1500)
   } catch (e: any) {
-    ElMessage.error(e?.message || '密码修改失败')
+    ElMessage.error(e?.message || t('profile.security.password.messages.changeFailed'))
   }
 }
 
@@ -245,9 +252,9 @@ onMounted(async () => {
           <template #header>
             <div class="card-title">
               <el-icon><Lock /></el-icon>
-              <span>双因素认证 (2FA / TOTP)</span>
-              <el-tag v-if="twoFABound" type="success" size="small">已开启</el-tag>
-              <el-tag v-else type="info" size="small">未开启</el-tag>
+              <span>{{ t('profile.security.twoFA.title') }}</span>
+              <el-tag v-if="twoFABound" type="success" size="small">{{ t('profile.security.twoFA.enabled') }}</el-tag>
+              <el-tag v-else type="info" size="small">{{ t('profile.security.twoFA.notEnabled') }}</el-tag>
             </div>
           </template>
           <el-alert
@@ -255,40 +262,40 @@ onMounted(async () => {
             type="info"
             :closable="false"
             show-icon
-            title="开启双因素认证可大幅提升账号安全"
-            description="使用 Google Authenticator / 微软 Authenticator 扫码绑定，登录时需输入 6 位动态码。"
+            :title="t('profile.security.twoFA.alertTitle')"
+            :description="t('profile.security.twoFA.alertDesc')"
             style="margin-bottom: 16px"
           />
           <div v-if="twoFABound">
             <el-descriptions :column="1" border>
-              <el-descriptions-item label="绑定时间">{{ twoFAStatus.boundAt || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="上次使用">{{ twoFAStatus.lastUsedAt || '-' }}</el-descriptions-item>
-              <el-descriptions-item label="备份码剩余">{{ twoFAStatus.backupCodeCount ?? 0 }} 个</el-descriptions-item>
+              <el-descriptions-item :label="t('profile.security.twoFA.fields.boundAt')">{{ twoFAStatus.boundAt || '-' }}</el-descriptions-item>
+              <el-descriptions-item :label="t('profile.security.twoFA.fields.lastUsedAt')">{{ twoFAStatus.lastUsedAt || '-' }}</el-descriptions-item>
+              <el-descriptions-item :label="t('profile.security.twoFA.fields.backupCodeCount')">{{ twoFAStatus.backupCodeCount ?? 0 }} {{ t('profile.security.twoFA.fields.backupCodeUnit') }}</el-descriptions-item>
             </el-descriptions>
             <div class="actions">
-              <el-button @click="fetchBackupCodes">查看备份码</el-button>
-              <el-button type="danger" @click="onDisable">关闭 2FA</el-button>
+              <el-button @click="fetchBackupCodes">{{ t('profile.security.twoFA.buttons.viewBackup') }}</el-button>
+              <el-button type="danger" @click="onDisable">{{ t('profile.security.twoFA.buttons.disable') }}</el-button>
             </div>
             <el-collapse v-if="backupCodes.length" style="margin-top: 12px">
-              <el-collapse-item title="备份码（脱敏）" name="codes">
+              <el-collapse-item :title="t('profile.security.twoFA.backupCodeTitle')" name="codes">
                 <el-tag v-for="c in backupCodes" :key="c" style="margin: 2px">{{ c }}</el-tag>
               </el-collapse-item>
             </el-collapse>
           </div>
           <div v-else-if="!bindResult">
-            <el-button type="primary" :icon="'Plus'" @click="startBind">开启 2FA</el-button>
+            <el-button type="primary" :icon="'Plus'" @click="startBind">{{ t('profile.security.twoFA.buttons.enable') }}</el-button>
           </div>
           <div v-else>
             <el-steps :active="1" finish-status="success" simple style="margin-bottom: 16px">
-              <el-step title="扫码" />
-              <el-step title="输入 6 位动态码" />
-              <el-step title="完成" />
+              <el-step :title="t('profile.security.twoFA.steps.scan')" />
+              <el-step :title="t('profile.security.twoFA.steps.inputCode')" />
+              <el-step :title="t('profile.security.twoFA.steps.complete')" />
             </el-steps>
             <el-alert
               type="success"
               :closable="false"
               show-icon
-              title="使用 Authenticator 扫描下方 otpauth URI"
+              :title="t('profile.security.twoFA.bind.scanAlert')"
             />
             <el-input
               :model-value="bindResult.otpauthUri"
@@ -302,15 +309,15 @@ onMounted(async () => {
               readonly
               style="margin-bottom: 12px; font-family: monospace"
             >
-              <template #prepend>密钥</template>
+              <template #prepend>{{ t('profile.security.twoFA.bind.secret') }}</template>
             </el-input>
             <el-form ref="bindFormRef" :model="bindForm" inline>
-              <el-form-item prop="otp" :rules="[{ required: true, len: 6, message: '请输入 6 位动态码' }]">
-                <el-input v-model="bindForm.otp" maxlength="6" placeholder="6 位动态码" style="width: 160px; letter-spacing: 4px" />
+              <el-form-item prop="otp" :rules="[{ required: true, len: 6, message: t('profile.security.twoFA.bind.otpRequired') }]">
+                <el-input v-model="bindForm.otp" maxlength="6" :placeholder="t('profile.security.twoFA.bind.otpPlaceholder')" style="width: 160px; letter-spacing: 4px" />
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" @click="confirmBind">确认绑定</el-button>
-                <el-button @click="cancelBind">取消</el-button>
+                <el-button type="primary" @click="confirmBind">{{ t('profile.security.twoFA.buttons.confirmBind') }}</el-button>
+                <el-button @click="cancelBind">{{ t('profile.security.twoFA.buttons.cancel') }}</el-button>
               </el-form-item>
             </el-form>
           </div>
@@ -320,14 +327,14 @@ onMounted(async () => {
           <template #header>
             <div class="card-title">
               <el-icon><Key /></el-icon>
-              <span>修改密码</span>
+              <span>{{ t('profile.security.password.title') }}</span>
             </div>
           </template>
           <el-form ref="pwdFormRef" :model="pwdForm" :rules="pwdRules" label-width="100px">
-            <el-form-item label="当前密码" prop="oldPassword">
+            <el-form-item :label="t('profile.security.password.fields.oldPassword')" prop="oldPassword">
               <el-input v-model="pwdForm.oldPassword" type="password" show-password />
             </el-form-item>
-            <el-form-item label="新密码" prop="newPassword">
+            <el-form-item :label="t('profile.security.password.fields.newPassword')" prop="newPassword">
               <el-input v-model="pwdForm.newPassword" type="password" show-password />
               <PasswordStrengthBar
                 :password="pwdForm.newPassword"
@@ -335,13 +342,13 @@ onMounted(async () => {
                 :show-rules="true"
                 style="margin-top: 6px"
               />
-              <div class="hint">8-32 位，包含大小写/数字/特殊字符中至少 3 类</div>
+              <div class="hint">{{ t('profile.security.password.hint') }}</div>
             </el-form-item>
-            <el-form-item label="确认新密码" prop="confirmPassword">
+            <el-form-item :label="t('profile.security.password.fields.confirmPassword')" prop="confirmPassword">
               <el-input v-model="pwdForm.confirmPassword" type="password" show-password />
             </el-form-item>
             <el-form-item>
-              <el-button type="primary" @click="onChangePwd">保存</el-button>
+              <el-button type="primary" @click="onChangePwd">{{ t('profile.security.password.buttons.save') }}</el-button>
             </el-form-item>
           </el-form>
         </el-card>
@@ -353,7 +360,7 @@ onMounted(async () => {
           <template #header>
             <div class="card-title">
               <el-icon><Monitor /></el-icon>
-              <span>活跃会话</span>
+              <span>{{ t('profile.security.session.title') }}</span>
               <el-button link type="primary" :icon="'Refresh'" :loading="sessionLoading" @click="fetchSessions" />
             </div>
           </template>
@@ -361,11 +368,11 @@ onMounted(async () => {
             type="warning"
             :closable="false"
             show-icon
-            title="同账号最多允许 1 个活跃会话，新登录会踢出旧设备"
+            :title="t('profile.security.session.alert')"
             style="margin-bottom: 12px"
           />
           <vxe-table :data="sessions" :loading="sessionLoading" border height="auto">
-            <vxe-column title="设备" width="120">
+            <vxe-column :title="t('profile.security.session.columns.device')" width="120">
               <template #default="{ row }">
                 <el-icon v-if="parseUserAgent(row.userAgent).device === 'DESKTOP'"><Monitor /></el-icon>
                 <el-icon v-else-if="parseUserAgent(row.userAgent).device === 'MOBILE'"><Iphone /></el-icon>
@@ -374,31 +381,31 @@ onMounted(async () => {
                 <span style="margin-left: 4px; font-size: 12px">{{ parseUserAgent(row.userAgent).os }}</span>
               </template>
             </vxe-column>
-            <vxe-column title="浏览器" width="100">
+            <vxe-column :title="t('profile.security.session.columns.browser')" width="100">
               <template #default="{ row }">
                 <el-tag size="small" type="info">{{ parseUserAgent(row.userAgent).browser }}</el-tag>
               </template>
             </vxe-column>
-            <vxe-column field="clientIp" title="IP" width="120" />
-            <vxe-column field="userAgent" title="客户端" min-width="200" show-overflow />
-            <vxe-column field="loginAt" title="登录时间" width="160" />
-            <vxe-column field="lastActiveAt" title="最近活跃" width="160" />
-            <vxe-column field="status" title="状态" width="100">
+            <vxe-column field="clientIp" :title="t('profile.security.session.columns.ip')" width="120" />
+            <vxe-column field="userAgent" :title="t('profile.security.session.columns.userAgent')" min-width="200" show-overflow />
+            <vxe-column field="loginAt" :title="t('profile.security.session.columns.loginAt')" width="160" />
+            <vxe-column field="lastActiveAt" :title="t('profile.security.session.columns.lastActiveAt')" width="160" />
+            <vxe-column field="status" :title="t('profile.security.session.columns.status')" width="100">
               <template #default="{ row }">
                 <el-tag :type="row.status === 'ACTIVE' ? 'success' : 'info'" size="small">
-                  {{ row.status === 'ACTIVE' ? '当前' : (row.status || '-') }}
+                  {{ row.status === 'ACTIVE' ? t('profile.security.session.status.current') : (row.status || '-') }}
                 </el-tag>
               </template>
             </vxe-column>
-            <vxe-column title="操作" width="80" fixed="right">
+            <vxe-column :title="t('profile.security.session.columns.action')" width="80" fixed="right">
               <template #default="{ row }">
-                <el-button link type="danger" size="small" @click="onKick(row)">下线</el-button>
+                <el-button link type="danger" size="small" @click="onKick(row)">{{ t('profile.security.session.buttons.kick') }}</el-button>
               </template>
             </vxe-column>
-            <template #empty><el-empty description="暂无活跃会话" /></template>
+            <template #empty><el-empty :description="t('profile.security.session.messages.empty')" /></template>
           </vxe-table>
           <div class="actions" style="margin-top: 12px">
-            <el-button type="warning" @click="onKickOthers">下线其他设备</el-button>
+            <el-button type="warning" @click="onKickOthers">{{ t('profile.security.session.buttons.kickOthers') }}</el-button>
           </div>
         </el-card>
       </el-col>

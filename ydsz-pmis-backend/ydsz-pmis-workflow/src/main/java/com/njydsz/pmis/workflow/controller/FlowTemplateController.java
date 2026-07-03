@@ -2,6 +2,8 @@ package com.njydsz.pmis.workflow.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowTemplateService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +22,7 @@ import java.util.Map;
  * @since 1.2.0
  */
 @Slf4j
+@Tag(name = "流程模板市场")
 @RestController
 @RequestMapping("/api/v1/workflow/template")
 @RequiredArgsConstructor
@@ -33,6 +36,7 @@ public class FlowTemplateController {
      * @param category 模板分类（HR/FINANCE/ADMIN/PROJECT），为空则返回全部
      * @return 模板列表（含 templateCode / templateName / category / description / icon / useCount / formPath）
      */
+    @Operation(summary = "模板列表")
     @GetMapping("/list")
     public Result<List<Map<String, Object>>> listTemplates(
             @RequestParam(required = false) String category) {
@@ -45,6 +49,7 @@ public class FlowTemplateController {
      * @param templateCode 模板编码
      * @return 模板详情，含完整的 BPMN 2.0 XML 流程定义
      */
+    @Operation(summary = "模板详情（含 BPMN XML）")
     @GetMapping("/{templateCode}")
     public Result<Map<String, Object>> getTemplate(@PathVariable String templateCode) {
         return Result.ok(templateService.getTemplate(templateCode));
@@ -60,6 +65,7 @@ public class FlowTemplateController {
      * @param flowName     自定义流程名称（可选，为空则使用模板名称）
      * @return 新创建的流程定义 ID
      */
+    @Operation(summary = "导入模板")
     @PostMapping("/{templateCode}/import")
     public Result<Long> importTemplate(@PathVariable String templateCode,
                                        @RequestParam(required = false) String flowName) {
@@ -77,6 +83,7 @@ public class FlowTemplateController {
      * @param category     模板分类（HR/FINANCE/ADMIN/PROJECT/GENERAL）
      * @return 操作结果
      */
+    @Operation(summary = "导出为模板")
     @PostMapping("/export/{definitionId}")
     public Result<Void> exportAsTemplate(@PathVariable Long definitionId,
                                          @RequestParam String templateName,

@@ -53,6 +53,7 @@ public class ShardAwareRuleEngine implements RuleEngine {
     private final ConsistentHashSharder sharder;
 
     /** 节点列表刷新间隔（毫秒） */
+    @SuppressWarnings("unused")
     private final long refreshIntervalMs;
 
     /** 是否启用分片（false 时全部本地执行） */
