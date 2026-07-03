@@ -412,6 +412,93 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         return true;
     }
 
+    // ============================== P2-3: 流程回滚（已完成实例撤销） ==============================
+
+    /** P2-3: 默认允许回滚的最大天数 */
+    private static final int DEFAULT_ROLLBACK_DAYS = 7;
+
+    /** P2-3: 管理员回滚权限编码 */
+    private static final String PERM_INSTANCE_ROLLBACK = "workflow:instance:rollback";
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean rollback(Long instanceId, Long operatorId, String reason, int maxRollbackDays) {
+        FlowInstanceDO instance = getByIdOrThrow(instanceId);
+
+        // 1. 校验：仅 COMPLETED 状态可回滚
+        if (!FlowInstanceStatus.COMPLETED.name().equals(instance.getFlowStatus())) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_a1b2c3d4" + instance.getFlowStatus());
+        }
+
+        // 2. 校验：仅发起人或管理员可回滚
+        boolean isInitiator = instance.getInitiatorId() != null
+                && instance.getInitiatorId().equals(operatorId);
+        boolean isAdmin = false;
+        com.njydsz.pmis.common.security.LoginUser user =
+                com.njydsz.pmis.common.security.SecurityContext.getCurrentOrNull();
+        if (user != null) {
+            isAdmin = user.isSuperAdmin() || user.hasPermission(PERM_INSTANCE_ROLLBACK);
+        }
+        if (!isInitiator && !isAdmin) {
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.workflow.msg_b2c3d4e5");
+        }
+
+        // 3. 校验：回滚原因不能为空
+        if (!StringUtils.hasText(reason)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d4e5f6a7");
+        }
+
+        // 4. 校验：时间窗口
+        int days = maxRollbackDays > 0 ? maxRollbackDays : DEFAULT_ROLLBACK_DAYS;
+        if (instance.getEndAt() != null) {
+            long elapsedDays = java.time.Duration.between(instance.getEndAt(), LocalDateTime.now()).toDays();
+            if (elapsedDays > days) {
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "error.workflow.msg_c3d4e5f6" + days);
+            }
+        }
+
+        // 5. 更新实例状态为 ROLLED_BACK（保留 currentNodeCode/currentNodeName 不变，便于追溯）
+        LocalDateTime now = LocalDateTime.now();
+        Long durationMs = instance.getStartAt() == null
+                ? null
+                : Duration.between(instance.getStartAt(), now).toMillis();
+        instanceMapper.updateStatus(instanceId, FlowInstanceStatus.ROLLED_BACK.name(),
+                instance.getCurrentNodeCode(), instance.getCurrentNodeName(),
+                now, durationMs);
+
+        // 6. 记录回滚元信息到 variable JSON（保留原有变量，仅追加 _rollback 字段）
+        try {
+            Map<String, Object> vars = parseVariables(instance.getVariable());
+            Map<String, Object> rollbackInfo = new LinkedHashMap<>();
+            rollbackInfo.put("operatorId", operatorId);
+            rollbackInfo.put("reason", reason);
+            rollbackInfo.put("rolledBackAt", now.toString());
+            rollbackInfo.put("byAdmin", isAdmin && !isInitiator);
+            vars.put("_rollback", rollbackInfo);
+            instanceMapper.updateVariable(instanceId, JSON.toJSONString(vars));
+        } catch (Exception e) {
+            log.warn("[Flow] 回滚元信息持久化失败: instanceId={} err={}", instanceId, e.getMessage());
+        }
+
+        log.info("[Flow] 回滚流程: instanceId={} operatorId={} reason={} isAdmin={}",
+                instanceId, operatorId, reason, isAdmin && !isInitiator);
+
+        // 7. Prometheus 指标 — 复用 incRecall 计数器
+        if (flowMetrics != null) {
+            flowMetrics.incRecall(instance.getFlowCode());
+        }
+
+        // 8. 触发 onInstanceRolledBack 事件（业务侧可执行补偿）
+        fireEvent(l -> l.onInstanceRolledBack(instanceId, operatorId, reason));
+
+        // 9. 发布 Spring 异步事件
+        publishWorkflowEvent("INSTANCE_ROLLED_BACK", instanceId, null);
+
+        return true;
+    }
+
     // ============================== P2-23: 实例多维分页查询 ==============================
 
     @Override

@@ -426,6 +426,28 @@ public class FlowEngineController {
     }
 
     /**
+     * P2-3: 回滚已完成的流程实例（撤销）
+     *
+     * <p>对标钉钉/飞书的"撤销审批"能力。仅 COMPLETED 状态、回滚时间窗口内（默认 7 天）、
+     * 发起人或拥有 workflow:instance:rollback 权限的管理员可执行。
+     *
+     * @param id             流程实例 ID
+     * @param operatorId     操作人 ID
+     * @param reason         回滚原因
+     * @param maxRollbackDays 允许回滚的最大天数（可选，默认 7）
+     * @return 统一响应结果，包含是否回滚成功
+     */
+    @PostMapping("/instance/{id}/rollback")
+    @Operation(summary = "回滚已完成的流程实例")
+    public Result<Boolean> rollback(@PathVariable String id,
+                                    @RequestParam Long operatorId,
+                                    @RequestParam String reason,
+                                    @RequestParam(required = false, defaultValue = "7") int maxRollbackDays) {
+        Long instanceId = Long.parseLong(id);
+        return Result.ok(instanceService.rollback(instanceId, operatorId, reason, maxRollbackDays));
+    }
+
+    /**
      * 审计轨迹查询
      *
      * @param id 流程实例 ID
@@ -1184,6 +1206,24 @@ public class FlowEngineController {
             @RequestParam(required = false) String endTime) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         return Result.ok(efficiencyService.approvalTrend(tenantId, interval, startTime, endTime));
+    }
+
+    /**
+     * P1: 流程健康度综合评分
+     *
+     * <p>返回 0-100 分综合评分及 EXCELLENT/GOOD/FAIR/POOR 评级，含各维度扣分明细。
+     *
+     * @param startTime 开始时间（可空）
+     * @param endTime   结束时间（可空）
+     * @return 评分结果：score / level / deductions / totalCount / anomalyCount / overdueRate / proxyRate / avgDurationMs
+     */
+    @Operation(summary = "流程健康度综合评分")
+    @GetMapping("/efficiency/health-score")
+    public Result<Map<String, Object>> healthScore(
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        return Result.ok(efficiencyService.healthScore(tenantId, startTime, endTime));
     }
 
     // ============== P0-3 / P2-4: 监控看板聚合端点 ==============

@@ -73,6 +73,33 @@ public interface FlowInstanceService {
     boolean recall(Long instanceId, Long initiatorId);
 
     /**
+     * P2-3: 回滚已完成的流程实例（撤销）
+     *
+     * <p>对标钉钉/飞书的"撤销审批"能力。已完成（COMPLETED）的流程实例，
+     * 在回滚时间窗口内（默认 7 天）可由发起人或管理员撤销：
+     * <ul>
+     *   <li>实例状态置为 ROLLED_BACK，保留全部历史轨迹；</li>
+     *   <li>不再重新推进流程，业务侧（如 ProjectInitiationFlowListener）通过
+     *       监听 onInstanceRolledBack 事件执行补偿逻辑；</li>
+     *   <li>记录回滚操作人、时间、原因到 variable JSON。</li>
+     * </ul>
+     *
+     * <p>校验规则：
+     * <ul>
+     *   <li>仅 COMPLETED 状态可回滚（TERMINATED/REJECTED 不可回滚，已驳回/已终止为最终态）；</li>
+     *   <li>仅发起人或管理员可回滚；</li>
+     *   <li>endAt 距当前时间不得超过 maxRollbackDays（默认 7 天）。</li>
+     * </ul>
+     *
+     * @param instanceId      实例 ID
+     * @param operatorId      操作人 ID（发起人或管理员）
+     * @param reason          回滚原因
+     * @param maxRollbackDays 允许回滚的最大天数（&lt;=0 时使用默认值 7）
+     * @return 是否回滚成功
+     */
+    boolean rollback(Long instanceId, Long operatorId, String reason, int maxRollbackDays);
+
+    /**
      * P2-23: 实例多维分页查询
      *
      * @param businessType 业务类型（可选）

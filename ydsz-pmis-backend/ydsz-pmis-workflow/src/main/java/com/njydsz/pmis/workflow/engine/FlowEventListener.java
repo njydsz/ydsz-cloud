@@ -49,6 +49,18 @@ public interface FlowEventListener {
     /** 实例撤回时触发 */
     default void onInstanceRecalled(Long instanceId, Long initiatorId) {}
 
+    /**
+     * P2-3: 实例回滚时触发（已完成实例被发起人/管理员撤销）
+     *
+     * <p>业务侧（如 ProjectInitiationFlowListener）可监听本事件执行补偿逻辑：
+     * 例如流程审批通过的"项目立项"被回滚，需将项目状态改回"待审批"。
+     *
+     * @param instanceId 实例 ID
+     * @param operatorId 操作人 ID（发起人或管理员）
+     * @param reason     回滚原因
+     */
+    default void onInstanceRolledBack(Long instanceId, Long operatorId, String reason) {}
+
     /** 任务转办时触发 */
     default void onTaskTransferred(Long taskId, Long fromUserId, Long toUserId) {}
 
