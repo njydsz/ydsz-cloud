@@ -556,15 +556,15 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
         a CREATE TABLE in a DROP+CREATE pair (we'll handle that case
         separately to keep the V2 column schema available)."""
         m = re.match(
-            r'^(\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE)(\s+)(\w+)(\s*\()',
+            r'^(\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE)\s+(\w+)\s*(\()',
             line, re.IGNORECASE,
         )
         if not m:
             return line
-        prefix, ws, name, paren = m.groups()
+        prefix, name, paren = m.groups()
         if 'IF NOT EXISTS' in prefix.upper():
             return line
-        return f'{prefix}{ws}{name} IF NOT EXISTS{paren}{line[m.end():]}'
+        return f'{prefix} IF NOT EXISTS {name}{paren}{line[m.end():]}'
 
     # Track which columns currently exist on each table as we write.
     # When we see CREATE TABLE x (...), add all listed cols.
@@ -576,6 +576,11 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
     pending_table_name: str | None = None
     pending_table_depth: int = 0
     pending_table_cols: list[str] = []
+    # Tracks multi-line ALTER TABLE statements: when ALTER TABLE <name>
+    # appears on a line by itself (no ADD COLUMN on the same line), we
+    # remember the table name and scan following lines for
+    # ADD COLUMN [IF NOT EXISTS] <col> until the statement ends with ';'.
+    pending_alter_table: str | None = None
 
     def _consume_create_table_cols(name: str, block_lines: list[str]) -> list[str]:
         """Extract column names from a CREATE TABLE block (lines)."""
@@ -619,6 +624,18 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
     # in-line.
     skipped_fwd_col_count = 0
 
+    # Track which tables have been created by CREATE TABLE in any
+    # earlier file in the migration order. We use this to distinguish
+    # between a `DROP+CREATE` *rebuild* pattern (table already exists
+    # in some earlier migration; DROP+CREATE wants to redefine it) and
+    # a `DROP+CREATE` *first-create* pattern (no earlier migration
+    # creates this table; DROP is just a no-op safety net; CREATE is
+    # the actual definition we want to run). The first case needs the
+    # AUTO-MIGRATION block (skip DROP+CREATE, emit ALTER TABLE ADD
+    # COLUMN). The second case just needs `CREATE TABLE IF NOT
+    # EXISTS` and the DROP can stay as CLEANUP-SKIP.
+    already_created_tables: set[str] = set()
+
     # Per-file pending schema updates from DROP+CREATE rebuild patterns.
     # When we see a `DROP TABLE IF EXISTS x;` followed by a `CREATE TABLE x`
     # we need to (a) skip both, and (b) emit an ALTER TABLE x ADD COLUMN
@@ -631,11 +648,14 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
     def _extract_create_table_block(lines: list[str], start: int) -> tuple[int, list[tuple[str, str]]]:
         """Given lines[start] is `CREATE TABLE x (`, walk forward to find
         the matching `)` and return (end_index, list of (col_name, col_def)).
+
+        col_def is the type+constraint part WITHOUT the leading column
+        name and WITHOUT a trailing comma, and WITHOUT inline -- comments.
+        E.g. `id BIGSERIAL PRIMARY KEY,` -> ('id', 'BIGSERIAL PRIMARY KEY').
         """
         cols = []
         depth = 0
         i = start
-        # Initialize depth with current line
         depth += lines[i].count('(') - lines[i].count(')')
         i += 1
         while i < len(lines):
@@ -650,9 +670,17 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
             if stripped.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK', 'KEY ', 'EXCLUDE')):
                 i += 1
                 continue
-            cm = re.match(r'^"?(\w+)"?(.*?)(,?\s*)$', stripped, re.DOTALL)
+            # Strip inline -- comment if present
+            line_no_comment = re.sub(r'--.*$', '', stripped).rstrip().rstrip(',').rstrip()
+            if not line_no_comment:
+                i += 1
+                continue
+            # Extract first token as column name (may be quoted)
+            cm = re.match(r'^\s*"?(\w+)"?\s+(.+)$', line_no_comment, re.DOTALL)
             if cm:
-                cols.append((cm.group(1), stripped.rstrip(',')))
+                col_name = cm.group(1)
+                col_def = cm.group(2).strip()
+                cols.append((col_name, col_def))
             i += 1
         return (i, cols)
 
@@ -677,9 +705,32 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
         # ---- pre-detect DROP+CREATE rebuild patterns in this file ----
         # For each DROP TABLE IF EXISTS x, look at the next non-blank
         # non-comment line. If it's CREATE TABLE x (optionally without
-        # IF NOT EXISTS), this is a rebuild -- we will skip the whole
-        # block and emit an ALTER TABLE ADD COLUMN.
+        # IF NOT EXISTS), this is a rebuild IF AND ONLY IF some earlier
+        # file already CREATE'd this table (i.e. `table` is in
+        # `already_created_tables`). Otherwise this is a first-create
+        # pattern: the DROP is just a safety net (CLEANUP-SKIP), and
+        # the CREATE must run (we will rewrite it to IF NOT EXISTS
+        # below). The first case is the only one that needs the
+        # AUTO-MIGRATION block.
+        #
+        # Important: after the pre-detect pass we MUST union this
+        # file's CREATE TABLEs into already_created_tables so that
+        # subsequent files can detect their own rebuild patterns.
         file_recreate_alters: list[dict] = []
+        # First pass: identify all CREATE TABLE statements in this file
+        # and the DROP+CREATE pairs. We use a single forward scan.
+        this_file_created: set[str] = set()
+        i = 0
+        while i < len(raw_lines):
+            line_i = raw_lines[i]
+            m_create_anywhere = re.match(
+                r'^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+                line_i, re.IGNORECASE,
+            )
+            if m_create_anywhere:
+                this_file_created.add(m_create_anywhere.group(1).lower())
+            i += 1
+        # Second pass: identify DROP+CREATE rebuild patterns
         i = 0
         while i < len(raw_lines):
             line_i = raw_lines[i]
@@ -690,7 +741,7 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
             if not m_drop:
                 i += 1
                 continue
-            table = m_drop.group(1)
+            table = m_drop.group(1).lower()
             # Find next non-blank, non-comment line
             j = i + 1
             while j < len(raw_lines):
@@ -703,19 +754,35 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                 r'^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
                 raw_lines[j], re.IGNORECASE,
             ) if j < len(raw_lines) else None
-            if m_create and m_create.group(1) == table:
-                end_idx, cols = _extract_create_table_block(raw_lines, j)
-                file_recreate_alters.append({
-                    'table': table,
-                    'cols': cols,
-                    'source_file': f,
-                    'drop_start': i,
-                    'create_start': j,
-                    'create_end': end_idx,
-                })
+            if m_create and m_create.group(1).lower() == table:
+                # Rebuild only if some EARLIER file already created
+                # this table. We use a snapshot of already_created_tables
+                # taken before we union this_file_created.
+                if table in already_created_tables:
+                    end_idx, cols = _extract_create_table_block(raw_lines, j)
+                    file_recreate_alters.append({
+                        'table': table,
+                        'cols': cols,
+                        'source_file': f,
+                        'drop_start': i,
+                        'create_start': j,
+                        'create_end': end_idx,
+                    })
+                    i = end_idx + 1
+                    continue
+                # First-create pattern: skip past the CREATE block in
+                # the pre-detect pass so we don't get confused, but
+                # the actual CREATE line is left for the CLEANUP
+                # + IF-NOT-EXISTS rewrite to handle normally.
+                end_idx, _ = _extract_create_table_block(raw_lines, j)
                 i = end_idx + 1
                 continue
             i += 1
+        # Union this file's CREATE TABLEs into already_created_tables
+        # AFTER the pre-detect pass so that "first CREATE in this
+        # file" is treated as first-create (not rebuild) but "second
+        # CREATE in the same file" still gets the rebuild treatment.
+        already_created_tables |= this_file_created
         pending_recreate_alters.extend(file_recreate_alters)
 
         for i, raw in enumerate(raw_lines):
@@ -1107,6 +1174,16 @@ for m in _re.finditer(
     text, _re.IGNORECASE,
 ):
     known_tables.add(m.group(1))
+# Also scan the SOURCE files: a table that we SKIPPED via
+# CLEANUP-REBUILD still exists in the database (created by an earlier
+# migration) so the validator must consider it known.
+for src_f in sql_files:
+    src_text = src_f.read_text(encoding='utf-8')
+    for m in _re.finditer(
+        r'CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+        src_text, _re.IGNORECASE,
+    ):
+        known_tables.add(m.group(1))
 
 for label, pat in [
     ('ALTER TABLE', _re.compile(r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+(?:\.\w+)+)', _re.IGNORECASE)),

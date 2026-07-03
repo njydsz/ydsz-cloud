@@ -76,7 +76,7 @@ describe('useTable', () => {
 
       const { loading, fetchData } = useTable<TestQuery>(mockFetcher)
 
-      await fetchData()
+      await expect(fetchData()).rejects.toThrow('Network error')
       expect(loading.value).toBe(false)
     })
   })

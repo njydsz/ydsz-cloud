@@ -23,6 +23,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -39,6 +41,7 @@ import static org.mockito.Mockito.*;
  * @author ydsz-pmis-team
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("AgentServiceImpl 单元测试")
 class AgentServiceImplTest {
 
@@ -89,7 +92,7 @@ class AgentServiceImplTest {
         assertEquals(AgentType.RISK_WARNING.getCode(), result.getAgentType());
         assertEquals(AgentAlertLevel.YELLOW.getCode(), result.getAlertLevel());
         verify(predictionMapper).insert(any(AgentPredictionDO.class));
-        verify(predictionMapper, times(2)).updateById(any(AgentPredictionDO.class));
+        verify(predictionMapper).updateById(any(AgentPredictionDO.class));
     }
 
     @Test

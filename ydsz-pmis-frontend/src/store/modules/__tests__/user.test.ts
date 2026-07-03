@@ -176,7 +176,7 @@ describe('User Store', () => {
       store.token = 'some-token'
       mockLogoutApi.mockRejectedValue(new Error('Network error'))
 
-      await store.logout()
+      await expect(store.logout()).rejects.toThrow('Network error')
 
       expect(store.token).toBe('')
       expect(removeToken).toHaveBeenCalled()
