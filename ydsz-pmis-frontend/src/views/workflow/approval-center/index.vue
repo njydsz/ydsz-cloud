@@ -199,4 +199,47 @@ onUnmounted(stopPolling)
 .tab-badge {
   margin-left: 4px;
 }
+
+/* P2-6: 移动端 H5 适配 */
+@media (max-width: 768px) {
+  .approval-center {
+    padding: 8px;
+  }
+
+  .page-header {
+    margin-bottom: 8px;
+
+    h2 {
+      font-size: 16px;
+    }
+
+    &__sub {
+      font-size: 12px;
+    }
+  }
+
+  .approval-tabs {
+    padding: 8px;
+
+    :deep(.el-tabs__header) {
+      margin-bottom: 8px;
+    }
+
+    /* tab 标签紧凑显示 */
+    :deep(.el-tabs__item) {
+      padding: 0 8px;
+      font-size: 13px;
+      height: 36px;
+      line-height: 36px;
+    }
+
+    :deep(.el-tabs__nav-wrap) {
+      overflow-x: auto;
+    }
+  }
+
+  .tab-label {
+    font-size: 13px;
+  }
+}
 </style>

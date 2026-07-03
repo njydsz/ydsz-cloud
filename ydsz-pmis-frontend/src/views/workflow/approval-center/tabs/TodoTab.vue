@@ -14,6 +14,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useResponsive } from '@/composables/useResponsive'
 import { pageTodoTasks, pageDefinitions } from '@/api/workflow'
 import type {
   FlowTaskDTO,
@@ -37,6 +38,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const { t } = useI18n()
+const { isMobile } = useResponsive()
 
 // ===========================================
 // 筛选状态
@@ -698,65 +700,75 @@ onMounted(() => {
       <el-table-column
         v-if="isColumnVisible('operation')"
         :label="t('workflow.approval.columns.operation')"
-        width="420"
+        :width="isMobile ? 110 : 420"
         fixed="right"
       >
         <template #default="{ row }">
           <template v-if="row.taskStatus === 'PENDING' || row.taskStatus === 'CLAIMED'">
-            <!-- 一键通过 -->
+            <!-- 一键通过（PC 端显示，移动端收进 dropdown） -->
             <el-button
-              v-if="row.taskStatus === 'PENDING'"
+              v-if="row.taskStatus === 'PENDING' && !isMobile"
               type="success"
               size="small"
               @click="quickPass(row)"
             >
               {{ t('workflow.approval.actions.quickPass') }}
             </el-button>
-            <!-- 通过（弹窗） -->
+            <!-- 通过（弹窗，PC 端显示，移动端收进 dropdown） -->
             <el-button
-              v-if="row.taskStatus === 'PENDING'"
+              v-if="row.taskStatus === 'PENDING' && !isMobile"
               type="primary"
               size="small"
               @click="openOpDialog('PASS', row)"
             >
               {{ t('workflow.approval.pass') }}
             </el-button>
-            <!-- 驳回 -->
+            <!-- 驳回（PC 端显示，移动端收进 dropdown） -->
             <el-button
-              v-if="row.taskStatus === 'PENDING'"
+              v-if="row.taskStatus === 'PENDING' && !isMobile"
               type="danger"
               size="small"
               @click="openOpDialog('REJECT', row)"
             >
               {{ t('workflow.approval.reject') }}
             </el-button>
-            <!-- 更多操作 -->
+            <!-- 更多操作（移动端承载全部操作） -->
             <el-dropdown size="small">
               <el-button size="small">
-                {{ t('workflow.approval.actions.more') }}<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                {{ isMobile ? '操作' : t('workflow.approval.actions.more') }}<el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item v-if="row.taskStatus === 'PENDING'" @click="quickClaim(row)">
+                  <!-- 移动端独有：一键通过 / 通过 / 驳回 -->
+                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && isMobile" @click="quickPass(row)">
+                    {{ t('workflow.approval.actions.quickPass') }}
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && isMobile" divided @click="openOpDialog('PASS', row)">
+                    {{ t('workflow.approval.pass') }}
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && isMobile" @click="openOpDialog('REJECT', row)">
+                    {{ t('workflow.approval.reject') }}
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && !isMobile" @click="quickClaim(row)">
                     {{ t('workflow.task.claim') }}
                   </el-dropdown-item>
                   <el-dropdown-item @click="quickSaveDraft(row)">{{ t('workflow.approval.actions.saveDraft') }}</el-dropdown-item>
                   <el-dropdown-item @click="quickMarkRead(row)">{{ t('workflow.approval.actions.markRead') }}</el-dropdown-item>
                   <el-dropdown-item @click="quickCommunicate(row)">{{ t('workflow.approval.actions.communicate') }}</el-dropdown-item>
-                  <el-dropdown-item divided @click="openOpDialog('TRANSFER', row)">
+                  <el-dropdown-item v-if="!isMobile" divided @click="openOpDialog('TRANSFER', row)">
                     {{ t('workflow.task.transfer') }}
                   </el-dropdown-item>
-                  <el-dropdown-item @click="openOpDialog('DELEGATE', row)">{{ t('workflow.task.delegate') }}</el-dropdown-item>
-                  <el-dropdown-item @click="openOpDialog('ADD_APPROVER', row)">
+                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('DELEGATE', row)">{{ t('workflow.task.delegate') }}</el-dropdown-item>
+                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('ADD_APPROVER', row)">
                     {{ t('workflow.approval.actions.addApprover') }}
                   </el-dropdown-item>
-                  <el-dropdown-item divided @click="openOpDialog('COUNTERSIGN_BEFORE', row)">
+                  <el-dropdown-item v-if="!isMobile" divided @click="openOpDialog('COUNTERSIGN_BEFORE', row)">
                     {{ t('workflow.approval.actions.countersignBefore') }}
                   </el-dropdown-item>
-                  <el-dropdown-item @click="openOpDialog('COUNTERSIGN_AFTER', row)">
+                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_AFTER', row)">
                     {{ t('workflow.approval.actions.countersignAfter') }}
                   </el-dropdown-item>
-                  <el-dropdown-item @click="openOpDialog('COUNTERSIGN_REMOVE', row)">
+                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_REMOVE', row)">
                     {{ t('workflow.approval.actions.countersignRemove') }}
                   </el-dropdown-item>
                   <el-dropdown-item divided @click="quickUrge(row)">{{ t('workflow.task.urge') }}</el-dropdown-item>
@@ -840,7 +852,7 @@ onMounted(() => {
     <el-dialog
       v-model="opDialog"
       :title="opDialogTitle"
-      width="520px"
+      :width="isMobile ? '90%' : '520px'"
       :close-on-click-modal="false"
     >
       <el-form label-position="top">
@@ -1011,5 +1023,89 @@ onMounted(() => {
   font-weight: 600;
   color: #303133;
   flex: 1;
+}
+
+/* P2-6: 移动端 H5 适配 */
+@media (max-width: 768px) {
+  /* 筛选栏：每行控件堆叠 */
+  .filter-bar-enhanced {
+    padding: 8px;
+
+    &__row {
+      gap: 6px;
+
+      &:first-child {
+        margin-bottom: 6px;
+        padding-bottom: 6px;
+      }
+
+      /* 紧急程度/流程类型/日期/重置 — 独占一行或两列 */
+      .el-radio-group {
+        width: 100%;
+      }
+
+      /* 固定宽度控件改为 100% */
+      :deep(.el-select),
+      :deep(.el-date-editor),
+      :deep(.el-input) {
+        width: 100% !important;
+        flex: 1 1 100%;
+      }
+
+      .el-button {
+        flex-shrink: 0;
+      }
+    }
+
+    &__row--chips {
+      flex-wrap: wrap;
+
+      .chip-tag {
+        font-size: 12px;
+      }
+    }
+  }
+
+  /* 表格：移动端单元格紧凑显示（inline 按钮已通过 v-if 收进 dropdown） */
+  :deep(.el-table) {
+    .el-table__cell {
+      padding: 6px 4px;
+    }
+
+    /* 字体紧凑 */
+    .cell {
+      font-size: 13px;
+    }
+  }
+
+  /* 分页：移动端简化 layout */
+  .pagination {
+    margin-top: 8px;
+    justify-content: center;
+
+    :deep(.el-pagination__total),
+    :deep(.el-pagination__sizes),
+    :deep(.el-pagination__jump) {
+      display: none;
+    }
+
+    :deep(.el-pagination__pages) {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+
+  /* 分组卡片紧凑显示 */
+  .group-card {
+    margin-bottom: 8px;
+
+    &__header {
+      padding: 8px;
+    }
+
+    &__name {
+      font-size: 13px;
+    }
+  }
 }
 </style>

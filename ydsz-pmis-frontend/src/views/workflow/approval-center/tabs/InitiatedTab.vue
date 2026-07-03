@@ -116,4 +116,45 @@ onMounted(loadMy)
   margin-top: 16px;
   justify-content: flex-end;
 }
+
+/* P2-6: 移动端 H5 适配 */
+@media (max-width: 768px) {
+  .filter-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+
+    :deep(.el-input),
+    :deep(.el-select) {
+      width: 100% !important;
+      flex: 1 1 100%;
+    }
+  }
+
+  :deep(.el-table) {
+    .el-table__cell {
+      padding: 6px 4px;
+    }
+
+    .cell {
+      font-size: 13px;
+    }
+  }
+
+  .pagination {
+    margin-top: 8px;
+    justify-content: center;
+
+    :deep(.el-pagination__total),
+    :deep(.el-pagination__sizes),
+    :deep(.el-pagination__jump) {
+      display: none;
+    }
+
+    :deep(.el-pagination__pages) {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  }
+}
 </style>

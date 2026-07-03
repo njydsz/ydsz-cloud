@@ -1,0 +1,37 @@
+{
+  "groups": [
+    {
+      "name": "spring.cloud.gateway",
+      "type": "org.springframework.cloud.gateway.config.GatewayProperties",
+      "sourceType": "org.springframework.cloud.gateway.config.GatewayProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.cloud.gateway.discovery.locator.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable discovery locator"
+    },
+    {
+      "name": "spring.cloud.gateway.discovery.locator.lower-case-service-id",
+      "type": "java.lang.Boolean",
+      "description": "Lower case service id"
+    },
+    {
+      "name": "spring.cloud.gateway.globalcors.cors-configurations",
+      "type": "java.util.Map<java.lang.String, org.springframework.cloud.gateway.config.GlobalCorsProperties>",
+      "description": "Global CORS configurations"
+    },
+    {
+      "name": "spring.cloud.gateway.default-filters",
+      "type": "java.util.List<org.springframework.cloud.gateway.filter.FilterDefinition>",
+      "description": "Default filters"
+    },
+    {
+      "name": "spring.cloud.gateway.httpclient.websocket.max-frame-payload-length",
+      "type": "java.lang.Integer",
+      "description": "WebSocket max frame payload length"
+    }
+  ],
+  "hints": []
+}

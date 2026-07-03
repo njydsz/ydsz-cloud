@@ -10,6 +10,7 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
+import { useResponsive } from '@/composables/useResponsive'
 import {
   getInstance,
   getDiagram,
@@ -40,6 +41,7 @@ import TaskCommentThread from '../components/TaskCommentThread.vue'
 
 const route = useRoute()
 const { t } = useI18n()
+const { isMobile } = useResponsive()
 
 const instance = ref<FlowInstanceDTO | null>(null)
 const diagram = ref<FlowDiagramDTO | null>(null)
@@ -301,7 +303,7 @@ watch(() => route.query.id, () => loadAll())
         />
       </el-tab-pane>
       <el-tab-pane :label="t('workflow.instance.detail')" name="detail">
-        <el-descriptions v-if="instance" :column="2" border>
+        <el-descriptions v-if="instance" :column="isMobile ? 1 : 2" border>
           <el-descriptions-item :label="t('workflow.instance.detailLabels.instanceId')">{{ instance.id }}</el-descriptions-item>
           <el-descriptions-item :label="t('workflow.instance.detailLabels.flowCode')">{{ instance.flowCode }}</el-descriptions-item>
           <el-descriptions-item :label="t('workflow.instance.detailLabels.businessType')">{{ instance.businessType || '-' }}</el-descriptions-item>
@@ -331,7 +333,7 @@ watch(() => route.query.id, () => loadAll())
         opType === 'recall' ? t('workflow.instance.opDialog.recall') :
         opType === 'urge' ? t('workflow.instance.opDialog.urge') : t('workflow.instance.opDialog.default')
       "
-      width="500px"
+      :width="isMobile ? '90%' : '500px'"
     >
       <el-form label-position="top">
         <el-form-item :label="t('workflow.instance.opForm.taskId')" v-if="opType === 'pass' || opType === 'reject' || opType === 'transfer'">
@@ -445,5 +447,65 @@ watch(() => route.query.id, () => loadAll())
   white-space: pre-wrap;
   word-break: break-all;
   margin: 0;
+}
+
+/* P2-6: 移动端 H5 适配 */
+@media (max-width: 768px) {
+  .instance-detail {
+    padding: 8px;
+  }
+
+  .page-header {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+  }
+
+  .header-title {
+    font-size: 14px;
+  }
+
+  .instance-summary {
+    margin-bottom: 8px;
+  }
+
+  /* summary 区已 grid auto-fit，仅需调小 gap */
+  .summary-row {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  /* 操作按钮组：移动端按钮文字省略、icon 优先 */
+  .summary-actions {
+    gap: 6px;
+    padding-top: 8px;
+
+    :deep(.el-button) {
+      padding-left: 10px;
+      padding-right: 10px;
+
+      .el-icon + span {
+        display: none; /* 仅保留 icon，节省横向空间 */
+      }
+    }
+  }
+
+  .detail-tabs {
+    padding: 8px;
+  }
+
+  .diagram-wrap {
+    padding: 8px 0;
+  }
+
+  /* tab 标签紧凑显示 */
+  .detail-tabs :deep(.el-tabs__item) {
+    padding: 0 8px;
+    font-size: 13px;
+  }
+
+  .detail-tabs :deep(.el-tabs__nav-wrap::after) {
+    height: 1px;
+  }
 }
 </style>
