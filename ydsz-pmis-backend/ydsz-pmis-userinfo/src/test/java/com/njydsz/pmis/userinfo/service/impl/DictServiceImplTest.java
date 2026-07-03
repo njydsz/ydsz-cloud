@@ -64,4 +64,38 @@ class DictServiceImplTest {
         item.setItemCode("MALE");
         item.setItemValue("男");
 
-        when(dictItemMapper.selec
+        when(dictItemMapper.selectByTypeCode("GENDER")).thenReturn(List.of(item));
+
+        List<DictItemDO> result = dictService.listItems("GENDER");
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("MALE", result.get(0).getItemCode());
+    }
+
+    @Test
+    @DisplayName("根据类型编码查询字典项为空时返回空列表")
+    void listItems_empty_shouldReturnEmptyList() {
+        when(dictItemMapper.selectByTypeCode("UNKNOWN")).thenReturn(Collections.emptyList());
+
+        List<DictItemDO> result = dictService.listItems("UNKNOWN");
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("刷新字典缓存")
+    void refreshCache_shouldReturnLatestItems() {
+        DictItemDO item = new DictItemDO();
+        item.setId(1L);
+        item.setTypeCode("GENDER");
+        item.setItemCode("FEMALE");
+        item.setItemValue("女");
+
+        when(dictItemMapper.selectByTypeCode("GENDER")).thenReturn(List.of(item));
+
+        List<DictItemDO> result = dictService.refreshCache("GENDER");
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        verify(dictItemMapper).selectByTypeCode("GENDER");
+    }
+}

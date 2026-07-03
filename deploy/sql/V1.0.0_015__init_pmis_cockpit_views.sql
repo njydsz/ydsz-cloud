@@ -9,7 +9,6 @@
 -- ----------------------------
 -- 1. 项目收入 + 成本视图（按 initiation × period）
 -- ----------------------------
-COMMENT ON VIEW pmis_view_initiation_revenue_cost IS '项目收入 + 成本聚合视图: CockpitReportServiceImpl 读取,total_revenue 包含所有收入记录,confirmed_revenue 仅 CONFIRMED 状态;labor/purchase/expense 三类成本分别聚合;LEFT JOIN + COALESCE 保证 0 收入/0 成本项目也出现';
 CREATE OR REPLACE VIEW pmis_view_initiation_revenue_cost AS
 SELECT i.id              AS initiation_id,
        COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r
@@ -27,11 +26,11 @@ SELECT i.id              AS initiation_id,
                   WHERE initiation_id = i.id AND deleted = 0), 0) AS expense_cost
 FROM pmis_project_initiation i
 WHERE i.deleted = 0;
+COMMENT ON VIEW pmis_view_initiation_revenue_cost IS '项目收入 + 成本聚合视图: CockpitReportServiceImpl 读取,total_revenue 包含所有收入记录,confirmed_revenue 仅 CONFIRMED 状态;labor/purchase/expense 三类成本分别聚合;LEFT JOIN + COALESCE 保证 0 收入/0 成本项目也出现';
 
 -- ----------------------------
 -- 2. 项目 EVM 预警分布
 -- ----------------------------
-COMMENT ON VIEW pmis_view_initiation_evm IS '项目 EVM 预警分布视图: 按立项聚合 RED/YELLOW/NORMAL 计数,AdvancedReportService#evmReport 读取,top_alert 取最高等级';
 CREATE OR REPLACE VIEW pmis_view_initiation_evm AS
 SELECT initiation_id,
        CASE
@@ -45,11 +44,11 @@ SELECT initiation_id,
 FROM pmis_evm_measure
 WHERE deleted = 0
 GROUP BY initiation_id;
+COMMENT ON VIEW pmis_view_initiation_evm IS '项目 EVM 预警分布视图: 按立项聚合 RED/YELLOW/NORMAL 计数,AdvancedReportService#evmReport 读取,top_alert 取最高等级';
 
 -- ----------------------------
 -- 3. 经营驾驶舱 KPI 总览视图
 -- ----------------------------
-COMMENT ON VIEW pmis_view_cockpit_overview IS '经营驾驶舱 KPI 总览视图: 单行汇总 active_projects/total_invoiced/confirmed_revenue,CockpitReportController#overview 直接读取';
 CREATE OR REPLACE VIEW pmis_view_cockpit_overview AS
 SELECT
     (SELECT COUNT(*) FROM pmis_project_initiation
@@ -58,22 +57,22 @@ SELECT
         WHERE deleted = 0 AND status IN ('ISSUED','RED_REVERSED'))      AS total_invoiced,
     (SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
         WHERE deleted = 0 AND status = 'ALLOCATED')                     AS confirmed_revenue;
+COMMENT ON VIEW pmis_view_cockpit_overview IS '经营驾驶舱 KPI 总览视图: 单行汇总 active_projects/total_invoiced/confirmed_revenue,CockpitReportController#overview 直接读取';
 
 -- ----------------------------
 -- 4. 项目风险预警视图
 -- ----------------------------
-COMMENT ON VIEW pmis_view_risk_dashboard IS '项目风险预警视图: 按 risk_level 聚合未关闭风险数,AdvancedReportService#riskDashboard 读取';
 CREATE OR REPLACE VIEW pmis_view_risk_dashboard AS
 SELECT risk_level,
        COUNT(*) AS cnt
 FROM pmis_execution_risk
 WHERE deleted = 0 AND status IN ('OPEN','MITIGATING')
 GROUP BY risk_level;
+COMMENT ON VIEW pmis_view_risk_dashboard IS '项目风险预警视图: 按 risk_level 聚合未关闭风险数,AdvancedReportService#riskDashboard 读取';
 
 -- ----------------------------
 -- 5. 人效排行（按员工聚合活跃项目数 + 平均 allocation）
 -- ----------------------------
-COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按员工聚合 active_count/assigned_count/avg_allocation,AdvancedReportService#utilizationRank 读取;Feign + try-catch 降级到 0,跨模块故障不阻塞驾驶舱';
 CREATE OR REPLACE VIEW pmis_view_employee_utilization AS
 SELECT employee_id,
        COUNT(*) FILTER (WHERE status = 'ACTIVE')                    AS active_count,
@@ -83,3 +82,4 @@ SELECT employee_id,
 FROM pmis_resource_assignment
 WHERE deleted = 0
 GROUP BY employee_id;
+COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按员工聚合 active_count/assigned_count/avg_allocation,AdvancedReportService#utilizationRank 读取;Feign + try-catch 降级到 0,跨模块故障不阻塞驾驶舱';

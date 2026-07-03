@@ -1,4 +1,4 @@
-﻿-- ====================================================================
+-- ====================================================================
 -- Nanjing Yunding PMIS database initialization script (single-file merge)
 -- Version: V1.0.0
 -- Target: PostgreSQL 18
@@ -14,6 +14,7 @@
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_001__init_pmis_schema.sql
 -- ====================================================================
+
 -- ====================================================================
 -- 南京云顶 PMIS 数据库初始化脚本
 -- V1.0.0
@@ -781,6 +782,7 @@ ON CONFLICT DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_004__init_pmis_workflow_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 工作流基础模块清理 DDL（Flowable 表已下线）
 -- 版本: V1.0.0_004
@@ -807,6 +809,7 @@ DROP TABLE IF EXISTS pmis_workflow_node_config;
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_005__init_pmis_file_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 文件存储模块 DDL
 -- 版本: V1.0.0_005
@@ -882,6 +885,7 @@ CREATE INDEX IF NOT EXISTS idx_file_bucket ON pmis_file(bucket);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_006__init_pmis_job_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 任务调度模块 DDL
 -- 版本: V1.0.0_006
@@ -983,6 +987,7 @@ CREATE INDEX idx_pjl_start_time ON pmis_job_log(start_time);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_007__init_pmis_message_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 消息通道模块 DDL
 -- 版本: V1.0.0_007
@@ -1088,6 +1093,7 @@ CREATE INDEX idx_pmt_status ON pmis_message_template(status);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_008__init_pmis_audit_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 审计日志模块 DDL
 -- 版本: V1.0.0_008
@@ -1179,6 +1185,7 @@ CREATE INDEX IF NOT EXISTS idx_pol_created ON pmis_operation_log(created_at DESC
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_009__init_pmis_project_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 项目全生命周期模块 DDL
 -- 版本: V1.0.0_009
@@ -1618,6 +1625,7 @@ CREATE INDEX idx_ppcc_status   ON pmis_project_contract_change (status);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_010__init_pmis_execution_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 项目执行/成本/利润模块 DDL
 -- 版本: V1.0.0_010
@@ -2069,6 +2077,7 @@ CREATE INDEX idx_per_trace      ON pmis_execution_risk (provider_trace_id);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_011__init_pmis_batch8_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 批次8 DDL：合同模板/项目变更/项目交付/项目结项/AI智能体
 -- 版本: V1.0.0_011
@@ -2532,6 +2541,7 @@ VALUES
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_012__init_pmis_finance_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 批次9 DDL：开票/回款/客户信用
 -- 版本: V1.0.0_012
@@ -2747,6 +2757,7 @@ CREATE INDEX idx_pfcc_tenant ON pmis_finance_customer_credit(tenant_id);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_013__init_pmis_evm_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 批次10 DDL：EVM 挣值 / 对外报价费率 / 对内成本费率 / 利润测算
 -- 版本: V1.0.0_013
@@ -3021,134 +3032,9 @@ VALUES
 -- ====================================================================
 
 -- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_014__init_pmis_admin_full_perm.sql
--- ====================================================================
--- ====================================================================
--- 9. 初始化菜单权限 + 角色授权 (admin 拥有全部权限)
--- ====================================================================
-
--- 一. 初始化菜单权限
--- 拆成多步插入：先插入顶层节点（parent_id=0），再插入二级子菜单，
--- 最后插入三级按钮权限。每一步都通过 perm_code 关联父节点。
--- 关键：PostgreSQL 在单条 INSERT VALUES 中，所有子查询都在语句开始时求值，
---       看不到同语句中正在插入的行；因此必须分多语句执行。
-
--- 步骤 1：插入顶层节点
-INSERT INTO pmis_permission
-    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
-VALUES
-    (0, 'dashboard',  '仪表盘',   'MENU', '/dashboard',  'dashboard/index', 'odometer',  1, 1, 'ENABLED', 0),
-    (0, 'system',     '系统管理', 'MENU', '/system',     'Layout',          'setting',   2, 1, 'ENABLED', 0),
-    (0, 'business',   '业务管理', 'MENU', '/business',   'Layout',          'briefcase', 3, 1, 'ENABLED', 0),
-    (0, 'execution',  '项目执行', 'MENU', '/execution',  'Layout',          'cpu',       4, 1, 'ENABLED', 0),
-    (0, 'finance',    '财务收支', 'MENU', '/finance',    'Layout',          'credit-card', 5, 1, 'ENABLED', 0),
-    (0, 'report',     '经营报表', 'MENU', '/report',     'Layout',          'data-analysis', 6, 1, 'ENABLED', 0),
-    (0, 'ai',         '智能助手', 'MENU', '/ai',         'Layout',          'magic-stick',  7, 1, 'ENABLED', 0)
-ON CONFLICT (perm_code, deleted) DO NOTHING;
-
--- 步骤 2a：插入系统管理子菜单
-INSERT INTO pmis_permission
-    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
-VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:user',     '用户管理',     'MENU', '/system/user',     'system/user/index',     'user',     1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:role',     '角色管理',     'MENU', '/system/role',     'system/role/index',     'avatar',   2, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:menu',     '菜单管理',     'MENU', '/system/menu',     'system/menu/index',     'menu',     3, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:dept',     '部门管理',     'MENU', '/system/dept',     'system/dept/index',     'office-building', 4, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:dict',     '数据字典',     'MENU', '/system/dict',     'system/dict/index',     'collection', 5, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:job-level','职级管理',     'MENU', '/system/job-level','system/job-level/index', 'medal',    6, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:config',   '参数配置',     'MENU', '/system/config',   'system/config/index',   'tools',    7, 1, 'ENABLED', 0)
-ON CONFLICT (perm_code, deleted) DO NOTHING;
-
--- 步骤 2b：插入业务根子菜单
-INSERT INTO pmis_permission
-    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
-VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:opportunity', '商机管理', 'MENU', '/business/opportunity', 'business/opportunity/index', 'lightbulb', 1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:initiation',  '立项管理', 'MENU', '/business/initiation',  'business/initiation/index',  'document', 2, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:contract',     '合同管理', 'MENU', '/business/contract',     'business/contract/index',     'tickets', 3, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:change',       '变更管理', 'MENU', '/business/change',       'business/change/index',       'refresh', 4, 1, 'ENABLED', 0)
-ON CONFLICT (perm_code, deleted) DO NOTHING;
-
--- 步骤 2c：插入执行根子菜单
-INSERT INTO pmis_permission
-    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
-VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:wbs',         'WBS 任务',  'MENU', '/execution/wbs',         'execution/wbs/index',         'list',     1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:timesheet',   '工时管理',  'MENU', '/execution/timesheet',   'execution/timesheet/index',   'timer',    2, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:attendance',  '考勤管理',  'MENU', '/execution/attendance',  'execution/attendance/index',  'calendar', 3, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:cost',        '成本管理',  'MENU', '/execution/cost',        'execution/cost/index',        'money',    4, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:revenue',     '收入管理',  'MENU', '/execution/revenue',     'execution/revenue/index',     'wallet',   5, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:risk',        '风险登记',  'MENU', '/execution/risk',        'execution/risk/index',        'warning',  6, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:profit',      '利润分析',  'MENU', '/execution/profit',      'execution/profit/index',      'data-line',7, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:delivery',    '交付管理',  'MENU', '/execution/delivery',    'execution/delivery/index',    'box',      8, 1, 'ENABLED', 0)
-ON CONFLICT (perm_code, deleted) DO NOTHING;
-
--- 步骤 2d：插入财务根子菜单
-INSERT INTO pmis_permission
-    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
-VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'finance'), 'finance:invoice',  '发票管理', 'MENU', '/finance/invoice',  'finance/invoice/index',  'document-copy', 1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'finance'), 'finance:payment',  '回款管理', 'MENU', '/finance/payment',  'finance/payment/index',  'bank-card',    2, 1, 'ENABLED', 0)
-ON CONFLICT (perm_code, deleted) DO NOTHING;
-
--- 步骤 2e：插入报表根子菜单
-INSERT INTO pmis_permission
-    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
-VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:profit',    '项目利润',   'MENU', '/report/profit',    'report/profit/index',    'pie-chart',    1, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:cost',      '成本明细',   'MENU', '/report/cost',      'report/cost/index',      'data-board',   2, 1, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:lifecycle', '生命周期台账', 'MENU', '/report/lifecycle', 'report/lifecycle/index', 'connection',   3, 1, 'ENABLED', 0)
-ON CONFLICT (perm_code, deleted) DO NOTHING;
-
--- 步骤 2f：插入 AI 根子菜单
-INSERT INTO pmis_permission
-    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
-VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'ai'), 'ai:agents',  'AI Agents', 'MENU', '/ai/agents', 'ai/agents/index', 'chat-dot-round', 1, 1, 'ENABLED', 0)
-ON CONFLICT (perm_code, deleted) DO NOTHING;
-
--- 步骤 3：插入按钮级权限（依赖步骤 2 的二级菜单）
-INSERT INTO pmis_permission
-    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
-VALUES
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:create', '新增用户', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:update', '编辑用户', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:delete', '删除用户', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:reset',  '重置密码', 'BUTTON', null, null, null, 4, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:create', '新增角色', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:update', '编辑角色', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:delete', '删除角色', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:assign', '分配权限', 'BUTTON', null, null, null, 4, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:menu'), 'auth:perm:create', '新增菜单', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:menu'), 'auth:perm:update', '编辑菜单', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
-    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:menu'), 'auth:perm:delete', '删除菜单', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0)
-ON CONFLICT (perm_code, deleted) DO NOTHING;
-
--- 二. SUPER_ADMIN 角色绑定所有权限
-INSERT INTO pmis_role_permission (role_id, permission_id)
-SELECT
-    (SELECT id FROM pmis_role WHERE role_code = 'SUPER_ADMIN'),
-    p.id
-FROM pmis_permission p
-WHERE p.deleted = 0
-  AND p.status = 'ENABLED'
-ON CONFLICT DO NOTHING;
-
--- 三. admin 用户绑定到 SUPER_ADMIN 角色
-INSERT INTO pmis_user_role (user_id, role_id, created_by)
-SELECT
-    (SELECT id FROM pmis_user_account WHERE username = 'admin'),
-    (SELECT id FROM pmis_role WHERE role_code = 'SUPER_ADMIN'),
-    0
-ON CONFLICT DO NOTHING;
-
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_014__init_pmis_admin_full_perm.sql
--- ====================================================================
-
--- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_014_1__init_pmis_resource_bench_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 批次11 DDL：资源池 + 人员标签 + 资源分配 + Bench 闲置
 -- 版本: V1.0.0_014
@@ -3354,8 +3240,136 @@ VALUES
 -- ====================================================================
 
 -- ====================================================================
+-- >>>>>>>>>> START OF V1.0.0_014__init_pmis_admin_full_perm.sql
+-- ====================================================================
+
+-- ====================================================================
+-- 9. 初始化菜单权限 + 角色授权 (admin 拥有全部权限)
+-- ====================================================================
+
+-- 一. 初始化菜单权限
+-- 拆成多步插入：先插入顶层节点（parent_id=0），再插入二级子菜单，
+-- 最后插入三级按钮权限。每一步都通过 perm_code 关联父节点。
+-- 关键：PostgreSQL 在单条 INSERT VALUES 中，所有子查询都在语句开始时求值，
+--       看不到同语句中正在插入的行；因此必须分多语句执行。
+
+-- 步骤 1：插入顶层节点
+INSERT INTO pmis_permission
+    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
+VALUES
+    (0, 'dashboard',  '仪表盘',   'MENU', '/dashboard',  'dashboard/index', 'odometer',  1, 1, 'ENABLED', 0),
+    (0, 'system',     '系统管理', 'MENU', '/system',     'Layout',          'setting',   2, 1, 'ENABLED', 0),
+    (0, 'business',   '业务管理', 'MENU', '/business',   'Layout',          'briefcase', 3, 1, 'ENABLED', 0),
+    (0, 'execution',  '项目执行', 'MENU', '/execution',  'Layout',          'cpu',       4, 1, 'ENABLED', 0),
+    (0, 'finance',    '财务收支', 'MENU', '/finance',    'Layout',          'credit-card', 5, 1, 'ENABLED', 0),
+    (0, 'report',     '经营报表', 'MENU', '/report',     'Layout',          'data-analysis', 6, 1, 'ENABLED', 0),
+    (0, 'ai',         '智能助手', 'MENU', '/ai',         'Layout',          'magic-stick',  7, 1, 'ENABLED', 0)
+ON CONFLICT (perm_code, deleted) DO NOTHING;
+
+-- 步骤 2a：插入系统管理子菜单
+INSERT INTO pmis_permission
+    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
+VALUES
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:user',     '用户管理',     'MENU', '/system/user',     'system/user/index',     'user',     1, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:role',     '角色管理',     'MENU', '/system/role',     'system/role/index',     'avatar',   2, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:menu',     '菜单管理',     'MENU', '/system/menu',     'system/menu/index',     'menu',     3, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:dept',     '部门管理',     'MENU', '/system/dept',     'system/dept/index',     'office-building', 4, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:dict',     '数据字典',     'MENU', '/system/dict',     'system/dict/index',     'collection', 5, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:job-level','职级管理',     'MENU', '/system/job-level','system/job-level/index', 'medal',    6, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system'), 'system:config',   '参数配置',     'MENU', '/system/config',   'system/config/index',   'tools',    7, 1, 'ENABLED', 0)
+ON CONFLICT (perm_code, deleted) DO NOTHING;
+
+-- 步骤 2b：插入业务根子菜单
+INSERT INTO pmis_permission
+    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
+VALUES
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:opportunity', '商机管理', 'MENU', '/business/opportunity', 'business/opportunity/index', 'lightbulb', 1, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:initiation',  '立项管理', 'MENU', '/business/initiation',  'business/initiation/index',  'document', 2, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:contract',     '合同管理', 'MENU', '/business/contract',     'business/contract/index',     'tickets', 3, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'business'), 'business:change',       '变更管理', 'MENU', '/business/change',       'business/change/index',       'refresh', 4, 1, 'ENABLED', 0)
+ON CONFLICT (perm_code, deleted) DO NOTHING;
+
+-- 步骤 2c：插入执行根子菜单
+INSERT INTO pmis_permission
+    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
+VALUES
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:wbs',         'WBS 任务',  'MENU', '/execution/wbs',         'execution/wbs/index',         'list',     1, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:timesheet',   '工时管理',  'MENU', '/execution/timesheet',   'execution/timesheet/index',   'timer',    2, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:attendance',  '考勤管理',  'MENU', '/execution/attendance',  'execution/attendance/index',  'calendar', 3, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:cost',        '成本管理',  'MENU', '/execution/cost',        'execution/cost/index',        'money',    4, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:revenue',     '收入管理',  'MENU', '/execution/revenue',     'execution/revenue/index',     'wallet',   5, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:risk',        '风险登记',  'MENU', '/execution/risk',        'execution/risk/index',        'warning',  6, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:profit',      '利润分析',  'MENU', '/execution/profit',      'execution/profit/index',      'data-line',7, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'execution'), 'execution:delivery',    '交付管理',  'MENU', '/execution/delivery',    'execution/delivery/index',    'box',      8, 1, 'ENABLED', 0)
+ON CONFLICT (perm_code, deleted) DO NOTHING;
+
+-- 步骤 2d：插入财务根子菜单
+INSERT INTO pmis_permission
+    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
+VALUES
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'finance'), 'finance:invoice',  '发票管理', 'MENU', '/finance/invoice',  'finance/invoice/index',  'document-copy', 1, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'finance'), 'finance:payment',  '回款管理', 'MENU', '/finance/payment',  'finance/payment/index',  'bank-card',    2, 1, 'ENABLED', 0)
+ON CONFLICT (perm_code, deleted) DO NOTHING;
+
+-- 步骤 2e：插入报表根子菜单
+INSERT INTO pmis_permission
+    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
+VALUES
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:profit',    '项目利润',   'MENU', '/report/profit',    'report/profit/index',    'pie-chart',    1, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:cost',      '成本明细',   'MENU', '/report/cost',      'report/cost/index',      'data-board',   2, 1, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'report'), 'report:lifecycle', '生命周期台账', 'MENU', '/report/lifecycle', 'report/lifecycle/index', 'connection',   3, 1, 'ENABLED', 0)
+ON CONFLICT (perm_code, deleted) DO NOTHING;
+
+-- 步骤 2f：插入 AI 根子菜单
+INSERT INTO pmis_permission
+    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
+VALUES
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'ai'), 'ai:agents',  'AI Agents', 'MENU', '/ai/agents', 'ai/agents/index', 'chat-dot-round', 1, 1, 'ENABLED', 0)
+ON CONFLICT (perm_code, deleted) DO NOTHING;
+
+-- 步骤 3：插入按钮级权限（依赖步骤 2 的二级菜单）
+INSERT INTO pmis_permission
+    (parent_id, perm_code, perm_name, perm_type, path, component, icon, sort_order, visible, status, created_by)
+VALUES
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:create', '新增用户', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:update', '编辑用户', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:delete', '删除用户', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:user'), 'auth:user:reset',  '重置密码', 'BUTTON', null, null, null, 4, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:create', '新增角色', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:update', '编辑角色', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:delete', '删除角色', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:role'), 'auth:role:assign', '分配权限', 'BUTTON', null, null, null, 4, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:menu'), 'auth:perm:create', '新增菜单', 'BUTTON', null, null, null, 1, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:menu'), 'auth:perm:update', '编辑菜单', 'BUTTON', null, null, null, 2, 0, 'ENABLED', 0),
+    ((SELECT id FROM pmis_permission WHERE perm_code = 'system:menu'), 'auth:perm:delete', '删除菜单', 'BUTTON', null, null, null, 3, 0, 'ENABLED', 0)
+ON CONFLICT (perm_code, deleted) DO NOTHING;
+
+-- 二. SUPER_ADMIN 角色绑定所有权限
+INSERT INTO pmis_role_permission (role_id, permission_id)
+SELECT
+    (SELECT id FROM pmis_role WHERE role_code = 'SUPER_ADMIN'),
+    p.id
+FROM pmis_permission p
+WHERE p.deleted = 0
+  AND p.status = 'ENABLED'
+ON CONFLICT DO NOTHING;
+
+-- 三. admin 用户绑定到 SUPER_ADMIN 角色
+INSERT INTO pmis_user_role (user_id, role_id, created_by)
+SELECT
+    (SELECT id FROM pmis_user_account WHERE username = 'admin'),
+    (SELECT id FROM pmis_role WHERE role_code = 'SUPER_ADMIN'),
+    0
+ON CONFLICT DO NOTHING;
+
+-- ====================================================================
+-- >>>>>>>>>> END OF V1.0.0_014__init_pmis_admin_full_perm.sql
+-- ====================================================================
+
+-- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_015__init_pmis_cockpit_views.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_015  经营驾驶舱 + 高级报表  视图脚本
 -- ============================================================
@@ -3449,6 +3463,7 @@ COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按员工
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_016__init_pmis_security.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_016  权限安全体系  脚本
 -- ============================================================
@@ -3682,6 +3697,7 @@ CREATE INDEX IF NOT EXISTS idx_user_session_expire      ON pmis_user_session (ex
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_017__init_pmis_after_sales_schema.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_017  项目售后管理  脚本
 -- ============================================================
@@ -3888,6 +3904,7 @@ CREATE INDEX IF NOT EXISTS idx_satisfaction_code ON pmis_satisfaction(survey_cod
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_018__init_pmis_smart_p4_2_schema.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_018  智能化升级 P4-1/P4-2/P4-3  脚本
 -- ============================================================
@@ -4008,6 +4025,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uk_reconcile_daily
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_019__init_pmis_alert_thresholds.sql
 -- ====================================================================
+
 -- ====================================================================
 -- 预警阈值配置（pmis_config，group=alert）
 --
@@ -4052,6 +4070,7 @@ ON CONFLICT (config_group, config_key, deleted) DO UPDATE
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_020__init_pmis_billable_utilization_snapshot.sql
 -- ====================================================================
+
 -- ====================================================================
 -- V1.0.0_020  可计费利用率快照表
 --
@@ -4135,6 +4154,7 @@ COMMENT ON COLUMN pmis_billable_utilization_snapshot.deleted IS '逻辑删除: 0
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_021__register_pmis_smart_jobs.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_021  智能化升级 P5/P6/P7  定时任务注册
 -- ============================================================
@@ -4198,6 +4218,7 @@ VALUES (
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_022__init_pmis_alert_templates.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_022  智能化升级 P5  消息模板（预警中心）
 -- ============================================================
@@ -4274,6 +4295,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALE
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_023__init_pmis_flow_engine.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 自建工作流引擎 DDL（对标 Warm-Flow 7 表极简设计）
 -- 版本: V1.0.0_023
@@ -4486,13 +4508,16 @@ COMMENT ON COLUMN pmis_flow_instance.duration_ms IS '总耗时(毫秒)';
 COMMENT ON COLUMN pmis_flow_instance.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_instance.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
-CREATE UNIQUE INDEX uk_pfi_biz ON pmis_flow_instance(business_type, business_id) WHERE deleted = 0;
-CREATE INDEX        idx_pfi_def         ON pmis_flow_instance(definition_id);
-CREATE INDEX        idx_pfi_code        ON pmis_flow_instance(flow_code);
-CREATE INDEX        idx_pfi_status      ON pmis_flow_instance(flow_status);
-CREATE INDEX        idx_pfi_initiator   ON pmis_flow_instance(initiator_id);
-CREATE INDEX        idx_pfi_tenant      ON pmis_flow_instance(tenant_id);
-CREATE INDEX        idx_pfi_start       ON pmis_flow_instance(start_at);
+-- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_finance_invoice) 的
+--      索引同名 (idx_pfi_status),触发"关系已存在"报错。改为
+--      flow_instance_ 前缀以彻底避免跨模块索引名冲突。
+CREATE UNIQUE INDEX uk_flow_instance_biz ON pmis_flow_instance(business_type, business_id) WHERE deleted = 0;
+CREATE INDEX        idx_flow_instance_def         ON pmis_flow_instance(definition_id);
+CREATE INDEX        idx_flow_instance_code        ON pmis_flow_instance(flow_code);
+CREATE INDEX        idx_flow_instance_status      ON pmis_flow_instance(flow_status);
+CREATE INDEX        idx_flow_instance_initiator   ON pmis_flow_instance(initiator_id);
+CREATE INDEX        idx_flow_instance_tenant      ON pmis_flow_instance(tenant_id);
+CREATE INDEX        idx_flow_instance_start       ON pmis_flow_instance(start_at);
 
 -- -----------------------------------------------------
 -- 5. 待办任务表（对标 Warm-Flow flow_task）
@@ -4723,6 +4748,7 @@ ON CONFLICT (flow_code, version, tenant_id) WHERE deleted = 0 DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_024__add_version_to_core_tables.sql
 -- ====================================================================
+
 -- ========================================================
 -- V1.0.0_024__add_version_to_core_tables.sql
 -- P1-12 乐观锁（@Version）覆盖核心实体
@@ -4791,6 +4817,7 @@ COMMENT ON COLUMN pmis_execution_ops_ticket.version IS '乐观锁版本号（P1-
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_025__add_pmis_flow_audit_log.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 工作流审计日志表 DDL（对标竞品审批轨迹能力）
 -- 版本: V1.0.0_025
@@ -4866,6 +4893,7 @@ CREATE INDEX idx_pfal_tenant     ON pmis_flow_audit_log(tenant_id);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_026__add_pmis_flow_cc.sql
 -- ====================================================================
+
 -- =============================================================
 -- V1.0.0_026__add_pmis_flow_cc.sql
 -- 流程抄送表
@@ -4975,6 +5003,7 @@ CREATE INDEX idx_pmis_flow_cc_rule_tenant
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_027__init_undo_log.sql
 -- ====================================================================
+
 -- ====================================================================
 --  Seata AT 模式 undo_log 表
 --  --------------------------------------------------------------------
@@ -5032,6 +5061,7 @@ COMMENT ON COLUMN undo_log.log_modified IS '最后修改时间';
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_028__add_flow_gap_columns.sql
 -- ====================================================================
+
 -- =============================================================
 -- V1.0.0_028__add_flow_gap_columns.sql
 -- 工作流引擎对标差距补全 — 新增字段
@@ -5083,6 +5113,7 @@ COMMENT ON COLUMN pmis_flow_task.version IS 'GAP-P1: 乐观锁版本号 — 会�
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_029__add_pmis_flow_timer.sql
 -- ====================================================================
+
 -- =============================================================
 -- V1.0.0_029__add_pmis_flow_timer.sql
 -- 工作流定时器节点 + 边界定时器
@@ -5181,6 +5212,7 @@ VALUES (
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_030__add_pmis_flow_delegate_auth.sql
 -- ====================================================================
+
 -- =============================================================
 -- V1.0.0_030__add_pmis_flow_delegate_auth.sql
 -- 流程委派代理（长期授权）
@@ -5310,6 +5342,7 @@ CREATE INDEX idx_pmis_flow_delegate_log_delegate
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_031__init_report_subscription.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_031  P1-5 报表订阅与导出记录表
 -- ============================================================
@@ -5374,6 +5407,7 @@ CREATE INDEX idx_report_export_status ON pmis_report_export_record (status) WHER
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_032__register_report_jobs.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_032  P1-5 注册报表定时任务
 -- ============================================================
@@ -5440,6 +5474,7 @@ VALUES (
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_033__add_pmis_flow_weight.sql
 -- ====================================================================
+
 -- =============================================================
 -- V1.0.0_031__add_pmis_flow_weight.sql
 -- 流程多实例会签权重 + VOTE 通过率
@@ -5472,6 +5507,7 @@ COMMENT ON COLUMN pmis_flow_task.vote_pass_rate IS 'VOTE 模式通过率阈值�
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_034__add_pmis_flow_sla_reminder.sql
 -- ====================================================================
+
 -- =============================================================
 -- V1.0.0_034__add_pmis_flow_sla_reminder.sql
 -- 流程 SLA 超时自动策略 + 催办计数
@@ -5527,6 +5563,7 @@ COMMENT ON COLUMN pmis_flow_task.sla_escalated    IS '是否已升级（0 否 / 
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_035__register_consistency_job.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_035  P2-6 注册数据一致性校验定时任务
 -- ============================================================
@@ -5563,6 +5600,7 @@ VALUES (
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_036__init_export_record.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_036  P2-11 异步导出记录表（下载中心）
 -- ============================================================
@@ -5614,6 +5652,7 @@ CREATE INDEX idx_export_status ON pmis_export_record (status) WHERE completed_at
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_037__init_pmis_flow_archive.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_037  P2-3 流程历史归档表
 -- ============================================================
@@ -5676,12 +5715,6 @@ CREATE TABLE pmis_flow_his_variable (
     archived_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
-COMMENT ON COLUMN pmis_flow_his_variable.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_flow_his_variable.instance_id IS '褰掓。瀹炰緥 ID (瀵瑰簲 pmis_flow_his_instance.id)';
-COMMENT ON COLUMN pmis_flow_his_variable.var_key IS '鍙橀噺閿?;
-COMMENT ON COLUMN pmis_flow_his_variable.var_value IS '鍙橀噺鍊?(瀛楃涓插舰寮?';
-COMMENT ON COLUMN pmis_flow_his_variable.archived_at IS '褰掓。鏃堕棿';
-
 COMMENT ON TABLE pmis_flow_his_variable IS '流程变量归档表: instance.variable JSON 拆分到独立行';
 
 CREATE INDEX idx_pfhv_instance ON pmis_flow_his_variable(instance_id);
@@ -5721,6 +5754,7 @@ ON CONFLICT (job_name, tenant_id) DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_038__add_pmis_flow_canary.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_038  P3-1 流程定义灰度发布字段
 -- ============================================================
@@ -5765,6 +5799,7 @@ CREATE INDEX IF NOT EXISTS idx_pfd_canary_status
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_039__init_pmis_attendance_schema.sql
 -- ====================================================================
+
 -- =====================================================
 -- PMIS 批次12 DDL：考勤管理(出勤/加班/请假)
 -- 版本: V1.0.0_015
@@ -5921,6 +5956,7 @@ CREATE INDEX idx_pl_status ON pmis_leave(approval_status);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_040__add_audit_diff_fields.sql
 -- ====================================================================
+
 -- 审计日志增加变更前后数据字段
 ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS before_data TEXT;
 ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS after_data TEXT;
@@ -5935,6 +5971,7 @@ COMMENT ON COLUMN pmis_operation_log.after_data IS '变更后数据（JSON 格�
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_041__init_pmis_literule_schema.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_041__init_pmis_literule_schema.sql
 -- LiteRule 轻量规则引擎：规则定义表 + 规则版本历史表
@@ -6110,23 +6147,6 @@ CREATE TABLE IF NOT EXISTS pmis_rule_template (
     created_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW()
 );
 
-COMMENT ON COLUMN pmis_rule_template.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_template.template_code IS '妯℃澘缂栫爜 (鍞竴)';
-COMMENT ON COLUMN pmis_rule_template.template_name IS '妯℃澘鍚嶇О';
-COMMENT ON COLUMN pmis_rule_template.category IS '鍒嗙被 (GENERAL/FINANCE/HR/...)';
-COMMENT ON COLUMN pmis_rule_template.description IS '鎻忚堪';
-COMMENT ON COLUMN pmis_rule_template.condition_expression IS '鏉′欢琛ㄨ揪寮?(Aviator 鑴氭湰)';
-COMMENT ON COLUMN pmis_rule_template.severity_expression IS '涓ラ噸搴﹁〃杈惧紡 (杩斿洖 RED/YELLOW/GREEN)';
-COMMENT ON COLUMN pmis_rule_template.default_severity IS '榛樿涓ラ噸搴?;
-COMMENT ON COLUMN pmis_rule_template.title_template IS '鏍囬妯℃澘 (鏀寔 )';
-COMMENT ON COLUMN pmis_rule_template.description_template IS '鎻忚堪妯℃澘 (鏀寔 )';
-COMMENT ON COLUMN pmis_rule_template.priority IS '浼樺厛绾? 鏁板瓧瓒婂皬浼樺厛绾ц秺楂?;
-COMMENT ON COLUMN pmis_rule_template.scope IS '浣滅敤鑼冨洿 (ALL/DEPT/ROLE)';
-COMMENT ON COLUMN pmis_rule_template.industry IS '琛屼笟 (GENERAL/FINANCE/IT/...)';
-COMMENT ON COLUMN pmis_rule_template.tags IS '鏍囩, 閫楀彿鍒嗛殧';
-COMMENT ON COLUMN pmis_rule_template.created_by IS '鍒涘缓浜?(SYSTEM=棰勭疆)';
-COMMENT ON COLUMN pmis_rule_template.created_at IS '鍒涘缓鏃堕棿';
-
 COMMENT ON TABLE pmis_rule_template IS 'LiteRule 规则模板表（模板市场）';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_rule_tpl_category ON pmis_rule_template (category);
@@ -6215,6 +6235,7 @@ VALUES
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_042__init_pmis_rule_test_case.sql
 -- ====================================================================
+
 -- ============================================
 -- V1.0.0_042__init_pmis_rule_test_case.sql
 -- 规则测试用例管理表
@@ -6232,19 +6253,19 @@ CREATE TABLE IF NOT EXISTS pmis_rule_test_case (
     updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
 );
 
+COMMENT ON TABLE pmis_rule_test_case IS 'P1-9: 规则测试用例表,用于规则评估的回归测试';
+COMMENT ON COLUMN pmis_rule_test_case.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_test_case.name IS '测试用例名称';
+COMMENT ON COLUMN pmis_rule_test_case.rule_code IS '关联规则编码 (可选, null 表示通用测试用例)';
+COMMENT ON COLUMN pmis_rule_test_case.facts_data IS '事实数据 JSON (输入参数)';
+COMMENT ON COLUMN pmis_rule_test_case.expected_triggered IS '预期触发的规则编码列表 JSON';
+COMMENT ON COLUMN pmis_rule_test_case.description IS '用例描述';
+COMMENT ON COLUMN pmis_rule_test_case.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_test_case.updated_at IS '更新时间';
+
 -- 索引
 CREATE INDEX IF NOT EXISTS idx_rule_test_case_code ON pmis_rule_test_case(rule_code);
 CREATE INDEX IF NOT EXISTS idx_rule_test_case_name ON pmis_rule_test_case(name);
-
-COMMENT ON TABLE pmis_rule_test_case IS 'P1-9: 瑙勫垯娴嬭瘯鐢ㄤ緥琛?鐢ㄤ簬瑙勫垯璇勪及鐨勫洖褰掓祴璇?;
-COMMENT ON COLUMN pmis_rule_test_case.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_test_case.name IS '娴嬭瘯鐢ㄤ緥鍚嶇О';
-COMMENT ON COLUMN pmis_rule_test_case.rule_code IS '鍏宠仈瑙勫垯缂栫爜 (鍙€? null 琛ㄧず閫氱敤娴嬭瘯鐢ㄤ緥)';
-COMMENT ON COLUMN pmis_rule_test_case.facts_data IS '浜嬪疄鏁版嵁 JSON (杈撳叆鍙傛暟)';
-COMMENT ON COLUMN pmis_rule_test_case.expected_triggered IS '棰勬湡瑙﹀彂鐨勮鍒欑紪鐮佸垪琛?JSON';
-COMMENT ON COLUMN pmis_rule_test_case.description IS '鐢ㄤ緥鎻忚堪';
-COMMENT ON COLUMN pmis_rule_test_case.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_rule_test_case.updated_at IS '鏇存柊鏃堕棿';
 
 -- 更新触发器
 CREATE OR REPLACE FUNCTION update_rule_test_case_updated_at()
@@ -6286,7 +6307,6 @@ INSERT INTO pmis_rule_test_case (name, rule_code, facts_data, expected_triggered
  '{"avgBillableUtilization": 0.65, "activeProjects": 5}',
  '["UTILIZATION_LOW"]',
  '利用率65%且有活跃项目，应触发');
-
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_042__init_pmis_rule_test_case.sql
 -- ====================================================================
@@ -6294,6 +6314,7 @@ INSERT INTO pmis_rule_test_case (name, rule_code, facts_data, expected_triggered
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_043__add_rule_lifecycle_and_trace.sql
 -- ====================================================================
+
 -- ============================================
 -- V1.0.0_043__add_rule_lifecycle_and_trace.sql
 -- 规则生命周期管理 & 执行链路追踪
@@ -6338,27 +6359,26 @@ CREATE TABLE IF NOT EXISTS pmis_rule_execution_trace (
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
 );
 
+COMMENT ON TABLE pmis_rule_execution_trace IS 'P1-11: 规则执行链路追踪表,一次评估一条记录';
+COMMENT ON COLUMN pmis_rule_execution_trace.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_execution_trace.trace_id IS '追踪 ID (同一批次评估共享)';
+COMMENT ON COLUMN pmis_rule_execution_trace.rule_code IS '规则编码';
+COMMENT ON COLUMN pmis_rule_execution_trace.rule_name IS '规则名称';
+COMMENT ON COLUMN pmis_rule_execution_trace.scenario IS '业务场景';
+COMMENT ON COLUMN pmis_rule_execution_trace.triggered IS '是否触发';
+COMMENT ON COLUMN pmis_rule_execution_trace.severity IS '严重度 (RED/YELLOW/GREEN/INFO)';
+COMMENT ON COLUMN pmis_rule_execution_trace.condition_result IS '条件表达式求值结果描述';
+COMMENT ON COLUMN pmis_rule_execution_trace.elapsed_ms IS '执行耗时 (毫秒)';
+COMMENT ON COLUMN pmis_rule_execution_trace.facts_snapshot IS '事实数据快照 JSON';
+COMMENT ON COLUMN pmis_rule_execution_trace.result_snapshot IS '结果快照 JSON';
+COMMENT ON COLUMN pmis_rule_execution_trace.error_message IS '错误信息';
+COMMENT ON COLUMN pmis_rule_execution_trace.created_at IS '创建时间';
+
 -- 索引
 CREATE INDEX IF NOT EXISTS idx_rule_trace_trace_id ON pmis_rule_execution_trace(trace_id);
 CREATE INDEX IF NOT EXISTS idx_rule_trace_rule_code ON pmis_rule_execution_trace(rule_code);
 CREATE INDEX IF NOT EXISTS idx_rule_trace_created ON pmis_rule_execution_trace(created_at);
 CREATE INDEX IF NOT EXISTS idx_rule_trace_scenario ON pmis_rule_execution_trace(scenario);
-
-COMMENT ON TABLE pmis_rule_execution_trace IS 'P1-11: 瑙勫垯鎵ц閾捐矾杩借釜琛?涓€娆¤瘎浼颁竴鏉¤褰?;
-COMMENT ON COLUMN pmis_rule_execution_trace.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_execution_trace.trace_id IS '杩借釜 ID (鍚屼竴鎵规璇勪及鍏变韩)';
-COMMENT ON COLUMN pmis_rule_execution_trace.rule_code IS '瑙勫垯缂栫爜';
-COMMENT ON COLUMN pmis_rule_execution_trace.rule_name IS '瑙勫垯鍚嶇О';
-COMMENT ON COLUMN pmis_rule_execution_trace.scenario IS '涓氬姟鍦烘櫙';
-COMMENT ON COLUMN pmis_rule_execution_trace.triggered IS '鏄惁瑙﹀彂';
-COMMENT ON COLUMN pmis_rule_execution_trace.severity IS '涓ラ噸搴?(RED/YELLOW/GREEN/INFO)';
-COMMENT ON COLUMN pmis_rule_execution_trace.condition_result IS '鏉′欢琛ㄨ揪寮忔眰鍊肩粨鏋滄弿杩?;
-COMMENT ON COLUMN pmis_rule_execution_trace.elapsed_ms IS '鎵ц鑰楁椂 (姣)';
-COMMENT ON COLUMN pmis_rule_execution_trace.facts_snapshot IS '浜嬪疄鏁版嵁蹇収 JSON';
-COMMENT ON COLUMN pmis_rule_execution_trace.result_snapshot IS '缁撴灉蹇収 JSON';
-COMMENT ON COLUMN pmis_rule_execution_trace.error_message IS '閿欒淇℃伅';
-COMMENT ON COLUMN pmis_rule_execution_trace.created_at IS '鍒涘缓鏃堕棿';
-
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_043__add_rule_lifecycle_and_trace.sql
 -- ====================================================================
@@ -6366,6 +6386,7 @@ COMMENT ON COLUMN pmis_rule_execution_trace.created_at IS '鍒涘缓鏃堕棿';
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_044__add_decision_table.sql
 -- ====================================================================
+
 -- ============================================
 -- V1.0.0_044__add_decision_table.sql
 -- 决策表支持
@@ -6394,29 +6415,28 @@ CREATE TABLE IF NOT EXISTS pmis_rule_decision_table (
     updated_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW()
 );
 
+COMMENT ON TABLE pmis_rule_decision_table IS 'P1-12: 决策表 (DMN 简化版),条件/动作/行均以 JSON 存储';
+COMMENT ON COLUMN pmis_rule_decision_table.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_decision_table.table_code IS '决策表编码 (唯一)';
+COMMENT ON COLUMN pmis_rule_decision_table.table_name IS '决策表名称';
+COMMENT ON COLUMN pmis_rule_decision_table.description IS '描述';
+COMMENT ON COLUMN pmis_rule_decision_table.category IS '类别';
+COMMENT ON COLUMN pmis_rule_decision_table.condition_columns IS '条件列定义 JSON: [{name,label,type}]';
+COMMENT ON COLUMN pmis_rule_decision_table.action_columns IS '动作列定义 JSON: [{name,label,type}]';
+COMMENT ON COLUMN pmis_rule_decision_table.rows IS '决策行 JSON: [{conditions,actions}]';
+COMMENT ON COLUMN pmis_rule_decision_table.default_actions IS '默认动作 (未匹配行时使用) JSON';
+COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略: UNIQUE/FIRST/PRIORITY/COLLECT/ANY,默认 FIRST';
+COMMENT ON COLUMN pmis_rule_decision_table.enabled IS '是否启用';
+COMMENT ON COLUMN pmis_rule_decision_table.priority IS '优先级';
+COMMENT ON COLUMN pmis_rule_decision_table.version IS '版本号';
+COMMENT ON COLUMN pmis_rule_decision_table.created_by IS '创建人';
+COMMENT ON COLUMN pmis_rule_decision_table.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_decision_table.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_rule_decision_table.updated_at IS '更新时间';
+
 CREATE INDEX IF NOT EXISTS idx_dt_code ON pmis_rule_decision_table(table_code);
 CREATE INDEX IF NOT EXISTS idx_dt_category ON pmis_rule_decision_table(category);
 CREATE INDEX IF NOT EXISTS idx_dt_enabled ON pmis_rule_decision_table(enabled);
-
-COMMENT ON TABLE pmis_rule_decision_table IS 'P1-12: 鍐崇瓥琛?(DMN 绠€鍖栫増),鏉′欢/鍔ㄤ綔/琛屽潎浠?JSON 瀛樺偍';
-COMMENT ON COLUMN pmis_rule_decision_table.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_decision_table.table_code IS '鍐崇瓥琛ㄧ紪鐮?(鍞竴)';
-COMMENT ON COLUMN pmis_rule_decision_table.table_name IS '鍐崇瓥琛ㄥ悕绉?;
-COMMENT ON COLUMN pmis_rule_decision_table.description IS '鎻忚堪';
-COMMENT ON COLUMN pmis_rule_decision_table.category IS '绫诲埆';
-COMMENT ON COLUMN pmis_rule_decision_table.condition_columns IS '鏉′欢鍒楀畾涔?JSON: [{name,label,type}]';
-COMMENT ON COLUMN pmis_rule_decision_table.action_columns IS '鍔ㄤ綔鍒楀畾涔?JSON: [{name,label,type}]';
-COMMENT ON COLUMN pmis_rule_decision_table.rows IS '鍐崇瓥琛?JSON: [{conditions,actions}]';
-COMMENT ON COLUMN pmis_rule_decision_table.default_actions IS '榛樿鍔ㄤ綔 (鏈尮閰嶈鏃朵娇鐢? JSON';
-COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '鍛戒腑绛栫暐: UNIQUE/FIRST/PRIORITY/COLLECT/ANY,榛樿 FIRST';
-COMMENT ON COLUMN pmis_rule_decision_table.enabled IS '鏄惁鍚敤';
-COMMENT ON COLUMN pmis_rule_decision_table.priority IS '浼樺厛绾?;
-COMMENT ON COLUMN pmis_rule_decision_table.version IS '鐗堟湰鍙?;
-COMMENT ON COLUMN pmis_rule_decision_table.created_by IS '鍒涘缓浜?;
-COMMENT ON COLUMN pmis_rule_decision_table.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_rule_decision_table.updated_by IS '鏇存柊浜?;
-COMMENT ON COLUMN pmis_rule_decision_table.updated_at IS '鏇存柊鏃堕棿';
-
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_044__add_decision_table.sql
 -- ====================================================================
@@ -6424,6 +6444,7 @@ COMMENT ON COLUMN pmis_rule_decision_table.updated_at IS '鏇存柊鏃堕棿';
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_045__add_decision_table_hit_policy.sql
 -- ====================================================================
+
 -- ============================================
 -- V1.0.0_045__add_decision_table_hit_policy.sql
 -- 决策表命中策略字段
@@ -6448,6 +6469,7 @@ COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略：UNIQUE/
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_046__add_pmis_flow_event_subscription.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_046  P0-1 BPMN 事件运行时 — 事件订阅表
 -- ============================================================
@@ -6524,6 +6546,7 @@ CREATE INDEX IF NOT EXISTS idx_pfes_correlation
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_047__add_rule_canary.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_047__add_rule_canary.sql
 -- 规则灰度发布：在 pmis_rule_def 表新增灰度路由字段
@@ -6579,6 +6602,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_canary_bucket_date   ON pmis_rule_canary_buc
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_048__add_pmis_flow_task_priority.sql
 -- ====================================================================
+
 -- ============================================================
 -- P1-1: 任务优先级 priority 字段落地
 -- ============================================================
@@ -6613,6 +6637,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_task_priority_todo
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_049__add_rule_status_check.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_049__add_rule_status_check.sql
 -- 规则状态字段数据库层 CHECK 约束（纵深防御，配合应用层 RuleStatus 状态机校验）
@@ -6635,6 +6660,7 @@ COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_050__add_pmis_event_outbox.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_050  P2-1 可靠消息投递 — 事件 Outbox 表
 -- ============================================================
@@ -6722,6 +6748,7 @@ CREATE INDEX IF NOT EXISTS idx_peo_trace
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_051__init_rule_scorecard_tree_script.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_051__init_rule_scorecard_tree_script.sql
 -- 评分卡 / 决策树 / 脚本规则持久化
@@ -6822,6 +6849,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_rule_script_category ON pmis_rule_script (ca
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_052__index_tuning.sql
 -- ====================================================================
+
 -- =====================================================================
 --  PMIS PostgreSQL 索引调优 SQL（批次 19）
 -- ---------------------------------------------------------------------
@@ -7011,6 +7039,7 @@ SELECT '✅ 索引调优完成（共 ' || count(*) || ' 个索引）' AS result
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_053__add_rule_tenant_id.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_053__add_rule_tenant_id.sql
 -- LiteRule 模块多租户字段预留（与项目其他业务表对齐）
@@ -7074,6 +7103,7 @@ CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON pmis_rule_canary_buc
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_054__add_user_org_columns.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_054  P2-2 候选人/变量独立表 — 用户表组织架构字段补全
 -- ============================================================
@@ -7129,6 +7159,7 @@ CREATE INDEX IF NOT EXISTS idx_pua_leader_id
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_055__init_rule_variable_def.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_055__init_rule_variable_def.sql
 -- P2-4 变量空间元数据：规则表达式中可引用的变量定义表
@@ -7196,6 +7227,7 @@ ON CONFLICT (tenant_id, var_name) DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_056__add_tenant_id_to_base_tables.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_056__add_tenant_id_to_base_tables.sql
 -- 基础表多租户字段预留 + 关键查询路径复合索引
@@ -7448,6 +7480,7 @@ ANALYZE pmis_rule_test_case;
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_057__create_extensions.sql
 -- ====================================================================
+
 -- ============================================================
 -- V1.0.0_057__create_extensions.sql
 -- 创建 PostgreSQL 扩展（H6.2 修复）
@@ -7476,6 +7509,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_058__init_pmis_flow_third_party.sql
 -- ====================================================================
+
 -- =============================================================
 -- V1.0.0_058__init_pmis_flow_third_party.sql
 -- 三方审批账号映射表 + 回调日志表
@@ -7583,6 +7617,7 @@ CREATE INDEX IF NOT EXISTS idx_third_party_log_status
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_059__init_pmis_flow_dmn.sql
 -- ====================================================================
+
 -- =============================================================
 -- V1.0.0_059__init_pmis_flow_dmn.sql
 -- DMN 决策表定义表
@@ -7654,14 +7689,14 @@ CREATE INDEX IF NOT EXISTS idx_flow_dmn_table_name
 -- >>>>>>>>>> END OF V1.0.0_059__init_pmis_flow_dmn.sql
 -- ====================================================================
 
-
 -- ====================================================================
--- >>>>>>>>>> SUPPLEMENT: code-discovered tables (do NOT exist in any V*__*.sql)
---   The following tables are referenced by MyBatis-Plus entities / mappers
---   in ydsz-pmis-backend, but no Flyway migration has been created yet.
---   They are appended here for completeness so that the single-file
---   initialization can be used on a fresh database. Once a Flyway
---   migration is published for each of them, this block can be removed.
+-- >>>>>>>>>> SUPPLEMENT: code-discovered tables (no Flyway migration yet)
+--   The following tables are referenced by MyBatis-Plus entities /
+--   mappers in ydsz-pmis-backend, but no Flyway migration has been
+--   created yet. They are appended here for completeness so the
+--   single-file initialization can be used on a fresh database.
+--   Once a Flyway migration is published for each of them, this
+--   block can be removed.
 -- ====================================================================
 
 -- ----------------------------------------------------------------
@@ -7683,26 +7718,25 @@ CREATE TABLE IF NOT EXISTS pmis_flow_template (
     deleted         SMALLINT        NOT NULL DEFAULT 0
 );
 
-COMMENT ON COLUMN pmis_flow_template.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_flow_template.template_name IS '妯℃澘鍚嶇О';
-COMMENT ON COLUMN pmis_flow_template.description IS '妯℃澘鎻忚堪';
-COMMENT ON COLUMN pmis_flow_template.icon IS '鍥炬爣 URL';
-COMMENT ON COLUMN pmis_flow_template.form_path IS '鍏宠仈琛ㄥ崟璺緞';
-COMMENT ON COLUMN pmis_flow_template.use_count IS '浣跨敤娆℃暟';
-COMMENT ON COLUMN pmis_flow_template.sort_order IS '鎺掑簭鍊? 鍗囧簭';
-COMMENT ON COLUMN pmis_flow_template.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_flow_template.updated_at IS '鏇存柊鏃堕棿';
-COMMENT ON COLUMN pmis_flow_template.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
-
 CREATE UNIQUE INDEX IF NOT EXISTS uk_flow_template_code
     ON pmis_flow_template (template_code) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_flow_template_category
     ON pmis_flow_template (category, sort_order) WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_flow_template IS 'P3-1: process template marketplace';
-COMMENT ON COLUMN pmis_flow_template.template_code IS 'template unique code';
-COMMENT ON COLUMN pmis_flow_template.category IS 'category: HR/FINANCE/ADMIN/PROJECT/GENERAL';
-COMMENT ON COLUMN pmis_flow_template.bpmn_xml IS 'BPMN 2.0 XML definition';
+COMMENT ON TABLE  pmis_flow_template IS 'P3-1: 流程模板市场表, 预置常用流程模板供一键导入';
+COMMENT ON COLUMN pmis_flow_template.id IS '主键 ID';
+COMMENT ON COLUMN pmis_flow_template.template_code IS '模板编码 (唯一)';
+COMMENT ON COLUMN pmis_flow_template.template_name IS '模板名称';
+COMMENT ON COLUMN pmis_flow_template.category IS '分类 (HR/FINANCE/ADMIN/PROJECT/GENERAL)';
+COMMENT ON COLUMN pmis_flow_template.description IS '模板描述';
+COMMENT ON COLUMN pmis_flow_template.icon IS '图标 URL';
+COMMENT ON COLUMN pmis_flow_template.bpmn_xml IS 'BPMN 2.0 XML 流程定义';
+COMMENT ON COLUMN pmis_flow_template.form_path IS '关联表单路径';
+COMMENT ON COLUMN pmis_flow_template.use_count IS '使用次数';
+COMMENT ON COLUMN pmis_flow_template.sort_order IS '排序值, 升序';
+COMMENT ON COLUMN pmis_flow_template.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_flow_template.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_flow_template.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_flow_auto_trigger -- P3-2: process auto-trigger
@@ -7710,18 +7744,6 @@ COMMENT ON COLUMN pmis_flow_template.bpmn_xml IS 'BPMN 2.0 XML definition';
 CREATE TABLE IF NOT EXISTS pmis_flow_auto_trigger (
     id                   BIGSERIAL       PRIMARY KEY,
     source_flow_code     VARCHAR(64)     NOT NULL,
-
-COMMENT ON COLUMN pmis_flow_auto_trigger.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_flow_auto_trigger.source_flow_code IS '婧愭祦绋嬬紪鐮?(瑙﹀彂鏂?';
-COMMENT ON COLUMN pmis_flow_auto_trigger.target_flow_code IS '鐩爣娴佺▼缂栫爜 (琚Е鍙戞柟)';
-COMMENT ON COLUMN pmis_flow_auto_trigger.description IS '瑙﹀彂瑙勫垯璇存槑';
-COMMENT ON COLUMN pmis_flow_auto_trigger.enabled IS '鏄惁鍚敤 1=鍚敤 0=绂佺敤';
-COMMENT ON COLUMN pmis_flow_auto_trigger.sort_order IS '瑙﹀彂椤哄簭';
-COMMENT ON COLUMN pmis_flow_auto_trigger.created_by IS '鍒涘缓浜?;
-COMMENT ON COLUMN pmis_flow_auto_trigger.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_flow_auto_trigger.updated_by IS '鏇存柊浜?;
-COMMENT ON COLUMN pmis_flow_auto_trigger.updated_at IS '鏇存柊鏃堕棿';
-COMMENT ON COLUMN pmis_flow_auto_trigger.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
     target_flow_code     VARCHAR(64)     NOT NULL,
     condition_expression VARCHAR(1024),
     description          VARCHAR(512),
@@ -7734,22 +7756,22 @@ COMMENT ON COLUMN pmis_flow_auto_trigger.deleted IS '閫昏緫鍒犻櫎 0=鏈
     deleted              SMALLINT        NOT NULL DEFAULT 0
 );
 
-COMMENT ON COLUMN pmis_flow_notify_channel.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_flow_notify_channel.tenant_id IS '绉熸埛 ID';
-COMMENT ON COLUMN pmis_flow_notify_channel.channel_type IS '閫氶亾绫诲瀷 (IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
-COMMENT ON COLUMN pmis_flow_notify_channel.channel_name IS '閫氶亾鍚嶇О';
-COMMENT ON COLUMN pmis_flow_notify_channel.enabled IS '鏄惁鍚敤 1=鍚敤 0=绂佺敤';
-COMMENT ON COLUMN pmis_flow_notify_channel.created_by IS '鍒涘缓浜?;
-COMMENT ON COLUMN pmis_flow_notify_channel.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_flow_notify_channel.updated_by IS '鏇存柊浜?;
-COMMENT ON COLUMN pmis_flow_notify_channel.updated_at IS '鏇存柊鏃堕棿';
-COMMENT ON COLUMN pmis_flow_notify_channel.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
-
 CREATE INDEX IF NOT EXISTS idx_flow_auto_trigger_src
     ON pmis_flow_auto_trigger (source_flow_code, enabled) WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_flow_auto_trigger IS 'P3-2: auto-trigger downstream process when upstream completed';
-COMMENT ON COLUMN pmis_flow_auto_trigger.condition_expression IS 'Aviator expression; empty = unconditional';
+COMMENT ON TABLE  pmis_flow_auto_trigger IS 'P3-2: 流程完成时自动触发下游流程的规则表';
+COMMENT ON COLUMN pmis_flow_auto_trigger.id IS '主键 ID';
+COMMENT ON COLUMN pmis_flow_auto_trigger.source_flow_code IS '源流程编码 (触发方)';
+COMMENT ON COLUMN pmis_flow_auto_trigger.target_flow_code IS '目标流程编码 (被触发方)';
+COMMENT ON COLUMN pmis_flow_auto_trigger.condition_expression IS 'Aviator 条件表达式;为空则无条件触发';
+COMMENT ON COLUMN pmis_flow_auto_trigger.description IS '触发规则说明';
+COMMENT ON COLUMN pmis_flow_auto_trigger.enabled IS '是否启用 1=启用 0=禁用';
+COMMENT ON COLUMN pmis_flow_auto_trigger.sort_order IS '触发顺序';
+COMMENT ON COLUMN pmis_flow_auto_trigger.created_by IS '创建人';
+COMMENT ON COLUMN pmis_flow_auto_trigger.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_flow_auto_trigger.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_flow_auto_trigger.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_flow_auto_trigger.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_flow_notify_channel -- P3-3: notification channel config
@@ -7765,43 +7787,24 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_channel (
     created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by    BIGINT,
     updated_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-
-COMMENT ON COLUMN pmis_rule_chain_graph.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_chain_graph.rule_code IS '鍏宠仈瑙勫垯缂栫爜';
-COMMENT ON COLUMN pmis_rule_chain_graph.name IS '鐢诲竷鍚嶇О';
-COMMENT ON COLUMN pmis_rule_chain_graph.description IS '鐢诲竷鎻忚堪';
-COMMENT ON COLUMN pmis_rule_chain_graph.scenario IS '涓氬姟鍦烘櫙';
-COMMENT ON COLUMN pmis_rule_chain_graph.tenant_id IS '绉熸埛 ID';
-COMMENT ON COLUMN pmis_rule_chain_graph.graph_version IS '鐢诲竷鐗堟湰鍙?;
-COMMENT ON COLUMN pmis_rule_chain_graph.content_json IS '鐢诲竷鑺傜偣/杩炵嚎 JSON';
-COMMENT ON COLUMN pmis_rule_chain_graph.created_by IS '鍒涘缓浜?;
-COMMENT ON COLUMN pmis_rule_chain_graph.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_rule_chain_graph.updated_by IS '鏇存柊浜?;
-COMMENT ON COLUMN pmis_rule_chain_graph.updated_at IS '鏇存柊鏃堕棿';
-COMMENT ON COLUMN pmis_rule_chain_graph.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
     deleted       SMALLINT        NOT NULL DEFAULT 0
 );
 
 CREATE INDEX IF NOT EXISTS idx_flow_notify_channel_type
     ON pmis_flow_notify_channel (channel_type, enabled) WHERE deleted = 0;
 
-
-COMMENT ON COLUMN pmis_flow_task_comment.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_flow_task_comment.tenant_id IS '绉熸埛 ID';
-COMMENT ON COLUMN pmis_flow_task_comment.instance_id IS '娴佺▼瀹炰緥 ID';
-COMMENT ON COLUMN pmis_flow_task_comment.task_id IS '浠诲姟 ID';
-COMMENT ON COLUMN pmis_flow_task_comment.node_code IS '鑺傜偣缂栫爜';
-COMMENT ON COLUMN pmis_flow_task_comment.user_id IS '璇勮浜?ID';
-COMMENT ON COLUMN pmis_flow_task_comment.user_name IS '璇勮浜哄鍚?(鍐椾綑)';
-COMMENT ON COLUMN pmis_flow_task_comment.content IS '璇勮鍐呭';
-COMMENT ON COLUMN pmis_flow_task_comment.parent_id IS '鐖惰瘎璁?ID (妤间腑妤? 0=鏍硅瘎璁?';
-COMMENT ON COLUMN pmis_flow_task_comment.created_by IS '鍒涘缓浜?;
-COMMENT ON COLUMN pmis_flow_task_comment.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_flow_task_comment.updated_by IS '鏇存柊浜?;
-COMMENT ON COLUMN pmis_flow_task_comment.updated_at IS '鏇存柊鏃堕棿';
-COMMENT ON COLUMN pmis_flow_task_comment.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
-COMMENT ON TABLE  pmis_flow_notify_channel IS 'P3-3: workflow notification channels (IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
-COMMENT ON COLUMN pmis_flow_notify_channel.config IS 'JSON config (webhook URL, SMS template code, etc.)';
+COMMENT ON TABLE  pmis_flow_notify_channel IS 'P3-3: 工作流通知通道配置表 (IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
+COMMENT ON COLUMN pmis_flow_notify_channel.id IS '主键 ID';
+COMMENT ON COLUMN pmis_flow_notify_channel.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_flow_notify_channel.channel_type IS '通道类型 (IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
+COMMENT ON COLUMN pmis_flow_notify_channel.channel_name IS '通道名称';
+COMMENT ON COLUMN pmis_flow_notify_channel.config IS '配置 JSON (Webhook URL, 短信模板编码等)';
+COMMENT ON COLUMN pmis_flow_notify_channel.enabled IS '是否启用 1=启用 0=禁用';
+COMMENT ON COLUMN pmis_flow_notify_channel.created_by IS '创建人';
+COMMENT ON COLUMN pmis_flow_notify_channel.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_flow_notify_channel.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_flow_notify_channel.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_flow_notify_channel.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_flow_task_comment -- P1-3: task comment thread
@@ -7829,23 +7832,22 @@ CREATE INDEX IF NOT EXISTS idx_flow_task_comment_task
 CREATE INDEX IF NOT EXISTS idx_flow_task_comment_parent
     ON pmis_flow_task_comment (parent_id) WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_flow_task_comment IS 'P1-3: workflow task comment thread (with parent_id for nested replies)';
-COMMENT ON COLUMN pmis_flow_task_comment.type IS 'COMMENT / QUESTION / REPLY';
-
-COMMENT ON COLUMN pmis_rule_ab_policy.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_ab_policy.auto_rollback_enabled IS '鏄惁鍚敤鑷姩鍥炴粴 1=鏄?0=鍚?;
-COMMENT ON COLUMN pmis_rule_ab_policy.error_rate_threshold IS '瑙﹀彂鍥炴粴鐨勯敊璇巼闃堝€?(0~1)';
-COMMENT ON COLUMN pmis_rule_ab_policy.min_sample_size IS '鏈€灏忚瘎浼版牱鏈暟';
-COMMENT ON COLUMN pmis_rule_ab_policy.check_window_minutes IS '璇勪及绐楀彛 (鍒嗛挓)';
-COMMENT ON COLUMN pmis_rule_ab_policy.notify_channels IS '閫氱煡閫氶亾 (閫楀彿鍒嗛殧, 寮曠敤 pmis_flow_notify_channel.id)';
-COMMENT ON COLUMN pmis_rule_ab_policy.description IS '绛栫暐鎻忚堪';
-COMMENT ON COLUMN pmis_rule_ab_policy.last_evaluated_at IS '鏈€杩戜竴娆¤瘎浼版椂闂?;
-COMMENT ON COLUMN pmis_rule_ab_policy.last_rollback_at IS '鏈€杩戜竴娆″洖婊氭椂闂?;
-COMMENT ON COLUMN pmis_rule_ab_policy.created_by IS '鍒涘缓浜?;
-COMMENT ON COLUMN pmis_rule_ab_policy.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_rule_ab_policy.updated_by IS '鏇存柊浜?;
-COMMENT ON COLUMN pmis_rule_ab_policy.updated_at IS '鏇存柊鏃堕棿';
-COMMENT ON COLUMN pmis_rule_ab_policy.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
+COMMENT ON TABLE  pmis_flow_task_comment IS 'P1-3: 工作流任务评论表 (楼中楼, 通过 parent_id 形成嵌套回复)';
+COMMENT ON COLUMN pmis_flow_task_comment.id IS '主键 ID';
+COMMENT ON COLUMN pmis_flow_task_comment.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_flow_task_comment.instance_id IS '流程实例 ID';
+COMMENT ON COLUMN pmis_flow_task_comment.task_id IS '任务 ID';
+COMMENT ON COLUMN pmis_flow_task_comment.node_code IS '节点编码';
+COMMENT ON COLUMN pmis_flow_task_comment.user_id IS '评论人 ID';
+COMMENT ON COLUMN pmis_flow_task_comment.user_name IS '评论人姓名 (冗余)';
+COMMENT ON COLUMN pmis_flow_task_comment.content IS '评论内容';
+COMMENT ON COLUMN pmis_flow_task_comment.type IS '评论类型: COMMENT/QUESTION/REPLY';
+COMMENT ON COLUMN pmis_flow_task_comment.parent_id IS '父评论 ID (楼中楼, 0=根评论)';
+COMMENT ON COLUMN pmis_flow_task_comment.created_by IS '创建人';
+COMMENT ON COLUMN pmis_flow_task_comment.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_flow_task_comment.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_flow_task_comment.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_flow_task_comment.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_rule_chain_graph -- P0-1: rule chain visual canvas
@@ -7870,38 +7872,32 @@ CREATE TABLE IF NOT EXISTS pmis_rule_chain_graph (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_rule_chain_graph_rule
     ON pmis_rule_chain_graph (rule_code) WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_chain_graph IS 'P0-1: visual canvas JSON for rule chain';
-COMMENT ON COLUMN pmis_rule_chain_graph.status IS 'DRAFT / PUBLISHED / ARCHIVED';
+COMMENT ON TABLE  pmis_rule_chain_graph IS 'P0-1: 规则链可视化画布 JSON 存储表';
+COMMENT ON COLUMN pmis_rule_chain_graph.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_chain_graph.rule_code IS '关联规则编码';
+COMMENT ON COLUMN pmis_rule_chain_graph.name IS '画布名称';
+COMMENT ON COLUMN pmis_rule_chain_graph.description IS '画布描述';
+COMMENT ON COLUMN pmis_rule_chain_graph.scenario IS '业务场景';
+COMMENT ON COLUMN pmis_rule_chain_graph.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_chain_graph.graph_version IS '画布版本号';
+COMMENT ON COLUMN pmis_rule_chain_graph.status IS '画布状态: DRAFT/PUBLISHED/ARCHIVED';
+COMMENT ON COLUMN pmis_rule_chain_graph.content_json IS '画布节点/连线 JSON';
+COMMENT ON COLUMN pmis_rule_chain_graph.created_by IS '创建人';
+COMMENT ON COLUMN pmis_rule_chain_graph.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_chain_graph.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_rule_chain_graph.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_rule_chain_graph.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_rule_dependency -- P1-8: rule dependency
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_dependency (
-
-COMMENT ON COLUMN pmis_rule_dependency.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_dependency.depends_on_rule_code IS '琚緷璧栫殑瑙勫垯缂栫爜';
-COMMENT ON COLUMN pmis_rule_dependency.cascade_on_disable IS '涓婃父绂佺敤鏃舵槸鍚︾骇鑱旂鐢?1=鏄?0=鍚?;
-COMMENT ON COLUMN pmis_rule_dependency.description IS '渚濊禆璇存槑';
-COMMENT ON COLUMN pmis_rule_dependency.tenant_id IS '绉熸埛 ID';
-COMMENT ON COLUMN pmis_rule_dependency.created_by IS '鍒涘缓浜?;
-COMMENT ON COLUMN pmis_rule_dependency.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_rule_dependency.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
     id                       BIGSERIAL       PRIMARY KEY,
     rule_code                VARCHAR(128)    NOT NULL,
     depends_on_rule_code     VARCHAR(128)    NOT NULL,
     dependency_type          VARCHAR(16)     NOT NULL DEFAULT 'EXECUTE',
     cascade_on_disable       SMALLINT        NOT NULL DEFAULT 0,
     description              VARCHAR(512),
-
-COMMENT ON COLUMN pmis_rule_pack_install.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_pack_install.pack_code IS '瑙勫垯闆嗙紪鐮?;
-COMMENT ON COLUMN pmis_rule_pack_install.pack_version IS '瑙勫垯闆嗙増鏈彿';
-COMMENT ON COLUMN pmis_rule_pack_install.tenant_id IS '绉熸埛 ID';
-COMMENT ON COLUMN pmis_rule_pack_install.installed_by IS '瀹夎鎿嶄綔浜?;
-COMMENT ON COLUMN pmis_rule_pack_install.installed_at IS '瀹夎鏃堕棿';
-COMMENT ON COLUMN pmis_rule_pack_install.error_message IS '澶辫触鏃剁殑閿欒淇℃伅';
-COMMENT ON COLUMN pmis_rule_pack_install.created_at IS '璁板綍鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
     tenant_id                BIGINT          NOT NULL DEFAULT 1,
     created_by               VARCHAR(64),
     created_at               TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -7913,17 +7909,17 @@ CREATE INDEX IF NOT EXISTS idx_rule_dependency_rule
 CREATE INDEX IF NOT EXISTS idx_rule_dependency_depends
     ON pmis_rule_dependency (depends_on_rule_code, cascade_on_disable) WHERE deleted = 0;
 
-COMMENT ON COLUMN pmis_rule_ab_rollback.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_ab_rollback.error_rate IS '鍥炴粴鏃剁殑閿欒鐜?;
-COMMENT ON COLUMN pmis_rule_ab_rollback.sample_size IS '璇勪及鏍锋湰鏁?;
-COMMENT ON COLUMN pmis_rule_ab_rollback.from_canary IS '鏄惁浠庣伆搴︾増鏈洖婊?1=鏄?0=鍚?;
-COMMENT ON COLUMN pmis_rule_ab_rollback.operator IS '鎿嶄綔浜?(SYSTEM=鑷姩)';
-COMMENT ON COLUMN pmis_rule_ab_rollback.notify_status IS '閫氱煡鍙戦€佺姸鎬?(PENDING/SUCCESS/FAILED)';
-COMMENT ON COLUMN pmis_rule_ab_rollback.created_at IS '鍥炴粴鏃堕棿';
-COMMENT ON COLUMN pmis_rule_ab_rollback.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
-
-COMMENT ON TABLE  pmis_rule_dependency IS 'P1-8: rule-to-rule dependency graph';
-COMMENT ON COLUMN pmis_rule_dependency.dependency_type IS 'EXECUTE / READ_RESULT / SOFT';
+COMMENT ON TABLE  pmis_rule_dependency IS 'P1-8: 规则间依赖关系表 (EXECUTE/READ_RESULT/SOFT)';
+COMMENT ON COLUMN pmis_rule_dependency.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_dependency.rule_code IS '规则编码';
+COMMENT ON COLUMN pmis_rule_dependency.depends_on_rule_code IS '被依赖的规则编码';
+COMMENT ON COLUMN pmis_rule_dependency.dependency_type IS '依赖类型: EXECUTE/READ_RESULT/SOFT';
+COMMENT ON COLUMN pmis_rule_dependency.cascade_on_disable IS '上游禁用时是否级联禁用 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_dependency.description IS '依赖说明';
+COMMENT ON COLUMN pmis_rule_dependency.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_dependency.created_by IS '创建人';
+COMMENT ON COLUMN pmis_rule_dependency.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_dependency.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_rule_ab_policy -- P1-10: AB test auto-rollback policy
@@ -7950,8 +7946,23 @@ CREATE TABLE IF NOT EXISTS pmis_rule_ab_policy (
 CREATE UNIQUE INDEX IF NOT EXISTS uk_rule_ab_policy_rule
     ON pmis_rule_ab_policy (rule_code) WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_ab_policy IS 'P1-10: AB test auto-rollback policy';
-COMMENT ON COLUMN pmis_rule_ab_policy.rollback_action IS 'AUTO auto-rollback / NOTIFY notify owner only';
+COMMENT ON TABLE  pmis_rule_ab_policy IS 'P1-10: AB Test 自动回滚策略表';
+COMMENT ON COLUMN pmis_rule_ab_policy.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_ab_policy.rule_code IS '规则编码';
+COMMENT ON COLUMN pmis_rule_ab_policy.auto_rollback_enabled IS '是否启用自动回滚 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_ab_policy.rollback_action IS '回滚动作: AUTO 自动回滚/NOTIFY 仅通知负责人';
+COMMENT ON COLUMN pmis_rule_ab_policy.error_rate_threshold IS '触发回滚的错误率阈值 (0~1)';
+COMMENT ON COLUMN pmis_rule_ab_policy.min_sample_size IS '最小评估样本数';
+COMMENT ON COLUMN pmis_rule_ab_policy.check_window_minutes IS '评估窗口 (分钟)';
+COMMENT ON COLUMN pmis_rule_ab_policy.notify_channels IS '通知通道 (逗号分隔, 引用 pmis_flow_notify_channel.id)';
+COMMENT ON COLUMN pmis_rule_ab_policy.description IS '策略描述';
+COMMENT ON COLUMN pmis_rule_ab_policy.last_evaluated_at IS '最近一次评估时间';
+COMMENT ON COLUMN pmis_rule_ab_policy.last_rollback_at IS '最近一次回滚时间';
+COMMENT ON COLUMN pmis_rule_ab_policy.created_by IS '创建人';
+COMMENT ON COLUMN pmis_rule_ab_policy.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_ab_policy.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_rule_ab_policy.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_rule_ab_policy.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_rule_ab_rollback -- P1-10: AB test rollback history
@@ -7972,8 +7983,17 @@ CREATE TABLE IF NOT EXISTS pmis_rule_ab_rollback (
 CREATE INDEX IF NOT EXISTS idx_rule_ab_rollback_rule
     ON pmis_rule_ab_rollback (rule_code, created_at DESC) WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_ab_rollback IS 'P1-10: AB test rollback history';
-COMMENT ON COLUMN pmis_rule_ab_rollback.trigger_reason IS 'ERROR_RATE / MANUAL / OWNER_REQUEST';
+COMMENT ON TABLE  pmis_rule_ab_rollback IS 'P1-10: AB Test 回滚历史表';
+COMMENT ON COLUMN pmis_rule_ab_rollback.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_ab_rollback.rule_code IS '规则编码';
+COMMENT ON COLUMN pmis_rule_ab_rollback.trigger_reason IS '触发原因: ERROR_RATE/MANUAL/OWNER_REQUEST';
+COMMENT ON COLUMN pmis_rule_ab_rollback.error_rate IS '回滚时的错误率';
+COMMENT ON COLUMN pmis_rule_ab_rollback.sample_size IS '评估样本数';
+COMMENT ON COLUMN pmis_rule_ab_rollback.from_canary IS '是否从灰度版本回滚 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_ab_rollback.operator IS '操作人 (SYSTEM=自动)';
+COMMENT ON COLUMN pmis_rule_ab_rollback.notify_status IS '通知发送状态: PENDING/SUCCESS/FAILED';
+COMMENT ON COLUMN pmis_rule_ab_rollback.created_at IS '回滚时间';
+COMMENT ON COLUMN pmis_rule_ab_rollback.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_rule_pack -- P2-14: rule pack marketplace
@@ -7999,31 +8019,30 @@ CREATE TABLE IF NOT EXISTS pmis_rule_pack (
     deleted         SMALLINT        NOT NULL DEFAULT 0
 );
 
-COMMENT ON COLUMN pmis_rule_pack.id IS '涓婚敭 ID';
-COMMENT ON COLUMN pmis_rule_pack.pack_code IS '瑙勫垯闆嗙紪鐮?;
-COMMENT ON COLUMN pmis_rule_pack.pack_version IS '瑙勫垯闆嗙増鏈彿 (璇箟鍖?';
-COMMENT ON COLUMN pmis_rule_pack.pack_name IS '瑙勫垯闆嗗悕绉?;
-COMMENT ON COLUMN pmis_rule_pack.industry IS '閫傜敤琛屼笟';
-COMMENT ON COLUMN pmis_rule_pack.tags IS '鏍囩, 閫楀彿鍒嗛殧';
-COMMENT ON COLUMN pmis_rule_pack.rule_codes IS '鍖呭惈鐨勮鍒欑紪鐮佸垪琛?(閫楀彿鍒嗛殧)';
-COMMENT ON COLUMN pmis_rule_pack.description IS '鎻忚堪';
-COMMENT ON COLUMN pmis_rule_pack.author IS '浣滆€?;
-COMMENT ON COLUMN pmis_rule_pack.download_count IS '涓嬭浇娆℃暟';
-COMMENT ON COLUMN pmis_rule_pack.rating IS '璇勫垎 (0~5)';
-COMMENT ON COLUMN pmis_rule_pack.enabled IS '鏄惁涓婃灦 1=鏄?0=鍚?;
-COMMENT ON COLUMN pmis_rule_pack.official IS '鏄惁瀹樻柟 1=鏄?0=鍚?;
-COMMENT ON COLUMN pmis_rule_pack.created_by IS '鍒涘缓浜?;
-COMMENT ON COLUMN pmis_rule_pack.created_at IS '鍒涘缓鏃堕棿';
-COMMENT ON COLUMN pmis_rule_pack.updated_by IS '鏇存柊浜?;
-COMMENT ON COLUMN pmis_rule_pack.updated_at IS '鏇存柊鏃堕棿';
-COMMENT ON COLUMN pmis_rule_pack.deleted IS '閫昏緫鍒犻櫎 0=鏈垹 1=宸插垹';
-
 CREATE UNIQUE INDEX IF NOT EXISTS uk_rule_pack_code_version
     ON pmis_rule_pack (pack_code, pack_version) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_rule_pack_industry
     ON pmis_rule_pack (industry, enabled) WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_pack IS 'P2-14: rule pack marketplace (industry/scenario based bundles)';
+COMMENT ON TABLE  pmis_rule_pack IS 'P2-14: 规则集市场表 (按行业/场景打包)';
+COMMENT ON COLUMN pmis_rule_pack.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_pack.pack_code IS '规则集编码';
+COMMENT ON COLUMN pmis_rule_pack.pack_version IS '规则集版本号 (语义化)';
+COMMENT ON COLUMN pmis_rule_pack.pack_name IS '规则集名称';
+COMMENT ON COLUMN pmis_rule_pack.industry IS '适用行业';
+COMMENT ON COLUMN pmis_rule_pack.tags IS '标签, 逗号分隔';
+COMMENT ON COLUMN pmis_rule_pack.rule_codes IS '包含的规则编码列表 (逗号分隔)';
+COMMENT ON COLUMN pmis_rule_pack.description IS '描述';
+COMMENT ON COLUMN pmis_rule_pack.author IS '作者';
+COMMENT ON COLUMN pmis_rule_pack.download_count IS '下载次数';
+COMMENT ON COLUMN pmis_rule_pack.rating IS '评分 (0~5)';
+COMMENT ON COLUMN pmis_rule_pack.enabled IS '是否上架 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_pack.official IS '是否官方 1=是 0=否';
+COMMENT ON COLUMN pmis_rule_pack.created_by IS '创建人';
+COMMENT ON COLUMN pmis_rule_pack.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_rule_pack.updated_by IS '更新人';
+COMMENT ON COLUMN pmis_rule_pack.updated_at IS '更新时间';
+COMMENT ON COLUMN pmis_rule_pack.deleted IS '逻辑删除 0=未删 1=已删';
 
 -- ----------------------------------------------------------------
 -- pmis_rule_pack_install -- P2-14: rule pack install history
@@ -8044,8 +8063,17 @@ CREATE TABLE IF NOT EXISTS pmis_rule_pack_install (
 CREATE INDEX IF NOT EXISTS idx_rule_pack_install_tenant
     ON pmis_rule_pack_install (tenant_id, pack_code, installed_at DESC) WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_rule_pack_install IS 'P2-14: rule pack install history (per tenant)';
-COMMENT ON COLUMN pmis_rule_pack_install.status IS 'SUCCESS / FAILED / ROLLBACK';
+COMMENT ON TABLE  pmis_rule_pack_install IS 'P2-14: 规则集安装历史表 (按租户)';
+COMMENT ON COLUMN pmis_rule_pack_install.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_pack_install.pack_code IS '规则集编码';
+COMMENT ON COLUMN pmis_rule_pack_install.pack_version IS '规则集版本号';
+COMMENT ON COLUMN pmis_rule_pack_install.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_pack_install.installed_by IS '安装操作人';
+COMMENT ON COLUMN pmis_rule_pack_install.installed_at IS '安装时间';
+COMMENT ON COLUMN pmis_rule_pack_install.status IS '安装状态: SUCCESS/FAILED/ROLLBACK';
+COMMENT ON COLUMN pmis_rule_pack_install.error_message IS '失败时的错误信息';
+COMMENT ON COLUMN pmis_rule_pack_install.created_at IS '记录创建时间';
+COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已删';
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT
 -- ====================================================================

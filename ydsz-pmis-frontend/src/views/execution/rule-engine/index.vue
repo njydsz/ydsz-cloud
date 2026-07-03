@@ -1248,7 +1248,7 @@ onMounted(() => {
               @validate="(v: boolean | null) => severityValid = v"
             />
             <div class="expr-actions">
-              <el-button size="small" :loading="validating" @click="handleValidate(editForm.severityExpression || '', 'severity')">
+              <el-button size="small" :loading="validating" aria-label="后端校验严重度表达式" @click="handleValidate(editForm.severityExpression || '', 'severity')">
                 <el-icon><Check /></el-icon>后端校验
               </el-button>
               <el-tag v-if="severityValid === true" type="success" size="small">语法合法</el-tag>
@@ -1331,7 +1331,7 @@ onMounted(() => {
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="dryRunLoading" @click="handleDryRun">
+          <el-button type="primary" :loading="dryRunLoading" aria-label="执行仿真" @click="handleDryRun">
             <el-icon><VideoPlay /></el-icon>执行仿真
           </el-button>
         </el-form-item>
@@ -1376,6 +1376,7 @@ onMounted(() => {
             filterable
             allow-create
             :placeholder="$t('execution.ruleEngine.batch.categoryPlaceholder')"
+            aria-label="选择新分类"
             style="width: 100%"
           >
             <el-option
@@ -1402,6 +1403,7 @@ onMounted(() => {
             :placeholder="$t('execution.ruleEngine.template.filterByCategory')"
             clearable
             style="width: 180px"
+            aria-label="按类别筛选模板"
           >
             <el-option v-for="c in templateCategoryOptions" :key="c" :label="c" :value="c" />
           </el-select>
@@ -1430,6 +1432,7 @@ onMounted(() => {
               link
               type="primary"
               size="small"
+              aria-label="导入模板"
               :loading="importingCodes.has(row.templateCode)"
               @click="handleImportTemplate(row)"
             >
@@ -1468,10 +1471,10 @@ onMounted(() => {
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="aiLoading" @click="handleAiGenerate">
+          <el-button type="primary" :loading="aiLoading" aria-label="AI生成预览规则" @click="handleAiGenerate">
             <el-icon><MagicStick /></el-icon>生成预览
           </el-button>
-          <el-button type="success" :loading="aiLoading" @click="handleAiGenerateAndSave">
+          <el-button type="success" :loading="aiLoading" aria-label="AI生成并保存规则" @click="handleAiGenerateAndSave">
             <el-icon><Check /></el-icon>生成并保存
           </el-button>
         </el-form-item>
@@ -1499,7 +1502,7 @@ onMounted(() => {
           </el-descriptions-item>
         </el-descriptions>
         <div class="ai-result-actions">
-          <el-button type="primary" @click="loadAiResultToEdit">
+          <el-button type="primary" aria-label="载入AI生成结果到编辑" @click="loadAiResultToEdit">
             <el-icon><Edit /></el-icon>载入编辑
           </el-button>
         </div>
@@ -1522,7 +1525,7 @@ onMounted(() => {
         <el-table-column prop="createdAt" label="创建时间" width="180" />
         <el-table-column label="操作" width="90" fixed="right">
           <template #default="{ row }">
-            <el-button link type="warning" size="small" @click="handleRollback(row.version)">
+            <el-button link type="warning" size="small" aria-label="回滚到该版本" @click="handleRollback(row.version)">
               <el-icon><RefreshLeft /></el-icon>回滚
             </el-button>
           </template>
@@ -1798,7 +1801,7 @@ onMounted(() => {
             />
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" :loading="abTestLoading" @click="runABTest">
+            <el-button type="primary" :loading="abTestLoading" aria-label="执行A/B测试" @click="runABTest">
               <el-icon><VideoPlay /></el-icon>执行 A/B 测试
             </el-button>
           </el-form-item>

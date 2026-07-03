@@ -2,10 +2,9 @@ package com.njydsz.pmis.userinfo.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
+import com.njydsz.pmis.userinfo.entity.UserRoleDO;
 import com.njydsz.pmis.userinfo.mapper.UserAccountMapper;
 import com.njydsz.pmis.userinfo.mapper.UserRoleMapper;
 import com.njydsz.pmis.userinfo.mapper.User2FAMapper;
@@ -13,7 +12,6 @@ import com.njydsz.pmis.userinfo.service.SessionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -79,7 +77,7 @@ class UserAccountServiceImplTest {
         when(userAccountMapper.selectById(999L)).thenReturn(null);
 
         BizException ex = assertThrows(BizException.class, () -> userAccountService.findById(999L));
-        assertEquals(BizErrorCode.USER_NOT_FOUND, ex.getCode());
+        assertEquals(30001, ex.getCode());
     }
 
     @Test
@@ -92,7 +90,7 @@ class UserAccountServiceImplTest {
         when(userAccountMapper.selectById(1L)).thenReturn(admin);
 
         BizException ex = assertThrows(BizException.class, () -> userAccountService.delete(1L));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(10001, ex.getCode());
     }
 
     @Test
@@ -101,7 +99,7 @@ class UserAccountServiceImplTest {
         when(userAccountMapper.selectById(999L)).thenReturn(null);
 
         BizException ex = assertThrows(BizException.class, () -> userAccountService.delete(999L));
-        assertEquals(BizErrorCode.USER_NOT_FOUND, ex.getCode());
+        assertEquals(30001, ex.getCode());
     }
 
     @Test
@@ -117,7 +115,7 @@ class UserAccountServiceImplTest {
 
         BizException ex = assertThrows(BizException.class,
                 () -> userAccountService.create(newUser, "Test@123456"));
-        assertEquals(BizErrorCode.DUPLICATE_KEY, ex.getCode());
+        assertEquals(10102, ex.getCode());
     }
 
     @Test
@@ -149,7 +147,7 @@ class UserAccountServiceImplTest {
         userAccountService.assignRoles(1L, roleIds);
 
         verify(userRoleMapper).delete(any(LambdaQueryWrapper.class));
-        verify(userRoleMapper, times(3)).insert(any());
+        verify(userRoleMapper, times(3)).insert(any(UserRoleDO.class));
     }
 
     @Test
@@ -161,6 +159,6 @@ class UserAccountServiceImplTest {
         user.setId(999L);
 
         BizException ex = assertThrows(BizException.class, () -> userAccountService.update(user));
-        assertEquals(BizErrorCode.USER_NOT_FOUND, ex.getCode());
+        assertEquals(30001, ex.getCode());
     }
 }

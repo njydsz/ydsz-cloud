@@ -1,13 +1,11 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
-import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.userinfo.dto.CaptchaVO;
 import com.njydsz.pmis.userinfo.dto.LoginDTO;
 import com.njydsz.pmis.userinfo.dto.LoginResultVO;
-import com.njydsz.pmis.userinfo.entity.RoleDO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
 import com.njydsz.pmis.userinfo.service.PermissionService;
 import com.njydsz.pmis.userinfo.service.RoleService;
@@ -25,7 +23,6 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import java.time.Duration;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -112,7 +109,7 @@ class AuthServiceImplTest {
         dto.setPassword("password");
 
         BizException ex = assertThrows(BizException.class, () -> authService.login(dto));
-        assertEquals(BizErrorCode.USER_NOT_FOUND, ex.getCode());
+        assertEquals(30001, ex.getCode());
     }
 
     @Test
@@ -136,7 +133,7 @@ class AuthServiceImplTest {
         dto.setPassword("password");
 
         BizException ex = assertThrows(BizException.class, () -> authService.login(dto));
-        assertEquals(BizErrorCode.USER_DISABLED, ex.getCode());
+        assertEquals(30003, ex.getCode());
     }
 
     @Test
@@ -163,7 +160,7 @@ class AuthServiceImplTest {
             dto.setPassword("wrongPassword");
 
             BizException ex = assertThrows(BizException.class, () -> authService.login(dto));
-            assertEquals(BizErrorCode.PASSWORD_INCORRECT, ex.getCode());
+            assertEquals(30002, ex.getCode());
         }
     }
 

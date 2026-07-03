@@ -210,13 +210,16 @@ COMMENT ON COLUMN pmis_flow_instance.duration_ms IS '总耗时(毫秒)';
 COMMENT ON COLUMN pmis_flow_instance.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_instance.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
-CREATE UNIQUE INDEX uk_pfi_biz ON pmis_flow_instance(business_type, business_id) WHERE deleted = 0;
-CREATE INDEX        idx_pfi_def         ON pmis_flow_instance(definition_id);
-CREATE INDEX        idx_pfi_code        ON pmis_flow_instance(flow_code);
-CREATE INDEX        idx_pfi_status      ON pmis_flow_instance(flow_status);
-CREATE INDEX        idx_pfi_initiator   ON pmis_flow_instance(initiator_id);
-CREATE INDEX        idx_pfi_tenant      ON pmis_flow_instance(tenant_id);
-CREATE INDEX        idx_pfi_start       ON pmis_flow_instance(start_at);
+-- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_finance_invoice) 的
+--      索引同名 (idx_pfi_status),触发"关系已存在"报错。改为
+--      flow_instance_ 前缀以彻底避免跨模块索引名冲突。
+CREATE UNIQUE INDEX uk_flow_instance_biz ON pmis_flow_instance(business_type, business_id) WHERE deleted = 0;
+CREATE INDEX        idx_flow_instance_def         ON pmis_flow_instance(definition_id);
+CREATE INDEX        idx_flow_instance_code        ON pmis_flow_instance(flow_code);
+CREATE INDEX        idx_flow_instance_status      ON pmis_flow_instance(flow_status);
+CREATE INDEX        idx_flow_instance_initiator   ON pmis_flow_instance(initiator_id);
+CREATE INDEX        idx_flow_instance_tenant      ON pmis_flow_instance(tenant_id);
+CREATE INDEX        idx_flow_instance_start       ON pmis_flow_instance(start_at);
 
 -- -----------------------------------------------------
 -- 5. 待办任务表（对标 Warm-Flow flow_task）

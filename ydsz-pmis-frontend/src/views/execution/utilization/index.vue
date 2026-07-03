@@ -239,6 +239,7 @@ function fmtHours(v: number | undefined) {
             type="date"
             value-format="YYYY-MM-DD"
             :placeholder="$t('execution.utilization.filter.startDate')"
+            aria-label="开始日期"
           />
         </el-form-item>
         <el-form-item label="结束日期">
@@ -247,20 +248,22 @@ function fmtHours(v: number | undefined) {
             type="date"
             value-format="YYYY-MM-DD"
             :placeholder="$t('execution.utilization.filter.endDate')"
+            aria-label="结束日期"
           />
         </el-form-item>
         <el-form-item label="快照周期">
-          <el-input v-model="query.period" :placeholder="$t('execution.utilization.filter.periodPlaceholder')" style="width: 140px" />
+          <el-input v-model="query.period" :placeholder="$t('execution.utilization.filter.periodPlaceholder')" style="width: 140px" aria-label="快照周期" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="loading" @click="refresh">查询</el-button>
-          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" :loading="loading" aria-label="查询利用率" @click="refresh">查询</el-button>
+          <el-button aria-label="重置查询条件" @click="handleReset">重置</el-button>
         </el-form-item>
         <el-form-item v-if="hasPerm(PC.EXECUTION_UTILIZATION_RECOMPUTE)">
           <el-button
             type="warning"
             :loading="recomputeLoading"
             plain
+            aria-label="增量重算快照"
             @click="handleRecompute(false)"
           >
             增量重算快照
@@ -269,6 +272,7 @@ function fmtHours(v: number | undefined) {
             type="danger"
             :loading="recomputeLoading"
             plain
+            aria-label="强制重算快照"
             @click="handleRecompute(true)"
           >
             强制重算快照
