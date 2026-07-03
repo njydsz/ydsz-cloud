@@ -87,16 +87,19 @@ public class SatisfactionServiceImpl implements SatisfactionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> overall() {
         return satisfactionMapper.aggregateOverall();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> levelDistribution() {
         return satisfactionMapper.aggregateByLevel();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<SatisfactionDO> page(int page, int size, String level, Long initiationId, String keyword) {
         Page<SatisfactionDO> p = new Page<>(page, size);
         LambdaQueryWrapper<SatisfactionDO> w = new LambdaQueryWrapper<>();

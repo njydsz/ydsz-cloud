@@ -116,6 +116,7 @@ public class DailyReconcileServiceImpl implements DailyReconcileService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> queryByDateRange(LocalDate from, LocalDate to, String status) {
         if (from == null) from = LocalDate.now().minusDays(30);
         if (to == null) to = LocalDate.now();
@@ -134,6 +135,7 @@ public class DailyReconcileServiceImpl implements DailyReconcileService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateStatus(LocalDate from, LocalDate to) {
         if (from == null) from = LocalDate.now().minusDays(30);
         if (to == null) to = LocalDate.now();

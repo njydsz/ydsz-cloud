@@ -82,6 +82,7 @@ public class RateCardServiceImpl implements RateCardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RateCardDO getById(Long id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         RateCardDO r = rateCardMapper.selectById(id);
@@ -90,6 +91,7 @@ public class RateCardServiceImpl implements RateCardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RateCardDO matchEffective(String levelCode, String projectType, String customerLevel, LocalDate date) {
         if (!StringUtils.hasText(levelCode)) return null;
         if (date == null) date = LocalDate.now();
@@ -97,12 +99,14 @@ public class RateCardServiceImpl implements RateCardService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RateCardDO> listByLevel(String levelCode) {
         if (!StringUtils.hasText(levelCode)) return List.of();
         return rateCardMapper.selectByLevel(levelCode);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<RateCardDO> page(int page, int size, String levelCode, String status) {
         Page<RateCardDO> p = new Page<>(page, size);
         LambdaQueryWrapper<RateCardDO> w = new LambdaQueryWrapper<>();

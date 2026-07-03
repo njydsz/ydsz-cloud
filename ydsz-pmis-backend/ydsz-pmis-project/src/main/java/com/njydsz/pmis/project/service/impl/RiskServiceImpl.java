@@ -105,6 +105,7 @@ public class RiskServiceImpl implements RiskService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RiskDO getById(Long id) {
         RiskDO r = riskMapper.selectById(id);
         if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_eed2ed24");
@@ -112,6 +113,7 @@ public class RiskServiceImpl implements RiskService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<RiskDO> page(int page, int size, String keyword, String status,
                              String riskLevel, Long initiationId) {
         Page<RiskDO> p = new Page<>(page, size);
@@ -129,12 +131,14 @@ public class RiskServiceImpl implements RiskService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RiskDO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
         return riskMapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByLevel(Long initiationId) {
         if (initiationId == null) return List.of();
         return riskMapper.aggregateByLevel(initiationId);

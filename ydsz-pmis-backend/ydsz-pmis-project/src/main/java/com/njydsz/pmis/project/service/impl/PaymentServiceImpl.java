@@ -226,6 +226,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> forecastCashFlow(Long initiationId, int months) {
         if (initiationId == null) return List.of();
         if (months <= 0) months = 3;
@@ -298,6 +299,7 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BigDecimal sumReceivedByContract(Long contractId) {
         if (contractId == null) return BigDecimal.ZERO;
         BigDecimal v = paymentMapper.sumReceivedByContract(contractId);
@@ -305,12 +307,14 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByMonth(Long initiationId) {
         if (initiationId == null) return List.of();
         return paymentMapper.aggregateByMonth(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByCustomer() {
         return paymentMapper.aggregateByCustomer();
     }

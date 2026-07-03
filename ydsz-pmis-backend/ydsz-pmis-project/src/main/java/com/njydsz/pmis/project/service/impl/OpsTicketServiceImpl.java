@@ -182,6 +182,7 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<OpsTicketDO> page(int page, int size, String status, String priority,
                                    Long initiationId, Long assigneeId, String keyword) {
         Page<OpsTicketDO> p = new Page<>(page, size);
@@ -200,31 +201,37 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> slaSummary() {
         return ticketMapper.aggregateSlaBreach();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStatus(Long initiationId) {
         return ticketMapper.aggregateByStatus(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OpsTicketDO> listByInitiation(Long initiationId) {
         return ticketMapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OpsTicketDO> listByWarranty(Long warrantyId) {
         return ticketMapper.selectByWarranty(warrantyId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<OpsTicketDO> listByAssignee(Long assigneeId, String status) {
         return ticketMapper.selectByAssignee(assigneeId, status);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public OpsTicketDO getById(Long id) {
         if (id == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_8f2cc72d");

@@ -186,6 +186,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      * @throws BizException 商机不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public OpportunityDO getById(Long id) {
         OpportunityDO o = opportunityMapper.selectById(id);
         if (o == null) {
@@ -207,6 +208,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     @Override
     @DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
+    @Transactional(readOnly = true)
     public Page<OpportunityDO> page(int page, int size, String keyword, String status, String level, Long ownerId) {
         Page<OpportunityDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OpportunityDO> w = new LambdaQueryWrapper<>();
@@ -250,6 +252,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      * @return 每种状态对应的数量列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return opportunityMapper.aggregateByStatus(tenantId);
@@ -262,6 +265,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      * @return 每种级别对应的数量列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByLevel(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return opportunityMapper.aggregateByLevel(tenantId);

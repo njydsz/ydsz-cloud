@@ -272,6 +272,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BigDecimal sumInvoicedByContract(Long contractId) {
         if (contractId == null) return BigDecimal.ZERO;
         BigDecimal v = invoiceMapper.sumInvoicedByContract(contractId);
@@ -279,12 +280,14 @@ public class InvoiceServiceImpl implements InvoiceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStatus(Long contractId) {
         if (contractId == null) return List.of();
         return invoiceMapper.aggregateByStatus(contractId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> sumByMonth(Long initiationId) {
         if (initiationId == null) return List.of();
         return invoiceMapper.sumByMonth(initiationId);

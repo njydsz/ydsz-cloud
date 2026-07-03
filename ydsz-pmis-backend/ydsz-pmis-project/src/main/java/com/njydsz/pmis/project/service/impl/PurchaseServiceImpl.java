@@ -109,6 +109,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PurchaseDO getById(Long id) {
         PurchaseDO p = purchaseMapper.selectById(id);
         if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_df942bcd");
@@ -116,6 +117,7 @@ public class PurchaseServiceImpl implements PurchaseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<PurchaseDO> page(int page, int size, String keyword, String status, Long initiationId) {
         Page<PurchaseDO> p = new Page<>(page, size);
         LambdaQueryWrapper<PurchaseDO> w = new LambdaQueryWrapper<>();

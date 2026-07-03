@@ -109,6 +109,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProjectClosureDO getById(Long id) {
         ProjectClosureDO c = closureMapper.selectById(id);
         if (c == null) {
@@ -118,12 +119,14 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProjectClosureDO getByInitiation(Long initiationId) {
         if (initiationId == null) return null;
         return closureMapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ProjectClosureDO> page(int page, int size, String keyword,
                                        String closureType, String status) {
         Page<ProjectClosureDO> p = new Page<>(page, size);
@@ -140,17 +143,20 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProjectClosureDO> listByType(String closureType) {
         return closureMapper.selectByType(closureType);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByType(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return closureMapper.aggregateByType(tenantId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ClosureAdmissionValidator.AdmissionCheck checkAdmission(Long id) {
         ProjectClosureDO c = getById(id);
         ClosureType type = ClosureType.fromCode(c.getClosureType());

@@ -117,6 +117,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      * @throws BizException 模板不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public ContractTemplateDO getById(Long id) {
         ContractTemplateDO t = templateMapper.selectById(id);
         if (t == null) {
@@ -136,6 +137,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      * @return 分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<ContractTemplateDO> page(int page, int size, String keyword,
                                          String contractType, String status) {
         Page<ContractTemplateDO> p = new Page<>(page, size);
@@ -158,6 +160,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
      * @return 模板列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<ContractTemplateDO> listByType(String contractType, String status) {
         return templateMapper.selectByType(contractType, status);
     }

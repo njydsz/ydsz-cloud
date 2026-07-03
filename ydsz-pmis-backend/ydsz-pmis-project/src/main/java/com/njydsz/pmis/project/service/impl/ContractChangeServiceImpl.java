@@ -155,6 +155,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      * @throws BizException 变更不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public ContractChangeDO getById(Long id) {
         ContractChangeDO c = changeMapper.selectById(id);
         if (c == null) {
@@ -173,6 +174,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      * @return 分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<ContractChangeDO> page(int page, int size, Long contractId, String status) {
         Page<ContractChangeDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ContractChangeDO> w = new LambdaQueryWrapper<>();
@@ -189,6 +191,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
      * @return 变更记录列表，合同 ID 为空时返回空列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<ContractChangeDO> listByContract(Long contractId) {
         if (contractId == null) return List.of();
         return changeMapper.selectByContractId(contractId);

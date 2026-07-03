@@ -131,18 +131,21 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public CustomerCreditDO getByCustomer(Long customerId) {
         if (customerId == null) return null;
         return creditMapper.selectByCustomerId(customerId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CustomerCreditDO> listByLevel(CreditLevel level) {
         if (level == null) return List.of();
         return creditMapper.selectByLevel(level.getCode());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> profile(Long customerId) {
         if (customerId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "客户 ID 不能为空");
@@ -165,6 +168,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> distribution() {
         List<Map<String, Object>> result = new ArrayList<>();
         for (CreditLevel l : CreditLevel.values()) {
@@ -178,6 +182,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<CustomerCreditDO> page(int page, int size, String keyword, String level) {
         Page<CustomerCreditDO> p = new Page<>(page, size);
         LambdaQueryWrapper<CustomerCreditDO> w = new LambdaQueryWrapper<>();

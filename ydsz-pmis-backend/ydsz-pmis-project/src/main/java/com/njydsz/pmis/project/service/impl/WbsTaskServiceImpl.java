@@ -151,6 +151,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public WbsTaskDO getById(Long id) {
         WbsTaskDO t = wbsTaskMapper.selectById(id);
         if (t == null) {
@@ -161,6 +162,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
 
     @Override
     @DataScope(userColumn = "created_by")
+    @Transactional(readOnly = true)
     public Page<WbsTaskDO> page(int page, int size, String keyword, String status,
                                 String taskType, Long initiationId, Long ownerId) {
         Page<WbsTaskDO> p = new Page<>(page, size);
@@ -181,16 +183,19 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<WbsTaskDO> listByInitiation(Long initiationId) {
         return wbsTaskMapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<WbsTaskDO> listMilestones(Long initiationId) {
         return wbsTaskMapper.selectMilestones(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BigDecimal calcOverallProgress(Long initiationId) {
         List<WbsTaskDO> list = wbsTaskMapper.selectByInitiation(initiationId);
         if (list == null || list.isEmpty()) return BigDecimal.ZERO;
@@ -207,6 +212,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStatus(Long initiationId) {
         if (initiationId == null) return List.of();
         return wbsTaskMapper.aggregateByStatus(initiationId);

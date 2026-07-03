@@ -272,11 +272,13 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AlertDispatchDO> listByLevelAndStatus(String level, String status) {
         return mapper.selectByLevelAndStatus(level, status);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByTypeAndLevel(Long tenantId) {
         return mapper.aggregateByTypeAndLevel(tenantId);
     }

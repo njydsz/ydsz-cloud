@@ -106,6 +106,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExpenseDO getById(Long id) {
         ExpenseDO e = expenseMapper.selectById(id);
         if (e == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_fe55e2d1");
@@ -113,6 +114,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ExpenseDO> page(int page, int size, String keyword, String status,
                                 String expenseType, Long employeeId, Long initiationId) {
         Page<ExpenseDO> p = new Page<>(page, size);

@@ -163,6 +163,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public TimeEntryDO getById(Long id) {
         TimeEntryDO e = timeEntryMapper.selectById(id);
         if (e == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_24f2654b");
@@ -171,6 +172,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     @DataScope(userColumn = "employee_id")
+    @Transactional(readOnly = true)
     public Page<TimeEntryDO> page(int page, int size, String keyword, String status,
                                   Long employeeId, Long initiationId, Long taskId,
                                   LocalDate from, LocalDate to) {
@@ -194,22 +196,26 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TimeEntryDO> listByEmployeeAndDateRange(Long employeeId, LocalDate from, LocalDate to) {
         return timeEntryMapper.selectByEmployeeAndDateRange(employeeId, from, to);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<TimeEntryDO> listByInitiationAndDateRange(Long initiationId, LocalDate from, LocalDate to) {
         return timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateHoursByEmployeeAndLevel(Long initiationId,
                                                                       LocalDate from, LocalDate to) {
         return timeEntryMapper.aggregateHoursByEmployeeAndLevel(initiationId, from, to);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> detectCrossProject(Long employeeId, LocalDate entryDate) {
         if (employeeId == null || entryDate == null) return List.of();
         return timeEntryMapper.detectCrossProject(employeeId, entryDate);

@@ -106,6 +106,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      * @throws BizException 补充协议不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public ContractSupplementDO getById(Long id) {
         ContractSupplementDO s = supplementMapper.selectById(id);
         if (s == null) {
@@ -121,6 +122,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      * @return 补充协议列表，合同 ID 为空时返回空列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<ContractSupplementDO> listByContract(Long contractId) {
         if (contractId == null) return List.of();
         return supplementMapper.selectByContractId(contractId);
@@ -135,6 +137,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
      * @return 分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<ContractSupplementDO> page(int page, int size, Long contractId) {
         Page<ContractSupplementDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ContractSupplementDO> w = new LambdaQueryWrapper<>();

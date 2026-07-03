@@ -150,6 +150,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * @throws BizException 变更不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public ProjectChangeDO getById(Long id) {
         ProjectChangeDO c = changeMapper.selectById(id);
         if (c == null) {
@@ -170,6 +171,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * @return 分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<ProjectChangeDO> page(int page, int size, String keyword,
                                       String changeType, String status, Long initiationId) {
         Page<ProjectChangeDO> p = new Page<>(page, size);
@@ -193,6 +195,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * @return 变更记录列表，立项 ID 为空时返回空列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<ProjectChangeDO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
         return changeMapper.selectByInitiation(initiationId);
@@ -205,6 +208,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * @return 每种变更类型对应的数量列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByType(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return changeMapper.aggregateByType(tenantId);
@@ -217,6 +221,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * @return 每种状态对应的数量列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return changeMapper.aggregateByStatus(tenantId);
@@ -229,6 +234,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      * @return 重大变更数量，立项 ID 为空时返回 0
      */
     @Override
+    @Transactional(readOnly = true)
     public long countMajorByInitiation(Long initiationId) {
         if (initiationId == null) return 0L;
         return changeMapper.countMajorByInitiation(initiationId);

@@ -68,6 +68,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DeliveryStandardDO getStandardById(Long id) {
         DeliveryStandardDO s = standardMapper.selectById(id);
         if (s == null) {
@@ -77,6 +78,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DeliveryStandardDO> listStandards(String projectType, String projectLevel, String stage) {
         if (StringUtils.hasText(stage)) {
             return standardMapper.selectByStage(projectType, projectLevel, stage);
@@ -85,6 +87,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countStandardsByType(String projectType) {
         if (!StringUtils.hasText(projectType)) return 0L;
         return standardMapper.countByType(projectType);
@@ -168,6 +171,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DeliveryItemDO getItemById(Long id) {
         DeliveryItemDO i = itemMapper.selectById(id);
         if (i == null) {
@@ -177,18 +181,21 @@ public class DeliveryServiceImpl implements DeliveryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DeliveryItemDO> listItemsByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
         return itemMapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DeliveryItemDO> listItemsByStage(Long initiationId, String stage) {
         if (initiationId == null) return List.of();
         return itemMapper.selectByStage(initiationId, stage);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateItemStatus(Long initiationId) {
         if (initiationId == null) return List.of();
         return itemMapper.aggregateByStatus(initiationId);
@@ -197,6 +204,7 @@ public class DeliveryServiceImpl implements DeliveryService {
     // ========== 阶段门控 ==========
 
     @Override
+    @Transactional(readOnly = true)
     public StageGateValidator.GateCheckResult checkStageGate(Long initiationId, String targetStage,
                                                               String projectLevel) {
         DeliveryStage target = DeliveryStage.fromCode(targetStage);

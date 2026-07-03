@@ -66,23 +66,27 @@ public class ProfitServiceImpl implements ProfitService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProfitSnapshotDO getByInitiationAndPeriod(Long initiationId, String period) {
         return snapshotMapper.selectByInitiationAndPeriod(initiationId, period);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProfitSnapshotDO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
         return snapshotMapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> trendByPeriod(Long initiationId) {
         if (initiationId == null) return List.of();
         return snapshotMapper.trendByPeriod(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public int healthScore(Long initiationId, String period) {
         ProfitSnapshotDO s = snapshotMapper.selectByInitiationAndPeriod(initiationId, period);
         if (s == null) return -1;

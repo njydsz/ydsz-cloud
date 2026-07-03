@@ -130,11 +130,13 @@ public class WarrantyServiceImpl implements WarrantyService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<WarrantyDO> listExpiring(LocalDate until) {
         return warrantyMapper.selectExpiringBefore(until);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<WarrantyDO> page(int page, int size, String status, Long initiationId, String keyword) {
         Page<WarrantyDO> p = new Page<>(page, size);
         LambdaQueryWrapper<WarrantyDO> w = new LambdaQueryWrapper<>();
@@ -149,6 +151,7 @@ public class WarrantyServiceImpl implements WarrantyService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public WarrantyDO getById(Long id) {
         WarrantyDO w = warrantyMapper.selectById(id);
         if (w == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_6457af8b");

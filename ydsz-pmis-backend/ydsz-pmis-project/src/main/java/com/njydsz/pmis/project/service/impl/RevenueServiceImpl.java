@@ -104,6 +104,7 @@ public class RevenueServiceImpl implements RevenueService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RevenueDO getById(Long id) {
         RevenueDO r = revenueMapper.selectById(id);
         if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_4924d9b4");
@@ -111,6 +112,7 @@ public class RevenueServiceImpl implements RevenueService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<RevenueDO> page(int page, int size, String keyword, String status,
                                  Long contractId, Long initiationId, String period) {
         Page<RevenueDO> p = new Page<>(page, size);
@@ -128,17 +130,20 @@ public class RevenueServiceImpl implements RevenueService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RevenueDO> listByInitiation(Long initiationId) {
         return revenueMapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> sumByContract(Long contractId) {
         if (contractId == null) return List.of();
         return revenueMapper.sumByContract(contractId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> sumByPeriod(Long initiationId) {
         if (initiationId == null) return List.of();
         return revenueMapper.sumByPeriod(initiationId);

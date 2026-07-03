@@ -308,6 +308,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @return 预算明细列表，立项 ID 为空时返回空列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<BudgetItemDO> listBudget(Long initiationId) {
         if (initiationId == null) return List.of();
         return budgetItemMapper.selectByInitiationId(initiationId);
@@ -320,6 +321,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @return 每种分类对应的汇总金额列表，立项 ID 为空时返回空列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> sumBudgetByCategory(Long initiationId) {
         if (initiationId == null) return List.of();
         return budgetItemMapper.sumByCategory(initiationId);
@@ -405,6 +407,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @return 评审记录列表，立项 ID 为空时返回空列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<GateReviewDO> listGateReviews(Long initiationId) {
         if (initiationId == null) return List.of();
         return gateReviewMapper.selectByInitiationId(initiationId);
@@ -419,6 +422,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @return 每种阶段对应的数量列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStage(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return initiationMapper.aggregateByStage(tenantId);
@@ -511,6 +515,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @throws BizException 立项不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> budgetSnapshot(Long id) {
         InitiationDO o = getById(id);
         Map<String, Object> snap = new LinkedHashMap<>();

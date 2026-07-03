@@ -130,6 +130,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ProfitSimulationDO getById(Long id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         ProfitSimulationDO s = mapper.selectById(id);
@@ -138,12 +139,14 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ProfitSimulationDO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
         return mapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> compare(Long initiationId) {
         if (initiationId == null) return List.of();
         List<ProfitSimulationDO> list = mapper.selectByInitiation(initiationId);
@@ -170,6 +173,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ProfitSimulationDO> page(int page, int size, Long initiationId, String scenarioType, String status) {
         Page<ProfitSimulationDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ProfitSimulationDO> w = new LambdaQueryWrapper<>();

@@ -122,6 +122,7 @@ public class ContractServiceImpl implements ContractService {
      * @throws BizException 合同不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public ContractDO getById(Long id) {
         ContractDO c = contractMapper.selectById(id);
         if (c == null) {
@@ -144,6 +145,7 @@ public class ContractServiceImpl implements ContractService {
      * @return 分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<ContractDO> page(int page, int size, String keyword, String status,
                                  String contractType, String riskLevel) {
         Page<ContractDO> p = new Page<>(page, size);
@@ -189,6 +191,7 @@ public class ContractServiceImpl implements ContractService {
      * @return 每种状态对应的数量列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return contractMapper.aggregateByStatus(tenantId);
@@ -201,6 +204,7 @@ public class ContractServiceImpl implements ContractService {
      * @return 每种风险等级对应的数量列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByRisk(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return contractMapper.aggregateByRisk(tenantId);

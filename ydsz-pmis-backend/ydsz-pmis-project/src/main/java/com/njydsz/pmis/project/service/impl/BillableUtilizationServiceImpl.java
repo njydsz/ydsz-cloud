@@ -10,6 +10,7 @@ import com.njydsz.pmis.project.service.BillableUtilizationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -35,6 +36,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class BillableUtilizationServiceImpl implements BillableUtilizationService {
 
     private final TimeEntryMapper timeEntryMapper;
@@ -166,6 +168,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Map<String, Object> recompute(String period, boolean recomputeAll) {
         long start = System.currentTimeMillis();
         String p = (period == null || period.isBlank())

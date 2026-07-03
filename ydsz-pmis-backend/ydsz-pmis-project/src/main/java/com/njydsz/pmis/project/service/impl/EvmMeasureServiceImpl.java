@@ -103,6 +103,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public EvmMeasureDO getById(Long id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         EvmMeasureDO m = evmMapper.selectById(id);
@@ -111,24 +112,28 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EvmMeasureDO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
         return evmMapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EvmMeasureDO> listByWbs(Long wbsTaskId) {
         if (wbsTaskId == null) return List.of();
         return evmMapper.selectByWbs(wbsTaskId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> trend(Long initiationId) {
         if (initiationId == null) return List.of();
         return evmMapper.trendByPeriod(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> dashboard(Long initiationId) {
         Map<String, Object> dash = new HashMap<>();
         if (initiationId == null) return dash;
@@ -166,6 +171,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<EvmMeasureDO> page(int page, int size, Long initiationId, String alertLevel) {
         Page<EvmMeasureDO> p = new Page<>(page, size);
         LambdaQueryWrapper<EvmMeasureDO> w = new LambdaQueryWrapper<>();

@@ -93,18 +93,21 @@ public class CostAllocationServiceImpl implements CostAllocationService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> monthlySummary(Long initiationId) {
         if (initiationId == null) return List.of();
         return costAllocationMapper.monthlySummary(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> sumByType(Long initiationId, String period) {
         if (initiationId == null) return List.of();
         return costAllocationMapper.sumByType(initiationId, period);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<CostAllocationDO> listByInitiationAndPeriod(Long initiationId, String period) {
         return costAllocationMapper.selectByInitiationAndPeriod(initiationId, period);
     }
