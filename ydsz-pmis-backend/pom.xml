@@ -24,8 +24,8 @@
         <module>ydsz-pmis-iam</module>
         <module>ydsz-pmis-system</module>
         <module>ydsz-pmis-workflow</module>
-        <!-- ydsz-pmis-xxljob 模块目录不存在，临时注释（预存问题） -->
-        <!-- <module>ydsz-pmis-xxljob</module> -->
+        <module>ydsz-pmis-cronjob</module>
+        <!-- ydsz-pmis-xxljob 已并入 ydsz-pmis-cronjob -->
         <module>ydsz-pmis-project</module>
         <module>ydsz-pmis-agent</module>
         <module>ydsz-pmis-literule</module>

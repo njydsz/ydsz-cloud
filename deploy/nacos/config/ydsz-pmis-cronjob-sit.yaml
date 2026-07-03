@@ -1,6 +1,6 @@
-# ============================================================
-# Nacos 配置：ydsz-pmis-scheduler-sit
-# DataId  : ydsz-pmis-scheduler-sit.yaml
+﻿# ============================================================
+# Nacos 配置：ydsz-pmis-cronjob-sit
+# DataId  : ydsz-pmis-cronjob-sit.yaml
 # Group   : PMIS_GROUP_SIT
 # Namespace: pmis
 # 环境     : SIT（系统集成测试）
@@ -15,7 +15,7 @@ server:
 
 spring:
   application:
-    name: ydsz-pmis-scheduler
+    name: ydsz-pmis-cronjob
   profiles:
     active: sit
   main:
@@ -78,7 +78,7 @@ xxl:
       addresses: ${XXL_JOB_ADMIN}
       access-token: ${XXL_JOB_ACCESS_TOKEN}
     executor:
-      appname: pmis-scheduler
+      appname: ydsz-pmis-cronjob
       address: ${XXL_JOB_EXECUTOR_ADDRESS:}
       ip: ${XXL_JOB_EXECUTOR_IP:}
       port: ${XXL_JOB_EXECUTOR_PORT:9999}
@@ -98,7 +98,7 @@ pmis:
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.scheduler.entity
+  type-aliases-package: com.njydsz.pmis.cronjob.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl

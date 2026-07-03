@@ -1,4 +1,4 @@
-# 后端基础设施使用手册
+﻿# 后端基础设施使用手册
 
 > 文档版本: V1.0 | 编制日期: 2026-06-30
 > 适用版本: ydsz-pmis 1.0.0-SNAPSHOT
@@ -391,7 +391,7 @@ public class UserController {
 | 4 | ydsz-pmis-project | 9005 | 商机/立项/合同/变更/执行/成本/财务/报表/驾驶舱（project + execution 合并，核心域，包名 com.njydsz.pmis.project） |
 | 5 | ydsz-pmis-agent | 9007 | AI 智能体（编排、风险预警、利润预测） |
 | 6 | ydsz-pmis-system | 9008 | 文件/配置/审计/通知/消息模板（file + config + audit + notification + message 合并，包名 com.njydsz.pmis.system） |
-| 7 | ydsz-pmis-scheduler | 9012 | 分布式任务调度（XXL-JOB 客户端） |
+| 7 | ydsz-pmis-cronjob | 9012 | 分布式任务调度（XXL-JOB 客户端） |
 | — | ydsz-pmis-common | — | 公共组件库（响应/异常/工具/常量，不独立部署） |
 | — | ydsz-pmis-literule | — | 轻量规则引擎库（表达式/规则链，不独立部署） |
 

@@ -270,7 +270,7 @@ ok "月度对账完成: ${BATCH_CODE}"
 log "报告: ${REPORT_FILE}"
 
 # ===== 退出码: 0=通过, 1=存在不平衡 =====
-local has_diff=$(psql "${PMIS_DSN}" -tAc "
+has_diff=$(psql "${PMIS_DSN}" -tAc "
   SELECT COUNT(*) FROM pmis_reconcile_log
    WHERE batch_code = '${BATCH_CODE}' AND diff > 0;
 " | tr -d '[:space:]')

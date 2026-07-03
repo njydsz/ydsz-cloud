@@ -38,6 +38,7 @@ import type {
   CreateDelegateAuthDTO,
   DelegateLogDTO,
   SlaOverdueTaskDTO,
+  SlaRuleConfigDTO,
   CanaryRolloutDTO,
   CanaryRolloutLogDTO,
   PublishCanaryDTO,
@@ -642,6 +643,21 @@ export function getFormConfig(definitionId: number, nodeCode: string) {
 export function saveFormConfig(definitionId: number, nodeCode: string, config: Partial<NodeFormConfigDTO>) {
   return http.post<ApiResponse<null>>(
     `/workflow/engine/definition/${definitionId}/form-config/${nodeCode}`,
+    config,
+  )
+}
+
+/** P1-2: 获取节点 SLA 规则配置（返回原始 JSON 字符串，前端自行解析） */
+export function getSlaConfig(definitionId: number, nodeCode: string) {
+  return http.get<ApiResponse<string | null>>(
+    `/workflow/engine/definition/${definitionId}/sla-config/${nodeCode}`,
+  )
+}
+
+/** P1-2: 保存节点 SLA 规则配置（传对象，后端序列化存储） */
+export function saveSlaConfig(definitionId: number, nodeCode: string, config: Partial<SlaRuleConfigDTO>) {
+  return http.post<ApiResponse<null>>(
+    `/workflow/engine/definition/${definitionId}/sla-config/${nodeCode}`,
     config,
   )
 }

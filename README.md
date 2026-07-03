@@ -1,4 +1,4 @@
-# YDSZ PMIS · 项目运营管理系统
+﻿# YDSZ PMIS · 项目运营管理系统
 
 > 南京云顶数字科技有限公司 · 软件定制 + 人力外包 双业态 · 业财一体化精细化运营平台
 >
@@ -128,7 +128,7 @@
 | 项目 | ydsz-pmis-project | **9005** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润（project + execution 合并，包名 com.njydsz.pmis.project） |
 | AI Agent | ydsz-pmis-agent | **9007** | 5 Agent + 4 编排 + 5 LLM Provider |
 | 系统 | ydsz-pmis-system | **9008** | 文件 / 配置 / 审计 / 通知 / 消息模板（file + config + audit + notification + message 合并，包名 com.njydsz.pmis.system） |
-| 调度 | ydsz-pmis-scheduler | **9012** | XXL-JOB 调度 + JobHandler 注册 |
+| 调度 | ydsz-pmis-cronjob | **9012** | XXL-JOB 调度 + JobHandler 注册 |
 | 公共（库） | ydsz-pmis-common | — | 统一响应 / AOP / 注解 / Feign / 敏感数据 / JobHandler / Sentry / I18n / 权限码 / 混沌（不独立部署） |
 | 轻量规则引擎（库） | ydsz-pmis-literule | — | 表达式驱动 + 规则链 + 阈值注入 + dry-run（批次 21 引入，不独立部署） |
 
@@ -221,7 +221,7 @@ ydsz-pmis/
 │   ├── ydsz-pmis-workflow/     # 9004 自研工作流 + BPMN
 │   ├── ydsz-pmis-project/      # 9005 项目/执行/财务/报表 (商机→售后全生命周期)
 │   ├── ydsz-pmis-agent/        # 9007 AI Agent
-│   ├── ydsz-pmis-scheduler/    # 9012 XXL-JOB
+│   ├── ydsz-pmis-cronjob/    # 9012 XXL-JOB
 │   └── ydsz-pmis-literule/     # --  轻量规则引擎 (库, 不独立部署)
 ├── ydsz-pmis-frontend/         # 前端 (Vue 3.5 + Vite 5.4)
 │   ├── src/api/                # 1:1 后端 Controller 封装

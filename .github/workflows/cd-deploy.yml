@@ -38,7 +38,7 @@ jobs:
           - { name: project,   port: 9005,  jar: ydsz-pmis-project }
           - { name: agent,     port: 9007,  jar: ydsz-pmis-agent }
           - { name: system,    port: 9008,  jar: ydsz-pmis-system }
-          - { name: scheduler, port: 9012,  jar: ydsz-pmis-scheduler }
+          - { name: cronjob,  port: 9012,  jar: ydsz-pmis-cronjob }
     steps:
       - uses: actions/checkout@v4
 

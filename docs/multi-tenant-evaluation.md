@@ -1,4 +1,4 @@
-# 多租户架构评估报告
+﻿# 多租户架构评估报告
 
 ## 1. 评估背景
 
@@ -48,7 +48,7 @@ YDSZ PMIS 当前为单租户私有化部署架构。本评估分析 SaaS 多租�
 - ydsz-pmis-gateway — 路由层注入 tenant_id
 
 ### 不需要修改的模块
-- ydsz-pmis-scheduler — 定时任务无租户概念
+- ydsz-pmis-cronjob — 定时任务无租户概念
 
 ## 6. 成本估算
 

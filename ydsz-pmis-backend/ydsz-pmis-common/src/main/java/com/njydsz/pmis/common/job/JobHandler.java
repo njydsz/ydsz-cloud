@@ -1,9 +1,9 @@
-package com.njydsz.pmis.common.job;
+﻿package com.njydsz.pmis.common.job;
 
 /**
  * 任务处理器接口（公共）
  *
- * <p>实现此接口的 Bean 即可被 ydsz-pmis-scheduler 动态调度。
+ * <p>实现此接口的 Bean 即可被 ydsz-pmis-cronjob 动态调度。
  * Bean 名称需与 pmis_job.handler 一致。
  *
  * <p>为避免 scheduler 与业务模块之间的循环依赖，接口统一声明在 common 模块。

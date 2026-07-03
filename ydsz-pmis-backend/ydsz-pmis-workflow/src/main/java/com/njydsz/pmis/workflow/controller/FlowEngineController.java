@@ -1505,6 +1505,36 @@ public class FlowEngineController {
     }
 
     /**
+     * P1-2: 获取节点 SLA 配置（JSON 字符串）
+     *
+     * @param id       流程定义 ID
+     * @param nodeCode 节点编码
+     * @return SLA 配置 JSON（未配置返回 null）
+     */
+    @GetMapping("/definition/{id}/sla-config/{nodeCode}")
+    public Result<String> getSlaConfig(@PathVariable Long id,
+                                        @PathVariable String nodeCode) {
+        return Result.ok(definitionService.getSlaConfig(id, nodeCode));
+    }
+
+    /**
+     * P1-2: 保存节点 SLA 配置
+     *
+     * @param id         流程定义 ID
+     * @param nodeCode   节点编码
+     * @param slaConfig  SLA 配置（JSON 对象，由 controller 序列化为字符串存储）
+     * @return 统一响应结果
+     */
+    @PostMapping("/definition/{id}/sla-config/{nodeCode}")
+    public Result<Void> saveSlaConfig(@PathVariable Long id,
+                                        @PathVariable String nodeCode,
+                                        @RequestBody java.util.Map<String, Object> slaConfig) {
+        String json = slaConfig == null ? null : com.alibaba.fastjson2.JSON.toJSONString(slaConfig);
+        definitionService.saveSlaConfig(id, nodeCode, json);
+        return Result.ok();
+    }
+
+    /**
      * GAP-V2-02: 获取表单渲染数据 — 审批人打开待办时获取字段权限
      *
      * @param instanceId 流程实例 ID

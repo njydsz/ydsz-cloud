@@ -1,11 +1,11 @@
--- ====================================================================
+﻿-- ====================================================================
 -- V1.0.0_020  可计费利用率快照表
 --
 --  说明：可计费利用率（BillableUtilization）由 scheduler 每日计算后
 --        持久化到本表，驾驶舱 / 排行榜 / 趋势分析均直接读快照，
 --        避免每次实时聚合 pmis_execution_time_entry 大表。
 --
---  写入路径：ydsz-pmis-scheduler 模块的
+--  写入路径：ydsz-pmis-cronjob 模块的
 --           BillableUtilizationJobHandler#execute
 --  读取路径：CockpitReportService / AdvancedReportService /
 --           BillableUtilizationController

@@ -148,6 +148,26 @@ public interface FlowDefinitionService {
     void saveFormConfig(Long definitionId, String nodeCode, String formFieldsConfig);
 
     /**
+     * P1-2: 获取节点 SLA 配置（JSON 字符串）
+     *
+     * @param definitionId 流程定义 ID
+     * @param nodeCode     节点编码
+     * @return slaConfig JSON 字符串（如
+     *   {@code {"timeoutMinutes":120,"action":"REMIND","reminderIntervalMinutes":60,"maxReminders":3,"escalateUserId":1}}），
+     *   未配置返回 null
+     */
+    String getSlaConfig(Long definitionId, String nodeCode);
+
+    /**
+     * P1-2: 保存节点 SLA 配置
+     *
+     * @param definitionId 流程定义 ID
+     * @param nodeCode     节点编码
+     * @param slaConfig    SLA 配置 JSON 字符串
+     */
+    void saveSlaConfig(Long definitionId, String nodeCode, String slaConfig);
+
+    /**
      * 列出流程定义的所有历史版本
      *
      * @param definitionId 流程定义 ID（用于获取 flowCode）

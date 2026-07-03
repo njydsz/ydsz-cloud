@@ -1,4 +1,4 @@
-# 部署 & DevOps
+﻿# 部署 & DevOps
 
 本目录包含 PMIS 项目的所有部署、运维、CI/CD 资源。
 
@@ -52,7 +52,7 @@ pnpm install && pnpm dev
 | 工作流 | 9004 | HTTP | ydsz-pmis-workflow |
 | 项目服务 | 9005 | HTTP | ydsz-pmis-project（原 project + execution） |
 | AI Agent | 9007 | HTTP | ydsz-pmis-agent |
-| 调度服务 | 9012 | HTTP | ydsz-pmis-scheduler |
+| 调度服务 | 9012 | HTTP | ydsz-pmis-cronjob |
 | Nacos | 8848 | HTTP | 注册/配置中心 |
 | PostgreSQL | 5432 | TCP | 主数据库 |
 | Redis | 6379 | TCP | 缓存/会话 |

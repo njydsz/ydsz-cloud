@@ -61,7 +61,7 @@ scrape_configs:
           - 'pmis-file'
           - 'pmis-audit'
           - 'pmis-message'
-          - 'pmis-scheduler'
+          - 'pmis-cronjob'
         type: 'A'
         port: 9000  # 基准端口，实际端口通过 relabel 映射
     relabel_configs:
@@ -119,7 +119,7 @@ scrape_configs:
         replacement: '${1}:9011'
       - source_labels: [__meta_dns_name]
         target_label: __address__
-        regex: 'pmis-scheduler'
+        regex: 'ydsz-pmis-cronjob'
         replacement: '${1}:9012'
       # 设置 tier 标签
       - source_labels: [service]

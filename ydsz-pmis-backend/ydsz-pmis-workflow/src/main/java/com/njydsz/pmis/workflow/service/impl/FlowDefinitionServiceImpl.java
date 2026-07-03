@@ -643,6 +643,32 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 definitionId, nodeCode);
     }
 
+    // ============================== P1-2: SLA 节点级配置 ==============================
+
+    @Override
+    public String getSlaConfig(Long definitionId, String nodeCode) {
+        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+        if (node == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
+        }
+        return node.getSlaConfig();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void saveSlaConfig(Long definitionId, String nodeCode, String slaConfig) {
+        FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
+        if (node == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "节点不存在: definitionId=" + definitionId + " nodeCode=" + nodeCode);
+        }
+        node.setSlaConfig(slaConfig);
+        nodeMapper.updateById(node);
+        log.info("[Flow] SLA 配置已保存: definitionId={} nodeCode={} slaConfig={}",
+                definitionId, nodeCode, slaConfig);
+    }
+
     // ============================== 版本历史与差异对比 ==============================
 
     @Override

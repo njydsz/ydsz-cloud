@@ -204,15 +204,15 @@ services:
       APP_NAME: pmis-message
       SERVER_PORT: 9011
 
-  # 13) scheduler - 分布式任务调度
-  scheduler:
-    image: pmis-scheduler:${IMAGE_TAG:-1.0.0}
-    container_name: pmis-scheduler
+  # 13) cronjob - 分布式任务调度
+  cronjob:
+    image: pmis-cronjob:${IMAGE_TAG:-1.0.0}
+    container_name: pmis-cronjob
     <<: *microservice-common
     ports:
       - "9012:9012"
     environment:
-      APP_NAME: pmis-scheduler
+      APP_NAME: pmis-cronjob
       SERVER_PORT: 9012
 
   # ============ 周边组件（独立部署）============

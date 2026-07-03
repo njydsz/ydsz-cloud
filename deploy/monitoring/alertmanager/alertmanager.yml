@@ -1,23 +1,42 @@
+# ====================================================================
+#  PMIS Alertmanager 告警路由配置
+#  ---------------------------------------------------------------------
+#  告警分级:
+#    critical - 严重告警 (5xx/连接池耗尽/Heap > 92%), 1h 重复, 钉钉+邮件
+#    warning  - 警告 (P99 高/GC 频繁), 4h 重复, 仅邮件
+#    default  - 其他未分类告警
+#  环境变量由 docker-compose.monitoring.yml 注入
+# ====================================================================
 global:
+  # 告警恢复超时: 持续 5m 无新触发则标记为 resolved
   resolve_timeout: 5m
 
 route:
+  # 分组维度: 同 alertname + cluster + severity 的告警合并通知
   group_by: ['alertname', 'cluster', 'severity']
+  # 同组内等待 30s 合并, 避免告警风暴
   group_wait: 30s
+  # 同组告警发送间隔 5m
   group_interval: 5m
+  # 同告警重复发送间隔 4h
   repeat_interval: 4h
   receiver: 'default'
+
+  # 子路由: 按严重程度分发到不同 receiver
   routes:
+    # critical 立即发送 (group_wait 缩短到 10s), 1h 重复
     - match:
         severity: critical
       receiver: 'critical'
       group_wait: 10s
       repeat_interval: 1h
+    # warning 4h 重复, 邮件通知即可
     - match:
         severity: warning
       receiver: 'warning'
 
 receivers:
+  # 默认 receiver (兜底, 大多数告警走 warning)
   - name: 'default'
     email_configs:
       - to: '${ALERT_EMAIL_TO:ops@njydsz.com}'
@@ -26,6 +45,7 @@ receivers:
         auth_username: '${SMTP_USER:alert@njydsz.com}'
         auth_password: '${SMTP_PASSWORD}'
         require_tls: true
+  # critical: 邮件 + 钉钉双通道, 故障恢复时也发通知
   - name: 'critical'
     email_configs:
       - to: '${ALERT_EMAIL_TO:ops@njydsz.com}'
@@ -37,6 +57,7 @@ receivers:
     webhook_configs:
       - url: '${DINGTALK_WEBHOOK_URL}'
         send_resolved: true
+  # warning: 仅邮件, 4h 重复
   - name: 'warning'
     email_configs:
       - to: '${ALERT_EMAIL_TO:ops@njydsz.com}'

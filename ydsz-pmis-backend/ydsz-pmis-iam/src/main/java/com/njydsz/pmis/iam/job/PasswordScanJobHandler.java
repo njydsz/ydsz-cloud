@@ -1,4 +1,4 @@
-package com.njydsz.pmis.iam.job;
+﻿package com.njydsz.pmis.iam.job;
 
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.iam.dto.PasswordScanResultDTO;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 /**
  * 密码巡检 JobHandler（P3-3 运维安全增强）
  *
- * <p>由 ydsz-pmis-scheduler 通过 Feign 触发，或 XXL-JOB 直接调用。
+ * <p>由 ydsz-pmis-cronjob 通过 Feign 触发，或 XXL-JOB 直接调用。
  * 建议 cron：每日 03:00 触发；扫描结果写入审计日志并通知 PMO 邮箱。
  *
  * @author ydsz-pmis-team

@@ -1,5 +1,6 @@
 [
   {
+    "_doc": "PMIS Sentinel 限流规则（flow）—— 上传至 Nacos: data-id=pmis-sentinel-flow, group=SENTINEL_GROUP, namespace=pmis",
     "resource": "POST:/api/v1/auth/login",
     "limitApp": "default",
     "grade": 1,
@@ -8,7 +9,7 @@
     "controlBehavior": 0,
     "burstCount": 0,
     "maxQueueingTimeoutMs": 0,
-    "_comment": "登录接口 5 QPS/IP/min，防爆破"
+    "_comment": "登录接口 5 QPS/IP/min，防爆破（grade=1 QPS 限流，controlBehavior=0 直接拒绝）"
   },
   {
     "resource": "POST:/api/v1/auth/2fa/verify",
@@ -16,7 +17,8 @@
     "grade": 1,
     "count": 10,
     "intervalSec": 60,
-    "_comment": "2FA 校验 10 QPS/IP/min"
+    "controlBehavior": 0,
+    "_comment": "2FA 校验 10 QPS/IP/min（与登录协同防爆破）"
   },
   {
     "resource": "POST:/api/v1/execution/import/*",
@@ -24,7 +26,8 @@
     "grade": 1,
     "count": 1,
     "intervalSec": 1,
-    "_comment": "导入接口 1 QPS/用户/秒，避免 OOM"
+    "controlBehavior": 0,
+    "_comment": "导入接口 1 QPS/用户/秒，避免大文件解析导致 OOM"
   },
   {
     "resource": "GET:/api/v1/execution/cockpit/*",
@@ -32,7 +35,8 @@
     "grade": 1,
     "count": 10,
     "intervalSec": 1,
-    "_comment": "驾驶舱查询 10 QPS/用户/秒"
+    "controlBehavior": 0,
+    "_comment": "驾驶舱查询 10 QPS/用户/秒（跨模块聚合昂贵）"
   },
   {
     "resource": "GET:/api/v1/execution/report-export/download",
@@ -40,6 +44,7 @@
     "grade": 1,
     "count": 2,
     "intervalSec": 1,
+    "controlBehavior": 0,
     "_comment": "报表导出 2 QPS/用户/秒，避免大数据量并发拖垮"
   },
   {
@@ -48,7 +53,8 @@
     "grade": 1,
     "count": 5,
     "intervalSec": 1,
-    "_comment": "高级报表 5 QPS/用户/秒"
+    "controlBehavior": 0,
+    "_comment": "高级报表 5 QPS/用户/秒（复杂查询）"
   },
   {
     "resource": "POST:/api/v1/execution/closure/*",
@@ -56,7 +62,8 @@
     "grade": 1,
     "count": 3,
     "intervalSec": 1,
-    "_comment": "结项提交 3 QPS/用户/秒"
+    "controlBehavior": 0,
+    "_comment": "结项提交 3 QPS/用户/秒（业务约束）"
   },
   {
     "resource": "POST:/api/v1/project/contracts/*",
@@ -64,7 +71,8 @@
     "grade": 1,
     "count": 5,
     "intervalSec": 1,
-    "_comment": "合同操作 5 QPS/用户/秒"
+    "controlBehavior": 0,
+    "_comment": "合同操作 5 QPS/用户/秒（业务约束）"
   },
   {
     "resource": "POST:/api/v1/agent/run",
@@ -72,6 +80,7 @@
     "grade": 1,
     "count": 2,
     "intervalSec": 1,
+    "controlBehavior": 0,
     "_comment": "AI Agent 调用 2 QPS/用户/秒（模型推理耗时高）"
   },
   {
@@ -80,6 +89,7 @@
     "grade": 1,
     "count": 1,
     "intervalSec": 5,
+    "controlBehavior": 0,
     "_comment": "AgentScope 编排 1 QPS/5秒（多 Agent 协同昂贵）"
   },
   {
@@ -88,6 +98,7 @@
     "grade": 1,
     "count": 20,
     "intervalSec": 1,
+    "controlBehavior": 0,
     "_comment": "审计分页 20 QPS/用户/秒"
   },
   {
@@ -96,7 +107,8 @@
     "grade": 1,
     "count": 30,
     "intervalSec": 1,
-    "_comment": "通知中心列表 30 QPS/用户/秒"
+    "controlBehavior": 0,
+    "_comment": "通知中心列表 30 QPS/用户/秒（前端高频轮询）"
   },
   {
     "resource": "POST:/api/v1/notification/messages/*",
@@ -104,7 +116,8 @@
     "grade": 1,
     "count": 50,
     "intervalSec": 1,
-    "_comment": "通知写入 50 QPS/用户/秒"
+    "controlBehavior": 0,
+    "_comment": "通知写入 50 QPS/用户/秒（批量消费场景）"
   },
   {
     "resource": "POST:/api/v1/workflow/processes/start",
@@ -112,6 +125,7 @@
     "grade": 1,
     "count": 5,
     "intervalSec": 1,
+    "controlBehavior": 0,
     "_comment": "流程发起 5 QPS/用户/秒"
   },
   {
@@ -120,6 +134,7 @@
     "grade": 1,
     "count": 1,
     "intervalSec": 60,
+    "controlBehavior": 0,
     "_comment": "可计费利用率重算 1 QPS/分钟（批次17补齐接口，重算昂贵）"
   }
 ]

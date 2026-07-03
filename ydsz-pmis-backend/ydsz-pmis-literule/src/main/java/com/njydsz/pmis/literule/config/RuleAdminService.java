@@ -136,14 +136,8 @@ public class RuleAdminService {
             }
         }
 
-        // 校验生命周期状态合法性（若 status 非空）
-        if (definition.getStatus() != null && !definition.getStatus().isBlank()) {
-            RuleStatus status = RuleStatus.fromCode(definition.getStatus());
-            if (status == null) {
-                throw new IllegalArgumentException("非法的规则状态: " + definition.getStatus()
-                        + "，合法值: DRAFT/REVIEW/PUBLISHED/DISABLED/ARCHIVED");
-            }
-        }
+        // 校验生命周期状态合法性 + 状态转换合法性
+        validateStatusTransition(definition);
 
         RuleDefinition saved = configProvider.save(definition, operator);
 
@@ -254,6 +248,62 @@ public class RuleAdminService {
      */
     public boolean validateExpression(String expression) {
         return evaluator.validate(expression);
+    }
+
+    /**
+     * 校验规则状态值合法性 + 状态转换合法性
+     *
+     * <p>规则：
+     * <ul>
+     *   <li>status 为空：跳过校验（由数据库默认值生效，向后兼容）</li>
+     *   <li>status 非法值（无法 fromCode 解析）：抛 IllegalArgumentException</li>
+     *   <li>新建（数据库中不存在该 code）：限制初始状态只能为 DRAFT 或 PUBLISHED</li>
+     *   <li>更新（数据库中已存在）：校验 {@code current.canTransitionTo(target)}，
+     *       状态未变化时放行</li>
+     * </ul>
+     *
+     * @param definition 待保存的规则定义
+     * @since 1.4.0
+     */
+    private void validateStatusTransition(RuleDefinition definition) {
+        String statusStr = definition.getStatus();
+        if (statusStr == null || statusStr.isBlank()) {
+            return;
+        }
+        RuleStatus target = RuleStatus.fromCode(statusStr);
+        if (target == null) {
+            throw new IllegalArgumentException("非法的规则状态: " + statusStr
+                    + "，合法值: DRAFT/REVIEW/PUBLISHED/DISABLED/ARCHIVED");
+        }
+
+        RuleDefinition existing = configProvider.findByCode(definition.getCode());
+        if (existing == null) {
+            // 新建：限制初始状态白名单（禁止 REVIEW/DISABLED/ARCHIVED 作为初始状态）
+            if (target != RuleStatus.DRAFT && target != RuleStatus.PUBLISHED) {
+                throw new IllegalStateException(
+                        "新建规则的初始状态只能为 DRAFT 或 PUBLISHED，禁止: " + target.getDesc());
+            }
+            return;
+        }
+
+        // 更新：校验状态转换合法性（状态未变化时直接放行）
+        RuleStatus current = parseStatusSafely(existing.getStatus());
+        if (target != current && !current.canTransitionTo(target)) {
+            throw new IllegalStateException("不允许的状态转换: "
+                    + current.getDesc() + " -> " + target.getDesc()
+                    + "（合法转换路径见 RuleStatus#canTransitionTo）");
+        }
+    }
+
+    /**
+     * 安全解析状态字符串，异常时回退到 PUBLISHED（数据库默认值）
+     *
+     * @param status 状态字符串
+     * @return RuleStatus；无法解析时返回 PUBLISHED
+     */
+    private RuleStatus parseStatusSafely(String status) {
+        RuleStatus parsed = RuleStatus.fromCode(status);
+        return parsed != null ? parsed : RuleStatus.PUBLISHED;
     }
 
     /**

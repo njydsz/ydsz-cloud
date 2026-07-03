@@ -5,7 +5,7 @@
 # 依赖：PostgreSQL（base 环境） + Nacos
 # --------------------------------------------------------------------------
 
-name: pmis-scheduler
+name: pmis-cronjob
 
 services:
   xxl-job-admin:

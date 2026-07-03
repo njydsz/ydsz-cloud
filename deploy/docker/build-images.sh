@@ -1,4 +1,4 @@
-#!/bin/bash
+﻿#!/bin/bash
 # =====================================================================
 #  PMIS 微服务 Docker 镜像批量构建脚本
 # ---------------------------------------------------------------------
@@ -33,7 +33,7 @@ declare -A SERVICES=(
     ["ydsz-pmis-project"]="Dockerfile.service:9005"
     ["ydsz-pmis-agent"]="Dockerfile.service:9007"
     ["ydsz-pmis-system"]="Dockerfile.service:9008"
-    ["ydsz-pmis-scheduler"]="Dockerfile.service:9012"
+    ["ydsz-pmis-cronjob"]="Dockerfile.service:9012"
     # ydsz-pmis-common / ydsz-pmis-literule 为库，不独立部署
 )
 

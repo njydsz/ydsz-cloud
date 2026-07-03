@@ -472,6 +472,26 @@ export interface SlaOverdueTaskDTO {
   title?: string
 }
 
+/**
+ * P1-2: 节点级 SLA 规则配置
+ *
+ * 与后端 `FlowNodeDO.slaConfig` JSON 字段对应，由 `FlowSlaServiceImpl` 解析执行。
+ */
+export interface SlaRuleConfigDTO {
+  /** 超时阈值（分钟）。必填，>0 才算开启 SLA */
+  timeoutMinutes: number
+  /** 超时后的最终动作 */
+  action: SlaStrategy
+  /** 提醒间隔（分钟），默认 60 */
+  reminderIntervalMinutes?: number
+  /** 最大提醒次数，达到后执行最终动作，默认 3 */
+  maxReminders?: number
+  /** 升级目标用户 ID（action=ESCALATE 时使用，可空默认管理员） */
+  escalateUserId?: number | null
+  /** 自动操作备注（AUTO_PASS/AUTO_REJECT 时写入审批意见） */
+  autoComment?: string
+}
+
 // ===========================================
 // P1-2: 灰度发布
 // ===========================================

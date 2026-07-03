@@ -1,4 +1,4 @@
-# 南京云顶 PMIS 开发规范总览
+﻿# 南京云顶 PMIS 开发规范总览
 
 > 文档版本: V1.0 | 编制日期: 2026-06-30
 > 对标: 阿里 / 字节 / 美团 / 华为云 等互联网大厂工程标准
@@ -31,7 +31,7 @@ ydsz-pmis/
 │   ├── ydsz-pmis-project/  # 项目/商机/合同/执行/财务/报表 (project + execution 合并)
 │   ├── ydsz-pmis-agent/    # AI 服务
 │   ├── ydsz-pmis-system/   # 文件/配置/审计/通知/消息模板 (file + config + audit + notification + message 合并)
-│   ├── ydsz-pmis-scheduler/ # 分布式任务调度
+│   ├── ydsz-pmis-cronjob/ # 分布式任务调度
 │   └── ydsz-pmis-literule/ # 轻量规则引擎 (库, 不独立部署)
 ├── deploy/                 # 部署与基础设施 (docker/sql/nacos)
 ├── docs/                   # 文档

@@ -1,4 +1,4 @@
-# Nacos 配置中心
+﻿# Nacos 配置中心
 
 将各微服务配置通过 Nacos 集中管理，本目录约定 **互联网大厂标准** 的 DataId / Group / Namespace 三段式命名。
 
@@ -37,7 +37,7 @@
 | ydsz-pmis-workflow | ydsz-pmis-workflow-{dev\|sit\|uat\|prod}.yaml | 9004 |
 | ydsz-pmis-project | ydsz-pmis-project-{dev\|sit\|uat\|prod}.yaml | 9005 |
 | ydsz-pmis-agent | ydsz-pmis-agent-{dev\|sit\|uat\|prod}.yaml | 9007 |
-| ydsz-pmis-scheduler | ydsz-pmis-scheduler-{dev\|sit\|uat\|prod}.yaml | 9012 |
+| ydsz-pmis-cronjob | ydsz-pmis-cronjob-{dev\|sit\|uat\|prod}.yaml | 9012 |
 
 > 服务合并重构后仅保留 7 个微服务：
 > - `user` + `auth` → `iam`（端口 9002）
@@ -204,6 +204,6 @@ curl http://<service-host>:<port>/actuator/refresh
 | 4 | ydsz-pmis-workflow | 9004 | ydsz-pmis-workflow- |
 | 5 | ydsz-pmis-project | 9005 | ydsz-pmis-project- |
 | 6 | ydsz-pmis-agent | 9007 | ydsz-pmis-agent- |
-| 7 | ydsz-pmis-scheduler | 9012 | ydsz-pmis-scheduler- |
+| 7 | ydsz-pmis-cronjob | 9012 | ydsz-pmis-cronjob- |
 
 > 每个模块在 `src/main/resources/` 下保留 4 个环境配置：`*-dev.yaml` / `*-sit.yaml` / `*-uat.yaml` / `*-prod.yaml`。

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.gateway.config;
+﻿package com.njydsz.pmis.gateway.config;
 
 import org.springframework.cloud.gateway.route.RouteLocator;
 import org.springframework.cloud.gateway.route.builder.RouteLocatorBuilder;
@@ -75,8 +75,8 @@ public class RouteConfig {
                         .uri("lb://ydsz-pmis-system"))
 
                 // 调度中心
-                .route("ydsz-pmis-scheduler", r -> r.path("/api/v1/job/**", "/api/v1/scheduler/**")
-                        .uri("lb://ydsz-pmis-scheduler"))
+                .route("ydsz-pmis-cronjob", r -> r.path("/api/v1/job/**", "/api/v1/scheduler/**")
+                        .uri("lb://ydsz-pmis-cronjob"))
 
                 // AI Agent
                 .route("ydsz-pmis-agent", r -> r.path("/api/v1/ai/**", "/api/v1/agent/**")

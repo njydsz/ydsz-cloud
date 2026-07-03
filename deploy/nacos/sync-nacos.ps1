@@ -1,4 +1,4 @@
-# ============================================================
+﻿# ============================================================
 # PMIS Nacos 配置统一同步脚本
 # 合并自: push-configs / push-to-nacos / fix-and-repush / fix-application-yml
 # ------------------------------------------------------------
@@ -63,7 +63,7 @@ $services = @(
     "ydsz-pmis-workflow",
     "ydsz-pmis-project",
     "ydsz-pmis-agent",
-    "ydsz-pmis-scheduler"
+    "ydsz-pmis-cronjob"
 )
 
 # ============================================================

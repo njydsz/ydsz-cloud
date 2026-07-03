@@ -286,8 +286,8 @@ cat >> "${REPORT_FILE}" <<EOF
 
 EOF
 
-local total_pass=0
-local total_fail=0
+total_pass=0
+total_fail=0
 for key in "${KEYS[@]}"; do
   if [[ -f "/tmp/_verify_${key}.status" ]]; then
     if [[ "$(cat /tmp/_verify_${key}.status)" == "PASS" ]]; then

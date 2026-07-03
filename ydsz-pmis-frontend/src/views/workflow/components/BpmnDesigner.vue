@@ -19,6 +19,7 @@ import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
 import { deployDefinition } from '@/api/workflow'
 import type { FlowDeployDTO } from '@/api/workflow/types'
 import FormFieldPermissions from './FormFieldPermissions.vue'
+import SlaRuleConfig from './SlaRuleConfig.vue'
 
 // ==================== Props ====================
 const props = defineProps<{
@@ -581,6 +582,18 @@ function applyTemplate(tpl: (typeof templates)[0]) {
                   @change="(v: number) => onPropertyChange('priority', v)"
                 />
               </el-form-item>
+
+              <!-- P1-2: SLA 超时策略配置（仅已部署流程可配置） -->
+              <el-divider content-position="left">SLA 策略</el-divider>
+              <div v-if="props.definitionId" class="field-perm-wrap">
+                <SlaRuleConfig
+                  :definition-id="props.definitionId"
+                  :node-code="panelData.elementId"
+                />
+              </div>
+              <div v-else class="field-perm-tip">
+                请先发布部署流程后再配置 SLA 策略
+              </div>
 
               <!-- P0-3: 字段权限配置（仅已部署流程可配置） -->
               <el-divider content-position="left">字段权限</el-divider>

@@ -2,8 +2,10 @@
 /**
  * @file SLA 管理页
  * @module views/workflow/sla
- * @description P1-2: SLA 配置与管理，显示超时任务列表，支持手动扫描和单任务处理，
- *   展示 SLA 策略（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）。
+ * @description P1-2: SLA 配置与管理：
+ *   1. SLA 规则预览：选择流程定义 → 展示各节点 SLA 配置（超时阈值/动作/提醒策略）
+ *   2. 超时任务列表：支持手动扫描和单任务处理
+ *   3. SLA 策略说明（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）
  */
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -12,9 +14,86 @@ import {
   listOverdueTasks,
   scanSla,
   processSlaTask,
+  pageDefinitions,
+  getDefinition,
 } from '@/api/workflow'
-import type { FlowTaskDTO } from '@/api/workflow/types'
-import type { SlaStrategy } from '@/api/workflow/types'
+import type { FlowTaskDTO, FlowDefinitionDTO, SlaStrategy, SlaRuleConfigDTO } from '@/api/workflow/types'
+
+// ==================== SLA 规则预览 ====================
+const ruleLoading = ref(false)
+const flowDefinitions = ref<FlowDefinitionDTO[]>([])
+const selectedDefinitionId = ref<number | null>(null)
+interface NodeSlaRow {
+  nodeCode: string
+  nodeName: string
+  nodeType: number
+  slaEnabled: boolean
+  timeoutMinutes?: number
+  action?: SlaStrategy
+  reminderIntervalMinutes?: number
+  maxReminders?: number
+  escalateUserId?: number | null
+  autoComment?: string
+}
+const nodeSlaRows = ref<NodeSlaRow[]>([])
+
+async function loadFlowDefinitions() {
+  try {
+    const res = await pageDefinitions({ status: 'PUBLISHED', pageNum: 1, pageSize: 200 })
+    if (res.data?.code === 0) {
+      flowDefinitions.value = res.data.data?.records || []
+    }
+  } catch {
+    // 静默失败
+  }
+}
+
+async function loadNodeSlaConfig(defId: number) {
+  ruleLoading.value = true
+  try {
+    const res = await getDefinition(defId)
+    if (res.data?.code === 0 && res.data?.data) {
+      const data = res.data.data as any
+      const nodes: any[] = data.nodes || []
+      nodeSlaRows.value = nodes.map((n) => {
+        const cfg = parseSlaConfig(n.slaConfig)
+        return {
+          nodeCode: n.nodeCode,
+          nodeName: n.nodeName,
+          nodeType: n.nodeType,
+          slaEnabled: !!cfg,
+          timeoutMinutes: cfg?.timeoutMinutes,
+          action: cfg?.action,
+          reminderIntervalMinutes: cfg?.reminderIntervalMinutes,
+          maxReminders: cfg?.maxReminders,
+          escalateUserId: cfg?.escalateUserId,
+          autoComment: cfg?.autoComment,
+        }
+      })
+    }
+  } catch (e) {
+    ElMessage.error('加载 SLA 规则失败：' + (e as Error).message)
+  } finally {
+    ruleLoading.value = false
+  }
+}
+
+function parseSlaConfig(jsonStr?: string | null): Partial<SlaRuleConfigDTO> | null {
+  if (!jsonStr) return null
+  try {
+    return JSON.parse(jsonStr) as Partial<SlaRuleConfigDTO>
+  } catch {
+    return null
+  }
+}
+
+function onDefinitionChange(val: number | null) {
+  if (val) {
+    loadNodeSlaConfig(val)
+  } else {
+    nodeSlaRows.value = []
+  }
+}
 
 // ==================== 状态 ====================
 const loading = ref(false)
@@ -122,7 +201,10 @@ function getSlaStrategy(row: any): string {
   return row.strategy || row.slaStrategy || 'REMIND'
 }
 
-onMounted(() => loadOverdueTasks())
+onMounted(() => {
+  loadFlowDefinitions()
+  loadOverdueTasks()
+})
 </script>
 
 <template>
@@ -151,6 +233,94 @@ onMounted(() => loadOverdueTasks())
           </el-tag>
           <span class="strategy-desc">{{ opt.desc }}</span>
         </div>
+      </div>
+    </el-card>
+
+    <!-- P1-2: SLA 规则预览（按流程定义查看节点配置） -->
+    <el-card shadow="never" class="page-body">
+      <template #header>
+        <div class="card-header">
+          <span class="card-title">SLA 规则预览</span>
+          <el-select
+            v-model="selectedDefinitionId"
+            placeholder="选择流程定义查看节点 SLA 配置"
+            clearable
+            filterable
+            size="small"
+            style="width: 280px"
+            @change="onDefinitionChange"
+          >
+            <el-option
+              v-for="def in flowDefinitions"
+              :key="def.id"
+              :label="def.flowName"
+              :value="def.id"
+            />
+          </el-select>
+        </div>
+      </template>
+
+      <el-table
+        v-loading="ruleLoading"
+        :data="nodeSlaRows"
+        border
+        stripe
+        size="small"
+        empty-text="请选择流程定义查看节点 SLA 配置"
+      >
+        <el-table-column prop="nodeCode" label="节点编码" min-width="120" show-overflow-tooltip />
+        <el-table-column prop="nodeName" label="节点名称" min-width="120">
+          <template #default="{ row }">
+            {{ row.nodeName || row.nodeCode }}
+          </template>
+        </el-table-column>
+        <el-table-column label="SLA 状态" width="100" align="center">
+          <template #default="{ row }">
+            <el-tag v-if="row.slaEnabled" type="success" size="small">已启用</el-tag>
+            <el-tag v-else type="info" size="small">未配置</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="超时阈值" width="110" align="center">
+          <template #default="{ row }">
+            <span v-if="row.slaEnabled">{{ row.timeoutMinutes }} 分钟</span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="超时动作" width="110" align="center">
+          <template #default="{ row }">
+            <el-tag
+              v-if="row.action"
+              :type="(slaStrategyMap[row.action]?.type as any) || 'info'"
+              size="small"
+            >
+              {{ slaStrategyMap[row.action]?.label || row.action }}
+            </el-tag>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="提醒间隔" width="100" align="center">
+          <template #default="{ row }">
+            <span v-if="row.slaEnabled">{{ row.reminderIntervalMinutes || 60 }} 分钟</span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="最大提醒" width="90" align="center">
+          <template #default="{ row }">
+            <span v-if="row.slaEnabled">{{ row.maxReminders ?? 3 }} 次</span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="升级用户" width="90" align="center">
+          <template #default="{ row }">
+            <span v-if="row.action === 'ESCALATE' && row.escalateUserId">
+              {{ row.escalateUserId }}
+            </span>
+            <span v-else class="text-muted">-</span>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div class="sla-rule-tip">
+        提示：SLA 配置在流程设计器节点属性面板中维护，发布后在此预览。任务超时后由系统每 60 秒自动扫描触发。
       </div>
     </el-card>
 
@@ -309,5 +479,16 @@ onMounted(() => loadOverdueTasks())
   display: flex;
   justify-content: flex-end;
   margin-top: 16px;
+}
+
+.text-muted {
+  color: #c0c4cc;
+}
+
+.sla-rule-tip {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
+  line-height: 1.5;
 }
 </style>
