@@ -34,6 +34,7 @@ import {
   LegendComponent,
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
+import { logger } from '@/utils/logger'
 
 /** ECharts tooltip formatter 的 axisPointer 模式参数类型（外部未导出，手动声明） */
 interface AxisTooltipParam {
@@ -168,7 +169,7 @@ async function loadOverview() {
   } catch (e) {
     // 拦截器已弹错误提示，此处仅记录失败计数用于轮询退避
     recordPollFailure()
-    console.warn('[WorkflowMonitor] loadOverview failed:', (e as Error).message)
+    logger.warn('[WorkflowMonitor]', 'loadOverview failed:', (e as Error).message)
   } finally {
     overviewLoading.value = false
   }
@@ -192,7 +193,7 @@ async function loadTrend() {
       renderTrendChart()
     }
   } catch (e) {
-    console.warn('[WorkflowMonitor] loadTrend failed:', (e as Error).message)
+    logger.warn('[WorkflowMonitor]', 'loadTrend failed:', (e as Error).message)
   } finally {
     trendLoading.value = false
   }
@@ -286,7 +287,7 @@ async function loadBottleneck() {
       renderBottleneckChart()
     }
   } catch (e) {
-    console.warn('[WorkflowMonitor] loadBottleneck failed:', (e as Error).message)
+    logger.warn('[WorkflowMonitor]', 'loadBottleneck failed:', (e as Error).message)
   } finally {
     bottleneckLoading.value = false
   }
@@ -367,7 +368,7 @@ async function loadApproverEfficiency() {
       renderApproverChart()
     }
   } catch (e) {
-    console.warn('[WorkflowMonitor] loadApproverEfficiency failed:', (e as Error).message)
+    logger.warn('[WorkflowMonitor]', 'loadApproverEfficiency failed:', (e as Error).message)
   } finally {
     approverLoading.value = false
   }
@@ -455,7 +456,7 @@ async function loadAnomaly() {
       anomalyTotal.value = res.data.data?.total || 0
     }
   } catch (e) {
-    console.warn('[WorkflowMonitor] loadAnomaly failed:', (e as Error).message)
+    logger.warn('[WorkflowMonitor]', 'loadAnomaly failed:', (e as Error).message)
   } finally {
     anomalyLoading.value = false
   }
@@ -546,7 +547,7 @@ async function loadDistribution() {
       renderDistributionChart()
     }
   } catch (e) {
-    console.warn('[WorkflowMonitor] loadDistribution failed:', (e as Error).message)
+    logger.warn('[WorkflowMonitor]', 'loadDistribution failed:', (e as Error).message)
   } finally {
     distributionLoading.value = false
   }
@@ -631,8 +632,9 @@ const pollStatus = ref<'running' | 'backing-off' | 'stopped'>('running')
 function recordPollFailure() {
   pollFailCount++
   if (pollFailCount >= POLL_MAX_FAIL) {
-    console.warn(
-      `[WorkflowMonitor] 轮询连续失败 ${pollFailCount} 次，停止自动刷新。请手动刷新页面恢复。`,
+    logger.warn(
+      '[WorkflowMonitor]',
+      `轮询连续失败 ${pollFailCount} 次，停止自动刷新。请手动刷新页面恢复。`,
     )
     ElMessage.warning('监控数据自动刷新已停止（连续失败），请检查网络或后端服务后手动刷新')
     stopPolling()
@@ -643,8 +645,9 @@ function recordPollFailure() {
       POLL_BASE_INTERVAL * Math.pow(2, pollFailCount),
       POLL_MAX_INTERVAL,
     )
-    console.warn(
-      `[WorkflowMonitor] 轮询失败 ${pollFailCount} 次，下次间隔 ${nextInterval / 1000}s`,
+    logger.warn(
+      '[WorkflowMonitor]',
+      `轮询失败 ${pollFailCount} 次，下次间隔 ${nextInterval / 1000}s`,
     )
     pollStatus.value = 'backing-off'
     stopPolling()

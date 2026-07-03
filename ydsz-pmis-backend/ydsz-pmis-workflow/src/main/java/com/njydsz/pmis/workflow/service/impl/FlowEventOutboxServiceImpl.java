@@ -1,8 +1,10 @@
 package com.njydsz.pmis.workflow.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.NotificationClient;
+import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.pmis.workflow.entity.EventOutboxDO;
 import com.njydsz.pmis.workflow.mapper.EventOutboxMapper;
 import com.njydsz.pmis.workflow.service.FlowEventOutboxService;
@@ -68,7 +70,7 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
             event.setNextRetryAt(LocalDateTime.now());
         }
         if (event.getTenantId() == null) {
-            event.setTenantId(1L);
+            event.setTenantId(TenantContext.getTenantId());
         }
         eventOutboxMapper.insert(event);
         log.debug("[Outbox] 事件入箱: id={} type={} bizType={} bizId={}",
@@ -111,6 +113,7 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EventOutboxDO> listDeadEvents(int limit) {
         int effectiveLimit = limit <= 0 ? 50 : limit;
         return eventOutboxMapper.selectList(
@@ -152,8 +155,8 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
      */
     private boolean deliverOne(EventOutboxDO event) {
         try {
-            Map<String, Object> payload = buildNotificationPayload(event);
-            Result<Integer> resp = notificationClient.send(payload);
+            NotificationFeignDTO dto = buildNotificationDTO(event);
+            Result<Integer> resp = notificationClient.send(dto);
             if (resp == null) {
                 log.warn("[Outbox] 投递响应为空: id={}", event.getId());
                 return false;
@@ -190,40 +193,48 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
     }
 
     /**
-     * 构造通知中心 send 接口的 payload
+     * 构造通知中心 send 接口的 DTO
      */
-    private Map<String, Object> buildNotificationPayload(EventOutboxDO event) {
-        Map<String, Object> payload = new HashMap<>();
-        payload.put("eventType", event.getEventType());
-        payload.put("bizType", event.getBizType());
+    private NotificationFeignDTO buildNotificationDTO(EventOutboxDO event) {
+        NotificationFeignDTO dto = new NotificationFeignDTO();
+        dto.setTitle(event.getEventType());
+        dto.setContent(event.getPayload());
+        dto.setLevel("INFO");
+        dto.setCategory("WORKFLOW");
+        dto.setBizType(event.getBizType());
         if (event.getBizId() != null) {
-            payload.put("bizId", event.getBizId());
+            dto.setBizId(String.valueOf(event.getBizId()));
         }
-        if (event.getInstanceId() != null) {
-            payload.put("instanceId", event.getInstanceId());
-        }
-        if (event.getTaskId() != null) {
-            payload.put("taskId", event.getTaskId());
-        }
-        if (event.getTargetChannels() != null && !event.getTargetChannels().isBlank()) {
-            payload.put("channels", event.getTargetChannels());
-        }
-        if (event.getTargetUserIds() != null && !event.getTargetUserIds().isBlank()) {
-            payload.put("receiverIds", event.getTargetUserIds());
-        }
-        // 解析 payload JSON 字段
+        // 解析 payload JSON 提取额外字段
         if (event.getPayload() != null && !event.getPayload().isBlank()) {
             try {
                 Map<String, Object> extra = JSON.parseObject(event.getPayload());
                 if (extra != null) {
-                    payload.putAll(extra);
+                    if (extra.containsKey("title")) dto.setTitle((String) extra.get("title"));
+                    if (extra.containsKey("content")) dto.setContent((String) extra.get("content"));
+                    if (extra.containsKey("level")) dto.setLevel((String) extra.get("level"));
+                    if (extra.containsKey("receiverId")) {
+                        Object rid = extra.get("receiverId");
+                        if (rid instanceof Number n) dto.setReceiverId(n.longValue());
+                    }
                 }
             } catch (Exception ignore) {
-                payload.put("rawPayload", event.getPayload());
+                // payload 非 JSON，保留原始内容
             }
         }
-        payload.put("traceId", event.getProviderTraceId());
-        return payload;
+        // 批量接收人
+        if (event.getTargetUserIds() != null && !event.getTargetUserIds().isBlank()) {
+            try {
+                List<Long> ids = new java.util.ArrayList<>();
+                for (String s : event.getTargetUserIds().split(",")) {
+                    ids.add(Long.parseLong(s.trim()));
+                }
+                dto.setReceiverIds(ids);
+            } catch (Exception ignore) {
+                // 解析失败忽略
+            }
+        }
+        return dto;
     }
 
     /**

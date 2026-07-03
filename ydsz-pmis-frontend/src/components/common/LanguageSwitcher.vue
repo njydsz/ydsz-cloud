@@ -7,6 +7,7 @@
 import { useI18n } from 'vue-i18n'
 import { setLocale, getLocale, type LocaleType } from '@/locales'
 import { ElTooltip } from 'element-plus'
+import { logger } from '@/utils/logger'
 
 const { t } = useI18n()
 
@@ -23,8 +24,7 @@ const currentLocale = computed(() => getLocale())
 function handleSelect(next: LocaleType) {
   if (next === currentLocale.value) return
   setLocale(next)
-  // eslint-disable-next-line no-console
-  console.info(`[i18n] switched to ${next}`)
+  logger.info('[i18n]', `switched to ${next}`)
 }
 </script>
 

@@ -31,6 +31,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentMapper departmentMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<DepartmentTreeVO> tree() {
         List<DepartmentDO> all = departmentMapper.selectAllEnabled();
         Map<Long, DepartmentTreeVO> map = new HashMap<>();
@@ -55,11 +56,13 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<DepartmentDO> listAllEnabled() {
         return departmentMapper.selectAllEnabled();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public DepartmentDO getById(Long id) {
         DepartmentDO d = departmentMapper.selectById(id);
         if (d == null) {

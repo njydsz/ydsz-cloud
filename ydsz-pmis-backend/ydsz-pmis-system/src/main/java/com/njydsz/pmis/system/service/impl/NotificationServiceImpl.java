@@ -146,6 +146,7 @@ public class NotificationServiceImpl implements NotificationService {
      * @return 通知分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<NotificationDO> inbox(Long userId, NotificationQueryDTO query) {
         Page<NotificationDO> page = new Page<>(query.getPage(), query.getSize());
         LambdaQueryWrapper<NotificationDO> w = new LambdaQueryWrapper<>();
@@ -170,6 +171,7 @@ public class NotificationServiceImpl implements NotificationService {
      * @return 未读通知数
      */
     @Override
+    @Transactional(readOnly = true)
     public long countUnread(Long userId) {
         Long count = notificationMapper.countUnread(userId);
         return count == null ? 0L : count;

@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,11 +25,11 @@ public interface NotificationClient {
     /**
      * 发送通知（单接收/批量均可）
      *
-     * @param payload 通知发送参数（兼容 NotificationSendDTO 字段）
+     * @param payload 通知发送参数（与 NotificationSendDTO 字段对齐）
      * @return 实际入库条数
      */
     @PostMapping("/api/v1/notifications/send")
-    Result<Integer> send(@RequestBody Map<String, Object> payload);
+    Result<Integer> send(@RequestBody NotificationFeignDTO payload);
 
     /**
      * P1-7: 实时推送消息到指定用户（WebSocket）
@@ -43,5 +45,5 @@ public interface NotificationClient {
     @PostMapping("/api/v1/notifications/push")
     Result<Map<String, Object>> pushRealtime(@RequestParam("userId") Long userId,
                                              @RequestParam("type") String type,
-                                             @RequestBody Object payload);
+                                             @RequestBody RealtimePushDTO payload);
 }

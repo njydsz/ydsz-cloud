@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -52,7 +53,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
         // 自动计算回款比例
         c.setReceivedRatio(computeRatio(dto.getReceivedAmount(), dto.getContractAmount()));
         if (!StringUtils.hasText(c.getStatus())) c.setStatus(ClosureStatus.DRAFT.getCode());
-        if (c.getTenantId() == null) c.setTenantId(1L);
+        if (c.getTenantId() == null) c.setTenantId(TenantContext.getTenantId());
         if (c.getProviderTraceId() == null) c.setProviderTraceId("");
         closureMapper.insert(c);
         log.info("[ProjectClosure] 创建结项: code={} type={} initiation={}",

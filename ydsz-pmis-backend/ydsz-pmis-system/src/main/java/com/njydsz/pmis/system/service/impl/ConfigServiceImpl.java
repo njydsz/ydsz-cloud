@@ -58,6 +58,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @return 分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<ConfigDO> page(ConfigQueryDTO query) {
         Page<ConfigDO> page = new Page<>(query.getPage(), query.getSize());
         LambdaQueryWrapper<ConfigDO> w = new LambdaQueryWrapper<>();
@@ -87,6 +88,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @throws BizException 当配置不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public ConfigDO getById(Long id) {
         ConfigDO c = configMapper.selectById(id);
         if (c == null) {
@@ -103,6 +105,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @return 配置实体，无则返回 null
      */
     @Override
+    @Transactional(readOnly = true)
     public ConfigDO getByKey(String group, String key) {
         String cacheKey = CACHE_PREFIX + group + ":" + key;
         String cached = redisTemplate.opsForValue().get(cacheKey);
@@ -123,6 +126,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @return key-value 映射
      */
     @Override
+    @Transactional(readOnly = true)
     public Map<String, String> getGroupAsMap(String group) {
         String cacheKey = CACHE_GROUP_PREFIX + group;
         String cached = redisTemplate.opsForValue().get(cacheKey);
@@ -144,6 +148,7 @@ public class ConfigServiceImpl implements ConfigService {
      * @return 公开配置列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<ConfigDO> listPublic() {
         return configMapper.selectPublic();
     }

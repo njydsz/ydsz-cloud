@@ -50,6 +50,15 @@ public interface UserServiceClient {
     Result<Map<Long, String>> batchEmployeeName(@RequestParam("ids") List<Long> ids);
 
     /**
+     * 批量查询客户名称
+     *
+     * @param customerIds 客户 ID 列表
+     * @return 客户 ID 到名称的映射
+     */
+    @GetMapping("/api/v1/user/customers/batch-name")
+    Result<Map<Long, String>> batchCustomerName(@RequestParam("ids") List<Long> customerIds);
+
+    /**
      * 按职级编码查询内部成本费率
      *
      * @param levelCode 职级编码（如 L4、L5）

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.project.entity.DailyReconcileDO;
 import com.njydsz.pmis.project.mapper.CostAllocationMapper;
 import com.njydsz.pmis.project.mapper.DailyReconcileMapper;
@@ -100,7 +101,7 @@ public class DailyReconcileServiceImpl implements DailyReconcileService {
         d.setDiffPct(diffPct);
         d.setStatus(status);
         d.setDetail(detail);
-        d.setTenantId(1L);
+        d.setTenantId(TenantContext.getTenantId());
         d.setProviderTraceId("");
         if (exist == null) {
             reconcileMapper.insert(d);

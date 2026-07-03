@@ -20,7 +20,9 @@ public enum AgentType {
     /** P2-1: 审批人推荐（流程引擎） */
     APPROVER_RECOMMEND("APPROVER_RECOMMEND", "审批人推荐"),
     /** P2-1: 意见起草（流程引擎） */
-    COMMENT_DRAFT("COMMENT_DRAFT", "意见起草");
+    COMMENT_DRAFT("COMMENT_DRAFT", "意见起草"),
+    /** P0-3: AI 一句话生成流程 */
+    FLOW_GENERATOR("FLOW_GENERATOR", "流程生成");
 
     /** 枚举编码 */
     private final String code;

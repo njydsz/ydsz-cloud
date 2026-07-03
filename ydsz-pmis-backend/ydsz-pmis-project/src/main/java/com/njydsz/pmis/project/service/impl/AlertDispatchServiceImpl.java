@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
@@ -78,7 +79,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
         }
         if (d.getRetryCount() == null) d.setRetryCount(0);
         if (d.getStatus() == null) d.setStatus("PENDING");
-        if (d.getTenantId() == null) d.setTenantId(1L);
+        if (d.getTenantId() == null) d.setTenantId(TenantContext.getTenantId());
         if (d.getDispatchedAt() == null) d.setDispatchedAt(LocalDateTime.now());
         if (d.getProviderTraceId() == null) d.setProviderTraceId("");
 

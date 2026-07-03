@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.project.entity.CostAllocationDO;
 import com.njydsz.pmis.project.enums.CostType;
 import com.njydsz.pmis.project.mapper.CostAllocationMapper;
@@ -47,7 +48,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
         c.setEmployeeId(employeeId);
         c.setEmployeeName(employeeName);
         c.setLevelCode(levelCode);
-        c.setTenantId(1L);
+        c.setTenantId(TenantContext.getTenantId());
         c.setProviderTraceId("");
         costAllocationMapper.insert(c);
         return c.getId();
@@ -66,7 +67,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
         c.setDescription("采购成本");
         c.setAmount(amount);
         c.setBillable(billable ? 1 : 0);
-        c.setTenantId(1L);
+        c.setTenantId(TenantContext.getTenantId());
         c.setProviderTraceId("");
         costAllocationMapper.insert(c);
         return c.getId();
@@ -85,7 +86,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
         c.setDescription("费用成本");
         c.setAmount(amount);
         c.setBillable(billable ? 1 : 0);
-        c.setTenantId(1L);
+        c.setTenantId(TenantContext.getTenantId());
         c.setProviderTraceId("");
         costAllocationMapper.insert(c);
         return c.getId();

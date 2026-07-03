@@ -53,7 +53,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             "/api/v1/auth/refresh",
             "/api/v1/auth/captcha",
             "/api/v1/auth/register",
-            "/api/v1/health"
+            "/api/v1/health",
+            // P0-2: 三方审批回调 webhook（钉钉/飞书/企微），通过签名验证保证安全
+            "/api/v1/workflow/third-party/dingtalk/callback",
+            "/api/v1/workflow/third-party/feishu/callback",
+            "/api/v1/workflow/third-party/wecom/callback"
     );
 
     /** JWT Token 生成与校验工具 */

@@ -42,6 +42,8 @@ interface CockpitOverview {
   benchIdleCost: number
   benchIdleCount: number
   utilizationPct: number
+  /** 关键提示项 */
+  hints?: Array<{ level: string; message: string }>
 }
 
 /** 下钻分析数据项 */

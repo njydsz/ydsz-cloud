@@ -112,7 +112,7 @@ public class ReconcileDataProviderImpl implements ReconcileDataProvider {
                 e.getEmployeeId() == null ? null : String.valueOf(e.getEmployeeId()),
                 e.getEntryDate(),
                 e.getHours(),
-                null, // TODO 待接入费率卡(RateCard)查询，填充 billableRate
+                null, // P2 待接入：需注入 RateCardMapper 查询员工对应费率，填充 billableRate
                 e.getStatus(),
                 e.getApproverName()
         );
@@ -132,7 +132,7 @@ public class ReconcileDataProviderImpl implements ReconcileDataProvider {
                 c.getAmount(),
                 c.getCostType(),
                 c.getSourceType(),
-                null // TODO CostAllocationDO 无审批人字段，暂返回 null
+                null // 数据模型限制：CostAllocationDO 无审批人字段，如需审批人信息需先扩展表结构
         );
     }
 

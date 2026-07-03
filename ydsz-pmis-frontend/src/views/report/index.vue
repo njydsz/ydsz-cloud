@@ -4,7 +4,7 @@
   @module views/report
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, reactive, onMounted, onUnmounted, nextTick, watch, type ComponentPublicInstance } from 'vue'
 import { ElMessage } from 'element-plus'
 import * as echarts from 'echarts'
 import {
@@ -34,11 +34,14 @@ type TabKey =
   | 'utilization'
   | 'bench'
 
+/** el-timeline-item 的 type 属性类型 */
+type TimelineType = 'primary' | 'success' | 'warning' | 'danger' | 'info' | ''
+
 const tab = ref<TabKey>('profit')
 const loading = ref(false)
-const reportData = ref<any>(null)
-const summaryData = ref<any[]>([])
-const listData = ref<any[]>([])
+const reportData = ref<Record<string, unknown> | null>(null)
+const summaryData = ref<Record<string, unknown>[]>([])
+const listData = ref<Record<string, unknown>[]>([])
 
 const query = reactive({ initiationId: undefined as number | undefined, period: '' })
 
@@ -47,7 +50,7 @@ const chartRefs = reactive<Record<string, HTMLDivElement | null>>({})
 const charts: Record<string, echarts.ECharts | null> = {}
 
 function setRef(key: string) {
-  return (el: any) => {
+  return (el: Element | ComponentPublicInstance | null) => {
     chartRefs[key] = el as HTMLDivElement | null
   }
 }
@@ -69,85 +72,86 @@ async function load(target: TabKey) {
   }
   loading.value = true
   try {
-    let res: any
+    let res: { data?: unknown } | undefined
     listData.value = []
     reportData.value = null
     summaryData.value = []
     switch (target) {
       case 'profit':
         res = await getProjectProfitReport(query.initiationId!, query.period)
-        reportData.value = res?.data ?? null
+        reportData.value = (res?.data as Record<string, unknown>) ?? null
         break
       case 'cost':
         res = await getCostDetailReport(query.initiationId!, query.period)
-        reportData.value = res?.data ?? null
+        reportData.value = (res?.data as Record<string, unknown>) ?? null
         break
       case 'payment':
         res = await getPaymentLedger(query.initiationId!)
-        reportData.value = res?.data ?? null
+        reportData.value = (res?.data as Record<string, unknown>) ?? null
         break
       case 'lifecycle':
         res = await getLifecycleReport(query.initiationId!)
-        reportData.value = res?.data ?? null
+        reportData.value = (res?.data as Record<string, unknown>) ?? null
         break
       case 'summary':
         res = await getProfitSummary()
-        summaryData.value = (res?.data as any[]) || []
+        summaryData.value = (res?.data as Record<string, unknown>[]) || []
         renderSummaryChart()
         return
       case 'evm':
         // P0 修复: 后端 /evm 仅取 initiationId, period 已被忽略
         res = await getEvmReport(query.initiationId!)
-        listData.value = (res?.data as any[]) || []
+        listData.value = (res?.data as Record<string, unknown>[]) || []
         break
       case 'dualRate':
         // P0 修复: 后端 /dual-rate 仅取 period, 按全局聚合 (不需要 initiationId)
         res = await getDualRateComparison(query.period)
-        listData.value = (res?.data as any[]) || []
+        listData.value = (res?.data as Record<string, unknown>[]) || []
         break
       case 'gantt':
         // P0 修复: 后端 /gantt 必传 initiationId
         res = await getResourceGantt(query.initiationId!)
-        listData.value = (res?.data as any[]) || []
+        listData.value = (res?.data as Record<string, unknown>[]) || []
         break
       case 'risk':
         // P0 修复: 后端 /risk-dashboard 返回 List<Map>, 不取 period
         res = await getRiskDashboard()
-        listData.value = (res?.data as any[]) || []
+        listData.value = (res?.data as Record<string, unknown>[]) || []
         break
       case 'utilization':
         // P0 修复: 后端 /utilization-rank, 默认 top=20
         res = await getUtilizationRank(20)
-        listData.value = (res?.data as any[]) || []
+        listData.value = (res?.data as Record<string, unknown>[]) || []
         renderUtilizationChart()
         return
       case 'bench':
         // P0 修复: 后端 /bench-cost 返回 List<Map>, 不取 period
         res = await getBenchCostReport()
-        listData.value = (res?.data as any[]) || []
+        listData.value = (res?.data as Record<string, unknown>[]) || []
         renderBenchChart()
         return
     }
     await nextTick()
     renderChartForTab(target)
-  } catch (e: any) {
-    ElMessage.error(e?.message || '加载失败')
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '加载失败')
     reportData.value = null
   } finally {
     loading.value = false
   }
 }
 
-function onTabChange(v: any) {
-  tab.value = v as TabKey
+function onTabChange(v: string | number) {
+  const key = v as TabKey
+  tab.value = key
   if (
-    v === 'summary' ||
-    v === 'risk' ||
-    v === 'utilization' ||
-    v === 'bench' ||
-    (query.initiationId && v)
+    key === 'summary' ||
+    key === 'risk' ||
+    key === 'utilization' ||
+    key === 'bench' ||
+    (query.initiationId && key)
   ) {
-    load(v)
+    load(key)
   } else {
     reportData.value = null
     listData.value = []
@@ -155,15 +159,15 @@ function onTabChange(v: any) {
   }
 }
 
-function fmtMoney(v: any) {
+function fmtMoney(v: unknown) {
   if (v === null || v === undefined) return '-'
   return `¥${Number(v).toLocaleString()}`
 }
-function fmtPct(v: any) {
+function fmtPct(v: unknown) {
   if (v === null || v === undefined) return '-'
   return `${(Number(v) * 100).toFixed(2)}%`
 }
-function toNumber(v: any, def = 0) {
+function toNumber(v: unknown, def = 0) {
   const n = Number(v)
   return Number.isFinite(n) ? n : def
 }
@@ -501,12 +505,12 @@ onUnmounted(() => {
 
       <!-- 利润 -->
       <div v-if="tab === 'profit' && reportData" class="grid">
-        <div class="kpi"><div class="kpi-label">收入</div><div class="kpi-value money">{{ fmtMoney((reportData as any).revenue) }}</div></div>
-        <div class="kpi"><div class="kpi-label">人工成本</div><div class="kpi-value">{{ fmtMoney((reportData as any).laborCost) }}</div></div>
-        <div class="kpi"><div class="kpi-label">采购成本</div><div class="kpi-value">{{ fmtMoney((reportData as any).purchaseCost) }}</div></div>
-        <div class="kpi"><div class="kpi-label">费用成本</div><div class="kpi-value">{{ fmtMoney((reportData as any).expenseCost) }}</div></div>
-        <div class="kpi highlight"><div class="kpi-label">毛利</div><div class="kpi-value money">{{ fmtMoney((reportData as any).grossProfit) }}</div></div>
-        <div class="kpi highlight"><div class="kpi-label">毛利率</div><div class="kpi-value">{{ fmtPct((reportData as any).grossMargin) }}</div></div>
+        <div class="kpi"><div class="kpi-label">收入</div><div class="kpi-value money">{{ fmtMoney(reportData?.revenue) }}</div></div>
+        <div class="kpi"><div class="kpi-label">人工成本</div><div class="kpi-value">{{ fmtMoney(reportData?.laborCost) }}</div></div>
+        <div class="kpi"><div class="kpi-label">采购成本</div><div class="kpi-value">{{ fmtMoney(reportData?.purchaseCost) }}</div></div>
+        <div class="kpi"><div class="kpi-label">费用成本</div><div class="kpi-value">{{ fmtMoney(reportData?.expenseCost) }}</div></div>
+        <div class="kpi highlight"><div class="kpi-label">毛利</div><div class="kpi-value money">{{ fmtMoney(reportData?.grossProfit) }}</div></div>
+        <div class="kpi highlight"><div class="kpi-label">毛利率</div><div class="kpi-value">{{ fmtPct(reportData?.grossMargin) }}</div></div>
       </div>
       <el-row v-if="tab === 'profit' && reportData" :gutter="16" class="chart-row">
         <el-col :span="12"><div :ref="setRef('profit-bar')" class="chart-area" /></el-col>
@@ -516,10 +520,10 @@ onUnmounted(() => {
       <!-- 成本归集 -->
       <template v-else-if="tab === 'cost' && reportData">
         <div class="grid">
-          <div class="kpi"><div class="kpi-label">总成本</div><div class="kpi-value money">{{ fmtMoney((reportData as any).totalCost) }}</div></div>
-          <div class="kpi"><div class="kpi-label">人工占比</div><div class="kpi-value">{{ fmtPct((reportData as any).laborRatio) }}</div></div>
-          <div class="kpi"><div class="kpi-label">采购占比</div><div class="kpi-value">{{ fmtPct((reportData as any).purchaseRatio) }}</div></div>
-          <div class="kpi"><div class="kpi-label">费用占比</div><div class="kpi-value">{{ fmtPct((reportData as any).expenseRatio) }}</div></div>
+          <div class="kpi"><div class="kpi-label">总成本</div><div class="kpi-value money">{{ fmtMoney(reportData?.totalCost) }}</div></div>
+          <div class="kpi"><div class="kpi-label">人工占比</div><div class="kpi-value">{{ fmtPct(reportData?.laborRatio) }}</div></div>
+          <div class="kpi"><div class="kpi-label">采购占比</div><div class="kpi-value">{{ fmtPct(reportData?.purchaseRatio) }}</div></div>
+          <div class="kpi"><div class="kpi-label">费用占比</div><div class="kpi-value">{{ fmtPct(reportData?.expenseRatio) }}</div></div>
         </div>
         <el-row :gutter="16" class="chart-row">
           <el-col :span="12" :offset="6"><div :ref="setRef('cost-pie')" class="chart-area" /></el-col>
@@ -529,17 +533,17 @@ onUnmounted(() => {
       <!-- 回款台账 -->
       <div v-else-if="tab === 'payment' && reportData">
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="累计开票">{{ fmtMoney((reportData as any).invoicedAmount) }}</el-descriptions-item>
-          <el-descriptions-item label="累计回款">{{ fmtMoney((reportData as any).receivedAmount) }}</el-descriptions-item>
-          <el-descriptions-item label="未回款">{{ fmtMoney((reportData as any).outstandingAmount) }}</el-descriptions-item>
-          <el-descriptions-item label="回款率">{{ fmtPct((reportData as any).collectionRate) }}</el-descriptions-item>
+          <el-descriptions-item label="累计开票">{{ fmtMoney(reportData?.invoicedAmount) }}</el-descriptions-item>
+          <el-descriptions-item label="累计回款">{{ fmtMoney(reportData?.receivedAmount) }}</el-descriptions-item>
+          <el-descriptions-item label="未回款">{{ fmtMoney(reportData?.outstandingAmount) }}</el-descriptions-item>
+          <el-descriptions-item label="回款率">{{ fmtPct(reportData?.collectionRate) }}</el-descriptions-item>
         </el-descriptions>
-        <vxe-table :data="(reportData as any).ledgers || []" border style="margin-top: 12px">
+        <vxe-table :data="(reportData?.ledgers as Record<string, unknown>[]) || []" border style="margin-top: 12px">
           <vxe-column type="seq" title="#" width="50" />
           <vxe-column field="date" title="日期" width="120" />
           <vxe-column field="type" title="类型" width="100" />
           <vxe-column field="code" title="单号" width="160" />
-          <vxe-column field="amount" title="金额" width="140" align="right" :formatter="({ cellValue }: any) => fmtMoney(cellValue)" />
+          <vxe-column field="amount" title="金额" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtMoney(cellValue)" />
           <vxe-column field="remark" title="备注" min-width="200" />
         </vxe-table>
       </div>
@@ -548,10 +552,10 @@ onUnmounted(() => {
       <div v-else-if="tab === 'lifecycle' && reportData">
         <el-timeline>
           <el-timeline-item
-            v-for="(item, idx) in (reportData as any).stages || []"
+            v-for="(item, idx) in (reportData?.stages as Array<Record<string, unknown>>) || []"
             :key="idx"
             :timestamp="item.date"
-            :type="item.type as any"
+            :type="item.type as TimelineType"
           >
             <h4>{{ item.stage }}</h4>
             <p>{{ item.description }}</p>
@@ -564,10 +568,10 @@ onUnmounted(() => {
         <vxe-table :data="summaryData" border stripe>
           <vxe-column field="initiationId" title="项目 ID" width="100" align="center" />
           <vxe-column field="initiationName" title="项目名称" min-width="200" show-overflow />
-          <vxe-column field="revenue" title="收入" width="140" align="right" :formatter="({ cellValue }: any) => fmtMoney(cellValue)" />
-          <vxe-column field="totalCost" title="总成本" width="140" align="right" :formatter="({ cellValue }: any) => fmtMoney(cellValue)" />
-          <vxe-column field="grossProfit" title="毛利" width="140" align="right" :formatter="({ cellValue }: any) => fmtMoney(cellValue)" />
-          <vxe-column field="grossMargin" title="毛利率" width="120" align="right" :formatter="({ cellValue }: any) => fmtPct(cellValue)" />
+          <vxe-column field="revenue" title="收入" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtMoney(cellValue)" />
+          <vxe-column field="totalCost" title="总成本" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtMoney(cellValue)" />
+          <vxe-column field="grossProfit" title="毛利" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtMoney(cellValue)" />
+          <vxe-column field="grossMargin" title="毛利率" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtPct(cellValue)" />
         </vxe-table>
         <el-row :gutter="16" class="chart-row">
           <el-col :span="24"><div :ref="setRef('summary-bar')" class="chart-area" /></el-col>
@@ -577,12 +581,12 @@ onUnmounted(() => {
       <!-- EVM -->
       <template v-else-if="tab === 'evm' && reportData">
         <div class="grid">
-          <div class="kpi"><div class="kpi-label">PV (计划值)</div><div class="kpi-value money">{{ fmtMoney((reportData as any).pv) }}</div></div>
-          <div class="kpi"><div class="kpi-label">EV (挣值)</div><div class="kpi-value money">{{ fmtMoney((reportData as any).ev) }}</div></div>
-          <div class="kpi"><div class="kpi-label">AC (实际成本)</div><div class="kpi-value money">{{ fmtMoney((reportData as any).ac) }}</div></div>
-          <div class="kpi"><div class="kpi-label">BAC (完工预算)</div><div class="kpi-value money">{{ fmtMoney((reportData as any).bac) }}</div></div>
-          <div class="kpi highlight"><div class="kpi-label">CPI</div><div class="kpi-value">{{ (reportData as any).cpi?.toFixed?.(2) || '-' }}</div></div>
-          <div class="kpi highlight"><div class="kpi-label">SPI</div><div class="kpi-value">{{ (reportData as any).spi?.toFixed?.(2) || '-' }}</div></div>
+          <div class="kpi"><div class="kpi-label">PV (计划值)</div><div class="kpi-value money">{{ fmtMoney(reportData?.pv) }}</div></div>
+          <div class="kpi"><div class="kpi-label">EV (挣值)</div><div class="kpi-value money">{{ fmtMoney(reportData?.ev) }}</div></div>
+          <div class="kpi"><div class="kpi-label">AC (实际成本)</div><div class="kpi-value money">{{ fmtMoney(reportData?.ac) }}</div></div>
+          <div class="kpi"><div class="kpi-label">BAC (完工预算)</div><div class="kpi-value money">{{ fmtMoney(reportData?.bac) }}</div></div>
+          <div class="kpi highlight"><div class="kpi-label">CPI</div><div class="kpi-value">{{ ((reportData?.cpi as number | undefined)?.toFixed?.(2)) || '-' }}</div></div>
+          <div class="kpi highlight"><div class="kpi-label">SPI</div><div class="kpi-value">{{ ((reportData?.spi as number | undefined)?.toFixed?.(2)) || '-' }}</div></div>
         </div>
         <el-row :gutter="16" class="chart-row">
           <el-col :span="12"><div :ref="setRef('evm-line')" class="chart-area" /></el-col>
@@ -593,12 +597,12 @@ onUnmounted(() => {
       <!-- 双费率对比 -->
       <template v-else-if="tab === 'dualRate' && reportData">
         <div class="grid">
-          <div class="kpi"><div class="kpi-label">外部费率总收入</div><div class="kpi-value money">{{ fmtMoney((reportData as any).externalRevenue) }}</div></div>
-          <div class="kpi"><div class="kpi-label">内部费率总收入</div><div class="kpi-value money">{{ fmtMoney((reportData as any).internalRevenue) }}</div></div>
-          <div class="kpi"><div class="kpi-label">外部毛利</div><div class="kpi-value money">{{ fmtMoney((reportData as any).externalGrossProfit) }}</div></div>
-          <div class="kpi"><div class="kpi-label">内部毛利</div><div class="kpi-value money">{{ fmtMoney((reportData as any).internalGrossProfit) }}</div></div>
-          <div class="kpi highlight"><div class="kpi-label">外部毛利率</div><div class="kpi-value">{{ fmtPct((reportData as any).externalMargin) }}</div></div>
-          <div class="kpi highlight"><div class="kpi-label">内部毛利率</div><div class="kpi-value">{{ fmtPct((reportData as any).internalMargin) }}</div></div>
+          <div class="kpi"><div class="kpi-label">外部费率总收入</div><div class="kpi-value money">{{ fmtMoney(reportData?.externalRevenue) }}</div></div>
+          <div class="kpi"><div class="kpi-label">内部费率总收入</div><div class="kpi-value money">{{ fmtMoney(reportData?.internalRevenue) }}</div></div>
+          <div class="kpi"><div class="kpi-label">外部毛利</div><div class="kpi-value money">{{ fmtMoney(reportData?.externalGrossProfit) }}</div></div>
+          <div class="kpi"><div class="kpi-label">内部毛利</div><div class="kpi-value money">{{ fmtMoney(reportData?.internalGrossProfit) }}</div></div>
+          <div class="kpi highlight"><div class="kpi-label">外部毛利率</div><div class="kpi-value">{{ fmtPct(reportData?.externalMargin) }}</div></div>
+          <div class="kpi highlight"><div class="kpi-label">内部毛利率</div><div class="kpi-value">{{ fmtPct(reportData?.internalMargin) }}</div></div>
         </div>
         <el-row :gutter="16" class="chart-row">
           <el-col :span="24"><div :ref="setRef('dual-bar')" class="chart-area" /></el-col>
@@ -608,10 +612,10 @@ onUnmounted(() => {
       <!-- 风险看板 -->
       <template v-else-if="tab === 'risk' && reportData">
         <div class="grid">
-          <div class="kpi"><div class="kpi-label">高风险项目</div><div class="kpi-value">{{ (reportData as any).highRiskCount ?? 0 }}</div></div>
-          <div class="kpi"><div class="kpi-label">中风险项目</div><div class="kpi-value">{{ (reportData as any).mediumRiskCount ?? 0 }}</div></div>
-          <div class="kpi"><div class="kpi-label">低风险项目</div><div class="kpi-value">{{ (reportData as any).lowRiskCount ?? 0 }}</div></div>
-          <div class="kpi"><div class="kpi-label">预警事件总数</div><div class="kpi-value">{{ (reportData as any).alertCount ?? 0 }}</div></div>
+          <div class="kpi"><div class="kpi-label">高风险项目</div><div class="kpi-value">{{ reportData?.highRiskCount ?? 0 }}</div></div>
+          <div class="kpi"><div class="kpi-label">中风险项目</div><div class="kpi-value">{{ reportData?.mediumRiskCount ?? 0 }}</div></div>
+          <div class="kpi"><div class="kpi-label">低风险项目</div><div class="kpi-value">{{ reportData?.lowRiskCount ?? 0 }}</div></div>
+          <div class="kpi"><div class="kpi-label">预警事件总数</div><div class="kpi-value">{{ reportData?.alertCount ?? 0 }}</div></div>
         </div>
         <el-row :gutter="16" class="chart-row">
           <el-col :span="12"><div :ref="setRef('risk-pie')" class="chart-area" /></el-col>
@@ -625,7 +629,7 @@ onUnmounted(() => {
           <vxe-column type="seq" title="#" width="50" />
           <vxe-column field="employeeName" title="姓名" min-width="120" />
           <vxe-column field="department" title="部门" min-width="120" />
-          <vxe-column field="utilization" title="利用率" width="120" align="right" :formatter="({ cellValue }: any) => `${Number(cellValue).toFixed(1)}%`" />
+          <vxe-column field="utilization" title="利用率" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => `${Number(cellValue).toFixed(1)}%`" />
           <vxe-column field="billableHours" title="可计费工时" width="120" align="right" />
         </vxe-table>
         <el-row :gutter="16" class="chart-row">
@@ -636,9 +640,9 @@ onUnmounted(() => {
       <!-- Bench 成本 -->
       <div v-else-if="tab === 'bench' && reportData">
         <el-descriptions :column="3" border>
-          <el-descriptions-item label="闲置人员数">{{ (reportData as any).headCount ?? 0 }}</el-descriptions-item>
-          <el-descriptions-item label="累计成本">{{ fmtMoney((reportData as any).totalCost) }}</el-descriptions-item>
-          <el-descriptions-item label="平均闲置天数">{{ (reportData as any).avgDays ?? 0 }}</el-descriptions-item>
+          <el-descriptions-item label="闲置人员数">{{ reportData?.headCount ?? 0 }}</el-descriptions-item>
+          <el-descriptions-item label="累计成本">{{ fmtMoney(reportData?.totalCost) }}</el-descriptions-item>
+          <el-descriptions-item label="平均闲置天数">{{ reportData?.avgDays ?? 0 }}</el-descriptions-item>
         </el-descriptions>
         <el-row :gutter="16" class="chart-row">
           <el-col :span="24"><div :ref="setRef('bench-line')" class="chart-area" /></el-col>

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -60,7 +61,7 @@ public class RevenueServiceImpl implements RevenueService {
         BeanUtils.copyProperties(dto, r);
         if (!StringUtils.hasText(r.getStatus())) r.setStatus("DRAFT");
         if (r.getPercentComplete() == null) r.setPercentComplete(BigDecimal.ZERO);
-        if (r.getTenantId() == null) r.setTenantId(1L);
+        if (r.getTenantId() == null) r.setTenantId(TenantContext.getTenantId());
         if (r.getProviderTraceId() == null) r.setProviderTraceId("");
         revenueMapper.insert(r);
         log.info("[Revenue] 创建收入确认: code={} amount={}", r.getRevenueCode(), r.getAmount());

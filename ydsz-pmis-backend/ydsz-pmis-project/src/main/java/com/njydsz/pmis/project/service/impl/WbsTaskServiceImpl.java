@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
@@ -57,7 +58,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
         if (t.getActualEffort() == null) t.setActualEffort(BigDecimal.ZERO);
         if (t.getProgressPct() == null) t.setProgressPct(BigDecimal.ZERO);
         if (t.getMilestone() == null) t.setMilestone(0);
-        if (t.getTenantId() == null) t.setTenantId(1L);
+        if (t.getTenantId() == null) t.setTenantId(TenantContext.getTenantId());
         if (t.getProviderTraceId() == null) t.setProviderTraceId("");
 
         // 计算工期

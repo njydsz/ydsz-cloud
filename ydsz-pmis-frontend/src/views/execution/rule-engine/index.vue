@@ -38,6 +38,7 @@ import type {
 } from '@/api/execution/rule-engine'
 import ExpressionEditor from '@/components/common/ExpressionEditor.vue'
 import RuleCategoryTreeSidebar from '@/components/common/RuleCategoryTreeSidebar.vue'
+import { logger } from '@/utils/logger'
 
 // 路由实例（P0-1 画布编辑入口）
 const router = useRouter()
@@ -265,7 +266,7 @@ async function fetchExpressionFunctions() {
       expressionFunctionDefs.value = res.data || []
     }
   } catch (e: any) {
-    console.warn('[ExpressionFunctions] 拉取失败:', e?.message)
+    logger.warn('[ExpressionFunctions]', '拉取失败:', e?.message)
     expressionFunctionDefs.value = []
   }
 }

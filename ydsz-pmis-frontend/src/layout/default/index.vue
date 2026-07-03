@@ -10,6 +10,7 @@ import TagsView from './components/TagsView.vue'
 import MainContent from './components/MainContent.vue'
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import { useAppStore } from '@/store/modules/app'
+import { logger } from '@/utils/logger'
 
 const appStore = useAppStore()
 
@@ -18,8 +19,7 @@ const appStore = useAppStore()
  * ErrorBoundary 内部已处理 Sentry 上报，此处仅做开发环境日志输出
  */
 function onError(err: unknown, info: string) {
-  // eslint-disable-next-line no-console
-  console.error('[Layout ErrorBoundary]', err, info)
+  logger.error('[Layout ErrorBoundary]', err, { info })
 }
 </script>
 

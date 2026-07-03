@@ -17,6 +17,7 @@ import router from '@/router'
 import { constantRoutes, asyncRoutes } from '@/router/routes'
 import { getMenuTreeApi } from '@/api/menu'
 import type { MenuTreeNode } from '@/api/menu/types'
+import { logger } from '@/utils/logger'
 
 /**
  * 视图组件显式映射表
@@ -197,7 +198,7 @@ export const usePermissionStore = defineStore('permission', () => {
       const { data } = await getMenuTreeApi()
       menus = data || []
     } catch (e) {
-      console.warn('[Permission] 拉取菜单树失败,使用静态路由', e)
+      logger.warn('[Permission]', '拉取菜单树失败,使用静态路由', e)
       menus = []
     }
 

@@ -83,4 +83,23 @@ public class NameAssembler {
         }
         return Map.of();
     }
+
+    /**
+     * 批量拉取客户名称。
+     *
+     * @param ids 客户 ID 列表
+     * @return 客户 ID 到名称的映射；失败返回空 Map
+     */
+    public Map<Long, String> batchCustomerName(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) return Map.of();
+        try {
+            Result<Map<Long, String>> r = userServiceClient.batchCustomerName(ids);
+            if (r != null && r.getData() != null) {
+                return r.getData();
+            }
+        } catch (Exception e) {
+            log.warn("[NameAssembler] 批量拉取客户名称失败: {}", e.getMessage());
+        }
+        return Map.of();
+    }
 }

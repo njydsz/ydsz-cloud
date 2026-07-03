@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -47,7 +48,7 @@ public class RateCardServiceImpl implements RateCardService {
         if (!StringUtils.hasText(r.getStatus())) r.setStatus("ACTIVE");
         if (!StringUtils.hasText(r.getCurrency())) r.setCurrency("CNY");
         if (r.getRateAmount() == null) r.setRateAmount(BigDecimal.ZERO);
-        if (r.getTenantId() == null) r.setTenantId(1L);
+        if (r.getTenantId() == null) r.setTenantId(TenantContext.getTenantId());
         if (r.getProviderTraceId() == null) r.setProviderTraceId("");
         rateCardMapper.insert(r);
         log.info("[RateCard] 创建报价费率: code={} level={} amount={}",

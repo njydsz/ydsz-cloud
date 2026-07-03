@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
@@ -65,7 +66,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         if (!StringUtils.hasText(e.getWorkType())) e.setWorkType("REGULAR");
         if (e.getOvertime() == null) e.setOvertime(BigDecimal.ZERO);
         if (!StringUtils.hasText(e.getStatus())) e.setStatus(TimeEntryStatus.DRAFT.getCode());
-        if (e.getTenantId() == null) e.setTenantId(1L);
+        if (e.getTenantId() == null) e.setTenantId(TenantContext.getTenantId());
         if (e.getProviderTraceId() == null) e.setProviderTraceId("");
 
         // 计算人天

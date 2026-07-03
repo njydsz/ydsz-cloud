@@ -21,6 +21,7 @@ import type { FlowDeployDTO } from '@/api/workflow/types'
 import FormFieldPermissions from './FormFieldPermissions.vue'
 import SlaRuleConfig from './SlaRuleConfig.vue'
 import { autoLayout } from './bpmn/autoLayout'
+import { logger } from '@/utils/logger'
 
 // ==================== Props ====================
 const props = defineProps<{
@@ -70,6 +71,8 @@ const panelData = reactive({
   priority: 0,          // 优先级
   conditionExpression: '', // 条件表达式（sequenceFlow）
   documentation: '',    // 节点说明
+  // P0-5: 表单字段权限（每个审批节点可配置字段的可见/可编辑/只读/隐藏权限）
+  fieldPermissions: [] as Array<{ fieldName: string; permission: 'EDITABLE' | 'READONLY' | 'HIDDEN' }>,
 })
 
 // 节点类型中文映射
@@ -234,7 +237,7 @@ function initModeler() {
     })
   } catch (e) {
     ElMessage.error('BPMN 设计器初始化失败：' + (e as Error).message)
-    console.error('BpmnModeler init error:', e)
+    logger.error('[BpmnDesigner]', e, { phase: 'init' })
   } finally {
     loading.value = false
   }
@@ -249,7 +252,7 @@ async function loadXml(xml: string) {
     currentXml.value = result.xml || ''
   } catch (e) {
     ElMessage.error('BPMN XML 导入失败：' + (e as Error).message)
-    console.error('importXML error:', e)
+    logger.error('[BpmnDesigner]', e, { phase: 'importXML' })
   } finally {
     loading.value = false
   }

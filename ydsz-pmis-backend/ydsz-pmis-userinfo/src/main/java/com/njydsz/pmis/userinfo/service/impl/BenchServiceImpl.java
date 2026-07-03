@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -73,7 +74,7 @@ public class BenchServiceImpl implements BenchService {
         b.setStatus(BenchStatus.ACTIVE.getCode());
         if (b.getBenchDate() == null) b.setBenchDate(LocalDate.now());
         if (b.getDailyCost() == null) b.setDailyCost(BigDecimal.ZERO);
-        if (b.getTenantId() == null) b.setTenantId(1L);
+        if (b.getTenantId() == null) b.setTenantId(TenantContext.getTenantId());
         if (b.getProviderTraceId() == null) b.setProviderTraceId("");
         // 计算初始成本
         b.setIdleDays(BenchCostCalculator.idleDays(b.getBenchDate(), b.getExitDate()));
@@ -107,6 +108,7 @@ public class BenchServiceImpl implements BenchService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BenchRecordDO getById(Long id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         BenchRecordDO b = benchMapper.selectById(id);
@@ -115,17 +117,20 @@ public class BenchServiceImpl implements BenchService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BenchRecordDO getActiveByEmployee(Long employeeId) {
         if (employeeId == null) return null;
         return benchMapper.selectActiveByEmployee(employeeId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByPool() {
         return benchMapper.aggregateByPool(BenchStatus.ACTIVE.getCode());
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> flowByDateRange(LocalDate from, LocalDate to) {
         if (from == null) from = LocalDate.now().minusDays(30);
         if (to == null) to = LocalDate.now();
@@ -133,6 +138,7 @@ public class BenchServiceImpl implements BenchService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<BenchRecordDO> page(int page, int size, Long poolId, String status) {
         Page<BenchRecordDO> p = new Page<>(page, size);
         LambdaQueryWrapper<BenchRecordDO> w = new LambdaQueryWrapper<>();
@@ -143,6 +149,7 @@ public class BenchServiceImpl implements BenchService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BigDecimal totalIdleCost() {
         List<Map<String, Object>> rows = aggregateByPool();
         BigDecimal total = BigDecimal.ZERO;
@@ -155,6 +162,7 @@ public class BenchServiceImpl implements BenchService {
     }
 
     /** 构造用于 Map 返回的辅助（保留扩展点） */
+    @Transactional(readOnly = true)
     public Map<String, Object> dashboard() {
         Map<String, Object> out = new HashMap<>();
         out.put("activePools", aggregateByPool());

@@ -45,7 +45,7 @@ public class RealtimePushService {
             message.put("data", payload);
             message.put("timestamp", System.currentTimeMillis());
             messagingTemplate.convertAndSend(
-                    "/topic/user/" + userId + "/notifications", message);
+                    "/topic/user/" + userId + "/notifications", (Object) message);
             log.debug("[WebSocket] 推送消息到用户 {}: type={}", userId, type);
         } catch (Exception e) {
             log.warn("[WebSocket] 推送消息失败，降级忽略: userId={}, type={}, error={}", userId, type, e.getMessage());

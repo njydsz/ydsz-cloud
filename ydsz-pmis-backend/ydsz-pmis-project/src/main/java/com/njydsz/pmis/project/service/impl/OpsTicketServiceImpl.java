@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -65,7 +66,7 @@ public class OpsTicketServiceImpl implements OpsTicketService {
         t.setResolveDueAt(deadline.resolveDueAt());
         t.setResponseBreached(false);
         t.setResolveBreached(false);
-        if (t.getTenantId() == null) t.setTenantId(1L);
+        if (t.getTenantId() == null) t.setTenantId(TenantContext.getTenantId());
         ticketMapper.insert(t);
         log.info("[OpsTicket] 创建工单: code={} priority={} responseDueAt={} resolveDueAt={}",
                 t.getTicketCode(), t.getPriority(), t.getResponseDueAt(), t.getResolveDueAt());

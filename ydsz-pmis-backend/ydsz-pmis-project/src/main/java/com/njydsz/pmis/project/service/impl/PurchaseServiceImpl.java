@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -61,7 +62,7 @@ public class PurchaseServiceImpl implements PurchaseService {
         }
         if (p.getQuantity() == null) p.setQuantity(BigDecimal.ONE);
         if (!StringUtils.hasText(p.getStatus())) p.setStatus(ApprovalStatus.DRAFT.getCode());
-        if (p.getTenantId() == null) p.setTenantId(1L);
+        if (p.getTenantId() == null) p.setTenantId(TenantContext.getTenantId());
         if (p.getProviderTraceId() == null) p.setProviderTraceId("");
 
         // 预算强管控：本次新增 + 项目已发生 ≤ 立项预算

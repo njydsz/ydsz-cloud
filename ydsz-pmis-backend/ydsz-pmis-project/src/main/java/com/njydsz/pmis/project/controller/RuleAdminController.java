@@ -24,6 +24,11 @@ import com.njydsz.pmis.literule.expr.ExpressionFunctionDef;
 import com.njydsz.pmis.literule.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.orchestrator.RuleChainGraph;
 import com.njydsz.pmis.literule.orchestrator.RuleGraphValidator;
+import com.njydsz.pmis.literule.ai.RuleLLMService;
+import com.njydsz.pmis.literule.ai.RuleHealthScore;
+import com.njydsz.pmis.literule.ai.RuleHealthScoreService;
+import com.njydsz.pmis.literule.ai.RuleRecommendation;
+import com.njydsz.pmis.literule.ai.RuleRecommendationService;
 import com.njydsz.pmis.literule.spi.RuleVersion;
 import com.njydsz.pmis.project.literule.RuleChainGraphService;
 import com.njydsz.pmis.project.literule.RuleDependencyService;
@@ -35,6 +40,8 @@ import com.njydsz.pmis.project.entity.RuleABPolicyDO;
 import com.njydsz.pmis.project.entity.RuleABRollbackDO;
 import com.njydsz.pmis.literule.api.RulePack;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -58,6 +65,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/rules")
 @RequiredArgsConstructor
+@Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、AI 增强、规则集市场")
 public class RuleAdminController {
 
     private final RuleAdminService ruleAdminService;
@@ -77,6 +85,10 @@ public class RuleAdminController {
     private final RuleCategoryTreeService ruleCategoryTreeService;
     private final ABTestAutoRollbackService abTestAutoRollbackService;
     private final RulePackService rulePackService;
+    // AI 增强（P2-15）：可选注入，未启用 AI 时为空
+    private final org.springframework.beans.factory.ObjectProvider<RuleLLMService> ruleLLMServiceProvider;
+    private final org.springframework.beans.factory.ObjectProvider<RuleHealthScoreService> ruleHealthScoreServiceProvider;
+    private final org.springframework.beans.factory.ObjectProvider<RuleRecommendationService> ruleRecommendationServiceProvider;
 
     /**
      * 查询全部规则定义
@@ -1354,5 +1366,140 @@ public class RuleAdminController {
             @RequestParam(value = "rating") double rating) {
         rulePackService.rate(id, rating);
         return Result.ok();
+    }
+
+    // ==================================================================
+    // P2-15 AI 增强
+    // ==================================================================
+
+    /**
+     * 自然语言转规则定义
+     *
+     * <p>调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）。
+     * LLM 不可用时降级返回空壳定义。
+     *
+     * @param body 请求体，含 naturalLanguage 字段
+     * @return LLM 生成的规则定义
+     */
+    @PostMapping("/ai/nl2rule")
+    @Operation(summary = "AI 自然语言转规则（NL2Rule）", description = "调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）；LLM 不可用时降级返回空壳定义")
+    public Result<RuleDefinition> naturalLanguageToRule(@RequestBody Map<String, String> body) {
+        RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("AI 增强未启用（pmis.literule.ai.enabled=false）");
+        }
+        String text = body == null ? null : body.get("naturalLanguage");
+        return Result.ok(svc.naturalLanguageToRule(text));
+    }
+
+    /**
+     * 生成规则业务描述
+     *
+     * @param ruleCode 规则编码
+     * @return 1~3 句中文描述；LLM 不可用时返回 null
+     */
+    @GetMapping("/{ruleCode}/ai/describe")
+    @Operation(summary = "AI 生成规则描述", description = "基于规则定义生成 1~3 句中文业务描述；LLM 不可用时返回 null")
+    public Result<String> describeRule(@PathVariable String ruleCode) {
+        RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("AI 增强未启用");
+        }
+        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        if (def == null) {
+            return Result.fail("规则不存在: " + ruleCode);
+        }
+        return Result.ok(svc.describeRule(def));
+    }
+
+    /**
+     * 表达式优化建议
+     *
+     * @param ruleCode 规则编码
+     * @return 优化建议文本
+     */
+    @GetMapping("/{ruleCode}/ai/optimize")
+    @Operation(summary = "AI 表达式优化建议", description = "基于规则条件表达式生成优化建议文本")
+    public Result<String> optimizeExpression(@PathVariable String ruleCode) {
+        RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("AI 增强未启用");
+        }
+        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        if (def == null) {
+            return Result.fail("规则不存在: " + ruleCode);
+        }
+        return Result.ok(svc.optimizeExpression(def.getConditionExpression()));
+    }
+
+    /**
+     * 规则健康度评分
+     *
+     * @param ruleCode 规则编码
+     * @return 健康度评分结果（0~100 + 分项 + 建议）
+     */
+    @GetMapping("/{ruleCode}/ai/health")
+    @Operation(summary = "规则健康度评分", description = "4 维加权评分（命中率 30% + 错误率 30% + 复杂度 20% + 覆盖率 20%），返回 0~100 总分 + EXCELLENT/GOOD/WARN/BAD 等级 + 建议")
+    public Result<RuleHealthScore> healthScore(@PathVariable String ruleCode) {
+        RuleHealthScoreService svc = ruleHealthScoreServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("AI 增强未启用");
+        }
+        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        if (def == null) {
+            return Result.fail("规则不存在: " + ruleCode);
+        }
+        RuleEngineStats stats = ruleEngine.getStats();
+        return Result.ok(svc.score(def, stats));
+    }
+
+    /**
+     * 批量规则健康度评分
+     *
+     * @return 全部规则的健康度评分列表
+     */
+    @GetMapping("/ai/health-batch")
+    @Operation(summary = "批量规则健康度评分", description = "对全部规则逐条评分，返回健康度评分列表")
+    public Result<List<RuleHealthScore>> healthScoreBatch() {
+        RuleHealthScoreService svc = ruleHealthScoreServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("AI 增强未启用");
+        }
+        List<RuleDefinition> all = ruleAdminService.listAll();
+        RuleEngineStats stats = ruleEngine.getStats();
+        // 逐条评分：score 方法内部会从全局 stats.perRuleStats 中按规则编码取明细
+        List<RuleHealthScore> result = new java.util.ArrayList<>(all.size());
+        for (RuleDefinition def : all) {
+            result.add(svc.score(def, stats));
+        }
+        return Result.ok(result);
+    }
+
+    /**
+     * 规则推荐
+     *
+     * @param ruleCode 源规则编码
+     * @return 推荐结果列表（按 score 降序）
+     */
+    @GetMapping("/{ruleCode}/ai/recommend")
+    @Operation(summary = "规则推荐", description = "基于 4 种启发式算法（字段补全/重复检测/变体建议/拆分建议）生成推荐规则列表，按 score 降序")
+    public Result<List<RuleRecommendation>> recommend(@PathVariable String ruleCode) {
+        RuleRecommendationService svc = ruleRecommendationServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("AI 增强未启用");
+        }
+        RuleDefinition source = ruleAdminService.getByCode(ruleCode);
+        if (source == null) {
+            return Result.fail("规则不存在: " + ruleCode);
+        }
+        List<RuleDefinition> all = ruleAdminService.listAll();
+        RuleEngineStats stats = ruleEngine.getStats();
+        // 将全局 stats 包装为 Map：recommend 内部按规则编码取 RuleEngineStats，
+        // 再从其 perRuleStats 中按规则编码取明细
+        Map<String, RuleEngineStats> statsMap = new java.util.HashMap<>();
+        if (stats != null) {
+            statsMap.put(source.getCode(), stats);
+        }
+        return Result.ok(svc.recommend(source, all, statsMap));
     }
 }

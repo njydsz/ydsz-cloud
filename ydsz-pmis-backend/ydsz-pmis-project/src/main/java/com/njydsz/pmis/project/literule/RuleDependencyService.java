@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.literule;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.project.entity.RuleDependencyDO;
 import com.njydsz.pmis.project.mapper.RuleDependencyMapper;
 import lombok.RequiredArgsConstructor;
@@ -74,7 +75,7 @@ public class RuleDependencyService {
         entity.setDependencyType(depType);
         entity.setCascadeOnDisable(cascadeOnDisable);
         entity.setDescription(description);
-        entity.setTenantId(1L);
+        entity.setTenantId(TenantContext.getTenantId());
         entity.setCreatedBy(operator == null ? "SYSTEM" : operator);
         entity.setCreatedAt(LocalDateTime.now());
         ruleDependencyMapper.insert(entity);

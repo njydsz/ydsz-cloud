@@ -105,7 +105,8 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
      */
     @Override
     public BigDecimal getPendingAmount(String projectId, String requestId) {
-        // TODO 申请金额由调用方传入，此处简化返回 ZERO
+        // 设计说明：实际申请金额由调用方通过 getUsageRatio(projectId, pendingAmount) 的 pendingAmount 参数传入，
+        // 此方法仅作为 SPI 契约的占位，始终返回 ZERO
         return BigDecimal.ZERO;
     }
 
@@ -120,7 +121,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
      */
     @Override
     public List<BudgetSnapshot> getBudgetSnapshots() {
-        // TODO 待接入活跃项目列表查询（需 InitiationServiceClient 新增批量接口或查询本地表）
+        // P3 待实现：需通过 InitiationServiceClient 批量查询活跃项目列表，或查询本地 initiation 表获取所有活跃 initiationId 后逐个汇总预算快照
         log.debug("[BudgetSnapshotProvider] getBudgetSnapshots 暂未实现，返回空列表");
         return Collections.emptyList();
     }

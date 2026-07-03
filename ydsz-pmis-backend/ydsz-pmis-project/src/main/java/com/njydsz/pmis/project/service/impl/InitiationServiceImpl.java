@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
@@ -33,7 +34,9 @@ import org.apache.seata.spring.annotation.GlobalTransactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -96,7 +99,7 @@ public class InitiationServiceImpl implements InitiationService {
             o.setProjectLevel("C");
         }
         if (o.getTenantId() == null) {
-            o.setTenantId(1L);
+            o.setTenantId(TenantContext.getTenantId());
         }
         if (o.getPlannedStartDate() != null && o.getPlannedEndDate() != null) {
             long days = ChronoUnit.DAYS.between(o.getPlannedStartDate(), o.getPlannedEndDate());
@@ -201,12 +204,56 @@ public class InitiationServiceImpl implements InitiationService {
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(InitiationDO::getCreatedAt);
         Page<InitiationDO> R = initiationMapper.selectPage(p, w);
-        if (R != null && R.getRecords() != null) {
-            for (InitiationDO rec : R.getRecords()) {
-                assembleNames(rec);
-            }
+        if (R != null && R.getRecords() != null && !R.getRecords().isEmpty()) {
+            batchAssembleNames(R.getRecords());
         }
         return R;
+    }
+
+    /**
+     * 批量装配名称（避免 N+1 远程调用）
+     *
+     * <p>先收集所有 customerId 和 pmId/sponsorId（员工 ID），一次性批量查询，
+     * 再循环填充到每条记录中。装配字段与 {@link #assembleNames(InitiationDO)} 保持一致：
+     * customerName / pmName / sponsorName。
+     *
+     * @param records 分页记录列表
+     */
+    private void batchAssembleNames(List<InitiationDO> records) {
+        // 收集需要解析的 ID
+        Set<Long> customerIds = new HashSet<>();
+        Set<Long> employeeIds = new HashSet<>();
+        for (InitiationDO rec : records) {
+            if (!StringUtils.hasText(rec.getCustomerName()) && rec.getCustomerId() != null) {
+                customerIds.add(rec.getCustomerId());
+            }
+            if (!StringUtils.hasText(rec.getPmName()) && rec.getPmId() != null) {
+                employeeIds.add(rec.getPmId());
+            }
+            if (!StringUtils.hasText(rec.getSponsorName()) && rec.getSponsorId() != null) {
+                employeeIds.add(rec.getSponsorId());
+            }
+        }
+        // 批量查询
+        Map<Long, String> customerNames = customerIds.isEmpty()
+                ? Map.of() : nameAssembler.batchCustomerName(new ArrayList<>(customerIds));
+        Map<Long, String> employeeNames = employeeIds.isEmpty()
+                ? Map.of() : nameAssembler.batchEmployeeName(new ArrayList<>(employeeIds));
+        // 填充名称
+        for (InitiationDO rec : records) {
+            if (!StringUtils.hasText(rec.getCustomerName()) && rec.getCustomerId() != null) {
+                String n = customerNames.get(rec.getCustomerId());
+                if (n != null) rec.setCustomerName(n);
+            }
+            if (!StringUtils.hasText(rec.getPmName()) && rec.getPmId() != null) {
+                String n = employeeNames.get(rec.getPmId());
+                if (n != null) rec.setPmName(n);
+            }
+            if (!StringUtils.hasText(rec.getSponsorName()) && rec.getSponsorId() != null) {
+                String n = employeeNames.get(rec.getSponsorId());
+                if (n != null) rec.setSponsorName(n);
+            }
+        }
     }
 
     // ============= 预算 =============

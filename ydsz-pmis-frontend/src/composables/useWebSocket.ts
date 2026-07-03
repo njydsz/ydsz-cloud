@@ -11,6 +11,7 @@
 import { ref, onUnmounted } from 'vue'
 import { Client } from '@stomp/stompjs'
 import { getToken } from '@/utils/auth'
+import { logger } from '@/utils/logger'
 
 /** WebSocket 推送消息体 */
 export interface WsMessage {
@@ -34,9 +35,6 @@ const globalMessages = ref<WsMessage[]>([])
 
 /** 全局 handler 注册表：Map<type, Set<handler>> */
 const globalHandlers = new Map<string, Set<(data: unknown) => void>>()
-
-/** 组件 ID 生成器 */
-let componentIdCounter = 0
 
 /**
  * 计算 STOMP broker 连接地址。
@@ -136,7 +134,7 @@ function initClient(): void {
     },
 
     onStompError: (frame) => {
-      console.error('[STOMP] Broker error:', frame.headers['message'], frame.body)
+      logger.error('[STOMP]', new Error(frame.headers['message']), { body: frame.body })
     },
 
     onWebSocketError: () => {
@@ -167,7 +165,6 @@ function ensureConnected(): void {
  * ```
  */
 export function useWebSocket() {
-  const componentId = ++componentIdCounter
   /** 当前组件注册的 handler 列表（用于组件卸载时批量移除） */
   const componentHandlers: Array<{ type: string; handler: (data: unknown) => void }> = []
 

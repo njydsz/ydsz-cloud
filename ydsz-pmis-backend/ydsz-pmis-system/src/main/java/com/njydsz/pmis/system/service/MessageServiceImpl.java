@@ -1,5 +1,6 @@
 package com.njydsz.pmis.system.service;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -192,7 +193,7 @@ public class MessageServiceImpl implements MessageService {
         log0.setContent(request.getContent());
         log0.setStatus("PENDING");
         log0.setTraceId(TraceIdUtil.get());
-        log0.setTenantId(1L);
+        log0.setTenantId(TenantContext.getTenantId());
         log0.setCreatedAt(LocalDateTime.now());
         log0.setUpdatedAt(LocalDateTime.now());
         log0.setDeleted(0);

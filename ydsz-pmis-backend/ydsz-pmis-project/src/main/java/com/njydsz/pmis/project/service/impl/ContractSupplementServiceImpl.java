@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -62,7 +63,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
         ContractSupplementDO s = new ContractSupplementDO();
         BeanUtils.copyProperties(dto, s);
         if (!StringUtils.hasText(s.getStatus())) s.setStatus("DRAFT");
-        if (s.getTenantId() == null) s.setTenantId(1L);
+        if (s.getTenantId() == null) s.setTenantId(TenantContext.getTenantId());
         supplementMapper.insert(s);
 
         // 联动：金额类型补充协议直接调整主合同金额

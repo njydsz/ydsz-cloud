@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.NotificationClient;
+import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.workflow.service.FlowNotificationService;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -235,7 +237,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         payload.put("bizType", bizType);
         payload.put("channel", "PUSH");
         try {
-            notificationClient.send(payload);
+            notificationClient.send(toFeignDTO(payload));
         } catch (Exception e) {
             // fallbackFactory 已兜底，此处再 catch 防御非 Feign 异常，降级为日志
             log.warn("[FlowNotify][IN_APP] Feign 调用降级为日志: userId={} title={} err={}",
@@ -267,7 +269,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             payload.put("receiver", receiver);
         }
         try {
-            notificationClient.send(payload);
+            notificationClient.send(toFeignDTO(payload));
         } catch (Exception e) {
             log.warn("[FlowNotify][EMAIL] Feign 调用降级为日志: userId={} title={} err={}",
                     userId, title, e.getMessage());
@@ -307,6 +309,79 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         }
         log.debug("[FlowNotify][WEBHOOK] userId={} title={} traceId={} url={}",
                 userId, title, traceId, webhookUrl);
+    }
+
+    /**
+     * 将 Map 形式的 payload 转换为强类型 NotificationFeignDTO
+     *
+     * <p>payload 中的 "userId" 映射到 DTO 的 receiverId（单接收人），
+     * "receiver" 映射到 receiverEmail，其余同名字段直接映射。
+     * Map 中的扩展字段（instanceId/taskId/channel 等）不在 Feign DTO 范围内会被丢弃，
+     * 与原先 system 模块 NotificationSendDTO 反序列化时忽略未知字段的行为一致。
+     *
+     * @param payload 原始 Map payload
+     * @return 强类型 Feign DTO
+     */
+    private NotificationFeignDTO toFeignDTO(Map<String, Object> payload) {
+        NotificationFeignDTO dto = new NotificationFeignDTO();
+        if (payload == null) {
+            return dto;
+        }
+        dto.setTitle(asString(payload.get("title")));
+        dto.setContent(asString(payload.get("content")));
+        dto.setLevel(asString(payload.get("level")));
+        dto.setCategory(asString(payload.get("category")));
+        dto.setSenderId(asLong(payload.get("senderId")));
+        dto.setReceiverId(asLong(payload.get("receiverId")));
+        if (dto.getReceiverId() == null) {
+            // payload 中使用 "userId" 表示单接收人
+            dto.setReceiverId(asLong(payload.get("userId")));
+        }
+        Object receiverIds = payload.get("receiverIds");
+        if (receiverIds instanceof List<?> list) {
+            List<Long> ids = new java.util.ArrayList<>(list.size());
+            for (Object o : list) {
+                Long id = asLong(o);
+                if (id != null) {
+                    ids.add(id);
+                }
+            }
+            dto.setReceiverIds(ids);
+        }
+        dto.setBizType(asString(payload.get("bizType")));
+        dto.setBizId(asString(payload.get("bizId")));
+        Object expiredAt = payload.get("expiredAt");
+        if (expiredAt instanceof LocalDateTime ldt) {
+            dto.setExpiredAt(ldt);
+        }
+        Object emailEnabled = payload.get("emailEnabled");
+        if (emailEnabled instanceof Boolean b) {
+            dto.setEmailEnabled(b);
+        }
+        dto.setReceiverEmail(asString(payload.get("receiverEmail")));
+        if (dto.getReceiverEmail() == null) {
+            // sendEmail 通道使用 "receiver" 表示收件邮箱
+            dto.setReceiverEmail(asString(payload.get("receiver")));
+        }
+        return dto;
+    }
+
+    private String asString(Object o) {
+        return o == null ? null : o.toString();
+    }
+
+    private Long asLong(Object o) {
+        if (o == null) {
+            return null;
+        }
+        if (o instanceof Number n) {
+            return n.longValue();
+        }
+        try {
+            return Long.parseLong(o.toString().trim());
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /**

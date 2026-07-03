@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -41,6 +42,7 @@ public class DictServiceImpl implements DictService {
     private final DictItemMapper dictItemMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<DictTypeDO> listAllTypes() {
         return dictTypeMapper.selectList(null);
     }
@@ -52,6 +54,7 @@ public class DictServiceImpl implements DictService {
      * 由于 Redisson Spring Cache 默认配置了 TTL，缓存会在到期后自动失效。
      */
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = CACHE_NAME, key = "#typeCode", unless = "#result == null || #result.isEmpty()")
     public List<DictItemDO> listItems(String typeCode) {
         return dictItemMapper.selectByTypeCode(typeCode);
@@ -66,6 +69,7 @@ public class DictServiceImpl implements DictService {
      * @param typeCode 字典类型编码
      */
     @Override
+    @Transactional(readOnly = true)
     @CachePut(value = CACHE_NAME, key = "#typeCode")
     public List<DictItemDO> refreshCache(String typeCode) {
         List<DictItemDO> items = dictItemMapper.selectByTypeCode(typeCode);

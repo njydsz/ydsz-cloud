@@ -1,5 +1,6 @@
 package com.njydsz.pmis.system.service;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -42,7 +43,7 @@ public class MessageTemplateServiceImpl {
         }
         t.setChannel(t.getChannel().toUpperCase());
         if (t.getStatus() == null) t.setStatus("ENABLED");
-        if (t.getTenantId() == null) t.setTenantId(1L);
+        if (t.getTenantId() == null) t.setTenantId(TenantContext.getTenantId());
         templateMapper.insert(t);
         log.info("[MessageTemplate] 创建模板: code={} channel={}", t.getTemplateCode(), t.getChannel());
         return t.getId();

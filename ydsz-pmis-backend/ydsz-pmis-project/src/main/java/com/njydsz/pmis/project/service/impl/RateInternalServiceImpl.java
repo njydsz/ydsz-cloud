@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -47,7 +48,7 @@ public class RateInternalServiceImpl implements RateInternalService {
         if (!StringUtils.hasText(r.getStatus())) r.setStatus("ACTIVE");
         if (!StringUtils.hasText(r.getCurrency())) r.setCurrency("CNY");
         if (r.getCostAmount() == null) r.setCostAmount(BigDecimal.ZERO);
-        if (r.getTenantId() == null) r.setTenantId(1L);
+        if (r.getTenantId() == null) r.setTenantId(TenantContext.getTenantId());
         if (r.getProviderTraceId() == null) r.setProviderTraceId("");
         rateMapper.insert(r);
         log.info("[RateInternal] 创建对内费率: code={} level={} cost={}",

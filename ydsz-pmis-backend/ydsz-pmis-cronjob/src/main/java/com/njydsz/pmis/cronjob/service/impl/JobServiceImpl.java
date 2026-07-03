@@ -1,5 +1,6 @@
 package com.njydsz.pmis.cronjob.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -144,6 +145,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * 应用启动时加载所有 NORMAL 任务
      */
     @Override
+    @Transactional(readOnly = true)
     public void loadOnStartup() {
         List<JobDO> list = jobMapper.selectAllNormal();
         log.info("[Cronjob] 启动加载任务数量: {}", list.size());
@@ -177,7 +179,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             job.setJobGroup("DEFAULT");
         }
         if (job.getTenantId() == null) {
-            job.setTenantId(1L);
+            job.setTenantId(TenantContext.getTenantId());
         }
         // 计算 nextFireTime
         LocalDateTime next = nextFireTime(job.getCronExpression());
@@ -365,6 +367,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @throws BizException 当任务不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public JobDO getById(Long id) {
         JobDO j = jobMapper.selectById(id);
         if (j == null) {
@@ -384,6 +387,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @return 任务分页数据
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<JobDO> page(int page, int size, String keyword, String status, String group) {
         Page<JobDO> p = new Page<>(page, size);
         LambdaQueryWrapper<JobDO> w = new LambdaQueryWrapper<>();
@@ -412,6 +416,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @return 执行日志分页数据
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<JobLogDO> pageLog(int page, int size, String jobKey, String status) {
         Page<JobLogDO> p = new Page<>(page, size);
         LambdaQueryWrapper<JobLogDO> w = new LambdaQueryWrapper<>();

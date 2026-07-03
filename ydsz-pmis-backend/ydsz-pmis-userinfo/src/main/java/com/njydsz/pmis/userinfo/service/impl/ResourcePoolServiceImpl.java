@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -46,7 +47,7 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
         if (!StringUtils.hasText(p.getStatus())) p.setStatus("ACTIVE");
         if (p.getHeadcount() == null) p.setHeadcount(0);
         if (p.getBillableTarget() == null) p.setBillableTarget(0);
-        if (p.getTenantId() == null) p.setTenantId(1L);
+        if (p.getTenantId() == null) p.setTenantId(TenantContext.getTenantId());
         if (p.getProviderTraceId() == null) p.setProviderTraceId("");
         poolMapper.insert(p);
         log.info("[ResourcePool] 创建资源池: code={} type={}", p.getPoolCode(), p.getPoolType());
@@ -78,6 +79,7 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResourcePoolDO getById(Long id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourcePoolDO p = poolMapper.selectById(id);
@@ -86,18 +88,21 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ResourcePoolDO> listByType(String poolType) {
         if (!StringUtils.hasText(poolType)) return List.of();
         return poolMapper.selectByType(poolType);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ResourcePoolDO> listByDept(Long departmentId) {
         if (departmentId == null) return List.of();
         return poolMapper.selectByDept(departmentId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ResourcePoolDO> page(int page, int size, String poolType, String status) {
         Page<ResourcePoolDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ResourcePoolDO> w = new LambdaQueryWrapper<>();

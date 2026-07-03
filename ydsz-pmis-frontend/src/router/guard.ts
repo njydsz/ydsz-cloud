@@ -16,6 +16,7 @@ import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { usePermissionStore } from '@/store/modules/permission'
 import i18n from '@/locales'
+import { logger } from '@/utils/logger'
 
 // 关闭右上角转圈动画，仅保留顶部进度条
 NProgress.configure({ showSpinner: false })
@@ -111,7 +112,7 @@ export function setupRouterGuard(router: Router): void {
 
   // 错误守卫：路由异常时关闭进度条；chunk 加载失败跳 /500，避免白屏
   router.onError((error) => {
-    console.error('[Router Error]', error)
+    logger.error('[Router]', error)
     NProgress.done()
     // 路由懒加载失败（chunk 缓存失效 / 部署中文件被删）→ 跳 500 兜底
     const msg = error?.message || ''

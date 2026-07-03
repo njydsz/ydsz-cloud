@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -53,7 +54,7 @@ public class ExpenseServiceImpl implements ExpenseService {
         ExpenseDO e = new ExpenseDO();
         BeanUtils.copyProperties(dto, e);
         if (!StringUtils.hasText(e.getStatus())) e.setStatus(ApprovalStatus.DRAFT.getCode());
-        if (e.getTenantId() == null) e.setTenantId(1L);
+        if (e.getTenantId() == null) e.setTenantId(TenantContext.getTenantId());
         if (e.getProviderTraceId() == null) e.setProviderTraceId("");
         if (!StringUtils.hasText(e.getEmployeeName())) {
             try {

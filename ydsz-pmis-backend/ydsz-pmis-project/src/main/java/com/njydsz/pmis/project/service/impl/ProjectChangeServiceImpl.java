@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -75,7 +76,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
             c.setApproverRoles("[\"PMO\"]");
         }
         if (!StringUtils.hasText(c.getStatus())) c.setStatus(ChangeStatus.DRAFT.getCode());
-        if (c.getTenantId() == null) c.setTenantId(1L);
+        if (c.getTenantId() == null) c.setTenantId(TenantContext.getTenantId());
         if (c.getProviderTraceId() == null) c.setProviderTraceId("");
         changeMapper.insert(c);
         log.info("[ProjectChange] 创建变更: code={} type={} major={} level={}",

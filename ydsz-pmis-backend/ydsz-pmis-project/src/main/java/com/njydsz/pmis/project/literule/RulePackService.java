@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.literule;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -190,7 +191,7 @@ public class RulePackService {
         RulePackInstallDO record = new RulePackInstallDO();
         record.setPackCode(packCode);
         record.setPackVersion(version);
-        record.setTenantId(1L);
+        record.setTenantId(TenantContext.getTenantId());
         record.setInstalledBy(operator);
         record.setInstalledAt(LocalDateTime.now());
         record.setStatus(failed == 0 ? "SUCCESS" : (success == 0 ? "FAILED" : "PARTIAL"));

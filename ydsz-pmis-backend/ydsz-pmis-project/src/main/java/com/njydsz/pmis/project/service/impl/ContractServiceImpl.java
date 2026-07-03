@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -63,7 +64,7 @@ public class ContractServiceImpl implements ContractService {
         if (!StringUtils.hasText(c.getCurrency())) {
             c.setCurrency("CNY");
         }
-        if (c.getTenantId() == null) c.setTenantId(1L);
+        if (c.getTenantId() == null) c.setTenantId(TenantContext.getTenantId());
         // 自动风险评估
         if (!StringUtils.hasText(c.getRiskLevel())) {
             c.setRiskLevel(ContractRiskEvaluator.evaluate(c).name());

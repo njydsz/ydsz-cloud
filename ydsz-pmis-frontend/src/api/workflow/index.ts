@@ -451,6 +451,14 @@ export function aiStatus() {
   )
 }
 
+/** P0-3: AI 一句话生成流程 */
+export function generateBpmn(description: string) {
+  return http.post<ApiResponse<{ bpmnXml: string }>>(
+    '/workflow/ai/generate',
+    { description },
+  )
+}
+
 // ===========================================
 // P2-2: 嵌入式审批（业务页内嵌审批面板）
 // ===========================================

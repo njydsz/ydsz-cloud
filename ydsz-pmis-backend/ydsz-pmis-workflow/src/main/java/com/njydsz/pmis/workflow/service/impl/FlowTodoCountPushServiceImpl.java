@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.service.impl;
 
 import com.njydsz.pmis.common.feign.NotificationClient;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
@@ -56,7 +57,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
             payload.put("userId", userId);
             payload.put("todoCount", count);
             payload.put("timestamp", System.currentTimeMillis());
-            notificationClient.pushRealtime(userId, TYPE_TODO_COUNT, payload);
+            notificationClient.pushRealtime(userId, TYPE_TODO_COUNT, new RealtimePushDTO(payload));
             log.debug("[FlowPush] 推送待办数: userId={} count={}", userId, count);
         } catch (Exception e) {
             log.warn("[FlowPush] 推送待办数失败: userId={} err={}", userId, e.getMessage());
@@ -88,7 +89,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
             payload.put("businessId", task.getBusinessId());
             payload.put("dueAt", task.getDueAt());
             payload.put("timestamp", System.currentTimeMillis());
-            notificationClient.pushRealtime(userId, TYPE_TASK_ASSIGNED, payload);
+            notificationClient.pushRealtime(userId, TYPE_TASK_ASSIGNED, new RealtimePushDTO(payload));
             // 任务已分配时，同步推送最新待办数
             pushTodoCount(userId);
             log.info("[FlowPush] 推送任务分配: userId={} taskId={} flowName={}",
@@ -112,7 +113,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
             payload.put("nodeName", task.getNodeName());
             payload.put("timestamp", System.currentTimeMillis());
             if (operatorUserId != null) {
-                notificationClient.pushRealtime(operatorUserId, TYPE_TASK_COMPLETED, payload);
+                notificationClient.pushRealtime(operatorUserId, TYPE_TASK_COMPLETED, new RealtimePushDTO(payload));
                 // 完成后同步推送最新待办数
                 pushTodoCount(operatorUserId);
             }
@@ -139,7 +140,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
             payload.put("reason", reason);
             payload.put("timestamp", System.currentTimeMillis());
             if (operatorUserId != null) {
-                notificationClient.pushRealtime(operatorUserId, TYPE_TASK_REJECTED, payload);
+                notificationClient.pushRealtime(operatorUserId, TYPE_TASK_REJECTED, new RealtimePushDTO(payload));
                 pushTodoCount(operatorUserId);
             }
             log.info("[FlowPush] 推送任务驳回: taskId={} operator={} reason={}",

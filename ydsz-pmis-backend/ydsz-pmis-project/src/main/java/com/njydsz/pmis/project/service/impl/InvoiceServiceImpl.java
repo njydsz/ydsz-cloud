@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -113,7 +114,7 @@ public class InvoiceServiceImpl implements InvoiceService {
         }
         if (inv.getStatus() == null) inv.setStatus(InvoiceStatus.DRAFT.getCode());
         if (inv.getCurrency() == null) inv.setCurrency("CNY");
-        if (inv.getTenantId() == null) inv.setTenantId(1L);
+        if (inv.getTenantId() == null) inv.setTenantId(TenantContext.getTenantId());
         if (inv.getProviderTraceId() == null) inv.setProviderTraceId("");
         invoiceMapper.insert(inv);
         log.info("[Invoice] 创建发票: code={} type={} basis={} amount={}",

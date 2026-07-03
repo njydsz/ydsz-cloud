@@ -388,8 +388,21 @@ public final class ChainGraphConverter {
             }
         }
         if (root == null) {
-            // 兜底：取第一个节点作为根
+            // 兜底 1：取第一个节点作为根
             root = graph.getNodes().get(0);
+        }
+
+        // 兜底 2：若兜底出来的根是 SINGLE 节点（说明整个 graph 没有任何 CHAIN 根节点），
+        // 则把所有 SINGLE 节点按 nodes 列表顺序组成 THEN 链，
+        // 对应 toGraph("扁平化 THEN 链") 的反向还原。
+        if ("SINGLE".equals(root.getNodeType())) {
+            List<ChainNodeDTO> allSingles = new ArrayList<>();
+            for (ChainNodeDTO n : graph.getNodes()) {
+                if ("SINGLE".equals(n.getNodeType())) {
+                    allSingles.add(n);
+                }
+            }
+            return buildSequenceChain(allSingles, graph, resolver, false);
         }
 
         String chainType = root.getChainType() != null ? root.getChainType() : "THEN";

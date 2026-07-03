@@ -9,6 +9,7 @@ import com.njydsz.pmis.userinfo.mapper.JobLevelRateMapper;
 import com.njydsz.pmis.userinfo.service.JobLevelService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -27,11 +28,13 @@ public class JobLevelServiceImpl implements JobLevelService {
     private final JobLevelRateMapper jobLevelRateMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<JobLevelDO> listAllLevels() {
         return jobLevelMapper.selectAllEnabled();
     }
 
     @Override
+    @Transactional(readOnly = true)
     public JobLevelRateDO getEffectiveRate(String levelCode, LocalDate date) {
         if (date == null) {
             date = LocalDate.now();
@@ -44,6 +47,7 @@ public class JobLevelServiceImpl implements JobLevelService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<JobLevelRateDO> listAllVersions(String levelCode) {
         return jobLevelRateMapper.selectAllVersions(levelCode);
     }

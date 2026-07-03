@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.dto.DeliveryItemCreateDTO;
@@ -49,7 +50,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         BeanUtils.copyProperties(dto, s);
         if (s.getRequired() == null) s.setRequired(1);
         if (s.getTriggerTr() == null) s.setTriggerTr(0);
-        if (s.getTenantId() == null) s.setTenantId(1L);
+        if (s.getTenantId() == null) s.setTenantId(TenantContext.getTenantId());
         if (s.getProviderTraceId() == null) s.setProviderTraceId("");
         standardMapper.insert(s);
         log.info("[DeliveryStandard] 创建交付物标准: type={} stage={} name={}",
@@ -107,7 +108,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         if (!StringUtils.hasText(i.getStatus())) {
             i.setStatus(DeliveryItemStatus.PENDING.getCode());
         }
-        if (i.getTenantId() == null) i.setTenantId(1L);
+        if (i.getTenantId() == null) i.setTenantId(TenantContext.getTenantId());
         if (i.getProviderTraceId() == null) i.setProviderTraceId("");
         itemMapper.insert(i);
         log.info("[DeliveryItem] 创建交付物: code={} project={} stage={}",

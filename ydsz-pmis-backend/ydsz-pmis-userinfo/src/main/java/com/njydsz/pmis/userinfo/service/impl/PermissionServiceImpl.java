@@ -13,6 +13,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -52,6 +53,7 @@ public class PermissionServiceImpl implements PermissionService {
     private final PermissionMapper permissionMapper;
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = CACHE_ALL_ENABLED, unless = "#result == null || #result.isEmpty()")
     public List<PermissionDO> listAllEnabled() {
         return permissionMapper.selectList(new LambdaQueryWrapper<PermissionDO>()
@@ -60,12 +62,14 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = CACHE_PERM_CODES, key = "#userId", unless = "#result == null || #result.isEmpty()")
     public List<String> listPermCodesByUserId(Long userId) {
         return permissionMapper.selectPermCodesByUserId(userId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = CACHE_MENU_TREE, key = "#userId", unless = "#result == null || #result.isEmpty()")
     public List<MenuTreeVO> listMenuTreeByUserId(Long userId) {
         // 1. 拉取该用户所有权限
@@ -77,6 +81,7 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     @Cacheable(value = CACHE_ALL_MENU_TREE, unless = "#result == null || #result.isEmpty()")
     public List<MenuTreeVO> listAllMenuTree() {
         return buildMenuTree(listAllEnabled());
@@ -128,11 +133,13 @@ public class PermissionServiceImpl implements PermissionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PermissionDO> listByRoleId(Long roleId) {
         return permissionMapper.selectByRoleId(roleId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PermissionDO getById(Long id) {
         PermissionDO p = permissionMapper.selectById(id);
         if (p == null) {

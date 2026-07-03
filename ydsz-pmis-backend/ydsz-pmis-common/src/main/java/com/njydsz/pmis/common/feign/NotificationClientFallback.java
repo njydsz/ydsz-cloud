@@ -1,6 +1,8 @@
 package com.njydsz.pmis.common.feign;
 
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
@@ -25,14 +27,14 @@ public class NotificationClientFallback implements FallbackFactory<NotificationC
     public NotificationClient create(Throwable cause) {
         return new NotificationClient() {
             @Override
-            public Result<Integer> send(Map<String, Object> payload) {
+            public Result<Integer> send(NotificationFeignDTO payload) {
                 log.warn("[Feign] NotificationClient 降级 send: title={}",
-                        payload == null ? "null" : payload.get("title"));
+                        payload == null ? "null" : payload.getTitle());
                 return Result.ok(0);
             }
 
             @Override
-            public Result<Map<String, Object>> pushRealtime(Long userId, String type, Object payload) {
+            public Result<Map<String, Object>> pushRealtime(Long userId, String type, RealtimePushDTO payload) {
                 log.warn("[Feign] NotificationClient 降级 pushRealtime: userId={} type={} cause={}",
                         userId, type, cause == null ? "null" : cause.getMessage());
                 return Result.ok(Collections.emptyMap());

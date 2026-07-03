@@ -1,5 +1,6 @@
 package com.njydsz.pmis.system.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -151,7 +152,7 @@ public class FileServiceImpl implements FileService {
         entity.setUrlExpireAt(LocalDateTime.now().plusSeconds(expire));
         entity.setUploaderId(dto.getUploaderId());
         entity.setUploaderName(dto.getUploaderName());
-        entity.setTenantId(1L);
+        entity.setTenantId(TenantContext.getTenantId());
         entity.setDescription(dto.getDescription());
         fileMapper.insert(entity);
 
@@ -207,6 +208,7 @@ public class FileServiceImpl implements FileService {
      * @throws BizException 当文件不存在时抛出
      */
     @Override
+    @Transactional(readOnly = true)
     public FileDO getById(Long id) {
         FileDO f = fileMapper.selectById(id);
         if (f == null) {
@@ -253,6 +255,7 @@ public class FileServiceImpl implements FileService {
      * @throws Exception 下载过程中发生异常
      */
     @Override
+    @Transactional(readOnly = true)
     public InputStream download(Long id) throws Exception {
         FileDO f = getById(id);
         return minioClient.getObject(GetObjectArgs.builder()
@@ -269,6 +272,7 @@ public class FileServiceImpl implements FileService {
      * @return 文件元信息列表
      */
     @Override
+    @Transactional(readOnly = true)
     public List<FileDO> listByBiz(String bizType, String bizId) {
         return fileMapper.selectByBiz(bizType, bizId);
     }
@@ -284,6 +288,7 @@ public class FileServiceImpl implements FileService {
      * @return 分页结果
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<FileDO> page(int page, int size, String bizType, String bizId, String keyword) {
         Page<FileDO> p = new Page<>(page, size);
         LambdaQueryWrapper<FileDO> w = new LambdaQueryWrapper<>();

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -55,7 +56,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         BeanUtils.copyProperties(dto, t);
         if (!StringUtils.hasText(t.getVersion())) t.setVersion("1.0.0");
         if (!StringUtils.hasText(t.getStatus())) t.setStatus(ContractTemplateStatus.DRAFT.getCode());
-        if (t.getTenantId() == null) t.setTenantId(1L);
+        if (t.getTenantId() == null) t.setTenantId(TenantContext.getTenantId());
         templateMapper.insert(t);
         log.info("[ContractTemplate] 创建模板: code={} type={}",
                 t.getTemplateCode(), t.getContractType());

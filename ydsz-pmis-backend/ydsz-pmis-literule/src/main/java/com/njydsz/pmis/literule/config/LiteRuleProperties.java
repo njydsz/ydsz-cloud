@@ -79,6 +79,11 @@ public class LiteRuleProperties {
     private Ai ai = new Ai();
 
     /**
+     * 分布式执行配置（P2-16）
+     */
+    private Distributed distributed = new Distributed();
+
+    /**
      * AI 增强配置
      *
      * <p>支持自然语言转规则表达式、规则推荐、健康度评分。
@@ -126,5 +131,32 @@ public class LiteRuleProperties {
 
         /** 推荐结果最大返回条数 */
         private int recommendTopN = 10;
+    }
+
+    /**
+     * 分布式执行配置
+     *
+     * <p>启用后规则引擎按一致性 hash 将规则分片到集群节点，
+     * 每个节点只执行属于自己的规则，避免重复计算。
+     *
+     * @since 1.5.0
+     */
+    @Data
+    public static class Distributed {
+
+        /** 是否启用分布式分片执行 */
+        private boolean enabled = false;
+
+        /** 虚拟节点数（默认 150，越大越均匀） */
+        private int virtualNodes = 150;
+
+        /** 节点列表刷新间隔（毫秒） */
+        private long refreshIntervalMs = 10_000L;
+
+        /** 心跳超时时间（毫秒，超过此时间未心跳的节点视为下线） */
+        private long heartbeatTimeoutMs = 30_000L;
+
+        /** 心跳发送间隔（毫秒） */
+        private long heartbeatIntervalMs = 5_000L;
     }
 }

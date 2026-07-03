@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.EmployeeTagCreateDTO;
@@ -37,7 +38,7 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
         BeanUtils.copyProperties(dto, t);
         if (t.getProficiency() == null) t.setProficiency(3);
         if (t.getYearsExp() == null) t.setYearsExp(0);
-        if (t.getTenantId() == null) t.setTenantId(1L);
+        if (t.getTenantId() == null) t.setTenantId(TenantContext.getTenantId());
         if (t.getProviderTraceId() == null) t.setProviderTraceId("");
         tagMapper.insert(t);
         log.info("[EmpTag] 添加标签: emp={} {}={}", t.getEmployeeId(), t.getTagType(), t.getTagCode());
@@ -64,12 +65,14 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EmployeeTagDO> listByEmployee(Long employeeId) {
         if (employeeId == null) return List.of();
         return tagMapper.selectByEmployee(employeeId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<EmployeeTagDO> findCandidates(String tagType, String tagCode) {
         if (!StringUtils.hasText(tagType)) return List.of();
         return tagMapper.selectByTag(tagType, tagCode);

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.userinfo.entity.UserSessionDO;
 import com.njydsz.pmis.userinfo.mapper.UserSessionMapper;
@@ -39,7 +40,7 @@ public class SessionServiceImpl implements SessionService {
         s.setUserAgent(userAgent);
         s.setDeviceType(deviceType);
         s.setStatus("ACTIVE");
-        s.setTenantId(1L);
+        s.setTenantId(TenantContext.getTenantId());
         s.setCreatedAt(LocalDateTime.now());
         s.setUpdatedAt(LocalDateTime.now());
         s.setDeleted(0);
@@ -68,11 +69,13 @@ public class SessionServiceImpl implements SessionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserSessionDO> listActive(Long userId) {
         return sessionMapper.selectActiveByUserId(userId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserSessionDO get(String sessionId) {
         return sessionMapper.selectBySessionId(sessionId);
     }

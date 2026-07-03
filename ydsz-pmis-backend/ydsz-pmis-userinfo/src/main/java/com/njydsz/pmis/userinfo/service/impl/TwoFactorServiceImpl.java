@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.TotpUtil;
@@ -57,7 +58,7 @@ public class TwoFactorServiceImpl implements TwoFactorService {
         entity.setBindingAt(LocalDateTime.now());
         entity.setBackupCodes(joinCodes(codes));
         entity.setEnabled(false);
-        entity.setTenantId(1L);
+        entity.setTenantId(TenantContext.getTenantId());
         if (existing == null) {
             user2FAMapper.insert(entity);
         } else {
@@ -141,11 +142,13 @@ public class TwoFactorServiceImpl implements TwoFactorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public User2FADO find(Long userId) {
         return user2FAMapper.selectByUserId(userId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<String> listBackupCodesMasked(Long userId) {
         User2FADO e = user2FAMapper.selectByUserId(userId);
         if (e == null || e.getBackupCodes() == null) {

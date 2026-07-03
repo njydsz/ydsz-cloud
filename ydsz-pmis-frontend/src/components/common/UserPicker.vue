@@ -152,7 +152,7 @@ async function doSearch(kw: string) {
       departmentId: props.departmentId,
       levelCode: props.levelCode,
       keyword: kw || undefined,
-    } as any)
+    })
     const records = (res.data?.data?.records || []) as UserVO[]
     mergeCandidates(records)
   } catch (e) {
@@ -187,7 +187,7 @@ function onFocus() {
 // ===========================================
 // 选中 / 取消选中
 // ===========================================
-function onChange(v: any) {
+function onChange(v: string | number | (string | number)[] | undefined) {
   if (props.multiple) {
     // v 是 ID 数组（el-select multiple 模式下默认以 valueKey 为绑定值）
     const arr = (v as Array<string | number>) || []
@@ -255,7 +255,7 @@ async function loadDialogList(reset = false) {
       departmentId: dialogDept.value ? Number(dialogDept.value) : undefined,
       levelCode: props.levelCode,
       keyword: dialogKeyword.value || undefined,
-    } as any)
+    })
     const records = (res.data?.data?.records || []) as UserVO[]
     dialogList.value = reset ? records : [...dialogList.value, ...records]
     dialogTotal.value = res.data?.data?.total || 0

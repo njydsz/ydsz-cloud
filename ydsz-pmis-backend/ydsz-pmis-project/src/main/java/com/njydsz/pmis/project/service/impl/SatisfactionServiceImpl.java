@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -59,7 +60,7 @@ public class SatisfactionServiceImpl implements SatisfactionService {
                     || level == SatisfactionLevel.VERY_DISSATISFIED);
         }
         if (s.getAnonymous() == null) s.setAnonymous(false);
-        if (s.getTenantId() == null) s.setTenantId(1L);
+        if (s.getTenantId() == null) s.setTenantId(TenantContext.getTenantId());
         satisfactionMapper.insert(s);
         log.info("[Satisfaction] 提交评价: code={} score={} level={} followUp={}",
                 s.getSurveyCode(), s.getScore(), s.getLevel(), s.getFollowUp());

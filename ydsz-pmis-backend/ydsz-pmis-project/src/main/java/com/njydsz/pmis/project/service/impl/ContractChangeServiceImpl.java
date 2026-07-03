@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -63,7 +64,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
         ContractChangeDO c = new ContractChangeDO();
         BeanUtils.copyProperties(dto, c);
         c.setStatus("DRAFT");
-        if (c.getTenantId() == null) c.setTenantId(1L);
+        if (c.getTenantId() == null) c.setTenantId(TenantContext.getTenantId());
         changeMapper.insert(c);
         log.info("[ContractChange] 提交变更: code={} type={}", c.getChangeCode(), c.getChangeType());
         return c.getId();

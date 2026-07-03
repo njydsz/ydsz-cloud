@@ -24,6 +24,7 @@ import {
   getFeatureFlagSnapshot,
 } from '@/api/feature-flag'
 import type { FeatureFlagSnapshot } from '@/api/feature-flag/types'
+import { logger } from '@/utils/logger'
 
 /** 内置的 flag key 枚举 (与后端 FeatureFlag 保持一致) */
 export const FEATURE_FLAGS = {
@@ -119,7 +120,7 @@ export function useFeatureFlag() {
         setCached(k, undefined, v)
       }
     } catch (e) {
-      console.warn('[useFeatureFlag] 拉取快照失败, 使用本地默认', e)
+      logger.warn('[useFeatureFlag]', '拉取快照失败, 使用本地默认', e)
       // 降级
       const fallback: Record<string, boolean> = {}
       for (const f of Object.values(FEATURE_FLAGS)) {

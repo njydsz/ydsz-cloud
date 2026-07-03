@@ -47,6 +47,12 @@ public class UserServiceClientFallback implements FallbackFactory<UserServiceCli
             }
 
             @Override
+            public Result<Map<Long, String>> batchCustomerName(List<Long> customerIds) {
+                log.warn("[UserServiceClientFallback] batchCustomerName 降级: ids={}", customerIds);
+                return Result.ok(Map.of());
+            }
+
+            @Override
             public Result<BigDecimal> getLevelRate(String levelCode) {
                 return Result.ok(BigDecimal.ZERO);
             }

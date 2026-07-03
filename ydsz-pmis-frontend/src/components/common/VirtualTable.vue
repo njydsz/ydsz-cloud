@@ -23,17 +23,20 @@ import { ref, computed } from 'vue'
 import { VxeTable, VxeColumn } from 'vxe-table'
 import type { VxeTableProps } from 'vxe-table'
 
+/** 列配置 */
+interface ColumnConfig {
+  field: string
+  title: string
+  width?: number | string
+  align?: 'left' | 'center' | 'right'
+  formatter?: (row: Record<string, unknown>, column: ColumnConfig) => string
+}
+
 interface Props {
   /** 表格数据 */
-  data: any[]
+  data: Record<string, unknown>[]
   /** 列配置 */
-  columns: Array<{
-    field: string
-    title: string
-    width?: number | string
-    align?: 'left' | 'center' | 'right'
-    formatter?: (row: any, column: any) => string
-  }>
+  columns: ColumnConfig[]
   /** 表格高度 */
   height?: number | string
   /** 行主键字段 */
@@ -52,10 +55,10 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const emit = defineEmits<{
-  'selection-change': [selected: any[]]
+  'selection-change': [selected: Record<string, unknown>[]]
 }>()
 
-const selectedRows = ref<any[]>([])
+const selectedRows = ref<Record<string, unknown>[]>([])
 
 const tableConfig = computed<VxeTableProps>(() => ({
   height: props.height,
@@ -67,7 +70,7 @@ const tableConfig = computed<VxeTableProps>(() => ({
   loading: props.loading,
 }))
 
-const handleSelectionChange = ({ records }: { records: any[] }) => {
+const handleSelectionChange = ({ records }: { records: Record<string, unknown>[] }) => {
   selectedRows.value = records
   emit('selection-change', records)
 }

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -74,7 +75,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
         if (a.getAllocation() == null) a.setAllocation(new BigDecimal("1.0"));
         if (a.getDailyHours() == null) a.setDailyHours(new BigDecimal("8.0"));
         if (a.getBillable() == null) a.setBillable(1);
-        if (a.getTenantId() == null) a.setTenantId(1L);
+        if (a.getTenantId() == null) a.setTenantId(TenantContext.getTenantId());
         if (a.getProviderTraceId() == null) a.setProviderTraceId("");
         if ("START".equals(action) && a.getActualStartDate() == null) {
             a.setActualStartDate(LocalDate.now());
@@ -89,6 +90,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ResourceAssignmentDO getById(Long id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourceAssignmentDO a = assignmentMapper.selectById(id);
@@ -97,18 +99,21 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ResourceAssignmentDO> listByEmployee(Long employeeId) {
         if (employeeId == null) return List.of();
         return assignmentMapper.selectByEmployee(employeeId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<ResourceAssignmentDO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
         return assignmentMapper.selectByInitiation(initiationId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public int activeCount(Long employeeId) {
         if (employeeId == null) return 0;
         Integer c = assignmentMapper.countActiveByEmployee(employeeId);
@@ -116,6 +121,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> utilization(Long employeeId) {
         Map<String, Object> out = new HashMap<>();
         if (employeeId == null) return out;
@@ -141,6 +147,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ResourceAssignmentDO> page(int page, int size, Long employeeId, Long initiationId, String status) {
         Page<ResourceAssignmentDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ResourceAssignmentDO> w = new LambdaQueryWrapper<>();

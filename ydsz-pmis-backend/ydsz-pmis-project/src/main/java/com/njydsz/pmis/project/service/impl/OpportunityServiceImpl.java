@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
@@ -83,7 +84,7 @@ public class OpportunityServiceImpl implements OpportunityService {
             o.setLevel("C");
         }
         if (o.getTenantId() == null) {
-            o.setTenantId(1L);
+            o.setTenantId(TenantContext.getTenantId());
         }
         if (o.getWinRate() == null) {
             o.setWinRate(WinRateEvaluator.evaluate(o));

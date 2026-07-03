@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.dto.ProfitSnapshotDTO;
@@ -48,7 +49,7 @@ public class ProfitServiceImpl implements ProfitService {
         }
         BeanUtils.copyProperties(dto, snap, "id", "initiationId", "period");
         snap.setSnapshotAt(LocalDateTime.now());
-        if (snap.getTenantId() == null) snap.setTenantId(1L);
+        if (snap.getTenantId() == null) snap.setTenantId(TenantContext.getTenantId());
         if (snap.getProviderTraceId() == null) snap.setProviderTraceId("");
 
         // 派生计算

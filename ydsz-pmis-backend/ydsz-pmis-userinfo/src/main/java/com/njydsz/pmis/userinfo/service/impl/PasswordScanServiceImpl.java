@@ -8,6 +8,7 @@ import com.njydsz.pmis.userinfo.service.PasswordScanService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.time.LocalDate;
@@ -33,6 +34,7 @@ public class PasswordScanServiceImpl implements PasswordScanService {
     private static final int EXPIRING_SOON_DAYS = 30;
 
     @Override
+    @Transactional(readOnly = true)
     public PasswordScanResultDTO scan(int expireDays) {
         int realExpireDays = expireDays <= 0 ? 90 : expireDays;
         LocalDateTime now = LocalDateTime.now();
@@ -89,6 +91,7 @@ public class PasswordScanServiceImpl implements PasswordScanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserAccountDO> listExpiredAccounts(int expireDays) {
         int realExpireDays = expireDays <= 0 ? 90 : expireDays;
         LocalDateTime threshold = LocalDateTime.now().minusDays(realExpireDays);
@@ -100,6 +103,7 @@ public class PasswordScanServiceImpl implements PasswordScanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserAccountDO> listExpiringSoonAccounts(int expireDays) {
         int realExpireDays = expireDays <= 0 ? 90 : expireDays;
         LocalDateTime expireThreshold = LocalDateTime.now().minusDays(realExpireDays);
@@ -112,6 +116,7 @@ public class PasswordScanServiceImpl implements PasswordScanService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserAccountDO> listInitialPasswordAccounts() {
         LambdaQueryWrapper<UserAccountDO> w = new LambdaQueryWrapper<>();
         w.eq(UserAccountDO::getStatus, "ENABLED")

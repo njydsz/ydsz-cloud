@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
 import com.njydsz.pmis.system.dto.NotificationQueryDTO;
 import com.njydsz.pmis.system.dto.NotificationSendDTO;
 import com.njydsz.pmis.system.entity.NotificationDO;
@@ -122,8 +123,9 @@ public class NotificationController {
     @PostMapping("/push")
     public Result<Map<String, Object>> push(@RequestParam Long userId,
                                             @RequestParam String type,
-                                            @RequestBody Object payload) {
-        realtimePushService.pushToUser(userId, type, payload);
+                                            @RequestBody RealtimePushDTO payload) {
+        Object data = payload != null ? payload.getData() : null;
+        realtimePushService.pushToUser(userId, type, data);
         return Result.ok(Map.of("success", true, "userId", userId, "type", type));
     }
 

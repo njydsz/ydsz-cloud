@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -73,7 +74,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
         EvmMeasureDO m = existing != null ? existing : new EvmMeasureDO();
         if (existing == null) {
             BeanUtils.copyProperties(dto, m);
-            m.setTenantId(1L);
+            m.setTenantId(TenantContext.getTenantId());
             m.setProviderTraceId("");
         } else {
             m.setPv(dto.getPv());

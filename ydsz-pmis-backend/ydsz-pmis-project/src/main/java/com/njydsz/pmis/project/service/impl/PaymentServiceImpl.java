@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -65,7 +66,7 @@ public class PaymentServiceImpl implements PaymentService {
         if (p.getStatus() == null) p.setStatus(PaymentStatus.PENDING.getCode());
         if (p.getCurrency() == null) p.setCurrency("CNY");
         if (p.getPaymentMethod() == null) p.setPaymentMethod("BANK_TRANSFER");
-        if (p.getTenantId() == null) p.setTenantId(1L);
+        if (p.getTenantId() == null) p.setTenantId(TenantContext.getTenantId());
         if (p.getProviderTraceId() == null) p.setProviderTraceId("");
 
         BigDecimal allocated = p.getAllocatedAmount() == null ? BigDecimal.ZERO : p.getAllocatedAmount();

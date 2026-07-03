@@ -1,5 +1,6 @@
 package com.njydsz.pmis.agent.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.alibaba.csp.sentinel.annotation.SentinelResource;
 import com.alibaba.csp.sentinel.slots.block.BlockException;
 import com.alibaba.fastjson2.JSON;
@@ -67,7 +68,7 @@ public class AgentServiceImpl implements AgentService {
         record.setCallerId(req.getCallerId());
         record.setCallerName(req.getCallerName());
         record.setSource(StringUtils.hasText(req.getSource()) ? req.getSource() : "MANUAL");
-        record.setTenantId(1L);
+        record.setTenantId(TenantContext.getTenantId());
         record.setProviderTraceId(TraceIdUtil.get() == null ? "" : TraceIdUtil.get());
         predictionMapper.insert(record);
 
@@ -146,6 +147,7 @@ public class AgentServiceImpl implements AgentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AgentPredictionDO getById(Long id) {
         AgentPredictionDO r = predictionMapper.selectById(id);
         if (r == null) {
@@ -155,6 +157,7 @@ public class AgentServiceImpl implements AgentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<AgentPredictionDO> page(int page, int size, String agentType, String alertLevel,
                                         String status, String bizType, Long bizId) {
         Page<AgentPredictionDO> p = new Page<>(page, size);
@@ -169,18 +172,21 @@ public class AgentServiceImpl implements AgentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<AgentPredictionDO> listRecent(String agentType, String alertLevel, Integer limit) {
         if (limit == null || limit <= 0) limit = 20;
         return predictionMapper.selectByAgentType(agentType, alertLevel, limit);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByType(Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return predictionMapper.aggregateByType(tenantId);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countByAlertLevel(String alertLevel, String agentType, Long tenantId) {
         if (tenantId == null) tenantId = 1L;
         return predictionMapper.countByAlertLevel(alertLevel, agentType, tenantId);

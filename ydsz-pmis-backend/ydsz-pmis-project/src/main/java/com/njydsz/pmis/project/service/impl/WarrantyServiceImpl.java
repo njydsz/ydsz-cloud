@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -66,7 +67,7 @@ public class WarrantyServiceImpl implements WarrantyService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_f4127654");
         }
         w.setStatus(WarrantyStatus.ACTIVE.getCode());
-        if (w.getTenantId() == null) w.setTenantId(1L);
+        if (w.getTenantId() == null) w.setTenantId(TenantContext.getTenantId());
         warrantyMapper.insert(w);
         log.info("[Warranty] 创建质保期: code={} project={} endDate={}",
                 w.getWarrantyCode(), w.getInitiationId(), w.getEndDate());

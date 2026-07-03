@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -81,7 +82,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
         s.setGrossMargin(s.getExternalRevenue().signum() == 0
                 ? BigDecimal.ZERO
                 : s.getGrossProfit().divide(s.getExternalRevenue(), 4, RoundingMode.HALF_UP));
-        if (s.getTenantId() == null) s.setTenantId(1L);
+        if (s.getTenantId() == null) s.setTenantId(TenantContext.getTenantId());
         if (s.getProviderTraceId() == null) s.setProviderTraceId("");
 
         mapper.insert(s);

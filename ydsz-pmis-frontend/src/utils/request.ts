@@ -31,6 +31,7 @@ import { getToken, getRefreshToken, setToken } from './auth'
 import { generateTraceId } from './trace'
 import { BizException, HttpException } from './error'
 import i18n from '@/locales'
+import { logger } from '@/utils/logger'
 
 /**
  * 解析后端返回的错误消息：如果消息是 i18n key（以 "error." 开头），
@@ -229,8 +230,7 @@ service.interceptors.response.use(
     if (isGet && retryCount < MAX_RETRIES && isRetryableError(error)) {
       if (error.config) error.config._retryCount = retryCount + 1
       const delay = getRetryDelay(retryCount)
-      // eslint-disable-next-line no-console
-      console.debug(`[request] 第 ${retryCount + 1} 次重试（${delay}ms 后）: ${error.config?.url}`)
+      logger.debug('[request]', `第 ${retryCount + 1} 次重试（${delay}ms 后）: ${error.config?.url}`)
       return new Promise((resolve) => setTimeout(resolve, delay))
         .then(() => service(error.config!))
     }

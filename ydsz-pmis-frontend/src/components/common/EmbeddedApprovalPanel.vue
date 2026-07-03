@@ -259,6 +259,7 @@ import {
   type EmbeddedApprovalView as EmbeddedApprovalViewType,
 } from '@/api/workflow'
 import { CommentEditor, UserPicker } from '@/components/common'
+import { logger } from '@/utils/logger'
 
 const props = withDefaults(
   defineProps<{
@@ -390,7 +391,7 @@ const loadPanel = async () => {
     const data = apiResp?.data ?? (resp as unknown as EmbeddedApprovalViewType)
     view.value = data || null
   } catch (e) {
-    console.error('[EmbeddedApprovalPanel] load failed', e)
+    logger.error('[EmbeddedApprovalPanel]', e, { phase: 'load' })
     ElMessage.error('加载审批面板失败')
   } finally {
     loading.value = false
@@ -404,7 +405,7 @@ const handleStart = async () => {
     await props.onStart()
     await loadPanel()
   } catch (e) {
-    console.error('[EmbeddedApprovalPanel] start failed', e)
+    logger.error('[EmbeddedApprovalPanel]', e, { phase: 'start' })
   } finally {
     starting.value = false
   }
@@ -456,7 +457,7 @@ const submitComment = async () => {
     await doAction(commentAction.value, commentDraft.value)
     commentDialogVisible.value = false
   } catch (e) {
-    console.error('[EmbeddedApprovalPanel] comment submit failed', e)
+    logger.error('[EmbeddedApprovalPanel]', e, { phase: 'comment' })
   } finally {
     commentSubmitting.value = false
   }

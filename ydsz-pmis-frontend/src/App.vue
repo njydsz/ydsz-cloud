@@ -11,6 +11,7 @@ import { RouterView } from 'vue-router'
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import { useAppStore } from '@/store/modules/app'
 import i18n from '@/locales'
+import { logger } from '@/utils/logger'
 // Element Plus 语言包（按当前 i18n locale 动态切换）
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
@@ -39,8 +40,7 @@ onMounted(() => {
  * ErrorBoundary 内部已处理 Sentry 上报，此处仅做开发环境日志输出
  */
 function onError(err: unknown, info: string) {
-  // eslint-disable-next-line no-console
-  console.error('[App ErrorBoundary]', err, info)
+  logger.error('[App ErrorBoundary]', err, { info })
 }
 </script>
 

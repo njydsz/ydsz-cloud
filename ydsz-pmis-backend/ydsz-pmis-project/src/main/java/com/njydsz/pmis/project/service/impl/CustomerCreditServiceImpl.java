@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
@@ -107,7 +108,7 @@ public class CustomerCreditServiceImpl implements CustomerCreditService {
             credit = new CustomerCreditDO();
             credit.setCustomerId(dto.getCustomerId());
             credit.setCustomerName(dto.getCustomerName());
-            credit.setTenantId(1L);
+            credit.setTenantId(TenantContext.getTenantId());
             credit.setProviderTraceId("");
             creditMapper.insert(credit);
         }

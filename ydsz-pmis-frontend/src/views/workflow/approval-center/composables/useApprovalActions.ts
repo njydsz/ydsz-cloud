@@ -448,7 +448,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
    * 保留空实现以避免 UI 入口报错。
    */
   function onOpMention(_m: { userId: number; name: string }) {
-    // TODO: 后端通知服务支持 @ 提及后，调用 notificationApi.mentionUser(_m.userId, _m.name)
+    // P2 待实现：后端通知服务支持 @ 提及后，调用 notificationApi.mentionUser(_m.userId, _m.name)
   }
 
   /**

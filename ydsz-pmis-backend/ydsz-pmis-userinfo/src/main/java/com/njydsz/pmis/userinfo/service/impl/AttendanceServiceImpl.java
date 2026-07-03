@@ -1,5 +1,6 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.njydsz.pmis.common.security.TenantContext;
 import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -71,7 +72,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         BeanUtils.copyProperties(dto, entity);
         if (entity.getWorkHours() == null) entity.setWorkHours(BigDecimal.ZERO);
         if (entity.getOvertimeHours() == null) entity.setOvertimeHours(BigDecimal.ZERO);
-        if (entity.getTenantId() == null) entity.setTenantId(1L);
+        if (entity.getTenantId() == null) entity.setTenantId(TenantContext.getTenantId());
         if (!StringUtils.hasText(entity.getProviderTraceId())) entity.setProviderTraceId("");
 
         attendanceMapper.insert(entity);
@@ -81,6 +82,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<AttendanceDO> pageAttendance(Long employeeId, LocalDate startDate, LocalDate endDate, int page, int size) {
         Page<AttendanceDO> p = new Page<>(page, size);
         LambdaQueryWrapper<AttendanceDO> wrapper = new LambdaQueryWrapper<>();
@@ -92,6 +94,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> statByStatus(Long employeeId, LocalDate startDate, LocalDate endDate) {
         return attendanceMapper.statByStatus(employeeId, startDate, endDate);
     }
@@ -115,7 +118,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         BeanUtils.copyProperties(dto, entity);
         if (entity.getOvertimeCode() == null) entity.setOvertimeCode("OT-" + IdUtil.fastSimpleUUID());
         entity.setApprovalStatus("DRAFT");
-        if (entity.getTenantId() == null) entity.setTenantId(1L);
+        if (entity.getTenantId() == null) entity.setTenantId(TenantContext.getTenantId());
         if (!StringUtils.hasText(entity.getProviderTraceId())) entity.setProviderTraceId("");
 
         overtimeMapper.insert(entity);
@@ -145,6 +148,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<OvertimeDO> pageOvertime(Long employeeId, String approvalStatus, int page, int size) {
         Page<OvertimeDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OvertimeDO> wrapper = new LambdaQueryWrapper<>();
@@ -155,6 +159,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public OvertimeDO getOvertime(Long id) {
         return id == null ? null : overtimeMapper.selectById(id);
     }
@@ -177,7 +182,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         BeanUtils.copyProperties(dto, entity);
         if (entity.getLeaveCode() == null) entity.setLeaveCode("LV-" + IdUtil.fastSimpleUUID());
         entity.setApprovalStatus(LeaveStatus.DRAFT.getCode());
-        if (entity.getTenantId() == null) entity.setTenantId(1L);
+        if (entity.getTenantId() == null) entity.setTenantId(TenantContext.getTenantId());
         if (!StringUtils.hasText(entity.getProviderTraceId())) entity.setProviderTraceId("");
 
         leaveMapper.insert(entity);
@@ -210,6 +215,7 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<LeaveDO> pageLeave(Long employeeId, String approvalStatus, int page, int size) {
         Page<LeaveDO> p = new Page<>(page, size);
         LambdaQueryWrapper<LeaveDO> wrapper = new LambdaQueryWrapper<>();
@@ -220,11 +226,13 @@ public class AttendanceServiceImpl implements AttendanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public LeaveDO getLeave(Long id) {
         return id == null ? null : leaveMapper.selectById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<LeaveDO> listApprovedLeaves(Long employeeId, LocalDate startDate, LocalDate endDate) {
         if (employeeId == null || startDate == null || endDate == null) return List.of();
         return leaveMapper.selectApprovedByEmployeeAndRange(

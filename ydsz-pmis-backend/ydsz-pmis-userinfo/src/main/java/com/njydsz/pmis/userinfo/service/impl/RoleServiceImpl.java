@@ -33,6 +33,7 @@ public class RoleServiceImpl implements RoleService {
     private final RolePermissionMapper rolePermissionMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public Page<RoleDO> page(RoleQueryDTO query) {
         Page<RoleDO> page = new Page<>(query.getPage(), query.getSize());
         LambdaQueryWrapper<RoleDO> w = new LambdaQueryWrapper<>();
@@ -51,6 +52,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RoleDO> listAllEnabled() {
         return roleMapper.selectList(new LambdaQueryWrapper<RoleDO>()
                 .eq(RoleDO::getStatus, "ENABLED")
@@ -58,6 +60,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public RoleDO getById(Long id) {
         RoleDO r = roleMapper.selectById(id);
         if (r == null) {
@@ -67,6 +70,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<RoleDO> listByUserId(Long userId) {
         return roleMapper.selectByUserId(userId);
     }
@@ -141,6 +145,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Long> listPermissionIds(Long roleId) {
         return rolePermissionMapper.selectPermissionIdsByRoleId(roleId);
     }
