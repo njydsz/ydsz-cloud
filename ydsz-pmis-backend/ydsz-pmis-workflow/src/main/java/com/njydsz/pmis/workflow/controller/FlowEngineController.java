@@ -34,6 +34,8 @@ import com.njydsz.pmis.workflow.service.FlowTaskService;
 import com.njydsz.pmis.workflow.service.FlowTemplateService;
 import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
 import jakarta.validation.Valid;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -55,6 +57,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
+@Tag(name = "workflow-engine", description = "工作流引擎管理接口")
 @RequestMapping("/api/v1/workflow/engine")
 @RequiredArgsConstructor
 public class FlowEngineController {
@@ -100,6 +103,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含引擎类型与可用性
      */
     @GetMapping("/info")
+    @Operation(summary = "查询工作流引擎信息")
     public Result<Map<String, Object>> info() {
         return Result.ok(Map.of(
                 "engineType", workflowFacade.engineType(),
@@ -116,6 +120,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含流程定义 ID
      */
     @PostMapping("/definition/deploy")
+    @Operation(summary = "部署流程定义")
     public Result<Long> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
         Long id = definitionService.deploy(dto);
         return Result.ok(id);
@@ -128,6 +133,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/publish")
+    @Operation(summary = "发布流程定义")
     public Result<Void> publish(@PathVariable Long id) {
         definitionService.publish(id);
         return Result.ok();
@@ -140,6 +146,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/deprecate")
+    @Operation(summary = "废弃流程定义")
     public Result<Void> deprecate(@PathVariable Long id) {
         definitionService.deprecate(id);
         return Result.ok();
@@ -154,6 +161,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含流程定义
      */
     @GetMapping("/definition/code/{code}")
+    @Operation(summary = "按编码查询已发布流程定义")
     public Result<FlowDefinitionDO> getByCode(@PathVariable String code,
                                           @RequestParam(required = false) String version,
                                           @RequestParam(required = false) Long tenantId) {
@@ -170,6 +178,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含流程定义列表
      */
     @GetMapping("/definition/page")
+    @Operation(summary = "分页查询流程定义")
     public Result<List<FlowDefinitionDO>> page(@RequestParam(defaultValue = "1") int pageNo,
                                           @RequestParam(defaultValue = "20") int pageSize,
                                           @RequestParam(required = false) String category,
@@ -184,6 +193,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含 definition / nodes / skips
      */
     @GetMapping("/definition/{id}")
+    @Operation(summary = "查询流程定义详情（含节点与跳转）")
     public Result<Map<String, Object>> getDefinitionDetail(@PathVariable Long id) {
         return Result.ok(definitionService.getDetail(id));
     }
@@ -197,6 +207,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{code}/switchVersion")
+    @Operation(summary = "切换流程定义的激活版本")
     public Result<Void> switchVersion(@PathVariable String code,
                                       @RequestParam Long definitionId,
                                       @RequestParam(required = false) Long tenantId) {
@@ -211,6 +222,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/enable")
+    @Operation(summary = "启用流程定义")
     public Result<Void> enable(@PathVariable Long id) {
         definitionService.enable(id);
         return Result.ok();
@@ -223,6 +235,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/disable")
+    @Operation(summary = "停用流程定义")
     public Result<Void> disable(@PathVariable Long id) {
         definitionService.disable(id);
         return Result.ok();
@@ -237,6 +250,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
+    @Operation(summary = "更新流程节点坐标")
     public Result<Void> updateNodeCoordinate(@PathVariable Long definitionId,
                                              @PathVariable String nodeCode,
                                              @RequestBody String coordinate) {
@@ -252,6 +266,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PutMapping("/definition/{id}")
+    @Operation(summary = "编辑未发布的流程定义草稿")
     public Result<Void> updateDefinition(@PathVariable Long id,
                                          @Valid @RequestBody FlowDeployProcessDTO dto) {
         definitionService.updateDefinition(id, dto);
@@ -265,6 +280,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含 JSON 字符串
      */
     @GetMapping("/definition/{id}/export")
+    @Operation(summary = "导出流程定义为 JSON")
     public Result<String> exportDefinition(@PathVariable Long id) {
         return Result.ok(definitionService.exportDefinition(id));
     }
@@ -277,6 +293,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含新创建的流程定义 ID
      */
     @PostMapping("/definition/import")
+    @Operation(summary = "从 JSON 导入流程定义")
     public Result<Long> importDefinition(@RequestBody String json,
                                          @RequestParam(required = false) Long tenantId) {
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
@@ -290,6 +307,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含版本列表
      */
     @GetMapping("/definition/{id}/versions")
+    @Operation(summary = "列出流程定义的所有历史版本")
     public Result<List<Map<String, Object>>> listVersions(@PathVariable Long id) {
         return Result.ok(definitionService.listVersions(id));
     }
@@ -303,6 +321,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含 nodeChanges 和 skipChanges
      */
     @GetMapping("/definition/{id}/diff")
+    @Operation(summary = "流程定义版本差异对比")
     public Result<Map<String, Object>> diffVersions(@PathVariable Long id,
                                                      @RequestParam Integer v1,
                                                      @RequestParam Integer v2) {
@@ -319,6 +338,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含模拟路径列表
      */
     @PostMapping("/definition/simulate")
+    @Operation(summary = "流程模拟运行")
     public Result<List<Map<String, Object>>> simulate(@RequestParam String flowCode,
                                                        @RequestParam(required = false) String version,
                                                        @RequestBody Map<String, Object> variables,
@@ -336,6 +356,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含流程实例 ID
      */
     @PostMapping("/instance/start")
+    @Operation(summary = "启动流程实例")
     public Result<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
         return Result.ok(workflowFacade.startProcess(dto));
     }
@@ -348,6 +369,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含流程实例视图
      */
     @GetMapping("/instance/byBusiness")
+    @Operation(summary = "按业务类型与业务 ID 查询流程实例")
     public Result<FlowInstanceViewDTO> getByBusiness(@RequestParam String businessType,
                                                  @RequestParam String businessId) {
         return Result.ok(workflowFacade.getByBusiness(businessType, businessId));
@@ -361,6 +383,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/instance/{id}/terminate")
+    @Operation(summary = "终止流程实例")
     public Result<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
         workflowFacade.terminateProcess(id, reason);
         return Result.ok();

@@ -2,6 +2,8 @@ package com.njydsz.pmis.workflow.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowAiGenerateService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +24,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
+@Tag(name = "workflow-ai-generate", description = "工作流AI生成接口")
 @RequestMapping("/api/v1/workflow/ai")
 @RequiredArgsConstructor
 public class FlowAiGenerateController {
@@ -38,6 +41,7 @@ public class FlowAiGenerateController {
      * @return 包含 bpmnXml 字段的响应数据
      */
     @PostMapping("/generate")
+    @Operation(summary = "AI一句话生成流程")
     public Result<Map<String, Object>> generate(@RequestBody Map<String, Object> body) {
         Object desc = body == null ? null : body.get("description");
         String description = desc == null ? "" : desc.toString();

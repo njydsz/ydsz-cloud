@@ -109,4 +109,31 @@ public interface FlowEfficiencyService {
      * @return 长期运行实例列表，每行含 type=LONG_RUNNING / instanceId / flowCode / flowName / startAt / runningDays
      */
     List<Map<String, Object>> detectLongRunningInstances(Long tenantId, int limit, int longRunningDays);
+
+    /**
+     * P1: 流程健康度综合评分（0-100 分）
+     *
+     * <p>基于效率统计和异常检测的综合评分，对标钉钉/飞书审批的"健康度"看板。
+     * 评分维度：
+     * <ul>
+     *   <li>超期率（30%）：overdueRate 越低越好，最高扣 30 分</li>
+     *   <li>代批率（20%）：proxyRate 过高说明审批人不在线，最高扣 20 分</li>
+     *   <li>平均耗时（20%）：avgDurationMs 越低越好，最高扣 20 分</li>
+     *   <li>异常数（30%）：卡单/高驳回/长期运行实例数，最高扣 30 分</li>
+     * </ul>
+     *
+     * <p>评级标准：
+     * <ul>
+     *   <li>EXCELLENT（优秀）：≥ 90 分</li>
+     *   <li>GOOD（良好）：75-89 分</li>
+     *   <li>FAIR（一般）：60-74 分</li>
+     *   <li>POOR（较差）：< 60 分</li>
+     * </ul>
+     *
+     * @param tenantId  租户 ID
+     * @param startTime 开始时间（可空）
+     * @param endTime   结束时间（可空）
+     * @return 评分结果，含 score(0-100) / level(EXCELLENT/GOOD/FAIR/POOR) / deductions(扣分明细)
+     */
+    Map<String, Object> healthScore(Long tenantId, String startTime, String endTime);
 }

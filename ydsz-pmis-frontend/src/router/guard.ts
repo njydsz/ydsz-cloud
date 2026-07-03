@@ -17,6 +17,7 @@ import { useUserStore } from '@/store/modules/user'
 import { usePermissionStore } from '@/store/modules/permission'
 import i18n from '@/locales'
 import { logger } from '@/utils/logger'
+import { recordAccess } from '@/api/favorite'
 
 // 关闭右上角转圈动画，仅保留顶部进度条
 NProgress.configure({ showSpinner: false })
@@ -102,12 +103,20 @@ export function setupRouterGuard(router: Router): void {
     }
   })
 
-  // 后置守卫：关闭进度条 + 设置文档标题
+  // 后置守卫：关闭进度条 + 设置文档标题 + 记录最近访问
   router.afterEach((to) => {
     NProgress.done()
     const title = resolveRouteTitle(to.meta.title as string)
     const appTitle = i18n.global.t('common.appTitle')
     document.title = title ? `${title} - ${appTitle}` : appTitle
+
+    // 记录最近访问：仅登录用户 + 有标题的业务路由（排除白名单页面）
+    const userStore = useUserStore()
+    if (userStore.token && title && !whiteList.includes(to.path)) {
+      recordAccess(to.fullPath, title).catch(() => {
+        // 记录失败静默忽略，不影响正常导航
+      })
+    }
   })
 
   // 错误守卫：路由异常时关闭进度条；chunk 加载失败跳 /500，避免白屏

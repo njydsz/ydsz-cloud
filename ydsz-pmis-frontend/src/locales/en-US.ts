@@ -54,6 +54,22 @@ export default {
     pageErrorSubtitle: 'Sorry, an unknown error occurred. Please retry or go back to home.',
     advancedSelect: 'Advanced select',
     confirmContinue: 'Confirm and continue',
+    globalSearch: {
+      title: 'Global Search',
+      placeholder: 'Search menus, projects... (Ctrl+K)',
+      groupRecent: 'Recent',
+      groupMenu: 'Navigation',
+      groupProject: 'Projects',
+      noResults: 'No matching results',
+      searching: 'Searching...',
+      projectType: 'Type',
+      projectStatus: 'Status',
+      projectPm: 'PM',
+      shortcut: 'Ctrl+K',
+      hintEnter: 'Open',
+      hintEsc: 'Close',
+      hintNavigate: 'Navigate',
+    },
     emptyState: {
       list: {
         title: 'No data',

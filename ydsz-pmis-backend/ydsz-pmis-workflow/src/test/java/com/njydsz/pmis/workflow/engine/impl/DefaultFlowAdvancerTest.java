@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.engine.impl;
 
+import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
@@ -7,8 +8,6 @@ import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowJoinTokenService;
@@ -40,6 +39,9 @@ import static org.mockito.Mockito.when;
  * 互斥分支、包容网关（INCLUSIVE）多分支、并行网关（PARALLEL）join 聚合、SpEL 条件回退评估、
  * Redis 异常降级等。
  *
+ * <p>P1：自流程定义元数据缓存接入后，节点/skip 查询统一走 {@link FlowDefinitionCacheService}，
+ * 测试改为 mock 缓存服务而非底层 Mapper。
+ *
  * <p>注意：{@code advance()} 方法仅计算并返回下一节点列表，不直接创建任务或更新实例状态。
  * 任务创建和实例状态更新由调用方（FlowInstanceServiceImpl）基于返回的节点列表完成。
  * 本测试类通过验证返回节点列表的正确性来断言推进结果。
@@ -67,9 +69,7 @@ import static org.mockito.Mockito.when;
 class DefaultFlowAdvancerTest {
 
     @Mock
-    private FlowSkipMapper skipMapper;
-    @Mock
-    private FlowNodeMapper nodeMapper;
+    private FlowDefinitionCacheService flowDefinitionCacheService;
     @Mock
     private FlowInstanceMapper instanceMapper;
     @Mock
@@ -93,7 +93,7 @@ class DefaultFlowAdvancerTest {
         // 构造器方式创建被测对象，FlowRoutingService 不注入（传 null），
         // 测试 SpEL 回退路径（evaluateSkipCondition 回退到 variableStrategy）
         advancer = new DefaultFlowAdvancer(
-                skipMapper, nodeMapper, instanceMapper,
+                flowDefinitionCacheService, instanceMapper,
                 taskService, instanceService, variableStrategy,
                 taskMapper, joinTokenService, null);
     }
@@ -111,10 +111,10 @@ class DefaultFlowAdvancerTest {
         FlowSkipDO incomingSkip = new FlowSkipDO();
         incomingSkip.setSkipName("部门审批");
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node2")).thenReturn(currentNode);
-        when(skipMapper.selectByNextNode(DEFINITION_ID, "node2")).thenReturn(List.of(incomingSkip));
-        when(nodeMapper.selectByDefinitionId(DEFINITION_ID)).thenReturn(List.of(currentNode, prevNode));
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node1")).thenReturn(prevNode);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node2")).thenReturn(currentNode);
+        when(flowDefinitionCacheService.getSkipsByNextNode(DEFINITION_ID, "node2")).thenReturn(List.of(incomingSkip));
+        when(flowDefinitionCacheService.getAllNodes(DEFINITION_ID)).thenReturn(List.of(currentNode, prevNode));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(prevNode);
 
         List<FlowNodeDO> result = advancer.advance(instance, "node2", "REJECT", null, Collections.emptyMap());
 
@@ -130,10 +130,10 @@ class DefaultFlowAdvancerTest {
         FlowNodeDO startNode = buildNode("node_start", "发起", FlowNodeType.START);
         FlowInstanceDO instance = buildInstance();
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node1")).thenReturn(currentNode);
-        when(skipMapper.selectByNextNode(DEFINITION_ID, "node1")).thenReturn(Collections.emptyList());
-        when(nodeMapper.selectStartNode(DEFINITION_ID)).thenReturn(startNode);
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node_start")).thenReturn(startNode);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(currentNode);
+        when(flowDefinitionCacheService.getSkipsByNextNode(DEFINITION_ID, "node1")).thenReturn(Collections.emptyList());
+        when(flowDefinitionCacheService.getStartNode(DEFINITION_ID)).thenReturn(startNode);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node_start")).thenReturn(startNode);
 
         List<FlowNodeDO> result = advancer.advance(instance, "node1", "REJECT", null, Collections.emptyMap());
 
@@ -151,9 +151,9 @@ class DefaultFlowAdvancerTest {
         FlowInstanceDO instance = buildInstance();
         FlowSkipDO skip = buildSkip("node2", null);
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node1")).thenReturn(currentNode);
-        when(skipMapper.selectByNodeCode(DEFINITION_ID, "node1", "PASS")).thenReturn(List.of(skip));
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node2")).thenReturn(nextNode);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(currentNode);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "node1")).thenReturn(List.of(skip));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node2")).thenReturn(nextNode);
 
         List<FlowNodeDO> result = advancer.advance(instance, "node1", "PASS", null, Collections.emptyMap());
 
@@ -170,9 +170,9 @@ class DefaultFlowAdvancerTest {
         FlowInstanceDO instance = buildInstance();
         FlowSkipDO skip = buildSkip("node_end", null);
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node1")).thenReturn(currentNode);
-        when(skipMapper.selectByNodeCode(DEFINITION_ID, "node1", "PASS")).thenReturn(List.of(skip));
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node_end")).thenReturn(endNode);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(currentNode);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "node1")).thenReturn(List.of(skip));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node_end")).thenReturn(endNode);
 
         List<FlowNodeDO> result = advancer.advance(instance, "node1", "PASS", null, Collections.emptyMap());
 
@@ -193,18 +193,18 @@ class DefaultFlowAdvancerTest {
         FlowSkipDO skipHigh = buildSkip("node_high", "${amount > 5000}");
         FlowSkipDO skipLow = buildSkip("node_low", "${amount <= 5000}");
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "gw1")).thenReturn(gateway);
-        when(skipMapper.selectByNodeCode(DEFINITION_ID, "gw1", "PASS")).thenReturn(List.of(skipHigh, skipLow));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "gw1")).thenReturn(gateway);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "gw1")).thenReturn(List.of(skipHigh, skipLow));
         when(variableStrategy.evaluate("${amount > 5000}", variables)).thenReturn(false);
         when(variableStrategy.evaluate("${amount <= 5000}", variables)).thenReturn(true);
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node_low")).thenReturn(lowNode);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node_low")).thenReturn(lowNode);
 
         List<FlowNodeDO> result = advancer.advance(instance, "gw1", "PASS", null, variables);
 
         assertThat(result).hasSize(1);
         assertThat(result.get(0).getNodeCode()).isEqualTo("node_low");
         // 排他网关互斥：首条匹配后 break，不评估后续出边对应节点
-        verify(nodeMapper, never()).selectByCode(DEFINITION_ID, "node_high");
+        verify(flowDefinitionCacheService, never()).getNodeByCode(DEFINITION_ID, "node_high");
     }
 
     @Test
@@ -218,11 +218,11 @@ class DefaultFlowAdvancerTest {
         FlowSkipDO skip1 = buildSkip("node_default", "${amount > 10000}");
         FlowSkipDO skip2 = buildSkip("node_special", "${amount > 5000}");
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "gw1")).thenReturn(gateway);
-        when(skipMapper.selectByNodeCode(DEFINITION_ID, "gw1", "PASS")).thenReturn(List.of(skip1, skip2));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "gw1")).thenReturn(gateway);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "gw1")).thenReturn(List.of(skip1, skip2));
         when(variableStrategy.evaluate("${amount > 10000}", variables)).thenReturn(false);
         when(variableStrategy.evaluate("${amount > 5000}", variables)).thenReturn(false);
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node_default")).thenReturn(defaultNode);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node_default")).thenReturn(defaultNode);
 
         List<FlowNodeDO> result = advancer.advance(instance, "gw1", "PASS", null, variables);
 
@@ -245,13 +245,13 @@ class DefaultFlowAdvancerTest {
         FlowSkipDO skip2 = buildSkip("node_b", "${type == 'VIP'}");
         FlowSkipDO skip3 = buildSkip("node_c", "${amount > 10000}");
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "gw_inc")).thenReturn(gateway);
-        when(skipMapper.selectByNodeCode(DEFINITION_ID, "gw_inc", "PASS")).thenReturn(List.of(skip1, skip2, skip3));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "gw_inc")).thenReturn(gateway);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "gw_inc")).thenReturn(List.of(skip1, skip2, skip3));
         when(variableStrategy.evaluate("${amount > 1000}", variables)).thenReturn(true);
         when(variableStrategy.evaluate("${type == 'VIP'}", variables)).thenReturn(true);
         when(variableStrategy.evaluate("${amount > 10000}", variables)).thenReturn(false);
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node_a")).thenReturn(nodeA);
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node_b")).thenReturn(nodeB);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node_a")).thenReturn(nodeA);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node_b")).thenReturn(nodeB);
 
         List<FlowNodeDO> result = advancer.advance(instance, "gw_inc", "PASS", null, variables);
 
@@ -271,11 +271,11 @@ class DefaultFlowAdvancerTest {
         FlowSkipDO skip1 = buildSkip("node_default", "${amount > 1000}");
         FlowSkipDO skip2 = buildSkip("node_special", "${amount > 5000}");
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "gw_inc")).thenReturn(gateway);
-        when(skipMapper.selectByNodeCode(DEFINITION_ID, "gw_inc", "PASS")).thenReturn(List.of(skip1, skip2));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "gw_inc")).thenReturn(gateway);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "gw_inc")).thenReturn(List.of(skip1, skip2));
         when(variableStrategy.evaluate("${amount > 1000}", variables)).thenReturn(false);
         when(variableStrategy.evaluate("${amount > 5000}", variables)).thenReturn(false);
-        when(nodeMapper.selectByCode(DEFINITION_ID, "node_default")).thenReturn(defaultNode);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node_default")).thenReturn(defaultNode);
 
         List<FlowNodeDO> result = advancer.advance(instance, "gw_inc", "PASS", null, variables);
 
@@ -293,14 +293,14 @@ class DefaultFlowAdvancerTest {
         FlowInstanceDO instance = buildInstance();
         FlowSkipDO skip = buildSkip("join1", null);
 
-        // join 节点有 2 条入边（hasMultipleIncoming + incomingCount 都查 selectByNextNode）
+        // join 节点有 2 条入边（hasMultipleIncoming + incomingCount 都查 getSkipsByNextNode）
         FlowSkipDO incoming1 = new FlowSkipDO();
         FlowSkipDO incoming2 = new FlowSkipDO();
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "branch1")).thenReturn(branchNode);
-        when(skipMapper.selectByNodeCode(DEFINITION_ID, "branch1", "PASS")).thenReturn(List.of(skip));
-        when(nodeMapper.selectByCode(DEFINITION_ID, "join1")).thenReturn(joinNode);
-        when(skipMapper.selectByNextNode(DEFINITION_ID, "join1")).thenReturn(List.of(incoming1, incoming2));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "branch1")).thenReturn(branchNode);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "branch1")).thenReturn(List.of(skip));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "join1")).thenReturn(joinNode);
+        when(flowDefinitionCacheService.getSkipsByNextNode(DEFINITION_ID, "join1")).thenReturn(List.of(incoming1, incoming2));
         when(joinTokenService.isInitialized(INSTANCE_ID, "join1")).thenReturn(true);
         when(joinTokenService.arriveToken(INSTANCE_ID, "join1")).thenReturn(true);
 
@@ -323,10 +323,10 @@ class DefaultFlowAdvancerTest {
         FlowSkipDO incoming1 = new FlowSkipDO();
         FlowSkipDO incoming2 = new FlowSkipDO();
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "branch1")).thenReturn(branchNode);
-        when(skipMapper.selectByNodeCode(DEFINITION_ID, "branch1", "PASS")).thenReturn(List.of(skip));
-        when(nodeMapper.selectByCode(DEFINITION_ID, "join1")).thenReturn(joinNode);
-        when(skipMapper.selectByNextNode(DEFINITION_ID, "join1")).thenReturn(List.of(incoming1, incoming2));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "branch1")).thenReturn(branchNode);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "branch1")).thenReturn(List.of(skip));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "join1")).thenReturn(joinNode);
+        when(flowDefinitionCacheService.getSkipsByNextNode(DEFINITION_ID, "join1")).thenReturn(List.of(incoming1, incoming2));
         // 首次到达：未初始化 → 触发 initTokens
         when(joinTokenService.isInitialized(INSTANCE_ID, "join1")).thenReturn(false);
         when(joinTokenService.arriveToken(INSTANCE_ID, "join1")).thenReturn(false);
@@ -375,10 +375,10 @@ class DefaultFlowAdvancerTest {
         FlowSkipDO incoming1 = new FlowSkipDO();
         FlowSkipDO incoming2 = new FlowSkipDO();
 
-        when(nodeMapper.selectByCode(DEFINITION_ID, "branch1")).thenReturn(branchNode);
-        when(skipMapper.selectByNodeCode(DEFINITION_ID, "branch1", "PASS")).thenReturn(List.of(skip));
-        when(nodeMapper.selectByCode(DEFINITION_ID, "join1")).thenReturn(joinNode);
-        when(skipMapper.selectByNextNode(DEFINITION_ID, "join1")).thenReturn(List.of(incoming1, incoming2));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "branch1")).thenReturn(branchNode);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "branch1")).thenReturn(List.of(skip));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "join1")).thenReturn(joinNode);
+        when(flowDefinitionCacheService.getSkipsByNextNode(DEFINITION_ID, "join1")).thenReturn(List.of(incoming1, incoming2));
         // Redis 异常
         when(joinTokenService.isInitialized(INSTANCE_ID, "join1"))
                 .thenThrow(new RuntimeException("Redis connection refused"));

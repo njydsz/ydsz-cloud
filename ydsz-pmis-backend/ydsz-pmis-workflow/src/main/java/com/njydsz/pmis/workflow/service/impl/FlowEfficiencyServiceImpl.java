@@ -531,4 +531,116 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
                 tenantId, effectiveLongRunningDays, result.size());
         return result;
     }
+
+    /**
+     * P1: 流程健康度综合评分
+     *
+     * <p>评分维度与权重：
+     * <ul>
+     *   <li>超期率（30%）：overdueRate * 30，最高扣 30 分</li>
+     *   <li>代批率（20%）：proxyRate * 20，最高扣 20 分</li>
+     *   <li>平均耗时（20%）：> 24h 扣 20、> 6h 扣 15、> 1h 扣 10，否则不扣</li>
+     *   <li>异常数（30%）：每个异常扣 5 分，最高扣 30 分</li>
+     * </ul>
+     */
+    @Override
+    public Map<String, Object> healthScore(Long tenantId, String startTime, String endTime) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        try {
+            // 复用效率统计
+            Map<String, Object> stats = efficiencyStats(tenantId, startTime, endTime);
+            double overdueRate = toDouble(stats.get("overdueRate"));
+            double proxyRate = toDouble(stats.get("proxyRate"));
+            double avgDurationMs = toDouble(stats.get("avgDurationMs"));
+            long totalCount = toLong(stats.get("totalCount"));
+
+            // 复用异常检测
+            List<Map<String, Object>> anomalies = detectAnomalies(tenantId, 50, 24, 7);
+            int anomalyCount = anomalies != null ? anomalies.size() : 0;
+
+            // 计算扣分明细
+            Map<String, Object> deductions = new LinkedHashMap<>();
+
+            // 1. 超期率扣分（最高 30）
+            double overdueDeduction = Math.min(30, overdueRate * 30);
+            deductions.put("overdue", Math.round(overdueDeduction * 100) / 100.0);
+
+            // 2. 代批率扣分（最高 20）
+            double proxyDeduction = Math.min(20, proxyRate * 20);
+            deductions.put("proxy", Math.round(proxyDeduction * 100) / 100.0);
+
+            // 3. 平均耗时扣分（最高 20）
+            double durationDeduction;
+            if (avgDurationMs > 86_400_000) {        // > 24h
+                durationDeduction = 20;
+            } else if (avgDurationMs > 21_600_000) { // > 6h
+                durationDeduction = 15;
+            } else if (avgDurationMs > 3_600_000) {  // > 1h
+                durationDeduction = 10;
+            } else {
+                durationDeduction = 0;
+            }
+            deductions.put("duration", durationDeduction);
+
+            // 4. 异常数扣分（每个 5 分，最高 30）
+            double anomalyDeduction = Math.min(30, anomalyCount * 5.0);
+            deductions.put("anomaly", Math.round(anomalyDeduction * 100) / 100.0);
+
+            // 综合评分
+            int score = (int) Math.max(0, 100 - overdueDeduction - proxyDeduction
+                    - durationDeduction - anomalyDeduction);
+
+            // 评级
+            String level;
+            if (score >= 90) {
+                level = "EXCELLENT";
+            } else if (score >= 75) {
+                level = "GOOD";
+            } else if (score >= 60) {
+                level = "FAIR";
+            } else {
+                level = "POOR";
+            }
+
+            result.put("score", score);
+            result.put("level", level);
+            result.put("deductions", deductions);
+            result.put("totalCount", totalCount);
+            result.put("anomalyCount", anomalyCount);
+            result.put("overdueRate", overdueRate);
+            result.put("proxyRate", proxyRate);
+            result.put("avgDurationMs", Math.round(avgDurationMs));
+
+            log.info("[FlowEfficiency] 健康度评分: tenantId={} score={} level={} anomalies={}",
+                    tenantId, score, level, anomalyCount);
+        } catch (Exception e) {
+            log.error("[FlowEfficiency] 健康度评分异常: tenantId={} err={}", tenantId, e.getMessage(), e);
+            result.put("score", 0);
+            result.put("level", "POOR");
+            result.put("deductions", Map.of());
+        }
+        return result;
+    }
+
+    /** 安全类型转换：Object → double */
+    private double toDouble(Object val) {
+        if (val == null) return 0.0;
+        if (val instanceof Number n) return n.doubleValue();
+        try {
+            return Double.parseDouble(val.toString());
+        } catch (NumberFormatException e) {
+            return 0.0;
+        }
+    }
+
+    /** 安全类型转换：Object → long */
+    private long toLong(Object val) {
+        if (val == null) return 0L;
+        if (val instanceof Number n) return n.longValue();
+        try {
+            return Long.parseLong(val.toString());
+        } catch (NumberFormatException e) {
+            return 0L;
+        }
+    }
 }

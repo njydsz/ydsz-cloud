@@ -10,13 +10,16 @@ import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
 import { ElMessageBox } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { Search } from '@element-plus/icons-vue'
 import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
 import NotificationBell from '@/components/common/NotificationBell.vue'
+import { useGlobalSearch } from '@/composables/useGlobalSearch'
 
 const appStore = useAppStore()
 const userStore = useUserStore()
 const router = useRouter()
 const { t } = useI18n()
+const { open: openSearch } = useGlobalSearch()
 
 /** 是否处于全屏状态 */
 const isFullscreen = ref(false)
@@ -77,6 +80,10 @@ onUnmounted(() => {
           <Expand v-else />
         </el-icon>
       </el-button>
+      <button class="search-trigger" :title="t('common.globalSearch.title')" @click="openSearch">
+        <el-icon :size="14"><Search /></el-icon>
+        <span class="search-text">{{ t('common.globalSearch.shortcut') }}</span>
+      </button>
       <Breadcrumb />
     </div>
     <div class="header-right">
@@ -134,6 +141,31 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: $spacing-sm;
+
+    .search-trigger {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border: 1px solid $border-extra-light;
+      border-radius: 4px;
+      background: $bg-page;
+      color: $text-secondary;
+      font-size: $font-size-xs;
+      cursor: pointer;
+      transition: all 0.2s;
+      white-space: nowrap;
+
+      &:hover {
+        border-color: $border-light;
+        color: $text-primary;
+      }
+
+      .search-text {
+        font-family: monospace;
+        opacity: 0.8;
+      }
+    }
   }
 
   .header-right {

@@ -56,6 +56,22 @@ export default {
     pageErrorSubtitle: '抱歉，页面发生了未知错误，请重试或返回首页',
     advancedSelect: '高级选择',
     confirmContinue: '确认并继续',
+    globalSearch: {
+      title: '全局搜索',
+      placeholder: '搜索菜单、项目... (Ctrl+K)',
+      groupRecent: '最近访问',
+      groupMenu: '菜单导航',
+      groupProject: '项目',
+      noResults: '未找到匹配结果',
+      searching: '搜索中...',
+      projectType: '类型',
+      projectStatus: '状态',
+      projectPm: '项目经理',
+      shortcut: 'Ctrl+K',
+      hintEnter: '打开',
+      hintEsc: '关闭',
+      hintNavigate: '切换',
+    },
     emptyState: {
       list: {
         title: '暂无数据',

@@ -11,6 +11,7 @@ import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.dto.FlowDeployProcessDTO;
 import com.njydsz.pmis.workflow.engine.BpmnModel;
 import com.njydsz.pmis.workflow.engine.BpmnXmlParser;
+import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;
 import com.njydsz.pmis.workflow.engine.FlowGraphValidator;
 import com.njydsz.pmis.workflow.engine.JsonHelper;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
@@ -54,6 +55,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     private final FlowSkipMapper skipMapper;
     private final BpmnXmlParser bpmnXmlParser;
     private final FlowGraphValidator graphValidator;
+    /** P1: 流程定义元数据缓存，部署/更新时主动失效 */
+    private final FlowDefinitionCacheService flowDefinitionCacheService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -201,6 +204,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                 dto.getFlowCode(), version, definitionId,
                 hasBpmn ? "BPMN" : "JSON",
                 nodes.size(), skips.size());
+        // P1: 部署新版本后主动清除该定义的缓存（防御性，避免遗留脏数据）
+        flowDefinitionCacheService.evict(definitionId);
         return definitionId;
     }
 
@@ -422,6 +427,8 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
             }
         }
 
+        // P1: 节点/跳转可能被重写，清除缓存避免脏读
+        flowDefinitionCacheService.evict(definitionId);
         log.info("[Flow] 编辑流程定义草稿: defId={} flowCode={}", definitionId, def.getFlowCode());
     }
 

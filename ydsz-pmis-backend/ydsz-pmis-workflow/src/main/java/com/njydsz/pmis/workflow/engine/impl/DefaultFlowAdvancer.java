@@ -5,14 +5,13 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
+import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowJoinTokenService;
@@ -40,8 +39,8 @@ import java.util.Map;
 @Component
 public class DefaultFlowAdvancer implements FlowAdvancer {
 
-    private final FlowSkipMapper skipMapper;
-    private final FlowNodeMapper nodeMapper;
+    /** P1: 流程定义元数据缓存（节点 + skip），替代直查 nodeMapper/skipMapper */
+    private final FlowDefinitionCacheService flowDefinitionCacheService;
     private final FlowInstanceMapper instanceMapper;
     private final FlowTaskService taskService;
     private final FlowInstanceService instanceService;
@@ -58,8 +57,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
      */
     private final FlowRoutingService routingService;
 
-    public DefaultFlowAdvancer(FlowSkipMapper skipMapper,
-                                FlowNodeMapper nodeMapper,
+    public DefaultFlowAdvancer(FlowDefinitionCacheService flowDefinitionCacheService,
                                 FlowInstanceMapper instanceMapper,
                                 FlowTaskService taskService,
                                 FlowInstanceService instanceService,
@@ -67,8 +65,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                                 FlowTaskMapper taskMapper,
                                 FlowJoinTokenService joinTokenService,
                                 @Autowired(required = false) FlowRoutingService routingService) {
-        this.skipMapper = skipMapper;
-        this.nodeMapper = nodeMapper;
+        this.flowDefinitionCacheService = flowDefinitionCacheService;
         this.instanceMapper = instanceMapper;
         this.taskService = taskService;
         this.instanceService = instanceService;
@@ -89,7 +86,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
         if (instance == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + instanceId);
         }
-        FlowNodeDO startNode = nodeMapper.selectStartNode(instance.getDefinitionId());
+        FlowNodeDO startNode = flowDefinitionCacheService.getStartNode(instance.getDefinitionId());
         if (startNode == null) {
             throw new BizException(BizErrorCode.INTERNAL_ERROR,
                     "error.workflow.msg_560bf118" + instance.getDefinitionId());
@@ -126,7 +123,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                                      String skipType,
                                      String targetNodeCode,
                                      Map<String, Object> variables) {
-        FlowNodeDO currentNode = nodeMapper.selectByCode(
+        FlowNodeDO currentNode = flowDefinitionCacheService.getNodeByCode(
                 currentInstance.getDefinitionId(), currentNodeCode);
         if (currentNode == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
@@ -141,7 +138,8 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             if (rejectTarget == null) {
                 throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
             }
-            FlowNodeDO target = nodeMapper.selectByCode(currentInstance.getDefinitionId(), rejectTarget);
+            FlowNodeDO target = flowDefinitionCacheService.getNodeByCode(
+                    currentInstance.getDefinitionId(), rejectTarget);
             if (target == null) {
                 throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6e66716d" + rejectTarget);
             }
@@ -158,7 +156,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
 
         List<FlowNodeDO> nextNodes = new ArrayList<>();
         for (FlowSkipDO skip : skips) {
-            FlowNodeDO next = nodeMapper.selectByCode(
+            FlowNodeDO next = flowDefinitionCacheService.getNodeByCode(
                     currentInstance.getDefinitionId(), skip.getNextNodeCode());
             if (next == null) {
                 log.warn("[Flow] 跳转目标节点不存在: skipId={} nextNode={}",
@@ -167,7 +165,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             }
             // P0-5 / GAP-P2: 网关 join 聚合 — 使用 Redis join 令牌精确跟踪分支到达状态
             if (isJoinNode(next) && hasMultipleIncoming(currentInstance.getDefinitionId(), next.getNodeCode())) {
-                int incomingCount = skipMapper.selectByNextNode(
+                int incomingCount = flowDefinitionCacheService.getSkipsByNextNode(
                         currentInstance.getDefinitionId(), next.getNodeCode()).size();
                 Long instId = currentInstance.getId();
                 String joinCode = next.getNodeCode();
@@ -209,8 +207,11 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     public List<FlowSkipDO> resolvePassSkips(FlowInstanceDO instance,
                                               FlowNodeDO currentNode,
                                               Map<String, Object> variables) {
-        List<FlowSkipDO> all = skipMapper.selectByNodeCode(
-                instance.getDefinitionId(), currentNode.getNodeCode(), "PASS");
+        // P1: 通过缓存获取当前节点的出发跳转，并在内存中按 skipType=PASS 过滤
+        List<FlowSkipDO> all = flowDefinitionCacheService.getSkipsByNodeCode(
+                instance.getDefinitionId(), currentNode.getNodeCode()).stream()
+                .filter(s -> "PASS".equalsIgnoreCase(s.getSkipType()))
+                .toList();
         if (all.isEmpty()) {
             return Collections.emptyList();
         }
@@ -278,13 +279,13 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
 
     @Override
     public String resolveRejectTarget(Long definitionId, String currentNodeCode) {
-        List<FlowSkipDO> incoming = skipMapper.selectByNextNode(definitionId, currentNodeCode);
+        List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, currentNodeCode);
         if (!incoming.isEmpty()) {
             return incoming.get(0).getSkipName() == null
                     ? currentNodeCode
                     : lookupNodeCodeByName(definitionId, incoming.get(0).getSkipName());
         }
-        FlowNodeDO start = nodeMapper.selectStartNode(definitionId);
+        FlowNodeDO start = flowDefinitionCacheService.getStartNode(definitionId);
         return start == null ? null : start.getNodeCode();
     }
 
@@ -299,12 +300,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
 
     /** 判断节点是否有多个入边 */
     private boolean hasMultipleIncoming(Long definitionId, String nodeCode) {
-        List<FlowSkipDO> incoming = skipMapper.selectByNextNode(definitionId, nodeCode);
+        List<FlowSkipDO> incoming = flowDefinitionCacheService.getSkipsByNextNode(definitionId, nodeCode);
         return incoming != null && incoming.size() > 1;
     }
 
     private String lookupNodeCodeByName(Long definitionId, String skipName) {
-        List<FlowNodeDO> all = nodeMapper.selectByDefinitionId(definitionId);
+        List<FlowNodeDO> all = flowDefinitionCacheService.getAllNodes(definitionId);
         return all.stream()
                 .filter(n -> skipName.equals(n.getNodeName()))
                 .map(FlowNodeDO::getNodeCode)

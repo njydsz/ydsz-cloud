@@ -63,6 +63,11 @@
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-3-starter</artifactId>
         </dependency>
+        <!-- P1: 流程定义元数据本地缓存（Caffeine，版本由 Spring Boot 父 pom 管理） -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
 
         <!-- 文档 -->
         <dependency>
