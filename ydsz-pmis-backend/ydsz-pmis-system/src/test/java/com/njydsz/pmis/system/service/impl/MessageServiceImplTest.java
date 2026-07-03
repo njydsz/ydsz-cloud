@@ -1,7 +1,6 @@
 package com.njydsz.pmis.system.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -10,7 +9,6 @@ import com.njydsz.pmis.system.entity.MessageLogDO;
 import com.njydsz.pmis.system.entity.MessageTemplateDO;
 import com.njydsz.pmis.system.mapper.MessageLogMapper;
 import com.njydsz.pmis.system.mapper.MessageTemplateMapper;
-import com.njydsz.pmis.system.service.MessageService;
 import com.njydsz.pmis.system.service.MessageServiceImpl;
 import com.njydsz.pmis.system.template.TemplateEngine;
 import org.junit.jupiter.api.DisplayName;
@@ -27,8 +25,6 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -140,7 +136,8 @@ class MessageServiceImplTest {
     class PageLogTest {
 
         @Test
-        @DisplayName("分页查询日志应返回正确结果")
+        @SuppressWarnings("unchecked")
+        @DisplayName("分页查询应返回正确结果")
         void shouldReturnPagedLogs() {
             when(messageLogMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
 

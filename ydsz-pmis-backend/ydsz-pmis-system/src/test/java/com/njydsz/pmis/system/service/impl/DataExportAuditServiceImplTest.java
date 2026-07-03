@@ -35,6 +35,7 @@ class DataExportAuditServiceImplTest {
     class PageTest {
 
         @Test
+        @SuppressWarnings("unchecked")
         @DisplayName("分页查询应返回正确结果")
         void shouldReturnPagedResults() {
             when(mapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
@@ -46,6 +47,7 @@ class DataExportAuditServiceImplTest {
         }
 
         @Test
+        @SuppressWarnings("unchecked")
         @DisplayName("按模块分页查询应正确过滤")
         void shouldFilterByModule() {
             when(mapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());

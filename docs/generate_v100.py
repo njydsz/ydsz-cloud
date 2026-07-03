@@ -432,17 +432,22 @@ header_lines = [
     f'-- Files merged: {len(sql_files)}',
     '-- ====================================================================',
     '',
-    '-- psql safety directives. These are no-ops if the script is loaded',
-    '-- by a non-psql driver (e.g. JDBC), which is the common case. They',
-    '-- only take effect when the file is consumed by psql.',
-    '\\set QUIET on',
-    '\\set ON_ERROR_STOP on',
-    '-- Reduce NOTICE/INFO noise but keep WARNING and above visible.',
-    '\\set VERBOSITY terse',
+    '-- Pure-SQL server-side safety settings. These work whether the',
+    '-- script is loaded via psql, JDBC, pg_dump, or any other PG',
+    '-- client. For psql-specific behavior (ON_ERROR_STOP, QUIET) you',
+    '-- should pass -v ON_ERROR_STOP=1 on the psql command line; see',
+    '-- the Usage block above.',
+    '--',
+    '-- Reduce NOTICE/INFO noise; keep WARNING and ERROR visible.',
+    'SET client_min_messages = WARNING;',
+    '-- Lock down search_path so unqualified table names resolve only',
+    '-- to the expected schema. (We use qualified names throughout, but',
+    '-- this guards against future contributors adding unqualified DDL.)',
+    "SET search_path = public, pg_catalog;",
     '',
-    '-- Wrap the entire init in one transaction so any failure rolls back',
-    '-- cleanly. If the script is already inside a transaction (e.g. a',
-    '-- tool-driven init), the SAVEPOINTs below still isolate us.',
+    '-- Wrap the entire init in one transaction so any failure rolls',
+    '-- back cleanly. If the script is already inside a transaction',
+    '-- (e.g. a tool-driven init), SAVEPOINTs below still isolate us.',
     'BEGIN;',
     '',
 ]
@@ -544,6 +549,23 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                 return True
         return False
 
+    def add_if_not_exists_to_create(line: str) -> str:
+        """Rewrite a bare `CREATE TABLE x (` to `CREATE TABLE IF NOT EXISTS x (`
+        so the table is created at most once. Does NOT rewrite if the
+        statement is `CREATE TABLE IF NOT EXISTS` already, nor if it's
+        a CREATE TABLE in a DROP+CREATE pair (we'll handle that case
+        separately to keep the V2 column schema available)."""
+        m = re.match(
+            r'^(\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE)(\s+)(\w+)(\s*\()',
+            line, re.IGNORECASE,
+        )
+        if not m:
+            return line
+        prefix, ws, name, paren = m.groups()
+        if 'IF NOT EXISTS' in prefix.upper():
+            return line
+        return f'{prefix}{ws}{name} IF NOT EXISTS{paren}{line[m.end():]}'
+
     # Track which columns currently exist on each table as we write.
     # When we see CREATE TABLE x (...), add all listed cols.
     # When we see ALTER TABLE x ADD COLUMN c ..., add c to the set.
@@ -597,6 +619,43 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
     # in-line.
     skipped_fwd_col_count = 0
 
+    # Per-file pending schema updates from DROP+CREATE rebuild patterns.
+    # When we see a `DROP TABLE IF EXISTS x;` followed by a `CREATE TABLE x`
+    # we need to (a) skip both, and (b) emit an ALTER TABLE x ADD COLUMN
+    # block to apply the V2 column schema to whatever V1 left behind.
+    # We accumulate them in pending_recreate_alter: list[dict] with keys
+    # `table`, `cols` (list of (name, type_with_default, full_line)),
+    # `source_file`, `start_line`, `end_line`.
+    pending_recreate_alters: list[dict] = []
+
+    def _extract_create_table_block(lines: list[str], start: int) -> tuple[int, list[tuple[str, str]]]:
+        """Given lines[start] is `CREATE TABLE x (`, walk forward to find
+        the matching `)` and return (end_index, list of (col_name, col_def)).
+        """
+        cols = []
+        depth = 0
+        i = start
+        # Initialize depth with current line
+        depth += lines[i].count('(') - lines[i].count(')')
+        i += 1
+        while i < len(lines):
+            depth += lines[i].count('(')
+            depth -= lines[i].count(')')
+            if depth <= 0:
+                return (i, cols)
+            stripped = lines[i].strip()
+            if not stripped or stripped.startswith('--'):
+                i += 1
+                continue
+            if stripped.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK', 'KEY ', 'EXCLUDE')):
+                i += 1
+                continue
+            cm = re.match(r'^"?(\w+)"?(.*?)(,?\s*)$', stripped, re.DOTALL)
+            if cm:
+                cols.append((cm.group(1), stripped.rstrip(',')))
+            i += 1
+        return (i, cols)
+
     for f in sql_files:
         out.write('\n')
         out.write('-- ====================================================================\n')
@@ -614,6 +673,50 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                 return
             to_skip.add(idx)
             skip_reason[idx] = reason
+
+        # ---- pre-detect DROP+CREATE rebuild patterns in this file ----
+        # For each DROP TABLE IF EXISTS x, look at the next non-blank
+        # non-comment line. If it's CREATE TABLE x (optionally without
+        # IF NOT EXISTS), this is a rebuild -- we will skip the whole
+        # block and emit an ALTER TABLE ADD COLUMN.
+        file_recreate_alters: list[dict] = []
+        i = 0
+        while i < len(raw_lines):
+            line_i = raw_lines[i]
+            m_drop = re.match(
+                r'^\s*DROP\s+TABLE\s+IF\s+EXISTS\s+(\w+)\s*;',
+                line_i, re.IGNORECASE,
+            )
+            if not m_drop:
+                i += 1
+                continue
+            table = m_drop.group(1)
+            # Find next non-blank, non-comment line
+            j = i + 1
+            while j < len(raw_lines):
+                stripped_j = raw_lines[j].strip()
+                if not stripped_j or stripped_j.startswith('--'):
+                    j += 1
+                    continue
+                break
+            m_create = re.match(
+                r'^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+                raw_lines[j], re.IGNORECASE,
+            ) if j < len(raw_lines) else None
+            if m_create and m_create.group(1) == table:
+                end_idx, cols = _extract_create_table_block(raw_lines, j)
+                file_recreate_alters.append({
+                    'table': table,
+                    'cols': cols,
+                    'source_file': f,
+                    'drop_start': i,
+                    'create_start': j,
+                    'create_end': end_idx,
+                })
+                i = end_idx + 1
+                continue
+            i += 1
+        pending_recreate_alters.extend(file_recreate_alters)
 
         for i, raw in enumerate(raw_lines):
             if is_forward_ref(raw):
@@ -744,8 +847,29 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                         _add_skip(j, 'FWD-COL')
                         j += 1
 
+        # Mark DROP+CREATE rebuild blocks as SKIPPED-CLEANUP.
+        for blk in file_recreate_alters:
+            for idx in range(blk['drop_start'], blk['create_end'] + 1):
+                _add_skip(idx, 'CLEANUP-REBUILD')
+
+        # Also auto-rewrite bare CREATE TABLE -> IF NOT EXISTS for
+        # tables that are NOT in a DROP+CREATE rebuild pattern. (Tables
+        # in a rebuild pattern are handled above.)
+        rebuild_table_starts = {blk['create_start'] for blk in file_recreate_alters}
+        rewrite_count = 0
+        for i, raw in enumerate(raw_lines):
+            if i in to_skip:
+                continue
+            if i in rebuild_table_starts:
+                continue
+            new_raw = add_if_not_exists_to_create(raw)
+            if new_raw != raw:
+                raw_lines[i] = new_raw
+                rewrite_count += 1
+
         # Replay the file with the augmented skip set.
         skipped_cleanup_count = sum(1 for r in skip_reason.values() if r == 'CLEANUP')
+        skipped_rebuild_count = sum(1 for r in skip_reason.values() if r == 'CLEANUP-REBUILD')
         for i, raw in enumerate(raw_lines):
             if i in to_skip and not raw.strip().startswith('--'):
                 reason = skip_reason.get(i, 'SKIPPED')
@@ -753,11 +877,53 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
             else:
                 out.write(raw)
         out.write('\n')
+
+        # Emit ALTER TABLE ADD COLUMN IF NOT EXISTS blocks for any
+        # rebuild tables. The block is idempotent: ADD COLUMN IF NOT
+        # EXISTS is a no-op when the column already exists, and the
+        # whole block is also wrapped in a CASE that checks whether
+        # the table exists at all (because in a TRULY fresh init the
+        # base CREATE TABLE in the EARLIER Flyway file already created
+        # the table with all V2 columns -- nothing to do here).
+        for blk in file_recreate_alters:
+            table = blk['table']
+            cols = blk['cols']
+            if not cols:
+                continue
+            out.write('\n')
+            out.write(f'-- [AUTO-MIGRATION] {table}: rebuild pattern detected.\n')
+            out.write(f'--   The V1 base table was created by an earlier Flyway\n')
+            out.write(f'--   migration; the V2 schema (this file) wanted to DROP+\n')
+            out.write(f'--   RECREATE it. We skipped the destructive DROP/CREATE,\n')
+            out.write(f'--   so we now apply only the column additions needed to\n')
+            out.write(f'--   bring the V1 table up to the V2 column list.\n')
+            out.write('DO $$\n')
+            out.write('BEGIN\n')
+            out.write(f"    IF EXISTS (SELECT 1 FROM information_schema.tables\n")
+            out.write(f"                WHERE table_schema = 'public' AND table_name = '{table}') THEN\n")
+            # Emit ADD COLUMN IF NOT EXISTS for each column
+            for col_name, col_def in cols:
+                # Strip any trailing/leading whitespace
+                cd = col_def.strip()
+                # If the col_def is exactly just a name (e.g. "id"), skip -- it's the PK inline
+                if cd.lower() == col_name.lower():
+                    continue
+                # If it's a PRIMARY KEY inline, skip (we don't add PK via ALTER)
+                if 'PRIMARY KEY' in cd.upper() and 'BIGSERIAL' not in cd.upper() and 'SERIAL' not in cd.upper():
+                    continue
+                out.write(f"        ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col_name} {cd.rstrip(',')};\n")
+            out.write("    END IF;\n")
+            out.write('END $$;\n')
+
         out.write('-- ====================================================================\n')
         out.write(f'-- >>>>>>>>>> END OF {f.name}\n')
         out.write('-- ====================================================================\n')
         if skipped_cleanup_count:
             print(f'  [SKIPPED-CLEANUP] {f.name}: {skipped_cleanup_count} cleanup DDL lines skipped')
+        if skipped_rebuild_count:
+            print(f'  [SKIPPED-CLEANUP-REBUILD] {f.name}: {skipped_rebuild_count} lines from {len(file_recreate_alters)} DROP+CREATE blocks skipped, ALTER TABLE ADD COLUMN block emitted')
+        if rewrite_count:
+            print(f'  [IF-NOT-EXISTS] {f.name}: {rewrite_count} bare CREATE TABLE rewritten with IF NOT EXISTS')
 
     if skipped_fwd_col_count:
         print(f'  [SKIPPED-FWD-COL] {skipped_fwd_col_count} COMMENT lines were skipped '

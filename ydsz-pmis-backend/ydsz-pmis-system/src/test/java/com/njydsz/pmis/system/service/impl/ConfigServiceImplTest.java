@@ -1,7 +1,6 @@
 package com.njydsz.pmis.system.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.system.dto.ConfigFormDTO;
 import com.njydsz.pmis.system.dto.ConfigQueryDTO;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -20,7 +18,6 @@ import org.springframework.data.redis.core.ValueOperations;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -238,6 +235,7 @@ class ConfigServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("分页查询应返回正确结果")
     void shouldReturnPagedConfigs() {
         ConfigQueryDTO query = new ConfigQueryDTO();

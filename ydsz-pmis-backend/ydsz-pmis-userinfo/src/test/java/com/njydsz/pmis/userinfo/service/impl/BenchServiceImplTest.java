@@ -100,6 +100,7 @@ class BenchServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("分页查询Bench记录")
     void page_shouldReturnPagedResult() {
         Page<BenchRecordDO> mockPage = new Page<>(1, 10);

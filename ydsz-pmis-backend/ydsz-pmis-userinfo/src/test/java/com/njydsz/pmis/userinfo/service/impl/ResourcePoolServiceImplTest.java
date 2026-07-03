@@ -109,6 +109,7 @@ class ResourcePoolServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("分页查询资源池")
     void page_shouldReturnPagedResult() {
         Page<ResourcePoolDO> mockPage = new Page<>(1, 10);

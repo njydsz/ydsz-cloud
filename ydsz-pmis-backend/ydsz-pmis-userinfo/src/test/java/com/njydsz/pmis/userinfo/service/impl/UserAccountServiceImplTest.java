@@ -43,7 +43,8 @@ class UserAccountServiceImplTest {
     private UserAccountServiceImpl userAccountService;
 
     @Test
-    @DisplayName("根据用户名查询用户成功")
+    @SuppressWarnings("unchecked")
+    @DisplayName("根据用户名查询用户")
     void findByUsername_shouldReturnUser() {
         UserAccountDO user = new UserAccountDO();
         user.setId(1L);
@@ -120,6 +121,7 @@ class UserAccountServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("分页查询用户")
     void page_shouldReturnPagedResult() {
         UserQueryDTO query = new UserQueryDTO();
@@ -141,6 +143,7 @@ class UserAccountServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("为用户分配角色")
     void assignRoles_shouldDeleteAndInsert() {
         List<Long> roleIds = List.of(1L, 2L, 3L);

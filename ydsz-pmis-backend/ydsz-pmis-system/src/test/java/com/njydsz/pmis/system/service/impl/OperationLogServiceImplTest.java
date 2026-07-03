@@ -18,7 +18,6 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -37,6 +36,7 @@ class OperationLogServiceImplTest {
     class PageTest {
 
         @Test
+        @SuppressWarnings("unchecked")
         @DisplayName("分页查询应返回正确结果")
         void shouldReturnPagedLogs() {
             when(operationLogMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
@@ -48,6 +48,7 @@ class OperationLogServiceImplTest {
         }
 
         @Test
+        @SuppressWarnings("unchecked")
         @DisplayName("带时间范围的分页查询应正确过滤")
         void shouldFilterByTimeRange() {
             LocalDateTime start = LocalDateTime.of(2024, 1, 1, 0, 0);

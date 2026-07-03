@@ -73,6 +73,7 @@ class AttendanceServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("分页查询出勤记录")
     void pageAttendance_shouldReturnPagedResult() {
         Page<AttendanceDO> mockPage = new Page<>(1, 10);

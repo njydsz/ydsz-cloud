@@ -24,14 +24,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class RuleRecommendationServiceTest {
 
     private LiteRuleProperties.Ai aiConfig;
-    private RuleHealthScoreService healthScoreService;
     private RuleRecommendationService service;
 
     @BeforeEach
     void setUp() {
         aiConfig = new LiteRuleProperties.Ai();
         aiConfig.setRecommendTopN(10);
-        healthScoreService = new RuleHealthScoreService(aiConfig);
         service = new RuleRecommendationService(aiConfig);
     }
 

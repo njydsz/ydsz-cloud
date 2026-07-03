@@ -55,8 +55,6 @@ class CursorHelperTest {
     @Test
     @DisplayName("解码格式错误的游标 - 应抛出 IllegalArgumentException")
     void decode_shouldThrowExceptionForMalformedCursor() {
-        // 编码一个有效的 cursor，然后篡改它
-        String validCursor = CursorHelper.encode(LocalDateTime.now(), 1L);
         // 无法直接篡改 Base64 内容，但我们可以测试空字符串解码返回 null
         assertNull(CursorHelper.decode(""));
     }

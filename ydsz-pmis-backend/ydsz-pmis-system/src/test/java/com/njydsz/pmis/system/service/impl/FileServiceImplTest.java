@@ -1,14 +1,12 @@
 package com.njydsz.pmis.system.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.system.config.MinioConfig;
 import com.njydsz.pmis.system.dto.FileUploadDTO;
 import com.njydsz.pmis.system.entity.FileDO;
 import com.njydsz.pmis.system.mapper.FileMapper;
 import io.minio.*;
-import io.minio.http.Method;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -18,9 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -173,6 +169,7 @@ class FileServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("分页查询应返回正确结果")
     void shouldReturnPagedFiles() {
         when(fileMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());

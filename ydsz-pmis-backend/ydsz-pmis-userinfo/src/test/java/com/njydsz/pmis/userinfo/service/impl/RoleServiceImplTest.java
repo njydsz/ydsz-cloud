@@ -58,6 +58,7 @@ class RoleServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("查询所有启用的角色")
     void listAllEnabled_shouldReturnRoleList() {
         RoleDO role = new RoleDO();
@@ -148,6 +149,7 @@ class RoleServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("分配权限给角色")
     void assignPermissions_shouldDeleteAndInsert() {
         List<Long> permIds = List.of(1L, 2L);

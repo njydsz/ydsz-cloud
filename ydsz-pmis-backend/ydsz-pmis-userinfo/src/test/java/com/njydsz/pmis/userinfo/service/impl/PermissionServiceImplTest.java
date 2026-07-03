@@ -90,6 +90,7 @@ class PermissionServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("查询所有启用的权限")
     void listAllEnabled_shouldReturnPermissionList() {
         PermissionDO perm = new PermissionDO();

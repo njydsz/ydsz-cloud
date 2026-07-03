@@ -118,6 +118,7 @@ class ResourceAssignmentServiceImplTest {
     }
 
     @Test
+    @SuppressWarnings("unchecked")
     @DisplayName("分页查询资源分配")
     void page_shouldReturnPagedResult() {
         Page<ResourceAssignmentDO> mockPage = new Page<>(1, 10);

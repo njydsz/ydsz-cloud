@@ -26,17 +26,22 @@
 -- Files merged: 58
 -- ====================================================================
 
--- psql safety directives. These are no-ops if the script is loaded
--- by a non-psql driver (e.g. JDBC), which is the common case. They
--- only take effect when the file is consumed by psql.
-\set QUIET on
-\set ON_ERROR_STOP on
--- Reduce NOTICE/INFO noise but keep WARNING and above visible.
-\set VERBOSITY terse
+-- Pure-SQL server-side safety settings. These work whether the
+-- script is loaded via psql, JDBC, pg_dump, or any other PG
+-- client. For psql-specific behavior (ON_ERROR_STOP, QUIET) you
+-- should pass -v ON_ERROR_STOP=1 on the psql command line; see
+-- the Usage block above.
+--
+-- Reduce NOTICE/INFO noise; keep WARNING and ERROR visible.
+SET client_min_messages = WARNING;
+-- Lock down search_path so unqualified table names resolve only
+-- to the expected schema. (We use qualified names throughout, but
+-- this guards against future contributors adding unqualified DDL.)
+SET search_path = public, pg_catalog;
 
--- Wrap the entire init in one transaction so any failure rolls back
--- cleanly. If the script is already inside a transaction (e.g. a
--- tool-driven init), the SAVEPOINTs below still isolate us.
+-- Wrap the entire init in one transaction so any failure rolls
+-- back cleanly. If the script is already inside a transaction
+-- (e.g. a tool-driven init), SAVEPOINTs below still isolate us.
 BEGIN;
 -- ====================================================================
 -- [GENERATOR NOTE] Forward references detected and skipped:

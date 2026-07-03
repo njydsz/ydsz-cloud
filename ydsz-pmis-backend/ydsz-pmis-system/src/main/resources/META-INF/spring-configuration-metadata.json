@@ -42,6 +42,21 @@
       "name": "rocketmq.consumer.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable RocketMQ consumer"
+    },
+    {
+      "name": "pmis.webhook.default-url",
+      "type": "java.lang.String",
+      "description": "Default webhook URL fallback"
+    },
+    {
+      "name": "pmis.webhook.connect-timeout",
+      "type": "java.lang.Integer",
+      "description": "Webhook connect timeout in milliseconds"
+    },
+    {
+      "name": "pmis.webhook.read-timeout",
+      "type": "java.lang.Integer",
+      "description": "Webhook read timeout in milliseconds"
     }
   ],
   "hints": []
