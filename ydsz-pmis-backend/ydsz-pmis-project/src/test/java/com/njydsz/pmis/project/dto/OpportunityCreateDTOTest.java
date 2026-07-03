@@ -1,7 +1,6 @@
 package com.njydsz.pmis.project.dto;
 
 import jakarta.validation.ConstraintViolation;
-import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import org.junit.jupiter.api.BeforeAll;
@@ -28,7 +27,7 @@ class OpportunityCreateDTOTest {
 
     @BeforeAll
     static void setUpValidator() {
-        try (ValidatorFactory factory = Validation.buildDefaultValidatorFactory()) {
+        try (ValidatorFactory factory = jakarta.validation.Validation.buildDefaultValidatorFactory()) {
             validator = factory.getValidator();
         }
     }

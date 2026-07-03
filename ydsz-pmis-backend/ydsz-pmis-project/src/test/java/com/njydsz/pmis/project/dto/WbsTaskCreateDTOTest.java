@@ -49,4 +49,42 @@ class WbsTaskCreateDTOTest {
 
             assertThat(dto.getTaskCode()).isEqualTo("TASK-001");
             assertThat(dto.getTaskName()).isEqualTo("需求分析");
-            assertThat(dto.getInitiationId()).isEqualTo(1
+            assertThat(dto.getInitiationId()).isEqualTo(1L);
+            assertThat(dto.getParentId()).isNull();
+            assertThat(dto.getTaskLevel()).isEqualTo(1);
+            assertThat(dto.getSortOrder()).isEqualTo(1);
+            assertThat(dto.getTaskType()).isEqualTo("TASK");
+            assertThat(dto.getPlannedStartDate()).isEqualTo(LocalDate.of(2026, 3, 1));
+            assertThat(dto.getPlannedEndDate()).isEqualTo(LocalDate.of(2026, 3, 15));
+            assertThat(dto.getDurationDays()).isEqualTo(15);
+            assertThat(dto.getPlannedEffort()).isEqualByComparingTo(new BigDecimal("30.0"));
+            assertThat(dto.getOwnerId()).isEqualTo(100L);
+            assertThat(dto.getOwnerName()).isEqualTo("张三");
+            assertThat(dto.getAssigneeIds()).isEqualTo("100,101");
+            assertThat(dto.getPriority()).isEqualTo("HIGH");
+            assertThat(dto.getDependsOn()).isNull();
+            assertThat(dto.getMilestone()).isEqualTo(0);
+            assertThat(dto.getDescription()).isEqualTo("需求分析任务");
+            assertThat(dto.getDeliverable()).isEqualTo("需求规格说明书");
+            assertThat(dto.getRiskLevel()).isEqualTo("LOW");
+        }
+
+        @Test
+        @DisplayName("null 字段赋值后 getter 应返回 null")
+        void shouldHandleNullValues() {
+            WbsTaskCreateDTO dto = new WbsTaskCreateDTO();
+            assertThat(dto.getTaskCode()).isNull();
+            assertThat(dto.getTaskName()).isNull();
+            assertThat(dto.getInitiationId()).isNull();
+            assertThat(dto.getParentId()).isNull();
+            assertThat(dto.getTaskLevel()).isNull();
+            assertThat(dto.getSortOrder()).isNull();
+            assertThat(dto.getTaskType()).isNull();
+            assertThat(dto.getPlannedStartDate()).isNull();
+            assertThat(dto.getPlannedEndDate()).isNull();
+            assertThat(dto.getDurationDays()).isNull();
+            assertThat(dto.getPlannedEffort()).isNull();
+            assertThat(dto.getOwnerId()).isNull();
+        }
+    }
+}

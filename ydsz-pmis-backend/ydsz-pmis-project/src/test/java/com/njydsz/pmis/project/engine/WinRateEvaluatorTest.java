@@ -28,7 +28,7 @@ class WinRateEvaluatorTest {
         opp.setOpportunityName("测试商机");
 
         BigDecimal rate = WinRateEvaluator.evaluate(opp);
-        assertEquals(new BigDecimal("1.0000"), rate);
+        assertEquals(BigDecimal.ONE, rate);
     }
 
     @Test

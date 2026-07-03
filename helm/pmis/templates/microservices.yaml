@@ -1,6 +1,0 @@
-{{- $root := . -}}
-{{- range $name, $svc := .Values.microservices }}
-{{- if $svc.enabled }}
-{{- include "pmis.microservice" (list $root $name) }}
-{{- end }}
-{{- end }}

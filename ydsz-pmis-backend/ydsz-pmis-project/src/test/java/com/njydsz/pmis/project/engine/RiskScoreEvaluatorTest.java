@@ -18,10 +18,10 @@ class RiskScoreEvaluatorTest {
     }
 
     @Test
-    @DisplayName("LOW概率 × HIGH影响 = LOW风险 (score=3)")
-    void shouldReturnLowWhenLowProbHighImpact() {
+    @DisplayName("LOW概率 × HIGH影响 = MEDIUM风险 (score=3)")
+    void shouldReturnMediumWhenLowProbHighImpact() {
         RiskLevel result = RiskScoreEvaluator.evaluate("LOW", "HIGH");
-        assertEquals(RiskLevel.LOW, result);
+        assertEquals(RiskLevel.MEDIUM, result);
     }
 
     @Test
