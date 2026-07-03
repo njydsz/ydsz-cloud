@@ -235,6 +235,39 @@ function reset() {
   offsetX.value = 0
   offsetY.value = 0
 }
+
+// ==================== P2-2: Minimap ====================
+const MINIMAP_WIDTH = 160
+const MINIMAP_HEIGHT = 100
+
+/** 小地图缩放比例 */
+const minimapScale = computed(() => {
+  const positions = Array.from(nodePositions.value.values())
+  if (positions.length === 0) return 1
+  const minX = Math.min(...positions.map((p) => p.x))
+  const minY = Math.min(...positions.map((p) => p.y))
+  const maxX = Math.max(...positions.map((p) => p.x)) + props.nodeWidth
+  const maxY = Math.max(...positions.map((p) => p.y)) + props.nodeHeight
+  const contentW = maxX - minX
+  const contentH = maxY - minY
+  if (contentW <= 0 || contentH <= 0) return 1
+  return Math.min(MINIMAP_WIDTH / contentW, MINIMAP_HEIGHT / contentH)
+})
+
+/** 小地图 viewBox */
+const minimapViewBox = computed(() => {
+  const positions = Array.from(nodePositions.value.values())
+  if (positions.length === 0) return `0 0 ${MINIMAP_WIDTH} ${MINIMAP_HEIGHT}`
+  const minX = Math.min(...positions.map((p) => p.x))
+  const minY = Math.min(...positions.map((p) => p.y))
+  const maxX = Math.max(...positions.map((p) => p.x)) + props.nodeWidth
+  const maxY = Math.max(...positions.map((p) => p.y)) + props.nodeHeight
+  return `${minX - 10} ${minY - 10} ${maxX - minX + 20} ${maxY - minY + 20}`
+})
+
+/** 小地图节点尺寸 */
+const minimapNodeW = computed(() => Math.max(props.nodeWidth * minimapScale.value, 4))
+const minimapNodeH = computed(() => Math.max(props.nodeHeight * minimapScale.value, 3))
 </script>
 
 <template>
@@ -386,6 +419,36 @@ function reset() {
         <span>{{ hoveredNode.permissionFlag }}</span>
       </div>
     </div>
+
+    <!-- P2-2: 小地图 -->
+    <div v-if="diagram.nodes && diagram.nodes.length > 0" class="flow-diagram__minimap">
+      <svg :viewBox="minimapViewBox" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+        <!-- 节点 -->
+        <rect
+          v-for="n in diagram.nodes || []"
+          :key="`mini-${n.nodeCode}`"
+          :x="nodePositions.get(n.nodeCode)?.x || 0"
+          :y="nodePositions.get(n.nodeCode)?.y || 0"
+          :width="nodeWidth"
+          :height="nodeHeight"
+          :fill="nodeFill(getNodeStatus(n.nodeCode))"
+          :stroke="nodeStroke(getNodeStatus(n.nodeCode))"
+          stroke-width="1"
+          rx="3"
+        />
+        <!-- 当前节点高亮 -->
+        <circle
+          v-for="code in diagram.activeNodeCodes || []"
+          :key="`mini-active-${code}`"
+          :cx="(nodePositions.get(code)?.x || 0) + nodeWidth / 2"
+          :cy="(nodePositions.get(code)?.y || 0) + nodeHeight / 2"
+          r="4"
+          fill="#1890ff"
+          opacity="0.8"
+        />
+      </svg>
+      <span class="minimap-label">缩略图</span>
+    </div>
   </div>
 </template>
 
@@ -459,6 +522,33 @@ function reset() {
     }
 
     .tooltip-label {
+      color: #94a3b8;
+    }
+  }
+
+  &__minimap {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    width: 160px;
+    height: 100px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #e2e8f0;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+    z-index: 10;
+
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .minimap-label {
+      position: absolute;
+      top: 2px;
+      right: 4px;
+      font-size: 10px;
       color: #94a3b8;
     }
   }

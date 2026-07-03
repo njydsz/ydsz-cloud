@@ -783,4 +783,29 @@ function applyTemplate(tpl: (typeof templates)[0]) {
   flex-shrink: 0;
   flex-wrap: wrap;
 }
+
+// P2-4: 移动端响应式适配
+@media (max-width: 768px) {
+  .bpmn-designer {
+    .bpmn-toolbar {
+      flex-wrap: wrap;
+      padding: 6px 8px;
+    }
+
+    .bpmn-body {
+      flex-direction: column;
+    }
+
+    .bpmn-property-panel {
+      width: 100%;
+      max-height: 240px;
+      border-left: none;
+      border-top: 1px solid var(--el-border-color-light);
+    }
+
+    .bpmn-canvas {
+      min-height: 300px;
+    }
+  }
+}
 </style>

@@ -1,10 +1,5 @@
 package com.njydsz.pmis.execution.service.impl;
 
-import com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO;
-import com.njydsz.pmis.execution.dto.CockpitKpiVO;
-import com.njydsz.pmis.execution.dto.ExecutiveOverviewVO;
-import com.njydsz.pmis.execution.dto.KpiTrendVO;
-import com.njydsz.pmis.execution.dto.ProjectGroupKpiDTO;
 import com.njydsz.pmis.execution.feign.BenchResourceClient;
 import com.njydsz.pmis.execution.mapper.BillableUtilizationSnapshotMapper;
 import com.njydsz.pmis.execution.mapper.CostAllocationMapper;
@@ -33,7 +28,7 @@ import static org.mockito.Mockito.when;
 /**
  * CockpitReportServiceImpl 测试
  */
-@DisplayName("CockpitReportServiceImpl 经营驾驶�?)
+@DisplayName("CockpitReportServiceImpl 经营驾驶�?)
 class CockpitReportServiceImplTest {
 
     private InvoiceMapper invoiceMapper;
@@ -62,7 +57,7 @@ class CockpitReportServiceImplTest {
         billableUtilizationService = mock(BillableUtilizationService.class);
         liteRuleEngine = mock(RuleEngine.class);
         benchResourceClient = mock(BenchResourceClient.class);
-        // 默认返回空规则列表，�?CockpitReportServiceImpl fallback �?legacyAlertEngine
+        // 默认返回空规则列表，�?CockpitReportServiceImpl fallback �?legacyAlertEngine
         when(liteRuleEngine.getRules()).thenReturn(List.of());
         service = new CockpitReportServiceImpl(invoiceMapper, paymentMapper, costAllocationMapper,
                 purchaseMapper, expenseMapper, evmMeasureMapper, riskMapper,
@@ -70,7 +65,7 @@ class CockpitReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("overview 收入/成本/毛利/毛利率计�?)
+    @DisplayName("overview 收入/成本/毛利/毛利率计�?)
     void overview_normal() {
         when(invoiceMapper.countDistinctInitiation()).thenReturn(5);
         when(invoiceMapper.sumInvoicedAmount()).thenReturn(new BigDecimal("1000.00"));
@@ -104,7 +99,7 @@ class CockpitReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("overview 收入�?0 时毛利率 0")
+    @DisplayName("overview 收入�?0 时毛利率 0")
     void overview_zeroRevenue() {
         when(invoiceMapper.countDistinctInitiation()).thenReturn(0);
         when(invoiceMapper.sumInvoicedAmount()).thenReturn(BigDecimal.ZERO);
@@ -122,7 +117,7 @@ class CockpitReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("overview mapper 异常时安全降�?)
+    @DisplayName("overview mapper 异常时安全降�?)
     void overview_mapperException() {
         when(invoiceMapper.countDistinctInitiation()).thenThrow(new RuntimeException("DB down"));
         when(invoiceMapper.sumInvoicedAmount()).thenThrow(new RuntimeException("DB down"));
@@ -141,7 +136,7 @@ class CockpitReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("evmHealthDistribution 空列表返�?0")
+    @DisplayName("evmHealthDistribution 空列表返�?0")
     void evmHealth_empty() {
         when(evmMeasureMapper.aggregateHealthByInitiation()).thenReturn(List.of());
         Map<String, Integer> out = service.evmHealthDistribution(null, null);
@@ -187,7 +182,7 @@ class CockpitReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("utilizationSummary 部门聚合异常时安全降�?)
+    @DisplayName("utilizationSummary 部门聚合异常时安全降�?)
     void utilization_deptException() {
         when(billableUtilizationService.snapshotAverage(any())).thenReturn(new HashMap<>());
         when(utilizationSnapshotMapper.gradeDistribution(any())).thenThrow(new RuntimeException());
@@ -240,7 +235,7 @@ class CockpitReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("contractAmountYearlyTrend 多年聚合含合同额、项目数、同�?)
+    @DisplayName("contractAmountYearlyTrend 多年聚合含合同额、项目数、同�?)
     void contractYearlyTrend_normal() {
         Map<String, Object> r2023 = new HashMap<>();
         r2023.put("year", "2023");
@@ -286,14 +281,14 @@ class CockpitReportServiceImplTest {
         assertThat(((Number) summary.get("latestYoy")).doubleValue()).isEqualTo(-0.20);
         // 累计 = 3700000
         assertThat(summary.get("totalAmount")).isEqualTo(new BigDecimal("3700000"));
-        // 累计项目�?3+4+5=12
+        // 累计项目�?3+4+5=12
         assertThat(((Number) summary.get("totalProjects")).intValue()).isEqualTo(12);
-        // 累计发票�?5+8+6=19
+        // 累计发票�?5+8+6=19
         assertThat(((Number) summary.get("totalInvoices")).intValue()).isEqualTo(19);
     }
 
     @Test
-    @DisplayName("contractAmountYearlyTrend 单年无同�?)
+    @DisplayName("contractAmountYearlyTrend 单年无同�?)
     void contractYearlyTrend_singleYear() {
         Map<String, Object> r = new HashMap<>();
         r.put("year", "2024");
@@ -333,7 +328,7 @@ class CockpitReportServiceImplTest {
         util.put("avg_pct", 0.85);
         when(billableUtilizationService.snapshotAverage(any())).thenReturn(util);
 
-        com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO out = service.alertSummary(null, null);
+        CockpitAlertSummaryVO out = service.alertSummary(null, null);
         assertThat(out.getTotalCount()).isZero();
         assertThat(out.getRedCount()).isZero();
         assertThat(out.getYellowCount()).isZero();
@@ -342,7 +337,7 @@ class CockpitReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("alertSummary 异常 KPI：触�?RED + YELLOW")
+    @DisplayName("alertSummary 异常 KPI：触�?RED + YELLOW")
     void alertSummary_triggersMultiple() {
         when(invoiceMapper.countDistinctInitiation()).thenReturn(5);
         when(invoiceMapper.sumInvoicedAmount()).thenReturn(new BigDecimal("1000"));
@@ -360,7 +355,7 @@ class CockpitReportServiceImplTest {
         util.put("avg_pct", 0.40); // 触发 UTILIZATION_LOW RED
         when(billableUtilizationService.snapshotAverage(any())).thenReturn(util);
 
-        com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO out = service.alertSummary(null, null);
+        CockpitAlertSummaryVO out = service.alertSummary(null, null);
         assertThat(out.getRedCount()).isGreaterThanOrEqualTo(2); // EVM_RED + UTILIZATION
         assertThat(out.getEvents().get(0).getSeverity().getWeight())
                 .isGreaterThanOrEqualTo(out.getEvents().get(out.getEvents().size() - 1).getSeverity().getWeight());
@@ -379,12 +374,12 @@ class CockpitReportServiceImplTest {
         when(evmMeasureMapper.aggregateHealthByInitiation()).thenThrow(new RuntimeException("DB"));
         when(billableUtilizationService.snapshotAverage(any())).thenReturn(new HashMap<>());
 
-        com.njydsz.pmis.execution.dto.CockpitAlertSummaryVO out = service.alertSummary(null, null);
+        CockpitAlertSummaryVO out = service.alertSummary(null, null);
         assertThat(out.getTotalCount()).isZero();
     }
 
     @Test
-    @DisplayName("projectGroupOverview �?levelCode 聚合并按合同额降�?)
+    @DisplayName("projectGroupOverview �?levelCode 聚合并按合同额降�?)
     void projectGroupOverview_normal() {
         Map<String, Object> r1 = new HashMap<>();
         r1.put("level_code", "L5");
@@ -405,12 +400,12 @@ class CockpitReportServiceImplTest {
         when(purchaseMapper.sumAllAmount()).thenReturn(BigDecimal.ZERO);
         when(expenseMapper.sumAllAmount()).thenReturn(BigDecimal.ZERO);
 
-        List<com.njydsz.pmis.execution.dto.ProjectGroupKpiDTO> out = service.projectGroupOverview(null, null);
+        List<ProjectGroupKpiDTO> out = service.projectGroupOverview(null, null);
         assertThat(out).hasSize(3);
-        // �?totalContractAmount 降序
+        // �?totalContractAmount 降序
         assertThat(out.get(0).getGroupCode()).isEqualTo("L5");
         assertThat(out.get(0).getTotalContractAmount()).isEqualByComparingTo(new BigDecimal("600.00"));
-        // UNKNOWN 群名应回退�?未分类项目群"
+        // UNKNOWN 群名应回退�?未分类项目群"
         assertThat(out.get(2).getGroupName()).isEqualTo("未分类项目群");
     }
 
@@ -418,12 +413,12 @@ class CockpitReportServiceImplTest {
     @DisplayName("projectGroupOverview mapper 异常时返回空")
     void projectGroupOverview_exception() {
         when(costAllocationMapper.sumByLevelCode()).thenThrow(new RuntimeException("DB"));
-        List<com.njydsz.pmis.execution.dto.ProjectGroupKpiDTO> out = service.projectGroupOverview(null, null);
+        List<ProjectGroupKpiDTO> out = service.projectGroupOverview(null, null);
         assertThat(out).isEmpty();
     }
 
     @Test
-    @DisplayName("executiveOverview 健康快照：评�?0 等级 D")
+    @DisplayName("executiveOverview 健康快照：评�?0 等级 D")
     void executiveOverview_healthy() {
         when(invoiceMapper.countDistinctInitiation()).thenReturn(3);
         when(invoiceMapper.sumInvoicedAmount()).thenReturn(new BigDecimal("1000"));
@@ -441,7 +436,7 @@ class CockpitReportServiceImplTest {
         util.put("avg_pct", 0.85);
         when(billableUtilizationService.snapshotAverage(any())).thenReturn(util);
 
-        com.njydsz.pmis.execution.dto.ExecutiveOverviewVO out = service.executiveOverview(null, null);
+        ExecutiveOverviewVO out = service.executiveOverview(null, null);
         assertThat(out.getActiveProjects()).isEqualTo(3);
         assertThat(out.getEvmGreenCount()).isEqualTo(2);
         assertThat(out.getHealthGrade()).isIn("A", "B", "C", "D");
@@ -466,13 +461,13 @@ class CockpitReportServiceImplTest {
         when(costAllocationMapper.sumByLevelCode()).thenReturn(List.of());
         when(billableUtilizationService.snapshotAverage(any())).thenReturn(new HashMap<>());
 
-        com.njydsz.pmis.execution.dto.ExecutiveOverviewVO out = service.executiveOverview(null, null);
+        ExecutiveOverviewVO out = service.executiveOverview(null, null);
         assertThat(out.getRiskProjectCount()).isEqualTo(5);
         assertThat(out.getRiskProjectRatio()).isEqualByComparingTo(new BigDecimal("0.5000"));
     }
 
     @Test
-    @DisplayName("executiveOverview riskMapper 异常时风险计�?0 不抛�?)
+    @DisplayName("executiveOverview riskMapper 异常时风险计�?0 不抛�?)
     void executiveOverview_riskException() {
         when(invoiceMapper.countDistinctInitiation()).thenReturn(3);
         when(invoiceMapper.sumInvoicedAmount()).thenReturn(BigDecimal.ZERO);
@@ -485,13 +480,13 @@ class CockpitReportServiceImplTest {
         when(costAllocationMapper.sumByLevelCode()).thenThrow(new RuntimeException("DB"));
         when(billableUtilizationService.snapshotAverage(any())).thenReturn(new HashMap<>());
 
-        com.njydsz.pmis.execution.dto.ExecutiveOverviewVO out = service.executiveOverview(null, null);
+        ExecutiveOverviewVO out = service.executiveOverview(null, null);
         assertThat(out.getRiskProjectCount()).isZero();
         assertThat(out.getHealthGrade()).isNotNull();
     }
 
     @Test
-    @DisplayName("kpiTrend 正常：合�?回款序列对齐月份 + MTD 增长�?)
+    @DisplayName("kpiTrend 正常：合�?回款序列对齐月份 + MTD 增长�?)
     void kpiTrend_normal() {
         Map<String, Object> c1 = new HashMap<>();
         c1.put("month", "2025-08");
@@ -512,14 +507,14 @@ class CockpitReportServiceImplTest {
         when(invoiceMapper.sumByRecentMonth(any())).thenReturn(List.of(c1, c2));
         when(paymentMapper.aggregateByRecentMonth(any())).thenReturn(List.of(p1, p2));
 
-        com.njydsz.pmis.execution.dto.KpiTrendVO out = service.kpiTrend(12);
+        KpiTrendVO out = service.kpiTrend(12);
         assertThat(out.getPeriods()).hasSize(2);
-        // 升序�? 月在 9 月前
+        // 升序�? 月在 9 月前
         assertThat(out.getPeriods().get(0)).isEqualTo("2025-08");
         assertThat(out.getPeriods().get(1)).isEqualTo("2025-09");
         // MTD 增长 = (120-100)/100 = 0.20
         assertThat(out.getContractMtdGrowth()).isEqualByComparingTo(new BigDecimal("0.2000"));
-        // 9 月合�?120，回�?100，毛�?100
+        // 9 月合�?120，回�?100，毛�?100
         assertThat(out.getGrossProfitSeries().get(1)).isEqualByComparingTo(new BigDecimal("100"));
     }
 
@@ -528,7 +523,7 @@ class CockpitReportServiceImplTest {
     void kpiTrend_empty() {
         when(invoiceMapper.sumByRecentMonth(any())).thenReturn(List.of());
         when(paymentMapper.aggregateByRecentMonth(any())).thenReturn(List.of());
-        com.njydsz.pmis.execution.dto.KpiTrendVO out = service.kpiTrend(0);
+        KpiTrendVO out = service.kpiTrend(0);
         assertThat(out.getPeriods()).isEmpty();
         assertThat(out.getContractMtdGrowth()).isEqualByComparingTo(BigDecimal.ZERO);
     }
@@ -538,16 +533,16 @@ class CockpitReportServiceImplTest {
     void kpiTrend_exception() {
         when(invoiceMapper.sumByRecentMonth(any())).thenThrow(new RuntimeException("DB"));
         when(paymentMapper.aggregateByRecentMonth(any())).thenThrow(new RuntimeException("DB"));
-        com.njydsz.pmis.execution.dto.KpiTrendVO out = service.kpiTrend(12);
+        KpiTrendVO out = service.kpiTrend(12);
         assertThat(out.getPeriods()).isEmpty();
     }
 
     @Test
-    @DisplayName("kpiTrend months 上限裁剪�?36")
+    @DisplayName("kpiTrend months 上限裁剪�?36")
     void kpiTrend_monthsClampedTo36() {
         when(invoiceMapper.sumByRecentMonth(any())).thenReturn(List.of());
         when(paymentMapper.aggregateByRecentMonth(any())).thenReturn(List.of());
-        com.njydsz.pmis.execution.dto.KpiTrendVO out = service.kpiTrend(99);
+        KpiTrendVO out = service.kpiTrend(99);
         assertThat(out.getPeriods()).isEmpty();
         org.mockito.Mockito.verify(invoiceMapper).sumByRecentMonth(Integer.valueOf(36));
     }
@@ -562,7 +557,7 @@ class CockpitReportServiceImplTest {
     }
 
     @Test
-    @DisplayName("kpiTrend 仅合�?仅回款单边数据仍能输�?)
+    @DisplayName("kpiTrend 仅合�?仅回款单边数据仍能输�?)
     void kpiTrend_oneSideData() {
         Map<String, Object> c1 = new HashMap<>();
         c1.put("month", "2025-09");
@@ -570,7 +565,7 @@ class CockpitReportServiceImplTest {
         c1.put("invoice_count", 1);
         when(invoiceMapper.sumByRecentMonth(any())).thenReturn(List.of(c1));
         when(paymentMapper.aggregateByRecentMonth(any())).thenReturn(List.of());
-        com.njydsz.pmis.execution.dto.KpiTrendVO out = service.kpiTrend(12);
+        KpiTrendVO out = service.kpiTrend(12);
         assertThat(out.getPeriods()).containsExactly("2025-09");
         assertThat(out.getConfirmedRevenueSeries().get(0)).isEqualByComparingTo(BigDecimal.ZERO);
     }

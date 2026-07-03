@@ -569,4 +569,35 @@ onMounted(() => {
 .simulate-result {
   margin-top: 16px;
 }
+
+// P2-4: 移动端响应式适配
+@media (max-width: 768px) {
+  .page-workflow-design {
+    padding: 8px;
+    height: calc(100vh - 60px);
+
+    .page-header {
+      &-row {
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      h2 {
+        font-size: 18px;
+      }
+
+      &__sub {
+        font-size: 12px;
+      }
+    }
+
+    .design-toolbar {
+      flex-wrap: wrap;
+
+      .el-select {
+        width: 100% !important;
+      }
+    }
+  }
+}
 </style>

@@ -36,6 +36,7 @@ import FlowTimeline from '../components/FlowTimeline.vue'
 import FlowDiagramReplay from '../components/FlowDiagramReplay.vue'
 import FormRenderer from '../components/FormRenderer.vue'
 import UserPicker from '@/components/common/UserPicker.vue'
+import TaskCommentThread from '../components/TaskCommentThread.vue'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -291,6 +292,13 @@ watch(() => route.query.id, () => loadAll())
           :readonly="!canOperate"
         />
         <el-empty v-else description="当前流程未配置动态表单，请使用下方通用审批操作" />
+      </el-tab-pane>
+      <el-tab-pane label="评论讨论" name="comment">
+        <TaskCommentThread
+          v-if="instanceId"
+          :instance-id="instanceId"
+          :node-code="instance?.currentNodeCode"
+        />
       </el-tab-pane>
       <el-tab-pane :label="t('workflow.instance.detail')" name="detail">
         <el-descriptions v-if="instance" :column="2" border>
