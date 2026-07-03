@@ -1,5 +1,11 @@
 package com.njydsz.pmis.literule.config;
 
+import com.njydsz.pmis.literule.ai.LLMClient;
+import com.njydsz.pmis.literule.ai.MockLLMClient;
+import com.njydsz.pmis.literule.ai.OpenAICompatibleLLMClient;
+import com.njydsz.pmis.literule.ai.RuleHealthScoreService;
+import com.njydsz.pmis.literule.ai.RuleLLMService;
+import com.njydsz.pmis.literule.ai.RuleRecommendationService;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.core.AsyncTraceRecorder;
 import com.njydsz.pmis.literule.core.DefaultRuleEngine;
@@ -345,5 +351,82 @@ public class LiteRuleAutoConfiguration {
         log.info("[LiteRule] 规则管理服务已初始化（dryRun={}, broadcast={}, conflictDetection={}）",
                 properties.isDryRunEnabled(), broadcaster != null, properties.isConflictDetectionEnabled());
         return service;
+    }
+
+    // ------------------------------------------------------------------
+    // P2-15 AI 增强
+    // ------------------------------------------------------------------
+
+    /**
+     * LLM 客户端（P2-15）
+     *
+     * <p>根据 {@code pmis.literule.ai.llm-client} 配置选择实现：
+     * <ul>
+     *   <li>OPENAI_COMPATIBLE：{@link OpenAICompatibleLLMClient}（OpenAI/DeepSeek/通义千问/Ollama 等兼容协议）</li>
+     *   <li>MOCK（默认）：{@link MockLLMClient}（离线/单元测试）</li>
+     * </ul>
+     *
+     * @param properties 配置
+     * @return LLMClient 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
+    public LLMClient llmClient(LiteRuleProperties properties) {
+        LiteRuleProperties.Ai ai = properties.getAi();
+        String type = ai.getLlmClient();
+        if (type == null || type.isEmpty() || "MOCK".equalsIgnoreCase(type)) {
+            log.info("[LiteRule-AI] LLM 客户端使用 Mock 实现（provider=MOCK, model={}）",
+                    MockLLMClient.DEFAULT_MODEL);
+            return new MockLLMClient();
+        }
+        if ("OPENAI_COMPATIBLE".equalsIgnoreCase(type)) {
+            log.info("[LiteRule-AI] LLM 客户端使用 OpenAI 兼容协议（apiUrl={}, model={}）",
+                    ai.getLlmApiUrl(), ai.getLlmModel());
+            return new OpenAICompatibleLLMClient(ai);
+        }
+        log.warn("[LiteRule-AI] 未知的 llm-client 类型: {}，回退到 MOCK", type);
+        return new MockLLMClient();
+    }
+
+    /**
+     * 规则 LLM 服务（P2-15）
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
+    public RuleLLMService ruleLLMService(LLMClient llmClient,
+                                          com.njydsz.pmis.literule.expr.ExpressionValidationService expressionValidationService) {
+        log.info("[LiteRule-AI] 规则 LLM 服务已初始化（provider={}, model={}）",
+                llmClient.provider(), llmClient.model());
+        return new RuleLLMService(llmClient, expressionValidationService);
+    }
+
+    /**
+     * 规则健康度评分服务（P2-15）
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
+    public RuleHealthScoreService ruleHealthScoreService(LiteRuleProperties properties) {
+        log.info("[LiteRule-AI] 规则健康度评分服务已初始化（hitRateWeight={}, errorRateWeight={}, complexityWeight={}, coverageWeight={}）",
+                properties.getAi().getHealthHitRateWeight(),
+                properties.getAi().getHealthErrorRateWeight(),
+                properties.getAi().getHealthComplexityWeight(),
+                properties.getAi().getHealthCoverageWeight());
+        return new RuleHealthScoreService(properties.getAi());
+    }
+
+    /**
+     * 规则推荐服务（P2-15）
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
+    public RuleRecommendationService ruleRecommendationService(LiteRuleProperties properties,
+                                                                RuleHealthScoreService healthScoreService) {
+        log.info("[LiteRule-AI] 规则推荐服务已初始化（topN={}）",
+                properties.getAi().getRecommendTopN());
+        return new RuleRecommendationService(properties.getAi(), healthScoreService);
     }
 }

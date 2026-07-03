@@ -3,7 +3,8 @@
  * @file 统一审批中心（薄容器组件）
  * @module views/workflow/approval-center
  * @description
- *   重构后的审批中心仅负责 Tab 切换、子组件加载与实时角标轮询。
+ *   P0-1: WebSocket 秒级推送替代 60s 轮询，120s 轮询作为降级兜底。
+ *   审批中心负责 Tab 切换、角标管理（WebSocket 驱动）、子组件加载。
  *   各 Tab 的列表/搜索/分页/操作逻辑已拆分至 tabs/ 子组件：
  *     - TodoTab      我的待办（含筛选/置顶/列设置/操作弹窗）
  *     - DoneTab      我的已办
@@ -14,17 +15,19 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { pageTodoTasks, ccUnreadCount } from '@/api/workflow'
+import { useWebSocket } from '@/composables/useWebSocket'
 import TodoTab from './tabs/TodoTab.vue'
 import DoneTab from './tabs/DoneTab.vue'
 import InitiatedTab from './tabs/InitiatedTab.vue'
 import CCTab from './tabs/CCTab.vue'
 
 const { t } = useI18n()
+const { on: onWs } = useWebSocket()
 
 const activeTab = ref<'todo' | 'done' | 'mine' | 'cc'>('todo')
 
 // ===========================================
-// 实时角标：60 秒轮询
+// 实时角标：WebSocket 秒级推送 + 120s 轮询降级兜底
 // ===========================================
 const todoTotal = ref(0)
 const ccUnread = ref(0)
@@ -64,11 +67,31 @@ function refreshBadges() {
   refreshCcUnread()
 }
 
+// P0-1: WebSocket 秒级推送 — 后端任务创建/通过/驳回时实时推送
+onWs('TODO_COUNT', (data: any) => {
+  if (data?.todoCount !== undefined) {
+    todoTotal.value = data.todoCount
+  }
+})
+onWs('TASK_ASSIGNED', () => {
+  // 新任务分配：刷新待办角标 + 抄送未读数
+  refreshBadges()
+})
+onWs('TASK_COMPLETED', () => {
+  // 任务完成：刷新待办角标
+  refreshTodoBadge()
+})
+onWs('TASK_REJECTED', () => {
+  // 任务驳回：刷新待办角标
+  refreshTodoBadge()
+})
+
+// 120s 轮询作为 WebSocket 降级兜底（从 60s 放宽到 120s）
 let pollingTimer: ReturnType<typeof setInterval> | null = null
 
 function startPolling() {
   refreshBadges()
-  pollingTimer = setInterval(refreshBadges, 60000)
+  pollingTimer = setInterval(refreshBadges, 120000)
 }
 
 function stopPolling() {

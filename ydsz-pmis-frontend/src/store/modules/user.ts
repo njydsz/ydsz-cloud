@@ -69,6 +69,12 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = data
     roles.value = data.roles || []
     permissions.value = data.permissions || []
+    // P0-1: 持久化 userInfo 到 localStorage，供 useWebSocket 读取 userId 进行 STOMP 订阅
+    try {
+      localStorage.setItem('userInfo', JSON.stringify(data))
+    } catch {
+      // 静默失败
+    }
   }
 
   /**
@@ -98,6 +104,12 @@ export const useUserStore = defineStore('user', () => {
     roles.value = []
     permissions.value = []
     removeToken()
+    // P0-1: 同步清除 localStorage 中的 userInfo
+    try {
+      localStorage.removeItem('userInfo')
+    } catch {
+      // 静默失败
+    }
     try {
       const permissionStore = usePermissionStore()
       permissionStore.reset()

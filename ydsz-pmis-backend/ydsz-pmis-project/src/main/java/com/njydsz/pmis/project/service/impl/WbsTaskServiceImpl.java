@@ -79,7 +79,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
             try {
                 String n = nameAssembler.resolveEmployee(t.getOwnerId());
                 if (n != null) t.setOwnerName(n);
-            } catch (Exception ignore) { }
+            } catch (Exception e) { log.warn("解析负责人名称失败 ownerId={}: {}", t.getOwnerId(), e.getMessage(), e); }
         }
         wbsTaskMapper.insert(t);
         log.info("[WbsTask] 创建任务: code={} name={}", t.getTaskCode(), t.getTaskName());

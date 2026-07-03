@@ -59,7 +59,7 @@ public class ExpenseServiceImpl implements ExpenseService {
             try {
                 String n = nameAssembler.resolveEmployee(e.getEmployeeId());
                 if (n != null) e.setEmployeeName(n);
-            } catch (Exception ignore) { }
+            } catch (Exception ex) { log.warn("解析员工名称失败 employeeId={}: {}", e.getEmployeeId(), ex.getMessage(), ex); }
         }
 
         // 预算强管控：本次报销 + 项目已发生 ≤ 立项预算

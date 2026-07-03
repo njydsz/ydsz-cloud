@@ -251,13 +251,13 @@ public class ContractServiceImpl implements ContractService {
             try {
                 String n = nameAssembler.resolveCustomer(c.getCustomerId());
                 if (n != null) c.setCustomerName(n);
-            } catch (Exception ignore) { }
+            } catch (Exception e) { log.warn("解析客户名称失败 customerId={}: {}", c.getCustomerId(), e.getMessage(), e); }
         }
         if (!StringUtils.hasText(c.getOwnerName()) && c.getOwnerId() != null) {
             try {
                 String n = nameAssembler.resolveEmployee(c.getOwnerId());
                 if (n != null) c.setOwnerName(n);
-            } catch (Exception ignore) { }
+            } catch (Exception e) { log.warn("解析负责人名称失败 ownerId={}: {}", c.getOwnerId(), e.getMessage(), e); }
         }
     }
 }

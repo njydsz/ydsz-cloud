@@ -15,6 +15,7 @@ import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useResponsive } from '@/composables/useResponsive'
+import { useWebSocket } from '@/composables/useWebSocket'
 import { pageTodoTasks, pageDefinitions } from '@/api/workflow'
 import type {
   FlowTaskDTO,
@@ -464,12 +465,28 @@ function goInstance(instanceId: number) {
 // ===========================================
 // 生命周期
 // ===========================================
+// P0-1: WebSocket 实时推送 — 任务变更时自动刷新待办列表
+const { on: onWs } = useWebSocket()
+let wsRefreshTimer: ReturnType<typeof setTimeout> | null = null
+
+/** 防抖刷新：短时间内多次 WS 推送只触发一次列表刷新 */
+function debouncedRefresh() {
+  if (wsRefreshTimer) clearTimeout(wsRefreshTimer)
+  wsRefreshTimer = setTimeout(() => {
+    loadTodo()
+  }, 500)
+}
+
 onMounted(() => {
   loadPinnedTasks()
   loadColumnPrefs()
   loadFilters()
   loadFlowDefinitions()
   loadTodo()
+  // WebSocket 监听任务变更
+  onWs('TASK_ASSIGNED', () => debouncedRefresh())
+  onWs('TASK_COMPLETED', () => debouncedRefresh())
+  onWs('TASK_REJECTED', () => debouncedRefresh())
 })
 </script>
 

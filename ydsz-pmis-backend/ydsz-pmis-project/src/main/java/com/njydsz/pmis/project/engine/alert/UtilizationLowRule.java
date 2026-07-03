@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.engine.alert;
 
 import com.njydsz.pmis.project.dto.AlertEventDTO;
 import com.njydsz.pmis.project.enums.AlertSeverity;
+import lombok.extern.slf4j.Slf4j;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -17,6 +18,7 @@ import java.util.UUID;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
+@Slf4j
 public class UtilizationLowRule implements AlertRule {
 
     /** 黄色阈值 = 0.70 */
@@ -85,7 +87,7 @@ public class UtilizationLowRule implements AlertRule {
         Integer activeProjects = null;
         if (apRaw instanceof Number) activeProjects = ((Number) apRaw).intValue();
         else if (apRaw != null) {
-            try { activeProjects = Integer.parseInt(String.valueOf(apRaw)); } catch (Exception ignore) {}
+            try { activeProjects = Integer.parseInt(String.valueOf(apRaw)); } catch (Exception e) { log.warn("解析活跃项目数失败 apRaw={}: {}", apRaw, e.getMessage(), e); }
         }
         if (activeProjects == null || activeProjects <= 0) return null;
         AlertSeverity severity = null;

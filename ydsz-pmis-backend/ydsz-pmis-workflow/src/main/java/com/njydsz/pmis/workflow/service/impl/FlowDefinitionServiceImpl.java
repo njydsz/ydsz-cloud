@@ -546,7 +546,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
                     try {
                         JSONObject extJson = JSON.parseObject(skip.getExt());
                         source = extJson != null ? extJson.getString("sourceRef") : null;
-                    } catch (Exception ignored) { }
+                    } catch (Exception e) { log.warn("解析skip节点ext JSON失败: {}", e.getMessage(), e); }
                 }
                 edge.put("source", source);
                 edge.put("target", skip.getNextNodeCode());
