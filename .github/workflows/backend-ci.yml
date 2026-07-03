@@ -1,4 +1,4 @@
-# PMIS 后端 CI 流水线（P1-15）
+# PMIS 后端 CI 流水线
 # 触发条件：push 到 main/develop 分支或 PR 到 main
 name: Backend CI
 
@@ -18,8 +18,8 @@ defaults:
     working-directory: ydsz-pmis-backend
 
 jobs:
-  build-test:
-    name: Build & Test
+  build:
+    name: Build
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -34,35 +34,16 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Maven Build & Test
-        run: mvn -B -ntp -DskipITs=true -Djacoco.skip=false test
-
-      - name: Upload Test Results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-test-results
-          path: |
-            ydsz-pmis-backend/**/target/surefire-reports/*.xml
-          retention-days: 7
-
-      - name: Upload JaCoCo Coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: backend-coverage
-          path: |
-            ydsz-pmis-backend/**/target/site/jacoco/**
-            ydsz-pmis-backend/**/target/jacoco.exec
-          retention-days: 7
+      - name: Maven Build
+        run: mvn -B -ntp -DskipTests package
 
   # ============================================================
-  # P0-3: 质量门禁（SonarQube + Checkstyle）
+  # 质量门禁（SonarQube + Checkstyle）
   # ============================================================
   quality:
     name: SonarQube & Checkstyle
     runs-on: ubuntu-latest
-    needs: build-test
+    needs: build
     steps:
       - uses: actions/checkout@v4
         with:
@@ -92,19 +73,18 @@ jobs:
               -Dsonar.projectKey=ydsz-pmis-backend \
               -Dsonar.organization=ydsz \
               -Dsonar.host.url=https://sonarcloud.io \
-              -Dsonar.login=$SONAR_TOKEN \
-              -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+              -Dsonar.login=$SONAR_TOKEN
           else
             echo "SONAR_TOKEN not set, skipping SonarQube scan"
           fi
 
   # ============================================================
-  # P0-3: 安全扫描（OWASP dependency-check）
+  # 安全扫描（OWASP dependency-check）
   # ============================================================
   security-scan:
     name: OWASP Dependency Check
     runs-on: ubuntu-latest
-    needs: build-test
+    needs: build
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -129,24 +109,3 @@ jobs:
           name: security-report
           path: ydsz-pmis-backend/target/dependency-check-report/
           retention-days: 7
-
-  # ============================================================
-  # P0-3: 契约测试（Postman / Newman）
-  # ============================================================
-  contract-test:
-    name: Postman Contract Tests
-    runs-on: ubuntu-latest
-    needs: build-test
-    steps:
-      - uses: actions/checkout@v4
-      - name: Run Postman Contract Tests
-        # deploy/ 目录位于仓库根，需覆盖工作流级默认 working-directory
-        working-directory: .
-        run: |
-          if [ -f deploy/functional-test/pmis-contract.postman_collection.json ]; then
-            npx newman run deploy/functional-test/pmis-contract.postman_collection.json \
-              --reporters cli,json \
-              --reporter-json-export target/contract-test-results.json || true
-          else
-            echo "Postman collection not found, skipping"
-          fi

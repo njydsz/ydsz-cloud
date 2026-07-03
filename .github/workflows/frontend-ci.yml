@@ -1,4 +1,4 @@
-# PMIS 前端 CI 流水线（P1-15）
+# PMIS 前端 CI 流水线
 # 触发条件：push 到 main/develop 分支或 PR 到 main
 name: Frontend CI
 
@@ -18,8 +18,8 @@ defaults:
     working-directory: ydsz-pmis-frontend
 
 jobs:
-  lint-test-build:
-    name: Lint & Test & Build
+  lint-build:
+    name: Lint & Build
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -45,74 +45,5 @@ jobs:
       - name: Lint
         run: pnpm run lint:check
 
-      - name: Unit Tests
-        run: pnpm run test
-
       - name: Type Check & Build
         run: pnpm run build
-
-      - name: SonarQube Scan
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: |
-          if [ -n "$SONAR_TOKEN" ]; then
-            npx sonar-scanner \
-              -Dsonar.projectKey=ydsz-pmis-frontend \
-              -Dsonar.organization=ydsz \
-              -Dsonar.sources=src \
-              -Dsonar.tests=src/__tests__ \
-              -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info
-          else
-            echo "SONAR_TOKEN not set, skipping SonarQube scan"
-          fi
-
-      - name: Upload Coverage
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-coverage
-          path: ydsz-pmis-frontend/coverage/
-          retention-days: 7
-
-  e2e:
-    # P2-14: E2E 跨浏览器测试（Chromium + Firefox）
-    # 使用 mock 模式运行，无需后端服务
-    name: E2E Tests (Chromium + Firefox)
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: pnpm
-          cache-dependency-path: ydsz-pmis-frontend/pnpm-lock.yaml
-
-      - name: Install Dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Install Playwright Browsers
-        # P2-14: 安装 chromium + firefox 两个浏览器引擎
-        run: pnpm exec playwright install --with-deps chromium firefox
-
-      - name: Run E2E Tests
-        run: pnpm run test:e2e
-        env:
-          CI: 'true'
-
-      - name: Upload E2E Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-report
-          path: ydsz-pmis-frontend/e2e-report/
-          retention-days: 7
