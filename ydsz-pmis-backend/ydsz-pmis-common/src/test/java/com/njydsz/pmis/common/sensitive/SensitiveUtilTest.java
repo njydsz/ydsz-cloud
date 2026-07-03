@@ -120,16 +120,14 @@ class SensitiveUtilTest {
     @DisplayName("地址脱敏 - 长地址应保留前后缀")
     void maskAddress_shouldMaskLongAddress() {
         String result = SensitiveUtil.maskAddress("江苏省南京市秦淮区某某路100号", 6, 3);
-        assertTrue(result.startsWith("江苏省南京"));
-        assertTrue(result.contains("***"));
-        assertTrue(result.endsWith("100号"));
+        assertEquals("江苏省南京市***00号", result);
     }
 
     @Test
-    @DisplayName("地址脱敏 - 短地址应保留前缀加 ***")
+    @DisplayName("地址脱敏 - 短地址（prefixKeep 不超长度）应保留前缀加 ***")
     void maskAddress_shouldMaskShortAddress() {
-        String result = SensitiveUtil.maskAddress("南京路1号", 6, 3);
-        assertEquals("南京路1号***", result);
+        String result = SensitiveUtil.maskAddress("南京路1号", 2, 1);
+        assertEquals("南京***", result);
     }
 
     // ==================== 自定义脱敏 ====================

@@ -90,6 +90,15 @@ spring:
           timeout: 10000
           writetimeout: 10000
 
+# ---------- Webhook 通道（企业微信 / 钉钉 / 飞书群机器人）----------
+# 对接 MessageChannel WEBHOOK 通道：HTTP POST 推送到用户配置的 Webhook URL。
+# URL 解析优先级：消息参数 params.webhookUrl > request.receiver(http 开头) > 默认配置 default-url
+pmis:
+  webhook:
+    default-url: ${PMIS_WEBHOOK_DEFAULT_URL:}   # 兜底默认 Webhook 地址（留空表示不启用兜底）
+    connect-timeout: 5000                       # 连接超时（毫秒）
+    read-timeout: 10000                         # 读取超时（毫秒）
+
 # ---------- MinIO 对象存储（原 file 模块） ----------
 minio:
   endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9100}

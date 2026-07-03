@@ -423,10 +423,9 @@ public class LiteRuleAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     @ConditionalOnProperty(prefix = "pmis.literule.ai", name = "enabled", havingValue = "true")
-    public RuleRecommendationService ruleRecommendationService(LiteRuleProperties properties,
-                                                                RuleHealthScoreService healthScoreService) {
+    public RuleRecommendationService ruleRecommendationService(LiteRuleProperties properties) {
         log.info("[LiteRule-AI] 规则推荐服务已初始化（topN={}）",
                 properties.getAi().getRecommendTopN());
-        return new RuleRecommendationService(properties.getAi(), healthScoreService);
+        return new RuleRecommendationService(properties.getAi());
     }
 }
