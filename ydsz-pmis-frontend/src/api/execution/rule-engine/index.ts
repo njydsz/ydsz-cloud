@@ -853,3 +853,67 @@ export const setRuleCategoryPath = (ruleCode: string, path: string) =>
     method: 'PUT',
     params: { path },
   })
+
+// ==================== 规则集市场（P2-14） ====================
+
+/** 规则集（RulePack） */
+export interface RulePack {
+  packCode: string
+  packVersion: string
+  packName: string
+  industry?: string
+  tags?: string[]
+  ruleCodes: string[]
+  description?: string
+  author?: string
+  downloadCount: number
+  rating: number
+}
+
+/** 安装结果 */
+export interface RulePackInstallResult {
+  packCode: string
+  version: string
+  total: number
+  success: number
+  failed: number
+  failedCodes: string[]
+}
+
+/**
+ * 列出市场全部规则集
+ */
+export const listPacks = () =>
+  request<RulePack[]>({
+    url: '/execution/api/v1/rules/packs',
+    method: 'GET',
+  })
+
+/**
+ * 搜索规则集
+ */
+export const searchPacks = (keyword: string) =>
+  request<RulePack[]>({
+    url: '/execution/api/v1/rules/packs/search',
+    method: 'GET',
+    params: { keyword },
+  })
+
+/**
+ * 查询规则集最新版本
+ */
+export const getLatestPack = (packCode: string) =>
+  request<RulePack>({
+    url: `/execution/api/v1/rules/packs/${packCode}/latest`,
+    method: 'GET',
+  })
+
+/**
+ * 安装规则集
+ */
+export const installPack = (packCode: string, version?: string) =>
+  request<RulePackInstallResult>({
+    url: `/execution/api/v1/rules/packs/${packCode}/install`,
+    method: 'POST',
+    params: version ? { version } : {},
+  })

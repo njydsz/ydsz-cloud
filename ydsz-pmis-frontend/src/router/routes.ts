@@ -305,6 +305,11 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/execution/rule-engine/decision-table-editor.vue'),
         meta: { title: 'rule-engine.decisionTable', icon: 'Grid', activeMenu: '/execution/rule-engine', hidden: true },
       },
+      {
+        path: 'rule-engine/pack-market',
+        component: () => import('@/views/execution/rule-engine/pack-market.vue'),
+        meta: { title: 'rule-engine.packMarket', icon: 'Box', activeMenu: '/execution/rule-engine' },
+      },
     ],
   },
   {

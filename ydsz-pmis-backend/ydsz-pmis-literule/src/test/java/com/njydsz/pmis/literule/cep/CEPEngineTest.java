@@ -129,10 +129,12 @@ class CEPEngineTest {
         engine.registerPattern(p);
 
         Instant base = Instant.parse("2024-01-01T10:00:00Z");
-        engine.feed(CEPEvent.builder().type("PAYMENT").timestamp(base)
-                .withAttr("amount", 500).build());
-        engine.feed(CEPEvent.builder().type("PAYMENT").timestamp(base.plusSeconds(30))
-                .withAttr("amount", 700).build());
+        java.util.Map<String, Object> attrs1 = new java.util.HashMap<>();
+        attrs1.put("amount", 500);
+        engine.feed(CEPEvent.builder().type("PAYMENT").timestamp(base).attributes(attrs1).build());
+        java.util.Map<String, Object> attrs2 = new java.util.HashMap<>();
+        attrs2.put("amount", 700);
+        engine.feed(CEPEvent.builder().type("PAYMENT").timestamp(base.plusSeconds(30)).attributes(attrs2).build());
         // 总和 1200 > 1000
         assertEquals(1, hits.size());
         assertEquals(1200.0, hits.get(0).getMetric());

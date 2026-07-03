@@ -123,14 +123,22 @@ public class CEPEngine implements Serializable {
      * 投放事件到指定模式
      */
     private void feedToPattern(CEPPattern pattern, CEPEvent event) {
-        // 1. 类型过滤
+        // 1. ABSENCE 模式特殊处理：需要接收任何类型事件
+        if (pattern.getType() == CEPPattern.PatternType.ABSENCE) {
+            handleAbsence(pattern, event, eventQueues
+                    .computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>())
+                    .computeIfAbsent(event.getPartitionKey(), k -> new ConcurrentLinkedDeque<>()));
+            return;
+        }
+
+        // 2. 类型过滤
         if (!matchesType(pattern, event)) return;
-        // 2. 表达式过滤
+        // 3. 表达式过滤
         if (pattern.getFilter() != null && !pattern.getFilter().isBlank()) {
             if (!evaluateFilter(pattern.getFilter(), event)) return;
         }
 
-        // 3. 维护事件队列
+        // 4. 维护事件队列
         String partitionKey = event.getPartitionKey();
         ConcurrentLinkedDeque<CEPEvent> queue = eventQueues
                 .computeIfAbsent(pattern.getId(), k -> new ConcurrentHashMap<>())
@@ -140,7 +148,6 @@ public class CEPEngine implements Serializable {
             case TIME_WINDOW -> handleTimeWindow(pattern, event, queue);
             case SEQUENCE -> handleSequence(pattern, event, partitionKey);
             case AGGREGATE -> handleAggregate(pattern, event, queue);
-            case ABSENCE -> handleAbsence(pattern, event, queue);
             default -> log.warn("[CEP] 未知模式类型: {}", pattern.getType());
         }
     }

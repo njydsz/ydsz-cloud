@@ -31,8 +31,11 @@ public class RealtimePushService {
     /**
      * 向指定用户推送通知。
      *
+     * <p>P0-1: 改用 topic 路由（/topic/user/{userId}/notifications），无需握手认证即可精确路由。
+     * 前端通过 STOMP 订阅 /topic/user/{userId}/notifications 接收消息。
+     *
      * @param userId      用户ID
-     * @param type        消息类型 (NOTIFICATION/ALERT/DASHBOARD)
+     * @param type        消息类型 (NOTIFICATION/ALERT/DASHBOARD/TODO_COUNT/TASK_ASSIGNED 等)
      * @param payload     消息内容
      */
     public void pushToUser(Long userId, String type, Object payload) {
@@ -41,11 +44,8 @@ public class RealtimePushService {
             message.put("type", type);
             message.put("data", payload);
             message.put("timestamp", System.currentTimeMillis());
-            messagingTemplate.convertAndSendToUser(
-                    String.valueOf(userId),
-                    "/queue/notifications",
-                    message
-            );
+            messagingTemplate.convertAndSend(
+                    "/topic/user/" + userId + "/notifications", message);
             log.debug("[WebSocket] 推送消息到用户 {}: type={}", userId, type);
         } catch (Exception e) {
             log.warn("[WebSocket] 推送消息失败，降级忽略: userId={}, type={}, error={}", userId, type, e.getMessage());

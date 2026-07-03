@@ -29,9 +29,11 @@ import com.njydsz.pmis.project.literule.RuleChainGraphService;
 import com.njydsz.pmis.project.literule.RuleDependencyService;
 import com.njydsz.pmis.project.literule.RuleCategoryTreeService;
 import com.njydsz.pmis.project.literule.ABTestAutoRollbackService;
+import com.njydsz.pmis.project.literule.RulePackService;
 import com.njydsz.pmis.project.entity.RuleDependencyDO;
 import com.njydsz.pmis.project.entity.RuleABPolicyDO;
 import com.njydsz.pmis.project.entity.RuleABRollbackDO;
+import com.njydsz.pmis.literule.api.RulePack;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,6 +76,7 @@ public class RuleAdminController {
     private final RuleDependencyService ruleDependencyService;
     private final RuleCategoryTreeService ruleCategoryTreeService;
     private final ABTestAutoRollbackService abTestAutoRollbackService;
+    private final RulePackService rulePackService;
 
     /**
      * 查询全部规则定义
@@ -1265,5 +1268,91 @@ public class RuleAdminController {
             @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         return Result.ok(abTestAutoRollbackService.manualRollback(ruleCode, operator, reason));
+    }
+
+    // ==================== 规则集市场（P2-14） ====================
+
+    /**
+     * 列出全部规则集（市场首页）
+     */
+    @GetMapping("/packs")
+    public Result<List<RulePack>> listPacks() {
+        return Result.ok(rulePackService.listAll());
+    }
+
+    /**
+     * 搜索规则集
+     */
+    @GetMapping("/packs/search")
+    public Result<List<RulePack>> searchPacks(@RequestParam(value = "keyword", required = false) String keyword) {
+        return Result.ok(rulePackService.search(keyword));
+    }
+
+    /**
+     * 查询规则集最新版本
+     */
+    @GetMapping("/packs/{packCode}/latest")
+    public Result<RulePack> getLatestPack(@PathVariable String packCode) {
+        return Result.ok(rulePackService.getLatest(packCode));
+    }
+
+    /**
+     * 查询规则集的所有版本
+     */
+    @GetMapping("/packs/{packCode}/versions")
+    public Result<List<RulePack>> listPackVersions(@PathVariable String packCode) {
+        return Result.ok(rulePackService.listVersions(packCode));
+    }
+
+    /**
+     * 发布规则集到市场
+     */
+    @PostMapping("/packs")
+    public Result<RulePack> publishPack(
+            @RequestBody RulePack pack,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        return Result.ok(rulePackService.publish(pack, operator));
+    }
+
+    /**
+     * 安装规则集（一键导入）
+     */
+    @PostMapping("/packs/{packCode}/install")
+    public Result<RulePackService.InstallResult> installPack(
+            @PathVariable String packCode,
+            @RequestParam(value = "version", required = false) String version,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        return Result.ok(rulePackService.install(packCode, version, operator));
+    }
+
+    /**
+     * 删除规则集
+     */
+    @DeleteMapping("/packs/{id}")
+    public Result<Void> deletePack(@PathVariable Long id) {
+        rulePackService.delete(id);
+        return Result.ok();
+    }
+
+    /**
+     * 标记为官方
+     */
+    @PutMapping("/packs/{id}/official")
+    public Result<Void> markOfficialPack(
+            @PathVariable Long id,
+            @RequestParam(value = "official", defaultValue = "true") boolean official) {
+        rulePackService.markOfficial(id, official);
+        return Result.ok();
+    }
+
+    /**
+     * 评分（0-5）
+     */
+    @PutMapping("/packs/{id}/rate")
+    public Result<Void> ratePack(
+            @PathVariable Long id,
+            @RequestParam(value = "rating") double rating) {
+        rulePackService.rate(id, rating);
+        return Result.ok();
     }
 }
