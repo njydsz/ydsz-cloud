@@ -17,7 +17,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-execution", fallbackFactory = ExecutionClientFallback.class)
+@FeignClient(name = "ydsz-pmis-project", fallbackFactory = ExecutionClientFallback.class)
 public interface ExecutionClient {
 
     /**

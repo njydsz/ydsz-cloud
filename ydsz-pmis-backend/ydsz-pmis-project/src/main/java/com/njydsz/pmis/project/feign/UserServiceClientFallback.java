@@ -5,13 +5,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
- * UserServiceClient 降级工厂
+ * 用户服务降级工厂
  *
- * <p>当 user 服务不可用时返回空数据，避免业务被拖垮。
+ * <p>user 服务不可用时返回 503 / 零费率，避免 NameAssembler / 成本计算等场景级联失败。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -21,10 +21,10 @@ import java.util.Map;
 public class UserServiceClientFallback implements FallbackFactory<UserServiceClient> {
 
     /**
-     * 创建降级实例。
+     * 创建降级客户端实例
      *
      * @param cause 触发降级的异常
-     * @return 降级 UserServiceClient，所有方法返回空数据
+     * @return 降级后的 UserServiceClient 实例
      */
     @Override
     public UserServiceClient create(Throwable cause) {
@@ -32,17 +32,12 @@ public class UserServiceClientFallback implements FallbackFactory<UserServiceCli
         return new UserServiceClient() {
             @Override
             public Result<Map<String, Object>> getEmployee(Long id) {
-                return Result.ok(null);
+                return Result.failed(503, "用户服务暂不可用");
             }
 
             @Override
-            public Result<String> getCustomerName(Long customerId) {
-                return Result.ok("");
-            }
-
-            @Override
-            public Result<Map<Long, String>> batchEmployeeName(List<Long> ids) {
-                return Result.ok(Map.of());
+            public Result<BigDecimal> getLevelRate(String levelCode) {
+                return Result.ok(BigDecimal.ZERO);
             }
         };
     }

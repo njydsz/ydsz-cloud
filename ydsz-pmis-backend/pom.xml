@@ -26,7 +26,6 @@
         <module>ydsz-pmis-workflow</module>
         <module>ydsz-pmis-scheduler</module>
         <module>ydsz-pmis-project</module>
-        <module>ydsz-pmis-execution</module>
         <module>ydsz-pmis-agent</module>
         <module>ydsz-pmis-literule</module>
     </modules>
@@ -107,11 +106,6 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-project</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-execution</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

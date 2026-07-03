@@ -45,12 +45,9 @@ public class RouteConfig {
                         .uri("lb://ydsz-pmis-iam"))
 
                 // ===== 业务服务 =====
-                // 项目服务 (商机/立项/合同/变更/合同模板)
-                .route("ydsz-pmis-project", r -> r.path("/api/v1/project/**")
-                        .uri("lb://ydsz-pmis-project"))
-
-                // 执行服务 (WBS/EVM/成本/收入/风险/工时/发票/付款/客户信用/资源/Dashboard/Report/费率/交付/收尾/利润)
-                .route("ydsz-pmis-execution", r -> r.path(
+                // 项目业务服务（合并 project + execution）：商机/立项/合同/变更/WBS/EVM/成本/收入/风险/工时/发票/付款/客户信用/资源/Dashboard/Report/费率/交付/收尾/利润
+                .route("ydsz-pmis-project", r -> r.path(
+                                "/api/v1/project/**",
                                 "/api/v1/execution/**",
                                 "/api/v1/invoices/**",
                                 "/api/v1/payments/**",
@@ -59,7 +56,7 @@ public class RouteConfig {
                                 "/api/v1/customers/**",
                                 "/api/v1/reports/**",
                                 "/api/v1/dashboard/**")
-                        .uri("lb://ydsz-pmis-execution"))
+                        .uri("lb://ydsz-pmis-project"))
 
                 // 工作流
                 .route("ydsz-pmis-workflow", r -> r.path("/api/v1/workflow/**")

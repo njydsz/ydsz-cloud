@@ -90,7 +90,7 @@
         -->
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-execution</artifactId>
+            <artifactId>ydsz-pmis-project</artifactId>
             <version>${project.version}</version>
             <optional>true</optional>
             <exclusions>
