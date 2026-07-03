@@ -20,15 +20,15 @@ export interface RuleDefinition {
   category: string
   /** 规则描述 */
   description?: string
-  /** 条件表达式（SpEL），返回 boolean 决定是否触发 */
+  /** 条件表达式（Aviator），返回 boolean 决定是否触发 */
   conditionExpression: string
-  /** 严重度表达式（SpEL），返回 RED/YELLOW/NORMAL */
+  /** 严重度表达式（Aviator），返回 RED/YELLOW/NORMAL */
   severityExpression?: string
   /** 默认严重度（当 severityExpression 为空或求值失败时使用） */
   defaultSeverity: string
-  /** 标题模板（支持 SpEL 变量占位） */
+  /** 标题模板（支持 ${var} 变量占位） */
   titleTemplate?: string
-  /** 描述模板（支持 SpEL 变量占位） */
+  /** 描述模板（支持 ${var} 变量占位） */
   descriptionTemplate?: string
   /** 优先级（数值越小越先执行） */
   priority: number
@@ -216,7 +216,7 @@ export const dryRun = (ruleCode: string | null, facts: Record<string, unknown>) 
 
 /**
  * 校验表达式语法是否合法
- * @param expression SpEL 表达式
+ * @param expression Aviator 表达式
  * @returns 是否合法
  */
 export const validateExpression = (expression: string) =>

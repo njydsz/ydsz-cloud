@@ -1,7 +1,8 @@
 package com.njydsz.pmis.execution.literule;
 
-import com.njydsz.pmis.common.config.ThresholdProvider;
+import com.njydsz.pmis.literule.spi.ThresholdProvider;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -9,8 +10,8 @@ import java.math.BigDecimal;
 /**
  * 规则阈值提供者桥接实现（execution 模块）
  *
- * <p>实现 literule 模块的 {@link com.njydsz.pmis.literule.spi.ThresholdProvider} SPI 接口，
- * 将调用桥接到 common 模块的 {@link ThresholdProvider}（统一从配置中心读取 alert 分组阈值）。
+ * <p>实现 literule 模块的 {@link ThresholdProvider} SPI 接口，
+ * 将调用桥接到 common 模块的 {@code com.njydsz.pmis.common.config.ThresholdProvider}（统一从配置中心读取 alert 分组阈值）。
  *
  * <p>说明：
  * <ul>
@@ -24,10 +25,11 @@ import java.math.BigDecimal;
  */
 @Component
 @RequiredArgsConstructor
-public class ThresholdProviderBridge implements com.njydsz.pmis.literule.spi.ThresholdProvider {
+public class ThresholdProviderBridge implements ThresholdProvider {
 
     /** common 模块阈值提供器（委托目标） */
-    private final ThresholdProvider delegate;
+    @Qualifier("commonThresholdProvider")
+    private final com.njydsz.pmis.common.config.ThresholdProvider delegate;
 
     @Override
     public String getString(String key, String defaultValue) {

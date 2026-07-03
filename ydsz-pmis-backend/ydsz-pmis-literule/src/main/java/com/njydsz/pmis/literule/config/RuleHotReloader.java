@@ -35,11 +35,20 @@ public class RuleHotReloader {
 
     /**
      * 启动时全量加载规则
+     *
+     * <p>当 {@code hotReloadEnabled=false} 时跳过加载。
+     * 当 {@code autoRegisterBuiltinRules=true}（默认）时，全量加载 DB 规则。
+     * 当 {@code autoRegisterBuiltinRules=false} 时，仅加载 DB 规则但不自动注册内置规则，
+     * 用户可手动调用 {@link #fullReload(String)} 加载。
      */
     @PostConstruct
     public void initLoad() {
         if (!properties.isHotReloadEnabled()) {
             log.info("[LiteRule] 热加载已禁用，跳过初始加载");
+            return;
+        }
+        if (!properties.isAutoRegisterBuiltinRules()) {
+            log.info("[LiteRule] 自动注册内置规则已禁用，跳过初始加载");
             return;
         }
         fullReload("SYSTEM_INIT");

@@ -498,7 +498,7 @@ public class RuleChain {
                     List<RuleResult> nodeResults = evaluateNode(node, iterContext, evaluator, statsRecorder);
                     // 检查是否遇到 BREAK
                     for (RuleResult r : nodeResults) {
-                        if (r != null && r.isTriggered() && "BREAK".equals(r.getRuleCode())) {
+                        if (r != null && r.isTriggered() && RuleResult.BREAK_CODE.equals(r.getRuleCode())) {
                             log.debug("[LiteRule-Chain] FOR 循环遇到 BREAK，终止迭代");
                             return results;
                         }
@@ -536,7 +536,7 @@ public class RuleChain {
                 for (RuleNode node : nodes) {
                     List<RuleResult> nodeResults = evaluateNode(node, context, evaluator, statsRecorder);
                     for (RuleResult r : nodeResults) {
-                        if (r != null && r.isTriggered() && "BREAK".equals(r.getRuleCode())) {
+                        if (r != null && r.isTriggered() && RuleResult.BREAK_CODE.equals(r.getRuleCode())) {
                             log.debug("[LiteRule-Chain] WHILE 循环遇到 BREAK，终止迭代");
                             return results;
                         }
@@ -557,9 +557,9 @@ public class RuleChain {
      * BREAK 语义：返回一个特殊的 BREAK 结果，由上层循环（FOR/WHILE）检测后终止
      */
     private List<RuleResult> evaluateBreak(RuleContext context, ExpressionEvaluator evaluator) {
-        // 返回一个标记为 BREAK 的特殊结果
+        // 返回一个标记为 BREAK 的特殊结果（使用 BREAK_CODE 常量，避免与真实规则编码冲突）
         RuleResult breakResult = new RuleResult();
-        breakResult.setRuleCode("BREAK");
+        breakResult.setRuleCode(RuleResult.BREAK_CODE);
         breakResult.setTriggered(true);
         breakResult.setSeverity(RuleSeverity.INFO);
         breakResult.setTitle("BREAK 终止循环");

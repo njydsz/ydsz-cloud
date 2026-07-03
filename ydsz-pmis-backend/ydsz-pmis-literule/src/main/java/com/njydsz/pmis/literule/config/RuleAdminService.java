@@ -1,5 +1,6 @@
 package com.njydsz.pmis.literule.config;
 
+import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleResult;
@@ -179,8 +180,7 @@ public class RuleAdminService {
         if (!dryRunEnabled) {
             throw new IllegalStateException("Dry-run 功能已被禁用（pmis.literule.dryRunEnabled=false）");
         }
-        com.njydsz.pmis.literule.api.RuleContext context =
-                com.njydsz.pmis.literule.api.RuleContext.of(facts, "DRY_RUN", "MANUAL");
+        RuleContext context = RuleContext.of(facts, "DRY_RUN", "MANUAL");
 
         if (ruleCode != null) {
             // 单条规则仿真

@@ -137,7 +137,7 @@ class RuleChainAdvancedTest {
                 int n = counter.incrementAndGet();
                 if (n >= 2) {
                     // 第二次迭代返回 BREAK
-                    return RuleResult.triggered("BREAK", "BREAK", "BREAK",
+                    return RuleResult.triggered(RuleResult.BREAK_CODE, "BREAK", "BREAK",
                             RuleSeverity.INFO, "BREAK", "");
                 }
                 return RuleResult.triggered("FOR_ITEM", "循环", "TEST", RuleSeverity.INFO, "", "");
@@ -422,7 +422,7 @@ class RuleChainAdvancedTest {
 
             assertEquals(1, results.size());
             assertTrue(results.get(0).isTriggered());
-            assertEquals("BREAK", results.get(0).getRuleCode());
+            assertEquals(RuleResult.BREAK_CODE, results.get(0).getRuleCode());
         }
     }
 }
