@@ -57,14 +57,14 @@ const SPEED_MAP: Record<number, number> = {
 }
 
 /** 步骤类型筛选下拉选项 */
-const STEP_TYPE_OPTIONS = [
-  { value: 'ALL', label: '全部' },
-  { value: 'START', label: '发起' },
-  { value: 'HIS_TASK', label: '历史任务' },
-  { value: 'AUDIT_LOG', label: '审计日志' },
-  { value: 'CURRENT_TASK', label: '当前待办' },
-  { value: 'END', label: '结束' },
-]
+const STEP_TYPE_OPTIONS = computed(() => [
+  { value: 'ALL', label: t('workflow.replay.stepType.ALL') },
+  { value: 'START', label: t('workflow.replay.stepType.START') },
+  { value: 'HIS_TASK', label: t('workflow.replay.stepType.HIS_TASK') },
+  { value: 'AUDIT_LOG', label: t('workflow.replay.stepType.AUDIT_LOG') },
+  { value: 'CURRENT_TASK', label: t('workflow.replay.stepType.CURRENT_TASK') },
+  { value: 'END', label: t('workflow.replay.stepType.END') },
+])
 
 /** 筛选后的步骤索引集合（用于步骤列表高亮） */
 const visibleStepIndices = computed<number[]>(() => {
@@ -260,13 +260,13 @@ function nodeTypeLabel(type: number | undefined): string {
 function nodeStateLabel(state: string | undefined): string {
   if (!state) return ''
   const map: Record<string, string> = {
-    ENTERED: '已进入',
-    PASSED: '已通过',
-    REJECTED: '已驳回',
-    ACTIVE: '进行中',
-    SKIPPED: '已跳过',
-    OBSERVED: '已观察',
-    FINISHED: '已完成',
+    ENTERED: t('workflow.replay.nodeState.ENTERED'),
+    PASSED: t('workflow.replay.nodeState.PASSED'),
+    REJECTED: t('workflow.replay.nodeState.REJECTED'),
+    ACTIVE: t('workflow.replay.nodeState.ACTIVE'),
+    SKIPPED: t('workflow.replay.nodeState.SKIPPED'),
+    OBSERVED: t('workflow.replay.nodeState.OBSERVED'),
+    FINISHED: t('workflow.replay.nodeState.FINISHED'),
   }
   return map[state] || state
 }
@@ -282,11 +282,11 @@ function nodeStateType(state: string | undefined): '' | 'success' | 'danger' | '
 function stepTypeLabel(type: string | undefined): string {
   if (!type) return ''
   const map: Record<string, string> = {
-    START: '发起',
-    HIS_TASK: '历史任务',
-    AUDIT_LOG: '审计日志',
-    CURRENT_TASK: '当前待办',
-    END: '结束',
+    START: t('workflow.replay.stepType.START'),
+    HIS_TASK: t('workflow.replay.stepType.HIS_TASK'),
+    AUDIT_LOG: t('workflow.replay.stepType.AUDIT_LOG'),
+    CURRENT_TASK: t('workflow.replay.stepType.CURRENT_TASK'),
+    END: t('workflow.replay.stepType.END'),
   }
   return map[type] || type
 }
@@ -439,7 +439,7 @@ onBeforeUnmount(() => {
             <el-descriptions-item :label="t('common.search')">
               <el-tag size="small">{{ currentStep.action || '-' }}</el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="操作人">
+            <el-descriptions-item :label="t('workflow.replay.actor')">
               {{ currentStep.actorName || currentStep.actor || '-' }}
             </el-descriptions-item>
             <el-descriptions-item :label="t('workflow.task.duration')">
@@ -448,7 +448,7 @@ onBeforeUnmount(() => {
               </span>
               <span v-else>-</span>
             </el-descriptions-item>
-            <el-descriptions-item v-if="currentStep.timestamp" label="时间" :span="2">
+            <el-descriptions-item v-if="currentStep.timestamp" :label="t('workflow.replay.time')" :span="2">
               {{ new Date(currentStep.timestamp).toLocaleString() }}
             </el-descriptions-item>
             <el-descriptions-item v-if="currentStep.comment" :label="t('workflow.task.comment')" :span="2">
@@ -460,7 +460,7 @@ onBeforeUnmount(() => {
 
       <!-- 步骤列表 -->
       <div class="flow-replay__steps">
-        <div class="steps-title">回放步骤（{{ totalSteps }}）</div>
+        <div class="steps-title">{{ t('workflow.replay.stepsTitle', { count: totalSteps }) }}</div>
         <el-timeline>
           <el-timeline-item
             v-for="(step, idx) in steps"

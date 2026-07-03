@@ -477,6 +477,14 @@
             </plugin>
         </plugins>
     </pluginManagement>
+
+    <!-- 显式启用 lombok/mapstruct 注解处理（所有子模块继承生效） -->
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+        </plugin>
+    </plugins>
     </build>
 
     <repositories>

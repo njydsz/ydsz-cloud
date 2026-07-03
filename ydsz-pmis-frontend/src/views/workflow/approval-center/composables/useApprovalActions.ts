@@ -11,8 +11,10 @@
  *   同时导出审批中心共享的状态映射与格式化辅助函数。
  */
 import { ref, reactive, computed, markRaw } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import dayjs from 'dayjs'
+import i18n from '@/locales'
 import {
   passTask,
   rejectTask,
@@ -134,9 +136,9 @@ abstract class BaseAction implements ApprovalAction {
       if (res?.data?.code === 0) {
         return { success: true }
       }
-      return { success: false, message: res?.data?.message || '操作失败' }
+      return { success: false, message: res?.data?.message || i18n.global.t('workflow.approval.messages.operationFailed') }
     } catch (e) {
-      return { success: false, message: '操作失败：' + (e as Error).message }
+      return { success: false, message: i18n.global.t('workflow.approval.messages.operationFailed') + '：' + (e as Error).message }
     }
   }
 }
@@ -144,9 +146,9 @@ abstract class BaseAction implements ApprovalAction {
 /** 通过 */
 class PassAction extends BaseAction {
   readonly type = 'PASS' as const
-  readonly title = '通过审批'
+  readonly title = 'workflow.approval.actions.passTitle'
   readonly needComment = true
-  readonly commentPlaceholder = '请输入审批意见（支持常用语 / @人 / 图片）'
+  readonly commentPlaceholder = 'workflow.approval.actions.passPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return passTask(this.toDto(ctx))
   }
@@ -155,10 +157,10 @@ class PassAction extends BaseAction {
 /** 驳回 */
 class RejectAction extends BaseAction {
   readonly type = 'REJECT' as const
-  readonly title = '驳回审批'
+  readonly title = 'workflow.approval.actions.rejectTitle'
   readonly needComment = true
   readonly needRejectNode = true
-  readonly commentPlaceholder = '请输入驳回意见'
+  readonly commentPlaceholder = 'workflow.approval.actions.rejectPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return rejectTask(this.toDto(ctx))
   }
@@ -167,12 +169,12 @@ class RejectAction extends BaseAction {
 /** 转办 */
 class TransferAction extends BaseAction {
   readonly type = 'TRANSFER' as const
-  readonly title = '转办'
+  readonly title = 'workflow.approval.actions.transferTitle'
   readonly needComment = true
   readonly needTargetUser = true
-  readonly targetUserLabel = '目标用户'
-  readonly targetUserDialogTitle = '选择转办人'
-  readonly commentPlaceholder = '请输入转办说明'
+  readonly targetUserLabel = 'workflow.approval.actions.targetUserLabel'
+  readonly targetUserDialogTitle = 'workflow.approval.actions.transferDialogTitle'
+  readonly commentPlaceholder = 'workflow.approval.actions.transferPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return transferTask(this.toDto(ctx))
   }
@@ -181,12 +183,12 @@ class TransferAction extends BaseAction {
 /** 委派 */
 class DelegateAction extends BaseAction {
   readonly type = 'DELEGATE' as const
-  readonly title = '委派'
+  readonly title = 'workflow.approval.actions.delegateTitle'
   readonly needComment = true
   readonly needTargetUser = true
-  readonly targetUserLabel = '目标用户'
-  readonly targetUserDialogTitle = '选择委派人'
-  readonly commentPlaceholder = '请输入委派说明'
+  readonly targetUserLabel = 'workflow.approval.actions.targetUserLabel'
+  readonly targetUserDialogTitle = 'workflow.approval.actions.delegateDialogTitle'
+  readonly commentPlaceholder = 'workflow.approval.actions.delegatePlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return delegateTask(this.toDto(ctx))
   }
@@ -195,7 +197,7 @@ class DelegateAction extends BaseAction {
 /** 签收 */
 class ClaimAction extends BaseAction {
   readonly type = 'CLAIM' as const
-  readonly title = '签收'
+  readonly title = 'workflow.approval.actions.claimTitle'
   protected call(ctx: ApprovalActionContext) {
     return claimTask({ taskId: ctx.taskId })
   }
@@ -204,10 +206,10 @@ class ClaimAction extends BaseAction {
 /** 催办（依赖 instanceId） */
 class UrgeAction extends BaseAction {
   readonly type = 'URGE' as const
-  readonly title = '催办'
+  readonly title = 'workflow.approval.actions.urgeTitle'
   readonly needComment = true
-  readonly commentLabel = '催办意见'
-  readonly commentPlaceholder = '请输入催办意见'
+  readonly commentLabel = 'workflow.approval.actions.urgeCommentLabel'
+  readonly commentPlaceholder = 'workflow.approval.actions.urgePlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return urgeTask({ instanceId: ctx.instanceId as number, comment: ctx.comment })
   }
@@ -216,10 +218,10 @@ class UrgeAction extends BaseAction {
 /** 暂存待审 */
 class SaveDraftAction extends BaseAction {
   readonly type = 'SAVE_DRAFT' as const
-  readonly title = '暂存待审'
+  readonly title = 'workflow.approval.actions.saveDraftTitle'
   readonly needComment = true
-  readonly commentLabel = '暂存备注'
-  readonly commentPlaceholder = '请输入暂存备注'
+  readonly commentLabel = 'workflow.approval.actions.draftCommentLabel'
+  readonly commentPlaceholder = 'workflow.approval.actions.draftPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return saveDraft(this.toDto(ctx))
   }
@@ -228,10 +230,10 @@ class SaveDraftAction extends BaseAction {
 /** 追加处理人 */
 class AddApproverAction extends BaseAction {
   readonly type = 'ADD_APPROVER' as const
-  readonly title = '追加处理人'
+  readonly title = 'workflow.approval.actions.addApproverTitle'
   readonly needTargetUser = true
-  readonly targetUserLabel = '追加处理人'
-  readonly targetUserDialogTitle = '选择追加处理人'
+  readonly targetUserLabel = 'workflow.approval.actions.addApproverLabel'
+  readonly targetUserDialogTitle = 'workflow.approval.actions.addApproverDialogTitle'
   protected call(ctx: ApprovalActionContext) {
     return addApprover(this.toDto(ctx))
   }
@@ -240,12 +242,12 @@ class AddApproverAction extends BaseAction {
 /** 前加签 */
 class CountersignBeforeAction extends BaseAction {
   readonly type = 'COUNTERSIGN_BEFORE' as const
-  readonly title = '前加签'
+  readonly title = 'workflow.approval.actions.countersignBeforeTitle'
   readonly needComment = true
   readonly needTargetUser = true
-  readonly targetUserLabel = '前加签人'
-  readonly targetUserDialogTitle = '选择前加签人'
-  readonly commentPlaceholder = '请输入加签说明'
+  readonly targetUserLabel = 'workflow.approval.actions.countersignBeforeLabel'
+  readonly targetUserDialogTitle = 'workflow.approval.actions.countersignBeforeDialogTitle'
+  readonly commentPlaceholder = 'workflow.approval.actions.countersignPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return countersignBefore(this.toDto(ctx))
   }
@@ -254,12 +256,12 @@ class CountersignBeforeAction extends BaseAction {
 /** 后加签 */
 class CountersignAfterAction extends BaseAction {
   readonly type = 'COUNTERSIGN_AFTER' as const
-  readonly title = '后加签'
+  readonly title = 'workflow.approval.actions.countersignAfterTitle'
   readonly needComment = true
   readonly needTargetUser = true
-  readonly targetUserLabel = '后加签人'
-  readonly targetUserDialogTitle = '选择后加签人'
-  readonly commentPlaceholder = '请输入加签说明'
+  readonly targetUserLabel = 'workflow.approval.actions.countersignAfterLabel'
+  readonly targetUserDialogTitle = 'workflow.approval.actions.countersignAfterDialogTitle'
+  readonly commentPlaceholder = 'workflow.approval.actions.countersignPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return countersignAfter(this.toDto(ctx))
   }
@@ -268,10 +270,10 @@ class CountersignAfterAction extends BaseAction {
 /** 减签 */
 class CountersignRemoveAction extends BaseAction {
   readonly type = 'COUNTERSIGN_REMOVE' as const
-  readonly title = '减签'
+  readonly title = 'workflow.approval.actions.countersignRemoveTitle'
   readonly needTargetUser = true
-  readonly targetUserLabel = '减签人'
-  readonly targetUserDialogTitle = '选择减签人'
+  readonly targetUserLabel = 'workflow.approval.actions.countersignRemoveLabel'
+  readonly targetUserDialogTitle = 'workflow.approval.actions.countersignRemoveDialogTitle'
   protected call(ctx: ApprovalActionContext) {
     return countersignRemove(this.toDto(ctx))
   }
@@ -280,7 +282,7 @@ class CountersignRemoveAction extends BaseAction {
 /** 标记已阅 */
 class MarkReadAction extends BaseAction {
   readonly type = 'MARK_READ' as const
-  readonly title = '标记已阅'
+  readonly title = 'workflow.approval.actions.markReadTitle'
   protected call(ctx: ApprovalActionContext) {
     return markReadTask({ taskId: ctx.taskId, userId: 0 })
   }
@@ -289,10 +291,10 @@ class MarkReadAction extends BaseAction {
 /** 沟通 */
 class CommunicateAction extends BaseAction {
   readonly type = 'COMMUNICATE' as const
-  readonly title = '沟通'
+  readonly title = 'workflow.approval.actions.communicateTitle'
   readonly needComment = true
-  readonly commentLabel = '沟通内容'
-  readonly commentPlaceholder = '请输入沟通内容'
+  readonly commentLabel = 'workflow.approval.actions.communicateCommentLabel'
+  readonly commentPlaceholder = 'workflow.approval.actions.communicatePlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return communicateTask(this.toDto(ctx))
   }
@@ -322,15 +324,15 @@ export const actionMap: Record<ApprovalActionType, ApprovalAction> = {
 // 三、操作弹窗状态与提交逻辑（composable）
 // ===========================================
 
-/** 审批常用语 */
-export const commentPhrases = [
-  '同意',
-  '同意，请按计划推进',
-  '同意，注意控制风险',
-  '请补充资料后再议',
-  '请修改后重新提交',
-  '驳回，理由不充分',
-  '已了解',
+/** 常用语 i18n keys */
+const commentPhraseKeys = [
+  'workflow.approval.phrases.agree',
+  'workflow.approval.phrases.agreeProceed',
+  'workflow.approval.phrases.agreeRisk',
+  'workflow.approval.phrases.supplementLater',
+  'workflow.approval.phrases.modifyResubmit',
+  'workflow.approval.phrases.rejectInsufficient',
+  'workflow.approval.phrases.acknowledged',
 ]
 
 export interface UseApprovalActionsOptions {
@@ -352,6 +354,7 @@ export interface UseApprovalActionsOptions {
  */
 export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   const { onSuccess } = options
+  const { t } = useI18n()
 
   const opDialog = ref(false)
   const opType = ref<ApprovalActionType>('PASS')
@@ -375,19 +378,19 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   /** 当前策略实例 */
   const currentAction = computed(() => actionMap[opType.value])
 
-  const opDialogTitle = computed(() => currentAction.value?.title || '操作')
+  const opDialogTitle = computed(() => t(currentAction.value?.title || 'workflow.approval.actions.operation'))
   const showCommentInput = computed(() => currentAction.value?.needComment ?? false)
   const showTargetUser = computed(() => currentAction.value?.needTargetUser ?? false)
   const showRejectNode = computed(() => currentAction.value?.needRejectNode ?? false)
-  const commentLabel = computed(() => currentAction.value?.commentLabel || '审批意见')
+  const commentLabel = computed(() => t(currentAction.value?.commentLabel || 'workflow.approval.actions.commentLabel'))
   const commentPlaceholder = computed(
-    () => currentAction.value?.commentPlaceholder || '请输入审批意见',
+    () => t(currentAction.value?.commentPlaceholder || 'workflow.approval.actions.commentPlaceholder'),
   )
   const targetUserLabel = computed(
-    () => currentAction.value?.targetUserLabel || '目标用户',
+    () => t(currentAction.value?.targetUserLabel || 'workflow.approval.actions.targetUserLabel'),
   )
   const targetUserDialogTitle = computed(
-    () => currentAction.value?.targetUserDialogTitle || '选择目标用户',
+    () => t(currentAction.value?.targetUserDialogTitle || 'workflow.approval.actions.targetUserDialogTitle'),
   )
 
   /** 重置表单 */
@@ -455,12 +458,12 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
 
     // 校验：驳回必须填写意见
     if (action.needComment && opType.value === 'REJECT' && !opForm.comment.trim()) {
-      ElMessage.warning('请填写驳回意见')
+      ElMessage.warning(t('workflow.approval.messages.rejectCommentRequired'))
       return
     }
     // 校验：需要目标用户时必填
     if (action.needTargetUser && !opForm.targetUserId) {
-      ElMessage.warning('请选择目标用户')
+      ElMessage.warning(t('workflow.approval.messages.targetUserRequired'))
       return
     }
 
@@ -483,11 +486,11 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
 
     const result = await action.execute(ctx)
     if (result.success) {
-      ElMessage.success('操作成功')
+      ElMessage.success(t('workflow.approval.messages.operationSuccess'))
       opDialog.value = false
       onSuccess?.()
     } else {
-      ElMessage.error(result.message || '操作失败')
+      ElMessage.error(result.message || t('workflow.approval.messages.operationFailed'))
     }
   }
 
@@ -499,16 +502,16 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   async function quickPass(task: FlowTaskDTO) {
     try {
       await ElMessageBox.confirm(
-        `确认直接通过审批事项「${task.title || '未命名'}」？`,
-        '一键通过',
-        { confirmButtonText: '确认通过', cancelButtonText: '取消', type: 'info' },
+        t('workflow.approval.messages.quickPassConfirm', { name: task.title || t('workflow.approval.messages.quickPassUnnamed') }),
+        t('workflow.approval.messages.quickPassTitle'),
+        { confirmButtonText: t('workflow.approval.messages.confirmPass'), cancelButtonText: t('common.cancel'), type: 'info' },
       )
-      const result = await actionMap.PASS.execute({ taskId: task.id, comment: '同意' })
+      const result = await actionMap.PASS.execute({ taskId: task.id, comment: t('workflow.approval.phrases.agree') })
       if (result.success) {
-        ElMessage.success('已通过')
+        ElMessage.success(t('workflow.approval.messages.passedSuccess'))
         onSuccess?.()
       } else {
-        ElMessage.error(result.message || '操作失败')
+        ElMessage.error(result.message || t('workflow.approval.messages.operationFailed'))
       }
     } catch {
       // 用户取消
@@ -519,10 +522,10 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   async function quickClaim(task: FlowTaskDTO) {
     const result = await actionMap.CLAIM.execute({ taskId: task.id })
     if (result.success) {
-      ElMessage.success('签收成功')
+      ElMessage.success(t('workflow.approval.messages.claimSuccess'))
       onSuccess?.()
     } else {
-      ElMessage.error(result.message || '签收失败')
+      ElMessage.error(result.message || t('workflow.approval.messages.claimFailed'))
     }
   }
 
@@ -530,9 +533,9 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   async function quickSaveDraft(task: FlowTaskDTO) {
     const result = await actionMap.SAVE_DRAFT.execute({ taskId: task.id, comment: '' })
     if (result.success) {
-      ElMessage.success('已暂存')
+      ElMessage.success(t('workflow.approval.messages.draftSaved'))
     } else {
-      ElMessage.error(result.message || '暂存失败')
+      ElMessage.error(result.message || t('workflow.approval.messages.draftFailed'))
     }
   }
 
@@ -540,18 +543,18 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   async function quickMarkRead(task: FlowTaskDTO) {
     const result = await actionMap.MARK_READ.execute({ taskId: task.id })
     if (result.success) {
-      ElMessage.success('已标记为已阅')
+      ElMessage.success(t('workflow.approval.messages.markedRead'))
     } else {
-      ElMessage.error(result.message || '操作失败')
+      ElMessage.error(result.message || t('workflow.approval.messages.operationFailed'))
     }
   }
 
   /** 快捷沟通（prompt 输入） */
   async function quickCommunicate(task: FlowTaskDTO) {
     try {
-      const { value } = await ElMessageBox.prompt('请输入沟通内容', '沟通', {
-        confirmButtonText: '发送',
-        cancelButtonText: '取消',
+      const { value } = await ElMessageBox.prompt(t('workflow.approval.messages.communicatePrompt'), t('workflow.approval.messages.communicateTitle'), {
+        confirmButtonText: t('workflow.approval.messages.send'),
+        cancelButtonText: t('common.cancel'),
         inputType: 'textarea',
       })
       const result = await actionMap.COMMUNICATE.execute({
@@ -559,9 +562,9 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
         comment: value,
       })
       if (result.success) {
-        ElMessage.success('沟通消息已发送')
+        ElMessage.success(t('workflow.approval.messages.communicateSent'))
       } else {
-        ElMessage.error(result.message || '沟通失败')
+        ElMessage.error(result.message || t('workflow.approval.messages.communicateFailed'))
       }
     } catch {
       // 用户取消
@@ -571,18 +574,18 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   /** 快捷催办（prompt 输入） */
   async function quickUrge(task: FlowTaskDTO) {
     try {
-      const { value } = await ElMessageBox.prompt('请输入催办意见', '催办', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      const { value } = await ElMessageBox.prompt(t('workflow.approval.messages.urgePrompt'), t('workflow.approval.messages.urgeTitle'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
       })
       const result = await actionMap.URGE.execute({
         instanceId: task.instanceId,
         comment: value,
       })
       if (result.success) {
-        ElMessage.success('催办成功')
+        ElMessage.success(t('workflow.approval.messages.urgeSuccess'))
       } else {
-        ElMessage.error(result.message || '催办失败')
+        ElMessage.error(result.message || t('workflow.approval.messages.urgeFailed'))
       }
     } catch {
       // 用户取消
@@ -592,20 +595,20 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   /** 批量通过 */
   async function quickBatchPass(taskIds: number[]) {
     if (taskIds.length === 0) {
-      ElMessage.warning('请先勾选待审批项')
+      ElMessage.warning(t('workflow.approval.messages.batchPassEmpty'))
       return
     }
     try {
-      const { value } = await ElMessageBox.prompt('请输入批量审批意见', '批量审批', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      const { value } = await ElMessageBox.prompt(t('workflow.approval.messages.batchPassPrompt'), t('workflow.approval.messages.batchPassTitle'), {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
       })
       const res = await batchPass({ taskIds, comment: value || undefined })
       if (res.data?.code === 0) {
-        ElMessage.success(`批量审批成功，共处理 ${res.data.data || taskIds.length} 项`)
+        ElMessage.success(t('workflow.approval.messages.batchPassSuccess', { count: res.data.data || taskIds.length }))
         onSuccess?.()
       } else {
-        ElMessage.error(res.data?.message || '批量审批失败')
+        ElMessage.error(res.data?.message || t('workflow.approval.messages.batchPassFailed'))
       }
     } catch {
       // 用户取消
@@ -642,7 +645,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     quickUrge,
     quickBatchPass,
     // 常量
-    commentPhrases,
+    commentPhrases: commentPhraseKeys.map((k) => t(k)),
   }
 }
 
@@ -651,40 +654,44 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
 // ===========================================
 
 /** 流程实例状态映射 */
-const instanceStatusMap: Record<string, { label: string; type: string }> = {
-  RUNNING: { label: '审批中', type: 'warning' },
-  SUSPENDED: { label: '已挂起', type: 'info' },
-  COMPLETED: { label: '已完成', type: 'success' },
-  TERMINATED: { label: '已终止', type: 'danger' },
-  REJECTED: { label: '已驳回', type: 'danger' },
+const instanceStatusMap: Record<string, { labelKey: string; type: string }> = {
+  RUNNING: { labelKey: 'workflow.instance.status.RUNNING', type: 'warning' },
+  SUSPENDED: { labelKey: 'workflow.instance.status.SUSPENDED', type: 'info' },
+  COMPLETED: { labelKey: 'workflow.instance.status.COMPLETED', type: 'success' },
+  TERMINATED: { labelKey: 'workflow.instance.status.TERMINATED', type: 'danger' },
+  REJECTED: { labelKey: 'workflow.instance.status.REJECTED', type: 'danger' },
 }
 
 /** 任务状态映射 */
-const taskStatusMap: Record<string, { label: string; type: string }> = {
-  PENDING: { label: '待办', type: 'warning' },
-  CLAIMED: { label: '已签收', type: 'primary' },
-  COMPLETED: { label: '已完成', type: 'success' },
-  REJECTED: { label: '已驳回', type: 'danger' },
-  SKIPPED: { label: '已跳过', type: 'info' },
-  CANCELLED: { label: '已取消', type: 'info' },
-  TIMEOUT: { label: '已超时', type: 'danger' },
-  DELEGATED: { label: '已委派', type: 'primary' },
-  FROZEN: { label: '已冻结', type: 'info' },
+const taskStatusMap: Record<string, { labelKey: string; type: string }> = {
+  PENDING: { labelKey: 'workflow.task.status.PENDING', type: 'warning' },
+  CLAIMED: { labelKey: 'workflow.task.status.CLAIMED', type: 'primary' },
+  COMPLETED: { labelKey: 'workflow.task.status.COMPLETED', type: 'success' },
+  REJECTED: { labelKey: 'workflow.task.status.REJECTED', type: 'danger' },
+  SKIPPED: { labelKey: 'workflow.task.status.SKIPPED', type: 'info' },
+  CANCELLED: { labelKey: 'workflow.task.status.CANCELLED', type: 'info' },
+  TIMEOUT: { labelKey: 'workflow.task.status.TIMEOUT', type: 'danger' },
+  DELEGATED: { labelKey: 'workflow.task.status.DELEGATED', type: 'info' },
+  FROZEN: { labelKey: 'workflow.task.status.FROZEN', type: 'info' },
 }
 
 /** 流程实例状态标签 */
 export function instanceStatusLabel(s: string): string {
-  return instanceStatusMap[s]?.label || s
+  const entry = instanceStatusMap[s]
+  return entry ? i18n.global.t(entry.labelKey) : s
 }
 
 /** 流程实例状态类型 */
 export function instanceStatusType(s: string): string {
-  return instanceStatusMap[s]?.type || 'info'
+  return instanceStatusMap[s]?.type ?? 'info'
 }
 
 /** 任务状态标签与类型 */
 export function taskStatusLabel(s: string): { label: string; type: string } {
-  return taskStatusMap[s] || { label: s, type: 'info' }
+  const entry = taskStatusMap[s]
+  return entry
+    ? { label: i18n.global.t(entry.labelKey), type: entry.type }
+    : { label: s, type: 'info' }
 }
 
 /** 格式化时间（YYYY-MM-DD HH:mm） */
@@ -697,12 +704,12 @@ export function formatTime(s?: string): string {
 export function durationLabel(ms?: number): string {
   if (!ms || ms <= 0) return '-'
   const s = Math.floor(ms / 1000)
-  if (s < 60) return `${s}秒`
+  if (s < 60) return i18n.global.t('workflow.approval.duration.second', { n: s })
   const m = Math.floor(s / 60)
-  if (m < 60) return `${m}分`
+  if (m < 60) return i18n.global.t('workflow.approval.duration.minute', { n: m })
   const h = Math.floor(m / 60)
-  if (h < 24) return `${h}时${m % 60}分`
-  return `${Math.floor(h / 24)}天`
+  if (h < 24) return i18n.global.t('workflow.approval.duration.hour', { n: h, m: m % 60 })
+  return i18n.global.t('workflow.approval.duration.day', { n: Math.floor(h / 24) })
 }
 
 /** 是否已超时 */

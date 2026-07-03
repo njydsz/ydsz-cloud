@@ -93,12 +93,12 @@ const form = reactive<Partial<OpportunityVO> & { id?: number }>({
   estimatedAmount: undefined,
 })
 
-const formRules = {
-  opportunityCode: [{ required: true, message: '商机编码必填', trigger: 'blur' }],
-  opportunityName: [{ required: true, message: '商机名称必填', trigger: 'blur' }],
-  customerId: [{ required: true, message: '客户 ID 必填', trigger: 'blur' }],
-  ownerId: [{ required: true, message: '负责人 ID 必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  opportunityCode: [{ required: true, message: t('project.opportunity.rules.opportunityCodeRequired'), trigger: 'blur' }],
+  opportunityName: [{ required: true, message: t('project.opportunity.rules.opportunityNameRequired'), trigger: 'blur' }],
+  customerId: [{ required: true, message: t('project.opportunity.rules.customerIdRequired'), trigger: 'blur' }],
+  ownerId: [{ required: true, message: t('project.opportunity.rules.ownerIdRequired'), trigger: 'blur' }],
+}))
 
 /** 打开新增商机弹窗，重置表单为初始值 */
 function openCreate() {

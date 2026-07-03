@@ -9,6 +9,7 @@
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import { useECharts } from '@/composables/useECharts'
 import {
   getExecutiveOverview,
@@ -23,6 +24,25 @@ import type {
 } from '@/api/execution/cockpit/types'
 
 defineOptions({ name: 'ExecutiveOverview' })
+
+const { t } = useI18n()
+
+/**
+ * 解析后端返回的 i18n 消息键
+ * 后端 inferGroupName() 返回格式：cockpit.group.reserve|3 或 cockpit.group.unclassified
+ * 前端根据 key 翻译并填充 {level} 参数
+ */
+function resolveGroupName(name: string | undefined | null): string {
+  if (!name) return '-'
+  if (name.startsWith('cockpit.group.')) {
+    const [key, level] = name.split('|')
+    if (level) {
+      return t(key, { level })
+    }
+    return t(key)
+  }
+  return name
+}
 
 // ========== 状态 ==========
 const loading = ref(false)
@@ -42,42 +62,42 @@ const kpiCards = computed(() => {
   return [
     {
       key: 'projects',
-      label: '在执行项目',
+      label: t('executive.kpi.activeProjects'),
       value: e.activeProjects ?? 0,
-      unit: '个',
+      unit: t('executive.kpi.unitProjects'),
       tone: 'primary' as const,
     },
     {
       key: 'contract',
-      label: '合同总额',
+      label: t('executive.kpi.totalContractAmount'),
       value: fmtYuan(e.totalContractAmount),
-      unit: '元',
+      unit: t('executive.kpi.unitYuan'),
       tone: 'primary' as const,
     },
     {
       key: 'revenue',
-      label: '已确认收入',
+      label: t('executive.kpi.confirmedRevenue'),
       value: fmtYuan(e.confirmedRevenue),
-      unit: '元',
+      unit: t('executive.kpi.unitYuan'),
       tone: 'success' as const,
     },
     {
       key: 'cost',
-      label: '累计成本',
+      label: t('executive.kpi.totalCost'),
       value: fmtYuan(e.totalCost),
-      unit: '元',
+      unit: t('executive.kpi.unitYuan'),
       tone: 'warning' as const,
     },
     {
       key: 'profit',
-      label: '累计毛利',
+      label: t('executive.kpi.grossProfit'),
       value: fmtYuan(e.grossProfit),
-      unit: '元',
+      unit: t('executive.kpi.unitYuan'),
       tone: (e.grossProfit ?? 0) >= 0 ? ('success' as const) : ('danger' as const),
     },
     {
       key: 'margin',
-      label: '平均毛利率',
+      label: t('executive.kpi.grossMargin'),
       value: pct1(e.grossMargin),
       unit: '',
       tone: ((e.grossMargin ?? 0) >= 0.15 ? 'success' : (e.grossMargin ?? 0) >= 0.05 ? 'warning' : 'danger') as
@@ -87,16 +107,16 @@ const kpiCards = computed(() => {
     },
     {
       key: 'util',
-      label: '可计费利用率',
+      label: t('executive.kpi.billableUtilization'),
       value: pct1(e.avgBillableUtilization),
       unit: '',
       tone: ((e.avgBillableUtilization ?? 0) >= 0.7 ? 'success' : 'warning') as 'success' | 'warning',
     },
     {
       key: 'bench',
-      label: 'Bench 闲置成本',
+      label: t('executive.kpi.benchIdleCost'),
       value: fmtYuan(e.benchIdleCost),
-      unit: '元',
+      unit: t('executive.kpi.unitYuan'),
       tone: ((e.benchIdleCost ?? 0) > 500_000 ? 'warning' : 'success') as 'warning' | 'success',
     },
   ]
@@ -119,19 +139,19 @@ const updateTrendChart = () => {
   setTrendOption(
     {
       tooltip: { trigger: 'axis' },
-      legend: { data: ['合同总额', '已确认收入', '毛利'] },
+      legend: { data: [t('executive.chart.legendContract'), t('executive.chart.legendRevenue'), t('executive.chart.legendProfit')] },
       grid: { left: 50, right: 30, top: 40, bottom: 30 },
       xAxis: { type: 'category', data: t.periods || [] },
       yAxis: [
-        { type: 'value', name: '金额（元）', position: 'left' },
-        { type: 'value', name: '毛利率（%）', position: 'right', min: 0, max: 100 },
+        { type: 'value', name: t('executive.chart.yAxisAmount'), position: 'left' },
+        { type: 'value', name: t('executive.chart.yAxisMarginPct'), position: 'right', min: 0, max: 100 },
       ],
       series: [
-        { name: '合同总额', type: 'bar', data: t.contractAmountSeries || [], yAxisIndex: 0, itemStyle: { color: '#409EFF' } },
-        { name: '已确认收入', type: 'bar', data: t.confirmedRevenueSeries || [], yAxisIndex: 0, itemStyle: { color: '#67C23A' } },
-        { name: '毛利', type: 'line', data: t.grossProfitSeries || [], yAxisIndex: 0, smooth: true, itemStyle: { color: '#E6A23C' } },
+        { name: t('executive.chart.legendContract'), type: 'bar', data: t.contractAmountSeries || [], yAxisIndex: 0, itemStyle: { color: '#409EFF' } },
+        { name: t('executive.chart.legendRevenue'), type: 'bar', data: t.confirmedRevenueSeries || [], yAxisIndex: 0, itemStyle: { color: '#67C23A' } },
+        { name: t('executive.chart.legendProfit'), type: 'line', data: t.grossProfitSeries || [], yAxisIndex: 0, smooth: true, itemStyle: { color: '#E6A23C' } },
         {
-          name: '毛利率',
+          name: t('executive.chart.legendMargin'),
           type: 'line',
           data: t.grossMarginPctSeries || [],
           yAxisIndex: 1,
@@ -151,19 +171,19 @@ const { setOption: setGroupOption } = useECharts(groupRef)
 const updateGroupChart = () => {
   const groups = executive.value?.projectGroups || []
   if (groups.length === 0) return
-  const groupNames = groups.map((g: ProjectGroupKpiDTO) => g.groupName || g.groupCode || '-')
+  const groupNames = groups.map((g: ProjectGroupKpiDTO) => resolveGroupName(g.groupName) || g.groupCode || '-')
   const contractData = groups.map((g: ProjectGroupKpiDTO) => Number(g.totalContractAmount || 0))
   const profitData = groups.map((g: ProjectGroupKpiDTO) => Number(g.grossProfit || 0))
   setGroupOption(
     {
       tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
-      legend: { data: ['合同总额', '毛利'] },
+      legend: { data: [t('executive.chart.legendContract'), t('executive.chart.legendProfit')] },
       grid: { left: 60, right: 30, top: 40, bottom: 60 },
       xAxis: { type: 'category', data: groupNames, axisLabel: { rotate: 30 } },
-      yAxis: { type: 'value', name: '金额（元）' },
+      yAxis: { type: 'value', name: t('executive.chart.yAxisAmount') },
       series: [
-        { name: '合同总额', type: 'bar', data: contractData, itemStyle: { color: '#409EFF' } },
-        { name: '毛利', type: 'bar', data: profitData, itemStyle: { color: '#67C23A' } },
+        { name: t('executive.chart.legendContract'), type: 'bar', data: contractData, itemStyle: { color: '#409EFF' } },
+        { name: t('executive.chart.legendProfit'), type: 'bar', data: profitData, itemStyle: { color: '#67C23A' } },
       ],
     } as any,
     true,
@@ -189,7 +209,7 @@ async function loadAll() {
     updateTrendChart()
     updateGroupChart()
   } catch (err) {
-    ElMessage.error('高管看板加载失败：' + (err as Error).message)
+    ElMessage.error(t('executive.messages.loadFailed', { message: (err as Error).message }))
   } finally {
     loading.value = false
   }
@@ -250,21 +270,21 @@ onBeforeUnmount(() => stopPolling())
     <el-card shadow="never" class="header-card">
       <div class="header-row">
         <div>
-          <div class="page-title">高管看板</div>
-          <div class="page-subtitle">公司级核心 KPI · 健康度评分 · 项目群对比</div>
+          <div class="page-title">{{ t('executive.title') }}</div>
+          <div class="page-subtitle">{{ t('executive.subtitle') }}</div>
         </div>
         <div class="header-right">
           <el-tag v-if="lastUpdated" type="info" effect="plain" size="small">
-            最后更新：{{ lastUpdated }}
+            {{ t('executive.lastUpdated', { time: lastUpdated }) }}
           </el-tag>
           <el-switch
             v-model="autoRefresh"
             inline-prompt
-            active-text="自动刷新"
-            inactive-text="手动"
+            :active-text="t('executive.autoRefresh')"
+            :inactive-text="t('executive.manual')"
             @change="toggleAutoRefresh"
           />
-          <el-button :icon="'Refresh'" :loading="loading" @click="loadAll">立即刷新</el-button>
+          <el-button :icon="'Refresh'" :loading="loading" @click="loadAll">{{ t('executive.refreshNow') }}</el-button>
         </div>
       </div>
     </el-card>
@@ -284,7 +304,7 @@ onBeforeUnmount(() => stopPolling())
       <el-col :xs="24" :md="8">
         <el-card shadow="never" class="health-card">
           <template #header>
-            <span>综合健康度</span>
+            <span>{{ t('executive.health.title') }}</span>
             <el-tag :type="executive?.healthGrade === 'D' ? 'danger' : 'success'" effect="dark" size="small" style="margin-left: 8px">
               {{ executive?.healthGrade || '-' }}
             </el-tag>
@@ -293,21 +313,21 @@ onBeforeUnmount(() => stopPolling())
             {{ executive?.healthScore?.toFixed(0) || 0 }}
           </div>
           <div class="health-tip">
-            <div>健康占比：{{ pct1(executive?.healthRatio) }}</div>
-            <div>风险项目：{{ executive?.riskProjectCount ?? 0 }} 个（占比 {{ pct1(executive?.riskProjectRatio) }}）</div>
-            <div>EVM：红 {{ executive?.evmRedCount ?? 0 }} / 黄 {{ executive?.evmYellowCount ?? 0 }} / 绿 {{ executive?.evmGreenCount ?? 0 }}</div>
+            <div>{{ t('executive.health.healthRatio', { ratio: pct1(executive?.healthRatio) }) }}</div>
+            <div>{{ t('executive.health.riskProjects', { count: executive?.riskProjectCount ?? 0, ratio: pct1(executive?.riskProjectRatio) }) }}</div>
+            <div>{{ t('executive.health.evmStats', { red: executive?.evmRedCount ?? 0, yellow: executive?.evmYellowCount ?? 0, green: executive?.evmGreenCount ?? 0 }) }}</div>
           </div>
         </el-card>
       </el-col>
       <el-col :xs="24" :md="16">
         <el-card shadow="never" class="alert-card">
           <template #header>
-            <span>异常预警</span>
-            <el-tag v-if="alert" type="danger" effect="dark" size="small" style="margin-left: 8px">红 {{ alert.redCount }}</el-tag>
-            <el-tag v-if="alert" type="warning" effect="dark" size="small" style="margin-left: 4px">黄 {{ alert.yellowCount }}</el-tag>
-            <el-tag v-if="alert" type="info" effect="plain" size="small" style="margin-left: 4px">共 {{ alert.totalCount }}</el-tag>
+            <span>{{ t('executive.alert.title') }}</span>
+            <el-tag v-if="alert" type="danger" effect="dark" size="small" style="margin-left: 8px">{{ t('executive.alert.red', { count: alert.redCount }) }}</el-tag>
+            <el-tag v-if="alert" type="warning" effect="dark" size="small" style="margin-left: 4px">{{ t('executive.alert.yellow', { count: alert.yellowCount }) }}</el-tag>
+            <el-tag v-if="alert" type="info" effect="plain" size="small" style="margin-left: 4px">{{ t('executive.alert.total', { count: alert.totalCount }) }}</el-tag>
           </template>
-          <el-empty v-if="!alert || alert.totalCount === 0" description="当前无触发预警" :image-size="60" />
+          <el-empty v-if="!alert || alert.totalCount === 0" :description="t('executive.alert.empty')" :image-size="60" />
           <ul v-else class="alert-list">
             <li v-for="ev in alert.events.slice(0, 5)" :key="ev.eventId" class="alert-item">
               <el-tag :type="severityTag(ev.severity)" effect="dark" size="small">{{ ev.severity }}</el-tag>
@@ -322,12 +342,12 @@ onBeforeUnmount(() => stopPolling())
     <!-- KPI 趋势 + 项目群对比 -->
     <el-row :gutter="16" style="margin-top: 16px">
       <el-col :xs="24" :md="14">
-        <el-card shadow="never" header="KPI 月度趋势（最近 12 月）">
+        <el-card shadow="never" :header="t('executive.chart.trendTitle')">
           <div ref="trendRef" class="chart-area" style="height: 320px" />
         </el-card>
       </el-col>
       <el-col :xs="24" :md="10">
-        <el-card shadow="never" header="项目群对比">
+        <el-card shadow="never" :header="t('executive.chart.groupTitle')">
           <div ref="groupRef" class="chart-area" style="height: 320px" />
         </el-card>
       </el-col>

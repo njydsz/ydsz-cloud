@@ -15,6 +15,7 @@
  */
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
 import type { EChartsOption } from 'echarts'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { formatDate } from '@/utils/format'
@@ -23,6 +24,8 @@ import type { KpiTrendVO } from '@/api/execution/cockpit'
 import { getCockpitAlertTopN } from '@/api/execution/alert'
 import { useECharts } from '@/composables/useECharts'
 import { isHandledError } from '@/utils/error'
+
+const { t } = useI18n()
 
 // ===== 数据状态 =====
 /** Cockpit KPI 数据结构 */
@@ -69,6 +72,13 @@ const { setOption: setAlertTopNOption } = useECharts(alertTopNRef)
 
 // ===== 格式化辅助 =====
 const userStore = useUserStore()
+/** 根据当前时间返回问候语 */
+const greeting = computed(() => {
+  const h = new Date().getHours()
+  if (h < 12) return t('dashboard.welcome.greetingMorning')
+  if (h < 18) return t('dashboard.welcome.greetingAfternoon')
+  return t('dashboard.welcome.greetingEvening')
+})
 /** 元转万元（保留 1 位小数） */
 const yuanToWan = (v: number | undefined) => {
   const n = Number(v ?? 0)
@@ -84,32 +94,32 @@ const fmtPercent = (v: number | undefined) => {
 /** 顶部 4 个 KPI 卡片数据 */
 const metrics = computed(() => [
   {
-    title: '活跃项目数',
+    title: t('dashboard.metrics.activeProjects'),
     value: String(kpi.value?.activeProjectCount ?? 0),
-    unit: '个',
+    unit: t('dashboard.unit.count'),
     color: '#1890ff',
     icon: 'Document',
   },
   {
-    title: '本月合同额',
+    title: t('dashboard.metrics.monthlyContractAmount'),
     value: yuanToWan(kpi.value?.totalRevenue),
-    unit: '万',
+    unit: t('dashboard.unit.tenThousand'),
     color: '#52c41a',
     icon: 'Money',
   },
   {
-    title: '已确认收入',
+    title: t('dashboard.metrics.recognizedRevenue'),
     value: yuanToWan(kpi.value?.recognizedRevenue),
-    unit: '万',
+    unit: t('dashboard.unit.tenThousand'),
     color: '#722ed1',
     icon: 'TrendCharts',
   },
   {
-    title: '本月毛利',
+    title: t('dashboard.metrics.monthlyGrossProfit'),
     value: yuanToWan(kpi.value?.totalGrossProfit),
-    unit: '万',
+    unit: t('dashboard.unit.tenThousand'),
     color: '#fa8c16',
-    sub: `毛利率 ${fmtPercent(kpi.value?.grossMargin)}`,
+    sub: t('dashboard.metrics.grossMargin', { rate: fmtPercent(kpi.value?.grossMargin) }),
     icon: 'DataAnalysis',
   },
 ])
@@ -117,21 +127,21 @@ const metrics = computed(() => [
 // ===== 图表 option 工厂 =====
 /** 项目健康度饼图 option */
 const healthOption = computed<EChartsOption>(() => ({
-  title: { text: '项目健康度分布', left: 'center', textStyle: { fontSize: 14 } },
+  title: { text: t('dashboard.charts.healthTitle'), left: 'center', textStyle: { fontSize: 14 } },
   tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
   legend: { bottom: 0, left: 'center' },
   series: [
     {
-      name: '健康度',
+      name: t('dashboard.charts.health'),
       type: 'pie',
       radius: ['38%', '70%'],
       avoidLabelOverlap: true,
       itemStyle: { borderRadius: 4, borderColor: '#fff', borderWidth: 2 },
       label: { show: true, formatter: '{b}\n{c}' },
       data: [
-        { name: '正常', value: kpi.value?.normalProjects ?? 18, itemStyle: { color: '#67c23a' } },
-        { name: '黄色', value: kpi.value?.yellowProjects ?? 7, itemStyle: { color: '#e6a23c' } },
-        { name: '红色', value: kpi.value?.redProjects ?? 3, itemStyle: { color: '#f56c6c' } },
+        { name: t('dashboard.charts.normal'), value: kpi.value?.normalProjects ?? 18, itemStyle: { color: '#67c23a' } },
+        { name: t('dashboard.charts.yellow'), value: kpi.value?.yellowProjects ?? 7, itemStyle: { color: '#e6a23c' } },
+        { name: t('dashboard.charts.red'), value: kpi.value?.redProjects ?? 3, itemStyle: { color: '#f56c6c' } },
       ],
     },
   ],
@@ -147,22 +157,22 @@ const trendOption = computed<EChartsOption>(() => {
     const baseDate = new Date(period.value + '-01')
     for (let i = 5; i >= 0; i--) {
       const d = new Date(baseDate.getFullYear(), baseDate.getMonth() - i, 1)
-      months.push(`${d.getMonth() + 1}月`)
+      months.push(t('dashboard.charts.monthSuffix', { n: d.getMonth() + 1 }))
     }
   }
   // 收入/毛利序列来自后端 kpi-trend 接口（已确认收入 / 毛利）
   const revenueSeries = trendData.value?.confirmedRevenueSeries ?? []
   const profitSeries = trendData.value?.grossProfitSeries ?? []
   return {
-    title: { text: '近 6 月收入/毛利趋势', left: 'center', textStyle: { fontSize: 14 } },
+    title: { text: t('dashboard.charts.trendTitle'), left: 'center', textStyle: { fontSize: 14 } },
     tooltip: { trigger: 'axis' },
-    legend: { data: ['收入', '毛利'], top: 30 },
+    legend: { data: [t('dashboard.charts.revenue'), t('dashboard.charts.profit')], top: 30 },
     grid: { top: 80, left: 50, right: 30, bottom: 30 },
     xAxis: { type: 'category', data: months, boundaryGap: false },
-    yAxis: { type: 'value', name: '万元' },
+    yAxis: { type: 'value', name: t('dashboard.charts.unitTenThousandYuan') },
     series: [
       {
-        name: '收入',
+        name: t('dashboard.charts.revenue'),
         type: 'line',
         smooth: true,
         symbolSize: 8,
@@ -171,7 +181,7 @@ const trendOption = computed<EChartsOption>(() => {
         areaStyle: { opacity: 0.15 },
       },
       {
-        name: '毛利',
+        name: t('dashboard.charts.profit'),
         type: 'line',
         smooth: true,
         symbolSize: 8,
@@ -185,11 +195,11 @@ const trendOption = computed<EChartsOption>(() => {
 
 /** EVM 健康度柱图 option */
 const evmOption = computed<EChartsOption>(() => ({
-  title: { text: 'EVM 健康度分布', left: 'center', textStyle: { fontSize: 14 } },
+  title: { text: t('dashboard.charts.evmTitle'), left: 'center', textStyle: { fontSize: 14 } },
   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
   grid: { top: 50, left: 40, right: 20, bottom: 30 },
-  xAxis: { type: 'category', data: ['正常', '黄色预警', '红色预警'] },
-  yAxis: { type: 'value', name: '项目数' },
+  xAxis: { type: 'category', data: [t('dashboard.charts.normal'), t('dashboard.charts.yellowAlert'), t('dashboard.charts.redAlert')] },
+  yAxis: { type: 'value', name: t('dashboard.charts.projectCount') },
   series: [
     {
       type: 'bar',
@@ -215,10 +225,10 @@ interface AlertTopNItem {
 const alertTopN = ref<AlertTopNItem[]>([])
 /** 预警 TOP 5 横向柱图 option */
 const alertTopNOption = computed<EChartsOption>(() => ({
-  title: { text: '预警项目 TOP 5', left: 'center', textStyle: { fontSize: 14 } },
+  title: { text: t('dashboard.charts.alertTopNTitle'), left: 'center', textStyle: { fontSize: 14 } },
   tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
   grid: { top: 50, left: 100, right: 30, bottom: 30 },
-  xAxis: { type: 'value', name: '预警数' },
+  xAxis: { type: 'value', name: t('dashboard.charts.alertCount') },
   yAxis: {
     type: 'category',
     data: alertTopN.value.map((a) => a.projectName || a.projectCode),
@@ -246,7 +256,7 @@ async function loadOverview() {
   } catch (e) {
     kpi.value = null
     if (!isHandledError(e)) {
-      ElMessage.error('数据加载失败，请刷新重试')
+      ElMessage.error(t('dashboard.messages.loadFailed'))
     }
   } finally {
     loading.value = false
@@ -261,7 +271,7 @@ async function loadAlertTopN() {
   } catch (e) {
     alertTopN.value = []
     if (!isHandledError(e)) {
-      ElMessage.error('预警数据加载失败，请刷新重试')
+      ElMessage.error(t('dashboard.messages.alertLoadFailed'))
     }
   }
 }
@@ -274,7 +284,7 @@ async function loadTrendData() {
   } catch (e) {
     trendData.value = null
     if (!isHandledError(e)) {
-      ElMessage.error('趋势数据加载失败')
+      ElMessage.error(t('dashboard.messages.trendLoadFailed'))
     }
   }
 }
@@ -335,8 +345,8 @@ onMounted(async () => {
     <el-card class="welcome-card" shadow="never">
       <div class="welcome-content">
         <div>
-          <h2>下午好,{{ userStore.realName || userStore.username }}!</h2>
-          <p>欢迎使用 PMIS 项目运营管理系统 · 当前时间: {{ formatDate(new Date(), 'YYYY-MM-DD HH:mm') }}</p>
+          <h2>{{ greeting }},{{ userStore.realName || userStore.username }}!</h2>
+          <p>{{ t('dashboard.welcome.text', { time: formatDate(new Date(), 'YYYY-MM-DD HH:mm') }) }}</p>
         </div>
         <el-icon class="welcome-icon" :size="60"><Sunny /></el-icon>
       </div>
@@ -352,7 +362,7 @@ onMounted(async () => {
           :value="opt.value"
         />
       </el-select>
-      <el-button :loading="loading" @click="refreshAll">刷新</el-button>
+      <el-button :loading="loading" @click="refreshAll">{{ t('common.refresh') }}</el-button>
     </div>
 
     <el-row :gutter="16" class="metric-row">
@@ -391,28 +401,28 @@ onMounted(async () => {
         <el-card shadow="never">
           <template #header>
             <div class="card-header">
-              <span>关键指标</span>
+              <span>{{ t('dashboard.keyMetrics.title') }}</span>
             </div>
           </template>
           <el-scrollbar height="280px">
             <div class="kpi-mini">
-              <span class="kpi-mini-label">毛利率</span>
+              <span class="kpi-mini-label">{{ t('dashboard.keyMetrics.grossMargin') }}</span>
               <span class="kpi-mini-value">{{ fmtPercent(kpi?.grossMargin) }}</span>
             </div>
             <div class="kpi-mini">
-              <span class="kpi-mini-label">平均可计费利用率</span>
+              <span class="kpi-mini-label">{{ t('dashboard.keyMetrics.avgUtilization') }}</span>
               <span class="kpi-mini-value">{{ fmtPercent(kpi?.avgUtilization) }}</span>
             </div>
             <div class="kpi-mini">
-              <span class="kpi-mini-label">空闲成本</span>
-              <span class="kpi-mini-value">{{ yuanToWan(kpi?.benchIdleCost) }} 万</span>
+              <span class="kpi-mini-label">{{ t('dashboard.keyMetrics.benchIdleCost') }}</span>
+              <span class="kpi-mini-value">{{ yuanToWan(kpi?.benchIdleCost) }} {{ t('dashboard.unit.tenThousand') }}</span>
             </div>
             <div class="kpi-mini">
-              <span class="kpi-mini-label">EVM 红色预警</span>
+              <span class="kpi-mini-label">{{ t('dashboard.keyMetrics.evmRedAlert') }}</span>
               <span class="kpi-mini-value danger">{{ kpi?.evmRedCount ?? 0 }}</span>
             </div>
             <div class="kpi-mini">
-              <span class="kpi-mini-label">EVM 黄色预警</span>
+              <span class="kpi-mini-label">{{ t('dashboard.keyMetrics.evmYellowAlert') }}</span>
               <span class="kpi-mini-value warn">{{ kpi?.evmYellowCount ?? 0 }}</span>
             </div>
           </el-scrollbar>

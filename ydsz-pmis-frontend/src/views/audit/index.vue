@@ -220,10 +220,10 @@ onMounted(fetchOperation)
         <div class="search-bar">
           <el-form inline :model="opQuery" @submit.prevent>
             <el-form-item :label="$t('audit.search.module')">
-              <el-input v-model="opQuery.module" placeholder="如 project" clearable />
+              <el-input v-model="opQuery.module" :placeholder="$t('audit.search.modulePlaceholder')" clearable />
             </el-form-item>
             <el-form-item :label="$t('audit.search.bizType')">
-              <el-input v-model="opQuery.bizType" placeholder="如 opportunity" clearable />
+              <el-input v-model="opQuery.bizType" :placeholder="$t('audit.search.bizTypePlaceholder')" clearable />
             </el-form-item>
             <el-form-item :label="$t('audit.search.status')">
               <el-select v-model="opQuery.status" clearable :placeholder="$t('common.all')" style="width: 110px">
@@ -345,7 +345,7 @@ onMounted(fetchOperation)
         <div class="search-bar">
           <el-form inline :model="soQuery" @submit.prevent>
             <el-form-item :label="$t('audit.search.opType')">
-              <el-input v-model="soQuery.opType" placeholder="如 BATCH_DELETE" clearable />
+              <el-input v-model="soQuery.opType" :placeholder="$t('audit.search.opTypePlaceholder')" clearable />
             </el-form-item>
             <el-form-item :label="$t('audit.search.userId')">
               <el-input-number v-model="soQuery.userId" :min="0" :controls="false" style="width: 120px" />
@@ -398,10 +398,10 @@ onMounted(fetchOperation)
         <div class="search-bar">
           <el-form inline :model="exQuery" @submit.prevent>
             <el-form-item :label="$t('audit.search.exportModule')">
-              <el-input v-model="exQuery.exportModule" placeholder="如 report" clearable />
+              <el-input v-model="exQuery.exportModule" :placeholder="$t('audit.search.exportModulePlaceholder')" clearable />
             </el-form-item>
             <el-form-item :label="$t('audit.search.exportAction')">
-              <el-input v-model="exQuery.exportAction" placeholder="如 export_excel" clearable />
+              <el-input v-model="exQuery.exportAction" :placeholder="$t('audit.search.exportActionPlaceholder')" clearable />
             </el-form-item>
             <el-form-item :label="$t('audit.search.userId')">
               <el-input-number v-model="exQuery.userId" :min="0" :controls="false" style="width: 120px" />

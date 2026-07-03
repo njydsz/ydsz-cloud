@@ -27,6 +27,33 @@ const router = useRouter()
 /** 已访问的标签列表 */
 const tags = ref<TagItem[]>([])
 
+/** localStorage 存储键 */
+const STORAGE_KEY = 'pmis_tags_view'
+
+/** 从 localStorage 恢复标签列表 */
+function restoreTags(): void {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored) as TagItem[]
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        tags.value = parsed
+      }
+    }
+  } catch {
+    // localStorage 读取失败时静默忽略
+  }
+}
+
+/** 持久化标签列表到 localStorage（仅非固定标签） */
+function persistTags(): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(tags.value))
+  } catch {
+    // 存储空间不足时静默忽略
+  }
+}
+
 /** 已访问视图（响应式别名） */
 const visitedViews = computed(() => tags.value)
 
@@ -44,6 +71,7 @@ function addTag(): void {
       })(),
       affix: !!route.meta?.affix,
     })
+    persistTags()
   }
 }
 
@@ -58,11 +86,15 @@ function closeTag(tag: TagItem): void {
   const idx = tags.value.findIndex((t) => t.path === tag.path)
   if (idx === -1) return
   tags.value.splice(idx, 1)
+  persistTags()
   if (tag.path === route.path) {
     const last = tags.value[tags.value.length - 1]
     router.push(last ? last.fullPath : '/')
   }
 }
+
+// 初始化时恢复持久化的标签
+restoreTags()
 
 // 路由变化时自动添加标签
 watch(route, addTag, { immediate: true })

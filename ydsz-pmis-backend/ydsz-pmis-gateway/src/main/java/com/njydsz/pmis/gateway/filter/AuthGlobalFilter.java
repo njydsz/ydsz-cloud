@@ -114,20 +114,20 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         // 提取 Token
         String authHeader = request.getHeaders().getFirst("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return unauthorized(exchange, traceId, "缺少认证 Token");
+            return unauthorized(exchange, traceId, "error.UNAUTHORIZED");
         }
         String jwt = authHeader.substring(7);
 
         // 验证 Token
         if (!jwtTokenProvider.validateToken(jwt)) {
-            return unauthorized(exchange, traceId, "Token 无效或已过期");
+            return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
         }
 
         // 黑名单检查
         return redisTemplate.hasKey(TOKEN_BLACKLIST_PREFIX + jwt)
                 .flatMap(blacklisted -> {
                     if (Boolean.TRUE.equals(blacklisted)) {
-                        return unauthorized(exchange, traceId, "Token 已失效,请重新登录");
+                        return unauthorized(exchange, traceId, "error.TOKEN_EXPIRED");
                     }
                     // 解析 Claims
                     Claims claims;
@@ -135,12 +135,12 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                         claims = jwtTokenProvider.parseClaims(jwt);
                     } catch (Exception e) {
                         log.warn("[AuthFilter] 解析 JWT 失败: {}", e.getMessage());
-                        return unauthorized(exchange, traceId, "Token 解析失败");
+                        return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
                     }
 
                     String type = claims.get("type", String.class);
                     if (!"access".equals(type)) {
-                        return unauthorized(exchange, traceId, "非访问 Token");
+                        return unauthorized(exchange, traceId, "error.TOKEN_INVALID");
                     }
 
                     Long userId = Long.parseLong(claims.getSubject());

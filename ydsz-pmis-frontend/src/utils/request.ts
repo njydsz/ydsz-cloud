@@ -30,6 +30,24 @@ import { useUserStore } from '@/store/modules/user'
 import { getToken, getRefreshToken, setToken } from './auth'
 import { generateTraceId } from './trace'
 import { BizException, HttpException } from './error'
+import i18n from '@/locales'
+
+/**
+ * 解析后端返回的错误消息：如果消息是 i18n key（以 "error." 开头），
+ * 通过 vue-i18n 翻译为当前语言；否则原样返回。
+ */
+function resolveErrorMessage(msg?: string): string {
+  if (!msg) return i18n.global.t('request.requestFailed')
+  if (msg.startsWith('error.')) {
+    // 后端返回的 i18n key，如 "error.UNAUTHORIZED"
+    const key = msg.substring(6) // 去掉 "error." 前缀
+    return i18n.global.t(`error.${key}`) || msg
+  }
+  if (msg.startsWith('validation.')) {
+    return i18n.global.t(msg) || msg
+  }
+  return msg
+}
 
 // 类型统一从 @/types/api 导入，避免重复定义
 export type { ApiResponse, PageData, PageQuery, PagedApiResponse } from '@/types/api'
@@ -74,7 +92,7 @@ function showLoading(): void {
   if (loadingCount === 1) {
     loadingInstance = ElLoading.service({
       lock: true,
-      text: '加载中...',
+      text: i18n.global.t('request.loading'),
       background: 'rgba(0, 0, 0, 0.05)',
     })
   }
@@ -177,7 +195,7 @@ service.interceptors.response.use(
     // 刷新 Token 请求自身返回业务错误：静默拒绝（handled=false），
     // 由调用方 doRefreshToken 的 catch 统一处理跳转，避免重复弹错
     if (response.config._isRefreshTokenRequest) {
-      return Promise.reject(new BizException(res.message || '刷新失败', res.code, false))
+      return Promise.reject(new BizException(resolveErrorMessage(res.message) || i18n.global.t('request.refreshFailed'), res.code, false))
     }
 
     // Token 失效业务码：20001 未登录 / 20002 Token 过期 / 20003 Token 无效
@@ -187,8 +205,9 @@ service.interceptors.response.use(
     }
 
     // 其他业务错误：统一弹错 + 抛 BizException（handled=true 标记拦截器已处理）
-    ElMessage.error(res.message || '请求失败')
-    return Promise.reject(new BizException(res.message || '请求失败', res.code, true))
+    const errMsg = resolveErrorMessage(res.message)
+    ElMessage.error(errMsg)
+    return Promise.reject(new BizException(errMsg, res.code, true))
   },
   (error) => {
     // 非静默请求关闭全局 loading
@@ -200,7 +219,7 @@ service.interceptors.response.use(
     if (error.config?._isRefreshTokenRequest) {
       const refreshMessage = error.response?.data?.message || error.message
       return Promise.reject(
-        new HttpException(refreshMessage || '刷新失败', error.response?.status || 0, false),
+        new HttpException(resolveErrorMessage(refreshMessage) || i18n.global.t('request.refreshFailed'), error.response?.status || 0, false),
       )
     }
 
@@ -226,13 +245,13 @@ service.interceptors.response.use(
       }
       handleUnauthorized(message)
     } else if (error.code === 'ECONNABORTED') {
-      ElMessage.error('请求超时，请稍后重试')
+      ElMessage.error(i18n.global.t('request.timeout'))
     } else if (!error.response) {
-      ElMessage.error('网络连接异常，请检查网络')
+      ElMessage.error(i18n.global.t('request.networkError'))
     } else {
-      ElMessage.error(message || '网络异常')
+      ElMessage.error(resolveErrorMessage(message) || i18n.global.t('request.networkAbnormal'))
     }
-    return Promise.reject(new HttpException(message || '网络异常', status || 0, true))
+    return Promise.reject(new HttpException(resolveErrorMessage(message) || i18n.global.t('request.networkAbnormal'), status || 0, true))
   },
 )
 
@@ -278,7 +297,7 @@ function rejectPendingQueue(error: unknown): void {
 async function doRefreshToken(): Promise<string> {
   const refreshToken = getRefreshToken()
   if (!refreshToken) {
-    throw new Error('refresh token 不存在')
+    throw new Error(i18n.global.t('request.refreshTokenMissing'))
   }
 
   const res = (await service({
@@ -292,7 +311,7 @@ async function doRefreshToken(): Promise<string> {
   const newToken = res.data.accessToken || res.data.token || ''
   const newRefreshToken = res.data.refreshToken || refreshToken
   if (!newToken) {
-    throw new Error('刷新返回的 token 为空')
+    throw new Error(i18n.global.t('request.refreshTokenEmpty'))
   }
 
   // 持久化新 token（同时更新 localStorage 中的 accessToken / refreshToken）
@@ -326,7 +345,7 @@ function handleTokenExpired(config: AxiosRequestConfig, message?: string): Promi
   // 防止死循环：已刷新重试过的请求再次 401，直接跳登录
   if (config._tokenRefreshed) {
     handleUnauthorized(message)
-    return Promise.reject(new BizException(message || '登录已过期', 401, true))
+    return Promise.reject(new BizException(resolveErrorMessage(message) || i18n.global.t('request.loginExpired'), 401, true))
   }
   config._tokenRefreshed = true
 
@@ -338,7 +357,7 @@ function handleTokenExpired(config: AxiosRequestConfig, message?: string): Promi
   // 无 refresh token，无法续期，直接跳登录
   if (!getRefreshToken()) {
     handleUnauthorized(message)
-    return Promise.reject(new BizException(message || '登录已过期', 401, true))
+    return Promise.reject(new BizException(resolveErrorMessage(message) || i18n.global.t('request.loginExpired'), 401, true))
   }
 
   isRefreshing = true
@@ -353,8 +372,8 @@ function handleTokenExpired(config: AxiosRequestConfig, message?: string): Promi
     .catch((err) => {
       // 刷新失败：拒绝队列中所有请求并跳登录
       rejectPendingQueue(err)
-      handleUnauthorized('登录已过期，请重新登录')
-      return Promise.reject(new BizException('登录已过期，请重新登录', 401, true))
+      handleUnauthorized(i18n.global.t('request.loginExpiredRelogin'))
+      return Promise.reject(new BizException(i18n.global.t('request.loginExpiredRelogin'), 401, true))
     })
     .finally(() => {
       isRefreshing = false
@@ -366,7 +385,7 @@ function handleTokenExpired(config: AxiosRequestConfig, message?: string): Promi
  * @param message - 错误提示文案
  */
 function handleUnauthorized(message?: string): void {
-  ElMessage.error(message || '登录已过期，请重新登录')
+  ElMessage.error(resolveErrorMessage(message) || i18n.global.t('request.loginExpiredRelogin'))
   const userStore = useUserStore()
   userStore.clearAuth()
   const redirect = encodeURIComponent(window.location.hash.slice(1) || '/')

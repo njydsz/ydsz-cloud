@@ -60,4 +60,9 @@ export function getLocale(): LocaleType {
   return i18n.global.locale.value as LocaleType
 }
 
+// 初始化 html lang 属性（确保首次加载即正确设置）
+if (typeof document !== 'undefined') {
+  document.documentElement.setAttribute('lang', i18n.global.locale.value)
+}
+
 export default i18n

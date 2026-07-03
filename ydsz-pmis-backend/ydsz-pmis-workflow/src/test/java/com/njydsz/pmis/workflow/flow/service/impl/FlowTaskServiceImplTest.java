@@ -2,7 +2,12 @@ package com.njydsz.pmis.workflow.flow.service.impl;
 
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.service.impl.FlowInstanceServiceImpl;
+import com.njydsz.pmis.workflow.service.impl.FlowTaskBatchServiceImpl;
+import com.njydsz.pmis.workflow.service.impl.FlowTaskCompleteServiceImpl;
+import com.njydsz.pmis.workflow.service.impl.FlowTaskQueryServiceImpl;
 import com.njydsz.pmis.workflow.service.impl.FlowTaskServiceImpl;
+import com.njydsz.pmis.workflow.service.impl.FlowTaskSignServiceImpl;
+import com.njydsz.pmis.workflow.service.impl.FlowTaskSupport;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.engine.FlowAssigneeResolver;
@@ -120,11 +125,19 @@ class FlowTaskServiceImplTest {
         todoCountPushService = mock(FlowTodoCountPushService.class);
         // P2-3: Prometheus 指标 mock（测试不需要真实指标）
         flowMetrics = mock(FlowMetrics.class);
-        service = new FlowTaskServiceImpl(taskMapper, hisTaskMapper, instanceMapper,
-                instanceService, advancer, variableStrategy,
-                userMapper, auditLogMapper, nodeMapper, assigneeResolver, eventListeners,
-                eventPublisher, urgeLimiter, delegateAuthService, delegateLogMapper, slaService,
-                todoCountPushService, flowMetrics);
+        // 拆分后 FlowTaskServiceImpl 为门面，委托 4 个子 Service + 1 个共享辅助
+        FlowTaskSupport support = new FlowTaskSupport(taskMapper, auditLogMapper,
+                eventListeners, eventPublisher);
+        FlowTaskQueryServiceImpl queryService = new FlowTaskQueryServiceImpl(taskMapper,
+                hisTaskMapper, userMapper);
+        FlowTaskCompleteServiceImpl completeService = new FlowTaskCompleteServiceImpl(taskMapper,
+                instanceMapper, hisTaskMapper, instanceService, advancer, variableStrategy,
+                userMapper, nodeMapper, assigneeResolver, delegateAuthService, delegateLogMapper,
+                slaService, todoCountPushService, flowMetrics, urgeLimiter, support);
+        FlowTaskSignServiceImpl signService = new FlowTaskSignServiceImpl(taskMapper, userMapper,
+                support);
+        FlowTaskBatchServiceImpl batchService = new FlowTaskBatchServiceImpl(completeService);
+        service = new FlowTaskServiceImpl(queryService, completeService, signService, batchService);
     }
 
     // ============== createTask ==============

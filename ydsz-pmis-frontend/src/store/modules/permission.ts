@@ -19,6 +19,96 @@ import { getMenuTreeApi } from '@/api/menu'
 import type { MenuTreeNode } from '@/api/menu/types'
 
 /**
+ * 视图组件显式映射表
+ *
+ * 后端菜单返回的 component 字段（如 "dashboard/index"）映射到对应的懒加载函数。
+ * 使用显式映射替代 `@vite-ignore` 动态导入，确保 Vite 能正确分析 chunk 依赖。
+ */
+const viewModules: Record<string, () => Promise<typeof import('*.vue')>> = {
+  // 仪表盘与驾驶舱
+  'dashboard/index': () => import('@/views/dashboard/index.vue'),
+  'cockpit/index': () => import('@/views/cockpit/index.vue'),
+  // 系统管理
+  'system/user/index': () => import('@/views/system/user/index.vue'),
+  'system/role/index': () => import('@/views/system/role/index.vue'),
+  'system/menu/index': () => import('@/views/system/menu/index.vue'),
+  'system/dept/index': () => import('@/views/system/dept/index.vue'),
+  'system/dict/index': () => import('@/views/system/dict/index.vue'),
+  'system/config/index': () => import('@/views/system/config/index.vue'),
+  'system/feature-flag/index': () => import('@/views/system/feature-flag/index.vue'),
+  'system/session/index': () => import('@/views/system/session/index.vue'),
+  'system/import-export/index': () => import('@/views/system/import-export/index.vue'),
+  'chaos/index': () => import('@/views/chaos/index.vue'),
+  // 项目管理
+  'project/opportunity/index': () => import('@/views/project/opportunity/index.vue'),
+  'project/initiation/index': () => import('@/views/project/initiation/index.vue'),
+  'project/contract/index': () => import('@/views/project/contract/index.vue'),
+  'project/contract-template/index': () => import('@/views/project/contract-template/index.vue'),
+  'project/contract-change/index': () => import('@/views/project/contract-change/index.vue'),
+  'change/index': () => import('@/views/change/index.vue'),
+  // 执行管理
+  'execution/wbs-task/index': () => import('@/views/execution/wbs-task/index.vue'),
+  'execution/time-entry/index': () => import('@/views/execution/time-entry/index.vue'),
+  'execution/purchase/index': () => import('@/views/execution/purchase/index.vue'),
+  'execution/expense/index': () => import('@/views/execution/expense/index.vue'),
+  'execution/risk/index': () => import('@/views/execution/risk/index.vue'),
+  'execution/profit/index': () => import('@/views/execution/profit/index.vue'),
+  'execution/evm/index': () => import('@/views/execution/evm/index.vue'),
+  'execution/utilization/index': () => import('@/views/execution/utilization/index.vue'),
+  'execution/rate-card/index': () => import('@/views/execution/rate-card/index.vue'),
+  'execution/rate-internal/index': () => import('@/views/execution/rate-internal/index.vue'),
+  'execution/profit-simulation/index': () => import('@/views/execution/profit-simulation/index.vue'),
+  'execution/delivery/index': () => import('@/views/execution/delivery/index.vue'),
+  'execution/closure/index': () => import('@/views/execution/closure/index.vue'),
+  'execution/alert/index': () => import('@/views/execution/alert/index.vue'),
+  'execution/reconcile/index': () => import('@/views/execution/reconcile/index.vue'),
+  'execution/rule-engine/index': () => import('@/views/execution/rule-engine/index.vue'),
+  // 售后管理
+  'aftersales/warranty/index': () => import('@/views/aftersales/warranty/index.vue'),
+  'aftersales/ops-ticket/index': () => import('@/views/aftersales/ops-ticket/index.vue'),
+  'aftersales/satisfaction/index': () => import('@/views/aftersales/satisfaction/index.vue'),
+  // 资源管理
+  'resource/job-level/index': () => import('@/views/resource/job-level/index.vue'),
+  'resource/pool/index': () => import('@/views/resource/pool/index.vue'),
+  'resource/employee-tag/index': () => import('@/views/resource/employee-tag/index.vue'),
+  'resource/assignment/index': () => import('@/views/resource/assignment/index.vue'),
+  'resource/bench/index': () => import('@/views/resource/bench/index.vue'),
+  // 考勤
+  'attendance/index': () => import('@/views/attendance/index.vue'),
+  // 报表
+  'report/index': () => import('@/views/report/index.vue'),
+  'report/executive/index': () => import('@/views/report/executive/index.vue'),
+  // 审计
+  'audit/index': () => import('@/views/audit/index.vue'),
+  // AI 智能体
+  'agent/orchestration/index': () => import('@/views/agent/orchestration/index.vue'),
+  'agent/prediction/index': () => import('@/views/agent/prediction/index.vue'),
+  // 工作流
+  'workflow/approval-center/index': () => import('@/views/workflow/approval-center/index.vue'),
+  'workflow/design/index': () => import('@/views/workflow/design/index.vue'),
+  'workflow/instance/index': () => import('@/views/workflow/instance/index.vue'),
+  'workflow/monitor/index': () => import('@/views/workflow/monitor/index.vue'),
+  // 个人中心
+  'profile/security': () => import('@/views/profile/security.vue'),
+  // 错误页
+  'error/404': () => import('@/views/error/404.vue'),
+}
+
+/**
+ * 根据后端返回的 component 路径解析为懒加载函数。
+ * 优先从显式映射表查找，未找到时回退到 layout 组件。
+ *
+ * @param componentPath - 后端菜单的 component 字段（如 "dashboard/index"）
+ * @returns 懒加载函数
+ */
+function resolveComponent(componentPath?: string): () => Promise<unknown> {
+  if (componentPath && viewModules[componentPath]) {
+    return viewModules[componentPath]
+  }
+  return () => import('@/layout/default/index.vue')
+}
+
+/**
  * 菜单节点 → 路由转换
  *
  * 后端返回的菜单树 permType=MENU 的节点才转换为路由。
@@ -49,7 +139,7 @@ function convertMenuToRoutes(
       path: isChild ? rawPath.replace(/^\//, '') : rawPath,
       name: 'Menu_' + m.permCode.replace(/[:.]/g, '_'),
       component: m.component
-        ? () => import(/* @vite-ignore */ `@/views/${m.component}.vue`)
+        ? resolveComponent(m.component)
         : () => import('@/layout/default/index.vue'),
       meta: {
         title: m.permName,

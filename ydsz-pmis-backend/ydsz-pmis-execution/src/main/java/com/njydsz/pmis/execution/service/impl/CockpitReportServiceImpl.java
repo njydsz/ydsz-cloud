@@ -783,14 +783,14 @@ public class CockpitReportServiceImpl implements CockpitReportService {
      */
     private String inferGroupName(String levelCode) {
         if (levelCode == null || levelCode.isEmpty() || "UNKNOWN".equalsIgnoreCase(levelCode)) {
-            return "未分类项目群";
+            return "cockpit.group.unclassified";
         }
-        // 简单规则：L1-L3 储备池 / L4-L12 事业部 / L13+ 总部
+        // 返回 i18n 消息键，前端根据 cockpit.group.* 翻译并填充 {level}
         try {
             int level = Integer.parseInt(levelCode.replaceAll("[^0-9]", ""));
-            if (level >= 1 && level <= 3) return "储备池（L" + level + "）";
-            if (level >= 4 && level <= 12) return "事业部（L" + level + "）";
-            if (level >= 13) return "总部直属（L" + level + "）";
+            if (level >= 1 && level <= 3) return "cockpit.group.reserve|" + level;
+            if (level >= 4 && level <= 12) return "cockpit.group.businessUnit|" + level;
+            if (level >= 13) return "cockpit.group.headquarters|" + level;
         } catch (NumberFormatException ignore) {
             // 非数字保持原值
         }

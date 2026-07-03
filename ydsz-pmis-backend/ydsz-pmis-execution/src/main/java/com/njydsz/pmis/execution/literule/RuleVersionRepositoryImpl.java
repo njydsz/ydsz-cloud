@@ -7,6 +7,7 @@ import com.njydsz.pmis.execution.entity.RuleVersionHistoryDO;
 import com.njydsz.pmis.execution.mapper.RuleDefinitionMapper;
 import com.njydsz.pmis.execution.mapper.RuleVersionHistoryMapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.spi.RuleVersion;
 import com.njydsz.pmis.literule.spi.RuleVersionRepository;
 import lombok.RequiredArgsConstructor;

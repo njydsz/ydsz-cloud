@@ -87,11 +87,11 @@ function openOp(type: typeof opType.value) {
 
 async function submitOp() {
   if (opType.value === 'reject' && !opForm.comment.trim()) {
-    ElMessage.warning('请填写驳回意见')
+    ElMessage.warning(t('workflow.instance.messages.rejectCommentRequired'))
     return
   }
   if (opType.value === 'terminate' && !opForm.reason.trim()) {
-    ElMessage.warning('请填写终止原因')
+    ElMessage.warning(t('workflow.instance.messages.terminateReasonRequired'))
     return
   }
   try {
@@ -119,24 +119,24 @@ async function submitOp() {
       res = await urgeTask({ instanceId: instanceId.value, comment: opForm.comment })
     }
     if (res?.data?.code === 0) {
-      ElMessage.success('操作成功')
+      ElMessage.success(t('common.success'))
       opDialog.value = false
       loadAll()
     } else {
-      ElMessage.error(res?.data?.message || '操作失败')
+      ElMessage.error(res?.data?.message || t('common.failed'))
     }
   } catch (e) {
-    ElMessage.error('操作失败：' + (e as Error).message)
+    ElMessage.error(t('workflow.instance.messages.opFailedWithMsg', { message: (e as Error).message }))
   }
 }
 
-const statusMap: Record<string, { label: string; type: string }> = {
-  RUNNING: { label: '审批中', type: 'warning' },
-  SUSPENDED: { label: '已挂起', type: 'info' },
-  COMPLETED: { label: '已完成', type: 'success' },
-  TERMINATED: { label: '已终止', type: 'danger' },
-  REJECTED: { label: '已驳回', type: 'danger' },
-}
+const statusMap = computed<Record<string, { label: string; type: string }>>(() => ({
+  RUNNING: { label: t('workflow.instance.status.RUNNING'), type: 'warning' },
+  SUSPENDED: { label: t('workflow.instance.status.SUSPENDED'), type: 'info' },
+  COMPLETED: { label: t('workflow.instance.status.COMPLETED'), type: 'success' },
+  TERMINATED: { label: t('workflow.instance.status.TERMINATED'), type: 'danger' },
+  REJECTED: { label: t('workflow.instance.status.REJECTED'), type: 'danger' },
+}))
 
 const canOperate = computed(() => {
   return instance.value && instance.value.status === 'RUNNING'
@@ -157,7 +157,7 @@ watch(() => route.query.id, () => loadAll())
     <div class="page-header">
       <el-page-header @back="$router.back()">
         <template #content>
-          <span class="header-title">流程实例详情</span>
+          <span class="header-title">{{ t('workflow.instance.headerTitle') }}</span>
         </template>
       </el-page-header>
     </div>
@@ -165,29 +165,29 @@ watch(() => route.query.id, () => loadAll())
       <el-card shadow="never">
         <div class="summary-row">
           <div class="summary-cell">
-            <div class="cell-label">流程名称</div>
+            <div class="cell-label">{{ t('workflow.instance.summary.flowName') }}</div>
             <div class="cell-value">{{ instance.flowName || instance.flowCode }}</div>
           </div>
           <div class="summary-cell">
-            <div class="cell-label">标题</div>
+            <div class="cell-label">{{ t('workflow.instance.summary.title') }}</div>
             <div class="cell-value">{{ instance.title || '-' }}</div>
           </div>
           <div class="summary-cell">
-            <div class="cell-label">业务单号</div>
+            <div class="cell-label">{{ t('workflow.instance.summary.businessNo') }}</div>
             <div class="cell-value">{{ instance.businessNo || '-' }}</div>
           </div>
           <div class="summary-cell">
-            <div class="cell-label">发起人</div>
+            <div class="cell-label">{{ t('workflow.instance.summary.initiator') }}</div>
             <div class="cell-value">{{ instance.initiatorName || instance.initiatorId || '-' }}</div>
           </div>
           <div class="summary-cell">
-            <div class="cell-label">发起时间</div>
+            <div class="cell-label">{{ t('workflow.instance.summary.startTime') }}</div>
             <div class="cell-value">
               {{ instance.startTime ? dayjs(instance.startTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
             </div>
           </div>
           <div class="summary-cell">
-            <div class="cell-label">状态</div>
+            <div class="cell-label">{{ t('workflow.instance.summary.status') }}</div>
             <div class="cell-value">
               <el-tag :type="(statusMap[instance.status]?.type as any) || 'info'" size="small">
                 {{ statusMap[instance.status]?.label || instance.status }}
@@ -195,25 +195,25 @@ watch(() => route.query.id, () => loadAll())
             </div>
           </div>
           <div class="summary-cell">
-            <div class="cell-label">当前节点</div>
+            <div class="cell-label">{{ t('workflow.instance.summary.currentNode') }}</div>
             <div class="cell-value">{{ instance.currentNodeName || '-' }}</div>
           </div>
         </div>
         <div class="summary-actions" v-if="canOperate">
           <el-button type="primary" @click="openOp('urge')">
-            <el-icon><Bell /></el-icon>催办
+            <el-icon><Bell /></el-icon>{{ t('workflow.instance.buttons.urge') }}
           </el-button>
           <el-button v-if="canSuspend" @click="openOp('suspend')">
-            <el-icon><VideoPause /></el-icon>挂起
+            <el-icon><VideoPause /></el-icon>{{ t('workflow.instance.buttons.suspend') }}
           </el-button>
           <el-button v-if="canActivate" @click="openOp('activate')">
-            <el-icon><VideoPlay /></el-icon>激活
+            <el-icon><VideoPlay /></el-icon>{{ t('workflow.instance.buttons.activate') }}
           </el-button>
           <el-button v-if="canRecall" @click="openOp('recall')">
-            <el-icon><RefreshLeft /></el-icon>撤回
+            <el-icon><RefreshLeft /></el-icon>{{ t('workflow.instance.buttons.recall') }}
           </el-button>
           <el-button type="danger" @click="openOp('terminate')">
-            <el-icon><CircleClose /></el-icon>终止
+            <el-icon><CircleClose /></el-icon>{{ t('workflow.instance.buttons.terminate') }}
           </el-button>
         </div>
       </el-card>
@@ -224,13 +224,13 @@ watch(() => route.query.id, () => loadAll())
         <div v-if="diagram" class="diagram-wrap">
           <FlowDiagramViewer :diagram="diagram" />
         </div>
-        <el-empty v-else :description="t('common.empty') || '暂无流程图'" />
+        <el-empty v-else :description="t('workflow.instance.emptyDiagram')" />
       </el-tab-pane>
       <el-tab-pane :label="t('workflow.instance.timeline')" name="timeline">
         <div v-if="timeline">
           <FlowTimeline :timeline="timeline" />
         </div>
-        <el-empty v-else :description="t('common.empty') || '暂无审批轨迹'" />
+        <el-empty v-else :description="t('workflow.instance.emptyTimeline')" />
       </el-tab-pane>
       <el-tab-pane :label="t('workflow.instance.replay')" name="replay">
         <FlowDiagramReplay
@@ -242,16 +242,16 @@ watch(() => route.query.id, () => loadAll())
       </el-tab-pane>
       <el-tab-pane :label="t('workflow.instance.detail')" name="detail">
         <el-descriptions v-if="instance" :column="2" border>
-          <el-descriptions-item label="实例 ID">{{ instance.id }}</el-descriptions-item>
-          <el-descriptions-item label="流程编码">{{ instance.flowCode }}</el-descriptions-item>
-          <el-descriptions-item label="业务类型">{{ instance.businessType || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="业务 ID">{{ instance.businessKey || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="租户 ID">{{ instance.tenantId || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="链路追踪">{{ instance.providerTraceId || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="结束时间" :span="2">
+          <el-descriptions-item :label="t('workflow.instance.detailLabels.instanceId')">{{ instance.id }}</el-descriptions-item>
+          <el-descriptions-item :label="t('workflow.instance.detailLabels.flowCode')">{{ instance.flowCode }}</el-descriptions-item>
+          <el-descriptions-item :label="t('workflow.instance.detailLabels.businessType')">{{ instance.businessType || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('workflow.instance.detailLabels.businessId')">{{ instance.businessKey || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('workflow.instance.detailLabels.tenantId')">{{ instance.tenantId || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('workflow.instance.detailLabels.traceId')">{{ instance.providerTraceId || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('workflow.instance.detailLabels.endTime')" :span="2">
             {{ instance.endTime ? dayjs(instance.endTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
           </el-descriptions-item>
-          <el-descriptions-item v-if="instance.variableJson" label="流程变量" :span="2">
+          <el-descriptions-item v-if="instance.variableJson" :label="t('workflow.instance.variable')" :span="2">
             <pre class="var-json">{{ instance.variableJson }}</pre>
           </el-descriptions-item>
         </el-descriptions>
@@ -262,43 +262,43 @@ watch(() => route.query.id, () => loadAll())
     <el-dialog
       v-model="opDialog"
       :title="
-        opType === 'pass' ? '通过审批' :
-        opType === 'reject' ? '驳回审批' :
-        opType === 'transfer' ? '转办' :
-        opType === 'terminate' ? '终止流程' :
-        opType === 'suspend' ? '挂起流程' :
-        opType === 'activate' ? '激活流程' :
-        opType === 'recall' ? '撤回流程' :
-        opType === 'urge' ? '催办' : '操作'
+        opType === 'pass' ? t('workflow.instance.opDialog.pass') :
+        opType === 'reject' ? t('workflow.instance.opDialog.reject') :
+        opType === 'transfer' ? t('workflow.instance.opDialog.transfer') :
+        opType === 'terminate' ? t('workflow.instance.opDialog.terminate') :
+        opType === 'suspend' ? t('workflow.instance.opDialog.suspend') :
+        opType === 'activate' ? t('workflow.instance.opDialog.activate') :
+        opType === 'recall' ? t('workflow.instance.opDialog.recall') :
+        opType === 'urge' ? t('workflow.instance.opDialog.urge') : t('workflow.instance.opDialog.default')
       "
       width="500px"
     >
       <el-form label-position="top">
-        <el-form-item label="任务 ID" v-if="opType === 'pass' || opType === 'reject' || opType === 'transfer'">
-          <el-input v-model.number="opForm.taskId" placeholder="任务 ID" />
+        <el-form-item :label="t('workflow.instance.opForm.taskId')" v-if="opType === 'pass' || opType === 'reject' || opType === 'transfer'">
+          <el-input v-model.number="opForm.taskId" :placeholder="t('workflow.instance.opForm.taskIdPlaceholder')" />
         </el-form-item>
-        <el-form-item label="审批意见" v-if="opType === 'pass' || opType === 'reject'">
+        <el-form-item :label="t('workflow.instance.opForm.comment')" v-if="opType === 'pass' || opType === 'reject'">
           <el-input v-model="opForm.comment" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item label="目标用户 ID" v-if="opType === 'transfer'">
+        <el-form-item :label="t('workflow.instance.opForm.targetUserId')" v-if="opType === 'transfer'">
           <el-input v-model.number="opForm.targetUserId" />
         </el-form-item>
-        <el-form-item label="目标用户姓名" v-if="opType === 'transfer'">
+        <el-form-item :label="t('workflow.instance.opForm.targetUserName')" v-if="opType === 'transfer'">
           <el-input v-model="opForm.targetUserName" />
         </el-form-item>
-        <el-form-item label="驳回到节点" v-if="opType === 'reject'">
-          <el-input v-model="opForm.targetNodeCode" placeholder="可选" />
+        <el-form-item :label="t('workflow.instance.opForm.rejectNode')" v-if="opType === 'reject'">
+          <el-input v-model="opForm.targetNodeCode" :placeholder="t('workflow.instance.opForm.rejectNodePlaceholder')" />
         </el-form-item>
-        <el-form-item label="原因" v-if="opType === 'terminate' || opType === 'recall'">
+        <el-form-item :label="t('workflow.instance.opForm.reason')" v-if="opType === 'terminate' || opType === 'recall'">
           <el-input v-model="opForm.reason" type="textarea" :rows="3" />
         </el-form-item>
-        <el-form-item label="催办意见" v-if="opType === 'urge' || opType === 'suspend'">
+        <el-form-item :label="t('workflow.instance.opForm.urgeComment')" v-if="opType === 'urge' || opType === 'suspend'">
           <el-input v-model="opForm.comment" type="textarea" :rows="3" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="opDialog = false">取消</el-button>
-        <el-button type="primary" @click="submitOp">确定</el-button>
+        <el-button @click="opDialog = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitOp">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>

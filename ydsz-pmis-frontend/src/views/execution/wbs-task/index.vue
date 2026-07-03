@@ -105,12 +105,12 @@ const form = reactive<Partial<WbsTaskCreateDTO>>({
   ownerId: 0,
 })
 
-const formRules = {
-  taskCode: [{ required: true, message: '任务编码必填', trigger: 'blur' }],
-  taskName: [{ required: true, message: '任务名称必填', trigger: 'blur' }],
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  ownerId: [{ required: true, message: '负责人 ID 必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  taskCode: [{ required: true, message: t('execution.wbsTask.rules.taskCodeRequired'), trigger: 'blur' }],
+  taskName: [{ required: true, message: t('execution.wbsTask.rules.taskNameRequired'), trigger: 'blur' }],
+  initiationId: [{ required: true, message: t('execution.wbsTask.rules.initiationIdRequired'), trigger: 'blur' }],
+  ownerId: [{ required: true, message: t('execution.wbsTask.rules.ownerIdRequired'), trigger: 'blur' }],
+}))
 
 /** 打开新建弹窗：重置表单为默认值 */
 function openCreate() {
@@ -323,7 +323,7 @@ onMounted(fetchList)
           </el-col>
           <el-col :span="12">
             <el-form-item :label="$t('execution.wbsTask.form.dependsOn')">
-              <el-input v-model="form.dependsOn" placeholder="如: 100,101" />
+              <el-input v-model="form.dependsOn" :placeholder="$t('execution.wbsTask.form.dependsOnPlaceholder')" />
             </el-form-item>
           </el-col>
         </el-row>

@@ -105,7 +105,7 @@ class FlowInstanceServiceImplTest {
         service = new FlowInstanceServiceImpl(instanceMapper, definitionService,
                 canaryService, advancer, taskService, taskMapper,
                 nodeMapper, skipMapper, variableStrategy,
-                eventListeners, flowMetrics, eventPublisher, subProcessService, ccService);
+                eventListeners, flowMetrics, eventPublisher, subProcessService, ccService, autoTriggerService);
     }
 
     @Test

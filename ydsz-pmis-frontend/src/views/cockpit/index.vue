@@ -11,6 +11,7 @@
  * KPI 月度趋势 + 60 秒自动刷新。
  */
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useECharts } from '@/composables/useECharts'
 import {
@@ -27,16 +28,49 @@ import { PC } from '@/constants/permissionCodes'
 
 defineOptions({ name: 'Cockpit' })
 
+const { t, locale } = useI18n()
+
+/** 驾驶舱 KPI 总览数据 */
+interface CockpitOverview {
+  totalContractAmount: number
+  totalRevenue: number
+  totalCost: number
+  grossProfit: number
+  grossMarginPct: number
+  activeProjectCount: number
+  overdueProjectCount: number
+  benchIdleCost: number
+  benchIdleCount: number
+  utilizationPct: number
+}
+
+/** 下钻分析数据项 */
+interface DrillItem {
+  name: string
+  value: number
+  count?: number
+  ratio?: number
+}
+
+/** 预警事件 */
+interface AlertEvent {
+  projectName: string
+  alertType: string
+  severity: 'RED' | 'YELLOW'
+  message: string
+  createdAt: string
+}
+
 /** 查询条件（期间，YYYY-MM） */
 const query = ref({ period: new Date().toISOString().slice(0, 7) })
 /** KPI 总览数据 */
-const overview = ref<any>(null)
+const overview = ref<CockpitOverview | null>(null)
 /** 下钻分析原始数据 */
-const drillData = ref<any[]>([])
+const drillData = ref<DrillItem[]>([])
 /** 当前下钻维度：dept-事业部 / projectType-项目类型 / customer-客户 */
 const drillDimension = ref<'dept' | 'projectType' | 'customer'>('dept')
 /** 预警汇总数据 */
-const alert = ref<{ redCount: number; yellowCount: number; totalCount: number; topEvent: any | null } | null>(null)
+const alert = ref<{ redCount: number; yellowCount: number; totalCount: number; topEvent: AlertEvent | null } | null>(null)
 /** KPI 月度趋势数据（最近 12 月） */
 const trend = ref<{ periods: string[]; contractAmountSeries: number[]; confirmedRevenueSeries: number[]; totalCostSeries: number[]; grossProfitSeries: number[]; grossMarginPctSeries: number[] } | null>(null)
 /** 最后一次刷新时间 */
@@ -71,7 +105,7 @@ async function loadOverview() {
     overview.value = data ?? {}
   } catch (e) {
     if (!isHandledError(e)) {
-      ElMessage.error('KPI 总览数据加载失败，请刷新重试')
+      ElMessage.error(t('cockpit.messages.overviewLoadFailed'))
     }
   }
 }
@@ -82,25 +116,25 @@ async function loadHealth() {
     const { data } = await getEvmHealthDistribution(query.value.period)
     const d = data as any
     setHealthOption({
-      title: { text: 'EVM 健康度分布', left: 'center' },
+      title: { text: t('cockpit.health.title'), left: 'center' },
       tooltip: { trigger: 'item' },
       legend: { bottom: 0 },
       series: [
         {
-          name: '健康度',
+          name: t('cockpit.health.seriesName'),
           type: 'pie',
           radius: ['40%', '70%'],
           data: [
-            { name: '正常', value: d?.NORMAL ?? 0, itemStyle: { color: '#67c23a' } },
-            { name: '黄色', value: d?.YELLOW ?? 0, itemStyle: { color: '#e6a23c' } },
-            { name: '红色', value: d?.RED ?? 0, itemStyle: { color: '#f56c6c' } },
+            { name: t('cockpit.health.normal'), value: d?.NORMAL ?? 0, itemStyle: { color: '#67c23a' } },
+            { name: t('cockpit.health.yellow'), value: d?.YELLOW ?? 0, itemStyle: { color: '#e6a23c' } },
+            { name: t('cockpit.health.red'), value: d?.RED ?? 0, itemStyle: { color: '#f56c6c' } },
           ],
         },
       ],
     })
   } catch (e) {
     if (!isHandledError(e)) {
-      ElMessage.error('EVM 健康度数据加载失败，请刷新重试')
+      ElMessage.error(t('cockpit.messages.healthLoadFailed'))
     }
   }
 }
@@ -116,7 +150,7 @@ async function loadDrill() {
     renderDrillChart()
   } catch (e) {
     if (!isHandledError(e)) {
-      ElMessage.error('下钻分析数据加载失败，请刷新重试')
+      ElMessage.error(t('cockpit.messages.drillLoadFailed'))
     }
   }
 }
@@ -125,9 +159,9 @@ async function loadDrill() {
 function renderDrillChart() {
   const rows = drillData.value
   setDrillOption({
-    title: { text: '下钻分析', left: 'center' },
+    title: { text: t('cockpit.drill.title'), left: 'center' },
     tooltip: { trigger: 'axis' },
-    legend: { data: ['收入', '成本', '毛利'], top: 30 },
+    legend: { data: [t('cockpit.drill.legend.revenue'), t('cockpit.drill.legend.cost'), t('cockpit.drill.legend.grossProfit')], top: 30 },
     grid: { top: 80, left: 60, right: 40, bottom: 40 },
     xAxis: {
       type: 'category',
@@ -135,9 +169,9 @@ function renderDrillChart() {
     },
     yAxis: { type: 'value' },
     series: [
-      { name: '收入', type: 'bar', data: rows.map((d: any) => Number(d.revenue || 0)), itemStyle: { color: '#409eff' } },
-      { name: '成本', type: 'bar', data: rows.map((d: any) => Number(d.cost || 0)), itemStyle: { color: '#909399' } },
-      { name: '毛利', type: 'bar', data: rows.map((d: any) => Number(d.grossProfit || 0)), itemStyle: { color: '#67c23a' } },
+      { name: t('cockpit.drill.legend.revenue'), type: 'bar', data: rows.map((d: any) => Number(d.revenue || 0)), itemStyle: { color: '#409eff' } },
+      { name: t('cockpit.drill.legend.cost'), type: 'bar', data: rows.map((d: any) => Number(d.cost || 0)), itemStyle: { color: '#909399' } },
+      { name: t('cockpit.drill.legend.grossProfit'), type: 'bar', data: rows.map((d: any) => Number(d.grossProfit || 0)), itemStyle: { color: '#67c23a' } },
     ],
   })
 }
@@ -158,7 +192,7 @@ async function loadAlert() {
     }
   } catch (e) {
     if (!isHandledError(e)) {
-      ElMessage.error('预警数据加载失败，请刷新重试')
+      ElMessage.error(t('cockpit.messages.alertLoadFailed'))
     }
   }
 }
@@ -182,33 +216,33 @@ async function loadTrend() {
     renderTrendChart()
   } catch (e) {
     if (!isHandledError(e)) {
-      ElMessage.error('KPI 趋势数据加载失败，请刷新重试')
+      ElMessage.error(t('cockpit.messages.trendLoadFailed'))
     }
   }
 }
 
 /** 渲染 KPI 月度趋势图（合同/收入/成本柱图 + 毛利率折线） */
 function renderTrendChart() {
-  const t = trend.value
-  if (!t) return
+  const td = trend.value
+  if (!td) return
   setTrendOption({
     tooltip: { trigger: 'axis' },
-    legend: { data: ['合同', '收入', '成本'], top: 0 },
+    legend: { data: [t('cockpit.trend.legend.contract'), t('cockpit.trend.legend.revenue'), t('cockpit.trend.legend.cost')], top: 0 },
     grid: { left: 50, right: 50, top: 40, bottom: 30 },
-    xAxis: { type: 'category', data: t.periods },
+    xAxis: { type: 'category', data: td.periods },
     yAxis: [
-      { type: 'value', name: '金额' },
-      { type: 'value', name: '毛利率(%)', position: 'right', min: 0, max: 100 },
+      { type: 'value', name: t('cockpit.trend.yAxisAmount') },
+      { type: 'value', name: t('cockpit.trend.yAxisGrossMarginPct'), position: 'right', min: 0, max: 100 },
     ],
     series: [
-      { name: '合同', type: 'bar', data: t.contractAmountSeries, itemStyle: { color: '#409eff' } },
-      { name: '收入', type: 'bar', data: t.confirmedRevenueSeries, itemStyle: { color: '#67c23a' } },
-      { name: '成本', type: 'bar', data: t.totalCostSeries, itemStyle: { color: '#909399' } },
+      { name: t('cockpit.trend.legend.contract'), type: 'bar', data: td.contractAmountSeries, itemStyle: { color: '#409eff' } },
+      { name: t('cockpit.trend.legend.revenue'), type: 'bar', data: td.confirmedRevenueSeries, itemStyle: { color: '#67c23a' } },
+      { name: t('cockpit.trend.legend.cost'), type: 'bar', data: td.totalCostSeries, itemStyle: { color: '#909399' } },
       {
-        name: '毛利率',
+        name: t('cockpit.trend.legend.grossMargin'),
         type: 'line',
         yAxisIndex: 1,
-        data: t.grossMarginPctSeries,
+        data: td.grossMarginPctSeries,
         smooth: true,
         lineStyle: { type: 'dashed' },
         itemStyle: { color: '#f56c6c' },
@@ -221,9 +255,9 @@ function renderTrendChart() {
 async function refresh() {
   try {
     await Promise.all([loadOverview(), loadHealth(), loadDrill(), loadAlert(), loadTrend()])
-    lastUpdated.value = new Date().toLocaleTimeString('zh-CN')
+    lastUpdated.value = new Date().toLocaleTimeString(locale.value)
   } catch (e: any) {
-    ElMessage.error('刷新失败：' + (e?.message || ''))
+    ElMessage.error(t('cockpit.messages.refreshFailed', { message: e?.message || '' }))
   }
 }
 
@@ -260,12 +294,13 @@ const alertTone = computed<'success' | 'warning' | 'info' | 'error'>(() => {
 
 /** 预警 banner 文案，包含红/黄数量与 TOP 事件标题 */
 const alertMessage = computed(() => {
-  if (!alert.value || alert.value.totalCount === 0) return '当前无触发预警，系统状态良好。'
+  if (!alert.value || alert.value.totalCount === 0) return t('cockpit.alert.noAlert')
   const a = alert.value
   const parts: string[] = []
-  if (a.redCount > 0) parts.push(`红色 ${a.redCount} 项`)
-  if (a.yellowCount > 0) parts.push(`黄色 ${a.yellowCount} 项`)
-  return `存在 ${parts.join('，')} 预警事件` + (a.topEvent ? `：${a.topEvent.title}` : '')
+  if (a.redCount > 0) parts.push(t('cockpit.alert.redCount', { count: a.redCount }))
+  if (a.yellowCount > 0) parts.push(t('cockpit.alert.yellowCount', { count: a.yellowCount }))
+  const base = t('cockpit.alert.hasAlert', { parts: parts.join(t('cockpit.alert.separator')) })
+  return a.topEvent ? base + t('cockpit.alert.suffix', { title: a.topEvent.title }) : base
 })
 
 /**
@@ -301,21 +336,21 @@ onBeforeUnmount(() => stopPolling())
     <el-card shadow="never" class="header-card">
       <div class="header-row">
         <div>
-          <div class="page-title">经营驾驶舱</div>
-          <div class="page-subtitle">KPI 总览 · 维度下钻 · 实时预警</div>
+          <div class="page-title">{{ t('cockpit.title') }}</div>
+          <div class="page-subtitle">{{ t('cockpit.subtitle') }}</div>
         </div>
         <div class="header-right">
           <el-tag v-if="lastUpdated" type="info" effect="plain" size="small">
-            最后更新：{{ lastUpdated }}
+            {{ t('cockpit.lastUpdated', { time: lastUpdated }) }}
           </el-tag>
           <el-switch
             v-model="autoRefresh"
             inline-prompt
-            active-text="自动"
-            inactive-text="手动"
+            :active-text="t('cockpit.autoRefresh.auto')"
+            :inactive-text="t('cockpit.autoRefresh.manual')"
             @change="toggleAutoRefresh"
           />
-          <el-button :icon="'Refresh'" @click="refresh">立即刷新</el-button>
+          <el-button :icon="'Refresh'" @click="refresh">{{ t('cockpit.autoRefresh.refreshNow') }}</el-button>
         </div>
       </div>
     </el-card>
@@ -346,11 +381,11 @@ onBeforeUnmount(() => stopPolling())
     <!-- 查询条件 -->
     <el-card shadow="never" class="query-card">
       <el-form inline>
-        <el-form-item label="期间 (YYYY-MM)">
-          <el-input v-model="query.period" placeholder="如 2026-07" style="width: 160px" />
+        <el-form-item :label="t('cockpit.query.periodLabel')">
+          <el-input v-model="query.period" :placeholder="t('cockpit.query.periodPlaceholder')" style="width: 160px" />
         </el-form-item>
         <el-form-item>
-          <el-button v-permission="[PC.COCKPIT_OVERVIEW_VIEW]" type="primary" :icon="'Refresh'" @click="refresh">刷新</el-button>
+          <el-button v-permission="[PC.COCKPIT_OVERVIEW_VIEW]" type="primary" :icon="'Refresh'" @click="refresh">{{ t('cockpit.query.refresh') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -359,37 +394,37 @@ onBeforeUnmount(() => stopPolling())
     <el-row :gutter="16" class="kpi-row">
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="kpi-card">
-          <div class="kpi-title">合同总额</div>
+          <div class="kpi-title">{{ t('cockpit.kpi.totalContractAmount') }}</div>
           <div class="kpi-value money">{{ fmtMoney(overview?.totalContractAmount) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="kpi-card">
-          <div class="kpi-title">已确认收入</div>
+          <div class="kpi-title">{{ t('cockpit.kpi.confirmedRevenue') }}</div>
           <div class="kpi-value money">{{ fmtMoney(overview?.confirmedRevenue) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="kpi-card">
-          <div class="kpi-title">累计成本</div>
+          <div class="kpi-title">{{ t('cockpit.kpi.totalCost') }}</div>
           <div class="kpi-value">{{ fmtMoney(overview?.totalCost) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="kpi-card highlight">
-          <div class="kpi-title">累计毛利</div>
+          <div class="kpi-title">{{ t('cockpit.kpi.grossProfit') }}</div>
           <div class="kpi-value money">{{ fmtMoney(overview?.grossProfit) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="kpi-card highlight">
-          <div class="kpi-title">平均毛利率</div>
+          <div class="kpi-title">{{ t('cockpit.kpi.grossMargin') }}</div>
           <div class="kpi-value">{{ fmtPct(overview?.grossMargin) }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="8" :md="4">
         <el-card shadow="hover" class="kpi-card">
-          <div class="kpi-title">在执行项目</div>
+          <div class="kpi-title">{{ t('cockpit.kpi.activeProjects') }}</div>
           <div class="kpi-value">{{ overview?.activeProjects ?? 0 }}</div>
         </el-card>
       </el-col>
@@ -401,11 +436,11 @@ onBeforeUnmount(() => stopPolling())
         <el-card shadow="never" class="chart-card">
           <template #header>
             <div class="chart-header">
-              <span>下钻分析</span>
+              <span>{{ t('cockpit.drill.title') }}</span>
               <el-radio-group v-model="drillDimension" size="small" @change="loadDrill">
-                <el-radio-button value="dept">事业部</el-radio-button>
-                <el-radio-button value="projectType">项目类型</el-radio-button>
-                <el-radio-button value="customer">客户</el-radio-button>
+                <el-radio-button value="dept">{{ t('cockpit.drill.dimension.dept') }}</el-radio-button>
+                <el-radio-button value="projectType">{{ t('cockpit.drill.dimension.projectType') }}</el-radio-button>
+                <el-radio-button value="customer">{{ t('cockpit.drill.dimension.customer') }}</el-radio-button>
               </el-radio-group>
             </div>
           </template>
@@ -422,7 +457,7 @@ onBeforeUnmount(() => stopPolling())
     <!-- KPI 趋势 -->
     <el-row :gutter="16" class="chart-row">
       <el-col :span="24">
-        <el-card shadow="never" header="KPI 月度趋势（最近 12 月）">
+        <el-card shadow="never" :header="t('cockpit.trend.title')">
           <div ref="trendRef" class="chart-area" style="height: 320px" />
         </el-card>
       </el-col>
@@ -432,7 +467,7 @@ onBeforeUnmount(() => stopPolling())
     <el-card shadow="never" class="extra-card">
       <el-row :gutter="16">
         <el-col :xs="24" :md="12">
-          <h4>关键提示</h4>
+          <h4>{{ t('cockpit.hints.title') }}</h4>
           <ul class="hint-list">
             <li v-for="(h, i) in (overview as any)?.hints || []" :key="i">
               <el-tag :type="(h.level as any) === 'RED' ? 'danger' : (h.level as any) === 'YELLOW' ? 'warning' : 'info'" size="small">
@@ -440,17 +475,17 @@ onBeforeUnmount(() => stopPolling())
               </el-tag>
               {{ h.message }}
             </li>
-            <li v-if="!((overview as any)?.hints || []).length" class="empty">暂无提示</li>
+            <li v-if="!((overview as any)?.hints || []).length" class="empty">{{ t('cockpit.hints.empty') }}</li>
           </ul>
         </el-col>
         <el-col :xs="24" :md="12">
-          <h4>快捷入口</h4>
+          <h4>{{ t('cockpit.shortcuts.title') }}</h4>
           <el-space wrap>
-            <el-button :icon="'TrendCharts'" @click="$router.push('/report/executive')">高管看板</el-button>
-            <el-button :icon="'WarningFilled'" @click="$router.push('/execution/risk')">风险预警</el-button>
-            <el-button :icon="'Document'" @click="$router.push('/report')">利润报表</el-button>
-            <el-button :icon="'Coin'" @click="$router.push('/execution/invoice')">发票管理</el-button>
-            <el-button :icon="'Money'" @click="$router.push('/execution/payment')">回款管理</el-button>
+            <el-button :icon="'TrendCharts'" @click="$router.push('/report/executive')">{{ t('cockpit.shortcuts.executive') }}</el-button>
+            <el-button :icon="'WarningFilled'" @click="$router.push('/execution/risk')">{{ t('cockpit.shortcuts.risk') }}</el-button>
+            <el-button :icon="'Document'" @click="$router.push('/report')">{{ t('cockpit.shortcuts.profitReport') }}</el-button>
+            <el-button :icon="'Coin'" @click="$router.push('/execution/invoice')">{{ t('cockpit.shortcuts.invoice') }}</el-button>
+            <el-button :icon="'Money'" @click="$router.push('/execution/payment')">{{ t('cockpit.shortcuts.payment') }}</el-button>
           </el-space>
         </el-col>
       </el-row>

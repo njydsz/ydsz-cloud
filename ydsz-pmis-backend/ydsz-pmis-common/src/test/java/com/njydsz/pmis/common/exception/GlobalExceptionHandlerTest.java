@@ -18,6 +18,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -118,7 +119,7 @@ class GlobalExceptionHandlerTest {
     @SuppressWarnings("deprecation")
     void handleNotReadable() {
         HttpMessageNotReadableException ex =
-                new HttpMessageNotReadableException("JSON parse error");
+                new HttpMessageNotReadableException("JSON parse error", (org.springframework.http.HttpInputMessage) null);
         Result<Void> r = handler.handleNotReadable(ex);
         assertThat(r.getCode()).isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
     }

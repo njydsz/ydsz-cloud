@@ -6,6 +6,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { pageMyInstances } from '@/api/workflow'
 import type { FlowInstanceDTO } from '@/api/workflow/types'
 import {
@@ -15,6 +16,7 @@ import {
 } from '../composables/useApprovalActions'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const myQuery = reactive({
   pageNum: 1,
@@ -51,42 +53,42 @@ onMounted(loadMy)
     <div class="filter-bar">
       <el-input
         v-model="myQuery.flowCode"
-        placeholder="流程编码"
+        :placeholder="t('workflow.approval.filter.flowCodePlaceholder')"
         clearable
         style="width: 200px"
       />
       <el-select
         v-model="myQuery.status"
-        placeholder="状态"
+        :placeholder="t('workflow.approval.columns.status')"
         clearable
         style="width: 140px"
       >
-        <el-option label="审批中" value="RUNNING" />
-        <el-option label="已挂起" value="SUSPENDED" />
-        <el-option label="已完成" value="COMPLETED" />
-        <el-option label="已终止" value="TERMINATED" />
-        <el-option label="已驳回" value="REJECTED" />
+        <el-option :label="t('workflow.instance.status.RUNNING')" value="RUNNING" />
+        <el-option :label="t('workflow.instance.status.SUSPENDED')" value="SUSPENDED" />
+        <el-option :label="t('workflow.instance.status.COMPLETED')" value="COMPLETED" />
+        <el-option :label="t('workflow.instance.status.TERMINATED')" value="TERMINATED" />
+        <el-option :label="t('workflow.instance.status.REJECTED')" value="REJECTED" />
       </el-select>
-      <el-button type="primary" @click="loadMy">查询</el-button>
+      <el-button type="primary" @click="loadMy">{{ t('workflow.approval.buttons.query') }}</el-button>
     </div>
     <el-table v-loading="myLoading" :data="myList" stripe>
-      <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip />
-      <el-table-column prop="flowName" label="流程" width="160" />
-      <el-table-column prop="businessNo" label="业务单号" width="160" />
-      <el-table-column label="状态" width="100">
+      <el-table-column prop="title" :label="t('workflow.approval.columns.title')" min-width="220" show-overflow-tooltip />
+      <el-table-column prop="flowName" :label="t('workflow.approval.columns.flowName')" width="160" />
+      <el-table-column prop="businessNo" :label="t('workflow.approval.columns.businessNo')" width="160" />
+      <el-table-column :label="t('workflow.approval.columns.status')" width="100">
         <template #default="{ row }">
           <el-tag :type="(instanceStatusType(row.status) as any)" size="small">
             {{ instanceStatusLabel(row.status) }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="currentNodeName" label="当前节点" width="120" />
-      <el-table-column label="发起时间" width="160">
+      <el-table-column prop="currentNodeName" :label="t('workflow.approval.columns.currentNodeName')" width="120" />
+      <el-table-column :label="t('workflow.approval.columns.startTime')" width="160">
         <template #default="{ row }">{{ formatTime(row.startTime) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="120" fixed="right">
+      <el-table-column :label="t('workflow.approval.columns.operation')" width="120" fixed="right">
         <template #default="{ row }">
-          <el-button size="small" text @click="goInstance(row.id)">查看流程</el-button>
+          <el-button size="small" text @click="goInstance(row.id)">{{ t('workflow.approval.actions.viewFlow') }}</el-button>
         </template>
       </el-table-column>
     </el-table>

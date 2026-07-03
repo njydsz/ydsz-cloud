@@ -1,10 +1,9 @@
 # ====================================================================
-#  PMIS Prometheus 主配置（批次 19）
+#  PMIS Prometheus 主配置
 #  ---------------------------------------------------------------------
-#  抓取 14 个微服务的 /actuator/prometheus 端点
-#  + Node Exporter（主机层指标）
-#  + Prometheus 自身指标
-#  告警规则来自 rules/ 目录
+#  使用 DNS 服务发现自动发现微服务实例，替代静态目标配置。
+#  Nacos DNS 解析格式：{serviceName}.{namespace}.svc.cluster.local
+#  在非 K8s 环境下使用 Docker DNS 或 Nacos DNS 集成。
 # ====================================================================
 
 global:
@@ -17,7 +16,7 @@ global:
 rule_files:
   - "rules/*.yml"
 
-# Alertmanager 告警路由 (批次 21 P2-21)
+# Alertmanager 告警路由
 alerting:
   alertmanagers:
     - static_configs:
@@ -34,126 +33,124 @@ scrape_configs:
 
   # 主机层指标
   - job_name: 'node-exporter'
-    static_configs:
-      - targets: ['pmis-node-exporter:9100']
-        labels:
-          service: node-exporter
+    dns_sd_configs:
+      - names:
+          - 'pmis-node-exporter'
+        type: 'A'
+        port: 9100
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'node-exporter'
 
-  # 14 个微服务（通过 Nacos 服务发现 + 静态兜底）
-  - job_name: 'pmis-gateway'
+  # ==================== 微服务（DNS 服务发现） ====================
+  # 所有 PMIS 微服务统一通过 DNS 服务发现，扩缩容后自动纳入抓取
+  - job_name: 'pmis-microservices'
     metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-gateway:9000']
-        labels:
-          service: pmis-gateway
-          tier: gateway
+    dns_sd_configs:
+      - names:
+          - 'pmis-gateway'
+          - 'pmis-auth'
+          - 'pmis-user'
+          - 'pmis-notification'
+          - 'pmis-workflow'
+          - 'pmis-project'
+          - 'pmis-execution'
+          - 'pmis-agent'
+          - 'pmis-config'
+          - 'pmis-file'
+          - 'pmis-audit'
+          - 'pmis-message'
+          - 'pmis-scheduler'
+        type: 'A'
+        port: 9000  # 基准端口，实际端口通过 relabel 映射
+    relabel_configs:
+      # 根据 DNS 名称设置 service 标签
+      - source_labels: [__meta_dns_name]
+        target_label: service
+      # 根据服务名映射实际端口
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-gateway'
+        replacement: '${1}:9000'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-auth'
+        replacement: '${1}:9001'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-user'
+        replacement: '${1}:9002'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-notification'
+        replacement: '${1}:9003'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-workflow'
+        replacement: '${1}:9004'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-project'
+        replacement: '${1}:9005'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-execution'
+        replacement: '${1}:9006'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-agent'
+        replacement: '${1}:9007'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-config'
+        replacement: '${1}:9008'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-file'
+        replacement: '${1}:9009'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-audit'
+        replacement: '${1}:9010'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-message'
+        replacement: '${1}:9011'
+      - source_labels: [__meta_dns_name]
+        target_label: __address__
+        regex: 'pmis-scheduler'
+        replacement: '${1}:9012'
+      # 设置 tier 标签
+      - source_labels: [service]
+        target_label: tier
+        regex: 'pmis-gateway'
+        replacement: 'gateway'
+      - source_labels: [service]
+        target_label: tier
+        regex: 'pmis-.*'
+        replacement: 'business'
 
-  - job_name: 'pmis-auth'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-auth:9001']
-        labels:
-          service: pmis-auth
-          tier: business
-
-  - job_name: 'pmis-user'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-user:9002']
-        labels:
-          service: pmis-user
-          tier: business
-
-  - job_name: 'pmis-notification'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-notification:9003']
-        labels:
-          service: pmis-notification
-          tier: business
-
-  - job_name: 'pmis-workflow'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-workflow:9004']
-        labels:
-          service: pmis-workflow
-          tier: business
-
-  - job_name: 'pmis-project'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-project:9005']
-        labels:
-          service: pmis-project
-          tier: business
-
-  - job_name: 'pmis-execution'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-execution:9006']
-        labels:
-          service: pmis-execution
-          tier: business
-
-  - job_name: 'pmis-agent'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-agent:9007']
-        labels:
-          service: pmis-agent
-          tier: business
-
-  - job_name: 'pmis-config'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-config:9008']
-        labels:
-          service: pmis-config
-          tier: business
-
-  - job_name: 'pmis-file'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-file:9009']
-        labels:
-          service: pmis-file
-          tier: business
-
-  - job_name: 'pmis-audit'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-audit:9010']
-        labels:
-          service: pmis-audit
-          tier: business
-
-  - job_name: 'pmis-message'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-message:9011']
-        labels:
-          service: pmis-message
-          tier: business
-
-  - job_name: 'pmis-scheduler'
-    metrics_path: /actuator/prometheus
-    static_configs:
-      - targets: ['pmis-scheduler:9012']
-        labels:
-          service: pmis-scheduler
-          tier: business
-
-  # PostgreSQL Exporter（可选）
+  # PostgreSQL Exporter
   - job_name: 'postgres'
-    static_configs:
-      - targets: ['pmis-postgres-exporter:9187']
-        labels:
-          service: postgres
+    dns_sd_configs:
+      - names:
+          - 'pmis-postgres-exporter'
+        type: 'A'
+        port: 9187
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'postgres'
 
-  # Redis Exporter（可选）
+  # Redis Exporter
   - job_name: 'redis'
-    static_configs:
-      - targets: ['pmis-redis-exporter:9121']
-        labels:
-          service: redis
+    dns_sd_configs:
+      - names:
+          - 'pmis-redis-exporter'
+        type: 'A'
+        port: 9121
+    relabel_configs:
+      - source_labels: [__address__]
+        target_label: service
+        replacement: 'redis'

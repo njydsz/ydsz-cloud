@@ -4,7 +4,7 @@
   @module views/system/role
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -46,11 +46,11 @@ const form = reactive<RoleFormDTO>({
   permissionIds: [],
 })
 
-const formRules = {
-  roleCode: [{ required: true, message: '角色编码必填', trigger: 'blur' }],
-  roleName: [{ required: true, message: '角色名称必填', trigger: 'blur' }],
-  dataScope: [{ required: true, message: '数据权限必填', trigger: 'change' }],
-}
+const formRules = computed(() => ({
+  roleCode: [{ required: true, message: t('system.role.rules.roleCodeRequired'), trigger: 'blur' }],
+  roleName: [{ required: true, message: t('system.role.rules.roleNameRequired'), trigger: 'blur' }],
+  dataScope: [{ required: true, message: t('system.role.rules.dataScopeRequired'), trigger: 'change' }],
+}))
 
 const permDialogVisible = ref(false)
 const permTree = ref<MenuTreeNode[]>([])
@@ -246,10 +246,10 @@ onMounted(fetchList)
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item :label="$t('system.role.form.roleCode')" prop="roleCode">
-          <el-input v-model="form.roleCode" placeholder="例如: PM" :disabled="dialogMode === 'edit'" />
+          <el-input v-model="form.roleCode" :placeholder="$t('system.role.form.roleCodePlaceholder')" :disabled="dialogMode === 'edit'" />
         </el-form-item>
         <el-form-item :label="$t('system.role.form.roleName')" prop="roleName">
-          <el-input v-model="form.roleName" placeholder="例如: 项目经理" />
+          <el-input v-model="form.roleName" :placeholder="$t('system.role.form.roleNamePlaceholder')" />
         </el-form-item>
         <el-form-item :label="$t('system.role.form.dataScope')" prop="dataScope">
           <el-select v-model="form.dataScope" style="width: 100%">

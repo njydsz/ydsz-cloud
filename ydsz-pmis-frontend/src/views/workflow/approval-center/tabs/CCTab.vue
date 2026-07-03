@@ -6,6 +6,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { pageCc, ccMarkRead, ccMarkAllRead } from '@/api/workflow'
 import type { FlowCcDTO, FlowCcQuery } from '@/api/workflow/types'
@@ -17,6 +18,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const { t } = useI18n()
 
 const ccQuery = reactive<FlowCcQuery>({
   readStatus: undefined,
@@ -55,7 +57,7 @@ async function quickCcRead(row: FlowCcDTO) {
 async function markAllCcRead() {
   const res = await ccMarkAllRead()
   if (res.data?.code === 0) {
-    ElMessage.success(`已全部标记为已读（${res.data.data} 条）`)
+    ElMessage.success(t('workflow.approval.messages.markAllReadSuccess', { count: res.data.data }))
     loadCc()
     emit('refresh-badge')
   }
@@ -73,34 +75,34 @@ onMounted(loadCc)
     <div class="filter-bar">
       <el-select
         v-model="ccQuery.readStatus"
-        placeholder="已读状态"
+        :placeholder="t('workflow.approval.filter.readStatus')"
         clearable
         style="width: 140px"
         @change="loadCc"
       >
-        <el-option label="未读" value="UNREAD" />
-        <el-option label="已读" value="READ" />
+        <el-option :label="t('workflow.approval.status.unread')" value="UNREAD" />
+        <el-option :label="t('workflow.approval.status.read')" value="READ" />
       </el-select>
-      <el-button type="primary" @click="loadCc">查询</el-button>
-      <el-button type="warning" @click="markAllCcRead">全部标为已读</el-button>
+      <el-button type="primary" @click="loadCc">{{ t('workflow.approval.buttons.query') }}</el-button>
+      <el-button type="warning" @click="markAllCcRead">{{ t('workflow.approval.buttons.markAllRead') }}</el-button>
     </div>
     <el-table v-loading="ccLoading" :data="ccList" stripe>
-      <el-table-column prop="title" label="抄送标题" min-width="220" show-overflow-tooltip />
-      <el-table-column prop="flowName" label="流程" width="160" />
-      <el-table-column prop="nodeName" label="触发节点" width="120" />
-      <el-table-column prop="triggerUserName" label="发起人" width="100" />
-      <el-table-column prop="content" label="意见/内容" min-width="200" show-overflow-tooltip />
-      <el-table-column label="状态" width="100">
+      <el-table-column prop="title" :label="t('workflow.approval.columns.ccTitle')" min-width="220" show-overflow-tooltip />
+      <el-table-column prop="flowName" :label="t('workflow.approval.columns.flowName')" width="160" />
+      <el-table-column prop="nodeName" :label="t('workflow.approval.columns.triggerNode')" width="120" />
+      <el-table-column prop="triggerUserName" :label="t('workflow.approval.columns.triggerUserName')" width="100" />
+      <el-table-column prop="content" :label="t('workflow.approval.columns.content')" min-width="200" show-overflow-tooltip />
+      <el-table-column :label="t('workflow.approval.columns.status')" width="100">
         <template #default="{ row }">
           <el-tag :type="row.readStatus === 'READ' ? 'info' : 'danger'" size="small">
-            {{ row.readStatus === 'READ' ? '已读' : '未读' }}
+            {{ row.readStatus === 'READ' ? t('workflow.approval.status.read') : t('workflow.approval.status.unread') }}
           </el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="抄送时间" width="160">
+      <el-table-column :label="t('workflow.approval.columns.readTime')" width="160">
         <template #default="{ row }">{{ formatTime(row.createTime) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="180" fixed="right">
+      <el-table-column :label="t('workflow.approval.columns.operation')" width="180" fixed="right">
         <template #default="{ row }">
           <el-button
             v-if="row.readStatus === 'UNREAD'"
@@ -109,9 +111,9 @@ onMounted(loadCc)
             type="primary"
             @click="quickCcRead(row)"
           >
-            标为已读
+            {{ t('workflow.approval.buttons.markRead') }}
           </el-button>
-          <el-button size="small" text @click="goInstance(row.instanceId)">查看流程</el-button>
+          <el-button size="small" text @click="goInstance(row.instanceId)">{{ t('workflow.approval.actions.viewFlow') }}</el-button>
         </template>
       </el-table-column>
     </el-table>

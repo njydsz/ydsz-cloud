@@ -104,12 +104,12 @@ const form = reactive<Partial<TimeEntryCreateDTO>>({
   description: '',
 })
 
-const formRules = {
-  entryDate: [{ required: true, message: '日期必填', trigger: 'change' }],
-  employeeId: [{ required: true, message: '员工 ID 必填', trigger: 'blur' }],
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  hours: [{ required: true, message: '工时必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  entryDate: [{ required: true, message: t('execution.timeEntry.rules.entryDateRequired'), trigger: 'change' }],
+  employeeId: [{ required: true, message: t('execution.timeEntry.rules.employeeIdRequired'), trigger: 'blur' }],
+  initiationId: [{ required: true, message: t('execution.timeEntry.rules.initiationIdRequired'), trigger: 'blur' }],
+  hours: [{ required: true, message: t('execution.timeEntry.rules.hoursRequired'), trigger: 'blur' }],
+}))
 
 /** 打开新建弹窗：重置表单为默认值，回填当前查询的员工/项目 ID */
 function openCreate() {
@@ -140,7 +140,7 @@ async function submitForm() {
 async function handleApprove(row: TimeEntryVO) {
   try {
     await ElMessageBox.confirm(t('execution.timeEntry.messages.confirmApprove'), t('common.confirm'), { type: 'warning' })
-    await approveTimeEntry({ id: row.id, approverId: 1, approverName: '系统' })
+    await approveTimeEntry({ id: row.id, approverId: 1, approverName: t('execution.timeEntry.systemApprover') })
     ElMessage.success(t('execution.timeEntry.messages.approveSuccess'))
     fetchList()
   } catch { /* 取消 */ }
@@ -150,7 +150,7 @@ async function handleApprove(row: TimeEntryVO) {
 async function handleReject(row: TimeEntryVO) {
   try {
     const { value } = await ElMessageBox.prompt(t('execution.timeEntry.messages.rejectPrompt'), t('execution.timeEntry.messages.rejectTitle'), { inputValidator: (v) => !!v || t('execution.timeEntry.messages.rejectReasonRequired') })
-    await rejectTimeEntry({ id: row.id, approverId: 1, approverName: '系统', reason: value })
+    await rejectTimeEntry({ id: row.id, approverId: 1, approverName: t('execution.timeEntry.systemApprover'), reason: value })
     ElMessage.success(t('execution.timeEntry.messages.rejectSuccess'))
     fetchList()
   } catch { /* 取消 */ }
@@ -245,7 +245,7 @@ onMounted(fetchList)
           <el-input-number v-model="form.employeeId" :min="1" :controls="false" style="width: 100%" />
         </el-form-item>
         <el-form-item :label="$t('execution.timeEntry.form.levelCode')">
-          <el-input v-model="form.levelCode" placeholder="如: L8" />
+          <el-input v-model="form.levelCode" :placeholder="$t('execution.timeEntry.form.levelCodePlaceholder')" />
         </el-form-item>
         <el-form-item :label="$t('execution.timeEntry.form.initiationId')" prop="initiationId">
           <el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" />

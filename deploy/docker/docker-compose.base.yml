@@ -80,7 +80,7 @@ services:
     networks:
       - pmis-net
 
-  # ============ RocketMQ 异步消息 ============
+  # ============ RocketMQ 异步消息（Dledger 高可用集群） ============
   rocketmq-namesrv:
     image: apache/rocketmq:5.3.0
     container_name: pmis-rocketmq-namesrv
@@ -93,20 +93,61 @@ services:
     networks:
       - pmis-net
 
-  rocketmq-broker:
+  rocketmq-broker-a:
     image: apache/rocketmq:5.3.0
-    container_name: pmis-rocketmq-broker
+    container_name: pmis-rocketmq-broker-a
     restart: unless-stopped
     ports:
       - "10909:10909"
       - "10911:10911"
       - "10912:10912"
-    command: sh mqbroker -n pmis-rocketmq-namesrv:9876 -c /opt/rocketmq/conf/broker.conf
+    command: sh mqbroker -n pmis-rocketmq-namesrv:9876 -c /opt/rocketmq/conf/dledger/broker-a.conf
     environment:
       JAVA_OPT_EXT: "-Xms1g -Xmx1g"
     volumes:
-      - rocketmq-data:/opt/rocketmq/store
-      - rocketmq-logs:/opt/rocketmq/logs
+      - rocketmq-data-a:/opt/rocketmq/store
+      - rocketmq-logs-a:/opt/rocketmq/logs
+      - ./rocketmq/broker-a.conf:/opt/rocketmq/conf/dledger/broker-a.conf:ro
+    depends_on:
+      - rocketmq-namesrv
+    networks:
+      - pmis-net
+
+  rocketmq-broker-b:
+    image: apache/rocketmq:5.3.0
+    container_name: pmis-rocketmq-broker-b
+    restart: unless-stopped
+    ports:
+      - "10919:10909"
+      - "10921:10911"
+      - "10922:10912"
+    command: sh mqbroker -n pmis-rocketmq-namesrv:9876 -c /opt/rocketmq/conf/dledger/broker-b.conf
+    environment:
+      JAVA_OPT_EXT: "-Xms1g -Xmx1g"
+    volumes:
+      - rocketmq-data-b:/opt/rocketmq/store
+      - rocketmq-logs-b:/opt/rocketmq/logs
+      - ./rocketmq/broker-b.conf:/opt/rocketmq/conf/dledger/broker-b.conf:ro
+    depends_on:
+      - rocketmq-namesrv
+    networks:
+      - pmis-net
+
+  rocketmq-broker-c:
+    image: apache/rocketmq:5.3.0
+    container_name: pmis-rocketmq-broker-c
+    restart: unless-stopped
+    ports:
+      - "10929:10909"
+      - "10931:10911"
+      - "10932:10912"
+    command: sh mqbroker -n pmis-rocketmq-namesrv:9876 -c /opt/rocketmq/conf/dledger/broker-c.conf
+    environment:
+      JAVA_OPT_EXT: "-Xms1g -Xmx1g"
+    volumes:
+      - rocketmq-data-c:/opt/rocketmq/store
+      - rocketmq-logs-c:/opt/rocketmq/logs
+      - ./rocketmq/broker-c.conf:/opt/rocketmq/conf/dledger/broker-c.conf:ro
     depends_on:
       - rocketmq-namesrv
     networks:
@@ -156,11 +197,19 @@ services:
       - "9200:9200"
     environment:
       discovery.type: single-node
-      xpack.security.enabled: "false"
+      xpack.security.enabled: "true"
+      xpack.security.transport.ssl.enabled: "true"
+      xpack.security.transport.ssl.rotation_mode: "true"
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-pmis@2026}
       ES_JAVA_OPTS: "-Xms2g -Xmx2g"
       TZ: Asia/Shanghai
     volumes:
       - es-data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD:-pmis@2026} -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     networks:
       - pmis-net
 
@@ -173,10 +222,18 @@ volumes:
     name: pmis-nacos-data
   nacos-logs:
     name: pmis-nacos-logs
-  rocketmq-data:
-    name: pmis-rocketmq-data
-  rocketmq-logs:
-    name: pmis-rocketmq-logs
+  rocketmq-data-a:
+    name: pmis-rocketmq-data-a
+  rocketmq-data-b:
+    name: pmis-rocketmq-data-b
+  rocketmq-data-c:
+    name: pmis-rocketmq-data-c
+  rocketmq-logs-a:
+    name: pmis-rocketmq-logs-a
+  rocketmq-logs-b:
+    name: pmis-rocketmq-logs-b
+  rocketmq-logs-c:
+    name: pmis-rocketmq-logs-c
   minio-data:
     name: pmis-minio-data
   es-data:

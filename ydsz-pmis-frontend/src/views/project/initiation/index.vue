@@ -4,7 +4,8 @@
   @module views/project/initiation
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -21,6 +22,8 @@ import {
 import type { InitiationVO, InitiationCreateDTO } from '@/api/project/initiation/types'
 import { PC } from '@/constants/permissionCodes'
 
+const { t } = useI18n()
+
 const loading = ref(false)
 const list = ref<InitiationVO[]>([])
 const total = ref(0)
@@ -33,29 +36,29 @@ const query = reactive({
   pmId: undefined as number | undefined,
 })
 
-const stageMap = {
-  DRAFT: { label: '草稿', type: 'info' as const },
-  UNDER_REVIEW: { label: '审批中', type: 'warning' as const },
-  APPROVED: { label: '已审批', type: 'success' as const },
-  REJECTED: { label: '已驳回', type: 'danger' as const },
-  EXECUTING: { label: '执行中', type: 'primary' as const },
-  CLOSED: { label: '已结项', type: 'info' as const },
-}
+const stageMap = computed(() => ({
+  DRAFT: { label: t('project.initiation.stage.DRAFT'), type: 'info' as const },
+  UNDER_REVIEW: { label: t('project.initiation.stage.UNDER_REVIEW'), type: 'warning' as const },
+  APPROVED: { label: t('project.initiation.stage.APPROVED'), type: 'success' as const },
+  REJECTED: { label: t('project.initiation.stage.REJECTED'), type: 'danger' as const },
+  EXECUTING: { label: t('project.initiation.stage.EXECUTING'), type: 'primary' as const },
+  CLOSED: { label: t('project.initiation.stage.CLOSED'), type: 'info' as const },
+}))
 
-const levelMap = {
-  A: { label: 'A 级', type: 'danger' as const },
-  B: { label: 'B 级', type: 'warning' as const },
-  C: { label: 'C 级', type: 'info' as const },
-  D: { label: 'D 级', type: 'info' as const },
-}
+const levelMap = computed(() => ({
+  A: { label: t('project.initiation.level.A'), type: 'danger' as const },
+  B: { label: t('project.initiation.level.B'), type: 'warning' as const },
+  C: { label: t('project.initiation.level.C'), type: 'info' as const },
+  D: { label: t('project.initiation.level.D'), type: 'info' as const },
+}))
 
-const gateMap = {
-  CD1_KICKOFF: { label: 'CD1 启动', type: 'info' as const },
-  CD2_DESIGN: { label: 'CD2 设计', type: 'primary' as const },
-  CD3_BUILD: { label: 'CD3 构建', type: 'primary' as const },
-  CD4_UAT: { label: 'CD4 UAT', type: 'warning' as const },
-  CD5_GO_LIVE: { label: 'CD5 上线', type: 'success' as const },
-}
+const gateMap = computed(() => ({
+  CD1_KICKOFF: { label: t('project.initiation.gate.CD1_KICKOFF'), type: 'info' as const },
+  CD2_DESIGN: { label: t('project.initiation.gate.CD2_DESIGN'), type: 'primary' as const },
+  CD3_BUILD: { label: t('project.initiation.gate.CD3_BUILD'), type: 'primary' as const },
+  CD4_UAT: { label: t('project.initiation.gate.CD4_UAT'), type: 'warning' as const },
+  CD5_GO_LIVE: { label: t('project.initiation.gate.CD5_GO_LIVE'), type: 'success' as const },
+}))
 
 /** 拉取立项分页列表 */
 async function fetchList() {
@@ -102,10 +105,10 @@ const form = reactive<Partial<InitiationCreateDTO>>({
 })
 
 const formRules = {
-  projectCode: [{ required: true, message: '项目编码必填', trigger: 'blur' }],
-  projectName: [{ required: true, message: '项目名称必填', trigger: 'blur' }],
-  customerId: [{ required: true, message: '客户 ID 必填', trigger: 'blur' }],
-  projectType: [{ required: true, message: '项目类型必填', trigger: 'change' }],
+  projectCode: [{ required: true, message: t('project.initiation.rules.projectCodeRequired'), trigger: 'blur' }],
+  projectName: [{ required: true, message: t('project.initiation.rules.projectNameRequired'), trigger: 'blur' }],
+  customerId: [{ required: true, message: t('project.initiation.rules.customerIdRequired'), trigger: 'blur' }],
+  projectType: [{ required: true, message: t('project.initiation.rules.projectTypeRequired'), trigger: 'change' }],
 }
 
 /** 打开新建立项弹窗，重置表单为初始值 */
@@ -133,7 +136,7 @@ function openCreate() {
 async function submitForm() {
   await formRef.value?.validate()
   await createInitiation(form as InitiationCreateDTO)
-  ElMessage.success('创建成功')
+  ElMessage.success(t('project.initiation.messages.createSuccess'))
   dialogVisible.value = false
   fetchList()
 }
@@ -144,9 +147,9 @@ async function submitForm() {
  */
 async function handleDelete(row: InitiationVO) {
   try {
-    await ElMessageBox.confirm(`确认删除立项「${row.projectName}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('project.initiation.messages.confirmDelete', { name: row.projectName }), t('common.tip'), { type: 'warning' })
     await deleteInitiation(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('project.initiation.messages.deleteSuccess'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -157,11 +160,11 @@ async function handleDelete(row: InitiationVO) {
  * @param target 目标阶段编码
  */
 async function handleStage(row: InitiationVO, target: string) {
-  const targetText = (stageMap as any)[target]?.label || target
+  const targetText = (stageMap.value as Record<string, { label: string }>)[target]?.label || target
   try {
-    await ElMessageBox.confirm(`确认将阶段变更为「${targetText}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('project.initiation.messages.confirmStageChange', { target: targetText }), t('common.tip'), { type: 'warning' })
     await changeInitiationStage({ id: row.id, targetStage: target })
-    ElMessage.success('阶段已更新')
+    ElMessage.success(t('project.initiation.messages.stageUpdated'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -169,10 +172,10 @@ async function handleStage(row: InitiationVO, target: string) {
 async function handleStartProcess(row: InitiationVO) {
   try {
     const { data } = await startInitiationProcess(row.id, 1)
-    ElMessage.success(`审批流已启动: ${data}`)
+    ElMessage.success(t('project.initiation.messages.processStarted', { data }))
     fetchList()
   } catch (e: any) {
-    ElMessage.error(e?.message || '启动失败')
+    ElMessage.error(e?.message || t('project.initiation.messages.startFailed'))
   }
 }
 
@@ -211,7 +214,7 @@ async function submitBudget() {
     amount: budgetForm.amount,
     remark: budgetForm.remark,
   })
-  ElMessage.success('已添加')
+  ElMessage.success(t('project.initiation.messages.budgetAdded'))
   const { data } = await listBudget(budgetInitiationId.value)
   budgetList.value = data || []
   budgetForm.itemName = ''
@@ -241,7 +244,7 @@ async function submitGate() {
     reviewResult: gateForm.reviewResult,
     comment: gateForm.comment,
   })
-  ElMessage.success('评审已提交')
+  ElMessage.success(t('project.initiation.messages.gateSubmitted'))
   gateDialogVisible.value = false
 }
 
@@ -260,16 +263,16 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="编码/名称" clearable />
+      <el-form-item :label="t('project.initiation.search.keyword')">
+        <el-input v-model="query.keyword" :placeholder="t('project.initiation.search.keywordPlaceholder')" clearable />
       </el-form-item>
-      <el-form-item label="阶段">
-        <el-select v-model="query.stage" placeholder="全部" clearable style="width: 140px">
+      <el-form-item :label="t('project.initiation.search.stage')">
+        <el-select v-model="query.stage" :placeholder="t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in stageMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="项目分级">
-        <el-select v-model="query.projectLevel" placeholder="全部" clearable style="width: 120px">
+      <el-form-item :label="t('project.initiation.search.projectLevel')">
+        <el-select v-model="query.projectLevel" :placeholder="t('common.all')" clearable style="width: 120px">
           <el-option v-for="(v, k) in levelMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
@@ -277,61 +280,61 @@ onMounted(fetchList)
 
     <template #toolbar>
       <el-button v-permission="[PC.PROJECT_INITIATION_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新建立项
+        {{ t('project.initiation.buttons.create') }}
       </el-button>
     </template>
 
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="projectCode" title="项目编码" width="160" />
-        <vxe-column field="projectName" title="项目名称" min-width="200" show-overflow />
-        <vxe-column field="customerName" title="客户" width="160" show-overflow />
-        <vxe-column field="pmName" title="项目经理" width="100" />
-        <vxe-column field="projectLevel" title="分级" width="80" align="center">
+        <vxe-column field="projectCode" :title="t('project.initiation.columns.projectCode')" width="160" />
+        <vxe-column field="projectName" :title="t('project.initiation.columns.projectName')" min-width="200" show-overflow />
+        <vxe-column field="customerName" :title="t('project.initiation.columns.customerName')" width="160" show-overflow />
+        <vxe-column field="pmName" :title="t('project.initiation.columns.pmName')" width="100" />
+        <vxe-column field="projectLevel" :title="t('project.initiation.columns.projectLevel')" width="80" align="center">
           <template #default="{ row }">
             <StatusTag :value="row.projectLevel" :map="levelMap" />
           </template>
         </vxe-column>
-        <vxe-column field="budgetAmount" title="预算" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="currentGate" title="当前门径" width="120">
+        <vxe-column field="budgetAmount" :title="t('project.initiation.columns.budgetAmount')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="currentGate" :title="t('project.initiation.columns.currentGate')" width="120">
           <template #default="{ row }">
             <StatusTag v-if="row.currentGate" :value="row.currentGate" :map="gateMap" />
             <span v-else>-</span>
           </template>
         </vxe-column>
-        <vxe-column field="stage" title="阶段" width="100">
+        <vxe-column field="stage" :title="t('project.initiation.columns.stage')" width="100">
           <template #default="{ row }">
             <StatusTag :value="row.stage" :map="stageMap" />
           </template>
         </vxe-column>
-        <vxe-column field="plannedStartDate" title="计划开始" width="110" />
-        <vxe-column field="plannedEndDate" title="计划结束" width="110" />
-        <vxe-column title="操作" width="320" fixed="right">
+        <vxe-column field="plannedStartDate" :title="t('project.initiation.columns.plannedStartDate')" width="110" />
+        <vxe-column field="plannedEndDate" :title="t('project.initiation.columns.plannedEndDate')" width="110" />
+        <vxe-column :title="t('project.initiation.columns.action')" width="320" fixed="right">
           <template #default="{ row }">
             <el-button v-permission="[PC.PROJECT_INITIATION_BUDGET]" link type="primary" size="small" @click="openBudget(row)">
-              预算
+              {{ t('project.initiation.buttons.budget') }}
             </el-button>
             <el-button v-permission="[PC.PROJECT_INITIATION_GATE]" link type="primary" size="small" @click="openGate(row)">
-              门径评审
+              {{ t('project.initiation.buttons.gateReview') }}
             </el-button>
             <el-button v-if="row.stage === 'DRAFT'" v-permission="[PC.PROJECT_INITIATION_START_PROCESS]" link type="success" size="small" @click="handleStartProcess(row)">
-              启动审批
+              {{ t('project.initiation.buttons.startApproval') }}
             </el-button>
             <el-button v-if="row.stage === 'DRAFT'" v-permission="[PC.PROJECT_INITIATION_GATE]" link type="warning" size="small" @click="handleStage(row, 'UNDER_REVIEW')">
-              提交评审
+              {{ t('project.initiation.buttons.submitReview') }}
             </el-button>
             <el-button v-if="row.stage === 'UNDER_REVIEW'" v-permission="[PC.PROJECT_INITIATION_GATE]" link type="success" size="small" @click="handleStage(row, 'APPROVED')">
-              审批通过
+              {{ t('project.initiation.buttons.approve') }}
             </el-button>
             <el-button v-if="row.stage === 'UNDER_REVIEW'" v-permission="[PC.PROJECT_INITIATION_GATE]" link type="danger" size="small" @click="handleStage(row, 'REJECTED')">
-              驳回
+              {{ t('project.initiation.buttons.reject') }}
             </el-button>
             <el-button v-if="row.stage === 'APPROVED'" v-permission="[PC.PROJECT_INITIATION_GATE]" link type="primary" size="small" @click="handleStage(row, 'EXECUTING')">
-              启动执行
+              {{ t('project.initiation.buttons.startExecution') }}
             </el-button>
             <el-button v-permission="[PC.PROJECT_INITIATION_DELETE]" link type="danger" size="small" @click="handleDelete(row)">
-              删除
+              {{ t('common.delete') }}
             </el-button>
           </template>
         </vxe-column>
@@ -339,45 +342,45 @@ onMounted(fetchList)
     </template>
 
     <!-- 立项表单 -->
-    <el-dialog v-model="dialogVisible" title="新建立项" width="720px">
+    <el-dialog v-model="dialogVisible" :title="t('project.initiation.dialog.createTitle')" width="720px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="项目编码" prop="projectCode">
+            <el-form-item :label="t('project.initiation.form.projectCode')" prop="projectCode">
               <el-input v-model="form.projectCode" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="项目名称" prop="projectName">
+            <el-form-item :label="t('project.initiation.form.projectName')" prop="projectName">
               <el-input v-model="form.projectName" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="客户 ID" prop="customerId">
+            <el-form-item :label="t('project.initiation.form.customerId')" prop="customerId">
               <el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="客户名称">
+            <el-form-item :label="t('project.initiation.form.customerName')">
               <el-input v-model="form.customerName" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="项目类型" prop="projectType">
+            <el-form-item :label="t('project.initiation.form.projectType')" prop="projectType">
               <el-select v-model="form.projectType" style="width: 100%">
-                <el-option label="内部研发" value="INTERNAL" />
-                <el-option label="客户定制" value="CUSTOM" />
-                <el-option label="产品交付" value="PRODUCT" />
-                <el-option label="运维服务" value="SERVICE" />
+                <el-option :label="t('project.initiation.projectType.INTERNAL')" value="INTERNAL" />
+                <el-option :label="t('project.initiation.projectType.CUSTOM')" value="CUSTOM" />
+                <el-option :label="t('project.initiation.projectType.PRODUCT')" value="PRODUCT" />
+                <el-option :label="t('project.initiation.projectType.SERVICE')" value="SERVICE" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="项目分级">
+            <el-form-item :label="t('project.initiation.form.projectLevel')">
               <el-select v-model="form.projectLevel" style="width: 100%">
                 <el-option v-for="(v, k) in levelMap" :key="k" :label="v.label" :value="k" />
               </el-select>
@@ -386,112 +389,115 @@ onMounted(fetchList)
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="项目经理 ID">
+            <el-form-item :label="t('project.initiation.form.pmId')">
               <el-input-number v-model="form.pmId" :min="0" :controls="false" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="发起人 ID">
+            <el-form-item :label="t('project.initiation.form.sponsorId')">
               <el-input-number v-model="form.sponsorId" :min="0" :controls="false" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="预计金额">
+            <el-form-item :label="t('project.initiation.form.estimatedAmount')">
               <el-input-number v-model="form.estimatedAmount" :min="0" :controls="false" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="预算金额">
+            <el-form-item :label="t('project.initiation.form.budgetAmount')">
               <el-input-number v-model="form.budgetAmount" :min="0" :controls="false" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="计划开始">
+            <el-form-item :label="t('project.initiation.form.plannedStartDate')">
               <el-date-picker v-model="form.plannedStartDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="计划结束">
+            <el-form-item :label="t('project.initiation.form.plannedEndDate')">
               <el-date-picker v-model="form.plannedEndDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="项目描述">
+        <el-form-item :label="t('project.initiation.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
-        <el-form-item label="商业论证">
+        <el-form-item :label="t('project.initiation.form.businessCase')">
           <el-input v-model="form.businessCase" type="textarea" :rows="2" />
         </el-form-item>
-        <el-form-item label="风险评估">
+        <el-form-item :label="t('project.initiation.form.riskAssessment')">
           <el-input v-model="form.riskAssessment" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 预算弹窗 -->
-    <el-dialog v-model="budgetDialogVisible" title="预算明细" width="800px">
-      <el-form :model="budgetForm" label-width="100px" inline>
-        <el-form-item label="分类">
+    <el-dialog v-model="budgetDialogVisible" :title="t('project.initiation.dialog.budgetTitle')" width="720px">
+      <el-form :model="budgetForm" label-width="80px" inline>
+        <el-form-item :label="t('project.initiation.budget.category')">
           <el-select v-model="budgetForm.category" style="width: 140px">
-            <el-option label="人工" value="LABOR" />
-            <el-option label="采购" value="PURCHASE" />
-            <el-option label="费用" value="EXPENSE" />
-            <el-option label="外协" value="OUTSOURCE" />
-            <el-option label="其他" value="OTHER" />
+            <el-option :label="t('project.initiation.budgetCategory.LABOR')" value="LABOR" />
+            <el-option :label="t('project.initiation.budgetCategory.PURCHASE')" value="PURCHASE" />
+            <el-option :label="t('project.initiation.budgetCategory.EXPENSE')" value="EXPENSE" />
+            <el-option :label="t('project.initiation.budgetCategory.OUTSOURCE')" value="OUTSOURCE" />
+            <el-option :label="t('project.initiation.budgetCategory.OTHER')" value="OTHER" />
           </el-select>
         </el-form-item>
-        <el-form-item label="名称">
-          <el-input v-model="budgetForm.itemName" placeholder="如: 后端开发" />
+        <el-form-item :label="t('project.initiation.budget.itemName')">
+          <el-input v-model="budgetForm.itemName" :placeholder="t('project.initiation.budget.itemNamePlaceholder')" style="width: 200px" />
         </el-form-item>
-        <el-form-item label="金额">
-          <el-input-number v-model="budgetForm.amount" :min="0" :controls="false" />
+        <el-form-item :label="t('project.initiation.budget.amount')">
+          <el-input-number v-model="budgetForm.amount" :min="0" :controls="false" style="width: 160px" />
         </el-form-item>
-        <el-form-item label="备注">
+        <el-form-item :label="t('project.initiation.budget.remark')">
           <el-input v-model="budgetForm.remark" style="width: 200px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :icon="'Plus'" @click="submitBudget">添加</el-button>
+          <el-button type="primary" @click="submitBudget">{{ t('project.initiation.budget.add') }}</el-button>
         </el-form-item>
       </el-form>
-      <vxe-table :data="budgetList" border>
+      <vxe-table :data="budgetList" border stripe max-height="300">
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="category" title="分类" width="100" />
-        <vxe-column field="itemName" title="名称" min-width="180" />
-        <vxe-column field="amount" title="金额" width="140" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="remark" title="备注" min-width="180" />
+        <vxe-column field="category" :title="t('project.initiation.budget.category')" width="100" />
+        <vxe-column field="itemName" :title="t('project.initiation.budget.itemName')" min-width="160" show-overflow />
+        <vxe-column field="amount" :title="t('project.initiation.budget.amount')" width="120" align="right" :formatter="({ cellValue }: any) => `¥${Number(cellValue).toLocaleString()}`" />
+        <vxe-column field="remark" :title="t('project.initiation.budget.remark')" min-width="120" show-overflow />
       </vxe-table>
+      <template #footer>
+        <el-button @click="budgetDialogVisible = false">{{ t('common.close') }}</el-button>
+      </template>
     </el-dialog>
 
     <!-- 门径评审弹窗 -->
-    <el-dialog v-model="gateDialogVisible" title="门径评审" width="520px">
+    <el-dialog v-model="gateDialogVisible" :title="t('project.initiation.dialog.gateTitle')" width="520px">
       <el-form :model="gateForm" label-width="100px">
-        <el-form-item label="门径">
+        <el-form-item :label="t('project.initiation.gateForm.gate')">
           <el-select v-model="gateForm.gateCode" style="width: 100%">
             <el-option v-for="(v, k) in gateMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
-        <el-form-item label="评审结果">
+        <el-form-item :label="t('project.initiation.gateForm.reviewResult')">
           <el-radio-group v-model="gateForm.reviewResult">
-            <el-radio value="PASS">通过</el-radio>
-            <el-radio value="CONDITIONAL">有条件通过</el-radio>
-            <el-radio value="FAIL">不通过</el-radio>
+            <el-radio value="PASS">{{ t('project.initiation.reviewResult.PASS') }}</el-radio>
+            <el-radio value="CONDITIONAL">{{ t('project.initiation.reviewResult.CONDITIONAL') }}</el-radio>
+            <el-radio value="FAIL">{{ t('project.initiation.reviewResult.FAIL') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="评审意见">
+        <el-form-item :label="t('project.initiation.gateForm.comment')">
           <el-input v-model="gateForm.comment" type="textarea" :rows="3" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="gateDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitGate">提交</el-button>
+        <el-button @click="gateDialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitGate">{{ t('common.submit') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

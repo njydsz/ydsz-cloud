@@ -11,8 +11,9 @@
  *     5. 任务操作弹窗：通过/驳回/转办/委派/加签/暂存/沟通/催办等
  *   审批操作逻辑通过 useApprovalActions（策略模式）注入。
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { pageTodoTasks, pageDefinitions } from '@/api/workflow'
 import type {
   FlowTaskDTO,
@@ -34,6 +35,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const { t } = useI18n()
 
 // ===========================================
 // 筛选状态
@@ -102,18 +104,18 @@ interface ColumnOption {
   label: string
   fixed?: boolean
 }
-const columnOptions: ColumnOption[] = [
-  { key: 'selection', label: '选择', fixed: true },
-  { key: 'pin', label: '置顶', fixed: true },
-  { key: 'title', label: '审批事项' },
-  { key: 'flowName', label: '流程' },
-  { key: 'nodeName', label: '当前节点' },
-  { key: 'assignorName', label: '委托人' },
-  { key: 'createTime', label: '到达时间' },
-  { key: 'status', label: '状态' },
-  { key: 'operation', label: '操作', fixed: true },
-]
-const visibleColumns = ref<string[]>(columnOptions.map((c) => c.key))
+const columnOptions = computed<ColumnOption[]>(() => [
+  { key: 'selection', label: t('workflow.approval.columns.selection'), fixed: true },
+  { key: 'pin', label: t('workflow.approval.columns.pin'), fixed: true },
+  { key: 'title', label: t('workflow.approval.columns.title') },
+  { key: 'flowName', label: t('workflow.approval.columns.flowName') },
+  { key: 'nodeName', label: t('workflow.approval.columns.nodeName') },
+  { key: 'assignorName', label: t('workflow.approval.columns.assignorName') },
+  { key: 'createTime', label: t('workflow.approval.columns.createTime') },
+  { key: 'status', label: t('workflow.approval.columns.status') },
+  { key: 'operation', label: t('workflow.approval.columns.operation'), fixed: true },
+])
+const visibleColumns = ref<string[]>(['selection', 'pin', 'title', 'flowName', 'nodeName', 'assignorName', 'createTime', 'status', 'operation'])
 
 function loadColumnPrefs() {
   try {
@@ -285,20 +287,20 @@ onMounted(() => {
       <div class="filter-bar-enhanced__row">
         <!-- 紧急程度 -->
         <el-radio-group v-model="urgencyFilter" size="small" @change="onFilterChange">
-          <el-radio-button value="all">全部</el-radio-button>
+          <el-radio-button value="all">{{ t('common.all') }}</el-radio-button>
           <el-radio-button value="nearly-overdue">
-            即将超时
-            <el-tooltip content="截止时间在 2 小时内" placement="top">
+            {{ t('workflow.approval.urgency.nearlyOverdue') }}
+            <el-tooltip :content="t('workflow.approval.urgency.nearlyOverdueTip')" placement="top">
               <el-icon style="margin-left: 2px"><QuestionFilled /></el-icon>
             </el-tooltip>
           </el-radio-button>
-          <el-radio-button value="overdue">已超时</el-radio-button>
+          <el-radio-button value="overdue">{{ t('workflow.approval.urgency.overdue') }}</el-radio-button>
         </el-radio-group>
 
         <!-- 流程类型 -->
         <el-select
           v-model="flowTypeFilter"
-          placeholder="流程类型"
+          :placeholder="t('workflow.approval.filter.flowType')"
           clearable
           filterable
           size="small"
@@ -317,9 +319,9 @@ onMounted(() => {
         <el-date-picker
           v-model="dateRange"
           type="daterange"
-          range-separator="至"
-          start-placeholder="发起开始"
-          end-placeholder="发起结束"
+          :range-separator="t('workflow.approval.filter.dateSeparator')"
+          :start-placeholder="t('workflow.approval.filter.startDate')"
+          :end-placeholder="t('workflow.approval.filter.endDate')"
           size="small"
           style="width: 260px"
           value-format="YYYY-MM-DD HH:mm:ss"
@@ -327,26 +329,26 @@ onMounted(() => {
           @change="onFilterChange"
         />
 
-        <el-button size="small" @click="resetTodoFilters">重置筛选</el-button>
+        <el-button size="small" @click="resetTodoFilters">{{ t('workflow.approval.filter.reset') }}</el-button>
       </div>
 
       <div class="filter-bar-enhanced__row">
         <el-input
           v-model="todoQuery.flowCode"
-          placeholder="流程编码关键词"
+          :placeholder="t('workflow.approval.filter.flowCodeKeywordPlaceholder')"
           clearable
           size="small"
           style="width: 200px"
           @keyup.enter="loadTodo"
         />
-        <el-button type="primary" size="small" @click="loadTodo">查询</el-button>
+        <el-button type="primary" size="small" @click="loadTodo">{{ t('workflow.approval.buttons.query') }}</el-button>
         <el-button
           type="success"
           size="small"
           :disabled="todoSelection.length === 0"
           @click="quickBatchPass(todoSelection.map((t) => t.id))"
         >
-          批量通过（{{ todoSelection.length }}）
+          {{ t('workflow.approval.buttons.batchPass', { n: todoSelection.length }) }}
         </el-button>
 
         <!-- 列显隐控制 -->
@@ -354,7 +356,7 @@ onMounted(() => {
           <template #reference>
             <el-button size="small" style="margin-left: auto">
               <el-icon><Setting /></el-icon>
-              列设置
+              {{ t('workflow.approval.buttons.columnSettings') }}
             </el-button>
           </template>
           <el-checkbox-group v-model="visibleColumns" @change="saveColumnPrefs">
@@ -362,7 +364,7 @@ onMounted(() => {
               <el-checkbox :value="col.key" :disabled="col.fixed" :label="col.key">
                 {{ col.label }}
                 <el-tag v-if="col.fixed" size="small" type="info" style="margin-left: 4px">
-                  固定
+                  {{ t('workflow.approval.columns.fixed') }}
                 </el-tag>
               </el-checkbox>
             </div>
@@ -386,7 +388,7 @@ onMounted(() => {
       />
       <el-table-column
         v-if="isColumnVisible('pin')"
-        label="置顶"
+        :label="t('workflow.approval.columns.pin')"
         width="60"
         align="center"
       >
@@ -396,7 +398,7 @@ onMounted(() => {
             :icon="isPinned(row.id) ? 'StarFilled' : 'Star'"
             size="small"
             text
-            :title="isPinned(row.id) ? '取消置顶' : '置顶'"
+            :title="isPinned(row.id) ? t('workflow.approval.actions.unpin') : t('workflow.approval.actions.pin')"
             @click="togglePin(row.id)"
           />
         </template>
@@ -404,32 +406,32 @@ onMounted(() => {
       <el-table-column
         v-if="isColumnVisible('title')"
         prop="title"
-        label="审批事项"
+        :label="t('workflow.approval.columns.title')"
         min-width="200"
         show-overflow-tooltip
       />
       <el-table-column
         v-if="isColumnVisible('flowName')"
         prop="flowName"
-        label="流程"
+        :label="t('workflow.approval.columns.flowName')"
         width="160"
         show-overflow-tooltip
       />
       <el-table-column
         v-if="isColumnVisible('nodeName')"
         prop="nodeName"
-        label="当前节点"
+        :label="t('workflow.approval.columns.nodeName')"
         width="120"
       />
       <el-table-column
         v-if="isColumnVisible('assignorName')"
         prop="assignorName"
-        label="委托人"
+        :label="t('workflow.approval.columns.assignorName')"
         width="100"
       />
       <el-table-column
         v-if="isColumnVisible('createTime')"
-        label="到达时间"
+        :label="t('workflow.approval.columns.createTime')"
         width="160"
       >
         <template #default="{ row }">
@@ -438,12 +440,12 @@ onMounted(() => {
       </el-table-column>
       <el-table-column
         v-if="isColumnVisible('status')"
-        label="状态"
+        :label="t('workflow.approval.columns.status')"
         width="120"
       >
         <template #default="{ row }">
           <el-tag v-if="isOverdue(row)" type="danger" size="small" effect="dark">
-            已超期
+            {{ t('workflow.approval.urgency.overdueTag') }}
           </el-tag>
           <el-tag
             v-else-if="isNearlyOverdue(row)"
@@ -451,7 +453,7 @@ onMounted(() => {
             size="small"
             effect="dark"
           >
-            即将超期
+            {{ t('workflow.approval.urgency.nearlyOverdueTag') }}
           </el-tag>
           <el-tag
             v-else
@@ -464,7 +466,7 @@ onMounted(() => {
       </el-table-column>
       <el-table-column
         v-if="isColumnVisible('operation')"
-        label="操作"
+        :label="t('workflow.approval.columns.operation')"
         width="420"
         fixed="right"
       >
@@ -477,7 +479,7 @@ onMounted(() => {
               size="small"
               @click="quickPass(row)"
             >
-              一键通过
+              {{ t('workflow.approval.actions.quickPass') }}
             </el-button>
             <!-- 通过（弹窗） -->
             <el-button
@@ -486,7 +488,7 @@ onMounted(() => {
               size="small"
               @click="openOpDialog('PASS', row)"
             >
-              通过
+              {{ t('workflow.approval.pass') }}
             </el-button>
             <!-- 驳回 -->
             <el-button
@@ -495,46 +497,46 @@ onMounted(() => {
               size="small"
               @click="openOpDialog('REJECT', row)"
             >
-              驳回
+              {{ t('workflow.approval.reject') }}
             </el-button>
             <!-- 更多操作 -->
             <el-dropdown size="small">
               <el-button size="small">
-                更多<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+                {{ t('workflow.approval.actions.more') }}<el-icon class="el-icon--right"><ArrowDown /></el-icon>
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
                   <el-dropdown-item v-if="row.taskStatus === 'PENDING'" @click="quickClaim(row)">
-                    签收
+                    {{ t('workflow.task.claim') }}
                   </el-dropdown-item>
-                  <el-dropdown-item @click="quickSaveDraft(row)">暂存</el-dropdown-item>
-                  <el-dropdown-item @click="quickMarkRead(row)">已阅</el-dropdown-item>
-                  <el-dropdown-item @click="quickCommunicate(row)">沟通</el-dropdown-item>
+                  <el-dropdown-item @click="quickSaveDraft(row)">{{ t('workflow.approval.actions.saveDraft') }}</el-dropdown-item>
+                  <el-dropdown-item @click="quickMarkRead(row)">{{ t('workflow.approval.actions.markRead') }}</el-dropdown-item>
+                  <el-dropdown-item @click="quickCommunicate(row)">{{ t('workflow.approval.actions.communicate') }}</el-dropdown-item>
                   <el-dropdown-item divided @click="openOpDialog('TRANSFER', row)">
-                    转办
+                    {{ t('workflow.task.transfer') }}
                   </el-dropdown-item>
-                  <el-dropdown-item @click="openOpDialog('DELEGATE', row)">委派</el-dropdown-item>
+                  <el-dropdown-item @click="openOpDialog('DELEGATE', row)">{{ t('workflow.task.delegate') }}</el-dropdown-item>
                   <el-dropdown-item @click="openOpDialog('ADD_APPROVER', row)">
-                    追加处理人
+                    {{ t('workflow.approval.actions.addApprover') }}
                   </el-dropdown-item>
                   <el-dropdown-item divided @click="openOpDialog('COUNTERSIGN_BEFORE', row)">
-                    前加签
+                    {{ t('workflow.approval.actions.countersignBefore') }}
                   </el-dropdown-item>
                   <el-dropdown-item @click="openOpDialog('COUNTERSIGN_AFTER', row)">
-                    后加签
+                    {{ t('workflow.approval.actions.countersignAfter') }}
                   </el-dropdown-item>
                   <el-dropdown-item @click="openOpDialog('COUNTERSIGN_REMOVE', row)">
-                    减签
+                    {{ t('workflow.approval.actions.countersignRemove') }}
                   </el-dropdown-item>
-                  <el-dropdown-item divided @click="quickUrge(row)">催办</el-dropdown-item>
-                  <el-dropdown-item @click="goInstance(row.instanceId)">查看流程</el-dropdown-item>
+                  <el-dropdown-item divided @click="quickUrge(row)">{{ t('workflow.task.urge') }}</el-dropdown-item>
+                  <el-dropdown-item @click="goInstance(row.instanceId)">{{ t('workflow.approval.actions.viewFlow') }}</el-dropdown-item>
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
           </template>
           <template v-else>
             <el-button size="small" text @click="goInstance(row.instanceId)">
-              查看流程
+              {{ t('workflow.approval.actions.viewFlow') }}
             </el-button>
           </template>
         </template>
@@ -578,7 +580,7 @@ onMounted(() => {
         <el-form-item v-if="showTargetUser" :label="targetUserLabel">
           <UserPicker
             v-model="opForm.targetUser"
-            :placeholder="'请选择目标用户（搜索姓名/用户名）'"
+            :placeholder="t('workflow.approval.actions.userPickerPlaceholder')"
             :show-dialog="true"
             :dialog-title="targetUserDialogTitle"
             @change="onTargetUserChange"
@@ -586,10 +588,10 @@ onMounted(() => {
         </el-form-item>
 
         <!-- 驳回到节点 -->
-        <el-form-item v-if="showRejectNode" label="驳回到节点">
+        <el-form-item v-if="showRejectNode" :label="t('workflow.approval.actions.rejectNode')">
           <el-select
             v-model="opForm.targetNodeCode"
-            placeholder="可选：留空则驳回到上一节点；选择则驳回到指定历史节点"
+            :placeholder="t('workflow.approval.actions.rejectNodePlaceholder')"
             clearable
             filterable
             style="width: 100%"
@@ -604,8 +606,8 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="opDialog = false">取消</el-button>
-        <el-button type="primary" @click="submitOp">确定</el-button>
+        <el-button @click="opDialog = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitOp">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>

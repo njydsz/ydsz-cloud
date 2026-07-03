@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.config;
 
 import com.alibaba.csp.sentinel.adapter.spring.webmvc_v6x.callback.BlockExceptionHandler;
+import com.alibaba.csp.sentinel.slots.block.degrade.DegradeException;
 import com.alibaba.csp.sentinel.slots.block.flow.FlowException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

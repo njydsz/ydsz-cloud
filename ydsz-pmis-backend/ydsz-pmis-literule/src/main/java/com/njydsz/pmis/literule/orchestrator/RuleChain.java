@@ -3,6 +3,7 @@ package com.njydsz.pmis.literule.orchestrator;
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
 

@@ -6,11 +6,13 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { pageDoneTasks } from '@/api/workflow'
 import type { FlowTaskDTO, FlowTaskQuery } from '@/api/workflow/types'
 import { formatTime, durationLabel } from '../composables/useApprovalActions'
 
 const router = useRouter()
+const { t } = useI18n()
 
 const doneQuery = reactive<FlowTaskQuery>({
   pageNum: 1,
@@ -45,27 +47,27 @@ onMounted(loadDone)
     <div class="filter-bar">
       <el-input
         v-model="doneQuery.flowCode"
-        placeholder="流程编码"
+        :placeholder="t('workflow.approval.filter.flowCodePlaceholder')"
         clearable
         style="width: 200px"
         @keyup.enter="loadDone"
       />
-      <el-button type="primary" @click="loadDone">查询</el-button>
+      <el-button type="primary" @click="loadDone">{{ t('workflow.approval.buttons.query') }}</el-button>
     </div>
     <el-table v-loading="doneLoading" :data="doneList" stripe>
-      <el-table-column prop="title" label="审批事项" min-width="220" show-overflow-tooltip />
-      <el-table-column prop="flowName" label="流程" width="160" />
-      <el-table-column prop="nodeName" label="节点" width="120" />
-      <el-table-column prop="comment" label="审批意见" min-width="180" show-overflow-tooltip />
-      <el-table-column label="耗时" width="100">
+      <el-table-column prop="title" :label="t('workflow.approval.columns.title')" min-width="220" show-overflow-tooltip />
+      <el-table-column prop="flowName" :label="t('workflow.approval.columns.flowName')" width="160" />
+      <el-table-column prop="nodeName" :label="t('workflow.approval.columns.nodeName')" width="120" />
+      <el-table-column prop="comment" :label="t('workflow.approval.columns.comment')" min-width="180" show-overflow-tooltip />
+      <el-table-column :label="t('workflow.approval.columns.duration')" width="100">
         <template #default="{ row }">{{ durationLabel(row.durationMs) }}</template>
       </el-table-column>
-      <el-table-column label="完成时间" width="160">
+      <el-table-column :label="t('workflow.approval.columns.finishAt')" width="160">
         <template #default="{ row }">{{ formatTime(row.finishAt) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="120" fixed="right">
+      <el-table-column :label="t('workflow.approval.columns.operation')" width="120" fixed="right">
         <template #default="{ row }">
-          <el-button size="small" text @click="goInstance(row.instanceId)">查看流程</el-button>
+          <el-button size="small" text @click="goInstance(row.instanceId)">{{ t('workflow.approval.actions.viewFlow') }}</el-button>
         </template>
       </el-table-column>
     </el-table>

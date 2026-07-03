@@ -4,7 +4,7 @@
   @module views/system/user
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
@@ -96,20 +96,20 @@ const form = reactive<UserCreateDTO & { id?: number }>({
   status: 'ENABLED',
 })
 
-const formRules = {
-  username: [{ required: true, message: '用户名必填', trigger: 'blur' }],
-  realName: [{ required: true, message: '姓名必填', trigger: 'blur' }],
+const formRules = computed(() => ({
+  username: [{ required: true, message: t('system.user.rules.usernameRequired'), trigger: 'blur' }],
+  realName: [{ required: true, message: t('system.user.rules.realNameRequired'), trigger: 'blur' }],
   password: [
     {
       validator: (_: any, v: string, cb: any) => {
-        if (formMode.value === 'create' && !v) return cb(new Error('密码必填'))
-        if (v && v.length < 6) return cb(new Error('密码长度至少 6 位'))
+        if (formMode.value === 'create' && !v) return cb(new Error(t('system.user.rules.passwordRequired')))
+        if (v && v.length < 6) return cb(new Error(t('system.user.messages.passwordMinLength')))
         cb()
       },
       trigger: 'blur',
     },
   ],
-}
+}))
 
 /** 打开新增用户弹窗，初始化表单默认值 */
 function openCreate() {
@@ -155,7 +155,7 @@ async function openEdit(row: UserVO) {
   } catch (e) {
     form.roleIds = []
     if (!isHandledError(e)) {
-      ElMessage.error('用户角色加载失败，请刷新重试')
+      ElMessage.error(t('system.user.messages.userRoleLoadFailed'))
     }
   }
   formDialogVisible.value = true
@@ -291,11 +291,11 @@ async function fetch2faStatus() {
 
 const deleteReAuth = useReAuth({
   operationCode: 'USER_DELETE',
-  operationName: '删除用户',
+  operationName: t('system.user.reauth.deleteUser'),
 })
 const resetPwdReAuth = useReAuth({
   operationCode: 'USER_RESET_PASSWORD',
-  operationName: '重置用户密码',
+  operationName: t('system.user.reauth.resetPassword'),
 })
 
 /**
@@ -449,7 +449,7 @@ onMounted(() => {
         <el-row :gutter="16">
           <el-col :xs="24" :sm="12">
             <el-form-item :label="$t('system.user.form.levelCode')">
-              <el-input v-model="form.levelCode" placeholder="例如: L8" />
+              <el-input v-model="form.levelCode" :placeholder="$t('system.user.form.levelCodePlaceholder')" />
             </el-form-item>
           </el-col>
           <el-col :xs="24" :sm="12">
@@ -480,7 +480,7 @@ onMounted(() => {
     <el-dialog v-model="resetDialogVisible" :title="$t('system.user.dialog.resetPwdTitle')" width="420px">
       <el-form label-width="80px">
         <el-form-item :label="$t('system.user.form.password')">
-          <el-input v-model="newPassword" type="password" show-password placeholder="至少 6 位" />
+          <el-input v-model="newPassword" type="password" show-password :placeholder="$t('system.user.form.passwordPlaceholder')" />
           <PasswordStrengthBar
             :password="newPassword"
             :show-input="false"
@@ -500,7 +500,7 @@ onMounted(() => {
       v-model:visible="deleteReAuth.dialog.visible"
       v-model:method="deleteReAuth.dialog.method"
       :operation-code="deleteReAuth.options.operationCode"
-      :operation-name="deleteReAuth.options.operationName"
+      :operation-name="$t('system.user.reauth.deleteUser')"
       :loading="deleteReAuth.dialog.loading"
       :error-message="deleteReAuth.dialog.errorMessage"
       :has-2fa="has2fa"
@@ -513,7 +513,7 @@ onMounted(() => {
       v-model:visible="resetPwdReAuth.dialog.visible"
       v-model:method="resetPwdReAuth.dialog.method"
       :operation-code="resetPwdReAuth.options.operationCode"
-      :operation-name="resetPwdReAuth.options.operationName"
+      :operation-name="$t('system.user.reauth.resetPassword')"
       :loading="resetPwdReAuth.dialog.loading"
       :error-message="resetPwdReAuth.dialog.errorMessage"
       :has-2fa="has2fa"

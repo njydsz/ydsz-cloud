@@ -12,11 +12,14 @@
  *   审批操作策略见 composables/useApprovalActions.ts。
  */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { pageTodoTasks, ccUnreadCount } from '@/api/workflow'
 import TodoTab from './tabs/TodoTab.vue'
 import DoneTab from './tabs/DoneTab.vue'
 import InitiatedTab from './tabs/InitiatedTab.vue'
 import CCTab from './tabs/CCTab.vue'
+
+const { t } = useI18n()
 
 const activeTab = ref<'todo' | 'done' | 'mine' | 'cc'>('todo')
 
@@ -83,7 +86,7 @@ onUnmounted(stopPolling)
   <div class="approval-center">
     <div class="page-header">
       <h2>
-        审批中心
+        {{ t('workflow.approval.title') }}
         <el-badge
           v-if="tabBadge.todo"
           :value="tabBadge.todo"
@@ -91,7 +94,7 @@ onUnmounted(stopPolling)
           class="header-badge"
         />
       </h2>
-      <p class="page-header__sub">统一处理待办、已办、发起、抄送（对标钉钉/飞书审批）</p>
+      <p class="page-header__sub">{{ t('workflow.approval.subtitle') }}</p>
     </div>
 
     <el-tabs v-model="activeTab" class="approval-tabs">
@@ -100,7 +103,7 @@ onUnmounted(stopPolling)
         <template #label>
           <span class="tab-label">
             <el-icon><Bell /></el-icon>
-            我的待办
+            {{ t('workflow.approval.tabs.todo') }}
             <el-badge
               v-if="tabBadge.todo"
               :value="tabBadge.todo"
@@ -117,7 +120,7 @@ onUnmounted(stopPolling)
         <template #label>
           <span class="tab-label">
             <el-icon><Select /></el-icon>
-            我的已办
+            {{ t('workflow.approval.tabs.done') }}
           </span>
         </template>
         <DoneTab />
@@ -128,7 +131,7 @@ onUnmounted(stopPolling)
         <template #label>
           <span class="tab-label">
             <el-icon><Promotion /></el-icon>
-            我发起的
+            {{ t('workflow.approval.tabs.mine') }}
           </span>
         </template>
         <InitiatedTab />
@@ -139,7 +142,7 @@ onUnmounted(stopPolling)
         <template #label>
           <span class="tab-label">
             <el-icon><Share /></el-icon>
-            抄送我的
+            {{ t('workflow.approval.tabs.cc') }}
             <el-badge
               v-if="tabBadge.cc"
               :value="tabBadge.cc"

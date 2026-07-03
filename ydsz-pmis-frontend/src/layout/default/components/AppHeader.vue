@@ -4,6 +4,7 @@
   @module layout/default/components/AppHeader
 -->
 <script setup lang="ts">
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useAppStore } from '@/store/modules/app'
 import { useUserStore } from '@/store/modules/user'
 import { useRouter } from 'vue-router'
@@ -16,6 +17,9 @@ const appStore = useAppStore()
 const userStore = useUserStore()
 const router = useRouter()
 const { t } = useI18n()
+
+/** 是否处于全屏状态 */
+const isFullscreen = ref(false)
 
 /** 退出登录：二次确认后调用 userStore.logout 并跳登录页 */
 async function handleLogout() {
@@ -36,6 +40,32 @@ async function handleLogout() {
 function handleToggleTheme() {
   appStore.toggleTheme()
 }
+
+/** 切换全屏/退出全屏 */
+function handleToggleFullscreen(): void {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {
+      // 浏览器不支持或用户拒绝时静默忽略
+    })
+  } else {
+    document.exitFullscreen().catch(() => {
+      // 退出全屏失败时静默忽略
+    })
+  }
+}
+
+/** 监听全屏状态变化（支持 ESC 退出后同步按钮状态） */
+function handleFullscreenChange(): void {
+  isFullscreen.value = !!document.fullscreenElement
+}
+
+onMounted(() => {
+  document.addEventListener('fullscreenchange', handleFullscreenChange)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('fullscreenchange', handleFullscreenChange)
+})
 </script>
 
 <template>
@@ -60,9 +90,12 @@ function handleToggleTheme() {
           </el-icon>
         </el-button>
       </el-tooltip>
-      <el-tooltip :content="t('common.fullscreen')">
-        <el-button text>
-          <el-icon :size="18"><FullScreen /></el-icon>
+      <el-tooltip :content="isFullscreen ? t('common.exitFullscreen') : t('common.fullscreen')">
+        <el-button text @click="handleToggleFullscreen">
+          <el-icon :size="18">
+            <Aim v-if="isFullscreen" />
+            <FullScreen v-else />
+          </el-icon>
         </el-button>
       </el-tooltip>
       <el-dropdown trigger="click">

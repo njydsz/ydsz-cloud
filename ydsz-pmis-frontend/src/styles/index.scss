@@ -46,11 +46,11 @@
   --text-secondary: #a3a6ad;
   --text-placeholder: #8d9095;
 
-  // 边框颜色
-  --border-base: #414243;
-  --border-light: #414243;
-  --border-lighter: #414243;
-  --border-extra-light: #38393a;
+  // 边框颜色（4 级层次：base 最明显 → extra-light 最微弱）
+  --border-base: #4c4d4f;
+  --border-light: #3d3e3f;
+  --border-lighter: #363738;
+  --border-extra-light: #2a2b2c;
 
   // 背景色
   --bg-base: #141414;
