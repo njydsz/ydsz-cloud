@@ -18,6 +18,7 @@ import com.njydsz.pmis.workflow.service.FlowInstanceMigrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -56,11 +57,13 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     }
 
     @Override
+    @Transactional(readOnly = true)
     public InstanceMigrationResultDTO previewMigration(InstanceMigrationDTO dto) {
         return doMigrate(dto, true);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<String> findRunningInstances(Long definitionId, Long tenantId) {
         if (definitionId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId 不能为空");
@@ -81,6 +84,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, String> autoMapNodes(Long sourceDefId, Long targetDefId) {
         if (sourceDefId == null || targetDefId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "sourceDefId/targetDefId 不能为空");

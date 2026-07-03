@@ -47,7 +47,9 @@ const pageSize = ref(20)
 const total = ref(0)
 const list = ref<AgentPrediction[]>([])
 const loading = ref(false)
-const aggregateData = ref<Array<{ agentType: string; count: number; red: number; yellow: number; normal: number }>>([])
+/** 按类型聚合的统计行 */
+type AggregateRow = { agentType: string; count: number; red: number; yellow: number; normal: number }
+const aggregateData = ref<AggregateRow[]>([])
 const counts = reactive({ red: 0, yellow: 0, normal: 0, total: 0 })
 
 async function load() {
@@ -58,10 +60,10 @@ async function load() {
       alertLevel: filter.alertLevel || undefined,
       status: filter.status || undefined,
     })
-    list.value = (data as any)?.list ?? (data as any) ?? []
-    total.value = (data as any)?.total ?? list.value.length
-  } catch (e: any) {
-    ElMessage.error(e?.message || '加载失败')
+    list.value = data?.list ?? []
+    total.value = data?.total ?? list.value.length
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '加载失败')
   } finally {
     loading.value = false
   }
@@ -77,11 +79,11 @@ async function loadAggregate() {
       countByAlertLevel({ alertLevel: 'NORMAL' }),
       countByAlertLevel(),
     ])
-    aggregateData.value = ((aggRes as any)?.data || []) as any[]
-    counts.red = Number((redRes as any)?.data ?? 0)
-    counts.yellow = Number((yellowRes as any)?.data ?? 0)
-    counts.normal = Number((normalRes as any)?.data ?? 0)
-    counts.total = Number((totalRes as any)?.data ?? 0)
+    aggregateData.value = (aggRes?.data as AggregateRow[]) || []
+    counts.red = Number(redRes?.data ?? 0)
+    counts.yellow = Number(yellowRes?.data ?? 0)
+    counts.normal = Number(normalRes?.data ?? 0)
+    counts.total = Number(totalRes?.data ?? 0)
     await nextTickRender()
   } catch { /* 静默 */ }
 }
@@ -124,8 +126,8 @@ async function openDetail(row: AgentPrediction) {
   try {
     const { data } = await getById(row.id)
     detail.value = (data as AgentPrediction) ?? null
-  } catch (e: any) {
-    ElMessage.error(e?.message || '详情加载失败')
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '详情加载失败')
   } finally {
     detailLoading.value = false
   }

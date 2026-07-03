@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
@@ -161,6 +162,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
     // ============================== 异常检测 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> detectAnomalies(Long instanceId) {
         if (instanceId == null) {
             return Collections.emptyList();
@@ -189,6 +191,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public boolean isAnomaly(Long instanceId) {
         return !detectAnomalies(instanceId).isEmpty();
     }

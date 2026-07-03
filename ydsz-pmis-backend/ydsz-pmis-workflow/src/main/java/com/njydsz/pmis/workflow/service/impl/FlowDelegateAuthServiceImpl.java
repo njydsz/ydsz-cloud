@@ -143,6 +143,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowDelegateAuthDO> listMine(Long ownerUserId, Long tenantId, String status) {
         if (ownerUserId == null) {
             return List.of();
@@ -152,6 +153,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowDelegateAuthDO> listAsDelegate(Long delegateUserId, Long tenantId, String status) {
         if (delegateUserId == null) {
             return List.of();
@@ -161,6 +163,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FlowDelegateAuthDO matchAuth(Long tenantId, Long ownerUserId,
                                          String flowCode, String nodeCode) {
         if (tenantId == null || ownerUserId == null) {
@@ -201,6 +204,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<FlowDelegateLogDO> listDelegateLog(Long delegateUserId, int page, int size) {
         if (delegateUserId == null) {
             return PageResult.empty();
@@ -214,6 +218,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<FlowDelegateLogDO> listOwnerLog(Long ownerUserId, int page, int size) {
         if (ownerUserId == null) {
             return PageResult.empty();

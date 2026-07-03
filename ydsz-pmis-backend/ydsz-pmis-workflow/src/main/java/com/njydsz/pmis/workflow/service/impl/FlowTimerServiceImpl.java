@@ -270,6 +270,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowTimerDO> listByInstance(Long instanceId) {
         return timerMapper.selectList(new QueryWrapper<FlowTimerDO>()
                 .eq("instance_id", instanceId)
@@ -278,6 +279,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countPending(Long instanceId) {
         return timerMapper.countPendingByInstance(instanceId);
     }

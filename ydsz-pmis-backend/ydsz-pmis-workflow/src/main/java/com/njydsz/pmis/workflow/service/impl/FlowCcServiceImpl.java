@@ -119,6 +119,7 @@ public class FlowCcServiceImpl implements FlowCcService {
     // ============================== 分页查询 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowCcDO> pageMyCc(Long tenantId, Long userId, FlowCcQueryDTO query) {
         try {
             if (userId == null || query == null) {
@@ -136,6 +137,7 @@ public class FlowCcServiceImpl implements FlowCcService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public long countMyCc(Long tenantId, Long userId, FlowCcQueryDTO query) {
         try {
             if (userId == null || query == null) {
@@ -149,6 +151,7 @@ public class FlowCcServiceImpl implements FlowCcService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<FlowCcDO> listCcByUser(Long userId, String readStatus, String flowCode,
                                              Long tenantId, int pageNo, int pageSize) {
         try {
@@ -205,6 +208,7 @@ public class FlowCcServiceImpl implements FlowCcService {
     // ============================== 未读数 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public long countUnread(Long userId, Long tenantId) {
         try {
             if (userId == null || tenantId == null) {
@@ -221,6 +225,7 @@ public class FlowCcServiceImpl implements FlowCcService {
     // ============================== 实例抄送列表 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowCcDO> listByInstance(Long instanceId, Long tenantId) {
         try {
             if (instanceId == null) {

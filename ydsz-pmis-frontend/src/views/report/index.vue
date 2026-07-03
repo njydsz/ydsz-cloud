@@ -172,6 +172,13 @@ function toNumber(v: unknown, def = 0) {
   return Number.isFinite(n) ? n : def
 }
 
+/** vxe-column 金额格式化器 */
+const moneyFormatter = ({ cellValue }: { cellValue: unknown }) => fmtMoney(cellValue)
+/** vxe-column 百分比格式化器 */
+const pctFormatter = ({ cellValue }: { cellValue: unknown }) => fmtPct(cellValue)
+/** vxe-column 利用率格式化器 */
+const utilizationFormatter = ({ cellValue }: { cellValue: unknown }) => `${Number(cellValue).toFixed(1)}%`
+
 // ============== 渲染分发 ==============
 
 async function renderChartForTab(key: TabKey) {
@@ -543,7 +550,7 @@ onUnmounted(() => {
           <vxe-column field="date" title="日期" width="120" />
           <vxe-column field="type" title="类型" width="100" />
           <vxe-column field="code" title="单号" width="160" />
-          <vxe-column field="amount" title="金额" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtMoney(cellValue)" />
+          <vxe-column field="amount" title="金额" width="140" align="right" :formatter="moneyFormatter" />
           <vxe-column field="remark" title="备注" min-width="200" />
         </vxe-table>
       </div>
@@ -568,10 +575,10 @@ onUnmounted(() => {
         <vxe-table :data="summaryData" border stripe>
           <vxe-column field="initiationId" title="项目 ID" width="100" align="center" />
           <vxe-column field="initiationName" title="项目名称" min-width="200" show-overflow />
-          <vxe-column field="revenue" title="收入" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtMoney(cellValue)" />
-          <vxe-column field="totalCost" title="总成本" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtMoney(cellValue)" />
-          <vxe-column field="grossProfit" title="毛利" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtMoney(cellValue)" />
-          <vxe-column field="grossMargin" title="毛利率" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => fmtPct(cellValue)" />
+          <vxe-column field="revenue" title="收入" width="140" align="right" :formatter="moneyFormatter" />
+          <vxe-column field="totalCost" title="总成本" width="140" align="right" :formatter="moneyFormatter" />
+          <vxe-column field="grossProfit" title="毛利" width="140" align="right" :formatter="moneyFormatter" />
+          <vxe-column field="grossMargin" title="毛利率" width="120" align="right" :formatter="pctFormatter" />
         </vxe-table>
         <el-row :gutter="16" class="chart-row">
           <el-col :span="24"><div :ref="setRef('summary-bar')" class="chart-area" /></el-col>
@@ -629,7 +636,7 @@ onUnmounted(() => {
           <vxe-column type="seq" title="#" width="50" />
           <vxe-column field="employeeName" title="姓名" min-width="120" />
           <vxe-column field="department" title="部门" min-width="120" />
-          <vxe-column field="utilization" title="利用率" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => `${Number(cellValue).toFixed(1)}%`" />
+          <vxe-column field="utilization" title="利用率" width="120" align="right" :formatter="utilizationFormatter" />
           <vxe-column field="billableHours" title="可计费工时" width="120" align="right" />
         </vxe-table>
         <el-row :gutter="16" class="chart-row">

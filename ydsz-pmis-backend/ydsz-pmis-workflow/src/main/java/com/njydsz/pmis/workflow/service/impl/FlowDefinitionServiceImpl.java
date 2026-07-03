@@ -221,6 +221,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FlowDefinitionDO getPublished(String flowCode, String version, Long tenantId) {
         if (!StringUtils.hasText(version)) {
             version = "1.0";
@@ -231,6 +232,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FlowDefinitionDO getLatestByCode(String flowCode, Long tenantId) {
         // P2-16: 多租户上下文 - 入参优先，否则从 SecurityContext 获取
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
@@ -238,6 +240,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowDefinitionDO> page(int pageNo, int pageSize, String category, String flowCode) {
         Page<FlowDefinitionDO> page = new Page<>(pageNo, pageSize);
         LambdaQueryWrapper<FlowDefinitionDO> w = new LambdaQueryWrapper<>();
@@ -250,6 +253,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> getDetail(Long definitionId) {
         // P2-21: 组装 definition + nodes + skips
         FlowDefinitionDO definition = definitionMapper.selectById(definitionId);
@@ -424,6 +428,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     // ============================== GAP-V2-06: 导入/导出 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public String exportDefinition(Long definitionId) {
         Map<String, Object> detail = getDetail(definitionId);
         if (detail == null) {
@@ -526,6 +531,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     // ============================== GAP-V2-01: 设计器数据 API ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> getDesignerData(Long definitionId) {
         Map<String, Object> detail = getDetail(definitionId);
         if (detail == null) {
@@ -620,6 +626,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     // ============================== GAP-V2-02: 表单字段配置 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public String getFormConfig(Long definitionId, String nodeCode) {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
@@ -646,6 +653,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     // ============================== P1-2: SLA 节点级配置 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public String getSlaConfig(Long definitionId, String nodeCode) {
         FlowNodeDO node = nodeMapper.selectByCode(definitionId, nodeCode);
         if (node == null) {
@@ -672,6 +680,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     // ============================== 版本历史与差异对比 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> listVersions(Long definitionId) {
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
@@ -699,6 +708,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> diffVersions(Long definitionId, Integer version1, Integer version2) {
         // 1. 获取基础定义，找到 flowCode
         FlowDefinitionDO baseDef = definitionMapper.selectById(definitionId);

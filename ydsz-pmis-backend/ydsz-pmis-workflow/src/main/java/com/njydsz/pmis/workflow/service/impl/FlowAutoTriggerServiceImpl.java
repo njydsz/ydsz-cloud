@@ -209,6 +209,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowAutoTriggerDO> listAll() {
         LambdaQueryWrapper<FlowAutoTriggerDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByAsc(FlowAutoTriggerDO::getSortOrder)

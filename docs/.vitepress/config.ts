@@ -17,6 +17,23 @@ export default defineConfig({
   lastUpdated: true,
   cleanUrls: true,
 
+  // 现有文档中存在指向源码的相对链接，VitePress 无法解析，忽略死链检查
+  ignoreDeadLinks: true,
+
+  // 排除非文档站的内部文档目录（SOP/运维报告/安全清单等）
+  srcExclude: [
+    'frontend/**',
+    'operations/**',
+    'security/**',
+    'data/**',
+    'perf/**',
+    '_shared/**',
+    'canary-deployment.md',
+    'chaos-engineering.md',
+    'multi-tenant-evaluation.md',
+    'pmis-prd-v3.md'
+  ],
+
   head: [
     ['meta', { name: 'theme-color', content: '#3c8cff' }]
   ],

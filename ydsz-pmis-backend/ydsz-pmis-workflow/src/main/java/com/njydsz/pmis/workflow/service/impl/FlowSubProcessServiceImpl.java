@@ -227,6 +227,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowInstanceDO> listChildren(Long parentInstanceId) {
         if (parentInstanceId == null) {
             return List.of();
@@ -260,6 +261,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     // ============== 新增公开方法 ==============
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> getSubProcessContext(Long childInstanceId) {
         if (childInstanceId == null) {
             return new HashMap<>();
@@ -290,6 +292,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> listSubProcessTree(Long parentInstanceId) {
         List<Map<String, Object>> tree = new ArrayList<>();
         if (parentInstanceId == null) {

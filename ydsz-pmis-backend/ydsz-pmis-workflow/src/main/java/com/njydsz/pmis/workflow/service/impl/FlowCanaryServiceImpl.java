@@ -135,6 +135,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FlowDefinitionDO resolveEffectiveDefinition(String flowCode, String version,
                                                        Long tenantId, Long initiatorId) {
         // 1) 先查稳定版（isPublish=1 且 canaryStatus != CANARYING 的最新已发布）
@@ -169,6 +170,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> listCanaryRolloutLog(String flowCode, Long tenantId) {
         if (!StringUtils.hasText(flowCode)) {
             return Collections.emptyList();

@@ -49,6 +49,8 @@ dist/
 dist-ssr/
 *.local
 .vite/
+.vitepress/cache/
+.vitepress/dist/
 .cache/
 .next/
 .nuxt/

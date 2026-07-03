@@ -68,6 +68,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
     // ============================== 查询 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowTaskCommentDO> listByTaskId(Long taskId) {
         try {
             if (taskId == null) {
@@ -84,6 +85,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowTaskCommentDO> listByInstanceId(Long instanceId) {
         try {
             if (instanceId == null) {

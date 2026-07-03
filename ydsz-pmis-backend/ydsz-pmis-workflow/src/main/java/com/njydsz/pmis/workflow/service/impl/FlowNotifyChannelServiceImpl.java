@@ -7,6 +7,7 @@ import com.njydsz.pmis.workflow.service.FlowNotifyChannelService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -28,6 +29,7 @@ public class FlowNotifyChannelServiceImpl implements FlowNotifyChannelService {
     private final FlowNotifyChannelMapper notifyChannelMapper;
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowNotifyChannelDO> listChannels(Long tenantId) {
         LambdaQueryWrapper<FlowNotifyChannelDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FlowNotifyChannelDO::getTenantId, tenantId)
@@ -36,6 +38,7 @@ public class FlowNotifyChannelServiceImpl implements FlowNotifyChannelService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowNotifyChannelDO> listEnabledChannels(Long tenantId) {
         LambdaQueryWrapper<FlowNotifyChannelDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FlowNotifyChannelDO::getTenantId, tenantId)
@@ -81,6 +84,7 @@ public class FlowNotifyChannelServiceImpl implements FlowNotifyChannelService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public String getConfig(String channelType, Long tenantId) {
         LambdaQueryWrapper<FlowNotifyChannelDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FlowNotifyChannelDO::getTenantId, tenantId)

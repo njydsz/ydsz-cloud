@@ -183,6 +183,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowEventSubscriptionDO> listByInstance(Long instanceId) {
         if (instanceId == null) {
             return Collections.emptyList();

@@ -43,6 +43,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     private final FlowDefinitionService definitionService;
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> listTemplates(String category) {
         try {
             List<FlowTemplateDO> templates = templateMapper.selectByCategory(category);
@@ -54,6 +55,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> getTemplate(String templateCode) {
         try {
             if (!StringUtils.hasText(templateCode)) {

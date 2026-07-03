@@ -46,14 +46,6 @@ interface CockpitOverview {
   hints?: Array<{ level: string; message: string }>
 }
 
-/** 下钻分析数据项 */
-interface DrillItem {
-  name: string
-  value: number
-  count?: number
-  ratio?: number
-}
-
 /** 预警事件 */
 interface AlertEvent {
   projectName: string
@@ -68,7 +60,7 @@ const query = ref({ period: new Date().toISOString().slice(0, 7) })
 /** KPI 总览数据 */
 const overview = ref<CockpitOverview | null>(null)
 /** 下钻分析原始数据 */
-const drillData = ref<DrillItem[]>([])
+const drillData = ref<Record<string, unknown>[]>([])
 /** 当前下钻维度：dept-事业部 / projectType-项目类型 / customer-客户 */
 const drillDimension = ref<'dept' | 'projectType' | 'customer'>('dept')
 /** 预警汇总数据 */
@@ -118,7 +110,7 @@ async function loadOverview() {
 async function loadHealth() {
   try {
     const { data } = await getEvmHealthDistribution(query.value.period)
-    const d = data as any
+    const d = data
     setHealthOption({
       title: { text: t('cockpit.health.title'), left: 'center' },
       tooltip: { trigger: 'item' },
@@ -146,11 +138,11 @@ async function loadHealth() {
 /** 按当前下钻维度拉取数据并渲染图表，失败静默处理 */
 async function loadDrill() {
   try {
-    let res: any
+    let res: { data?: Array<Record<string, unknown>> } | undefined
     if (drillDimension.value === 'dept') res = await drillByDept(query.value.period)
     else if (drillDimension.value === 'projectType') res = await drillByProjectType(query.value.period)
     else res = await drillByCustomer(query.value.period)
-    drillData.value = (res?.data as any[]) || []
+    drillData.value = res?.data || []
     renderDrillChart()
   } catch (e) {
     if (!isHandledError(e)) {
@@ -169,13 +161,13 @@ function renderDrillChart() {
     grid: { top: 80, left: 60, right: 40, bottom: 40 },
     xAxis: {
       type: 'category',
-      data: rows.map((d: any) => d.name || d.dimension || '-'),
+      data: rows.map((d) => String(d.name || d.dimension || '-')),
     },
     yAxis: { type: 'value' },
     series: [
-      { name: t('cockpit.drill.legend.revenue'), type: 'bar', data: rows.map((d: any) => Number(d.revenue || 0)), itemStyle: { color: '#409eff' } },
-      { name: t('cockpit.drill.legend.cost'), type: 'bar', data: rows.map((d: any) => Number(d.cost || 0)), itemStyle: { color: '#909399' } },
-      { name: t('cockpit.drill.legend.grossProfit'), type: 'bar', data: rows.map((d: any) => Number(d.grossProfit || 0)), itemStyle: { color: '#67c23a' } },
+      { name: t('cockpit.drill.legend.revenue'), type: 'bar', data: rows.map((d) => Number(d.revenue || 0)), itemStyle: { color: '#409eff' } },
+      { name: t('cockpit.drill.legend.cost'), type: 'bar', data: rows.map((d) => Number(d.cost || 0)), itemStyle: { color: '#909399' } },
+      { name: t('cockpit.drill.legend.grossProfit'), type: 'bar', data: rows.map((d) => Number(d.grossProfit || 0)), itemStyle: { color: '#67c23a' } },
     ],
   })
 }
@@ -320,7 +312,7 @@ const alertMessage = computed(() => {
  * @param v 金额数值
  * @returns 带人民币符号的格式化字符串，空值返回 '-'
  */
-function fmtMoney(v: any) {
+function fmtMoney(v: unknown) {
   if (v === null || v === undefined) return '-'
   return `¥${Number(v).toLocaleString()}`
 }
@@ -330,7 +322,7 @@ function fmtMoney(v: any) {
  * @param v 比例值（0-1）
  * @returns 百分比字符串
  */
-function fmtPct(v: any) {
+function fmtPct(v: unknown) {
   if (v === null || v === undefined) return '0.0%'
   return `${(Number(v) * 100).toFixed(1)}%`
 }
@@ -481,13 +473,13 @@ onBeforeUnmount(() => stopPolling())
         <el-col :xs="24" :md="12">
           <h4>{{ t('cockpit.hints.title') }}</h4>
           <ul class="hint-list">
-            <li v-for="(h, i) in (overview as any)?.hints || []" :key="i">
-              <el-tag :type="(h.level as any) === 'RED' ? 'danger' : (h.level as any) === 'YELLOW' ? 'warning' : 'info'" size="small">
+            <li v-for="(h, i) in overview?.hints || []" :key="i">
+              <el-tag :type="h.level === 'RED' ? 'danger' : h.level === 'YELLOW' ? 'warning' : 'info'" size="small">
                 {{ h.level }}
               </el-tag>
               {{ h.message }}
             </li>
-            <li v-if="!((overview as any)?.hints || []).length" class="empty">{{ t('cockpit.hints.empty') }}</li>
+            <li v-if="!(overview?.hints || []).length" class="empty">{{ t('cockpit.hints.empty') }}</li>
           </ul>
         </el-col>
         <el-col :xs="24" :md="12">

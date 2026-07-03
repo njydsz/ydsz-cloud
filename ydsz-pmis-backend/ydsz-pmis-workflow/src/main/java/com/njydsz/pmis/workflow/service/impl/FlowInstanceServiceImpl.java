@@ -197,11 +197,13 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FlowInstanceDO getById(Long id) {
         return instanceMapper.selectById(id);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public FlowInstanceDO getByBusiness(String businessType, String businessId) {
         return instanceMapper.selectByBusiness(businessType, businessId);
     }
@@ -361,6 +363,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<FlowInstanceDO> listByInitiator(Long initiatorId, String flowStatus) {
         return instanceMapper.selectByInitiator(initiatorId, flowStatus);
     }
@@ -412,6 +415,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     // ============================== P2-23: 实例多维分页查询 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public PageResult<FlowInstanceDO> page(String businessType, Long initiatorId, String flowStatus,
                                            LocalDateTime startTime, LocalDateTime endTime,
                                            Long tenantId, int pageNo, int pageSize) {
@@ -429,6 +433,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     // ============================== P2-24: 流程变量读写 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     @SuppressWarnings("unchecked")
     public Map<String, Object> getVariables(Long instanceId) {
         // P2-24: 读取实例 variable JSON 并解析为 Map
@@ -641,6 +646,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     // ============================== GAP-V2-08: 流程模拟运行 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public List<Map<String, Object>> simulate(String flowCode, String version,
                                                Map<String, Object> variables, Long tenantId) {
         if (!StringUtils.hasText(flowCode)) {
@@ -906,6 +912,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     // ============================== GAP-V2-02: 表单渲染数据 ==============================
 
     @Override
+    @Transactional(readOnly = true)
     public Map<String, Object> getFormRenderData(Long instanceId, Long taskId) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {

@@ -19,6 +19,7 @@ import com.njydsz.pmis.workflow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -54,6 +55,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     private static final String ROLE_OBSERVER = "OBSERVER";
 
     @Override
+    @Transactional(readOnly = true)
     public EmbeddedApprovalViewDTO loadPanel(String businessType, String businessId, Long userId) {
         if (businessType == null || businessType.isBlank()
                 || businessId == null || businessId.isBlank()) {
