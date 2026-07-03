@@ -52,6 +52,71 @@
       "name": "spring.data.elasticsearch.socket-timeout",
       "type": "java.time.Duration",
       "description": "Elasticsearch socket timeout"
+    },
+    {
+      "name": "seata.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable Seata distributed transaction"
+    },
+    {
+      "name": "seata.application-id",
+      "type": "java.lang.String",
+      "description": "Seata application ID"
+    },
+    {
+      "name": "seata.tx-service-group",
+      "type": "java.lang.String",
+      "description": "Seata transaction service group"
+    },
+    {
+      "name": "seata.enable-auto-data-source-proxy",
+      "type": "java.lang.Boolean",
+      "description": "Enable Seata auto data source proxy"
+    },
+    {
+      "name": "seata.registry.type",
+      "type": "java.lang.String",
+      "description": "Seata registry type"
+    },
+    {
+      "name": "seata.registry.nacos.server-addr",
+      "type": "java.lang.String",
+      "description": "Nacos server address for Seata registry"
+    },
+    {
+      "name": "seata.registry.nacos.namespace",
+      "type": "java.lang.String",
+      "description": "Nacos namespace for Seata registry"
+    },
+    {
+      "name": "seata.registry.nacos.group",
+      "type": "java.lang.String",
+      "description": "Nacos group for Seata registry"
+    },
+    {
+      "name": "seata.config.type",
+      "type": "java.lang.String",
+      "description": "Seata config type"
+    },
+    {
+      "name": "seata.config.nacos.server-addr",
+      "type": "java.lang.String",
+      "description": "Nacos server address for Seata config"
+    },
+    {
+      "name": "seata.config.nacos.namespace",
+      "type": "java.lang.String",
+      "description": "Nacos namespace for Seata config"
+    },
+    {
+      "name": "seata.config.nacos.group",
+      "type": "java.lang.String",
+      "description": "Nacos group for Seata config"
+    },
+    {
+      "name": "seata.config.nacos.data-id",
+      "type": "java.lang.String",
+      "description": "Nacos data-id for Seata config"
     }
   ],
   "hints": []
