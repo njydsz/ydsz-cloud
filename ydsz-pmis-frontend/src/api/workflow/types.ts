@@ -640,3 +640,49 @@ export interface FlowTemplateDTO {
   createdAt?: string
   updatedAt?: string
 }
+
+/** P3-1: 通知通道配置 */
+export interface NotifyChannelDTO {
+  id?: number
+  tenantId?: number
+  /** 通道类型：IN_APP / EMAIL / SMS / WEBHOOK / DINGTALK / WECHAT */
+  channelType: string
+  channelName: string
+  /** JSON 配置（webhook URL / SMS 模板编码等） */
+  config: string
+  enabled: boolean
+  createdAt?: string
+  updatedAt?: string
+}
+
+/** P3-3: 实例迁移入参 */
+export interface InstanceMigrationDTO {
+  sourceDefinitionId: number
+  targetDefinitionId: number
+  tenantId?: number
+  /** 旧节点编码 → 新节点编码 映射 */
+  nodeMapping?: Record<string, string>
+  /** true=仅预览，false=执行迁移 */
+  dryRun?: boolean
+}
+
+/** P3-3: 迁移明细 */
+export interface MigrationDetail {
+  instanceId: number
+  instanceTitle?: string
+  oldNodeCode?: string
+  newNodeCode?: string
+  /** MIGRATED / SKIPPED / FAILED */
+  status: string
+  reason?: string
+}
+
+/** P3-3: 实例迁移结果 */
+export interface InstanceMigrationResultDTO {
+  totalInstances: number
+  migratedCount: number
+  skippedCount: number
+  failedCount: number
+  details: MigrationDetail[]
+  nodeMappingApplied?: Record<string, string>
+}

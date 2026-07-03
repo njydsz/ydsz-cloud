@@ -56,7 +56,7 @@ public class DecisionTableEvaluator {
     private static final String DEFAULT_HIT_POLICY = "FIRST";
 
     @Autowired(required = false)
-    private AviatorExpressionEvaluator aviatorEvaluator;
+    private ExpressionEvaluator expressionEvaluator;
 
     /** Bean 未注入时的兜底求值器（懒加载，避免污染全局 Aviator 实例） */
     private volatile ExpressionEvaluator fallbackEvaluator;
@@ -335,13 +335,13 @@ public class DecisionTableEvaluator {
      * 获取表达式求值器：优先使用注入的 Bean，未注入时兜底创建默认沙箱实例
      */
     private ExpressionEvaluator getEvaluator() {
-        if (aviatorEvaluator != null) {
-            return aviatorEvaluator;
+        if (expressionEvaluator != null) {
+            return expressionEvaluator;
         }
         if (fallbackEvaluator == null) {
             synchronized (this) {
                 if (fallbackEvaluator == null) {
-                    log.warn("[DMN] AviatorExpressionEvaluator Bean 未注入，使用默认沙箱实例兜底");
+                    log.warn("[DMN] ExpressionEvaluator Bean 未注入，使用默认沙箱 Aviator 实例兜底");
                     fallbackEvaluator = new AviatorExpressionEvaluator(true);
                 }
             }
