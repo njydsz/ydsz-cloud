@@ -10,8 +10,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 /**
  * 消息中心 OpenFeign 客户端
  *
- * <p>执行模块在预警分发 / 工单通知等场景通过该客户端调用消息中心；
- * 当 ydsz-pmis-message 不可用时, FallbackFactory 返回默认值避免级联失败.
+ * <p>项目业务模块在预警分发 / 工单通知等场景通过该客户端调用系统消息中心；
+ * 当 ydsz-pmis-system 不可用时, FallbackFactory 返回默认值避免级联失败.
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

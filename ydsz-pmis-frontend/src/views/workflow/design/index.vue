@@ -355,6 +355,7 @@ onMounted(() => {
     <div class="page-body">
       <BpmnDesigner
         v-if="designerMode === 'bpmn'"
+        :definition-id="selectedDefinitionId"
         :flow-code="selectedDefinition?.flowCode"
         :flow-name="selectedDefinition?.flowName"
         :initial-xml="selectedDefinition?.bpmnXml"

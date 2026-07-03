@@ -1,5 +1,5 @@
-# pmis-project 微服务 Rollout 范例 (与 execution 同模板, 仅替换镜像/名称)
-# 适用: 项目模块 (商机/立项/合同/变更)
+# pmis-project 微服务 Rollout 范例 (project 已合并原 execution 服务)
+# 适用: 项目模块 (商机/立项/合同/变更/执行)
 apiVersion: argoproj.io/v1alpha1
 kind: Rollout
 metadata:

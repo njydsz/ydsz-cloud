@@ -52,6 +52,15 @@ public class ExpressionRule implements Rule {
     @Override
     public String getScope() { return definition.getScope(); }
 
+    /**
+     * 暴露规则定义（用于灰度路由 / Trace 记录 / 监控指标）
+     *
+     * @return 原始规则定义
+     * @since 1.4.0
+     */
+    @Override
+    public RuleDefinition getRuleDefinition() { return definition; }
+
     @Override
     public RuleResult evaluate(RuleContext context) {
         long start = System.nanoTime();

@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * 系统配置中心 Feign 客户端
  *
- * <p>供业务模块在不直接依赖 ydsz-pmis-config 模块的前提下读取
+ * <p>供业务模块在不直接依赖 ydsz-pmis-system 模块的前提下读取
  * pmis_config 表中的告警阈值、计算费率等运行时配置。
  *
  * @author ydsz-pmis-team

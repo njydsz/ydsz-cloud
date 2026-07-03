@@ -60,6 +60,12 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     /** 监控指标（可选，1.4.0 起支持） */
     private volatile RuleMetrics metrics;
 
+    /** 灰度路由器（可选，1.4.0 起支持） */
+    private volatile RuleCanaryRouter canaryRouter;
+
+    /** 是否启用灰度路由（与 canaryRouter 双重判断） */
+    private volatile boolean canaryEnabled = true;
+
     /** 统计计数器 */
     private final AtomicLong totalEvaluations = new AtomicLong(0);
     private final AtomicLong totalTriggered = new AtomicLong(0);
@@ -107,16 +113,47 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             long start = System.nanoTime();
             RuleResult result = null;
             Exception caughtException = null;
-            try {
-                // 超时执行：若配置了 timeoutExecutor，则用其包裹；否则直接评估
-                if (timeoutExecutor != null) {
-                    result = timeoutExecutor.evaluateWithTimeout(rule, context, 0);
-                } else {
-                    result = rule.evaluate(context);
+            boolean routedToCanary = false;
+
+            // 灰度路由：仅对带 canaryRatio 的表达式规则生效
+            RuleDefinition canaryDef = resolveCanaryDefinition(rule);
+            if (canaryDef != null) {
+                boolean goCanary = canaryRouter.shouldRouteToCanary(canaryDef, context);
+                canaryRouter.recordBucket(rule.getCode(), goCanary);
+                if (goCanary) {
+                    routedToCanary = true;
+                    Rule canaryRule = canaryRouter.buildCanaryRule(canaryDef);
+                    try {
+                        if (timeoutExecutor != null) {
+                            result = timeoutExecutor.evaluateWithTimeout(canaryRule, context, 0);
+                        } else {
+                            result = canaryRule.evaluate(context);
+                        }
+                    } catch (Exception e) {
+                        caughtException = e;
+                    }
+                    if (result != null) {
+                        canaryRouter.markCanary(result);
+                    }
+                    if (log.isDebugEnabled()) {
+                        log.debug("[LiteRule-Canary] 规则 {} 命中灰度桶，评估候选版本", rule.getCode());
+                    }
                 }
-            } catch (Exception e) {
-                caughtException = e;
             }
+
+            // 未路由到灰度桶：评估主版本
+            if (!routedToCanary) {
+                try {
+                    if (timeoutExecutor != null) {
+                        result = timeoutExecutor.evaluateWithTimeout(rule, context, 0);
+                    } else {
+                        result = rule.evaluate(context);
+                    }
+                } catch (Exception e) {
+                    caughtException = e;
+                }
+            }
+
             long elapsed = (System.nanoTime() - start) / 1_000_000;
             boolean isTriggered = result != null && result.isTriggered();
             // 异常 + 超时返回的"未触发"也算异常（用于熔断统计）
@@ -159,6 +196,35 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         // 按严重度倒序
         triggered.sort(Comparator.comparingInt((RuleResult r) -> severityWeight(r)).reversed());
         return triggered;
+    }
+
+    /**
+     * 解析规则对应的灰度候选定义
+     *
+     * <p>仅当以下条件全部满足时返回非 null：
+     * <ul>
+     *   <li>canaryEnabled = true</li>
+     *   <li>canaryRouter 已注入</li>
+     *   <li>规则暴露了 RuleDefinition（即 {@code rule.getRuleDefinition()} 非空）</li>
+     *   <li>canaryRatio > 0 且配置了候选表达式（条件或严重度）</li>
+     * </ul>
+     *
+     * @param rule 规则
+     * @return 灰度定义；不满足条件返回 null
+     * @since 1.4.0
+     */
+    private RuleDefinition resolveCanaryDefinition(Rule rule) {
+        if (!canaryEnabled || canaryRouter == null) {
+            return null;
+        }
+        RuleDefinition def = rule.getRuleDefinition();
+        if (def == null || def.getCanaryRatio() <= 0) {
+            return null;
+        }
+        if (def.getCanaryConditionExpression() == null && def.getCanarySeverityExpression() == null) {
+            return null;
+        }
+        return def;
     }
 
     @Override
@@ -330,6 +396,46 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     public RuleMetrics getMetrics() {
         return metrics;
+    }
+
+    /**
+     * 设置灰度路由器
+     *
+     * @param canaryRouter 灰度路由器；null 表示禁用灰度
+     * @since 1.4.0
+     */
+    public void setCanaryRouter(RuleCanaryRouter canaryRouter) {
+        this.canaryRouter = canaryRouter;
+    }
+
+    /**
+     * 获取灰度路由器
+     *
+     * @return 灰度路由器；未配置返回 null
+     * @since 1.4.0
+     */
+    public RuleCanaryRouter getCanaryRouter() {
+        return canaryRouter;
+    }
+
+    /**
+     * 设置是否启用灰度路由
+     *
+     * @param canaryEnabled 是否启用
+     * @since 1.4.0
+     */
+    public void setCanaryEnabled(boolean canaryEnabled) {
+        this.canaryEnabled = canaryEnabled;
+    }
+
+    /**
+     * 获取是否启用灰度路由
+     *
+     * @return 是否启用
+     * @since 1.4.0
+     */
+    public boolean isCanaryEnabled() {
+        return canaryEnabled;
     }
 
     /**

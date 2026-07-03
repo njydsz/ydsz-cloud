@@ -18,6 +18,7 @@ import 'bpmn-js/dist/assets/bpmn-js.css'
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn.css'
 import { deployDefinition } from '@/api/workflow'
 import type { FlowDeployDTO } from '@/api/workflow/types'
+import FormFieldPermissions from './FormFieldPermissions.vue'
 
 // ==================== Props ====================
 const props = defineProps<{
@@ -29,6 +30,8 @@ const props = defineProps<{
   flowName?: string
   /** 流程类别 */
   category?: string
+  /** P0-3: 流程定义 ID（用于字段权限配置） */
+  definitionId?: number | null
 }>()
 
 const emit = defineEmits<{

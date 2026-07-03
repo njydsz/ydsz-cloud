@@ -10,10 +10,10 @@ import java.util.Map;
 /**
  * 通知实时推送 Feign 客户端。
  *
- * <p>供 execution 等非 notification 模块调用 notification 的 WebSocket 推送接口，
+ * <p>供 project 等非 system 模块调用 system 的 WebSocket 推送接口，
  * 将站内通知/告警实时下发给前端。FallbackFactory 确保推送失败不影响主业务。
  *
- * <p>使用 contextId 与已有 {@link NotificationClient} 区分（二者均指向 ydsz-pmis-notification）。
+ * <p>使用 contextId 与已有 {@link NotificationClient} 区分（二者均指向 ydsz-pmis-system）。
  *
  * @author ydsz-pmis-team
  * @since 1.2.0

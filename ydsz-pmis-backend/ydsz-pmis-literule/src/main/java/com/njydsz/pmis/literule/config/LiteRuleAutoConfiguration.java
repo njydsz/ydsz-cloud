@@ -4,6 +4,7 @@ import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.core.AsyncTraceRecorder;
 import com.njydsz.pmis.literule.core.DefaultRuleEngine;
 import com.njydsz.pmis.literule.core.MicrometerRuleMetrics;
+import com.njydsz.pmis.literule.core.RuleCanaryRouter;
 import com.njydsz.pmis.literule.core.RuleCircuitBreaker;
 import com.njydsz.pmis.literule.core.RuleMetrics;
 import com.njydsz.pmis.literule.core.RuleTimeoutExecutor;
@@ -19,9 +20,12 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.Map;
 
 /**
  * LiteRule 自动配置
@@ -71,7 +75,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     public RuleEngine ruleEngine(LiteRuleProperties properties,
                                   ObjectProvider<TraceRecorder> traceDelegateProvider,
-                                  ObjectProvider<io.micrometer.core.instrument.MeterRegistry> meterRegistryProvider) {
+                                  ApplicationContext applicationContext) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
 
@@ -109,19 +113,49 @@ public class LiteRuleAutoConfiguration {
                     properties.getCircuitBreakerErrorRate(), properties.getCircuitBreakerMinEvaluations());
         }
 
-        io.micrometer.core.instrument.MeterRegistry meterRegistry = meterRegistryProvider.getIfAvailable();
-        if (meterRegistry != null) {
-            MicrometerRuleMetrics metrics = new MicrometerRuleMetrics(meterRegistry);
-            engine.setMetrics(metrics);
-            log.info("[LiteRule] Prometheus 监控指标已启用 (registry={})",
-                    meterRegistry.getClass().getSimpleName());
-        }
+        // Micrometer 桥接（仅当 classpath 存在 MeterRegistry 时启用）
+        bindMicrometerIfAvailable(engine, applicationContext);
 
         log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}）",
                 properties.isStatsEnabled(), properties.isTraceEnabled(),
                 properties.getRuleTimeoutMs(), properties.getCircuitBreakerMinEvaluations() > 0,
-                meterRegistry != null);
+                engine.getMetrics() != null);
         return engine;
+    }
+
+    /**
+     * 当 classpath 存在 MeterRegistry 时桥接到 Micrometer
+     *
+     * <p>使用反射式检测避免对 MeterRegistry 类的硬依赖，使得 literule 在缺少 micrometer 依赖的环境下仍能工作。
+     */
+    @SuppressWarnings("unchecked")
+    private void bindMicrometerIfAvailable(DefaultRuleEngine engine, ApplicationContext ctx) {
+        Class<?> meterRegistryClass;
+        try {
+            meterRegistryClass = Class.forName("io.micrometer.core.instrument.MeterRegistry", false,
+                    getClass().getClassLoader());
+        } catch (ClassNotFoundException e) {
+            log.debug("[LiteRule] Micrometer 不在 classpath，跳过 Prometheus 指标桥接");
+            return;
+        }
+        Map<String, ?> beans = ctx.getBeansOfType(meterRegistryClass);
+        if (beans.isEmpty()) {
+            log.debug("[LiteRule] 未找到 MeterRegistry Bean，跳过 Prometheus 指标桥接");
+            return;
+        }
+        Object registry = beans.values().iterator().next();
+        try {
+            Class<?> metricsClass = Class.forName(
+                    "com.njydsz.pmis.literule.core.MicrometerRuleMetrics", true,
+                    getClass().getClassLoader());
+            java.lang.reflect.Constructor<?> ctor = metricsClass.getConstructor(meterRegistryClass);
+            RuleMetrics metrics = (RuleMetrics) ctor.newInstance(registry);
+            engine.setMetrics(metrics);
+            log.info("[LiteRule] Prometheus 监控指标已启用 (registry={})",
+                    registry.getClass().getSimpleName());
+        } catch (Exception e) {
+            log.warn("[LiteRule] MicrometerRuleMetrics 桥接失败: {}", e.getMessage());
+        }
     }
 
     /**

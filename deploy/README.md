@@ -38,21 +38,20 @@ pnpm install && pnpm dev
 
 ## 服务端口清单
 
+> 服务合并重构后仅保留 7 个微服务：
+> - `user` + `auth` → `iam`（端口 9002）
+> - `file` + `config` + `audit` + `notification` + `message` → `system`（端口 9008）
+> - `project` + `execution` → `project`（端口 9005）
+
 | 服务 | 端口 | 协议 | 说明 |
 |------|------|------|------|
 | 前端 (Vite) | 5173 | HTTP | 开发服务器 |
-| API 网关 | 9000 | HTTP | 统一入口 |
-| 认证服务 | 9001 | HTTP | ydsz-pmis-auth |
-| 用户服务 | 9002 | HTTP | ydsz-pmis-user（含资源池/Bench） |
-| 通知服务 | 9003 | HTTP | ydsz-pmis-notification |
+| API 网关 | 9000 | HTTP | ydsz-pmis-gateway（统一入口） |
+| IAM 服务 | 9002 | HTTP | ydsz-pmis-iam（原 user + auth） |
+| 系统服务 | 9008 | HTTP | ydsz-pmis-system（原 file + config + audit + notification + message） |
 | 工作流 | 9004 | HTTP | ydsz-pmis-workflow |
-| 项目服务 | 9005 | HTTP | ydsz-pmis-project |
-| 执行服务 | 9006 | HTTP | ydsz-pmis-execution（含财务/报表） |
+| 项目服务 | 9005 | HTTP | ydsz-pmis-project（原 project + execution） |
 | AI Agent | 9007 | HTTP | ydsz-pmis-agent |
-| 配置中心 | 9008 | HTTP | ydsz-pmis-config |
-| 文件服务 | 9009 | HTTP | ydsz-pmis-file |
-| 审计服务 | 9010 | HTTP | ydsz-pmis-audit |
-| 消息模板 | 9011 | HTTP | ydsz-pmis-message |
 | 调度服务 | 9012 | HTTP | ydsz-pmis-scheduler |
 | Nacos | 8848 | HTTP | 注册/配置中心 |
 | PostgreSQL | 5432 | TCP | 主数据库 |

@@ -59,6 +59,19 @@ public interface Rule {
     }
 
     /**
+     * 规则定义快照（用于灰度路由、统计、Trace）
+     *
+     * <p>默认返回 null，表示该规则为编码规则（无动态 RuleDefinition）。
+     * 表达式规则 / 决策表规则应覆盖此方法返回原始定义。
+     *
+     * @return 规则定义；null 表示编码规则
+     * @since 1.4.0
+     */
+    default RuleDefinition getRuleDefinition() {
+        return null;
+    }
+
+    /**
      * 评估规则
      *
      * @param context 规则上下文（事实数据）

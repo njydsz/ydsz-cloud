@@ -9,7 +9,6 @@ kind: Kustomization
 namespace: pmis-prod
 
 resources:
-  - ../../base/execution-rollout.yaml
   - ../../base/analysis-templates.yaml
   - project-rollout.yaml
   - finance-rollout.yaml

@@ -2,16 +2,16 @@
 #  PMIS 通用微服务 Dockerfile（适用于除 gateway 外的所有后端服务）
 # ---------------------------------------------------------------------
 #  构建参数：
-#    APP_NAME   - 应用名（如 pmis-auth / pmis-user）
-#    SERVER_PORT- 服务端口（如 9001）
+#    APP_NAME   - 应用名（如 pmis-iam / pmis-system）
+#    SERVER_PORT- 服务端口（如 9002）
 #    JAR_FILE   - jar 文件路径（相对构建上下文）
 #
 #  用法：
 #    docker build -f Dockerfile.service \
-#      --build-arg APP_NAME=pmis-auth \
-#      --build-arg SERVER_PORT=9001 \
-#      --build-arg JAR_FILE=ydsz-pmis-auth/target/ydsz-pmis-auth-*.jar \
-#      -t pmis-auth:1.0.0 .
+#      --build-arg APP_NAME=pmis-iam \
+#      --build-arg SERVER_PORT=9002 \
+#      --build-arg JAR_FILE=ydsz-pmis-iam/target/ydsz-pmis-iam-*.jar \
+#      -t pmis-iam:1.0.0 .
 # =====================================================================
 FROM pmis-base:1.0.0
 

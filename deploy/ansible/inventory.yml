@@ -2,9 +2,9 @@
 #  PMIS 生产环境主机清单（批次 19）
 # ---------------------------------------------------------------------
 #  部署拓扑（3 节点起步，可水平扩展）：
-#  - node1: 网关 + 鉴权 + 用户中心 (CPU 密集)
-#  - node2: 项目 + 执行 + 调度 (业务核心)
-#  - node3: Agent + 报表 + 通知 (AI/IO 混合)
+#  - node1: 网关 + IAM (CPU 密集)
+#  - node2: 项目 + 工作流 + 调度 (业务核心)
+#  - node3: Agent + 系统服务 (AI/IO 混合)
 #  数据库与缓存独立部署（参见 group pg/redis）
 # =====================================================================
 
@@ -32,8 +32,7 @@ all:
         role: gateway
         services:
           - ydsz-pmis-gateway
-          - ydsz-pmis-auth
-          - ydsz-pmis-user
+          - ydsz-pmis-iam
 
     app_core:
       hosts:
@@ -43,12 +42,8 @@ all:
         role: core
         services:
           - ydsz-pmis-project
-          - ydsz-pmis-execution
-          - ydsz-pmis-scheduler
           - ydsz-pmis-workflow
-          - ydsz-pmis-file
-          - ydsz-pmis-audit
-          - ydsz-pmis-config
+          - ydsz-pmis-scheduler
 
     app_ai:
       hosts:
@@ -58,8 +53,7 @@ all:
         role: ai
         services:
           - ydsz-pmis-agent
-          - ydsz-pmis-message
-          - ydsz-pmis-notification
+          - ydsz-pmis-system
 
     # ---- 数据库节点 ----
     pg:

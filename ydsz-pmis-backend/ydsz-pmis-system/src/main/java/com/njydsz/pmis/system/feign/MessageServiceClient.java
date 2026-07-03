@@ -17,7 +17,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-message", fallbackFactory = MessageServiceClientFallback.class)
+@FeignClient(name = "ydsz-pmis-system", fallbackFactory = MessageServiceClientFallback.class)
 public interface MessageServiceClient {
 
     /**

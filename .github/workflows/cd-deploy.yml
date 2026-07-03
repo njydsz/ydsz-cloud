@@ -33,17 +33,11 @@ jobs:
       matrix:
         service:
           - { name: gateway,   port: 9000,  jar: ydsz-pmis-gateway }
-          - { name: auth,      port: 9001,  jar: ydsz-pmis-auth }
-          - { name: user,      port: 9002,  jar: ydsz-pmis-user }
-          - { name: notification, port: 9003, jar: ydsz-pmis-notification }
+          - { name: iam,       port: 9002,  jar: ydsz-pmis-iam }
           - { name: workflow,  port: 9004,  jar: ydsz-pmis-workflow }
           - { name: project,   port: 9005,  jar: ydsz-pmis-project }
-          - { name: execution, port: 9006,  jar: ydsz-pmis-execution }
           - { name: agent,     port: 9007,  jar: ydsz-pmis-agent }
-          - { name: config,    port: 9008,  jar: ydsz-pmis-config }
-          - { name: file,      port: 9009,  jar: ydsz-pmis-file }
-          - { name: audit,     port: 9010,  jar: ydsz-pmis-audit }
-          - { name: message,   port: 9011,  jar: ydsz-pmis-message }
+          - { name: system,    port: 9008,  jar: ydsz-pmis-system }
           - { name: scheduler, port: 9012,  jar: ydsz-pmis-scheduler }
     steps:
       - uses: actions/checkout@v4
@@ -145,7 +139,7 @@ jobs:
       - name: Deploy to Staging
         run: |
           # 更新所有微服务镜像
-          for svc in gateway auth user notification workflow project execution agent config file audit message scheduler; do
+          for svc in gateway iam workflow project agent system scheduler; do
             kubectl set image deployment/pmis-${svc} \
               pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
               -n pmis-staging
@@ -157,7 +151,7 @@ jobs:
 
       - name: Wait for Rollout
         run: |
-          for svc in gateway auth user notification workflow project execution agent config file audit message scheduler frontend; do
+          for svc in gateway iam workflow project agent system scheduler frontend; do
             echo "Waiting for pmis-${svc} rollout..."
             kubectl rollout status deployment/pmis-${svc} -n pmis-staging --timeout=300s
           done
@@ -186,7 +180,7 @@ jobs:
       - name: Canary Deploy (5% → 25% → 50% → 100%)
         run: |
           # 使用 Argo Rollouts 金丝雀发布
-          for svc in gateway auth user notification workflow project execution agent config file audit message scheduler frontend; do
+          for svc in gateway iam workflow project agent system scheduler frontend; do
             # 更新镜像并启动金丝雀
             kubectl argo rollouts set image rollout/pmis-${svc} \
               pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \

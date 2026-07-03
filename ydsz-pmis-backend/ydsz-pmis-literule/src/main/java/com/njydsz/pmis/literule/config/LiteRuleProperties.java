@@ -48,4 +48,12 @@ public class LiteRuleProperties {
 
     /** 规则熔断最小评估次数（达到该次数后才计算错误率，1.4.0） */
     private int circuitBreakerMinEvaluations = 100;
+
+    /**
+     * 是否启用规则灰度路由（1.4.0）
+     *
+     * <p>启用后，对带 canaryRatio > 0 且配置了候选表达式的规则，
+     * 按比例将流量分到候选版本，结果会被标记 canary=true。
+     */
+    private boolean canaryEnabled = true;
 }

@@ -80,6 +80,20 @@ public class RuleResult implements Serializable {
     private long elapsedMs;
 
     /**
+     * 是否为灰度候选版本评估结果
+     *
+     * <p>当规则定义了 canaryRatio 且当前流量命中灰度桶时，
+     * 引擎会同时评估主版本与候选版本，候选版本结果此字段为 true。
+     *
+     * @since 1.4.0
+     */
+    @Builder.Default
+    private boolean canary = false;
+
+    /** 灰度桶标识（用于运营对比） */
+    private String canaryBucket;
+
+    /**
      * 快速构建未触发结果
      *
      * @param ruleCode 规则编码

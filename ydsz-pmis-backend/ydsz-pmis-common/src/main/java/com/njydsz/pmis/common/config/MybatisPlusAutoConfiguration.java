@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
  *
  * <p>覆盖策略：业务模块可通过自定义 {@link MybatisPlusInterceptor} Bean
  * （{@code @Bean public MybatisPlusInterceptor ...}）覆盖此默认配置。
- * 当前已自定义的模块：ydsz-pmis-user / ydsz-pmis-notification / ydsz-pmis-config。
+ * 当前已自定义的模块：ydsz-pmis-iam / ydsz-pmis-system。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

@@ -96,4 +96,39 @@ public class RuleDefinition implements Serializable {
 
     /** 审核意见 */
     private String reviewComment;
+
+    /**
+     * 灰度比例（0.0~1.0，0 表示不启用灰度）
+     *
+     * <p>当 canaryRatio > 0 且存在候选版本（canaryDefinition 非空）时，
+     * 引擎按此比例将流量分到候选版本。
+     *
+     * @since 1.4.0
+     */
+    @Builder.Default
+    private double canaryRatio = 0.0;
+
+    /**
+     * 灰度条件（Aviator 表达式列表，AND 关系）
+     *
+     * <p>仅当 canaryRatio > 0 时生效；满足全部条件才进入灰度流量分桶。
+     * 示例：{@code ["tenantId == 'T001'", "userRole == 'ADMIN'"]}
+     * 为空时仅按 canaryRatio 比例分桶。
+     *
+     * @since 1.4.0
+     */
+    private java.util.List<String> canaryConditions;
+
+    /**
+     * 灰度候选版本表达式（条件/严重度表达式，覆盖主版本）
+     *
+     * <p>当流量被分到灰度桶时，使用此候选表达式构造一条临时规则进行评估，
+     * 结果会被标记 {@link RuleResult#isCanary()} = true，便于运营对比新旧命中差异。
+     *
+     * @since 1.4.0
+     */
+    private String canaryConditionExpression;
+
+    /** 灰度候选版本的严重度表达式 */
+    private String canarySeverityExpression;
 }

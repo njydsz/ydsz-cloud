@@ -80,6 +80,14 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
         if (condition == null || condition.isBlank()) {
             return true;
         }
+        // P0-2: dmn: 前缀路由 — DMN 决策表条件应由 FlowRoutingService 处理，
+        // 走到这里说明 routingService 不可用（literule 模块未启用或 DecisionTableEvalService 未注入）。
+        // 给出明确告警，避免被当作普通表达式静默返回 false。
+        if (condition.startsWith("dmn:")) {
+            log.warn("[Flow] DMN 决策表路由不可用（FlowRoutingService 未注入），条件评估返回 false: expr='{}'。" +
+                    "请确保 ydsz-pmis-literule 模块已启用且 DecisionTableConfigProvider 已注册。", condition);
+            return false;
+        }
         // 优先使用 Aviator 引擎求值（统一表达式引擎）
         if (expressionEvaluator != null) {
             try {

@@ -32,18 +32,17 @@
 | 微服务 | DataId | 端口 |
 |--------|--------|------|
 | ydsz-pmis-gateway | ydsz-pmis-gateway-{dev\|sit\|uat\|prod}.yaml | 9000 |
-| ydsz-pmis-auth | ydsz-pmis-auth-{dev\|sit\|uat\|prod}.yaml | 9001 |
-| ydsz-pmis-user | ydsz-pmis-user-{dev\|sit\|uat\|prod}.yaml | 9002 |
-| ydsz-pmis-notification | ydsz-pmis-notification-{dev\|sit\|uat\|prod}.yaml | 9013 |
-| ydsz-pmis-workflow | ydsz-pmis-workflow-{dev\|sit\|uat\|prod}.yaml | 9014 |
-| ydsz-pmis-project | ydsz-pmis-project-{dev\|sit\|uat\|prod}.yaml | 9015 |
-| ydsz-pmis-execution | ydsz-pmis-execution-{dev\|sit\|uat\|prod}.yaml | 9016 |
-| ydsz-pmis-agent | ydsz-pmis-agent-{dev\|sit\|uat\|prod}.yaml | 9017 |
-| ydsz-pmis-config | ydsz-pmis-config-{dev\|sit\|uat\|prod}.yaml | 9018 |
-| ydsz-pmis-file | ydsz-pmis-file-{dev\|sit\|uat\|prod}.yaml | 9019 |
-| ydsz-pmis-audit | ydsz-pmis-audit-{dev\|sit\|uat\|prod}.yaml | 9020 |
-| ydsz-pmis-message | ydsz-pmis-message-{dev\|sit\|uat\|prod}.yaml | 9021 |
-| ydsz-pmis-scheduler | ydsz-pmis-scheduler-{dev\|sit\|uat\|prod}.yaml | 9022 |
+| ydsz-pmis-iam | ydsz-pmis-iam-{dev\|sit\|uat\|prod}.yaml | 9002 |
+| ydsz-pmis-system | ydsz-pmis-system-{dev\|sit\|uat\|prod}.yaml | 9008 |
+| ydsz-pmis-workflow | ydsz-pmis-workflow-{dev\|sit\|uat\|prod}.yaml | 9004 |
+| ydsz-pmis-project | ydsz-pmis-project-{dev\|sit\|uat\|prod}.yaml | 9005 |
+| ydsz-pmis-agent | ydsz-pmis-agent-{dev\|sit\|uat\|prod}.yaml | 9007 |
+| ydsz-pmis-scheduler | ydsz-pmis-scheduler-{dev\|sit\|uat\|prod}.yaml | 9012 |
+
+> 服务合并重构后仅保留 7 个微服务：
+> - `user` + `auth` → `iam`（端口 9002）
+> - `file` + `config` + `audit` + `notification` + `message` → `system`（端口 9008）
+> - `project` + `execution` → `project`（端口 9005）
 
 ## 4. 共享配置（推荐）
 
@@ -119,11 +118,11 @@ Nacos 提供 OpenAPI 可批量导入：
 ```bash
 # 通用导入脚本（伪代码，参考官方 API 文档）
 curl -X POST "http://nacos-host:8848/nacos/v1/cs/configs" \
-  -d "dataId=ydsz-pmis-user-prod.yaml" \
+  -d "dataId=ydsz-pmis-iam-prod.yaml" \
   -d "group=PMIS_GROUP" \
   -d "namespaceId=pmis-prod" \
   -d "type=yaml" \
-  --data-urlencode "content@src/main/resources/ydsz-pmis-user-prod.yaml"
+  --data-urlencode "content@src/main/resources/ydsz-pmis-iam-prod.yaml"
 ```
 
 也可使用 `nacos-cli` / `nacos-sync` 等工具。
@@ -200,17 +199,11 @@ curl http://<service-host>:<port>/actuator/refresh
 | 序号 | 模块 | 端口 | DataId 前缀 |
 |------|------|------|-------------|
 | 1 | ydsz-pmis-gateway | 9000 | ydsz-pmis-gateway- |
-| 2 | ydsz-pmis-auth | 9001 | ydsz-pmis-auth- |
-| 3 | ydsz-pmis-user | 9002 | ydsz-pmis-user- |
-| 4 | ydsz-pmis-notification | 9013 | ydsz-pmis-notification- |
-| 5 | ydsz-pmis-workflow | 9014 | ydsz-pmis-workflow- |
-| 6 | ydsz-pmis-project | 9015 | ydsz-pmis-project- |
-| 7 | ydsz-pmis-execution | 9016 | ydsz-pmis-execution- |
-| 8 | ydsz-pmis-agent | 9017 | ydsz-pmis-agent- |
-| 9 | ydsz-pmis-config | 9018 | ydsz-pmis-config- |
-| 10 | ydsz-pmis-file | 9019 | ydsz-pmis-file- |
-| 11 | ydsz-pmis-audit | 9020 | ydsz-pmis-audit- |
-| 12 | ydsz-pmis-message | 9021 | ydsz-pmis-message- |
-| 13 | ydsz-pmis-scheduler | 9022 | ydsz-pmis-scheduler- |
+| 2 | ydsz-pmis-iam | 9002 | ydsz-pmis-iam- |
+| 3 | ydsz-pmis-system | 9008 | ydsz-pmis-system- |
+| 4 | ydsz-pmis-workflow | 9004 | ydsz-pmis-workflow- |
+| 5 | ydsz-pmis-project | 9005 | ydsz-pmis-project- |
+| 6 | ydsz-pmis-agent | 9007 | ydsz-pmis-agent- |
+| 7 | ydsz-pmis-scheduler | 9012 | ydsz-pmis-scheduler- |
 
 > 每个模块在 `src/main/resources/` 下保留 4 个环境配置：`*-dev.yaml` / `*-sit.yaml` / `*-uat.yaml` / `*-prod.yaml`。
