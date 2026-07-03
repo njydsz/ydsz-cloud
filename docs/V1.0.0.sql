@@ -84,7 +84,7 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ====================================================================
 
 -- 字典类型表
-CREATE TABLE pmis_dict_type (
+CREATE TABLE IF NOT EXISTS pmis_dict_type(
     id              BIGSERIAL      PRIMARY KEY,
     type_code       VARCHAR(64)    NOT NULL,
     type_name       VARCHAR(128)   NOT NULL,
@@ -112,7 +112,7 @@ COMMENT ON COLUMN pmis_dict_type.deleted IS '逻辑删除标记: 0 未删除 / 1
 CREATE INDEX idx_pmis_dict_type_status ON pmis_dict_type (status) WHERE deleted = 0;
 
 -- 字典项表
-CREATE TABLE pmis_dict_item (
+CREATE TABLE IF NOT EXISTS pmis_dict_item(
     id              BIGSERIAL      PRIMARY KEY,
     type_code       VARCHAR(64)    NOT NULL,
     item_code       VARCHAR(64)    NOT NULL,
@@ -149,7 +149,7 @@ CREATE INDEX idx_pmis_dict_item_type ON pmis_dict_item (type_code) WHERE deleted
 CREATE INDEX idx_pmis_dict_item_status ON pmis_dict_item (status) WHERE deleted = 0;
 
 -- 字典版本表
-CREATE TABLE pmis_dict_version (
+CREATE TABLE IF NOT EXISTS pmis_dict_version(
     id              BIGSERIAL      PRIMARY KEY,
     type_code       VARCHAR(64)    NOT NULL,
     version         VARCHAR(32)    NOT NULL,
@@ -174,7 +174,7 @@ COMMENT ON COLUMN pmis_dict_version.deleted IS '逻辑删除标记: 0 未删除 
 -- ====================================================================
 
 -- 角色表
-CREATE TABLE pmis_role (
+CREATE TABLE IF NOT EXISTS pmis_role(
     id              BIGSERIAL      PRIMARY KEY,
     role_code       VARCHAR(64)    NOT NULL,
     role_name       VARCHAR(64)    NOT NULL,
@@ -206,7 +206,7 @@ COMMENT ON COLUMN pmis_role.deleted IS '逻辑删除标记: 0 未删除 / 1 已�
 CREATE INDEX idx_pmis_role_status ON pmis_role (status) WHERE deleted = 0;
 
 -- 权限/菜单表
-CREATE TABLE pmis_permission (
+CREATE TABLE IF NOT EXISTS pmis_permission(
     id              BIGSERIAL      PRIMARY KEY,
     parent_id       BIGINT         NOT NULL DEFAULT 0,
     perm_code       VARCHAR(128)   NOT NULL,
@@ -247,7 +247,7 @@ CREATE INDEX idx_pmis_permission_parent ON pmis_permission (parent_id);
 CREATE INDEX idx_pmis_permission_type ON pmis_permission (perm_type) WHERE deleted = 0;
 
 -- 用户-角色关联表
-CREATE TABLE pmis_user_role (
+CREATE TABLE IF NOT EXISTS pmis_user_role(
     id              BIGSERIAL      PRIMARY KEY,
     user_id         BIGINT         NOT NULL,
     role_id         BIGINT         NOT NULL,
@@ -268,7 +268,7 @@ CREATE INDEX idx_pmis_user_role_user ON pmis_user_role (user_id) WHERE deleted =
 CREATE INDEX idx_pmis_user_role_role ON pmis_user_role (role_id) WHERE deleted = 0;
 
 -- 角色-权限关联表
-CREATE TABLE pmis_role_permission (
+CREATE TABLE IF NOT EXISTS pmis_role_permission(
     id              BIGSERIAL      PRIMARY KEY,
     role_id         BIGINT         NOT NULL,
     permission_id   BIGINT         NOT NULL,
@@ -288,7 +288,7 @@ COMMENT ON COLUMN pmis_role_permission.deleted IS '逻辑删除标记: 0 未删�
 -- ====================================================================
 
 -- 部门表
-CREATE TABLE pmis_department (
+CREATE TABLE IF NOT EXISTS pmis_department(
     id              BIGSERIAL      PRIMARY KEY,
     dept_code       VARCHAR(64)    NOT NULL,
     dept_name       VARCHAR(128)   NOT NULL,
@@ -329,7 +329,7 @@ CREATE INDEX idx_pmis_department_parent ON pmis_department (parent_id);
 CREATE INDEX idx_pmis_department_status ON pmis_department (status) WHERE deleted = 0;
 
 -- 岗位表
-CREATE TABLE pmis_position (
+CREATE TABLE IF NOT EXISTS pmis_position(
     id              BIGSERIAL      PRIMARY KEY,
     position_code   VARCHAR(64)    NOT NULL,
     position_name   VARCHAR(128)   NOT NULL,
@@ -361,7 +361,7 @@ COMMENT ON COLUMN pmis_position.deleted IS '逻辑删除标记: 0 未删除 / 1 
 CREATE INDEX idx_pmis_position_dept ON pmis_position (department_id) WHERE deleted = 0;
 
 -- 职级表 (L1-L18)
-CREATE TABLE pmis_job_level (
+CREATE TABLE IF NOT EXISTS pmis_job_level(
     id              BIGSERIAL      PRIMARY KEY,
     level_code      VARCHAR(8)     NOT NULL,
     level_name      VARCHAR(64)    NOT NULL,
@@ -391,7 +391,7 @@ COMMENT ON COLUMN pmis_job_level.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_job_level.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
 -- 职级费率表 (对外人天 / 对内人天)
-CREATE TABLE pmis_job_level_rate (
+CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
     id                  BIGSERIAL      PRIMARY KEY,
     level_code          VARCHAR(8)     NOT NULL,
     external_daily      NUMERIC(10,2)  NOT NULL,
@@ -442,7 +442,7 @@ CREATE INDEX idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WH
 CREATE INDEX idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
 
 -- 员工表
-CREATE TABLE pmis_employee (
+CREATE TABLE IF NOT EXISTS pmis_employee(
     id              BIGSERIAL      PRIMARY KEY,
     user_id         BIGINT         NOT NULL,
     emp_code        VARCHAR(64)    NOT NULL,
@@ -511,7 +511,7 @@ CREATE INDEX idx_pmis_emp_level ON pmis_employee (level_code) WHERE deleted = 0;
 CREATE INDEX idx_pmis_emp_bench ON pmis_employee (bench_status, bench_start) WHERE deleted = 0;
 
 -- 员工标签表
-CREATE TABLE pmis_employee_tag (
+CREATE TABLE IF NOT EXISTS pmis_employee_tag(
     id              BIGSERIAL      PRIMARY KEY,
     employee_id     BIGINT         NOT NULL,
     tag_type        VARCHAR(32)    NOT NULL,
@@ -537,7 +537,7 @@ CREATE INDEX idx_pmis_emp_tag_code ON pmis_employee_tag (tag_code);
 -- ====================================================================
 
 -- 用户账号表
-CREATE TABLE pmis_user_account (
+CREATE TABLE IF NOT EXISTS pmis_user_account(
     id              BIGSERIAL      PRIMARY KEY,
     username        VARCHAR(64)    NOT NULL,
     password        VARCHAR(128)   NOT NULL,
@@ -580,7 +580,7 @@ CREATE INDEX idx_pmis_user_status ON pmis_user_account (status) WHERE deleted = 
 -- 5. 通知中心
 -- ====================================================================
 
-CREATE TABLE pmis_notification (
+CREATE TABLE IF NOT EXISTS pmis_notification(
     id              BIGSERIAL      PRIMARY KEY,
     title           VARCHAR(255)   NOT NULL,
     content         TEXT,
@@ -625,7 +625,7 @@ CREATE INDEX idx_pmis_notif_biz ON pmis_notification (biz_type, biz_id) WHERE de
 -- 6. 系统配置
 -- ====================================================================
 
-CREATE TABLE pmis_config (
+CREATE TABLE IF NOT EXISTS pmis_config(
     id              BIGSERIAL      PRIMARY KEY,
     config_group    VARCHAR(64)    NOT NULL,
     config_key      VARCHAR(128)   NOT NULL,
@@ -666,7 +666,7 @@ CREATE INDEX idx_pmis_config_group ON pmis_config (config_group) WHERE deleted =
 -- 7. 操作日志
 -- ====================================================================
 
-CREATE TABLE pmis_operation_log (
+CREATE TABLE IF NOT EXISTS pmis_operation_log(
     id              BIGSERIAL      PRIMARY KEY,
     user_id         BIGINT,
     username        VARCHAR(64),
@@ -944,28 +944,28 @@ CREATE INDEX IF NOT EXISTS idx_file_bucket ON pmis_file(bucket);
 -- =====================================================
 
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_job;
-CREATE TABLE pmis_job (
-    id              BIGSERIAL PRIMARY KEY,
-    job_name        VARCHAR(128) NOT NULL,
-    job_group       VARCHAR(64)  NOT NULL DEFAULT 'DEFAULT',
-    job_key         VARCHAR(128) NOT NULL,
-    handler         VARCHAR(256) NOT NULL,
-    cron_expression VARCHAR(128) NOT NULL,
-    params_json     TEXT,
-    status          VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',
-    remark          VARCHAR(512),
-    next_fire_time  TIMESTAMP,
-    last_fire_time  TIMESTAMP,
-    fire_count      BIGINT       NOT NULL DEFAULT 0,
-    success_count   BIGINT       NOT NULL DEFAULT 0,
-    fail_count      BIGINT       NOT NULL DEFAULT 0,
-    tenant_id       BIGINT       DEFAULT 1,
-    create_by       BIGINT,
-    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by       BIGINT,
-    update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_job (
+-- [SKIPPED-CLEANUP-REBUILD]     id              BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     job_name        VARCHAR(128) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     job_group       VARCHAR(64)  NOT NULL DEFAULT 'DEFAULT',
+-- [SKIPPED-CLEANUP-REBUILD]     job_key         VARCHAR(128) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     handler         VARCHAR(256) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     cron_expression VARCHAR(128) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     params_json     TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status          VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',
+-- [SKIPPED-CLEANUP-REBUILD]     remark          VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     next_fire_time  TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     last_fire_time  TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     fire_count      BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     success_count   BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     fail_count      BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id       BIGINT       DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     create_by       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     update_by       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted         SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_job IS '动态定时任务定义表: 支持运行时增删改触发频率的定时任务(Quartz/XXL-JOB)';
 COMMENT ON COLUMN pmis_job.id IS '主键 ID';
@@ -995,21 +995,21 @@ CREATE INDEX idx_pmis_job_group ON pmis_job(job_group);
 CREATE INDEX idx_pmis_job_tenant ON pmis_job(tenant_id);
 
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_job_log;
-CREATE TABLE pmis_job_log (
-    id              BIGSERIAL PRIMARY KEY,
-    job_id          BIGINT       NOT NULL,
-    job_key         VARCHAR(128) NOT NULL,
-    start_time      TIMESTAMP    NOT NULL,
-    end_time        TIMESTAMP,
-    duration_ms     BIGINT,
-    status          VARCHAR(32)  NOT NULL,
-    error_message   TEXT,
-    params_json     TEXT,
-    result_json     TEXT,
-    trace_id        VARCHAR(64),
-    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_job_log (
+-- [SKIPPED-CLEANUP-REBUILD]     id              BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     job_id          BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     job_key         VARCHAR(128) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     start_time      TIMESTAMP    NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     end_time        TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     duration_ms     BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     status          VARCHAR(32)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     error_message   TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     params_json     TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     result_json     TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     trace_id        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted         SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_job_log IS '任务执行日志: 每次任务执行的耗时/入参/出参/异常,用于排障与审计';
 COMMENT ON COLUMN pmis_job_log.id IS '主键 ID';
@@ -1031,6 +1031,65 @@ CREATE INDEX idx_pjl_job_key ON pmis_job_log(job_key);
 CREATE INDEX idx_pjl_status ON pmis_job_log(status);
 CREATE INDEX idx_pjl_start_time ON pmis_job_log(start_time);
 
+
+-- [AUTO-MIGRATION] pmis_job: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_job') THEN
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS job_name VARCHAR(128) NOT NULL;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS job_group VARCHAR(64)  NOT NULL DEFAULT 'DEFAULT';
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS job_key VARCHAR(128) NOT NULL;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS handler VARCHAR(256) NOT NULL;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS cron_expression VARCHAR(128) NOT NULL;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS params_json TEXT;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'NORMAL';
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS remark VARCHAR(512);
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS next_fire_time TIMESTAMP;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS last_fire_time TIMESTAMP;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS fire_count BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS success_count BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS fail_count BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS tenant_id BIGINT       DEFAULT 1;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS create_by BIGINT;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS create_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS update_by BIGINT;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS update_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_job ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_job_log: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_job_log') THEN
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS job_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS job_key VARCHAR(128) NOT NULL;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS start_time TIMESTAMP    NOT NULL;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS end_time TIMESTAMP;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS duration_ms BIGINT;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS error_message TEXT;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS params_json TEXT;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS result_json TEXT;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS trace_id VARCHAR(64);
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS create_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_job_log ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_006__init_pmis_job_schema.sql
 -- ====================================================================
@@ -1046,27 +1105,27 @@ CREATE INDEX idx_pjl_start_time ON pmis_job_log(start_time);
 -- =====================================================
 
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_message_log;
-CREATE TABLE pmis_message_log (
-    id              BIGSERIAL PRIMARY KEY,
-    channel         VARCHAR(32)  NOT NULL,
-    biz_type        VARCHAR(64),
-    biz_id          VARCHAR(64),
-    receiver        VARCHAR(256) NOT NULL,
-    template_code   VARCHAR(128),
-    template_params TEXT,
-    content         TEXT,
-    status          VARCHAR(32)  NOT NULL,
-    error_message   TEXT,
-    provider_trace_id VARCHAR(128),
-    cost_ms         BIGINT,
-    trace_id        VARCHAR(64),
-    tenant_id       BIGINT       DEFAULT 1,
-    create_by       BIGINT,
-    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by       BIGINT,
-    update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_message_log (
+-- [SKIPPED-CLEANUP-REBUILD]     id              BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     channel         VARCHAR(32)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     biz_type        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     biz_id          VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     receiver        VARCHAR(256) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     template_code   VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     template_params TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     content         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status          VARCHAR(32)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     error_message   TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     cost_ms         BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     trace_id        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id       BIGINT       DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     create_by       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     update_by       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted         SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_message_log IS '消息发送日志: 短信/邮件/推送/站内信发送全量记录,支持按业务/接收人查询';
 COMMENT ON COLUMN pmis_message_log.id IS '主键 ID';
@@ -1096,24 +1155,24 @@ CREATE INDEX idx_pml_receiver ON pmis_message_log(receiver);
 CREATE INDEX idx_pml_tenant ON pmis_message_log(tenant_id);
 
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_message_template;
-CREATE TABLE pmis_message_template (
-    id              BIGSERIAL PRIMARY KEY,
-    template_code   VARCHAR(128) NOT NULL,
-    channel         VARCHAR(32)  NOT NULL,
-    subject         VARCHAR(256),
-    content         TEXT         NOT NULL,
-    provider        VARCHAR(64),
-    provider_key    VARCHAR(128),
-    sign_name       VARCHAR(64),
-    status          VARCHAR(32)  NOT NULL DEFAULT 'ENABLED',
-    description     VARCHAR(512),
-    tenant_id       BIGINT       DEFAULT 1,
-    create_by       BIGINT,
-    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by       BIGINT,
-    update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_message_template (
+-- [SKIPPED-CLEANUP-REBUILD]     id              BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     template_code   VARCHAR(128) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     channel         VARCHAR(32)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     subject         VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     content         TEXT         NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     provider        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     provider_key    VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     sign_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     status          VARCHAR(32)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     description     VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id       BIGINT       DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     create_by       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     update_by       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted         SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_message_template IS '消息模板表: 短信/邮件/推送/站内信模板,支持 ${var} 占位符嵌套替换';
 COMMENT ON COLUMN pmis_message_template.id IS '主键 ID';
@@ -1137,6 +1196,67 @@ CREATE UNIQUE INDEX uk_pmt_code_channel ON pmis_message_template(template_code, 
 CREATE INDEX idx_pmt_channel ON pmis_message_template(channel);
 CREATE INDEX idx_pmt_status ON pmis_message_template(status);
 
+
+-- [AUTO-MIGRATION] pmis_message_log: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_message_log') THEN
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS channel VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS biz_type VARCHAR(64);
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS biz_id VARCHAR(64);
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS receiver VARCHAR(256) NOT NULL;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS template_code VARCHAR(128);
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS template_params TEXT;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS content TEXT;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS error_message TEXT;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(128);
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS cost_ms BIGINT;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS trace_id VARCHAR(64);
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS tenant_id BIGINT       DEFAULT 1;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS create_by BIGINT;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS create_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS update_by BIGINT;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS update_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_message_template: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_message_template') THEN
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS template_code VARCHAR(128) NOT NULL;
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS channel VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS subject VARCHAR(256);
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS content TEXT         NOT NULL;
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS provider VARCHAR(64);
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS provider_key VARCHAR(128);
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS sign_name VARCHAR(64);
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS description VARCHAR(512);
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS tenant_id BIGINT       DEFAULT 1;
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS create_by BIGINT;
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS create_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS update_by BIGINT;
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS update_time TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_message_template ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_007__init_pmis_message_schema.sql
 -- ====================================================================
@@ -1247,36 +1367,36 @@ CREATE INDEX IF NOT EXISTS idx_pol_created ON pmis_operation_log(created_at DESC
 -- 1. 商机主表 pmis_project_opportunity
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_opportunity;
-CREATE TABLE pmis_project_opportunity (
-    id                BIGSERIAL PRIMARY KEY,
-    opportunity_code  VARCHAR(64)   NOT NULL,
-    opportunity_name  VARCHAR(256)  NOT NULL,
-    customer_id       BIGINT        NOT NULL,
-    customer_name     VARCHAR(256),
-    business_dept_id  BIGINT,
-    owner_id          BIGINT        NOT NULL,
-    owner_name        VARCHAR(64),
-    level             VARCHAR(8)    NOT NULL DEFAULT 'C',  -- A/B/C
-    source            VARCHAR(64),                        -- 商机来源
-    industry          VARCHAR(64),
-    estimated_amount  NUMERIC(18,2) NOT NULL DEFAULT 0,    -- 预计金额
-    win_rate          NUMERIC(5,4)  NOT NULL DEFAULT 0,    -- 0~1
-    expected_sign_date DATE,                               -- 预计签约日期
-    expected_start_date DATE,
-    expected_end_date   DATE,
-    status            VARCHAR(32)   NOT NULL DEFAULT 'FOLLOWING',  -- FOLLOWING/QUOTED/NEGOTIATING/WON/LOST/INVALID
-    lost_reason       VARCHAR(512),
-    competitor        VARCHAR(256),
-    remark            TEXT,
-    tags              VARCHAR(512),                       -- 逗号分隔
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppo_code UNIQUE (opportunity_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_opportunity (
+-- [SKIPPED-CLEANUP-REBUILD]     id                BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     opportunity_code  VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     opportunity_name  VARCHAR(256)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_name     VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     business_dept_id  BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     owner_id          BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     owner_name        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     level             VARCHAR(8)    NOT NULL DEFAULT 'C',  -- A/B/C
+-- [SKIPPED-CLEANUP-REBUILD]     source            VARCHAR(64),                        -- 商机来源
+-- [SKIPPED-CLEANUP-REBUILD]     industry          VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     estimated_amount  NUMERIC(18,2) NOT NULL DEFAULT 0,    -- 预计金额
+-- [SKIPPED-CLEANUP-REBUILD]     win_rate          NUMERIC(5,4)  NOT NULL DEFAULT 0,    -- 0~1
+-- [SKIPPED-CLEANUP-REBUILD]     expected_sign_date DATE,                               -- 预计签约日期
+-- [SKIPPED-CLEANUP-REBUILD]     expected_start_date DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     expected_end_date   DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     status            VARCHAR(32)   NOT NULL DEFAULT 'FOLLOWING',  -- FOLLOWING/QUOTED/NEGOTIATING/WON/LOST/INVALID
+-- [SKIPPED-CLEANUP-REBUILD]     lost_reason       VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     competitor        VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     remark            TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tags              VARCHAR(512),                       -- 逗号分隔
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id         BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     created_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted           SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_ppo_code UNIQUE (opportunity_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_project_opportunity IS '商机主表: 销售线索到合同前的漏斗管理,支持赢率/分级/转化立项';
 COMMENT ON COLUMN pmis_project_opportunity.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_opportunity.opportunity_code IS '商机编码(全局唯一,如 OPP20260001)';
@@ -1317,19 +1437,19 @@ CREATE INDEX idx_ppo_tenant     ON pmis_project_opportunity (tenant_id);
 -- 2. 商机跟进记录 pmis_project_opportunity_follow
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_opportunity_follow;
-CREATE TABLE pmis_project_opportunity_follow (
-    id                BIGSERIAL PRIMARY KEY,
-    opportunity_id    BIGINT        NOT NULL,
-    follow_type       VARCHAR(32)   NOT NULL,    -- VISIT/CALL/QUOTE/NEGOTIATE/OTHER
-    follow_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    follower_id       BIGINT        NOT NULL,
-    follower_name     VARCHAR(64),
-    content           TEXT,
-    next_step         TEXT,
-    next_follow_date  DATE,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_opportunity_follow (
+-- [SKIPPED-CLEANUP-REBUILD]     id                BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     opportunity_id    BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     follow_type       VARCHAR(32)   NOT NULL,    -- VISIT/CALL/QUOTE/NEGOTIATE/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     follow_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     follower_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     follower_name     VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     content           TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     next_step         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     next_follow_date  DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted           SMALLINT      NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_project_opportunity_follow IS '商机跟进记录: 拜访/电话/报价/谈判的痕迹管理,支持时间线回溯';
 COMMENT ON COLUMN pmis_project_opportunity_follow.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_opportunity_follow.opportunity_id IS '商机 ID(关联 pmis_project_opportunity.id)';
@@ -1348,39 +1468,39 @@ CREATE INDEX idx_ppof_opp ON pmis_project_opportunity_follow (opportunity_id, fo
 -- 3. 立项主表 pmis_project_initiation
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_initiation;
-CREATE TABLE pmis_project_initiation (
-    id                BIGSERIAL PRIMARY KEY,
-    project_code      VARCHAR(64)   NOT NULL,
-    project_name      VARCHAR(256)  NOT NULL,
-    opportunity_id    BIGINT,                            -- 来源商机
-    customer_id       BIGINT        NOT NULL,
-    customer_name     VARCHAR(256),
-    business_dept_id  BIGINT,
-    project_type      VARCHAR(32)   NOT NULL,            -- FIXED_PRICE/T&M/OUTSOURCING/PRODUCT...
-    project_level     VARCHAR(16)   NOT NULL DEFAULT 'C', -- A/B/C
-    pm_id             BIGINT,                            -- 项目经理
-    pm_name           VARCHAR(64),
-    sponsor_id        BIGINT,                            -- 项目发起人
-    sponsor_name      VARCHAR(64),
-    estimated_amount  NUMERIC(18,2) NOT NULL DEFAULT 0,
-    budget_amount     NUMERIC(18,2) NOT NULL DEFAULT 0,
-    planned_start_date DATE,
-    planned_end_date   DATE,
-    duration_days     INTEGER       NOT NULL DEFAULT 0,
-    stage             VARCHAR(32)   NOT NULL DEFAULT 'PRE_INITIATION', -- PRE_INITIATION/SUBMITTED/APPROVING/APPROVED/REJECTED/EXECUTING/CLOSED
-    current_gate      VARCHAR(32),                       -- 当前门径 CD1/CD2/CD3/CD4/CD5
-    description       TEXT,
-    business_case     TEXT,                              -- 立项依据
-    risk_assessment   TEXT,                              -- 风险评估
-    workflow_id       VARCHAR(64),                       -- 关联自研工作流流程实例
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppi_code UNIQUE (project_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_initiation (
+-- [SKIPPED-CLEANUP-REBUILD]     id                BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     project_code      VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     project_name      VARCHAR(256)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     opportunity_id    BIGINT,                            -- 来源商机
+-- [SKIPPED-CLEANUP-REBUILD]     customer_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_name     VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     business_dept_id  BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     project_type      VARCHAR(32)   NOT NULL,            -- FIXED_PRICE/T&M/OUTSOURCING/PRODUCT...
+-- [SKIPPED-CLEANUP-REBUILD]     project_level     VARCHAR(16)   NOT NULL DEFAULT 'C', -- A/B/C
+-- [SKIPPED-CLEANUP-REBUILD]     pm_id             BIGINT,                            -- 项目经理
+-- [SKIPPED-CLEANUP-REBUILD]     pm_name           VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     sponsor_id        BIGINT,                            -- 项目发起人
+-- [SKIPPED-CLEANUP-REBUILD]     sponsor_name      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     estimated_amount  NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     budget_amount     NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     planned_start_date DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     planned_end_date   DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     duration_days     INTEGER       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     stage             VARCHAR(32)   NOT NULL DEFAULT 'PRE_INITIATION', -- PRE_INITIATION/SUBMITTED/APPROVING/APPROVED/REJECTED/EXECUTING/CLOSED
+-- [SKIPPED-CLEANUP-REBUILD]     current_gate      VARCHAR(32),                       -- 当前门径 CD1/CD2/CD3/CD4/CD5
+-- [SKIPPED-CLEANUP-REBUILD]     description       TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     business_case     TEXT,                              -- 立项依据
+-- [SKIPPED-CLEANUP-REBUILD]     risk_assessment   TEXT,                              -- 风险评估
+-- [SKIPPED-CLEANUP-REBUILD]     workflow_id       VARCHAR(64),                       -- 关联自研工作流流程实例
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id         BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     created_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted           SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_ppi_code UNIQUE (project_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_project_initiation IS '项目立项主表: 商机到合同之间的立项流程载体,关联预算/PM/CDCP 门径评审';
 COMMENT ON COLUMN pmis_project_initiation.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_initiation.project_code IS '项目编码(全局唯一,如 PRJ20260001)';
@@ -1424,22 +1544,22 @@ CREATE INDEX idx_ppi_created   ON pmis_project_initiation (created_at DESC);
 -- 4. 立项预算明细 pmis_project_budget_item
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_budget_item;
-CREATE TABLE pmis_project_budget_item (
-    id                BIGSERIAL PRIMARY KEY,
-    initiation_id     BIGINT        NOT NULL,
-    category          VARCHAR(32)   NOT NULL,    -- LABOR/PURCHASE/EXPENSE/OUTSOURCE/OTHER
-    sub_category      VARCHAR(64),
-    description       VARCHAR(256),
-    quantity          NUMERIC(18,2) NOT NULL DEFAULT 0,
-    unit              VARCHAR(16),
-    unit_price        NUMERIC(18,2) NOT NULL DEFAULT 0,
-    amount            NUMERIC(18,2) NOT NULL DEFAULT 0,
-    remark            VARCHAR(512),
-    sort_order        INTEGER       NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_budget_item (
+-- [SKIPPED-CLEANUP-REBUILD]     id                BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id     BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     category          VARCHAR(32)   NOT NULL,    -- LABOR/PURCHASE/EXPENSE/OUTSOURCE/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     sub_category      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     description       VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     quantity          NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     unit              VARCHAR(16),
+-- [SKIPPED-CLEANUP-REBUILD]     unit_price        NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     amount            NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     remark            VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     sort_order        INTEGER       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted           SMALLINT      NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_project_budget_item IS '立项预算明细: 按类别拆解预算,支撑执行期预算占用控制(80% 黄/95% 红)';
 COMMENT ON COLUMN pmis_project_budget_item.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_budget_item.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
@@ -1461,22 +1581,22 @@ CREATE INDEX idx_ppbi_init ON pmis_project_budget_item (initiation_id);
 -- 5. 门径评审记录 pmis_project_gate_review
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_gate_review;
-CREATE TABLE pmis_project_gate_review (
-    id                BIGSERIAL PRIMARY KEY,
-    initiation_id     BIGINT        NOT NULL,
-    gate_code         VARCHAR(16)   NOT NULL,    -- CD1/CD2/CD3/CD4/CD5
-    gate_name         VARCHAR(64),
-    review_result     VARCHAR(16)   NOT NULL DEFAULT 'PENDING', -- PENDING/PASSED/REJECTED/CONDITIONAL
-    reviewer_id       BIGINT,
-    reviewer_name     VARCHAR(64),
-    review_at         TIMESTAMP,
-    decision_basis    TEXT,
-    conditions        TEXT,
-    next_gate         VARCHAR(16),
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_gate_review (
+-- [SKIPPED-CLEANUP-REBUILD]     id                BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id     BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     gate_code         VARCHAR(16)   NOT NULL,    -- CD1/CD2/CD3/CD4/CD5
+-- [SKIPPED-CLEANUP-REBUILD]     gate_name         VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     review_result     VARCHAR(16)   NOT NULL DEFAULT 'PENDING', -- PENDING/PASSED/REJECTED/CONDITIONAL
+-- [SKIPPED-CLEANUP-REBUILD]     reviewer_id       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     reviewer_name     VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     review_at         TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     decision_basis    TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     conditions        TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     next_gate         VARCHAR(16),
+-- [SKIPPED-CLEANUP-REBUILD]     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted           SMALLINT      NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_project_gate_review IS '门径评审记录: CDCP 决策评审(CD1 启动/CD2 设计/CD3 建设/CD4 UAT/CD5 上线)';
 COMMENT ON COLUMN pmis_project_gate_review.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_gate_review.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
@@ -1498,38 +1618,38 @@ CREATE INDEX idx_ppgr_init ON pmis_project_gate_review (initiation_id, gate_code
 -- 6. 合同主表 pmis_project_contract
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract;
-CREATE TABLE pmis_project_contract (
-    id                BIGSERIAL PRIMARY KEY,
-    contract_code     VARCHAR(64)   NOT NULL,
-    contract_name     VARCHAR(256)  NOT NULL,
-    initiation_id     BIGINT,                            -- 关联立项
-    customer_id       BIGINT        NOT NULL,
-    customer_name     VARCHAR(256),
-    contract_type     VARCHAR(32)   NOT NULL,            -- FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE
-    sign_date         DATE,
-    effective_date    DATE,
-    expire_date       DATE,
-    total_amount      NUMERIC(18,2) NOT NULL DEFAULT 0,  -- 合同总额
-    currency          VARCHAR(8)    NOT NULL DEFAULT 'CNY',
-    payment_terms     TEXT,                              -- 付款条款
-    billing_cycle     VARCHAR(32),                       -- 结算周期
-    tax_rate          NUMERIC(5,4)  NOT NULL DEFAULT 0,   -- 税率 0.0000-1.0000
-    status            VARCHAR(32)   NOT NULL DEFAULT 'DRAFT', -- DRAFT/SUBMITTED/APPROVING/ACTIVE/SUSPENDED/EXPIRED/TERMINATED
-    risk_level        VARCHAR(8)    NOT NULL DEFAULT 'LOW',  -- LOW/MEDIUM/HIGH
-    risk_notes        TEXT,
-    owner_id          BIGINT        NOT NULL,
-    owner_name        VARCHAR(64),
-    contract_file_id  BIGINT,                            -- 合同文件 ID（关联 file 服务）
-    workflow_id       VARCHAR(64),
-    remark            TEXT,
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppc_code UNIQUE (contract_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_contract (
+-- [SKIPPED-CLEANUP-REBUILD]     id                BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     contract_code     VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     contract_name     VARCHAR(256)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id     BIGINT,                            -- 关联立项
+-- [SKIPPED-CLEANUP-REBUILD]     customer_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_name     VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     contract_type     VARCHAR(32)   NOT NULL,            -- FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE
+-- [SKIPPED-CLEANUP-REBUILD]     sign_date         DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     effective_date    DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     expire_date       DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     total_amount      NUMERIC(18,2) NOT NULL DEFAULT 0,  -- 合同总额
+-- [SKIPPED-CLEANUP-REBUILD]     currency          VARCHAR(8)    NOT NULL DEFAULT 'CNY',
+-- [SKIPPED-CLEANUP-REBUILD]     payment_terms     TEXT,                              -- 付款条款
+-- [SKIPPED-CLEANUP-REBUILD]     billing_cycle     VARCHAR(32),                       -- 结算周期
+-- [SKIPPED-CLEANUP-REBUILD]     tax_rate          NUMERIC(5,4)  NOT NULL DEFAULT 0,   -- 税率 0.0000-1.0000
+-- [SKIPPED-CLEANUP-REBUILD]     status            VARCHAR(32)   NOT NULL DEFAULT 'DRAFT', -- DRAFT/SUBMITTED/APPROVING/ACTIVE/SUSPENDED/EXPIRED/TERMINATED
+-- [SKIPPED-CLEANUP-REBUILD]     risk_level        VARCHAR(8)    NOT NULL DEFAULT 'LOW',  -- LOW/MEDIUM/HIGH
+-- [SKIPPED-CLEANUP-REBUILD]     risk_notes        TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     owner_id          BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     owner_name        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     contract_file_id  BIGINT,                            -- 合同文件 ID（关联 file 服务）
+-- [SKIPPED-CLEANUP-REBUILD]     workflow_id       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     remark            TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id         BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     created_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted           SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_ppc_code UNIQUE (contract_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_project_contract IS '合同主表: 项目签约合同,关联立项/客户/付款条款,支撑开票回款';
 COMMENT ON COLUMN pmis_project_contract.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_contract.contract_code IS '合同编码(全局唯一,如 CT20260001)';
@@ -1572,27 +1692,27 @@ CREATE INDEX idx_ppc_tenant    ON pmis_project_contract (tenant_id);
 -- 7. 合同补充协议 pmis_project_contract_supplement
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract_supplement;
-CREATE TABLE pmis_project_contract_supplement (
-    id                BIGSERIAL PRIMARY KEY,
-    contract_id       BIGINT        NOT NULL,
-    supplement_code   VARCHAR(64)   NOT NULL,
-    supplement_name   VARCHAR(256)  NOT NULL,
-    supplement_type   VARCHAR(32)   NOT NULL,            -- AMOUNT/SCOPE/TERM/OTHER
-    change_amount     NUMERIC(18,2) NOT NULL DEFAULT 0,
-    new_total_amount  NUMERIC(18,2) NOT NULL DEFAULT 0,
-    effective_date    DATE,
-    expire_date       DATE,
-    content           TEXT,
-    file_id           BIGINT,
-    status            VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppcs_code UNIQUE (supplement_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_contract_supplement (
+-- [SKIPPED-CLEANUP-REBUILD]     id                BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     contract_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     supplement_code   VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     supplement_name   VARCHAR(256)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     supplement_type   VARCHAR(32)   NOT NULL,            -- AMOUNT/SCOPE/TERM/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     change_amount     NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     new_total_amount  NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     effective_date    DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     expire_date       DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     content           TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     file_id           BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     status            VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id         BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     created_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted           SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_ppcs_code UNIQUE (supplement_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_project_contract_supplement IS '合同补充协议: 主合同签订后的金额/范围/工期/其他补充条款,法务备案';
 COMMENT ON COLUMN pmis_project_contract_supplement.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_contract_supplement.contract_id IS '主合同 ID(关联 pmis_project_contract.id)';
@@ -1618,31 +1738,31 @@ CREATE INDEX idx_ppcs_contract ON pmis_project_contract_supplement (contract_id)
 -- 8. 合同变更记录 pmis_project_contract_change
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract_change;
-CREATE TABLE pmis_project_contract_change (
-    id                BIGSERIAL PRIMARY KEY,
-    contract_id       BIGINT        NOT NULL,
-    change_code       VARCHAR(64)   NOT NULL,
-    change_type       VARCHAR(32)   NOT NULL,    -- SCOPE/AMOUNT/TERM/PERSONNEL/PROGRESS
-    change_reason     TEXT,
-    before_value      TEXT,
-    after_value       TEXT,
-    amount_delta      NUMERIC(18,2) NOT NULL DEFAULT 0,
-    impact_analysis   TEXT,
-    status            VARCHAR(32)   NOT NULL DEFAULT 'DRAFT', -- DRAFT/SUBMITTED/APPROVING/APPROVED/REJECTED
-    applicant_id      BIGINT,
-    applicant_name    VARCHAR(64),
-    approver_id       BIGINT,
-    approver_name     VARCHAR(64),
-    approved_at       TIMESTAMP,
-    workflow_id       VARCHAR(64),
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppcc_code UNIQUE (change_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_contract_change (
+-- [SKIPPED-CLEANUP-REBUILD]     id                BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     contract_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     change_code       VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     change_type       VARCHAR(32)   NOT NULL,    -- SCOPE/AMOUNT/TERM/PERSONNEL/PROGRESS
+-- [SKIPPED-CLEANUP-REBUILD]     change_reason     TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     before_value      TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     after_value       TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     amount_delta      NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     impact_analysis   TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status            VARCHAR(32)   NOT NULL DEFAULT 'DRAFT', -- DRAFT/SUBMITTED/APPROVING/APPROVED/REJECTED
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_id      BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_name    VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     approver_id       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     approver_name     VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     approved_at       TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     workflow_id       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id         BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     created_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by        BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted           SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_ppcc_code UNIQUE (change_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_project_contract_change IS '合同变更记录: 范围/金额/工期/人员/进度的变更,需走审批流';
 COMMENT ON COLUMN pmis_project_contract_change.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_contract_change.contract_id IS '主合同 ID(关联 pmis_project_contract.id)';
@@ -1669,6 +1789,275 @@ COMMENT ON COLUMN pmis_project_contract_change.deleted IS '逻辑删除标记: 0
 CREATE INDEX idx_ppcc_contract ON pmis_project_contract_change (contract_id);
 CREATE INDEX idx_ppcc_status   ON pmis_project_contract_change (status);
 
+
+-- [AUTO-MIGRATION] pmis_project_opportunity: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_opportunity') THEN
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS opportunity_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS opportunity_name VARCHAR(256)  NOT NULL;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS customer_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS customer_name VARCHAR(256);
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS business_dept_id BIGINT;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS owner_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS owner_name VARCHAR(64);
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS level VARCHAR(8)    NOT NULL DEFAULT 'C';
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS source VARCHAR(64);
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS industry VARCHAR(64);
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS estimated_amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS win_rate NUMERIC(5,4)  NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS expected_sign_date DATE;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS expected_start_date DATE;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS expected_end_date DATE;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS status VARCHAR(32)   NOT NULL DEFAULT 'FOLLOWING';
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS lost_reason VARCHAR(512);
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS competitor VARCHAR(256);
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS tags VARCHAR(512);
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS created_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS updated_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_opportunity ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_project_opportunity_follow: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_opportunity_follow') THEN
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS opportunity_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS follow_type VARCHAR(32)   NOT NULL;
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS follow_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS follower_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS follower_name VARCHAR(64);
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS content TEXT;
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS next_step TEXT;
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS next_follow_date DATE;
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_opportunity_follow ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_project_initiation: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_initiation') THEN
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS project_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS project_name VARCHAR(256)  NOT NULL;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS opportunity_id BIGINT;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS customer_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS customer_name VARCHAR(256);
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS business_dept_id BIGINT;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS project_type VARCHAR(32)   NOT NULL;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS project_level VARCHAR(16)   NOT NULL DEFAULT 'C';
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS pm_id BIGINT;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS pm_name VARCHAR(64);
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS sponsor_id BIGINT;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS sponsor_name VARCHAR(64);
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS estimated_amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS budget_amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS planned_start_date DATE;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS planned_end_date DATE;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS duration_days INTEGER       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS stage VARCHAR(32)   NOT NULL DEFAULT 'PRE_INITIATION';
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS current_gate VARCHAR(32);
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS description TEXT;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS business_case TEXT;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS risk_assessment TEXT;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS workflow_id VARCHAR(64);
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS created_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS updated_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_initiation ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_project_budget_item: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_budget_item') THEN
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS initiation_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS category VARCHAR(32)   NOT NULL;
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS sub_category VARCHAR(64);
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS description VARCHAR(256);
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS quantity NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS unit VARCHAR(16);
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS unit_price NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS remark VARCHAR(512);
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS sort_order INTEGER       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_budget_item ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_project_gate_review: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_gate_review') THEN
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS initiation_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS gate_code VARCHAR(16)   NOT NULL;
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS gate_name VARCHAR(64);
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS review_result VARCHAR(16)   NOT NULL DEFAULT 'PENDING';
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS reviewer_id BIGINT;
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS reviewer_name VARCHAR(64);
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS review_at TIMESTAMP;
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS decision_basis TEXT;
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS conditions TEXT;
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS next_gate VARCHAR(16);
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_gate_review ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_project_contract: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_contract') THEN
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS contract_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS contract_name VARCHAR(256)  NOT NULL;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS initiation_id BIGINT;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS customer_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS customer_name VARCHAR(256);
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS contract_type VARCHAR(32)   NOT NULL;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS sign_date DATE;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS effective_date DATE;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS expire_date DATE;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS total_amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS currency VARCHAR(8)    NOT NULL DEFAULT 'CNY';
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS payment_terms TEXT;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS billing_cycle VARCHAR(32);
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS tax_rate NUMERIC(5,4)  NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS status VARCHAR(32)   NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS risk_level VARCHAR(8)    NOT NULL DEFAULT 'LOW';
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS risk_notes TEXT;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS owner_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS owner_name VARCHAR(64);
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS contract_file_id BIGINT;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS workflow_id VARCHAR(64);
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS created_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS updated_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_contract ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_project_contract_supplement: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_contract_supplement') THEN
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS contract_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS supplement_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS supplement_name VARCHAR(256)  NOT NULL;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS supplement_type VARCHAR(32)   NOT NULL;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS change_amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS new_total_amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS effective_date DATE;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS expire_date DATE;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS content TEXT;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS file_id BIGINT;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS status VARCHAR(32)   NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS created_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS updated_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_contract_supplement ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_project_contract_change: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_contract_change') THEN
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS contract_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS change_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS change_type VARCHAR(32)   NOT NULL;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS change_reason TEXT;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS before_value TEXT;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS after_value TEXT;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS amount_delta NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS impact_analysis TEXT;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS status VARCHAR(32)   NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS applicant_id BIGINT;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS applicant_name VARCHAR(64);
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS approver_id BIGINT;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS approver_name VARCHAR(64);
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS workflow_id VARCHAR(64);
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS created_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS updated_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_contract_change ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_009__init_pmis_project_schema.sql
 -- ====================================================================
@@ -1687,44 +2076,44 @@ CREATE INDEX idx_ppcc_status   ON pmis_project_contract_change (status);
 -- 1. WBS 任务表 pmis_execution_wbs_task
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_wbs_task;
-CREATE TABLE pmis_execution_wbs_task (
-    id                  BIGSERIAL PRIMARY KEY,
-    task_code           VARCHAR(64)   NOT NULL,
-    task_name           VARCHAR(256)  NOT NULL,
-    initiation_id       BIGINT        NOT NULL,         -- 关联立项
-    parent_id           BIGINT        NOT NULL DEFAULT 0,
-    task_level          INTEGER       NOT NULL DEFAULT 1, -- WBS 层级
-    wbs_path            VARCHAR(512),                    -- 形如 /1/3/5
-    sort_order          INTEGER       NOT NULL DEFAULT 0,
-    task_type           VARCHAR(32)   NOT NULL DEFAULT 'TASK', -- TASK/MILESTONE/SUMMARY
-    planned_start_date  DATE,
-    planned_end_date    DATE,
-    actual_start_date   DATE,
-    actual_end_date     DATE,
-    duration_days       INTEGER,
-    planned_effort      NUMERIC(10,2) NOT NULL DEFAULT 0,    -- 计划人天
-    actual_effort       NUMERIC(10,2) NOT NULL DEFAULT 0,    -- 实际人天
-    progress_pct        NUMERIC(5,2)  NOT NULL DEFAULT 0,    -- 0-100
-    owner_id            BIGINT        NOT NULL,               -- 责任人
-    owner_name          VARCHAR(64),
-    assignee_ids        VARCHAR(512),                        -- 逗号分隔执行人
-    priority            VARCHAR(16)   NOT NULL DEFAULT 'NORMAL', -- LOW/NORMAL/HIGH/URGENT
-    status              VARCHAR(32)   NOT NULL DEFAULT 'PLANNED',
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_execution_wbs_task (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     task_code           VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     task_name           VARCHAR(256)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT        NOT NULL,         -- 关联立项
+-- [SKIPPED-CLEANUP-REBUILD]     parent_id           BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     task_level          INTEGER       NOT NULL DEFAULT 1, -- WBS 层级
+-- [SKIPPED-CLEANUP-REBUILD]     wbs_path            VARCHAR(512),                    -- 形如 /1/3/5
+-- [SKIPPED-CLEANUP-REBUILD]     sort_order          INTEGER       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     task_type           VARCHAR(32)   NOT NULL DEFAULT 'TASK', -- TASK/MILESTONE/SUMMARY
+-- [SKIPPED-CLEANUP-REBUILD]     planned_start_date  DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     planned_end_date    DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     actual_start_date   DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     actual_end_date     DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     duration_days       INTEGER,
+-- [SKIPPED-CLEANUP-REBUILD]     planned_effort      NUMERIC(10,2) NOT NULL DEFAULT 0,    -- 计划人天
+-- [SKIPPED-CLEANUP-REBUILD]     actual_effort       NUMERIC(10,2) NOT NULL DEFAULT 0,    -- 实际人天
+-- [SKIPPED-CLEANUP-REBUILD]     progress_pct        NUMERIC(5,2)  NOT NULL DEFAULT 0,    -- 0-100
+-- [SKIPPED-CLEANUP-REBUILD]     owner_id            BIGINT        NOT NULL,               -- 责任人
+-- [SKIPPED-CLEANUP-REBUILD]     owner_name          VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     assignee_ids        VARCHAR(512),                        -- 逗号分隔执行人
+-- [SKIPPED-CLEANUP-REBUILD]     priority            VARCHAR(16)   NOT NULL DEFAULT 'NORMAL', -- LOW/NORMAL/HIGH/URGENT
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(32)   NOT NULL DEFAULT 'PLANNED',
     -- PLANNED/IN_PROGRESS/BLOCKED/IN_REVIEW/COMPLETED/CANCELLED
-    depends_on          VARCHAR(512),                        -- 依赖任务ID列表
-    milestone           SMALLINT      NOT NULL DEFAULT 0,
-    description         TEXT,
-    deliverable         TEXT,
-    risk_level          VARCHAR(16)   NOT NULL DEFAULT 'LOW', -- LOW/MEDIUM/HIGH
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_by          BIGINT        NOT NULL DEFAULT 0,
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          BIGINT        NOT NULL DEFAULT 0,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pewt_code UNIQUE (task_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD]     depends_on          VARCHAR(512),                        -- 依赖任务ID列表
+-- [SKIPPED-CLEANUP-REBUILD]     milestone           SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     description         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     deliverable         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     risk_level          VARCHAR(16)   NOT NULL DEFAULT 'LOW', -- LOW/MEDIUM/HIGH
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by          BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by          BIGINT        NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pewt_code UNIQUE (task_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_execution_wbs_task IS 'WBS 任务表: 项目工作分解结构,层级化任务编排,支撑进度/工时/责任追踪';
 COMMENT ON COLUMN pmis_execution_wbs_task.id IS '主键 ID';
 COMMENT ON COLUMN pmis_execution_wbs_task.task_code IS '任务编码(全局唯一,如 TASK20260001001)';
@@ -1772,34 +2161,34 @@ CREATE INDEX idx_pewt_trace      ON pmis_execution_wbs_task (provider_trace_id);
 -- 2. 工时录入表 pmis_execution_time_entry
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_time_entry;
-CREATE TABLE pmis_execution_time_entry (
-    id                  BIGSERIAL PRIMARY KEY,
-    entry_date          DATE          NOT NULL,
-    employee_id         BIGINT        NOT NULL,        -- 填报人
-    employee_name       VARCHAR(64),
-    level_code          VARCHAR(8)    NOT NULL,        -- 职级
-    initiation_id       BIGINT        NOT NULL,
-    initiation_name     VARCHAR(256),
-    task_id             BIGINT,                          -- 关联 WBS 任务（可空：项目级工时）
-    task_name           VARCHAR(256),
-    hours               NUMERIC(5,2)  NOT NULL,        -- 工时（小时）
-    days                NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 人天（按 8h 折算）
-    overtime            NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 加班工时
-    work_type           VARCHAR(32)   NOT NULL DEFAULT 'REGULAR', -- REGULAR/OVERTIME/TRAINING/LEAVE
-    billable            SMALLINT      NOT NULL DEFAULT 1,           -- 是否可计费: 1 可计费 / 0 不可计费
-    description         TEXT,
-    status              VARCHAR(16)   NOT NULL DEFAULT 'DRAFT',
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_execution_time_entry (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     entry_date          DATE          NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     employee_id         BIGINT        NOT NULL,        -- 填报人
+-- [SKIPPED-CLEANUP-REBUILD]     employee_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     level_code          VARCHAR(8)    NOT NULL,        -- 职级
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_name     VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     task_id             BIGINT,                          -- 关联 WBS 任务（可空：项目级工时）
+-- [SKIPPED-CLEANUP-REBUILD]     task_name           VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     hours               NUMERIC(5,2)  NOT NULL,        -- 工时（小时）
+-- [SKIPPED-CLEANUP-REBUILD]     days                NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 人天（按 8h 折算）
+-- [SKIPPED-CLEANUP-REBUILD]     overtime            NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 加班工时
+-- [SKIPPED-CLEANUP-REBUILD]     work_type           VARCHAR(32)   NOT NULL DEFAULT 'REGULAR', -- REGULAR/OVERTIME/TRAINING/LEAVE
+-- [SKIPPED-CLEANUP-REBUILD]     billable            SMALLINT      NOT NULL DEFAULT 1,           -- 是否可计费: 1 可计费 / 0 不可计费
+-- [SKIPPED-CLEANUP-REBUILD]     description         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(16)   NOT NULL DEFAULT 'DRAFT',
     -- DRAFT/SUBMITTED/APPROVED/REJECTED
-    approver_id         BIGINT,
-    approver_name       VARCHAR(64),
-    approved_at         TIMESTAMP,
-    reject_reason       VARCHAR(512),
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD]     approver_id         BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     approver_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     approved_at         TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     reject_reason       VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT      NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_execution_time_entry IS '工时录入表: 日清日结,员工每日填报工时,自动计算人天/成本';
 COMMENT ON COLUMN pmis_execution_time_entry.id IS '主键 ID';
 COMMENT ON COLUMN pmis_execution_time_entry.entry_date IS '工时日期';
@@ -1838,26 +2227,26 @@ CREATE INDEX idx_pete_trace     ON pmis_execution_time_entry (provider_trace_id)
 -- 3. 成本归集表 pmis_cost_allocation
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_cost_allocation;
-CREATE TABLE pmis_cost_allocation (
-    id                  BIGSERIAL PRIMARY KEY,
-    initiation_id       BIGINT        NOT NULL,
-    period              VARCHAR(7)    NOT NULL,        -- 形如 2026-06
-    cost_type           VARCHAR(32)   NOT NULL,        -- LABOR/PURCHASE/EXPENSE/OUTSOURCE/ALLOCATION/OTHER
-    source_id           BIGINT,                          -- 源单据ID（time_entry/purchase/expense）
-    source_type         VARCHAR(32),                    -- 源单据类型
-    description         VARCHAR(512),
-    amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
-    billable            SMALLINT      NOT NULL DEFAULT 1, -- 是否可计费
-    allocated           SMALLINT      NOT NULL DEFAULT 0, -- 是否已分摊
-    employee_id         BIGINT,
-    employee_name       VARCHAR(64),
-    level_code          VARCHAR(8),
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_cost_allocation (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     period              VARCHAR(7)    NOT NULL,        -- 形如 2026-06
+-- [SKIPPED-CLEANUP-REBUILD]     cost_type           VARCHAR(32)   NOT NULL,        -- LABOR/PURCHASE/EXPENSE/OUTSOURCE/ALLOCATION/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     source_id           BIGINT,                          -- 源单据ID（time_entry/purchase/expense）
+-- [SKIPPED-CLEANUP-REBUILD]     source_type         VARCHAR(32),                    -- 源单据类型
+-- [SKIPPED-CLEANUP-REBUILD]     description         VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     billable            SMALLINT      NOT NULL DEFAULT 1, -- 是否可计费
+-- [SKIPPED-CLEANUP-REBUILD]     allocated           SMALLINT      NOT NULL DEFAULT 0, -- 是否已分摊
+-- [SKIPPED-CLEANUP-REBUILD]     employee_id         BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     employee_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     level_code          VARCHAR(8),
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT      NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_cost_allocation IS '项目成本归集表: 按月 × 类别归集项目发生的所有成本,支撑利润核算与驾驶舱';
 COMMENT ON COLUMN pmis_cost_allocation.id IS '主键 ID';
 COMMENT ON COLUMN pmis_cost_allocation.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
@@ -1888,31 +2277,31 @@ CREATE INDEX idx_pca_trace      ON pmis_cost_allocation (provider_trace_id);
 -- 4. 采购成本表 pmis_cost_purchase
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_cost_purchase;
-CREATE TABLE pmis_cost_purchase (
-    id                  BIGSERIAL PRIMARY KEY,
-    purchase_code       VARCHAR(64)   NOT NULL,
-    initiation_id       BIGINT        NOT NULL,
-    vendor              VARCHAR(256),
-    item_name           VARCHAR(256)  NOT NULL,
-    quantity            NUMERIC(10,2) NOT NULL DEFAULT 1,
-    unit_price          NUMERIC(18,2) NOT NULL DEFAULT 0,
-    amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
-    purchase_date       DATE,
-    status              VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_cost_purchase (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     purchase_code       VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     vendor              VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     item_name           VARCHAR(256)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     quantity            NUMERIC(10,2) NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     unit_price          NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     purchase_date       DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
     -- DRAFT/SUBMITTED/APPROVED/REJECTED/PAID
-    applicant_id        BIGINT        NOT NULL,
-    applicant_name      VARCHAR(64),
-    approver_id         BIGINT,
-    approver_name       VARCHAR(64),
-    approved_at         TIMESTAMP,
-    description         TEXT,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pcp_code UNIQUE (purchase_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_id        BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_name      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     approver_id         BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     approver_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     approved_at         TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     description         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pcp_code UNIQUE (purchase_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_cost_purchase IS '采购成本申请表: 项目硬件/软件/服务采购,触发预算占用校验(80% 黄/95% 红)';
 COMMENT ON COLUMN pmis_cost_purchase.id IS '主键 ID';
 COMMENT ON COLUMN pmis_cost_purchase.purchase_code IS '采购单编码(全局唯一)';
@@ -1945,29 +2334,29 @@ CREATE INDEX idx_pcp_trace      ON pmis_cost_purchase (provider_trace_id);
 -- 5. 费用报销表 pmis_cost_expense
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_cost_expense;
-CREATE TABLE pmis_cost_expense (
-    id                  BIGSERIAL PRIMARY KEY,
-    expense_code        VARCHAR(64)   NOT NULL,
-    initiation_id       BIGINT,                          -- 项目级费用可空（公司公共费用）
-    employee_id         BIGINT        NOT NULL,
-    employee_name       VARCHAR(64),
-    expense_type        VARCHAR(32)   NOT NULL,        -- TRAVEL/CATERING/MEETING/SUPPLIES/COMMUNICATION/OTHER
-    amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
-    expense_date        DATE          NOT NULL,
-    description         TEXT,
-    receipt_url         VARCHAR(512),
-    status              VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_cost_expense (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     expense_code        VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT,                          -- 项目级费用可空（公司公共费用）
+-- [SKIPPED-CLEANUP-REBUILD]     employee_id         BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     employee_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     expense_type        VARCHAR(32)   NOT NULL,        -- TRAVEL/CATERING/MEETING/SUPPLIES/COMMUNICATION/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     expense_date        DATE          NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     description         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     receipt_url         VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
     -- DRAFT/SUBMITTED/APPROVED/REJECTED/PAID
-    approver_id         BIGINT,
-    approver_name       VARCHAR(64),
-    approved_at         TIMESTAMP,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pce_code UNIQUE (expense_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD]     approver_id         BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     approver_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     approved_at         TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pce_code UNIQUE (expense_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_cost_expense IS '费用报销表: 差旅/团建/会议/办公等费用报销,可关联项目(影响项目预算)';
 COMMENT ON COLUMN pmis_cost_expense.id IS '主键 ID';
 COMMENT ON COLUMN pmis_cost_expense.expense_code IS '报销单编码(全局唯一)';
@@ -1998,30 +2387,30 @@ CREATE INDEX idx_pce_trace      ON pmis_cost_expense (provider_trace_id);
 -- 6. 收入确认表 pmis_profit_revenue
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_profit_revenue;
-CREATE TABLE pmis_profit_revenue (
-    id                  BIGSERIAL PRIMARY KEY,
-    contract_id         BIGINT        NOT NULL,
-    initiation_id       BIGINT        NOT NULL,
-    revenue_code        VARCHAR(64)   NOT NULL,
-    recognition_method  VARCHAR(32)   NOT NULL,        -- MILESTONE/PERCENTAGE/PERCENT_COMPLETE/POINTS/MANUAL
-    period              VARCHAR(7)    NOT NULL,        -- 2026-06
-    amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
-    recognition_date    DATE          NOT NULL,
-    milestone           VARCHAR(128),                    -- 里程碑描述
-    percent_complete    NUMERIC(5,2),                    -- 完工百分比（完工法）
-    invoice_id          BIGINT,                          -- 关联开票申请（批次8）
-    status              VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_profit_revenue (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     contract_id         BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     revenue_code        VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     recognition_method  VARCHAR(32)   NOT NULL,        -- MILESTONE/PERCENTAGE/PERCENT_COMPLETE/POINTS/MANUAL
+-- [SKIPPED-CLEANUP-REBUILD]     period              VARCHAR(7)    NOT NULL,        -- 2026-06
+-- [SKIPPED-CLEANUP-REBUILD]     amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     recognition_date    DATE          NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     milestone           VARCHAR(128),                    -- 里程碑描述
+-- [SKIPPED-CLEANUP-REBUILD]     percent_complete    NUMERIC(5,2),                    -- 完工百分比（完工法）
+-- [SKIPPED-CLEANUP-REBUILD]     invoice_id          BIGINT,                          -- 关联开票申请（批次8）
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
     -- DRAFT/CONFIRMED/REVERSED
-    confirmed_by        BIGINT,
-    confirmed_at        TIMESTAMP,
-    description         TEXT,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppr_code UNIQUE (revenue_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD]     confirmed_by        BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     confirmed_at        TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     description         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_ppr_code UNIQUE (revenue_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_profit_revenue IS '收入确认表: 按里程碑/百分比/完工法/手动法等多维度确认项目收入';
 COMMENT ON COLUMN pmis_profit_revenue.id IS '主键 ID';
 COMMENT ON COLUMN pmis_profit_revenue.contract_id IS '合同 ID(关联 pmis_project_contract.id)';
@@ -2053,30 +2442,30 @@ CREATE INDEX idx_ppr_trace       ON pmis_profit_revenue (provider_trace_id);
 -- 7. 项目利润快照表 pmis_profit_snapshot
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_profit_snapshot;
-CREATE TABLE pmis_profit_snapshot (
-    id                  BIGSERIAL PRIMARY KEY,
-    initiation_id       BIGINT        NOT NULL,
-    period              VARCHAR(7)    NOT NULL,
-    contract_amount     NUMERIC(18,2) NOT NULL DEFAULT 0, -- 合同总额
-    recognized_revenue  NUMERIC(18,2) NOT NULL DEFAULT 0, -- 已确认收入
-    billed_amount       NUMERIC(18,2) NOT NULL DEFAULT 0, -- 已开票
-    received_amount     NUMERIC(18,2) NOT NULL DEFAULT 0, -- 已回款
-    labor_cost          NUMERIC(18,2) NOT NULL DEFAULT 0, -- 人力成本
-    purchase_cost       NUMERIC(18,2) NOT NULL DEFAULT 0, -- 采购成本
-    expense_cost        NUMERIC(18,2) NOT NULL DEFAULT 0, -- 费用
-    outsource_cost      NUMERIC(18,2) NOT NULL DEFAULT 0, -- 外包
-    allocation_cost     NUMERIC(18,2) NOT NULL DEFAULT 0, -- 分摊费用
-    total_cost          NUMERIC(18,2) NOT NULL DEFAULT 0, -- 总成本
-    gross_profit        NUMERIC(18,2) NOT NULL DEFAULT 0, -- 毛利
-    gross_margin        NUMERIC(5,4)  NOT NULL DEFAULT 0, -- 毛利率
-    progress_pct        NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 完工进度
-    billable_hours      NUMERIC(10,2) NOT NULL DEFAULT 0, -- 可计费工时
-    non_billable_hours  NUMERIC(10,2) NOT NULL DEFAULT 0, -- 不可计费工时
-    snapshot_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    deleted             SMALLINT      NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_profit_snapshot (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     period              VARCHAR(7)    NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     contract_amount     NUMERIC(18,2) NOT NULL DEFAULT 0, -- 合同总额
+-- [SKIPPED-CLEANUP-REBUILD]     recognized_revenue  NUMERIC(18,2) NOT NULL DEFAULT 0, -- 已确认收入
+-- [SKIPPED-CLEANUP-REBUILD]     billed_amount       NUMERIC(18,2) NOT NULL DEFAULT 0, -- 已开票
+-- [SKIPPED-CLEANUP-REBUILD]     received_amount     NUMERIC(18,2) NOT NULL DEFAULT 0, -- 已回款
+-- [SKIPPED-CLEANUP-REBUILD]     labor_cost          NUMERIC(18,2) NOT NULL DEFAULT 0, -- 人力成本
+-- [SKIPPED-CLEANUP-REBUILD]     purchase_cost       NUMERIC(18,2) NOT NULL DEFAULT 0, -- 采购成本
+-- [SKIPPED-CLEANUP-REBUILD]     expense_cost        NUMERIC(18,2) NOT NULL DEFAULT 0, -- 费用
+-- [SKIPPED-CLEANUP-REBUILD]     outsource_cost      NUMERIC(18,2) NOT NULL DEFAULT 0, -- 外包
+-- [SKIPPED-CLEANUP-REBUILD]     allocation_cost     NUMERIC(18,2) NOT NULL DEFAULT 0, -- 分摊费用
+-- [SKIPPED-CLEANUP-REBUILD]     total_cost          NUMERIC(18,2) NOT NULL DEFAULT 0, -- 总成本
+-- [SKIPPED-CLEANUP-REBUILD]     gross_profit        NUMERIC(18,2) NOT NULL DEFAULT 0, -- 毛利
+-- [SKIPPED-CLEANUP-REBUILD]     gross_margin        NUMERIC(5,4)  NOT NULL DEFAULT 0, -- 毛利率
+-- [SKIPPED-CLEANUP-REBUILD]     progress_pct        NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 完工进度
+-- [SKIPPED-CLEANUP-REBUILD]     billable_hours      NUMERIC(10,2) NOT NULL DEFAULT 0, -- 可计费工时
+-- [SKIPPED-CLEANUP-REBUILD]     non_billable_hours  NUMERIC(10,2) NOT NULL DEFAULT 0, -- 不可计费工时
+-- [SKIPPED-CLEANUP-REBUILD]     snapshot_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT      NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_profit_snapshot IS '项目利润快照（按月）';
 COMMENT ON COLUMN pmis_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
 
@@ -2088,30 +2477,30 @@ CREATE INDEX idx_pps_trace      ON pmis_profit_snapshot (provider_trace_id);
 -- 8. 项目风险登记表 pmis_execution_risk
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_risk;
-CREATE TABLE pmis_execution_risk (
-    id                  BIGSERIAL PRIMARY KEY,
-    risk_code           VARCHAR(64)   NOT NULL,
-    initiation_id       BIGINT        NOT NULL,
-    risk_title          VARCHAR(256)  NOT NULL,
-    risk_type           VARCHAR(32)   NOT NULL DEFAULT 'OTHER', -- SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER
-    description         TEXT,
-    probability         VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM', -- LOW/MEDIUM/HIGH
-    impact              VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM',
-    risk_level          VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM', -- 计算后的等级
-    mitigation          TEXT,
-    contingency         TEXT,
-    owner_id            BIGINT        NOT NULL,
-    owner_name          VARCHAR(64),
-    status              VARCHAR(32)   NOT NULL DEFAULT 'OPEN', -- OPEN/MITIGATING/CLOSED/OCCURRED
-    occurred_at         TIMESTAMP,
-    closed_at           TIMESTAMP,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    CONSTRAINT uk_per_code UNIQUE (risk_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_execution_risk (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     risk_code           VARCHAR(64)   NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     risk_title          VARCHAR(256)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     risk_type           VARCHAR(32)   NOT NULL DEFAULT 'OTHER', -- SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     description         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     probability         VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM', -- LOW/MEDIUM/HIGH
+-- [SKIPPED-CLEANUP-REBUILD]     impact              VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM',
+-- [SKIPPED-CLEANUP-REBUILD]     risk_level          VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM', -- 计算后的等级
+-- [SKIPPED-CLEANUP-REBUILD]     mitigation          TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     contingency         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     owner_id            BIGINT        NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     owner_name          VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(32)   NOT NULL DEFAULT 'OPEN', -- OPEN/MITIGATING/CLOSED/OCCURRED
+-- [SKIPPED-CLEANUP-REBUILD]     occurred_at         TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     closed_at           TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT        NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_per_code UNIQUE (risk_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE pmis_execution_risk IS '项目风险登记';
 COMMENT ON COLUMN pmis_execution_risk.risk_type IS 'SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER';
 COMMENT ON COLUMN pmis_execution_risk.status IS 'OPEN/MITIGATING/CLOSED/OCCURRED';
@@ -2121,6 +2510,290 @@ CREATE INDEX idx_per_status     ON pmis_execution_risk (status) WHERE deleted = 
 CREATE INDEX idx_per_level      ON pmis_execution_risk (risk_level) WHERE deleted = 0;
 CREATE INDEX idx_per_trace      ON pmis_execution_risk (provider_trace_id);
 
+
+-- [AUTO-MIGRATION] pmis_execution_wbs_task: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_execution_wbs_task') THEN
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS task_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS task_name VARCHAR(256)  NOT NULL;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS initiation_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS parent_id BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS task_level INTEGER       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS wbs_path VARCHAR(512);
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS sort_order INTEGER       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS task_type VARCHAR(32)   NOT NULL DEFAULT 'TASK';
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS planned_start_date DATE;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS planned_end_date DATE;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS actual_start_date DATE;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS actual_end_date DATE;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS duration_days INTEGER;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS planned_effort NUMERIC(10,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS actual_effort NUMERIC(10,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS progress_pct NUMERIC(5,2)  NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS owner_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS owner_name VARCHAR(64);
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS assignee_ids VARCHAR(512);
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS priority VARCHAR(16)   NOT NULL DEFAULT 'NORMAL';
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS status VARCHAR(32)   NOT NULL DEFAULT 'PLANNED';
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS depends_on VARCHAR(512);
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS milestone SMALLINT      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS description TEXT;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS deliverable TEXT;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS risk_level VARCHAR(16)   NOT NULL DEFAULT 'LOW';
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)   NOT NULL DEFAULT '';
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS created_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS updated_by BIGINT        NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_wbs_task ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_execution_time_entry: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_execution_time_entry') THEN
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS entry_date DATE          NOT NULL;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS employee_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS employee_name VARCHAR(64);
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS level_code VARCHAR(8)    NOT NULL;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS initiation_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS initiation_name VARCHAR(256);
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS task_id BIGINT;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS task_name VARCHAR(256);
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS hours NUMERIC(5,2)  NOT NULL;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS days NUMERIC(5,2)  NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS overtime NUMERIC(5,2)  NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS work_type VARCHAR(32)   NOT NULL DEFAULT 'REGULAR';
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS billable SMALLINT      NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS description TEXT;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS status VARCHAR(16)   NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS approver_id BIGINT;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS approver_name VARCHAR(64);
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS reject_reason VARCHAR(512);
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)   NOT NULL DEFAULT '';
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_time_entry ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_cost_allocation: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_cost_allocation') THEN
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS initiation_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS period VARCHAR(7)    NOT NULL;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS cost_type VARCHAR(32)   NOT NULL;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS source_id BIGINT;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS source_type VARCHAR(32);
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS description VARCHAR(512);
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS billable SMALLINT      NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS allocated SMALLINT      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS employee_id BIGINT;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS employee_name VARCHAR(64);
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS level_code VARCHAR(8);
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)   NOT NULL DEFAULT '';
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_cost_allocation ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_cost_purchase: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_cost_purchase') THEN
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS purchase_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS initiation_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS vendor VARCHAR(256);
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS item_name VARCHAR(256)  NOT NULL;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS quantity NUMERIC(10,2) NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS unit_price NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS purchase_date DATE;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS status VARCHAR(32)   NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS applicant_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS applicant_name VARCHAR(64);
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS approver_id BIGINT;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS approver_name VARCHAR(64);
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS description TEXT;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)   NOT NULL DEFAULT '';
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_cost_purchase ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_cost_expense: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_cost_expense') THEN
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS expense_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS initiation_id BIGINT;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS employee_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS employee_name VARCHAR(64);
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS expense_type VARCHAR(32)   NOT NULL;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS expense_date DATE          NOT NULL;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS description TEXT;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS receipt_url VARCHAR(512);
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS status VARCHAR(32)   NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS approver_id BIGINT;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS approver_name VARCHAR(64);
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)   NOT NULL DEFAULT '';
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_cost_expense ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_profit_revenue: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_profit_revenue') THEN
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS contract_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS initiation_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS revenue_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS recognition_method VARCHAR(32)   NOT NULL;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS period VARCHAR(7)    NOT NULL;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS recognition_date DATE          NOT NULL;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS milestone VARCHAR(128);
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS percent_complete NUMERIC(5,2);
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS invoice_id BIGINT;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS status VARCHAR(32)   NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS confirmed_by BIGINT;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMP;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS description TEXT;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)   NOT NULL DEFAULT '';
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_profit_revenue ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_profit_snapshot: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_profit_snapshot') THEN
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS initiation_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS period VARCHAR(7)    NOT NULL;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS contract_amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS recognized_revenue NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS billed_amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS received_amount NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS labor_cost NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS purchase_cost NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS expense_cost NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS outsource_cost NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS allocation_cost NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS total_cost NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS gross_profit NUMERIC(18,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS gross_margin NUMERIC(5,4)  NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS progress_pct NUMERIC(5,2)  NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS billable_hours NUMERIC(10,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS non_billable_hours NUMERIC(10,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS snapshot_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)   NOT NULL DEFAULT '';
+        ALTER TABLE pmis_profit_snapshot ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_execution_risk: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_execution_risk') THEN
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS risk_code VARCHAR(64)   NOT NULL;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS initiation_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS risk_title VARCHAR(256)  NOT NULL;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS risk_type VARCHAR(32)   NOT NULL DEFAULT 'OTHER';
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS description TEXT;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS probability VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM';
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS impact VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM';
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS risk_level VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM';
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS mitigation TEXT;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS contingency TEXT;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS owner_id BIGINT        NOT NULL;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS owner_name VARCHAR(64);
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS status VARCHAR(32)   NOT NULL DEFAULT 'OPEN';
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS occurred_at TIMESTAMP;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS closed_at TIMESTAMP;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS tenant_id BIGINT        NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)   NOT NULL DEFAULT '';
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS created_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_risk ADD COLUMN IF NOT EXISTS deleted SMALLINT      NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_010__init_pmis_execution_schema.sql
 -- ====================================================================
@@ -2140,32 +2813,32 @@ CREATE INDEX idx_per_trace      ON pmis_execution_risk (provider_trace_id);
 -- 1. 合同模板表 pmis_project_contract_template
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract_template;
-CREATE TABLE pmis_project_contract_template (
-    id                     BIGSERIAL PRIMARY KEY,
-    template_code          VARCHAR(64)  NOT NULL,
-    template_name          VARCHAR(256) NOT NULL,
-    contract_type          VARCHAR(32)  NOT NULL,            -- FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER
-    version                VARCHAR(32)  NOT NULL DEFAULT '1.0.0',
-    payment_terms          TEXT,
-    default_payment_days   INTEGER      NOT NULL DEFAULT 30,
-    default_penalty_rate   NUMERIC(5,4) NOT NULL DEFAULT 0,
-    sla_description        TEXT,
-    deliverables           TEXT,
-    content                TEXT,                              -- 模板正文
-    customer_level         VARCHAR(16),                      -- A/B/C/D
-    project_level          VARCHAR(16),                      -- L1-L18
-    status                 VARCHAR(32)  NOT NULL DEFAULT 'DRAFT', -- DRAFT/PUBLISHED/DEPRECATED
-    author_id              BIGINT,
-    author_name            VARCHAR(64),
-    remark                 TEXT,
-    tenant_id              BIGINT       NOT NULL DEFAULT 1,
-    created_by             BIGINT       NOT NULL DEFAULT 0,
-    created_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by             BIGINT       NOT NULL DEFAULT 0,
-    updated_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppct_code UNIQUE (template_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_contract_template (
+-- [SKIPPED-CLEANUP-REBUILD]     id                     BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     template_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     template_name          VARCHAR(256) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     contract_type          VARCHAR(32)  NOT NULL,            -- FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     version                VARCHAR(32)  NOT NULL DEFAULT '1.0.0',
+-- [SKIPPED-CLEANUP-REBUILD]     payment_terms          TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     default_payment_days   INTEGER      NOT NULL DEFAULT 30,
+-- [SKIPPED-CLEANUP-REBUILD]     default_penalty_rate   NUMERIC(5,4) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     sla_description        TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     deliverables           TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     content                TEXT,                              -- 模板正文
+-- [SKIPPED-CLEANUP-REBUILD]     customer_level         VARCHAR(16),                      -- A/B/C/D
+-- [SKIPPED-CLEANUP-REBUILD]     project_level          VARCHAR(16),                      -- L1-L18
+-- [SKIPPED-CLEANUP-REBUILD]     status                 VARCHAR(32)  NOT NULL DEFAULT 'DRAFT', -- DRAFT/PUBLISHED/DEPRECATED
+-- [SKIPPED-CLEANUP-REBUILD]     author_id              BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     author_name            VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     remark                 TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id              BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     created_by             BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by             BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted                SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_ppct_code UNIQUE (template_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_project_contract_template IS '合同模板表: 8 类项目类型（FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER）的标准化合同模板,合同起草时按类型引用';
 COMMENT ON COLUMN pmis_project_contract_template.template_code IS '模板编码: 业务唯一,如 TPL-FIX-001';
 COMMENT ON COLUMN pmis_project_contract_template.template_name IS '模板名称';
@@ -2192,42 +2865,42 @@ CREATE INDEX idx_ppct_tenant ON pmis_project_contract_template(tenant_id);
 -- 2. 项目变更主表 pmis_project_change
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_change;
-CREATE TABLE pmis_project_change (
-    id                       BIGSERIAL PRIMARY KEY,
-    change_code              VARCHAR(64)  NOT NULL,
-    initiation_id            BIGINT       NOT NULL,
-    change_type              VARCHAR(32)  NOT NULL,            -- SCOPE/COST/CONTRACT/STAFF/SCHEDULE
-    change_title             VARCHAR(256) NOT NULL,
-    change_reason            TEXT,
-    change_desc              TEXT,
-    budget_impact            NUMERIC(15,2) NOT NULL DEFAULT 0,
-    contract_impact          NUMERIC(15,2) NOT NULL DEFAULT 0,
-    schedule_impact_days     INTEGER      NOT NULL DEFAULT 0,
-    profit_impact            NUMERIC(15,2) NOT NULL DEFAULT 0,
-    profit_impact_pct        NUMERIC(5,4) NOT NULL DEFAULT 0,
-    risk_level_after         VARCHAR(16)  NOT NULL DEFAULT 'LOW',  -- LOW/MEDIUM/HIGH
-    affected_wbs_count       INTEGER      NOT NULL DEFAULT 0,
-    affected_staff_count     INTEGER      NOT NULL DEFAULT 0,
-    major_flag               SMALLINT     NOT NULL DEFAULT 0,        -- 0/1 重大变更
-    approver_roles           VARCHAR(256) NOT NULL DEFAULT '[]',     -- JSON
-    applicant_id             BIGINT       NOT NULL,
-    applicant_name           VARCHAR(64),
-    contract_id              BIGINT,
-    workflow_id              VARCHAR(64),
-    status                   VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- ChangeStatus
-    submitted_at             TIMESTAMP,
-    approved_at              TIMESTAMP,
-    executed_at              TIMESTAMP,
-    remark                   TEXT,
-    tenant_id                BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id        VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by               BIGINT       NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               BIGINT       NOT NULL DEFAULT 0,
-    updated_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                  SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pch_code UNIQUE (change_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_project_change (
+-- [SKIPPED-CLEANUP-REBUILD]     id                       BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     change_code              VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id            BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     change_type              VARCHAR(32)  NOT NULL,            -- SCOPE/COST/CONTRACT/STAFF/SCHEDULE
+-- [SKIPPED-CLEANUP-REBUILD]     change_title             VARCHAR(256) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     change_reason            TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     change_desc              TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     budget_impact            NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     contract_impact          NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     schedule_impact_days     INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     profit_impact            NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     profit_impact_pct        NUMERIC(5,4) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     risk_level_after         VARCHAR(16)  NOT NULL DEFAULT 'LOW',  -- LOW/MEDIUM/HIGH
+-- [SKIPPED-CLEANUP-REBUILD]     affected_wbs_count       INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     affected_staff_count     INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     major_flag               SMALLINT     NOT NULL DEFAULT 0,        -- 0/1 重大变更
+-- [SKIPPED-CLEANUP-REBUILD]     approver_roles           VARCHAR(256) NOT NULL DEFAULT '[]',     -- JSON
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_id             BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_name           VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     contract_id              BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     workflow_id              VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     status                   VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- ChangeStatus
+-- [SKIPPED-CLEANUP-REBUILD]     submitted_at             TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     approved_at              TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     executed_at              TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     remark                   TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id                BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id        VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by               BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by               BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted                  SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pch_code UNIQUE (change_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_project_change IS '项目变更主表: 5 类变更（SCOPE/COST/CONTRACT/STAFF/SCHEDULE）全过程管理,严格执行 DRAFT→SUBMITTED→UNDER_REVIEW→APPROVED/REJECTED→EXECUTING 状态机';
 COMMENT ON COLUMN pmis_project_change.change_code IS '变更单号: 业务唯一,如 CHG-2026-001';
 COMMENT ON COLUMN pmis_project_change.initiation_id IS '所属立项 ID';
@@ -2265,24 +2938,24 @@ CREATE INDEX idx_pch_major ON pmis_project_change(initiation_id, major_flag);
 -- 3. 交付物标准表 pmis_execution_delivery_standard
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_delivery_standard;
-CREATE TABLE pmis_execution_delivery_standard (
-    id                    BIGSERIAL PRIMARY KEY,
-    project_type          VARCHAR(32)  NOT NULL,                 -- ProjectType
-    project_level         VARCHAR(16),                            -- L1-L18, NULL=全部
-    delivery_name         VARCHAR(256) NOT NULL,
-    delivery_category     VARCHAR(32)  NOT NULL DEFAULT 'DOC',   -- DOC/CODE/MODEL/RUNBOOK/REPORT/OTHER
-    stage                 VARCHAR(32)  NOT NULL,                 -- DeliveryStage
-    required              SMALLINT     NOT NULL DEFAULT 1,        -- 1=必交付
-    trigger_tr            SMALLINT     NOT NULL DEFAULT 0,        -- 是否触发 TR
-    acceptance_criteria   TEXT,
-    template_ref          VARCHAR(256),
-    remark                TEXT,
-    tenant_id             BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_execution_delivery_standard (
+-- [SKIPPED-CLEANUP-REBUILD]     id                    BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     project_type          VARCHAR(32)  NOT NULL,                 -- ProjectType
+-- [SKIPPED-CLEANUP-REBUILD]     project_level         VARCHAR(16),                            -- L1-L18, NULL=全部
+-- [SKIPPED-CLEANUP-REBUILD]     delivery_name         VARCHAR(256) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     delivery_category     VARCHAR(32)  NOT NULL DEFAULT 'DOC',   -- DOC/CODE/MODEL/RUNBOOK/REPORT/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     stage                 VARCHAR(32)  NOT NULL,                 -- DeliveryStage
+-- [SKIPPED-CLEANUP-REBUILD]     required              SMALLINT     NOT NULL DEFAULT 1,        -- 1=必交付
+-- [SKIPPED-CLEANUP-REBUILD]     trigger_tr            SMALLINT     NOT NULL DEFAULT 0,        -- 是否触发 TR
+-- [SKIPPED-CLEANUP-REBUILD]     acceptance_criteria   TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     template_ref          VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     remark                TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id             BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted               SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_execution_delivery_standard IS '交付物标准库: 8 类项目类型 × 5 个门径阶段（CD1/CD2/CD3/CD4/CD5）的标准交付物定义,新建项目时按类型/级别自动生成交付物清单';
 COMMENT ON COLUMN pmis_execution_delivery_standard.project_type IS '项目类型: FIXED_PRICE / T_M / OUTSOURCING / PRODUCT / MAINTENANCE / CONSULTING / TRAINING / OTHER';
 COMMENT ON COLUMN pmis_execution_delivery_standard.project_level IS '项目级别: L1-L18,NULL 表示全级别适用';
@@ -2304,39 +2977,39 @@ CREATE INDEX idx_peds_stage ON pmis_execution_delivery_standard(stage);
 -- 4. 交付物实例表 pmis_execution_delivery_item
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_delivery_item;
-CREATE TABLE pmis_execution_delivery_item (
-    id                    BIGSERIAL PRIMARY KEY,
-    item_code             VARCHAR(64)  NOT NULL,
-    initiation_id         BIGINT       NOT NULL,
-    standard_id           BIGINT,
-    project_type          VARCHAR(32),
-    project_level         VARCHAR(16),
-    delivery_name         VARCHAR(256) NOT NULL,
-    delivery_category     VARCHAR(32)  NOT NULL DEFAULT 'DOC',
-    stage                 VARCHAR(32)  NOT NULL,
-    required              SMALLINT     NOT NULL DEFAULT 1,
-    planned_submit_date   DATE,
-    actual_submit_date    DATE,
-    accepted_date         DATE,
-    submitter_id          BIGINT,
-    submitter_name        VARCHAR(64),
-    reviewer_id           BIGINT,
-    reviewer_name         VARCHAR(64),
-    review_comment        TEXT,
-    status                VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- DeliveryItemStatus
-    tr_required           SMALLINT     NOT NULL DEFAULT 0,
-    tr_completed          SMALLINT     NOT NULL DEFAULT 0,
-    file_ids              VARCHAR(2048) NOT NULL DEFAULT '[]',
-    remark                TEXT,
-    tenant_id             BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by            BIGINT       NOT NULL DEFAULT 0,
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by            BIGINT       NOT NULL DEFAULT 0,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pedi_code UNIQUE (item_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_execution_delivery_item (
+-- [SKIPPED-CLEANUP-REBUILD]     id                    BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     item_code             VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id         BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     standard_id           BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     project_type          VARCHAR(32),
+-- [SKIPPED-CLEANUP-REBUILD]     project_level         VARCHAR(16),
+-- [SKIPPED-CLEANUP-REBUILD]     delivery_name         VARCHAR(256) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     delivery_category     VARCHAR(32)  NOT NULL DEFAULT 'DOC',
+-- [SKIPPED-CLEANUP-REBUILD]     stage                 VARCHAR(32)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     required              SMALLINT     NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     planned_submit_date   DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     actual_submit_date    DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     accepted_date         DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     submitter_id          BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     submitter_name        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     reviewer_id           BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     reviewer_name         VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     review_comment        TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status                VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- DeliveryItemStatus
+-- [SKIPPED-CLEANUP-REBUILD]     tr_required           SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tr_completed          SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     file_ids              VARCHAR(2048) NOT NULL DEFAULT '[]',
+-- [SKIPPED-CLEANUP-REBUILD]     remark                TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id             BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by            BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by            BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted               SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pedi_code UNIQUE (item_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_execution_delivery_item IS '交付物实例表: 项目立项后,按交付物标准库自动生成具体交付物实例,跟踪提交/验收全过程';
 COMMENT ON COLUMN pmis_execution_delivery_item.item_code IS '交付物实例编码: 业务唯一,如 DI-2026-001';
 COMMENT ON COLUMN pmis_execution_delivery_item.initiation_id IS '所属立项 ID';
@@ -2371,46 +3044,46 @@ CREATE INDEX idx_pedi_status ON pmis_execution_delivery_item(status);
 -- 5. 项目结项主表 pmis_execution_closure
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_closure;
-CREATE TABLE pmis_execution_closure (
-    id                       BIGSERIAL PRIMARY KEY,
-    closure_code             VARCHAR(64)  NOT NULL,
-    initiation_id            BIGINT       NOT NULL,
-    closure_type             VARCHAR(32)  NOT NULL,            -- FORMAL/PRE_CLOSURE/FORCED
-    closure_reason           TEXT,
-    contract_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,
-    received_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,
-    received_ratio           NUMERIC(5,4) NOT NULL DEFAULT 0,
-    cpi                      NUMERIC(5,2) NOT NULL DEFAULT 1.0,
-    spi                      NUMERIC(5,2) NOT NULL DEFAULT 1.0,
-    gross_margin             NUMERIC(5,4) NOT NULL DEFAULT 0,
-    progress_pct             NUMERIC(5,2) NOT NULL DEFAULT 0,
-    total_cost               NUMERIC(15,2) NOT NULL DEFAULT 0,
-    warranty_months          INTEGER      NOT NULL DEFAULT 0,
-    warranty_start_date      DATE,
-    warranty_end_date        DATE,
-    planned_archive_date     DATE,
-    actual_archive_date      DATE,
-    archive_file_ids         VARCHAR(2048) NOT NULL DEFAULT '[]',
-    locked                   SMALLINT     NOT NULL DEFAULT 0,
-    status                   VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- ClosureStatus
-    remark                   TEXT,
-    applicant_id             BIGINT,
-    applicant_name           VARCHAR(64),
-    approver_id              BIGINT,
-    approver_name            VARCHAR(64),
-    submitted_at             TIMESTAMP,
-    approved_at              TIMESTAMP,
-    archived_at              TIMESTAMP,
-    approval_comment         TEXT,
-    tenant_id                BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id        VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by               BIGINT       NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by               BIGINT       NOT NULL DEFAULT 0,
-    updated_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                  SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pec_code UNIQUE (closure_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_execution_closure (
+-- [SKIPPED-CLEANUP-REBUILD]     id                       BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     closure_code             VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id            BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     closure_type             VARCHAR(32)  NOT NULL,            -- FORMAL/PRE_CLOSURE/FORCED
+-- [SKIPPED-CLEANUP-REBUILD]     closure_reason           TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     contract_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     received_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     received_ratio           NUMERIC(5,4) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     cpi                      NUMERIC(5,2) NOT NULL DEFAULT 1.0,
+-- [SKIPPED-CLEANUP-REBUILD]     spi                      NUMERIC(5,2) NOT NULL DEFAULT 1.0,
+-- [SKIPPED-CLEANUP-REBUILD]     gross_margin             NUMERIC(5,4) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     progress_pct             NUMERIC(5,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     total_cost               NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     warranty_months          INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     warranty_start_date      DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     warranty_end_date        DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     planned_archive_date     DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     actual_archive_date      DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     archive_file_ids         VARCHAR(2048) NOT NULL DEFAULT '[]',
+-- [SKIPPED-CLEANUP-REBUILD]     locked                   SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     status                   VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- ClosureStatus
+-- [SKIPPED-CLEANUP-REBUILD]     remark                   TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_id             BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_name           VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     approver_id              BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     approver_name            VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     submitted_at             TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     approved_at              TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     archived_at              TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     approval_comment         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id                BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id        VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by               BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by               BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted                  SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pec_code UNIQUE (closure_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_execution_closure IS '项目结项主表: 3 种结项类型（FORMAL/PRE_CLOSURE/FORCED）,由 ClosureAdmissionValidator 按类型校验准入条件';
 COMMENT ON COLUMN pmis_execution_closure.closure_code IS '结项单号: 业务唯一,如 PC-2026-001';
 COMMENT ON COLUMN pmis_execution_closure.initiation_id IS '所属立项 ID: 一对一关联';
@@ -2451,34 +3124,34 @@ CREATE INDEX idx_pec_type_status ON pmis_execution_closure(closure_type, status)
 -- 6. AI 智能体预测/推荐结果表 pmis_agent_prediction
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_agent_prediction;
-CREATE TABLE pmis_agent_prediction (
-    id                  BIGSERIAL PRIMARY KEY,
-    task_code           VARCHAR(64)  NOT NULL,
-    agent_type          VARCHAR(32)  NOT NULL,                  -- RISK_WARNING/RESOURCE_RECOMMEND/PROFIT_FORECAST/WIN_RATE_PREDICT/TIMESHEET_ANOMALY
-    biz_type            VARCHAR(32),                            -- PROJECT/OPPORTUNITY/TIMESHEET/STAFF
-    biz_id              BIGINT,
-    biz_ref             VARCHAR(256),
-    input_snapshot      TEXT,                                   -- 输入数据 JSON
-    output_result       TEXT,                                   -- 输出数据 JSON
-    alert_level         VARCHAR(16)  NOT NULL DEFAULT 'NORMAL', -- INFO/YELLOW/RED/NORMAL/RECOMMEND
-    score               NUMERIC(7,2) NOT NULL DEFAULT 0,        -- 0-100
-    confidence          NUMERIC(4,2) NOT NULL DEFAULT 0,        -- 0-1
-    suggestion          TEXT,
-    matched_rules       VARCHAR(2048) NOT NULL DEFAULT '[]',   -- 命中规则 JSON
-    cost_ms             BIGINT       NOT NULL DEFAULT 0,
-    model_version       VARCHAR(32)  NOT NULL DEFAULT 'v1.0.0',
-    status              VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- PENDING/RUNNING/SUCCESS/FAILED
-    error_msg           TEXT,
-    caller_id           BIGINT,
-    caller_name         VARCHAR(64),
-    source              VARCHAR(32)  NOT NULL DEFAULT 'MANUAL', -- MANUAL/SCHEDULED/EVENT
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pap_code UNIQUE (task_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_agent_prediction (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     task_code           VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     agent_type          VARCHAR(32)  NOT NULL,                  -- RISK_WARNING/RESOURCE_RECOMMEND/PROFIT_FORECAST/WIN_RATE_PREDICT/TIMESHEET_ANOMALY
+-- [SKIPPED-CLEANUP-REBUILD]     biz_type            VARCHAR(32),                            -- PROJECT/OPPORTUNITY/TIMESHEET/STAFF
+-- [SKIPPED-CLEANUP-REBUILD]     biz_id              BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     biz_ref             VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     input_snapshot      TEXT,                                   -- 输入数据 JSON
+-- [SKIPPED-CLEANUP-REBUILD]     output_result       TEXT,                                   -- 输出数据 JSON
+-- [SKIPPED-CLEANUP-REBUILD]     alert_level         VARCHAR(16)  NOT NULL DEFAULT 'NORMAL', -- INFO/YELLOW/RED/NORMAL/RECOMMEND
+-- [SKIPPED-CLEANUP-REBUILD]     score               NUMERIC(7,2) NOT NULL DEFAULT 0,        -- 0-100
+-- [SKIPPED-CLEANUP-REBUILD]     confidence          NUMERIC(4,2) NOT NULL DEFAULT 0,        -- 0-1
+-- [SKIPPED-CLEANUP-REBUILD]     suggestion          TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     matched_rules       VARCHAR(2048) NOT NULL DEFAULT '[]',   -- 命中规则 JSON
+-- [SKIPPED-CLEANUP-REBUILD]     cost_ms             BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     model_version       VARCHAR(32)  NOT NULL DEFAULT 'v1.0.0',
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- PENDING/RUNNING/SUCCESS/FAILED
+-- [SKIPPED-CLEANUP-REBUILD]     error_msg           TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     caller_id           BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     caller_name         VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     source              VARCHAR(32)  NOT NULL DEFAULT 'MANUAL', -- MANUAL/SCHEDULED/EVENT
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pap_code UNIQUE (task_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_agent_prediction IS 'AI 智能体预测/推荐结果表: 5 类智能体（风险预警/资源推荐/利润预测/赢率预测/工时异常）的输出持久化';
 COMMENT ON COLUMN pmis_agent_prediction.task_code IS '任务编码: 业务唯一,如 AGT-2026-001';
 COMMENT ON COLUMN pmis_agent_prediction.agent_type IS '智能体类型: RISK_WARNING 风险预警 / RESOURCE_RECOMMEND 资源推荐 / PROFIT_FORECAST 利润预测 / WIN_RATE_PREDICT 赢率预测 / TIMESHEET_ANOMALY 工时异常';
@@ -2585,6 +3258,248 @@ VALUES
     ('TPL-TRN-001',  '培训服务标准合同',          'TRAINING',     '1.0.0', '培训前付 50%/结束后 50%',                          0,  0.0010, '培训出勤率≥80%',                    '培训教材/考勤/效果评估',       'PUBLISHED', 1),
     ('TPL-OTH-001',  '通用合同模板',              'OTHER',        '1.0.0', '5-5（启动50%/验收50%）',                            30, 0.0010, '依项目类型',                       '项目章程/交付物清单/验收报告', 'PUBLISHED', 1);
 
+
+-- [AUTO-MIGRATION] pmis_project_contract_template: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_contract_template') THEN
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS template_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS template_name VARCHAR(256) NOT NULL;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS contract_type VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS version VARCHAR(32)  NOT NULL DEFAULT '1.0.0';
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS payment_terms TEXT;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS default_payment_days INTEGER      NOT NULL DEFAULT 30;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS default_penalty_rate NUMERIC(5,4) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS sla_description TEXT;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS deliverables TEXT;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS content TEXT;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS customer_level VARCHAR(16);
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS project_level VARCHAR(16);
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS author_id BIGINT;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS author_name VARCHAR(64);
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_contract_template ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_project_change: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_project_change') THEN
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS change_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS initiation_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS change_type VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS change_title VARCHAR(256) NOT NULL;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS change_reason TEXT;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS change_desc TEXT;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS budget_impact NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS contract_impact NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS schedule_impact_days INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS profit_impact NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS profit_impact_pct NUMERIC(5,4) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS risk_level_after VARCHAR(16)  NOT NULL DEFAULT 'LOW';
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS affected_wbs_count INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS affected_staff_count INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS major_flag SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS approver_roles VARCHAR(256) NOT NULL DEFAULT '[]';
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS applicant_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS applicant_name VARCHAR(64);
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS contract_id BIGINT;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS workflow_id VARCHAR(64);
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS executed_at TIMESTAMP;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_project_change ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_execution_delivery_standard: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_execution_delivery_standard') THEN
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS project_type VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS project_level VARCHAR(16);
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS delivery_name VARCHAR(256) NOT NULL;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS delivery_category VARCHAR(32)  NOT NULL DEFAULT 'DOC';
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS stage VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS required SMALLINT     NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS trigger_tr SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS acceptance_criteria TEXT;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS template_ref VARCHAR(256);
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_delivery_standard ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_execution_delivery_item: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_execution_delivery_item') THEN
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS item_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS initiation_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS standard_id BIGINT;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS project_type VARCHAR(32);
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS project_level VARCHAR(16);
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS delivery_name VARCHAR(256) NOT NULL;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS delivery_category VARCHAR(32)  NOT NULL DEFAULT 'DOC';
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS stage VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS required SMALLINT     NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS planned_submit_date DATE;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS actual_submit_date DATE;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS accepted_date DATE;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS submitter_id BIGINT;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS submitter_name VARCHAR(64);
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS reviewer_id BIGINT;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS reviewer_name VARCHAR(64);
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS review_comment TEXT;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'PENDING';
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS tr_required SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS tr_completed SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS file_ids VARCHAR(2048) NOT NULL DEFAULT '[]';
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_delivery_item ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_execution_closure: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_execution_closure') THEN
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS closure_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS initiation_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS closure_type VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS closure_reason TEXT;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS contract_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS received_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS received_ratio NUMERIC(5,4) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS cpi NUMERIC(5,2) NOT NULL DEFAULT 1.0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS spi NUMERIC(5,2) NOT NULL DEFAULT 1.0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS gross_margin NUMERIC(5,4) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS progress_pct NUMERIC(5,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS total_cost NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS warranty_months INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS warranty_start_date DATE;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS warranty_end_date DATE;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS planned_archive_date DATE;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS actual_archive_date DATE;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS archive_file_ids VARCHAR(2048) NOT NULL DEFAULT '[]';
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS locked SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS applicant_id BIGINT;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS applicant_name VARCHAR(64);
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS approver_id BIGINT;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS approver_name VARCHAR(64);
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS approval_comment TEXT;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_execution_closure ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_agent_prediction: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_agent_prediction') THEN
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS task_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS agent_type VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS biz_type VARCHAR(32);
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS biz_id BIGINT;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS biz_ref VARCHAR(256);
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS input_snapshot TEXT;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS output_result TEXT;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS alert_level VARCHAR(16)  NOT NULL DEFAULT 'NORMAL';
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS score NUMERIC(7,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS confidence NUMERIC(4,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS suggestion TEXT;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS matched_rules VARCHAR(2048) NOT NULL DEFAULT '[]';
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS cost_ms BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS model_version VARCHAR(32)  NOT NULL DEFAULT 'v1.0.0';
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'PENDING';
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS error_msg TEXT;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS caller_id BIGINT;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS caller_name VARCHAR(64);
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS source VARCHAR(32)  NOT NULL DEFAULT 'MANUAL';
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_agent_prediction ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_011__init_pmis_batch8_schema.sql
 -- ====================================================================
@@ -2604,45 +3519,45 @@ VALUES
 -- 1. 发票主表 pmis_finance_invoice
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_finance_invoice;
-CREATE TABLE pmis_finance_invoice (
-    id                  BIGSERIAL PRIMARY KEY,
-    invoice_no          VARCHAR(64),                              -- 财务发票号
-    invoice_code        VARCHAR(64)  NOT NULL,                    -- 业务编号（系统生成）
-    invoice_type        VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',   -- NORMAL/RED_REVERSE
-    contract_id         BIGINT       NOT NULL,
-    initiation_id       BIGINT       NOT NULL,
-    customer_id         BIGINT       NOT NULL,
-    customer_name       VARCHAR(256),
-    invoice_basis       VARCHAR(32)  NOT NULL,                    -- MILESTONE/OUTSOURCING/MONTHLY/FINAL/OTHER
-    amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 含税金额
-    tax_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,
-    net_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 不含税金额
-    tax_rate            NUMERIC(5,4) NOT NULL DEFAULT 0.06,
-    currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
-    invoice_date        DATE,
-    tax_period          VARCHAR(16),                              -- YYYY-MM
-    title               VARCHAR(256),                             -- 发票抬头
-    tax_no              VARCHAR(64),                              -- 纳税人识别号
-    bank_info           VARCHAR(256),                             -- 开户行+账号
-    address             VARCHAR(256),
-    phone               VARCHAR(64),
-    remark              TEXT,
-    status              VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',     -- InvoiceStatus
-    reversed_by_id      BIGINT,                                   -- 被红冲的发票ID
-    attachment_id       VARCHAR(64),                              -- 发票扫描件
-    approval_comment    TEXT,
-    applied_by          BIGINT,
-    approved_by         BIGINT,
-    approved_at         TIMESTAMP,
-    issued_by           BIGINT,
-    issued_at           TIMESTAMP,
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pfi_code UNIQUE (invoice_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_finance_invoice (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     invoice_no          VARCHAR(64),                              -- 财务发票号
+-- [SKIPPED-CLEANUP-REBUILD]     invoice_code        VARCHAR(64)  NOT NULL,                    -- 业务编号（系统生成）
+-- [SKIPPED-CLEANUP-REBUILD]     invoice_type        VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',   -- NORMAL/RED_REVERSE
+-- [SKIPPED-CLEANUP-REBUILD]     contract_id         BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_id         BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_name       VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     invoice_basis       VARCHAR(32)  NOT NULL,                    -- MILESTONE/OUTSOURCING/MONTHLY/FINAL/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 含税金额
+-- [SKIPPED-CLEANUP-REBUILD]     tax_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     net_amount          NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 不含税金额
+-- [SKIPPED-CLEANUP-REBUILD]     tax_rate            NUMERIC(5,4) NOT NULL DEFAULT 0.06,
+-- [SKIPPED-CLEANUP-REBUILD]     currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
+-- [SKIPPED-CLEANUP-REBUILD]     invoice_date        DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     tax_period          VARCHAR(16),                              -- YYYY-MM
+-- [SKIPPED-CLEANUP-REBUILD]     title               VARCHAR(256),                             -- 发票抬头
+-- [SKIPPED-CLEANUP-REBUILD]     tax_no              VARCHAR(64),                              -- 纳税人识别号
+-- [SKIPPED-CLEANUP-REBUILD]     bank_info           VARCHAR(256),                             -- 开户行+账号
+-- [SKIPPED-CLEANUP-REBUILD]     address             VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     phone               VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     remark              TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',     -- InvoiceStatus
+-- [SKIPPED-CLEANUP-REBUILD]     reversed_by_id      BIGINT,                                   -- 被红冲的发票ID
+-- [SKIPPED-CLEANUP-REBUILD]     attachment_id       VARCHAR(64),                              -- 发票扫描件
+-- [SKIPPED-CLEANUP-REBUILD]     approval_comment    TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     applied_by          BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     approved_by         BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     approved_at         TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     issued_by           BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     issued_at           TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pfi_code UNIQUE (invoice_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_finance_invoice IS '发票主表: 支持正常开票与红冲（RED_REVERSED）,执行 InvoiceStatus 状态机校验,invoice_code 唯一,invoice_no 在 ISSUED 时分配';
 COMMENT ON COLUMN pmis_finance_invoice.invoice_no IS '财务发票号: 税务局分配的纸质/电子发票号,ISSUED 状态时分配';
 COMMENT ON COLUMN pmis_finance_invoice.invoice_code IS '业务编号: 系统生成的唯一编码,如 INV-2026-001';
@@ -2688,36 +3603,36 @@ CREATE INDEX idx_pfi_tax_period ON pmis_finance_invoice(tax_period);
 -- 2. 回款主表 pmis_finance_payment
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_finance_payment;
-CREATE TABLE pmis_finance_payment (
-    id                  BIGSERIAL PRIMARY KEY,
-    payment_no          VARCHAR(64),                              -- 银行流水号/系统流水
-    payment_code        VARCHAR(64)  NOT NULL,                    -- 业务编号
-    contract_id         BIGINT       NOT NULL,
-    initiation_id       BIGINT       NOT NULL,
-    customer_id         BIGINT       NOT NULL,
-    customer_name       VARCHAR(256),
-    amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 回款总金额
-    currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
-    payment_method      VARCHAR(32)  NOT NULL DEFAULT 'BANK_TRANSFER', -- BANK_TRANSFER/CHECK/CASH/OTHER
-    payment_date        DATE         NOT NULL,                    -- 到账日期
-    bank_account        VARCHAR(64),                              -- 客户付款账号
-    our_bank_account    VARCHAR(64),                              -- 我方收款账号
-    bank_reference      VARCHAR(128),                             -- 银行流水号
-    invoice_allocation  TEXT,                                     -- 已分配发票ID（逗号分隔）
-    allocated_amount    NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 已核销金额
-    unallocated_amount  NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 未核销金额
-    status              VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- PaymentStatus
-    remark              TEXT,
-    confirmed_by        BIGINT,
-    confirmed_at        TIMESTAMP,
-    recorded_by         BIGINT,
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pfp_code UNIQUE (payment_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_finance_payment (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     payment_no          VARCHAR(64),                              -- 银行流水号/系统流水
+-- [SKIPPED-CLEANUP-REBUILD]     payment_code        VARCHAR(64)  NOT NULL,                    -- 业务编号
+-- [SKIPPED-CLEANUP-REBUILD]     contract_id         BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_id         BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_name       VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     amount              NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 回款总金额
+-- [SKIPPED-CLEANUP-REBUILD]     currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
+-- [SKIPPED-CLEANUP-REBUILD]     payment_method      VARCHAR(32)  NOT NULL DEFAULT 'BANK_TRANSFER', -- BANK_TRANSFER/CHECK/CASH/OTHER
+-- [SKIPPED-CLEANUP-REBUILD]     payment_date        DATE         NOT NULL,                    -- 到账日期
+-- [SKIPPED-CLEANUP-REBUILD]     bank_account        VARCHAR(64),                              -- 客户付款账号
+-- [SKIPPED-CLEANUP-REBUILD]     our_bank_account    VARCHAR(64),                              -- 我方收款账号
+-- [SKIPPED-CLEANUP-REBUILD]     bank_reference      VARCHAR(128),                             -- 银行流水号
+-- [SKIPPED-CLEANUP-REBUILD]     invoice_allocation  TEXT,                                     -- 已分配发票ID（逗号分隔）
+-- [SKIPPED-CLEANUP-REBUILD]     allocated_amount    NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 已核销金额
+-- [SKIPPED-CLEANUP-REBUILD]     unallocated_amount  NUMERIC(15,2) NOT NULL DEFAULT 0,         -- 未核销金额
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- PaymentStatus
+-- [SKIPPED-CLEANUP-REBUILD]     remark              TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     confirmed_by        BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     confirmed_at        TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     recorded_by         BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pfp_code UNIQUE (payment_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_finance_payment IS '回款主表: 客户回款记录,支持核销发票（allocated_amount/unallocated_amount）,unallocatedAmount=0 时自动转 ALLOCATED';
 COMMENT ON COLUMN pmis_finance_payment.payment_no IS '回款流水号: 银行流水号或系统生成';
 COMMENT ON COLUMN pmis_finance_payment.payment_code IS '业务编号: 系统生成的唯一编码,如 PAY-2026-001';
@@ -2754,28 +3669,28 @@ CREATE INDEX idx_pfp_unalloc ON pmis_finance_payment(customer_id, status, unallo
 -- 3. 客户信用表 pmis_finance_customer_credit
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_finance_customer_credit;
-CREATE TABLE pmis_finance_customer_credit (
-    id                    BIGSERIAL PRIMARY KEY,
-    customer_id           BIGINT       NOT NULL,
-    customer_name         VARCHAR(256),
-    credit_level          VARCHAR(8)   NOT NULL DEFAULT 'D',       -- A/B/C/D
-    credit_score          INTEGER      NOT NULL DEFAULT 0,        -- 0-100
-    total_contract_amount NUMERIC(15,2) NOT NULL DEFAULT 0,
-    total_invoiced_amount NUMERIC(15,2) NOT NULL DEFAULT 0,
-    total_received_amount NUMERIC(15,2) NOT NULL DEFAULT 0,
-    on_time_rate          NUMERIC(5,4) NOT NULL DEFAULT 0,        -- 及时回款率
-    contract_count        INTEGER      NOT NULL DEFAULT 0,
-    overdue_count         INTEGER      NOT NULL DEFAULT 0,
-    last_evaluation_at    TIMESTAMP,
-    evaluator             VARCHAR(64),
-    remark                TEXT,
-    tenant_id             BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pfcc_customer UNIQUE (customer_id, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_finance_customer_credit (
+-- [SKIPPED-CLEANUP-REBUILD]     id                    BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_id           BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     customer_name         VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     credit_level          VARCHAR(8)   NOT NULL DEFAULT 'D',       -- A/B/C/D
+-- [SKIPPED-CLEANUP-REBUILD]     credit_score          INTEGER      NOT NULL DEFAULT 0,        -- 0-100
+-- [SKIPPED-CLEANUP-REBUILD]     total_contract_amount NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     total_invoiced_amount NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     total_received_amount NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     on_time_rate          NUMERIC(5,4) NOT NULL DEFAULT 0,        -- 及时回款率
+-- [SKIPPED-CLEANUP-REBUILD]     contract_count        INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     overdue_count         INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     last_evaluation_at    TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     evaluator             VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     remark                TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id             BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted               SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pfcc_customer UNIQUE (customer_id, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_finance_customer_credit IS '客户信用表: 客户信用评分与等级（A/B/C/D）,CustomerCreditScoreEvaluator 评分（0-100）';
 COMMENT ON COLUMN pmis_finance_customer_credit.customer_id IS '客户 ID: 全局唯一';
 COMMENT ON COLUMN pmis_finance_customer_credit.customer_name IS '客户名称（冗余）';
@@ -2801,6 +3716,127 @@ CREATE INDEX idx_pfcc_tenant ON pmis_finance_customer_credit(tenant_id);
 -- =====================================================
 -- credit_level 字段含义（见上方 COLUMN COMMENT）: A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59)
 
+
+-- [AUTO-MIGRATION] pmis_finance_invoice: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_finance_invoice') THEN
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS invoice_no VARCHAR(64);
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS invoice_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS invoice_type VARCHAR(32)  NOT NULL DEFAULT 'NORMAL';
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS contract_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS initiation_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS customer_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS customer_name VARCHAR(256);
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS invoice_basis VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS tax_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS net_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS tax_rate NUMERIC(5,4) NOT NULL DEFAULT 0.06;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS currency VARCHAR(16)  NOT NULL DEFAULT 'CNY';
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS invoice_date DATE;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS tax_period VARCHAR(16);
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS title VARCHAR(256);
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS tax_no VARCHAR(64);
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS bank_info VARCHAR(256);
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS address VARCHAR(256);
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS phone VARCHAR(64);
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS reversed_by_id BIGINT;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS attachment_id VARCHAR(64);
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS approval_comment TEXT;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS applied_by BIGINT;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS approved_by BIGINT;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS issued_by BIGINT;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS issued_at TIMESTAMP;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_finance_invoice ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_finance_payment: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_finance_payment') THEN
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS payment_no VARCHAR(64);
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS payment_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS contract_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS initiation_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS customer_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS customer_name VARCHAR(256);
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS currency VARCHAR(16)  NOT NULL DEFAULT 'CNY';
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS payment_method VARCHAR(32)  NOT NULL DEFAULT 'BANK_TRANSFER';
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS payment_date DATE         NOT NULL;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS bank_account VARCHAR(64);
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS our_bank_account VARCHAR(64);
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS bank_reference VARCHAR(128);
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS invoice_allocation TEXT;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS allocated_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS unallocated_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'PENDING';
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS confirmed_by BIGINT;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS confirmed_at TIMESTAMP;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS recorded_by BIGINT;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_finance_payment ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_finance_customer_credit: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_finance_customer_credit') THEN
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS customer_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS customer_name VARCHAR(256);
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS credit_level VARCHAR(8)   NOT NULL DEFAULT 'D';
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS credit_score INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS total_contract_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS total_invoiced_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS total_received_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS on_time_rate NUMERIC(5,4) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS contract_count INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS overdue_count INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS last_evaluation_at TIMESTAMP;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS evaluator VARCHAR(64);
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_finance_customer_credit ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_012__init_pmis_finance_schema.sql
 -- ====================================================================
@@ -2820,33 +3856,33 @@ CREATE INDEX idx_pfcc_tenant ON pmis_finance_customer_credit(tenant_id);
 -- 1. EVM 挣值测量表 pmis_evm_measure
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_evm_measure;
-CREATE TABLE pmis_evm_measure (
-    id                  BIGSERIAL PRIMARY KEY,
-    initiation_id       BIGINT       NOT NULL,
-    wbs_task_id         BIGINT,                                -- 可空：项目级度量
-    period              VARCHAR(16)  NOT NULL,                 -- YYYY-MM
-    pv                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 计划值
-    ev                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 挣值
-    ac                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 实际成本
-    bac                 NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 完工预算
-    cpi                 NUMERIC(7,4)  NOT NULL DEFAULT 1.0,
-    spi                 NUMERIC(7,4)  NOT NULL DEFAULT 1.0,
-    cv                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 成本偏差 EV-AC
-    sv                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 进度偏差 EV-PV
-    eac                 NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 完工估算 BAC/CPI
-    vac                 NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 完工偏差 BAC-EAC
-    etc                 NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 完工尚需 EAC-AC
-    tcpi                NUMERIC(7,4)  NOT NULL DEFAULT 1.0,    -- 完工绩效指数
-    alert_level         VARCHAR(16)  NOT NULL DEFAULT 'NORMAL',
-    alert_reason        TEXT,
-    measure_date        DATE         NOT NULL,
-    remark              TEXT,
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_evm_measure (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     wbs_task_id         BIGINT,                                -- 可空：项目级度量
+-- [SKIPPED-CLEANUP-REBUILD]     period              VARCHAR(16)  NOT NULL,                 -- YYYY-MM
+-- [SKIPPED-CLEANUP-REBUILD]     pv                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 计划值
+-- [SKIPPED-CLEANUP-REBUILD]     ev                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 挣值
+-- [SKIPPED-CLEANUP-REBUILD]     ac                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 实际成本
+-- [SKIPPED-CLEANUP-REBUILD]     bac                 NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 完工预算
+-- [SKIPPED-CLEANUP-REBUILD]     cpi                 NUMERIC(7,4)  NOT NULL DEFAULT 1.0,
+-- [SKIPPED-CLEANUP-REBUILD]     spi                 NUMERIC(7,4)  NOT NULL DEFAULT 1.0,
+-- [SKIPPED-CLEANUP-REBUILD]     cv                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 成本偏差 EV-AC
+-- [SKIPPED-CLEANUP-REBUILD]     sv                  NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 进度偏差 EV-PV
+-- [SKIPPED-CLEANUP-REBUILD]     eac                 NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 完工估算 BAC/CPI
+-- [SKIPPED-CLEANUP-REBUILD]     vac                 NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 完工偏差 BAC-EAC
+-- [SKIPPED-CLEANUP-REBUILD]     etc                 NUMERIC(15,2) NOT NULL DEFAULT 0,      -- 完工尚需 EAC-AC
+-- [SKIPPED-CLEANUP-REBUILD]     tcpi                NUMERIC(7,4)  NOT NULL DEFAULT 1.0,    -- 完工绩效指数
+-- [SKIPPED-CLEANUP-REBUILD]     alert_level         VARCHAR(16)  NOT NULL DEFAULT 'NORMAL',
+-- [SKIPPED-CLEANUP-REBUILD]     alert_reason        TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     measure_date        DATE         NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     remark              TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_evm_measure IS 'EVM 挣值测量记录: 周期性（按 period 月度）记录 PV/EV/AC/BAC 等挣值指标,EvmCalculator 用 nz() 防空 NPE,EvmAlertLevel 评估预警';
 COMMENT ON COLUMN pmis_evm_measure.initiation_id IS '所属立项 ID';
 COMMENT ON COLUMN pmis_evm_measure.wbs_task_id IS '关联 WBS 任务 ID: 可空,NULL 表示项目级度量';
@@ -2879,26 +3915,26 @@ CREATE INDEX idx_pem_alert ON pmis_evm_measure(alert_level);
 -- 2. 对外报价费率表 pmis_rate_card
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_rate_card;
-CREATE TABLE pmis_rate_card (
-    id                  BIGSERIAL PRIMARY KEY,
-    rate_code           VARCHAR(64)  NOT NULL,
-    level_code          VARCHAR(16)  NOT NULL,                 -- L1-L18
-    project_type        VARCHAR(32),                           -- ProjectType
-    customer_level      VARCHAR(8),                            -- A/B/C/D
-    billing_unit        VARCHAR(16)  NOT NULL DEFAULT 'DAY',   -- DAY/HOUR
-    rate_amount         NUMERIC(15,2) NOT NULL DEFAULT 0,
-    currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
-    effective_date      DATE         NOT NULL,
-    expiry_date         DATE,
-    status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
-    remark              TEXT,
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_prc_code UNIQUE (rate_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_rate_card (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     rate_code           VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     level_code          VARCHAR(16)  NOT NULL,                 -- L1-L18
+-- [SKIPPED-CLEANUP-REBUILD]     project_type        VARCHAR(32),                           -- ProjectType
+-- [SKIPPED-CLEANUP-REBUILD]     customer_level      VARCHAR(8),                            -- A/B/C/D
+-- [SKIPPED-CLEANUP-REBUILD]     billing_unit        VARCHAR(16)  NOT NULL DEFAULT 'DAY',   -- DAY/HOUR
+-- [SKIPPED-CLEANUP-REBUILD]     rate_amount         NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
+-- [SKIPPED-CLEANUP-REBUILD]     effective_date      DATE         NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     expiry_date         DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
+-- [SKIPPED-CLEANUP-REBUILD]     remark              TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_prc_code UNIQUE (rate_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_rate_card IS '对外报价费率表 Rate Card: 客户报价用,支持 3 级匹配（level+project+customer > level+project > level）,matchEffective 自动选最优';
 COMMENT ON COLUMN pmis_rate_card.rate_code IS '费率编码: 业务唯一,如 RC-L5-FIX-A';
 COMMENT ON COLUMN pmis_rate_card.level_code IS '职级: L1-L18';
@@ -2921,26 +3957,26 @@ CREATE INDEX idx_prc_status ON pmis_rate_card(status, effective_date);
 -- 3. 对内成本费率表 pmis_rate_internal
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_rate_internal;
-CREATE TABLE pmis_rate_internal (
-    id                  BIGSERIAL PRIMARY KEY,
-    rate_code           VARCHAR(64)  NOT NULL,
-    level_code          VARCHAR(16)  NOT NULL,
-    department_id       BIGINT,                                -- 事业部/部门
-    department_name     VARCHAR(256),
-    billing_unit        VARCHAR(16)  NOT NULL DEFAULT 'DAY',
-    cost_amount         NUMERIC(15,2) NOT NULL DEFAULT 0,
-    currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
-    effective_date      DATE         NOT NULL,
-    expiry_date         DATE,
-    status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
-    remark              TEXT,
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pri_code UNIQUE (rate_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_rate_internal (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     rate_code           VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     level_code          VARCHAR(16)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     department_id       BIGINT,                                -- 事业部/部门
+-- [SKIPPED-CLEANUP-REBUILD]     department_name     VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     billing_unit        VARCHAR(16)  NOT NULL DEFAULT 'DAY',
+-- [SKIPPED-CLEANUP-REBUILD]     cost_amount         NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     currency            VARCHAR(16)  NOT NULL DEFAULT 'CNY',
+-- [SKIPPED-CLEANUP-REBUILD]     effective_date      DATE         NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     expiry_date         DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
+-- [SKIPPED-CLEANUP-REBUILD]     remark              TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pri_code UNIQUE (rate_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_rate_internal IS '对内成本费率表: 内部人力成本计算用,matchEffective 优先 (level+department) 而非 (level only)';
 COMMENT ON COLUMN pmis_rate_internal.rate_code IS '费率编码: 业务唯一,如 RI-L5-DEV-001';
 COMMENT ON COLUMN pmis_rate_internal.level_code IS '职级: L1-L18';
@@ -2963,39 +3999,39 @@ CREATE INDEX idx_pri_status ON pmis_rate_internal(status, effective_date);
 -- 4. 利润测算版本表 pmis_profit_simulation
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_profit_simulation;
-CREATE TABLE pmis_profit_simulation (
-    id                  BIGSERIAL PRIMARY KEY,
-    simulation_code     VARCHAR(64)  NOT NULL,
-    simulation_name     VARCHAR(256) NOT NULL,
-    initiation_id       BIGINT       NOT NULL,
-    version             INTEGER      NOT NULL DEFAULT 1,
-    scenario_type       VARCHAR(32)  NOT NULL DEFAULT 'BASE',   -- BASE/OPTIMISTIC/PESSIMISTIC/CUSTOM
-    contract_amount     NUMERIC(15,2) NOT NULL DEFAULT 0,
-    external_revenue    NUMERIC(15,2) NOT NULL DEFAULT 0,
-    internal_cost       NUMERIC(15,2) NOT NULL DEFAULT 0,
-    expected_hours      NUMERIC(15,2) NOT NULL DEFAULT 0,
-    blended_rate        NUMERIC(15,2) NOT NULL DEFAULT 0,
-    gross_profit        NUMERIC(15,2) NOT NULL DEFAULT 0,
-    gross_margin        NUMERIC(7,4)  NOT NULL DEFAULT 0,
-    target_margin       NUMERIC(7,4)  NOT NULL DEFAULT 0,
-    labor_cost          NUMERIC(15,2) NOT NULL DEFAULT 0,
-    purchase_cost       NUMERIC(15,2) NOT NULL DEFAULT 0,
-    expense_cost        NUMERIC(15,2) NOT NULL DEFAULT 0,
-    outsource_cost      NUMERIC(15,2) NOT NULL DEFAULT 0,
-    assumptions         TEXT,                                  -- JSON
-    status              VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',
-    approver_name       VARCHAR(64),
-    approved_at         TIMESTAMP,
-    remark              TEXT,
-    applicant_id        BIGINT,
-    applicant_name      VARCHAR(64),
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pps_code UNIQUE (simulation_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_profit_simulation (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     simulation_code     VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     simulation_name     VARCHAR(256) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id       BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     version             INTEGER      NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     scenario_type       VARCHAR(32)  NOT NULL DEFAULT 'BASE',   -- BASE/OPTIMISTIC/PESSIMISTIC/CUSTOM
+-- [SKIPPED-CLEANUP-REBUILD]     contract_amount     NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     external_revenue    NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     internal_cost       NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     expected_hours      NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     blended_rate        NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     gross_profit        NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     gross_margin        NUMERIC(7,4)  NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     target_margin       NUMERIC(7,4)  NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     labor_cost          NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     purchase_cost       NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     expense_cost        NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     outsource_cost      NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     assumptions         TEXT,                                  -- JSON
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',
+-- [SKIPPED-CLEANUP-REBUILD]     approver_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     approved_at         TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     remark              TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_id        BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     applicant_name      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pps_code UNIQUE (simulation_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_profit_simulation IS '利润测算版本表 What-if: 同一立项支持多个测算版本,create() 自动 version=max+1,APPROVED/ARCHIVED 状态禁止删除';
 COMMENT ON COLUMN pmis_profit_simulation.simulation_code IS '测算单号: 业务唯一,如 SIM-2026-001';
 COMMENT ON COLUMN pmis_profit_simulation.simulation_name IS '测算名称';
@@ -3078,6 +4114,147 @@ VALUES
     ('RI-L17-DEFAULT', 'L17', 'DAY', 10000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
     ('RI-L18-DEFAULT', 'L18', 'DAY', 12000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init');
 
+
+-- [AUTO-MIGRATION] pmis_evm_measure: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_evm_measure') THEN
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS initiation_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS wbs_task_id BIGINT;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS period VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS pv NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS ev NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS ac NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS bac NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS cpi NUMERIC(7,4)  NOT NULL DEFAULT 1.0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS spi NUMERIC(7,4)  NOT NULL DEFAULT 1.0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS cv NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS sv NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS eac NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS vac NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS etc NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS tcpi NUMERIC(7,4)  NOT NULL DEFAULT 1.0;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS alert_level VARCHAR(16)  NOT NULL DEFAULT 'NORMAL';
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS alert_reason TEXT;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS measure_date DATE         NOT NULL;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_evm_measure ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_rate_card: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_rate_card') THEN
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS rate_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS level_code VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS project_type VARCHAR(32);
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS customer_level VARCHAR(8);
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS billing_unit VARCHAR(16)  NOT NULL DEFAULT 'DAY';
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS rate_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS currency VARCHAR(16)  NOT NULL DEFAULT 'CNY';
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS effective_date DATE         NOT NULL;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS expiry_date DATE;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE';
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_rate_card ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_rate_internal: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_rate_internal') THEN
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS rate_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS level_code VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS department_id BIGINT;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS department_name VARCHAR(256);
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS billing_unit VARCHAR(16)  NOT NULL DEFAULT 'DAY';
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS cost_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS currency VARCHAR(16)  NOT NULL DEFAULT 'CNY';
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS effective_date DATE         NOT NULL;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS expiry_date DATE;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE';
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_rate_internal ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_profit_simulation: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_profit_simulation') THEN
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS simulation_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS simulation_name VARCHAR(256) NOT NULL;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS initiation_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS version INTEGER      NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS scenario_type VARCHAR(32)  NOT NULL DEFAULT 'BASE';
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS contract_amount NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS external_revenue NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS internal_cost NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS expected_hours NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS blended_rate NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS gross_profit NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS gross_margin NUMERIC(7,4)  NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS target_margin NUMERIC(7,4)  NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS labor_cost NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS purchase_cost NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS expense_cost NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS outsource_cost NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS assumptions TEXT;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'DRAFT';
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS approver_name VARCHAR(64);
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS approved_at TIMESTAMP;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS applicant_id BIGINT;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS applicant_name VARCHAR(64);
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_profit_simulation ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_013__init_pmis_evm_schema.sql
 -- ====================================================================
@@ -3097,25 +4274,25 @@ VALUES
 -- 1. 资源池主表 pmis_resource_pool
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_resource_pool;
-CREATE TABLE pmis_resource_pool (
-    id                  BIGSERIAL PRIMARY KEY,
-    pool_code           VARCHAR(64)  NOT NULL,
-    pool_name           VARCHAR(256) NOT NULL,
-    pool_type           VARCHAR(32)  NOT NULL,                 -- HQ/DIVISION/RESERVE
-    department_id       BIGINT,                                -- 事业部/部门
-    department_name     VARCHAR(256),
-    level_range         VARCHAR(32),                           -- L1-L3 / L4-L12 / L13+
-    headcount           INTEGER      NOT NULL DEFAULT 0,
-    billable_target     INTEGER      NOT NULL DEFAULT 0,
-    description         TEXT,
-    status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_prp_code UNIQUE (pool_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_resource_pool (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     pool_code           VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     pool_name           VARCHAR(256) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     pool_type           VARCHAR(32)  NOT NULL,                 -- HQ/DIVISION/RESERVE
+-- [SKIPPED-CLEANUP-REBUILD]     department_id       BIGINT,                                -- 事业部/部门
+-- [SKIPPED-CLEANUP-REBUILD]     department_name     VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     level_range         VARCHAR(32),                           -- L1-L3 / L4-L12 / L13+
+-- [SKIPPED-CLEANUP-REBUILD]     headcount           INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     billable_target     INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     description         TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_prp_code UNIQUE (pool_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_resource_pool IS '资源池表: 3 级资源池（HQ 总部 / DIVISION 事业部 / RESERVE 储备）,PoolType.inferByLevel 按职级自动分配';
 COMMENT ON COLUMN pmis_resource_pool.pool_code IS '资源池编码: 业务唯一,如 POOL-HQ-GLOBAL';
 COMMENT ON COLUMN pmis_resource_pool.pool_name IS '资源池名称';
@@ -3137,22 +4314,22 @@ CREATE INDEX idx_prp_dept ON pmis_resource_pool(department_id);
 -- 2. 人员标签表 pmis_employee_tag
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_employee_tag;
-CREATE TABLE pmis_employee_tag (
-    id                  BIGSERIAL PRIMARY KEY,
-    employee_id         BIGINT       NOT NULL,
-    tag_type            VARCHAR(32)  NOT NULL,                 -- SKILL/INDUSTRY/DOMAIN/CERT
-    tag_code            VARCHAR(64)  NOT NULL,
-    tag_name            VARCHAR(256) NOT NULL,
-    proficiency         INTEGER      NOT NULL DEFAULT 3,       -- 1-5
-    years_exp           INTEGER      NOT NULL DEFAULT 0,
-    remark              TEXT,
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pet_emp_tag UNIQUE (employee_id, tag_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_employee_tag (
+-- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     employee_id         BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     tag_type            VARCHAR(32)  NOT NULL,                 -- SKILL/INDUSTRY/DOMAIN/CERT
+-- [SKIPPED-CLEANUP-REBUILD]     tag_code            VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     tag_name            VARCHAR(256) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     proficiency         INTEGER      NOT NULL DEFAULT 3,       -- 1-5
+-- [SKIPPED-CLEANUP-REBUILD]     years_exp           INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     remark              TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pet_emp_tag UNIQUE (employee_id, tag_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_employee_tag IS '人员标签表: 员工的技能/行业/领域/资质标签,支撑资源推荐智能体匹配';
 COMMENT ON COLUMN pmis_employee_tag.employee_id IS '员工 ID';
 COMMENT ON COLUMN pmis_employee_tag.tag_type IS '标签类型: SKILL 技能 / INDUSTRY 行业 / DOMAIN 领域 / CERT 资质';
@@ -3171,32 +4348,32 @@ CREATE INDEX idx_pet_type ON pmis_employee_tag(tag_type, tag_code);
 -- 3. 资源分配主表 pmis_resource_assignment
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_resource_assignment;
-CREATE TABLE pmis_resource_assignment (
-    id                    BIGSERIAL PRIMARY KEY,
-    assignment_code       VARCHAR(64)  NOT NULL,
-    employee_id           BIGINT       NOT NULL,
-    employee_name         VARCHAR(64),
-    level_code            VARCHAR(16),
-    pool_id               BIGINT,
-    pool_type             VARCHAR(32),                         -- 冗余池类型
-    initiation_id         BIGINT,                              -- 关联项目
-    initiation_name       VARCHAR(256),
-    opportunity_id        BIGINT,                              -- 关联商机
-    status                VARCHAR(32)  NOT NULL DEFAULT 'RESERVED',
-    allocation            NUMERIC(5,4) NOT NULL DEFAULT 1.0,   -- 0-1
-    planned_start_date    DATE,
-    planned_end_date      DATE,
-    actual_start_date     DATE,
-    actual_end_date       DATE,
-    billable              SMALLINT     NOT NULL DEFAULT 1,
-    daily_hours           NUMERIC(5,2) NOT NULL DEFAULT 8.0,
-    tenant_id             BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pra_code UNIQUE (assignment_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_resource_assignment (
+-- [SKIPPED-CLEANUP-REBUILD]     id                    BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     assignment_code       VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     employee_id           BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     employee_name         VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     level_code            VARCHAR(16),
+-- [SKIPPED-CLEANUP-REBUILD]     pool_id               BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     pool_type             VARCHAR(32),                         -- 冗余池类型
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_id         BIGINT,                              -- 关联项目
+-- [SKIPPED-CLEANUP-REBUILD]     initiation_name       VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     opportunity_id        BIGINT,                              -- 关联商机
+-- [SKIPPED-CLEANUP-REBUILD]     status                VARCHAR(32)  NOT NULL DEFAULT 'RESERVED',
+-- [SKIPPED-CLEANUP-REBUILD]     allocation            NUMERIC(5,4) NOT NULL DEFAULT 1.0,   -- 0-1
+-- [SKIPPED-CLEANUP-REBUILD]     planned_start_date    DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     planned_end_date      DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     actual_start_date     DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     actual_end_date       DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     billable              SMALLINT     NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     daily_hours           NUMERIC(5,2) NOT NULL DEFAULT 8.0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id             BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted               SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pra_code UNIQUE (assignment_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_resource_assignment IS '资源分配表: 资源预占/入场/调岗/离场的全过程,act() 入口按 action 参数映射 AssignmentStatus';
 COMMENT ON COLUMN pmis_resource_assignment.assignment_code IS '分配单号: 业务唯一,如 RA-2026-001';
 COMMENT ON COLUMN pmis_resource_assignment.employee_id IS '员工 ID';
@@ -3227,30 +4404,30 @@ CREATE INDEX idx_pra_pool ON pmis_resource_assignment(pool_id, status);
 -- 4. Bench 闲置记录表 pmis_bench_record
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_bench_record;
-CREATE TABLE pmis_bench_record (
-    id                    BIGSERIAL PRIMARY KEY,
-    bench_code            VARCHAR(64)  NOT NULL,
-    employee_id           BIGINT       NOT NULL,
-    employee_name         VARCHAR(64),
-    level_code            VARCHAR(16),
-    pool_id               BIGINT,
-    bench_reason          VARCHAR(32)  NOT NULL DEFAULT 'ENTER', -- ENTER/EXIT
-    reason_type            VARCHAR(32),                          -- PROJECT_END/RESERVE/TRAINING/LEAVE
-    source_assignment     BIGINT,                               -- 触发本次 Bench 的分配记录
-    bench_date            DATE         NOT NULL,
-    exit_date             DATE,
-    idle_days             INTEGER      NOT NULL DEFAULT 0,
-    status                VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE', -- BenchStatus
-    daily_cost            NUMERIC(15,2) NOT NULL DEFAULT 0,
-    total_idle_cost       NUMERIC(15,2) NOT NULL DEFAULT 0,
-    remark                TEXT,
-    tenant_id             BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pbr_code UNIQUE (bench_code, deleted)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_bench_record (
+-- [SKIPPED-CLEANUP-REBUILD]     id                    BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     bench_code            VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     employee_id           BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     employee_name         VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     level_code            VARCHAR(16),
+-- [SKIPPED-CLEANUP-REBUILD]     pool_id               BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     bench_reason          VARCHAR(32)  NOT NULL DEFAULT 'ENTER', -- ENTER/EXIT
+-- [SKIPPED-CLEANUP-REBUILD]     reason_type            VARCHAR(32),                          -- PROJECT_END/RESERVE/TRAINING/LEAVE
+-- [SKIPPED-CLEANUP-REBUILD]     source_assignment     BIGINT,                               -- 触发本次 Bench 的分配记录
+-- [SKIPPED-CLEANUP-REBUILD]     bench_date            DATE         NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     exit_date             DATE,
+-- [SKIPPED-CLEANUP-REBUILD]     idle_days             INTEGER      NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     status                VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE', -- BenchStatus
+-- [SKIPPED-CLEANUP-REBUILD]     daily_cost            NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     total_idle_cost       NUMERIC(15,2) NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     remark                TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id             BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
+-- [SKIPPED-CLEANUP-REBUILD]     created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted               SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pbr_code UNIQUE (bench_code, deleted)
+-- [SKIPPED-CLEANUP-REBUILD] );
 COMMENT ON TABLE  pmis_bench_record IS 'Bench 闲置记录表: 资源闲置期间自动入池/出池,BenchCostCalculator 计算 idleDays + totalIdleCost';
 COMMENT ON COLUMN pmis_bench_record.bench_code IS 'Bench 单号: 业务唯一,如 BENCH-2026-001';
 COMMENT ON COLUMN pmis_bench_record.employee_id IS '员工 ID';
@@ -3286,6 +4463,131 @@ VALUES
     ('POOL-DIV-IMPL',         '实施事业部池',    'DIVISION', 3, '实施事业部', 'L4-L12', 0, 0, 'ACTIVE', 1, 'init'),
     ('POOL-RESERVE-TRAINING', '储备培训池',      'RESERVE',  1, '总部',  'L1-L3', 0, 0, 'ACTIVE', 1, 'init');
 
+
+-- [AUTO-MIGRATION] pmis_resource_pool: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_resource_pool') THEN
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS pool_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS pool_name VARCHAR(256) NOT NULL;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS pool_type VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS department_id BIGINT;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS department_name VARCHAR(256);
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS level_range VARCHAR(32);
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS headcount INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS billable_target INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS description TEXT;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE';
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_resource_pool ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_employee_tag: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_employee_tag') THEN
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS employee_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tag_type VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tag_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tag_name VARCHAR(256) NOT NULL;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS proficiency INTEGER      NOT NULL DEFAULT 3;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS years_exp INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_resource_assignment: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_resource_assignment') THEN
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS assignment_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS employee_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS employee_name VARCHAR(64);
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS level_code VARCHAR(16);
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS pool_id BIGINT;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS pool_type VARCHAR(32);
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS initiation_id BIGINT;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS initiation_name VARCHAR(256);
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS opportunity_id BIGINT;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS status VARCHAR(32)  NOT NULL DEFAULT 'RESERVED';
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS allocation NUMERIC(5,4) NOT NULL DEFAULT 1.0;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS planned_start_date DATE;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS planned_end_date DATE;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS actual_start_date DATE;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS actual_end_date DATE;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS billable SMALLINT     NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS daily_hours NUMERIC(5,2) NOT NULL DEFAULT 8.0;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_resource_assignment ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_bench_record: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_bench_record') THEN
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS bench_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS employee_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS employee_name VARCHAR(64);
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS level_code VARCHAR(16);
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS pool_id BIGINT;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS bench_reason VARCHAR(32)  NOT NULL DEFAULT 'ENTER';
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS reason_type VARCHAR(32);
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS source_assignment BIGINT;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS bench_date DATE         NOT NULL;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS exit_date DATE;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS idle_days INTEGER      NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE';
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS daily_cost NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS total_idle_cost NUMERIC(15,2) NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS remark TEXT;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_bench_record ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_014_1__init_pmis_resource_bench_schema.sql
 -- ====================================================================
@@ -4362,30 +5664,30 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALE
 --    记录流程的整体信息（编码、名称、版本、表单路径、模型 JSON）
 -- -----------------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_definition;
-CREATE TABLE pmis_flow_definition (
-    id                 BIGSERIAL    PRIMARY KEY,
-    flow_code          VARCHAR(64)  NOT NULL,
-    flow_name          VARCHAR(128) NOT NULL,
-    category           VARCHAR(64),
-    version            VARCHAR(20)  NOT NULL DEFAULT '1.0',
-    model_value        VARCHAR(40)  NOT NULL DEFAULT 'CLASSICS',
-    form_custom        CHAR(1)      NOT NULL DEFAULT 'N',
-    form_path          VARCHAR(256),
-    activity_status    SMALLINT     NOT NULL DEFAULT 1,
-    is_publish         SMALLINT     NOT NULL DEFAULT 0,
-    listener_type      VARCHAR(64),
-    listener_path      VARCHAR(512),
-    ext                VARCHAR(1024),
-    description        VARCHAR(512),
-    status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_definition (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_name          VARCHAR(128) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     category           VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     version            VARCHAR(20)  NOT NULL DEFAULT '1.0',
+-- [SKIPPED-CLEANUP-REBUILD]     model_value        VARCHAR(40)  NOT NULL DEFAULT 'CLASSICS',
+-- [SKIPPED-CLEANUP-REBUILD]     form_custom        CHAR(1)      NOT NULL DEFAULT 'N',
+-- [SKIPPED-CLEANUP-REBUILD]     form_path          VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     activity_status    SMALLINT     NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     is_publish         SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     listener_type      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     listener_path      VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     ext                VARCHAR(1024),
+-- [SKIPPED-CLEANUP-REBUILD]     description        VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64)
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE  pmis_flow_definition IS '流程定义表: 记录流程的整体信息(编码/名称/版本/表单路径/模型 JSON)';
 COMMENT ON COLUMN pmis_flow_definition.flow_code IS '流程编码(业务语义: project_initiation/contract_change/...)';
@@ -4416,27 +5718,27 @@ CREATE INDEX        idx_pfd_status      ON pmis_flow_definition(status) WHERE de
 --    流程中的各个节点：开始/审批/会签/网关/结束
 -- -----------------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_node;
-CREATE TABLE pmis_flow_node (
-    id                 BIGSERIAL    PRIMARY KEY,
-    definition_id      BIGINT       NOT NULL,
-    flow_code          VARCHAR(64)  NOT NULL,
-    node_type          SMALLINT     NOT NULL,
-    node_code          VARCHAR(64)  NOT NULL,
-    node_name          VARCHAR(128) NOT NULL,
-    permission_flag    VARCHAR(512),
-    skip_any_node      VARCHAR(64),
-    coordinate         VARCHAR(64),
-    skip_list          TEXT,
-    ext                VARCHAR(1024),
-    status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_node (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     definition_id      BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_type          SMALLINT     NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_name          VARCHAR(128) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     permission_flag    VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     skip_any_node      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     coordinate         VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     skip_list          TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     ext                VARCHAR(1024),
+-- [SKIPPED-CLEANUP-REBUILD]     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64)
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE  pmis_flow_node IS '流程节点表: 流程中的各个节点(开始/审批/会签/网关/结束)';
 COMMENT ON COLUMN pmis_flow_node.definition_id IS '所属流程定义 ID';
@@ -4462,27 +5764,27 @@ CREATE INDEX        idx_pfn_type    ON pmis_flow_node(node_type);
 --    节点之间的有向边：顺序流 / 条件分支 / 退回
 -- -----------------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_skip;
-CREATE TABLE pmis_flow_skip (
-    id                 BIGSERIAL    PRIMARY KEY,
-    definition_id      BIGINT       NOT NULL,
-    flow_code          VARCHAR(64)  NOT NULL,
-    skip_name          VARCHAR(128),
-    skip_type          VARCHAR(16)  NOT NULL,
-    coordinate         VARCHAR(64),
-    skip_condition     VARCHAR(512),
-    next_node_code     VARCHAR(64)  NOT NULL,
-    next_node_type     SMALLINT,
-    coordinate_next    VARCHAR(64),
-    skip_list          TEXT,
-    status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_skip (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     definition_id      BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     skip_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     skip_type          VARCHAR(16)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     coordinate         VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     skip_condition     VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     next_node_code     VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     next_node_type     SMALLINT,
+-- [SKIPPED-CLEANUP-REBUILD]     coordinate_next    VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     skip_list          TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64)
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE  pmis_flow_skip IS '节点跳转关联表: 节点之间的有向边,顺序流 / 条件分支 / 退回';
 COMMENT ON COLUMN pmis_flow_skip.definition_id IS '所属流程定义 ID';
@@ -4507,35 +5809,35 @@ CREATE INDEX idx_pfs_type   ON pmis_flow_skip(skip_type);
 --    每次启动流程生成一条实例记录
 -- -----------------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_instance;
-CREATE TABLE pmis_flow_instance (
-    id                 BIGSERIAL    PRIMARY KEY,
-    flow_code          VARCHAR(64)  NOT NULL,
-    flow_name          VARCHAR(128),
-    definition_id      BIGINT       NOT NULL,
-    flow_version       VARCHAR(20)  NOT NULL DEFAULT '1.0',
-    business_type      VARCHAR(64)  NOT NULL,
-    business_id        VARCHAR(64)  NOT NULL,
-    business_no        VARCHAR(128),
-    title              VARCHAR(256),
-    initiator_id       BIGINT,
-    initiator_name     VARCHAR(64),
-    current_node_code  VARCHAR(64),
-    current_node_name  VARCHAR(128),
-    variable           TEXT,
-    flow_status        VARCHAR(32)  NOT NULL DEFAULT 'RUNNING',
-    activity_status    SMALLINT     NOT NULL DEFAULT 1,
-    start_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    end_at             TIMESTAMP,
-    duration_ms        BIGINT,
-    status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_instance (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     definition_id      BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_version       VARCHAR(20)  NOT NULL DEFAULT '1.0',
+-- [SKIPPED-CLEANUP-REBUILD]     business_type      VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     business_id        VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     business_no        VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     title              VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     initiator_id       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     initiator_name     VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     current_node_code  VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     current_node_name  VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     variable           TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_status        VARCHAR(32)  NOT NULL DEFAULT 'RUNNING',
+-- [SKIPPED-CLEANUP-REBUILD]     activity_status    SMALLINT     NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     start_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     end_at             TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     duration_ms        BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64)
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE  pmis_flow_instance IS '流程实例表: 每次启动流程生成一条实例记录,记录审批全过程';
 COMMENT ON COLUMN pmis_flow_instance.flow_code IS '流程编码';
@@ -4575,44 +5877,44 @@ CREATE INDEX        idx_flow_instance_start       ON pmis_flow_instance(start_at
 --    实例推进过程中产生的待办切片
 -- -----------------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_task;
-CREATE TABLE pmis_flow_task (
-    id                 BIGSERIAL    PRIMARY KEY,
-    instance_id        BIGINT       NOT NULL,
-    flow_code          VARCHAR(64)  NOT NULL,
-    definition_id      BIGINT       NOT NULL,
-    node_code          VARCHAR(64)  NOT NULL,
-    node_name          VARCHAR(128),
-    node_type          SMALLINT     NOT NULL,
-    business_type      VARCHAR(64),
-    business_id        VARCHAR(64),
-    business_no        VARCHAR(128),
-    flow_name          VARCHAR(128),
-    title              VARCHAR(256),
-    assignor_id        BIGINT,
-    assignor_name      VARCHAR(64),
-    assignee_type      VARCHAR(16)  NOT NULL DEFAULT 'USER',
-    assignee_id        VARCHAR(64)  NOT NULL,
-    assignee_name      VARCHAR(64),
-    permission_flag    VARCHAR(512),
-    perform_type       VARCHAR(16)  NOT NULL DEFAULT 'OR',
-    approve_count      INT          NOT NULL DEFAULT 1,
-    approve_finished   INT          NOT NULL DEFAULT 0,
-    task_status        VARCHAR(32)  NOT NULL DEFAULT 'PENDING',
-    comment            TEXT,
-    status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    claim_at           TIMESTAMP,
-    finish_at          TIMESTAMP,
-    duration_ms        BIGINT,
-    due_at             TIMESTAMP,
-    priority           INT          NOT NULL DEFAULT 50,
-    deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_task (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     instance_id        BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     definition_id      BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     node_type          SMALLINT     NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     business_type      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     business_id        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     business_no        VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     flow_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     title              VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     assignor_id        BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     assignor_name      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     assignee_type      VARCHAR(16)  NOT NULL DEFAULT 'USER',
+-- [SKIPPED-CLEANUP-REBUILD]     assignee_id        VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     assignee_name      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     permission_flag    VARCHAR(512),
+-- [SKIPPED-CLEANUP-REBUILD]     perform_type       VARCHAR(16)  NOT NULL DEFAULT 'OR',
+-- [SKIPPED-CLEANUP-REBUILD]     approve_count      INT          NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     approve_finished   INT          NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     task_status        VARCHAR(32)  NOT NULL DEFAULT 'PENDING',
+-- [SKIPPED-CLEANUP-REBUILD]     comment            TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     claim_at           TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     finish_at          TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     duration_ms        BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     due_at             TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     priority           INT          NOT NULL DEFAULT 50,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64)
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE  pmis_flow_task IS '待办任务表: 实例推进过程中产生的待办切片,办理人待办箱核心表';
 COMMENT ON COLUMN pmis_flow_task.instance_id IS '所属流程实例 ID';
@@ -4659,40 +5961,40 @@ CREATE INDEX idx_pft_due        ON pmis_flow_task(due_at) WHERE task_status = 'P
 --    已完成任务的归档，避免主表膨胀
 -- -----------------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_his_task;
-CREATE TABLE pmis_flow_his_task (
-    id                 BIGSERIAL    PRIMARY KEY,
-    instance_id        BIGINT       NOT NULL,
-    task_id            BIGINT       NOT NULL,
-    flow_code          VARCHAR(64)  NOT NULL,
-    definition_id      BIGINT       NOT NULL,
-    node_code          VARCHAR(64)  NOT NULL,
-    node_name          VARCHAR(128),
-    node_type          SMALLINT     NOT NULL,
-    business_type      VARCHAR(64),
-    business_id        VARCHAR(64),
-    business_no        VARCHAR(128),
-    flow_name          VARCHAR(128),
-    title              VARCHAR(256),
-    assignee_type      VARCHAR(16)  NOT NULL,
-    assignee_id        VARCHAR(64)  NOT NULL,
-    assignee_name      VARCHAR(64),
-    perform_type       VARCHAR(16)  NOT NULL,
-    approve_count      INT          NOT NULL DEFAULT 1,
-    approve_finished   INT          NOT NULL DEFAULT 0,
-    task_status        VARCHAR(32)  NOT NULL,
-    comment            TEXT,
-    status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    claim_at           TIMESTAMP,
-    finish_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    duration_ms        BIGINT,
-    deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_his_task (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     instance_id        BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     task_id            BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     definition_id      BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     node_type          SMALLINT     NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     business_type      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     business_id        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     business_no        VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     flow_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     title              VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     assignee_type      VARCHAR(16)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     assignee_id        VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     assignee_name      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     perform_type       VARCHAR(16)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     approve_count      INT          NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     approve_finished   INT          NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     task_status        VARCHAR(32)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     comment            TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     claim_at           TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     finish_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     duration_ms        BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64)
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE  pmis_flow_his_task IS '历史任务表: 已完成任务的归档,避免主表膨胀,审批历史追溯';
 COMMENT ON COLUMN pmis_flow_his_task.instance_id IS '所属流程实例 ID';
@@ -4732,26 +6034,26 @@ CREATE INDEX idx_pfht_tenant     ON pmis_flow_his_task(tenant_id);
 --    任务多办理人扩展（一个 task 可挂多个用户）
 -- -----------------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_user;
-CREATE TABLE pmis_flow_user (
-    id                 BIGSERIAL    PRIMARY KEY,
-    task_id            BIGINT       NOT NULL,
-    instance_id        BIGINT       NOT NULL,
-    node_code          VARCHAR(64)  NOT NULL,
-    user_type          VARCHAR(16)  NOT NULL,
-    user_id            VARCHAR(64)  NOT NULL,
-    user_name          VARCHAR(64),
-    processed          SMALLINT     NOT NULL DEFAULT 0,
-    process_at         TIMESTAMP,
-    comment            TEXT,
-    status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_user (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     task_id            BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     instance_id        BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     user_type          VARCHAR(16)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     user_id            VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     user_name          VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     processed          SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     process_at         TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     comment            TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64)
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE  pmis_flow_user IS '流程用户表: 会签多办理人,一个 task 可挂多个用户';
 COMMENT ON COLUMN pmis_flow_user.task_id IS '所属任务 ID';
@@ -4792,6 +6094,270 @@ VALUES
      'PMIS 通用请假：申请人 → 直属上级 → 人事', 'ENABLED', 1, 'init_v1', 0, 0)
 ON CONFLICT (flow_code, version, tenant_id) WHERE deleted = 0 DO NOTHING;
 
+
+-- [AUTO-MIGRATION] pmis_flow_definition: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_definition') THEN
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS flow_name VARCHAR(128) NOT NULL;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS category VARCHAR(64);
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS version VARCHAR(20)  NOT NULL DEFAULT '1.0';
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS model_value VARCHAR(40)  NOT NULL DEFAULT 'CLASSICS';
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS form_custom CHAR(1)      NOT NULL DEFAULT 'N';
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS form_path VARCHAR(256);
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS activity_status SMALLINT     NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS is_publish SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS listener_type VARCHAR(64);
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS listener_path VARCHAR(512);
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS ext VARCHAR(1024);
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS description VARCHAR(512);
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_definition ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_flow_node: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_node') THEN
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS definition_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS node_type SMALLINT     NOT NULL;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS node_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS node_name VARCHAR(128) NOT NULL;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS permission_flag VARCHAR(512);
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS skip_any_node VARCHAR(64);
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS coordinate VARCHAR(64);
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS skip_list TEXT;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS ext VARCHAR(1024);
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_node ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_flow_skip: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_skip') THEN
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS definition_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS skip_name VARCHAR(128);
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS skip_type VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS coordinate VARCHAR(64);
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS skip_condition VARCHAR(512);
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS next_node_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS next_node_type SMALLINT;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS coordinate_next VARCHAR(64);
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS skip_list TEXT;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_skip ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_flow_instance: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_instance') THEN
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS flow_name VARCHAR(128);
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS definition_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS flow_version VARCHAR(20)  NOT NULL DEFAULT '1.0';
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS business_type VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS business_id VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS business_no VARCHAR(128);
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS title VARCHAR(256);
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS initiator_id BIGINT;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS initiator_name VARCHAR(64);
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS current_node_code VARCHAR(64);
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS current_node_name VARCHAR(128);
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS variable TEXT;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS flow_status VARCHAR(32)  NOT NULL DEFAULT 'RUNNING';
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS activity_status SMALLINT     NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS start_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS end_at TIMESTAMP;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS duration_ms BIGINT;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_instance ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_flow_task: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_task') THEN
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS instance_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS definition_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS node_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS node_name VARCHAR(128);
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS node_type SMALLINT     NOT NULL;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS business_type VARCHAR(64);
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS business_id VARCHAR(64);
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS business_no VARCHAR(128);
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS flow_name VARCHAR(128);
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS title VARCHAR(256);
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS assignor_id BIGINT;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS assignor_name VARCHAR(64);
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS assignee_type VARCHAR(16)  NOT NULL DEFAULT 'USER';
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS assignee_id VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS assignee_name VARCHAR(64);
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS permission_flag VARCHAR(512);
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS perform_type VARCHAR(16)  NOT NULL DEFAULT 'OR';
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS approve_count INT          NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS approve_finished INT          NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS task_status VARCHAR(32)  NOT NULL DEFAULT 'PENDING';
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS comment TEXT;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS claim_at TIMESTAMP;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS finish_at TIMESTAMP;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS duration_ms BIGINT;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS due_at TIMESTAMP;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS priority INT          NOT NULL DEFAULT 50;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_flow_his_task: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_his_task') THEN
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS instance_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS task_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS definition_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS node_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS node_name VARCHAR(128);
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS node_type SMALLINT     NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS business_type VARCHAR(64);
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS business_id VARCHAR(64);
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS business_no VARCHAR(128);
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS flow_name VARCHAR(128);
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS title VARCHAR(256);
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignee_type VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignee_id VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignee_name VARCHAR(64);
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS perform_type VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS approve_count INT          NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS approve_finished INT          NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS task_status VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS comment TEXT;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS claim_at TIMESTAMP;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS finish_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS duration_ms BIGINT;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_flow_user: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_user') THEN
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS task_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS instance_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS node_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS user_type VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS user_id VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS user_name VARCHAR(64);
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS processed SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS process_at TIMESTAMP;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS comment TEXT;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_user ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_023__init_pmis_flow_engine.sql
 -- ====================================================================
@@ -4889,31 +6455,31 @@ ALTER TABLE pmis_ops_ticket
 --    记录流程全生命周期的操作轨迹：谁在何时对哪个实例/任务做了什么操作
 -- -----------------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_audit_log;
-CREATE TABLE pmis_flow_audit_log (
-    id                 BIGSERIAL    PRIMARY KEY,
-    instance_id        BIGINT       NOT NULL,
-    task_id            BIGINT,
-    flow_code          VARCHAR(64)  NOT NULL,
-    business_type      VARCHAR(64),
-    business_id        VARCHAR(64),
-    node_code          VARCHAR(64),
-    node_name          VARCHAR(128),
-    action             VARCHAR(32)  NOT NULL,
-    operator_id        BIGINT,
-    operator_name      VARCHAR(64),
-    target_id          BIGINT,
-    target_name        VARCHAR(64),
-    comment            TEXT,
-    operated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0,
-    tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_audit_log (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     instance_id        BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     task_id            BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     business_type      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     business_id        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     node_code          VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     node_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     action             VARCHAR(32)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     operator_id        BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     operator_name      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     target_id          BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     target_name        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     comment            TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     operated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     created_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64)
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE  pmis_flow_audit_log IS '流程审计日志表: 记录流程全生命周期的操作轨迹(谁在何时对哪个实例/任务做了什么操作)';
 COMMENT ON COLUMN pmis_flow_audit_log.instance_id IS '流程实例 ID';
@@ -4943,6 +6509,42 @@ CREATE INDEX idx_pfal_action     ON pmis_flow_audit_log(action);
 CREATE INDEX idx_pfal_operated   ON pmis_flow_audit_log(operated_at);
 CREATE INDEX idx_pfal_tenant     ON pmis_flow_audit_log(tenant_id);
 
+
+-- [AUTO-MIGRATION] pmis_flow_audit_log: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_audit_log') THEN
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS instance_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS task_id BIGINT;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS business_type VARCHAR(64);
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS business_id VARCHAR(64);
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS node_code VARCHAR(64);
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS node_name VARCHAR(128);
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS action VARCHAR(32)  NOT NULL;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS operator_id BIGINT;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS operator_name VARCHAR(64);
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS target_id BIGINT;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS target_name VARCHAR(64);
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS comment TEXT;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS operated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS status VARCHAR(16)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_audit_log ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_025__add_pmis_flow_audit_log.sql
 -- ====================================================================
@@ -4967,30 +6569,30 @@ CREATE INDEX idx_pfal_tenant     ON pmis_flow_audit_log(tenant_id);
 -- 1. 抄送主表
 -- -------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_cc;
-CREATE TABLE pmis_flow_cc (
-    id                 BIGSERIAL PRIMARY KEY,
-    tenant_id          BIGINT       NOT NULL,
-    instance_id        BIGINT       NOT NULL,
-    task_id            BIGINT,
-    node_code          VARCHAR(64)  NOT NULL,
-    node_name          VARCHAR(128),
-    flow_code          VARCHAR(64)  NOT NULL,
-    flow_name          VARCHAR(128),
-    business_key       VARCHAR(128),
-    cc_user_id         BIGINT       NOT NULL,
-    cc_user_name       VARCHAR(64),
-    cc_type            VARCHAR(16)  NOT NULL DEFAULT 'CC_NODE',
-    trigger_user_id    BIGINT,
-    trigger_user_name  VARCHAR(64),
-    title              VARCHAR(255),
-    content            TEXT,
-    read_status        VARCHAR(16)  NOT NULL DEFAULT 'UNREAD',
-    read_at            TIMESTAMP,
-    provider_trace_id  VARCHAR(64),
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_cc (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     instance_id        BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     task_id            BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     node_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     business_key       VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     cc_user_id         BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     cc_user_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     cc_type            VARCHAR(16)  NOT NULL DEFAULT 'CC_NODE',
+-- [SKIPPED-CLEANUP-REBUILD]     trigger_user_id    BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     trigger_user_name  VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     title              VARCHAR(255),
+-- [SKIPPED-CLEANUP-REBUILD]     content            TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     read_status        VARCHAR(16)  NOT NULL DEFAULT 'UNREAD',
+-- [SKIPPED-CLEANUP-REBUILD]     read_at            TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_flow_cc IS '流程抄送记录 - 抄送中心查询主体（对标钉钉/飞书）';
 COMMENT ON COLUMN pmis_flow_cc.tenant_id IS '租户 ID（多租户隔离）';
@@ -5030,19 +6632,19 @@ CREATE INDEX idx_pmis_flow_cc_created
 -- 2. 抄送触发配置表（cc 配置由用户/系统预置，无需触发时由节点类型决定）
 -- -------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_cc_rule;
-CREATE TABLE pmis_flow_cc_rule (
-    id                 BIGSERIAL PRIMARY KEY,
-    tenant_id          BIGINT       NOT NULL,
-    flow_code          VARCHAR(64)  NOT NULL,
-    node_code          VARCHAR(64)  NOT NULL,
-    rule_type          VARCHAR(16)  NOT NULL,
-    rule_target        VARCHAR(255) NOT NULL,
-    enabled            SMALLINT     NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64),
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_cc_rule (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     rule_type          VARCHAR(16)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     rule_target        VARCHAR(255) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     enabled            SMALLINT     NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_flow_cc_rule IS '流程抄送规则配置 - 自动抄送规则（如：变更金额>1万自动抄送 CEO）';
 COMMENT ON COLUMN pmis_flow_cc_rule.rule_type IS '规则类型：USER/ROLE/DEPT/SPEL';
@@ -5053,6 +6655,65 @@ CREATE INDEX idx_pmis_flow_cc_rule_tenant
     ON pmis_flow_cc_rule (tenant_id, flow_code, node_code, deleted)
     WHERE deleted = 0;
 
+
+-- [AUTO-MIGRATION] pmis_flow_cc: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_cc') THEN
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS instance_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS task_id BIGINT;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS node_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS node_name VARCHAR(128);
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS flow_name VARCHAR(128);
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS business_key VARCHAR(128);
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS cc_user_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS cc_user_name VARCHAR(64);
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS cc_type VARCHAR(16)  NOT NULL DEFAULT 'CC_NODE';
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS trigger_user_id BIGINT;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS trigger_user_name VARCHAR(64);
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS title VARCHAR(255);
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS content TEXT;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS read_status VARCHAR(16)  NOT NULL DEFAULT 'UNREAD';
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS read_at TIMESTAMP;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_cc ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_flow_cc_rule: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_cc_rule') THEN
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS node_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS rule_type VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS rule_target VARCHAR(255) NOT NULL;
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS enabled SMALLINT     NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_cc_rule ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_026__add_pmis_flow_cc.sql
 -- ====================================================================
@@ -5190,33 +6851,33 @@ COMMENT ON COLUMN pmis_flow_task.version IS 'GAP-P1: 乐观锁版本号 — 会�
 -- 1. 定时器实例表
 -- -------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_timer;
-CREATE TABLE pmis_flow_timer (
-    id                 BIGSERIAL PRIMARY KEY,
-    tenant_id          BIGINT       NOT NULL,
-    instance_id        BIGINT       NOT NULL,
-    definition_id      BIGINT       NOT NULL,
-    flow_code          VARCHAR(64)  NOT NULL,
-    node_code          VARCHAR(64)  NOT NULL,
-    node_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_timer (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     instance_id        BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     definition_id      BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_name          VARCHAR(128),
     -- 中间定时器 INTERMEDIATE / 边界定时器 BOUNDARY
-    timer_type         VARCHAR(16)  NOT NULL DEFAULT 'INTERMEDIATE',
+-- [SKIPPED-CLEANUP-REBUILD]     timer_type         VARCHAR(16)  NOT NULL DEFAULT 'INTERMEDIATE',
     -- 边界定时器关联的 userTask
-    boundary_task_id   BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     boundary_task_id   BIGINT,
     -- 触发时间
-    fire_at            TIMESTAMP    NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     fire_at            TIMESTAMP    NOT NULL,
     -- CRON 表达式（可空，仅用于循环定时器）
-    cycle              VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     cycle              VARCHAR(64),
     -- 状态: PENDING / FIRED / CANCELLED
-    timer_status       VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
+-- [SKIPPED-CLEANUP-REBUILD]     timer_status       VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
     -- 触发时间
-    fired_at           TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     fired_at           TIMESTAMP,
     -- 取消原因（userTask 完成时关闭）
-    cancel_reason      VARCHAR(255),
-    provider_trace_id  VARCHAR(64),
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD]     cancel_reason      VARCHAR(255),
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_flow_timer IS '工作流定时器 - 中间定时器/边界定时器调度表';
 COMMENT ON COLUMN pmis_flow_timer.timer_type IS 'INTERMEDIATE 中间定时器 / BOUNDARY 边界定时器';
@@ -5262,6 +6923,37 @@ VALUES (
     1
 ) ON CONFLICT (job_key) DO NOTHING;
 
+
+-- [AUTO-MIGRATION] pmis_flow_timer: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_timer') THEN
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS instance_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS definition_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS node_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS node_name VARCHAR(128);
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS timer_type VARCHAR(16)  NOT NULL DEFAULT 'INTERMEDIATE';
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS boundary_task_id BIGINT;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS fire_at TIMESTAMP    NOT NULL;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS cycle VARCHAR(64);
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS timer_status VARCHAR(16)  NOT NULL DEFAULT 'PENDING';
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS fired_at TIMESTAMP;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS cancel_reason VARCHAR(255);
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_timer ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_029__add_pmis_flow_timer.sql
 -- ====================================================================
@@ -5289,31 +6981,31 @@ VALUES (
 -- 1. 委派代理主表
 -- -------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_delegate_auth;
-CREATE TABLE pmis_flow_delegate_auth (
-    id                    BIGSERIAL PRIMARY KEY,
-    tenant_id             BIGINT       NOT NULL,
-    owner_user_id         BIGINT       NOT NULL,
-    owner_user_name       VARCHAR(64),
-    delegate_user_id      BIGINT       NOT NULL,
-    delegate_user_name    VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_delegate_auth (
+-- [SKIPPED-CLEANUP-REBUILD]     id                    BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id             BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     owner_user_id         BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     owner_user_name       VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     delegate_user_id      BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     delegate_user_name    VARCHAR(64),
     -- 匹配模式: ALL/FLOW/FLOW_NODE/ROLE
-    scope_type            VARCHAR(16)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     scope_type            VARCHAR(16)  NOT NULL,
     -- 流程编码（scopeType=FLOW/FLOW_NODE 时必填）
-    flow_code             VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code             VARCHAR(64),
     -- 节点编码（scopeType=FLOW_NODE 时必填）
-    node_code             VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     node_code             VARCHAR(64),
     -- 角色编码（scopeType=ROLE 时必填）
-    role_code             VARCHAR(64),
-    start_time            TIMESTAMP    NOT NULL,
-    end_time              TIMESTAMP    NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     role_code             VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     start_time            TIMESTAMP    NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     end_time              TIMESTAMP    NOT NULL,
     -- 状态: ENABLED=启用 DISABLED=停用 EXPIRED=已过期 REVOKED=已撤回
-    auth_status           VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
-    reason                VARCHAR(255),
-    provider_trace_id     VARCHAR(64),
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD]     auth_status           VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
+-- [SKIPPED-CLEANUP-REBUILD]     reason                VARCHAR(255),
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id     VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted               SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_flow_delegate_auth IS '流程委派代理（长期授权）- 预置规则区间内任务自动转给被委派人';
 COMMENT ON COLUMN pmis_flow_delegate_auth.tenant_id IS '租户 ID';
@@ -5356,24 +7048,24 @@ CREATE INDEX idx_pmis_flow_delegate_auth_flow
 -- 2. 委派代理使用日志（审计追溯：谁在什么时间被代理处理了什么任务）
 -- -------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_delegate_log;
-CREATE TABLE pmis_flow_delegate_log (
-    id                 BIGSERIAL PRIMARY KEY,
-    tenant_id          BIGINT       NOT NULL,
-    auth_id            BIGINT       NOT NULL,
-    instance_id        BIGINT       NOT NULL,
-    task_id            BIGINT       NOT NULL,
-    node_code          VARCHAR(64),
-    owner_user_id      BIGINT       NOT NULL,
-    delegate_user_id   BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_delegate_log (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     auth_id            BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     instance_id        BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     task_id            BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     node_code          VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     owner_user_id      BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     delegate_user_id   BIGINT       NOT NULL,
     -- 操作类型: ACT=代理办理 VIEW=代理查看
-    op_type            VARCHAR(16)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     op_type            VARCHAR(16)  NOT NULL,
     -- 实际处理动作：PASS/REJECT/CLAIM/TRANSFER/...
-    action             VARCHAR(16),
-    comment            TEXT,
-    provider_trace_id  VARCHAR(64),
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0
-);
+-- [SKIPPED-CLEANUP-REBUILD]     action             VARCHAR(16),
+-- [SKIPPED-CLEANUP-REBUILD]     comment            TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     deleted            SMALLINT     NOT NULL DEFAULT 0
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_flow_delegate_log IS '流程委派代理使用日志 - 审计代理操作';
 COMMENT ON COLUMN pmis_flow_delegate_log.auth_id IS '关联的授权 ID';
@@ -5392,6 +7084,64 @@ CREATE INDEX idx_pmis_flow_delegate_log_delegate
     ON pmis_flow_delegate_log (tenant_id, delegate_user_id, created_at DESC)
     WHERE deleted = 0;
 
+
+-- [AUTO-MIGRATION] pmis_flow_delegate_auth: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_delegate_auth') THEN
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS owner_user_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS owner_user_name VARCHAR(64);
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS delegate_user_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS delegate_user_name VARCHAR(64);
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS scope_type VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64);
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS node_code VARCHAR(64);
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS role_code VARCHAR(64);
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS start_time TIMESTAMP    NOT NULL;
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS end_time TIMESTAMP    NOT NULL;
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS auth_status VARCHAR(16)  NOT NULL DEFAULT 'ENABLED';
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS reason VARCHAR(255);
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_delegate_auth ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_flow_delegate_log: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_delegate_log') THEN
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS auth_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS instance_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS task_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS node_code VARCHAR(64);
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS owner_user_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS delegate_user_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS op_type VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS action VARCHAR(16);
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS comment TEXT;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_delegate_log ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_030__add_pmis_flow_delegate_auth.sql
 -- ====================================================================
@@ -5722,34 +7472,34 @@ CREATE INDEX idx_export_status ON pmis_export_record (status) WHERE completed_at
 
 -- 归档实例表（结构与 pmis_flow_instance 一致 + archived_at 字段）
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_his_instance;
-CREATE TABLE pmis_flow_his_instance (
-    id                 BIGSERIAL    PRIMARY KEY,
-    flow_code          VARCHAR(64)  NOT NULL,
-    flow_name          VARCHAR(128),
-    definition_id      BIGINT,
-    flow_version       VARCHAR(20),
-    business_type      VARCHAR(64),
-    business_id        VARCHAR(64),
-    business_no        VARCHAR(64),
-    title              VARCHAR(256),
-    initiator_id       BIGINT,
-    initiator_name     VARCHAR(64),
-    current_node_code  VARCHAR(64),
-    current_node_name  VARCHAR(128),
-    variable           TEXT,
-    flow_status        VARCHAR(16)  NOT NULL,
-    activity_status    SMALLINT     NOT NULL DEFAULT 1,
-    start_at           TIMESTAMP,
-    end_at             TIMESTAMP,
-    duration_ms        BIGINT,
-    created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL,
-    updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL,
-    archived_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_his_instance (
+-- [SKIPPED-CLEANUP-REBUILD]     id                 BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_code          VARCHAR(64)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_name          VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     definition_id      BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_version       VARCHAR(20),
+-- [SKIPPED-CLEANUP-REBUILD]     business_type      VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     business_id        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     business_no        VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     title              VARCHAR(256),
+-- [SKIPPED-CLEANUP-REBUILD]     initiator_id       BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     initiator_name     VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     current_node_code  VARCHAR(64),
+-- [SKIPPED-CLEANUP-REBUILD]     current_node_name  VARCHAR(128),
+-- [SKIPPED-CLEANUP-REBUILD]     variable           TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     flow_status        VARCHAR(16)  NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     activity_status    SMALLINT     NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     start_at           TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     end_at             TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     duration_ms        BIGINT,
+-- [SKIPPED-CLEANUP-REBUILD]     created_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     created_at         TIMESTAMP    NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_by         BIGINT       NOT NULL DEFAULT 0,
+-- [SKIPPED-CLEANUP-REBUILD]     updated_at         TIMESTAMP    NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     archived_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+-- [SKIPPED-CLEANUP-REBUILD]     tenant_id          BIGINT       NOT NULL DEFAULT 1,
+-- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id  VARCHAR(64)
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE  pmis_flow_his_instance IS '流程实例归档表: 已完成且超过 retention 天数的实例迁移至此';
 COMMENT ON COLUMN pmis_flow_his_instance.archived_at IS '归档时间';
@@ -5764,13 +7514,13 @@ CREATE INDEX idx_pfhi_archived_at ON pmis_flow_his_instance(archived_at);
 
 -- 归档变量表（用于归档 instance 时同步迁移 variable 字段中的大 JSON）
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_his_variable;
-CREATE TABLE pmis_flow_his_variable (
-    id            BIGSERIAL    PRIMARY KEY,
-    instance_id   BIGINT       NOT NULL,
-    var_key       VARCHAR(128) NOT NULL,
-    var_value     TEXT,
-    archived_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
+-- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_flow_his_variable (
+-- [SKIPPED-CLEANUP-REBUILD]     id            BIGSERIAL    PRIMARY KEY,
+-- [SKIPPED-CLEANUP-REBUILD]     instance_id   BIGINT       NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     var_key       VARCHAR(128) NOT NULL,
+-- [SKIPPED-CLEANUP-REBUILD]     var_value     TEXT,
+-- [SKIPPED-CLEANUP-REBUILD]     archived_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+-- [SKIPPED-CLEANUP-REBUILD] );
 
 COMMENT ON TABLE pmis_flow_his_variable IS '流程变量归档表: instance.variable JSON 拆分到独立行';
 
@@ -5812,6 +7562,63 @@ VALUES
      1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
 ON CONFLICT (job_key) DO NOTHING;
 
+
+-- [AUTO-MIGRATION] pmis_flow_his_instance: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_his_instance') THEN
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS flow_code VARCHAR(64)  NOT NULL;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS flow_name VARCHAR(128);
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS definition_id BIGINT;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS flow_version VARCHAR(20);
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS business_type VARCHAR(64);
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS business_id VARCHAR(64);
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS business_no VARCHAR(64);
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS title VARCHAR(256);
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS initiator_id BIGINT;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS initiator_name VARCHAR(64);
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS current_node_code VARCHAR(64);
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS current_node_name VARCHAR(128);
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS variable TEXT;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS flow_status VARCHAR(16)  NOT NULL;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS activity_status SMALLINT     NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS start_at TIMESTAMP;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS end_at TIMESTAMP;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS duration_ms BIGINT;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS created_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS updated_by BIGINT       NOT NULL DEFAULT 0;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
+        ALTER TABLE pmis_flow_his_instance ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64);
+    END IF;
+END $$;
+
+-- [AUTO-MIGRATION] pmis_flow_his_variable: rebuild pattern detected.
+--   The V1 base table was created by an earlier Flyway
+--   migration; the V2 schema (this file) wanted to DROP+
+--   RECREATE it. We skipped the destructive DROP/CREATE,
+--   so we now apply only the column additions needed to
+--   bring the V1 table up to the V2 column list.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+                WHERE table_schema = 'public' AND table_name = 'pmis_flow_his_variable') THEN
+        ALTER TABLE pmis_flow_his_variable ADD COLUMN IF NOT EXISTS id BIGSERIAL    PRIMARY KEY;
+        ALTER TABLE pmis_flow_his_variable ADD COLUMN IF NOT EXISTS instance_id BIGINT       NOT NULL;
+        ALTER TABLE pmis_flow_his_variable ADD COLUMN IF NOT EXISTS var_key VARCHAR(128) NOT NULL;
+        ALTER TABLE pmis_flow_his_variable ADD COLUMN IF NOT EXISTS var_value TEXT;
+        ALTER TABLE pmis_flow_his_variable ADD COLUMN IF NOT EXISTS archived_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
+    END IF;
+END $$;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_037__init_pmis_flow_archive.sql
 -- ====================================================================

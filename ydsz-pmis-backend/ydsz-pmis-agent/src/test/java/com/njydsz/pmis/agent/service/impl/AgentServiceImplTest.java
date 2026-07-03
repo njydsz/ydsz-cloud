@@ -20,7 +20,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -49,7 +48,6 @@ class AgentServiceImplTest {
     @Mock
     private AgentPredictionMapper predictionMapper;
 
-    @InjectMocks
     private AgentServiceImpl agentService;
 
     private MockedStatic<TenantContext> tenantContextMock;
@@ -64,6 +62,8 @@ class AgentServiceImplTest {
         traceIdUtilMock.when(TraceIdUtil::get).thenReturn("test-trace-id");
 
         when(riskWarningAgent.type()).thenReturn(AgentType.RISK_WARNING);
+
+        agentService = new AgentServiceImpl(List.of(riskWarningAgent), predictionMapper);
     }
 
     @AfterEach
@@ -96,7 +96,7 @@ class AgentServiceImplTest {
     @DisplayName("run - 请求为 null 时抛出 BizException")
     void run_shouldThrowBizExceptionWhenRequestIsNull() {
         BizException ex = assertThrows(BizException.class, () -> agentService.run(null));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     @Test
@@ -105,7 +105,7 @@ class AgentServiceImplTest {
         AgentRunRequestDTO req = buildRequest("INVALID_TYPE", 100L, "PROJECT");
 
         BizException ex = assertThrows(BizException.class, () -> agentService.run(req));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     @Test
@@ -117,7 +117,7 @@ class AgentServiceImplTest {
                 .thenThrow(new RuntimeException("Agent execution error"));
 
         BizException ex = assertThrows(BizException.class, () -> agentService.run(req));
-        assertEquals(BizErrorCode.INTERNAL_ERROR, ex.getCode());
+        assertEquals(BizErrorCode.INTERNAL_ERROR.getCode(), ex.getCode());
 
         ArgumentCaptor<AgentPredictionDO> captor = ArgumentCaptor.forClass(AgentPredictionDO.class);
         verify(predictionMapper, atLeastOnce()).updateById(captor.capture());
@@ -165,7 +165,7 @@ class AgentServiceImplTest {
 
         BizException ex = assertThrows(BizException.class,
                 () -> agentService.executeInMemory("INVALID", ctx));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     // ==================== getById ====================
@@ -193,7 +193,7 @@ class AgentServiceImplTest {
         when(predictionMapper.selectById(999L)).thenReturn(null);
 
         BizException ex = assertThrows(BizException.class, () -> agentService.getById(999L));
-        assertEquals(BizErrorCode.NOT_FOUND, ex.getCode());
+        assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
     }
 
     // ==================== page ====================

@@ -1,6 +1,7 @@
 /**
  * @file user.test.ts
  * @description 测试 User Store 的登录、登出、权限校验逻辑
+ * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'

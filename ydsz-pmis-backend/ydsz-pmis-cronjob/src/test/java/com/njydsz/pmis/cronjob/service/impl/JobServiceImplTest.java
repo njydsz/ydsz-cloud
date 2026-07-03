@@ -15,20 +15,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -40,6 +35,7 @@ import static org.mockito.Mockito.*;
  * @author ydsz-pmis-team
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @DisplayName("JobServiceImpl 单元测试")
 class JobServiceImplTest {
 
@@ -108,7 +104,7 @@ class JobServiceImplTest {
         when(jobMapper.selectByJobKey("dup-key")).thenReturn(new JobDO());
 
         BizException ex = assertThrows(BizException.class, () -> jobService.create(job));
-        assertEquals(BizErrorCode.DUPLICATE_KEY, ex.getCode());
+        assertEquals(BizErrorCode.DUPLICATE_KEY.getCode(), ex.getCode());
     }
 
     @Test
@@ -117,7 +113,7 @@ class JobServiceImplTest {
         JobDO job = buildJob("", "testHandler", "0 0 8 * * ?");
 
         BizException ex = assertThrows(BizException.class, () -> jobService.create(job));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     @Test
@@ -126,7 +122,7 @@ class JobServiceImplTest {
         JobDO job = buildJob("test-job", "", "0 0 8 * * ?");
 
         BizException ex = assertThrows(BizException.class, () -> jobService.create(job));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     @Test
@@ -135,7 +131,7 @@ class JobServiceImplTest {
         JobDO job = buildJob("test-job", "testHandler", "");
 
         BizException ex = assertThrows(BizException.class, () -> jobService.create(job));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     @Test
@@ -144,7 +140,7 @@ class JobServiceImplTest {
         JobDO job = buildJob("test-job", "testHandler", "invalid-cron");
 
         BizException ex = assertThrows(BizException.class, () -> jobService.create(job));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     // ==================== getById ====================
@@ -170,7 +166,7 @@ class JobServiceImplTest {
         when(jobMapper.selectById(999L)).thenReturn(null);
 
         BizException ex = assertThrows(BizException.class, () -> jobService.getById(999L));
-        assertEquals(BizErrorCode.NOT_FOUND, ex.getCode());
+        assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
     }
 
     // ==================== pause ====================
@@ -196,7 +192,7 @@ class JobServiceImplTest {
         when(jobMapper.selectById(999L)).thenReturn(null);
 
         BizException ex = assertThrows(BizException.class, () -> jobService.pause(999L));
-        assertEquals(BizErrorCode.NOT_FOUND, ex.getCode());
+        assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
     }
 
     // ==================== resume ====================
@@ -264,7 +260,7 @@ class JobServiceImplTest {
         when(jobMapper.selectById(999L)).thenReturn(null);
 
         BizException ex = assertThrows(BizException.class, () -> jobService.delete(999L));
-        assertEquals(BizErrorCode.NOT_FOUND, ex.getCode());
+        assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
     }
 
     // ==================== page ====================
@@ -341,7 +337,7 @@ class JobServiceImplTest {
         when(jobMapper.selectById(999L)).thenReturn(null);
 
         BizException ex = assertThrows(BizException.class, () -> jobService.update(job));
-        assertEquals(BizErrorCode.NOT_FOUND, ex.getCode());
+        assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
     }
 
     @Test
@@ -350,7 +346,7 @@ class JobServiceImplTest {
         JobDO job = new JobDO();
 
         BizException ex = assertThrows(BizException.class, () -> jobService.update(job));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     // ==================== helper ====================

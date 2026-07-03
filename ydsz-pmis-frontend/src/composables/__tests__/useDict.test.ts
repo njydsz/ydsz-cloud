@@ -1,6 +1,7 @@
 /**
  * @file useDict.test.ts
  * @description 测试 useDict 字典 composable 与工具函数
+ * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { setActivePinia, createPinia } from 'pinia'
@@ -40,7 +41,6 @@ describe('useDict', () => {
     const { items, loading } = useDict('test_type', true)
 
     expect(mockLoadDict).toHaveBeenCalledWith('test_type')
-    // 等待异步加载完成
     await vi.waitFor(() => {
       expect(loading.value).toBe(false)
     })

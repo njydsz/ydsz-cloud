@@ -10,10 +10,10 @@ import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -43,8 +43,16 @@ class AgentOrchestrationServiceImplTest {
     @Mock
     private AgentCoordinator coordinator;
 
-    @InjectMocks
     private AgentOrchestrationServiceImpl orchestrationService;
+
+    @BeforeEach
+    void setUp() {
+        when(riskWarningAgent.type()).thenReturn(AgentType.RISK_WARNING);
+        when(profitForecastAgent.type()).thenReturn(AgentType.PROFIT_FORECAST);
+
+        orchestrationService = new AgentOrchestrationServiceImpl(
+                List.of(riskWarningAgent, profitForecastAgent), coordinator);
+    }
 
     // ==================== orchestrate ====================
 
@@ -53,15 +61,12 @@ class AgentOrchestrationServiceImplTest {
     void orchestrate_shouldThrowBizExceptionWhenRequestIsNull() {
         BizException ex = assertThrows(BizException.class,
                 () -> orchestrationService.orchestrate(null));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     @Test
     @DisplayName("orchestrate - 正常编排并返回结果")
     void orchestrate_shouldReturnOrchestrationResult() {
-        when(riskWarningAgent.type()).thenReturn(AgentType.RISK_WARNING);
-        when(profitForecastAgent.type()).thenReturn(AgentType.PROFIT_FORECAST);
-
         OrchestrationRequest req = buildRequest(List.of("RISK_WARNING", "PROFIT_FORECAST"));
         OrchestrationResult expectedResult = buildOrchestrationResult();
         when(coordinator.coordinate(any(OrchestrationRequest.class), anyMap())).thenReturn(expectedResult);
@@ -77,21 +82,16 @@ class AgentOrchestrationServiceImplTest {
     @Test
     @DisplayName("orchestrate - 请求的 Agent 类型无匹配时抛出 BizException")
     void orchestrate_shouldThrowBizExceptionWhenNoAgentMatched() {
-        when(riskWarningAgent.type()).thenReturn(AgentType.RISK_WARNING);
-        when(profitForecastAgent.type()).thenReturn(AgentType.PROFIT_FORECAST);
-
         OrchestrationRequest req = buildRequest(List.of("WIN_RATE_PREDICT", "TIMESHEET_ANOMALY"));
 
         BizException ex = assertThrows(BizException.class,
                 () -> orchestrationService.orchestrate(req));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     @Test
     @DisplayName("orchestrate - 部分 Agent 类型未注册时跳过并继续编排")
     void orchestrate_shouldSkipUnregisteredAgentTypes() {
-        when(riskWarningAgent.type()).thenReturn(AgentType.RISK_WARNING);
-
         OrchestrationRequest req = buildRequest(List.of("RISK_WARNING", "UNREGISTERED_TYPE"));
         OrchestrationResult expectedResult = buildOrchestrationResult();
         expectedResult.setAgentCount(1);
@@ -110,7 +110,7 @@ class AgentOrchestrationServiceImplTest {
 
         BizException ex = assertThrows(BizException.class,
                 () -> orchestrationService.orchestrate(req));
-        assertEquals(BizErrorCode.BAD_REQUEST, ex.getCode());
+        assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
     }
 
     // ==================== agentRegistry ====================
@@ -118,9 +118,6 @@ class AgentOrchestrationServiceImplTest {
     @Test
     @DisplayName("agentRegistry - 返回已注册 Agent 映射表")
     void agentRegistry_shouldReturnAgentMap() {
-        when(riskWarningAgent.type()).thenReturn(AgentType.RISK_WARNING);
-        when(profitForecastAgent.type()).thenReturn(AgentType.PROFIT_FORECAST);
-
         Map<String, Agent> registry = orchestrationService.agentRegistry();
 
         assertNotNull(registry);
