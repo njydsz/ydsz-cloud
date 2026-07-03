@@ -528,7 +528,8 @@ onBeforeUnmount(() => stopPolling())
   .kpi-row { margin-bottom: 16px; }
   .kpi-card {
     text-align: center;
-    .kpi-title { font-size: 12px; color: var(--el-text-color-secondary); }
+    /* H18.3 修复：KPI 标题改用 regular 色（#606266），满足 WCAG AA 对比度 4.5:1，原 secondary(#909399) 仅 3.5:1 */
+    .kpi-title { font-size: 12px; color: var(--el-text-color-regular); }
     .kpi-value { font-size: 22px; font-weight: 600; margin-top: 8px;
       &.money { color: var(--el-color-primary); }
     }

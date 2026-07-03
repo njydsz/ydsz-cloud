@@ -9,7 +9,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Version, VideoPlay, Refresh, Search, Files } from '@element-plus/icons-vue'
+import { CopyDocument, VideoPlay, Refresh, Search, Files } from '@element-plus/icons-vue'
 import FlowDesigner from '../components/FlowDesigner.vue'
 import BpmnDesigner from '../components/BpmnDesigner.vue'
 import {
@@ -43,7 +43,7 @@ async function loadDefinitions() {
   definitionLoading.value = true
   try {
     const res = await pageDefinitions({ pageNum: 1, pageSize: 200 })
-    definitionList.value = res.data?.records ?? []
+    definitionList.value = res.data?.data?.list ?? []
     if (definitionList.value.length > 0 && !selectedDefinitionId.value) {
       selectedDefinitionId.value = definitionList.value[0].id
       selectedDefinition.value = definitionList.value[0]
@@ -78,7 +78,7 @@ async function loadVersions() {
   versionLoading.value = true
   try {
     const res = await listVersions(selectedDefinitionId.value)
-    versionList.value = res.data ?? []
+    versionList.value = res.data?.data ?? []
   } catch (e) {
     ElMessage.error('加载版本列表失败')
   } finally {
@@ -132,7 +132,7 @@ async function doDiff() {
       diffV1.value,
       diffV2.value,
     )
-    diffData.value = res.data ?? null
+    diffData.value = res.data?.data ?? null
   } catch (e) {
     ElMessage.error('差异对比失败')
   } finally {
@@ -176,7 +176,7 @@ async function doSimulate() {
   simulateResult.value = null
   try {
     const res = await simulateFlow(simulateForm.flowCode, variables)
-    simulateResult.value = res.data ?? null
+    simulateResult.value = res.data?.data ?? null
   } catch (e: any) {
     ElMessage.error('模拟运行失败：' + (e?.message ?? '未知错误'))
   } finally {
@@ -224,7 +224,7 @@ async function loadTemplates() {
   templateLoading.value = true
   try {
     const res = await listFlowTemplates(templateCategory.value || undefined)
-    templateList.value = res.data ?? []
+    templateList.value = res.data?.data ?? []
   } catch {
     ElMessage.error('加载模板列表失败')
   } finally {
@@ -240,7 +240,7 @@ async function handleImportTemplate(tpl: FlowTemplateDTO) {
       { type: 'info' },
     )
     const res = await importFlowTemplate(tpl.templateCode)
-    ElMessage.success(`模板导入成功，新定义 ID: ${res.data}`)
+    ElMessage.success(`模板导入成功，新定义 ID: ${res.data?.data}`)
     templateDialog.value = false
     await loadDefinitions()
   } catch (e) {
@@ -345,7 +345,7 @@ onMounted(() => {
 
       <el-button :icon="Files" @click="openTemplateDialog">模板库</el-button>
       <el-button @click="openExportDialog">导出为模板</el-button>
-      <el-button :icon="Version" @click="openVersionDrawer">版本管理</el-button>
+      <el-button :icon="CopyDocument" @click="openVersionDrawer">版本管理</el-button>
       <el-button type="primary" :icon="VideoPlay" @click="openSimulateDialog">
         模拟运行
       </el-button>

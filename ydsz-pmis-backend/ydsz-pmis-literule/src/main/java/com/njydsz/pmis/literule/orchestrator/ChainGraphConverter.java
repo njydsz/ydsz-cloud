@@ -159,42 +159,99 @@ public final class ChainGraphConverter {
 
     /**
      * 提取 ELIF 链：多条件分支
+     *
+     * <p>P0-1 增强：通过 {@link RuleChain#getElifBranches()} 访问多分支条件列表，
+     * 抽取每个条件分支为画布节点，并通过 {@link ChainEdgeDTO.EdgeType#ELIF_BRANCH}
+     * 边连接，condition 字段携带条件表达式。
      */
     private static void extractElif(RuleChain chain, String parentId,
                                     AtomicInteger nodeSeq,
                                     List<ChainNodeDTO> nodes,
                                     List<ChainEdgeDTO> edges) {
-        // ELIF 的 elifBranches 不通过 getNodes() 暴露，这里通过公共字段无法获取
-        // 实际生产场景下需要在 RuleChain 中补充 getter；这里仅做骨架提取
-        // 为保持兼容，ELIF 链的子节点提取为空（前端可基于 metadata 自定义）
+        java.util.List<Map.Entry<String, RuleNode>> branches = chain.getElifBranches();
+        if (branches != null) {
+            for (Map.Entry<String, RuleNode> branch : branches) {
+                String nodeId = "node-" + nodeSeq.incrementAndGet();
+                ChainNodeDTO node = ruleNodeToDTO(branch.getValue(), nodeId, parentId);
+                nodes.add(node);
+                edges.add(ChainEdgeDTO.builder()
+                        .edgeId("edge-" + nodeSeq.incrementAndGet())
+                        .sourceNodeId(parentId)
+                        .targetNodeId(nodeId)
+                        .edgeType(ChainEdgeDTO.EdgeType.ELIF_BRANCH)
+                        .condition(branch.getKey())
+                        .label(branch.getKey())
+                        .build());
+            }
+        }
+        // 提取 ELSE 兜底分支
+        RuleNode elseNode = chain.getElseNode();
+        if (elseNode != null) {
+            String nodeId = "node-" + nodeSeq.incrementAndGet();
+            ChainNodeDTO node = ruleNodeToDTO(elseNode, nodeId, parentId);
+            // ELSE 节点用更显眼的 label
+            if (node.getLabel() == null || node.getLabel().equals("规则组")) {
+                node.setLabel("ELSE 兜底");
+            }
+            nodes.add(node);
+            edges.add(ChainEdgeDTO.builder()
+                    .edgeId("edge-" + nodeSeq.incrementAndGet())
+                    .sourceNodeId(parentId)
+                    .targetNodeId(nodeId)
+                    .edgeType(ChainEdgeDTO.EdgeType.DEFAULT_BRANCH)
+                    .label("ELSE")
+                    .build());
+        }
     }
 
     /**
      * 提取 SWITCH 链：分支选择
+     *
+     * <p>P0-1 增强：同时提取 defaultBranch 作为 DEFAULT_BRANCH 兜底分支。
      */
     private static void extractSwitch(RuleChain chain, String parentId,
                                       AtomicInteger nodeSeq,
                                       List<ChainNodeDTO> nodes,
                                       List<ChainEdgeDTO> edges) {
         Map<String, RuleNode> branchMap = chain.getBranchMap();
-        if (branchMap == null) return;
-        for (Map.Entry<String, RuleNode> entry : branchMap.entrySet()) {
+        if (branchMap != null) {
+            for (Map.Entry<String, RuleNode> entry : branchMap.entrySet()) {
+                String nodeId = "node-" + nodeSeq.incrementAndGet();
+                ChainNodeDTO node = ruleNodeToDTO(entry.getValue(), nodeId, parentId);
+                nodes.add(node);
+                edges.add(ChainEdgeDTO.builder()
+                        .edgeId("edge-" + nodeSeq.incrementAndGet())
+                        .sourceNodeId(parentId)
+                        .targetNodeId(nodeId)
+                        .edgeType(ChainEdgeDTO.EdgeType.SWITCH_BRANCH)
+                        .branchValue(entry.getKey())
+                        .label(entry.getKey())
+                        .build());
+            }
+        }
+        // 提取默认分支
+        RuleNode defaultNode = chain.getDefaultBranch();
+        if (defaultNode != null) {
             String nodeId = "node-" + nodeSeq.incrementAndGet();
-            ChainNodeDTO node = ruleNodeToDTO(entry.getValue(), nodeId, parentId);
+            ChainNodeDTO node = ruleNodeToDTO(defaultNode, nodeId, parentId);
+            if (node.getLabel() == null || node.getLabel().equals("规则组")) {
+                node.setLabel("DEFAULT 兜底");
+            }
             nodes.add(node);
             edges.add(ChainEdgeDTO.builder()
                     .edgeId("edge-" + nodeSeq.incrementAndGet())
                     .sourceNodeId(parentId)
                     .targetNodeId(nodeId)
-                    .edgeType(ChainEdgeDTO.EdgeType.SWITCH_BRANCH)
-                    .branchValue(entry.getKey())
-                    .label(entry.getKey())
+                    .edgeType(ChainEdgeDTO.EdgeType.DEFAULT_BRANCH)
+                    .label("DEFAULT")
                     .build());
         }
     }
 
     /**
      * 提取 FOR 链：循环
+     *
+     * <p>P0-1 增强：使用真实 {@code iterableExpression} 与 {@code iterationVar} 填充 metadata。
      */
     private static void extractFor(RuleChain chain, String parentId,
                                     AtomicInteger nodeSeq,
@@ -202,14 +259,21 @@ public final class ChainGraphConverter {
                                     List<ChainEdgeDTO> edges) {
         List<RuleNode> ruleNodes = chain.getNodes();
         if (ruleNodes == null || ruleNodes.isEmpty()) return;
+        String iterable = chain.getIterableExpression();
+        String iterVar = chain.getIterationVar();
         for (RuleNode rn : ruleNodes) {
             String nodeId = "node-" + nodeSeq.incrementAndGet();
             ChainNodeDTO node = ruleNodeToDTO(rn, nodeId, parentId);
-            // 在 metadata 中携带 FOR 的迭代变量名和集合表达式
             Map<String, Object> meta = new LinkedHashMap<>();
-            meta.put("iterableExpression", "items");
-            meta.put("iterationVar", "item");
-            node.setMetadata(meta);
+            if (iterable != null) {
+                meta.put("iterableExpression", iterable);
+            }
+            if (iterVar != null) {
+                meta.put("iterationVar", iterVar);
+            }
+            if (!meta.isEmpty()) {
+                node.setMetadata(meta);
+            }
             nodes.add(node);
             edges.add(ChainEdgeDTO.builder()
                     .edgeId("edge-" + nodeSeq.incrementAndGet())
@@ -222,6 +286,8 @@ public final class ChainGraphConverter {
 
     /**
      * 提取 WHILE 链：条件循环
+     *
+     * <p>P0-1 增强：在 metadata 中携带 maxIterations，便于前端配置面板展示。
      */
     private static void extractWhile(RuleChain chain, String parentId,
                                       AtomicInteger nodeSeq,
@@ -230,9 +296,17 @@ public final class ChainGraphConverter {
         List<RuleNode> ruleNodes = chain.getNodes();
         if (ruleNodes == null || ruleNodes.isEmpty()) return;
         String condition = chain.getConditionExpression();
+        int maxIter = chain.getMaxIterations();
         for (RuleNode rn : ruleNodes) {
             String nodeId = "node-" + nodeSeq.incrementAndGet();
             ChainNodeDTO node = ruleNodeToDTO(rn, nodeId, parentId);
+            if (maxIter > 0) {
+                Map<String, Object> meta = node.getMetadata() != null
+                        ? new LinkedHashMap<>(node.getMetadata())
+                        : new LinkedHashMap<>();
+                meta.put("maxIterations", maxIter);
+                node.setMetadata(meta);
+            }
             nodes.add(node);
             edges.add(ChainEdgeDTO.builder()
                     .edgeId("edge-" + nodeSeq.incrementAndGet())
@@ -291,9 +365,8 @@ public final class ChainGraphConverter {
     /**
      * 将画布图还原为可执行的 RuleChain
      *
-     * <p>当前实现支持 THEN/WHEN 序列链的还原（最常见场景）。
-     * 复杂链类型（IF/SWITCH/FOR/WHILE）需要前端按业务语义重新编排，
-     * 后端提供 REST API 由 {@link com.njydsz.pmis.literule.config.RuleAdminService} 直接构造 RuleChain。
+     * <p>P0-1 增强：支持全部 8 种链类型（THEN/WHEN/IF/ELIF/SWITCH/FOR/WHILE/BREAK）。
+     * 复杂链（IF/ELIF/SWITCH/FOR/WHILE/BREAK）的条件/分支/迭代元数据从画布节点的 metadata 还原。
      *
      * @param graph    画布图
      * @param resolver 规则解析器
@@ -305,19 +378,193 @@ public final class ChainGraphConverter {
         if (graph.getNodes() == null || graph.getNodes().isEmpty()) {
             return null;
         }
-        // 找出所有 SINGLE 节点（按 nodeId 排序，保持画布顺序）
-        List<Rule> rules = new ArrayList<>();
-        for (ChainNodeDTO node : graph.getNodes()) {
-            if ("SINGLE".equals(node.getNodeType()) && node.getRuleCode() != null) {
-                Rule rule = resolver.resolve(node.getRuleCode());
-                if (rule != null) {
-                    rules.add(rule);
+
+        // 找出根节点（CHAIN 类型的根节点）
+        ChainNodeDTO root = null;
+        for (ChainNodeDTO n : graph.getNodes()) {
+            if ("CHAIN".equals(n.getNodeType()) && n.getParentNodeId() == null) {
+                root = n;
+                break;
+            }
+        }
+        if (root == null) {
+            // 兜底：取第一个节点作为根
+            root = graph.getNodes().get(0);
+        }
+
+        String chainType = root.getChainType() != null ? root.getChainType() : "THEN";
+        List<ChainNodeDTO> children = findChildren(graph, root.getNodeId());
+
+        switch (chainType) {
+            case "THEN":
+                return buildSequenceChain(children, graph, resolver, false);
+            case "WHEN":
+                return buildSequenceChain(children, graph, resolver, true);
+            case "IF": {
+                String condition = root.getLabel() != null && root.getLabel().contains(" ")
+                        ? root.getLabel() : "true";
+                ChainEdgeDTO firstEdge = findFirstEdge(graph, root.getNodeId());
+                if (firstEdge != null && firstEdge.getCondition() != null) {
+                    condition = firstEdge.getCondition();
                 }
+                Rule action = firstChildRule(children, graph, resolver);
+                return action != null ? RuleChain.ifThen(condition, action) : null;
+            }
+            case "ELIF": {
+                Map<String, Rule> branchMap = new LinkedHashMap<>();
+                Rule elseRule = null;
+                for (ChainEdgeDTO edge : graph.getEdges()) {
+                    if (!root.getNodeId().equals(edge.getSourceNodeId())) continue;
+                    ChainNodeDTO target = findNode(graph, edge.getTargetNodeId());
+                    if (target == null) continue;
+                    Rule r = resolveNode(target, resolver);
+                    if (r == null) continue;
+                    if (ChainEdgeDTO.EdgeType.DEFAULT_BRANCH.equals(edge.getEdgeType())) {
+                        elseRule = r;
+                    } else if (edge.getCondition() != null) {
+                        branchMap.put(edge.getCondition(), r);
+                    }
+                }
+                return RuleChain.elif(branchMap, elseRule);
+            }
+            case "SWITCH": {
+                String branchKey = "type";
+                if (root.getLabel() != null && root.getLabel().contains("=")) {
+                    branchKey = root.getLabel().split("=")[0].trim();
+                }
+                Map<String, Rule> branchMap = new LinkedHashMap<>();
+                Rule defaultRule = null;
+                for (ChainEdgeDTO edge : graph.getEdges()) {
+                    if (!root.getNodeId().equals(edge.getSourceNodeId())) continue;
+                    ChainNodeDTO target = findNode(graph, edge.getTargetNodeId());
+                    if (target == null) continue;
+                    Rule r = resolveNode(target, resolver);
+                    if (r == null) continue;
+                    if (ChainEdgeDTO.EdgeType.DEFAULT_BRANCH.equals(edge.getEdgeType())) {
+                        defaultRule = r;
+                    } else if (edge.getBranchValue() != null) {
+                        branchMap.put(edge.getBranchValue(), r);
+                    }
+                }
+                return RuleChain.switchOn(branchKey, branchMap, defaultRule);
+            }
+            case "FOR": {
+                String iterable = "items";
+                String iterVar = "item";
+                Map<String, Object> meta = root.getMetadata();
+                if (meta != null) {
+                    if (meta.get("iterableExpression") != null) {
+                        iterable = String.valueOf(meta.get("iterableExpression"));
+                    }
+                    if (meta.get("iterationVar") != null) {
+                        iterVar = String.valueOf(meta.get("iterationVar"));
+                    }
+                }
+                Rule action = firstChildRule(children, graph, resolver);
+                return action != null ? RuleChain.forEach(iterable, iterVar, action) : null;
+            }
+            case "WHILE": {
+                String condition = "true";
+                ChainEdgeDTO firstEdge = findFirstEdge(graph, root.getNodeId());
+                if (firstEdge != null && firstEdge.getCondition() != null) {
+                    condition = firstEdge.getCondition();
+                }
+                int maxIter = 100;
+                Map<String, Object> meta = root.getMetadata();
+                if (meta != null && meta.get("maxIterations") instanceof Number n) {
+                    maxIter = n.intValue();
+                }
+                Rule action = firstChildRule(children, graph, resolver);
+                return action != null ? RuleChain.whileDo(condition, action, maxIter) : null;
+            }
+            case "BREAK":
+                return RuleChain.breakChain();
+            default:
+                return buildSequenceChain(children, graph, resolver, false);
+        }
+    }
+
+    /**
+     * 构建顺序链（THEN / WHEN）
+     */
+    private static RuleChain buildSequenceChain(List<ChainNodeDTO> children,
+                                                RuleChainGraph graph,
+                                                RuleResolver resolver,
+                                                boolean parallel) {
+        List<Rule> rules = new ArrayList<>();
+        for (ChainNodeDTO c : children) {
+            Rule r = resolveNode(c, resolver);
+            if (r != null) {
+                rules.add(r);
             }
         }
         if (rules.isEmpty()) {
             return null;
         }
-        return RuleChain.then(rules.toArray(new Rule[0]));
+        return parallel
+                ? RuleChain.when(rules.toArray(new Rule[0]))
+                : RuleChain.then(rules.toArray(new Rule[0]));
+    }
+
+    /**
+     * 解析单个节点为 Rule
+     */
+    private static Rule resolveNode(ChainNodeDTO node, RuleResolver resolver) {
+        if (node == null) return null;
+        if ("SINGLE".equals(node.getNodeType()) && node.getRuleCode() != null) {
+            return resolver.resolve(node.getRuleCode());
+        }
+        // CHAIN/GROUP 类型暂不支持直接 resolve 为单一 Rule，留待后续扩展
+        return null;
+    }
+
+    /**
+     * 查找节点的所有直接子节点
+     */
+    private static List<ChainNodeDTO> findChildren(RuleChainGraph graph, String parentId) {
+        List<ChainNodeDTO> result = new ArrayList<>();
+        if (graph.getNodes() == null) return result;
+        for (ChainNodeDTO n : graph.getNodes()) {
+            if (parentId != null && parentId.equals(n.getParentNodeId())) {
+                result.add(n);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 按 nodeId 查找节点
+     */
+    private static ChainNodeDTO findNode(RuleChainGraph graph, String nodeId) {
+        if (graph.getNodes() == null || nodeId == null) return null;
+        for (ChainNodeDTO n : graph.getNodes()) {
+            if (nodeId.equals(n.getNodeId())) {
+                return n;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 查找指定源节点的第一条出边
+     */
+    private static ChainEdgeDTO findFirstEdge(RuleChainGraph graph, String sourceId) {
+        if (graph.getEdges() == null) return null;
+        for (ChainEdgeDTO e : graph.getEdges()) {
+            if (sourceId != null && sourceId.equals(e.getSourceNodeId())) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 取第一个子节点解析为 Rule
+     */
+    private static Rule firstChildRule(List<ChainNodeDTO> children,
+                                       RuleChainGraph graph,
+                                       RuleResolver resolver) {
+        if (children == null || children.isEmpty()) return null;
+        return resolveNode(children.get(0), resolver);
     }
 }

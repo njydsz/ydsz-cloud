@@ -298,7 +298,7 @@ onMounted(fetchList)
   >
     <template #search>
       <el-form-item :label="t('project.initiation.search.keyword')">
-        <el-input v-model="query.keyword" :placeholder="t('project.initiation.search.keywordPlaceholder')" clearable @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" />
+        <el-input v-model="query.keyword" :placeholder="t('project.initiation.search.keywordPlaceholder')" clearable aria-label="搜索关键字" @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" />
       </el-form-item>
       <el-form-item :label="t('project.initiation.search.stage')">
         <el-select v-model="query.stage" :placeholder="t('common.all')" clearable style="width: 140px">

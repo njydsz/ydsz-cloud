@@ -53,7 +53,7 @@
 
     <el-empty
       v-else
-      description="暂无字段权限配置，点击"添加字段"开始"
+      description="暂无字段权限配置，点击'添加字段'开始"
       :image-size="50"
     />
 

@@ -287,6 +287,18 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/execution/rule-engine/index.vue'),
         meta: { title: 'route.executionRuleEngine', icon: 'Setting', affix: false, keepAlive: true },
       },
+      {
+        path: 'rule-engine/designer/:ruleCode',
+        name: 'RuleEngineDesigner',
+        component: () => import('@/views/execution/rule-engine/designer.vue'),
+        meta: { title: 'rule-engine.designer', icon: 'Connection', activeMenu: '/execution/rule-engine', hidden: true },
+      },
+      {
+        path: 'rule-engine/traces',
+        name: 'RuleEngineTraces',
+        component: () => import('@/views/execution/rule-engine/traces.vue'),
+        meta: { title: 'rule-engine.traces', icon: 'DataLine', activeMenu: '/execution/rule-engine', hidden: true },
+      },
     ],
   },
   {

@@ -260,15 +260,15 @@ onMounted(fetchSnapshot)
     .stat-card {
       padding: $spacing-md;
       border-radius: 6px;
-      color: $text-white;
+      color: #fff;
       text-align: center;
       background: $text-placeholder;
     }
-    .stat-total { background: $color-primary; }
-    .stat-enabled { background: $color-success; }
+    .stat-total { background: $primary-color; }
+    .stat-enabled { background: $success-color; }
     .stat-disabled { background: $text-secondary; }
-    .stat-mandatory { background: $color-danger; }
-    .stat-rollout { background: $color-warning; }
+    .stat-mandatory { background: $danger-color; }
+    .stat-rollout { background: $warning-color; }
 
     .stat-value {
       font-size: 28px;
@@ -309,7 +309,7 @@ onMounted(fetchSnapshot)
 
   .key-text {
     font-family: 'SFMono-Regular', Consolas, monospace;
-    color: $color-primary;
+    color: $primary-color;
     font-size: 13px;
   }
 
@@ -326,7 +326,7 @@ onMounted(fetchSnapshot)
       width: 90px;
       font-size: 12px;
       color: $text-secondary;
-      font-family: $font-family-mono;
+      font-family: 'SFMono-Regular', Consolas, monospace;
     }
   }
 }

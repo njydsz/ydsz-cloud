@@ -704,6 +704,69 @@ public class RuleChain {
     }
 
     /**
+     * 获取多分支条件列表（ELIF 专用）
+     *
+     * <p>仅 ELIF 链返回非 null 列表；其他链类型返回 null。
+     * P0-1 增强：暴露给 {@link ChainGraphConverter} 提取子节点。
+     *
+     * @return 不可修改的多分支条件列表
+     * @since 1.5.0
+     */
+    public List<Map.Entry<String, RuleNode>> getElifBranches() {
+        return elifBranches;
+    }
+
+    /**
+     * 获取 ELSE 节点（ELIF 专用）
+     *
+     * @return ELSE 节点；ELIF 链之外或未设置时返回 null
+     * @since 1.5.0
+     */
+    public RuleNode getElseNode() {
+        return elseNode;
+    }
+
+    /**
+     * 获取 SWITCH 默认分支节点
+     *
+     * @return 默认分支节点；SWITCH 链之外或未设置时返回 null
+     * @since 1.5.0
+     */
+    public RuleNode getDefaultBranch() {
+        return defaultBranch;
+    }
+
+    /**
+     * 获取 FOR 迭代集合表达式（如 {@code "items"}）
+     *
+     * @return 集合表达式；FOR 链之外返回 null
+     * @since 1.5.0
+     */
+    public String getIterableExpression() {
+        return iterableExpression;
+    }
+
+    /**
+     * 获取 FOR 迭代变量名（如 {@code "item"}）
+     *
+     * @return 迭代变量名；FOR 链之外返回 null
+     * @since 1.5.0
+     */
+    public String getIterationVar() {
+        return iterationVar;
+    }
+
+    /**
+     * 获取 WHILE 最大迭代次数
+     *
+     * @return 最大迭代次数；WHILE 链之外返回 0
+     * @since 1.5.0
+     */
+    public int getMaxIterations() {
+        return maxIterations;
+    }
+
+    /**
      * 获取条件表达式
      *
      * @return 条件表达式；IF 之外为 null

@@ -17,6 +17,7 @@
     <properties>
         <aviator.version>5.4.3</aviator.version>
         <groovy.version>4.0.22</groovy.version>
+        <qlexpress.version>3.3.1</qlexpress.version>
     </properties>
 
     <dependencies>
@@ -38,6 +39,13 @@
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy-jsr223</artifactId>
             <version>${groovy.version}</version>
+        </dependency>
+
+        <!-- QLExpress 阿里表达式引擎（P0-3：与 Aviator 双引擎可切换） -->
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>QLExpress</artifactId>
+            <version>${qlexpress.version}</version>
         </dependency>
 
         <!-- Spring Context（自动配置 + 事件驱动热加载） -->

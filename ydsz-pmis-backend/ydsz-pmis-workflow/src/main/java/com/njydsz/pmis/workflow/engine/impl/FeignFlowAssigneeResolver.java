@@ -15,24 +15,21 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * 基于 Feign 的办理人解析器（P1-5）
+ * 基于 Feign 的办理人解析器（P1-5 / P2-2）
  *
  * <p>通过 {@link OrgQueryClient} 调用 userinfo 服务，将 BPMN 中的角色/部门审批人标识
  * 展开为具体用户 ID 列表。覆盖 {@link DefaultFlowAssigneeResolver} 的空实现
  * （DefaultFlowAssigneeResolver 上有 {@code @ConditionalOnMissingBean}，本 Bean 注册后自动让位）。
  *
- * <p>当前支持的展开能力：
+ * <p>支持的展开能力：
  * <ul>
  *   <li>{@code role:HR} → 调用 userinfo 按 roleCode 查询用户 ID 列表</li>
  *   <li>{@code dept:10} → 调用 userinfo 按 deptId 查询部门负责人</li>
  *   <li>{@code dept:SALES} → 调用 userinfo 按 deptCode 查询部门负责人</li>
- * </ul>
- *
- * <p>未实现的能力（待 P2-2 候选人/变量独立表落地后补全）：
- * <ul>
- *   <li>{@code leader:1001} 直属上级（用户表无 leader_id 字段）</li>
- *   <li>{@code position:PM} 岗位（无岗位表）</li>
- *   <li>{@code multi_leader:N} 多级上级（依赖 leader_id 字段）</li>
+ *   <li>{@code leader:1001} → 调用 userinfo 查询用户直属上级（P2-2）</li>
+ *   <li>{@code leader:initiator} → 从流程变量取发起人 ID 后查询其直属上级（P2-2）</li>
+ *   <li>{@code position:PM} → 调用 userinfo 按 positionCode 查询岗位下用户（P2-2）</li>
+ *   <li>{@code multi_leader:N} → 多级上级链式查询，最多 15 级防循环引用（P2-2）</li>
  * </ul>
  *
  * <p>容错策略：Feign 调用失败时返回空列表，由 {@code node.ext.emptyStrategy} 兜底。
@@ -56,11 +53,12 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
      *   <li>{@code role:xxx} → 调用 {@link OrgQueryClient#listUserIdsByRoleCode}</li>
      *   <li>{@code dept:数字} → 调用 {@link OrgQueryClient#getDeptLeaderByDeptId}</li>
      *   <li>{@code dept:非数字} → 调用 {@link OrgQueryClient#getDeptLeaderByDeptCode}</li>
-     *   <li>{@code leader:xxx} / {@code position:xxx} → 暂不展开，返回空列表</li>
+     *   <li>{@code leader:xxx} → 调用 {@link OrgQueryClient#getLeaderByUserId}（P2-2）</li>
+     *   <li>{@code position:xxx} → 调用 {@link OrgQueryClient#listUserIdsByPositionCode}（P2-2）</li>
      * </ul>
      *
      * @param permissionFlag 权限标识，如 role:hr / dept:10 / leader:1001
-     * @param variables      流程变量（当前未使用，保留扩展）
+     * @param variables      流程变量（leader:initiator 时用于解析发起人 ID）
      * @return 用户 ID 列表（空列表表示无法展开，引擎将原样保留）
      */
     @Override
@@ -126,8 +124,8 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
     /**
      * 查询用户的部门 ID 列表（用于待办反查）
      *
-     * <p>当前 userinfo 用户表无 dept_id 字段，始终返回空列表。
-     * 待 P2-2 落地后由 userinfo 端实现真实查询。
+     * <p>调用 {@link OrgQueryClient#listDeptIdsByUserId} 查询用户所属部门。
+     * Feign 调用失败时返回空列表，不影响主流程。
      *
      * @param userId 用户 ID
      * @return 部门 ID 列表（字符串形式）

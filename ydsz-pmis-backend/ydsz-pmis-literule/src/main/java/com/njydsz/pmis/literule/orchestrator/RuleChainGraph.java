@@ -59,6 +59,9 @@ public class RuleChainGraph implements Serializable {
     /** 画布名称（如"CPI 预警链-2024Q1"） */
     private String name;
 
+    /** 关联规则编码（一对一，P0-1 增强：作为画布查询的 key） */
+    private String ruleCode;
+
     /** 画布描述 */
     private String description;
 

@@ -53,19 +53,15 @@
 | 模块 | 端口 | 副本数(基线) | 关键依赖 | 备注 |
 |------|------|------------|----------|------|
 | gateway | 9000 | 4 | Nacos, Redis | 唯一对外入口 |
-| auth | 9001 | 2 | Nacos, Redis, MySQL | 含 2FA + 会话 |
-| user | 9002 | 3 | Nacos, MySQL | 含资源池/Bench |
-| notification | 9003 | 2 | Nacos, Redis, RabbitMQ | |
-| workflow | 9004 | 2 | Nacos, MySQL | 自研工作流引擎 |
-| project | 9005 | 3 | Nacos, MySQL | 商机/立项/合同 |
-| execution | 9006 | 5 | Nacos, MySQL, Redis, Feign(user) | 核心, 副本最多 |
-| agent | 9007 | 2 | Nacos, Feign(execution) | AI 编排 |
-| config | 9008 | 2 | Nacos, MySQL | 配置中心 |
-| file | 9009 | 2 | MinIO | 文件存储 |
-| audit | 9010 | 2 | MySQL | 审计 |
-| message | 9011 | 2 | Nacos, Redis | 消息模板 |
-| cronjob | 9012 | 1 | XXL-JOB, MySQL | 单实例避免并发 |
+| system | 9001 | 2 | Nacos, Redis, MinIO, MySQL | 文件/配置/审计/通知/消息模板（合并） |
+| userinfo | 9002 | 3 | Nacos, MySQL, Redis | 用户/认证/权限/部门/资源池/Bench（合并） |
+| project | 9003 | 5 | Nacos, MySQL, Redis, Feign(userinfo) | 商机/立项/合同/执行/财务/报表/驾驶舱（合并），核心域副本最多 |
+| cronjob | 9004 | 1 | XXL-JOB, MySQL | 单实例避免并发 |
+| workflow | 9005 | 2 | Nacos, MySQL | 自研工作流引擎 |
+| agent | 9006 | 2 | Nacos, Feign(project) | AI 编排 |
 | frontend | 80 | 4 | Nginx | Vue 静态 |
+
+> 端口分配（2026-07-03 修订）：9000 网关；9001-9006 按"基础→用户→业务→调度→流程→AI"依赖顺序连续编排；9007-9099 保留给未来模块。
 
 ## 3. 容量规划 (HPA 阈值)
 
@@ -209,7 +205,7 @@ curl -X POST "http://sentinel-dashboard:8718/degradeRules" \
   -d "grade=1&count=100&timeWindow=10"
 
 # 紧急关闭 AI 编排 (使用 FeatureFlag)
-curl -X PUT "http://pmis-config:9008/api/v1/feature-flags/AGENT_ORCHESTRATION/enabled" \
+curl -X PUT "http://pmis-system:9001/api/v1/feature-flags/AGENT_ORCHESTRATION/enabled" \
   -H "Content-Type: application/json" -d "false"
 ```
 
@@ -251,10 +247,10 @@ kubectl rollout status deployment/pmis-<service> -n pmis-prod --timeout=300s
 kubectl rollout undo deployment/pmis-<service> --to-revision=<n> -n pmis-prod
 
 # 方案 C: 关闭 FeatureFlag (无需重启)
-curl -X PUT "http://pmis-config:9008/api/v1/feature-flags/<KEY>/enabled?enabled=false"
+curl -X PUT "http://pmis-system:9001/api/v1/feature-flags/<KEY>/enabled?enabled=false"
 
 # 方案 D: 关闭混沌工程
-curl -X POST "http://pmis-config:9008/api/v1/chaos/history/clear"
+curl -X POST "http://pmis-system:9001/api/v1/chaos/history/clear"
 ```
 
 ### 6.5 数据恢复

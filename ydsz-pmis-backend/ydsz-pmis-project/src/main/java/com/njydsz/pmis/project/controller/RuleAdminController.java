@@ -21,7 +21,10 @@ import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.config.ABTestService;
 import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
 import com.njydsz.pmis.literule.expr.ExpressionValidationService;
+import com.njydsz.pmis.literule.orchestrator.RuleChainGraph;
+import com.njydsz.pmis.literule.orchestrator.RuleGraphValidator;
 import com.njydsz.pmis.literule.spi.RuleVersion;
+import com.njydsz.pmis.project.literule.RuleChainGraphService;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +63,7 @@ public class RuleAdminController {
     private final ObjectMapper objectMapper;
     private final DecisionTableEvalService decisionTableEvalService;
     private final ExpressionValidationService expressionValidationService;
+    private final RuleChainGraphService ruleChainGraphService;
 
     /**
      * 查询全部规则定义
@@ -836,5 +840,237 @@ public class RuleAdminController {
         result.put("imported", imported);
         result.put("skipped", skipped);
         return Result.ok(result);
+    }
+
+    // ==================== 规则删除（P0-4） ====================
+
+    /**
+     * 删除规则（软删除：将状态置为 ARCHIVED，保留版本历史）
+     *
+     * <p>P0-4 关键修复：补全前端规则引擎页"删除"按钮对应的后端接口。
+     * 软删除策略：status=ARCHIVED + enabled=false，保留 pmis_rule_def 原行；
+     * 同步清理 pmis_rule_chain_graph 画布。
+     *
+     * @param ruleCode 规则编码
+     * @param operator 操作人
+     * @return 操作结果
+     */
+    @DeleteMapping("/{ruleCode}")
+    public Result<Void> deleteRule(@PathVariable String ruleCode,
+                                   @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        if (def == null) {
+            return Result.fail("规则不存在: " + ruleCode);
+        }
+        def.setStatus(RuleStatus.ARCHIVED.name());
+        def.setEnabled(false);
+        ruleAdminService.save(def, operator, "[删除] 软删除规则 status=ARCHIVED");
+        // 同步删除画布
+        ruleChainGraphService.delete(ruleCode);
+        log.info("[LiteRule] 规则已删除: ruleCode={}, operator={}", ruleCode, operator);
+        return Result.ok();
+    }
+
+    // ==================== 批量操作（P0-5） ====================
+
+    /**
+     * 批量启停规则
+     *
+     * <p>P0-5 关键修复：列表加 checkbox 后批量操作接口。
+     * 启用时同时校验 status=PUBLISHED，未发布的规则不能启用。
+     *
+     * @param request  请求体，包含 ruleCodes / enabled
+     * @param operator 操作人
+     * @return 成功与失败明细
+     */
+    @PostMapping("/batch-toggle")
+    public Result<Map<String, Object>> batchToggle(@RequestBody Map<String, Object> request,
+                                                   @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        @SuppressWarnings("unchecked")
+        List<String> ruleCodes = (List<String>) request.get("ruleCodes");
+        Boolean enabled = (Boolean) request.get("enabled");
+        if (ruleCodes == null || ruleCodes.isEmpty()) {
+            return Result.fail("ruleCodes 不能为空");
+        }
+        if (enabled == null) {
+            return Result.fail("enabled 不能为空");
+        }
+        int success = 0;
+        List<String> failed = new java.util.ArrayList<>();
+        for (String code : ruleCodes) {
+            try {
+                RuleDefinition def = ruleAdminService.getByCode(code);
+                if (def == null) {
+                    failed.add(code + ": 不存在");
+                    continue;
+                }
+                if (Boolean.TRUE.equals(enabled) && !"PUBLISHED".equals(def.getStatus())) {
+                    failed.add(code + ": 未发布的规则不能启用");
+                    continue;
+                }
+                def.setEnabled(enabled);
+                ruleAdminService.save(def, operator, "[批量] " + (enabled ? "启用" : "停用"));
+                success++;
+            } catch (Exception e) {
+                failed.add(code + ": " + e.getMessage());
+            }
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("success", success);
+        result.put("failed", failed);
+        return Result.ok(result);
+    }
+
+    /**
+     * 批量调整规则优先级
+     *
+     * @param request  请求体，包含 ruleCodes / delta（可为负）
+     * @param operator 操作人
+     * @return 成功与失败明细
+     */
+    @PostMapping("/batch-priority")
+    public Result<Map<String, Object>> batchPriority(@RequestBody Map<String, Object> request,
+                                                      @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        @SuppressWarnings("unchecked")
+        List<String> ruleCodes = (List<String>) request.get("ruleCodes");
+        Integer delta = (Integer) request.get("delta");
+        if (ruleCodes == null || ruleCodes.isEmpty()) {
+            return Result.fail("ruleCodes 不能为空");
+        }
+        if (delta == null || delta == 0) {
+            return Result.fail("delta 不能为空或 0");
+        }
+        int success = 0;
+        List<String> failed = new java.util.ArrayList<>();
+        for (String code : ruleCodes) {
+            try {
+                RuleDefinition def = ruleAdminService.getByCode(code);
+                if (def == null) {
+                    failed.add(code + ": 不存在");
+                    continue;
+                }
+                int newPriority = (def.getPriority()) + delta.intValue();
+                // 钳制 0-100 范围
+                newPriority = Math.max(0, Math.min(100, newPriority));
+                def.setPriority(newPriority);
+                ruleAdminService.save(def, operator, "[批量] 优先级调整 " + (delta > 0 ? "+" : "") + delta);
+                success++;
+            } catch (Exception e) {
+                failed.add(code + ": " + e.getMessage());
+            }
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("success", success);
+        result.put("failed", failed);
+        return Result.ok(result);
+    }
+
+    /**
+     * 批量调整规则分类
+     *
+     * @param request  请求体，包含 ruleCodes / category
+     * @param operator 操作人
+     * @return 成功与失败明细
+     */
+    @PostMapping("/batch-category")
+    public Result<Map<String, Object>> batchCategory(@RequestBody Map<String, Object> request,
+                                                      @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        @SuppressWarnings("unchecked")
+        List<String> ruleCodes = (List<String>) request.get("ruleCodes");
+        String category = (String) request.get("category");
+        if (ruleCodes == null || ruleCodes.isEmpty()) {
+            return Result.fail("ruleCodes 不能为空");
+        }
+        if (category == null || category.isBlank()) {
+            return Result.fail("category 不能为空");
+        }
+        int success = 0;
+        List<String> failed = new java.util.ArrayList<>();
+        for (String code : ruleCodes) {
+            try {
+                RuleDefinition def = ruleAdminService.getByCode(code);
+                if (def == null) {
+                    failed.add(code + ": 不存在");
+                    continue;
+                }
+                def.setCategory(category);
+                ruleAdminService.save(def, operator, "[批量] 分类调整为 " + category);
+                success++;
+            } catch (Exception e) {
+                failed.add(code + ": " + e.getMessage());
+            }
+        }
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("success", success);
+        result.put("failed", failed);
+        return Result.ok(result);
+    }
+
+    // ==================== 规则链画布（P0-1） ====================
+
+    /**
+     * 查询规则的画布
+     *
+     * <p>P0-1：返回 RuleChainGraph JSON 内容（含 nodes/edges/viewport/metadata）。
+     * 不存在时返回 200 + null，前端按空画布初始化。
+     *
+     * @param ruleCode 规则编码
+     * @return 画布对象
+     */
+    @GetMapping("/{ruleCode}/graph")
+    public Result<RuleChainGraph> getChainGraph(@PathVariable String ruleCode) {
+        return Result.ok(ruleChainGraphService.getByRuleCode(ruleCode));
+    }
+
+    /**
+     * 保存或更新画布
+     *
+     * <p>保存前先用 {@link RuleGraphValidator} 校验画布结构，存在 ERROR 级问题则拒绝保存。
+     * 校验通过后自动递增画布版本号。
+     *
+     * @param ruleCode 规则编码
+     * @param graph    画布
+     * @param operator 操作人
+     * @return 保存后的画布
+     */
+    @PostMapping("/{ruleCode}/graph")
+    public Result<Map<String, Object>> saveChainGraph(@PathVariable String ruleCode,
+                                                       @RequestBody RuleChainGraph graph,
+                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        // 1. 结构校验
+        List<RuleGraphValidator.GraphValidationIssue> issues = RuleGraphValidator.validate(graph);
+        if (!RuleGraphValidator.isValid(issues)) {
+            return Result.ok(Map.of(
+                    "valid", false,
+                    "issues", issues,
+                    "message", "画布结构不合法，请先修复错误"
+            ));
+        }
+        // 2. 保存
+        RuleChainGraph saved = ruleChainGraphService.save(ruleCode, graph, operator);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("valid", true);
+        result.put("issues", issues);
+        result.put("graph", saved);
+        return Result.ok(result);
+    }
+
+    /**
+     * 删除画布
+     */
+    @DeleteMapping("/{ruleCode}/graph")
+    public Result<Void> deleteChainGraph(@PathVariable String ruleCode) {
+        ruleChainGraphService.delete(ruleCode);
+        return Result.ok();
+    }
+
+    /**
+     * 校验画布结构（不保存）
+     *
+     * <p>供前端"实时校验"按钮调用，返回 ERROR/WARN 两级问题。
+     */
+    @PostMapping("/{ruleCode}/graph/validate")
+    public Result<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(@RequestBody RuleChainGraph graph) {
+        return Result.ok(RuleGraphValidator.validate(graph));
     }
 }

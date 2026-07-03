@@ -41,7 +41,7 @@ async function loadFlowDefinitions() {
   try {
     const res = await pageDefinitions({ status: 'PUBLISHED', pageNum: 1, pageSize: 200 })
     if (res.data?.code === 0) {
-      flowDefinitions.value = res.data.data?.records || []
+      flowDefinitions.value = res.data.data?.list || []
     }
   } catch {
     // 静默失败

@@ -3,7 +3,7 @@
   "info": {
     "title": "PMIS API 端点摘要",
     "version": "1.0.0",
-    "description": "南京云顶 PMIS 后端 14 个微服务的端点摘要，供契约测试与文档检索使用\n每个服务通过 /v3/api-docs 暴露完整 OpenAPI 3 规范",
+    "description": "南京云顶 PMIS 后端 7 个微服务的端点摘要（2026-07-03 服务合并后），供契约测试与文档检索使用\n每个服务通过 /v3/api-docs 暴露完整 OpenAPI 3 规范\n\n端口分配: 9000 gateway / 9001 system / 9002 userinfo / 9003 project / 9004 cronjob / 9005 workflow / 9006 agent",
     "contact": {
       "name": "PMIS API Team",
       "email": "api-team@ydsz-pmis.cn"
@@ -11,18 +11,17 @@
   },
   "servers": [
     { "url": "http://localhost:9000", "description": "API 网关（推荐）" },
-    { "url": "http://localhost:9001", "description": "auth 直连" }
+    { "url": "http://localhost:9001", "description": "system 直连" },
+    { "url": "http://localhost:9002", "description": "userinfo 直连" }
   ],
   "tags": [
-    { "name": "gateway",   "description": "API 网关路由表" },
-    { "name": "auth",      "description": "认证授权（ydsz-pmis-auth :9001）" },
-    { "name": "user",      "description": "用户/权限/部门/资源池（ydsz-pmis-user :9002）" },
-    { "name": "project",   "description": "商机/立项/合同/变更（ydsz-pmis-project :9005）" },
-    { "name": "execution", "description": "执行/成本/财务/报表（ydsz-pmis-execution :9006）" },
-    { "name": "agent",     "description": "AI 智能体（ydsz-pmis-agent :9007）" },
-    { "name": "notification", "description": "通知中心（ydsz-pmis-notification :9003）" },
-    { "name": "workflow",  "description": "工作流（ydsz-pmis-workflow :9004）" },
-    { "name": "audit",     "description": "审计日志（ydsz-pmis-audit :9010）" }
+    { "name": "gateway",   "description": "API 网关路由表（9000）" },
+    { "name": "system",    "description": "系统基础服务：文件/配置/审计/通知/消息模板（ydsz-pmis-system :9001，2026-07-03 合并）" },
+    { "name": "userinfo",  "description": "用户信息中心：用户/认证/权限/部门/资源池/Bench（ydsz-pmis-userinfo :9002，2026-07-03 合并）" },
+    { "name": "project",   "description": "项目/执行/财务/报表/驾驶舱：商机→售后全生命周期（ydsz-pmis-project :9003，2026-07-03 合并）" },
+    { "name": "cronjob",   "description": "分布式任务调度 XXL-JOB 客户端（ydsz-pmis-cronjob :9004）" },
+    { "name": "workflow",  "description": "工作流（ydsz-pmis-workflow :9005，2026-07-03 端口重分配）" },
+    { "name": "agent",     "description": "AI 智能体（ydsz-pmis-agent :9006，2026-07-03 端口重分配）" }
   ],
   "components": {
     "securitySchemes": {
@@ -58,7 +57,7 @@
   "paths": {
     "/api/v1/auth/login": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["userinfo"],
         "summary": "账号密码登录（5 QPS/IP/min 限流）",
         "security": [],
         "responses": { "200": { "description": "成功，返回 access_token + refresh_token" } }
@@ -66,7 +65,7 @@
     },
     "/api/v1/auth/refresh": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["userinfo"],
         "summary": "刷新 access_token（用 refresh_token）",
         "security": [],
         "responses": { "200": { "description": "成功" } }
@@ -74,28 +73,28 @@
     },
     "/api/v1/auth/logout": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["userinfo"],
         "summary": "登出（吊销当前 token）",
         "responses": { "200": { "description": "成功" } }
       }
     },
     "/api/v1/auth/2fa/bind": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["userinfo"],
         "summary": "绑定 TOTP 双因素认证",
         "responses": { "200": { "description": "成功，返回 secret + qrcodeUrl + backupCodes" } }
       }
     },
     "/api/v1/auth/2fa/verify": {
       "post": {
-        "tags": ["auth"],
+        "tags": ["userinfo"],
         "summary": "校验 TOTP 动态口令（6 位）",
         "responses": { "200": { "description": "验证通过" } }
       }
     },
     "/api/v1/user/users": {
       "get": {
-        "tags": ["user"],
+        "tags": ["userinfo"],
         "summary": "用户分页查询",
         "parameters": [
           { "name": "page",     "in": "query", "schema": { "type": "integer", "default": 1 } },
@@ -108,26 +107,26 @@
     },
     "/api/v1/user/roles": {
       "get": {
-        "tags": ["user"],
+        "tags": ["userinfo"],
         "summary": "角色分页查询",
         "responses": { "200": { "description": "PageResult<RoleDO>" } }
       },
       "post": {
-        "tags": ["user"],
+        "tags": ["userinfo"],
         "summary": "创建角色",
         "responses": { "200": { "description": "新角色 ID" } }
       }
     },
     "/api/v1/resource/pool": {
       "get": {
-        "tags": ["user"],
+        "tags": ["userinfo"],
         "summary": "资源池分页查询",
         "responses": { "200": { "description": "PageResult<ResourcePoolDO>" } }
       }
     },
     "/api/v1/resource/bench": {
       "get": {
-        "tags": ["user"],
+        "tags": ["userinfo"],
         "summary": "Bench 闲置人员分页",
         "responses": { "200": { "description": "PageResult<BenchRecordDO>" } }
       }
@@ -188,19 +187,19 @@
     },
     "/api/v1/execution/wbs-tasks": {
       "get": {
-        "tags": ["execution"],
-        "summary": "WBS 任务分页查询",
+        "tags": ["project"],
+        "summary": "WBS 任务分页查询（2026-07-03 execution 并入 project）",
         "responses": { "200": { "description": "PageResult<WbsTaskDO>" } }
       },
       "post": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "新建 WBS 任务",
         "responses": { "200": { "description": "新任务 ID" } }
       }
     },
     "/api/v1/execution/time-entries/{id}/approve": {
       "post": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "工时审批（自动归集 8h/人天 × 800 元 人力成本）",
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
@@ -210,19 +209,19 @@
     },
     "/api/v1/execution/invoices": {
       "get": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "开票分页查询",
         "responses": { "200": { "description": "PageResult<InvoiceDO>" } }
       },
       "post": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "新建开票申请（按 invoice_basis 自动校验：MILESTONE 需验收报告，OUTSOURCING 需人天单）",
         "responses": { "200": { "description": "新开票 ID" } }
       }
     },
     "/api/v1/execution/payments/{id}/allocate": {
       "post": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "回款核销（按 invoice_id 分摊，> unallocatedAmount 拒绝，自动 ALLOCATED 转换）",
         "parameters": [
           { "name": "id", "in": "path", "required": true, "schema": { "type": "integer" } }
@@ -232,7 +231,7 @@
     },
     "/api/v1/execution/import/template/{bizType}": {
       "get": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "下载空白导入模板（rate-card / rate-internal / time-entry）",
         "parameters": [
           { "name": "bizType", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -242,7 +241,7 @@
     },
     "/api/v1/execution/import/{bizType}": {
       "post": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "批量导入（1 QPS/用户 限流，失败行明细返回）",
         "parameters": [
           { "name": "bizType", "in": "path", "required": true, "schema": { "type": "string" } }
@@ -252,7 +251,7 @@
     },
     "/api/v1/execution/report-export/download": {
       "get": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "报表导出（XLSX / CSV，6 类报表通用）",
         "parameters": [
           { "name": "type",   "in": "query", "required": true, "schema": { "type": "string" } },
@@ -263,21 +262,21 @@
     },
     "/api/v1/execution/cockpit/overview": {
       "get": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "经营驾驶舱 6 KPI（activeProjects / totalContractAmount / confirmedRevenue / totalCost / grossProfit / grossMargin）",
         "responses": { "200": { "description": "CockpitKpiVO + EVM 健康分布 + Bench 闲置成本" } }
       }
     },
     "/api/v1/execution/cockpit/drill-down": {
       "get": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "驾驶舱下钻（department / projectType / customer 三维）",
         "responses": { "200": { "description": "CockpitDrillDownDTO" } }
       }
     },
     "/api/v1/execution/advanced/evm": {
       "get": {
-        "tags": ["execution"],
+        "tags": ["project"],
         "summary": "EVM 挣值管理报表（项目健康仪表盘）",
         "responses": { "200": { "description": "EVM 6 大指标" } }
       }
@@ -298,14 +297,14 @@
     },
     "/api/v1/notification/messages": {
       "get": {
-        "tags": ["notification"],
-        "summary": "我的消息分页（按已读/未读过滤）",
+        "tags": ["system"],
+        "summary": "我的消息分页（按已读/未读过滤，2026-07-03 通知并入 system）",
         "responses": { "200": { "description": "PageResult<MessageDO>" } }
       }
     },
     "/api/v1/notification/messages/{id}/read": {
       "post": {
-        "tags": ["notification"],
+        "tags": ["system"],
         "summary": "标记已读",
         "responses": { "200": { "description": "成功" } }
       }
@@ -319,14 +318,14 @@
     },
     "/api/v1/audit/login-audit/page": {
       "get": {
-        "tags": ["audit"],
-        "summary": "登录审计分页（10 种 LoginStatus）",
+        "tags": ["system"],
+        "summary": "登录审计分页（10 种 LoginStatus，2026-07-03 审计并入 system）",
         "responses": { "200": { "description": "PageResult<LoginAuditDO>" } }
       }
     },
     "/api/v1/audit/operation-log/page": {
       "get": {
-        "tags": ["audit"],
+        "tags": ["system"],
         "summary": "操作日志分页（异步落库，90 天自动清理）",
         "responses": { "200": { "description": "PageResult<OperationLogDO>" } }
       }

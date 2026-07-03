@@ -396,14 +396,16 @@ public class UserController {
 | # | 模块 | 端口 | 职责 |
 |---|------|------|------|
 | 1 | ydsz-pmis-gateway | 9000 | API 网关（路由、鉴权透传、CORS） |
-| 2 | ydsz-pmis-userinfo | 9002 | 用户信息中心 + 认证/用户/权限/部门/资源池（含 Bench，user + auth 合并，包名 com.njydsz.pmis.userinfo） |
-| 3 | ydsz-pmis-workflow | 9004 | 自研工作流引擎（审批流、门径评审、SLA） |
-| 4 | ydsz-pmis-project | 9005 | 商机/立项/合同/变更/执行/成本/财务/报表/驾驶舱（project + execution 合并，核心域，包名 com.njydsz.pmis.project） |
-| 5 | ydsz-pmis-agent | 9007 | AI 智能体（编排、风险预警、利润预测） |
-| 6 | ydsz-pmis-system | 9008 | 文件/配置/审计/通知/消息模板（file + config + audit + notification + message 合并，包名 com.njydsz.pmis.system） |
-| 7 | ydsz-pmis-cronjob | 9012 | 分布式任务调度（XXL-JOB 客户端） |
+| 2 | ydsz-pmis-system | 9001 | 文件/配置/审计/通知/消息模板（file + config + audit + notification + message 合并，包名 com.njydsz.pmis.system） |
+| 3 | ydsz-pmis-userinfo | 9002 | 用户信息中心 + 认证/用户/权限/部门/资源池（含 Bench，user + auth 合并，包名 com.njydsz.pmis.userinfo） |
+| 4 | ydsz-pmis-project | 9003 | 商机/立项/合同/变更/执行/成本/财务/报表/驾驶舱（project + execution 合并，核心域，包名 com.njydsz.pmis.project） |
+| 5 | ydsz-pmis-cronjob | 9004 | 分布式任务调度（XXL-JOB 客户端） |
+| 6 | ydsz-pmis-workflow | 9005 | 自研工作流引擎（审批流、门径评审、SLA） |
+| 7 | ydsz-pmis-agent | 9006 | AI 智能体（编排、风险预警、利润预测） |
 | — | ydsz-pmis-common | — | 公共组件库（响应/异常/工具/常量，不独立部署） |
 | — | ydsz-pmis-literule | — | 轻量规则引擎库（表达式/规则链，不独立部署） |
+
+> 端口分配原则（2026-07-03 修订）：9000 网关；9001-9006 按"基础→用户→业务→调度→流程→AI"依赖顺序连续编排；9007-9099 保留给未来模块（财务独立、报表引擎、BI）。
 
 > 周边组件端口保持业界默认：xxl-job-admin 9100、seata 8091/7091、sentinel 8719、
 > nacos 8848/9848、minio 9000/9001、postgres 5432、redis 6379、rocketmq 9876/10909/10911/10912、elasticsearch 9200。

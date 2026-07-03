@@ -75,7 +75,7 @@ function handleSelect(next: LocaleType) {
   &-code {
     font-size: 11px;
     color: $text-placeholder;
-    font-family: $font-family-mono;
+    font-family: 'SFMono-Regular', Consolas, monospace;
   }
 }
 </style>

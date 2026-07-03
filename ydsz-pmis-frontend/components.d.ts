@@ -81,6 +81,7 @@ declare module 'vue' {
     ExpressionEditor: typeof import('./src/components/common/ExpressionEditor.vue')['default']
     FormDialog: typeof import('./src/components/common/FormDialog.vue')['default']
     InlineEdit: typeof import('./src/components/common/InlineEdit.vue')['default']
+    JsonEditor: typeof import('./src/components/common/JsonEditor.vue')['default']
     LanguageSwitcher: typeof import('./src/components/common/LanguageSwitcher.vue')['default']
     NotificationBell: typeof import('./src/components/common/NotificationBell.vue')['default']
     PageLayout: typeof import('./src/components/common/PageLayout.vue')['default']

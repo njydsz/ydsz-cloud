@@ -441,10 +441,14 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     }
   }
 
-  /** @人 提及（占位，留待后端实现通知） */
-  function onOpMention(m: { userId: number; name: string }) {
-    // eslint-disable-next-line no-console
-    console.debug('[ApprovalCenter] @ 提及用户:', m)
+  /**
+   * @人 提及（占位，留待后端实现通知）
+   *
+   * <p>当前仅记录被提及用户，待后端通知服务支持 @ 提及语义后补全推送逻辑。
+   * 保留空实现以避免 UI 入口报错。
+   */
+  function onOpMention(_m: { userId: number; name: string }) {
+    // TODO: 后端通知服务支持 @ 提及后，调用 notificationApi.mentionUser(_m.userId, _m.name)
   }
 
   /**

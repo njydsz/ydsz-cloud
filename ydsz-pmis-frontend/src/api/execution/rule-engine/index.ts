@@ -585,3 +585,171 @@ export const importRules = (rules: Record<string, unknown>[]) =>
     method: 'POST',
     data: { rules },
   })
+
+// ==================== 规则删除（P0-4） ====================
+
+/**
+ * 软删除规则（status 置为 ARCHIVED）
+ * @param ruleCode 规则编码
+ */
+export const deleteRule = (ruleCode: string) =>
+  request<void>({
+    url: `/execution/api/v1/rules/${ruleCode}`,
+    method: 'DELETE',
+    headers: { 'X-Operator': 'admin' },
+  })
+
+// ==================== 批量操作（P0-5） ====================
+
+/**
+ * 批量启停规则
+ * @param ruleCodes 规则编码列表
+ * @param enabled true=启用, false=停用
+ */
+export const batchToggle = (ruleCodes: string[], enabled: boolean) =>
+  request<{ success: number; failed: string[] }>({
+    url: '/execution/api/v1/rules/batch-toggle',
+    method: 'POST',
+    data: { ruleCodes, enabled },
+    headers: { 'X-Operator': 'admin' },
+  })
+
+/**
+ * 批量调整优先级
+ * @param ruleCodes 规则编码列表
+ * @param delta 优先级变化量（可为负）
+ */
+export const batchPriority = (ruleCodes: string[], delta: number) =>
+  request<{ success: number; failed: string[] }>({
+    url: '/execution/api/v1/rules/batch-priority',
+    method: 'POST',
+    data: { ruleCodes, delta },
+    headers: { 'X-Operator': 'admin' },
+  })
+
+/**
+ * 批量调整分类
+ */
+export const batchCategory = (ruleCodes: string[], category: string) =>
+  request<{ success: number; failed: string[] }>({
+    url: '/execution/api/v1/rules/batch-category',
+    method: 'POST',
+    data: { ruleCodes, category },
+    headers: { 'X-Operator': 'admin' },
+  })
+
+// ==================== 规则链画布（P0-1） ====================
+
+/** 链节点位置 */
+export interface ChainNodePosition {
+  x: number
+  y: number
+}
+
+/** 链节点 DTO */
+export interface ChainNodeDTO {
+  nodeId: string
+  nodeType: 'CHAIN' | 'SINGLE' | 'GROUP'
+  chainType?: 'THEN' | 'WHEN' | 'IF' | 'ELIF' | 'SWITCH' | 'FOR' | 'WHILE' | 'BREAK'
+  label?: string
+  ruleCode?: string
+  parentNodeId?: string
+  position?: ChainNodePosition
+  metadata?: Record<string, unknown>
+}
+
+/** 链边 DTO */
+export interface ChainEdgeDTO {
+  edgeId: string
+  sourceNodeId: string
+  targetNodeId: string
+  edgeType: 'THEN' | 'IF_BRANCH' | 'ELIF_BRANCH' | 'SWITCH_BRANCH' | 'FOR_ITER' | 'WHILE_ITER' | 'DEFAULT_BRANCH' | 'GROUP_MEMBER' | 'BREAK'
+  condition?: string
+  branchValue?: string
+  label?: string
+}
+
+/** 画布视口 */
+export interface ChainViewport {
+  x: number
+  y: number
+  zoom: number
+}
+
+/** 规则链画布 */
+export interface RuleChainGraph {
+  graphId?: string
+  name?: string
+  ruleCode?: string
+  description?: string
+  scenario?: string
+  tenantId?: string
+  version?: string
+  status?: string
+  nodes: ChainNodeDTO[]
+  edges: ChainEdgeDTO[]
+  viewport?: ChainViewport
+  metadata?: Record<string, unknown>
+  createdAt?: string
+  updatedAt?: string
+  createdBy?: string
+  updatedBy?: string
+}
+
+/** 画布问题（前端展示） */
+export interface RuleChainGraphViewIssue {
+  level: 'ERROR' | 'WARN'
+  code: string
+  message: string
+}
+
+/** 画布保存结果 */
+export interface SaveGraphResult {
+  valid: boolean
+  issues: RuleChainGraphViewIssue[]
+  graph?: RuleChainGraph
+  message?: string
+}
+
+/**
+ * 查询规则的画布
+ * @param ruleCode 规则编码
+ */
+export const getChainGraph = (ruleCode: string) =>
+  request<RuleChainGraph>({
+    url: `/execution/api/v1/rules/${ruleCode}/graph`,
+    method: 'GET',
+  })
+
+/**
+ * 保存或更新画布
+ * @param ruleCode 规则编码
+ * @param graph 画布
+ */
+export const saveChainGraph = (ruleCode: string, graph: RuleChainGraph) =>
+  request<SaveGraphResult>({
+    url: `/execution/api/v1/rules/${ruleCode}/graph`,
+    method: 'POST',
+    data: graph,
+    headers: { 'X-Operator': 'admin' },
+  })
+
+/**
+ * 校验画布结构（不保存）
+ * @param graph 画布
+ */
+export const validateChainGraph = (graph: RuleChainGraph) =>
+  request<RuleChainGraphViewIssue[]>({
+    url: `/execution/api/v1/rules/_/graph/validate`,
+    method: 'POST',
+    data: graph,
+  })
+
+/**
+ * 删除画布
+ */
+export const deleteChainGraph = (ruleCode: string) =>
+  request<void>({
+    url: `/execution/api/v1/rules/${ruleCode}/graph`,
+    method: 'DELETE',
+  })

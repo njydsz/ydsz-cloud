@@ -10,51 +10,48 @@
 
 # PMIS 后端 API 文档
 
-> 文档版本: V1.0 | 编制日期: 2026-07-01 | 最近更新: 2026-07-03
+> 文档版本: V1.1 | 编制日期: 2026-07-01 | 最近更新: 2026-07-03
 > 适用版本: ydsz-pmis 1.0.0-SNAPSHOT
-> 微服务数: 14（7 部署 + 2 库 + 5 拆分模块）
+> 微服务数: 7（2026-07-03 服务合并后，按"基础→用户→业务→调度→流程→AI"统一端口 9000-9006）
 
-本目录汇总 PMIS 后端全部 14 个微服务模块的 API 文档。文档由 SpringDoc (OpenAPI 3.0) 在服务启动时**实时生成**，并辅以本仓库人工维护的 Markdown 模块说明。
+本目录汇总 PMIS 后端 7 个微服务模块的 API 文档。文档由 SpringDoc (OpenAPI 3.0) 在服务启动时**实时生成**，并辅以本仓库人工维护的 Markdown 模块说明。
 
 ```
 docs/api/
 ├── README.md                 # 本文件
-├── openapi-summary.json      # 14 模块端点摘要（机器可读）
+├── openapi-summary.json      # 7 模块端点摘要（机器可读）
 ├── openapi-gateway.json      # API 网关路由表
-└── modules/                  # 按模块拆分
-    ├── auth.md               # 认证授权（/api/v1/auth/*）
-    ├── user.md               # 用户/权限/部门/资源池（/api/v1/user/* + /api/v1/resource/*）
-    ├── project.md            # 商机/立项/合同/变更（/api/v1/project/*）
-    ├── execution.md          # 执行/成本/财务/报表（/api/v1/execution/*）
-    ├── agent.md              # AI 智能体（/api/v1/agent/*）
-    ├── notification.md       # 通知中心（/api/v1/notification/*）
+└── modules/                  # 按业务域拆分（7 部署 + 12 业务域）
+    ├── userinfo.md           # 用户信息中心：用户/认证/权限/部门/资源池/Bench（/api/v1/auth/* + /api/v1/user/* + /api/v1/resource/*）
+    ├── project.md            # 项目/执行/财务/报表/驾驶舱：商机→售后全生命周期（/api/v1/project/* + /api/v1/execution/*）
+    ├── system.md             # 系统基础服务：文件/配置/审计/通知/消息模板（/api/v1/file/* + /api/v1/audit/* + /api/v1/notification/* + /api/v1/message/* + /api/v1/config/*）
     ├── workflow.md           # 工作流（/api/v1/workflow/*）
-    ├── file.md               # 文件服务（/api/v1/file/*）
-    ├── audit.md              # 审计日志（/api/v1/audit/*）
-    ├── message.md            # 消息模板（/api/v1/message/*）
-    ├── config.md             # 系统配置（/api/v1/config/*）
-    └── cronjob.md            # 定时任务（/api/v1/cronjob/*）
+    ├── agent.md              # AI 智能体（/api/v1/agent/*）
+    └── cronjob.md            # 分布式任务调度 XXL-JOB 客户端（/api/v1/cronjob/*）
 ```
 
 ## 查看方式
 
 ### 方式 1：Swagger UI（推荐）
 
-每个微服务在 808X 端口暴露 Swagger UI：
+每个微服务在 900X 端口暴露 Swagger UI（2026-07-03 端口重分配）：
 
 ```
-http://localhost:9001/swagger-ui.html  # auth
-http://localhost:9002/swagger-ui.html  # user
-http://localhost:9005/swagger-ui.html  # project
-http://localhost:9006/swagger-ui.html  # execution
-...
-http://localhost:9010/swagger-ui.html  # audit
+http://localhost:9000/swagger-ui.html  # gateway        - API 网关路由
+http://localhost:9001/swagger-ui.html  # system         - 文件/配置/审计/通知/消息模板
+http://localhost:9002/swagger-ui.html  # userinfo       - 用户/认证/权限/部门/资源池/Bench
+http://localhost:9003/swagger-ui.html  # project        - 商机/立项/合同/执行/财务/报表/驾驶舱
+http://localhost:9004/swagger-ui.html  # cronjob        - 分布式任务调度
+http://localhost:9005/swagger-ui.html  # workflow       - 工作流
+http://localhost:9006/swagger-ui.html  # agent          - AI 智能体
 ```
 
 Knife4j 增强版（国内访问更稳定）：
 
 ```
-http://localhost:9001/doc.html
+http://localhost:9001/doc.html   # system
+http://localhost:9002/doc.html   # userinfo
+http://localhost:9003/doc.html   # project
 ```
 
 ### 方式 2：OpenAPI 3 JSON
@@ -62,9 +59,12 @@ http://localhost:9001/doc.html
 每个微服务启动后访问：
 
 ```
-http://localhost:9001/v3/api-docs
-http://localhost:9002/v3/api-docs
-...
+http://localhost:9001/v3/api-docs  # system
+http://localhost:9002/v3/api-docs  # userinfo
+http://localhost:9003/v3/api-docs  # project
+http://localhost:9004/v3/api-docs  # cronjob
+http://localhost:9005/v3/api-docs  # workflow
+http://localhost:9006/v3/api-docs  # agent
 ```
 
 返回的 JSON 可导入 [Apifox](https://www.apifox.cn/)、[Apipost](https://www.apipost.cn/)、[Postman](https://www.postman.com/) 等工具。
@@ -170,7 +170,7 @@ Access token 有效期 2 小时，refresh token 有效期 7 天。
 mvn -pl ydsz-pmis-project spring-boot:run
 
 # 另开终端导出 OpenAPI JSON
-curl http://localhost:9005/v3/api-docs > docs/api/openapi-project.json
+curl http://localhost:9003/v3/api-docs > docs/api/openapi-project.json
 ```
 
 ### Maven 批量生成
@@ -184,6 +184,7 @@ mvn -pl 'ydsz-pmis-*' exec:java -Dexec.mainClass="org.springdoc.openapi.Generate
 
 | 日期 | 版本 | 变更 |
 |------|------|------|
+| 2026-07-03 | 1.2 | 服务合并端口重分配 9000-9006 |
 | 2026-07-01 | 1.0.0 | 初始 14 模块端点文档（批次 18） |
 | 2026-06-15 | 1.0.0-rc3 | execution 模块增 ImportExportController |
 | 2026-06-01 | 1.0.0-rc2 | agent 模块增 AgentOrchestrationController |

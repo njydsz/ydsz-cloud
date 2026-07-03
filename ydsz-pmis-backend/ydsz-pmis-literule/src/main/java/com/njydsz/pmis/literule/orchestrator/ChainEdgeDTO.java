@@ -73,11 +73,13 @@ public class ChainEdgeDTO implements Serializable {
     public static final class EdgeType {
         public static final String THEN = "THEN";
         public static final String IF_BRANCH = "IF_BRANCH";
+        public static final String ELIF_BRANCH = "ELIF_BRANCH";
         public static final String SWITCH_BRANCH = "SWITCH_BRANCH";
         public static final String FOR_ITER = "FOR_ITER";
         public static final String WHILE_ITER = "WHILE_ITER";
         public static final String DEFAULT_BRANCH = "DEFAULT_BRANCH";
         public static final String GROUP_MEMBER = "GROUP_MEMBER";
+        public static final String BREAK = "BREAK";
         private EdgeType() {}
     }
 }

@@ -45,82 +45,53 @@ scrape_configs:
 
   # ==================== 微服务（DNS 服务发现） ====================
   # 所有 PMIS 微服务统一通过 DNS 服务发现，扩缩容后自动纳入抓取
+  # 服务合并后 7 个部署单元（2026-07-03 端口重分配）
   - job_name: 'pmis-microservices'
     metrics_path: /actuator/prometheus
     dns_sd_configs:
       - names:
           - 'pmis-gateway'
-          - 'pmis-auth'
-          - 'pmis-user'
-          - 'pmis-notification'
-          - 'pmis-workflow'
+          - 'pmis-system'
+          - 'pmis-userinfo'
           - 'pmis-project'
-          - 'pmis-execution'
-          - 'pmis-agent'
-          - 'pmis-config'
-          - 'pmis-file'
-          - 'pmis-audit'
-          - 'pmis-message'
           - 'pmis-cronjob'
+          - 'pmis-workflow'
+          - 'pmis-agent'
         type: 'A'
         port: 9000  # 基准端口，实际端口通过 relabel 映射
     relabel_configs:
       # 根据 DNS 名称设置 service 标签
       - source_labels: [__meta_dns_name]
         target_label: service
-      # 根据服务名映射实际端口
+      # 根据服务名映射实际端口（2026-07-03 重分配后）
       - source_labels: [__meta_dns_name]
         target_label: __address__
         regex: 'pmis-gateway'
         replacement: '${1}:9000'
       - source_labels: [__meta_dns_name]
         target_label: __address__
-        regex: 'pmis-auth'
+        regex: 'pmis-system'
         replacement: '${1}:9001'
       - source_labels: [__meta_dns_name]
         target_label: __address__
-        regex: 'pmis-user'
+        regex: 'pmis-userinfo'
         replacement: '${1}:9002'
       - source_labels: [__meta_dns_name]
         target_label: __address__
-        regex: 'pmis-notification'
+        regex: 'pmis-project'
         replacement: '${1}:9003'
       - source_labels: [__meta_dns_name]
         target_label: __address__
-        regex: 'pmis-workflow'
+        regex: 'pmis-cronjob'
         replacement: '${1}:9004'
       - source_labels: [__meta_dns_name]
         target_label: __address__
-        regex: 'pmis-project'
+        regex: 'pmis-workflow'
         replacement: '${1}:9005'
       - source_labels: [__meta_dns_name]
         target_label: __address__
-        regex: 'pmis-execution'
-        replacement: '${1}:9006'
-      - source_labels: [__meta_dns_name]
-        target_label: __address__
         regex: 'pmis-agent'
-        replacement: '${1}:9007'
-      - source_labels: [__meta_dns_name]
-        target_label: __address__
-        regex: 'pmis-config'
-        replacement: '${1}:9008'
-      - source_labels: [__meta_dns_name]
-        target_label: __address__
-        regex: 'pmis-file'
-        replacement: '${1}:9009'
-      - source_labels: [__meta_dns_name]
-        target_label: __address__
-        regex: 'pmis-audit'
-        replacement: '${1}:9010'
-      - source_labels: [__meta_dns_name]
-        target_label: __address__
-        regex: 'pmis-message'
-        replacement: '${1}:9011'
-      - source_labels: [__meta_dns_name]
-        target_label: __address__
-        regex: 'ydsz-pmis-cronjob'
-        replacement: '${1}:9012'
+        replacement: '${1}:9006'
       # 设置 tier 标签
       - source_labels: [service]
         target_label: tier

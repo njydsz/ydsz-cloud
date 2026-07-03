@@ -429,7 +429,7 @@ async function loadAnomaly() {
   try {
     const res = await getAnomalyInstances(anomalyQuery)
     if (res.data?.code === 0) {
-      anomalyList.value = res.data.data?.records || []
+      anomalyList.value = res.data.data?.list || []
       anomalyTotal.value = res.data.data?.total || 0
     }
   } finally {

@@ -30,7 +30,7 @@ public enum FlowNodeType {
      *    <li>serviceType: HTTP / SCRIPT / AUTO_PASS（默认 AUTO_PASS）</li>
      *    <li>url: HTTP 调用地址（serviceType=HTTP 时必填）</li>
      *    <li>method: HTTP 方法 GET/POST/PUT/DELETE（默认 GET）</li>
-     *    <li>script: 脚本内容（serviceType=SCRIPT 时使用，暂未实现）</li>
+     *    <li>script: 脚本内容（serviceType=SCRIPT 时使用，Aviator 语法，由 FlowServiceNodeExecutor 沙箱执行）</li>
      *  </ul>
      *  <p>P1-5: ext JSON 还支持 autoDedup: true 配置，表示该节点启用跨节点办理人去重
      *  （同实例下已审批过的办理人将被排除，候选为空时自动跳过）。

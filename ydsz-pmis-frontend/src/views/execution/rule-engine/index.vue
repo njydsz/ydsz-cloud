@@ -226,6 +226,90 @@ const filteredRules = computed(() => {
   return list
 })
 
+// ==================== P0-5 批量操作 ====================
+const selectedRuleCodes = ref<string[]>([])
+/** 批量改分类对话框 */
+const batchCategoryDialogVisible = ref(false)
+const batchCategoryValue = ref('')
+
+function onSelectionChange(selection: RuleDefinition[]) {
+  selectedRuleCodes.value = selection.map((r) => r.code)
+}
+/** 是否可被选中（仅 PUBLISHED 状态可被批量启用） */
+function isRuleSelectable(row: RuleDefinition) {
+  return row.status !== 'ARCHIVED'
+}
+
+async function handleBatchToggle(enabled: boolean) {
+  if (selectedRuleCodes.value.length === 0) return
+  try {
+    const res = await ruleApi.batchToggle(selectedRuleCodes.value, enabled)
+    if (res.code === 0) {
+      const data = res.data
+      ElMessage.success(`批量${enabled ? '启用' : '停用'}完成: 成功 ${data?.success || 0} 条`)
+      if (data?.failed?.length) {
+        ElMessage.warning(`失败 ${data.failed.length} 条: ${data.failed.slice(0, 3).join('; ')}`)
+      }
+      await fetchRules()
+      selectedRuleCodes.value = []
+    } else {
+      ElMessage.error(res.message || '批量操作失败')
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.message || '批量操作异常')
+  }
+}
+
+async function handleBatchPriority(delta: number) {
+  if (selectedRuleCodes.value.length === 0) return
+  try {
+    const res = await ruleApi.batchPriority(selectedRuleCodes.value, delta)
+    if (res.code === 0) {
+      const data = res.data
+      ElMessage.success(`优先级调整完成: 成功 ${data?.success || 0} 条`)
+      if (data?.failed?.length) {
+        ElMessage.warning(`失败 ${data.failed.length} 条`)
+      }
+      await fetchRules()
+    } else {
+      ElMessage.error(res.message || '批量调整失败')
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.message || '操作异常')
+  }
+}
+
+function openBatchCategoryDialog() {
+  if (selectedRuleCodes.value.length === 0) return
+  batchCategoryValue.value = ''
+  batchCategoryDialogVisible.value = true
+}
+
+async function confirmBatchCategory() {
+  if (!batchCategoryValue.value) {
+    ElMessage.warning('请输入新分类')
+    return
+  }
+  try {
+    const res = await ruleApi.batchCategory(selectedRuleCodes.value, batchCategoryValue.value)
+    if (res.code === 0) {
+      const data = res.data
+      ElMessage.success(`批量改分类完成: 成功 ${data?.success || 0} 条`)
+      batchCategoryDialogVisible.value = false
+      await fetchRules()
+    } else {
+      ElMessage.error(res.message || '批量改分类失败')
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.message || '操作异常')
+  }
+}
+
+// ==================== P0-1 画布编辑入口 ====================
+function openDesigner(row: RuleDefinition) {
+  router.push(`/rule-engine/designer/${row.code}`)
+}
+
 /** 已存在的类别集合（用于筛选下拉） */
 const categoryOptions = computed(() => {
   const set = new Set<string>()
@@ -891,7 +975,15 @@ onMounted(() => {
       </div>
 
       <!-- 规则列表表格 -->
-      <el-table v-loading="loading" :data="filteredRules" border stripe style="width: 100%">
+      <el-table
+        v-loading="loading"
+        :data="filteredRules"
+        border
+        stripe
+        style="width: 100%"
+        @selection-change="onSelectionChange"
+      >
+        <el-table-column type="selection" width="48" :selectable="isRuleSelectable" />
         <el-table-column prop="code" label="规则编码" width="180" show-overflow-tooltip />
         <el-table-column prop="name" label="规则名称" min-width="180" show-overflow-tooltip />
         <el-table-column label="类别" width="120">
@@ -920,7 +1012,7 @@ onMounted(() => {
             <el-tag type="info" size="small">v{{ row.version }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="320" fixed="right">
+        <el-table-column label="操作" width="380" fixed="right">
           <template #default="{ row }">
             <el-button link type="primary" size="small" @click="openEdit(row)">
               <el-icon><Edit /></el-icon>编辑
@@ -934,12 +1026,28 @@ onMounted(() => {
             <el-button link type="info" size="small" @click="openVersions(row)">
               <el-icon><Clock /></el-icon>版本
             </el-button>
+            <el-button link type="success" size="small" @click="openDesigner(row)">
+              <el-icon><Connection /></el-icon>画布
+            </el-button>
             <el-button link type="danger" size="small" @click="handleDelete(row)">
               <el-icon><Delete /></el-icon>删除
             </el-button>
           </template>
         </el-table-column>
       </el-table>
+
+      <!-- P0-5 批量操作工具栏 -->
+      <div v-if="selectedRuleCodes.length > 0" class="batch-toolbar">
+        <span class="batch-info">已选 {{ selectedRuleCodes.length }} 条</span>
+        <el-button-group>
+          <el-button type="success" plain :icon="CircleCheck" @click="handleBatchToggle(true)">批量启用</el-button>
+          <el-button type="warning" plain :icon="CircleClose" @click="handleBatchToggle(false)">批量停用</el-button>
+          <el-button plain @click="handleBatchPriority(10)">优先级 +10</el-button>
+          <el-button plain @click="handleBatchPriority(-10)">优先级 -10</el-button>
+          <el-button plain @click="openBatchCategoryDialog">批量改分类</el-button>
+          <el-button text @click="selectedRuleCodes = []">清空选择</el-button>
+        </el-button-group>
+      </div>
     </el-card>
 
     <!-- ==================== 规则编辑对话框 ==================== -->

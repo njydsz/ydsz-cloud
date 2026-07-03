@@ -26,18 +26,33 @@ const props = defineProps<{
   readonly?: boolean
 }>()
 
+// ==================== Emits ====================
+const emit = defineEmits<{
+  /** 后端返回 formSchema 时触发（父组件未传 formSchema 的场景） */
+  (e: 'schema-loaded', schema: string): void
+}>()
+
 // ==================== State ====================
 const fApi = ref<any>(null)
 const loading = ref(false)
 const fieldPermissions = ref<Record<string, FieldPermission>>({})
 const formData = ref<Record<string, any>>({})
+/** 后端返回的 formSchema（父组件未传 formSchema 时使用） */
+const backendSchema = ref<string>('')
+
+/**
+ * 实际生效的 schema：优先使用 props.formSchema，否则回退到后端返回的 backendSchema。
+ * 解决父组件未传 formSchema 但后端返回了 schema 时不渲染表单的问题。
+ */
+const effectiveSchema = computed(() => props.formSchema || backendSchema.value)
 
 // ==================== 计算渲染规则 ====================
 /** 解析原始 rule 数组 */
 const parsedRules = computed<Rule[]>(() => {
-  if (!props.formSchema) return []
+  const schemaSrc = effectiveSchema.value
+  if (!schemaSrc) return []
   try {
-    let schema: any = props.formSchema
+    let schema: any = schemaSrc
     if (typeof schema === 'string') {
       const parsed = JSON.parse(schema)
       // 兼容 { rule: [...], options: {...} } 或直接 [...]
@@ -52,11 +67,12 @@ const parsedRules = computed<Rule[]>(() => {
 
 /** 解析 form-create 配置选项 */
 const parsedOptions = computed<Options>(() => {
-  if (!props.formSchema || typeof props.formSchema !== 'string') {
+  const schemaSrc = effectiveSchema.value
+  if (!schemaSrc || typeof schemaSrc !== 'string') {
     return { submitBtn: false, resetBtn: false } as Options
   }
   try {
-    const parsed = JSON.parse(props.formSchema)
+    const parsed = JSON.parse(schemaSrc)
     if (parsed.options) {
       return { ...parsed.options, submitBtn: false, resetBtn: false }
     }
@@ -125,13 +141,14 @@ async function loadFieldPermissions() {
     const res = await getFormRenderData(props.instanceId)
     if (res.data?.code === 0 && res.data?.data) {
       fieldPermissions.value = res.data.data.fieldPermissions || {}
-      // 如果没有传入 formSchema 但后端返回了，也支持使用后端的
+      // 父组件未传 formSchema 但后端返回了：回填 backendSchema 并通知父组件
       if (!props.formSchema && res.data.data.formSchema) {
-        // emit or handle
+        backendSchema.value = res.data.data.formSchema
+        emit('schema-loaded', res.data.data.formSchema)
       }
     }
   } catch (e) {
-    console.warn('加载字段权限失败:', e)
+    ElMessage.warning('加载字段权限失败：' + (e as Error).message)
   } finally {
     loading.value = false
   }

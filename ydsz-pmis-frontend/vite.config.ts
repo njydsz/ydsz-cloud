@@ -81,6 +81,8 @@ export default defineConfig(({ mode }) => {
         },
         workbox: {
           globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+          // 排除 bundle 分析报告，避免 PWA 预缓存超限（stats.html 由 visualizer 生成，无需离线）
+          globIgnores: ['**/stats.html'],
           navigateFallback: '/index.html',
         },
       }),
