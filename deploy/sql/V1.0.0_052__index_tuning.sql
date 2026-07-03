@@ -114,23 +114,24 @@ CREATE INDEX IF NOT EXISTS idx_pmis_agent_blackboard_session
 --  6) 财务对账（voucher / payment / invoice）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_status_issued
-    ON pmis_invoice (status, issued_at DESC);
+    ON pmis_finance_invoice (status, issued_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_customer_status
-    ON pmis_invoice (customer_id, status, issued_at DESC);
+    ON pmis_finance_invoice (customer_id, status, issued_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_payment_unallocated
-    ON pmis_payment (contract_id, status)
+    ON pmis_finance_payment (contract_id, status)
     WHERE status IN ('RECEIVED', 'PARTIAL');
-CREATE INDEX IF NOT EXISTS idx_pmis_voucher_period_status
-    ON pmis_voucher (period, status, created_at DESC);
+-- 注：pmis_voucher 表尚未创建，相关索引暂时注释，待凭证表落地后启用
+-- CREATE INDEX IF NOT EXISTS idx_pmis_voucher_period_status
+--     ON pmis_voucher (period, status, created_at DESC);
 
 -- =====================================================================
 --  7) 时区/时间相关 BRIN 索引（日志/审计表 100w+ 行）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_audit_log_brin_created
-    ON pmis_audit_log USING BRIN (created_at)
+    ON pmis_operation_log USING BRIN (created_at)
     WITH (pages_per_range = 32);
 CREATE INDEX IF NOT EXISTS idx_pmis_message_log_brin_sent
-    ON pmis_message_send_log USING BRIN (sent_at)
+    ON pmis_message_log USING BRIN (sent_at)
     WITH (pages_per_range = 32);
 CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
     ON pmis_operation_log USING BRIN (created_at)

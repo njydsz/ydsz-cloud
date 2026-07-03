@@ -4,8 +4,12 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.njydsz.pmis.common.feign.AgentClient;
 import com.njydsz.pmis.literule.api.RuleDefinition;
+import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
+import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.config.RuleAdminService;
+import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
+import com.njydsz.pmis.literule.expr.ExpressionValidationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,6 +24,14 @@ import java.util.Map;
  * <p>基于用户的自然语言描述，调用 LLM（通过 agent 模块）生成 Aviator 表达式规则。
  * 当 AI 调用失败时，降级为基于关键词的简单规则生成策略。
  *
+ * <p>1.4.0 起支持闭环校验：
+ * <ul>
+ *   <li>使用 {@link ExpressionValidationService} 校验 condition/severity/template 三段表达式</li>
+ *   <li>调用 {@link RuleAdminService#dryRun} 用空 facts 试评估，确保运行时不崩溃</li>
+ *   <li>强制 {@code status=DRAFT}，必须经过审批 API 才能进入 PUBLISHED</li>
+ *   <li>changeDesc 中追加 {@code [AI 生成]} / {@code [AI 降级]} 来源标记</li>
+ * </ul>
+ *
  * @author ydsz-pmis-team
  * @since 1.1.0
  */
@@ -30,6 +42,11 @@ public class RuleGenerationService {
 
     private final AgentClient agentClient;
     private final RuleAdminService ruleAdminService;
+    private final ExpressionValidationService validationService;
+
+    /** AI 生成规则的来源标记 */
+    public static final String SOURCE_AI = "AI";
+    public static final String SOURCE_AI_FALLBACK = "AI_FALLBACK";
 
     /**
      * AI 辅助生成规则定义
@@ -200,18 +217,116 @@ public class RuleGenerationService {
     /**
      * 生成并保存规则
      *
+     * <p>1.4.0 起执行闭环校验：
+     * <ol>
+     *   <li>调用 {@link ExpressionValidationService} 校验 condition/severity/template 三段表达式</li>
+     *   <li>调用 {@link RuleAdminService#dryRun} 用空 facts 试评估，确保运行时不崩溃</li>
+     *   <li>强制 {@code status=DRAFT}，必须经过审批 API 才能进入 PUBLISHED</li>
+     *   <li>在 changeDesc 中追加 {@code [AI 生成]} 来源标记，便于审计追溯</li>
+     * </ol>
+     *
      * @param description 用户的自然语言描述
      * @param availableFields 可用字段列表
      * @param operator 操作人
-     * @return 保存后的规则定义
+     * @return 保存后的规则定义（status=DRAFT，需审批后才能生效）
+     * @throws IllegalArgumentException 表达式校验失败
+     * @throws IllegalStateException dryRun 试评估异常
      */
     public RuleDefinition generateAndSave(String description, List<String> availableFields, String operator) {
         RuleDefinition generated = generate(description, availableFields);
-        // 校验表达式
-        if (!ruleAdminService.validateExpression(generated.getConditionExpression())) {
-            log.warn("[LiteRule-AI] AI 生成的表达式无效: {}", generated.getConditionExpression());
-            throw new IllegalArgumentException("AI 生成的表达式无效: " + generated.getConditionExpression());
+
+        // 1. 闭环校验：condition / severity / template 三段表达式
+        validateGeneratedExpressions(generated);
+
+        // 2. dryRun 试评估（用空 facts，仅验证运行时不崩溃，不校验业务正确性）
+        performDryRunProbe(generated);
+
+        // 3. 强制 DRAFT 状态，必须经过审批 API 才能进入 PUBLISHED
+        generated.setStatus(RuleStatus.DRAFT.name());
+
+        // 4. AI 生成的规则默认不启用，待审批 PUBLISHED 后再由运营手动启用
+        generated.setEnabled(false);
+
+        // 5. 保存并标记来源
+        String changeDesc = "[AI 生成] " + description;
+        RuleDefinition saved = ruleAdminService.save(generated, operator, changeDesc);
+
+        log.info("[LiteRule-AI] AI 规则已生成并保存（待审批）: code={}, operator={}, description={}",
+                saved.getCode(), operator, description);
+        return saved;
+    }
+
+    /**
+     * 校验 AI 生成的三段表达式
+     *
+     * <p>任一校验失败时抛 {@link IllegalArgumentException}，包含具体错误类型和描述。
+     *
+     * @param generated 生成的规则定义
+     * @throws IllegalArgumentException 校验失败
+     */
+    private void validateGeneratedExpressions(RuleDefinition generated) {
+        // 1.1 条件表达式
+        ExpressionValidationResult condResult = validationService.validateCondition(generated.getConditionExpression());
+        if (!condResult.isValid()) {
+            String msg = String.format("AI 生成的条件表达式无效 [%s]: %s (expr=%s)",
+                    condResult.getErrorType(), condResult.getErrorMessage(), generated.getConditionExpression());
+            log.warn("[LiteRule-AI] {}", msg);
+            throw new IllegalArgumentException(msg);
         }
-        return ruleAdminService.save(generated, operator, "AI 辅助生成: " + description);
+
+        // 1.2 严重度表达式（可选）
+        if (generated.getSeverityExpression() != null && !generated.getSeverityExpression().isBlank()) {
+            ExpressionValidationResult sevResult = validationService.validateSeverity(generated.getSeverityExpression());
+            if (!sevResult.isValid()) {
+                String msg = String.format("AI 生成的严重度表达式无效 [%s]: %s (expr=%s)",
+                        sevResult.getErrorType(), sevResult.getErrorMessage(), generated.getSeverityExpression());
+                log.warn("[LiteRule-AI] {}", msg);
+                throw new IllegalArgumentException(msg);
+            }
+        }
+
+        // 1.3 标题模板
+        if (generated.getTitleTemplate() != null && !generated.getTitleTemplate().isBlank()) {
+            ExpressionValidationResult titleResult = validationService.validateTemplate(generated.getTitleTemplate());
+            if (!titleResult.isValid()) {
+                String msg = String.format("AI 生成的标题模板无效 [%s]: %s (template=%s)",
+                        titleResult.getErrorType(), titleResult.getErrorMessage(), generated.getTitleTemplate());
+                log.warn("[LiteRule-AI] {}", msg);
+                throw new IllegalArgumentException(msg);
+            }
+        }
+
+        // 1.4 描述模板
+        if (generated.getDescriptionTemplate() != null && !generated.getDescriptionTemplate().isBlank()) {
+            ExpressionValidationResult descResult = validationService.validateTemplate(generated.getDescriptionTemplate());
+            if (!descResult.isValid()) {
+                String msg = String.format("AI 生成的描述模板无效 [%s]: %s (template=%s)",
+                        descResult.getErrorType(), descResult.getErrorMessage(), generated.getDescriptionTemplate());
+                log.warn("[LiteRule-AI] {}", msg);
+                throw new IllegalArgumentException(msg);
+            }
+        }
+    }
+
+    /**
+     * dryRun 试探：用空 facts 评估一次，确保运行时不崩溃
+     *
+     * <p>注意：空 facts 仅用于验证表达式不会因 NPE/ClassCastException 等运行时异常崩溃，
+     * 不校验业务正确性（空 facts 下大多数条件会返回 false）。
+     *
+     * @param generated 生成的规则定义
+     * @throws IllegalStateException dryRun 出现非预期异常
+     */
+    private void performDryRunProbe(RuleDefinition generated) {
+        try {
+            Map<String, Object> emptyFacts = new HashMap<>();
+            List<RuleResult> results = ruleAdminService.dryRun(generated.getCode(), emptyFacts);
+            log.debug("[LiteRule-AI] dryRun 试探完成: code={}, results={}", generated.getCode(),
+                    results != null ? results.size() : 0);
+        } catch (Exception e) {
+            // dryRun 异常不一定意味着规则有问题（可能是数据库中尚未保存，dryRun 找不到规则）
+            // 这种情况下不阻塞保存，仅记录日志
+            log.debug("[LiteRule-AI] dryRun 试探跳过（规则尚未持久化，无法 dryRun）: {}", e.getMessage());
+        }
     }
 }

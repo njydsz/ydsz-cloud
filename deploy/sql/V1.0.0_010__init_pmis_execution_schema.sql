@@ -107,6 +107,7 @@ CREATE TABLE pmis_execution_time_entry (
     days                NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 人天（按 8h 折算）
     overtime            NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 加班工时
     work_type           VARCHAR(32)   NOT NULL DEFAULT 'REGULAR', -- REGULAR/OVERTIME/TRAINING/LEAVE
+    billable            SMALLINT      NOT NULL DEFAULT 1,           -- 是否可计费: 1 可计费 / 0 不可计费
     description         TEXT,
     status              VARCHAR(16)   NOT NULL DEFAULT 'DRAFT',
     -- DRAFT/SUBMITTED/APPROVED/REJECTED

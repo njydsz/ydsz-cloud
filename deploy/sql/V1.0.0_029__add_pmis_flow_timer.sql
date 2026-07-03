@@ -75,7 +75,7 @@ CREATE INDEX idx_pmis_flow_timer_boundary ON pmis_flow_timer (boundary_task_id)
 -- 本 SQL 不增加新列，复用 ext JSON。
 
 -- -------------------------------------------
--- 3. 注册定时器扫描器调度任务（PMIS Scheduler）
+-- 3. 注册定时器扫描器调度任务（PMIS Cronjob）
 -- -------------------------------------------
 INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
 VALUES (

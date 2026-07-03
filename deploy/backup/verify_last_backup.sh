@@ -30,10 +30,10 @@ echo "  yesterday: ${YESTERDAY}"
 echo "  backup_dir: ${BACKUP_DIR}"
 echo "==========================================="
 
-# ---------- 1) 文件存在性 ----------
-BACKUP_FILE="${BACKUP_DIR}/pmis_daily_${YESTERDAY}.sql.gz"
-if [ ! -f "${BACKUP_FILE}" ]; then
-  fail "昨日备份文件不存在：${BACKUP_FILE}"
+# ---------- 1) 文件存在性（支持时分秒后缀的通配匹配） ----------
+BACKUP_FILE=$(ls -t "${BACKUP_DIR}"/pmis_daily_${YESTERDAY}_*.sql.gz 2>/dev/null | head -1)
+if [ -z "${BACKUP_FILE}" ] || [ ! -f "${BACKUP_FILE}" ]; then
+  fail "昨日备份文件不存在：pmis_daily_${YESTERDAY}_*.sql.gz"
 fi
 ok "备份文件存在：$(basename ${BACKUP_FILE})"
 

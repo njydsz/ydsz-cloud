@@ -1,3 +1,13 @@
+<!--
+  ===========================================================================
+  文件名: chaos-engineering.md
+  路径:   docs/chaos-engineering.md
+  作用:   PMIS 混沌工程（Chaos Engineering）方案，故障注入实验、容错能力验证
+  原则:   Netflix chaos principles（稳态假设 → 多样化实验 → 生产演练 → 自动化持续）
+  关联:   canary-deployment.md  /  deploy/monitoring/  /  docs/operations/prod-ops-runbook.md
+  ===========================================================================
+-->
+
 # PMIS 混沌工程 (Chaos Engineering)
 
 > 批次 20 P3-5 | 适用: PMIS 全量 14 个 Spring Cloud 微服务

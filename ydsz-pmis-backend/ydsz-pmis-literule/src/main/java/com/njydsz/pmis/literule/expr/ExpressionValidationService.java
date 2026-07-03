@@ -1,6 +1,5 @@
 package com.njydsz.pmis.literule.expr;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
@@ -14,11 +13,12 @@ import java.util.regex.Pattern;
  * <p>面向前端表达式编辑器的高层校验 API，封装 {@link ExpressionEvaluator#validateDetailed(String)}
  * 并叠加业务语义校验（条件表达式必须返回 boolean、严重度表达式取值合法、模板占位符闭合等）。
  *
- * <p>当前实现的特点：
+ * <p>1.4.0 起支持 VariableRegistry（P2-4）：
  * <ul>
- *   <li>不依赖 VariableRegistry（P2-4 尚未落地），所以 UNDEFINED_VARIABLE 类型暂时不会触发</li>
- *   <li>从表达式文本中提取引用变量，用于前端"已使用变量"提示</li>
- *   <li>模板表达式校验仅做 {@code ${var}} 占位符闭合检查，不做变量存在性校验</li>
+ *   <li>当注入非空 {@link VariableRegistry} 时，启用 UNDEFINED_VARIABLE 校验</li>
+ *   <li>对条件/严重度表达式中引用的变量，逐一查询 registry，未注册的变量收集为 UNDEFINED_VARIABLE 错误</li>
+ *   <li>对模板表达式中的 ${var} 占位符，同样查询 registry</li>
+ *   <li>当 registry 为 {@link EmptyVariableRegistry} 时（默认），跳过 UNDEFINED_VARIABLE 校验，保持向后兼容</li>
  * </ul>
  *
  * <p>Bean 装配见 {@link com.njydsz.pmis.literule.config.LiteRuleAutoConfiguration#expressionValidationService}。
@@ -27,10 +27,10 @@ import java.util.regex.Pattern;
  * @since 1.4.0
  */
 @Slf4j
-@RequiredArgsConstructor
 public class ExpressionValidationService {
 
     private final ExpressionEvaluator evaluator;
+    private final VariableRegistry variableRegistry;
 
     /** 模板占位符正则：${var} 或 ${ a.b.c } */
     private static final Pattern TEMPLATE_PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{([^}]*)\\}");
@@ -39,16 +39,43 @@ public class ExpressionValidationService {
     private static final Pattern UNCLOSED_PLACEHOLDER_PATTERN = Pattern.compile("\\$\\{[^}]*$");
 
     /**
+     * 构造表达式校验服务（不启用 UNDEFINED_VARIABLE 校验）
+     *
+     * @param evaluator 表达式求值器
+     */
+    public ExpressionValidationService(ExpressionEvaluator evaluator) {
+        this(evaluator, new EmptyVariableRegistry());
+    }
+
+    /**
+     * 构造表达式校验服务
+     *
+     * @param evaluator 表达式求值器
+     * @param variableRegistry 变量注册表（null 时使用 EmptyVariableRegistry，跳过 UNDEFINED_VARIABLE 校验）
+     */
+    public ExpressionValidationService(ExpressionEvaluator evaluator, VariableRegistry variableRegistry) {
+        this.evaluator = evaluator;
+        this.variableRegistry = variableRegistry != null ? variableRegistry : new EmptyVariableRegistry();
+        if (!this.variableRegistry.isEmpty()) {
+            log.info("[LiteRule-Expr] 变量空间校验已启用（已注册 {} 个变量）", this.variableRegistry.listAll().size());
+        }
+    }
+
+    /**
      * 校验条件表达式（必须返回 boolean）
      *
-     * <p>当前实现只校验语法合法性，不强制运行时类型检查（避免误报）。
-     * VariableRegistry（P2-4）落地后，可在此叠加变量存在性校验。
+     * <p>当注入非空 {@link VariableRegistry} 时，叠加 UNDEFINED_VARIABLE 校验。
      *
      * @param expression 条件表达式
      * @return 校验结果
      */
     public ExpressionValidationResult validateCondition(String expression) {
-        return evaluator.validateDetailed(expression);
+        ExpressionValidationResult base = evaluator.validateDetailed(expression);
+        // 语法不通过时直接返回，不进入变量校验阶段
+        if (!base.isValid()) {
+            return base;
+        }
+        return checkUndefinedVariables(base);
     }
 
     /**
@@ -65,14 +92,17 @@ public class ExpressionValidationService {
             // 严重度表达式可选，为空时使用 defaultSeverity
             return ExpressionValidationResult.ok(expression, 0L, List.of());
         }
-        return evaluator.validateDetailed(expression);
+        ExpressionValidationResult base = evaluator.validateDetailed(expression);
+        if (!base.isValid()) {
+            return base;
+        }
+        return checkUndefinedVariables(base);
     }
 
     /**
      * 校验模板表达式（支持 ${var} 占位符）
      *
-     * <p>仅校验占位符是否闭合，不校验变量是否存在。
-     * 普通文本（不含占位符）视为合法。
+     * <p>当注入非空 {@link VariableRegistry} 时，对 ${var} 中的变量做 UNDEFINED_VARIABLE 校验。
      *
      * @param template 模板字符串
      * @return 校验结果
@@ -106,7 +136,50 @@ public class ExpressionValidationService {
         }
 
         elapsed = (System.nanoTime() - start) / 1_000_000L;
-        return ExpressionValidationResult.ok(template, elapsed, referencedVars);
+        ExpressionValidationResult result = ExpressionValidationResult.ok(template, elapsed, referencedVars);
+
+        // 叠加变量存在性校验（仅当 registry 非空时）
+        return checkUndefinedVariables(result);
+    }
+
+    /**
+     * 校验表达式中的变量是否已注册
+     *
+     * <p>当 {@link #variableRegistry} 为空（{@link EmptyVariableRegistry}）时，跳过校验。
+     * 当 registry 非空时，遍历 referencedVariables，收集未注册的变量。
+     *
+     * @param base 基础校验结果（已通过语法校验）
+     * @return 叠加 UNDEFINED_VARIABLE 校验后的结果
+     */
+    private ExpressionValidationResult checkUndefinedVariables(ExpressionValidationResult base) {
+        if (variableRegistry == null || variableRegistry.isEmpty()) {
+            return base;
+        }
+        List<String> referenced = base.getReferencedVariables();
+        if (referenced == null || referenced.isEmpty()) {
+            return base;
+        }
+        List<String> undefined = new ArrayList<>();
+        for (String var : referenced) {
+            if (!variableRegistry.contains(var)) {
+                undefined.add(var);
+            }
+        }
+        if (undefined.isEmpty()) {
+            return base;
+        }
+        String msg = String.format("表达式引用了未注册的变量: %s（共 %d 个，请检查拼写或联系管理员注册变量）",
+                String.join(", ", undefined), undefined.size());
+        return ExpressionValidationResult.builder()
+                .valid(false)
+                .errorType(ExpressionValidationResult.ErrorType.UNDEFINED_VARIABLE)
+                .errorMessage(msg)
+                .errorLine(-1)
+                .errorColumn(-1)
+                .expression(base.getExpression())
+                .parseTimeMs(base.getParseTimeMs())
+                .referencedVariables(referenced)
+                .build();
     }
 
     /**
@@ -124,6 +197,9 @@ public class ExpressionValidationService {
             ExpressionValidationResult result;
             try {
                 result = evaluator.validateDetailed(expr);
+                if (result.isValid()) {
+                    result = checkUndefinedVariables(result);
+                }
             } catch (Exception e) {
                 result = ExpressionValidationResult.fail(expr,
                         ExpressionValidationResult.ErrorType.UNKNOWN,
@@ -132,5 +208,39 @@ public class ExpressionValidationService {
             results.put(label, result);
         });
         return results;
+    }
+
+    /**
+     * 获取已注册的变量列表（供前端编辑器自动补全）
+     *
+     * @return 变量定义列表
+     */
+    public List<VariableDefinition> listAvailableVariables() {
+        if (variableRegistry == null) {
+            return List.of();
+        }
+        return variableRegistry.listAll();
+    }
+
+    /**
+     * 按类别查询已注册变量
+     *
+     * @param category 变量类别
+     * @return 变量定义列表
+     */
+    public List<VariableDefinition> listVariablesByCategory(String category) {
+        if (variableRegistry == null) {
+            return List.of();
+        }
+        return variableRegistry.listByCategory(category);
+    }
+
+    /**
+     * 获取变量注册表（暴露给外部用于注册变量）
+     *
+     * @return 变量注册表
+     */
+    public VariableRegistry getVariableRegistry() {
+        return variableRegistry;
     }
 }

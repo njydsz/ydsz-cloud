@@ -113,7 +113,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         s.setAwaitTerminationSeconds(30);
         s.initialize();
         this.taskScheduler = s;
-        log.info("[Scheduler] 任务调度器初始化完成, poolSize=8");
+        log.info("[Cronjob] 任务调度器初始化完成, poolSize=8");
     }
 
     /**
@@ -123,7 +123,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public void destroy() {
         scheduledMap.values().forEach(f -> f.cancel(true));
         scheduledMap.clear();
-        log.info("[Scheduler] 任务调度器已关闭");
+        log.info("[Cronjob] 任务调度器已关闭");
     }
 
     /**
@@ -136,7 +136,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         try {
             loadOnStartup();
         } catch (Exception e) {
-            log.error("[Scheduler] 启动加载任务失败: {}", e.getMessage(), e);
+            log.error("[Cronjob] 启动加载任务失败: {}", e.getMessage(), e);
         }
     }
 
@@ -146,12 +146,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     @Override
     public void loadOnStartup() {
         List<JobDO> list = jobMapper.selectAllNormal();
-        log.info("[Scheduler] 启动加载任务数量: {}", list.size());
+        log.info("[Cronjob] 启动加载任务数量: {}", list.size());
         for (JobDO j : list) {
             try {
                 register(j);
             } catch (Exception e) {
-                log.warn("[Scheduler] 注册任务失败: key={} reason={}", j.getJobKey(), e.getMessage());
+                log.warn("[Cronjob] 注册任务失败: key={} reason={}", j.getJobKey(), e.getMessage());
             }
         }
     }
@@ -186,7 +186,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if ("NORMAL".equals(job.getStatus())) {
             register(job);
         }
-        log.info("[Scheduler] 创建任务: key={} cron={} handler={}", job.getJobKey(), job.getCronExpression(), job.getHandler());
+        log.info("[Cronjob] 创建任务: key={} cron={} handler={}", job.getJobKey(), job.getCronExpression(), job.getHandler());
         return job.getId();
     }
 
@@ -226,7 +226,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         if ("NORMAL".equals(exists.getStatus())) {
             register(exists);
         }
-        log.info("[Scheduler] 更新任务: key={}", exists.getJobKey());
+        log.info("[Cronjob] 更新任务: key={}", exists.getJobKey());
     }
 
     /**
@@ -243,7 +243,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         }
         unregister(j.getJobKey());
         jobMapper.deleteById(id);
-        log.info("[Scheduler] 删除任务: key={}", j.getJobKey());
+        log.info("[Cronjob] 删除任务: key={}", j.getJobKey());
     }
 
     /**
@@ -258,7 +258,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         unregister(j.getJobKey());
         j.setStatus("PAUSED");
         jobMapper.updateById(j);
-        log.info("[Scheduler] 暂停任务: key={}", j.getJobKey());
+        log.info("[Cronjob] 暂停任务: key={}", j.getJobKey());
     }
 
     /**
@@ -279,7 +279,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             jobMapper.updateById(j);
             register(j);
         }
-        log.info("[Scheduler] 恢复任务: key={}", j.getJobKey());
+        log.info("[Cronjob] 恢复任务: key={}", j.getJobKey());
     }
 
     /**
@@ -307,7 +307,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             return false;
         }
         if (!StringUtils.hasText(job.getCronExpression())) {
-            log.warn("[Scheduler] 注册失败: 任务 {} cron 表达式为空", job.getJobKey());
+            log.warn("[Cronjob] 注册失败: 任务 {} cron 表达式为空", job.getJobKey());
             return false;
         }
         if (scheduledMap.containsKey(job.getJobKey())) {
@@ -320,10 +320,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
                     trigger
             );
             scheduledMap.put(job.getJobKey(), f);
-            log.info("[Scheduler] 注册任务成功: key={} cron={}", job.getJobKey(), job.getCronExpression());
+            log.info("[Cronjob] 注册任务成功: key={} cron={}", job.getJobKey(), job.getCronExpression());
             return true;
         } catch (Exception e) {
-            log.error("[Scheduler] 注册任务失败: key={} reason={}", job.getJobKey(), e.getMessage());
+            log.error("[Cronjob] 注册任务失败: key={} reason={}", job.getJobKey(), e.getMessage());
             return false;
         }
     }
@@ -339,7 +339,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         ScheduledFuture<?> f = scheduledMap.remove(jobKey);
         if (f != null) {
             f.cancel(false);
-            log.info("[Scheduler] 注销任务: key={}", jobKey);
+            log.info("[Cronjob] 注销任务: key={}", jobKey);
             return true;
         }
         return false;
@@ -445,10 +445,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             Boolean acquired = redisTemplate.opsForValue()
                     .setIfAbsent(lockKey, INSTANCE_ID, JOB_LOCK_TTL);
             if (!Boolean.TRUE.equals(acquired)) {
-                log.info("[Scheduler] 任务已被其他实例持有锁, 跳过本次执行: key={}", job.getJobKey());
+                log.info("[Cronjob] 任务已被其他实例持有锁, 跳过本次执行: key={}", job.getJobKey());
                 return null;
             }
-            log.debug("[Scheduler] 获取分布式锁成功: key={} holder={}", lockKey, INSTANCE_ID);
+            log.debug("[Cronjob] 获取分布式锁成功: key={} holder={}", lockKey, INSTANCE_ID);
         }
 
         // 写开始日志
@@ -472,7 +472,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             success = true;
             log0.setResultJson(result == null ? null : JSON.toJSONString(result));
         } catch (Exception e) {
-            log.error("[Scheduler] 任务执行失败: key={} handler={} reason={}",
+            log.error("[Cronjob] 任务执行失败: key={} handler={} reason={}",
                     job.getJobKey(), job.getHandler(), e.getMessage(), e);
             error = e.getClass().getSimpleName() + ": " + e.getMessage();
             log0.setErrorMessage(error);
@@ -499,7 +499,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
                     redisTemplate.execute(RELEASE_LOCK_SCRIPT,
                             Collections.singletonList(lockKey), INSTANCE_ID);
                 } catch (Exception e) {
-                    log.warn("[Scheduler] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}",
+                    log.warn("[Cronjob] 释放分布式锁失败(将等待 TTL 自动过期): key={} reason={}",
                             lockKey, e.getMessage());
                 }
             }
@@ -566,7 +566,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
             // CronExpression 基于 LocalDateTime 直接计算, 无需时区转换
             return expr.next(LocalDateTime.now());
         } catch (Exception e) {
-            log.warn("[Scheduler] 计算 nextFireTime 失败: cron={} err={}", cron, e.getMessage());
+            log.warn("[Cronjob] 计算 nextFireTime 失败: cron={} err={}", cron, e.getMessage());
             return null;
         }
     }

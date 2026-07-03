@@ -1,4 +1,32 @@
-# 项目根目录 .gitignore
+# =============================================================================
+# YDSZ PMIS · 仓库根目录 .gitignore
+# -----------------------------------------------------------------------------
+# 作用:    集中管理本仓库所有需要忽略的临时文件、构建产物、IDE 缓存、敏感凭据
+# 维护:    PMIS 研发部  ·  与代码同步更新
+# 规范:    见 docs/standards/git-workflow.md（提交前自检）
+#
+# 忽略分组（按文件类别从重到轻）:
+#   1. Java/Maven 构建产物（target/、*.jar、*.war、*.class）
+#   2. Node.js/前端构建产物（node_modules/、dist/、.vite/、coverage/）
+#   3. IDE 缓存（.idea/、.vscode/、*.iml、Eclipse/NetBeans 元数据）
+#   4. 操作系统临时文件（.DS_Store、Thumbs.db、$RECYCLE.BIN/）
+#   5. 日志与 PID（*.log、logs/、*.pid）
+#   6. 临时文件（*.tmp、*.bak、*.swp、.cache/、.tmp/、.temp/）
+#   7. 环境变量与敏感凭据（.env、*.pem、*.key、*.p12、secrets.yml）
+#   8. 密钥与凭证（jdbc.properties、credentials.json、service-account*.json）
+#   9. 数据库本地文件（*.db、*.sqlite、*.dump）
+#  10. 测试产物（test-output/、allure-results/、screenshots/）
+#  11. SonarQube 工作区（.scannerwork/）
+#  12. Docker 本地覆盖（docker-compose.override.yml）
+#  13. Nacos 本地数据（nacos-data/、nacos-logs/）
+#  14. 备份文件（*.bak、*.backup、*.orig）
+#
+# 注意（必须保留入库、不被本文件忽略）:
+#   - sonar-project.properties  团队共享配置（P0-3 规范要求）
+#   - .env.example              环境变量模板
+#   - .gitkeep                  空目录占位
+#   - LICENSE / NOTICE          许可证与归属声明
+# =============================================================================
 
 # ========================
 # Java / Maven

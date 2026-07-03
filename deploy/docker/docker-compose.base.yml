@@ -200,13 +200,13 @@ services:
       xpack.security.enabled: "true"
       xpack.security.transport.ssl.enabled: "true"
       xpack.security.transport.ssl.rotation_mode: "true"
-      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:-pmis@2026}
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:?ELASTIC_PASSWORD is required}
       ES_JAVA_OPTS: "-Xms2g -Xmx2g"
       TZ: Asia/Shanghai
     volumes:
       - es-data:/usr/share/elasticsearch/data
     healthcheck:
-      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD:-pmis@2026} -f http://localhost:9200/_cluster/health || exit 1"]
+      test: ["CMD-SHELL", "curl -s -u elastic:${ELASTIC_PASSWORD:?ELASTIC_PASSWORD is required} -f http://localhost:9200/_cluster/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 5

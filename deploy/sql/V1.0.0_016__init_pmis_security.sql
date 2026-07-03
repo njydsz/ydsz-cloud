@@ -21,6 +21,14 @@ ALTER TABLE pmis_user_account
     ADD COLUMN IF NOT EXISTS last_pwd_change_at TIMESTAMP,
     ADD COLUMN IF NOT EXISTS pwd_change_count INT    NOT NULL DEFAULT 0;
 
+-- 字段注释（V1.0.0_001 中误提前写入，迁移至此处与 ADD COLUMN 同步）
+COMMENT ON COLUMN pmis_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_SUB 本部门及下级 / SELF 本人 / CUSTOM 自定义';
+COMMENT ON COLUMN pmis_user_account.custom_dept_ids IS '自定义数据权限部门 ID 列表(逗号分隔,data_scope=CUSTOM 时生效)';
+COMMENT ON COLUMN pmis_user_account.mfa_enabled IS '是否启用双因素认证';
+COMMENT ON COLUMN pmis_user_account.mfa_type IS '双因素认证类型: NONE 未启用 / TOTP 基于时间的一次性密码 / SMS 短信验证码';
+COMMENT ON COLUMN pmis_user_account.last_pwd_change_at IS '最近密码修改时间';
+COMMENT ON COLUMN pmis_user_account.pwd_change_count IS '密码修改次数(用于强制定期改密)';
+
 -- ----------------------------
 -- 2) 登录审计
 -- ----------------------------

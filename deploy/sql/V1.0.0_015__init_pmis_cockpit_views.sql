@@ -20,7 +20,7 @@ SELECT i.id              AS initiation_id,
                   WHERE r2.initiation_id = i.id AND r2.deleted = 0
                     AND r2.status = 'CONFIRMED'), 0) AS confirmed_revenue,
        COALESCE((SELECT SUM(amount) FROM pmis_cost_allocation
-                  WHERE initiation_id = i.id AND deleted = 0), 0) AS labor_cost,
+                  WHERE initiation_id = i.id AND deleted = 0 AND cost_type = 'LABOR'), 0) AS labor_cost,
        COALESCE((SELECT SUM(amount) FROM pmis_cost_purchase
                   WHERE initiation_id = i.id AND deleted = 0), 0) AS purchase_cost,
        COALESCE((SELECT SUM(amount) FROM pmis_cost_expense
@@ -34,7 +34,11 @@ WHERE i.deleted = 0;
 COMMENT ON VIEW pmis_view_initiation_evm IS '项目 EVM 预警分布视图: 按立项聚合 RED/YELLOW/NORMAL 计数,AdvancedReportService#evmReport 读取,top_alert 取最高等级';
 CREATE OR REPLACE VIEW pmis_view_initiation_evm AS
 SELECT initiation_id,
-       MAX(alert_level)                              AS top_alert,
+       CASE
+           WHEN COUNT(*) FILTER (WHERE alert_level = 'RED') > 0 THEN 'RED'::VARCHAR
+           WHEN COUNT(*) FILTER (WHERE alert_level = 'YELLOW') > 0 THEN 'YELLOW'::VARCHAR
+           ELSE 'NORMAL'::VARCHAR
+       END                                           AS top_alert,
        COUNT(*) FILTER (WHERE alert_level = 'RED')    AS red_count,
        COUNT(*) FILTER (WHERE alert_level = 'YELLOW') AS yellow_count,
        COUNT(*) FILTER (WHERE alert_level = 'NORMAL') AS green_count
@@ -63,7 +67,7 @@ CREATE OR REPLACE VIEW pmis_view_risk_dashboard AS
 SELECT risk_level,
        COUNT(*) AS cnt
 FROM pmis_execution_risk
-WHERE deleted = 0 AND status IN ('IDENTIFIED','MITIGATING')
+WHERE deleted = 0 AND status IN ('OPEN','MITIGATING')
 GROUP BY risk_level;
 
 -- ----------------------------

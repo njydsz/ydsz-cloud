@@ -1,3 +1,13 @@
+/*
+ * ============================================================================
+ *  文件名: charts.js
+ *  路径:   docs/assets/charts.js
+ *  作用:   PRD/对标报告中所有 ECharts 图表的渲染脚本（竞品雷达、岗位分布等）
+ *  依赖:   ../_shared/js/echarts.min.js
+ *  使用:   在 docs/pmis-prd-v3.html 中引入
+ *  维护:   PMIS 产品组
+ * ============================================================================
+ */
 (function() {
   var style = getComputedStyle(document.documentElement);
   var accent = style.getPropertyValue('--accent').trim();

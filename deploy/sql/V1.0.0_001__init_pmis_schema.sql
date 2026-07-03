@@ -498,12 +498,8 @@ COMMENT ON COLUMN pmis_user_account.last_login_time IS '最近登录时间';
 COMMENT ON COLUMN pmis_user_account.last_login_ip IS '最近登录 IP';
 COMMENT ON COLUMN pmis_user_account.login_fail_count IS '连续登录失败次数(达到阈值触发锁定)';
 COMMENT ON COLUMN pmis_user_account.locked_until IS '锁定截止时间(到期自动解锁)';
-COMMENT ON COLUMN pmis_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_SUB 本部门及下级 / SELF 本人 / CUSTOM 自定义';
-COMMENT ON COLUMN pmis_user_account.custom_dept_ids IS '自定义数据权限部门 ID 列表(逗号分隔,data_scope=CUSTOM 时生效)';
-COMMENT ON COLUMN pmis_user_account.mfa_enabled IS '是否启用双因素认证';
-COMMENT ON COLUMN pmis_user_account.mfa_type IS '双因素认证类型: NONE 未启用 / TOTP 基于时间的一次性密码 / SMS 短信验证码';
-COMMENT ON COLUMN pmis_user_account.last_pwd_change_at IS '最近密码修改时间';
-COMMENT ON COLUMN pmis_user_account.pwd_change_count IS '密码修改次数(用于强制定期改密)';
+-- 注：data_scope / custom_dept_ids / mfa_enabled / mfa_type / last_pwd_change_at / pwd_change_count
+-- 的 COMMENT 已迁移至 V1.0.0_016（字段在该脚本中通过 ADD COLUMN 创建）
 COMMENT ON COLUMN pmis_user_account.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_user_account.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_user_account.updated_by IS '最后修改人 ID';

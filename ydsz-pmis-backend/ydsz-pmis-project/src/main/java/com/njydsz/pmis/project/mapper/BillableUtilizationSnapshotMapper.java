@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * 可计费利用率快照 Mapper
  *
- * <p>Scheduler 写入 + Cockpit / 报表读取。
+ * <p>Cronjob 写入 + Cockpit / 报表读取。
  */
 @Mapper
 public interface BillableUtilizationSnapshotMapper extends BaseMapper<BillableUtilizationSnapshotDO> {

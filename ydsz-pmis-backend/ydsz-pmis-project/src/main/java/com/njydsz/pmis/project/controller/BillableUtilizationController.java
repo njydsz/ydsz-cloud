@@ -134,13 +134,13 @@ public class BillableUtilizationController {
     }
 
     /**
-     * 触发快照重算（Scheduler 调用 / 运维手工）
+     * 触发快照重算（Cronjob 调用 / 运维手工）
      *
      * @param period       指定期间，可选
      * @param recomputeAll 是否全量重算
      * @return 重算结果数据
      */
-    @Operation(summary = "触发快照重算（Scheduler 调用 / 运维手工）")
+    @Operation(summary = "触发快照重算（Cronjob 调用 / 运维手工）")
     @PrePermission("execution:utilization:recompute")
     @PostMapping("/recompute")
     public Result<Map<String, Object>> recompute(

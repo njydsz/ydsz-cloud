@@ -1,3 +1,16 @@
+# =============================================================================
+# PMIS 持续部署 (CD) 流水线
+# -----------------------------------------------------------------------------
+# 作用:  构建并推送 7 个后端 + 1 个前端镜像到阿里云 ACR，再通过 kubectl 部署到 K8s
+# 触发:  push 到 main (自动部署 staging)  /  workflow_dispatch (手动选择 staging|production)
+# 镜像仓库: registry.cn-hangzhou.aliyuncs.com/ydsz
+# 镜像 tag: ${{ github.sha }} (commit SHA) + latest
+# 部署策略:  staging = 滚动更新  /  production = Argo Rollouts 金丝雀 (5%→25%→50%→100%)
+# 关联:   backend-ci.yml  /  frontend-ci.yml (上游)  /  helm/pmis/  /  deploy/canary/
+# 凭据 (在 GitHub Secrets 中配置):
+#   - ALIYUN_REGISTRY_USERNAME / ALIYUN_REGISTRY_PASSWORD
+#   - KUBE_CONFIG_STAGING / KUBE_CONFIG_PRODUCTION (base64 编码的 kubeconfig)
+# =============================================================================
 name: CD Deploy
 
 on:

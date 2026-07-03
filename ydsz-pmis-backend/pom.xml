@@ -111,7 +111,7 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-xxljob</artifactId>
+                <artifactId>ydsz-pmis-cronjob</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

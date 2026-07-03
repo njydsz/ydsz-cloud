@@ -505,6 +505,99 @@ public class RuleAdminController {
         return Result.ok(ruleAdminService.save(def, operator, "状态变更: " + current.getDesc() + " -> " + target.getDesc()));
     }
 
+    /**
+     * 审批通过（1.4.0 起支持）
+     *
+     * <p>将规则从 DRAFT/REVIEW 状态变更为 PUBLISHED，并记录审批人、审批时间、审批意见。
+     * 主要用于 AI 生成规则的闭环：AI 生成 → DRAFT → 人工审批 → PUBLISHED。
+     *
+     * @param ruleCode 规则编码
+     * @param request  请求体，包含 comment（审批意见）
+     * @param operator 审批人
+     * @return 审批后的规则定义
+     */
+    @PostMapping("/{ruleCode}/approve")
+    public Result<RuleDefinition> approve(@PathVariable String ruleCode,
+                                           @RequestBody Map<String, String> request,
+                                           @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        if (def == null) {
+            return Result.fail("规则不存在: " + ruleCode);
+        }
+
+        RuleStatus current = parseStatusSafely(def.getStatus());
+        if (!current.canTransitionTo(RuleStatus.PUBLISHED)) {
+            return Result.fail("当前状态 " + current.getDesc() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
+        }
+
+        String comment = request.getOrDefault("comment", "");
+
+        // 记录审批留痕
+        def.setStatus(RuleStatus.PUBLISHED.name());
+        def.setReviewedBy(operator);
+        def.setReviewedAt(LocalDateTime.now().toString());
+        def.setReviewComment(comment);
+        // 审批通过后默认启用（运营可后续手动 toggle 关闭）
+        def.setEnabled(true);
+
+        String changeDesc = String.format("[审批通过] %s -> PUBLISHED, 审批人=%s, 意见=%s",
+                current.getDesc(), operator, comment.isEmpty() ? "无" : comment);
+        return Result.ok(ruleAdminService.save(def, operator, changeDesc));
+    }
+
+    /**
+     * 审批驳回（1.4.0 起支持）
+     *
+     * <p>将规则从 DRAFT/REVIEW 状态变更为 ARCHIVED，并记录驳回理由。
+     * 主要用于 AI 生成规则的闭环：AI 生成 → DRAFT → 人工驳回 → ARCHIVED。
+     *
+     * @param ruleCode 规则编码
+     * @param request  请求体，包含 reason（驳回理由，必填）
+     * @param operator 审批人
+     * @return 驳回后的规则定义
+     */
+    @PostMapping("/{ruleCode}/reject")
+    public Result<RuleDefinition> reject(@PathVariable String ruleCode,
+                                          @RequestBody Map<String, String> request,
+                                          @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        RuleDefinition def = ruleAdminService.getByCode(ruleCode);
+        if (def == null) {
+            return Result.fail("规则不存在: " + ruleCode);
+        }
+
+        RuleStatus current = parseStatusSafely(def.getStatus());
+        if (!current.canTransitionTo(RuleStatus.ARCHIVED)) {
+            return Result.fail("当前状态 " + current.getDesc() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
+        }
+
+        String reason = request.getOrDefault("reason", "");
+        if (reason.isBlank()) {
+            return Result.fail("驳回理由不能为空");
+        }
+
+        // 记录驳回留痕
+        def.setStatus(RuleStatus.ARCHIVED.name());
+        def.setReviewedBy(operator);
+        def.setReviewedAt(LocalDateTime.now().toString());
+        def.setReviewComment("[驳回] " + reason);
+        def.setEnabled(false);
+
+        String changeDesc = String.format("[审批驳回] %s -> ARCHIVED, 审批人=%s, 理由=%s",
+                current.getDesc(), operator, reason);
+        return Result.ok(ruleAdminService.save(def, operator, changeDesc));
+    }
+
+    /**
+     * 安全解析规则状态，无效值回退到 PUBLISHED
+     */
+    private RuleStatus parseStatusSafely(String status) {
+        try {
+            return RuleStatus.valueOf(status);
+        } catch (Exception e) {
+            return RuleStatus.PUBLISHED;
+        }
+    }
+
     // ==================== 执行链路追踪 ====================
 
     /**

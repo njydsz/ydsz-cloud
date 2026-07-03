@@ -1,0 +1,242 @@
+package com.njydsz.pmis.workflow.engine.impl;
+
+import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.feign.OrgQueryClient;
+import com.njydsz.pmis.workflow.engine.FlowAssigneeResolver;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+/**
+ * 基于 Feign 的办理人解析器（P1-5）
+ *
+ * <p>通过 {@link OrgQueryClient} 调用 userinfo 服务，将 BPMN 中的角色/部门审批人标识
+ * 展开为具体用户 ID 列表。覆盖 {@link DefaultFlowAssigneeResolver} 的空实现
+ * （DefaultFlowAssigneeResolver 上有 {@code @ConditionalOnMissingBean}，本 Bean 注册后自动让位）。
+ *
+ * <p>当前支持的展开能力：
+ * <ul>
+ *   <li>{@code role:HR} → 调用 userinfo 按 roleCode 查询用户 ID 列表</li>
+ *   <li>{@code dept:10} → 调用 userinfo 按 deptId 查询部门负责人</li>
+ *   <li>{@code dept:SALES} → 调用 userinfo 按 deptCode 查询部门负责人</li>
+ * </ul>
+ *
+ * <p>未实现的能力（待 P2-2 候选人/变量独立表落地后补全）：
+ * <ul>
+ *   <li>{@code leader:1001} 直属上级（用户表无 leader_id 字段）</li>
+ *   <li>{@code position:PM} 岗位（无岗位表）</li>
+ *   <li>{@code multi_leader:N} 多级上级（依赖 leader_id 字段）</li>
+ * </ul>
+ *
+ * <p>容错策略：Feign 调用失败时返回空列表，由 {@code node.ext.emptyStrategy} 兜底。
+ *
+ * @author ydsz-pmis-team
+ * @since 1.2.0
+ */
+@Slf4j
+@Component
+@RequiredArgsConstructor
+public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
+
+    /** 组织架构查询 Feign 客户端（注入失败时由 fallback 返回空列表） */
+    private final OrgQueryClient orgQueryClient;
+
+    /**
+     * 将权限标识展开为具体用户 ID 列表
+     *
+     * <p>按前缀路由：
+     * <ul>
+     *   <li>{@code role:xxx} → 调用 {@link OrgQueryClient#listUserIdsByRoleCode}</li>
+     *   <li>{@code dept:数字} → 调用 {@link OrgQueryClient#getDeptLeaderByDeptId}</li>
+     *   <li>{@code dept:非数字} → 调用 {@link OrgQueryClient#getDeptLeaderByDeptCode}</li>
+     *   <li>{@code leader:xxx} / {@code position:xxx} → 暂不展开，返回空列表</li>
+     * </ul>
+     *
+     * @param permissionFlag 权限标识，如 role:hr / dept:10 / leader:1001
+     * @param variables      流程变量（当前未使用，保留扩展）
+     * @return 用户 ID 列表（空列表表示无法展开，引擎将原样保留）
+     */
+    @Override
+    public List<Long> expandUsers(String permissionFlag, Map<String, Object> variables) {
+        if (permissionFlag == null || permissionFlag.isBlank()) {
+            return Collections.emptyList();
+        }
+        String token = permissionFlag.trim();
+        try {
+            if (token.startsWith("role:")) {
+                return expandRole(token.substring("role:".length()).trim());
+            }
+            if (token.startsWith("dept:")) {
+                return expandDept(token.substring("dept:".length()).trim());
+            }
+            if (token.startsWith("leader:")) {
+                log.debug("[Flow] leader: 暂未实现，等待 P2-2 用户表 leader_id 字段落地: {}", token);
+                return Collections.emptyList();
+            }
+            if (token.startsWith("position:")) {
+                log.debug("[Flow] position: 暂未实现，等待 P2-2 岗位表落地: {}", token);
+                return Collections.emptyList();
+            }
+            log.debug("[Flow] 未识别的办理人前缀，不展开: {}", token);
+            return Collections.emptyList();
+        } catch (Exception e) {
+            log.warn("[Flow] 办理人展开异常，回退到 emptyStrategy 兜底: token={} err={}",
+                    token, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 查询用户的角色编码列表（用于待办反查）
+     *
+     * <p>workflow 待办查询时，对 ROLE 类型的任务，需要反查当前用户拥有的角色编码，
+     * 与 task.assigneeId 中存储的 roleCode 进行匹配。
+     *
+     * @param userId 用户 ID
+     * @return 角色编码列表
+     */
+    @Override
+    public List<String> getRoleCodes(Long userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+        try {
+            Result<List<String>> resp = orgQueryClient.listRoleCodesByUserId(userId);
+            if (resp == null || resp.getCode() != Result.CODE_SUCCESS || resp.getData() == null) {
+                return Collections.emptyList();
+            }
+            return resp.getData().stream()
+                    .filter(Objects::nonNull)
+                    .filter(c -> !c.isBlank())
+                    .distinct()
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("[Flow] 查询用户角色编码失败: userId={} err={}", userId, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 查询用户的部门 ID 列表（用于待办反查）
+     *
+     * <p>当前 userinfo 用户表无 dept_id 字段，始终返回空列表。
+     * 待 P2-2 落地后由 userinfo 端实现真实查询。
+     *
+     * @param userId 用户 ID
+     * @return 部门 ID 列表（字符串形式）
+     */
+    @Override
+    public List<String> getDeptIds(Long userId) {
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+        try {
+            Result<List<String>> resp = orgQueryClient.listDeptIdsByUserId(userId);
+            if (resp == null || resp.getCode() != Result.CODE_SUCCESS || resp.getData() == null) {
+                return Collections.emptyList();
+            }
+            return resp.getData().stream()
+                    .filter(Objects::nonNull)
+                    .filter(c -> !c.isBlank())
+                    .distinct()
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.warn("[Flow] 查询用户部门 ID 失败: userId={} err={}", userId, e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+    /**
+     * 展开多级上级（连续 N 级主管）
+     *
+     * <p>当前 userinfo 用户表无 leader_id 字段，始终返回空列表。
+     * 待 P2-2 落地后实现循环逐级向上查询。
+     *
+     * @param userId    起始用户 ID（通常为发起人）
+     * @param levels    向上级数（≥1）
+     * @param variables 流程变量
+     * @return 多级上级用户 ID 列表
+     */
+    @Override
+    public List<Long> expandMultiLeader(Long userId, int levels, Map<String, Object> variables) {
+        log.debug("[Flow] multi_leader 暂未实现，等待 P2-2 用户表 leader_id 字段落地: userId={} levels={}",
+                userId, levels);
+        return Collections.emptyList();
+    }
+
+    // ============================== 内部辅助 ==============================
+
+    /**
+     * 展开角色审批人为用户 ID 列表
+     *
+     * @param roleCode 角色编码
+     * @return 用户 ID 列表
+     */
+    private List<Long> expandRole(String roleCode) {
+        if (roleCode == null || roleCode.isBlank()) {
+            return Collections.emptyList();
+        }
+        Result<List<Long>> resp = orgQueryClient.listUserIdsByRoleCode(roleCode);
+        if (resp == null || resp.getCode() != Result.CODE_SUCCESS || resp.getData() == null) {
+            log.debug("[Flow] 角色展开返回空: roleCode={} resp={}", roleCode,
+                    resp == null ? "null" : resp.getCode());
+            return Collections.emptyList();
+        }
+        return resp.getData().stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 展开部门审批人为部门负责人
+     *
+     * <p>若 token 为纯数字则按 deptId 查询，否则按 deptCode 查询。
+     * 返回单元素列表（部门负责人唯一）。
+     *
+     * @param deptToken 部门 ID（数字）或部门编码
+     * @return 部门负责人用户 ID 列表（0 或 1 个元素）
+     */
+    private List<Long> expandDept(String deptToken) {
+        if (deptToken == null || deptToken.isBlank()) {
+            return Collections.emptyList();
+        }
+        Long leaderId;
+        if (deptToken.matches("\\d+")) {
+            // 纯数字：按 deptId 查
+            Result<Long> resp = orgQueryClient.getDeptLeaderByDeptId(Long.parseLong(deptToken));
+            leaderId = extractLong(resp);
+        } else {
+            // 非数字：按 deptCode 查
+            Result<Long> resp = orgQueryClient.getDeptLeaderByDeptCode(deptToken);
+            leaderId = extractLong(resp);
+        }
+        if (leaderId == null) {
+            log.debug("[Flow] 部门负责人为空: deptToken={}", deptToken);
+            return Collections.emptyList();
+        }
+        List<Long> result = new ArrayList<>(1);
+        result.add(leaderId);
+        return result;
+    }
+
+    /**
+     * 从 Result 中安全提取 Long 值
+     *
+     * @param resp Feign 响应
+     * @return Long 值，失败或为空时返回 null
+     */
+    private Long extractLong(Result<Long> resp) {
+        if (resp == null || resp.getCode() != Result.CODE_SUCCESS) {
+            return null;
+        }
+        return resp.getData();
+    }
+}

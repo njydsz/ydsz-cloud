@@ -1,3 +1,25 @@
+<!--
+================================================================================
+YDSZ PMIS · 项目运营管理系统 · README
+--------------------------------------------------------------------------------
+项目代号:   YDSZ PMIS
+所属公司:   南京云顶数字科技有限公司
+版本:       v1.3.0-SNAPSHOT
+最近更新:   2026-07-03
+维护团队:   PMIS 研发部
+文档密级:   内部受控 · 禁止外传
+更新策略:   跟随代码版本同步更新（批次 28 完成）
+
+本文件是仓库的入口文档，向新成员/合作方/审核方解释：
+  1. 是什么（产品定位 / 业务覆盖）
+  2. 包含什么（仓库结构 / 批次交付 / 模块拓扑）
+  3. 怎么跑（环境要求 / 本地启动 / 测试命令 / 部署流程）
+  4. 怎么查（文档导航 / 规范索引 / 运维手册）
+
+变更需走 PR + Code Review，详细规范见 docs/standards/git-workflow.md
+================================================================================
+-->
+
 # YDSZ PMIS · 项目运营管理系统
 
 > 南京云顶数字科技有限公司 · 软件定制 + 人力外包 双业态 · 业财一体化精细化运营平台
@@ -143,7 +165,7 @@ project → common / userinfo(Feign) / workflow(Feign) / literule
 agent   → common / project(Feign) / literule
 system  → common / userinfo(Feign) / project(Feign)
 workflow → common / system(Feign)
-scheduler → common.feign(ProjectClient)        # 批次 17: JobHandler 迁至 common,打破循环依赖（已更名为 ydsz-pmis-cronjob）
+cronjob  → common.feign(ProjectClient)        # 批次 17: JobHandler 迁至 common,打破循环依赖
 literule  → common                              # 批次 21: 表达式引擎独立,供各业务模块按需引用
 ```
 
