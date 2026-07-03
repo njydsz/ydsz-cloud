@@ -29,7 +29,7 @@
         </dependency>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
-            <artifactId>ydsz-pmis-message</artifactId>
+            <artifactId>ydsz-pmis-system</artifactId>
         </dependency>
 
         <dependency>

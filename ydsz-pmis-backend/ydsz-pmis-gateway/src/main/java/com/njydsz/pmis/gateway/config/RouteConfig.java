@@ -65,33 +65,21 @@ public class RouteConfig {
                 .route("ydsz-pmis-workflow", r -> r.path("/api/v1/workflow/**")
                         .uri("lb://ydsz-pmis-workflow"))
 
-                // 消息模板 / 发送
-                .route("ydsz-pmis-message", r -> r.path("/api/v1/message/**")
-                        .uri("lb://ydsz-pmis-message"))
-
-                // 通知中心
-                .route("ydsz-pmis-notification", r -> r.path("/api/v1/notifications/**")
-                        .uri("lb://ydsz-pmis-notification"))
-
-                // 通知中心 WebSocket（P0-2 实时推送，STOMP/SockJS 端点 /ws）
-                .route("ydsz-pmis-notification-ws", r -> r.path("/ws/**")
-                        .uri("lb://ydsz-pmis-notification"))
-
-                // 配置中心
-                .route("ydsz-pmis-config", r -> r.path("/api/v1/configs/**", "/api/v1/config/**")
-                        .uri("lb://ydsz-pmis-config"))
+                // 系统基础服务（合并 file + config + audit + notification + message）
+                .route("ydsz-pmis-system", r -> r.path(
+                                "/api/v1/message/**",
+                                "/api/v1/notifications/**",
+                                "/ws/**",
+                                "/api/v1/configs/**",
+                                "/api/v1/config/**",
+                                "/api/v1/file/**",
+                                "/api/v1/audit/**",
+                                "/api/v1/operation-logs/**")
+                        .uri("lb://ydsz-pmis-system"))
 
                 // 调度中心
                 .route("ydsz-pmis-scheduler", r -> r.path("/api/v1/job/**", "/api/v1/scheduler/**")
                         .uri("lb://ydsz-pmis-scheduler"))
-
-                // 文件服务
-                .route("ydsz-pmis-file", r -> r.path("/api/v1/file/**")
-                        .uri("lb://ydsz-pmis-file"))
-
-                // 审计日志
-                .route("ydsz-pmis-audit", r -> r.path("/api/v1/audit/**", "/api/v1/operation-logs/**")
-                        .uri("lb://ydsz-pmis-audit"))
 
                 // AI Agent
                 .route("ydsz-pmis-agent", r -> r.path("/api/v1/ai/**", "/api/v1/agent/**")

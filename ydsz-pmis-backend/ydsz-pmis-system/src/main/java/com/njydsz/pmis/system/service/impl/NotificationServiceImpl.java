@@ -8,9 +8,11 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.system.dto.NotificationQueryDTO;
 import com.njydsz.pmis.system.dto.NotificationSendDTO;
 import com.njydsz.pmis.system.entity.NotificationDO;
-import com.njydsz.pmis.system.feign.MessageServiceClient;
+import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.system.feign.UserServiceClient;
 import com.njydsz.pmis.system.mapper.NotificationMapper;
+import com.njydsz.pmis.system.service.MessageService;
 import com.njydsz.pmis.system.service.NotificationService;
 import com.njydsz.pmis.system.service.RealtimePushService;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +39,8 @@ public class NotificationServiceImpl implements NotificationService {
 
     /** 通知 Mapper */
     private final NotificationMapper notificationMapper;
-    /** 消息服务 Feign 客户端 */
-    private final MessageServiceClient messageServiceClient;
+    /** 消息服务（合并后本地调用，替代原 Feign） */
+    private final MessageService messageService;
     /** 用户服务 Feign 客户端 */
     private final UserServiceClient userServiceClient;
     /** 实时推送服务（WebSocket，P0-2） */
@@ -101,24 +103,21 @@ public class NotificationServiceImpl implements NotificationService {
         }
 
         try {
-            MessageServiceClient.MessageFeignDTO msg = new MessageServiceClient.MessageFeignDTO();
-            msg.setChannel("EMAIL");
-            msg.setReceiver(email);
-            msg.setSubject(dto.getTitle());
-            msg.setContent(buildHtmlContent(dto));
-            msg.setBizType(dto.getBizType() == null ? "NOTIF" : dto.getBizType());
-            msg.setBizId(dto.getBizId());
-            Result<Object> resp = messageServiceClient.send(msg);
-            if (resp != null && resp.getCode() == 0 && resp.getData() != null) {
+            MessageRequest req = new MessageRequest();
+            req.setChannel("EMAIL");
+            req.setReceiver(email);
+            req.setSubject(dto.getTitle());
+            req.setContent(buildHtmlContent(dto));
+            req.setBizType(dto.getBizType() == null ? "NOTIF" : dto.getBizType());
+            req.setBizId(dto.getBizId());
+            MessageResult msgResult = messageService.send(req);
+            if (msgResult != null && msgResult.isSuccess()) {
                 R.setEmailSent(true);
-                Object trace = extractTraceId(resp.getData());
-                if (trace != null) {
-                    R.setProviderTraceId(String.valueOf(trace));
-                }
+                R.setProviderTraceId(msgResult.getProviderTraceId());
                 log.info("[Notification] 邮件投递成功: receiverId={} email={} traceId={}",
                         dto.getReceiverId(), email, R.getProviderTraceId());
             } else {
-                String err = resp == null ? "消息服务无响应" : ("code=" + resp.getCode() + " msg=" + resp.getMessage());
+                String err = msgResult == null ? "消息服务无响应" : msgResult.getErrorMessage();
                 R.setEmailSent(false);
                 R.setEmailError(err);
                 log.warn("[Notification] 邮件投递失败: receiverId={} email={} reason={}",

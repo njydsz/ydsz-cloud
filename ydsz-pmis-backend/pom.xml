@@ -22,13 +22,9 @@
         <module>ydsz-pmis-common</module>
         <module>ydsz-pmis-gateway</module>
         <module>ydsz-pmis-iam</module>
-        <module>ydsz-pmis-config</module>
-        <module>ydsz-pmis-notification</module>
+        <module>ydsz-pmis-system</module>
         <module>ydsz-pmis-workflow</module>
-        <module>ydsz-pmis-file</module>
         <module>ydsz-pmis-scheduler</module>
-        <module>ydsz-pmis-message</module>
-        <module>ydsz-pmis-audit</module>
         <module>ydsz-pmis-project</module>
         <module>ydsz-pmis-execution</module>
         <module>ydsz-pmis-agent</module>
@@ -125,7 +121,7 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-message</artifactId>
+                <artifactId>ydsz-pmis-system</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

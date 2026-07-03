@@ -18,7 +18,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-config", fallbackFactory = ConfigClientFallback.class)
+@FeignClient(name = "ydsz-pmis-system", fallbackFactory = ConfigClientFallback.class)
 public interface ConfigClient {
 
     /**
