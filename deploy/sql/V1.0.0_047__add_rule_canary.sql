@@ -20,7 +20,7 @@ ALTER TABLE pmis_rule_def
     ADD COLUMN IF NOT EXISTS canary_severity_expression TEXT;
 
 COMMENT ON COLUMN pmis_rule_def.canary_ratio IS '灰度比例（0~1.0，0 不启用灰度；启用后按比例将流量路由到候选版本）';
-COMMENT ON COLUMN pmis_rule_def.canary_conditions IS '灰度条件表达式列表（Aviator 语法，AND 关系；JSON 数组，示例：["tenantId == \'T001\'"]）';
+COMMENT ON COLUMN pmis_rule_def.canary_conditions IS '灰度条件表达式列表（Aviator 语法，AND 关系；JSON 数组，示例：["tenantId == ''T001''"]）';
 COMMENT ON COLUMN pmis_rule_def.canary_condition_expression IS '灰度候选版本条件表达式（覆盖主版本，进行 A/B 验证）';
 COMMENT ON COLUMN pmis_rule_def.canary_severity_expression IS '灰度候选版本严重度表达式（覆盖主版本）';
 

@@ -17,7 +17,7 @@ SET statement_timeout = '5min';
 CREATE INDEX IF NOT EXISTS idx_pmis_initiation_tenant_created
     ON pmis_project_initiation (tenant_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_initiation_status_created
-    ON pmis_project_initiation (status, created_at DESC)
+    ON pmis_project_initiation (stage, created_at DESC)
     WHERE deleted = 0;
 
 -- 项目变更表（4.1.1）
@@ -76,9 +76,9 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_pmis_evm_period
 --  3) 利用率快照（4.2.1）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_utilization_user_period
-    ON pmis_billable_utilization_snapshot (user_id, period DESC);
+    ON pmis_billable_utilization_snapshot (employee_id, period DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_utilization_dept_period
-    ON pmis_billable_utilization_snapshot (department_id, period DESC);
+    ON pmis_billable_utilization_snapshot (department, period DESC);
 
 -- =====================================================================
 --  4) 预警 / 对账（4.2.2/4.2.3）

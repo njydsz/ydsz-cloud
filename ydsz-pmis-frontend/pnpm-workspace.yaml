@@ -4,5 +4,11 @@ packages:
 allowBuilds:
   "@parcel/watcher": true
   core-js-pure: set this to true or false
+  cwebp-bin: true
   esbuild: true
+  gifsicle: true
+  jpegtran-bin: true
+  mozjpeg: true
+  optipng-bin: true
+  pngquant-bin: true
   vue-demi: true

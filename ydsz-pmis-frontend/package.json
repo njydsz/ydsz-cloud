@@ -105,6 +105,7 @@
     "unplugin-vue-components": "^0.27.4",
     "vite": "^5.4.8",
     "vite-plugin-compression": "^0.5.1",
+    "vite-plugin-imagemin": "^0.6.1",
     "vite-plugin-pwa": "^0.20.5",
     "vitest": "^2.1.9",
     "vue-eslint-parser": "^9.4.3",

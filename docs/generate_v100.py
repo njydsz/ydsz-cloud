@@ -609,7 +609,7 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                 if not line:
                     i = line_end
                     continue
-                if line.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK')):
+                if re.match(r'^(CONSTRAINT|PRIMARY\s+KEY|FOREIGN\s+KEY|UNIQUE\s*\(|INDEX|CHECK\s*\(|KEY\s|EXCLUDE\b)', line, re.IGNORECASE):
                     pass
                 else:
                     cm = re.match(r'"?(\w+)"?', line)
@@ -667,7 +667,7 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
             if not stripped or stripped.startswith('--'):
                 i += 1
                 continue
-            if stripped.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK', 'KEY ', 'EXCLUDE')):
+            if re.match(r'^(CONSTRAINT|PRIMARY\s+KEY|FOREIGN\s+KEY|UNIQUE\s*\(|INDEX|CHECK\s*\(|KEY\s|EXCLUDE\b)', stripped, re.IGNORECASE):
                 i += 1
                 continue
             # Strip inline -- comment if present
@@ -785,6 +785,15 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
         already_created_tables |= this_file_created
         pending_recreate_alters.extend(file_recreate_alters)
 
+        # Snapshot V1 columns for rebuild tables BEFORE the second pass.
+        # This lets us identify which COMMENT ON COLUMN statements
+        # reference V2-only columns (not yet in the V1 schema) so we
+        # can defer them until AFTER the AUTO-MIGRATION block.
+        rebuild_v1_cols: dict[str, set[str]] = {}
+        for blk in file_recreate_alters:
+            tbl = blk['table']
+            rebuild_v1_cols[tbl] = set(table_cols.get(tbl, set()))
+
         for i, raw in enumerate(raw_lines):
             if is_forward_ref(raw):
                 _add_skip(i, 'FWD-REF')
@@ -797,6 +806,17 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                         and not prev.rstrip().endswith(';')
                     ):
                         _add_skip(i - 1, 'FWD-REF')
+                # If the current line does NOT end with ';', it's a
+                # multi-line statement (e.g. CREATE INDEX ... WHERE ...).
+                # Skip continuation lines until we find one ending with ';'.
+                if not raw.rstrip().endswith(';'):
+                    j = i + 1
+                    while j < len(raw_lines):
+                        cont = raw_lines[j]
+                        _add_skip(j, 'FWD-REF')
+                        if cont.rstrip().endswith(';'):
+                            break
+                        j += 1
             # ---- cleanup DDL detection ----
             # Flyway migration scripts often start with DROP TABLE IF
             # EXISTS / DELETE FROM to make re-runs idempotent in dev. On
@@ -863,7 +883,10 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                 pending_table_cols = []
             elif pending_table_name is not None:
                 # accumulate columns from this line
-                if not stripped.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK')):
+                # Use word-boundary matching so that column names like
+                # "check_in_time" or "unique_code" are NOT mistaken for
+                # CONSTRAINT / CHECK / UNIQUE clauses.
+                if not re.match(r'^(CONSTRAINT|PRIMARY\s+KEY|FOREIGN\s+KEY|UNIQUE\s*\(|INDEX|CHECK\s*\()', stripped, re.IGNORECASE):
                     cm = re.match(r'^\s*"?(\w+)"?', raw)
                     if cm and not raw.lstrip().startswith(('--', ')')):
                         pending_table_cols.append(cm.group(1).lower())
@@ -961,11 +984,31 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
         # Replay the file with the augmented skip set.
         skipped_cleanup_count = sum(1 for r in skip_reason.values() if r == 'CLEANUP')
         skipped_rebuild_count = sum(1 for r in skip_reason.values() if r == 'CLEANUP-REBUILD')
+        # Collect COMMENT ON COLUMN statements for rebuild tables that
+        # reference V2-only columns. These must be deferred until AFTER
+        # the AUTO-MIGRATION block (which adds the columns via ALTER
+        # TABLE ADD COLUMN). Emitting them before would fail at runtime
+        # because the column doesn't exist yet.
+        deferred_comments: list[str] = []
+        rebuild_tables = {blk['table'] for blk in file_recreate_alters}
         for i, raw in enumerate(raw_lines):
             if i in to_skip and not raw.strip().startswith('--'):
                 reason = skip_reason.get(i, 'SKIPPED')
                 out.write(f'-- [SKIPPED-{reason}] ' + raw)
             else:
+                # Check if this is a COMMENT ON COLUMN for a rebuild
+                # table's V2-only column. If so, defer it.
+                m_defer = re.match(
+                    r'^\s*COMMENT\s+ON\s+COLUMN\s+(\w+)\.(\w+)\b',
+                    raw, re.IGNORECASE,
+                )
+                if m_defer:
+                    tbl, col = m_defer.group(1), m_defer.group(2).lower()
+                    if (tbl in rebuild_v1_cols
+                            and col not in rebuild_v1_cols[tbl]):
+                        # V2-only column; defer until after AUTO-MIGRATION
+                        deferred_comments.append(raw)
+                        continue
                 out.write(raw)
         out.write('\n')
 
@@ -1005,6 +1048,17 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                 out.write(f"        ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {col_name} {cd.rstrip(',')};\n")
             out.write("    END IF;\n")
             out.write('END $$;\n')
+
+        # Emit deferred COMMENT ON COLUMN statements (V2-only columns
+        # for rebuild tables). These must come AFTER the AUTO-MIGRATION
+        # block so the columns exist at runtime.
+        if deferred_comments:
+            out.write('\n')
+            out.write('-- Deferred COMMENTs for rebuild-table V2 columns\n')
+            out.write('-- (emitted after AUTO-MIGRATION so columns exist)\n')
+            for dc in deferred_comments:
+                out.write(dc)
+            out.write('\n')
 
         out.write('-- ====================================================================\n')
         out.write(f'-- >>>>>>>>>> END OF {f.name}\n')
@@ -1323,7 +1377,7 @@ for f in sql_files:
                 if not line:
                     i = line_end
                     continue
-                if line.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK')):
+                if re.match(r'^(CONSTRAINT|PRIMARY\s+KEY|FOREIGN\s+KEY|UNIQUE\s*\(|INDEX|CHECK\s*\(|KEY\s|EXCLUDE\b)', line, re.IGNORECASE):
                     pass
                 else:
                     cm = _re.match(r'"?(\w+)"?', line)
@@ -1356,7 +1410,7 @@ for m in _re.finditer(
             if not line:
                 i = line_end
                 continue
-            if line.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK')):
+            if _re.match(r'^(CONSTRAINT|PRIMARY\s+KEY|FOREIGN\s+KEY|UNIQUE\s*\(|INDEX|CHECK\s*\(|KEY\s|EXCLUDE\b)', line, _re.IGNORECASE):
                 pass
             else:
                 cm = _re.match(r'"?(\w+)"?', line)

@@ -433,9 +433,9 @@ CREATE TABLE pmis_execution_risk (
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     CONSTRAINT uk_per_code UNIQUE (risk_code, deleted)
 );
-COMMENT ON TABLE pmis_execution_risk IS '项目风险登记';
-COMMENT ON COLUMN pmis_execution_risk.risk_type IS 'SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER';
-COMMENT ON COLUMN pmis_execution_risk.status IS 'OPEN/MITIGATING/CLOSED/OCCURRED';
+COMMENT ON TABLE pmis_execution_risk IS '项目风险登记表: 项目执行过程中的风险识别、跟踪与闭环管理';
+COMMENT ON COLUMN pmis_execution_risk.risk_type IS '风险类型: SCOPE 范围 / SCHEDULE 进度 / COST 成本 / QUALITY 质量 / RESOURCE 资源 / EXTERNAL 外部 / OTHER 其他';
+COMMENT ON COLUMN pmis_execution_risk.status IS '风险状态: OPEN 待处理 / MITIGATING 处理中 / CLOSED 已关闭 / OCCURRED 已发生';
 
 CREATE INDEX idx_per_initiation ON pmis_execution_risk (initiation_id) WHERE deleted = 0;
 CREATE INDEX idx_per_status     ON pmis_execution_risk (status) WHERE deleted = 0;
