@@ -26,12 +26,9 @@ public class RouteConfig {
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
                 // ===== 基础服务 =====
-                // 认证服务
-                .route("ydsz-pmis-auth", r -> r.path("/api/v1/auth/**")
-                        .uri("lb://ydsz-pmis-auth"))
-
-                // 用户服务 (含 RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签)
-                .route("ydsz-pmis-user", r -> r.path(
+                // 身份认证管理服务（合并 user + auth）：认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签
+                .route("ydsz-pmis-iam", r -> r.path(
+                                "/api/v1/auth/**",
                                 "/api/v1/users/**",
                                 "/api/v1/departments/**",
                                 "/api/v1/employees/**",
@@ -45,7 +42,7 @@ public class RouteConfig {
                                 "/api/v1/resource-pools/**",
                                 "/api/v1/resource-assignments/**",
                                 "/api/v1/feign/auth/**")
-                        .uri("lb://ydsz-pmis-user"))
+                        .uri("lb://ydsz-pmis-iam"))
 
                 // ===== 业务服务 =====
                 // 项目服务 (商机/立项/合同/变更/合同模板)

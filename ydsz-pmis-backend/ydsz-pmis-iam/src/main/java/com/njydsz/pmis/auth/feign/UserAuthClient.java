@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-user", fallbackFactory = UserAuthClientFallback.class)
+@FeignClient(name = "ydsz-pmis-iam", fallbackFactory = UserAuthClientFallback.class)
 public interface UserAuthClient {
 
     /**

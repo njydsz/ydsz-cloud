@@ -4,14 +4,17 @@ import cn.hutool.core.util.IdUtil;
 import com.njydsz.pmis.auth.dto.CaptchaVO;
 import com.njydsz.pmis.auth.dto.LoginDTO;
 import com.njydsz.pmis.auth.dto.LoginResultVO;
-import com.njydsz.pmis.auth.feign.UserAuthClient;
 import com.njydsz.pmis.auth.service.AuthService;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.api.BizErrorCode;
-import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.user.dto.LoginContextDTO;
+import com.njydsz.pmis.user.entity.RoleDO;
+import com.njydsz.pmis.user.entity.UserAccountDO;
+import com.njydsz.pmis.user.service.PermissionService;
+import com.njydsz.pmis.user.service.RoleService;
+import com.njydsz.pmis.user.service.UserAccountService;
 import com.wf.captcha.SpecCaptcha;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +26,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -67,8 +71,12 @@ public class AuthServiceImpl implements AuthService {
     private final StringRedisTemplate redisTemplate;
     /** JWT Token 生成与校验工具 */
     private final JwtTokenProvider jwtTokenProvider;
-    /** user 服务 Feign 客户端 */
-    private final UserAuthClient userAuthClient;
+    /** 用户账号服务（合并后本地调用，替代原 Feign） */
+    private final UserAccountService userAccountService;
+    /** 角色服务 */
+    private final RoleService roleService;
+    /** 权限服务 */
+    private final PermissionService permissionService;
 
     /**
      * 是否强制启用图形验证码 (测试场景可关闭)
@@ -122,13 +130,12 @@ public class AuthServiceImpl implements AuthService {
             validateCaptcha(dto.getCaptchaKey(), dto.getCaptchaCode());
         }
 
-        // 2. 通过 Feign 加载登录上下文
-        Result<LoginContextDTO> r = userAuthClient.getLoginContextByUsername(dto.getUsername());
-        if (r == null || !r.isSuccess() || r.getData() == null) {
+        // 2. 本地加载登录上下文（合并后直接调用 user 服务，无需 Feign）
+        LoginContextDTO ctx = buildContext(userAccountService.findByUsername(dto.getUsername()));
+        if (ctx == null) {
             log.warn("[Auth] 用户不存在 username={}", dto.getUsername());
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
         }
-        LoginContextDTO ctx = r.getData();
 
         // 3. 锁定检查
         if (ctx.getLockedUntil() != null && ctx.getLockedUntil() > System.currentTimeMillis()) {
@@ -183,11 +190,10 @@ public class AuthServiceImpl implements AuthService {
         Long userId = jwtTokenProvider.getUserId(refreshToken);
 
         // 重新加载上下文（角色权限可能已变）
-        Result<LoginContextDTO> r = userAuthClient.getLoginContextById(userId);
-        if (r == null || !r.isSuccess() || r.getData() == null) {
+        LoginContextDTO ctx = buildContext(userAccountService.findById(userId));
+        if (ctx == null) {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
         }
-        LoginContextDTO ctx = r.getData();
         if (!"ENABLED".equalsIgnoreCase(ctx.getStatus())) {
             throw new BizException(BizErrorCode.USER_DISABLED);
         }
@@ -245,6 +251,51 @@ public class AuthServiceImpl implements AuthService {
     }
 
     // ============== 私有方法 ==============
+
+    /**
+     * 根据用户实体构建登录上下文（含角色与权限编码）
+     *
+     * <p>合并后由本地 Service 直接装配，替代原 Feign 远程调用。
+     *
+     * @param user 用户实体
+     * @return 登录上下文，用户为空时返回 null
+     */
+    private LoginContextDTO buildContext(UserAccountDO user) {
+        if (user == null) {
+            return null;
+        }
+        LoginContextDTO.LoginContextDTOBuilder builder = LoginContextDTO.builder()
+                .userId(user.getId())
+                .username(user.getUsername())
+                .password(user.getPassword())
+                .salt(user.getSalt())
+                .status(user.getStatus())
+                .loginFailCount(user.getLoginFailCount() == null ? 0 : user.getLoginFailCount())
+                .lockedUntil(user.getLockedUntil() == null ? null
+                        : user.getLockedUntil().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
+
+        // 角色编码列表
+        try {
+            List<RoleDO> roles = roleService.listByUserId(user.getId());
+            if (roles != null && !roles.isEmpty()) {
+                builder.roles(roles.stream().map(RoleDO::getRoleCode).toList());
+            } else {
+                builder.roles(Collections.emptyList());
+            }
+        } catch (Exception ignore) {
+            builder.roles(Collections.emptyList());
+        }
+
+        // 权限编码列表
+        try {
+            List<String> perms = permissionService.listPermCodesByUserId(user.getId());
+            builder.permissions(perms == null ? Collections.emptyList() : perms);
+        } catch (Exception ignore) {
+            builder.permissions(Collections.emptyList());
+        }
+
+        return builder.build();
+    }
 
     /**
      * 校验图形验证码

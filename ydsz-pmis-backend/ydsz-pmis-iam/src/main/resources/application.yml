@@ -1,9 +1,9 @@
-﻿server:
+server:
   port: 9002
 
 spring:
   application:
-    name: ydsz-pmis-user
+    name: ydsz-pmis-iam
   profiles:
     active: dev
   cloud:
@@ -16,6 +16,11 @@ spring:
         file-extension: yaml
         group: ${spring.profiles.active}
         namespace: ${NACOS_NAMESPACE:pmis}
+        # 引入共享配置：datasource / redis / mybatis-plus / springdoc / logging
+        shared-configs:
+          - data-id: pmis-common-shared.yaml
+            group: PMIS_GROUP_${spring.profiles.active}
+            refresh: true
   datasource:
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?useUnicode=true&characterEncoding=utf8
     username: ${DB_USER:postgres}
@@ -27,8 +32,7 @@ spring:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
-  # P2-6: Spring Cache 配置，由 Redisson Spring Boot Starter 自动装配 RedisCacheManager
-  # TTL 30 分钟，与字典数据变更频率匹配；缓存 null 防止缓存穿透由 @Cacheable unless 控制
+  # Spring Cache 配置，由 Redisson Spring Boot Starter 自动装配 RedisCacheManager
   cache:
     type: redis
     redis:
@@ -54,6 +58,14 @@ springdoc:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
+
+# JWT 配置（原 auth 模块）
+pmis:
+  jwt:
+    secret: ${JWT_SECRET}
+    issuer: pmis
+  auth:
+    captcha-required: ${CAPTCHA_REQUIRED:true}
 
 logging:
   level:

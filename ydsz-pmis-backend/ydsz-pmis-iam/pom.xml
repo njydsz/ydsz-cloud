@@ -10,15 +10,16 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>ydsz-pmis-user</artifactId>
-    <name>ydsz-pmis-user</name>
-    <description>用户/组织/人员服务</description>
+    <artifactId>ydsz-pmis-iam</artifactId>
+    <name>ydsz-pmis-iam</name>
+    <description>身份认证管理服务（合并 user + auth）：用户/组织/角色/权限/认证/会话/双因子/资源池</description>
 
     <dependencies>
         <dependency>
             <groupId>com.njydsz.pmis</groupId>
             <artifactId>ydsz-pmis-common</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
@@ -35,6 +36,7 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-openfeign</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -47,11 +49,12 @@
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
         </dependency>
-        <!-- P2-6: Spring Cache 抽象，配合 Redisson 提供 @Cacheable/@CacheEvict 声明式缓存 -->
+        <!-- Spring Cache 抽象，配合 Redisson 提供 @Cacheable/@CacheEvict 声明式缓存 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
+
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-spring-boot4-starter</artifactId>
@@ -68,6 +71,27 @@
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-3-starter</artifactId>
         </dependency>
+
+        <!-- JWT -->
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+        </dependency>
+
+        <!-- 图形验证码 -->
+        <dependency>
+            <groupId>com.github.whvcse</groupId>
+            <artifactId>easy-captcha</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
