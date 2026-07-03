@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.BudgetItemDTO;
@@ -52,6 +53,7 @@ public class InitiationController {
      */
     @Operation(summary = "提交立项")
     @PrePermission("project:initiation:create")
+    @OperationLog(module = "立项管理", action = "提交立项", bizType = "INITIATION", saveResult = true)
     @PostMapping
     public Result<Long> create(@Valid @RequestBody InitiationCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -65,6 +67,7 @@ public class InitiationController {
      */
     @Operation(summary = "阶段迁移")
     @PrePermission("project:initiation:update")
+    @OperationLog(module = "立项管理", action = "阶段迁移", bizType = "INITIATION")
     @PutMapping("/stage")
     public Result<Void> changeStage(@Valid @RequestBody InitiationStageDTO dto) {
         service.changeStage(dto);
@@ -79,6 +82,7 @@ public class InitiationController {
      */
     @Operation(summary = "删除立项")
     @PrePermission("project:initiation:delete")
+    @OperationLog(module = "立项管理", action = "删除立项", bizType = "INITIATION")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -132,6 +136,7 @@ public class InitiationController {
      */
     @Operation(summary = "新增预算明细")
     @PrePermission("project:initiation:budget")
+    @OperationLog(module = "立项管理", action = "新增预算明细", bizType = "BUDGET", saveResult = true)
     @PostMapping("/budget")
     public Result<Long> addBudget(@Valid @RequestBody BudgetItemDTO dto) {
         return Result.ok(service.addBudgetItem(dto));
@@ -145,6 +150,7 @@ public class InitiationController {
      */
     @Operation(summary = "删除预算明细")
     @PrePermission("project:initiation:budget")
+    @OperationLog(module = "立项管理", action = "删除预算明细", bizType = "BUDGET")
     @DeleteMapping("/budget/{id}")
     public Result<Void> delBudget(@PathVariable Long id) {
         service.deleteBudgetItem(id);
@@ -185,6 +191,7 @@ public class InitiationController {
      */
     @Operation(summary = "重新汇总预算总额")
     @PrePermission("project:initiation:budget")
+    @OperationLog(module = "立项管理", action = "重新汇总预算总额", bizType = "BUDGET", saveResult = true)
     @PostMapping("/{id}/budget/recompute")
     public Result<BigDecimal> recomputeBudget(@PathVariable Long id) {
         return Result.ok(service.recomputeBudget(id));
@@ -200,6 +207,7 @@ public class InitiationController {
      */
     @Operation(summary = "门径评审")
     @PrePermission("project:initiation:gate")
+    @OperationLog(module = "立项管理", action = "门径评审", bizType = "GATE", saveResult = true)
     @PostMapping("/gate/review")
     public Result<Long> reviewGate(@Valid @RequestBody GateReviewDTO dto) {
         return Result.ok(service.reviewGate(dto));
@@ -256,6 +264,7 @@ public class InitiationController {
      */
     @Operation(summary = "标记审批中")
     @PrePermission("project:initiation:update")
+    @OperationLog(module = "立项管理", action = "标记审批中（流程回调）", bizType = "INITIATION")
     @PostMapping("/{id}/mark-processing")
     public Result<Void> markProcessing(@PathVariable Long id) {
         service.markProcessing(id);
@@ -270,6 +279,7 @@ public class InitiationController {
      */
     @Operation(summary = "标记已批准")
     @PrePermission("project:initiation:update")
+    @OperationLog(module = "立项管理", action = "标记已批准（流程回调）", bizType = "INITIATION")
     @PostMapping("/{id}/mark-approved")
     public Result<Void> markApproved(@PathVariable Long id) {
         service.markApproved(id);
@@ -285,6 +295,7 @@ public class InitiationController {
      */
     @Operation(summary = "标记已驳回")
     @PrePermission("project:initiation:update")
+    @OperationLog(module = "立项管理", action = "标记已驳回（流程回调）", bizType = "INITIATION")
     @PostMapping("/{id}/mark-rejected")
     public Result<Void> markRejected(@PathVariable Long id,
                                      @RequestParam(required = false) String reason) {

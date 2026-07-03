@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.PaymentAllocationDTO;
@@ -49,6 +50,7 @@ public class PaymentController {
      */
     @Operation(summary = "录入回款")
     @PrePermission("finance:payment:create")
+    @OperationLog(module = "回款管理", action = "录入回款", bizType = "PAYMENT", saveResult = true)
     @PostMapping
     public Result<Long> record(@Valid @RequestBody PaymentCreateDTO dto) {
         return Result.ok(service.record(dto));
@@ -63,6 +65,7 @@ public class PaymentController {
      */
     @Operation(summary = "确认到账")
     @PrePermission("finance:payment:status")
+    @OperationLog(module = "回款管理", action = "确认到账", bizType = "PAYMENT")
     @PutMapping("/{id}/confirm")
     public Result<Void> confirm(@PathVariable Long id, @RequestParam Long operatorId) {
         service.confirm(id, operatorId);
@@ -79,6 +82,7 @@ public class PaymentController {
      */
     @Operation(summary = "取消")
     @PrePermission("finance:payment:status")
+    @OperationLog(module = "回款管理", action = "取消回款", bizType = "PAYMENT")
     @PutMapping("/{id}/cancel")
     public Result<Void> cancel(@PathVariable Long id,
                           @RequestParam Long operatorId,
@@ -95,6 +99,7 @@ public class PaymentController {
      */
     @Operation(summary = "删除")
     @PrePermission("finance:payment:delete")
+    @OperationLog(module = "回款管理", action = "删除回款", bizType = "PAYMENT")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
@@ -109,6 +114,7 @@ public class PaymentController {
      */
     @Operation(summary = "核销到发票")
     @PrePermission("finance:payment:allocate")
+    @OperationLog(module = "回款管理", action = "核销到发票", bizType = "PAYMENT")
     @PostMapping("/allocate")
     public Result<Void> allocate(@Valid @RequestBody PaymentAllocationDTO dto) {
         service.allocate(dto);
@@ -124,6 +130,7 @@ public class PaymentController {
      */
     @Operation(summary = "自动核销（按客户）")
     @PrePermission("finance:payment:allocate")
+    @OperationLog(module = "回款管理", action = "自动核销（按客户）", bizType = "PAYMENT", saveResult = true)
     @PostMapping("/auto-allocate")
     public Result<Integer> autoAllocate(@RequestParam Long customerId,
                                    @RequestParam Long operatorId) {

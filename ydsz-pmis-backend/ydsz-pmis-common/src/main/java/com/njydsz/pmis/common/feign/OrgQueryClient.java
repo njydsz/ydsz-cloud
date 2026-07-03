@@ -71,4 +71,31 @@ public interface OrgQueryClient {
      */
     @GetMapping("/user-dept-ids")
     Result<List<String>> listDeptIdsByUserId(@RequestParam("userId") Long userId);
+
+    /**
+     * P2-2: 根据部门 ID 查询启用状态的用户 ID 列表
+     *
+     * @param deptId 部门 ID
+     * @return 用户 ID 列表
+     */
+    @GetMapping("/users-by-dept")
+    Result<List<Long>> listUserIdsByDeptId(@RequestParam("deptId") Long deptId);
+
+    /**
+     * P2-2: 根据岗位编码查询启用状态的用户 ID 列表
+     *
+     * @param positionCode 岗位编码
+     * @return 用户 ID 列表
+     */
+    @GetMapping("/users-by-position")
+    Result<List<Long>> listUserIdsByPositionCode(@RequestParam("positionCode") String positionCode);
+
+    /**
+     * P2-2: 根据用户 ID 查询直属上级用户 ID
+     *
+     * @param userId 用户 ID
+     * @return 直属上级用户 ID，未设置时返回 null
+     */
+    @GetMapping("/leader-by-user")
+    Result<Long> getLeaderByUserId(@RequestParam("userId") Long userId);
 }

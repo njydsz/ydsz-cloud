@@ -54,6 +54,24 @@ public class OrgQueryClientFallbackFactory implements FallbackFactory<OrgQueryCl
             public Result<List<String>> listDeptIdsByUserId(Long userId) {
                 return Result.ok(Collections.emptyList());
             }
+
+            @Override
+            public Result<List<Long>> listUserIdsByDeptId(Long deptId) {
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
+                        "userinfo 服务不可用，部门成员展开失败: " + deptId);
+            }
+
+            @Override
+            public Result<List<Long>> listUserIdsByPositionCode(String positionCode) {
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
+                        "userinfo 服务不可用，岗位展开失败: " + positionCode);
+            }
+
+            @Override
+            public Result<Long> getLeaderByUserId(Long userId) {
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
+                        "userinfo 服务不可用，直属上级查询失败: " + userId);
+            }
         };
     }
 }

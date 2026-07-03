@@ -39,6 +39,18 @@ spring:
           max-idle: 8
           min-idle: 2
           max-wait: 3s
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            connect-timeout: 2000
+            read-timeout: 5000
+            logger-level: BASIC
+
+feign:
+  sentinel:
+    enabled: true
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml

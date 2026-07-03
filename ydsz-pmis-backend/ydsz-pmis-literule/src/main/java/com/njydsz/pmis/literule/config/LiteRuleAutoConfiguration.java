@@ -191,17 +191,28 @@ public class LiteRuleAutoConfiguration {
      * 表达式校验服务（1.4.0 起支持）
      *
      * <p>面向前端表达式编辑器的校验 API，提供结构化的错误信息。
+     * 当 classpath 中存在 {@link com.njydsz.pmis.literule.expr.VariableRegistry} Bean 时，
+     * 启用 UNDEFINED_VARIABLE 校验；否则使用 {@link com.njydsz.pmis.literule.expr.EmptyVariableRegistry} 跳过。
      *
      * @param evaluator 表达式求值器
+     * @param registryProvider 变量注册表（可选）
      * @return ExpressionValidationService 实例
      * @since 1.4.0
      */
     @Bean
     @ConditionalOnMissingBean
     public com.njydsz.pmis.literule.expr.ExpressionValidationService expressionValidationService(
-            ExpressionEvaluator evaluator) {
-        log.info("[LiteRule] 表达式校验服务已初始化");
-        return new com.njydsz.pmis.literule.expr.ExpressionValidationService(evaluator);
+            ExpressionEvaluator evaluator,
+            org.springframework.beans.factory.ObjectProvider<com.njydsz.pmis.literule.expr.VariableRegistry> registryProvider) {
+        com.njydsz.pmis.literule.expr.VariableRegistry registry = registryProvider.getIfAvailable();
+        if (registry == null) {
+            registry = new com.njydsz.pmis.literule.expr.EmptyVariableRegistry();
+            log.info("[LiteRule] 表达式校验服务已初始化（变量空间校验未启用）");
+        } else {
+            log.info("[LiteRule] 表达式校验服务已初始化（变量空间校验已启用，已注册 {} 个变量）",
+                    registry.listAll().size());
+        }
+        return new com.njydsz.pmis.literule.expr.ExpressionValidationService(evaluator, registry);
     }
 
     /**

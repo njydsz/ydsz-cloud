@@ -143,10 +143,14 @@ public class PaymentServiceImpl implements PaymentService {
                 : existing + "," + dto.getInvoiceId();
         BigDecimal newAllocated = p.getAllocatedAmount().add(dto.getAmount());
         BigDecimal newUnalloc = p.getAmount().subtract(newAllocated);
-        paymentMapper.updateAllocation(p.getId(), updated, newAllocated, newUnalloc);
         p.setInvoiceAllocation(updated);
         p.setAllocatedAmount(newAllocated);
         p.setUnallocatedAmount(newUnalloc);
+        int rows = paymentMapper.updateById(p);
+        if (rows == 0) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                "并发冲突：回款核销失败，其他用户已修改该回款记录，请重试。paymentId=" + p.getId());
+        }
 
         if (newUnalloc.signum() == 0) {
             transit(p, PaymentStatus.ALLOCATED, dto.getOperatorId());

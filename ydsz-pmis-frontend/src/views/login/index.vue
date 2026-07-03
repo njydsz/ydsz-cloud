@@ -31,11 +31,11 @@ const captchaLoading = ref(false)
 
 /** 登录表单数据 */
 const form = reactive({
-  username: 'admin',
-  password: 'admin123',
+  username: import.meta.env.DEV ? 'admin' : '',
+  password: import.meta.env.DEV ? 'admin123' : '',
   captchaKey: '',
   captchaCode: '',
-  rememberMe: true,
+  rememberMe: false,
 })
 
 /** 图形验证码图片 Base64 */

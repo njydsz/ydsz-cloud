@@ -72,4 +72,13 @@ public class UserAccountDO extends BaseDO {
 
     /** 密码累计修改次数 */
     private Integer pwdChangeCount;
+
+    /** P2-2: 所属部门 ID（关联 pmis_department.id，用于审批人 dept: 展开） */
+    private Long deptId;
+
+    /** P2-2: 直属上级用户 ID（关联 pmis_user_account.id，用于审批人 leader: 展开） */
+    private Long leaderId;
+
+    /** P2-2: 岗位编码（如 PM/DEV/QA/SA，用于审批人 position: 展开） */
+    private String positionCode;
 }

@@ -5,6 +5,7 @@ import com.njydsz.pmis.userinfo.entity.DepartmentDO;
 import com.njydsz.pmis.userinfo.entity.RoleDO;
 import com.njydsz.pmis.userinfo.mapper.DepartmentMapper;
 import com.njydsz.pmis.userinfo.mapper.RoleMapper;
+import com.njydsz.pmis.userinfo.mapper.UserAccountMapper;
 import com.njydsz.pmis.userinfo.mapper.UserRoleMapper;
 import com.njydsz.pmis.userinfo.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,6 +59,8 @@ public class OrgQueryFeignController {
     private final UserRoleMapper userRoleMapper;
     /** 部门 Mapper（按 deptId/deptCode 查 leaderId） */
     private final DepartmentMapper departmentMapper;
+    /** P2-2: 用户账号 Mapper（按 deptId/positionCode/leaderId 查询） */
+    private final UserAccountMapper userAccountMapper;
     /** 角色服务（反查用户角色编码） */
     private final RoleService roleService;
 
@@ -182,16 +185,103 @@ public class OrgQueryFeignController {
     /**
      * 查询用户所属部门 ID 列表
      *
-     * <p>当前用户表（pmis_user_account）无 dept_id 字段，返回空列表。
-     * 待 P2-2 候选人/变量独立表落地（用户表增加 dept_id/leader_id 字段）后补全。
+     * <p>P2-2 已落地：用户表新增 dept_id 字段，返回单元素列表。
      *
      * @param userId 用户 ID
-     * @return 部门 ID 列表（字符串形式），当前始终返回空列表
+     * @return 部门 ID 列表（字符串形式），未设置时返回空列表
      */
-    @Operation(summary = "查询用户部门 ID 列表（待 P2-2 落地）")
+    @Operation(summary = "查询用户部门 ID 列表")
     @GetMapping("/user-dept-ids")
     public Result<List<String>> listDeptIdsByUserId(@RequestParam("userId") Long userId) {
-        // TODO P2-2: 用户表增加 dept_id 字段后实现
-        return Result.ok(Collections.emptyList());
+        if (userId == null) {
+            return Result.ok(Collections.emptyList());
+        }
+        try {
+            Long deptId = userAccountMapper.selectDeptIdByUserId(userId);
+            if (deptId == null) {
+                return Result.ok(Collections.emptyList());
+            }
+            return Result.ok(List.of(String.valueOf(deptId)));
+        } catch (Exception e) {
+            log.warn("[OrgQuery] 查询用户部门 ID 失败: userId={} err={}", userId, e.getMessage());
+            return Result.ok(Collections.emptyList());
+        }
+    }
+
+    /**
+     * P2-2: 根据部门 ID 查询启用状态的用户 ID 列表
+     *
+     * @param deptId 部门 ID
+     * @return 用户 ID 列表
+     */
+    @Operation(summary = "按部门 ID 查询用户 ID 列表")
+    @GetMapping("/users-by-dept")
+    public Result<List<Long>> listUserIdsByDeptId(@RequestParam("deptId") Long deptId) {
+        if (deptId == null) {
+            return Result.ok(Collections.emptyList());
+        }
+        try {
+            List<Long> userIds = userAccountMapper.selectUserIdsByDeptId(deptId);
+            if (userIds == null) {
+                return Result.ok(Collections.emptyList());
+            }
+            List<Long> cleaned = userIds.stream()
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            return Result.ok(cleaned);
+        } catch (Exception e) {
+            log.warn("[OrgQuery] 按部门查询用户失败: deptId={} err={}", deptId, e.getMessage());
+            return Result.ok(Collections.emptyList());
+        }
+    }
+
+    /**
+     * P2-2: 根据岗位编码查询启用状态的用户 ID 列表
+     *
+     * @param positionCode 岗位编码
+     * @return 用户 ID 列表
+     */
+    @Operation(summary = "按岗位编码查询用户 ID 列表")
+    @GetMapping("/users-by-position")
+    public Result<List<Long>> listUserIdsByPositionCode(@RequestParam("positionCode") String positionCode) {
+        if (positionCode == null || positionCode.isBlank()) {
+            return Result.ok(Collections.emptyList());
+        }
+        try {
+            List<Long> userIds = userAccountMapper.selectUserIdsByPositionCode(positionCode.trim());
+            if (userIds == null) {
+                return Result.ok(Collections.emptyList());
+            }
+            List<Long> cleaned = userIds.stream()
+                    .filter(Objects::nonNull)
+                    .distinct()
+                    .collect(Collectors.toList());
+            return Result.ok(cleaned);
+        } catch (Exception e) {
+            log.warn("[OrgQuery] 按岗位查询用户失败: positionCode={} err={}", positionCode, e.getMessage());
+            return Result.ok(Collections.emptyList());
+        }
+    }
+
+    /**
+     * P2-2: 根据用户 ID 查询直属上级用户 ID
+     *
+     * @param userId 用户 ID
+     * @return 直属上级用户 ID，未设置时返回 null
+     */
+    @Operation(summary = "按用户 ID 查询直属上级")
+    @GetMapping("/leader-by-user")
+    public Result<Long> getLeaderByUserId(@RequestParam("userId") Long userId) {
+        if (userId == null) {
+            return Result.ok(null);
+        }
+        try {
+            Long leaderId = userAccountMapper.selectLeaderIdByUserId(userId);
+            return Result.ok(leaderId);
+        } catch (Exception e) {
+            log.warn("[OrgQuery] 查询直属上级失败: userId={} err={}", userId, e.getMessage());
+            return Result.ok(null);
+        }
     }
 }

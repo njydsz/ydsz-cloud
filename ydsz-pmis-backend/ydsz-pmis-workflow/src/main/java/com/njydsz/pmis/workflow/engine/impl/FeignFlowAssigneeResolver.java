@@ -77,12 +77,12 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
                 return expandDept(token.substring("dept:".length()).trim());
             }
             if (token.startsWith("leader:")) {
-                log.debug("[Flow] leader: 暂未实现，等待 P2-2 用户表 leader_id 字段落地: {}", token);
-                return Collections.emptyList();
+                // P2-2: leader:userId → 直属上级
+                return expandLeader(token.substring("leader:".length()).trim(), variables);
             }
             if (token.startsWith("position:")) {
-                log.debug("[Flow] position: 暂未实现，等待 P2-2 岗位表落地: {}", token);
-                return Collections.emptyList();
+                // P2-2: position:code → 岗位下所有用户
+                return expandPosition(token.substring("position:".length()).trim());
             }
             log.debug("[Flow] 未识别的办理人前缀，不展开: {}", token);
             return Collections.emptyList();
@@ -154,10 +154,10 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
     }
 
     /**
-     * 展开多级上级（连续 N 级主管）
+     * P2-2: 展开多级上级（连续 N 级主管）
      *
-     * <p>当前 userinfo 用户表无 leader_id 字段，始终返回空列表。
-     * 待 P2-2 落地后实现循环逐级向上查询。
+     * <p>循环调用 {@link OrgQueryClient#getLeaderByUserId} 逐级向上查询。
+     * 防御性限制：最多 15 级（避免循环引用导致死循环）。
      *
      * @param userId    起始用户 ID（通常为发起人）
      * @param levels    向上级数（≥1）
@@ -166,9 +166,36 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
      */
     @Override
     public List<Long> expandMultiLeader(Long userId, int levels, Map<String, Object> variables) {
-        log.debug("[Flow] multi_leader 暂未实现，等待 P2-2 用户表 leader_id 字段落地: userId={} levels={}",
-                userId, levels);
-        return Collections.emptyList();
+        if (userId == null || levels <= 0) {
+            return Collections.emptyList();
+        }
+        int maxLevels = Math.min(levels, 15);  // 防御性限制
+        List<Long> result = new ArrayList<>(maxLevels);
+        Long currentUserId = userId;
+        java.util.Set<Long> visited = new java.util.HashSet<>();
+        visited.add(userId);  // 防止自环
+        for (int i = 0; i < maxLevels; i++) {
+            try {
+                Result<Long> resp = orgQueryClient.getLeaderByUserId(currentUserId);
+                Long leaderId = extractLong(resp);
+                if (leaderId == null) {
+                    log.debug("[Flow] multi_leader 链路中断: userId={} level={}", currentUserId, i + 1);
+                    break;
+                }
+                if (!visited.add(leaderId)) {
+                    log.warn("[Flow] multi_leader 检测到循环引用: userId={} leaderId={}", currentUserId, leaderId);
+                    break;
+                }
+                result.add(leaderId);
+                currentUserId = leaderId;
+            } catch (Exception e) {
+                log.warn("[Flow] multi_leader 查询异常: userId={} level={} err={}",
+                        currentUserId, i + 1, e.getMessage());
+                break;
+            }
+        }
+        log.debug("[Flow] multi_leader 展开: startUserId={} levels={} result={}", userId, levels, result);
+        return result;
     }
 
     // ============================== 内部辅助 ==============================
@@ -186,6 +213,69 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         Result<List<Long>> resp = orgQueryClient.listUserIdsByRoleCode(roleCode);
         if (resp == null || resp.getCode() != Result.CODE_SUCCESS || resp.getData() == null) {
             log.debug("[Flow] 角色展开返回空: roleCode={} resp={}", roleCode,
+                    resp == null ? "null" : resp.getCode());
+            return Collections.emptyList();
+        }
+        return resp.getData().stream()
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * P2-2: 展开直属上级
+     *
+     * <p>token 可为：
+     * <ul>
+     *   <li>数字 userId → 直接查该用户的直属上级</li>
+     *   <li>"initiator" → 从流程变量取发起人 ID，再查直属上级</li>
+     * </ul>
+     *
+     * @param token     用户 ID 或 "initiator"
+     * @param variables 流程变量（仅在 token=initiator 时使用）
+     * @return 直属上级用户 ID 列表（0 或 1 个元素）
+     */
+    private List<Long> expandLeader(String token, Map<String, Object> variables) {
+        if (token == null || token.isBlank()) {
+            return Collections.emptyList();
+        }
+        Long userId;
+        if ("initiator".equalsIgnoreCase(token)) {
+            userId = resolveInitiatorId(variables);
+        } else {
+            try {
+                userId = Long.parseLong(token);
+            } catch (NumberFormatException e) {
+                log.warn("[Flow] leader: token 不是数字也不是 initiator: {}", token);
+                return Collections.emptyList();
+            }
+        }
+        if (userId == null) {
+            return Collections.emptyList();
+        }
+        Long leaderId = extractLong(orgQueryClient.getLeaderByUserId(userId));
+        if (leaderId == null) {
+            log.debug("[Flow] 直属上级为空: userId={}", userId);
+            return Collections.emptyList();
+        }
+        List<Long> result = new ArrayList<>(1);
+        result.add(leaderId);
+        return result;
+    }
+
+    /**
+     * P2-2: 展开岗位审批人为用户 ID 列表
+     *
+     * @param positionCode 岗位编码
+     * @return 用户 ID 列表
+     */
+    private List<Long> expandPosition(String positionCode) {
+        if (positionCode == null || positionCode.isBlank()) {
+            return Collections.emptyList();
+        }
+        Result<List<Long>> resp = orgQueryClient.listUserIdsByPositionCode(positionCode);
+        if (resp == null || resp.getCode() != Result.CODE_SUCCESS || resp.getData() == null) {
+            log.debug("[Flow] 岗位展开返回空: positionCode={} resp={}", positionCode,
                     resp == null ? "null" : resp.getCode());
             return Collections.emptyList();
         }
@@ -225,6 +315,36 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         List<Long> result = new ArrayList<>(1);
         result.add(leaderId);
         return result;
+    }
+
+    /**
+     * 从流程变量解析发起人 ID
+     *
+     * @param variables 流程变量
+     * @return 发起人 ID，未找到返回 null
+     */
+    private Long resolveInitiatorId(Map<String, Object> variables) {
+        if (variables == null || variables.isEmpty()) {
+            return null;
+        }
+        Object initiator = variables.get("initiatorId");
+        if (initiator == null) {
+            initiator = variables.get("startUserId");
+        }
+        if (initiator == null) {
+            initiator = variables.get("initiator");
+        }
+        if (initiator == null) {
+            return null;
+        }
+        if (initiator instanceof Number n) {
+            return n.longValue();
+        }
+        try {
+            return Long.parseLong(String.valueOf(initiator));
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 
     /**

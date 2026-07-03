@@ -1,5 +1,20 @@
+# =============================================================================
 # PMIS 前端 CI 流水线
-# 触发条件：push 到 main/develop 分支或 PR 到 main
+# -----------------------------------------------------------------------------
+# 作用:   对 ydsz-pmis-frontend/ 模块进行依赖安装 + Lint + 类型检查 + 构建
+# 触发:   push 到 main/develop 分支 (限定 ydsz-pmis-frontend/** 路径)
+#         pull_request 到 main (限定 ydsz-pmis-frontend/** 路径)
+# 关联:   与 cd-deploy.yml 串行 (CI 通过 → CD 构建前端镜像)
+#
+# Job 编排:
+#   1. lint-build         pnpm install (frozen-lockfile) → eslint → tsc + build
+#
+# 工具版本:  Node.js 20 · pnpm 9 · Vue 3.5 · Vite 5.4
+#
+# 性能:     缓存 ~/.local/share/pnpm/store (按 pnpm-lock.yaml 哈希) · 总耗时 3-6 分钟
+#
+# 注意:    working-directory 已统一为 ydsz-pmis-frontend，无需在每个 step 重复指定
+# =============================================================================
 name: Frontend CI
 
 on:

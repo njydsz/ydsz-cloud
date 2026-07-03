@@ -195,10 +195,12 @@ public class InvoiceServiceImpl implements InvoiceService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_8f692e44");
         }
         transit(inv, InvoiceStatus.RED_REVERSED, comment, operatorId);
-        // 同时把被红冲的原发票置为 RED_REVERSED
-        InvoiceDO origin = invoiceMapper.selectById(id);
-        if (origin != null) {
-            transit(origin, InvoiceStatus.RED_REVERSED, comment, operatorId);
+        // 同时把被红冲的原发票（蓝字发票）置为 RED_REVERSED
+        if (inv.getReversedById() != null) {
+            InvoiceDO origin = invoiceMapper.selectById(inv.getReversedById());
+            if (origin != null) {
+                transit(origin, InvoiceStatus.RED_REVERSED, comment, operatorId);
+            }
         }
     }
 

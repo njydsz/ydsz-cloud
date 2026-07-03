@@ -19,9 +19,12 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     druid:
-      initial-size: 20
-      min-idle: 20
-      max-active: 80
+      # H7 修复：连接池从 80 收敛到 30，避免单服务耗尽 PG max_connections
+      # 9 个微服务 × 80 = 720 连接，已逼近 PG 默认 max_connections=1000
+      # 收敛后 9 × 30 = 270，给运维与突发负载留出充足余量
+      initial-size: 10
+      min-idle: 10
+      max-active: 30
       max-wait: 60000
       validation-query: SELECT 1
       test-while-idle: true
@@ -35,10 +38,24 @@ spring:
       timeout: 5s
       lettuce:
         pool:
-          max-active: 64
-          max-idle: 32
-          min-idle: 8
+          max-active: 32
+          max-idle: 16
+          min-idle: 4
           max-wait: 5s
+  cloud:
+    openfeign:
+      client:
+        config:
+          default:
+            # C14 修复：与 dev 对齐，统一 Feign 超时
+            connect-timeout: 2000
+            read-timeout: 5000
+            logger-level: BASIC
+
+# C14 修复：启用 Sentinel 熔断降级
+feign:
+  sentinel:
+    enabled: true
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml

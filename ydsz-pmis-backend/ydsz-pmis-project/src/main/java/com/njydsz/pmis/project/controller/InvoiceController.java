@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.InvoiceApprovalDTO;
@@ -49,6 +50,7 @@ public class InvoiceController {
      */
     @Operation(summary = "创建发票申请")
     @PrePermission("finance:invoice:create")
+    @OperationLog(module = "发票管理", action = "创建发票申请", bizType = "INVOICE", saveResult = true)
     @PostMapping
     public Result<Long> create(@Valid @RequestBody InvoiceCreateDTO dto) {
         return Result.ok(service.create(dto));
@@ -63,6 +65,7 @@ public class InvoiceController {
      */
     @Operation(summary = "提交审批")
     @PrePermission("finance:invoice:approve")
+    @OperationLog(module = "发票管理", action = "提交发票审批", bizType = "INVOICE")
     @PutMapping("/{id}/submit")
     public Result<Void> submit(@PathVariable Long id, @RequestParam Long operatorId) {
         service.submit(id, operatorId);
@@ -78,6 +81,7 @@ public class InvoiceController {
      */
     @Operation(summary = "审批通过")
     @PrePermission("finance:invoice:approve")
+    @OperationLog(module = "发票管理", action = "审批通过", bizType = "INVOICE")
     @PutMapping("/{id}/approve")
     public Result<Void> approve(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.approve(id, dto);
@@ -93,6 +97,7 @@ public class InvoiceController {
      */
     @Operation(summary = "审批驳回")
     @PrePermission("finance:invoice:approve")
+    @OperationLog(module = "发票管理", action = "审批驳回", bizType = "INVOICE")
     @PutMapping("/{id}/reject")
     public Result<Void> reject(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.reject(id, dto);
@@ -108,6 +113,7 @@ public class InvoiceController {
      */
     @Operation(summary = "财务开具")
     @PrePermission("finance:invoice:issue")
+    @OperationLog(module = "发票管理", action = "财务开具发票", bizType = "INVOICE")
     @PutMapping("/{id}/issue")
     public Result<Void> issue(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.issue(id, dto);
@@ -124,6 +130,7 @@ public class InvoiceController {
      */
     @Operation(summary = "红冲")
     @PrePermission("finance:invoice:reverse")
+    @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
     @PutMapping("/{id}/reverse")
     public Result<Void> redReverse(@PathVariable Long id,
                               @RequestParam Long operatorId,
@@ -142,6 +149,7 @@ public class InvoiceController {
      */
     @Operation(summary = "取消")
     @PrePermission("finance:invoice:status")
+    @OperationLog(module = "发票管理", action = "取消发票", bizType = "INVOICE")
     @PutMapping("/{id}/cancel")
     public Result<Void> cancel(@PathVariable Long id,
                           @RequestParam Long operatorId,
@@ -158,6 +166,7 @@ public class InvoiceController {
      */
     @Operation(summary = "删除")
     @PrePermission("finance:invoice:delete")
+    @OperationLog(module = "发票管理", action = "删除发票", bizType = "INVOICE")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         service.delete(id);
