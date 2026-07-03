@@ -6,38 +6,50 @@
 #  依赖：Nacos 服务发现、Sentinel Dashboard、Redis
 # =====================================================================
 
+# 网关监听端口
 server:
-  port: 9000  # 网关监听端口
+  port: 9000
 
 spring:
+  # Nacos 注册的服务名
   application:
-    name: ydsz-pmis-gateway  # Nacos 注册的服务名
+    name: ydsz-pmis-gateway
+  # 激活 dev / sit / uat / prod profile
   profiles:
-    active: dev  # 激活 dev / sit / uat / prod profile
+    active: dev
   cloud:
     nacos:
       # 服务注册
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:pmis}
-        username: ${NACOS_USERNAME:}
-        password: ${NACOS_PASSWORD}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:Limw1020}
       # 配置中心（路由规则、限流阈值等动态配置）
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        file-extension: yaml
-        group: ${spring.profiles.active}
         namespace: ${NACOS_NAMESPACE:pmis}
-        username: ${NACOS_USERNAME:}
-        password: ${NACOS_PASSWORD}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:Limw1020}
+        group: ${spring.profiles.active}
+        refresh-enabled: true
+        file-extension: yaml
+        # 引入共享配置：datasource / redis / mybatis-plus / springdoc / logging
+        # 避免每个微服务重复定义，修改一次全集群生效
+        shared-configs:
+          - data-id: ydsz-pmis-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true
     # ---------- Gateway 路由配置 ----------
     gateway:
       # 服务发现路由：自动从 Nacos 拉取服务列表，通过 serviceId 转发
       # 如 GET /ydsz-pmis-iam/api/v1/users 转发到 IAM 服务
       discovery:
         locator:
-          enabled: true          # 开启服务发现路由
-          lower-case-service-id: true  # 路径小写
+          # 开启服务发现路由
+          enabled: true
+          # 路径小写
+          lower-case-service-id: true
       # ---------- 全局 CORS 配置 ----------
       # 注意：allowedOriginPatterns 与 allowedOrigins 不能同时配置
       # 生产环境应替换为白名单（不要使用 *）
@@ -48,11 +60,16 @@ spring:
             allowedMethods: "*"
             allowedHeaders: "*"
             exposedHeaders:
-              - Authorization      # 暴露给前端 JS 读取的 token 头
-              - X-Trace-Id         # 链路追踪 ID（便于日志关联）
-              - Content-Disposition  # 文件下载文件名
-            allowCredentials: true  # 允许携带 Cookie
-            maxAge: 3600           # 预检请求缓存 1 小时
+              # 暴露给前端 JS 读取的 token 头
+              - Authorization
+              # 链路追踪 ID（便于日志关联）
+              - X-Trace-Id
+              # 文件下载文件名
+              - Content-Disposition
+            # 允许携带 Cookie
+            allowCredentials: true
+            # 预检请求缓存 1 小时
+            maxAge: 3600
       # ---------- 默认过滤器 ----------
       default-filters:
         # 去重 Access-Control-Allow-Origin / Allow-Credentials 响应头
@@ -61,15 +78,20 @@ spring:
       # ---------- WebSocket 客户端配置 ----------
       httpclient:
         websocket:
-          max-frame-payload-length: 65536  # 64KB 单帧上限（防止恶意大帧）
+          # 64KB 单帧上限（防止恶意大帧）
+          max-frame-payload-length: 65536
     # ---------- Sentinel 限流/熔断 ----------
     sentinel:
       transport:
-        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}  # Sentinel 控制台
-        port: ${SENTINEL_TRANSPORT_PORT:8719}              # 与 Dashboard 通信端口
-      eager: true                                          # 启动时立即初始化（不延迟到首次请求）
+        # Sentinel 控制台
+        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
+        # 与 Dashboard 通信端口
+        port: ${SENTINEL_TRANSPORT_PORT:8719}
+      # 启动时立即初始化（不延迟到首次请求）
+      eager: true
       filter:
-        enabled: true  # 启用 Sentinel Web 过滤器
+        # 启用 Sentinel Web 过滤器
+        enabled: true
       # 限流触发后的降级响应（429 + 业务码）
       scg:
         fallback:
@@ -78,15 +100,17 @@ spring:
           response-body: '{"code":429,"message":"error.RATE_LIMIT"}'
 
 # ---------- Feign 客户端（微服务间调用） ----------
+# Feign 调用纳入 Sentinel 治理（限流 + 降级）
 feign:
   sentinel:
-    enabled: true  # Feign 调用纳入 Sentinel 治理（限流 + 降级）
+    enabled: true
 
 # ---------- 日志 ----------
 logging:
   level:
     root: INFO
     "[com.njydsz.pmis]": DEBUG
-    "[org.springframework.cloud.gateway]": INFO  # 路由日志降级避免刷屏
+    # 路由日志降级避免刷屏
+    "[org.springframework.cloud.gateway]": INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"

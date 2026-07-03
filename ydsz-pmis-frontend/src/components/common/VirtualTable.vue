@@ -3,34 +3,45 @@
   @description 基于 vxe-table 封装的大数据量虚拟滚动表格，数据量超过阈值自动启用虚拟滚动
   @module components/common/VirtualTable
 -->
+<script lang="ts">
+/** 列配置（导出供外部使用） */
+export interface ColumnConfig {
+  field: string
+  title: string
+  width?: number | string
+  align?: 'left' | 'center' | 'right'
+  /** 纯文本格式化器（与 slot 二选一，签名兼容 vxe-table） */
+  formatter?: (params: { row: Record<string, unknown>; column: unknown; cellValue: unknown }) => string
+  /** 是否启用自定义插槽渲染（父组件通过 #col-{field} 传入） */
+  slot?: boolean
+  /** 是否固定列（left/right） */
+  fixed?: 'left' | 'right'
+  /** 是否可排序 */
+  sortable?: boolean
+}
+</script>
+
 <script setup lang="ts">
 /**
  * 虚拟滚动大数据表格
  *
  * 基于 vxe-table 封装，当数据量超过 50 行时自动启用纵向虚拟滚动，
- * 保证万级数据渲染流畅。支持复选框选择与选择事件回传。
+ * 保证万级数据渲染流畅。支持复选框选择、formatter 文本格式化、自定义插槽渲染。
  *
- * 使用示例：
- *   <VirtualTable
- *     :data="largeList"
- *     :columns="columns"
- *     :height="600"
- *     checkbox
- *     @selection-change="onSelectionChange"
- *   />
+ * 自定义插槽用法（P3-1 扩展）：
+ *   在 ColumnConfig 中设置 `slot: true`，然后通过 `#col-{field}` 传递自定义渲染：
+ *   <VirtualTable :data="list" :columns="cols">
+ *     <template #col-status="{ row }">
+ *       <el-tag>{{ row.status }}</el-tag>
+ *     </template>
+ *     <template #col-actions="{ row }">
+ *       <el-button @click="edit(row)">编辑</el-button>
+ *     </template>
+ *   </VirtualTable>
  */
 import { ref, computed } from 'vue'
 import { VxeTable, VxeColumn } from 'vxe-table'
 import type { VxeTableProps } from 'vxe-table'
-
-/** 列配置 */
-interface ColumnConfig {
-  field: string
-  title: string
-  width?: number | string
-  align?: 'left' | 'center' | 'right'
-  formatter?: (row: Record<string, unknown>, column: ColumnConfig) => string
-}
 
 interface Props {
   /** 表格数据 */
@@ -95,7 +106,14 @@ defineExpose({ tableConfig, handleSelectionChange, selectedRows })
       :width="col.width"
       :align="col.align || 'left'"
       :formatter="col.formatter"
+      :fixed="col.fixed"
+      :sortable="col.sortable"
       show-overflow
-    />
+    >
+      <!-- 自定义插槽：父组件通过 #col-{field} 传入渲染内容 -->
+      <template v-if="col.slot" #default="slotData">
+        <slot :name="`col-${col.field}`" v-bind="slotData" />
+      </template>
+    </vxe-column>
   </vxe-table>
 </template>

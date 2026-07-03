@@ -10,25 +10,42 @@
 #  依赖：Nacos、PostgreSQL、Redis、MinIO、XXL-Job Admin
 # =====================================================================
 
+# HTTP 监听端口（提供 actuator / 业务接口）
 server:
-  port: 9004  # HTTP 监听端口（提供 actuator / 业务接口）
+  port: 9004
 
 spring:
+  # Nacos 注册的服务名
   application:
-    name: ydsz-pmis-xxljob  # Nacos 注册的服务名
+    name: ydsz-pmis-cronjob
+  # 激活 dev / sit / uat / prod profile
   profiles:
     active: dev
   main:
     web-application-type: servlet
   cloud:
     nacos:
+      # 服务注册
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:pmis}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:Limw1020}
+      # 配置中心（路由规则、限流阈值等动态配置）
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        file-extension: yml
-        group: ${spring.profiles.active}
         namespace: ${NACOS_NAMESPACE:pmis}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:Limw1020}
+        group: ${spring.profiles.active}
+        refresh-enabled: true
+        file-extension: yaml
+        # 引入共享配置：datasource / redis / mybatis-plus / springdoc / logging
+        # 避免每个微服务重复定义，修改一次全集群生效
+        shared-configs:
+          - data-id: ydsz-pmis-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true
 
   # ---------- 数据源 ----------
   datasource:

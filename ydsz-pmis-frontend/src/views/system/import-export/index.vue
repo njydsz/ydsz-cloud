@@ -129,23 +129,18 @@
         </template>
       </el-result>
 
-      <!-- 错误详情 -->
-      <!-- TODO P3: 待评估迁移 VirtualTable（导入文件最多 10000 行，错误明细可能 >100；但 value 列使用 el-tag 强调错误值，迁移为 formatter 文本会丢失视觉区分，需先扩展组件支持插槽后再迁移） -->
-      <el-table
+      <!-- 错误详情（P3-1: 已迁移到 VirtualTable，支持虚拟滚动 + 自定义插槽） -->
+      <VirtualTable
         v-if="importResult.errors?.length"
-        :data="importResult.errors"
-        :max-height="300"
+        :data="importResult.errors as Record<string, unknown>[]"
+        :columns="errorColumns"
+        :height="300"
         style="margin-top: 20px"
       >
-        <el-table-column prop="rowIndex" label="行号" width="80" />
-        <el-table-column prop="field" label="字段" width="180" />
-        <el-table-column prop="message" label="错误信息" />
-        <el-table-column prop="value" label="原值">
-          <template #default="{ row }">
-            <el-tag type="danger" size="small">{{ row.value }}</el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
+        <template #col-value="{ row }">
+          <el-tag type="danger" size="small">{{ (row as ImportError).value }}</el-tag>
+        </template>
+      </VirtualTable>
     </el-card>
   </div>
 </template>
@@ -155,7 +150,9 @@ import { computed, ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { UploadFile, UploadFiles, UploadUserFile } from 'element-plus'
 import { Download, UploadFilled, Check, Money, Timer, User } from '@element-plus/icons-vue'
-import { downloadTemplate, importData, type ImportResult } from '@/api/system/import-export'
+import { downloadTemplate, importData, type ImportResult, type ImportError } from '@/api/system/import-export'
+import VirtualTable from '@/components/common/VirtualTable.vue'
+import type { ColumnConfig } from '@/components/common/VirtualTable.vue'
 
 defineOptions({ name: 'ImportExportIndex' })
 
@@ -199,6 +196,14 @@ const importProgress = ref(0)
 const progressText = ref('')
 const fileList = ref<UploadUserFile[]>([])
 const importResult = ref<ImportResult | null>(null)
+
+/** 导入错误明细列配置 */
+const errorColumns: ColumnConfig[] = [
+  { field: 'rowIndex', title: '行号', width: 80 },
+  { field: 'field', title: '字段', width: 180 },
+  { field: 'message', title: '错误信息' },
+  { field: 'value', title: '原值', slot: true },
+]
 
 /**
  * 文件大小格式化（B / KB / MB）

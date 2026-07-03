@@ -1049,7 +1049,7 @@ onMounted(() => {
       </div>
 
       <!-- 规则列表表格 -->
-      <!-- TODO P3: 待评估迁移 VirtualTable（listRules 全量返回，规则数可能 >100；但含 selection/switch/6 个操作按钮/Tag 插槽，VirtualTable 不支持，需先扩展组件支持插槽后再迁移） -->
+      <!-- P3-1: 保留 el-table 不迁移 VirtualTable。原因：VirtualTable 不支持 :selectable 条件可选（限制 ARCHIVED 状态规则不可被批量操作），且本表含 selection + el-switch + 6 个操作按钮 + 多 el-tag 插槽的复杂组合，迁移将丢失 :selectable 限制导致 ARCHIVED 规则可被批量启用/停用而引发后端报错。如需迁移需先扩展 VirtualTable 支持 :selectable。 -->
       <el-table
         v-loading="loading"
         :data="filteredRules"

@@ -39,36 +39,28 @@
         </el-form-item>
       </el-form>
 
-      <!-- 链路列表 -->
-      <!-- TODO P3: 待评估迁移 VirtualTable（listRecentTraces 上限 200 条，可能 >100；但含操作按钮/Tag 插槽，VirtualTable 仅支持 formatter 文本渲染，需先扩展组件支持插槽后再迁移） -->
-      <el-table v-loading="loading" :data="filteredTraces" border stripe max-height="520">
-        <el-table-column prop="traceId" label="Trace ID" width="220" show-overflow-tooltip />
-        <el-table-column prop="ruleCode" label="规则编码" width="180" show-overflow-tooltip />
-        <el-table-column prop="ruleName" label="规则名称" min-width="180" show-overflow-tooltip />
-        <el-table-column label="是否触发" width="100" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.triggered ? 'danger' : 'info'" size="small">
-              {{ row.triggered ? '触发' : '未触发' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="严重度" width="100">
-          <template #default="{ row }">
-            <el-tag :type="severityType(row.severity)" size="small">
-              {{ severityLabel(row.severity) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="elapsedMs" label="耗时(ms)" width="100" sortable />
-        <el-table-column prop="scenario" label="场景" width="100" />
-        <el-table-column prop="createdAt" label="执行时间" width="180" />
-        <el-table-column label="操作" width="180" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openDetail(row)">详情</el-button>
-            <el-button link type="warning" size="small" @click="replayTrace(row)">回放</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <!-- 链路列表（P3-1: 已迁移到 VirtualTable，支持虚拟滚动 + 自定义插槽） -->
+      <VirtualTable
+        :data="filteredTraces as Record<string, unknown>[]"
+        :columns="traceColumns"
+        :loading="loading"
+        :height="520"
+      >
+        <template #col-triggered="{ row }">
+          <el-tag :type="(row as ExecutionTrace).triggered ? 'danger' : 'info'" size="small">
+            {{ (row as ExecutionTrace).triggered ? '触发' : '未触发' }}
+          </el-tag>
+        </template>
+        <template #col-severity="{ row }">
+          <el-tag :type="severityType((row as ExecutionTrace).severity)" size="small">
+            {{ severityLabel((row as ExecutionTrace).severity) }}
+          </el-tag>
+        </template>
+        <template #col-actions="{ row }">
+          <el-button link type="primary" size="small" @click="openDetail(row as ExecutionTrace)">详情</el-button>
+          <el-button link type="warning" size="small" @click="replayTraceRow(row as ExecutionTrace)">回放</el-button>
+        </template>
+      </VirtualTable>
     </el-card>
 
     <!-- 详情对话框 -->
@@ -160,8 +152,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { Refresh, Search } from '@element-plus/icons-vue'
+import VirtualTable from '@/components/common/VirtualTable.vue'
+import type { ColumnConfig } from '@/components/common/VirtualTable.vue'
 import {
   getTrace, getTracesByRule, listRecentTraces, replayTrace,
   type ExecutionTrace, type ReplayResult,
@@ -182,6 +176,19 @@ const currentTrace = ref<ExecutionTrace | null>(null)
 
 const replayVisible = ref(false)
 const replayResult = ref<ReplayResult | null>(null)
+
+/** 链路列表列配置 */
+const traceColumns: ColumnConfig[] = [
+  { field: 'traceId', title: 'Trace ID', width: 220 },
+  { field: 'ruleCode', title: '规则编码', width: 180 },
+  { field: 'ruleName', title: '规则名称', width: 180 },
+  { field: 'triggered', title: '是否触发', width: 100, align: 'center', slot: true },
+  { field: 'severity', title: '严重度', width: 100, slot: true },
+  { field: 'elapsedMs', title: '耗时(ms)', width: 100, sortable: true },
+  { field: 'scenario', title: '场景', width: 100 },
+  { field: 'createdAt', title: '执行时间', width: 180 },
+  { field: 'actions', title: '操作', width: 180, fixed: 'right', slot: true },
+]
 
 const filteredTraces = computed(() => {
   let list = traces.value

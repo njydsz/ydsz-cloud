@@ -35,15 +35,27 @@ spring:
       max-request-size: 500MB    # 整个请求最大 500MB
   cloud:
     nacos:
+      # 服务注册
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:pmis}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:Limw1020}
+      # 配置中心（路由规则、限流阈值等动态配置）
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        file-extension: yaml
-        group: ${spring.profiles.active}
         namespace: ${NACOS_NAMESPACE:pmis}
-        refresh-enabled: true  # 启用配置热刷新
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:Limw1020}
+        group: ${spring.profiles.active}
+        refresh-enabled: true
+        file-extension: yaml
+        # 引入共享配置：datasource / redis / mybatis-plus / springdoc / logging
+        # 避免每个微服务重复定义，修改一次全集群生效
+        shared-configs:
+          - data-id: ydsz-pmis-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true
   # ---------- 数据源 ----------
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource

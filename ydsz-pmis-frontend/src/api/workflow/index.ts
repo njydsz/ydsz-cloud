@@ -170,6 +170,30 @@ export function recallInstance(id: number) {
   return http.post<ApiResponse<null>>(`/workflow/engine/instance/${id}/recall`)
 }
 
+/**
+ * P2-3: 回滚已完成的流程实例（撤销）
+ *
+ * <p>对标钉钉/飞书的"撤销审批"。仅 COMPLETED 状态、回滚时间窗口内（默认 7 天）、
+ * 发起人或拥有 workflow:instance:rollback 权限的管理员可执行。
+ *
+ * @param id              流程实例 ID
+ * @param operatorId      操作人 ID
+ * @param reason          回滚原因
+ * @param maxRollbackDays 允许回滚的最大天数（可选，默认 7）
+ */
+export function rollbackInstance(
+  id: number,
+  operatorId: number,
+  reason: string,
+  maxRollbackDays = 7,
+) {
+  return http.post<ApiResponse<boolean>>(
+    `/workflow/engine/instance/${id}/rollback`,
+    null,
+    { params: { operatorId, reason, maxRollbackDays } },
+  )
+}
+
 // ===========================================
 // 任务操作
 // ===========================================

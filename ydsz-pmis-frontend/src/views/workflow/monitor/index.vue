@@ -734,3 +734,377 @@ const statCards = computed(() => [
     color: '#1890ff',
     bgColor: 'rgba(24,144,255,0.08)',
   },
+  {
+    key: 'todayNewCount' as const,
+    title: t('workflow.monitor.stat.todayNew'),
+    icon: 'el-icon-plus',
+    color: '#52c41a',
+    bgColor: 'rgba(82,196,26,0.08)',
+  },
+  {
+    key: 'pendingTaskCount' as const,
+    title: t('workflow.monitor.stat.pending'),
+    icon: 'el-icon-s-order',
+    color: '#fa8c16',
+    bgColor: 'rgba(250,140,22,0.08)',
+  },
+  {
+    key: 'overdueTaskCount' as const,
+    title: t('workflow.monitor.stat.overdue'),
+    icon: 'el-icon-warning',
+    color: '#f5222d',
+    bgColor: 'rgba(245,34,45,0.08)',
+  },
+  {
+    key: 'todayCompletedCount' as const,
+    title: t('workflow.monitor.stat.todayCompleted'),
+    icon: 'el-icon-circle-check',
+    color: '#13c2c2',
+    bgColor: 'rgba(19,194,194,0.08)',
+  },
+])
+</script>
+
+<template>
+  <div class="monitor-dashboard">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <div class="page-header__left">
+        <h2>{{ t('workflow.monitor.title') }}</h2>
+        <p class="page-header__sub">
+          {{ t('workflow.monitor.subtitle') }}
+          <el-tag
+            v-if="pollStatus === 'running'"
+            size="small"
+            type="success"
+            effect="plain"
+            style="margin-left: 8px"
+          >{{ t('workflow.monitor.pollRunning') }}</el-tag>
+          <el-tag
+            v-else-if="pollStatus === 'backing-off'"
+            size="small"
+            type="warning"
+            effect="plain"
+            style="margin-left: 8px"
+          >{{ t('workflow.monitor.pollBackingOff') }}</el-tag>
+          <el-tag
+            v-else
+            size="small"
+            type="danger"
+            effect="plain"
+            style="margin-left: 8px"
+          >{{ t('workflow.monitor.pollStopped') }}</el-tag>
+        </p>
+      </div>
+      <div class="page-header__right">
+        <el-date-picker
+          v-model="dateRange"
+          type="datetimerange"
+          :range-separator="t('workflow.monitor.rangeSeparator')"
+          :start-placeholder="t('workflow.monitor.startPlaceholder')"
+          :end-placeholder="t('workflow.monitor.endPlaceholder')"
+          format="YYYY-MM-DD HH:mm:ss"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          :shortcuts="dateShortcuts"
+          size="default"
+          clearable
+          style="width: 360px"
+        />
+      </div>
+    </div>
+
+    <!-- 统计卡片行 -->
+    <div class="stat-cards">
+      <div
+        v-for="card in statCards"
+        :key="card.key"
+        class="stat-card"
+        :style="{ borderTopColor: card.color }"
+      >
+        <div class="stat-card__icon" :style="{ backgroundColor: card.bgColor, color: card.color }">
+          <i :class="card.icon" />
+        </div>
+        <div class="stat-card__info">
+          <div class="stat-card__title">{{ card.title }}</div>
+          <div class="stat-card__value" :style="{ color: card.color }">
+            {{ displayStats[card.key] }}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 第一行：趋势图 + 流程类型分布 -->
+    <div class="chart-row">
+      <el-card shadow="never" class="chart-card">
+        <template #header>
+          <div class="card-header">
+            <span>{{ t('workflow.monitor.charts.trendTitle') }}</span>
+            <el-radio-group v-model="trendDays" size="small">
+              <el-radio-button :value="7">{{ t('workflow.monitor.range7Days') }}</el-radio-button>
+              <el-radio-button :value="30">{{ t('workflow.monitor.range30Days') }}</el-radio-button>
+            </el-radio-group>
+          </div>
+        </template>
+        <div ref="trendChartRef" class="chart-box" v-loading="trendLoading" />
+      </el-card>
+
+      <el-card shadow="never" class="chart-card">
+        <template #header>
+          <span>{{ t('workflow.monitor.charts.distributionTitle') }}</span>
+        </template>
+        <div ref="distributionChartRef" class="chart-box" v-loading="distributionLoading" />
+      </el-card>
+    </div>
+
+    <!-- 第二行：节点耗时瓶颈 + 审批人效率 -->
+    <div class="chart-row">
+      <el-card shadow="never" class="chart-card">
+        <template #header>
+          <span>{{ t('workflow.monitor.charts.bottleneckTitle') }}</span>
+        </template>
+        <div ref="bottleneckChartRef" class="chart-box" v-loading="bottleneckLoading" />
+      </el-card>
+
+      <el-card shadow="never" class="chart-card">
+        <template #header>
+          <span>{{ t('workflow.monitor.charts.approverTitle') }}</span>
+        </template>
+        <div ref="approverChartRef" class="chart-box" v-loading="approverLoading" />
+      </el-card>
+    </div>
+
+    <!-- 异常流程列表 -->
+    <el-card shadow="never" class="section">
+      <template #header>
+        <div class="card-header">
+          <span>{{ t('workflow.monitor.anomaly.title') }}</span>
+          <div>
+            <el-button size="small" text @click="loadAnomaly">{{ t('workflow.monitor.buttons.refresh') }}</el-button>
+            <el-button size="small" type="primary" plain @click="exportAnomalyCsv" :disabled="!anomalyList.length">
+              {{ t('workflow.monitor.buttons.exportCsv') }}
+            </el-button>
+          </div>
+        </div>
+      </template>
+      <div class="filter-bar">
+        <el-select
+          v-model="anomalyQuery.anomalyType"
+          :placeholder="t('workflow.monitor.anomaly.anomalyTypePlaceholder')"
+          clearable
+          style="width: 140px"
+          @change="anomalyQuery.pageNum = 1; loadAnomaly()"
+        >
+          <el-option :label="t('workflow.monitor.anomaly.type.TIMEOUT')" value="TIMEOUT" />
+          <el-option :label="t('workflow.monitor.anomaly.type.STUCK')" value="STUCK" />
+          <el-option :label="t('workflow.monitor.anomaly.type.CIRCULAR_APPROVAL')" value="CIRCULAR_APPROVAL" />
+          <el-option :label="t('workflow.monitor.anomaly.type.REPEATED_REJECT')" value="REPEATED_REJECT" />
+        </el-select>
+        <el-select
+          v-model="anomalyQuery.warnLevel"
+          :placeholder="t('workflow.monitor.anomaly.warnLevelPlaceholder')"
+          clearable
+          style="width: 120px"
+          @change="anomalyQuery.pageNum = 1; loadAnomaly()"
+        >
+          <el-option :label="t('workflow.monitor.anomaly.warnLevel.RED')" value="RED" />
+          <el-option :label="t('workflow.monitor.anomaly.warnLevel.YELLOW')" value="YELLOW" />
+          <el-option :label="t('workflow.monitor.anomaly.warnLevel.ORANGE')" value="ORANGE" />
+        </el-select>
+        <el-button type="primary" @click="anomalyQuery.pageNum = 1; loadAnomaly()">{{ t('workflow.monitor.buttons.query') }}</el-button>
+      </div>
+      <el-table :data="anomalyList" v-loading="anomalyLoading" stripe>
+        <el-table-column prop="id" :label="t('workflow.monitor.anomaly.colId')" width="80" />
+        <el-table-column prop="title" :label="t('workflow.monitor.anomaly.colTitle')" min-width="200" show-overflow-tooltip />
+        <el-table-column prop="flowName" :label="t('workflow.monitor.anomaly.colFlow')" width="140" show-overflow-tooltip />
+        <el-table-column prop="initiatorName" :label="t('workflow.monitor.anomaly.colInitiator')" width="100" />
+        <el-table-column :label="t('workflow.monitor.anomaly.colAnomalyType')" width="120">
+          <template #default="{ row }">
+            <el-tag
+              :color="anomalyTypeMap[row.anomalyType]?.color"
+              size="small"
+              effect="dark"
+              style="border: none"
+            >
+              {{ anomalyTypeMap[row.anomalyType]?.label || row.anomalyType }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('workflow.monitor.anomaly.colWarnLevel')" width="100">
+          <template #default="{ row }">
+            <el-tag
+              :type="warnLevelMap[row.warnLevel]?.type || 'info'"
+              size="small"
+            >
+              {{ warnLevelMap[row.warnLevel]?.label || row.warnLevel }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="currentNodeName" :label="t('workflow.monitor.anomaly.colCurrentNode')" width="120" />
+        <el-table-column :label="t('workflow.monitor.anomaly.colOverdueDays')" width="100">
+          <template #default="{ row }">
+            <span v-if="row.overdueDays != null" style="color: #f5222d; font-weight: 600">
+              {{ row.overdueDays }} {{ t('workflow.monitor.anomaly.dayUnit') }}
+            </span>
+            <span v-else>-</span>
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('workflow.monitor.anomaly.colStartTime')" width="160">
+          <template #default="{ row }">
+            {{ row.startTime ? dayjs(row.startTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="t('workflow.monitor.anomaly.colAction')" width="100" fixed="right">
+          <template #default="{ row }">
+            <el-button size="small" text type="primary" @click="goInstance(row)">{{ t('workflow.monitor.buttons.viewDetail') }}</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        v-model:current-page="anomalyQuery.pageNum"
+        v-model:page-size="anomalyQuery.pageSize"
+        :total="anomalyTotal"
+        :page-sizes="[10, 20, 50]"
+        layout="total, sizes, prev, pager, next, jumper"
+        class="pagination"
+        @current-change="loadAnomaly"
+        @size-change="loadAnomaly"
+      />
+    </el-card>
+  </div>
+</template>
+
+<style scoped lang="scss">
+.monitor-dashboard {
+  padding: 16px;
+}
+
+.page-header {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+
+  &__left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__right {
+    flex-shrink: 0;
+  }
+
+  h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #1e293b;
+  }
+
+  &__sub {
+    margin: 4px 0 0;
+    color: #64748b;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* ========== 统计卡片 ========== */
+.stat-cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: #fff;
+  border-radius: 8px;
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-top: 3px solid;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  transition: box-shadow 0.2s, transform 0.2s;
+
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  &__icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+
+    i {
+      font-size: 22px;
+    }
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__title {
+    font-size: 13px;
+    color: #64748b;
+    margin-bottom: 4px;
+  }
+
+  &__value {
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1;
+  }
+}
+
+/* ========== 图表区域 ========== */
+.chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.chart-card {
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+  }
+}
+
+.chart-box {
+  height: 320px;
+}
+
+/* ========== 异常列表 ========== */
+.section {
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 600;
+  }
+}
+
+.filter-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.pagination {
+  margin-top: 16px;
+  justify-content: flex-end;
+}
+</style>

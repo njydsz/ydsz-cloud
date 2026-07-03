@@ -21,6 +21,8 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import VirtualTable from '@/components/common/VirtualTable.vue'
+import type { ColumnConfig } from '@/components/common/VirtualTable.vue'
 import {
   aggregateUtilization,
   getOverallUtilization,
@@ -82,6 +84,16 @@ const gradeLabelMap: Record<string, string> = {
   WARN: '黄色预警',
   CRITICAL: '红色预警',
 }
+
+/** 预警员工列表列配置（P3-1: 迁移到 VirtualTable，去掉了 el-table 的序号列） */
+const alertColumns: ColumnConfig[] = [
+  { field: 'employeeName', title: '员工', width: 140 },
+  { field: 'levelCode', title: '职级', width: 80 },
+  { field: 'totalHours', title: '总工时 (h)', width: 120, align: 'right', slot: true },
+  { field: 'billableHours', title: '可计费 (h)', width: 120, align: 'right', slot: true },
+  { field: 'utilizationPct', title: '利用率', width: 120, align: 'right', slot: true },
+  { field: 'grade', title: '考核', width: 120, align: 'center', slot: true },
+]
 
 /** 整体考核等级（取后端返回值，缺省为 NORMAL） */
 const overallGrade = computed(() => {
@@ -360,30 +372,31 @@ function fmtHours(v: number | undefined) {
         <span style="color: #f56c6c">预警员工（WARN/CRITICAL）</span>
         <span class="muted">（按 utilizationPct 升序）</span>
       </template>
-      <!-- TODO P3: 待评估迁移 VirtualTable（大型组织预警员工可能 >100；但含 StatusTag/彩色文本插槽，VirtualTable 仅支持 formatter 文本渲染，需先扩展组件支持插槽后再迁移） -->
-      <el-table v-loading="loading" :data="alerts" border size="small">
-        <el-table-column type="index" label="#" width="50" />
-        <el-table-column prop="employeeName" label="员工" min-width="120" />
-        <el-table-column prop="levelCode" label="职级" width="80" />
-        <el-table-column label="总工时 (h)" width="120" align="right">
-          <template #default="{ row }">{{ fmtHours(row.totalHours) }}</template>
-        </el-table-column>
-        <el-table-column label="可计费 (h)" width="120" align="right">
-          <template #default="{ row }">{{ fmtHours(row.billableHours) }}</template>
-        </el-table-column>
-        <el-table-column label="利用率" width="120" align="right">
-          <template #default="{ row }">
-            <span :style="{ color: gradeColorMap[row.grade] || '' }">
-              {{ fmtPct(row.utilizationPct) }}
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column label="考核" width="120" align="center">
-          <template #default="{ row }">
-            <StatusTag :value="row.grade" :label="gradeLabelMap[row.grade] || row.grade" />
-          </template>
-        </el-table-column>
-      </el-table>
+      <!-- P3-1: 已迁移到 VirtualTable，支持虚拟滚动 + 自定义插槽；去掉了原 el-table 的序号列 -->
+      <VirtualTable
+        :data="alerts as Record<string, unknown>[]"
+        :columns="alertColumns"
+        :loading="loading"
+        :height="500"
+      >
+        <template #col-totalHours="{ row }">
+          {{ fmtHours((row as UtilizationRowVO).totalHours) }}
+        </template>
+        <template #col-billableHours="{ row }">
+          {{ fmtHours((row as UtilizationRowVO).billableHours) }}
+        </template>
+        <template #col-utilizationPct="{ row }">
+          <span :style="{ color: gradeColorMap[(row as UtilizationRowVO).grade || ''] || '' }">
+            {{ fmtPct((row as UtilizationRowVO).utilizationPct) }}
+          </span>
+        </template>
+        <template #col-grade="{ row }">
+          <StatusTag
+            :value="(row as UtilizationRowVO).grade"
+            :label="gradeLabelMap[(row as UtilizationRowVO).grade || ''] || (row as UtilizationRowVO).grade"
+          />
+        </template>
+      </VirtualTable>
       <el-empty v-if="!loading && alerts.length === 0" description="当前无预警员工" />
     </el-card>
   </PageLayout>

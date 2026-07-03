@@ -16,6 +16,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
+import VirtualTable from '@/components/common/VirtualTable.vue'
+import type { ColumnConfig } from '@/components/common/VirtualTable.vue'
 import {
   listAlerts,
   submitAlert,
@@ -70,6 +72,21 @@ const typeMap: Record<string, string> = {
   QUALITY: '质量',
   OTHER: '其他',
 }
+
+/** 预警分发列表列配置 */
+const alertColumns: ColumnConfig[] = [
+  { field: 'alertCode', title: '预警编号', width: 220 },
+  { field: 'alertType', title: '类型', width: 100, slot: true },
+  { field: 'alertLevel', title: '等级', width: 80, slot: true },
+  { field: 'title', title: '标题', width: 220 },
+  { field: 'targetRole', title: '触达角色', width: 160 },
+  { field: 'pushChannels', title: '渠道', width: 120 },
+  { field: 'status', title: '状态', width: 100, slot: true },
+  { field: 'retryCount', title: '重试', width: 60 },
+  { field: 'dispatchedAt', title: '触发时间', width: 160 },
+  { field: 'failReason', title: '失败原因', width: 180 },
+  { field: 'actions', title: '操作', width: 220, fixed: 'right', slot: true },
+]
 
 /** 拉取预警分发列表（按 level/status 过滤） */
 async function fetchList() {
@@ -234,62 +251,51 @@ onMounted(() => {
       </el-col>
     </el-row>
 
-    <!-- 预警分发列表 -->
-    <!-- TODO P3: 待评估迁移 VirtualTable（listAlerts 全量返回，预警记录可能 >100；但含 StatusTag/el-link/操作按钮插槽，VirtualTable 不支持，需先扩展组件支持插槽后再迁移） -->
-    <el-table v-loading="loading" :data="list" border stripe>
-      <el-table-column prop="alertCode" label="预警编号" width="220" />
-      <el-table-column label="类型" width="100">
-        <template #default="{ row }">
-          {{ typeMap[row.alertType] || row.alertType }}
-        </template>
-      </el-table-column>
-      <el-table-column label="等级" width="80">
-        <template #default="{ row }">
-          <el-link type="primary" @click="handleResolveRoles(row.alertLevel)">
-            <StatusTag
-              :label="levelMap[row.alertLevel as keyof typeof levelMap]?.label || row.alertLevel"
-              :type="levelMap[row.alertLevel as keyof typeof levelMap]?.type || 'info'"
-            />
-          </el-link>
-        </template>
-      </el-table-column>
-      <el-table-column prop="title" label="标题" min-width="220" show-overflow-tooltip />
-      <el-table-column prop="targetRole" label="触达角色" width="160" />
-      <el-table-column prop="pushChannels" label="渠道" width="120" />
-      <el-table-column label="状态" width="100">
-        <template #default="{ row }">
+    <!-- 预警分发列表（P3-1: 已迁移到 VirtualTable，支持虚拟滚动 + 自定义插槽） -->
+    <VirtualTable
+      :data="list as Record<string, unknown>[]"
+      :columns="alertColumns"
+      :loading="loading"
+      :height="520"
+    >
+      <template #col-alertType="{ row }">
+        {{ typeMap[(row as AlertDispatchVO).alertType] || (row as AlertDispatchVO).alertType }}
+      </template>
+      <template #col-alertLevel="{ row }">
+        <el-link type="primary" @click="handleResolveRoles((row as AlertDispatchVO).alertLevel)">
           <StatusTag
-            :label="statusMap[row.status as keyof typeof statusMap]?.label || row.status"
-            :type="statusMap[row.status as keyof typeof statusMap]?.type || 'info'"
+            :label="levelMap[(row as AlertDispatchVO).alertLevel as keyof typeof levelMap]?.label || (row as AlertDispatchVO).alertLevel"
+            :type="levelMap[(row as AlertDispatchVO).alertLevel as keyof typeof levelMap]?.type || 'info'"
           />
-        </template>
-      </el-table-column>
-      <el-table-column prop="retryCount" label="重试" width="60" />
-      <el-table-column prop="dispatchedAt" label="触发时间" width="160" />
-      <el-table-column prop="failReason" label="失败原因" min-width="160" show-overflow-tooltip />
-      <el-table-column label="操作" width="220" fixed="right">
-        <template #default="{ row }">
-          <el-button
-            v-if="(row as AlertDispatchVO).status === 'PENDING' || (row as AlertDispatchVO).status === 'FAILED'"
-            type="primary"
-            size="small"
-            link
-            @click="handleDispatch(row as AlertDispatchVO)"
-          >
-            立即分发
-          </el-button>
-          <el-button
-            v-if="(row as AlertDispatchVO).status === 'PENDING' || (row as AlertDispatchVO).status === 'FAILED'"
-            type="danger"
-            size="small"
-            link
-            @click="handleCancel(row as AlertDispatchVO)"
-          >
-            取消
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+        </el-link>
+      </template>
+      <template #col-status="{ row }">
+        <StatusTag
+          :label="statusMap[(row as AlertDispatchVO).status as keyof typeof statusMap]?.label || (row as AlertDispatchVO).status"
+          :type="statusMap[(row as AlertDispatchVO).status as keyof typeof statusMap]?.type || 'info'"
+        />
+      </template>
+      <template #col-actions="{ row }">
+        <el-button
+          v-if="(row as AlertDispatchVO).status === 'PENDING' || (row as AlertDispatchVO).status === 'FAILED'"
+          type="primary"
+          size="small"
+          link
+          @click="handleDispatch(row as AlertDispatchVO)"
+        >
+          立即分发
+        </el-button>
+        <el-button
+          v-if="(row as AlertDispatchVO).status === 'PENDING' || (row as AlertDispatchVO).status === 'FAILED'"
+          type="danger"
+          size="small"
+          link
+          @click="handleCancel(row as AlertDispatchVO)"
+        >
+          取消
+        </el-button>
+      </template>
+    </VirtualTable>
 
     <!-- 提交预警弹窗 -->
     <el-dialog v-model="dialogVisible" title="提交预警" width="600px">

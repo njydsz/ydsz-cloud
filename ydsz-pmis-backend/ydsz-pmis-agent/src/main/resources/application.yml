@@ -7,25 +7,43 @@
 #  依赖：Nacos、PostgreSQL、Redis、可选 Spring AI（OpenAI / 灵积 / 千帆）
 # =====================================================================
 
+# HTTP 监听端口
 server:
-  port: 9006  # HTTP 监听端口
+  port: 9006
 
 spring:
+  # Nacos 注册的服务名
   application:
-    name: ydsz-pmis-agent  # Nacos 注册的服务名
+    name: ydsz-pmis-agent
+  # 激活 dev / sit / uat / prod profile
   profiles:
-    active: dev  # 激活 dev / sit / uat / prod profile
+    active: dev
+  # 启用 Servlet 容器（提供 HTTP API）
   main:
-    web-application-type: servlet  # 启用 Servlet 容器（提供 HTTP API）
+    web-application-type: servlet
   cloud:
     nacos:
+      # 服务注册
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
+        namespace: ${NACOS_NAMESPACE:pmis}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:Limw1020}
+      # 配置中心（路由规则、限流阈值等动态配置）
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
-        file-extension: yml
-        group: ${spring.profiles.active}
         namespace: ${NACOS_NAMESPACE:pmis}
+        username: ${NACOS_USERNAME:nacos}
+        password: ${NACOS_PASSWORD:Limw1020}
+        group: ${spring.profiles.active}
+        refresh-enabled: true
+        file-extension: yaml
+        # 引入共享配置：datasource / redis / mybatis-plus / springdoc / logging
+        # 避免每个微服务重复定义，修改一次全集群生效
+        shared-configs:
+          - data-id: ydsz-pmis-common.yaml
+            group: ${spring.profiles.active}
+            refresh: true
 
   # ---------- 数据源 ----------
   datasource:
