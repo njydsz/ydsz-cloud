@@ -10,9 +10,9 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>ydsz-pmis-scheduler</artifactId>
-    <name>ydsz-pmis-scheduler</name>
-    <description>任务调度服务：基于 Spring TaskScheduler 的动态定时任务</description>
+    <artifactId>ydsz-pmis-xxljob</artifactId>
+    <name>ydsz-pmis-xxljob</name>
+    <description>任务调度服务：基于 XXL-Job 的分布式定时任务</description>
 
     <dependencies>
         <dependency>

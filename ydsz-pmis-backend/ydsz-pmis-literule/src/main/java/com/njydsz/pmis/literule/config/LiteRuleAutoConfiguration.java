@@ -64,6 +64,7 @@ public class LiteRuleAutoConfiguration {
      *   <li>当 ruleTimeoutMs > 0 时启用 {@link RuleTimeoutExecutor}</li>
      *   <li>当 circuitBreakerMinEvaluations > 0 时启用 {@link RuleCircuitBreaker}</li>
      *   <li>当 MeterRegistry 可用时启用 {@link MicrometerRuleMetrics}</li>
+     *   <li>当 canaryEnabled=true 时启用 {@link RuleCanaryRouter}</li>
      * </ul>
      *
      * @param properties         配置属性
@@ -75,6 +76,7 @@ public class LiteRuleAutoConfiguration {
     @ConditionalOnMissingBean
     public RuleEngine ruleEngine(LiteRuleProperties properties,
                                   ObjectProvider<TraceRecorder> traceDelegateProvider,
+                                  ObjectProvider<ExpressionEvaluator> evaluatorProvider,
                                   ApplicationContext applicationContext) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
@@ -113,13 +115,24 @@ public class LiteRuleAutoConfiguration {
                     properties.getCircuitBreakerErrorRate(), properties.getCircuitBreakerMinEvaluations());
         }
 
+        if (properties.isCanaryEnabled()) {
+            ExpressionEvaluator evaluator = evaluatorProvider.getIfAvailable();
+            if (evaluator == null) {
+                evaluator = new AviatorExpressionEvaluator(properties.isSandboxEnabled());
+            }
+            RuleCanaryRouter canaryRouter = new RuleCanaryRouter(evaluator);
+            engine.setCanaryRouter(canaryRouter);
+            engine.setCanaryEnabled(true);
+            log.info("[LiteRule] 规则灰度路由已启用");
+        }
+
         // Micrometer 桥接（仅当 classpath 存在 MeterRegistry 时启用）
         bindMicrometerIfAvailable(engine, applicationContext);
 
-        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}）",
+        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}）",
                 properties.isStatsEnabled(), properties.isTraceEnabled(),
                 properties.getRuleTimeoutMs(), properties.getCircuitBreakerMinEvaluations() > 0,
-                engine.getMetrics() != null);
+                engine.getMetrics() != null, engine.getCanaryRouter() != null);
         return engine;
     }
 

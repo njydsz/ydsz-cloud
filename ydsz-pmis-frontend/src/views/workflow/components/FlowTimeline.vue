@@ -5,15 +5,50 @@
  * P0-8: 审批轨迹时间线 UI（对标钉钉/飞书/Activiti History Service）。
  * 支持事件类型：START/TASK_COMPLETED/URGE/TRANSFER/DELEGATE/COUNTERSIGN/TIMEOUT/COMPLETE/REJECT/SUSPEND/ACTIVATE/RECALL/JUMP/CC
  */
-import { computed } from 'vue'
+import { computed, ref, watch, nextTick } from 'vue'
 import dayjs from 'dayjs'
 import type { FlowTimelineDTO, FlowTimelineEventDTO } from '@/api/workflow/types'
 
 const props = defineProps<{
   timeline: FlowTimelineDTO
+  /** P0-4: 高亮指定节点编码对应的事件（点击流程图节点跳转时设置） */
+  highlightNodeCode?: string | null
 }>()
 
 const events = computed<FlowTimelineEventDTO[]>(() => props.timeline.events || [])
+
+// P0-4: 高亮控制 — 当 highlightNodeCode 变化时找到第一个匹配事件并滚动+高亮
+const highlightActive = ref(false)
+const highlightIndex = ref(-1)
+let highlightTimer: ReturnType<typeof setTimeout> | null = null
+
+watch(
+  () => props.highlightNodeCode,
+  async (code) => {
+    if (!code) {
+      highlightIndex.value = -1
+      return
+    }
+    const idx = events.value.findIndex((e) => e.nodeCode === code)
+    if (idx < 0) {
+      highlightIndex.value = -1
+      return
+    }
+    highlightIndex.value = idx
+    highlightActive.value = true
+    await nextTick()
+    // 滚动到对应事件
+    const el = document.querySelector(`[data-tl-idx="${idx}"]`)
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+    // 3 秒后取消高亮
+    if (highlightTimer) clearTimeout(highlightTimer)
+    highlightTimer = setTimeout(() => {
+      highlightActive.value = false
+    }, 3000)
+  },
+)
 
 /** 事件类型 → 颜色 + 图标 + 文案 */
 const eventConfig: Record<
@@ -65,7 +100,11 @@ function formatDuration(ms?: number): string {
         :color="config(e.eventType).color"
         placement="top"
       >
-        <div class="timeline-card">
+        <div
+          class="timeline-card"
+          :class="{ 'timeline-card--highlight': highlightActive && highlightIndex === idx }"
+          :data-tl-idx="idx"
+        >
           <div class="timeline-card__header">
             <el-icon :size="16" :color="config(e.eventType).color">
               <component :is="config(e.eventType).icon" />
@@ -119,6 +158,14 @@ function formatDuration(ms?: number): string {
   border-radius: 6px;
   padding: 12px 16px;
   max-width: 600px;
+  transition: box-shadow 0.3s, border-color 0.3s, background 0.3s;
+
+  /* P0-4: 节点点击高亮 */
+  &--highlight {
+    border-color: #1890ff;
+    background: #eff6ff;
+    box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.2);
+  }
 
   &__header {
     display: flex;

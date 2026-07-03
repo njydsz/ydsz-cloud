@@ -70,10 +70,10 @@ kubectl logs -n argo-rollouts -l app=argo-rollouts --tail=100 | grep -i prom
 
 ## 10. 批量操作 (CI 集成)
 # 发布所有服务:
-for svc in execution project finance agent; do
+for svc in project finance agent; do
   kubectl argo rollouts set image pmis-$svc $svc=registry/...:v1.2.0 -n pmis-prod
 done
 # 等全部完成:
-for svc in execution project finance agent; do
+for svc in project finance agent; do
   kubectl argo rollouts status pmis-$svc -n pmis-prod --timeout 30m
 done

@@ -1,8 +1,8 @@
-﻿-- ====================================================================
+-- ====================================================================
 -- 预警阈值配置（pmis_config，group=alert）
 --
 --  说明：EVM / Bench / 预算 / 毛利率 / 利用率 等模块的告警阈值从此处读取，
---       业务模块通过 ConfigClient Feign 调用 ydsz-pmis-config 读取。
+--       业务模块通过 ConfigClient Feign 调用 ydsz-pmis-system 读取。
 -- ====================================================================
 
 INSERT INTO pmis_config (config_group, config_key, config_value, value_type, description, is_public, created_by)

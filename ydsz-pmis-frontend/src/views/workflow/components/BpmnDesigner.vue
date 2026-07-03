@@ -581,6 +581,18 @@ function applyTemplate(tpl: (typeof templates)[0]) {
                   @change="(v: number) => onPropertyChange('priority', v)"
                 />
               </el-form-item>
+
+              <!-- P0-3: 字段权限配置（仅已部署流程可配置） -->
+              <el-divider content-position="left">字段权限</el-divider>
+              <div v-if="props.definitionId" class="field-perm-wrap">
+                <FormFieldPermissions
+                  :definition-id="props.definitionId"
+                  :node-code="panelData.elementId"
+                />
+              </div>
+              <div v-else class="field-perm-tip">
+                请先发布部署流程后再配置字段权限
+              </div>
             </template>
 
             <!-- 连线条件表达式 -->
@@ -747,6 +759,20 @@ function applyTemplate(tpl: (typeof templates)[0]) {
   color: #94a3b8;
   margin-top: 2px;
   line-height: 1.4;
+}
+
+/* P0-3: 字段权限配置区块 */
+.field-perm-wrap {
+  padding: 4px 0 8px;
+}
+
+.field-perm-tip {
+  font-size: 12px;
+  color: #94a3b8;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 4px;
+  line-height: 1.5;
 }
 
 .bpmn-canvas :deep(.bjs-powered-by) {

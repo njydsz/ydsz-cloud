@@ -1,8 +1,8 @@
-﻿server:
+server:
   port: 9012
 spring:
   application:
-    name: ydsz-pmis-scheduler
+    name: ydsz-pmis-xxljob
   profiles:
     active: dev
   main:
@@ -45,7 +45,7 @@ minio:
 
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
-  type-aliases-package: com.njydsz.pmis.scheduler.entity
+  type-aliases-package: com.njydsz.pmis.xx ljob.entity
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl

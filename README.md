@@ -2,7 +2,7 @@
 
 > 南京云顶数字科技有限公司 · 软件定制 + 人力外包 双业态 · 业财一体化精细化运营平台
 >
-> **当前版本**: `v1.3.0-SNAPSHOT` · **最近更新**: 2026-07-02 · **构建状态**: 后端 15 模块 `mvn test` 全部通过 / 前端 `vitest` 54 文件 / `vue-tsc` 0 错
+> **当前版本**: `v1.3.0-SNAPSHOT` · **最近更新**: 2026-07-03 · **构建状态**: 后端 7 服务 + 2 库 `mvn test` 全部通过 / 前端 `vitest` 54 文件 / `vue-tsc` 0 错
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.7-6DB33F?logo=springboot)]()
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.1-6DB33F?logo=spring)]()

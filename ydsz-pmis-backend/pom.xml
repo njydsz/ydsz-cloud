@@ -24,7 +24,7 @@
         <module>ydsz-pmis-iam</module>
         <module>ydsz-pmis-system</module>
         <module>ydsz-pmis-workflow</module>
-        <module>ydsz-pmis-scheduler</module>
+        <module>ydsz-pmis-xxljob</module>
         <module>ydsz-pmis-project</module>
         <module>ydsz-pmis-agent</module>
         <module>ydsz-pmis-literule</module>
@@ -110,7 +110,7 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-scheduler</artifactId>
+                <artifactId>ydsz-pmis-xxljob</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
