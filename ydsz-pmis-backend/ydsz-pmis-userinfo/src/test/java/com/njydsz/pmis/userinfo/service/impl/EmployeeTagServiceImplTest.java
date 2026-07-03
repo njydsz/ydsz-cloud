@@ -1,12 +1,9 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.userinfo.dto.EmployeeTagCreateDTO;
 import com.njydsz.pmis.userinfo.entity.EmployeeTagDO;
 import com.njydsz.pmis.userinfo.mapper.EmployeeTagMapper;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,16 +26,6 @@ class EmployeeTagServiceImplTest {
 
     @InjectMocks
     private EmployeeTagServiceImpl employeeTagService;
-
-    @BeforeEach
-    void setUp() {
-        TenantContext.setTenantId(1L);
-    }
-
-    @AfterEach
-    void tearDown() {
-        TenantContext.clear();
-    }
 
     @Test
     @DisplayName("添加人员标签成功")

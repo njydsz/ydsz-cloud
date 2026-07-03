@@ -87,7 +87,15 @@ FULL OUTER JOIN
 COMMENT ON VIEW pmis_view_flow_archive_stats IS '流程归档统计: active_count 主表实例数 / archived_count 已归档实例数';
 
 -- 注册归档任务到 pmis_job（每日 03:00 触发，阈值 30 天）
-INSERT INTO pmis_job (job_name, handler, cron, status, params, tenant_id, created_at, updated_at, deleted)
+-- 早期版本误用 cron/params/created_at/updated_at 等字段名，应与
+-- V1.0.0_006 中 pmis_job 表的列保持一致: cron_expression/params_json/
+-- create_time/update_time。同时补齐 job_group/job_key/remark 字段。
+INSERT INTO pmis_job
+    (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id, create_time, update_time, deleted)
 VALUES
-    ('flowHistoryArchiveJobHandler', 'flowHistoryArchiveJobHandler', '0 0 3 * * ?', 'NORMAL', '{"days":30,"batchSize":100,"maxProcessMs":30000}', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
-ON CONFLICT (job_name, tenant_id) DO NOTHING;
+    ('流程历史归档任务', 'WORKFLOW', 'flowHistoryArchiveJob',
+     'flowHistoryArchiveJobHandler', '0 0 3 * * ?',
+     '{"days":30,"batchSize":100,"maxProcessMs":30000}',
+     'NORMAL', '每日 03:00 归档 30 天前的历史流程实例, 单批 100 条, 单次最长 30s',
+     1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
+ON CONFLICT (job_key) DO NOTHING;

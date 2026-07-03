@@ -792,6 +792,108 @@ for m in _re.finditer(r'COMMENT\s+ON\s+TABLE\s+(\w+)\b', text, _re.IGNORECASE):
     if name not in all_known_tables:
         errors.append(f'  COMMENT ON TABLE unknown table: {name!r}')
 
+# 7. No INSERT INTO <table> references a column that doesn't exist on the
+#    table. Such an INSERT will fail at execution time with
+#    "column <col> of relation <table> does not exist".
+# Build a map: table_name -> set(column_names)
+table_columns = {}
+for f in sql_files:
+    ftxt = f.read_text(encoding='utf-8')
+    # find each CREATE TABLE block
+    for m in _re.finditer(
+        r'CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+        ftxt, _re.IGNORECASE,
+    ):
+        tname = m.group(1)
+        if tname in table_columns:
+            continue
+        # walk parens to find column list
+        depth = 0
+        i = m.end() - 1
+        cols = set()
+        while i < len(ftxt):
+            ch = ftxt[i]
+            if ch == '(':
+                depth += 1
+            elif ch == ')':
+                depth -= 1
+                if depth == 0:
+                    break
+            elif depth == 1 and ch == '\n':
+                # parse one line as a column def (skip CONSTRAINT/TABLE-level)
+                line_start = i + 1
+                line_end = ftxt.find('\n', line_start)
+                if line_end < 0:
+                    line_end = len(ftxt)
+                line = ftxt[line_start:line_end].strip()
+                if not line:
+                    i = line_end
+                    continue
+                if line.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK')):
+                    pass  # table-level
+                else:
+                    # first word is the column name
+                    cm = _re.match(r'"?(\w+)"?', line)
+                    if cm:
+                        cols.add(cm.group(1).lower())
+            i += 1
+        table_columns[tname] = cols
+    # also include supplement tables
+for m in _re.finditer(
+    r'CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+    supplement_text, _re.IGNORECASE,
+):
+    tname = m.group(1)
+    if tname in table_columns:
+        continue
+    depth = 0
+    i = m.end() - 1
+    cols = set()
+    while i < len(supplement_text):
+        ch = supplement_text[i]
+        if ch == '(':
+            depth += 1
+        elif ch == ')':
+            depth -= 1
+            if depth == 0:
+                break
+        elif depth == 1 and ch == '\n':
+            line_start = i + 1
+            line_end = supplement_text.find('\n', line_start)
+            if line_end < 0:
+                line_end = len(supplement_text)
+            line = supplement_text[line_start:line_end].strip()
+            if not line:
+                i = line_end
+                continue
+            if line.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK')):
+                pass
+            else:
+                cm = _re.match(r'"?(\w+)"?', line)
+                if cm:
+                    cols.add(cm.group(1).lower())
+        i += 1
+    table_columns[tname] = cols
+
+# Now check all INSERT INTO <table> (col1, col2, ...) VALUES ...
+# The INSERT might span multiple lines, so we need to find a balanced paren.
+insert_re = _re.compile(r'INSERT\s+INTO\s+(\w+)\s*\(([^)]+)\)', _re.IGNORECASE)
+for m in insert_re.finditer(text):
+    tname = m.group(1)
+    cols_str = m.group(2)
+    line_start = text.rfind('\n', 0, m.start()) + 1
+    line = text[line_start: text.find('\n', m.start())]
+    if '[SKIPPED-FWD-REF]' in line:
+        continue
+    if tname not in all_known_tables:
+        # already reported above
+        continue
+    declared = {c.strip().strip('"').lower() for c in cols_str.split(',') if c.strip()}
+    actual = table_columns.get(tname, set())
+    for c in declared:
+        if c not in actual:
+            errors.append(f'  INSERT INTO {tname}: column {c!r} not in table definition')
+
 # Stats
 total_col = len(re_col_body.findall(text))
 total_tbl = len(re_tbl_body.findall(text))

@@ -3,7 +3,6 @@ package com.njydsz.pmis.userinfo.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.userinfo.dto.AttendanceCreateDTO;
 import com.njydsz.pmis.userinfo.dto.LeaveCreateDTO;
 import com.njydsz.pmis.userinfo.dto.OvertimeCreateDTO;
@@ -13,8 +12,6 @@ import com.njydsz.pmis.userinfo.entity.OvertimeDO;
 import com.njydsz.pmis.userinfo.mapper.AttendanceMapper;
 import com.njydsz.pmis.userinfo.mapper.LeaveMapper;
 import com.njydsz.pmis.userinfo.mapper.OvertimeMapper;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -44,16 +41,6 @@ class AttendanceServiceImplTest {
 
     @InjectMocks
     private AttendanceServiceImpl attendanceService;
-
-    @BeforeEach
-    void setUp() {
-        TenantContext.setTenantId(1L);
-    }
-
-    @AfterEach
-    void tearDown() {
-        TenantContext.clear();
-    }
 
     @Test
     @DisplayName("登记出勤成功")

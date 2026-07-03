@@ -3,12 +3,9 @@ package com.njydsz.pmis.userinfo.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.userinfo.dto.ResourcePoolCreateDTO;
 import com.njydsz.pmis.userinfo.entity.ResourcePoolDO;
 import com.njydsz.pmis.userinfo.mapper.ResourcePoolMapper;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,16 +28,6 @@ class ResourcePoolServiceImplTest {
 
     @InjectMocks
     private ResourcePoolServiceImpl resourcePoolService;
-
-    @BeforeEach
-    void setUp() {
-        TenantContext.setTenantId(1L);
-    }
-
-    @AfterEach
-    void tearDown() {
-        TenantContext.clear();
-    }
 
     @Test
     @DisplayName("创建资源池成功")
