@@ -882,6 +882,30 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
             )
             if m_alter:
                 table_cols.setdefault(m_alter.group(1), set()).add(m_alter.group(2).lower())
+                # Single-line ALTER TABLE ... ADD COLUMN: statement may
+                # continue on following lines with more ADD COLUMN clauses.
+                if not stripped.endswith(';'):
+                    pending_alter_table = m_alter.group(1)
+            else:
+                # Detect multi-line ALTER TABLE: "ALTER TABLE <name>"
+                # on a line by itself (no ADD COLUMN on the same line).
+                m_alter_start = re.match(
+                    r'^\s*ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+)\b',
+                    raw, re.IGNORECASE,
+                )
+                if m_alter_start:
+                    pending_alter_table = m_alter_start.group(1)
+                elif pending_alter_table is not None:
+                    # We are inside a multi-line ALTER TABLE; scan the
+                    # current line for ADD COLUMN [IF NOT EXISTS] <col>.
+                    for m_addcol in re.finditer(
+                        r'ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\b',
+                        raw, re.IGNORECASE,
+                    ):
+                        table_cols.setdefault(pending_alter_table, set()).add(m_addcol.group(1).lower())
+                # End pending ALTER TABLE when the statement terminates.
+                if pending_alter_table is not None and stripped.endswith(';'):
+                    pending_alter_table = None
 
             # Also support multi-line ALTER TABLE ... ADD COLUMN (col in
             # following lines). We only track the form where the column
