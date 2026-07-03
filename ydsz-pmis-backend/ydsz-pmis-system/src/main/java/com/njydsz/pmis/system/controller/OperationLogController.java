@@ -1,8 +1,8 @@
-package com.njydsz.pmis.audit.controller;
+package com.njydsz.pmis.system.controller;
 
-import com.njydsz.pmis.audit.entity.OperationLogDO;
-import com.njydsz.pmis.audit.service.OperationLogServiceImpl;
-import com.njydsz.pmis.audit.util.DiffCalculator;
+import com.njydsz.pmis.system.entity.OperationLogDO;
+import com.njydsz.pmis.system.service.OperationLogServiceImpl;
+import com.njydsz.pmis.system.util.DiffCalculator;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;

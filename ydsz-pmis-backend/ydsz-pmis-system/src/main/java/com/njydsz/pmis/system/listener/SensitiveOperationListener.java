@@ -1,7 +1,7 @@
-package com.njydsz.pmis.audit.listener;
+package com.njydsz.pmis.system.listener;
 
-import com.njydsz.pmis.audit.entity.SensitiveOperationDO;
-import com.njydsz.pmis.audit.mapper.SensitiveOperationMapper;
+import com.njydsz.pmis.system.entity.SensitiveOperationDO;
+import com.njydsz.pmis.system.mapper.SensitiveOperationMapper;
 import com.njydsz.pmis.common.security.SensitiveOperationEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

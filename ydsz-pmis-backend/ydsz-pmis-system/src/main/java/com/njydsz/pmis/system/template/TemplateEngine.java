@@ -1,4 +1,4 @@
-package com.njydsz.pmis.message.template;
+package com.njydsz.pmis.system.template;
 
 import java.util.Map;
 

@@ -1,13 +1,13 @@
-package com.njydsz.pmis.message.controller;
+package com.njydsz.pmis.system.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.message.dto.MessageSendDTO;
-import com.njydsz.pmis.message.entity.MessageLogDO;
-import com.njydsz.pmis.message.service.MessageServiceImpl;
+import com.njydsz.pmis.system.dto.MessageSendDTO;
+import com.njydsz.pmis.system.entity.MessageLogDO;
+import com.njydsz.pmis.system.service.MessageServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;

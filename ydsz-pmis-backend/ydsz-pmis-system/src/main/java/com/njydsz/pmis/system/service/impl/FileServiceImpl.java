@@ -1,14 +1,14 @@
-package com.njydsz.pmis.file.service.impl;
+package com.njydsz.pmis.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.file.config.MinioConfig;
-import com.njydsz.pmis.file.dto.FileUploadDTO;
-import com.njydsz.pmis.file.entity.FileDO;
-import com.njydsz.pmis.file.mapper.FileMapper;
-import com.njydsz.pmis.file.service.FileService;
+import com.njydsz.pmis.system.config.MinioConfig;
+import com.njydsz.pmis.system.dto.FileUploadDTO;
+import com.njydsz.pmis.system.entity.FileDO;
+import com.njydsz.pmis.system.mapper.FileMapper;
+import com.njydsz.pmis.system.service.FileService;
 import io.minio.GetObjectArgs;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;

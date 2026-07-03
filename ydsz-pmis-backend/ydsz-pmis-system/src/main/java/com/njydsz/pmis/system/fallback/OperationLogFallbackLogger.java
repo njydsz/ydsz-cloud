@@ -1,4 +1,4 @@
-package com.njydsz.pmis.audit.fallback;
+package com.njydsz.pmis.system.fallback;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.event.OperationLogEvent;
@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
 /**
  * 操作日志补偿记录器
  *
- * <p>当 {@link com.njydsz.pmis.audit.listener.OperationLogListener} 落库失败且重试仍失败时，
+ * <p>当 {@link com.njydsz.pmis.system.listener.OperationLogListener} 落库失败且重试仍失败时，
  * 将事件 JSON 写入独立的 "audit-fallback" logger，由 logback 配置滚动文件 appender
  * 输出到 {@code logs/audit-fallback.log}，便于运维或对账任务后期补录。</p>
  *

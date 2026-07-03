@@ -1,8 +1,8 @@
-package com.njydsz.pmis.file.service;
+package com.njydsz.pmis.system.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.file.dto.FileUploadDTO;
-import com.njydsz.pmis.file.entity.FileDO;
+import com.njydsz.pmis.system.dto.FileUploadDTO;
+import com.njydsz.pmis.system.entity.FileDO;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;

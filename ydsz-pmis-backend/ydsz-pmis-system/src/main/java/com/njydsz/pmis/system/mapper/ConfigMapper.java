@@ -1,7 +1,7 @@
-package com.njydsz.pmis.config.mapper;
+package com.njydsz.pmis.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.config.entity.ConfigDO;
+import com.njydsz.pmis.system.entity.ConfigDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

@@ -1,8 +1,8 @@
-package com.njydsz.pmis.audit.listener;
+package com.njydsz.pmis.system.listener;
 
-import com.njydsz.pmis.audit.entity.OperationLogDO;
-import com.njydsz.pmis.audit.fallback.OperationLogFallbackLogger;
-import com.njydsz.pmis.audit.mapper.OperationLogMapper;
+import com.njydsz.pmis.system.entity.OperationLogDO;
+import com.njydsz.pmis.system.fallback.OperationLogFallbackLogger;
+import com.njydsz.pmis.system.mapper.OperationLogMapper;
 import com.njydsz.pmis.common.event.OperationLogEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

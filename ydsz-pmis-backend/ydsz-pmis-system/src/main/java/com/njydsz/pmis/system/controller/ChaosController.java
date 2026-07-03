@@ -1,4 +1,4 @@
-package com.njydsz.pmis.config.controller;
+package com.njydsz.pmis.system.controller;
 
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;

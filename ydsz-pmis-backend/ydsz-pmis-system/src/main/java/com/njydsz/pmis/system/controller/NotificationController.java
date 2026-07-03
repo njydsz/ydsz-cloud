@@ -1,4 +1,4 @@
-package com.njydsz.pmis.notification.controller;
+package com.njydsz.pmis.system.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
@@ -6,11 +6,11 @@ import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.security.SecurityContext;
-import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
-import com.njydsz.pmis.notification.dto.NotificationSendDTO;
-import com.njydsz.pmis.notification.entity.NotificationDO;
-import com.njydsz.pmis.notification.service.NotificationService;
-import com.njydsz.pmis.notification.service.RealtimePushService;
+import com.njydsz.pmis.system.dto.NotificationQueryDTO;
+import com.njydsz.pmis.system.dto.NotificationSendDTO;
+import com.njydsz.pmis.system.entity.NotificationDO;
+import com.njydsz.pmis.system.service.NotificationService;
+import com.njydsz.pmis.system.service.RealtimePushService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

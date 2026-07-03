@@ -1,6 +1,6 @@
-package com.njydsz.pmis.message.channel.impl;
+package com.njydsz.pmis.system.channel.impl;
 
-import com.njydsz.pmis.message.channel.MessageChannel;
+import com.njydsz.pmis.system.channel.MessageChannel;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import lombok.extern.slf4j.Slf4j;

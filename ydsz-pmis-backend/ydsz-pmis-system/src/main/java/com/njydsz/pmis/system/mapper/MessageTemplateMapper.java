@@ -1,7 +1,7 @@
-package com.njydsz.pmis.message.mapper;
+package com.njydsz.pmis.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.message.entity.MessageTemplateDO;
+import com.njydsz.pmis.system.entity.MessageTemplateDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

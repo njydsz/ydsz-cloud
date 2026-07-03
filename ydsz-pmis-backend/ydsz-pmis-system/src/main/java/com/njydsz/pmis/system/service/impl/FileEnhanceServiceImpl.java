@@ -1,8 +1,8 @@
-package com.njydsz.pmis.file.service.impl;
+package com.njydsz.pmis.system.service.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.njydsz.pmis.file.config.MinioConfig;
-import com.njydsz.pmis.file.service.FileEnhanceService;
+import com.njydsz.pmis.system.config.MinioConfig;
+import com.njydsz.pmis.system.service.FileEnhanceService;
 import io.minio.GetObjectArgs;
 import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;

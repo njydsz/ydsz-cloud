@@ -1,4 +1,4 @@
-package com.njydsz.pmis.config.service.impl;
+package com.njydsz.pmis.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -6,11 +6,11 @@ import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.TypeReference;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.config.dto.ConfigFormDTO;
-import com.njydsz.pmis.config.dto.ConfigQueryDTO;
-import com.njydsz.pmis.config.entity.ConfigDO;
-import com.njydsz.pmis.config.mapper.ConfigMapper;
-import com.njydsz.pmis.config.service.ConfigService;
+import com.njydsz.pmis.system.dto.ConfigFormDTO;
+import com.njydsz.pmis.system.dto.ConfigQueryDTO;
+import com.njydsz.pmis.system.entity.ConfigDO;
+import com.njydsz.pmis.system.mapper.ConfigMapper;
+import com.njydsz.pmis.system.service.ConfigService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;

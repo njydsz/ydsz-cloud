@@ -1,9 +1,9 @@
-package com.njydsz.pmis.audit.service;
+package com.njydsz.pmis.system.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.audit.entity.OperationLogDO;
-import com.njydsz.pmis.audit.mapper.OperationLogMapper;
+import com.njydsz.pmis.system.entity.OperationLogDO;
+import com.njydsz.pmis.system.mapper.OperationLogMapper;
 import com.njydsz.pmis.common.entity.CursorPageResult;
 import com.njydsz.pmis.common.util.CursorHelper;
 import lombok.RequiredArgsConstructor;

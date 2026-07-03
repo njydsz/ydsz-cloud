@@ -1,7 +1,7 @@
-package com.njydsz.pmis.notification.mapper;
+package com.njydsz.pmis.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.notification.entity.NotificationDO;
+import com.njydsz.pmis.system.entity.NotificationDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

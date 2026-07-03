@@ -1,4 +1,4 @@
-package com.njydsz.pmis.file.controller;
+package com.njydsz.pmis.system.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
@@ -6,9 +6,9 @@ import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.security.SecurityContext;
-import com.njydsz.pmis.file.dto.FileUploadDTO;
-import com.njydsz.pmis.file.entity.FileDO;
-import com.njydsz.pmis.file.service.FileService;
+import com.njydsz.pmis.system.dto.FileUploadDTO;
+import com.njydsz.pmis.system.entity.FileDO;
+import com.njydsz.pmis.system.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;

@@ -1,9 +1,9 @@
-package com.njydsz.pmis.config.service;
+package com.njydsz.pmis.system.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.config.dto.ConfigFormDTO;
-import com.njydsz.pmis.config.dto.ConfigQueryDTO;
-import com.njydsz.pmis.config.entity.ConfigDO;
+import com.njydsz.pmis.system.dto.ConfigFormDTO;
+import com.njydsz.pmis.system.dto.ConfigQueryDTO;
+import com.njydsz.pmis.system.entity.ConfigDO;
 
 import java.util.List;
 import java.util.Map;

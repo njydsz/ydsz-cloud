@@ -1,7 +1,7 @@
-package com.njydsz.pmis.audit.mapper;
+package com.njydsz.pmis.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.audit.entity.OperationLogDO;
+import com.njydsz.pmis.system.entity.OperationLogDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

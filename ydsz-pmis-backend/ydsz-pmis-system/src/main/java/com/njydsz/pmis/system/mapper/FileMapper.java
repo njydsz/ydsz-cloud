@@ -1,7 +1,7 @@
-package com.njydsz.pmis.file.mapper;
+package com.njydsz.pmis.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.file.entity.FileDO;
+import com.njydsz.pmis.system.entity.FileDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.audit.util;
+package com.njydsz.pmis.system.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;

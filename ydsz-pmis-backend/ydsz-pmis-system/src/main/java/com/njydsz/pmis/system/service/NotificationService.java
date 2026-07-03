@@ -1,9 +1,9 @@
-package com.njydsz.pmis.notification.service;
+package com.njydsz.pmis.system.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
-import com.njydsz.pmis.notification.dto.NotificationSendDTO;
-import com.njydsz.pmis.notification.entity.NotificationDO;
+import com.njydsz.pmis.system.dto.NotificationQueryDTO;
+import com.njydsz.pmis.system.dto.NotificationSendDTO;
+import com.njydsz.pmis.system.entity.NotificationDO;
 
 import java.util.List;
 

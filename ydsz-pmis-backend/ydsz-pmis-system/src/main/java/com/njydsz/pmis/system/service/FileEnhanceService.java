@@ -1,4 +1,4 @@
-package com.njydsz.pmis.file.service;
+package com.njydsz.pmis.system.service;
 
 import org.springframework.web.multipart.MultipartFile;
 

@@ -1,10 +1,10 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.system.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.message.entity.MessageLogDO;
-import com.njydsz.pmis.message.entity.MessageTemplateDO;
+import com.njydsz.pmis.system.entity.MessageLogDO;
+import com.njydsz.pmis.system.entity.MessageTemplateDO;
 
 /**
  * 消息服务接口

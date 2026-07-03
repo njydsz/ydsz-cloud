@@ -1,4 +1,4 @@
-package com.njydsz.pmis.config.dto;
+package com.njydsz.pmis.system.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

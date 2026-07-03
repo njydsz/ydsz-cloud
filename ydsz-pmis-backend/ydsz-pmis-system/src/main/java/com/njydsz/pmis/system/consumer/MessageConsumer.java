@@ -1,9 +1,9 @@
-package com.njydsz.pmis.message.consumer;
+package com.njydsz.pmis.system.consumer;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
-import com.njydsz.pmis.message.service.MessageService;
+import com.njydsz.pmis.system.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;

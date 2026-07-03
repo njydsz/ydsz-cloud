@@ -1,8 +1,8 @@
-package com.njydsz.pmis.file.controller;
+package com.njydsz.pmis.system.controller;
 
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.file.service.FileEnhanceService;
+import com.njydsz.pmis.system.service.FileEnhanceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;

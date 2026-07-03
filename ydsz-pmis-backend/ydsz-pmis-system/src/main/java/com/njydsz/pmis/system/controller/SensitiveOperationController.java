@@ -1,9 +1,9 @@
-package com.njydsz.pmis.audit.controller;
+package com.njydsz.pmis.system.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.audit.entity.SensitiveOperationDO;
-import com.njydsz.pmis.audit.mapper.SensitiveOperationMapper;
+import com.njydsz.pmis.system.entity.SensitiveOperationDO;
+import com.njydsz.pmis.system.mapper.SensitiveOperationMapper;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;

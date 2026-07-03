@@ -1,7 +1,7 @@
-package com.njydsz.pmis.audit.mapper;
+package com.njydsz.pmis.system.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.audit.entity.SensitiveOperationDO;
+import com.njydsz.pmis.system.entity.SensitiveOperationDO;
 
 import java.util.List;
 

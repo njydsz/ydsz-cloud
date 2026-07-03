@@ -1,4 +1,4 @@
-package com.njydsz.pmis.notification.service;
+package com.njydsz.pmis.system.service;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

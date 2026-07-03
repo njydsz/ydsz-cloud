@@ -1,18 +1,18 @@
-package com.njydsz.pmis.notification.service.impl;
+package com.njydsz.pmis.system.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.notification.dto.NotificationQueryDTO;
-import com.njydsz.pmis.notification.dto.NotificationSendDTO;
-import com.njydsz.pmis.notification.entity.NotificationDO;
-import com.njydsz.pmis.notification.feign.MessageServiceClient;
-import com.njydsz.pmis.notification.feign.UserServiceClient;
-import com.njydsz.pmis.notification.mapper.NotificationMapper;
-import com.njydsz.pmis.notification.service.NotificationService;
-import com.njydsz.pmis.notification.service.RealtimePushService;
+import com.njydsz.pmis.system.dto.NotificationQueryDTO;
+import com.njydsz.pmis.system.dto.NotificationSendDTO;
+import com.njydsz.pmis.system.entity.NotificationDO;
+import com.njydsz.pmis.system.feign.MessageServiceClient;
+import com.njydsz.pmis.system.feign.UserServiceClient;
+import com.njydsz.pmis.system.mapper.NotificationMapper;
+import com.njydsz.pmis.system.service.NotificationService;
+import com.njydsz.pmis.system.service.RealtimePushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

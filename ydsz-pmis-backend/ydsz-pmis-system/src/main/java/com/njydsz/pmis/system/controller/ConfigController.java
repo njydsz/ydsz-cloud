@@ -1,13 +1,13 @@
-package com.njydsz.pmis.config.controller;
+package com.njydsz.pmis.system.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
-import com.njydsz.pmis.config.dto.ConfigFormDTO;
-import com.njydsz.pmis.config.dto.ConfigQueryDTO;
-import com.njydsz.pmis.config.entity.ConfigDO;
-import com.njydsz.pmis.config.service.ConfigService;
+import com.njydsz.pmis.system.dto.ConfigFormDTO;
+import com.njydsz.pmis.system.dto.ConfigQueryDTO;
+import com.njydsz.pmis.system.entity.ConfigDO;
+import com.njydsz.pmis.system.service.ConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;

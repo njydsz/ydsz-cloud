@@ -1,11 +1,11 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.system.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
-import com.njydsz.pmis.message.entity.MessageTemplateDO;
-import com.njydsz.pmis.message.mapper.MessageTemplateMapper;
+import com.njydsz.pmis.system.entity.MessageTemplateDO;
+import com.njydsz.pmis.system.mapper.MessageTemplateMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

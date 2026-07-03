@@ -1,18 +1,18 @@
-package com.njydsz.pmis.message.service;
+package com.njydsz.pmis.system.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.util.TraceIdUtil;
-import com.njydsz.pmis.message.channel.MessageChannel;
+import com.njydsz.pmis.system.channel.MessageChannel;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
-import com.njydsz.pmis.message.entity.MessageLogDO;
-import com.njydsz.pmis.message.entity.MessageTemplateDO;
-import com.njydsz.pmis.message.mapper.MessageLogMapper;
-import com.njydsz.pmis.message.mapper.MessageTemplateMapper;
-import com.njydsz.pmis.message.template.TemplateEngine;
+import com.njydsz.pmis.system.entity.MessageLogDO;
+import com.njydsz.pmis.system.entity.MessageTemplateDO;
+import com.njydsz.pmis.system.mapper.MessageLogMapper;
+import com.njydsz.pmis.system.mapper.MessageTemplateMapper;
+import com.njydsz.pmis.system.template.TemplateEngine;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

@@ -1,4 +1,4 @@
-package com.njydsz.pmis.file.config;
+package com.njydsz.pmis.system.config;
 
 import io.minio.MinioClient;
 import lombok.Data;
