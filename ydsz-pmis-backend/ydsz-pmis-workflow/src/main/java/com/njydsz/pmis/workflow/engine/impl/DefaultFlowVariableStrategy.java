@@ -4,7 +4,7 @@ import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -54,11 +54,19 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
      *
      * <p>当 ydsz-pmis-literule 模块启用时自动注入；未启用时为 null，回退到正则解析。
      */
-    @Autowired(required = false)
-    private ExpressionEvaluator expressionEvaluator;
+    private final ExpressionEvaluator expressionEvaluator;
 
     /** 标记 Aviator 不可用的警告是否已输出过（避免日志刷屏） */
     private volatile boolean aviatorUnavailableLogged = false;
+
+    /**
+     * 构造注入：使用 {@link ObjectProvider} 支持可选依赖。
+     *
+     * @param evaluatorProvider 表达式求值器提供者（可选）
+     */
+    public DefaultFlowVariableStrategy(ObjectProvider<ExpressionEvaluator> evaluatorProvider) {
+        this.expressionEvaluator = evaluatorProvider.getIfAvailable();
+    }
 
     private static final Pattern PLACEHOLDER = Pattern.compile("\\$\\{([a-zA-Z_][a-zA-Z0-9_\\.]*)}");
     /** 字面量比较：lhs (op) rhs  -- lhs 可为标识符、数字、字符串 */

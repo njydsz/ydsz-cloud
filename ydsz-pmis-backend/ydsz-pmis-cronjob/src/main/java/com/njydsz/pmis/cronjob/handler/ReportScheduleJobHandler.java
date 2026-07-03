@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.handler;
+package com.njydsz.pmis.cronjob.handler;
 
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.service.ReportScheduleService;

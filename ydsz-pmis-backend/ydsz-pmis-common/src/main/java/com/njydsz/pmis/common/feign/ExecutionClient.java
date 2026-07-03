@@ -9,10 +9,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import java.util.Map;
 
 /**
- * 执行模块 Feign 客户端（供 scheduler / 跨模块调用）
+ * 执行模块 Feign 客户端（供 cronjob / 跨模块调用）
  *
- * <p>scheduler 通过此接口触发可计费利用率快照重算，
- * 避免 scheduler 直接依赖 execution 模块的具体类路径。
+ * <p>cronjob 通过此接口触发可计费利用率快照重算，
+ * 避免 cronjob 直接依赖 execution 模块的具体类路径。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

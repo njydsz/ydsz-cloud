@@ -615,6 +615,73 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     }
   }
 
+  /**
+   * P1-3: 批量签收 — 前端循环调单条 claim，收集结果并汇总提示
+   *
+   * 适用场景：候选任务批量领取。部分失败不影响其他任务。
+   */
+  async function quickBatchClaim(tasks: FlowTaskDTO[]) {
+    if (tasks.length === 0) {
+      ElMessage.warning('请先选择要签收的任务')
+      return
+    }
+    try {
+      await ElMessageBox.confirm(
+        `确认批量签收选中的 ${tasks.length} 个任务？`,
+        '批量签收确认',
+        { type: 'warning' },
+      )
+    } catch {
+      return // 用户取消
+    }
+    let success = 0
+    let failed = 0
+    for (const task of tasks) {
+      const result = await actionMap.CLAIM.execute({ taskId: task.id })
+      if (result.success) {
+        success++
+      } else {
+        failed++
+      }
+    }
+    if (failed === 0) {
+      ElMessage.success(`批量签收成功：${success} 个`)
+    } else {
+      ElMessage.warning(`签收完成：成功 ${success} 个，失败 ${failed} 个`)
+    }
+    if (success > 0) {
+      onSuccess?.()
+    }
+  }
+
+  /**
+   * P1-3: 批量已阅 — 前端循环调单条 markRead，收集结果并汇总提示
+   */
+  async function quickBatchMarkRead(tasks: FlowTaskDTO[]) {
+    if (tasks.length === 0) {
+      ElMessage.warning('请先选择要标记已阅的任务')
+      return
+    }
+    let success = 0
+    let failed = 0
+    for (const task of tasks) {
+      const result = await actionMap.MARK_READ.execute({ taskId: task.id })
+      if (result.success) {
+        success++
+      } else {
+        failed++
+      }
+    }
+    if (failed === 0) {
+      ElMessage.success(`批量已阅成功：${success} 个`)
+    } else {
+      ElMessage.warning(`已阅完成：成功 ${success} 个，失败 ${failed} 个`)
+    }
+    if (success > 0) {
+      onSuccess?.()
+    }
+  }
+
   return {
     // 弹窗状态
     opDialog,
@@ -644,6 +711,8 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     quickCommunicate,
     quickUrge,
     quickBatchPass,
+    quickBatchClaim,
+    quickBatchMarkRead,
     // 常量
     commentPhrases: commentPhraseKeys.map((k) => t(k)),
   }

@@ -78,6 +78,17 @@ public class RuleDefinition implements Serializable {
     @Builder.Default
     private int version = 1;
 
+    /**
+     * 租户 ID
+     *
+     * <p>多租户隔离标识，单租户部署下默认为 1。
+     * 字段已预留，运行时按租户过滤的能力待 v2.0 多租户化阶段启用。
+     *
+     * @since 1.4.0
+     */
+    @Builder.Default
+    private long tenantId = 1L;
+
     /** 生命周期状态 */
     @Builder.Default
     private String status = "PUBLISHED";

@@ -20,7 +20,7 @@ deploy/nginx/
 | `/api/v1/project/` | pmis_project_cluster | 9005 | 项目 |
 | `/api/v1/execution/` | pmis_execution_cluster | 9006 | 执行 |
 | `/api/v1/agent/` | pmis_agent_cluster | 9007 | AI Agent |
-| `/api/v1/scheduler/` | pmis_scheduler_cluster | 9012 | 调度 |
+| `/api/v1/scheduler/` | pmis_cronjob_cluster | 9012 | 调度 |
 | `/api/v1/audit/` | pmis_audit_cluster | 9010 | 审计 |
 | `/api/v1/notification/` | pmis_notification_cluster | 9003 | 通知 |
 | `/api/v1/workflow/` | pmis_workflow_cluster | 9004 | 工作流 |

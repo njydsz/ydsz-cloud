@@ -14,7 +14,7 @@
 |------|------|
 | 报告版本 | v1.0（2026-07-01） |
 | 测试目标 | 建立 PMIS 全链路性能基线，作为后续版本回归基准 |
-| 覆盖服务 | 14 个微服务（gateway / auth / user / project / execution / agent / scheduler / audit / notification / workflow / file / config / message / common） |
+| 覆盖服务 | 14 个微服务（gateway / auth / user / project / execution / agent / cronjob / audit / notification / workflow / file / config / message / common） |
 | 覆盖场景 | 4 套 jmx：核心读 / 写密集 / AI 编排 / 500 阶梯加压 + WebSocket + 24h Soak |
 | 关联脚本 | [deploy/perf/jmeter/](../perf/jmeter/) 4+2 个 jmx + [deploy/perf/24h.sh](../perf/24h.sh) + [deploy/perf/baseline/soak-report.md](../perf/baseline/soak-report.md) |
 

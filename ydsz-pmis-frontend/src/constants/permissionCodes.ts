@@ -108,7 +108,7 @@ export const PC = {
   // ============= 敏感操作二次认证(sensitive) =============
   SENSITIVE_REAUTH: 'sensitive:reauth:confirm',
 
-  // ============= 调度管理(scheduler) =============
+  // ============= 调度管理(cronjob) =============
   SCHEDULER_JOB_CREATE: 'scheduler:job:create',
   SCHEDULER_JOB_UPDATE: 'scheduler:job:update',
   SCHEDULER_JOB_DELETE: 'scheduler:job:delete',

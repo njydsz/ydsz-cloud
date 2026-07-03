@@ -31,7 +31,7 @@ import java.util.Map;
  *
  * <p>P1-6 实现：
  * <ol>
- *   <li>scheduler 每 60s 扫描所有 PENDING/CLAIMED 且 dueAt 不为空的 task</li>
+ *   <li>cronjob 每 60s 扫描所有 PENDING/CLAIMED 且 dueAt 不为空的 task</li>
  *   <li>解析 node.slaConfig 配置：timeoutMinutes / action / reminderIntervalMinutes / maxReminders / escalateUserId</li>
  *   <li>未到 dueAt：跳过；超过 dueAt 但未到最终动作：根据 maxReminders 重复 REMIND</li>
  *   <li>超过 dueAt 且已超出 reminder 容忍窗口：执行最终动作（ESCALATE / AUTO_PASS / AUTO_REJECT）</li>

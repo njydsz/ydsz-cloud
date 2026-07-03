@@ -19,7 +19,7 @@ docs/api/
     ├── audit.md              # 审计日志（/api/v1/audit/*）
     ├── message.md            # 消息模板（/api/v1/message/*）
     ├── config.md             # 系统配置（/api/v1/config/*）
-    └── scheduler.md          # 任务调度（/api/v1/scheduler/*）
+    └── scheduler.md          # 任务调度（/api/v1/scheduler/*，保留路径前缀）
 ```
 
 ## 查看方式

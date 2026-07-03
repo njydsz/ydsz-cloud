@@ -137,7 +137,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         // 8) Bench 闲置成本（用户模块 Feign 调用失败时回退 0）
         kpi.setBenchIdleCost(benchIdleCostSafe());
 
-        // 9) 可计费利用率均值：从快照表读取（scheduler 每日计算），无数据时实时聚合兜底
+        // 9) 可计费利用率均值：从快照表读取（cronjob 每日计算），无数据时实时聚合兜底
         kpi.setAvgBillableUtilization(avgBillableUtilizationSafe(period));
 
         return kpi;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob;
+package com.njydsz.pmis.cronjob;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * 任务调度服务启动类
+ * 定时任务调度服务启动类
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

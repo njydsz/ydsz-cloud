@@ -27,7 +27,7 @@
 
     <!--
         PostgreSQL UPSERT：ON CONFLICT (period, employee_id) DO UPDATE
-        保证 scheduler 重跑 / 跨天重复触发时不会产生重复记录
+        保证 cronjob 重跑 / 跨天重复触发时不会产生重复记录
     -->
     <insert id="upsert" parameterType="com.njydsz.pmis.project.entity.BillableUtilizationSnapshotDO">
         INSERT INTO pmis_billable_utilization_snapshot

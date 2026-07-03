@@ -63,7 +63,7 @@ curl -fsS http://<service>:<port>/actuator/health
 | file | `GET /file/list?bizType=test&bizId=1` | 文件列表 |
 | audit | `GET /audit/log/page?pageNum=1&pageSize=10` | 日志分页 |
 | message | `GET /message/template/list?pageNum=1&pageSize=10` | 模板列表 |
-| scheduler | `GET /scheduler/job/list?pageNum=1&pageSize=10` | 任务列表 |
+| cronjob | `GET /scheduler/job/list?pageNum=1&pageSize=10` | 任务列表 |
 
 **判定**:
 - [ ] 所有 HTTP 200, 响应 < 500ms

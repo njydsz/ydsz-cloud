@@ -9,7 +9,7 @@
 -- 设计：
 --   - pmis_flow_timer: 定时器实例表（每创建一个定时器节点实例时写入一行）
 --   - timer_status: PENDING / FIRED / CANCELLED
---   - fire_at: 到点时间，scheduler 每 30s 扫描一次到点的 PENDING 记录并触发
+--   - fire_at: 到点时间，cronjob 每 30s 扫描一次到点的 PENDING 记录并触发
 --   - boundary_task_id: 边界定时器关联的 userTask ID
 -- =============================================================
 

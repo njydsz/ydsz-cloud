@@ -61,7 +61,7 @@ public class FlowTimerDO extends BaseDO {
     /** 边界定时器关联的 userTask ID（INTERMEDIATE 为 null） */
     private Long boundaryTaskId;
 
-    /** 到点时间（scheduler 按此扫描） */
+    /** 到点时间（cronjob 按此扫描） */
     private LocalDateTime fireAt;
 
     /** CRON 表达式（循环定时器，可空） */

@@ -5,7 +5,7 @@ import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -55,11 +55,24 @@ public class DecisionTableEvaluator {
     /** 默认命中策略 */
     private static final String DEFAULT_HIT_POLICY = "FIRST";
 
-    @Autowired(required = false)
-    private ExpressionEvaluator expressionEvaluator;
+    /**
+     * Aviator 表达式求值器（可选注入）。
+     *
+     * <p>当 ydsz-pmis-literule 模块启用时自动注入；未启用时为 null，回退到默认沙箱实例。
+     */
+    private final ExpressionEvaluator expressionEvaluator;
 
     /** Bean 未注入时的兜底求值器（懒加载，避免污染全局 Aviator 实例） */
     private volatile ExpressionEvaluator fallbackEvaluator;
+
+    /**
+     * 构造注入：使用 {@link ObjectProvider} 支持可选依赖。
+     *
+     * @param evaluatorProvider 表达式求值器提供者（可选）
+     */
+    public DecisionTableEvaluator(ObjectProvider<ExpressionEvaluator> evaluatorProvider) {
+        this.expressionEvaluator = evaluatorProvider.getIfAvailable();
+    }
 
     /**
      * 评估决策表
@@ -254,7 +267,6 @@ public class DecisionTableEvaluator {
      * <p>按 actionColumns 定义顺序构建 LinkedHashMap，键为动作列名，值为行内对应动作值。
      * 若未定义 actionColumns，则原样返回行内 actions 映射。
      */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> extractActions(Map<String, Object> row, DecisionTableDO table) {
         Map<String, Object> actions = asMap(row.get("actions"));
         Map<String, Object> actionMap = actions != null ? actions : row;

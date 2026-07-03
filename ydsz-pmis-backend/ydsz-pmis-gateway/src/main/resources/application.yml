@@ -1,18 +1,28 @@
-﻿server:
-  port: 9000
+# =====================================================================
+#  PMIS API 网关服务（Spring Cloud Gateway）配置
+#  --------------------------------------------------------------------
+#  端口：9000
+#  职责：统一入口、路由分发、限流/熔断、CORS、认证、日志、Sentinel
+#  依赖：Nacos 服务发现、Sentinel Dashboard、Redis
+# =====================================================================
+
+server:
+  port: 9000  # 网关监听端口
 
 spring:
   application:
-    name: ydsz-pmis-gateway
+    name: ydsz-pmis-gateway  # Nacos 注册的服务名
   profiles:
-    active: dev
+    active: dev  # 激活 dev / sit / uat / prod profile
   cloud:
     nacos:
+      # 服务注册
       discovery:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME:}
         password: ${NACOS_PASSWORD}
+      # 配置中心（路由规则、限流阈值等动态配置）
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         file-extension: yaml
@@ -20,11 +30,17 @@ spring:
         namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME:}
         password: ${NACOS_PASSWORD}
+    # ---------- Gateway 路由配置 ----------
     gateway:
+      # 服务发现路由：自动从 Nacos 拉取服务列表，通过 serviceId 转发
+      # 如 GET /ydsz-pmis-iam/api/v1/users 转发到 IAM 服务
       discovery:
         locator:
-          enabled: true
-          lower-case-service-id: true
+          enabled: true          # 开启服务发现路由
+          lower-case-service-id: true  # 路径小写
+      # ---------- 全局 CORS 配置 ----------
+      # 注意：allowedOriginPatterns 与 allowedOrigins 不能同时配置
+      # 生产环境应替换为白名单（不要使用 *）
       globalcors:
         cors-configurations:
           '[/**]':
@@ -32,37 +48,45 @@ spring:
             allowedMethods: "*"
             allowedHeaders: "*"
             exposedHeaders:
-              - Authorization
-              - X-Trace-Id
-              - Content-Disposition
-            allowCredentials: true
-            maxAge: 3600
+              - Authorization      # 暴露给前端 JS 读取的 token 头
+              - X-Trace-Id         # 链路追踪 ID（便于日志关联）
+              - Content-Disposition  # 文件下载文件名
+            allowCredentials: true  # 允许携带 Cookie
+            maxAge: 3600           # 预检请求缓存 1 小时
+      # ---------- 默认过滤器 ----------
       default-filters:
+        # 去重 Access-Control-Allow-Origin / Allow-Credentials 响应头
+        # 避免跨域时出现多值冲突
         - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_UNIQUE
+      # ---------- WebSocket 客户端配置 ----------
       httpclient:
         websocket:
-          max-frame-payload-length: 65536
+          max-frame-payload-length: 65536  # 64KB 单帧上限（防止恶意大帧）
+    # ---------- Sentinel 限流/熔断 ----------
     sentinel:
       transport:
-        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}
-        port: ${SENTINEL_TRANSPORT_PORT:8719}
-      eager: true
+        dashboard: ${SENTINEL_DASHBOARD:127.0.0.1:8858}  # Sentinel 控制台
+        port: ${SENTINEL_TRANSPORT_PORT:8719}              # 与 Dashboard 通信端口
+      eager: true                                          # 启动时立即初始化（不延迟到首次请求）
       filter:
-        enabled: true
+        enabled: true  # 启用 Sentinel Web 过滤器
+      # 限流触发后的降级响应（429 + 业务码）
       scg:
         fallback:
           mode: response
           response-status: 429
           response-body: '{"code":429,"message":"error.RATE_LIMIT"}'
 
+# ---------- Feign 客户端（微服务间调用） ----------
 feign:
   sentinel:
-    enabled: true
+    enabled: true  # Feign 调用纳入 Sentinel 治理（限流 + 降级）
 
+# ---------- 日志 ----------
 logging:
   level:
     root: INFO
     com.njydsz.pmis: DEBUG
-    org.springframework.cloud.gateway: INFO
+    org.springframework.cloud.gateway: INFO  # 路由日志降级避免刷屏
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"

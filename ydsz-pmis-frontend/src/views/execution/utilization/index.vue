@@ -136,7 +136,7 @@ async function fetchAlerts() {
   }
 }
 
-/** 拉取快照周期均值（scheduler 每日 02:30 计算的快照数据） */
+/** 拉取快照周期均值（cronjob 每日 02:30 计算的快照数据） */
 async function fetchSnapshot() {
   snapshotLoading.value = true
   try {

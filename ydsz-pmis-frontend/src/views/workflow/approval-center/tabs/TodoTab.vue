@@ -11,7 +11,7 @@
  *     5. 任务操作弹窗：通过/驳回/转办/委派/加签/暂存/沟通/催办等
  *   审批操作逻辑通过 useApprovalActions（策略模式）注入。
  */
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { pageTodoTasks, pageDefinitions } from '@/api/workflow'
@@ -20,7 +20,8 @@ import type {
   FlowTaskQuery,
   FlowDefinitionDTO,
 } from '@/api/workflow/types'
-import { UserPicker, CommentEditor } from '@/components/common'
+import { UserPicker, CommentEditor, BatchToolbar } from '@/components/common'
+import type { BatchAction } from '@/components/common'
 import {
   useApprovalActions,
   isOverdue,
@@ -44,6 +45,100 @@ const urgencyFilter = ref<'all' | 'nearly-overdue' | 'overdue'>('all')
 const flowTypeFilter = ref<string | undefined>(undefined)
 const flowDefinitions = ref<FlowDefinitionDTO[]>([])
 const dateRange = ref<[string, string] | null>(null)
+
+// P1-3: 快捷标签 chips（今日到期 / 本周到期 / 超期 / 紧急）
+type QuickTag = 'today' | 'thisWeek' | 'overdue' | 'urgent' | null
+const activeQuickTag = ref<QuickTag>(null)
+
+const quickTagOptions: { value: QuickTag; label: string; type: 'danger' | 'warning' | 'info' }[] = [
+  { value: 'overdue', label: '已超期', type: 'danger' },
+  { value: 'today', label: '今日到期', type: 'warning' },
+  { value: 'thisWeek', label: '本周到期', type: 'info' },
+  { value: 'urgent', label: '紧急', type: 'danger' },
+]
+
+function onQuickTagClick(tag: QuickTag) {
+  activeQuickTag.value = activeQuickTag.value === tag ? null : tag
+  applyQuickTag()
+  onFilterChange()
+}
+
+function applyQuickTag() {
+  const tag = activeQuickTag.value
+  if (!tag) {
+    urgencyFilter.value = 'all'
+    return
+  }
+  const now = new Date()
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59)
+  const weekEnd = new Date(now)
+  weekEnd.setDate(now.getDate() + (7 - now.getDay()))
+  weekEnd.setHours(23, 59, 59)
+  switch (tag) {
+    case 'overdue':
+      urgencyFilter.value = 'overdue'
+      dateRange.value = null
+      break
+    case 'today':
+      urgencyFilter.value = 'all'
+      dateRange.value = [
+        new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().replace('T', ' ').slice(0, 19),
+        todayEnd.toISOString().replace('T', ' ').slice(0, 19),
+      ]
+      break
+    case 'thisWeek':
+      urgencyFilter.value = 'all'
+      dateRange.value = [
+        new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString().replace('T', ' ').slice(0, 19),
+        weekEnd.toISOString().replace('T', ' ').slice(0, 19),
+      ]
+      break
+    case 'urgent':
+      urgencyFilter.value = 'all'
+      dateRange.value = null
+      break
+  }
+}
+
+// P1-3: 持久化筛选条件（urgencyFilter / flowTypeFilter / dateRange）
+const FILTER_STORAGE_KEY = 'approval_center_filters'
+
+function saveFilters() {
+  try {
+    localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify({
+      urgencyFilter: urgencyFilter.value,
+      flowTypeFilter: flowTypeFilter.value,
+      activeQuickTag: activeQuickTag.value,
+    }))
+  } catch {
+    // 静默失败
+  }
+}
+
+function loadFilters() {
+  try {
+    const raw = localStorage.getItem(FILTER_STORAGE_KEY)
+    if (raw) {
+      const saved = JSON.parse(raw)
+      if (saved.urgencyFilter) urgencyFilter.value = saved.urgencyFilter
+      if (saved.flowTypeFilter !== undefined) flowTypeFilter.value = saved.flowTypeFilter
+      if (saved.activeQuickTag) activeQuickTag.value = saved.activeQuickTag
+    }
+  } catch {
+    // 使用默认值
+  }
+}
+
+// 监听筛选变化自动保存
+watch([urgencyFilter, flowTypeFilter, dateRange, activeQuickTag], saveFilters)
+
+// P1-3: 按流程类型聚合展示模式（平铺 / 分组）— 声明 groupByFlow，分组逻辑在 todoList 声明后
+const groupByFlow = ref(false)
+
+// P1-3: 紧急标签筛选（urgent = priority >= 76）
+function isUrgentTask(task: FlowTaskDTO): boolean {
+  return (task.priority ?? 50) >= 76
+}
 
 async function loadFlowDefinitions() {
   try {
@@ -164,6 +259,51 @@ const todoTotal = ref(0)
 const todoLoading = ref(false)
 const todoSelection = ref<FlowTaskDTO[]>([])
 
+// P1-3: 分组模式逻辑（在 todoList 声明后定义）
+interface FlowGroup {
+  flowCode: string
+  flowName: string
+  tasks: FlowTaskDTO[]
+  _expanded: boolean
+  _selected: FlowTaskDTO[]
+}
+const todoGroupedByFlow = ref<FlowGroup[]>([])
+
+watch([todoList, groupByFlow], () => {
+  if (!groupByFlow.value) {
+    todoGroupedByFlow.value = []
+    return
+  }
+  const map = new Map<string, FlowGroup>()
+  for (const task of todoList.value) {
+    const code = task.flowCode || '_unknown'
+    if (!map.has(code)) {
+      map.set(code, {
+        flowCode: code,
+        flowName: task.flowName || task.flowCode || '未知流程',
+        tasks: [],
+        _expanded: true,
+        _selected: [],
+      })
+    }
+    map.get(code)!.tasks.push(task)
+  }
+  todoGroupedByFlow.value = Array.from(map.values()).sort((a, b) => b.tasks.length - a.tasks.length)
+}, { immediate: true })
+
+/** 分组模式下同步选中状态到 todoSelection */
+function onGroupSelectionChange(flowCode: string, rows: FlowTaskDTO[]) {
+  const group = todoGroupedByFlow.value.find((g) => g.flowCode === flowCode)
+  if (group) {
+    group._selected = rows
+  }
+  const all: FlowTaskDTO[] = []
+  for (const g of todoGroupedByFlow.value) {
+    all.push(...g._selected)
+  }
+  todoSelection.value = all
+}
+
 /** 表格行样式 */
 function tableRowClassName({ row }: { row: FlowTaskDTO }): string {
   if (isOverdue(row)) return 'row-overdue'
@@ -209,6 +349,10 @@ async function loadTodo() {
       } else if (urgencyFilter.value === 'overdue') {
         records = records.filter((t) => isOverdue(t))
       }
+      // P1-3: 紧急标签客户端过滤（priority >= 76）
+      if (activeQuickTag.value === 'urgent') {
+        records = records.filter((t) => isUrgentTask(t))
+      }
 
       // 排序：置顶优先 → priority DESC → createTime ASC
       records.sort((a, b) => {
@@ -236,6 +380,7 @@ function resetTodoFilters() {
   urgencyFilter.value = 'all'
   flowTypeFilter.value = undefined
   dateRange.value = null
+  activeQuickTag.value = null
   todoQuery.flowCode = undefined
   todoQuery.pageNum = 1
   loadTodo()
@@ -273,12 +418,39 @@ const {
   quickCommunicate,
   quickUrge,
   quickBatchPass,
+  quickBatchClaim,
+  quickBatchMarkRead,
 } = useApprovalActions({
   onSuccess: () => {
     loadTodo()
     emit('refresh-badge')
   },
 })
+
+// ===========================================
+// P1-3: 批量操作工具栏配置
+// ===========================================
+const batchActions = computed<BatchAction[]>(() => [
+  {
+    label: `批量通过 (${todoSelection.value.length})`,
+    type: 'primary',
+    handler: () => quickBatchPass(todoSelection.value.map((t) => t.id)),
+  },
+  {
+    label: '批量签收',
+    type: 'success',
+    handler: () => quickBatchClaim(todoSelection.value),
+  },
+  {
+    label: '批量已阅',
+    type: 'info',
+    handler: () => quickBatchMarkRead(todoSelection.value),
+  },
+])
+
+function clearSelection() {
+  todoSelection.value = []
+}
 
 // ===========================================
 // 跳转
@@ -293,6 +465,7 @@ function goInstance(instanceId: number) {
 onMounted(() => {
   loadPinnedTasks()
   loadColumnPrefs()
+  loadFilters()
   loadFlowDefinitions()
   loadTodo()
 })
@@ -360,14 +533,17 @@ onMounted(() => {
           @keyup.enter="loadTodo"
         />
         <el-button type="primary" size="small" @click="loadTodo">{{ t('workflow.approval.buttons.query') }}</el-button>
-        <el-button
-          type="success"
-          size="small"
-          :disabled="todoSelection.length === 0"
-          @click="quickBatchPass(todoSelection.map((t) => t.id))"
-        >
-          {{ t('workflow.approval.buttons.batchPass', { n: todoSelection.length }) }}
-        </el-button>
+
+        <!-- P1-3: 分组展示切换 -->
+        <el-tooltip content="按流程类型分组展示" placement="top">
+          <el-switch
+            v-model="groupByFlow"
+            inline-prompt
+            active-text="分组"
+            inactive-text="平铺"
+            size="small"
+          />
+        </el-tooltip>
 
         <!-- 列显隐控制 -->
         <el-popover placement="bottom-end" :width="200" trigger="click">
@@ -389,10 +565,34 @@ onMounted(() => {
           </el-checkbox-group>
         </el-popover>
       </div>
+
+      <!-- P1-3: 快捷标签 chips -->
+      <div class="filter-bar-enhanced__row filter-bar-enhanced__row--chips">
+        <span class="chips-label">快捷筛选：</span>
+        <el-tag
+          v-for="tag in quickTagOptions"
+          :key="tag.value || 'none'"
+          :type="activeQuickTag === tag.value ? tag.type : 'info'"
+          :effect="activeQuickTag === tag.value ? 'dark' : 'plain'"
+          size="small"
+          class="chip-tag"
+          @click="onQuickTagClick(tag.value)"
+        >
+          {{ tag.label }}
+        </el-tag>
+      </div>
     </div>
 
-    <!-- 待办表格 -->
+    <!-- P1-3: 批量操作工具栏（替换原 inline 批量通过按钮） -->
+    <BatchToolbar
+      :selected-count="todoSelection.length"
+      :actions="batchActions"
+      @clear="clearSelection"
+    />
+
+    <!-- 待办表格（平铺模式） -->
     <el-table
+      v-if="!groupByFlow"
       v-loading="todoLoading"
       :data="todoList"
       stripe
@@ -574,6 +774,55 @@ onMounted(() => {
       </el-table-column>
     </el-table>
 
+    <!-- P1-3: 分组模式（按流程类型聚合） -->
+    <div v-if="groupByFlow" v-loading="todoLoading" class="group-view">
+      <el-empty v-if="todoGroupedByFlow.length === 0" description="暂无待办" :image-size="60" />
+      <div v-for="group in todoGroupedByFlow" :key="group.flowCode" class="group-card">
+        <div class="group-card__header" @click="group._expanded = !group._expanded">
+          <el-icon class="group-card__arrow">
+            <ArrowDown v-if="group._expanded" />
+            <ArrowRight v-else />
+          </el-icon>
+          <span class="group-card__name">{{ group.flowName }}</span>
+          <el-tag size="small" type="info">{{ group.tasks.length }} 个待办</el-tag>
+        </div>
+        <el-table
+          v-if="group._expanded"
+          :data="group.tasks"
+          stripe
+          size="small"
+          :row-class-name="tableRowClassName"
+          @selection-change="(v: FlowTaskDTO[]) => onGroupSelectionChange(group.flowCode, v)"
+        >
+          <el-table-column type="selection" width="45" />
+          <el-table-column prop="title" label="任务标题" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="nodeName" label="节点" min-width="100" show-overflow-tooltip>
+            <template #default="{ row }">{{ row.nodeName || row.nodeCode }}</template>
+          </el-table-column>
+          <el-table-column prop="assigneeName" label="处理人" min-width="90">
+            <template #default="{ row }">{{ row.assigneeName || row.assigneeId || '-' }}</template>
+          </el-table-column>
+          <el-table-column label="优先级" width="80">
+            <template #default="{ row }">
+              <el-tag :type="priorityTag(row.priority).type" size="small">
+                {{ priorityTag(row.priority).label }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="创建时间" min-width="140">
+            <template #default="{ row }">
+              {{ row.createTime ? formatTime(row.createTime) : '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" width="100" fixed="right">
+            <template #default="{ row }">
+              <el-button size="small" type="primary" link @click="goInstance(row.instanceId)">详情</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+
     <el-pagination
       v-model:current-page="todoQuery.pageNum"
       v-model:page-size="todoQuery.pageSize"
@@ -701,5 +950,66 @@ onMounted(() => {
   td:first-child {
     border-left: 3px solid #e6a23c;
   }
+}
+
+/* P1-3: 快捷标签 chips */
+.filter-bar-enhanced__row--chips {
+  align-items: center;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.chips-label {
+  font-size: 12px;
+  color: #909399;
+}
+
+.chip-tag {
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.2s;
+}
+
+.chip-tag:hover {
+  opacity: 0.8;
+  transform: translateY(-1px);
+}
+
+/* P1-3: 分组模式样式 */
+.group-view {
+  min-height: 200px;
+}
+
+.group-card {
+  margin-bottom: 12px;
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.group-card__header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  background: #f5f7fa;
+  cursor: pointer;
+  user-select: none;
+}
+
+.group-card__header:hover {
+  background: #ecf5ff;
+}
+
+.group-card__arrow {
+  font-size: 12px;
+  color: #909399;
+}
+
+.group-card__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  flex: 1;
 }
 </style>

@@ -1,8 +1,8 @@
 package com.njydsz.pmis.workflow.engine;
 
 import com.njydsz.pmis.workflow.service.FlowNotificationService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -25,14 +25,14 @@ import java.util.Map;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class FlowNotificationHelper {
 
     /** 默认通知通道：站内信 */
     private static final String CHANNEL_IN_APP = "IN_APP";
 
     /** 工作流通知服务，统一管理多通道投递（IN_APP/EMAIL/WEBHOOK） */
-    @Autowired
-    private FlowNotificationService notificationService;
+    private final FlowNotificationService notificationService;
 
     /**
      * 任务待办通知：谁有新的待办需要处理

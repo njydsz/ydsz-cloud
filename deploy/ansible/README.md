@@ -12,7 +12,7 @@ deploy/ansible/
 ## 拓扑
 
 - **app_gateway** (node1, 10.0.1.11) — gateway / auth / user
-- **app_core** (node2, 10.0.1.12) — project / execution / scheduler / workflow
+- **app_core** (node2, 10.0.1.12) — project / execution / cronjob / workflow
 - **app_ai** (node3, 10.0.1.13) — agent / message / notification
 - **pg** (10.0.2.11/12) — PostgreSQL 16 主从
 - **redis** (10.0.3.11/12/13) — Redis 7 集群三主三从

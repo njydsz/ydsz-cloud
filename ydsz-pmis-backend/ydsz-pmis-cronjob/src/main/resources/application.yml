@@ -1,8 +1,21 @@
+# =====================================================================
+#  PMIS 调度服务（ydsz-pmis-cronjob）配置
+#  --------------------------------------------------------------------
+#  端口：9012
+#  职责：与 XXL-Job Admin 通信的 Executor 客户端
+#    - 报表定时生成（每日报表、订阅推送）
+#    - 成本/收入/工时/利润/开票/回款 月度自动对账
+#    - 预警重试补偿、巡检、SLA 计算
+#    - 流程超时扫描、归档
+#  依赖：Nacos、PostgreSQL、Redis、MinIO、XXL-Job Admin
+# =====================================================================
+
 server:
-  port: 9012
+  port: 9012  # HTTP 监听端口（提供 actuator / 业务接口）
+
 spring:
   application:
-    name: ydsz-pmis-xxljob
+    name: ydsz-pmis-xxljob  # Nacos 注册的服务名
   profiles:
     active: dev
   main:
@@ -16,26 +29,30 @@ spring:
         file-extension: yml
         group: ${spring.profiles.active}
         namespace: ${NACOS_NAMESPACE:pmis}
+
+  # ---------- 数据源 ----------
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.postgresql.Driver
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD}
+
+  # ---------- Redis ----------
   data:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       database: ${REDIS_DB:0}
-      timeout: 3s
+      timeout: 3s              # 调度任务响应要快
       lettuce:
         pool:
-          max-active: 8
+          max-active: 8        # 调度场景并发不高
           max-idle: 4
-          min-idle: 1
+          min-idle: 1          # 至少保留 1 个空闲连接
 
-# MinIO 对象存储（报表文件上传）
+# ---------- MinIO 对象存储（报表文件上传） ----------
 minio:
   endpoint: ${MINIO_ENDPOINT:http://127.0.0.1:9100}
   access-key: ${MINIO_ACCESS_KEY:minioadmin}
@@ -43,6 +60,7 @@ minio:
   default-bucket: ${MINIO_BUCKET:pmis}
   url-expire-seconds: 3600
 
+# ---------- MyBatis-Plus ----------
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.njydsz.pmis.cronjob.entity
@@ -57,9 +75,30 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
+# ---------- 日志 ----------
 logging:
   level:
     root: INFO
     com.njydsz.pmis: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
+
+# =====================================================================
+# XXL-Job Executor 配置（生产通过 Nacos 覆盖）
+# ---------------------------------------------------------------------
+xxl:
+  job:
+    admin:
+      addresses: ${XXL_JOB_ADMIN_ADDRESSES:http://127.0.0.1:9100/xxl-job-admin}
+      # 登录账号（与 deploy/scheduler 初始化一致）
+      username: ${XXL_JOB_USERNAME:admin}
+      password: ${XXL_JOB_PASSWORD:123456}
+    executor:
+      appname: ${XXL_JOB_APPNAME:pmis-executor}
+      address:
+      ip:
+      port: ${XXL_JOB_EXECUTOR_PORT:9999}
+      logpath: ${XXL_JOB_LOG_PATH:./logs/xxl-job}
+      logretentiondays: 30
+    # 访问令牌（生产必须设置，与 Admin 端保持一致）
+    accessToken: ${XXL_JOB_ACCESS_TOKEN:default-token}

@@ -5,7 +5,7 @@
 #   gateway :9000  / auth :9001     / user :9002      / notification :9003
 #   workflow :9004 / project :9005  / execution :9006 / agent :9007
 #   config :9008   / file :9009     / audit :9010     / message :9011
-#   scheduler :9012
+#   cronjob :9012
 # 周边组件：
 #   xxl-job-admin :9100（分布式任务调度）
 #   seata-server :8091（分布式事务协调器）
@@ -81,7 +81,7 @@ services:
       - audit
       - config
       - message
-      - scheduler
+      - cronjob
 
   # 2) auth - 认证授权
   auth:

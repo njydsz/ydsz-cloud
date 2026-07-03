@@ -1,4 +1,4 @@
-﻿# YDSZ PMIS · 项目运营管理系统
+# YDSZ PMIS · 项目运营管理系统
 
 > 南京云顶数字科技有限公司 · 软件定制 + 人力外包 双业态 · 业财一体化精细化运营平台
 >
@@ -43,7 +43,7 @@
 
 | 维度 | 数字 | 说明 |
 |---|---|---|
-| 后端微服务 | **9 模块（7 部署 + 2 库）** | gateway / iam / workflow / project / agent / system / scheduler（部署）+ common / literule（库）+ 父 pom |
+| 后端微服务 | **9 模块（7 部署 + 2 库）** | gateway / iam / workflow / project / agent / system / cronjob（部署）+ common / literule（库）+ 父 pom |
 | 后端 Java 源文件 | **870+** | 业务代码 + DTO/VO/Mapper/Test |
 | 后端测试 | **229 测试类 / 1500+ 用例** | `mvn test` BUILD SUCCESS 跨 9 模块 |
 | 前端页面 | **57 个** | 业务页面 + 设计器 + 监控中心 |

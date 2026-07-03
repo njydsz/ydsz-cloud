@@ -3,7 +3,7 @@ package com.njydsz.pmis.common.featureflag;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.ConfigClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
@@ -50,9 +50,22 @@ public class LocalFeatureFlagService implements FeatureFlagService {
     /** 本地快照缓存 */
     private final Map<String, CacheEntry> snapshotCache = new ConcurrentHashMap<>();
 
-    /** 配置中心 Feign 客户端（可选，单测时可为 null） */
-    @Autowired(required = false)
-    private ConfigClient configClient;
+    /**
+     * 配置中心 Feign 客户端（可选，单测时可为 null）。
+     *
+     * <p>使用 {@code transient} 标记以避免序列化；非 final 是为了保留
+     * {@link #setConfigClientForTest(ConfigClient)} 测试钩子。
+     */
+    private transient ConfigClient configClient;
+
+    /**
+     * 构造注入：使用 {@link ObjectProvider} 支持可选依赖。
+     *
+     * @param configClientProvider 配置中心 Feign 客户端提供者（可选）
+     */
+    public LocalFeatureFlagService(ObjectProvider<ConfigClient> configClientProvider) {
+        this.configClient = configClientProvider.getIfAvailable();
+    }
 
     // ============== 查询 ==============
 

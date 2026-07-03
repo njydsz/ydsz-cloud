@@ -970,7 +970,7 @@ public class FlowEngineController {
     // ============== P1-6: SLA 超时自动策略 ==============
 
     /**
-     * P1-6: 手动触发 SLA 扫描（管理后台调试用，scheduler 默认每 60s 自动扫描）
+     * P1-6: 手动触发 SLA 扫描（管理后台调试用，cronjob 默认每 60s 自动扫描）
      *
      * @return 本轮扫描处理的任务数
      */

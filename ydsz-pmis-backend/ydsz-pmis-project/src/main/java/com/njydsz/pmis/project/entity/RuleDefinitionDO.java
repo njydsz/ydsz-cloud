@@ -42,6 +42,9 @@ public class RuleDefinitionDO implements Serializable {
     private Boolean drilldownAvailable;
     private Integer version;
 
+    /** 租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用） */
+    private Long tenantId;
+
     /** 生命周期状态 */
     private String status;
 

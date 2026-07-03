@@ -21,7 +21,7 @@
     <modules>
         <module>ydsz-pmis-common</module>
         <module>ydsz-pmis-gateway</module>
-        <module>ydsz-pmis-iam</module>
+        <module>ydsz-pmis-userinfo</module>
         <module>ydsz-pmis-system</module>
         <module>ydsz-pmis-workflow</module>
         <module>ydsz-pmis-cronjob</module>

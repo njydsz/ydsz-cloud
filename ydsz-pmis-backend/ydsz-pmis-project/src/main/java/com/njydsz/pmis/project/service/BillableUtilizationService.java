@@ -87,7 +87,7 @@ public interface BillableUtilizationService {
     Map<String, Object> evaluate(double totalHours, double billableHours);
 
     /**
-     * 触发快照重算（供 scheduler 调用）
+     * 触发快照重算（供 cronjob 调用）
      *
      * <p>聚合 pmis_execution_time_entry（status=APPROVED）中指定周期的工时，
      * 写入 pmis_billable_utilization_snapshot。recomputeAll=true 时先按 period 软删再重写。

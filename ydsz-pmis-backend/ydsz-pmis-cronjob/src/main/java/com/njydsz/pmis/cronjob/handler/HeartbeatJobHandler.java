@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.handler;
+package com.njydsz.pmis.cronjob.handler;
 
 import com.njydsz.pmis.common.job.JobHandler;
 import lombok.extern.slf4j.Slf4j;

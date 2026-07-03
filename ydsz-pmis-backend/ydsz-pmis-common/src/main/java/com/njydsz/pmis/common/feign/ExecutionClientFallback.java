@@ -11,7 +11,7 @@ import java.util.Map;
 /**
  * ExecutionClient 降级
  *
- * <p>execution 模块不可用时：recompute 返回 ok=false 让 scheduler 记录失败，
+ * <p>execution 模块不可用时：recompute 返回 ok=false 让 cronjob 记录失败，
  * snapshotAverage 返回空 map + source=DOWN 让调用方走兜底逻辑。
  *
  * @author ydsz-pmis-team

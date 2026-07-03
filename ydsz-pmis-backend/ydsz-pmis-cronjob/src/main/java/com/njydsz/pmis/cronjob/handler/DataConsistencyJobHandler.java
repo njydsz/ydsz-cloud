@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.handler;
+package com.njydsz.pmis.cronjob.handler;
 
 import com.njydsz.pmis.common.job.JobHandler;
 import org.slf4j.Logger;

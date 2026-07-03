@@ -1,0 +1,50 @@
+# PMIS XXL-Job Admin 调度管理后台（批次 19 落地）
+# --------------------------------------------------------------------------
+# 启动：docker compose -f deploy/cronjob/docker-compose.yml up -d
+# 默认端口：9100（Admin Web UI，默认账户 admin / 123456）
+# 依赖：PostgreSQL（base 环境） + Nacos
+# --------------------------------------------------------------------------
+
+name: pmis-cronjob
+
+services:
+  xxl-job-admin:
+    image: xuxueli/xxl-job-admin:2.4.0
+    container_name: pmis-xxl-job-admin
+    hostname: xxl-job-admin
+    restart: unless-stopped
+    ports:
+      - "9100:8080"
+    environment:
+      PARAMS: >-
+        --spring.datasource.url=jdbc:postgresql://pmis-postgres:5432/pmis
+        --spring.datasource.username=pmis
+        --spring.datasource.password=pmis@2026
+        --spring.datasource.driver-class-name=org.postgresql.Driver
+        --xxl.job.accessToken=pmis-xxl-token
+        --xxl.job.i18n=zh_CN
+        --server.servlet.context-path=/xxl-job-admin
+        --spring.mail.username=pmis-alert@pmis.cn
+        --spring.mail.password=pmis-mail-pwd
+        --xxl.job.triggerpool.fast.max=200
+        --xxl.job.triggerpool.slow.max=100
+        --xxl.job.logretentiondays=30
+    volumes:
+      - xxljob-data:/data/applogs/xxl-job
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/xxl-job-admin/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - pmis-net
+
+volumes:
+  xxljob-data:
+    name: pmis-xxljob-data
+
+networks:
+  pmis-net:
+    external: true
+    name: pmis-network
+    driver: bridge

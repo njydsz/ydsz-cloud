@@ -50,7 +50,7 @@
 | file | 9009 | 2 | MinIO | 文件存储 |
 | audit | 9010 | 2 | MySQL | 审计 |
 | message | 9011 | 2 | Nacos, Redis | 消息模板 |
-| scheduler | 9012 | 1 | XXL-JOB, MySQL | 单实例避免并发 |
+| cronjob | 9012 | 1 | XXL-JOB, MySQL | 单实例避免并发 |
 | frontend | 80 | 4 | Nginx | Vue 静态 |
 
 ## 3. 容量规划 (HPA 阈值)

@@ -39,7 +39,7 @@ public interface FlowTimerService {
     Long scheduleBoundary(Long taskId, Long instanceId, String nodeCode, Duration delay);
 
     /**
-     * 触发单个定时器（scheduler 扫描到到点记录时调用）
+     * 触发单个定时器（cronjob 扫描到到点记录时调用）
      *
      * @param timer 定时器记录
      * @return true=触发成功 false=已被处理

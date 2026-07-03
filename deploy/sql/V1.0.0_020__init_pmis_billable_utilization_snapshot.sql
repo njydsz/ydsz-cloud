@@ -1,4 +1,4 @@
-﻿-- ====================================================================
+-- ====================================================================
 -- V1.0.0_020  可计费利用率快照表
 --
 --  说明：可计费利用率（BillableUtilization）由 scheduler 每日计算后
@@ -53,7 +53,7 @@ CREATE INDEX IF NOT EXISTS idx_billable_range
     ON pmis_billable_utilization_snapshot (range_from, range_to)
     WHERE deleted = 0;
 
-COMMENT ON TABLE  pmis_billable_utilization_snapshot IS '可计费利用率快照表: scheduler 每日计算并持久化,驾驶舱/排行榜/趋势分析均读快照,避免实时聚合大表';
+COMMENT ON TABLE  pmis_billable_utilization_snapshot IS '可计费利用率快照表: cronjob 每日计算并持久化,驾驶舱/排行榜/趋势分析均读快照,避免实时聚合大表';
 COMMENT ON COLUMN pmis_billable_utilization_snapshot.period IS '统计周期: 格式 yyyy-MM,例如 2026-06';
 COMMENT ON COLUMN pmis_billable_utilization_snapshot.employee_id IS '员工 ID';
 COMMENT ON COLUMN pmis_billable_utilization_snapshot.employee_name IS '员工姓名（冗余）';

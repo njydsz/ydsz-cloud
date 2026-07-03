@@ -203,7 +203,7 @@ microservices:
       targetMemory: 80
     pdb:
       minAvailable: 1
-  scheduler:
+  cronjob:
     enabled: true
     port: 9012
     replicas: 1

@@ -1,9 +1,9 @@
-﻿#!/bin/bash
+#!/bin/bash
 # =====================================================================
 #  PMIS 微服务 Docker 镜像批量构建脚本
 # ---------------------------------------------------------------------
 #  服务合并后共 8 个可部署服务（common/literule 为库不独立部署）：
-#    gateway / iam / system / workflow / project / agent / scheduler
+#    gateway / iam / system / workflow / project / agent / cronjob
 #  用法：
 #    ./build-images.sh [tag]
 #    默认 tag=1.0.0

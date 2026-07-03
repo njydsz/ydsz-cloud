@@ -1,5 +1,20 @@
-# Common 模块无独立配置
+# =====================================================================
+#  PMIS 公共模块（ydsz-pmis-common）配置
+#  --------------------------------------------------------------------
+#  说明：common 模块作为公共依赖被其他微服务引用，本身不独立部署，
+#        因此不需要 HTTP 端口、服务发现等配置。
+#  包含内容：
+#    - 统一响应包装 Result<T> + R<T>（含业务码、消息、数据）
+#    - 全局异常处理 GlobalExceptionHandler
+#    - 通用工具类（时间、加密、TraceId、IdWorker、Jackson）
+#    - MyBatis-Plus 自动填充（创建人/创建时间/更新人/更新时间）
+#    - 跨服务常量、错误码枚举
+#  共享配置：通过 Nacos 共享配置 pmis-common-shared.yaml 注入
+#            （数据源、Redis、MyBatis-Plus、日志等）
+# =====================================================================
+
+# 关闭 Web 容器（common 不启动 Tomcat）
 spring:
   main:
     web-application-type: none
-    banner-mode: off
+    banner-mode: off  # 关闭启动 banner

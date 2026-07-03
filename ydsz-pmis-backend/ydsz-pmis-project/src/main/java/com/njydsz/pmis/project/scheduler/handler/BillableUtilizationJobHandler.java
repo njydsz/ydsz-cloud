@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.project.scheduler.handler;
+package com.njydsz.pmis.project.scheduler.handler;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;

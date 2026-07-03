@@ -1,12 +1,22 @@
-﻿server:
-  port: 9007
+# =====================================================================
+#  PMIS AI Agent 服务配置
+#  --------------------------------------------------------------------
+#  端口：9007
+#  职责：AI 智能体编排、LLM 调用、AgentScope 多 Agent 协同
+#        业务预测、文档生成、智能问答
+#  依赖：Nacos、PostgreSQL、Redis、可选 Spring AI（OpenAI / 灵积 / 千帆）
+# =====================================================================
+
+server:
+  port: 9007  # HTTP 监听端口
+
 spring:
   application:
-    name: ydsz-pmis-agent
+    name: ydsz-pmis-agent  # Nacos 注册的服务名
   profiles:
-    active: dev
+    active: dev  # 激活 dev / sit / uat / prod profile
   main:
-    web-application-type: servlet
+    web-application-type: servlet  # 启用 Servlet 容器（提供 HTTP API）
   cloud:
     nacos:
       discovery:
@@ -16,26 +26,32 @@ spring:
         file-extension: yml
         group: ${spring.profiles.active}
         namespace: ${NACOS_NAMESPACE:pmis}
+
+  # ---------- 数据源 ----------
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
     driver-class-name: org.postgresql.Driver
+    # currentSchema=public 显式指定 schema，兼容多租户
     url: jdbc:postgresql://${DB_HOST:127.0.0.1}:${DB_PORT:5432}/${DB_NAME:ydsz-pmis}?currentSchema=public
     username: ${DB_USER:postgres}
     password: ${DB_PASSWORD}
+
+  # ---------- Redis ----------
   data:
     redis:
       host: ${REDIS_HOST:127.0.0.1}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD}
       database: ${REDIS_DB:0}
-      timeout: 5s
-      lettuce:
+      timeout: 5s            # 命令超时 5s
+      lettuce:               # Lettuce 客户端（Netty 异步）
         pool:
-          max-active: 16
-          max-idle: 8
-          min-idle: 0
-          max-wait: 5s
+          max-active: 16     # 最大连接（够 Agent 并发推理）
+          max-idle: 8        # 空闲连接
+          min-idle: 0        # 最小空闲（按需创建）
+          max-wait: 5s       # 获取连接最大等待
 
+# ---------- MyBatis-Plus ----------
 mybatis-plus:
   mapper-locations: classpath*:mapper/**/*.xml
   type-aliases-package: com.njydsz.pmis.agent.entity
@@ -43,24 +59,35 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
-    banner: false
+    banner: false             # 关闭启动 banner
     db-config:
       id-type: AUTO
 
+# ---------- SpringDoc / Swagger ----------
 springdoc:
   swagger-ui:
     path: /swagger-ui.html
   api-docs:
     path: /v3/api-docs
 
+# ---------- 日志 ----------
 logging:
   level:
     root: INFO
     com.njydsz.pmis: DEBUG
   pattern:
+    # 注意：traceId 在前，便于日志聚合检索
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
 
+# =====================================================================
 # P1-13: Spring AI 集成配置（生产环境通过 Nacos 覆盖）
+# ---------------------------------------------------------------------
+# Provider 选择策略：
+#   - mock          ：内置 Mock 实现，单元测试/开发使用
+#   - spring-ai-openai：OpenAI / 兼容协议
+#   - dashscope     ：阿里云灵积
+#   - qianfan       ：百度千帆
+# =====================================================================
 pmis:
   agent:
     llm:
@@ -70,10 +97,10 @@ pmis:
       timeout-millis: ${LLM_TIMEOUT_MILLIS:10000}
       # 失败重试次数(不含首次)
       max-retries: ${LLM_MAX_RETRIES:2}
-      # 失败时是否降级到 mock
+      # 失败时是否降级到 mock（生产建议 false，避免掩盖真实故障）
       fallback-to-mock: ${LLM_FALLBACK_TO_MOCK:true}
 
-# Spring AI OpenAI 配置（provider=spring-ai-openai 时生效）
+# ---------- Spring AI OpenAI 配置（provider=spring-ai-openai 时生效） ----------
 spring:
   ai:
     openai:
@@ -81,15 +108,15 @@ spring:
       base-url: ${OPENAI_BASE_URL:https://api.openai.com}
       chat:
         options:
-          model: ${OPENAI_MODEL:gpt-4o-mini}
-          temperature: 0.3
+          model: ${OPENAI_MODEL:gpt-4o-mini}  # 默认模型
+          temperature: 0.3                    # 温度低 → 输出稳定
 
-# Actuator 端点暴露（P1-13 LLM 健康检查）
+# ---------- Actuator 端点暴露（P1-13 LLM 健康检查） ----------
 management:
   endpoints:
     web:
       exposure:
-        include: health,info,metrics
+        include: health,info,metrics  # 暴露健康/指标
   endpoint:
     health:
-      show-details: when-authorized
+      show-details: when-authorized  # 仅授权用户可看详情

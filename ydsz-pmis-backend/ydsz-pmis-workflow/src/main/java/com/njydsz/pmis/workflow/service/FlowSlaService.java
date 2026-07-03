@@ -11,10 +11,10 @@ import java.util.Map;
  * <p>P1-6: 后端超时自动策略（PASS/REJECT/NOTIFY/ESCALATE）
  * <p>对标钉钉/飞书审批的 SLA 自动化能力：
  * <ul>
- *   <li>任务到 dueAt 时由 scheduler 扫描触发</li>
+ *   <li>任务到 dueAt 时由 cronjob 扫描触发</li>
  *   <li>按节点 slaConfig 配置自动执行：REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT</li>
  *   <li>每次扫描会增加 reminder_count，达到 maxReminders 时切换为最终动作</li>
- *   <li>所有异常都被 try-catch 吞掉，scheduler 主循环不会因单条任务失败而中断</li>
+ *   <li>所有异常都被 try-catch 吞掉，cronjob 主循环不会因单条任务失败而中断</li>
  * </ul>
  *
  * @author ydsz-pmis-team

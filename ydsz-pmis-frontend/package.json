@@ -3,7 +3,27 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "南京云顶 PMIS 运营管理系统 - 前端",
+  "description": "南京云顶 PMIS 运营管理系统 - 前端（Vue 3 + Vite + TypeScript）",
+  "author": "PMIS Team <frontend@pmis.example.com>",
+  "license": "UNLICENSED",
+  "homepage": "https://pmis.example.com",
+  "repository": {
+    "type": "git",
+    "url": "https://git.pmis.example.com/ydsz-pmis/ydsz-pmis-frontend.git"
+  },
+  "bugs": {
+    "url": "https://jira.pmis.example.com"
+  },
+  "keywords": [
+    "pmis",
+    "vue3",
+    "vite",
+    "typescript",
+    "element-plus",
+    "bpmn",
+    "lowcode",
+    "form-designer"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc --noEmit && vite build",
@@ -12,6 +32,7 @@
     "type-check": "vue-tsc --noEmit",
     "lint": "eslint . --ext .vue,.js,.ts,.jsx,.tsx --fix",
     "lint:check": "eslint . --ext .vue,.js,.ts,.jsx,.tsx",
+    "lint:scan-warnings": "node scripts/scan-any-warnings.mjs",
     "format": "prettier --write \"src/**/*.{vue,ts,js,scss,json,md}\"",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -83,7 +104,8 @@
     "vue-tsc": "^2.1.6"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
   },
   "lint-staged": {
     "*.{vue,ts,js,tsx,jsx}": [

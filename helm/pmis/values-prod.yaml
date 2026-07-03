@@ -30,7 +30,7 @@ microservices:
   file:        { enabled: true, port: 9009, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 4, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
   audit:       { enabled: true, port: 9010, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 4, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
   message:     { enabled: true, port: 9011, replicas: 2, jvmOpts: "-Xms512m -Xmx1g -XX:+UseG1GC", hpa: { minReplicas: 2, maxReplicas: 4, targetCPU: 70, targetMemory: 80 }, pdb: { minAvailable: 1 } }
-  scheduler:   { enabled: true, port: 9012, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
+  cronjob:     { enabled: true, port: 9012, replicas: 1, jvmOpts: "-Xms256m -Xmx512m -XX:+UseG1GC" }
 
 frontend:
   enabled: true

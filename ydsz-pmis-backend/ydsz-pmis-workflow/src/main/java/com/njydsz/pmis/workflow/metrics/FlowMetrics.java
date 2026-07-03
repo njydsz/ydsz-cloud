@@ -11,7 +11,7 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Tags;
 import io.micrometer.core.instrument.Timer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -49,15 +49,22 @@ public class FlowMetrics {
     private final ConcurrentMap<String, Timer> timerCache = new ConcurrentHashMap<>();
 
     // ============================== Gauge 弱引用 mapper（避免循环依赖） ==============================
-    @Autowired(required = false)
-    private FlowInstanceMapper instanceMapper;
-    @Autowired(required = false)
-    private FlowTaskMapper taskMapper;
-    @Autowired(required = false)
-    private FlowCcMapper ccMapper;
+    /**
+     * Mapper 通过 ObjectProvider 实现可选注入，避免监控指标对核心数据源造成循环依赖。
+     * 若对应 Mapper 不存在则保持为 null，注册 Gauge 时会优雅跳过。
+     */
+    private final FlowInstanceMapper instanceMapper;
+    private final FlowTaskMapper taskMapper;
+    private final FlowCcMapper ccMapper;
 
-    public FlowMetrics(MeterRegistry registry) {
+    public FlowMetrics(MeterRegistry registry,
+                       ObjectProvider<FlowInstanceMapper> instanceMapperProvider,
+                       ObjectProvider<FlowTaskMapper> taskMapperProvider,
+                       ObjectProvider<FlowCcMapper> ccMapperProvider) {
         this.registry = registry;
+        this.instanceMapper = instanceMapperProvider.getIfAvailable();
+        this.taskMapper = taskMapperProvider.getIfAvailable();
+        this.ccMapper = ccMapperProvider.getIfAvailable();
         // 注册 Gauge（延迟到 bean 装配完成后再调用 query 方法）
         registerGauges();
         log.info("[FlowMetrics] 初始化完成，Prometheus 端点可访问 /actuator/prometheus");

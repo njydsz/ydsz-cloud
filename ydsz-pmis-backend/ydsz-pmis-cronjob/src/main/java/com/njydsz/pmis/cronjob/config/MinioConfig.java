@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.cronjob.config;
+package com.njydsz.pmis.cronjob.config;
 
 import io.minio.MinioClient;
 import lombok.Data;
