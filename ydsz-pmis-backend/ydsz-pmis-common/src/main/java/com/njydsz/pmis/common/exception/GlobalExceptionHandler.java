@@ -10,6 +10,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.OptimisticLockingFailureException;
+import org.springframework.dao.QueryTimeoutException;
+import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -231,6 +237,149 @@ public class GlobalExceptionHandler {
         Result<Void> r = Result.failed(BizErrorCode.INTERNAL_ERROR.getCode(), message);
         r.setTraceId(traceId);
         return r;
+    }
+
+    // ==================== H9.1 修复：数据库异常处理 ====================
+
+    /**
+     * 唯一键冲突处理（PostgreSQL SQLSTATE 23505）
+     *
+     * <p>典型场景：插入重复业务编号（如 contract_no、invoice_no、user_username）。
+     * 区别于 BizErrorCode.DUPLICATE_KEY（业务层校验），DB_DUPLICATE_KEY 是数据库约束层面触发。
+     *
+     * @param e   唯一键冲突异常
+     * @param req HTTP 请求
+     * @return 统一响应（400 BAD_REQUEST）
+     */
+    @ExceptionHandler(DuplicateKeyException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleDuplicateKey(DuplicateKeyException e, HttpServletRequest req) {
+        String detail = extractPgDetail(e.getMessage());
+        log.warn("[DB-DuplicateKey] {} {} - {}", req.getMethod(), req.getRequestURI(), detail);
+        Result<Void> r = Result.failed(BizErrorCode.DB_DUPLICATE_KEY.getCode(),
+                resolveMessage(BizErrorCode.DB_DUPLICATE_KEY) + (detail != null ? ": " + detail : ""));
+        r.setTraceId(TraceIdUtil.get());
+        return r;
+    }
+
+    /**
+     * 数据完整性约束冲突处理（PostgreSQL SQLSTATE 23xxx 系列）
+     *
+     * <p>包括：外键冲突（23503）、非空约束（23502）、CHECK 约束（23514）等。
+     *
+     * @param e   数据完整性异常
+     * @param req HTTP 请求
+     * @return 统一响应（400 BAD_REQUEST）
+     */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public Result<Void> handleDataIntegrity(DataIntegrityViolationException e, HttpServletRequest req) {
+        // DuplicateKeyException 是 DataIntegrityViolationException 的子类，已被上面更具体的 handler 处理
+        if (e instanceof DuplicateKeyException) {
+            return handleDuplicateKey((DuplicateKeyException) e, req);
+        }
+        String detail = extractPgDetail(e.getMessage());
+        log.warn("[DB-DataIntegrity] {} {} - {}", req.getMethod(), req.getRequestURI(), detail);
+        Result<Void> r = Result.failed(BizErrorCode.DB_DATA_INTEGRITY.getCode(),
+                resolveMessage(BizErrorCode.DB_DATA_INTEGRITY) + (detail != null ? ": " + detail : ""));
+        r.setTraceId(TraceIdUtil.get());
+        return r;
+    }
+
+    /**
+     * 乐观锁冲突处理（@Version 版本号不匹配）
+     *
+     * <p>典型场景：并发更新同一资源，MyBatis-Plus @Version 机制触发。
+     *
+     * @param e   乐观锁失败异常
+     * @param req HTTP 请求
+     * @return 统一响应（409 CONFLICT）
+     */
+    @ExceptionHandler(OptimisticLockingFailureException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public Result<Void> handleOptimisticLock(OptimisticLockingFailureException e, HttpServletRequest req) {
+        log.warn("[DB-OptimisticLock] {} {} - {}", req.getMethod(), req.getRequestURI(), e.getMessage());
+        // 乐观锁冲突映射到 DB_LOCK_CONTENTION，提示用户"数据已被他人修改，请刷新后重试"
+        Result<Void> r = Result.failed(BizErrorCode.DB_LOCK_CONTENTION.getCode(),
+                resolveMessage(BizErrorCode.DB_LOCK_CONTENTION) + "：数据已被他人修改，请刷新后重试");
+        r.setTraceId(TraceIdUtil.get());
+        return r;
+    }
+
+    /**
+     * 数据库查询超时处理
+     *
+     * @param e   查询超时异常
+     * @param req HTTP 请求
+     * @return 统一响应（503 SERVICE_UNAVAILABLE）
+     */
+    @ExceptionHandler(QueryTimeoutException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public Result<Void> handleQueryTimeout(QueryTimeoutException e, HttpServletRequest req) {
+        log.warn("[DB-QueryTimeout] {} {} - {}", req.getMethod(), req.getRequestURI(), e.getMessage());
+        Result<Void> r = Result.failed(BizErrorCode.DB_QUERY_TIMEOUT.getCode(),
+                resolveMessage(BizErrorCode.DB_QUERY_TIMEOUT));
+        r.setTraceId(TraceIdUtil.get());
+        return r;
+    }
+
+    /**
+     * 数据库连接失败处理（连接池耗尽、网络断开等）
+     *
+     * <p>TransientDataAccessResourceException 在 Spring 中表示"暂时性数据访问资源不可用"，
+     * 常见于数据库连接池耗尽或 PG 主从切换期间。
+     *
+     * @param e   暂时性数据访问异常
+     * @param req HTTP 请求
+     * @return 统一响应（503 SERVICE_UNAVAILABLE）
+     */
+    @ExceptionHandler(TransientDataAccessResourceException.class)
+    @ResponseStatus(HttpStatus.SERVICE_UNAVAILABLE)
+    public Result<Void> handleDbConnFailed(TransientDataAccessResourceException e, HttpServletRequest req) {
+        log.error("[DB-ConnFailed] {} {} - {}", req.getMethod(), req.getRequestURI(), e.getMessage());
+        Result<Void> r = Result.failed(BizErrorCode.DB_CONNECTION_FAILED.getCode(),
+                resolveMessage(BizErrorCode.DB_CONNECTION_FAILED));
+        r.setTraceId(TraceIdUtil.get());
+        return r;
+    }
+
+    /**
+     * DataAccessException 兜底（捕获所有未被上面具体 handler 命中的 DAO 异常）
+     *
+     * <p>例如：BadSqlGrammarException（SQL 语法错误，通常是 mapper 配置问题）、
+     * IncorrectResultSizeDataAccessException 等。
+     *
+     * @param e   DAO 异常
+     * @param req HTTP 请求
+     * @return 统一响应（500 INTERNAL_SERVER_ERROR）
+     */
+    @ExceptionHandler(DataAccessException.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public Result<Void> handleDataAccessException(DataAccessException e, HttpServletRequest req) {
+        String traceId = TraceIdUtil.get();
+        log.error("[DB-Error] {} {} - traceId={} - {}", req.getMethod(), req.getRequestURI(), traceId, e.getMessage());
+        // H9.3 修复：不向客户端暴露 SQL 细节，仅返回 traceId 供排查
+        String message = resolveMessage(BizErrorCode.INTERNAL_ERROR) + " (TraceId: " + traceId + ")";
+        Result<Void> r = Result.failed(BizErrorCode.INTERNAL_ERROR.getCode(), message);
+        r.setTraceId(traceId);
+        return r;
+    }
+
+    /**
+     * 从 PostgreSQL 异常消息中提取 Detail 字段，避免暴露完整堆栈。
+     *
+     * <p>PG 异常消息通常形如：{@code ERROR: duplicate key value violates unique constraint "uk_contract_no"
+     * Detail: Key (contract_no)=(HT20260101001) already exists.}
+     * 本方法提取 "Detail:" 之后的内容用于业务提示。
+     *
+     * @param msg 原始异常消息
+     * @return 提取后的 Detail 内容，无匹配则返回 null
+     */
+    private String extractPgDetail(String msg) {
+        if (msg == null) return null;
+        int idx = msg.indexOf("Detail:");
+        if (idx < 0) return null;
+        return msg.substring(idx + 7).trim();
     }
 
     // ==================== i18n 辅助方法 ====================

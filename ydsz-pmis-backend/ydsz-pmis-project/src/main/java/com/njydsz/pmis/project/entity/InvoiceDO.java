@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import com.njydsz.pmis.common.sensitive.Sensitive;
+import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
 import lombok.Data;
 
 import java.io.Serial;
@@ -65,13 +67,16 @@ public class InvoiceDO implements Serializable {
     private LocalDate taxPeriod;
     /** 发票抬头 */
     private String title;
-    /** 纳税人识别号 */
+    /** 纳税人识别号（脱敏：保留前 6 后 4） */
+    @Sensitive(SensitiveStrategy.ID_CARD)
     private String taxNo;
-    /** 开户行+账号 */
+    /** 开户行+账号（脱敏：保留前 4 后 4） */
+    @Sensitive(SensitiveStrategy.BANK_CARD)
     private String bankInfo;
     /** 公司地址 */
     private String address;
-    /** 公司电话 */
+    /** 公司电话（脱敏：138****8000） */
+    @Sensitive(SensitiveStrategy.PHONE)
     private String phone;
     /** 备注 */
     private String remark;

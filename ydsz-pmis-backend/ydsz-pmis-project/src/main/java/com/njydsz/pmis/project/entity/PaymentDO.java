@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import com.njydsz.pmis.common.sensitive.Sensitive;
+import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
 import lombok.Data;
 
 import java.io.Serial;
@@ -53,9 +55,11 @@ public class PaymentDO implements Serializable {
     private String paymentMethod;
     /** 到账日期 */
     private LocalDate paymentDate;
-    /** 客户付款账户 */
+    /** 客户付款账户（脱敏：保留前 4 后 4） */
+    @Sensitive(SensitiveStrategy.BANK_CARD)
     private String bankAccount;
-    /** 我方收款账户 */
+    /** 我方收款账户（脱敏：保留前 4 后 4） */
+    @Sensitive(SensitiveStrategy.BANK_CARD)
     private String ourBankAccount;
     /** 银行流水号 */
     private String bankReference;

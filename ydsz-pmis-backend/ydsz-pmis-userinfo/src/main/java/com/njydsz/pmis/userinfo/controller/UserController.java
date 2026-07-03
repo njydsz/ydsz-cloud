@@ -12,6 +12,7 @@ import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
 import com.njydsz.pmis.userinfo.service.UserAccountService;
+import com.njydsz.pmis.userinfo.vo.UserVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
@@ -40,36 +41,36 @@ public class UserController {
      * 用户分页查询
      *
      * @param query 查询条件
-     * @return 统一响应结果，包含分页数据
+     * @return 统一响应结果，包含分页数据（H13.1 修复：返回 UserVO 已脱敏）
      */
     @Operation(summary = "用户分页")
     @PrePermission("auth:user:list")
     @GetMapping
-    public Result<Page<UserAccountDO>> page(UserQueryDTO query) {
-        return Result.ok(userAccountService.page(query));
+    public Result<Page<UserVO>> page(UserQueryDTO query) {
+        return Result.ok(userAccountService.pageVo(query));
     }
 
     /**
      * 查询用户详情
      *
      * @param id 用户 ID
-     * @return 统一响应结果，包含用户信息
+     * @return 统一响应结果，包含用户信息（H13.1 修复：返回 UserVO 已脱敏）
      */
     @Operation(summary = "用户详情")
     @GetMapping("/{id}")
-    public Result<UserAccountDO> get(@PathVariable Long id) {
-        return Result.ok(userAccountService.findById(id));
+    public Result<UserVO> get(@PathVariable Long id) {
+        return Result.ok(userAccountService.findVoById(id));
     }
 
     /**
      * 获取当前登录用户信息
      *
-     * @return 统一响应结果，包含当前用户信息
+     * @return 统一响应结果，包含当前用户信息（H13.1 修复：返回 UserVO 已脱敏）
      */
     @Operation(summary = "当前用户信息")
     @GetMapping("/me")
-    public Result<UserAccountDO> me() {
-        return Result.ok(userAccountService.findById(SecurityContext.getUserId()));
+    public Result<UserVO> me() {
+        return Result.ok(userAccountService.findVoById(SecurityContext.getUserId()));
     }
 
     /**

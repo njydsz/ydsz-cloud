@@ -60,6 +60,57 @@ const overview = ref<MonitorOverviewDTO>({
 })
 const overviewLoading = ref(false)
 
+// ===========================================
+// P2-4: 全局时间范围选择器（驱动趋势/瓶颈/审批人/分布图）
+// ===========================================
+const dateRange = ref<[string, string] | null>(null)
+const dateShortcuts = [
+  {
+    text: '今日',
+    value: () => {
+      const today = dayjs().format('YYYY-MM-DD 00:00:00')
+      return [today, dayjs().format('YYYY-MM-DD 23:59:59')]
+    },
+  },
+  {
+    text: '近 7 天',
+    value: () => {
+      return [
+        dayjs().subtract(6, 'day').format('YYYY-MM-DD 00:00:00'),
+        dayjs().format('YYYY-MM-DD 23:59:59'),
+      ]
+    },
+  },
+  {
+    text: '近 30 天',
+    value: () => {
+      return [
+        dayjs().subtract(29, 'day').format('YYYY-MM-DD 00:00:00'),
+        dayjs().format('YYYY-MM-DD 23:59:59'),
+      ]
+    },
+  },
+]
+
+/** 返回当前时间范围的 {startTime, endTime}，未选择则返回空对象 */
+function currentTimeRange() {
+  if (!dateRange.value || dateRange.value.length !== 2) return {}
+  return {
+    startTime: dateRange.value[0],
+    endTime: dateRange.value[1],
+  }
+}
+
+/** 时间范围变化时重载除概览外的所有图表 */
+watch(dateRange, () => {
+  loadTrend()
+  loadBottleneck()
+  loadApproverEfficiency()
+  loadDistribution()
+  anomalyQuery.pageNum = 1
+  loadAnomaly()
+})
+
 // 数字动画显示值
 const displayStats = reactive({
   runningCount: 0,
@@ -208,7 +259,7 @@ let bottleneckChart: echarts.ECharts | null = null
 async function loadBottleneck() {
   bottleneckLoading.value = true
   try {
-    const res = await nodeDurationStats({})
+    const res = await nodeDurationStats(currentTimeRange())
     if (res.data?.code === 0) {
       const all = res.data.data || []
       bottleneckData.value = all
@@ -290,7 +341,7 @@ let approverChart: echarts.ECharts | null = null
 async function loadApproverEfficiency() {
   approverLoading.value = true
   try {
-    const res = await getApproverEfficiency({ topN: 10 })
+    const res = await getApproverEfficiency({ topN: 10, ...currentTimeRange() })
     if (res.data?.code === 0) {
       approverData.value = res.data.data || []
       renderApproverChart()
@@ -403,6 +454,57 @@ function goInstance(row: AnomalyInstanceDTO) {
   router.push({ path: '/workflow/instance', query: { id: String(row.id) } })
 }
 
+/**
+ * P2-4: 导出异常列表为 CSV
+ *
+ * <p>前端纯客户端导出，不新增后端接口；适合异常列表数据量小的场景。
+ * 字段：实例ID / 标题 / 流程 / 发起人 / 异常类型 / 预警级别 / 当前节点 / 超期天数 / 发起时间
+ */
+function exportAnomalyCsv() {
+  if (!anomalyList.value.length) {
+    ElMessage.warning('当前无可导出的异常数据')
+    return
+  }
+  const headers = [
+    '实例ID', '标题', '流程', '发起人', '异常类型', '预警级别',
+    '当前节点', '超期天数', '发起时间',
+  ]
+  const rows = anomalyList.value.map((r) => [
+    r.id ?? '',
+    r.title ?? '',
+    r.flowName ?? '',
+    r.initiatorName ?? '',
+    anomalyTypeMap[r.anomalyType]?.label ?? r.anomalyType ?? '',
+    warnLevelMap[r.warnLevel]?.label ?? r.warnLevel ?? '',
+    r.currentNodeName ?? '',
+    r.overdueDays ?? '',
+    r.startTime ? dayjs(r.startTime).format('YYYY-MM-DD HH:mm:ss') : '',
+  ])
+  // CSV 转义：含逗号/换行/引号的字段用双引号包裹，内部双引号变两个
+  const escapeCell = (v: unknown) => {
+    const s = String(v ?? '')
+    if (/[",\n]/.test(s)) {
+      return '"' + s.replace(/"/g, '""') + '"'
+    }
+    return s
+  }
+  const csvContent = [
+    headers.map(escapeCell).join(','),
+    ...rows.map((r) => r.map(escapeCell).join(',')),
+  ].join('\n')
+  // 加 BOM 头避免 Excel 中文乱码
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `异常流程_${dayjs().format('YYYYMMDD_HHmmss')}.csv`
+  document.body.appendChild(link)
+  link.click()
+  document.body.removeChild(link)
+  URL.revokeObjectURL(url)
+  ElMessage.success(`已导出 ${anomalyList.value.length} 条异常数据`)
+}
+
 // ===========================================
 // 流程类型分布
 // ===========================================
@@ -414,7 +516,7 @@ let distributionChart: echarts.ECharts | null = null
 async function loadDistribution() {
   distributionLoading.value = true
   try {
-    const res = await getFlowTypeDistribution({})
+    const res = await getFlowTypeDistribution(currentTimeRange())
     if (res.data?.code === 0) {
       distributionData.value = res.data.data || []
       renderDistributionChart()
@@ -584,11 +686,28 @@ const statCards = [
   <div class="monitor-dashboard">
     <!-- 页面标题 -->
     <div class="page-header">
-      <h2>实时监控仪表盘</h2>
-      <p class="page-header__sub">
-        流程运行状态实时监控，数据每 30 秒自动刷新
-        <el-tag size="small" type="success" effect="plain" style="margin-left: 8px">自动刷新中</el-tag>
-      </p>
+      <div class="page-header__left">
+        <h2>实时监控仪表盘</h2>
+        <p class="page-header__sub">
+          流程运行状态实时监控，数据每 30 秒自动刷新
+          <el-tag size="small" type="success" effect="plain" style="margin-left: 8px">自动刷新中</el-tag>
+        </p>
+      </div>
+      <div class="page-header__right">
+        <el-date-picker
+          v-model="dateRange"
+          type="datetimerange"
+          range-separator="至"
+          start-placeholder="开始时间"
+          end-placeholder="结束时间"
+          format="YYYY-MM-DD HH:mm:ss"
+          value-format="YYYY-MM-DD HH:mm:ss"
+          :shortcuts="dateShortcuts"
+          size="default"
+          clearable
+          style="width: 360px"
+        />
+      </div>
     </div>
 
     <!-- 统计卡片行 -->
@@ -656,7 +775,12 @@ const statCards = [
       <template #header>
         <div class="card-header">
           <span>异常流程列表</span>
-          <el-button size="small" text @click="loadAnomaly">刷新</el-button>
+          <div>
+            <el-button size="small" text @click="loadAnomaly">刷新</el-button>
+            <el-button size="small" type="primary" plain @click="exportAnomalyCsv" :disabled="!anomalyList.length">
+              导出 CSV
+            </el-button>
+          </div>
         </div>
       </template>
       <div class="filter-bar">
@@ -753,6 +877,19 @@ const statCards = [
 
 .page-header {
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+
+  &__left {
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__right {
+    flex-shrink: 0;
+  }
 
   h2 {
     margin: 0;

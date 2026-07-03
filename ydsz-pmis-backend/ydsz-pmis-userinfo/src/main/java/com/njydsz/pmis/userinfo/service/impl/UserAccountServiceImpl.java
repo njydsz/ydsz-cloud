@@ -24,6 +24,7 @@ import com.njydsz.pmis.userinfo.mapper.UserAccountMapper;
 import com.njydsz.pmis.userinfo.mapper.UserRoleMapper;
 import com.njydsz.pmis.userinfo.service.SessionService;
 import com.njydsz.pmis.userinfo.service.UserAccountService;
+import com.njydsz.pmis.userinfo.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -74,6 +75,11 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    public UserVO findVoById(Long userId) {
+        return toVo(findById(userId));
+    }
+
+    @Override
     @DataScope(deptColumn = "dept_id", userColumn = "id")
     public Page<UserAccountDO> page(UserQueryDTO query) {
         Page<UserAccountDO> page = new Page<>(query.getPage(), query.getSize());
@@ -92,6 +98,37 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(UserAccountDO::getId);
         return userAccountMapper.selectPage(page, w);
+    }
+
+    @Override
+    public Page<UserVO> pageVo(UserQueryDTO query) {
+        Page<UserAccountDO> doPage = page(query);
+        Page<UserVO> voPage = new Page<>(doPage.getCurrent(), doPage.getSize(), doPage.getTotal());
+        voPage.setRecords(doPage.getRecords().stream().map(this::toVo).toList());
+        return voPage;
+    }
+
+    /**
+     * DO → VO 转换（H13.1 修复：对外接口统一返回 UserVO，剥离 password/salt）
+     *
+     * @param u 用户账号 DO
+     * @return 用户视图对象（不含敏感字段）
+     */
+    private UserVO toVo(UserAccountDO u) {
+        if (u == null) return null;
+        UserVO vo = new UserVO();
+        vo.setId(u.getId());
+        vo.setUsername(u.getUsername());
+        vo.setEmployeeId(u.getEmployeeId());
+        vo.setStatus(u.getStatus());
+        vo.setLastLoginTime(u.getLastLoginTime());
+        vo.setLastLoginIp(u.getLastLoginIp());
+        vo.setDataScope(u.getDataScope());
+        vo.setDeptId(u.getDeptId());
+        vo.setLeaderId(u.getLeaderId());
+        vo.setPositionCode(u.getPositionCode());
+        vo.setMfaEnabled(u.getMfaEnabled());
+        return vo;
     }
 
     @Override

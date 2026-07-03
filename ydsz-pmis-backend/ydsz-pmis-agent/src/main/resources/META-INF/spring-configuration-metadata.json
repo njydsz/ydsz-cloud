@@ -1,0 +1,52 @@
+{
+  "groups": [
+    {
+      "name": "pmis.agent",
+      "type": "com.njydsz.pmis.agent.config.AgentProperties",
+      "sourceType": "com.njydsz.pmis.agent.config.AgentProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "pmis.agent.llm.provider",
+      "type": "java.lang.String",
+      "description": "LLM Provider (mock|spring-ai-openai|dashscope|qianfan)"
+    },
+    {
+      "name": "pmis.agent.llm.timeout-millis",
+      "type": "java.lang.Long",
+      "description": "LLM call timeout in milliseconds"
+    },
+    {
+      "name": "pmis.agent.llm.max-retries",
+      "type": "java.lang.Integer",
+      "description": "Max retry count (excluding first attempt)"
+    },
+    {
+      "name": "pmis.agent.llm.fallback-to-mock",
+      "type": "java.lang.Boolean",
+      "description": "Fallback to mock on failure"
+    },
+    {
+      "name": "pmis.openai-config.openai.api-key",
+      "type": "java.lang.String",
+      "description": "OpenAI API key"
+    },
+    {
+      "name": "pmis.openai-config.openai.base-url",
+      "type": "java.lang.String",
+      "description": "OpenAI base URL"
+    },
+    {
+      "name": "pmis.openai-config.openai.chat.options.model",
+      "type": "java.lang.String",
+      "description": "OpenAI chat model"
+    },
+    {
+      "name": "pmis.openai-config.openai.chat.options.temperature",
+      "type": "java.lang.Double",
+      "description": "OpenAI chat temperature"
+    }
+  ],
+  "hints": []
+}

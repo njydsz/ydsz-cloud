@@ -321,21 +321,4 @@ public class NotificationServiceImpl implements NotificationService {
                 .replace(">", "&gt;")
                 .replace("\"", "&quot;");
     }
-
-    /**
-     * 从响应数据中提取供应商追踪 ID
-     *
-     * @param data 响应数据
-     * @return 追踪 ID，无则返回 null
-     */
-    @SuppressWarnings("unchecked")
-    private Object extractTraceId(Object data) {
-        if (data == null) return null;
-        if (data instanceof Map) {
-            Object t = ((Map<String, Object>) data).get("providerTraceId");
-            if (t != null) return t;
-            return ((Map<String, Object>) data).get("traceId");
-        }
-        return null;
-    }
 }

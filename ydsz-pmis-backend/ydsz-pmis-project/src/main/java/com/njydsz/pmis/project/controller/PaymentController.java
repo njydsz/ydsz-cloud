@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -51,6 +52,7 @@ public class PaymentController {
     @Operation(summary = "录入回款")
     @PrePermission("finance:payment:create")
     @OperationLog(module = "回款管理", action = "录入回款", bizType = "PAYMENT", saveResult = true)
+    @Idempotent(key = "payment:record", ttlSeconds = 10, message = "请勿重复录入回款")
     @PostMapping
     public Result<Long> record(@Valid @RequestBody PaymentCreateDTO dto) {
         return Result.ok(service.record(dto));

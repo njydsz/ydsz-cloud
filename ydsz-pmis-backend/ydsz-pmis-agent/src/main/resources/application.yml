@@ -74,13 +74,13 @@ springdoc:
 logging:
   level:
     root: INFO
-    com.njydsz.pmis: DEBUG
+    "[com.njydsz.pmis]": DEBUG
   pattern:
     # 注意：traceId 在前，便于日志聚合检索
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level [%X{traceId:-}] %logger{36} - %msg%n"
 
 # =====================================================================
-# P1-13: Spring AI 集成配置（生产环境通过 Nacos 覆盖）
+# P1-13: AI 集成配置（生产环境通过 Nacos 覆盖）
 # ---------------------------------------------------------------------
 # Provider 选择策略：
 #   - mock          ：内置 Mock 实现，单元测试/开发使用
@@ -100,9 +100,8 @@ pmis:
       # 失败时是否降级到 mock（生产建议 false，避免掩盖真实故障）
       fallback-to-mock: ${LLM_FALLBACK_TO_MOCK:true}
 
-# ---------- Spring AI OpenAI 配置（provider=spring-ai-openai 时生效） ----------
-spring:
-  ai:
+  # ---------- OpenAI 兼容配置（provider 选择 openai 时生效） ----------
+  openai-config:
     openai:
       api-key: ${OPENAI_API_KEY}
       base-url: ${OPENAI_BASE_URL:https://api.openai.com}

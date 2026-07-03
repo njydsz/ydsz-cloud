@@ -21,7 +21,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/workflow/trigger")
+@RequestMapping("/api/v1/workflow/trigger")
 @RequiredArgsConstructor
 public class FlowAutoTriggerController {
 

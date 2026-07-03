@@ -39,6 +39,13 @@ public enum BizErrorCode {
     SERVICE_UNAVAILABLE(10202, "服务暂不可用"),
     REQUEST_TIMEOUT(10203, "请求超时"),
     RATE_LIMIT(10301, "请求频率超限"),
+    // H9.2 修复：数据库相关错误码（与 GlobalExceptionHandler H9.1 配合使用）
+    DB_DUPLICATE_KEY(10401, "数据唯一性冲突"),
+    DB_CONSTRAINT_VIOLATION(10402, "数据约束冲突"),
+    DB_DATA_INTEGRITY(10403, "数据完整性错误"),
+    DB_QUERY_TIMEOUT(10404, "数据库查询超时"),
+    DB_CONNECTION_FAILED(10405, "数据库连接失败"),
+    DB_LOCK_CONTENTION(10406, "数据库锁冲突"),
 
     // ========== 2xxxx 认证授权 ==========
     UNAUTHORIZED(20001, "未登录"),

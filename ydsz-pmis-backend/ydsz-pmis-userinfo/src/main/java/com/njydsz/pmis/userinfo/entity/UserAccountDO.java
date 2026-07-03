@@ -3,6 +3,7 @@ package com.njydsz.pmis.userinfo.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,9 +33,11 @@ public class UserAccountDO extends BaseDO {
     private String username;
 
     /** 密码密文（加盐哈希） */
+    @JsonIgnore
     private String password;
 
     /** 密码盐值 */
+    @JsonIgnore
     private String salt;
 
     /** 关联员工 ID */

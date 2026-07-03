@@ -35,7 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/workflow/embedded")
+@RequestMapping("/api/v1/workflow/embedded")
 @RequiredArgsConstructor
 public class FlowEmbeddedApprovalController {
 
@@ -97,12 +97,12 @@ public class FlowEmbeddedApprovalController {
     /**
      * 嵌入式快捷操作（按业务类型 + 业务 ID）
      *
-     * <p>URL 形式：/api/workflow/embedded/{businessType}/{businessId}/action
+     * <p>URL 形式：/api/v1/workflow/embedded/{businessType}/{businessId}/action
      */
     @PostMapping("/{businessType}/{businessId}/action")
     public Result<Void> quickActionByPath(@PathVariable String businessType,
                                           @PathVariable String businessId,
-                                          @RequestBody EmbeddedApprovalActionDTO dto) {
+                                          @Valid @RequestBody EmbeddedApprovalActionDTO dto) {
         dto.setBusinessType(businessType);
         dto.setBusinessId(businessId);
         LoginUser u = SecurityContext.getCurrentOrNull();

@@ -112,7 +112,9 @@ management:
         include: health,info,metrics,prometheus
   endpoint:
     health:
-      show-details: when-authorized
+      # H8.5 修复：内网 K8s readiness 探针需要看到具体失败组件
+      # actuator 端点应通过网关或 NetworkPolicy 限制为内网访问，不暴露公网
+      show-details: always
       probes:
         enabled: true
   health:

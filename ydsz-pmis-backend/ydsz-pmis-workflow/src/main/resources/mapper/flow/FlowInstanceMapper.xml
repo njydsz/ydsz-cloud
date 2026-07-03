@@ -167,4 +167,63 @@
           <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
         ORDER BY due_at ASC
     </select>
+
+    <!-- P2-4: 按 flow_status 分组计数（监控概览用，1 次查询替代 5 次 count） -->
+    <select id="selectCountGroupByStatus" resultType="java.util.Map">
+        SELECT flow_status AS "flowStatus", COUNT(1) AS "cnt"
+        FROM pmis_flow_instance
+        WHERE status = 'ENABLED' AND deleted = 0
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+        GROUP BY flow_status
+    </select>
+
+    <!-- P2-4: 今日新增/完成实例数（单次查询得到两个指标） -->
+    <select id="selectTodayCount" resultType="java.util.Map">
+        SELECT
+            COUNT(1) FILTER (WHERE start_at &gt;= CURRENT_DATE) AS "todayNewCount",
+            COUNT(1) FILTER (WHERE end_at &gt;= CURRENT_DATE AND end_at IS NOT NULL) AS "todayCompletedCount"
+        FROM pmis_flow_instance
+        WHERE status = 'ENABLED' AND deleted = 0
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+    </select>
+
+    <!-- P2-4: 按流程编码分组统计实例数 -->
+    <select id="selectFlowTypeDistribution" resultType="java.util.Map">
+        SELECT flow_code AS "flowCode",
+               MAX(flow_name) AS "flowName",
+               COUNT(1) AS "cnt"
+        FROM pmis_flow_instance
+        WHERE status = 'ENABLED' AND deleted = 0
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+          <if test="startTime != null">AND start_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND start_at &lt;= #{endTime}</if>
+        GROUP BY flow_code
+        ORDER BY cnt DESC
+    </select>
+
+    <!-- P2-4: 按日期分组统计新增实例数 -->
+    <select id="selectDailyNewCount" resultType="java.util.Map">
+        SELECT DATE(start_at) AS "date", COUNT(1) AS "newCount"
+        FROM pmis_flow_instance
+        WHERE status = 'ENABLED' AND deleted = 0
+          AND start_at IS NOT NULL
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+          <if test="startTime != null">AND start_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND start_at &lt;= #{endTime}</if>
+        GROUP BY DATE(start_at)
+        ORDER BY DATE(start_at) ASC
+    </select>
+
+    <!-- P2-4: 按日期分组统计完成实例数 -->
+    <select id="selectDailyCompletedCount" resultType="java.util.Map">
+        SELECT DATE(end_at) AS "date", COUNT(1) AS "completedCount"
+        FROM pmis_flow_instance
+        WHERE status = 'ENABLED' AND deleted = 0
+          AND end_at IS NOT NULL
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+          <if test="startTime != null">AND end_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND end_at &lt;= #{endTime}</if>
+        GROUP BY DATE(end_at)
+        ORDER BY DATE(end_at) ASC
+    </select>
 </mapper>

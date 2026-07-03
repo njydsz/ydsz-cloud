@@ -5,6 +5,7 @@ import com.njydsz.pmis.userinfo.dto.LoginRequest;
 import com.njydsz.pmis.userinfo.dto.LoginResult;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
+import com.njydsz.pmis.userinfo.vo.UserVO;
 
 import java.util.List;
 
@@ -33,12 +34,32 @@ public interface UserAccountService {
     UserAccountDO findById(Long userId);
 
     /**
+     * 根据 userId 查询并转换为 VO（剥离 password/salt 等敏感字段）
+     *
+     * <p>H13.1 修复：对外接口应返回 UserVO 而非 DO。
+     *
+     * @param userId 用户 ID
+     * @return 用户视图对象
+     */
+    UserVO findVoById(Long userId);
+
+    /**
      * 分页查询
      *
      * @param query 查询条件
-     * @return 分页结果
+     * @return 分页结果（DO，内部使用）
      */
     Page<UserAccountDO> page(UserQueryDTO query);
+
+    /**
+     * 分页查询并转换为 VO
+     *
+     * <p>H13.1 修复：对外接口应返回 UserVO 而非 DO。
+     *
+     * @param query 查询条件
+     * @return 分页结果（VO，已脱敏）
+     */
+    Page<UserVO> pageVo(UserQueryDTO query);
 
     /**
      * 创建用户（密码加密）

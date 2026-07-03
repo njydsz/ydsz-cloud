@@ -213,6 +213,11 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
+    public long countPending(Long tenantId) {
+        return queryService.countPending(tenantId);
+    }
+
+    @Override
     public PageResult<FlowTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, Long tenantId,

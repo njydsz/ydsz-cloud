@@ -151,4 +151,25 @@
           AND status = 'ENABLED'
           AND deleted = 0
     </select>
+
+    <!-- P2-4: 按办理人分组聚合效率统计（SQL 层 GROUP BY） -->
+    <select id="selectApproverEfficiency" resultType="java.util.Map">
+        SELECT assignee_id AS "assigneeId",
+               MAX(assignee_name) AS "assigneeName",
+               COUNT(1) AS "completedCount",
+               COALESCE(AVG(duration_ms) FILTER (WHERE duration_ms IS NOT NULL AND duration_ms &gt; 0), 0) AS "avgDurationMs",
+               COALESCE(SUM(duration_ms) FILTER (WHERE duration_ms IS NOT NULL AND duration_ms &gt; 0), 0) AS "totalDurationMs"
+        FROM pmis_flow_his_task
+        WHERE status = 'ENABLED'
+          AND deleted = 0
+          AND task_status = 'COMPLETED'
+          AND assignee_id IS NOT NULL
+          AND assignee_id != '0'
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+          <if test="startTime != null">AND finish_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND finish_at &lt;= #{endTime}</if>
+        GROUP BY assignee_id
+        ORDER BY completedCount DESC
+        LIMIT #{limit}
+    </select>
 </mapper>

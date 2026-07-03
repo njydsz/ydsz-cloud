@@ -392,6 +392,28 @@ function handleAutoLayout() {
   }
 }
 
+/**
+ * P2-5: 画布缩放与适配视图
+ *
+ * <p>对标钉钉/飞书审批流设计器，提供放大/缩小/适配画布三件套。
+ * 基于 bpmn-js 内置 zoomScroll 与 canvas 服务，无需额外依赖。
+ */
+function handleZoomIn() {
+  if (!modeler.value) return
+  modeler.value.get('zoomScroll').stepZoom(1)
+}
+
+function handleZoomOut() {
+  if (!modeler.value) return
+  modeler.value.get('zoomScroll').stepZoom(-1)
+}
+
+function handleFitView() {
+  if (!modeler.value) return
+  const canvas = modeler.value.get('canvas')
+  canvas.zoom('fit-viewport', 'auto')
+}
+
 // ==================== Templates ====================
 const templates = [
   {
@@ -497,6 +519,11 @@ function applyTemplate(tpl: (typeof templates)[0]) {
       <div class="bpmn-toolbar-right">
         <el-button size="small" @click="handleImportXml">导入 XML</el-button>
         <el-button size="small" @click="handleExportXml" :disabled="!currentXml">导出 XML</el-button>
+        <el-button-group class="zoom-group">
+          <el-button size="small" @click="handleZoomOut" :disabled="!currentXml" title="缩小">－</el-button>
+          <el-button size="small" @click="handleFitView" :disabled="!currentXml" title="适配画布">适配</el-button>
+          <el-button size="small" @click="handleZoomIn" :disabled="!currentXml" title="放大">＋</el-button>
+        </el-button-group>
         <el-button size="small" @click="handleAutoLayout" :disabled="!currentXml">自动布局</el-button>
         <el-button size="small" @click="handleReset">重置</el-button>
         <el-button size="small" type="primary" @click="handleSave" :loading="saving" :disabled="!currentXml">
@@ -820,6 +847,39 @@ function applyTemplate(tpl: (typeof templates)[0]) {
 
 .bpmn-canvas :deep(.djs-context-pad) {
   border-radius: 6px;
+}
+
+/* P2-5: 节点悬停 / 选中高亮 — 对标钉钉/飞书审批流设计器视觉反馈 */
+.bpmn-canvas :deep(.djs-element.djs-hover:not(.djs-connection)) {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: 1px;
+}
+
+.bpmn-canvas :deep(.djs-element.selected:not(.djs-connection)) {
+  outline: 2px dashed var(--el-color-primary);
+  outline-offset: 2px;
+}
+
+/* 连线悬停高亮 */
+.bpmn-canvas :deep(.djs-element.djs-hover.djs-connection .djs-visual > path) {
+  stroke: var(--el-color-primary);
+  stroke-width: 2px;
+}
+
+.bpmn-canvas :deep(.djs-element.selected.djs-connection .djs-visual > path) {
+  stroke: var(--el-color-primary);
+  stroke-width: 2px;
+}
+
+/* zoom 按钮组紧凑显示 */
+.zoom-group {
+  display: inline-flex;
+}
+
+.zoom-group :deep(.el-button) {
+  padding-left: 10px;
+  padding-right: 10px;
+  font-weight: 600;
 }
 
 .bpmn-loading-overlay {

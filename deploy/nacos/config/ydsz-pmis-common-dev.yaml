@@ -26,6 +26,12 @@ spring:
       validation-query: SELECT 1
       test-while-idle: true
       filters: stat,wall,slf4j
+      # H4.5 修复：dev 慢 SQL 阈值更敏感（100ms），便于尽早发现性能问题
+      filter:
+        stat:
+          enabled: true
+          slow-sql-millis: 100
+          log-slow-sql: true
   data:
     redis:
       host: ${REDIS_HOST}

@@ -419,7 +419,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
      * 加载流程图（含高亮当前节点）
      *
      * <p>嵌入式场景下流程图较大（包含 definition/nodes/skips），由前端按需通过
-     * GET /api/workflow/engine/instance/{id}/diagram 单独拉取，本接口不返回以保持轻量。
+     * GET /api/v1/workflow/engine/instance/{id}/diagram 单独拉取，本接口不返回以保持轻量。
      * 仅返回最简的节点信息用于高亮当前节点。
      */
     private Map<String, Object> loadDiagram(FlowInstanceDO instance) {

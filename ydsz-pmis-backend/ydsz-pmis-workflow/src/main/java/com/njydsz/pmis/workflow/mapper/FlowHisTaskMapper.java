@@ -110,4 +110,18 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
      * @return 已审批过的办理人 ID 列表（去重）
      */
     List<String> selectCompletedAssigneeIds(@Param("instanceId") Long instanceId);
+
+    /**
+     * P2-4: 按办理人分组聚合效率统计（SQL 层 GROUP BY，避免 Java 层全表加载）
+     *
+     * @param tenantId  租户 ID（可空）
+     * @param startTime finish_at 下界（可空）
+     * @param endTime   finish_at 上界（可空）
+     * @param limit     返回条数
+     * @return 每个办理人一行：assigneeId / assigneeName / completedCount / avgDurationMs / totalDurationMs
+     */
+    List<Map<String, Object>> selectApproverEfficiency(@Param("tenantId") Long tenantId,
+                                                        @Param("startTime") LocalDateTime startTime,
+                                                        @Param("endTime") LocalDateTime endTime,
+                                                        @Param("limit") int limit);
 }

@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 流程实例 Mapper
@@ -106,4 +107,62 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
      * @return 超期子流程实例列表
      */
     List<FlowInstanceDO> selectOverdueInstances(@Param("tenantId") Long tenantId);
+
+    /**
+     * P2-4: 按 flow_status 分组计数（监控概览用，避免多次 count 查询）
+     *
+     * @param tenantId 租户 ID（可空）
+     * @return 每种状态一行：flowStatus / cnt
+     */
+    List<Map<String, Object>> selectCountGroupByStatus(@Param("tenantId") Long tenantId);
+
+    /**
+     * P2-4: 统计今日新增/完成实例数
+     *
+     * <p>今日新增按 start_at &gt;= 今日 00:00:00 过滤；
+     * 今日完成按 end_at &gt;= 今日 00:00:00 过滤。
+     *
+     * @param tenantId 租户 ID（可空）
+     * @return 单行：todayNewCount / todayCompletedCount
+     */
+    Map<String, Object> selectTodayCount(@Param("tenantId") Long tenantId);
+
+    /**
+     * P2-4: 按流程编码分组统计实例数（监控分布图用）
+     *
+     * @param tenantId  租户 ID（可空）
+     * @param startTime start_at 下界（可空）
+     * @param endTime   start_at 上界（可空）
+     * @return 每个流程一行：flowCode / flowName / cnt
+     */
+    List<Map<String, Object>> selectFlowTypeDistribution(@Param("tenantId") Long tenantId,
+                                                          @Param("startTime") LocalDateTime startTime,
+                                                          @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * P2-4: 按日期分组统计新增/完成实例数（监控趋势图用）
+     *
+     * <p>新增按 start_at 日期分组；完成按 end_at 日期分组；分别聚合后做外连接。
+     * 实现采用两次 GROUP BY 后在 Java 层合并（避免 SQL FULL OUTER JOIN 复杂性）。
+     *
+     * @param tenantId  租户 ID（可空）
+     * @param startTime start_at 下界
+     * @param endTime   start_at 上界
+     * @return 每天一行：date / newCount
+     */
+    List<Map<String, Object>> selectDailyNewCount(@Param("tenantId") Long tenantId,
+                                                   @Param("startTime") LocalDateTime startTime,
+                                                   @Param("endTime") LocalDateTime endTime);
+
+    /**
+     * P2-4: 按日期分组统计完成实例数
+     *
+     * @param tenantId  租户 ID（可空）
+     * @param startTime end_at 下界
+     * @param endTime   end_at 上界
+     * @return 每天一行：date / completedCount
+     */
+    List<Map<String, Object>> selectDailyCompletedCount(@Param("tenantId") Long tenantId,
+                                                         @Param("startTime") LocalDateTime startTime,
+                                                         @Param("endTime") LocalDateTime endTime);
 }

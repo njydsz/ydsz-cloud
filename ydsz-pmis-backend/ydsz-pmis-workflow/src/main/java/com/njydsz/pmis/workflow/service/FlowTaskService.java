@@ -204,6 +204,14 @@ public interface FlowTaskService {
     long countOverdue(String assigneeId, Long tenantId);
 
     /**
+     * P2-4: 统计待办任务总数（PENDING + CLAIMED）
+     *
+     * @param tenantId 租户 ID（可空）
+     * @return 待办任务数量
+     */
+    long countPending(Long tenantId);
+
+    /**
      * P2-33: 已办多维筛选分页查询（真分页：SQL LIMIT/OFFSET）
      *
      * @param assigneeId   办理人 ID（可空）

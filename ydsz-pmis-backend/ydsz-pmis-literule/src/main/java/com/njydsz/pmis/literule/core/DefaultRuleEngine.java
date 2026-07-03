@@ -18,6 +18,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -119,12 +120,14 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             boolean hasBreakpoint = bpHook != null && bpHook.hasBreakpoint(rule.getCode());
             java.util.Map<String, Object> bpFactsSnapshot = null;
             if (hasBreakpoint) {
+                // 提取 final 局部变量，IDE 才能识别为非空
+                final BreakpointHook hook = Objects.requireNonNull(bpHook, "breakpointHook");
                 try {
                     bpFactsSnapshot = new java.util.LinkedHashMap<>(context.getFacts());
                     BreakpointHook.BreakpointContext beforeCtx = new BreakpointHook.BreakpointContext(
                             "BEFORE", context.getTraceId(), rule.getCode(), rule.getName(),
                             scenario, bpFactsSnapshot);
-                    BreakpointHook.BreakpointAction action = bpHook.onBeforeEvaluate(beforeCtx);
+                    BreakpointHook.BreakpointAction action = hook.onBeforeEvaluate(beforeCtx);
                     if (log.isDebugEnabled()) {
                         log.debug("[LiteRule] 规则 {} 命中断点 onBeforeEvaluate action={}", rule.getCode(), action);
                     }
@@ -192,6 +195,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
 
             // 断点调试（P2-3）：评估后回调，供 hook 查看结果与上下文快照
             if (hasBreakpoint) {
+                // 提取 final 局部变量，IDE 才能识别为非空
+                final BreakpointHook hook = Objects.requireNonNull(bpHook, "breakpointHook");
                 try {
                     BreakpointHook.BreakpointContext afterCtx = new BreakpointHook.BreakpointContext(
                             "AFTER", context.getTraceId(), rule.getCode(), rule.getName(),
@@ -201,7 +206,7 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
                     if (caughtException != null) {
                         afterCtx.setException(caughtException);
                     }
-                    bpHook.onAfterEvaluate(afterCtx);
+                    hook.onAfterEvaluate(afterCtx);
                 } catch (Exception ae) {
                     log.debug("[LiteRule] 断点 onAfterEvaluate 异常: {}", ae.getMessage());
                 }

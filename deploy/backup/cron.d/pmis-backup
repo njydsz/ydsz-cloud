@@ -28,4 +28,8 @@ PMIS_BACKUP_OSS_BUCKET=pmis-prod-backup
 0 4 1 * *   postgres  test -f ${PMIS_PGPASSWORD_FILE} && . ${PMIS_PGPASSWORD_FILE} && /data/backup/restore-test.sh >> /var/log/pmis/backup/restore_test.log 2>&1
 
 # 每日 09:00 检查昨日备份是否成功（.last_backup.json 状态校验）
-0 9 * * *   postgres  test -f ${PMIS_PGPASSWORD_FILE} && /data/backup/verify_last_backup.sh >> /var/log/pmis/backup/verify.log 2>&1
+0 9 * * *   postgres  test -f ${PMIS_PGPASSWORD_FILE} && . ${PMIS_PGPASSWORD_FILE} && /data/backup/verify_last_backup.sh >> /var/log/pmis/backup/verify.log 2>&1
+
+# H6.4 修复：每日 01:00 用 pgbadger 分析昨日 pg_log，输出 HTML 报告
+# 依赖：apt install pgbadger / httpd（或 nginx）
+1 1 * * *   postgres  pgbadger /var/log/postgresql/*.csv -o /var/www/pgbadger/index.html -j 4 --incremental --outdir /var/www/pgbadger/ 2>>/var/log/pmis/backup/pgbadger.log || true

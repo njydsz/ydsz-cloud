@@ -219,6 +219,18 @@ public class FlowTaskQueryServiceImpl {
         return taskMapper.countOverdue(assigneeId, tid);
     }
 
+    /**
+     * P2-4: 统计待办任务总数（PENDING + CLAIMED）
+     */
+    public long countPending(Long tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowTaskDO> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        wrapper.eq(FlowTaskDO::getTenantId, tid)
+                .in(FlowTaskDO::getTaskStatus, "PENDING", "CLAIMED");
+        return taskMapper.selectCount(wrapper);
+    }
+
     // ============================== 视图转换 ==============================
 
     /**

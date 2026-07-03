@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
@@ -51,6 +52,7 @@ public class InvoiceController {
     @Operation(summary = "创建发票申请")
     @PrePermission("finance:invoice:create")
     @OperationLog(module = "发票管理", action = "创建发票申请", bizType = "INVOICE", saveResult = true)
+    @Idempotent(key = "invoice:create", ttlSeconds = 10, message = "请勿重复提交发票申请")
     @PostMapping
     public Result<Long> create(@Valid @RequestBody InvoiceCreateDTO dto) {
         return Result.ok(service.create(dto));

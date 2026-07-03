@@ -21,7 +21,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/workflow/template")
+@RequestMapping("/api/v1/workflow/template")
 @RequiredArgsConstructor
 public class FlowTemplateController {
 

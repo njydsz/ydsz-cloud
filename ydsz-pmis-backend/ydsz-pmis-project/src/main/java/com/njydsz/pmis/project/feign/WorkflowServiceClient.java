@@ -24,26 +24,26 @@ public interface WorkflowServiceClient {
     /**
      * 启动流程实例
      *
-     * <p>对应自研引擎: POST /api/workflow/engine/instance/start
+     * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/start
      */
-    @PostMapping("/api/workflow/engine/instance/start")
+    @PostMapping("/api/v1/workflow/engine/instance/start")
     Result<String> startProcess(@RequestBody Map<String, Object> body);
 
     /**
      * 通过业务单据反查流程状态
      *
-     * <p>对应自研引擎: GET /api/workflow/engine/instance/byBusiness
+     * <p>对应自研引擎: GET /api/v1/workflow/engine/instance/byBusiness
      */
-    @GetMapping("/api/workflow/engine/instance/byBusiness")
+    @GetMapping("/api/v1/workflow/engine/instance/byBusiness")
     Result<Map<String, Object>> getByBusiness(@RequestParam("businessType") String businessType,
                                           @RequestParam("businessId") String businessId);
 
     /**
      * 终止流程实例
      *
-     * <p>对应自研引擎: POST /api/workflow/engine/instance/{id}/terminate
+     * <p>对应自研引擎: POST /api/v1/workflow/engine/instance/{id}/terminate
      */
-    @PostMapping("/api/workflow/engine/instance/{id}/terminate")
+    @PostMapping("/api/v1/workflow/engine/instance/{id}/terminate")
     Result<Void> terminate(@PathVariable("id") String processInstanceId,
                       @RequestParam(value = "reason", required = false) String reason);
 }
