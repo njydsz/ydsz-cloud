@@ -33,10 +33,16 @@ const emit = defineEmits<{
 }>()
 
 // ==================== State ====================
-const fApi = ref<any>(null)
+/** form-create 渲染器 API 实例（formData/validate/resetFields 等） */
+interface FormCreateApi {
+  formData: () => Record<string, unknown>
+  validate: () => Promise<void>
+  resetFields: () => void
+}
+const fApi = ref<FormCreateApi | null>(null)
 const loading = ref(false)
 const fieldPermissions = ref<Record<string, FieldPermission>>({})
-const formData = ref<Record<string, any>>({})
+const formData = ref<Record<string, unknown>>({})
 /** 后端返回的 formSchema（父组件未传 formSchema 时使用） */
 const backendSchema = ref<string>('')
 
@@ -52,11 +58,11 @@ const parsedRules = computed<Rule[]>(() => {
   const schemaSrc = effectiveSchema.value
   if (!schemaSrc) return []
   try {
-    let schema: any = schemaSrc
+    let schema: unknown = schemaSrc
     if (typeof schema === 'string') {
-      const parsed = JSON.parse(schema)
+      const parsed = JSON.parse(schema) as { rule?: unknown } | unknown[]
       // 兼容 { rule: [...], options: {...} } 或直接 [...]
-      schema = parsed.rule || parsed
+      schema = Array.isArray(parsed) ? parsed : (parsed.rule ?? parsed)
     }
     if (!Array.isArray(schema)) return []
     return schema as Rule[]
@@ -88,10 +94,14 @@ const renderRules = computed<Rule[]>(() => {
   const readonly = props.readonly
 
   return parsedRules.value
-    .map((rule: any) => {
+    .map((rule: Rule) => {
       // 深拷贝避免污染原始数据
-      const newRule = JSON.parse(JSON.stringify(rule))
-      const field = newRule.field || newRule.name
+      const newRule = JSON.parse(JSON.stringify(rule)) as Rule & {
+        hidden?: boolean
+        props?: { disabled?: boolean }
+      }
+      const ruleRecord = newRule as unknown as { field?: string; name?: string }
+      const field = ruleRecord.field || ruleRecord.name
 
       if (field && perms[field]) {
         const perm = perms[field]
@@ -112,7 +122,7 @@ const renderRules = computed<Rule[]>(() => {
 
       return newRule
     })
-    .filter((rule: any) => !rule.hidden)
+    .filter((rule: Rule & { hidden?: boolean }) => !rule.hidden)
 })
 
 /** 是否有可渲染的表单 */
@@ -155,7 +165,7 @@ async function loadFieldPermissions() {
 }
 
 /** 获取表单数据（供父组件调用） */
-function getFormData(): Record<string, any> {
+function getFormData(): Record<string, unknown> {
   if (fApi.value) {
     return fApi.value.formData() || formData.value
   }
@@ -198,7 +208,7 @@ defineExpose({
         v-model="formData"
         :rule="renderRules"
         :option="parsedOptions"
-        @api="(api: any) => (fApi = api)"
+        @api="(api: FormCreateApi) => (fApi = api)"
       />
     </div>
     <el-empty v-else description="暂无表单数据" :image-size="60" />

@@ -727,7 +727,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
 // ===========================================
 
 /** 流程实例状态映射 */
-const instanceStatusMap: Record<string, { labelKey: string; type: string }> = {
+const instanceStatusMap: Record<string, { labelKey: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }> = {
   RUNNING: { labelKey: 'workflow.instance.status.RUNNING', type: 'warning' },
   SUSPENDED: { labelKey: 'workflow.instance.status.SUSPENDED', type: 'info' },
   COMPLETED: { labelKey: 'workflow.instance.status.COMPLETED', type: 'success' },
@@ -736,7 +736,7 @@ const instanceStatusMap: Record<string, { labelKey: string; type: string }> = {
 }
 
 /** 任务状态映射 */
-const taskStatusMap: Record<string, { labelKey: string; type: string }> = {
+const taskStatusMap: Record<string, { labelKey: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }> = {
   PENDING: { labelKey: 'workflow.task.status.PENDING', type: 'warning' },
   CLAIMED: { labelKey: 'workflow.task.status.CLAIMED', type: 'primary' },
   COMPLETED: { labelKey: 'workflow.task.status.COMPLETED', type: 'success' },
@@ -755,12 +755,12 @@ export function instanceStatusLabel(s: string): string {
 }
 
 /** 流程实例状态类型 */
-export function instanceStatusType(s: string): string {
+export function instanceStatusType(s: string): 'primary' | 'success' | 'warning' | 'danger' | 'info' {
   return instanceStatusMap[s]?.type ?? 'info'
 }
 
 /** 任务状态标签与类型 */
-export function taskStatusLabel(s: string): { label: string; type: string } {
+export function taskStatusLabel(s: string): { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' } {
   const entry = taskStatusMap[s]
   return entry
     ? { label: i18n.global.t(entry.labelKey), type: entry.type }

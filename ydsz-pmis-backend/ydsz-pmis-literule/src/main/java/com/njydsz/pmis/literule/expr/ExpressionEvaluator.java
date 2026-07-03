@@ -2,6 +2,8 @@ package com.njydsz.pmis.literule.expr;
 
 import com.njydsz.pmis.literule.api.RuleContext;
 
+import java.util.List;
+
 /**
  * 表达式求值器接口
  *
@@ -63,5 +65,17 @@ public interface ExpressionEvaluator {
         return ExpressionValidationResult.fail(expression,
                 ExpressionValidationResult.ErrorType.UNKNOWN,
                 "表达式非法", elapsed);
+    }
+
+    /**
+     * 已注册函数定义列表（P1-7 函数市场）
+     *
+     * <p>用于向前端暴露自动补全 + 文档悬浮。
+     * 默认返回 {@link ExpressionFunctionDef#defaults()}。
+     *
+     * @since 1.5.0
+     */
+    default List<ExpressionFunctionDef> registeredFunctionDefs() {
+        return ExpressionFunctionDef.defaults();
     }
 }

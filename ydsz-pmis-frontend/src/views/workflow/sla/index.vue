@@ -53,8 +53,14 @@ async function loadNodeSlaConfig(defId: number) {
   try {
     const res = await getDefinition(defId)
     if (res.data?.code === 0 && res.data?.data) {
-      const data = res.data.data as any
-      const nodes: any[] = data.nodes || []
+      // FlowDefinitionDTO 暂未声明 nodes 字段，此处为运行期扩展
+      const data = res.data.data as unknown as { nodes?: Array<{
+        nodeCode: string
+        nodeName: string
+        nodeType: number
+        slaConfig?: string | null
+      }> }
+      const nodes = data.nodes || []
       nodeSlaRows.value = nodes.map((n) => {
         const cfg = parseSlaConfig(n.slaConfig)
         return {
@@ -104,7 +110,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 
 // ==================== SLA 策略映射 ====================
-const slaStrategyMap: Record<string, { label: string; type: string }> = {
+const slaStrategyMap: Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }> = {
   REMIND: { label: '提醒', type: 'warning' },
   ESCALATE: { label: '升级', type: 'danger' },
   AUTO_PASS: { label: '自动通过', type: 'success' },
@@ -197,8 +203,10 @@ function getOverdueDays(row: FlowTaskDTO): number {
 }
 
 /** 获取任务的 SLA 策略（从任务扩展字段解析，后端可能通过 ext 或其他字段返回） */
-function getSlaStrategy(row: any): string {
-  return row.strategy || row.slaStrategy || 'REMIND'
+function getSlaStrategy(row: FlowTaskDTO): SlaStrategy {
+  const v = (row as unknown as { strategy?: string; slaStrategy?: SlaStrategy }).strategy
+    || (row as unknown as { slaStrategy?: SlaStrategy }).slaStrategy
+  return (v as SlaStrategy) || 'REMIND'
 }
 
 onMounted(() => {
@@ -228,7 +236,7 @@ onMounted(() => {
       </template>
       <div class="strategy-list">
         <div v-for="opt in slaStrategyOptions" :key="opt.value" class="strategy-item">
-          <el-tag :type="(slaStrategyMap[opt.value]?.type as any) || 'info'" size="small">
+          <el-tag :type="slaStrategyMap[opt.value]?.type || 'info'" size="small">
             {{ opt.label }}
           </el-tag>
           <span class="strategy-desc">{{ opt.desc }}</span>
@@ -290,7 +298,7 @@ onMounted(() => {
           <template #default="{ row }">
             <el-tag
               v-if="row.action"
-              :type="(slaStrategyMap[row.action]?.type as any) || 'info'"
+              :type="slaStrategyMap[row.action]?.type || 'info'"
               size="small"
             >
               {{ slaStrategyMap[row.action]?.label || row.action }}
@@ -372,7 +380,7 @@ onMounted(() => {
         <el-table-column label="SLA 策略" width="100">
           <template #default="{ row }">
             <el-tag
-              :type="(slaStrategyMap[getSlaStrategy(row)]?.type as any) || 'info'"
+              :type="slaStrategyMap[getSlaStrategy(row)]?.type || 'info'"
               size="small"
             >
               {{ slaStrategyMap[getSlaStrategy(row)]?.label || getSlaStrategy(row) }}

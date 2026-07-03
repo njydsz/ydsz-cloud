@@ -33,6 +33,26 @@ public class RuleDefinition implements Serializable {
     /** 规则类别 */
     private String category;
 
+    /**
+     * 分类路径（P1-9 规则目录树）
+     *
+     * <p>多级分类用 {@code /} 分隔，如 {@code "finance/credit/loan"}。前端左侧树按此字段构建。
+     * 兼容：category 保留作为一级分类，categoryPath 可空（空时按 category 显示）。
+     */
+    private String categoryPath;
+
+    /**
+     * 责任人（P1-9 规则目录树）
+     *
+     * <p>工号/用户名。Owner 在以下场景使用：
+     * <ul>
+     *   <li>规则异常告警通知（执行失败率突增、连续 N 次未命中）</li>
+     *   <li>AB Test 自动回滚后的通知</li>
+     *   <li>规则巡检/审核派单</li>
+     * </ul>
+     */
+    private String owner;
+
     /** 规则描述 */
     private String description;
 

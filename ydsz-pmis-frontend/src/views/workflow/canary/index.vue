@@ -69,7 +69,7 @@ const strategyOptions = [
   { label: '比例+白名单', value: 'PERCENTAGE_AND_WHITELIST' },
 ]
 
-const actionMap: Record<string, { label: string; type: string }> = {
+const actionMap: Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }> = {
   PUBLISH: { label: '启动灰度', type: 'primary' },
   ADJUST: { label: '调整比例', type: 'warning' },
   PROMOTE: { label: '全量发布', type: 'success' },
@@ -422,7 +422,7 @@ onMounted(() => loadDefinitions())
       <el-table v-loading="logLoading" :data="rolloutLogs" border stripe max-height="400">
         <el-table-column prop="action" label="操作类型" width="120">
           <template #default="{ row }">
-            <el-tag :type="(actionMap[row.action]?.type as any) || 'info'" size="small">
+            <el-tag :type="actionMap[row.action]?.type || 'info'" size="small">
               {{ actionMap[row.action]?.label || row.action }}
             </el-tag>
           </template>

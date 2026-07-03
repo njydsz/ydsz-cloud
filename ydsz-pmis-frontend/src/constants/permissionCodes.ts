@@ -321,6 +321,11 @@ export const PC = {
   WORKFLOW_VERSION_VIEW: 'workflow:version:view',
   WORKFLOW_VERSION_SWITCH: 'workflow:version:switch',
   WORKFLOW_VERSION_SIMULATE: 'workflow:version:simulate',
+
+  // P2-8: 历史数据归档管理
+  WORKFLOW_HISTORY_ARCHIVE_VIEW: 'workflow:history:archive:view',
+  WORKFLOW_HISTORY_ARCHIVE_TRIGGER: 'workflow:history:archive:trigger',
+  WORKFLOW_HISTORY_PURGE_TRIGGER: 'workflow:history:purge:trigger',
 } as const
 
 /** 权限码字面量联合类型（用于参数类型约束） */

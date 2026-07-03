@@ -18,6 +18,10 @@ export interface RuleDefinition {
   name: string
   /** 规则类别，如 BUDGET / RISK / EVM */
   category: string
+  /** 分类路径（P1-9 规则目录树），如 "finance/credit/loan" */
+  categoryPath?: string
+  /** 责任人（P1-9），工号/用户名 */
+  owner?: string
   /** 规则描述 */
   description?: string
   /** 条件表达式（Aviator），返回 boolean 决定是否触发 */
@@ -38,6 +42,26 @@ export interface RuleDefinition {
   scope?: string
   /** 版本号 */
   version: number
+}
+
+/**
+ * 规则目录树节点（P1-9）
+ */
+export interface CategoryNode {
+  /** 节点名称（最后一段，如 "credit"） */
+  name: string
+  /** 完整路径（如 "/finance/credit"） */
+  path: string
+  /** 节点深度（ROOT=0，一级=1） */
+  depth: number
+  /** 是否根节点（虚拟 ROOT） */
+  root: boolean
+  /** 当前节点及子节点下规则数 */
+  ruleCount: number
+  /** 责任人列表（去重） */
+  owners: string[]
+  /** 子节点 */
+  children: CategoryNode[]
 }
 
 /**
@@ -752,4 +776,80 @@ export const deleteChainGraph = (ruleCode: string) =>
   request<void>({
     url: `/execution/api/v1/rules/${ruleCode}/graph`,
     method: 'DELETE',
+  })
+
+// ==================== 函数市场（P1-7） ====================
+
+/** 表达式函数定义 */
+export interface ExpressionFunctionDef {
+  name: string
+  signature: string
+  description: string
+  sample: string
+  category: string
+  supportedEngines: string
+}
+
+/**
+ * 获取已注册表达式函数列表
+ * @param engine 引擎类型 aviator/qlexpress/all
+ */
+export const expressionFunctions = (engine: 'aviator' | 'qlexpress' | 'all' = 'all') =>
+  request<ExpressionFunctionDef[]>({
+    url: '/execution/api/v1/rules/expression-functions',
+    method: 'GET',
+    params: { engine },
+  })
+
+// ==================== 规则目录树 + 责任人（P1-9） ====================
+
+/**
+ * 获取规则目录树
+ */
+export const getCategoryTree = () =>
+  request<CategoryNode>({
+    url: '/execution/api/v1/rules/category-tree',
+    method: 'GET',
+  })
+
+/**
+ * 按分类路径前缀查询规则
+ * @param path 分类路径前缀（必传）
+ */
+export const listByCategoryPath = (path: string) =>
+  request<RuleDefinition[]>({
+    url: '/execution/api/v1/rules/by-category-path',
+    method: 'GET',
+    params: { path },
+  })
+
+/**
+ * 按 Owner 查询规则
+ * @param owner 责任人工号
+ */
+export const listByOwner = (owner: string) =>
+  request<RuleDefinition[]>({
+    url: '/execution/api/v1/rules/by-owner',
+    method: 'GET',
+    params: { owner },
+  })
+
+/**
+ * 设置规则责任人
+ */
+export const setRuleOwner = (ruleCode: string, owner: string) =>
+  request<void>({
+    url: `/execution/api/v1/rules/${ruleCode}/owner`,
+    method: 'PUT',
+    params: { owner },
+  })
+
+/**
+ * 设置规则分类路径
+ */
+export const setRuleCategoryPath = (ruleCode: string, path: string) =>
+  request<void>({
+    url: `/execution/api/v1/rules/${ruleCode}/category-path`,
+    method: 'PUT',
+    params: { path },
   })

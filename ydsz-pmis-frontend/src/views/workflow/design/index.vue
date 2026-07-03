@@ -177,8 +177,8 @@ async function doSimulate() {
   try {
     const res = await simulateFlow(simulateForm.flowCode, variables)
     simulateResult.value = res.data?.data ?? null
-  } catch (e: any) {
-    ElMessage.error('模拟运行失败：' + (e?.message ?? '未知错误'))
+  } catch (e) {
+    ElMessage.error('模拟运行失败：' + ((e as Error)?.message ?? '未知错误'))
   } finally {
     simulating.value = false
   }

@@ -100,6 +100,8 @@ public class RuleConfigProviderImpl implements RuleConfigProvider {
                 .code(DO.getRuleCode())
                 .name(DO.getRuleName())
                 .category(DO.getCategory())
+                .categoryPath(DO.getCategoryPath())
+                .owner(DO.getOwner())
                 .description(DO.getDescription())
                 .conditionExpression(DO.getConditionExpression())
                 .severityExpression(DO.getSeverityExpression())
@@ -129,6 +131,8 @@ public class RuleConfigProviderImpl implements RuleConfigProvider {
         DO.setRuleCode(def.getCode());
         DO.setRuleName(def.getName());
         DO.setCategory(def.getCategory());
+        DO.setCategoryPath(def.getCategoryPath());
+        DO.setOwner(def.getOwner());
         DO.setDescription(def.getDescription());
         DO.setConditionExpression(def.getConditionExpression());
         DO.setSeverityExpression(def.getSeverityExpression());

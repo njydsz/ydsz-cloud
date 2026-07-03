@@ -690,7 +690,7 @@ onMounted(() => {
           </el-tag>
           <el-tag
             v-else
-            :type="(taskStatusLabel(row.taskStatus).type as any)"
+            :type="taskStatusLabel(row.taskStatus).type"
             size="small"
           >
             {{ taskStatusLabel(row.taskStatus).label }}

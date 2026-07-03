@@ -38,6 +38,7 @@ import FlowDiagramReplay from '../components/FlowDiagramReplay.vue'
 import FormRenderer from '../components/FormRenderer.vue'
 import UserPicker from '@/components/common/UserPicker.vue'
 import TaskCommentThread from '../components/TaskCommentThread.vue'
+import type { UserVO } from '@/api/system/user/types'
 
 const route = useRoute()
 const { t } = useI18n()
@@ -107,13 +108,22 @@ function openOp(type: typeof opType.value) {
 }
 
 // P1-5: 转办用户选择回调
-function onTransferUserPicked(user: any) {
+function onTransferUserPicked(user: UserVO | UserVO[] | null) {
+  if (Array.isArray(user)) {
+    // 多选场景不应出现在转办，取第一个
+    const u = user[0]
+    if (u) {
+      opForm.targetUserId = u.id
+      opForm.targetUserName = u.realName || u.username || ''
+    } else {
+      opForm.targetUserId = undefined
+      opForm.targetUserName = ''
+    }
+    return
+  }
   if (user && typeof user === 'object') {
     opForm.targetUserId = user.id
-    opForm.targetUserName = user.name || user.nickname || ''
-  } else if (typeof user === 'number') {
-    opForm.targetUserId = user
-    opForm.targetUserName = ''
+    opForm.targetUserName = user.realName || user.username || ''
   } else {
     opForm.targetUserId = undefined
     opForm.targetUserName = ''
@@ -175,7 +185,7 @@ async function submitOp() {
   }
 }
 
-const statusMap = computed<Record<string, { label: string; type: string }>>(() => ({
+const statusMap = computed<Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }>>(() => ({
   RUNNING: { label: t('workflow.instance.status.RUNNING'), type: 'warning' },
   SUSPENDED: { label: t('workflow.instance.status.SUSPENDED'), type: 'info' },
   COMPLETED: { label: t('workflow.instance.status.COMPLETED'), type: 'success' },
@@ -234,7 +244,7 @@ watch(() => route.query.id, () => loadAll())
           <div class="summary-cell">
             <div class="cell-label">{{ t('workflow.instance.summary.status') }}</div>
             <div class="cell-value">
-              <el-tag :type="(statusMap[instance.status]?.type as any) || 'info'" size="small">
+              <el-tag :type="statusMap[instance.status]?.type || 'info'" size="small">
                 {{ statusMap[instance.status]?.label || instance.status }}
               </el-tag>
             </div>
@@ -355,7 +365,7 @@ watch(() => route.query.id, () => loadAll())
           <UserPicker
             :model-value="opForm.targetUserId"
             placeholder="搜索并选择转办人"
-            @change="(_v: any, user: any) => onTransferUserPicked(user)"
+            @change="(_v, user) => onTransferUserPicked(user)"
           />
         </el-form-item>
         <el-form-item :label="t('workflow.instance.opForm.rejectNode')" v-if="opType === 'reject'">

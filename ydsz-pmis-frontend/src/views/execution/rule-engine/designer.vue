@@ -202,18 +202,22 @@
         </el-form-item>
         <template v-if="editingNode.chainType === 'FOR'">
           <el-form-item label="迭代集合">
-            <el-input v-model="getMetadata('iterableExpression')" placeholder="如 items" @change="markDirty" />
+            <el-input :model-value="getMetadata('iterableExpression')" placeholder="如 items"
+              @update:model-value="(v: string) => setMetadata('iterableExpression', v)" @change="markDirty" />
           </el-form-item>
           <el-form-item label="迭代变量">
-            <el-input v-model="getMetadata('iterationVar')" placeholder="如 item" @change="markDirty" />
+            <el-input :model-value="getMetadata('iterationVar')" placeholder="如 item"
+              @update:model-value="(v: string) => setMetadata('iterationVar', v)" @change="markDirty" />
           </el-form-item>
         </template>
         <template v-if="editingNode.chainType === 'WHILE'">
           <el-form-item label="循环条件">
-            <el-input v-model="getMetadata('whileCondition')" placeholder="如 count < 10" @change="markDirty" />
+            <el-input :model-value="getMetadata('whileCondition')" placeholder="如 count < 10"
+              @update:model-value="(v: string) => setMetadata('whileCondition', v)" @change="markDirty" />
           </el-form-item>
           <el-form-item label="最大迭代">
-            <el-input-number v-model="getMetadata('maxIterations')" :min="1" :max="10000" @change="markDirty" />
+            <el-input-number :model-value="getMetadata('maxIterations')" :min="1" :max="10000"
+              @update:model-value="(v: number) => setMetadata('maxIterations', v)" @change="markDirty" />
           </el-form-item>
         </template>
       </el-form>
@@ -537,6 +541,11 @@ function getMetadata(key: string): any {
   if (!editingNode.value) return ''
   if (!editingNode.value.metadata) editingNode.value.metadata = {}
   return editingNode.value.metadata[key] ?? ''
+}
+function setMetadata(key: string, value: any) {
+  if (!editingNode.value) return
+  if (!editingNode.value.metadata) editingNode.value.metadata = {}
+  editingNode.value.metadata[key] = value
 }
 function edgePath(edge: ChainEdgeDTO): string {
   const source = graph.value.nodes.find(n => n.nodeId === edge.sourceNodeId)

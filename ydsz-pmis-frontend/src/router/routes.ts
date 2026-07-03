@@ -299,6 +299,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/execution/rule-engine/traces.vue'),
         meta: { title: 'rule-engine.traces', icon: 'DataLine', activeMenu: '/execution/rule-engine', hidden: true },
       },
+      {
+        path: 'rule-engine/decision-table/:ruleCode',
+        name: 'RuleEngineDecisionTable',
+        component: () => import('@/views/execution/rule-engine/decision-table-editor.vue'),
+        meta: { title: 'rule-engine.decisionTable', icon: 'Grid', activeMenu: '/execution/rule-engine', hidden: true },
+      },
     ],
   },
   {
@@ -512,6 +518,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         name: 'WorkflowCanary',
         component: () => import('@/views/workflow/canary/index.vue'),
         meta: { title: 'route.workflowCanary', icon: 'Promotion', keepAlive: true, permCode: PC.WORKFLOW_CANARY_VIEW },
+      },
+      {
+        path: 'history',
+        name: 'WorkflowHistory',
+        component: () => import('@/views/workflow/history/index.vue'),
+        meta: { title: 'route.workflowHistory', icon: 'Files', keepAlive: true, permCode: PC.WORKFLOW_HISTORY_ARCHIVE_VIEW },
       },
     ],
   },

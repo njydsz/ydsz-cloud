@@ -232,6 +232,7 @@ export default {
     workflowDelegateAuth: '委托授权',
     workflowSla: 'SLA 管理',
     workflowCanary: '灰度发布',
+    workflowHistory: '历史归档',
   },
   dashboard: {
     welcome: {

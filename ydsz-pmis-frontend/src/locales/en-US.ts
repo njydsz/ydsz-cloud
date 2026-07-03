@@ -230,6 +230,7 @@ export default {
     workflowDelegateAuth: 'Delegate Auth',
     workflowSla: 'SLA Management',
     workflowCanary: 'Canary Release',
+    workflowHistory: 'History Archive',
   },
   dashboard: {
     welcome: {

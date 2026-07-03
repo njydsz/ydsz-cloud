@@ -19,8 +19,10 @@
  *  7. 执行统计概览
  */
 import { ref, reactive, computed, onMounted, watch, nextTick, shallowRef } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { CircleCheck, CircleClose, Connection, Expand, Fold, User } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import * as ruleApi from '@/api/execution/rule-engine'
 import type {
@@ -35,6 +37,10 @@ import type {
   ABTestReport,
 } from '@/api/execution/rule-engine'
 import ExpressionEditor from '@/components/common/ExpressionEditor.vue'
+import RuleCategoryTreeSidebar from '@/components/common/RuleCategoryTreeSidebar.vue'
+
+// 路由实例（P0-1 画布编辑入口）
+const router = useRouter()
 
 // ==================== 严重度映射 ====================
 
@@ -210,12 +216,34 @@ const rules = ref<RuleDefinition[]>([])
 const categoryFilter = ref('')
 /** 关键字筛选（编码/名称） */
 const keyword = ref('')
+/** 目录树选中路径（P1-9） */
+const selectedCategoryPath = ref('')
+/** 目录树侧边栏显示状态（P1-9） */
+const sidebarVisible = ref(true)
+/** 目录树 ref（P1-9） */
+const sidebarRef = ref<InstanceType<typeof RuleCategoryTreeSidebar> | null>(null)
 
-/** 按类别/关键字过滤后的规则列表 */
+/** 树节点选中处理 */
+function onCategorySelect(path: string) {
+  selectedCategoryPath.value = path
+  // 切换分类时清空旧选择
+  selectedRuleCodes.value = []
+}
+
+/** 切换侧边栏显隐 */
+function toggleSidebar() {
+  sidebarVisible.value = !sidebarVisible.value
+}
+
+/** 按类别/关键字/分类路径过滤后的规则列表 */
 const filteredRules = computed(() => {
   let list = rules.value
   if (categoryFilter.value) {
     list = list.filter((r) => r.category === categoryFilter.value)
+  }
+  if (selectedCategoryPath.value) {
+    const prefix = selectedCategoryPath.value
+    list = list.filter((r) => (r.categoryPath || '').startsWith(prefix))
   }
   if (keyword.value.trim()) {
     const kw = keyword.value.trim().toLowerCase()
@@ -226,12 +254,27 @@ const filteredRules = computed(() => {
   return list
 })
 
+// ==================== P1-7 表达式函数市场 ====================
+/** 已注册表达式函数（用于 CodeMirror 自动补全 + 悬浮文档） */
+const expressionFunctionDefs = ref<ruleApi.ExpressionFunctionDef[]>([])
+
+async function fetchExpressionFunctions() {
+  try {
+    const res = await ruleApi.expressionFunctions('all')
+    if (res.code === 0) {
+      expressionFunctionDefs.value = res.data || []
+    }
+  } catch (e: any) {
+    console.warn('[ExpressionFunctions] 拉取失败:', e?.message)
+    expressionFunctionDefs.value = []
+  }
+}
+
 // ==================== P0-5 批量操作 ====================
 const selectedRuleCodes = ref<string[]>([])
 /** 批量改分类对话框 */
 const batchCategoryDialogVisible = ref(false)
 const batchCategoryValue = ref('')
-
 function onSelectionChange(selection: RuleDefinition[]) {
   selectedRuleCodes.value = selection.map((r) => r.code)
 }
@@ -366,6 +409,8 @@ const editForm = reactive<RuleDefinition>({
   code: '',
   name: '',
   category: '',
+  categoryPath: '',
+  owner: '',
   description: '',
   conditionExpression: '',
   severityExpression: '',
@@ -397,6 +442,8 @@ function resetEditForm() {
     code: '',
     name: '',
     category: '',
+    categoryPath: '',
+    owner: '',
     description: '',
     conditionExpression: '',
     severityExpression: '',
@@ -487,16 +534,27 @@ async function handleToggle(row: RuleDefinition, enabled: boolean) {
  * @param row 规则定义
  */
 async function handleDelete(row: RuleDefinition) {
-  await ElMessageBox.confirm(
-    `确认删除规则「${row.name}」(${row.code})？删除后不可恢复，建议使用停用代替。`,
-    '删除确认',
-    { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' },
-  )
-  // 后端暂未提供独立删除接口，此处通过停用 + 提示占位
-  // 若后端补充 DELETE 接口可替换为 ruleApi 调用
-  await ruleApi.toggleRule(row.code, false)
-  ElMessage.success('规则已停用（删除接口待后端补充）')
-  fetchRules()
+  try {
+    await ElMessageBox.confirm(
+      `确认删除规则「${row.name}」(${row.code})？\n删除为软删除（status=ARCHIVED），保留版本历史，可在数据库中恢复。`,
+      '删除确认',
+      { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' },
+    )
+  } catch {
+    return
+  }
+  // P0-4: 调用真实删除接口
+  try {
+    const res = await ruleApi.deleteRule(row.code)
+    if (res.code === 0) {
+      ElMessage.success(`规则「${row.name}」已删除`)
+      await fetchRules()
+    } else {
+      ElMessage.error(res.message || '删除失败')
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.message || '删除异常')
+  }
 }
 
 // ==================== Dry-run 仿真 ====================
@@ -885,6 +943,8 @@ onMounted(() => {
   fetchStats().then(() => {
     nextTick(() => initStatsChart())
   })
+  // P1-7 函数市场：异步加载函数列表供 CodeMirror 自动补全
+  fetchExpressionFunctions()
 })
 </script>
 
@@ -927,13 +987,26 @@ onMounted(() => {
       <div ref="statsChartRef" style="width:100%;min-height:300px"></div>
     </el-card>
 
-    <!-- 主卡片：工具栏 + 规则列表 -->
-    <el-card shadow="never" class="main-card">
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <el-button type="primary" @click="openCreate">
-            <el-icon><Plus /></el-icon>新建规则
-          </el-button>
+    <!-- 主体：左侧目录树 + 右侧规则列表（P1-9） -->
+    <div class="rule-engine-body">
+      <RuleCategoryTreeSidebar
+        v-if="sidebarVisible"
+        ref="sidebarRef"
+        v-model:selectedPath="selectedCategoryPath"
+        @select="onCategorySelect"
+      />
+
+      <div class="rule-engine-main">
+        <!-- 主卡片：工具栏 + 规则列表 -->
+        <el-card shadow="never" class="main-card">
+          <div class="toolbar">
+            <div class="toolbar-left">
+              <el-button :icon="sidebarVisible ? Fold : Expand" plain @click="toggleSidebar">
+                {{ sidebarVisible ? '收起目录' : '展开目录' }}
+              </el-button>
+              <el-button type="primary" @click="openCreate">
+                <el-icon><Plus /></el-icon>新建规则
+              </el-button>
           <el-button type="success" @click="openTemplateMarket">
             <el-icon><Files /></el-icon>从模板导入
           </el-button>
@@ -989,6 +1062,20 @@ onMounted(() => {
         <el-table-column label="类别" width="120">
           <template #default="{ row }">
             <el-tag effect="plain">{{ row.category }}</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="分类路径" width="220" show-overflow-tooltip>
+          <template #default="{ row }">
+            <span v-if="row.categoryPath" class="path-text">{{ row.categoryPath }}</span>
+            <span v-else class="path-empty">-</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="责任人" width="100">
+          <template #default="{ row }">
+            <el-tag v-if="row.owner" type="success" size="small" effect="plain">
+              <el-icon><User /></el-icon>{{ row.owner }}
+            </el-tag>
+            <span v-else class="path-empty">-</span>
           </template>
         </el-table-column>
         <el-table-column prop="priority" label="优先级" width="90" sortable />
@@ -1049,6 +1136,8 @@ onMounted(() => {
         </el-button-group>
       </div>
     </el-card>
+      </div><!-- /.rule-engine-main -->
+    </div><!-- /.rule-engine-body -->
 
     <!-- ==================== 规则编辑对话框 ==================== -->
     <el-dialog
@@ -1087,18 +1176,31 @@ onMounted(() => {
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="默认严重度" prop="defaultSeverity">
-              <el-select v-model="editForm.defaultSeverity" style="width: 100%">
-                <el-option
-                  v-for="opt in severityOptions"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :value="opt.value"
-                />
-              </el-select>
+            <el-form-item label="责任人">
+              <el-input v-model="editForm.owner" placeholder="如 zhangsan（工号/用户名）" />
             </el-form-item>
           </el-col>
         </el-row>
+        <el-form-item label="分类路径">
+          <el-input
+            v-model="editForm.categoryPath"
+            placeholder="多级分类用 / 分隔，如 finance/credit/loan"
+          />
+          <div style="font-size:11px;color:#909399;margin-top:4px">
+            用于左侧目录树导航；保存后第一段会同步到「类别」字段
+          </div>
+        </el-form-item>
+
+        <el-form-item label="默认严重度" prop="defaultSeverity">
+          <el-select v-model="editForm.defaultSeverity" style="width: 100%">
+            <el-option
+              v-for="opt in severityOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
+        </el-form-item>
 
         <el-form-item label="条件表达式" prop="conditionExpression">
           <div class="expr-block">
@@ -1132,6 +1234,7 @@ onMounted(() => {
             <ExpressionEditor
               v-model="editForm.severityExpression"
               :fields="availableFields"
+              :functions="expressionFunctionDefs"
               placeholder="如: budgetUsageRatio >= 0.95 ? 'RED' : 'YELLOW'"
               :validate-on-input="true"
               @validate="(v: boolean | null) => severityValid = v"
@@ -1250,6 +1353,35 @@ onMounted(() => {
       </el-table>
       <template #footer>
         <el-button @click="dryRunDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- ==================== P0-5 批量改分类对话框 ==================== -->
+    <el-dialog v-model="batchCategoryDialogVisible" title="批量修改分类" width="420px">
+      <el-form label-width="80px">
+        <el-form-item label="已选规则">
+          <el-tag type="info">{{ selectedRuleCodes.length }} 条</el-tag>
+        </el-form-item>
+        <el-form-item label="新分类" required>
+          <el-select
+            v-model="batchCategoryValue"
+            filterable
+            allow-create
+            placeholder="选择或输入新分类"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="opt in categoryOptions"
+              :key="opt"
+              :label="opt"
+              :value="opt"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="batchCategoryDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="confirmBatchCategory">确定</el-button>
       </template>
     </el-dialog>
 
@@ -1841,5 +1973,53 @@ onMounted(() => {
       }
     }
   }
+}
+
+// P0-5 批量操作工具栏样式
+.batch-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-top: 12px;
+  background: linear-gradient(135deg, #eff6ff 0%, #f0f9ff 100%);
+  border: 1px solid #bfdbfe;
+  border-radius: 6px;
+
+  .batch-info {
+    font-weight: 600;
+    color: $primary-color;
+  }
+}
+
+// P1-9 规则目录树 + 责任人
+.rule-engine-body {
+  display: flex;
+  gap: 0;
+  align-items: stretch;
+  min-height: 600px;
+  background: #fff;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.rule-engine-main {
+  flex: 1;
+  min-width: 0;
+  padding: 0 0 0 12px;
+}
+
+.path-text {
+  font-family: 'Courier New', Consolas, monospace;
+  font-size: 12px;
+  color: #606266;
+  background: #f4f4f5;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.path-empty {
+  color: #c0c4cc;
+  font-size: 12px;
 }
 </style>

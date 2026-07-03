@@ -35,6 +35,13 @@ import {
 } from 'echarts/components'
 import { CanvasRenderer } from 'echarts/renderers'
 
+/** ECharts tooltip formatter 的 axisPointer 模式参数类型（外部未导出，手动声明） */
+interface AxisTooltipParam {
+  name?: string
+  value?: number
+  dataIndex?: number
+}
+
 echarts.use([
   LineChart,
   BarChart,
@@ -152,7 +159,16 @@ async function loadOverview() {
       animateNumber('pendingTaskCount', data.pendingTaskCount)
       animateNumber('overdueTaskCount', data.overdueTaskCount)
       animateNumber('todayCompletedCount', data.todayCompletedCount)
+      // 轮询成功，重置失败计数与状态
+      pollFailCount = 0
+      if (pollStatus.value !== 'running') {
+        pollStatus.value = 'running'
+      }
     }
+  } catch (e) {
+    // 拦截器已弹错误提示，此处仅记录失败计数用于轮询退避
+    recordPollFailure()
+    console.warn('[WorkflowMonitor] loadOverview failed:', (e as Error).message)
   } finally {
     overviewLoading.value = false
   }
@@ -175,6 +191,8 @@ async function loadTrend() {
       trendData.value = res.data.data || []
       renderTrendChart()
     }
+  } catch (e) {
+    console.warn('[WorkflowMonitor] loadTrend failed:', (e as Error).message)
   } finally {
     trendLoading.value = false
   }
@@ -267,6 +285,8 @@ async function loadBottleneck() {
         .slice(0, 10)
       renderBottleneckChart()
     }
+  } catch (e) {
+    console.warn('[WorkflowMonitor] loadBottleneck failed:', (e as Error).message)
   } finally {
     bottleneckLoading.value = false
   }
@@ -282,9 +302,9 @@ function renderBottleneckChart() {
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
-      formatter: (params: any) => {
+      formatter: (params: AxisTooltipParam | AxisTooltipParam[]) => {
         const p = Array.isArray(params) ? params[0] : params
-        return `${p.name}<br/>平均耗时: ${formatDuration(p.value)}<br/>实例数: ${top[p.dataIndex]?.instanceCount || 0}`
+        return `${p?.name ?? ''}<br/>平均耗时: ${formatDuration(p?.value)}<br/>实例数: ${top[p?.dataIndex ?? -1]?.instanceCount || 0}`
       },
     },
     grid: { left: 120, right: 80, top: 10, bottom: 20 },
@@ -322,7 +342,7 @@ function renderBottleneckChart() {
         label: {
           show: true,
           position: 'right',
-          formatter: (p: any) => formatDuration(p.value),
+          formatter: (p: AxisTooltipParam) => formatDuration(p?.value),
           fontSize: 11,
         },
       },
@@ -346,6 +366,8 @@ async function loadApproverEfficiency() {
       approverData.value = res.data.data || []
       renderApproverChart()
     }
+  } catch (e) {
+    console.warn('[WorkflowMonitor] loadApproverEfficiency failed:', (e as Error).message)
   } finally {
     approverLoading.value = false
   }
@@ -361,11 +383,11 @@ function renderApproverChart() {
     tooltip: {
       trigger: 'axis',
       axisPointer: { type: 'shadow' },
-      formatter: (params: any) => {
+      formatter: (params: AxisTooltipParam | AxisTooltipParam[]) => {
         const p = Array.isArray(params) ? params[0] : params
-        const idx = data.length - 1 - (p.dataIndex || 0)
+        const idx = data.length - 1 - (p?.dataIndex || 0)
         const item = data[idx]
-        return `${item?.userName || p.name}<br/>平均处理时长: ${formatDuration(p.value)}<br/>完成数: ${item?.completedCount || 0}`
+        return `${item?.userName || p?.name || ''}<br/>平均处理时长: ${formatDuration(p?.value)}<br/>完成数: ${item?.completedCount || 0}`
       },
     },
     grid: { left: 120, right: 80, top: 10, bottom: 20 },
@@ -403,7 +425,7 @@ function renderApproverChart() {
         label: {
           show: true,
           position: 'right',
-          formatter: (p: any) => formatDuration(p.value),
+          formatter: (p: AxisTooltipParam) => formatDuration(p?.value),
           fontSize: 11,
         },
       },
@@ -432,6 +454,8 @@ async function loadAnomaly() {
       anomalyList.value = res.data.data?.list || []
       anomalyTotal.value = res.data.data?.total || 0
     }
+  } catch (e) {
+    console.warn('[WorkflowMonitor] loadAnomaly failed:', (e as Error).message)
   } finally {
     anomalyLoading.value = false
   }
@@ -444,10 +468,10 @@ const anomalyTypeMap: Record<string, { label: string; color: string }> = {
   REPEATED_REJECT: { label: '重复驳回', color: '#eb2f96' },
 }
 
-const warnLevelMap: Record<string, { label: string; type: string }> = {
+const warnLevelMap: Record<string, { label: string; type: 'primary' | 'success' | 'warning' | 'danger' | 'info' }> = {
   RED: { label: '严重', type: 'danger' },
   YELLOW: { label: '警告', type: 'warning' },
-  ORANGE: { label: '注意', type: '' },
+  ORANGE: { label: '注意', type: 'info' },
 }
 
 function goInstance(row: AnomalyInstanceDTO) {
@@ -521,6 +545,8 @@ async function loadDistribution() {
       distributionData.value = res.data.data || []
       renderDistributionChart()
     }
+  } catch (e) {
+    console.warn('[WorkflowMonitor] loadDistribution failed:', (e as Error).message)
   } finally {
     distributionLoading.value = false
   }
@@ -589,15 +615,52 @@ function formatDuration(ms?: number): string {
 }
 
 // ===========================================
-// 自动刷新
+// 自动刷新（含失败退避）
 // ===========================================
+// 轮询策略：默认 30s 间隔；连续失败时指数退避（最多 5min）；
+// 连续失败 5 次后停止轮询，避免后端不可用时持续打请求。
 let pollTimer: ReturnType<typeof setInterval> | null = null
+let pollFailCount = 0
+const POLL_MAX_FAIL = 5
+const POLL_BASE_INTERVAL = 30_000
+const POLL_MAX_INTERVAL = 5 * 60_000
+/** 轮询状态：running=正常 / backing-off=退避中 / stopped=已停止 */
+const pollStatus = ref<'running' | 'backing-off' | 'stopped'>('running')
+
+/** 记录轮询失败，达到阈值则停止轮询 */
+function recordPollFailure() {
+  pollFailCount++
+  if (pollFailCount >= POLL_MAX_FAIL) {
+    console.warn(
+      `[WorkflowMonitor] 轮询连续失败 ${pollFailCount} 次，停止自动刷新。请手动刷新页面恢复。`,
+    )
+    ElMessage.warning('监控数据自动刷新已停止（连续失败），请检查网络或后端服务后手动刷新')
+    stopPolling()
+    pollStatus.value = 'stopped'
+  } else {
+    // 指数退避：30s → 60s → 120s → 240s → 300s（上限）
+    const nextInterval = Math.min(
+      POLL_BASE_INTERVAL * Math.pow(2, pollFailCount),
+      POLL_MAX_INTERVAL,
+    )
+    console.warn(
+      `[WorkflowMonitor] 轮询失败 ${pollFailCount} 次，下次间隔 ${nextInterval / 1000}s`,
+    )
+    pollStatus.value = 'backing-off'
+    stopPolling()
+    pollTimer = setInterval(() => {
+      loadOverview()
+    }, nextInterval)
+  }
+}
 
 function startPolling() {
   stopPolling()
+  pollFailCount = 0
+  pollStatus.value = 'running'
   pollTimer = setInterval(() => {
     loadOverview()
-  }, 30_000)
+  }, POLL_BASE_INTERVAL)
 }
 
 function stopPolling() {
@@ -690,7 +753,27 @@ const statCards = [
         <h2>实时监控仪表盘</h2>
         <p class="page-header__sub">
           流程运行状态实时监控，数据每 30 秒自动刷新
-          <el-tag size="small" type="success" effect="plain" style="margin-left: 8px">自动刷新中</el-tag>
+          <el-tag
+            v-if="pollStatus === 'running'"
+            size="small"
+            type="success"
+            effect="plain"
+            style="margin-left: 8px"
+          >自动刷新中</el-tag>
+          <el-tag
+            v-else-if="pollStatus === 'backing-off'"
+            size="small"
+            type="warning"
+            effect="plain"
+            style="margin-left: 8px"
+          >刷新退避中</el-tag>
+          <el-tag
+            v-else
+            size="small"
+            type="danger"
+            effect="plain"
+            style="margin-left: 8px"
+          >已停止刷新</el-tag>
         </p>
       </div>
       <div class="page-header__right">
@@ -829,7 +912,7 @@ const statCards = [
         <el-table-column label="预警级别" width="100">
           <template #default="{ row }">
             <el-tag
-              :type="(warnLevelMap[row.warnLevel]?.type as any) || 'info'"
+              :type="warnLevelMap[row.warnLevel]?.type || 'info'"
               size="small"
             >
               {{ warnLevelMap[row.warnLevel]?.label || row.warnLevel }}

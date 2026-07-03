@@ -36,6 +36,11 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
     private final boolean sandboxEnabled;
 
     /**
+     * AST 级别表达式沙箱（P1-11，替代 P0 阶段的正则黑名单）
+     */
+    private final ExpressionSandbox sandbox = new ExpressionSandbox();
+
+    /**
      * 危险表达式模式（沙箱模式下阻断）
      *
      * <p>阻断以下危险模式：
@@ -107,8 +112,13 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
     /**
      * 沙箱表达式安全校验
      *
-     * <p>在沙箱模式下，检查表达式是否包含危险模式。
-     * 若包含危险模式，抛出 {@link SecurityException}。
+     * <p>P1-11：使用 {@link ExpressionSandbox}（AST 级别词法分析）替代 P0 的正则黑名单。
+     * 解析流程：
+     * <ol>
+     *   <li>剥离字符串字面量，避免误判</li>
+     *   <li>提取所有标识符 token</li>
+     *   <li>对链式包路径、危险类名、危险方法名做白名单/黑名单校验</li>
+     * </ol>
      *
      * @param expression 表达式文本
      * @throws SecurityException 表达式包含危险操作
@@ -117,8 +127,9 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
         if (!sandboxEnabled) {
             return;
         }
-        if (DANGEROUS_PATTERN.matcher(expression).find()) {
-            throw new SecurityException("表达式包含危险操作，已被沙箱拦截: " + expression);
+        ExpressionSandbox.SandboxCheckResult result = sandbox.check(expression);
+        if (!result.isPassed()) {
+            throw new SecurityException("表达式被沙箱拦截: " + result.violationSummary());
         }
     }
 

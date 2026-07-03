@@ -219,6 +219,92 @@ public class RuleAdminService {
     }
 
     /**
+     * 更新规则责任人（P1-9 规则目录树）
+     *
+     * <p>Owner 主要用于异常告警通知、AB Test 自动回滚通知、巡检派单。
+     * 操作不触发热刷新事件（仅元数据变更），但会写审计日志。
+     *
+     * @param ruleCode 规则编码
+     * @param owner    责任人（工号/用户名）
+     * @param operator 操作人
+     * @since 1.5.0
+     */
+    public void updateOwner(String ruleCode, String owner, String operator) {
+        if (ruleCode == null || ruleCode.isBlank()) {
+            throw new IllegalArgumentException("ruleCode 不能为空");
+        }
+        RuleDefinition existing = configProvider.findByCode(ruleCode);
+        if (existing == null) {
+            throw new IllegalArgumentException("规则不存在: " + ruleCode);
+        }
+        existing.setOwner(owner);
+        configProvider.save(existing, operator);
+        log.info("[LiteRule] 规则责任人更新: code={}, owner={}, operator={}", ruleCode, owner, operator);
+    }
+
+    /**
+     * 更新规则分类路径（P1-9 规则目录树）
+     *
+     * <p>categoryPath 用 {@code /} 分隔的多级分类。校验规则：
+     * <ul>
+     *   <li>不能为空字符串</li>
+     *   <li>段之间用 {@code /} 分隔，每段不能包含特殊字符</li>
+     *   <li>深度不超过 5 级</li>
+     * </ul>
+     * 操作不触发热刷新事件（仅元数据变更）。
+     *
+     * @param ruleCode 规则编码
+     * @param path     分类路径
+     * @param operator 操作人
+     * @since 1.5.0
+     */
+    public void updateCategoryPath(String ruleCode, String path, String operator) {
+        if (ruleCode == null || ruleCode.isBlank()) {
+            throw new IllegalArgumentException("ruleCode 不能为空");
+        }
+        validateCategoryPath(path);
+        RuleDefinition existing = configProvider.findByCode(ruleCode);
+        if (existing == null) {
+            throw new IllegalArgumentException("规则不存在: " + ruleCode);
+        }
+        existing.setCategoryPath(path);
+        // 一级分类同步到 category
+        if (path != null && !path.isBlank()) {
+            int slashIdx = path.indexOf('/');
+            existing.setCategory(slashIdx > 0 ? path.substring(0, slashIdx) : path);
+        }
+        configProvider.save(existing, operator);
+        log.info("[LiteRule] 规则分类路径更新: code={}, path={}, operator={}", ruleCode, path, operator);
+    }
+
+    /**
+     * 校验分类路径合法性
+     */
+    private void validateCategoryPath(String path) {
+        if (path == null || path.isBlank()) {
+            throw new IllegalArgumentException("分类路径不能为空");
+        }
+        if (path.length() > 512) {
+            throw new IllegalArgumentException("分类路径长度不能超过 512");
+        }
+        if (path.startsWith("/") || path.endsWith("/")) {
+            throw new IllegalArgumentException("分类路径不能以 / 开头或结尾: " + path);
+        }
+        if (path.contains("//")) {
+            throw new IllegalArgumentException("分类路径不能包含连续 / : " + path);
+        }
+        String[] segs = path.split("/");
+        if (segs.length > 5) {
+            throw new IllegalArgumentException("分类路径深度不能超过 5 级: " + path);
+        }
+        for (String s : segs) {
+            if (!s.matches("[\\w\\u4e00-\\u9fa5-]+")) {
+                throw new IllegalArgumentException("分类路径段包含非法字符: " + s);
+            }
+        }
+    }
+
+    /**
      * 查询规则版本历史
      *
      * @param ruleCode 规则编码

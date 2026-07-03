@@ -931,3 +931,92 @@ export function autoMapNodes(sourceDefinitionId: number, targetDefinitionId: num
   )
 }
 
+// ==================== P2-8: 历史数据归档管理 ====================
+//
+// 对应后端 FlowHistoryArchiveController，路径前缀 /workflow/history（/api/v1 由 VITE_API_PREFIX 注入）。
+// 运维场景：查看归档策略、手动触发归档、手动清理冷数据，避免每次都需修改 pmis_job 表或等待 cron。
+
+/** 归档配置（与后端 FlowHistoryProperties 字段对齐） */
+export interface FlowHistoryConfig {
+  archiveEnabled: boolean
+  retentionDays: number
+  batchSize: number
+  maxProcessMs: number
+  cronExpression: string
+  purgeEnabled: boolean
+  purgeDays: number
+}
+
+/** 归档执行结果摘要（archive 场景） */
+export interface FlowHistoryArchiveResult {
+  /** 是否成功 */
+  ok?: boolean
+  /** 候选实例总数 */
+  total?: number
+  /** 已归档实例数 */
+  archived?: number
+  /** 跳过实例数（任务未终态等原因） */
+  missing?: number
+  /** 异常实例数 */
+  errors?: number
+  /** 实际使用的归档阈值天数 */
+  days?: number
+  /** 耗时毫秒 */
+  costMs?: number
+  /** 错误信息（ok=false 时） */
+  error?: string
+}
+
+/** 清理执行结果摘要（purge 场景） */
+export interface FlowHistoryPurgeResult {
+  /** 是否成功 */
+  ok?: boolean
+  /** 实际使用的清理阈值天数 */
+  purgeDays?: number
+  /** 是否因 purgeEnabled=false 跳过 */
+  skipped?: boolean
+  /** 跳过原因 */
+  reason?: string
+  /** 已清理归档实例数 */
+  purgedInstances?: number
+  /** 已清理变量行数 */
+  purgedVariables?: number
+  /** 耗时毫秒 */
+  costMs?: number
+  /** 错误信息（ok=false 时） */
+  error?: string
+}
+
+/** 查询当前归档配置 */
+export function getHistoryConfig() {
+  return http.get<ApiResponse<FlowHistoryConfig>>('/workflow/history/config')
+}
+
+/**
+ * 手动触发归档
+ * @param params 可选覆盖配置（不传则使用 yml 默认值）
+ */
+export function triggerArchive(params?: {
+  retentionDays?: number
+  batchSize?: number
+  maxProcessMs?: number
+}) {
+  return http.post<ApiResponse<FlowHistoryArchiveResult>>(
+    '/workflow/history/archive',
+    undefined,
+    { params },
+  )
+}
+
+/**
+ * 手动触发清理（purge）
+ * @param purgeDays 清理阈值天数（不传则使用配置值）
+ */
+export function purgeHistory(purgeDays?: number) {
+  return http.post<ApiResponse<FlowHistoryPurgeResult>>(
+    '/workflow/history/purge',
+    undefined,
+    { params: { purgeDays } },
+  )
+}
+

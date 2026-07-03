@@ -20,11 +20,18 @@ import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.config.ABTestService;
 import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
+import com.njydsz.pmis.literule.expr.ExpressionFunctionDef;
 import com.njydsz.pmis.literule.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.orchestrator.RuleChainGraph;
 import com.njydsz.pmis.literule.orchestrator.RuleGraphValidator;
 import com.njydsz.pmis.literule.spi.RuleVersion;
 import com.njydsz.pmis.project.literule.RuleChainGraphService;
+import com.njydsz.pmis.project.literule.RuleDependencyService;
+import com.njydsz.pmis.project.literule.RuleCategoryTreeService;
+import com.njydsz.pmis.project.literule.ABTestAutoRollbackService;
+import com.njydsz.pmis.project.entity.RuleDependencyDO;
+import com.njydsz.pmis.project.entity.RuleABPolicyDO;
+import com.njydsz.pmis.project.entity.RuleABRollbackDO;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,6 +71,9 @@ public class RuleAdminController {
     private final DecisionTableEvalService decisionTableEvalService;
     private final ExpressionValidationService expressionValidationService;
     private final RuleChainGraphService ruleChainGraphService;
+    private final RuleDependencyService ruleDependencyService;
+    private final RuleCategoryTreeService ruleCategoryTreeService;
+    private final ABTestAutoRollbackService abTestAutoRollbackService;
 
     /**
      * 查询全部规则定义
@@ -1072,5 +1082,188 @@ public class RuleAdminController {
     @PostMapping("/{ruleCode}/graph/validate")
     public Result<List<RuleGraphValidator.GraphValidationIssue>> validateChainGraph(@RequestBody RuleChainGraph graph) {
         return Result.ok(RuleGraphValidator.validate(graph));
+    }
+
+    // ==================== 函数市场（P1-7） ====================
+
+    /**
+     * 获取已注册表达式函数列表
+     *
+     * <p>P1-7 函数市场：前端 CodeMirror 编辑器拉取此接口，渲染自动补全 + 悬浮文档。
+     * 当前默认返回 18 个内置函数（string/math/convert/datetime/logic/type 六类）。
+     *
+     * @param engine 引擎类型（aviator/qlexpress/all），默认 all
+     * @return 函数定义列表
+     */
+    @GetMapping("/expression-functions")
+    public Result<List<ExpressionFunctionDef>> expressionFunctions(
+            @RequestParam(value = "engine", defaultValue = "all") String engine) {
+        List<ExpressionFunctionDef> all = ExpressionFunctionDef.defaults();
+        List<ExpressionFunctionDef> filtered = all.stream()
+                .filter(f -> "all".equalsIgnoreCase(engine)
+                        || engine.equalsIgnoreCase(f.getSupportedEngines()))
+                .toList();
+        return Result.ok(filtered);
+    }
+
+    // ==================== 规则依赖（P1-8） ====================
+
+    /**
+     * 添加规则依赖
+     */
+    @PostMapping("/{ruleCode}/dependencies")
+    public Result<RuleDependencyDO> addDependency(
+            @PathVariable String ruleCode,
+            @RequestBody Map<String, Object> body,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        String dependsOn = (String) body.get("dependsOnRuleCode");
+        String depType = (String) body.getOrDefault("dependencyType", "EXECUTE");
+        Boolean cascade = (Boolean) body.getOrDefault("cascadeOnDisable", false);
+        String description = (String) body.get("description");
+        return Result.ok(ruleDependencyService.add(ruleCode, dependsOn, depType, cascade, description, operator));
+    }
+
+    /**
+     * 删除规则依赖
+     */
+    @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
+    public Result<Void> removeDependency(
+            @PathVariable String ruleCode,
+            @PathVariable String dependsOnRuleCode) {
+        ruleDependencyService.remove(ruleCode, dependsOnRuleCode);
+        return Result.ok();
+    }
+
+    /**
+     * 查询规则的依赖（正向：依赖了哪些）
+     */
+    @GetMapping("/{ruleCode}/dependencies")
+    public Result<List<RuleDependencyDO>> listDependencies(@PathVariable String ruleCode) {
+        return Result.ok(ruleDependencyService.listDependencies(ruleCode));
+    }
+
+    /**
+     * 查询被依赖（反向：被哪些规则依赖）
+     */
+    @GetMapping("/{ruleCode}/dependents")
+    public Result<List<RuleDependencyDO>> listDependents(@PathVariable String ruleCode) {
+        return Result.ok(ruleDependencyService.listDependents(ruleCode));
+    }
+
+    /**
+     * 查询级联禁用影响（disable ruleCode 时，需要级联禁用的规则列表）
+     */
+    @GetMapping("/{ruleCode}/cascading-disable")
+    public Result<List<String>> cascadingDisable(@PathVariable String ruleCode) {
+        return Result.ok(ruleDependencyService.cascadingDisable(ruleCode));
+    }
+
+    // ==================== 规则目录树 + 责任人（P1-9） ====================
+
+    /**
+     * 获取规则目录树
+     *
+     * <p>树根为虚拟 ROOT，children 为一级分类。叶子节点或中间节点都包含该路径下的规则数与 Owner 列表。
+     */
+    @GetMapping("/category-tree")
+    public Result<RuleCategoryTreeService.CategoryNode> categoryTree() {
+        return Result.ok(ruleCategoryTreeService.buildTree());
+    }
+
+    /**
+     * 按分类路径前缀查询规则
+     *
+     * @param path 分类路径前缀，例如 "finance" / "finance/credit"
+     */
+    @GetMapping("/by-category-path")
+    public Result<List<RuleDefinition>> listByCategoryPath(
+            @RequestParam(value = "path", required = false) String path) {
+        return Result.ok(ruleCategoryTreeService.listDefinitionsByCategoryPath(path));
+    }
+
+    /**
+     * 按 Owner 查询规则
+     */
+    @GetMapping("/by-owner")
+    public Result<List<RuleDefinition>> listByOwner(
+            @RequestParam(value = "owner") String owner) {
+        return Result.ok(ruleCategoryTreeService.listDefinitionsByOwner(owner));
+    }
+
+    /**
+     * 设置规则责任人
+     */
+    @PutMapping("/{ruleCode}/owner")
+    public Result<Void> setOwner(
+            @PathVariable String ruleCode,
+            @RequestParam(value = "owner") String owner,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        ruleAdminService.updateOwner(ruleCode, owner, operator);
+        return Result.ok();
+    }
+
+    /**
+     * 设置规则分类路径
+     */
+    @PutMapping("/{ruleCode}/category-path")
+    public Result<Void> setCategoryPath(
+            @PathVariable String ruleCode,
+            @RequestParam(value = "path") String path,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        ruleAdminService.updateCategoryPath(ruleCode, path, operator);
+        return Result.ok();
+    }
+
+    // ==================== AB Test 自动回滚策略（P1-10） ====================
+
+    /**
+     * 获取规则的 AB Test 自动回滚策略（无配置时返回默认策略）
+     */
+    @GetMapping("/{ruleCode}/ab-policy")
+    public Result<RuleABPolicyDO> getABPolicy(@PathVariable String ruleCode) {
+        RuleABPolicyDO policy = abTestAutoRollbackService.getPolicy(ruleCode);
+        return Result.ok(policy);
+    }
+
+    /**
+     * 更新规则的 AB Test 自动回滚策略
+     */
+    @PutMapping("/{ruleCode}/ab-policy")
+    public Result<Void> updateABPolicy(
+            @PathVariable String ruleCode,
+            @RequestBody RuleABPolicyDO policy,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        policy.setRuleCode(ruleCode);
+        abTestAutoRollbackService.savePolicy(policy, operator);
+        return Result.ok();
+    }
+
+    /**
+     * 查询规则的回滚历史
+     */
+    @GetMapping("/{ruleCode}/ab-rollbacks")
+    public Result<List<RuleABRollbackDO>> listRollbackHistory(@PathVariable String ruleCode) {
+        return Result.ok(abTestAutoRollbackService.listRollbackHistory(ruleCode));
+    }
+
+    /**
+     * 主动触发 AB Test 评估（人工立即检查）
+     */
+    @PostMapping("/{ruleCode}/ab-evaluate")
+    public Result<Boolean> evaluateAB(@PathVariable String ruleCode) {
+        return Result.ok(abTestAutoRollbackService.evaluateOne(ruleCode));
+    }
+
+    /**
+     * 人工回滚（Owner 主动请求 / 紧急操作）
+     *
+     * @param reason MANUAL / OWNER_REQUEST
+     */
+    @PostMapping("/{ruleCode}/ab-rollback")
+    public Result<RuleABRollbackDO> manualRollback(
+            @PathVariable String ruleCode,
+            @RequestParam(value = "reason", defaultValue = "MANUAL") String reason,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        return Result.ok(abTestAutoRollbackService.manualRollback(ruleCode, operator, reason));
     }
 }

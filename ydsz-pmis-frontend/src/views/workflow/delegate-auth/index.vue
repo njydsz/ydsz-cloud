@@ -24,6 +24,7 @@ import type {
   DelegateScopeType,
 } from '@/api/workflow/types'
 import UserPicker from '@/components/common/UserPicker.vue'
+import type { UserVO } from '@/api/system/user/types'
 
 // ==================== Tab 切换 ====================
 const activeTab = ref<'mine' | 'toMe' | 'delegateLog' | 'ownerLog'>('mine')
@@ -125,13 +126,21 @@ function openCreateDialog() {
 }
 
 // 代理人选择回调
-function onDelegateUserPicked(user: any) {
+function onDelegateUserPicked(user: UserVO | UserVO[] | null) {
+  if (Array.isArray(user)) {
+    const u = user[0]
+    if (u) {
+      createForm.delegateId = u.id
+      createForm.delegateName = u.realName || u.username || ''
+    } else {
+      createForm.delegateId = undefined
+      createForm.delegateName = ''
+    }
+    return
+  }
   if (user && typeof user === 'object') {
     createForm.delegateId = user.id
-    createForm.delegateName = user.name || user.nickname || ''
-  } else if (typeof user === 'number') {
-    createForm.delegateId = user
-    createForm.delegateName = ''
+    createForm.delegateName = user.realName || user.username || ''
   } else {
     createForm.delegateId = undefined
     createForm.delegateName = ''
@@ -376,7 +385,7 @@ onMounted(() => loadData())
           <UserPicker
             :model-value="createForm.delegateId"
             placeholder="搜索并选择代理人"
-            @change="(_v: any, user: any) => onDelegateUserPicked(user)"
+            @change="(_v, user) => onDelegateUserPicked(user)"
           />
         </el-form-item>
         <el-form-item label="授权范围" required>

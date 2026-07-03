@@ -77,7 +77,7 @@ onMounted(loadMy)
       <el-table-column prop="businessNo" :label="t('workflow.approval.columns.businessNo')" width="160" />
       <el-table-column :label="t('workflow.approval.columns.status')" width="100">
         <template #default="{ row }">
-          <el-tag :type="(instanceStatusType(row.status) as any)" size="small">
+          <el-tag :type="instanceStatusType(row.status)" size="small">
             {{ instanceStatusLabel(row.status) }}
           </el-tag>
         </template>

@@ -119,8 +119,10 @@ public class QLExpressExpressionEvaluator implements ExpressionEvaluator {
         }
         try {
             sandboxCheck(expression);
+            // QLExpress 3.x 没有公开 parseInstruction，改用 execute + 临时 context 探测语法
             ExpressRunner runner = new ExpressRunner(true, false);
-            runner.parseInstruction(expression);
+            IExpressContext<String, Object> probeCtx = new DefaultContext<>();
+            runner.execute(expression, probeCtx, Collections.emptyList(), false, false);
             return true;
         } catch (Exception e) {
             return false;
@@ -149,32 +151,17 @@ public class QLExpressExpressionEvaluator implements ExpressionEvaluator {
                     e.getMessage(), elapsed);
         }
 
-        // 3. 编译校验
+        // 3. 编译校验：QLExpress 3.x 没有 parseInstruction 公开方法，用 execute 配合临时 context 试运行
+        //    所有异常统一用通用 Exception 捕获，QLExpress 3.3.1 内部异常也是 RuntimeException 子类
         try {
             ExpressRunner runner = new ExpressRunner(true, false);
-            runner.parseInstruction(expression);
+            IExpressContext<String, Object> probeCtx = new DefaultContext<>();
+            runner.execute(expression, probeCtx, Collections.emptyList(), false, false);
         } catch (Exception e) {
             long elapsed = (System.nanoTime() - start) / 1_000_000L;
-            String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
-            int line = -1;
-            int column = -1;
-            // 尝试从 QLExpress 错误消息中解析行列号（QLExpress 消息格式包含 [line,column]）
-            java.util.regex.Matcher m = java.util.regex.Pattern
-                    .compile("\\[(\\d+),\\s*(\\d+)\\]").matcher(msg);
-            if (m.find()) {
-                line = Integer.parseInt(m.group(1));
-                column = Integer.parseInt(m.group(2));
-            }
-            return ExpressionValidationResult.builder()
-                    .valid(false)
-                    .errorType(ExpressionValidationResult.ErrorType.SYNTAX_ERROR)
-                    .errorMessage(msg)
-                    .errorLine(line)
-                    .errorColumn(column)
-                    .expression(expression)
-                    .parseTimeMs(elapsed)
-                    .referencedVariables(new java.util.ArrayList<>())
-                    .build();
+            return ExpressionValidationResult.fail(expression,
+                    ExpressionValidationResult.ErrorType.SYNTAX_ERROR,
+                    e.getMessage(), elapsed);
         }
 
         // 4. 校验通过，提取引用变量
@@ -184,11 +171,17 @@ public class QLExpressExpressionEvaluator implements ExpressionEvaluator {
     }
 
     /**
-     * 沙箱安全校验
+     * AST 级别表达式沙箱（P1-11，替代 P0 阶段的正则黑名单）
+     */
+    private final ExpressionSandbox sandbox = new ExpressionSandbox();
+
+    /**
+     * 沙箱安全校验（P1-11：AST 级别词法分析替代正则黑名单）
      */
     private void sandboxCheck(String expression) {
-        if (DANGEROUS_PATTERN.matcher(expression).find()) {
-            throw new SecurityException("表达式包含危险操作，已被沙箱拦截: " + expression);
+        ExpressionSandbox.SandboxCheckResult result = sandbox.check(expression);
+        if (!result.isPassed()) {
+            throw new SecurityException("表达式被沙箱拦截: " + result.violationSummary());
         }
     }
 
