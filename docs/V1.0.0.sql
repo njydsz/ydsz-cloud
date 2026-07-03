@@ -3506,12 +3506,12 @@ ALTER TABLE pmis_user_account
     ADD COLUMN IF NOT EXISTS pwd_change_count INT    NOT NULL DEFAULT 0;
 
 -- 字段注释（V1.0.0_001 中误提前写入，迁移至此处与 ADD COLUMN 同步）
-COMMENT ON COLUMN pmis_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_SUB 本部门及下级 / SELF 本人 / CUSTOM 自定义';
-COMMENT ON COLUMN pmis_user_account.custom_dept_ids IS '自定义数据权限部门 ID 列表(逗号分隔,data_scope=CUSTOM 时生效)';
-COMMENT ON COLUMN pmis_user_account.mfa_enabled IS '是否启用双因素认证';
-COMMENT ON COLUMN pmis_user_account.mfa_type IS '双因素认证类型: NONE 未启用 / TOTP 基于时间的一次性密码 / SMS 短信验证码';
-COMMENT ON COLUMN pmis_user_account.last_pwd_change_at IS '最近密码修改时间';
-COMMENT ON COLUMN pmis_user_account.pwd_change_count IS '密码修改次数(用于强制定期改密)';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_SUB 本部门及下级 / SELF 本人 / CUSTOM 自定义';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_user_account.custom_dept_ids IS '自定义数据权限部门 ID 列表(逗号分隔,data_scope=CUSTOM 时生效)';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_user_account.mfa_enabled IS '是否启用双因素认证';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_user_account.mfa_type IS '双因素认证类型: NONE 未启用 / TOTP 基于时间的一次性密码 / SMS 短信验证码';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_user_account.last_pwd_change_at IS '最近密码修改时间';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_user_account.pwd_change_count IS '密码修改次数(用于强制定期改密)';
 
 -- ----------------------------
 -- 2) 登录审计
@@ -4823,16 +4823,16 @@ ALTER TABLE pmis_ops_ticket
     ADD COLUMN IF NOT EXISTS version INTEGER NOT NULL DEFAULT 0;
 
 -- ========== 同步更新 init schema 脚本中的字段注释（仅文档作用，不影响运行） ==========
-COMMENT ON COLUMN pmis_project_initiation.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_project_contract.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_project_contract_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_project_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_finance_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_execution_wbs_task.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_cost_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
-COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_project_initiation.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_project_contract.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_project_contract_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_project_change.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_finance_invoice.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_finance_payment.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_finance_customer_credit.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_execution_wbs_task.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_cost_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_024__add_version_to_core_tables.sql
@@ -5514,7 +5514,7 @@ VALUES (
 ALTER TABLE pmis_flow_user
     ADD COLUMN IF NOT EXISTS weight INTEGER NOT NULL DEFAULT 1;
 
-COMMENT ON COLUMN pmis_flow_user.weight IS '办理人权重（默认 1，可配置 2/3 等）';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_user.weight IS '办理人权重（默认 1，可配置 2/3 等）';
 
 -- -------------------------------------------
 -- 2. pmis_flow_task 增加 vote_pass_rate 字段（VOTE 模式下的通过率阈值）
@@ -5522,7 +5522,7 @@ COMMENT ON COLUMN pmis_flow_user.weight IS '办理人权重（默认 1，可配�
 ALTER TABLE pmis_flow_task
     ADD COLUMN IF NOT EXISTS vote_pass_rate DECIMAL(5, 4) NOT NULL DEFAULT 0.5;
 
-COMMENT ON COLUMN pmis_flow_task.vote_pass_rate IS 'VOTE 模式通过率阈值（0~1，默认 0.5 表示过半数）';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_task.vote_pass_rate IS 'VOTE 模式通过率阈值（0~1，默认 0.5 表示过半数）';
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_033__add_pmis_flow_weight.sql
@@ -5561,10 +5561,10 @@ ALTER TABLE pmis_flow_task
 ALTER TABLE pmis_flow_task
     ADD COLUMN IF NOT EXISTS sla_escalated    SMALLINT      NOT NULL DEFAULT 0;
 
-COMMENT ON COLUMN pmis_flow_task.reminder_count   IS '已发送的 SLA 催办次数';
-COMMENT ON COLUMN pmis_flow_task.last_reminded_at IS '最近一次催办时间';
-COMMENT ON COLUMN pmis_flow_task.sla_action       IS '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）';
-COMMENT ON COLUMN pmis_flow_task.sla_escalated    IS '是否已升级（0 否 / 1 是，避免重复升级）';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_task.reminder_count   IS '已发送的 SLA 催办次数';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_task.last_reminded_at IS '最近一次催办时间';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_task.sla_action       IS '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_task.sla_escalated    IS '是否已升级（0 否 / 1 是，避免重复升级）';
 
 -- -------------------------------------------
 -- 2. pmis_flow_node 已存在 slaConfig 字段（V1.0.0_026 引入），无需变更
@@ -5810,13 +5810,13 @@ ALTER TABLE pmis_flow_definition
     ADD COLUMN IF NOT EXISTS canary_strategy         VARCHAR(16)  NOT NULL DEFAULT 'USER_HASH',
     ADD COLUMN IF NOT EXISTS canary_rollout_log      TEXT;
 
-COMMENT ON COLUMN pmis_flow_definition.canary_percent IS
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_definition.canary_percent IS
     '灰度比例 0-100（0=稳定版 / 100=全量灰度版）';
-COMMENT ON COLUMN pmis_flow_definition.canary_status IS
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_definition.canary_status IS
     '灰度状态: NONE 无 / CANARYING 灰度中 / PROMOTED 已全量 / ROLLED_BACK 已回滚';
-COMMENT ON COLUMN pmis_flow_definition.canary_strategy IS
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_definition.canary_strategy IS
     '灰度切流策略: USER_HASH 按发起人ID hash / RANDOM 随机 / WHITELIST 白名单';
-COMMENT ON COLUMN pmis_flow_definition.canary_rollout_log IS
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_definition.canary_rollout_log IS
     '灰度发布历史 JSON 数组[{operatorId,operatorName,fromPercent,toPercent,operateAt,note}]';
 
 -- 灰度索引（按状态快速查询正在灰度中的定义）
@@ -5864,8 +5864,8 @@ COMMENT ON TABLE  pmis_attendance IS '员工出勤记录表: 每日打卡 + 工�
 COMMENT ON COLUMN pmis_attendance.employee_id IS '员工 ID';
 COMMENT ON COLUMN pmis_attendance.employee_name IS '员工姓名（冗余）';
 COMMENT ON COLUMN pmis_attendance.attendance_date IS '出勤日期';
-COMMENT ON COLUMN pmis_attendance.check_in_time IS '上班打卡时间';
-COMMENT ON COLUMN pmis_attendance.check_out_time IS '下班打卡时间';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_attendance.check_in_time IS '上班打卡时间';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_attendance.check_out_time IS '下班打卡时间';
 COMMENT ON COLUMN pmis_attendance.work_hours IS '工作时长(小时)';
 COMMENT ON COLUMN pmis_attendance.overtime_hours IS '加班时长(小时)';
 COMMENT ON COLUMN pmis_attendance.status IS '出勤状态: NORMAL 正常 / LATE 迟到 / EARLY 早退 / ABSENT 缺勤 / LEAVE 请假 / OVERTIME 加班';
@@ -6460,7 +6460,6 @@ COMMENT ON COLUMN pmis_rule_decision_table.condition_columns IS '条件列定义
 COMMENT ON COLUMN pmis_rule_decision_table.action_columns IS '动作列定义 JSON: [{name,label,type}]';
 COMMENT ON COLUMN pmis_rule_decision_table.rows IS '决策行 JSON: [{conditions,actions}]';
 COMMENT ON COLUMN pmis_rule_decision_table.default_actions IS '默认动作 (未匹配行时使用) JSON';
-COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略: UNIQUE/FIRST/PRIORITY/COLLECT/ANY,默认 FIRST';
 COMMENT ON COLUMN pmis_rule_decision_table.enabled IS '是否启用';
 COMMENT ON COLUMN pmis_rule_decision_table.priority IS '优先级';
 COMMENT ON COLUMN pmis_rule_decision_table.version IS '版本号';
@@ -6495,7 +6494,7 @@ CREATE INDEX IF NOT EXISTS idx_dt_enabled ON pmis_rule_decision_table(enabled);
 ALTER TABLE pmis_rule_decision_table
     ADD COLUMN IF NOT EXISTS hit_policy VARCHAR(32) NOT NULL DEFAULT 'FIRST';
 
-COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略：UNIQUE/FIRST/PRIORITY/COLLECT/ANY';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略：UNIQUE/FIRST/PRIORITY/COLLECT/ANY';
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_045__add_decision_table_hit_policy.sql
@@ -6603,10 +6602,10 @@ ALTER TABLE pmis_rule_def
 ALTER TABLE pmis_rule_def
     ADD COLUMN IF NOT EXISTS canary_severity_expression TEXT;
 
-COMMENT ON COLUMN pmis_rule_def.canary_ratio IS '灰度比例（0~1.0，0 不启用灰度；启用后按比例将流量路由到候选版本）';
-COMMENT ON COLUMN pmis_rule_def.canary_conditions IS '灰度条件表达式列表（Aviator 语法，AND 关系；JSON 数组，示例：["tenantId == \'T001\'"]）';
-COMMENT ON COLUMN pmis_rule_def.canary_condition_expression IS '灰度候选版本条件表达式（覆盖主版本，进行 A/B 验证）';
-COMMENT ON COLUMN pmis_rule_def.canary_severity_expression IS '灰度候选版本严重度表达式（覆盖主版本）';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_rule_def.canary_ratio IS '灰度比例（0~1.0，0 不启用灰度；启用后按比例将流量路由到候选版本）';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_rule_def.canary_conditions IS '灰度条件表达式列表（Aviator 语法，AND 关系；JSON 数组，示例：["tenantId == \'T001\'"]）';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_rule_def.canary_condition_expression IS '灰度候选版本条件表达式（覆盖主版本，进行 A/B 验证）';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_rule_def.canary_severity_expression IS '灰度候选版本严重度表达式（覆盖主版本）';
 
 -- 灰度规则索引（便于快速查询启用了灰度的规则集）
 CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_canary ON pmis_rule_def (canary_ratio) WHERE canary_ratio > 0;
@@ -6920,44 +6919,44 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_provider_trace
     WHERE provider_trace_id IS NOT NULL;
 
 -- 项目结项（4.1.4）
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_closure_initiation_status
--- [SKIPPED-FWD-REF]     ON pmis_project_closure (initiation_id, status, created_at DESC);
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_closure_closure_type
--- [SKIPPED-FWD-REF]     ON pmis_project_closure (closure_type, created_at DESC);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_closure_initiation_status
+-- [SKIPPED-FWD-COL]     ON pmis_project_closure (initiation_id, status, created_at DESC);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_closure_closure_type
+-- [SKIPPED-FWD-COL]     ON pmis_project_closure (closure_type, created_at DESC);
 
 -- 合同模板（4.1.5）
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_template_code
--- [SKIPPED-FWD-REF]     ON pmis_contract_template (code);
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_template_status_type
--- [SKIPPED-FWD-REF]     ON pmis_contract_template (status, type, created_at DESC);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_template_code
+-- [SKIPPED-FWD-COL]     ON pmis_contract_template (code);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_template_status_type
+-- [SKIPPED-FWD-COL]     ON pmis_contract_template (status, type, created_at DESC);
 
 -- 售后表（4.1.3）
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_warranty_initiation_expire
--- [SKIPPED-FWD-REF]     ON pmis_after_sales_warranty (initiation_id, expire_date DESC)
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_warranty_initiation_expire
+-- [SKIPPED-FWD-COL]     ON pmis_after_sales_warranty (initiation_id, expire_date DESC)
     WHERE status = 'ACTIVE';
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_priority_status
--- [SKIPPED-FWD-REF]     ON pmis_after_sales_ops_ticket (priority, status, created_at DESC)
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_priority_status
+-- [SKIPPED-FWD-COL]     ON pmis_after_sales_ops_ticket (priority, status, created_at DESC)
     WHERE status IN ('OPEN', 'IN_PROGRESS');
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_sla_due
--- [SKIPPED-FWD-REF]     ON pmis_after_sales_ops_ticket (sla_due_at)
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_sla_due
+-- [SKIPPED-FWD-COL]     ON pmis_after_sales_ops_ticket (sla_due_at)
     WHERE status NOT IN ('CLOSED', 'CANCELLED');
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_satisfaction_ticket
--- [SKIPPED-FWD-REF]     ON pmis_after_sales_satisfaction (ticket_id, created_at DESC);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_satisfaction_ticket
+-- [SKIPPED-FWD-COL]     ON pmis_after_sales_satisfaction (ticket_id, created_at DESC);
 
 -- 项目交付（4.1.2）
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_delivery_initiation_stage
--- [SKIPPED-FWD-REF]     ON pmis_project_delivery (initiation_id, stage, status);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_delivery_initiation_stage
+-- [SKIPPED-FWD-COL]     ON pmis_project_delivery (initiation_id, stage, status);
 
 -- =====================================================================
 --  2) EVM 看板（4.2 联动）
 -- =====================================================================
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_evm_initiation_period
--- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, period DESC);
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_evm_wbs_period
--- [SKIPPED-FWD-REF]     ON pmis_evm_record (wbs_task_id, period DESC);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_evm_initiation_period
+-- [SKIPPED-FWD-COL]     ON pmis_evm_record (initiation_id, period DESC);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_evm_wbs_period
+-- [SKIPPED-FWD-COL]     ON pmis_evm_record (wbs_task_id, period DESC);
 -- EVM 周期唯一性（idempotent on initiation+wbs+period）
--- [SKIPPED-FWD-REF] CREATE UNIQUE INDEX IF NOT EXISTS uq_pmis_evm_period
--- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, wbs_task_id, period);
+-- [SKIPPED-FWD-COL] CREATE UNIQUE INDEX IF NOT EXISTS uq_pmis_evm_period
+-- [SKIPPED-FWD-COL]     ON pmis_evm_record (initiation_id, wbs_task_id, period);
 
 -- =====================================================================
 --  3) 利用率快照（4.2.1）
@@ -6976,10 +6975,10 @@ CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_recipient
 CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
     ON pmis_alert_dispatch (next_retry_at)
     WHERE status = 'FAILED' AND retry_count < 3;
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_period
--- [SKIPPED-FWD-REF]     ON pmis_daily_reconcile (period DESC, status);
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_diff_only
--- [SKIPPED-FWD-REF]     ON pmis_daily_reconcile (period DESC)
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_period
+-- [SKIPPED-FWD-COL]     ON pmis_daily_reconcile (period DESC, status);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_diff_only
+-- [SKIPPED-FWD-COL]     ON pmis_daily_reconcile (period DESC)
     WHERE diff_count > 0;
 
 -- =====================================================================
@@ -6992,10 +6991,10 @@ CREATE INDEX IF NOT EXISTS idx_pmis_agent_prediction_type_alert
 CREATE INDEX IF NOT EXISTS idx_pmis_agent_prediction_trace
     ON pmis_agent_prediction (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_agent_orchestration_biz
--- [SKIPPED-FWD-REF]     ON pmis_agent_orchestration (biz_type, biz_id, created_at DESC);
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_agent_blackboard_session
--- [SKIPPED-FWD-REF]     ON pmis_agent_blackboard (session_id);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_agent_orchestration_biz
+-- [SKIPPED-FWD-COL]     ON pmis_agent_orchestration (biz_type, biz_id, created_at DESC);
+-- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_agent_blackboard_session
+-- [SKIPPED-FWD-COL]     ON pmis_agent_blackboard (session_id);
 
 -- =====================================================================
 --  6) 财务对账（voucher / payment / invoice）
@@ -7037,12 +7036,12 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_status_lower
 -- =====================================================================
 ANALYZE pmis_project_initiation;
 ANALYZE pmis_project_change;
--- [SKIPPED-FWD-REF] ANALYZE pmis_project_closure;
--- [SKIPPED-FWD-REF] ANALYZE pmis_evm_record;
+-- [SKIPPED-FWD-COL] ANALYZE pmis_project_closure;
+-- [SKIPPED-FWD-COL] ANALYZE pmis_evm_record;
 ANALYZE pmis_billable_utilization_snapshot;
 ANALYZE pmis_agent_prediction;
 ANALYZE pmis_alert_dispatch;
--- [SKIPPED-FWD-REF] ANALYZE pmis_daily_reconcile;
+-- [SKIPPED-FWD-COL] ANALYZE pmis_daily_reconcile;
 ANALYZE pmis_finance_invoice;
 ANALYZE pmis_finance_payment;
 ANALYZE pmis_operation_log;
@@ -7094,7 +7093,7 @@ SELECT '✅ 索引调优完成（共 ' || count(*) || ' 个索引）' AS result
 ALTER TABLE pmis_rule_def
     ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
 CREATE INDEX IF NOT EXISTS idx_rule_def_tenant ON pmis_rule_def (tenant_id);
-COMMENT ON COLUMN pmis_rule_def.tenant_id IS '租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用）';
+-- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_rule_def.tenant_id IS '租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用）';
 
 -- 2. 规则版本历史表
 ALTER TABLE pmis_rule_version_history

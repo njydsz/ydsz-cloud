@@ -516,16 +516,65 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                 return True
         return False
 
+    # Track which columns currently exist on each table as we write.
+    # When we see CREATE TABLE x (...), add all listed cols.
+    # When we see ALTER TABLE x ADD COLUMN c ..., add c to the set.
+    # When we see COMMENT ON COLUMN x.c, check that c is in the set;
+    # if not, mark the line as SKIPPED-FWD-COL (a re-COMMENT may be
+    # emitted after the corresponding ALTER later in the file).
+    table_cols: dict[str, set[str]] = {}
+    pending_table_name: str | None = None
+    pending_table_depth: int = 0
+    pending_table_cols: list[str] = []
+
+    def _consume_create_table_cols(name: str, block_lines: list[str]) -> list[str]:
+        """Extract column names from a CREATE TABLE block (lines)."""
+        cols = []
+        # Concatenate into one text and walk parens.
+        block_text = ''.join(block_lines)
+        m = re.search(r'\(', block_text)
+        if not m:
+            return cols
+        depth = 0
+        i = m.end() - 1
+        while i < len(block_text):
+            ch = block_text[i]
+            if ch == '(':
+                depth += 1
+            elif ch == ')':
+                depth -= 1
+                if depth == 0:
+                    break
+            elif depth == 1 and ch == '\n':
+                line_start = i + 1
+                line_end = block_text.find('\n', line_start)
+                if line_end < 0:
+                    line_end = len(block_text)
+                line = block_text[line_start:line_end].strip()
+                if not line:
+                    i = line_end
+                    continue
+                if line.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK')):
+                    pass
+                else:
+                    cm = re.match(r'"?(\w+)"?', line)
+                    if cm:
+                        cols.append(cm.group(1).lower())
+            i += 1
+        return cols
+
+    # Pre-scan to extract table column maps. We use the same logic as
+    # the validator (which is applied to the merged text post-write).
+    # For real-time checks during the write loop, we update table_cols
+    # in-line.
+    skipped_fwd_col_count = 0
+
     for f in sql_files:
         out.write('\n')
         out.write('-- ====================================================================\n')
         out.write(f'-- >>>>>>>>>> START OF {f.name}\n')
         out.write('-- ====================================================================\n')
         out.write('\n')
-        # First pass: collect lines, mark the index of each line that
-        # needs to be commented out. A DDL that spans multiple lines
-        # (e.g. CREATE INDEX / ALTER TABLE) requires the previous line
-        # (the statement head) to also be marked.
         raw_lines = f.read_text(encoding='utf-8').splitlines(keepends=True)
         to_skip = set()
         for i, raw in enumerate(raw_lines):
@@ -541,14 +590,88 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                     ):
                         to_skip.add(i - 1)
         for i, raw in enumerate(raw_lines):
+            stripped = raw.strip()
+            # Maintain table_cols as we write so we can mark
+            # COMMENT ON COLUMN for a column that doesn't yet exist.
+            m_create = re.match(
+                r'^\s*CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+                raw, re.IGNORECASE,
+            )
+            if m_create:
+                pending_table_name = m_create.group(1)
+                pending_table_depth = raw.count('(') - raw.count(')')
+                pending_table_cols = []
+            elif pending_table_name is not None:
+                # accumulate columns from this line
+                if not stripped.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK')):
+                    cm = re.match(r'^\s*"?(\w+)"?', raw)
+                    if cm and not raw.lstrip().startswith(('--', ')')):
+                        pending_table_cols.append(cm.group(1).lower())
+                # update depth
+                pending_table_depth += raw.count('(')
+                pending_table_depth -= raw.count(')')
+                if pending_table_depth <= 0:
+                    table_cols.setdefault(pending_table_name, set()).update(pending_table_cols)
+                    pending_table_name = None
+                    pending_table_depth = 0
+                    pending_table_cols = []
+
+            m_alter = re.match(
+                r'^\s*ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+)\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\b',
+                raw, re.IGNORECASE,
+            )
+            if m_alter:
+                table_cols.setdefault(m_alter.group(1), set()).add(m_alter.group(2).lower())
+
+            # Also support multi-line ALTER TABLE ... ADD COLUMN (col in
+            # following lines). We only track the form where the column
+            # name is on the same line; the more advanced multi-line
+            # forms (rare) won't be tracked but the post-merge validator
+            # will catch them.
+            m_comment = re.match(
+                r'^\s*COMMENT\s+ON\s+COLUMN\s+(\w+)\.(\w+)\b',
+                raw, re.IGNORECASE,
+            )
+            if m_comment and i not in to_skip:
+                tbl, col = m_comment.group(1), m_comment.group(2).lower()
+                if tbl in table_cols and col not in table_cols[tbl]:
+                    to_skip.add(i)
+                    skipped_fwd_col_count += 1
+                    # Also skip continuation lines: SQL string literals
+                    # may span multiple lines (rare but used in some
+                    # Flyway scripts). The COMMENT statement ends at
+                    # the first `;` on a continuation line.
+                    j = i + 1
+                    while j < len(raw_lines):
+                        line_j = raw_lines[j]
+                        if line_j.rstrip().endswith(';'):
+                            to_skip.add(j)
+                            break
+                        if line_j.strip().startswith('--'):
+                            # empty comment-only line; include but stop
+                            to_skip.add(j)
+                            break
+                        to_skip.add(j)
+                        j += 1
+
+        # Replay the file with the augmented skip set.
+        for i, raw in enumerate(raw_lines):
             if i in to_skip and not raw.strip().startswith('--'):
-                out.write('-- [SKIPPED-FWD-REF] ' + raw)
+                if '[SKIPPED-FWD-REF]' not in raw:
+                    out.write('-- [SKIPPED-FWD-COL] ' + raw)
+                else:
+                    out.write(raw)
             else:
                 out.write(raw)
         out.write('\n')
         out.write('-- ====================================================================\n')
         out.write(f'-- >>>>>>>>>> END OF {f.name}\n')
         out.write('-- ====================================================================\n')
+
+    if skipped_fwd_col_count:
+        print(f'  [SKIPPED-FWD-COL] {skipped_fwd_col_count} COMMENT lines were skipped '
+              f'(column not yet ALTER TABLE ADD COLUMN at that offset). '
+              f'A later COMMENT will be applied after the column is added.')
 
     out.write('\n')
     out.write('-- ====================================================================\n')
@@ -609,7 +732,9 @@ ADDITIONS = {
         "COMMENT ON COLUMN pmis_rule_decision_table.action_columns IS '动作列定义 JSON: [{name,label,type}]';",
         "COMMENT ON COLUMN pmis_rule_decision_table.rows IS '决策行 JSON: [{conditions,actions}]';",
         "COMMENT ON COLUMN pmis_rule_decision_table.default_actions IS '默认动作 (未匹配行时使用) JSON';",
-        "COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略: UNIQUE/FIRST/PRIORITY/COLLECT/ANY,默认 FIRST';",
+        # hit_policy 不在此处加注释: 它在 V1.0.0_045 的 ALTER TABLE ADD COLUMN
+        # 中被引入,在此之前表上还不存在该列,在 V1.0.0_044 的 CREATE TABLE 后
+        # 立即执行 COMMENT 会触发 "字段不存在" 错误。
         "COMMENT ON COLUMN pmis_rule_decision_table.enabled IS '是否启用';",
         "COMMENT ON COLUMN pmis_rule_decision_table.priority IS '优先级';",
         "COMMENT ON COLUMN pmis_rule_decision_table.version IS '版本号';",
@@ -795,8 +920,12 @@ for m in _re.finditer(r'COMMENT\s+ON\s+TABLE\s+(\w+)\b', text, _re.IGNORECASE):
 # 7. No INSERT INTO <table> references a column that doesn't exist on the
 #    table. Such an INSERT will fail at execution time with
 #    "column <col> of relation <table> does not exist".
-# Build a map: table_name -> set(column_names)
-table_columns = {}
+# Build a map: table_name -> set(column_names).
+# IMPORTANT: A table may be re-CREATEd in a later script with IF NOT EXISTS
+# (which is a no-op at runtime if the table already exists), and the new
+# columns are then added via ALTER TABLE ADD COLUMN. So we UNION the
+# columns from every CREATE TABLE block AND every ALTER TABLE ADD COLUMN.
+table_columns: dict[str, set[str]] = {}
 for f in sql_files:
     ftxt = f.read_text(encoding='utf-8')
     # find each CREATE TABLE block
@@ -805,12 +934,10 @@ for f in sql_files:
         ftxt, _re.IGNORECASE,
     ):
         tname = m.group(1)
-        if tname in table_columns:
-            continue
         # walk parens to find column list
         depth = 0
         i = m.end() - 1
-        cols = set()
+        cols = table_columns.setdefault(tname, set())
         while i < len(ftxt):
             ch = ftxt[i]
             if ch == '(':
@@ -820,7 +947,6 @@ for f in sql_files:
                 if depth == 0:
                     break
             elif depth == 1 and ch == '\n':
-                # parse one line as a column def (skip CONSTRAINT/TABLE-level)
                 line_start = i + 1
                 line_end = ftxt.find('\n', line_start)
                 if line_end < 0:
@@ -830,25 +956,21 @@ for f in sql_files:
                     i = line_end
                     continue
                 if line.upper().startswith(('CONSTRAINT', 'PRIMARY KEY', 'FOREIGN KEY', 'UNIQUE', 'INDEX', 'CHECK')):
-                    pass  # table-level
+                    pass
                 else:
-                    # first word is the column name
                     cm = _re.match(r'"?(\w+)"?', line)
                     if cm:
                         cols.add(cm.group(1).lower())
             i += 1
-        table_columns[tname] = cols
     # also include supplement tables
 for m in _re.finditer(
     r'CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
     supplement_text, _re.IGNORECASE,
 ):
     tname = m.group(1)
-    if tname in table_columns:
-        continue
     depth = 0
     i = m.end() - 1
-    cols = set()
+    cols = table_columns.setdefault(tname, set())
     while i < len(supplement_text):
         ch = supplement_text[i]
         if ch == '(':
@@ -873,10 +995,46 @@ for m in _re.finditer(
                 if cm:
                     cols.add(cm.group(1).lower())
         i += 1
-    table_columns[tname] = cols
+
+# Now also union in columns added by ALTER TABLE ... ADD COLUMN. The
+# effective column set is CREATE TABLE cols UNION ALTER ADD cols (since
+# at runtime the ALTERs add the new columns to whatever the CREATE
+# defined). However, since `text` is the merged file and ALTERs come
+# after CREATE, we process them in offset order so the validation can
+# know "at this offset, has the column been added yet".
+# First build a chronologically ordered (offset, table, col) list of
+# additions.
+add_events: list[tuple[int, str, str]] = []
+for m in _re.finditer(
+    r'ALTER\s+TABLE\s+(?:ONLY\s+)?(?:IF\s+EXISTS\s+)?(\w+)\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)',
+    text, _re.IGNORECASE,
+):
+    add_events.append((m.start(), m.group(1), m.group(2).lower()))
+add_events.sort()
+
+# For each table, build the chronologically ordered "effective cols at offset O"
+# by simulating: start with cols from CREATE TABLE, then add ALTER events in order.
+table_create_first_offset: dict[str, int] = {}
+for m in _re.finditer(
+    r'CREATE\s+(?:OR\s+REPLACE\s+)?(?:UNLOGGED\s+)?TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(\w+)\s*\(',
+    text, _re.IGNORECASE,
+):
+    tname = m.group(1)
+    if tname not in table_create_first_offset:
+        table_create_first_offset[tname] = m.start()
+table_add_events: dict[str, list[tuple[int, str]]] = {}
+for off, tbl, col in add_events:
+    table_add_events.setdefault(tbl, []).append((off, col))
+
+def effective_cols_at(tbl: str, offset: int) -> set[str]:
+    """Return the set of column names that exist on tbl AT the given file offset."""
+    cols = set(table_columns.get(tbl, set()))
+    for off, col in table_add_events.get(tbl, []):
+        if off <= offset:
+            cols.add(col)
+    return cols
 
 # Now check all INSERT INTO <table> (col1, col2, ...) VALUES ...
-# The INSERT might span multiple lines, so we need to find a balanced paren.
 insert_re = _re.compile(r'INSERT\s+INTO\s+(\w+)\s*\(([^)]+)\)', _re.IGNORECASE)
 for m in insert_re.finditer(text):
     tname = m.group(1)
@@ -886,13 +1044,32 @@ for m in insert_re.finditer(text):
     if '[SKIPPED-FWD-REF]' in line:
         continue
     if tname not in all_known_tables:
-        # already reported above
         continue
     declared = {c.strip().strip('"').lower() for c in cols_str.split(',') if c.strip()}
-    actual = table_columns.get(tname, set())
+    actual = effective_cols_at(tname, m.start())
     for c in declared:
         if c not in actual:
             errors.append(f'  INSERT INTO {tname}: column {c!r} not in table definition')
+
+# 9. No COMMENT ON COLUMN x.y references a column y that does not exist
+#    on table x at the offset of the comment. We DO NOT report a hard
+#    error here -- instead, we mark the offending COMMENT line for
+#    skipping in the merged file (it will re-appear after the ALTER
+#    TABLE that actually adds the column, so the user-facing annotation
+#    is preserved).
+#    This handles historical cases like V1.0.0_001 leaving dangling
+#    COMMENT ON COLUMN for fields that V1.0.0_016 added later.
+_comment_to_skip: set[int] = set()
+for m in _re.finditer(r'COMMENT\s+ON\s+COLUMN\s+(\w+)\.(\w+)\b', text, _re.IGNORECASE):
+    tbl, col = m.group(1), m.group(2)
+    line_start = text.rfind('\n', 0, m.start()) + 1
+    line = text[line_start: text.find('\n', m.start())]
+    if '[SKIPPED-FWD-REF]' in line:
+        continue
+    if tbl not in all_known_tables:
+        continue
+    if col.lower() not in effective_cols_at(tbl, m.start()):
+        _comment_to_skip.add(line_start)
 
 # 8. No INSERT ... VALUES has ON CONFLICT clause in the middle of a
 #    multi-row VALUES block. PostgreSQL requires ON CONFLICT to appear
