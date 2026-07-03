@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.feign;
+package com.njydsz.pmis.userinfo.feign;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;

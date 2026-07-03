@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # Nacos 配置：ydsz-pmis-cronjob-uat
 # DataId  : ydsz-pmis-cronjob-uat.yaml
 # Group   : PMIS_GROUP_UAT
@@ -87,7 +87,7 @@ xxl:
     access-token: ${XXL_JOB_ACCESS_TOKEN}
 
 pmis:
-  scheduler:
+  cronjob:
     enabled: true
     reconcile-job-cron: "0 0 2 * * ?"
     evm-snapshot-cron: "0 0 1 * * ?"
@@ -145,4 +145,4 @@ logging:
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"
   file:
-    name: /var/log/pmis/scheduler
+    name: /var/log/pmis/cronjob

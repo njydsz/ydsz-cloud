@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.job;
+package com.njydsz.pmis.userinfo.job;
 
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.userinfo.dto.PasswordScanResultDTO;

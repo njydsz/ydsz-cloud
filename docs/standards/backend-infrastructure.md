@@ -1,6 +1,16 @@
-﻿# 后端基础设施使用手册
+<!--
+  ===========================================================================
+  文件名: backend-infrastructure.md
+  路径:   docs/standards/backend-infrastructure.md
+  作用:   PMIS 后端基础设施使用手册：R/异常/TraceId/JWT/权限/限流/日志 等公共组件
+  适用版本: ydsz-pmis 1.0.0-SNAPSHOT
+  对应模块: ydsz-pmis-common
+  ===========================================================================
+-->
 
-> 文档版本: V1.0 | 编制日期: 2026-06-30
+# 后端基础设施使用手册
+
+> 文档版本: V1.0 | 编制日期: 2026-06-30 | 最近更新: 2026-07-03
 > 适用版本: ydsz-pmis 1.0.0-SNAPSHOT
 
 ## 1. 总体架构
@@ -328,7 +338,7 @@ CommonConstants.DELETED            // 1
 
 ```bash
 mvn -pl ydsz-pmis-common test
-mvn -pl ydsz-pmis-iam -am test
+mvn -pl ydsz-pmis-userinfo -am test
 ```
 
 ## 15. 开发规范
@@ -386,7 +396,7 @@ public class UserController {
 | # | 模块 | 端口 | 职责 |
 |---|------|------|------|
 | 1 | ydsz-pmis-gateway | 9000 | API 网关（路由、鉴权透传、CORS） |
-| 2 | ydsz-pmis-iam | 9002 | 认证授权 + 用户/权限/部门/资源池（含 Bench，user + auth 合并，包名 com.njydsz.pmis.iam） |
+| 2 | ydsz-pmis-userinfo | 9002 | 用户信息中心 + 认证/用户/权限/部门/资源池（含 Bench，user + auth 合并，包名 com.njydsz.pmis.userinfo） |
 | 3 | ydsz-pmis-workflow | 9004 | 自研工作流引擎（审批流、门径评审、SLA） |
 | 4 | ydsz-pmis-project | 9005 | 商机/立项/合同/变更/执行/成本/财务/报表/驾驶舱（project + execution 合并，核心域，包名 com.njydsz.pmis.project） |
 | 5 | ydsz-pmis-agent | 9007 | AI 智能体（编排、风险预警、利润预测） |
@@ -415,3 +425,38 @@ public class UserController {
 - [x] 日志规范（logback-spring.xml）
 - [x] 公共常量（CommonConstants）
 - [x] 单元测试（112+ 用例）
+
+## 18. 常见问题（FAQ）
+
+| 问题 | 答案 |
+|------|------|
+| 如何在 Service 中获取当前登录用户？ | `SecurityContext.getUserId()` / `getUsername()` |
+| 业务异常如何抛出？ | `throw new BizException(BizErrorCode.XXX)` |
+| 如何对接口做幂等？ | Redis 存 `pmis:idem:{userId}:{key}` → result，TTL 24h |
+| 如何禁用某些接口的鉴权？ | `@PrePermission(requireLogin = false)`，并在网关白名单配置 |
+| 如何在测试中模拟用户？ | `SecurityContext.set(LoginUser.builder().userId(1L).build())` |
+| 如何查看 SQL 执行日志？ | `mybatis-plus.configuration.log-impl: org.apache.ibatis.logging.stdout.StdOutImpl`（仅 dev） |
+
+## 19. 性能调优建议
+
+| 现象 | 调优手段 |
+|------|----------|
+| 接口响应慢 | 开启慢 SQL 日志，定位全表扫描 |
+| CPU 飙高 | Arthas `dashboard` + `thread` 命令定位 |
+| Full GC 频繁 | 调整 G1 Region Size，检查大对象分配 |
+| 慢接口 | 集成 SkyWalking，定位分布式调用链瓶颈 |
+| 数据库连接耗尽 | 调整 Druid `max-active`、检查连接泄漏 |
+
+## 20. 相关文档
+
+- 接口规范：[`api-spec.md`](file:///d:/Code/ydsz/ydsz-pmis/docs/standards/api-spec.md)
+- 数据库规范：[`database-spec.md`](file:///d:/Code/ydsz/ydsz-pmis/docs/standards/database-spec.md)
+- API 文档：[`docs/api/README.md`](file:///d:/Code/ydsz/ydsz-pmis/docs/api/README.md)
+- 版本管理：[`docs/api/api-versioning.md`](file:///d:/Code/ydsz/ydsz-pmis/docs/api/api-versioning.md)
+
+## 21. 变更记录
+
+| 日期 | 版本 | 变更人 | 变更内容 |
+|------|------|--------|----------|
+| 2026-07-03 | 1.1 | 架构组 | 新增 §18 FAQ、§19 性能调优、§20 相关文档 |
+| 2026-06-30 | 1.0 | 架构组 | 初始版本 |

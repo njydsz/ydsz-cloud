@@ -8,7 +8,7 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
- * 身份认证管理服务启动类（合并 user + auth）
+ * 用户信息中心服务启动类（合并 user + auth）
  *
  * <p>合并后 auth 不再通过 Feign 调用 user 加载登录上下文，改为本地 Service 直接调用，
  * 降低登录链路延迟与故障点。

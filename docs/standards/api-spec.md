@@ -154,7 +154,7 @@ GET /api/v1/projects?page=1&size=20&sort=createdAt,desc
 | `0` | 成功 | 业务正常返回 | `Result.ok()` |
 | `1xxxx` | 通用错误 | 校验、限流、上传下载等横切关注点 | `@Valid` 失败、限流触发 |
 | `2xxxx` | 认证授权 | 登录态、Token、权限码、数据权限 | JWT 过期、缺少权限码 |
-| `3xxxx` | 用户/组织/人员 | IAM 模块专属 | 用户不存在、密码错误 |
+| `3xxxx` | 用户/组织/人员 | userinfo 模块专属 | 用户不存在、密码错误 |
 | `4xxxx` | 项目/合同/商机 | Project 模块专属 | 项目状态不允许操作 |
 | `5xxxx` | 财务/成本/收入/利润 | 财务域专属 | 成本超预算 |
 | `6xxxx` | 资源/工时/人员调度 | 资源池模块 | 资源冲突、Bench 闲置 |
@@ -297,3 +297,30 @@ public class ProjectCreateDTO {
 - 限流策略：令牌桶 + 滑动窗口（Redis INCR + EXPIRE）
 - 限流触发：返回 429 + `Retry-After` Header + `code=10301`
 - 详细规则配置见 [`deploy/sentinel/flow-rules.json`](file:///d:/Code/ydsz/ydsz-pmis/deploy/sentinel/flow-rules.json)
+
+## 9. 跨域（CORS）
+
+- 生产环境**禁止** `*` 通配
+- 网关统一处理 CORS，业务模块不重复配置
+- 白名单域名从 Nacos `pmis.cors.allowed-origins` 动态加载
+
+## 10. 请求/响应编码与压缩
+
+- 统一 UTF-8 编码
+- 请求体 > 1KB 启用 Gzip 压缩
+- 响应体 > 1KB 启用 Gzip 压缩（Nginx 层 `gzip on; gzip_min_length 1k;`）
+
+## 11. 接口联调与 Mock
+
+- 联调环境：`https://dev-api.pmis.example.com/api/v1`
+- 预发环境：`https://staging-api.pmis.example.com/api/v1`
+- 生产环境：`https://api.pmis.example.com/api/v1`
+- 本地 Mock：前端 [`VITE_USE_MOCK=true`](file:///d:/Code/ydsz/ydsz-pmis/ydsz-pmis-frontend/.env.example) 走本地 Mock 数据
+
+## 12. 变更记录
+
+| 日期 | 版本 | 变更人 | 变更内容 |
+|------|------|--------|----------|
+| 2026-07-03 | 1.1 | 架构组 | 错误码表新增 `10004/10202/10203`；增加 §3.3 抛出约定；补充 Idempotency-Key 描述 |
+| 2026-06-30 | 1.0 | 架构组 | 初始版本，10 段位错误码体系 |
+

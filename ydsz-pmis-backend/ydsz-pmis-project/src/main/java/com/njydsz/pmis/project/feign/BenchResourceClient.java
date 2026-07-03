@@ -20,7 +20,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-iam", fallbackFactory = BenchResourceClientFallback.class)
+@FeignClient(name = "ydsz-pmis-userinfo", fallbackFactory = BenchResourceClientFallback.class)
 public interface BenchResourceClient {
 
     /**

@@ -101,7 +101,7 @@
             </dependency>
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
-                <artifactId>ydsz-pmis-iam</artifactId>
+                <artifactId>ydsz-pmis-userinfo</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

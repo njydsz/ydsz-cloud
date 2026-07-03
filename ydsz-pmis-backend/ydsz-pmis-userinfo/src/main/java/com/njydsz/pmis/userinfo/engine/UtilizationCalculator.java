@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.engine;
+package com.njydsz.pmis.userinfo.engine;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;

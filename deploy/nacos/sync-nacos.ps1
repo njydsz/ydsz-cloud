@@ -1,4 +1,4 @@
-﻿# ============================================================
+# ============================================================
 # PMIS Nacos 配置统一同步脚本
 # 合并自: push-configs / push-to-nacos / fix-and-repush / fix-application-yml
 # ------------------------------------------------------------
@@ -50,7 +50,7 @@ $ConfigDir = Join-Path $ScriptDir "config"
 
 # ============================================================
 # 服务列表 (7 个微服务 - 服务合并重构后)
-#   user + auth             -> iam (9002)
+#   user + auth             -> userinfo (9002)
 #   file + config + audit
 #     + notification
 #     + message             -> system (9008)
@@ -58,7 +58,7 @@ $ConfigDir = Join-Path $ScriptDir "config"
 # ============================================================
 $services = @(
     "ydsz-pmis-gateway",
-    "ydsz-pmis-iam",
+    "ydsz-pmis-userinfo",
     "ydsz-pmis-system",
     "ydsz-pmis-workflow",
     "ydsz-pmis-project",

@@ -115,7 +115,7 @@ deploy/sql/
 ## 表命名规范
 
 - 前缀：`pmis_<业务域>_<实体>`，如 `pmis_project_initiation`、`pmis_finance_invoice`
-- 业务域缩写：dict / iam / project / execution / finance / evm / agent / audit / file / job / message / workflow / alert / rule / attendance
+- 业务域缩写：dict / userinfo / project / execution / finance / evm / agent / audit / file / job / message / workflow / alert / rule / attendance
 - 主键：统一 `BIGSERIAL`，命名 `id`
 - 通用字段：`tenant_id`、`created_by/at`、`updated_by/at`、`deleted`（逻辑删除，0=未删 1=已删）
 - 时间字段：默认 `CURRENT_TIMESTAMP`，类型 `TIMESTAMP`（不带时区，应用层统一 UTC+8）

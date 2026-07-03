@@ -1,3 +1,13 @@
+<!--
+  ===========================================================================
+  文件名: dengbao-2.0-3-level-checklist.md
+  路径:   docs/security/dengbao-2.0-3-level-checklist.md
+  作用:   PMIS 等保 2.0 三级安全合规清单（GB/T 22239-2019）
+  状态:   上线前 1 个月测评
+  关联:   encrypted-field-rollout.md  /  standards/code-quality.md
+  ===========================================================================
+-->
+
 # PMIS 等保 2.0 三级 安全合规清单
 
 > 适用范围：ydsz-pmis 生产环境  
@@ -41,7 +51,7 @@
 
 | 编号 | 要求 | 当前状态 | 实施位置 |
 |------|------|----------|----------|
-| 4.1.1 | 双因子认证 | ✅ | ydsz-pmis-iam TOTP |
+| 4.1.1 | 双因子认证 | ✅ | ydsz-pmis-userinfo TOTP |
 | 4.1.2 | 密码复杂度（8 位 + 大小写 + 数字 + 符号） | ✅ | AuthValidator |
 | 4.1.3 | 密码定期更换（90 天） | ✅ | UserServiceImpl |
 | 4.1.4 | 登录失败处理（5 次锁定 30 分钟） | ✅ | LoginAttemptService |

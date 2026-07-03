@@ -1,6 +1,20 @@
+<!--
+  ===========================================================================
+  文件名: api-versioning.md
+  路径:   docs/api/api-versioning.md
+  作用:   PMIS API 版本管理规范：URL Path Versioning、废弃策略、兼容性约束、迁移指南
+  适用:   所有 REST API 提供方（后端 Controller）与消费方（前端、第三方）
+  关联:   ../standards/api-spec.md#13-版本控制
+  ===========================================================================
+-->
+
 # API 版本管理规范
 
-## 1. 版本策略
+> 文档版本: V1.0 | 编制日期: 2026-07-01 | 最近更新: 2026-07-03
+> 适用: PMIS 全栈 API（14 模块）
+> 策略: URL Path Versioning（业界主流，便于网关路由）
+
+> 📌 本规范是 API 演进过程中的**契约守则**，所有破坏性变更必须遵循"先标记后下线"原则。
 
 YDSZ PMIS 采用 URL Path Versioning 策略，所有 API 以 `/api/v1/` 为前缀。
 
@@ -61,3 +75,73 @@ public Result<PageResult<ProjectVO>> listProjects(@RequestParam PageQuery query)
 2. **迁移指南** — 每个破坏性变更的替代方案
 3. **示例代码** — 前端/移动端/第三方集成的代码示例
 4. **过渡期安排** — 双版本并行时间表
+
+## 6. 迁移指南模板
+
+> 实际升级时复制此模板到 `docs/api/migration/v1-to-v2.md`
+
+```markdown
+# API v1 → v2 迁移指南
+
+## 升级时间表
+
+| 阶段 | 日期 | 内容 |
+|------|------|------|
+| 公告期 | YYYY-MM-DD | 发布迁移指南、邮件通知所有消费方 |
+| 双版本期 | YYYY-MM-DD | v1 + v2 并行，至少 6 个月 |
+| 废弃期 | YYYY-MM-DD | v1 接口添加 Deprecation: true 响应头 |
+| 下线期 | YYYY-MM-DD | v1 接口返回 410 Gone |
+
+## 破坏性变更清单
+
+| 接口 | 变更类型 | 替代方案 |
+|------|----------|----------|
+| GET /api/v1/project/list | 删除 | GET /api/v2/projects |
+| ... | ... | ... |
+
+## 自动化迁移脚本
+
+    # 批量替换前端 API 路径
+    find ydsz-pmis-frontend/src -name "*.ts" -exec sed -i 's|/api/v1/project|/api/v2/projects|g' {} \;
+
+## FAQ
+
+| 问题 | 答案 |
+|------|------|
+| v1 还能用多久？ | 发布新版本后至少 6 个月 |
+| 是否影响性能？ | 无影响，v1/v2 走相同服务实例 |
+| 如何回滚？ | 切回旧版镜像，URL 不变 |
+```
+
+> 上面的 `自动化迁移脚本` 段落使用 4 空格缩进避免 markdown 高亮错乱。
+
+## 7. 前端版本切换最佳实践
+
+```typescript
+// src/config/api-version.ts
+export const API_VERSION = 'v2' as const
+
+// src/api/project/index.ts
+import { API_VERSION } from '@/config/api-version'
+const BASE = `/api/${API_VERSION}/projects`
+```
+
+> 前端通过统一 `API_VERSION` 常量控制版本，**禁止** 在调用处硬编码 `/api/v1/`。
+
+## 8. 监控与告警
+
+- v1 接口访问量监控：每日汇总 Top 10 调用方
+- 访问量 < 1% 持续 1 个月 → 评估下线
+- 关键客户仍依赖 v1 → 主动通知 + 协助迁移
+
+## 9. 相关文档
+
+- 接口规范：[`../standards/api-spec.md`](../standards/api-spec.md)
+- API 总览：[`README.md`](README.md)
+
+## 10. 变更记录
+
+| 日期 | 版本 | 变更人 | 变更内容 |
+|------|------|--------|----------|
+| 2026-07-03 | 1.1 | 架构组 | 顶部 banner、新增 §6-§10 迁移模板、前端切换、监控、变更记录 |
+| 2026-07-01 | 1.0 | 架构组 | 初始版本 |

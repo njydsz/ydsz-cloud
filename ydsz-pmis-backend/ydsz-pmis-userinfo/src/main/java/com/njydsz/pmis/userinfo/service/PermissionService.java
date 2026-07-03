@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.service;
+package com.njydsz.pmis.userinfo.service;
 
 import com.njydsz.pmis.userinfo.dto.PermissionFormDTO;
 import com.njydsz.pmis.userinfo.entity.PermissionDO;

@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.vo;
+package com.njydsz.pmis.userinfo.vo;
 
 import lombok.Data;
 

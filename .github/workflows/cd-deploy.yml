@@ -33,7 +33,7 @@ jobs:
       matrix:
         service:
           - { name: gateway,   port: 9000,  jar: ydsz-pmis-gateway }
-          - { name: iam,       port: 9002,  jar: ydsz-pmis-iam }
+          - { name: userinfo, port: 9002,  jar: ydsz-pmis-userinfo }
           - { name: workflow,  port: 9004,  jar: ydsz-pmis-workflow }
           - { name: project,   port: 9005,  jar: ydsz-pmis-project }
           - { name: agent,     port: 9007,  jar: ydsz-pmis-agent }
@@ -139,7 +139,7 @@ jobs:
       - name: Deploy to Staging
         run: |
           # 更新所有微服务镜像
-          for svc in gateway iam workflow project agent system cronjob; do
+          for svc in gateway userinfo workflow project agent system cronjob; do
             kubectl set image deployment/pmis-${svc} \
               pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
               -n pmis-staging
@@ -151,7 +151,7 @@ jobs:
 
       - name: Wait for Rollout
         run: |
-          for svc in gateway iam workflow project agent system cronjob frontend; do
+          for svc in gateway userinfo workflow project agent system cronjob frontend; do
             echo "Waiting for pmis-${svc} rollout..."
             kubectl rollout status deployment/pmis-${svc} -n pmis-staging --timeout=300s
           done
@@ -180,7 +180,7 @@ jobs:
       - name: Canary Deploy (5% → 25% → 50% → 100%)
         run: |
           # 使用 Argo Rollouts 金丝雀发布
-          for svc in gateway iam workflow project agent system cronjob frontend; do
+          for svc in gateway userinfo workflow project agent system cronjob frontend; do
             # 更新镜像并启动金丝雀
             kubectl argo rollouts set image rollout/pmis-${svc} \
               pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \

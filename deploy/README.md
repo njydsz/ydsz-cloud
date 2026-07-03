@@ -73,7 +73,7 @@ deploy/
 │   ├── cluster-verify.sh
 │   └── README.md
 │
-├── scheduler/              # XXL-Job 分布式调度
+├── cronjob/                # XXL-Job 分布式调度
 │   ├── docker-compose.yml
 │   ├── verify-xxl.sh
 │   └── README.md
@@ -135,7 +135,7 @@ pnpm install && pnpm dev
 ## 服务端口清单
 
 > 服务合并重构后保留 7 个核心微服务（+ 1 调度）：
-> - `user` + `auth` → `iam`（端口 9002）
+> - `user` + `auth` → `userinfo`（端口 9002）
 > - `file` + `config` + `audit` + `notification` + `message` → `system`（端口 9008）
 > - `project` + `execution` → `project`（端口 9005）
 
@@ -143,7 +143,7 @@ pnpm install && pnpm dev
 |------|------|------|------|
 | 前端 (Vite) | 5173 | HTTP | 开发服务器 |
 | API 网关 | 9000 | HTTP | ydsz-pmis-gateway（统一入口） |
-| IAM 服务 | 9002 | HTTP | ydsz-pmis-iam（原 user + auth） |
+| 用户信息中心 | 9002 | HTTP | ydsz-pmis-userinfo（原 user + auth） |
 | 工作流 | 9004 | HTTP | ydsz-pmis-workflow |
 | 项目服务 | 9005 | HTTP | ydsz-pmis-project（原 project + execution） |
 | AI Agent | 9007 | HTTP | ydsz-pmis-agent |

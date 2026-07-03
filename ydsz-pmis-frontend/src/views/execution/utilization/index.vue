@@ -15,7 +15,7 @@
  *  5) 触发快照重算（运维 / 手动补算）
  *
  *  数据源：pmis_execution_time_entry（status=APPROVED）
- *  快照：  pmis_billable_utilization_snapshot（scheduler 每日 02:30 计算）
+ *  快照：  pmis_billable_utilization_snapshot（cronjob 每日 02:30 计算）
  */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'

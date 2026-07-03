@@ -1,7 +1,19 @@
+<!--
+  ===========================================================================
+  文件名: frontend-spec.md
+  路径:   docs/standards/frontend-spec.md
+  作用:   PMIS 前端工程（Vue 3 + Vite + TS）目录结构、组件、状态、路由、请求层规范
+  技术栈: Vue 3.4+ / Vite 5+ / TypeScript 5+ / Pinia 2+ / Element Plus 2.7+ / vxe-table 4+
+  对标:   Vue 官方风格指南 / 字节前端规范 / 阿里前端规约
+  ===========================================================================
+-->
+
 # 前端工程规范
 
-> 文档版本: V1.0 | 编制日期: 2026-06-30
+> 文档版本: V1.0 | 编制日期: 2026-06-30 | 最近更新: 2026-07-03
 > 技术栈: Vue 3.4+ / Vite 5+ / TypeScript 5+ / Pinia 2+ / Element Plus 2.7+ / vxe-table 4+
+
+> 📌 本规范适用于 `ydsz-pmis-frontend` 全栈代码，**所有 PR 必须先通过 ESLint + Prettier + TypeScript 类型检查**。
 
 ## 1. 目录结构
 
@@ -339,3 +351,52 @@ module.exports = {
 - `pnpm type-check` (TS 类型检查)
 - `pnpm test` (Vitest 单元测试)
 - Husky + lint-staged 在 commit 时自动执行
+
+## 9. 可访问性（A11Y）
+
+- 所有交互元素必须有 `aria-label` 或可见文本
+- 颜色对比度 ≥ 4.5:1（WCAG 2.1 AA）
+- 键盘导航：Tab 顺序合理，焦点可见
+- 表单错误提示使用 `aria-describedby` 关联
+
+## 10. 国际化（i18n）
+
+- 使用 `vue-i18n` 9.x + Composition API
+- 文案统一放在 `src/locales/{zh-CN,en-US}/**/*.ts`
+- **禁止** 在模板/JS 中硬编码中文字符串
+- 动态菜单、权限码等也需要支持国际化
+
+## 11. 错误监控
+
+- 已集成 Sentry（`@sentry/vue`）
+- 全局异常通过 `app.config.errorHandler` 捕获
+- 关键业务操作（登录、提交、支付）增加 Sentry Breadcrumb
+
+## 12. 性能预算
+
+| 资源 | 预算 | 监控 |
+|------|------|------|
+| 首屏 JS | ≤ 500KB（gzip） | `rollup-plugin-visualizer` |
+| 首屏 CSS | ≤ 100KB（gzip） | 同上 |
+| 首屏图片 | ≤ 300KB | `<el-image lazy />` |
+| LCP | ≤ 2.5s | Web Vitals |
+| FID | ≤ 100ms | Web Vitals |
+| CLS | ≤ 0.1 | Web Vitals |
+
+## 13. 浏览器兼容
+
+| 浏览器 | 最低版本 |
+|--------|----------|
+| Chrome | 100+ |
+| Edge | 100+ |
+| Firefox | 100+ |
+| Safari | 15+ |
+| ❌ IE | 不支持 |
+
+## 14. 变更记录
+
+| 日期 | 版本 | 变更人 | 变更内容 |
+|------|------|--------|----------|
+| 2026-07-03 | 1.1 | 前端架构组 | 新增 §9 A11Y、§10 i18n、§11 错误监控、§12 性能预算、§13 浏览器兼容 |
+| 2026-06-30 | 1.0 | 前端架构组 | 初始版本 |
+

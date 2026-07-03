@@ -1,3 +1,13 @@
+<!--
+  ===========================================================================
+  文件名: any-warnings-cleanup.md
+  路径:   docs/frontend/any-warnings-cleanup.md
+  作用:   PMIS 前端 TS any 警告收口 SOP（批次 19 P2-4），消除 79 个 any 警告统一为强类型
+  工具:   scripts/scan-any-warnings.mjs  /  src/types/api.ts
+  关联:   ydsz-pmis-frontend 源码  /  standards/frontend-spec.md
+  ===========================================================================
+-->
+
 # PMIS 前端 any 警告收口 SOP（批次 19 P2-4）
 
 > 目标：消除 `pnpm lint` 报告的 79 个 any 警告，统一为强类型

@@ -1,6 +1,6 @@
 <!--
   @file 资源分配管理
-  @description 资源分配管理页面：提供员工利用率/活跃项目数查询、分配记录分页筛选，并通过单一 act() 入口执行分配动作（预占 RESERVE / 入场 START / 调岗 TRANSFER / 离场 RELEASE / 取消 CANCEL）。对应路由 /resource/assignment，后端服务 ydsz-pmis-iam（端口 9002）。
+  @description 资源分配管理页面：提供员工利用率/活跃项目数查询、分配记录分页筛选，并通过单一 act() 入口执行分配动作（预占 RESERVE / 入场 START / 调岗 TRANSFER / 离场 RELEASE / 取消 CANCEL）。对应路由 /resource/assignment，后端服务 ydsz-pmis-userinfo（端口 9002）。
   @module views/resource/assignment
 -->
 <script setup lang="ts">

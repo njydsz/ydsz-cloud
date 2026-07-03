@@ -1,6 +1,6 @@
 <!--
   @file 员工标签管理
-  @description 员工标签管理页面：提供「按员工查询标签」与「按标签筛选候选人」两个 Tab，支持为员工新增/删除标签（技术栈/技术方向/行业经验/可用时间）。对应路由 /resource/employee-tag，后端服务 ydsz-pmis-iam（端口 9002）。
+  @description 员工标签管理页面：提供「按员工查询标签」与「按标签筛选候选人」两个 Tab，支持为员工新增/删除标签（技术栈/技术方向/行业经验/可用时间）。对应路由 /resource/employee-tag，后端服务 ydsz-pmis-userinfo（端口 9002）。
   @module views/resource/employee-tag
 -->
 <script setup lang="ts">

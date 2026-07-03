@@ -1,9 +1,23 @@
+<!--
+  ===========================================================================
+  文件名: backend-spec.md
+  路径:   docs/standards/backend-spec.md
+  作用:   PMIS 后端多模块结构、包结构、统一响应、异常、日志、Controller/Service 编码规范
+  技术栈: Spring Boot 3.3+ / Spring Cloud Alibaba 2023+ / MyBatis-Plus 3.5+ / PostgreSQL 18 / Redis 7
+  对标:   阿里《Java 开发手册》黄山版 / Google Style Guide
+  ===========================================================================
+-->
+
 # 后端工程规范
 
-> 文档版本: V1.0 | 编制日期: 2026-06-30
+> 文档版本: V1.0 | 编制日期: 2026-06-30 | 最近更新: 2026-07-03
 > 技术栈: Spring Boot 3.3+ / Spring Cloud Alibaba 2023+ / MyBatis-Plus 3.5+ / PostgreSQL 18 / Redis 7 / 自研工作流引擎 / Nacos 2
 
+> 📌 本规范适用于 `ydsz-pmis-backend` 下全部 7 个可部署微服务 + 2 个库模块，**所有 PR 必须先通过本规范自检**。
+
 ## 1. 多模块结构
+
+> 模块拆分遵循"**高内聚、低耦合**"原则，按业务域划分；每个微服务可独立部署、版本化伸缩。
 
 ```
 ydsz-pmis-backend/
@@ -23,9 +37,9 @@ ydsz-pmis-backend/
 │       ├── filter/                  # 全局过滤器
 │       ├── config/                  # 路由配置
 │       └── GatewayApplication.java
-├── ydsz-pmis-iam/                    # 认证授权 + 用户/组织（user + auth 合并）
+├── ydsz-pmis-userinfo/              # 用户信息中心（合并 user + auth）
 │   ├── pom.xml
-│   └── src/main/java/com/njydsz/pmis/iam/
+│   └── src/main/java/com/njydsz/pmis/userinfo/
 │       ├── controller/
 │       ├── service/
 │       ├── mapper/
@@ -34,12 +48,15 @@ ydsz-pmis-backend/
 │       ├── vo/
 │       ├── convert/
 │       ├── token/                   # JWT 工具
-│       └── IamApplication.java
-├── ... (其他微服务结构同 iam)
+│       └── UserInfoApplication.java
+├── ... (其他微服务结构同 userinfo)
 └── sql/                              # 业务 SQL 文件
     ├── user/
     └── project/
 ```
+
+> 📌 **模块依赖原则**：上游 → 下游单向依赖，**禁止循环依赖**。
+> 依赖方向：`gateway` → 业务服务 → `common`；`literule` 作为可被业务服务引用的工具库。
 
 ## 2. 包结构规范
 
@@ -340,3 +357,58 @@ class ProjectServiceTest {
     }
 }
 ```
+
+## 12. 缓存使用规范
+
+- 缓存读写封装在 `common-cache` 模块，禁止业务模块直接调用 Redis API
+- Key 命名：`pmis:{module}:{biz}:{id}`，如 `pmis:project:main:10086`
+- 过期时间：业务数据 ≤ 30 分钟，会话数据按业务定
+- 缓存更新策略：先更新 DB，再删除缓存（**Cache Aside**）
+- 禁止把**全量列表**放进缓存
+
+## 13. 分布式锁规范
+
+- 使用 [`Redisson`](file:///d:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-common/pom.xml) 分布式锁，禁止自己实现
+- 锁粒度：业务 ID 级，避免大锁
+- 必须设置超时时间（默认 5 秒），防止死锁
+- 业务完成后立即释放，**禁止在 finally 中执行业务**
+
+```java
+RLock lock = redissonClient.getLock("pmis:project:create:" + userId);
+try {
+    if (lock.tryLock(3, 10, TimeUnit.SECONDS)) {
+        // 业务逻辑
+    }
+} finally {
+    if (lock.isHeldByCurrentThread()) {
+        lock.unlock();
+    }
+}
+```
+
+## 14. 数据库事务规范
+
+| 场景 | 注解 | 说明 |
+|------|------|------|
+| 单库写操作 | `@Transactional(rollbackFor = Exception.class)` | 显式声明回滚异常 |
+| 只读操作 | `@Transactional(readOnly = true)` | 走只读连接，提升性能 |
+| 多服务调用 | **禁止大事务**，拆分为本地事务 + 消息补偿 | Seata 分布式事务（仅必要时使用） |
+| 异步任务 | `@Async` + `@Transactional` | 注意代理失效 |
+
+> ⚠️ **禁止在事务内做远程调用**（HTTP / MQ / RPC），会导致长事务和锁等待。
+
+## 15. 性能基线
+
+| 接口类型 | P95 响应时间 | 并发要求 |
+|----------|--------------|----------|
+| 简单查询 | < 100ms | ≥ 500 QPS |
+| 复杂查询 | < 500ms | ≥ 100 QPS |
+| 写操作 | < 300ms | ≥ 200 QPS |
+| 批量操作 | < 5s | - |
+
+## 16. 变更记录
+
+| 日期 | 版本 | 变更人 | 变更内容 |
+|------|------|--------|----------|
+| 2026-07-03 | 1.1 | 架构组 | 新增 §12 缓存规范、§13 分布式锁、§14 事务、§15 性能基线 |
+| 2026-06-30 | 1.0 | 架构组 | 初始版本 |

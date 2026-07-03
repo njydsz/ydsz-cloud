@@ -14,12 +14,12 @@ import java.util.Map;
  * 用户服务 Feign 客户端（合并 project + execution 调用需求）
  *
  * <p>用于 NameAssembler 解析员工/客户名称、内部成本费率查询等跨模块场景；
- * iam 服务不可用时由 {@link UserServiceClientFallback} 返回降级值。
+ * userinfo 服务不可用时由 {@link UserServiceClientFallback} 返回降级值。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-iam", fallbackFactory = UserServiceClientFallback.class)
+@FeignClient(name = "ydsz-pmis-userinfo", fallbackFactory = UserServiceClientFallback.class)
 public interface UserServiceClient {
 
     /**

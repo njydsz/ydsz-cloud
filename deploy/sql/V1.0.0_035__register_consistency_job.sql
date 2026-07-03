@@ -17,7 +17,7 @@ DELETE FROM pmis_job WHERE job_key = 'data-consistency-check';
 INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
     'data-consistency-check',
-    'PMIS_SCHEDULER',
+    'PMIS_CRONJOB',
     'data-consistency-check',
     'dataConsistencyJobHandler',
     '0 30 2 * * ?',

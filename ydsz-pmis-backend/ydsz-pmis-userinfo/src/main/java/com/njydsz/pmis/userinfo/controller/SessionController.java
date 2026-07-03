@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.controller;
+package com.njydsz.pmis.userinfo.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;

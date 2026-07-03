@@ -1,6 +1,15 @@
+<!--
+  ===========================================================================
+  文件名: naming-convention.md
+  路径:   docs/standards/naming-convention.md
+  作用:   PMIS 编码与命名规范：语言版本、标识符命名、后端/前端/数据库命名细则
+  对标:   阿里巴巴《Java 开发手册》/ Google Style Guide
+  ===========================================================================
+-->
+
 # 编码与命名规范
 
-> 文档版本: V1.0 | 编制日期: 2026-06-30
+> 文档版本: V1.0 | 编制日期: 2026-06-30 | 最近更新: 2026-07-03
 > 对标: 阿里巴巴《Java 开发手册》、Google Style Guide
 
 ## 1. 语言版本
@@ -129,3 +138,28 @@
 - 日志使用 SLF4J，级别严格：ERROR（系统异常）/ WARN（业务警告）/ INFO（关键节点）/ DEBUG（详细信息）
 - 日志格式：`<时间> <级别> <线程> <Logger> [<traceId>] - <message>`
 - 禁止 `System.out.println` 打印日志
+
+## 9. 命名反模式（Code Smells）
+
+| 反模式 | 正确做法 |
+|--------|----------|
+| `userList`, `dataMap` | `users`, `userMap`（集合类型已隐含） |
+| `processData()`, `handleInfo()` | `parseUser()`, `validateOrder()`（动词+具体对象） |
+| `temp1`, `a`, `info` | 业务含义命名：`userId`, `projectName` |
+| `getData()` 返回 `Object` | 强类型返回：`UserVO`, `PageResult<X>` |
+| `MyClass` + `Impl` 命名类 | 业务领域命名：`UserServiceImpl`, `OrderServiceImpl` |
+
+## 10. 命名评审 CheckList
+
+- [ ] 是否使用业务术语（非技术黑话）
+- [ ] 是否避免缩写歧义
+- [ ] 是否见名知意
+- [ ] 是否符合所在语言惯例（Java/TS/SQL）
+- [ ] 是否与同模块其他命名风格一致
+
+## 11. 变更记录
+
+| 日期 | 版本 | 变更人 | 变更内容 |
+|------|------|--------|----------|
+| 2026-07-03 | 1.1 | 架构组 | 新增 §9 反模式、§10 评审 CheckList |
+| 2026-06-30 | 1.0 | 架构组 | 初始版本 |

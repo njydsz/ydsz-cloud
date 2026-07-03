@@ -168,7 +168,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public Long create(JobDO job) {
         validate(job);
         if (jobMapper.selectByJobKey(job.getJobKey()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.scheduler.msg_7e5ef640" + job.getJobKey());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640" + job.getJobKey());
         }
         if (job.getStatus() == null) {
             job.setStatus("NORMAL");
@@ -200,11 +200,11 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     @Transactional(rollbackFor = Exception.class)
     public void update(JobDO job) {
         if (job.getId() == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.scheduler.msg_ce91ca69");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_ce91ca69");
         }
         JobDO exists = jobMapper.selectById(job.getId());
         if (exists == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.scheduler.msg_c0d8369f");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         if (StringUtils.hasText(job.getCronExpression())) {
             validateCron(job.getCronExpression());
@@ -239,7 +239,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public void delete(Long id) {
         JobDO j = jobMapper.selectById(id);
         if (j == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.scheduler.msg_c0d8369f");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         unregister(j.getJobKey());
         jobMapper.deleteById(id);
@@ -368,7 +368,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public JobDO getById(Long id) {
         JobDO j = jobMapper.selectById(id);
         if (j == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.scheduler.msg_c0d8369f");
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
         }
         return j;
     }
@@ -515,10 +515,10 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     private void validate(JobDO job) {
         if (!StringUtils.hasText(job.getJobKey())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.scheduler.msg_884214e7");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_884214e7");
         }
         if (!StringUtils.hasText(job.getHandler())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.scheduler.msg_04ebee77");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_04ebee77");
         }
         validateCron(job.getCronExpression());
     }
@@ -531,12 +531,12 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     private void validateCron(String cron) {
         if (!StringUtils.hasText(cron)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.scheduler.msg_35ac148f");
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_35ac148f");
         }
         try {
             new CronTrigger(cron);
         } catch (Exception e) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.scheduler.msg_5d0044ca" + e.getMessage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca" + e.getMessage());
         }
     }
 

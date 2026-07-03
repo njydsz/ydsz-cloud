@@ -212,6 +212,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     /**
      * 触发订阅 — 标记 COMPLETED，取消边界任务（如有），推进流程
      */
+    @SuppressWarnings("unchecked")
     private void triggerSubscription(FlowEventSubscriptionDO sub, String payload, String triggerSource) {
         // 1. 标记订阅已触发
         subscriptionMapper.markTriggered(sub.getId(), payload, triggerSource, LocalDateTime.now());
@@ -304,7 +305,6 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         }
     }
 
-    @SuppressWarnings("unchecked")
     private String extractCorrelationKey(Map<String, Object> ext, Map<String, Object> variables) {
         Object expr = ext.get("correlationKeyExpression");
         if (expr == null) {

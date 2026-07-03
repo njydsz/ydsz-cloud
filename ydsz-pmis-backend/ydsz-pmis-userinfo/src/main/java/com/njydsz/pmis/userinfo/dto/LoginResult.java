@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.dto;
+package com.njydsz.pmis.userinfo.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

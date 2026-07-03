@@ -26,8 +26,8 @@ public class RouteConfig {
     public RouteLocator customRouteLocator(RouteLocatorBuilder builder) {
         return builder.routes()
                 // ===== 基础服务 =====
-                // 身份认证管理服务（合并 user + auth）：认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签
-                .route("ydsz-pmis-iam", r -> r.path(
+                // 用户信息中心服务（合并 user + auth）：认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签
+                .route("ydsz-pmis-userinfo", r -> r.path(
                                 "/api/v1/auth/**",
                                 "/api/v1/users/**",
                                 "/api/v1/departments/**",
@@ -42,7 +42,7 @@ public class RouteConfig {
                                 "/api/v1/resource-pools/**",
                                 "/api/v1/resource-assignments/**",
                                 "/api/v1/feign/auth/**")
-                        .uri("lb://ydsz-pmis-iam"))
+                        .uri("lb://ydsz-pmis-userinfo"))
 
                 // ===== 业务服务 =====
                 // 项目业务服务（合并 project + execution）：商机/立项/合同/变更/WBS/EVM/成本/收入/风险/工时/发票/付款/客户信用/资源/Dashboard/Report/费率/交付/收尾/利润
@@ -74,8 +74,8 @@ public class RouteConfig {
                                 "/api/v1/operation-logs/**")
                         .uri("lb://ydsz-pmis-system"))
 
-                // 调度中心
-                .route("ydsz-pmis-cronjob", r -> r.path("/api/v1/job/**", "/api/v1/scheduler/**")
+                // 定时任务
+                .route("ydsz-pmis-cronjob", r -> r.path("/api/v1/cronjob/**")
                         .uri("lb://ydsz-pmis-cronjob"))
 
                 // AI Agent

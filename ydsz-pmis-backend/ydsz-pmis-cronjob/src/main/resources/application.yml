@@ -90,7 +90,7 @@ xxl:
   job:
     admin:
       addresses: ${XXL_JOB_ADMIN_ADDRESSES:http://127.0.0.1:9100/xxl-job-admin}
-      # 登录账号（与 deploy/scheduler 初始化一致）
+      # 登录账号（与 deploy/cronjob 初始化一致）
       username: ${XXL_JOB_USERNAME:admin}
       password: ${XXL_JOB_PASSWORD:123456}
     executor:

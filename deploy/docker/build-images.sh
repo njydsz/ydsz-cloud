@@ -3,7 +3,7 @@
 #  PMIS 微服务 Docker 镜像批量构建脚本
 # ---------------------------------------------------------------------
 #  服务合并后共 8 个可部署服务（common/literule 为库不独立部署）：
-#    gateway / iam / system / workflow / project / agent / cronjob
+#    gateway / userinfo / system / workflow / project / agent / cronjob
 #  用法：
 #    ./build-images.sh [tag]
 #    默认 tag=1.0.0
@@ -28,7 +28,7 @@ docker build -f Dockerfile.base -t "pmis-base:${TAG}" .
 # 2. 定义微服务的 artifactId → Dockerfile 映射（合并后 7 个可部署服务）
 declare -A SERVICES=(
     ["ydsz-pmis-gateway"]="Dockerfile.gateway:9000"
-    ["ydsz-pmis-iam"]="Dockerfile.service:9002"
+    ["ydsz-pmis-userinfo"]="Dockerfile.service:9002"
     ["ydsz-pmis-workflow"]="Dockerfile.service:9004"
     ["ydsz-pmis-project"]="Dockerfile.service:9005"
     ["ydsz-pmis-agent"]="Dockerfile.service:9007"

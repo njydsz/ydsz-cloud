@@ -1,6 +1,20 @@
+<!--
+  ===========================================================================
+  文件名: README.md
+  路径:   docs/api/README.md
+  作用:   PMIS 后端 API 文档总入口，介绍文档结构、查看方式、鉴权约定、错误码、响应格式
+  适用:   前后端开发 / 联调 / 测试 / 第三方集成
+  关联:   ../standards/api-spec.md  ../standards/backend-infrastructure.md
+  ===========================================================================
+-->
+
 # PMIS 后端 API 文档
 
-## 文档结构
+> 文档版本: V1.0 | 编制日期: 2026-07-01 | 最近更新: 2026-07-03
+> 适用版本: ydsz-pmis 1.0.0-SNAPSHOT
+> 微服务数: 14（7 部署 + 2 库 + 5 拆分模块）
+
+本目录汇总 PMIS 后端全部 14 个微服务模块的 API 文档。文档由 SpringDoc (OpenAPI 3.0) 在服务启动时**实时生成**，并辅以本仓库人工维护的 Markdown 模块说明。
 
 ```
 docs/api/
@@ -19,7 +33,7 @@ docs/api/
     ├── audit.md              # 审计日志（/api/v1/audit/*）
     ├── message.md            # 消息模板（/api/v1/message/*）
     ├── config.md             # 系统配置（/api/v1/config/*）
-    └── scheduler.md          # 任务调度（/api/v1/scheduler/*，保留路径前缀）
+    └── cronjob.md            # 定时任务（/api/v1/cronjob/*）
 ```
 
 ## 查看方式
@@ -180,3 +194,56 @@ mvn -pl 'ydsz-pmis-*' exec:java -Dexec.mainClass="org.springdoc.openapi.Generate
 |------|--------|----------|
 | 整体 API 规范 | 后端架构组 | api-team@ydsz-pmis.cn |
 | 各模块端点 | 模块 Owner | 见 [`docs/standards/code-quality.md`](../standards/code-quality.md) |
+
+## 联调示例（curl）
+
+```bash
+# 1. 登录获取 Token
+curl -X POST http://localhost:9000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123","captchaId":"...","captchaCode":"..."}'
+
+# 2. 调用业务接口
+curl -X GET http://localhost:9000/api/v1/projects/10086 \
+  -H "Authorization: Bearer eyJhbGc..." \
+  -H "X-Trace-Id: my-trace-001"
+
+# 3. 幂等写操作
+curl -X POST http://localhost:9000/api/v1/projects \
+  -H "Authorization: Bearer eyJhbGc..." \
+  -H "Content-Type: application/json" \
+  -H "Idempotency-Key: $(uuidgen)" \
+  -d '{"name":"测试项目","type":"INTERNAL","level":"L1"}'
+```
+
+## OpenAPI 客户端生成
+
+```bash
+# 使用 openapi-generator 生成 TS 客户端
+npx @openapitools/openapi-generator-cli generate \
+  -i docs/api/openapi.json \
+  -g typescript-axios \
+  -o ydsz-pmis-frontend/src/api/generated
+
+# 生成 Java 客户端
+npx @openapitools/openapi-generator-cli generate \
+  -i docs/api/openapi.json \
+  -g java \
+  -o client-java
+```
+
+## 常见问题
+
+| 问题 | 答案 |
+|------|------|
+| 如何重置 Swagger UI 缓存？ | 浏览器无痕模式 / `Ctrl+Shift+R` 强刷 |
+| Knife4j 与 Swagger UI 区别？ | Knife4j 国内访问更稳定、增强 UI |
+| 如何订阅 API 变更？ | 关注本目录 Git 提交，或加入 Slack `#pmis-api` 频道 |
+| OpenAPI 生成的代码无法直接运行？ | 需要手动调整 import 路径 + 类型增强 |
+
+## 变更记录
+
+| 日期 | 版本 | 变更人 | 变更内容 |
+|------|------|--------|----------|
+| 2026-07-03 | 1.1 | 架构组 | 顶部 banner、curl 示例、客户端生成、FAQ、变更记录 |
+| 2026-07-01 | 1.0 | 架构组 | 初始 14 模块端点文档（批次 18） |

@@ -723,13 +723,23 @@ public class FlowTaskCompleteServiceImpl {
             throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
                     "error.workflow.msg_199e8ba1" + task.getId());
         }
-        if (finished < required) {
-            // 未全部通过：任务保持 PENDING，不推进
+        // P1-4: 优先求值 completionCondition 表达式（支持 BPMN 标准多实例完成条件）
+        boolean shouldAdvance;
+        String completionCondition = resolveCompletionCondition(task);
+        if (completionCondition != null) {
+            shouldAdvance = evaluateCompletionCondition(completionCondition, finished, required, vars);
+        } else {
+            // 回退到原有逻辑：全部通过才推进
+            shouldAdvance = finished >= required;
+        }
+        if (!shouldAdvance) {
+            // 未达到完成条件：任务保持 PENDING，不推进
             support.audit(task, "PARALLEL_PASS", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
-            log.info("[Flow] 并行会签部分通过: taskId={} finished={}/{}", task.getId(), finished, required);
+            log.info("[Flow] 并行会签部分通过: taskId={} finished={}/{} condition={}",
+                    task.getId(), finished, required, completionCondition != null);
             return;
         }
-        // 全部通过：完成 + 推进 + 跳过剩余
+        // 完成条件满足：完成 + 推进 + 跳过剩余
         taskMapper.skipByNode(instance.getId(), task.getNodeCode(),
                 FlowTaskStatus.SKIPPED.name());
         completeAndArchive(task, dto.getComment());
@@ -740,7 +750,78 @@ public class FlowTaskCompleteServiceImpl {
         updateInstanceNode(instance, nextNodes);
         fireTaskCompleted(task.getId(), "PASS", vars);
         support.audit(task, "PARALLEL_PASS_ALL", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
-        log.info("[Flow] 并行会签全部通过: taskId={} finished={}/{}", task.getId(), finished, required);
+        log.info("[Flow] 并行会签完成条件满足: taskId={} finished={}/{} condition={}",
+                task.getId(), finished, required, completionCondition != null);
+    }
+
+    /**
+     * P1-4: 解析节点的 completionCondition 表达式
+     *
+     * <p>优先从 {@code ext.completionCondition} 读取（推荐存储位置）；
+     * 若为空，回退从 {@code node.skipAnyNode} 读取（向后兼容 BpmnXmlParser 旧解析逻辑），
+     * 但仅当其看起来像表达式时（含 {@code nrOf} 或 {@code >=} / {@code <=} 等）才采用。
+     *
+     * @return 完成条件表达式，未配置返回 null
+     */
+    private String resolveCompletionCondition(FlowTaskDO task) {
+        if (task.getDefinitionId() == null || task.getNodeCode() == null) {
+            return null;
+        }
+        FlowNodeDO node = nodeMapper.selectByCode(task.getDefinitionId(), task.getNodeCode());
+        if (node == null) {
+            return null;
+        }
+        // 优先从 ext.completionCondition 读取
+        Map<String, Object> ext = parseExtConfig(node.getExt());
+        Object cc = ext.get("completionCondition");
+        if (cc != null) {
+            String s = String.valueOf(cc).trim();
+            if (!s.isEmpty()) {
+                return stripExpressionBraces(s);
+            }
+        }
+        // 回退：从 skipAnyNode 读取（仅当看起来像表达式时）
+        String skipAny = node.getSkipAnyNode();
+        if (skipAny != null && !skipAny.isBlank()
+                && (skipAny.contains("nrOf") || skipAny.contains(">=") || skipAny.contains("<="))) {
+            return stripExpressionBraces(skipAny.trim());
+        }
+        return null;
+    }
+
+    /**
+     * P1-4: 去除表达式外层的 ${...} 包裹
+     */
+    private String stripExpressionBraces(String expr) {
+        if (expr.startsWith("${") && expr.endsWith("}")) {
+            return expr.substring(2, expr.length() - 1).trim();
+        }
+        return expr;
+    }
+
+    /**
+     * P1-4: 求值 completionCondition 表达式，注入 BPMN 标准多实例变量
+     *
+     * <p>注入变量：
+     * <ul>
+     *   <li>{@code nrOfInstances} = required（总会签人数）</li>
+     *   <li>{@code nrOfCompletedInstances} = finished（已通过人数，含当前这次）</li>
+     *   <li>{@code nrOfActiveInstances} = required - finished（剩余待处理人数）</li>
+     * </ul>
+     */
+    private boolean evaluateCompletionCondition(String condition, int finished, int required,
+                                                  Map<String, Object> vars) {
+        try {
+            Map<String, Object> evalVars = new java.util.HashMap<>(vars != null ? vars : Collections.emptyMap());
+            evalVars.put("nrOfInstances", required);
+            evalVars.put("nrOfCompletedInstances", finished);
+            evalVars.put("nrOfActiveInstances", Math.max(0, required - finished));
+            return variableStrategy.evaluate(condition, evalVars);
+        } catch (Exception e) {
+            log.warn("[Flow] completionCondition 求值失败: condition={} err={} — 回退到全部通过逻辑",
+                    condition, e.getMessage());
+            return finished >= required;
+        }
     }
 
     /** P1-12: 顺序会签 — 按序逐一处理（GAP-P1: 乐观锁防并发） */
@@ -1231,6 +1312,31 @@ public class FlowTaskCompleteServiceImpl {
 
     /** 展开办理人为用户列表 */
     private List<String> expandAssignees(FlowNodeDO node, Map<String, Object> variables) {
+        // P1-4: 优先读取 ext.collection 配置，从流程变量动态展开会签人员集合
+        Map<String, Object> nodeExt = parseExtConfig(node.getExt());
+        Object collectionVar = nodeExt.get("collection");
+        if (collectionVar != null && variables != null && !variables.isEmpty()) {
+            String varName = String.valueOf(collectionVar).trim();
+            // 支持表达式形式 ${varName}
+            if (varName.startsWith("${") && varName.endsWith("}")) {
+                varName = varName.substring(2, varName.length() - 1).trim();
+            }
+            Object collectionValue = variables.get(varName);
+            if (collectionValue == null) {
+                // 尝试 _selfSelect_<nodeCode> 命名约定
+                collectionValue = variables.get("_selfSelect_" + node.getNodeCode());
+            }
+            List<String> expanded = expandCollectionValue(collectionValue);
+            if (!expanded.isEmpty()) {
+                log.info("[Flow] collection 变量展开: nodeCode={} var={} count={}",
+                        node.getNodeCode(), varName, expanded.size());
+                return expanded;
+            }
+            // collection 配置存在但变量为空，返回空列表触发 emptyStrategy 兜底
+            log.warn("[Flow] collection 变量为空: nodeCode={} var={}", node.getNodeCode(), varName);
+            return Collections.emptyList();
+        }
+
         String perm = node.getPermissionFlag();
         if (!StringUtils.hasText(perm)) {
             return Collections.emptyList();
@@ -1245,8 +1351,19 @@ public class FlowTaskCompleteServiceImpl {
         for (String token : resolved.split(",")) {
             String t = token.trim();
             if (t.isEmpty()) continue;
-            // P2-38: self_select: 前缀不在展开阶段处理（需从流程变量读取发起人指定的用户列表），保留原样走 fallback
+            // P1-4: self_select: 前缀展开 _selfSelect_<nodeCode> 变量（修复原仅存变量名不展开的问题）
             if (t.startsWith("self_select:")) {
+                String varName = t.substring("self_select:".length()).trim();
+                Object selfSelectVal = variables != null ? variables.get("_selfSelect_" + node.getNodeCode()) : null;
+                if (selfSelectVal == null && variables != null && !varName.isEmpty()) {
+                    selfSelectVal = variables.get(varName);
+                }
+                List<String> expanded = expandCollectionValue(selfSelectVal);
+                for (String uid : expanded) {
+                    if (seen.add(uid)) {
+                        result.add(uid);
+                    }
+                }
                 continue;
             }
             // user: 前缀直接作为用户 ID 加入结果
@@ -1286,6 +1403,53 @@ public class FlowTaskCompleteServiceImpl {
                     String s = String.valueOf(uid);
                     if (seen.add(s)) {
                         result.add(s);
+                    }
+                }
+            }
+        }
+        return result;
+    }
+
+    /**
+     * P1-4: 将 collection / self_select 变量值展开为用户 ID 字符串列表
+     *
+     * <p>支持以下值类型：
+     * <ul>
+     *   <li>List&lt;Long&gt; / List&lt;String&gt; — 逐元素转字符串</li>
+     *   <li>逗号分隔 String — split 后逐段处理</li>
+     *   <li>单个数字 String — 直接作为单元素</li>
+     *   <li>null — 返回空列表</li>
+     * </ul>
+     */
+    private List<String> expandCollectionValue(Object value) {
+        if (value == null) {
+            return Collections.emptyList();
+        }
+        List<String> result = new ArrayList<>();
+        if (value instanceof java.util.List<?> list) {
+            for (Object item : list) {
+                if (item == null) continue;
+                String s = String.valueOf(item).trim();
+                if (!s.isEmpty()) {
+                    result.add(s);
+                }
+            }
+        } else if (value instanceof Object[] arr) {
+            for (Object item : arr) {
+                if (item == null) continue;
+                String s = String.valueOf(item).trim();
+                if (!s.isEmpty()) {
+                    result.add(s);
+                }
+            }
+        } else {
+            String s = String.valueOf(value).trim();
+            if (!s.isEmpty()) {
+                // 逗号分隔支持
+                for (String part : s.split(",")) {
+                    String p = part.trim();
+                    if (!p.isEmpty()) {
+                        result.add(p);
                     }
                 }
             }

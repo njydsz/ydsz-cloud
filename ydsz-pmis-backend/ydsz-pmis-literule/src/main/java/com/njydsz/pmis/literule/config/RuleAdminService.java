@@ -48,6 +48,15 @@ public class RuleAdminService {
     /** 是否启用 dry-run 仿真（对应 pmis.literule.dryRunEnabled 配置） */
     private boolean dryRunEnabled = true;
 
+    /** 规则冲突检测器（可选，1.4.0 起支持） */
+    private RuleConflictDetector conflictDetector;
+
+    /** 是否启用冲突检测（对应 pmis.literule.conflictDetectionEnabled） */
+    private boolean conflictDetectionEnabled = true;
+
+    /** ERROR 级别冲突是否阻塞保存（对应 pmis.literule.conflictDetectionBlockOnError） */
+    private boolean conflictDetectionBlockOnError = true;
+
     /**
      * 构造规则管理服务
      *
@@ -99,6 +108,36 @@ public class RuleAdminService {
     }
 
     /**
+     * 设置规则冲突检测器
+     *
+     * @param conflictDetector 冲突检测器实例
+     * @since 1.4.0
+     */
+    public void setConflictDetector(RuleConflictDetector conflictDetector) {
+        this.conflictDetector = conflictDetector;
+    }
+
+    /**
+     * 设置是否启用冲突检测
+     *
+     * @param conflictDetectionEnabled 是否启用
+     * @since 1.4.0
+     */
+    public void setConflictDetectionEnabled(boolean conflictDetectionEnabled) {
+        this.conflictDetectionEnabled = conflictDetectionEnabled;
+    }
+
+    /**
+     * 设置 ERROR 级别冲突是否阻塞保存
+     *
+     * @param conflictDetectionBlockOnError 是否阻塞
+     * @since 1.4.0
+     */
+    public void setConflictDetectionBlockOnError(boolean conflictDetectionBlockOnError) {
+        this.conflictDetectionBlockOnError = conflictDetectionBlockOnError;
+    }
+
+    /**
      * 查询全部规则定义
      *
      * @return 全部规则定义
@@ -138,6 +177,9 @@ public class RuleAdminService {
 
         // 校验生命周期状态合法性 + 状态转换合法性
         validateStatusTransition(definition);
+
+        // 冲突检测（可选，1.4.0 起支持）
+        detectConflicts(definition);
 
         RuleDefinition saved = configProvider.save(definition, operator);
 
@@ -304,6 +346,53 @@ public class RuleAdminService {
     private RuleStatus parseStatusSafely(String status) {
         RuleStatus parsed = RuleStatus.fromCode(status);
         return parsed != null ? parsed : RuleStatus.PUBLISHED;
+    }
+
+    /**
+     * 执行规则冲突检测
+     *
+     * <p>根据配置决定是否启用、ERROR 级别冲突是否阻塞保存。
+     * WARN 级别冲突仅记录日志。
+     *
+     * @param definition 待保存的规则定义
+     * @since 1.4.0
+     */
+    private void detectConflicts(RuleDefinition definition) {
+        if (!conflictDetectionEnabled || conflictDetector == null) {
+            return;
+        }
+        List<RuleConflict> conflicts;
+        try {
+            conflicts = conflictDetector.detect(definition);
+        } catch (Exception e) {
+            log.warn("[LiteRule-Conflict] 冲突检测执行异常，跳过: {}", e.getMessage());
+            return;
+        }
+        if (conflicts == null || conflicts.isEmpty()) {
+            return;
+        }
+
+        boolean hasError = false;
+        for (RuleConflict c : conflicts) {
+            if (c.getLevel() == RuleConflict.Level.ERROR) {
+                hasError = true;
+                log.error("[LiteRule-Conflict] {} 冲突: {} vs {} - {}",
+                        c.getType(), c.getNewRuleCode(), c.getConflictingRuleCode(), c.getDescription());
+            } else {
+                log.warn("[LiteRule-Conflict] {} 提示: {} vs {} - {}",
+                        c.getType(), c.getNewRuleCode(), c.getConflictingRuleCode(), c.getDescription());
+            }
+        }
+
+        if (hasError && conflictDetectionBlockOnError) {
+            RuleConflict firstError = conflicts.stream()
+                    .filter(c -> c.getLevel() == RuleConflict.Level.ERROR)
+                    .findFirst().orElse(null);
+            throw new IllegalStateException("规则冲突检测未通过（"
+                    + conflicts.size() + " 项冲突，其中 "
+                    + conflicts.stream().filter(c -> c.getLevel() == RuleConflict.Level.ERROR).count()
+                    + " 项 ERROR）: " + (firstError != null ? firstError.getDescription() : ""));
+        }
     }
 
     /**

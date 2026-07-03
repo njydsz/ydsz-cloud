@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.enums;
+package com.njydsz.pmis.userinfo.enums;
 
 /**
  * 资源池类型

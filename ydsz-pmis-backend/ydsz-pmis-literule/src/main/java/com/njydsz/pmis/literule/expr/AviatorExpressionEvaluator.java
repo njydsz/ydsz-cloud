@@ -180,6 +180,108 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
         }
     }
 
+    @Override
+    public ExpressionValidationResult validateDetailed(String expression) {
+        long start = System.nanoTime();
+        long elapsed = (System.nanoTime() - start) / 1_000_000L;
+
+        // 1. 空表达式
+        if (expression == null || expression.isBlank()) {
+            return ExpressionValidationResult.fail(expression,
+                    ExpressionValidationResult.ErrorType.EMPTY,
+                    "表达式为空", elapsed);
+        }
+
+        // 2. 沙箱拦截（在编译前检查危险模式）
+        try {
+            sandboxCheck(expression);
+        } catch (SecurityException e) {
+            elapsed = (System.nanoTime() - start) / 1_000_000L;
+            return ExpressionValidationResult.fail(expression,
+                    ExpressionValidationResult.ErrorType.SANDBOX_VIOLATION,
+                    e.getMessage(), elapsed);
+        }
+
+        // 3. 编译校验
+        try {
+            instance.compile(expression, true);
+        } catch (Exception e) {
+            elapsed = (System.nanoTime() - start) / 1_000_000L;
+            String msg = e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName();
+            int line = -1;
+            int column = -1;
+            // 尝试从消息中解析位置（Aviator 消息格式：通常包含 "line N" 或 "[N,M]"）
+            java.util.regex.Matcher lineMatcher = java.util.regex.Pattern
+                    .compile("line\\s+(\\d+)", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(msg);
+            if (lineMatcher.find()) {
+                line = Integer.parseInt(lineMatcher.group(1));
+            }
+            java.util.regex.Matcher colMatcher = java.util.regex.Pattern
+                    .compile("(?:column|col)\\s+(\\d+)", java.util.regex.Pattern.CASE_INSENSITIVE).matcher(msg);
+            if (colMatcher.find()) {
+                column = Integer.parseInt(colMatcher.group(1));
+            }
+
+            return ExpressionValidationResult.builder()
+                    .valid(false)
+                    .errorType(ExpressionValidationResult.ErrorType.SYNTAX_ERROR)
+                    .errorMessage(msg)
+                    .errorLine(line)
+                    .errorColumn(column)
+                    .expression(expression)
+                    .parseTimeMs(elapsed)
+                    .referencedVariables(new java.util.ArrayList<>())
+                    .build();
+        }
+
+        // 4. 编译通过，提取引用变量
+        elapsed = (System.nanoTime() - start) / 1_000_000L;
+        java.util.List<String> vars = extractVariables(expression);
+        return ExpressionValidationResult.ok(expression, elapsed, vars);
+    }
+
+    /** Aviator 关键字与内置函数，不应作为变量返回 */
+    private static final java.util.Set<String> AVIATOR_KEYWORDS = java.util.Set.of(
+            "true", "false", "nil", "null",
+            "RED", "YELLOW", "INFO", "GREEN",
+            "if", "else", "return", "seq", "lambda", "fn",
+            "let", "for", "while", "break", "continue",
+            "println", "print", "p", "string", "long", "double",
+            "boolean", "int", "math", "Math",
+            "max", "min", "abs", "round", "floor", "ceil", "sqrt", "pow", "log",
+            "contains", "startsWith", "endsWith", "length",
+            "count", "sum", "avg", "rand", "now", "date",
+            "tuple", "map", "set", "sorted", "sort"
+    );
+
+    /**
+     * 从表达式中提取引用的变量名
+     *
+     * <p>基于正则提取标识符，过滤 Aviator 关键字与内置函数。
+     * 不依赖 VariableRegistry（P2-4），用于前端编辑器的"已使用变量"提示。
+     *
+     * @param expression 表达式
+     * @return 变量名列表（去重，保留出现顺序）
+     */
+    private java.util.List<String> extractVariables(String expression) {
+        if (expression == null || expression.isBlank()) {
+            return java.util.List.of();
+        }
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("\\b([a-zA-Z_]\\w*)\\b").matcher(expression);
+        java.util.LinkedHashSet<String> vars = new java.util.LinkedHashSet<>();
+        while (m.find()) {
+            String word = m.group(1);
+            if (AVIATOR_KEYWORDS.contains(word)) continue;
+            if (word.matches("\\d+")) continue;
+            // 保留首字母小写或含下划线的标识符（驼峰/蛇形变量名）
+            if (Character.isLowerCase(word.charAt(0)) || word.contains("_")) {
+                vars.add(word);
+            }
+        }
+        return new java.util.ArrayList<>(vars);
+    }
+
     /**
      * 编译表达式（带缓存）
      *

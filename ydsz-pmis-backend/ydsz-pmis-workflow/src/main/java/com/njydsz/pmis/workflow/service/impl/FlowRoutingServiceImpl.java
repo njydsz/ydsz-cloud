@@ -12,9 +12,8 @@ import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowRoutingService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 
@@ -48,7 +47,6 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 @ConditionalOnBean({RuleEngine.class, ExpressionEvaluator.class})
 public class FlowRoutingServiceImpl implements FlowRoutingService {
 
@@ -58,8 +56,22 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
     private final FlowInstanceMapper instanceMapper;
 
     /** DMN 决策表评估服务（可选依赖，未注入时 DMN 路由不可用，回退到 Aviator 评估） */
-    @Autowired(required = false)
-    private DecisionTableEvalService decisionTableEvalService;
+    private final DecisionTableEvalService decisionTableEvalService;
+
+    /**
+     * 构造注入：使用 {@link ObjectProvider} 支持可选依赖 {@link DecisionTableEvalService}。
+     */
+    public FlowRoutingServiceImpl(ExpressionEvaluator expressionEvaluator,
+                                  FlowTaskMapper taskMapper,
+                                  FlowAuditLogMapper auditLogMapper,
+                                  FlowInstanceMapper instanceMapper,
+                                  ObjectProvider<DecisionTableEvalService> decisionTableEvalServiceProvider) {
+        this.expressionEvaluator = expressionEvaluator;
+        this.taskMapper = taskMapper;
+        this.auditLogMapper = auditLogMapper;
+        this.instanceMapper = instanceMapper;
+        this.decisionTableEvalService = decisionTableEvalServiceProvider.getIfAvailable();
+    }
 
     // ============================== 路由评估 ==============================
 

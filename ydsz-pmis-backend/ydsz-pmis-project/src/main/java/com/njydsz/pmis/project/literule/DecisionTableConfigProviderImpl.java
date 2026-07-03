@@ -116,7 +116,6 @@ public class DecisionTableConfigProviderImpl implements DecisionTableConfigProvi
     /**
      * DecisionTableDO → DecisionTableDefinition
      */
-    @SuppressWarnings("unchecked")
     private DecisionTableDefinition toDefinition(DecisionTableDO entity) {
         return DecisionTableDefinition.builder()
                 .tableCode(entity.getTableCode())
@@ -156,7 +155,6 @@ public class DecisionTableConfigProviderImpl implements DecisionTableConfigProvi
         return entity;
     }
 
-    @SuppressWarnings("unchecked")
     private List<DecisionTableDefinition.Column> convertToColumns(List<Map<String, Object>> columns) {
         if (columns == null) return new ArrayList<>();
         List<DecisionTableDefinition.Column> result = new ArrayList<>(columns.size());
@@ -170,7 +168,6 @@ public class DecisionTableConfigProviderImpl implements DecisionTableConfigProvi
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private List<Map<String, Object>> convertColumnsToMaps(List<DecisionTableDefinition.Column> columns) {
         if (columns == null) return new ArrayList<>();
         List<Map<String, Object>> result = new ArrayList<>(columns.size());
@@ -202,7 +199,6 @@ public class DecisionTableConfigProviderImpl implements DecisionTableConfigProvi
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private List<Map<String, Object>> convertRowsToMaps(List<DecisionTableDefinition.Row> rows) {
         if (rows == null) return new ArrayList<>();
         List<Map<String, Object>> result = new ArrayList<>(rows.size());

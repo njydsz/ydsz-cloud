@@ -83,7 +83,7 @@ public class BillableUtilizationSnapshotDO implements Serializable {
     /** 快照生成时间 */
     private LocalDateTime snapshotAt;
 
-    /** 触发来源：SCHEDULER / MANUAL / RETRO */
+    /** 触发来源：CRONJOB / MANUAL / RETRO */
     private String source;
 
     /** 租户ID */

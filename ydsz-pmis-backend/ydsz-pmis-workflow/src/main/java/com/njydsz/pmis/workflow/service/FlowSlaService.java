@@ -23,7 +23,7 @@ import java.util.Map;
 public interface FlowSlaService {
 
     /**
-     * 扫描所有到点任务并执行 SLA 策略（scheduler 每 60s 调用一次）
+     * 扫描所有到点任务并执行 SLA 策略（cronjob 每 60s 调用一次）
      *
      * @return 实际处理的任务数
      */

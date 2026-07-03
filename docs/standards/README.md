@@ -51,7 +51,7 @@ ydsz-pmis/
 ├── ydsz-pmis-backend/      # 后端微服务聚合 (Spring Cloud Alibaba, 7 部署 + 2 库)
 │   ├── ydsz-pmis-common/   # 公共组件库 (响应/异常/工具/常量, 不独立部署)
 │   ├── ydsz-pmis-gateway/  # API 网关
-│   ├── ydsz-pmis-iam/      # 认证/RBAC/部门/人员/职级/字典/资源池/Bench (user + auth 合并)
+│   ├── ydsz-pmis-userinfo/  # 用户信息/RBAC/部门/人员/职级/字典/资源池/Bench (user + auth 合并)
 │   ├── ydsz-pmis-workflow/ # 自研工作流引擎
 │   ├── ydsz-pmis-project/  # 项目/商机/合同/执行/财务/报表 (project + execution 合并)
 │   ├── ydsz-pmis-agent/    # AI 服务

@@ -1,6 +1,17 @@
+<!--
+  ===========================================================================
+  文件名: post-deploy-checklist.md
+  路径:   docs/operations/post-deploy-checklist.md
+  作用:   PMIS 上线后必检清单（10 项），任一未通过立即回滚
+  适用:   任何 PMIS 14 微服务或前端的发布 (Canary / 全量 / Hotfix) 后 30 分钟内
+  关联:   prod-ops-runbook.md
+  ===========================================================================
+-->
+
 # PMIS 上线后 必检清单 (Post-Deploy Checklist)
 
 > 批次 21 P4-3 | 适用: 任何 PMIS 14 微服务或前端的发布 (Canary / 全量 / Hotfix) 后 30 分钟内
+> 文档版本: V1.0 | 编制: 2026-07-01 | 最近更新: 2026-07-03
 
 每项必检, 任一未通过 → 立即回滚 → 故障复盘。
 
@@ -63,7 +74,7 @@ curl -fsS http://<service>:<port>/actuator/health
 | file | `GET /file/list?bizType=test&bizId=1` | 文件列表 |
 | audit | `GET /audit/log/page?pageNum=1&pageSize=10` | 日志分页 |
 | message | `GET /message/template/list?pageNum=1&pageSize=10` | 模板列表 |
-| cronjob | `GET /scheduler/job/list?pageNum=1&pageSize=10` | 任务列表 |
+| cronjob | `GET /cronjob/job/list?pageNum=1&pageSize=10` | 任务列表 |
 
 **判定**:
 - [ ] 所有 HTTP 200, 响应 < 500ms

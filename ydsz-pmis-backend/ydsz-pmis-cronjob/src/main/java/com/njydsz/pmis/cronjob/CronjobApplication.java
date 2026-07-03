@@ -18,7 +18,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableFeignClients(basePackages = "com.njydsz.pmis.common.feign")
 @EnableScheduling
 @MapperScan("com.njydsz.pmis.cronjob.mapper")
-public class SchedulerApplication {
+public class CronjobApplication {
 
     /**
      * 应用入口方法
@@ -26,6 +26,6 @@ public class SchedulerApplication {
      * @param args 启动参数
      */
     public static void main(String[] args) {
-        SpringApplication.run(SchedulerApplication.class, args);
+        SpringApplication.run(CronjobApplication.class, args);
     }
 }

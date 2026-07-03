@@ -108,12 +108,12 @@ export const PC = {
   // ============= 敏感操作二次认证(sensitive) =============
   SENSITIVE_REAUTH: 'sensitive:reauth:confirm',
 
-  // ============= 调度管理(cronjob) =============
-  SCHEDULER_JOB_CREATE: 'scheduler:job:create',
-  SCHEDULER_JOB_UPDATE: 'scheduler:job:update',
-  SCHEDULER_JOB_DELETE: 'scheduler:job:delete',
-  SCHEDULER_JOB_TRIGGER: 'scheduler:job:trigger',
-  SCHEDULER_JOB_RELOAD: 'scheduler:job:reload',
+  // ============= 定时任务管理(cronjob) =============
+  CRONJOB_JOB_CREATE: 'cronjob:job:create',
+  CRONJOB_JOB_UPDATE: 'cronjob:job:update',
+  CRONJOB_JOB_DELETE: 'cronjob:job:delete',
+  CRONJOB_JOB_TRIGGER: 'cronjob:job:trigger',
+  CRONJOB_JOB_RELOAD: 'cronjob:job:reload',
 
   // ============= 通知中心(notif) =============
   NOTIF_MESSAGE_SEND: 'notif:message:send',

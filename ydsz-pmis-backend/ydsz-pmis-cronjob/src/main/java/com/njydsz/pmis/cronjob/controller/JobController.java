@@ -28,7 +28,7 @@ import java.util.Map;
  */
 @Tag(name = "任务调度")
 @RestController
-@RequestMapping("/api/v1/job")
+@RequestMapping("/api/v1/cronjob")
 @RequiredArgsConstructor
 @Validated
 public class JobController {
@@ -43,7 +43,7 @@ public class JobController {
      * @return 统一响应结果，包含新增任务 ID
      */
     @Operation(summary = "新增任务")
-    @PrePermission(PermissionCodes.SCHEDULER_JOB_CREATE)
+    @PrePermission(PermissionCodes.CRONJOB_JOB_CREATE)
     @PostMapping
     public Result<Long> create(@Valid @RequestBody JobDO job) {
         return Result.ok(jobService.create(job));
@@ -56,7 +56,7 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "更新任务")
-    @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
+    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @PutMapping
     public Result<Void> update(@Valid @RequestBody JobDO job) {
         jobService.update(job);
@@ -70,9 +70,9 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除任务")
-    @PrePermission(PermissionCodes.SCHEDULER_JOB_DELETE)
+    @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
+    public Result<Void> delete(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
         jobService.delete(id);
         return Result.ok();
     }
@@ -84,9 +84,9 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "暂停任务")
-    @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
+    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @PostMapping("/{id}/pause")
-    public Result<Void> pause(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
+    public Result<Void> pause(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
         jobService.pause(id);
         return Result.ok();
     }
@@ -98,9 +98,9 @@ public class JobController {
      * @return 统一响应结果
      */
     @Operation(summary = "恢复任务")
-    @PrePermission(PermissionCodes.SCHEDULER_JOB_UPDATE)
+    @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @PostMapping("/{id}/resume")
-    public Result<Void> resume(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
+    public Result<Void> resume(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
         jobService.resume(id);
         return Result.ok();
     }
@@ -112,9 +112,9 @@ public class JobController {
      * @return 统一响应结果，包含执行日志 ID
      */
     @Operation(summary = "立即执行一次")
-    @PrePermission(PermissionCodes.SCHEDULER_JOB_TRIGGER)
+    @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
     @PostMapping("/{id}/trigger")
-    public Result<Long> trigger(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
+    public Result<Long> trigger(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
         return Result.ok(jobService.trigger(id));
     }
 
@@ -126,7 +126,7 @@ public class JobController {
      */
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
-    public Result<JobDO> getById(@PathVariable @NotNull(message = "{validation.scheduler.msg_2fae0c34}") Long id) {
+    public Result<JobDO> getById(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
         return Result.ok(jobService.getById(id));
     }
 
@@ -143,8 +143,8 @@ public class JobController {
     @Operation(summary = "分页查询任务")
     @GetMapping("/page")
     public Result<Page<JobDO>> page(
-            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.scheduler.msg_e648fb78}") int page,
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.scheduler.msg_15154512}") int size,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
@@ -163,8 +163,8 @@ public class JobController {
     @Operation(summary = "分页查询任务执行日志")
     @GetMapping("/log/page")
     public Result<Page<JobLogDO>> pageLog(
-            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.scheduler.msg_e648fb78}") int page,
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.scheduler.msg_15154512}") int size,
+            @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") int size,
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
         return Result.ok(jobService.pageLog(page, size, jobKey, status));
@@ -176,7 +176,7 @@ public class JobController {
      * @return 统一响应结果，包含操作结果信息
      */
     @Operation(summary = "重新加载所有任务")
-    @PrePermission(PermissionCodes.SCHEDULER_JOB_RELOAD)
+    @PrePermission(PermissionCodes.CRONJOB_JOB_RELOAD)
     @PostMapping("/reload")
     public Result<Map<String, Object>> reload() {
         jobService.loadOnStartup();

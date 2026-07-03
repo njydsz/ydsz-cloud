@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.service.impl;
+package com.njydsz.pmis.userinfo.service.impl;
 
 import com.njydsz.pmis.userinfo.entity.DictItemDO;
 import com.njydsz.pmis.userinfo.entity.DictTypeDO;

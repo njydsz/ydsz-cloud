@@ -1,7 +1,7 @@
 -- ====================================================================
 -- V1.0.0_020  可计费利用率快照表
 --
---  说明：可计费利用率（BillableUtilization）由 scheduler 每日计算后
+--  说明：可计费利用率（BillableUtilization）由 cronjob 每日计算后
 --        持久化到本表，驾驶舱 / 排行榜 / 趋势分析均直接读快照，
 --        避免每次实时聚合 pmis_execution_time_entry 大表。
 --
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS pmis_billable_utilization_snapshot (
     range_from       DATE         NOT NULL,
     range_to         DATE         NOT NULL,
     snapshot_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    source           VARCHAR(16)  NOT NULL DEFAULT 'SCHEDULER',    -- SCHEDULER / MANUAL / RETRO
+    source           VARCHAR(16)  NOT NULL DEFAULT 'CRONJOB',    -- CRONJOB / MANUAL / RETRO
     tenant_id        BIGINT       DEFAULT 0,
     deleted          SMALLINT     NOT NULL DEFAULT 0,
     CONSTRAINT uq_billable_period_emp UNIQUE (period, employee_id, deleted)

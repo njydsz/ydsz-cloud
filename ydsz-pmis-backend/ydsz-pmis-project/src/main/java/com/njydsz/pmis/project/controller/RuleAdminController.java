@@ -19,6 +19,8 @@ import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.config.ABTestService;
+import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
+import com.njydsz.pmis.literule.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.spi.RuleVersion;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +59,7 @@ public class RuleAdminController {
     private final DecisionTableMapper decisionTableMapper;
     private final ObjectMapper objectMapper;
     private final DecisionTableEvalService decisionTableEvalService;
+    private final ExpressionValidationService expressionValidationService;
 
     /**
      * 查询全部规则定义
@@ -158,6 +161,46 @@ public class RuleAdminController {
     @GetMapping("/validate")
     public Result<Boolean> validate(@RequestParam String expression) {
         return Result.ok(ruleAdminService.validateExpression(expression));
+    }
+
+    /**
+     * 详细校验条件表达式（1.4.0 起支持）
+     *
+     * <p>返回结构化的校验结果，包含错误类型、错误位置、错误描述、引用的变量列表，
+     * 供前端表达式编辑器渲染错误标记和自动补全提示。
+     *
+     * @param expression 条件表达式
+     * @return 校验结果
+     */
+    @PostMapping("/validate-expression")
+    public Result<ExpressionValidationResult> validateExpression(@RequestBody Map<String, String> request) {
+        String expression = request.get("expression");
+        String type = request.getOrDefault("type", "condition");
+        ExpressionValidationResult result;
+        switch (type) {
+            case "severity":
+                result = expressionValidationService.validateSeverity(expression);
+                break;
+            case "template":
+                result = expressionValidationService.validateTemplate(expression);
+                break;
+            case "condition":
+            default:
+                result = expressionValidationService.validateCondition(expression);
+                break;
+        }
+        return Result.ok(result);
+    }
+
+    /**
+     * 批量校验表达式（1.4.0 起支持）
+     *
+     * @param request key=标签，value=表达式
+     * @return 校验结果（与输入顺序一致）
+     */
+    @PostMapping("/validate-batch")
+    public Result<Map<String, ExpressionValidationResult>> validateBatch(@RequestBody Map<String, String> request) {
+        return Result.ok(expressionValidationService.validateBatch(request));
     }
 
     /**

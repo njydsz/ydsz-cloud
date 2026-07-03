@@ -90,13 +90,13 @@ public final class PermissionCodes {
     public static final String RESOURCE_ASSIGN_ACT = "resource:assign:act";
     public static final String RESOURCE_BENCH_ACT = "resource:bench:act";
 
-    // ==================== 调度 ====================
+    // ==================== 定时任务 ====================
 
-    public static final String SCHEDULER_JOB_CREATE = "scheduler:job:create";
-    public static final String SCHEDULER_JOB_UPDATE = "scheduler:job:update";
-    public static final String SCHEDULER_JOB_DELETE = "scheduler:job:delete";
-    public static final String SCHEDULER_JOB_TRIGGER = "scheduler:job:trigger";
-    public static final String SCHEDULER_JOB_RELOAD = "scheduler:job:reload";
+    public static final String CRONJOB_JOB_CREATE = "cronjob:job:create";
+    public static final String CRONJOB_JOB_UPDATE = "cronjob:job:update";
+    public static final String CRONJOB_JOB_DELETE = "cronjob:job:delete";
+    public static final String CRONJOB_JOB_TRIGGER = "cronjob:job:trigger";
+    public static final String CRONJOB_JOB_RELOAD = "cronjob:job:reload";
 
     // ==================== 通知 ====================
 
@@ -306,10 +306,10 @@ public final class PermissionCodes {
 
     // ==================== 兼容旧码(将废弃,仅用于数据迁移) ====================
 
-    /** @deprecated use {@link #SCHEDULER_JOB_CREATE} */
+    /** @deprecated use {@link #CRONJOB_JOB_CREATE} */
     @Deprecated
     public static final String LEGACY_JOB_ADD = "job:add";
-    /** @deprecated use {@link #SCHEDULER_JOB_UPDATE} */
+    /** @deprecated use {@link #CRONJOB_JOB_UPDATE} */
     @Deprecated
     public static final String LEGACY_JOB_EDIT = "job:edit";
     /** @deprecated use {@link #NOTIF_MESSAGE_SEND} */

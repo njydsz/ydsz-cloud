@@ -1,4 +1,4 @@
-﻿# 多租户架构评估报告
+# 多租户架构评估报告
 
 ## 1. 评估背景
 
@@ -42,7 +42,7 @@ YDSZ PMIS 当前为单租户私有化部署架构。本评估分析 SaaS 多租�
 
 ### 必须修改的模块
 - ydsz-pmis-common — 租户拦截器、Token 扩展
-- ydsz-pmis-iam — 用户/角色/权限增加租户维度（含原 user + auth）
+- ydsz-pmis-userinfo — 用户/角色/权限增加租户维度（含原 user + auth）
 - ydsz-pmis-project — 项目/合同/商机/执行数据增加 tenant_id（含原 project + execution）
 - ydsz-pmis-system — 配置/审计/通知/消息模板增加租户维度（含原 config + audit + notification + message；file 仅 bucket 隔离）
 - ydsz-pmis-gateway — 路由层注入 tenant_id

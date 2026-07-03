@@ -1,6 +1,15 @@
+<!--
+  ===========================================================================
+  文件名: git-workflow.md
+  路径:   docs/standards/git-workflow.md
+  作用:   PMIS Git 分支模型、Conventional Commits、commitlint、Code Review、Tag/Release 流程
+  模型:   GitLab Flow + Trunk Based 混合（按大厂标准）
+  ===========================================================================
+-->
+
 # Git 工作流规范
 
-> 文档版本: V1.0 | 编制日期: 2026-06-30
+> 文档版本: V1.0 | 编制日期: 2026-06-30 | 最近更新: 2026-07-03
 > 模型: GitLab Flow + Trunk Based 混合 (按大厂标准)
 
 ## 1. 分支模型
@@ -136,3 +145,53 @@ MAJOR.MINOR.PATCH
 - 禁止提交：`*.jar`、`*.war`、`target/`、`node_modules/`、`.env`、`.idea/`、`.vscode/`、密码、密钥
 - 仓库根 `.gitignore` 必须包含
 - 敏感配置统一从 Nacos / 环境变量读取，**禁止硬编码**
+
+## 9. 紧急修复（Hotfix）流程
+
+```
+线上故障 ──► 创建 hotfix/PMIS-xxx 分支（基于 main）
+        ──► 修复 + 自测
+        ──► 紧急合入 main（1 Reviewer + 1 Maintainer 即可）
+        ──► 同步 Cherry-pick 到 release/* 当前发布分支
+        ──► 发布新 Tag（如 v1.0.1）
+        ──► 事后复盘 + 补全单测
+```
+
+> ⚠️ Hotfix 仅用于**生产 P0/P1 故障**，常规 Bug 修复走 `bugfix/*` → release 流程。
+
+## 10. 常用 Git 命令约定
+
+```bash
+# 同步最新 main
+git fetch origin
+git rebase origin/main
+
+# 推送前自检（项目根）
+./scripts/pre-commit.sh   # 触发 husky + lint-staged
+
+# 撤销最近一次提交（保留改动）
+git reset --soft HEAD~1
+
+# 修改最近一次提交信息
+git commit --amend
+
+# 交互式 rebase 合并多个 commit
+git rebase -i HEAD~3
+```
+
+## 11. 提交信息红线
+
+| ❌ 禁止 | ✅ 推荐 |
+|---------|----------|
+| `fix bug` | `fix(project): 修复项目状态切换失败的并发问题` |
+| `update` | `feat(user): 新增用户导入功能` |
+| `wip` | `chore: 临时提交，完成后需拆分` |
+| 大段无意义 emoji | 简洁中文或英文，描述"做什么" |
+| 多个不相关变更混在一个提交 | 一个提交只做一件事（原子提交） |
+
+## 12. 变更记录
+
+| 日期 | 版本 | 变更人 | 变更内容 |
+|------|------|--------|----------|
+| 2026-07-03 | 1.1 | 架构组 | 新增 §9 Hotfix 流程、§10 常用命令、§11 提交红线 |
+| 2026-06-30 | 1.0 | 架构组 | 初始版本 |

@@ -1,3 +1,14 @@
+<!--
+  ===========================================================================
+  文件名: canary-deployment.md
+  路径:   docs/canary-deployment.md
+  作用:   PMIS 金丝雀发布（Canary Deployment）方案：流量分桶、灰度策略、回滚机制
+  适用:   14 个 Spring Cloud 微服务 + 1 个前端
+  阶段:   5% → 25% → 50% → 100%
+  关联:   docs/operations/post-deploy-checklist.md  /  helm/  /  docs/chaos-engineering.md
+  ===========================================================================
+-->
+
 # PMIS 金丝雀发布 (Canary Deployment)
 
 > 批次 20 P3-4 | 适用: PMIS 全量 14 个 Spring Cloud 微服务 + 1 个前端
@@ -26,7 +37,7 @@
 
 ### 3.1 前置条件
 1. 微服务 namespace 已开启 sidecar 注入: `kubectl label namespace pmis-prod istio-injection=enabled`
-2. `gateway` 服务本身不参与金丝雀 (它路由到后端), 仅对 backend (project/iam/...) 切分
+2. `gateway` 服务本身不参与金丝雀 (它路由到后端), 仅对 backend (project/userinfo/...) 切分
 3. 当前版本 (stable) 的 Deployment labels 必须包含 `version: <tag>`
 
 ### 3.2 执行步骤

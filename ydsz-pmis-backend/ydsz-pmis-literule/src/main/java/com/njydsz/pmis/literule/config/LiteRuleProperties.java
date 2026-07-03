@@ -56,4 +56,20 @@ public class LiteRuleProperties {
      * 按比例将流量分到候选版本，结果会被标记 canary=true。
      */
     private boolean canaryEnabled = true;
+
+    /**
+     * 是否启用规则冲突检测（1.4.0）
+     *
+     * <p>启用后，规则保存前会检测与现有规则的潜在冲突
+     * （条件重复、严重度矛盾、命名冲突）。
+     */
+    private boolean conflictDetectionEnabled = true;
+
+    /**
+     * ERROR 级别冲突是否阻塞保存（1.4.0）
+     *
+     * <p>true：检测到 CONTRADICTORY_SEVERITY 等确定性冲突时抛异常阻塞保存；
+     * false：仅记录日志，不阻塞保存。
+     */
+    private boolean conflictDetectionBlockOnError = true;
 }

@@ -1,3 +1,14 @@
+<!--
+  ===========================================================================
+  文件名: rule-scorecard-tree-script.md
+  路径:   docs/rules/rule-scorecard-tree-script.md
+  作用:   LiteRule 1.4.0 评分卡/决策树/脚本三类高级规则的持久化设计
+  版本:   1.4.0
+  迁移:   V1.0.0_048__init_rule_scorecard_tree_script.sql
+  关联:   ydsz-pmis-literule 源码  /  rule-canary.md
+  ===========================================================================
+-->
+
 # 评分卡 / 决策树 / 脚本规则持久化
 
 > 对应版本：LiteRule 1.4.0  

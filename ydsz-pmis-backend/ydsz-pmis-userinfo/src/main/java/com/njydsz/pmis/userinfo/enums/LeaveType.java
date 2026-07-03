@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.enums;
+package com.njydsz.pmis.userinfo.enums;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

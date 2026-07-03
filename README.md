@@ -43,13 +43,13 @@
 
 | 维度 | 数字 | 说明 |
 |---|---|---|
-| 后端微服务 | **9 模块（7 部署 + 2 库）** | gateway / iam / workflow / project / agent / system / cronjob（部署）+ common / literule（库）+ 父 pom |
+| 后端微服务 | **9 模块（7 部署 + 2 库）** | gateway / userinfo / workflow / project / agent / system / cronjob（部署）+ common / literule（库）+ 父 pom |
 | 后端 Java 源文件 | **870+** | 业务代码 + DTO/VO/Mapper/Test |
 | 后端测试 | **229 测试类 / 1500+ 用例** | `mvn test` BUILD SUCCESS 跨 9 模块 |
 | 前端页面 | **57 个** | 业务页面 + 设计器 + 监控中心 |
 | 前端测试 | **54 文件 / 470+ 用例** | vitest 单元 + 组件 + Playwright 4 E2E |
-| Controller 数 | **80+** | project 41 + iam 15 + workflow 3 + 其余 21+ |
-| 业务 Service | **130+** | project 38 + iam 29 + agent 12 + workflow 8 + 其余 40+ |
+| Controller 数 | **80+** | project 41 + userinfo 15 + workflow 3 + 其余 21+ |
+| 业务 Service | **130+** | project 38 + userinfo 29 + agent 12 + workflow 8 + 其余 40+ |
 | 业务枚举 | **80+** | 状态机 / 业务码 / 审批流 / 编排模式 |
 | 权限码 | **240+** | 前后端 `PermissionCodes` 一一对应 |
 | 状态机 | **35+** | 覆盖商机 / 立项 / 合同 / 变更 / 发票 / 回款 / 工单 / 售后等 |
@@ -123,7 +123,7 @@
 | 模块 | artifactId | 端口 | 职责 |
 |---|---|---|---|
 | API 网关 | ydsz-pmis-gateway | **9000** | 路由 + 鉴权 + 限流 + CORS |
-| IAM | ydsz-pmis-iam | **9002** | 登录 / Token / 2FA / 登录审计 / 二次认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签（user + auth 合并，包名 com.njydsz.pmis.iam） |
+| 用户信息 | ydsz-pmis-userinfo | **9002** | 登录 / Token / 2FA / 登录审计 / 二次认证 / RBAC / 部门 / 人员 / 职级 / 字典 / 资源池 / Bench / 员工标签（user + auth 合并，包名 com.njydsz.pmis.userinfo） |
 | 工作流 | ydsz-pmis-workflow | **9004** | 自研 `pmis_flow_*` 引擎 + BPMN 2.0 解析 + 模板 + 模拟 |
 | 项目 | ydsz-pmis-project | **9005** | 商机 / 立项 / 合同 / 变更 / WBS / EVM / 成本 / 收入 / 风险 / 工时 / 发票 / 付款 / 客户信用 / 资源 / Dashboard / Report / 费率 / 交付 / 收尾 / 利润（project + execution 合并，包名 com.njydsz.pmis.project） |
 | AI Agent | ydsz-pmis-agent | **9007** | 5 Agent + 4 编排 + 5 LLM Provider |
@@ -132,18 +132,18 @@
 | 公共（库） | ydsz-pmis-common | — | 统一响应 / AOP / 注解 / Feign / 敏感数据 / JobHandler / Sentry / I18n / 权限码 / 混沌（不独立部署） |
 | 轻量规则引擎（库） | ydsz-pmis-literule | — | 表达式驱动 + 规则链 + 阈值注入 + dry-run（批次 21 引入，不独立部署） |
 
-> **架构决策（2026-07-03 修订）**: 服务合并重构——user + auth → iam（9002，包名 com.njydsz.pmis.iam）；file + config + audit + notification + message → system（9008，包名 com.njydsz.pmis.system）；project + execution → project（9005，包名 com.njydsz.pmis.project）。合并后共 7 个可部署服务 + 2 个库（common / literule 不独立部署），降低运维成本与跨服务调用复杂度。原规划 11 微服务曾落地为 15 模块，本次合并收敛为 9 模块。
+> **架构决策（2026-07-03 修订）**: 服务合并重构——user + auth → userinfo（9002，包名 com.njydsz.pmis.userinfo）；file + config + audit + notification + message → system（9008，包名 com.njydsz.pmis.system）；project + execution → project（9005，包名 com.njydsz.pmis.project）。合并后共 7 个可部署服务 + 2 个库（common / literule 不独立部署），降低运维成本与跨服务调用复杂度。原规划 11 微服务曾落地为 15 模块，本次合并收敛为 9 模块。
 
 ### 4.3 模块依赖拓扑
 
 ```text
-gateway → iam / project / agent / system / workflow
-iam     → common / literule
-project → common / iam(Feign) / workflow(Feign) / literule
+gateway → userinfo / project / agent / system / workflow
+userinfo → common / literule
+project → common / userinfo(Feign) / workflow(Feign) / literule
 agent   → common / project(Feign) / literule
-system  → common / iam(Feign) / project(Feign)
+system  → common / userinfo(Feign) / project(Feign)
 workflow → common / system(Feign)
-scheduler → common.feign(ProjectClient)        # 批次 17: JobHandler 迁至 common,打破循环依赖
+scheduler → common.feign(ProjectClient)        # 批次 17: JobHandler 迁至 common,打破循环依赖（已更名为 ydsz-pmis-cronjob）
 literule  → common                              # 批次 21: 表达式引擎独立,供各业务模块按需引用
 ```
 
@@ -173,7 +173,7 @@ psql -U pmis -d pmis -f deploy/sql/V1.0.0_001__init_pmis_schema.sql
 # Spring Boot 启动时 Flyway 自动迁移 (推荐)
 
 # 3. 启动后端 (按依赖顺序)
-mvn -pl ydsz-pmis-common,ydsz-pmis-literule,ydsz-pmis-iam \
+mvn -pl ydsz-pmis-common,ydsz-pmis-literule,ydsz-pmis-userinfo \
     -am install -DskipTests
 mvn -pl ydsz-pmis-gateway spring-boot:run   # 端口 9000
 # 其它模块同理 spring-boot:run,按依赖拓扑顺序启动
@@ -216,7 +216,7 @@ ydsz-pmis/
 ├── ydsz-pmis-backend/          # 后端 9 模块聚合工程（7 部署 + 2 库）
 │   ├── ydsz-pmis-gateway/      # 9000 API 网关
 │   ├── ydsz-pmis-common/       # 公共组件库 (80+ 测试类, 不独立部署)
-│   ├── ydsz-pmis-iam/          # 9002 认证/RBAC/部门/人员/职级/字典/资源池/Bench/员工标签
+│   ├── ydsz-pmis-userinfo/    # 9002 用户信息/RBAC/部门/人员/职级/字典/资源池/Bench/员工标签
 │   ├── ydsz-pmis-system/       # 9008 文件/配置/审计/通知/消息模板
 │   ├── ydsz-pmis-workflow/     # 9004 自研工作流 + BPMN
 │   ├── ydsz-pmis-project/      # 9005 项目/执行/财务/报表 (商机→售后全生命周期)
@@ -300,7 +300,7 @@ ydsz-pmis/
 | 13 | 用户中心强化 | 2FA + Session + 登录审计 + 数据导出审计 + 二次认证 + 6 模块补全 60 测试 |
 | 14-15 | 报表与驾驶舱 | EVM 看板 + Cockpit 6 KPI + 高级报表 6 类 + 5 张聚合 SQL 视图 |
 | 16 | AI Agent 编排 | 4 策略 + Blackboard + 50 测试类 100% 通过 |
-| 17 | JobHandler 重构 | scheduler→execution 跨模块 Feign 化，172 测试 100% |
+| 17 | JobHandler 重构 | cronjob→execution 跨模块 Feign 化，172 测试 100% |
 | 18-19 | 工作流 v1.1 + 质量门禁 | Checkstyle + SonarQube + OWASP + 工作流 110 测试 |
 | 20 | 混沌工程 + 金丝雀 | ChaosService + 5 类实验 + Argo Rollouts |
 | 21 | literule 规则引擎 | Aviator 表达式 + 规则链 + 阈值注入 + dry-run |

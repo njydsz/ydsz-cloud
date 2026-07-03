@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.controller;
+package com.njydsz.pmis.userinfo.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.userinfo.dto.LoginContextDTO;

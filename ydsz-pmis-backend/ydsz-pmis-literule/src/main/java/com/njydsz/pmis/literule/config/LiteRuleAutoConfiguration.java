@@ -144,7 +144,6 @@ public class LiteRuleAutoConfiguration {
      *
      * <p>使用反射式检测避免对 MeterRegistry 类的硬依赖，使得 literule 在缺少 micrometer 依赖的环境下仍能工作。
      */
-    @SuppressWarnings("unchecked")
     private void bindMicrometerIfAvailable(DefaultRuleEngine engine, ApplicationContext ctx) {
         Class<?> meterRegistryClass;
         try {
@@ -186,6 +185,23 @@ public class LiteRuleAutoConfiguration {
     public ABTestService abTestService(ExpressionEvaluator evaluator) {
         log.info("[LiteRule] A/B 测试服务已初始化");
         return new ABTestService(evaluator);
+    }
+
+    /**
+     * 表达式校验服务（1.4.0 起支持）
+     *
+     * <p>面向前端表达式编辑器的校验 API，提供结构化的错误信息。
+     *
+     * @param evaluator 表达式求值器
+     * @return ExpressionValidationService 实例
+     * @since 1.4.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public com.njydsz.pmis.literule.expr.ExpressionValidationService expressionValidationService(
+            ExpressionEvaluator evaluator) {
+        log.info("[LiteRule] 表达式校验服务已初始化");
+        return new com.njydsz.pmis.literule.expr.ExpressionValidationService(evaluator);
     }
 
     /**
@@ -295,8 +311,20 @@ public class LiteRuleAutoConfiguration {
             service.setBroadcaster(broadcaster);
             log.info("[LiteRule] 分布式规则广播已启用");
         }
-        log.info("[LiteRule] 规则管理服务已初始化（dryRun={}, broadcast={}）",
-                properties.isDryRunEnabled(), broadcaster != null);
+        // 冲突检测（1.4.0 起支持，仅在启用时装配检测器）
+        if (properties.isConflictDetectionEnabled()) {
+            RuleConflictDetector conflictDetector = new RuleConflictDetector(configProvider);
+            service.setConflictDetector(conflictDetector);
+            service.setConflictDetectionEnabled(true);
+            service.setConflictDetectionBlockOnError(properties.isConflictDetectionBlockOnError());
+            log.info("[LiteRule] 规则冲突检测已启用（blockOnError={}）",
+                    properties.isConflictDetectionBlockOnError());
+        } else {
+            // 显式关闭：即便上层手动注入检测器，也不生效
+            service.setConflictDetectionEnabled(false);
+        }
+        log.info("[LiteRule] 规则管理服务已初始化（dryRun={}, broadcast={}, conflictDetection={}）",
+                properties.isDryRunEnabled(), broadcaster != null, properties.isConflictDetectionEnabled());
         return service;
     }
 }

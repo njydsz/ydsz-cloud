@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * 用户服务降级工厂
  *
- * <p>iam 服务不可用时返回 503 / 零费率 / 空映射，避免 NameAssembler / 成本计算等场景级联失败。
+ * <p>userinfo 服务不可用时返回 503 / 零费率 / 空映射，避免 NameAssembler / 成本计算等场景级联失败。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

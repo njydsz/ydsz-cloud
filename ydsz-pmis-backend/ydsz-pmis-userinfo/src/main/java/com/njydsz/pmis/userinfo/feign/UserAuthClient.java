@@ -1,4 +1,4 @@
-﻿package com.njydsz.pmis.userinfo.feign;
+package com.njydsz.pmis.userinfo.feign;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.userinfo.dto.LoginContextDTO;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@FeignClient(name = "ydsz-pmis-iam", fallbackFactory = UserAuthClientFallback.class)
+@FeignClient(name = "ydsz-pmis-userinfo", fallbackFactory = UserAuthClientFallback.class)
 public interface UserAuthClient {
 
     /**

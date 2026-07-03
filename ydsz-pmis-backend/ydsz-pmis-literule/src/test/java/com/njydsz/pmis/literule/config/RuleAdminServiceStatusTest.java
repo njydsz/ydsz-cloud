@@ -2,12 +2,9 @@ package com.njydsz.pmis.literule.config;
 
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
-import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.core.DefaultRuleEngine;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
-import com.njydsz.pmis.literule.spi.RuleVersion;
-import com.njydsz.pmis.literule.spi.RuleVersionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;

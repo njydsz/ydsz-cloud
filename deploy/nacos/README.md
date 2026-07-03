@@ -1,4 +1,4 @@
-﻿# Nacos 配置中心
+# Nacos 配置中心
 
 将各微服务配置通过 Nacos 集中管理，本目录约定 **互联网大厂标准** 的 DataId / Group / Namespace 三段式命名。
 
@@ -32,7 +32,7 @@
 | 微服务 | DataId | 端口 |
 |--------|--------|------|
 | ydsz-pmis-gateway | ydsz-pmis-gateway-{dev\|sit\|uat\|prod}.yaml | 9000 |
-| ydsz-pmis-iam | ydsz-pmis-iam-{dev\|sit\|uat\|prod}.yaml | 9002 |
+| ydsz-pmis-userinfo | ydsz-pmis-userinfo-{dev\|sit\|uat\|prod}.yaml | 9002 |
 | ydsz-pmis-system | ydsz-pmis-system-{dev\|sit\|uat\|prod}.yaml | 9008 |
 | ydsz-pmis-workflow | ydsz-pmis-workflow-{dev\|sit\|uat\|prod}.yaml | 9004 |
 | ydsz-pmis-project | ydsz-pmis-project-{dev\|sit\|uat\|prod}.yaml | 9005 |
@@ -40,7 +40,7 @@
 | ydsz-pmis-cronjob | ydsz-pmis-cronjob-{dev\|sit\|uat\|prod}.yaml | 9012 |
 
 > 服务合并重构后仅保留 7 个微服务：
-> - `user` + `auth` → `iam`（端口 9002）
+> - `user` + `auth` → `userinfo`（端口 9002）
 > - `file` + `config` + `audit` + `notification` + `message` → `system`（端口 9008）
 > - `project` + `execution` → `project`（端口 9005）
 
@@ -118,11 +118,11 @@ Nacos 提供 OpenAPI 可批量导入：
 ```bash
 # 通用导入脚本（伪代码，参考官方 API 文档）
 curl -X POST "http://nacos-host:8848/nacos/v1/cs/configs" \
-  -d "dataId=ydsz-pmis-iam-prod.yaml" \
+  -d "dataId=ydsz-pmis-userinfo-prod.yaml" \
   -d "group=PMIS_GROUP" \
   -d "namespaceId=pmis-prod" \
   -d "type=yaml" \
-  --data-urlencode "content@src/main/resources/ydsz-pmis-iam-prod.yaml"
+  --data-urlencode "content@src/main/resources/ydsz-pmis-userinfo-prod.yaml"
 ```
 
 也可使用 `nacos-cli` / `nacos-sync` 等工具。
@@ -199,7 +199,7 @@ curl http://<service-host>:<port>/actuator/refresh
 | 序号 | 模块 | 端口 | DataId 前缀 |
 |------|------|------|-------------|
 | 1 | ydsz-pmis-gateway | 9000 | ydsz-pmis-gateway- |
-| 2 | ydsz-pmis-iam | 9002 | ydsz-pmis-iam- |
+| 2 | ydsz-pmis-userinfo | 9002 | ydsz-pmis-userinfo- |
 | 3 | ydsz-pmis-system | 9008 | ydsz-pmis-system- |
 | 4 | ydsz-pmis-workflow | 9004 | ydsz-pmis-workflow- |
 | 5 | ydsz-pmis-project | 9005 | ydsz-pmis-project- |

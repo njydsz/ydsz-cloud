@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
  * <p>设计要点：
  * <ul>
  *   <li>每创建一个定时器节点实例，插入一行 PENDING 记录</li>
- *   <li>scheduler 每 30s 扫描 fire_at &lt;= now() AND timer_status = 'PENDING'</li>
+ *   <li>cronjob 每 30s 扫描 fire_at &lt;= now() AND timer_status = 'PENDING'</li>
  *   <li>触发后更新 status = FIRED, fired_at = now()，并由 DefaultFlowAdvancer 推进流程</li>
  *   <li>被依附的 userTask 完成时关闭对应 BOUNDARY 定时器（CANCELLED）</li>
  * </ul>

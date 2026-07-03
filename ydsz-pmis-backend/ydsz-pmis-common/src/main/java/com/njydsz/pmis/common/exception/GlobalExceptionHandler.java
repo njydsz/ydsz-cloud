@@ -7,7 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
@@ -43,12 +43,20 @@ public class GlobalExceptionHandler {
     /**
      * 国际化消息源（可选注入）。
      *
-     * <p>使用字段注入而非构造器注入，以保留无参构造函数，
-     * 便于单元测试中直接 {@code new GlobalExceptionHandler()} 实例化。
+     * <p>使用构造器注入并通过 {@link ObjectProvider} 支持缺失场景，
+     * 便于单元测试中通过反射或子类化绕过 Spring 容器；
      * 当 messageSource 为 null（如单元测试）时，回退到 {@link BizErrorCode#getMessage()} 默认中文消息。
      */
-    @Autowired
-    private MessageSource messageSource;
+    private final MessageSource messageSource;
+
+    /**
+     * 构造器：通过 {@link ObjectProvider} 支持 {@link MessageSource} 可选注入。
+     *
+     * @param messageSourceProvider 国际化消息源提供者（可选）
+     */
+    public GlobalExceptionHandler(ObjectProvider<MessageSource> messageSourceProvider) {
+        this.messageSource = messageSourceProvider.getIfAvailable();
+    }
 
     /**
      * 业务异常处理

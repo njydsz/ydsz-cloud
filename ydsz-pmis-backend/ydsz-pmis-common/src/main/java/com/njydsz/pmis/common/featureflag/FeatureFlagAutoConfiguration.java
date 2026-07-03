@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.featureflag;
 
+import com.njydsz.pmis.common.feign.ConfigClient;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -19,11 +21,12 @@ public class FeatureFlagAutoConfiguration {
     /**
      * 注册特性开关服务默认实现
      *
+     * @param configClientProvider 配置中心 Feign 客户端提供者（可选, 无依赖时降级到本地 store）
      * @return LocalFeatureFlagService 实例
      */
     @Bean
     @ConditionalOnMissingBean(FeatureFlagService.class)
-    public FeatureFlagService featureFlagService() {
-        return new LocalFeatureFlagService();
+    public FeatureFlagService featureFlagService(ObjectProvider<ConfigClient> configClientProvider) {
+        return new LocalFeatureFlagService(configClientProvider);
     }
 }

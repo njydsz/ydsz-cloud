@@ -1,4 +1,4 @@
-package com.njydsz.pmis.project.scheduler.handler;
+package com.njydsz.pmis.project.cronjob.handler;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
@@ -31,8 +31,8 @@ import java.util.Map;
  * <p>Bean 名称 = {@code billableUtilizationJobHandler}，
  * 可在 pmis_job 表插入一条记录：handler=billableUtilizationJobHandler, cron="0 30 2 * * ?"
  *
- * <p>本类从 {@code ydsz-pmis-cronjob} 迁出至本模块，避免 scheduler→project 的循环依赖
- * （project 已依赖 scheduler）。由 Spring 在项目业务模块启动时扫描本 Bean，并按名称匹配 pmis_job.handler。
+ * <p>本类从 {@code ydsz-pmis-cronjob} 迁出至本模块，避免 cronjob→project 的循环依赖
+ * （project 已依赖 cronjob）。由 Spring 在项目业务模块启动时扫描本 Bean，并按名称匹配 pmis_job.handler。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0

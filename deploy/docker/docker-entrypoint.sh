@@ -9,7 +9,7 @@
 #    4) 启动超过 60s 仍在运行则输出慢启动诊断, 提示调优
 #
 #  挂载示例 (覆盖配置):
-#    docker run -v /host/conf:/opt/pmis/conf pmis-iam:1.0.0
+#    docker run -v /host/conf:/opt/pmis/conf pmis-userinfo:1.0.0
 #
 #  注意:
 #    - 容器 stop 时 tini (PID 1) 负责转发 SIGTERM 给 java 进程

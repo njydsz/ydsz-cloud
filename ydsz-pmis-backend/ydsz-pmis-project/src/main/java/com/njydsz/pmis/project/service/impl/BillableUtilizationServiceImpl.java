@@ -387,7 +387,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
         snap.setRangeFrom(from);
         snap.setRangeTo(to);
         snap.setSnapshotAt(LocalDateTime.now());
-        snap.setSource("SCHEDULER");
+        snap.setSource("CRONJOB");
         snap.setDeleted(0);
         return snap;
     }
