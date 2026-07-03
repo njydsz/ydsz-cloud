@@ -16,14 +16,14 @@ import java.util.Map;
  *
  * <p>启用项：
  * <ul>
- *   <li>{@code stat-filter} — SQL 执行统计，慢 SQL 阈值 3 秒，自动记录到日志</li>
+ *   <li>{@code stat-filter} — SQL 执行统计，慢 SQL 阈值 1 秒（与 PG log_min_duration_statement 对齐），自动记录到日志</li>
  *   <li>{@code web-stat-filter} — URL 访问统计（请求次数/执行时间）</li>
- *   <li>{@code stat-view-servlet} — 监控页面 /druid/* （生产环境建议配合网关权限控制）</li>
+ *   <li>{@code stat-view-servlet} — 监控页面 /druid/* <b>默认关闭</b>，需显式启用并强制配置账号密码 + IP 白名单</li>
  *   <li>{@code aop-patterns} — AOP 拦截 Service 层方法，统计方法级 SQL 执行</li>
  * </ul>
  *
  * <p>覆盖策略：业务服务可在自身 application.yml 中显式设置同名属性覆盖默认值，
- * 例如关闭监控页面：{@code spring.datasource.druid.stat-view-servlet.enabled=false}。
+ * 例如启用监控页面：{@code spring.datasource.druid.stat-view-servlet.enabled=true}（必须同时配置 login-username/password）。
  *
  * <p>注册：{@code META-INF/spring/org.springframework.boot.env.EnvironmentPostProcessor.imports}
  *
@@ -37,8 +37,8 @@ import java.util.Map;
 @SuppressWarnings("removal")
 public class DruidMonitorEnabler implements EnvironmentPostProcessor {
 
-    /** 默认慢 SQL 阈值（毫秒），生产环境建议 3 秒 */
-    public static final String SLOW_SQL_MILLIS_DEFAULT = "3000";
+    /** 默认慢 SQL 阈值（毫秒），与 PostgreSQL log_min_duration_statement=500ms 对齐（取 1000ms 平衡噪音与可视性） */
+    public static final String SLOW_SQL_MILLIS_DEFAULT = "1000";
 
     /** Druid DataSource 全限定类名，用于检测 classpath 是否存在 Druid */
     public static final String DRUID_DATASOURCE_CLASS = "com.alibaba.druid.pool.DruidDataSource";
@@ -90,11 +90,11 @@ public class DruidMonitorEnabler implements EnvironmentPostProcessor {
         defaults.put("spring.datasource.druid.web-stat-filter.exclusions",
                 "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*");
 
-        // 监控页面（/druid/*）
-        defaults.put("spring.datasource.druid.stat-view-servlet.enabled", true);
+        // 监控页面（/druid/*）—— H4.1 修复：默认关闭，避免生产裸奔
+        // 启用时必须显式配置 login-username/password 与 IP 白名单（allow/deny）
+        defaults.put("spring.datasource.druid.stat-view-servlet.enabled", false);
         defaults.put("spring.datasource.druid.stat-view-servlet.url-pattern", "/druid/*");
         defaults.put("spring.datasource.druid.stat-view-servlet.reset-enable", false);
-        // 默认不设置 login-username/password，由网关统一鉴权；如需独立访问请显式配置
 
         // AOP 拦截 Service 层，统计方法级 SQL 执行情况
         defaults.put("spring.datasource.druid.aop-patterns",

@@ -20,6 +20,7 @@ import { deployDefinition } from '@/api/workflow'
 import type { FlowDeployDTO } from '@/api/workflow/types'
 import FormFieldPermissions from './FormFieldPermissions.vue'
 import SlaRuleConfig from './SlaRuleConfig.vue'
+import { autoLayout } from './bpmn/autoLayout'
 
 // ==================== Props ====================
 const props = defineProps<{
@@ -374,6 +375,23 @@ function handleReset() {
   ElMessage.success('已重置为空白流程')
 }
 
+/**
+ * P2-3: 一键自动布局（dagre 分层有向图）
+ *
+ * <p>解决 bpmn-js 内置 BpmnAutoPlace 对网关分叉/并行汇聚场景节点重叠、连线交叉的问题。
+ * 用户点击按钮触发，不破坏手动调整结果；坐标通过 moveShape 写入 BPMNDI 段，
+ * 部署后实例详情/回放均能透传。
+ */
+function handleAutoLayout() {
+  if (!modeler.value) return
+  try {
+    autoLayout(modeler.value)
+    ElMessage.success('已自动布局')
+  } catch (e) {
+    ElMessage.error('自动布局失败：' + (e as Error).message)
+  }
+}
+
 // ==================== Templates ====================
 const templates = [
   {
@@ -479,6 +497,7 @@ function applyTemplate(tpl: (typeof templates)[0]) {
       <div class="bpmn-toolbar-right">
         <el-button size="small" @click="handleImportXml">导入 XML</el-button>
         <el-button size="small" @click="handleExportXml" :disabled="!currentXml">导出 XML</el-button>
+        <el-button size="small" @click="handleAutoLayout" :disabled="!currentXml">自动布局</el-button>
         <el-button size="small" @click="handleReset">重置</el-button>
         <el-button size="small" type="primary" @click="handleSave" :loading="saving" :disabled="!currentXml">
           保存

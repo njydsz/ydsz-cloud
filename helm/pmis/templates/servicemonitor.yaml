@@ -15,7 +15,8 @@ spec:
   endpoints:
     - port: http
       path: /actuator/prometheus
-      interval: 15s
+      interval: {{ $.Values.monitoring.serviceMonitor.interval | default "30s" }}
+      scrapeTimeout: {{ $.Values.monitoring.serviceMonitor.scrapeTimeout | default "10s" }}
 ---
 {{- end }}
 {{- end }}

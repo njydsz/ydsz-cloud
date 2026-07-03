@@ -80,9 +80,16 @@ public class LiteRuleAutoConfiguration {
     public RuleEngine ruleEngine(LiteRuleProperties properties,
                                   ObjectProvider<TraceRecorder> traceDelegateProvider,
                                   ObjectProvider<ExpressionEvaluator> evaluatorProvider,
+                                  ObjectProvider<com.njydsz.pmis.literule.core.BreakpointHook> breakpointHookProvider,
                                   ApplicationContext applicationContext) {
         DefaultRuleEngine engine = new DefaultRuleEngine();
         engine.setStatsEnabled(properties.isStatsEnabled());
+
+        // 断点调试 Hook（P2-3）：可选注入，仅当应用层提供实现时生效
+        com.njydsz.pmis.literule.core.BreakpointHook bpHook = breakpointHookProvider.getIfAvailable();
+        if (bpHook != null) {
+            engine.setBreakpointHook(bpHook);
+        }
 
         if (properties.isTraceEnabled()) {
             AsyncTraceRecorder asyncRecorder = new AsyncTraceRecorder(
@@ -132,10 +139,11 @@ public class LiteRuleAutoConfiguration {
         // Micrometer 桥接（仅当 classpath 存在 MeterRegistry 时启用）
         bindMicrometerIfAvailable(engine, applicationContext);
 
-        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}）",
+        log.info("[LiteRule] 默认规则引擎已初始化（statsEnabled={}, traceEnabled={}, timeoutMs={}, breaker={}, metrics={}, canary={}, breakpoint={}）",
                 properties.isStatsEnabled(), properties.isTraceEnabled(),
                 properties.getRuleTimeoutMs(), properties.getCircuitBreakerMinEvaluations() > 0,
-                engine.getMetrics() != null, engine.getCanaryRouter() != null);
+                engine.getMetrics() != null, engine.getCanaryRouter() != null,
+                engine.getBreakpointHook() != null);
         return engine;
     }
 

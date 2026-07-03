@@ -1,5 +1,5 @@
 -- ============================================================
--- V1.0.0_051__init_rule_variable_def.sql
+-- V1.0.0_055__init_rule_variable_def.sql
 -- P2-4 变量空间元数据：规则表达式中可引用的变量定义表
 -- @author ydsz-pmis-team
 -- @since 1.4.0

@@ -33,7 +33,7 @@ spring:
     # ---------- Gateway 路由配置 ----------
     gateway:
       # 服务发现路由：自动从 Nacos 拉取服务列表，通过 serviceId 转发
-      # 如 GET /ydsz-pmis-userinfo/api/v1/users 转发到 userinfo 服务
+      # 如 GET /ydsz-pmis-iam/api/v1/users 转发到 IAM 服务
       discovery:
         locator:
           enabled: true          # 开启服务发现路由

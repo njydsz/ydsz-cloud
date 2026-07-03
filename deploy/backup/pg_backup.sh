@@ -15,7 +15,12 @@ PG_PORT="${PMIS_PG_PORT:-5432}"
 PG_USER="${PMIS_PG_USER:-pmis_backup}"
 PG_DB="${PMIS_PG_DB:-pmis}"
 BACKUP_DIR="${PMIS_BACKUP_DIR:-/data/backup/pmis/daily}"
+# H7.4 修复：等保 2.0 三级要求"重要数据备份至少保存 90 天"
+#   本地保留 7 天（快速恢复近期数据）
+#   OSS 保留 90 天（生命周期规则：30 天后转 IA，90 天后转 Archive）
+#   异地 1 年（运维另行配置 OSS 跨区域复制）
 RETENTION_DAYS="${PMIS_RETENTION_DAYS:-7}"
+OSS_RETENTION_DAYS="${PMIS_OSS_RETENTION_DAYS:-90}"
 LOG_DIR="${PMIS_BACKUP_LOG_DIR:-/var/log/pmis/backup}"
 ALERT_MAIL="${PMIS_ALERT_MAIL:-ops@ydsz-pmis.cn}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
@@ -72,10 +77,30 @@ if ! pg_restore --list "${BACKUP_FILE}" > /dev/null 2>&1; then
 fi
 echo "[STEP 3] verify ok"
 
-# ---------- 4. 上传 OSS / 异地存储（可选） ----------
+# ---------- 4. 上传 OSS / 异地存储（可选，H7.3 修复：传输加密） ----------
+# H7.3 修复：等保 2.0 三级要求"传输与存储加密"，原脚本明文上传 OSS
+#   方案 A：OSS 服务端加密（推荐，零侵入）
+#   方案 B：客户端 GPG 加密后上传（密钥由运维独立托管）
+# 优先采用方案 A，配置 PMIS_BACKUP_GPG_PASSPHRASE 时同时启用方案 B 双重保险
 if [ -n "${PMIS_BACKUP_OSS_BUCKET:-}" ] && command -v ossutil > /dev/null 2>&1; then
-  echo "[STEP 4] upload to oss://${PMIS_BACKUP_OSS_BUCKET}"
-  ossutil cp "${BACKUP_FILE}" "oss://${PMIS_BACKUP_OSS_BUCKET}/daily/$(basename ${BACKUP_FILE})" --meta x-oss-storage-class:IA || echo "[WARN] oss upload failed, continue"
+  echo "[STEP 4] upload to oss://${PMIS_BACKUP_OSS_BUCKET} (with server-side encryption)"
+  # OSS 服务端加密：x-oss-server-side-encryption=KMS（阿里云 KMS 托管主密钥）
+  ossutil cp "${BACKUP_FILE}" "oss://${PMIS_BACKUP_OSS_BUCKET}/daily/$(basename ${BACKUP_FILE})" \
+      --meta x-oss-storage-class:IA \
+      --meta x-oss-server-side-encryption:KMS \
+      || echo "[WARN] oss upload failed, continue"
+  # 可选：客户端 GPG 加密二次保护
+  if [ -n "${PMIS_BACKUP_GPG_PASSPHRASE:-}" ] && command -v gpg > /dev/null 2>&1; then
+    echo "  [STEP 4.1] GPG 加密后上传 .gpg 副本"
+    gpg --batch --yes --passphrase "${PMIS_BACKUP_GPG_PASSPHRASE}" \
+        -c "${BACKUP_FILE}" 2>/dev/null || echo "[WARN] gpg encrypt failed"
+    if [ -f "${BACKUP_FILE}.gpg" ]; then
+      ossutil cp "${BACKUP_FILE}.gpg" "oss://${PMIS_BACKUP_OSS_BUCKET}/daily/$(basename ${BACKUP_FILE}).gpg" \
+          --meta x-oss-storage-class:Archive \
+          || echo "[WARN] gpg oss upload failed"
+      shred -u "${BACKUP_FILE}.gpg" 2>/dev/null || rm -f "${BACKUP_FILE}.gpg"
+    fi
+  fi
 fi
 
 # ---------- 5. 清理 7 天前的旧备份 ----------

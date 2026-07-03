@@ -27,8 +27,43 @@ spring:
       max-active: 30
       max-wait: 60000
       validation-query: SELECT 1
+      validation-timeout: 3
       test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      # H4.3/H8.1 修复：K8s 网络下保活，避免 PG/iptables 30s 超时断连
+      keep-alive: true
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      max-evictable-idle-time-millis: 900000
+      # H4.3/H8.2 修复：连接泄漏检测，5 分钟未关闭视为泄漏
+      remove-abandoned: true
+      remove-abandoned-timeout: 300
+      log-abandoned: true
+      connection-init-checks: true
       filters: stat,wall,slf4j
+      filter:
+        wall:
+          enabled: true
+          config:
+            # H4.4 修复：wall filter 防注入规则
+            select-all-column-allow: false        # 禁止 SELECT *
+            delete-where-none-check: true         # 禁止无 WHERE 的 DELETE
+            update-where-none-check: true         # 禁止无 WHERE 的 UPDATE
+            truncate-allow: false                 # 禁止 TRUNCATE
+            drop-table-allow: false               # 禁止 DROP TABLE
+            alter-table-allow: false              # 禁止 ALTER TABLE（迁移走 Flyway）
+        stat:
+          enabled: true
+          slow-sql-millis: 1000                   # 与 PG log_min_duration_statement 对齐
+          log-slow-sql: true
+      # H4.1 修复：监控页面默认关闭，启用时必须配置账号密码与 IP 白名单
+      stat-view-servlet:
+        enabled: ${DRUID_MONITOR_ENABLED:false}
+        login-username: ${DRUID_USER:pmis_dba}
+        login-password: ${DRUID_PASSWORD:}
+        allow: ${DRUID_ALLOW_IP:127.0.0.1}
+        deny: 0.0.0.0/0
   data:
     redis:
       host: ${REDIS_HOST}

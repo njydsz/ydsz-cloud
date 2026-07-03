@@ -67,6 +67,9 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     /** 是否启用灰度路由（与 canaryRouter 双重判断） */
     private volatile boolean canaryEnabled = true;
 
+    /** 断点调试 Hook（可选，1.4.0 起支持 P2-3） */
+    private volatile BreakpointHook breakpointHook;
+
     /** 统计计数器 */
     private final AtomicLong totalEvaluations = new AtomicLong(0);
     private final AtomicLong totalTriggered = new AtomicLong(0);
@@ -109,6 +112,30 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             if (circuitBreaker != null && !circuitBreaker.allowEvaluate(rule.getCode())) {
                 log.debug("[LiteRule] 规则 {} 已被熔断，跳过评估", rule.getCode());
                 continue;
+            }
+
+            // 断点调试（P2-3）：仅在规则设置了断点时触发，避免对全部规则产生性能开销
+            BreakpointHook bpHook = this.breakpointHook;
+            boolean hasBreakpoint = bpHook != null && bpHook.hasBreakpoint(rule.getCode());
+            java.util.Map<String, Object> bpFactsSnapshot = null;
+            if (hasBreakpoint) {
+                try {
+                    bpFactsSnapshot = new java.util.LinkedHashMap<>(context.getFacts());
+                    BreakpointHook.BreakpointContext beforeCtx = new BreakpointHook.BreakpointContext(
+                            "BEFORE", context.getTraceId(), rule.getCode(), rule.getName(),
+                            scenario, bpFactsSnapshot);
+                    BreakpointHook.BreakpointAction action = bpHook.onBeforeEvaluate(beforeCtx);
+                    if (log.isDebugEnabled()) {
+                        log.debug("[LiteRule] 规则 {} 命中断点 onBeforeEvaluate action={}", rule.getCode(), action);
+                    }
+                    if (action == BreakpointHook.BreakpointAction.STEP_OVER) {
+                        // 单步跳过：不评估当前规则，直接进入下一条
+                        continue;
+                    }
+                    // SUSPEND 的实际阻塞由 hook 实现内部完成（如阻塞等待外部唤醒），引擎层不感知
+                } catch (Exception be) {
+                    log.debug("[LiteRule] 断点 onBeforeEvaluate 异常: {}", be.getMessage());
+                }
             }
 
             long start = System.nanoTime();
@@ -162,6 +189,23 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
                     || (result != null && result.getDescription() != null
                         && result.getDescription().startsWith("评估超时"));
             record(rule.getCode(), isTriggered, isError, elapsed);
+
+            // 断点调试（P2-3）：评估后回调，供 hook 查看结果与上下文快照
+            if (hasBreakpoint) {
+                try {
+                    BreakpointHook.BreakpointContext afterCtx = new BreakpointHook.BreakpointContext(
+                            "AFTER", context.getTraceId(), rule.getCode(), rule.getName(),
+                            scenario, bpFactsSnapshot);
+                    afterCtx.setResult(result);
+                    afterCtx.setElapsedMs(elapsed);
+                    if (caughtException != null) {
+                        afterCtx.setException(caughtException);
+                    }
+                    bpHook.onAfterEvaluate(afterCtx);
+                } catch (Exception ae) {
+                    log.debug("[LiteRule] 断点 onAfterEvaluate 异常: {}", ae.getMessage());
+                }
+            }
 
             // 熔断器记录结果
             if (circuitBreaker != null) {
@@ -437,6 +481,29 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
      */
     public boolean isCanaryEnabled() {
         return canaryEnabled;
+    }
+
+    /**
+     * 设置断点调试 Hook（P2-3）
+     *
+     * @param breakpointHook 断点 Hook；null 表示禁用断点调试
+     * @since 1.4.0
+     */
+    public void setBreakpointHook(BreakpointHook breakpointHook) {
+        this.breakpointHook = breakpointHook;
+        if (breakpointHook != null) {
+            log.info("[LiteRule] 断点调试 Hook 已注入: {}", breakpointHook.getClass().getSimpleName());
+        }
+    }
+
+    /**
+     * 获取断点调试 Hook（P2-3）
+     *
+     * @return 断点 Hook；未配置返回 null
+     * @since 1.4.0
+     */
+    public BreakpointHook getBreakpointHook() {
+        return breakpointHook;
     }
 
     /**

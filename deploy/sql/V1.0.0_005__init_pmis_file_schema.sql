@@ -2,10 +2,16 @@
 -- PMIS 文件存储模块 DDL
 -- 版本: V1.0.0_005
 -- 描述: 文件元信息表
+--
+-- H1.5 修复：审计字段命名从 create_by/create_time/update_by/update_time
+--   改为 created_by/created_at/updated_by/updated_at，与 BaseDO 及
+--   全项目其他表统一规范。MyBatis-Plus MetaObjectHandler 按新字段填充。
+--
+-- H1.3 修复：移除 DROP TABLE IF EXISTS，改为 CREATE TABLE IF NOT EXISTS
+--   避免已应用过的迁移再次执行时丢数据。
 -- =====================================================
 
-DROP TABLE IF EXISTS pmis_file;
-CREATE TABLE pmis_file (
+CREATE TABLE IF NOT EXISTS pmis_file (
     id              BIGSERIAL PRIMARY KEY,
     file_name       VARCHAR(256) NOT NULL,
     original_name   VARCHAR(256) NOT NULL,
@@ -23,10 +29,10 @@ CREATE TABLE pmis_file (
     uploader_name   VARCHAR(64),
     tenant_id       BIGINT       DEFAULT 1,
     description     VARCHAR(512),
-    create_by       BIGINT,
-    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by       BIGINT,
-    update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by      BIGINT,
+    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      BIGINT,
+    updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT     NOT NULL DEFAULT 0
 );
 
@@ -48,14 +54,14 @@ COMMENT ON COLUMN pmis_file.uploader_id IS '上传人 ID';
 COMMENT ON COLUMN pmis_file.uploader_name IS '上传人姓名';
 COMMENT ON COLUMN pmis_file.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_file.description IS '文件描述/备注';
-COMMENT ON COLUMN pmis_file.create_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_file.create_time IS '创建时间';
-COMMENT ON COLUMN pmis_file.update_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_file.update_time IS '最后修改时间';
+COMMENT ON COLUMN pmis_file.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_file.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_file.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_file.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_file.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_file_biz ON pmis_file(biz_type, biz_id);
-CREATE INDEX idx_file_hash ON pmis_file(file_hash);
-CREATE INDEX idx_file_uploader ON pmis_file(uploader_id);
-CREATE INDEX idx_file_tenant ON pmis_file(tenant_id);
-CREATE INDEX idx_file_bucket ON pmis_file(bucket);
+CREATE INDEX IF NOT EXISTS idx_file_biz ON pmis_file(biz_type, biz_id);
+CREATE INDEX IF NOT EXISTS idx_file_hash ON pmis_file(file_hash);
+CREATE INDEX IF NOT EXISTS idx_file_uploader ON pmis_file(uploader_id);
+CREATE INDEX IF NOT EXISTS idx_file_tenant ON pmis_file(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_file_bucket ON pmis_file(bucket);

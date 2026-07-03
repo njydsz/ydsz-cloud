@@ -156,9 +156,9 @@ ANALYZE pmis_billable_utilization_snapshot;
 ANALYZE pmis_agent_prediction;
 ANALYZE pmis_alert_dispatch;
 ANALYZE pmis_daily_reconcile;
-ANALYZE pmis_invoice;
-ANALYZE pmis_payment;
-ANALYZE pmis_audit_log;
+ANALYZE pmis_finance_invoice;
+ANALYZE pmis_finance_payment;
+ANALYZE pmis_operation_log;
 
 -- =====================================================================
 --  10) 索引使用情况监控 SQL（运维参考）

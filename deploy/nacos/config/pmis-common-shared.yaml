@@ -33,6 +33,8 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.slf4j.Slf4jImpl
   global-config:
+    # H3.3 修复：显式关闭 banner，避免仅引用 shared 配置的服务启动时打印 MyBatis-Plus Banner
+    banner: false
     db-config:
       logic-delete-field: deleted
       logic-delete-value: 1
