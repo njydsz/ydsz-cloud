@@ -1,7 +1,6 @@
 package com.njydsz.pmis.system.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.system.entity.MessageTemplateDO;
 import com.njydsz.pmis.system.mapper.MessageTemplateMapper;
@@ -20,9 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -181,6 +177,7 @@ class MessageTemplateServiceImplTest {
     class PageTest {
 
         @Test
+        @SuppressWarnings("unchecked")
         @DisplayName("分页查询应返回正确结果")
         void shouldReturnPagedTemplates() {
             when(templateMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());

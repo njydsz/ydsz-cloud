@@ -35,6 +35,7 @@ class SensitiveOperationServiceImplTest {
     class PageTest {
 
         @Test
+        @SuppressWarnings("unchecked")
         @DisplayName("分页查询应返回正确结果")
         void shouldReturnPagedResults() {
             when(mapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
@@ -46,6 +47,7 @@ class SensitiveOperationServiceImplTest {
         }
 
         @Test
+        @SuppressWarnings("unchecked")
         @DisplayName("按操作类型分页查询应正确过滤")
         void shouldFilterByOpType() {
             when(mapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());

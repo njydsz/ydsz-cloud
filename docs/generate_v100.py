@@ -413,9 +413,37 @@ header_lines = [
     '--   running the Flyway migrations end-to-end, suitable for one-shot',
     '--   initialization of fresh environments.',
     '--   For online upgrades keep using Flyway + deploy/sql/V*__*.sql.',
+    '--',
+    '-- Usage:',
+    '--   psql "host=... user=... dbname=... password=..." -v ON_ERROR_STOP=1 -f V1.0.0.sql',
+    '--',
+    '-- Safety:',
+    '--   * -v ON_ERROR_STOP=1 is REQUIRED; otherwise a single failure',
+    '--     in the middle will leave the script in an indeterminate state.',
+    '--   * The whole script runs inside one transaction (BEGIN; COMMIT;).',
+    '--     Any failure rolls back the entire init.',
+    '--   * DROP TABLE / DELETE FROM cleanup statements from the source',
+    '--     Flyway files are auto-skipped (see [SKIPPED-CLEANUP] markers).',
+    '--   * Forward references (tables not in this batch, multi-line COMMENT',
+    '--     pre-dating an ALTER TABLE) are auto-skipped ([SKIPPED-FWD-REF],',
+    '--     [SKIPPED-FWD-COL]).',
+    '-- ====================================================================',
     '-- Generated at: 2026-07-04',
     f'-- Files merged: {len(sql_files)}',
     '-- ====================================================================',
+    '',
+    '-- psql safety directives. These are no-ops if the script is loaded',
+    '-- by a non-psql driver (e.g. JDBC), which is the common case. They',
+    '-- only take effect when the file is consumed by psql.',
+    '\\set QUIET on',
+    '\\set ON_ERROR_STOP on',
+    '-- Reduce NOTICE/INFO noise but keep WARNING and above visible.',
+    '\\set VERBOSITY terse',
+    '',
+    '-- Wrap the entire init in one transaction so any failure rolls back',
+    '-- cleanly. If the script is already inside a transaction (e.g. a',
+    '-- tool-driven init), the SAVEPOINTs below still isolate us.',
+    'BEGIN;',
     '',
 ]
 
@@ -576,10 +604,20 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
         out.write('-- ====================================================================\n')
         out.write('\n')
         raw_lines = f.read_text(encoding='utf-8').splitlines(keepends=True)
-        to_skip = set()
+        to_skip: set[int] = set()
+        # Per-line skip reason (for the marker label we emit). If a
+        # line is skipped for multiple reasons, the first wins.
+        skip_reason: dict[int, str] = {}
+
+        def _add_skip(idx: int, reason: str) -> None:
+            if idx in to_skip:
+                return
+            to_skip.add(idx)
+            skip_reason[idx] = reason
+
         for i, raw in enumerate(raw_lines):
             if is_forward_ref(raw):
-                to_skip.add(i)
+                _add_skip(i, 'FWD-REF')
                 # If the previous line is a continuation head
                 # (e.g. CREATE INDEX ...), mark it too.
                 if i > 0:
@@ -588,7 +626,59 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                         not prev.strip().startswith('--')
                         and not prev.rstrip().endswith(';')
                     ):
-                        to_skip.add(i - 1)
+                        _add_skip(i - 1, 'FWD-REF')
+            # ---- cleanup DDL detection ----
+            # Flyway migration scripts often start with DROP TABLE IF
+            # EXISTS / DELETE FROM to make re-runs idempotent in dev. On
+            # a fresh one-shot init these are noise; on a re-run they
+            # would destroy real data. We skip them in the merged file
+            # because the corresponding CREATE TABLE IF NOT EXISTS /
+            # INSERT ... ON CONFLICT DO NOTHING below make the script
+            # naturally idempotent.
+            stripped_line = raw.strip()
+            if (
+                re.match(r'^\s*DROP\s+TABLE\s+IF\s+EXISTS\b', stripped_line, re.IGNORECASE)
+                or re.match(r'^\s*DROP\s+VIEW\s+IF\s+EXISTS\b', stripped_line, re.IGNORECASE)
+                or re.match(r'^\s*TRUNCATE\s+TABLE\b', stripped_line, re.IGNORECASE)
+            ):
+                _add_skip(i, 'CLEANUP')
+                # Only treat as multi-line if the current line does NOT
+                # end with `;`. Otherwise stop immediately so we don't
+                # accidentally swallow the following CREATE TABLE.
+                if not stripped_line.rstrip().endswith(';'):
+                    j = i + 1
+                    while j < len(raw_lines):
+                        nxt = raw_lines[j]
+                        if nxt.rstrip().endswith(';'):
+                            _add_skip(j, 'CLEANUP')
+                            break
+                        if nxt.strip().startswith('--') or not nxt.strip():
+                            break
+                        _add_skip(j, 'CLEANUP')
+                        j += 1
+            elif re.match(r'^\s*DELETE\s+FROM\s+\w+\b', stripped_line, re.IGNORECASE):
+                _add_skip(i, 'CLEANUP')
+                # Only treat as multi-line if the current line does NOT
+                # end with `;` AND we are not yet inside a balanced
+                # paren expression. Otherwise stop immediately.
+                starts_unbalanced = (
+                    raw.count('(') - raw.count(')') > 0
+                    or not stripped_line.rstrip().endswith(';')
+                )
+                if starts_unbalanced:
+                    j = i + 1
+                    depth = raw.count('(') - raw.count(')')
+                    while j < len(raw_lines):
+                        nxt = raw_lines[j]
+                        depth += nxt.count('(')
+                        depth -= nxt.count(')')
+                        if nxt.rstrip().endswith(';') and depth <= 0:
+                            _add_skip(j, 'CLEANUP')
+                            break
+                        if nxt.strip().startswith('--') and depth <= 0:
+                            break
+                        _add_skip(j, 'CLEANUP')
+                        j += 1
         for i, raw in enumerate(raw_lines):
             stripped = raw.strip()
             # Maintain table_cols as we write so we can mark
@@ -635,7 +725,7 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
             if m_comment and i not in to_skip:
                 tbl, col = m_comment.group(1), m_comment.group(2).lower()
                 if tbl in table_cols and col not in table_cols[tbl]:
-                    to_skip.add(i)
+                    _add_skip(i, 'FWD-COL')
                     skipped_fwd_col_count += 1
                     # Also skip continuation lines: SQL string literals
                     # may span multiple lines (rare but used in some
@@ -645,28 +735,29 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
                     while j < len(raw_lines):
                         line_j = raw_lines[j]
                         if line_j.rstrip().endswith(';'):
-                            to_skip.add(j)
+                            _add_skip(j, 'FWD-COL')
                             break
                         if line_j.strip().startswith('--'):
                             # empty comment-only line; include but stop
-                            to_skip.add(j)
+                            _add_skip(j, 'FWD-COL')
                             break
-                        to_skip.add(j)
+                        _add_skip(j, 'FWD-COL')
                         j += 1
 
         # Replay the file with the augmented skip set.
+        skipped_cleanup_count = sum(1 for r in skip_reason.values() if r == 'CLEANUP')
         for i, raw in enumerate(raw_lines):
             if i in to_skip and not raw.strip().startswith('--'):
-                if '[SKIPPED-FWD-REF]' not in raw:
-                    out.write('-- [SKIPPED-FWD-COL] ' + raw)
-                else:
-                    out.write(raw)
+                reason = skip_reason.get(i, 'SKIPPED')
+                out.write(f'-- [SKIPPED-{reason}] ' + raw)
             else:
                 out.write(raw)
         out.write('\n')
         out.write('-- ====================================================================\n')
         out.write(f'-- >>>>>>>>>> END OF {f.name}\n')
         out.write('-- ====================================================================\n')
+        if skipped_cleanup_count:
+            print(f'  [SKIPPED-CLEANUP] {f.name}: {skipped_cleanup_count} cleanup DDL lines skipped')
 
     if skipped_fwd_col_count:
         print(f'  [SKIPPED-FWD-COL] {skipped_fwd_col_count} COMMENT lines were skipped '
@@ -688,6 +779,16 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
     out.write('-- ====================================================================\n')
     out.write('-- >>>>>>>>>> END OF SUPPLEMENT\n')
     out.write('-- ====================================================================\n')
+    out.write('\n')
+    out.write('-- ====================================================================\n')
+    out.write('-- All DDL has been applied. Commit the transaction. If any DDL above\n')
+    out.write('-- failed, the implicit ROLLBACK from psql -v ON_ERROR_STOP=1 will\n')
+    out.write('-- have already aborted the transaction and the COMMIT below will\n')
+    out.write('-- error out harmlessly. Tool-driven inits should ignore the COMMIT\n')
+    out.write('-- line and roll back manually on exception.\n')
+    out.write('-- ====================================================================\n')
+    out.write('COMMIT;\n')
+    out.write('\n')
 
 # ---- validation BEFORE comment additions ----
 

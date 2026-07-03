@@ -7,9 +7,37 @@
 --   running the Flyway migrations end-to-end, suitable for one-shot
 --   initialization of fresh environments.
 --   For online upgrades keep using Flyway + deploy/sql/V*__*.sql.
+--
+-- Usage:
+--   psql "host=... user=... dbname=... password=..." -v ON_ERROR_STOP=1 -f V1.0.0.sql
+--
+-- Safety:
+--   * -v ON_ERROR_STOP=1 is REQUIRED; otherwise a single failure
+--     in the middle will leave the script in an indeterminate state.
+--   * The whole script runs inside one transaction (BEGIN; COMMIT;).
+--     Any failure rolls back the entire init.
+--   * DROP TABLE / DELETE FROM cleanup statements from the source
+--     Flyway files are auto-skipped (see [SKIPPED-CLEANUP] markers).
+--   * Forward references (tables not in this batch, multi-line COMMENT
+--     pre-dating an ALTER TABLE) are auto-skipped ([SKIPPED-FWD-REF],
+--     [SKIPPED-FWD-COL]).
+-- ====================================================================
 -- Generated at: 2026-07-04
 -- Files merged: 58
 -- ====================================================================
+
+-- psql safety directives. These are no-ops if the script is loaded
+-- by a non-psql driver (e.g. JDBC), which is the common case. They
+-- only take effect when the file is consumed by psql.
+\set QUIET on
+\set ON_ERROR_STOP on
+-- Reduce NOTICE/INFO noise but keep WARNING and above visible.
+\set VERBOSITY terse
+
+-- Wrap the entire init in one transaction so any failure rolls back
+-- cleanly. If the script is already inside a transaction (e.g. a
+-- tool-driven init), the SAVEPOINTs below still isolate us.
+BEGIN;
 -- ====================================================================
 -- [GENERATOR NOTE] Forward references detected and skipped:
 --   - pmis_after_sales_ops_ticket  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
@@ -812,13 +840,13 @@ ON CONFLICT DO NOTHING;
 -- =====================================================
 
 -- 清理：业务流程实例关联表（功能已被 pmis_flow_instance 替代）
-DROP TABLE IF EXISTS pmis_workflow_business;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_workflow_business;
 
 -- 清理：流程表单定义表（功能已通过 pmis_flow_definition.form_path 替代）
-DROP TABLE IF EXISTS pmis_workflow_form;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_workflow_form;
 
 -- 清理：流程节点配置表（功能已通过 pmis_flow_node.permission_flag / ext 替代）
-DROP TABLE IF EXISTS pmis_workflow_node_config;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_workflow_node_config;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_004__init_pmis_workflow_schema.sql
@@ -910,7 +938,7 @@ CREATE INDEX IF NOT EXISTS idx_file_bucket ON pmis_file(bucket);
 -- 描述: 动态定时任务定义与执行日志
 -- =====================================================
 
-DROP TABLE IF EXISTS pmis_job;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_job;
 CREATE TABLE pmis_job (
     id              BIGSERIAL PRIMARY KEY,
     job_name        VARCHAR(128) NOT NULL,
@@ -961,7 +989,7 @@ CREATE INDEX idx_pmis_job_status ON pmis_job(status);
 CREATE INDEX idx_pmis_job_group ON pmis_job(job_group);
 CREATE INDEX idx_pmis_job_tenant ON pmis_job(tenant_id);
 
-DROP TABLE IF EXISTS pmis_job_log;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_job_log;
 CREATE TABLE pmis_job_log (
     id              BIGSERIAL PRIMARY KEY,
     job_id          BIGINT       NOT NULL,
@@ -1012,7 +1040,7 @@ CREATE INDEX idx_pjl_start_time ON pmis_job_log(start_time);
 -- 描述: 短信/邮件/推送发送日志
 -- =====================================================
 
-DROP TABLE IF EXISTS pmis_message_log;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_message_log;
 CREATE TABLE pmis_message_log (
     id              BIGSERIAL PRIMARY KEY,
     channel         VARCHAR(32)  NOT NULL,
@@ -1062,7 +1090,7 @@ CREATE INDEX idx_pml_biz ON pmis_message_log(biz_type, biz_id);
 CREATE INDEX idx_pml_receiver ON pmis_message_log(receiver);
 CREATE INDEX idx_pml_tenant ON pmis_message_log(tenant_id);
 
-DROP TABLE IF EXISTS pmis_message_template;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_message_template;
 CREATE TABLE pmis_message_template (
     id              BIGSERIAL PRIMARY KEY,
     template_code   VARCHAR(128) NOT NULL,
@@ -1213,7 +1241,7 @@ CREATE INDEX IF NOT EXISTS idx_pol_created ON pmis_operation_log(created_at DESC
 -- =====================================================
 -- 1. 商机主表 pmis_project_opportunity
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_opportunity;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_opportunity;
 CREATE TABLE pmis_project_opportunity (
     id                BIGSERIAL PRIMARY KEY,
     opportunity_code  VARCHAR(64)   NOT NULL,
@@ -1283,7 +1311,7 @@ CREATE INDEX idx_ppo_tenant     ON pmis_project_opportunity (tenant_id);
 -- =====================================================
 -- 2. 商机跟进记录 pmis_project_opportunity_follow
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_opportunity_follow;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_opportunity_follow;
 CREATE TABLE pmis_project_opportunity_follow (
     id                BIGSERIAL PRIMARY KEY,
     opportunity_id    BIGINT        NOT NULL,
@@ -1314,7 +1342,7 @@ CREATE INDEX idx_ppof_opp ON pmis_project_opportunity_follow (opportunity_id, fo
 -- =====================================================
 -- 3. 立项主表 pmis_project_initiation
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_initiation;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_initiation;
 CREATE TABLE pmis_project_initiation (
     id                BIGSERIAL PRIMARY KEY,
     project_code      VARCHAR(64)   NOT NULL,
@@ -1390,7 +1418,7 @@ CREATE INDEX idx_ppi_created   ON pmis_project_initiation (created_at DESC);
 -- =====================================================
 -- 4. 立项预算明细 pmis_project_budget_item
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_budget_item;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_budget_item;
 CREATE TABLE pmis_project_budget_item (
     id                BIGSERIAL PRIMARY KEY,
     initiation_id     BIGINT        NOT NULL,
@@ -1427,7 +1455,7 @@ CREATE INDEX idx_ppbi_init ON pmis_project_budget_item (initiation_id);
 -- =====================================================
 -- 5. 门径评审记录 pmis_project_gate_review
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_gate_review;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_gate_review;
 CREATE TABLE pmis_project_gate_review (
     id                BIGSERIAL PRIMARY KEY,
     initiation_id     BIGINT        NOT NULL,
@@ -1464,7 +1492,7 @@ CREATE INDEX idx_ppgr_init ON pmis_project_gate_review (initiation_id, gate_code
 -- =====================================================
 -- 6. 合同主表 pmis_project_contract
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_contract;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract;
 CREATE TABLE pmis_project_contract (
     id                BIGSERIAL PRIMARY KEY,
     contract_code     VARCHAR(64)   NOT NULL,
@@ -1538,7 +1566,7 @@ CREATE INDEX idx_ppc_tenant    ON pmis_project_contract (tenant_id);
 -- =====================================================
 -- 7. 合同补充协议 pmis_project_contract_supplement
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_contract_supplement;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract_supplement;
 CREATE TABLE pmis_project_contract_supplement (
     id                BIGSERIAL PRIMARY KEY,
     contract_id       BIGINT        NOT NULL,
@@ -1584,7 +1612,7 @@ CREATE INDEX idx_ppcs_contract ON pmis_project_contract_supplement (contract_id)
 -- =====================================================
 -- 8. 合同变更记录 pmis_project_contract_change
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_contract_change;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract_change;
 CREATE TABLE pmis_project_contract_change (
     id                BIGSERIAL PRIMARY KEY,
     contract_id       BIGINT        NOT NULL,
@@ -1653,7 +1681,7 @@ CREATE INDEX idx_ppcc_status   ON pmis_project_contract_change (status);
 -- =====================================================
 -- 1. WBS 任务表 pmis_execution_wbs_task
 -- =====================================================
-DROP TABLE IF EXISTS pmis_execution_wbs_task;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_wbs_task;
 CREATE TABLE pmis_execution_wbs_task (
     id                  BIGSERIAL PRIMARY KEY,
     task_code           VARCHAR(64)   NOT NULL,
@@ -1738,7 +1766,7 @@ CREATE INDEX idx_pewt_trace      ON pmis_execution_wbs_task (provider_trace_id);
 -- =====================================================
 -- 2. 工时录入表 pmis_execution_time_entry
 -- =====================================================
-DROP TABLE IF EXISTS pmis_execution_time_entry;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_time_entry;
 CREATE TABLE pmis_execution_time_entry (
     id                  BIGSERIAL PRIMARY KEY,
     entry_date          DATE          NOT NULL,
@@ -1804,7 +1832,7 @@ CREATE INDEX idx_pete_trace     ON pmis_execution_time_entry (provider_trace_id)
 -- =====================================================
 -- 3. 成本归集表 pmis_cost_allocation
 -- =====================================================
-DROP TABLE IF EXISTS pmis_cost_allocation;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_cost_allocation;
 CREATE TABLE pmis_cost_allocation (
     id                  BIGSERIAL PRIMARY KEY,
     initiation_id       BIGINT        NOT NULL,
@@ -1854,7 +1882,7 @@ CREATE INDEX idx_pca_trace      ON pmis_cost_allocation (provider_trace_id);
 -- =====================================================
 -- 4. 采购成本表 pmis_cost_purchase
 -- =====================================================
-DROP TABLE IF EXISTS pmis_cost_purchase;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_cost_purchase;
 CREATE TABLE pmis_cost_purchase (
     id                  BIGSERIAL PRIMARY KEY,
     purchase_code       VARCHAR(64)   NOT NULL,
@@ -1911,7 +1939,7 @@ CREATE INDEX idx_pcp_trace      ON pmis_cost_purchase (provider_trace_id);
 -- =====================================================
 -- 5. 费用报销表 pmis_cost_expense
 -- =====================================================
-DROP TABLE IF EXISTS pmis_cost_expense;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_cost_expense;
 CREATE TABLE pmis_cost_expense (
     id                  BIGSERIAL PRIMARY KEY,
     expense_code        VARCHAR(64)   NOT NULL,
@@ -1964,7 +1992,7 @@ CREATE INDEX idx_pce_trace      ON pmis_cost_expense (provider_trace_id);
 -- =====================================================
 -- 6. 收入确认表 pmis_profit_revenue
 -- =====================================================
-DROP TABLE IF EXISTS pmis_profit_revenue;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_profit_revenue;
 CREATE TABLE pmis_profit_revenue (
     id                  BIGSERIAL PRIMARY KEY,
     contract_id         BIGINT        NOT NULL,
@@ -2019,7 +2047,7 @@ CREATE INDEX idx_ppr_trace       ON pmis_profit_revenue (provider_trace_id);
 -- =====================================================
 -- 7. 项目利润快照表 pmis_profit_snapshot
 -- =====================================================
-DROP TABLE IF EXISTS pmis_profit_snapshot;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_profit_snapshot;
 CREATE TABLE pmis_profit_snapshot (
     id                  BIGSERIAL PRIMARY KEY,
     initiation_id       BIGINT        NOT NULL,
@@ -2054,7 +2082,7 @@ CREATE INDEX idx_pps_trace      ON pmis_profit_snapshot (provider_trace_id);
 -- =====================================================
 -- 8. 项目风险登记表 pmis_execution_risk
 -- =====================================================
-DROP TABLE IF EXISTS pmis_execution_risk;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_risk;
 CREATE TABLE pmis_execution_risk (
     id                  BIGSERIAL PRIMARY KEY,
     risk_code           VARCHAR(64)   NOT NULL,
@@ -2106,7 +2134,7 @@ CREATE INDEX idx_per_trace      ON pmis_execution_risk (provider_trace_id);
 -- =====================================================
 -- 1. 合同模板表 pmis_project_contract_template
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_contract_template;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract_template;
 CREATE TABLE pmis_project_contract_template (
     id                     BIGSERIAL PRIMARY KEY,
     template_code          VARCHAR(64)  NOT NULL,
@@ -2158,7 +2186,7 @@ CREATE INDEX idx_ppct_tenant ON pmis_project_contract_template(tenant_id);
 -- =====================================================
 -- 2. 项目变更主表 pmis_project_change
 -- =====================================================
-DROP TABLE IF EXISTS pmis_project_change;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_change;
 CREATE TABLE pmis_project_change (
     id                       BIGSERIAL PRIMARY KEY,
     change_code              VARCHAR(64)  NOT NULL,
@@ -2231,7 +2259,7 @@ CREATE INDEX idx_pch_major ON pmis_project_change(initiation_id, major_flag);
 -- =====================================================
 -- 3. 交付物标准表 pmis_execution_delivery_standard
 -- =====================================================
-DROP TABLE IF EXISTS pmis_execution_delivery_standard;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_delivery_standard;
 CREATE TABLE pmis_execution_delivery_standard (
     id                    BIGSERIAL PRIMARY KEY,
     project_type          VARCHAR(32)  NOT NULL,                 -- ProjectType
@@ -2270,7 +2298,7 @@ CREATE INDEX idx_peds_stage ON pmis_execution_delivery_standard(stage);
 -- =====================================================
 -- 4. 交付物实例表 pmis_execution_delivery_item
 -- =====================================================
-DROP TABLE IF EXISTS pmis_execution_delivery_item;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_delivery_item;
 CREATE TABLE pmis_execution_delivery_item (
     id                    BIGSERIAL PRIMARY KEY,
     item_code             VARCHAR(64)  NOT NULL,
@@ -2337,7 +2365,7 @@ CREATE INDEX idx_pedi_status ON pmis_execution_delivery_item(status);
 -- =====================================================
 -- 5. 项目结项主表 pmis_execution_closure
 -- =====================================================
-DROP TABLE IF EXISTS pmis_execution_closure;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_closure;
 CREATE TABLE pmis_execution_closure (
     id                       BIGSERIAL PRIMARY KEY,
     closure_code             VARCHAR(64)  NOT NULL,
@@ -2417,7 +2445,7 @@ CREATE INDEX idx_pec_type_status ON pmis_execution_closure(closure_type, status)
 -- =====================================================
 -- 6. AI 智能体预测/推荐结果表 pmis_agent_prediction
 -- =====================================================
-DROP TABLE IF EXISTS pmis_agent_prediction;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_agent_prediction;
 CREATE TABLE pmis_agent_prediction (
     id                  BIGSERIAL PRIMARY KEY,
     task_code           VARCHAR(64)  NOT NULL,
@@ -2570,7 +2598,7 @@ VALUES
 -- =====================================================
 -- 1. 发票主表 pmis_finance_invoice
 -- =====================================================
-DROP TABLE IF EXISTS pmis_finance_invoice;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_finance_invoice;
 CREATE TABLE pmis_finance_invoice (
     id                  BIGSERIAL PRIMARY KEY,
     invoice_no          VARCHAR(64),                              -- 财务发票号
@@ -2654,7 +2682,7 @@ CREATE INDEX idx_pfi_tax_period ON pmis_finance_invoice(tax_period);
 -- =====================================================
 -- 2. 回款主表 pmis_finance_payment
 -- =====================================================
-DROP TABLE IF EXISTS pmis_finance_payment;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_finance_payment;
 CREATE TABLE pmis_finance_payment (
     id                  BIGSERIAL PRIMARY KEY,
     payment_no          VARCHAR(64),                              -- 银行流水号/系统流水
@@ -2720,7 +2748,7 @@ CREATE INDEX idx_pfp_unalloc ON pmis_finance_payment(customer_id, status, unallo
 -- =====================================================
 -- 3. 客户信用表 pmis_finance_customer_credit
 -- =====================================================
-DROP TABLE IF EXISTS pmis_finance_customer_credit;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_finance_customer_credit;
 CREATE TABLE pmis_finance_customer_credit (
     id                    BIGSERIAL PRIMARY KEY,
     customer_id           BIGINT       NOT NULL,
@@ -2786,7 +2814,7 @@ CREATE INDEX idx_pfcc_tenant ON pmis_finance_customer_credit(tenant_id);
 -- =====================================================
 -- 1. EVM 挣值测量表 pmis_evm_measure
 -- =====================================================
-DROP TABLE IF EXISTS pmis_evm_measure;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_evm_measure;
 CREATE TABLE pmis_evm_measure (
     id                  BIGSERIAL PRIMARY KEY,
     initiation_id       BIGINT       NOT NULL,
@@ -2845,7 +2873,7 @@ CREATE INDEX idx_pem_alert ON pmis_evm_measure(alert_level);
 -- =====================================================
 -- 2. 对外报价费率表 pmis_rate_card
 -- =====================================================
-DROP TABLE IF EXISTS pmis_rate_card;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_rate_card;
 CREATE TABLE pmis_rate_card (
     id                  BIGSERIAL PRIMARY KEY,
     rate_code           VARCHAR(64)  NOT NULL,
@@ -2887,7 +2915,7 @@ CREATE INDEX idx_prc_status ON pmis_rate_card(status, effective_date);
 -- =====================================================
 -- 3. 对内成本费率表 pmis_rate_internal
 -- =====================================================
-DROP TABLE IF EXISTS pmis_rate_internal;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_rate_internal;
 CREATE TABLE pmis_rate_internal (
     id                  BIGSERIAL PRIMARY KEY,
     rate_code           VARCHAR(64)  NOT NULL,
@@ -2929,7 +2957,7 @@ CREATE INDEX idx_pri_status ON pmis_rate_internal(status, effective_date);
 -- =====================================================
 -- 4. 利润测算版本表 pmis_profit_simulation
 -- =====================================================
-DROP TABLE IF EXISTS pmis_profit_simulation;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_profit_simulation;
 CREATE TABLE pmis_profit_simulation (
     id                  BIGSERIAL PRIMARY KEY,
     simulation_code     VARCHAR(64)  NOT NULL,
@@ -3063,7 +3091,7 @@ VALUES
 -- =====================================================
 -- 1. 资源池主表 pmis_resource_pool
 -- =====================================================
-DROP TABLE IF EXISTS pmis_resource_pool;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_resource_pool;
 CREATE TABLE pmis_resource_pool (
     id                  BIGSERIAL PRIMARY KEY,
     pool_code           VARCHAR(64)  NOT NULL,
@@ -3103,7 +3131,7 @@ CREATE INDEX idx_prp_dept ON pmis_resource_pool(department_id);
 -- =====================================================
 -- 2. 人员标签表 pmis_employee_tag
 -- =====================================================
-DROP TABLE IF EXISTS pmis_employee_tag;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_employee_tag;
 CREATE TABLE pmis_employee_tag (
     id                  BIGSERIAL PRIMARY KEY,
     employee_id         BIGINT       NOT NULL,
@@ -3137,7 +3165,7 @@ CREATE INDEX idx_pet_type ON pmis_employee_tag(tag_type, tag_code);
 -- =====================================================
 -- 3. 资源分配主表 pmis_resource_assignment
 -- =====================================================
-DROP TABLE IF EXISTS pmis_resource_assignment;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_resource_assignment;
 CREATE TABLE pmis_resource_assignment (
     id                    BIGSERIAL PRIMARY KEY,
     assignment_code       VARCHAR(64)  NOT NULL,
@@ -3193,7 +3221,7 @@ CREATE INDEX idx_pra_pool ON pmis_resource_assignment(pool_id, status);
 -- =====================================================
 -- 4. Bench 闲置记录表 pmis_bench_record
 -- =====================================================
-DROP TABLE IF EXISTS pmis_bench_record;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_bench_record;
 CREATE TABLE pmis_bench_record (
     id                    BIGSERIAL PRIMARY KEY,
     bench_code            VARCHAR(64)  NOT NULL,
@@ -4184,11 +4212,11 @@ COMMENT ON COLUMN pmis_billable_utilization_snapshot.deleted IS '逻辑删除: 0
 -- ============================================================
 
 -- 清理旧记录（保证可重跑）
-DELETE FROM pmis_job WHERE job_key IN (
-    'alertDispatchRetryJob',
-    'dailyReconcileJob',
-    'afterSalesScanJob'
-);
+-- [SKIPPED-CLEANUP] DELETE FROM pmis_job WHERE job_key IN (
+-- [SKIPPED-CLEANUP]     'alertDispatchRetryJob',
+-- [SKIPPED-CLEANUP]     'dailyReconcileJob',
+-- [SKIPPED-CLEANUP]     'afterSalesScanJob'
+-- [SKIPPED-CLEANUP] );
 
 -- ---------- P5-2 预警重试补偿 ----------
 INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
@@ -4328,7 +4356,7 @@ WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALE
 -- 1. 流程定义表（对标 Warm-Flow flow_definition）
 --    记录流程的整体信息（编码、名称、版本、表单路径、模型 JSON）
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_definition;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_definition;
 CREATE TABLE pmis_flow_definition (
     id                 BIGSERIAL    PRIMARY KEY,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -4382,7 +4410,7 @@ CREATE INDEX        idx_pfd_status      ON pmis_flow_definition(status) WHERE de
 -- 2. 流程节点表（对标 Warm-Flow flow_node）
 --    流程中的各个节点：开始/审批/会签/网关/结束
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_node;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_node;
 CREATE TABLE pmis_flow_node (
     id                 BIGSERIAL    PRIMARY KEY,
     definition_id      BIGINT       NOT NULL,
@@ -4428,7 +4456,7 @@ CREATE INDEX        idx_pfn_type    ON pmis_flow_node(node_type);
 -- 3. 节点跳转关联表（对标 Warm-Flow flow_skip）
 --    节点之间的有向边：顺序流 / 条件分支 / 退回
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_skip;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_skip;
 CREATE TABLE pmis_flow_skip (
     id                 BIGSERIAL    PRIMARY KEY,
     definition_id      BIGINT       NOT NULL,
@@ -4473,7 +4501,7 @@ CREATE INDEX idx_pfs_type   ON pmis_flow_skip(skip_type);
 -- 4. 流程实例表（对标 Warm-Flow flow_instance）
 --    每次启动流程生成一条实例记录
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_instance;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_instance;
 CREATE TABLE pmis_flow_instance (
     id                 BIGSERIAL    PRIMARY KEY,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -4541,7 +4569,7 @@ CREATE INDEX        idx_flow_instance_start       ON pmis_flow_instance(start_at
 -- 5. 待办任务表（对标 Warm-Flow flow_task）
 --    实例推进过程中产生的待办切片
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_task;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_task;
 CREATE TABLE pmis_flow_task (
     id                 BIGSERIAL    PRIMARY KEY,
     instance_id        BIGINT       NOT NULL,
@@ -4625,7 +4653,7 @@ CREATE INDEX idx_pft_due        ON pmis_flow_task(due_at) WHERE task_status = 'P
 -- 6. 历史任务表（对标 Warm-Flow flow_his_task）
 --    已完成任务的归档，避免主表膨胀
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_his_task;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_his_task;
 CREATE TABLE pmis_flow_his_task (
     id                 BIGSERIAL    PRIMARY KEY,
     instance_id        BIGINT       NOT NULL,
@@ -4698,7 +4726,7 @@ CREATE INDEX idx_pfht_tenant     ON pmis_flow_his_task(tenant_id);
 -- 7. 流程用户表（对标 Warm-Flow flow_user）
 --    任务多办理人扩展（一个 task 可挂多个用户）
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_user;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_user;
 CREATE TABLE pmis_flow_user (
     id                 BIGSERIAL    PRIMARY KEY,
     task_id            BIGINT       NOT NULL,
@@ -4855,7 +4883,7 @@ ALTER TABLE pmis_ops_ticket
 -- 8. 流程审计日志表（pmis_flow_audit_log）
 --    记录流程全生命周期的操作轨迹：谁在何时对哪个实例/任务做了什么操作
 -- -----------------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_audit_log;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_audit_log;
 CREATE TABLE pmis_flow_audit_log (
     id                 BIGSERIAL    PRIMARY KEY,
     instance_id        BIGINT       NOT NULL,
@@ -4933,7 +4961,7 @@ CREATE INDEX idx_pfal_tenant     ON pmis_flow_audit_log(tenant_id);
 -- -------------------------------------------
 -- 1. 抄送主表
 -- -------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_cc;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_cc;
 CREATE TABLE pmis_flow_cc (
     id                 BIGSERIAL PRIMARY KEY,
     tenant_id          BIGINT       NOT NULL,
@@ -4996,7 +5024,7 @@ CREATE INDEX idx_pmis_flow_cc_created
 -- -------------------------------------------
 -- 2. 抄送触发配置表（cc 配置由用户/系统预置，无需触发时由节点类型决定）
 -- -------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_cc_rule;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_cc_rule;
 CREATE TABLE pmis_flow_cc_rule (
     id                 BIGSERIAL PRIMARY KEY,
     tenant_id          BIGINT       NOT NULL,
@@ -5156,7 +5184,7 @@ COMMENT ON COLUMN pmis_flow_task.version IS 'GAP-P1: 乐观锁版本号 — 会�
 -- -------------------------------------------
 -- 1. 定时器实例表
 -- -------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_timer;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_timer;
 CREATE TABLE pmis_flow_timer (
     id                 BIGSERIAL PRIMARY KEY,
     tenant_id          BIGINT       NOT NULL,
@@ -5255,7 +5283,7 @@ VALUES (
 -- -------------------------------------------
 -- 1. 委派代理主表
 -- -------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_delegate_auth;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_delegate_auth;
 CREATE TABLE pmis_flow_delegate_auth (
     id                    BIGSERIAL PRIMARY KEY,
     tenant_id             BIGINT       NOT NULL,
@@ -5322,7 +5350,7 @@ CREATE INDEX idx_pmis_flow_delegate_auth_flow
 -- -------------------------------------------
 -- 2. 委派代理使用日志（审计追溯：谁在什么时间被代理处理了什么任务）
 -- -------------------------------------------
-DROP TABLE IF EXISTS pmis_flow_delegate_log;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_delegate_log;
 CREATE TABLE pmis_flow_delegate_log (
     id                 BIGSERIAL PRIMARY KEY,
     tenant_id          BIGINT       NOT NULL,
@@ -5443,11 +5471,11 @@ CREATE INDEX idx_report_export_status ON pmis_report_export_record (status) WHER
 -- ============================================================
 
 -- 清理旧记录（保证可重跑）
-DELETE FROM pmis_job WHERE job_key IN (
-    'reportDailyJob',
-    'reportWeeklyJob',
-    'reportMonthlyJob'
-);
+-- [SKIPPED-CLEANUP] DELETE FROM pmis_job WHERE job_key IN (
+-- [SKIPPED-CLEANUP]     'reportDailyJob',
+-- [SKIPPED-CLEANUP]     'reportWeeklyJob',
+-- [SKIPPED-CLEANUP]     'reportMonthlyJob'
+-- [SKIPPED-CLEANUP] );
 
 -- ---------- 日报表生成与分发 ----------
 INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
@@ -5515,7 +5543,7 @@ ALTER TABLE pmis_flow_user
     ADD COLUMN IF NOT EXISTS weight INTEGER NOT NULL DEFAULT 1;
 
 -- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_user.weight IS '办理人权重（默认 1，可配置 2/3 等）';
-
+-- [SKIPPED-FWD-COL] 
 -- -------------------------------------------
 -- 2. pmis_flow_task 增加 vote_pass_rate 字段（VOTE 模式下的通过率阈值）
 -- -------------------------------------------
@@ -5601,7 +5629,7 @@ ALTER TABLE pmis_flow_task
 -- ============================================================
 
 -- 清理旧记录（保证可重跑，按 job_key 唯一键清理）
-DELETE FROM pmis_job WHERE job_key = 'data-consistency-check';
+-- [SKIPPED-CLEANUP] DELETE FROM pmis_job WHERE job_key = 'data-consistency-check';
 
 -- ---------- 数据一致性校验任务 ----------
 INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
@@ -5688,7 +5716,7 @@ CREATE INDEX idx_export_status ON pmis_export_record (status) WHERE completed_at
 -- ============================================================
 
 -- 归档实例表（结构与 pmis_flow_instance 一致 + archived_at 字段）
-DROP TABLE IF EXISTS pmis_flow_his_instance;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_his_instance;
 CREATE TABLE pmis_flow_his_instance (
     id                 BIGSERIAL    PRIMARY KEY,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -5730,7 +5758,7 @@ CREATE INDEX idx_pfhi_tenant     ON pmis_flow_his_instance(tenant_id);
 CREATE INDEX idx_pfhi_archived_at ON pmis_flow_his_instance(archived_at);
 
 -- 归档变量表（用于归档 instance 时同步迁移 variable 字段中的大 JSON）
-DROP TABLE IF EXISTS pmis_flow_his_variable;
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_his_variable;
 CREATE TABLE pmis_flow_his_variable (
     id            BIGSERIAL    PRIMARY KEY,
     instance_id   BIGINT       NOT NULL,
@@ -5745,7 +5773,7 @@ CREATE INDEX idx_pfhv_instance ON pmis_flow_his_variable(instance_id);
 CREATE INDEX idx_pfhv_key      ON pmis_flow_his_variable(instance_id, var_key);
 
 -- 归档统计视图（管理员可见：实例总数/已归档/未归档）
-DROP VIEW IF EXISTS pmis_view_flow_archive_stats;
+-- [SKIPPED-CLEANUP] DROP VIEW IF EXISTS pmis_view_flow_archive_stats;
 CREATE VIEW pmis_view_flow_archive_stats AS
 SELECT
     COALESCE(main.flow_code, his.flow_code)   AS flow_code,
@@ -5811,13 +5839,13 @@ ALTER TABLE pmis_flow_definition
     ADD COLUMN IF NOT EXISTS canary_rollout_log      TEXT;
 
 -- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_definition.canary_percent IS
-    '灰度比例 0-100（0=稳定版 / 100=全量灰度版）';
+-- [SKIPPED-FWD-COL]     '灰度比例 0-100（0=稳定版 / 100=全量灰度版）';
 -- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_definition.canary_status IS
-    '灰度状态: NONE 无 / CANARYING 灰度中 / PROMOTED 已全量 / ROLLED_BACK 已回滚';
+-- [SKIPPED-FWD-COL]     '灰度状态: NONE 无 / CANARYING 灰度中 / PROMOTED 已全量 / ROLLED_BACK 已回滚';
 -- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_definition.canary_strategy IS
-    '灰度切流策略: USER_HASH 按发起人ID hash / RANDOM 随机 / WHITELIST 白名单';
+-- [SKIPPED-FWD-COL]     '灰度切流策略: USER_HASH 按发起人ID hash / RANDOM 随机 / WHITELIST 白名单';
 -- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_flow_definition.canary_rollout_log IS
-    '灰度发布历史 JSON 数组[{operatorId,operatorName,fromPercent,toPercent,operateAt,note}]';
+-- [SKIPPED-FWD-COL]     '灰度发布历史 JSON 数组[{operatorId,operatorName,fromPercent,toPercent,operateAt,note}]';
 
 -- 灰度索引（按状态快速查询正在灰度中的定义）
 CREATE INDEX IF NOT EXISTS idx_pfd_canary_status
@@ -6919,44 +6947,44 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_provider_trace
     WHERE provider_trace_id IS NOT NULL;
 
 -- 项目结项（4.1.4）
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_closure_initiation_status
--- [SKIPPED-FWD-COL]     ON pmis_project_closure (initiation_id, status, created_at DESC);
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_closure_closure_type
--- [SKIPPED-FWD-COL]     ON pmis_project_closure (closure_type, created_at DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_closure_initiation_status
+-- [SKIPPED-FWD-REF]     ON pmis_project_closure (initiation_id, status, created_at DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_closure_closure_type
+-- [SKIPPED-FWD-REF]     ON pmis_project_closure (closure_type, created_at DESC);
 
 -- 合同模板（4.1.5）
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_template_code
--- [SKIPPED-FWD-COL]     ON pmis_contract_template (code);
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_template_status_type
--- [SKIPPED-FWD-COL]     ON pmis_contract_template (status, type, created_at DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_template_code
+-- [SKIPPED-FWD-REF]     ON pmis_contract_template (code);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_template_status_type
+-- [SKIPPED-FWD-REF]     ON pmis_contract_template (status, type, created_at DESC);
 
 -- 售后表（4.1.3）
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_warranty_initiation_expire
--- [SKIPPED-FWD-COL]     ON pmis_after_sales_warranty (initiation_id, expire_date DESC)
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_warranty_initiation_expire
+-- [SKIPPED-FWD-REF]     ON pmis_after_sales_warranty (initiation_id, expire_date DESC)
     WHERE status = 'ACTIVE';
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_priority_status
--- [SKIPPED-FWD-COL]     ON pmis_after_sales_ops_ticket (priority, status, created_at DESC)
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_priority_status
+-- [SKIPPED-FWD-REF]     ON pmis_after_sales_ops_ticket (priority, status, created_at DESC)
     WHERE status IN ('OPEN', 'IN_PROGRESS');
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_sla_due
--- [SKIPPED-FWD-COL]     ON pmis_after_sales_ops_ticket (sla_due_at)
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_sla_due
+-- [SKIPPED-FWD-REF]     ON pmis_after_sales_ops_ticket (sla_due_at)
     WHERE status NOT IN ('CLOSED', 'CANCELLED');
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_satisfaction_ticket
--- [SKIPPED-FWD-COL]     ON pmis_after_sales_satisfaction (ticket_id, created_at DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_satisfaction_ticket
+-- [SKIPPED-FWD-REF]     ON pmis_after_sales_satisfaction (ticket_id, created_at DESC);
 
 -- 项目交付（4.1.2）
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_delivery_initiation_stage
--- [SKIPPED-FWD-COL]     ON pmis_project_delivery (initiation_id, stage, status);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_delivery_initiation_stage
+-- [SKIPPED-FWD-REF]     ON pmis_project_delivery (initiation_id, stage, status);
 
 -- =====================================================================
 --  2) EVM 看板（4.2 联动）
 -- =====================================================================
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_evm_initiation_period
--- [SKIPPED-FWD-COL]     ON pmis_evm_record (initiation_id, period DESC);
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_evm_wbs_period
--- [SKIPPED-FWD-COL]     ON pmis_evm_record (wbs_task_id, period DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_evm_initiation_period
+-- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, period DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_evm_wbs_period
+-- [SKIPPED-FWD-REF]     ON pmis_evm_record (wbs_task_id, period DESC);
 -- EVM 周期唯一性（idempotent on initiation+wbs+period）
--- [SKIPPED-FWD-COL] CREATE UNIQUE INDEX IF NOT EXISTS uq_pmis_evm_period
--- [SKIPPED-FWD-COL]     ON pmis_evm_record (initiation_id, wbs_task_id, period);
+-- [SKIPPED-FWD-REF] CREATE UNIQUE INDEX IF NOT EXISTS uq_pmis_evm_period
+-- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, wbs_task_id, period);
 
 -- =====================================================================
 --  3) 利用率快照（4.2.1）
@@ -6975,10 +7003,10 @@ CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_recipient
 CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
     ON pmis_alert_dispatch (next_retry_at)
     WHERE status = 'FAILED' AND retry_count < 3;
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_period
--- [SKIPPED-FWD-COL]     ON pmis_daily_reconcile (period DESC, status);
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_diff_only
--- [SKIPPED-FWD-COL]     ON pmis_daily_reconcile (period DESC)
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_period
+-- [SKIPPED-FWD-REF]     ON pmis_daily_reconcile (period DESC, status);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_diff_only
+-- [SKIPPED-FWD-REF]     ON pmis_daily_reconcile (period DESC)
     WHERE diff_count > 0;
 
 -- =====================================================================
@@ -6991,10 +7019,10 @@ CREATE INDEX IF NOT EXISTS idx_pmis_agent_prediction_type_alert
 CREATE INDEX IF NOT EXISTS idx_pmis_agent_prediction_trace
     ON pmis_agent_prediction (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_agent_orchestration_biz
--- [SKIPPED-FWD-COL]     ON pmis_agent_orchestration (biz_type, biz_id, created_at DESC);
--- [SKIPPED-FWD-COL] CREATE INDEX IF NOT EXISTS idx_pmis_agent_blackboard_session
--- [SKIPPED-FWD-COL]     ON pmis_agent_blackboard (session_id);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_agent_orchestration_biz
+-- [SKIPPED-FWD-REF]     ON pmis_agent_orchestration (biz_type, biz_id, created_at DESC);
+-- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_agent_blackboard_session
+-- [SKIPPED-FWD-REF]     ON pmis_agent_blackboard (session_id);
 
 -- =====================================================================
 --  6) 财务对账（voucher / payment / invoice）
@@ -7036,12 +7064,12 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_status_lower
 -- =====================================================================
 ANALYZE pmis_project_initiation;
 ANALYZE pmis_project_change;
--- [SKIPPED-FWD-COL] ANALYZE pmis_project_closure;
--- [SKIPPED-FWD-COL] ANALYZE pmis_evm_record;
+-- [SKIPPED-FWD-REF] ANALYZE pmis_project_closure;
+-- [SKIPPED-FWD-REF] ANALYZE pmis_evm_record;
 ANALYZE pmis_billable_utilization_snapshot;
 ANALYZE pmis_agent_prediction;
 ANALYZE pmis_alert_dispatch;
--- [SKIPPED-FWD-COL] ANALYZE pmis_daily_reconcile;
+-- [SKIPPED-FWD-REF] ANALYZE pmis_daily_reconcile;
 ANALYZE pmis_finance_invoice;
 ANALYZE pmis_finance_payment;
 ANALYZE pmis_operation_log;
@@ -7094,7 +7122,7 @@ ALTER TABLE pmis_rule_def
     ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
 CREATE INDEX IF NOT EXISTS idx_rule_def_tenant ON pmis_rule_def (tenant_id);
 -- [SKIPPED-FWD-COL] COMMENT ON COLUMN pmis_rule_def.tenant_id IS '租户 ID（单租户部署默认 1，多租户隔离待 v2.0 启用）';
-
+-- [SKIPPED-FWD-COL] 
 -- 2. 规则版本历史表
 ALTER TABLE pmis_rule_version_history
     ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
@@ -8111,3 +8139,13 @@ COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT
 -- ====================================================================
+
+-- ====================================================================
+-- All DDL has been applied. Commit the transaction. If any DDL above
+-- failed, the implicit ROLLBACK from psql -v ON_ERROR_STOP=1 will
+-- have already aborted the transaction and the COMMIT below will
+-- error out harmlessly. Tool-driven inits should ignore the COMMIT
+-- line and roll back manually on exception.
+-- ====================================================================
+COMMIT;
+

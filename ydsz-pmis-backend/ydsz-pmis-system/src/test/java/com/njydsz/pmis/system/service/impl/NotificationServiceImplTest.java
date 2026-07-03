@@ -1,14 +1,12 @@
 package com.njydsz.pmis.system.service.impl;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.system.dto.NotificationQueryDTO;
 import com.njydsz.pmis.system.dto.NotificationSendDTO;
 import com.njydsz.pmis.system.entity.NotificationDO;
 import com.njydsz.pmis.system.mapper.NotificationMapper;
 import com.njydsz.pmis.system.service.MessageService;
-import com.njydsz.pmis.system.service.NotificationService;
 import com.njydsz.pmis.system.service.RealtimePushService;
 import com.njydsz.pmis.system.feign.UserServiceClient;
 import org.junit.jupiter.api.DisplayName;
@@ -26,7 +24,6 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
@@ -112,6 +109,7 @@ class NotificationServiceImplTest {
     class InboxTest {
 
         @Test
+        @SuppressWarnings("unchecked")
         @DisplayName("收件箱分页查询应返回正确结果")
         void shouldReturnInboxPage() {
             NotificationQueryDTO query = new NotificationQueryDTO();
@@ -126,6 +124,7 @@ class NotificationServiceImplTest {
         }
 
         @Test
+        @SuppressWarnings("unchecked")
         @DisplayName("带分类过滤的收件箱查询应正确过滤")
         void shouldFilterByCategory() {
             NotificationQueryDTO query = new NotificationQueryDTO();
