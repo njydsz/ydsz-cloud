@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.service;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.project.dto.RiskCreateDTO;
 import com.njydsz.pmis.project.dto.RiskStatusDTO;
-import com.njydsz.pmis.project.entity.RiskDO;
+import com.njydsz.pmis.project.vo.RiskVO;
 
 import java.util.List;
 import java.util.Map;
@@ -44,9 +44,9 @@ public interface RiskService {
      * 根据ID查询风险
      *
      * @param id 风险ID
-     * @return 风险实体
+     * @return 风险 VO（剥离 tenantId/providerTraceId/deleted/version 等敏感字段）
      */
-    RiskDO getById(Long id);
+    RiskVO getById(Long id);
 
     /**
      * 分页查询风险
@@ -57,18 +57,18 @@ public interface RiskService {
      * @param status       状态过滤
      * @param riskLevel    风险等级
      * @param initiationId 项目立项ID
-     * @return 分页结果
+     * @return 分页结果（VO）
      */
-    Page<RiskDO> page(int page, int size, String keyword, String status,
+    Page<RiskVO> page(int page, int size, String keyword, String status,
                       String riskLevel, Long initiationId);
 
     /**
      * 查询项目下所有风险
      *
      * @param initiationId 项目立项ID
-     * @return 风险列表
+     * @return 风险 VO 列表
      */
-    List<RiskDO> listByInitiation(Long initiationId);
+    List<RiskVO> listByInitiation(Long initiationId);
 
     /**
      * 风险等级分布统计

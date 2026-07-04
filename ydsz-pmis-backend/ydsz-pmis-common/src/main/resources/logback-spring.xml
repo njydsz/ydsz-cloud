@@ -132,6 +132,11 @@
     <logger name="org.springframework" level="INFO"/>
     <logger name="org.apache.ibatis" level="INFO"/>
     <logger name="com.baomidou.mybatisplus" level="INFO"/>
+    <!-- P2-1: MyBatis SQL 日志（慢SQL监控，DEBUG级别输出完整SQL及参数） -->
+    <logger name="com.njydsz.pmis.project.mapper" level="DEBUG"/>
+    <logger name="com.njydsz.pmis.workflow.mapper" level="DEBUG"/>
+    <logger name="com.njydsz.pmis.system.mapper" level="DEBUG"/>
+    <logger name="com.njydsz.pmis.userinfo.mapper" level="DEBUG"/>
     <logger name="com.alibaba.nacos" level="WARN"/>
     <logger name="org.apache.dubbo" level="WARN"/>
 

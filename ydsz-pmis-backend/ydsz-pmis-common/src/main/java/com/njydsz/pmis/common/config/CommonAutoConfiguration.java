@@ -29,7 +29,8 @@ import java.util.Map;
  */
 @Configuration
 @ComponentScan("com.njydsz.pmis.common")
-@Import({FeatureFlagAutoConfiguration.class, ChaosAutoConfiguration.class, SentinelAutoConfiguration.class, JasyptAutoConfiguration.class})
+@Import({FeatureFlagAutoConfiguration.class, ChaosAutoConfiguration.class, SentinelAutoConfiguration.class,
+        JasyptAutoConfiguration.class})
 @EnableAsync
 @EnableCaching
 public class CommonAutoConfiguration {

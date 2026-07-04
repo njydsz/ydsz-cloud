@@ -13,6 +13,7 @@ import com.njydsz.pmis.project.enums.RiskLevel;
 import com.njydsz.pmis.project.enums.RiskStatus;
 import com.njydsz.pmis.project.mapper.RiskMapper;
 import com.njydsz.pmis.project.service.RiskService;
+import com.njydsz.pmis.project.vo.RiskVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -77,7 +78,7 @@ public class RiskServiceImpl implements RiskService {
         if (dto == null || dto.getId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
-        RiskDO r = getById(dto.getId());
+        RiskDO r = loadByIdDO(dto.getId());
         RiskStatus from = RiskStatus.fromCode(r.getStatus());
         RiskStatus to = RiskStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
@@ -97,7 +98,7 @@ public class RiskServiceImpl implements RiskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
-        RiskDO r = getById(id);
+        RiskDO r = loadByIdDO(id);
         if (RiskStatus.fromCode(r.getStatus()) == RiskStatus.OCCURRED) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0fa95df6");
         }
@@ -106,15 +107,14 @@ public class RiskServiceImpl implements RiskService {
 
     @Override
     @Transactional(readOnly = true)
-    public RiskDO getById(Long id) {
-        RiskDO r = riskMapper.selectById(id);
-        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_eed2ed24");
-        return r;
+    public RiskVO getById(Long id) {
+        RiskDO r = loadByIdDO(id);
+        return toVo(r);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<RiskDO> page(int page, int size, String keyword, String status,
+    public Page<RiskVO> page(int page, int size, String keyword, String status,
                              String riskLevel, Long initiationId) {
         Page<RiskDO> p = new Page<>(page, size);
         LambdaQueryWrapper<RiskDO> w = new LambdaQueryWrapper<>();
@@ -127,14 +127,23 @@ public class RiskServiceImpl implements RiskService {
         if (StringUtils.hasText(riskLevel)) w.eq(RiskDO::getRiskLevel, riskLevel);
         if (initiationId != null) w.eq(RiskDO::getInitiationId, initiationId);
         w.orderByDesc(RiskDO::getCreatedAt);
-        return riskMapper.selectPage(p, w);
+        Page<RiskDO> doPage = riskMapper.selectPage(p, w);
+        Page<RiskVO> voPage = new Page<>(doPage.getCurrent(), doPage.getSize(), doPage.getTotal());
+        if (doPage.getRecords() != null && !doPage.getRecords().isEmpty()) {
+            voPage.setRecords(doPage.getRecords().stream().map(this::toVo).toList());
+        } else {
+            voPage.setRecords(List.of());
+        }
+        return voPage;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<RiskDO> listByInitiation(Long initiationId) {
+    public List<RiskVO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
-        return riskMapper.selectByInitiation(initiationId);
+        List<RiskDO> list = riskMapper.selectByInitiation(initiationId);
+        if (list == null || list.isEmpty()) return List.of();
+        return list.stream().map(this::toVo).toList();
     }
 
     @Override
@@ -142,5 +151,51 @@ public class RiskServiceImpl implements RiskService {
     public List<Map<String, Object>> aggregateByLevel(Long initiationId) {
         if (initiationId == null) return List.of();
         return riskMapper.aggregateByLevel(initiationId);
+    }
+
+    /**
+     * 内部使用：根据 ID 加载 DO（保留所有字段，供 changeStatus/delete 等内部业务判断使用）
+     *
+     * <p>对外接口请使用 {@link #getById(Long)} 返回 VO。
+     *
+     * @param id 风险ID
+     * @return 风险 DO
+     */
+    private RiskDO loadByIdDO(Long id) {
+        RiskDO r = riskMapper.selectById(id);
+        if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_eed2ed24");
+        return r;
+    }
+
+    /**
+     * DO → VO 转换（剥离 tenantId / providerTraceId / deleted / version 等敏感字段）
+     *
+     * <p>手写 setter 模式，参考 {@code UserAccountServiceImpl#toVo}。
+     *
+     * @param r 风险 DO
+     * @return 风险 VO
+     */
+    private RiskVO toVo(RiskDO r) {
+        if (r == null) return null;
+        RiskVO v = new RiskVO();
+        v.setId(r.getId());
+        v.setRiskCode(r.getRiskCode());
+        v.setInitiationId(r.getInitiationId());
+        v.setRiskTitle(r.getRiskTitle());
+        v.setRiskType(r.getRiskType());
+        v.setDescription(r.getDescription());
+        v.setProbability(r.getProbability());
+        v.setImpact(r.getImpact());
+        v.setRiskLevel(r.getRiskLevel());
+        v.setMitigation(r.getMitigation());
+        v.setContingency(r.getContingency());
+        v.setOwnerId(r.getOwnerId());
+        v.setOwnerName(r.getOwnerName());
+        v.setStatus(r.getStatus());
+        v.setOccurredAt(r.getOccurredAt());
+        v.setClosedAt(r.getClosedAt());
+        v.setCreatedAt(r.getCreatedAt());
+        v.setUpdatedAt(r.getUpdatedAt());
+        return v;
     }
 }

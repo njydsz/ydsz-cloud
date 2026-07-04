@@ -15,8 +15,12 @@ import com.njydsz.pmis.userinfo.service.UserAccountService;
 import com.njydsz.pmis.userinfo.vo.UserVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -32,6 +36,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
+@Validated
 public class UserController {
 
     /** 用户账号服务 */
@@ -60,7 +65,7 @@ public class UserController {
     @Operation(summary = "用户详情")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}")
-    public Result<UserVO> get(@PathVariable Long id) {
+    public Result<UserVO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(userAccountService.findVoById(id));
     }
 
@@ -85,7 +90,7 @@ public class UserController {
      */
     @Operation(summary = "修改自己的密码")
     @PostMapping("/me/password")
-    public Result<Void> changeMyPassword(@RequestBody Map<String, String> body) {
+    public Result<Void> changeMyPassword(@Valid @RequestBody Map<String, String> body) {
         String oldPassword = body.get("oldPassword");
         String newPassword = body.get("newPassword");
         if (oldPassword == null || newPassword == null) {
@@ -108,7 +113,7 @@ public class UserController {
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_7aa2293e}")
     @PostMapping
-    public Result<Long> create(@RequestBody Map<String, Object> body) {
+    public Result<Long> create(@Valid @RequestBody Map<String, Object> body) {
         String username = (String) body.get("username");
         String password = (String) body.get("password");
         Long employeeId = body.get("employeeId") == null ? null : Long.valueOf(body.get("employeeId").toString());
@@ -132,7 +137,7 @@ public class UserController {
     @PrePermission("auth:user:update")
     @OperationLog(module = "权限管理", action = "更新用户", bizType = "USER")
     @PutMapping
-    public Result<Void> update(@RequestBody UserAccountDO user) {
+    public Result<Void> update(@Valid @RequestBody UserAccountDO user) {
         userAccountService.update(user);
         return Result.ok();
     }
@@ -148,7 +153,7 @@ public class UserController {
     @RequireReAuth(code = "USER_DELETE", name = "删除用户")
     @OperationLog(module = "权限管理", action = "删除用户", bizType = "USER")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         userAccountService.delete(id);
         return Result.ok();
     }
@@ -167,7 +172,7 @@ public class UserController {
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_538560c7}")
     @PostMapping("/{id}/reset-password")
-    public Result<Void> resetPassword(@PathVariable Long id, @RequestParam @NotBlank String password) {
+    public Result<Void> resetPassword(@PathVariable @Min(1) Long id, @RequestParam @NotBlank String password) {
         userAccountService.resetPassword(id, password);
         return Result.ok();
     }
@@ -183,7 +188,7 @@ public class UserController {
     @PrePermission("auth:user:toggle")
     @OperationLog(module = "权限管理", action = "切换状态", bizType = "USER")
     @PostMapping("/{id}/status")
-    public Result<Void> toggleStatus(@PathVariable Long id, @RequestParam String status) {
+    public Result<Void> toggleStatus(@PathVariable @Min(1) Long id, @RequestParam @NotBlank String status) {
         userAccountService.toggleStatus(id, status);
         return Result.ok();
     }
@@ -199,7 +204,7 @@ public class UserController {
     @PrePermission("auth:user:assign")
     @OperationLog(module = "权限管理", action = "分配角色", bizType = "USER")
     @PutMapping("/{id}/roles")
-    public Result<Void> assignRoles(@PathVariable Long id, @RequestBody List<Long> roleIds) {
+    public Result<Void> assignRoles(@PathVariable @Min(1) Long id, @Valid @RequestBody List<Long> roleIds) {
         userAccountService.assignRoles(id, roleIds);
         return Result.ok();
     }
@@ -213,7 +218,7 @@ public class UserController {
     @Operation(summary = "查询用户角色 ID 列表")
     @RateLimit(key = "user:list", qps = 20, windowSeconds = 60)
     @GetMapping("/{id}/roles")
-    public Result<List<Long>> listRoles(@PathVariable Long id) {
+    public Result<List<Long>> listRoles(@PathVariable @Min(1) Long id) {
         return Result.ok(userAccountService.listRoleIds(id));
     }
 }

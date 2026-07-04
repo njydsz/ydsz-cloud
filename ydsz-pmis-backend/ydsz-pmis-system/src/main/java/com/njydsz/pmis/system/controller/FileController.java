@@ -12,7 +12,12 @@ import com.njydsz.pmis.system.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -32,6 +37,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/file")
 @RequiredArgsConstructor
+@Validated
 public class FileController {
 
     /** 文件服务 */
@@ -74,7 +80,7 @@ public class FileController {
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "删除文件", bizType = "FILE")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) throws Exception {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) throws Exception {
         fileService.delete(id);
         return Result.ok();
     }
@@ -89,7 +95,7 @@ public class FileController {
     @Operation(summary = "批量删除")
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @DeleteMapping("/batch")
-    public Result<Void> deleteBatch(@RequestBody List<Long> ids) throws Exception {
+    public Result<Void> deleteBatch(@Valid @RequestBody List<Long> ids) throws Exception {
         fileService.deleteBatch(ids);
         return Result.ok();
     }

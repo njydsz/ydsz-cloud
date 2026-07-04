@@ -11,6 +11,7 @@ import com.njydsz.pmis.project.engine.EvmCalculator;
 import com.njydsz.pmis.project.entity.EvmMeasureDO;
 import com.njydsz.pmis.project.mapper.EvmMeasureMapper;
 import com.njydsz.pmis.project.service.EvmMeasureService;
+import com.njydsz.pmis.project.vo.EvmMeasureVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -104,25 +105,29 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     @Transactional(readOnly = true)
-    public EvmMeasureDO getById(Long id) {
+    public EvmMeasureVO getById(Long id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_411b6827");
         EvmMeasureDO m = evmMapper.selectById(id);
         if (m == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c14ffd5d");
-        return m;
+        return toVo(m);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<EvmMeasureDO> listByInitiation(Long initiationId) {
+    public List<EvmMeasureVO> listByInitiation(Long initiationId) {
         if (initiationId == null) return List.of();
-        return evmMapper.selectByInitiation(initiationId);
+        List<EvmMeasureDO> list = evmMapper.selectByInitiation(initiationId);
+        if (list == null || list.isEmpty()) return List.of();
+        return list.stream().map(this::toVo).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<EvmMeasureDO> listByWbs(Long wbsTaskId) {
+    public List<EvmMeasureVO> listByWbs(Long wbsTaskId) {
         if (wbsTaskId == null) return List.of();
-        return evmMapper.selectByWbs(wbsTaskId);
+        List<EvmMeasureDO> list = evmMapper.selectByWbs(wbsTaskId);
+        if (list == null || list.isEmpty()) return List.of();
+        return list.stream().map(this::toVo).toList();
     }
 
     @Override
@@ -172,13 +177,20 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<EvmMeasureDO> page(int page, int size, Long initiationId, String alertLevel) {
+    public Page<EvmMeasureVO> page(int page, int size, Long initiationId, String alertLevel) {
         Page<EvmMeasureDO> p = new Page<>(page, size);
         LambdaQueryWrapper<EvmMeasureDO> w = new LambdaQueryWrapper<>();
         if (initiationId != null) w.eq(EvmMeasureDO::getInitiationId, initiationId);
         if (StringUtils.hasText(alertLevel)) w.eq(EvmMeasureDO::getAlertLevel, alertLevel);
         w.orderByDesc(EvmMeasureDO::getPeriod);
-        return evmMapper.selectPage(p, w);
+        Page<EvmMeasureDO> doPage = evmMapper.selectPage(p, w);
+        Page<EvmMeasureVO> voPage = new Page<>(doPage.getCurrent(), doPage.getSize(), doPage.getTotal());
+        if (doPage.getRecords() != null && !doPage.getRecords().isEmpty()) {
+            voPage.setRecords(doPage.getRecords().stream().map(this::toVo).toList());
+        } else {
+            voPage.setRecords(List.of());
+        }
+        return voPage;
     }
 
     @Override
@@ -223,5 +235,41 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
         // 用 listByInitiation.size() 简化; 大数据量场景可后续替换为 count mapper
         List<EvmMeasureDO> all = evmMapper.selectByInitiation(initiationId);
         return all == null ? 0L : all.size();
+    }
+
+    /**
+     * DO → VO 转换（剥离 tenantId / providerTraceId / deleted 等敏感字段）
+     *
+     * <p>手写 setter 模式，参考 {@code UserAccountServiceImpl#toVo}。
+     *
+     * @param m EVM 测量 DO
+     * @return EVM 测量 VO
+     */
+    private EvmMeasureVO toVo(EvmMeasureDO m) {
+        if (m == null) return null;
+        EvmMeasureVO v = new EvmMeasureVO();
+        v.setId(m.getId());
+        v.setInitiationId(m.getInitiationId());
+        v.setWbsTaskId(m.getWbsTaskId());
+        v.setPeriod(m.getPeriod());
+        v.setPv(m.getPv());
+        v.setEv(m.getEv());
+        v.setAc(m.getAc());
+        v.setBac(m.getBac());
+        v.setCpi(m.getCpi());
+        v.setSpi(m.getSpi());
+        v.setCv(m.getCv());
+        v.setSv(m.getSv());
+        v.setEac(m.getEac());
+        v.setVac(m.getVac());
+        v.setEtc(m.getEtc());
+        v.setTcpi(m.getTcpi());
+        v.setAlertLevel(m.getAlertLevel());
+        v.setAlertReason(m.getAlertReason());
+        v.setMeasureDate(m.getMeasureDate());
+        v.setRemark(m.getRemark());
+        v.setCreatedAt(m.getCreatedAt());
+        v.setUpdatedAt(m.getUpdatedAt());
+        return v;
     }
 }

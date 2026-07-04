@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.EvmMeasureCreateDTO;
-import com.njydsz.pmis.project.entity.EvmMeasureDO;
 import com.njydsz.pmis.project.service.EvmMeasureService;
+import com.njydsz.pmis.project.vo.EvmMeasureVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -55,12 +55,12 @@ public class EvmController {
      * 查询 EVM 测量详情
      *
      * @param id 测量 ID
-     * @return 测量实体
+     * @return 测量 VO（剥离 tenantId/providerTraceId/deleted）
      */
     @Operation(summary = "详情")
     @PrePermission("execution:evm:list")
     @GetMapping("/{id}")
-    public Result<EvmMeasureDO> get(@PathVariable Long id) {
+    public Result<EvmMeasureVO> get(@PathVariable Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -68,12 +68,12 @@ public class EvmController {
      * 按项目查询 EVM 测量列表
      *
      * @param initiationId 项目立项 ID
-     * @return 测量列表
+     * @return 测量 VO 列表
      */
     @Operation(summary = "按项目查询")
     @PrePermission("execution:evm:list")
     @GetMapping("/by-initiation")
-    public Result<List<EvmMeasureDO>> listByInitiation(@RequestParam Long initiationId) {
+    public Result<List<EvmMeasureVO>> listByInitiation(@RequestParam Long initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
@@ -81,12 +81,12 @@ public class EvmController {
      * 按 WBS 任务查询 EVM 测量列表
      *
      * @param wbsTaskId WBS 任务 ID
-     * @return 测量列表
+     * @return 测量 VO 列表
      */
     @Operation(summary = "按 WBS 查询")
     @PrePermission("execution:evm:list")
     @GetMapping("/by-wbs")
-    public Result<List<EvmMeasureDO>> listByWbs(@RequestParam Long wbsTaskId) {
+    public Result<List<EvmMeasureVO>> listByWbs(@RequestParam Long wbsTaskId) {
         return Result.ok(service.listByWbs(wbsTaskId));
     }
 
@@ -128,7 +128,7 @@ public class EvmController {
     @Operation(summary = "分页")
     @PrePermission("execution:evm:list")
     @GetMapping("/page")
-    public Result<Page<EvmMeasureDO>> page(
+    public Result<Page<EvmMeasureVO>> page(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) Long initiationId,

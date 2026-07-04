@@ -2,7 +2,7 @@ package com.njydsz.pmis.project.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.project.dto.EvmMeasureCreateDTO;
-import com.njydsz.pmis.project.entity.EvmMeasureDO;
+import com.njydsz.pmis.project.vo.EvmMeasureVO;
 
 import java.util.List;
 import java.util.Map;
@@ -29,25 +29,25 @@ public interface EvmMeasureService {
      * 根据ID查询测量记录
      *
      * @param id 记录ID
-     * @return 测量实体
+     * @return 测量 VO（剥离 tenantId/providerTraceId/deleted 等敏感字段）
      */
-    EvmMeasureDO getById(Long id);
+    EvmMeasureVO getById(Long id);
 
     /**
      * 查询项目下所有测量记录
      *
      * @param initiationId 项目立项ID
-     * @return 测量列表
+     * @return 测量 VO 列表
      */
-    List<EvmMeasureDO> listByInitiation(Long initiationId);
+    List<EvmMeasureVO> listByInitiation(Long initiationId);
 
     /**
      * 查询 WBS 节点下所有测量记录
      *
      * @param wbsTaskId WBS任务ID
-     * @return 测量列表
+     * @return 测量 VO 列表
      */
-    List<EvmMeasureDO> listByWbs(Long wbsTaskId);
+    List<EvmMeasureVO> listByWbs(Long wbsTaskId);
 
     /**
      * WBS 节点级偏差趋势
@@ -74,7 +74,7 @@ public interface EvmMeasureService {
      * @param alertLevel   告警级别
      * @return 分页结果
      */
-    Page<EvmMeasureDO> page(int page, int size, Long initiationId, String alertLevel);
+    Page<EvmMeasureVO> page(int page, int size, Long initiationId, String alertLevel);
 
     /**
      * 删除测量记录
