@@ -135,25 +135,26 @@ const trendRef = ref<HTMLDivElement | null>(null)
 const { setOption: setTrendOption } = useECharts(trendRef)
 const updateTrendChart = () => {
   if (!trend.value) return
-  const t = trend.value
+  // 注意：局部变量不能命名为 t，否则会遮蔽 useI18n() 返回的翻译函数 t
+  const trendData = trend.value
   setTrendOption(
     {
       tooltip: { trigger: 'axis' },
       legend: { data: [t('executive.chart.legendContract'), t('executive.chart.legendRevenue'), t('executive.chart.legendProfit')] },
       grid: { left: 50, right: 30, top: 40, bottom: 30 },
-      xAxis: { type: 'category', data: t.periods || [] },
+      xAxis: { type: 'category', data: trendData.periods || [] },
       yAxis: [
         { type: 'value', name: t('executive.chart.yAxisAmount'), position: 'left' },
         { type: 'value', name: t('executive.chart.yAxisMarginPct'), position: 'right', min: 0, max: 100 },
       ],
       series: [
-        { name: t('executive.chart.legendContract'), type: 'bar', data: t.contractAmountSeries || [], yAxisIndex: 0, itemStyle: { color: '#409EFF' } },
-        { name: t('executive.chart.legendRevenue'), type: 'bar', data: t.confirmedRevenueSeries || [], yAxisIndex: 0, itemStyle: { color: '#67C23A' } },
-        { name: t('executive.chart.legendProfit'), type: 'line', data: t.grossProfitSeries || [], yAxisIndex: 0, smooth: true, itemStyle: { color: '#E6A23C' } },
+        { name: t('executive.chart.legendContract'), type: 'bar', data: trendData.contractAmountSeries || [], yAxisIndex: 0, itemStyle: { color: '#409EFF' } },
+        { name: t('executive.chart.legendRevenue'), type: 'bar', data: trendData.confirmedRevenueSeries || [], yAxisIndex: 0, itemStyle: { color: '#67C23A' } },
+        { name: t('executive.chart.legendProfit'), type: 'line', data: trendData.grossProfitSeries || [], yAxisIndex: 0, smooth: true, itemStyle: { color: '#E6A23C' } },
         {
           name: t('executive.chart.legendMargin'),
           type: 'line',
-          data: t.grossMarginPctSeries || [],
+          data: trendData.grossMarginPctSeries || [],
           yAxisIndex: 1,
           smooth: true,
           lineStyle: { type: 'dashed' },

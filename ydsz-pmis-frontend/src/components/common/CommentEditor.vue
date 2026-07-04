@@ -188,9 +188,8 @@ function insertAtCursor(text: string) {
   })
 }
 
-function onInput(e: Event) {
-  const v = (e.target as HTMLTextAreaElement).value
-  emit('update:modelValue', v)
+function onInput(value: string) {
+  emit('update:modelValue', value)
 }
 
 // ===========================================

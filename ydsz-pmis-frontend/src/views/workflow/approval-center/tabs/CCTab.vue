@@ -34,8 +34,10 @@ async function loadCc() {
   try {
     const res = await pageCc(ccQuery)
     if (res.data?.code === 0) {
-      ccList.value = res.data.data?.records || []
-      ccTotal.value = res.data.data?.total || 0
+      // 后端分页返回 records/total 字段（MyBatis-Plus Page），与前端 PageResult 类型不一致，用类型断言收敛
+      const pageData = res.data?.data as unknown as { records?: FlowCcDTO[]; total?: number } | undefined
+      ccList.value = pageData?.records || []
+      ccTotal.value = pageData?.total || 0
     }
   } finally {
     ccLoading.value = false
@@ -109,7 +111,7 @@ onMounted(loadCc)
             size="small"
             text
             type="primary"
-            @click="quickCcRead(row)"
+            @click="quickCcRead(row as FlowCcDTO)"
           >
             {{ t('workflow.approval.buttons.markRead') }}
           </el-button>

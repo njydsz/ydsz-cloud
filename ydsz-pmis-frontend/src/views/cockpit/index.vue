@@ -23,6 +23,7 @@ import {
   drillByProjectType,
   drillByCustomer,
 } from '@/api/execution/cockpit'
+import type { CockpitKpiVO, AlertEventDTO } from '@/api/execution/cockpit/types'
 import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 
@@ -30,29 +31,10 @@ defineOptions({ name: 'Cockpit' })
 
 const { t, locale } = useI18n()
 
-/** 驾驶舱 KPI 总览数据 */
-interface CockpitOverview {
-  totalContractAmount: number
-  totalRevenue: number
-  totalCost: number
-  grossProfit: number
-  grossMarginPct: number
-  activeProjectCount: number
-  overdueProjectCount: number
-  benchIdleCost: number
-  benchIdleCount: number
-  utilizationPct: number
-  /** 关键提示项 */
+/** 驾驶舱 KPI 总览数据（基于后端 CockpitKpiVO，扩展前端独有的 hints 字段） */
+type CockpitOverview = CockpitKpiVO & {
+  /** 关键提示项（前端独有，后端暂未返回） */
   hints?: Array<{ level: string; message: string }>
-}
-
-/** 预警事件 */
-interface AlertEvent {
-  projectName: string
-  alertType: string
-  severity: 'RED' | 'YELLOW'
-  message: string
-  createdAt: string
 }
 
 /** 查询条件（期间，YYYY-MM） */
@@ -64,7 +46,7 @@ const drillData = ref<Record<string, unknown>[]>([])
 /** 当前下钻维度：dept-事业部 / projectType-项目类型 / customer-客户 */
 const drillDimension = ref<'dept' | 'projectType' | 'customer'>('dept')
 /** 预警汇总数据 */
-const alert = ref<{ redCount: number; yellowCount: number; totalCount: number; topEvent: AlertEvent | null } | null>(null)
+const alert = ref<{ redCount: number; yellowCount: number; totalCount: number; topEvent: AlertEventDTO | null } | null>(null)
 /** KPI 月度趋势数据（最近 12 月） */
 const trend = ref<{ periods: string[]; contractAmountSeries: number[]; confirmedRevenueSeries: number[]; totalCostSeries: number[]; grossProfitSeries: number[]; grossMarginPctSeries: number[] } | null>(null)
 /** 最后一次刷新时间 */

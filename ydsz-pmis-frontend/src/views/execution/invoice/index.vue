@@ -13,7 +13,8 @@
  * 状态: DRAFT -> SUBMITTED -> APPROVED -> ISSUED -> RED_REVERSED / CANCELLED
  * 开票依据: MILESTONE(需验收证明) / OUTSOURCING(需人天确认单) / MONTHLY / FINAL / OTHER
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -27,6 +28,8 @@ import {
 } from '@/api/execution/invoice'
 import type { InvoiceVO, InvoiceCreateDTO } from '@/api/execution/invoice/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 /** 列表加载状态 */
 const loading = ref(false)
@@ -47,31 +50,31 @@ const query = reactive({
   initiationId: undefined as number | undefined,
 })
 
-/** 发票状态 → 标签/样式映射 */
-const statusMap = {
-  DRAFT: { label: '草稿', type: 'info' as const },
-  SUBMITTED: { label: '已提交', type: 'warning' as const },
-  APPROVED: { label: '已审批', type: 'success' as const },
-  REJECTED: { label: '已驳回', type: 'danger' as const },
-  ISSUED: { label: '已开票', type: 'primary' as const },
-  RED_REVERSED: { label: '已红冲', type: 'danger' as const },
-  CANCELLED: { label: '已取消', type: 'info' as const },
-}
+/** 发票状态 → 标签/样式映射（i18n 响应式） */
+const statusMap = computed(() => ({
+  DRAFT: { label: t('finance.invoice.status.DRAFT'), type: 'info' as const },
+  SUBMITTED: { label: t('finance.invoice.status.SUBMITTED'), type: 'warning' as const },
+  APPROVED: { label: t('finance.invoice.status.APPROVED'), type: 'success' as const },
+  REJECTED: { label: t('finance.invoice.status.REJECTED'), type: 'danger' as const },
+  ISSUED: { label: t('finance.invoice.status.ISSUED'), type: 'primary' as const },
+  RED_REVERSED: { label: t('finance.invoice.status.RED_REVERSED'), type: 'danger' as const },
+  CANCELLED: { label: t('finance.invoice.status.CANCELLED'), type: 'info' as const },
+}))
 
-/** 发票类型 → 中文标签映射（蓝字/红字） */
-const typeMap = {
-  NORMAL: { label: '蓝字发票' },
-  RED_REVERSE: { label: '红字发票' },
-}
+/** 发票类型 → 标签映射（蓝字/红字，i18n 响应式） */
+const typeMap = computed(() => ({
+  NORMAL: { label: t('finance.invoice.invoiceType.NORMAL') },
+  RED_REVERSE: { label: t('finance.invoice.invoiceType.RED_REVERSE') },
+}))
 
-/** 开票依据 → 中文标签映射 */
-const basisMap = {
-  MILESTONE: { label: '里程碑' },
-  OUTSOURCING: { label: '外协人天' },
-  MONTHLY: { label: '按月' },
-  FINAL: { label: '终验' },
-  OTHER: { label: '其他' },
-}
+/** 开票依据 → 标签映射（i18n 响应式） */
+const basisMap = computed(() => ({
+  MILESTONE: { label: t('finance.invoice.basis.MILESTONE') },
+  OUTSOURCING: { label: t('finance.invoice.basis.OUTSOURCING') },
+  MONTHLY: { label: t('finance.invoice.basis.MONTHLY') },
+  FINAL: { label: t('finance.invoice.basis.FINAL') },
+  OTHER: { label: t('finance.invoice.basis.OTHER') },
+}))
 
 /** 分页查询发票列表 */
 async function fetchList() {
@@ -122,14 +125,14 @@ const form = reactive<Partial<InvoiceCreateDTO>>({
 })
 
 /** 表单校验规则 */
-const formRules = {
-  invoiceCode: [{ required: true, message: '发票编码必填', trigger: 'blur' }],
-  invoiceType: [{ required: true, message: '发票类型必填', trigger: 'change' }],
-  invoiceBasis: [{ required: true, message: '开票依据必填', trigger: 'change' }],
-  customerId: [{ required: true, message: '客户 ID 必填', trigger: 'blur' }],
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  amount: [{ required: true, message: '金额必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  invoiceCode: [{ required: true, message: t('finance.invoice.rules.codeRequired'), trigger: 'blur' }],
+  invoiceType: [{ required: true, message: t('finance.invoice.rules.typeRequired'), trigger: 'change' }],
+  invoiceBasis: [{ required: true, message: t('finance.invoice.rules.basisRequired'), trigger: 'change' }],
+  customerId: [{ required: true, message: t('finance.invoice.rules.customerIdRequired'), trigger: 'blur' }],
+  initiationId: [{ required: true, message: t('finance.invoice.rules.initiationIdRequired'), trigger: 'blur' }],
+  amount: [{ required: true, message: t('finance.invoice.rules.amountRequired'), trigger: 'blur' }],
+}))
 
 /** 打开新增弹窗并重置表单为默认值 */
 function openCreate() {
@@ -158,7 +161,7 @@ async function submitForm() {
     submitting.value = true
     await formRef.value?.validate()
     await createInvoice(form as InvoiceCreateDTO)
-    ElMessage.success('已创建')
+    ElMessage.success(t('finance.invoice.messages.created'))
     dialogVisible.value = false
     fetchList()
   } catch {
@@ -174,11 +177,11 @@ async function submitForm() {
  * @param action 审批动作（APPROVED 通过 / REJECTED 驳回）
  */
 async function handleApprove(row: InvoiceVO, action: 'APPROVED' | 'REJECTED') {
-  const text = action === 'APPROVED' ? '通过' : '驳回'
+  const text = action === 'APPROVED' ? t('finance.invoice.messages.approvePass') : t('finance.invoice.messages.approveReject')
   try {
-    await ElMessageBox.confirm(`确认${text}该发票？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('finance.invoice.messages.approvePrompt', { text }), t('common.tip'), { type: 'warning' })
     await approveInvoice({ id: row.id, approverId: 1, approverName: '系统' })
-    ElMessage.success(`已${text}`)
+    ElMessage.success(t('finance.invoice.messages.approved', { text }))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -189,12 +192,12 @@ async function handleApprove(row: InvoiceVO, action: 'APPROVED' | 'REJECTED') {
  */
 async function handleIssue(row: InvoiceVO) {
   try {
-    await ElMessageBox.confirm('确认开票？开票后将自动生成发票号 (invoiceNo)。', '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('finance.invoice.messages.issuePrompt'), t('common.tip'), { type: 'warning' })
     await issueInvoice({ id: row.id })
-    ElMessage.success('已开票')
+    ElMessage.success(t('finance.invoice.messages.issued'))
     fetchList()
   } catch (e: any) {
-    ElMessage.error(e?.message || '开票失败')
+    ElMessage.error(e?.message || t('finance.invoice.messages.issueFailed'))
   }
 }
 
@@ -204,12 +207,12 @@ async function handleIssue(row: InvoiceVO) {
  */
 async function handleReverse(row: InvoiceVO) {
   try {
-    const { value } = await ElMessageBox.prompt('请输入被红冲的原发票 ID', '红冲发票', {
+    const { value } = await ElMessageBox.prompt(t('finance.invoice.messages.reversePrompt'), t('finance.invoice.messages.reverseTitle'), {
       inputPattern: /^\d+$/,
-      inputErrorMessage: '请输入数字',
+      inputErrorMessage: t('finance.invoice.messages.reversePattern'),
     })
     await reverseInvoice({ id: row.id, reversedById: Number(value) })
-    ElMessage.success('已红冲')
+    ElMessage.success(t('finance.invoice.messages.reversed'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -220,9 +223,9 @@ async function handleReverse(row: InvoiceVO) {
  */
 async function handleDelete(row: InvoiceVO) {
   try {
-    await ElMessageBox.confirm(`确认删除该发票？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('finance.invoice.messages.deletePrompt'), t('common.tip'), { type: 'warning' })
     await deleteInvoice(row.id)
-    ElMessage.success('删除成功')
+    ElMessage.success(t('finance.invoice.messages.deleted'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -245,97 +248,97 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="编码/发票号" clearable aria-label="搜索关键字" @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+      <el-form-item :label="t('finance.invoice.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('finance.invoice.search.keywordPlaceholder')" clearable :aria-label="t('common.search')" @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
+      <el-form-item :label="t('finance.invoice.search.status')">
+        <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="类型">
-        <el-select v-model="query.invoiceType" placeholder="全部" clearable style="width: 120px">
+      <el-form-item :label="t('finance.invoice.search.type')">
+        <el-select v-model="query.invoiceType" :placeholder="t('common.all')" clearable style="width: 120px">
           <el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="项目 ID"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
+      <el-form-item :label="t('finance.invoice.search.initiationId')"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
     </template>
 
     <template #toolbar>
       <el-button v-permission="[PC.FINANCE_INVOICE_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新增发票
+        {{ t('finance.invoice.buttons.create') }}
       </el-button>
     </template>
 
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="invoiceCode" title="编码" width="160" />
-        <vxe-column field="invoiceNo" title="发票号" width="160" />
-        <vxe-column field="invoiceType" title="类型" width="100">
+        <vxe-column field="invoiceCode" :title="t('finance.invoice.columns.code')" width="160" />
+        <vxe-column field="invoiceNo" :title="t('finance.invoice.columns.no')" width="160" />
+        <vxe-column field="invoiceType" :title="t('finance.invoice.columns.type')" width="100">
           <template #default="{ row }">{{ typeMap[row.invoiceType as keyof typeof typeMap]?.label || row.invoiceType || '-' }}</template>
         </vxe-column>
-        <vxe-column field="invoiceBasis" title="开票依据" width="100">
+        <vxe-column field="invoiceBasis" :title="t('finance.invoice.columns.basis')" width="100">
           <template #default="{ row }">{{ basisMap[row.invoiceBasis as keyof typeof basisMap]?.label || row.invoiceBasis || '-' }}</template>
         </vxe-column>
-        <vxe-column field="customerName" title="客户" width="160" show-overflow />
-        <vxe-column field="initiationName" title="项目" width="160" show-overflow />
-        <vxe-column field="amount" title="金额(含税)" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="taxAmount" title="税额" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="issueDate" title="开票日期" width="110" />
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="customerName" :title="t('finance.invoice.columns.customer')" width="160" show-overflow />
+        <vxe-column field="initiationName" :title="t('finance.invoice.columns.project')" width="160" show-overflow />
+        <vxe-column field="amount" :title="t('finance.invoice.columns.amount')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="taxAmount" :title="t('finance.invoice.columns.taxAmount')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="issueDate" :title="t('finance.invoice.columns.issueDate')" width="110" />
+        <vxe-column field="status" :title="t('finance.invoice.columns.status')" width="100">
           <template #default="{ row }"><StatusTag :value="row.status" :map="statusMap" /></template>
         </vxe-column>
-        <vxe-column title="操作" width="320" fixed="right">
+        <vxe-column :title="t('finance.invoice.columns.action')" width="320" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.FINANCE_INVOICE_APPROVE]" link type="success" size="small" @click="handleApprove(row, 'APPROVED')">通过</el-button>
-            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.FINANCE_INVOICE_APPROVE]" link type="danger" size="small" @click="handleApprove(row, 'REJECTED')">驳回</el-button>
-            <el-button v-if="row.status === 'APPROVED'" v-permission="[PC.FINANCE_INVOICE_ISSUE]" link type="primary" size="small" @click="handleIssue(row)">开票</el-button>
-            <el-button v-if="row.status === 'ISSUED'" v-permission="[PC.FINANCE_INVOICE_REVERSE]" link type="danger" size="small" @click="handleReverse(row)">红冲</el-button>
-            <el-button v-permission="[PC.FINANCE_INVOICE_CREATE]" link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.FINANCE_INVOICE_APPROVE]" link type="success" size="small" @click="handleApprove(row, 'APPROVED')">{{ t('finance.invoice.buttons.approve') }}</el-button>
+            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.FINANCE_INVOICE_APPROVE]" link type="danger" size="small" @click="handleApprove(row, 'REJECTED')">{{ t('finance.invoice.buttons.reject') }}</el-button>
+            <el-button v-if="row.status === 'APPROVED'" v-permission="[PC.FINANCE_INVOICE_ISSUE]" link type="primary" size="small" @click="handleIssue(row)">{{ t('finance.invoice.buttons.issue') }}</el-button>
+            <el-button v-if="row.status === 'ISSUED'" v-permission="[PC.FINANCE_INVOICE_REVERSE]" link type="danger" size="small" @click="handleReverse(row)">{{ t('finance.invoice.buttons.reverse') }}</el-button>
+            <el-button v-permission="[PC.FINANCE_INVOICE_CREATE]" link type="danger" size="small" @click="handleDelete(row)">{{ t('finance.invoice.buttons.delete') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
-    <el-dialog v-model="dialogVisible" title="新增发票" width="640px">
+    <el-dialog v-model="dialogVisible" :title="t('finance.invoice.dialog.createTitle')" width="640px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
-          <el-col :xs="24" :sm="12"><el-form-item label="发票编码" prop="invoiceCode"><el-input v-model="form.invoiceCode" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12"><el-form-item label="发票类型" prop="invoiceType"><el-select v-model="form.invoiceType" style="width: 100%"><el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.invoice.form.code')" prop="invoiceCode"><el-input v-model="form.invoiceCode" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.invoice.form.type')" prop="invoiceType"><el-select v-model="form.invoiceType" style="width: 100%"><el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :xs="24" :sm="12"><el-form-item label="客户 ID" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12"><el-form-item label="客户名称"><el-input v-model="form.customerName" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.invoice.form.customerId')" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.invoice.form.customerName')"><el-input v-model="form.customerName" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :xs="24" :sm="12"><el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12"><el-form-item label="合同 ID"><el-input-number v-model="form.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.invoice.form.initiationId')" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.invoice.form.contractId')"><el-input-number v-model="form.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
         </el-row>
-        <el-form-item label="开票依据" prop="invoiceBasis">
+        <el-form-item :label="t('finance.invoice.form.basis')" prop="invoiceBasis">
           <el-select v-model="form.invoiceBasis" style="width: 100%">
             <el-option v-for="(v, k) in basisMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
         <el-row :gutter="16">
-          <el-col :xs="24" :sm="12" :md="8"><el-form-item label="金额" prop="amount"><el-input-number v-model="form.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12" :md="8"><el-form-item label="税率"><el-input-number v-model="form.taxRate" :min="0" :max="1" :step="0.01" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12" :md="8"><el-form-item label="税额"><el-input-number :model-value="Number(form.amount || 0) * Number(form.taxRate || 0)" :min="0" disabled style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12" :md="8"><el-form-item :label="t('finance.invoice.form.amount')" prop="amount"><el-input-number v-model="form.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12" :md="8"><el-form-item :label="t('finance.invoice.form.taxRate')"><el-input-number v-model="form.taxRate" :min="0" :max="1" :step="0.01" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12" :md="8"><el-form-item :label="t('finance.invoice.form.taxAmount')"><el-input-number :model-value="Number(form.amount || 0) * Number(form.taxRate || 0)" :min="0" disabled style="width: 100%" /></el-form-item></el-col>
         </el-row>
-        <el-form-item v-if="form.invoiceBasis === 'MILESTONE'" label="验收证明">
-          <el-input v-model="form.acceptanceProof" placeholder="URL 或文件标识" />
+        <el-form-item v-if="form.invoiceBasis === 'MILESTONE'" :label="t('finance.invoice.form.acceptanceProof')">
+          <el-input v-model="form.acceptanceProof" :placeholder="t('finance.invoice.form.proofPlaceholder')" />
         </el-form-item>
-        <el-form-item v-if="form.invoiceBasis === 'OUTSOURCING'" label="人天确认单">
-          <el-input v-model="form.personDaySheet" placeholder="URL 或文件标识" />
+        <el-form-item v-if="form.invoiceBasis === 'OUTSOURCING'" :label="t('finance.invoice.form.personDaySheet')">
+          <el-input v-model="form.personDaySheet" :placeholder="t('finance.invoice.form.proofPlaceholder')" />
         </el-form-item>
-        <el-form-item label="到期日">
+        <el-form-item :label="t('finance.invoice.form.dueDate')">
           <el-date-picker v-model="form.dueDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="备注">
+        <el-form-item :label="t('finance.invoice.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

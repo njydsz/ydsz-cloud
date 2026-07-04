@@ -160,7 +160,7 @@ public class BudgetGuard {
             }
             return r.getData();
         } catch (Exception e) {
-            log.warn("[BudgetGuard] budgetSnapshot 调用异常，已降级: {}", e.getMessage());
+            log.error("[BudgetGuard] budgetSnapshot 调用异常，已降级: {}", e.getMessage());
             return null;
         }
     }

@@ -37,6 +37,7 @@ import {
   autocompletion,
   type Completion,
   type CompletionContext,
+  type CompletionResult,
 } from '@codemirror/autocomplete'
 import { linter, type Diagnostic } from '@codemirror/lint'
 import { defaultKeymap, history, historyKeymap } from '@codemirror/commands'
@@ -51,13 +52,14 @@ export interface ExpressionFunction {
 
 const props = withDefaults(
   defineProps<{
-    modelValue: string
+    modelValue?: string
     fields?: string[]
     functions?: ExpressionFunction[]
     placeholder?: string
     validateOnInput?: boolean
   }>(),
   {
+    modelValue: '',
     fields: () => [],
     functions: () => [],
     placeholder: '请输入表达式...',
@@ -83,7 +85,7 @@ let validateTimer: ReturnType<typeof setTimeout> | null = null
 /**
  * 构建 Aviator 表达式自动补全源
  */
-function aviatorCompletions(context: CompletionContext): Completion[] | null {
+function aviatorCompletions(context: CompletionContext): CompletionResult | null {
   const word = context.matchBefore(/\w*/)
   if (!word || (word.from === word.to && !context.explicit)) return null
 
@@ -140,7 +142,7 @@ function aviatorCompletions(context: CompletionContext): Completion[] | null {
     }
   }
 
-  return options.length > 0 ? options : null
+  return options.length > 0 ? { from: word.from, options } : null
 }
 
 // ==================== Validation ====================
@@ -235,7 +237,7 @@ function triggerValidation() {
   if (!props.validateOnInput) return
   if (validateTimer) clearTimeout(validateTimer)
   validateTimer = setTimeout(() => {
-    const { issues, valid } = collectSyntaxIssues(props.modelValue)
+    const { issues, valid } = collectSyntaxIssues(props.modelValue ?? '')
     emit('validate', valid)
     // 冒泡首个问题给父组件（用于显示位置提示）
     emit('issue', issues.length > 0 ? issues[0] : null)
@@ -265,7 +267,7 @@ function buildExtensions(): Extension[] {
         key: 'Ctrl-Enter',
         mac: 'Cmd-Enter',
         run: () => {
-          const { valid } = collectSyntaxIssues(props.modelValue)
+          const { valid } = collectSyntaxIssues(props.modelValue ?? '')
           emit('validate', valid)
           return true
         },
@@ -336,7 +338,7 @@ onMounted(() => {
     if (!editorRef.value) return
 
     const state = EditorState.create({
-      doc: props.modelValue,
+      doc: props.modelValue ?? '',
       extensions: buildExtensions(),
     })
 
@@ -361,12 +363,13 @@ watch(
   () => props.modelValue,
   (newVal) => {
     const view = editorView.value
-    if (view && newVal !== view.state.doc.toString()) {
+    const next = newVal ?? ''
+    if (view && next !== view.state.doc.toString()) {
       view.dispatch({
         changes: {
           from: 0,
           to: view.state.doc.length,
-          insert: newVal,
+          insert: next,
         },
       })
     }

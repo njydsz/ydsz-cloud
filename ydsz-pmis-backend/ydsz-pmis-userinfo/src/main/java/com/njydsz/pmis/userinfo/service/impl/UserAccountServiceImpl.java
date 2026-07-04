@@ -16,12 +16,14 @@ import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.userinfo.dto.LoginRequest;
 import com.njydsz.pmis.userinfo.dto.LoginResult;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
+import com.njydsz.pmis.userinfo.entity.RoleDO;
 import com.njydsz.pmis.userinfo.entity.User2FADO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
 import com.njydsz.pmis.userinfo.entity.UserRoleDO;
 import com.njydsz.pmis.userinfo.mapper.User2FAMapper;
 import com.njydsz.pmis.userinfo.mapper.UserAccountMapper;
 import com.njydsz.pmis.userinfo.mapper.UserRoleMapper;
+import com.njydsz.pmis.userinfo.service.RoleService;
 import com.njydsz.pmis.userinfo.service.SessionService;
 import com.njydsz.pmis.userinfo.service.UserAccountService;
 import com.njydsz.pmis.userinfo.vo.UserVO;
@@ -55,6 +57,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final UserAccountMapper userAccountMapper;
     private final UserRoleMapper userRoleMapper;
     private final User2FAMapper user2FAMapper;
+    private final RoleService roleService;
     private final SessionService sessionService;
     private final ApplicationEventPublisher publisher;
     private final AccountLockInfo lockPolicy = AccountLockInfo.defaultPolicy();
@@ -184,7 +187,11 @@ public class UserAccountServiceImpl implements UserAccountService {
         if (u == null) {
             throw new BizException(BizErrorCode.USER_NOT_FOUND);
         }
-        if ("admin".equals(u.getUsername())) {
+        // 禁止删除超级管理员：通过角色判断而非用户名，避免管理员改名后保护失效
+        List<RoleDO> roles = roleService.listByUserId(userId);
+        boolean isSuperAdmin = roles.stream()
+                .anyMatch(r -> "SUPER_ADMIN".equals(r.getRoleCode()));
+        if (isSuperAdmin) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_5b101e42");
         }
         userAccountMapper.deleteById(userId);

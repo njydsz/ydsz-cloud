@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * NodeRegistry registry = new InMemoryNodeRegistry("node-1");
  * ConsistentHashSharder sharder = new ConsistentHashSharder();
  * ShardAwareRuleEngine engine = new ShardAwareRuleEngine(delegate, registry, sharder);
- * engine.start(); // 启动定时刷新节点列表
+ * engine.refreshNodes(); // 刷新节点列表
  * List&lt;RuleResult&gt; results = engine.evaluate(context);
  * </pre>
  *
@@ -52,10 +52,6 @@ public class ShardAwareRuleEngine implements RuleEngine {
     /** 一致性 hash 分片器 */
     private final ConsistentHashSharder sharder;
 
-    /** 节点列表刷新间隔（毫秒） */
-    @SuppressWarnings("unused")
-    private final long refreshIntervalMs;
-
     /** 是否启用分片（false 时全部本地执行） */
     private volatile boolean shardingEnabled = true;
 
@@ -63,15 +59,14 @@ public class ShardAwareRuleEngine implements RuleEngine {
     private volatile String lastSignature = "";
 
     public ShardAwareRuleEngine(RuleEngine delegate, NodeRegistry nodeRegistry) {
-        this(delegate, nodeRegistry, new ConsistentHashSharder(), 10_000L);
+        this(delegate, nodeRegistry, new ConsistentHashSharder());
     }
 
     public ShardAwareRuleEngine(RuleEngine delegate, NodeRegistry nodeRegistry,
-                                ConsistentHashSharder sharder, long refreshIntervalMs) {
+                                ConsistentHashSharder sharder) {
         this.delegate = delegate;
         this.nodeRegistry = nodeRegistry;
         this.sharder = sharder;
-        this.refreshIntervalMs = refreshIntervalMs;
     }
 
     /**

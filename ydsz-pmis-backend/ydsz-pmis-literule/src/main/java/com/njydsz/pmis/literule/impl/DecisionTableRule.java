@@ -138,7 +138,8 @@ public class DecisionTableRule implements Rule {
                         .findFirst()
                         .orElse(matchedRows.get(0));
             } else {
-                // FIRST / ANY → 首条
+                // FIRST / ANY / RULE_ORDER → 首条（RULE_ORDER 在单结果场景下等同于 FIRST，
+                // 多结果场景由 DecisionTableEvaluator 返回全部匹配行）
                 chosen = matchedRows.get(0);
             }
 

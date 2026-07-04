@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
@@ -521,7 +522,6 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(readOnly = true)
-    @SuppressWarnings("unchecked")
     public Map<String, Object> getVariables(Long instanceId) {
         // P2-24: 读取实例 variable JSON 并解析为 Map
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
@@ -529,7 +529,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = JSON.parseObject(instance.getVariable(), Map.class);
+            Map<String, Object> map = JsonUtils.parseMap(instance.getVariable());
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[Flow] 解析 variable JSON 失败: instanceId={} err={}",
@@ -573,13 +573,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     }
 
     /** 解析 variable JSON 为 Map，空值返回空 Map */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseVariables(String variable) {
         if (!StringUtils.hasText(variable)) {
             return new HashMap<>();
         }
         try {
-            Map<String, Object> map = JSON.parseObject(variable, Map.class);
+            Map<String, Object> map = JsonUtils.parseMap(variable);
             return map == null ? new HashMap<>() : map;
         } catch (Exception e) {
             log.warn("[Flow] 解析 variable JSON 失败，返回空 Map: {}", e.getMessage());
@@ -689,13 +688,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      * 查找该节点的当前 PENDING 任务作为 boundaryTaskId。
      * intermediateCatchEvent 无 attachedToRef，返回 null。
      */
-    @SuppressWarnings("unchecked")
     private Long resolveBoundaryTaskId(FlowNodeDO node, Long instanceId) {
         if (node == null || !StringUtils.hasText(node.getExt())) {
             return null;
         }
         try {
-            Map<String, Object> ext = JSON.parseObject(node.getExt(), Map.class);
+            Map<String, Object> ext = JsonUtils.parseMap(node.getExt());
             if (ext == null) return null;
             String attachedToRef = (String) ext.get("attachedToRef");
             if (!StringUtils.hasText(attachedToRef)) {
@@ -720,8 +718,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return false;
         }
         try {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> ext = JSON.parseObject(node.getExt(), Map.class);
+            Map<String, Object> ext = JsonUtils.parseMap(node.getExt());
             if (ext == null) return false;
             return ext.containsKey("callActivityFlowCode")
                     || ext.containsKey("subProcessFlowCode");
@@ -902,13 +899,12 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
      * @param skip 跳转 DO
      * @return 源节点编码，解析失败返回 null
      */
-    @SuppressWarnings("unchecked")
     private String extractFromNodeCode(FlowSkipDO skip) {
         if (skip.getExt() == null || skip.getExt().isBlank()) {
             return null;
         }
         try {
-            Map<String, Object> ext = JSON.parseObject(skip.getExt(), Map.class);
+            Map<String, Object> ext = JsonUtils.parseMap(skip.getExt());
             if (ext != null && ext.containsKey("sourceRef")) {
                 return (String) ext.get("sourceRef");
             }

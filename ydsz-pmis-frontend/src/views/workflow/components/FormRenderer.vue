@@ -122,7 +122,7 @@ const renderRules = computed<Rule[]>(() => {
 
       return newRule
     })
-    .filter((rule: Rule & { hidden?: boolean }) => !rule.hidden)
+    .filter((rule: Rule & { hidden?: boolean }) => !rule.hidden) as Rule[]
 })
 
 /** 是否有可渲染的表单 */
@@ -153,8 +153,9 @@ async function loadFieldPermissions() {
       fieldPermissions.value = res.data.data.fieldPermissions || {}
       // 父组件未传 formSchema 但后端返回了：回填 backendSchema 并通知父组件
       if (!props.formSchema && res.data.data.formSchema) {
-        backendSchema.value = res.data.data.formSchema
-        emit('schema-loaded', res.data.data.formSchema)
+        const schema = res.data.data.formSchema as string
+        backendSchema.value = schema
+        emit('schema-loaded', schema)
       }
     }
   } catch (e) {

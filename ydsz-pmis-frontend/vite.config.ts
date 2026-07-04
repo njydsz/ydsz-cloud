@@ -11,6 +11,7 @@ import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
 import { visualizer } from 'rollup-plugin-visualizer'
 import viteCompression from 'vite-plugin-compression'
+import viteImagemin from 'vite-plugin-imagemin'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 import { viteMockPlugin } from './src/mock/vite-plugin-mock'
@@ -104,6 +105,19 @@ export default defineConfig(({ mode }) => {
             }),
           ]
         : []),
+      // 图片/字体压缩优化：无损/有损压缩构建产物中的图片和 SVG 资源
+      ...(mode === 'production'
+        ? [
+            viteImagemin({
+              gifsicle: { optimizationLevel: 7, interlaced: false },
+              optipng: { optimizationLevel: 7 },
+              mozjpeg: { quality: 80 },
+              pngquant: { quality: [0.8, 0.9], speed: 4 },
+              svgo: { plugins: [{ name: 'removeViewBox', active: false }] },
+              webp: { quality: 80 },
+            }),
+          ]
+        : []),
     ],
 
     resolve: {
@@ -155,6 +169,8 @@ export default defineConfig(({ mode }) => {
             element: ['element-plus', '@element-plus/icons-vue'], // Element Plus UI 库
             echarts: ['echarts'], // 图表库
             'vxe-table': ['vxe-table', 'xe-utils'], // 高性能表格
+            bpmn: ['bpmn-js'], // BPMN 流程图
+            codemirror: ['codemirror', '@codemirror/lang-javascript'], // 代码编辑器
           },
         },
       },

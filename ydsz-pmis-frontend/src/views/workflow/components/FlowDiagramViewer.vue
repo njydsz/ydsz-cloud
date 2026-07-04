@@ -82,7 +82,7 @@ const nodePositions = computed(() => {
     levelCount.set(cur.level, (levelCount.get(cur.level) || 0) + 1)
     map.set(cur.code, {
       x: 100 + cur.level * 220,
-      y: 100 + (levelCount.get(cur.level) - 1) * 120,
+      y: 100 + (levelCount.get(cur.level)! - 1) * 120,
     })
     for (const next of adj.get(cur.code) || []) {
       if (!visited.has(next)) {
@@ -240,20 +240,6 @@ function reset() {
 const MINIMAP_WIDTH = 160
 const MINIMAP_HEIGHT = 100
 
-/** 小地图缩放比例 */
-const minimapScale = computed(() => {
-  const positions = Array.from(nodePositions.value.values())
-  if (positions.length === 0) return 1
-  const minX = Math.min(...positions.map((p) => p.x))
-  const minY = Math.min(...positions.map((p) => p.y))
-  const maxX = Math.max(...positions.map((p) => p.x)) + props.nodeWidth
-  const maxY = Math.max(...positions.map((p) => p.y)) + props.nodeHeight
-  const contentW = maxX - minX
-  const contentH = maxY - minY
-  if (contentW <= 0 || contentH <= 0) return 1
-  return Math.min(MINIMAP_WIDTH / contentW, MINIMAP_HEIGHT / contentH)
-})
-
 /** 小地图 viewBox */
 const minimapViewBox = computed(() => {
   const positions = Array.from(nodePositions.value.values())
@@ -264,10 +250,6 @@ const minimapViewBox = computed(() => {
   const maxY = Math.max(...positions.map((p) => p.y)) + props.nodeHeight
   return `${minX - 10} ${minY - 10} ${maxX - minX + 20} ${maxY - minY + 20}`
 })
-
-/** 小地图节点尺寸 */
-const minimapNodeW = computed(() => Math.max(props.nodeWidth * minimapScale.value, 4))
-const minimapNodeH = computed(() => Math.max(props.nodeHeight * minimapScale.value, 3))
 </script>
 
 <template>

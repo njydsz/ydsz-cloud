@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.engine.impl;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;
@@ -313,13 +314,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                 .orElse(null);
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseVariable(String json) {
         if (json == null || json.isBlank()) {
             return Collections.emptyMap();
         }
         try {
-            return JSON.parseObject(json, Map.class);
+            return JsonUtils.parseMap(json);
         } catch (Exception e) {
             log.warn("[Flow] 变量解析失败: {}", e.getMessage());
             return Collections.emptyMap();

@@ -344,7 +344,16 @@ function renderRiskChart() {
   // P0 修复: listData 为 List<Map>, 按 highRiskCount/mediumRiskCount/lowRiskCount 字段聚合
   const rows = listData.value || []
   // 简单聚合: 取所有行的合计
-  const agg = rows.reduce(
+  type RiskAgg = {
+    highRiskCount: number
+    mediumRiskCount: number
+    lowRiskCount: number
+    highAlerts: number
+    mediumAlerts: number
+    lowAlerts: number
+    alertCount: number
+  }
+  const agg = rows.reduce<RiskAgg>(
     (acc, r) => {
       acc.highRiskCount += toNumber(r.highRiskCount)
       acc.mediumRiskCount += toNumber(r.mediumRiskCount)
@@ -564,7 +573,7 @@ onUnmounted(() => {
           <el-timeline-item
             v-for="(item, idx) in (reportData?.stages as Array<Record<string, unknown>>) || []"
             :key="idx"
-            :timestamp="item.date"
+            :timestamp="item.date as string | undefined"
             :type="item.type as TimelineType"
           >
             <h4>{{ item.stage }}</h4>

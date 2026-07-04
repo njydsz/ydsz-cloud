@@ -374,16 +374,16 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="超时天数" width="90">
           <template #default="{ row }">
-            <el-tag type="danger" size="small">{{ getOverdueDays(row) }} 天</el-tag>
+            <el-tag type="danger" size="small">{{ getOverdueDays(row as FlowTaskDTO) }} 天</el-tag>
           </template>
         </el-table-column>
         <el-table-column label="SLA 策略" width="100">
           <template #default="{ row }">
             <el-tag
-              :type="slaStrategyMap[getSlaStrategy(row)]?.type || 'info'"
+              :type="slaStrategyMap[getSlaStrategy(row as FlowTaskDTO)]?.type || 'info'"
               size="small"
             >
-              {{ slaStrategyMap[getSlaStrategy(row)]?.label || getSlaStrategy(row) }}
+              {{ slaStrategyMap[getSlaStrategy(row as FlowTaskDTO)]?.label || getSlaStrategy(row as FlowTaskDTO) }}
             </el-tag>
           </template>
         </el-table-column>
@@ -393,7 +393,7 @@ onMounted(() => {
               size="small"
               type="primary"
               link
-              @click="handleProcessTask(row)"
+              @click="handleProcessTask(row as FlowTaskDTO)"
             >处理</el-button>
           </template>
         </el-table-column>

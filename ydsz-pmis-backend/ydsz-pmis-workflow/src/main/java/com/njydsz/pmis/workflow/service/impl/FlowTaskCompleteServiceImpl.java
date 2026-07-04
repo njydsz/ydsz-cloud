@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.dto.FlowAssigneeDTO;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
@@ -1032,13 +1033,12 @@ public class FlowTaskCompleteServiceImpl {
         hisTaskMapper.insert(his);
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> mergeVariables(FlowInstanceDO instance, Map<String, Object> extra) {
         if (instance == null || !StringUtils.hasText(instance.getVariable())) {
             return extra == null ? Collections.emptyMap() : extra;
         }
         try {
-            Map<String, Object> base = JSON.parseObject(instance.getVariable(), Map.class);
+            Map<String, Object> base = JsonUtils.parseMap(instance.getVariable());
             if (extra != null && !extra.isEmpty()) {
                 base.putAll(extra);
             }
@@ -1284,13 +1284,12 @@ public class FlowTaskCompleteServiceImpl {
     }
 
     /** 解析 node.ext JSON 为 Map */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseExtConfig(String ext) {
         if (!StringUtils.hasText(ext)) {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = JSON.parseObject(ext, Map.class);
+            Map<String, Object> map = JsonUtils.parseMap(ext);
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[Flow] 解析 node.ext JSON 失败: {} err={}", ext, e.getMessage());
@@ -1488,7 +1487,7 @@ public class FlowTaskCompleteServiceImpl {
     private FlowPerformType resolvePerformType(FlowNodeDO node) {
         if (node.getExt() != null) {
             try {
-                Map<?, ?> ext = JSON.parseObject(node.getExt(), Map.class);
+                Map<?, ?> ext = JsonUtils.parseMap(node.getExt());
                 Object ptObj = ext.get("performType");
                 if (ptObj instanceof String pt) {
                     return FlowPerformType.valueOf(pt);

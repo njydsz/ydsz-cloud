@@ -39,7 +39,7 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import SkeletonTable from './SkeletonTable.vue'
 import BatchToolbar from './BatchToolbar.vue'
-import EmptyState from './EmptyState.vue'
+import EmptyState, { type EmptyPreset } from './EmptyState.vue'
 
 const { t } = useI18n()
 
@@ -147,6 +147,14 @@ const showSkeleton = computed(
 const showEmpty = computed(
   () => props.emptyPreset !== '' && !props.loading && props.list.length === 0,
 )
+
+/**
+ * H16.4：传给 EmptyState 的 preset（已剔除空字符串，'' 时回退默认 'list'）。
+ * showEmpty 已保证渲染时 emptyPreset 必非空，这里仅做类型收敛。
+ */
+const resolvedEmptyPreset = computed<EmptyPreset>(
+  () => (props.emptyPreset || 'list') as EmptyPreset,
+)
 </script>
 
 <template>
@@ -200,7 +208,7 @@ const showEmpty = computed(
         />
         <EmptyState
           v-else-if="showEmpty"
-          :preset="emptyPreset"
+          :preset="resolvedEmptyPreset"
           :action-text="emptyActionText"
           :block-height="Number(tableMinHeight) || 0"
           @action="onEmptyAction"

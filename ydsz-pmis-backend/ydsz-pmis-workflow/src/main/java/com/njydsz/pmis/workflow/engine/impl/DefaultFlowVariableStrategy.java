@@ -72,10 +72,6 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
     /** 字面量比较：lhs (op) rhs  -- lhs 可为标识符、数字、字符串 */
     private static final Pattern COMPARE_LITERAL = Pattern.compile(
             "^\\s*(.+?)\\s*(>=|<=|==|!=|>|<)\\s*(.+?)\\s*$");
-    /** ${var} (op) 字面量  -- 主要使用模式（保留供未来扩展） */
-    @SuppressWarnings("unused")
-    private static final Pattern COMPARE_PLACEHOLDER = Pattern.compile(
-            "^\\s*\\$\\{([^}]+)}\\s*(>=|<=|==|!=|>|<)\\s*(.+?)\\s*$");
     /** ${var op value} 内部比较模式  -- 即整体被 ${} 包裹且内部含运算符 */
     private static final Pattern COMPARE_INNER = Pattern.compile(
             "^\\s*([a-zA-Z_][a-zA-Z0-9_\\.]*)\\s*(>=|<=|==|!=|>|<)\\s*(.+?)\\s*$");

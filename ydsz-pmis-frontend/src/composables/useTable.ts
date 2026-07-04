@@ -80,12 +80,11 @@ export function useTable<Q extends UseTableQuery>(
    */
   function resetQuery(defaults?: Partial<Q>): Promise<void> {
     Object.keys(query).forEach((k) => {
-      const key = k as keyof Q
       if (k === 'page' || k === 'size') return
       if (defaults && k in defaults) {
-        ;(query as Record<string, unknown>)[key] = defaults[k]
+        ;(query as Record<string, unknown>)[k] = defaults[k as keyof Q]
       } else {
-        ;(query as Record<string, unknown>)[key] = undefined
+        ;(query as Record<string, unknown>)[k] = undefined
       }
     })
     query.page = 1

@@ -93,21 +93,21 @@ public class EncryptedFieldMigrationCli {
      * @param results 各列迁移结果
      */
     private static void printEncryptSummary(List<EncryptedFieldMigrationService.MigrationResult> results) {
-        System.out.println();
-        System.out.println("==================== ENCRYPT 汇总 ====================");
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n==================== ENCRYPT 汇总 ====================\n");
         long totalSuccess = 0, totalSkipped = 0, totalFailed = 0;
         for (EncryptedFieldMigrationService.MigrationResult r : results) {
-            System.out.printf("  %s.%-15s success=%-6d skipped=%-6d failed=%-6d cost=%dms%n",
+            sb.append(String.format("  %s.%-15s success=%-6d skipped=%-6d failed=%-6d cost=%dms%n",
                     r.column().table(), r.column().cipherColumn(),
-                    r.success(), r.skipped(), r.failed(), r.costMs());
+                    r.success(), r.skipped(), r.failed(), r.costMs()));
             totalSuccess += r.success();
             totalSkipped += r.skipped();
             totalFailed += r.failed();
         }
-        System.out.println("-------------------------------------------------------");
-        System.out.printf("  TOTAL: success=%d skipped=%d failed=%d%n", totalSuccess, totalSkipped, totalFailed);
-        System.out.println("=======================================================");
-        System.out.println();
+        sb.append("-------------------------------------------------------\n");
+        sb.append(String.format("  TOTAL: success=%d skipped=%d failed=%d%n", totalSuccess, totalSkipped, totalFailed));
+        sb.append("=======================================================");
+        log.info(sb.toString());
     }
 
     /**
@@ -116,15 +116,15 @@ public class EncryptedFieldMigrationCli {
      * @param results 各列校验结果
      */
     private static void printVerifySummary(List<EncryptedFieldMigrationService.VerifyResult> results) {
-        System.out.println();
-        System.out.println("==================== VERIFY 汇总 ======================");
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n==================== VERIFY 汇总 ======================\n");
         for (EncryptedFieldMigrationService.VerifyResult r : results) {
-            System.out.printf("  %s.%-15s sample=%-4d match=%-4d mismatch=%-4d rate=%.2f%%%n",
+            sb.append(String.format("  %s.%-15s sample=%-4d match=%-4d mismatch=%-4d rate=%.2f%%%n",
                     r.column().table(), r.column().cipherColumn(),
-                    r.sample(), r.match(), r.mismatch(), r.matchRate() * 100);
+                    r.sample(), r.match(), r.mismatch(), r.matchRate() * 100));
         }
-        System.out.println("=======================================================");
-        System.out.println();
+        sb.append("=======================================================");
+        log.info(sb.toString());
     }
 
     /**

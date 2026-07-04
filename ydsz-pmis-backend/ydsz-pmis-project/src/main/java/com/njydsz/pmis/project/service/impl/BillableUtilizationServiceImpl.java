@@ -188,7 +188,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
                 int removed = snapshotMapper.deleteByPeriod(p);
                 log.info("[BillableUtilization] recompute 软删 period={} count={}", p, removed);
             } catch (Exception e) {
-                log.warn("[BillableUtilization] 软删失败: {}", e.getMessage());
+                log.error("[BillableUtilization] 软删失败: {}", e.getMessage());
             }
         }
 
@@ -206,7 +206,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
                 int n = snapshotMapper.upsert(snap);
                 affected += Math.max(n, 0);
             } catch (Exception e) {
-                log.warn("[BillableUtilization] 写入快照失败 employee={} : {}",
+                log.error("[BillableUtilization] 写入快照失败 employee={} : {}",
                         raw.get("employee_id"), e.getMessage());
             }
         }
@@ -338,7 +338,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
         try {
             return s.get();
         } catch (Exception e) {
-            log.warn("[Utilization] 数据查询失败: {}", e.getMessage());
+            log.error("[Utilization] 数据查询失败: {}", e.getMessage());
             return null;
         }
     }
@@ -409,7 +409,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
                 }
             }
         } catch (Exception e) {
-            log.warn("[Utilization] 读取 RateInternal 失败: {}", e.getMessage());
+            log.error("[Utilization] 读取 RateInternal 失败: {}", e.getMessage());
         }
         return out;
     }

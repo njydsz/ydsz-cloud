@@ -18,6 +18,7 @@ export { default as QuickAccess } from './QuickAccess.vue'
 export { default as InlineEdit } from './InlineEdit.vue'
 // P1-8: 通用用户选择器（远程搜索 + 高级弹窗）
 export { default as UserPicker } from './UserPicker.vue'
+export type { UserModel } from './UserPicker.vue'
 // P1-9: 意见编辑器（常用语 / @人 / 图片附件）
 export { default as CommentEditor } from './CommentEditor.vue'
 export type { CommentAttachment, CommentMention } from './CommentEditor.vue'

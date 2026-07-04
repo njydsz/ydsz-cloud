@@ -5,6 +5,7 @@ import com.googlecode.aviator.AviatorEvaluator;
 import com.googlecode.aviator.Expression;
 import com.googlecode.aviator.Feature;
 import com.googlecode.aviator.Options;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
@@ -216,13 +217,12 @@ public class FlowServiceNodeExecutor {
     /**
      * 解析 ext JSON 为 Map
      */
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseExtConfig(String ext) {
         if (!StringUtils.hasText(ext)) {
             return Collections.emptyMap();
         }
         try {
-            Map<String, Object> map = JSON.parseObject(ext, Map.class);
+            Map<String, Object> map = JsonUtils.parseMap(ext);
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[Flow-Service] 解析 ext JSON 失败: {} err={}", ext, e.getMessage());

@@ -21,6 +21,7 @@ import {
 } from '@/api/project/initiation'
 import type { InitiationVO, InitiationCreateDTO } from '@/api/project/initiation/types'
 import { PC } from '@/constants/permissionCodes'
+import { useFormDraft } from '@/composables/useFormDraft'
 
 const { t } = useI18n()
 
@@ -119,8 +120,48 @@ const formRules = {
   projectType: [{ required: true, message: t('project.initiation.rules.projectTypeRequired'), trigger: 'change' }],
 }
 
-/** 打开新建立项弹窗，重置表单为初始值 */
+// ===== 表单草稿 =====
+const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form, {
+  key: 'initiation-create',
+  debounce: 3000,
+})
+
+const draftTimeText = computed(() => {
+  if (!lastSavedAt.value) return ''
+  return lastSavedAt.value.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+})
+
+/** 打开新建立项弹窗，重置表单为初始值；若检测到草稿则提示恢复 */
 function openCreate() {
+  if (hasDraft.value) {
+    ElMessageBox.confirm(t('project.initiation.messages.confirmRestoreDraft'), t('common.tip'), { type: 'info' })
+      .then(() => {
+        restore()
+        ElMessage.success(t('project.initiation.messages.draftRestored'))
+        dialogVisible.value = true
+      })
+      .catch(() => {
+        clearDraft()
+        Object.assign(form, {
+          projectCode: '',
+          projectName: '',
+          customerId: 0,
+          customerName: '',
+          projectType: 'INTERNAL',
+          projectLevel: 'C',
+          pmId: undefined,
+          estimatedAmount: undefined,
+          budgetAmount: undefined,
+          plannedStartDate: '',
+          plannedEndDate: '',
+          description: '',
+          businessCase: '',
+          riskAssessment: '',
+        })
+        dialogVisible.value = true
+      })
+    return
+  }
   Object.assign(form, {
     projectCode: '',
     projectName: '',
@@ -147,6 +188,7 @@ async function submitForm() {
     submitting.value = true
     await formRef.value?.validate()
     await createInitiation(form as InitiationCreateDTO)
+    clearDraft()
     ElMessage.success(t('project.initiation.messages.createSuccess'))
     dialogVisible.value = false
     fetchList()
@@ -468,6 +510,7 @@ onMounted(fetchList)
         </el-form-item>
       </el-form>
       <template #footer>
+        <span v-if="draftTimeText" style="color: #909399; font-size: 12px; margin-right: auto;">草稿已保存 {{ draftTimeText }}</span>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
         <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('common.confirm') }}</el-button>
       </template>

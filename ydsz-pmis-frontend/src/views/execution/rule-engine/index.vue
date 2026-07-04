@@ -20,7 +20,6 @@
  */
 import { ref, reactive, computed, onMounted, watch, nextTick, shallowRef } from 'vue'
 import { useRouter } from 'vue-router'
-import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { CircleCheck, CircleClose, Connection, Expand, Fold, User } from '@element-plus/icons-vue'
@@ -39,13 +38,12 @@ import type {
 } from '@/api/execution/rule-engine'
 import ExpressionEditor from '@/components/common/ExpressionEditor.vue'
 import RuleCategoryTreeSidebar from '@/components/common/RuleCategoryTreeSidebar.vue'
+import VirtualTable from '@/components/common/VirtualTable.vue'
+import type { ColumnConfig } from '@/components/common/VirtualTable.vue'
 import { logger } from '@/utils/logger'
 
 // 路由实例（P0-1 画布编辑入口）
 const router = useRouter()
-
-// i18n
-const { t } = useI18n()
 
 // ==================== 严重度映射 ====================
 
@@ -280,13 +278,27 @@ const selectedRuleCodes = ref<string[]>([])
 /** 批量改分类对话框 */
 const batchCategoryDialogVisible = ref(false)
 const batchCategoryValue = ref('')
-function onSelectionChange(selection: RuleDefinition[]) {
-  selectedRuleCodes.value = selection.map((r) => r.code)
+function onSelectionChange(selection: Record<string, unknown>[]) {
+  selectedRuleCodes.value = selection.map((r) => r.code as string)
 }
 /** 是否可被选中（仅 PUBLISHED 状态可被批量启用） */
-function isRuleSelectable(row: RuleDefinition) {
+function isRuleSelectable(row: Record<string, unknown>) {
   return row.status !== 'ARCHIVED'
 }
+
+/** 规则列表表格列配置 */
+const ruleColumns: ColumnConfig[] = [
+  { field: 'code', title: '规则编码', width: 180 },
+  { field: 'name', title: '规则名称', width: 180 },
+  { field: 'category', title: '类别', width: 120, slot: true },
+  { field: 'categoryPath', title: '分类路径', width: 220, slot: true },
+  { field: 'owner', title: '责任人', width: 100, slot: true },
+  { field: 'priority', title: '优先级', width: 90, sortable: true },
+  { field: 'defaultSeverity', title: '默认严重度', width: 110, slot: true },
+  { field: 'enabled', title: '状态', width: 90, slot: true },
+  { field: 'version', title: '版本', width: 80, align: 'center', slot: true },
+  { field: 'actions', title: '操作', width: 380, fixed: 'right', slot: true },
+]
 
 async function handleBatchToggle(enabled: boolean) {
   if (selectedRuleCodes.value.length === 0) return
@@ -1055,81 +1067,64 @@ onMounted(() => {
       </div>
 
       <!-- 规则列表表格 -->
-      <!-- P3-1: 保留 el-table 不迁移 VirtualTable。原因：VirtualTable 不支持 :selectable 条件可选（限制 ARCHIVED 状态规则不可被批量操作），且本表含 selection + el-switch + 6 个操作按钮 + 多 el-tag 插槽的复杂组合，迁移将丢失 :selectable 限制导致 ARCHIVED 规则可被批量启用/停用而引发后端报错。如需迁移需先扩展 VirtualTable 支持 :selectable。 -->
-      <el-table
-        v-loading="loading"
-        :data="filteredRules"
-        border
-        stripe
-        style="width: 100%"
+      <VirtualTable
+        :data="filteredRules as Record<string, unknown>[]"
+        :columns="ruleColumns"
+        :loading="loading"
+        :height="500"
+        checkbox
+        :check-method="isRuleSelectable"
+        row-key="code"
         @selection-change="onSelectionChange"
       >
-        <el-table-column type="selection" width="48" :selectable="isRuleSelectable" />
-        <el-table-column prop="code" label="规则编码" width="180" show-overflow-tooltip />
-        <el-table-column prop="name" label="规则名称" min-width="180" show-overflow-tooltip />
-        <el-table-column label="类别" width="120">
-          <template #default="{ row }">
-            <el-tag effect="plain">{{ row.category }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="分类路径" width="220" show-overflow-tooltip>
-          <template #default="{ row }">
-            <span v-if="row.categoryPath" class="path-text">{{ row.categoryPath }}</span>
-            <span v-else class="path-empty">-</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="责任人" width="100">
-          <template #default="{ row }">
-            <el-tag v-if="row.owner" type="success" size="small" effect="plain">
-              <el-icon><User /></el-icon>{{ row.owner }}
-            </el-tag>
-            <span v-else class="path-empty">-</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="priority" label="优先级" width="90" sortable />
-        <el-table-column label="默认严重度" width="110">
-          <template #default="{ row }">
-            <el-tag :type="severityOf(row.defaultSeverity).type" size="small">
-              {{ severityOf(row.defaultSeverity).label }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="状态" width="90">
-          <template #default="{ row }">
-            <el-switch
-              :model-value="row.enabled"
-              @change="(val: boolean) => handleToggle(row, val)"
-            />
-          </template>
-        </el-table-column>
-        <el-table-column label="版本" width="80" align="center">
-          <template #default="{ row }">
-            <el-tag type="info" size="small">v{{ row.version }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="380" fixed="right">
-          <template #default="{ row }">
-            <el-button link type="primary" size="small" aria-label="编辑规则" @click="openEdit(row)">
-              <el-icon><Edit /></el-icon>编辑
-            </el-button>
-            <el-button link type="primary" size="small" aria-label="仿真规则" @click="openDryRun(row)">
-              <el-icon><VideoPlay /></el-icon>仿真
-            </el-button>
-            <el-button link type="warning" size="small" aria-label="A/B测试规则" @click="openABTest(row)">
-              <el-icon><Switch /></el-icon>A/B
-            </el-button>
-            <el-button link type="info" size="small" aria-label="查看版本历史" @click="openVersions(row)">
-              <el-icon><Clock /></el-icon>版本
-            </el-button>
-            <el-button link type="success" size="small" aria-label="画布编辑" @click="openDesigner(row)">
-              <el-icon><Connection /></el-icon>画布
-            </el-button>
-            <el-button link type="danger" size="small" aria-label="删除规则" @click="handleDelete(row)">
-              <el-icon><Delete /></el-icon>删除
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+        <template #col-category="{ row }">
+          <el-tag effect="plain">{{ row.category }}</el-tag>
+        </template>
+        <template #col-categoryPath="{ row }">
+          <span v-if="row.categoryPath" class="path-text">{{ row.categoryPath }}</span>
+          <span v-else class="path-empty">-</span>
+        </template>
+        <template #col-owner="{ row }">
+          <el-tag v-if="row.owner" type="success" size="small" effect="plain">
+            <el-icon><User /></el-icon>{{ row.owner }}
+          </el-tag>
+          <span v-else class="path-empty">-</span>
+        </template>
+        <template #col-defaultSeverity="{ row }">
+          <el-tag :type="severityOf((row as RuleDefinition).defaultSeverity).type" size="small">
+            {{ severityOf((row as RuleDefinition).defaultSeverity).label }}
+          </el-tag>
+        </template>
+        <template #col-enabled="{ row }">
+          <el-switch
+            :model-value="row.enabled"
+            @change="(val: string | number | boolean) => handleToggle(row as RuleDefinition, val as boolean)"
+          />
+        </template>
+        <template #col-version="{ row }">
+          <el-tag type="info" size="small">v{{ row.version }}</el-tag>
+        </template>
+        <template #col-actions="{ row }">
+          <el-button link type="primary" size="small" aria-label="编辑规则" @click="openEdit(row as RuleDefinition)">
+            <el-icon><Edit /></el-icon>编辑
+          </el-button>
+          <el-button link type="primary" size="small" aria-label="仿真规则" @click="openDryRun(row as RuleDefinition)">
+            <el-icon><VideoPlay /></el-icon>仿真
+          </el-button>
+          <el-button link type="warning" size="small" aria-label="A/B测试规则" @click="openABTest(row as RuleDefinition)">
+            <el-icon><Switch /></el-icon>A/B
+          </el-button>
+          <el-button link type="info" size="small" aria-label="查看版本历史" @click="openVersions(row as RuleDefinition)">
+            <el-icon><Clock /></el-icon>版本
+          </el-button>
+          <el-button link type="success" size="small" aria-label="画布编辑" @click="openDesigner(row as RuleDefinition)">
+            <el-icon><Connection /></el-icon>画布
+          </el-button>
+          <el-button link type="danger" size="small" aria-label="删除规则" @click="handleDelete(row as RuleDefinition)">
+            <el-icon><Delete /></el-icon>删除
+          </el-button>
+        </template>
+      </VirtualTable>
 
       <!-- P0-5 批量操作工具栏 -->
       <div v-if="selectedRuleCodes.length > 0" class="batch-toolbar">
@@ -1434,7 +1429,7 @@ onMounted(() => {
               size="small"
               aria-label="导入模板"
               :loading="importingCodes.has(row.templateCode)"
-              @click="handleImportTemplate(row)"
+              @click="handleImportTemplate(row as RuleTemplate)"
             >
               <el-icon><Download /></el-icon>导入
             </el-button>

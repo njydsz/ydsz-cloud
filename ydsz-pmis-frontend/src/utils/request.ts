@@ -175,13 +175,13 @@ service.interceptors.request.use(
 
 // 响应拦截器：统一处理业务码与 HTTP 错误
 service.interceptors.response.use(
-  (response: AxiosResponse): unknown => {
+  (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
     // 非静默请求关闭全局 loading
     if (!response.config.silent) {
       hideLoading()
     }
 
-    const res = response.data as ApiResponse
+    const res = response.data as ApiResponse<unknown>
 
     // 二进制流（文件下载）直接返回原始 response，便于上层读取 blob
     if (response.config.responseType === 'blob') {
@@ -190,7 +190,7 @@ service.interceptors.response.use(
 
     // 业务成功
     if (res.code === 0 || res.code === 200) {
-      return res
+      return res as unknown as AxiosResponse
     }
 
     // 刷新 Token 请求自身返回业务错误：静默拒绝（handled=false），
@@ -202,7 +202,7 @@ service.interceptors.response.use(
     // Token 失效业务码：20001 未登录 / 20002 Token 过期 / 20003 Token 无效
     // 不直接跳登录，尝试使用 refreshToken 无感续期并重试原始请求
     if (res.code === 20001 || res.code === 20002 || res.code === 20003) {
-      return handleTokenExpired(response.config, res.message)
+      return handleTokenExpired(response.config, res.message) as unknown as Promise<AxiosResponse>
     }
 
     // 其他业务错误：统一弹错 + 抛 BizException（handled=true 标记拦截器已处理）

@@ -217,7 +217,7 @@
           </el-form-item>
           <el-form-item label="最大迭代">
             <el-input-number :model-value="getMetadata('maxIterations')" :min="1" :max="10000"
-              @update:model-value="(v: number) => setMetadata('maxIterations', v)" @change="markDirty" />
+              @update:model-value="(v: number | undefined) => setMetadata('maxIterations', v)" @change="markDirty" />
           </el-form-item>
         </template>
       </el-form>
@@ -238,10 +238,12 @@ import {
   Back, ZoomIn, ZoomOut,
 } from '@element-plus/icons-vue'
 import * as dagre from 'dagre'
-import { getChainGraph, saveChainGraph, validateChainGraph, listRules } from '@/api/execution/rule-engine'
+import {
+  getChainGraph, saveChainGraph, validateChainGraph, listRules,
+} from '@/api/execution/rule-engine'
 import type {
   ChainNodeDTO, ChainEdgeDTO, RuleChainGraph, RuleChainGraphViewIssue,
-} from '@/api/execution/rule-engine/types'
+} from '@/api/execution/rule-engine'
 
 defineOptions({ name: 'RuleChainDesigner' })
 
@@ -429,14 +431,13 @@ function onCanvasMouseUp() {
 // ==================== 连线（拖拽连接） ====================
 function onAnchorMouseDown(e: MouseEvent, node: ChainNodeDTO, dir: 'out') {
   if (dir !== 'out') return
-  const canvasRect = canvasRef.value!.getBoundingClientRect()
   const x = (node.position?.x || 0) + NODE_WIDTH
   const y = (node.position?.y || 0) + NODE_HEIGHT / 2
   pendingEdge.value = { x1: x, y1: y, x2: x, y2: y }
   dragState.value = { type: 'connect', startX: e.clientX, startY: e.clientY }
 }
 
-function onAnchorMouseUp(e: MouseEvent, target: ChainNodeDTO | null) {
+function onAnchorMouseUp(_e: MouseEvent, target: ChainNodeDTO | null) {
   if (dragState.value.type !== 'connect' || !pendingEdge.value) return
   if (target) {
     const sourceNode = graph.value.nodes.find(n =>
@@ -467,7 +468,7 @@ function onAnchorMouseUp(e: MouseEvent, target: ChainNodeDTO | null) {
 }
 
 // ==================== 节点增删 ====================
-function addChainNode(chainType: string) {
+function addChainNode(chainType: 'THEN' | 'WHEN' | 'IF' | 'ELIF' | 'SWITCH' | 'FOR' | 'WHILE' | 'BREAK') {
   const node: ChainNodeDTO = {
     nodeId: `node-${Date.now()}`,
     nodeType: 'CHAIN',
@@ -502,8 +503,9 @@ function removeNode(node: ChainNodeDTO) {
     }).catch(() => {})
 }
 function editNode(node: ChainNodeDTO) {
-  editingNode.value = JSON.parse(JSON.stringify(node))
-  if (!editingNode.value.metadata) editingNode.value.metadata = {}
+  const copy = JSON.parse(JSON.stringify(node)) as ChainNodeDTO
+  if (!copy.metadata) copy.metadata = {}
+  editingNode.value = copy
   editDialogVisible.value = true
 }
 function confirmEdit() {

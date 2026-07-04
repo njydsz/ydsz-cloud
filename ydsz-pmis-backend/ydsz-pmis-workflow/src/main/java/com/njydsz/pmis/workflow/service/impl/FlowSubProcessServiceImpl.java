@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.dto.FlowStartProcessDTO;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
@@ -420,13 +421,12 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseVariables(String variableJson) {
         if (variableJson == null || variableJson.isBlank()) {
             return new HashMap<>();
         }
         try {
-            Map<String, Object> map = JSON.parseObject(variableJson, Map.class);
+            Map<String, Object> map = JsonUtils.parseMap(variableJson);
             return map == null ? new HashMap<>() : map;
         } catch (Exception e) {
             return new HashMap<>();

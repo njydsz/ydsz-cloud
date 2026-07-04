@@ -42,7 +42,7 @@ const pageSize = ref(10)
 // ==================== 创建授权弹窗 ====================
 const createDialog = ref(false)
 const creating = ref(false)
-const createForm = reactive<CreateDelegateAuthDTO>({
+const createForm = reactive<Omit<CreateDelegateAuthDTO, 'delegateId'> & { delegateId?: number }>({
   delegateId: undefined,
   delegateName: '',
   scopeType: 'ALL',
@@ -165,7 +165,7 @@ async function submitCreate() {
 
   creating.value = true
   try {
-    const res = await createDelegateAuth(createForm)
+    const res = await createDelegateAuth(createForm as CreateDelegateAuthDTO)
     if (res.data?.code === 0) {
       ElMessage.success('授权创建成功')
       createDialog.value = false
@@ -279,14 +279,14 @@ onMounted(() => loadData())
                   size="small"
                   :type="row.enabled ? 'warning' : 'success'"
                   link
-                  @click="handleToggle(row)"
+                  @click="handleToggle(row as DelegateAuthDTO)"
                 >{{ row.enabled ? '停用' : '启用' }}</el-button>
                 <el-button
                   v-if="!row.revoked"
                   size="small"
                   type="danger"
                   link
-                  @click="handleRevoke(row)"
+                  @click="handleRevoke(row as DelegateAuthDTO)"
                 >撤回</el-button>
               </template>
             </el-table-column>

@@ -19,7 +19,6 @@
  */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import VirtualTable from '@/components/common/VirtualTable.vue'
@@ -39,9 +38,6 @@ import { useUserStore } from '@/store/modules/user'
 // 权限助手：统一通过 userStore 校验按钮级权限
 const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
-
-// i18n
-const { t } = useI18n()
 
 // 列表加载状态
 const loading = ref(false)

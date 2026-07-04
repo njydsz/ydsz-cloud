@@ -146,7 +146,7 @@ public class ReportServiceImpl implements ReportService {
                     byEmployee.add(m);
                 }
             }
-        } catch (Exception e) { log.warn("生成员工维度报表失败: {}", e.getMessage(), e); }
+        } catch (Exception e) { log.error("生成员工维度报表失败: {}", e.getMessage(), e); }
         report.put("byEmployee", byEmployee);
         return report;
     }
@@ -202,7 +202,7 @@ public class ReportServiceImpl implements ReportService {
                     result.add(m);
                 }
             }
-        } catch (Exception e) { log.warn("生成利润快照报表失败: {}", e.getMessage(), e); }
+        } catch (Exception e) { log.error("生成利润快照报表失败: {}", e.getMessage(), e); }
         return result;
     }
 
@@ -228,7 +228,7 @@ public class ReportServiceImpl implements ReportService {
                 }
             }
         } catch (Exception e) {
-            log.warn("[Report] profitRank 快照查询失败: {}", e.getMessage());
+            log.error("[Report] profitRank 快照查询失败: {}", e.getMessage());
         }
 
         List<Map<String, Object>> rows = new ArrayList<>();
@@ -326,7 +326,7 @@ public class ReportServiceImpl implements ReportService {
                 if (costType != null && !costType.equalsIgnoreCase(c.getCostType())) continue;
                 sum = sum.add(c.getAmount() == null ? BigDecimal.ZERO : c.getAmount());
             }
-        } catch (Exception e) { log.warn("汇总成本分配失败: {}", e.getMessage(), e); }
+        } catch (Exception e) { log.error("汇总成本分配失败: {}", e.getMessage(), e); }
         return sum;
     }
 
@@ -344,7 +344,7 @@ public class ReportServiceImpl implements ReportService {
                     sum = sum.add(p.getAmount() == null ? BigDecimal.ZERO : p.getAmount());
                 }
             }
-        } catch (Exception e) { log.warn("汇总采购金额失败: {}", e.getMessage(), e); }
+        } catch (Exception e) { log.error("汇总采购金额失败: {}", e.getMessage(), e); }
         return sum;
     }
 
@@ -362,7 +362,7 @@ public class ReportServiceImpl implements ReportService {
                     sum = sum.add(e.getAmount() == null ? BigDecimal.ZERO : e.getAmount());
                 }
             }
-        } catch (Exception e) { log.warn("汇总报销金额失败: {}", e.getMessage(), e); }
+        } catch (Exception e) { log.error("汇总报销金额失败: {}", e.getMessage(), e); }
         return sum;
     }
 

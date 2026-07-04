@@ -475,7 +475,7 @@ public class InitiationServiceImpl implements InitiationService {
                 return null;
             }
         } catch (Exception e) {
-            log.warn("[Initiation] Feign 调用 workflow 失败: {}", e.getMessage());
+            log.error("[Initiation] Feign 调用 workflow 失败: {}", e.getMessage());
             return null;
         }
         o.setWorkflowId(processInstanceId);

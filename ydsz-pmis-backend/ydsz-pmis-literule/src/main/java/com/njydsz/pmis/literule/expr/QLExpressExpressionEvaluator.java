@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 /**
  * QLExpress 表达式评估器（P0-3 真正实现）
@@ -38,35 +37,7 @@ public class QLExpressExpressionEvaluator implements ExpressionEvaluator {
      */
     private final Map<String, ExpressRunner> compileCache = new ConcurrentHashMap<>(256);
 
-    /**
-     * 危险模式（沙箱拦截）
-     *
-     * <p>对齐 Aviator 沙箱策略：
-     * <ul>
-     *   <li>System.exit / System.getProperties / System.getenv</li>
-     *   <li>Runtime.getRuntime / ProcessBuilder</li>
-     *   <li>Class.forName / ClassLoader</li>
-     *   <li>反射 API：Method/Field/Constructor.invoke</li>
-     *   <li>文件 / 网络 IO</li>
-     *   <li>脚本引擎</li>
-     * </ul>
-     */
-    @SuppressWarnings("unused")
-    private static final Pattern DANGEROUS_PATTERN = Pattern.compile(
-            "(?i)("
-            + "System\\.(exit|getProperties|getenv|setProperty)"
-            + "|Runtime\\.getRuntime"
-            + "|ProcessBuilder"
-            + "|Class\\.forName"
-            + "|ClassLoader"
-            + "|Method\\.invoke|Field\\.set|Constructor\\.newInstance"
-            + "|FileInputStream|FileOutputStream|Files\\.(read|write|delete|create)"
-            + "|java\\.io\\.|java\\.net\\."
-            + "|java\\.lang\\.reflect\\."
-            + "|ScriptEngine"
-            + "|\\bexec\\b"
-            + ")"
-    );
+    // 沙箱拦截由 ExpressionSandbox 负责（P1-11 AST 级别检查替代正则黑名单）
 
     /** QLExpress 关键字（用于 validateDetailed 排除） */
     private static final java.util.Set<String> QL_KEYWORDS = java.util.Set.of(

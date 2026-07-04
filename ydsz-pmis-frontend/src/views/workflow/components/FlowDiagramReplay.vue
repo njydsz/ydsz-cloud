@@ -17,6 +17,7 @@
  */
 import { computed, nextTick, onBeforeUnmount, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { RefreshLeft, ArrowLeft } from '@element-plus/icons-vue'
 import { getDiagram, getReplaySteps } from '@/api/workflow'
 import type {
   FlowDiagramDTO,
@@ -122,12 +123,6 @@ const totalSteps = computed(() => steps.value.length)
 
 /** 当前节点的回放状态（决定高亮颜色） */
 const currentNodeState = computed(() => currentStep.value?.nodeState || '')
-
-/** 播放进度（百分比） */
-const progress = computed(() => {
-  if (totalSteps.value <= 1) return 0
-  return Math.round((currentIndex.value / (totalSteps.value - 1)) * 100)
-})
 
 /** 加载数据 */
 async function loadData() {
@@ -239,21 +234,6 @@ function scrollToCurrentNode() {
     top: Math.max(0, targetTop),
     behavior: playing.value ? 'smooth' : 'auto',
   })
-}
-
-/** 节点类型标签（i18n 友好） */
-function nodeTypeLabel(type: number | undefined): string {
-  if (type == null) return ''
-  const key = `workflow.diagram.nodeType.${type}` as
-    | 'workflow.diagram.nodeType.0'
-    | 'workflow.diagram.nodeType.1'
-    | 'workflow.diagram.nodeType.2'
-    | 'workflow.diagram.nodeType.3'
-    | 'workflow.diagram.nodeType.4'
-    | 'workflow.diagram.nodeType.5'
-    | 'workflow.diagram.nodeType.6'
-    | 'workflow.diagram.nodeType.7'
-  return t(key)
 }
 
 /** 节点状态标签 */
@@ -380,7 +360,7 @@ onBeforeUnmount(() => {
             :max="totalSteps - 1"
             :show-tooltip="false"
             class="progress-slider"
-            @input="(v: number) => jumpTo(v)"
+            @input="(v: number | number[]) => jumpTo(v as number)"
           />
         </div>
         <div class="controls-right">

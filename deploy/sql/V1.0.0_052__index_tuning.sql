@@ -114,9 +114,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_agent_blackboard_session
 --  6) 财务对账（voucher / payment / invoice）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_status_issued
-    ON pmis_finance_invoice (status, issued_at DESC);
+    ON pmis_finance_invoice (status, invoice_date DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_customer_status
-    ON pmis_finance_invoice (customer_id, status, issued_at DESC);
+    ON pmis_finance_invoice (customer_id, status, invoice_date DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_payment_unallocated
     ON pmis_finance_payment (contract_id, status)
     WHERE status IN ('RECEIVED', 'PARTIAL');
@@ -131,7 +131,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_audit_log_brin_created
     ON pmis_operation_log USING BRIN (created_at)
     WITH (pages_per_range = 32);
 CREATE INDEX IF NOT EXISTS idx_pmis_message_log_brin_sent
-    ON pmis_message_log USING BRIN (sent_at)
+    ON pmis_message_log USING BRIN (create_time)
     WITH (pages_per_range = 32);
 CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
     ON pmis_operation_log USING BRIN (created_at)
@@ -141,7 +141,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
 --  8) 表达式索引（状态名/类型名查询）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_initiation_status_lower
-    ON pmis_project_initiation (lower(status));
+    ON pmis_project_initiation (lower(stage));
 CREATE INDEX IF NOT EXISTS idx_pmis_change_status_lower
     ON pmis_project_change (lower(status));
 

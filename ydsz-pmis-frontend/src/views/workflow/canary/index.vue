@@ -20,7 +20,6 @@ import type {
   FlowDefinitionDTO,
   CanaryRolloutLogDTO,
   PublishCanaryDTO,
-  CanaryStrategy,
 } from '@/api/workflow/types'
 
 // ==================== 流程定义列表 ====================
@@ -55,13 +54,6 @@ const adjustPercentage = ref(10)
 const logDialog = ref(false)
 const logLoading = ref(false)
 const rolloutLogs = ref<CanaryRolloutLogDTO[]>([])
-
-// ==================== 策略映射 ====================
-const strategyMap: Record<CanaryStrategy, string> = {
-  PERCENTAGE: '按比例',
-  WHITELIST: '白名单',
-  PERCENTAGE_AND_WHITELIST: '比例+白名单',
-}
 
 const strategyOptions = [
   { label: '按比例', value: 'PERCENTAGE' },
@@ -333,11 +325,11 @@ onMounted(() => loadDefinitions())
         </el-table-column>
         <el-table-column label="操作" width="320" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" type="primary" link @click="openPublishDialog(row)">启动灰度</el-button>
-            <el-button size="small" type="warning" link @click="openAdjustDialog(row)">调整比例</el-button>
-            <el-button size="small" type="success" link @click="handlePromote(row)">全量发布</el-button>
-            <el-button size="small" type="danger" link @click="handleRollback(row)">回滚</el-button>
-            <el-button size="small" link @click="openLogDialog(row)">发布历史</el-button>
+            <el-button size="small" type="primary" link @click="openPublishDialog(row as FlowDefinitionDTO)">启动灰度</el-button>
+            <el-button size="small" type="warning" link @click="openAdjustDialog(row as FlowDefinitionDTO)">调整比例</el-button>
+            <el-button size="small" type="success" link @click="handlePromote(row as FlowDefinitionDTO)">全量发布</el-button>
+            <el-button size="small" type="danger" link @click="handleRollback(row as FlowDefinitionDTO)">回滚</el-button>
+            <el-button size="small" link @click="openLogDialog(row as FlowDefinitionDTO)">发布历史</el-button>
           </template>
         </el-table-column>
       </el-table>

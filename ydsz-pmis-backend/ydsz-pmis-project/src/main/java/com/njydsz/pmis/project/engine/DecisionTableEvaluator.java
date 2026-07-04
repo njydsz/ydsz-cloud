@@ -17,11 +17,12 @@ import java.util.Map;
 /**
  * DMN 决策表评估引擎
  *
- * <p>基于 OMG DMN 标准的决策表求值器，支持五种命中策略（hit policy）：
+ * <p>基于 OMG DMN 标准的决策表求值器，支持六种命中策略（hit policy）：
  * <ul>
  *   <li><b>UNIQUE</b>：唯一命中，匹配到多行时抛出 {@link IllegalStateException}</li>
  *   <li><b>FIRST</b>：首次命中，返回第一条匹配行（默认策略）</li>
- *   <li><b>PRIORITY</b>：优先级命中，返回优先级最高的匹配行（数值越大优先级越高）</li>
+ *   <li><b>PRIORITY</b>：优先级命中，返回优先级最高的匹配行（数值越小优先级越高）</li>
+ *   <li><b>RULE_ORDER</b>：规则顺序命中，返回所有匹配行（按行在表中的出现顺序）</li>
  *   <li><b>COLLECT</b>：收集命中，返回所有匹配行</li>
  *   <li><b>ANY</b>：任意命中，返回任意一条匹配行（多条时取首条并告警）</li>
  * </ul>
@@ -158,10 +159,18 @@ public class DecisionTableEvaluator {
             }
             case "PRIORITY": {
                 MatchedRow best = matched.stream()
-                        .max((a, b) -> Integer.compare(a.priority, b.priority))
+                        .min((a, b) -> Integer.compare(a.priority, b.priority))
                         .orElse(matched.get(0));
                 log.debug("[DMN] PRIORITY 命中: rowIndex={}, priority={}", best.rowIndex, best.priority);
                 return singleResult(extractActions(best.row, table));
+            }
+            case "RULE_ORDER": {
+                // DMN 1.4 RULE ORDER：返回全部匹配行，按行在表中的出现顺序排列
+                List<Map<String, Object>> all = new ArrayList<>(matched.size());
+                for (MatchedRow m : matched) {
+                    all.add(extractActions(m.row, table));
+                }
+                return all;
             }
             case "COLLECT": {
                 List<Map<String, Object>> all = new ArrayList<>(matched.size());

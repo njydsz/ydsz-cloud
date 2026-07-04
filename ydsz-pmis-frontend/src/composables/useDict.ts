@@ -16,7 +16,7 @@
  * const label = useDictLabel('wbs_task_status', 'COMPLETED') // '已完成'
  * ```
  */
-import { ref, watch, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
 import { useDictStore } from '@/store/modules/dict'
 import type { DictItemVO } from '@/api/system/dict/types'
 import type { OptionVO } from '@/types/api'

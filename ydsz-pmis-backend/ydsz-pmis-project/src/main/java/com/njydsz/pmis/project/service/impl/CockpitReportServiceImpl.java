@@ -161,7 +161,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
                 out.merge(top, 1, (a, b) -> a + b);
             }
         } catch (Exception e) {
-            log.warn("[Cockpit] EVM 健康分布聚合失败: {}", e.getMessage());
+            log.error("[Cockpit] EVM 健康分布聚合失败: {}", e.getMessage());
         }
         return out;
     }
@@ -199,7 +199,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             gradeDist = utilizationSnapshotMapper.gradeDistribution(period);
         } catch (Exception e) {
-            log.warn("[Cockpit] 利用率等级分布失败: {}", e.getMessage());
+            log.error("[Cockpit] 利用率等级分布失败: {}", e.getMessage());
         }
         out.put("gradeDistribution", gradeDist);
 
@@ -208,7 +208,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             deptList = utilizationSnapshotMapper.groupByDepartment(period);
         } catch (Exception e) {
-            log.warn("[Cockpit] 部门利用率聚合失败: {}", e.getMessage());
+            log.error("[Cockpit] 部门利用率聚合失败: {}", e.getMessage());
         }
         if (deptList.size() > 5) {
             deptList = deptList.subList(0, 5);
@@ -226,7 +226,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             out = invoiceMapper.sumByDepartment();
         } catch (Exception e) {
-            log.warn("[Cockpit] 事业部下钻失败: {}", e.getMessage());
+            log.error("[Cockpit] 事业部下钻失败: {}", e.getMessage());
         }
         return out;
     }
@@ -239,7 +239,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             out = invoiceMapper.sumByProjectType();
         } catch (Exception e) {
-            log.warn("[Cockpit] 项目类型下钻失败: {}", e.getMessage());
+            log.error("[Cockpit] 项目类型下钻失败: {}", e.getMessage());
         }
         return out;
     }
@@ -252,7 +252,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             out = invoiceMapper.sumByCustomer();
         } catch (Exception e) {
-            log.warn("[Cockpit] 客户下钻失败: {}", e.getMessage());
+            log.error("[Cockpit] 客户下钻失败: {}", e.getMessage());
         }
         return out;
     }
@@ -265,7 +265,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             rows = invoiceMapper.sumByYear();
         } catch (Exception e) {
-            log.warn("[Cockpit] 合同年度趋势查询失败: {}", e.getMessage());
+            log.error("[Cockpit] 合同年度趋势查询失败: {}", e.getMessage());
         }
         if (rows == null) {
             rows = new ArrayList<>();
@@ -333,7 +333,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             return invoiceMapper.countDistinctInitiation();
         } catch (Exception e) {
-            log.warn("[Cockpit] activeProjects 计算失败: {}", e.getMessage());
+            log.error("[Cockpit] activeProjects 计算失败: {}", e.getMessage());
             return 0;
         }
     }
@@ -342,7 +342,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             return nz(invoiceMapper.sumInvoicedAmount());
         } catch (Exception e) {
-            log.warn("[Cockpit] 合同总额计算失败: {}", e.getMessage());
+            log.error("[Cockpit] 合同总额计算失败: {}", e.getMessage());
             return ZERO;
         }
     }
@@ -351,7 +351,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             return nz(paymentMapper.sumAllocatedAmount());
         } catch (Exception e) {
-            log.warn("[Cockpit] 已确认收入计算失败: {}", e.getMessage());
+            log.error("[Cockpit] 已确认收入计算失败: {}", e.getMessage());
             return ZERO;
         }
     }
@@ -364,7 +364,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
             }
             return toDecimal(resp.getData().get("totalIdleCost"));
         } catch (Exception e) {
-            log.warn("[Cockpit] Bench 闲置成本获取失败: {}", e.getMessage());
+            log.error("[Cockpit] Bench 闲置成本获取失败: {}", e.getMessage());
             return ZERO;
         }
     }
@@ -377,7 +377,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             return nz(supplier.get());
         } catch (Exception e) {
-            log.warn("[Cockpit] 成本聚合失败: {}", e.getMessage());
+            log.error("[Cockpit] 成本聚合失败: {}", e.getMessage());
             return ZERO;
         }
     }
@@ -391,7 +391,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
             }
             return toDecimal(avg.get("avg_pct"));
         } catch (Exception e) {
-            log.warn("[Cockpit] 利用率均值获取失败: {}", e.getMessage());
+            log.error("[Cockpit] 利用率均值获取失败: {}", e.getMessage());
             return BigDecimal.valueOf(0.75);
         }
     }

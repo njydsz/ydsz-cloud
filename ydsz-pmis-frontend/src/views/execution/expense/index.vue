@@ -12,7 +12,7 @@
  * 状态: DRAFT -> SUBMITTED -> APPROVED -> PAID / REJECTED / CANCELLED
  * 涉及预算强管控。
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -24,6 +24,7 @@ import {
 } from '@/api/execution/expense'
 import type { ExpenseVO, ExpenseCreateDTO } from '@/api/execution/expense/types'
 import { PC } from '@/constants/permissionCodes'
+import { useFormDraft } from '@/composables/useFormDraft'
 
 /** 列表加载状态 */
 const loading = ref(false)
@@ -112,8 +113,41 @@ const formRules = {
   amount: [{ required: true, message: '金额必填', trigger: 'blur' }],
 }
 
-/** 打开新增弹窗并重置表单为默认值 */
+// ===== 表单草稿 =====
+const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form, {
+  key: 'expense-create',
+  debounce: 3000,
+})
+
+const draftTimeText = computed(() => {
+  if (!lastSavedAt.value) return ''
+  return lastSavedAt.value.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+})
+
+/** 打开新增弹窗并重置表单为默认值；若检测到草稿则提示恢复 */
 function openCreate() {
+  if (hasDraft.value) {
+    ElMessageBox.confirm('检测到未提交的草稿，是否恢复？', '提示', { type: 'info' })
+      .then(() => {
+        restore()
+        ElMessage.success('草稿已恢复')
+        dialogVisible.value = true
+      })
+      .catch(() => {
+        clearDraft()
+        Object.assign(form, {
+          expenseCode: '',
+          employeeId: query.employeeId ?? 0,
+          initiationId: query.initiationId,
+          expenseType: 'TRAVEL',
+          amount: 0,
+          expenseDate: new Date().toISOString().slice(0, 10),
+          description: '',
+        })
+        dialogVisible.value = true
+      })
+    return
+  }
   Object.assign(form, {
     expenseCode: '',
     employeeId: query.employeeId ?? 0,
@@ -130,6 +164,7 @@ function openCreate() {
 async function submitForm() {
   await formRef.value?.validate()
   await createExpense(form as ExpenseCreateDTO)
+  clearDraft()
   ElMessage.success('已创建（触发预算校验）')
   dialogVisible.value = false
   fetchList()
@@ -251,6 +286,7 @@ onMounted(fetchList)
         </el-alert>
       </el-form>
       <template #footer>
+        <span v-if="draftTimeText" style="color: #909399; font-size: 12px; margin-right: auto;">草稿已保存 {{ draftTimeText }}</span>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitForm">确定</el-button>
       </template>

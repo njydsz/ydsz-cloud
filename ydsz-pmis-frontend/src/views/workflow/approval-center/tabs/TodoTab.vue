@@ -147,7 +147,9 @@ async function loadFlowDefinitions() {
   try {
     const res = await pageDefinitions({ status: 'PUBLISHED', pageNum: 1, pageSize: 200 })
     if (res.data?.code === 0) {
-      flowDefinitions.value = res.data.data?.records || []
+      // 后端分页返回 records 字段（MyBatis-Plus Page），与前端 PageResult.list 类型不一致，用类型断言收敛
+      const pageData = res.data?.data as unknown as { records?: FlowDefinitionDTO[] } | undefined
+      flowDefinitions.value = pageData?.records || []
     }
   } catch {
     // 静默失败
@@ -343,8 +345,10 @@ async function loadTodo() {
 
     const res = await pageTodoTasks(params)
     if (res.data?.code === 0) {
-      let records = res.data.data?.records || []
-      const total = res.data.data?.total || 0
+      // 后端分页返回 records/total 字段（MyBatis-Plus Page），与前端 PageResult 类型不一致，用类型断言收敛
+      const pageData = res.data?.data as unknown as { records?: FlowTaskDTO[]; total?: number } | undefined
+      let records = pageData?.records || []
+      const total = pageData?.total || 0
 
       // 紧急程度筛选（客户端过滤）
       if (urgencyFilter.value === 'nearly-overdue') {
@@ -694,11 +698,11 @@ onMounted(() => {
         width="120"
       >
         <template #default="{ row }">
-          <el-tag v-if="isOverdue(row)" type="danger" size="small" effect="dark">
+          <el-tag v-if="isOverdue(row as FlowTaskDTO)" type="danger" size="small" effect="dark">
             {{ t('workflow.approval.urgency.overdueTag') }}
           </el-tag>
           <el-tag
-            v-else-if="isNearlyOverdue(row)"
+            v-else-if="isNearlyOverdue(row as FlowTaskDTO)"
             type="warning"
             size="small"
             effect="dark"
@@ -727,7 +731,7 @@ onMounted(() => {
               v-if="row.taskStatus === 'PENDING' && !isMobile"
               type="success"
               size="small"
-              @click="quickPass(row)"
+              @click="quickPass(row as FlowTaskDTO)"
             >
               {{ t('workflow.approval.actions.quickPass') }}
             </el-button>
@@ -736,7 +740,7 @@ onMounted(() => {
               v-if="row.taskStatus === 'PENDING' && !isMobile"
               type="primary"
               size="small"
-              @click="openOpDialog('PASS', row)"
+              @click="openOpDialog('PASS', row as FlowTaskDTO)"
             >
               {{ t('workflow.approval.pass') }}
             </el-button>
@@ -745,7 +749,7 @@ onMounted(() => {
               v-if="row.taskStatus === 'PENDING' && !isMobile"
               type="danger"
               size="small"
-              @click="openOpDialog('REJECT', row)"
+              @click="openOpDialog('REJECT', row as FlowTaskDTO)"
             >
               {{ t('workflow.approval.reject') }}
             </el-button>
@@ -757,38 +761,38 @@ onMounted(() => {
               <template #dropdown>
                 <el-dropdown-menu>
                   <!-- 移动端独有：一键通过 / 通过 / 驳回 -->
-                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && isMobile" @click="quickPass(row)">
+                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && isMobile" @click="quickPass(row as FlowTaskDTO)">
                     {{ t('workflow.approval.actions.quickPass') }}
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && isMobile" divided @click="openOpDialog('PASS', row)">
+                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && isMobile" divided @click="openOpDialog('PASS', row as FlowTaskDTO)">
                     {{ t('workflow.approval.pass') }}
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && isMobile" @click="openOpDialog('REJECT', row)">
+                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && isMobile" @click="openOpDialog('REJECT', row as FlowTaskDTO)">
                     {{ t('workflow.approval.reject') }}
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && !isMobile" @click="quickClaim(row)">
+                  <el-dropdown-item v-if="row.taskStatus === 'PENDING' && !isMobile" @click="quickClaim(row as FlowTaskDTO)">
                     {{ t('workflow.task.claim') }}
                   </el-dropdown-item>
-                  <el-dropdown-item @click="quickSaveDraft(row)">{{ t('workflow.approval.actions.saveDraft') }}</el-dropdown-item>
-                  <el-dropdown-item @click="quickMarkRead(row)">{{ t('workflow.approval.actions.markRead') }}</el-dropdown-item>
-                  <el-dropdown-item @click="quickCommunicate(row)">{{ t('workflow.approval.actions.communicate') }}</el-dropdown-item>
-                  <el-dropdown-item v-if="!isMobile" divided @click="openOpDialog('TRANSFER', row)">
+                  <el-dropdown-item @click="quickSaveDraft(row as FlowTaskDTO)">{{ t('workflow.approval.actions.saveDraft') }}</el-dropdown-item>
+                  <el-dropdown-item @click="quickMarkRead(row as FlowTaskDTO)">{{ t('workflow.approval.actions.markRead') }}</el-dropdown-item>
+                  <el-dropdown-item @click="quickCommunicate(row as FlowTaskDTO)">{{ t('workflow.approval.actions.communicate') }}</el-dropdown-item>
+                  <el-dropdown-item v-if="!isMobile" divided @click="openOpDialog('TRANSFER', row as FlowTaskDTO)">
                     {{ t('workflow.task.transfer') }}
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('DELEGATE', row)">{{ t('workflow.task.delegate') }}</el-dropdown-item>
-                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('ADD_APPROVER', row)">
+                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('DELEGATE', row as FlowTaskDTO)">{{ t('workflow.task.delegate') }}</el-dropdown-item>
+                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('ADD_APPROVER', row as FlowTaskDTO)">
                     {{ t('workflow.approval.actions.addApprover') }}
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="!isMobile" divided @click="openOpDialog('COUNTERSIGN_BEFORE', row)">
+                  <el-dropdown-item v-if="!isMobile" divided @click="openOpDialog('COUNTERSIGN_BEFORE', row as FlowTaskDTO)">
                     {{ t('workflow.approval.actions.countersignBefore') }}
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_AFTER', row)">
+                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_AFTER', row as FlowTaskDTO)">
                     {{ t('workflow.approval.actions.countersignAfter') }}
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_REMOVE', row)">
+                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_REMOVE', row as FlowTaskDTO)">
                     {{ t('workflow.approval.actions.countersignRemove') }}
                   </el-dropdown-item>
-                  <el-dropdown-item divided @click="quickUrge(row)">{{ t('workflow.task.urge') }}</el-dropdown-item>
+                  <el-dropdown-item divided @click="quickUrge(row as FlowTaskDTO)">{{ t('workflow.task.urge') }}</el-dropdown-item>
                   <el-dropdown-item @click="goInstance(row.instanceId)">{{ t('workflow.approval.actions.viewFlow') }}</el-dropdown-item>
                 </el-dropdown-menu>
               </template>

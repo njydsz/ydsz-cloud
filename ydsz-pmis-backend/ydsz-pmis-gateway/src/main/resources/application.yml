@@ -24,13 +24,13 @@ spring:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:Limw1020}
+        password: ${NACOS_PASSWORD:}
       # 配置中心（路由规则、限流阈值等动态配置）
       config:
         server-addr: ${NACOS_SERVER_ADDR:127.0.0.1:8848}
         namespace: ${NACOS_NAMESPACE:pmis}
         username: ${NACOS_USERNAME:nacos}
-        password: ${NACOS_PASSWORD:Limw1020}
+        password: ${NACOS_PASSWORD:}
         group: ${spring.profiles.active}
         refresh-enabled: true
         file-extension: yaml

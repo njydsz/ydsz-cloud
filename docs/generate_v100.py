@@ -566,6 +566,72 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
             return line
         return f'{prefix} IF NOT EXISTS {name}{paren}{line[m.end():]}'
 
+    def add_if_not_exists_to_create_index(line: str) -> str:
+        """Rewrite a bare `CREATE [UNIQUE] INDEX x ...` to
+        `CREATE [UNIQUE] INDEX IF NOT EXISTS x ...` so the index
+        is created at most once. Does NOT rewrite if IF NOT EXISTS is
+        already present, nor if the statement has no explicit index
+        name (CREATE INDEX ON tbl (...) is rare and best left alone).
+        Supports both single-line (CREATE INDEX x ON ...) and
+        multi-line (CREATE INDEX x\\n    ON ...) forms."""
+        m = re.match(
+            r'^(\s*CREATE\s+(?:UNIQUE\s+)?INDEX)\s+(?!IF\s+NOT\s+EXISTS)(\w+)\b',
+            line, re.IGNORECASE,
+        )
+        if not m:
+            return line
+        prefix, name = m.groups()
+        return f'{prefix} IF NOT EXISTS {name}{line[m.end():]}'
+
+    def add_on_conflict_to_inserts(lines: list[str]) -> tuple[list[str], int]:
+        """Append `ON CONFLICT DO NOTHING` to every multi-row INSERT
+        ... VALUES statement that doesn't already have an ON CONFLICT
+        clause. Returns the (possibly modified) lines and the count
+        of statements rewritten. Single-row INSERT ... SELECT and
+        INSERT ... DEFAULT VALUES are left untouched.
+
+        Strategy: scan line by line, tracking the start of an INSERT
+        statement. When we find the terminating `;`, check the whole
+        statement text; if it contains `VALUES` and no `ON CONFLICT`,
+        rewrite the terminating line to insert ` ON CONFLICT DO NOTHING`
+        before the `;`."""
+        out_lines = list(lines)
+        rewrite_count = 0
+        i = 0
+        n = len(out_lines)
+        while i < n:
+            line = out_lines[i]
+            if re.match(r'^\s*INSERT\s+INTO\b', line, re.IGNORECASE):
+                start = i
+                # Collect lines until we find the terminating ';'
+                j = i
+                while j < n and not out_lines[j].rstrip().endswith(';'):
+                    j += 1
+                if j >= n:
+                    # Unterminated; leave as-is
+                    i += 1
+                    continue
+                # Build the statement text (without the trailing ';')
+                stmt_lines = out_lines[start:j + 1]
+                stmt_text = '\n'.join(stmt_lines)
+                has_values = re.search(r'\bVALUES\b', stmt_text, re.IGNORECASE) is not None
+                has_on_conflict = re.search(r'\bON\s+CONFLICT\b', stmt_text, re.IGNORECASE) is not None
+                if has_values and not has_on_conflict:
+                    # Rewrite the terminating line: insert
+                    # ' ON CONFLICT DO NOTHING' before the final ';'
+                    end_line = out_lines[j]
+                    # Find the last ';' (should be at the end, modulo
+                    # trailing whitespace)
+                    stripped = end_line.rstrip()
+                    indent = end_line[:len(end_line) - len(end_line.lstrip())]
+                    new_end = f"{indent}{stripped[:-1]} ON CONFLICT DO NOTHING;"
+                    out_lines[j] = new_end
+                    rewrite_count += 1
+                i = j + 1
+            else:
+                i += 1
+        return out_lines, rewrite_count
+
     # Track which columns currently exist on each table as we write.
     # When we see CREATE TABLE x (...), add all listed cols.
     # When we see ALTER TABLE x ADD COLUMN c ..., add c to the set.
@@ -980,6 +1046,18 @@ with OUT_FILE.open('w', encoding='utf-8', newline='') as out:
             if new_raw != raw:
                 raw_lines[i] = new_raw
                 rewrite_count += 1
+                continue
+            new_raw = add_if_not_exists_to_create_index(raw)
+            if new_raw != raw:
+                raw_lines[i] = new_raw
+                rewrite_count += 1
+
+        # Append ON CONFLICT DO NOTHING to all INSERT ... VALUES
+        # statements that don't already have it, so the script is
+        # idempotent and can be re-run on a populated database.
+        raw_lines, insert_rewrite_count = add_on_conflict_to_inserts(raw_lines)
+        if insert_rewrite_count:
+            print(f'  [ON-CONFLICT] {f.name}: {insert_rewrite_count} INSERT statements augmented with ON CONFLICT DO NOTHING')
 
         # Replay the file with the augmented skip set.
         skipped_cleanup_count = sum(1 for r in skip_reason.values() if r == 'CLEANUP')

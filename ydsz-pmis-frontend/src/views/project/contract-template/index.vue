@@ -77,8 +77,8 @@ const isEmpty = computed(() => !loading.value && list.value.length === 0)
 const selectedRows = ref<ContractTemplateVO[]>([])
 
 /** 表格勾选行变更回调，同步 selectedRows */
-function onSelectionChange({ rows }: { rows: ContractTemplateVO[] }) {
-  selectedRows.value = rows
+function onSelectionChange({ records }: { records: ContractTemplateVO[] }) {
+  selectedRows.value = records
 }
 
 // ===== 新增表单弹窗 =====

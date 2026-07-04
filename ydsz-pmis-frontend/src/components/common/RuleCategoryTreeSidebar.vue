@@ -50,31 +50,6 @@ function handleNodeClick(node: CategoryNode) {
   emit('select', path)
 }
 
-/** 自定义节点渲染：标签 + 规则数 + Owner 数徽标 */
-function renderNodeContent(h: any, ctx: any) {
-  const node: CategoryNode = ctx.data
-  return h(
-    'span',
-    { class: 'tree-node-content' },
-    [
-      h('span', { class: 'tree-node-name' }, node.name),
-      node.ruleCount > 0
-        ? h('span', { class: 'tree-node-badge' }, String(node.ruleCount))
-        : null,
-      node.owners && node.owners.length > 0
-        ? h(
-            'span',
-            { class: 'tree-node-owner' },
-            [
-              h('span', { class: 'tree-node-owner-icon' }, '👤'),
-              String(node.owners.length),
-            ],
-          )
-        : null,
-    ].filter(Boolean),
-  )
-}
-
 defineExpose({ reload: loadTree })
 
 onMounted(() => {

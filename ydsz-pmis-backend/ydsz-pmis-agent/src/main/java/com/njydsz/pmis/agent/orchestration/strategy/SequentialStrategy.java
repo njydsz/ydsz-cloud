@@ -3,10 +3,7 @@ package com.njydsz.pmis.agent.orchestration.strategy;
 import com.njydsz.pmis.agent.engine.Agent;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
-import com.njydsz.pmis.agent.enums.AgentAlertLevel;
-import com.njydsz.pmis.agent.enums.AgentType;
 import com.njydsz.pmis.agent.orchestration.AgentBlackboard;
-import com.njydsz.pmis.agent.orchestration.AgentMessage;
 import com.njydsz.pmis.agent.orchestration.OrchestrationMode;
 import com.njydsz.pmis.agent.orchestration.OrchestrationRequest;
 import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
@@ -97,39 +94,5 @@ public class SequentialStrategy implements OrchestrationStrategy {
         }
         return new AgentContext(req.getBizType(), req.getBizId(), req.getBizRef(),
                 req.getCallerId(), req.getCallerName(), req.getSource(), params);
-    }
-
-    /**
-     * 工具：根据 agent code 取枚举（兼容大小写）
-     */
-    @SuppressWarnings("unused")
-    private AgentType parseType(String code) {
-        return AgentType.fromCode(code);
-    }
-
-    /**
-     * 工具：根据 code 解析告警等级（兼容大小写）。
-     *
-     * @param code 等级码，可空
-     * @return 告警等级；为空或未匹配返回 NORMAL
-     */
-    @SuppressWarnings("unused")
-    private AgentAlertLevel parseLevel(String code) {
-        if (code == null) return AgentAlertLevel.NORMAL;
-        for (AgentAlertLevel l : AgentAlertLevel.values()) {
-            if (l.getCode().equalsIgnoreCase(code)) return l;
-        }
-        return AgentAlertLevel.NORMAL;
-    }
-
-    /**
-     * 构造输入消息（工具方法）。
-     *
-     * @param from 发送方
-     * @return INPUT 类型消息
-     */
-    @SuppressWarnings("unused")
-    private AgentMessage inputMessage(String from) {
-        return AgentMessage.input(from, null);
     }
 }

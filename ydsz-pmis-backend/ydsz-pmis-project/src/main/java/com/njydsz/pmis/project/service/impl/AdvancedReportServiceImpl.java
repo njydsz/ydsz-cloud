@@ -40,10 +40,14 @@ import java.util.stream.Collectors;
  * <p>提供 EVM 报表、利用率排名、待岗成本、双费率利润对比、资源甘特图、风险看板六类高级报表。
  * 跨模块数据通过 Feign + try-catch 回退到 0，避免单模块故障导致报表整体不可用。
  *
+ * <p>历史版本曾使用类级 {@code @SuppressWarnings("null")} 抑制 Eclipse JDT 的 null 分析警告，
+ * 但该 token 仅 Eclipse 识别（Maven/javac 不识别），且会掩盖真实的 null 风险。已移除，
+ * 改为在 {@link #toBigDecimal(Object)}、{@link #toLong(Object)}、{@link #stringOf(Object)}
+ * 等私有方法中统一处理 null，调用方无需关心。
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SuppressWarnings("null")
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -446,7 +450,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             Object cost = resp.getData().get("totalIdleCost");
             return toBigDecimal(cost);
         } catch (Exception e) {
-            log.warn("[AdvancedReport] Bench 仪表盘 Feign 调用失败: {}", e.getMessage());
+            log.error("[AdvancedReport] Bench 仪表盘 Feign 调用失败: {}", e.getMessage());
             return ZERO;
         }
     }
@@ -495,7 +499,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             Result<List<Map<String, Object>>> resp = benchResourceClient.listResourceAssignmentsByInitiation(initiationId);
             assignments = (resp == null || resp.getData() == null) ? List.of() : resp.getData();
         } catch (Exception e) {
-            log.warn("[AdvancedReport] 资源分配 Feign 调用失败 initiationId={} err={}",
+            log.error("[AdvancedReport] 资源分配 Feign 调用失败 initiationId={} err={}",
                     initiationId, e.getMessage());
             return new ArrayList<>();
         }

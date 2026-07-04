@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.engine.JsonHelper;
 import com.njydsz.pmis.workflow.entity.FlowEventSubscriptionDO;
@@ -213,7 +214,6 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     /**
      * 触发订阅 — 标记 COMPLETED，取消边界任务（如有），推进流程
      */
-    @SuppressWarnings("unchecked")
     private void triggerSubscription(FlowEventSubscriptionDO sub, String payload, String triggerSource) {
         // 1. 标记订阅已触发
         subscriptionMapper.markTriggered(sub.getId(), payload, triggerSource, LocalDateTime.now());
@@ -240,7 +240,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         Map<String, Object> variables = parseVariables(instance.getVariable());
         if (StringUtils.hasText(payload)) {
             try {
-                Map<String, Object> payloadMap = JSON.parseObject(payload, Map.class);
+                Map<String, Object> payloadMap = JsonUtils.parseMap(payload);
                 if (payloadMap != null) {
                     variables.putAll(payloadMap);
                     instanceMapper.updateVariable(instance.getId(), JSON.toJSONString(variables));
@@ -294,13 +294,12 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         log.info("[Flow] 边界事件取消任务: taskId={} errorCode={}", taskId, errorCode);
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseExt(FlowNodeDO node) {
         if (!StringUtils.hasText(node.getExt())) {
             return Collections.emptyMap();
         }
         try {
-            return JSON.parseObject(node.getExt(), Map.class);
+            return JsonUtils.parseMap(node.getExt());
         } catch (Exception e) {
             return Collections.emptyMap();
         }
@@ -320,13 +319,12 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
         return exprStr;
     }
 
-    @SuppressWarnings("unchecked")
     private Map<String, Object> parseVariables(String variableJson) {
         if (!StringUtils.hasText(variableJson)) {
             return new HashMap<>();
         }
         try {
-            Map<String, Object> m = JSON.parseObject(variableJson, Map.class);
+            Map<String, Object> m = JsonUtils.parseMap(variableJson);
             return m != null ? m : new HashMap<>();
         } catch (Exception e) {
             return new HashMap<>();

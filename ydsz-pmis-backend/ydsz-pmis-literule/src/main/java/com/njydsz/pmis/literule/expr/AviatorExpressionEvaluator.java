@@ -9,7 +9,6 @@ import com.njydsz.pmis.literule.api.RuleContext;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.regex.Pattern;
 
 /**
  * Aviator 表达式求值器实现
@@ -39,40 +38,6 @@ public class AviatorExpressionEvaluator implements ExpressionEvaluator {
      * AST 级别表达式沙箱（P1-11，替代 P0 阶段的正则黑名单）
      */
     private final ExpressionSandbox sandbox = new ExpressionSandbox();
-
-    /**
-     * 危险表达式模式（沙箱模式下阻断）
-     *
-     * <p>阻断以下危险模式：
-     * <ul>
-     *   <li>System.exit / System.getProperties / System.getenv</li>
-     *   <li>Runtime.getRuntime / ProcessBuilder</li>
-     *   <li>Class.forName / ClassLoader</li>
-     *   <li>Thread / Process</li>
-     *   <li>反射 API：Method/Field/Constructor.invoke</li>
-     *   <li>文件 I/O：FileInputStream/FileOutputStream/Files</li>
-     *   <li>网络 I/O：Socket/URL/HttpURLConnection</li>
-     *   <li>脚本引擎：ScriptEngine</li>
-     * </ul>
-     */
-    @SuppressWarnings("unused")
-    private static final Pattern DANGEROUS_PATTERN = Pattern.compile(
-            // 类名以完整或部分方式出现即阻断
-            "(?i)("
-            + "System\\.(exit|getProperties|getenv|setProperty)"  // 系统操作
-            + "|Runtime\\.getRuntime"                              // 运行时执行
-            + "|ProcessBuilder"                                    // 进程创建
-            + "|Class\\.forName"                                   // 反射加载类
-            + "|ClassLoader"                                       // 类加载器
-            + "|\\bThread\\.(sleep|interrupt|stop|destroy)"        // 线程控制
-            + "|Method\\.invoke|Field\\.set|Constructor\\.newInstance" // 反射调用
-            + "|FileInputStream|FileOutputStream|Files\\.(read|write|delete|create)" // 文件 I/O
-            + "|java\\.io\\.|java\\.net\\."                         // IO 和网络包
-            + "|java\\.lang\\.reflect\\."                           // 反射包
-            + "|ScriptEngine"                                      // 脚本引擎
-            + "|\\bexec\\b"                                        // 命令执行
-            + ")"
-    );
 
     public AviatorExpressionEvaluator() {
         this(true);

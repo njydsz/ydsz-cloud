@@ -12,9 +12,30 @@
 --     shared_preload_libraries 中预加载后才可创建扩展
 --   - uuid-ossp / pgcrypto 无需 preload
 --   - 此脚本在已创建扩展的环境中执行会返回 NOTICE 而非 ERROR（IF NOT EXISTS）
+--   - pg_hint_plan / pg_stat_statements 在某些环境（如 PG18 或未配置 preload）
+--     不可用，使用 DO 块容错，避免阻断主流程
 -- ============================================================
 
-CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
-CREATE EXTENSION IF NOT EXISTS pg_hint_plan;
+-- pg_stat_statements: 需 shared_preload_libraries 预加载, 未加载时跳过
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'pg_stat_statements 不可用, 跳过: %', SQLERRM;
+END $$;
+
+-- pg_hint_plan: 仅 PG 12-16 可用, PG18 不支持, 跳过
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_hint_plan;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'pg_hint_plan 不可用, 跳过: %', SQLERRM;
+END $$;
+
+-- uuid-ossp: 无需 preload, 标准扩展
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- pgcrypto: 无需 preload, 标准扩展
 CREATE EXTENSION IF NOT EXISTS pgcrypto;

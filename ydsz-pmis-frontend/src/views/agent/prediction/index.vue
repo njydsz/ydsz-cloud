@@ -10,32 +10,35 @@
  */
 import { computed, onMounted, reactive, ref, watch } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import { aggregateByType, countByAlertLevel, getById, page, recent } from '@/api/agent/prediction'
 import type { AgentPrediction, AlertLevel } from '@/api/agent/prediction/types'
 import { useECharts } from '@/composables/useECharts'
 import { PC } from '@/constants/permissionCodes'
 
-const AGENT_TYPE_OPTIONS = [
-  { value: '',                    label: '全部 Agent' },
-  { value: 'RISK_WARNING',        label: '项目风险预警' },
-  { value: 'RESOURCE_RECOMMEND',  label: '资源调度推荐' },
-  { value: 'PROFIT_FORECAST',     label: '利润预测' },
-  { value: 'WIN_RATE_PREDICT',    label: '商机赢率预测' },
-  { value: 'TIMESHEET_ANOMALY',   label: '工时异常识别' },
-]
-const ALERT_OPTIONS = [
-  { value: '',        label: '全部等级' },
-  { value: 'RED',     label: '红色' },
-  { value: 'YELLOW',  label: '黄色' },
-  { value: 'NORMAL',  label: '正常' },
-  { value: 'INFO',    label: '提示' },
-]
-const STATUS_OPTIONS = [
-  { value: '',        label: '全部状态' },
-  { value: 'SUCCESS', label: '成功' },
-  { value: 'FAILED',  label: '失败' },
-  { value: 'RUNNING', label: '执行中' },
-]
+const { t } = useI18n()
+
+const AGENT_TYPE_OPTIONS = computed(() => [
+  { value: '',                    label: t('agent.prediction.agentType.ALL') },
+  { value: 'RISK_WARNING',        label: t('agent.prediction.agentType.RISK_WARNING') },
+  { value: 'RESOURCE_RECOMMEND',  label: t('agent.prediction.agentType.RESOURCE_RECOMMEND') },
+  { value: 'PROFIT_FORECAST',     label: t('agent.prediction.agentType.PROFIT_FORECAST') },
+  { value: 'WIN_RATE_PREDICT',    label: t('agent.prediction.agentType.WIN_RATE_PREDICT') },
+  { value: 'TIMESHEET_ANOMALY',   label: t('agent.prediction.agentType.TIMESHEET_ANOMALY') },
+])
+const ALERT_OPTIONS = computed(() => [
+  { value: '',        label: t('agent.prediction.alert.ALL') },
+  { value: 'RED',     label: t('agent.prediction.alert.RED') },
+  { value: 'YELLOW',  label: t('agent.prediction.alert.YELLOW') },
+  { value: 'NORMAL',  label: t('agent.prediction.alert.NORMAL') },
+  { value: 'INFO',    label: t('agent.prediction.alert.INFO') },
+])
+const STATUS_OPTIONS = computed(() => [
+  { value: '',        label: t('agent.prediction.status.ALL') },
+  { value: 'SUCCESS', label: t('agent.prediction.status.SUCCESS') },
+  { value: 'FAILED',  label: t('agent.prediction.status.FAILED') },
+  { value: 'RUNNING', label: t('agent.prediction.status.RUNNING') },
+])
 
 const filter = reactive({
   agentType: '',
@@ -63,7 +66,7 @@ async function load() {
     list.value = data?.list ?? []
     total.value = data?.total ?? list.value.length
   } catch (e: unknown) {
-    ElMessage.error((e as Error)?.message || '加载失败')
+    ElMessage.error((e as Error)?.message || t('agent.prediction.messages.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -98,17 +101,17 @@ function nextTickRender() {
 function renderChart() {
   const rows = aggregateData.value
   setOption({
-    title: { text: 'Agent 预测分布', left: 'center', top: 0 },
+    title: { text: t('agent.prediction.chart.title'), left: 'center', top: 0 },
     tooltip: { trigger: 'axis' },
-    legend: { data: ['红色', '黄色', '正常', '其他'], top: 28 },
+    legend: { data: [t('agent.prediction.chart.legendRed'), t('agent.prediction.chart.legendYellow'), t('agent.prediction.chart.legendNormal'), t('agent.prediction.chart.legendOther')], top: 28 },
     grid: { top: 70, left: 60, right: 40, bottom: 60 },
     xAxis: { type: 'category', data: rows.map((r) => r.agentType), axisLabel: { rotate: 20 } },
     yAxis: { type: 'value' },
     series: [
-      { name: '红色',  type: 'bar', stack: 't', data: rows.map((r) => r.red ?? 0),    itemStyle: { color: '#F56C6C' } },
-      { name: '黄色',  type: 'bar', stack: 't', data: rows.map((r) => r.yellow ?? 0), itemStyle: { color: '#E6A23C' } },
-      { name: '正常',  type: 'bar', stack: 't', data: rows.map((r) => r.normal ?? 0), itemStyle: { color: '#67C23A' } },
-      { name: '其他',  type: 'bar', stack: 't', data: rows.map((r) => Math.max(0, (r.count ?? 0) - (r.red ?? 0) - (r.yellow ?? 0) - (r.normal ?? 0))), itemStyle: { color: '#909399' } },
+      { name: t('agent.prediction.chart.legendRed'),  type: 'bar', stack: 't', data: rows.map((r) => r.red ?? 0),    itemStyle: { color: '#F56C6C' } },
+      { name: t('agent.prediction.chart.legendYellow'),  type: 'bar', stack: 't', data: rows.map((r) => r.yellow ?? 0), itemStyle: { color: '#E6A23C' } },
+      { name: t('agent.prediction.chart.legendNormal'),  type: 'bar', stack: 't', data: rows.map((r) => r.normal ?? 0), itemStyle: { color: '#67C23A' } },
+      { name: t('agent.prediction.chart.legendOther'),  type: 'bar', stack: 't', data: rows.map((r) => Math.max(0, (r.count ?? 0) - (r.red ?? 0) - (r.yellow ?? 0) - (r.normal ?? 0))), itemStyle: { color: '#909399' } },
     ],
   })
 }
@@ -127,7 +130,7 @@ async function openDetail(row: AgentPrediction) {
     const { data } = await getById(row.id)
     detail.value = (data as AgentPrediction) ?? null
   } catch (e: unknown) {
-    ElMessage.error((e as Error)?.message || '详情加载失败')
+    ElMessage.error((e as Error)?.message || t('agent.prediction.messages.detailLoadFailed'))
   } finally {
     detailLoading.value = false
   }
@@ -190,25 +193,25 @@ onMounted(() => {
     <el-row :gutter="16" class="kpi-row">
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="kpi-card">
-          <div class="kpi-title">总记录数</div>
+          <div class="kpi-title">{{ t('agent.prediction.kpi.total') }}</div>
           <div class="kpi-value">{{ counts.total }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="kpi-card danger">
-          <div class="kpi-title">红色告警</div>
+          <div class="kpi-title">{{ t('agent.prediction.kpi.red') }}</div>
           <div class="kpi-value">{{ counts.red }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="kpi-card warning">
-          <div class="kpi-title">黄色告警</div>
+          <div class="kpi-title">{{ t('agent.prediction.kpi.yellow') }}</div>
           <div class="kpi-value">{{ counts.yellow }}</div>
         </el-card>
       </el-col>
       <el-col :xs="12" :sm="6">
         <el-card shadow="hover" class="kpi-card success">
-          <div class="kpi-title">正常</div>
+          <div class="kpi-title">{{ t('agent.prediction.kpi.normal') }}</div>
           <div class="kpi-value">{{ counts.normal }}</div>
         </el-card>
       </el-col>
@@ -216,23 +219,23 @@ onMounted(() => {
 
     <el-card shadow="never" class="filter-card">
       <el-form inline>
-        <el-form-item label="Agent 类型">
-          <el-select v-model="filter.agentType" placeholder="全部" style="width: 180px" @change="onFilterChange">
+        <el-form-item :label="t('agent.prediction.search.agentType')">
+          <el-select v-model="filter.agentType" :placeholder="t('common.all')" style="width: 180px" @change="onFilterChange">
             <el-option v-for="o in AGENT_TYPE_OPTIONS" :key="o.value" :value="o.value" :label="o.label" />
           </el-select>
         </el-form-item>
-        <el-form-item label="告警等级">
-          <el-select v-model="filter.alertLevel" placeholder="全部" style="width: 140px" @change="onFilterChange">
+        <el-form-item :label="t('agent.prediction.search.alertLevel')">
+          <el-select v-model="filter.alertLevel" :placeholder="t('common.all')" style="width: 140px" @change="onFilterChange">
             <el-option v-for="o in ALERT_OPTIONS" :key="o.value" :value="o.value" :label="o.label" />
           </el-select>
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="filter.status" placeholder="全部" style="width: 120px" @change="onFilterChange">
+        <el-form-item :label="t('agent.prediction.search.status')">
+          <el-select v-model="filter.status" :placeholder="t('common.all')" style="width: 120px" @change="onFilterChange">
             <el-option v-for="o in STATUS_OPTIONS" :key="o.value" :value="o.value" :label="o.label" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button :icon="'Refresh'" @click="load">刷新</el-button>
+          <el-button :icon="'Refresh'" @click="load">{{ t('agent.prediction.buttons.refresh') }}</el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -248,39 +251,39 @@ onMounted(() => {
             height="auto"
           >
             <vxe-column type="seq" width="56" title="#" />
-            <vxe-column field="taskCode" title="任务编码" width="200" show-overflow />
-            <vxe-column field="agentType" title="Agent" width="160">
+            <vxe-column field="taskCode" :title="t('agent.prediction.columns.taskCode')" width="200" show-overflow />
+            <vxe-column field="agentType" :title="t('agent.prediction.columns.agent')" width="160">
               <template #default="{ row }">
                 <el-tag size="small" effect="plain">{{ row.agentType }}</el-tag>
               </template>
             </vxe-column>
-            <vxe-column field="bizType" title="业务" width="100" />
-            <vxe-column field="bizRef" title="业务编号" width="140" show-overflow />
-            <vxe-column field="alertLevel" title="告警" width="100">
+            <vxe-column field="bizType" :title="t('agent.prediction.columns.bizType')" width="100" />
+            <vxe-column field="bizRef" :title="t('agent.prediction.columns.bizRef')" width="140" show-overflow />
+            <vxe-column field="alertLevel" :title="t('agent.prediction.columns.alert')" width="100">
               <template #default="{ row }">
                 <el-tag v-if="row.alertLevel" :type="levelType(row.alertLevel)" size="small" effect="dark">
                   {{ row.alertLevel }}
                 </el-tag>
               </template>
             </vxe-column>
-            <vxe-column field="score" title="得分" width="80">
+            <vxe-column field="score" :title="t('agent.prediction.columns.score')" width="80">
               <template #default="{ row }">{{ row.score == null ? '-' : Number(row.score).toFixed(2) }}</template>
             </vxe-column>
-            <vxe-column field="confidence" title="置信度" width="100">
+            <vxe-column field="confidence" :title="t('agent.prediction.columns.confidence')" width="100">
               <template #default="{ row }">{{ row.confidence == null ? '-' : Number(row.confidence).toFixed(4) }}</template>
             </vxe-column>
-            <vxe-column field="status" title="状态" width="90">
+            <vxe-column field="status" :title="t('agent.prediction.columns.status')" width="90">
               <template #default="{ row }">
                 <el-tag :type="statusType(row.status)" size="small">{{ row.status }}</el-tag>
               </template>
             </vxe-column>
-            <vxe-column field="costMs" title="耗时" width="80">
+            <vxe-column field="costMs" :title="t('agent.prediction.columns.cost')" width="80">
               <template #default="{ row }">{{ row.costMs ?? 0 }} ms</template>
             </vxe-column>
-            <vxe-column field="createdAt" title="执行时间" width="170" />
-            <vxe-column title="操作" width="80" fixed="right">
+            <vxe-column field="createdAt" :title="t('agent.prediction.columns.createdAt')" width="170" />
+            <vxe-column :title="t('agent.prediction.columns.action')" width="80" fixed="right">
               <template #default="{ row }">
-                <el-button link type="primary" size="small" @click="openDetail(row)">详情</el-button>
+                <el-button link type="primary" size="small" @click="openDetail(row)">{{ t('agent.prediction.buttons.detail') }}</el-button>
               </template>
             </vxe-column>
           </vxe-table>
@@ -297,47 +300,47 @@ onMounted(() => {
         </el-card>
       </el-col>
       <el-col :xs="24" :md="8">
-        <el-card shadow="never" header="告警分布">
+        <el-card shadow="never" :header="t('agent.prediction.chartCardTitle')">
           <div ref="chartRef" class="chart-area" />
         </el-card>
       </el-col>
     </el-row>
 
     <!-- 详情抽屉 -->
-    <el-drawer v-model="drawerVisible" title="执行详情" size="520px">
+    <el-drawer v-model="drawerVisible" :title="t('agent.prediction.detail.title')" size="520px">
       <el-skeleton v-if="detailLoading" :rows="6" animated />
       <template v-else-if="detail">
         <el-descriptions :column="1" border size="small">
-          <el-descriptions-item label="任务编码">{{ detail.taskCode }}</el-descriptions-item>
-          <el-descriptions-item label="Agent 类型">
+          <el-descriptions-item :label="t('agent.prediction.detail.taskCode')">{{ detail.taskCode }}</el-descriptions-item>
+          <el-descriptions-item :label="t('agent.prediction.detail.agentType')">
             <el-tag size="small">{{ detail.agentType }}</el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="告警等级">
+          <el-descriptions-item :label="t('agent.prediction.detail.alertLevel')">
             <el-tag :type="levelType(detail.alertLevel)" size="small" effect="dark">
               {{ detail.alertLevel || '-' }}
             </el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="状态">
+          <el-descriptions-item :label="t('agent.prediction.detail.status')">
             <el-tag :type="statusType(detail.status)" size="small">{{ detail.status }}</el-tag>
           </el-descriptions-item>
-          <el-descriptions-item label="得分">{{ detail.score == null ? '-' : Number(detail.score).toFixed(2) }}</el-descriptions-item>
-          <el-descriptions-item label="置信度">{{ detail.confidence == null ? '-' : Number(detail.confidence).toFixed(4) }}</el-descriptions-item>
-          <el-descriptions-item label="耗时">{{ detail.costMs ?? 0 }} ms</el-descriptions-item>
-          <el-descriptions-item label="模型版本">{{ detail.modelVersion || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="调用人">{{ detail.callerName || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="来源">{{ detail.source || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="业务编号">{{ detail.bizRef || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="建议">{{ detail.suggestion || '-' }}</el-descriptions-item>
-          <el-descriptions-item v-if="detail.errorMsg" label="错误信息">
+          <el-descriptions-item :label="t('agent.prediction.detail.score')">{{ detail.score == null ? '-' : Number(detail.score).toFixed(2) }}</el-descriptions-item>
+          <el-descriptions-item :label="t('agent.prediction.detail.confidence')">{{ detail.confidence == null ? '-' : Number(detail.confidence).toFixed(4) }}</el-descriptions-item>
+          <el-descriptions-item :label="t('agent.prediction.detail.cost')">{{ detail.costMs ?? 0 }} ms</el-descriptions-item>
+          <el-descriptions-item :label="t('agent.prediction.detail.modelVersion')">{{ detail.modelVersion || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('agent.prediction.detail.caller')">{{ detail.callerName || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('agent.prediction.detail.source')">{{ detail.source || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('agent.prediction.detail.bizRef')">{{ detail.bizRef || '-' }}</el-descriptions-item>
+          <el-descriptions-item :label="t('agent.prediction.detail.suggestion')">{{ detail.suggestion || '-' }}</el-descriptions-item>
+          <el-descriptions-item v-if="detail.errorMsg" :label="t('agent.prediction.detail.errorMsg')">
             <el-text type="danger">{{ detail.errorMsg }}</el-text>
           </el-descriptions-item>
         </el-descriptions>
 
         <el-collapse style="margin-top: 12px">
-          <el-collapse-item title="输入快照" name="input">
+          <el-collapse-item :title="t('agent.prediction.detailCollapse.input')" name="input">
             <pre class="json-pre">{{ inputSnapshotFmt }}</pre>
           </el-collapse-item>
-          <el-collapse-item title="输出结果" name="output">
+          <el-collapse-item :title="t('agent.prediction.detailCollapse.output')" name="output">
             <pre class="json-pre">{{ outputResultFmt }}</pre>
           </el-collapse-item>
         </el-collapse>

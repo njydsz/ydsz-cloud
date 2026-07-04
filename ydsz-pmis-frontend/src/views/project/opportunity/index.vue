@@ -21,6 +21,7 @@ import {
 } from '@/api/project/opportunity'
 import type { OpportunityVO, OpportunityCreateDTO, OpportunityUpdateDTO } from '@/api/project/opportunity/types'
 import { PC } from '@/constants/permissionCodes'
+import { useFormDraft } from '@/composables/useFormDraft'
 
 const { t } = useI18n()
 
@@ -100,8 +101,48 @@ const formRules = computed(() => ({
   ownerId: [{ required: true, message: t('project.opportunity.rules.ownerIdRequired'), trigger: 'blur' }],
 }))
 
-/** 打开新增商机弹窗，重置表单为初始值 */
+// ===== 表单草稿 =====
+const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form, {
+  key: 'opportunity-create',
+  debounce: 3000,
+})
+
+const draftTimeText = computed(() => {
+  if (!lastSavedAt.value) return ''
+  return lastSavedAt.value.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+})
+
+/** 打开新增商机弹窗，重置表单为初始值；若检测到草稿则提示恢复 */
 function openCreate() {
+  if (hasDraft.value) {
+    ElMessageBox.confirm(t('project.opportunity.messages.confirmRestoreDraft'), t('common.confirm'), { type: 'info' })
+      .then(() => {
+        restore()
+        ElMessage.success(t('project.opportunity.messages.draftRestored'))
+        formMode.value = 'create'
+        dialogVisible.value = true
+      })
+      .catch(() => {
+        clearDraft()
+        formMode.value = 'create'
+        Object.assign(form, {
+          id: undefined,
+          opportunityCode: '',
+          opportunityName: '',
+          customerId: 0,
+          customerName: '',
+          ownerId: 0,
+          ownerName: '',
+          level: 'C',
+          estimatedAmount: undefined,
+          status: 'FOLLOWING',
+          source: '',
+          industry: '',
+        })
+        dialogVisible.value = true
+      })
+    return
+  }
   formMode.value = 'create'
   Object.assign(form, {
     id: undefined,
@@ -121,6 +162,7 @@ function openCreate() {
 }
 
 async function openEdit(row: OpportunityVO) {
+  clearDraft()
   formMode.value = 'edit'
   Object.assign(form, { ...row })
   dialogVisible.value = true
@@ -142,6 +184,7 @@ async function submitForm() {
       industry: form.industry,
     }
     await createOpportunity(dto)
+    clearDraft()
     ElMessage.success(t('project.opportunity.messages.createSuccess'))
   } else if (form.id) {
     const dto: OpportunityUpdateDTO = {
@@ -369,6 +412,7 @@ onMounted(fetchList)
           </el-form-item>
         </el-form>
         <template #footer>
+          <span v-if="draftTimeText" style="color: #909399; font-size: 12px; margin-right: auto;">草稿已保存 {{ draftTimeText }}</span>
           <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
           <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
         </template>

@@ -412,6 +412,7 @@ onMounted(fetchList)
         </el-form-item>
       </el-form>
       <template #footer>
+        <span v-if="draftTimeText" style="color: #909399; font-size: 12px; margin-right: auto;">草稿已保存 {{ draftTimeText }}</span>
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitForm">确定</el-button>
       </template>

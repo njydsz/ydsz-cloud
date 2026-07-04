@@ -45,12 +45,6 @@ class CommonConstantsTest {
     }
 
     @Test
-    @DisplayName("默认密码 - 应等于 admin123")
-    void defaultPassword_shouldBeAdmin123() {
-        assertEquals("admin123", CommonConstants.DEFAULT_PASSWORD);
-    }
-
-    @Test
     @DisplayName("逻辑删除常量 - NOT_DELETED=0, DELETED=1")
     void deleteConstants_shouldHaveCorrectValues() {
         assertEquals(0, CommonConstants.NOT_DELETED);

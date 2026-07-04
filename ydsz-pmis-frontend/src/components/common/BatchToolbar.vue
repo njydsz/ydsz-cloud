@@ -27,7 +27,7 @@ export interface BatchAction {
   /** 按钮文案 */
   label: string
   /** 按钮类型 */
-  type?: 'primary' | 'warning' | 'danger' | 'info'
+  type?: 'primary' | 'success' | 'warning' | 'danger' | 'info'
   /** 按钮图标（element-plus icon 名称） */
   icon?: string
   /** 权限码，配合 v-permission 指令做按钮级权限控制 */

@@ -24,8 +24,12 @@ import { logger } from '@/utils/logger'
  *
  * 后端菜单返回的 component 字段（如 "dashboard/index"）映射到对应的懒加载函数。
  * 使用显式映射替代 `@vite-ignore` 动态导入，确保 Vite 能正确分析 chunk 依赖。
+ *
+ * 注意：value 类型使用 `Promise<unknown>` 而非 `Promise<typeof import('*.vue')>`，
+ * 因为 vue-tsc 会为每个 .vue 文件推断出具体的组件类型，与通用的 `*.vue` 模块声明
+ * 存在类型参数方差不兼容（系统性类型推断问题），统一以 unknown 收敛。
  */
-const viewModules: Record<string, () => Promise<typeof import('*.vue')>> = {
+const viewModules: Record<string, () => Promise<unknown>> = {
   // 仪表盘与驾驶舱
   'dashboard/index': () => import('@/views/dashboard/index.vue'),
   'cockpit/index': () => import('@/views/cockpit/index.vue'),

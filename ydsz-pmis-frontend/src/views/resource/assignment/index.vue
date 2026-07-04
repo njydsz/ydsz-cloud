@@ -4,8 +4,9 @@
   @module views/resource/assignment
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import {
   actResourceAssignment,
   pageAssignments,
@@ -14,6 +15,8 @@ import {
 } from '@/api/resource/assignment'
 import type { ResourceAssignmentVO, ResourceAssignmentCreateDTO } from '@/api/resource/assignment/types'
 
+const { t } = useI18n()
+
 const loading = ref(false)
 const list = ref<ResourceAssignmentVO[]>([])
 const total = ref(0)
@@ -21,20 +24,20 @@ const total = ref(0)
 const query = reactive({ page: 1, size: 10, employeeId: undefined as number | undefined, initiationId: undefined as number | undefined, status: '' })
 
 // 分配动作映射：label 为中文文案，type 对应 el-tag 类型
-const actionMap: Record<string, { label: string; type: string }> = {
-  RESERVE: { label: '预占', type: 'info' },
-  START: { label: '入场', type: 'success' },
-  TRANSFER: { label: '调岗', type: 'warning' },
-  RELEASE: { label: '离场', type: 'danger' },
-  CANCEL: { label: '取消', type: 'info' },
-}
+const actionMap = computed<Record<string, { label: string; type: string }>>(() => ({
+  RESERVE: { label: t('resource.assignment.action.RESERVE'), type: 'info' },
+  START: { label: t('resource.assignment.action.START'), type: 'success' },
+  TRANSFER: { label: t('resource.assignment.action.TRANSFER'), type: 'warning' },
+  RELEASE: { label: t('resource.assignment.action.RELEASE'), type: 'danger' },
+  CANCEL: { label: t('resource.assignment.action.CANCEL'), type: 'info' },
+}))
 
 // 分配状态映射：ACTIVE 生效中 / RELEASED 已离场 / CANCELLED 已取消
-const statusMap: Record<string, { label: string; type: string }> = {
-  ACTIVE: { label: '生效中', type: 'success' },
-  RELEASED: { label: '已离场', type: 'info' },
-  CANCELLED: { label: '已取消', type: 'warning' },
-}
+const statusMap = computed<Record<string, { label: string; type: string }>>(() => ({
+  ACTIVE: { label: t('resource.assignment.status.ACTIVE'), type: 'success' },
+  RELEASED: { label: t('resource.assignment.status.RELEASED'), type: 'info' },
+  CANCELLED: { label: t('resource.assignment.status.CANCELLED'), type: 'warning' },
+}))
 
 /** 拉取分配记录分页列表 */
 async function fetchList() {
@@ -65,11 +68,11 @@ const form = reactive<ResourceAssignmentCreateDTO>({
   remark: '',
 })
 
-const formRules = {
-  employeeId: [{ required: true, message: '员工 ID 必填', trigger: 'blur' }],
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  action: [{ required: true, message: '动作必填', trigger: 'change' }],
-}
+const formRules = computed(() => ({
+  employeeId: [{ required: true, message: t('resource.assignment.rules.employeeIdRequired'), trigger: 'blur' }],
+  initiationId: [{ required: true, message: t('resource.assignment.rules.initiationIdRequired'), trigger: 'blur' }],
+  action: [{ required: true, message: t('resource.assignment.rules.actionRequired'), trigger: 'change' }],
+}))
 
 /** 打开分配动作弹窗，按动作类型初始化表单默认值 */
 function openAct(action: string) {
@@ -89,7 +92,7 @@ function openAct(action: string) {
 /** 提交分配动作，成功后关闭弹窗并刷新列表 */
 async function submitForm() {
   await actResourceAssignment(form)
-  ElMessage.success('操作成功')
+  ElMessage.success(t('resource.assignment.messages.success'))
   dialogVisible.value = false
   fetchList()
 }
@@ -124,14 +127,13 @@ onMounted(fetchList)
     <!-- 员工利用率查询区 -->
     <el-card shadow="never" class="util-card">
       <template #header>
-        <span>员工利用率查询</span>
+        <span>{{ t('resource.assignment.util.title') }}</span>
       </template>
       <div class="util-row">
-        <el-input-number v-model="utilEmployeeId" :min="1" placeholder="员工 ID" />
-        <el-button type="primary" @click="checkUtilization">查询</el-button>
+        <el-input-number v-model="utilEmployeeId" :min="1" :placeholder="t('resource.assignment.util.employeeIdPlaceholder')" />
+        <el-button type="primary" @click="checkUtilization">{{ t('resource.assignment.buttons.query') }}</el-button>
         <el-tag v-if="activeProjectCount !== null" :type="activeProjectCount >= 3 ? 'danger' : 'success'">
-          活跃项目数: {{ activeProjectCount }}
-          {{ activeProjectCount >= 3 ? ' (过载预警)' : '' }}
+          {{ t('resource.assignment.util.activeCount', { count: activeProjectCount }) }}{{ activeProjectCount >= 3 ? t('resource.assignment.util.overloadWarn') : '' }}
         </el-tag>
         <span v-if="utilResult" class="util-detail">
           <el-tag v-for="(v, k) in utilResult" :key="k" size="small" type="info" effect="plain">
@@ -144,57 +146,57 @@ onMounted(fetchList)
     <!-- 分配记录查询与操作区 -->
     <el-card shadow="never" style="margin-top: 16px">
       <el-form inline :model="query" class="search-form">
-        <el-form-item label="员工 ID">
+        <el-form-item :label="t('resource.assignment.search.employeeId')">
           <el-input-number v-model="query.employeeId" :min="0" :controls="false" />
         </el-form-item>
-        <el-form-item label="项目 ID">
+        <el-form-item :label="t('resource.assignment.search.initiationId')">
           <el-input-number v-model="query.initiationId" :min="0" :controls="false" />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+        <el-form-item :label="t('resource.assignment.search.status')">
+          <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 140px">
             <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="query.page = 1; fetchList()">查询</el-button>
-          <el-button @click="query.employeeId = undefined; query.initiationId = undefined; query.status = ''; fetchList()">重置</el-button>
+          <el-button type="primary" @click="query.page = 1; fetchList()">{{ t('resource.assignment.buttons.query') }}</el-button>
+          <el-button @click="query.employeeId = undefined; query.initiationId = undefined; query.status = ''; fetchList()">{{ t('resource.assignment.buttons.reset') }}</el-button>
         </el-form-item>
       </el-form>
 
       <div class="toolbar">
-        <el-button v-permission="['resource:assign:act']" type="primary" @click="openAct('RESERVE')">预占</el-button>
-        <el-button v-permission="['resource:assign:act']" @click="openAct('START')">入场</el-button>
-        <el-button v-permission="['resource:assign:act']" @click="openAct('TRANSFER')">调岗</el-button>
-        <el-button v-permission="['resource:assign:act']" type="danger" @click="openAct('RELEASE')">离场</el-button>
-        <el-button v-permission="['resource:assign:act']" @click="openAct('CANCEL')">取消</el-button>
-        <el-button :icon="'Refresh'" @click="fetchList">刷新</el-button>
+        <el-button v-permission="['resource:assign:act']" type="primary" @click="openAct('RESERVE')">{{ t('resource.assignment.buttons.reserve') }}</el-button>
+        <el-button v-permission="['resource:assign:act']" @click="openAct('START')">{{ t('resource.assignment.buttons.start') }}</el-button>
+        <el-button v-permission="['resource:assign:act']" @click="openAct('TRANSFER')">{{ t('resource.assignment.buttons.transfer') }}</el-button>
+        <el-button v-permission="['resource:assign:act']" type="danger" @click="openAct('RELEASE')">{{ t('resource.assignment.buttons.release') }}</el-button>
+        <el-button v-permission="['resource:assign:act']" @click="openAct('CANCEL')">{{ t('resource.assignment.buttons.cancel') }}</el-button>
+        <el-button :icon="'Refresh'" @click="fetchList">{{ t('resource.assignment.buttons.refresh') }}</el-button>
       </div>
 
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="employeeName" title="员工" width="120" />
-        <vxe-column field="employeeId" title="员工 ID" width="100" />
-        <vxe-column field="initiationName" title="项目" min-width="180" />
-        <vxe-column field="initiationId" title="项目 ID" width="100" />
-        <vxe-column field="action" title="动作" width="100">
+        <vxe-column field="employeeName" :title="t('resource.assignment.columns.employee')" width="120" />
+        <vxe-column field="employeeId" :title="t('resource.assignment.columns.employeeId')" width="100" />
+        <vxe-column field="initiationName" :title="t('resource.assignment.columns.project')" min-width="180" />
+        <vxe-column field="initiationId" :title="t('resource.assignment.columns.initiationId')" width="100" />
+        <vxe-column field="action" :title="t('resource.assignment.columns.action')" width="100">
           <template #default="{ row }">
             <el-tag size="small" :type="(actionMap[row.action]?.type as any) || 'info'">
               {{ actionMap[row.action]?.label || row.action }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="status" :title="t('resource.assignment.columns.status')" width="100">
           <template #default="{ row }">
             <el-tag :type="(statusMap[row.status]?.type as any) || 'info'">
               {{ statusMap[row.status]?.label || row.status }}
             </el-tag>
           </template>
         </vxe-column>
-        <vxe-column field="startDate" title="开始" width="120" />
-        <vxe-column field="endDate" title="结束" width="120" />
-        <vxe-column field="allocation" title="分配比例" width="100" align="center" />
-        <vxe-column field="levelCode" title="职级" width="80" align="center" />
-        <vxe-column field="remark" title="备注" min-width="160" />
+        <vxe-column field="startDate" :title="t('resource.assignment.columns.startDate')" width="120" />
+        <vxe-column field="endDate" :title="t('resource.assignment.columns.endDate')" width="120" />
+        <vxe-column field="allocation" :title="t('resource.assignment.columns.allocation')" width="100" align="center" />
+        <vxe-column field="levelCode" :title="t('resource.assignment.columns.levelCode')" width="80" align="center" />
+        <vxe-column field="remark" :title="t('resource.assignment.columns.remark')" min-width="160" />
       </vxe-table>
 
       <div class="pagination">
@@ -211,38 +213,38 @@ onMounted(fetchList)
     </el-card>
 
     <!-- 分配动作弹窗 -->
-    <el-dialog v-model="dialogVisible" title="分配动作" width="500px">
+    <el-dialog v-model="dialogVisible" :title="t('resource.assignment.dialog.title')" width="500px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="员工 ID" prop="employeeId">
+        <el-form-item :label="t('resource.assignment.form.employeeId')" prop="employeeId">
           <el-input-number v-model="form.employeeId" :min="1" />
         </el-form-item>
-        <el-form-item label="项目 ID" prop="initiationId">
+        <el-form-item :label="t('resource.assignment.form.initiationId')" prop="initiationId">
           <el-input-number v-model="form.initiationId" :min="1" />
         </el-form-item>
-        <el-form-item label="动作" prop="action">
+        <el-form-item :label="t('resource.assignment.form.action')" prop="action">
           <el-select v-model="form.action" style="width: 100%">
             <el-option v-for="(v, k) in actionMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
-        <el-form-item label="开始日期">
+        <el-form-item :label="t('resource.assignment.form.startDate')">
           <el-date-picker v-model="form.startDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="结束日期">
+        <el-form-item :label="t('resource.assignment.form.endDate')">
           <el-date-picker v-model="form.endDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="分配比例">
+        <el-form-item :label="t('resource.assignment.form.allocation')">
           <el-input-number v-model="form.allocation" :min="0" :max="1" :step="0.1" />
         </el-form-item>
-        <el-form-item label="职级">
-          <el-input v-model="form.levelCode" placeholder="例如: L8" />
+        <el-form-item :label="t('resource.assignment.form.levelCode')">
+          <el-input v-model="form.levelCode" :placeholder="t('resource.assignment.form.levelCodePlaceholder')" />
         </el-form-item>
-        <el-form-item label="备注">
+        <el-form-item :label="t('resource.assignment.form.remark')">
           <el-input v-model="form.remark" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>

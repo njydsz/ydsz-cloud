@@ -11,7 +11,6 @@ import { ref, reactive, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { ArrowDown } from '@element-plus/icons-vue'
 import BpmnModeler from 'bpmn-js/lib/Modeler'
-import type Modeler from 'bpmn-js/lib/Modeler'
 import type { Element as BpmnElement } from 'bpmn-js/lib/model/Types'
 import 'bpmn-js/dist/assets/diagram-js.css'
 import 'bpmn-js/dist/assets/bpmn-js.css'
@@ -134,8 +133,13 @@ function readElementProperties(element: BpmnElement) {
 function updateElementProperty(propertyName: string, value: string | number) {
   if (!selectedElement.value || !modeler.value) return
   const element = selectedElement.value
-  const modeling = modeler.value.get('modeling')
-  const bpmnFactory = modeler.value.get('bpmnFactory')
+  // bpmn-js 的 get() 返回 unknown，这里用类型断言收敛到具体的服务类型（避免引入 any）
+  const modeling = modeler.value.get('modeling') as {
+    updateProperties: (el: BpmnElement, attrs: Record<string, unknown>) => void
+  }
+  const bpmnFactory = modeler.value.get('bpmnFactory') as {
+    create: (type: string, attrs?: Record<string, unknown>) => BpmnElement
+  }
 
   if (propertyName === 'elementName') {
     modeling.updateProperties(element, { name: value })
@@ -473,17 +477,20 @@ function handleAutoLayout() {
  */
 function handleZoomIn() {
   if (!modeler.value) return
-  modeler.value.get('zoomScroll').stepZoom(1)
+  // bpmn-js 的 get() 返回 unknown，用类型断言收敛
+  const zoomScroll = modeler.value.get('zoomScroll') as { stepZoom: (step: number) => void }
+  zoomScroll.stepZoom(1)
 }
 
 function handleZoomOut() {
   if (!modeler.value) return
-  modeler.value.get('zoomScroll').stepZoom(-1)
+  const zoomScroll = modeler.value.get('zoomScroll') as { stepZoom: (step: number) => void }
+  zoomScroll.stepZoom(-1)
 }
 
 function handleFitView() {
   if (!modeler.value) return
-  const canvas = modeler.value.get('canvas')
+  const canvas = modeler.value.get('canvas') as { zoom: (level: string | number, position?: string) => void }
   canvas.zoom('fit-viewport', 'auto')
 }
 
@@ -709,7 +716,7 @@ function applyTemplate(tpl: (typeof templates)[0]) {
                   v-model="panelData.priority"
                   :min="0"
                   :max="100"
-                  @change="(v: number) => onPropertyChange('priority', v)"
+                  @change="(v: number | undefined) => onPropertyChange('priority', v ?? 0)"
                 />
               </el-form-item>
 

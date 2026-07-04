@@ -29,10 +29,15 @@ public final class CommonConstants {
     /** 用户所属部门 ID Header (网关透传) */
     public static final String HEADER_USER_DEPT = "X-User-Dept-Id";
 
-    /** 默认密码 (admin) */
-    public static final String DEFAULT_PASSWORD = "admin123";
-
-    /** 逻辑删除：未删除 */
+    /**
+     * 逻辑删除：未删除
+     *
+     * <p>注：早期版本曾保留 DEFAULT_PASSWORD = "admin123" 常量，但该值已被
+     * {@link com.njydsz.pmis.common.security.PasswordPolicy} 列入弱密码黑名单，
+     * 二者存在矛盾。该常量在主代码中无任何引用，故移除。
+     * 初始 admin 账号密码由部署脚本（deploy/sql/V1.0.0_001__init_pmis_schema.sql）
+     * 直接以哈希形式注入，并在首次登录时强制修改。
+     */
     public static final int NOT_DELETED = 0;
 
     /** 逻辑删除：已删除 */

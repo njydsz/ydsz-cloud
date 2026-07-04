@@ -33,8 +33,10 @@ async function loadMy() {
   try {
     const res = await pageMyInstances(myQuery)
     if (res.data?.code === 0) {
-      myList.value = res.data.data?.records || []
-      myTotal.value = res.data.data?.total || 0
+      // 后端分页返回 records/total 字段（MyBatis-Plus Page），与前端 PageResult 类型不一致，用类型断言收敛
+      const pageData = res.data?.data as unknown as { records?: FlowInstanceDTO[]; total?: number } | undefined
+      myList.value = pageData?.records || []
+      myTotal.value = pageData?.total || 0
     }
   } finally {
     myLoading.value = false

@@ -247,7 +247,7 @@ public class ABTestAutoRollbackService {
         // 3. 调用 Notifier（若 system 模块未启用则降级为 ERROR 日志）
         ABTestNotifier notifier = notifierProvider.getIfAvailable();
         if (notifier == null) {
-            log.error("[ABAutoRollback-Notify] subject={}, content={}", subject, content);
+            log.warn("[ABAutoRollback-Notify] subject={}, content={}", subject, content);
             return "FALLBACK_LOGGED";
         }
         try {
@@ -255,7 +255,7 @@ public class ABTestAutoRollbackService {
             return "SENT";
         } catch (Exception e) {
             log.warn("[ABAutoRollback] Owner {} 通知失败: {}", owner, e.getMessage());
-            log.error("[ABAutoRollback-Notify] subject={}, content={}", subject, content);
+            log.warn("[ABAutoRollback-Notify] subject={}, content={}", subject, content);
             return "FAILED";
         }
     }

@@ -109,7 +109,7 @@ COMMENT ON COLUMN pmis_dict_type.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_dict_type.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_dict_type.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_dict_type_status ON pmis_dict_type (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_dict_type_status ON pmis_dict_type (status) WHERE deleted = 0;
 
 -- 字典项表
 CREATE TABLE IF NOT EXISTS pmis_dict_item(
@@ -145,8 +145,8 @@ COMMENT ON COLUMN pmis_dict_item.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_dict_item.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_dict_item.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_dict_item_type ON pmis_dict_item (type_code) WHERE deleted = 0;
-CREATE INDEX idx_pmis_dict_item_status ON pmis_dict_item (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_dict_item_type ON pmis_dict_item (type_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_dict_item_status ON pmis_dict_item (status) WHERE deleted = 0;
 
 -- 字典版本表
 CREATE TABLE IF NOT EXISTS pmis_dict_version(
@@ -203,7 +203,7 @@ COMMENT ON COLUMN pmis_role.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_role.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_role.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_role_status ON pmis_role (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_role_status ON pmis_role (status) WHERE deleted = 0;
 
 -- 权限/菜单表
 CREATE TABLE IF NOT EXISTS pmis_permission(
@@ -243,8 +243,8 @@ COMMENT ON COLUMN pmis_permission.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_permission.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_permission.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_permission_parent ON pmis_permission (parent_id);
-CREATE INDEX idx_pmis_permission_type ON pmis_permission (perm_type) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_permission_parent ON pmis_permission (parent_id);
+CREATE INDEX IF NOT EXISTS idx_pmis_permission_type ON pmis_permission (perm_type) WHERE deleted = 0;
 
 -- 用户-角色关联表
 CREATE TABLE IF NOT EXISTS pmis_user_role(
@@ -264,8 +264,8 @@ COMMENT ON COLUMN pmis_user_role.created_by IS '授权人 ID';
 COMMENT ON COLUMN pmis_user_role.created_at IS '授权时间';
 COMMENT ON COLUMN pmis_user_role.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_user_role_user ON pmis_user_role (user_id) WHERE deleted = 0;
-CREATE INDEX idx_pmis_user_role_role ON pmis_user_role (role_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_user_role_user ON pmis_user_role (user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_user_role_role ON pmis_user_role (role_id) WHERE deleted = 0;
 
 -- 角色-权限关联表
 CREATE TABLE IF NOT EXISTS pmis_role_permission(
@@ -325,8 +325,8 @@ COMMENT ON COLUMN pmis_department.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_department.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_department.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_department_parent ON pmis_department (parent_id);
-CREATE INDEX idx_pmis_department_status ON pmis_department (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_department_parent ON pmis_department (parent_id);
+CREATE INDEX IF NOT EXISTS idx_pmis_department_status ON pmis_department (status) WHERE deleted = 0;
 
 -- 岗位表
 CREATE TABLE IF NOT EXISTS pmis_position(
@@ -358,7 +358,7 @@ COMMENT ON COLUMN pmis_position.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_position.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_position.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_position_dept ON pmis_position (department_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_position_dept ON pmis_position (department_id) WHERE deleted = 0;
 
 -- 职级表 (L1-L18)
 CREATE TABLE IF NOT EXISTS pmis_job_level(
@@ -438,8 +438,8 @@ COMMENT ON COLUMN pmis_job_level_rate.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_job_level_rate.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_job_level_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WHERE deleted = 0;
-CREATE INDEX idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
+CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
 
 -- 员工表
 CREATE TABLE IF NOT EXISTS pmis_employee(
@@ -505,10 +505,10 @@ COMMENT ON COLUMN pmis_employee.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_employee.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_employee.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_emp_user ON pmis_employee (user_id);
-CREATE INDEX idx_pmis_emp_dept ON pmis_employee (department_id) WHERE deleted = 0;
-CREATE INDEX idx_pmis_emp_level ON pmis_employee (level_code) WHERE deleted = 0;
-CREATE INDEX idx_pmis_emp_bench ON pmis_employee (bench_status, bench_start) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_emp_user ON pmis_employee (user_id);
+CREATE INDEX IF NOT EXISTS idx_pmis_emp_dept ON pmis_employee (department_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_emp_level ON pmis_employee (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_emp_bench ON pmis_employee (bench_status, bench_start) WHERE deleted = 0;
 
 -- 员工标签表
 CREATE TABLE IF NOT EXISTS pmis_employee_tag(
@@ -529,8 +529,8 @@ COMMENT ON COLUMN pmis_employee_tag.tag_value IS '标签值(中文展示名)';
 COMMENT ON COLUMN pmis_employee_tag.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_employee_tag.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_emp_tag_emp ON pmis_employee_tag (employee_id);
-CREATE INDEX idx_pmis_emp_tag_code ON pmis_employee_tag (tag_code);
+CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_emp ON pmis_employee_tag (employee_id);
+CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_code ON pmis_employee_tag (tag_code);
 
 -- ====================================================================
 -- 4. 用户账号
@@ -574,7 +574,7 @@ COMMENT ON COLUMN pmis_user_account.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_user_account.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_user_account.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_user_status ON pmis_user_account (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_user_status ON pmis_user_account (status) WHERE deleted = 0;
 
 -- ====================================================================
 -- 5. 通知中心
@@ -618,8 +618,8 @@ COMMENT ON COLUMN pmis_notification.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_notification.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_notification.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_notif_receiver ON pmis_notification (receiver_id, read_status) WHERE deleted = 0;
-CREATE INDEX idx_pmis_notif_biz ON pmis_notification (biz_type, biz_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_notif_receiver ON pmis_notification (receiver_id, read_status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_notif_biz ON pmis_notification (biz_type, biz_id) WHERE deleted = 0;
 
 -- ====================================================================
 -- 6. 系统配置
@@ -660,7 +660,7 @@ COMMENT ON COLUMN pmis_config.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_config.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_config.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pmis_config_group ON pmis_config (config_group) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_config_group ON pmis_config (config_group) WHERE deleted = 0;
 
 -- ====================================================================
 -- 7. 操作日志
@@ -702,9 +702,9 @@ COMMENT ON COLUMN pmis_operation_log.status IS '操作状态: SUCCESS 成功 / F
 COMMENT ON COLUMN pmis_operation_log.error_message IS '错误信息(失败时填充)';
 COMMENT ON COLUMN pmis_operation_log.created_at IS '操作时间';
 
-CREATE INDEX idx_pmis_oplog_user ON pmis_operation_log (user_id);
-CREATE INDEX idx_pmis_oplog_module ON pmis_operation_log (module, action);
-CREATE INDEX idx_pmis_oplog_created ON pmis_operation_log (created_at);
+CREATE INDEX IF NOT EXISTS idx_pmis_oplog_user ON pmis_operation_log (user_id);
+CREATE INDEX IF NOT EXISTS idx_pmis_oplog_module ON pmis_operation_log (module, action);
+CREATE INDEX IF NOT EXISTS idx_pmis_oplog_created ON pmis_operation_log (created_at);
 
 -- ====================================================================
 -- 8. 初始化数据
@@ -989,10 +989,10 @@ COMMENT ON COLUMN pmis_job.update_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_job.update_time IS '最后修改时间';
 COMMENT ON COLUMN pmis_job.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE UNIQUE INDEX uk_pmis_job_key ON pmis_job(job_key);
-CREATE INDEX idx_pmis_job_status ON pmis_job(status);
-CREATE INDEX idx_pmis_job_group ON pmis_job(job_group);
-CREATE INDEX idx_pmis_job_tenant ON pmis_job(tenant_id);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_job_key ON pmis_job(job_key);
+CREATE INDEX IF NOT EXISTS idx_pmis_job_status ON pmis_job(status);
+CREATE INDEX IF NOT EXISTS idx_pmis_job_group ON pmis_job(job_group);
+CREATE INDEX IF NOT EXISTS idx_pmis_job_tenant ON pmis_job(tenant_id);
 
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_job_log;
 CREATE TABLE IF NOT EXISTS pmis_job_log(
@@ -1026,10 +1026,10 @@ COMMENT ON COLUMN pmis_job_log.trace_id IS '链路追踪 ID(SkyWalking/TLog)';
 COMMENT ON COLUMN pmis_job_log.create_time IS '日志写入时间';
 COMMENT ON COLUMN pmis_job_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pjl_job_id ON pmis_job_log(job_id);
-CREATE INDEX idx_pjl_job_key ON pmis_job_log(job_key);
-CREATE INDEX idx_pjl_status ON pmis_job_log(status);
-CREATE INDEX idx_pjl_start_time ON pmis_job_log(start_time);
+CREATE INDEX IF NOT EXISTS idx_pjl_job_id ON pmis_job_log(job_id);
+CREATE INDEX IF NOT EXISTS idx_pjl_job_key ON pmis_job_log(job_key);
+CREATE INDEX IF NOT EXISTS idx_pjl_status ON pmis_job_log(status);
+CREATE INDEX IF NOT EXISTS idx_pjl_start_time ON pmis_job_log(start_time);
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_006__init_pmis_job_schema.sql
@@ -1089,11 +1089,11 @@ COMMENT ON COLUMN pmis_message_log.update_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_message_log.update_time IS '最后修改时间';
 COMMENT ON COLUMN pmis_message_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pml_channel ON pmis_message_log(channel);
-CREATE INDEX idx_pml_status ON pmis_message_log(status);
-CREATE INDEX idx_pml_biz ON pmis_message_log(biz_type, biz_id);
-CREATE INDEX idx_pml_receiver ON pmis_message_log(receiver);
-CREATE INDEX idx_pml_tenant ON pmis_message_log(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pml_channel ON pmis_message_log(channel);
+CREATE INDEX IF NOT EXISTS idx_pml_status ON pmis_message_log(status);
+CREATE INDEX IF NOT EXISTS idx_pml_biz ON pmis_message_log(biz_type, biz_id);
+CREATE INDEX IF NOT EXISTS idx_pml_receiver ON pmis_message_log(receiver);
+CREATE INDEX IF NOT EXISTS idx_pml_tenant ON pmis_message_log(tenant_id);
 
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_message_template;
 CREATE TABLE IF NOT EXISTS pmis_message_template(
@@ -1133,9 +1133,9 @@ COMMENT ON COLUMN pmis_message_template.update_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_message_template.update_time IS '最后修改时间';
 COMMENT ON COLUMN pmis_message_template.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE UNIQUE INDEX uk_pmt_code_channel ON pmis_message_template(template_code, channel, tenant_id);
-CREATE INDEX idx_pmt_channel ON pmis_message_template(channel);
-CREATE INDEX idx_pmt_status ON pmis_message_template(status);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pmt_code_channel ON pmis_message_template(template_code, channel, tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pmt_channel ON pmis_message_template(channel);
+CREATE INDEX IF NOT EXISTS idx_pmt_status ON pmis_message_template(status);
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_007__init_pmis_message_schema.sql
@@ -1306,12 +1306,12 @@ COMMENT ON COLUMN pmis_project_opportunity.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_opportunity.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_opportunity.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_ppo_customer   ON pmis_project_opportunity (customer_id);
-CREATE INDEX idx_ppo_owner      ON pmis_project_opportunity (owner_id);
-CREATE INDEX idx_ppo_status     ON pmis_project_opportunity (status);
-CREATE INDEX idx_ppo_level      ON pmis_project_opportunity (level);
-CREATE INDEX idx_ppo_created    ON pmis_project_opportunity (created_at DESC);
-CREATE INDEX idx_ppo_tenant     ON pmis_project_opportunity (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ppo_customer   ON pmis_project_opportunity (customer_id);
+CREATE INDEX IF NOT EXISTS idx_ppo_owner      ON pmis_project_opportunity (owner_id);
+CREATE INDEX IF NOT EXISTS idx_ppo_status     ON pmis_project_opportunity (status);
+CREATE INDEX IF NOT EXISTS idx_ppo_level      ON pmis_project_opportunity (level);
+CREATE INDEX IF NOT EXISTS idx_ppo_created    ON pmis_project_opportunity (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ppo_tenant     ON pmis_project_opportunity (tenant_id);
 
 -- =====================================================
 -- 2. 商机跟进记录 pmis_project_opportunity_follow
@@ -1342,7 +1342,7 @@ COMMENT ON COLUMN pmis_project_opportunity_follow.next_step IS '下一步计划'
 COMMENT ON COLUMN pmis_project_opportunity_follow.next_follow_date IS '下次跟进日期';
 COMMENT ON COLUMN pmis_project_opportunity_follow.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_opportunity_follow.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX idx_ppof_opp ON pmis_project_opportunity_follow (opportunity_id, follow_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ppof_opp ON pmis_project_opportunity_follow (opportunity_id, follow_at DESC);
 
 -- =====================================================
 -- 3. 立项主表 pmis_project_initiation
@@ -1413,12 +1413,12 @@ COMMENT ON COLUMN pmis_project_initiation.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_initiation.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_initiation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_ppi_customer  ON pmis_project_initiation (customer_id);
-CREATE INDEX idx_ppi_stage     ON pmis_project_initiation (stage);
-CREATE INDEX idx_ppi_pm        ON pmis_project_initiation (pm_id);
-CREATE INDEX idx_ppi_opp       ON pmis_project_initiation (opportunity_id);
-CREATE INDEX idx_ppi_tenant    ON pmis_project_initiation (tenant_id);
-CREATE INDEX idx_ppi_created   ON pmis_project_initiation (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ppi_customer  ON pmis_project_initiation (customer_id);
+CREATE INDEX IF NOT EXISTS idx_ppi_stage     ON pmis_project_initiation (stage);
+CREATE INDEX IF NOT EXISTS idx_ppi_pm        ON pmis_project_initiation (pm_id);
+CREATE INDEX IF NOT EXISTS idx_ppi_opp       ON pmis_project_initiation (opportunity_id);
+CREATE INDEX IF NOT EXISTS idx_ppi_tenant    ON pmis_project_initiation (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ppi_created   ON pmis_project_initiation (created_at DESC);
 
 -- =====================================================
 -- 4. 立项预算明细 pmis_project_budget_item
@@ -1455,7 +1455,7 @@ COMMENT ON COLUMN pmis_project_budget_item.sort_order IS '排序号';
 COMMENT ON COLUMN pmis_project_budget_item.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_budget_item.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_budget_item.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX idx_ppbi_init ON pmis_project_budget_item (initiation_id);
+CREATE INDEX IF NOT EXISTS idx_ppbi_init ON pmis_project_budget_item (initiation_id);
 
 -- =====================================================
 -- 5. 门径评审记录 pmis_project_gate_review
@@ -1492,7 +1492,7 @@ COMMENT ON COLUMN pmis_project_gate_review.next_gate IS '下一门径';
 COMMENT ON COLUMN pmis_project_gate_review.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_gate_review.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_gate_review.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX idx_ppgr_init ON pmis_project_gate_review (initiation_id, gate_code);
+CREATE INDEX IF NOT EXISTS idx_ppgr_init ON pmis_project_gate_review (initiation_id, gate_code);
 
 -- =====================================================
 -- 6. 合同主表 pmis_project_contract
@@ -1561,12 +1561,12 @@ COMMENT ON COLUMN pmis_project_contract.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_contract.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_contract.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_ppc_customer  ON pmis_project_contract (customer_id);
-CREATE INDEX idx_ppc_init      ON pmis_project_contract (initiation_id);
-CREATE INDEX idx_ppc_status    ON pmis_project_contract (status);
-CREATE INDEX idx_ppc_sign      ON pmis_project_contract (sign_date);
-CREATE INDEX idx_ppc_risk      ON pmis_project_contract (risk_level);
-CREATE INDEX idx_ppc_tenant    ON pmis_project_contract (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ppc_customer  ON pmis_project_contract (customer_id);
+CREATE INDEX IF NOT EXISTS idx_ppc_init      ON pmis_project_contract (initiation_id);
+CREATE INDEX IF NOT EXISTS idx_ppc_status    ON pmis_project_contract (status);
+CREATE INDEX IF NOT EXISTS idx_ppc_sign      ON pmis_project_contract (sign_date);
+CREATE INDEX IF NOT EXISTS idx_ppc_risk      ON pmis_project_contract (risk_level);
+CREATE INDEX IF NOT EXISTS idx_ppc_tenant    ON pmis_project_contract (tenant_id);
 
 -- =====================================================
 -- 7. 合同补充协议 pmis_project_contract_supplement
@@ -1612,7 +1612,7 @@ COMMENT ON COLUMN pmis_project_contract_supplement.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_contract_supplement.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_contract_supplement.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_contract_supplement.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX idx_ppcs_contract ON pmis_project_contract_supplement (contract_id);
+CREATE INDEX IF NOT EXISTS idx_ppcs_contract ON pmis_project_contract_supplement (contract_id);
 
 -- =====================================================
 -- 8. 合同变更记录 pmis_project_contract_change
@@ -1666,8 +1666,8 @@ COMMENT ON COLUMN pmis_project_contract_change.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_contract_change.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_contract_change.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_contract_change.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX idx_ppcc_contract ON pmis_project_contract_change (contract_id);
-CREATE INDEX idx_ppcc_status   ON pmis_project_contract_change (status);
+CREATE INDEX IF NOT EXISTS idx_ppcc_contract ON pmis_project_contract_change (contract_id);
+CREATE INDEX IF NOT EXISTS idx_ppcc_status   ON pmis_project_contract_change (status);
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_009__init_pmis_project_schema.sql
@@ -1761,12 +1761,12 @@ COMMENT ON COLUMN pmis_execution_wbs_task.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_execution_wbs_task.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_execution_wbs_task.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pewt_initiation ON pmis_execution_wbs_task (initiation_id, deleted);
-CREATE INDEX idx_pewt_parent     ON pmis_execution_wbs_task (parent_id);
-CREATE INDEX idx_pewt_owner      ON pmis_execution_wbs_task (owner_id) WHERE deleted = 0;
-CREATE INDEX idx_pewt_status     ON pmis_execution_wbs_task (status) WHERE deleted = 0;
-CREATE INDEX idx_pewt_milestone  ON pmis_execution_wbs_task (initiation_id, milestone) WHERE deleted = 0;
-CREATE INDEX idx_pewt_trace      ON pmis_execution_wbs_task (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_pewt_initiation ON pmis_execution_wbs_task (initiation_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_pewt_parent     ON pmis_execution_wbs_task (parent_id);
+CREATE INDEX IF NOT EXISTS idx_pewt_owner      ON pmis_execution_wbs_task (owner_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pewt_status     ON pmis_execution_wbs_task (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pewt_milestone  ON pmis_execution_wbs_task (initiation_id, milestone) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pewt_trace      ON pmis_execution_wbs_task (provider_trace_id);
 
 -- =====================================================
 -- 2. 工时录入表 pmis_execution_time_entry
@@ -1827,12 +1827,12 @@ COMMENT ON COLUMN pmis_execution_time_entry.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_execution_time_entry.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_execution_time_entry.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pete_employee  ON pmis_execution_time_entry (employee_id, entry_date DESC);
-CREATE INDEX idx_pete_initiation ON pmis_execution_time_entry (initiation_id, entry_date DESC);
-CREATE INDEX idx_pete_task      ON pmis_execution_time_entry (task_id) WHERE deleted = 0;
-CREATE INDEX idx_pete_status    ON pmis_execution_time_entry (status) WHERE deleted = 0;
-CREATE INDEX idx_pete_level     ON pmis_execution_time_entry (level_code) WHERE deleted = 0;
-CREATE INDEX idx_pete_trace     ON pmis_execution_time_entry (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_pete_employee  ON pmis_execution_time_entry (employee_id, entry_date DESC);
+CREATE INDEX IF NOT EXISTS idx_pete_initiation ON pmis_execution_time_entry (initiation_id, entry_date DESC);
+CREATE INDEX IF NOT EXISTS idx_pete_task      ON pmis_execution_time_entry (task_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pete_status    ON pmis_execution_time_entry (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pete_level     ON pmis_execution_time_entry (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pete_trace     ON pmis_execution_time_entry (provider_trace_id);
 
 -- =====================================================
 -- 3. 成本归集表 pmis_cost_allocation
@@ -1878,11 +1878,11 @@ COMMENT ON COLUMN pmis_cost_allocation.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_cost_allocation.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_cost_allocation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pca_initiation ON pmis_cost_allocation (initiation_id, period);
-CREATE INDEX idx_pca_type       ON pmis_cost_allocation (cost_type) WHERE deleted = 0;
-CREATE INDEX idx_pca_source     ON pmis_cost_allocation (source_type, source_id);
-CREATE INDEX idx_pca_employee   ON pmis_cost_allocation (employee_id) WHERE deleted = 0;
-CREATE INDEX idx_pca_trace      ON pmis_cost_allocation (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_pca_initiation ON pmis_cost_allocation (initiation_id, period);
+CREATE INDEX IF NOT EXISTS idx_pca_type       ON pmis_cost_allocation (cost_type) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pca_source     ON pmis_cost_allocation (source_type, source_id);
+CREATE INDEX IF NOT EXISTS idx_pca_employee   ON pmis_cost_allocation (employee_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pca_trace      ON pmis_cost_allocation (provider_trace_id);
 
 -- =====================================================
 -- 4. 采购成本表 pmis_cost_purchase
@@ -1936,10 +1936,10 @@ COMMENT ON COLUMN pmis_cost_purchase.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_cost_purchase.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_cost_purchase.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pcp_initiation ON pmis_cost_purchase (initiation_id) WHERE deleted = 0;
-CREATE INDEX idx_pcp_status     ON pmis_cost_purchase (status) WHERE deleted = 0;
-CREATE INDEX idx_pcp_applicant  ON pmis_cost_purchase (applicant_id) WHERE deleted = 0;
-CREATE INDEX idx_pcp_trace      ON pmis_cost_purchase (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_pcp_initiation ON pmis_cost_purchase (initiation_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pcp_status     ON pmis_cost_purchase (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pcp_applicant  ON pmis_cost_purchase (applicant_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pcp_trace      ON pmis_cost_purchase (provider_trace_id);
 
 -- =====================================================
 -- 5. 费用报销表 pmis_cost_expense
@@ -1989,10 +1989,10 @@ COMMENT ON COLUMN pmis_cost_expense.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_cost_expense.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_cost_expense.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_pce_initiation ON pmis_cost_expense (initiation_id) WHERE deleted = 0;
-CREATE INDEX idx_pce_employee   ON pmis_cost_expense (employee_id) WHERE deleted = 0;
-CREATE INDEX idx_pce_status     ON pmis_cost_expense (status) WHERE deleted = 0;
-CREATE INDEX idx_pce_trace      ON pmis_cost_expense (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_pce_initiation ON pmis_cost_expense (initiation_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pce_employee   ON pmis_cost_expense (employee_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pce_status     ON pmis_cost_expense (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pce_trace      ON pmis_cost_expense (provider_trace_id);
 
 -- =====================================================
 -- 6. 收入确认表 pmis_profit_revenue
@@ -2044,10 +2044,10 @@ COMMENT ON COLUMN pmis_profit_revenue.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_profit_revenue.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_profit_revenue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX idx_ppr_contract    ON pmis_profit_revenue (contract_id) WHERE deleted = 0;
-CREATE INDEX idx_ppr_initiation  ON pmis_profit_revenue (initiation_id, period) WHERE deleted = 0;
-CREATE INDEX idx_ppr_status      ON pmis_profit_revenue (status) WHERE deleted = 0;
-CREATE INDEX idx_ppr_trace       ON pmis_profit_revenue (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_ppr_contract    ON pmis_profit_revenue (contract_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppr_initiation  ON pmis_profit_revenue (initiation_id, period) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppr_status      ON pmis_profit_revenue (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppr_trace       ON pmis_profit_revenue (provider_trace_id);
 
 -- =====================================================
 -- 7. 项目利润快照表 pmis_profit_snapshot
@@ -2080,9 +2080,9 @@ CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
 COMMENT ON TABLE pmis_profit_snapshot IS '项目利润快照（按月）';
 COMMENT ON COLUMN pmis_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
 
-CREATE INDEX idx_pps_initiation ON pmis_profit_snapshot (initiation_id, period) WHERE deleted = 0;
-CREATE INDEX idx_pps_period     ON pmis_profit_snapshot (period) WHERE deleted = 0;
-CREATE INDEX idx_pps_trace      ON pmis_profit_snapshot (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_pps_initiation ON pmis_profit_snapshot (initiation_id, period) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pps_period     ON pmis_profit_snapshot (period) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pps_trace      ON pmis_profit_snapshot (provider_trace_id);
 
 -- =====================================================
 -- 8. 项目风险登记表 pmis_execution_risk
@@ -2116,10 +2116,10 @@ COMMENT ON TABLE pmis_execution_risk IS '项目风险登记表: 项目执行过�
 COMMENT ON COLUMN pmis_execution_risk.risk_type IS '风险类型: SCOPE 范围 / SCHEDULE 进度 / COST 成本 / QUALITY 质量 / RESOURCE 资源 / EXTERNAL 外部 / OTHER 其他';
 COMMENT ON COLUMN pmis_execution_risk.status IS '风险状态: OPEN 待处理 / MITIGATING 处理中 / CLOSED 已关闭 / OCCURRED 已发生';
 
-CREATE INDEX idx_per_initiation ON pmis_execution_risk (initiation_id) WHERE deleted = 0;
-CREATE INDEX idx_per_status     ON pmis_execution_risk (status) WHERE deleted = 0;
-CREATE INDEX idx_per_level      ON pmis_execution_risk (risk_level) WHERE deleted = 0;
-CREATE INDEX idx_per_trace      ON pmis_execution_risk (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_per_initiation ON pmis_execution_risk (initiation_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_per_status     ON pmis_execution_risk (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_per_level      ON pmis_execution_risk (risk_level) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_per_trace      ON pmis_execution_risk (provider_trace_id);
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_010__init_pmis_execution_schema.sql
@@ -2185,8 +2185,8 @@ COMMENT ON COLUMN pmis_project_contract_template.author_name IS '模板作者姓
 COMMENT ON COLUMN pmis_project_contract_template.remark IS '备注';
 COMMENT ON COLUMN pmis_project_contract_template.tenant_id IS '租户 ID: 多租户隔离';
 COMMENT ON COLUMN pmis_project_contract_template.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_ppct_type_status ON pmis_project_contract_template(contract_type, status);
-CREATE INDEX idx_ppct_tenant ON pmis_project_contract_template(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ppct_type_status ON pmis_project_contract_template(contract_type, status);
+CREATE INDEX IF NOT EXISTS idx_ppct_tenant ON pmis_project_contract_template(tenant_id);
 
 -- =====================================================
 -- 2. 项目变更主表 pmis_project_change
@@ -2257,9 +2257,9 @@ COMMENT ON COLUMN pmis_project_change.remark IS '备注';
 COMMENT ON COLUMN pmis_project_change.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_project_change.provider_trace_id IS '链路追踪 ID: AI 智能体调用时的 trace 标识';
 COMMENT ON COLUMN pmis_project_change.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pch_initiation ON pmis_project_change(initiation_id);
-CREATE INDEX idx_pch_type_status ON pmis_project_change(change_type, status);
-CREATE INDEX idx_pch_major ON pmis_project_change(initiation_id, major_flag);
+CREATE INDEX IF NOT EXISTS idx_pch_initiation ON pmis_project_change(initiation_id);
+CREATE INDEX IF NOT EXISTS idx_pch_type_status ON pmis_project_change(change_type, status);
+CREATE INDEX IF NOT EXISTS idx_pch_major ON pmis_project_change(initiation_id, major_flag);
 
 -- =====================================================
 -- 3. 交付物标准表 pmis_execution_delivery_standard
@@ -2297,8 +2297,8 @@ COMMENT ON COLUMN pmis_execution_delivery_standard.remark IS '备注';
 COMMENT ON COLUMN pmis_execution_delivery_standard.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_execution_delivery_standard.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_execution_delivery_standard.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_peds_type_level ON pmis_execution_delivery_standard(project_type, project_level);
-CREATE INDEX idx_peds_stage ON pmis_execution_delivery_standard(stage);
+CREATE INDEX IF NOT EXISTS idx_peds_type_level ON pmis_execution_delivery_standard(project_type, project_level);
+CREATE INDEX IF NOT EXISTS idx_peds_stage ON pmis_execution_delivery_standard(stage);
 
 -- =====================================================
 -- 4. 交付物实例表 pmis_execution_delivery_item
@@ -2363,9 +2363,9 @@ COMMENT ON COLUMN pmis_execution_delivery_item.remark IS '备注';
 COMMENT ON COLUMN pmis_execution_delivery_item.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_execution_delivery_item.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_execution_delivery_item.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pedi_initiation ON pmis_execution_delivery_item(initiation_id);
-CREATE INDEX idx_pedi_stage ON pmis_execution_delivery_item(initiation_id, stage);
-CREATE INDEX idx_pedi_status ON pmis_execution_delivery_item(status);
+CREATE INDEX IF NOT EXISTS idx_pedi_initiation ON pmis_execution_delivery_item(initiation_id);
+CREATE INDEX IF NOT EXISTS idx_pedi_stage ON pmis_execution_delivery_item(initiation_id, stage);
+CREATE INDEX IF NOT EXISTS idx_pedi_status ON pmis_execution_delivery_item(status);
 
 -- =====================================================
 -- 5. 项目结项主表 pmis_execution_closure
@@ -2444,8 +2444,8 @@ COMMENT ON COLUMN pmis_execution_closure.approval_comment IS '审批意见';
 COMMENT ON COLUMN pmis_execution_closure.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_execution_closure.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_execution_closure.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pec_initiation ON pmis_execution_closure(initiation_id);
-CREATE INDEX idx_pec_type_status ON pmis_execution_closure(closure_type, status);
+CREATE INDEX IF NOT EXISTS idx_pec_initiation ON pmis_execution_closure(initiation_id);
+CREATE INDEX IF NOT EXISTS idx_pec_type_status ON pmis_execution_closure(closure_type, status);
 
 -- =====================================================
 -- 6. AI 智能体预测/推荐结果表 pmis_agent_prediction
@@ -2502,9 +2502,9 @@ COMMENT ON COLUMN pmis_agent_prediction.source IS '调用来源: MANUAL 手动 /
 COMMENT ON COLUMN pmis_agent_prediction.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_agent_prediction.provider_trace_id IS '链路追踪 ID: 端到端 trace';
 COMMENT ON COLUMN pmis_agent_prediction.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pap_biz ON pmis_agent_prediction(biz_type, biz_id);
-CREATE INDEX idx_pap_agent_level ON pmis_agent_prediction(agent_type, alert_level);
-CREATE INDEX idx_pap_status ON pmis_agent_prediction(status);
+CREATE INDEX IF NOT EXISTS idx_pap_biz ON pmis_agent_prediction(biz_type, biz_id);
+CREATE INDEX IF NOT EXISTS idx_pap_agent_level ON pmis_agent_prediction(agent_type, alert_level);
+CREATE INDEX IF NOT EXISTS idx_pap_status ON pmis_agent_prediction(status);
 
 -- =====================================================
 -- 7. 初始化 8 类项目类型的默认交付物标准（CD1-CD5）
@@ -2568,8 +2568,7 @@ VALUES
     ('OTHER', NULL, '项目章程',               'DOC',     'CD1_KICKOFF', 1, 0, 'PMO 评审', 1),
     ('OTHER', NULL, '交付物清单',             'DOC',     'CD2_DESIGN',  1, 0, '客户确认', 1),
     ('OTHER', NULL, '工作成果',               'DOC',     'CD3_BUILD',   1, 0, '内部评审', 1),
-    ('OTHER', NULL, '验收报告',               'DOC',     'CD5_GO_LIVE', 1, 0, '客户签字', 1);
-
+        ('OTHER', NULL, '验收报告',               'DOC',     'CD5_GO_LIVE', 1, 0, '客户签字', 1) ON CONFLICT DO NOTHING;
 -- =====================================================
 -- 8. 初始化 8 类项目类型的默认合同模板
 -- =====================================================
@@ -2583,8 +2582,7 @@ VALUES
     ('TPL-MNT-001',  '运维服务标准合同',          'MAINTENANCE',  '1.0.0', '季付',                                            90, 0.0010, '可用性≥99.9%/故障处理 SLA',         'SLA 协议/月度运维报告',       'PUBLISHED', 1),
     ('TPL-CON-001',  '咨询服务标准合同',          'CONSULTING',   '1.0.0', '5-4-1（启动50%/中期40%/验收10%）',                30, 0.0010, '不限响应时间（按时交付）',          '调研报告/咨询方案/实施报告',   'PUBLISHED', 1),
     ('TPL-TRN-001',  '培训服务标准合同',          'TRAINING',     '1.0.0', '培训前付 50%/结束后 50%',                          0,  0.0010, '培训出勤率≥80%',                    '培训教材/考勤/效果评估',       'PUBLISHED', 1),
-    ('TPL-OTH-001',  '通用合同模板',              'OTHER',        '1.0.0', '5-5（启动50%/验收50%）',                            30, 0.0010, '依项目类型',                       '项目章程/交付物清单/验收报告', 'PUBLISHED', 1);
-
+        ('TPL-OTH-001',  '通用合同模板',              'OTHER',        '1.0.0', '5-5（启动50%/验收50%）',                            30, 0.0010, '依项目类型',                       '项目章程/交付物清单/验收报告', 'PUBLISHED', 1) ON CONFLICT DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_011__init_pmis_batch8_schema.sql
 -- ====================================================================
@@ -2677,12 +2675,12 @@ COMMENT ON COLUMN pmis_finance_invoice.issued_at IS '开票时间';
 COMMENT ON COLUMN pmis_finance_invoice.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_finance_invoice.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_finance_invoice.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pfi_contract ON pmis_finance_invoice(contract_id);
-CREATE INDEX idx_pfi_initiation ON pmis_finance_invoice(initiation_id);
-CREATE INDEX idx_pfi_customer ON pmis_finance_invoice(customer_id);
-CREATE INDEX idx_pfi_status ON pmis_finance_invoice(status, invoice_type);
-CREATE INDEX idx_pfi_invoice_date ON pmis_finance_invoice(invoice_date);
-CREATE INDEX idx_pfi_tax_period ON pmis_finance_invoice(tax_period);
+CREATE INDEX IF NOT EXISTS idx_pfi_contract ON pmis_finance_invoice(contract_id);
+CREATE INDEX IF NOT EXISTS idx_pfi_initiation ON pmis_finance_invoice(initiation_id);
+CREATE INDEX IF NOT EXISTS idx_pfi_customer ON pmis_finance_invoice(customer_id);
+CREATE INDEX IF NOT EXISTS idx_pfi_status ON pmis_finance_invoice(status, invoice_type);
+CREATE INDEX IF NOT EXISTS idx_pfi_invoice_date ON pmis_finance_invoice(invoice_date);
+CREATE INDEX IF NOT EXISTS idx_pfi_tax_period ON pmis_finance_invoice(tax_period);
 
 -- =====================================================
 -- 2. 回款主表 pmis_finance_payment
@@ -2743,12 +2741,12 @@ COMMENT ON COLUMN pmis_finance_payment.recorded_by IS '录入人 ID';
 COMMENT ON COLUMN pmis_finance_payment.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_finance_payment.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_finance_payment.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pfp_contract ON pmis_finance_payment(contract_id);
-CREATE INDEX idx_pfp_initiation ON pmis_finance_payment(initiation_id);
-CREATE INDEX idx_pfp_customer ON pmis_finance_payment(customer_id);
-CREATE INDEX idx_pfp_status ON pmis_finance_payment(status);
-CREATE INDEX idx_pfp_payment_date ON pmis_finance_payment(payment_date);
-CREATE INDEX idx_pfp_unalloc ON pmis_finance_payment(customer_id, status, unallocated_amount);
+CREATE INDEX IF NOT EXISTS idx_pfp_contract ON pmis_finance_payment(contract_id);
+CREATE INDEX IF NOT EXISTS idx_pfp_initiation ON pmis_finance_payment(initiation_id);
+CREATE INDEX IF NOT EXISTS idx_pfp_customer ON pmis_finance_payment(customer_id);
+CREATE INDEX IF NOT EXISTS idx_pfp_status ON pmis_finance_payment(status);
+CREATE INDEX IF NOT EXISTS idx_pfp_payment_date ON pmis_finance_payment(payment_date);
+CREATE INDEX IF NOT EXISTS idx_pfp_unalloc ON pmis_finance_payment(customer_id, status, unallocated_amount);
 
 -- =====================================================
 -- 3. 客户信用表 pmis_finance_customer_credit
@@ -2793,8 +2791,8 @@ COMMENT ON COLUMN pmis_finance_customer_credit.remark IS '备注';
 COMMENT ON COLUMN pmis_finance_customer_credit.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_finance_customer_credit.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_finance_customer_credit.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pfcc_level ON pmis_finance_customer_credit(credit_level, credit_score);
-CREATE INDEX idx_pfcc_tenant ON pmis_finance_customer_credit(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pfcc_level ON pmis_finance_customer_credit(credit_level, credit_score);
+CREATE INDEX IF NOT EXISTS idx_pfcc_tenant ON pmis_finance_customer_credit(tenant_id);
 
 -- =====================================================
 -- 4. 初始数据：信用等级字典（用于前端展示）
@@ -2870,10 +2868,10 @@ COMMENT ON COLUMN pmis_evm_measure.remark IS '备注';
 COMMENT ON COLUMN pmis_evm_measure.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_evm_measure.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_evm_measure.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pem_initiation ON pmis_evm_measure(initiation_id);
-CREATE INDEX idx_pem_wbs ON pmis_evm_measure(wbs_task_id);
-CREATE INDEX idx_pem_period ON pmis_evm_measure(initiation_id, period);
-CREATE INDEX idx_pem_alert ON pmis_evm_measure(alert_level);
+CREATE INDEX IF NOT EXISTS idx_pem_initiation ON pmis_evm_measure(initiation_id);
+CREATE INDEX IF NOT EXISTS idx_pem_wbs ON pmis_evm_measure(wbs_task_id);
+CREATE INDEX IF NOT EXISTS idx_pem_period ON pmis_evm_measure(initiation_id, period);
+CREATE INDEX IF NOT EXISTS idx_pem_alert ON pmis_evm_measure(alert_level);
 
 -- =====================================================
 -- 2. 对外报价费率表 pmis_rate_card
@@ -2914,8 +2912,8 @@ COMMENT ON COLUMN pmis_rate_card.remark IS '备注';
 COMMENT ON COLUMN pmis_rate_card.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rate_card.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_rate_card.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_prc_level ON pmis_rate_card(level_code, project_type, customer_level);
-CREATE INDEX idx_prc_status ON pmis_rate_card(status, effective_date);
+CREATE INDEX IF NOT EXISTS idx_prc_level ON pmis_rate_card(level_code, project_type, customer_level);
+CREATE INDEX IF NOT EXISTS idx_prc_status ON pmis_rate_card(status, effective_date);
 
 -- =====================================================
 -- 3. 对内成本费率表 pmis_rate_internal
@@ -2956,8 +2954,8 @@ COMMENT ON COLUMN pmis_rate_internal.remark IS '备注';
 COMMENT ON COLUMN pmis_rate_internal.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rate_internal.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_rate_internal.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pri_level_dept ON pmis_rate_internal(level_code, department_id);
-CREATE INDEX idx_pri_status ON pmis_rate_internal(status, effective_date);
+CREATE INDEX IF NOT EXISTS idx_pri_level_dept ON pmis_rate_internal(level_code, department_id);
+CREATE INDEX IF NOT EXISTS idx_pri_status ON pmis_rate_internal(status, effective_date);
 
 -- =====================================================
 -- 4. 利润测算版本表 pmis_profit_simulation
@@ -3024,9 +3022,9 @@ COMMENT ON COLUMN pmis_profit_simulation.applicant_name IS '申请人姓名（�
 COMMENT ON COLUMN pmis_profit_simulation.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_profit_simulation.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_profit_simulation.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_psm_initiation ON pmis_profit_simulation(initiation_id);
-CREATE INDEX idx_psm_version ON pmis_profit_simulation(initiation_id, version);
-CREATE INDEX idx_psm_status ON pmis_profit_simulation(status, scenario_type);
+CREATE INDEX IF NOT EXISTS idx_psm_initiation ON pmis_profit_simulation(initiation_id);
+CREATE INDEX IF NOT EXISTS idx_psm_version ON pmis_profit_simulation(initiation_id, version);
+CREATE INDEX IF NOT EXISTS idx_psm_status ON pmis_profit_simulation(status, scenario_type);
 
 -- =====================================================
 -- 5. 初始化 L1-L18 职级默认对外报价费率（基线参考）
@@ -3051,8 +3049,7 @@ VALUES
     ('RC-L15-DEFAULT', 'L15', NULL, NULL, 'DAY', 11000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
     ('RC-L16-DEFAULT', 'L16', NULL, NULL, 'DAY', 13000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
     ('RC-L17-DEFAULT', 'L17', NULL, NULL, 'DAY', 15000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
-    ('RC-L18-DEFAULT', 'L18', NULL, NULL, 'DAY', 18000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init');
-
+        ('RC-L18-DEFAULT', 'L18', NULL, NULL, 'DAY', 18000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
 -- =====================================================
 -- 6. 初始化 L1-L18 职级默认对内成本费率（基线参考）
 -- =====================================================
@@ -3076,8 +3073,7 @@ VALUES
     ('RI-L15-DEFAULT', 'L15', 'DAY',  7300.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
     ('RI-L16-DEFAULT', 'L16', 'DAY',  8500.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
     ('RI-L17-DEFAULT', 'L17', 'DAY', 10000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
-    ('RI-L18-DEFAULT', 'L18', 'DAY', 12000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init');
-
+        ('RI-L18-DEFAULT', 'L18', 'DAY', 12000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_013__init_pmis_evm_schema.sql
 -- ====================================================================
@@ -3130,8 +3126,8 @@ COMMENT ON COLUMN pmis_resource_pool.status IS '状态: ACTIVE 启用 / INACTIVE
 COMMENT ON COLUMN pmis_resource_pool.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_resource_pool.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_resource_pool.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_prp_type_status ON pmis_resource_pool(pool_type, status);
-CREATE INDEX idx_prp_dept ON pmis_resource_pool(department_id);
+CREATE INDEX IF NOT EXISTS idx_prp_type_status ON pmis_resource_pool(pool_type, status);
+CREATE INDEX IF NOT EXISTS idx_prp_dept ON pmis_resource_pool(department_id);
 
 -- =====================================================
 -- 2. 人员标签表 pmis_employee_tag
@@ -3158,8 +3154,8 @@ COMMENT ON COLUMN pmis_employee_tag.employee_id IS '员工 ID';
 COMMENT ON COLUMN pmis_employee_tag.tag_type IS '标签类型: SKILL 技能 / INDUSTRY 行业 / DOMAIN 领域 / CERT 资质';
 COMMENT ON COLUMN pmis_employee_tag.tag_code IS '标签编码: 业务唯一,如 JAVA / BANKING';
 COMMENT ON COLUMN pmis_employee_tag.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pet_emp ON pmis_employee_tag(employee_id);
-CREATE INDEX idx_pet_type ON pmis_employee_tag(tag_type, tag_code);
+CREATE INDEX IF NOT EXISTS idx_pet_emp ON pmis_employee_tag(employee_id);
+CREATE INDEX IF NOT EXISTS idx_pet_type ON pmis_employee_tag(tag_type, tag_code);
 
 -- =====================================================
 -- 3. 资源分配主表 pmis_resource_assignment
@@ -3212,10 +3208,10 @@ COMMENT ON COLUMN pmis_resource_assignment.daily_hours IS '日均工时(小时):
 COMMENT ON COLUMN pmis_resource_assignment.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_resource_assignment.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_resource_assignment.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pra_emp ON pmis_resource_assignment(employee_id);
-CREATE INDEX idx_pra_initiation ON pmis_resource_assignment(initiation_id);
-CREATE INDEX idx_pra_status ON pmis_resource_assignment(status);
-CREATE INDEX idx_pra_pool ON pmis_resource_assignment(pool_id, status);
+CREATE INDEX IF NOT EXISTS idx_pra_emp ON pmis_resource_assignment(employee_id);
+CREATE INDEX IF NOT EXISTS idx_pra_initiation ON pmis_resource_assignment(initiation_id);
+CREATE INDEX IF NOT EXISTS idx_pra_status ON pmis_resource_assignment(status);
+CREATE INDEX IF NOT EXISTS idx_pra_pool ON pmis_resource_assignment(pool_id, status);
 
 -- =====================================================
 -- 4. Bench 闲置记录表 pmis_bench_record
@@ -3264,10 +3260,10 @@ COMMENT ON COLUMN pmis_bench_record.remark IS '备注';
 COMMENT ON COLUMN pmis_bench_record.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_bench_record.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_bench_record.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pbr_emp ON pmis_bench_record(employee_id);
-CREATE INDEX idx_pbr_status ON pmis_bench_record(status, bench_date);
-CREATE INDEX idx_pbr_pool ON pmis_bench_record(pool_id, status);
-CREATE INDEX idx_pbr_date ON pmis_bench_record(bench_date, exit_date);
+CREATE INDEX IF NOT EXISTS idx_pbr_emp ON pmis_bench_record(employee_id);
+CREATE INDEX IF NOT EXISTS idx_pbr_status ON pmis_bench_record(status, bench_date);
+CREATE INDEX IF NOT EXISTS idx_pbr_pool ON pmis_bench_record(pool_id, status);
+CREATE INDEX IF NOT EXISTS idx_pbr_date ON pmis_bench_record(bench_date, exit_date);
 
 -- =====================================================
 -- 5. 初始化三级资源池（HQ/DIVISION/RESERVE）
@@ -3278,8 +3274,7 @@ VALUES
     ('POOL-HQ-GLOBAL',        '总部高级资源池',   'HQ',       1, '总部',  'L13+', 0, 0, 'ACTIVE', 1, 'init'),
     ('POOL-DIV-CONSULTING',   '咨询事业部池',    'DIVISION', 2, '咨询事业部', 'L4-L12', 0, 0, 'ACTIVE', 1, 'init'),
     ('POOL-DIV-IMPL',         '实施事业部池',    'DIVISION', 3, '实施事业部', 'L4-L12', 0, 0, 'ACTIVE', 1, 'init'),
-    ('POOL-RESERVE-TRAINING', '储备培训池',      'RESERVE',  1, '总部',  'L1-L3', 0, 0, 'ACTIVE', 1, 'init');
-
+        ('POOL-RESERVE-TRAINING', '储备培训池',      'RESERVE',  1, '总部',  'L1-L3', 0, 0, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
 
 -- [AUTO-MIGRATION] pmis_employee_tag: rebuild pattern detected.
 --   The V1 base table was created by an earlier Flyway
@@ -4264,8 +4259,7 @@ VALUES (
     'NORMAL',
     '每 5 分钟扫描 PENDING/FAILED 预警并重发，超过 maxRetry 后保持 FAILED',
     1
-);
-
+) ON CONFLICT DO NOTHING;
 -- ---------- P6-1 每日自动对账 ----------
 INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
 VALUES (
@@ -4277,8 +4271,7 @@ VALUES (
     'NORMAL',
     '每日 02:00 校验成本/收入/开票/回款/工时/利润 6 维度双向一致性，落库 pmis_reconcile_daily',
     1
-);
-
+) ON CONFLICT DO NOTHING;
 -- ---------- P7-3 售后巡检 ----------
 INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, status, remark, tenant_id)
 VALUES (
@@ -4290,8 +4283,7 @@ VALUES (
     'NORMAL',
     '每日 03:00 扫描即将到期/已过期质保期 + 运维工单 SLA 违约',
     1
-);
-
+) ON CONFLICT DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_021__register_pmis_smart_jobs.sql
 -- ====================================================================
@@ -4435,11 +4427,11 @@ COMMENT ON COLUMN pmis_flow_definition.status IS '状态: ENABLED 启用 / DISAB
 COMMENT ON COLUMN pmis_flow_definition.deleted IS '逻辑删除: 0=未删除,1=已删除';
 COMMENT ON COLUMN pmis_flow_definition.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
 
-CREATE UNIQUE INDEX uk_pfd_code_version ON pmis_flow_definition(flow_code, version, tenant_id) WHERE deleted = 0;
-CREATE INDEX        idx_pfd_category    ON pmis_flow_definition(category);
-CREATE INDEX        idx_pfd_publish     ON pmis_flow_definition(is_publish);
-CREATE INDEX        idx_pfd_tenant      ON pmis_flow_definition(tenant_id);
-CREATE INDEX        idx_pfd_status      ON pmis_flow_definition(status) WHERE deleted = 0;
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfd_code_version ON pmis_flow_definition(flow_code, version, tenant_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfd_category    ON pmis_flow_definition(category);
+CREATE INDEX IF NOT EXISTS idx_pfd_publish     ON pmis_flow_definition(is_publish);
+CREATE INDEX IF NOT EXISTS idx_pfd_tenant      ON pmis_flow_definition(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pfd_status      ON pmis_flow_definition(status) WHERE deleted = 0;
 
 -- -----------------------------------------------------
 -- 2. 流程节点表（对标 Warm-Flow flow_node）
@@ -4482,10 +4474,10 @@ COMMENT ON COLUMN pmis_flow_node.ext IS '扩展字段 JSON';
 COMMENT ON COLUMN pmis_flow_node.status IS '状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_node.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
-CREATE UNIQUE INDEX uk_pfn_def_code ON pmis_flow_node(definition_id, node_code) WHERE deleted = 0;
-CREATE INDEX        idx_pfn_def     ON pmis_flow_node(definition_id);
-CREATE INDEX        idx_pfn_code    ON pmis_flow_node(flow_code);
-CREATE INDEX        idx_pfn_type    ON pmis_flow_node(node_type);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfn_def_code ON pmis_flow_node(definition_id, node_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfn_def     ON pmis_flow_node(definition_id);
+CREATE INDEX IF NOT EXISTS idx_pfn_code    ON pmis_flow_node(flow_code);
+CREATE INDEX IF NOT EXISTS idx_pfn_type    ON pmis_flow_node(node_type);
 
 -- -----------------------------------------------------
 -- 3. 节点跳转关联表（对标 Warm-Flow flow_skip）
@@ -4528,9 +4520,9 @@ COMMENT ON COLUMN pmis_flow_skip.skip_list IS '跳转路由集合 JSON';
 COMMENT ON COLUMN pmis_flow_skip.status IS '状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_skip.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
-CREATE INDEX idx_pfs_def    ON pmis_flow_skip(definition_id);
-CREATE INDEX idx_pfs_code   ON pmis_flow_skip(flow_code);
-CREATE INDEX idx_pfs_type   ON pmis_flow_skip(skip_type);
+CREATE INDEX IF NOT EXISTS idx_pfs_def    ON pmis_flow_skip(definition_id);
+CREATE INDEX IF NOT EXISTS idx_pfs_code   ON pmis_flow_skip(flow_code);
+CREATE INDEX IF NOT EXISTS idx_pfs_type   ON pmis_flow_skip(skip_type);
 
 -- -----------------------------------------------------
 -- 4. 流程实例表（对标 Warm-Flow flow_instance）
@@ -4592,13 +4584,13 @@ COMMENT ON COLUMN pmis_flow_instance.deleted IS '逻辑删除: 0=未删除,1=已
 -- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_finance_invoice) 的
 --      索引同名 (idx_pfi_status),触发"关系已存在"报错。改为
 --      flow_instance_ 前缀以彻底避免跨模块索引名冲突。
-CREATE UNIQUE INDEX uk_flow_instance_biz ON pmis_flow_instance(business_type, business_id) WHERE deleted = 0;
-CREATE INDEX        idx_flow_instance_def         ON pmis_flow_instance(definition_id);
-CREATE INDEX        idx_flow_instance_code        ON pmis_flow_instance(flow_code);
-CREATE INDEX        idx_flow_instance_status      ON pmis_flow_instance(flow_status);
-CREATE INDEX        idx_flow_instance_initiator   ON pmis_flow_instance(initiator_id);
-CREATE INDEX        idx_flow_instance_tenant      ON pmis_flow_instance(tenant_id);
-CREATE INDEX        idx_flow_instance_start       ON pmis_flow_instance(start_at);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_flow_instance_biz ON pmis_flow_instance(business_type, business_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_flow_instance_def         ON pmis_flow_instance(definition_id);
+CREATE INDEX IF NOT EXISTS idx_flow_instance_code        ON pmis_flow_instance(flow_code);
+CREATE INDEX IF NOT EXISTS idx_flow_instance_status      ON pmis_flow_instance(flow_status);
+CREATE INDEX IF NOT EXISTS idx_flow_instance_initiator   ON pmis_flow_instance(initiator_id);
+CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant      ON pmis_flow_instance(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_flow_instance_start       ON pmis_flow_instance(start_at);
 
 -- -----------------------------------------------------
 -- 5. 待办任务表（对标 Warm-Flow flow_task）
@@ -4675,14 +4667,14 @@ COMMENT ON COLUMN pmis_flow_task.due_at IS '截止时间: SLA 预警依据';
 COMMENT ON COLUMN pmis_flow_task.priority IS 'P1-1: 任务优先级(1-100,默认50),待办默认按 priority DESC, created_at ASC 排序';
 COMMENT ON COLUMN pmis_flow_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
-CREATE INDEX idx_pft_instance   ON pmis_flow_task(instance_id);
-CREATE INDEX idx_pft_assignee   ON pmis_flow_task(assignee_id, task_status);
-CREATE INDEX idx_pft_node       ON pmis_flow_task(node_code);
-CREATE INDEX idx_pft_biz        ON pmis_flow_task(business_type, business_id);
-CREATE INDEX idx_pft_status     ON pmis_flow_task(task_status);
-CREATE INDEX idx_pft_tenant     ON pmis_flow_task(tenant_id);
-CREATE INDEX idx_pft_create     ON pmis_flow_task(created_at);
-CREATE INDEX idx_pft_due        ON pmis_flow_task(due_at) WHERE task_status = 'PENDING';
+CREATE INDEX IF NOT EXISTS idx_pft_instance   ON pmis_flow_task(instance_id);
+CREATE INDEX IF NOT EXISTS idx_pft_assignee   ON pmis_flow_task(assignee_id, task_status);
+CREATE INDEX IF NOT EXISTS idx_pft_node       ON pmis_flow_task(node_code);
+CREATE INDEX IF NOT EXISTS idx_pft_biz        ON pmis_flow_task(business_type, business_id);
+CREATE INDEX IF NOT EXISTS idx_pft_status     ON pmis_flow_task(task_status);
+CREATE INDEX IF NOT EXISTS idx_pft_tenant     ON pmis_flow_task(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pft_create     ON pmis_flow_task(created_at);
+CREATE INDEX IF NOT EXISTS idx_pft_due        ON pmis_flow_task(due_at) WHERE task_status = 'PENDING';
 
 -- -----------------------------------------------------
 -- 6. 历史任务表（对标 Warm-Flow flow_his_task）
@@ -4751,11 +4743,11 @@ COMMENT ON COLUMN pmis_flow_his_task.finish_at IS '完成时间';
 COMMENT ON COLUMN pmis_flow_his_task.duration_ms IS '处理耗时(毫秒)';
 COMMENT ON COLUMN pmis_flow_his_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
-CREATE INDEX idx_pfht_instance   ON pmis_flow_his_task(instance_id);
-CREATE INDEX idx_pfht_assignee   ON pmis_flow_his_task(assignee_id, task_status);
-CREATE INDEX idx_pfht_biz        ON pmis_flow_his_task(business_type, business_id);
-CREATE INDEX idx_pfht_finish     ON pmis_flow_his_task(finish_at);
-CREATE INDEX idx_pfht_tenant     ON pmis_flow_his_task(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pfht_instance   ON pmis_flow_his_task(instance_id);
+CREATE INDEX IF NOT EXISTS idx_pfht_assignee   ON pmis_flow_his_task(assignee_id, task_status);
+CREATE INDEX IF NOT EXISTS idx_pfht_biz        ON pmis_flow_his_task(business_type, business_id);
+CREATE INDEX IF NOT EXISTS idx_pfht_finish     ON pmis_flow_his_task(finish_at);
+CREATE INDEX IF NOT EXISTS idx_pfht_tenant     ON pmis_flow_his_task(tenant_id);
 
 -- -----------------------------------------------------
 -- 7. 流程用户表（对标 Warm-Flow flow_user）
@@ -4796,9 +4788,9 @@ COMMENT ON COLUMN pmis_flow_user.comment IS '处理意见';
 COMMENT ON COLUMN pmis_flow_user.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_user.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
-CREATE UNIQUE INDEX uk_pfu_task_user ON pmis_flow_user(task_id, user_id, user_type) WHERE deleted = 0;
-CREATE INDEX        idx_pfu_instance ON pmis_flow_user(instance_id);
-CREATE INDEX        idx_pfu_user     ON pmis_flow_user(user_id, processed);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfu_task_user ON pmis_flow_user(task_id, user_id, user_type) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfu_instance ON pmis_flow_user(instance_id);
+CREATE INDEX IF NOT EXISTS idx_pfu_user     ON pmis_flow_user(user_id, processed);
 
 -- =====================================================
 -- 初始化数据：PMIS 业务流定义
@@ -4965,13 +4957,13 @@ COMMENT ON COLUMN pmis_flow_audit_log.deleted IS '逻辑删除: 0=未删除,1=�
 COMMENT ON COLUMN pmis_flow_audit_log.tenant_id IS '租户 ID(默认 1)';
 COMMENT ON COLUMN pmis_flow_audit_log.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
 
-CREATE INDEX idx_pfal_instance   ON pmis_flow_audit_log(instance_id);
-CREATE INDEX idx_pfal_task       ON pmis_flow_audit_log(task_id);
-CREATE INDEX idx_pfal_operator   ON pmis_flow_audit_log(operator_id);
-CREATE INDEX idx_pfal_biz        ON pmis_flow_audit_log(business_type, business_id);
-CREATE INDEX idx_pfal_action     ON pmis_flow_audit_log(action);
-CREATE INDEX idx_pfal_operated   ON pmis_flow_audit_log(operated_at);
-CREATE INDEX idx_pfal_tenant     ON pmis_flow_audit_log(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pfal_instance   ON pmis_flow_audit_log(instance_id);
+CREATE INDEX IF NOT EXISTS idx_pfal_task       ON pmis_flow_audit_log(task_id);
+CREATE INDEX IF NOT EXISTS idx_pfal_operator   ON pmis_flow_audit_log(operator_id);
+CREATE INDEX IF NOT EXISTS idx_pfal_biz        ON pmis_flow_audit_log(business_type, business_id);
+CREATE INDEX IF NOT EXISTS idx_pfal_action     ON pmis_flow_audit_log(action);
+CREATE INDEX IF NOT EXISTS idx_pfal_operated   ON pmis_flow_audit_log(operated_at);
+CREATE INDEX IF NOT EXISTS idx_pfal_tenant     ON pmis_flow_audit_log(tenant_id);
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_025__add_pmis_flow_audit_log.sql
@@ -5043,16 +5035,16 @@ COMMENT ON COLUMN pmis_flow_cc.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_flow_cc.deleted IS '逻辑删除标记 0=未删 1=已删';
 
 -- 索引：抄送中心查询优化
-CREATE INDEX idx_pmis_flow_cc_tenant_user
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_tenant_user
     ON pmis_flow_cc (tenant_id, cc_user_id, read_status, deleted)
     WHERE deleted = 0;
-CREATE INDEX idx_pmis_flow_cc_instance
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_instance
     ON pmis_flow_cc (tenant_id, instance_id, deleted)
     WHERE deleted = 0;
-CREATE INDEX idx_pmis_flow_cc_biz
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_biz
     ON pmis_flow_cc (tenant_id, business_key, deleted)
     WHERE deleted = 0;
-CREATE INDEX idx_pmis_flow_cc_created
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_created
     ON pmis_flow_cc (tenant_id, created_at DESC)
     WHERE deleted = 0;
 
@@ -5079,7 +5071,7 @@ COMMENT ON COLUMN pmis_flow_cc_rule.rule_type IS '规则类型：USER/ROLE/DEPT/
 COMMENT ON COLUMN pmis_flow_cc_rule.rule_target IS '规则目标：用户/角色/部门/SpEL 表达式';
 COMMENT ON COLUMN pmis_flow_cc_rule.enabled IS '是否启用 0=停用 1=启用';
 
-CREATE INDEX idx_pmis_flow_cc_rule_tenant
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_tenant
     ON pmis_flow_cc_rule (tenant_id, flow_code, node_code, deleted)
     WHERE deleted = 0;
 
@@ -5254,12 +5246,12 @@ COMMENT ON COLUMN pmis_flow_timer.timer_status IS 'PENDING 待执行 / FIRED 已
 COMMENT ON COLUMN pmis_flow_timer.fire_at IS '到点时间，扫描器按此字段选取待执行记录';
 
 -- 索引：扫描器按 fire_at + status 选取
-CREATE INDEX idx_pmis_flow_timer_scan ON pmis_flow_timer (timer_status, fire_at)
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_scan ON pmis_flow_timer (timer_status, fire_at)
     WHERE deleted = 0;
 -- 索引：实例维度查询
-CREATE INDEX idx_pmis_flow_timer_instance ON pmis_flow_timer (instance_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_instance ON pmis_flow_timer (instance_id, deleted);
 -- 索引：边界定时器反向关联 userTask
-CREATE INDEX idx_pmis_flow_timer_boundary ON pmis_flow_timer (boundary_task_id)
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_boundary ON pmis_flow_timer (boundary_task_id)
     WHERE boundary_task_id IS NOT NULL;
 
 -- -------------------------------------------
@@ -5363,22 +5355,22 @@ COMMENT ON COLUMN pmis_flow_delegate_auth.provider_trace_id IS '链路追踪 ID'
 COMMENT ON COLUMN pmis_flow_delegate_auth.deleted IS '逻辑删除标记';
 
 -- 索引：按 owner 查询我的授权记录
-CREATE INDEX idx_pmis_flow_delegate_auth_owner
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_owner
     ON pmis_flow_delegate_auth (tenant_id, owner_user_id, auth_status, deleted)
     WHERE deleted = 0;
 
 -- 索引：按 delegate 查询代理给我的任务（创建任务时反向匹配）
-CREATE INDEX idx_pmis_flow_delegate_auth_delegate
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_delegate
     ON pmis_flow_delegate_auth (tenant_id, delegate_user_id, auth_status, deleted)
     WHERE deleted = 0;
 
 -- 索引：按生效时间扫描待生效/已过期记录
-CREATE INDEX idx_pmis_flow_delegate_auth_time
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_time
     ON pmis_flow_delegate_auth (tenant_id, start_time, end_time, deleted)
     WHERE deleted = 0;
 
 -- 索引：按流程编码匹配（创建任务时）
-CREATE INDEX idx_pmis_flow_delegate_auth_flow
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_flow
     ON pmis_flow_delegate_auth (tenant_id, flow_code, auth_status, deleted)
     WHERE deleted = 0;
 
@@ -5412,13 +5404,13 @@ COMMENT ON COLUMN pmis_flow_delegate_log.op_type IS '操作类型：ACT=办理 /
 COMMENT ON COLUMN pmis_flow_delegate_log.action IS '办理动作：PASS/REJECT/CLAIM/TRANSFER';
 COMMENT ON COLUMN pmis_flow_delegate_log.comment IS '办理意见';
 
-CREATE INDEX idx_pmis_flow_delegate_log_auth
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_auth
     ON pmis_flow_delegate_log (tenant_id, auth_id, deleted)
     WHERE deleted = 0;
-CREATE INDEX idx_pmis_flow_delegate_log_task
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_task
     ON pmis_flow_delegate_log (tenant_id, task_id, deleted)
     WHERE deleted = 0;
-CREATE INDEX idx_pmis_flow_delegate_log_delegate
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_delegate
     ON pmis_flow_delegate_log (tenant_id, delegate_user_id, created_at DESC)
     WHERE deleted = 0;
 
@@ -5461,8 +5453,8 @@ COMMENT ON COLUMN pmis_report_subscription.channels IS '推送渠道，逗号分
 COMMENT ON COLUMN pmis_report_subscription.recipients IS '接收人邮箱，逗号分隔';
 COMMENT ON COLUMN pmis_report_subscription.enabled IS '是否启用 (1=启用, 0=停用)';
 
-CREATE INDEX idx_report_subscriber ON pmis_report_subscription (subscriber_id);
-CREATE INDEX idx_report_type_freq ON pmis_report_subscription (report_type, frequency) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_report_subscriber ON pmis_report_subscription (subscriber_id);
+CREATE INDEX IF NOT EXISTS idx_report_type_freq ON pmis_report_subscription (report_type, frequency) WHERE deleted = 0;
 
 -- 报表导出记录表
 CREATE TABLE IF NOT EXISTS pmis_report_export_record (
@@ -5485,7 +5477,7 @@ COMMENT ON COLUMN pmis_report_export_record.file_url IS '下载 URL';
 COMMENT ON COLUMN pmis_report_export_record.status IS '状态 (PENDING/GENERATING/SENT/FAILED)';
 COMMENT ON COLUMN pmis_report_export_record.error_message IS '错误信息';
 
-CREATE INDEX idx_report_export_status ON pmis_report_export_record (status) WHERE completed_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_report_export_status ON pmis_report_export_record (status) WHERE completed_at IS NULL;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_031__init_report_subscription.sql
@@ -5524,8 +5516,7 @@ VALUES (
     'NORMAL',
     '每日 08:00 生成驾驶舱/EVM/利润/利用率/Bench/风险日报并分发到订阅人',
     1
-);
-
+) ON CONFLICT DO NOTHING;
 -- ---------- 周报表生成与分发 ----------
 INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
@@ -5538,8 +5529,7 @@ VALUES (
     'NORMAL',
     '每周一 08:00 生成周报表并分发到订阅人',
     1
-);
-
+) ON CONFLICT DO NOTHING;
 -- ---------- 月报表生成与分发 ----------
 INSERT INTO pmis_job (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id)
 VALUES (
@@ -5552,8 +5542,7 @@ VALUES (
     'NORMAL',
     '每月 1 日 08:00 生成月报表并分发到订阅人',
     1
-);
-
+) ON CONFLICT DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_032__register_report_jobs.sql
 -- ====================================================================
@@ -5678,8 +5667,7 @@ VALUES (
     'NORMAL',
     '数据一致性校验（发票vs回款、预算vs成本、WBSvs工时）',
     1
-);
-
+) ON CONFLICT DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_035__register_consistency_job.sql
 -- ====================================================================
@@ -5729,8 +5717,8 @@ COMMENT ON COLUMN pmis_export_record.error_message IS '错误信息';
 COMMENT ON COLUMN pmis_export_record.completed_at IS '完成时间';
 COMMENT ON COLUMN pmis_export_record.expired_at IS '过期时间';
 
-CREATE INDEX idx_export_user ON pmis_export_record (user_id) WHERE deleted = 0;
-CREATE INDEX idx_export_status ON pmis_export_record (status) WHERE completed_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_export_user ON pmis_export_record (user_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_export_status ON pmis_export_record (status) WHERE completed_at IS NULL;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_036__init_export_record.sql
@@ -5784,13 +5772,13 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_instance(
 COMMENT ON TABLE  pmis_flow_his_instance IS '流程实例归档表: 已完成且超过 retention 天数的实例迁移至此';
 COMMENT ON COLUMN pmis_flow_his_instance.archived_at IS '归档时间';
 
-CREATE INDEX idx_pfhi_business   ON pmis_flow_his_instance(business_type, business_id);
-CREATE INDEX idx_pfhi_flow_code  ON pmis_flow_his_instance(flow_code);
-CREATE INDEX idx_pfhi_flow_status ON pmis_flow_his_instance(flow_status);
-CREATE INDEX idx_pfhi_initiator  ON pmis_flow_his_instance(initiator_id);
-CREATE INDEX idx_pfhi_end_at     ON pmis_flow_his_instance(end_at);
-CREATE INDEX idx_pfhi_tenant     ON pmis_flow_his_instance(tenant_id);
-CREATE INDEX idx_pfhi_archived_at ON pmis_flow_his_instance(archived_at);
+CREATE INDEX IF NOT EXISTS idx_pfhi_business   ON pmis_flow_his_instance(business_type, business_id);
+CREATE INDEX IF NOT EXISTS idx_pfhi_flow_code  ON pmis_flow_his_instance(flow_code);
+CREATE INDEX IF NOT EXISTS idx_pfhi_flow_status ON pmis_flow_his_instance(flow_status);
+CREATE INDEX IF NOT EXISTS idx_pfhi_initiator  ON pmis_flow_his_instance(initiator_id);
+CREATE INDEX IF NOT EXISTS idx_pfhi_end_at     ON pmis_flow_his_instance(end_at);
+CREATE INDEX IF NOT EXISTS idx_pfhi_tenant     ON pmis_flow_his_instance(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pfhi_archived_at ON pmis_flow_his_instance(archived_at);
 
 -- 归档变量表（用于归档 instance 时同步迁移 variable 字段中的大 JSON）
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_his_variable;
@@ -5804,8 +5792,8 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_variable(
 
 COMMENT ON TABLE pmis_flow_his_variable IS '流程变量归档表: instance.variable JSON 拆分到独立行';
 
-CREATE INDEX idx_pfhv_instance ON pmis_flow_his_variable(instance_id);
-CREATE INDEX idx_pfhv_key      ON pmis_flow_his_variable(instance_id, var_key);
+CREATE INDEX IF NOT EXISTS idx_pfhv_instance ON pmis_flow_his_variable(instance_id);
+CREATE INDEX IF NOT EXISTS idx_pfhv_key      ON pmis_flow_his_variable(instance_id, var_key);
 
 -- 归档统计视图（管理员可见：实例总数/已归档/未归档）
 -- [SKIPPED-CLEANUP] DROP VIEW IF EXISTS pmis_view_flow_archive_stats;
@@ -5937,9 +5925,9 @@ COMMENT ON COLUMN pmis_attendance.remark IS '备注';
 COMMENT ON COLUMN pmis_attendance.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_attendance.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_attendance.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pa_emp ON pmis_attendance(employee_id);
-CREATE INDEX idx_pa_date ON pmis_attendance(attendance_date);
-CREATE INDEX idx_pa_status ON pmis_attendance(status);
+CREATE INDEX IF NOT EXISTS idx_pa_emp ON pmis_attendance(employee_id);
+CREATE INDEX IF NOT EXISTS idx_pa_date ON pmis_attendance(attendance_date);
+CREATE INDEX IF NOT EXISTS idx_pa_status ON pmis_attendance(status);
 
 -- =====================================================
 -- 2. 加班申请表 pmis_overtime
@@ -5989,9 +5977,9 @@ COMMENT ON COLUMN pmis_overtime.approval_remark IS '审批意见';
 COMMENT ON COLUMN pmis_overtime.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_overtime.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_overtime.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pot_emp ON pmis_overtime(employee_id);
-CREATE INDEX idx_pot_date ON pmis_overtime(overtime_date);
-CREATE INDEX idx_pot_status ON pmis_overtime(approval_status);
+CREATE INDEX IF NOT EXISTS idx_pot_emp ON pmis_overtime(employee_id);
+CREATE INDEX IF NOT EXISTS idx_pot_date ON pmis_overtime(overtime_date);
+CREATE INDEX IF NOT EXISTS idx_pot_status ON pmis_overtime(approval_status);
 
 -- =====================================================
 -- 3. 请假申请表 pmis_leave
@@ -6039,10 +6027,10 @@ COMMENT ON COLUMN pmis_leave.approval_remark IS '审批意见';
 COMMENT ON COLUMN pmis_leave.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_leave.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_leave.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX idx_pl_emp ON pmis_leave(employee_id);
-CREATE INDEX idx_pl_date ON pmis_leave(start_date, end_date);
-CREATE INDEX idx_pl_type ON pmis_leave(leave_type);
-CREATE INDEX idx_pl_status ON pmis_leave(approval_status);
+CREATE INDEX IF NOT EXISTS idx_pl_emp ON pmis_leave(employee_id);
+CREATE INDEX IF NOT EXISTS idx_pl_date ON pmis_leave(start_date, end_date);
+CREATE INDEX IF NOT EXISTS idx_pl_type ON pmis_leave(leave_type);
+CREATE INDEX IF NOT EXISTS idx_pl_status ON pmis_leave(approval_status);
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_039__init_pmis_attendance_schema.sql
@@ -6404,7 +6392,7 @@ INSERT INTO pmis_rule_test_case (name, rule_code, facts_data, expected_triggered
 ('利用率低于70%', 'UTILIZATION_LOW',
  '{"avgBillableUtilization": 0.65, "activeProjects": 5}',
  '["UTILIZATION_LOW"]',
- '利用率65%且有活跃项目，应触发');
+  '利用率65%且有活跃项目，应触发') ON CONFLICT DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_042__init_pmis_rule_test_case.sql
 -- ====================================================================
@@ -7033,10 +7021,10 @@ CREATE INDEX IF NOT EXISTS idx_pmis_utilization_dept_period
 --  4) 预警 / 对账（4.2.2/4.2.3）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_recipient
-    ON pmis_alert_dispatch (recipient_id, sent_at DESC)
+    ON pmis_alert_dispatch (target_role, sent_at DESC)
     WHERE status IN ('PENDING', 'FAILED');
 CREATE INDEX IF NOT EXISTS idx_pmis_alert_dispatch_retry
-    ON pmis_alert_dispatch (next_retry_at)
+    ON pmis_alert_dispatch (retry_count, sent_at DESC)
     WHERE status = 'FAILED' AND retry_count < 3;
 -- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_reconcile_daily_period
 -- [SKIPPED-FWD-REF]     ON pmis_daily_reconcile (period DESC, status);
@@ -7063,9 +7051,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_agent_prediction_trace
 --  6) 财务对账（voucher / payment / invoice）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_status_issued
-    ON pmis_finance_invoice (status, issued_at DESC);
+    ON pmis_finance_invoice (status, invoice_date DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_invoice_customer_status
-    ON pmis_finance_invoice (customer_id, status, issued_at DESC);
+    ON pmis_finance_invoice (customer_id, status, invoice_date DESC);
 CREATE INDEX IF NOT EXISTS idx_pmis_payment_unallocated
     ON pmis_finance_payment (contract_id, status)
     WHERE status IN ('RECEIVED', 'PARTIAL');
@@ -7080,7 +7068,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_audit_log_brin_created
     ON pmis_operation_log USING BRIN (created_at)
     WITH (pages_per_range = 32);
 CREATE INDEX IF NOT EXISTS idx_pmis_message_log_brin_sent
-    ON pmis_message_log USING BRIN (sent_at)
+    ON pmis_message_log USING BRIN (create_time)
     WITH (pages_per_range = 32);
 CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
     ON pmis_operation_log USING BRIN (created_at)
@@ -7090,7 +7078,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
 --  8) 表达式索引（状态名/类型名查询）
 -- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_pmis_initiation_status_lower
-    ON pmis_project_initiation (lower(status));
+    ON pmis_project_initiation (lower(stage));
 CREATE INDEX IF NOT EXISTS idx_pmis_change_status_lower
     ON pmis_project_change (lower(status));
 
@@ -7592,11 +7580,32 @@ ANALYZE pmis_rule_test_case;
 --     shared_preload_libraries 中预加载后才可创建扩展
 --   - uuid-ossp / pgcrypto 无需 preload
 --   - 此脚本在已创建扩展的环境中执行会返回 NOTICE 而非 ERROR（IF NOT EXISTS）
+--   - pg_hint_plan / pg_stat_statements 在某些环境（如 PG18 或未配置 preload）
+--     不可用，使用 DO 块容错，避免阻断主流程
 -- ============================================================
 
-CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
-CREATE EXTENSION IF NOT EXISTS pg_hint_plan;
+-- pg_stat_statements: 需 shared_preload_libraries 预加载, 未加载时跳过
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_stat_statements;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'pg_stat_statements 不可用, 跳过: %', SQLERRM;
+END $$;
+
+-- pg_hint_plan: 仅 PG 12-16 可用, PG18 不支持, 跳过
+DO $$
+BEGIN
+    CREATE EXTENSION IF NOT EXISTS pg_hint_plan;
+EXCEPTION
+    WHEN OTHERS THEN
+        RAISE NOTICE 'pg_hint_plan 不可用, 跳过: %', SQLERRM;
+END $$;
+
+-- uuid-ossp: 无需 preload, 标准扩展
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- pgcrypto: 无需 preload, 标准扩展
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 -- ====================================================================

@@ -54,6 +54,8 @@ interface Props {
   rowKey?: string
   /** 是否开启复选框选择列 */
   checkbox?: boolean
+  /** 复选框可选判断方法：返回 false 则该行不可勾选（对应 el-table :selectable） */
+  checkMethod?: (row: Record<string, unknown>) => boolean
   /** 加载态 */
   loading?: boolean
 }
@@ -77,7 +79,9 @@ const tableConfig = computed<VxeTableProps>(() => ({
   scrollY: { enabled: true, gt: 50 },
   columnConfig: { resizable: true },
   radioConfig: { highlight: true },
-  checkboxConfig: props.checkbox ? { highlight: true, range: true } : undefined,
+  checkboxConfig: props.checkbox
+    ? { highlight: true, range: true, checkMethod: props.checkMethod }
+    : undefined,
   loading: props.loading,
 }))
 

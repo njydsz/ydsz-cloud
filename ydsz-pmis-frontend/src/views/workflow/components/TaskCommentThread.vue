@@ -6,13 +6,14 @@
  */
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { ChatLineRound, Delete, Position } from '@element-plus/icons-vue'
+import { Delete, Position } from '@element-plus/icons-vue'
 import {
   listInstanceComments,
   addTaskComment,
   deleteTaskComment,
 } from '@/api/workflow'
 import type { TaskCommentDTO } from '@/api/workflow/types'
+import type { ApiResponse } from '@/types/api'
 
 const props = defineProps<{
   instanceId: number
@@ -44,7 +45,8 @@ async function loadComments() {
   loading.value = true
   try {
     const res = await listInstanceComments(props.instanceId)
-    comments.value = res.data ?? []
+    // 拦截器已解包 AxiosResponse，运行时 res 即 ApiResponse<TaskCommentDTO[]>
+    comments.value = (res as unknown as ApiResponse<TaskCommentDTO[]>).data ?? []
   } catch {
     ElMessage.error('加载评论失败')
   } finally {
@@ -126,14 +128,14 @@ function formatTime(time?: string): string {
   return time.replace('T', ' ').substring(0, 16)
 }
 
-function typeTag(type: string): string {
+function typeTag(type: string): 'info' | 'primary' | 'success' | 'warning' | 'danger' | undefined {
   switch (type) {
     case 'QUESTION':
       return 'warning'
     case 'REPLY':
       return 'info'
     default:
-      return ''
+      return undefined
   }
 }
 

@@ -6,11 +6,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RulePack;
-import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import com.njydsz.pmis.project.entity.RulePackDO;
 import com.njydsz.pmis.project.entity.RulePackInstallDO;
-import com.njydsz.pmis.project.mapper.RuleDefinitionMapper;
 import com.njydsz.pmis.project.mapper.RulePackInstallMapper;
 import com.njydsz.pmis.project.mapper.RulePackMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +27,7 @@ import java.util.List;
  * 规则集 Service（P2-14）
  *
  * <p>提供规则集（RulePack）的市场发布、查询、安装、版本管理等能力。
- * 安装过程：从 pack 中提取 rule_codes 列表，逐条调用 {@link RuleAdminService} 创建/更新规则。
+ * 安装过程：从 pack 中提取 rule_codes 列表，通过 {@link RuleConfigProvider} 加载规则定义。
  *
  * @author ydsz-pmis-team
  * @since 1.5.0
@@ -41,11 +39,7 @@ public class RulePackService {
 
     private final RulePackMapper rulePackMapper;
     private final RulePackInstallMapper rulePackInstallMapper;
-    @SuppressWarnings("unused")
-    private final RuleDefinitionMapper ruleDefinitionMapper;
     private final RuleConfigProvider ruleConfigProvider;
-    @SuppressWarnings("unused")
-    private final RuleAdminService ruleAdminService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 

@@ -1,12 +1,12 @@
 package com.njydsz.pmis.workflow.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.engine.FlowNotificationHelper;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowSlaAction;
-import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
@@ -48,8 +48,6 @@ public class FlowSlaServiceImpl implements FlowSlaService {
 
     private final FlowTaskMapper taskMapper;
     private final FlowNodeMapper nodeMapper;
-    @SuppressWarnings("unused")
-    private final FlowInstanceMapper instanceMapper;
     /** P1-6: 用 @Lazy 打破 FlowSlaService ↔ FlowTaskService 循环依赖 */
     @org.springframework.context.annotation.Lazy
     private final FlowTaskService taskService;
@@ -72,8 +70,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             return Collections.emptyMap();
         }
         try {
-            @SuppressWarnings("unchecked")
-            Map<String, Object> map = JSON.parseObject(slaConfigJson, Map.class);
+            Map<String, Object> map = JsonUtils.parseMap(slaConfigJson);
             return map == null ? Collections.emptyMap() : map;
         } catch (Exception e) {
             log.warn("[FlowSla] 解析 slaConfig 失败: {} err={}", slaConfigJson, e.getMessage());

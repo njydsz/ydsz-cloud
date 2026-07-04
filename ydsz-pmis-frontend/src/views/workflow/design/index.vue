@@ -186,7 +186,7 @@ async function doSimulate() {
 }
 
 // ==================== 结果标签颜色 ====================
-function stepTagType(result: string): string {
+function stepTagType(result: string): 'info' | 'primary' | 'success' | 'warning' | 'danger' | undefined {
   switch (result) {
     case 'PASS':
       return 'success'
@@ -289,13 +289,13 @@ function categoryLabel(cat?: string): string {
   return found?.label || cat || '通用'
 }
 
-function categoryTagType(cat?: string): string {
+function categoryTagType(cat?: string): 'info' | 'primary' | 'success' | 'warning' | 'danger' | undefined {
   switch (cat) {
     case 'HR': return 'danger'
     case 'FINANCE': return 'warning'
     case 'ADMIN': return 'info'
     case 'PROJECT': return 'success'
-    default: return ''
+    default: return undefined
   }
 }
 
@@ -327,7 +327,7 @@ async function doAiGenerate() {
       ElMessage.success('流程生成成功，已加载到设计器')
       aiGenerateDialog.value = false
       // 将生成的 BPMN XML 加载到 BPMN 设计器（通过 ref 调用）
-      bpmnDesignerRef.value?.importXml(res.data.data.bpmnXml)
+      ;(bpmnDesignerRef.value as unknown as { importXml: (xml: string) => void } | null)?.importXml(res.data.data.bpmnXml)
     } else {
       ElMessage.error(res.data?.message || '生成失败')
     }
@@ -454,7 +454,7 @@ onMounted(() => {
               type="primary"
               link
               size="small"
-              @click="handleSwitchVersion(row)"
+              @click="handleSwitchVersion(row as FlowVersionDTO)"
             >
               设为激活
             </el-button>

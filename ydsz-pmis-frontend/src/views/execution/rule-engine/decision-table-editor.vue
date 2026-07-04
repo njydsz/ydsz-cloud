@@ -315,11 +315,11 @@ async function save() {
       })),
       defaultActions: parseRowActions(defaultActionText.value),
     }
-    // 3. 调 updateRule
-    const updateRes = await ruleApi.updateRule(ruleCode.value, {
+    // 3. 调 saveRule（决策表数据通过扩展字段一并提交给后端）
+    const updateRes = await ruleApi.saveRule({
       ...(await ruleApi.getRule(ruleCode.value)).data,
       decisionTable,
-    })
+    } as unknown as RuleDefinition)
     if (updateRes.code === 0) {
       ElMessage.success('保存成功')
     } else {
@@ -331,11 +331,11 @@ async function save() {
 }
 
 async function dryRun() {
-  // 命中预览：把所有条件 → row 用通配符 '*' 填，跑一次 simulate
+  // 命中预览：把所有条件 → row 用通配符 '*' 填，跑一次 dryRun
   const input: Record<string, any> = {}
   // 用户暂不输入事实，仅展示当前表的结构
   try {
-    const res = await ruleApi.simulateRule(ruleCode.value, input)
+    const res = await ruleApi.dryRun(ruleCode.value, input)
     previewResult.value = res.data
     previewVisible.value = true
   } catch (e: any) {

@@ -27,8 +27,10 @@ async function loadDone() {
   try {
     const res = await pageDoneTasks(doneQuery)
     if (res.data?.code === 0) {
-      doneList.value = res.data.data?.records || []
-      doneTotal.value = res.data.data?.total || 0
+      // 后端分页返回 records/total 字段（MyBatis-Plus Page），与前端 PageResult 类型不一致，用类型断言收敛
+      const pageData = res.data?.data as unknown as { records?: FlowTaskDTO[]; total?: number } | undefined
+      doneList.value = pageData?.records || []
+      doneTotal.value = pageData?.total || 0
     }
   } finally {
     doneLoading.value = false

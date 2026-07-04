@@ -231,7 +231,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch, type Component } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Refresh,
@@ -360,7 +360,7 @@ const actionButtons = computed(() => {
   if (!view.value) return []
   const map: Record<
     string,
-    { type: string; icon: unknown; label: string }
+    { type: '' | 'default' | 'primary' | 'success' | 'warning' | 'info' | 'danger' | 'text'; icon: Component | undefined; label: string }
   > = {
     PASS: { type: 'primary', icon: Check, label: '通过' },
     REJECT: { type: 'danger', icon: Close, label: '驳回' },
@@ -372,7 +372,7 @@ const actionButtons = computed(() => {
   }
   return (view.value.actions || []).map((a) => ({
     action: a,
-    ...(map[a] || { type: 'default', icon: null, label: a }),
+    ...(map[a] || { type: 'default' as const, icon: undefined, label: a }),
   }))
 })
 
@@ -387,7 +387,7 @@ const loadPanel = async () => {
       businessId: props.businessId,
     })
     // 拦截器返回 ApiResponse（含 code/data），但 mock 可能直接返回 payload
-    const apiResp = resp as { data?: EmbeddedApprovalViewType; code?: number }
+    const apiResp = resp as unknown as { data?: EmbeddedApprovalViewType; code?: number }
     const data = apiResp?.data ?? (resp as unknown as EmbeddedApprovalViewType)
     view.value = data || null
   } catch (e) {
@@ -531,7 +531,7 @@ const handleAiRecommend = async () => {
         name: t.assigneeName,
       })),
     })
-    const data = (resp as { data?: Array<Record<string, unknown>> }).data
+    const data = (resp as unknown as { data?: Array<Record<string, unknown>> }).data
     const list = data ?? (resp as unknown as Array<Record<string, unknown>>)
     aiResult.value = list && list.length
       ? list
@@ -558,7 +558,7 @@ const handleAiDraft = async () => {
       nodeName: view.value?.diagram?.currentNodeName as string,
       title: view.value?.instance?.title as string,
     })
-    const data = (resp as { data?: { primary: string; alternatives: string[] } }).data
+    const data = (resp as unknown as { data?: { primary: string; alternatives: string[] } }).data
     const result = data ?? (resp as unknown as { primary: string; alternatives: string[] })
     if (result?.primary) {
       commentDraft.value = result.primary

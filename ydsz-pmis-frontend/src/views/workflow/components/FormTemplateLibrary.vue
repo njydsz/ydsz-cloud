@@ -15,9 +15,9 @@
  */
 import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { FORM_TEMPLATES, filterTemplatesByCategory, TEMPLATE_CATEGORIES, type FormTemplate } from '../form-design/templates'
+import { filterTemplatesByCategory, TEMPLATE_CATEGORIES, type FormTemplate } from '../form-design/templates'
 
-const props = defineProps<{
+defineProps<{
   visible: boolean
 }>()
 

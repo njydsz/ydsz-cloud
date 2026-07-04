@@ -11,19 +11,16 @@
  *   5. 模型导出：保存为 JSON + 后端转换为 BPMN XML
  *   6. 流程模板：内置 4 套（立项/变更/结项/通用）
  */
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   CirclePlus,
   CircleCheck,
   Select,
-  Share,
-  Bell,
   Filter,
   Stopwatch,
   Connection,
   Position,
-  VideoPlay,
   Promotion,
 } from '@element-plus/icons-vue'
 import { deployDefinition } from '@/api/workflow'
@@ -329,7 +326,7 @@ function onNodeMouseDown(e: MouseEvent, n: DesignerNode) {
   drawState.value.isDragging = true
   drawState.value.dragNode = n
   // 转换为 SVG viewBox 坐标
-  const svg = (e.currentTarget as HTMLElement).ownerSVGElement
+  const svg = (e.currentTarget as SVGElement).ownerSVGElement
   if (!svg) return
   const pt = svg.createSVGPoint()
   pt.x = e.clientX

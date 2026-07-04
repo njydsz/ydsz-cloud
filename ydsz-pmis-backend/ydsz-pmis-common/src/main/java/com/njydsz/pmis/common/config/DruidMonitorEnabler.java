@@ -1,7 +1,7 @@
 package com.njydsz.pmis.common.config;
 
 import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
+import org.springframework.boot.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
@@ -26,16 +26,11 @@ import java.util.Map;
  * <p>覆盖策略：业务服务可在自身 application.yml 中显式设置同名属性覆盖默认值，
  * 例如启用监控页面：{@code spring.datasource.druid.stat-view-servlet.enabled=true}（必须同时配置 login-username/password）。
  *
- * <p>注册：{@code META-INF/spring/org.springframework.boot.env.EnvironmentPostProcessor.imports}
- *
- * <p>注：{@code EnvironmentPostProcessor} 在 Spring Boot 4.0+ 标记为 for-removal，
- * 但当前仍为唯一稳定的「在 SpringApplication 启动前注入默认配置」的官方扩展点。
- * 待 Spring Boot 提供正式替代 API 后再迁移。
+ * <p>注册：{@code META-INF/spring/org.springframework.boot.EnvironmentPostProcessor.imports}
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@SuppressWarnings("removal")
 public class DruidMonitorEnabler implements EnvironmentPostProcessor {
 
     /** 默认慢 SQL 阈值（毫秒），与 PostgreSQL log_min_duration_statement=500ms 对齐（取 1000ms 平衡噪音与可视性） */

@@ -955,7 +955,7 @@ const statCards = computed(() => [
         </el-table-column>
         <el-table-column :label="t('workflow.monitor.anomaly.colAction')" width="100" fixed="right">
           <template #default="{ row }">
-            <el-button size="small" text type="primary" @click="goInstance(row)">{{ t('workflow.monitor.buttons.viewDetail') }}</el-button>
+            <el-button size="small" text type="primary" @click="goInstance(row as AnomalyInstanceDTO)">{{ t('workflow.monitor.buttons.viewDetail') }}</el-button>
           </template>
         </el-table-column>
       </el-table>

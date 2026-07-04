@@ -344,25 +344,4 @@ public class AuthServiceImpl implements AuthService {
         redisTemplate.delete(LOGIN_FAIL_PREFIX + username);
     }
 
-    /**
-     * 将时间戳转换为本地日期时间
-     *
-     * @param ts 毫秒时间戳
-     * @return 本地日期时间
-     */
-    @SuppressWarnings("unused")
-    private static LocalDateTime toLocalTime(long ts) {
-        return LocalDateTime.ofInstant(Instant.ofEpochMilli(ts), ZoneId.systemDefault());
-    }
-
-    /**
-     * 将可能为 null 的列表转换为空列表
-     *
-     * @param v 原始列表
-     * @return 非 null 列表
-     */
-    @SuppressWarnings("unused")
-    private static List<String> emptyIfNull(List<String> v) {
-        return v == null ? List.of() : v;
-    }
 }

@@ -12,8 +12,9 @@
  * 状态: PENDING -> CONFIRMED -> ALLOCATED / CANCELLED
  * 核销：支持多发票分摊，余额耗尽自动转 ALLOCATED
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -25,6 +26,8 @@ import {
 } from '@/api/execution/payment'
 import type { PaymentVO, PaymentCreateDTO, PaymentAllocationDTO } from '@/api/execution/payment/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 /** 列表加载状态 */
 const loading = ref(false)
@@ -47,20 +50,20 @@ const query = reactive({
 })
 
 /** 回款状态 → 标签/样式映射 */
-const statusMap = {
-  PENDING: { label: '待确认', type: 'warning' as const },
-  CONFIRMED: { label: '已确认', type: 'primary' as const },
-  ALLOCATED: { label: '已核销', type: 'success' as const },
-  CANCELLED: { label: '已取消', type: 'info' as const },
-}
+const statusMap = computed(() => ({
+  PENDING: { label: t('finance.payment.status.PENDING'), type: 'warning' as const },
+  CONFIRMED: { label: t('finance.payment.status.CONFIRMED'), type: 'primary' as const },
+  ALLOCATED: { label: t('finance.payment.status.ALLOCATED'), type: 'success' as const },
+  CANCELLED: { label: t('finance.payment.status.CANCELLED'), type: 'info' as const },
+}))
 
 /** 支付方式 → 中文标签映射 */
-const methodMap = {
-  BANK_TRANSFER: { label: '银行转账' },
-  CHECK: { label: '支票' },
-  CASH: { label: '现金' },
-  OTHER: { label: '其他' },
-}
+const methodMap = computed(() => ({
+  BANK_TRANSFER: { label: t('finance.payment.method.BANK_TRANSFER') },
+  CHECK: { label: t('finance.payment.method.CHECK') },
+  CASH: { label: t('finance.payment.method.CASH') },
+  OTHER: { label: t('finance.payment.method.OTHER') },
+}))
 
 /** 分页查询回款列表 */
 async function fetchList() {
@@ -108,12 +111,12 @@ const form = reactive<Partial<PaymentCreateDTO>>({
 })
 
 /** 表单校验规则 */
-const formRules = {
-  paymentCode: [{ required: true, message: '回款单号必填', trigger: 'blur' }],
-  customerId: [{ required: true, message: '客户 ID 必填', trigger: 'blur' }],
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  amount: [{ required: true, message: '金额必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  paymentCode: [{ required: true, message: t('finance.payment.rules.codeRequired'), trigger: 'blur' }],
+  customerId: [{ required: true, message: t('finance.payment.rules.customerIdRequired'), trigger: 'blur' }],
+  initiationId: [{ required: true, message: t('finance.payment.rules.initiationIdRequired'), trigger: 'blur' }],
+  amount: [{ required: true, message: t('finance.payment.rules.amountRequired'), trigger: 'blur' }],
+}))
 
 /** 打开新增弹窗并重置表单为默认值 */
 function openCreate() {
@@ -140,7 +143,7 @@ async function submitForm() {
     submitting.value = true
     await formRef.value?.validate()
     await createPayment(form as PaymentCreateDTO)
-    ElMessage.success('已创建')
+    ElMessage.success(t('finance.payment.messages.created'))
     dialogVisible.value = false
     fetchList()
   } catch {
@@ -156,11 +159,11 @@ async function submitForm() {
  * @param target 目标状态
  */
 async function handleStatus(row: PaymentVO, target: string) {
-  const targetText = (statusMap as any)[target]?.label || target
+  const targetText = (statusMap.value as any)[target]?.label || target
   try {
-    await ElMessageBox.confirm(`确认将状态变更为「${targetText}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('finance.payment.messages.statusConfirmPrompt', { target: targetText }), t('common.tip'), { type: 'warning' })
     await changePaymentStatus(row.id, target, 1, '系统')
-    ElMessage.success('状态已更新')
+    ElMessage.success(t('finance.payment.messages.statusUpdated'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -185,18 +188,18 @@ function openAllocate(row: PaymentVO) {
 /** 提交核销，将回款金额分摊到指定发票 */
 async function submitAllocate() {
   if (!allocForm.invoiceId || !allocForm.amount) {
-    ElMessage.warning('请填写发票 ID 和金额')
+    ElMessage.warning(t('finance.payment.messages.allocPrompt'))
     return
   }
   // H17.1 修复：allocating 防重复提交
   try {
     allocating.value = true
     await allocatePayment(allocForm)
-    ElMessage.success('核销成功')
+    ElMessage.success(t('finance.payment.messages.allocSuccess'))
     allocDialogVisible.value = false
     fetchList()
   } catch (e: any) {
-    ElMessage.error(e?.message || '核销失败')
+    ElMessage.error(e?.message || t('finance.payment.messages.allocFailed'))
   } finally {
     allocating.value = false
   }
@@ -208,9 +211,9 @@ async function submitAllocate() {
  */
 async function handleDelete(row: PaymentVO) {
   try {
-    await ElMessageBox.confirm(`确认删除该回款？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('finance.payment.messages.deletePrompt'), t('common.tip'), { type: 'warning' })
     await deletePayment(row.id)
-    ElMessage.success('已删除')
+    ElMessage.success(t('finance.payment.messages.deleted'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -233,91 +236,91 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="单号/银行流水" clearable aria-label="搜索关键字" @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">
+      <el-form-item :label="t('finance.payment.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('finance.payment.search.keywordPlaceholder')" clearable :aria-label="t('common.search')" @clear="query.page = 1; fetchList()" @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
+      <el-form-item :label="t('finance.payment.search.status')">
+        <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="项目 ID"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
+      <el-form-item :label="t('finance.payment.search.initiationId')"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
     </template>
 
     <template #toolbar>
       <el-button v-permission="[PC.FINANCE_PAYMENT_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新增回款
+        {{ t('finance.payment.buttons.create') }}
       </el-button>
     </template>
 
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="paymentCode" title="单号" width="160" />
-        <vxe-column field="customerName" title="客户" width="160" show-overflow />
-        <vxe-column field="initiationName" title="项目" width="160" show-overflow />
-        <vxe-column field="amount" title="金额" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="unallocatedAmount" title="未核销" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="paymentMethod" title="方式" width="100">
+        <vxe-column field="paymentCode" :title="t('finance.payment.columns.code')" width="160" />
+        <vxe-column field="customerName" :title="t('finance.payment.columns.customer')" width="160" show-overflow />
+        <vxe-column field="initiationName" :title="t('finance.payment.columns.project')" width="160" show-overflow />
+        <vxe-column field="amount" :title="t('finance.payment.columns.amount')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="unallocatedAmount" :title="t('finance.payment.columns.unallocated')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="paymentMethod" :title="t('finance.payment.columns.method')" width="100">
           <template #default="{ row }">{{ methodMap[row.paymentMethod as keyof typeof methodMap]?.label || row.paymentMethod || '-' }}</template>
         </vxe-column>
-        <vxe-column field="paymentDate" title="到账日期" width="110" />
-        <vxe-column field="bankRef" title="银行流水" width="160" />
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="paymentDate" :title="t('finance.payment.columns.paymentDate')" width="110" />
+        <vxe-column field="bankRef" :title="t('finance.payment.columns.bankRef')" width="160" />
+        <vxe-column field="status" :title="t('finance.payment.columns.status')" width="100">
           <template #default="{ row }"><StatusTag :value="row.status" :map="statusMap" /></template>
         </vxe-column>
-        <vxe-column title="操作" width="280" fixed="right">
+        <vxe-column :title="t('finance.payment.columns.action')" width="280" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'PENDING'" link type="primary" size="small" @click="handleStatus(row, 'CONFIRMED')">确认</el-button>
-            <el-button v-if="row.status === 'CONFIRMED'" v-permission="[PC.FINANCE_PAYMENT_ALLOCATE]" link type="success" size="small" @click="openAllocate(row)">核销</el-button>
-            <el-button v-if="['PENDING', 'CONFIRMED'].includes(row.status || '')" link type="info" size="small" @click="handleStatus(row, 'CANCELLED')">取消</el-button>
-            <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+            <el-button v-if="row.status === 'PENDING'" link type="primary" size="small" @click="handleStatus(row, 'CONFIRMED')">{{ t('finance.payment.buttons.confirm') }}</el-button>
+            <el-button v-if="row.status === 'CONFIRMED'" v-permission="[PC.FINANCE_PAYMENT_ALLOCATE]" link type="success" size="small" @click="openAllocate(row)">{{ t('finance.payment.buttons.allocate') }}</el-button>
+            <el-button v-if="['PENDING', 'CONFIRMED'].includes(row.status || '')" link type="info" size="small" @click="handleStatus(row, 'CANCELLED')">{{ t('finance.payment.buttons.cancel') }}</el-button>
+            <el-button link type="danger" size="small" @click="handleDelete(row)">{{ t('finance.payment.buttons.delete') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
-    <el-dialog v-model="dialogVisible" title="新增回款" width="520px">
+    <el-dialog v-model="dialogVisible" :title="t('finance.payment.dialog.createTitle')" width="520px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="回款单号" prop="paymentCode"><el-input v-model="form.paymentCode" /></el-form-item>
+        <el-form-item :label="t('finance.payment.form.code')" prop="paymentCode"><el-input v-model="form.paymentCode" /></el-form-item>
         <el-row :gutter="16">
-          <el-col :xs="24" :sm="12"><el-form-item label="客户 ID" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12"><el-form-item label="客户名称"><el-input v-model="form.customerName" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.payment.form.customerId')" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.payment.form.customerName')"><el-input v-model="form.customerName" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :xs="24" :sm="12"><el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12"><el-form-item label="合同 ID"><el-input-number v-model="form.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.payment.form.initiationId')" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.payment.form.contractId')"><el-input-number v-model="form.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :xs="24" :sm="12"><el-form-item label="金额" prop="amount"><el-input-number v-model="form.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :xs="24" :sm="12"><el-form-item label="支付方式"><el-select v-model="form.paymentMethod" style="width: 100%"><el-option v-for="(v, k) in methodMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.payment.form.amount')" prop="amount"><el-input-number v-model="form.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :xs="24" :sm="12"><el-form-item :label="t('finance.payment.form.method')"><el-select v-model="form.paymentMethod" style="width: 100%"><el-option v-for="(v, k) in methodMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
         </el-row>
-        <el-form-item label="到账日期">
+        <el-form-item :label="t('finance.payment.form.paymentDate')">
           <el-date-picker v-model="form.paymentDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="银行账号"><el-input v-model="form.bankAccount" /></el-form-item>
-        <el-form-item label="银行流水"><el-input v-model="form.bankRef" /></el-form-item>
-        <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item :label="t('finance.payment.form.bankAccount')"><el-input v-model="form.bankAccount" /></el-form-item>
+        <el-form-item :label="t('finance.payment.form.bankRef')"><el-input v-model="form.bankRef" /></el-form-item>
+        <el-form-item :label="t('finance.payment.form.remark')"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
 
-    <el-dialog v-model="allocDialogVisible" title="回款核销" width="480px">
+    <el-dialog v-model="allocDialogVisible" :title="t('finance.payment.dialog.allocateTitle')" width="480px">
       <el-alert v-if="allocPayment" type="info" :closable="false" show-icon style="margin-bottom: 12px">
-        回款单号: {{ allocPayment.paymentCode }} | 剩余可核销: ¥{{ Number(allocPayment.unallocatedAmount ?? allocPayment.amount).toLocaleString() }}
+        {{ t('finance.payment.allocInfo', { code: allocPayment.paymentCode, amount: `¥${Number(allocPayment.unallocatedAmount ?? allocPayment.amount).toLocaleString()}` }) }}
       </el-alert>
       <el-form :model="allocForm" label-width="100px">
-        <el-form-item label="发票 ID">
+        <el-form-item :label="t('finance.payment.allocForm.invoiceId')">
           <el-input-number v-model="allocForm.invoiceId" :min="1" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="核销金额">
+        <el-form-item :label="t('finance.payment.allocForm.amount')">
           <el-input-number v-model="allocForm.amount" :min="0" :controls="false" style="width: 100%" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="allocDialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="allocating" @click="submitAllocate">确认核销</el-button>
+        <el-button @click="allocDialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="allocating" @click="submitAllocate">{{ t('finance.payment.messages.allocateConfirm') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

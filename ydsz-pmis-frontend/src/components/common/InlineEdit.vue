@@ -78,12 +78,13 @@ const cancelEdit = () => {
   editValue.value = props.modelValue ?? ''
 }
 
-const handleKeydown = (e: KeyboardEvent) => {
-  if (e.key === 'Enter') {
-    e.preventDefault()
+const handleKeydown = (e: Event | KeyboardEvent) => {
+  const ke = e as KeyboardEvent
+  if (ke.key === 'Enter') {
+    ke.preventDefault()
     commitEdit()
-  } else if (e.key === 'Escape') {
-    e.preventDefault()
+  } else if (ke.key === 'Escape') {
+    ke.preventDefault()
     cancelEdit()
   }
 }

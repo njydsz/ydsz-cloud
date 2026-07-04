@@ -1,6 +1,7 @@
 package com.njydsz.pmis.workflow.engine;
 
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.util.JsonUtils;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
@@ -198,12 +199,11 @@ public class FlowGraphValidator {
     /**
      * 从 FlowSkipDO.ext 中提取 sourceRef
      */
-    @SuppressWarnings("unchecked")
     private String extractSourceRef(FlowSkipDO skip) {
         // 优先从 ext JSON 的 sourceRef 字段获取
         if (StringUtils.hasText(skip.getExt())) {
             try {
-                Map<String, Object> ext = JSON.parseObject(skip.getExt(), Map.class);
+                Map<String, Object> ext = JsonUtils.parseMap(skip.getExt());
                 if (ext != null) {
                     Object src = ext.get("sourceRef");
                     if (src != null) {

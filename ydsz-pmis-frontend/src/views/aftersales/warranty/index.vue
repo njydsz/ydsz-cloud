@@ -83,8 +83,8 @@ const isEmpty = computed(() => !loading.value && list.value.length === 0)
 const selectedRows = ref<WarrantyVO[]>([])
 
 /** 表格勾选行变更回调，同步本地选中列表 */
-function onSelectionChange({ rows }: { rows: WarrantyVO[] }) {
-  selectedRows.value = rows
+function onSelectionChange({ records }: { records: WarrantyVO[] }) {
+  selectedRows.value = records
 }
 
 /** 新增质保期弹窗显隐 */

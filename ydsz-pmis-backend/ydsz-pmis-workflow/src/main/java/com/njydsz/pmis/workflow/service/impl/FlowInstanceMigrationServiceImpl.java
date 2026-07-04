@@ -10,10 +10,12 @@ import com.njydsz.pmis.workflow.dto.InstanceMigrationResultDTO.MigrationDetail;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
+import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
+import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceMigrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,9 @@ import java.util.stream.Collectors;
  * <p>当流程定义更新（新版本部署）后，将运行中实例迁移到新版本：
  * 更新 definitionId / flowVersion，并按节点映射调整 currentNodeCode。
  *
+ * <p>P3-3 增强：实例迁移成功后同步更新该实例下未完成的待办任务（pmis_flow_task）的
+ * definitionId / nodeCode / nodeName，避免迁移后待办任务仍指向旧定义导致办理异常。
+ *
  * <p>注意：{@link #migrate(InstanceMigrationDTO)} 不加 {@code @Transactional}，
  * 以支持"逐实例防御式迁移"——单个实例失败不影响其他实例的已成功写入，
  * 失败明细记录在结果报告中，便于人工重试。
@@ -50,6 +55,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     private final FlowInstanceMapper instanceMapper;
     private final FlowNodeMapper nodeMapper;
     private final FlowDefinitionMapper definitionMapper;
+    private final FlowTaskMapper flowTaskMapper;
 
     @Override
     public InstanceMigrationResultDTO migrate(InstanceMigrationDTO dto) {
@@ -220,6 +226,14 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
                             instance.setCurrentNodeName(targetNode.getNodeName());
                         }
                         instanceMapper.updateById(instance);
+
+                        // P3-3: 同步迁移该实例下未完成的待办任务（pmis_flow_task）
+                        // 仅迁移 PENDING/CLAIMED 状态的任务，已完成的历史任务保持不变
+                        int taskMigrated = migrateInstanceTasks(
+                                instance.getId(), targetDefId, oldNodeCode, newNodeCode,
+                                nodeMapping, targetNodeMap);
+                        log.info("[Flow-Migrate] 实例任务级迁移: instanceId={} taskMigrated={}",
+                                instance.getId(), taskMigrated);
                     }
 
                     detail.setStatus("MIGRATED");
@@ -289,6 +303,106 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
             return oldNodeCode;
         }
         // 3. 无法解析
+        return null;
+    }
+
+    /**
+     * P3-3: 迁移实例下未完成的待办任务到目标定义。
+     *
+     * <p>处理策略：
+     * <ul>
+     *   <li>查询该实例下所有 PENDING 任务（CLAIMED 状态也属于未完成，但 selectPendingByInstance 仅返回 PENDING；
+     *       为保证一致性，这里查 PENDING；已 CLAIMED 的任务由 SLA/办理流程处理）</li>
+     *   <li>对每个任务更新 definitionId</li>
+     *   <li>节点编码同步策略：
+     *     <ul>
+     *       <li>若任务 nodeCode == 实例旧 nodeCode，更新为新 nodeCode + 新 nodeName</li>
+     *       <li>否则按 nodeMapping 映射；映射目标必须存在于目标定义</li>
+     *       <li>映射缺失时，若任务 nodeCode 直接存在于目标定义，仅更新 definitionId</li>
+     *       <li>都不行则跳过该任务（保留旧 definitionId，记录 warning）</li>
+     *     </ul>
+     *   </li>
+     * </ul>
+     *
+     * @param instanceId    实例 ID
+     * @param targetDefId   目标定义 ID
+     * @param oldInstNode   实例旧节点编码
+     * @param newInstNode   实例新节点编码
+     * @param nodeMapping   节点映射
+     * @param targetNodeMap 目标定义节点编码集合
+     * @return 成功迁移的任务数
+     */
+    private int migrateInstanceTasks(Long instanceId, Long targetDefId,
+                                     String oldInstNode, String newInstNode,
+                                     Map<String, String> nodeMapping,
+                                     Map<String, FlowNodeDO> targetNodeMap) {
+        List<FlowTaskDO> pendingTasks = flowTaskMapper.selectPendingByInstance(instanceId);
+        if (pendingTasks == null || pendingTasks.isEmpty()) {
+            return 0;
+        }
+        int migrated = 0;
+        for (FlowTaskDO task : pendingTasks) {
+            String oldTaskNode = task.getNodeCode();
+            String newTaskNode = resolveTaskNodeCode(oldTaskNode, oldInstNode, newInstNode,
+                    nodeMapping, targetNodeMap);
+            if (newTaskNode == null) {
+                log.warn("[Flow-Migrate] 任务节点无法映射，跳过: instanceId={} taskId={} nodeCode={}",
+                        instanceId, task.getId(), oldTaskNode);
+                continue;
+            }
+            task.setDefinitionId(targetDefId);
+            task.setNodeCode(newTaskNode);
+            FlowNodeDO targetNode = targetNodeMap.get(newTaskNode);
+            if (targetNode != null) {
+                task.setNodeName(targetNode.getNodeName());
+            }
+            flowTaskMapper.updateById(task);
+            migrated++;
+        }
+        return migrated;
+    }
+
+    /**
+     * 解析任务节点的新编码。
+     *
+     * <p>优先级：
+     * <ol>
+     *   <li>任务节点 == 实例旧节点 → 直接使用实例新节点编码</li>
+     *   <li>nodeMapping 存在映射且映射目标存在于目标定义 → 使用映射值</li>
+     *   <li>任务节点直接存在于目标定义 → 保持不变</li>
+     *   <li>否则返回 null（无法映射）</li>
+     * </ol>
+     *
+     * @param oldTaskNode   任务旧节点编码
+     * @param oldInstNode   实例旧节点编码
+     * @param newInstNode   实例新节点编码
+     * @param nodeMapping   节点映射
+     * @param targetNodeMap 目标定义节点集合
+     * @return 新节点编码，null 表示无法解析
+     */
+    private String resolveTaskNodeCode(String oldTaskNode, String oldInstNode, String newInstNode,
+                                       Map<String, String> nodeMapping,
+                                       Map<String, FlowNodeDO> targetNodeMap) {
+        if (!StringUtils.hasText(oldTaskNode)) {
+            return null;
+        }
+        // 1. 与实例旧节点相同 → 跟随实例迁移到新节点
+        if (oldTaskNode.equals(oldInstNode)) {
+            return newInstNode;
+        }
+        // 2. 显式映射
+        if (nodeMapping.containsKey(oldTaskNode)) {
+            String mapped = nodeMapping.get(oldTaskNode);
+            if (StringUtils.hasText(mapped) && targetNodeMap.containsKey(mapped)) {
+                return mapped;
+            }
+            return null;
+        }
+        // 3. 直接存在于目标定义
+        if (targetNodeMap.containsKey(oldTaskNode)) {
+            return oldTaskNode;
+        }
+        // 4. 无法解析
         return null;
     }
 }

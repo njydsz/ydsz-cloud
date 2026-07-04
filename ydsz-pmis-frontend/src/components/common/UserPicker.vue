@@ -34,7 +34,7 @@ import type { UserVO } from '@/api/system/user/types'
 
 const { t } = useI18n()
 
-type UserModel = number | string | UserVO | null | undefined
+export type UserModel = number | string | UserVO | null | undefined
 
 const props = withDefaults(
   defineProps<{
@@ -159,7 +159,9 @@ async function doSearch(kw: string) {
       levelCode: props.levelCode,
       keyword: kw || undefined,
     })
-    const records = (res.data?.data?.records || []) as UserVO[]
+    // res.data 为 PageResult<UserVO>，后端分页返回 records 字段（MyBatis-Plus），用类型断言收敛
+    const pageData = res.data as unknown as { data?: { records?: UserVO[] } } | undefined
+    const records = (pageData?.data?.records || []) as UserVO[]
     mergeCandidates(records)
   } catch (e) {
     // 全局拦截器已弹错，这里只兜底
@@ -262,9 +264,11 @@ async function loadDialogList(reset = false) {
       levelCode: props.levelCode,
       keyword: dialogKeyword.value || undefined,
     })
-    const records = (res.data?.data?.records || []) as UserVO[]
+    // res.data 为 PageResult<UserVO>，后端分页返回 records/total 字段（MyBatis-Plus），用类型断言收敛
+    const pageData = res.data as unknown as { data?: { records?: UserVO[]; total?: number } } | undefined
+    const records = (pageData?.data?.records || []) as UserVO[]
     dialogList.value = reset ? records : [...dialogList.value, ...records]
-    dialogTotal.value = res.data?.data?.total || 0
+    dialogTotal.value = pageData?.data?.total || 0
     mergeCandidates(records)
   } catch (e) {
     ElMessage.error(t('common.userPicker.loadFailed', { message: (e as Error).message }))
@@ -486,8 +490,8 @@ onMounted(() => {
           <el-table-column width="50">
             <template #default="{ row }">
               <el-checkbox
-                :model-value="isDialogSelected(row)"
-                @change="toggleDialogSelect(row)"
+                :model-value="isDialogSelected(row as UserVO)"
+                @change="toggleDialogSelect(row as UserVO)"
               />
             </template>
           </el-table-column>

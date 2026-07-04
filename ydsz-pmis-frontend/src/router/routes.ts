@@ -536,6 +536,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         component: () => import('@/views/workflow/instance-migration/index.vue'),
         meta: { title: 'workflow.instanceMigration.title', icon: 'Switch', keepAlive: true, permCode: PC.WORKFLOW_DEFINITION_LIST },
       },
+      {
+        path: 'dmn',
+        name: 'WorkflowDmn',
+        component: () => import('@/views/workflow/dmn/index.vue'),
+        meta: { title: 'route.workflowDmn', icon: 'Grid', keepAlive: true, permCode: PC.WORKFLOW_DEFINITION_LIST },
+      },
     ],
   },
 ]

@@ -18,28 +18,20 @@ package com.njydsz.pmis.project.enums;
  */
 public enum UtilizationGrade {
 
-    EXCELLENT("EXCELLENT", "优秀", 85, 100),
-    GOOD("GOOD", "良好", 70, 85),
-    NORMAL("NORMAL", "合格", 50, 70),
-    WARN("WARN", "预警", 30, 50),
-    CRITICAL("CRITICAL", "严重", 0, 30);
+    EXCELLENT("EXCELLENT", "优秀"),
+    GOOD("GOOD", "良好"),
+    NORMAL("NORMAL", "合格"),
+    WARN("WARN", "预警"),
+    CRITICAL("CRITICAL", "严重");
 
     /** 等级编码（大小写不敏感） */
     private final String code;
     /** 等级中文描述 */
     private final String desc;
-    @SuppressWarnings("unused")
-    /** 阈值下界（包含） */
-    private final int lowerBound;
-    @SuppressWarnings("unused")
-    /** 阈值上界（不包含） */
-    private final int upperBound;
 
-    UtilizationGrade(String code, String desc, int lowerBound, int upperBound) {
+    UtilizationGrade(String code, String desc) {
         this.code = code;
         this.desc = desc;
-        this.lowerBound = lowerBound;
-        this.upperBound = upperBound;
     }
 
     /**

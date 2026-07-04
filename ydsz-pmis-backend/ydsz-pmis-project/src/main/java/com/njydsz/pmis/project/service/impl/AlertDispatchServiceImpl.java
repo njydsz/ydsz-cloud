@@ -184,7 +184,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
             }
             return r.getData();
         } catch (Exception e) {
-            log.warn("[Alert] Feign 调用异常: channel={} err={}", channel, e.getMessage());
+            log.error("[Alert] Feign 调用异常: channel={} err={}", channel, e.getMessage());
             return MessageResult.fail(channel, e.getMessage());
         }
     }

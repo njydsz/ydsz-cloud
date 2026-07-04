@@ -6,9 +6,11 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
 import com.njydsz.pmis.userinfo.entity.UserRoleDO;
+import com.njydsz.pmis.userinfo.entity.RoleDO;
 import com.njydsz.pmis.userinfo.mapper.UserAccountMapper;
 import com.njydsz.pmis.userinfo.mapper.UserRoleMapper;
 import com.njydsz.pmis.userinfo.mapper.User2FAMapper;
+import com.njydsz.pmis.userinfo.service.RoleService;
 import com.njydsz.pmis.userinfo.service.SessionService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -36,6 +38,8 @@ class UserAccountServiceImplTest {
     private User2FAMapper user2FAMapper;
     @Mock
     private SessionService sessionService;
+    @Mock
+    private RoleService roleService;
     @Mock
     private ApplicationEventPublisher publisher;
 
@@ -90,6 +94,10 @@ class UserAccountServiceImplTest {
         admin.setUsername("admin");
 
         when(userAccountMapper.selectById(1L)).thenReturn(admin);
+
+        RoleDO superAdminRole = new RoleDO();
+        superAdminRole.setRoleCode("SUPER_ADMIN");
+        when(roleService.listByUserId(1L)).thenReturn(List.of(superAdminRole));
 
         BizException ex = assertThrows(BizException.class, () -> userAccountService.delete(1L));
         assertEquals(10001, ex.getCode());

@@ -29,6 +29,14 @@ public final class JsonHelper {
 
     /**
      * JSON 字符串 → Map
+     *
+     * <p>注：原实现使用 {@code JSON.parseObject(json, Map.class, SupportSmartMatch)}，
+     * 会触发 unchecked cast 警告。为保持与历史行为一致（含 SmartMatch 特性），
+     * 此处仍保留 fastjson2 直接调用；如不需要 SmartMatch，建议改用
+     * {@link com.njydsz.pmis.common.util.JsonUtils#parseMap(String)}。
+     *
+     * @param json JSON 字符串
+     * @return 解析后的 Map；输入为 null/空白时返回 null
      */
     @SuppressWarnings("unchecked")
     public static Map<String, Object> fromJson(String json) {

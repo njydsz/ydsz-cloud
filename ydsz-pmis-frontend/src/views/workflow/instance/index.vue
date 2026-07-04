@@ -8,7 +8,7 @@
 import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import { useResponsive } from '@/composables/useResponsive'
 import {

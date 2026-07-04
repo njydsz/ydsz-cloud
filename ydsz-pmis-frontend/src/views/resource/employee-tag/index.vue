@@ -4,8 +4,9 @@
   @module views/resource/employee-tag
 -->
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import {
   addEmployeeTag,
   removeEmployeeTag,
@@ -14,6 +15,8 @@ import {
 } from '@/api/resource/employee-tag'
 import type { EmployeeTagVO, EmployeeTagCreateDTO } from '@/api/resource/employee-tag/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 const tab = ref<'byEmployee' | 'candidates'>('byEmployee')
 const employeeId = ref<number | null>(null)
@@ -25,12 +28,12 @@ const candidateForm = reactive({
 })
 const candidates = ref<EmployeeTagVO[]>([])
 
-const tagTypeMap: Record<string, string> = {
-  SKILL: '技术栈',
-  TECH: '技术方向',
-  INDUSTRY: '行业经验',
-  AVAILABILITY: '可用时间',
-}
+const tagTypeMap = computed<Record<string, string>>(() => ({
+  SKILL: t('resource.employeeTag.tagType.SKILL'),
+  TECH: t('resource.employeeTag.tagType.TECH'),
+  INDUSTRY: t('resource.employeeTag.tagType.INDUSTRY'),
+  AVAILABILITY: t('resource.employeeTag.tagType.AVAILABILITY'),
+}))
 
 const dialogVisible = ref(false)
 const form = reactive<EmployeeTagCreateDTO>({
@@ -42,12 +45,12 @@ const form = reactive<EmployeeTagCreateDTO>({
   description: '',
 })
 
-const formRules = {
-  employeeId: [{ required: true, message: '员工 ID 必填', trigger: 'blur' }],
-  tagType: [{ required: true, message: '标签类型必填', trigger: 'change' }],
-  tagCode: [{ required: true, message: '标签编码必填', trigger: 'blur' }],
-  tagName: [{ required: true, message: '标签名称必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  employeeId: [{ required: true, message: t('resource.employeeTag.rules.employeeIdRequired'), trigger: 'blur' }],
+  tagType: [{ required: true, message: t('resource.employeeTag.rules.typeRequired'), trigger: 'change' }],
+  tagCode: [{ required: true, message: t('resource.employeeTag.rules.codeRequired'), trigger: 'blur' }],
+  tagName: [{ required: true, message: t('resource.employeeTag.rules.nameRequired'), trigger: 'blur' }],
+}))
 
 /** 拉取指定员工的标签列表 */
 async function fetchTags() {
@@ -87,7 +90,7 @@ function openCreate() {
 /** 提交新增标签，成功后关闭弹窗并刷新员工标签列表 */
 async function submitForm() {
   await addEmployeeTag(form)
-  ElMessage.success('添加成功')
+  ElMessage.success(t('resource.employeeTag.messages.added'))
   dialogVisible.value = false
   fetchTags()
 }
@@ -98,9 +101,9 @@ async function submitForm() {
  */
 async function handleDelete(row: EmployeeTagVO) {
   try {
-    await ElMessageBox.confirm(`确认删除标签「${row.tagName}」?`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('resource.employeeTag.messages.deletePrompt', { name: row.tagName }), t('common.tip'), { type: 'warning' })
     await removeEmployeeTag(row.id)
-    ElMessage.success('已删除')
+    ElMessage.success(t('resource.employeeTag.messages.deleted'))
     fetchTags()
   } catch {
     /* 取消 */
@@ -117,84 +120,84 @@ onMounted(() => {
   <div class="tag-page">
     <el-card shadow="never">
       <el-tabs v-model="tab">
-        <el-tab-pane label="按员工查询" name="byEmployee">
+        <el-tab-pane :label="t('resource.employeeTag.tabs.byEmployee')" name="byEmployee">
           <div class="search-row">
-            <el-input-number v-model="employeeId" :min="1" placeholder="员工 ID" />
-            <el-button type="primary" @click="fetchTags">查询</el-button>
-            <el-button v-permission="[PC.RESOURCE_TAG_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">新增标签</el-button>
+            <el-input-number v-model="employeeId" :min="1" :placeholder="t('resource.employeeTag.search.employeeIdPlaceholder')" />
+            <el-button type="primary" @click="fetchTags">{{ t('resource.employeeTag.buttons.query') }}</el-button>
+            <el-button v-permission="[PC.RESOURCE_TAG_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">{{ t('resource.employeeTag.buttons.create') }}</el-button>
           </div>
           <vxe-table :data="tags" border>
             <vxe-column type="seq" title="#" width="50" />
-            <vxe-column field="employeeId" title="员工 ID" width="100" />
-            <vxe-column field="tagType" title="类型" width="120">
+            <vxe-column field="employeeId" :title="t('resource.employeeTag.columns.employeeId')" width="100" />
+            <vxe-column field="tagType" :title="t('resource.employeeTag.columns.type')" width="120">
               <template #default="{ row }">
                 <el-tag size="small">{{ tagTypeMap[row.tagType] || row.tagType }}</el-tag>
               </template>
             </vxe-column>
-            <vxe-column field="tagCode" title="标签编码" width="160" />
-            <vxe-column field="tagName" title="标签名称" min-width="160" />
-            <vxe-column field="weight" title="权重" width="80" align="center" />
-            <vxe-column field="description" title="描述" min-width="200" />
-            <vxe-column title="操作" width="120" fixed="right">
+            <vxe-column field="tagCode" :title="t('resource.employeeTag.columns.code')" width="160" />
+            <vxe-column field="tagName" :title="t('resource.employeeTag.columns.name')" min-width="160" />
+            <vxe-column field="weight" :title="t('resource.employeeTag.columns.weight')" width="80" align="center" />
+            <vxe-column field="description" :title="t('resource.employeeTag.columns.description')" min-width="200" />
+            <vxe-column :title="t('resource.employeeTag.columns.action')" width="120" fixed="right">
               <template #default="{ row }">
-                <el-button v-permission="[PC.RESOURCE_TAG_DELETE]" link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+                <el-button v-permission="[PC.RESOURCE_TAG_DELETE]" link type="danger" size="small" @click="handleDelete(row)">{{ t('resource.employeeTag.buttons.delete') }}</el-button>
               </template>
             </vxe-column>
           </vxe-table>
         </el-tab-pane>
 
         <!-- 按标签筛选候选人 -->
-        <el-tab-pane label="按标签筛选候选人" name="candidates">
+        <el-tab-pane :label="t('resource.employeeTag.tabs.candidates')" name="candidates">
           <div class="search-row">
             <el-select v-model="candidateForm.tagType" style="width: 160px" @change="fetchCandidates">
               <el-option v-for="(label, val) in tagTypeMap" :key="val" :label="label" :value="val" />
             </el-select>
-            <el-input v-model="candidateForm.tagCode" placeholder="标签编码 (可选)" clearable style="width: 220px" />
-            <el-button type="primary" @click="fetchCandidates">查询</el-button>
+            <el-input v-model="candidateForm.tagCode" :placeholder="t('resource.employeeTag.search.tagCodePlaceholder')" clearable style="width: 220px" />
+            <el-button type="primary" @click="fetchCandidates">{{ t('resource.employeeTag.buttons.query') }}</el-button>
           </div>
           <vxe-table :data="candidates" border>
             <vxe-column type="seq" title="#" width="50" />
-            <vxe-column field="employeeId" title="员工 ID" width="100" />
-            <vxe-column field="tagType" title="类型" width="120">
+            <vxe-column field="employeeId" :title="t('resource.employeeTag.columns.employeeId')" width="100" />
+            <vxe-column field="tagType" :title="t('resource.employeeTag.columns.type')" width="120">
               <template #default="{ row }">
                 <el-tag size="small">{{ tagTypeMap[row.tagType] || row.tagType }}</el-tag>
               </template>
             </vxe-column>
-            <vxe-column field="tagCode" title="标签编码" width="160" />
-            <vxe-column field="tagName" title="标签名称" min-width="160" />
-            <vxe-column field="weight" title="权重" width="80" align="center" />
-            <vxe-column field="description" title="描述" min-width="200" />
+            <vxe-column field="tagCode" :title="t('resource.employeeTag.columns.code')" width="160" />
+            <vxe-column field="tagName" :title="t('resource.employeeTag.columns.name')" min-width="160" />
+            <vxe-column field="weight" :title="t('resource.employeeTag.columns.weight')" width="80" align="center" />
+            <vxe-column field="description" :title="t('resource.employeeTag.columns.description')" min-width="200" />
           </vxe-table>
         </el-tab-pane>
       </el-tabs>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" title="新增人员标签" width="480px">
+    <el-dialog v-model="dialogVisible" :title="t('resource.employeeTag.dialog.createTitle')" width="480px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="员工 ID" prop="employeeId">
+        <el-form-item :label="t('resource.employeeTag.form.employeeId')" prop="employeeId">
           <el-input-number v-model="form.employeeId" :min="1" />
         </el-form-item>
-        <el-form-item label="标签类型" prop="tagType">
+        <el-form-item :label="t('resource.employeeTag.form.type')" prop="tagType">
           <el-select v-model="form.tagType" style="width: 100%">
             <el-option v-for="(label, val) in tagTypeMap" :key="val" :label="label" :value="val" />
           </el-select>
         </el-form-item>
-        <el-form-item label="标签编码" prop="tagCode">
-          <el-input v-model="form.tagCode" placeholder="例如: JAVA" />
+        <el-form-item :label="t('resource.employeeTag.form.code')" prop="tagCode">
+          <el-input v-model="form.tagCode" :placeholder="t('resource.employeeTag.form.codePlaceholder')" />
         </el-form-item>
-        <el-form-item label="标签名称" prop="tagName">
-          <el-input v-model="form.tagName" placeholder="例如: Java 开发" />
+        <el-form-item :label="t('resource.employeeTag.form.name')" prop="tagName">
+          <el-input v-model="form.tagName" :placeholder="t('resource.employeeTag.form.namePlaceholder')" />
         </el-form-item>
-        <el-form-item label="权重">
+        <el-form-item :label="t('resource.employeeTag.form.weight')">
           <el-input-number v-model="form.weight" :min="0" :max="10" :step="0.5" />
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="t('resource.employeeTag.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>

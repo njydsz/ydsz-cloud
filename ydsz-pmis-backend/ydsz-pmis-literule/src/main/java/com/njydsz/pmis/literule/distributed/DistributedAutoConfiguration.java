@@ -92,7 +92,7 @@ public class DistributedAutoConfiguration {
             ConsistentHashSharder sharder,
             String nodeId) {
 
-        ShardAwareRuleEngine engine = new ShardAwareRuleEngine(ruleEngine, nodeRegistry, sharder, 10_000L);
+        ShardAwareRuleEngine engine = new ShardAwareRuleEngine(ruleEngine, nodeRegistry, sharder);
         engine.refreshNodes();
 
         // 启动定时心跳 + 节点刷新

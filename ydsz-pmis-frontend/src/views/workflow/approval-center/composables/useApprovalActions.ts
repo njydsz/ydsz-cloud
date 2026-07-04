@@ -13,6 +13,7 @@
 import { ref, reactive, computed, markRaw } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { AxiosResponse } from 'axios'
 import dayjs from 'dayjs'
 import i18n from '@/locales'
 import {
@@ -34,6 +35,7 @@ import {
 } from '@/api/workflow'
 import type { FlowTaskDTO, FlowTaskOperateDTO } from '@/api/workflow/types'
 import type { ApiResponse } from '@/utils/request'
+import type { UserModel } from '@/components/common'
 
 // ===========================================
 // 一、策略接口定义
@@ -107,16 +109,16 @@ export interface ApprovalAction {
 abstract class BaseAction implements ApprovalAction {
   abstract readonly type: ApprovalActionType
   abstract readonly title: string
-  readonly needComment = false
-  readonly needTargetUser = false
-  readonly needRejectNode = false
+  readonly needComment: boolean = false
+  readonly needTargetUser: boolean = false
+  readonly needRejectNode: boolean = false
   readonly commentLabel?: string
   readonly commentPlaceholder?: string
   readonly targetUserLabel?: string
   readonly targetUserDialogTitle?: string
 
   /** 子类实现：调用对应的任务操作 API */
-  protected abstract call(ctx: ApprovalActionContext): Promise<ApiResponse<unknown>>
+  protected abstract call(ctx: ApprovalActionContext): Promise<AxiosResponse<ApiResponse<unknown>>>
 
   /** 通用：上下文 → FlowTaskOperateDTO */
   protected toDto(ctx: ApprovalActionContext): FlowTaskOperateDTO {
@@ -147,8 +149,8 @@ abstract class BaseAction implements ApprovalAction {
 class PassAction extends BaseAction {
   readonly type = 'PASS' as const
   readonly title = 'workflow.approval.actions.passTitle'
-  readonly needComment = true
-  readonly commentPlaceholder = 'workflow.approval.actions.passPlaceholder'
+  override readonly needComment = true
+  override readonly commentPlaceholder = 'workflow.approval.actions.passPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return passTask(this.toDto(ctx))
   }
@@ -158,9 +160,9 @@ class PassAction extends BaseAction {
 class RejectAction extends BaseAction {
   readonly type = 'REJECT' as const
   readonly title = 'workflow.approval.actions.rejectTitle'
-  readonly needComment = true
-  readonly needRejectNode = true
-  readonly commentPlaceholder = 'workflow.approval.actions.rejectPlaceholder'
+  override readonly needComment = true
+  override readonly needRejectNode = true
+  override readonly commentPlaceholder = 'workflow.approval.actions.rejectPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return rejectTask(this.toDto(ctx))
   }
@@ -170,11 +172,11 @@ class RejectAction extends BaseAction {
 class TransferAction extends BaseAction {
   readonly type = 'TRANSFER' as const
   readonly title = 'workflow.approval.actions.transferTitle'
-  readonly needComment = true
-  readonly needTargetUser = true
-  readonly targetUserLabel = 'workflow.approval.actions.targetUserLabel'
-  readonly targetUserDialogTitle = 'workflow.approval.actions.transferDialogTitle'
-  readonly commentPlaceholder = 'workflow.approval.actions.transferPlaceholder'
+  override readonly needComment = true
+  override readonly needTargetUser = true
+  override readonly targetUserLabel = 'workflow.approval.actions.targetUserLabel'
+  override readonly targetUserDialogTitle = 'workflow.approval.actions.transferDialogTitle'
+  override readonly commentPlaceholder = 'workflow.approval.actions.transferPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return transferTask(this.toDto(ctx))
   }
@@ -184,11 +186,11 @@ class TransferAction extends BaseAction {
 class DelegateAction extends BaseAction {
   readonly type = 'DELEGATE' as const
   readonly title = 'workflow.approval.actions.delegateTitle'
-  readonly needComment = true
-  readonly needTargetUser = true
-  readonly targetUserLabel = 'workflow.approval.actions.targetUserLabel'
-  readonly targetUserDialogTitle = 'workflow.approval.actions.delegateDialogTitle'
-  readonly commentPlaceholder = 'workflow.approval.actions.delegatePlaceholder'
+  override readonly needComment = true
+  override readonly needTargetUser = true
+  override readonly targetUserLabel = 'workflow.approval.actions.targetUserLabel'
+  override readonly targetUserDialogTitle = 'workflow.approval.actions.delegateDialogTitle'
+  override readonly commentPlaceholder = 'workflow.approval.actions.delegatePlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return delegateTask(this.toDto(ctx))
   }
@@ -207,9 +209,9 @@ class ClaimAction extends BaseAction {
 class UrgeAction extends BaseAction {
   readonly type = 'URGE' as const
   readonly title = 'workflow.approval.actions.urgeTitle'
-  readonly needComment = true
-  readonly commentLabel = 'workflow.approval.actions.urgeCommentLabel'
-  readonly commentPlaceholder = 'workflow.approval.actions.urgePlaceholder'
+  override readonly needComment = true
+  override readonly commentLabel = 'workflow.approval.actions.urgeCommentLabel'
+  override readonly commentPlaceholder = 'workflow.approval.actions.urgePlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return urgeTask({ instanceId: ctx.instanceId as number, comment: ctx.comment })
   }
@@ -219,9 +221,9 @@ class UrgeAction extends BaseAction {
 class SaveDraftAction extends BaseAction {
   readonly type = 'SAVE_DRAFT' as const
   readonly title = 'workflow.approval.actions.saveDraftTitle'
-  readonly needComment = true
-  readonly commentLabel = 'workflow.approval.actions.draftCommentLabel'
-  readonly commentPlaceholder = 'workflow.approval.actions.draftPlaceholder'
+  override readonly needComment = true
+  override readonly commentLabel = 'workflow.approval.actions.draftCommentLabel'
+  override readonly commentPlaceholder = 'workflow.approval.actions.draftPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return saveDraft(this.toDto(ctx))
   }
@@ -231,9 +233,9 @@ class SaveDraftAction extends BaseAction {
 class AddApproverAction extends BaseAction {
   readonly type = 'ADD_APPROVER' as const
   readonly title = 'workflow.approval.actions.addApproverTitle'
-  readonly needTargetUser = true
-  readonly targetUserLabel = 'workflow.approval.actions.addApproverLabel'
-  readonly targetUserDialogTitle = 'workflow.approval.actions.addApproverDialogTitle'
+  override readonly needTargetUser = true
+  override readonly targetUserLabel = 'workflow.approval.actions.addApproverLabel'
+  override readonly targetUserDialogTitle = 'workflow.approval.actions.addApproverDialogTitle'
   protected call(ctx: ApprovalActionContext) {
     return addApprover(this.toDto(ctx))
   }
@@ -243,11 +245,11 @@ class AddApproverAction extends BaseAction {
 class CountersignBeforeAction extends BaseAction {
   readonly type = 'COUNTERSIGN_BEFORE' as const
   readonly title = 'workflow.approval.actions.countersignBeforeTitle'
-  readonly needComment = true
-  readonly needTargetUser = true
-  readonly targetUserLabel = 'workflow.approval.actions.countersignBeforeLabel'
-  readonly targetUserDialogTitle = 'workflow.approval.actions.countersignBeforeDialogTitle'
-  readonly commentPlaceholder = 'workflow.approval.actions.countersignPlaceholder'
+  override readonly needComment = true
+  override readonly needTargetUser = true
+  override readonly targetUserLabel = 'workflow.approval.actions.countersignBeforeLabel'
+  override readonly targetUserDialogTitle = 'workflow.approval.actions.countersignBeforeDialogTitle'
+  override readonly commentPlaceholder = 'workflow.approval.actions.countersignPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return countersignBefore(this.toDto(ctx))
   }
@@ -257,11 +259,11 @@ class CountersignBeforeAction extends BaseAction {
 class CountersignAfterAction extends BaseAction {
   readonly type = 'COUNTERSIGN_AFTER' as const
   readonly title = 'workflow.approval.actions.countersignAfterTitle'
-  readonly needComment = true
-  readonly needTargetUser = true
-  readonly targetUserLabel = 'workflow.approval.actions.countersignAfterLabel'
-  readonly targetUserDialogTitle = 'workflow.approval.actions.countersignAfterDialogTitle'
-  readonly commentPlaceholder = 'workflow.approval.actions.countersignPlaceholder'
+  override readonly needComment = true
+  override readonly needTargetUser = true
+  override readonly targetUserLabel = 'workflow.approval.actions.countersignAfterLabel'
+  override readonly targetUserDialogTitle = 'workflow.approval.actions.countersignAfterDialogTitle'
+  override readonly commentPlaceholder = 'workflow.approval.actions.countersignPlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return countersignAfter(this.toDto(ctx))
   }
@@ -271,9 +273,9 @@ class CountersignAfterAction extends BaseAction {
 class CountersignRemoveAction extends BaseAction {
   readonly type = 'COUNTERSIGN_REMOVE' as const
   readonly title = 'workflow.approval.actions.countersignRemoveTitle'
-  readonly needTargetUser = true
-  readonly targetUserLabel = 'workflow.approval.actions.countersignRemoveLabel'
-  readonly targetUserDialogTitle = 'workflow.approval.actions.countersignRemoveDialogTitle'
+  override readonly needTargetUser = true
+  override readonly targetUserLabel = 'workflow.approval.actions.countersignRemoveLabel'
+  override readonly targetUserDialogTitle = 'workflow.approval.actions.countersignRemoveDialogTitle'
   protected call(ctx: ApprovalActionContext) {
     return countersignRemove(this.toDto(ctx))
   }
@@ -292,9 +294,9 @@ class MarkReadAction extends BaseAction {
 class CommunicateAction extends BaseAction {
   readonly type = 'COMMUNICATE' as const
   readonly title = 'workflow.approval.actions.communicateTitle'
-  readonly needComment = true
-  readonly commentLabel = 'workflow.approval.actions.communicateCommentLabel'
-  readonly commentPlaceholder = 'workflow.approval.actions.communicatePlaceholder'
+  override readonly needComment = true
+  override readonly commentLabel = 'workflow.approval.actions.communicateCommentLabel'
+  override readonly commentPlaceholder = 'workflow.approval.actions.communicatePlaceholder'
   protected call(ctx: ApprovalActionContext) {
     return communicateTask(this.toDto(ctx))
   }
@@ -363,7 +365,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
   const opForm = reactive({
     comment: '',
     /** 目标用户对象（UserPicker 选择） */
-    targetUser: null as { id: number; realName?: string; username?: string } | null,
+    targetUser: null as UserModel,
     targetUserId: undefined as number | undefined,
     targetUserName: '' as string,
     targetNodeCode: '',
@@ -583,6 +585,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
         cancelButtonText: t('common.cancel'),
       })
       const result = await actionMap.URGE.execute({
+        taskId: task.id,
         instanceId: task.instanceId,
         comment: value,
       })

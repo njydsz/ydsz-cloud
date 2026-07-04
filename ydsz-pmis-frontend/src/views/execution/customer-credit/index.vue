@@ -12,8 +12,9 @@
  * 评分模型: 30 基础分(新客户) + 合同数 + 合作年限 + 付款习惯 - 逾期惩罚
  * 等级: A(90-100) / B(75-89) / C(60-74) / D(0-59)
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -23,6 +24,8 @@ import {
 } from '@/api/execution/customer-credit'
 import type { CustomerCreditVO, CreditAssessmentDTO } from '@/api/execution/customer-credit/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 /** 列表加载状态 */
 const loading = ref(false)
@@ -40,19 +43,19 @@ const query = reactive({
 })
 
 /** 信用等级 → 标签/样式映射（A/B/C/D） */
-const levelMap = {
-  A: { label: 'A级', type: 'success' as const },
-  B: { label: 'B级', type: 'primary' as const },
-  C: { label: 'C级', type: 'warning' as const },
-  D: { label: 'D级', type: 'danger' as const },
-}
+const levelMap = computed(() => ({
+  A: { label: t('finance.credit.level.A'), type: 'success' as const },
+  B: { label: t('finance.credit.level.B'), type: 'primary' as const },
+  C: { label: t('finance.credit.level.C'), type: 'warning' as const },
+  D: { label: t('finance.credit.level.D'), type: 'danger' as const },
+}))
 
 /** 付款习惯 → 中文标签映射 */
-const habitMap = {
-  ONTIME: { label: '按时' },
-  OFTEN_LATE: { label: '经常逾期' },
-  SEVERE_LATE: { label: '严重逾期' },
-}
+const habitMap = computed(() => ({
+  ONTIME: { label: t('finance.credit.habit.ONTIME') },
+  OFTEN_LATE: { label: t('finance.credit.habit.OFTEN_LATE') },
+  SEVERE_LATE: { label: t('finance.credit.habit.SEVERE_LATE') },
+}))
 
 /** 分页查询客户信用列表 */
 async function fetchList() {
@@ -86,9 +89,9 @@ function handleReset() {
 async function handleQuery(row: CustomerCreditVO) {
   try {
     const { data } = await getCreditByCustomer(row.customerId)
-    ElMessage.success(`客户最新信用: ${data?.level} (${data?.score}分)`)
+    ElMessage.success(t('finance.credit.messages.queryResult', { level: data?.level, score: data?.score }))
   } catch (e: any) {
-    ElMessage.error(e?.message || '查询失败')
+    ElMessage.error(e?.message || t('finance.credit.messages.queryFailed'))
   }
 }
 
@@ -109,9 +112,9 @@ const form = reactive<Partial<CreditAssessmentDTO>>({
 })
 
 /** 表单校验规则 */
-const formRules = {
-  customerId: [{ required: true, message: '客户 ID 必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  customerId: [{ required: true, message: t('finance.credit.rules.customerIdRequired'), trigger: 'blur' }],
+}))
 
 /** 打开信用评估弹窗并重置表单为默认值 */
 function openAssess() {
@@ -133,11 +136,11 @@ async function submitAssess() {
   await formRef.value?.validate()
   try {
     const { data } = await assessCustomerCredit(form as CreditAssessmentDTO)
-    ElMessage.success(`评估完成: ${data.level} (${data.score}分)`)
+    ElMessage.success(t('finance.credit.messages.assessResult', { level: data.level, score: data.score }))
     dialogVisible.value = false
     fetchList()
   } catch (e: any) {
-    ElMessage.error(e?.message || '评估失败')
+    ElMessage.error(e?.message || t('finance.credit.messages.assessFailed'))
   }
 }
 
@@ -158,9 +161,9 @@ onMounted(fetchList)
   >
     <!-- 搜索栏 -->
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="客户名" clearable /></el-form-item>
-      <el-form-item label="等级">
-        <el-select v-model="query.level" placeholder="全部" clearable style="width: 120px">
+      <el-form-item :label="t('finance.credit.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('finance.credit.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="t('finance.credit.search.level')">
+        <el-select v-model="query.level" :placeholder="t('common.all')" clearable style="width: 120px">
           <el-option v-for="(v, k) in levelMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
@@ -169,7 +172,7 @@ onMounted(fetchList)
     <!-- 工具栏 -->
     <template #toolbar>
       <el-button v-permission="[PC.FINANCE_CREDIT_ASSESS]" type="primary" :icon="'Plus'" @click="openAssess">
-        信用评估
+        {{ t('finance.credit.buttons.assess') }}
       </el-button>
     </template>
 
@@ -177,57 +180,57 @@ onMounted(fetchList)
     <template #table>
       <vxe-table :data="list" :loading="loading" border stripe>
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="customerId" title="客户 ID" width="100" align="center" />
-        <vxe-column field="customerName" title="客户名称" min-width="200" show-overflow />
-        <vxe-column field="score" title="评分" width="100" align="center">
+        <vxe-column field="customerId" :title="t('finance.credit.columns.customerId')" width="100" align="center" />
+        <vxe-column field="customerName" :title="t('finance.credit.columns.customerName')" min-width="200" show-overflow />
+        <vxe-column field="score" :title="t('finance.credit.columns.score')" width="100" align="center">
           <template #default="{ row }">
             <span :style="{ color: Number(row.score) >= 90 ? '#67c23a' : Number(row.score) >= 60 ? '#e6a23c' : '#f56c6c', fontWeight: 600 }">
               {{ row.score }}
             </span>
           </template>
         </vxe-column>
-        <vxe-column field="level" title="等级" width="100" align="center">
+        <vxe-column field="level" :title="t('finance.credit.columns.level')" width="100" align="center">
           <template #default="{ row }"><StatusTag :value="row.level" :map="levelMap" /></template>
         </vxe-column>
-        <vxe-column field="contractCount" title="合同数" width="100" align="center" />
-        <vxe-column field="totalContractAmount" title="累计合同额" width="140" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="overdueCount" title="逾期次数" width="100" align="center" />
-        <vxe-column field="overdueAmount" title="逾期金额" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="lastAssessDate" title="上次评估" width="120" />
-        <vxe-column title="操作" width="140" fixed="right">
+        <vxe-column field="contractCount" :title="t('finance.credit.columns.contractCount')" width="100" align="center" />
+        <vxe-column field="totalContractAmount" :title="t('finance.credit.columns.totalContractAmount')" width="140" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="overdueCount" :title="t('finance.credit.columns.overdueCount')" width="100" align="center" />
+        <vxe-column field="overdueAmount" :title="t('finance.credit.columns.overdueAmount')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="lastAssessDate" :title="t('finance.credit.columns.lastAssessDate')" width="120" />
+        <vxe-column :title="t('finance.credit.columns.action')" width="140" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="handleQuery(row)">查最新</el-button>
+            <el-button link type="primary" size="small" @click="handleQuery(row)">{{ t('finance.credit.buttons.query') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
     <!-- 信用评估弹窗 -->
-    <el-dialog v-model="dialogVisible" title="客户信用评估" width="600px">
+    <el-dialog v-model="dialogVisible" :title="t('finance.credit.dialog.assessTitle')" width="600px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="120px">
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="客户 ID" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="客户名称"><el-input v-model="form.customerName" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('finance.credit.form.customerId')" prop="customerId"><el-input-number v-model="form.customerId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('finance.credit.form.customerName')"><el-input v-model="form.customerName" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="合作合同数"><el-input-number v-model="form.contractCount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="合作年限"><el-input-number v-model="form.cooperationYears" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('finance.credit.form.contractCount')"><el-input-number v-model="form.contractCount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('finance.credit.form.cooperationYears')"><el-input-number v-model="form.cooperationYears" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="累计合同额"><el-input-number v-model="form.totalContractAmount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="付款习惯"><el-select v-model="form.paymentHabit" style="width: 100%"><el-option v-for="(v, k) in habitMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('finance.credit.form.totalContractAmount')"><el-input-number v-model="form.totalContractAmount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('finance.credit.form.paymentHabit')"><el-select v-model="form.paymentHabit" style="width: 100%"><el-option v-for="(v, k) in habitMap" :key="k" :label="v.label" :value="k" /></el-select></el-form-item></el-col>
         </el-row>
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="逾期次数"><el-input-number v-model="form.overdueCount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="逾期金额"><el-input-number v-model="form.overdueAmount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('finance.credit.form.overdueCount')"><el-input-number v-model="form.overdueCount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="t('finance.credit.form.overdueAmount')"><el-input-number v-model="form.overdueAmount" :min="0" :controls="false" style="width: 100%" /></el-form-item></el-col>
         </el-row>
         <el-alert type="info" :closable="false" show-icon>
-          提示: 新客户无历史记录时, 评分模型自动赋予 30 基础分, 默认等级 A。
+          {{ t('finance.credit.assessTip') }}
         </el-alert>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitAssess">提交评估</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="submitAssess">{{ t('finance.credit.buttons.submit') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

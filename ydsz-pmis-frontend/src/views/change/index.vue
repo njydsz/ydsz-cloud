@@ -137,8 +137,8 @@ const isEmpty = computed(() => !loading.value && list.value.length === 0)
 const selectedRows = ref<ProjectChangeVO[]>([])
 
 /** 表格勾选行变更回调，同步本地选中列表 */
-function onSelectionChange({ rows }: { rows: ProjectChangeVO[] }) {
-  selectedRows.value = rows
+function onSelectionChange({ records }: { records: ProjectChangeVO[] }) {
+  selectedRows.value = records
 }
 
 /** 重置查询条件并重新加载列表 */

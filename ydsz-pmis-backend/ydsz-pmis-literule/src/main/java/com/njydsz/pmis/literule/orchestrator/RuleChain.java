@@ -85,10 +85,6 @@ public class RuleChain {
     /** WHILE 最大迭代次数，防止死循环，默认 100 */
     private final int maxIterations;
 
-    /** 是否终止循环（BREAK 使用） */
-    @SuppressWarnings("unused")
-    private final boolean isBreak;
-
     /**
      * 私有构造，统一通过工厂方法创建
      *
@@ -102,13 +98,12 @@ public class RuleChain {
      * @param iterableExpression  遍历集合表达式
      * @param iterationVar        迭代变量名
      * @param maxIterations       最大迭代次数
-     * @param isBreak             是否终止
      */
     private RuleChain(RuleChainType chainType, List<RuleNode> nodes, String conditionExpression,
                       String branchKey, Map<String, RuleNode> branchMap, RuleNode defaultBranch,
                       List<Map.Entry<String, RuleNode>> elifBranches, RuleNode elseNode,
                       String iterableExpression, String iterationVar,
-                      int maxIterations, boolean isBreak) {
+                      int maxIterations) {
         this.chainType = chainType;
         this.nodes = nodes;
         this.conditionExpression = conditionExpression;
@@ -120,7 +115,6 @@ public class RuleChain {
         this.iterableExpression = iterableExpression;
         this.iterationVar = iterationVar;
         this.maxIterations = maxIterations;
-        this.isBreak = isBreak;
     }
 
     /**
@@ -138,7 +132,7 @@ public class RuleChain {
             }
         }
         return new RuleChain(RuleChainType.THEN,
-                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, null, 0, false);
+                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, null, 0);
     }
 
     /**
@@ -156,7 +150,7 @@ public class RuleChain {
             }
         }
         return new RuleChain(RuleChainType.WHEN,
-                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, null, 0, false);
+                Collections.unmodifiableList(nodeList), null, null, null, null, null, null, null, null, 0);
     }
 
     /**
@@ -171,7 +165,7 @@ public class RuleChain {
         Objects.requireNonNull(actionRule, "actionRule 不能为 null");
         List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(actionRule));
         return new RuleChain(RuleChainType.IF,
-                nodeList, conditionExpression, null, null, null, null, null, null, null, 0, false);
+                nodeList, conditionExpression, null, null, null, null, null, null, null, 0);
     }
 
     /**
@@ -206,7 +200,7 @@ public class RuleChain {
         RuleNode defaultNode = defaultRule != null ? RuleNode.of(defaultRule) : null;
         return new RuleChain(RuleChainType.SWITCH,
                 null, null, branchKey, Collections.unmodifiableMap(nodeMap), defaultNode,
-                null, null, null, null, 0, false);
+                null, null, null, null, 0);
     }
 
     /**
@@ -226,7 +220,7 @@ public class RuleChain {
         }
         RuleNode elseNode = elseRule != null ? RuleNode.of(elseRule) : null;
         return new RuleChain(RuleChainType.ELIF,
-                null, null, null, null, null, Collections.unmodifiableList(branchList), elseNode, null, null, 0, false);
+                null, null, null, null, null, Collections.unmodifiableList(branchList), elseNode, null, null, 0);
     }
 
     /**
@@ -243,7 +237,7 @@ public class RuleChain {
         Objects.requireNonNull(actionRule, "actionRule 不能为 null");
         List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(actionRule));
         return new RuleChain(RuleChainType.FOR,
-                nodeList, null, null, null, null, null, null, iterableExpression, iterationVar, 0, false);
+                nodeList, null, null, null, null, null, null, iterableExpression, iterationVar, 0);
     }
 
     /**
@@ -273,7 +267,7 @@ public class RuleChain {
         }
         List<RuleNode> nodeList = Collections.singletonList(RuleNode.of(actionRule));
         return new RuleChain(RuleChainType.WHILE,
-                nodeList, conditionExpression, null, null, null, null, null, null, null, maxIterations, false);
+                nodeList, conditionExpression, null, null, null, null, null, null, null, maxIterations);
     }
 
     /**
@@ -286,7 +280,7 @@ public class RuleChain {
      */
     public static RuleChain breakChain() {
         return new RuleChain(RuleChainType.BREAK,
-                null, null, null, null, null, null, null, null, null, 0, true);
+                null, null, null, null, null, null, null, null, null, 0);
     }
 
     /**
