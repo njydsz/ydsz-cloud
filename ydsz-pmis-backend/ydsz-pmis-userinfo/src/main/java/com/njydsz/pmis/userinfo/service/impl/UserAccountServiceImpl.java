@@ -349,6 +349,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @SuppressWarnings("deprecation")
     public void changePassword(Long userId, String oldPassword, String newPassword) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {

@@ -53,7 +53,7 @@ common/
 
 ### 2.2 占位符约定
 
-`ubuntu/` 和 `windows/` 的安装脚本会做以下占位符替换(完整列表见 [deploy/README.md §4.2](../README.md#42-占位符约定commonconf)):
+`ubuntu/` 和 `windows/` 的安装脚本会做以下占位符替换(完整列表见 [deploy/README.md §8](../README.md#8-占位符约定commonconf)):
 
 | 占位符 | 含义 |
 |---|---|
@@ -123,6 +123,8 @@ common/
 PGPASSWORD=pmis123 psql -h 127.0.0.1 -U pmis -d ydsz_pmis \
   -f deploy/common/sql/tables_xxl_job_pg.sql
 ```
+
+> 说明:XXL-Job 复用主库 `ydsz_pmis`,沿用其账号(`pmis` / `pmis123`)。如主库改了密码,同步修改 [`../conf/xxl-job/application.properties`](../conf/xxl-job/application.properties) 中的 `spring.datasource.password`。
 
 ---
 
