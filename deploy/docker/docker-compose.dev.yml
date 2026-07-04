@@ -1,54 +1,59 @@
 # =============================================================================
 #  YDSZ PMIS · 开发/测试环境基础设施编排
 # -----------------------------------------------------------------------------
-#  用途:    一键拉起 PMIS 后端所需的全部基础设施（4 个容器，约 2GB 内存）
+#  用途:    一键拉起 PMIS 后端所需的全部基础设施（8 个容器，约 4GB 内存）
 #  依赖:    Docker 24+ / Docker Compose v2+
 #  启动:    docker compose -f deploy/docker/docker-compose.dev.yml up -d
 #  停止:    docker compose -f deploy/docker/docker-compose.dev.yml down
 #  重置:    docker compose -f deploy/docker/docker-compose.dev.yml down -v
 #
 #  包含组件:
-#    1. PostgreSQL 18  - 主数据库（自动初始化 126 张表）
-#    2. Redis 7         - 缓存 / 会话 / 分布式锁
-#    3. Nacos 2.4       - 服务注册 + 配置中心（standalone 模式，内置 derby）
-#    4. MinIO           - 对象存储（文件 / 报表 / 导出）
+#    1. PostgreSQL 18       - 主数据库（自动初始化 126 张表）
+#    2. Redis 7             - 缓存 / 会话 / 分布式锁
+#    3. Nacos 2.4           - 服务注册 + 配置中心（standalone + 内置 derby）
+#    4. MinIO               - 对象存储（文件 / 报表 / 导出）
+#    5. Seata 2.5           - 分布式事务协调器（AT 模式）
+#    6. RocketMQ 5.x        - 消息中间件（NameServer + Broker + Console）
+#    7. XXL-Job 2.4         - 分布式任务调度（Admin）
+#    8. Elasticsearch 8.15  - 全文搜索 / 日志分析
 #
-#  不包含（本项目使用频率低，按需启动）:
-#    - Sentinel Dashboard   : 限流规则在 Nacos 集中配置即可
-#    - XXL-Job Admin        : 后续可由 pmis_schedule_task 表 + @Scheduled 替代
-#    - RocketMQ             : 后续可由 Spring Event + @Async 替代
-#    - Seata Server         : 内网场景本地 @Transactional 即可
-#    - Elasticsearch        : 全文搜索改用 PG tsvector
-#    - SkyWalking           : 链路追踪用 Logback traceId 即可
+#  端口速查:
+#    5432  PostgreSQL   6379  Redis         8848/9848  Nacos
+#    9100  MinIO API    9101  MinIO Console  8091  Seata
+#    9876  RocketMQ NS  10911 RocketMQ Broker  8080/9100  RocketMQ Console
+#    9200  Elasticsearch 9300  ES transport   9100  XXL-Job Admin
+#
+#  原生（无 Docker）部署: 参考 docs/INFRASTRUCTURE.md
 # =============================================================================
 
 name: pmis-dev
 
+# =============================================================================
+#  通用配置：Compose v2 的 --compatibility 行为
+# =============================================================================
+x-common-env: &common-env
+  TZ: Asia/Shanghai
+
 services:
 
   # ---------------------------------------------------------------------------
-  #  PostgreSQL 18 - 主数据库
-  # ---------------------------------------------------------------------------
-  #  首次启动自动执行 docker-entrypoint-initdb.d/*.sql 初始化库表
-  #  字符集: UTF8 / 时区: Asia/Shanghai
+  #  1. PostgreSQL 18 - 主数据库
   # ---------------------------------------------------------------------------
   postgres:
     image: postgres:18-alpine
     container_name: pmis-postgres
     restart: unless-stopped
     environment:
+      <<: *common-env
       POSTGRES_DB: ${POSTGRES_DB:-ydsz_pmis}
       POSTGRES_USER: ${POSTGRES_USER:-pmis}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pmis123}
-      # 让 docker-entrypoint 阶段就接受我们的 SQL（防止 locale 报错）
       POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
-      TZ: Asia/Shanghai
     ports:
       - "${POSTGRES_PORT:-5432}:5432"
     volumes:
-      # 持久化数据
       - postgres_data:/var/lib/postgresql/data
-      # 首次启动自动建库+灌 SQL（v1.0.0_001 ~ v1.0.0_041 → 合并为 V1.0.0.sql）
+      # 首次启动自动建库+灌 SQL
       - ../../docs/V1.0.0.sql:/docker-entrypoint-initdb.d/V1.0.0.sql:ro
     networks:
       - pmis-net
@@ -65,7 +70,7 @@ services:
         max-file: "3"
 
   # ---------------------------------------------------------------------------
-  #  Redis 7 - 缓存 + 会话 + 分布式锁
+  #  2. Redis 7 - 缓存 + 会话 + 分布式锁
   # ---------------------------------------------------------------------------
   redis:
     image: redis:7-alpine
@@ -100,10 +105,9 @@ services:
         max-file: "3"
 
   # ---------------------------------------------------------------------------
-  #  Nacos 2.4 - 服务注册 + 配置中心
+  #  3. Nacos 2.4 - 服务注册 + 配置中心
   # ---------------------------------------------------------------------------
-  #  standalone 模式 + 内置 derby，单机即可用，不依赖外部 MySQL
-  #  端口: 8848 (HTTP) / 9848 (gRPC) / 7848 (RPC)
+  #  standalone 模式 + 内置 derby；如需 MySQL 持久化见 INFRASTRUCTURE.md
   # ---------------------------------------------------------------------------
   nacos:
     image: nacos/nacos-server:v2.4.3
@@ -115,7 +119,6 @@ services:
       JVM_XMX: 512m
       JVM_XMN: 256m
       TZ: Asia/Shanghai
-      # 内置 derby 模式，不需要配置 SPRING_DATASOURCE_PLATFORM
     ports:
       - "${NACOS_PORT:-8848}:8848"
       - "9848:9848"
@@ -137,9 +140,7 @@ services:
         max-file: "3"
 
   # ---------------------------------------------------------------------------
-  #  MinIO - 对象存储
-  # ---------------------------------------------------------------------------
-  #  内网项目替代方案：可改为本地文件目录 + Nginx 静态映射
+  #  4. MinIO - 对象存储
   # ---------------------------------------------------------------------------
   minio:
     image: minio/minio:latest
@@ -170,7 +171,7 @@ services:
         max-file: "3"
 
   # ---------------------------------------------------------------------------
-  #  MinIO 初始化 - 自动创建 pmis 桶
+  #  4.1 MinIO 初始化 - 自动创建 pmis 桶
   # ---------------------------------------------------------------------------
   minio-init:
     image: minio/mc:latest
@@ -188,6 +189,206 @@ services:
     networks:
       - pmis-net
     restart: "no"
+
+  # ---------------------------------------------------------------------------
+  #  5. Seata 2.5 - 分布式事务协调器
+  # ---------------------------------------------------------------------------
+  #  使用内置 file 模式持久化（生产用 MySQL 持久化见 INFRASTRUCTURE.md）
+  #  端口: 8091 (TCP) / 7091 (HTTP 控制台, 2.x 才有)
+  # ---------------------------------------------------------------------------
+  seata:
+    image: apache/seata-server:2.5.0
+    container_name: pmis-seata
+    restart: unless-stopped
+    hostname: seata
+    environment:
+      TZ: Asia/Shanghai
+      SEATA_IP: seata
+      SEATA_PORT: 8091
+      # 存储模式：file（默认） / db / redis
+      STORE_MODE: file
+      # 控制台账号（2.5+ 才有）
+      SEATA_CONSOLE_USERNAME: ${SEATA_CONSOLE_USER:admin}
+      SEATA_CONSOLE_PASSWORD: ${SEATA_CONSOLE_PASSWORD:admin}
+    ports:
+      - "7091:7091"
+      - "8091:8091"
+    volumes:
+      - seata_logs:/root/logs
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:7091/api/v1/auth/login -X POST -H 'Content-Type: application/json' -d '{\"username\":\"admin\",\"password\":\"admin\"}' || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  6. RocketMQ 5.x - 消息中间件
+  # ---------------------------------------------------------------------------
+  #  含 NameServer + Broker + Proxy 5.x 集成模式
+  #  端口: 9876 (NameServer) / 10911 (Broker) / 8080 (Proxy/RocketMQ Console)
+  # ---------------------------------------------------------------------------
+  rocketmq-namesrv:
+    image: apache/rocketmq:5.3.2
+    container_name: pmis-rocketmq-namesrv
+    restart: unless-stopped
+    command: sh mqnamesrv
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "9876:9876"
+    volumes:
+      - rocketmq_logs:/home/rocketmq/logs
+      - rocketmq_store:/home/rocketmq/store
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 9876 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  rocketmq-broker:
+    image: apache/rocketmq:5.3.2
+    container_name: pmis-rocketmq-broker
+    restart: unless-stopped
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+    command: sh mqbroker -n rocketmq-namesrv:9876 -c /home/rocketmq/rocketmq-5.3.2/conf/broker.conf
+    environment:
+      TZ: Asia/Shanghai
+    ports:
+      - "10911:10911"
+      - "10909:10909"
+    volumes:
+      - ./rocketmq/broker.conf:/home/rocketmq/rocketmq-5.3.2/conf/broker.conf:ro
+      - rocketmq_logs:/home/rocketmq/logs
+      - rocketmq_store:/home/rocketmq/store
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 10911 || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  rocketmq-console:
+    image: apacherocketmq/rocketmq-console-ng:2.0.1
+    container_name: pmis-rocketmq-console
+    restart: unless-stopped
+    depends_on:
+      rocketmq-namesrv:
+        condition: service_healthy
+    environment:
+      TZ: Asia/Shanghai
+      JAVA_OPTS: "-Drocketmq.namesrv.addr=rocketmq-namesrv:9876 -Dcom.rocketmq.sendMessageWithVIPChannel=false"
+    ports:
+      - "${ROCKETMQ_CONSOLE_PORT:-8080}:8080"
+    networks:
+      - pmis-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  7. XXL-Job 2.4 - 分布式任务调度（Admin）
+  # ---------------------------------------------------------------------------
+  #  Admin 控制台 + 默认账号 admin/123456
+  #  端口: 9100（按 application.yml XXL_JOB_ADMIN_ADDRESSES 配置）
+  #  数据库初始化: 首次启动自动执行 /docker-entrypoint-initdb.d/tables_xxl_job.sql
+  # ---------------------------------------------------------------------------
+  xxl-job:
+    image: xuxueli/xxl-job-admin:2.4.2
+    container_name: pmis-xxl-job
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PARAMS: >-
+        --spring.datasource.url=jdbc:postgresql://postgres:5432/${POSTGRES_DB:-ydsz_pmis}
+        --spring.datasource.username=${POSTGRES_USER:-pmis}
+        --spring.datasource.password=${POSTGRES_PASSWORD:-pmis123}
+        --xxl.job.accessToken=${XXL_JOB_ACCESS_TOKEN:-default-token}
+    ports:
+      - "${XXL_JOB_PORT:-9100}:8080"
+    volumes:
+      - xxl_job_logs:/data/applogs/admin/jobLog
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8080/xxl-job-admin/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  8. Elasticsearch 8.15 - 全文搜索
+  # ---------------------------------------------------------------------------
+  #  单节点模式 + 关闭 xpack 安全（仅开发用）
+  #  端口: 9200 (HTTP) / 9300 (transport)
+  #  注意: 内存需 ≥ 512m（生产建议 ≥ 2g）
+  # ---------------------------------------------------------------------------
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    container_name: pmis-elasticsearch
+    restart: unless-stopped
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - TZ=Asia/Shanghai
+    ports:
+      - "${ES_HTTP_PORT:-9200}:9200"
+      - "${ES_TRANSPORT_PORT:-9300}:9300"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
 
 # =============================================================================
 #  网络与数据卷
@@ -208,3 +409,13 @@ volumes:
     name: pmis-nacos-logs
   minio_data:
     name: pmis-minio-data
+  seata_logs:
+    name: pmis-seata-logs
+  rocketmq_logs:
+    name: pmis-rocketmq-logs
+  rocketmq_store:
+    name: pmis-rocketmq-store
+  xxl_job_logs:
+    name: pmis-xxl-job-logs
+  es_data:
+    name: pmis-es-data

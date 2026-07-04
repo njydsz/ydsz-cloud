@@ -1,0 +1,79 @@
+# =============================================================================
+#  Seata 2.5 Server 配置
+# -----------------------------------------------------------------------------
+#  Ubuntu:  /opt/seata/conf/application.yml
+#  Windows: C:\seata\conf\application.yml
+#  启动:    sh seata-server.sh
+#           seata-server.bat
+# =============================================================================
+
+server:
+  port: 7091
+  servlet:
+    session:
+      timeout: 30m
+
+spring:
+  application:
+    name: seata-server
+
+logging:
+  config: classpath:logback-spring.xml
+  file:
+    path: ${SEATA_LOG_PATH:./logs}
+  level:
+    org.seata: info
+    io.seata: info
+    org.springframework.web: warn
+
+# ---------- 控制台账号 ----------
+console:
+  user:
+    username: admin
+    password: admin
+
+# ---------- Seata Server 配置 ----------
+seata:
+  config:
+    type: file
+    file:
+      name: file.conf
+  registry:
+    type: file
+    file:
+      name: file.conf
+  # 启用控制台
+  enable-console: true
+  # 日志输出
+  log:
+    enable-console-print: true
+  security:
+    secretKey: SeataSecretKey1234567890abcdef
+    tokenValidityInMilliseconds: 1800000
+    csrf:
+      enable: false
+    ignore:
+      urls: /,/**/*.css,/**/*.js,/**/*.html,/**/*.map,/**/*.svg,/**/*.png,/**/*.ico,/**/*.gif,/**/*.jpg,/**/*.woff,/**/*.ttf,/api/v1/auth/login,/error,/health,/health/**,/webjars/**
+
+# =============================================================================
+#  如需开启 Nacos 注册中心（推荐生产用）：
+# =============================================================================
+# seata:
+#   registry:
+#     type: nacos
+#     nacos:
+#       application: seata-server
+#       server-addr: 127.0.0.1:8848
+#       group: SEATA_GROUP
+#       namespace: pmis
+#       username: nacos
+#       password: nacos
+#   config:
+#     type: nacos
+#     nacos:
+#       server-addr: 127.0.0.1:8848
+#       namespace: pmis
+#       group: SEATA_GROUP
+#       username: nacos
+#       password: nacos
+#       data-id: seataServer.properties

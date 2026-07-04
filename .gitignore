@@ -167,3 +167,13 @@ nacos-logs/
 *.bak
 *.backup
 *.orig
+
+# ========================
+# 部署与运行产物
+# ========================
+# 后端服务启动日志与 PID（start-all.sh 生成）
+.run-logs/
+# 部署环境变量（deploy/.env 是真实密码，deploy/.env.example 提交）
+deploy/.env
+# PMIS 公共配置 Nacos 导入失败时的临时输出
+deploy/nacos/.imported

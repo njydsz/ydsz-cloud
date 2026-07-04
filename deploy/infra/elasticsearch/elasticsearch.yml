@@ -1,0 +1,49 @@
+# =============================================================================
+#  Elasticsearch 8.15 单节点配置
+# -----------------------------------------------------------------------------
+#  Ubuntu:  /etc/elasticsearch/elasticsearch.yml
+#  Windows: C:\elasticsearch\config\elasticsearch.yml
+#  启动:    sudo systemctl start elasticsearch  (Linux)
+#           bin\elasticsearch.bat                (Windows)
+# =============================================================================
+
+# ---------- 集群 ----------
+cluster.name: pmis-dev
+node.name: pmis-es-node-1
+# 首次启动生成 UUID 后填回（生产）
+# node.roles: [ master, data, ingest ]
+
+# ---------- 网络 ----------
+network.host: 127.0.0.1
+http.port: 9200
+transport.port: 9300
+
+# ---------- 路径 ----------
+path.data: /var/lib/elasticsearch    # Windows: C:\elasticsearch\data
+path.logs: /var/log/elasticsearch    # Windows: C:\elasticsearch\logs
+
+# ---------- 内存锁（生产推荐） ----------
+bootstrap.memory_lock: false   # Windows 必须 false
+
+# ---------- 关闭安全（仅开发用，生产必开）----------
+xpack.security.enabled: false
+xpack.security.enrollment.enabled: false
+xpack.security.http.ssl.enabled: false
+xpack.security.transport.ssl.enabled: false
+
+# ---------- 集群发现（单节点） ----------
+discovery.type: single-node
+
+# ---------- 索引生命周期 ----------
+action.auto_create_index: true
+action.destructive_requires_name: false
+
+# ---------- 跨域（CORS，便于 Kibana/Postman 调试） ----------
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+http.cors.allow-headers: "Authorization,Content-Type"
+http.cors.allow-methods: "OPTIONS,GET,POST,PUT,DELETE"
+
+# ---------- 索引分片（单节点建议 1）----------
+index.number_of_shards: 1
+index.number_of_replicas: 0

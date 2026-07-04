@@ -31,14 +31,12 @@ public class UserAuthClientFallback implements FallbackFactory<UserAuthClient> {
         return new UserAuthClient() {
             @Override
             public Result<LoginContextDTO> getLoginContextByUsername(String username) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "用户服务不可用，请稍后重试");
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public Result<LoginContextDTO> getLoginContextById(Long userId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "用户服务不可用，请稍后重试");
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
         };
     }

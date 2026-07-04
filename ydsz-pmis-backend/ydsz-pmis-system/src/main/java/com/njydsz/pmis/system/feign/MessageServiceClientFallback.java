@@ -1,5 +1,6 @@
 package com.njydsz.pmis.system.feign;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -31,7 +32,7 @@ public class MessageServiceClientFallback implements FallbackFactory<MessageServ
         return new MessageServiceClient() {
             @Override
             public Result<Object> send(MessageFeignDTO dto) {
-                return Result.failed(503, "消息服务暂不可用, 邮件未发送: receiver=" + dto.getReceiver());
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
