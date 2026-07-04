@@ -191,7 +191,7 @@ async function handleStatus(row: ExpenseVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {
     await ElMessageBox.confirm(t('execution.expense.messages.confirmStatusChange', { target: targetText }), t('common.tip'), { type: 'warning' })
-    await changeExpenseStatus({ id: row.id, targetStatus: target, approverId: 1, approverName: '系统' })
+    await changeExpenseStatus({ id: row.id, targetStatus: target, approverId: 1, approverName: t('execution.expense.systemApprover') })
     ElMessage.success(t('execution.expense.messages.statusUpdated'))
     fetchList()
   } catch { /* 取消 */ }

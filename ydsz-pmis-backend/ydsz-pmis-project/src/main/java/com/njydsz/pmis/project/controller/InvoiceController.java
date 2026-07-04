@@ -10,6 +10,7 @@ import com.njydsz.pmis.project.dto.InvoiceCreateDTO;
 import com.njydsz.pmis.project.entity.InvoiceDO;
 import com.njydsz.pmis.project.service.InvoiceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -38,7 +39,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "发票管理")
+@Tag(name = "发票管理", description = "发票管理相关接口")
 @RestController
 @RequestMapping("/api/v1/execution/invoice")
 @RequiredArgsConstructor
@@ -73,7 +74,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "提交发票审批", bizType = "INVOICE")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable @Min(1) Long id, @RequestParam Long operatorId) {
+    public Result<Void> submit(@Parameter(description = "发票ID") @PathVariable @Min(1) Long id, @Parameter(description = "操作人ID") @RequestParam Long operatorId) {
         service.submit(id, operatorId);
         return Result.ok();
     }
@@ -89,7 +90,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批通过", bizType = "INVOICE")
     @PutMapping("/{id}/approve")
-    public Result<Void> approve(@PathVariable @Min(1) Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> approve(@Parameter(description = "发票ID") @PathVariable @Min(1) Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.approve(id, dto);
         return Result.ok();
     }
@@ -105,7 +106,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批驳回", bizType = "INVOICE")
     @PutMapping("/{id}/reject")
-    public Result<Void> reject(@PathVariable @Min(1) Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> reject(@Parameter(description = "发票ID") @PathVariable @Min(1) Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.reject(id, dto);
         return Result.ok();
     }
@@ -121,7 +122,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:issue")
     @OperationLog(module = "发票管理", action = "财务开具发票", bizType = "INVOICE")
     @PutMapping("/{id}/issue")
-    public Result<Void> issue(@PathVariable @Min(1) Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> issue(@Parameter(description = "发票ID") @PathVariable @Min(1) Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.issue(id, dto);
         return Result.ok();
     }
@@ -138,9 +139,9 @@ public class InvoiceController {
     @PrePermission("finance:invoice:reverse")
     @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
     @PutMapping("/{id}/reverse")
-    public Result<Void> redReverse(@PathVariable @Min(1) Long id,
-                              @RequestParam Long operatorId,
-                              @RequestParam(required = false) String comment) {
+    public Result<Void> redReverse(@Parameter(description = "发票ID") @PathVariable @Min(1) Long id,
+                              @Parameter(description = "操作人ID") @RequestParam Long operatorId,
+                              @Parameter(description = "红冲备注") @RequestParam(required = false) String comment) {
         service.redReverse(id, operatorId, comment);
         return Result.ok();
     }
@@ -157,9 +158,9 @@ public class InvoiceController {
     @PrePermission("finance:invoice:status")
     @OperationLog(module = "发票管理", action = "取消发票", bizType = "INVOICE")
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable @Min(1) Long id,
-                          @RequestParam Long operatorId,
-                          @RequestParam(required = false) String comment) {
+    public Result<Void> cancel(@Parameter(description = "发票ID") @PathVariable @Min(1) Long id,
+                          @Parameter(description = "操作人ID") @RequestParam Long operatorId,
+                          @Parameter(description = "取消备注") @RequestParam(required = false) String comment) {
         service.cancel(id, operatorId, comment);
         return Result.ok();
     }
@@ -174,7 +175,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:delete")
     @OperationLog(module = "发票管理", action = "删除发票", bizType = "INVOICE")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "发票ID") @PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -188,7 +189,7 @@ public class InvoiceController {
     @Operation(summary = "详情")
     @PrePermission("finance:invoice:list")
     @GetMapping("/{id}")
-    public Result<InvoiceDO> get(@PathVariable @Min(1) Long id) {
+    public Result<InvoiceDO> get(@Parameter(description = "发票ID") @PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -209,14 +210,14 @@ public class InvoiceController {
     @PrePermission("finance:invoice:list")
     @GetMapping("/page")
     public Result<Page<InvoiceDO>> page(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long contractId,
-            @RequestParam(required = false) Long initiationId,
-            @RequestParam(required = false) Long customerId,
-            @RequestParam(required = false) String invoiceType) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "状态") @RequestParam(required = false) String status,
+            @Parameter(description = "合同ID") @RequestParam(required = false) Long contractId,
+            @Parameter(description = "立项ID") @RequestParam(required = false) Long initiationId,
+            @Parameter(description = "客户ID") @RequestParam(required = false) Long customerId,
+            @Parameter(description = "发票类型") @RequestParam(required = false) String invoiceType) {
         return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, customerId, invoiceType));
     }
 
@@ -229,7 +230,7 @@ public class InvoiceController {
     @Operation(summary = "按合同汇总开票金额")
     @PrePermission("finance:invoice:list")
     @GetMapping("/sum/by-contract")
-    public Result<BigDecimal> sumByContract(@RequestParam Long contractId) {
+    public Result<BigDecimal> sumByContract(@Parameter(description = "合同ID") @RequestParam Long contractId) {
         return Result.ok(service.sumInvoicedByContract(contractId));
     }
 
@@ -242,7 +243,7 @@ public class InvoiceController {
     @Operation(summary = "按状态分组台账")
     @PrePermission("finance:invoice:list")
     @GetMapping("/aggregate/by-status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam Long contractId) {
+    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "合同ID") @RequestParam Long contractId) {
         return Result.ok(service.aggregateByStatus(contractId));
     }
 }

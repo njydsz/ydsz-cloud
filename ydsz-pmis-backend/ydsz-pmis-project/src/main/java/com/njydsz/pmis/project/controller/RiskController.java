@@ -9,6 +9,7 @@ import com.njydsz.pmis.project.dto.RiskStatusDTO;
 import com.njydsz.pmis.project.service.RiskService;
 import com.njydsz.pmis.project.vo.RiskVO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -36,7 +37,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "项目风险")
+@Tag(name = "风险管理", description = "风险管理相关接口")
 @RestController
 @RequestMapping("/api/v1/execution/risk")
 @RequiredArgsConstructor
@@ -84,7 +85,7 @@ public class RiskController {
     @PrePermission("execution:risk:delete")
     @Idempotent(key = "risk:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "风险ID") @PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -98,7 +99,7 @@ public class RiskController {
     @Operation(summary = "详情")
     @PrePermission("execution:risk:list")
     @GetMapping("/{id}")
-    public Result<RiskVO> get(@PathVariable @Min(1) Long id) {
+    public Result<RiskVO> get(@Parameter(description = "风险ID") @PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -117,12 +118,12 @@ public class RiskController {
     @PrePermission("execution:risk:list")
     @GetMapping("/page")
     public Result<Page<RiskVO>> page(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String riskLevel,
-            @RequestParam(required = false) Long initiationId) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "状态") @RequestParam(required = false) String status,
+            @Parameter(description = "风险等级") @RequestParam(required = false) String riskLevel,
+            @Parameter(description = "立项ID") @RequestParam(required = false) Long initiationId) {
         return Result.ok(service.page(page, size, keyword, status, riskLevel, initiationId));
     }
 
@@ -135,7 +136,7 @@ public class RiskController {
     @Operation(summary = "按等级聚合")
     @PrePermission("execution:risk:list")
     @GetMapping("/aggregate/by-level")
-    public Result<List<Map<String, Object>>> aggregateByLevel(@RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "立项ID") @RequestParam Long initiationId) {
         return Result.ok(service.aggregateByLevel(initiationId));
     }
 }
