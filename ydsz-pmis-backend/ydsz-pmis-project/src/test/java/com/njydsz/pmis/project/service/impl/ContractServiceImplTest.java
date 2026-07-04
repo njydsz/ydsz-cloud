@@ -184,7 +184,6 @@ class ContractServiceImplTest {
         page.setRecords(records);
         when(contractMapper.selectPage(any(), any())).thenReturn(page);
         when(nameAssembler.batchCustomerName(anyList())).thenReturn(Map.of(10L, "客户A", 11L, "客户B"));
-        when(nameAssembler.batchEmployeeName(anyList())).thenReturn(Map.of());
 
         contractService.page(1, 10, null, null, null, null);
 

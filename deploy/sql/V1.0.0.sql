@@ -2128,7 +2128,6 @@ CREATE TABLE IF NOT EXISTS pmis_execution_risk(
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0,
     version             INTEGER       NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_per_code UNIQUE (risk_code, deleted)
 );
 COMMENT ON TABLE pmis_execution_risk IS '项目风险登记表: 项目执行过程中的风险识别、跟踪与闭环管理';
