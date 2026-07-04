@@ -62,8 +62,8 @@ docker compose -f deploy/docker/docker-compose.dev.yml down -v
 | 容器名 | 镜像 | 容器内端口 | 宿主机端口 | 用途 |
 |---|---|---|---|---|
 | `pmis-postgres` | `postgres:18-alpine` | 5432 | 5432 | 主数据库 |
-| `pmis-redis` | `redis:7-alpine` | 6379 | 6379 | 缓存/分布式锁 |
-| `pmis-nacos` | `nacos/nacos-server:v2.4.3` | 8848 / 9848 / 7848 | 8848 / 9848 | 注册/配置中心 |
+| `pmis-redis` | `redis:8-alpine` | 6379 | 6379 | 缓存/分布式锁 |
+| `pmis-nacos` | `nacos/nacos-server:v2.3.2` | 8848 / 9848 / 7848 | 8848 / 9848 | 注册/配置中心 |
 | `pmis-minio` | `minio/minio:latest` | 9000 / 9001 | **9100 / 9101** | 对象存储 |
 | `pmis-seata` | `seataio/seata-server:2.5` | 8091 / 7091 | 8091 / 7091 | 分布式事务 |
 | `pmis-rocketmq-namesrv` | `apache/rocketmq:5.3` | 9876 | 9876 | NameServer |

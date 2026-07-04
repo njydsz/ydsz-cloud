@@ -9,8 +9,8 @@
 #
 #  包含组件:
 #    1. PostgreSQL 18       - 主数据库（自动初始化 126 张表）
-#    2. Redis 7             - 缓存 / 会话 / 分布式锁
-#    3. Nacos 2.4           - 服务注册 + 配置中心（standalone + 内置 derby）
+#    2. Redis 8             - 缓存 / 会话 / 分布式锁
+#    3. Nacos 2.3.2         - 服务注册 + 配置中心（standalone + 内置 derby）
 #    4. MinIO               - 对象存储（文件 / 报表 / 导出）
 #    5. Seata 2.5           - 分布式事务协调器（AT 模式）
 #    6. RocketMQ 5.x        - 消息中间件（NameServer + Broker + Console）
@@ -70,10 +70,10 @@ services:
         max-file: "3"
 
   # ---------------------------------------------------------------------------
-  #  2. Redis 7 - 缓存 + 会话 + 分布式锁
+  #  2. Redis 8 - 缓存 + 会话 + 分布式锁
   # ---------------------------------------------------------------------------
   redis:
-    image: redis:7-alpine
+    image: redis:8-alpine
     container_name: pmis-redis
     restart: unless-stopped
     command:
@@ -105,12 +105,12 @@ services:
         max-file: "3"
 
   # ---------------------------------------------------------------------------
-  #  3. Nacos 2.4 - 服务注册 + 配置中心
+  #  3. Nacos 2.3.2 - 服务注册 + 配置中心
   # ---------------------------------------------------------------------------
   #  standalone 模式 + 内置 derby；如需 MySQL 持久化见 INFRASTRUCTURE.md
   # ---------------------------------------------------------------------------
   nacos:
-    image: nacos/nacos-server:v2.4.3
+    image: nacos/nacos-server:v2.3.2
     container_name: pmis-nacos
     restart: unless-stopped
     environment:

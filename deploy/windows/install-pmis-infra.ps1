@@ -25,8 +25,8 @@ $ErrorActionPreference = 'Stop'
 
 # ---------- 版本 ----------
 $PG_VERSION = '18.0'
-$REDIS_VERSION = '7.4.1'
-$NACOS_VERSION = '2.4.3'
+$REDIS_VERSION = '8.0.0'
+$NACOS_VERSION = '2.3.2'
 $MINIO_VERSION = '2025-04-01T00-00-00Z'
 $SEATA_VERSION = '2.5.0'
 $ROCKETMQ_VERSION = '5.3.2'

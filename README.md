@@ -32,7 +32,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 [![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs)]()
 [![TS](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript)]()
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-336791?logo=postgresql)]()
-[![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis)]()
+[![Redis](https://img.shields.io/badge/Redis-8-DC382D?logo=redis)]()
 [![License](https://img.shields.io/badge/license-Proprietary-red)]()
 
 ---
@@ -94,8 +94,8 @@ YDSZ PMIS · 项目运营管理系统 · README
 | 维度 | 选型 |
 |---|---|
 | **后端框架** | Spring Boot 4.0.7 + Spring Cloud 2025.1.2 + Spring Cloud Alibaba 2025.1.0.0 |
-| **后端治理** | Nacos 2.x（注册/配置）+ Sentinel 1.8.9（限流/熔断）+ Seata 2.5.0（AT 模式分布式事务）+ OpenFeign + RocketMQ 5.x + XXL-JOB 2.4+ |
-| **数据** | PostgreSQL 18 + MyBatis-Plus 3.5.16 + Redis 7 + MinIO + 5 张聚合 SQL 视图（零 Java JOIN） |
+| **后端治理** | Nacos 2.3.2（注册/配置）+ Sentinel 1.8.9（限流/熔断）+ Seata 2.5.0（AT 模式分布式事务）+ OpenFeign + RocketMQ 5.x + XXL-JOB 2.4+ |
+| **数据** | PostgreSQL 18 + MyBatis-Plus 3.5.16 + Redis 8 + MinIO + 5 张聚合 SQL 视图（零 Java JOIN） |
 | **可观测** | Sentry（异常，默认关闭需手动启用）+ Logback + TraceId（MDC）+ Actuator（健康检查） |
 | **安全** | AES-256 + SM4 字段加密 · 7 种脱敏策略 · TOTP 2FA · DataScope 6 模式 · 操作/登录/导出/敏感 4 类审计 · 二级密码策略 |
 | **质量门禁（CI）** | Checkstyle + SpotBugs + FindSecBugs + JaCoCo（覆盖率，配置已就绪）+ OWASP Dependency-Check（默认跳过，CI 中 -DskipDependencyCheck=false 启用） |
@@ -117,10 +117,10 @@ YDSZ PMIS · 项目运营管理系统 · README
 | 前端测试 | vitest | 2.1 | 单元测试 |
 | 后端框架 | Spring Boot / Spring Cloud / SCA | 4.0.7 / 2025.1.2 / 2025.1.0.0 | 微服务 |
 | 后端 ORM | MyBatis-Plus | 3.5.16 | 持久层 |
-| 后端治理 | Nacos / Sentinel / Seata / OpenFeign | 2.x / 1.8.9 / 2.5.0 / 4.x | 注册/限流/事务/调用 |
+| 后端治理 | Nacos / Sentinel / Seata / OpenFeign | 2.3.2 / 1.8.9 / 2.5.0 / 4.x | 注册/限流/事务/调用 |
 | 表达式 | Aviator（literule 模块） | 5.4.3 | 规则引擎表达式 |
 | 数据库 | PostgreSQL | 18 | 主库 |
-| 缓存/锁 | Redis / Redisson | 7 / 4.6.1 | 会话 / 分布式锁 / 幂等 |
+| 缓存/锁 | Redis / Redisson | 8 / 4.6.1 | 会话 / 分布式锁 / 幂等 |
 | 消息 | RocketMQ | 5.x（spring-boot-starter 2.3.1） | 异步事件 |
 | 调度 | XXL-JOB | 2.4+ | 分布式任务 |
 | AI | Spring AI + AgentScope | - | 多智能体编排 |
@@ -163,8 +163,8 @@ literule  → common
 | Node.js | ≥ 20 | 前端 Vite 5.4 |
 | pnpm | ≥ 9 | 强制 lockfile 统一 |
 | PostgreSQL | 18 | 主库 |
-| Redis | 7 | 缓存 / 会话 / 分布式锁 |
-| Nacos | 2.x | namespace `pmis` / group `PMIS_GROUP_{DEV/SIT/UAT/PROD}` |
+| Redis | 8 | 缓存 / 会话 / 分布式锁 |
+| Nacos | 2.3.2 | namespace `pmis` / group `PMIS_GROUP_{DEV/SIT/UAT/PROD}` |
 | Docker | 24+ | Compose 编排基础设施 |
 
 ### 5.2 本地启动

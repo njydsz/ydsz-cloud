@@ -42,7 +42,7 @@ done
 # 导入配置（使用 Nacos OpenAPI /v1/cs/configs）
 echo "[INFO] 导入配置: $DATA_ID (namespace=$NAMESPACE, group=$GROUP)"
 
-# 注意: Nacos 2.x 鉴权方式: accessToken 由 /v1/auth/login 获取
+# 注意: Nacos 2.3 鉴权方式: accessToken 由 /v1/auth/login 获取
 ACCESS_TOKEN=$(curl -s -X POST "http://$NACOS_ADDR/nacos/v1/auth/login" \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "username=$USERNAME&password=$PASSWORD" | grep -oP '"accessToken":"\K[^"]+' || echo "")

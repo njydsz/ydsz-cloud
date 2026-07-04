@@ -56,7 +56,7 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh
 脚本会自动完成:
 
 1. 创建 `pmis` 系统用户
-2. 安装 PostgreSQL 18 / Redis 7(apt)
+2. 安装 PostgreSQL 18 / Redis 8(apt)
 3. 安装 JDK 21(apt)
 4. 部署 Nacos / XXL-Job / Seata(Java 中间件,下载 release 包)
 5. 部署 MinIO / RocketMQ / Elasticsearch(原生二进制)

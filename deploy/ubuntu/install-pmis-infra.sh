@@ -22,8 +22,8 @@ JAVA_HOME=${JAVA_HOME:-/opt/jdk-21}
 
 # ---------- 版本 ----------
 PG_VERSION=18
-REDIS_VERSION=7.4
-NACOS_VERSION=2.4.3
+REDIS_VERSION=8.0
+NACOS_VERSION=2.3.2
 MINIO_RELEASE=2025-04-01
 SEATA_VERSION=2.5.0
 ROCKETMQ_VERSION=5.3.2
@@ -137,11 +137,11 @@ EOF
 }
 
 # =============================================================================
-#  Redis 7
+#  Redis 8
 # =============================================================================
 install_redis() {
   if should_skip redis; then return; fi
-  log "安装 Redis 7..."
+  log "安装 Redis 8..."
 
   apt-get install -y -qq redis-server
 
@@ -154,11 +154,11 @@ install_redis() {
   systemctl restart redis-server
   sleep 1
 
-  ok "Redis 7 安装完成"
+  ok "Redis 8 安装完成"
 }
 
 # =============================================================================
-#  Nacos 2.4
+#  Nacos 2.3.2
 # =============================================================================
 install_nacos() {
   if should_skip nacos; then return; fi
