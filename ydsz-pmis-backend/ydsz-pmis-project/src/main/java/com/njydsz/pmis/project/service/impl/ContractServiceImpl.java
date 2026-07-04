@@ -21,8 +21,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 合同服务实现
@@ -70,6 +73,8 @@ public class ContractServiceImpl implements ContractService {
             c.setRiskLevel(ContractRiskEvaluator.evaluate(c).name());
         }
         contractMapper.insert(c);
+        // 装配名称（满足"create 路径必须装配 foreign-key name"约束）
+        assembleNames(c);
         log.info("[Contract] 创建合同: code={} name={}", c.getContractCode(), c.getContractName());
         return c.getId();
     }
@@ -161,9 +166,7 @@ public class ContractServiceImpl implements ContractService {
         w.orderByDesc(ContractDO::getCreatedAt);
         Page<ContractDO> result = contractMapper.selectPage(p, w);
         if (result != null && result.getRecords() != null) {
-            for (ContractDO rec : result.getRecords()) {
-                assembleNames(rec);
-            }
+            batchAssembleNames(result.getRecords());
         }
         return result;
     }
@@ -187,26 +190,26 @@ public class ContractServiceImpl implements ContractService {
     /**
      * 按状态聚合计数。
      *
-     * @param tenantId 租户 ID，为空时填充默认值 1
+     * @param tenantId 租户 ID，为空时取 TenantContext.getTenantId()
      * @return 每种状态对应的数量列表
      */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
-        if (tenantId == null) tenantId = 1L;
+        if (tenantId == null) tenantId = TenantContext.getTenantId();
         return contractMapper.aggregateByStatus(tenantId);
     }
 
     /**
      * 按风险等级聚合计数。
      *
-     * @param tenantId 租户 ID，为空时填充默认值 1
+     * @param tenantId 租户 ID，为空时取 TenantContext.getTenantId()
      * @return 每种风险等级对应的数量列表
      */
     @Override
     @Transactional(readOnly = true)
     public List<Map<String, Object>> aggregateByRisk(Long tenantId) {
-        if (tenantId == null) tenantId = 1L;
+        if (tenantId == null) tenantId = TenantContext.getTenantId();
         return contractMapper.aggregateByRisk(tenantId);
     }
 
@@ -263,6 +266,44 @@ public class ContractServiceImpl implements ContractService {
                 String n = nameAssembler.resolveEmployee(c.getOwnerId());
                 if (n != null) c.setOwnerName(n);
             } catch (Exception e) { log.warn("解析负责人名称失败 ownerId={}: {}", c.getOwnerId(), e.getMessage(), e); }
+        }
+    }
+
+    /**
+     * 批量装配客户/负责人名称（避免 N+1 Feign 调用）。
+     * <p>三步法：① 用 Set 去重收集待解析 ID；② 一次性批量 Feign 查询；③ Map 查找填充名称。
+     * 装配字段与 {@link #assembleNames(ContractDO)} 保持一致。</p>
+     *
+     * @param records 合同列表，为空或装配器为空时直接返回
+     */
+    private void batchAssembleNames(List<ContractDO> records) {
+        if (records == null || records.isEmpty() || nameAssembler == null) return;
+        // 第 1 步：收集需要解析的 ID（用 Set 去重）
+        Set<Long> customerIds = new HashSet<>();
+        Set<Long> employeeIds = new HashSet<>();
+        for (ContractDO rec : records) {
+            if (!StringUtils.hasText(rec.getCustomerName()) && rec.getCustomerId() != null) {
+                customerIds.add(rec.getCustomerId());
+            }
+            if (!StringUtils.hasText(rec.getOwnerName()) && rec.getOwnerId() != null) {
+                employeeIds.add(rec.getOwnerId());
+            }
+        }
+        // 第 2 步：一次性批量查询（空集合守卫，Set → ArrayList 转换）
+        Map<Long, String> customerNames = customerIds.isEmpty()
+                ? Map.of() : nameAssembler.batchCustomerName(new ArrayList<>(customerIds));
+        Map<Long, String> employeeNames = employeeIds.isEmpty()
+                ? Map.of() : nameAssembler.batchEmployeeName(new ArrayList<>(employeeIds));
+        // 第 3 步：循环填充名称（Map 查找，Feign 失败时 Map 为空自然跳过）
+        for (ContractDO rec : records) {
+            if (!StringUtils.hasText(rec.getCustomerName()) && rec.getCustomerId() != null) {
+                String n = customerNames.get(rec.getCustomerId());
+                if (n != null) rec.setCustomerName(n);
+            }
+            if (!StringUtils.hasText(rec.getOwnerName()) && rec.getOwnerId() != null) {
+                String n = employeeNames.get(rec.getOwnerId());
+                if (n != null) rec.setOwnerName(n);
+            }
         }
     }
 }

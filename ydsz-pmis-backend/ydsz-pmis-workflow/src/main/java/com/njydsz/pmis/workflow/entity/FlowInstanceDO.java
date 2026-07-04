@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -103,4 +104,8 @@ public class FlowInstanceDO extends BaseDO {
     /** 子流程超时时间（超时自动终止子流程，可空） */
     @TableField("due_at")
     private LocalDateTime dueAt;
+
+    /** 乐观锁版本号（P1-2） */
+    @Version
+    private Integer version;
 }

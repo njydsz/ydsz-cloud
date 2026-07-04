@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.njydsz.pmis.common.entity.BaseDO;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -116,4 +117,8 @@ public class FlowDefinitionDO extends BaseDO {
      * </pre>
      */
     private String canaryRolloutLog;
+
+    /** 乐观锁版本号（P1-2） */
+    @Version
+    private Integer version;
 }

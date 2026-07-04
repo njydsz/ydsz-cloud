@@ -1276,6 +1276,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
     updated_by        BIGINT        NOT NULL DEFAULT 0,
     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT      NOT NULL DEFAULT 0,
+    version           INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppo_code UNIQUE (opportunity_code, deleted)
 );
 COMMENT ON TABLE pmis_project_opportunity IS '商机主表: 销售线索到合同前的漏斗管理,支持赢率/分级/转化立项';
@@ -1329,7 +1330,8 @@ CREATE TABLE IF NOT EXISTS pmis_project_opportunity_follow(
     next_step         TEXT,
     next_follow_date  DATE,
     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0
+    deleted           SMALLINT      NOT NULL DEFAULT 0,
+    version           INTEGER       NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE pmis_project_opportunity_follow IS '商机跟进记录: 拜访/电话/报价/谈判的痕迹管理,支持时间线回溯';
 COMMENT ON COLUMN pmis_project_opportunity_follow.id IS '主键 ID';
@@ -1380,6 +1382,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_initiation(
     updated_by        BIGINT        NOT NULL DEFAULT 0,
     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT      NOT NULL DEFAULT 0,
+    version           INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppi_code UNIQUE (project_code, deleted)
 );
 COMMENT ON TABLE pmis_project_initiation IS '项目立项主表: 商机到合同之间的立项流程载体,关联预算/PM/CDCP 门径评审';
@@ -1439,9 +1442,11 @@ CREATE TABLE IF NOT EXISTS pmis_project_budget_item(
     sort_order        INTEGER       NOT NULL DEFAULT 0,
     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0
+    deleted           SMALLINT      NOT NULL DEFAULT 0,
+    version           INTEGER       NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE pmis_project_budget_item IS '立项预算明细: 按类别拆解预算,支撑执行期预算占用控制(80% 黄/95% 红)';
+COMMENT ON COLUMN pmis_project_budget_item.version IS '乐观锁版本号(P1-2)';
 COMMENT ON COLUMN pmis_project_budget_item.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_budget_item.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
 COMMENT ON COLUMN pmis_project_budget_item.category IS '预算类别: LABOR 人力 / PURCHASE 采购 / EXPENSE 费用 / OUTSOURCE 外包 / OTHER 其他';
@@ -1476,7 +1481,8 @@ CREATE TABLE IF NOT EXISTS pmis_project_gate_review(
     next_gate         VARCHAR(16),
     created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0
+    deleted           SMALLINT      NOT NULL DEFAULT 0,
+    version           INTEGER       NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE pmis_project_gate_review IS '门径评审记录: CDCP 决策评审(CD1 启动/CD2 设计/CD3 建设/CD4 UAT/CD5 上线)';
 COMMENT ON COLUMN pmis_project_gate_review.id IS '主键 ID';
@@ -1529,6 +1535,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract(
     updated_by        BIGINT        NOT NULL DEFAULT 0,
     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT      NOT NULL DEFAULT 0,
+    version           INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppc_code UNIQUE (contract_code, deleted)
 );
 COMMENT ON TABLE pmis_project_contract IS '合同主表: 项目签约合同,关联立项/客户/付款条款,支撑开票回款';
@@ -1592,6 +1599,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
     updated_by        BIGINT        NOT NULL DEFAULT 0,
     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT      NOT NULL DEFAULT 0,
+    version           INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppcs_code UNIQUE (supplement_code, deleted)
 );
 COMMENT ON TABLE pmis_project_contract_supplement IS '合同补充协议: 主合同签订后的金额/范围/工期/其他补充条款,法务备案';
@@ -1642,6 +1650,7 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
     updated_by        BIGINT        NOT NULL DEFAULT 0,
     updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted           SMALLINT      NOT NULL DEFAULT 0,
+    version           INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppcc_code UNIQUE (change_code, deleted)
 );
 COMMENT ON TABLE pmis_project_contract_change IS '合同变更记录: 范围/金额/工期/人员/进度的变更,需走审批流';
@@ -1724,6 +1733,7 @@ CREATE TABLE IF NOT EXISTS pmis_execution_wbs_task(
     updated_by          BIGINT        NOT NULL DEFAULT 0,
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0,
+    version             INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pewt_code UNIQUE (task_code, deleted)
 );
 COMMENT ON TABLE pmis_execution_wbs_task IS 'WBS 任务表: 项目工作分解结构,层级化任务编排,支撑进度/工时/责任追踪';
@@ -1799,7 +1809,8 @@ CREATE TABLE IF NOT EXISTS pmis_execution_time_entry(
     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0
+    deleted             SMALLINT      NOT NULL DEFAULT 0,
+    version             INTEGER       NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE pmis_execution_time_entry IS '工时录入表: 日清日结,员工每日填报工时,自动计算人天/成本';
 COMMENT ON COLUMN pmis_execution_time_entry.id IS '主键 ID';
@@ -1857,7 +1868,8 @@ CREATE TABLE IF NOT EXISTS pmis_cost_allocation(
     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0
+    deleted             SMALLINT      NOT NULL DEFAULT 0,
+    version             INTEGER       NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE pmis_cost_allocation IS '项目成本归集表: 按月 × 类别归集项目发生的所有成本,支撑利润核算与驾驶舱';
 COMMENT ON COLUMN pmis_cost_allocation.id IS '主键 ID';
@@ -1912,6 +1924,7 @@ CREATE TABLE IF NOT EXISTS pmis_cost_purchase(
     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0,
+    version             INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pcp_code UNIQUE (purchase_code, deleted)
 );
 COMMENT ON TABLE pmis_cost_purchase IS '采购成本申请表: 项目硬件/软件/服务采购,触发预算占用校验(80% 黄/95% 红)';
@@ -1967,6 +1980,7 @@ CREATE TABLE IF NOT EXISTS pmis_cost_expense(
     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0,
+    version             INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_pce_code UNIQUE (expense_code, deleted)
 );
 COMMENT ON TABLE pmis_cost_expense IS '费用报销表: 差旅/团建/会议/办公等费用报销,可关联项目(影响项目预算)';
@@ -2021,6 +2035,7 @@ CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0,
+    version             INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_ppr_code UNIQUE (revenue_code, deleted)
 );
 COMMENT ON TABLE pmis_profit_revenue IS '收入确认表: 按里程碑/百分比/完工法/手动法等多维度确认项目收入';
@@ -2076,7 +2091,8 @@ CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
     snapshot_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tenant_id           BIGINT        NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    deleted             SMALLINT      NOT NULL DEFAULT 0
+    deleted             SMALLINT      NOT NULL DEFAULT 0,
+    version             INTEGER       NOT NULL DEFAULT 0
 );
 COMMENT ON TABLE pmis_profit_snapshot IS '项目利润快照（按月）';
 COMMENT ON COLUMN pmis_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
@@ -2111,6 +2127,8 @@ CREATE TABLE IF NOT EXISTS pmis_execution_risk(
     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0,
+    version             INTEGER       NOT NULL DEFAULT 0,
+    version             INTEGER       NOT NULL DEFAULT 0,
     CONSTRAINT uk_per_code UNIQUE (risk_code, deleted)
 );
 COMMENT ON TABLE pmis_execution_risk IS '项目风险登记表: 项目执行过程中的风险识别、跟踪与闭环管理';
