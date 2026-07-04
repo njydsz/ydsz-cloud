@@ -8,6 +8,7 @@ import com.njydsz.pmis.userinfo.service.DictService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/dict")
 @RequiredArgsConstructor
+@Validated
 public class DictController {
 
     /** 字典服务 */

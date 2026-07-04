@@ -7,7 +7,9 @@ import com.njydsz.pmis.project.service.AlertDispatchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +34,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/execution/alert-dispatch")
 @RequiredArgsConstructor
+@Validated
 public class AlertDispatchController {
 
     private final AlertDispatchService service;
@@ -56,7 +59,7 @@ public class AlertDispatchController {
      */
     @Operation(summary = "立即分发")
     @PutMapping("/{id}/dispatch")
-    public Result<Boolean> dispatchNow(@PathVariable Long id) {
+    public Result<Boolean> dispatchNow(@PathVariable @Min(1) Longid) {
         return Result.ok(service.dispatchNow(id));
     }
 
@@ -81,7 +84,7 @@ public class AlertDispatchController {
      */
     @Operation(summary = "取消预警")
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable Long id, @RequestParam(required = false) String reason) {
+    public Result<Void> cancel(@PathVariable @Min(1) Longid, @RequestParam(required = false) String reason) {
         service.cancel(id, reason);
         return Result.ok();
     }

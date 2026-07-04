@@ -11,8 +11,11 @@ import com.njydsz.pmis.project.service.WarrantyService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +37,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/execution/warranty")
 @RequiredArgsConstructor
+@Validated
 public class WarrantyController {
 
     private final WarrantyService service;
@@ -84,8 +88,8 @@ public class WarrantyController {
     @PrePermission("aftersales:warranty:list")
     @GetMapping("/page")
     public Result<PageResult<WarrantyDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) String keyword) {
@@ -95,7 +99,7 @@ public class WarrantyController {
     @Operation(summary = "质保期详情")
     @PrePermission("aftersales:warranty:list")
     @GetMapping("/{id}")
-    public Result<WarrantyDO> getById(@PathVariable Long id) {
+    public Result<WarrantyDO> getById(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getById(id));
     }
 }

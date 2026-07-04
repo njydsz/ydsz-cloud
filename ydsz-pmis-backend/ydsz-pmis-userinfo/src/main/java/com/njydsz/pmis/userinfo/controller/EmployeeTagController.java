@@ -10,7 +10,9 @@ import com.njydsz.pmis.userinfo.service.EmployeeTagService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,6 +35,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/employee-tags")
 @RequiredArgsConstructor
+@Validated
 public class EmployeeTagController {
 
     /** 人员标签服务 */
@@ -62,7 +65,7 @@ public class EmployeeTagController {
     @PrePermission(PermissionCodes.RESOURCE_TAG_DELETE)
     @OperationLog(module = "人员标签", action = "删除标签", bizType = "EMPLOYEE_TAG")
     @DeleteMapping("/{id}")
-    public Result<Void> remove(@PathVariable Long id) {
+    public Result<Void> remove(@PathVariable @Min(1) Long id) {
         tagService.remove(id);
         return Result.ok();
     }
@@ -78,8 +81,8 @@ public class EmployeeTagController {
     @PrePermission(PermissionCodes.RESOURCE_TAG_UPDATE)
     @OperationLog(module = "人员标签", action = "覆盖员工标签", bizType = "EMPLOYEE_TAG")
     @PutMapping("/replace/{employeeId}")
-    public Result<Void> replaceByEmployee(@PathVariable Long employeeId,
-                                     @RequestBody List<EmployeeTagCreateDTO> tags) {
+    public Result<Void> replaceByEmployee(@PathVariable @Min(1) Long employeeId,
+                                     @Valid @RequestBody List<EmployeeTagCreateDTO> tags) {
         tagService.replaceByEmployee(employeeId, tags);
         return Result.ok();
     }
@@ -92,7 +95,7 @@ public class EmployeeTagController {
      */
     @Operation(summary = "按员工查询")
     @GetMapping("/by-employee/{employeeId}")
-    public Result<List<EmployeeTagDO>> listByEmployee(@PathVariable Long employeeId) {
+    public Result<List<EmployeeTagDO>> listByEmployee(@PathVariable @Min(1) Long employeeId) {
         return Result.ok(tagService.listByEmployee(employeeId));
     }
 

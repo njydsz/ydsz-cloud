@@ -11,7 +11,10 @@ import com.njydsz.pmis.project.service.ProfitSimulationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +40,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/execution/profit-simulation")
 @RequiredArgsConstructor
+@Validated
 public class ProfitSimulationController {
 
     private final ProfitSimulationService service;
@@ -78,7 +82,7 @@ public class ProfitSimulationController {
     @Operation(summary = "删除")
     @PrePermission("execution:simulation:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Longid) {
         service.delete(id);
         return Result.ok();
     }
@@ -92,7 +96,7 @@ public class ProfitSimulationController {
     @Operation(summary = "详情")
     @PrePermission("execution:simulation:list")
     @GetMapping("/{id}")
-    public Result<ProfitSimulationDO> get(@PathVariable Long id) {
+    public Result<ProfitSimulationDO> get(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getById(id));
     }
 
@@ -136,8 +140,8 @@ public class ProfitSimulationController {
     @PrePermission("execution:simulation:list")
     @GetMapping("/page")
     public Result<Page<ProfitSimulationDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) String scenarioType,
             @RequestParam(required = false) String status) {

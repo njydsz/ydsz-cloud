@@ -12,7 +12,10 @@ import com.njydsz.pmis.project.service.OpsTicketService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,6 +37,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/execution/ops-ticket")
 @RequiredArgsConstructor
+@Validated
 public class OpsTicketController {
 
     private final OpsTicketService service;
@@ -82,8 +86,8 @@ public class OpsTicketController {
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/page")
     public Result<PageResult<OpsTicketDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String priority,
             @RequestParam(required = false) Long initiationId,
@@ -110,14 +114,14 @@ public class OpsTicketController {
     @Operation(summary = "工单详情")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/{id}")
-    public Result<OpsTicketDO> getById(@PathVariable Long id) {
+    public Result<OpsTicketDO> getById(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "按项目查询工单")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/by-initiation/{initiationId}")
-    public Result<List<OpsTicketDO>> listByInitiation(@PathVariable Long initiationId) {
+    public Result<List<OpsTicketDO>> listByInitiation(@PathVariable @Min(1) LonginitiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
 }

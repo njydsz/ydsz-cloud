@@ -5,6 +5,12 @@ import com.njydsz.pmis.agent.orchestration.OrchestrationResult;
 import com.njydsz.pmis.agent.service.AgentOrchestrationService;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -25,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/agent/orchestration")
 @RequiredArgsConstructor
+@Validated
 public class AgentOrchestrationController {
 
     /** 多智能体编排服务 */
@@ -39,7 +46,7 @@ public class AgentOrchestrationController {
     @Operation(summary = "协调多 Agent 编排执行")
     @PrePermission("agent:orchestration:run")
     @PostMapping("/coordinate")
-    public Result<OrchestrationResult> coordinate(@RequestBody OrchestrationRequest req) {
+    public Result<OrchestrationResult> coordinate(@Valid @RequestBody OrchestrationRequest req) {
         return Result.ok(service.orchestrate(req));
     }
 }

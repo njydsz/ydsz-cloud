@@ -10,7 +10,10 @@ import com.njydsz.pmis.userinfo.service.ResourcePoolService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +38,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/resource-pools")
 @RequiredArgsConstructor
+@Validated
 public class ResourcePoolController {
 
     /** 资源池服务 */
@@ -65,7 +69,7 @@ public class ResourcePoolController {
     @PrePermission("resource:pool:update")
     @OperationLog(module = "资源池", action = "更新资源池", bizType = "RESOURCE_POOL")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
+    public Result<Void> update(@PathVariable @Min(1) Long id, @Valid @RequestBody ResourcePoolCreateDTO dto) {
         poolService.update(id, dto);
         return Result.ok();
     }
@@ -80,7 +84,7 @@ public class ResourcePoolController {
     @PrePermission("resource:pool:delete")
     @OperationLog(module = "资源池", action = "删除资源池", bizType = "RESOURCE_POOL")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         poolService.delete(id);
         return Result.ok();
     }
@@ -93,7 +97,7 @@ public class ResourcePoolController {
      */
     @Operation(summary = "资源池详情")
     @GetMapping("/{id}")
-    public Result<ResourcePoolDO> get(@PathVariable Long id) {
+    public Result<ResourcePoolDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(poolService.getById(id));
     }
 
@@ -117,7 +121,7 @@ public class ResourcePoolController {
      */
     @Operation(summary = "按部门查询")
     @GetMapping("/by-dept/{departmentId}")
-    public Result<List<ResourcePoolDO>> listByDept(@PathVariable Long departmentId) {
+    public Result<List<ResourcePoolDO>> listByDept(@PathVariable @Min(1) Long departmentId) {
         return Result.ok(poolService.listByDept(departmentId));
     }
 
@@ -133,8 +137,8 @@ public class ResourcePoolController {
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public Result<Page<ResourcePoolDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String poolType,
             @RequestParam(required = false) String status) {
         return Result.ok(poolService.page(page, size, poolType, status));

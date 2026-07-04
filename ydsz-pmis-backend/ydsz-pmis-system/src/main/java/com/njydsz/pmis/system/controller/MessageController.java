@@ -10,6 +10,9 @@ import com.njydsz.pmis.system.entity.MessageLogDO;
 import com.njydsz.pmis.system.service.MessageServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
@@ -30,6 +34,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/message")
 @RequiredArgsConstructor
+@Validated
 public class MessageController {
 
     /** 消息发送服务 */
@@ -44,7 +49,7 @@ public class MessageController {
     @Operation(summary = "发送消息（支持模板渲染）")
     @PrePermission("notif:message:send")
     @PostMapping("/send")
-    public Result<MessageResult> send(@RequestBody MessageSendDTO dto) {
+    public Result<MessageResult> send(@Valid @RequestBody MessageSendDTO dto) {
         if (dto == null) {
             return Result.failed(10001, "请求不能为空");
         }
@@ -66,8 +71,8 @@ public class MessageController {
     @PrePermission("notif:message:send")
     @GetMapping("/log/page")
     public Result<Page<MessageLogDO>> pageLog(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) String status) {

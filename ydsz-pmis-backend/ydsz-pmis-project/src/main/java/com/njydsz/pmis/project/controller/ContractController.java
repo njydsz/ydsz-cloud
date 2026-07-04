@@ -11,7 +11,9 @@ import com.njydsz.pmis.project.service.ContractService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -35,6 +37,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/project/contract")
 @RequiredArgsConstructor
+@Validated
 public class ContractController {
 
     /** 合同服务 */
@@ -79,7 +82,7 @@ public class ContractController {
     @PrePermission("project:contract:delete")
     @Idempotent(key = "contract:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -93,7 +96,7 @@ public class ContractController {
     @Operation(summary = "合同详情")
     @PrePermission("project:contract:list")
     @GetMapping("/{id}")
-    public Result<ContractDO> get(@PathVariable Long id) {
+    public Result<ContractDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -112,8 +115,8 @@ public class ContractController {
     @PrePermission("project:contract:list")
     @GetMapping("/page")
     public Result<Page<ContractDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @jakarta.validation.constraints.Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String contractType,
@@ -130,7 +133,7 @@ public class ContractController {
     @Operation(summary = "重新评估风险等级")
     @PrePermission("project:contract:evaluate")
     @PostMapping("/{id}/evaluate-risk")
-    public Result<String> evaluateRisk(@PathVariable Long id) {
+    public Result<String> evaluateRisk(@PathVariable @Min(1) Long id) {
         return Result.ok(service.evaluateRisk(id));
     }
 

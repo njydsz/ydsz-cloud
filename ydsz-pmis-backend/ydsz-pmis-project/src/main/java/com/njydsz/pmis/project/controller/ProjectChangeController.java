@@ -12,7 +12,9 @@ import com.njydsz.pmis.project.service.ProjectChangeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/project/change")
 @RequiredArgsConstructor
+@Validated
 public class ProjectChangeController {
 
     /** 项目变更服务 */
@@ -82,7 +85,7 @@ public class ProjectChangeController {
     @Operation(summary = "删除变更")
     @PrePermission("project:change:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -96,7 +99,7 @@ public class ProjectChangeController {
     @Operation(summary = "变更详情")
     @PrePermission("project:change:list")
     @GetMapping("/{id}")
-    public Result<ProjectChangeDO> get(@PathVariable Long id) {
+    public Result<ProjectChangeDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -115,8 +118,8 @@ public class ProjectChangeController {
     @PrePermission("project:change:list")
     @GetMapping("/page")
     public Result<Page<ProjectChangeDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @jakarta.validation.constraints.Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String changeType,
             @RequestParam(required = false) String status,
@@ -133,7 +136,7 @@ public class ProjectChangeController {
     @Operation(summary = "按项目查询变更列表")
     @PrePermission("project:change:list")
     @GetMapping("/list-by-initiation/{initiationId}")
-    public Result<List<ProjectChangeDO>> listByInitiation(@PathVariable Long initiationId) {
+    public Result<List<ProjectChangeDO>> listByInitiation(@PathVariable @Min(1) Long initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
@@ -172,7 +175,7 @@ public class ProjectChangeController {
     @Operation(summary = "统计项目重大变更数")
     @PrePermission("project:change:list")
     @GetMapping("/major-count/{initiationId}")
-    public Result<Long> countMajor(@PathVariable Long initiationId) {
+    public Result<Long> countMajor(@PathVariable @Min(1) Long initiationId) {
         return Result.ok(service.countMajorByInitiation(initiationId));
     }
 
@@ -189,7 +192,7 @@ public class ProjectChangeController {
     @Operation(summary = "获取合法状态迁移列表")
     @PrePermission("project:change:list")
     @GetMapping("/{id}/allowed-transitions")
-    public Result<List<String>> getAllowedTransitions(@PathVariable Long id) {
+    public Result<List<String>> getAllowedTransitions(@PathVariable @Min(1) Long id) {
         ProjectChangeDO change = service.getById(id);
         if (change == null) {
             return Result.ok(List.of());

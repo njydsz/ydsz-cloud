@@ -12,7 +12,9 @@ import com.njydsz.pmis.system.service.ConfigService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/configs")
 @RequiredArgsConstructor
+@Validated
 public class ConfigController {
 
     private final ConfigService configService;
@@ -82,7 +85,7 @@ public class ConfigController {
     @PrePermission("sys:config:delete")
     @OperationLog(module = "系统配置", action = "删除配置", bizType = "CONFIG")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         configService.delete(id);
         return Result.ok();
     }

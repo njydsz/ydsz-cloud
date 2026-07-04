@@ -9,12 +9,15 @@ import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
@@ -28,6 +31,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/audit/sensitive-op")
 @RequiredArgsConstructor
+@Validated
 public class SensitiveOperationController {
 
     private final SensitiveOperationMapper mapper;
@@ -36,8 +40,8 @@ public class SensitiveOperationController {
     @PrePermission("audit:sensitive:view")
     @GetMapping("/page")
     public Result<PageResult<SensitiveOperationDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String opType) {
         Page<SensitiveOperationDO> p = new Page<>(page, size);

@@ -52,6 +52,10 @@ export default {
     viewErrorDetails: 'View error details',
     pageRenderError: 'Page render error',
     pageErrorSubtitle: 'Sorry, an unknown error occurred. Please retry or go back to home.',
+    errorId: 'Error ID',
+    retryLimitExceeded: 'Retry limit reached. Please refresh the page or contact admin.',
+    contactAdmin: 'Contact admin',
+    copyErrorId: 'Copy error ID',
     advancedSelect: 'Advanced select',
     confirmContinue: 'Confirm and continue',
     globalSearch: {

@@ -7,6 +7,9 @@ import com.njydsz.pmis.system.entity.MessageTemplateDO;
 import com.njydsz.pmis.system.service.MessageTemplateServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import java.util.List;
 
@@ -30,6 +34,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/message/template")
 @RequiredArgsConstructor
+@Validated
 public class MessageTemplateController {
 
     /** 消息模板服务 */
@@ -44,7 +49,7 @@ public class MessageTemplateController {
     @Operation(summary = "创建模板")
     @PrePermission("notif:message:send")
     @PostMapping
-    public Result<Long> create(@RequestBody MessageTemplateDTO dto) {
+    public Result<Long> create(@Valid @RequestBody MessageTemplateDTO dto) {
         return Result.ok(templateService.create(dto.toDO()));
     }
 
@@ -57,7 +62,7 @@ public class MessageTemplateController {
     @Operation(summary = "更新模板")
     @PrePermission("notif:message:send")
     @PutMapping
-    public Result<Void> update(@RequestBody MessageTemplateDTO dto) {
+    public Result<Void> update(@Valid @RequestBody MessageTemplateDTO dto) {
         MessageTemplateDO t = dto.toDO();
         t.setId(dto.getId());
         templateService.update(t);
@@ -73,7 +78,7 @@ public class MessageTemplateController {
     @Operation(summary = "删除模板")
     @PrePermission("notif:message:send")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         templateService.delete(id);
         return Result.ok();
     }
@@ -87,7 +92,7 @@ public class MessageTemplateController {
     @Operation(summary = "模板详情")
     @PrePermission("notif:message:send")
     @GetMapping("/{id}")
-    public Result<MessageTemplateDO> get(@PathVariable Long id) {
+    public Result<MessageTemplateDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(templateService.getById(id));
     }
 
@@ -104,8 +109,8 @@ public class MessageTemplateController {
     @PrePermission("notif:message:send")
     @GetMapping("/page")
     public Result<Page<MessageTemplateDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String channel,
             @RequestParam(required = false) String keyword) {
         return Result.ok(templateService.page(page, size, channel, keyword));

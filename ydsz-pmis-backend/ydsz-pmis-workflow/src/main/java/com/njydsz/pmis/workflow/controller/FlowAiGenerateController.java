@@ -2,6 +2,12 @@ package com.njydsz.pmis.workflow.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowAiGenerateService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +33,7 @@ import java.util.Map;
 @Tag(name = "workflow-ai-generate", description = "工作流AI生成接口")
 @RequestMapping("/api/v1/workflow/ai")
 @RequiredArgsConstructor
+@Validated
 public class FlowAiGenerateController {
 
     private final FlowAiGenerateService flowAiGenerateService;

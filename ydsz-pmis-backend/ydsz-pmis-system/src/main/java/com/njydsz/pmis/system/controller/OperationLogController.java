@@ -10,6 +10,8 @@ import com.njydsz.pmis.common.entity.CursorPageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -18,6 +20,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,6 +35,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/audit/operation")
 @RequiredArgsConstructor
+@Validated
 public class OperationLogController {
 
     /** 操作日志服务 */
@@ -54,8 +58,8 @@ public class OperationLogController {
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/page")
     public Result<PageResult<OperationLogDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) String status,
@@ -89,7 +93,7 @@ public class OperationLogController {
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/cursor-page")
     public Result<CursorPageResult<OperationLogDO>> cursorPage(
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String cursor,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String bizType,
@@ -158,7 +162,7 @@ public class OperationLogController {
     @Operation(summary = "查询变更差异")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/{id}/diff")
-    public List<DiffCalculator.FieldDiff> getDiff(@PathVariable Long id) {
+    public List<DiffCalculator.FieldDiff> getDiff(@PathVariable @Min(1) Long id) {
         OperationLogDO log = service.getById(id);
         if (log == null) return List.of();
         return DiffCalculator.calculateDiff(log.getBeforeData(), log.getAfterData());

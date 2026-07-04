@@ -10,7 +10,9 @@ import com.njydsz.pmis.userinfo.vo.MenuTreeVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,6 +27,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/permissions")
 @RequiredArgsConstructor
+@Validated
 public class PermissionController {
 
     /** 权限服务 */
@@ -84,7 +87,7 @@ public class PermissionController {
      */
     @Operation(summary = "查询角色的权限")
     @GetMapping("/by-role/{roleId}")
-    public Result<List<PermissionDO>> listByRole(@PathVariable Long roleId) {
+    public Result<List<PermissionDO>> listByRole(@PathVariable @Min(1) Long roleId) {
         return Result.ok(permissionService.listByRoleId(roleId));
     }
 
@@ -96,7 +99,7 @@ public class PermissionController {
      */
     @Operation(summary = "权限详情")
     @GetMapping("/{id}")
-    public Result<PermissionDO> get(@PathVariable Long id) {
+    public Result<PermissionDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(permissionService.getById(id));
     }
 
@@ -139,7 +142,7 @@ public class PermissionController {
     @PrePermission("auth:perm:delete")
     @OperationLog(module = "权限管理", action = "删除权限", bizType = "PERM")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         permissionService.delete(id);
         return Result.ok();
     }

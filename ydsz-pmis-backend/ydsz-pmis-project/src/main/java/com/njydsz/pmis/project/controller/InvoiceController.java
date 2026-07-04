@@ -12,7 +12,10 @@ import com.njydsz.pmis.project.service.InvoiceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,6 +42,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/execution/invoice")
 @RequiredArgsConstructor
+@Validated
 public class InvoiceController {
 
     private final InvoiceService service;
@@ -69,7 +73,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "提交发票审批", bizType = "INVOICE")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable Long id, @RequestParam Long operatorId) {
+    public Result<Void> submit(@PathVariable @Min(1) Longid, @RequestParam Long operatorId) {
         service.submit(id, operatorId);
         return Result.ok();
     }
@@ -85,7 +89,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批通过", bizType = "INVOICE")
     @PutMapping("/{id}/approve")
-    public Result<Void> approve(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> approve(@PathVariable @Min(1) Longid, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.approve(id, dto);
         return Result.ok();
     }
@@ -101,7 +105,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批驳回", bizType = "INVOICE")
     @PutMapping("/{id}/reject")
-    public Result<Void> reject(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> reject(@PathVariable @Min(1) Longid, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.reject(id, dto);
         return Result.ok();
     }
@@ -117,7 +121,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:issue")
     @OperationLog(module = "发票管理", action = "财务开具发票", bizType = "INVOICE")
     @PutMapping("/{id}/issue")
-    public Result<Void> issue(@PathVariable Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> issue(@PathVariable @Min(1) Longid, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.issue(id, dto);
         return Result.ok();
     }
@@ -134,7 +138,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:reverse")
     @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
     @PutMapping("/{id}/reverse")
-    public Result<Void> redReverse(@PathVariable Long id,
+    public Result<Void> redReverse(@PathVariable @Min(1) Longid,
                               @RequestParam Long operatorId,
                               @RequestParam(required = false) String comment) {
         service.redReverse(id, operatorId, comment);
@@ -153,7 +157,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:status")
     @OperationLog(module = "发票管理", action = "取消发票", bizType = "INVOICE")
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable Long id,
+    public Result<Void> cancel(@PathVariable @Min(1) Longid,
                           @RequestParam Long operatorId,
                           @RequestParam(required = false) String comment) {
         service.cancel(id, operatorId, comment);
@@ -170,7 +174,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:delete")
     @OperationLog(module = "发票管理", action = "删除发票", bizType = "INVOICE")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Longid) {
         service.delete(id);
         return Result.ok();
     }
@@ -184,7 +188,7 @@ public class InvoiceController {
     @Operation(summary = "详情")
     @PrePermission("finance:invoice:list")
     @GetMapping("/{id}")
-    public Result<InvoiceDO> get(@PathVariable Long id) {
+    public Result<InvoiceDO> get(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getById(id));
     }
 
@@ -205,8 +209,8 @@ public class InvoiceController {
     @PrePermission("finance:invoice:list")
     @GetMapping("/page")
     public Result<Page<InvoiceDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long contractId,

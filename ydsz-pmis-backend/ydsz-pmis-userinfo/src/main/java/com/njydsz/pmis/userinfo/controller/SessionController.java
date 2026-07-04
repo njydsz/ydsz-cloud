@@ -10,7 +10,10 @@ import com.njydsz.pmis.userinfo.mapper.UserSessionMapper;
 import com.njydsz.pmis.userinfo.service.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,6 +36,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/user/session")
 @RequiredArgsConstructor
+@Validated
 public class SessionController {
 
     /** 会话服务 */
@@ -90,8 +94,8 @@ public class SessionController {
     @Operation(summary = "管理员分页查询所有会话（按用户/状态/IP 过滤）")
     @GetMapping("/admin/page")
     public Result<PageResult<UserSessionDO>> adminPage(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String clientIp) {

@@ -6,6 +6,12 @@ import com.njydsz.pmis.workflow.service.FlowThirdPartyAccountService;
 import com.njydsz.pmis.workflow.thirdparty.DingTalkSignatureUtil;
 import com.njydsz.pmis.workflow.thirdparty.FeishuSignatureUtil;
 import com.njydsz.pmis.workflow.thirdparty.WeComSignatureUtil;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +47,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/workflow/third-party")
 @RequiredArgsConstructor
+@Validated
 public class FlowThirdPartyApprovalController {
 
     private final FlowThirdPartyAccountService thirdPartyAccountService;

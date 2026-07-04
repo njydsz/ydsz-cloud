@@ -63,6 +63,15 @@ public class MessageLogDO extends BaseDO {
     /** 链路追踪 ID */
     private String traceId;
 
+    /** RocketMQ 消息 ID（P0-D3: 关联 MQ 投递链路） */
+    private String msgId;
+
+    /** RocketMQ Topic（P0-D3: 标识消息来源 Topic，DLQ 消息填充原 Topic） */
+    private String topic;
+
+    /** RocketMQ 重试次数（P0-D3: 死信消息填充实际重试次数） */
+    private Integer reconsumeTimes;
+
     /** 租户 ID */
     private Long tenantId;
 }

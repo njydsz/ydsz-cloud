@@ -11,8 +11,11 @@ import com.njydsz.pmis.userinfo.service.impl.BenchServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +40,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/bench")
 @RequiredArgsConstructor
+@Validated
 public class BenchController {
 
     /** 闲置池服务 */
@@ -64,7 +68,7 @@ public class BenchController {
      */
     @Operation(summary = "Bench 详情")
     @GetMapping("/{id}")
-    public Result<BenchRecordDO> get(@PathVariable Long id) {
+    public Result<BenchRecordDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(benchService.getById(id));
     }
 
@@ -76,7 +80,7 @@ public class BenchController {
      */
     @Operation(summary = "员工当前 Bench 记录")
     @GetMapping("/active/{employeeId}")
-    public Result<BenchRecordDO> getActiveByEmployee(@PathVariable Long employeeId) {
+    public Result<BenchRecordDO> getActiveByEmployee(@PathVariable @Min(1) Long employeeId) {
         return Result.ok(benchService.getActiveByEmployee(employeeId));
     }
 
@@ -118,8 +122,8 @@ public class BenchController {
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public Result<Page<BenchRecordDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) Long poolId,
             @RequestParam(required = false) String status) {
         return Result.ok(benchService.page(page, size, poolId, status));

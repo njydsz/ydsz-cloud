@@ -13,6 +13,11 @@ import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 import lombok.RequiredArgsConstructor;
 
 import java.util.LinkedHashMap;
@@ -39,6 +44,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/agent")
 @RequiredArgsConstructor
+@Validated
 public class AgentController {
 
     /** Agent 服务 */
@@ -97,7 +103,7 @@ public class AgentController {
     @Operation(summary = "记录详情")
     @PrePermission("agent:task:view")
     @GetMapping("/{id}")
-    public Result<AgentPredictionDO> get(@PathVariable Long id) {
+    public Result<AgentPredictionDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -117,8 +123,8 @@ public class AgentController {
     @PrePermission("agent:task:list")
     @GetMapping("/page")
     public Result<Page<AgentPredictionDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) String alertLevel,
             @RequestParam(required = false) String status,

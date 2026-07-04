@@ -15,7 +15,9 @@ import com.njydsz.pmis.system.service.RealtimePushService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,6 +33,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
+@Validated
 public class NotificationController {
 
     /** 通知服务 */
@@ -83,7 +86,7 @@ public class NotificationController {
      */
     @Operation(summary = "标记已读")
     @PostMapping("/{id}/read")
-    public Result<Boolean> markRead(@PathVariable Long id) {
+    public Result<Boolean> markRead(@PathVariable @Min(1) Long id) {
         return Result.ok(notificationService.markRead(SecurityContext.getUserId(), id));
     }
 

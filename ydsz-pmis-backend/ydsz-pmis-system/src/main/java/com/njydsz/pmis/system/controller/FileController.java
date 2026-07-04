@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -108,7 +109,7 @@ public class FileController {
      */
     @Operation(summary = "文件详情")
     @GetMapping("/{id}")
-    public Result<FileDO> getById(@PathVariable Long id) {
+    public Result<FileDO> getById(@PathVariable @Min(1) Long id) {
         return Result.ok(fileService.getById(id));
     }
 
@@ -121,8 +122,8 @@ public class FileController {
      */
     @Operation(summary = "获取预签名下载 URL")
     @GetMapping("/{id}/presigned-url")
-    public Result<String> presignedUrl(@PathVariable Long id,
-                                  @RequestParam(required = false) Integer expireSeconds) {
+    public Result<String> presignedUrl(@PathVariable @Min(1) Long id,
+                                  @RequestParam(required = false) @Min(1) Integer expireSeconds) {
         return Result.ok(fileService.getPresignedUrl(id, expireSeconds));
     }
 
@@ -135,7 +136,7 @@ public class FileController {
      */
     @Operation(summary = "下载文件")
     @GetMapping("/{id}/download")
-    public void download(@PathVariable Long id, HttpServletResponse response) throws Exception {
+    public void download(@PathVariable @Min(1) Long id, HttpServletResponse response) throws Exception {
         FileDO f = fileService.getById(id);
         try (InputStream in = fileService.download(id);
              OutputStream out = response.getOutputStream()) {
@@ -159,8 +160,8 @@ public class FileController {
      */
     @Operation(summary = "按业务查询")
     @GetMapping("/by-biz")
-    public Result<List<FileDO>> listByBiz(@RequestParam String bizType,
-                                     @RequestParam String bizId) {
+    public Result<List<FileDO>> listByBiz(@RequestParam @NotBlank String bizType,
+                                     @RequestParam @NotBlank String bizId) {
         return Result.ok(fileService.listByBiz(bizType, bizId));
     }
 
@@ -177,8 +178,8 @@ public class FileController {
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public Result<Page<FileDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String bizType,
             @RequestParam(required = false) String bizId,
             @RequestParam(required = false) String keyword) {

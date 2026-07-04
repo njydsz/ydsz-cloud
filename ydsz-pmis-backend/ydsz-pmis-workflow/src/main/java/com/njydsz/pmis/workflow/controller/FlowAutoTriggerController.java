@@ -3,6 +3,12 @@ package com.njydsz.pmis.workflow.controller;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.entity.FlowAutoTriggerDO;
 import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +32,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/workflow/trigger")
 @RequiredArgsConstructor
+@Validated
 public class FlowAutoTriggerController {
 
     private final FlowAutoTriggerService autoTriggerService;
@@ -65,7 +72,7 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "删除触发规则")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         autoTriggerService.deleteById(id);
         return Result.ok();
     }
@@ -78,7 +85,7 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "启用/禁用触发规则")
     @PutMapping("/{id}/toggle")
-    public Result<Map<String, Object>> toggle(@PathVariable Long id) {
+    public Result<Map<String, Object>> toggle(@PathVariable @Min(1) Long id) {
         boolean enabled = autoTriggerService.toggleEnabled(id);
         return Result.ok(Map.of("id", id, "enabled", enabled));
     }

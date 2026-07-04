@@ -12,7 +12,9 @@ import com.njydsz.pmis.project.service.OpportunityService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +39,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/project/opportunity")
 @RequiredArgsConstructor
+@Validated
 public class OpportunityController {
 
     private final OpportunityService service;
@@ -70,7 +73,7 @@ public class OpportunityController {
     @PrePermission("project:opportunity:delete")
     @Idempotent(key = "opportunity:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -78,7 +81,7 @@ public class OpportunityController {
     @Operation(summary = "商机详情")
     @PrePermission("project:opportunity:list")
     @GetMapping("/{id}")
-    public Result<OpportunityDO> get(@PathVariable Long id) {
+    public Result<OpportunityDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -86,8 +89,8 @@ public class OpportunityController {
     @PrePermission("project:opportunity:list")
     @GetMapping("/page")
     public Result<Page<OpportunityDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Min(1) @jakarta.validation.constraints.Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String level,
@@ -98,7 +101,7 @@ public class OpportunityController {
     @Operation(summary = "评估并更新赢率")
     @PrePermission("project:opportunity:evaluate")
     @PostMapping("/{id}/evaluate-winrate")
-    public Result<BigDecimal> evaluateWinRate(@PathVariable Long id,
+    public Result<BigDecimal> evaluateWinRate(@PathVariable @Min(1) Long id,
                                          @RequestParam(required = false) String customerCredit,
                                          @RequestParam(defaultValue = "false") boolean hasHistory) {
         return Result.ok(service.evaluateWinRate(id, customerCredit, hasHistory));
@@ -121,7 +124,7 @@ public class OpportunityController {
     @Operation(summary = "商机转立项自动化(WON -> CONVERTED + 创建预立项草稿)")
     @PrePermission("project:opportunity:convert")
     @PostMapping("/{id}/convert-to-initiation")
-    public Result<Long> convertToInitiation(@PathVariable Long id,
+    public Result<Long> convertToInitiation(@PathVariable @Min(1) Long id,
                                         @RequestParam(required = false) Long sponsorId,
                                         @RequestParam(required = false) Long pmId) {
         return Result.ok(service.convertToInitiation(id, sponsorId, pmId));

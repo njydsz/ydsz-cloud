@@ -1,8 +1,11 @@
 package com.njydsz.pmis.system.consumer;
 
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.system.entity.MessageLogDO;
+import com.njydsz.pmis.system.mapper.MessageLogMapper;
 import com.njydsz.pmis.system.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,8 +58,8 @@ import java.util.Collections;
 @ConditionalOnClass(name = "org.apache.rocketmq.spring.annotation.RocketMQMessageListener")
 @ConditionalOnProperty(prefix = "rocketmq.consumer", name = "enabled", havingValue = "true", matchIfMissing = false)
 @RocketMQMessageListener(
-        topic = "pmis-message-topic",
-        consumerGroup = "pmis-message-consumer",
+        topic = PmisMessageTopics.TOPIC_MESSAGE,
+        consumerGroup = PmisMessageTopics.GROUP_MESSAGE,
         selectorExpression = "*",
         maxReconsumeTimes = 3
 )
@@ -66,6 +69,8 @@ public class MessageConsumer implements RocketMQListener<String> {
     private final MessageService messageService;
     /** Redis 模板，用于幂等防重 */
     private final StringRedisTemplate redisTemplate;
+    /** 消息日志 Mapper（P0-D3: BizException 不再静默丢弃，记录到日志表） */
+    private final MessageLogMapper messageLogMapper;
 
     // ==================== 幂等防重常量 ====================
 
@@ -145,20 +150,56 @@ public class MessageConsumer implements RocketMQListener<String> {
 
         try {
             messageService.send(request);
-            log.info("[MessageConsumer] topic=pmis-message-topic channel={} template={} cost={}ms idempotent={}",
-                    request.getChannel(), request.getTemplateCode(),
+            log.info("[MessageConsumer] topic={} channel={} template={} cost={}ms idempotent={}",
+                    PmisMessageTopics.TOPIC_MESSAGE, request.getChannel(), request.getTemplateCode(),
                     System.currentTimeMillis() - start, idempotentKey != null);
         } catch (BizException e) {
-            // 业务异常：保留锁（防止重投 spam），不抛出
-            log.error("[MessageConsumer] biz error, body={}, err={}, idempotentKey={}",
-                    body, e.getMessage(), idempotentKey);
+            // 业务异常：保留锁（防止重投 spam），不抛出触发重试；
+            // P0-D3: 不再静默丢弃，落库到 pmis_message_log(status=FAILED) 便于后续排查/补偿
+            log.error("[MessageConsumer] biz error, messageId={} err={} idempotentKey={}",
+                    request.getMessageId(), e.getMessage(), idempotentKey);
+            recordFailedLog(request, e.getMessage());
         } catch (Exception e) {
             // 系统异常：释放锁（允许 RocketMQ 重投），抛出触发重试
-            log.error("[MessageConsumer] system error, body={}, idempotentKey={}", body, idempotentKey, e);
+            log.error("[MessageConsumer] system error, messageId={} idempotentKey={}",
+                    request.getMessageId(), idempotentKey, e);
             releaseLock(idempotentKey);
             throw new RuntimeException("MessageConsumer failed, will retry", e);
         }
         // 正常完成或 BizException：保留锁，TTL 内防止重复消费
+    }
+
+    /**
+     * 业务异常时记录失败日志到 pmis_message_log（P0-D3）
+     *
+     * <p>原实现 BizException 静默丢弃，无任何痕迹。改为落库 status=FAILED，
+     * 便于运维通过日志表排查/补偿，避免消息"消失"。
+     * 落库失败仅记录 WARN 日志，不影响主流程（避免日志写入失败反抛异常触发无意义重投）。
+     *
+     * @param request      原始消息请求
+     * @param errorMessage 错误信息
+     */
+    private void recordFailedLog(MessageRequest request, String errorMessage) {
+        try {
+            MessageLogDO logDO = new MessageLogDO();
+            logDO.setChannel(request.getChannel());
+            logDO.setBizType(request.getBizType());
+            logDO.setBizId(request.getBizId());
+            logDO.setReceiver(request.getReceiver());
+            logDO.setTemplateCode(request.getTemplateCode());
+            logDO.setContent(request.getContent());
+            logDO.setStatus("FAILED");
+            logDO.setErrorMessage(errorMessage);
+            logDO.setMsgId(request.getMessageId());
+            logDO.setTopic(PmisMessageTopics.TOPIC_MESSAGE);
+            logDO.setReconsumeTimes(0);
+            logDO.setTenantId(1L);
+            messageLogMapper.insert(logDO);
+        } catch (Exception logEx) {
+            // 日志落库失败不影响主流程，仅记录
+            log.warn("[MessageConsumer] 记录失败日志异常, messageId={} err={}",
+                    request.getMessageId(), logEx.getMessage());
+        }
     }
 
     /**

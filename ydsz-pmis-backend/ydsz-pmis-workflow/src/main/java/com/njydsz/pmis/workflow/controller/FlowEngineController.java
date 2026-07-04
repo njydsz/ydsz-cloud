@@ -34,10 +34,13 @@ import com.njydsz.pmis.workflow.service.FlowTaskService;
 import com.njydsz.pmis.workflow.service.FlowTemplateService;
 import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -60,6 +63,7 @@ import java.util.Map;
 @Tag(name = "workflow-engine", description = "工作流引擎管理接口")
 @RequestMapping("/api/v1/workflow/engine")
 @RequiredArgsConstructor
+@Validated
 public class FlowEngineController {
 
     /** 工作流门面，业务调用入口 */
@@ -134,7 +138,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{id}/publish")
     @Operation(summary = "发布流程定义")
-    public Result<Void> publish(@PathVariable Long id) {
+    public Result<Void> publish(@PathVariable @Min(1) Long id) {
         definitionService.publish(id);
         return Result.ok();
     }
@@ -147,7 +151,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{id}/deprecate")
     @Operation(summary = "废弃流程定义")
-    public Result<Void> deprecate(@PathVariable Long id) {
+    public Result<Void> deprecate(@PathVariable @Min(1) Long id) {
         definitionService.deprecate(id);
         return Result.ok();
     }
@@ -179,8 +183,8 @@ public class FlowEngineController {
      */
     @GetMapping("/definition/page")
     @Operation(summary = "分页查询流程定义")
-    public Result<List<FlowDefinitionDO>> page(@RequestParam(defaultValue = "1") int pageNo,
-                                          @RequestParam(defaultValue = "20") int pageSize,
+    public Result<List<FlowDefinitionDO>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNo,
+                                          @RequestParam(defaultValue = "20") @Max(100) int pageSize,
                                           @RequestParam(required = false) String category,
                                           @RequestParam(required = false) String flowCode) {
         return Result.ok(definitionService.page(pageNo, pageSize, category, flowCode));
@@ -194,7 +198,7 @@ public class FlowEngineController {
      */
     @GetMapping("/definition/{id}")
     @Operation(summary = "查询流程定义详情（含节点与跳转）")
-    public Result<Map<String, Object>> getDefinitionDetail(@PathVariable Long id) {
+    public Result<Map<String, Object>> getDefinitionDetail(@PathVariable @Min(1) Long id) {
         return Result.ok(definitionService.getDetail(id));
     }
 
@@ -223,7 +227,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{id}/enable")
     @Operation(summary = "启用流程定义")
-    public Result<Void> enable(@PathVariable Long id) {
+    public Result<Void> enable(@PathVariable @Min(1) Long id) {
         definitionService.enable(id);
         return Result.ok();
     }
@@ -236,7 +240,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{id}/disable")
     @Operation(summary = "停用流程定义")
-    public Result<Void> disable(@PathVariable Long id) {
+    public Result<Void> disable(@PathVariable @Min(1) Long id) {
         definitionService.disable(id);
         return Result.ok();
     }
@@ -251,7 +255,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
     @Operation(summary = "更新流程节点坐标")
-    public Result<Void> updateNodeCoordinate(@PathVariable Long definitionId,
+    public Result<Void> updateNodeCoordinate(@PathVariable @Min(1) Long definitionId,
                                              @PathVariable String nodeCode,
                                              @RequestBody String coordinate) {
         definitionService.updateNodeCoordinate(definitionId, nodeCode, coordinate);
@@ -267,7 +271,7 @@ public class FlowEngineController {
      */
     @PutMapping("/definition/{id}")
     @Operation(summary = "编辑未发布的流程定义草稿")
-    public Result<Void> updateDefinition(@PathVariable Long id,
+    public Result<Void> updateDefinition(@PathVariable @Min(1) Long id,
                                          @Valid @RequestBody FlowDeployProcessDTO dto) {
         definitionService.updateDefinition(id, dto);
         return Result.ok();
@@ -281,7 +285,7 @@ public class FlowEngineController {
      */
     @GetMapping("/definition/{id}/export")
     @Operation(summary = "导出流程定义为 JSON")
-    public Result<String> exportDefinition(@PathVariable Long id) {
+    public Result<String> exportDefinition(@PathVariable @Min(1) Long id) {
         return Result.ok(definitionService.exportDefinition(id));
     }
 
@@ -308,7 +312,7 @@ public class FlowEngineController {
      */
     @GetMapping("/definition/{id}/versions")
     @Operation(summary = "列出流程定义的所有历史版本")
-    public Result<List<Map<String, Object>>> listVersions(@PathVariable Long id) {
+    public Result<List<Map<String, Object>>> listVersions(@PathVariable @Min(1) Long id) {
         return Result.ok(definitionService.listVersions(id));
     }
 
@@ -322,7 +326,7 @@ public class FlowEngineController {
      */
     @GetMapping("/definition/{id}/diff")
     @Operation(summary = "流程定义版本差异对比")
-    public Result<Map<String, Object>> diffVersions(@PathVariable Long id,
+    public Result<Map<String, Object>> diffVersions(@PathVariable @Min(1) Long id,
                                                      @RequestParam Integer v1,
                                                      @RequestParam Integer v2) {
         return Result.ok(definitionService.diffVersions(id, v1, v2));
@@ -509,8 +513,8 @@ public class FlowEngineController {
      */
     @GetMapping("/instance/page")
     public Result<PageResult<FlowInstanceDO>> instancePage(
-            @RequestParam(defaultValue = "1") int pageNo,
-            @RequestParam(defaultValue = "20") int pageSize,
+            @RequestParam(defaultValue = "1") @Min(1) int pageNo,
+            @RequestParam(defaultValue = "20") @Max(100) int pageSize,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) Long initiatorId,
             @RequestParam(required = false) String flowStatus,
@@ -529,7 +533,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含变量 Map
      */
     @GetMapping("/instance/{id}/variables")
-    public Result<Map<String, Object>> getVariables(@PathVariable Long id) {
+    public Result<Map<String, Object>> getVariables(@PathVariable @Min(1) Long id) {
         return Result.ok(instanceService.getVariables(id));
     }
 
@@ -541,7 +545,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/instance/{id}/variables")
-    public Result<Void> setVariables(@PathVariable Long id,
+    public Result<Void> setVariables(@PathVariable @Min(1) Long id,
                                      @RequestBody Map<String, Object> variables) {
         instanceService.setVariables(id, variables);
         return Result.ok();
@@ -556,7 +560,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含任务详情
      */
     @GetMapping("/task/{taskId}")
-    public Result<Map<String, Object>> taskDetail(@PathVariable Long taskId) {
+    public Result<Map<String, Object>> taskDetail(@PathVariable @Min(1) Long taskId) {
         return Result.ok(workflowFacade.getTaskDetail(taskId));
     }
 
@@ -606,7 +610,7 @@ public class FlowEngineController {
      * @return 该任务所属实例经过的历史节点列表（按首次完成时间正序）
      */
     @GetMapping("/task/{taskId}/rejectable-nodes")
-    public Result<List<Map<String, Object>>> rejectableNodes(@PathVariable Long taskId) {
+    public Result<List<Map<String, Object>>> rejectableNodes(@PathVariable @Min(1) Long taskId) {
         FlowTaskDO task = taskService.getById(taskId);
         if (task == null) {
             return Result.ok(List.of());
@@ -700,7 +704,7 @@ public class FlowEngineController {
      * @return 统一响应结果，包含被催办人列表
      */
     @PostMapping("/instance/{id}/urge")
-    public Result<List<String>> urge(@PathVariable Long id,
+    public Result<List<String>> urge(@PathVariable @Min(1) Long id,
                                  @RequestParam Long operatorId,
                                  @RequestParam(required = false) String comment) {
         return Result.ok(workflowFacade.urgeTask(id, operatorId, comment));
@@ -716,8 +720,8 @@ public class FlowEngineController {
      */
     @GetMapping("/task/todo")
     public Result<List<Map<String, Object>>> todo(@RequestParam Long userId,
-                                              @RequestParam(defaultValue = "1") int page,
-                                              @RequestParam(defaultValue = "20") int size) {
+                                              @RequestParam(defaultValue = "1") @Min(1) int page,
+                                              @RequestParam(defaultValue = "20") @Max(100) int size) {
         return Result.ok(workflowFacade.listTodoTasks(userId, page, size));
     }
 
@@ -731,8 +735,8 @@ public class FlowEngineController {
      */
     @GetMapping("/task/done")
     public Result<List<Map<String, Object>>> done(@RequestParam Long userId,
-                                              @RequestParam(defaultValue = "1") int page,
-                                              @RequestParam(defaultValue = "20") int size) {
+                                              @RequestParam(defaultValue = "1") @Min(1) int page,
+                                              @RequestParam(defaultValue = "20") @Max(100) int size) {
         return Result.ok(workflowFacade.listDoneTasks(userId, page, size));
     }
 
@@ -775,7 +779,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/{taskId}/timeout")
-    public Result<Void> timeoutTask(@PathVariable Long taskId,
+    public Result<Void> timeoutTask(@PathVariable @Min(1) Long taskId,
                                     @RequestParam(required = false) String reason) {
         taskService.timeoutTask(taskId, reason);
         return Result.ok();
@@ -802,8 +806,8 @@ public class FlowEngineController {
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(required = false) Long tenantId,
-            @RequestParam(defaultValue = "1") int pageNo,
-            @RequestParam(defaultValue = "20") int pageSize) {
+            @RequestParam(defaultValue = "1") @Min(1) int pageNo,
+            @RequestParam(defaultValue = "20") @Max(100) int pageSize) {
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
         return Result.ok(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize));
@@ -841,7 +845,7 @@ public class FlowEngineController {
      * P0-3: 抄送标记已读
      */
     @PostMapping("/cc/{id}/read")
-    public Result<Boolean> ccMarkRead(@PathVariable Long id) {
+    public Result<Boolean> ccMarkRead(@PathVariable @Min(1) Long id) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         Long userId = SecurityContext.getUserId();
         ccService.markRead(tenantId, userId, id);
@@ -892,7 +896,7 @@ public class FlowEngineController {
      * P1-4: 撤回授权
      */
     @PostMapping("/delegate-auth/{id}/revoke")
-    public Result<Void> revokeDelegateAuth(@PathVariable Long id) {
+    public Result<Void> revokeDelegateAuth(@PathVariable @Min(1) Long id) {
         Long ownerId = SecurityContext.getUserId();
         delegateAuthService.revoke(id, ownerId);
         return Result.ok();
@@ -902,7 +906,7 @@ public class FlowEngineController {
      * P1-4: 启用/停用授权
      */
     @PostMapping("/delegate-auth/{id}/status")
-    public Result<Void> updateDelegateAuthStatus(@PathVariable Long id,
+    public Result<Void> updateDelegateAuthStatus(@PathVariable @Min(1) Long id,
                                                  @RequestParam String status) {
         Long operatorId = SecurityContext.getUserId();
         delegateAuthService.updateStatus(id, status, operatorId);
@@ -936,8 +940,8 @@ public class FlowEngineController {
      */
     @GetMapping("/delegate-auth/log/delegate")
     public Result<PageResult<?>> myDelegateLog(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size) {
         Long delegateUserId = SecurityContext.getUserId();
         return Result.ok(delegateAuthService.listDelegateLog(delegateUserId, page, size));
     }
@@ -947,8 +951,8 @@ public class FlowEngineController {
      */
     @GetMapping("/delegate-auth/log/owner")
     public Result<PageResult<?>> myOwnerLog(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size) {
         Long ownerUserId = SecurityContext.getUserId();
         return Result.ok(delegateAuthService.listOwnerLog(ownerUserId, page, size));
     }
@@ -974,7 +978,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/{taskId}/read")
-    public Result<Void> markRead(@PathVariable Long taskId) {
+    public Result<Void> markRead(@PathVariable @Min(1) Long taskId) {
         Long userId = SecurityContext.getUserId();
         taskService.markRead(taskId, userId);
         return Result.ok();
@@ -1036,7 +1040,7 @@ public class FlowEngineController {
      * @return 是否处理成功
      */
     @PostMapping("/sla/process/{taskId}")
-    public Result<Boolean> slaProcess(@PathVariable Long taskId) {
+    public Result<Boolean> slaProcess(@PathVariable @Min(1) Long taskId) {
         FlowTaskDO task = taskService.getById(taskId);
         if (task == null) {
             return Result.failed(BizErrorCode.NOT_FOUND, "任务不存在: " + taskId);
@@ -1311,8 +1315,8 @@ public class FlowEngineController {
     public Result<PageResult<Map<String, Object>>> monitorAnomaly(
             @RequestParam(required = false) String anomalyType,
             @RequestParam(required = false) String warnLevel,
-            @RequestParam(defaultValue = "1") int pageNum,
-            @RequestParam(defaultValue = "10") int pageSize) {
+            @RequestParam(defaultValue = "1") @Min(1) int pageNum,
+            @RequestParam(defaultValue = "10") @Max(100) int pageSize) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
 
         // 拉取全量异常（detectAnomalies 默认 limit=100，足够覆盖监控场景）
@@ -1643,7 +1647,7 @@ public class FlowEngineController {
      */
     @PostMapping("/canary/{definitionId}/publish")
     public Result<Void> publishCanary(
-            @PathVariable Long definitionId,
+            @PathVariable @Min(1) Long definitionId,
             @RequestParam(defaultValue = "10") int initialPercent,
             @RequestParam(defaultValue = "USER_HASH") String strategy,
             @RequestParam(required = false) Long operatorId,
@@ -1666,7 +1670,7 @@ public class FlowEngineController {
      */
     @PostMapping("/canary/{definitionId}/adjust")
     public Result<Void> adjustCanary(
-            @PathVariable Long definitionId,
+            @PathVariable @Min(1) Long definitionId,
             @RequestParam int newPercent,
             @RequestParam(required = false) Long operatorId,
             @RequestParam(required = false) String operatorName,
@@ -1686,7 +1690,7 @@ public class FlowEngineController {
      */
     @PostMapping("/canary/{definitionId}/promote")
     public Result<Void> promoteCanary(
-            @PathVariable Long definitionId,
+            @PathVariable @Min(1) Long definitionId,
             @RequestParam(required = false) Long operatorId,
             @RequestParam(required = false) String operatorName,
             @RequestParam(required = false) String note) {
@@ -1705,7 +1709,7 @@ public class FlowEngineController {
      */
     @PostMapping("/canary/{definitionId}/rollback")
     public Result<Void> rollbackCanary(
-            @PathVariable Long definitionId,
+            @PathVariable @Min(1) Long definitionId,
             @RequestParam(required = false) Long operatorId,
             @RequestParam(required = false) String operatorName,
             @RequestParam(required = false) String note) {
@@ -1737,7 +1741,7 @@ public class FlowEngineController {
      * @return 设计器数据（definition / nodes / edges）
      */
     @GetMapping("/definition/{id}/designer")
-    public Result<Map<String, Object>> getDesignerData(@PathVariable Long id) {
+    public Result<Map<String, Object>> getDesignerData(@PathVariable @Min(1) Long id) {
         return Result.ok(definitionService.getDesignerData(id));
     }
 
@@ -1749,7 +1753,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/designer")
-    public Result<Void> saveDesignerData(@PathVariable Long id,
+    public Result<Void> saveDesignerData(@PathVariable @Min(1) Long id,
                                           @RequestBody Map<String, Object> designerData) {
         definitionService.saveDesignerData(id, designerData);
         return Result.ok();
@@ -1765,7 +1769,7 @@ public class FlowEngineController {
      * @return 字段权限 JSON 字符串
      */
     @GetMapping("/definition/{id}/form-config/{nodeCode}")
-    public Result<String> getFormConfig(@PathVariable Long id,
+    public Result<String> getFormConfig(@PathVariable @Min(1) Long id,
                                          @PathVariable String nodeCode) {
         return Result.ok(definitionService.getFormConfig(id, nodeCode));
     }
@@ -1779,7 +1783,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/form-config/{nodeCode}")
-    public Result<Void> saveFormConfig(@PathVariable Long id,
+    public Result<Void> saveFormConfig(@PathVariable @Min(1) Long id,
                                         @PathVariable String nodeCode,
                                         @RequestBody String formFieldsConfig) {
         definitionService.saveFormConfig(id, nodeCode, formFieldsConfig);
@@ -1794,7 +1798,7 @@ public class FlowEngineController {
      * @return SLA 配置 JSON（未配置返回 null）
      */
     @GetMapping("/definition/{id}/sla-config/{nodeCode}")
-    public Result<String> getSlaConfig(@PathVariable Long id,
+    public Result<String> getSlaConfig(@PathVariable @Min(1) Long id,
                                         @PathVariable String nodeCode) {
         return Result.ok(definitionService.getSlaConfig(id, nodeCode));
     }
@@ -1808,7 +1812,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/sla-config/{nodeCode}")
-    public Result<Void> saveSlaConfig(@PathVariable Long id,
+    public Result<Void> saveSlaConfig(@PathVariable @Min(1) Long id,
                                         @PathVariable String nodeCode,
                                         @RequestBody java.util.Map<String, Object> slaConfig) {
         String json = slaConfig == null ? null : com.alibaba.fastjson2.JSON.toJSONString(slaConfig);
@@ -1825,7 +1829,7 @@ public class FlowEngineController {
      */
     @GetMapping("/instance/{instanceId}/form-render")
     public Result<Map<String, Object>> getFormRenderData(
-            @PathVariable Long instanceId,
+            @PathVariable @Min(1) Long instanceId,
             @RequestParam(required = false) Long taskId) {
         return Result.ok(instanceService.getFormRenderData(instanceId, taskId));
     }
@@ -1867,7 +1871,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PutMapping("/notify-channel/{id}/toggle")
-    public Result<Void> toggleNotifyChannel(@PathVariable Long id,
+    public Result<Void> toggleNotifyChannel(@PathVariable @Min(1) Long id,
                                              @RequestParam Boolean enabled) {
         notifyChannelService.toggleChannel(id, enabled);
         return Result.ok();
@@ -1880,7 +1884,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @DeleteMapping("/notify-channel/{id}")
-    public Result<Void> deleteNotifyChannel(@PathVariable Long id) {
+    public Result<Void> deleteNotifyChannel(@PathVariable @Min(1) Long id) {
         notifyChannelService.deleteChannel(id);
         return Result.ok();
     }
@@ -1990,7 +1994,7 @@ public class FlowEngineController {
      */
     @GetMapping("/instance/{instanceId}/event-subscriptions")
     public Result<List<com.njydsz.pmis.workflow.entity.FlowEventSubscriptionDO>> listEventSubscriptions(
-            @PathVariable Long instanceId) {
+            @PathVariable @Min(1) Long instanceId) {
         return Result.ok(eventSubscriptionService.listByInstance(instanceId));
     }
 }

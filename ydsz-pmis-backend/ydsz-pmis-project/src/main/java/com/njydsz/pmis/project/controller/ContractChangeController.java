@@ -10,7 +10,10 @@ import com.njydsz.pmis.project.service.ContractChangeService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -32,6 +35,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/project/contract/change")
 @RequiredArgsConstructor
+@Validated
 public class ContractChangeController {
 
     /** 合同变更服务 */
@@ -61,7 +65,7 @@ public class ContractChangeController {
     @PrePermission("project:contract-change:approve")
     @Idempotent(key = "contract-change:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable Long id) {
+    public Result<Void> submit(@PathVariable @Min(1) Longid) {
         service.submit(id);
         return Result.ok();
     }
@@ -77,7 +81,7 @@ public class ContractChangeController {
     @Operation(summary = "审批通过")
     @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/approve")
-    public Result<Void> approve(@PathVariable Long id,
+    public Result<Void> approve(@PathVariable @Min(1) Longid,
                            @RequestParam Long approverId,
                            @RequestParam String approverName) {
         service.approve(id, approverId, approverName);
@@ -96,7 +100,7 @@ public class ContractChangeController {
     @Operation(summary = "驳回")
     @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/reject")
-    public Result<Void> reject(@PathVariable Long id,
+    public Result<Void> reject(@PathVariable @Min(1) Longid,
                           @RequestParam Long approverId,
                           @RequestParam String approverName,
                           @RequestParam(required = false) String reason) {
@@ -113,7 +117,7 @@ public class ContractChangeController {
     @Operation(summary = "变更详情")
     @PrePermission("project:contract-change:list")
     @GetMapping("/{id}")
-    public Result<ContractChangeDO> get(@PathVariable Long id) {
+    public Result<ContractChangeDO> get(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getById(id));
     }
 
@@ -130,8 +134,8 @@ public class ContractChangeController {
     @PrePermission("project:contract-change:list")
     @GetMapping("/page")
     public Result<Page<ContractChangeDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) Long contractId,
             @RequestParam(required = false) String status) {
         return Result.ok(service.page(page, size, contractId, status));

@@ -13,7 +13,10 @@ import com.njydsz.pmis.project.service.DeliveryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +40,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/execution/delivery")
 @RequiredArgsConstructor
+@Validated
 public class DeliveryController {
 
     private final DeliveryService service;
@@ -66,7 +70,7 @@ public class DeliveryController {
     @Operation(summary = "删除交付物标准")
     @PrePermission("execution:delivery:delete")
     @DeleteMapping("/standard/{id}")
-    public Result<Void> deleteStandard(@PathVariable Long id) {
+    public Result<Void> deleteStandard(@PathVariable @Min(1) Longid) {
         service.deleteStandard(id);
         return Result.ok();
     }
@@ -80,7 +84,7 @@ public class DeliveryController {
     @Operation(summary = "交付物标准详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/standard/{id}")
-    public Result<DeliveryStandardDO> getStandard(@PathVariable Long id) {
+    public Result<DeliveryStandardDO> getStandard(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getStandardById(id));
     }
 
@@ -155,7 +159,7 @@ public class DeliveryController {
     @Operation(summary = "标记 TR 完成")
     @PrePermission("execution:delivery:status")
     @PutMapping("/item/{id}/tr-completed")
-    public Result<Void> markTrCompleted(@PathVariable Long id,
+    public Result<Void> markTrCompleted(@PathVariable @Min(1) Longid,
                                    @RequestParam Integer completed) {
         service.markTrCompleted(id, completed);
         return Result.ok();
@@ -170,7 +174,7 @@ public class DeliveryController {
     @Operation(summary = "删除交付物实例")
     @PrePermission("execution:delivery:delete")
     @DeleteMapping("/item/{id}")
-    public Result<Void> deleteItem(@PathVariable Long id) {
+    public Result<Void> deleteItem(@PathVariable @Min(1) Longid) {
         service.deleteItem(id);
         return Result.ok();
     }
@@ -184,7 +188,7 @@ public class DeliveryController {
     @Operation(summary = "交付物实例详情")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/{id}")
-    public Result<DeliveryItemDO> getItem(@PathVariable Long id) {
+    public Result<DeliveryItemDO> getItem(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getItemById(id));
     }
 
@@ -197,7 +201,7 @@ public class DeliveryController {
     @Operation(summary = "按项目查询所有交付物")
     @PrePermission("execution:delivery:list")
     @GetMapping("/item/list-by-initiation/{initiationId}")
-    public Result<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable Long initiationId) {
+    public Result<List<DeliveryItemDO>> listItemsByInitiation(@PathVariable @Min(1) LonginitiationId) {
         return Result.ok(service.listItemsByInitiation(initiationId));
     }
 

@@ -12,7 +12,10 @@ import com.njydsz.pmis.project.service.ProjectClosureService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -36,6 +39,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/execution/closure")
 @RequiredArgsConstructor
+@Validated
 public class ProjectClosureController {
 
     private final ProjectClosureService service;
@@ -77,7 +81,7 @@ public class ProjectClosureController {
     @Operation(summary = "删除结项记录")
     @PrePermission("closure:project:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Longid) {
         service.delete(id);
         return Result.ok();
     }
@@ -91,7 +95,7 @@ public class ProjectClosureController {
     @Operation(summary = "结项详情")
     @PrePermission("closure:project:list")
     @GetMapping("/{id}")
-    public Result<ProjectClosureDO> get(@PathVariable Long id) {
+    public Result<ProjectClosureDO> get(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getById(id));
     }
 
@@ -104,7 +108,7 @@ public class ProjectClosureController {
     @Operation(summary = "按项目查询结项")
     @PrePermission("closure:project:list")
     @GetMapping("/by-initiation/{initiationId}")
-    public Result<ProjectClosureDO> getByInitiation(@PathVariable Long initiationId) {
+    public Result<ProjectClosureDO> getByInitiation(@PathVariable @Min(1) LonginitiationId) {
         return Result.ok(service.getByInitiation(initiationId));
     }
 
@@ -122,8 +126,8 @@ public class ProjectClosureController {
     @PrePermission("closure:project:list")
     @GetMapping("/page")
     public Result<Page<ProjectClosureDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String closureType,
             @RequestParam(required = false) String status) {
@@ -165,7 +169,7 @@ public class ProjectClosureController {
     @Operation(summary = "结项准入校验")
     @PrePermission("closure:project:list")
     @GetMapping("/{id}/admission-check")
-    public Result<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable Long id) {
+    public Result<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable @Min(1) Longid) {
         return Result.ok(service.checkAdmission(id));
     }
 }

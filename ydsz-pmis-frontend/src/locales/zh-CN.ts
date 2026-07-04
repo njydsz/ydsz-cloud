@@ -54,6 +54,10 @@ export default {
     viewErrorDetails: '查看错误详情',
     pageRenderError: '页面渲染异常',
     pageErrorSubtitle: '抱歉，页面发生了未知错误，请重试或返回首页',
+    errorId: '错误编号',
+    retryLimitExceeded: '重试次数已达上限，请刷新页面或联系管理员',
+    contactAdmin: '联系管理员',
+    copyErrorId: '复制错误编号',
     advancedSelect: '高级选择',
     confirmContinue: '确认并继续',
     globalSearch: {

@@ -4,6 +4,12 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.entity.FlowDmnTableDO;
 import com.njydsz.pmis.workflow.service.FlowDmnTableService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +33,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/workflow/dmn")
 @RequiredArgsConstructor
+@Validated
 public class FlowDmnController {
 
     private final FlowDmnTableService dmnTableService;
@@ -41,8 +48,8 @@ public class FlowDmnController {
      */
     @Operation(summary = "分页查询决策表")
     @PostMapping("/page")
-    public Result<Page<FlowDmnTableDO>> page(@RequestParam(defaultValue = "1") int pageNum,
-                                             @RequestParam(defaultValue = "20") int pageSize,
+    public Result<Page<FlowDmnTableDO>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNum,
+                                             @RequestParam(defaultValue = "20") @Max(100) int pageSize,
                                              @RequestParam(required = false) String tableName) {
         return Result.ok(dmnTableService.page(pageNum, pageSize, tableName));
     }
@@ -55,7 +62,7 @@ public class FlowDmnController {
      */
     @Operation(summary = "按 ID 获取决策表详情")
     @GetMapping("/{id}")
-    public Result<FlowDmnTableDO> getById(@PathVariable Long id) {
+    public Result<FlowDmnTableDO> getById(@PathVariable @Min(1) Long id) {
         return Result.ok(dmnTableService.getById(id));
     }
 
@@ -81,7 +88,7 @@ public class FlowDmnController {
      */
     @Operation(summary = "新建/更新决策表")
     @PostMapping("/save")
-    public Result<Long> save(@RequestBody FlowDmnTableDO table) {
+    public Result<Long> save(@Valid @RequestBody FlowDmnTableDO table) {
         if (table.getId() != null) {
             dmnTableService.update(table);
             return Result.ok();
@@ -97,7 +104,7 @@ public class FlowDmnController {
      */
     @Operation(summary = "发布决策表")
     @PostMapping("/{id}/publish")
-    public Result<Void> publish(@PathVariable Long id) {
+    public Result<Void> publish(@PathVariable @Min(1) Long id) {
         dmnTableService.publish(id);
         return Result.ok();
     }

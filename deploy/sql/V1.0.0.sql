@@ -1096,6 +1096,15 @@ CREATE INDEX IF NOT EXISTS idx_pml_biz ON pmis_message_log(biz_type, biz_id);
 CREATE INDEX IF NOT EXISTS idx_pml_receiver ON pmis_message_log(receiver);
 CREATE INDEX IF NOT EXISTS idx_pml_tenant ON pmis_message_log(tenant_id);
 
+-- P0-D3: 扩展 MQ 元信息字段（msg_id / topic / reconsume_times）
+ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS msg_id VARCHAR(64);
+ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS topic VARCHAR(128);
+ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS reconsume_times INTEGER DEFAULT 0;
+COMMENT ON COLUMN pmis_message_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
+COMMENT ON COLUMN pmis_message_log.topic IS 'RocketMQ Topic(标识消息来源 Topic, DLQ 消息填充原 Topic)';
+COMMENT ON COLUMN pmis_message_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';
+CREATE INDEX IF NOT EXISTS idx_pml_msg_id ON pmis_message_log(msg_id);
+
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_message_template;
 CREATE TABLE IF NOT EXISTS pmis_message_template(
     id              BIGSERIAL PRIMARY KEY,

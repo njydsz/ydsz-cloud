@@ -10,8 +10,11 @@ import com.njydsz.pmis.project.service.RateInternalService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +40,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/execution/rate-internal")
 @RequiredArgsConstructor
+@Validated
 public class RateInternalController {
 
     private final RateInternalService service;
@@ -66,7 +70,7 @@ public class RateInternalController {
     @PrePermission("execution:rate-internal:update")
     @Idempotent(key = "rate-internal:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody RateInternalCreateDTO dto) {
+    public Result<Void> update(@PathVariable @Min(1) Longid, @Valid @RequestBody RateInternalCreateDTO dto) {
         service.update(id, dto);
         return Result.ok();
     }
@@ -80,7 +84,7 @@ public class RateInternalController {
     @Operation(summary = "删除")
     @PrePermission("execution:rate-internal:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Longid) {
         service.delete(id);
         return Result.ok();
     }
@@ -94,7 +98,7 @@ public class RateInternalController {
     @Operation(summary = "详情")
     @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
-    public Result<RateInternalDO> get(@PathVariable Long id) {
+    public Result<RateInternalDO> get(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getById(id));
     }
 
@@ -146,8 +150,8 @@ public class RateInternalController {
     @PrePermission("execution:rate:list")
     @GetMapping("/page")
     public Result<Page<RateInternalDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String levelCode,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) String status) {

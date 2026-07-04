@@ -11,6 +11,8 @@ import com.njydsz.pmis.project.service.TimeEntryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,6 +41,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/execution/time-entry")
 @RequiredArgsConstructor
+@Validated
 public class TimeEntryController {
 
     private final TimeEntryService service;
@@ -67,7 +70,7 @@ public class TimeEntryController {
     @PrePermission("execution:time:approve")
     @Idempotent(key = "time-entry:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable Long id) {
+    public Result<Void> submit(@PathVariable @Min(1) Longid) {
         service.submit(id);
         return Result.ok();
     }
@@ -96,7 +99,7 @@ public class TimeEntryController {
     @PrePermission("execution:time:delete")
     @Idempotent(key = "time-entry:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Longid) {
         service.delete(id);
         return Result.ok();
     }
@@ -110,7 +113,7 @@ public class TimeEntryController {
     @Operation(summary = "工时详情")
     @PrePermission("execution:time:list")
     @GetMapping("/{id}")
-    public Result<TimeEntryDO> get(@PathVariable Long id) {
+    public Result<TimeEntryDO> get(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getById(id));
     }
 
@@ -132,8 +135,8 @@ public class TimeEntryController {
     @PrePermission("execution:time:list")
     @GetMapping("/page")
     public Result<Page<TimeEntryDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long employeeId,

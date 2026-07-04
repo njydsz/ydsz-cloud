@@ -11,7 +11,9 @@ import com.njydsz.pmis.userinfo.vo.DepartmentTreeVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/departments")
 @RequiredArgsConstructor
+@Validated
 public class DepartmentController {
 
     /** 部门服务 */
@@ -64,7 +67,7 @@ public class DepartmentController {
     @Operation(summary = "部门详情")
     @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
-    public Result<DepartmentDO> get(@PathVariable Long id) {
+    public Result<DepartmentDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(departmentService.getById(id));
     }
 
@@ -107,7 +110,7 @@ public class DepartmentController {
     @PrePermission("org:dept:delete")
     @OperationLog(module = "组织架构", action = "删除部门", bizType = "DEPARTMENT")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         departmentService.delete(id);
         return Result.ok();
     }

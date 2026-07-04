@@ -10,8 +10,11 @@ import com.njydsz.pmis.project.service.RateCardService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -37,6 +40,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/execution/rate-card")
 @RequiredArgsConstructor
+@Validated
 public class RateCardController {
 
     private final RateCardService service;
@@ -66,7 +70,7 @@ public class RateCardController {
     @PrePermission("execution:rate-card:update")
     @Idempotent(key = "rate-card:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}")
-    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody RateCardCreateDTO dto) {
+    public Result<Void> update(@PathVariable @Min(1) Longid, @Valid @RequestBody RateCardCreateDTO dto) {
         service.update(id, dto);
         return Result.ok();
     }
@@ -81,7 +85,7 @@ public class RateCardController {
     @PrePermission("execution:rate-card:delete")
     @Idempotent(key = "rate-card:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Longid) {
         service.delete(id);
         return Result.ok();
     }
@@ -95,7 +99,7 @@ public class RateCardController {
     @Operation(summary = "详情")
     @PrePermission("execution:rate:list")
     @GetMapping("/{id}")
-    public Result<RateCardDO> get(@PathVariable Long id) {
+    public Result<RateCardDO> get(@PathVariable @Min(1) Longid) {
         return Result.ok(service.getById(id));
     }
 
@@ -145,8 +149,8 @@ public class RateCardController {
     @PrePermission("execution:rate:list")
     @GetMapping("/page")
     public Result<Page<RateCardDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) String levelCode,
             @RequestParam(required = false) String status) {
         return Result.ok(service.page(page, size, levelCode, status));

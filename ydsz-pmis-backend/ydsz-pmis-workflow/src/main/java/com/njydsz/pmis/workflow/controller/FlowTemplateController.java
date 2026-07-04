@@ -2,6 +2,12 @@ package com.njydsz.pmis.workflow.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowTemplateService;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotBlank;
+import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +32,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/workflow/template")
 @RequiredArgsConstructor
+@Validated
 public class FlowTemplateController {
 
     private final FlowTemplateService templateService;
@@ -85,7 +92,7 @@ public class FlowTemplateController {
      */
     @Operation(summary = "导出为模板")
     @PostMapping("/export/{definitionId}")
-    public Result<Void> exportAsTemplate(@PathVariable Long definitionId,
+    public Result<Void> exportAsTemplate(@PathVariable @Min(1) Long definitionId,
                                          @RequestParam String templateName,
                                          @RequestParam(required = false, defaultValue = "GENERAL") String category) {
         templateService.exportAsTemplate(definitionId, templateName, category);
