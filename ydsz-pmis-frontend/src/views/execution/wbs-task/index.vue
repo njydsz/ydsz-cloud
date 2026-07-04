@@ -213,8 +213,8 @@ onMounted(fetchList)
       </el-button>
     </template>
 
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="taskCode" :title="$t('execution.wbsTask.columns.taskCode')" width="140" />
         <vxe-column field="taskName" :title="$t('execution.wbsTask.columns.taskName')" min-width="200" show-overflow />

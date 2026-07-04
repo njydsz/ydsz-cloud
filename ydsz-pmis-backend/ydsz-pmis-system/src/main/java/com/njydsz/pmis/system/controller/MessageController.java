@@ -9,6 +9,7 @@ import com.njydsz.pmis.system.dto.MessageSendDTO;
 import com.njydsz.pmis.system.entity.MessageLogDO;
 import com.njydsz.pmis.system.service.MessageServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -30,7 +31,7 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "消息发送")
+@Tag(name = "消息发送", description = "消息发送及发送日志查询接口")
 @RestController
 @RequestMapping("/api/v1/message")
 @RequiredArgsConstructor
@@ -71,11 +72,11 @@ public class MessageController {
     @PrePermission("notif:message:send")
     @GetMapping("/log/page")
     public Result<Page<MessageLogDO>> pageLog(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
-            @RequestParam(required = false) String channel,
-            @RequestParam(required = false) String bizType,
-            @RequestParam(required = false) String status) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "通道") @RequestParam(required = false) String channel,
+            @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
+            @Parameter(description = "发送状态") @RequestParam(required = false) String status) {
         return Result.ok(messageService.pageLog(page, size, channel, bizType, status));
     }
 

@@ -247,8 +247,8 @@ onMounted(async () => {
       </el-button>
     </template>
     <!-- 数据表格：报价费率明细 + 编辑/删除操作列 -->
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border height="auto">
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border height="auto" :scroll-y="scope.tableProps.scrollY">
         <vxe-column field="rateCode" title="费率编号" width="150" />
         <vxe-column field="levelCode" title="职级" width="100" />
         <vxe-column field="projectType" title="项目类型" width="100" />

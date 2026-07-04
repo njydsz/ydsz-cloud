@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.system.service.FileEnhanceService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -29,7 +30,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "文件增强")
+@Tag(name = "文件增强", description = "分片上传、病毒扫描、在线预览接口")
 @RestController
 @RequestMapping("/api/v1/file/enhance")
 @RequiredArgsConstructor
@@ -49,7 +50,7 @@ public class FileEnhanceController {
             message = "{validation.file.msg_f4ed69d1}")
     @PostMapping("/scan")
     public Result<Map<String, Object>> scanVirus(
-            @RequestParam("file") @NotNull(message = "{validation.file.msg_3f00c223}") MultipartFile file) {
+            @Parameter(description = "待扫描文件") @RequestParam("file") @NotNull(message = "{validation.file.msg_3f00c223}") MultipartFile file) {
         boolean safe = fileEnhanceService.scanVirus(file);
         Map<String, Object> result = new HashMap<>();
         result.put("safe", safe);
@@ -70,9 +71,9 @@ public class FileEnhanceController {
             message = "{validation.file.msg_f4ed69d1}")
     @PostMapping("/multipart/init")
     public Result<Map<String, Object>> initMultipartUpload(
-            @RequestParam @NotBlank(message = "{validation.file.msg_f185973c}") String filename,
-            @RequestParam @Min(value = 1, message = "{validation.file.msg_a32c726a}") long totalSize,
-            @RequestParam @Min(value = 1, message = "{validation.file.msg_0dddf2c0}") int totalChunks) {
+            @Parameter(description = "文件名") @RequestParam @NotBlank(message = "{validation.file.msg_f185973c}") String filename,
+            @Parameter(description = "文件总大小（字节）") @RequestParam @Min(value = 1, message = "{validation.file.msg_a32c726a}") long totalSize,
+            @Parameter(description = "分片总数") @RequestParam @Min(value = 1, message = "{validation.file.msg_0dddf2c0}") int totalChunks) {
         String uploadId = fileEnhanceService.initMultipartUpload(filename, totalSize, totalChunks);
         Map<String, Object> result = new HashMap<>();
         result.put("uploadId", uploadId);
@@ -91,8 +92,8 @@ public class FileEnhanceController {
     @Operation(summary = "上传分片")
     @PostMapping("/multipart/chunk")
     public Result<Map<String, Object>> uploadChunk(
-            @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId,
-            @RequestParam @Min(value = 0, message = "{validation.file.msg_4b78b69b}") int chunkIndex,
+            @Parameter(description = "分片上传ID") @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId,
+            @Parameter(description = "分片序号") @RequestParam @Min(value = 0, message = "{validation.file.msg_4b78b69b}") int chunkIndex,
             @RequestParam("chunk") @NotNull(message = "{validation.file.msg_041e6b98}") MultipartFile chunk) throws Exception {
         boolean success = fileEnhanceService.uploadChunk(uploadId, chunkIndex, chunk.getBytes());
         Map<String, Object> result = new HashMap<>();
@@ -110,7 +111,7 @@ public class FileEnhanceController {
     @Operation(summary = "完成分片上传")
     @PostMapping("/multipart/complete")
     public Result<Map<String, Object>> completeMultipartUpload(
-            @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {
+            @Parameter(description = "分片上传ID") @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {
         String fileKey = fileEnhanceService.completeMultipartUpload(uploadId);
         Map<String, Object> result = new HashMap<>();
         result.put("fileKey", fileKey != null ? fileKey : "");
@@ -127,7 +128,7 @@ public class FileEnhanceController {
     @Operation(summary = "取消分片上传")
     @DeleteMapping("/multipart/abort")
     public Result<Map<String, Object>> abortMultipartUpload(
-            @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {
+            @Parameter(description = "分片上传ID") @RequestParam @NotBlank(message = "{validation.file.msg_5866b696}") String uploadId) {
         fileEnhanceService.abortMultipartUpload(uploadId);
         Map<String, Object> result = new HashMap<>();
         result.put("success", true);
@@ -143,7 +144,7 @@ public class FileEnhanceController {
     @Operation(summary = "生成预览URL")
     @GetMapping("/preview")
     public Result<Map<String, Object>> generatePreviewUrl(
-            @RequestParam @NotBlank(message = "{validation.file.msg_db802ce3}") String fileKey) {
+            @Parameter(description = "文件key") @RequestParam @NotBlank(message = "{validation.file.msg_db802ce3}") String fileKey) {
         String url = fileEnhanceService.generatePreviewUrl(fileKey);
         Map<String, Object> result = new HashMap<>();
         result.put("previewUrl", url);

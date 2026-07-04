@@ -547,7 +547,7 @@ onMounted(() => {
 
     <!-- 加班申请 -->
     <el-dialog v-model="otDialogVisible" :title="t('attendance.overtime.dialog.title')" width="520px">
-      <el-form :model="otForm" label-width="100px">
+      <el-form ref="otFormRef" :model="otForm" :rules="otFormRules" label-width="100px">
         <el-form-item :label="t('attendance.overtime.form.employeeId')">
           <el-input-number v-model="otForm.employeeId" :min="1" />
         </el-form-item>

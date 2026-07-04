@@ -9,6 +9,7 @@ import com.njydsz.pmis.userinfo.entity.DepartmentDO;
 import com.njydsz.pmis.userinfo.service.DepartmentService;
 import com.njydsz.pmis.userinfo.vo.DepartmentTreeVO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -24,7 +25,7 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "组织架构-部门")
+@Tag(name = "部门管理", description = "部门管理相关接口")
 @RestController
 @RequestMapping("/api/v1/departments")
 @RequiredArgsConstructor
@@ -67,7 +68,7 @@ public class DepartmentController {
     @Operation(summary = "部门详情")
     @RateLimit(key = "dept", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
-    public Result<DepartmentDO> get(@PathVariable @Min(1) Long id) {
+    public Result<DepartmentDO> get(@Parameter(description = "部门ID") @PathVariable @Min(1) Long id) {
         return Result.ok(departmentService.getById(id));
     }
 
@@ -110,7 +111,7 @@ public class DepartmentController {
     @PrePermission("org:dept:delete")
     @OperationLog(module = "组织架构", action = "删除部门", bizType = "DEPARTMENT")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "部门ID") @PathVariable @Min(1) Long id) {
         departmentService.delete(id);
         return Result.ok();
     }

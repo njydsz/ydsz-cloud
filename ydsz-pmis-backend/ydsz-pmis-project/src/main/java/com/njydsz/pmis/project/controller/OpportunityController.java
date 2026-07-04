@@ -10,6 +10,7 @@ import com.njydsz.pmis.project.dto.OpportunityUpdateDTO;
 import com.njydsz.pmis.project.entity.OpportunityDO;
 import com.njydsz.pmis.project.service.OpportunityService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -35,7 +36,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "商机管理")
+@Tag(name = "商机管理", description = "商机管理相关接口")
 @RestController
 @RequestMapping("/api/v1/project/opportunity")
 @RequiredArgsConstructor
@@ -73,7 +74,7 @@ public class OpportunityController {
     @PrePermission("project:opportunity:delete")
     @Idempotent(key = "opportunity:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "商机ID") @PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -81,7 +82,7 @@ public class OpportunityController {
     @Operation(summary = "商机详情")
     @PrePermission("project:opportunity:list")
     @GetMapping("/{id}")
-    public Result<OpportunityDO> get(@PathVariable @Min(1) Long id) {
+    public Result<OpportunityDO> get(@Parameter(description = "商机ID") @PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -89,44 +90,44 @@ public class OpportunityController {
     @PrePermission("project:opportunity:list")
     @GetMapping("/page")
     public Result<Page<OpportunityDO>> page(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @jakarta.validation.constraints.Max(100) int size,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String level,
-            @RequestParam(required = false) Long ownerId) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @jakarta.validation.constraints.Max(100) int size,
+            @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "状态") @RequestParam(required = false) String status,
+            @Parameter(description = "分级") @RequestParam(required = false) String level,
+            @Parameter(description = "负责人ID") @RequestParam(required = false) Long ownerId) {
         return Result.ok(service.page(page, size, keyword, status, level, ownerId));
     }
 
     @Operation(summary = "评估并更新赢率")
     @PrePermission("project:opportunity:evaluate")
     @PostMapping("/{id}/evaluate-winrate")
-    public Result<BigDecimal> evaluateWinRate(@PathVariable @Min(1) Long id,
-                                         @RequestParam(required = false) String customerCredit,
-                                         @RequestParam(defaultValue = "false") boolean hasHistory) {
+    public Result<BigDecimal> evaluateWinRate(@Parameter(description = "商机ID") @PathVariable @Min(1) Long id,
+                                         @Parameter(description = "客户信用") @RequestParam(required = false) String customerCredit,
+                                         @Parameter(description = "是否有历史合作") @RequestParam(defaultValue = "false") boolean hasHistory) {
         return Result.ok(service.evaluateWinRate(id, customerCredit, hasHistory));
     }
 
     @Operation(summary = "按状态聚合")
     @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) Long tenantId) {
         return Result.ok(service.aggregateByStatus(tenantId));
     }
 
     @Operation(summary = "按分级聚合")
     @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/level")
-    public Result<List<Map<String, Object>>> aggregateByLevel(@RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "租户ID") @RequestParam(required = false) Long tenantId) {
         return Result.ok(service.aggregateByLevel(tenantId));
     }
 
     @Operation(summary = "商机转立项自动化(WON -> CONVERTED + 创建预立项草稿)")
     @PrePermission("project:opportunity:convert")
     @PostMapping("/{id}/convert-to-initiation")
-    public Result<Long> convertToInitiation(@PathVariable @Min(1) Long id,
-                                        @RequestParam(required = false) Long sponsorId,
-                                        @RequestParam(required = false) Long pmId) {
+    public Result<Long> convertToInitiation(@Parameter(description = "商机ID") @PathVariable @Min(1) Long id,
+                                        @Parameter(description = "发起人ID") @RequestParam(required = false) Long sponsorId,
+                                        @Parameter(description = "项目经理ID") @RequestParam(required = false) Long pmId) {
         return Result.ok(service.convertToInitiation(id, sponsorId, pmId));
     }
 }

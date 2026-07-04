@@ -189,8 +189,8 @@ onMounted(fetchList)
       </el-button>
     </template>
 
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="riskCode" :title="t('execution.risk.columns.riskCode')" width="120" />
         <vxe-column field="riskName" :title="t('execution.risk.columns.riskName')" min-width="200" show-overflow />

@@ -360,8 +360,8 @@ onMounted(fetchList)
       </el-button>
     </template>
 
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="projectCode" :title="t('project.initiation.columns.projectCode')" width="160" />
         <vxe-column field="projectName" :title="t('project.initiation.columns.projectName')" min-width="200" show-overflow />

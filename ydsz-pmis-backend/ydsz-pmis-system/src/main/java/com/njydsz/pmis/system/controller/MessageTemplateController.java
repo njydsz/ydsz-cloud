@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.system.entity.MessageTemplateDO;
 import com.njydsz.pmis.system.service.MessageTemplateServiceImpl;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
@@ -30,7 +31,7 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "消息模板")
+@Tag(name = "消息模板", description = "消息模板的增删改查接口")
 @RestController
 @RequestMapping("/api/v1/message/template")
 @RequiredArgsConstructor
@@ -78,7 +79,8 @@ public class MessageTemplateController {
     @Operation(summary = "删除模板")
     @PrePermission("notif:message:send")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(
+            @Parameter(description = "模板ID") @PathVariable @Min(1) Long id) {
         templateService.delete(id);
         return Result.ok();
     }
@@ -92,7 +94,8 @@ public class MessageTemplateController {
     @Operation(summary = "模板详情")
     @PrePermission("notif:message:send")
     @GetMapping("/{id}")
-    public Result<MessageTemplateDO> get(@PathVariable @Min(1) Long id) {
+    public Result<MessageTemplateDO> get(
+            @Parameter(description = "模板ID") @PathVariable @Min(1) Long id) {
         return Result.ok(templateService.getById(id));
     }
 
@@ -109,10 +112,10 @@ public class MessageTemplateController {
     @PrePermission("notif:message:send")
     @GetMapping("/page")
     public Result<Page<MessageTemplateDO>> page(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
-            @RequestParam(required = false) String channel,
-            @RequestParam(required = false) String keyword) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "通道") @RequestParam(required = false) String channel,
+            @Parameter(description = "关键字") @RequestParam(required = false) String keyword) {
         return Result.ok(templateService.page(page, size, channel, keyword));
     }
 
@@ -125,7 +128,8 @@ public class MessageTemplateController {
     @Operation(summary = "按通道列出模板")
     @PrePermission("notif:message:send")
     @GetMapping("/list")
-    public Result<List<MessageTemplateDO>> listByChannel(@RequestParam String channel) {
+    public Result<List<MessageTemplateDO>> listByChannel(
+            @Parameter(description = "通道") @RequestParam String channel) {
         return Result.ok(templateService.listByChannel(channel));
     }
 

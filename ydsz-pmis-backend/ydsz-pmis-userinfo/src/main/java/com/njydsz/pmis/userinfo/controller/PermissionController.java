@@ -8,6 +8,7 @@ import com.njydsz.pmis.userinfo.entity.PermissionDO;
 import com.njydsz.pmis.userinfo.service.PermissionService;
 import com.njydsz.pmis.userinfo.vo.MenuTreeVO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -23,7 +24,7 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "权限-权限/菜单")
+@Tag(name = "权限管理", description = "权限管理相关接口")
 @RestController
 @RequestMapping("/api/v1/permissions")
 @RequiredArgsConstructor
@@ -87,7 +88,7 @@ public class PermissionController {
      */
     @Operation(summary = "查询角色的权限")
     @GetMapping("/by-role/{roleId}")
-    public Result<List<PermissionDO>> listByRole(@PathVariable @Min(1) Long roleId) {
+    public Result<List<PermissionDO>> listByRole(@Parameter(description = "角色ID") @PathVariable @Min(1) Long roleId) {
         return Result.ok(permissionService.listByRoleId(roleId));
     }
 
@@ -99,7 +100,7 @@ public class PermissionController {
      */
     @Operation(summary = "权限详情")
     @GetMapping("/{id}")
-    public Result<PermissionDO> get(@PathVariable @Min(1) Long id) {
+    public Result<PermissionDO> get(@Parameter(description = "权限ID") @PathVariable @Min(1) Long id) {
         return Result.ok(permissionService.getById(id));
     }
 
@@ -142,7 +143,7 @@ public class PermissionController {
     @PrePermission("auth:perm:delete")
     @OperationLog(module = "权限管理", action = "删除权限", bizType = "PERM")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "权限ID") @PathVariable @Min(1) Long id) {
         permissionService.delete(id);
         return Result.ok();
     }

@@ -264,8 +264,8 @@ onMounted(async () => {
         新建内部费率
       </el-button>
     </template>
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border height="auto">
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border height="auto" :scroll-y="scope.tableProps.scrollY">
         <vxe-column field="rateCode" title="费率编号" width="150" />
         <vxe-column field="levelCode" title="职级" width="100" />
         <vxe-column field="departmentName" title="部门" min-width="140" show-overflow />

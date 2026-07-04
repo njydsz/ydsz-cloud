@@ -192,7 +192,7 @@ onMounted(fetchList)
       </el-button>
     </template>
 
-    <template #table>
+    <template #table="scope">
       <EmptyState
         v-if="isEmpty"
         preset="search"
@@ -201,7 +201,7 @@ onMounted(fetchList)
         :action-text="t('aftersales.warranty.empty.actionCreate')"
         @action="openCreate"
       />
-      <vxe-table v-else :data="list" :loading="loading" border stripe @checkbox-change="onSelectionChange" @checkbox-all="onSelectionChange">
+      <vxe-table v-else :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY" @checkbox-change="onSelectionChange" @checkbox-all="onSelectionChange">
         <vxe-column type="checkbox" width="50" />
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="warrantyCode" :title="t('aftersales.warranty.columns.warrantyCode')" width="200" />

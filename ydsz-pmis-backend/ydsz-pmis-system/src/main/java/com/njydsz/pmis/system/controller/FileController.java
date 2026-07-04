@@ -10,6 +10,7 @@ import com.njydsz.pmis.system.dto.FileUploadDTO;
 import com.njydsz.pmis.system.entity.FileDO;
 import com.njydsz.pmis.system.service.FileService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
@@ -34,7 +35,7 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "文件存储")
+@Tag(name = "文件存储", description = "文件上传、下载、删除及查询相关接口")
 @RestController
 @RequestMapping("/api/v1/file")
 @RequiredArgsConstructor
@@ -56,8 +57,9 @@ public class FileController {
     @PrePermission(PermissionCodes.FILE_STORAGE_UPLOAD)
     @OperationLog(module = "文件存储", action = "上传文件", bizType = "FILE")
     @PostMapping("/upload")
-    public Result<FileDO> upload(@RequestPart("file") MultipartFile file,
-                            FileUploadDTO dto) throws Exception {
+    public Result<FileDO> upload(
+            @Parameter(description = "multipart 文件") @RequestPart("file") MultipartFile file,
+            FileUploadDTO dto) throws Exception {
         if (dto == null) {
             dto = new FileUploadDTO();
         }
@@ -81,7 +83,8 @@ public class FileController {
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
     @OperationLog(module = "文件存储", action = "删除文件", bizType = "FILE")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) throws Exception {
+    public Result<Void> delete(
+            @Parameter(description = "文件ID") @PathVariable @Min(1) Long id) throws Exception {
         fileService.delete(id);
         return Result.ok();
     }
@@ -109,7 +112,8 @@ public class FileController {
      */
     @Operation(summary = "文件详情")
     @GetMapping("/{id}")
-    public Result<FileDO> getById(@PathVariable @Min(1) Long id) {
+    public Result<FileDO> getById(
+            @Parameter(description = "文件ID") @PathVariable @Min(1) Long id) {
         return Result.ok(fileService.getById(id));
     }
 
@@ -122,8 +126,9 @@ public class FileController {
      */
     @Operation(summary = "获取预签名下载 URL")
     @GetMapping("/{id}/presigned-url")
-    public Result<String> presignedUrl(@PathVariable @Min(1) Long id,
-                                  @RequestParam(required = false) @Min(1) Integer expireSeconds) {
+    public Result<String> presignedUrl(
+            @Parameter(description = "文件ID") @PathVariable @Min(1) Long id,
+            @Parameter(description = "URL有效期（秒）") @RequestParam(required = false) @Min(1) Integer expireSeconds) {
         return Result.ok(fileService.getPresignedUrl(id, expireSeconds));
     }
 
@@ -136,7 +141,9 @@ public class FileController {
      */
     @Operation(summary = "下载文件")
     @GetMapping("/{id}/download")
-    public void download(@PathVariable @Min(1) Long id, HttpServletResponse response) throws Exception {
+    public void download(
+            @Parameter(description = "文件ID") @PathVariable @Min(1) Long id,
+            HttpServletResponse response) throws Exception {
         FileDO f = fileService.getById(id);
         try (InputStream in = fileService.download(id);
              OutputStream out = response.getOutputStream()) {
@@ -160,8 +167,9 @@ public class FileController {
      */
     @Operation(summary = "按业务查询")
     @GetMapping("/by-biz")
-    public Result<List<FileDO>> listByBiz(@RequestParam @NotBlank String bizType,
-                                     @RequestParam @NotBlank String bizId) {
+    public Result<List<FileDO>> listByBiz(
+            @Parameter(description = "业务类型") @RequestParam @NotBlank String bizType,
+            @Parameter(description = "业务单据ID") @RequestParam @NotBlank String bizId) {
         return Result.ok(fileService.listByBiz(bizType, bizId));
     }
 
@@ -178,11 +186,11 @@ public class FileController {
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public Result<Page<FileDO>> page(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) String bizType,
-            @RequestParam(required = false) String bizId,
-            @RequestParam(required = false) String keyword) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
+            @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
+            @Parameter(description = "业务单据ID") @RequestParam(required = false) String bizId,
+            @Parameter(description = "关键词") @RequestParam(required = false) String keyword) {
         return Result.ok(fileService.page(page, size, bizType, bizId, keyword));
     }
 }

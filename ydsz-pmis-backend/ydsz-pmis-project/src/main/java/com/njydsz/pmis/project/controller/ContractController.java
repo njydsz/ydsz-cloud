@@ -9,6 +9,7 @@ import com.njydsz.pmis.project.dto.ContractStatusDTO;
 import com.njydsz.pmis.project.entity.ContractDO;
 import com.njydsz.pmis.project.service.ContractService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -33,7 +34,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "合同管理")
+@Tag(name = "合同管理", description = "合同管理相关接口")
 @RestController
 @RequestMapping("/api/v1/project/contract")
 @RequiredArgsConstructor
@@ -82,7 +83,7 @@ public class ContractController {
     @PrePermission("project:contract:delete")
     @Idempotent(key = "contract:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "合同ID") @PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -96,7 +97,7 @@ public class ContractController {
     @Operation(summary = "合同详情")
     @PrePermission("project:contract:list")
     @GetMapping("/{id}")
-    public Result<ContractDO> get(@PathVariable @Min(1) Long id) {
+    public Result<ContractDO> get(@Parameter(description = "合同ID") @PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -115,12 +116,12 @@ public class ContractController {
     @PrePermission("project:contract:list")
     @GetMapping("/page")
     public Result<Page<ContractDO>> page(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Min(1) @jakarta.validation.constraints.Max(100) int size,
-            @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String contractType,
-            @RequestParam(required = false) String riskLevel) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @jakarta.validation.constraints.Max(100) int size,
+            @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "状态") @RequestParam(required = false) String status,
+            @Parameter(description = "合同类型") @RequestParam(required = false) String contractType,
+            @Parameter(description = "风险等级") @RequestParam(required = false) String riskLevel) {
         return Result.ok(service.page(page, size, keyword, status, contractType, riskLevel));
     }
 
@@ -133,7 +134,7 @@ public class ContractController {
     @Operation(summary = "重新评估风险等级")
     @PrePermission("project:contract:evaluate")
     @PostMapping("/{id}/evaluate-risk")
-    public Result<String> evaluateRisk(@PathVariable @Min(1) Long id) {
+    public Result<String> evaluateRisk(@Parameter(description = "合同ID") @PathVariable @Min(1) Long id) {
         return Result.ok(service.evaluateRisk(id));
     }
 
@@ -146,7 +147,7 @@ public class ContractController {
     @Operation(summary = "按状态聚合")
     @PrePermission("project:contract:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) Long tenantId) {
         return Result.ok(service.aggregateByStatus(tenantId));
     }
 
@@ -159,7 +160,7 @@ public class ContractController {
     @Operation(summary = "按风险等级聚合")
     @PrePermission("project:contract:list")
     @GetMapping("/aggregate/risk")
-    public Result<List<Map<String, Object>>> aggregateByRisk(@RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByRisk(@Parameter(description = "租户ID") @RequestParam(required = false) Long tenantId) {
         return Result.ok(service.aggregateByRisk(tenantId));
     }
 }

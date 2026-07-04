@@ -137,7 +137,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         instance.setFlowCode(def.getFlowCode());
         instance.setFlowName(def.getFlowName());
         instance.setDefinitionId(def.getId());
-        instance.setFlowVersion(def.getVersion());
+        instance.setFlowVersion(def.getFlowVersion());
         instance.setBusinessType(dto.getBusinessType());
         instance.setBusinessId(dto.getBusinessId());
         instance.setBusinessNo(dto.getBusinessNo());
@@ -889,7 +889,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
 
         log.info("[Flow-Simulate] 模拟完成: flowCode={} version={} steps={}",
-                flowCode, def.getVersion(), result.size());
+                flowCode, def.getFlowVersion(), result.size());
         return result;
     }
 

@@ -14,6 +14,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -23,6 +24,8 @@ import {
 } from '@/api/execution/closure'
 import type { ProjectClosureVO, ProjectClosureCreateDTO } from '@/api/execution/closure/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 /** 列表加载状态 */
 const loading = ref(false)
@@ -42,18 +45,18 @@ const query = reactive({
 
 /** 结项类型 → 标签/样式映射 */
 const typeMap = {
-  FORMAL: { label: '正式结项', type: 'primary' as const },
-  PRE_CLOSURE: { label: '预结项', type: 'warning' as const },
-  FORCED: { label: '强制结项', type: 'danger' as const },
+  FORMAL: { label: t('execution.closure.type.FORMAL'), type: 'primary' as const },
+  PRE_CLOSURE: { label: t('execution.closure.type.PRE_CLOSURE'), type: 'warning' as const },
+  FORCED: { label: t('execution.closure.type.FORCED'), type: 'danger' as const },
 }
 
 /** 结项状态 → 标签/样式映射 */
 const statusMap = {
-  DRAFT: { label: '草稿', type: 'info' as const },
-  SUBMITTED: { label: '已提交', type: 'warning' as const },
-  APPROVED: { label: '已通过', type: 'success' as const },
-  REJECTED: { label: '已驳回', type: 'danger' as const },
-  ARCHIVED: { label: '已归档', type: 'info' as const },
+  DRAFT: { label: t('execution.closure.status.DRAFT'), type: 'info' as const },
+  SUBMITTED: { label: t('execution.closure.status.SUBMITTED'), type: 'warning' as const },
+  APPROVED: { label: t('execution.closure.status.APPROVED'), type: 'success' as const },
+  REJECTED: { label: t('execution.closure.status.REJECTED'), type: 'danger' as const },
+  ARCHIVED: { label: t('execution.closure.status.ARCHIVED'), type: 'info' as const },
 }
 
 /** 分页查询结项列表 */
@@ -102,9 +105,9 @@ const form = reactive<Partial<ProjectClosureCreateDTO>>({
 
 /** 表单校验规则 */
 const formRules = {
-  closureCode: [{ required: true, message: '结项单号必填', trigger: 'blur' }],
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  type: [{ required: true, message: '结项类型必填', trigger: 'change' }],
+  closureCode: [{ required: true, message: t('execution.closure.rules.closureCodeRequired'), trigger: 'blur' }],
+  initiationId: [{ required: true, message: t('execution.closure.rules.initiationIdRequired'), trigger: 'blur' }],
+  type: [{ required: true, message: t('execution.closure.rules.typeRequired'), trigger: 'change' }],
 }
 
 /** 打开新建弹窗并重置表单 */
@@ -127,7 +130,7 @@ async function submitForm() {
     submitting.value = true
     await formRef.value?.validate()
     await createProjectClosure(form as ProjectClosureCreateDTO)
-    ElMessage.success('已创建')
+    ElMessage.success(t('execution.closure.messages.created'))
     dialogVisible.value = false
     fetchList()
   } catch {
@@ -145,9 +148,9 @@ async function submitForm() {
 async function handleStatus(row: ProjectClosureVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
   try {
-    await ElMessageBox.confirm(`确认将状态变更为「${targetText}」吗？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('execution.closure.messages.confirmStatusChange', { target: targetText }), t('common.tip'), { type: 'warning' })
     await changeProjectClosureStatus({ id: row.id, targetStatus: target })
-    ElMessage.success('状态已更新')
+    ElMessage.success(t('execution.closure.messages.statusUpdated'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -169,14 +172,14 @@ onMounted(fetchList)
   >
     <!-- 搜索栏 -->
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="单号/项目" clearable /></el-form-item>
-      <el-form-item label="类型">
-        <el-select v-model="query.type" placeholder="全部" clearable style="width: 130px">
+      <el-form-item :label="$t('execution.closure.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.closure.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="$t('execution.closure.search.type')">
+        <el-select v-model="query.type" :placeholder="$t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 130px">
+      <el-form-item :label="$t('execution.closure.search.status')">
+        <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
@@ -185,7 +188,7 @@ onMounted(fetchList)
     <!-- 工具栏 -->
     <template #toolbar>
       <el-button v-permission="[PC.CLOSURE_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新建结项
+        {{ $t('execution.closure.buttons.create') }}
       </el-button>
     </template>
 
@@ -193,53 +196,53 @@ onMounted(fetchList)
     <template #table="scope">
       <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="closureCode" title="结项单号" width="160" />
-        <vxe-column field="initiationName" title="项目" min-width="200" show-overflow />
-        <vxe-column field="type" title="类型" width="100">
+        <vxe-column field="closureCode" :title="$t('execution.closure.columns.closureCode')" width="160" />
+        <vxe-column field="initiationName" :title="$t('execution.closure.columns.initiationName')" min-width="200" show-overflow />
+        <vxe-column field="type" :title="$t('execution.closure.columns.type')" width="100">
           <template #default="{ row }"><StatusTag :value="row.type" :map="typeMap" /></template>
         </vxe-column>
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="status" :title="$t('execution.closure.columns.status')" width="100">
           <template #default="{ row }"><StatusTag :value="row.status" :map="statusMap" /></template>
         </vxe-column>
-        <vxe-column field="paymentRatio" title="回款比例" width="110" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(0)}%` : '-'" />
-        <vxe-column field="grossMargin" title="毛利率" width="100" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(1)}%` : '-'" />
-        <vxe-column field="applicantName" title="申请人" width="100" />
-        <vxe-column field="approverName" title="审批人" width="100" />
-        <vxe-column field="warrantyEndDate" title="质保期至" width="110" />
-        <vxe-column field="createdAt" title="创建时间" width="170" />
-        <vxe-column title="操作" width="280" fixed="right">
+        <vxe-column field="paymentRatio" :title="$t('execution.closure.columns.paymentRatio')" width="110" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(0)}%` : '-'" />
+        <vxe-column field="grossMargin" :title="$t('execution.closure.columns.grossMargin')" width="100" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(1)}%` : '-'" />
+        <vxe-column field="applicantName" :title="$t('execution.closure.columns.applicantName')" width="100" />
+        <vxe-column field="approverName" :title="$t('execution.closure.columns.approverName')" width="100" />
+        <vxe-column field="warrantyEndDate" :title="$t('execution.closure.columns.warrantyEndDate')" width="110" />
+        <vxe-column field="createdAt" :title="$t('execution.closure.columns.createdAt')" width="170" />
+        <vxe-column :title="$t('execution.closure.columns.action')" width="280" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'DRAFT'" v-permission="[PC.CLOSURE_STATUS]" link type="warning" size="small" @click="handleStatus(row, 'SUBMITTED')">提交</el-button>
-            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.CLOSURE_STATUS]" link type="success" size="small" @click="handleStatus(row, 'APPROVED')">通过</el-button>
-            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.CLOSURE_STATUS]" link type="danger" size="small" @click="handleStatus(row, 'REJECTED')">驳回</el-button>
-            <el-button v-if="row.status === 'APPROVED'" v-permission="[PC.CLOSURE_STATUS]" link type="info" size="small" @click="handleStatus(row, 'ARCHIVED')">归档</el-button>
+            <el-button v-if="row.status === 'DRAFT'" v-permission="[PC.CLOSURE_STATUS]" link type="warning" size="small" @click="handleStatus(row, 'SUBMITTED')">{{ $t('common.submit') }}</el-button>
+            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.CLOSURE_STATUS]" link type="success" size="small" @click="handleStatus(row, 'APPROVED')">{{ $t('execution.closure.buttons.approve') }}</el-button>
+            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.CLOSURE_STATUS]" link type="danger" size="small" @click="handleStatus(row, 'REJECTED')">{{ $t('execution.closure.buttons.reject') }}</el-button>
+            <el-button v-if="row.status === 'APPROVED'" v-permission="[PC.CLOSURE_STATUS]" link type="info" size="small" @click="handleStatus(row, 'ARCHIVED')">{{ $t('execution.closure.buttons.archive') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
     <!-- 新建结项弹窗 -->
-    <el-dialog v-model="dialogVisible" title="新建结项" width="640px">
+    <el-dialog v-model="dialogVisible" :title="$t('execution.closure.dialog.createTitle')" width="640px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
-          <el-col :span="12"><el-form-item label="结项单号" prop="closureCode"><el-input v-model="form.closureCode" /></el-form-item></el-col>
-          <el-col :span="12"><el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="$t('execution.closure.dialog.closureCode')" prop="closureCode"><el-input v-model="form.closureCode" /></el-form-item></el-col>
+          <el-col :span="12"><el-form-item :label="$t('execution.closure.dialog.initiationId')" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item></el-col>
         </el-row>
-        <el-form-item label="结项类型" prop="type">
+        <el-form-item :label="$t('execution.closure.dialog.closureType')" prop="type">
           <el-select v-model="form.type" style="width: 100%">
             <el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
-        <el-form-item label="结项原因"><el-input v-model="form.reason" type="textarea" :rows="2" /></el-form-item>
-        <el-form-item label="项目总结"><el-input v-model="form.summary" type="textarea" :rows="3" /></el-form-item>
-        <el-form-item label="经验教训"><el-input v-model="form.lessonsLearned" type="textarea" :rows="3" /></el-form-item>
-        <el-form-item label="质保期至">
+        <el-form-item :label="$t('execution.closure.dialog.reason')"><el-input v-model="form.reason" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item :label="$t('execution.closure.dialog.summary')"><el-input v-model="form.summary" type="textarea" :rows="3" /></el-form-item>
+        <el-form-item :label="$t('execution.closure.dialog.lessonsLearned')"><el-input v-model="form.lessonsLearned" type="textarea" :rows="3" /></el-form-item>
+        <el-form-item :label="$t('execution.closure.dialog.warrantyEndDate')">
           <el-date-picker v-model="form.warrantyEndDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ $t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

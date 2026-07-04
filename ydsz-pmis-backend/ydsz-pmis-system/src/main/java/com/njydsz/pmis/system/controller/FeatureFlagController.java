@@ -7,6 +7,7 @@ import com.njydsz.pmis.common.featureflag.FeatureFlag;
 import com.njydsz.pmis.common.featureflag.FeatureFlagService;
 import com.njydsz.pmis.common.featureflag.FeatureFlagSnapshot;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -33,7 +34,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0 (批次20)
  */
-@Tag(name = "系统-特性开关")
+@Tag(name = "系统-特性开关", description = "特性开关管理、灰度发布接口")
 @RestController
 @RequestMapping("/api/v1/feature-flags")
 @RequiredArgsConstructor
@@ -76,8 +77,9 @@ public class FeatureFlagController {
      */
     @Operation(summary = "业务方判断 flag 是否启用 (无权限校验)")
     @GetMapping("/check")
-    public Result<Boolean> check(@RequestParam @NotNull String key,
-                            @RequestParam(required = false) Long userId) {
+    public Result<Boolean> check(
+            @Parameter(description = "flag 键") @RequestParam @NotNull String key,
+            @Parameter(description = "用户ID（可选，用于灰度判断）") @RequestParam(required = false) Long userId) {
         FeatureFlag flag;
         try {
             flag = FeatureFlag.valueOf(key);
@@ -98,8 +100,9 @@ public class FeatureFlagController {
     @PrePermission("sys:feature-flag:update")
     @OperationLog(module = "特性开关", action = "更新开关", bizType = "FEATURE_FLAG")
     @PutMapping("/{key}/enabled")
-    public Result<Boolean> setEnabled(@PathVariable String key,
-                                 @RequestParam boolean enabled) {
+    public Result<Boolean> setEnabled(
+            @Parameter(description = "flag 键") @PathVariable String key,
+            @Parameter(description = "是否启用") @RequestParam boolean enabled) {
         FeatureFlag flag = parseFlag(key);
         boolean effective = featureFlagService.setEnabled(flag, enabled);
         return Result.ok(effective);
@@ -116,8 +119,9 @@ public class FeatureFlagController {
     @PrePermission("sys:feature-flag:update")
     @OperationLog(module = "特性开关", action = "更新灰度", bizType = "FEATURE_FLAG")
     @PutMapping("/{key}/rollout")
-    public Result<Integer> setRollout(@PathVariable String key,
-                                 @RequestParam @Min(0) @Max(100) int percentage) {
+    public Result<Integer> setRollout(
+            @Parameter(description = "flag 键") @PathVariable String key,
+            @Parameter(description = "灰度百分比（0-100）") @RequestParam @Min(0) @Max(100) int percentage) {
         FeatureFlag flag = parseFlag(key);
         int clamped = featureFlagService.setRolloutPercentage(flag, percentage);
         return Result.ok(clamped);

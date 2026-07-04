@@ -62,7 +62,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         definitionMapper.updateById(def);
 
         log.info("[Flow][Canary] 启动灰度: defId={} code={} version={} percent={}% strategy={} operator={}",
-                definitionId, def.getFlowCode(), def.getVersion(), initialPercent,
+                definitionId, def.getFlowCode(), def.getFlowVersion(), initialPercent,
                 def.getCanaryStrategy(), operatorName);
     }
 
@@ -114,7 +114,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         definitionMapper.updateById(def);
 
         log.info("[Flow][Canary] 全量发布完成: defId={} code={} version={} operator={}",
-                definitionId, def.getFlowCode(), def.getVersion(), operatorName);
+                definitionId, def.getFlowCode(), def.getFlowVersion(), operatorName);
     }
 
     @Override
@@ -131,7 +131,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         definitionMapper.updateById(def);
 
         log.info("[Flow][Canary] 灰度回滚: defId={} code={} version={} operator={} reason={}",
-                definitionId, def.getFlowCode(), def.getVersion(), operatorName, note);
+                definitionId, def.getFlowCode(), def.getFlowVersion(), operatorName, note);
     }
 
     @Override
@@ -163,7 +163,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         // 3) 按策略切流
         if (shouldUseCanary(canary, percent, initiatorId)) {
             log.debug("[Flow][Canary] 切流至灰度版: code={} version={} percent={}% initiator={}",
-                    flowCode, canary.getVersion(), percent, initiatorId);
+                    flowCode, canary.getFlowVersion(), percent, initiatorId);
             return canary;
         }
         return stable;
@@ -197,7 +197,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
                 Map<String, Object> m = new HashMap<>();
                 m.put("definitionId", d.getId());
                 m.put("flowCode", d.getFlowCode());
-                m.put("version", d.getVersion());
+                m.put("version", d.getFlowVersion());
                 m.put("operatorId", o.get("operatorId"));
                 m.put("operatorName", o.get("operatorName"));
                 m.put("fromPercent", o.get("fromPercent"));

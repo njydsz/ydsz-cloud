@@ -9,6 +9,7 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.entity.CursorPageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -31,7 +32,7 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "操作日志")
+@Tag(name = "操作日志", description = "操作审计日志查询与管理接口")
 @RestController
 @RequestMapping("/api/v1/audit/operation")
 @RequiredArgsConstructor
@@ -58,16 +59,16 @@ public class OperationLogController {
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/page")
     public Result<PageResult<OperationLogDO>> page(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String bizType,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String module,
-            @RequestParam(required = false)
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
+            @Parameter(description = "状态") @RequestParam(required = false) String status,
+            @Parameter(description = "模块名") @RequestParam(required = false) String module,
+            @Parameter(description = "起始时间") @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startTime,
-            @RequestParam(required = false)
+            @Parameter(description = "截止时间") @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime endTime) {
         return Result.ok(PageResult.ofPage(service.page(page, size, userId, bizType, status, module, startTime, endTime)));
@@ -93,16 +94,16 @@ public class OperationLogController {
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/cursor-page")
     public Result<CursorPageResult<OperationLogDO>> cursorPage(
-            @RequestParam(defaultValue = "20") @Max(100) int size,
-            @RequestParam(required = false) String cursor,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String bizType,
-            @RequestParam(required = false) String status,
-            @RequestParam(required = false) String module,
-            @RequestParam(required = false)
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "游标（首次请求不传）") @RequestParam(required = false) String cursor,
+            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
+            @Parameter(description = "状态") @RequestParam(required = false) String status,
+            @Parameter(description = "模块名") @RequestParam(required = false) String module,
+            @Parameter(description = "起始时间") @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime startTime,
-            @RequestParam(required = false)
+            @Parameter(description = "截止时间") @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime endTime) {
         return Result.ok(service.pageByCursor(size, cursor, userId, bizType, status, module, startTime, endTime));
@@ -118,8 +119,9 @@ public class OperationLogController {
     @Operation(summary = "按用户查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/by-user")
-    public Result<List<OperationLogDO>> byUser(@RequestParam Long userId,
-                                          @RequestParam(defaultValue = "50") int limit) {
+    public Result<List<OperationLogDO>> byUser(
+            @Parameter(description = "用户ID") @RequestParam Long userId,
+            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") int limit) {
         return Result.ok(service.listByUser(userId, limit));
     }
 
@@ -134,9 +136,10 @@ public class OperationLogController {
     @Operation(summary = "按业务查询")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/by-biz")
-    public Result<List<OperationLogDO>> byBiz(@RequestParam String bizType,
-                                         @RequestParam String bizId,
-                                         @RequestParam(defaultValue = "50") int limit) {
+    public Result<List<OperationLogDO>> byBiz(
+            @Parameter(description = "业务类型") @RequestParam String bizType,
+            @Parameter(description = "业务单据ID") @RequestParam String bizId,
+            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") int limit) {
         return Result.ok(service.listByBiz(bizType, bizId, limit));
     }
 
@@ -149,7 +152,8 @@ public class OperationLogController {
     @Operation(summary = "清理 N 天前日志")
     @PrePermission(PermissionCodes.AUDIT_LOG_CLEAN)
     @PostMapping("/clean")
-    public Result<Integer> clean(@RequestParam(defaultValue = "90") int days) {
+    public Result<Integer> clean(
+            @Parameter(description = "保留天数") @RequestParam(defaultValue = "90") int days) {
         return Result.ok(service.cleanBefore(days));
     }
 
@@ -162,7 +166,8 @@ public class OperationLogController {
     @Operation(summary = "查询变更差异")
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/{id}/diff")
-    public List<DiffCalculator.FieldDiff> getDiff(@PathVariable @Min(1) Long id) {
+    public List<DiffCalculator.FieldDiff> getDiff(
+            @Parameter(description = "操作日志ID") @PathVariable @Min(1) Long id) {
         OperationLogDO log = service.getById(id);
         if (log == null) return List.of();
         return DiffCalculator.calculateDiff(log.getBeforeData(), log.getAfterData());

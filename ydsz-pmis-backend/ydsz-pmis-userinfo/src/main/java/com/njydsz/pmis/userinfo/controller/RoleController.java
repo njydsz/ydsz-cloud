@@ -10,6 +10,7 @@ import com.njydsz.pmis.userinfo.dto.RoleQueryDTO;
 import com.njydsz.pmis.userinfo.entity.RoleDO;
 import com.njydsz.pmis.userinfo.service.RoleService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -25,7 +26,7 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "权限-角色")
+@Tag(name = "角色管理", description = "角色管理相关接口")
 @RestController
 @RequestMapping("/api/v1/roles")
 @RequiredArgsConstructor
@@ -70,7 +71,7 @@ public class RoleController {
     @Operation(summary = "角色详情")
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}")
-    public Result<RoleDO> get(@PathVariable @Min(1) Long id) {
+    public Result<RoleDO> get(@Parameter(description = "角色ID") @PathVariable @Min(1) Long id) {
         return Result.ok(roleService.getById(id));
     }
 
@@ -113,7 +114,7 @@ public class RoleController {
     @PrePermission("auth:role:delete")
     @OperationLog(module = "权限管理", action = "删除角色", bizType = "ROLE")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "角色ID") @PathVariable @Min(1) Long id) {
         roleService.delete(id);
         return Result.ok();
     }
@@ -129,7 +130,7 @@ public class RoleController {
     @PrePermission("auth:role:assign")
     @OperationLog(module = "权限管理", action = "分配权限", bizType = "ROLE")
     @PutMapping("/{id}/permissions")
-    public Result<Void> assignPermissions(@PathVariable @Min(1) Long id, @Valid @RequestBody List<Long> permissionIds) {
+    public Result<Void> assignPermissions(@Parameter(description = "角色ID") @PathVariable @Min(1) Long id, @Valid @RequestBody List<Long> permissionIds) {
         roleService.assignPermissions(id, permissionIds);
         return Result.ok();
     }
@@ -143,7 +144,7 @@ public class RoleController {
     @Operation(summary = "查询角色的权限 ID 列表")
     @RateLimit(key = "role:list", qps = 30, windowSeconds = 60)
     @GetMapping("/{id}/permissions")
-    public Result<List<Long>> listPermissions(@PathVariable @Min(1) Long id) {
+    public Result<List<Long>> listPermissions(@Parameter(description = "角色ID") @PathVariable @Min(1) Long id) {
         return Result.ok(roleService.listPermissionIds(id));
     }
 }

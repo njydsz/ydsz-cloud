@@ -8,6 +8,7 @@ import com.njydsz.pmis.userinfo.service.impl.AuthServiceImpl;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "认证授权")
+@Tag(name = "认证管理", description = "认证管理相关接口")
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -63,7 +64,7 @@ public class AuthController {
      */
     @Operation(summary = "刷新 Token")
     @PostMapping("/refresh")
-    public Result<LoginResultVO> refresh(@RequestParam String refreshToken) {
+    public Result<LoginResultVO> refresh(@Parameter(description = "刷新Token") @RequestParam String refreshToken) {
         return Result.ok(authService.refresh(refreshToken));
     }
 

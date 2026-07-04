@@ -41,7 +41,8 @@ public class FlowDefinitionDO extends BaseDO {
     private String category;
 
     /** 流程版本 */
-    private String version;
+    @TableField("flow_version")
+    private String flowVersion;
 
     /** 设计器模型：CLASSICS 经典 / MIMIC 仿钉钉 */
     private String modelValue;

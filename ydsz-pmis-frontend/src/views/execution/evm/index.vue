@@ -384,8 +384,8 @@ onMounted(() => {
         </el-button>
       </template>
       <!-- EVM 测量列表表格 -->
-      <template #table>
-        <vxe-table :data="list" :loading="loading" border height="auto">
+      <template #table="scope">
+        <vxe-table :data="list" :loading="loading" border height="auto" :scroll-y="scope.tableProps.scrollY">
           <vxe-column field="period" title="周期" width="100" />
           <vxe-column field="pv" title="PV" width="110">
             <template #default="{ row }">

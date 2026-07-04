@@ -168,8 +168,8 @@ onMounted(() => {
       </el-col>
     </el-row>
 
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="reconcileDate" title="对账日期" width="120" />
         <vxe-column field="reconcileType" title="维度" width="100">

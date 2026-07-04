@@ -341,8 +341,8 @@ onMounted(() => {
         </el-button>
       </template>
       <!-- 数据表格：测算版本明细 + 状态流转操作列 -->
-      <template #table>
-        <vxe-table :data="list" :loading="loading" border height="auto">
+      <template #table="scope">
+        <vxe-table :data="list" :loading="loading" border height="auto" :scroll-y="scope.tableProps.scrollY">
           <vxe-column field="simulationCode" title="编号" width="160" />
           <vxe-column field="simulationName" title="测算名称" min-width="160" show-overflow />
           <vxe-column field="version" title="版本" width="70" />

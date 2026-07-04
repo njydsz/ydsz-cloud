@@ -10,6 +10,7 @@ import com.njydsz.pmis.system.dto.ConfigQueryDTO;
 import com.njydsz.pmis.system.entity.ConfigDO;
 import com.njydsz.pmis.system.service.ConfigService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -26,7 +27,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "系统-配置中心")
+@Tag(name = "系统-配置中心", description = "系统配置管理相关接口")
 @RestController
 @RequestMapping("/api/v1/configs")
 @RequiredArgsConstructor
@@ -46,14 +47,17 @@ public class ConfigController {
     @Operation(summary = "按 group+key 查配置")
     @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping("/by-key")
-    public Result<ConfigDO> getByKey(@RequestParam String group, @RequestParam String key) {
+    public Result<ConfigDO> getByKey(
+            @Parameter(description = "配置分组") @RequestParam String group,
+            @Parameter(description = "配置键") @RequestParam String key) {
         return Result.ok(configService.getByKey(group, key));
     }
 
     @Operation(summary = "按 group 查全部配置（key-value 形式）")
     @RateLimit(key = "config", qps = 50, windowSeconds = 60)
     @GetMapping("/group/{group}")
-    public Result<Map<String, String>> getGroup(@PathVariable String group) {
+    public Result<Map<String, String>> getGroup(
+            @Parameter(description = "配置分组") @PathVariable String group) {
         return Result.ok(configService.getGroupAsMap(group));
     }
 
@@ -85,7 +89,8 @@ public class ConfigController {
     @PrePermission("sys:config:delete")
     @OperationLog(module = "系统配置", action = "删除配置", bizType = "CONFIG")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Long id) {
+    public Result<Void> delete(
+            @Parameter(description = "配置ID") @PathVariable @Min(1) Long id) {
         configService.delete(id);
         return Result.ok();
     }
@@ -94,7 +99,8 @@ public class ConfigController {
     @PrePermission("sys:config:delete")
     @OperationLog(module = "系统配置", action = "按分组删除", bizType = "CONFIG")
     @DeleteMapping("/group/{group}")
-    public Result<Integer> deleteByGroup(@PathVariable String group) {
+    public Result<Integer> deleteByGroup(
+            @Parameter(description = "配置分组") @PathVariable String group) {
         return Result.ok(configService.deleteByGroup(group));
     }
 
@@ -102,7 +108,9 @@ public class ConfigController {
     @PrePermission("sys:config:update")
     @OperationLog(module = "系统配置", action = "按分组启停", bizType = "CONFIG")
     @PutMapping("/group/{group}/status/{status}")
-    public Result<Integer> updateStatusByGroup(@PathVariable String group, @PathVariable String status) {
+    public Result<Integer> updateStatusByGroup(
+            @Parameter(description = "配置分组") @PathVariable String group,
+            @Parameter(description = "状态") @PathVariable String status) {
         return Result.ok(configService.updateStatusByGroup(group, status));
     }
 

@@ -170,7 +170,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         def.setFlowCode(dto.getFlowCode());
         def.setFlowName(dto.getFlowName());
         def.setCategory(dto.getCategory());
-        def.setVersion(version);
+        def.setFlowVersion(version);
         def.setModelValue("CLASSICS");
         def.setFormCustom("N");
         def.setFormPath(dto.getFormPath());
@@ -699,7 +699,7 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         for (FlowDefinitionDO v : versions) {
             Map<String, Object> map = new LinkedHashMap<>();
             map.put("id", v.getId());
-            map.put("version", v.getVersion());
+            map.put("version", v.getFlowVersion());
             map.put("flowName", v.getFlowName());
             map.put("isPublish", v.getIsPublish());
             map.put("activityStatus", v.getActivityStatus());
@@ -730,10 +730,10 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         String v1Str = String.valueOf(version1);
         String v2Str = String.valueOf(version2);
         FlowDefinitionDO defV1 = allVersions.stream()
-                .filter(d -> v1Str.equals(d.getVersion()))
+                .filter(d -> v1Str.equals(d.getFlowVersion()))
                 .findFirst().orElse(null);
         FlowDefinitionDO defV2 = allVersions.stream()
-                .filter(d -> v2Str.equals(d.getVersion()))
+                .filter(d -> v2Str.equals(d.getFlowVersion()))
                 .findFirst().orElse(null);
 
         if (defV1 == null) {

@@ -425,7 +425,7 @@ class FlowDefinitionServiceImplTest {
         def.setFlowCode(FLOW_CODE);
         def.setFlowName("请假审批");
         def.setCategory("HR");
-        def.setVersion("1.0");
+        def.setFlowVersion("1.0");
         def.setIsPublish(1);
         def.setActivityStatus(1);
         def.setTenantId(1L);

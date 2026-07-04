@@ -7,6 +7,7 @@ import com.njydsz.pmis.common.chaos.ChaosExperiment;
 import com.njydsz.pmis.common.chaos.ChaosOutcome;
 import com.njydsz.pmis.common.chaos.ChaosService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
@@ -50,7 +51,7 @@ import java.util.Map;
  * @since 1.0.0 (批次20)
  */
 @Slf4j
-@Tag(name = "系统-混沌工程")
+@Tag(name = "系统-混沌工程", description = "混沌工程实验管理接口（仅 dev/staging 环境）")
 @RestController
 @RequestMapping("/api/v1/chaos")
 @RequiredArgsConstructor
@@ -81,7 +82,8 @@ public class ChaosController {
     @Operation(summary = "按 target 查询实验")
     @PrePermission("sys:chaos:view")
     @GetMapping("/experiments/{target}")
-    public Result<ChaosExperiment> get(@PathVariable @NotBlank String target) {
+    public Result<ChaosExperiment> get(
+            @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target) {
         ChaosExperiment found = chaosService.list().stream()
                 .filter(e -> target.equals(e.getTarget()))
                 .findFirst()
@@ -115,8 +117,9 @@ public class ChaosController {
     @PrePermission("sys:chaos:create")
     @OperationLog(module = "混沌工程", action = "更新实验", bizType = "CHAOS_EXPERIMENT")
     @PutMapping("/experiments/{target}")
-    public Result<Void> update(@PathVariable @NotBlank String target,
-                          @RequestBody @Valid ChaosExperiment experiment) {
+    public Result<Void> update(
+            @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target,
+            @RequestBody @Valid ChaosExperiment experiment) {
         experiment.setTarget(target);
         chaosService.register(experiment);
         return Result.ok();
@@ -133,8 +136,9 @@ public class ChaosController {
     @PrePermission("sys:chaos:trigger")
     @OperationLog(module = "混沌工程", action = "启停实验", bizType = "CHAOS_EXPERIMENT")
     @PutMapping("/experiments/{target}/enabled")
-    public Result<Void> toggle(@PathVariable @NotBlank String target,
-                          @RequestParam boolean enabled) {
+    public Result<Void> toggle(
+            @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target,
+            @Parameter(description = "是否启用") @RequestParam boolean enabled) {
         ChaosExperiment exp = chaosService.list().stream()
                 .filter(e -> target.equals(e.getTarget()))
                 .findFirst()
@@ -154,7 +158,8 @@ public class ChaosController {
     @PrePermission("sys:chaos:delete")
     @OperationLog(module = "混沌工程", action = "注销实验", bizType = "CHAOS_EXPERIMENT")
     @DeleteMapping("/experiments/{target}")
-    public Result<Void> unregister(@PathVariable @NotBlank String target) {
+    public Result<Void> unregister(
+            @Parameter(description = "实验目标标识") @PathVariable @NotBlank String target) {
         chaosService.unregister(target);
         return Result.ok();
     }
@@ -193,7 +198,8 @@ public class ChaosController {
     @Operation(summary = "dry-run: 主动触发一次注入以验证容错 (需 captureMode 包裹异常)")
     @PrePermission("sys:chaos:trigger")
     @PostMapping("/dry-run")
-    public Result<Map<String, Object>> dryRun(@RequestParam @NotBlank String target) {
+    public Result<Map<String, Object>> dryRun(
+            @Parameter(description = "实验目标标识") @RequestParam @NotBlank String target) {
         // 包装异常: ChaosService 注入时会抛, 这里把异常转成 outcome 字符串
         ChaosOutcome outcome;
         String error = null;

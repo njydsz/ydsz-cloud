@@ -4416,7 +4416,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_definition(
     flow_code          VARCHAR(64)  NOT NULL,
     flow_name          VARCHAR(128) NOT NULL,
     category           VARCHAR(64),
-    version            VARCHAR(20)  NOT NULL DEFAULT '1.0',
+    flow_version       VARCHAR(20)  NOT NULL DEFAULT '1.0',
     model_value        VARCHAR(40)  NOT NULL DEFAULT 'CLASSICS',
     form_custom        CHAR(1)      NOT NULL DEFAULT 'N',
     form_path          VARCHAR(256),
@@ -4433,14 +4433,16 @@ CREATE TABLE IF NOT EXISTS pmis_flow_definition(
     updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
+    provider_trace_id  VARCHAR(64),
+    version            INTEGER      NOT NULL DEFAULT 0
 );
 
 COMMENT ON TABLE  pmis_flow_definition IS '流程定义表: 记录流程的整体信息(编码/名称/版本/表单路径/模型 JSON)';
 COMMENT ON COLUMN pmis_flow_definition.flow_code IS '流程编码(业务语义: project_initiation/contract_change/...)';
 COMMENT ON COLUMN pmis_flow_definition.flow_name IS '流程名称';
 COMMENT ON COLUMN pmis_flow_definition.category IS '流程分类: project/contract/closure/admin';
-COMMENT ON COLUMN pmis_flow_definition.version IS '流程版本(语义化版本,1.0/1.1/2.0)';
+COMMENT ON COLUMN pmis_flow_definition.flow_version IS '流程版本(语义化版本,1.0/1.1/2.0)';
+COMMENT ON COLUMN pmis_flow_definition.version IS '乐观锁版本号';
 COMMENT ON COLUMN pmis_flow_definition.model_value IS '设计器模型: CLASSICS 经典 / MIMIC 仿钉钉';
 COMMENT ON COLUMN pmis_flow_definition.form_custom IS '审批表单是否自定义: Y 是 / N 否';
 COMMENT ON COLUMN pmis_flow_definition.form_path IS '审批表单路径(前端路由或外置表单 URL)';

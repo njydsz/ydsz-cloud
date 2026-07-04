@@ -218,7 +218,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
                     if (!dryRun) {
                         // 实际更新：definitionId / flowVersion / currentNodeCode / currentNodeName
                         instance.setDefinitionId(targetDefId);
-                        instance.setFlowVersion(targetDef.getVersion());
+                        instance.setFlowVersion(targetDef.getFlowVersion());
                         instance.setCurrentNodeCode(newNodeCode);
                         // 同步更新节点名称
                         FlowNodeDO targetNode = targetNodeMap.get(newNodeCode);

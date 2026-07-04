@@ -13,6 +13,7 @@ import com.njydsz.pmis.system.entity.NotificationDO;
 import com.njydsz.pmis.system.service.NotificationService;
 import com.njydsz.pmis.system.service.RealtimePushService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
@@ -29,7 +30,7 @@ import java.util.Map;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "通知中心")
+@Tag(name = "通知中心", description = "通知发送、收件箱及实时推送接口")
 @RestController
 @RequestMapping("/api/v1/notifications")
 @RequiredArgsConstructor
@@ -86,7 +87,8 @@ public class NotificationController {
      */
     @Operation(summary = "标记已读")
     @PostMapping("/{id}/read")
-    public Result<Boolean> markRead(@PathVariable @Min(1) Long id) {
+    public Result<Boolean> markRead(
+            @Parameter(description = "通知ID") @PathVariable @Min(1) Long id) {
         return Result.ok(notificationService.markRead(SecurityContext.getUserId(), id));
     }
 
@@ -124,9 +126,10 @@ public class NotificationController {
      */
     @Operation(summary = "实时推送（指定用户）")
     @PostMapping("/push")
-    public Result<Map<String, Object>> push(@RequestParam Long userId,
-                                            @RequestParam String type,
-                                            @RequestBody RealtimePushDTO payload) {
+    public Result<Map<String, Object>> push(
+            @Parameter(description = "接收用户ID") @RequestParam Long userId,
+            @Parameter(description = "消息类型") @RequestParam String type,
+            @RequestBody RealtimePushDTO payload) {
         Object data = payload != null ? payload.getData() : null;
         realtimePushService.pushToUser(userId, type, data);
         return Result.ok(Map.of("success", true, "userId", userId, "type", type));
@@ -141,8 +144,9 @@ public class NotificationController {
      */
     @Operation(summary = "实时广播")
     @PostMapping("/broadcast")
-    public Result<Map<String, Object>> broadcast(@RequestParam String type,
-                                                 @RequestBody Object payload) {
+    public Result<Map<String, Object>> broadcast(
+            @Parameter(description = "消息类型") @RequestParam String type,
+            @RequestBody Object payload) {
         realtimePushService.broadcast(type, payload);
         return Result.ok(Map.of("success", true, "type", type));
     }

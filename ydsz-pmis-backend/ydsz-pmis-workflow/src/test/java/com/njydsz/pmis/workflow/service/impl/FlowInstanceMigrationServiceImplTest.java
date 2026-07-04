@@ -413,7 +413,7 @@ class FlowInstanceMigrationServiceImplTest {
         FlowDefinitionDO def = new FlowDefinitionDO();
         def.setId(id);
         def.setFlowCode(flowCode);
-        def.setVersion(version);
+        def.setFlowVersion(version);
         return def;
     }
 

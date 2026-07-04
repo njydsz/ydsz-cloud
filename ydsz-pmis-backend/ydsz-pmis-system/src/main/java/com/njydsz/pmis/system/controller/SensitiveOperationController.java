@@ -8,6 +8,7 @@ import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -27,7 +28,7 @@ import java.util.List;
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
-@Tag(name = "敏感操作审计")
+@Tag(name = "敏感操作审计", description = "敏感操作审计记录查询接口")
 @RestController
 @RequestMapping("/api/v1/audit/sensitive-op")
 @RequiredArgsConstructor
@@ -40,10 +41,10 @@ public class SensitiveOperationController {
     @PrePermission("audit:sensitive:view")
     @GetMapping("/page")
     public Result<PageResult<SensitiveOperationDO>> page(
-            @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
-            @RequestParam(required = false) Long userId,
-            @RequestParam(required = false) String opType) {
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
+            @Parameter(description = "操作类型") @RequestParam(required = false) String opType) {
         Page<SensitiveOperationDO> p = new Page<>(page, size);
         LambdaQueryWrapper<SensitiveOperationDO> w = new LambdaQueryWrapper<>();
         if (userId != null) w.eq(SensitiveOperationDO::getUserId, userId);
@@ -55,8 +56,9 @@ public class SensitiveOperationController {
     @Operation(summary = "按用户查询敏感操作历史")
     @PrePermission("audit:sensitive:view")
     @GetMapping("/by-user")
-    public Result<List<SensitiveOperationDO>> byUser(@RequestParam Long userId,
-                                                @RequestParam(defaultValue = "50") int limit) {
+    public Result<List<SensitiveOperationDO>> byUser(
+            @Parameter(description = "用户ID") @RequestParam Long userId,
+            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") int limit) {
         return Result.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
     }
 }

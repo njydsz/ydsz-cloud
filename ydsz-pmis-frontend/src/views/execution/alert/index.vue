@@ -14,6 +14,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import VirtualTable from '@/components/common/VirtualTable.vue'
@@ -34,6 +35,8 @@ import type {
   AlertResolveRolesVO,
 } from '@/api/execution/alert/types'
 
+const { t } = useI18n()
+
 /** 列表加载状态 */
 const loading = ref(false)
 /** 预警分发记录列表 */
@@ -48,44 +51,44 @@ const query = reactive({
 
 /** 预警等级 → 标签/样式映射 */
 const levelMap = {
-  YELLOW: { label: '黄色', type: 'warning' as const },
-  RED: { label: '红色', type: 'danger' as const },
-  NORMAL: { label: '通知', type: 'info' as const },
+  YELLOW: { label: t('execution.alert.level.YELLOW'), type: 'warning' as const },
+  RED: { label: t('execution.alert.level.RED'), type: 'danger' as const },
+  NORMAL: { label: t('execution.alert.level.NORMAL'), type: 'info' as const },
 }
 
 /** 分发状态 → 标签/样式映射 */
 const statusMap = {
-  PENDING: { label: '待分发', type: 'warning' as const },
-  SENT: { label: '已发送', type: 'success' as const },
-  FAILED: { label: '失败', type: 'danger' as const },
-  CANCELLED: { label: '已取消', type: 'info' as const },
+  PENDING: { label: t('execution.alert.status.PENDING'), type: 'warning' as const },
+  SENT: { label: t('execution.alert.status.SENT'), type: 'success' as const },
+  FAILED: { label: t('execution.alert.status.FAILED'), type: 'danger' as const },
+  CANCELLED: { label: t('execution.alert.status.CANCELLED'), type: 'info' as const },
 }
 
 /** 预警业务类型 → 中文名映射 */
 const typeMap: Record<string, string> = {
-  BUDGET: '预算',
-  RISK: '风险',
+  BUDGET: t('execution.alert.type.BUDGET'),
+  RISK: t('execution.alert.type.RISK'),
   EVM: 'EVM',
   SLA: 'SLA',
   BENCH: 'Bench',
-  UTILIZATION: '利用率',
-  QUALITY: '质量',
-  OTHER: '其他',
+  UTILIZATION: t('execution.alert.type.UTILIZATION'),
+  QUALITY: t('execution.alert.type.QUALITY'),
+  OTHER: t('execution.alert.type.OTHER'),
 }
 
 /** 预警分发列表列配置 */
 const alertColumns: ColumnConfig[] = [
-  { field: 'alertCode', title: '预警编号', width: 220 },
-  { field: 'alertType', title: '类型', width: 100, slot: true },
-  { field: 'alertLevel', title: '等级', width: 80, slot: true },
-  { field: 'title', title: '标题', width: 220 },
-  { field: 'targetRole', title: '触达角色', width: 160 },
-  { field: 'pushChannels', title: '渠道', width: 120 },
-  { field: 'status', title: '状态', width: 100, slot: true },
-  { field: 'retryCount', title: '重试', width: 60 },
-  { field: 'dispatchedAt', title: '触发时间', width: 160 },
-  { field: 'failReason', title: '失败原因', width: 180 },
-  { field: 'actions', title: '操作', width: 220, fixed: 'right', slot: true },
+  { field: 'alertCode', title: t('execution.alert.columns.alertCode'), width: 220 },
+  { field: 'alertType', title: t('execution.alert.columns.alertType'), width: 100, slot: true },
+  { field: 'alertLevel', title: t('execution.alert.columns.alertLevel'), width: 80, slot: true },
+  { field: 'title', title: t('execution.alert.columns.title'), width: 220 },
+  { field: 'targetRole', title: t('execution.alert.columns.targetRole'), width: 160 },
+  { field: 'pushChannels', title: t('execution.alert.columns.pushChannels'), width: 120 },
+  { field: 'status', title: t('execution.alert.columns.status'), width: 100, slot: true },
+  { field: 'retryCount', title: t('execution.alert.columns.retryCount'), width: 60 },
+  { field: 'dispatchedAt', title: t('execution.alert.columns.dispatchedAt'), width: 160 },
+  { field: 'failReason', title: t('execution.alert.columns.failReason'), width: 180 },
+  { field: 'actions', title: t('execution.alert.columns.action'), width: 220, fixed: 'right', slot: true },
 ]
 
 /** 拉取预警分发列表（按 level/status 过滤） */
@@ -134,9 +137,9 @@ const form = reactive<AlertDispatchDTO>({
 })
 /** 表单校验规则 */
 const formRules = {
-  alertType: [{ required: true, message: '预警类型必填', trigger: 'change' }],
-  alertLevel: [{ required: true, message: '预警等级必填', trigger: 'change' }],
-  title: [{ required: true, message: '标题必填', trigger: 'blur' }],
+  alertType: [{ required: true, message: t('execution.alert.rules.alertTypeRequired'), trigger: 'change' }],
+  alertLevel: [{ required: true, message: t('execution.alert.rules.alertLevelRequired'), trigger: 'change' }],
+  title: [{ required: true, message: t('execution.alert.rules.titleRequired'), trigger: 'blur' }],
 }
 
 /** 打开新增预警弹窗，重置表单为默认值 */
@@ -156,7 +159,7 @@ async function handleSubmit() {
     submitting.value = true
     await formRef.value?.validate()
     await submitAlert(form)
-    ElMessage.success('预警已提交')
+    ElMessage.success(t('execution.alert.messages.submitted'))
     dialogVisible.value = false
     fetchList()
   } catch {
@@ -171,16 +174,16 @@ async function handleSubmit() {
  * @param row 预警分发记录
  */
 async function handleDispatch(row: AlertDispatchVO) {
-  await ElMessageBox.confirm(`确认立即分发预警 ${row.alertCode}?`, '提示', { type: 'warning' })
+  await ElMessageBox.confirm(t('execution.alert.messages.confirmDispatch', { code: row.alertCode }), t('common.tip'), { type: 'warning' })
   const ok = await dispatchAlertNow(row.id)
-  ElMessage[ok ? 'success' : 'error'](ok ? '分发成功' : '分发失败')
+  ElMessage[ok ? 'success' : 'error'](ok ? t('execution.alert.messages.dispatchSuccess') : t('execution.alert.messages.dispatchFailed'))
   fetchList()
 }
 
 /** 重试最多 3 次失败的预警分发 */
 async function handleRetry() {
   const n = await retryFailedAlerts(3)
-  ElMessage.success(`已重发 ${n} 条预警`)
+  ElMessage.success(t('execution.alert.messages.retrySuccess', { count: n }))
   fetchList()
 }
 
@@ -189,12 +192,12 @@ async function handleRetry() {
  * @param row 预警分发记录
  */
 async function handleCancel(row: AlertDispatchVO) {
-  const { value: reason } = await ElMessageBox.prompt('请输入取消原因', '取消预警', {
+  const { value: reason } = await ElMessageBox.prompt(t('execution.alert.messages.cancelPrompt'), t('execution.alert.messages.cancelTitle'), {
     inputPattern: /.+/,
-    inputErrorMessage: '原因不能为空',
+    inputErrorMessage: t('execution.alert.messages.cancelReasonRequired'),
   })
   await cancelAlert(row.id, reason)
-  ElMessage.success('已取消')
+  ElMessage.success(t('execution.alert.messages.canceled'))
   fetchList()
 }
 
@@ -205,7 +208,7 @@ async function handleCancel(row: AlertDispatchVO) {
 async function handleResolveRoles(level: string) {
   const { data } = await resolveAlertRoles(level)
   const roles = (data as unknown as AlertResolveRolesVO).roles || (data as unknown as string[])
-  ElMessageBox.alert(Array.isArray(roles) ? roles.join(' / ') : String(roles), `${level} 等级触达角色`, {
+  ElMessageBox.alert(Array.isArray(roles) ? roles.join(' / ') : String(roles), t('execution.alert.messages.rolesTitle', { level }), {
     type: 'info',
   })
 }
@@ -224,25 +227,25 @@ onMounted(() => {
       <div class="flex items-center justify-between w-full">
         <div class="flex gap-2">
           <el-button type="primary" @click="openCreate">
-            <el-icon><Plus /></el-icon>提交预警
+            <el-icon><Plus /></el-icon>{{ $t('execution.alert.buttons.submit') }}
           </el-button>
           <el-button type="warning" @click="handleRetry">
-            <el-icon><Refresh /></el-icon>重试失败
+            <el-icon><Refresh /></el-icon>{{ $t('execution.alert.buttons.retryFailed') }}
           </el-button>
         </div>
         <div class="flex gap-2">
-          <el-select v-model="query.level" placeholder="等级" clearable style="width: 120px" @change="fetchList">
-            <el-option label="黄色" value="YELLOW" />
-            <el-option label="红色" value="RED" />
-            <el-option label="通知" value="NORMAL" />
+          <el-select v-model="query.level" :placeholder="$t('execution.alert.search.level')" clearable style="width: 120px" @change="fetchList">
+            <el-option :label="$t('execution.alert.level.YELLOW')" value="YELLOW" />
+            <el-option :label="$t('execution.alert.level.RED')" value="RED" />
+            <el-option :label="$t('execution.alert.level.NORMAL')" value="NORMAL" />
           </el-select>
-          <el-select v-model="query.status" placeholder="状态" clearable style="width: 140px" @change="fetchList">
-            <el-option label="待分发" value="PENDING" />
-            <el-option label="已发送" value="SENT" />
-            <el-option label="失败" value="FAILED" />
-            <el-option label="已取消" value="CANCELLED" />
+          <el-select v-model="query.status" :placeholder="$t('execution.alert.search.status')" clearable style="width: 140px" @change="fetchList">
+            <el-option :label="$t('execution.alert.status.PENDING')" value="PENDING" />
+            <el-option :label="$t('execution.alert.status.SENT')" value="SENT" />
+            <el-option :label="$t('execution.alert.status.FAILED')" value="FAILED" />
+            <el-option :label="$t('execution.alert.status.CANCELLED')" value="CANCELLED" />
           </el-select>
-          <el-button @click="handleReset">重置</el-button>
+          <el-button @click="handleReset">{{ $t('common.reset') }}</el-button>
         </div>
       </div>
     </template>
@@ -295,7 +298,7 @@ onMounted(() => {
           link
           @click="handleDispatch(row as AlertDispatchVO)"
         >
-          立即分发
+          {{ $t('execution.alert.buttons.dispatchNow') }}
         </el-button>
         <el-button
           v-if="(row as AlertDispatchVO).status === 'PENDING' || (row as AlertDispatchVO).status === 'FAILED'"
@@ -304,39 +307,39 @@ onMounted(() => {
           link
           @click="handleCancel(row as AlertDispatchVO)"
         >
-          取消
+          {{ $t('execution.alert.buttons.cancel') }}
         </el-button>
       </template>
     </VirtualTable>
 
     <!-- 提交预警弹窗 -->
-    <el-dialog v-model="dialogVisible" title="提交预警" width="600px">
+    <el-dialog v-model="dialogVisible" :title="$t('execution.alert.dialog.submitTitle')" width="600px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="预警类型" prop="alertType">
+        <el-form-item :label="$t('execution.alert.dialog.alertType')" prop="alertType">
           <el-select v-model="form.alertType" style="width: 100%">
-            <el-option v-for="t in Object.keys(typeMap)" :key="t" :label="typeMap[t]" :value="t" />
+            <el-option v-for="key in Object.keys(typeMap)" :key="key" :label="typeMap[key as keyof typeof typeMap]" :value="key" />
           </el-select>
         </el-form-item>
-        <el-form-item label="预警等级" prop="alertLevel">
+        <el-form-item :label="$t('execution.alert.dialog.alertLevel')" prop="alertLevel">
           <el-radio-group v-model="form.alertLevel">
-            <el-radio value="YELLOW">黄色</el-radio>
-            <el-radio value="RED">红色</el-radio>
-            <el-radio value="NORMAL">通知</el-radio>
+            <el-radio value="YELLOW">{{ $t('execution.alert.level.YELLOW') }}</el-radio>
+            <el-radio value="RED">{{ $t('execution.alert.level.RED') }}</el-radio>
+            <el-radio value="NORMAL">{{ $t('execution.alert.level.NORMAL') }}</el-radio>
           </el-radio-group>
         </el-form-item>
-        <el-form-item label="标题" prop="title">
+        <el-form-item :label="$t('execution.alert.dialog.title')" prop="title">
           <el-input v-model="form.title" />
         </el-form-item>
-        <el-form-item label="内容">
+        <el-form-item :label="$t('execution.alert.dialog.content')">
           <el-input v-model="form.content" type="textarea" :rows="4" />
         </el-form-item>
-        <el-form-item label="触达角色">
-          <el-input v-model="form.targetRole" placeholder="留空按 level 自动解析" />
+        <el-form-item :label="$t('execution.alert.dialog.targetRole')">
+          <el-input v-model="form.targetRole" :placeholder="$t('execution.alert.dialog.targetRolePlaceholder')" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="handleSubmit">提交</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="handleSubmit">{{ $t('common.submit') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

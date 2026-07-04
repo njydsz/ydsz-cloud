@@ -49,3 +49,15 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+
+# =====================================================================
+# SpringDoc OpenAPI 3.0 配置
+# =====================================================================
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  default-produces-media-type: application/json

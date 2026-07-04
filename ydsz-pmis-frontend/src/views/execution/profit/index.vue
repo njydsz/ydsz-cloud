@@ -211,8 +211,8 @@ onMounted(() => {
           <template #toolbar>
             <el-button v-permission="[PC.EXECUTION_REVENUE_CREATE]" type="primary" :icon="'Plus'" @click="openRCreate">新增收入</el-button>
           </template>
-          <template #table>
-            <vxe-table :data="rList" :loading="rLoading" border stripe>
+          <template #table="scope">
+            <vxe-table :data="rList" :loading="rLoading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
               <vxe-column type="seq" title="#" width="50" />
               <vxe-column field="initiationName" title="项目" width="160" show-overflow />
               <vxe-column field="contractCode" title="合同" width="140" />
@@ -253,8 +253,8 @@ onMounted(() => {
               </el-form-item>
             </el-form>
           </template>
-          <template #table>
-            <vxe-table :data="pList" :loading="pLoading" border stripe>
+          <template #table="scope">
+            <vxe-table :data="pList" :loading="pLoading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
               <vxe-column type="seq" title="#" width="50" />
               <vxe-column field="initiationName" title="项目" width="200" show-overflow />
               <vxe-column field="period" title="期间" width="100" />

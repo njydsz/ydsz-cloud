@@ -15,6 +15,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -24,6 +25,8 @@ import {
 } from '@/api/execution/delivery'
 import type { DeliveryItemVO, DeliveryItemCreateDTO } from '@/api/execution/delivery/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 /** 列表加载状态 */
 const loading = ref(false)
@@ -43,26 +46,26 @@ const query = reactive({
 
 /** 交付阶段 → 标签/样式映射（CD1~CD5） */
 const stageMap = {
-  CD1_KICKOFF: { label: 'CD1 启动', type: 'info' as const },
-  CD2_DESIGN: { label: 'CD2 设计', type: 'primary' as const },
-  CD3_BUILD: { label: 'CD3 构建', type: 'primary' as const },
-  CD4_UAT: { label: 'CD4 UAT', type: 'warning' as const },
-  CD5_GO_LIVE: { label: 'CD5 上线', type: 'success' as const },
+  CD1_KICKOFF: { label: t('execution.delivery.stage.CD1_KICKOFF'), type: 'info' as const },
+  CD2_DESIGN: { label: t('execution.delivery.stage.CD2_DESIGN'), type: 'primary' as const },
+  CD3_BUILD: { label: t('execution.delivery.stage.CD3_BUILD'), type: 'primary' as const },
+  CD4_UAT: { label: t('execution.delivery.stage.CD4_UAT'), type: 'warning' as const },
+  CD5_GO_LIVE: { label: t('execution.delivery.stage.CD5_GO_LIVE'), type: 'success' as const },
 }
 
 /** 交付物类型 → 标签/样式映射 */
 const typeMap = {
-  STANDARD: { label: '标准', type: 'info' as const },
-  SPECIFIC: { label: '项目特异', type: 'primary' as const },
+  STANDARD: { label: t('execution.delivery.type.STANDARD'), type: 'info' as const },
+  SPECIFIC: { label: t('execution.delivery.type.SPECIFIC'), type: 'primary' as const },
 }
 
 /** 交付物状态 → 标签/样式映射 */
 const statusMap = {
-  PENDING: { label: '待提交', type: 'info' as const },
-  SUBMITTED: { label: '已提交', type: 'warning' as const },
-  ACCEPTED: { label: '已验收', type: 'success' as const },
-  REJECTED: { label: '已驳回', type: 'danger' as const },
-  WAIVED: { label: '已豁免', type: 'info' as const },
+  PENDING: { label: t('execution.delivery.status.PENDING'), type: 'info' as const },
+  SUBMITTED: { label: t('execution.delivery.status.SUBMITTED'), type: 'warning' as const },
+  ACCEPTED: { label: t('execution.delivery.status.ACCEPTED'), type: 'success' as const },
+  REJECTED: { label: t('execution.delivery.status.REJECTED'), type: 'danger' as const },
+  WAIVED: { label: t('execution.delivery.status.WAIVED'), type: 'info' as const },
 }
 
 /** 分页查询交付物列表 */
@@ -109,9 +112,9 @@ const form = reactive<Partial<DeliveryItemCreateDTO>>({
 
 /** 表单校验规则 */
 const formRules = {
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  stage: [{ required: true, message: '阶段必填', trigger: 'change' }],
-  name: [{ required: true, message: '交付物名称必填', trigger: 'blur' }],
+  initiationId: [{ required: true, message: t('execution.delivery.rules.initiationIdRequired'), trigger: 'blur' }],
+  stage: [{ required: true, message: t('execution.delivery.rules.stageRequired'), trigger: 'change' }],
+  name: [{ required: true, message: t('execution.delivery.rules.nameRequired'), trigger: 'blur' }],
 }
 
 /** 打开新增弹窗并重置表单为默认值 */
@@ -134,7 +137,7 @@ async function submitForm() {
     submitting.value = true
     await formRef.value?.validate()
     await createDeliveryItem(form as DeliveryItemCreateDTO)
-    ElMessage.success('已创建')
+    ElMessage.success(t('execution.delivery.messages.created'))
     dialogVisible.value = false
     fetchList()
   } catch {
@@ -153,11 +156,11 @@ async function handleStatus(row: DeliveryItemVO, target: string) {
   try {
     let reason: string | undefined
     if (target === 'REJECTED') {
-      const { value } = await ElMessageBox.prompt('请输入驳回原因', '驳回交付物', { inputValidator: (v) => !!v || '原因必填' })
+      const { value } = await ElMessageBox.prompt(t('execution.delivery.messages.rejectPrompt'), t('execution.delivery.messages.rejectTitle'), { inputValidator: (v) => !!v || t('execution.delivery.messages.rejectReasonRequired') })
       reason = value
     }
     await changeDeliveryItemStatus({ id: row.id, targetStatus: target, reason })
-    ElMessage.success('状态已更新')
+    ElMessage.success(t('execution.delivery.messages.statusUpdated'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -179,24 +182,24 @@ onMounted(fetchList)
   >
     <!-- 搜索栏 -->
     <template #search>
-      <el-form-item label="关键字"><el-input v-model="query.keyword" placeholder="名称" clearable /></el-form-item>
-      <el-form-item label="阶段">
-        <el-select v-model="query.stage" placeholder="全部" clearable style="width: 130px">
+      <el-form-item :label="$t('execution.delivery.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.delivery.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="$t('execution.delivery.search.stage')">
+        <el-select v-model="query.stage" :placeholder="$t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in stageMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 130px">
+      <el-form-item :label="$t('execution.delivery.search.status')">
+        <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="项目 ID"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
+      <el-form-item :label="$t('execution.delivery.search.initiationId')"><el-input-number v-model="query.initiationId" :min="0" :controls="false" /></el-form-item>
     </template>
 
     <!-- 工具栏 -->
     <template #toolbar>
       <el-button v-permission="[PC.EXECUTION_DELIVERY_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新增交付物
+        {{ $t('execution.delivery.buttons.create') }}
       </el-button>
     </template>
 
@@ -204,64 +207,64 @@ onMounted(fetchList)
     <template #table="scope">
       <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="name" title="交付物名称" min-width="200" show-overflow />
-        <vxe-column field="initiationName" title="项目" width="160" show-overflow />
-        <vxe-column field="stage" title="阶段" width="100">
+        <vxe-column field="name" :title="$t('execution.delivery.columns.name')" min-width="200" show-overflow />
+        <vxe-column field="initiationName" :title="$t('execution.delivery.columns.initiationName')" width="160" show-overflow />
+        <vxe-column field="stage" :title="$t('execution.delivery.columns.stage')" width="100">
           <template #default="{ row }"><StatusTag :value="row.stage" :map="stageMap" /></template>
         </vxe-column>
-        <vxe-column field="type" title="类型" width="100">
+        <vxe-column field="type" :title="$t('execution.delivery.columns.type')" width="100">
           <template #default="{ row }"><StatusTag :value="row.type" :map="typeMap" /></template>
         </vxe-column>
-        <vxe-column field="level" title="重要度" width="80" align="center" />
-        <vxe-column field="ownerName" title="负责人" width="100" />
-        <vxe-column field="submittedAt" title="提交时间" width="170" />
-        <vxe-column field="acceptedAt" title="验收时间" width="170" />
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="level" :title="$t('execution.delivery.columns.level')" width="80" align="center" />
+        <vxe-column field="ownerName" :title="$t('execution.delivery.columns.ownerName')" width="100" />
+        <vxe-column field="submittedAt" :title="$t('execution.delivery.columns.submittedAt')" width="170" />
+        <vxe-column field="acceptedAt" :title="$t('execution.delivery.columns.acceptedAt')" width="170" />
+        <vxe-column field="status" :title="$t('execution.delivery.columns.status')" width="100">
           <template #default="{ row }"><StatusTag :value="row.status" :map="statusMap" /></template>
         </vxe-column>
-        <vxe-column title="操作" width="280" fixed="right">
+        <vxe-column :title="$t('execution.delivery.columns.action')" width="280" fixed="right">
           <template #default="{ row }">
-            <el-button v-if="row.status === 'PENDING'" v-permission="[PC.EXECUTION_DELIVERY_REVIEW]" link type="warning" size="small" @click="handleStatus(row, 'SUBMITTED')">提交</el-button>
-            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.EXECUTION_DELIVERY_REVIEW]" link type="success" size="small" @click="handleStatus(row, 'ACCEPTED')">验收</el-button>
-            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.EXECUTION_DELIVERY_REVIEW]" link type="danger" size="small" @click="handleStatus(row, 'REJECTED')">驳回</el-button>
-            <el-button v-if="['PENDING', 'REJECTED'].includes(row.status || '')" v-permission="[PC.EXECUTION_DELIVERY_REVIEW]" link type="info" size="small" @click="handleStatus(row, 'WAIVED')">豁免</el-button>
+            <el-button v-if="row.status === 'PENDING'" v-permission="[PC.EXECUTION_DELIVERY_REVIEW]" link type="warning" size="small" @click="handleStatus(row, 'SUBMITTED')">{{ $t('execution.delivery.buttons.submit') }}</el-button>
+            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.EXECUTION_DELIVERY_REVIEW]" link type="success" size="small" @click="handleStatus(row, 'ACCEPTED')">{{ $t('execution.delivery.buttons.accept') }}</el-button>
+            <el-button v-if="row.status === 'SUBMITTED'" v-permission="[PC.EXECUTION_DELIVERY_REVIEW]" link type="danger" size="small" @click="handleStatus(row, 'REJECTED')">{{ $t('execution.delivery.buttons.reject') }}</el-button>
+            <el-button v-if="['PENDING', 'REJECTED'].includes(row.status || '')" v-permission="[PC.EXECUTION_DELIVERY_REVIEW]" link type="info" size="small" @click="handleStatus(row, 'WAIVED')">{{ $t('execution.delivery.buttons.waive') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
     </template>
 
     <!-- 新增交付物弹窗 -->
-    <el-dialog v-model="dialogVisible" title="新增交付物" width="520px">
+    <el-dialog v-model="dialogVisible" :title="$t('execution.delivery.dialog.createTitle')" width="520px">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
-        <el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item>
-        <el-form-item label="阶段" prop="stage">
+        <el-form-item :label="$t('execution.delivery.dialog.initiationId')" prop="initiationId"><el-input-number v-model="form.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item>
+        <el-form-item :label="$t('execution.delivery.dialog.stage')" prop="stage">
           <el-select v-model="form.stage" style="width: 100%">
             <el-option v-for="(v, k) in stageMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
-        <el-form-item label="类型">
+        <el-form-item :label="$t('execution.delivery.dialog.type')">
           <el-select v-model="form.type" style="width: 100%">
             <el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" />
           </el-select>
         </el-form-item>
-        <el-form-item label="交付物名称" prop="name"><el-input v-model="form.name" /></el-form-item>
-        <el-form-item label="重要度">
+        <el-form-item :label="$t('execution.delivery.dialog.name')" prop="name"><el-input v-model="form.name" /></el-form-item>
+        <el-form-item :label="$t('execution.delivery.dialog.level')">
           <el-select v-model="form.level" style="width: 100%">
-            <el-option label="普通" value="NORMAL" />
-            <el-option label="重要" value="IMPORTANT" />
-            <el-option label="关键" value="CRITICAL" />
+            <el-option :label="$t('execution.delivery.level.NORMAL')" value="NORMAL" />
+            <el-option :label="$t('execution.delivery.level.IMPORTANT')" value="IMPORTANT" />
+            <el-option :label="$t('execution.delivery.level.CRITICAL')" value="CRITICAL" />
           </el-select>
         </el-form-item>
-        <el-form-item label="负责人 ID">
+        <el-form-item :label="$t('execution.delivery.dialog.ownerId')">
           <el-input-number v-model="form.ownerId" :min="0" :controls="false" style="width: 100%" />
         </el-form-item>
-        <el-form-item label="描述">
+        <el-form-item :label="$t('execution.delivery.dialog.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
+        <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ $t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

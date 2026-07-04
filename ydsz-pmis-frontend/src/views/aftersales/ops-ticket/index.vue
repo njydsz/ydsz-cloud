@@ -340,7 +340,7 @@ onMounted(() => {
     </el-row>
 
     <!-- 工单表格 -->
-    <template #table>
+    <template #table="scope">
       <EmptyState
         v-if="isEmpty"
         preset="search"
@@ -349,7 +349,7 @@ onMounted(() => {
         :action-text="t('aftersales.opsTicket.empty.actionCreate')"
         @action="openCreate"
       />
-      <vxe-table v-else :data="list" :loading="loading" border stripe>
+      <vxe-table v-else :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="ticketCode" :title="t('aftersales.opsTicket.columns.ticketCode')" width="180" />
         <vxe-column field="title" :title="t('aftersales.opsTicket.columns.title')" min-width="220" show-overflow />
