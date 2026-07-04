@@ -23,8 +23,6 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
@@ -124,6 +122,7 @@ public class AuthServiceImpl implements AuthService {
      * @throws BizException 当验证码错误、用户不存在、账号锁定或密码错误时抛出
      */
     @Override
+    @SuppressWarnings("deprecation")
     public LoginResultVO login(LoginDTO dto) {
         // 1. 图形验证码校验（可配置关闭）
         if (captchaRequired) {

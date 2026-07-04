@@ -4,9 +4,12 @@ import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.constant.CommonConstants;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
+import com.njydsz.pmis.common.util.InternalHeaderSigner;
+import com.njydsz.pmis.common.util.PathGuard;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.core.Ordered;
@@ -22,17 +25,21 @@ import reactor.core.publisher.Mono;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 /**
- * 认证全局过滤器
+ * 认证全局过滤器（P0-C5 安全加固）
  *
  * <p>核心职责:
  * <ol>
- *   <li>提取 Authorization 头中的 JWT</li>
- *   <li>使用 JwtTokenProvider 验证签名 + 解析 Claims</li>
- *   <li>检查 Token 黑名单 (Redis)</li>
+ *   <li>路径规范化：拦截 {@code ..}、{@code //} 等路径穿越攻击</li>
+ *   <li>剥离客户端伪造的内部头：所有 {@code X-User-*} / {@code X-Internal-*}
+ *       头在透传前必须先删除客户端传入的值</li>
+ *   <li>提取 Authorization 头中的 JWT 并校验</li>
+ *   <li>检查 Token 黑名单（Redis）</li>
  *   <li>将 userId/username/roles/permissions 写入 X-User-* 头透传给下游</li>
+ *   <li>注入 {@code X-Internal-Sig} + {@code X-Internal-Ts} 签名头，下游可校验</li>
  * </ol>
  *
  * @author ydsz-pmis-team
@@ -45,10 +52,14 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
     /** Token 黑名单前缀 (与 auth 服务保持一致) */
     private static final String TOKEN_BLACKLIST_PREFIX = "pmis:token:blacklist:";
-    // BLACKLISTED reserved for future blacklist check implementation
 
-    /** 白名单(不校验 Token) */
-    private static final List<String> WHITE_LIST = List.of(
+    /**
+     * 白名单(不校验 Token)。
+     *
+     * <p>P0-C5 改为精确匹配：仅路径完全相等才放行，
+     * 杜绝 {@code /api/v1/auth/login/../users/list} 等 startsWith 绕过。
+     */
+    private static final Set<String> WHITE_LIST = PathGuard.whiteList(
             "/api/v1/auth/login",
             "/api/v1/auth/refresh",
             "/api/v1/auth/captcha",
@@ -66,7 +77,16 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     private final ReactiveStringRedisTemplate redisTemplate;
 
     /**
-     * 核心过滤逻辑：链路追踪 → 白名单放行 → Token 校验 → 黑名单检查 → 用户信息透传
+     * 内部头签名密钥（复用 JWT 密钥，避免新增配置）。
+     *
+     * <p>P0-C4 已强制校验：生产环境必须为强随机密钥，弱密钥拒绝启动。
+     */
+    @Value("${pmis.jwt.secret:}")
+    private String internalSignSecret;
+
+    /**
+     * 核心过滤逻辑：路径规范化 → 链路追踪 → 白名单放行 → Token 校验
+     * → 黑名单检查 → 剥离伪造头 → 注入签名头 → 用户信息透传
      *
      * @param exchange 服务器 Web 交换上下文
      * @param chain    网关过滤器链
@@ -75,9 +95,16 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         ServerHttpRequest request = exchange.getRequest();
-        String path = request.getURI().getPath();
+        String rawPath = request.getURI().getPath();
 
-        // 链路追踪 ID
+        // P0-C5: 路径规范化，拦截 .. / // / %2e%2e 等穿越攻击
+        String path = PathGuard.sanitize(rawPath);
+        if (path == null) {
+            log.warn("[AuthFilter] 拒绝路径穿越攻击 rawPath={}", rawPath);
+            return rejectPathTraversal(exchange);
+        }
+
+        // 链路追踪 ID（先剥离客户端伪造的 traceId，再注入网关生成的值）
         final String traceId;
         String traceIdTmp = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
         if (traceIdTmp == null || traceIdTmp.isEmpty()) {
@@ -89,10 +116,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
         // 统一写入 traceId 到响应头，确保所有响应（成功/失败/OPTIONS/白名单）都携带链路追踪 ID
         exchange.getResponse().getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
 
-        // 跨域预检直接放行
+        // 跨域预检直接放行（先剥离内部头再透传）
         if ("OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
             return chain.filter(exchange.mutate()
                     .request(r -> {
+                        stripInternalHeaders(r);
                         r.header(CommonConstants.HEADER_TRACE_ID, traceId);
                         String acceptLang = request.getHeaders().getFirst("Accept-Language");
                         if (acceptLang != null && !acceptLang.isEmpty()) {
@@ -102,10 +130,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     .build());
         }
 
-        // 白名单直接放行
-        if (isWhiteList(path)) {
+        // 白名单直接放行（先剥离内部头，防止白名单请求伪造身份）
+        if (PathGuard.matchWhiteList(path, WHITE_LIST)) {
             return chain.filter(exchange.mutate()
                     .request(r -> {
+                        stripInternalHeaders(r);
                         r.header(CommonConstants.HEADER_TRACE_ID, traceId);
                         String acceptLang = request.getHeaders().getFirst("Accept-Language");
                         if (acceptLang != null && !acceptLang.isEmpty()) {
@@ -154,16 +183,34 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                     @SuppressWarnings("unchecked")
                     List<String> permissions = (List<String>) claims.get("permissions");
 
-                    // 透传用户信息
+                    String userIdStr = String.valueOf(userId);
+                    String usernameStr = username == null ? "" : username;
+                    String rolesStr = roles == null ? "" : String.join(",", roles);
+                    String permsStr = permissions == null ? "" : String.join(",", permissions);
+
+                    // P0-C5: 生成内部头签名（防伪造 + 防重放）
+                    long tsSeconds = System.currentTimeMillis() / 1000L;
+                    String sig = InternalHeaderSigner.sign(internalSignSecret, traceId,
+                            userIdStr, usernameStr, rolesStr, permsStr, tsSeconds);
+
+                    // 透传用户信息（先剥离客户端伪造的内部头，再注入网关值）
+                    final String acceptLang = request.getHeaders().getFirst("Accept-Language");
                     ServerHttpRequest mutated = request.mutate()
-                            .header(CommonConstants.HEADER_TRACE_ID, traceId)
-                            .header(CommonConstants.HEADER_USER_ID, String.valueOf(userId))
-                            .header(CommonConstants.HEADER_USERNAME, username == null ? "" : username)
-                            .header("X-User-Roles", roles == null ? "" : String.join(",", roles))
-                            .header("X-User-Permissions", permissions == null ? "" : String.join(",", permissions))
-                            .header("Authorization", authHeader)
-                            .header("Accept-Language", request.getHeaders().getFirst("Accept-Language") != null
-                                    ? request.getHeaders().getFirst("Accept-Language") : "zh-CN")
+                            .headers(h -> {
+                                // 剥离所有客户端伪造的内部头
+                                stripInternalHeaders(h);
+                                // 注入网关签发的内部头
+                                h.set(CommonConstants.HEADER_TRACE_ID, traceId);
+                                h.set(CommonConstants.HEADER_USER_ID, userIdStr);
+                                h.set(CommonConstants.HEADER_USERNAME, usernameStr);
+                                h.set(CommonConstants.HEADER_USER_ROLES, rolesStr);
+                                h.set(CommonConstants.HEADER_USER_PERMISSIONS, permsStr);
+                                h.set(CommonConstants.HEADER_INTERNAL_SIG, sig);
+                                h.set(CommonConstants.HEADER_INTERNAL_TS, String.valueOf(tsSeconds));
+                                h.set("Authorization", authHeader);
+                                h.set("Accept-Language",
+                                        acceptLang != null && !acceptLang.isEmpty() ? acceptLang : "zh-CN");
+                            })
                             .build();
 
                     return chain.filter(exchange.mutate().request(mutated).build());
@@ -171,13 +218,41 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
     }
 
     /**
-     * 判断请求路径是否在白名单中
+     * 剥离客户端可能伪造的内部头（Consumer 风格，用于 headers(h -> ...) ）。
      *
-     * @param path 请求路径
-     * @return true 表示在白名单中（无需鉴权），false 表示需要鉴权
+     * @param headers HttpHeaders builder
      */
-    private boolean isWhiteList(String path) {
-        return WHITE_LIST.stream().anyMatch(path::startsWith);
+    private void stripInternalHeaders(org.springframework.http.HttpHeaders headers) {
+        for (String name : PathGuard.internalHeaders()) {
+            headers.remove(name);
+        }
+    }
+
+    /**
+     * 剥离客户端可能伪造的内部头（Builder 风格，用于 request.mutate().request(r -> ...)）。
+     *
+     * @param r ServerHttpRequest.Builder
+     */
+    private void stripInternalHeaders(ServerHttpRequest.Builder r) {
+        for (String name : PathGuard.internalHeaders()) {
+            r.headers(h -> h.remove(name));
+        }
+    }
+
+    /**
+     * 返回 400 拒绝路径穿越响应
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @return 完成信号 Mono
+     */
+    private Mono<Void> rejectPathTraversal(ServerWebExchange exchange) {
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(HttpStatus.BAD_REQUEST);
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        Result<Void> body = Result.failed(400, "error.BAD_REQUEST");
+        byte[] bytes = JSON.toJSONString(body).getBytes(StandardCharsets.UTF_8);
+        DataBuffer buffer = response.bufferFactory().wrap(bytes);
+        return response.writeWith(Mono.just(buffer));
     }
 
     /**

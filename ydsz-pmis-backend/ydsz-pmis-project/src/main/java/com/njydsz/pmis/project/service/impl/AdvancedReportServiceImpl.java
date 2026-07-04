@@ -291,7 +291,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             billableByDept.merge(dept, billable, BigDecimal::add);
             overtimeByDept.merge(dept, overtime, BigDecimal::add);
             leaveByDept.merge(dept, leave, BigDecimal::add);
-            headByDept.merge(dept, 1L, Long::sum);
+            headByDept.merge(dept, 1L, (a, b) -> a + b);
         }
 
         List<Map<String, Object>> out = new ArrayList<>();
@@ -547,8 +547,8 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         Map<Long, Integer> byInitiation = new HashMap<>();
         for (RiskDO r : risks) {
             String level = r.getRiskLevel() == null ? "UNKNOWN" : r.getRiskLevel();
-            byLevel.merge(level, 1, Integer::sum);
-            byInitiation.merge(r.getInitiationId(), 1, Integer::sum);
+            byLevel.merge(level, 1, (a, b) -> a + b);
+            byInitiation.merge(r.getInitiationId(), 1, (a, b) -> a + b);
         }
         List<Map<String, Object>> out = new ArrayList<>();
         for (Map.Entry<String, Integer> e : byLevel.entrySet()) {
@@ -572,6 +572,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
     private static final List<String> RISK_LEVELS = List.of("LOW", "MEDIUM", "HIGH");
 
     @Override
+    @SuppressWarnings("unchecked")
     public Map<String, Object> riskMatrix(Long initiationId, String riskType, String status) {
         Map<String, Object> out = new LinkedHashMap<>();
         // 1) 拉取风险列表（异常时降级为空）
@@ -632,18 +633,18 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
             Map<String, Object> cell = cellMap.get(key);
             if (cell == null) continue;
             cell.put("count", ((Number) cell.get("count")).intValue() + 1);
-            @SuppressWarnings("unchecked")
-            List<Long> ids = (List<Long>) cell.get("cellProjectIds");
+            @SuppressWarnings("rawtypes")
+            List ids = (List) cell.get("cellProjectIds");
             if (r.getInitiationId() != null && !ids.contains(r.getInitiationId())) {
                 ids.add(r.getInitiationId());
             }
             cell.put("projectCount", ((List<?>) cell.get("cellProjectIds")).size());
 
             if (StringUtils.hasText(r.getRiskType())) {
-                byType.merge(r.getRiskType().toUpperCase(), 1, Integer::sum);
+                byType.merge(r.getRiskType().toUpperCase(), 1, (a, b) -> a + b);
             }
             if (r.getInitiationId() != null) {
-                projectCount.merge(r.getInitiationId(), 1, Integer::sum);
+                projectCount.merge(r.getInitiationId(), 1, (a, b) -> a + b);
             }
             total++;
             String cellLevel = (String) cell.get("level");

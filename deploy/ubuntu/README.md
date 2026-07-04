@@ -1,57 +1,87 @@
 # Ubuntu · Linux 原生部署
 
 > Ubuntu 22.04 / 24.04 上的原生中间件安装 + systemd 托管
-> 适用:准生产 / 生产(单机或主备)
+> 适用:准生产(单机) / 小规模生产 / 内网测试
 > 优点:性能最佳,与 Linux 运维生态契合
 
 ---
 
-## 目录结构
+## 目录
+
+1. [目录结构](#1-目录结构)
+2. [前置](#2-前置)
+3. [一键安装 8 中间件](#3-一键安装-8-中间件)
+4. [中间件管理](#4-中间件管理)
+5. [启动 PMIS 应用](#5-启动-pmis-应用)
+6. [数据/日志目录](#6-数据日志目录)
+7. [systemd 单元](#7-systemd-单元)
+8. [故障排查](#8-故障排查)
+9. [相关链接](#9-相关链接)
+
+---
+
+## 1. 目录结构
 
 ```
 ubuntu/
-├── install-pmis-infra.sh    # 一键安装 8 中间件
-├── infra-manager.sh          # 中间件启停/状态管理
-└── scripts/                  # 应用层启停脚本(.sh)
-    ├── start-all.sh
-    ├── stop-all.sh
-    ├── check-env.sh
-    └── import-nacos-config.sh
+├── install-pmis-infra.sh        # 一键安装 8 中间件
+├── infra-manager.sh              # 中间件启停/状态管理
+└── scripts/                      # 应用层启停脚本(.sh)
+    ├── start-all.sh              # 一键启动 7 后端 + 前端
+    ├── stop-all.sh               # 一键停止
+    ├── check-env.sh              # 环境检查
+    └── import-nacos-config.sh    # Nacos 共享配置导入
 ```
 
-## 前置
+---
 
-| 工具 | 版本 |
+## 2. 前置
+
+| 项 | 要求 |
 |---|---|
 | OS | Ubuntu 22.04 LTS / 24.04 LTS |
 | 用户 | root 或 sudo 权限 |
-| 网络 | 能访问 PostgreSQL PGDG / Redis 官方源 |
+| 网络 | 能访问 PostgreSQL PGDG / Redis 官方源 / GitHub release |
+| 内存 | 建议 ≥ 8GB |
+| 磁盘 | `/opt` ≥ 20GB |
 
-## 1. 一键安装 8 中间件
+---
+
+## 3. 一键安装 8 中间件
 
 ```bash
 sudo ./deploy/ubuntu/install-pmis-infra.sh
 ```
 
-脚本会:
+脚本会自动完成:
 
 1. 创建 `pmis` 系统用户
-2. 安装 PostgreSQL 18 / Redis 7
-3. 安装 JDK 21 + Nacos / XXL-Job / Seata(Java 中间件)
-4. 部署 MinIO / RocketMQ / Elasticsearch(原生二进制)
-5. 复制 `common/conf/` 模板并替换占位符
-6. 注册 systemd 服务
-7. 启动并验证
+2. 安装 PostgreSQL 18 / Redis 7(apt)
+3. 安装 JDK 21(apt)
+4. 部署 Nacos / XXL-Job / Seata(Java 中间件,下载 release 包)
+5. 部署 MinIO / RocketMQ / Elasticsearch(原生二进制)
+6. 复制 [`../common/conf/`](../common/README.md) 模板并替换占位符
+7. 注册 systemd 服务
+8. 启动并验证
 
-预计耗时:15-30 分钟(取决于网络)
+**预计耗时**:15-30 分钟(取决于网络)
 
-## 2. 中间件管理
+可选参数:
+
+```bash
+sudo ./deploy/ubuntu/install-pmis-infra.sh --no-start       # 只安装不启动
+sudo ./deploy/ubuntu/install-pmis-infra.sh --skip=es,minio  # 跳过指定中间件
+```
+
+---
+
+## 4. 中间件管理
 
 ```bash
 # 查看所有中间件状态
 ./deploy/ubuntu/infra-manager.sh status
 
-# 启动 / 停止 / 重启
+# 启动 / 停止 / 重启 单个
 ./deploy/ubuntu/infra-manager.sh start postgres
 ./deploy/ubuntu/infra-manager.sh stop redis
 ./deploy/ubuntu/infra-manager.sh restart nacos
@@ -61,9 +91,11 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh
 ./deploy/ubuntu/infra-manager.sh stop-all
 ```
 
-支持 8 个中间件短名:`postgres` / `redis` / `nacos` / `minio` / `seata` / `rocketmq` / `xxl-job` / `elasticsearch`
+支持的 8 个短名:`postgres` / `redis` / `nacos` / `minio` / `seata` / `rocketmq` / `xxl-job` / `elasticsearch`,以及 `all`。
 
-## 3. 启动 PMIS 应用
+---
+
+## 5. 启动 PMIS 应用
 
 中间件就绪后:
 
@@ -71,30 +103,44 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh
 # 1. 导入 Nacos 共享配置
 ./deploy/ubuntu/scripts/import-nacos-config.sh pmis dev
 
-# 2. 一键启动 7 个后端 + 前端
+# 2. 一键启动 7 个后端 + 前端(后台)
 ./deploy/ubuntu/scripts/start-all.sh
 
 # 3. 仅启动后端(开发时省时)
 ./deploy/ubuntu/scripts/start-all.sh --backend
 
-# 4. 停止
+# 4. 仅启动基础设施(不常用)
+./deploy/ubuntu/scripts/start-all.sh --infra
+
+# 5. 停止
 ./deploy/ubuntu/scripts/stop-all.sh
 ./deploy/ubuntu/scripts/stop-all.sh --with-infra   # 含中间件
 ```
 
-## 4. 数据/日志目录
+> 启动日志位于 `$ROOT/.run-logs/`,每个服务一个 `.log` + `.pid` 文件。
+
+---
+
+## 6. 数据/日志目录
 
 | 用途 | 路径 |
 |---|---|
-| 数据 | `/opt/pmis/data/` |
-| 日志 | `/var/log/pmis/` |
-| 公共配置 | `/etc/pmis/` |
+| PMIS 数据 | `/opt/pmis/data/` |
+| PMIS 日志 | `/var/log/pmis/` |
+| 启动脚本输出 | `$ROOT/.run-logs/{service}.log` |
+| PostgreSQL data | `/var/lib/postgresql/18/main/` |
 | Nacos data | `/opt/nacos/data/` |
-| 启动日志 | `/var/log/pmis/{middleware}.log` |
+| Redis data | `/var/lib/redis/` |
+| MinIO data | `/opt/pmis/data/minio/` |
+| RocketMQ data | `/opt/pmis/data/rocketmq/` |
+| XXL-Job 日志 | `/var/log/pmis/xxl-job.log` |
+| ES data | `/opt/pmis/data/elasticsearch/` |
 
-## 5. systemd 单元位置
+---
 
-服务注册在:
+## 7. systemd 单元
+
+`install-pmis-infra.sh` 会在 `/etc/systemd/system/` 注册 9 个服务(8 中间件 + rocketmq 拆为 2 个):
 
 ```
 /etc/systemd/system/
@@ -109,19 +155,36 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh
 └── pmis-elasticsearch.service
 ```
 
-`install-pmis-infra.sh` 会自动创建,无需手动写。
-
-## 6. 故障排查
+也可以直接用 systemd 命令:
 
 ```bash
-# 查看某个服务的 systemd 日志
-sudo journalctl -u pmis-nacos -f
-
-# 查看启动脚本输出
-cat /var/log/pmis/nacos.log
-
-# 检查端口监听
-ss -tlnp | grep 8848
+sudo systemctl status pmis-nacos
+sudo systemctl restart pmis-redis
+sudo journalctl -u pmis-nacos -f       # 实时日志
 ```
 
-详见 [`docs/INFRASTRUCTURE.md`](../../docs/INFRASTRUCTURE.md) Ubuntu 章节。
+---
+
+## 8. 故障排查
+
+| 现象 | 排查命令 |
+|---|---|
+| 服务起不来 | `sudo systemctl status pmis-{name}` |
+| 启动失败 | `sudo journalctl -u pmis-{name} -n 100` |
+| 端口未监听 | `ss -tlnp \| grep 8848` |
+| PG 连不上 | `sudo -u postgres psql -c "SELECT version();"` |
+| Nacos 502 | `tail -f /var/log/pmis/nacos.log` |
+| 磁盘满 | `du -sh /opt/pmis/* \| sort -h` |
+
+详细排查见 [`docs/INFRASTRUCTURE.md`](../../docs/INFRASTRUCTURE.md)。
+
+---
+
+## 9. 相关链接
+
+- [deploy/ 总入口](../README.md)
+- [common/](../common/README.md) · 共享配置(本目录脚本会从这里读)
+- [docker/](../docker/README.md) · 容器化(替代方案)
+- [k8s/](../k8s/README.md) · K8S 部署(生产推荐)
+- [windows/](../windows/README.md) · Windows 等价方案
+- [docs/INFRASTRUCTURE.md](../../docs/INFRASTRUCTURE.md) · 8 中间件详细步骤

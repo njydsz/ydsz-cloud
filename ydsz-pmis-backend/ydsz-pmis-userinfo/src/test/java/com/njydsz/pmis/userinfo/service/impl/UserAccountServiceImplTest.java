@@ -117,6 +117,7 @@ class UserAccountServiceImplTest {
 
     @Test
     @DisplayName("创建用户时用户名重复抛出异常")
+    @SuppressWarnings("unchecked")
     void create_duplicateUsername_shouldThrowException() {
         UserAccountDO existing = new UserAccountDO();
         existing.setUsername("testuser");
@@ -181,6 +182,7 @@ class UserAccountServiceImplTest {
 
     @Test
     @DisplayName("创建用户 - 密码应使用 BCrypt 哈希且 salt 为空")
+    @SuppressWarnings("unchecked")
     void create_shouldUseBCryptHash() {
         try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class);
              MockedStatic<PasswordPolicy> policy = mockStatic(PasswordPolicy.class)) {
@@ -233,6 +235,7 @@ class UserAccountServiceImplTest {
 
     @Test
     @DisplayName("修改密码 - 历史 MD5 密码校验通过后新密码升级为 BCrypt")
+    @SuppressWarnings("deprecation")
     void changePassword_legacyMD5_shouldUpgradeToBCrypt() {
         try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class);
              MockedStatic<PasswordPolicy> policy = mockStatic(PasswordPolicy.class)) {
@@ -262,6 +265,7 @@ class UserAccountServiceImplTest {
 
     @Test
     @DisplayName("修改密码 - BCrypt 密码校验通过后新密码仍使用 BCrypt")
+    @SuppressWarnings("deprecation")
     void changePassword_bcrypt_shouldKeepBCrypt() {
         try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class);
              MockedStatic<PasswordPolicy> policy = mockStatic(PasswordPolicy.class)) {

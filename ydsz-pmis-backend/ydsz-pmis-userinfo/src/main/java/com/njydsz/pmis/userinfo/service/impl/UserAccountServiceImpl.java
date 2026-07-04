@@ -256,6 +256,7 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @SuppressWarnings("deprecation")
     public LoginResult login(LoginRequest request) {
         if (request == null || !StringUtils.hasText(request.getUsername())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_0b62b5ce");

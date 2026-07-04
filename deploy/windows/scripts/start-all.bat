@@ -11,10 +11,10 @@ REM    5. 编译并后台启动 7 个后端微服务
 REM    6. 启动前端开发服务器
 REM
 REM  用法：
-REM    deploy\scripts\start-all.bat            REM  # 全量启动
-REM    deploy\scripts\start-all.bat backend     REM  # 只启动后端
-REM    deploy\scripts\start-all.bat frontend    REM  # 只启动前端
-REM    deploy\scripts\start-all.bat infra       REM  # 只启动基础设施
+REM    deploy\windows\scripts\start-all.bat       REM  # 全量启动
+REM    deploy\windows\scripts\start-all.bat backend    REM  # 只启动后端
+REM    deploy\windows\scripts\start-all.bat frontend   REM  # 只启动前端
+REM    deploy\windows\scripts\start-all.bat infra      REM  # 只启动基础设施
 REM =============================================================================
 chcp 65001 >nul
 setlocal EnableDelayedExpansion

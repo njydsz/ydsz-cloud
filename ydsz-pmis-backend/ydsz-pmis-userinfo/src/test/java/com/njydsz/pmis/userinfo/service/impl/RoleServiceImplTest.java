@@ -37,6 +37,7 @@ class RoleServiceImplTest {
 
     @Test
     @DisplayName("分页查询角色")
+    @SuppressWarnings("unchecked")
     void page_shouldReturnPagedResult() {
         RoleQueryDTO query = new RoleQueryDTO();
         query.setPage(1);

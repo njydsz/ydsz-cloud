@@ -53,6 +53,7 @@ class LoginAuditServiceImplTest {
 
         @Test
         @DisplayName("分页查询应返回正确结果")
+        @SuppressWarnings("unchecked")
         void shouldReturnPagedAudits() {
             when(loginAuditMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
 
@@ -64,6 +65,7 @@ class LoginAuditServiceImplTest {
 
         @Test
         @DisplayName("不带过滤条件的分页查询也应正常返回")
+        @SuppressWarnings("unchecked")
         void shouldReturnPagedAuditsWithoutFilters() {
             when(loginAuditMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
 

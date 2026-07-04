@@ -66,6 +66,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("登录成功 - 历史 MD5 密码应触发惰性升级为 BCrypt")
+    @SuppressWarnings("deprecation")
     void login_shouldReturnToken() {
         try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class)) {
             UserAccountDO user = new UserAccountDO();
@@ -181,6 +182,7 @@ class AuthServiceImplTest {
 
     @Test
     @DisplayName("登录时密码错误抛出异常")
+    @SuppressWarnings("deprecation")
     void login_wrongPassword_shouldThrowException() {
         try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class)) {
             UserAccountDO user = new UserAccountDO();

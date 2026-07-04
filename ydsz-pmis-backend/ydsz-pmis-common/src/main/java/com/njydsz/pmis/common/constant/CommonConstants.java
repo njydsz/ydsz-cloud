@@ -29,6 +29,27 @@ public final class CommonConstants {
     /** 用户所属部门 ID Header (网关透传) */
     public static final String HEADER_USER_DEPT = "X-User-Dept-Id";
 
+    /** 用户角色 Header (网关透传) */
+    public static final String HEADER_USER_ROLES = "X-User-Roles";
+
+    /** 用户权限 Header (网关透传) */
+    public static final String HEADER_USER_PERMISSIONS = "X-User-Permissions";
+
+    /**
+     * 内部头 HMAC 签名 Header（P0-C5）。
+     *
+     * <p>网关在透传 {@code X-User-*} 系列头时，同时注入该签名头，
+     * 下游服务通过校验签名拦截外部直接调用（绕过网关）伪造的内部头。
+     * 签名算法：HMAC-SHA256(secret, traceId|userId|username|roles|permissions)。
+     */
+    public static final String HEADER_INTERNAL_SIG = "X-Internal-Sig";
+
+    /** 内部头签名时间戳 Header（P0-C5，用于防重放） */
+    public static final String HEADER_INTERNAL_TS = "X-Internal-Ts";
+
+    /** 内部头签名有效期（秒），超过即视为非法 */
+    public static final long INTERNAL_SIG_TTL_SECONDS = 60;
+
     /**
      * 逻辑删除：未删除
      *

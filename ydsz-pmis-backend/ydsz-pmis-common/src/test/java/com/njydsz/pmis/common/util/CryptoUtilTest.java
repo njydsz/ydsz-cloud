@@ -170,6 +170,7 @@ class CryptoUtilTest {
 
     @Test
     @DisplayName("加盐密码 - 加密后应能校验通过")
+    @SuppressWarnings("deprecation")
     void encryptPassword_shouldBeVerifiable() {
         String[] result = CryptoUtil.encryptPassword("myPassword123");
         assertEquals(2, result.length);
@@ -180,6 +181,7 @@ class CryptoUtilTest {
 
     @Test
     @DisplayName("加盐密码 - 错误密码校验应失败")
+    @SuppressWarnings("deprecation")
     void verifyPassword_shouldFailForWrongPassword() {
         String[] result = CryptoUtil.encryptPassword("myPassword123");
         assertFalse(CryptoUtil.verifyPassword("wrongPassword", result[0], result[1]));
@@ -187,6 +189,7 @@ class CryptoUtilTest {
 
     @Test
     @DisplayName("加盐密码 - 空参数校验应返回 false")
+    @SuppressWarnings("deprecation")
     void verifyPassword_shouldReturnFalseForBlankParams() {
         assertFalse(CryptoUtil.verifyPassword(null, "enc", "salt"));
         assertFalse(CryptoUtil.verifyPassword("raw", null, "salt"));

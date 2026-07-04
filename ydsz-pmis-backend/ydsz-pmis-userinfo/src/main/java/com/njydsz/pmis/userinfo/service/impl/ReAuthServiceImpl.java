@@ -92,6 +92,7 @@ public class ReAuthServiceImpl implements ReAuthService {
 
     // ----------------- 私有 -----------------
 
+    @SuppressWarnings("deprecation")
     private boolean verifyPassword(Long userId, String rawPassword) {
         if (rawPassword == null || rawPassword.isBlank()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_1a011aca");
