@@ -1,0 +1,102 @@
+# =============================================================================
+#  YDSZ PMIS · Helm Chart PROD 环境覆盖值
+# -----------------------------------------------------------------------------
+#  生产环境关键差异:
+#    1. 镜像 tag 固定为正式版本（非 SNAPSHOT/RC）
+#    2. 多副本 + HPA + PDB
+#    3. 严格资源限制
+#    4. Ingress + TLS
+#    5. 日志级别 INFO
+# =============================================================================
+
+global:
+  imageTag: v1.3.0
+  nacos:
+    serverAddr: nacos-server.pmis.svc.cluster.local:8848
+    namespace: pmis
+
+backend:
+  springProfile: prod
+  env:
+    LOGGING_LEVEL_ROOT: INFO
+    LOGGING_LEVEL_COM_NJYDSZ_PMIS: INFO
+
+services:
+  gateway:
+    replicas: 3
+    resources:
+      requests: { cpu: 500m, memory: 768Mi }
+      limits:   { cpu: 2000m, memory: 1536Mi }
+    hpa:
+      enabled: true
+      minReplicas: 3
+      maxReplicas: 10
+      cpuUtilization: 70
+    ingress:
+      enabled: true
+      className: nginx
+      host: pmis.example.com
+      tls:
+        enabled: true
+        secretName: pmis-tls
+
+  system:
+    replicas: 3
+    resources:
+      requests: { cpu: 500m, memory: 768Mi }
+      limits:   { cpu: 2000m, memory: 1536Mi }
+
+  userinfo:
+    replicas: 3
+    resources:
+      requests: { cpu: 500m, memory: 768Mi }
+      limits:   { cpu: 2000m, memory: 1536Mi }
+
+  project:
+    replicas: 4
+    resources:
+      requests: { cpu: 750m, memory: 1Gi }
+      limits:   { cpu: 3000m, memory: 2Gi }
+    hpa:
+      enabled: true
+      minReplicas: 4
+      maxReplicas: 12
+      cpuUtilization: 65
+
+  cronjob:
+    replicas: 2
+    resources:
+      requests: { cpu: 300m, memory: 512Mi }
+      limits:   { cpu: 1000m, memory: 1Gi }
+
+  workflow:
+    replicas: 3
+    resources:
+      requests: { cpu: 500m, memory: 768Mi }
+      limits:   { cpu: 2000m, memory: 1536Mi }
+
+  agent:
+    replicas: 2
+    resources:
+      requests: { cpu: 400m, memory: 640Mi }
+      limits:   { cpu: 1500m, memory: 1280Mi }
+    hpa:
+      enabled: true
+      minReplicas: 2
+      maxReplicas: 6
+      cpuUtilization: 75
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+frontend:
+  enabled: true
+  replicas: 3
+  ingress:
+    enabled: true
+    className: nginx
+    host: app.pmis.example.com
+    tls:
+      enabled: true
+      secretName: pmis-frontend-tls

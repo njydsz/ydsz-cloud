@@ -90,13 +90,16 @@ docker compose -f deploy/docker/docker-compose.dev.yml down -v
 | 前端(Vite dev) | http://127.0.0.1:5173 | — |
 | API 网关 | http://127.0.0.1:9000 | — |
 | Nacos | http://127.0.0.1:8848/nacos | `nacos` / `nacos` |
-| MinIO Console | http://127.0.0.1:9101 | `minioadmin` / `minioadmin` |
+| MinIO Console | http://127.0.0.1:9101 | 见 [`../.env.example`](../.env.example) 的 `MINIO_ACCESS_KEY` / `MINIO_SECRET_KEY` |
 | Seata Console | http://127.0.0.1:7091 | `admin` / `admin` |
 | XXL-Job Admin | http://127.0.0.1:9100/xxl-job-admin | `admin` / `123456` |
 | Elasticsearch | http://127.0.0.1:9200 | — |
 | RocketMQ Console | http://127.0.0.1:8080 | — |
-| PostgreSQL | `127.0.0.1:5432` | `pmis` / `pmis123` |
-| Redis | `127.0.0.1:6379` | 密码 `pmis123` |
+| PostgreSQL | `127.0.0.1:5432` | 见 [`../.env.example`](../.env.example) 的 `POSTGRES_USER` / `POSTGRES_PASSWORD` |
+| Redis | `127.0.0.1:6379` | 见 [`../.env.example`](../.env.example) 的 `REDIS_PASSWORD` |
+
+> **重要**:Docker 实际账号密码由 `deploy/.env`(从 `.env.example` 复制)决定。
+> 容器内 `docker-compose.dev.yml` 用 `${VAR:-default}` 兜底,`.env` 已设置的值会覆盖默认。
 
 ---
 
@@ -161,7 +164,7 @@ docker compose -f deploy/docker/docker-compose.dev.yml up -d
 ## 8. 相关链接
 
 - [deploy/ 总入口](../README.md)
-- [common/](../common/README.md) · 共享配置
+- [common/](../common/README.md) · 共享配置(原生部署从这里读)
 - [k8s/](../k8s/README.md) · 生产推荐
 - [ubuntu/](../ubuntu/README.md) · [windows/](../windows/README.md) · 原生部署
-- [docs/INFRASTRUCTURE.md](../../docs/INFRASTRUCTURE.md) · 8 中间件部署详细步骤
+- 8 中间件详细步骤见 [`../README.md §4`](../README.md#4-8-大中间件) + 各子目录 § 故障排查

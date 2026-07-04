@@ -26,9 +26,6 @@
 ```
 deploy/
 ├── README.md                       # 本文件(总入口)
-├── DEPLOY.md                       # 详细部署手册(应用层)
-├── INFRASTRUCTURE.md               # 8 中间件详细部署步骤
-├── QUICKSTART.md                   # 5 分钟快速启动
 ├── .env.example                    # 环境变量模板
 │
 ├── common/                         # 跨环境共享资源
@@ -41,6 +38,17 @@ deploy/
 │   ├── docker-compose.dev.yml      # 8 中间件 + 3 辅助 容器编排
 │   ├── rocketmq/broker.conf
 │   └── README.md
+│
+├── helm/                           # Helm Chart 部署(K8s 参数化方案)
+│   └── ydsz-pmis/                  # Chart 包(含 4 环境覆盖值)
+│       ├── Chart.yaml
+│       ├── values.yaml             # 默认值
+│       ├── values-{dev,sit,uat,prod}.yaml
+│       └── templates/              # deployment/svc/ingress/hpa/pdb 等
+│
+├── scripts/                        # 跨环境部署辅助脚本
+│   ├── build-images.sh/.ps1        # 批量构建 7 后端 + 1 前端镜像
+│   └── smoke-test.sh/.ps1          # 部署后冒烟测试(9 项关键检查)
 │
 ├── ubuntu/                         # Ubuntu 原生部署 + systemd
 │   ├── install-pmis-infra.sh
@@ -265,24 +273,21 @@ PGPASSWORD=Limw1020 psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
 
 ## 10. 相关文档
 
-### 本目录
+### 本目录文档(各子目录 README)
 
-- [QUICKSTART.md](QUICKSTART.md) — 5 分钟快速启动(从零到跑起来)
-- [DEPLOY.md](DEPLOY.md) — 详细部署手册(应用层)
-- [INFRASTRUCTURE.md](INFRASTRUCTURE.md) — 8 中间件详细部署步骤(Docker/Windows/Ubuntu)
-- [.env.example](.env.example) — 环境变量模板
-
-### 子目录
-
-- [common/README.md](common/README.md) — 跨环境共享资源
-- [docker/README.md](docker/README.md) — Docker 部署(11 容器)
+- [common/README.md](common/README.md) — 跨环境共享资源(conf 模板 + Nacos 共享配置 + SQL)
+- [docker/README.md](docker/README.md) — Docker 部署(11 容器清单)
 - [ubuntu/README.md](ubuntu/README.md) — Ubuntu 原生 + systemd
 - [windows/README.md](windows/README.md) — Windows 原生 + NSSM
-- [k8s/README.md](k8s/README.md) — Kubernetes 部署
+- [k8s/README.md](k8s/README.md) — Kubernetes 部署(Kustomize)
 
-### 仓库其他位置
+### 本目录其他文件
 
-- [../docs/DEPLOY.md](../docs/DEPLOY.md) — 项目级部署总览
-- [../docs/INFRASTRUCTURE.md](../docs/INFRASTRUCTURE.md) — 项目级中间件文档
-- [../docs/QUICKSTART.md](../docs/QUICKSTART.md) — 项目级快速启动
-- [../docs/V1.0.0.sql](../docs/V1.0.0.sql) — 主库初始化脚本(完整版,含注释)
+- [.env.example](.env.example) — 环境变量模板(复制为 `.env` 后修改)
+- [sql/V1.0.0.sql](sql/V1.0.0.sql) — 主库初始化脚本(126 表 + 5 视图,含中文注释,已通过 PG 18.4 验证)
+- [common/nacos/ydsz-pmis-common.yaml](common/nacos/ydsz-pmis-common.yaml) — 7 微服务共享的 Nacos 配置
+- [common/conf/](common/conf/) — 7 中间件原生部署的配置模板
+
+### 仓库根 README
+
+- [../README.md](../README.md) — 项目级 README

@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.controller;
 
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.util.SortBy;
 import com.njydsz.pmis.project.es.ProjectSearchDoc;
 import com.njydsz.pmis.project.service.SearchService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,7 +12,6 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -50,7 +50,7 @@ public class SearchController {
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "{validation.execution.msg_9aaebb77}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.execution.msg_15154512}") int size) {
         return Result.ok(searchService.searchProjects(keyword,
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"))));
+                PageRequest.of(page, size, SortBy.desc(ProjectSearchDoc::getCreatedAt))));
     }
 
     /**

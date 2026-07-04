@@ -176,7 +176,7 @@ sudo journalctl -u pmis-nacos -f       # 实时日志
 | Nacos 502 | `tail -f /var/log/pmis/nacos.log` |
 | 磁盘满 | `du -sh /opt/pmis/* \| sort -h` |
 
-详细排查见 [`docs/INFRASTRUCTURE.md`](../../docs/INFRASTRUCTURE.md)。
+详细排查见 [`../README.md`](../README.md#8-占位符约定commonconf) 占位符约定 + [`../README.md §4`](../README.md#4-8-大中间件)。
 
 ---
 
@@ -184,7 +184,7 @@ sudo journalctl -u pmis-nacos -f       # 实时日志
 
 - [deploy/ 总入口](../README.md)
 - [common/](../common/README.md) · 共享配置(本目录脚本会从这里读)
-- [docker/](../docker/README.md) · 容器化(替代方案)
+- [docker/](../docker/README.md) · 容器化(替代方案,11 容器)
 - [k8s/](../k8s/README.md) · K8S 部署(生产推荐)
 - [windows/](../windows/README.md) · Windows 等价方案
-- [docs/INFRASTRUCTURE.md](../../docs/INFRASTRUCTURE.md) · 8 中间件详细步骤
+- 8 中间件详细步骤见 [`../README.md §4`](../README.md#4-8-大中间件)

@@ -21,6 +21,15 @@ import java.util.Map;
 public interface AsyncExportService {
 
     /**
+     * pmis_export_record 表的 created_at 列名（Java Bean 字段命名）。
+     *
+     * <p>由于 {@link #getExportRecords(Long, Pageable)} 返回 {@code Map<String, Object>}
+     * 投影而非实体类，无法使用方法引用推导字段名；这里将列名集中到常量，控制器层与
+     * Service 层共用同一字符串常量，避免硬编码导致的字段名失同步。
+     */
+    String COL_CREATED_AT = "createdAt";
+
+    /**
      * 提交异步导出任务。
      *
      * @param userId     用户ID

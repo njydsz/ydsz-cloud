@@ -186,7 +186,7 @@ Set-Service -Name nacos -StartupType Automatic   # 设为自动启动
 | Nacos 502 | `Get-Content C:\pmis\logs\nacos.log -Tail 50` |
 | 磁盘满 | `Get-PSDrive C \| Format-Table` |
 
-详细排查见 [`docs/INFRASTRUCTURE.md`](../../docs/INFRASTRUCTURE.md)。
+详细排查见 [`../README.md §8`](../README.md#8-占位符约定commonconf) 占位符约定 + [`../README.md §4`](../README.md#4-8-大中间件)。
 
 ---
 
@@ -194,7 +194,7 @@ Set-Service -Name nacos -StartupType Automatic   # 设为自动启动
 
 - [deploy/ 总入口](../README.md)
 - [common/](../common/README.md) · 共享配置(本目录脚本会从这里读)
-- [docker/](../docker/README.md) · 容器化(替代方案,推荐用于本地开发)
+- [docker/](../docker/README.md) · 容器化(替代方案,推荐用于本地开发,11 容器)
 - [k8s/](../k8s/README.md) · K8S 部署(生产推荐)
 - [ubuntu/](../ubuntu/README.md) · Linux 等价方案
-- [docs/INFRASTRUCTURE.md](../../docs/INFRASTRUCTURE.md) · 8 中间件详细步骤
+- 8 中间件详细步骤见 [`../README.md §4`](../README.md#4-8-大中间件)

@@ -115,7 +115,7 @@ common/
 |---|---|
 | `tables_xxl_job_pg.sql` | XXL-Job 的 PostgreSQL 表(主库用 PG 时) |
 
-主库初始化走 [`docs/V1.0.0.sql`](../../docs/V1.0.0.sql)(126 表 + 5 视图),**不在本目录**。
+主库初始化走 [`../sql/V1.0.0.sql`](../sql/V1.0.0.sql)(126 表 + 5 视图),**不在本目录**。
 
 执行示例(Ubuntu):
 
@@ -143,4 +143,4 @@ PGPASSWORD=pmis123 psql -h 127.0.0.1 -U pmis -d ydsz_pmis \
 
 - [deploy/ 总入口](../README.md)
 - [docker/](../docker/README.md) · [k8s/](../k8s/README.md) · [ubuntu/](../ubuntu/README.md) · [windows/](../windows/README.md)
-- [docs/INFRASTRUCTURE.md](../../docs/INFRASTRUCTURE.md) · 中间件部署详细步骤
+- 8 中间件详细步骤见各子目录 § 故障排查 + [`../README.md §4`](../README.md#4-8-大中间件)

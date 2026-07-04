@@ -143,18 +143,39 @@ images:
     newTag: v1.3.0
 ```
 
-### 5.2 构建并推送(7 个服务)
+### 5.2 构建并推送(7 个后端服务 + 1 个前端)
+
+仓库根目录提供统一的多阶段 Dockerfile + 批量构建脚本：
 
 ```bash
-# 在 ydsz-pmis-backend 目录
-mvn -pl ydsz-pmis-gateway -am clean package -DskipTests
-docker build -t <REGISTRY>/ydsz-pmis-gateway:v1.3.0 -f ydsz-pmis-gateway/Dockerfile .
-docker push <REGISTRY>/ydsz-pmis-gateway:v1.3.0
+# 方式 1：批量构建所有 7 个后端服务 + 前端（推荐）
+bash deploy/scripts/build-images.sh v1.3.0 ydsz-pmis
+# 或 PowerShell
+.\deploy\scripts\build-images.ps1 -Tag v1.3.0 -Registry ydsz-pmis
 
-# 重复 7 次,或写 Makefile 批处理
+# 方式 2：构建并推送到私有仓库
+bash deploy/scripts/build-images.sh v1.3.0 registry.cn-hangzhou.aliyuncs.com/your-org
+PUSH=true bash deploy/scripts/build-images.sh v1.3.0 registry.cn-hangzhou.aliyuncs.com/your-org
+
+# 方式 3：单服务手动构建
+docker build -t ydsz-pmis/gateway:v1.3.0 \
+  --build-arg MODULE_NAME=ydsz-pmis-gateway \
+  --build-arg APP_PORT=9000 \
+  -f ydsz-pmis-backend/Dockerfile ydsz-pmis-backend/
 ```
 
-> 当前仓库的 `Dockerfile` 需自行创建(本目录未提供 K8S 专用镜像构建文件)。
+**镜像构建特性**（对齐阿里/字节容器化规范）:
+- 多阶段构建（Maven builder → JRE alpine runtime）
+- 非 root 用户（pmis:65532）
+- tini 作为 PID 1，正确处理 SIGTERM
+- JVM 容器化参数（-XX:+UseContainerSupport + MaxRAMPercentage）
+- BuildKit 缓存挂载加速构建
+- Actuator 健康检查
+
+详细说明见:
+- [后端 Dockerfile](../../ydsz-pmis-backend/Dockerfile)
+- [前端 Dockerfile](../../ydsz-pmis-frontend/Dockerfile)
+- [批量构建脚本](../scripts/build-images.sh)
 
 ---
 
@@ -189,12 +210,14 @@ docker push <REGISTRY>/ydsz-pmis-gateway:v1.3.0
 
 ## 8. 待办与未来规划
 
+- [x] 镜像构建 Dockerfile（已提供，见 `ydsz-pmis-backend/Dockerfile` 与 `ydsz-pmis-frontend/Dockerfile`）
+- [x] Helm Chart（已提供，见 `deploy/helm/ydsz-pmis/`）
+- [x] 冒烟测试脚本（已提供，见 `deploy/scripts/smoke-test.sh/.ps1`）
 - [ ] Ingress 模板(各集群规范不同,留空)
 - [ ] NetworkPolicy 模板
 - [ ] cert-manager 集成
 - [ ] ArgoCD Application manifest
 - [ ] 中间件 Helm chart(可选)
-- [ ] 镜像构建 Dockerfile
 
 ---
 
@@ -202,6 +225,6 @@ docker push <REGISTRY>/ydsz-pmis-gateway:v1.3.0
 
 - [deploy/ 总入口](../README.md)
 - [common/](../common/README.md) · 共享配置(中间件 K8S 化时参考)
-- [docker/](../docker/README.md) · 测试用容器编排
+- [docker/](../docker/README.md) · 测试用容器编排(11 容器)
 - [ubuntu/](../ubuntu/README.md) · [windows/](../windows/README.md) · 原生部署
-- [docs/INFRASTRUCTURE.md](../../docs/INFRASTRUCTURE.md) · 8 中间件部署详细步骤
+- 8 中间件详细步骤见 [`../README.md §4`](../README.md#4-8-大中间件) + 各子目录 § 故障排查

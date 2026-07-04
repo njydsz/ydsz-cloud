@@ -55,7 +55,7 @@ public class AsyncExportController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         return asyncExportService.getExportRecords(userId,
-                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt")));
+                PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, AsyncExportService.COL_CREATED_AT)));
     }
 
     @GetMapping("/{recordId}/download")
