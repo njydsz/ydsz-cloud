@@ -9,6 +9,8 @@
 # 网关监听端口
 server:
   port: 9000
+  # P1-3: 请求头大小限制（防止大请求攻击）
+  max-http-request-header-size: 16KB
 
 spring:
   # Nacos 注册的服务名

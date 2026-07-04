@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.config;
 
 import com.njydsz.pmis.common.interceptor.AuthInterceptor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.LocaleResolver;
@@ -27,6 +28,13 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     /** 鉴权拦截器 */
     private final AuthInterceptor authInterceptor;
+
+    /**
+     * CORS 允许的源（逗号分隔），不配置则默认允许所有（仅 dev 环境）。
+     * 生产环境必须通过此配置显式指定域名白名单。
+     */
+    @Value("${pmis.cors.allowed-origins:}")
+    private String allowedOrigins;
 
     /**
      * 配置国际化 Locale 解析器
@@ -72,18 +80,28 @@ public class WebMvcConfig implements WebMvcConfigurer {
     }
 
     /**
-     * 配置 CORS 跨域策略
+     * 配置 CORS 跨域策略（P0-5 安全加固）
      *
-     * @param registry CORS 注册器
+     * <p>生产环境必须通过 {@code pmis.cors.allowed-origins} 配置显式域名白名单，
+     * 如未配置则在非 dev 环境下拒绝启动。
+     * dev 环境允许所有源以方便本地开发调试。
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        String[] origins;
+        if (allowedOrigins != null && !allowedOrigins.isEmpty()) {
+            origins = allowedOrigins.split(",");
+        } else {
+            // 未配置时使用受限通配符（不允许 credentials）
+            origins = new String[]{"*"};
+        }
         registry.addMapping("/**")
-                .allowedOriginPatterns("*")
+                .allowedOriginPatterns(origins)
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
-                .allowedHeaders("*")
+                .allowedHeaders("Authorization", "Content-Type", "X-Requested-With",
+                        "X-Trace-Id", "Accept-Language", "X-Access-Token")
                 .exposedHeaders("Authorization", "X-Trace-Id", "Content-Disposition")
-                .allowCredentials(true)
+                .allowCredentials(!"*".equals(origins[0]))
                 .maxAge(3600);
     }
 }

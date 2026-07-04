@@ -307,6 +307,13 @@
                 <version>${easycaptcha.version}</version>
             </dependency>
 
+            <!-- Jasypt 配置加密（P0-4） -->
+            <dependency>
+                <groupId>com.github.ulisesbocchio</groupId>
+                <artifactId>jasypt-spring-boot-starter</artifactId>
+                <version>3.0.5</version>
+            </dependency>
+
             <!-- Testcontainers -->
             <dependency>
                 <groupId>org.testcontainers</groupId>

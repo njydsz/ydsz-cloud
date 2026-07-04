@@ -280,6 +280,7 @@ PGPASSWORD=Limw1020 psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
 - [ubuntu/README.md](ubuntu/README.md) — Ubuntu 原生 + systemd
 - [windows/README.md](windows/README.md) — Windows 原生 + NSSM
 - [k8s/README.md](k8s/README.md) — Kubernetes 部署(Kustomize)
+- [helm/ydsz-pmis/README.md](helm/ydsz-pmis/README.md) — Helm Chart 部署(K8s 参数化方案)
 
 ### 本目录其他文件
 
@@ -287,6 +288,12 @@ PGPASSWORD=Limw1020 psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
 - [sql/V1.0.0.sql](sql/V1.0.0.sql) — 主库初始化脚本(126 表 + 5 视图,含中文注释,已通过 PG 18.4 验证)
 - [common/nacos/ydsz-pmis-common.yaml](common/nacos/ydsz-pmis-common.yaml) — 7 微服务共享的 Nacos 配置
 - [common/conf/](common/conf/) — 7 中间件原生部署的配置模板
+- [scripts/build-images.sh](scripts/build-images.sh) — 批量构建 7 后端 + 1 前端 Docker 镜像
+- [scripts/build-images.ps1](scripts/build-images.ps1) — Windows PowerShell 批量构建镜像
+- [scripts/smoke-test.sh](scripts/smoke-test.sh) — 部署后冒烟测试(9 项关键检查)
+- [scripts/smoke-test.ps1](scripts/smoke-test.ps1) — Windows PowerShell 冒烟测试
+- [../ydsz-pmis-backend/Dockerfile](../ydsz-pmis-backend/Dockerfile) — 后端统一多阶段 Dockerfile
+- [../ydsz-pmis-frontend/Dockerfile](../ydsz-pmis-frontend/Dockerfile) — 前端 Nginx 多阶段 Dockerfile
 
 ### 仓库根 README
 
