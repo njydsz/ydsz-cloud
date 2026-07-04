@@ -29,20 +29,17 @@ public class OrgQueryClientFallbackFactory implements FallbackFactory<OrgQueryCl
         return new OrgQueryClient() {
             @Override
             public Result<List<Long>> listUserIdsByRoleCode(String roleCode) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "userinfo 服务不可用，角色展开失败: " + roleCode);
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public Result<Long> getDeptLeaderByDeptId(Long deptId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "userinfo 服务不可用，部门负责人查询失败: " + deptId);
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public Result<Long> getDeptLeaderByDeptCode(String deptCode) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "userinfo 服务不可用，部门负责人查询失败: " + deptCode);
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
@@ -57,20 +54,17 @@ public class OrgQueryClientFallbackFactory implements FallbackFactory<OrgQueryCl
 
             @Override
             public Result<List<Long>> listUserIdsByDeptId(Long deptId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "userinfo 服务不可用，部门成员展开失败: " + deptId);
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public Result<List<Long>> listUserIdsByPositionCode(String positionCode) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "userinfo 服务不可用，岗位展开失败: " + positionCode);
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public Result<Long> getLeaderByUserId(Long userId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "userinfo 服务不可用，直属上级查询失败: " + userId);
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
         };
     }

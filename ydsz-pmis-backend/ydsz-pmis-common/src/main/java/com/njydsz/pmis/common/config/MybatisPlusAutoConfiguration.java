@@ -53,7 +53,7 @@ public class MybatisPlusAutoConfiguration {
     public MybatisPlusInterceptor mybatisPlusInterceptor() {
         MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
         // 1. 多租户拦截器（H3.1 修复）：必须最先，自动追加 WHERE tenant_id = ?
-        //    忽略 undo_log / flyway_schema_history 等无 tenant_id 列的表
+        //    忽略 undo_log 等无 tenant_id 列的表
         interceptor.addInnerInterceptor(new TenantLineInnerInterceptor(new PmisTenantLineHandler()));
         // 2. 分页拦截器（PostgreSQL 方言）
         interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.POSTGRE_SQL));

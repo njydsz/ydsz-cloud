@@ -29,7 +29,7 @@ public class GatewaySentinelConfig {
     @PostConstruct
     public void init() {
         BlockRequestHandler handler = (exchange, ex) -> {
-            Result<?> body = Result.failed(429, "网关限流: " + ex.getClass().getSimpleName());
+            Result<?> body = Result.failed(429, "Gateway rate limited: " + ex.getClass().getSimpleName());
             return ServerResponse.status(HttpStatus.TOO_MANY_REQUESTS)
                     .contentType(MediaType.APPLICATION_JSON)
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE + ";charset=" + StandardCharsets.UTF_8)

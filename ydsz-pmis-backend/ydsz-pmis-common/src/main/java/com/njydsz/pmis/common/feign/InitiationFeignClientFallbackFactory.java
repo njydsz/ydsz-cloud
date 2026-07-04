@@ -25,20 +25,17 @@ public class InitiationFeignClientFallbackFactory implements FallbackFactory<Ini
         return new InitiationFeignClient() {
             @Override
             public Result<Void> markProcessing(Long initiationId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "立项服务不可用，标记审批中失败: " + initiationId);
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public Result<Void> markApproved(Long initiationId) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "立项服务不可用，标记已批准失败: " + initiationId);
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
             public Result<Void> markRejected(Long initiationId, String reason) {
-                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                        "立项服务不可用，标记已驳回失败: " + initiationId);
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
         };
     }

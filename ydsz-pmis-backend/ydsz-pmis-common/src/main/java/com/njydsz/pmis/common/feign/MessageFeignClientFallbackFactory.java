@@ -22,7 +22,6 @@ public class MessageFeignClientFallbackFactory implements FallbackFactory<Messag
     public MessageFeignClient create(Throwable cause) {
         log.warn("[MessageFeignClient] Feign fallback triggered: {}",
                 cause == null ? "null" : cause.getMessage());
-        return dto -> Result.failed(BizErrorCode.SERVICE_UNAVAILABLE,
-                "消息服务不可用，发送失败: " + (dto == null ? null : dto.get("receiver")));
+        return dto -> Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
     }
 }

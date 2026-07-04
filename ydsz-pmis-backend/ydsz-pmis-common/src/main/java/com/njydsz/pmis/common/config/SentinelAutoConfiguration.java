@@ -49,16 +49,16 @@ public class SentinelAutoConfiguration {
             Result<?> body;
             if (e instanceof FlowException) {
                 response.setStatus(429);
-                body = Result.failed(BizErrorCode.RATE_LIMIT, "请求频率超限，请稍后再试");
+                body = Result.failed(BizErrorCode.RATE_LIMIT);
             } else if (e instanceof DegradeException) {
                 response.setStatus(503);
-                body = Result.failed(BizErrorCode.SERVICE_UNAVAILABLE, "服务降级保护中，请稍后再试");
+                body = Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             } else if (e instanceof SystemBlockException) {
                 response.setStatus(503);
-                body = Result.failed(BizErrorCode.SERVICE_UNAVAILABLE, "系统负载过高，已触发保护");
+                body = Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             } else {
                 response.setStatus(429);
-                body = Result.failed(BizErrorCode.RATE_LIMIT, "请求被限流: " + e.getClass().getSimpleName());
+                body = Result.failed(BizErrorCode.RATE_LIMIT);
             }
             response.setContentType(MediaType.APPLICATION_JSON_VALUE);
             response.setCharacterEncoding(StandardCharsets.UTF_8.name());

@@ -1,0 +1,210 @@
+# =============================================================================
+#  YDSZ PMIS · 开发/测试环境基础设施编排
+# -----------------------------------------------------------------------------
+#  用途:    一键拉起 PMIS 后端所需的全部基础设施（4 个容器，约 2GB 内存）
+#  依赖:    Docker 24+ / Docker Compose v2+
+#  启动:    docker compose -f deploy/docker/docker-compose.dev.yml up -d
+#  停止:    docker compose -f deploy/docker/docker-compose.dev.yml down
+#  重置:    docker compose -f deploy/docker/docker-compose.dev.yml down -v
+#
+#  包含组件:
+#    1. PostgreSQL 18  - 主数据库（自动初始化 126 张表）
+#    2. Redis 7         - 缓存 / 会话 / 分布式锁
+#    3. Nacos 2.4       - 服务注册 + 配置中心（standalone 模式，内置 derby）
+#    4. MinIO           - 对象存储（文件 / 报表 / 导出）
+#
+#  不包含（本项目使用频率低，按需启动）:
+#    - Sentinel Dashboard   : 限流规则在 Nacos 集中配置即可
+#    - XXL-Job Admin        : 后续可由 pmis_schedule_task 表 + @Scheduled 替代
+#    - RocketMQ             : 后续可由 Spring Event + @Async 替代
+#    - Seata Server         : 内网场景本地 @Transactional 即可
+#    - Elasticsearch        : 全文搜索改用 PG tsvector
+#    - SkyWalking           : 链路追踪用 Logback traceId 即可
+# =============================================================================
+
+name: pmis-dev
+
+services:
+
+  # ---------------------------------------------------------------------------
+  #  PostgreSQL 18 - 主数据库
+  # ---------------------------------------------------------------------------
+  #  首次启动自动执行 docker-entrypoint-initdb.d/*.sql 初始化库表
+  #  字符集: UTF8 / 时区: Asia/Shanghai
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:18-alpine
+    container_name: pmis-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ydsz_pmis}
+      POSTGRES_USER: ${POSTGRES_USER:-pmis}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-pmis123}
+      # 让 docker-entrypoint 阶段就接受我们的 SQL（防止 locale 报错）
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+      TZ: Asia/Shanghai
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      # 持久化数据
+      - postgres_data:/var/lib/postgresql/data
+      # 首次启动自动建库+灌 SQL（v1.0.0_001 ~ v1.0.0_041 → 合并为 V1.0.0.sql）
+      - ../../docs/V1.0.0.sql:/docker-entrypoint-initdb.d/V1.0.0.sql:ro
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-pmis} -d ${POSTGRES_DB:-ydsz_pmis}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  Redis 7 - 缓存 + 会话 + 分布式锁
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: pmis-redis
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --maxmemory
+      - "256mb"
+      - --maxmemory-policy
+      - "allkeys-lru"
+      - --requirepass
+      - ${REDIS_PASSWORD:-pmis123}
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-pmis123}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  Nacos 2.4 - 服务注册 + 配置中心
+  # ---------------------------------------------------------------------------
+  #  standalone 模式 + 内置 derby，单机即可用，不依赖外部 MySQL
+  #  端口: 8848 (HTTP) / 9848 (gRPC) / 7848 (RPC)
+  # ---------------------------------------------------------------------------
+  nacos:
+    image: nacos/nacos-server:v2.4.3
+    container_name: pmis-nacos
+    restart: unless-stopped
+    environment:
+      MODE: standalone
+      JVM_XMS: 512m
+      JVM_XMX: 512m
+      JVM_XMN: 256m
+      TZ: Asia/Shanghai
+      # 内置 derby 模式，不需要配置 SPRING_DATASOURCE_PLATFORM
+    ports:
+      - "${NACOS_PORT:-8848}:8848"
+      - "9848:9848"
+    volumes:
+      - nacos_data:/home/nacos/data
+      - nacos_logs:/home/nacos/logs
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8848/nacos/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  MinIO - 对象存储
+  # ---------------------------------------------------------------------------
+  #  内网项目替代方案：可改为本地文件目录 + Nginx 静态映射
+  # ---------------------------------------------------------------------------
+  minio:
+    image: minio/minio:latest
+    container_name: pmis-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+      TZ: Asia/Shanghai
+    ports:
+      - "${MINIO_API_PORT:-9100}:9000"
+      - "${MINIO_CONSOLE_PORT:-9101}:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  MinIO 初始化 - 自动创建 pmis 桶
+  # ---------------------------------------------------------------------------
+  minio-init:
+    image: minio/mc:latest
+    container_name: pmis-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local http://minio:9000 ${MINIO_ACCESS_KEY:-minioadmin} ${MINIO_SECRET_KEY:-minioadmin} &&
+      (mc mb --ignore-existing local/${MINIO_BUCKET:-pmis}) &&
+      mc anonymous set download local/${MINIO_BUCKET:-pmis} || true &&
+      echo 'MinIO bucket [${MINIO_BUCKET:-pmis}] initialized.'
+      "
+    networks:
+      - pmis-net
+    restart: "no"
+
+# =============================================================================
+#  网络与数据卷
+# =============================================================================
+networks:
+  pmis-net:
+    driver: bridge
+    name: pmis-net
+
+volumes:
+  postgres_data:
+    name: pmis-postgres-data
+  redis_data:
+    name: pmis-redis-data
+  nacos_data:
+    name: pmis-nacos-data
+  nacos_logs:
+    name: pmis-nacos-logs
+  minio_data:
+    name: pmis-minio-data

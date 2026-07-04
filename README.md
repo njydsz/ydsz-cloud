@@ -78,7 +78,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 | 计算引擎 | **15+** | EVM / 双费率 / 信用 / 风险 / 阶段门径 / 准入 / 模拟 / 规则链 / ... |
 | AI Agent | **5 + 4 编排** | RiskWarning / ResourceRecommend / ProfitForecast / WinRatePredict / TimesheetAnomaly · 4 策略（SEQUENTIAL/PARALLEL/VOTING/CASCADE） |
 | LLM Provider | **5** | Mock / DashScope（通义千问）/ Qianfan（文心）/ SpringAI / LlmProviderRouter |
-| SQL Flyway 脚本 | **43 个** | V1.0.0_001 ~ V1.0.0_041（批次 28 增） |
+| SQL 迁移脚本 | **43 个** | V1.0.0_001 ~ V1.0.0_041（批次 28 增） |
 | 聚合 SQL 视图 | **5 张** | `pmis_view_initiation_revenue_cost` / `pmis_view_initiation_evm` / `pmis_view_cockpit_overview` / `pmis_view_risk_dashboard` / `pmis_view_employee_utilization` |
 | 批次交付 | **28 批次** | 批次 1-28 已完成 · 等保测评 / 多租户改造 待评估 |
 
@@ -192,9 +192,9 @@ literule  → common                              # 批次 21: 表达式引擎�
 # 1. 启动基础设施 (Nacos / Postgres / Redis / MinIO)
 cd deploy/docker && docker compose -f docker-compose.base.yml up -d
 
-# 2. 初始化数据库 (43 个 Flyway 脚本自动执行)
+# 2. 初始化数据库 (43 个 SQL 迁移脚本)
 psql -U pmis -d pmis -f deploy/sql/V1.0.0_001__init_pmis_schema.sql
-# Spring Boot 启动时 Flyway 自动迁移 (推荐)
+# 按编号顺序执行 deploy/sql/ 下所有 V1.0.0_xxx 脚本
 
 # 3. 启动后端 (按依赖顺序)
 mvn -pl ydsz-pmis-common,ydsz-pmis-literule,ydsz-pmis-userinfo \
@@ -260,7 +260,7 @@ ydsz-pmis/
 │   ├── docker/                 # 7 服务 Dockerfile
 │   ├── ansible/                # 多环境编排
 │   ├── argo-rollouts/          # 金丝雀（批次 23）
-│   ├── sql/                    # 43 Flyway 脚本
+│   ├── sql/                    # 43 SQL 迁移脚本
 │   ├── functional-test/        # UAT + Postman 32 端点
 │   ├── perf/jmeter/            # 6 性能场景
 │   ├── security/               # 等保 / OWASP / crypto-verify
@@ -333,7 +333,7 @@ ydsz-pmis/
 | 24 | chaos-dashboard | 前端 4 KPI + 2 ECharts + 实验 CRUD + Dry-Run + 5s 轮询 |
 | 25 | 售后管理 | 质保期 + 运维工单 P1-P4 SLA + 满意度 9 测试类 |
 | 26 | v1.1 优化 | Seata + WebSocket + CI 门禁 + ES + 文件增强 + 报表 + 批量操作等 24 项 |
-| 27 | v1.2 优化 | Sentry 接入 + Redis 配置补全 + BFF + 工作流事件联动 + EasyExcel + ErrorBoundary + 暗黑模式 + 限流启用 + RocketMQ + Flyway 修正 + i18n 6 页面 + Helm 5 模板 + Alertmanager + Controller 校验 + SpotBugs + PWA |
+| 27 | v1.2 优化 | Sentry 接入 + Redis 配置补全 + BFF + 工作流事件联动 + EasyExcel + ErrorBoundary + 暗黑模式 + 限流启用 + RocketMQ + 迁移脚本修正 + i18n 6 页面 + Helm 5 模板 + Alertmanager + Controller 校验 + SpotBugs + PWA |
 | 28 | v1.3 国际化与代码优化 | i18n 基础设施 + 中英文语言包 + 多模块重构 + literule 计算类迁移 + Nacos 分组统一 + 端口对齐 |
 
 **当前状态**：批次 28 已完成；下一阶段（批次 29+）规划等保测评 / 多租户改造，按业务节奏启动。

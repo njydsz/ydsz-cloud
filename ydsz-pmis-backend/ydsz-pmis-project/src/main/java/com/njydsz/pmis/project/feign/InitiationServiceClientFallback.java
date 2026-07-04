@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.feign;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -34,7 +35,7 @@ public class InitiationServiceClientFallback implements FallbackFactory<Initiati
             @Override
             public Result<Map<String, Object>> budgetSnapshot(Long id) {
                 // 返回 code=503 + 空数据；BudgetGuard 将识别后跳过强管控
-                return Result.failed(503, "项目服务暂不可用，预算强管控已自动降级");
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
         };
     }

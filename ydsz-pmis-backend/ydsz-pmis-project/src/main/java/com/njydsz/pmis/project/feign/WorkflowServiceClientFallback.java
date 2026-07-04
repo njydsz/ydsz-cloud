@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.feign;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -23,7 +24,7 @@ public class WorkflowServiceClientFallback implements FallbackFactory<WorkflowSe
         return new WorkflowServiceClient() {
             @Override
             public Result<String> startProcess(Map<String, Object> body) {
-                return Result.failed(503, "工作流服务暂不可用");
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.feign;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
@@ -31,13 +32,13 @@ public class MessageServiceClientFallback implements FallbackFactory<MessageServ
             @Override
             public Result<MessageResult> send(MessageRequest request) {
                 if (request == null) {
-                    return Result.ok(MessageResult.fail("UNKNOWN", "降级: 请求为空"));
+                    return Result.ok(MessageResult.fail("UNKNOWN", "Degraded: empty request"));
                 }
                 log.warn("[MessageClientFallback] 降级 send: bizType={} bizId={} channel={} template={}",
                         request.getBizType(), request.getBizId(),
                         request.getChannel(), request.getTemplateCode());
                 MessageResult r = MessageResult.fail(request.getChannel(),
-                        "消息中心暂不可用: " + (cause == null ? "unknown" : cause.getMessage()));
+                        BizErrorCode.SERVICE_UNAVAILABLE.getMessage());
                 return Result.ok(r);
             }
         };

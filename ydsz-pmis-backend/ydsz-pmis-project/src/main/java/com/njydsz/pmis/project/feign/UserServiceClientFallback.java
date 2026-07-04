@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.feign;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.openfeign.FallbackFactory;
@@ -33,7 +34,7 @@ public class UserServiceClientFallback implements FallbackFactory<UserServiceCli
         return new UserServiceClient() {
             @Override
             public Result<Map<String, Object>> getEmployee(Long id) {
-                return Result.failed(503, "用户服务暂不可用");
+                return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
