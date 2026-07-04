@@ -27,6 +27,10 @@ export interface SentryConfig {
   tracesSampleRate?: number
   /** 错误采样率 0-1, 默认 1.0 (100% 错误) */
   sampleRate?: number
+  /** 会话回放采样率 0-1, 默认 0.1 (10% 会话) */
+  replaysSessionSampleRate?: number
+  /** 错误时会话回放采样率 0-1, 默认 1.0 (100% 错误会话) */
+  replaysOnErrorSampleRate?: number
   /** 启用 Vue 集成, 默认 true */
   vueIntegration?: boolean
   /** 启用路由性能, 默认 true */
@@ -92,6 +96,8 @@ export async function initSentry(
       release: config.release,
       tracesSampleRate: config.tracesSampleRate ?? 0.1,
       sampleRate: config.sampleRate ?? 1.0,
+      replaysSessionSampleRate: config.replaysSessionSampleRate ?? 0.1,
+      replaysOnErrorSampleRate: config.replaysOnErrorSampleRate ?? 1.0,
       debug: config.debug ?? false,
     }
     if (integrations.length > 0) {
@@ -193,4 +199,21 @@ export function closeSentry(): void {
   _sentryModule.close()
   _initialized = false
   _sentryModule = null
+}
+
+/**
+ * 上报性能测量数据
+ * @param name 测量名称，如 'component.mount'
+ * @param value 测量值（毫秒）
+ * @param tags 附加标签
+ * @returns void，未初始化时不执行任何操作
+ */
+export function captureMeasurement(name: string, value: number, tags?: Record<string, unknown>): void {
+  if (!_initialized || !_sentryModule) return
+  _sentryModule.addBreadcrumb?.({
+    category: 'performance',
+    message: name,
+    data: { value: value.toFixed(2), ...tags } as Record<string, string | number | boolean>,
+    level: 'info',
+  })
 }

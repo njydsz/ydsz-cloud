@@ -5,7 +5,6 @@
 -->
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -18,6 +17,7 @@ import {
 import type { ContractVO, ContractCreateDTO, ContractStatusDTO } from '@/api/project/contract/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
+import { handleError, confirmAction, showSuccess } from '@/utils/error'
 
 // ===== 列表查询状态 =====
 const loading = ref(false)
@@ -123,35 +123,34 @@ const draftTimeText = computed(() => {
 })
 
 /** 打开新增合同弹窗，重置表单为初始值；若检测到草稿则提示恢复 */
-function openCreate() {
+async function openCreate() {
   if (hasDraft.value) {
-    ElMessageBox.confirm('检测到未提交的草稿，是否恢复？', '提示', { type: 'info' })
-      .then(() => {
-        restore()
-        ElMessage.success('草稿已恢复')
-        formMode.value = 'create'
-        dialogVisible.value = true
+    const confirmed = await confirmAction('检测到未提交的草稿，是否恢复？', '提示')
+    if (confirmed) {
+      restore()
+      showSuccess('草稿已恢复')
+      formMode.value = 'create'
+      dialogVisible.value = true
+    } else {
+      clearDraft()
+      formMode.value = 'create'
+      Object.assign(form, {
+        id: undefined,
+        contractCode: '',
+        contractName: '',
+        customerId: 0,
+        customerName: '',
+        contractType: 'FIXED_PRICE',
+        amount: 0,
+        currency: 'CNY',
+        signDate: '',
+        effectiveDate: '',
+        expireDate: '',
+        paymentTerms: '',
+        description: '',
       })
-      .catch(() => {
-        clearDraft()
-        formMode.value = 'create'
-        Object.assign(form, {
-          id: undefined,
-          contractCode: '',
-          contractName: '',
-          customerId: 0,
-          customerName: '',
-          contractType: 'FIXED_PRICE',
-          amount: 0,
-          currency: 'CNY',
-          signDate: '',
-          effectiveDate: '',
-          expireDate: '',
-          paymentTerms: '',
-          description: '',
-        })
-        dialogVisible.value = true
-      })
+      dialogVisible.value = true
+    }
     return
   }
   formMode.value = 'create'
@@ -206,7 +205,7 @@ async function submitForm() {
       }
       await createContract(dto)
       clearDraft()
-      ElMessage.success('创建成功')
+      showSuccess('创建成功')
     } else if (form.id) {
       await updateContract({
         id: form.id,
@@ -218,10 +217,12 @@ async function submitForm() {
         paymentTerms: form.paymentTerms,
         description: form.description,
       } as any)
-      ElMessage.success('更新成功')
+      showSuccess('更新成功')
     }
     dialogVisible.value = false
     fetchList()
+  } catch (e) {
+    handleError(e, 'submitForm')
   } finally {
     submitting.value = false
   }
@@ -232,12 +233,15 @@ async function submitForm() {
  * @param row 选中的合同行数据
  */
 async function handleDelete(row: ContractVO) {
+  const confirmed = await confirmAction(`确认删除合同「${row.contractName}」吗？`, '提示')
+  if (!confirmed) return
   try {
-    await ElMessageBox.confirm(`确认删除合同「${row.contractName}」吗？`, '提示', { type: 'warning' })
     await deleteContract(row.id)
-    ElMessage.success('删除成功')
+    showSuccess('删除成功')
     fetchList()
-  } catch { /* 取消 */ }
+  } catch (e) {
+    handleError(e, 'handleDelete')
+  }
 }
 
 /**
@@ -247,13 +251,16 @@ async function handleDelete(row: ContractVO) {
  */
 async function handleStatus(row: ContractVO, target: string) {
   const targetText = (statusMap as any)[target]?.label || target
+  const confirmed = await confirmAction(`确认将状态变更为「${targetText}」吗？`, '提示')
+  if (!confirmed) return
   try {
-    await ElMessageBox.confirm(`确认将状态变更为「${targetText}」吗？`, '提示', { type: 'warning' })
     const dto: ContractStatusDTO = { id: row.id, targetStatus: target }
     await changeContractStatus(dto)
-    ElMessage.success('状态已更新')
+    showSuccess('状态已更新')
     fetchList()
-  } catch { /* 取消 */ }
+  } catch (e) {
+    handleError(e, 'handleStatus')
+  }
 }
 
 onMounted(fetchList)

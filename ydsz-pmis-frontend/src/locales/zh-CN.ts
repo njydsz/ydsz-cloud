@@ -22,6 +22,10 @@ export default {
     loading: '加载中...',
     success: '操作成功',
     failed: '操作失败',
+    operationFailed: '操作失败',
+    operationSuccess: '操作成功',
+    pleaseCheckForm: '请检查表单输入',
+    systemError: '系统异常，请稍后重试',
     yes: '是',
     no: '否',
     all: '全部',
@@ -93,6 +97,12 @@ export default {
         title: '无访问权限',
         description: '当前账号没有访问该资源的权限, 如需访问请联系管理员',
       },
+    },
+    pagination: {
+      total: '共 {total} 条',
+      pageSize: '{size} 条/页',
+      currentPage: '第 {page} 页',
+      goto: '前往',
     },
     reauth: {
       title: '敏感操作二次认证 — {name} ({code})',

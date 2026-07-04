@@ -36,6 +36,8 @@ import { setupLazyDirective } from './directives/lazy'
 import { initSentry, captureError } from './utils/sentry'
 // 日志工具（开发环境使用）
 import { logger } from './utils/logger'
+// Web Vitals 性能监控
+import { reportWebVitals } from './composables/usePerformance'
 
 const app = createApp(App)
 
@@ -96,5 +98,10 @@ if (import.meta.env.PROD) {
     environment: import.meta.env.MODE,
     release: import.meta.env.VITE_APP_VERSION,
     tracesSampleRate: 0.1,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
   }, app, router)
 }
+
+// 启用 Web Vitals 性能监控
+reportWebVitals()

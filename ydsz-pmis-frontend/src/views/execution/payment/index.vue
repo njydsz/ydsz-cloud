@@ -13,7 +13,7 @@
  * 核销：支持多发票分摊，余额耗尽自动转 ALLOCATED
  */
 import { ref, reactive, onMounted, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -26,6 +26,7 @@ import {
 } from '@/api/execution/payment'
 import type { PaymentVO, PaymentCreateDTO, PaymentAllocationDTO } from '@/api/execution/payment/types'
 import { PC } from '@/constants/permissionCodes'
+import { handleError, confirmAction, showSuccess } from '@/utils/error'
 
 const { t } = useI18n()
 
@@ -77,10 +78,11 @@ async function fetchList() {
     })
     list.value = data.list
     total.value = data.total
-  } catch {
+  } catch (e) {
     // H16.1 修复：查询失败时清空陈旧数据
     list.value = []
     total.value = 0
+    handleError(e, 'fetchList')
   } finally {
     loading.value = false
   }
@@ -143,11 +145,12 @@ async function submitForm() {
     submitting.value = true
     await formRef.value?.validate()
     await createPayment(form as PaymentCreateDTO)
-    ElMessage.success(t('finance.payment.messages.created'))
+    showSuccess(t('finance.payment.messages.created'))
     dialogVisible.value = false
     fetchList()
-  } catch {
+  } catch (e) {
     // 校验或创建失败：拦截器已弹错，保持弹窗打开
+    handleError(e, 'submitForm')
   } finally {
     submitting.value = false
   }
@@ -160,12 +163,18 @@ async function submitForm() {
  */
 async function handleStatus(row: PaymentVO, target: string) {
   const targetText = (statusMap.value as any)[target]?.label || target
+  const confirmed = await confirmAction(
+    t('finance.payment.messages.statusConfirmPrompt', { target: targetText }),
+    t('common.tip'),
+  )
+  if (!confirmed) return
   try {
-    await ElMessageBox.confirm(t('finance.payment.messages.statusConfirmPrompt', { target: targetText }), t('common.tip'), { type: 'warning' })
     await changePaymentStatus(row.id, target, 1, t('finance.payment.systemApprover'))
-    ElMessage.success(t('finance.payment.messages.statusUpdated'))
+    showSuccess(t('finance.payment.messages.statusUpdated'))
     fetchList()
-  } catch { /* 取消 */ }
+  } catch (e) {
+    handleError(e, 'handleStatus')
+  }
 }
 
 /** 核销弹窗可见性 */
@@ -195,11 +204,11 @@ async function submitAllocate() {
   try {
     allocating.value = true
     await allocatePayment(allocForm)
-    ElMessage.success(t('finance.payment.messages.allocSuccess'))
+    showSuccess(t('finance.payment.messages.allocSuccess'))
     allocDialogVisible.value = false
     fetchList()
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('finance.payment.messages.allocFailed'))
+  } catch (e) {
+    handleError(e, 'submitAllocate')
   } finally {
     allocating.value = false
   }
@@ -210,12 +219,18 @@ async function submitAllocate() {
  * @param row 回款记录
  */
 async function handleDelete(row: PaymentVO) {
+  const confirmed = await confirmAction(
+    t('finance.payment.messages.deletePrompt'),
+    t('common.tip'),
+  )
+  if (!confirmed) return
   try {
-    await ElMessageBox.confirm(t('finance.payment.messages.deletePrompt'), t('common.tip'), { type: 'warning' })
     await deletePayment(row.id)
-    ElMessage.success(t('finance.payment.messages.deleted'))
+    showSuccess(t('finance.payment.messages.deleted'))
     fetchList()
-  } catch { /* 取消 */ }
+  } catch (e) {
+    handleError(e, 'handleDelete')
+  }
 }
 
 /** 页面挂载时加载列表 */

@@ -6,7 +6,6 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   listRoles,
   getRole,
@@ -19,6 +18,7 @@ import {
 import { getAllPermissionsApi } from '@/api/menu'
 import type { RoleVO, RoleFormDTO } from '@/api/system/role/types'
 import type { MenuTreeNode } from '@/api/menu/types'
+import { handleError, confirmAction, showSuccess } from '@/utils/error'
 
 const { t } = useI18n()
 
@@ -92,24 +92,32 @@ function openCreate() {
  */
 async function openEdit(row: RoleVO) {
   dialogMode.value = 'edit'
-  const { data } = await getRole(row.id)
-  Object.assign(form, data)
-  form.permissionIds = []
-  dialogVisible.value = true
+  try {
+    const { data } = await getRole(row.id)
+    Object.assign(form, data)
+    form.permissionIds = []
+    dialogVisible.value = true
+  } catch (e) {
+    handleError(e, 'openEdit')
+  }
 }
 
 /** 提交表单：根据 dialogMode 执行创建或更新，成功后刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
-  if (dialogMode.value === 'create') {
-    await createRole(form)
-    ElMessage.success(t('system.role.messages.createSuccess'))
-  } else {
-    await updateRole(form)
-    ElMessage.success(t('system.role.messages.updateSuccess'))
+  try {
+    if (dialogMode.value === 'create') {
+      await createRole(form)
+      showSuccess(t('system.role.messages.createSuccess'))
+    } else {
+      await updateRole(form)
+      showSuccess(t('system.role.messages.updateSuccess'))
+    }
+    dialogVisible.value = false
+    fetchList()
+  } catch (e) {
+    handleError(e, 'submitForm')
   }
-  dialogVisible.value = false
-  fetchList()
 }
 
 /**
@@ -117,13 +125,17 @@ async function submitForm() {
  * @param row 待删除的角色行数据
  */
 async function handleDelete(row: RoleVO) {
+  const confirmed = await confirmAction(
+    t('system.role.messages.confirmDelete', { name: row.roleName }),
+    t('common.confirm'),
+  )
+  if (!confirmed) return
   try {
-    await ElMessageBox.confirm(t('system.role.messages.confirmDelete', { name: row.roleName }), t('common.confirm'), { type: 'warning' })
     await deleteRole(row.id)
-    ElMessage.success(t('system.role.messages.deleteSuccess'))
+    showSuccess(t('system.role.messages.deleteSuccess'))
     fetchList()
-  } catch {
-    /* 用户取消 */
+  } catch (e) {
+    handleError(e, 'handleDelete')
   }
 }
 
@@ -133,13 +145,17 @@ async function handleDelete(row: RoleVO) {
  */
 async function openPermDialog(row: RoleVO) {
   permDialogRoleId.value = row.id
-  // 1. 拉取全量权限
-  const { data } = await getAllPermissionsApi()
-  permTree.value = data || []
-  // 2. 拉取已分配
-  const { data: checkedIds } = await listRolePermissions(row.id)
-  permCheckedIds.value = checkedIds
-  permDialogVisible.value = true
+  try {
+    // 1. 拉取全量权限
+    const { data } = await getAllPermissionsApi()
+    permTree.value = data || []
+    // 2. 拉取已分配
+    const { data: checkedIds } = await listRolePermissions(row.id)
+    permCheckedIds.value = checkedIds
+    permDialogVisible.value = true
+  } catch (e) {
+    handleError(e, 'openPermDialog')
+  }
 }
 
 /**
@@ -164,9 +180,13 @@ async function submitPermAssign() {
   const halfChecked = permTreeRef.value?.getHalfCheckedNodes?.() || []
   const all = [...checked, ...halfChecked]
   const ids = collectCheckedIds(all as MenuTreeNode[])
-  await assignPermissions(permDialogRoleId.value, ids)
-  ElMessage.success(t('system.role.messages.permAssignSuccess'))
-  permDialogVisible.value = false
+  try {
+    await assignPermissions(permDialogRoleId.value, ids)
+    showSuccess(t('system.role.messages.permAssignSuccess'))
+    permDialogVisible.value = false
+  } catch (e) {
+    handleError(e, 'submitPermAssign')
+  }
 }
 
 onMounted(fetchList)

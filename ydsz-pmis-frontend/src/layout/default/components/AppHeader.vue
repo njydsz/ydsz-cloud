@@ -14,12 +14,14 @@ import { Search } from '@element-plus/icons-vue'
 import LanguageSwitcher from '@/components/common/LanguageSwitcher.vue'
 import NotificationBell from '@/components/common/NotificationBell.vue'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
+import { useResponsive } from '@/composables/useResponsive'
 
 const appStore = useAppStore()
 const userStore = useUserStore()
 const router = useRouter()
 const { t } = useI18n()
 const { open: openSearch } = useGlobalSearch()
+const { isMobile } = useResponsive()
 
 /** 是否处于全屏状态 */
 const isFullscreen = ref(false)
@@ -80,11 +82,11 @@ onUnmounted(() => {
           <Expand v-else />
         </el-icon>
       </el-button>
-      <button class="search-trigger" :title="t('common.globalSearch.title')" aria-label="全局搜索" @click="openSearch">
+      <button v-if="!isMobile" class="search-trigger" :title="t('common.globalSearch.title')" aria-label="全局搜索" @click="openSearch">
         <el-icon :size="14"><Search /></el-icon>
         <span class="search-text">{{ t('common.globalSearch.shortcut') }}</span>
       </button>
-      <Breadcrumb />
+      <Breadcrumb v-if="!isMobile" />
     </div>
     <div class="header-right">
       <NotificationBell />
@@ -184,6 +186,19 @@ onUnmounted(() => {
     .user-name {
       font-size: $font-size-base;
       color: $text-primary;
+    }
+  }
+
+  // 移动端适配
+  @media (max-width: $breakpoint-sm) {
+    padding: 0 $spacing-sm;
+
+    .header-right {
+      gap: $spacing-xs;
+    }
+
+    .user-info .user-name {
+      display: none;
     }
   }
 }

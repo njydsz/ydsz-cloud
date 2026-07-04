@@ -16,11 +16,14 @@ import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { getCaptchaApi } from '@/api/user'
 import { verify2fa, verifyBackupCode } from '@/api/user/two-factor'
+import { handleError, showSuccess } from '@/utils/error'
+import { useResponsive } from '@/composables/useResponsive'
 
 const router = useRouter()
 const route = useRoute()
 const userStore = useUserStore()
 const { t } = useI18n()
+const { isMobile } = useResponsive()
 
 /** 登录表单引用 */
 const formRef = ref<FormInstance>()
@@ -57,8 +60,8 @@ async function refreshCaptcha() {
     const { data } = await getCaptchaApi()
     form.captchaKey = data.captchaKey
     captchaImage.value = data.captchaImage
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('login.captchaLoadFailed'))
+  } catch (e) {
+    handleError(e, 'refreshCaptcha')
   } finally {
     captchaLoading.value = false
   }
@@ -159,8 +162,8 @@ async function submitMfa() {
     }
     mfaDialogVisible.value = false
     await onLoginSuccess()
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('login.mfa.verifyFailed'))
+  } catch (e) {
+    handleError(e, 'submitMfa')
   } finally {
     mfaLoading.value = false
   }
@@ -169,7 +172,7 @@ async function submitMfa() {
 /** 登录成功后处理：拉取用户信息并跳转到 redirect 或首页 */
 async function onLoginSuccess() {
   await userStore.fetchUserInfo()
-  ElMessage.success(t('login.messages.loginSuccess'))
+  showSuccess(t('login.messages.loginSuccess'))
   const redirect = (route.query.redirect as string) || '/'
   await router.push(redirect)
 }
@@ -241,7 +244,8 @@ onMounted(() => {
     <el-dialog
       v-model="mfaDialogVisible"
       :title="t('login.mfa.title')"
-      width="420px"
+      :width="isMobile ? '90%' : '420px'"
+      :fullscreen="isMobile"
       :close-on-click-modal="false"
       :show-close="false"
     >
@@ -392,6 +396,42 @@ onMounted(() => {
     font-size: $font-size-sm;
     color: $text-placeholder;
     text-align: center;
+  }
+}
+
+// 移动端适配
+@media (max-width: $breakpoint-sm) {
+  .login-container {
+    width: 90%;
+    max-width: 400px;
+    height: auto;
+    min-height: 500px;
+    flex-direction: column;
+  }
+
+  .login-left {
+    display: none;
+  }
+
+  .login-right {
+    padding: $spacing-lg $spacing-md;
+
+    .login-title {
+      font-size: 20px;
+      text-align: center;
+      margin-bottom: $spacing-lg;
+    }
+
+    .captcha-row {
+      flex-direction: column;
+      align-items: stretch;
+      gap: $spacing-sm;
+
+      .captcha-img {
+        width: 100%;
+        height: 50px;
+      }
+    }
   }
 }
 </style>

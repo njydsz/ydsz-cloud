@@ -581,4 +581,56 @@ onMounted(async () => {
     }
   }
 }
+
+// 移动端适配
+@media (max-width: $breakpoint-sm) {
+  .welcome-card {
+    :deep(.el-card__body) {
+      padding: $spacing-md;
+    }
+
+    .welcome-content {
+      flex-direction: column;
+      text-align: center;
+      gap: $spacing-md;
+
+      h2 {
+        font-size: 20px;
+      }
+    }
+
+    .welcome-icon {
+      order: -1;
+    }
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: stretch;
+
+    .el-select,
+    .el-button {
+      width: 100%;
+    }
+  }
+
+  .metric-card {
+    .metric-content {
+      gap: $spacing-sm;
+    }
+
+    .metric-icon {
+      width: 48px;
+      height: 48px;
+    }
+
+    .metric-value .value {
+      font-size: 22px;
+    }
+  }
+
+  .chart-area {
+    height: 280px;
+  }
+}
 </style>

@@ -79,6 +79,8 @@ declare module 'axios' {
     _isRefreshTokenRequest?: boolean
     /** 标记请求是否已因 Token 过期重试过，防止刷新后仍 401 造成死循环 */
     _tokenRefreshed?: boolean
+    /** 请求元数据（内部使用，记录请求开始时间用于性能监控） */
+    metadata?: { startTime: number }
   }
 }
 
@@ -151,7 +153,7 @@ const service: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json;charset=UTF-8' },
 })
 
-// 请求拦截器：注入 Token + TraceId + 全局 loading
+// 请求拦截器：注入 Token + TraceId + 全局 loading + 性能监控
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getToken()
@@ -159,6 +161,9 @@ service.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     config.headers['X-Trace-Id'] = generateTraceId()
+
+    // 记录请求开始时间（用于性能监控）
+    config.metadata = { startTime: performance.now() }
 
     // 非静默请求开启全局 loading
     if (!config.silent) {
@@ -173,12 +178,21 @@ service.interceptors.request.use(
   },
 )
 
-// 响应拦截器：统一处理业务码与 HTTP 错误
+// 响应拦截器：统一处理业务码与 HTTP 错误 + 性能监控
 service.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
     // 非静默请求关闭全局 loading
     if (!response.config.silent) {
       hideLoading()
+    }
+
+    // 计算请求耗时并记录慢请求
+    const startTime = response.config.metadata?.startTime
+    if (startTime) {
+      const duration = performance.now() - startTime
+      if (duration > 3000) {
+        logger.warn('[SlowRequest]', `${response.config.url} took ${duration.toFixed(0)}ms`)
+      }
     }
 
     const res = response.data as ApiResponse<unknown>

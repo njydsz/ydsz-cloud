@@ -15,10 +15,19 @@ import GlobalSearch from '@/components/common/GlobalSearch.vue'
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import { useAppStore } from '@/store/modules/app'
 import { useGlobalSearch } from '@/composables/useGlobalSearch'
+import { useResponsive } from '@/composables/useResponsive'
 import { logger } from '@/utils/logger'
 
 const appStore = useAppStore()
 const { open } = useGlobalSearch()
+
+// 响应式：小屏幕时自动收起侧边栏
+const { isMobile } = useResponsive()
+watch(isMobile, (mobile) => {
+  if (mobile && !appStore.sidebarCollapsed) {
+    appStore.toggleSidebar()
+  }
+}, { immediate: true })
 
 // Ctrl+K / Cmd+K 快捷键唤起全局搜索
 const { Ctrl_K, Meta_K } = useMagicKeys()

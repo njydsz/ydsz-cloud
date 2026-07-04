@@ -6,7 +6,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import {
   listUsers,
   createUser,
@@ -22,12 +22,14 @@ import { get2faStatus } from '@/api/user/two-factor'
 import ReAuthDialog from '@/components/common/ReAuthDialog.vue'
 import PasswordStrengthBar from '@/components/common/PasswordStrengthBar.vue'
 import { useReAuth } from '@/composables/useReAuth'
-import { isHandledError } from '@/utils/error'
+import { useResponsive } from '@/composables/useResponsive'
+import { handleError, confirmAction, showSuccess } from '@/utils/error'
 import type { ReAuthMethod } from '@/api/user/reauth'
 import type { UserVO, UserCreateDTO } from '@/api/system/user/types'
 import type { RoleVO } from '@/api/system/role/types'
 
 const { t } = useI18n()
+const { isMobile } = useResponsive()
 
 const loading = ref(false)
 const list = ref<UserVO[]>([])
@@ -52,9 +54,7 @@ async function fetchRoles() {
     roleList.value = data || []
   } catch (e) {
     roleList.value = []
-    if (!isHandledError(e)) {
-      ElMessage.error(t('system.user.messages.roleLoadFailed'))
-    }
+    handleError(e, 'fetchRoles')
   }
 }
 
@@ -154,9 +154,7 @@ async function openEdit(row: UserVO) {
     form.roleIds = data || []
   } catch (e) {
     form.roleIds = []
-    if (!isHandledError(e)) {
-      ElMessage.error(t('system.user.messages.userRoleLoadFailed'))
-    }
+    handleError(e, 'openEdit')
   }
   formDialogVisible.value = true
 }
@@ -182,10 +180,7 @@ async function submitForm() {
       try {
         await assignUserRoles(userId, form.roleIds)
       } catch (e) {
-        /* 角色分配失败不阻断主流程，但需提示用户 */
-        if (!isHandledError(e)) {
-          ElMessage.warning(t('system.user.messages.roleAssignFailed'))
-        }
+        handleError(e, 'assignUserRoles')
       }
     }
   } else {
@@ -213,14 +208,14 @@ async function submitForm() {
  * @param row 待删除的用户行数据
  */
 async function handleDelete(row: UserVO) {
-  try {
-    await ElMessageBox.confirm(t('system.user.messages.confirmDelete', { name: row.realName }), t('common.confirm'), { type: 'warning' })
-  } catch {
-    return
-  }
+  const confirmed = await confirmAction(
+    t('system.user.messages.confirmDelete', { name: row.realName }),
+    t('common.confirm'),
+  )
+  if (!confirmed) return
   await deleteReAuth.withReAuth(async (token) => {
     await deleteUser(row.id, token)
-    ElMessage.success(t('system.user.messages.deleteSuccess'))
+    showSuccess(t('system.user.messages.deleteSuccess'))
     await fetchList()
   })
 }
@@ -231,18 +226,14 @@ async function handleDelete(row: UserVO) {
  */
 async function handleToggleStatus(row: UserVO) {
   const next = (row as any).status === 'ENABLED' ? 'DISABLED' : 'ENABLED'
-  try {
-    await ElMessageBox.confirm(
-      t('system.user.messages.confirmToggle', { action: next === 'ENABLED' ? t('system.user.buttons.enable') : t('system.user.buttons.disable'), name: row.realName }),
-      t('common.confirm'),
-      { type: 'warning' },
-    )
-    await toggleUserStatus(row.id, next)
-    ElMessage.success(t('system.user.messages.statusUpdated'))
-    fetchList()
-  } catch {
-    /* 取消 */
-  }
+  const confirmed = await confirmAction(
+    t('system.user.messages.confirmToggle', { action: next === 'ENABLED' ? t('system.user.buttons.enable') : t('system.user.buttons.disable'), name: row.realName }),
+    t('common.confirm'),
+  )
+  if (!confirmed) return
+  await toggleUserStatus(row.id, next)
+  showSuccess(t('system.user.messages.statusUpdated'))
+  fetchList()
 }
 
 // 重置密码弹窗
@@ -283,9 +274,7 @@ async function fetch2faStatus() {
     has2fa.value = data?.enabled || false
   } catch (e) {
     has2fa.value = false
-    if (!isHandledError(e)) {
-      ElMessage.error(t('system.user.messages.twoFaLoadFailed'))
-    }
+    handleError(e, 'fetch2faStatus')
   }
 }
 
@@ -332,7 +321,7 @@ onMounted(() => {
 <template>
   <div class="user-page">
     <el-card shadow="never">
-      <el-form ref="queryForm" inline :model="query" class="search-form">
+      <el-form ref="queryForm" :inline="!isMobile" :model="query" class="search-form">
         <el-form-item :label="$t('system.user.search.keyword')">
           <el-input v-model="query.keyword" :placeholder="$t('system.user.search.keywordPlaceholder')" clearable />
         </el-form-item>
@@ -356,38 +345,40 @@ onMounted(() => {
         <el-button :icon="'Refresh'" @click="fetchList">{{ $t('common.refresh') }}</el-button>
       </div>
 
-      <vxe-table :data="list" :loading="loading" border stripe>
-        <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="username" :title="$t('system.user.columns.username')" width="140" />
-        <vxe-column field="realName" :title="$t('system.user.columns.realName')" width="120" />
-        <vxe-column field="levelName" :title="$t('system.user.columns.levelName')" width="100" />
-        <vxe-column field="departmentName" :title="$t('system.user.columns.departmentName')" min-width="160" />
-        <vxe-column field="phone" :title="$t('system.user.columns.phone')" width="140" />
-        <vxe-column field="email" :title="$t('system.user.columns.email')" min-width="180" />
-        <vxe-column field="status" :title="$t('system.user.columns.status')" width="80">
-          <template #default="{ row }">
-            <el-tag :type="(row as any).status === 'ENABLED' ? 'success' : 'info'">
-              {{ $t(`system.user.status.${(row as any).status}`) }}
-            </el-tag>
-          </template>
-        </vxe-column>
-        <vxe-column :title="$t('system.user.columns.action')" width="300" fixed="right">
-          <template #default="{ row }">
-            <el-button v-permission="['auth:user:update']" link type="primary" size="small" @click="openEdit(row)">
-              {{ $t('system.user.buttons.edit') }}
-            </el-button>
-            <el-button v-permission="['auth:user:reset-password']" link type="primary" size="small" @click="openResetPwd(row)">
-              {{ $t('system.user.buttons.resetPassword') }}
-            </el-button>
-            <el-button v-permission="['auth:user:toggle']" link type="primary" size="small" @click="handleToggleStatus(row)">
-              {{ (row as any).status === 'ENABLED' ? $t('system.user.buttons.disable') : $t('system.user.buttons.enable') }}
-            </el-button>
-            <el-button v-permission="['auth:user:delete']" link type="danger" size="small" @click="handleDelete(row)">
-              {{ $t('common.delete') }}
-            </el-button>
-          </template>
-        </vxe-column>
-      </vxe-table>
+      <div class="table-wrapper">
+        <vxe-table :data="list" :loading="loading" border stripe>
+          <vxe-column type="seq" title="#" width="50" />
+          <vxe-column field="username" :title="$t('system.user.columns.username')" width="140" />
+          <vxe-column field="realName" :title="$t('system.user.columns.realName')" width="120" />
+          <vxe-column field="levelName" :title="$t('system.user.columns.levelName')" width="100" />
+          <vxe-column field="departmentName" :title="$t('system.user.columns.departmentName')" min-width="160" />
+          <vxe-column field="phone" :title="$t('system.user.columns.phone')" width="140" />
+          <vxe-column field="email" :title="$t('system.user.columns.email')" min-width="180" />
+          <vxe-column field="status" :title="$t('system.user.columns.status')" width="80">
+            <template #default="{ row }">
+              <el-tag :type="(row as any).status === 'ENABLED' ? 'success' : 'info'">
+                {{ $t(`system.user.status.${(row as any).status}`) }}
+              </el-tag>
+            </template>
+          </vxe-column>
+          <vxe-column :title="$t('system.user.columns.action')" width="300" fixed="right">
+            <template #default="{ row }">
+              <el-button v-permission="['auth:user:update']" link type="primary" size="small" @click="openEdit(row)">
+                {{ $t('system.user.buttons.edit') }}
+              </el-button>
+              <el-button v-permission="['auth:user:reset-password']" link type="primary" size="small" @click="openResetPwd(row)">
+                {{ $t('system.user.buttons.resetPassword') }}
+              </el-button>
+              <el-button v-permission="['auth:user:toggle']" link type="primary" size="small" @click="handleToggleStatus(row)">
+                {{ (row as any).status === 'ENABLED' ? $t('system.user.buttons.disable') : $t('system.user.buttons.enable') }}
+              </el-button>
+              <el-button v-permission="['auth:user:delete']" link type="danger" size="small" @click="handleDelete(row)">
+                {{ $t('common.delete') }}
+              </el-button>
+            </template>
+          </vxe-column>
+        </vxe-table>
+      </div>
 
       <div class="pagination">
         <el-pagination
@@ -406,7 +397,8 @@ onMounted(() => {
     <el-dialog
       v-model="formDialogVisible"
       :title="formMode === 'create' ? $t('system.user.dialog.createTitle') : $t('system.user.dialog.editTitle')"
-      width="640px"
+      :width="isMobile ? '90%' : '640px'"
+      :fullscreen="isMobile"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
@@ -477,7 +469,7 @@ onMounted(() => {
     </el-dialog>
 
     <!-- 重置密码弹窗 -->
-    <el-dialog v-model="resetDialogVisible" :title="$t('system.user.dialog.resetPwdTitle')" width="420px">
+    <el-dialog v-model="resetDialogVisible" :title="$t('system.user.dialog.resetPwdTitle')" :width="isMobile ? '90%' : '420px'" :fullscreen="isMobile">
       <el-form label-width="80px">
         <el-form-item :label="$t('system.user.form.password')">
           <el-input v-model="newPassword" type="password" show-password :placeholder="$t('system.user.form.passwordPlaceholder')" />
@@ -525,8 +517,31 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .user-page {
-  .search-form { margin-bottom: $spacing-md; }
-  .toolbar { margin-bottom: $spacing-md; }
-  .pagination { margin-top: $spacing-md; display: flex; justify-content: flex-end; }
+  .search-form {
+    margin-bottom: $spacing-md;
+  }
+
+  .toolbar {
+    margin-bottom: $spacing-md;
+  }
+
+  .table-wrapper {
+    overflow-x: auto;
+
+    @media (max-width: $breakpoint-sm) {
+      margin: 0 -#{$spacing-md};
+      padding: 0 #{$spacing-md};
+    }
+  }
+
+  .pagination {
+    margin-top: $spacing-md;
+    display: flex;
+    justify-content: flex-end;
+
+    @media (max-width: $breakpoint-sm) {
+      justify-content: center;
+    }
+  }
 }
 </style>

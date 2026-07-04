@@ -20,6 +20,10 @@ export default {
     loading: 'Loading...',
     success: 'Success',
     failed: 'Failed',
+    operationFailed: 'Operation failed',
+    operationSuccess: 'Operation successful',
+    pleaseCheckForm: 'Please check form input',
+    systemError: 'System error, please try again later',
     yes: 'Yes',
     no: 'No',
     all: 'All',
@@ -91,6 +95,12 @@ export default {
         title: 'No access permission',
         description: 'Your account does not have permission to access this resource. Contact the administrator if needed.',
       },
+    },
+    pagination: {
+      total: 'Total {total}',
+      pageSize: '{size} / page',
+      currentPage: 'Page {page}',
+      goto: 'Go to',
     },
     reauth: {
       title: 'Sensitive Operation Re-authentication — {name} ({code})',

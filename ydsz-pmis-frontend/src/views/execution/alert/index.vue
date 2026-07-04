@@ -34,6 +34,7 @@ import type {
   AlertAggregateVO,
   AlertResolveRolesVO,
 } from '@/api/execution/alert/types'
+import { handleError, confirmAction, showSuccess } from '@/utils/error'
 
 const { t } = useI18n()
 
@@ -159,11 +160,12 @@ async function handleSubmit() {
     submitting.value = true
     await formRef.value?.validate()
     await submitAlert(form)
-    ElMessage.success(t('execution.alert.messages.submitted'))
+    showSuccess(t('execution.alert.messages.submitted'))
     dialogVisible.value = false
     fetchList()
-  } catch {
+  } catch (e) {
     // 拦截器已弹错，保持弹窗打开
+    handleError(e, 'handleSubmit')
   } finally {
     submitting.value = false
   }
@@ -174,17 +176,33 @@ async function handleSubmit() {
  * @param row 预警分发记录
  */
 async function handleDispatch(row: AlertDispatchVO) {
-  await ElMessageBox.confirm(t('execution.alert.messages.confirmDispatch', { code: row.alertCode }), t('common.tip'), { type: 'warning' })
-  const ok = await dispatchAlertNow(row.id)
-  ElMessage[ok ? 'success' : 'error'](ok ? t('execution.alert.messages.dispatchSuccess') : t('execution.alert.messages.dispatchFailed'))
-  fetchList()
+  const confirmed = await confirmAction(
+    t('execution.alert.messages.confirmDispatch', { code: row.alertCode }),
+    t('common.tip'),
+  )
+  if (!confirmed) return
+  try {
+    const ok = await dispatchAlertNow(row.id)
+    if (ok) {
+      showSuccess(t('execution.alert.messages.dispatchSuccess'))
+    } else {
+      ElMessage.error(t('execution.alert.messages.dispatchFailed'))
+    }
+    fetchList()
+  } catch (e) {
+    handleError(e, 'handleDispatch')
+  }
 }
 
 /** 重试最多 3 次失败的预警分发 */
 async function handleRetry() {
-  const n = await retryFailedAlerts(3)
-  ElMessage.success(t('execution.alert.messages.retrySuccess', { count: n }))
-  fetchList()
+  try {
+    const n = await retryFailedAlerts(3)
+    showSuccess(t('execution.alert.messages.retrySuccess', { count: n }))
+    fetchList()
+  } catch (e) {
+    handleError(e, 'handleRetry')
+  }
 }
 
 /**
@@ -192,13 +210,20 @@ async function handleRetry() {
  * @param row 预警分发记录
  */
 async function handleCancel(row: AlertDispatchVO) {
-  const { value: reason } = await ElMessageBox.prompt(t('execution.alert.messages.cancelPrompt'), t('execution.alert.messages.cancelTitle'), {
-    inputPattern: /.+/,
-    inputErrorMessage: t('execution.alert.messages.cancelReasonRequired'),
-  })
-  await cancelAlert(row.id, reason)
-  ElMessage.success(t('execution.alert.messages.canceled'))
-  fetchList()
+  try {
+    const { value: reason } = await ElMessageBox.prompt(t('execution.alert.messages.cancelPrompt'), t('execution.alert.messages.cancelTitle'), {
+      inputPattern: /.+/,
+      inputErrorMessage: t('execution.alert.messages.cancelReasonRequired'),
+    })
+    await cancelAlert(row.id, reason)
+    showSuccess(t('execution.alert.messages.canceled'))
+    fetchList()
+  } catch (e) {
+    // 用户取消输入时不处理
+    if (e !== 'cancel') {
+      handleError(e, 'handleCancel')
+    }
+  }
 }
 
 /**
