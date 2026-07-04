@@ -92,6 +92,8 @@ function handleReset() {
   fetchList()
 }
 
+/** 提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
 /** 新增报销弹窗可见性 */
 const dialogVisible = ref(false)
 /** 表单引用（用于校验） */
@@ -162,12 +164,19 @@ function openCreate() {
 
 /** 提交新建报销单，校验通过后创建（触发预算校验）并刷新列表 */
 async function submitForm() {
-  await formRef.value?.validate()
-  await createExpense(form as ExpenseCreateDTO)
-  clearDraft()
-  ElMessage.success('已创建（触发预算校验）')
-  dialogVisible.value = false
-  fetchList()
+  try {
+    submitting.value = true
+    await formRef.value?.validate()
+    await createExpense(form as ExpenseCreateDTO)
+    clearDraft()
+    ElMessage.success('已创建（触发预算校验）')
+    dialogVisible.value = false
+    fetchList()
+  } catch {
+    // 拦截器已弹错，保持弹窗打开
+  } finally {
+    submitting.value = false
+  }
 }
 
 /**
@@ -288,7 +297,7 @@ onMounted(fetchList)
       <template #footer>
         <span v-if="draftTimeText" style="color: #909399; font-size: 12px; margin-right: auto;">草稿已保存 {{ draftTimeText }}</span>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
   </PageLayout>

@@ -385,6 +385,7 @@ onMounted(loadDefinitions)
         <!-- 详情列表 -->
         <el-table
           v-if="previewResult"
+          v-loading="previewing"
           :data="previewResult.details"
           border
           stripe
@@ -448,7 +449,7 @@ onMounted(loadDefinitions)
               <div class="stat-card__label">{{ t('workflow.instanceMigration.step4.status.FAILED') }}</div>
             </div>
           </div>
-          <el-table :data="executeResult.details" border stripe max-height="420">
+          <el-table v-loading="executing" :data="executeResult.details" border stripe max-height="420">
             <el-table-column prop="instanceId" :label="t('workflow.instanceMigration.step4.columns.instanceId')" width="100" />
             <el-table-column prop="instanceTitle" :label="t('workflow.instanceMigration.step4.columns.instanceTitle')" min-width="160" show-overflow-tooltip />
             <el-table-column prop="oldNodeCode" :label="t('workflow.instanceMigration.step4.columns.oldNodeCode')" min-width="130" />

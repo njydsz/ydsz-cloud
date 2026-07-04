@@ -18,6 +18,8 @@ import type { ResourcePoolVO, ResourcePoolCreateDTO } from '@/api/resource/pool/
 const { t } = useI18n()
 
 const loading = ref(false)
+const submitting = ref(false)
+const deleting = ref(false)
 const list = ref<ResourcePoolVO[]>([])
 const total = ref(0)
 // 分页查询条件：资源池类型 / 状态
@@ -105,24 +107,34 @@ function openEdit(row: ResourcePoolVO) {
 /** 提交表单：根据 dialogMode 执行创建或更新，成功后刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
-  if (dialogMode.value === 'create') {
-    await createResourcePool(form)
-    ElMessage.success(t('resource.pool.messages.createSuccess'))
-  } else if (form.id) {
-    await updateResourcePool(form.id, form)
-    ElMessage.success(t('resource.pool.messages.updateSuccess'))
+  submitting.value = true
+  try {
+    if (dialogMode.value === 'create') {
+      await createResourcePool(form)
+      ElMessage.success(t('resource.pool.messages.createSuccess'))
+    } else if (form.id) {
+      await updateResourcePool(form.id, form)
+      ElMessage.success(t('resource.pool.messages.updateSuccess'))
+    }
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    submitting.value = false
   }
-  dialogVisible.value = false
-  fetchList()
 }
 
 /** 二次确认后删除资源池 */
 async function handleDelete(row: ResourcePoolVO) {
   try {
     await ElMessageBox.confirm(t('resource.pool.messages.deletePrompt', { name: row.poolName }), t('common.tip'), { type: 'warning' })
-    await deleteResourcePool(row.id)
-    ElMessage.success(t('resource.pool.messages.deleted'))
-    fetchList()
+    deleting.value = true
+    try {
+      await deleteResourcePool(row.id)
+      ElMessage.success(t('resource.pool.messages.deleted'))
+      fetchList()
+    } finally {
+      deleting.value = false
+    }
   } catch {
     /* 取消 */
   }
@@ -184,7 +196,7 @@ onMounted(fetchList)
         <vxe-column :title="t('resource.pool.columns.action')" width="180" fixed="right">
           <template #default="{ row }">
             <el-button v-permission="['resource:pool:update']" link type="primary" size="small" @click="openEdit(row)">{{ t('resource.pool.buttons.edit') }}</el-button>
-            <el-button v-permission="['resource:pool:delete']" link type="danger" size="small" @click="handleDelete(row)">{{ t('resource.pool.buttons.delete') }}</el-button>
+            <el-button v-permission="['resource:pool:delete']" link type="danger" size="small" :loading="deleting" @click="handleDelete(row)">{{ t('resource.pool.buttons.delete') }}</el-button>
           </template>
         </vxe-column>
       </vxe-table>
@@ -243,7 +255,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>

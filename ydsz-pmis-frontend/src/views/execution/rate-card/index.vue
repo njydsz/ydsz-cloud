@@ -105,6 +105,8 @@ async function onRefresh() {
   await fetchList()
 }
 
+/** 提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
 // 弹窗 - 新建/编辑报价费率
 const dialogVisible = ref(false)
 const formRef = ref<any>()
@@ -173,19 +175,22 @@ function openEdit(row: RateCardVO) {
 async function submit() {
   if (!formRef.value) return
   try {
+    submitting.value = true
     await formRef.value.validate()
+    if (editingId.value) {
+      await updateRateCard(editingId.value, form)
+      ElMessage.success('更新成功')
+    } else {
+      await createRateCard(form)
+      ElMessage.success('创建成功')
+    }
+    dialogVisible.value = false
+    fetchList()
   } catch {
-    return
+    // 校验或保存失败，保持弹窗打开
+  } finally {
+    submitting.value = false
   }
-  if (editingId.value) {
-    await updateRateCard(editingId.value, form)
-    ElMessage.success('更新成功')
-  } else {
-    await createRateCard(form)
-    ElMessage.success('创建成功')
-  }
-  dialogVisible.value = false
-  fetchList()
 }
 
 /** 删除报价费率（二次确认） */
@@ -368,7 +373,7 @@ onMounted(async () => {
     </el-form>
     <template #footer>
       <el-button @click="dialogVisible = false">取消</el-button>
-      <el-button type="primary" :loading="loading" @click="submit">保存</el-button>
+      <el-button type="primary" :loading="submitting" @click="submit">保存</el-button>
     </template>
   </el-dialog>
 </template>

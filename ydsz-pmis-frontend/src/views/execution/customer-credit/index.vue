@@ -95,6 +95,8 @@ async function handleQuery(row: CustomerCreditVO) {
   }
 }
 
+/** 提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
 /** 信用评估弹窗可见性 */
 const dialogVisible = ref(false)
 /** 表单引用（用于校验） */
@@ -133,14 +135,17 @@ function openAssess() {
 
 /** 提交信用评估，成功后展示评级与分数并刷新列表 */
 async function submitAssess() {
-  await formRef.value?.validate()
   try {
+    submitting.value = true
+    await formRef.value?.validate()
     const { data } = await assessCustomerCredit(form as CreditAssessmentDTO)
     ElMessage.success(t('finance.credit.messages.assessResult', { level: data.level, score: data.score }))
     dialogVisible.value = false
     fetchList()
   } catch (e: any) {
     ElMessage.error(e?.message || t('finance.credit.messages.assessFailed'))
+  } finally {
+    submitting.value = false
   }
 }
 
@@ -230,7 +235,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitAssess">{{ t('finance.credit.buttons.submit') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitAssess">{{ t('finance.credit.buttons.submit') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

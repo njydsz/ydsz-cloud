@@ -26,6 +26,7 @@ import { useFormDraft } from '@/composables/useFormDraft'
 const { t } = useI18n()
 
 const loading = ref(false)
+const submitting = ref(false)
 const list = ref<OpportunityVO[]>([])
 const total = ref(0)
 const query = reactive({
@@ -170,42 +171,47 @@ async function openEdit(row: OpportunityVO) {
 
 async function submitForm() {
   await formRef.value?.validate()
-  if (formMode.value === 'create') {
-    const dto: OpportunityCreateDTO = {
-      opportunityCode: form.opportunityCode!,
-      opportunityName: form.opportunityName!,
-      customerId: form.customerId!,
-      customerName: form.customerName,
-      ownerId: form.ownerId!,
-      ownerName: form.ownerName,
-      level: form.level,
-      estimatedAmount: form.estimatedAmount,
-      source: form.source,
-      industry: form.industry,
+  submitting.value = true
+  try {
+    if (formMode.value === 'create') {
+      const dto: OpportunityCreateDTO = {
+        opportunityCode: form.opportunityCode!,
+        opportunityName: form.opportunityName!,
+        customerId: form.customerId!,
+        customerName: form.customerName,
+        ownerId: form.ownerId!,
+        ownerName: form.ownerName,
+        level: form.level,
+        estimatedAmount: form.estimatedAmount,
+        source: form.source,
+        industry: form.industry,
+      }
+      await createOpportunity(dto)
+      clearDraft()
+      ElMessage.success(t('project.opportunity.messages.createSuccess'))
+    } else if (form.id) {
+      const dto: OpportunityUpdateDTO = {
+        id: form.id,
+        opportunityName: form.opportunityName,
+        level: form.level,
+        industry: form.industry,
+        estimatedAmount: form.estimatedAmount,
+        winRate: form.winRate,
+        expectedSignDate: form.expectedSignDate,
+        expectedStartDate: form.expectedStartDate,
+        expectedEndDate: form.expectedEndDate,
+        competitor: form.competitor,
+        remark: form.remark,
+        tags: form.tags,
+      }
+      await updateOpportunity(dto)
+      ElMessage.success(t('project.opportunity.messages.updateSuccess'))
     }
-    await createOpportunity(dto)
-    clearDraft()
-    ElMessage.success(t('project.opportunity.messages.createSuccess'))
-  } else if (form.id) {
-    const dto: OpportunityUpdateDTO = {
-      id: form.id,
-      opportunityName: form.opportunityName,
-      level: form.level,
-      industry: form.industry,
-      estimatedAmount: form.estimatedAmount,
-      winRate: form.winRate,
-      expectedSignDate: form.expectedSignDate,
-      expectedStartDate: form.expectedStartDate,
-      expectedEndDate: form.expectedEndDate,
-      competitor: form.competitor,
-      remark: form.remark,
-      tags: form.tags,
-    }
-    await updateOpportunity(dto)
-    ElMessage.success(t('project.opportunity.messages.updateSuccess'))
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    submitting.value = false
   }
-  dialogVisible.value = false
-  fetchList()
 }
 
 async function handleDelete(row: OpportunityVO) {
@@ -414,7 +420,7 @@ onMounted(fetchList)
         <template #footer>
           <span v-if="draftTimeText" style="color: #909399; font-size: 12px; margin-right: auto;">草稿已保存 {{ draftTimeText }}</span>
           <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
-          <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
+          <el-button type="primary" :loading="submitting" @click="submitForm">{{ $t('common.confirm') }}</el-button>
         </template>
       </el-dialog>
     </template>

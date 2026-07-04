@@ -21,12 +21,16 @@ const { t } = useI18n()
 const tab = ref<'byEmployee' | 'candidates'>('byEmployee')
 const employeeId = ref<number | null>(null)
 const tags = ref<EmployeeTagVO[]>([])
+const tagsLoading = ref(false)
 
 const candidateForm = reactive({
   tagType: 'SKILL',
   tagCode: '',
 })
 const candidates = ref<EmployeeTagVO[]>([])
+const candidatesLoading = ref(false)
+const submitting = ref(false)
+const deleting = ref(false)
 
 const tagTypeMap = computed<Record<string, string>>(() => ({
   SKILL: t('resource.employeeTag.tagType.SKILL'),
@@ -55,22 +59,28 @@ const formRules = computed(() => ({
 /** 拉取指定员工的标签列表 */
 async function fetchTags() {
   if (!employeeId.value) return
+  tagsLoading.value = true
   try {
     const { data } = await listEmployeeTags(employeeId.value)
     tags.value = data || []
   } catch {
     tags.value = []
+  } finally {
+    tagsLoading.value = false
   }
 }
 
 /** 按标签类型/编码筛选具备该标签的候选员工 */
 async function fetchCandidates() {
   if (!candidateForm.tagType) return
+  candidatesLoading.value = true
   try {
     const { data } = await findCandidates(candidateForm.tagType, candidateForm.tagCode || undefined)
     candidates.value = data || []
   } catch {
     candidates.value = []
+  } finally {
+    candidatesLoading.value = false
   }
 }
 
@@ -89,10 +99,15 @@ function openCreate() {
 
 /** 提交新增标签，成功后关闭弹窗并刷新员工标签列表 */
 async function submitForm() {
-  await addEmployeeTag(form)
-  ElMessage.success(t('resource.employeeTag.messages.added'))
-  dialogVisible.value = false
-  fetchTags()
+  submitting.value = true
+  try {
+    await addEmployeeTag(form)
+    ElMessage.success(t('resource.employeeTag.messages.added'))
+    dialogVisible.value = false
+    fetchTags()
+  } finally {
+    submitting.value = false
+  }
 }
 
 /**
@@ -102,9 +117,14 @@ async function submitForm() {
 async function handleDelete(row: EmployeeTagVO) {
   try {
     await ElMessageBox.confirm(t('resource.employeeTag.messages.deletePrompt', { name: row.tagName }), t('common.tip'), { type: 'warning' })
-    await removeEmployeeTag(row.id)
-    ElMessage.success(t('resource.employeeTag.messages.deleted'))
-    fetchTags()
+    deleting.value = true
+    try {
+      await removeEmployeeTag(row.id)
+      ElMessage.success(t('resource.employeeTag.messages.deleted'))
+      fetchTags()
+    } finally {
+      deleting.value = false
+    }
   } catch {
     /* 取消 */
   }
@@ -126,7 +146,7 @@ onMounted(() => {
             <el-button type="primary" @click="fetchTags">{{ t('resource.employeeTag.buttons.query') }}</el-button>
             <el-button v-permission="[PC.RESOURCE_TAG_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">{{ t('resource.employeeTag.buttons.create') }}</el-button>
           </div>
-          <vxe-table :data="tags" border>
+          <vxe-table :data="tags" :loading="tagsLoading" border>
             <vxe-column type="seq" title="#" width="50" />
             <vxe-column field="employeeId" :title="t('resource.employeeTag.columns.employeeId')" width="100" />
             <vxe-column field="tagType" :title="t('resource.employeeTag.columns.type')" width="120">
@@ -140,7 +160,7 @@ onMounted(() => {
             <vxe-column field="description" :title="t('resource.employeeTag.columns.description')" min-width="200" />
             <vxe-column :title="t('resource.employeeTag.columns.action')" width="120" fixed="right">
               <template #default="{ row }">
-                <el-button v-permission="[PC.RESOURCE_TAG_DELETE]" link type="danger" size="small" @click="handleDelete(row)">{{ t('resource.employeeTag.buttons.delete') }}</el-button>
+                <el-button v-permission="[PC.RESOURCE_TAG_DELETE]" link type="danger" size="small" :loading="deleting" @click="handleDelete(row)">{{ t('resource.employeeTag.buttons.delete') }}</el-button>
               </template>
             </vxe-column>
           </vxe-table>
@@ -155,7 +175,7 @@ onMounted(() => {
             <el-input v-model="candidateForm.tagCode" :placeholder="t('resource.employeeTag.search.tagCodePlaceholder')" clearable style="width: 220px" />
             <el-button type="primary" @click="fetchCandidates">{{ t('resource.employeeTag.buttons.query') }}</el-button>
           </div>
-          <vxe-table :data="candidates" border>
+          <vxe-table :data="candidates" :loading="candidatesLoading" border>
             <vxe-column type="seq" title="#" width="50" />
             <vxe-column field="employeeId" :title="t('resource.employeeTag.columns.employeeId')" width="100" />
             <vxe-column field="tagType" :title="t('resource.employeeTag.columns.type')" width="120">
@@ -197,7 +217,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>

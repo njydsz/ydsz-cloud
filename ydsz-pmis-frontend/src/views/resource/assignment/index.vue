@@ -18,6 +18,7 @@ import type { ResourceAssignmentVO, ResourceAssignmentCreateDTO } from '@/api/re
 const { t } = useI18n()
 
 const loading = ref(false)
+const submitting = ref(false)
 const list = ref<ResourceAssignmentVO[]>([])
 const total = ref(0)
 // 分页查询条件：员工 ID / 项目 initiation ID / 分配状态
@@ -91,10 +92,15 @@ function openAct(action: string) {
 
 /** 提交分配动作，成功后关闭弹窗并刷新列表 */
 async function submitForm() {
-  await actResourceAssignment(form)
-  ElMessage.success(t('resource.assignment.messages.success'))
-  dialogVisible.value = false
-  fetchList()
+  submitting.value = true
+  try {
+    await actResourceAssignment(form)
+    ElMessage.success(t('resource.assignment.messages.success'))
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    submitting.value = false
+  }
 }
 
 // 员工利用率查询相关状态：utilResult 为利用率明细，activeProjectCount 为活跃项目数（≥3 触发过载预警）
@@ -244,7 +250,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>

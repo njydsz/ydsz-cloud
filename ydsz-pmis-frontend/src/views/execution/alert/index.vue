@@ -119,7 +119,9 @@ function handleReset() {
   fetchList()
 }
 
-/** 提交预警弹窗可见性 */
+/** 提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
+/** 预警提交弹窗可见性 */
 const dialogVisible = ref(false)
 /** 预警提交表单数据 */
 const form = reactive<AlertDispatchDTO>({
@@ -148,10 +150,17 @@ function openCreate() {
 
 /** 提交预警，成功后关闭弹窗并刷新列表 */
 async function handleSubmit() {
-  await submitAlert(form)
-  ElMessage.success('预警已提交')
-  dialogVisible.value = false
-  fetchList()
+  try {
+    submitting.value = true
+    await submitAlert(form)
+    ElMessage.success('预警已提交')
+    dialogVisible.value = false
+    fetchList()
+  } catch {
+    // 拦截器已弹错，保持弹窗打开
+  } finally {
+    submitting.value = false
+  }
 }
 
 /**
@@ -324,7 +333,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit">提交</el-button>
+        <el-button type="primary" :loading="submitting" @click="handleSubmit">提交</el-button>
       </template>
     </el-dialog>
   </PageLayout>

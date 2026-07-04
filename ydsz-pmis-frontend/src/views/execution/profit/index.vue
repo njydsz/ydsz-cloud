@@ -68,6 +68,8 @@ function resetRevenue() {
   fetchRevenue()
 }
 
+/** 提交按钮 loading 状态，防止重复提交 */
+const rSubmitting = ref(false)
 /** 新增收入弹窗可见性 */
 const rDialogVisible = ref(false)
 /** 收入表单引用（用于校验） */
@@ -105,11 +107,18 @@ function openRCreate() {
 
 /** 提交新建收入记录，校验通过后创建并刷新列表 */
 async function submitR() {
-  await rFormRef.value?.validate()
-  await createRevenue(rForm as RevenueCreateDTO)
-  ElMessage.success('已创建')
-  rDialogVisible.value = false
-  fetchRevenue()
+  try {
+    rSubmitting.value = true
+    await rFormRef.value?.validate()
+    await createRevenue(rForm as RevenueCreateDTO)
+    ElMessage.success('已创建')
+    rDialogVisible.value = false
+    fetchRevenue()
+  } catch {
+    // 拦截器已弹错，保持弹窗打开
+  } finally {
+    rSubmitting.value = false
+  }
 }
 
 /**
@@ -288,7 +297,7 @@ onMounted(() => {
     </el-form>
     <template #footer>
       <el-button @click="rDialogVisible = false">取消</el-button>
-      <el-button type="primary" @click="submitR">确定</el-button>
+      <el-button type="primary" :loading="rSubmitting" @click="submitR">确定</el-button>
     </template>
   </el-dialog>
 </template>

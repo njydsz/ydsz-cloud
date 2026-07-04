@@ -135,6 +135,8 @@ async function fetchCompare() {
   }
 }
 
+/** 提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
 // 弹窗 - 新建
 const dialogVisible = ref(false)
 const formRef = ref<any>()
@@ -175,15 +177,18 @@ function openCreate() {
 async function submit() {
   if (!formRef.value) return
   try {
+    submitting.value = true
     await formRef.value.validate()
+    await createProfitSimulation(form)
+    ElMessage.success('创建成功，引擎已自动测算毛利/毛利率')
+    dialogVisible.value = false
+    fetchList()
+    fetchCompare()
   } catch {
-    return
+    // 校验或创建失败，保持弹窗打开
+  } finally {
+    submitting.value = false
   }
-  await createProfitSimulation(form)
-  ElMessage.success('创建成功，引擎已自动测算毛利/毛利率')
-  dialogVisible.value = false
-  fetchList()
-  fetchCompare()
 }
 
 /** 状态流转：DRAFT → SUBMITTED，提交审批 */
@@ -469,7 +474,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="loading" @click="submit">保存</el-button>
+        <el-button type="primary" :loading="submitting" @click="submit">保存</el-button>
       </template>
     </el-dialog>
   </div>

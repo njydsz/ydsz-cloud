@@ -88,7 +88,7 @@ public class FlowDmnController {
      */
     @Operation(summary = "新建/更新决策表")
     @PostMapping("/save")
-    public Result<Long> save(@Valid @RequestBody FlowDmnTableDO table) {
+    public Result<Long> save(@RequestBody FlowDmnTableDO table) {
         if (table.getId() != null) {
             dmnTableService.update(table);
             return Result.ok();

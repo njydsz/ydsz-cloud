@@ -26,6 +26,8 @@ import type {
 import { isHandledError } from '@/utils/error'
 import { PC } from '@/constants/permissionCodes'
 
+/** 对账按钮 loading 状态，防止重复触发 */
+const running = ref(false)
 // 列表查询状态
 const loading = ref(false)
 const list = ref<DailyReconcileVO[]>([])
@@ -100,10 +102,17 @@ function handleReset() {
 
 /** 手动触发每日对账重算，生成对账记录后刷新列表与聚合数据 */
 async function handleRun() {
-  const n = await runDailyReconcile()
-  ElMessage.success(`已生成 ${n} 条对账记录`)
-  fetchList()
-  fetchAggregate()
+  try {
+    running.value = true
+    const n = await runDailyReconcile()
+    ElMessage.success(`已生成 ${n} 条对账记录`)
+    fetchList()
+    fetchAggregate()
+  } catch {
+    // 拦截器已弹错
+  } finally {
+    running.value = false
+  }
 }
 
 onMounted(() => {
@@ -139,7 +148,7 @@ onMounted(() => {
     </template>
 
     <template #toolbar>
-      <el-button v-permission="[PC.EXECUTION_RECONCILE_RUN]" type="primary" :icon="'Refresh'" @click="handleRun">
+      <el-button v-permission="[PC.EXECUTION_RECONCILE_RUN]" type="primary" :icon="'Refresh'" :loading="running" @click="handleRun">
         立即对账
       </el-button>
     </template>

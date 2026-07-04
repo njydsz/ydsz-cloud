@@ -114,7 +114,7 @@ public class FlowEmbeddedApprovalController {
     @PostMapping("/{businessType}/{businessId}/action")
     public Result<Void> quickActionByPath(@PathVariable String businessType,
                                           @PathVariable String businessId,
-                                          @Valid @RequestBody EmbeddedApprovalActionDTO dto) {
+                                          @RequestBody @Valid EmbeddedApprovalActionDTO dto) {
         dto.setBusinessType(businessType);
         dto.setBusinessId(businessId);
         LoginUser u = SecurityContext.getCurrentOrNull();

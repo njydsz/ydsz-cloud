@@ -90,6 +90,8 @@ function handleReset() {
   fetchList()
 }
 
+/** 提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
 // 弹窗 - 新建风险
 const dialogVisible = ref(false)
 const formRef = ref<any>()
@@ -127,11 +129,18 @@ function openCreate() {
 
 /** 提交新建表单：校验通过后调用创建接口，RiskScoreEvaluator 自动评级 */
 async function submitForm() {
-  await formRef.value?.validate()
-  await createRisk(form as RiskCreateDTO)
-  ElMessage.success(t('execution.risk.messages.createSuccess'))
-  dialogVisible.value = false
-  fetchList()
+  try {
+    submitting.value = true
+    await formRef.value?.validate()
+    await createRisk(form as RiskCreateDTO)
+    ElMessage.success(t('execution.risk.messages.createSuccess'))
+    dialogVisible.value = false
+    fetchList()
+  } catch {
+    // 拦截器已弹错，保持弹窗打开
+  } finally {
+    submitting.value = false
+  }
 }
 
 /** 状态流转：根据目标状态推进风险处理流程（启动缓解/关闭/接受） */
@@ -234,7 +243,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ t('common.confirm') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

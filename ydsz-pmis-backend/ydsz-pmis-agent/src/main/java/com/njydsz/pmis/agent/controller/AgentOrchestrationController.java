@@ -46,7 +46,7 @@ public class AgentOrchestrationController {
     @Operation(summary = "协调多 Agent 编排执行")
     @PrePermission("agent:orchestration:run")
     @PostMapping("/coordinate")
-    public Result<OrchestrationResult> coordinate(@Valid @RequestBody OrchestrationRequest req) {
+    public Result<OrchestrationResult> coordinate(@RequestBody OrchestrationRequest req) {
         return Result.ok(service.orchestrate(req));
     }
 }

@@ -26,6 +26,7 @@ const userStore = useUserStore()
 const hasPerm = (code: string) => userStore.hasPermission(code)
 
 const loading = ref(false)
+const submitting = ref(false)
 const list = ref<BenchRecordVO[]>([])
 const total = ref(0)
 const query = reactive({
@@ -198,11 +199,16 @@ async function submit() {
   }
   const pool = pools.value.find((p) => p.id === form.poolId)
   if (pool) form.remark = (form.remark || '') + (form.remark ? ' | ' : '') + t('resource.bench.messages.poolSuffix', { name: pool.poolName })
-  await actBench(form)
-  ElMessage.success(form.action === 'ENTER' ? t('resource.bench.messages.enterSuccess') : t('resource.bench.messages.exitSuccess'))
-  dialogVisible.value = false
-  fetchList()
-  fetchDashboard()
+  submitting.value = true
+  try {
+    await actBench(form)
+    ElMessage.success(form.action === 'ENTER' ? t('resource.bench.messages.enterSuccess') : t('resource.bench.messages.exitSuccess'))
+    dialogVisible.value = false
+    fetchList()
+    fetchDashboard()
+  } finally {
+    submitting.value = false
+  }
 }
 
 onMounted(async () => {
@@ -427,7 +433,7 @@ onMounted(async () => {
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" :loading="loading" @click="submit">{{ t('resource.bench.footer.confirm') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submit">{{ t('resource.bench.footer.confirm') }}</el-button>
       </template>
     </el-dialog>
   </div>

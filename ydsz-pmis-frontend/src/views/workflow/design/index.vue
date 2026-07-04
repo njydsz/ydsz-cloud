@@ -578,7 +578,7 @@ onMounted(() => {
           style="margin-bottom: 12px"
         />
 
-        <el-table :data="simulateResult.steps" border stripe size="small">
+        <el-table v-loading="simulating" :data="simulateResult.steps" border stripe size="small">
           <el-table-column prop="stepIndex" label="#" width="50" align="center" />
           <el-table-column prop="nodeCode" label="节点编码" min-width="120" />
           <el-table-column prop="nodeName" label="节点名称" min-width="100" />

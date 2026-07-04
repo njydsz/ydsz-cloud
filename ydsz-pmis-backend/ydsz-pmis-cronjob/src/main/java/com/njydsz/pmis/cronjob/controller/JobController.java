@@ -11,7 +11,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
@@ -72,7 +72,7 @@ public class JobController {
     @Operation(summary = "删除任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         jobService.delete(id);
         return Result.ok();
     }
@@ -86,7 +86,7 @@ public class JobController {
     @Operation(summary = "暂停任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @PostMapping("/{id}/pause")
-    public Result<Void> pause(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
+    public Result<Void> pause(@PathVariable @Min(1) Long id) {
         jobService.pause(id);
         return Result.ok();
     }
@@ -100,7 +100,7 @@ public class JobController {
     @Operation(summary = "恢复任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @PostMapping("/{id}/resume")
-    public Result<Void> resume(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
+    public Result<Void> resume(@PathVariable @Min(1) Long id) {
         jobService.resume(id);
         return Result.ok();
     }
@@ -114,7 +114,7 @@ public class JobController {
     @Operation(summary = "立即执行一次")
     @PrePermission(PermissionCodes.CRONJOB_JOB_TRIGGER)
     @PostMapping("/{id}/trigger")
-    public Result<Long> trigger(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
+    public Result<Long> trigger(@PathVariable @Min(1) Long id) {
         return Result.ok(jobService.trigger(id));
     }
 
@@ -126,7 +126,7 @@ public class JobController {
      */
     @Operation(summary = "任务详情")
     @GetMapping("/{id}")
-    public Result<JobDO> getById(@PathVariable @NotNull(message = "{validation.cronjob.msg_2fae0c34}") Long id) {
+    public Result<JobDO> getById(@PathVariable @Min(1) Long id) {
         return Result.ok(jobService.getById(id));
     }
 
@@ -144,7 +144,7 @@ public class JobController {
     @GetMapping("/page")
     public Result<Page<JobDO>> page(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") int size,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String group) {
@@ -164,7 +164,7 @@ public class JobController {
     @GetMapping("/log/page")
     public Result<Page<JobLogDO>> pageLog(
             @RequestParam(defaultValue = "1") @Min(value = 1, message = "{validation.cronjob.msg_e648fb78}") int page,
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") int size,
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.cronjob.msg_15154512}") @Max(100) int size,
             @RequestParam(required = false) String jobKey,
             @RequestParam(required = false) String status) {
         return Result.ok(jobService.pageLog(page, size, jobKey, status));

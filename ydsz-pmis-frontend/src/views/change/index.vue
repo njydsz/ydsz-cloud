@@ -15,6 +15,7 @@
  * 重大变更: GM + CFO 双审批
  */
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -33,6 +34,8 @@ import type {
 } from '@/api/project/change/types'
 import { PC } from '@/constants/permissionCodes'
 import { useTable } from '@/composables/useTable'
+
+const { t } = useI18n()
 
 // ===== 列表查询 (useTable composable) =====
 const {
@@ -62,33 +65,33 @@ const {
   return { list: data.list || [], total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
 }, { defaultSize: 10 })
 
-// 状态映射（与后端 ChangeStatus 枚举对齐）
-const statusMap: Record<string, { label: string; type: 'info' | 'warning' | 'success' | 'danger' | 'primary' }> = {
-  DRAFT:        { label: '草稿',     type: 'info' },
-  SUBMITTED:    { label: '已提交',   type: 'warning' },
-  UNDER_REVIEW: { label: '评审中',   type: 'warning' },
-  APPROVED:     { label: '已批准',   type: 'success' },
-  REJECTED:     { label: '已驳回',   type: 'danger' },
-  EXECUTING:    { label: '执行中',   type: 'primary' },
-  EXECUTED:     { label: '已执行',   type: 'success' },
-  CANCELLED:    { label: '已取消',   type: 'info' },
-}
+// 状态映射（与后端 ChangeStatus 枚举对齐，响应语言切换）
+const statusMap = computed<Record<string, { label: string; type: 'info' | 'warning' | 'success' | 'danger' | 'primary' }>>(() => ({
+  DRAFT:        { label: t('common.status.draft'),     type: 'info' },
+  SUBMITTED:    { label: t('common.status.submitted'), type: 'warning' },
+  UNDER_REVIEW: { label: t('change.status.underReview'), type: 'warning' },
+  APPROVED:     { label: t('common.status.approved'), type: 'success' },
+  REJECTED:     { label: t('common.status.rejected'), type: 'danger' },
+  EXECUTING:    { label: t('common.status.running'),  type: 'primary' },
+  EXECUTED:     { label: t('common.status.executed'), type: 'success' },
+  CANCELLED:    { label: t('common.status.canceled'), type: 'info' },
+}))
 
 // 变更类型（与后端 ChangeType 枚举对齐：SCOPE/COST/CONTRACT/STAFF/SCHEDULE）
-const typeMap: Record<string, { label: string; color: string }> = {
-  SCOPE:    { label: '范围变更',   color: '#409EFF' },
-  COST:     { label: '成本变更',   color: '#F56C6C' },
-  CONTRACT: { label: '合同变更',   color: '#E6A23C' },
-  STAFF:    { label: '人员变更',   color: '#67C23A' },
-  SCHEDULE: { label: '进度变更',   color: '#909399' },
-}
+const typeMap = computed<Record<string, { label: string; color: string }>>(() => ({
+  SCOPE:    { label: t('change.type.scope'),    color: '#409EFF' },
+  COST:     { label: t('change.type.cost'),     color: '#F56C6C' },
+  CONTRACT: { label: t('change.type.contract'), color: '#E6A23C' },
+  STAFF:    { label: t('change.type.staff'),    color: '#67C23A' },
+  SCHEDULE: { label: t('change.type.schedule'), color: '#909399' },
+}))
 
 // 风险等级（与后端 RiskLevel 枚举对齐）
-const riskMap: Record<string, { label: string; color: string }> = {
-  LOW:    { label: '低风险', color: '#67C23A' },
-  MEDIUM: { label: '中风险', color: '#E6A23C' },
-  HIGH:   { label: '高风险', color: '#F56C6C' },
-}
+const riskMap = computed<Record<string, { label: string; color: string }>>(() => ({
+  LOW:    { label: t('change.risk.low'),    color: '#67C23A' },
+  MEDIUM: { label: t('change.risk.medium'), color: '#E6A23C' },
+  HIGH:   { label: t('change.risk.high'),   color: '#F56C6C' },
+}))
 
 // 状态机迁移规则 (前端兜底; 服务端 allowed-transitions 优先)
 const transitions: Record<string, string[]> = {
@@ -173,11 +176,11 @@ const form = reactive<Partial<ProjectChangeCreateDTO>>({
   remark: '',
 })
 
-const formRules = {
-  changeCode: [{ required: true, message: '变更编号必填', trigger: 'blur' }],
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  changeTitle: [{ required: true, message: '变更标题必填', trigger: 'blur' }],
-}
+const formRules = computed(() => ({
+  changeCode: [{ required: true, message: t('common.rule.required', { field: t('change.field.changeCode') }), trigger: 'blur' }],
+  initiationId: [{ required: true, message: t('common.rule.required', { field: t('change.field.initiationId') }), trigger: 'blur' }],
+  changeTitle: [{ required: true, message: t('common.rule.required', { field: t('change.field.changeTitle') }), trigger: 'blur' }],
+}))
 
 /** 打开新增变更弹窗，自动生成变更编号并重置表单为默认值 */
 function openCreate() {
@@ -208,7 +211,7 @@ async function submitForm() {
   submitting.value = true
   try {
     await createProjectChange(form as ProjectChangeCreateDTO)
-    ElMessage.success('变更已提交, 后端已自动评估影响等级')
+    ElMessage.success(t('change.message.submitted'))
     dialogVisible.value = false
     fetchList()
   } finally {
@@ -223,19 +226,19 @@ async function submitForm() {
  * @param target 目标状态码
  */
 async function handleStatus(row: ProjectChangeVO, target: string) {
-  const targetLabel = statusMap[target]?.label || target
+  const targetLabel = statusMap.value[target]?.label || target
   let extraHint = ''
   if (row.majorFlag === 1 && (target === 'APPROVED' || target === 'UNDER_REVIEW')) {
-    extraHint = '\n(此为重大变更, ' + (row.approverRoles || 'GM/CFO') + ' 需双审批)'
+    extraHint = '\n' + t('change.message.majorChangeHint', { roles: row.approverRoles || 'GM/CFO' })
   }
   try {
     await ElMessageBox.confirm(
-      `确认将变更「${row.changeCode}」状态变更为「${targetLabel}」?${extraHint}`,
-      '状态迁移',
+      t('change.message.confirmStatusChange', { code: row.changeCode, target: targetLabel, hint: extraHint }),
+      t('change.dialog.statusTransition'),
       { type: 'warning' },
     )
     await changeProjectChangeStatus({ id: row.id, targetStatus: target })
-    ElMessage.success('状态已更新')
+    ElMessage.success(t('common.message.statusUpdated'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -248,12 +251,12 @@ async function handleStatus(row: ProjectChangeVO, target: string) {
 async function handleDelete(row: ProjectChangeVO) {
   try {
     await ElMessageBox.confirm(
-      `确认删除变更「${row.changeCode}」?仅 DRAFT/REJECTED/CANCELLED 状态可删除。`,
-      '删除确认',
+      t('change.message.confirmDelete', { code: row.changeCode }),
+      t('common.dialog.deleteTitle'),
       { type: 'warning' },
     )
     await deleteProjectChange(row.id)
-    ElMessage.success('已删除')
+    ElMessage.success(t('common.message.deleted'))
     fetchList()
   } catch { /* 取消 */ }
 }
@@ -324,9 +327,9 @@ const estimatedRisk = computed(() => {
   else if (form.scheduleImpactDays && Math.abs(form.scheduleImpactDays) > 3) score += 1
   if (form.affectedWbsCount && form.affectedWbsCount > 5) score += 1
   if (form.affectedStaffCount && form.affectedStaffCount > 3) score += 1
-  if (score >= 4) return { level: 'HIGH', label: '高风险(需 GM+CFO 双审批)', color: '#F56C6C' }
-  if (score >= 2) return { level: 'MEDIUM', label: '中风险', color: '#E6A23C' }
-  return { level: 'LOW', label: '低风险', color: '#67C23A' }
+  if (score >= 4) return { level: 'HIGH', label: t('change.risk.highMajor'), color: '#F56C6C' }
+  if (score >= 2) return { level: 'MEDIUM', label: t('change.risk.medium'), color: '#E6A23C' }
+  return { level: 'LOW', label: t('change.risk.low'), color: '#67C23A' }
 })
 
 onMounted(() => {
@@ -346,45 +349,45 @@ onMounted(() => {
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="编号/标题/原因" clearable />
+      <el-form-item :label="t('change.field.keyword')">
+        <el-input v-model="query.keyword" :placeholder="t('change.placeholder.keyword')" clearable />
       </el-form-item>
-      <el-form-item label="状态">
-        <el-select v-model="query.status" placeholder="全部" clearable style="width: 130px">
+      <el-form-item :label="t('common.column.status')">
+        <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="类型">
-        <el-select v-model="query.changeType" placeholder="全部" clearable style="width: 140px">
+      <el-form-item :label="t('common.column.type')">
+        <el-select v-model="query.changeType" :placeholder="t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="项目 ID">
-        <el-input v-model.number="query.initiationId" placeholder="立项 ID" clearable style="width: 140px" />
+      <el-form-item :label="t('change.field.initiationId')">
+        <el-input v-model.number="query.initiationId" :placeholder="t('change.placeholder.initiationId')" clearable style="width: 140px" />
       </el-form-item>
     </template>
 
     <template #toolbar>
       <el-button v-permission="[PC.PROJECT_CHANGE_CREATE]" type="primary" :icon="'Plus'" @click="openCreate">
-        新增变更
+        {{ t('change.button.create') }}
       </el-button>
     </template>
 
-    <template #table>
+    <template #table="scope">
       <EmptyState
         v-if="isEmpty"
         preset="search"
-        :title="query.keyword || query.status || query.changeType || query.initiationId ? '未找到匹配的项目变更' : '暂无项目变更'"
-        :description="query.keyword || query.status || query.changeType || query.initiationId ? '请尝试调整筛选条件或清空搜索关键字' : '当前还没有任何项目变更, 可以在项目详情中发起新的变更'"
-        action-text="重置筛选"
+        :title="query.keyword || query.status || query.changeType || query.initiationId ? t('change.empty.noMatch') : t('change.empty.noData')"
+        :description="query.keyword || query.status || query.changeType || query.initiationId ? t('change.empty.adjustFilter') : t('change.empty.createHint')"
+        :action-text="t('change.button.resetFilter')"
         @action="resetQuery"
       />
-      <vxe-table v-else :data="list" :loading="loading" border stripe @checkbox-change="onSelectionChange" @checkbox-all="onSelectionChange">
+      <vxe-table v-else :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY" @checkbox-change="onSelectionChange" @checkbox-all="onSelectionChange">
         <vxe-column type="checkbox" width="50" />
         <vxe-column type="seq" title="#" width="50" />
-        <vxe-column field="changeCode" title="变更编号" width="170" fixed="left" />
-        <vxe-column field="changeTitle" title="变更标题" min-width="200" show-overflow />
-        <vxe-column field="changeType" title="类型" width="110">
+        <vxe-column field="changeCode" :title="t('change.field.changeCode')" width="170" fixed="left" />
+        <vxe-column field="changeTitle" :title="t('change.field.changeTitle')" min-width="200" show-overflow />
+        <vxe-column field="changeType" :title="t('common.column.type')" width="110">
           <template #default="{ row }">
             <el-tag v-if="typeMap[row.changeType]" :color="typeMap[row.changeType].color" effect="light" size="small" style="color: #fff; border: none">
               {{ typeMap[row.changeType].label }}
@@ -392,12 +395,12 @@ onMounted(() => {
             <span v-else>{{ row.changeType || '-' }}</span>
           </template>
         </vxe-column>
-        <vxe-column field="status" title="状态" width="100">
+        <vxe-column field="status" :title="t('common.column.status')" width="100">
           <template #default="{ row }">
             <StatusTag :value="row.status" :map="statusMap" />
           </template>
         </vxe-column>
-        <vxe-column field="riskLevelAfter" title="影响等级" width="100">
+        <vxe-column field="riskLevelAfter" :title="t('change.field.impactLevel')" width="100">
           <template #default="{ row }">
             <el-tag v-if="riskMap[row.riskLevelAfter]" :type="row.riskLevelAfter === 'HIGH' ? 'danger' : row.riskLevelAfter === 'MEDIUM' ? 'warning' : 'success'" size="small">
               {{ riskMap[row.riskLevelAfter].label }}
@@ -405,38 +408,38 @@ onMounted(() => {
             <span v-else>-</span>
           </template>
         </vxe-column>
-        <vxe-column title="重大" width="60" align="center">
+        <vxe-column :title="t('change.field.major')" width="60" align="center">
           <template #default="{ row }">
-            <el-tag v-if="row.majorFlag === 1" type="danger" size="small">重大</el-tag>
+            <el-tag v-if="row.majorFlag === 1" type="danger" size="small">{{ t('change.field.major') }}</el-tag>
             <span v-else>-</span>
           </template>
         </vxe-column>
-        <vxe-column field="budgetImpact" title="预算影响" width="120" align="right">
+        <vxe-column field="budgetImpact" :title="t('change.field.budgetImpact')" width="120" align="right">
           <template #default="{ row }">
             <span :style="{ color: (row.budgetImpact || 0) > 0 ? '#F56C6C' : (row.budgetImpact || 0) < 0 ? '#67C23A' : undefined }">
               {{ fmtImpact(row.budgetImpact) }}
             </span>
           </template>
         </vxe-column>
-        <vxe-column field="scheduleImpactDays" title="进度影响(天)" width="110" align="right">
+        <vxe-column field="scheduleImpactDays" :title="t('change.field.scheduleImpact')" width="110" align="right">
           <template #default="{ row }">
             <span :style="{ color: (row.scheduleImpactDays || 0) > 0 ? '#E6A23C' : (row.scheduleImpactDays || 0) < 0 ? '#67C23A' : undefined }">
               {{ fmtImpact(row.scheduleImpactDays) }}
             </span>
           </template>
         </vxe-column>
-        <vxe-column field="profitImpactPct" title="利润影响%" width="100" align="right">
+        <vxe-column field="profitImpactPct" :title="t('change.field.profitImpactPct')" width="100" align="right">
           <template #default="{ row }">
             <span :style="{ color: (row.profitImpactPct || 0) < 0 ? '#F56C6C' : '#67C23A' }">
               {{ fmtPct(row.profitImpactPct) }}
             </span>
           </template>
         </vxe-column>
-        <vxe-column field="applicantName" title="申请人" width="100" />
-        <vxe-column field="createdAt" title="创建时间" width="170" />
-        <vxe-column title="操作" width="320" fixed="right">
+        <vxe-column field="applicantName" :title="t('common.column.applicant')" width="100" />
+        <vxe-column field="createdAt" :title="t('common.column.createdAt')" width="170" />
+        <vxe-column :title="t('common.column.action')" width="320" fixed="right">
           <template #default="{ row }">
-            <el-button link type="primary" size="small" @click="openDetail(row)">详情</el-button>
+            <el-button link type="primary" size="small" @click="openDetail(row)">{{ t('common.button.viewDetail') }}</el-button>
             <el-button
               v-for="target in allowedTargets(row)"
               :key="target"
@@ -456,7 +459,7 @@ onMounted(() => {
               size="small"
               @click="handleDelete(row)"
             >
-              删除
+              {{ t('common.delete') }}
             </el-button>
           </template>
         </vxe-column>
@@ -464,134 +467,134 @@ onMounted(() => {
     </template>
 
     <!-- 新增变更弹窗 -->
-    <el-dialog v-model="dialogVisible" title="新增项目变更" width="900px" :close-on-click-modal="false">
+    <el-dialog v-model="dialogVisible" :title="t('change.dialog.create')" width="900px" :close-on-click-modal="false">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="120px">
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="变更编号" prop="changeCode">
-              <el-input v-model="form.changeCode" placeholder="如 CHG-2026-001" />
+            <el-form-item :label="t('change.field.changeCode')" prop="changeCode">
+              <el-input v-model="form.changeCode" :placeholder="t('change.placeholder.changeCode')" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="项目 ID" prop="initiationId">
-              <el-input v-model.number="form.initiationId" placeholder="立项 ID" />
+            <el-form-item :label="t('change.field.initiationId')" prop="initiationId">
+              <el-input v-model.number="form.initiationId" :placeholder="t('change.placeholder.initiationId')" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="12">
-            <el-form-item label="变更类型">
+            <el-form-item :label="t('change.field.changeType')">
               <el-select v-model="form.changeType" style="width: 100%">
                 <el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="预估影响等级">
+            <el-form-item :label="t('change.field.estimatedLevel')">
               <el-tag :color="estimatedRisk.color" effect="dark" size="default" style="color: #fff; border: none">
                 {{ estimatedRisk.label }}
               </el-tag>
               <span style="margin-left: 8px; color: #909399; font-size: 12px">
-                (后端评估为准)
+                {{ t('change.field.estimatedHint') }}
               </span>
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="变更标题" prop="changeTitle">
-          <el-input v-model="form.changeTitle" placeholder="简要描述" />
+        <el-form-item :label="t('change.field.changeTitle')" prop="changeTitle">
+          <el-input v-model="form.changeTitle" :placeholder="t('change.placeholder.changeTitle')" />
         </el-form-item>
-        <el-form-item label="变更原因">
+        <el-form-item :label="t('change.field.changeReason')">
           <el-input v-model="form.changeReason" type="textarea" :rows="2" />
         </el-form-item>
-        <el-form-item label="详细说明">
+        <el-form-item :label="t('change.field.changeDesc')">
           <el-input v-model="form.changeDesc" type="textarea" :rows="3" />
         </el-form-item>
         <el-row :gutter="16">
           <el-col :span="6">
-            <el-form-item label="预算影响">
-              <el-input v-model.number="form.budgetImpact" type="number" placeholder="元" />
+            <el-form-item :label="t('change.field.budgetImpact')">
+              <el-input v-model.number="form.budgetImpact" type="number" :placeholder="t('change.unit.yuan')" />
             </el-form-item>
           </el-col>
           <el-col :span="6">
-            <el-form-item label="合同影响">
-              <el-input v-model.number="form.contractImpact" type="number" placeholder="元" />
+            <el-form-item :label="t('change.field.contractImpact')">
+              <el-input v-model.number="form.contractImpact" type="number" :placeholder="t('change.unit.yuan')" />
             </el-form-item>
           </el-col>
           <el-col :span="6">
-            <el-form-item label="进度影响(天)">
+            <el-form-item :label="t('change.field.scheduleImpact')">
               <el-input v-model.number="form.scheduleImpactDays" type="number" />
             </el-form-item>
           </el-col>
           <el-col :span="6">
-            <el-form-item label="利润影响">
-              <el-input v-model.number="form.profitImpact" type="number" placeholder="元" />
+            <el-form-item :label="t('change.field.profitImpact')">
+              <el-input v-model.number="form.profitImpact" type="number" :placeholder="t('change.unit.yuan')" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-row :gutter="16">
           <el-col :span="8">
-            <el-form-item label="影响 WBS 数">
+            <el-form-item :label="t('change.field.affectedWbs')">
               <el-input v-model.number="form.affectedWbsCount" type="number" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="影响人员数">
+            <el-form-item :label="t('change.field.affectedStaff')">
               <el-input v-model.number="form.affectedStaffCount" type="number" />
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="关联合同 ID">
+            <el-form-item :label="t('change.field.contractId')">
               <el-input v-model.number="form.contractId" type="number" />
             </el-form-item>
           </el-col>
         </el-row>
-        <el-form-item label="备注">
+        <el-form-item :label="t('common.column.remark')">
           <el-input v-model="form.remark" type="textarea" :rows="2" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" :loading="submitting" @click="submitForm">提交</el-button>
+        <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">{{ t('common.submit') }}</el-button>
       </template>
     </el-dialog>
 
     <!-- 详情抽屉 -->
-    <el-drawer v-model="detailVisible" title="变更详情" size="60%">
+    <el-drawer v-model="detailVisible" :title="t('change.dialog.detail')" size="60%">
       <div v-loading="detailLoading">
         <template v-if="detail">
           <el-descriptions :column="2" border>
-            <el-descriptions-item label="变更编号">{{ detail.changeCode }}</el-descriptions-item>
-            <el-descriptions-item label="状态">
+            <el-descriptions-item :label="t('change.field.changeCode')">{{ detail.changeCode }}</el-descriptions-item>
+            <el-descriptions-item :label="t('common.column.status')">
               <StatusTag :value="detail.status" :map="statusMap" />
             </el-descriptions-item>
-            <el-descriptions-item label="类型">
+            <el-descriptions-item :label="t('common.column.type')">
               <el-tag v-if="typeMap[detail.changeType]" :color="typeMap[detail.changeType].color" effect="light" size="small" style="color: #fff; border: none">
                 {{ typeMap[detail.changeType].label }}
               </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="影响等级">
+            <el-descriptions-item :label="t('change.field.impactLevel')">
               <el-tag v-if="riskMap[detail.riskLevelAfter as string]" :type="detail.riskLevelAfter === 'HIGH' ? 'danger' : detail.riskLevelAfter === 'MEDIUM' ? 'warning' : 'success'" size="small">
                 {{ riskMap[detail.riskLevelAfter as string].label }}
               </el-tag>
             </el-descriptions-item>
-            <el-descriptions-item label="重大变更">
-              <el-tag v-if="detail.majorFlag === 1" type="danger" size="small">是</el-tag>
-              <span v-else>否</span>
+            <el-descriptions-item :label="t('change.field.majorChange')">
+              <el-tag v-if="detail.majorFlag === 1" type="danger" size="small">{{ t('common.yes') }}</el-tag>
+              <span v-else>{{ t('common.no') }}</span>
             </el-descriptions-item>
-            <el-descriptions-item label="项目 ID">{{ detail.initiationId }}</el-descriptions-item>
-            <el-descriptions-item label="标题" :span="2">{{ detail.changeTitle }}</el-descriptions-item>
-            <el-descriptions-item label="原因" :span="2">{{ detail.changeReason || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="详细说明" :span="2">{{ detail.changeDesc || '-' }}</el-descriptions-item>
-            <el-descriptions-item label="预算影响">{{ fmtImpact(detail.budgetImpact) }}</el-descriptions-item>
-            <el-descriptions-item label="合同影响">{{ fmtImpact(detail.contractImpact) }}</el-descriptions-item>
-            <el-descriptions-item label="进度影响">{{ fmtImpact(detail.scheduleImpactDays) }} 天</el-descriptions-item>
-            <el-descriptions-item label="利润影响">{{ fmtPct(detail.profitImpactPct) }}</el-descriptions-item>
-            <el-descriptions-item label="申请人">{{ detail.applicantName }}</el-descriptions-item>
-            <el-descriptions-item label="创建时间">{{ detail.createdAt }}</el-descriptions-item>
-            <el-descriptions-item v-if="detail.approverRoles" label="需审批角色" :span="2">
+            <el-descriptions-item :label="t('change.field.initiationId')">{{ detail.initiationId }}</el-descriptions-item>
+            <el-descriptions-item :label="t('common.column.title')" :span="2">{{ detail.changeTitle }}</el-descriptions-item>
+            <el-descriptions-item :label="t('change.field.changeReason')" :span="2">{{ detail.changeReason || '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="t('change.field.changeDesc')" :span="2">{{ detail.changeDesc || '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="t('change.field.budgetImpact')">{{ fmtImpact(detail.budgetImpact) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('change.field.contractImpact')">{{ fmtImpact(detail.contractImpact) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('change.field.scheduleImpact')">{{ fmtImpact(detail.scheduleImpactDays) }} {{ t('change.unit.days') }}</el-descriptions-item>
+            <el-descriptions-item :label="t('change.field.profitImpact')">{{ fmtPct(detail.profitImpactPct) }}</el-descriptions-item>
+            <el-descriptions-item :label="t('common.column.applicant')">{{ detail.applicantName }}</el-descriptions-item>
+            <el-descriptions-item :label="t('common.column.createdAt')">{{ detail.createdAt }}</el-descriptions-item>
+            <el-descriptions-item v-if="detail.approverRoles" :label="t('change.field.approverRoles')" :span="2">
               <el-tag type="warning" size="small">{{ detail.approverRoles }}</el-tag>
             </el-descriptions-item>
-            <el-descriptions-item v-if="detail.remark" label="备注" :span="2">{{ detail.remark }}</el-descriptions-item>
+            <el-descriptions-item v-if="detail.remark" :label="t('common.column.remark')" :span="2">{{ detail.remark }}</el-descriptions-item>
           </el-descriptions>
         </template>
       </div>

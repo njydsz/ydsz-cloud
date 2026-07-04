@@ -21,6 +21,7 @@ import { useFormDraft } from '@/composables/useFormDraft'
 
 // ===== 列表查询状态 =====
 const loading = ref(false)
+const submitting = ref(false)
 const list = ref<ContractVO[]>([])
 const total = ref(0)
 const query = reactive({
@@ -186,39 +187,44 @@ async function openEdit(row: ContractVO) {
 /** 提交合同表单：新增模式创建合同，编辑模式更新合同，完成后刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
-  if (formMode.value === 'create') {
-    const dto: ContractCreateDTO = {
-      contractCode: form.contractCode!,
-      contractName: form.contractName!,
-      customerId: form.customerId!,
-      customerName: form.customerName,
-      contractType: form.contractType!,
-      amount: form.amount!,
-      currency: form.currency,
-      signDate: form.signDate,
-      effectiveDate: form.effectiveDate,
-      expireDate: form.expireDate,
-      paymentTerms: form.paymentTerms,
-      description: form.description,
+  submitting.value = true
+  try {
+    if (formMode.value === 'create') {
+      const dto: ContractCreateDTO = {
+        contractCode: form.contractCode!,
+        contractName: form.contractName!,
+        customerId: form.customerId!,
+        customerName: form.customerName,
+        contractType: form.contractType!,
+        amount: form.amount!,
+        currency: form.currency,
+        signDate: form.signDate,
+        effectiveDate: form.effectiveDate,
+        expireDate: form.expireDate,
+        paymentTerms: form.paymentTerms,
+        description: form.description,
+      }
+      await createContract(dto)
+      clearDraft()
+      ElMessage.success('创建成功')
+    } else if (form.id) {
+      await updateContract({
+        id: form.id,
+        contractName: form.contractName,
+        amount: form.amount,
+        signDate: form.signDate,
+        effectiveDate: form.effectiveDate,
+        expireDate: form.expireDate,
+        paymentTerms: form.paymentTerms,
+        description: form.description,
+      } as any)
+      ElMessage.success('更新成功')
     }
-    await createContract(dto)
-    clearDraft()
-    ElMessage.success('创建成功')
-  } else if (form.id) {
-    await updateContract({
-      id: form.id,
-      contractName: form.contractName,
-      amount: form.amount,
-      signDate: form.signDate,
-      effectiveDate: form.effectiveDate,
-      expireDate: form.expireDate,
-      paymentTerms: form.paymentTerms,
-      description: form.description,
-    } as any)
-    ElMessage.success('更新成功')
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    submitting.value = false
   }
-  dialogVisible.value = false
-  fetchList()
 }
 
 /**
@@ -414,7 +420,7 @@ onMounted(fetchList)
       <template #footer>
         <span v-if="draftTimeText" style="color: #909399; font-size: 12px; margin-right: auto;">草稿已保存 {{ draftTimeText }}</span>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
   </PageLayout>

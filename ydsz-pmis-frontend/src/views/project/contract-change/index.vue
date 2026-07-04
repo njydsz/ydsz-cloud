@@ -18,6 +18,7 @@ import { PC } from '@/constants/permissionCodes'
 
 // ===== 列表查询状态 =====
 const loading = ref(false)
+const submitting = ref(false)
 const list = ref<ContractChangeVO[]>([])
 const total = ref(0)
 const query = reactive({
@@ -111,10 +112,15 @@ function openCreate() {
 /** 提交新增变更表单：校验通过后创建并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
-  await createContractChange(form as ContractChangeCreateDTO)
-  ElMessage.success('创建成功')
-  dialogVisible.value = false
-  fetchList()
+  submitting.value = true
+  try {
+    await createContractChange(form as ContractChangeCreateDTO)
+    ElMessage.success('创建成功')
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    submitting.value = false
+  }
 }
 
 /** 变更单状态流转（需二次确认），状态机见文件头 */
@@ -235,7 +241,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
   </PageLayout>

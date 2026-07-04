@@ -71,6 +71,8 @@ function handleReset() {
   fetchList()
 }
 
+/** 提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
 // 弹窗 - 新建采购单
 const dialogVisible = ref(false)
 const formRef = ref<any>()
@@ -111,15 +113,22 @@ function openCreate() {
 
 /** 提交新建表单：校验通过后自动计算金额并触发预算强管控校验 */
 async function submitForm() {
-  await formRef.value?.validate()
-  // 自动计算金额 = 数量 × 单价
-  if (form.quantity && form.unitPrice) {
-    form.amount = Number(form.quantity) * Number(form.unitPrice)
+  try {
+    submitting.value = true
+    await formRef.value?.validate()
+    // 自动计算金额 = 数量 × 单价
+    if (form.quantity && form.unitPrice) {
+      form.amount = Number(form.quantity) * Number(form.unitPrice)
+    }
+    await createPurchase(form as PurchaseCreateDTO)
+    ElMessage.success('已创建（触发预算校验）')
+    dialogVisible.value = false
+    fetchList()
+  } catch {
+    // 拦截器已弹错，保持弹窗打开
+  } finally {
+    submitting.value = false
   }
-  await createPurchase(form as PurchaseCreateDTO)
-  ElMessage.success('已创建（触发预算校验）')
-  dialogVisible.value = false
-  fetchList()
 }
 
 /** 删除采购单（二次确认） */
@@ -234,7 +243,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
   </PageLayout>

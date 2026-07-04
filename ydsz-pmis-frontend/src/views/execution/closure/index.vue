@@ -83,6 +83,8 @@ function handleReset() {
   fetchList()
 }
 
+/** 提交按钮 loading 状态，防止重复提交 */
+const submitting = ref(false)
 /** 新建结项弹窗可见性 */
 const dialogVisible = ref(false)
 /** 表单引用（用于校验） */
@@ -121,11 +123,18 @@ function openCreate() {
 
 /** 提交新建结项单，校验通过后创建并刷新列表 */
 async function submitForm() {
-  await formRef.value?.validate()
-  await createProjectClosure(form as ProjectClosureCreateDTO)
-  ElMessage.success('已创建')
-  dialogVisible.value = false
-  fetchList()
+  try {
+    submitting.value = true
+    await formRef.value?.validate()
+    await createProjectClosure(form as ProjectClosureCreateDTO)
+    ElMessage.success('已创建')
+    dialogVisible.value = false
+    fetchList()
+  } catch {
+    // 拦截器已弹错，保持弹窗打开
+  } finally {
+    submitting.value = false
+  }
 }
 
 /**
@@ -230,7 +239,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button type="primary" :loading="submitting" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
   </PageLayout>

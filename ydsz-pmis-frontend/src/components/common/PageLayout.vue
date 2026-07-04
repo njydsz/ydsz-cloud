@@ -60,6 +60,10 @@ const props = defineProps({
   title: { type: String, default: '' },
   /** 表格区域最小宽度，用于内嵌 vxe-table */
   tableMinHeight: { type: [Number, String], default: 400 },
+  /** P0-E3: 表格固定高度（虚拟滚动前提），通过 slot scope 暴露给 #table 插槽 */
+  tableHeight: { type: [Number, String], default: 480 },
+  /** P0-E3: 是否启用虚拟滚动配置（通过 slot scope 暴露 scrollY 配置对象） */
+  virtualScroll: { type: Boolean, default: true },
   /** 分页条数选项 */
   pageSizes: { type: Array as PropType<number[]>, default: () => [10, 20, 50, 100] },
   /** 分页布局 */
@@ -155,6 +159,15 @@ const showEmpty = computed(
 const resolvedEmptyPreset = computed<EmptyPreset>(
   () => (props.emptyPreset || 'list') as EmptyPreset,
 )
+
+/**
+ * P0-E3: 通过 slot scope 暴露给 #table 插槽的虚拟滚动配置
+ * 页面可在 vxe-table 上直接绑定：:height="tableProps.height" :scroll-y="tableProps.scrollY"
+ */
+const tableProps = computed(() => ({
+  height: props.tableHeight,
+  scrollY: props.virtualScroll ? { enabled: true, gt: 50 } : { enabled: false },
+}))
 </script>
 
 <template>
@@ -213,7 +226,7 @@ const resolvedEmptyPreset = computed<EmptyPreset>(
           :block-height="Number(tableMinHeight) || 0"
           @action="onEmptyAction"
         />
-        <slot v-else name="table" />
+        <slot v-else name="table" :table-props="tableProps" />
       </div>
 
       <!-- 分页 -->

@@ -65,8 +65,10 @@ const form = reactive({
 })
 
 const agentOptions = ref<AgentTypeInfo[]>([])
+const agentOptionsLoading = ref(false)
 
 async function loadAgentOptions() {
+  agentOptionsLoading.value = true
   try {
     const { data } = await listAgents()
     agentOptions.value = (data as AgentTypeInfo[]) ?? []
@@ -79,6 +81,8 @@ async function loadAgentOptions() {
       { code: 'WIN_RATE_PREDICT',   desc: t('agent.orchestration.agentDesc.WIN_RATE_PREDICT') },
       { code: 'TIMESHEET_ANOMALY',  desc: t('agent.orchestration.agentDesc.TIMESHEET_ANOMALY') },
     ]
+  } finally {
+    agentOptionsLoading.value = false
   }
 }
 
@@ -238,6 +242,7 @@ onMounted(() => {
             <el-form-item :label="t('agent.orchestration.form.agentTypes')">
               <el-select
 v-model="form.agentTypes" multiple collapse-tags collapse-tags-tooltip
+                         :loading="agentOptionsLoading"
                          :placeholder="t('agent.orchestration.form.agentTypesPlaceholder')" style="width: 100%">
                 <el-option v-for="a in agentOptions" :key="a.code" :value="a.code" :label="`${a.code}（${a.desc}）`" />
               </el-select>
@@ -354,7 +359,7 @@ v-model="form.agentTypes" multiple collapse-tags collapse-tags-tooltip
       </el-row>
 
       <el-card shadow="never" :header="t('agent.orchestration.sections.trace')" style="margin-top: 16px">
-        <el-table :data="result.trace" stripe size="small">
+        <el-table v-loading="submitting" :data="result.trace" stripe size="small">
           <el-table-column type="index" width="56" label="#" />
           <el-table-column prop="agentType" :label="t('agent.orchestration.traceCols.agent')" width="200" />
           <el-table-column prop="mode" :label="t('agent.orchestration.traceCols.mode')" width="120">

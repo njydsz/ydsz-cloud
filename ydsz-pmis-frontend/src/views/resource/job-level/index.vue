@@ -16,6 +16,7 @@ const rate = ref<JobLevelRateVO | null>(null)
 const versions = ref<JobLevelRateVO[]>([])
 const selectedLevel = ref<string>('')
 const loading = ref(false)
+const rateLoading = ref(false)
 
 const segmentMap = computed<Record<string, string>>(() => ({
   PRIMARY: t('resource.jobLevel.segment.PRIMARY'),
@@ -45,6 +46,7 @@ async function fetchLevels() {
  */
 async function selectLevel(code: string) {
   selectedLevel.value = code
+  rateLoading.value = true
   try {
     const today = new Date().toISOString().slice(0, 10)
     const { data } = await getJobLevelRate(code, today)
@@ -57,6 +59,8 @@ async function selectLevel(code: string) {
     versions.value = data || []
   } catch {
     versions.value = []
+  } finally {
+    rateLoading.value = false
   }
 }
 
@@ -115,6 +119,7 @@ onMounted(fetchLevels)
             </div>
           </template>
 
+          <div v-loading="rateLoading">
           <el-empty v-if="!rate" :description="t('resource.jobLevel.rate.empty')" :image-size="80" />
           <el-descriptions v-else :column="3" border>
             <el-descriptions-item :label="t('resource.jobLevel.rate.fields.externalDaily')">
@@ -142,6 +147,7 @@ onMounted(fetchLevels)
             <el-descriptions-item :label="t('resource.jobLevel.rate.fields.expireDate')" :span="2">{{ rate.expireDate || t('resource.jobLevel.rate.fields.longTerm') }}</el-descriptions-item>
             <el-descriptions-item v-if="rate.description" :label="t('resource.jobLevel.rate.fields.description')" :span="3">{{ rate.description }}</el-descriptions-item>
           </el-descriptions>
+          </div>
         </el-card>
 
         <!-- 历史版本 -->
@@ -149,7 +155,7 @@ onMounted(fetchLevels)
           <template #header>
             <span>{{ t('resource.jobLevel.version.title') }}</span>
           </template>
-          <vxe-table :data="versions" border>
+          <vxe-table :data="versions" :loading="rateLoading" border>
             <vxe-column type="seq" title="#" width="50" />
             <vxe-column field="version" :title="t('resource.jobLevel.version.columns.version')" width="80" align="center" />
             <vxe-column field="externalDaily" :title="t('resource.jobLevel.version.columns.externalDaily')" width="140" />
