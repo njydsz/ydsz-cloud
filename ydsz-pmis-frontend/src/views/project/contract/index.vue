@@ -287,8 +287,8 @@ onMounted(fetchList)
       </el-button>
     </template>
 
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="contractCode" title="编码" width="160" />
         <vxe-column field="contractName" title="合同名称" min-width="200" show-overflow />

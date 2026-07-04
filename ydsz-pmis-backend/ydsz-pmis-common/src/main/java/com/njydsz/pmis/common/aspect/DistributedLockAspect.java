@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.aspect;
 
 import com.njydsz.pmis.common.annotation.DistributedLock;
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,13 +54,13 @@ public class DistributedLockAspect {
                     distributedLock.timeUnit());
             if (!acquired) {
                 log.warn("[DistributedLock] 获取锁失败: key={}, waitTime={}s", lockKey, distributedLock.waitTime());
-                throw BizException.of("RESOURCE_LOCKED", "操作过于频繁，请稍后重试");
+                throw new BizException(BizErrorCode.RESOURCE_LOCKED, "操作过于频繁，请稍后重试");
             }
             log.debug("[DistributedLock] 获取锁成功: key={}", lockKey);
             return joinPoint.proceed();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw BizException.of("RESOURCE_LOCKED", "操作被中断，请稍后重试");
+            throw new BizException(BizErrorCode.RESOURCE_LOCKED, "操作被中断，请稍后重试");
         } finally {
             if (acquired && lock.isHeldByCurrentThread()) {
                 lock.unlock();

@@ -185,8 +185,8 @@ onMounted(fetchList)
     </template>
 
     <!-- 数据表格：采购单明细 + 状态流转操作列 -->
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="purchaseCode" title="采购单号" width="160" />
         <vxe-column field="initiationName" title="项目" width="160" show-overflow />

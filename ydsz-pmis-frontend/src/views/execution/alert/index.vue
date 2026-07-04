@@ -123,6 +123,8 @@ function handleReset() {
 const submitting = ref(false)
 /** 预警提交弹窗可见性 */
 const dialogVisible = ref(false)
+/** 表单引用（用于校验） */
+const formRef = ref<any>()
 /** 预警提交表单数据 */
 const form = reactive<AlertDispatchDTO>({
   alertType: 'BUDGET',
@@ -152,6 +154,7 @@ function openCreate() {
 async function handleSubmit() {
   try {
     submitting.value = true
+    await formRef.value?.validate()
     await submitAlert(form)
     ElMessage.success('预警已提交')
     dialogVisible.value = false
@@ -308,7 +311,7 @@ onMounted(() => {
 
     <!-- 提交预警弹窗 -->
     <el-dialog v-model="dialogVisible" title="提交预警" width="600px">
-      <el-form :model="form" :rules="formRules" label-width="100px">
+      <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item label="预警类型" prop="alertType">
           <el-select v-model="form.alertType" style="width: 100%">
             <el-option v-for="t in Object.keys(typeMap)" :key="t" :label="typeMap[t]" :value="t" />

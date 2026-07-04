@@ -268,8 +268,8 @@ onMounted(fetchList)
       </el-button>
     </template>
 
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="invoiceCode" :title="t('finance.invoice.columns.code')" width="160" />
         <vxe-column field="invoiceNo" :title="t('finance.invoice.columns.no')" width="160" />

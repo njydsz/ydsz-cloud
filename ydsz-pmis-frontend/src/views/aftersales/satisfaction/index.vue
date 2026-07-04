@@ -260,8 +260,8 @@ onMounted(() => {
     </el-row>
 
     <!-- 评价表格 -->
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="satisfactionCode" :title="t('aftersales.satisfaction.columns.satisfactionCode')" width="180" />
         <vxe-column field="ticketCode" :title="t('aftersales.satisfaction.columns.ticketCode')" width="180" show-overflow />

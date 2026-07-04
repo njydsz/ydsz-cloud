@@ -40,6 +40,7 @@ const tagTypeMap = computed<Record<string, string>>(() => ({
 }))
 
 const dialogVisible = ref(false)
+const formRef = ref<any>()
 const form = reactive<EmployeeTagCreateDTO>({
   employeeId: 0,
   tagType: 'SKILL',
@@ -99,6 +100,7 @@ function openCreate() {
 
 /** 提交新增标签，成功后关闭弹窗并刷新员工标签列表 */
 async function submitForm() {
+  await formRef.value?.validate()
   submitting.value = true
   try {
     await addEmployeeTag(form)

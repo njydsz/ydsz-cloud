@@ -182,8 +182,8 @@ onMounted(fetchList)
     </template>
 
     <!-- 客户信用列表表格 -->
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="customerId" :title="t('finance.credit.columns.customerId')" width="100" align="center" />
         <vxe-column field="customerName" :title="t('finance.credit.columns.customerName')" min-width="200" show-overflow />

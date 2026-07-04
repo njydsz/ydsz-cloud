@@ -57,6 +57,7 @@ async function fetchList() {
 }
 
 const dialogVisible = ref(false)
+const formRef = ref<any>()
 // 分配动作表单（与后端 ResourceAssignmentCreateDTO 对齐）
 const form = reactive<ResourceAssignmentCreateDTO>({
   employeeId: 0,
@@ -92,6 +93,7 @@ function openAct(action: string) {
 
 /** 提交分配动作，成功后关闭弹窗并刷新列表 */
 async function submitForm() {
+  await formRef.value?.validate()
   submitting.value = true
   try {
     await actResourceAssignment(form)

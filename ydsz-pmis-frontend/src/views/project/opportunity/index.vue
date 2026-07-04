@@ -297,8 +297,8 @@ onMounted(fetchList)
       </el-button>
     </template>
 
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="opportunityCode" :title="$t('project.opportunity.columns.opportunityCode')" width="160" />
         <vxe-column field="opportunityName" :title="$t('project.opportunity.columns.opportunityName')" min-width="200" show-overflow />

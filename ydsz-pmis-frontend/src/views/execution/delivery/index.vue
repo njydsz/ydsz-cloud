@@ -201,8 +201,8 @@ onMounted(fetchList)
     </template>
 
     <!-- 交付物列表表格 -->
-    <template #table>
-      <vxe-table :data="list" :loading="loading" border stripe>
+    <template #table="scope">
+      <vxe-table :data="list" :loading="loading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="name" title="交付物名称" min-width="200" show-overflow />
         <vxe-column field="initiationName" title="项目" width="160" show-overflow />

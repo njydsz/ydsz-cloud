@@ -46,6 +46,8 @@ public enum BizErrorCode {
     DB_QUERY_TIMEOUT(10404, "数据库查询超时"),
     DB_CONNECTION_FAILED(10405, "数据库连接失败"),
     DB_LOCK_CONTENTION(10406, "数据库锁冲突"),
+    // 分布式锁冲突（P2-3：@DistributedLock 获取锁失败）
+    RESOURCE_LOCKED(10501, "资源锁冲突"),
 
     // ========== 2xxxx 认证授权 ==========
     UNAUTHORIZED(20001, "未登录"),

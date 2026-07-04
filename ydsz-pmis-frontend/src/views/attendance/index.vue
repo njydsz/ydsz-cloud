@@ -73,6 +73,8 @@ async function fetchAttendance() {
 
 /** 出勤登记弹窗显隐 */
 const attDialogVisible = ref(false)
+/** 出勤登记表单引用 */
+const attFormRef = ref()
 /** 出勤登记表单数据 */
 const attForm = reactive<AttendanceCreateDTO>({
   employeeId: 0,
@@ -102,6 +104,7 @@ function openAttCreate() {
 
 /** 提交出勤登记，调用后端登记接口并刷新列表 */
 async function submitAtt() {
+  await attFormRef.value?.validate()
   await recordAttendance(attForm)
   ElMessage.success(t('attendance.attendance.messages.recorded'))
   attDialogVisible.value = false
@@ -145,6 +148,8 @@ async function fetchOvertime() {
 
 /** 加班申请弹窗显隐 */
 const otDialogVisible = ref(false)
+/** 加班申请表单引用 */
+const otFormRef = ref()
 /** 加班申请表单数据 */
 const otForm = reactive<OvertimeCreateDTO>({
   employeeId: 0,
@@ -155,6 +160,15 @@ const otForm = reactive<OvertimeCreateDTO>({
   payRate: 1.5,
   reason: '',
 })
+/** 加班申请表单验证规则 */
+const otFormRules = computed(() => ({
+  employeeId: [{ required: true, message: t('attendance.overtime.rules.employeeIdRequired'), trigger: 'blur' }],
+  overtimeDate: [{ required: true, message: t('attendance.overtime.rules.dateRequired'), trigger: 'change' }],
+  startTime: [{ required: true, message: t('attendance.overtime.rules.startTimeRequired'), trigger: 'change' }],
+  endTime: [{ required: true, message: t('attendance.overtime.rules.endTimeRequired'), trigger: 'change' }],
+  overtimeType: [{ required: true, message: t('attendance.overtime.rules.typeRequired'), trigger: 'change' }],
+  reason: [{ required: true, message: t('attendance.overtime.rules.reasonRequired'), trigger: 'blur' }],
+}))
 
 /** 打开加班申请弹窗，重置表单为默认值 */
 function openOtCreate() {
@@ -172,6 +186,7 @@ function openOtCreate() {
 
 /** 提交加班申请，调用后端提交接口并刷新列表 */
 async function submitOt() {
+  await otFormRef.value?.validate()
   await submitOvertime(otForm)
   ElMessage.success(t('attendance.overtime.messages.submitted'))
   otDialogVisible.value = false
