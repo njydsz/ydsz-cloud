@@ -5797,7 +5797,7 @@ CREATE INDEX IF NOT EXISTS idx_pfhv_key      ON pmis_flow_his_variable(instance_
 
 -- 归档统计视图（管理员可见：实例总数/已归档/未归档）
 -- [SKIPPED-CLEANUP] DROP VIEW IF EXISTS pmis_view_flow_archive_stats;
-CREATE VIEW pmis_view_flow_archive_stats AS
+CREATE OR REPLACE VIEW pmis_view_flow_archive_stats AS
 SELECT
     COALESCE(main.flow_code, his.flow_code)   AS flow_code,
     COALESCE(main.tenant_id, his.tenant_id)   AS tenant_id,
@@ -7268,9 +7268,18 @@ CREATE TABLE IF NOT EXISTS pmis_rule_variable_def (
     updated_at      TIMESTAMP
 );
 
--- 唯一约束：同租户下变量名唯一
-ALTER TABLE pmis_rule_variable_def
-    ADD CONSTRAINT uk_rule_variable_name UNIQUE (tenant_id, var_name);
+-- 唯一约束：同租户下变量名唯一（幂等：约束已存在时跳过）
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'uk_rule_variable_name'
+          AND conrelid = 'pmis_rule_variable_def'::regclass
+    ) THEN
+        ALTER TABLE pmis_rule_variable_def
+            ADD CONSTRAINT uk_rule_variable_name UNIQUE (tenant_id, var_name);
+    END IF;
+END $$;
 
 -- 索引：按类别查询
 CREATE INDEX IF NOT EXISTS idx_rule_variable_category ON pmis_rule_variable_def (category);
