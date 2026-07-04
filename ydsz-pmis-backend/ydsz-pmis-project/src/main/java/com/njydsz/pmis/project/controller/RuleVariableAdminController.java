@@ -6,6 +6,7 @@ import com.njydsz.pmis.literule.expr.VariableDefinition;
 import com.njydsz.pmis.project.literule.DatabaseVariableRegistry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/api/v1/rule-variables")
 @RequiredArgsConstructor
+@Validated
 public class RuleVariableAdminController {
 
     private final DatabaseVariableRegistry variableRegistry;

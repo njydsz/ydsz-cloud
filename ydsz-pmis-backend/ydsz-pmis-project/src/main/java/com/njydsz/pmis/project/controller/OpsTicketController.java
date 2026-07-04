@@ -114,14 +114,14 @@ public class OpsTicketController {
     @Operation(summary = "工单详情")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/{id}")
-    public Result<OpsTicketDO> getById(@PathVariable @Min(1) Longid) {
+    public Result<OpsTicketDO> getById(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
     @Operation(summary = "按项目查询工单")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/by-initiation/{initiationId}")
-    public Result<List<OpsTicketDO>> listByInitiation(@PathVariable @Min(1) LonginitiationId) {
+    public Result<List<OpsTicketDO>> listByInitiation(@PathVariable @Min(1) Long initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
 }

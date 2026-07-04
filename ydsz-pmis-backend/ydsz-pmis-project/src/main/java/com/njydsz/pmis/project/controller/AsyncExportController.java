@@ -63,14 +63,14 @@ public class AsyncExportController {
 
     @GetMapping("/{recordId}/download")
     @Operation(summary = "获取下载URL")
-    public Map<String, Object> getDownloadUrl(@PathVariable @Min(1) LongrecordId) {
+    public Map<String, Object> getDownloadUrl(@PathVariable @Min(1) Long recordId) {
         String url = asyncExportService.getDownloadUrl(recordId);
         return Map.of("url", url != null ? url : "", "success", url != null);
     }
 
     @DeleteMapping("/{recordId}")
     @Operation(summary = "删除导出记录")
-    public Map<String, Object> deleteExportRecord(@PathVariable @Min(1) LongrecordId) {
+    public Map<String, Object> deleteExportRecord(@PathVariable @Min(1) Long recordId) {
         asyncExportService.deleteExportRecord(recordId);
         return Map.of("success", true);
     }

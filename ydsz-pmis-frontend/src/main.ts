@@ -34,8 +34,26 @@ import { setupPermissionDirective } from './directives/permission'
 import { setupLazyDirective } from './directives/lazy'
 // Sentry 错误监控（生产环境动态加载）
 import { initSentry, captureError } from './utils/sentry'
+// 日志工具（开发环境使用）
+import { logger } from './utils/logger'
 
 const app = createApp(App)
+
+/**
+ * P0-E1: 全局错误处理器
+ * 捕获以下未被子组件 ErrorBoundary 拦截的异常：
+ *  - 组件事件处理器抛出的同步/异步错误
+ *  - setup 中未被 onErrorCaptured 覆盖的同步错误
+ *  - 生命周期钩子中的错误
+ * 生产环境通过 Sentry 上报，开发环境输出到 console。
+ */
+app.config.errorHandler = (err, _instance, info) => {
+  if (import.meta.env.PROD) {
+    captureError(err, { componentTrace: info, source: 'app.errorHandler' })
+  } else {
+    logger.error('[app.errorHandler]', err, { info })
+  }
+}
 
 // 全量注册 Element Plus 图标，模板中可直接使用 <el-icon><Edit /></el-icon>
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
@@ -59,7 +77,19 @@ app.use(router)
 // 挂载应用
 app.mount('#app')
 
-// P2-1: 生产环境启用 Sentry 错误监控 + 全局 Promise rejection 捕获
+// P0-E1: 全局 Promise rejection 捕获（生产环境 + 开发环境均启用）
+// 生产环境：Sentry 上报
+// 开发环境：console 输出，便于及时发现未处理的 Promise 异常
+window.addEventListener('unhandledrejection', (event) => {
+  const reason = event.reason
+  if (import.meta.env.PROD) {
+    captureError(reason, { type: 'unhandledrejection' })
+  } else {
+    logger.error('[unhandledrejection]', reason)
+  }
+})
+
+// P2-1: 生产环境启用 Sentry 错误监控
 if (import.meta.env.PROD) {
   initSentry({
     dsn: import.meta.env.VITE_SENTRY_DSN || '',
@@ -67,9 +97,4 @@ if (import.meta.env.PROD) {
     release: import.meta.env.VITE_APP_VERSION,
     tracesSampleRate: 0.1,
   }, app, router)
-
-  // 捕获未处理的 Promise rejection
-  window.addEventListener('unhandledrejection', (event) => {
-    captureError(event.reason, { type: 'unhandledrejection' })
-  })
 }

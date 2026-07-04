@@ -81,7 +81,7 @@ public class ProjectClosureController {
     @Operation(summary = "删除结项记录")
     @PrePermission("closure:project:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Longid) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -95,7 +95,7 @@ public class ProjectClosureController {
     @Operation(summary = "结项详情")
     @PrePermission("closure:project:list")
     @GetMapping("/{id}")
-    public Result<ProjectClosureDO> get(@PathVariable @Min(1) Longid) {
+    public Result<ProjectClosureDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -108,7 +108,7 @@ public class ProjectClosureController {
     @Operation(summary = "按项目查询结项")
     @PrePermission("closure:project:list")
     @GetMapping("/by-initiation/{initiationId}")
-    public Result<ProjectClosureDO> getByInitiation(@PathVariable @Min(1) LonginitiationId) {
+    public Result<ProjectClosureDO> getByInitiation(@PathVariable @Min(1) Long initiationId) {
         return Result.ok(service.getByInitiation(initiationId));
     }
 
@@ -169,7 +169,7 @@ public class ProjectClosureController {
     @Operation(summary = "结项准入校验")
     @PrePermission("closure:project:list")
     @GetMapping("/{id}/admission-check")
-    public Result<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable @Min(1) Longid) {
+    public Result<ClosureAdmissionValidator.AdmissionCheck> checkAdmission(@PathVariable @Min(1) Long id) {
         return Result.ok(service.checkAdmission(id));
     }
 }

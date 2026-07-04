@@ -84,7 +84,7 @@ public class RiskController {
     @PrePermission("execution:risk:delete")
     @Idempotent(key = "risk:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Longid) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -98,7 +98,7 @@ public class RiskController {
     @Operation(summary = "详情")
     @PrePermission("execution:risk:list")
     @GetMapping("/{id}")
-    public Result<RiskVO> get(@PathVariable @Min(1) Longid) {
+    public Result<RiskVO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 

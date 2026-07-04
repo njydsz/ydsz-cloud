@@ -66,7 +66,7 @@ public class CustomerCreditController {
     @Operation(summary = "获取客户信用")
     @PrePermission("finance:credit:list")
     @GetMapping("/customer/{customerId}")
-    public Result<CustomerCreditDO> getByCustomer(@PathVariable @Min(1) LongcustomerId) {
+    public Result<CustomerCreditDO> getByCustomer(@PathVariable @Min(1) Long customerId) {
         return Result.ok(service.getByCustomer(customerId));
     }
 
@@ -79,7 +79,7 @@ public class CustomerCreditController {
     @Operation(summary = "客户风险画像")
     @PrePermission("finance:credit:list")
     @GetMapping("/profile/{customerId}")
-    public Result<Map<String, Object>> profile(@PathVariable @Min(1) LongcustomerId) {
+    public Result<Map<String, Object>> profile(@PathVariable @Min(1) Long customerId) {
         return Result.ok(service.profile(customerId));
     }
 

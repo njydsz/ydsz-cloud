@@ -47,7 +47,7 @@ function onError(err: unknown, info: string) {
 <template>
   <!-- el-config-provider 用于全局化 Element Plus 配置（国际化、尺寸、主题等） -->
   <el-config-provider :locale="elementLocale">
-    <ErrorBoundary @error="onError">
+    <ErrorBoundary :reset-on-route-change="false" @error="onError">
       <RouterView />
     </ErrorBoundary>
   </el-config-provider>

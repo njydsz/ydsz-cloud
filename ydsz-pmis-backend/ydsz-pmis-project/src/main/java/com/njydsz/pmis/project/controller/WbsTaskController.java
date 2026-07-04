@@ -86,7 +86,7 @@ public class WbsTaskController {
     @Operation(summary = "更新任务进度")
     @PrePermission("execution:wbs:update")
     @PutMapping("/{id}/progress")
-    public Result<Void> updateProgress(@PathVariable @Min(1) Longid,
+    public Result<Void> updateProgress(@PathVariable @Min(1) Long id,
                                    @RequestParam BigDecimal progressPct,
                                    @RequestParam(required = false) BigDecimal actualEffort) {
         service.updateProgress(id, progressPct, actualEffort);
@@ -103,7 +103,7 @@ public class WbsTaskController {
     @PrePermission("execution:wbs:delete")
     @Idempotent(key = "wbs-task:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Longid) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -117,7 +117,7 @@ public class WbsTaskController {
     @Operation(summary = "任务详情")
     @PrePermission("execution:wbs:list")
     @GetMapping("/{id}")
-    public Result<WbsTaskDO> get(@PathVariable @Min(1) Longid) {
+    public Result<WbsTaskDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -156,7 +156,7 @@ public class WbsTaskController {
     @Operation(summary = "项目下的任务列表")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}")
-    public Result<List<WbsTaskDO>> listByInitiation(@PathVariable @Min(1) LonginitiationId) {
+    public Result<List<WbsTaskDO>> listByInitiation(@PathVariable @Min(1) Long initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
@@ -169,7 +169,7 @@ public class WbsTaskController {
     @Operation(summary = "项目里程碑")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/milestones")
-    public Result<List<WbsTaskDO>> listMilestones(@PathVariable @Min(1) LonginitiationId) {
+    public Result<List<WbsTaskDO>> listMilestones(@PathVariable @Min(1) Long initiationId) {
         return Result.ok(service.listMilestones(initiationId));
     }
 
@@ -182,7 +182,7 @@ public class WbsTaskController {
     @Operation(summary = "项目整体进度（按工时加权）")
     @PrePermission("execution:wbs:list")
     @GetMapping("/initiation/{initiationId}/overall-progress")
-    public Result<BigDecimal> overallProgress(@PathVariable @Min(1) LonginitiationId) {
+    public Result<BigDecimal> overallProgress(@PathVariable @Min(1) Long initiationId) {
         return Result.ok(service.calcOverallProgress(initiationId));
     }
 

@@ -10,6 +10,7 @@ import Sidebar from './components/Sidebar.vue'
 import AppHeader from './components/AppHeader.vue'
 import TagsView from './components/TagsView.vue'
 import MainContent from './components/MainContent.vue'
+import RouteSkeleton from './components/RouteSkeleton.vue'
 import GlobalSearch from '@/components/common/GlobalSearch.vue'
 import ErrorBoundary from '@/components/common/ErrorBoundary.vue'
 import { useAppStore } from '@/store/modules/app'
@@ -49,7 +50,12 @@ function onError(err: unknown, info: string) {
           <RouterView v-slot="{ Component, route }">
             <Transition name="route" mode="out-in">
               <KeepAlive>
-                <component :is="Component" :key="route.fullPath" />
+                <Suspense>
+                  <component :is="Component" :key="route.fullPath" />
+                  <template #fallback>
+                    <RouteSkeleton />
+                  </template>
+                </Suspense>
               </KeepAlive>
             </Transition>
           </RouterView>

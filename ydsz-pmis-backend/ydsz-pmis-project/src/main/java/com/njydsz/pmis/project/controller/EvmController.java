@@ -64,7 +64,7 @@ public class EvmController {
     @Operation(summary = "详情")
     @PrePermission("execution:evm:list")
     @GetMapping("/{id}")
-    public Result<EvmMeasureVO> get(@PathVariable @Min(1) Longid) {
+    public Result<EvmMeasureVO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
@@ -149,7 +149,7 @@ public class EvmController {
     @Operation(summary = "删除")
     @PrePermission("execution:evm:delete")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Longid) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }

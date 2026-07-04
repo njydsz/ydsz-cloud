@@ -9,7 +9,10 @@ import com.njydsz.pmis.project.service.OpportunityFollowService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/v1/project/opportunity/follow")
 @RequiredArgsConstructor
+@Validated
 public class OpportunityFollowController {
 
     /** 商机跟进服务 */
@@ -56,8 +60,8 @@ public class OpportunityFollowController {
     @Operation(summary = "分页查询")
     @GetMapping("/page")
     public Result<Page<OpportunityFollowDO>> page(
-            @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
             @RequestParam(required = false) Long opportunityId) {
         return Result.ok(service.page(page, size, opportunityId));
     }

@@ -73,7 +73,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "提交发票审批", bizType = "INVOICE")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable @Min(1) Longid, @RequestParam Long operatorId) {
+    public Result<Void> submit(@PathVariable @Min(1) Long id, @RequestParam Long operatorId) {
         service.submit(id, operatorId);
         return Result.ok();
     }
@@ -89,7 +89,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批通过", bizType = "INVOICE")
     @PutMapping("/{id}/approve")
-    public Result<Void> approve(@PathVariable @Min(1) Longid, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> approve(@PathVariable @Min(1) Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.approve(id, dto);
         return Result.ok();
     }
@@ -105,7 +105,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:approve")
     @OperationLog(module = "发票管理", action = "审批驳回", bizType = "INVOICE")
     @PutMapping("/{id}/reject")
-    public Result<Void> reject(@PathVariable @Min(1) Longid, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> reject(@PathVariable @Min(1) Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.reject(id, dto);
         return Result.ok();
     }
@@ -121,7 +121,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:issue")
     @OperationLog(module = "发票管理", action = "财务开具发票", bizType = "INVOICE")
     @PutMapping("/{id}/issue")
-    public Result<Void> issue(@PathVariable @Min(1) Longid, @Valid @RequestBody InvoiceApprovalDTO dto) {
+    public Result<Void> issue(@PathVariable @Min(1) Long id, @Valid @RequestBody InvoiceApprovalDTO dto) {
         service.issue(id, dto);
         return Result.ok();
     }
@@ -138,7 +138,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:reverse")
     @OperationLog(module = "发票管理", action = "红冲发票", bizType = "INVOICE")
     @PutMapping("/{id}/reverse")
-    public Result<Void> redReverse(@PathVariable @Min(1) Longid,
+    public Result<Void> redReverse(@PathVariable @Min(1) Long id,
                               @RequestParam Long operatorId,
                               @RequestParam(required = false) String comment) {
         service.redReverse(id, operatorId, comment);
@@ -157,7 +157,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:status")
     @OperationLog(module = "发票管理", action = "取消发票", bizType = "INVOICE")
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable @Min(1) Longid,
+    public Result<Void> cancel(@PathVariable @Min(1) Long id,
                           @RequestParam Long operatorId,
                           @RequestParam(required = false) String comment) {
         service.cancel(id, operatorId, comment);
@@ -174,7 +174,7 @@ public class InvoiceController {
     @PrePermission("finance:invoice:delete")
     @OperationLog(module = "发票管理", action = "删除发票", bizType = "INVOICE")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Longid) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -188,7 +188,7 @@ public class InvoiceController {
     @Operation(summary = "详情")
     @PrePermission("finance:invoice:list")
     @GetMapping("/{id}")
-    public Result<InvoiceDO> get(@PathVariable @Min(1) Longid) {
+    public Result<InvoiceDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 

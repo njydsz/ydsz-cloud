@@ -15,6 +15,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,7 +71,7 @@ public class TimeEntryController {
     @PrePermission("execution:time:approve")
     @Idempotent(key = "time-entry:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable @Min(1) Longid) {
+    public Result<Void> submit(@PathVariable @Min(1) Long id) {
         service.submit(id);
         return Result.ok();
     }
@@ -99,7 +100,7 @@ public class TimeEntryController {
     @PrePermission("execution:time:delete")
     @Idempotent(key = "time-entry:delete", ttlSeconds = 5, message = "请勿重复提交")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Longid) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -113,7 +114,7 @@ public class TimeEntryController {
     @Operation(summary = "工时详情")
     @PrePermission("execution:time:list")
     @GetMapping("/{id}")
-    public Result<TimeEntryDO> get(@PathVariable @Min(1) Longid) {
+    public Result<TimeEntryDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 

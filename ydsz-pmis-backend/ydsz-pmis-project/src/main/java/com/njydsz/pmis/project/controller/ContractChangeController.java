@@ -65,7 +65,7 @@ public class ContractChangeController {
     @PrePermission("project:contract-change:approve")
     @Idempotent(key = "contract-change:update", ttlSeconds = 5, message = "请勿重复提交")
     @PutMapping("/{id}/submit")
-    public Result<Void> submit(@PathVariable @Min(1) Longid) {
+    public Result<Void> submit(@PathVariable @Min(1) Long id) {
         service.submit(id);
         return Result.ok();
     }
@@ -81,7 +81,7 @@ public class ContractChangeController {
     @Operation(summary = "审批通过")
     @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/approve")
-    public Result<Void> approve(@PathVariable @Min(1) Longid,
+    public Result<Void> approve(@PathVariable @Min(1) Long id,
                            @RequestParam Long approverId,
                            @RequestParam String approverName) {
         service.approve(id, approverId, approverName);
@@ -100,7 +100,7 @@ public class ContractChangeController {
     @Operation(summary = "驳回")
     @PrePermission("project:contract-change:approve")
     @PutMapping("/{id}/reject")
-    public Result<Void> reject(@PathVariable @Min(1) Longid,
+    public Result<Void> reject(@PathVariable @Min(1) Long id,
                           @RequestParam Long approverId,
                           @RequestParam String approverName,
                           @RequestParam(required = false) String reason) {
@@ -117,7 +117,7 @@ public class ContractChangeController {
     @Operation(summary = "变更详情")
     @PrePermission("project:contract-change:list")
     @GetMapping("/{id}")
-    public Result<ContractChangeDO> get(@PathVariable @Min(1) Longid) {
+    public Result<ContractChangeDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 

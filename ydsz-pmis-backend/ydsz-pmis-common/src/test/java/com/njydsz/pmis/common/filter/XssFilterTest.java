@@ -1,19 +1,23 @@
 package com.njydsz.pmis.common.filter;
 
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
-import org.springframework.mock.web.MockFilterChain;
 
-import jakarta.servlet.ServletException;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * XssFilter 单元测试
+ *
+ * <p>XssFilter 通过 {@link jakarta.servlet.http.HttpServletRequestWrapper} 包装请求，
+ * 测试时从 {@link MockFilterChain#getRequest()} 获取包装后的 HttpServletRequest。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0
@@ -22,20 +26,26 @@ class XssFilterTest {
 
     private final XssFilter filter = new XssFilter();
 
+    /**
+     * 执行过滤器并返回包装后的请求
+     */
+    private HttpServletRequest runFilter(MockHttpServletRequest request) throws ServletException, IOException {
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        MockFilterChain chain = new MockFilterChain();
+        filter.doFilterInternal(request, response, chain);
+        return (HttpServletRequest) chain.getRequest();
+    }
+
     @Test
     void shouldPassNormalValues() throws ServletException, IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter("name", "张三");
         request.addParameter("email", "test@example.com");
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
+        HttpServletRequest wrapped = runFilter(request);
 
-        filter.doFilterInternal(request, response, chain);
-
-        // 验证正常值未被修改（通过 wrapper 后正常参数应该保持不变）
-        String name = request.getParameter("name");
-        assertEquals("张三", name);
+        assertEquals("张三", wrapped.getParameter("name"));
+        assertEquals("test@example.com", wrapped.getParameter("email"));
     }
 
     @ParameterizedTest
@@ -51,17 +61,12 @@ class XssFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter("input", malicious);
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
+        HttpServletRequest wrapped = runFilter(request);
 
-        filter.doFilterInternal(request, response, chain);
-
-        String result = request.getParameter("input");
-        // 过滤后不应包含未转义的 <script> 标签
+        String result = wrapped.getParameter("input");
+        assertNotNull(result, "过滤后参数不应为 null");
         assertFalse(result.contains("<script>"), "应移除 <script> 标签: " + result);
-        // 过滤后不应包含 javascript: 协议
         assertFalse(result.toLowerCase().contains("javascript:"), "应移除 javascript: 协议: " + result);
-        // 过滤后不应包含 on* 事件
         assertFalse(result.toLowerCase().contains("onerror="), "应移除 onerror 事件: " + result);
         assertFalse(result.toLowerCase().contains("onclick="), "应移除 onclick 事件: " + result);
         assertFalse(result.toLowerCase().contains("onload="), "应移除 onload 事件: " + result);
@@ -70,12 +75,7 @@ class XssFilterTest {
     @Test
     void shouldHandleNullValues() throws ServletException, IOException {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        // 不添加参数
-
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
-
-        assertDoesNotThrow(() -> filter.doFilterInternal(request, response, chain));
+        assertDoesNotThrow(() -> runFilter(request));
     }
 
     @Test
@@ -83,12 +83,9 @@ class XssFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter("empty", "");
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
+        HttpServletRequest wrapped = runFilter(request);
 
-        filter.doFilterInternal(request, response, chain);
-
-        assertEquals("", request.getParameter("empty"));
+        assertEquals("", wrapped.getParameter("empty"));
     }
 
     @Test
@@ -96,14 +93,11 @@ class XssFilterTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.addParameter("text", "<div class=\"test\">Hello & World</div>");
 
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        MockFilterChain chain = new MockFilterChain();
+        HttpServletRequest wrapped = runFilter(request);
 
-        filter.doFilterInternal(request, response, chain);
-
-        String result = request.getParameter("text");
-        // HTML 特殊字符应被转义
-        assertTrue(result.contains("&lt;") || !result.contains("<"), "尖括号应被转义");
-        assertTrue(result.contains("&amp;") || !result.contains("&"), "& 应被转义");
+        String result = wrapped.getParameter("text");
+        assertNotNull(result);
+        assertTrue(result.contains("&lt;") || !result.contains("<"), "尖括号应被转义: " + result);
+        assertTrue(result.contains("&amp;") || !result.contains("&"), "& 应被转义: " + result);
     }
 }

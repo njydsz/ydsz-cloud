@@ -73,7 +73,7 @@ public class PaymentController {
     @PrePermission("finance:payment:status")
     @OperationLog(module = "回款管理", action = "确认到账", bizType = "PAYMENT")
     @PutMapping("/{id}/confirm")
-    public Result<Void> confirm(@PathVariable @Min(1) Longid, @RequestParam Long operatorId) {
+    public Result<Void> confirm(@PathVariable @Min(1) Long id, @RequestParam Long operatorId) {
         service.confirm(id, operatorId);
         return Result.ok();
     }
@@ -90,7 +90,7 @@ public class PaymentController {
     @PrePermission("finance:payment:status")
     @OperationLog(module = "回款管理", action = "取消回款", bizType = "PAYMENT")
     @PutMapping("/{id}/cancel")
-    public Result<Void> cancel(@PathVariable @Min(1) Longid,
+    public Result<Void> cancel(@PathVariable @Min(1) Long id,
                           @RequestParam Long operatorId,
                           @RequestParam(required = false) String reason) {
         service.cancel(id, operatorId, reason);
@@ -107,7 +107,7 @@ public class PaymentController {
     @PrePermission("finance:payment:delete")
     @OperationLog(module = "回款管理", action = "删除回款", bizType = "PAYMENT")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Longid) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -167,7 +167,7 @@ public class PaymentController {
     @Operation(summary = "详情")
     @PrePermission("finance:payment:list")
     @GetMapping("/{id}")
-    public Result<PaymentDO> get(@PathVariable @Min(1) Longid) {
+    public Result<PaymentDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 

@@ -61,7 +61,7 @@ public class ContractSupplementController {
      */
     @Operation(summary = "删除补充协议")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@PathVariable @Min(1) Longid) {
+    public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
         return Result.ok();
     }
@@ -74,7 +74,7 @@ public class ContractSupplementController {
      */
     @Operation(summary = "补充协议详情")
     @GetMapping("/{id}")
-    public Result<ContractSupplementDO> get(@PathVariable @Min(1) Longid) {
+    public Result<ContractSupplementDO> get(@PathVariable @Min(1) Long id) {
         return Result.ok(service.getById(id));
     }
 
