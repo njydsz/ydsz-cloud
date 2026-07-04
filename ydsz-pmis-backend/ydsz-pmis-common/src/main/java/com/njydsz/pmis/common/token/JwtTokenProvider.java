@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * JWT Token 工具 (Common)
@@ -28,7 +29,8 @@ import java.util.Map;
  * <ul>
  *   <li>HS256 至少 256 位 (32 字节); 启动时强制校验, 长度不足时直接抛异常</li>
  *   <li>支持 Base64 编码传入 (以 {@code base64:} 前缀标识)</li>
- *   <li>生产环境禁止使用默认密钥 (校验中含 "default" 关键字时拒绝启动)</li>
+ *   <li>生产环境禁止使用默认/弱密钥：检测到时直接抛异常拒绝启动（P0-C4）</li>
+ *   <li>非生产环境使用默认/弱密钥：打印 WARN 但允许启动（便于开发联调）</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -40,8 +42,21 @@ public class JwtTokenProvider {
 
     /** HS256 密钥最小字节数（256 位） */
     private static final int MIN_SECRET_BYTES = 32;
-    /** 默认密钥标识，用于启动时检测并告警 */
-    private static final String DEFAULT_KEY_MARKER = "default-jwt-secret-key";
+    /**
+     * 弱密钥标识集合：包含以下关键字（不区分大小写）即视为默认/占位/示例密钥。
+     *
+     * <p>覆盖常见占位符：default / change-me / your-secret / example / test /
+     * demo / placeholder / sample / template / xxx / 12345678 / qwerty。
+     */
+    private static final Set<String> WEAK_KEY_MARKERS = Set.of(
+            "default", "change-me", "change_me", "changeme",
+            "your-secret", "your_secret", "yoursecret",
+            "example", "test", "demo", "placeholder", "sample", "template",
+            "xxx", "12345678", "qwerty", "secret-key", "secret_key", "secretkey",
+            "pmis-user-module-jwt-secret"
+    );
+    /** 被视为生产环境的 profile 名（包含其一即视为生产） */
+    private static final Set<String> PROD_PROFILES = Set.of("prod", "production");
 
     /** JWT 签名密钥（明文或 Base64） */
     @Value("${pmis.jwt.secret:}")
@@ -58,6 +73,10 @@ public class JwtTokenProvider {
     /** 刷新 Token 过期时间（秒） */
     @Value("${pmis.jwt.refresh-expire-seconds:604800}")
     private long refreshExpireSeconds;
+
+    /** 当前激活的 Spring Profile（用于生产环境弱密钥拦截） */
+    @Value("${spring.profiles.active:default}")
+    private String activeProfile;
 
     /** 签名密钥对象 */
     private SecretKey key;
@@ -76,11 +95,28 @@ public class JwtTokenProvider {
     public void init() {
         this.key = buildKey();
         this.jwtParser = Jwts.parser().verifyWith(key).build();
-        log.info("[JWT] 初始化完成, issuer={}, access={}s, refresh={}s, defaultKey={}",
-                issuer, accessExpireSeconds, refreshExpireSeconds, defaultKeyUsed);
+        log.info("[JWT] 初始化完成, issuer={}, access={}s, refresh={}s, defaultKey={}, profile={}",
+                issuer, accessExpireSeconds, refreshExpireSeconds, defaultKeyUsed, activeProfile);
     }
 
-    private SecretKey buildKey() {
+    /**
+     * 构建签名密钥并进行强度/弱标识校验。
+     *
+     * <p>P0-C4 安全加固：
+     * <ol>
+     *   <li>密钥为空 → 抛 {@link IllegalStateException}</li>
+     *   <li>密钥长度不足 32 字节 → 抛 {@link IllegalStateException}</li>
+     *   <li>密钥含弱标识（default/change-me/your-secret 等）：
+     *     <ul>
+     *       <li>生产环境（profile 含 prod）→ 抛 {@link IllegalStateException} 拒绝启动</li>
+     *       <li>非生产环境 → 打印 WARN，标记 defaultKeyUsed=true</li>
+     *     </ul>
+     *   </li>
+     * </ol>
+     *
+     * @return HS256 签名密钥
+     */
+    SecretKey buildKey() {
         if (!StringUtils.hasText(secret)) {
             throw new IllegalStateException("pmis.jwt.secret 未配置");
         }
@@ -99,11 +135,47 @@ public class JwtTokenProvider {
                     "pmis.jwt.secret 至少 " + MIN_SECRET_BYTES + " 字节 (HS256 安全要求), 实际 "
                             + bytes.length + " 字节. 推荐通过 base64: 前缀传入 32 字节 Base64 编码密钥");
         }
-        if (secret.toLowerCase().contains(DEFAULT_KEY_MARKER)) {
+        if (isWeakSecret(secret)) {
             defaultKeyUsed = true;
+            if (isProductionProfile(activeProfile)) {
+                throw new IllegalStateException(
+                        "[JWT] 生产环境禁止使用默认/弱密钥! 检测到密钥含弱标识, profile="
+                                + activeProfile + ". 请通过环境变量 JWT_SECRET 注入强随机密钥"
+                                + "（建议 32 字节 Base64 编码，前缀 base64:）");
+            }
             log.warn("[JWT] 检测到默认/占位密钥, 严禁在生产环境使用! 请尽快轮换: pmis.jwt.secret");
         }
         return Keys.hmacShaKeyFor(bytes);
+    }
+
+    /**
+     * 判断密钥是否为弱密钥（包含预设弱标识）。
+     *
+     * <p>仅用于内部启动校验，不对外暴露。
+     *
+     * @param secret 原始密钥字符串
+     * @return true 表示弱密钥
+     */
+    static boolean isWeakSecret(String secret) {
+        if (secret == null || secret.isBlank()) {
+            return true;
+        }
+        String lower = secret.toLowerCase();
+        return WEAK_KEY_MARKERS.stream().anyMatch(lower::contains);
+    }
+
+    /**
+     * 判断当前 profile 是否为生产环境。
+     *
+     * @param profile spring.profiles.active 值
+     * @return true 表示生产环境
+     */
+    static boolean isProductionProfile(String profile) {
+        if (profile == null || profile.isBlank()) {
+            return false;
+        }
+        String lower = profile.toLowerCase();
+        return PROD_PROFILES.stream().anyMatch(lower::contains);
     }
 
     /**

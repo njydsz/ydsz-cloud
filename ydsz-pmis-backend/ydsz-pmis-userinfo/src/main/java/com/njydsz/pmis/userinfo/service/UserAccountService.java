@@ -139,4 +139,15 @@ public interface UserAccountService {
      * @param userId 用户 ID
      */
     void clearLoginFailCount(Long userId);
+
+    /**
+     * 升级密码哈希为 BCrypt（用于历史 MD5 密码的惰性升级）
+     *
+     * <p>登录时检测到 MD5 格式密码校验通过后，调用此方法将密码升级为 BCrypt。
+     * 升级失败不影响登录流程。
+     *
+     * @param userId     用户 ID
+     * @param bcryptHash BCrypt 哈希字符串
+     */
+    void upgradePasswordHash(Long userId, String bcryptHash);
 }

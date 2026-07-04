@@ -8,7 +8,7 @@
 # 关联:   与 cd-deploy.yml 串行 (CI 通过 → CD 构建镜像)
 #
 # Job 编排:
-#   1. build              编译全部 9 后端模块（Maven）
+#   1. test               编译 + 运行全部 9 后端模块单元测试（Maven）
 #   2. quality            Checkstyle + SpotBugs + SonarQube（SONAR_TOKEN 可选）
 #   3. security-scan      OWASP dependency-check（CVSS ≥ 7 直接失败）
 #
@@ -37,8 +37,8 @@ defaults:
     working-directory: ydsz-pmis-backend
 
 jobs:
-  build:
-    name: Build
+  test:
+    name: Build & Test
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -53,8 +53,18 @@ jobs:
           distribution: 'temurin'
           cache: maven
 
-      - name: Maven Build
-        run: mvn -B -ntp -DskipTests package
+      - name: Maven Test (含编译 + 单元测试 + JaCoCo 覆盖率)
+        run: mvn -B -ntp test
+
+      - name: Upload Test Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: |
+            ydsz-pmis-backend/**/target/surefire-reports/*.xml
+            ydsz-pmis-backend/**/target/site/jacoco/**
+          retention-days: 7
 
   # ============================================================
   # 质量门禁（SonarQube + Checkstyle）
@@ -62,7 +72,7 @@ jobs:
   quality:
     name: SonarQube & Checkstyle
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
     steps:
       - uses: actions/checkout@v4
         with:
@@ -103,7 +113,7 @@ jobs:
   security-scan:
     name: OWASP Dependency Check
     runs-on: ubuntu-latest
-    needs: build
+    needs: test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4

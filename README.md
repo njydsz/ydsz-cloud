@@ -171,13 +171,222 @@ literule  → common
 
 **5 分钟快速启动**：参考 [docs/QUICKSTART.md](docs/QUICKSTART.md)
 **详细部署手册**：参考 [docs/DEPLOY.md](docs/DEPLOY.md)
+**8 大中间件部署**（PG/Redis/Nacos/MinIO/Seata/RocketMQ/XXL-Job/ES）：参考 [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)
 
 ```bash
 # 0. 环境检查（首次部署前必跑）
-./deploy/scripts/check-env.sh   # Linux/macOS
-.\deploy\scripts\check-env.bat  # Windows
+./deploy/ubuntu/scripts/check-env.sh   # Linux/macOS
+.\deploy\windows\scripts\check-env.bat  # Windows
 
 # 1. 一键启动（基础设施 + 后端 + 前端）
-./deploy/scripts/start-all.sh
+./deploy/ubuntu/scripts/start-all.sh
+# 或 Windows
+.\deploy\windows\scripts\start-all.bat
 
-# 2. 单独启动
+# 2. 中间件管理（按操作系统）
+./deploy/ubuntu/infra-manager.sh status      # Ubuntu
+.\deploy\windows\infra-manager.ps1 status    # Windows
+
+# 3. 单独启动
+./deploy/ubuntu/scripts/start-all.sh --infra     # 仅基础设施
+./deploy/ubuntu/scripts/start-all.sh --backend   # 仅后端
+./deploy/ubuntu/scripts/start-all.sh --frontend  # 仅前端
+
+# 4. 停止
+./deploy/ubuntu/scripts/stop-all.sh
+./deploy/ubuntu/scripts/stop-all.sh --with-infra  # 含基础设施
+
+# 5. 访问
+# 前端:       http://localhost:5173
+# API 网关:   http://localhost:9000
+# Nacos:      http://127.0.0.1:8848/nacos (nacos/nacos)
+# MinIO:      http://127.0.0.1:9101 (minioadmin/minioadmin)
+# Seata:      http://127.0.0.1:7091 (admin/admin)
+# XXL-Job:    http://127.0.0.1:9100/xxl-job-admin (admin/123456)
+# ES:         http://127.0.0.1:9200
+# RocketMQ:   http://127.0.0.1:8080
+```
+
+### 5.3 测试命令
+
+```bash
+# 后端 - 9 模块测试
+mvn -pl ydsz-pmis-backend -am test
+
+# 前端单元测试
+cd ydsz-pmis-frontend && pnpm test
+
+# 前端类型检查
+pnpm type-check
+
+# 代码质量检查
+mvn checkstyle:check              # Checkstyle
+mvn org.jacoco:jacoco-maven-plugin:report   # 覆盖率
+mvn -DskipDependencyCheck=false org.owasp:dependency-check-maven:check  # OWASP
+```
+
+## 六、仓库结构
+
+```text
+ydsz-pmis/
+├── ydsz-pmis-backend/          # 后端 9 模块聚合工程（7 部署 + 2 库）
+│   ├── ydsz-pmis-gateway/      # 9000 API 网关
+│   ├── ydsz-pmis-common/       # 公共组件库 (不独立部署)
+│   ├── ydsz-pmis-system/       # 9001 文件/配置/审计/通知/消息模板
+│   ├── ydsz-pmis-userinfo/     # 9002 用户信息/RBAC/部门/人员/职级/字典/资源池/Bench/员工标签
+│   ├── ydsz-pmis-project/      # 9003 项目/执行/财务/报表 (商机→售后全生命周期)
+│   ├── ydsz-pmis-cronjob/      # 9004 XXL-JOB
+│   ├── ydsz-pmis-workflow/     # 9005 自研工作流 + BPMN
+│   ├── ydsz-pmis-agent/        # 9006 AI Agent
+│   └── ydsz-pmis-literule/     # --  轻量规则引擎 (库, 不独立部署)
+├── ydsz-pmis-frontend/         # 前端 (Vue 3.5 + Vite 5.4)
+│   ├── src/api/                # 1:1 后端 Controller 封装
+│   ├── src/views/              # 57 个业务页面
+│   ├── src/components/common/  # 20+ 通用组件 (含 vxe-table 通用列表)
+│   ├── src/composables/        # useECharts / useFeatureFlag / useReAuth / useFormDraft / useI18n
+│   ├── src/locales/            # 中/英文语言包
+│   └── src/mock/               # vite-plugin-mock 独立开发
+├── deploy/                     # 部署全套(按环境分子目录)
+│   ├── common/                 # 跨环境共享资源(中间件配置模板 + Nacos 共享配置 + SQL)
+│   │   ├── conf/               # 8 中间件原生部署配置(postgres/redis/nacos/minio/seata/rocketmq/xxl-job/elasticsearch)
+│   │   ├── nacos/              # PMIS 共享 Nacos 配置 ydsz-pmis-common.yaml
+│   │   └── sql/                # 通用 SQL(XXL-Job PG 表等)
+│   ├── docker/                 # Docker 容器化(8 中间件 + docker-compose.dev.yml)
+│   ├── k8s/                    # K8S 部署(Kustomize:base + overlays/dev|sit|uat|prod)
+│   ├── ubuntu/                 # Ubuntu 原生部署(中间件安装 + systemd)
+│   │   ├── install-pmis-infra.sh
+│   │   ├── infra-manager.sh
+│   │   └── scripts/            # 应用层启停(start-all/stop-all/check-env/import-nacos-config)
+│   ├── windows/                # Windows 原生部署(中间件安装 + NSSM)
+│   │   ├── install-pmis-infra.ps1
+│   │   ├── infra-manager.ps1
+│   │   └── scripts/            # 应用层启停(start-all/stop-all/check-env/import-nacos-config)
+│   └── .env.example            # 环境变量模板
+├── docs/                       # 文档库
+│   ├── QUICKSTART.md           # 5 分钟快速启动
+│   ├── DEPLOY.md               # 详细部署手册（应用层）
+│   ├── INFRASTRUCTURE.md       # 8 中间件 Docker/Windows/Ubuntu 三合一部署
+│   └── V1.0.0.sql              # 数据库初始化脚本（126 表 + 5 视图）
+├── .github/workflows/          # CI/CD 流水线
+│   ├── backend-ci.yml          # 后端 CI（构建 + 质量扫描）
+│   ├── frontend-ci.yml         # 前端 CI（lint + build）
+│   └── cd-deploy.yml           # CD 部署流水线
+└── README.md                   # 本文件
+```
+
+## 七、核心业务规则速查
+
+### 7.1 职级费率体系（L1-L18）
+
+| 职级段 | 月工资 | 公司月总成本 | 对内人天 | 对外人天 | 资源池 |
+|---|---|---|---|---|---|
+| L1-L3 | 4.5K-5.5K | 6.1K-7.5K | 281-344 | 422-516 | 备用池 |
+| L4-L6 | 6K-8K | 8.2K-10.9K | 375-500 | 563-750 | 事业部 |
+| L7-L9 | 9K-12K | 12.2K-16.3K | 563-750 | 844-1125 | 事业部 |
+| L10-L12 | 13K-16K | 17.7K-21.8K | 814-1001 | 1221-1501 | 事业部（预警减半） |
+| L13-L15 | 17K-20K | 23.1K-27.2K | 1063-1251 | 1595-1876 | 总部池 |
+| L16-L18 | 19K-21K | 24.6K-27.2K | 1131-1251 | 1697-1876 | 总部池（战略层） |
+
+### 7.2 预警阈值
+
+| 指标 | 绿色 | 黄色 | 红色 |
+|---|---|---|---|
+| CPI 成本绩效 | ≥ 0.95 | 0.85-0.95 | < 0.85 |
+| SPI 进度绩效 | ≥ 0.95 | 0.85-0.95 | < 0.85 |
+| 预算占用率 | < 80% | 80%-95% | ≥ 95% |
+| Bench 闲置 | — | 7 天 | 15 天 |
+| L10+ Bench | — | 3 天（减半） | 7 天（减半） |
+| 客户信用 | A 90+ | B 75-89 / C 60-74 | D < 60 |
+
+### 7.3 状态机收敛点（部分）
+
+- **InvoiceStatus**: DRAFT → SUBMITTED → APPROVED → ISSUED → (RED_REVERSED / CANCELLED 终态)
+- **ContractStatus**: DRAFT → REVIEWING → APPROVED → SIGNED → (CLOSED / TERMINATED)
+- **ChangeStatus**: DRAFT → SUBMITTED → UNDER_REVIEW → APPROVED/REJECTED → (CLOSED / CANCELLED)
+- **ClosureStatus**: DRAFT → SUBMITTED → APPROVED → (ARCHIVED / REJECTED)
+- **WbsTaskStatus**: PLANNED → IN_PROGRESS → (BLOCKED) → IN_REVIEW → COMPLETED / CANCELLED
+- **OpportunityStatus**: NEW → QUALIFIED → (WON → CONVERTED 终态) / (LOST 终态) / ON_HOLD
+- **OpsTicketStatus**: OPEN → TRIAGED → IN_PROGRESS → (RESOLVED / ESCALATED) → CLOSED
+
+## 八、批次交付总览
+
+| 批次 | 主题 | 关键交付 |
+|---|---|---|
+| 1-12 | 核心业务 | 14 模块 + 34 业务页面 + 主数据流 |
+| 13 | 用户中心强化 | 2FA + Session + 登录审计 + 数据导出审计 + 二次认证 + 6 模块补全 60 测试 |
+| 14-15 | 报表与驾驶舱 | EVM 看板 + Cockpit 6 KPI + 高级报表 6 类 + 5 张聚合 SQL 视图 |
+| 16 | AI Agent 编排 | 4 策略 + Blackboard + 50 测试类 |
+| 17 | JobHandler 重构 | cronjob→execution 跨模块 Feign 化 |
+| 18-19 | 工作流 v1.1 + 质量门禁 | Checkstyle + 工作流 110 测试 |
+| 20 | 混沌工程 + 金丝雀 | ChaosService + 5 类实验 |
+| 21 | literule 规则引擎 | Aviator 表达式 + 规则链 + 阈值注入 + dry-run |
+| 22 | 工作流 v2 | 设计器数据 API + 表单引擎 + 通知渠道 + 审批人去重 + 导入导出 + 50 步模拟 |
+| 23 | 模板与监控 | 流程模板 + 流程监控仪表盘 + 流程自动触发 |
+| 24 | chaos-dashboard | 前端 4 KPI + 2 ECharts + 实验 CRUD + Dry-Run + 5s 轮询 |
+| 25 | 售后管理 | 质保期 + 运维工单 P1-P4 SLA + 满意度 9 测试类 |
+| 26 | v1.1 优化 | Seata + WebSocket + CI 门禁 + ES + 文件增强 + 报表 + 批量操作等 24 项 |
+| 27 | v1.2 优化 | Sentry 接入 + Redis 配置补全 + BFF + 工作流事件联动 + EasyExcel + ErrorBoundary + 暗黑模式 + 限流启用 + RocketMQ + i18n 6 页面 + PWA 等 |
+| 28 | v1.3 国际化与代码优化 | i18n 基础设施 + 中英文语言包 + 多模块重构 + literule 计算类迁移 + Nacos 分组统一 + 端口对齐 |
+
+**当前状态**：批次 28 已完成；下一阶段（批次 29+）规划等保测评 / 多租户改造，按业务节奏启动。
+
+## 九、质量与可观测性
+
+| 维度 | 指标 / 工具 | 阈值 / 现状 |
+|---|---|---|
+| 后端单测 | JUnit 5 + Mockito + AssertJ | 111 测试类，本地 `mvn test` 通过 |
+| 后端覆盖率 | JaCoCo | 行覆盖 ≥ 60%，分支覆盖 ≥ 50%（门禁配置就绪，CI 待启用） |
+| 前端单测 | Vitest + Vue Test Utils | 7 个测试文件，本地 `pnpm test` 通过 |
+| 前端类型 | vue-tsc --noEmit | 0 错 |
+| 前端 Lint | ESLint + Prettier | CI 阻断 |
+| 静态检查 | Checkstyle（failsOnError=true） | CI 阻断 |
+| 静态分析 | SpotBugs + FindSecBugs（Low 阈值） | CI 阻断 |
+| 依赖漏洞 | OWASP dependency-check（CVSS ≥ 7 阻断） | 默认跳过，CI 中 -DskipDependencyCheck=false 启用 |
+| 异常聚合 | Sentry（前端 + 后端 dynamic import） | 默认关闭，生产环境手动启用 |
+| 链路追踪 | TraceId Filter + Logback MDC | 单服务内 TraceId 透传，跨服务追踪待接入 |
+| 健康检查 | Spring Boot Actuator | `/actuator/health` 就绪 |
+| 日志 | Logback + JSON 结构化（logstash-logback-encoder） | 文件输出，ELK 聚合待接入 |
+
+## 十、文档导航
+
+### 10.1 现有文档
+
+| 文档 | 链接 |
+|---|---|
+| 5 分钟快速启动 | [docs/QUICKSTART.md](docs/QUICKSTART.md) |
+| 详细部署手册 | [docs/DEPLOY.md](docs/DEPLOY.md) |
+| 数据库初始化脚本 | [docs/V1.0.0.sql](docs/V1.0.0.sql) |
+
+> **说明**: 项目规范、运维手册、安全合规、API 文档等将在后续批次补齐。当前所有规范与决策记录请参考代码注释与项目记忆（`.trae-cn/memory/projects/`）。
+
+### 10.2 API 文档
+
+- 后端启动后访问 Swagger UI: `http://localhost:{port}/swagger-ui.html`（springdoc-openapi 已集成）
+- 前端有 `scripts/openapi-gen.mjs` 脚本可基于 OpenAPI 生成前端 API 客户端
+
+## 十一、团队
+
+| 角色 | 人数 | 备注 |
+|---|---|---|
+| 项目经理 | 1 | 批次化交付 + 验收 |
+| 产品经理 | 1 | PRD V3.x 演进 |
+| 前端开发 | 2-3 | Vue 3.5 + 设计器 |
+| 后端开发 | 3-4 | 微服务 + 工作流 + 规则引擎 |
+| 测试 | 1-2 | 自动化 + 性能 |
+| UI 设计 | 1 |  |
+| 数据工程师（二期+） | 1 |  |
+| AI 工程师（三期+） | 1 | Agent + LLM Provider |
+| 运维工程师（SRE） | 1 | 部署 / 监控 |
+
+## 十二、版本与许可
+
+- **当前版本**: v1.3.0-SNAPSHOT（批次 28 完成，2026-07-04）
+- **首发版本**: v1.0.0 GA（2026-06-30）
+- **文档密级**: 内部受控
+- **仓库地址**: `https://gitlab.njydsz.com/ydsz/oursource/ydsz-pmis`
+- **许可**: 南京云顶数字科技有限公司内部使用
+
+---
+
+> 本 README 由 PMIS 团队维护，与代码同步更新（v1.3.0_2026-07-04）。
+> 任何变更请走 PR + Code Review 流程。

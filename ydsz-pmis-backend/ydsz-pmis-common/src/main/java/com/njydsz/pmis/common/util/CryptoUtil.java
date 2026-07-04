@@ -2,6 +2,7 @@ package com.njydsz.pmis.common.util;
 
 import cn.hutool.core.util.StrUtil;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.util.DigestUtils;
 
 import javax.crypto.Cipher;
@@ -23,7 +24,7 @@ import java.util.Base64;
  * <p>提供 4 类能力:
  * <ul>
  *   <li>摘要: MD5 / SHA-256</li>
- *   <li>密码哈希: 随机盐 MD5 / PBKDF2-HMAC-SHA256</li>
+ *   <li>密码哈希: BCrypt(推荐) / 随机盐 MD5(兼容历史) / PBKDF2-HMAC-SHA256</li>
  *   <li>对称加密: AES-256-GCM / SM4-GCM (国密, 需 BouncyCastle)</li>
  *   <li>HMAC 签名: SHA-256</li>
  * </ul>
@@ -117,14 +118,63 @@ public final class CryptoUtil {
 
     // ==================== 密码哈希 ====================
 
+    /** BCrypt 编码器（cost=12，OWASP ASVS V2.4.2 推荐值） */
+    private static final BCryptPasswordEncoder BCRYPT_ENCODER = new BCryptPasswordEncoder(12);
+
     /**
-     * 密码加盐 (MD5 + 8 位随机盐)
+     * 使用 BCrypt 哈希密码（推荐）
      *
-     * <p>兼容历史数据，新系统建议改用 {@link #hashPasswordPBKDF2(String, byte[], int)}。
+     * <p>BCrypt 自带随机盐，无需单独存储盐字段。cost=12 在现代服务器上约 250ms/次，
+     * 兼顾安全性与性能。符合 OWASP ASVS V2.4.2 要求。
+     *
+     * @param rawPassword 明文密码
+     * @return BCrypt 哈希字符串（格式 {@code $2a$12$...}）
+     */
+    public static String hashPasswordBCrypt(String rawPassword) {
+        if (StrUtil.isBlank(rawPassword)) {
+            throw new IllegalArgumentException("密码不能为空");
+        }
+        return BCRYPT_ENCODER.encode(rawPassword);
+    }
+
+    /**
+     * 校验 BCrypt 密码
+     *
+     * @param rawPassword  明文密码
+     * @param hashedPassword BCrypt 哈希字符串
+     * @return true 表示校验通过
+     */
+    public static boolean verifyPasswordBCrypt(String rawPassword, String hashedPassword) {
+        if (StrUtil.hasBlank(rawPassword, hashedPassword)) {
+            return false;
+        }
+        return BCRYPT_ENCODER.matches(rawPassword, hashedPassword);
+    }
+
+    /**
+     * 判断密码哈希是否为 BCrypt 格式
+     *
+     * @param hashedPassword 密码哈希字符串
+     * @return true 表示是 BCrypt 格式（以 $2a$ / $2b$ / $2y$ 开头）
+     */
+    public static boolean isBCryptFormat(String hashedPassword) {
+        return hashedPassword != null
+                && (hashedPassword.startsWith("$2a$")
+                    || hashedPassword.startsWith("$2b$")
+                    || hashedPassword.startsWith("$2y$"));
+    }
+
+    /**
+     * 密码加盐 (MD5 + 8 位随机盐) — 已废弃，仅用于兼容历史数据
+     *
+     * <p>已废弃：新密码必须使用 {@link #hashPasswordBCrypt(String)}。
+     * 历史用户的 MD5 密码在下次登录时会惰性升级为 BCrypt。
      *
      * @param rawPassword 明文密码
      * @return [加密密码, 盐]
+     * @deprecated 使用 {@link #hashPasswordBCrypt(String)} 替代
      */
+    @Deprecated
     public static String[] encryptPassword(String rawPassword) {
         String salt = randomSalt(8);
         String encrypted = md5(rawPassword + salt);
@@ -132,13 +182,15 @@ public final class CryptoUtil {
     }
 
     /**
-     * 校验 MD5 加盐密码
+     * 校验 MD5 加盐密码 — 已废弃，仅用于兼容历史数据
      *
      * @param rawPassword 明文密码
      * @param encrypted   已加密密码
      * @param salt        盐
      * @return true 表示校验通过
+     * @deprecated 使用 {@link #verifyPasswordBCrypt(String, String)} 替代
      */
+    @Deprecated
     public static boolean verifyPassword(String rawPassword, String encrypted, String salt) {
         if (StrUtil.hasBlank(rawPassword, encrypted, salt)) {
             return false;

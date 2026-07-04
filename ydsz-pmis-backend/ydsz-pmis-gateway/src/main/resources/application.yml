@@ -51,14 +51,14 @@ spring:
           # 路径小写
           lower-case-service-id: true
       # ---------- 全局 CORS 配置 ----------
-      # 注意：allowedOriginPatterns 与 allowedOrigins 不能同时配置
-      # 生产环境应替换为白名单（不要使用 *）
+      # 安全说明: 生产环境必须通过 CORS_ALLOWED_ORIGINS 设置显式域名白名单
+      # dev 环境可留空(默认 *)，prod profile 下强制要求白名单
       globalcors:
         cors-configurations:
           '[/**]':
-            allowedOriginPatterns: "*"
-            allowedMethods: "*"
-            allowedHeaders: "*"
+            allowedOriginPatterns: ${CORS_ALLOWED_ORIGINS:*}
+            allowedMethods: "GET,POST,PUT,DELETE,OPTIONS,PATCH"
+            allowedHeaders: "Authorization,Content-Type,X-Requested-With,X-Access-Token,X-Trace-Id"
             exposedHeaders:
               # 暴露给前端 JS 读取的 token 头
               - Authorization

@@ -8,6 +8,7 @@
 #
 # Job 编排:
 #   1. lint-build         pnpm install (frozen-lockfile) → eslint → tsc + build
+#   2. test               pnpm test (vitest 单元测试)
 #
 # 工具版本:  Node.js 20 · pnpm 9 · Vue 3.5 · Vite 5.4
 #
@@ -62,3 +63,31 @@ jobs:
 
       - name: Type Check & Build
         run: pnpm run build
+
+  test:
+    name: Unit Test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: lint-build
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+          cache-dependency-path: ydsz-pmis-frontend/pnpm-lock.yaml
+
+      - name: Install Dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run Vitest
+        run: pnpm test

@@ -135,6 +135,11 @@
             <groupId>org.apache.seata</groupId>
             <artifactId>seata-spring-boot-starter</artifactId>
         </dependency>
+        <!-- Spring Security Crypto（BCrypt 密码哈希，仅引入 crypto 模块不引入完整 Security 框架） -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-crypto</artifactId>
+        </dependency>
 
         <!-- 单元测试 -->
         <dependency>

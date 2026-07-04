@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-agent
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-agent
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-agent
+  template:
+    metadata:
+      labels:
+        app: ydsz-pmis-agent
+        tier: backend
+    spec:
+      containers:
+        - name: agent
+          image: ydsz-pmis/agent:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9006
+          envFrom:
+            - configMapRef:
+                name: pmis-common-config
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: 2000m
+              memory: 2Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9006
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-agent
+  namespace: pmis
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-agent
+  ports:
+    - name: http
+      port: 9006
+      targetPort: 9006

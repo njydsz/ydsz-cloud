@@ -1,0 +1,67 @@
+# PROD PodDisruptionBudget:确保滚动更新时至少有 1 个 Pod 在线
+
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-gateway
+  namespace: pmis
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-gateway
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-system
+  namespace: pmis
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-system
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-userinfo
+  namespace: pmis
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-userinfo
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-project
+  namespace: pmis
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: ydsz-pmis-project
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-workflow
+  namespace: pmis
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-workflow
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: ydsz-pmis-agent
+  namespace: pmis
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-agent

@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.common.security.SensitiveOperationEvent;
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -111,7 +112,7 @@ public class RequireReAuthAspect {
                 .expireAt(System.currentTimeMillis() + ann.ttlSeconds() * 1000L)
                 .traceId(TraceIdUtil.get())
                 .clientIp(request == null ? "" : clientIp(request))
-                .tenantId(1L)
+                .tenantId(TenantContext.getTenantId())
                 .build();
         publisher.publishEvent(event);
     }

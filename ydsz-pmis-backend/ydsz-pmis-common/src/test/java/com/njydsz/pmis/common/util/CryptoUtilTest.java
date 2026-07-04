@@ -193,6 +193,64 @@ class CryptoUtilTest {
         assertFalse(CryptoUtil.verifyPassword("raw", "enc", null));
     }
 
+    // ==================== BCrypt 密码哈希 ====================
+
+    @Test
+    @DisplayName("BCrypt - 哈希后应能校验通过")
+    void hashPasswordBCrypt_shouldBeVerifiable() {
+        String hash = CryptoUtil.hashPasswordBCrypt("myStrongPwd#2026");
+        assertNotNull(hash);
+        assertTrue(CryptoUtil.isBCryptFormat(hash));
+        assertTrue(CryptoUtil.verifyPasswordBCrypt("myStrongPwd#2026", hash));
+    }
+
+    @Test
+    @DisplayName("BCrypt - 相同明文多次哈希结果应不同（自带随机盐）")
+    void hashPasswordBCrypt_shouldProduceDifferentHashes() {
+        String h1 = CryptoUtil.hashPasswordBCrypt("samePassword123");
+        String h2 = CryptoUtil.hashPasswordBCrypt("samePassword123");
+        assertNotEquals(h1, h2, "BCrypt 自带随机盐，相同明文哈希结果应不同");
+        assertTrue(CryptoUtil.verifyPasswordBCrypt("samePassword123", h1));
+        assertTrue(CryptoUtil.verifyPasswordBCrypt("samePassword123", h2));
+    }
+
+    @Test
+    @DisplayName("BCrypt - 错误密码校验应失败")
+    void verifyPasswordBCrypt_shouldFailForWrongPassword() {
+        String hash = CryptoUtil.hashPasswordBCrypt("correctPwd#2026");
+        assertFalse(CryptoUtil.verifyPasswordBCrypt("wrongPwd", hash));
+    }
+
+    @Test
+    @DisplayName("BCrypt - 空参数应返回 false / 抛出异常")
+    void verifyPasswordBCrypt_shouldHandleBlank() {
+        String hash = CryptoUtil.hashPasswordBCrypt("correctPwd#2026");
+        assertFalse(CryptoUtil.verifyPasswordBCrypt(null, hash));
+        assertFalse(CryptoUtil.verifyPasswordBCrypt("raw", null));
+        assertFalse(CryptoUtil.verifyPasswordBCrypt("", hash));
+        assertThrows(IllegalArgumentException.class, () -> CryptoUtil.hashPasswordBCrypt(null));
+        assertThrows(IllegalArgumentException.class, () -> CryptoUtil.hashPasswordBCrypt(""));
+    }
+
+    @Test
+    @DisplayName("isBCryptFormat - 应正确识别 BCrypt 格式")
+    void isBCryptFormat_shouldRecognizeBCryptHashes() {
+        assertTrue(CryptoUtil.isBCryptFormat("$2a$12$abcdefghijklmnopqrstuv123456789012345678901234567890123456"));
+        assertTrue(CryptoUtil.isBCryptFormat("$2b$12$abcdefghijklmnopqrstuv123456789012345678901234567890123456"));
+        assertTrue(CryptoUtil.isBCryptFormat("$2y$10$abcdefghijklmnopqrstuv123456789012345678901234567890123456"));
+        assertFalse(CryptoUtil.isBCryptFormat("abcdef1234567890"));
+        assertFalse(CryptoUtil.isBCryptFormat(""));
+        assertFalse(CryptoUtil.isBCryptFormat(null));
+    }
+
+    @Test
+    @DisplayName("BCrypt - 哈希字符串应以 $2a$12$ 开头（cost=12）")
+    void hashPasswordBCrypt_shouldUseCostFactor12() {
+        String hash = CryptoUtil.hashPasswordBCrypt("testPwd#2026");
+        assertTrue(hash.startsWith("$2a$12$") || hash.startsWith("$2b$12$"),
+                "BCrypt 哈希应使用 cost=12，实际: " + hash);
+    }
+
     @Test
     @DisplayName("PBKDF2 密码哈希 - 正常哈希应能校验通过")
     void hashPasswordPBKDF2_shouldBeVerifiable() {

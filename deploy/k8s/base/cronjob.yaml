@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-cronjob
+  namespace: pmis
+  labels:
+    app: ydsz-pmis-cronjob
+    tier: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ydsz-pmis-cronjob
+  template:
+    metadata:
+      labels:
+        app: ydsz-pmis-cronjob
+        tier: backend
+    spec:
+      containers:
+        - name: cronjob
+          image: ydsz-pmis/cronjob:IMAGE_TAG
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9004
+          envFrom:
+            - configMapRef:
+                name: pmis-common-config
+          resources:
+            requests:
+              cpu: 250m
+              memory: 512Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 9004
+            initialDelaySeconds: 30
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ydsz-pmis-cronjob
+  namespace: pmis
+spec:
+  type: ClusterIP
+  selector:
+    app: ydsz-pmis-cronjob
+  ports:
+    - name: http
+      port: 9004
+      targetPort: 9004

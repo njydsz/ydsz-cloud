@@ -36,7 +36,7 @@ import java.util.List;
  * <ol>
  *   <li>校验图形验证码（Redis 5 分钟有效期）</li>
  *   <li>本地加载登录上下文（合并后直接调用 user 服务，无需 Feign）</li>
- *   <li>校验密码（MD5 + 随机盐）</li>
+ *   <li>校验密码（BCrypt 推荐，兼容历史 MD5 + 随机盐，登录成功后惰性升级为 BCrypt）</li>
  *   <li>校验用户状态（ENABLED / 锁定）</li>
  *   <li>生成 JWT（roles/permissions 写入 Claims）</li>
  * </ol>
@@ -147,10 +147,24 @@ public class AuthServiceImpl implements AuthService {
             throw new BizException(BizErrorCode.USER_DISABLED);
         }
 
-        // 5. 密码校验
-        if (!CryptoUtil.verifyPassword(dto.getPassword(), ctx.getPassword(), ctx.getSalt())) {
+        // 5. 密码校验（兼容 BCrypt 与历史 MD5；MD5 校验通过后惰性升级为 BCrypt）
+        boolean oldHashWasBcrypt = CryptoUtil.isBCryptFormat(ctx.getPassword());
+        boolean passwordOk = oldHashWasBcrypt
+                ? CryptoUtil.verifyPasswordBCrypt(dto.getPassword(), ctx.getPassword())
+                : CryptoUtil.verifyPassword(dto.getPassword(), ctx.getPassword(), ctx.getSalt());
+        if (!passwordOk) {
             recordLoginFailure(dto.getUsername());
             throw new BizException(BizErrorCode.PASSWORD_INCORRECT);
+        }
+        // 惰性升级：历史 MD5 密码登录成功后升级为 BCrypt（失败不影响登录流程）
+        if (!oldHashWasBcrypt) {
+            try {
+                userAccountService.upgradePasswordHash(ctx.getUserId(),
+                        CryptoUtil.hashPasswordBCrypt(dto.getPassword()));
+            } catch (Exception ex) {
+                log.warn("[Auth] 密码哈希惰性升级失败 userId={} reason={}",
+                        ctx.getUserId(), ex.getMessage());
+            }
         }
 
         // 6. 清除失败计数

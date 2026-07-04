@@ -1,0 +1,41 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+# DEV 环境:单实例 + DEBUG 日志 + 关闭资源限制
+# 用法:kubectl apply -k deploy/k8s/overlays/dev
+
+namespace: pmis-dev
+
+resources:
+  - ../../base
+
+namePrefix: dev-
+
+# 镜像 tag 替换(开发环境用 SNAPSHOT)
+images:
+  - name: ydsz-pmis/gateway
+    newTag: v1.3.0-SNAPSHOT
+  - name: ydsz-pmis/system
+    newTag: v1.3.0-SNAPSHOT
+  - name: ydsz-pmis/userinfo
+    newTag: v1.3.0-SNAPSHOT
+  - name: ydsz-pmis/project
+    newTag: v1.3.0-SNAPSHOT
+  - name: ydsz-pmis/cronjob
+    newTag: v1.3.0-SNAPSHOT
+  - name: ydsz-pmis/workflow
+    newTag: v1.3.0-SNAPSHOT
+  - name: ydsz-pmis/agent
+    newTag: v1.3.0-SNAPSHOT
+
+# 调试日志:把所有 PMIS 包日志设为 DEBUG
+configMapGenerator:
+  - name: pmis-common-config
+    behavior: merge
+    literals:
+      - LOGGING_LEVEL_COM_NJYDSZ_PMIS=DEBUG
+      - LOGGING_LEVEL_ROOT=INFO
+
+# 单实例 + 去掉资源限制
+patches:
+  - path: patch-replicas.yaml

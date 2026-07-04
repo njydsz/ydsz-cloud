@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.event.OperationLogEvent;
 import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -166,7 +167,7 @@ public class OperationLogAspect {
                 .errorMessage(error == null ? "" : error.getMessage())
                 .costMs(cost)
                 .traceId(TraceIdUtil.get())
-                .tenantId(1L)
+                .tenantId(TenantContext.getTenantId())
                 .timestamp(System.currentTimeMillis())
                 .build();
     }

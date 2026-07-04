@@ -1,0 +1,121 @@
+# PROD 资源限制:更严格的 requests/limits
+# 通过 strategic merge patch 修改 base 中 7 个服务的资源规格
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-gateway
+spec:
+  template:
+    spec:
+      containers:
+        - name: gateway
+          resources:
+            requests:
+              cpu: 500m
+              memory: 768Mi
+            limits:
+              cpu: 2000m
+              memory: 1.5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-system
+spec:
+  template:
+    spec:
+      containers:
+        - name: system
+          resources:
+            requests:
+              cpu: 500m
+              memory: 768Mi
+            limits:
+              cpu: 2000m
+              memory: 1.5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-userinfo
+spec:
+  template:
+    spec:
+      containers:
+        - name: userinfo
+          resources:
+            requests:
+              cpu: 500m
+              memory: 768Mi
+            limits:
+              cpu: 2000m
+              memory: 1.5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-project
+spec:
+  template:
+    spec:
+      containers:
+        - name: project
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1.5Gi
+            limits:
+              cpu: 4000m
+              memory: 3Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-cronjob
+spec:
+  template:
+    spec:
+      containers:
+        - name: cronjob
+          resources:
+            requests:
+              cpu: 500m
+              memory: 768Mi
+            limits:
+              cpu: 1500m
+              memory: 1.5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-workflow
+spec:
+  template:
+    spec:
+      containers:
+        - name: workflow
+          resources:
+            requests:
+              cpu: 500m
+              memory: 768Mi
+            limits:
+              cpu: 2000m
+              memory: 1.5Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ydsz-pmis-agent
+spec:
+  template:
+    spec:
+      containers:
+        - name: agent
+          resources:
+            requests:
+              cpu: 1000m
+              memory: 1.5Gi
+            limits:
+              cpu: 4000m
+              memory: 3Gi

@@ -87,7 +87,7 @@ public class DataExportAuditAspect {
                 .rowCount(rowCount)
                 .traceId(TraceIdUtil.get())
                 .clientIp(request != null ? clientIp(request) : "")
-                .tenantId(1L)
+                .tenantId(TenantContext.getTenantId())
                 .exportedAt(System.currentTimeMillis())
                 .build();
         publisher.publishEvent(event);

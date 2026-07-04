@@ -3,6 +3,8 @@ package com.njydsz.pmis.common.entity;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Set;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -155,5 +157,123 @@ class PageQueryTest {
     void pageQuery_shouldImplementSerializable() {
         PageQuery pageQuery = new PageQuery();
         assertInstanceOf(java.io.Serializable.class, pageQuery);
+    }
+
+    // ==================== P0-C3 orderBy 白名单校验 ====================
+
+    @Test
+    @DisplayName("ORDER_BY_PATTERN 常量应为 ^[a-zA-Z][a-zA-Z0-9_]*$")
+    void orderByPattern_shouldBeCorrect() {
+        assertEquals("^[a-zA-Z][a-zA-Z0-9_]*$", PageQuery.ORDER_BY_PATTERN);
+    }
+
+    @Test
+    @DisplayName("safeOrderBy - orderBy 为空应返回默认字段")
+    void safeOrderBy_emptyShouldReturnDefault() {
+        PageQuery q = new PageQuery();
+        assertEquals("create_time", q.safeOrderBy(Set.of("create_time"), "create_time"));
+    }
+
+    @Test
+    @DisplayName("safeOrderBy - orderBy 在白名单中应返回原值")
+    void safeOrderBy_inWhitelistShouldReturnOriginal() {
+        PageQuery q = new PageQuery();
+        q.setOrderBy("update_time");
+        Set<String> allowed = Set.of("create_time", "update_time", "id");
+        assertEquals("update_time", q.safeOrderBy(allowed, "create_time"));
+    }
+
+    @Test
+    @DisplayName("safeOrderBy - orderBy 不在白名单中应返回默认字段")
+    void safeOrderBy_notInWhitelistShouldReturnDefault() {
+        PageQuery q = new PageQuery();
+        q.setOrderBy("password");
+        Set<String> allowed = Set.of("create_time", "update_time");
+        assertEquals("create_time", q.safeOrderBy(allowed, "create_time"));
+    }
+
+    @Test
+    @DisplayName("safeOrderBy - orderBy 含特殊字符（SQL 注入尝试）应返回默认字段")
+    void safeOrderBy_sqlInjectionShouldReturnDefault() {
+        PageQuery q = new PageQuery();
+        // 模拟 SQL 注入尝试
+        q.setOrderBy("create_time; DROP TABLE pmis_user");
+        assertEquals("create_time", q.safeOrderBy(Set.of("create_time"), "create_time"));
+    }
+
+    @Test
+    @DisplayName("safeOrderBy - orderBy 含数字开头应返回默认字段（违反 PATTERN）")
+    void safeOrderBy_digitPrefixedShouldReturnDefault() {
+        PageQuery q = new PageQuery();
+        q.setOrderBy("1create_time");
+        assertEquals("create_time", q.safeOrderBy(Set.of("1create_time"), "create_time"));
+    }
+
+    @Test
+    @DisplayName("safeOrderBy - 白名单为空时应返回默认字段（保守策略）")
+    void safeOrderBy_emptyWhitelistShouldReturnDefault() {
+        PageQuery q = new PageQuery();
+        q.setOrderBy("create_time");
+        assertEquals("id", q.safeOrderBy(null, "id"));
+        assertEquals("id", q.safeOrderBy(Set.of(), "id"));
+    }
+
+    @Test
+    @DisplayName("safeOrderBy - 默认字段为 null 时应返回 null")
+    void safeOrderBy_nullDefaultShouldReturnNull() {
+        PageQuery q = new PageQuery();
+        assertNull(q.safeOrderBy(Set.of("create_time"), null));
+
+        q.setOrderBy("unknown_field");
+        assertNull(q.safeOrderBy(Set.of("create_time"), null));
+    }
+
+    @Test
+    @DisplayName("safeOrderDir - asc 应返回 asc（不区分大小写）")
+    void safeOrderDir_ascShouldReturnAsc() {
+        PageQuery q = new PageQuery();
+        q.setOrderDir("asc");
+        assertEquals("asc", q.safeOrderDir());
+
+        q.setOrderDir("ASC");
+        assertEquals("asc", q.safeOrderDir());
+
+        q.setOrderDir("Asc");
+        assertEquals("asc", q.safeOrderDir());
+    }
+
+    @Test
+    @DisplayName("safeOrderDir - desc 应返回 desc")
+    void safeOrderDir_descShouldReturnDesc() {
+        PageQuery q = new PageQuery();
+        q.setOrderDir("desc");
+        assertEquals("desc", q.safeOrderDir());
+
+        q.setOrderDir("DESC");
+        assertEquals("desc", q.safeOrderDir());
+    }
+
+    @Test
+    @DisplayName("safeOrderDir - 非法值应返回 desc（防 SQL 注入）")
+    void safeOrderDir_invalidShouldReturnDesc() {
+        PageQuery q = new PageQuery();
+        q.setOrderDir("asc; DROP TABLE pmis_user");
+        assertEquals("desc", q.safeOrderDir());
+
+        q.setOrderDir("random");
+        assertEquals("desc", q.safeOrderDir());
+
+        q.setOrderDir("");
+        assertEquals("desc", q.safeOrderDir());
+
+        q.setOrderDir(null);
+        assertEquals("desc", q.safeOrderDir());
+    }
+
+    @Test
+    @DisplayName("safeOrderDir - 默认值应为 desc")
+    void safeOrderDir_defaultShouldBeDesc() {
+        PageQuery q = new PageQuery();
+        assertEquals("desc", q.safeOrderDir());
     }
 }

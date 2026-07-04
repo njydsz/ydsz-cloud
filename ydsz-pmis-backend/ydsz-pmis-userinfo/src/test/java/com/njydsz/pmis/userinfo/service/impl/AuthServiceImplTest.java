@@ -65,7 +65,7 @@ class AuthServiceImplTest {
     }
 
     @Test
-    @DisplayName("登录成功")
+    @DisplayName("登录成功 - 历史 MD5 密码应触发惰性升级为 BCrypt")
     void login_shouldReturnToken() {
         try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class)) {
             UserAccountDO user = new UserAccountDO();
@@ -80,7 +80,11 @@ class AuthServiceImplTest {
             when(userAccountService.findByUsername("admin")).thenReturn(user);
             when(roleService.listByUserId(1L)).thenReturn(Collections.emptyList());
             when(permissionService.listPermCodesByUserId(1L)).thenReturn(Collections.emptyList());
+            // 历史 MD5 格式：isBCryptFormat 返回 false，走 verifyPassword 路径
+            cryptoUtil.when(() -> CryptoUtil.isBCryptFormat("encryptedPwd")).thenReturn(false);
             cryptoUtil.when(() -> CryptoUtil.verifyPassword(anyString(), anyString(), anyString())).thenReturn(true);
+            // 惰性升级：返回模拟的 BCrypt 哈希
+            cryptoUtil.when(() -> CryptoUtil.hashPasswordBCrypt(anyString())).thenReturn("$2a$12$mockedBcryptHash");
             when(jwtTokenProvider.generateToken(anyLong(), anyString(), anyList(), anyList(), anyLong()))
                     .thenReturn("access-token-xxx");
             when(jwtTokenProvider.generateRefreshToken(anyLong(), anyLong()))
@@ -96,6 +100,45 @@ class AuthServiceImplTest {
             assertEquals("access-token-xxx", result.getToken());
             assertEquals("refresh-token-xxx", result.getRefreshToken());
             assertNotNull(result.getExpiresIn());
+            // 验证调用了惰性升级
+            verify(userAccountService).upgradePasswordHash(eq(1L), eq("$2a$12$mockedBcryptHash"));
+        }
+    }
+
+    @Test
+    @DisplayName("登录成功 - BCrypt 密码不应触发惰性升级")
+    void login_withBCryptPassword_shouldNotUpgrade() {
+        try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class)) {
+            UserAccountDO user = new UserAccountDO();
+            user.setId(2L);
+            user.setUsername("bcryptuser");
+            user.setPassword("$2a$12$realBcryptHash");
+            user.setSalt("");
+            user.setStatus("ENABLED");
+            user.setLoginFailCount(0);
+            user.setLockedUntil(null);
+
+            when(userAccountService.findByUsername("bcryptuser")).thenReturn(user);
+            when(roleService.listByUserId(2L)).thenReturn(Collections.emptyList());
+            when(permissionService.listPermCodesByUserId(2L)).thenReturn(Collections.emptyList());
+            // BCrypt 格式：isBCryptFormat 返回 true，走 verifyPasswordBCrypt 路径
+            cryptoUtil.when(() -> CryptoUtil.isBCryptFormat("$2a$12$realBcryptHash")).thenReturn(true);
+            cryptoUtil.when(() -> CryptoUtil.verifyPasswordBCrypt(anyString(), anyString())).thenReturn(true);
+            when(jwtTokenProvider.generateToken(anyLong(), anyString(), anyList(), anyList(), anyLong()))
+                    .thenReturn("access-token-bcrypt");
+            when(jwtTokenProvider.generateRefreshToken(anyLong(), anyLong()))
+                    .thenReturn("refresh-token-bcrypt");
+
+            LoginDTO dto = new LoginDTO();
+            dto.setUsername("bcryptuser");
+            dto.setPassword("correctPwd");
+
+            LoginResultVO result = authService.login(dto);
+
+            assertNotNull(result);
+            assertEquals("access-token-bcrypt", result.getToken());
+            // BCrypt 路径不应触发升级
+            verify(userAccountService, never()).upgradePasswordHash(anyLong(), anyString());
         }
     }
 
@@ -152,6 +195,7 @@ class AuthServiceImplTest {
             when(userAccountService.findByUsername("admin")).thenReturn(user);
             when(roleService.listByUserId(1L)).thenReturn(Collections.emptyList());
             when(permissionService.listPermCodesByUserId(1L)).thenReturn(Collections.emptyList());
+            cryptoUtil.when(() -> CryptoUtil.isBCryptFormat("encryptedPwd")).thenReturn(false);
             cryptoUtil.when(() -> CryptoUtil.verifyPassword(anyString(), anyString(), anyString())).thenReturn(false);
 
             LoginDTO dto = new LoginDTO();
@@ -160,6 +204,36 @@ class AuthServiceImplTest {
 
             BizException ex = assertThrows(BizException.class, () -> authService.login(dto));
             assertEquals(30002, ex.getCode());
+        }
+    }
+
+    @Test
+    @DisplayName("登录时 BCrypt 密码错误抛出异常")
+    void login_bcryptWrongPassword_shouldThrowException() {
+        try (MockedStatic<CryptoUtil> cryptoUtil = mockStatic(CryptoUtil.class)) {
+            UserAccountDO user = new UserAccountDO();
+            user.setId(3L);
+            user.setUsername("bcryptuser");
+            user.setPassword("$2a$12$realBcryptHash");
+            user.setSalt("");
+            user.setStatus("ENABLED");
+            user.setLoginFailCount(0);
+            user.setLockedUntil(null);
+
+            when(userAccountService.findByUsername("bcryptuser")).thenReturn(user);
+            when(roleService.listByUserId(3L)).thenReturn(Collections.emptyList());
+            when(permissionService.listPermCodesByUserId(3L)).thenReturn(Collections.emptyList());
+            cryptoUtil.when(() -> CryptoUtil.isBCryptFormat("$2a$12$realBcryptHash")).thenReturn(true);
+            cryptoUtil.when(() -> CryptoUtil.verifyPasswordBCrypt(anyString(), anyString())).thenReturn(false);
+
+            LoginDTO dto = new LoginDTO();
+            dto.setUsername("bcryptuser");
+            dto.setPassword("wrongPwd");
+
+            BizException ex = assertThrows(BizException.class, () -> authService.login(dto));
+            assertEquals(30002, ex.getCode());
+            // 校验失败不应触发升级
+            verify(userAccountService, never()).upgradePasswordHash(anyLong(), anyString());
         }
     }
 
