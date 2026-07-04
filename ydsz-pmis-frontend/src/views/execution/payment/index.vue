@@ -162,7 +162,7 @@ async function handleStatus(row: PaymentVO, target: string) {
   const targetText = (statusMap.value as any)[target]?.label || target
   try {
     await ElMessageBox.confirm(t('finance.payment.messages.statusConfirmPrompt', { target: targetText }), t('common.tip'), { type: 'warning' })
-    await changePaymentStatus(row.id, target, 1, '系统')
+    await changePaymentStatus(row.id, target, 1, t('finance.payment.systemApprover'))
     ElMessage.success(t('finance.payment.messages.statusUpdated'))
     fetchList()
   } catch { /* 取消 */ }

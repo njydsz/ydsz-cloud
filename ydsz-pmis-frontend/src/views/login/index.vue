@@ -221,7 +221,7 @@ onMounted(() => {
             <div class="captcha-row">
               <el-input v-model="form.captchaCode" :placeholder="t('login.captchaPlaceholder')" :prefix-icon="'Picture'" />
               <div class="captcha-img" :class="{ loading: captchaLoading }" @click="refreshCaptcha">
-                <img v-if="captchaImage" :src="captchaImage" alt="captcha" />
+                <img v-if="captchaImage" :src="captchaImage" alt="captcha" loading="lazy" />
                 <span v-else class="captcha-placeholder">{{ captchaLoading ? t('login.captchaLoading') : t('login.captchaClickToLoad') }}</span>
               </div>
             </div>

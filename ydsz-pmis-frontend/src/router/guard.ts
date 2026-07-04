@@ -15,6 +15,7 @@ import NProgress from 'nprogress'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { usePermissionStore } from '@/store/modules/permission'
+import { useAppStore } from '@/store/modules/app'
 import i18n from '@/locales'
 import { logger } from '@/utils/logger'
 import { recordAccess } from '@/api/favorite'
@@ -103,7 +104,7 @@ export function setupRouterGuard(router: Router): void {
     }
   })
 
-  // 后置守卫：关闭进度条 + 设置文档标题 + 记录最近访问
+  // 后置守卫：关闭进度条 + 设置文档标题 + 记录最近访问 + 缓存视图
   router.afterEach((to) => {
     NProgress.done()
     const title = resolveRouteTitle(to.meta.title as string)
@@ -116,6 +117,12 @@ export function setupRouterGuard(router: Router): void {
       recordAccess(to.fullPath, title).catch(() => {
         // 记录失败静默忽略，不影响正常导航
       })
+    }
+
+    // 缓存视图：将标记了 keepAlive 的路由组件名加入缓存列表
+    if (to.meta.keepAlive && to.name) {
+      const appStore = useAppStore()
+      appStore.addCachedView(to.name as string)
     }
   })
 

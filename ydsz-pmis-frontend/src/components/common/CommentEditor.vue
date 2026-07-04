@@ -488,7 +488,7 @@ defineExpose({
           class="attachment-item"
         >
           <div class="attachment-thumb" @click="previewAttachment(att)">
-            <img v-if="att.type?.startsWith('image/')" :src="att.url" :alt="att.name" />
+            <img v-if="att.type?.startsWith('image/')" :src="att.url" :alt="att.name" loading="lazy" />
             <el-icon v-else><Picture /></el-icon>
           </div>
           <div class="attachment-meta">
@@ -520,7 +520,7 @@ defineExpose({
       width="600px"
       append-to-body
     >
-      <img v-if="previewUrl" :src="previewUrl" :alt="previewName" class="preview-image" />
+      <img v-if="previewUrl" :src="previewUrl" :alt="previewName" class="preview-image" loading="lazy" />
     </el-dialog>
   </div>
 </template>

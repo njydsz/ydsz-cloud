@@ -120,7 +120,7 @@ function onAction() {
 <template>
   <div class="empty-state" :style="containerStyle">
     <div class="empty-state__inner">
-      <img v-if="imageUrl" :src="imageUrl" class="empty-state__image" alt="empty" />
+      <img v-if="imageUrl" :src="imageUrl" class="empty-state__image" alt="empty" loading="lazy" />
       <div v-else class="empty-state__body">
         <el-icon :size="iconSize" class="empty-state__icon">
           <component :is="resolved.icon" />

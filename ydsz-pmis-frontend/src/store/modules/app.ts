@@ -23,6 +23,8 @@ export const useAppStore = defineStore('app', () => {
   const size = ref<'default' | 'large' | 'small'>('default')
   /** 当前主题（light 浅色 / dark 暗色） */
   const theme = ref<'light' | 'dark'>('light')
+  /** 需要缓存的视图组件名称列表（配合 KeepAlive 使用） */
+  const cachedViews = ref<string[]>([])
 
   /** 切换侧边栏折叠状态 */
   function toggleSidebar(): void {
@@ -76,15 +78,47 @@ export const useAppStore = defineStore('app', () => {
     document.documentElement.classList.toggle('dark', saved === 'dark')
   }
 
+  /**
+   * 添加缓存视图
+   * @param name 组件名称
+   */
+  function addCachedView(name: string): void {
+    if (!cachedViews.value.includes(name)) {
+      cachedViews.value.push(name)
+    }
+  }
+
+  /**
+   * 移除缓存视图
+   * @param name 组件名称
+   */
+  function removeCachedView(name: string): void {
+    const index = cachedViews.value.indexOf(name)
+    if (index > -1) {
+      cachedViews.value.splice(index, 1)
+    }
+  }
+
+  /**
+   * 清空所有缓存视图
+   */
+  function clearCachedViews(): void {
+    cachedViews.value = []
+  }
+
   return {
     sidebarCollapsed,
     device,
     size,
     theme,
+    cachedViews,
     toggleSidebar,
     setDevice,
     setSize,
     toggleTheme,
     initTheme,
+    addCachedView,
+    removeCachedView,
+    clearCachedViews,
   }
 })

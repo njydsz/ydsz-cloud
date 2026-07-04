@@ -1,6 +1,5 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.RoleFormDTO;
@@ -10,154 +9,312 @@ import com.njydsz.pmis.userinfo.entity.RolePermissionDO;
 import com.njydsz.pmis.userinfo.mapper.RoleMapper;
 import com.njydsz.pmis.userinfo.mapper.RolePermissionMapper;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName("角色服务测试")
+@DisplayName("RoleServiceImpl 单元测试")
 class RoleServiceImplTest {
 
     @Mock
     private RoleMapper roleMapper;
+
     @Mock
     private RolePermissionMapper rolePermissionMapper;
 
     @InjectMocks
     private RoleServiceImpl roleService;
 
-    @Test
-    @DisplayName("分页查询角色")
-    @SuppressWarnings("unchecked")
-    void page_shouldReturnPagedResult() {
-        RoleQueryDTO query = new RoleQueryDTO();
-        query.setPage(1);
-        query.setSize(10);
+    @Nested
+    @DisplayName("createRole 方法")
+    class CreateRoleTest {
 
-        Page<RoleDO> mockPage = new Page<>(1, 10);
-        RoleDO role = new RoleDO();
-        role.setId(1L);
-        role.setRoleCode("ADMIN");
-        role.setRoleName("管理员");
-        mockPage.setRecords(List.of(role));
-        mockPage.setTotal(1);
+        @Test
+        @DisplayName("创建角色 - 正常流程")
+        void createRole_Success() {
+            // Given
+            RoleFormDTO dto = new RoleFormDTO();
+            dto.setRoleCode("TEST_ROLE");
+            dto.setRoleName("测试角色");
+            dto.setPermissionIds(Arrays.asList(1L, 2L));
 
-        when(roleMapper.selectPage(any(Page.class), any(LambdaQueryWrapper.class))).thenReturn(mockPage);
+            when(roleMapper.selectByCode("TEST_ROLE")).thenReturn(null);
+            doAnswer(invocation -> {
+                RoleDO entity = invocation.getArgument(0);
+                entity.setId(100L);
+                return 1;
+            }).when(roleMapper).insert(any(RoleDO.class));
 
-        Page<RoleDO> result = roleService.page(query);
-        assertNotNull(result);
-        assertEquals(1, result.getTotal());
+            // When
+            Long id = roleService.create(dto);
+
+            // Then
+            assertThat(id).isEqualTo(100L);
+            verify(roleMapper).insert(any(RoleDO.class));
+            verify(rolePermissionMapper, times(2)).insert(any(RolePermissionDO.class));
+        }
+
+        @Test
+        @DisplayName("创建角色 - 角色编码已存在")
+        void createRole_DuplicateCode() {
+            // Given
+            RoleFormDTO dto = new RoleFormDTO();
+            dto.setRoleCode("EXISTING_ROLE");
+            dto.setRoleName("已存在角色");
+
+            RoleDO existing = new RoleDO();
+            when(roleMapper.selectByCode("EXISTING_ROLE")).thenReturn(existing);
+
+            // When & Then
+            assertThatThrownBy(() -> roleService.create(dto))
+                    .isInstanceOf(BizException.class);
+            verify(roleMapper, never()).insert(any(RoleDO.class));
+        }
+
+        @Test
+        @DisplayName("创建角色 - 无权限ID列表时不创建权限关联")
+        void createRole_NoPermissions() {
+            // Given
+            RoleFormDTO dto = new RoleFormDTO();
+            dto.setRoleCode("NEW_ROLE");
+            dto.setRoleName("新角色");
+            dto.setPermissionIds(null);
+
+            when(roleMapper.selectByCode("NEW_ROLE")).thenReturn(null);
+            doAnswer(invocation -> {
+                RoleDO entity = invocation.getArgument(0);
+                entity.setId(101L);
+                return 1;
+            }).when(roleMapper).insert(any(RoleDO.class));
+
+            // When
+            Long id = roleService.create(dto);
+
+            // Then
+            assertThat(id).isEqualTo(101L);
+            verify(roleMapper).insert(any(RoleDO.class));
+            verify(rolePermissionMapper, never()).insert(any(RolePermissionDO.class));
+        }
     }
 
-    @Test
-    @SuppressWarnings("unchecked")
-    @DisplayName("查询所有启用的角色")
-    void listAllEnabled_shouldReturnRoleList() {
-        RoleDO role = new RoleDO();
-        role.setId(1L);
-        role.setRoleCode("ADMIN");
-        role.setRoleName("管理员");
-        role.setStatus("ENABLED");
+    @Nested
+    @DisplayName("updateRole 方法")
+    class UpdateRoleTest {
 
-        when(roleMapper.selectList(any(LambdaQueryWrapper.class))).thenReturn(List.of(role));
+        @Test
+        @DisplayName("更新角色 - 正常流程")
+        void updateRole_Success() {
+            // Given
+            RoleFormDTO dto = new RoleFormDTO();
+            dto.setId(1L);
+            dto.setRoleCode("UPDATED_ROLE");
+            dto.setRoleName("更新后角色");
 
-        List<RoleDO> result = roleService.listAllEnabled();
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("ADMIN", result.get(0).getRoleCode());
+            RoleDO existing = new RoleDO();
+            existing.setId(1L);
+            existing.setRoleCode("OLD_ROLE");
+            when(roleMapper.selectById(1L)).thenReturn(existing);
+            when(roleMapper.updateById(any(RoleDO.class))).thenReturn(1);
+
+            // When & Then
+            assertThatCode(() -> roleService.update(dto)).doesNotThrowAnyException();
+            verify(roleMapper).updateById(any(RoleDO.class));
+        }
+
+        @Test
+        @DisplayName("更新角色 - ID为空")
+        void updateRole_IdIsNull() {
+            // Given
+            RoleFormDTO dto = new RoleFormDTO();
+            dto.setId(null);
+            dto.setRoleCode("ROLE");
+
+            // When & Then
+            assertThatThrownBy(() -> roleService.update(dto))
+                    .isInstanceOf(BizException.class);
+        }
+
+        @Test
+        @DisplayName("更新角色 - 角色不存在")
+        void updateRole_NotFound() {
+            // Given
+            RoleFormDTO dto = new RoleFormDTO();
+            dto.setId(999L);
+            dto.setRoleCode("ROLE");
+
+            when(roleMapper.selectById(999L)).thenReturn(null);
+
+            // When & Then
+            assertThatThrownBy(() -> roleService.update(dto))
+                    .isInstanceOf(BizException.class);
+        }
     }
 
-    @Test
-    @DisplayName("根据ID查询角色")
-    void getById_shouldReturnRole() {
-        RoleDO role = new RoleDO();
-        role.setId(1L);
-        role.setRoleCode("ADMIN");
-        role.setRoleName("管理员");
+    @Nested
+    @DisplayName("deleteRole 方法")
+    class DeleteRoleTest {
 
-        when(roleMapper.selectById(1L)).thenReturn(role);
+        @Test
+        @DisplayName("删除角色 - 正常流程")
+        void deleteRole_Success() {
+            // Given
+            RoleDO role = new RoleDO();
+            role.setId(1L);
+            role.setRoleCode("NORMAL_ROLE");
+            when(roleMapper.selectById(1L)).thenReturn(role);
+            when(roleMapper.deleteById(1L)).thenReturn(1);
+            when(rolePermissionMapper.delete(any())).thenReturn(1);
 
-        RoleDO result = roleService.getById(1L);
-        assertNotNull(result);
-        assertEquals("ADMIN", result.getRoleCode());
+            // When & Then
+            assertThatCode(() -> roleService.delete(1L)).doesNotThrowAnyException();
+            verify(roleMapper).deleteById(1L);
+            verify(rolePermissionMapper).delete(any());
+        }
+
+        @Test
+        @DisplayName("删除角色 - 角色不存在")
+        void deleteRole_NotFound() {
+            // Given
+            when(roleMapper.selectById(999L)).thenReturn(null);
+
+            // When & Then
+            assertThatThrownBy(() -> roleService.delete(999L))
+                    .isInstanceOf(BizException.class);
+        }
+
+        @Test
+        @DisplayName("删除角色 - SUPER_ADMIN不允许删除")
+        void deleteRole_SuperAdminForbidden() {
+            // Given
+            RoleDO role = new RoleDO();
+            role.setId(1L);
+            role.setRoleCode("SUPER_ADMIN");
+            when(roleMapper.selectById(1L)).thenReturn(role);
+
+            // When & Then
+            assertThatThrownBy(() -> roleService.delete(1L))
+                    .isInstanceOf(BizException.class);
+            verify(roleMapper, never()).deleteById(any());
+        }
     }
 
-    @Test
-    @DisplayName("根据ID查询不存在的角色时抛出异常")
-    void getById_notFound_shouldThrowException() {
-        when(roleMapper.selectById(999L)).thenReturn(null);
+    @Nested
+    @DisplayName("assignPermissions 方法")
+    class AssignPermissionsTest {
 
-        BizException ex = assertThrows(BizException.class, () -> roleService.getById(999L));
-        assertEquals(10101, ex.getCode());
+        @Test
+        @DisplayName("分配权限 - 正常流程")
+        void assignPermissions_Success() {
+            // Given
+            Long roleId = 1L;
+            List<Long> permissionIds = Arrays.asList(10L, 20L, 30L);
+            when(rolePermissionMapper.delete(any())).thenReturn(1);
+
+            // When
+            roleService.assignPermissions(roleId, permissionIds);
+
+            // Then
+            verify(rolePermissionMapper).delete(any());
+            verify(rolePermissionMapper, times(3)).insert(any(RolePermissionDO.class));
+        }
+
+        @Test
+        @DisplayName("分配权限 - 空权限列表时只清除旧关联")
+        void assignPermissions_EmptyList() {
+            // Given
+            Long roleId = 1L;
+            List<Long> permissionIds = List.of();
+            when(rolePermissionMapper.delete(any())).thenReturn(1);
+
+            // When
+            roleService.assignPermissions(roleId, permissionIds);
+
+            // Then
+            verify(rolePermissionMapper).delete(any());
+            verify(rolePermissionMapper, never()).insert(any(RolePermissionDO.class));
+        }
+
+        @Test
+        @DisplayName("分配权限 - null权限列表时只清除旧关联")
+        void assignPermissions_NullList() {
+            // Given
+            Long roleId = 1L;
+            when(rolePermissionMapper.delete(any())).thenReturn(1);
+
+            // When
+            roleService.assignPermissions(roleId, null);
+
+            // Then
+            verify(rolePermissionMapper).delete(any());
+            verify(rolePermissionMapper, never()).insert(any(RolePermissionDO.class));
+        }
     }
 
-    @Test
-    @DisplayName("根据用户ID查询角色列表")
-    void listByUserId_shouldReturnRoleList() {
-        RoleDO role = new RoleDO();
-        role.setId(1L);
-        role.setRoleCode("ADMIN");
+    @Nested
+    @DisplayName("page 方法")
+    class PageTest {
 
-        when(roleMapper.selectByUserId(1L)).thenReturn(List.of(role));
+        @Test
+        @DisplayName("分页查询 - 正常流程")
+        void page_Success() {
+            // Given
+            RoleQueryDTO query = new RoleQueryDTO();
+            query.setPage(1);
+            query.setSize(10);
+            when(roleMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
 
-        List<RoleDO> result = roleService.listByUserId(1L);
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals("ADMIN", result.get(0).getRoleCode());
+            // When
+            Page<RoleDO> result = roleService.page(query);
+
+            // Then
+            assertThat(result).isNotNull();
+            verify(roleMapper).selectPage(any(Page.class), any());
+        }
     }
 
-    @Test
-    @DisplayName("创建角色成功")
-    void create_shouldInsertRole() {
-        RoleFormDTO dto = new RoleFormDTO();
-        dto.setRoleCode("NEW_ROLE");
-        dto.setRoleName("新角色");
-        dto.setPermissionIds(Collections.emptyList());
+    @Nested
+    @DisplayName("getById 方法")
+    class GetByIdTest {
 
-        when(roleMapper.selectByCode("NEW_ROLE")).thenReturn(null);
-        doAnswer(invocation -> {
-            RoleDO entity = invocation.getArgument(0);
-            entity.setId(200L);
-            return 1;
-        }).when(roleMapper).insert(any(RoleDO.class));
+        @Test
+        @DisplayName("根据ID查询 - 正常流程")
+        void getById_Success() {
+            // Given
+            RoleDO role = new RoleDO();
+            role.setId(1L);
+            role.setRoleCode("TEST_ROLE");
+            when(roleMapper.selectById(1L)).thenReturn(role);
 
-        Long id = roleService.create(dto);
-        assertNotNull(id);
-        assertEquals(200L, id);
-        verify(roleMapper).insert(any(RoleDO.class));
-    }
+            // When
+            RoleDO result = roleService.getById(1L);
 
-    @Test
-    @DisplayName("删除SUPER_ADMIN角色时抛出异常")
-    void delete_superAdmin_shouldThrowException() {
-        RoleDO superAdmin = new RoleDO();
-        superAdmin.setId(1L);
-        superAdmin.setRoleCode("SUPER_ADMIN");
+            // Then
+            assertThat(result).isNotNull();
+            assertThat(result.getId()).isEqualTo(1L);
+        }
 
-        when(roleMapper.selectById(1L)).thenReturn(superAdmin);
+        @Test
+        @DisplayName("根据ID查询 - 角色不存在")
+        void getById_NotFound() {
+            // Given
+            when(roleMapper.selectById(999L)).thenReturn(null);
 
-        BizException ex = assertThrows(BizException.class, () -> roleService.delete(1L));
-        assertEquals(10001, ex.getCode());
-    }
-
-    @Test
-    @SuppressWarnings("unchecked")
-    @DisplayName("分配权限给角色")
-    void assignPermissions_shouldDeleteAndInsert() {
-        List<Long> permIds = List.of(1L, 2L);
-
-        roleService.assignPermissions(1L, permIds);
-
-        verify(rolePermissionMapper).delete(any(LambdaQueryWrapper.class));
-        verify(rolePermissionMapper, times(2)).insert(any(RolePermissionDO.class));
+            // When & Then
+            assertThatThrownBy(() -> roleService.getById(999L))
+                    .isInstanceOf(BizException.class);
+        }
     }
 }

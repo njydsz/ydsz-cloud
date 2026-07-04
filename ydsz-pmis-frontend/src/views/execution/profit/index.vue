@@ -10,8 +10,9 @@
 /**
  * 收入确认 + 利润快照
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import {
   pageRevenues,
@@ -22,6 +23,8 @@ import {
 } from '@/api/execution/profit'
 import type { RevenueVO, RevenueCreateDTO, ProfitSnapshotVO } from '@/api/execution/profit/types'
 import { PC } from '@/constants/permissionCodes'
+
+const { t } = useI18n()
 
 /** 当前激活的 Tab（revenue 收入确认 / profit 利润快照） */
 const tab = ref<'revenue' | 'profit'>('revenue')
@@ -36,12 +39,12 @@ const rTotal = ref(0)
 /** 收入查询条件：关键字 + 项目 ID + 确认方法 */
 const rQuery = reactive({ page: 1, size: 10, keyword: '', initiationId: undefined as number | undefined, method: '' })
 
-/** 收入确认方法 → 中文标签映射（终验法/里程碑/按月） */
-const methodMap = {
-  FINAL: { label: '终验法' },
-  MILESTONE: { label: '里程碑' },
-  MONTHLY: { label: '按月' },
-}
+/** 收入确认方法 → 标签映射（终验法/里程碑/按月） */
+const methodMap = computed(() => ({
+  FINAL: { label: t('execution.profit.method.FINAL') },
+  MILESTONE: { label: t('execution.profit.method.MILESTONE') },
+  MONTHLY: { label: t('execution.profit.method.MONTHLY') },
+}))
 
 /** 分页查询收入确认列表 */
 async function fetchRevenue() {
@@ -84,12 +87,12 @@ const rForm = reactive<Partial<RevenueCreateDTO>>({
 })
 
 /** 收入表单校验规则 */
-const rFormRules = {
-  initiationId: [{ required: true, message: '项目 ID 必填', trigger: 'blur' }],
-  recognitionMethod: [{ required: true, message: '确认方法必填', trigger: 'change' }],
-  amount: [{ required: true, message: '金额必填', trigger: 'blur' }],
-  period: [{ required: true, message: '期间必填', trigger: 'blur' }],
-}
+const rFormRules = computed(() => ({
+  initiationId: [{ required: true, message: t('execution.profit.rules.initiationIdRequired'), trigger: 'blur' }],
+  recognitionMethod: [{ required: true, message: t('execution.profit.rules.methodRequired'), trigger: 'change' }],
+  amount: [{ required: true, message: t('execution.profit.rules.amountRequired'), trigger: 'blur' }],
+  period: [{ required: true, message: t('execution.profit.rules.periodRequired'), trigger: 'blur' }],
+}))
 
 /** 打开新增收入弹窗并重置表单为默认值 */
 function openRCreate() {
@@ -111,7 +114,7 @@ async function submitR() {
     rSubmitting.value = true
     await rFormRef.value?.validate()
     await createRevenue(rForm as RevenueCreateDTO)
-    ElMessage.success('已创建')
+    ElMessage.success(t('execution.profit.messages.created'))
     rDialogVisible.value = false
     fetchRevenue()
   } catch {
@@ -127,9 +130,9 @@ async function submitR() {
  */
 async function handleRDelete(row: RevenueVO) {
   try {
-    await ElMessageBox.confirm(`确认删除该收入记录？`, '提示', { type: 'warning' })
+    await ElMessageBox.confirm(t('execution.profit.messages.confirmDeleteRevenue'), t('common.tip'), { type: 'warning' })
     await deleteRevenue(row.id)
-    ElMessage.success('已删除')
+    ElMessage.success(t('execution.profit.messages.deleted'))
     fetchRevenue()
   } catch { /* 取消 */ }
 }
@@ -165,16 +168,16 @@ async function fetchProfit() {
  */
 async function handleGenerate() {
   if (!pQuery.initiationId) {
-    ElMessage.warning('请填写项目 ID')
+    ElMessage.warning(t('execution.profit.messages.fillInitiationId'))
     return
   }
   const period = pQuery.period || new Date().toISOString().slice(0, 7)
   try {
     const { data } = await generateProfitSnapshot(pQuery.initiationId, period)
-    ElMessage.success(`快照已生成 (ID: ${data})`)
+    ElMessage.success(t('execution.profit.messages.snapshotGenerated', { id: data }))
     fetchProfit()
   } catch (e: any) {
-    ElMessage.error(e?.message || '生成失败')
+    ElMessage.error(e?.message || t('execution.profit.messages.generateFailed'))
   }
 }
 
@@ -188,7 +191,7 @@ onMounted(() => {
 <template>
   <el-card shadow="never">
     <el-tabs v-model="tab">
-      <el-tab-pane label="收入确认" name="revenue">
+      <el-tab-pane :label="$t('execution.profit.tabs.revenue')" name="revenue">
         <PageLayout
           v-model:query="rQuery"
           :list="rList"
@@ -200,32 +203,32 @@ onMounted(() => {
           @refresh="fetchRevenue"
         >
           <template #search>
-            <el-form-item label="关键字"><el-input v-model="rQuery.keyword" placeholder="项目/合同" clearable /></el-form-item>
-            <el-form-item label="项目 ID"><el-input-number v-model="rQuery.initiationId" :min="0" :controls="false" /></el-form-item>
-            <el-form-item label="确认方法">
-              <el-select v-model="rQuery.method" placeholder="全部" clearable style="width: 140px">
+            <el-form-item :label="$t('execution.profit.search.keyword')"><el-input v-model="rQuery.keyword" :placeholder="$t('execution.profit.search.keywordPlaceholder')" clearable /></el-form-item>
+            <el-form-item :label="$t('execution.profit.search.initiationId')"><el-input-number v-model="rQuery.initiationId" :min="0" :controls="false" /></el-form-item>
+            <el-form-item :label="$t('execution.profit.search.method')">
+              <el-select v-model="rQuery.method" :placeholder="$t('common.all')" clearable style="width: 140px">
                 <el-option v-for="(v, k) in methodMap" :key="k" :label="v.label" :value="k" />
               </el-select>
             </el-form-item>
           </template>
           <template #toolbar>
-            <el-button v-permission="[PC.EXECUTION_REVENUE_CREATE]" type="primary" :icon="'Plus'" @click="openRCreate">新增收入</el-button>
+            <el-button v-permission="[PC.EXECUTION_REVENUE_CREATE]" type="primary" :icon="'Plus'" @click="openRCreate">{{ $t('execution.profit.buttons.createRevenue') }}</el-button>
           </template>
           <template #table="scope">
             <vxe-table :data="rList" :loading="rLoading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
               <vxe-column type="seq" title="#" width="50" />
-              <vxe-column field="initiationName" title="项目" width="160" show-overflow />
-              <vxe-column field="contractCode" title="合同" width="140" />
-              <vxe-column field="recognitionMethod" title="方法" width="100">
+              <vxe-column field="initiationName" :title="$t('execution.profit.columns.initiationName')" width="160" show-overflow />
+              <vxe-column field="contractCode" :title="$t('execution.profit.columns.contractCode')" width="140" />
+              <vxe-column field="recognitionMethod" :title="$t('execution.profit.columns.recognitionMethod')" width="100">
                 <template #default="{ row }">{{ methodMap[row.recognitionMethod as keyof typeof methodMap]?.label || row.recognitionMethod || '-' }}</template>
               </vxe-column>
-              <vxe-column field="period" title="期间" width="100" />
-              <vxe-column field="amount" title="金额" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="recognitionDate" title="确认日期" width="110" />
-              <vxe-column field="description" title="说明" min-width="200" show-overflow />
-              <vxe-column title="操作" width="100" fixed="right">
+              <vxe-column field="period" :title="$t('execution.profit.columns.period')" width="100" />
+              <vxe-column field="amount" :title="$t('execution.profit.columns.amount')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="recognitionDate" :title="$t('execution.profit.columns.recognitionDate')" width="110" />
+              <vxe-column field="description" :title="$t('execution.profit.columns.description')" min-width="200" show-overflow />
+              <vxe-column :title="$t('execution.profit.columns.action')" width="100" fixed="right">
                 <template #default="{ row }">
-                  <el-button link type="danger" size="small" @click="handleRDelete(row)">删除</el-button>
+                  <el-button link type="danger" size="small" @click="handleRDelete(row)">{{ $t('execution.profit.buttons.delete') }}</el-button>
                 </template>
               </vxe-column>
             </vxe-table>
@@ -233,7 +236,7 @@ onMounted(() => {
         </PageLayout>
       </el-tab-pane>
 
-      <el-tab-pane label="利润快照" name="profit">
+      <el-tab-pane :label="$t('execution.profit.tabs.profitSnapshot')" name="profit">
         <PageLayout
           v-model:query="pQuery"
           :list="pList"
@@ -245,27 +248,27 @@ onMounted(() => {
         >
           <template #toolbar>
             <el-form inline :model="pQuery" class="profit-form">
-              <el-form-item label="项目 ID"><el-input-number v-model="pQuery.initiationId" :min="0" :controls="false" /></el-form-item>
-              <el-form-item label="期间 (YYYY-MM)"><el-input v-model="pQuery.period" placeholder="如 2026-07" /></el-form-item>
+              <el-form-item :label="$t('execution.profit.search.initiationId')"><el-input-number v-model="pQuery.initiationId" :min="0" :controls="false" /></el-form-item>
+              <el-form-item :label="$t('execution.profit.dialog.period')"><el-input v-model="pQuery.period" :placeholder="$t('execution.profit.dialog.periodPlaceholder')" /></el-form-item>
               <el-form-item>
-                <el-button v-permission="[PC.EXECUTION_PROFIT_SNAPSHOT]" type="primary" :icon="'Plus'" @click="handleGenerate">生成快照</el-button>
-                <el-button @click="pQuery.initiationId = undefined; pQuery.period = ''; fetchProfit()">重置</el-button>
+                <el-button v-permission="[PC.EXECUTION_PROFIT_SNAPSHOT]" type="primary" :icon="'Plus'" @click="handleGenerate">{{ $t('execution.profit.buttons.generateSnapshot') }}</el-button>
+                <el-button @click="pQuery.initiationId = undefined; pQuery.period = ''; fetchProfit()">{{ $t('execution.profit.buttons.reset') }}</el-button>
               </el-form-item>
             </el-form>
           </template>
           <template #table="scope">
             <vxe-table :data="pList" :loading="pLoading" border stripe :height="scope.tableProps.height" :scroll-y="scope.tableProps.scrollY">
               <vxe-column type="seq" title="#" width="50" />
-              <vxe-column field="initiationName" title="项目" width="200" show-overflow />
-              <vxe-column field="period" title="期间" width="100" />
-              <vxe-column field="revenue" title="收入" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="laborCost" title="人工成本" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="purchaseCost" title="采购成本" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="expenseCost" title="费用成本" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="totalCost" title="总成本" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="grossProfit" title="毛利" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="grossMargin" title="毛利率" width="100" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(1)}%` : '-'" />
-              <vxe-column field="healthScore" title="健康度" width="100" align="center">
+              <vxe-column field="initiationName" :title="$t('execution.profit.columns.initiationName')" width="200" show-overflow />
+              <vxe-column field="period" :title="$t('execution.profit.columns.period')" width="100" />
+              <vxe-column field="revenue" :title="$t('execution.profit.columns.revenue')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="laborCost" :title="$t('execution.profit.columns.laborCost')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="purchaseCost" :title="$t('execution.profit.columns.purchaseCost')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="expenseCost" :title="$t('execution.profit.columns.expenseCost')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="totalCost" :title="$t('execution.profit.columns.totalCost')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="grossProfit" :title="$t('execution.profit.columns.grossProfit')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="grossMargin" :title="$t('execution.profit.columns.grossMargin')" width="100" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(1)}%` : '-'" />
+              <vxe-column field="healthScore" :title="$t('execution.profit.columns.healthScore')" width="100" align="center">
                 <template #default="{ row }">
                   <el-tag :type="Number(row.healthScore || 0) >= 80 ? 'success' : Number(row.healthScore || 0) >= 60 ? 'warning' : 'danger'">
                     {{ row.healthScore ?? '-' }}
@@ -279,25 +282,25 @@ onMounted(() => {
     </el-tabs>
   </el-card>
 
-  <el-dialog v-model="rDialogVisible" title="新增收入确认" width="520px">
+  <el-dialog v-model="rDialogVisible" :title="$t('execution.profit.dialog.createRevenueTitle')" width="520px">
     <el-form ref="rFormRef" :model="rForm" :rules="rFormRules" label-width="100px">
-      <el-form-item label="项目 ID" prop="initiationId"><el-input-number v-model="rForm.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item>
-      <el-form-item label="合同 ID"><el-input-number v-model="rForm.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item>
-      <el-form-item label="确认方法" prop="recognitionMethod">
+      <el-form-item :label="$t('execution.profit.dialog.initiationId')" prop="initiationId"><el-input-number v-model="rForm.initiationId" :min="1" :controls="false" style="width: 100%" /></el-form-item>
+      <el-form-item :label="$t('execution.profit.dialog.contractId')"><el-input-number v-model="rForm.contractId" :min="0" :controls="false" style="width: 100%" /></el-form-item>
+      <el-form-item :label="$t('execution.profit.dialog.recognitionMethod')" prop="recognitionMethod">
         <el-select v-model="rForm.recognitionMethod" style="width: 100%">
           <el-option v-for="(v, k) in methodMap" :key="k" :label="v.label" :value="k" />
         </el-select>
       </el-form-item>
-      <el-form-item label="金额" prop="amount"><el-input-number v-model="rForm.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item>
-      <el-form-item label="期间 (YYYY-MM)" prop="period"><el-input v-model="rForm.period" placeholder="如 2026-07" /></el-form-item>
-      <el-form-item label="确认日期">
+      <el-form-item :label="$t('execution.profit.dialog.amount')" prop="amount"><el-input-number v-model="rForm.amount" :min="0" :controls="false" style="width: 100%" /></el-form-item>
+      <el-form-item :label="$t('execution.profit.dialog.period')" prop="period"><el-input v-model="rForm.period" :placeholder="$t('execution.profit.dialog.periodPlaceholder')" /></el-form-item>
+      <el-form-item :label="$t('execution.profit.dialog.recognitionDate')">
         <el-date-picker v-model="rForm.recognitionDate" type="date" value-format="YYYY-MM-DD" style="width: 100%" />
       </el-form-item>
-      <el-form-item label="说明"><el-input v-model="rForm.description" type="textarea" :rows="2" /></el-form-item>
+      <el-form-item :label="$t('execution.profit.dialog.description')"><el-input v-model="rForm.description" type="textarea" :rows="2" /></el-form-item>
     </el-form>
     <template #footer>
-      <el-button @click="rDialogVisible = false">取消</el-button>
-      <el-button type="primary" :loading="rSubmitting" @click="submitR">确定</el-button>
+      <el-button @click="rDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+      <el-button type="primary" :loading="rSubmitting" @click="submitR">{{ $t('common.ok') }}</el-button>
     </template>
   </el-dialog>
 </template>

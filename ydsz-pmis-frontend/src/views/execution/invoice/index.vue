@@ -180,7 +180,7 @@ async function handleApprove(row: InvoiceVO, action: 'APPROVED' | 'REJECTED') {
   const text = action === 'APPROVED' ? t('finance.invoice.messages.approvePass') : t('finance.invoice.messages.approveReject')
   try {
     await ElMessageBox.confirm(t('finance.invoice.messages.approvePrompt', { text }), t('common.tip'), { type: 'warning' })
-    await approveInvoice({ id: row.id, approverId: 1, approverName: '系统' })
+    await approveInvoice({ id: row.id, approverId: 1, approverName: t('finance.invoice.systemApprover') })
     ElMessage.success(t('finance.invoice.messages.approved', { text }))
     fetchList()
   } catch { /* 取消 */ }

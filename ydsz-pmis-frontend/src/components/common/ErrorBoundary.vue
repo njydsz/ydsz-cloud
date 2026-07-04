@@ -12,12 +12,15 @@
     5. 新增 resetOnRouteChange prop，支持禁用路由切换重置（顶层 ErrorBoundary 用）
 -->
 <script setup lang="ts">
-import { ref, onErrorCaptured, watch } from 'vue'
+import { ref, computed, onErrorCaptured, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { captureError } from '@/utils/sentry'
 import { logger } from '@/utils/logger'
+
+/** 是否为开发环境（模板中无法直接使用 import.meta.env） */
+const isDev = computed(() => import.meta.env.DEV)
 
 const props = withDefaults(defineProps<{
   /** 路由切换时是否自动重置错误态（默认 true，顶层 ErrorBoundary 可设为 false） */
@@ -175,7 +178,7 @@ async function handleCopyErrorId() {
       </div>
 
       <!-- 错误详情：仅开发环境展示，避免生产环境泄露堆栈 -->
-      <details class="error-boundary__details" v-if="errorMessage && !import.meta.env.PROD">
+      <details class="error-boundary__details" v-if="errorMessage && isDev">
         <summary>{{ t('common.viewErrorDetails') }}</summary>
         <pre class="error-boundary__trace">{{ errorMessage }}</pre>
       </details>
