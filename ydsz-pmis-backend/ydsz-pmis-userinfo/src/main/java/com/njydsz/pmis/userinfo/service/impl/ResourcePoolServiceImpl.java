@@ -37,10 +37,10 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
     public Long create(ResourcePoolCreateDTO dto) {
         validate(dto);
         if (poolMapper.selectByCode(dto.getPoolCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_c51c8d33" + dto.getPoolCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_c51c8d33", dto.getPoolCode());
         }
         if (PoolType.fromCode(dto.getPoolType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_c3e0a19a" + dto.getPoolType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_c3e0a19a", dto.getPoolType());
         }
         ResourcePoolDO p = new ResourcePoolDO();
         BeanUtils.copyProperties(dto, p);

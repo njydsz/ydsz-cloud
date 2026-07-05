@@ -84,12 +84,12 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     public FlowInstanceViewDTO start(Long instanceId) {
         FlowInstanceDO instance = instanceService.getById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
         }
         FlowNodeDO startNode = flowDefinitionCacheService.getStartNode(instance.getDefinitionId());
         if (startNode == null) {
             throw new BizException(BizErrorCode.INTERNAL_ERROR,
-                    "error.workflow.msg_560bf118" + instance.getDefinitionId());
+                    "error.workflow.msg_560bf118", instance.getDefinitionId());
         }
         List<FlowNodeDO> nextNodes = advance(instance, startNode.getNodeCode(),
                 "PASS", null, parseVariable(instance.getVariable()));
@@ -127,7 +127,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                 currentInstance.getDefinitionId(), currentNodeCode);
         if (currentNode == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "error.workflow.msg_d84d389b" + currentNodeCode);
+                    "error.workflow.msg_d84d389b", currentNodeCode);
         }
 
         // REJECT 退回
@@ -141,7 +141,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             FlowNodeDO target = flowDefinitionCacheService.getNodeByCode(
                     currentInstance.getDefinitionId(), rejectTarget);
             if (target == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6e66716d" + rejectTarget);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6e66716d", rejectTarget);
             }
             return List.of(target);
         }
@@ -201,6 +201,58 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
             nextNodes.add(next);
         }
         return nextNodes;
+    }
+
+    /**
+     * GAP-P0-2: 退回多节点同退
+     *
+     * <p>对标飞书"退回多节点同退"。当 skipType=REJECT 且 targetNodeCodes 非空时，
+     * 在所有指定节点同时创建待办任务，让多个前序节点重新审批。
+     * 单节点退回（targetNodeCodes 为空或单元素）降级到原 advance 逻辑。
+     */
+    @Override
+    public List<FlowNodeDO> advanceMulti(FlowInstanceDO currentInstance,
+                                          String currentNodeCode,
+                                          String skipType,
+                                          List<String> targetNodeCodes,
+                                          Map<String, Object> variables) {
+        // 非 REJECT 或多节点列表为空：降级到单节点 advance
+        if (!"REJECT".equalsIgnoreCase(skipType)
+                || targetNodeCodes == null || targetNodeCodes.isEmpty()) {
+            String single = (targetNodeCodes == null || targetNodeCodes.isEmpty())
+                    ? null : targetNodeCodes.get(0);
+            return advance(currentInstance, currentNodeCode, skipType, single, variables);
+        }
+
+        // 单元素：降级到单节点 advance（保持原有语义）
+        if (targetNodeCodes.size() == 1) {
+            return advance(currentInstance, currentNodeCode, skipType,
+                    targetNodeCodes.get(0), variables);
+        }
+
+        // GAP-P0-2: 多节点同退 — 校验所有目标节点存在，返回全部目标节点列表
+        log.info("[Flow] 退回多节点同退: instanceId={} currentNode={} targets={}",
+                currentInstance.getId(), currentNodeCode, targetNodeCodes);
+        List<FlowNodeDO> targets = new ArrayList<>();
+        for (String nodeCode : targetNodeCodes) {
+            if (nodeCode == null || nodeCode.isBlank()) {
+                continue;
+            }
+            FlowNodeDO target = flowDefinitionCacheService.getNodeByCode(
+                    currentInstance.getDefinitionId(), nodeCode);
+            if (target == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND,
+                        "error.workflow.msg_6e66716d" + nodeCode);
+            }
+            // 避免重复
+            if (targets.stream().noneMatch(t -> t.getNodeCode().equals(nodeCode))) {
+                targets.add(target);
+            }
+        }
+        if (targets.isEmpty()) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_241f4a79");
+        }
+        return targets;
     }
 
     @Override

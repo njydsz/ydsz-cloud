@@ -166,7 +166,7 @@ public class ContractSupplementServiceImpl implements ContractSupplementService 
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_33d967a0");
         }
         if (!TYPES.contains(dto.getSupplementType().toUpperCase())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3820d28c" + dto.getSupplementType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3820d28c", dto.getSupplementType());
         }
     }
 }

@@ -31,7 +31,7 @@ public interface FlowAdvancer {
      * @param currentInstance  当前实例
      * @param currentNodeCode  当前完成的节点编码
      * @param skipType         跳转类型 PASS/REJECT
-     * @param targetNodeCode   退回目标节点（REJECT 时使用）
+     * @param targetNodeCode   退回目标节点（REJECT 时使用，单节点）
      * @param variables        流程变量（用于条件/办理人解析）
      * @return 推进后产生的下一节点列表（空表示流程结束）
      */
@@ -40,6 +40,35 @@ public interface FlowAdvancer {
                               String skipType,
                               String targetNodeCode,
                               Map<String, Object> variables);
+
+    /**
+     * GAP-P0-2: 完成任务后推进（支持退回多节点同退）
+     *
+     * <p>对标飞书"退回多节点同退"。当 skipType=REJECT 且 targetNodeCodes 非空时，
+     * 在所有指定节点同时创建待办任务，让多个前序节点重新审批。
+     *
+     * <p>注意：本方法特意命名为 {@code advanceMulti} 而非 {@code advance} 重载，
+     * 以避免调用方传 {@code null} 时与 {@link #advance(FlowInstanceDO, String, String, String, Map)}
+     * 产生重载歧义（Java 规范下 {@code null} 同时匹配 String 与 List&lt;String&gt;）。
+     *
+     * @param currentInstance  当前实例
+     * @param currentNodeCode  当前完成的节点编码
+     * @param skipType         跳转类型 PASS/REJECT
+     * @param targetNodeCodes  退回多节点目标列表（REJECT 时使用，非空时优先于单节点）
+     * @param variables        流程变量
+     * @return 推进后产生的下一节点列表（空表示流程结束）
+     * @since 1.6.0
+     */
+    default List<FlowNodeDO> advanceMulti(FlowInstanceDO currentInstance,
+                                           String currentNodeCode,
+                                           String skipType,
+                                           java.util.List<String> targetNodeCodes,
+                                           Map<String, Object> variables) {
+        // 默认实现：降级到单节点退回（取第一个或 null）
+        String single = (targetNodeCodes == null || targetNodeCodes.isEmpty())
+                ? null : targetNodeCodes.get(0);
+        return advance(currentInstance, currentNodeCode, skipType, single, variables);
+    }
 
     /**
      * 解析出所有满足条件的 PASS 跳转

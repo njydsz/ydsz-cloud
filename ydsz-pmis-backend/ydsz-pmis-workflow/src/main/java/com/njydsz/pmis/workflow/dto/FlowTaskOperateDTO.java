@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,8 +43,16 @@ public class FlowTaskOperateDTO implements Serializable {
     /** 流程变量 */
     private Map<String, Object> variables;
 
-    /** 退回目标节点编码（仅 REJECT 时使用） */
+    /** 退回目标节点编码（仅 REJECT 时使用，单节点退回，向后兼容） */
     private String targetNodeCode;
+
+    /**
+     * GAP-P0-2: 退回多节点同退目标节点编码列表（仅 REJECT 时使用）
+     *
+     * <p>对标飞书"退回多节点同退"：勾选多个前序节点均重新审批。
+     * 非空时优先于 {@link #targetNodeCode}；为空时降级到单节点退回（向后兼容）。
+     */
+    private List<String> targetNodeCodes;
 
     /** 转办/委派目标人 */
     private Long targetUserId;

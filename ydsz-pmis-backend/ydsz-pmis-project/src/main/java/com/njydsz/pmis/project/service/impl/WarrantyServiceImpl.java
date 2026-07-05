@@ -46,7 +46,7 @@ public class WarrantyServiceImpl implements WarrantyService {
                 WarrantyStatus s = WarrantyStatus.fromCode(w.getStatus());
                 if (s != null && !s.isTerminal()) {
                     throw new BizException(BizErrorCode.BAD_REQUEST,
-                            "error.execution.msg_a3d34659" + w.getWarrantyCode());
+                            "error.execution.msg_a3d34659", w.getWarrantyCode());
                 }
             }
         }
@@ -84,10 +84,10 @@ public class WarrantyServiceImpl implements WarrantyService {
         if (w == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_6457af8b");
         WarrantyStatus st = WarrantyStatus.fromCode(w.getStatus());
         if (st == null || st.isTerminal()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_b9835ff3" + w.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_b9835ff3", w.getStatus());
         }
         if (!st.canTransitTo(WarrantyStatus.TERMINATED)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_5b3f83db" + st.getDesc());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_5b3f83db", st.getDesc());
         }
         warrantyMapper.markStatus(dto.getId(), WarrantyStatus.TERMINATED.getCode(), dto.getReason());
         log.info("[Warranty] 终止质保期: id={} reason={}", dto.getId(), dto.getReason());

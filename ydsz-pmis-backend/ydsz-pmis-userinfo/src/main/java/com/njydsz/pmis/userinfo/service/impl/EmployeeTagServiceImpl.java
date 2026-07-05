@@ -84,7 +84,7 @@ public class EmployeeTagServiceImpl implements EmployeeTagService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         }
         if (TagType.fromCode(dto.getTagType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_3637b07d" + dto.getTagType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_3637b07d", dto.getTagType());
         }
         if (!StringUtils.hasText(dto.getTagCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_8faabfac");

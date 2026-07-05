@@ -156,7 +156,7 @@ public class FlowTaskSignServiceImpl {
         int deleted = userMapper.deleteByMap(deleteMap);
         if (deleted == 0) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "error.workflow.msg_a39adc9d" + dto.getTargetUserId());
+                    "error.workflow.msg_a39adc9d", dto.getTargetUserId());
         }
         // approveCount -1，但不低于 1
         int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();

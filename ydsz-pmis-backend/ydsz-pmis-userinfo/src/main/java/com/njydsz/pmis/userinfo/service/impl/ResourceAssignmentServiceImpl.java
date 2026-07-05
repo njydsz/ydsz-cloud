@@ -50,7 +50,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         }
         if (assignmentMapper.selectByCode(dto.getAssignmentCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_c59015da" + dto.getAssignmentCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_c59015da", dto.getAssignmentCode());
         }
         // RESERVE 阶段要求 opportunity 或 initiation 任一存在
         String action = dto.getAction().toUpperCase();

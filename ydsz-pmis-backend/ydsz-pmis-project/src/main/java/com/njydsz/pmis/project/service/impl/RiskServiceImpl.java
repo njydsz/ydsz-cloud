@@ -55,7 +55,7 @@ public class RiskServiceImpl implements RiskService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_26804acb");
         }
         if (riskMapper.selectByCode(dto.getRiskCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_25ba60bd" + dto.getRiskCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_25ba60bd", dto.getRiskCode());
         }
         RiskDO r = new RiskDO();
         BeanUtils.copyProperties(dto, r);
@@ -82,11 +82,11 @@ public class RiskServiceImpl implements RiskService {
         RiskStatus from = RiskStatus.fromCode(r.getStatus());
         RiskStatus to = RiskStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_95380062" + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
+                    "error.execution.msg_95380062", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         riskMapper.updateStatus(dto.getId(), to.getCode());
         if (to == RiskStatus.OCCURRED) r.setOccurredAt(LocalDateTime.now());

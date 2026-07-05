@@ -41,7 +41,7 @@ public class RateCardServiceImpl implements RateCardService {
     public Long create(RateCardCreateDTO dto) {
         validate(dto);
         if (rateCardMapper.selectByCode(dto.getRateCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_f713b711" + dto.getRateCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_f713b711", dto.getRateCode());
         }
         RateCardDO r = new RateCardDO();
         BeanUtils.copyProperties(dto, r);

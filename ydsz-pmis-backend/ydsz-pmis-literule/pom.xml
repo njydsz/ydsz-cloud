@@ -18,6 +18,7 @@
         <aviator.version>5.4.3</aviator.version>
         <groovy.version>4.0.22</groovy.version>
         <qlexpress.version>3.3.1</qlexpress.version>
+        <redisson.version>4.6.1</redisson.version>
     </properties>
 
     <dependencies>
@@ -67,6 +68,14 @@
         <dependency>
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!-- Redisson（分布式广播与节点注册，可选；1.5.0 起） -->
+        <dependency>
+            <groupId>org.redisson</groupId>
+            <artifactId>redisson-spring-boot-starter</artifactId>
+            <version>${redisson.version}</version>
             <optional>true</optional>
         </dependency>
 

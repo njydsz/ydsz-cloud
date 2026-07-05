@@ -85,7 +85,7 @@ public class BpmnXmlParser {
         Element root = doc.getDocumentElement();
         if (!"definitions".equalsIgnoreCase(root.getLocalName())) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.workflow.msg_a2ed268d" + root.getLocalName());
+                    "error.workflow.msg_a2ed268d", root.getLocalName());
         }
 
         // 找 <process> 节点
@@ -186,7 +186,7 @@ public class BpmnXmlParser {
             throw e;
         } catch (Exception e) {
             log.error("[BpmnParser] 解析失败: {}", e.getMessage());
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_3db1015b" + e.getMessage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_3db1015b", e.getMessage());
         }
     }
 

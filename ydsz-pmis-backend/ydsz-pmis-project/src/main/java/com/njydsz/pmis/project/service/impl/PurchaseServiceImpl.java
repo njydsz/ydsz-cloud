@@ -52,7 +52,7 @@ public class PurchaseServiceImpl implements PurchaseService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");
         }
         if (purchaseMapper.selectByCode(dto.getPurchaseCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_126ca992" + dto.getPurchaseCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_126ca992", dto.getPurchaseCode());
         }
         PurchaseDO p = new PurchaseDO();
         BeanUtils.copyProperties(dto, p);
@@ -86,11 +86,11 @@ public class PurchaseServiceImpl implements PurchaseService {
         ApprovalStatus from = ApprovalStatus.fromCode(p.getStatus());
         ApprovalStatus to = ApprovalStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_8d2ee457" + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
+                    "error.execution.msg_8d2ee457", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         purchaseMapper.updateStatus(dto.getId(), to.getCode(),
                 dto.getApproverId(), dto.getApproverName());

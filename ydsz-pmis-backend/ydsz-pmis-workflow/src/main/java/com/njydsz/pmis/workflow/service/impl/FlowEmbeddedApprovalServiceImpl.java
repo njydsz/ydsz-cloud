@@ -202,7 +202,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
             }
             default:
                 throw new BizException(BizErrorCode.BAD_REQUEST,
-                        "error.workflow.msg_3adf9016" + dto.getAction());
+                        "error.workflow.msg_3adf9016", dto.getAction());
         }
     }
 

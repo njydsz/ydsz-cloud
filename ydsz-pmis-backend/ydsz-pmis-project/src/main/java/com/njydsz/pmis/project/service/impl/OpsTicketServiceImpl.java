@@ -48,10 +48,10 @@ public class OpsTicketServiceImpl implements OpsTicketService {
         validate(dto);
         OpsTicketPriority priority = OpsTicketPriority.fromCode(dto.getPriority());
         if (priority == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d4fa3d01" + dto.getPriority());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d4fa3d01", dto.getPriority());
         }
         if (!ALLOWED_CATEGORIES.contains(dto.getCategory() == null ? "OTHER" : dto.getCategory())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a9b85ade" + dto.getCategory());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a9b85ade", dto.getCategory());
         }
         OpsTicketDO t = new OpsTicketDO();
         BeanUtils.copyProperties(dto, t);
@@ -85,7 +85,7 @@ public class OpsTicketServiceImpl implements OpsTicketService {
         if (st == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9fc0eba4");
         if (!st.canTransitTo(OpsTicketStatus.ASSIGNED)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_1893fa52" + st.getDesc());
+                    "error.execution.msg_1893fa52", st.getDesc());
         }
         ticketMapper.updateAssignee(dto.getId(), dto.getAssigneeId(), dto.getAssigneeName(),
                 OpsTicketStatus.ASSIGNED.getCode(), LocalDateTime.now());
@@ -103,10 +103,10 @@ public class OpsTicketServiceImpl implements OpsTicketService {
         OpsTicketStatus from = OpsTicketStatus.fromCode(t.getStatus());
         OpsTicketStatus to = OpsTicketStatus.fromCode(dto.getTargetStatus());
         if (from == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_af717625");
-        if (to == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_57801ca5" + dto.getTargetStatus());
+        if (to == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_57801ca5", dto.getTargetStatus());
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_01c65a70" + from.getDesc() + " → " + to.getDesc());
+                    "error.execution.msg_01c65a70", from.getDesc(), to.getDesc());
         }
         LocalDateTime now = LocalDateTime.now();
         ticketMapper.updateStatus(dto.getId(), to.getCode());

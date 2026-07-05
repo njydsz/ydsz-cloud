@@ -287,7 +287,7 @@ public class UserAccountServiceImpl implements UserAccountService {
                     "账号已锁定至 " + u.getLockedUntil(), false, null);
             long remain = lockPolicy.remainingMinutes(u.getLockedUntil());
             throw new BizException(BizErrorCode.ACCOUNT_LOCKED,
-                    "error.user.msg_2e463b61" + remain + " 分钟后再试");
+                    "error.user.msg_2e463b61", remain);
         }
 
         if (!"ENABLED".equals(u.getStatus())) {

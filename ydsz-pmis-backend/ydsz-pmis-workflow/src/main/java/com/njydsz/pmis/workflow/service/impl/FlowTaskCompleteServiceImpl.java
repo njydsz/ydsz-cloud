@@ -126,7 +126,7 @@ public class FlowTaskCompleteServiceImpl {
     public Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16" + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
         }
 
         // P1-4: SERVICE 服务节点 — 自动执行（HTTP/SCRIPT/AUTO_PASS），不创建人工任务
@@ -360,7 +360,7 @@ public class FlowTaskCompleteServiceImpl {
     public void claim(Long taskId, Long userId) {
         FlowTaskDO task = support.getTaskOrThrow(taskId);
         if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5873f2ae" + task.getTaskStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5873f2ae", task.getTaskStatus());
         }
         taskMapper.updateById(toClaimTask(task, userId));
         support.audit(task, "CLAIM", userId, null, null);
@@ -382,7 +382,7 @@ public class FlowTaskCompleteServiceImpl {
     public void pass(FlowTaskOperateDTO dto) {
         FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_7f4098fb" + task.getTaskStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_7f4098fb", task.getTaskStatus());
         }
         Map<String, Object> variables = dto.getVariables() == null
                 ? Collections.emptyMap() : dto.getVariables();
@@ -432,10 +432,14 @@ public class FlowTaskCompleteServiceImpl {
         }
     }
 
-    // ============================== 驳回（P1-11: 任意历史节点） ==============================
+    // ============================== 驳回（P1-11: 任意历史节点；GAP-P0-2: 多节点同退） ==============================
 
     /**
      * 驳回
+     *
+     * <p>GAP-P0-2: 支持退回多节点同退（对标飞书）。
+     * 当 {@code dto.targetNodeCodes} 非空且 size > 1 时，在所有指定节点同时创建待办任务；
+     * 否则降级到单节点退回（{@code dto.targetNodeCode}）。
      */
     @Transactional(rollbackFor = Exception.class)
     public void reject(FlowTaskOperateDTO dto) {
@@ -454,9 +458,20 @@ public class FlowTaskCompleteServiceImpl {
         FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
         Map<String, Object> mergedVars = mergeVariables(instance, dto.getVariables());
 
-        // 推进：退回模式（dto.targetNodeCode 支持任意历史节点）
-        List<FlowNodeDO> rejectTargets = advancer.advance(instance, task.getNodeCode(),
-                "REJECT", dto.getTargetNodeCode(), mergedVars);
+        // GAP-P0-2: 优先使用多节点同退；为空时降级到单节点（向后兼容）
+        List<FlowNodeDO> rejectTargets;
+        boolean multiReject = dto.getTargetNodeCodes() != null && dto.getTargetNodeCodes().size() > 1;
+        if (multiReject) {
+            rejectTargets = advancer.advanceMulti(instance, task.getNodeCode(),
+                    "REJECT", dto.getTargetNodeCodes(), mergedVars);
+        } else {
+            // 单节点退回（保持原有逻辑）
+            String singleTarget = dto.getTargetNodeCodes() != null && !dto.getTargetNodeCodes().isEmpty()
+                    ? dto.getTargetNodeCodes().get(0)
+                    : dto.getTargetNodeCode();
+            rejectTargets = advancer.advance(instance, task.getNodeCode(),
+                    "REJECT", singleTarget, mergedVars);
+        }
         if (rejectTargets.isEmpty()) {
             instanceMapper.updateStatus(instance.getId(),
                     FlowInstanceStatus.REJECTED.name(),
@@ -481,8 +496,8 @@ public class FlowTaskCompleteServiceImpl {
                 rejectTargets.get(0).getNodeCode(), rejectTargets.get(0).getNodeName(),
                 null, null);
         support.audit(task, "REJECT", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
-        log.info("[Flow] 退回任务: taskId={} target={}", task.getId(),
-                rejectTargets.get(0).getNodeCode());
+        log.info("[Flow] 退回任务: taskId={} targets={} multi={}", task.getId(),
+                rejectTargets.stream().map(FlowNodeDO::getNodeCode).toList(), multiReject);
         // P1-7: WebSocket 推送任务驳回 + 操作人待办数更新
         if (todoCountPushService != null) {
             todoCountPushService.pushTaskRejected(task, dto.getUserId(), dto.getComment());
@@ -613,19 +628,19 @@ public class FlowTaskCompleteServiceImpl {
     public void jump(FlowTaskOperateDTO dto) {
         FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_1efc5644" + task.getTaskStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_1efc5644", task.getTaskStatus());
         }
         if (!StringUtils.hasText(dto.getTargetNodeCode())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_09c299d0");
         }
         FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16" + task.getInstanceId());
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", task.getInstanceId());
         }
         // 校验目标节点存在
         FlowNodeDO targetNode = nodeMapper.selectByCode(task.getDefinitionId(), dto.getTargetNodeCode());
         if (targetNode == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_a35217ba" + dto.getTargetNodeCode());
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_a35217ba", dto.getTargetNodeCode());
         }
         // 完成当前任务（状态 COMPLETED，审计 action=JUMP）
         completeAndArchive(task, dto.getComment());
@@ -669,7 +684,7 @@ public class FlowTaskCompleteServiceImpl {
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.PENDING.name().equals(status)
                 && !FlowTaskStatus.CLAIMED.name().equals(status)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ecc09732" + status);
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ecc09732", status);
         }
         // 更新任务状态为 TIMEOUT
         LocalDateTime now = LocalDateTime.now();
@@ -721,7 +736,7 @@ public class FlowTaskCompleteServiceImpl {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
-                    "error.workflow.msg_199e8ba1" + task.getId());
+                    "error.workflow.msg_199e8ba1", task.getId());
         }
         // P1-4: 优先求值 completionCondition 表达式（支持 BPMN 标准多实例完成条件）
         boolean shouldAdvance;
@@ -834,7 +849,7 @@ public class FlowTaskCompleteServiceImpl {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
-                    "error.workflow.msg_199e8ba1" + task.getId());
+                    "error.workflow.msg_199e8ba1", task.getId());
         }
         if (finished < required) {
             // 还有下一个用户：切换办理人
@@ -871,7 +886,7 @@ public class FlowTaskCompleteServiceImpl {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
-                    "error.workflow.msg_199e8ba1" + task.getId());
+                    "error.workflow.msg_199e8ba1", task.getId());
         }
         // P1-5: 通过率可配置 — 默认 50% + 1（即过半数）
         int threshold = (required / 2) + 1;
@@ -939,7 +954,7 @@ public class FlowTaskCompleteServiceImpl {
         int updated = taskMapper.updateById(task);
         if (updated == 0) {
             throw new BizException(BizErrorCode.RESOURCE_CONFLICT,
-                    "error.workflow.msg_199e8ba1" + task.getId());
+                    "error.workflow.msg_199e8ba1", task.getId());
         }
         // 5. 阈值（默认 50%）
         int threshold = (totalWeight / 2) + 1;

@@ -129,7 +129,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 dto.getInitiatorId());
         if (def == null) {
             throw new BizException(BizErrorCode.NOT_FOUND,
-                    "error.workflow.msg_add8d012" + dto.getFlowCode());
+                    "error.workflow.msg_add8d012", dto.getFlowCode());
         }
 
         // 2. 创建实例
@@ -399,7 +399,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             advancer.start(instanceId);
         } catch (Exception e) {
             log.error("[Flow] 撤回后重新推进失败: instanceId={}", instanceId, e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_3d726320" + e.getMessage());
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_3d726320", e.getMessage());
         }
         log.info("[Flow] 撤回流程: instanceId={} initiatorId={}", instanceId, initiatorId);
         // P2-3: Prometheus 指标 — 撤回
@@ -429,7 +429,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         // 1. 校验：仅 COMPLETED 状态可回滚
         if (!FlowInstanceStatus.COMPLETED.name().equals(instance.getFlowStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.workflow.msg_a1b2c3d4" + instance.getFlowStatus());
+                    "error.workflow.msg_a1b2c3d4", instance.getFlowStatus());
         }
 
         // 2. 校验：仅发起人或管理员可回滚
@@ -456,7 +456,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             long elapsedDays = java.time.Duration.between(instance.getEndAt(), LocalDateTime.now()).toDays();
             if (elapsedDays > days) {
                 throw new BizException(BizErrorCode.BAD_REQUEST,
-                        "error.workflow.msg_c3d4e5f6" + days);
+                        "error.workflow.msg_c3d4e5f6", days);
             }
         }
 
@@ -547,7 +547,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.put(key, value);
@@ -564,7 +564,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717", instanceId);
         }
         Map<String, Object> map = parseVariables(instance.getVariable());
         map.putAll(variables);
@@ -591,7 +591,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private FlowInstanceDO getByIdOrThrow(Long id) {
         FlowInstanceDO instance = instanceMapper.selectById(id);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717" + id);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_67a10717", id);
         }
         return instance;
     }
@@ -662,7 +662,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                     log.error("[Flow] callActivity 启动子流程失败: instanceId={} node={} err={}",
                             instanceId, node.getNodeCode(), e.getMessage(), e);
                     throw new BizException(BizErrorCode.INTERNAL_ERROR,
-                            "error.workflow.msg_f2bd498c" + e.getMessage());
+                            "error.workflow.msg_f2bd498c", e.getMessage());
                 }
                 continue;
             }
@@ -999,7 +999,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     public Map<String, Object> getFormRenderData(Long instanceId, Long taskId) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16" + instanceId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
         }
         String nodeCode;
         String nodeName;
@@ -1008,7 +1008,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             // 优先从任务获取节点信息
             FlowTaskDO task = taskMapper.selectById(taskId);
             if (task == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08" + taskId);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
             }
             nodeCode = task.getNodeCode();
             nodeName = task.getNodeName();

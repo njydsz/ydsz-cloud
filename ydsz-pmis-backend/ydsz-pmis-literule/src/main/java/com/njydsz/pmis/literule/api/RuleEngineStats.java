@@ -37,6 +37,12 @@ public class RuleEngineStats implements Serializable {
     /** 总评估耗时（毫秒） */
     private long totalElapsedMs;
 
+    /** 当前注册规则数（规则规模监控，用于评估 RETE 引入必要性） */
+    private int registeredRules;
+
+    /** 最近一次评估遍历的规则数 */
+    private int lastEvaluatedRules;
+
     /** 按规则编码的统计明细 */
     private Map<String, RuleStat> perRuleStats;
 

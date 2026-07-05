@@ -794,6 +794,7 @@ export default {
         done: 'My Done',
         mine: 'Initiated by Me',
         cc: 'CC to Me',
+        all: 'All',
       },
       columns: {
         selection: 'Selection',
@@ -811,6 +812,7 @@ export default {
         businessNo: 'Business No.',
         currentNodeName: 'Current Node',
         startTime: 'Start Time',
+        initiatorName: 'Initiator',
         ccTitle: 'CC Title',
         triggerNode: 'Trigger Node',
         triggerUserName: 'Initiator',
@@ -833,6 +835,7 @@ export default {
         reset: 'Reset Filters',
         flowCodePlaceholder: 'Flow Code',
         flowCodeKeywordPlaceholder: 'Flow code keyword',
+        businessTypePlaceholder: 'Business Type',
         readStatus: 'Read Status',
       },
       buttons: {
@@ -858,6 +861,8 @@ export default {
         operation: 'Operation',
         rejectNode: 'Reject to Node',
         rejectNodePlaceholder: 'Optional: leave empty to reject to previous node; select to reject to a specific historical node',
+        rejectNodeEmpty: 'No rejectable historical nodes, will automatically reject to the previous node',
+        rejectMultiHint: 'Multi-select supported. Selecting multiple nodes will reject to all selected nodes simultaneously (multi-node reject)',
         userPickerPlaceholder: 'Select target user (search by name/username)',
         commentLabel: 'Comment',
         urgeCommentLabel: 'Urge Comment',

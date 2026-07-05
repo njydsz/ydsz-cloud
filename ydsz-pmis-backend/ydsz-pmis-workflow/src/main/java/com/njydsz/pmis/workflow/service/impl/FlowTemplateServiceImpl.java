@@ -63,14 +63,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             }
             FlowTemplateDO template = templateMapper.selectByTemplateCode(templateCode);
             if (template == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047" + templateCode);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
             }
             return toDetailMap(template);
         } catch (BizException e) {
             throw e;
         } catch (Exception e) {
             log.error("[FlowTemplate] 获取模板详情异常: templateCode={} err={}", templateCode, e.getMessage(), e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_c2642700" + e.getMessage());
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
         }
     }
 
@@ -83,10 +83,10 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             }
             FlowTemplateDO template = templateMapper.selectByTemplateCode(templateCode);
             if (template == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047" + templateCode);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
             }
             if (!StringUtils.hasText(template.getBpmnXml())) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f407e561" + templateCode);
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f407e561", templateCode);
             }
 
             // 构建部署 DTO，使用 BPMN XML 模式
@@ -114,7 +114,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         } catch (Exception e) {
             log.error("[FlowTemplate] 模板导入异常: templateCode={} err={}", templateCode, e.getMessage(), e);
             throw new BizException(BizErrorCode.INTERNAL_ERROR,
-                    "error.workflow.msg_ecc1169b" + templateCode + " — " + e.getMessage());
+                    "error.workflow.msg_ecc1169b", templateCode, e.getMessage());
         }
     }
 
@@ -132,12 +132,12 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             // 获取流程定义详情
             Map<String, Object> detail = definitionService.getDetail(definitionId);
             if (detail == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
             }
 
             FlowDefinitionDO definition = (FlowDefinitionDO) detail.get("definition");
             if (definition == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
             }
 
             // 生成模板编码
@@ -177,7 +177,7 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             throw e;
         } catch (Exception e) {
             log.error("[FlowTemplate] 导出模板异常: definitionId={} err={}", definitionId, e.getMessage(), e);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_d119b2ed" + e.getMessage());
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_d119b2ed", e.getMessage());
         }
     }
 

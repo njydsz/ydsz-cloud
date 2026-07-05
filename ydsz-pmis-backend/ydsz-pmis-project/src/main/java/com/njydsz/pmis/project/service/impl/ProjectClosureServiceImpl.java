@@ -46,7 +46,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
         validate(dto);
         if (closureMapper.selectByCode(dto.getClosureCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "error.execution.msg_404a2e2f" + dto.getClosureCode());
+                    "error.execution.msg_404a2e2f", dto.getClosureCode());
         }
         ProjectClosureDO c = new ProjectClosureDO();
         BeanUtils.copyProperties(dto, c);
@@ -68,14 +68,14 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
         ClosureStatus from = ClosureStatus.fromCode(c.getStatus());
         ClosureStatus to = ClosureStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a" + c.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a", c.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_85e97de8" + from.getDesc() + " → " + to.getDesc());
+                    "error.execution.msg_85e97de8", from.getDesc(), to.getDesc());
         }
         LocalDateTime now = LocalDateTime.now();
         if (to == ClosureStatus.SUBMITTED) c.setSubmittedAt(now);
@@ -177,7 +177,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (ClosureType.fromCode(dto.getClosureType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_85b85c9e" + dto.getClosureType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_85b85c9e", dto.getClosureType());
         }
         if (dto.getApplicantId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_98bc5a1a");

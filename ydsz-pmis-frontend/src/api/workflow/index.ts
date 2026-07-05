@@ -145,6 +145,21 @@ export function pageInstances(params: {
   )
 }
 
+/** GAP-P0-1: 全部流程实例（管理员"全部"视图，需 workflow:monitor:view 权限） */
+export function listAllInstances(params: {
+  businessType?: string
+  flowStatus?: string
+  startTime?: string
+  endTime?: string
+  page?: number
+  size?: number
+}) {
+  return http.get<ApiResponse<FlowInstanceDTO[]>>(
+    '/workflow/engine/instance/all',
+    { params },
+  )
+}
+
 /** 终止流程实例 */
 export function terminateInstance(id: number, reason: string) {
   return http.post<ApiResponse<null>>(

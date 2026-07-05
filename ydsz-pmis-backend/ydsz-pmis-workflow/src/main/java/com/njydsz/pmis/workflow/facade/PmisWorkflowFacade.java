@@ -373,6 +373,31 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         return m;
     }
 
+    /** GAP-P0-1: 将 FlowInstanceDO 转换为 Map（管理员"全部"视图） */
+    private Map<String, Object> instanceToMap(FlowInstanceDO i) {
+        Map<String, Object> m = new HashMap<>();
+        m.put("id", i.getId());
+        m.put("flowCode", i.getFlowCode());
+        m.put("flowName", i.getFlowName());
+        m.put("definitionId", i.getDefinitionId());
+        m.put("flowVersion", i.getFlowVersion());
+        m.put("businessType", i.getBusinessType());
+        m.put("businessId", i.getBusinessId());
+        m.put("businessNo", i.getBusinessNo());
+        m.put("title", i.getTitle());
+        m.put("initiatorId", i.getInitiatorId());
+        m.put("initiatorName", i.getInitiatorName());
+        m.put("currentNodeCode", i.getCurrentNodeCode());
+        m.put("currentNodeName", i.getCurrentNodeName());
+        m.put("flowStatus", i.getFlowStatus());
+        m.put("activityStatus", i.getActivityStatus());
+        m.put("startAt", i.getStartAt());
+        m.put("endAt", i.getEndAt());
+        m.put("durationMs", i.getDurationMs());
+        m.put("dueAt", i.getDueAt());
+        return m;
+    }
+
     private Map<String, Object> auditToMap(FlowAuditLogDO log) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", log.getId());

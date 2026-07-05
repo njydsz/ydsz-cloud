@@ -56,7 +56,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");
         }
         if (mapper.selectByCode(dto.getSimulationCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_0e48bb17" + dto.getSimulationCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_0e48bb17", dto.getSimulationCode());
         }
         ProfitSimulationDO s = new ProfitSimulationDO();
         BeanUtils.copyProperties(dto, s);
@@ -102,10 +102,10 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
         if (s == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_a246acf1");
         SimulationStatus from = SimulationStatus.fromCode(s.getStatus());
         SimulationStatus to = SimulationStatus.fromCode(dto.getTargetStatus());
-        if (to == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
+        if (to == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         if (from == null || !from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_01c65a70" + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
+                    "error.execution.msg_01c65a70", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         s.setStatus(to.getCode());
         if (to == SimulationStatus.APPROVED) {

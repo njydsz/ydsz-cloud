@@ -796,6 +796,7 @@ export default {
         done: '我的已办',
         mine: '我发起的',
         cc: '抄送我的',
+        all: '全部',
       },
       columns: {
         selection: '选择',
@@ -813,6 +814,7 @@ export default {
         businessNo: '业务单号',
         currentNodeName: '当前节点',
         startTime: '发起时间',
+        initiatorName: '发起人',
         ccTitle: '抄送标题',
         triggerNode: '触发节点',
         triggerUserName: '发起人',
@@ -835,6 +837,7 @@ export default {
         reset: '重置筛选',
         flowCodePlaceholder: '流程编码',
         flowCodeKeywordPlaceholder: '流程编码关键词',
+        businessTypePlaceholder: '业务类型',
         readStatus: '已读状态',
       },
       buttons: {
@@ -860,6 +863,8 @@ export default {
         operation: '操作',
         rejectNode: '驳回到节点',
         rejectNodePlaceholder: '可选：留空则驳回到上一节点；选择则驳回到指定历史节点',
+        rejectNodeEmpty: '无可驳回的历史节点，将自动驳回到上一节点',
+        rejectMultiHint: '支持多选，勾选多个节点时将同时退回至所选节点（多节点同退）',
         userPickerPlaceholder: '请选择目标用户（搜索姓名/用户名）',
         commentLabel: '审批意见',
         urgeCommentLabel: '催办意见',

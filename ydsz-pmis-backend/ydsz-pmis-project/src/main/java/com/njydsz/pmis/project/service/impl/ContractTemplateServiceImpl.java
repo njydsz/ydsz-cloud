@@ -50,7 +50,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         validate(dto);
         if (templateMapper.selectByCode(dto.getTemplateCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "error.project.msg_ba4811d9" + dto.getTemplateCode());
+                    "error.project.msg_ba4811d9", dto.getTemplateCode());
         }
         ContractTemplateDO t = new ContractTemplateDO();
         BeanUtils.copyProperties(dto, t);
@@ -77,14 +77,14 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
         ContractTemplateStatus from = ContractTemplateStatus.fromCode(t.getStatus());
         ContractTemplateStatus to = ContractTemplateStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_2e33226a" + t.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_2e33226a", t.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.project.msg_01c65a70" + from.getDesc() + " → " + to.getDesc());
+                    "error.project.msg_01c65a70", from.getDesc(), to.getDesc());
         }
         // PUBLISHED -> DRAFT 视为重新编辑（仍允许）
         templateMapper.updateStatus(t.getId(), to.getCode());
@@ -176,7 +176,7 @@ public class ContractTemplateServiceImpl implements ContractTemplateService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (ContractTemplateType.fromCode(dto.getContractType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d8bb22ac" + dto.getContractType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d8bb22ac", dto.getContractType());
         }
         if (dto.getDefaultPaymentDays() != null && dto.getDefaultPaymentDays() < 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_435fcf5a");

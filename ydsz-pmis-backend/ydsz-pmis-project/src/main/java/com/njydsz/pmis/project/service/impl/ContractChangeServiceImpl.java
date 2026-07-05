@@ -81,7 +81,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public void submit(Long id) {
         ContractChangeDO c = getById(id);
         if (!"DRAFT".equalsIgnoreCase(c.getStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d85e77c2" + c.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d85e77c2", c.getStatus());
         }
         changeMapper.updateStatus(id, "SUBMITTED", null, null);
         log.info("[ContractChange] 提交审批: id={}", id);
@@ -101,7 +101,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public void approve(Long id, Long approverId, String approverName) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8a0e5737" + c.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8a0e5737", c.getStatus());
         }
         changeMapper.updateStatus(id, "APPROVED", approverId, approverName);
 
@@ -136,7 +136,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
     public void reject(Long id, Long approverId, String approverName, String reason) {
         ContractChangeDO c = getById(id);
         if (!("SUBMITTED".equalsIgnoreCase(c.getStatus()) || "APPROVING".equalsIgnoreCase(c.getStatus()))) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_a77d8060" + c.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_a77d8060", c.getStatus());
         }
         changeMapper.updateStatus(id, "REJECTED", approverId, approverName);
         if (StringUtils.hasText(reason)) {
@@ -214,7 +214,7 @@ public class ContractChangeServiceImpl implements ContractChangeService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_00a4ec00");
         }
         if (!CHANGE_TYPES.contains(dto.getChangeType().toUpperCase())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_b246fa8c" + dto.getChangeType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_b246fa8c", dto.getChangeType());
         }
     }
 }

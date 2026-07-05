@@ -120,7 +120,7 @@ public final class SecurityContext {
     public static void requirePermission(String perm) {
         LoginUser user = getCurrent();
         if (!user.hasPermission(perm)) {
-            throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_1e40057e" + perm);
+            throw new BizException(BizErrorCode.FORBIDDEN, "error.common.msg_1e40057e", perm);
         }
     }
 

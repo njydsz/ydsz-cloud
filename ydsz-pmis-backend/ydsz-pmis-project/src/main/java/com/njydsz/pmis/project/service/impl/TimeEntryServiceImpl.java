@@ -99,7 +99,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         TimeEntryStatus from = TimeEntryStatus.fromCode(e.getStatus());
         if (from == null || !from.canTransitTo(TimeEntryStatus.SUBMITTED)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_7b9adbb0" + (from == null ? "未知" : from.getDesc()));
+                    "error.execution.msg_7b9adbb0", (from == null ? "未知" : from.getDesc()));
         }
         timeEntryMapper.updateStatus(id, TimeEntryStatus.SUBMITTED.getCode(), null, null, null);
         log.info("[TimeEntry] 提交工时: id={}", id);
@@ -115,12 +115,11 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         TimeEntryStatus from = TimeEntryStatus.fromCode(e.getStatus());
         TimeEntryStatus to = TimeEntryStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_5ad12374" + (from == null ? "未知" : from.getDesc())
-                            + " → " + to.getDesc());
+                    "error.execution.msg_5ad12374", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         if (to == TimeEntryStatus.REJECTED && !StringUtils.hasText(dto.getRejectReason())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4f3bb73f");

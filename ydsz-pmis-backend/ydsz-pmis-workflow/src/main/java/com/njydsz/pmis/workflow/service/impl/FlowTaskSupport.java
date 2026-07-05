@@ -57,7 +57,7 @@ public class FlowTaskSupport {
     public FlowTaskDO getTaskOrThrow(Long id) {
         FlowTaskDO task = taskMapper.selectById(id);
         if (task == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08" + id);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
         }
         return task;
     }

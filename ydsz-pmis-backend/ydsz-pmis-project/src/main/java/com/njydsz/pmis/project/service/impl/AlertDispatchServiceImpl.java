@@ -71,7 +71,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
         }
         String level = StringUtils.hasText(dto.getAlertLevel()) ? dto.getAlertLevel().toUpperCase() : "YELLOW";
         if (!isValidLevel(level)) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_edec9e26" + level);
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_edec9e26", level);
         }
         if (!StringUtils.hasText(dto.getTitle())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a39a1acf");

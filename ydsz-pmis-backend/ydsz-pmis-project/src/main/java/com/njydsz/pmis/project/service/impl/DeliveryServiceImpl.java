@@ -101,7 +101,7 @@ public class DeliveryServiceImpl implements DeliveryService {
         validateItem(dto);
         if (itemMapper.selectByCode(dto.getItemCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "error.execution.msg_6f4c0a13" + dto.getItemCode());
+                    "error.execution.msg_6f4c0a13", dto.getItemCode());
         }
         DeliveryItemDO i = new DeliveryItemDO();
         BeanUtils.copyProperties(dto, i);
@@ -126,14 +126,14 @@ public class DeliveryServiceImpl implements DeliveryService {
         DeliveryItemStatus from = DeliveryItemStatus.fromCode(i.getStatus());
         DeliveryItemStatus to = DeliveryItemStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a" + i.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a", i.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_ba80cf32" + from.getDesc() + " → " + to.getDesc());
+                    "error.execution.msg_ba80cf32", from.getDesc(), to.getDesc());
         }
         // LocalDateTime now removed - unused
         LocalDate today = LocalDate.now();
@@ -222,10 +222,10 @@ public class DeliveryServiceImpl implements DeliveryService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         }
         if (ProjectType.fromCode(dto.getProjectType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1942429d" + dto.getProjectType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1942429d", dto.getProjectType());
         }
         if (DeliveryStage.fromCode(dto.getStage()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4fbcd36c" + dto.getStage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4fbcd36c", dto.getStage());
         }
     }
 
@@ -238,11 +238,11 @@ public class DeliveryServiceImpl implements DeliveryService {
         }
         if (StringUtils.hasText(dto.getStage())
                 && DeliveryStage.fromCode(dto.getStage()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4fbcd36c" + dto.getStage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_4fbcd36c", dto.getStage());
         }
         if (StringUtils.hasText(dto.getProjectType())
                 && ProjectType.fromCode(dto.getProjectType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1942429d" + dto.getProjectType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1942429d", dto.getProjectType());
         }
     }
 }

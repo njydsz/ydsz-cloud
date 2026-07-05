@@ -546,6 +546,34 @@ public class FlowEngineController {
     }
 
     /**
+     * GAP-P0-1: 全部流程实例查询（管理员视图）
+     *
+     * <p>对标钉钉/飞书/企微审批中心"全部"Tab。需要 {@code workflow:monitor:view} 权限。
+     * 与 {@code /instance/page} 的区别：本端点语义为"管理员看全部"，强制不按 initiatorId 过滤，
+     * 返回精简 Map 结构（避免泄露定义内部字段）。
+     *
+     * @param page         页码
+     * @param size         每页大小
+     * @param businessType 业务类型（可选）
+     * @param flowStatus   流程状态（可选）
+     * @param startTime    开始时间下界（可选）
+     * @param endTime      开始时间上界（可选）
+     * @return 统一响应结果，包含实例 Map 列表
+     */
+    @GetMapping("/instance/all")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    public Result<List<Map<String, Object>>> instanceAll(
+            @RequestParam(defaultValue = "1") @Min(1) int page,
+            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(required = false) String businessType,
+            @RequestParam(required = false) String flowStatus,
+            @RequestParam(required = false) LocalDateTime startTime,
+            @RequestParam(required = false) LocalDateTime endTime) {
+        return Result.ok(workflowFacade.listAllInstances(businessType, flowStatus,
+                startTime, endTime, page, size));
+    }
+
+    /**
      * P2-24: 读取流程变量
      *
      * @param id 流程实例 ID

@@ -86,7 +86,7 @@ public class DepartmentServiceImpl implements DepartmentService {
         // 编码唯一
         DepartmentDO exists = departmentMapper.selectByCode(dto.getDeptCode());
         if (exists != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_58b44529" + dto.getDeptCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_58b44529", dto.getDeptCode());
         }
         // 父部门校验
         Long parentId = dto.getParentId() == null ? 0L : dto.getParentId();

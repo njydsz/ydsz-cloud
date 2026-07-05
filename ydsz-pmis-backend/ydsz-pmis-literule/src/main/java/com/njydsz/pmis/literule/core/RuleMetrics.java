@@ -38,6 +38,10 @@ public class RuleMetrics {
     protected final AtomicLong totalErrors = new AtomicLong(0);
     /** 总耗时（毫秒） */
     protected final AtomicLong totalElapsedMs = new AtomicLong(0);
+    /** 当前注册规则数（用于规则规模监控，评估 RETE 引入必要性） */
+    protected volatile int registeredRules = 0;
+    /** 单次评估遍历的规则数（最近一次 evaluate 调用实际遍历的规则数） */
+    protected volatile int lastEvaluatedRules = 0;
 
     /**
      * 记录单次评估
@@ -77,8 +81,38 @@ public class RuleMetrics {
         log.debug("[LiteRule-Metrics] Trace 队列积压: {}", queueSize);
     }
 
+    /**
+     * 记录当前注册规则数（规则规模监控指标）
+     *
+     * <p>用于评估是否需要引入 RETE 算法：
+     * <ul>
+     *   <li>规则数 &lt; 200：顺序匹配性能可接受</li>
+     *   <li>规则数 200~1000：建议监控平均评估耗时，考虑条件索引优化</li>
+     *   <li>规则数 &gt; 1000：建议评估引入 RETE 算法或条件索引</li>
+     * </ul>
+     *
+     * @param count 当前注册规则数
+     * @since 1.5.0
+     */
+    public void recordRegisteredRules(int count) {
+        this.registeredRules = count;
+        log.debug("[LiteRule-Metrics] 注册规则数: {}", count);
+    }
+
+    /**
+     * 记录单次评估遍历的规则数
+     *
+     * @param count 遍历规则数
+     * @since 1.5.0
+     */
+    public void recordEvaluatedRules(int count) {
+        this.lastEvaluatedRules = count;
+    }
+
     public long getTotalEvaluations() { return totalEvaluations.get(); }
     public long getTotalTriggered() { return totalTriggered.get(); }
     public long getTotalErrors() { return totalErrors.get(); }
     public long getTotalElapsedMs() { return totalElapsedMs.get(); }
+    public int getRegisteredRules() { return registeredRules; }
+    public int getLastEvaluatedRules() { return lastEvaluatedRules; }
 }

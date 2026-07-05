@@ -48,7 +48,7 @@ public class BenchServiceImpl implements BenchService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         }
         if (benchMapper.selectByCode(dto.getBenchCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_31770192" + dto.getBenchCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_31770192", dto.getBenchCode());
         }
         String action = dto.getAction() == null ? "" : dto.getAction().toUpperCase();
         if ("ENTER".equals(action)) return autoEnter(dto);
@@ -57,7 +57,7 @@ public class BenchServiceImpl implements BenchService {
                     dto.getReasonType(), dto.getExitDate() != null ? dto.getExitDate() : LocalDate.now());
             return null;
         }
-        throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_f4a32874" + dto.getAction());
+        throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_f4a32874", dto.getAction());
     }
 
     @Override
@@ -66,7 +66,7 @@ public class BenchServiceImpl implements BenchService {
         // 校验当前没有活跃 Bench
         BenchRecordDO active = benchMapper.selectActiveByEmployee(dto.getEmployeeId());
         if (active != null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d48cd922" + active.getBenchCode());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d48cd922", active.getBenchCode());
         }
         BenchRecordDO b = new BenchRecordDO();
         BeanUtils.copyProperties(dto, b);

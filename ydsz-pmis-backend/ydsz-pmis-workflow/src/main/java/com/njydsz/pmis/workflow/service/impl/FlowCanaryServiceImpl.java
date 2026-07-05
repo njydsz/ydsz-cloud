@@ -75,7 +75,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         String curStatus = def.getCanaryStatus() == null ? CanaryStatus.NONE.name() : def.getCanaryStatus();
         if (!CanaryStatus.CANARYING.name().equals(curStatus)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.workflow.msg_f5374e71" + curStatus);
+                    "error.workflow.msg_f5374e71", curStatus);
         }
         int oldPercent = def.getCanaryPercent() == null ? 0 : def.getCanaryPercent();
         if (oldPercent == newPercent) {
@@ -216,7 +216,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     private void validatePercent(int percent) {
         if (percent < 0 || percent > 100) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.workflow.msg_a9bb9120" + percent);
+                    "error.workflow.msg_a9bb9120", percent);
         }
     }
 
@@ -226,7 +226,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         }
         FlowDefinitionDO def = definitionMapper.selectById(definitionId);
         if (def == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8" + definitionId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_690c83d8", definitionId);
         }
         return def;
     }

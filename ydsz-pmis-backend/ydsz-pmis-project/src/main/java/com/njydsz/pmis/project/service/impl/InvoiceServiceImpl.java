@@ -53,17 +53,17 @@ public class InvoiceServiceImpl implements InvoiceService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_abaef3a6");
         }
         if (InvoiceType.fromCode(dto.getInvoiceType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_e77a5692" + dto.getInvoiceType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_e77a5692", dto.getInvoiceType());
         }
         if (InvoiceBasis.fromCode(dto.getInvoiceBasis()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a5324fa7" + dto.getInvoiceBasis());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a5324fa7", dto.getInvoiceBasis());
         }
         if (invoiceMapper.selectByCode(dto.getInvoiceCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_9c944632" + dto.getInvoiceCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_9c944632", dto.getInvoiceCode());
         }
         if (StringUtils.hasText(dto.getInvoiceNo())
                 && invoiceMapper.selectByInvoiceNo(dto.getInvoiceNo()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_bef09851" + dto.getInvoiceNo());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_bef09851", dto.getInvoiceNo());
         }
         if ("RED_REVERSE".equalsIgnoreCase(dto.getInvoiceType())) {
             if (dto.getReversedById() == null) {
@@ -172,7 +172,7 @@ public class InvoiceServiceImpl implements InvoiceService {
             if (invoiceMapper.selectByInvoiceNo(dto.getInvoiceNo()) != null
                     && !dto.getInvoiceNo().equals(inv.getInvoiceNo())) {
                 throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                        "error.execution.msg_67174829" + dto.getInvoiceNo());
+                        "error.execution.msg_67174829", dto.getInvoiceNo());
             }
             inv.setInvoiceNo(dto.getInvoiceNo());
         }
@@ -300,11 +300,11 @@ public class InvoiceServiceImpl implements InvoiceService {
         InvoiceStatus from = InvoiceStatus.fromCode(inv.getStatus());
         if (from == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_2e33226a" + inv.getStatus());
+                    "error.execution.msg_2e33226a", inv.getStatus());
         }
         if (!from.canTransitTo(target)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_80c713df" + from.getDesc() + " 迁移到 " + target.getDesc());
+                    "error.execution.msg_80c713df", from.getDesc(), target.getDesc());
         }
         invoiceMapper.updateStatus(inv.getId(), target.getCode(), operatorId, null);
         inv.setStatus(target.getCode());

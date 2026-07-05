@@ -133,7 +133,10 @@ export interface FlowTaskOperateDTO {
   comment?: string
   targetUserId?: number
   targetUserName?: string
+  /** 单节点退回目标（向后兼容） */
   targetNodeCode?: string
+  /** GAP-P0-2: 多节点同退目标列表（非空时优先于 targetNodeCode） */
+  targetNodeCodes?: string[]
   variables?: Record<string, unknown>
 }
 

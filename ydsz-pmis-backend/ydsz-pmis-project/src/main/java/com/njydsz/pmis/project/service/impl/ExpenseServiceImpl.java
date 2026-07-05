@@ -49,7 +49,7 @@ public class ExpenseServiceImpl implements ExpenseService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9f487f28");
         }
         if (expenseMapper.selectByCode(dto.getExpenseCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_37f1deeb" + dto.getExpenseCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_37f1deeb", dto.getExpenseCode());
         }
         ExpenseDO e = new ExpenseDO();
         BeanUtils.copyProperties(dto, e);
@@ -83,11 +83,11 @@ public class ExpenseServiceImpl implements ExpenseService {
         ApprovalStatus from = ApprovalStatus.fromCode(e.getStatus());
         ApprovalStatus to = ApprovalStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null || !from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_ba0d6420" + (from == null ? "未知" : from.getDesc()) + " → " + to.getDesc());
+                    "error.execution.msg_ba0d6420", (from == null ? "未知" : from.getDesc()), to.getDesc());
         }
         expenseMapper.updateStatus(dto.getId(), to.getCode(),
                 dto.getApproverId(), dto.getApproverName());

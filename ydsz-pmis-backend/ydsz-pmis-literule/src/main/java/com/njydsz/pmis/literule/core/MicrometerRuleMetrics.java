@@ -21,6 +21,8 @@ import java.util.concurrent.TimeUnit;
  *   <li>{@code literule_rule_eval_duration_seconds{rule_code,}} — 评估耗时分布（P50/P95/P99）</li>
  *   <li>{@code literule_breaker_state{rule_code,state,}} — 熔断状态（0/1）</li>
  *   <li>{@code literule_trace_queue_size} — Trace 队列积压（Gauge）</li>
+ *   <li>{@code literule_registered_rules} — 当前注册规则数（Gauge，用于评估 RETE 引入必要性）</li>
+ *   <li>{@code literule_evaluated_rules} — 单次评估遍历规则数（Gauge）</li>
  * </ul>
  *
  * <p>不依赖任何 Spring 注解，可被 Spring Boot 以外的框架使用。
@@ -32,6 +34,8 @@ public class MicrometerRuleMetrics extends RuleMetrics {
 
     private final MeterRegistry registry;
     private volatile int lastTraceQueueSize = 0;
+    private volatile int lastRegisteredRules = 0;
+    private volatile int lastEvaluatedRules = 0;
 
     public MicrometerRuleMetrics(MeterRegistry registry) {
         this.registry = registry;
@@ -84,5 +88,19 @@ public class MicrometerRuleMetrics extends RuleMetrics {
         super.recordTraceQueueSize(queueSize);
         lastTraceQueueSize = queueSize;
         registry.gauge("literule_trace_queue_size", Tags.empty(), lastTraceQueueSize);
+    }
+
+    @Override
+    public void recordRegisteredRules(int count) {
+        super.recordRegisteredRules(count);
+        lastRegisteredRules = count;
+        registry.gauge("literule_registered_rules", Tags.empty(), lastRegisteredRules);
+    }
+
+    @Override
+    public void recordEvaluatedRules(int count) {
+        super.recordEvaluatedRules(count);
+        lastEvaluatedRules = count;
+        registry.gauge("literule_evaluated_rules", Tags.empty(), lastEvaluatedRules);
     }
 }

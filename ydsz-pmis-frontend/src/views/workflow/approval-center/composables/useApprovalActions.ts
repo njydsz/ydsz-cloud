@@ -64,7 +64,10 @@ export interface ApprovalActionContext {
   comment?: string
   targetUserId?: number
   targetUserName?: string
+  /** 单节点退回目标（向后兼容） */
   targetNodeCode?: string
+  /** GAP-P0-2: 多节点同退目标列表（非空时优先于 targetNodeCode） */
+  targetNodeCodes?: string[]
   variables?: Record<string, unknown>
 }
 
@@ -128,6 +131,10 @@ abstract class BaseAction implements ApprovalAction {
       targetUserId: ctx.targetUserId,
       targetUserName: ctx.targetUserName,
       targetNodeCode: ctx.targetNodeCode || undefined,
+      // GAP-P0-2: 多节点同退列表（非空时后端优先使用）
+      targetNodeCodes: ctx.targetNodeCodes && ctx.targetNodeCodes.length > 0
+        ? ctx.targetNodeCodes
+        : undefined,
       variables: ctx.variables,
     }
   }
@@ -369,6 +376,8 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     targetUserId: undefined as number | undefined,
     targetUserName: '' as string,
     targetNodeCode: '',
+    /** GAP-P0-2: 多节点同退勾选的节点编码列表 */
+    targetNodeCodes: [] as string[],
     /** 驳回目标节点列表（任意历史节点） */
     rejectTargets: [] as Array<{ nodeCode: string; nodeName?: string }>,
     /** 附件列表（CommentEditor 附件） */
@@ -402,6 +411,8 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     opForm.targetUserId = undefined
     opForm.targetUserName = ''
     opForm.targetNodeCode = ''
+    // GAP-P0-2: 重置多节点同退勾选
+    opForm.targetNodeCodes = []
     opForm.rejectTargets = []
     opForm.attachments = []
     opForm.mentions = []
@@ -480,6 +491,8 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
       targetUserId: opForm.targetUserId,
       targetUserName: opForm.targetUserName,
       targetNodeCode: opForm.targetNodeCode || undefined,
+      // GAP-P0-2: 多节点同退勾选列表（非空时后端优先使用）
+      targetNodeCodes: opForm.targetNodeCodes.length > 0 ? opForm.targetNodeCodes : undefined,
       variables: {
         attachments: opForm.attachments.map((a) => ({
           fileId: a.fileId,

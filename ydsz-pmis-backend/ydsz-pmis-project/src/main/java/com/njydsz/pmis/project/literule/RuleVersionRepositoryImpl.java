@@ -95,9 +95,9 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
                 .titleTemplate(existing.getTitleTemplate())
                 .descriptionTemplate(existing.getDescriptionTemplate())
                 .priority(existing.getPriority())
-                .enabled(existing.getEnabled())
+                .enabled(Boolean.TRUE.equals(existing.getEnabled()))
                 .scope(existing.getScope())
-                .drilldownAvailable(existing.getDrilldownAvailable())
+                .drilldownAvailable(Boolean.TRUE.equals(existing.getDrilldownAvailable()))
                 .version(existing.getVersion())
                 .build();
         saveVersion(rolledBack, operator, "回滚至 v" + version);

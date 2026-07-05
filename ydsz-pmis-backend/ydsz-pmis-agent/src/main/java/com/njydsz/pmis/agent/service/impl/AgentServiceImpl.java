@@ -82,7 +82,7 @@ public class AgentServiceImpl implements AgentService {
             record.setErrorMsg(e.getMessage());
             record.setCostMs(System.currentTimeMillis() - t0);
             predictionMapper.updateById(record);
-            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.agent.msg_eaf40df5" + e.getMessage());
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.agent.msg_eaf40df5", e.getMessage());
         }
         long cost = System.currentTimeMillis() - t0;
         record.setAlertLevel(result.getAlertLevel() == null ? AgentAlertLevel.NORMAL.getCode()
@@ -140,7 +140,7 @@ public class AgentServiceImpl implements AgentService {
     public AgentResult executeInMemory(String agentType, AgentContext context) {
         AgentType type = AgentType.fromCode(agentType);
         if (type == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_3e4d9788" + agentType);
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_3e4d9788", agentType);
         }
         Agent agent = findAgent(type);
         return agent.execute(context);
@@ -208,7 +208,7 @@ public class AgentServiceImpl implements AgentService {
         }
         AgentType type = AgentType.fromCode(req.getAgentType());
         if (type == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_3e4d9788" + req.getAgentType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.agent.msg_3e4d9788", req.getAgentType());
         }
         return type;
     }

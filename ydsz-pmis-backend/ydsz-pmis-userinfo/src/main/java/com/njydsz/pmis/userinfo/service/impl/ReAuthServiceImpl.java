@@ -73,7 +73,7 @@ public class ReAuthServiceImpl implements ReAuthService {
             case "TOTP" -> ok = verifyTotp(userId, request.getOtp());
             case "BACKUP_CODE" -> ok = verifyBackupCode(userId, request.getBackupCode());
             default -> throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.user.msg_0fecfe87" + method + "（仅 PASSWORD / TOTP / BACKUP_CODE）");
+                    "error.user.msg_0fecfe87", method);
         }
         if (!ok) {
             throw new BizException(BizErrorCode.FORBIDDEN, "error.user.msg_89bb6348");

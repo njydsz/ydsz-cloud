@@ -55,7 +55,7 @@ public class AgentCoordinatorImpl implements AgentCoordinator {
         OrchestrationStrategy strategy = strategyMap.get(req.getMode());
         if (strategy == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.agent.msg_2eda11e6" + req.getMode().getCode());
+                    "error.agent.msg_2eda11e6", req.getMode().getCode());
         }
         AgentBlackboard blackboard = new AgentBlackboard(req.getFacts());
         log.info("[Coordinator] 开始编排: mode={} biz={} agents={}",

@@ -41,7 +41,7 @@ public class JobLevelServiceImpl implements JobLevelService {
         }
         JobLevelRateDO rate = jobLevelRateMapper.selectEffective(levelCode, date);
         if (rate == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c23b2b34" + levelCode);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_c23b2b34", levelCode);
         }
         return rate;
     }

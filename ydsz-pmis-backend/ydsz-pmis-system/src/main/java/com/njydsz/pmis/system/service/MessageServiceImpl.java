@@ -93,10 +93,10 @@ public class MessageServiceImpl implements MessageService {
             MessageTemplateDO template = loadTemplate(
                     request.getTemplateCode(), request.getChannel().toUpperCase(), null);
             if (template == null) {
-                throw new BizException(BizErrorCode.NOT_FOUND, "error.message.msg_c16cb047" + request.getTemplateCode());
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.message.msg_c16cb047", request.getTemplateCode());
             }
             if (!"ENABLED".equalsIgnoreCase(template.getStatus())) {
-                throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_fe0cc3a8" + request.getTemplateCode());
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_fe0cc3a8", request.getTemplateCode());
             }
             Map<String, Object> params = request.getParams() == null ? new HashMap<>() : request.getParams();
             String content = templateEngine.render(template.getContent(), params);
@@ -113,7 +113,7 @@ public class MessageServiceImpl implements MessageService {
         // 选择通道
         MessageChannel channel = channelCache.get(request.getChannel().toUpperCase());
         if (channel == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_3d19e7f2" + request.getChannel());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.message.msg_3d19e7f2", request.getChannel());
         }
 
         // 执行发送并记录日志

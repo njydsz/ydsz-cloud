@@ -52,10 +52,10 @@ public class RevenueServiceImpl implements RevenueService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_a853c0c6");
         }
         if (RevenueRecognitionMethod.fromCode(dto.getRecognitionMethod()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9a58a1bc" + dto.getRecognitionMethod());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_9a58a1bc", dto.getRecognitionMethod());
         }
         if (revenueMapper.selectByCode(dto.getRevenueCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_52c2d527" + dto.getRevenueCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_52c2d527", dto.getRevenueCode());
         }
         RevenueDO r = new RevenueDO();
         BeanUtils.copyProperties(dto, r);

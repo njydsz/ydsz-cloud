@@ -59,7 +59,7 @@ public class PaymentServiceImpl implements PaymentService {
         }
         if (paymentMapper.selectByCode(dto.getPaymentCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "error.execution.msg_bf666ece" + dto.getPaymentCode());
+                    "error.execution.msg_bf666ece", dto.getPaymentCode());
         }
         PaymentDO p = new PaymentDO();
         BeanUtils.copyProperties(dto, p);
@@ -136,7 +136,7 @@ public class PaymentServiceImpl implements PaymentService {
                 : p.getUnallocatedAmount();
         if (dto.getAmount().compareTo(remain) > 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_8036953c" + dto.getAmount() + ")大于未分配金额(" + remain + ")");
+                    "error.execution.msg_8036953c", dto.getAmount(), remain);
         }
         String existing = p.getInvoiceAllocation();
         String updated = (existing == null || existing.isBlank())
@@ -323,11 +323,11 @@ public class PaymentServiceImpl implements PaymentService {
         PaymentStatus from = PaymentStatus.fromCode(p.getStatus());
         if (from == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_2e33226a" + p.getStatus());
+                    "error.execution.msg_2e33226a", p.getStatus());
         }
         if (!from.canTransitTo(target)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_93d51f1f" + from.getDesc() + " 迁移到 " + target.getDesc());
+                    "error.execution.msg_93d51f1f", from.getDesc(), target.getDesc());
         }
         paymentMapper.updateStatus(p.getId(), target.getCode(), operatorId);
         p.setStatus(target.getCode());

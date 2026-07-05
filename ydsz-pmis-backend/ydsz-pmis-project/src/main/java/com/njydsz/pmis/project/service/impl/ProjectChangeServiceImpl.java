@@ -61,7 +61,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         validate(dto);
         if (changeMapper.selectByCode(dto.getChangeCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "error.project.msg_f3637e40" + dto.getChangeCode());
+                    "error.project.msg_f3637e40", dto.getChangeCode());
         }
         ProjectChangeDO c = new ProjectChangeDO();
         BeanUtils.copyProperties(dto, c);
@@ -100,14 +100,14 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         ChangeStatus from = ChangeStatus.fromCode(c.getStatus());
         ChangeStatus to = ChangeStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_2e33226a" + c.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.project.msg_0c941160" + from.getDesc() + " → " + to.getDesc());
+                    "error.project.msg_0c941160", from.getDesc(), to.getDesc());
         }
         LocalDateTime now = LocalDateTime.now();
         if (to == ChangeStatus.SUBMITTED) c.setSubmittedAt(now);
@@ -136,7 +136,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
         ProjectChangeDO c = getById(id);
         ChangeStatus st = ChangeStatus.fromCode(c.getStatus());
         if (st != ChangeStatus.DRAFT && st != ChangeStatus.REJECTED && st != ChangeStatus.CANCELLED) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3a1a0d4b" + st.getDesc());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3a1a0d4b", st.getDesc());
         }
         changeMapper.deleteById(id);
         log.info("[ProjectChange] 删除变更: id={}", id);
@@ -251,7 +251,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_d9712a58");
         }
         if (ChangeType.fromCode(dto.getChangeType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7d505699" + dto.getChangeType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7d505699", dto.getChangeType());
         }
         if (dto.getApplicantId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_98bc5a1a");

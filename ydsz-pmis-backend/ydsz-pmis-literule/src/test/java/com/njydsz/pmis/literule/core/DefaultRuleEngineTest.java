@@ -272,6 +272,44 @@ class DefaultRuleEngineTest {
         assertThat(stats.getTotalEvaluations()).isEqualTo(0);
     }
 
+    @Test
+    @DisplayName("规则规模监控 - 注册后 stats 反映注册规则数")
+    void registeredRulesShouldBeReflectedInStats() {
+        engine.register(createRule("R001", "规则1", 100));
+        engine.register(createRule("R002", "规则2", 100));
+        engine.register(createRule("R003", "规则3", 100));
+
+        RuleEngineStats stats = engine.getStats();
+        assertThat(stats.getRegisteredRules()).isEqualTo(3);
+    }
+
+    @Test
+    @DisplayName("规则规模监控 - 注销后 stats 反映最新规则数")
+    void unregisteredRulesShouldBeReflectedInStats() {
+        engine.register(createRule("R001", "规则1", 100));
+        engine.register(createRule("R002", "规则2", 100));
+
+        engine.unregister("R001");
+
+        RuleEngineStats stats = engine.getStats();
+        assertThat(stats.getRegisteredRules()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("规则规模监控 - metrics 记录注册规则数与遍历规则数")
+    void metricsShouldRecordRuleScale() {
+        RuleMetrics metrics = new RuleMetrics();
+        engine.setMetrics(metrics);
+        engine.register(createRule("R001", "规则1", 100));
+        engine.register(createRule("R002", "规则2", 100));
+
+        assertThat(metrics.getRegisteredRules()).isEqualTo(2);
+
+        engine.evaluate(RuleContext.of(Map.of("amount", 1000)));
+
+        assertThat(metrics.getLastEvaluatedRules()).isEqualTo(2);
+    }
+
     // ============ 异常隔离 ============
 
     @Test

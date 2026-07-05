@@ -47,7 +47,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     public Long create(WbsTaskCreateDTO dto) {
         validate(dto);
         if (wbsTaskMapper.selectByCode(dto.getTaskCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_aecdf567" + dto.getTaskCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.execution.msg_aecdf567", dto.getTaskCode());
         }
         WbsTaskDO t = new WbsTaskDO();
         BeanUtils.copyProperties(dto, t);
@@ -94,14 +94,14 @@ public class WbsTaskServiceImpl implements WbsTaskService {
         WbsTaskStatus from = WbsTaskStatus.fromCode(t.getStatus());
         WbsTaskStatus to = WbsTaskStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a" + t.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2e33226a", t.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.execution.msg_28f70737" + from.getDesc() + " → " + to.getDesc());
+                    "error.execution.msg_28f70737", from.getDesc(), to.getDesc());
         }
         wbsTaskMapper.updateStatus(t.getId(), to.getCode());
         // 同步进度

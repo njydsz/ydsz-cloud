@@ -90,24 +90,38 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         rules.add(rule);
         // 按优先级排序
         rules.sort(Comparator.comparingInt(Rule::getPriority));
-        log.info("[LiteRule] 规则已注册: code={}, name={}, priority={}", rule.getCode(), rule.getName(), rule.getPriority());
+        recordRegisteredRules();
+        log.info("[LiteRule] 规则已注册: code={}, name={}, priority={}, total={}",
+                rule.getCode(), rule.getName(), rule.getPriority(), rules.size());
     }
 
     @Override
     public void unregister(String ruleCode) {
         if (ruleCode == null) return;
         rules.removeIf(r -> ruleCode.equals(r.getCode()));
+        recordRegisteredRules();
+    }
+
+    /**
+     * 记录当前注册规则数到监控指标
+     */
+    private void recordRegisteredRules() {
+        if (metrics != null) {
+            metrics.recordRegisteredRules(rules.size());
+        }
     }
 
     @Override
     public List<RuleResult> evaluate(RuleContext context) {
         List<RuleResult> triggered = new ArrayList<>();
         String scenario = context.getScenario();
+        int evaluatedCount = 0;
         for (Rule rule : rules) {
             // 场景过滤：非 DEFAULT 场景下，跳过 scope 不匹配的规则
             if (!shouldEvaluate(rule, scenario)) {
                 continue;
             }
+            evaluatedCount++;
 
             // 熔断检查：已被熔断的规则跳过评估
             if (circuitBreaker != null && !circuitBreaker.allowEvaluate(rule.getCode())) {
@@ -245,6 +259,10 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         }
         // 按严重度倒序
         triggered.sort(Comparator.comparingInt((RuleResult r) -> severityWeight(r)).reversed());
+        // 记录本次评估遍历的规则数（用于规则规模监控）
+        if (metrics != null) {
+            metrics.recordEvaluatedRules(evaluatedCount);
+        }
         return triggered;
     }
 
@@ -323,6 +341,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
                 .totalTriggered(totalTriggered.get())
                 .totalErrors(totalErrors.get())
                 .totalElapsedMs(totalElapsedMs.get())
+                .registeredRules(rules.size())
+                .lastEvaluatedRules(metrics != null ? metrics.getLastEvaluatedRules() : 0)
                 .perRuleStats(snapshot)
                 .build();
     }

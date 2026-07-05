@@ -900,22 +900,25 @@ onMounted(() => {
           />
         </el-form-item>
 
-        <!-- 驳回到节点 -->
+        <!-- GAP-P0-2: 驳回到节点（支持多节点同退） -->
         <el-form-item v-if="showRejectNode" :label="t('workflow.approval.actions.rejectNode')">
-          <el-select
-            v-model="opForm.targetNodeCode"
-            :placeholder="t('workflow.approval.actions.rejectNodePlaceholder')"
-            clearable
-            filterable
-            style="width: 100%"
-          >
-            <el-option
-              v-for="n in opForm.rejectTargets"
-              :key="n.nodeCode"
-              :label="n.nodeName || n.nodeCode"
-              :value="n.nodeCode"
-            />
-          </el-select>
+          <div style="width: 100%">
+            <el-checkbox-group v-model="opForm.targetNodeCodes">
+              <el-checkbox
+                v-for="n in opForm.rejectTargets"
+                :key="n.nodeCode"
+                :label="n.nodeName || n.nodeCode"
+                :value="n.nodeCode"
+                style="display: block; margin-bottom: 4px"
+              />
+            </el-checkbox-group>
+            <div v-if="opForm.rejectTargets.length === 0" style="color: #909399; font-size: 12px">
+              {{ t('workflow.approval.actions.rejectNodeEmpty') }}
+            </div>
+            <div style="color: #909399; font-size: 12px; margin-top: 4px">
+              {{ t('workflow.approval.actions.rejectMultiHint') }}
+            </div>
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>

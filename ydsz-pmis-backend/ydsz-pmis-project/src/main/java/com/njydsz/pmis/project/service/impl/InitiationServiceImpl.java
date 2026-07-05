@@ -88,7 +88,7 @@ public class InitiationServiceImpl implements InitiationService {
     public Long create(InitiationCreateDTO dto) {
         validate(dto);
         if (initiationMapper.selectByCode(dto.getProjectCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_32756e2a" + dto.getProjectCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_32756e2a", dto.getProjectCode());
         }
         InitiationDO o = new InitiationDO();
         BeanUtils.copyProperties(dto, o);
@@ -127,14 +127,14 @@ public class InitiationServiceImpl implements InitiationService {
         InitiationStage from = InitiationStage.fromCode(o.getStage());
         InitiationStage to = InitiationStage.fromCode(dto.getTargetStage());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8453405e" + dto.getTargetStage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_8453405e", dto.getTargetStage());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3895d38d" + o.getStage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_3895d38d", o.getStage());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.project.msg_fc28e9a4" + from.getDesc() + " → " + to.getDesc());
+                    "error.project.msg_fc28e9a4", from.getDesc(), to.getDesc());
         }
         String gate = to == InitiationStage.APPROVED ? GateCode.CD1.name() : o.getCurrentGate();
         initiationMapper.updateStage(o.getId(), to.getCode(), gate);
@@ -368,10 +368,10 @@ public class InitiationServiceImpl implements InitiationService {
         InitiationDO o = getById(dto.getInitiationId());
         GateCode gate = GateCode.fromCode(dto.getGateCode());
         if (gate == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_e08dfe9a" + dto.getGateCode());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_e08dfe9a", dto.getGateCode());
         }
         if (!GATE_RESULTS.contains(dto.getReviewResult().toUpperCase())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_64b97ca8" + dto.getReviewResult());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_64b97ca8", dto.getReviewResult());
         }
         GateReviewDO existing = gateReviewMapper.selectByInitiationAndGate(o.getId(), gate.name());
         GateReviewDO record = existing != null ? existing : new GateReviewDO();
@@ -648,7 +648,7 @@ public class InitiationServiceImpl implements InitiationService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_779da94d");
         }
         if (!BUDGET_CATEGORIES.contains(dto.getCategory().toUpperCase())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_b33fbb09" + dto.getCategory());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_b33fbb09", dto.getCategory());
         }
     }
 }

@@ -137,7 +137,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         OvertimeDO entity = overtimeMapper.selectById(id);
         if (entity == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_09aca734");
         if (!"SUBMITTED".equalsIgnoreCase(entity.getApprovalStatus())) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_8a0e5737" + entity.getApprovalStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_8a0e5737", entity.getApprovalStatus());
         }
         entity.setApprovalStatus(action.toUpperCase());
         entity.setApproverId(approverId == null ? null : Long.valueOf(approverId));
@@ -200,11 +200,11 @@ public class AttendanceServiceImpl implements AttendanceService {
         LeaveStatus current = LeaveStatus.fromCode(entity.getApprovalStatus());
         LeaveStatus target = LeaveStatus.fromCode(action);
         if (current == null || target == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_555b7349" + action);
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_555b7349", action);
         }
         if (!current.canTransitTo(target)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.user.msg_e6729e07" + current.getDesc() + " 流转到 " + target.getDesc());
+                    "error.user.msg_e6729e07", current.getDesc(), target.getDesc());
         }
         entity.setApprovalStatus(target.getCode());
         if (approverId != null) entity.setApproverId(Long.valueOf(approverId));
@@ -246,7 +246,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (dto.getEmployeeId() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         if (dto.getAttendanceDate() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_6d57c0a5");
         if (StringUtils.hasText(dto.getStatus()) && AttendanceStatus.fromCode(dto.getStatus()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_555b7349" + dto.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_555b7349", dto.getStatus());
         }
     }
 
@@ -266,7 +266,7 @@ public class AttendanceServiceImpl implements AttendanceService {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (dto.getEmployeeId() == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_03f5ae35");
         if (LeaveType.fromCode(dto.getLeaveType()) == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_867f50ca" + dto.getLeaveType());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_867f50ca", dto.getLeaveType());
         }
         if (dto.getStartDate() == null || dto.getEndDate() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_9c779eb8");

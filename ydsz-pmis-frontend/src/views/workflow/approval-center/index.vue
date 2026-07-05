@@ -10,21 +10,29 @@
  *     - DoneTab      我的已办
  *     - InitiatedTab 我发起的
  *     - CCTab        抄送我的
+ *     - AllTab       全部流程实例（管理员视图，GAP-P0-1）
  *   审批操作策略见 composables/useApprovalActions.ts。
  */
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { pageTodoTasks, ccUnreadCount } from '@/api/workflow'
 import { useWebSocket } from '@/composables/useWebSocket'
+import { useUserStore } from '@/store/modules/user'
+import { PC } from '@/constants/permissionCodes'
 import TodoTab from './tabs/TodoTab.vue'
 import DoneTab from './tabs/DoneTab.vue'
 import InitiatedTab from './tabs/InitiatedTab.vue'
 import CCTab from './tabs/CCTab.vue'
+import AllTab from './tabs/AllTab.vue'
 
 const { t } = useI18n()
 const { on: onWs } = useWebSocket()
+const userStore = useUserStore()
 
-const activeTab = ref<'todo' | 'done' | 'mine' | 'cc'>('todo')
+// GAP-P0-1: "全部"Tab 仅管理员（workflow:monitor:view 权限）可见
+const showAllTab = computed(() => userStore.hasPermission(PC.WORKFLOW_MONITOR))
+
+const activeTab = ref<'todo' | 'done' | 'mine' | 'cc' | 'all'>('todo')
 
 // ===========================================
 // 实时角标：WebSocket 秒级推送 + 120s 轮询降级兜底
@@ -176,6 +184,17 @@ onUnmounted(stopPolling)
           </span>
         </template>
         <CCTab @refresh-badge="refreshBadges" />
+      </el-tab-pane>
+
+      <!-- GAP-P0-1: 全部流程实例（管理员视图） -->
+      <el-tab-pane v-if="showAllTab" name="all" lazy>
+        <template #label>
+          <span class="tab-label">
+            <el-icon><DataAnalysis /></el-icon>
+            {{ t('workflow.approval.tabs.all') }}
+          </span>
+        </template>
+        <AllTab />
       </el-tab-pane>
     </el-tabs>
   </div>

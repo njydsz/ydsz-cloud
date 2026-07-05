@@ -60,7 +60,7 @@ public class ContractServiceImpl implements ContractService {
     public Long create(ContractCreateDTO dto) {
         validate(dto);
         if (contractMapper.selectByCode(dto.getContractCode()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_f038adba" + dto.getContractCode());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_f038adba", dto.getContractCode());
         }
         ContractDO c = new ContractDO();
         BeanUtils.copyProperties(dto, c);
@@ -95,14 +95,14 @@ public class ContractServiceImpl implements ContractService {
         ContractStatus from = ContractStatus.fromCode(c.getStatus());
         ContractStatus to = ContractStatus.fromCode(dto.getTargetStatus());
         if (to == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6" + dto.getTargetStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_7bc741c6", dto.getTargetStatus());
         }
         if (from == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_2e33226a" + c.getStatus());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_2e33226a", c.getStatus());
         }
         if (!from.canTransitTo(to)) {
             throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.project.msg_01c65a70" + from.getDesc() + " → " + to.getDesc());
+                    "error.project.msg_01c65a70", from.getDesc(), to.getDesc());
         }
         contractMapper.updateStatus(c.getId(), to.getCode());
         log.info("[Contract] 状态迁移: id={} {} -> {}", c.getId(), from.getCode(), to.getCode());

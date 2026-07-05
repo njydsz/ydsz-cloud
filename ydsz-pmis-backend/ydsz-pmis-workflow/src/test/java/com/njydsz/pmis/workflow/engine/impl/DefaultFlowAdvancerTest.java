@@ -343,6 +343,100 @@ class DefaultFlowAdvancerTest {
         verify(joinTokenService, never()).clearTokens(anyLong(), anyString());
     }
 
+    // ==================== E2. GAP-P0-2: 多节点同退 ====================
+
+    @Test
+    @DisplayName("GAP-P0-2 多节点同退 - 返回全部指定目标节点")
+    void rejectMultiShouldReturnAllTargetNodes() {
+        FlowInstanceDO instance = buildInstance();
+        FlowNodeDO target1 = buildNode("node1", "部门审批", FlowNodeType.APPROVAL);
+        FlowNodeDO target2 = buildNode("node3", "财务审批", FlowNodeType.APPROVAL);
+
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(target1);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node3")).thenReturn(target2);
+
+        List<FlowNodeDO> result = advancer.advance(instance, "node5", "REJECT",
+                List.of("node1", "node3"), Collections.emptyMap());
+
+        assertThat(result).hasSize(2);
+        assertThat(result.get(0).getNodeCode()).isEqualTo("node1");
+        assertThat(result.get(1).getNodeCode()).isEqualTo("node3");
+    }
+
+    @Test
+    @DisplayName("GAP-P0-2 多节点同退 - 单元素列表降级到单节点退回")
+    void rejectMultiWithSingleElementShouldFallbackToSingle() {
+        FlowInstanceDO instance = buildInstance();
+        FlowNodeDO currentNode = buildNode("node2", "主管审批", FlowNodeType.APPROVAL);
+        FlowNodeDO target = buildNode("node1", "部门审批", FlowNodeType.APPROVAL);
+
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node2")).thenReturn(currentNode);
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(target);
+
+        List<FlowNodeDO> result = advancer.advance(instance, "node2", "REJECT",
+                List.of("node1"), Collections.emptyMap());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNodeCode()).isEqualTo("node1");
+    }
+
+    @Test
+    @DisplayName("GAP-P0-2 多节点同退 - 空列表降级到默认退回（前驱节点）")
+    void rejectMultiWithEmptyListShouldFallbackToDefault() {
+        FlowNodeDO currentNode = buildNode("node2", "主管审批", FlowNodeType.APPROVAL);
+        FlowNodeDO prevNode = buildNode("node1", "部门审批", FlowNodeType.APPROVAL);
+        FlowInstanceDO instance = buildInstance();
+
+        FlowSkipDO incomingSkip = new FlowSkipDO();
+        incomingSkip.setSkipName("部门审批");
+
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node2")).thenReturn(currentNode);
+        when(flowDefinitionCacheService.getSkipsByNextNode(DEFINITION_ID, "node2")).thenReturn(List.of(incomingSkip));
+        when(flowDefinitionCacheService.getAllNodes(DEFINITION_ID)).thenReturn(List.of(currentNode, prevNode));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(prevNode);
+
+        List<FlowNodeDO> result = advancer.advance(instance, "node2", "REJECT",
+                Collections.emptyList(), Collections.emptyMap());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNodeCode()).isEqualTo("node1");
+    }
+
+    @Test
+    @DisplayName("GAP-P0-2 多节点同退 - 去重：重复 nodeCode 只保留一个")
+    void rejectMultiShouldDeduplicateNodeCodes() {
+        FlowInstanceDO instance = buildInstance();
+        FlowNodeDO target1 = buildNode("node1", "部门审批", FlowNodeType.APPROVAL);
+
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(target1);
+
+        List<FlowNodeDO> result = advancer.advance(instance, "node5", "REJECT",
+                List.of("node1", "node1", "node1"), Collections.emptyMap());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNodeCode()).isEqualTo("node1");
+    }
+
+    @Test
+    @DisplayName("GAP-P0-2 多节点同退 - PASS 语义不触发多节点逻辑")
+    void rejectMultiShouldNotTriggerOnPass() {
+        FlowNodeDO currentNode = buildNode("node1", "部门审批", FlowNodeType.APPROVAL);
+        FlowNodeDO nextNode = buildNode("node2", "主管审批", FlowNodeType.APPROVAL);
+        FlowInstanceDO instance = buildInstance();
+        FlowSkipDO skip = buildSkip("node2", null);
+
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(currentNode);
+        when(flowDefinitionCacheService.getSkipsByNodeCode(DEFINITION_ID, "node1")).thenReturn(List.of(skip));
+        when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node2")).thenReturn(nextNode);
+
+        // skipType=PASS 时即便传了多节点列表，也应走 PASS 推进
+        List<FlowNodeDO> result = advancer.advance(instance, "node1", "PASS",
+                List.of("node1", "node2"), Collections.emptyMap());
+
+        assertThat(result).hasSize(1);
+        assertThat(result.get(0).getNodeCode()).isEqualTo("node2");
+    }
+
     // ==================== F. 条件表达式评估 ====================
 
     @Test

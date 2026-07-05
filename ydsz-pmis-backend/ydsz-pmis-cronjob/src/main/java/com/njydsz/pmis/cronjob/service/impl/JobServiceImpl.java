@@ -170,7 +170,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
     public Long create(JobDO job) {
         validate(job);
         if (jobMapper.selectByJobKey(job.getJobKey()) != null) {
-            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640" + job.getJobKey());
+            throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640", job.getJobKey());
         }
         if (job.getStatus() == null) {
             job.setStatus("NORMAL");
@@ -541,7 +541,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
         try {
             new CronTrigger(cron);
         } catch (Exception e) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca" + e.getMessage());
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
         }
     }
 

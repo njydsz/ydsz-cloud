@@ -81,7 +81,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
             }
             case "ALL" -> { /* no-op */ }
             default -> throw new BizException(BizErrorCode.BAD_REQUEST,
-                    "error.workflow.msg_b0022eba" + auth.getScopeType());
+                    "error.workflow.msg_b0022eba", auth.getScopeType());
         }
 
         // 默认值
@@ -111,7 +111,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         }
         FlowDelegateAuthDO auth = authMapper.selectById(authId);
         if (auth == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c47a9632" + authId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c47a9632", authId);
         }
         if (ownerUserId != null && !ownerUserId.equals(auth.getOwnerUserId())) {
             throw new BizException(BizErrorCode.FORBIDDEN, "error.workflow.msg_f121ff85");
@@ -131,7 +131,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
         }
         FlowDelegateAuthDO auth = authMapper.selectById(authId);
         if (auth == null) {
-            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c47a9632" + authId);
+            throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c47a9632", authId);
         }
         // 权限校验：仅 owner 可改
         if (operatorId != null && !operatorId.equals(auth.getOwnerUserId())) {

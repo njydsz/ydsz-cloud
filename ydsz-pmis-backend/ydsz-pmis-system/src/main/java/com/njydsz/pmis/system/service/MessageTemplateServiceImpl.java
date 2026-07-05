@@ -39,7 +39,7 @@ public class MessageTemplateServiceImpl {
         validate(t);
         if (templateMapper.selectByCodeAndChannel(t.getTemplateCode(), t.getChannel().toUpperCase(), 1L) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY,
-                    "error.message.msg_74548ac6" + t.getTemplateCode() + " channel=" + t.getChannel());
+                    "error.message.msg_74548ac6", t.getTemplateCode(), t.getChannel());
         }
         t.setChannel(t.getChannel().toUpperCase());
         if (t.getStatus() == null) t.setStatus("ENABLED");
