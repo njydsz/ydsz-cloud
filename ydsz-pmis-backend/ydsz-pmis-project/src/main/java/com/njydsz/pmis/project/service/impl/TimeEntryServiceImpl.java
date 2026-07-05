@@ -189,7 +189,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
         if (from != null) w.ge(TimeEntryDO::getEntryDate, from);
         if (to != null) w.le(TimeEntryDO::getEntryDate, to);
         // 数据权限 SQL 注入
-        String ds = DataScopeHelper.buildSqlFragment("", "");
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "employee_id");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(TimeEntryDO::getEntryDate);
         return timeEntryMapper.selectPage(p, w);

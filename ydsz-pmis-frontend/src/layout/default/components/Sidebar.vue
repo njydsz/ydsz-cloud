@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAppStore } from '@/store/modules/app'
 import { usePermissionStore } from '@/store/modules/permission'
 import i18n from '@/locales'
@@ -14,6 +15,7 @@ import type { RouteRecordRaw } from 'vue-router'
 const route = useRoute()
 const appStore = useAppStore()
 const permissionStore = usePermissionStore()
+const { t } = useI18n()
 
 /** 菜单项数据结构 */
 interface MenuItem {
@@ -57,7 +59,7 @@ const activeMenu = computed<string>(() => {
 </script>
 
 <template>
-  <nav class="sidebar-wrap" role="navigation" aria-label="主导航菜单">
+  <nav class="sidebar-wrap" role="navigation" :aria-label="t('common.aria.mainNav')">
     <div class="sidebar-logo">
       <span v-if="!appStore.sidebarCollapsed">PMIS</span>
       <span v-else>P</span>
@@ -71,7 +73,7 @@ const activeMenu = computed<string>(() => {
         text-color="#303133"
         active-text-color="#1890ff"
         router
-        aria-label="导航菜单列表"
+        :aria-label="t('common.aria.menuList')"
       >
         <template v-for="menu in menus" :key="menu.path">
           <!-- 子菜单 -->

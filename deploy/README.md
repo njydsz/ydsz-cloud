@@ -68,7 +68,8 @@ deploy/
 │   └── README.md
 │
 └── sql/                            # 主库 SQL
-    └── V1.0.0.sql                  # 126 表 + 5 视图(含中文注释)
+    ├── V1.0.0.sql                  # 126 表 + 5 视图(含中文注释)
+    └── README.md                   # Schema 变更与版本化交付规范(不引入 Flyway / Liquibase)
 ```
 
 > **设计原则**:`common/` 是单一事实源(中间件配置模板),`docker/ubuntu/windows` 分别走三种部署形态,`k8s/` 是生产推荐形态,所有环境共享同一份 SQL。

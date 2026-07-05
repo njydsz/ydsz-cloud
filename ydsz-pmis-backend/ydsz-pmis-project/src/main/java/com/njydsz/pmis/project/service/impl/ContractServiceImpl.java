@@ -3,8 +3,11 @@ package com.njydsz.pmis.project.service.impl;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.aspect.DataScopeAspect;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.project.assembler.NameAssembler;
 import com.njydsz.pmis.project.dto.ContractCreateDTO;
 import com.njydsz.pmis.project.dto.ContractStatusDTO;
@@ -133,6 +136,8 @@ public class ContractServiceImpl implements ContractService {
         if (c == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_22d39b90");
         }
+        // P0-4: 越权防护 - 非超管只能查看自己创建的合同
+        DataScopeAspect.assertAllowByOwner(c.getCreatedBy());
         assembleNames(c);
         return c;
     }
@@ -150,6 +155,7 @@ public class ContractServiceImpl implements ContractService {
      * @return 分页结果
      */
     @Override
+    @DataScope(userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<ContractDO> page(int page, int size, String keyword, String status,
                                  String contractType, String riskLevel) {
@@ -163,6 +169,9 @@ public class ContractServiceImpl implements ContractService {
         if (StringUtils.hasText(status)) w.eq(ContractDO::getStatus, status);
         if (StringUtils.hasText(contractType)) w.eq(ContractDO::getContractType, contractType);
         if (StringUtils.hasText(riskLevel)) w.eq(ContractDO::getRiskLevel, riskLevel);
+        // P0-5: 数据权限 SQL 注入
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
+        if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(ContractDO::getCreatedAt);
         Page<ContractDO> result = contractMapper.selectPage(p, w);
         if (result != null && result.getRecords() != null) {

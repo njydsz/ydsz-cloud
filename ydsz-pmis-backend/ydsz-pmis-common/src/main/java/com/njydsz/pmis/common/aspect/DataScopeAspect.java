@@ -86,6 +86,35 @@ public class DataScopeAspect {
         if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
             return;
         }
-        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337" + targetDeptId);
+        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
+    }
+
+    /**
+     * 越权检查（基于归属人）：当前用户若无权访问目标归属人拥有的数据则抛出 DATA_SCOPE_FORBIDDEN 异常.
+     *
+     * <p>适用于实体无 deptId 字段但有 createdBy/ownerId 字段的场景（如合同/发票/回款等）。
+     * 规则：
+     * <ul>
+     *   <li>超管或 ALL 数据范围：放行</li>
+     *   <li>SELF 数据范围：仅当 targetOwnerId 等于当前用户 ID 时放行</li>
+     *   <li>DEPT/DEPT_AND_CHILD 数据范围：暂按 ownerId 判断（无 deptId 时退化为 SELF 语义）</li>
+     *   <li>targetOwnerId 为 null 时放行（数据未分配归属人，不阻断查询）</li>
+     * </ul>
+     *
+     * @param targetOwnerId 目标数据归属人 ID（createdBy 或 ownerId）
+     * @throws BizException 无权限访问时抛出
+     */
+    public static void assertAllowByOwner(Long targetOwnerId) {
+        DataScopeContext ctx = peek();
+        if (ctx.isAll()) {
+            return;
+        }
+        if (targetOwnerId == null) {
+            return;
+        }
+        if (ctx.getUserId() != null && ctx.getUserId().equals(targetOwnerId)) {
+            return;
+        }
+        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
     }
 }

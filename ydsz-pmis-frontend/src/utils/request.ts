@@ -161,6 +161,12 @@ service.interceptors.request.use(
       config.headers.Authorization = `Bearer ${token}`
     }
     config.headers['X-Trace-Id'] = generateTraceId()
+    // P1: 注入 Accept-Language 头，与后端 i18n MessageSource 对齐
+    // vue-i18n legacy 模式下 locale 是 ref<string>；composition 模式下是 Ref<string>
+    const locale = (i18n.global.locale as unknown as { value?: string })?.value
+      || (i18n.global.locale as unknown as string)
+      || 'zh-CN'
+    config.headers['Accept-Language'] = locale
 
     // 记录请求开始时间（用于性能监控）
     config.metadata = { startTime: performance.now() }

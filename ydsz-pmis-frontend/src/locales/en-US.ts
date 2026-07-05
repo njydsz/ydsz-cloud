@@ -78,6 +78,18 @@ export default {
       hintEsc: 'Close',
       hintNavigate: 'Navigate',
     },
+    aria: {
+      appHeader: 'Top Navigation',
+      expandSidebar: 'Expand Sidebar',
+      collapseSidebar: 'Collapse Sidebar',
+      globalSearch: 'Global Search',
+      toggleTheme: 'Toggle Theme',
+      enterFullscreen: 'Enter Fullscreen',
+      exitFullscreen: 'Exit Fullscreen',
+      userMenu: 'User Menu',
+      mainNav: 'Main Navigation',
+      menuList: 'Navigation Menu',
+    },
     emptyState: {
       list: {
         title: 'No data',

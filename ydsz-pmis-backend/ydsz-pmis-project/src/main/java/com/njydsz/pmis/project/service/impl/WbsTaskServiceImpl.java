@@ -176,7 +176,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
         if (initiationId != null) w.eq(WbsTaskDO::getInitiationId, initiationId);
         if (ownerId != null) w.eq(WbsTaskDO::getOwnerId, ownerId);
         // 数据权限 SQL 注入
-        String ds = DataScopeHelper.buildSqlFragment("", "");
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "created_by");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByAsc(WbsTaskDO::getTaskLevel).orderByAsc(WbsTaskDO::getSortOrder);
         return wbsTaskMapper.selectPage(p, w);

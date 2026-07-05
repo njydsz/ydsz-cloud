@@ -6,10 +6,10 @@
  * 用法：
  * ```ts
  * const { loading, list, total, query, fetchData, handleQuery, resetQuery } =
- *   useTable(pageApi, { defaultSize: 20 })
+ *   useTable(pageApi, { defaultSize: 20, persistSizeKey: 'project-list' })
  * ```
  */
-import { ref, reactive, type Ref } from 'vue'
+import { ref, reactive, watch, type Ref } from 'vue'
 
 /** 分页查询参数基类 */
 export interface UseTableQuery {
@@ -25,13 +25,45 @@ export interface UseTableOptions<Q extends UseTableQuery> {
   defaultSize?: number
   /** 初始查询参数 */
   defaultQuery?: Partial<Q>
+  /**
+   * 持久化每页条数的 localStorage key（建议传路由名以保证每页独立）
+   * - 不传则不持久化
+   * - 传入后：初始化时从 localStorage 恢复用户上次选择，size 变化时回写
+   */
+  persistSizeKey?: string
+}
+
+/** localStorage 中 pageSize 持久化的统一前缀，便于清理与避免冲突 */
+const PAGE_SIZE_KEY_PREFIX = 'pmis-pageSize-'
+
+/** 读取持久化的每页条数 */
+function loadPersistedSize(key?: string): number | null {
+  if (!key) return null
+  try {
+    const v = localStorage.getItem(PAGE_SIZE_KEY_PREFIX + key)
+    if (!v) return null
+    const n = Number(v)
+    return Number.isFinite(n) && n > 0 ? n : null
+  } catch {
+    return null
+  }
+}
+
+/** 写入持久化的每页条数 */
+function savePersistedSize(key: string | undefined, size: number): void {
+  if (!key) return
+  try {
+    localStorage.setItem(PAGE_SIZE_KEY_PREFIX + key, String(size))
+  } catch {
+    /* localStorage 可能不可用 */
+  }
 }
 
 /**
  * 通用分页查询 composable
  *
  * @param fetcher - 数据拉取函数，接收 query 返回 PageResult
- * @param options - 初始化选项（默认分页大小、初始查询参数）
+ * @param options - 初始化选项（默认分页大小、初始查询参数、持久化 key）
  * @returns 包含 loading/list/total/query 与分页操作方法的对象
  */
 export function useTable<Q extends UseTableQuery>(
@@ -45,12 +77,28 @@ export function useTable<Q extends UseTableQuery>(
   /** 总条数（用于分页器显示） */
   const total = ref(0)
 
+  // 解析初始 size：优先使用持久化值，其次 defaultQuery.size，最后 defaultSize 或 10
+  const persistedSize = loadPersistedSize(options.persistSizeKey)
+  const initialSize =
+    (persistedSize as Q['size'] | null) ??
+    (options.defaultQuery?.size as Q['size'] | undefined) ??
+    (options.defaultSize as Q['size'] | undefined) ??
+    (10 as Q['size'])
+
   /** 查询参数（响应式，绑定到搜索表单） */
   const query = reactive<Q>({
     ...(options.defaultQuery as Q),
     page: (options.defaultQuery?.page ?? 1) as Q['page'],
-    size: (options.defaultQuery?.size ?? options.defaultSize ?? 10) as Q['size'],
+    size: initialSize,
   } as unknown as Q)
+
+  // P1: 持久化每页条数（用户切换 pageSize 后，下次访问恢复）
+  if (options.persistSizeKey) {
+    watch(
+      () => query.size,
+      (newSize) => savePersistedSize(options.persistSizeKey, newSize),
+    )
+  }
 
   /** 拉取数据（兼容 ApiResponse<PageResult> 与 PageResult 两种返回结构） */
   async function fetchData(): Promise<void> {

@@ -102,7 +102,7 @@ public class UserAccountServiceImpl implements UserAccountService {
             w.eq(UserAccountDO::getEmployeeId, query.getEmployeeId());
         }
         // 数据权限 SQL 注入（按员工 dept_id 与 user.id）
-        String ds = DataScopeHelper.buildSqlFragment("", "");
+        String ds = DataScopeHelper.buildSqlFragment("", "", "dept_id", "id");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(UserAccountDO::getId);
         return userAccountMapper.selectPage(page, w);

@@ -3,8 +3,6 @@ package com.njydsz.pmis.common.util;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.util.concurrent.atomic.AtomicLong;
-
 /**
  * 雪花算法分布式 ID 生成器
  *
@@ -70,10 +68,6 @@ public class SnowflakeIdGenerator {
 
     /** 当前毫秒内序列号 */
     private long sequence = 0L;
-
-    /** 用于检测时钟回拨的最后时间戳（volatile 保证多线程可见） */
-    private volatile long lastBackwardCheckTimestamp = System.currentTimeMillis();
-
     /**
      * Spring 构造时注入 workerId
      * <p>优先级: 环境变量 PMIS_WORKER_ID > K8s POD_INDEX > 服务名 hash 取模

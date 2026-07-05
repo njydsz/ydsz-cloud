@@ -70,6 +70,20 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
         </dependency>
+        <!-- P1-6: Micrometer Tracing + Brave（对接 Jaeger/Zipkin，替代自研 UUID traceId）
+             Spring Boot 4.x 自动配置：
+               - BraveAutoConfiguration → 注册 Tracer/HttpTracer
+               - Slf4jCurrentTraceContext → 自动将 traceId/spanId 写入 MDC（与 logback %X{traceId:-} 一致）
+               - TracingFilter → 自动从 traceparent/b3 header 读取并创建 span
+               - TracingClient → Feign 自动注入 traceparent/b3 header -->
+        <dependency>
+            <groupId>io.micrometer</groupId>
+            <artifactId>micrometer-tracing-bridge-brave</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-reporter-brave</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>

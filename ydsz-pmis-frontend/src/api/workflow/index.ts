@@ -174,21 +174,21 @@ export function recallInstance(id: number) {
  * <p>对标钉钉/飞书的"撤销审批"。仅 COMPLETED 状态、回滚时间窗口内（默认 7 天）、
  * 发起人或拥有 workflow:instance:rollback 权限的管理员可执行。
  *
+ * <p>P0-1 修复：operatorId 由后端从 SecurityContext 取，前端不再传。
+ *
  * @param id              流程实例 ID
- * @param operatorId      操作人 ID
  * @param reason          回滚原因
  * @param maxRollbackDays 允许回滚的最大天数（可选，默认 7）
  */
 export function rollbackInstance(
   id: number,
-  operatorId: number,
   reason: string,
   maxRollbackDays = 7,
 ) {
   return http.post<ApiResponse<boolean>>(
     `/workflow/engine/instance/${id}/rollback`,
     null,
-    { params: { operatorId, reason, maxRollbackDays } },
+    { params: { reason, maxRollbackDays } },
   )
 }
 
@@ -252,9 +252,16 @@ export function countersignRemove(payload: FlowTaskOperateDTO) {
   )
 }
 
-/** 签收任务 */
-export function claimTask(payload: FlowTaskOperateDTO) {
-  return http.post<ApiResponse<null>>('/workflow/engine/task/claim', payload)
+/**
+ * 签收任务
+ * P0-1 修复：userId 由后端从 SecurityContext 取，前端只传 taskId
+ */
+export function claimTask(taskId: number) {
+  return http.post<ApiResponse<null>>(
+    '/workflow/engine/task/claim',
+    null,
+    { params: { taskId } },
+  )
 }
 
 /** 取消签收 */
@@ -267,20 +274,28 @@ export function jumpTask(payload: FlowTaskOperateDTO) {
   return http.post<ApiResponse<null>>('/workflow/engine/task/jump', payload)
 }
 
-/** 催办 */
-export function urgeTask(payload: {
-  instanceId: number
-  comment?: string
-}) {
-  return http.post<ApiResponse<string[]>>('/workflow/engine/task/urge', payload)
+/**
+ * 催办
+ * P0-1 修复：operatorId 由后端从 SecurityContext 取；路径修正为 /instance/{id}/urge
+ */
+export function urgeTask(instanceId: number, comment?: string) {
+  return http.post<ApiResponse<string[]>>(
+    `/workflow/engine/instance/${instanceId}/urge`,
+    null,
+    { params: { comment } },
+  )
 }
 
-/** 批量审批 */
-export function batchPass(payload: {
-  taskIds: number[]
-  comment?: string
-}) {
-  return http.post<ApiResponse<number>>('/workflow/engine/task/batchPass', payload)
+/**
+ * 批量审批
+ * P0-1 修复：userId 由后端从 SecurityContext 取；后端为 @RequestParam，前端用 params
+ */
+export function batchPass(taskIds: number[], comment?: string) {
+  return http.post<ApiResponse<number>>(
+    '/workflow/engine/task/batchPass',
+    null,
+    { params: { taskIds, comment } },
+  )
 }
 
 /** GAP-P0: 暂存待审 */
@@ -761,24 +776,52 @@ export function processSlaTask(taskId: number) {
 // P1-2: 灰度发布（canary）
 // ===========================================
 
-/** 启动灰度发布 */
+/**
+ * 启动灰度发布
+ * P0-1 修复：operatorId/operatorName 由后端从 SecurityContext 取，前端不再传
+ */
 export function publishCanary(definitionId: number, payload: PublishCanaryDTO) {
-  return http.post<ApiResponse<null>>(`/workflow/engine/canary/${definitionId}/publish`, payload)
+  return http.post<ApiResponse<null>>(
+    `/workflow/engine/canary/${definitionId}/publish`,
+    null,
+    { params: { initialPercent: payload.percentage ?? 10, strategy: payload.strategy, note: undefined } },
+  )
 }
 
-/** 调整灰度比例 */
-export function adjustCanary(definitionId: number, percentage: number) {
-  return http.post<ApiResponse<null>>(`/workflow/engine/canary/${definitionId}/adjust`, { percentage })
+/**
+ * 调整灰度比例
+ * P0-1 修复：operatorId/operatorName 由后端从 SecurityContext 取
+ */
+export function adjustCanary(definitionId: number, newPercent: number, note?: string) {
+  return http.post<ApiResponse<null>>(
+    `/workflow/engine/canary/${definitionId}/adjust`,
+    null,
+    { params: { newPercent, note } },
+  )
 }
 
-/** 全量发布（灰度转正） */
-export function promoteCanary(definitionId: number) {
-  return http.post<ApiResponse<null>>(`/workflow/engine/canary/${definitionId}/promote`)
+/**
+ * 全量发布（灰度转正）
+ * P0-1 修复：operatorId/operatorName 由后端从 SecurityContext 取
+ */
+export function promoteCanary(definitionId: number, note?: string) {
+  return http.post<ApiResponse<null>>(
+    `/workflow/engine/canary/${definitionId}/promote`,
+    null,
+    { params: { note } },
+  )
 }
 
-/** 回滚灰度发布 */
-export function rollbackCanary(definitionId: number) {
-  return http.post<ApiResponse<null>>(`/workflow/engine/canary/${definitionId}/rollback`)
+/**
+ * 回滚灰度发布
+ * P0-1 修复：operatorId/operatorName 由后端从 SecurityContext 取
+ */
+export function rollbackCanary(definitionId: number, note?: string) {
+  return http.post<ApiResponse<null>>(
+    `/workflow/engine/canary/${definitionId}/rollback`,
+    null,
+    { params: { note } },
+  )
 }
 
 /** 获取灰度发布历史日志 */

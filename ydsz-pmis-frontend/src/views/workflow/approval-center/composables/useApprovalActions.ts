@@ -201,7 +201,7 @@ class ClaimAction extends BaseAction {
   readonly type = 'CLAIM' as const
   readonly title = 'workflow.approval.actions.claimTitle'
   protected call(ctx: ApprovalActionContext) {
-    return claimTask({ taskId: ctx.taskId })
+    return claimTask(ctx.taskId)
   }
 }
 
@@ -213,7 +213,7 @@ class UrgeAction extends BaseAction {
   override readonly commentLabel = 'workflow.approval.actions.urgeCommentLabel'
   override readonly commentPlaceholder = 'workflow.approval.actions.urgePlaceholder'
   protected call(ctx: ApprovalActionContext) {
-    return urgeTask({ instanceId: ctx.instanceId as number, comment: ctx.comment })
+    return urgeTask(ctx.instanceId as number, ctx.comment)
   }
 }
 
@@ -610,7 +610,7 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
         confirmButtonText: t('common.confirm'),
         cancelButtonText: t('common.cancel'),
       })
-      const res = await batchPass({ taskIds, comment: value || undefined })
+      const res = await batchPass(taskIds, value || undefined)
       if (res.data?.code === 0) {
         ElMessage.success(t('workflow.approval.messages.batchPassSuccess', { count: res.data.data || taskIds.length }))
         onSuccess?.()

@@ -171,7 +171,7 @@ async function submitOp() {
     } else if (opType.value === 'recall') {
       res = await recallInstance(instanceId.value)
     } else if (opType.value === 'urge') {
-      res = await urgeTask({ instanceId: instanceId.value, comment: opForm.comment })
+      res = await urgeTask(instanceId.value, opForm.comment)
     }
     if (res?.data?.code === 0) {
       ElMessage.success(t('common.success'))

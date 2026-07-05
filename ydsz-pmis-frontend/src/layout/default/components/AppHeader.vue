@@ -74,15 +74,15 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <header class="app-header" aria-label="顶部导航栏">
+  <header class="app-header" :aria-label="t('common.aria.appHeader')">
     <div class="header-left">
-      <el-button text :aria-label="appStore.sidebarCollapsed ? '展开侧边栏' : '收起侧边栏'" @click="appStore.toggleSidebar()">
+      <el-button text :aria-label="appStore.sidebarCollapsed ? t('common.aria.expandSidebar') : t('common.aria.collapseSidebar')" @click="appStore.toggleSidebar()">
         <el-icon :size="20">
           <Fold v-if="!appStore.sidebarCollapsed" />
           <Expand v-else />
         </el-icon>
       </el-button>
-      <button v-if="!isMobile" class="search-trigger" :title="t('common.globalSearch.title')" aria-label="全局搜索" @click="openSearch">
+      <button v-if="!isMobile" class="search-trigger" :title="t('common.globalSearch.title')" :aria-label="t('common.aria.globalSearch')" @click="openSearch">
         <el-icon :size="14"><Search /></el-icon>
         <span class="search-text">{{ t('common.globalSearch.shortcut') }}</span>
       </button>
@@ -92,7 +92,7 @@ onUnmounted(() => {
       <NotificationBell />
       <LanguageSwitcher />
       <el-tooltip :content="t('common.theme')">
-        <el-button text aria-label="切换主题" @click="handleToggleTheme">
+        <el-button text :aria-label="t('common.aria.toggleTheme')" @click="handleToggleTheme">
           <el-icon :size="18">
             <Sunny v-if="appStore.theme === 'light'" />
             <Moon v-else />
@@ -100,14 +100,14 @@ onUnmounted(() => {
         </el-button>
       </el-tooltip>
       <el-tooltip :content="isFullscreen ? t('common.exitFullscreen') : t('common.fullscreen')">
-        <el-button text :aria-label="isFullscreen ? '退出全屏' : '进入全屏'" @click="handleToggleFullscreen">
+        <el-button text :aria-label="isFullscreen ? t('common.aria.exitFullscreen') : t('common.aria.enterFullscreen')" @click="handleToggleFullscreen">
           <el-icon :size="18">
             <Aim v-if="isFullscreen" />
             <FullScreen v-else />
           </el-icon>
         </el-button>
       </el-tooltip>
-      <el-dropdown trigger="click" aria-label="用户菜单">
+      <el-dropdown trigger="click" :aria-label="t('common.aria.userMenu')">
         <div class="user-info">
           <el-avatar :size="32" :src="userStore.userInfo?.avatar">
             {{ userStore.realName?.charAt(0) || 'U' }}

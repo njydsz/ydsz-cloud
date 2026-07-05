@@ -4,7 +4,6 @@ import com.njydsz.pmis.common.util.TraceIdUtil;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
@@ -60,20 +59,22 @@ public class PmisFeignInterceptor implements RequestInterceptor {
     }
 
     /**
-     * 在 Feign 请求发出前注入可观测性 Header
+     * 在 Feign 请求发出前注入可观测性 Header（P1-6 简化）
      *
-     * <p>1) 透传 traceId（MDC 优先 → 新生成兜底）
-     * <p>2) 注入 X-Request-Source（PMIS-{serviceName}）
+     * <p>1) 透传 traceId：Brave {@code TracingClient} 会自动注入 {@code traceparent}/{@code b3}
+     *          header；本拦截器仅补充兼容性 {@code X-Trace-Id}，便于老网关/前端关联
+     * <p>2) 注入 X-Request-Source（PMIS-{serviceName}）：标识调用方
      *
      * @param template Feign 请求模板
      */
     @Override
     public void apply(RequestTemplate template) {
-        // 1) 透传 traceId（MDC 优先 → 新生成兜底，使用雪花算法）
-        String traceId = MDC.get("traceId");
+        // 1) 补充 X-Trace-Id（兼容性 header；Brave 已自动注入 traceparent/b3）
+        String traceId = TraceIdUtil.get();
         if (traceId == null || traceId.isEmpty()) {
+            // 当前线程无 span（如异步调用）：生成兜底 traceId
             traceId = TraceIdUtil.generate();
-            MDC.put("traceId", traceId);
+            TraceIdUtil.set(traceId);
         }
         template.header(TRACE_ID_HEADER, traceId);
 

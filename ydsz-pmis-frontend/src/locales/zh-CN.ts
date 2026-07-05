@@ -80,6 +80,18 @@ export default {
       hintEsc: '关闭',
       hintNavigate: '切换',
     },
+    aria: {
+      appHeader: '顶部导航栏',
+      expandSidebar: '展开侧边栏',
+      collapseSidebar: '收起侧边栏',
+      globalSearch: '全局搜索',
+      toggleTheme: '切换主题',
+      enterFullscreen: '进入全屏',
+      exitFullscreen: '退出全屏',
+      userMenu: '用户菜单',
+      mainNav: '主导航菜单',
+      menuList: '导航菜单列表',
+    },
     emptyState: {
       list: {
         title: '暂无数据',

@@ -64,6 +64,37 @@ management:
         include: livenessState
       readiness:
         include: readinessState,db,redis,discoveryClient
+  # =====================================================================
+  # P1-6: Micrometer Tracing + Brave（对接 Jaeger/Zipkin）
+  # --------------------------------------------------------------------
+  # 采样率：开发环境 100%，生产通过 ENV TRACING_SAMPLING_PROBABILITY=0.1 调整
+  # 上报地址：Jaeger/Zipkin 收集器 OTLP 兼容端点
+  # 传播格式：W3C Trace Context（traceparent）+ B3 多头兼容旧客户端
+  # =====================================================================
+  tracing:
+    sampling:
+      probability: ${TRACING_SAMPLING_PROBABILITY:1.0}
+    propagation:
+      type: w3c
+    brave:
+      # 支持 W3C + B3 双传播（向后兼容老服务网关）
+      baggage:
+        enabled: true
+  zipkin:
+    tracing:
+      endpoint: ${ZIPKIN_ENDPOINT:http://zipkin.observability.svc.cluster.local:9411/api/v2/spans}
+      connect-timeout: 1s
+      read-timeout: 5s
+      export:
+        enabled: ${TRACING_EXPORT_ENABLED:true}
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+        http.client.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+        http.client.requests: 0.5,0.95,0.99
 
 # =====================================================================
 # SpringDoc OpenAPI 3.0 配置

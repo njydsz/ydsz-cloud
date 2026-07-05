@@ -105,7 +105,7 @@ const projectItems = computed<ProjectItem[]>(() =>
     type: 'project',
     title: p.projectName,
     subtitle: [p.customerName, p.pmName].filter(Boolean).join(' · '),
-    path: `/project/initiation?highlight=${p.initiationId}`,
+    path: `/project/initiation?highlight=${p.id}`,
   })),
 )
 

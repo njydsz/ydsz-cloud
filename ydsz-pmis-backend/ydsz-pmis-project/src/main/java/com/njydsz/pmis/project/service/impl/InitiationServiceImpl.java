@@ -200,7 +200,7 @@ public class InitiationServiceImpl implements InitiationService {
         if (StringUtils.hasText(projectLevel)) w.eq(InitiationDO::getProjectLevel, projectLevel);
         if (pmId != null) w.eq(InitiationDO::getPmId, pmId);
         // 数据权限 SQL 注入
-        String ds = DataScopeHelper.buildSqlFragment("", "");
+        String ds = DataScopeHelper.buildSqlFragment("", "", "business_dept_id", "created_by");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(InitiationDO::getCreatedAt);
         Page<InitiationDO> R = initiationMapper.selectPage(p, w);

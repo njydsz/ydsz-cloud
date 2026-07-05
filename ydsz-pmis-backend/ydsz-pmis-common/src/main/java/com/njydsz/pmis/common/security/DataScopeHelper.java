@@ -52,7 +52,7 @@ public final class DataScopeHelper {
         if (ctx.getCustomDeptIds() != null && ctx.getCustomDeptIds().contains(targetDeptId)) {
             return;
         }
-        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337" + targetDeptId);
+        throw new BizException(BizErrorCode.DATA_SCOPE_FORBIDDEN, "error.common.msg_e107b337");
     }
 
     /**
@@ -81,34 +81,50 @@ public final class DataScopeHelper {
     /**
      * 计算 WHERE 条件 SQL 片段（不含 WHERE 关键字）
      *
-     * <p>由 Service 层拼接到 QueryWrapper：
-     * <pre>
-     *   String fragment = DataScopeHelper.buildSqlFragment("t", "t");
-     *   if (!fragment.isEmpty()) wrapper.apply(fragment);
-     * </pre>
+     * <p>使用默认字段名: dept_id / created_by
      *
      * @param deptAlias 部门字段别名
      * @param userAlias 创建人字段别名
      * @return 条件片段，无数据权限时返回 ""
      */
     public static String buildSqlFragment(String deptAlias, String userAlias) {
+        return buildSqlFragment(deptAlias, userAlias, "dept_id", "created_by");
+    }
+
+    /**
+     * 计算 WHERE 条件 SQL 片段（含自定义字段名）
+     *
+     * <p>由 Service 层拼接到 QueryWrapper：
+     * <pre>
+     *   String fragment = DataScopeHelper.buildSqlFragment("t", "t", "dept_id", "created_by");
+     *   if (!fragment.isEmpty()) wrapper.apply(fragment);
+     * </pre>
+     *
+     * @param deptAlias  部门字段表别名
+     * @param userAlias  创建人字段表别名
+     * @param deptColumn 部门字段列名 (如 "dept_id", "business_dept_id")
+     * @param userColumn 创建人字段列名 (如 "created_by", "creator_id")
+     * @return 条件片段，无数据权限时返回 ""
+     */
+    public static String buildSqlFragment(String deptAlias, String userAlias,
+                                          String deptColumn, String userColumn) {
         DataScopeContext ctx = current();
         if (ctx.isAll()) {
             return "";
         }
         StringBuilder sb = new StringBuilder();
         switch (ctx.getScope()) {
-            case SELF -> sb.append(prefix(deptAlias)).append("creator_id").append(suffix(userAlias))
+            case SELF -> sb.append(prefix(deptAlias)).append(userColumn).append(suffix(userAlias))
                     .append(" = ").append(safeValue(ctx.getUserId()));
-            case DEPT -> sb.append(prefix(deptAlias)).append("dept_id").append(suffix(deptAlias))
+            case DEPT -> sb.append(prefix(deptAlias)).append(deptColumn).append(suffix(deptAlias))
                     .append(" = ").append(safeValue(ctx.getDeptId()));
             case DEPT_AND_CHILD -> {
                 List<Long> ids = ctx.getDeptIds();
                 if (ids == null || ids.isEmpty()) {
-                    sb.append(prefix(deptAlias)).append("dept_id").append(suffix(deptAlias))
+                    sb.append(prefix(deptAlias)).append(deptColumn).append(suffix(deptAlias))
                             .append(" = ").append(safeValue(ctx.getDeptId()));
                 } else {
-                    sb.append(prefix(deptAlias)).append("dept_id").append(suffix(deptAlias))
+                    sb.append(prefix(deptAlias)).append(deptColumn).append(suffix(deptAlias))
                             .append(" IN (").append(joinIds(ids)).append(")");
                 }
             }
@@ -117,7 +133,7 @@ public final class DataScopeHelper {
                 if (ids == null || ids.isEmpty()) {
                     sb.append("1=0");
                 } else {
-                    sb.append(prefix(deptAlias)).append("dept_id").append(suffix(deptAlias))
+                    sb.append(prefix(deptAlias)).append(deptColumn).append(suffix(deptAlias))
                             .append(" IN (").append(joinIds(ids)).append(")");
                 }
             }

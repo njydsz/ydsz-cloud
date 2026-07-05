@@ -221,7 +221,7 @@ public class OpportunityServiceImpl implements OpportunityService {
         if (StringUtils.hasText(level)) w.eq(OpportunityDO::getLevel, level);
         if (ownerId != null) w.eq(OpportunityDO::getOwnerId, ownerId);
         // 数据权限 SQL 注入
-        String ds = DataScopeHelper.buildSqlFragment("", "");
+        String ds = DataScopeHelper.buildSqlFragment("", "", "business_dept_id", "created_by");
         if (!ds.isEmpty()) w.apply(ds);
         w.orderByDesc(OpportunityDO::getCreatedAt);
         return opportunityMapper.selectPage(p, w);

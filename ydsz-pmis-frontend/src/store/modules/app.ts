@@ -13,10 +13,12 @@ import { ref } from 'vue'
 
 /** localStorage 中存储主题的 key */
 const THEME_STORAGE_KEY = 'theme'
+/** localStorage 中存储侧边栏折叠状态的 key */
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'sidebarCollapsed'
 
 export const useAppStore = defineStore('app', () => {
   /** 侧边栏是否折叠（窄模式） */
-  const sidebarCollapsed = ref(false)
+  const sidebarCollapsed = ref(loadSidebarCollapsed())
   /** 当前设备类型，影响 layout 渲染策略 */
   const device = ref<'desktop' | 'mobile'>('desktop')
   /** Element Plus 组件全局尺寸 */
@@ -26,9 +28,23 @@ export const useAppStore = defineStore('app', () => {
   /** 需要缓存的视图组件名称列表（配合 KeepAlive 使用） */
   const cachedViews = ref<string[]>([])
 
-  /** 切换侧边栏折叠状态 */
+  /** 读取持久化的侧边栏折叠状态，localStorage 不可用时返回 false */
+  function loadSidebarCollapsed(): boolean {
+    try {
+      return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true'
+    } catch {
+      return false
+    }
+  }
+
+  /** 切换侧边栏折叠状态并持久化 */
   function toggleSidebar(): void {
     sidebarCollapsed.value = !sidebarCollapsed.value
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(sidebarCollapsed.value))
+    } catch {
+      /* localStorage 可能不可用（如隐私模式） */
+    }
   }
 
   /** 设置设备类型（响应式断点变化时由 layout 调用） */
