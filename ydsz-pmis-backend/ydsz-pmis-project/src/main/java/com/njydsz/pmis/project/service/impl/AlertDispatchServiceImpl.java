@@ -17,6 +17,8 @@ import com.njydsz.pmis.common.feign.NotificationPushClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -47,6 +49,16 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
     private final MessageServiceClient messageClient;
     /** 通知实时推送 Feign 客户端（P0-2，通过 notification 服务 WebSocket 下发） */
     private final NotificationPushClient pushClient;
+
+    /**
+     * 自身代理引用，避免内部 this 调用绕过 Spring AOP（@GlobalTransactional / @Transactional）。
+     * <p>P1-4 修复：retryFailed 通过 this.dispatchNow() 调用时，AOP 注解不生效，导致
+     * 分布式事务回滚失效。改为通过 self 代理调用，确保 @GlobalTransactional 正常工作。
+     * <p>@Lazy 避免循环依赖（self 引用自身 bean）。
+     */
+    @Autowired
+    @Lazy
+    private AlertDispatchService self;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -250,7 +262,9 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
         for (AlertDispatchDO d : list) {
             try {
                 mapper.incrementRetry(d.getId());
-                if (dispatchNow(d.getId())) {
+                // P1-4: 通过 self 代理调用 dispatchNow，激活 @GlobalTransactional 注解
+                // （此前 this.dispatchNow() 会绕过 Spring AOP，导致分布式事务失效）
+                if (self.dispatchNow(d.getId())) {
                     n++;
                 }
             } catch (Exception e) {

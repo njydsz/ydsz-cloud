@@ -64,13 +64,10 @@ spring:
           max-wait: 5s
 
   # ---------- Spring Cache（统一使用 Redis） ----------
+  # P1-10: TTL/序列化/前缀由 PmisCacheConfig 统一接管，按 cacheName 差异化配置（防雪崩）
+  # 此处仅保留 type=redis 触发 Spring Boot 自动装配 RedisConnectionFactory
   cache:
     type: redis
-    redis:
-      time-to-live: 30m
-      cache-null-values: false
-      key-prefix: pmis:
-      use-key-prefix: true
 
 # ---------- MyBatis-Plus 共享配置 ----------
 mybatis-plus:

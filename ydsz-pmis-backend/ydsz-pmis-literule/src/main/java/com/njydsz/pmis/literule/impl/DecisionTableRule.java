@@ -28,7 +28,8 @@ import java.util.regex.Pattern;
  *   <li>遍历所有 Row，对每行的 conditions 进行匹配（条件 AND 关系）</li>
  *   <li>按 {@link HitPolicy} 收集命中结果</li>
  *   <li>UNIQUE 多行命中时记录异常（不抛出，仅返回未触发 + 错误描述）</li>
- *   <li>COLLECT 返回所有命中行；其余策略仅返回首条/优先级最高的命中行</li>
+ *   <li>COLLECT/RULE_ORDER 返回所有命中行：主结果取首条，其余存入 {@code collectedResults}</li>
+ *   <li>FIRST/ANY/PRIORITY 仅返回首条/优先级最高的命中行</li>
  * </ol>
  *
  * <p>条件表达式解析由 {@link #matchCondition} 实现，支持字面值、比较、区间、枚举、Aviator 表达式。
@@ -131,15 +132,26 @@ public class DecisionTableRule implements Rule {
                         .min(Comparator.comparingInt(DecisionTableDefinition.Row::getPriority))
                         .orElse(matchedRows.get(0));
             } else if (policy == HitPolicy.COLLECT) {
-                // COLLECT 返回所有匹配（拼接描述），但 RuleResult 只能返回一个；
-                // 这里返回首条，actions 中追加 _matchedCount/_allMatches 供下游分析
-                chosen = matchedRows.stream()
-                        .sorted(Comparator.comparingInt(DecisionTableDefinition.Row::getPriority))
-                        .findFirst()
-                        .orElse(matchedRows.get(0));
+                // COLLECT 策略：按优先级升序排序，主结果取首条，
+                // 其余匹配行作为独立 RuleResult 收集到 collectedResults
+                List<DecisionTableDefinition.Row> sorted = new ArrayList<>(matchedRows);
+                sorted.sort(Comparator.comparingInt(DecisionTableDefinition.Row::getPriority));
+                chosen = sorted.get(0);
+                RuleResult mainResult = buildResultFromActions(chosen.getActions(), start);
+                mainResult.setCollectedResults(buildCollectedResults(sorted, start));
+                // 兼容下游：actions 中保留 _matchedCount 供旧消费者使用
+                mainResult.setDescription(appendCollectInfo(mainResult.getDescription(), sorted.size()));
+                return mainResult;
+            } else if (policy == HitPolicy.RULE_ORDER) {
+                // RULE_ORDER 策略：按行在表中的出现顺序，主结果取首条，
+                // 其余匹配行作为独立 RuleResult 收集到 collectedResults
+                chosen = matchedRows.get(0);
+                RuleResult mainResult = buildResultFromActions(chosen.getActions(), start);
+                mainResult.setCollectedResults(buildCollectedResults(matchedRows, start));
+                mainResult.setDescription(appendCollectInfo(mainResult.getDescription(), matchedRows.size()));
+                return mainResult;
             } else {
-                // FIRST / ANY / RULE_ORDER → 首条（RULE_ORDER 在单结果场景下等同于 FIRST，
-                // 多结果场景由 DecisionTableEvaluator 返回全部匹配行）
+                // FIRST / ANY → 首条
                 chosen = matchedRows.get(0);
             }
 
@@ -326,6 +338,36 @@ public class DecisionTableRule implements Rule {
 
     private long elapsedMs(long startNano) {
         return (System.nanoTime() - startNano) / 1_000_000;
+    }
+
+    /**
+     * 构建 COLLECT/RULE_ORDER 策略的全部匹配行结果列表
+     *
+     * <p>每行独立构建一个 {@link RuleResult}，保留行优先级与动作信息，
+     * 主结果（列表首项）与外层返回的主结果内容一致。
+     *
+     * @param matchedRows 已按策略排序的匹配行
+     * @param startNano   评估起始纳秒时间
+     * @return 匹配行结果列表（至少 1 项）
+     */
+    private List<RuleResult> buildCollectedResults(List<DecisionTableDefinition.Row> matchedRows, long startNano) {
+        List<RuleResult> results = new ArrayList<>(matchedRows.size());
+        for (DecisionTableDefinition.Row row : matchedRows) {
+            results.add(buildResultFromActions(row.getActions(), startNano));
+        }
+        return results;
+    }
+
+    /**
+     * 在描述末尾追加 COLLECT/RULE_ORDER 命中计数信息
+     *
+     * @param description 原始描述
+     * @param count       匹配行数
+     * @return 拼接后的描述；原始描述为空时仅返回计数信息
+     */
+    private String appendCollectInfo(String description, int count) {
+        String info = "[matchedCount=" + count + "]";
+        return (description == null || description.isEmpty()) ? info : description + " " + info;
     }
 
     public DecisionTableDefinition getDefinition() {

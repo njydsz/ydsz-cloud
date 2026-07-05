@@ -150,15 +150,53 @@ class DecisionTableRuleTest {
     }
 
     @Test
-    void shouldReturnFirstMatchedOnCollectPolicy() {
+    void shouldReturnAllMatchesOnCollectPolicy() {
         DecisionTableRule rule = new DecisionTableRule(buildRiskTable(HitPolicy.COLLECT), null);
         Map<String, Object> facts = new HashMap<>();
         facts.put("evmRedCount", 5);
         facts.put("grossMargin", 0.03);
         RuleResult result = rule.evaluate(RuleContext.of(facts));
 
+        // 主结果触发，严重度取首条匹配行（row1 优先级 10 < row2 优先级 20）
         assertTrue(result.isTriggered());
         assertEquals(RuleSeverity.RED, result.getSeverity());
+        // COLLECT 策略应收集全部匹配行（row1 + row2）
+        assertTrue(result.hasCollectedResults(), "COLLECT 策略应返回 collectedResults");
+        assertEquals(2, result.getCollectedResultsOrEmpty().size());
+        // 首条为主结果对应的行
+        assertEquals(RuleSeverity.RED, result.getCollectedResultsOrEmpty().get(0).getSeverity());
+        assertEquals(RuleSeverity.YELLOW, result.getCollectedResultsOrEmpty().get(1).getSeverity());
+        // 描述中应包含命中计数
+        assertNotNull(result.getDescription());
+        assertTrue(result.getDescription().contains("matchedCount=2"));
+    }
+
+    @Test
+    void shouldReturnAllMatchesInRowOrderOnRuleOrderPolicy() {
+        DecisionTableRule rule = new DecisionTableRule(buildRiskTable(HitPolicy.RULE_ORDER), null);
+        Map<String, Object> facts = new HashMap<>();
+        facts.put("evmRedCount", 5);
+        facts.put("grossMargin", 0.03);
+        RuleResult result = rule.evaluate(RuleContext.of(facts));
+
+        assertTrue(result.isTriggered());
+        assertTrue(result.hasCollectedResults(), "RULE_ORDER 策略应返回 collectedResults");
+        assertEquals(2, result.getCollectedResultsOrEmpty().size());
+        // RULE_ORDER 按表中出现顺序：row1(EVM) 在前，row2(毛利率) 在后
+        assertEquals("EVM 严重偏离", result.getCollectedResultsOrEmpty().get(0).getTitle());
+        assertEquals("毛利率过低", result.getCollectedResultsOrEmpty().get(1).getTitle());
+    }
+
+    @Test
+    void shouldNotReturnCollectedResultsOnFirstPolicy() {
+        DecisionTableRule rule = new DecisionTableRule(buildRiskTable(HitPolicy.FIRST), null);
+        Map<String, Object> facts = new HashMap<>();
+        facts.put("evmRedCount", 5);
+        facts.put("grossMargin", 0.03);
+        RuleResult result = rule.evaluate(RuleContext.of(facts));
+
+        assertTrue(result.isTriggered());
+        assertFalse(result.hasCollectedResults(), "FIRST 策略不应返回 collectedResults");
     }
 
     @Test

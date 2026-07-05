@@ -125,6 +125,24 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         return pageResult.getList().stream().map(this::toMap).toList();
     }
 
+    // ============================== GAP-P0-1: 全部流程实例（管理员视图） ==============================
+
+    /**
+     * GAP-P0-1: 查全部流程实例（管理员视图）
+     *
+     * <p>复用 {@link FlowInstanceService#page}，不按 initiatorId 过滤，返回当前租户下所有实例。
+     * 上层 Controller 应通过 {@code @PrePermission(PermissionCodes.WORKFLOW_MONITOR)} 拦截非管理员访问。
+     */
+    @Override
+    public List<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
+                                                       LocalDateTime startTime, LocalDateTime endTime,
+                                                       int page, int size) {
+        PageResult<FlowInstanceDO> pageResult = instanceService.page(
+                businessType, null, flowStatus, startTime, endTime,
+                SecurityContext.getTenantIdOrDefault(1L), page, size);
+        return pageResult.getList().stream().map(this::instanceToMap).toList();
+    }
+
     @Override
     public void countersignBeforeTask(FlowTaskOperateDTO dto) {
         taskService.countersignBefore(dto);

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.constant.CacheConstants;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.AccountLockInfo;
@@ -31,6 +32,8 @@ import com.njydsz.pmis.userinfo.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -65,6 +68,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.USER_BY_USERNAME_CACHE, key = "#username",
+            unless = "#result == null")
     public UserAccountDO findByUsername(String username) {
         return userAccountMapper.selectOne(new LambdaQueryWrapper<UserAccountDO>()
                 .eq(UserAccountDO::getUsername, username));
@@ -72,6 +77,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(readOnly = true)
+    @Cacheable(value = CacheConstants.USER_BY_ID_CACHE, key = "#userId",
+            unless = "#result == null")
     public UserAccountDO findById(Long userId) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
@@ -166,6 +173,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @CacheEvict(value = {CacheConstants.USER_BY_ID_CACHE, CacheConstants.USER_BY_USERNAME_CACHE},
+            allEntries = true)
     public void update(UserAccountDO user) {
         if (user.getId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_668e9add");
@@ -183,6 +192,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.USER_BY_ID_CACHE, CacheConstants.USER_BY_USERNAME_CACHE},
+            allEntries = true)
     public void delete(Long userId) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
@@ -202,6 +213,8 @@ public class UserAccountServiceImpl implements UserAccountService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.USER_BY_ID_CACHE, CacheConstants.USER_BY_USERNAME_CACHE},
+            allEntries = true)
     public void resetPassword(Long userId, String newPassword) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {
@@ -223,6 +236,8 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @CacheEvict(value = {CacheConstants.USER_BY_ID_CACHE, CacheConstants.USER_BY_USERNAME_CACHE},
+            allEntries = true)
     public void toggleStatus(Long userId, String status) {
         UserAccountDO u = userAccountMapper.selectById(userId);
         if (u == null) {

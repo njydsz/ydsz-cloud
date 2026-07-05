@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -92,6 +95,51 @@ public class RuleResult implements Serializable {
 
     /** 灰度桶标识（用于运营对比） */
     private String canaryBucket;
+
+    /**
+     * COLLECT/RULE_ORDER 命中策略下收集的全部匹配行结果
+     *
+     * <p>仅当决策表采用 {@link HitPolicy#COLLECT} 或 {@link HitPolicy#RULE_ORDER}
+     * 策略且命中多行时填充。主结果（{@code severity/title/description}）取首条
+     * 匹配行，其余匹配行以独立 {@link RuleResult} 形式存入此列表，保留命中顺序。
+     *
+     * <p>对于单结果策略（UNIQUE/FIRST/PRIORITY/ANY），此字段为空列表。
+     *
+     * @since 1.5.0
+     */
+    @Builder.Default
+    private List<RuleResult> collectedResults = Collections.emptyList();
+
+    /**
+     * 追加一个收集结果（用于 COLLECT/RULE_ORDER 策略）
+     *
+     * @param result 单行匹配结果
+     */
+    public void addCollectedResult(RuleResult result) {
+        if (result == null) return;
+        if (collectedResults == null || collectedResults == Collections.<RuleResult>emptyList()) {
+            collectedResults = new ArrayList<>();
+        }
+        collectedResults.add(result);
+    }
+
+    /**
+     * 是否包含多结果集合
+     *
+     * @return true 表示当前结果由 COLLECT/RULE_ORDER 策略产出，存在多行匹配
+     */
+    public boolean hasCollectedResults() {
+        return collectedResults != null && !collectedResults.isEmpty();
+    }
+
+    /**
+     * 获取收集结果的不可变视图
+     *
+     * @return 收集结果列表；无收集时返回空列表
+     */
+    public List<RuleResult> getCollectedResultsOrEmpty() {
+        return collectedResults == null ? Collections.emptyList() : collectedResults;
+    }
 
     /**
      * 快速构建未触发结果

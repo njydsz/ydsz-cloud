@@ -1,40 +1,22 @@
 package com.njydsz.pmis.project.config;
 
-import org.springframework.cache.CacheManager;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.cache.RedisCacheConfiguration;
-import org.springframework.data.redis.cache.RedisCacheManager;
-import org.springframework.data.redis.connection.RedisConnectionFactory;
-
-import java.time.Duration;
-
 /**
- * 驾驶舱 Redis 缓存配置
+ * 驾驶舱缓存配置（P1-10 已废弃，保留类仅用于文档）
  *
- * <p>为 CockpitReportService 的 @Cacheable 方法提供 RedisCacheManager，
- * 统一 TTL 5 分钟，避免高频驾驶舱查询反复击穿到数据库。
+ * <p><b>历史</b>：原为 CockpitReportService 单独定义 RedisCacheManager，TTL 5 分钟。
  *
- * <p>使用默认 JdkSerializationRedisSerializer（被缓存的 VO/Map 均已实现 Serializable），
- * 不缓存 null 值，由 @Cacheable 的 unless 条件过滤空结果。
+ * <p><b>P1-10 变更</b>：统一由 {@link com.njydsz.pmis.common.config.PmisCacheConfig} 接管，
+ * cockpit 缓存名称 {@code cockpit:report} 的 TTL 已在 PmisCacheConfig 中配置为 5 分钟。
+ *
+ * <p><b>清理说明</b>：本类不再注册任何 Bean，仅作为历史文档保留。
+ * 如需移除，可直接删除本文件 + 引用处即可。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
+ * @deprecated P1-10 起由 {@link com.njydsz.pmis.common.config.PmisCacheConfig} 统一接管
  */
-@Configuration
+@Deprecated(forRemoval = true)
 public class CockpitCacheConfig {
-
-    /** 驾驶舱缓存统一 TTL：5 分钟 */
-    private static final Duration COCKPIT_CACHE_TTL = Duration.ofMinutes(5);
-
-    @Bean
-    public CacheManager cockpitCacheManager(RedisConnectionFactory connectionFactory) {
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
-                .entryTtl(COCKPIT_CACHE_TTL)
-                .disableCachingNullValues();
-        return RedisCacheManager.builder(connectionFactory)
-                .cacheDefaults(config)
-                .transactionAware()
-                .build();
-    }
+    // P1-10: 已迁移至 com.njydsz.pmis.common.config.PmisCacheConfig
+    // cockpit:report 缓存 TTL 5 分钟已在 PmisCacheConfig 中配置
 }

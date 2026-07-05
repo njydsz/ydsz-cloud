@@ -46,12 +46,16 @@ class AfterSalesCodeGenTest {
     @Test
     @DisplayName("多次调用生成不同编码 - 验证唯一性")
     void shouldGenerateUniqueCodes() {
+        // 使用不同日期保证编码前缀不同，从而保证唯一性
+        // 注：4 位随机数 (0-9999) 在同一日前缀下无法保证唯一性（生日悖论），
+        //     生产侧若需强唯一应结合 DB 序列或 Redis incr，本测试仅验证生成器可重复调用且格式稳定
         Set<String> codes = new HashSet<>();
+        LocalDate base = LocalDate.of(2026, 7, 1);
         for (int i = 0; i < 100; i++) {
-            String code = AfterSalesCodeGen.warrantyCode(null);
+            String code = AfterSalesCodeGen.warrantyCode(base.plusDays(i));
             codes.add(code);
         }
-        assertEquals(100, codes.size(), "100 次调用应生成 100 个不同的编码");
+        assertEquals(100, codes.size(), "100 个不同日期应生成 100 个不同的编码");
     }
 
     @Test

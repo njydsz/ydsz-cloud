@@ -84,6 +84,25 @@ public interface WorkflowFacade {
     List<Map<String, Object>> listDoneTasks(Long userId, int page, int size);
 
     /**
+     * GAP-P0-1: 查全部流程实例（管理员视图）
+     *
+     * <p>对标钉钉/飞书/企微审批中心的"全部"Tab，管理员可查看当前租户下所有流程实例。
+     * 非管理员调用应由上层权限拦截（需要 workflow:monitor:view 权限）。
+     *
+     * @param businessType 业务类型（可空）
+     * @param flowStatus   流程状态（可空）
+     * @param startTime    开始时间下界（可空）
+     * @param endTime      开始时间上界（可空）
+     * @param page         页码（从 1 开始）
+     * @param size         每页大小
+     * @return 实例 Map 列表
+     */
+    List<Map<String, Object>> listAllInstances(String businessType, String flowStatus,
+                                                java.time.LocalDateTime startTime,
+                                                java.time.LocalDateTime endTime,
+                                                int page, int size);
+
+    /**
      * 前加签
      */
     void countersignBeforeTask(FlowTaskOperateDTO dto);
