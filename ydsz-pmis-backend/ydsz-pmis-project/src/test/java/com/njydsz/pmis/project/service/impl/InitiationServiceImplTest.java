@@ -402,6 +402,7 @@ class InitiationServiceImplTest {
 
         @Test
         @DisplayName("分页查询 - 正常流程")
+        @SuppressWarnings("unchecked")
         void page_Success() {
             // Given
             when(initiationMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
@@ -416,6 +417,7 @@ class InitiationServiceImplTest {
 
         @Test
         @DisplayName("分页查询 - 带关键词过滤")
+        @SuppressWarnings("unchecked")
         void page_WithKeyword() {
             // Given
             when(initiationMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
@@ -430,6 +432,7 @@ class InitiationServiceImplTest {
 
         @Test
         @DisplayName("分页查询 - 带阶段过滤")
+        @SuppressWarnings("unchecked")
         void page_WithStage() {
             // Given
             when(initiationMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());

@@ -4,8 +4,6 @@ import com.njydsz.pmis.project.search.ProjectSearchVO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
-
 /**
  * 项目全文检索服务接口。
  *

@@ -343,6 +343,7 @@ class ContractServiceImplTest {
 
         @Test
         @DisplayName("分页查询 - 正常流程")
+        @SuppressWarnings("unchecked")
         void page_Success() {
             // Given
             when(contractMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
@@ -357,6 +358,7 @@ class ContractServiceImplTest {
 
         @Test
         @DisplayName("分页查询 - 带关键词过滤")
+        @SuppressWarnings("unchecked")
         void page_WithKeyword() {
             // Given
             when(contractMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());
@@ -371,6 +373,7 @@ class ContractServiceImplTest {
 
         @Test
         @DisplayName("分页查询 - 带状态过滤")
+        @SuppressWarnings("unchecked")
         void page_WithStatus() {
             // Given
             when(contractMapper.selectPage(any(Page.class), any())).thenReturn(new Page<>());

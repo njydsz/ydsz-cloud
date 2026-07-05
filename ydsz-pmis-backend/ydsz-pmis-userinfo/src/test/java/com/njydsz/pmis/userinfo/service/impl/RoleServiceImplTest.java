@@ -269,6 +269,7 @@ class RoleServiceImplTest {
 
         @Test
         @DisplayName("分页查询 - 正常流程")
+        @SuppressWarnings("unchecked")
         void page_Success() {
             // Given
             RoleQueryDTO query = new RoleQueryDTO();
