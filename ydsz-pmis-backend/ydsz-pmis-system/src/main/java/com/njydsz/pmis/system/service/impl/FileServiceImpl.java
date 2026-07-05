@@ -1,22 +1,23 @@
 package com.njydsz.pmis.system.service.impl;
 
-import com.njydsz.pmis.common.security.TenantContext;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.system.config.MinioConfig;
 import com.njydsz.pmis.system.dto.FileUploadDTO;
 import com.njydsz.pmis.system.entity.FileDO;
 import com.njydsz.pmis.system.mapper.FileMapper;
 import com.njydsz.pmis.system.service.FileService;
+import io.minio.BucketExistsArgs;
 import io.minio.GetObjectArgs;
 import io.minio.GetPresignedObjectUrlArgs;
+import io.minio.MakeBucketArgs;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
 import io.minio.RemoveObjectArgs;
-import io.minio.BucketExistsArgs;
-import io.minio.MakeBucketArgs;
 import io.minio.http.Method;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +32,6 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 文件存储服务实现（MinIO）
@@ -111,11 +111,11 @@ public class FileServiceImpl implements FileService {
         // 计算 SHA-256
         String hash = sha256Hex(content);
 
-        // 生成对象 key：yyyyMM/dd/uuid-原始文件名
+        // 生成对象 key：yyyyMM/dd/雪花ID-原始文件名
         LocalDateTime now = LocalDateTime.now();
         String key = String.format("%04d%02d/%02d/%s-%s",
                 now.getYear(), now.getMonthValue(), now.getDayOfMonth(),
-                UUID.randomUUID().toString().replace("-", "").substring(0, 12),
+                SnowflakeIdGenerator.nextIdStr().substring(0, 12),
                 sanitizeName(originalName));
 
         // 上传

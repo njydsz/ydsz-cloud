@@ -173,8 +173,8 @@ jobs:
 
       - name: Smoke Test
         run: |
-          chmod +x deploy/smoke-test/run.sh
-          STAGING_URL=https://staging.pmis.ydsz.cn ./deploy/smoke-test/run.sh
+          chmod +x deploy/scripts/smoke-test.sh
+          STAGING_URL=https://staging.pmis.ydsz.cn ./deploy/scripts/smoke-test.sh
 
   # ==================== 部署 Production（金丝雀） ====================
   deploy-production:
@@ -195,24 +195,39 @@ jobs:
       - name: Canary Deploy (5% → 25% → 50% → 100%)
         run: |
           # 使用 Argo Rollouts 金丝雀发布
+          # 错误率阈值：5 分钟窗口内 5xx 比例 > 1% 即判定失败
+          ERROR_RATE_THRESHOLD=0.01
           for svc in gateway userinfo workflow project agent system cronjob frontend; do
-            # 更新镜像并启动金丝雀
-            kubectl argo rollouts set image rollout/pmis-${svc} \
-              pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
-              -n pmis-production
+            echo "==> 开始金丝雀发布: pmis-${svc}"
 
-            # 5% 金丝雀
+            # 更新镜像并启动金丝雀（5%）
             kubectl argo rollouts set image rollout/pmis-${svc} \
               pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
               -n pmis-production
             echo "Canary 5% for pmis-${svc}, waiting 60s for observation..."
             sleep 60
 
-            # 检查错误率
-            ERROR_RATE=$(kubectl argo rollouts get rollout pmis-${svc} -n pmis-production -o jsonpath='{.status.canary.currentStepAnalysis}' 2>/dev/null || echo "0")
-            if [ "$ERROR_RATE" != "0" ]; then
-              echo "ERROR: High error rate detected for pmis-${svc}, aborting!"
+            # 通过 Prometheus 真实查询错误率（5xx / 总请求）
+            # 查询最近 5 分钟该服务的 5xx 错误率
+            ERROR_RATE=$(curl -s "http://prometheus-server.monitoring.svc.cluster.local:9090/api/v1/query" \
+              --data-urlencode "query=sum(rate(http_server_requests_seconds_count{namespace=\"pmis-production\",pod=~\"pmis-${svc}.*\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"pmis-production\",pod=~\"pmis-${svc}.*\"}[5m]))" \
+              | jq -r '.data.result[0].value[1] // "0"')
+            echo "pmis-${svc} 当前 5xx 错误率: ${ERROR_RATE}"
+            if [ "$(echo "${ERROR_RATE} > ${ERROR_RATE_THRESHOLD}" | bc -l)" = "1" ]; then
+              echo "ERROR: pmis-${svc} 错误率 ${ERROR_RATE} 超过阈值 ${ERROR_RATE_THRESHOLD}，中止发布！"
               kubectl argo rollouts abort rollout/pmis-${svc} -n pmis-production
+              kubectl argo rollouts undo rollout/pmis-${svc} -n pmis-production
+              exit 1
+            fi
+
+            # 检查 Pod 健康状态（如有 Pod 不健康则中止）
+            UNHEALTHY=$(kubectl get pods -n pmis-production -l app=pmis-${svc} \
+              --field-selector=status.phase!=Running,status.phase!=Succeeded \
+              --no-headers 2>/dev/null | wc -l)
+            if [ "${UNHEALTHY}" -gt "0" ]; then
+              echo "ERROR: pmis-${svc} 有 ${UNHEALTHY} 个 Pod 不健康，中止发布！"
+              kubectl argo rollouts abort rollout/pmis-${svc} -n pmis-production
+              kubectl argo rollouts undo rollout/pmis-${svc} -n pmis-production
               exit 1
             fi
 
@@ -233,8 +248,8 @@ jobs:
 
       - name: Production Smoke Test
         run: |
-          chmod +x deploy/smoke-test/run.sh
-          PRODUCTION_URL=https://pmis.ydsz.cn ./deploy/smoke-test/run.sh
+          chmod +x deploy/scripts/smoke-test.sh
+          PRODUCTION_URL=https://pmis.ydsz.cn ./deploy/scripts/smoke-test.sh
 
       - name: Notify Deploy Success
         if: success()

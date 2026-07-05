@@ -91,6 +91,8 @@ function onSelectionChange({ records }: { records: WarrantyVO[] }) {
 const dialogVisible = ref(false)
 /** 新增质保期表单引用 */
 const formRef = ref<any>()
+/** 提交中状态（防重复提交） */
+const submitting = ref(false)
 /** 新增质保期表单数据 */
 const form = reactive<Partial<WarrantyCreateDTO>>({
   initiationId: 0,
@@ -120,10 +122,15 @@ function openCreate() {
 /** 提交新增质保期表单，校验通过后调用创建接口 */
 async function submitForm() {
   await formRef.value?.validate()
-  await createWarranty(form as WarrantyCreateDTO)
-  ElMessage.success(t('aftersales.warranty.messages.created'))
-  dialogVisible.value = false
-  fetchList()
+  submitting.value = true
+  try {
+    await createWarranty(form as WarrantyCreateDTO)
+    ElMessage.success(t('aftersales.warranty.messages.created'))
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    submitting.value = false
+  }
 }
 
 /**
@@ -256,7 +263,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
+        <el-button type="primary" :loading="submitting" :disabled="submitting" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

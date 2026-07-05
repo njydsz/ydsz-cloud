@@ -1,11 +1,11 @@
 package com.njydsz.pmis.common.job;
 
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.function.Supplier;
 
@@ -125,7 +125,7 @@ public final class JobRunRecorder {
             return existing;
         }
         return "JOB-" + System.currentTimeMillis() + "-" +
-                UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase();
+                SnowflakeIdGenerator.nextIdStr().substring(0, 8).toUpperCase();
     }
 
     private static boolean tryPutMdc(String key, String val) {

@@ -86,6 +86,72 @@ mybatis-plus:
       logic-delete-value: 1
       logic-not-delete-value: 0
 
+# ---------- Feign 超时与重试共享配置 ----------
+# 大厂规范: 跨服务调用必须显式配置超时，避免下游慢响应拖垮上游线程池
+#   - connectTimeout: TCP 连接建立超时（ms），1s 内连不上即失败
+#   - readTimeout:    响应读取超时（ms），普通接口 3s，报表接口由 @FeignClient 覆盖为 10s
+# Feign 默认不重试（避免幂等问题），重试由 Resilience4j 在 Aspect 层统一处理
+feign:
+  client:
+    config:
+      default:
+        connect-timeout: 1000
+        read-timeout: 3000
+        logger-level: BASIC
+      # 报表/导出/AI 等长耗时接口分组，由 @FeignClient(name="...") 匹配
+      ydsz-pmis-project:
+        read-timeout: 10000
+      ydsz-pmis-agent:
+        read-timeout: 30000
+  # 关闭默认重试，统一由 Resilience4j Retry 接管
+  compression:
+    request:
+      enabled: true
+      mime-types: application/json
+    response:
+      enabled: true
+
+# ---------- Spring Cloud OpenFeign + Sentinel 熔断 ----------
+# 启用 Sentinel 对 Feign 的熔断降级支持
+spring.cloud.openfeign:
+  circuitbreaker:
+    enabled: true
+
+# ---------- Resilience4j 重试配置 ----------
+# 与 Sentinel 熔断互补: Sentinel 负责熔断/限流, Resilience4j 负责重试
+# 仅对网络抖动/超时重试，不对业务异常重试（避免雪崩）
+resilience4j:
+  retry:
+    instances:
+      feignRetry:
+        max-attempts: 3
+        wait-duration: 200ms
+        enable-exponential-backoff: true
+        exponential-backoff-multiplier: 2.0
+        exponential-max-wait-duration: 2s
+        retry-exceptions:
+          - java.util.concurrent.TimeoutException
+          - java.net.ConnectException
+          - java.net.SocketTimeoutException
+          - org.springframework.web.client.ResourceAccessException
+        ignore-exceptions:
+          - com.njydsz.pmis.common.exception.BizException
+          - java.lang.IllegalArgumentException
+      dbRetry:
+        max-attempts: 2
+        wait-duration: 100ms
+        retry-exceptions:
+          - org.springframework.dao.OptimisticLockingFailureException
+  circuitbreaker:
+    instances:
+      default:
+        register-health-indicator: true
+        sliding-window-size: 10
+        minimum-number-of-calls: 5
+        failure-rate-threshold: 50
+        wait-duration-in-open-state: 30s
+        permitted-number-of-calls-in-half-open-state: 3
+
 # ---------- SpringDoc / OpenAPI 共享配置 ----------
 springdoc:
   api-docs:

@@ -66,7 +66,7 @@ export const resetPassword = (id: number, newPassword: string, reauthToken?: str
   request<void>({
     url: `/users/${id}/reset-password`,
     method: 'POST',
-    params: { password: newPassword },
+    data: { newPassword },
     headers: reauthToken ? { 'X-Re-Auth-Token': reauthToken } : undefined,
   })
 

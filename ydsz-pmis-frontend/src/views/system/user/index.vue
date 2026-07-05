@@ -82,6 +82,8 @@ function handleReset() {
 const formDialogVisible = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
 const formRef = ref()
+/** 提交中状态（防重复提交） */
+const submittingForm = ref(false)
 const form = reactive<UserCreateDTO & { id?: number }>({
   id: undefined,
   username: '',
@@ -162,45 +164,50 @@ async function openEdit(row: UserVO) {
 /** 提交表单：根据 formMode 执行创建或更新，并在创建/更新后分配角色 */
 async function submitForm() {
   await formRef.value?.validate()
-  if (formMode.value === 'create') {
-    const { data: userId } = await createUser({
-      username: form.username,
-      realName: form.realName,
-      password: form.password,
-      email: form.email,
-      phone: form.phone,
-      levelCode: form.levelCode,
-      departmentId: form.departmentId,
-      positionId: form.positionId,
-      roleIds: form.roleIds,
-      status: form.status,
-    } as any)
-    ElMessage.success(t('system.user.messages.createSuccess'))
-    if (form.roleIds && form.roleIds.length) {
-      try {
-        await assignUserRoles(userId, form.roleIds)
-      } catch (e) {
-        handleError(e, 'assignUserRoles')
-      }
-    }
-  } else {
-    if (form.id) {
-      await updateUser(form.id, {
+  submittingForm.value = true
+  try {
+    if (formMode.value === 'create') {
+      const { data: userId } = await createUser({
+        username: form.username,
         realName: form.realName,
+        password: form.password,
         email: form.email,
         phone: form.phone,
         levelCode: form.levelCode,
         departmentId: form.departmentId,
         positionId: form.positionId,
-        status: form.status,
         roleIds: form.roleIds,
+        status: form.status,
       } as any)
-      await assignUserRoles(form.id, form.roleIds ?? [])
-      ElMessage.success(t('system.user.messages.updateSuccess'))
+      ElMessage.success(t('system.user.messages.createSuccess'))
+      if (form.roleIds && form.roleIds.length) {
+        try {
+          await assignUserRoles(userId, form.roleIds)
+        } catch (e) {
+          handleError(e, 'assignUserRoles')
+        }
+      }
+    } else {
+      if (form.id) {
+        await updateUser(form.id, {
+          realName: form.realName,
+          email: form.email,
+          phone: form.phone,
+          levelCode: form.levelCode,
+          departmentId: form.departmentId,
+          positionId: form.positionId,
+          status: form.status,
+          roleIds: form.roleIds,
+        } as any)
+        await assignUserRoles(form.id, form.roleIds ?? [])
+        ElMessage.success(t('system.user.messages.updateSuccess'))
+      }
     }
+    formDialogVisible.value = false
+    fetchList()
+  } finally {
+    submittingForm.value = false
   }
-  formDialogVisible.value = false
-  fetchList()
 }
 
 /**
@@ -240,6 +247,8 @@ async function handleToggleStatus(row: UserVO) {
 const resetDialogVisible = ref(false)
 const resetUserId = ref<number | null>(null)
 const newPassword = ref('')
+/** 重置密码提交中状态（防重复提交） */
+const submittingResetPwd = ref(false)
 /**
  * 打开重置密码弹窗
  * @param row 待重置密码的用户行数据
@@ -258,11 +267,16 @@ async function submitResetPwd() {
   }
   const id = resetUserId.value
   const pwd = newPassword.value
-  await resetPwdReAuth.withReAuth(async (token) => {
-    await resetPassword(id, pwd, token)
-    ElMessage.success(t('system.user.messages.passwordReset'))
-    resetDialogVisible.value = false
-  })
+  submittingResetPwd.value = true
+  try {
+    await resetPwdReAuth.withReAuth(async (token) => {
+      await resetPassword(id, pwd, token)
+      ElMessage.success(t('system.user.messages.passwordReset'))
+      resetDialogVisible.value = false
+    })
+  } finally {
+    submittingResetPwd.value = false
+  }
 }
 
 // ============= 二次认证 =============
@@ -464,7 +478,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="formDialogVisible = false">{{ $t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ $t('common.confirm') }}</el-button>
+        <el-button type="primary" :loading="submittingForm" :disabled="submittingForm" @click="submitForm">{{ $t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 
@@ -483,7 +497,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="resetDialogVisible = false">{{ $t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitResetPwd">{{ $t('common.confirm') }}</el-button>
+        <el-button type="primary" :loading="submittingResetPwd" :disabled="submittingResetPwd" @click="submitResetPwd">{{ $t('common.confirm') }}</el-button>
       </template>
     </el-dialog>
 

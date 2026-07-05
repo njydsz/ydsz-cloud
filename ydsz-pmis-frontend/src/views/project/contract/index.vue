@@ -17,6 +17,7 @@ import {
 import type { ContractVO, ContractCreateDTO, ContractStatusDTO } from '@/api/project/contract/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
+import { useUserStore } from '@/store/modules/user'
 import { handleError, confirmAction, showSuccess } from '@/utils/error'
 
 // ===== 列表查询状态 =====
@@ -112,9 +113,11 @@ const formRules = {
 }
 
 // ===== 表单草稿 =====
+const userStore = useUserStore()
 const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form, {
   key: 'contract-create',
   debounce: 3000,
+  userId: userStore.userInfo?.id,
 })
 
 const draftTimeText = computed(() => {

@@ -3,10 +3,9 @@ package com.njydsz.pmis.system.channel.impl;
 import com.njydsz.pmis.system.channel.MessageChannel;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 /**
  * App 推送通道 - Mock 实现
@@ -39,7 +38,7 @@ public class MockPushChannel implements MessageChannel {
         if (request.getReceiver() == null || request.getReceiver().isBlank()) {
             return MessageResult.fail("PUSH", "推送目标不能为空");
         }
-        String traceId = "MOCK-PUSH-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        String traceId = "MOCK-PUSH-" + SnowflakeIdGenerator.nextTraceId();
         log.info("[PUSH-MOCK] 推送 receiver={} content={}", request.getReceiver(), request.getContent());
         return MessageResult.ok("PUSH", traceId);
     }

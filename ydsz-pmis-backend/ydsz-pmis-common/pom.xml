@@ -49,6 +49,11 @@
             <artifactId>sentinel-spring-webmvc-v6x-adapter</artifactId>
             <version>1.8.8</version>
         </dependency>
+        <!-- Resilience4j: 重试机制（与 Sentinel 熔断互补，统一接管 Feign 重试） -->
+        <dependency>
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+        </dependency>
         <dependency>
             <groupId>io.swagger.core.v3</groupId>
             <artifactId>swagger-annotations-jakarta</artifactId>

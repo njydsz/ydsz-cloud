@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.engine.alert;
 
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.project.dto.AlertEventDTO;
 import com.njydsz.pmis.project.enums.AlertSeverity;
 
@@ -7,7 +8,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 毛利率过低规则
@@ -93,7 +93,7 @@ public class MarginLowRule implements AlertRule {
         }
         if (severity == null) return null;
         return AlertEventDTO.builder()
-                .eventId(UUID.randomUUID().toString())
+                .eventId(SnowflakeIdGenerator.nextIdStr())
                 .ruleCode(getCode())
                 .ruleName(getName())
                 .category(getCategory())

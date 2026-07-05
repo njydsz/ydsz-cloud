@@ -1,11 +1,11 @@
 package com.njydsz.pmis.project.engine.alert;
 
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.project.dto.AlertEventDTO;
 import com.njydsz.pmis.project.enums.AlertSeverity;
 
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * EVM 红色告警规则
@@ -74,7 +74,7 @@ public class EvmRedRule implements AlertRule {
         int red = toInt(raw);
         if (red < threshold) return null;
         return AlertEventDTO.builder()
-                .eventId(UUID.randomUUID().toString())
+                .eventId(SnowflakeIdGenerator.nextIdStr())
                 .ruleCode(getCode())
                 .ruleName(getName())
                 .category(getCategory())

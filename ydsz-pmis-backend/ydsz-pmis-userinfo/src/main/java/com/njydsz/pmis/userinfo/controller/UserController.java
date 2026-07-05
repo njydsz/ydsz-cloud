@@ -9,6 +9,8 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.userinfo.dto.PasswordChangeDTO;
+import com.njydsz.pmis.userinfo.dto.PasswordResetDTO;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
 import com.njydsz.pmis.userinfo.service.UserAccountService;
@@ -84,19 +86,14 @@ public class UserController {
     /**
      * 当前用户修改自己的密码
      *
-     * @param body 请求体，包含 oldPassword 与 newPassword
+     * @param dto 请求体，包含 oldPassword 与 newPassword
      * @return 统一响应结果
      * @throws BizException 当原密码或新密码为空时抛出
      */
     @Operation(summary = "修改自己的密码")
     @PostMapping("/me/password")
-    public Result<Void> changeMyPassword(@Valid @RequestBody Map<String, String> body) {
-        String oldPassword = body.get("oldPassword");
-        String newPassword = body.get("newPassword");
-        if (oldPassword == null || newPassword == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_2b7a520e");
-        }
-        userAccountService.changePassword(SecurityContext.getUserId(), oldPassword, newPassword);
+    public Result<Void> changeMyPassword(@Valid @RequestBody PasswordChangeDTO dto) {
+        userAccountService.changePassword(SecurityContext.getUserId(), dto.getOldPassword(), dto.getNewPassword());
         return Result.ok();
     }
 
@@ -161,8 +158,8 @@ public class UserController {
     /**
      * 重置用户密码
      *
-     * @param id       用户 ID
-     * @param password 新密码
+     * @param id  用户 ID
+     * @param dto 请求体，包含新密码
      * @return 统一响应结果
      */
     @Operation(summary = "重置密码")
@@ -172,8 +169,9 @@ public class UserController {
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_538560c7}")
     @PostMapping("/{id}/reset-password")
-    public Result<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable @Min(1) Long id, @Parameter(description = "新密码") @RequestParam @NotBlank String password) {
-        userAccountService.resetPassword(id, password);
+    public Result<Void> resetPassword(@Parameter(description = "用户ID") @PathVariable @Min(1) Long id,
+                                      @Valid @RequestBody PasswordResetDTO dto) {
+        userAccountService.resetPassword(id, dto.getNewPassword());
         return Result.ok();
     }
 

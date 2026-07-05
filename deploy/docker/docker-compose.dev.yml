@@ -54,7 +54,8 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       # 首次启动自动建库+灌 SQL
-      - ../../docs/V1.0.0.sql:/docker-entrypoint-initdb.d/V1.0.0.sql:ro
+      # docker-compose 文件位于 deploy/docker/，SQL 脚本位于 deploy/sql/
+      - ../sql/V1.0.0.sql:/docker-entrypoint-initdb.d/V1.0.0.sql:ro
     networks:
       - pmis-net
     healthcheck:

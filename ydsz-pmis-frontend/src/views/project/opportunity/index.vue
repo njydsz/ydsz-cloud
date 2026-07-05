@@ -22,6 +22,7 @@ import {
 import type { OpportunityVO, OpportunityCreateDTO, OpportunityUpdateDTO } from '@/api/project/opportunity/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
+import { useUserStore } from '@/store/modules/user'
 
 const { t } = useI18n()
 
@@ -103,9 +104,11 @@ const formRules = computed(() => ({
 }))
 
 // ===== 表单草稿 =====
+const userStore = useUserStore()
 const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form, {
   key: 'opportunity-create',
   debounce: 3000,
+  userId: userStore.userInfo?.id,
 })
 
 const draftTimeText = computed(() => {

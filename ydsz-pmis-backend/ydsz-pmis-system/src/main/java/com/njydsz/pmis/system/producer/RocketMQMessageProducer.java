@@ -3,6 +3,7 @@ package com.njydsz.pmis.system.producer;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.constant.PmisMessageTopics;
 import com.njydsz.pmis.common.feign.MessageRequest;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.SendResult;
@@ -13,15 +14,13 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
-import java.util.UUID;
-
 /**
  * RocketMQ 消息生产者封装（P0-D3）
  *
  * <p>统一封装 {@link RocketMQTemplate} 的发送入口，解决以下问题：
  * <ul>
  *   <li>原 {@code MessageConsumer} 监听 {@code pmis-message-topic} 但无生产者发送消息，处于空跑状态</li>
- *   <li>统一生成 {@code messageId}（UUID），保证消费端幂等键可用</li>
+ *   <li>统一生成 {@code messageId}（雪花算法），保证消费端幂等键可用</li>
  *   <li>封装同步/异步发送，屏蔽 RocketMQTemplate API 细节</li>
  *   <li>统一 Topic 常量引用 {@link PmisMessageTopics}，避免字面量散落</li>
  * </ul>
@@ -63,7 +62,7 @@ public class RocketMQMessageProducer {
      * <p>同步发送会阻塞等待 Broker ACK，适用于对投递可靠性要求高的场景。
      * 发送失败会抛出 {@link RuntimeException}，由调用方决定是否重试或降级。
      *
-     * <p>若 {@code request.messageId} 为空，自动生成 UUID 填充，保证消费端幂等键可用。
+     * <p>若 {@code request.messageId} 为空，自动生成雪花 ID 填充，保证消费端幂等键可用。
      *
      * @param request 消息请求
      * @return RocketMQ 消息 ID（发送成功时非空，发送失败时为 null）
@@ -137,7 +136,7 @@ public class RocketMQMessageProducer {
      */
     private void ensureMessageId(MessageRequest request) {
         if (!StringUtils.hasText(request.getMessageId())) {
-            request.setMessageId(UUID.randomUUID().toString().replace("-", ""));
+            request.setMessageId(SnowflakeIdGenerator.nextIdStr());
         }
     }
 }

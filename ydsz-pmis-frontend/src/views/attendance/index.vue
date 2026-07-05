@@ -75,6 +75,8 @@ async function fetchAttendance() {
 const attDialogVisible = ref(false)
 /** 出勤登记表单引用 */
 const attFormRef = ref()
+/** 出勤登记提交中状态（防重复提交） */
+const submittingAtt = ref(false)
 /** 出勤登记表单数据 */
 const attForm = reactive<AttendanceCreateDTO>({
   employeeId: 0,
@@ -105,10 +107,15 @@ function openAttCreate() {
 /** 提交出勤登记，调用后端登记接口并刷新列表 */
 async function submitAtt() {
   await attFormRef.value?.validate()
-  await recordAttendance(attForm)
-  ElMessage.success(t('attendance.attendance.messages.recorded'))
-  attDialogVisible.value = false
-  fetchAttendance()
+  submittingAtt.value = true
+  try {
+    await recordAttendance(attForm)
+    ElMessage.success(t('attendance.attendance.messages.recorded'))
+    attDialogVisible.value = false
+    fetchAttendance()
+  } finally {
+    submittingAtt.value = false
+  }
 }
 
 // ============== 加班 ==============
@@ -150,6 +157,8 @@ async function fetchOvertime() {
 const otDialogVisible = ref(false)
 /** 加班申请表单引用 */
 const otFormRef = ref()
+/** 加班申请提交中状态（防重复提交） */
+const submittingOt = ref(false)
 /** 加班申请表单数据 */
 const otForm = reactive<OvertimeCreateDTO>({
   employeeId: 0,
@@ -187,10 +196,15 @@ function openOtCreate() {
 /** 提交加班申请，调用后端提交接口并刷新列表 */
 async function submitOt() {
   await otFormRef.value?.validate()
-  await submitOvertime(otForm)
-  ElMessage.success(t('attendance.overtime.messages.submitted'))
-  otDialogVisible.value = false
-  fetchOvertime()
+  submittingOt.value = true
+  try {
+    await submitOvertime(otForm)
+    ElMessage.success(t('attendance.overtime.messages.submitted'))
+    otDialogVisible.value = false
+    fetchOvertime()
+  } finally {
+    submittingOt.value = false
+  }
 }
 
 /**
@@ -250,6 +264,8 @@ async function fetchLeave() {
 
 /** 请假申请弹窗显隐 */
 const lvDialogVisible = ref(false)
+/** 请假申请提交中状态（防重复提交） */
+const submittingLv = ref(false)
 /** 请假申请表单数据 */
 const lvForm = reactive<LeaveCreateDTO>({
   employeeId: 0,
@@ -273,10 +289,15 @@ function openLvCreate() {
 
 /** 提交请假申请，调用后端提交接口并刷新列表 */
 async function submitLv() {
-  await submitLeave(lvForm)
-  ElMessage.success(t('attendance.leave.messages.submitted'))
-  lvDialogVisible.value = false
-  fetchLeave()
+  submittingLv.value = true
+  try {
+    await submitLeave(lvForm)
+    ElMessage.success(t('attendance.leave.messages.submitted'))
+    lvDialogVisible.value = false
+    fetchLeave()
+  } finally {
+    submittingLv.value = false
+  }
 }
 
 /**
@@ -541,7 +562,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="attDialogVisible = false">{{ t('attendance.common.buttons.cancel') }}</el-button>
-        <el-button type="primary" @click="submitAtt">{{ t('attendance.common.buttons.ok') }}</el-button>
+        <el-button type="primary" :loading="submittingAtt" :disabled="submittingAtt" @click="submitAtt">{{ t('attendance.common.buttons.ok') }}</el-button>
       </template>
     </el-dialog>
 
@@ -574,7 +595,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="otDialogVisible = false">{{ t('attendance.common.buttons.cancel') }}</el-button>
-        <el-button type="primary" @click="submitOt">{{ t('attendance.common.buttons.ok') }}</el-button>
+        <el-button type="primary" :loading="submittingOt" :disabled="submittingOt" @click="submitOt">{{ t('attendance.common.buttons.ok') }}</el-button>
       </template>
     </el-dialog>
 
@@ -601,7 +622,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="lvDialogVisible = false">{{ t('attendance.common.buttons.cancel') }}</el-button>
-        <el-button type="primary" @click="submitLv">{{ t('attendance.common.buttons.ok') }}</el-button>
+        <el-button type="primary" :loading="submittingLv" :disabled="submittingLv" @click="submitLv">{{ t('attendance.common.buttons.ok') }}</el-button>
       </template>
     </el-dialog>
   </div>

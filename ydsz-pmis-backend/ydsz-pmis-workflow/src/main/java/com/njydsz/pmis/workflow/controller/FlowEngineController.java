@@ -1,8 +1,10 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.WorkflowFacade;
 import com.njydsz.pmis.workflow.dto.FlowCcQueryDTO;
@@ -125,6 +127,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/deploy")
     @Operation(summary = "部署流程定义")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public Result<Long> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
         Long id = definitionService.deploy(dto);
         return Result.ok(id);
@@ -138,6 +141,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{id}/publish")
     @Operation(summary = "发布流程定义")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public Result<Void> publish(@PathVariable @Min(1) Long id) {
         definitionService.publish(id);
         return Result.ok();
@@ -151,6 +155,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{id}/deprecate")
     @Operation(summary = "废弃流程定义")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public Result<Void> deprecate(@PathVariable @Min(1) Long id) {
         definitionService.deprecate(id);
         return Result.ok();
@@ -212,6 +217,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{code}/switchVersion")
     @Operation(summary = "切换流程定义的激活版本")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public Result<Void> switchVersion(@PathVariable String code,
                                       @RequestParam Long definitionId,
                                       @RequestParam(required = false) Long tenantId) {
@@ -227,6 +233,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{id}/enable")
     @Operation(summary = "启用流程定义")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public Result<Void> enable(@PathVariable @Min(1) Long id) {
         definitionService.enable(id);
         return Result.ok();
@@ -240,6 +247,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{id}/disable")
     @Operation(summary = "停用流程定义")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public Result<Void> disable(@PathVariable @Min(1) Long id) {
         definitionService.disable(id);
         return Result.ok();
@@ -255,6 +263,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/{definitionId}/node/{nodeCode}/coordinate")
     @Operation(summary = "更新流程节点坐标")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<Void> updateNodeCoordinate(@PathVariable @Min(1) Long definitionId,
                                              @PathVariable String nodeCode,
                                              @RequestBody String coordinate) {
@@ -271,6 +280,7 @@ public class FlowEngineController {
      */
     @PutMapping("/definition/{id}")
     @Operation(summary = "编辑未发布的流程定义草稿")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<Void> updateDefinition(@PathVariable @Min(1) Long id,
                                          @Valid @RequestBody FlowDeployProcessDTO dto) {
         definitionService.updateDefinition(id, dto);
@@ -298,6 +308,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/import")
     @Operation(summary = "从 JSON 导入流程定义")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
     public Result<Long> importDefinition(@RequestBody String json,
                                          @RequestParam(required = false) Long tenantId) {
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
@@ -343,6 +354,7 @@ public class FlowEngineController {
      */
     @PostMapping("/definition/simulate")
     @Operation(summary = "流程模拟运行")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public Result<List<Map<String, Object>>> simulate(@RequestParam String flowCode,
                                                        @RequestParam(required = false) String version,
                                                        @RequestBody Map<String, Object> variables,
@@ -361,6 +373,7 @@ public class FlowEngineController {
      */
     @PostMapping("/instance/start")
     @Operation(summary = "启动流程实例")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
     public Result<String> startProcess(@Valid @RequestBody FlowStartProcessDTO dto) {
         return Result.ok(workflowFacade.startProcess(dto));
     }
@@ -388,6 +401,7 @@ public class FlowEngineController {
      */
     @PostMapping("/instance/{id}/terminate")
     @Operation(summary = "终止流程实例")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> terminate(@PathVariable String id, @RequestParam(required = false) String reason) {
         workflowFacade.terminateProcess(id, reason);
         return Result.ok();
@@ -400,6 +414,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/instance/{id}/suspend")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> suspend(@PathVariable String id) {
         workflowFacade.suspendProcess(id);
         return Result.ok();
@@ -412,6 +427,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/instance/{id}/activate")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> activate(@PathVariable String id) {
         workflowFacade.activateProcess(id);
         return Result.ok();
@@ -420,13 +436,15 @@ public class FlowEngineController {
     /**
      * 撤回流程（仅发起人可撤回，仅运行中可撤回）
      *
-     * @param id         流程实例 ID
-     * @param initiatorId 发起人 ID
+     * <p>P0-1 修复：发起人 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
+     * @param id 流程实例 ID
      * @return 统一响应结果，包含是否撤回成功
      */
     @PostMapping("/instance/{id}/recall")
-    public Result<Boolean> recall(@PathVariable String id, @RequestParam Long initiatorId) {
-        return Result.ok(workflowFacade.recallProcess(id, initiatorId));
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_START)
+    public Result<Boolean> recall(@PathVariable String id) {
+        return Result.ok(workflowFacade.recallProcess(id, SecurityContext.getUserId()));
     }
 
     /**
@@ -435,20 +453,21 @@ public class FlowEngineController {
      * <p>对标钉钉/飞书的"撤销审批"能力。仅 COMPLETED 状态、回滚时间窗口内（默认 7 天）、
      * 发起人或拥有 workflow:instance:rollback 权限的管理员可执行。
      *
-     * @param id             流程实例 ID
-     * @param operatorId     操作人 ID
-     * @param reason         回滚原因
+     * <p>P0-1 修复：操作人 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
+     * @param id              流程实例 ID
+     * @param reason          回滚原因
      * @param maxRollbackDays 允许回滚的最大天数（可选，默认 7）
      * @return 统一响应结果，包含是否回滚成功
      */
     @PostMapping("/instance/{id}/rollback")
     @Operation(summary = "回滚已完成的流程实例")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_ROLLBACK)
     public Result<Boolean> rollback(@PathVariable String id,
-                                    @RequestParam Long operatorId,
                                     @RequestParam String reason,
                                     @RequestParam(required = false, defaultValue = "7") int maxRollbackDays) {
         Long instanceId = Long.parseLong(id);
-        return Result.ok(instanceService.rollback(instanceId, operatorId, reason, maxRollbackDays));
+        return Result.ok(instanceService.rollback(instanceId, SecurityContext.getUserId(), reason, maxRollbackDays));
     }
 
     /**
@@ -545,6 +564,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/instance/{id}/variables")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> setVariables(@PathVariable @Min(1) Long id,
                                      @RequestBody Map<String, Object> variables) {
         instanceService.setVariables(id, variables);
@@ -567,13 +587,15 @@ public class FlowEngineController {
     /**
      * 签收任务
      *
+     * <p>P0-1 修复：用户 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
      * @param taskId 任务 ID
-     * @param userId 用户 ID
      * @return 统一响应结果
      */
     @PostMapping("/task/claim")
-    public Result<Void> claim(@RequestParam Long taskId, @RequestParam Long userId) {
-        workflowFacade.claimTask(taskId, userId);
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    public Result<Void> claim(@RequestParam Long taskId) {
+        workflowFacade.claimTask(taskId, SecurityContext.getUserId());
         return Result.ok();
     }
 
@@ -584,7 +606,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/pass")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> pass(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         workflowFacade.completeTask(dto);
         return Result.ok();
     }
@@ -596,7 +621,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/reject")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> reject(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         workflowFacade.rejectTask(dto);
         return Result.ok();
     }
@@ -626,7 +654,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/transfer")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> transfer(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         workflowFacade.transferTask(dto);
         return Result.ok();
     }
@@ -638,7 +669,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/delegate")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> delegate(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         workflowFacade.delegateTask(dto);
         return Result.ok();
     }
@@ -650,7 +684,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/countersignBefore")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> countersignBefore(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         workflowFacade.countersignBeforeTask(dto);
         return Result.ok();
     }
@@ -662,7 +699,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/countersignAfter")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> countersignAfter(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         workflowFacade.countersignAfterTask(dto);
         return Result.ok();
     }
@@ -674,7 +714,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/jump")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_CONTROL)
     public Result<Void> jump(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         workflowFacade.jumpTask(dto);
         return Result.ok();
     }
@@ -682,62 +725,64 @@ public class FlowEngineController {
     /**
      * P2-26: 批量审批 — 对多个任务逐一通过
      *
+     * <p>P0-1 修复：操作人 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
      * @param taskIds 任务 ID 列表
-     * @param userId  操作人 ID
      * @param comment 审批意见（可选）
      * @return 统一响应结果
      */
     @PostMapping("/task/batchPass")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> batchPass(@RequestParam List<Long> taskIds,
-                                  @RequestParam Long userId,
                                   @RequestParam(required = false) String comment) {
-        workflowFacade.batchPassTasks(taskIds, userId, comment);
+        workflowFacade.batchPassTasks(taskIds, SecurityContext.getUserId(), comment);
         return Result.ok();
     }
 
     /**
      * 催办
      *
-     * @param id         流程实例 ID
-     * @param operatorId 操作人 ID
-     * @param comment    催办备注（可选）
+     * <p>P0-1 修复：操作人 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
+     * @param id      流程实例 ID
+     * @param comment 催办备注（可选）
      * @return 统一响应结果，包含被催办人列表
      */
     @PostMapping("/instance/{id}/urge")
+    @PrePermission(PermissionCodes.WORKFLOW_INSTANCE_VIEW)
     public Result<List<String>> urge(@PathVariable @Min(1) Long id,
-                                 @RequestParam Long operatorId,
                                  @RequestParam(required = false) String comment) {
-        return Result.ok(workflowFacade.urgeTask(id, operatorId, comment));
+        return Result.ok(workflowFacade.urgeTask(id, SecurityContext.getUserId(), comment));
     }
 
     /**
      * 待办任务查询
      *
-     * @param userId 用户 ID
-     * @param page   页码
-     * @param size   每页大小
+     * <p>P0-1 修复：用户 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
+     * @param page 页码
+     * @param size 每页大小
      * @return 统一响应结果，包含待办任务列表
      */
     @GetMapping("/task/todo")
-    public Result<List<Map<String, Object>>> todo(@RequestParam Long userId,
-                                              @RequestParam(defaultValue = "1") @Min(1) int page,
+    public Result<List<Map<String, Object>>> todo(@RequestParam(defaultValue = "1") @Min(1) int page,
                                               @RequestParam(defaultValue = "20") @Max(100) int size) {
-        return Result.ok(workflowFacade.listTodoTasks(userId, page, size));
+        return Result.ok(workflowFacade.listTodoTasks(SecurityContext.getUserId(), page, size));
     }
 
     /**
      * 已办任务查询
      *
-     * @param userId 用户 ID
-     * @param page   页码
-     * @param size   每页大小
+     * <p>P0-1 修复：用户 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
+     * @param page 页码
+     * @param size 每页大小
      * @return 统一响应结果，包含已办任务列表
      */
     @GetMapping("/task/done")
-    public Result<List<Map<String, Object>>> done(@RequestParam Long userId,
-                                              @RequestParam(defaultValue = "1") @Min(1) int page,
+    public Result<List<Map<String, Object>>> done(@RequestParam(defaultValue = "1") @Min(1) int page,
                                               @RequestParam(defaultValue = "20") @Max(100) int size) {
-        return Result.ok(workflowFacade.listDoneTasks(userId, page, size));
+        return Result.ok(workflowFacade.listDoneTasks(SecurityContext.getUserId(), page, size));
     }
 
     // ============== P2-31/32/33: 审计运营统计 ==============
@@ -822,6 +867,7 @@ public class FlowEngineController {
      * @return 抄送分页结果
      */
     @PostMapping("/cc/page")
+    @PrePermission(PermissionCodes.WORKFLOW_CC_VIEW)
     public Result<PageResult<FlowCcDO>> pageCc(@RequestBody FlowCcQueryDTO query) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         Long userId = SecurityContext.getUserId();
@@ -883,6 +929,7 @@ public class FlowEngineController {
      * </pre>
      */
     @PostMapping("/delegate-auth/create")
+    @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public Result<Long> createDelegateAuth(@RequestBody FlowDelegateAuthDO auth) {
         // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
         if (auth.getOwnerUserId() == null) {
@@ -896,6 +943,7 @@ public class FlowEngineController {
      * P1-4: 撤回授权
      */
     @PostMapping("/delegate-auth/{id}/revoke")
+    @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public Result<Void> revokeDelegateAuth(@PathVariable @Min(1) Long id) {
         Long ownerId = SecurityContext.getUserId();
         delegateAuthService.revoke(id, ownerId);
@@ -906,6 +954,7 @@ public class FlowEngineController {
      * P1-4: 启用/停用授权
      */
     @PostMapping("/delegate-auth/{id}/status")
+    @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
     public Result<Void> updateDelegateAuthStatus(@PathVariable @Min(1) Long id,
                                                  @RequestParam String status) {
         Long operatorId = SecurityContext.getUserId();
@@ -966,7 +1015,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/countersignRemove")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> countersignRemove(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         taskService.countersignRemove(dto);
         return Result.ok();
     }
@@ -991,7 +1043,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/communicate")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> communicate(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         taskService.communicate(dto);
         return Result.ok();
     }
@@ -1003,7 +1058,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/saveDraft")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> saveDraft(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         workflowFacade.saveDraft(dto);
         return Result.ok();
     }
@@ -1015,7 +1073,10 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/task/addApprover")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Void> addApprover(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
         workflowFacade.addApprover(dto);
         return Result.ok();
     }
@@ -1028,6 +1089,7 @@ public class FlowEngineController {
      * @return 本轮扫描处理的任务数
      */
     @PostMapping("/sla/scan")
+    @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<Integer> slaScan() {
         int processed = slaService.scanAndProcess();
         return Result.ok(processed);
@@ -1040,6 +1102,7 @@ public class FlowEngineController {
      * @return 是否处理成功
      */
     @PostMapping("/sla/process/{taskId}")
+    @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<Boolean> slaProcess(@PathVariable @Min(1) Long taskId) {
         FlowTaskDO task = taskService.getById(taskId);
         if (task == null) {
@@ -1103,6 +1166,7 @@ public class FlowEngineController {
      * @return Top N 推荐审批人列表
      */
     @PostMapping("/ai/recommend-approvers")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<List<Map<String, Object>>> recommendApprovers(
             @RequestBody Map<String, Object> body) {
         if (body == null) {
@@ -1127,6 +1191,7 @@ public class FlowEngineController {
      * }
      */
     @PostMapping("/ai/draft-comment")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
     public Result<Map<String, Object>> draftComment(@RequestBody Map<String, Object> body) {
         if (body == null) {
             return Result.failed(BizErrorCode.BAD_REQUEST, "请求体不能为空");
@@ -1242,6 +1307,7 @@ public class FlowEngineController {
      * @return 概览统计数据：runningCount/todayNewCount/pendingTaskCount/overdueTaskCount/todayCompletedCount
      */
     @GetMapping("/monitor/overview")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<Map<String, Object>> monitorOverview() {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         Map<String, Object> overview = new LinkedHashMap<>();
@@ -1312,6 +1378,7 @@ public class FlowEngineController {
      * @return 分页异常实例列表
      */
     @GetMapping("/monitor/anomaly")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<PageResult<Map<String, Object>>> monitorAnomaly(
             @RequestParam(required = false) String anomalyType,
             @RequestParam(required = false) String warnLevel,
@@ -1428,6 +1495,7 @@ public class FlowEngineController {
      * @return 趋势列表
      */
     @GetMapping("/monitor/instance-trend")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<List<Map<String, Object>>> monitorInstanceTrend(
             @RequestParam(defaultValue = "7") int days) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
@@ -1489,6 +1557,7 @@ public class FlowEngineController {
      * @return 审批人排名列表
      */
     @GetMapping("/monitor/approver-efficiency")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<List<Map<String, Object>>> monitorApproverEfficiency(
             @RequestParam(defaultValue = "10") int topN,
             @RequestParam(required = false) String startTime,
@@ -1529,6 +1598,7 @@ public class FlowEngineController {
      * @return 分布列表
      */
     @GetMapping("/monitor/flow-type-distribution")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<List<Map<String, Object>>> monitorFlowTypeDistribution(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime) {
@@ -1611,6 +1681,7 @@ public class FlowEngineController {
      * @return 新创建的流程定义 ID
      */
     @PostMapping("/template/{templateCode}/import")
+    @PrePermission(PermissionCodes.WORKFLOW_TEMPLATE_IMPORT)
     public Result<Long> importTemplate(@PathVariable String templateCode,
                                        @RequestParam(required = false) String flowName) {
         return Result.ok(templateService.importTemplate(templateCode, flowName));
@@ -1637,83 +1708,82 @@ public class FlowEngineController {
      *
      * <p>将指定定义标记为灰度版，按 initialPercent 切流。
      *
+     * <p>P0-1 修复：操作人 ID/姓名从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
      * @param definitionId   灰度版定义 ID
      * @param initialPercent 初始灰度比例（0-100）
      * @param strategy       切流策略：USER_HASH / RANDOM / WHITELIST
-     * @param operatorId     操作人 ID
-     * @param operatorName   操作人姓名
      * @param note           备注
      * @return 统一响应结果
      */
     @PostMapping("/canary/{definitionId}/publish")
+    @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> publishCanary(
             @PathVariable @Min(1) Long definitionId,
             @RequestParam(defaultValue = "10") int initialPercent,
             @RequestParam(defaultValue = "USER_HASH") String strategy,
-            @RequestParam(required = false) Long operatorId,
-            @RequestParam(required = false) String operatorName,
             @RequestParam(required = false) String note) {
         canaryService.publishCanary(definitionId, initialPercent, strategy,
-                operatorId, operatorName, note);
+                SecurityContext.getUserId(), SecurityContext.getUsername(), note);
         return Result.ok();
     }
 
     /**
      * P3-1: 调整灰度比例（逐步放量/缩量）
      *
+     * <p>P0-1 修复：操作人 ID/姓名从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
      * @param definitionId 定义 ID
      * @param newPercent   新比例（0-100）
-     * @param operatorId   操作人 ID
-     * @param operatorName 操作人姓名
      * @param note         备注
      * @return 统一响应结果
      */
     @PostMapping("/canary/{definitionId}/adjust")
+    @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> adjustCanary(
             @PathVariable @Min(1) Long definitionId,
             @RequestParam int newPercent,
-            @RequestParam(required = false) Long operatorId,
-            @RequestParam(required = false) String operatorName,
             @RequestParam(required = false) String note) {
-        canaryService.adjustCanaryPercent(definitionId, newPercent, operatorId, operatorName, note);
+        canaryService.adjustCanaryPercent(definitionId, newPercent,
+                SecurityContext.getUserId(), SecurityContext.getUsername(), note);
         return Result.ok();
     }
 
     /**
      * P3-1: 全量发布 - 灰度版晋升为稳定版
      *
+     * <p>P0-1 修复：操作人 ID/姓名从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
      * @param definitionId 灰度版定义 ID
-     * @param operatorId   操作人 ID
-     * @param operatorName 操作人姓名
      * @param note         备注
      * @return 统一响应结果
      */
     @PostMapping("/canary/{definitionId}/promote")
+    @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> promoteCanary(
             @PathVariable @Min(1) Long definitionId,
-            @RequestParam(required = false) Long operatorId,
-            @RequestParam(required = false) String operatorName,
             @RequestParam(required = false) String note) {
-        canaryService.promoteCanary(definitionId, operatorId, operatorName, note);
+        canaryService.promoteCanary(definitionId,
+                SecurityContext.getUserId(), SecurityContext.getUsername(), note);
         return Result.ok();
     }
 
     /**
      * P3-1: 灰度回滚
      *
+     * <p>P0-1 修复：操作人 ID/姓名从 SecurityContext 获取，不再暴露为 URL 参数。
+     *
      * @param definitionId 灰度版定义 ID
-     * @param operatorId   操作人 ID
-     * @param operatorName 操作人姓名
      * @param note         备注（含回滚原因）
      * @return 统一响应结果
      */
     @PostMapping("/canary/{definitionId}/rollback")
+    @PrePermission(PermissionCodes.WORKFLOW_CANARY_MANAGE)
     public Result<Void> rollbackCanary(
             @PathVariable @Min(1) Long definitionId,
-            @RequestParam(required = false) Long operatorId,
-            @RequestParam(required = false) String operatorName,
             @RequestParam(required = false) String note) {
-        canaryService.rollbackCanary(definitionId, operatorId, operatorName, note);
+        canaryService.rollbackCanary(definitionId,
+                SecurityContext.getUserId(), SecurityContext.getUsername(), note);
         return Result.ok();
     }
 
@@ -1741,6 +1811,7 @@ public class FlowEngineController {
      * @return 设计器数据（definition / nodes / edges）
      */
     @GetMapping("/definition/{id}/designer")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<Map<String, Object>> getDesignerData(@PathVariable @Min(1) Long id) {
         return Result.ok(definitionService.getDesignerData(id));
     }
@@ -1753,6 +1824,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/designer")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<Void> saveDesignerData(@PathVariable @Min(1) Long id,
                                           @RequestBody Map<String, Object> designerData) {
         definitionService.saveDesignerData(id, designerData);
@@ -1769,6 +1841,7 @@ public class FlowEngineController {
      * @return 字段权限 JSON 字符串
      */
     @GetMapping("/definition/{id}/form-config/{nodeCode}")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<String> getFormConfig(@PathVariable @Min(1) Long id,
                                          @PathVariable String nodeCode) {
         return Result.ok(definitionService.getFormConfig(id, nodeCode));
@@ -1783,6 +1856,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/form-config/{nodeCode}")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DESIGN)
     public Result<Void> saveFormConfig(@PathVariable @Min(1) Long id,
                                         @PathVariable String nodeCode,
                                         @RequestBody String formFieldsConfig) {
@@ -1798,6 +1872,7 @@ public class FlowEngineController {
      * @return SLA 配置 JSON（未配置返回 null）
      */
     @GetMapping("/definition/{id}/sla-config/{nodeCode}")
+    @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<String> getSlaConfig(@PathVariable @Min(1) Long id,
                                         @PathVariable String nodeCode) {
         return Result.ok(definitionService.getSlaConfig(id, nodeCode));
@@ -1812,6 +1887,7 @@ public class FlowEngineController {
      * @return 统一响应结果
      */
     @PostMapping("/definition/{id}/sla-config/{nodeCode}")
+    @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<Void> saveSlaConfig(@PathVariable @Min(1) Long id,
                                         @PathVariable String nodeCode,
                                         @RequestBody java.util.Map<String, Object> slaConfig) {
@@ -1856,6 +1932,7 @@ public class FlowEngineController {
      * @return 保存后的通道配置
      */
     @PostMapping("/notify-channel/save")
+    @PrePermission(PermissionCodes.WORKFLOW_NOTIFY_CONFIG)
     public Result<FlowNotifyChannelDO> saveNotifyChannel(@RequestBody FlowNotifyChannelDO dto) {
         if (dto.getTenantId() == null) {
             dto.setTenantId(SecurityContext.getTenantIdOrDefault(1L));

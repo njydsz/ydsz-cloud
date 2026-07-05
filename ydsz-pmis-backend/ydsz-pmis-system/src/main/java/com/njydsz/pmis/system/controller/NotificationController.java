@@ -119,12 +119,16 @@ public class NotificationController {
     /**
      * 实时推送消息到指定用户（供其他微服务通过 Feign 调用，P0-2）
      *
+     * <p>P0-2 修复：补 @PrePermission 权限校验，防止任意登录用户调用向他人推送消息。
+     * 内部 Feign 调用应使用服务账号（拥有 notif:message:push 权限）。</p>
+     *
      * @param userId  接收用户 ID
      * @param type    消息类型 (NOTIFICATION/ALERT/DASHBOARD)
      * @param payload 消息内容
      * @return 推送结果
      */
     @Operation(summary = "实时推送（指定用户）")
+    @PrePermission(PermissionCodes.NOTIF_PUSH)
     @PostMapping("/push")
     public Result<Map<String, Object>> push(
             @Parameter(description = "接收用户ID") @RequestParam Long userId,
@@ -138,11 +142,15 @@ public class NotificationController {
     /**
      * 广播消息到所有在线用户（供其他微服务通过 Feign 调用，P0-2）
      *
+     * <p>P0-2 修复：补 @PrePermission 权限校验，防止任意登录用户调用全站广播。
+     * 内部 Feign 调用应使用服务账号（拥有 notif:message:broadcast 权限）。</p>
+     *
      * @param type    消息类型
      * @param payload 消息内容
      * @return 推送结果
      */
     @Operation(summary = "实时广播")
+    @PrePermission(PermissionCodes.NOTIF_BROADCAST)
     @PostMapping("/broadcast")
     public Result<Map<String, Object>> broadcast(
             @Parameter(description = "消息类型") @RequestParam String type,

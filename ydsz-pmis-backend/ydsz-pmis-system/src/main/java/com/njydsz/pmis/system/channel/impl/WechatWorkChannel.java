@@ -3,6 +3,7 @@ package com.njydsz.pmis.system.channel.impl;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.system.channel.MessageChannel;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 企业微信群机器人通道
@@ -116,7 +116,7 @@ public class WechatWorkChannel implements MessageChannel {
             HttpEntity<String> entity = new HttpEntity<>(JSON.toJSONString(payload), headers);
 
             ResponseEntity<String> response = restTemplate.postForEntity(webhookUrl, entity, String.class);
-            String traceId = "WECHAT_WORK-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+            String traceId = "WECHAT_WORK-" + SnowflakeIdGenerator.nextTraceId();
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 // 企业微信返回 errcode=0 表示成功

@@ -1,6 +1,7 @@
 package com.njydsz.pmis.system.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.system.config.MinioConfig;
 import com.njydsz.pmis.system.service.FileEnhanceService;
 import io.minio.GetObjectArgs;
@@ -27,7 +28,6 @@ import java.net.Socket;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -137,7 +137,7 @@ public class FileEnhanceServiceImpl implements FileEnhanceService {
 
     @Override
     public String initMultipartUpload(String filename, long totalSize, int totalChunks) {
-        String uploadId = UUID.randomUUID().toString().replace("-", "");
+        String uploadId = SnowflakeIdGenerator.nextIdStr();
         ChunkMeta meta = new ChunkMeta(filename, totalSize, totalChunks);
         try {
             stringRedisTemplate.opsForValue().set(metaKey(uploadId), JSON.toJSONString(meta));

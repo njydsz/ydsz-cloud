@@ -47,6 +47,7 @@
         <postgresql.version>42.7.4</postgresql.version>
         <druid.version>1.2.28</druid.version>
         <hutool.version>5.8.46</hutool.version>
+        <resilience4j.version>2.2.0</resilience4j.version>
         <mapstruct.version>1.6.3</mapstruct.version>
         <lombok.version>1.18.42</lombok.version>
         <fastjson2.version>2.0.62</fastjson2.version>
@@ -167,6 +168,18 @@
                 <groupId>com.alibaba.csp</groupId>
                 <artifactId>sentinel-spring-cloud-gateway-adapter</artifactId>
                 <version>1.8.9</version>
+            </dependency>
+
+            <!-- Resilience4j: 重试/熔断/隔离舱（与 Sentinel 互补，Feign 重试统一由此接管） -->
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-spring-boot3</artifactId>
+                <version>${resilience4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.resilience4j</groupId>
+                <artifactId>resilience4j-reactor</artifactId>
+                <version>${resilience4j.version}</version>
             </dependency>
 
             <!-- Hutool 工具 -->

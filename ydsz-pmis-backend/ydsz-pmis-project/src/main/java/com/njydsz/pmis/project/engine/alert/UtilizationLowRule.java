@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.engine.alert;
 
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.project.dto.AlertEventDTO;
 import com.njydsz.pmis.project.enums.AlertSeverity;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +9,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * 可计费利用率过低规则
@@ -99,7 +99,7 @@ public class UtilizationLowRule implements AlertRule {
         if (severity == null) return null;
         BigDecimal pct = util.multiply(new BigDecimal("100")).setScale(2, RoundingMode.HALF_UP);
         return AlertEventDTO.builder()
-                .eventId(UUID.randomUUID().toString())
+                .eventId(SnowflakeIdGenerator.nextIdStr())
                 .ruleCode(getCode())
                 .ruleName(getName())
                 .category(getCategory())

@@ -1,5 +1,6 @@
 package com.njydsz.pmis.common.feign;
 
+import com.njydsz.pmis.common.util.TraceIdUtil;
 import feign.RequestInterceptor;
 import feign.RequestTemplate;
 import lombok.extern.slf4j.Slf4j;
@@ -7,8 +8,6 @@ import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 /**
  * PMIS Feign 统一可观测性拦截器（批次 19 P2-2 落地）
@@ -70,10 +69,10 @@ public class PmisFeignInterceptor implements RequestInterceptor {
      */
     @Override
     public void apply(RequestTemplate template) {
-        // 1) 透传 traceId（MDC 优先 → 新生成兜底）
+        // 1) 透传 traceId（MDC 优先 → 新生成兜底，使用雪花算法）
         String traceId = MDC.get("traceId");
         if (traceId == null || traceId.isEmpty()) {
-            traceId = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+            traceId = TraceIdUtil.generate();
             MDC.put("traceId", traceId);
         }
         template.header(TRACE_ID_HEADER, traceId);

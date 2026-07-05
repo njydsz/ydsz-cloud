@@ -118,6 +118,8 @@ function handleReset() {
 /** 评价弹窗显隐 */
 const dialogVisible = ref(false)
 const formRef = ref<any>()
+/** 提交中状态（防重复提交） */
+const submitting = ref(false)
 /** 评价表单数据 */
 const form = reactive<Partial<SatisfactionCreateDTO>>({
   overallScore: 5,
@@ -150,11 +152,16 @@ function openCreate() {
 /** 提交评价表单，校验通过后调用提交接口并刷新统计 */
 async function submitForm() {
   await formRef.value?.validate()
-  await submitSatisfaction(form as SatisfactionCreateDTO)
-  ElMessage.success(t('aftersales.satisfaction.messages.submitted'))
-  dialogVisible.value = false
-  fetchList()
-  fetchStats()
+  submitting.value = true
+  try {
+    await submitSatisfaction(form as SatisfactionCreateDTO)
+    ElMessage.success(t('aftersales.satisfaction.messages.submitted'))
+    dialogVisible.value = false
+    fetchList()
+    fetchStats()
+  } finally {
+    submitting.value = false
+  }
 }
 
 /** 标记不满意评价为跟进中，需输入跟进说明 */
@@ -342,7 +349,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ t('common.submit') }}</el-button>
+        <el-button type="primary" :loading="submitting" :disabled="submitting" @click="submitForm">{{ t('common.submit') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

@@ -14,9 +14,9 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * PMIS 核心业务指标采集（H5.2/H5.3 修复）
  *
- * <p>问题：deploy/monitoring/prometheus/rules/pmis-alerts.yml 引用了
- * pmis_evm_red_projects_count / pmis_bench_total_cost / pmis_billable_utilization_avg
- * 等指标，但代码未注册，告警永不触发。
+ * <p>配套告警规则文件：deploy/monitoring/prometheus/rules/pmis-alerts.yml
+ * 该文件已包含 pmis_evm_red_projects_count / pmis_bench_total_cost /
+ * pmis_billable_utilization_avg 三个指标的告警规则（P1/P2 级别）。
  *
  * <p>方案：通过 @Scheduled 定时任务每分钟从 DB 拉取关键 KPI 注册为 Gauge。
  * 不侵入业务代码，DB 查询走只读副本或主库均可（QPS 1/min 可忽略）。

@@ -84,6 +84,8 @@ function onSelectionChange({ records }: { records: ContractTemplateVO[] }) {
 // ===== 新增表单弹窗 =====
 const dialogVisible = ref(false)
 const formRef = ref<any>()
+/** 提交中状态（防重复提交） */
+const submitting = ref(false)
 const form = reactive<Partial<ContractTemplateCreateDTO>>({
   code: '',
   name: '',
@@ -115,10 +117,15 @@ function openCreate() {
 /** 提交新增模板表单：校验通过后创建并刷新列表 */
 async function submitForm() {
   await formRef.value?.validate()
-  await createContractTemplate(form as ContractTemplateCreateDTO)
-  ElMessage.success('创建成功')
-  dialogVisible.value = false
-  fetchList()
+  submitting.value = true
+  try {
+    await createContractTemplate(form as ContractTemplateCreateDTO)
+    ElMessage.success('创建成功')
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    submitting.value = false
+  }
 }
 
 /**
@@ -250,7 +257,7 @@ onMounted(fetchList)
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitForm">确定</el-button>
+        <el-button type="primary" :loading="submitting" :disabled="submitting" @click="submitForm">确定</el-button>
       </template>
     </el-dialog>
   </PageLayout>

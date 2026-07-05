@@ -101,6 +101,10 @@ public final class PermissionCodes {
     // ==================== 通知 ====================
 
     public static final String NOTIF_MESSAGE_SEND = "notif:message:send";
+    /** 实时推送消息到指定用户 (内部 Feign 接口, 仅服务账号/管理员可调用) */
+    public static final String NOTIF_PUSH = "notif:message:push";
+    /** 广播消息到所有在线用户 (内部 Feign 接口, 仅服务账号/管理员可调用) */
+    public static final String NOTIF_BROADCAST = "notif:message:broadcast";
 
     // ==================== 文件 ====================
 
@@ -303,5 +307,46 @@ public final class PermissionCodes {
     public static final String AGENT_ORCHESTRATION_RUN = "agent:orchestration:run";
     public static final String AGENT_ORCHESTRATION_VIEW = "agent:orchestration:view";
     public static final String AGENT_PREDICTION_VIEW = "agent:prediction:view";
+
+    // ==================== 工作流 (P0-3 补齐) ====================
+
+    /** 流程定义部署 (管理员) */
+    public static final String WORKFLOW_DEFINITION_DEPLOY = "workflow:definition:deploy";
+    /** 流程定义发布/废弃/启停/切换版本 (管理员) */
+    public static final String WORKFLOW_DEFINITION_PUBLISH = "workflow:definition:publish";
+    /** 流程定义删除 (管理员) */
+    public static final String WORKFLOW_DEFINITION_DELETE = "workflow:definition:delete";
+    /** 流程定义导入 (管理员) */
+    public static final String WORKFLOW_DEFINITION_IMPORT = "workflow:definition:import";
+    /** 流程定义设计器配置 (管理员) */
+    public static final String WORKFLOW_DEFINITION_DESIGN = "workflow:definition:design";
+    /** 流程实例查询/查看 */
+    public static final String WORKFLOW_INSTANCE_VIEW = "workflow:instance:view";
+    /** 流程实例启动 */
+    public static final String WORKFLOW_INSTANCE_START = "workflow:instance:start";
+    /** 流程实例终止/挂起/激活 (管理员) */
+    public static final String WORKFLOW_INSTANCE_CONTROL = "workflow:instance:control";
+    /** 流程实例回滚 (管理员) */
+    public static final String WORKFLOW_INSTANCE_ROLLBACK = "workflow:instance:rollback";
+    /** 流程实例迁移 (管理员) */
+    public static final String WORKFLOW_INSTANCE_MIGRATE = "workflow:instance:migrate";
+    /** 任务查询/详情 (本人) */
+    public static final String WORKFLOW_TASK_VIEW = "workflow:task:view";
+    /** 任务操作: 通过/驳回/签收/转办/委派/加签/跳转/批量审批 (本人) */
+    public static final String WORKFLOW_TASK_OPERATE = "workflow:task:operate";
+    /** 灰度发布管理 (管理员) */
+    public static final String WORKFLOW_CANARY_MANAGE = "workflow:canary:manage";
+    /** 抄送查询 (本人) */
+    public static final String WORKFLOW_CC_VIEW = "workflow:cc:view";
+    /** 委派授权管理 (本人) */
+    public static final String WORKFLOW_DELEGATE_MANAGE = "workflow:delegate:manage";
+    /** SLA 配置 (管理员) */
+    public static final String WORKFLOW_SLA_CONFIG = "workflow:sla:config";
+    /** 通知通道配置 (管理员) */
+    public static final String WORKFLOW_NOTIFY_CONFIG = "workflow:notify:config";
+    /** 工作流监控看板查看 */
+    public static final String WORKFLOW_MONITOR_VIEW = "workflow:monitor:view";
+    /** 工作流模板导入 (管理员) */
+    public static final String WORKFLOW_TEMPLATE_IMPORT = "workflow:template:import";
 
     }

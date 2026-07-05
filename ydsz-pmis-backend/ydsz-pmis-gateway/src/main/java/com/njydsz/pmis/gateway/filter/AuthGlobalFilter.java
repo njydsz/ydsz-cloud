@@ -6,6 +6,7 @@ import com.njydsz.pmis.common.constant.CommonConstants;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.util.InternalHeaderSigner;
 import com.njydsz.pmis.common.util.PathGuard;
+import com.njydsz.pmis.common.util.TraceIdUtil;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,6 @@ import reactor.core.publisher.Mono;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * 认证全局过滤器（P0-C5 安全加固）
@@ -104,11 +104,11 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return rejectPathTraversal(exchange);
         }
 
-        // 链路追踪 ID（先剥离客户端伪造的 traceId，再注入网关生成的值）
+        // 链路追踪 ID（先剥离客户端伪造的 traceId，再注入网关生成的值，使用雪花算法）
         final String traceId;
         String traceIdTmp = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
         if (traceIdTmp == null || traceIdTmp.isEmpty()) {
-            traceId = UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+            traceId = TraceIdUtil.generate();
         } else {
             traceId = traceIdTmp;
         }

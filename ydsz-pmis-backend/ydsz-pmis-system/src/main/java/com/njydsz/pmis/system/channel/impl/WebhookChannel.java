@@ -3,6 +3,7 @@ package com.njydsz.pmis.system.channel.impl;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.system.channel.MessageChannel;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +20,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 /**
  * Webhook 通道实现
@@ -121,7 +121,7 @@ public class WebhookChannel implements MessageChannel {
             ResponseEntity<String> response = restTemplate.postForEntity(webhookUrl, entity, String.class);
             int statusCode = response.getStatusCode().value();
             if (response.getStatusCode().is2xxSuccessful()) {
-                String traceId = "WEBHOOK-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+                String traceId = "WEBHOOK-" + SnowflakeIdGenerator.nextTraceId();
                 log.info("[WEBHOOK] 发送成功: url={} status={}", webhookUrl, statusCode);
                 return MessageResult.ok("WEBHOOK", traceId);
             }

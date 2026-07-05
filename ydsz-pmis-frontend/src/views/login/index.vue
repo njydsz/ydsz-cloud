@@ -34,8 +34,8 @@ const captchaLoading = ref(false)
 
 /** 登录表单数据 */
 const form = reactive({
-  username: import.meta.env.DEV ? 'admin' : '',
-  password: import.meta.env.DEV ? 'admin123' : '',
+  username: '',
+  password: '',
   captchaKey: '',
   captchaCode: '',
   rememberMe: false,

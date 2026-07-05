@@ -35,6 +35,12 @@ server:
 # =====================================================================
 # Actuator 健康检查
 # =====================================================================
+# 启用 readiness/liveness 探针分组，配合 K8s 部署使用：
+#   - liveness:  仅检测进程存活（JVM/磁盘），失败触发重启
+#   - readiness: 检测依赖（DB/Redis/MQ），失败时摘除流量但不重启
+# K8s 部署模板中已配置:
+#   livenessProbe:  /actuator/health/liveness
+#   readinessProbe: /actuator/health/readiness
 management:
   endpoints:
     web:
@@ -49,6 +55,15 @@ management:
   endpoint:
     health:
       show-details: when-authorized
+  # 启用 probes 并自定义分组，避免 liveness 因依赖短暂抖动而误重启
+  health:
+    probes:
+      enabled: true
+    group:
+      liveness:
+        include: livenessState
+      readiness:
+        include: readinessState,db,redis,discoveryClient
 
 # =====================================================================
 # SpringDoc OpenAPI 3.0 配置

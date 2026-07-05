@@ -2,12 +2,13 @@ package com.njydsz.pmis.common.util;
 
 import org.slf4j.MDC;
 
-import java.util.UUID;
-
 /**
  * 链路追踪 ID 工具
  *
  * <p>基于 MDC 存储 traceId，配合日志框架输出。
+ *
+ * <p>traceId 生成策略: 雪花算法（Snowflake）转 16 进制，避免 UUID 在索引上的页分裂。
+ * 如需对接 SkyWalking/Jaeger，可在 P1-6 接入 Micrometer Tracing 后由 W3C Trace Context 接管。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -21,12 +22,12 @@ public final class TraceIdUtil {
     }
 
     /**
-     * 生成 16 位 traceId
+     * 生成 16 位 traceId（雪花算法 16 进制）
      *
      * @return traceId 字符串
      */
     public static String generate() {
-        return UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        return SnowflakeIdGenerator.nextTraceId();
     }
 
     /**

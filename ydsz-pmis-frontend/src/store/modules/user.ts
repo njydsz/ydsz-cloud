@@ -17,6 +17,7 @@ import { loginApi, logoutApi, getUserInfoApi } from '@/api/user'
 import type { LoginParams, LoginResult, UserInfo } from '@/api/user/types'
 import { removeToken, setToken, getToken } from '@/utils/auth'
 import { usePermissionStore } from '@/store/modules/permission'
+import { clearAllDrafts } from '@/composables/useFormDraft'
 
 export const useUserStore = defineStore('user', () => {
   /** Access Token（同步持久化到 localStorage） */
@@ -98,6 +99,8 @@ export const useUserStore = defineStore('user', () => {
    *   2. 路由 name 冲突导致 addRoute 失败
    */
   function clearAuth(): void {
+    // P0-8: 先取出当前用户 ID, 再清空 userInfo, 用于按用户清理草稿
+    const currentUserId = userInfo.value?.id
     token.value = ''
     refreshToken.value = ''
     userInfo.value = null
@@ -107,6 +110,12 @@ export const useUserStore = defineStore('user', () => {
     // P0-1: 同步清除 localStorage 中的 userInfo
     try {
       localStorage.removeItem('userInfo')
+    } catch {
+      // 静默失败
+    }
+    // P0-8: 清理当前用户的表单草稿, 防止公共电脑场景下跨用户数据泄漏
+    try {
+      clearAllDrafts(currentUserId)
     } catch {
       // 静默失败
     }

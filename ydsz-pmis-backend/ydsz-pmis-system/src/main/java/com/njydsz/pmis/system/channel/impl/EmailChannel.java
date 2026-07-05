@@ -3,6 +3,7 @@ package com.njydsz.pmis.system.channel.impl;
 import com.njydsz.pmis.system.channel.MessageChannel;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +13,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 import jakarta.mail.internet.MimeMessage;
-import java.util.UUID;
 
 /**
  * 邮件通道实现
@@ -83,7 +83,7 @@ public class EmailChannel implements MessageChannel {
                 msg.setText(request.getContent());
                 mailSender.send(msg);
             }
-            String traceId = "EMAIL-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+            String traceId = "EMAIL-" + SnowflakeIdGenerator.nextTraceId();
             log.info("[EMAIL] 发送成功: to={} subject={}", request.getReceiver(), subject);
             return MessageResult.ok("EMAIL", traceId);
         } catch (Exception e) {

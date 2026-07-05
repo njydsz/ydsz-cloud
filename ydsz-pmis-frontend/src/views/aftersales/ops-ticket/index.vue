@@ -132,6 +132,8 @@ const isEmpty = computed(() => !loading.value && list.value.length === 0)
 /** 新增工单弹窗显隐 */
 const dialogVisible = ref(false)
 const formRef = ref<any>()
+/** 提交中状态（防重复提交） */
+const submittingForm = ref(false)
 /** 新增工单表单数据 */
 const form = reactive<Partial<OpsTicketCreateDTO>>({
   initiationId: 0,
@@ -163,14 +165,21 @@ function openCreate() {
 /** 提交新增工单表单，校验通过后调用创建接口 */
 async function submitForm() {
   await formRef.value?.validate()
-  await createOpsTicket(form as OpsTicketCreateDTO)
-  ElMessage.success(t('aftersales.opsTicket.messages.created'))
-  dialogVisible.value = false
-  fetchList()
+  submittingForm.value = true
+  try {
+    await createOpsTicket(form as OpsTicketCreateDTO)
+    ElMessage.success(t('aftersales.opsTicket.messages.created'))
+    dialogVisible.value = false
+    fetchList()
+  } finally {
+    submittingForm.value = false
+  }
 }
 
 /** 派单弹窗显隐 */
 const assignVisible = ref(false)
+/** 派单提交中状态（防重复提交） */
+const submittingAssign = ref(false)
 /** 派单表单数据 */
 const assignForm = reactive<{ id?: number; assigneeId: number; comment: string }>({
   id: undefined,
@@ -193,10 +202,15 @@ async function submitAssign() {
     return
   }
   const dto: OpsTicketAssignDTO = { id: assignForm.id, assigneeId: assignForm.assigneeId, comment: assignForm.comment }
-  await assignOpsTicket(dto)
-  ElMessage.success(t('aftersales.opsTicket.messages.assigned'))
-  assignVisible.value = false
-  fetchList()
+  submittingAssign.value = true
+  try {
+    await assignOpsTicket(dto)
+    ElMessage.success(t('aftersales.opsTicket.messages.assigned'))
+    assignVisible.value = false
+    fetchList()
+  } finally {
+    submittingAssign.value = false
+  }
 }
 
 /**
@@ -234,6 +248,8 @@ async function handleStatus(row: OpsTicketVO, target: string) {
 
 /** 关闭评价弹窗显隐 */
 const evalVisible = ref(false)
+/** 关闭评价提交中状态（防重复提交） */
+const submittingEvaluate = ref(false)
 /** 客户评价表单数据 */
 const evalForm = reactive<{ id?: number; score: number; comment: string }>({
   id: undefined,
@@ -252,15 +268,20 @@ function openEvaluate(row: OpsTicketVO) {
 /** 提交关闭并评价，将工单置为 CLOSED 并记录客户评分 */
 async function submitEvaluate() {
   if (!evalForm.id) return
-  await closeAndEvaluateOpsTicket({
-    id: evalForm.id,
-    targetStatus: 'CLOSED',
-    customerScore: evalForm.score,
-    customerComment: evalForm.comment,
-  } as any)
-  ElMessage.success(t('aftersales.opsTicket.messages.evaluated'))
-  evalVisible.value = false
-  fetchList()
+  submittingEvaluate.value = true
+  try {
+    await closeAndEvaluateOpsTicket({
+      id: evalForm.id,
+      targetStatus: 'CLOSED',
+      customerScore: evalForm.score,
+      customerComment: evalForm.comment,
+    } as any)
+    ElMessage.success(t('aftersales.opsTicket.messages.evaluated'))
+    evalVisible.value = false
+    fetchList()
+  } finally {
+    submittingEvaluate.value = false
+  }
 }
 
 /** 触发 SLA 超时扫描，并刷新列表与统计 */
@@ -451,7 +472,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="dialogVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitForm">{{ t('common.ok') }}</el-button>
+        <el-button type="primary" :loading="submittingForm" :disabled="submittingForm" @click="submitForm">{{ t('common.ok') }}</el-button>
       </template>
     </el-dialog>
 
@@ -468,7 +489,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="assignVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitAssign">{{ t('aftersales.opsTicket.actions.assign') }}</el-button>
+        <el-button type="primary" :loading="submittingAssign" :disabled="submittingAssign" @click="submitAssign">{{ t('aftersales.opsTicket.actions.assign') }}</el-button>
       </template>
     </el-dialog>
 
@@ -485,7 +506,7 @@ onMounted(() => {
       </el-form>
       <template #footer>
         <el-button @click="evalVisible = false">{{ t('common.cancel') }}</el-button>
-        <el-button type="primary" @click="submitEvaluate">{{ t('aftersales.opsTicket.actions.closeEvaluate') }}</el-button>
+        <el-button type="primary" :loading="submittingEvaluate" :disabled="submittingEvaluate" @click="submitEvaluate">{{ t('aftersales.opsTicket.actions.closeEvaluate') }}</el-button>
       </template>
     </el-dialog>
   </PageLayout>

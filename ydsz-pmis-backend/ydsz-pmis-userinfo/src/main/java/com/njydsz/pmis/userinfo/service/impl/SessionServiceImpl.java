@@ -1,6 +1,7 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
 import com.njydsz.pmis.common.security.TenantContext;
+import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.userinfo.entity.UserSessionDO;
 import com.njydsz.pmis.userinfo.mapper.UserSessionMapper;
@@ -12,7 +13,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 用户会话管理实现
@@ -32,7 +32,7 @@ public class SessionServiceImpl implements SessionService {
     public UserSessionDO create(Long userId, String clientIp, String userAgent, String deviceType, int expireSeconds) {
         UserSessionDO s = new UserSessionDO();
         s.setUserId(userId);
-        s.setSessionId(UUID.randomUUID().toString().replace("-", ""));
+        s.setSessionId(SnowflakeIdGenerator.nextIdStr());
         s.setLoginAt(LocalDateTime.now());
         s.setLastActiveAt(LocalDateTime.now());
         s.setExpireAt(LocalDateTime.now().plusSeconds(expireSeconds));
