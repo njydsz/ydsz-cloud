@@ -171,7 +171,8 @@ literule  → common
 
 **5 分钟快速启动**：参考 [docs/QUICKSTART.md](docs/QUICKSTART.md)
 **详细部署手册**：参考 [docs/DEPLOY.md](docs/DEPLOY.md)
-**8 大中间件部署**（PG/Redis/Nacos/MinIO/Seata/RocketMQ/XXL-Job/ES）：参考 [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)
+**7 大中间件部署**（PG/Redis/Nacos/MinIO/Seata/RocketMQ/XXL-Job）：参考 [docs/INFRASTRUCTURE.md](docs/INFRASTRUCTURE.md)
+（全文检索已统一改用 PostgreSQL tsvector，无需 ES）
 
 ```bash
 # 0. 环境检查（首次部署前必跑）
@@ -248,10 +249,10 @@ ydsz-pmis/
 │   └── src/mock/               # vite-plugin-mock 独立开发
 ├── deploy/                     # 部署全套(按环境分子目录)
 │   ├── common/                 # 跨环境共享资源(中间件配置模板 + Nacos 共享配置 + SQL)
-│   │   ├── conf/               # 8 中间件原生部署配置(postgres/redis/nacos/minio/seata/rocketmq/xxl-job/elasticsearch)
+│   │   ├── conf/               # 7 中间件原生部署配置(postgres/redis/nacos/minio/seata/rocketmq/xxl-job)
 │   │   ├── nacos/              # PMIS 共享 Nacos 配置 ydsz-pmis-common.yaml
 │   │   └── sql/                # 通用 SQL(XXL-Job PG 表等)
-│   ├── docker/                 # Docker 容器化(8 中间件 + docker-compose.dev.yml)
+│   ├── docker/                 # Docker 容器化(7 中间件 + docker-compose.dev.yml)
 │   ├── k8s/                    # K8S 部署(Kustomize:base + overlays/dev|sit|uat|prod)
 │   ├── ubuntu/                 # Ubuntu 原生部署(中间件安装 + systemd)
 │   │   ├── install-pmis-infra.sh

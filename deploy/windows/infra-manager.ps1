@@ -89,7 +89,6 @@ switch ($Action) {
                 Start-Svc $Services['seata']    'Seata'
                 foreach ($rmq in $Services['rocketmq']) { Start-Svc $rmq "RocketMQ-$rmq" }
                 Start-Svc $Services['xxl-job']  'XXL-Job'
-                Start-Svc $Services['elasticsearch'] 'Elasticsearch'
             }
             default {
                 if ($Services.ContainsKey($Target)) {
@@ -105,7 +104,6 @@ switch ($Action) {
     'stop' {
         switch ($Target) {
             'all' {
-                Stop-Svc $Services['elasticsearch'] 'Elasticsearch'
                 Stop-Svc $Services['xxl-job']  'XXL-Job'
                 foreach ($rmq in $Services['rocketmq']) { Stop-Svc $rmq "RocketMQ-$rmq" }
                 Stop-Svc $Services['seata']    'Seata'
@@ -134,11 +132,10 @@ switch ($Action) {
         Show-Status $Services['seata']    'Seata'
         foreach ($rmq in $Services['rocketmq']) { Show-Status $rmq "RocketMQ-$rmq" }
         Show-Status $Services['xxl-job']  'XXL-Job'
-        Show-Status $Services['elasticsearch'] 'Elasticsearch'
         Write-Host "=================================================" -ForegroundColor Cyan
         Write-Host ""
         Write-Host "端口连通性：" -ForegroundColor Cyan
-        $ports = @(5432, 6379, 8848, 9100, 9101, 8091, 9876, 10911, 9200)
+        $ports = @(5432, 6379, 8848, 9100, 9101, 8091, 9876, 10911)
         foreach ($p in $ports) {
             $c = Get-NetTCPConnection -LocalPort $p -State Listen -ErrorAction SilentlyContinue
             $text = if ($c) { 'OK ' } else { 'X  ' }
@@ -153,6 +150,6 @@ switch ($Action) {
     }
     default {
         Write-Host "用法: .\infra-manager.ps1 {start|stop|status|restart} [middleware]"
-        Write-Host "      middleware: postgres|redis|nacos|minio|seata|rocketmq|xxl-job|elasticsearch|all"
+        Write-Host "      middleware: postgres|redis|nacos|minio|seata|rocketmq|xxl-job|all"
     }
 }

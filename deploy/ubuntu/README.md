@@ -24,7 +24,7 @@
 
 ```
 ubuntu/
-├── install-pmis-infra.sh        # 一键安装 8 中间件
+├── install-pmis-infra.sh        # 一键安装 7 中间件
 ├── infra-manager.sh              # 中间件启停/状态管理
 └── scripts/                      # 应用层启停脚本(.sh)
     ├── start-all.sh              # 一键启动 7 后端 + 前端
@@ -47,7 +47,7 @@ ubuntu/
 
 ---
 
-## 3. 一键安装 8 中间件
+## 3. 一键安装 7 中间件
 
 ```bash
 sudo ./deploy/ubuntu/install-pmis-infra.sh
@@ -59,7 +59,7 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh
 2. 安装 PostgreSQL 18 / Redis 8(apt)
 3. 安装 JDK 21(apt)
 4. 部署 Nacos / XXL-Job / Seata(Java 中间件,下载 release 包)
-5. 部署 MinIO / RocketMQ / Elasticsearch(原生二进制)
+5. 部署 MinIO / RocketMQ(原生二进制)
 6. 复制 [`../common/conf/`](../common/README.md) 模板并替换占位符
 7. 注册 systemd 服务
 8. 启动并验证
@@ -70,7 +70,7 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh
 
 ```bash
 sudo ./deploy/ubuntu/install-pmis-infra.sh --no-start       # 只安装不启动
-sudo ./deploy/ubuntu/install-pmis-infra.sh --skip=es,minio  # 跳过指定中间件
+sudo ./deploy/ubuntu/install-pmis-infra.sh --skip=minio     # 跳过指定中间件
 ```
 
 ---
@@ -140,7 +140,7 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh --skip=es,minio  # 跳过指定中间
 
 ## 7. systemd 单元
 
-`install-pmis-infra.sh` 会在 `/etc/systemd/system/` 注册 9 个服务(8 中间件 + rocketmq 拆为 2 个):
+`install-pmis-infra.sh` 会在 `/etc/systemd/system/` 注册 8 个服务(7 中间件 + rocketmq 拆为 2 个):
 
 ```
 /etc/systemd/system/
@@ -151,8 +151,7 @@ sudo ./deploy/ubuntu/install-pmis-infra.sh --skip=es,minio  # 跳过指定中间
 ├── pmis-seata.service
 ├── pmis-rocketmq-namesrv.service
 ├── pmis-rocketmq-broker.service
-├── pmis-xxl-job.service
-└── pmis-elasticsearch.service
+└── pmis-xxl-job.service
 ```
 
 也可以直接用 systemd 命令:

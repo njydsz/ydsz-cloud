@@ -159,25 +159,25 @@ kubectl apply -k deploy/k8s/overlays/dev
 
 ### 5.1 [common/](common/README.md) · 跨环境共享
 
-- `conf/` — 7 个中间件原生部署的配置模板(ES / Nacos / PG / Redis / RocketMQ / Seata / XXL-Job)
+- `conf/` — 7 个中间件原生部署的配置模板(Nacos / PG / Redis / RocketMQ / Seata / XXL-Job / MinIO)
 - `nacos/ydsz-pmis-common.yaml` — 7 微服务启动时从 Nacos 拉取的共享配置
 - `sql/tables_xxl_job_pg.sql` — XXL-Job 的 PG 表
 
 ### 5.2 [docker/](docker/README.md) · 容器化
 
-- `docker-compose.dev.yml` — 11 容器编排
+- `docker-compose.dev.yml` — 10 容器编排
 - 适合:开发 / 内网测试 / 快速验证
 - **不适合生产**(性能损耗 2-5%)
 
 ### 5.3 [ubuntu/](ubuntu/README.md) · Linux 原生 + systemd
 
-- `install-pmis-infra.sh` — 一键安装 8 中间件
+- `install-pmis-infra.sh` — 一键安装 7 中间件
 - `infra-manager.sh` — 中间件启停/状态管理
 - 适合:准生产(单机) / 小规模生产
 
 ### 5.4 [windows/](windows/README.md) · Windows 原生 + NSSM
 
-- `install-pmis-infra.ps1` — 一键安装 8 中间件
+- `install-pmis-infra.ps1` — 一键安装 7 中间件
 - `infra-manager.ps1` — 中间件启停/状态管理
 - 适合:Windows 内网测试 / 演示
 
@@ -245,7 +245,6 @@ cp deploy/.env.example deploy/.env
 | `__PMIS_DATA_HOME__` | 数据根目录 | `/opt/pmis/data/` | `C:\pmis\data\` |
 | `__PMIS_LOG_HOME__` | 日志根目录 | `/var/log/pmis/` | `C:\pmis\logs\` |
 | `__PG_DATA__` | PG 数据目录 | `/var/lib/postgresql/18/main/` | `C:\Program Files\PostgreSQL\18\data\` |
-| `__ES_DATA__` | ES 数据目录 | `/opt/pmis/data/elasticsearch/` | `C:\pmis\data\elasticsearch\` |
 | `__NACOS_DATA__` | Nacos 数据目录 | `/opt/nacos/data/` | `C:\pmis\nacos\data\` |
 
 > **修改流程**:改 `common/conf/{middleware}/*` → 重跑对应环境的 install 脚本。

@@ -24,7 +24,7 @@
 
 ```
 windows/
-├── install-pmis-infra.ps1       # 一键安装 8 中间件
+├── install-pmis-infra.ps1       # 一键安装 7 中间件
 ├── infra-manager.ps1            # 中间件启停/状态管理
 └── scripts/                     # 应用层启停脚本(.bat / .ps1)
     ├── start-all.bat            # 一键启动 7 后端 + 前端
@@ -99,7 +99,7 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass -Force
 .\deploy\windows\infra-manager.ps1 stop-all
 ```
 
-支持的 8 个短名:`postgres` / `redis` / `nacos` / `minio` / `seata` / `rocketmq` / `xxl-job` / `elasticsearch`,以及 `all`。
+支持的 7 个短名:`postgres` / `redis` / `nacos` / `minio` / `seata` / `rocketmq` / `xxl-job`,以及 `all`。
 
 ---
 
@@ -142,7 +142,6 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy Bypass -Force
 | MinIO data | `C:\pmis\data\minio\` |
 | RocketMQ data | `C:\pmis\data\rocketmq\` |
 | XXL-Job 日志 | `C:\pmis\logs\xxl-job.log` |
-| ES data | `C:\pmis\data\elasticsearch\` |
 
 `install-pmis-infra.ps1` 启动时会询问 `DataHome` / `LogHome`,可自定义。
 

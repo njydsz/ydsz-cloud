@@ -4,12 +4,13 @@
 # -----------------------------------------------------------------------------
 #  用法:   ./infra-manager.sh {start|stop|status|restart} [middleware]
 #          middleware: postgres | redis | nacos | minio | seata |
-#                     rocketmq | xxl-job | elasticsearch | all
+#                     rocketmq | xxl-job | all
 #  示例:   ./infra-manager.sh start all         # 启动全部
 #          ./infra-manager.sh stop postgres     # 只停 postgres
 #          ./infra-manager.sh status            # 看全部状态
-#  路径:   默认从 /opt/<middleware> 读取
-#  自定义: export PMIS_INFRA_HOME=/your/path    # 改安装位置
+# 路径:   默认从 /opt/<middleware> 读取
+# 自定义: export PMIS_INFRA_HOME=/your/path    # 改安装位置
+# 注:    Elasticsearch 已移除（P2-19 起改用 PostgreSQL tsvector）
 # =============================================================================
 set -e
 
@@ -243,36 +244,8 @@ xxl_status() {
 }
 
 # =============================================================================
-#  Elasticsearch
+#  注: Elasticsearch 已移除（P2-19 起改用 PostgreSQL tsvector 全文检索）
 # =============================================================================
-es_start() {
-  if systemctl is-active --quiet elasticsearch; then
-    log "Elasticsearch 已在运行"; return
-  fi
-  log "启动 Elasticsearch..."
-  sudo systemctl start elasticsearch
-  log "等待 ES 就绪（首次启动约 30-90s）..."
-  for i in {1..45}; do
-    if curl -sf http://127.0.0.1:9200/_cluster/health >/dev/null 2>&1; then
-      ok "Elasticsearch 已启动"; return
-    fi
-    sleep 2
-  done
-  warn "Elasticsearch 启动超时"
-}
-es_stop() {
-  log "停止 Elasticsearch..."
-  sudo systemctl stop elasticsearch
-  ok "Elasticsearch 已停止"
-}
-es_status() {
-  if systemctl is-active --quiet elasticsearch; then
-    ok "Elasticsearch: 运行中"
-    curl -s "http://127.0.0.1:9200/_cluster/health?pretty" 2>/dev/null | grep -E "cluster_name|status" | head -3
-  else
-    err "Elasticsearch: 未运行"
-  fi
-}
 
 # =============================================================================
 #  路由
@@ -282,7 +255,7 @@ case "$ACTION" in
     case "$TARGET" in
       all)
         pg_start; redis_start; nacos_start; minio_start
-        seata_start; rocketmq_start; xxl_start; es_start
+        seata_start; rocketmq_start; xxl_start
         ;;
       postgres)      pg_start ;;
       redis)         redis_start ;;
@@ -291,14 +264,13 @@ case "$ACTION" in
       seata)         seata_start ;;
       rocketmq)      rocketmq_start ;;
       xxl-job)       xxl_start ;;
-      elasticsearch) es_start ;;
       *) err "未知中间件: $TARGET"; exit 1 ;;
     esac
     ;;
   stop)
     case "$TARGET" in
       all)
-        es_stop; xxl_stop; rocketmq_stop; seata_stop
+        xxl_stop; rocketmq_stop; seata_stop
         minio_stop; nacos_stop; redis_stop; pg_stop
         ;;
       postgres)      pg_stop ;;
@@ -308,14 +280,13 @@ case "$ACTION" in
       seata)         seata_stop ;;
       rocketmq)      rocketmq_stop ;;
       xxl-job)       xxl_stop ;;
-      elasticsearch) es_stop ;;
       *) err "未知中间件: $TARGET"; exit 1 ;;
     esac
     ;;
   status)
     echo "================== 中间件状态 =================="
     pg_status; redis_status; nacos_status; minio_status
-    seata_status; rocketmq_status; xxl_status; es_status
+    seata_status; rocketmq_status; xxl_status
     echo "================================================="
     ;;
   restart)
@@ -325,7 +296,7 @@ case "$ACTION" in
     ;;
   *)
     echo "用法: $0 {start|stop|status|restart} [middleware]"
-    echo "      middleware: postgres|redis|nacos|minio|seata|rocketmq|xxl-job|elasticsearch|all"
+    echo "      middleware: postgres|redis|nacos|minio|seata|rocketmq|xxl-job|all"
     exit 1
     ;;
 esac

@@ -1,8 +1,9 @@
 # Docker · 容器化部署
 
-> Docker Compose 编排 11 个容器(8 中间件 + 3 辅助)
+> Docker Compose 编排 10 个容器(7 中间件 + 3 辅助)
 > 适用:开发 / 内网测试 / 快速验证
 > 性能:相比原生损耗约 2-5%,**不适合生产**
+> 全文检索:PostgreSQL tsvector(已移除 Elasticsearch,P2-19)
 
 ---
 
@@ -55,13 +56,13 @@ docker compose -f deploy/docker/docker-compose.dev.yml down -v
 
 ---
 
-## 3. 11 个容器清单
+## 3. 10 个容器清单
 
-### 3.1 8 大中间件
+### 3.1 7 大中间件
 
 | 容器名 | 镜像 | 容器内端口 | 宿主机端口 | 用途 |
 |---|---|---|---|---|
-| `pmis-postgres` | `postgres:18-alpine` | 5432 | 5432 | 主数据库 |
+| `pmis-postgres` | `postgres:18-alpine` | 5432 | 5432 | 主数据库(全文检索) |
 | `pmis-redis` | `redis:8-alpine` | 6379 | 6379 | 缓存/分布式锁 |
 | `pmis-nacos` | `nacos/nacos-server:v2.3.2` | 8848 / 9848 / 7848 | 8848 / 9848 | 注册/配置中心 |
 | `pmis-minio` | `minio/minio:latest` | 9000 / 9001 | **9100 / 9101** | 对象存储 |
@@ -69,7 +70,6 @@ docker compose -f deploy/docker/docker-compose.dev.yml down -v
 | `pmis-rocketmq-namesrv` | `apache/rocketmq:5.3` | 9876 | 9876 | NameServer |
 | `pmis-rocketmq-broker` | `apache/rocketmq:5.3` | 10911 / 10909 | 10911 / 10909 | Broker |
 | `pmis-xxl-job` | `xuxueli/xxl-job-admin:2.4` | 8080 | **9100** | 任务调度 |
-| `pmis-elasticsearch` | `elasticsearch:8.15` | 9200 / 9300 | 9200 / 9300 | 全文搜索 |
 
 ### 3.2 3 个辅助容器
 
@@ -122,7 +122,7 @@ docker run --rm -v pmis-postgres-data:/data -v ${PWD}:/backup \
   alpine tar xzf /backup/pg-backup-2026-07-04.tar.gz -C /
 ```
 
-> 默认数据卷名:`pmis-{postgres,redis,nacos,minio,seata,rocketmq,xxl-job,elasticsearch}-data`
+> 默认数据卷名:`pmis-{postgres,redis,nacos,minio,seata,rocketmq,xxl-job}-data`
 
 ---
 

@@ -24,11 +24,11 @@ import java.lang.reflect.Method;
  *
  * // 新写法（编译期类型安全）
  * PageRequest.of(0, 20,
- *     SortBy.by(Sort.Direction.DESC, ProjectSearchDoc::getCreatedAt));
+ *     SortBy.by(Sort.Direction.DESC, InitiationDO::getCreatedAt));
  *
  * // 链式：多列排序
- * Sort sort = SortBy.by(Sort.Direction.ASC, ProjectSearchDoc::getProjectName)
- *                   .and(SortBy.by(Sort.Direction.DESC, ProjectSearchDoc::getCreatedAt));
+ * Sort sort = SortBy.by(Sort.Direction.ASC, InitiationDO::getProjectName)
+ *                   .and(SortBy.by(Sort.Direction.DESC, InitiationDO::getCreatedAt));
  * }</pre>
  *
  * <h3>支持的 getter 形式</h3>

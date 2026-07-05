@@ -7,7 +7,8 @@
 #    - WBS 任务 / 工时归集 / 成本归集 / 利润 / EVM
 #    - 风险 / 预警 / 报表 / 导出 / 复盘
 #    - 收付款 / 发票 / 报销 / 采购 / 客户信用
-#  依赖：Nacos、PostgreSQL、Redis、MinIO（文件）、ES（日志/搜索，可选）、Seata
+# 依赖：Nacos、PostgreSQL、Redis、MinIO（文件）、Seata
+# 全文检索：PostgreSQL tsvector（P2-19 起替代 ES）
 # =====================================================================
 
 server:
@@ -66,11 +67,6 @@ spring:
           max-idle: 8
           min-idle: 0
           max-wait: 5s
-    # ---------- Elasticsearch（可选，用于全文搜索、日志分析） ----------
-    elasticsearch:
-      uris: ${ES_URIS:http://localhost:9200}
-      connection-timeout: 5s
-      socket-timeout: 30s
 
 # ---------- MinIO 对象存储（异步导出文件上传） ----------
 minio:

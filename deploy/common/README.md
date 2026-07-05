@@ -143,4 +143,4 @@ PGPASSWORD=pmis123 psql -h 127.0.0.1 -U pmis -d ydsz_pmis \
 
 - [deploy/ 总入口](../README.md)
 - [docker/](../docker/README.md) · [k8s/](../k8s/README.md) · [ubuntu/](../ubuntu/README.md) · [windows/](../windows/README.md)
-- 8 中间件详细步骤见各子目录 § 故障排查 + [`../README.md §4`](../README.md#4-8-大中间件)
+- 7 中间件详细步骤见各子目录 § 故障排查 + [`../README.md §4`](../README.md#4-8-大中间件)

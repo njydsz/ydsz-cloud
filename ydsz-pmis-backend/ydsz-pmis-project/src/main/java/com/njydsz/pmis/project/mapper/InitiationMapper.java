@@ -53,4 +53,34 @@ public interface InitiationMapper extends BaseMapper<InitiationDO> {
      * @return 数量
      */
     Long countByStage(@Param("stage") String stage, @Param("tenantId") Long tenantId);
+
+    /**
+     * 基于 PG tsvector 的项目全文检索（P2-19，替代 ES）。
+     *
+     * <p>检索范围：立项主表的 project_name / customer_name / pm_name + 关联合同表（pmis_project_contract）
+     * 的 contract_name，使用 {@code to_tsvector('simple', ...)} 构建文本向量，
+     * {@code plainto_tsquery} 解析关键词（防 SQL 注入），按 {@code ts_rank} 倒序返回。
+     *
+     * <p>仅返回逻辑未删除的记录，且最多返回 {@code limit} 条。合同名称通过 LEFT JOIN 拼入，无合同时为 NULL。
+     *
+     * @param keyword 关键词（用户输入）
+     * @param tenantId 租户 ID（数据隔离）
+     * @param offset 分页偏移
+     * @param limit 分页大小
+     * @return 匹配的项目搜索结果列表
+     */
+    java.util.List<com.njydsz.pmis.project.search.ProjectSearchVO> searchByFullText(
+            @Param("keyword") String keyword,
+            @Param("tenantId") Long tenantId,
+            @Param("offset") int offset,
+            @Param("limit") int limit);
+
+    /**
+     * 基于 PG tsvector 的全文检索结果总数。
+     *
+     * @param keyword  关键词
+     * @param tenantId 租户 ID
+     * @return 命中总数
+     */
+    Long countByFullText(@Param("keyword") String keyword, @Param("tenantId") Long tenantId);
 }

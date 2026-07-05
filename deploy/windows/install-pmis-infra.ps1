@@ -31,7 +31,6 @@ $MINIO_VERSION = '2025-04-01T00-00-00Z'
 $SEATA_VERSION = '2.5.0'
 $ROCKETMQ_VERSION = '5.3.2'
 $XXL_JOB_VERSION = '2.4.2'
-$ES_VERSION = '8.15.3'
 
 # ---------- 公共配置目录（相对当前脚本） ----------
 $SCRIPT_DIR = $PSScriptRoot
@@ -81,9 +80,6 @@ $REPLACEMENTS = @{
     '__SEATA_HOME__'     = "$InstallHome\seata"
     '__ROCKETMQ_HOME__'  = "$InstallHome\rocketmq"
     '__XXL_JOB_HOME__'   = "$InstallHome\xxl-job"
-    '__ES_HOME__'        = "$InstallHome\elasticsearch"
-    '__ES_PATH_DATA__'   = "$DataHome\elasticsearch"
-    '__ES_PATH_LOGS__'   = "$LogHome\elasticsearch"
 }
 
 # ---------- 下载目录 ----------
@@ -354,46 +350,15 @@ function Install-XXLJob {
 }
 
 # =============================================================================
-#  Elasticsearch
+#  注: Elasticsearch 已移除（P2-19 起改用 PostgreSQL tsvector 全文检索）
 # =============================================================================
-function Install-Elasticsearch {
-    if (Test-Skip 'elasticsearch') { return }
-    Write-Step "安装 Elasticsearch $ES_VERSION..."
-
-    if (-not (Test-Path "$InstallHome\elasticsearch")) {
-        $tgz = Join-Path $DownloadDir "elasticsearch.zip"
-        Invoke-WebRequest -Uri "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-$ES_VERSION-windows-x86_64.zip" -OutFile $tgz -UseBasicParsing
-        Expand-Archive -Path $tgz -DestinationPath $InstallHome
-        Rename-Item "$InstallHome\elasticsearch-$ES_VERSION" "$InstallHome\elasticsearch"
-    }
-
-    Copy-Item "$InstallHome\elasticsearch\config\elasticsearch.yml" "$InstallHome\elasticsearch\config\elasticsearch.yml.bak" -Force
-    Copy-With-Replace -Source (Join-Path $COMMON_CONF 'elasticsearch\elasticsearch.yml') -Destination "$InstallHome\elasticsearch\config\elasticsearch.yml" -Replacements $REPLACEMENTS
-    New-Item -ItemType Directory -Force -Path "$InstallHome\elasticsearch\config\jvm.options.d" | Out-Null
-    Copy-Item (Join-Path $COMMON_CONF 'elasticsearch\jvm.options.d\heap.options') "$InstallHome\elasticsearch\config\jvm.options.d\heap.options" -Force
-
-    $esUser = 'elasticsearch-svc'
-    if (-not (Get-LocalUser -Name $esUser -ErrorAction SilentlyContinue)) {
-        New-LocalUser -Name $esUser -NoPassword -Description "Elasticsearch Service Account" | Out-Null
-    }
-    $svc = Get-Service -Name 'elasticsearch' -ErrorAction SilentlyContinue
-    if (-not $svc) {
-        nssm install elasticsearch "$InstallHome\elasticsearch\bin\elasticsearch.bat"
-        nssm set elasticsearch AppDirectory "$InstallHome\elasticsearch"
-        nssm set elasticsearch DisplayName "Elasticsearch"
-        nssm set elasticsearch Start SERVICE_AUTO_START
-        nssm set elasticsearch ObjectName ".\$esUser"
-    }
-    if (-not $NoStart) { Start-Service elasticsearch }
-    Write-OK "Elasticsearch 安装完成（端口 9200）"
-}
 
 # =============================================================================
 #  卸载
 # =============================================================================
 function Uninstall-All {
     Write-Step "卸载全部中间件..."
-    foreach ($svc in @('elasticsearch','xxl-job','rocketmq-broker','rocketmq-namesrv','seata','minio','nacos','Redis')) {
+    foreach ($svc in @('xxl-job','rocketmq-broker','rocketmq-namesrv','seata','minio','nacos','Redis')) {
         $s = Get-Service -Name $svc -ErrorAction SilentlyContinue
         if ($s) {
             Stop-Service -Name $svc -Force -ErrorAction SilentlyContinue
@@ -427,7 +392,6 @@ Install-MinIO
 Install-Seata
 Install-RocketMQ
 Install-XXLJob
-Install-Elasticsearch
 
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Cyan

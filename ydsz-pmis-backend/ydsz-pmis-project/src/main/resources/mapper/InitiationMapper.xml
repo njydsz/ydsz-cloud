@@ -60,4 +60,85 @@
         WHERE stage = #{stage} AND tenant_id = #{tenantId} AND deleted = 0
     </select>
 
+    <!--
+      P2-19: 基于 PG tsvector 的项目全文检索（替代 ES）。
+      检索范围: project_name / customer_name / pm_name / contract_name(子查询取首个关联合同的合同名,避免一对多导致分页错乱)
+      排序: ts_rank 倒序 + id 升序保证稳定排序
+      关键点: plainto_tsquery 防 SQL 注入;且仅在 keyword 非空时计算 tsquery
+    -->
+    <select id="searchByFullText" resultType="com.njydsz.pmis.project.search.ProjectSearchVO">
+        SELECT
+            i.id              AS id,
+            i.project_code    AS projectCode,
+            i.project_name    AS projectName,
+            i.customer_name   AS customerName,
+            (
+                SELECT c.contract_name
+                FROM pmis_project_contract c
+                WHERE c.initiation_id = i.id AND c.deleted = 0
+                ORDER BY c.id ASC
+                LIMIT 1
+            )                 AS contractName,
+            i.project_type    AS projectType,
+            i.stage           AS stage,
+            i.pm_name         AS pmName,
+            i.created_at      AS createdAt,
+            i.updated_at      AS updatedAt
+        FROM pmis_project_initiation i
+        WHERE i.deleted = 0
+          AND i.tenant_id = #{tenantId}
+          AND (
+                to_tsvector('simple',
+                    coalesce(i.project_name, '') || ' ' ||
+                    coalesce(i.customer_name, '') || ' ' ||
+                    coalesce(i.pm_name, '') || ' ' ||
+                    coalesce((
+                        SELECT c.contract_name
+                        FROM pmis_project_contract c
+                        WHERE c.initiation_id = i.id AND c.deleted = 0
+                        ORDER BY c.id ASC
+                        LIMIT 1
+                    ), '')
+                ) @@ plainto_tsquery('simple', #{keyword})
+              )
+        ORDER BY ts_rank(
+                to_tsvector('simple',
+                    coalesce(i.project_name, '') || ' ' ||
+                    coalesce(i.customer_name, '') || ' ' ||
+                    coalesce(i.pm_name, '') || ' ' ||
+                    coalesce((
+                        SELECT c.contract_name
+                        FROM pmis_project_contract c
+                        WHERE c.initiation_id = i.id AND c.deleted = 0
+                        ORDER BY c.id ASC
+                        LIMIT 1
+                    ), '')
+                ),
+                plainto_tsquery('simple', #{keyword})
+            ) DESC,
+            i.id ASC
+        LIMIT #{limit} OFFSET #{offset}
+    </select>
+
+    <select id="countByFullText" resultType="java.lang.Long">
+        SELECT COUNT(1)
+        FROM pmis_project_initiation i
+        WHERE i.deleted = 0
+          AND i.tenant_id = #{tenantId}
+          AND (
+                to_tsvector('simple',
+                    coalesce(i.project_name, '') || ' ' ||
+                    coalesce(i.customer_name, '') || ' ' ||
+                    coalesce(i.pm_name, '') || ' ' ||
+                    coalesce((
+                        SELECT c.contract_name
+                        FROM pmis_project_contract c
+                        WHERE c.initiation_id = i.id AND c.deleted = 0
+                        ORDER BY c.id ASC
+                        LIMIT 1
+                    ), '')
+                ) @@ plainto_tsquery('simple', #{keyword})
+              )
+    </select>
+
 </mapper>

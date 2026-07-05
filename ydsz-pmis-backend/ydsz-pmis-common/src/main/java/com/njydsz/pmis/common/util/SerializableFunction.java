@@ -14,7 +14,7 @@ import java.util.function.Function;
  * <p>典型用法（搭配 {@link SortBy}）：
  * <pre>{@code
  * // 等价于 Sort.by(Sort.Direction.DESC, "createdAt")，但 createdAt 为编译期类型安全的引用
- * Sort sort = SortBy.desc(ProjectSearchDoc::getCreatedAt);
+ * Sort sort = SortBy.desc(InitiationDO::getCreatedAt);
  * }</pre>
  *
  * <p>说明：仅用于编译期产生方法引用，运行时不会真正序列化，因此 lambda 实现类无需

@@ -127,10 +127,6 @@
                     <groupId>org.apache.seata</groupId>
                     <artifactId>seata-spring-boot-starter</artifactId>
                 </exclusion>
-                <exclusion>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-                </exclusion>
             </exclusions>
         </dependency>
     </dependencies>

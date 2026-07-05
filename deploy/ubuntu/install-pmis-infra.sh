@@ -28,7 +28,6 @@ MINIO_RELEASE=2025-04-01
 SEATA_VERSION=2.5.0
 ROCKETMQ_VERSION=5.3.2
 XXL_JOB_VERSION=2.4.2
-ES_VERSION=8.15.3
 
 SKIP_LIST=""
 NO_START=0
@@ -424,59 +423,8 @@ EOF
 }
 
 # =============================================================================
-#  Elasticsearch 8.15
+#  注: Elasticsearch 已移除（P2-19 起改用 PostgreSQL tsvector 全文检索）
 # =============================================================================
-install_elasticsearch() {
-  if should_skip elasticsearch; then return; fi
-  log "安装 Elasticsearch $ES_VERSION..."
-
-  if [[ ! -d $INSTALL_HOME/elasticsearch ]]; then
-    cd $DOWNLOAD_DIR
-    wget -q "https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-$ES_VERSION-linux-x86_64.tar.gz"
-    tar -xzf elasticsearch-$ES_VERSION-linux-x86_64.tar.gz -C $INSTALL_HOME
-    mv $INSTALL_HOME/elasticsearch-$ES_VERSION $INSTALL_HOME/elasticsearch
-  fi
-
-  ES_HOME=$INSTALL_HOME/elasticsearch
-  cp "$ES_HOME/config/elasticsearch.yml" "$ES_HOME/config/elasticsearch.yml.bak"
-  cp "$(dirname "$0")/../infra/elasticsearch/elasticsearch.yml" "$ES_HOME/config/elasticsearch.yml"
-  mkdir -p $ES_HOME/config/jvm.options.d
-  cp "$(dirname "$0")/../infra/elasticsearch/jvm.options.d/heap.options" $ES_HOME/config/jvm.options.d/
-
-  # ES 不能以 root 启动
-  chown -R $SERVICE_USER:$SERVICE_USER $ES_HOME
-
-  # 修改启动用户
-  sed -i "s|^ES_USER=.*|ES_USER=$SERVICE_USER|" $ES_HOME/bin/elasticsearch
-
-  cat > /etc/systemd/system/elasticsearch.service <<EOF
-[Unit]
-Description=Elasticsearch
-After=network.target
-
-[Service]
-Type=simple
-User=$SERVICE_USER
-Group=$SERVICE_USER
-LimitNOFILE=65535
-LimitNPROC=4096
-LimitMEMLOCK=infinity
-Environment=JAVA_HOME=$JAVA_HOME
-Environment=ES_JAVA_OPTS="-Xms512m -Xmx512m"
-ExecStart=$ES_HOME/bin/elasticsearch
-Restart=on-failure
-RestartSec=10
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-  systemctl daemon-reload
-  systemctl enable elasticsearch
-  [[ $NO_START -eq 0 ]] && systemctl start elasticsearch
-
-  ok "Elasticsearch 安装完成（端口 9200）"
-}
 
 # =============================================================================
 #  卸载
@@ -484,7 +432,7 @@ EOF
 uninstall_all() {
   log "卸载全部中间件..."
 
-  for svc in elasticsearch xxl-job rocketmq-broker rocketmq-namesrv seata minio nacos; do
+  for svc in xxl-job rocketmq-broker rocketmq-namesrv seata minio nacos; do
     systemctl stop $svc 2>/dev/null || true
     systemctl disable $svc 2>/dev/null || true
     rm -f /etc/systemd/system/$svc.service
@@ -494,7 +442,7 @@ uninstall_all() {
   apt-get purge -y -qq postgresql-18 redis-server 2>/dev/null || true
   apt-get autoremove -y -qq 2>/dev/null || true
 
-  rm -rf $INSTALL_HOME/nacos $INSTALL_HOME/seata $INSTALL_HOME/rocketmq $INSTALL_HOME/xxl-job $INSTALL_HOME/elasticsearch
+  rm -rf $INSTALL_HOME/nacos $INSTALL_HOME/seata $INSTALL_HOME/rocketmq $INSTALL_HOME/xxl-job
   rm -f /usr/local/bin/minio
   rm -rf $DATA_DIR/minio $DATA_DIR/rocketmq
 
@@ -524,7 +472,6 @@ install_minio
 install_seata
 install_rocketmq
 install_xxl_job
-install_elasticsearch
 
 echo
 echo "============================================================"

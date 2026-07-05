@@ -3,7 +3,7 @@ package com.njydsz.pmis.project.controller;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.util.SortBy;
-import com.njydsz.pmis.project.es.ProjectSearchDoc;
+import com.njydsz.pmis.project.search.ProjectSearchVO;
 import com.njydsz.pmis.project.service.SearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -45,12 +45,12 @@ public class SearchController {
     @Operation(summary = "全文检索项目")
     @RateLimit(key = "search", qps = 10, windowSeconds = 60)
     @GetMapping("/projects")
-    public Result<Page<ProjectSearchDoc>> searchProjects(
+    public Result<Page<ProjectSearchVO>> searchProjects(
             @RequestParam @NotBlank(message = "{validation.execution.msg_ede12b69}") String keyword,
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "{validation.execution.msg_9aaebb77}") int page,
             @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.execution.msg_15154512}") int size) {
         return Result.ok(searchService.searchProjects(keyword,
-                PageRequest.of(page, size, SortBy.desc(ProjectSearchDoc::getCreatedAt))));
+                PageRequest.of(page, size, SortBy.desc(ProjectSearchVO::getCreatedAt))));
     }
 
     /**

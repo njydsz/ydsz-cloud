@@ -39,21 +39,6 @@
       "defaultValue": 3600
     },
     {
-      "name": "spring.data.elasticsearch.uris",
-      "type": "java.lang.String",
-      "description": "Elasticsearch URIs"
-    },
-    {
-      "name": "spring.data.elasticsearch.connection-timeout",
-      "type": "java.time.Duration",
-      "description": "Elasticsearch connection timeout"
-    },
-    {
-      "name": "spring.data.elasticsearch.socket-timeout",
-      "type": "java.time.Duration",
-      "description": "Elasticsearch socket timeout"
-    },
-    {
       "name": "seata.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable Seata distributed transaction"
