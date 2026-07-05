@@ -20,7 +20,8 @@
     </resultMap>
 
     <select id="selectByInitiationId" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_budget_item
+        SELECT id, initiation_id, category, sub_category, description, quantity, unit, unit_price, amount, remark, sort_order, created_at, updated_at, deleted
+        FROM pmis_project_budget_item
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY sort_order, id
     </select>

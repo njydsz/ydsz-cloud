@@ -39,7 +39,7 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_change
+        SELECT id, change_code, initiation_id, change_type, change_title, change_reason, change_desc, budget_impact, contract_impact, schedule_impact_days, profit_impact, profit_impact_pct, risk_level_after, affected_wbs_count, affected_staff_count, major_flag, approver_roles, applicant_id, applicant_name, contract_id, workflow_id, status, submitted_at, approved_at, executed_at, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_project_change
         WHERE change_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
@@ -50,7 +50,7 @@
     </update>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_change
+        SELECT id, change_code, initiation_id, change_type, change_title, change_reason, change_desc, budget_impact, contract_impact, schedule_impact_days, profit_impact, profit_impact_pct, risk_level_after, affected_wbs_count, affected_staff_count, major_flag, approver_roles, applicant_id, applicant_name, contract_id, workflow_id, status, submitted_at, approved_at, executed_at, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_project_change
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY created_at DESC
     </select>

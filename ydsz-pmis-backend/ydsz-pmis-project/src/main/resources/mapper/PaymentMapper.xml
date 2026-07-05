@@ -33,7 +33,7 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_payment
+        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_finance_payment
         WHERE payment_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
@@ -55,19 +55,19 @@
     </update>
 
     <select id="selectByContract" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_payment
+        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_finance_payment
         WHERE contract_id = #{contractId} AND deleted = 0
         ORDER BY payment_date DESC
     </select>
 
     <select id="selectByCustomer" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_payment
+        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_finance_payment
         WHERE customer_id = #{customerId} AND deleted = 0
         ORDER BY payment_date DESC
     </select>
 
     <select id="selectUnallocated" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_payment
+        SELECT id, payment_no, payment_code, contract_id, initiation_id, customer_id, customer_name, amount, currency, payment_method, payment_date, bank_account, our_bank_account, bank_reference, invoice_allocation, allocated_amount, unallocated_amount, status, remark, confirmed_by, confirmed_at, recorded_by, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_finance_payment
         WHERE customer_id = #{customerId}
           AND status = 'CONFIRMED'
           AND unallocated_amount > 0

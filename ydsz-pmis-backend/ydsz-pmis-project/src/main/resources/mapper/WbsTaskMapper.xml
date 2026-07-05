@@ -40,7 +40,7 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_wbs_task
+        SELECT id, task_code, task_name, initiation_id, parent_id, task_level, wbs_path, sort_order, task_type, planned_start_date, planned_end_date, actual_start_date, actual_end_date, duration_days, planned_effort, actual_effort, progress_pct, owner_id, owner_name, assignee_ids, priority, status, depends_on, milestone, description, deliverable, risk_level, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_execution_wbs_task
         WHERE task_code = #{code} AND deleted = 0
         LIMIT 1
     </select>
@@ -60,19 +60,19 @@
     </update>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_wbs_task
+        SELECT id, task_code, task_name, initiation_id, parent_id, task_level, wbs_path, sort_order, task_type, planned_start_date, planned_end_date, actual_start_date, actual_end_date, duration_days, planned_effort, actual_effort, progress_pct, owner_id, owner_name, assignee_ids, priority, status, depends_on, milestone, description, deliverable, risk_level, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_execution_wbs_task
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY task_level ASC, sort_order ASC
     </select>
 
     <select id="selectChildren" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_wbs_task
+        SELECT id, task_code, task_name, initiation_id, parent_id, task_level, wbs_path, sort_order, task_type, planned_start_date, planned_end_date, actual_start_date, actual_end_date, duration_days, planned_effort, actual_effort, progress_pct, owner_id, owner_name, assignee_ids, priority, status, depends_on, milestone, description, deliverable, risk_level, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_execution_wbs_task
         WHERE parent_id = #{parentId} AND deleted = 0
         ORDER BY sort_order ASC
     </select>
 
     <select id="selectMilestones" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_wbs_task
+        SELECT id, task_code, task_name, initiation_id, parent_id, task_level, wbs_path, sort_order, task_type, planned_start_date, planned_end_date, actual_start_date, actual_end_date, duration_days, planned_effort, actual_effort, progress_pct, owner_id, owner_name, assignee_ids, priority, status, depends_on, milestone, description, deliverable, risk_level, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_execution_wbs_task
         WHERE initiation_id = #{initiationId} AND milestone = 1 AND deleted = 0
         ORDER BY planned_start_date ASC
     </select>

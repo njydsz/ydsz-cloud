@@ -22,7 +22,8 @@
     </resultMap>
 
     <select id="selectByTypeAndLevel" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_delivery_standard
+        SELECT id, project_type, project_level, delivery_name, delivery_category, stage, required, trigger_tr, acceptance_criteria, template_ref, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_execution_delivery_standard
         <where>
             deleted = 0
             <if test="projectType != null and projectType != ''">
@@ -36,7 +37,8 @@
     </select>
 
     <select id="selectByStage" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_delivery_standard
+        SELECT id, project_type, project_level, delivery_name, delivery_category, stage, required, trigger_tr, acceptance_criteria, template_ref, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_execution_delivery_standard
         <where>
             deleted = 0
             <if test="projectType != null and projectType != ''">

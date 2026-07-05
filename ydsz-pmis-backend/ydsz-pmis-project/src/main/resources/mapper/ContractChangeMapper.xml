@@ -28,13 +28,15 @@
     </resultMap>
 
     <select id="selectByContractId" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_contract_change
+        SELECT id, contract_id, change_code, change_type, change_reason, before_value, after_value, amount_delta, impact_analysis, status, applicant_id, applicant_name, approver_id, approver_name, approved_at, workflow_id, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_project_contract_change
         WHERE contract_id = #{contractId} AND deleted = 0
         ORDER BY created_at DESC
     </select>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_contract_change
+        SELECT id, contract_id, change_code, change_type, change_reason, before_value, after_value, amount_delta, impact_analysis, status, applicant_id, applicant_name, approver_id, approver_name, approved_at, workflow_id, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_project_contract_change
         WHERE change_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 

@@ -36,7 +36,8 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_initiation
+        SELECT id, project_code, project_name, opportunity_id, customer_id, customer_name, business_dept_id, project_type, project_level, pm_id, pm_name, sponsor_id, sponsor_name, estimated_amount, budget_amount, planned_start_date, planned_end_date, duration_days, stage, current_gate, description, business_case, risk_assessment, workflow_id, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_project_initiation
         WHERE project_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 

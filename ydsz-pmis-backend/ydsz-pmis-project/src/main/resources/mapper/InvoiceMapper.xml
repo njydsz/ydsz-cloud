@@ -42,12 +42,14 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_invoice
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_finance_invoice
         WHERE invoice_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByInvoiceNo" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_invoice
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_finance_invoice
         WHERE invoice_no = #{invoiceNo} AND deleted = 0 LIMIT 1
     </select>
 
@@ -61,19 +63,22 @@
     </update>
 
     <select id="selectByContract" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_invoice
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_finance_invoice
         WHERE contract_id = #{contractId} AND deleted = 0
         ORDER BY invoice_date DESC
     </select>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_invoice
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_finance_invoice
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY invoice_date DESC
     </select>
 
     <select id="selectByCustomer" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_invoice
+        SELECT id, invoice_no, invoice_code, invoice_type, contract_id, initiation_id, customer_id, customer_name, invoice_basis, amount, tax_amount, net_amount, tax_rate, currency, invoice_date, tax_period, title, tax_no, bank_info, address, phone, remark, status, reversed_by_id, attachment_id, approval_comment, applied_by, approved_by, approved_at, issued_by, issued_at, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_finance_invoice
         WHERE customer_id = #{customerId} AND deleted = 0
         ORDER BY invoice_date DESC
     </select>

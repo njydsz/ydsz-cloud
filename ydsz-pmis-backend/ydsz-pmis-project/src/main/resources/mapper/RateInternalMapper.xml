@@ -23,13 +23,13 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_rate_internal
+        SELECT id, rate_code, level_code, department_id, department_name, billing_unit, cost_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_internal
         WHERE rate_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <!-- 命中规则：先 (职级+部门) > 再 (职级) -->
     <select id="matchEffective" resultMap="BaseResultMap">
-        SELECT * FROM pmis_rate_internal
+        SELECT id, rate_code, level_code, department_id, department_name, billing_unit, cost_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_internal
         WHERE level_code = #{levelCode}
           AND status = 'ACTIVE'
           AND effective_date &lt;= #{date}
@@ -43,7 +43,7 @@
     </select>
 
     <select id="selectByLevelAndDept" resultMap="BaseResultMap">
-        SELECT * FROM pmis_rate_internal
+        SELECT id, rate_code, level_code, department_id, department_name, billing_unit, cost_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_internal
         WHERE level_code = #{levelCode}
           <choose>
               <when test="departmentId != null">AND department_id = #{departmentId}</when>
@@ -54,7 +54,7 @@
     </select>
 
     <select id="selectAll" resultMap="BaseResultMap">
-        SELECT * FROM pmis_rate_internal
+        SELECT id, rate_code, level_code, department_id, department_name, billing_unit, cost_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_internal
         WHERE deleted = 0
         ORDER BY level_code ASC
     </select>

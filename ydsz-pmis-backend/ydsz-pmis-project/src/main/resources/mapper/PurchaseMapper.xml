@@ -27,7 +27,7 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_cost_purchase
+        SELECT id, purchase_code, initiation_id, vendor, item_name, quantity, unit_price, amount, purchase_date, status, applicant_id, applicant_name, approver_id, approver_name, approved_at, description, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_cost_purchase
         WHERE purchase_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 

@@ -35,7 +35,10 @@
     </insert>
 
     <select id="selectByUser" resultMap="BaseResultMap">
-        SELECT * FROM pmis_data_export_audit
+        SELECT id, user_id, username, export_module, export_action, biz_type, row_count,
+               file_name, file_size, export_format, query_summary,
+               trace_id, client_ip, tenant_id, exported_at, created_at
+        FROM pmis_data_export_audit
         WHERE user_id = #{userId}
         ORDER BY exported_at DESC
         LIMIT #{limit}

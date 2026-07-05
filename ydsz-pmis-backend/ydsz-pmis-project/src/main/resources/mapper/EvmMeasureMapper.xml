@@ -31,7 +31,8 @@
     </resultMap>
 
     <select id="selectByInitiationAndPeriod" resultMap="BaseResultMap">
-        SELECT * FROM pmis_evm_measure
+        SELECT id, initiation_id, wbs_task_id, period, pv, ev, ac, bac, cpi, spi, cv, sv, eac, vac, etc, tcpi, alert_level, alert_reason, measure_date, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_evm_measure
         WHERE initiation_id = #{initiationId}
           <choose>
               <when test="wbsTaskId != null">AND wbs_task_id = #{wbsTaskId}</when>
@@ -43,13 +44,15 @@
     </select>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_evm_measure
+        SELECT id, initiation_id, wbs_task_id, period, pv, ev, ac, bac, cpi, spi, cv, sv, eac, vac, etc, tcpi, alert_level, alert_reason, measure_date, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_evm_measure
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY period DESC, wbs_task_id ASC
     </select>
 
     <select id="selectByWbs" resultMap="BaseResultMap">
-        SELECT * FROM pmis_evm_measure
+        SELECT id, initiation_id, wbs_task_id, period, pv, ev, ac, bac, cpi, spi, cv, sv, eac, vac, etc, tcpi, alert_level, alert_reason, measure_date, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_evm_measure
         WHERE wbs_task_id = #{wbsTaskId} AND deleted = 0
         ORDER BY period DESC
     </select>

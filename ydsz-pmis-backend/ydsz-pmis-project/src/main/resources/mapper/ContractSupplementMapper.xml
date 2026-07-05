@@ -24,13 +24,15 @@
     </resultMap>
 
     <select id="selectByContractId" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_contract_supplement
+        SELECT id, contract_id, supplement_code, supplement_name, supplement_type, change_amount, new_total_amount, effective_date, expire_date, content, file_id, status, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_project_contract_supplement
         WHERE contract_id = #{contractId} AND deleted = 0
         ORDER BY created_at DESC
     </select>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_contract_supplement
+        SELECT id, contract_id, supplement_code, supplement_name, supplement_type, change_amount, new_total_amount, effective_date, expire_date, content, file_id, status, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_project_contract_supplement
         WHERE supplement_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 

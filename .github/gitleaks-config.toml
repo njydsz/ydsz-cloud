@@ -1,0 +1,74 @@
+# PMIS Gitleaks 配置（P1-8）
+# -----------------------------------------------------------------------------
+# 作用: 自定义 gitleaks 扫描规则，在默认规则基础上增加项目特定的白名单
+# 文档: https://github.com/gitleaks/gitleaks#configuration
+
+title = "PMIS Gitleaks Config"
+
+[extend]
+# 继承 gitleaks 内置默认规则（100+ 规则覆盖常见密钥类型）
+useDefault = true
+
+# =========================================================================
+# 全局白名单：以下路径/文件不扫描
+# =========================================================================
+[[allowlistPaths]]
+# 测试 fixture / mock 数据中的假密钥（非真实凭据）
+patterns = [
+    '''src/test/resources/.*''',
+    '''src/test/java/.*mock.*''',
+    '''__mocks__/.*''',
+    '''\.env\.example''',
+    '''deploy/sql/.*''',
+    '''docs/.*''',
+]
+
+# =========================================================================
+# 白名单：已知安全的示例值（非真实密钥）
+# =========================================================================
+[[allowlist]]
+# 占位符
+description = "允许占位符（非真实密钥）"
+regexes = [
+    '''<your-.*-here>''',
+    '''REPLACE_VIA_SEALED_SECRETS''',
+    '''CHANGE_ME''',
+    '''your-password-here''',
+    '''example-password''',
+]
+
+[[allowlist]]
+description = "允许测试用 JWT Token（mock）"
+regexes = [
+    '''eyJhbGciOiJIUzI1NiJ9\.eyJzdWIiOiJ0ZXN0''',
+    '''test-jwt-token-.*''',
+]
+
+[[allowlist]]
+description = "允许测试用 Redis/PG 连接串（localhost）"
+regexes = [
+    '''redis://localhost:6379''',
+    '''jdbc:postgresql://localhost:5432''',
+    '''jdbc:postgresql://127\.0\.0\.1:5432''',
+]
+
+# =========================================================================
+# 自定义规则：PMIS 项目特定密钥模式
+# =========================================================================
+[[rules]]
+id = "pmis-jasypt-password"
+description = "Jasypt 配置加密主密码"
+regex = '''jasypt\.password\s*[=:]\s*['"]?[A-Za-z0-9]{16,}['"]?'''
+tags = ["pmis", "config-encryption"]
+
+[[rules]]
+id = "pmis-aliyun-oss-key"
+description = "阿里云 OSS AccessKey Secret"
+regex = '''aliyun\.oss\.access-key-secret\s*[=:]\s*['"]?[A-Za-z0-9+/=]{30,}['"]?'''
+tags = ["pmis", "cloud"]
+
+[[rules]]
+id = "pmis-dingtalk-secret"
+description = "钉钉机器人 Secret"
+regex = '''dingtalk\.secret\s*[=:]\s*['"]?SEC[A-Za-z0-9]{60,}['"]?'''
+tags = ["pmis", "notification"]

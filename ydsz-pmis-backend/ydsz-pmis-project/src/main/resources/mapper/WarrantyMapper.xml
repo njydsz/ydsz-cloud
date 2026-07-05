@@ -31,18 +31,18 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_warranty
+        SELECT id, warranty_code, initiation_id, contract_id, project_type, project_level, start_date, end_date, duration_months, notice_days, notice_sent, notice_sent_at, status, terminated_at, terminated_reason, contact_name, contact_phone, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_warranty
         WHERE warranty_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_warranty
+        SELECT id, warranty_code, initiation_id, contract_id, project_type, project_level, start_date, end_date, duration_months, notice_days, notice_sent, notice_sent_at, status, terminated_at, terminated_reason, contact_name, contact_phone, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_warranty
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY start_date DESC, id DESC
     </select>
 
     <select id="selectExpiringBefore" resultMap="BaseResultMap">
-        SELECT * FROM pmis_warranty
+        SELECT id, warranty_code, initiation_id, contract_id, project_type, project_level, start_date, end_date, duration_months, notice_days, notice_sent, notice_sent_at, status, terminated_at, terminated_reason, contact_name, contact_phone, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_warranty
         WHERE end_date &lt;= #{until}
           AND status IN ('ACTIVE', 'EXPIRING_SOON')
           AND deleted = 0
@@ -50,7 +50,7 @@
     </select>
 
     <select id="selectOverdue" resultMap="BaseResultMap">
-        SELECT * FROM pmis_warranty
+        SELECT id, warranty_code, initiation_id, contract_id, project_type, project_level, start_date, end_date, duration_months, notice_days, notice_sent, notice_sent_at, status, terminated_at, terminated_reason, contact_name, contact_phone, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_warranty
         WHERE end_date &lt; #{today}
           AND status NOT IN ('EXPIRED', 'TERMINATED')
           AND deleted = 0

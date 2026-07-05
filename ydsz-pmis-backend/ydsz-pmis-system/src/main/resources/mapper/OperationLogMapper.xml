@@ -39,14 +39,22 @@
     </insert>
 
     <select id="selectByUser" resultMap="BaseResultMap">
-        SELECT * FROM pmis_operation_log
+        SELECT id, module, action, biz_type, biz_id, user_id, username,
+               request_url, http_method, method_signature, client_ip, user_agent,
+               params_json, response_json, status, error_message, cost_ms,
+               trace_id, tenant_id, created_at
+        FROM pmis_operation_log
         WHERE user_id = #{userId}
         ORDER BY created_at DESC
         LIMIT #{limit}
     </select>
 
     <select id="selectByBiz" resultMap="BaseResultMap">
-        SELECT * FROM pmis_operation_log
+        SELECT id, module, action, biz_type, biz_id, user_id, username,
+               request_url, http_method, method_signature, client_ip, user_agent,
+               params_json, response_json, status, error_message, cost_ms,
+               trace_id, tenant_id, created_at
+        FROM pmis_operation_log
         WHERE biz_type = #{bizType} AND biz_id = #{bizId}
         ORDER BY created_at DESC
         LIMIT #{limit}

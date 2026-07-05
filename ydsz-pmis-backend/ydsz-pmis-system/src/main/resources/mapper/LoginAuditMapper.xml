@@ -30,7 +30,9 @@
     </insert>
 
     <select id="selectByUsername" resultMap="BaseResultMap">
-        SELECT * FROM pmis_login_audit
+        SELECT id, username, user_id, login_at, login_ip, user_agent,
+               status, fail_reason, mfa_used, mfa_success, trace_id, tenant_id, created_at
+        FROM pmis_login_audit
         WHERE username = #{username}
         ORDER BY login_at DESC
         LIMIT #{limit}

@@ -26,7 +26,8 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_profit_revenue
+        SELECT id, contract_id, initiation_id, revenue_code, recognition_method, period, amount, recognition_date, milestone, percent_complete, invoice_id, status, confirmed_by, confirmed_at, description, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_profit_revenue
         WHERE revenue_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
@@ -39,7 +40,8 @@
     </update>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_profit_revenue
+        SELECT id, contract_id, initiation_id, revenue_code, recognition_method, period, amount, recognition_date, milestone, percent_complete, invoice_id, status, confirmed_by, confirmed_at, description, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_profit_revenue
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY recognition_date DESC
     </select>

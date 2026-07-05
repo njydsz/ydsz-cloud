@@ -35,7 +35,8 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_contract
+        SELECT id, contract_code, contract_name, initiation_id, customer_id, customer_name, contract_type, sign_date, effective_date, expire_date, total_amount, currency, payment_terms, billing_cycle, tax_rate, status, risk_level, risk_notes, owner_id, owner_name, contract_file_id, workflow_id, remark, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_project_contract
         WHERE contract_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 

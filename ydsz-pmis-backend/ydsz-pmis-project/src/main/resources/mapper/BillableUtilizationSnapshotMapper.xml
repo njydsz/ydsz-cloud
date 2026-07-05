@@ -65,13 +65,15 @@
     </delete>
 
     <select id="selectByPeriod" resultMap="BaseResultMap">
-        SELECT * FROM pmis_billable_utilization_snapshot
+        SELECT id, period, employee_id, employee_name, level_code, department, total_hours, billable_hours, overtime_hours, leave_hours, training_hours, bench_hours, utilization_pct, grade, range_from, range_to, snapshot_at, source, tenant_id, deleted
+        FROM pmis_billable_utilization_snapshot
         WHERE period = #{period} AND deleted = 0
         ORDER BY utilization_pct DESC
     </select>
 
     <select id="selectByRange" resultMap="BaseResultMap">
-        SELECT * FROM pmis_billable_utilization_snapshot
+        SELECT id, period, employee_id, employee_name, level_code, department, total_hours, billable_hours, overtime_hours, leave_hours, training_hours, bench_hours, utilization_pct, grade, range_from, range_to, snapshot_at, source, tenant_id, deleted
+        FROM pmis_billable_utilization_snapshot
         WHERE deleted = 0
           AND ((range_from &lt;= #{to} AND range_to &gt;= #{from}))
         ORDER BY period DESC, utilization_pct DESC
@@ -135,14 +137,16 @@
     </select>
 
     <select id="rankTop" resultMap="BaseResultMap">
-        SELECT * FROM pmis_billable_utilization_snapshot
+        SELECT id, period, employee_id, employee_name, level_code, department, total_hours, billable_hours, overtime_hours, leave_hours, training_hours, bench_hours, utilization_pct, grade, range_from, range_to, snapshot_at, source, tenant_id, deleted
+        FROM pmis_billable_utilization_snapshot
         WHERE period = #{period} AND deleted = 0
         ORDER BY utilization_pct DESC
         LIMIT #{top}
     </select>
 
     <select id="alertEmployees" resultMap="BaseResultMap">
-        SELECT * FROM pmis_billable_utilization_snapshot
+        SELECT id, period, employee_id, employee_name, level_code, department, total_hours, billable_hours, overtime_hours, leave_hours, training_hours, bench_hours, utilization_pct, grade, range_from, range_to, snapshot_at, source, tenant_id, deleted
+        FROM pmis_billable_utilization_snapshot
         WHERE period = #{period} AND deleted = 0
           AND grade IN ('WARN', 'CRITICAL')
         ORDER BY utilization_pct ASC

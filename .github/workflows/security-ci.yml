@@ -1,0 +1,58 @@
+# =============================================================================
+# PMIS 安全扫描 CI 流水线（P1-8）
+# -----------------------------------------------------------------------------
+# 作用:  对源代码进行密钥泄露扫描（gitleaks），防止 API Key / 密码 / Token 误提交
+# 触发:  push 到 main/develop  /  pull_request 到 main
+# 关联:  backend-ci.yml / frontend-ci.yml / cd-deploy.yml
+#
+# 工具:  gitleaks v8（业界主流的密钥扫描工具，支持 100+ 规则）
+# 阻断策略: 发现任何 HIGH/CRITICAL 级别密钥泄露即 CI 失败
+#
+# 凭据:  无需额外 Secrets
+# =============================================================================
+name: Security CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'ydsz-pmis-backend/**'
+      - 'ydsz-pmis-frontend/**'
+      - 'deploy/**'
+      - '.github/workflows/security-ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ydsz-pmis-backend/**'
+      - 'ydsz-pmis-frontend/**'
+      - 'deploy/**'
+
+jobs:
+  # ============================================================
+  # Gitleaks 源代码密钥扫描
+  # ============================================================
+  gitleaks:
+    name: Gitleaks Secret Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 需要完整历史以扫描所有 commit
+
+      - name: Gitleaks 扫描
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_ENABLE_COMMENTS: true
+          GITLEAKS_ENABLE_UPLOAD_ARTIFACT: true
+          GITLEAKS_CONFIG: .github/gitleaks-config.toml
+
+      - name: 上传 gitleaks 报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitleaks-report
+          path: |
+            results/
+            *.sarif
+          retention-days: 30

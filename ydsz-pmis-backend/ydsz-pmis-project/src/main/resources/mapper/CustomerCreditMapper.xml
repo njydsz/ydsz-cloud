@@ -25,7 +25,8 @@
     </resultMap>
 
     <select id="selectByCustomerId" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_customer_credit
+        SELECT id, customer_id, customer_name, credit_level, credit_score, total_contract_amount, total_invoiced_amount, total_received_amount, on_time_rate, contract_count, overdue_count, last_evaluation_at, evaluator, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_finance_customer_credit
         WHERE customer_id = #{customerId} AND deleted = 0 LIMIT 1
     </select>
 
@@ -38,7 +39,8 @@
     </update>
 
     <select id="selectByLevel" resultMap="BaseResultMap">
-        SELECT * FROM pmis_finance_customer_credit
+        SELECT id, customer_id, customer_name, credit_level, credit_score, total_contract_amount, total_invoiced_amount, total_received_amount, on_time_rate, contract_count, overdue_count, last_evaluation_at, evaluator, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_finance_customer_credit
         WHERE credit_level = #{level} AND deleted = 0
         ORDER BY credit_score DESC
     </select>

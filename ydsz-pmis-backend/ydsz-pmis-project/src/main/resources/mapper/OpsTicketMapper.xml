@@ -39,24 +39,24 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_ops_ticket
+        SELECT id, ticket_code, initiation_id, warranty_id, title, description, category, priority, status, reporter_id, reporter_name, reporter_phone, assignee_id, assignee_name, accepted_at, started_at, resolved_at, closed_at, response_due_at, resolve_due_at, response_breached, resolve_breached, resolution_note, customer_score, customer_comment, file_ids, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_ops_ticket
         WHERE ticket_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_ops_ticket
+        SELECT id, ticket_code, initiation_id, warranty_id, title, description, category, priority, status, reporter_id, reporter_name, reporter_phone, assignee_id, assignee_name, accepted_at, started_at, resolved_at, closed_at, response_due_at, resolve_due_at, response_breached, resolve_breached, resolution_note, customer_score, customer_comment, file_ids, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_ops_ticket
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY created_at DESC, id DESC
     </select>
 
     <select id="selectByWarranty" resultMap="BaseResultMap">
-        SELECT * FROM pmis_ops_ticket
+        SELECT id, ticket_code, initiation_id, warranty_id, title, description, category, priority, status, reporter_id, reporter_name, reporter_phone, assignee_id, assignee_name, accepted_at, started_at, resolved_at, closed_at, response_due_at, resolve_due_at, response_breached, resolve_breached, resolution_note, customer_score, customer_comment, file_ids, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_ops_ticket
         WHERE warranty_id = #{warrantyId} AND deleted = 0
         ORDER BY created_at DESC, id DESC
     </select>
 
     <select id="selectByAssignee" resultMap="BaseResultMap">
-        SELECT * FROM pmis_ops_ticket
+        SELECT id, ticket_code, initiation_id, warranty_id, title, description, category, priority, status, reporter_id, reporter_name, reporter_phone, assignee_id, assignee_name, accepted_at, started_at, resolved_at, closed_at, response_due_at, resolve_due_at, response_breached, resolve_breached, resolution_note, customer_score, customer_comment, file_ids, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_ops_ticket
         WHERE assignee_id = #{assigneeId} AND deleted = 0
         <if test="status != null and status != ''">
             AND status = #{status}
@@ -65,7 +65,7 @@
     </select>
 
     <select id="selectActiveTickets" resultMap="BaseResultMap">
-        SELECT * FROM pmis_ops_ticket
+        SELECT id, ticket_code, initiation_id, warranty_id, title, description, category, priority, status, reporter_id, reporter_name, reporter_phone, assignee_id, assignee_name, accepted_at, started_at, resolved_at, closed_at, response_due_at, resolve_due_at, response_breached, resolve_breached, resolution_note, customer_score, customer_comment, file_ids, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_ops_ticket
         WHERE status IN ('OPEN', 'ASSIGNED', 'IN_PROGRESS')
           AND deleted = 0
         ORDER BY response_due_at

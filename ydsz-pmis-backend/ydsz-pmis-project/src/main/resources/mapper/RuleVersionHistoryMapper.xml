@@ -3,6 +3,7 @@
 <mapper namespace="com.njydsz.pmis.project.mapper.RuleVersionHistoryMapper">
 
     <select id="listByCode" resultType="com.njydsz.pmis.project.entity.RuleVersionHistoryDO">
+        <!-- 保留 SELECT *：本 mapper 未定义 resultMap，仅使用 resultType 指向 DO 类，列名通过 MyBatis-Plus 默认驼峰转下划线自动映射，无法从 XML 中明确提取列顺序 -->
         SELECT * FROM pmis_rule_version_history WHERE rule_code = #{ruleCode} ORDER BY version DESC
     </select>
 

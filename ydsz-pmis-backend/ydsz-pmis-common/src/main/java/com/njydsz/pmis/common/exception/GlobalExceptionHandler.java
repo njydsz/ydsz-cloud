@@ -86,7 +86,8 @@ public class GlobalExceptionHandler {
             message = resolveMessage(errorCode);
         } else if (message != null && message.startsWith("error.")) {
             // 自定义 message 看起来是 i18n key（以 "error." 开头），尝试通过 MessageSource 解析
-            message = resolveMessage(message, null, message);
+            // P1-12: 透传 BizException.args 给 MessageSource，支持 {0} {1} 占位符
+            message = resolveMessage(message, e.getArgs(), message);
         }
         Result<Void> r = Result.failed(e.getCode(), message);
         r.setTraceId(TraceIdUtil.get());

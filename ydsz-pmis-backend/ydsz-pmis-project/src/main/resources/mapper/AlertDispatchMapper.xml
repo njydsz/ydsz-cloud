@@ -28,7 +28,8 @@
     </resultMap>
 
     <select id="selectByLevelAndStatus" resultMap="BaseResultMap">
-        SELECT * FROM pmis_alert_dispatch
+        SELECT id, alert_code, alert_type, alert_level, source_type, source_id, title, content, target_role, target_user_ids, push_channels, dispatched_at, dispatched_by, status, sent_at, fail_reason, retry_count, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_alert_dispatch
         WHERE deleted = 0
           <if test="level != null and level != ''">AND alert_level = #{level}</if>
           <if test="status != null and status != ''">AND status = #{status}</if>
@@ -37,7 +38,8 @@
     </select>
 
     <select id="selectRetryable" resultMap="BaseResultMap">
-        SELECT * FROM pmis_alert_dispatch
+        SELECT id, alert_code, alert_type, alert_level, source_type, source_id, title, content, target_role, target_user_ids, push_channels, dispatched_at, dispatched_by, status, sent_at, fail_reason, retry_count, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_alert_dispatch
         WHERE deleted = 0
           AND status = 'FAILED'
           AND retry_count &lt; #{maxRetry}

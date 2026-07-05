@@ -27,24 +27,40 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_bench_record
+        SELECT id, bench_code, employee_id, employee_name, level_code, pool_id, bench_reason,
+               reason_type, source_assignment, bench_date, exit_date, idle_days, status,
+               daily_cost, total_idle_cost, remark, tenant_id, provider_trace_id, created_at,
+               updated_at, deleted
+        FROM pmis_bench_record
         WHERE bench_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectActiveByEmployee" resultMap="BaseResultMap">
-        SELECT * FROM pmis_bench_record
+        SELECT id, bench_code, employee_id, employee_name, level_code, pool_id, bench_reason,
+               reason_type, source_assignment, bench_date, exit_date, idle_days, status,
+               daily_cost, total_idle_cost, remark, tenant_id, provider_trace_id, created_at,
+               updated_at, deleted
+        FROM pmis_bench_record
         WHERE employee_id = #{employeeId} AND status = 'ACTIVE' AND deleted = 0
         ORDER BY bench_date DESC LIMIT 1
     </select>
 
     <select id="selectByStatus" resultMap="BaseResultMap">
-        SELECT * FROM pmis_bench_record
+        SELECT id, bench_code, employee_id, employee_name, level_code, pool_id, bench_reason,
+               reason_type, source_assignment, bench_date, exit_date, idle_days, status,
+               daily_cost, total_idle_cost, remark, tenant_id, provider_trace_id, created_at,
+               updated_at, deleted
+        FROM pmis_bench_record
         WHERE status = #{status} AND deleted = 0
         ORDER BY bench_date DESC
     </select>
 
     <select id="selectByPool" resultMap="BaseResultMap">
-        SELECT * FROM pmis_bench_record
+        SELECT id, bench_code, employee_id, employee_name, level_code, pool_id, bench_reason,
+               reason_type, source_assignment, bench_date, exit_date, idle_days, status,
+               daily_cost, total_idle_cost, remark, tenant_id, provider_trace_id, created_at,
+               updated_at, deleted
+        FROM pmis_bench_record
         WHERE pool_id = #{poolId}
           <if test="status != null and status != ''">
               AND status = #{status}

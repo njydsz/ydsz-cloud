@@ -137,9 +137,86 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:cache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:cache,mode=max
 
+  # ==================== 镜像安全扫描 + SBOM + 签名（P1-8） ====================
+  # 作用: 对构建出的镜像进行 Trivy 漏洞扫描、Syft 生成 SBOM、cosign 签名
+  # 阻断策略: CRITICAL 漏洞阻断部署；HIGH 漏洞仅告警（避免误报阻断）
+  # SBOM 格式: CycloneDX JSON（业界标准，可对接 Dependency-Track / Anchore）
+  scan-images:
+    needs: [build-backend, build-frontend]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service: [gateway, system, userinfo, project, cronjob, workflow, agent, frontend]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Trivy 镜像漏洞扫描
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service }}:${{ env.IMAGE_TAG }}
+          format: 'sarif'
+          output: 'trivy-${{ matrix.service }}.sarif'
+          exit-code: '1'
+          severity: 'CRITICAL'  # 仅 CRITICAL 阻断；HIGH 仅告警
+          ignore-unfixed: true   # 忽略未修复的漏洞
+          vuln-type: 'os,library'
+
+      - name: Syft 生成 SBOM（CycloneDX）
+        uses: anchore/sbom-action@v0
+        with:
+          image: ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service }}:${{ env.IMAGE_TAG }}
+          format: cyclonedx-json
+          output-file: sbom-${{ matrix.service }}.cyclonedx.json
+
+      - name: cosign 镜像签名（可选）
+        # 仅当配置了 COSIGN_KEY 时执行；未配置则跳过（不阻断流水线）
+        if: ${{ secrets.COSIGN_KEY != '' }}
+        uses: sigstore/cosign-installer@v3
+        with:
+          cosign-release: 'v2.2.4'
+
+      - name: 使用 cosign 签名镜像
+        if: ${{ secrets.COSIGN_KEY != '' }}
+        env:
+          COSIGN_KEY: ${{ secrets.COSIGN_KEY }}
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "${COSIGN_KEY}" > /tmp/cosign.key
+          cosign sign --yes --key /tmp/cosign.key \
+            ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service }}:${{ env.IMAGE_TAG }}
+          rm -f /tmp/cosign.key
+
+      - name: 上传 Trivy 扫描报告
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: trivy-report-${{ matrix.service }}
+          path: trivy-${{ matrix.service }}.sarif
+          retention-days: 30
+
+      - name: 上传 SBOM
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-${{ matrix.service }}
+          path: sbom-${{ matrix.service }}.cyclonedx.json
+          retention-days: 90  # SBOM 保留 90 天，满足合规审计要求
+
+      - name: 安全扫描摘要
+        if: always()
+        run: |
+          echo "## 镜像安全扫描摘要 - pmis-${{ matrix.service }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| 项目 | 状态 |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Trivy 漏洞扫描 | ${{ job.status == 'success' && '✅ 通过' || '❌ 失败' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| SBOM 生成 | ✅ 完成 |" >> $GITHUB_STEP_SUMMARY
+          echo "| cosign 签名 | ${{ secrets.COSIGN_KEY != '' && '✅ 已签名' || '⚠️ 跳过（未配置密钥）' }} |" >> $GITHUB_STEP_SUMMARY
+
   # ==================== 部署 Staging ====================
   deploy-staging:
-    needs: [build-backend, build-frontend]
+    needs: [build-backend, build-frontend, scan-images]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
     environment: staging

@@ -33,7 +33,7 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_opportunity
+        SELECT id, opportunity_code, opportunity_name, customer_id, customer_name, business_dept_id, owner_id, owner_name, level, source, industry, estimated_amount, win_rate, expected_sign_date, expected_start_date, expected_end_date, status, lost_reason, competitor, remark, tags, tenant_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_project_opportunity
         WHERE opportunity_code = #{code} AND deleted = 0
         LIMIT 1
     </select>

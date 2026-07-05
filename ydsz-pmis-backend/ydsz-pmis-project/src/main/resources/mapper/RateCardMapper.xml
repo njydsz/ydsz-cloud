@@ -23,13 +23,13 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_rate_card
+        SELECT id, rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_card
         WHERE rate_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <!-- 命中规则：先匹配 (职级+项目类型+客户等级) 三元组；退化匹配 (职级+项目类型)；再退化匹配 (职级) -->
     <select id="matchEffective" resultMap="BaseResultMap">
-        SELECT * FROM pmis_rate_card
+        SELECT id, rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_card
         WHERE level_code = #{levelCode}
           AND status = 'ACTIVE'
           AND effective_date &lt;= #{date}
@@ -46,13 +46,13 @@
     </select>
 
     <select id="selectByLevel" resultMap="BaseResultMap">
-        SELECT * FROM pmis_rate_card
+        SELECT id, rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_card
         WHERE level_code = #{levelCode} AND deleted = 0
         ORDER BY effective_date DESC
     </select>
 
     <select id="selectAll" resultMap="BaseResultMap">
-        SELECT * FROM pmis_rate_card
+        SELECT id, rate_code, level_code, project_type, customer_level, billing_unit, rate_amount, currency, effective_date, expiry_date, status, remark, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_rate_card
         WHERE deleted = 0
         ORDER BY level_code ASC
     </select>

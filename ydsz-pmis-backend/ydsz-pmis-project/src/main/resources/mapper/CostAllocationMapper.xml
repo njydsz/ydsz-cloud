@@ -24,7 +24,8 @@
     </resultMap>
 
     <select id="selectByInitiationAndPeriod" resultMap="BaseResultMap">
-        SELECT * FROM pmis_cost_allocation
+        SELECT id, initiation_id, period, cost_type, source_id, source_type, description, amount, billable, allocated, employee_id, employee_name, level_code, tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_cost_allocation
         WHERE initiation_id = #{initiationId}
           AND period = #{period} AND deleted = 0
         ORDER BY cost_type, created_at

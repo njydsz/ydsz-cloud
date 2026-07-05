@@ -32,18 +32,18 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_satisfaction
+        SELECT id, survey_code, initiation_id, ticket_id, warranty_id, score, level, professionalism, timeliness, quality, attitude, comments, suggest, anonymous, evaluator_id, evaluator_name, evaluated_at, follow_up, follow_up_note, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_satisfaction
         WHERE survey_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_satisfaction
+        SELECT id, survey_code, initiation_id, ticket_id, warranty_id, score, level, professionalism, timeliness, quality, attitude, comments, suggest, anonymous, evaluator_id, evaluator_name, evaluated_at, follow_up, follow_up_note, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_satisfaction
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY evaluated_at DESC, id DESC
     </select>
 
     <select id="selectByTicket" resultMap="BaseResultMap">
-        SELECT * FROM pmis_satisfaction
+        SELECT id, survey_code, initiation_id, ticket_id, warranty_id, score, level, professionalism, timeliness, quality, attitude, comments, suggest, anonymous, evaluator_id, evaluator_name, evaluated_at, follow_up, follow_up_note, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted FROM pmis_satisfaction
         WHERE ticket_id = #{ticketId} AND deleted = 0
         ORDER BY evaluated_at DESC, id DESC
     </select>

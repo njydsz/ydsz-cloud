@@ -31,7 +31,11 @@
     </resultMap>
 
     <select id="selectByTaskCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_agent_prediction
+        SELECT id, task_code, agent_type, biz_type, biz_id, biz_ref, input_snapshot,
+               output_result, alert_level, score, confidence, suggestion, matched_rules,
+               cost_ms, model_version, status, error_msg, caller_id, caller_name, source,
+               tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_agent_prediction
         WHERE task_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
@@ -42,7 +46,11 @@
     </update>
 
     <select id="selectByBiz" resultMap="BaseResultMap">
-        SELECT * FROM pmis_agent_prediction
+        SELECT id, task_code, agent_type, biz_type, biz_id, biz_ref, input_snapshot,
+               output_result, alert_level, score, confidence, suggestion, matched_rules,
+               cost_ms, model_version, status, error_msg, caller_id, caller_name, source,
+               tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_agent_prediction
         <where>
             deleted = 0
             <if test="bizType != null and bizType != ''">
@@ -59,7 +67,11 @@
     </select>
 
     <select id="selectByAgentType" resultMap="BaseResultMap">
-        SELECT * FROM pmis_agent_prediction
+        SELECT id, task_code, agent_type, biz_type, biz_id, biz_ref, input_snapshot,
+               output_result, alert_level, score, confidence, suggestion, matched_rules,
+               cost_ms, model_version, status, error_msg, caller_id, caller_name, source,
+               tenant_id, provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_agent_prediction
         <where>
             deleted = 0 AND status = 'SUCCESS'
             <if test="agentType != null and agentType != ''">

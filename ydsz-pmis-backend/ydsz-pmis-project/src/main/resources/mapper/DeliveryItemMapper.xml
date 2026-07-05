@@ -36,7 +36,8 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_delivery_item
+        SELECT id, item_code, initiation_id, standard_id, project_type, project_level, delivery_name, delivery_category, stage, required, planned_submit_date, actual_submit_date, accepted_date, submitter_id, submitter_name, reviewer_id, reviewer_name, review_comment, status, tr_required, tr_completed, file_ids, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_delivery_item
         WHERE item_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
@@ -53,13 +54,15 @@
     </update>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_delivery_item
+        SELECT id, item_code, initiation_id, standard_id, project_type, project_level, delivery_name, delivery_category, stage, required, planned_submit_date, actual_submit_date, accepted_date, submitter_id, submitter_name, reviewer_id, reviewer_name, review_comment, status, tr_required, tr_completed, file_ids, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_delivery_item
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY stage, id
     </select>
 
     <select id="selectByStage" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_delivery_item
+        SELECT id, item_code, initiation_id, standard_id, project_type, project_level, delivery_name, delivery_category, stage, required, planned_submit_date, actual_submit_date, accepted_date, submitter_id, submitter_name, reviewer_id, reviewer_name, review_comment, status, tr_required, tr_completed, file_ids, remark, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_delivery_item
         WHERE initiation_id = #{initiationId}
           <if test="stage != null and stage != ''">
               AND stage = #{stage}

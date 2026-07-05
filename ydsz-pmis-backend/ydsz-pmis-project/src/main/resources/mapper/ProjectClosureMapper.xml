@@ -43,12 +43,14 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_closure
+        SELECT id, closure_code, initiation_id, closure_type, closure_reason, contract_amount, received_amount, received_ratio, cpi, spi, gross_margin, progress_pct, total_cost, warranty_months, warranty_start_date, warranty_end_date, planned_archive_date, actual_archive_date, archive_file_ids, locked, status, remark, applicant_id, applicant_name, approver_id, approver_name, submitted_at, approved_at, archived_at, approval_comment, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_closure
         WHERE closure_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_closure
+        SELECT id, closure_code, initiation_id, closure_type, closure_reason, contract_amount, received_amount, received_ratio, cpi, spi, gross_margin, progress_pct, total_cost, warranty_months, warranty_start_date, warranty_end_date, planned_archive_date, actual_archive_date, archive_file_ids, locked, status, remark, applicant_id, applicant_name, approver_id, approver_name, submitted_at, approved_at, archived_at, approval_comment, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_closure
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY created_at DESC LIMIT 1
     </select>
@@ -66,7 +68,8 @@
     </update>
 
     <select id="selectByType" resultMap="BaseResultMap">
-        SELECT * FROM pmis_execution_closure
+        SELECT id, closure_code, initiation_id, closure_type, closure_reason, contract_amount, received_amount, received_ratio, cpi, spi, gross_margin, progress_pct, total_cost, warranty_months, warranty_start_date, warranty_end_date, planned_archive_date, actual_archive_date, archive_file_ids, locked, status, remark, applicant_id, applicant_name, approver_id, approver_name, submitted_at, approved_at, archived_at, approval_comment, tenant_id, provider_trace_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_execution_closure
         <where>
             deleted = 0
             <if test="closureType != null and closureType != ''">

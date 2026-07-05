@@ -28,12 +28,12 @@
     </resultMap>
 
     <select id="selectByInitiationAndPeriod" resultMap="BaseResultMap">
-        SELECT * FROM pmis_profit_snapshot
+        SELECT id, initiation_id, period, contract_amount, recognized_revenue, billed_amount, received_amount, labor_cost, purchase_cost, expense_cost, outsource_cost, allocation_cost, total_cost, gross_profit, gross_margin, progress_pct, billable_hours, non_billable_hours, snapshot_at, tenant_id, provider_trace_id, deleted FROM pmis_profit_snapshot
         WHERE initiation_id = #{initiationId} AND period = #{period} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByInitiation" resultMap="BaseResultMap">
-        SELECT * FROM pmis_profit_snapshot
+        SELECT id, initiation_id, period, contract_amount, recognized_revenue, billed_amount, received_amount, labor_cost, purchase_cost, expense_cost, outsource_cost, allocation_cost, total_cost, gross_profit, gross_margin, progress_pct, billable_hours, non_billable_hours, snapshot_at, tenant_id, provider_trace_id, deleted FROM pmis_profit_snapshot
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY period DESC
     </select>

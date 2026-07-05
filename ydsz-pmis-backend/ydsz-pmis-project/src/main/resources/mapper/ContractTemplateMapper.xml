@@ -29,12 +29,14 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_contract_template
+        SELECT id, template_code, template_name, contract_type, version, payment_terms, default_payment_days, default_penalty_rate, sla_description, deliverables, content, customer_level, project_level, status, author_id, author_name, remark, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_project_contract_template
         WHERE template_code = #{code} AND deleted = 0 LIMIT 1
     </select>
 
     <select id="selectByType" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_contract_template
+        SELECT id, template_code, template_name, contract_type, version, payment_terms, default_payment_days, default_penalty_rate, sla_description, deliverables, content, customer_level, project_level, status, author_id, author_name, remark, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+        FROM pmis_project_contract_template
         <where>
             deleted = 0
             <if test="contractType != null and contractType != ''">

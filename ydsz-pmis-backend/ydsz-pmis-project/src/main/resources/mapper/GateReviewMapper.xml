@@ -20,13 +20,15 @@
     </resultMap>
 
     <select id="selectByInitiationId" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_gate_review
+        SELECT id, initiation_id, gate_code, gate_name, review_result, reviewer_id, reviewer_name, review_at, decision_basis, conditions, next_gate, created_at, updated_at, deleted
+        FROM pmis_project_gate_review
         WHERE initiation_id = #{initiationId} AND deleted = 0
         ORDER BY created_at
     </select>
 
     <select id="selectByInitiationAndGate" resultMap="BaseResultMap">
-        SELECT * FROM pmis_project_gate_review
+        SELECT id, initiation_id, gate_code, gate_name, review_result, reviewer_id, reviewer_name, review_at, decision_basis, conditions, next_gate, created_at, updated_at, deleted
+        FROM pmis_project_gate_review
         WHERE initiation_id = #{initiationId} AND gate_code = #{gateCode} AND deleted = 0
         LIMIT 1
     </select>

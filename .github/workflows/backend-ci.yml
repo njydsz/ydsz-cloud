@@ -58,6 +58,16 @@ jobs:
         # 当行覆盖率 < 60% 或分支覆盖率 < 50% 时构建失败
         run: mvn -B -ntp verify
 
+      - name: 静态扫描 DB Migration 依赖（拦截 Flyway / Liquibase）
+        # 项目规范（deploy/sql/README.md §1）：不引入任何自动化 schema migration 框架
+        # CI 静态扫描拦截，确保 PR 不会误引入 flyway-core / liquibase-core
+        run: |
+          if mvn -B -ntp dependency:tree 2>/dev/null | grep -iE 'flyway|liquibase'; then
+            echo "::error::检测到 Flyway / Liquibase 依赖，违反项目规范（见 deploy/sql/README.md §1）"
+            exit 1
+          fi
+          echo "✅ 未检测到 Flyway / Liquibase 依赖"
+
       - name: Upload Test Reports
         if: always()
         uses: actions/upload-artifact@v4

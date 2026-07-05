@@ -28,17 +28,29 @@
     </resultMap>
 
     <select id="selectByCode" resultMap="BaseResultMap">
-        SELECT * FROM pmis_overtime WHERE deleted = 0 AND overtime_code = #{overtimeCode} LIMIT 1
+        SELECT id, overtime_code, employee_id, employee_name, overtime_date, start_time, end_time,
+               overtime_hours, overtime_type, pay_rate, reason, approval_id, approval_status,
+               approver_id, approver_name, approval_time, approval_remark, tenant_id,
+               provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_overtime WHERE deleted = 0 AND overtime_code = #{overtimeCode} LIMIT 1
     </select>
 
     <select id="selectByEmployee" resultMap="BaseResultMap">
-        SELECT * FROM pmis_overtime
+        SELECT id, overtime_code, employee_id, employee_name, overtime_date, start_time, end_time,
+               overtime_hours, overtime_type, pay_rate, reason, approval_id, approval_status,
+               approver_id, approver_name, approval_time, approval_remark, tenant_id,
+               provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_overtime
         WHERE deleted = 0 AND employee_id = #{employeeId}
         ORDER BY overtime_date DESC
     </select>
 
     <select id="selectByStatus" resultMap="BaseResultMap">
-        SELECT * FROM pmis_overtime
+        SELECT id, overtime_code, employee_id, employee_name, overtime_date, start_time, end_time,
+               overtime_hours, overtime_type, pay_rate, reason, approval_id, approval_status,
+               approver_id, approver_name, approval_time, approval_remark, tenant_id,
+               provider_trace_id, created_at, updated_at, deleted
+        FROM pmis_overtime
         WHERE deleted = 0 AND approval_status = #{approvalStatus}
         ORDER BY overtime_date DESC
     </select>

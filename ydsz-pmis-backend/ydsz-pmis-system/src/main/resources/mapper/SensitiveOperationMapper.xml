@@ -34,7 +34,10 @@
     </insert>
 
     <select id="selectByUser" resultMap="BaseResultMap">
-        SELECT * FROM pmis_sensitive_operation
+        SELECT id, user_id, username, operation_code, operation_name, biz_type, biz_id,
+               re_auth_method, re_auth_token, verified_at, expire_at,
+               client_ip, trace_id, tenant_id, created_at
+        FROM pmis_sensitive_operation
         WHERE user_id = #{userId}
         ORDER BY verified_at DESC
         LIMIT #{limit}
