@@ -28,8 +28,12 @@ import java.util.stream.Collectors;
  * <p>P1-8:
  * <ul>
  *   <li>{@link #generateReport} 按 reportType 生成 Excel，上传 MinIO，返回对象 key</li>
- *   <li>{@link #distributeReport} 落库 pmis_report_export_record，并通过 Feign 调用 message 模块发送 EMAIL 通知</li>
+ *   <li>{@link #distributeReport} 落库 pmis_export_record（source='SUBSCRIPTION'，P0-3 合并），
+ *       并通过 Feign 调用 message 模块发送 EMAIL 通知</li>
  * </ul>
+ *
+ * <p>P0-3: 原 pmis_report_export_record 已并入 pmis_export_record，
+ * 通过 source='SUBSCRIPTION' + subscription_id 区分订阅触发的导出记录。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -120,9 +124,11 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
     }
 
     /**
-     * 分发报表：落库 pmis_report_export_record，并通过 Feign 调用 message 模块发送 EMAIL 通知。
+     * 分发报表：落库 pmis_export_record（source='SUBSCRIPTION'，P0-3 合并），
+     * 并通过 Feign 调用 message 模块发送 EMAIL 通知。
      *
-     * <p>邮件发送失败仅记录日志，不影响记录落库与调度主流程。
+     * <p>邮件发送失败仅记录日志，不影响记录落库与调度主流程；
+     * 此时状态置 COMPLETED（文件已生成）+ 错误信息回写，邮件侧独立由 message 模块重试。
      *
      * @param subId      订阅 ID
      * @param reportType 报表类型
@@ -132,14 +138,56 @@ public class ReportScheduleServiceImpl implements ReportScheduleService {
      */
     @Override
     public void distributeReport(Long subId, String reportType, String fileKey, String recipients, String channels) {
-        // 1. 落库 pmis_report_export_record
-        String sql = "INSERT INTO pmis_report_export_record "
-                + "(subscription_id, report_type, file_url, status, generated_at) VALUES (?, ?, ?, ?, ?)";
-        jdbcTemplate.update(sql, subId, reportType, fileKey, "COMPLETED", LocalDateTime.now());
+        // 1. 落库 pmis_export_record，source='SUBSCRIPTION' 标记订阅触发
+        //    字段顺序与 pmis_export_record 完全对齐（避免 SQL 字段错位）
+        String sql = "INSERT INTO pmis_export_record ("
+                + "tenant_id, source, user_id, export_type, report_type, subscription_id, "
+                + "file_key, file_url, file_size, status, completed_at) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        // export_type 与 report_type 同时填：export_type='SUBSCRIPTION_REPORT' 作为统一类型
+        // report_type 保留订阅侧语义（COCKPIT/EVM/PROFIT...）
+        Long subscriberId = resolveSubscriberId(subId);
+        jdbcTemplate.update(sql,
+                1L,
+                "SUBSCRIPTION",
+                subscriberId,
+                "SUBSCRIPTION_REPORT",
+                reportType,
+                subId,
+                fileKey,
+                fileKey,
+                null,
+                "COMPLETED",
+                LocalDateTime.now());
         log.info("[ReportSchedule] 报表记录落库: subId={}, type={}, fileKey={}", subId, reportType, fileKey);
 
         // 2. 通过 Feign 调用 message 模块发送 EMAIL 通知
         sendEmailNotification(reportType, fileKey, recipients, channels, subId);
+    }
+
+    /**
+     * 根据订阅 ID 解析订阅人 ID。
+     *
+     * <p>用于回填 pmis_export_record.user_id，使前端下载中心可以按 user_id 筛选
+     * 「我订阅的报表」。若订阅不存在或异常，返回 null（数据库允许 user_id 为空，
+     * 因为 source='SUBSCRIPTION' 时 user_id 仅为辅助查询字段）。
+     *
+     * @param subId 订阅 ID
+     * @return 订阅人 ID，失败时返回 null
+     */
+    private Long resolveSubscriberId(Long subId) {
+        if (subId == null) {
+            return null;
+        }
+        try {
+            Long subscriberId = jdbcTemplate.queryForObject(
+                    "SELECT subscriber_id FROM pmis_report_subscription WHERE id = ?",
+                    Long.class, subId);
+            return subscriberId;
+        } catch (Exception e) {
+            log.warn("[ReportSchedule] 解析订阅人失败: subId={}, error={}", subId, e.getMessage());
+            return null;
+        }
     }
 
     // ============================== 报表数据构建 ==============================

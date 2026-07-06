@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.userinfo.mapper.PositionMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.userinfo.entity.PositionDO">
+        <id column="id" property="id"/>
+        <result column="position_code" property="positionCode"/>
+        <result column="position_name" property="positionName"/>
+        <result column="department_id" property="departmentId"/>
+        <result column="level_code" property="levelCode"/>
+        <result column="description" property="description"/>
+        <result column="status" property="status"/>
+        <result column="tenant_id" property="tenantId"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+    </resultMap>
+
+    <sql id="BaseColumns">
+        id, position_code, position_name, department_id, level_code, description,
+        status, tenant_id, created_by, created_at, updated_by, updated_at, deleted
+    </sql>
+
+    <select id="selectByDepartment" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM pmis_position
+        WHERE department_id = #{departmentId} AND deleted = 0
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="selectByCode" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM pmis_position
+        WHERE position_code = #{positionCode} AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <select id="selectByLevel" resultMap="BaseResultMap">
+        SELECT <include refid="BaseColumns"/>
+        FROM pmis_position
+        WHERE level_code = #{levelCode} AND deleted = 0
+        ORDER BY department_id, created_at DESC
+    </select>
+</mapper>

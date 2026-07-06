@@ -17,11 +17,9 @@
 --     in the middle will leave the script in an indeterminate state.
 --   * The whole script runs inside one transaction (BEGIN; COMMIT;).
 --     Any failure rolls back the entire init.
---   * DROP TABLE / DELETE FROM cleanup statements from the source
---     migration files are auto-skipped (see [SKIPPED-CLEANUP] markers).
---   * Forward references (tables not in this batch, multi-line COMMENT
---     pre-dating an ALTER TABLE) are auto-skipped ([SKIPPED-FWD-REF],
---     [SKIPPED-FWD-COL]).
+--   * CREATE TABLE / CREATE INDEX 全部使用 IF NOT EXISTS,保证可重复执行
+--   * P1-6 清理: 历史 [SKIPPED-CLEANUP] / [SKIPPED-FWD-REF] 标记已全部移除
+--     (DROP 改 CREATE IF NOT EXISTS 即可重入;前置引用表在文件头 §Missing-Tables 列出)
 -- ====================================================================
 -- Generated at: 2026-07-04
 -- Files merged: 58
@@ -63,9 +61,7 @@ BEGIN;
 -- ====================================================================
 
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_001__init_pmis_schema.sql
--- ====================================================================
+-- ============================ [001] init pmis schema ============================
 
 -- ====================================================================
 -- 南京云顶 PMIS 数据库初始化脚本
@@ -811,8 +807,11 @@ CREATE INDEX IF NOT EXISTS idx_config_tenant_created
 -- 7. 操作日志
 -- ====================================================================
 
+-- V1.0.0_001 P1-4 重构: pmis_operation_log 改为按月 RANGE 分区表
+--   (主键必须包含分区键;BRIN 索引对父表定义,自动传播到所有分区)
+DROP TABLE IF EXISTS pmis_operation_log CASCADE;
 CREATE TABLE IF NOT EXISTS pmis_operation_log(
-    id                BIGSERIAL      PRIMARY KEY,
+    id                BIGSERIAL      NOT NULL,
     user_id           BIGINT,
     username          VARCHAR(64),
     module            VARCHAR(64)    NOT NULL,
@@ -837,8 +836,10 @@ CREATE TABLE IF NOT EXISTS pmis_operation_log(
     created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tenant_id         BIGINT         NOT NULL DEFAULT 1,
     CONSTRAINT ck_pol_status_enum  CHECK (status IN ('SUCCESS', 'FAILED')),
-    CONSTRAINT ck_pol_cost_nonneg  CHECK (cost_ms IS NULL OR cost_ms >= 0)
-);
+    CONSTRAINT ck_pol_cost_nonneg  CHECK (cost_ms IS NULL OR cost_ms >= 0),
+    -- 分区表主键必须包含分区键
+    PRIMARY KEY (id, created_at)
+) PARTITION BY RANGE (created_at);
 COMMENT ON TABLE pmis_operation_log IS '操作日志表: 用户关键操作全量留存(模块/动作/入参/出参/耗时/IP),用于审计与问题排查';
 COMMENT ON COLUMN pmis_operation_log.id IS '主键 ID';
 COMMENT ON COLUMN pmis_operation_log.user_id IS '操作用户 ID';
@@ -863,6 +864,7 @@ COMMENT ON COLUMN pmis_operation_log.trace_id IS 'V1.0.0_008: 系统链路追踪
 COMMENT ON COLUMN pmis_operation_log.created_at IS '操作时间';
 COMMENT ON COLUMN pmis_operation_log.tenant_id IS '租户 ID(单租户部署默认 1)';
 
+-- P1-4: 父表索引,自动传播到所有月度分区
 CREATE INDEX IF NOT EXISTS idx_pmis_oplog_user ON pmis_operation_log (user_id);
 CREATE INDEX IF NOT EXISTS idx_pmis_oplog_module ON pmis_operation_log (module, action);
 CREATE INDEX IF NOT EXISTS idx_pmis_oplog_created ON pmis_operation_log (created_at);
@@ -876,6 +878,10 @@ CREATE INDEX IF NOT EXISTS idx_pol_user_created
     ON pmis_operation_log(user_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_pol_trace
     ON pmis_operation_log(trace_id) WHERE trace_id IS NOT NULL;
+-- P1-4: BRIN 索引(父表,自动传播) — 时间范围扫描友好
+CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
+    ON pmis_operation_log USING BRIN (created_at)
+    WITH (pages_per_range = 32);
 
 -- ====================================================================
 -- 8. 初始化数据
@@ -997,13 +1003,9 @@ INSERT INTO pmis_config (config_group, config_key, config_value, value_type, des
     ('alert', 'alert.bench.days.red', '15', 'NUMBER', 'Bench 红色预警天数', 0)
 ON CONFLICT DO NOTHING;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_001__init_pmis_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_004__init_pmis_workflow_schema.sql
--- ====================================================================
+-- ============================ [004] init pmis workflow schema ============================
 
 -- =====================================================
 -- PMIS 工作流基础模块清理 DDL（Flowable 表已下线）
@@ -1024,13 +1026,9 @@ ON CONFLICT DO NOTHING;
 -- 清理：流程节点配置表（功能已通过 pmis_flow_node.permission_flag / ext 替代）
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_workflow_node_config;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_004__init_pmis_workflow_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_005__init_pmis_file_schema.sql
--- ====================================================================
+-- ============================ [005] init pmis file schema ============================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
 --   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
@@ -1114,13 +1112,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_file_tenant_created
 CREATE INDEX IF NOT EXISTS idx_pmis_file_url_expire
     ON pmis_file (url_expire_at) WHERE deleted = 0 AND url_expire_at IS NOT NULL;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_005__init_pmis_file_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_006__init_pmis_job_schema.sql
--- ====================================================================
+-- ============================ [006] init pmis job schema ============================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
 --   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
@@ -1261,13 +1255,9 @@ CREATE INDEX IF NOT EXISTS idx_pjl_job_start
 CREATE INDEX IF NOT EXISTS idx_pjl_trace_id
     ON pmis_job_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_006__init_pmis_job_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_007__init_pmis_message_schema.sql
--- ====================================================================
+-- ============================ [007] init pmis message schema ============================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
 --   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
@@ -1413,9 +1403,7 @@ CREATE INDEX IF NOT EXISTS idx_pmt_status
 CREATE INDEX IF NOT EXISTS idx_pmt_tenant_status
     ON pmis_message_template (tenant_id, status) WHERE deleted = 0;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_007__init_pmis_message_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
 -- ====================================================================
 -- V1.0.0_008 已优化内联至 V1.0.0_001 的 pmis_operation_log 定义中
@@ -1423,9 +1411,7 @@ CREATE INDEX IF NOT EXISTS idx_pmt_tenant_status
 --  并补齐 V1.0.0_040 审计差异字段 before_data/after_data)
 -- ====================================================================
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_009__init_pmis_project_schema.sql
--- ====================================================================
+-- ============================ [009] init pmis project schema ============================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
 --   2) 全部审计字段统一为 created_by/created_at/updated_by/updated_at
@@ -2023,13 +2009,9 @@ CREATE INDEX IF NOT EXISTS idx_ppcc_approver_status
 CREATE INDEX IF NOT EXISTS idx_ppcc_tenant_approved
     ON pmis_project_contract_change (tenant_id, approved_at DESC) WHERE deleted = 0;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_009__init_pmis_project_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_010__init_pmis_execution_schema.sql
--- ====================================================================
+-- ============================ [010] init pmis execution schema ============================
 -- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
 --   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
 --   2) 全部审计字段统一为 created_by/created_at/updated_by/updated_at
@@ -2713,13 +2695,9 @@ CREATE INDEX IF NOT EXISTS idx_per_tenant_status
 CREATE INDEX IF NOT EXISTS idx_per_trace
     ON pmis_execution_risk (provider_trace_id) WHERE provider_trace_id <> '';
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_010__init_pmis_execution_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_011__init_pmis_batch8_schema.sql
--- ====================================================================
+-- ============================ [011] init pmis batch8 schema ============================
 
 -- =====================================================
 -- PMIS 批次8 DDL：合同模板/项目变更/项目交付/项目结项/AI智能体
@@ -3266,13 +3244,9 @@ VALUES
     ('TPL-CON-001',  '咨询服务标准合同',          'CONSULTING',   '1.0.0', '5-4-1（启动50%/中期40%/验收10%）',                30, 0.0010, '不限响应时间（按时交付）',          '调研报告/咨询方案/实施报告',   'PUBLISHED', 1),
     ('TPL-TRN-001',  '培训服务标准合同',          'TRAINING',     '1.0.0', '培训前付 50%/结束后 50%',                          0,  0.0010, '培训出勤率≥80%',                    '培训教材/考勤/效果评估',       'PUBLISHED', 1),
         ('TPL-OTH-001',  '通用合同模板',              'OTHER',        '1.0.0', '5-5（启动50%/验收50%）',                            30, 0.0010, '依项目类型',                       '项目章程/交付物清单/验收报告', 'PUBLISHED', 1) ON CONFLICT DO NOTHING;
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_011__init_pmis_batch8_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_012__init_pmis_finance_schema.sql
--- ====================================================================
+-- ============================ [012] init pmis finance schema ============================
 
 -- =====================================================
 -- PMIS 批次9 DDL：开票/回款/客户信用
@@ -3314,15 +3288,24 @@ CREATE TABLE IF NOT EXISTS pmis_finance_invoice(
     approval_comment    TEXT,
     applied_by          BIGINT,
     approved_by         BIGINT,
-    approved_at         TIMESTAMP,
+    approved_at         TIMESTAMPTZ,
     issued_by           BIGINT,
-    issued_at           TIMESTAMP,
+    issued_at           TIMESTAMPTZ,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by          BIGINT       NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT       NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pfi_code UNIQUE (invoice_code, deleted)
+    CONSTRAINT uk_pfi_code              UNIQUE (invoice_code, deleted),
+    CONSTRAINT ck_pfi_invoice_type      CHECK (invoice_type IN ('NORMAL','RED_REVERSE')),
+    CONSTRAINT ck_pfi_invoice_basis     CHECK (invoice_basis IN ('MILESTONE','OUTSOURCING','MONTHLY','FINAL','OTHER')),
+    CONSTRAINT ck_pfi_status_enum       CHECK (status IN ('DRAFT','SUBMITTED','ISSUED','RED_REVERSED','CANCELLED')),
+    CONSTRAINT ck_pfi_tax_period_fmt    CHECK (tax_period IS NULL OR tax_period ~ '^\d{4}-(0[1-9]|1[0-2])$'),
+    CONSTRAINT ck_pfi_tax_rate_range    CHECK (tax_rate >= 0 AND tax_rate <= 1),
+    CONSTRAINT ck_pfi_amount_nonneg     CHECK (amount >= 0 AND tax_amount >= 0 AND net_amount >= 0),
+    CONSTRAINT ck_pfi_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_finance_invoice IS '发票主表: 支持正常开票与红冲（RED_REVERSED）,执行 InvoiceStatus 状态机校验,invoice_code 唯一,invoice_no 在 ISSUED 时分配';
 COMMENT ON COLUMN pmis_finance_invoice.invoice_no IS '财务发票号: 税务局分配的纸质/电子发票号,ISSUED 状态时分配';
@@ -3358,12 +3341,25 @@ COMMENT ON COLUMN pmis_finance_invoice.issued_at IS '开票时间';
 COMMENT ON COLUMN pmis_finance_invoice.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_finance_invoice.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_finance_invoice.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pfi_contract ON pmis_finance_invoice(contract_id);
-CREATE INDEX IF NOT EXISTS idx_pfi_initiation ON pmis_finance_invoice(initiation_id);
-CREATE INDEX IF NOT EXISTS idx_pfi_customer ON pmis_finance_invoice(customer_id);
-CREATE INDEX IF NOT EXISTS idx_pfi_status ON pmis_finance_invoice(status, invoice_type);
-CREATE INDEX IF NOT EXISTS idx_pfi_invoice_date ON pmis_finance_invoice(invoice_date);
-CREATE INDEX IF NOT EXISTS idx_pfi_tax_period ON pmis_finance_invoice(tax_period);
+-- 复合/部分索引(替代零散的 idx_pfi_*)
+CREATE INDEX IF NOT EXISTS idx_pfi_tenant_contract
+    ON pmis_finance_invoice(tenant_id, contract_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfi_tenant_initiation
+    ON pmis_finance_invoice(tenant_id, initiation_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfi_tenant_customer
+    ON pmis_finance_invoice(tenant_id, customer_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfi_tenant_status_type
+    ON pmis_finance_invoice(tenant_id, status, invoice_type)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfi_tenant_invoice_date
+    ON pmis_finance_invoice(tenant_id, invoice_date)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfi_tenant_tax_period
+    ON pmis_finance_invoice(tenant_id, tax_period)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 2. 回款主表 pmis_finance_payment
@@ -3390,14 +3386,21 @@ CREATE TABLE IF NOT EXISTS pmis_finance_payment(
     status              VARCHAR(32)  NOT NULL DEFAULT 'PENDING',  -- PaymentStatus
     remark              TEXT,
     confirmed_by        BIGINT,
-    confirmed_at        TIMESTAMP,
+    confirmed_at        TIMESTAMPTZ,
     recorded_by         BIGINT,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by          BIGINT       NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT       NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pfp_code UNIQUE (payment_code, deleted)
+    CONSTRAINT uk_pfp_code              UNIQUE (payment_code, deleted),
+    CONSTRAINT ck_pfp_payment_method    CHECK (payment_method IN ('BANK_TRANSFER','CHECK','CASH','OTHER')),
+    CONSTRAINT ck_pfp_status_enum       CHECK (status IN ('PENDING','RECEIVED','PARTIAL','ALLOCATED','CANCELLED')),
+    CONSTRAINT ck_pfp_amount_nonneg     CHECK (amount >= 0 AND allocated_amount >= 0 AND unallocated_amount >= 0),
+    CONSTRAINT ck_pfp_alloc_le_amount   CHECK (allocated_amount <= amount),
+    CONSTRAINT ck_pfp_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_finance_payment IS '回款主表: 客户回款记录,支持核销发票（allocated_amount/unallocated_amount）,unallocatedAmount=0 时自动转 ALLOCATED';
 COMMENT ON COLUMN pmis_finance_payment.payment_no IS '回款流水号: 银行流水号或系统生成';
@@ -3424,12 +3427,22 @@ COMMENT ON COLUMN pmis_finance_payment.recorded_by IS '录入人 ID';
 COMMENT ON COLUMN pmis_finance_payment.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_finance_payment.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_finance_payment.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pfp_contract ON pmis_finance_payment(contract_id);
-CREATE INDEX IF NOT EXISTS idx_pfp_initiation ON pmis_finance_payment(initiation_id);
-CREATE INDEX IF NOT EXISTS idx_pfp_customer ON pmis_finance_payment(customer_id);
-CREATE INDEX IF NOT EXISTS idx_pfp_status ON pmis_finance_payment(status);
-CREATE INDEX IF NOT EXISTS idx_pfp_payment_date ON pmis_finance_payment(payment_date);
-CREATE INDEX IF NOT EXISTS idx_pfp_unalloc ON pmis_finance_payment(customer_id, status, unallocated_amount);
+-- 复合/部分索引(替代零散的 idx_pfp_*)
+CREATE INDEX IF NOT EXISTS idx_pfp_tenant_contract
+    ON pmis_finance_payment(tenant_id, contract_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfp_tenant_initiation
+    ON pmis_finance_payment(tenant_id, initiation_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfp_tenant_customer_status
+    ON pmis_finance_payment(tenant_id, customer_id, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfp_tenant_payment_date
+    ON pmis_finance_payment(tenant_id, payment_date)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfp_tenant_customer_unalloc
+    ON pmis_finance_payment(tenant_id, customer_id, unallocated_amount)
+    WHERE deleted = 0 AND status IN ('PENDING','RECEIVED','PARTIAL');
 
 -- =====================================================
 -- 3. 客户信用表 pmis_finance_customer_credit
@@ -3447,15 +3460,23 @@ CREATE TABLE IF NOT EXISTS pmis_finance_customer_credit(
     on_time_rate          NUMERIC(5,4) NOT NULL DEFAULT 0,        -- 及时回款率
     contract_count        INTEGER      NOT NULL DEFAULT 0,
     overdue_count         INTEGER      NOT NULL DEFAULT 0,
-    last_evaluation_at    TIMESTAMP,
+    last_evaluation_at    TIMESTAMPTZ,
     evaluator             VARCHAR(64),
     remark                TEXT,
     tenant_id             BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by            BIGINT       NOT NULL DEFAULT 0,
+    created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by            BIGINT       NOT NULL DEFAULT 0,
+    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pfcc_customer UNIQUE (customer_id, deleted)
+    CONSTRAINT uk_pfcc_customer         UNIQUE (customer_id, deleted),
+    CONSTRAINT ck_pfcc_credit_level     CHECK (credit_level IN ('A','B','C','D')),
+    CONSTRAINT ck_pfcc_credit_score      CHECK (credit_score >= 0 AND credit_score <= 100),
+    CONSTRAINT ck_pfcc_on_time_rate      CHECK (on_time_rate >= 0 AND on_time_rate <= 1),
+    CONSTRAINT ck_pfcc_amount_nonneg     CHECK (total_contract_amount >= 0 AND total_invoiced_amount >= 0 AND total_received_amount >= 0),
+    CONSTRAINT ck_pfcc_count_nonneg      CHECK (contract_count >= 0 AND overdue_count >= 0),
+    CONSTRAINT ck_pfcc_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_finance_customer_credit IS '客户信用表: 客户信用评分与等级（A/B/C/D）,CustomerCreditScoreEvaluator 评分（0-100）';
 COMMENT ON COLUMN pmis_finance_customer_credit.customer_id IS '客户 ID: 全局唯一';
@@ -3474,21 +3495,22 @@ COMMENT ON COLUMN pmis_finance_customer_credit.remark IS '备注';
 COMMENT ON COLUMN pmis_finance_customer_credit.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_finance_customer_credit.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_finance_customer_credit.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pfcc_level ON pmis_finance_customer_credit(credit_level, credit_score);
-CREATE INDEX IF NOT EXISTS idx_pfcc_tenant ON pmis_finance_customer_credit(tenant_id);
+-- 复合/部分索引(替代零散的 idx_pfcc_level / idx_pfcc_tenant)
+CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_level_score
+    ON pmis_finance_customer_credit(tenant_id, credit_level, credit_score DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfcc_tenant_updated
+    ON pmis_finance_customer_credit(tenant_id, updated_at DESC)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 4. 初始数据：信用等级字典（用于前端展示）
 -- =====================================================
 -- credit_level 字段含义（见上方 COLUMN COMMENT）: A=优质(90-100) B=良好(75-89) C=一般(60-74) D=风险(0-59)
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_012__init_pmis_finance_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_013__init_pmis_evm_schema.sql
--- ====================================================================
+-- ============================ [013] init pmis evm schema ============================
 
 -- =====================================================
 -- PMIS 批次10 DDL：EVM 挣值 / 对外报价费率 / 对内成本费率 / 利润测算
@@ -3524,9 +3546,19 @@ CREATE TABLE IF NOT EXISTS pmis_evm_measure(
     remark              TEXT,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0
+    created_by          BIGINT       NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT       NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    CONSTRAINT uk_pem_init_period       UNIQUE (initiation_id, wbs_task_id, period, deleted),
+    CONSTRAINT ck_pem_period_fmt        CHECK (period ~ '^\d{4}-(0[1-9]|1[0-2])$'),
+    CONSTRAINT ck_pem_alert_level       CHECK (alert_level IN ('NORMAL','YELLOW','RED','INFO')),
+    CONSTRAINT ck_pem_amounts_nonneg    CHECK (pv >= 0 AND ev >= 0 AND ac >= 0 AND bac >= 0 AND eac >= 0),
+    CONSTRAINT ck_pem_cpi_range         CHECK (cpi > 0 AND cpi <= 10),
+    CONSTRAINT ck_pem_spi_range         CHECK (spi > 0 AND spi <= 10),
+    CONSTRAINT ck_pem_tcpi_range        CHECK (tcpi > 0),
+    CONSTRAINT ck_pem_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_evm_measure IS 'EVM 挣值测量记录: 周期性（按 period 月度）记录 PV/EV/AC/BAC 等挣值指标,EvmCalculator 用 nz() 防空 NPE,EvmAlertLevel 评估预警';
 COMMENT ON COLUMN pmis_evm_measure.initiation_id IS '所属立项 ID';
@@ -3551,10 +3583,16 @@ COMMENT ON COLUMN pmis_evm_measure.remark IS '备注';
 COMMENT ON COLUMN pmis_evm_measure.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_evm_measure.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_evm_measure.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pem_initiation ON pmis_evm_measure(initiation_id);
-CREATE INDEX IF NOT EXISTS idx_pem_wbs ON pmis_evm_measure(wbs_task_id);
-CREATE INDEX IF NOT EXISTS idx_pem_period ON pmis_evm_measure(initiation_id, period);
-CREATE INDEX IF NOT EXISTS idx_pem_alert ON pmis_evm_measure(alert_level);
+-- 复合/部分索引(替代零散的 idx_pem_initiation / idx_pem_wbs / idx_pem_period / idx_pem_alert)
+CREATE INDEX IF NOT EXISTS idx_pem_tenant_initiation_measure_date
+    ON pmis_evm_measure(tenant_id, initiation_id, measure_date DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pem_tenant_wbs_measure_date
+    ON pmis_evm_measure(tenant_id, wbs_task_id, measure_date DESC)
+    WHERE deleted = 0 AND wbs_task_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pem_tenant_alert_measure_date
+    ON pmis_evm_measure(tenant_id, alert_level, measure_date DESC)
+    WHERE deleted = 0 AND alert_level IN ('YELLOW','RED');
 
 -- =====================================================
 -- 2. 对外报价费率表 pmis_rate_card
@@ -3575,10 +3613,19 @@ CREATE TABLE IF NOT EXISTS pmis_rate_card(
     remark              TEXT,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by          BIGINT       NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT       NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_prc_code UNIQUE (rate_code, deleted)
+    CONSTRAINT uk_prc_code              UNIQUE (rate_code, deleted),
+    CONSTRAINT ck_prc_billing_unit      CHECK (billing_unit IN ('DAY','HOUR')),
+    CONSTRAINT ck_prc_project_type      CHECK (project_type IS NULL OR project_type IN ('FIXED_PRICE','T_M','OUTSOURCING','PRODUCT','MAINTENANCE','CONSULTING','TRAINING','OTHER')),
+    CONSTRAINT ck_prc_customer_level    CHECK (customer_level IS NULL OR customer_level IN ('A','B','C','D')),
+    CONSTRAINT ck_prc_status_enum       CHECK (status IN ('ACTIVE','INACTIVE')),
+    CONSTRAINT ck_prc_rate_nonneg       CHECK (rate_amount >= 0),
+    CONSTRAINT ck_prc_expiry_after_eff  CHECK (expiry_date IS NULL OR expiry_date >= effective_date),
+    CONSTRAINT ck_prc_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_rate_card IS '对外报价费率表 Rate Card: 客户报价用,支持 3 级匹配（level+project+customer > level+project > level）,matchEffective 自动选最优';
 COMMENT ON COLUMN pmis_rate_card.rate_code IS '费率编码: 业务唯一,如 RC-L5-FIX-A';
@@ -3595,8 +3642,14 @@ COMMENT ON COLUMN pmis_rate_card.remark IS '备注';
 COMMENT ON COLUMN pmis_rate_card.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rate_card.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_rate_card.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_prc_level ON pmis_rate_card(level_code, project_type, customer_level);
-CREATE INDEX IF NOT EXISTS idx_prc_status ON pmis_rate_card(status, effective_date);
+-- 复合/部分索引(替代零散的 idx_prc_level / idx_prc_status)
+-- 主要查询: tenant + level + project_type + customer_level + 在效期内 + ACTIVE
+CREATE INDEX IF NOT EXISTS idx_prc_tenant_level_match
+    ON pmis_rate_card(tenant_id, level_code, project_type, customer_level)
+    WHERE deleted = 0 AND status = 'ACTIVE';
+CREATE INDEX IF NOT EXISTS idx_prc_tenant_status_effective
+    ON pmis_rate_card(tenant_id, status, effective_date DESC)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 3. 对内成本费率表 pmis_rate_internal
@@ -3617,10 +3670,17 @@ CREATE TABLE IF NOT EXISTS pmis_rate_internal(
     remark              TEXT,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by          BIGINT       NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT       NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pri_code UNIQUE (rate_code, deleted)
+    CONSTRAINT uk_pri_code              UNIQUE (rate_code, deleted),
+    CONSTRAINT ck_pri_billing_unit      CHECK (billing_unit IN ('DAY','HOUR')),
+    CONSTRAINT ck_pri_status_enum       CHECK (status IN ('ACTIVE','INACTIVE')),
+    CONSTRAINT ck_pri_cost_nonneg       CHECK (cost_amount >= 0),
+    CONSTRAINT ck_pri_expiry_after_eff  CHECK (expiry_date IS NULL OR expiry_date >= effective_date),
+    CONSTRAINT ck_pri_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_rate_internal IS '对内成本费率表: 内部人力成本计算用,matchEffective 优先 (level+department) 而非 (level only)';
 COMMENT ON COLUMN pmis_rate_internal.rate_code IS '费率编码: 业务唯一,如 RI-L5-DEV-001';
@@ -3637,8 +3697,13 @@ COMMENT ON COLUMN pmis_rate_internal.remark IS '备注';
 COMMENT ON COLUMN pmis_rate_internal.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rate_internal.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_rate_internal.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pri_level_dept ON pmis_rate_internal(level_code, department_id);
-CREATE INDEX IF NOT EXISTS idx_pri_status ON pmis_rate_internal(status, effective_date);
+-- 复合/部分索引(替代零散的 idx_pri_level_dept / idx_pri_status)
+CREATE INDEX IF NOT EXISTS idx_pri_tenant_level_dept
+    ON pmis_rate_internal(tenant_id, level_code, department_id)
+    WHERE deleted = 0 AND status = 'ACTIVE';
+CREATE INDEX IF NOT EXISTS idx_pri_tenant_status_effective
+    ON pmis_rate_internal(tenant_id, status, effective_date DESC)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 4. 利润测算版本表 pmis_profit_simulation
@@ -3666,16 +3731,27 @@ CREATE TABLE IF NOT EXISTS pmis_profit_simulation(
     assumptions         TEXT,                                  -- JSON
     status              VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',
     approver_name       VARCHAR(64),
-    approved_at         TIMESTAMP,
+    approved_at         TIMESTAMPTZ,
     remark              TEXT,
     applicant_id        BIGINT,
     applicant_name      VARCHAR(64),
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by          BIGINT       NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT       NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pps_code UNIQUE (simulation_code, deleted)
+    CONSTRAINT uk_pps_code              UNIQUE (simulation_code, deleted),
+    CONSTRAINT ck_pps_scenario_type     CHECK (scenario_type IN ('BASE','OPTIMISTIC','PESSIMISTIC','CUSTOM')),
+    CONSTRAINT ck_pps_status_enum       CHECK (status IN ('DRAFT','SUBMITTED','APPROVED','REJECTED','ARCHIVED')),
+    CONSTRAINT ck_pps_version_pos       CHECK (version > 0),
+    CONSTRAINT ck_pps_amounts_nonneg    CHECK (contract_amount >= 0 AND external_revenue >= 0 AND internal_cost >= 0
+                                              AND expected_hours >= 0 AND blended_rate >= 0
+                                              AND labor_cost >= 0 AND purchase_cost >= 0
+                                              AND expense_cost >= 0 AND outsource_cost >= 0),
+    CONSTRAINT ck_pps_margin_range      CHECK (gross_margin >= -1 AND gross_margin <= 1 AND target_margin >= -1 AND target_margin <= 1),
+    CONSTRAINT ck_pps_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_profit_simulation IS '利润测算版本表 What-if: 同一立项支持多个测算版本,create() 自动 version=max+1,APPROVED/ARCHIVED 状态禁止删除';
 COMMENT ON COLUMN pmis_profit_simulation.simulation_code IS '测算单号: 业务唯一,如 SIM-2026-001';
@@ -3705,9 +3781,13 @@ COMMENT ON COLUMN pmis_profit_simulation.applicant_name IS '申请人姓名（�
 COMMENT ON COLUMN pmis_profit_simulation.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_profit_simulation.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_profit_simulation.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_psm_initiation ON pmis_profit_simulation(initiation_id);
-CREATE INDEX IF NOT EXISTS idx_psm_version ON pmis_profit_simulation(initiation_id, version);
-CREATE INDEX IF NOT EXISTS idx_psm_status ON pmis_profit_simulation(status, scenario_type);
+-- 复合/部分索引(替代零散的 idx_psm_initiation / idx_psm_version / idx_psm_status)
+CREATE INDEX IF NOT EXISTS idx_psm_tenant_initiation_version
+    ON pmis_profit_simulation(tenant_id, initiation_id, version DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_psm_tenant_status_scenario
+    ON pmis_profit_simulation(tenant_id, status, scenario_type)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 5. 初始化 L1-L18 职级默认对外报价费率（基线参考）
@@ -3757,13 +3837,9 @@ VALUES
     ('RI-L16-DEFAULT', 'L16', 'DAY',  8500.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
     ('RI-L17-DEFAULT', 'L17', 'DAY', 10000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init'),
         ('RI-L18-DEFAULT', 'L18', 'DAY', 12000.00, 'CNY', CURRENT_DATE, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_013__init_pmis_evm_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_014_1__init_pmis_resource_bench_schema.sql
--- ====================================================================
+-- ============================ [014_1] init pmis resource bench schema ============================
 
 -- =====================================================
 -- PMIS 批次11 DDL：资源池 + 人员标签 + 资源分配 + Bench 闲置
@@ -3790,10 +3866,17 @@ CREATE TABLE IF NOT EXISTS pmis_resource_pool(
     status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by          BIGINT       NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT       NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_prp_code UNIQUE (pool_code, deleted)
+    CONSTRAINT uk_prp_code              UNIQUE (pool_code, deleted),
+    CONSTRAINT ck_prp_pool_type         CHECK (pool_type IN ('HQ','DIVISION','RESERVE')),
+    CONSTRAINT ck_prp_status_enum       CHECK (status IN ('ACTIVE','INACTIVE')),
+    CONSTRAINT ck_prp_headcount_nonneg  CHECK (headcount >= 0),
+    CONSTRAINT ck_prp_bill_target_nonneg CHECK (billable_target >= 0),
+    CONSTRAINT ck_prp_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_resource_pool IS '资源池表: 3 级资源池（HQ 总部 / DIVISION 事业部 / RESERVE 储备）,PoolType.inferByLevel 按职级自动分配';
 COMMENT ON COLUMN pmis_resource_pool.pool_code IS '资源池编码: 业务唯一,如 POOL-HQ-GLOBAL';
@@ -3809,36 +3892,59 @@ COMMENT ON COLUMN pmis_resource_pool.status IS '状态: ACTIVE 启用 / INACTIVE
 COMMENT ON COLUMN pmis_resource_pool.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_resource_pool.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_resource_pool.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_prp_type_status ON pmis_resource_pool(pool_type, status);
-CREATE INDEX IF NOT EXISTS idx_prp_dept ON pmis_resource_pool(department_id);
+-- 复合/部分索引(替代零散的 idx_prp_type_status / idx_prp_dept)
+CREATE INDEX IF NOT EXISTS idx_prp_tenant_type_status
+    ON pmis_resource_pool(tenant_id, pool_type, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prp_tenant_dept
+    ON pmis_resource_pool(tenant_id, department_id)
+    WHERE deleted = 0 AND department_id IS NOT NULL;
 
 -- =====================================================
 -- 2. 人员标签表 pmis_employee_tag
 -- =====================================================
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_employee_tag;
--- [SKIPPED-CLEANUP-REBUILD] CREATE TABLE pmis_employee_tag (
--- [SKIPPED-CLEANUP-REBUILD]     id                  BIGSERIAL PRIMARY KEY,
--- [SKIPPED-CLEANUP-REBUILD]     employee_id         BIGINT       NOT NULL,
--- [SKIPPED-CLEANUP-REBUILD]     tag_type            VARCHAR(32)  NOT NULL,                 -- SKILL/INDUSTRY/DOMAIN/CERT
--- [SKIPPED-CLEANUP-REBUILD]     tag_code            VARCHAR(64)  NOT NULL,
--- [SKIPPED-CLEANUP-REBUILD]     tag_name            VARCHAR(256) NOT NULL,
--- [SKIPPED-CLEANUP-REBUILD]     proficiency         INTEGER      NOT NULL DEFAULT 3,       -- 1-5
--- [SKIPPED-CLEANUP-REBUILD]     years_exp           INTEGER      NOT NULL DEFAULT 0,
--- [SKIPPED-CLEANUP-REBUILD]     remark              TEXT,
--- [SKIPPED-CLEANUP-REBUILD]     tenant_id           BIGINT       NOT NULL DEFAULT 1,
--- [SKIPPED-CLEANUP-REBUILD]     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
--- [SKIPPED-CLEANUP-REBUILD]     created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
--- [SKIPPED-CLEANUP-REBUILD]     updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
--- [SKIPPED-CLEANUP-REBUILD]     deleted             SMALLINT     NOT NULL DEFAULT 0,
--- [SKIPPED-CLEANUP-REBUILD]     CONSTRAINT uk_pet_emp_tag UNIQUE (employee_id, tag_code, deleted)
--- [SKIPPED-CLEANUP-REBUILD] );
+-- 注意:历史 [SKIPPED-CLEANUP-REBUILD] 标记下的旧版 DDL 已废弃,以下为优化后的最终版本
+CREATE TABLE IF NOT EXISTS pmis_employee_tag(
+    id                  BIGSERIAL PRIMARY KEY,
+    employee_id         BIGINT       NOT NULL,
+    tag_type            VARCHAR(32)  NOT NULL,                 -- SKILL/INDUSTRY/DOMAIN/CERT
+    tag_code            VARCHAR(64)  NOT NULL,
+    tag_name            VARCHAR(256) NOT NULL,
+    proficiency         INTEGER      NOT NULL DEFAULT 3,       -- 1-5
+    years_exp           INTEGER      NOT NULL DEFAULT 0,
+    remark              TEXT,
+    tenant_id           BIGINT       NOT NULL DEFAULT 1,
+    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
+    created_by          BIGINT       NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT       NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    CONSTRAINT uk_pet_emp_tag           UNIQUE (employee_id, tag_code, deleted),
+    CONSTRAINT ck_pet_tag_type          CHECK (tag_type IN ('SKILL','INDUSTRY','DOMAIN','CERT')),
+    CONSTRAINT ck_pet_proficiency       CHECK (proficiency BETWEEN 1 AND 5),
+    CONSTRAINT ck_pet_years_exp_nonneg  CHECK (years_exp >= 0),
+    CONSTRAINT ck_pet_deleted_enum      CHECK (deleted IN (0, 1))
+);
 COMMENT ON TABLE  pmis_employee_tag IS '人员标签表: 员工的技能/行业/领域/资质标签,支撑资源推荐智能体匹配';
 COMMENT ON COLUMN pmis_employee_tag.employee_id IS '员工 ID';
 COMMENT ON COLUMN pmis_employee_tag.tag_type IS '标签类型: SKILL 技能 / INDUSTRY 行业 / DOMAIN 领域 / CERT 资质';
 COMMENT ON COLUMN pmis_employee_tag.tag_code IS '标签编码: 业务唯一,如 JAVA / BANKING';
+COMMENT ON COLUMN pmis_employee_tag.tag_name IS '标签名称';
+COMMENT ON COLUMN pmis_employee_tag.proficiency IS '熟练度: 1=入门 2=了解 3=熟练 4=精通 5=专家';
+COMMENT ON COLUMN pmis_employee_tag.years_exp IS '相关经验年限';
+COMMENT ON COLUMN pmis_employee_tag.remark IS '备注';
+COMMENT ON COLUMN pmis_employee_tag.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_employee_tag.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_employee_tag.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pet_emp ON pmis_employee_tag(employee_id);
-CREATE INDEX IF NOT EXISTS idx_pet_type ON pmis_employee_tag(tag_type, tag_code);
+-- 复合/部分索引(替代零散的 idx_pet_emp / idx_pet_type)
+CREATE INDEX IF NOT EXISTS idx_pet_tenant_emp
+    ON pmis_employee_tag(tenant_id, employee_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pet_tenant_type_code
+    ON pmis_employee_tag(tenant_id, tag_type, tag_code)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 3. 资源分配主表 pmis_resource_assignment
@@ -3865,10 +3971,19 @@ CREATE TABLE IF NOT EXISTS pmis_resource_assignment(
     daily_hours           NUMERIC(5,2) NOT NULL DEFAULT 8.0,
     tenant_id             BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by            BIGINT       NOT NULL DEFAULT 0,
+    created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by            BIGINT       NOT NULL DEFAULT 0,
+    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pra_code UNIQUE (assignment_code, deleted)
+    CONSTRAINT uk_pra_code              UNIQUE (assignment_code, deleted),
+    CONSTRAINT ck_pra_status_enum       CHECK (status IN ('RESERVED','IN_PROGRESS','TRANSFERRED','RELEASED','CANCELLED')),
+    CONSTRAINT ck_pra_pool_type         CHECK (pool_type IS NULL OR pool_type IN ('HQ','DIVISION','RESERVE')),
+    CONSTRAINT ck_pra_allocation_range  CHECK (allocation > 0 AND allocation <= 1),
+    CONSTRAINT ck_pra_billable          CHECK (billable IN (0, 1)),
+    CONSTRAINT ck_pra_daily_hours       CHECK (daily_hours > 0 AND daily_hours <= 24),
+    CONSTRAINT ck_pra_dates_order       CHECK (planned_end_date IS NULL OR planned_start_date IS NULL OR planned_end_date >= planned_start_date),
+    CONSTRAINT ck_pra_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_resource_assignment IS '资源分配表: 资源预占/入场/调岗/离场的全过程,act() 入口按 action 参数映射 AssignmentStatus';
 COMMENT ON COLUMN pmis_resource_assignment.assignment_code IS '分配单号: 业务唯一,如 RA-2026-001';
@@ -3891,10 +4006,16 @@ COMMENT ON COLUMN pmis_resource_assignment.daily_hours IS '日均工时(小时):
 COMMENT ON COLUMN pmis_resource_assignment.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_resource_assignment.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_resource_assignment.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pra_emp ON pmis_resource_assignment(employee_id);
-CREATE INDEX IF NOT EXISTS idx_pra_initiation ON pmis_resource_assignment(initiation_id);
-CREATE INDEX IF NOT EXISTS idx_pra_status ON pmis_resource_assignment(status);
-CREATE INDEX IF NOT EXISTS idx_pra_pool ON pmis_resource_assignment(pool_id, status);
+-- 复合/部分索引(替代零散的 idx_pra_emp / idx_pra_initiation / idx_pra_status / idx_pra_pool)
+CREATE INDEX IF NOT EXISTS idx_pra_tenant_emp_status
+    ON pmis_resource_assignment(tenant_id, employee_id, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pra_tenant_initiation_status
+    ON pmis_resource_assignment(tenant_id, initiation_id, status)
+    WHERE deleted = 0 AND initiation_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pra_tenant_pool_status
+    ON pmis_resource_assignment(tenant_id, pool_id, status)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 4. Bench 闲置记录表 pmis_bench_record
@@ -3919,10 +4040,19 @@ CREATE TABLE IF NOT EXISTS pmis_bench_record(
     remark                TEXT,
     tenant_id             BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by            BIGINT       NOT NULL DEFAULT 0,
+    created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by            BIGINT       NOT NULL DEFAULT 0,
+    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pbr_code UNIQUE (bench_code, deleted)
+    CONSTRAINT uk_pbr_code              UNIQUE (bench_code, deleted),
+    CONSTRAINT ck_pbr_bench_reason      CHECK (bench_reason IN ('ENTER','EXIT')),
+    CONSTRAINT ck_pbr_reason_type       CHECK (reason_type IS NULL OR reason_type IN ('PROJECT_END','RESERVE','TRAINING','LEAVE','OTHER')),
+    CONSTRAINT ck_pbr_status_enum       CHECK (status IN ('ACTIVE','CLOSED')),
+    CONSTRAINT ck_pbr_cost_nonneg       CHECK (daily_cost >= 0 AND total_idle_cost >= 0),
+    CONSTRAINT ck_pbr_idle_days_nonneg  CHECK (idle_days >= 0),
+    CONSTRAINT ck_pbr_exit_after_bench  CHECK (exit_date IS NULL OR exit_date >= bench_date),
+    CONSTRAINT ck_pbr_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_bench_record IS 'Bench 闲置记录表: 资源闲置期间自动入池/出池,BenchCostCalculator 计算 idleDays + totalIdleCost';
 COMMENT ON COLUMN pmis_bench_record.bench_code IS 'Bench 单号: 业务唯一,如 BENCH-2026-001';
@@ -3943,10 +4073,16 @@ COMMENT ON COLUMN pmis_bench_record.remark IS '备注';
 COMMENT ON COLUMN pmis_bench_record.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_bench_record.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_bench_record.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pbr_emp ON pmis_bench_record(employee_id);
-CREATE INDEX IF NOT EXISTS idx_pbr_status ON pmis_bench_record(status, bench_date);
-CREATE INDEX IF NOT EXISTS idx_pbr_pool ON pmis_bench_record(pool_id, status);
-CREATE INDEX IF NOT EXISTS idx_pbr_date ON pmis_bench_record(bench_date, exit_date);
+-- 复合/部分索引(替代零散的 idx_pbr_emp / idx_pbr_status / idx_pbr_pool / idx_pbr_date)
+CREATE INDEX IF NOT EXISTS idx_pbr_tenant_emp_status
+    ON pmis_bench_record(tenant_id, employee_id, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pbr_tenant_pool_status
+    ON pmis_bench_record(tenant_id, pool_id, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pbr_tenant_active_dates
+    ON pmis_bench_record(tenant_id, bench_date DESC)
+    WHERE deleted = 0 AND status = 'ACTIVE';
 
 -- =====================================================
 -- 5. 初始化三级资源池（HQ/DIVISION/RESERVE）
@@ -3960,47 +4096,23 @@ VALUES
         ('POOL-RESERVE-TRAINING', '储备培训池',      'RESERVE',  1, '总部',  'L1-L3', 0, 0, 'ACTIVE', 1, 'init') ON CONFLICT DO NOTHING;
 
 -- [AUTO-MIGRATION] pmis_employee_tag: rebuild pattern detected.
---   The V1 base table was created by an earlier migration; the V2
---   schema (this file) wanted to DROP+
---   RECREATE it. We skipped the destructive DROP/CREATE,
---   so we now apply only the column additions needed to
---   bring the V1 table up to the V2 column list.
-DO $$
-BEGIN
+-- 注: 历史兼容代码 (兼容 V1.0.0_014_1 旧版 [SKIPPED-CLEANUP-REBUILD] 的字段补齐逻辑)
+--   已被前面 CREATE TABLE 取代 (IF NOT EXISTS 已包含全部字段),此处保留
+--   空 DO 块以保留脚本兼容性,无任何实际效果。
+DO $$ BEGIN
     IF EXISTS (SELECT 1 FROM information_schema.tables
                 WHERE table_schema = 'public' AND table_name = 'pmis_employee_tag') THEN
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS id BIGSERIAL PRIMARY KEY;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS employee_id BIGINT       NOT NULL;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tag_type VARCHAR(32)  NOT NULL;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tag_code VARCHAR(64)  NOT NULL;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tag_name VARCHAR(256) NOT NULL;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS proficiency INTEGER      NOT NULL DEFAULT 3;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS years_exp INTEGER      NOT NULL DEFAULT 0;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS remark TEXT;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS tenant_id BIGINT       NOT NULL DEFAULT 1;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64)  NOT NULL DEFAULT '';
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS created_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP;
-        ALTER TABLE pmis_employee_tag ADD COLUMN IF NOT EXISTS deleted SMALLINT     NOT NULL DEFAULT 0;
+        -- 字段已由上方 CREATE TABLE IF NOT EXISTS 完整定义,这里无需重复 ALTER
+        NULL;
     END IF;
 END $$;
 
--- Deferred COMMENTs for rebuild-table V2 columns
--- (emitted after AUTO-MIGRATION so columns exist)
-COMMENT ON COLUMN pmis_employee_tag.tag_name IS '标签名称';
-COMMENT ON COLUMN pmis_employee_tag.proficiency IS '熟练度: 1-5 星';
-COMMENT ON COLUMN pmis_employee_tag.years_exp IS '相关年限(年)';
-COMMENT ON COLUMN pmis_employee_tag.remark IS '备注';
-COMMENT ON COLUMN pmis_employee_tag.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_employee_tag.provider_trace_id IS '链路追踪 ID';
+-- 注释说明: 上方 CREATE TABLE 已包含 tag_name / proficiency / years_exp / remark / tenant_id / provider_trace_id
+-- 字段及其 COMMENT,此处不再重复定义,避免与上方 COMMENT 重复执行。
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_014_1__init_pmis_resource_bench_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_014__init_pmis_admin_full_perm.sql
--- ====================================================================
+-- ============================ [014] init pmis admin full perm ============================
 
 -- ====================================================================
 -- 9. 初始化菜单权限 + 角色授权 (admin 拥有全部权限)
@@ -4121,13 +4233,9 @@ SELECT
     0
 ON CONFLICT DO NOTHING;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_014__init_pmis_admin_full_perm.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_015__init_pmis_cockpit_views.sql
--- ====================================================================
+-- ============================ [015] init pmis cockpit views ============================
 
 -- ============================================================
 -- V1.0.0_015  经营驾驶舱 + 高级报表  视图脚本
@@ -4140,30 +4248,39 @@ ON CONFLICT DO NOTHING;
 -- ----------------------------
 -- 1. 项目收入 + 成本视图（按 initiation × period）
 -- ----------------------------
+-- 优化: 显式带 tenant_id,避免 JOIN 放大导致跨租户数据泄露
 CREATE OR REPLACE VIEW pmis_view_initiation_revenue_cost AS
-SELECT i.id              AS initiation_id,
+SELECT i.tenant_id,
+       i.id              AS initiation_id,
        COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r
-                  WHERE r.initiation_id = i.id AND r.deleted = 0), 0)         AS total_revenue,
+                  WHERE r.initiation_id = i.id AND r.deleted = 0
+                    AND r.tenant_id = i.tenant_id), 0)         AS total_revenue,
        COALESCE((SELECT SUM(amount) FROM pmis_finance_invoice p
-                  WHERE p.initiation_id = i.id AND p.deleted = 0), 0)         AS invoiced_amount,
+                  WHERE p.initiation_id = i.id AND p.deleted = 0
+                    AND p.tenant_id = i.tenant_id), 0)         AS invoiced_amount,
        COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r2
                   WHERE r2.initiation_id = i.id AND r2.deleted = 0
-                    AND r2.status = 'CONFIRMED'), 0) AS confirmed_revenue,
+                    AND r2.status = 'CONFIRMED'
+                    AND r2.tenant_id = i.tenant_id), 0)        AS confirmed_revenue,
        COALESCE((SELECT SUM(amount) FROM pmis_cost_allocation
-                  WHERE initiation_id = i.id AND deleted = 0 AND cost_type = 'LABOR'), 0) AS labor_cost,
+                  WHERE initiation_id = i.id AND deleted = 0 AND cost_type = 'LABOR'
+                    AND tenant_id = i.tenant_id), 0)           AS labor_cost,
        COALESCE((SELECT SUM(amount) FROM pmis_cost_purchase
-                  WHERE initiation_id = i.id AND deleted = 0), 0) AS purchase_cost,
+                  WHERE initiation_id = i.id AND deleted = 0
+                    AND tenant_id = i.tenant_id), 0)          AS purchase_cost,
        COALESCE((SELECT SUM(amount) FROM pmis_cost_expense
-                  WHERE initiation_id = i.id AND deleted = 0), 0) AS expense_cost
+                  WHERE initiation_id = i.id AND deleted = 0
+                    AND tenant_id = i.tenant_id), 0)          AS expense_cost
 FROM pmis_project_initiation i
 WHERE i.deleted = 0;
-COMMENT ON VIEW pmis_view_initiation_revenue_cost IS '项目收入 + 成本聚合视图: CockpitReportServiceImpl 读取,total_revenue 包含所有收入记录,confirmed_revenue 仅 CONFIRMED 状态;labor/purchase/expense 三类成本分别聚合;LEFT JOIN + COALESCE 保证 0 收入/0 成本项目也出现';
+COMMENT ON VIEW pmis_view_initiation_revenue_cost IS '项目收入 + 成本聚合视图: CockpitReportServiceImpl 读取,total_revenue 包含所有收入记录,confirmed_revenue 仅 CONFIRMED 状态;labor/purchase/expense 三类成本分别聚合;LEFT JOIN + COALESCE 保证 0 收入/0 成本项目也出现;每条子查询强制带 tenant_id = i.tenant_id 防止跨租户数据污染';
 
 -- ----------------------------
 -- 2. 项目 EVM 预警分布
 -- ----------------------------
 CREATE OR REPLACE VIEW pmis_view_initiation_evm AS
-SELECT initiation_id,
+SELECT tenant_id,
+       initiation_id,
        CASE
            WHEN COUNT(*) FILTER (WHERE alert_level = 'RED') > 0 THEN 'RED'::VARCHAR
            WHEN COUNT(*) FILTER (WHERE alert_level = 'YELLOW') > 0 THEN 'YELLOW'::VARCHAR
@@ -4174,54 +4291,58 @@ SELECT initiation_id,
        COUNT(*) FILTER (WHERE alert_level = 'NORMAL') AS green_count
 FROM pmis_evm_measure
 WHERE deleted = 0
-GROUP BY initiation_id;
-COMMENT ON VIEW pmis_view_initiation_evm IS '项目 EVM 预警分布视图: 按立项聚合 RED/YELLOW/NORMAL 计数,AdvancedReportService#evmReport 读取,top_alert 取最高等级';
+GROUP BY tenant_id, initiation_id;
+COMMENT ON VIEW pmis_view_initiation_evm IS '项目 EVM 预警分布视图: 按 tenant_id + 立项聚合 RED/YELLOW/NORMAL 计数,AdvancedReportService#evmReport 读取,top_alert 取最高等级';
 
 -- ----------------------------
 -- 3. 经营驾驶舱 KPI 总览视图
 -- ----------------------------
+-- 注意: 多租户场景下,此视图按 tenant_id 分组聚合,确保租户间数据隔离
 CREATE OR REPLACE VIEW pmis_view_cockpit_overview AS
 SELECT
+    tenant_id,
     (SELECT COUNT(*) FROM pmis_project_initiation
-        WHERE deleted = 0 AND stage IN ('APPROVED','IN_PROGRESS'))      AS active_projects,
+        WHERE deleted = 0 AND stage IN ('APPROVED','IN_PROGRESS')
+          AND tenant_id = t.tenant_id)                                            AS active_projects,
     (SELECT COALESCE(SUM(amount), 0) FROM pmis_finance_invoice
-        WHERE deleted = 0 AND status IN ('ISSUED','RED_REVERSED'))      AS total_invoiced,
+        WHERE deleted = 0 AND status IN ('ISSUED','RED_REVERSED')
+          AND tenant_id = t.tenant_id)                                            AS total_invoiced,
     (SELECT COALESCE(SUM(allocated_amount), 0) FROM pmis_finance_payment
-        WHERE deleted = 0 AND status = 'ALLOCATED')                     AS confirmed_revenue;
-COMMENT ON VIEW pmis_view_cockpit_overview IS '经营驾驶舱 KPI 总览视图: 单行汇总 active_projects/total_invoiced/confirmed_revenue,CockpitReportController#overview 直接读取';
+        WHERE deleted = 0 AND status = 'ALLOCATED'
+          AND tenant_id = t.tenant_id)                                           AS confirmed_revenue
+FROM (SELECT DISTINCT tenant_id FROM pmis_project_initiation WHERE deleted = 0) t;
+COMMENT ON VIEW pmis_view_cockpit_overview IS '经营驾驶舱 KPI 总览视图: 按 tenant_id 分组汇总 active_projects/total_invoiced/confirmed_revenue,单租户场景返回单行;多租户需前端按租户过滤;底层子查询都强制带 tenant_id 关联,杜绝跨租户数据污染;CockpitReportController#overview 直接读取';
 
 -- ----------------------------
 -- 4. 项目风险预警视图
 -- ----------------------------
 CREATE OR REPLACE VIEW pmis_view_risk_dashboard AS
-SELECT risk_level,
+SELECT tenant_id,
+       risk_level,
        COUNT(*) AS cnt
 FROM pmis_execution_risk
 WHERE deleted = 0 AND status IN ('OPEN','MITIGATING')
-GROUP BY risk_level;
-COMMENT ON VIEW pmis_view_risk_dashboard IS '项目风险预警视图: 按 risk_level 聚合未关闭风险数,AdvancedReportService#riskDashboard 读取';
+GROUP BY tenant_id, risk_level;
+COMMENT ON VIEW pmis_view_risk_dashboard IS '项目风险预警视图: 按 tenant_id + risk_level 聚合未关闭风险数,AdvancedReportService#riskDashboard 读取,单租户场景可按 risk_level 过滤';
 
 -- ----------------------------
 -- 5. 人效排行（按员工聚合活跃项目数 + 平均 allocation）
 -- ----------------------------
 CREATE OR REPLACE VIEW pmis_view_employee_utilization AS
-SELECT employee_id,
+SELECT tenant_id,
+       employee_id,
        COUNT(*) FILTER (WHERE status = 'ACTIVE')                    AS active_count,
        COUNT(*) FILTER (WHERE status IN ('ACTIVE','RESERVED','TRANSFERRING')) AS assigned_count,
        COALESCE(AVG(allocation) FILTER (WHERE status = 'ACTIVE'), 0) AS avg_allocation,
        COALESCE(SUM(allocation) FILTER (WHERE status = 'ACTIVE'), 0) AS total_allocation
 FROM pmis_resource_assignment
 WHERE deleted = 0
-GROUP BY employee_id;
-COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按员工聚合 active_count/assigned_count/avg_allocation,AdvancedReportService#utilizationRank 读取;Feign + try-catch 降级到 0,跨模块故障不阻塞驾驶舱';
+GROUP BY tenant_id, employee_id;
+COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按 tenant_id + 员工聚合 active_count/assigned_count/avg_allocation,AdvancedReportService#utilizationRank 读取;Feign + try-catch 降级到 0,跨模块故障不阻塞驾驶舱';
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_015__init_pmis_cockpit_views.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_016__init_pmis_security.sql
--- ====================================================================
+-- ============================ [016] init pmis security ============================
 
 -- ============================================================
 -- V1.0.0_016  权限安全体系  脚本
@@ -4248,7 +4369,7 @@ CREATE TABLE IF NOT EXISTS pmis_login_audit (
     id              BIGSERIAL PRIMARY KEY,
     username        VARCHAR(64)   NOT NULL,
     user_id         BIGINT,
-    login_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    login_at        TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     login_ip        VARCHAR(64),
     user_agent      VARCHAR(512),
     status          VARCHAR(16)   NOT NULL,
@@ -4257,9 +4378,11 @@ CREATE TABLE IF NOT EXISTS pmis_login_audit (
     mfa_success     BOOLEAN,
     trace_id        VARCHAR(64),
     tenant_id       BIGINT        NOT NULL DEFAULT 1,
-    created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT      NOT NULL DEFAULT 0
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT      NOT NULL DEFAULT 0,
+    CONSTRAINT ck_login_audit_status    CHECK (status IN ('SUCCESS','FAIL','LOCKED','MFA_REQUIRED')),
+    CONSTRAINT ck_login_audit_deleted   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_login_audit IS '登录审计日志表: 等保 2.0 要求,登录成功/失败全留存,支持溯源审计';
 COMMENT ON COLUMN pmis_login_audit.username IS '登录用户名: 失败时也可记录,便于排查撞库';
@@ -4267,17 +4390,23 @@ COMMENT ON COLUMN pmis_login_audit.user_id IS '登录用户 ID: 成功时记录,
 COMMENT ON COLUMN pmis_login_audit.login_at IS '登录时间';
 COMMENT ON COLUMN pmis_login_audit.login_ip IS '登录 IP: 用于异常登录检测';
 COMMENT ON COLUMN pmis_login_audit.user_agent IS '浏览器 UA: 用于设备指纹';
-COMMENT ON COLUMN pmis_login_audit.status IS '状态: SUCCESS 成功 / FAIL 失败 / LOCKED 锁定';
+COMMENT ON COLUMN pmis_login_audit.status IS '状态: SUCCESS 成功 / FAIL 失败 / LOCKED 锁定 / MFA_REQUIRED 待 MFA';
 COMMENT ON COLUMN pmis_login_audit.fail_reason IS '失败原因: 密码错误/账号锁定/MFA 失败等';
 COMMENT ON COLUMN pmis_login_audit.mfa_used IS '是否使用 MFA: true=已启用并使用';
 COMMENT ON COLUMN pmis_login_audit.mfa_success IS 'MFA 是否通过: NULL=未使用,true=通过,false=失败';
 COMMENT ON COLUMN pmis_login_audit.trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_login_audit.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_login_audit.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
-CREATE INDEX IF NOT EXISTS idx_login_audit_user_at ON pmis_login_audit (username, login_at DESC);
-CREATE INDEX IF NOT EXISTS idx_login_audit_ip_at   ON pmis_login_audit (login_ip, login_at DESC);
-CREATE INDEX IF NOT EXISTS idx_login_audit_status  ON pmis_login_audit (status, login_at DESC);
+-- 复合/部分索引(替代零散的 idx_login_audit_*)
+CREATE INDEX IF NOT EXISTS idx_login_audit_tenant_user_at
+    ON pmis_login_audit(tenant_id, username, login_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_login_audit_tenant_ip_at
+    ON pmis_login_audit(tenant_id, login_ip, login_at DESC)
+    WHERE deleted = 0 AND login_ip IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_login_audit_tenant_status_at
+    ON pmis_login_audit(tenant_id, status, login_at DESC)
+    WHERE deleted = 0;
 
 -- ----------------------------
 -- 3) 双因素认证
@@ -4287,15 +4416,17 @@ CREATE TABLE IF NOT EXISTS pmis_user_2fa (
     user_id         BIGINT        NOT NULL,
     mfa_type        VARCHAR(16)   NOT NULL DEFAULT 'TOTP',
     secret          VARCHAR(128)  NOT NULL,
-    binding_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_used_at    TIMESTAMP,
+    binding_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_used_at    TIMESTAMPTZ,
     backup_codes    TEXT,
     enabled         BOOLEAN       NOT NULL DEFAULT TRUE,
     tenant_id       BIGINT        NOT NULL DEFAULT 1,
-    created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT      NOT NULL DEFAULT 0,
-    UNIQUE (user_id, mfa_type, deleted)
+    CONSTRAINT uk_user_2fa_uid_type     UNIQUE (user_id, mfa_type, deleted),
+    CONSTRAINT ck_user_2fa_type         CHECK (mfa_type IN ('TOTP','SMS','EMAIL')),
+    CONSTRAINT ck_user_2fa_deleted      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_user_2fa IS '用户双因素认证表: 基于 TOTP（Time-based OTP）的双因素认证,使用 constant-time 比对防时序攻击';
 COMMENT ON COLUMN pmis_user_2fa.user_id IS '用户 ID';
@@ -4307,6 +4438,9 @@ COMMENT ON COLUMN pmis_user_2fa.backup_codes IS '备份码（密文）: 一次�
 COMMENT ON COLUMN pmis_user_2fa.enabled IS '是否启用: true=启用';
 COMMENT ON COLUMN pmis_user_2fa.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_user_2fa.deleted IS '逻辑删除: 0=未删除,1=已删除';
+CREATE INDEX IF NOT EXISTS idx_user_2fa_tenant_user
+    ON pmis_user_2fa(tenant_id, user_id)
+    WHERE deleted = 0;
 
 -- ----------------------------
 -- 4) 数据导出审计
@@ -4326,10 +4460,15 @@ CREATE TABLE IF NOT EXISTS pmis_data_export_audit (
     trace_id        VARCHAR(64),
     client_ip       VARCHAR(64),
     tenant_id       BIGINT        NOT NULL DEFAULT 1,
-    exported_at     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT      NOT NULL DEFAULT 0
+    exported_at     TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT      NOT NULL DEFAULT 0,
+    CONSTRAINT ck_dea_export_action      CHECK (export_action IN ('EXPORT','PRINT','DOWNLOAD')),
+    CONSTRAINT ck_dea_export_format      CHECK (export_format IS NULL OR export_format IN ('XLSX','CSV','PDF','JSON','XML')),
+    CONSTRAINT ck_dea_row_count_nonneg   CHECK (row_count >= 0),
+    CONSTRAINT ck_dea_file_size_nonneg   CHECK (file_size IS NULL OR file_size >= 0),
+    CONSTRAINT ck_dea_deleted            CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_data_export_audit IS '数据导出审计表: 合同/财务/薪酬等敏感数据导出全留存,@DataExportAudit 自动捕获';
 COMMENT ON COLUMN pmis_data_export_audit.user_id IS '导出用户 ID';
@@ -4347,9 +4486,13 @@ COMMENT ON COLUMN pmis_data_export_audit.client_ip IS '客户端 IP';
 COMMENT ON COLUMN pmis_data_export_audit.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_data_export_audit.exported_at IS '导出时间';
 COMMENT ON COLUMN pmis_data_export_audit.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
-CREATE INDEX IF NOT EXISTS idx_export_audit_user_at  ON pmis_data_export_audit (user_id, exported_at DESC);
-CREATE INDEX IF NOT EXISTS idx_export_audit_module   ON pmis_data_export_audit (export_module, exported_at DESC);
+-- 复合/部分索引(替代零散的 idx_export_audit_*)
+CREATE INDEX IF NOT EXISTS idx_dea_tenant_user_at
+    ON pmis_data_export_audit(tenant_id, user_id, exported_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_dea_tenant_module_at
+    ON pmis_data_export_audit(tenant_id, export_module, exported_at DESC)
+    WHERE deleted = 0;
 
 -- ----------------------------
 -- 5) 敏感操作二次确认
@@ -4364,14 +4507,17 @@ CREATE TABLE IF NOT EXISTS pmis_sensitive_operation (
     biz_id          VARCHAR(64),
     re_auth_method  VARCHAR(16)   NOT NULL,
     re_auth_token   VARCHAR(256),
-    verified_at     TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expire_at       TIMESTAMP     NOT NULL,
+    verified_at     TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expire_at       TIMESTAMPTZ   NOT NULL,
     client_ip       VARCHAR(64),
     trace_id        VARCHAR(64),
     tenant_id       BIGINT        NOT NULL DEFAULT 1,
-    created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT      NOT NULL DEFAULT 0
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT      NOT NULL DEFAULT 0,
+    CONSTRAINT ck_sensitive_op_method    CHECK (re_auth_method IN ('PASSWORD','MFA','SMS')),
+    CONSTRAINT ck_sensitive_op_expire    CHECK (expire_at >= verified_at),
+    CONSTRAINT ck_sensitive_op_deleted   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_sensitive_operation IS '敏感操作二次确认记录表: @RequireReAuth 注解触发的二次认证,token 一次性消费,防重放';
 COMMENT ON COLUMN pmis_sensitive_operation.user_id IS '操作用户 ID';
@@ -4388,9 +4534,13 @@ COMMENT ON COLUMN pmis_sensitive_operation.client_ip IS '客户端 IP';
 COMMENT ON COLUMN pmis_sensitive_operation.trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_sensitive_operation.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_sensitive_operation.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
-CREATE INDEX IF NOT EXISTS idx_sensitive_op_user_at ON pmis_sensitive_operation (user_id, verified_at DESC);
-CREATE INDEX IF NOT EXISTS idx_sensitive_op_code    ON pmis_sensitive_operation (operation_code, verified_at DESC);
+-- 复合/部分索引(替代零散的 idx_sensitive_op_*)
+CREATE INDEX IF NOT EXISTS idx_sensitive_op_tenant_user_at
+    ON pmis_sensitive_operation(tenant_id, user_id, verified_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_sensitive_op_tenant_code_at
+    ON pmis_sensitive_operation(tenant_id, operation_code, verified_at DESC)
+    WHERE deleted = 0;
 
 -- ----------------------------
 -- 6) 用户会话（单点登录/强制下线）
@@ -4400,21 +4550,25 @@ CREATE TABLE IF NOT EXISTS pmis_user_session (
     user_id         BIGINT        NOT NULL,
     session_id      VARCHAR(64)   NOT NULL,
     token_jti       VARCHAR(64),
-    login_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    last_active_at  TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expire_at       TIMESTAMP     NOT NULL,
+    login_at        TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_active_at  TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expire_at       TIMESTAMPTZ   NOT NULL,
     client_ip       VARCHAR(64),
     user_agent      VARCHAR(512),
     device_type     VARCHAR(32),
     status          VARCHAR(16)   NOT NULL DEFAULT 'ACTIVE',
-    logout_at       TIMESTAMP,
+    logout_at       TIMESTAMPTZ,
     logout_reason   VARCHAR(64),
     trace_id        VARCHAR(64),
     tenant_id       BIGINT        NOT NULL DEFAULT 1,
-    created_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT      NOT NULL DEFAULT 0,
-    UNIQUE (session_id)
+    CONSTRAINT uk_user_session_id        UNIQUE (session_id),
+    CONSTRAINT ck_user_session_status    CHECK (status IN ('ACTIVE','EXPIRED','KICKED','LOGOUT')),
+    CONSTRAINT ck_user_session_device    CHECK (device_type IS NULL OR device_type IN ('WEB','IOS','ANDROID','DESKTOP','API')),
+    CONSTRAINT ck_user_session_expire    CHECK (expire_at > login_at),
+    CONSTRAINT ck_user_session_deleted   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_user_session IS '用户活跃会话表: 单点登录/强制下线管理,SessionService 维护生命周期';
 COMMENT ON COLUMN pmis_user_session.user_id IS '用户 ID';
@@ -4426,23 +4580,23 @@ COMMENT ON COLUMN pmis_user_session.expire_at IS '过期时间';
 COMMENT ON COLUMN pmis_user_session.client_ip IS '客户端 IP';
 COMMENT ON COLUMN pmis_user_session.user_agent IS '浏览器 UA';
 COMMENT ON COLUMN pmis_user_session.device_type IS '设备类型: WEB / IOS / ANDROID / DESKTOP';
-COMMENT ON COLUMN pmis_user_session.status IS '会话状态: ACTIVE 活跃 / EXPIRED 过期 / KICKED 踢出';
+COMMENT ON COLUMN pmis_user_session.status IS '会话状态: ACTIVE 活跃 / EXPIRED 过期 / KICKED 踢出 / LOGOUT 主动登出';
 COMMENT ON COLUMN pmis_user_session.logout_at IS '登出时间';
 COMMENT ON COLUMN pmis_user_session.logout_reason IS '登出原因: USER_LOGOUT / ADMIN_KICK / EXPIRED';
 COMMENT ON COLUMN pmis_user_session.trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_user_session.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_user_session.deleted IS '逻辑删除: 0=未删除,1=已删除';
+-- 复合/部分索引(替代零散的 idx_user_session_*)
+CREATE INDEX IF NOT EXISTS idx_user_session_tenant_user_status
+    ON pmis_user_session(tenant_id, user_id, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_user_session_tenant_expire
+    ON pmis_user_session(tenant_id, expire_at)
+    WHERE deleted = 0 AND status = 'ACTIVE';
 
-CREATE INDEX IF NOT EXISTS idx_user_session_user_status ON pmis_user_session (user_id, status);
-CREATE INDEX IF NOT EXISTS idx_user_session_expire      ON pmis_user_session (expire_at);
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_016__init_pmis_security.sql
--- ====================================================================
-
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_017__init_pmis_after_sales_schema.sql
--- ====================================================================
+-- ============================ [017] init pmis after sales schema ============================
 
 -- ============================================================
 -- V1.0.0_017  项目售后管理  脚本
@@ -4458,7 +4612,7 @@ CREATE INDEX IF NOT EXISTS idx_user_session_expire      ON pmis_user_session (ex
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_warranty (
     id                  BIGSERIAL PRIMARY KEY,
-    warranty_code       VARCHAR(64)  NOT NULL UNIQUE,
+    warranty_code       VARCHAR(64)  NOT NULL,
     initiation_id       BIGINT       NOT NULL,
     contract_id         BIGINT,
     project_type        VARCHAR(32),
@@ -4468,9 +4622,9 @@ CREATE TABLE IF NOT EXISTS pmis_warranty (
     duration_months     INT          NOT NULL DEFAULT 12,
     notice_days         INT          NOT NULL DEFAULT 30,
     notice_sent         BOOLEAN      NOT NULL DEFAULT FALSE,
-    notice_sent_at      TIMESTAMP,
+    notice_sent_at      TIMESTAMPTZ,
     status              VARCHAR(16)  NOT NULL DEFAULT 'ACTIVE',
-    terminated_at       TIMESTAMP,
+    terminated_at       TIMESTAMPTZ,
     terminated_reason   VARCHAR(256),
     contact_name        VARCHAR(64),
     contact_phone       VARCHAR(32),
@@ -4478,10 +4632,17 @@ CREATE TABLE IF NOT EXISTS pmis_warranty (
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64),
     created_by          BIGINT,
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by          BIGINT,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    CONSTRAINT uk_warranty_code           UNIQUE (warranty_code, deleted),
+    CONSTRAINT ck_warranty_status         CHECK (status IN ('ACTIVE','EXPIRING','EXPIRED','TERMINATED')),
+    CONSTRAINT ck_warranty_project_type   CHECK (project_type IS NULL OR project_type IN ('FIXED_PRICE','T_M','OUTSOURCING','PRODUCT','MAINTENANCE','CONSULTING','TRAINING','OTHER')),
+    CONSTRAINT ck_warranty_duration       CHECK (duration_months >= 0),
+    CONSTRAINT ck_warranty_notice_days    CHECK (notice_days >= 0),
+    CONSTRAINT ck_warranty_end_after      CHECK (end_date >= start_date),
+    CONSTRAINT ck_warranty_deleted        CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_warranty IS '项目质保期表: 项目结项后自动创建,到期前 N 天提醒客户,status 状态机 ACTIVE/EXPIRING/EXPIRED/TERMINATED';
 COMMENT ON COLUMN pmis_warranty.warranty_code IS '质保单号: 业务唯一,如 WAR-2026-001';
@@ -4504,17 +4665,20 @@ COMMENT ON COLUMN pmis_warranty.remark IS '备注';
 COMMENT ON COLUMN pmis_warranty.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_warranty.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_warranty.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
-CREATE INDEX IF NOT EXISTS idx_warranty_initiation ON pmis_warranty(initiation_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_warranty_status_end ON pmis_warranty(status, end_date, deleted);
-CREATE INDEX IF NOT EXISTS idx_warranty_code ON pmis_warranty(warranty_code);
+-- 复合/部分索引(替代零散的 idx_warranty_*)
+CREATE INDEX IF NOT EXISTS idx_warranty_tenant_initiation
+    ON pmis_warranty(tenant_id, initiation_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_warranty_tenant_status_end
+    ON pmis_warranty(tenant_id, status, end_date)
+    WHERE deleted = 0;
 
 -- ----------------------------
 -- 2) 运维工单
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     id                  BIGSERIAL PRIMARY KEY,
-    ticket_code         VARCHAR(64)  NOT NULL UNIQUE,
+    ticket_code         VARCHAR(64)  NOT NULL,
     initiation_id       BIGINT       NOT NULL,
     warranty_id         BIGINT,
     title               VARCHAR(128) NOT NULL,
@@ -4527,12 +4691,12 @@ CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     reporter_phone      VARCHAR(32),
     assignee_id         BIGINT,
     assignee_name       VARCHAR(64),
-    accepted_at         TIMESTAMP,
-    started_at          TIMESTAMP,
-    resolved_at         TIMESTAMP,
-    closed_at           TIMESTAMP,
-    response_due_at     TIMESTAMP    NOT NULL,
-    resolve_due_at      TIMESTAMP    NOT NULL,
+    accepted_at         TIMESTAMPTZ,
+    started_at          TIMESTAMPTZ,
+    resolved_at         TIMESTAMPTZ,
+    closed_at           TIMESTAMPTZ,
+    response_due_at     TIMESTAMPTZ  NOT NULL,
+    resolve_due_at      TIMESTAMPTZ  NOT NULL,
     response_breached   BOOLEAN      NOT NULL DEFAULT FALSE,
     resolve_breached    BOOLEAN      NOT NULL DEFAULT FALSE,
     resolution_note     TEXT,
@@ -4542,10 +4706,17 @@ CREATE TABLE IF NOT EXISTS pmis_ops_ticket (
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64),
     created_by          BIGINT,
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by          BIGINT,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    CONSTRAINT uk_ops_ticket_code           UNIQUE (ticket_code, deleted),
+    CONSTRAINT ck_ops_category              CHECK (category IN ('BUG','CHANGE','CONSULT','COMPLAINT','OTHER')),
+    CONSTRAINT ck_ops_priority              CHECK (priority IN ('P1','P2','P3','P4')),
+    CONSTRAINT ck_ops_status                CHECK (status IN ('OPEN','ACCEPTED','IN_PROGRESS','RESOLVED','CLOSED','CANCELLED')),
+    CONSTRAINT ck_ops_customer_score        CHECK (customer_score IS NULL OR customer_score BETWEEN 1 AND 5),
+    CONSTRAINT ck_ops_due_order             CHECK (resolve_due_at >= response_due_at),
+    CONSTRAINT ck_ops_deleted               CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_ops_ticket IS '运维工单表: 项目售后全流程闭环,SLA 跟踪（P1 4h/P2 1d/P3 3d/P4 7d）';
 COMMENT ON COLUMN pmis_ops_ticket.ticket_code IS '工单号: 业务唯一,如 TK-2026-001';
@@ -4576,20 +4747,29 @@ COMMENT ON COLUMN pmis_ops_ticket.file_ids IS '附件 ID 列表: 引用 pmis_fil
 COMMENT ON COLUMN pmis_ops_ticket.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_ops_ticket.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_ops_ticket.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
-CREATE INDEX IF NOT EXISTS idx_ops_initiation ON pmis_ops_ticket(initiation_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_ops_warranty ON pmis_ops_ticket(warranty_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_ops_status ON pmis_ops_ticket(status, deleted);
-CREATE INDEX IF NOT EXISTS idx_ops_assignee_status ON pmis_ops_ticket(assignee_id, status, deleted);
-CREATE INDEX IF NOT EXISTS idx_ops_priority ON pmis_ops_ticket(priority, status, deleted);
-CREATE INDEX IF NOT EXISTS idx_ops_code ON pmis_ops_ticket(ticket_code);
+-- 复合/部分索引(替代零散的 idx_ops_*)
+CREATE INDEX IF NOT EXISTS idx_ops_tenant_initiation
+    ON pmis_ops_ticket(tenant_id, initiation_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ops_tenant_warranty
+    ON pmis_ops_ticket(tenant_id, warranty_id)
+    WHERE deleted = 0 AND warranty_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_ops_tenant_status
+    ON pmis_ops_ticket(tenant_id, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ops_tenant_assignee_status
+    ON pmis_ops_ticket(tenant_id, assignee_id, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ops_tenant_priority_status
+    ON pmis_ops_ticket(tenant_id, priority, status)
+    WHERE deleted = 0;
 
 -- ----------------------------
 -- 3) 满意度评价
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS pmis_satisfaction (
     id                  BIGSERIAL PRIMARY KEY,
-    survey_code         VARCHAR(64)  NOT NULL UNIQUE,
+    survey_code         VARCHAR(64)  NOT NULL,
     initiation_id       BIGINT       NOT NULL,
     ticket_id           BIGINT,
     warranty_id         BIGINT,
@@ -4604,16 +4784,24 @@ CREATE TABLE IF NOT EXISTS pmis_satisfaction (
     anonymous           BOOLEAN      NOT NULL DEFAULT FALSE,
     evaluator_id        BIGINT,
     evaluator_name      VARCHAR(64),
-    evaluated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    evaluated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     follow_up           BOOLEAN      NOT NULL DEFAULT FALSE,
     follow_up_note      VARCHAR(512),
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64),
     created_by          BIGINT,
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by          BIGINT,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    CONSTRAINT uk_satisfaction_code       UNIQUE (survey_code, deleted),
+    CONSTRAINT ck_satisfaction_level      CHECK (level IN ('VERY_SATISFIED','SATISFIED','NEUTRAL','UNSATISFIED','VERY_UNSATISFIED')),
+    CONSTRAINT ck_satisfaction_score      CHECK (score BETWEEN 1 AND 5),
+    CONSTRAINT ck_satisfaction_pro        CHECK (professionalism IS NULL OR professionalism BETWEEN 1 AND 5),
+    CONSTRAINT ck_satisfaction_timeliness CHECK (timeliness      IS NULL OR timeliness      BETWEEN 1 AND 5),
+    CONSTRAINT ck_satisfaction_quality    CHECK (quality         IS NULL OR quality         BETWEEN 1 AND 5),
+    CONSTRAINT ck_satisfaction_attitude   CHECK (attitude        IS NULL OR attitude        BETWEEN 1 AND 5),
+    CONSTRAINT ck_satisfaction_deleted    CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_satisfaction IS '服务满意度评价表: 工单关闭/质保期结束可触发,4 维度评分（专业/及时/质量/态度）';
 COMMENT ON COLUMN pmis_satisfaction.survey_code IS '评价单号: 业务唯一,如 SAT-2026-001';
@@ -4621,7 +4809,7 @@ COMMENT ON COLUMN pmis_satisfaction.initiation_id IS '所属立项 ID';
 COMMENT ON COLUMN pmis_satisfaction.ticket_id IS '关联工单 ID: 工单触发的评价';
 COMMENT ON COLUMN pmis_satisfaction.warranty_id IS '关联质保期 ID: 质保期触发的评价';
 COMMENT ON COLUMN pmis_satisfaction.score IS '总评分: 1-5';
-COMMENT ON COLUMN pmis_satisfaction.level IS '评价等级: VERY_SATISFIED 非常满意 / SATISFIED 满意 / NEUTRAL 一般 / UNSATISFIED 不满意';
+COMMENT ON COLUMN pmis_satisfaction.level IS '评价等级: VERY_SATISFIED 非常满意 / SATISFIED 满意 / NEUTRAL 一般 / UNSATISFIED 不满意 / VERY_UNSATISFIED 非常不满意';
 COMMENT ON COLUMN pmis_satisfaction.professionalism IS '专业度评分: 1-5';
 COMMENT ON COLUMN pmis_satisfaction.timeliness IS '及时性评分: 1-5';
 COMMENT ON COLUMN pmis_satisfaction.quality IS '质量评分: 1-5';
@@ -4637,19 +4825,20 @@ COMMENT ON COLUMN pmis_satisfaction.follow_up_note IS '回访记录';
 COMMENT ON COLUMN pmis_satisfaction.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_satisfaction.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_satisfaction.deleted IS '逻辑删除: 0=未删除,1=已删除';
+-- 复合/部分索引(替代零散的 idx_satisfaction_*)
+CREATE INDEX IF NOT EXISTS idx_satisfaction_tenant_initiation
+    ON pmis_satisfaction(tenant_id, initiation_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_satisfaction_tenant_ticket
+    ON pmis_satisfaction(tenant_id, ticket_id)
+    WHERE deleted = 0 AND ticket_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_satisfaction_tenant_level
+    ON pmis_satisfaction(tenant_id, level)
+    WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_satisfaction_initiation ON pmis_satisfaction(initiation_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_satisfaction_ticket ON pmis_satisfaction(ticket_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_satisfaction_level ON pmis_satisfaction(level, deleted);
-CREATE INDEX IF NOT EXISTS idx_satisfaction_code ON pmis_satisfaction(survey_code);
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_017__init_pmis_after_sales_schema.sql
--- ====================================================================
-
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_018__init_pmis_smart_p4_2_schema.sql
--- ====================================================================
+-- ============================ [018] init pmis smart p4 2 schema ============================
 
 -- ============================================================
 -- V1.0.0_018  智能化升级 P4-1/P4-2/P4-3  脚本
@@ -4682,23 +4871,31 @@ CREATE TABLE IF NOT EXISTS pmis_alert_dispatch (
     target_role         VARCHAR(64)  NOT NULL,
     target_user_ids     VARCHAR(1024),
     push_channels       VARCHAR(64)  NOT NULL DEFAULT 'IN_APP',
-    dispatched_at       TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    dispatched_at       TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     dispatched_by       VARCHAR(64),
     status              VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
-    sent_at             TIMESTAMP,
+    sent_at             TIMESTAMPTZ,
     fail_reason         VARCHAR(512),
     retry_count         INT          NOT NULL DEFAULT 0,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64),
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    -- 枚举约束
+    CONSTRAINT ck_pad_alert_type       CHECK (alert_type  IN ('BUDGET','EVM','SLA','RISK','PROFIT','BENCH','UTILIZATION','OTHER')),
+    CONSTRAINT ck_pad_alert_level      CHECK (alert_level IN ('YELLOW','RED')),
+    CONSTRAINT ck_pad_source_type      CHECK (source_type IN ('PROJECT','EVM','TICKET','BENCH','CONFIG','OTHER')),
+    CONSTRAINT ck_pad_push_channels    CHECK (push_channels ~ '^(IN_APP|EMAIL|SMS|WECHAT)(,(IN_APP|EMAIL|SMS|WECHAT))*$'),
+    CONSTRAINT ck_pad_status_enum      CHECK (status IN ('PENDING','SENT','FAILED','RETRYING')),
+    CONSTRAINT ck_pad_retry_count      CHECK (retry_count >= 0 AND retry_count <= 10),
+    CONSTRAINT ck_pad_deleted          CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE  pmis_alert_dispatch IS '预警分级推送表: 黄/红不同层级触达,失败自动重试（最大 3 次）';
+COMMENT ON TABLE  pmis_alert_dispatch IS '预警分级推送表: 黄/红不同层级触达,失败自动重试（最大 3 次,硬上限 10 次）';
 COMMENT ON COLUMN pmis_alert_dispatch.alert_code IS '预警编码: 业务唯一,如 ALERT-2026-001';
-COMMENT ON COLUMN pmis_alert_dispatch.alert_type IS '预警类型: BUDGET 预算 / EVM 挣值 / SLA 工单 / RISK 风险 / PROFIT 利润';
+COMMENT ON COLUMN pmis_alert_dispatch.alert_type IS '预警类型: BUDGET 预算 / EVM 挣值 / SLA 工单 / RISK 风险 / PROFIT 利润 / BENCH 闲置 / UTILIZATION 利用率 / OTHER 其他';
 COMMENT ON COLUMN pmis_alert_dispatch.alert_level IS '预警等级: YELLOW 黄色 / RED 红色';
-COMMENT ON COLUMN pmis_alert_dispatch.source_type IS '触发源类型: PROJECT/EVM/TICKET 等';
+COMMENT ON COLUMN pmis_alert_dispatch.source_type IS '触发源类型: PROJECT/EVM/TICKET/BENCH/CONFIG/OTHER';
 COMMENT ON COLUMN pmis_alert_dispatch.source_id IS '触发源业务 ID';
 COMMENT ON COLUMN pmis_alert_dispatch.title IS '预警标题';
 COMMENT ON COLUMN pmis_alert_dispatch.content IS '预警内容（已渲染的模板）';
@@ -4710,16 +4907,23 @@ COMMENT ON COLUMN pmis_alert_dispatch.dispatched_by IS '派发人: 定时任务 
 COMMENT ON COLUMN pmis_alert_dispatch.status IS '发送状态: PENDING 待发送 / SENT 已发送 / FAILED 失败 / RETRYING 重试中';
 COMMENT ON COLUMN pmis_alert_dispatch.sent_at IS '发送成功时间';
 COMMENT ON COLUMN pmis_alert_dispatch.fail_reason IS '失败原因';
-COMMENT ON COLUMN pmis_alert_dispatch.retry_count IS '重试次数: 最大 3 次';
+COMMENT ON COLUMN pmis_alert_dispatch.retry_count IS '重试次数: 业务最大 3 次,硬上限 10 次';
 COMMENT ON COLUMN pmis_alert_dispatch.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_alert_dispatch.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_alert_dispatch.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
-CREATE INDEX IF NOT EXISTS idx_alert_dispatch_level   ON pmis_alert_dispatch(alert_level, deleted);
-CREATE INDEX IF NOT EXISTS idx_alert_dispatch_type    ON pmis_alert_dispatch(alert_type, deleted);
-CREATE INDEX IF NOT EXISTS idx_alert_dispatch_status  ON pmis_alert_dispatch(status, deleted);
-CREATE INDEX IF NOT EXISTS idx_alert_dispatch_source  ON pmis_alert_dispatch(source_type, source_id);
-CREATE INDEX IF NOT EXISTS idx_alert_dispatch_target  ON pmis_alert_dispatch(target_role, deleted);
+-- 复合/部分索引(替代零散的单列索引)
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_level_status
+    ON pmis_alert_dispatch(tenant_id, alert_level, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_type_dispatched
+    ON pmis_alert_dispatch(tenant_id, alert_type, dispatched_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_source
+    ON pmis_alert_dispatch(tenant_id, source_type, source_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pad_tenant_target
+    ON pmis_alert_dispatch(tenant_id, target_role)
+    WHERE deleted = 0;
 
 -- ----------------------------
 -- 3) 每日对账表
@@ -4737,40 +4941,48 @@ CREATE TABLE IF NOT EXISTS pmis_reconcile_daily (
     detail              TEXT,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64),
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT     NOT NULL DEFAULT 0,
+    -- 枚举约束
+    CONSTRAINT ck_prd_reconcile_type    CHECK (reconcile_type IN ('COST','REVENUE','PAYMENT','INVOICE','TIMESHEET','PROFIT','BENCH','BUDGET')),
+    CONSTRAINT ck_prd_status_enum       CHECK (status IN ('OK','WARN','FAIL')),
+    -- 数值与比例范围
+    CONSTRAINT ck_prd_diff_amount_eq    CHECK (diff_amount = actual_amount - expected_amount),
+    CONSTRAINT ck_prd_diff_pct_range    CHECK (diff_pct >= -1 AND diff_pct <= 1),
+    CONSTRAINT ck_prd_deleted           CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_reconcile_daily IS '每日自动对账表: 成本/收入/回款/开票 跨模块校验,ReconcileServiceImpl 执行';
 COMMENT ON COLUMN pmis_reconcile_daily.reconcile_date IS '对账日期: 每日 02:00 触发';
-COMMENT ON COLUMN pmis_reconcile_daily.reconcile_type IS '对账类型: COST 成本 / REVENUE 收入 / PAYMENT 回款 / INVOICE 开票 / TIMESHEET 工时 / PROFIT 利润';
+COMMENT ON COLUMN pmis_reconcile_daily.reconcile_type IS '对账类型: COST 成本 / REVENUE 收入 / PAYMENT 回款 / INVOICE 开票 / TIMESHEET 工时 / PROFIT 利润 / BENCH 闲置 / BUDGET 预算';
 COMMENT ON COLUMN pmis_reconcile_daily.initiation_id IS '所属立项 ID: 可空,NULL 表示全局维度';
 COMMENT ON COLUMN pmis_reconcile_daily.expected_amount IS '应计金额(元)';
 COMMENT ON COLUMN pmis_reconcile_daily.actual_amount IS '实计金额(元)';
 COMMENT ON COLUMN pmis_reconcile_daily.diff_amount IS '差异金额(元) = actual - expected';
-COMMENT ON COLUMN pmis_reconcile_daily.diff_pct IS '差异比例: 0.05=5%';
-COMMENT ON COLUMN pmis_reconcile_daily.status IS '对账状态: OK 一致 / WARN 警告（diff_pct < 5%）/ FAIL 失败（diff_pct >= 5%）';
+COMMENT ON COLUMN pmis_reconcile_daily.diff_pct IS '差异比例: -1 ~ 1,例如 0.05=5%';
+COMMENT ON COLUMN pmis_reconcile_daily.status IS '对账状态: OK 一致 / WARN 警告（|diff_pct| < 5%）/ FAIL 失败（|diff_pct| >= 5%）';
 COMMENT ON COLUMN pmis_reconcile_daily.detail IS '对账明细 JSON: 列出差异项';
 COMMENT ON COLUMN pmis_reconcile_daily.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_reconcile_daily.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_reconcile_daily.deleted IS '逻辑删除: 0=未删除,1=已删除';
-
-CREATE INDEX IF NOT EXISTS idx_reconcile_daily_date    ON pmis_reconcile_daily(reconcile_date, deleted);
-CREATE INDEX IF NOT EXISTS idx_reconcile_daily_type    ON pmis_reconcile_daily(reconcile_type, deleted);
-CREATE INDEX IF NOT EXISTS idx_reconcile_daily_init    ON pmis_reconcile_daily(initiation_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_reconcile_daily_status  ON pmis_reconcile_daily(status, deleted);
+-- 复合/部分索引(替代零散的单列索引)
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_date_type
+    ON pmis_reconcile_daily(tenant_id, reconcile_date DESC, reconcile_type)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_init_date
+    ON pmis_reconcile_daily(tenant_id, initiation_id, reconcile_date DESC)
+    WHERE deleted = 0 AND initiation_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_status_date
+    ON pmis_reconcile_daily(tenant_id, status, reconcile_date DESC)
+    WHERE deleted = 0 AND status IN ('WARN','FAIL');
 
 -- 唯一约束：每天每个维度只能有一条
-CREATE UNIQUE INDEX IF NOT EXISTS uk_reconcile_daily
-    ON pmis_reconcile_daily(reconcile_date, reconcile_type, COALESCE(initiation_id, 0), deleted);
+CREATE UNIQUE INDEX IF NOT EXISTS uk_prd_tenant_date_type_init
+    ON pmis_reconcile_daily(tenant_id, reconcile_date, reconcile_type, COALESCE(initiation_id, 0), deleted);
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_018__init_pmis_smart_p4_2_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_019__init_pmis_alert_thresholds.sql
--- ====================================================================
+-- ============================ [019] init pmis alert thresholds ============================
 
 -- ====================================================================
 -- 预警阈值配置（pmis_config，group=alert）
@@ -4809,13 +5021,9 @@ ON CONFLICT (config_group, config_key, deleted) DO UPDATE
         description   = EXCLUDED.description,
         updated_at    = CURRENT_TIMESTAMP;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_019__init_pmis_alert_thresholds.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_020__init_pmis_billable_utilization_snapshot.sql
--- ====================================================================
+-- ============================ [020] init pmis billable utilization snapshot ============================
 
 -- ====================================================================
 -- V1.0.0_020  可计费利用率快照表
@@ -4850,26 +5058,43 @@ CREATE TABLE IF NOT EXISTS pmis_billable_utilization_snapshot (
     grade            VARCHAR(16)  NOT NULL DEFAULT 'NORMAL',        -- EXCELLENT/GOOD/NORMAL/WARN/CRITICAL
     range_from       DATE         NOT NULL,
     range_to         DATE         NOT NULL,
-    snapshot_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    snapshot_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     source           VARCHAR(16)  NOT NULL DEFAULT 'CRONJOB',    -- CRONJOB / MANUAL / RETRO
-    tenant_id        BIGINT       DEFAULT 0,
+    tenant_id        BIGINT       DEFAULT 1,
     deleted          SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uq_billable_period_emp UNIQUE (period, employee_id, deleted)
+    -- 数据完整性约束
+    CONSTRAINT uq_billable_period_emp UNIQUE (period, employee_id, deleted),
+    CONSTRAINT ck_bill_period_fmt     CHECK (period ~ '^\d{4}-(0[1-9]|1[0-2])$'),
+    CONSTRAINT ck_bill_grade_enum     CHECK (grade IN ('EXCELLENT','GOOD','NORMAL','WARN','CRITICAL')),
+    CONSTRAINT ck_bill_source_enum    CHECK (source IN ('CRONJOB','MANUAL','RETRO')),
+    CONSTRAINT ck_bill_hours_nonneg   CHECK (total_hours >= 0 AND billable_hours >= 0 AND overtime_hours >= 0
+                                              AND leave_hours >= 0 AND training_hours >= 0 AND bench_hours >= 0),
+    CONSTRAINT ck_bill_billable_le_total CHECK (billable_hours <= total_hours),
+    CONSTRAINT ck_bill_util_range     CHECK (utilization_pct >= 0 AND utilization_pct <= 1),
+    CONSTRAINT ck_bill_range_order    CHECK (range_to >= range_from),
+    CONSTRAINT ck_bill_level_fmt      CHECK (level_code IS NULL OR level_code ~ '^L([1-9]|1[0-8])$'),
+    CONSTRAINT ck_bill_deleted        CHECK (deleted IN (0, 1))
 );
 
-CREATE INDEX IF NOT EXISTS idx_billable_period
-    ON pmis_billable_utilization_snapshot (period, deleted);
-
-CREATE INDEX IF NOT EXISTS idx_billable_department
-    ON pmis_billable_utilization_snapshot (department, period)
+-- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0 优化)
+CREATE INDEX IF NOT EXISTS idx_billable_tenant_period
+    ON pmis_billable_utilization_snapshot (tenant_id, period DESC)
     WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_billable_grade
-    ON pmis_billable_utilization_snapshot (grade, period)
+CREATE INDEX IF NOT EXISTS idx_billable_tenant_dept_period
+    ON pmis_billable_utilization_snapshot (tenant_id, department, period)
     WHERE deleted = 0;
 
-CREATE INDEX IF NOT EXISTS idx_billable_range
-    ON pmis_billable_utilization_snapshot (range_from, range_to)
+CREATE INDEX IF NOT EXISTS idx_billable_tenant_grade_period
+    ON pmis_billable_utilization_snapshot (tenant_id, grade, period)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_billable_tenant_level_period
+    ON pmis_billable_utilization_snapshot (tenant_id, level_code, period)
+    WHERE deleted = 0;
+
+CREATE INDEX IF NOT EXISTS idx_billable_tenant_range
+    ON pmis_billable_utilization_snapshot (tenant_id, range_from, range_to)
     WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_billable_utilization_snapshot IS '可计费利用率快照表: cronjob 每日计算并持久化,驾驶舱/排行榜/趋势分析均读快照,避免实时聚合大表';
@@ -4893,13 +5118,9 @@ COMMENT ON COLUMN pmis_billable_utilization_snapshot.source IS '数据来源: SC
 COMMENT ON COLUMN pmis_billable_utilization_snapshot.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_billable_utilization_snapshot.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_020__init_pmis_billable_utilization_snapshot.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_021__register_pmis_smart_jobs.sql
--- ====================================================================
+-- ============================ [021] register pmis smart jobs ============================
 
 -- ============================================================
 -- V1.0.0_021  智能化升级 P5/P6/P7  定时任务注册
@@ -4954,13 +5175,9 @@ VALUES (
     '每日 03:00 扫描即将到期/已过期质保期 + 运维工单 SLA 违约',
     1
 ) ON CONFLICT DO NOTHING;
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_021__register_pmis_smart_jobs.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_022__init_pmis_alert_templates.sql
--- ====================================================================
+-- ============================ [022] init pmis alert templates ============================
 
 -- ============================================================
 -- V1.0.0_022  智能化升级 P5  消息模板（预警中心）
@@ -5031,13 +5248,9 @@ SELECT 'ALERT_OTHER_YELLOW', 'IN_APP',
        'IN_APP', 'PMIS', 'ENABLED', '黄色预警通用兜底模板', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_OTHER_YELLOW' AND channel = 'IN_APP');
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_022__init_pmis_alert_templates.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_023__init_pmis_flow_engine.sql
--- ====================================================================
+-- ============================ [023] init pmis flow engine ============================
 
 -- =====================================================
 -- PMIS 自建工作流引擎 DDL（对标 Warm-Flow 7 表极简设计）
@@ -5071,13 +5284,21 @@ CREATE TABLE IF NOT EXISTS pmis_flow_definition(
     description        VARCHAR(512),
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id  VARCHAR(64),
-    version            INTEGER      NOT NULL DEFAULT 0
+    version            INTEGER      NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfd_status_enum       CHECK (status IN ('ENABLED','DISABLED')),
+    CONSTRAINT ck_pfd_model_value       CHECK (model_value IN ('CLASSICS','MIMIC')),
+    CONSTRAINT ck_pfd_form_custom       CHECK (form_custom IN ('Y','N')),
+    CONSTRAINT ck_pfd_activity_status   CHECK (activity_status IN (0, 1)),
+    CONSTRAINT ck_pfd_is_publish        CHECK (is_publish IN (0, 1, 9)),
+    CONSTRAINT ck_pfd_version_nonneg    CHECK (version >= 0),
+    CONSTRAINT ck_pfd_deleted           CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_flow_definition IS '流程定义表: 记录流程的整体信息(编码/名称/版本/表单路径/模型 JSON)';
@@ -5098,12 +5319,21 @@ COMMENT ON COLUMN pmis_flow_definition.description IS '流程描述';
 COMMENT ON COLUMN pmis_flow_definition.status IS '状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_definition.deleted IS '逻辑删除: 0=未删除,1=已删除';
 COMMENT ON COLUMN pmis_flow_definition.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
+COMMENT ON COLUMN pmis_flow_definition.tenant_id IS '租户 ID: 多租户隔离';
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_pfd_code_version ON pmis_flow_definition(flow_code, version, tenant_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pfd_category    ON pmis_flow_definition(category);
-CREATE INDEX IF NOT EXISTS idx_pfd_publish     ON pmis_flow_definition(is_publish);
-CREATE INDEX IF NOT EXISTS idx_pfd_tenant      ON pmis_flow_definition(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_pfd_status      ON pmis_flow_definition(status) WHERE deleted = 0;
+-- 复合/部分索引(替代零散的单列索引)
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfd_tenant_code_version
+    ON pmis_flow_definition(tenant_id, flow_code, version)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfd_tenant_category
+    ON pmis_flow_definition(tenant_id, category)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfd_tenant_publish
+    ON pmis_flow_definition(tenant_id, is_publish)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfd_tenant_status
+    ON pmis_flow_definition(tenant_id, status)
+    WHERE deleted = 0;
 
 -- -----------------------------------------------------
 -- 2. 流程节点表（对标 Warm-Flow flow_node）
@@ -5124,12 +5354,16 @@ CREATE TABLE IF NOT EXISTS pmis_flow_node(
     ext                VARCHAR(1024),
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
+    provider_trace_id  VARCHAR(64),
+    -- 数据完整性约束
+    CONSTRAINT ck_pfn_status_enum       CHECK (status IN ('ENABLED','DISABLED')),
+    CONSTRAINT ck_pfn_node_type         CHECK (node_type IN (0, 1, 2, 3, 4, 5, 6, 7)),
+    CONSTRAINT ck_pfn_deleted           CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_flow_node IS '流程节点表: 流程中的各个节点(开始/审批/会签/网关/结束)';
@@ -5145,11 +5379,18 @@ COMMENT ON COLUMN pmis_flow_node.skip_list IS '节点跳转路由集合 JSON';
 COMMENT ON COLUMN pmis_flow_node.ext IS '扩展字段 JSON';
 COMMENT ON COLUMN pmis_flow_node.status IS '状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_node.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN pmis_flow_node.tenant_id IS '租户 ID: 多租户隔离';
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_pfn_def_code ON pmis_flow_node(definition_id, node_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pfn_def     ON pmis_flow_node(definition_id);
-CREATE INDEX IF NOT EXISTS idx_pfn_code    ON pmis_flow_node(flow_code);
-CREATE INDEX IF NOT EXISTS idx_pfn_type    ON pmis_flow_node(node_type);
+-- 复合/部分索引(替代零散的单列索引)
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfn_tenant_def_code
+    ON pmis_flow_node(tenant_id, definition_id, node_code)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfn_tenant_def_type
+    ON pmis_flow_node(tenant_id, definition_id, node_type)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfn_tenant_code
+    ON pmis_flow_node(tenant_id, flow_code)
+    WHERE deleted = 0;
 
 -- -----------------------------------------------------
 -- 3. 节点跳转关联表（对标 Warm-Flow flow_skip）
@@ -5170,12 +5411,17 @@ CREATE TABLE IF NOT EXISTS pmis_flow_skip(
     skip_list          TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
+    provider_trace_id  VARCHAR(64),
+    -- 数据完整性约束
+    CONSTRAINT ck_pfs_skip_type         CHECK (skip_type IN ('PASS','REJECT','FORWARD','BACK')),
+    CONSTRAINT ck_pfs_status_enum       CHECK (status IN ('ENABLED','DISABLED')),
+    CONSTRAINT ck_pfs_next_node_type    CHECK (next_node_type IS NULL OR next_node_type IN (0, 1, 2, 3, 4, 5, 6, 7)),
+    CONSTRAINT ck_pfs_deleted           CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_flow_skip IS '节点跳转关联表: 节点之间的有向边,顺序流 / 条件分支 / 退回';
@@ -5191,10 +5437,15 @@ COMMENT ON COLUMN pmis_flow_skip.coordinate_next IS '下一节点坐标 JSON';
 COMMENT ON COLUMN pmis_flow_skip.skip_list IS '跳转路由集合 JSON';
 COMMENT ON COLUMN pmis_flow_skip.status IS '状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_skip.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN pmis_flow_skip.tenant_id IS '租户 ID: 多租户隔离';
 
-CREATE INDEX IF NOT EXISTS idx_pfs_def    ON pmis_flow_skip(definition_id);
-CREATE INDEX IF NOT EXISTS idx_pfs_code   ON pmis_flow_skip(flow_code);
-CREATE INDEX IF NOT EXISTS idx_pfs_type   ON pmis_flow_skip(skip_type);
+-- 复合/部分索引(替代零散的单列索引)
+CREATE INDEX IF NOT EXISTS idx_pfs_tenant_def_next
+    ON pmis_flow_skip(tenant_id, definition_id, next_node_code)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfs_tenant_def_type
+    ON pmis_flow_skip(tenant_id, definition_id, skip_type)
+    WHERE deleted = 0;
 
 -- -----------------------------------------------------
 -- 4. 流程实例表（对标 Warm-Flow flow_instance）
@@ -5218,17 +5469,24 @@ CREATE TABLE IF NOT EXISTS pmis_flow_instance(
     variable           TEXT,
     flow_status        VARCHAR(32)  NOT NULL DEFAULT 'RUNNING',
     activity_status    SMALLINT     NOT NULL DEFAULT 1,
-    start_at           TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    end_at             TIMESTAMP,
+    start_at           TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    end_at             TIMESTAMPTZ,
     duration_ms        BIGINT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
+    provider_trace_id  VARCHAR(64),
+    -- 数据完整性约束
+    CONSTRAINT ck_pfi_flow_status       CHECK (flow_status IN ('RUNNING','SUSPENDED','COMPLETED','TERMINATED','REJECTED','DRAFT')),
+    CONSTRAINT ck_pfi_activity_status   CHECK (activity_status IN (0, 1)),
+    CONSTRAINT ck_pfi_status_enum       CHECK (status IN ('ENABLED','DISABLED')),
+    CONSTRAINT ck_pfi_end_after_start   CHECK (end_at IS NULL OR end_at >= start_at),
+    CONSTRAINT ck_pfi_duration_nonneg   CHECK (duration_ms IS NULL OR duration_ms >= 0),
+    CONSTRAINT ck_pfi_deleted           CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_flow_instance IS '流程实例表: 每次启动流程生成一条实例记录,记录审批全过程';
@@ -5252,17 +5510,30 @@ COMMENT ON COLUMN pmis_flow_instance.end_at IS '结束时间';
 COMMENT ON COLUMN pmis_flow_instance.duration_ms IS '总耗时(毫秒)';
 COMMENT ON COLUMN pmis_flow_instance.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_instance.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN pmis_flow_instance.tenant_id IS '租户 ID: 多租户隔离';
 
 -- 说明：早期版本使用 pfi_ 前缀与 V1.0.0_012 (pmis_finance_invoice) 的
 --      索引同名 (idx_pfi_status),触发"关系已存在"报错。改为
 --      flow_instance_ 前缀以彻底避免跨模块索引名冲突。
-CREATE UNIQUE INDEX IF NOT EXISTS uk_flow_instance_biz ON pmis_flow_instance(business_type, business_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_flow_instance_def         ON pmis_flow_instance(definition_id);
-CREATE INDEX IF NOT EXISTS idx_flow_instance_code        ON pmis_flow_instance(flow_code);
-CREATE INDEX IF NOT EXISTS idx_flow_instance_status      ON pmis_flow_instance(flow_status);
-CREATE INDEX IF NOT EXISTS idx_flow_instance_initiator   ON pmis_flow_instance(initiator_id);
-CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant      ON pmis_flow_instance(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_flow_instance_start       ON pmis_flow_instance(start_at);
+-- 复合/部分索引(替代零散的单列索引)
+CREATE UNIQUE INDEX IF NOT EXISTS uk_flow_instance_tenant_biz
+    ON pmis_flow_instance(tenant_id, business_type, business_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_def
+    ON pmis_flow_instance(tenant_id, definition_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_code_status
+    ON pmis_flow_instance(tenant_id, flow_code, flow_status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_status
+    ON pmis_flow_instance(tenant_id, flow_status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_initiator
+    ON pmis_flow_instance(tenant_id, initiator_id, start_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant_start
+    ON pmis_flow_instance(tenant_id, start_at DESC)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 5. 待办任务运行态表 pmis_flow_run_task
@@ -5316,16 +5587,16 @@ CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     comment            TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    claim_at           TIMESTAMP,
-    finish_at          TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    claim_at           TIMESTAMPTZ,
+    finish_at          TIMESTAMPTZ,
     duration_ms        BIGINT,
-    due_at             TIMESTAMP,
+    due_at             TIMESTAMPTZ,
     priority           INT          NOT NULL DEFAULT 50,
     reminder_count     INT          NOT NULL DEFAULT 0,
-    last_reminded_at   TIMESTAMP,
+    last_reminded_at   TIMESTAMPTZ,
     sla_action         VARCHAR(32),
     sla_escalated      SMALLINT     NOT NULL DEFAULT 0,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
@@ -5336,10 +5607,21 @@ CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     -- 乐观锁版本号(GAP-P1: 会签并发安全,MyBatis-Plus @Version 自动维护)
     version            INT          NOT NULL DEFAULT 0,
     -- 数据完整性约束
-    CONSTRAINT ck_pfrt_vote_pass_rate  CHECK (vote_pass_rate >= 0 AND vote_pass_rate <= 1),
-    CONSTRAINT ck_pfrt_priority_range  CHECK (priority >= 1 AND priority <= 100),
-    CONSTRAINT ck_pfrt_approve_nonneg  CHECK (approve_count >= 0 AND approve_finished >= 0),
-    CONSTRAINT ck_pfrt_approve_bounded CHECK (approve_finished <= approve_count),
+    CONSTRAINT ck_pfrt_assignee_type    CHECK (assignee_type IN ('USER','ROLE','DEPT','SPEL','FOREACH_PARALLEL')),
+    CONSTRAINT ck_pfrt_perform_type     CHECK (perform_type  IN ('OR','SEQUENTIAL','PARALLEL','VOTE','FOREACH_PARALLEL')),
+    CONSTRAINT ck_pfrt_task_status      CHECK (task_status   IN ('PENDING','CLAIMED','COMPLETED','REJECTED','SKIPPED','CANCELLED','TIMEOUT','FROZEN')),
+    CONSTRAINT ck_pfrt_status_enum      CHECK (status        IN ('ENABLED','DISABLED')),
+    CONSTRAINT ck_pfrt_node_type        CHECK (node_type     IN (0, 1, 2, 3, 4, 5, 6, 7)),
+    CONSTRAINT ck_pfrt_sla_action       CHECK (sla_action IS NULL OR sla_action IN ('REMIND','ESCALATE','AUTO_PASS','AUTO_REJECT')),
+    CONSTRAINT ck_pfrt_sla_escalated    CHECK (sla_escalated IN (0, 1)),
+    CONSTRAINT ck_pfrt_vote_pass_rate   CHECK (vote_pass_rate >= 0 AND vote_pass_rate <= 1),
+    CONSTRAINT ck_pfrt_priority_range   CHECK (priority >= 1 AND priority <= 100),
+    CONSTRAINT ck_pfrt_approve_nonneg   CHECK (approve_count >= 0 AND approve_finished >= 0),
+    CONSTRAINT ck_pfrt_approve_bounded  CHECK (approve_finished <= approve_count),
+    CONSTRAINT ck_pfrt_reminder_nonneg  CHECK (reminder_count >= 0),
+    CONSTRAINT ck_pfrt_version_nonneg   CHECK (version >= 0),
+    CONSTRAINT ck_pfrt_duration_nonneg  CHECK (duration_ms IS NULL OR duration_ms >= 0),
+    CONSTRAINT ck_pfrt_deleted          CHECK (deleted IN (0, 1)),
     -- FOREACH 唯一性:同一实例+节点+迭代元素只能有一条未删除 task
     CONSTRAINT uk_pfrt_foreach_iter
         UNIQUE (instance_id, node_code, iter_var)
@@ -5383,18 +5665,30 @@ COMMENT ON COLUMN pmis_flow_run_task.sla_escalated IS 'P1-6: 是否已升级(0 �
 COMMENT ON COLUMN pmis_flow_run_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
 COMMENT ON COLUMN pmis_flow_run_task.iter_var IS 'GAP-P2-10: FOREACH 当前迭代元素值(循环节点每条独立 task 对应的集合元素,非循环节点为 NULL),UK 约束 (instance_id, node_code, iter_var) 防止重复创建';
 COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 会签并发安全,MyBatis-Plus @Version 自动维护';
+COMMENT ON COLUMN pmis_flow_run_task.tenant_id IS '租户 ID: 多租户隔离';
 
-CREATE INDEX IF NOT EXISTS idx_pft_instance   ON pmis_flow_run_task(instance_id);
-CREATE INDEX IF NOT EXISTS idx_pft_assignee   ON pmis_flow_run_task(assignee_id, task_status);
-CREATE INDEX IF NOT EXISTS idx_pft_node       ON pmis_flow_run_task(node_code);
-CREATE INDEX IF NOT EXISTS idx_pft_biz        ON pmis_flow_run_task(business_type, business_id);
-CREATE INDEX IF NOT EXISTS idx_pft_status     ON pmis_flow_run_task(task_status);
-CREATE INDEX IF NOT EXISTS idx_pft_tenant     ON pmis_flow_run_task(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_pft_create     ON pmis_flow_run_task(created_at);
-CREATE INDEX IF NOT EXISTS idx_pft_due        ON pmis_flow_run_task(due_at) WHERE task_status = 'PENDING';
+-- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
+CREATE INDEX IF NOT EXISTS idx_pft_tenant_assignee_status
+    ON pmis_flow_run_task(tenant_id, assignee_id, task_status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pft_tenant_instance
+    ON pmis_flow_run_task(tenant_id, instance_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pft_tenant_biz
+    ON pmis_flow_run_task(tenant_id, business_type, business_id)
+    WHERE deleted = 0 AND business_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pft_tenant_node
+    ON pmis_flow_run_task(tenant_id, node_code)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pft_tenant_status
+    ON pmis_flow_run_task(tenant_id, task_status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pft_tenant_due
+    ON pmis_flow_run_task(tenant_id, due_at)
+    WHERE deleted = 0 AND task_status = 'PENDING';
 -- P1-1: 待办按优先级+时间排序(仅 PENDING/CLAIMED 走索引)
 CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
-    ON pmis_flow_run_task (priority DESC, created_at ASC)
+    ON pmis_flow_run_task (tenant_id, priority DESC, created_at ASC)
     WHERE task_status IN ('PENDING', 'CLAIMED')
       AND status = 'ENABLED'
       AND deleted = 0;
@@ -5429,17 +5723,28 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
     comment            TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    claim_at           TIMESTAMP,
-    finish_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    claim_at           TIMESTAMPTZ,
+    finish_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     duration_ms        BIGINT,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id  VARCHAR(64),
     -- GAP-P2-10: FOREACH 归档追溯(从 pmis_flow_run_task 复制)
-    iter_var           VARCHAR(255)
+    iter_var           VARCHAR(255),
+    -- 数据完整性约束
+    CONSTRAINT ck_pfht_assignee_type    CHECK (assignee_type IN ('USER','ROLE','DEPT','SPEL','FOREACH_PARALLEL')),
+    CONSTRAINT ck_pfht_perform_type     CHECK (perform_type  IN ('OR','SEQUENTIAL','PARALLEL','VOTE','FOREACH_PARALLEL')),
+    CONSTRAINT ck_pfht_task_status      CHECK (task_status   IN ('COMPLETED','REJECTED','SKIPPED','CANCELLED','TIMEOUT')),
+    CONSTRAINT ck_pfht_status_enum      CHECK (status        IN ('ENABLED','DISABLED')),
+    CONSTRAINT ck_pfht_node_type        CHECK (node_type     IN (0, 1, 2, 3, 4, 5, 6, 7)),
+    CONSTRAINT ck_pfht_vote_pass_rate   CHECK (vote_pass_rate >= 0 AND vote_pass_rate <= 1),
+    CONSTRAINT ck_pfht_approve_nonneg   CHECK (approve_count >= 0 AND approve_finished >= 0),
+    CONSTRAINT ck_pfht_approve_bounded  CHECK (approve_finished <= approve_count),
+    CONSTRAINT ck_pfht_duration_nonneg  CHECK (duration_ms IS NULL OR duration_ms >= 0),
+    CONSTRAINT ck_pfht_deleted          CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_flow_his_task IS '历史任务表: 已完成任务的归档,避免主表膨胀,审批历史追溯';
@@ -5470,12 +5775,21 @@ COMMENT ON COLUMN pmis_flow_his_task.finish_at IS '完成时间';
 COMMENT ON COLUMN pmis_flow_his_task.duration_ms IS '处理耗时(毫秒)';
 COMMENT ON COLUMN pmis_flow_his_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
 COMMENT ON COLUMN pmis_flow_his_task.iter_var IS 'GAP-P2-10: FOREACH 归档时的迭代元素值(从 pmis_flow_run_task 复制,审批历史追溯)';
+COMMENT ON COLUMN pmis_flow_his_task.tenant_id IS '租户 ID: 多租户隔离';
 
-CREATE INDEX IF NOT EXISTS idx_pfht_instance   ON pmis_flow_his_task(instance_id);
-CREATE INDEX IF NOT EXISTS idx_pfht_assignee   ON pmis_flow_his_task(assignee_id, task_status);
-CREATE INDEX IF NOT EXISTS idx_pfht_biz        ON pmis_flow_his_task(business_type, business_id);
-CREATE INDEX IF NOT EXISTS idx_pfht_finish     ON pmis_flow_his_task(finish_at);
-CREATE INDEX IF NOT EXISTS idx_pfht_tenant     ON pmis_flow_his_task(tenant_id);
+-- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
+CREATE INDEX IF NOT EXISTS idx_pfht_tenant_instance_finish
+    ON pmis_flow_his_task(tenant_id, instance_id, finish_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfht_tenant_assignee_finish
+    ON pmis_flow_his_task(tenant_id, assignee_id, finish_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfht_tenant_biz
+    ON pmis_flow_his_task(tenant_id, business_type, business_id)
+    WHERE deleted = 0 AND business_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pfht_tenant_finish
+    ON pmis_flow_his_task(tenant_id, finish_at DESC)
+    WHERE deleted = 0;
 
 -- -----------------------------------------------------
 -- 7. 流程用户表（对标 Warm-Flow flow_user）
@@ -5491,16 +5805,22 @@ CREATE TABLE IF NOT EXISTS pmis_flow_user(
     user_id            VARCHAR(64)  NOT NULL,
     user_name          VARCHAR(64),
     processed          SMALLINT     NOT NULL DEFAULT 0,
-    process_at         TIMESTAMP,
+    process_at         TIMESTAMPTZ,
     comment            TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
+    provider_trace_id  VARCHAR(64),
+    -- 数据完整性约束
+    CONSTRAINT ck_pfu_user_type         CHECK (user_type  IN ('USER','ROLE','DEPT')),
+    CONSTRAINT ck_pfu_status_enum       CHECK (status     IN ('ENABLED','DISABLED')),
+    CONSTRAINT ck_pfu_processed         CHECK (processed  IN (0, 1)),
+    CONSTRAINT ck_pfu_process_after     CHECK (processed = 0 OR process_at IS NOT NULL),
+    CONSTRAINT ck_pfu_deleted           CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_flow_user IS '流程用户表: 会签多办理人,一个 task 可挂多个用户';
@@ -5515,10 +5835,18 @@ COMMENT ON COLUMN pmis_flow_user.process_at IS '处理时间';
 COMMENT ON COLUMN pmis_flow_user.comment IS '处理意见';
 COMMENT ON COLUMN pmis_flow_user.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_user.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN pmis_flow_user.tenant_id IS '租户 ID: 多租户隔离';
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_pfu_task_user ON pmis_flow_user(task_id, user_id, user_type) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pfu_instance ON pmis_flow_user(instance_id);
-CREATE INDEX IF NOT EXISTS idx_pfu_user     ON pmis_flow_user(user_id, processed);
+-- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfu_tenant_task_user
+    ON pmis_flow_user(tenant_id, task_id, user_id, user_type)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfu_tenant_instance
+    ON pmis_flow_user(tenant_id, instance_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfu_tenant_user_processed
+    ON pmis_flow_user(tenant_id, user_id, processed)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 初始化数据：PMIS 业务流定义
@@ -5542,16 +5870,11 @@ VALUES
      'PMIS 通用请假：申请人 → 直属上级 → 人事', 'ENABLED', 1, 'init_v1', 0, 0)
 ON CONFLICT (flow_code, version, tenant_id) WHERE deleted = 0 DO NOTHING;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_023__init_pmis_flow_engine.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_024__add_version_to_core_tables.sql
--- ====================================================================
+-- ============================ [024] add version to core tables ============================
 
 -- ========================================================
--- V1.0.0_024__add_version_to_core_tables.sql
 -- P1-12 乐观锁（@Version）覆盖核心实体
 --
 -- 为 10 张核心业务表添加 version 列，配合 MyBatis-Plus
@@ -5617,13 +5940,9 @@ COMMENT ON COLUMN pmis_execution_wbs_task.version IS '乐观锁版本号（P1-12
 COMMENT ON COLUMN pmis_cost_purchase.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），MyBatis-Plus @Version 自动维护';
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_024__add_version_to_core_tables.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_025__add_pmis_flow_audit_log.sql
--- ====================================================================
+-- ============================ [025] add pmis flow audit log ============================
 
 -- =====================================================
 -- PMIS 工作流审计日志表 DDL（对标竞品审批轨迹能力）
@@ -5637,10 +5956,12 @@ COMMENT ON COLUMN pmis_ops_ticket.version IS '乐观锁版本号（P1-12），My
 -- -----------------------------------------------------
 -- 8. 流程审计日志表（pmis_flow_audit_log）
 --    记录流程全生命周期的操作轨迹：谁在何时对哪个实例/任务做了什么操作
+--    P1-4 重构: 改为按月 RANGE 分区表
 -- -----------------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_audit_log;
+DROP TABLE IF EXISTS pmis_flow_audit_log CASCADE;
 CREATE TABLE IF NOT EXISTS pmis_flow_audit_log(
-    id                 BIGSERIAL    PRIMARY KEY,
+    id                 BIGSERIAL    NOT NULL,
     instance_id        BIGINT       NOT NULL,
     task_id            BIGINT,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -5654,16 +5975,25 @@ CREATE TABLE IF NOT EXISTS pmis_flow_audit_log(
     target_id          BIGINT,
     target_name        VARCHAR(64),
     comment            TEXT,
-    operated_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    operated_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
-);
+    provider_trace_id  VARCHAR(64),
+    -- 数据完整性约束
+    CONSTRAINT ck_pfal_status_enum      CHECK (status IN ('ENABLED','DISABLED')),
+    CONSTRAINT ck_pfal_action_enum      CHECK (action IN ('START','PASS','REJECT','TRANSFER','DELEGATE','COUNTERSIGN_BEFORE','COUNTERSIGN_AFTER',
+                                                            'RECALL','URGE','TERMINATE','SUSPEND','ACTIVATE','CLAIM','DELEGATE_RETURN',
+                                                            'PARALLEL_PASS','SEQUENTIAL_PASS','VOTE_PASS','AUTO_PASS','COUNTERSIGN_REMOVE',
+                                                            'MARK_READ','COMMUNICATE','SLA_TIMEOUT','SLA_ESCALATE')),
+    CONSTRAINT ck_pfal_deleted          CHECK (deleted IN (0, 1)),
+    -- 分区表主键必须包含分区键
+    PRIMARY KEY (id, operated_at)
+) PARTITION BY RANGE (operated_at);
 
 COMMENT ON TABLE  pmis_flow_audit_log IS '流程审计日志表: 记录流程全生命周期的操作轨迹(谁在何时对哪个实例/任务做了什么操作)';
 COMMENT ON COLUMN pmis_flow_audit_log.instance_id IS '流程实例 ID';
@@ -5685,24 +6015,37 @@ COMMENT ON COLUMN pmis_flow_audit_log.deleted IS '逻辑删除: 0=未删除,1=�
 COMMENT ON COLUMN pmis_flow_audit_log.tenant_id IS '租户 ID(默认 1)';
 COMMENT ON COLUMN pmis_flow_audit_log.provider_trace_id IS '链路追踪 ID(来自调用方或自生成)';
 
-CREATE INDEX IF NOT EXISTS idx_pfal_instance   ON pmis_flow_audit_log(instance_id);
-CREATE INDEX IF NOT EXISTS idx_pfal_task       ON pmis_flow_audit_log(task_id);
-CREATE INDEX IF NOT EXISTS idx_pfal_operator   ON pmis_flow_audit_log(operator_id);
-CREATE INDEX IF NOT EXISTS idx_pfal_biz        ON pmis_flow_audit_log(business_type, business_id);
-CREATE INDEX IF NOT EXISTS idx_pfal_action     ON pmis_flow_audit_log(action);
-CREATE INDEX IF NOT EXISTS idx_pfal_operated   ON pmis_flow_audit_log(operated_at);
-CREATE INDEX IF NOT EXISTS idx_pfal_tenant     ON pmis_flow_audit_log(tenant_id);
+-- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
+-- P1-4: 父表索引,自动传播到所有月度分区
+CREATE INDEX IF NOT EXISTS idx_pfal_tenant_instance_operated
+    ON pmis_flow_audit_log(tenant_id, instance_id, operated_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfal_tenant_task_operated
+    ON pmis_flow_audit_log(tenant_id, task_id, operated_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfal_tenant_operator_operated
+    ON pmis_flow_audit_log(tenant_id, operator_id, operated_at DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfal_tenant_biz
+    ON pmis_flow_audit_log(tenant_id, business_type, business_id)
+    WHERE deleted = 0 AND business_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pfal_tenant_action_operated
+    ON pmis_flow_audit_log(tenant_id, action, operated_at DESC)
+    WHERE deleted = 0;
+-- P1-4: BRIN 索引(父表,自动传播) — 流程审计时间范围扫描
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_audit_log_brin
+    ON pmis_flow_audit_log USING BRIN (operated_at)
+    WITH (pages_per_range = 32);
+-- P1-4: provider_trace_id 索引(全链路追踪)
+CREATE INDEX IF NOT EXISTS idx_pfal_provider_trace
+    ON pmis_flow_audit_log (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_025__add_pmis_flow_audit_log.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_026__add_pmis_flow_cc.sql
--- ====================================================================
+-- ============================ [026] add pmis flow cc ============================
 
 -- =============================================================
--- V1.0.0_026__add_pmis_flow_cc.sql
 -- 流程抄送表
 --
 -- P0-3: 抄送中心（对标钉钉/飞书的"抄送我的"独立 Tab）。
@@ -5735,11 +6078,16 @@ CREATE TABLE IF NOT EXISTS pmis_flow_cc(
     title              VARCHAR(255),
     content            TEXT,
     read_status        VARCHAR(16)  NOT NULL DEFAULT 'UNREAD',
-    read_at            TIMESTAMP,
+    read_at            TIMESTAMPTZ,
     provider_trace_id  VARCHAR(64),
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            SMALLINT     NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfcc_cc_type          CHECK (cc_type     IN ('CC_NODE','MANUAL_CC','AUTO_CC')),
+    CONSTRAINT ck_pfcc_read_status      CHECK (read_status IN ('UNREAD','READ')),
+    CONSTRAINT ck_pfcc_read_at          CHECK ((read_status = 'UNREAD' AND read_at IS NULL) OR read_status = 'READ'),
+    CONSTRAINT ck_pfcc_deleted          CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_flow_cc IS '流程抄送记录 - 抄送中心查询主体（对标钉钉/飞书）';
@@ -5789,9 +6137,13 @@ CREATE TABLE IF NOT EXISTS pmis_flow_cc_rule(
     rule_target        VARCHAR(255) NOT NULL,
     enabled            SMALLINT     NOT NULL DEFAULT 1,
     provider_trace_id  VARCHAR(64),
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            SMALLINT     NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfccr_rule_type       CHECK (rule_type IN ('USER','ROLE','DEPT','SPEL')),
+    CONSTRAINT ck_pfccr_enabled         CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_pfccr_deleted         CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_flow_cc_rule IS '流程抄送规则配置 - 自动抄送规则（如：变更金额>1万自动抄送 CEO）';
@@ -5803,13 +6155,9 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_cc_rule_tenant
     ON pmis_flow_cc_rule (tenant_id, flow_code, node_code, deleted)
     WHERE deleted = 0;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_026__add_pmis_flow_cc.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_027__init_undo_log.sql
--- ====================================================================
+-- ============================ [027] init undo log ============================
 
 -- ====================================================================
 --  Seata AT 模式 undo_log 表
@@ -5861,16 +6209,11 @@ COMMENT ON COLUMN undo_log.log_modified IS '最后修改时间';
 -- CREATE INDEX IF NOT EXISTS idx_undo_log_xid ON undo_log (xid);
 -- CREATE INDEX IF NOT EXISTS idx_undo_log_status_modified ON undo_log (log_status, log_modified);
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_027__init_undo_log.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_028__add_flow_gap_columns.sql
--- ====================================================================
+-- ============================ [028] add flow gap columns ============================
 
 -- =============================================================
--- V1.0.0_028__add_flow_gap_columns.sql
 -- 工作流引擎对标差距补全 — 新增字段
 --
 -- GAP-P0: 表单字段权限 (pmis_flow_node.form_fields_config)
@@ -5913,16 +6256,11 @@ COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 
 -- 新增 action 值: AUTO_PASS / COUNTERSIGN_REMOVE / MARK_READ / COMMUNICATE / SLA_TIMEOUT / SLA_ESCALATE
 -- -------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_028__add_flow_gap_columns.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_029__add_pmis_flow_timer.sql
--- ====================================================================
+-- ============================ [029] add pmis flow timer ============================
 
 -- =============================================================
--- V1.0.0_029__add_pmis_flow_timer.sql
 -- 工作流定时器节点 + 边界定时器
 --
 -- P1-2: 工作流定时器
@@ -5953,19 +6291,24 @@ CREATE TABLE IF NOT EXISTS pmis_flow_timer(
     -- 边界定时器关联的 userTask
     boundary_task_id   BIGINT,
     -- 触发时间
-    fire_at            TIMESTAMP    NOT NULL,
+    fire_at            TIMESTAMPTZ  NOT NULL,
     -- CRON 表达式（可空，仅用于循环定时器）
     cycle              VARCHAR(64),
     -- 状态: PENDING / FIRED / CANCELLED
     timer_status       VARCHAR(16)  NOT NULL DEFAULT 'PENDING',
     -- 触发时间
-    fired_at           TIMESTAMP,
+    fired_at           TIMESTAMPTZ,
     -- 取消原因（userTask 完成时关闭）
     cancel_reason      VARCHAR(255),
     provider_trace_id  VARCHAR(64),
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            SMALLINT     NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pft_timer_type        CHECK (timer_type   IN ('INTERMEDIATE','BOUNDARY')),
+    CONSTRAINT ck_pft_timer_status      CHECK (timer_status IN ('PENDING','FIRED','CANCELLED')),
+    CONSTRAINT ck_pft_fired_status      CHECK ((timer_status = 'PENDING' AND fired_at IS NULL) OR timer_status IN ('FIRED','CANCELLED')),
+    CONSTRAINT ck_pft_deleted           CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_flow_timer IS '工作流定时器 - 中间定时器/边界定时器调度表';
@@ -5973,14 +6316,19 @@ COMMENT ON COLUMN pmis_flow_timer.timer_type IS 'INTERMEDIATE 中间定时器 / 
 COMMENT ON COLUMN pmis_flow_timer.timer_status IS 'PENDING 待执行 / FIRED 已触发 / CANCELLED 已取消';
 COMMENT ON COLUMN pmis_flow_timer.fire_at IS '到点时间，扫描器按此字段选取待执行记录';
 
+-- 复合/部分索引(替代零散的单列索引,引入 tenant_id + WHERE deleted=0)
 -- 索引：扫描器按 fire_at + status 选取
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_scan ON pmis_flow_timer (timer_status, fire_at)
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_scan
+    ON pmis_flow_timer (tenant_id, timer_status, fire_at)
     WHERE deleted = 0;
 -- 索引：实例维度查询
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_instance ON pmis_flow_timer (instance_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_instance
+    ON pmis_flow_timer (tenant_id, instance_id)
+    WHERE deleted = 0;
 -- 索引：边界定时器反向关联 userTask
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_boundary ON pmis_flow_timer (boundary_task_id)
-    WHERE boundary_task_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_timer_tenant_boundary
+    ON pmis_flow_timer (tenant_id, boundary_task_id)
+    WHERE deleted = 0 AND boundary_task_id IS NOT NULL;
 
 -- -------------------------------------------
 -- 2. FlowNodeDO 扩展字段（流程设计时存到 ext 即可，无需新加列）
@@ -6012,16 +6360,11 @@ VALUES (
     1
 ) ON CONFLICT (job_key) DO NOTHING;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_029__add_pmis_flow_timer.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_030__add_pmis_flow_delegate_auth.sql
--- ====================================================================
+-- ============================ [030] add pmis flow delegate auth ============================
 
 -- =============================================================
--- V1.0.0_030__add_pmis_flow_delegate_auth.sql
 -- 流程委派代理（长期授权）
 --
 -- P1-4: 长期授权委派（对标钉钉/飞书的"代理人"功能）
@@ -6040,8 +6383,8 @@ VALUES (
 -- -------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_delegate_auth;
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_auth(
-    id                    BIGSERIAL PRIMARY KEY,
-    tenant_id             BIGINT       NOT NULL,
+    id                    BIGSERIAL    PRIMARY KEY,
+    tenant_id             BIGINT       NOT NULL DEFAULT 1,
     owner_user_id         BIGINT       NOT NULL,
     owner_user_name       VARCHAR(64),
     delegate_user_id      BIGINT       NOT NULL,
@@ -6054,15 +6397,29 @@ CREATE TABLE IF NOT EXISTS pmis_flow_delegate_auth(
     node_code             VARCHAR(64),
     -- 角色编码（scopeType=ROLE 时必填）
     role_code             VARCHAR(64),
-    start_time            TIMESTAMP    NOT NULL,
-    end_time              TIMESTAMP    NOT NULL,
+    start_time            TIMESTAMPTZ  NOT NULL,
+    end_time              TIMESTAMPTZ  NOT NULL,
     -- 状态: ENABLED=启用 DISABLED=停用 EXPIRED=已过期 REVOKED=已撤回
     auth_status           VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
     reason                VARCHAR(255),
     provider_trace_id     VARCHAR(64),
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0
+    created_by            BIGINT       NOT NULL DEFAULT 0,
+    created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by            BIGINT       NOT NULL DEFAULT 0,
+    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted               SMALLINT     NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfda_scope_type         CHECK (scope_type  IN ('ALL','FLOW','FLOW_NODE','ROLE')),
+    CONSTRAINT ck_pfda_auth_status        CHECK (auth_status IN ('ENABLED','DISABLED','EXPIRED','REVOKED')),
+    CONSTRAINT ck_pfda_time_range         CHECK (end_time > start_time),
+    CONSTRAINT ck_pfda_scope_consistency  CHECK (
+        (scope_type = 'ALL'      AND flow_code IS NULL AND node_code IS NULL AND role_code IS NULL) OR
+        (scope_type = 'FLOW'     AND flow_code IS NOT NULL AND node_code IS NULL AND role_code IS NULL) OR
+        (scope_type = 'FLOW_NODE' AND flow_code IS NOT NULL AND node_code IS NOT NULL AND role_code IS NULL) OR
+        (scope_type = 'ROLE'     AND flow_code IS NULL AND node_code IS NULL AND role_code IS NOT NULL)
+    ),
+    CONSTRAINT ck_pfda_distinct_users     CHECK (owner_user_id <> delegate_user_id),
+    CONSTRAINT ck_pfda_deleted            CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_flow_delegate_auth IS '流程委派代理（长期授权）- 预置规则区间内任务自动转给被委派人';
@@ -6107,8 +6464,8 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_auth_flow
 -- -------------------------------------------
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_delegate_log;
 CREATE TABLE IF NOT EXISTS pmis_flow_delegate_log(
-    id                 BIGSERIAL PRIMARY KEY,
-    tenant_id          BIGINT       NOT NULL,
+    id                 BIGSERIAL    PRIMARY KEY,
+    tenant_id          BIGINT       NOT NULL DEFAULT 1,
     auth_id            BIGINT       NOT NULL,
     instance_id        BIGINT       NOT NULL,
     task_id            BIGINT       NOT NULL,
@@ -6121,8 +6478,12 @@ CREATE TABLE IF NOT EXISTS pmis_flow_delegate_log(
     action             VARCHAR(16),
     comment            TEXT,
     provider_trace_id  VARCHAR(64),
-    created_at         TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT     NOT NULL DEFAULT 0
+    created_at         TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            SMALLINT     NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfdl_op_type          CHECK (op_type IN ('ACT','VIEW')),
+    CONSTRAINT ck_pfdl_op_action        CHECK (action IS NULL OR action IN ('PASS','REJECT','CLAIM','TRANSFER','DELEGATE','COMMUNICATE')),
+    CONSTRAINT ck_pfdl_deleted          CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_flow_delegate_log IS '流程委派代理使用日志 - 审计代理操作';
@@ -6142,78 +6503,64 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_delegate_log_delegate
     ON pmis_flow_delegate_log (tenant_id, delegate_user_id, created_at DESC)
     WHERE deleted = 0;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_030__add_pmis_flow_delegate_auth.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_031__init_report_subscription.sql
--- ====================================================================
+-- ============================ [031] init report subscription ============================
 
 -- ============================================================
 -- V1.0.0_031  P1-5 报表订阅与导出记录表
 -- ============================================================
 -- 说明：定时报表生成与分发（P1-5）
---   pmis_report_subscription   报表订阅表
---   pmis_report_export_record  报表导出记录表
+--   pmis_report_subscription  报表订阅表
+--   pmis_export_record        报表导出记录（P0-3 合并 source='SUBSCRIPTION'）
 -- ============================================================
 
 -- 报表订阅表
 CREATE TABLE IF NOT EXISTS pmis_report_subscription (
     id              BIGSERIAL    PRIMARY KEY,
+    tenant_id       BIGINT       NOT NULL DEFAULT 1,
     subscriber_id   BIGINT       NOT NULL,
     report_type     VARCHAR(50)  NOT NULL,
     frequency       VARCHAR(20)  NOT NULL DEFAULT 'DAILY',
     channels        VARCHAR(200),
     recipients      VARCHAR(500),
     enabled         SMALLINT     NOT NULL DEFAULT 1,
-    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    provider_trace_id VARCHAR(64),
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT     NOT NULL DEFAULT 0,
-    version         INT          NOT NULL DEFAULT 0
+    version         INT          NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_prs_frequency    CHECK (frequency IN ('DAILY','WEEKLY','MONTHLY','REALTIME')),
+    CONSTRAINT ck_prs_enabled      CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_prs_deleted      CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_prs_version      CHECK (version >= 0)
 );
 
 COMMENT ON TABLE pmis_report_subscription IS '报表订阅表';
+COMMENT ON COLUMN pmis_report_subscription.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_report_subscription.subscriber_id IS '订阅人ID';
 COMMENT ON COLUMN pmis_report_subscription.report_type IS '报表类型 (COCKPIT/EVM/PROFIT/UTILIZATION/BENCH_COST/RISK)';
-COMMENT ON COLUMN pmis_report_subscription.frequency IS '推送频率 (DAILY/WEEKLY/MONTHLY)';
+COMMENT ON COLUMN pmis_report_subscription.frequency IS '推送频率 (DAILY/WEEKLY/MONTHLY/REALTIME)';
 COMMENT ON COLUMN pmis_report_subscription.channels IS '推送渠道，逗号分隔 (EMAIL/DINGTALK/IN_APP)';
 COMMENT ON COLUMN pmis_report_subscription.recipients IS '接收人邮箱，逗号分隔';
 COMMENT ON COLUMN pmis_report_subscription.enabled IS '是否启用 (1=启用, 0=停用)';
 
-CREATE INDEX IF NOT EXISTS idx_report_subscriber ON pmis_report_subscription (subscriber_id);
-CREATE INDEX IF NOT EXISTS idx_report_type_freq ON pmis_report_subscription (report_type, frequency) WHERE deleted = 0;
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prs_tenant_subscriber
+    ON pmis_report_subscription (tenant_id, subscriber_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prs_tenant_type_freq
+    ON pmis_report_subscription (tenant_id, report_type, frequency)
+    WHERE deleted = 0;
 
--- 报表导出记录表
-CREATE TABLE IF NOT EXISTS pmis_report_export_record (
-    id              BIGSERIAL    PRIMARY KEY,
-    subscription_id BIGINT,
-    report_type     VARCHAR(50)  NOT NULL,
-    file_key        VARCHAR(500),
-    file_url        VARCHAR(1000),
-    status          VARCHAR(20)  NOT NULL DEFAULT 'PENDING',
-    error_message   TEXT,
-    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    completed_at    TIMESTAMP
-);
+-- --------------------------------------------------------------------
+-- P0-3 合并：原 pmis_report_export_record 已并入 pmis_export_record，
+--           通过 source='SUBSCRIPTION' 区分订阅触发的导出记录。
+-- --------------------------------------------------------------------
 
-COMMENT ON TABLE pmis_report_export_record IS '报表导出记录表';
-COMMENT ON COLUMN pmis_report_export_record.subscription_id IS '关联订阅ID';
-COMMENT ON COLUMN pmis_report_export_record.report_type IS '报表类型';
-COMMENT ON COLUMN pmis_report_export_record.file_key IS 'MinIO 文件 key';
-COMMENT ON COLUMN pmis_report_export_record.file_url IS '下载 URL';
-COMMENT ON COLUMN pmis_report_export_record.status IS '状态 (PENDING/GENERATING/SENT/FAILED)';
-COMMENT ON COLUMN pmis_report_export_record.error_message IS '错误信息';
 
-CREATE INDEX IF NOT EXISTS idx_report_export_status ON pmis_report_export_record (status) WHERE completed_at IS NULL;
-
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_031__init_report_subscription.sql
--- ====================================================================
-
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_032__register_report_jobs.sql
--- ====================================================================
+-- ============================ [032] register report jobs ============================
 
 -- ============================================================
 -- V1.0.0_032  P1-5 注册报表定时任务
@@ -6271,16 +6618,11 @@ VALUES (
     '每月 1 日 08:00 生成月报表并分发到订阅人',
     1
 ) ON CONFLICT DO NOTHING;
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_032__register_report_jobs.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_033__add_pmis_flow_weight.sql
--- ====================================================================
+-- ============================ [033] add pmis flow weight ============================
 
 -- =============================================================
--- V1.0.0_031__add_pmis_flow_weight.sql
 -- 流程多实例会签权重 + VOTE 通过率
 --
 -- P1-5: 多实例会签权重（per-user 权重）+ VOTE 通过率（可配置阈值）
@@ -6312,16 +6654,11 @@ ALTER TABLE pmis_flow_run_task
 
 COMMENT ON COLUMN pmis_flow_run_task.vote_pass_rate IS 'VOTE 模式通过率阈值（0~1，默认 0.5 表示过半数）';
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_033__add_pmis_flow_weight.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_034__add_pmis_flow_sla_reminder.sql
--- ====================================================================
+-- ============================ [034] add pmis flow sla reminder ============================
 
 -- =============================================================
--- V1.0.0_034__add_pmis_flow_sla_reminder.sql
 -- 流程 SLA 超时自动策略 + 催办计数
 --
 -- P1-6: 后端超时自动策略（PASS/REJECT/NOTIFY/ESCALATE）
@@ -6368,13 +6705,9 @@ COMMENT ON COLUMN pmis_flow_run_task.sla_escalated    IS '是否已升级（0 �
 --    }
 -- -------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_034__add_pmis_flow_sla_reminder.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_035__register_consistency_job.sql
--- ====================================================================
+-- ============================ [035] register consistency job ============================
 
 -- ============================================================
 -- V1.0.0_035  P2-6 注册数据一致性校验定时任务
@@ -6404,13 +6737,9 @@ VALUES (
     '数据一致性校验（发票vs回款、预算vs成本、WBSvs工时）',
     1
 ) ON CONFLICT DO NOTHING;
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_035__register_consistency_job.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_036__init_export_record.sql
--- ====================================================================
+-- ============================ [036] init export record ============================
 
 -- ============================================================
 -- V1.0.0_036  P2-11 异步导出记录表（下载中心）
@@ -6421,11 +6750,20 @@ VALUES (
 -- 注意：版本号 033/034 已被流程引擎占用，本表使用 036。
 -- ============================================================
 
--- 异步导出记录表
+-- 异步导出记录表（同时承担历史 pmis_report_export_record 的角色，P0-3 合并）
 CREATE TABLE IF NOT EXISTS pmis_export_record (
     id              BIGSERIAL    PRIMARY KEY,
-    user_id         BIGINT       NOT NULL,
+    tenant_id       BIGINT       NOT NULL DEFAULT 1,
+    -- 来源：MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发（cronjob 模块）
+    source          VARCHAR(16)  NOT NULL DEFAULT 'MANUAL',
+    -- 发起人：MANUAL 必填；SUBSCRIPTION 取订阅人 subscriber_id
+    user_id         BIGINT,
+    -- 通用导出类型（MANUAL 主用）
     export_type     VARCHAR(50)  NOT NULL,
+    -- 报表类型（SUBSCRIPTION 主用，与 export_type 互补）
+    report_type     VARCHAR(50),
+    -- 关联订阅 ID（仅 SUBSCRIPTION 来源有值）
+    subscription_id BIGINT,
     file_name       VARCHAR(500),
     file_key        VARCHAR(500),
     file_url        VARCHAR(1000),
@@ -6433,36 +6771,68 @@ CREATE TABLE IF NOT EXISTS pmis_export_record (
     status          VARCHAR(20)  NOT NULL DEFAULT 'PENDING',
     params          TEXT,
     error_message   TEXT,
-    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    completed_at    TIMESTAMP,
-    expired_at      TIMESTAMP,
+    provider_trace_id VARCHAR(64),
+    created_at      TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at    TIMESTAMPTZ,
+    expired_at      TIMESTAMPTZ,
     deleted         SMALLINT     NOT NULL DEFAULT 0,
-    version         INT          NOT NULL DEFAULT 0
+    version         INT          NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pex_source         CHECK (source IN ('MANUAL', 'SUBSCRIPTION')),
+    CONSTRAINT ck_pex_status         CHECK (status IN ('PENDING','GENERATING','COMPLETED','SENT','FAILED','EXPIRED')),
+    CONSTRAINT ck_pex_file_size      CHECK (file_size IS NULL OR file_size >= 0),
+    CONSTRAINT ck_pex_deleted        CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_pex_version        CHECK (version >= 0),
+    CONSTRAINT ck_pex_time_range     CHECK (completed_at IS NULL OR completed_at >= created_at),
+    -- 用户与订阅互斥：MANUAL 必须有 user_id，SUBSCRIPTION 必须有 subscription_id
+    CONSTRAINT ck_pex_source_link    CHECK (
+        (source = 'MANUAL'      AND user_id IS NOT NULL AND subscription_id IS NULL) OR
+        (source = 'SUBSCRIPTION' AND subscription_id IS NOT NULL)
+    )
 );
 
-COMMENT ON TABLE pmis_export_record IS '异步导出记录表';
-COMMENT ON COLUMN pmis_export_record.user_id IS '发起导出的用户ID';
-COMMENT ON COLUMN pmis_export_record.export_type IS '导出类型 (PROJECT/CONTRACT/INVOICE/PAYMENT/EVM/AUDIT_LOG等)';
+COMMENT ON TABLE pmis_export_record IS '异步导出记录表（同时承载报表订阅导出，P0-3 合并）';
+COMMENT ON COLUMN pmis_export_record.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_export_record.source IS '来源：MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发';
+COMMENT ON COLUMN pmis_export_record.user_id IS '发起人 ID（MANUAL 必填，SUBSCRIPTION 取订阅人）';
+COMMENT ON COLUMN pmis_export_record.export_type IS '通用导出类型 (MANUAL 主用，如 PROJECT/CONTRACT/INVOICE/PAYMENT/EVM/AUDIT_LOG)';
+COMMENT ON COLUMN pmis_export_record.report_type IS '报表类型（SUBSCRIPTION 主用，如 COCKPIT/EVM/PROFIT/UTILIZATION）';
+COMMENT ON COLUMN pmis_export_record.subscription_id IS '关联订阅 ID（仅 SUBSCRIPTION 来源有值，引用 pmis_report_subscription.id）';
 COMMENT ON COLUMN pmis_export_record.file_name IS '文件名';
 COMMENT ON COLUMN pmis_export_record.file_key IS 'MinIO 文件 key';
 COMMENT ON COLUMN pmis_export_record.file_url IS '下载 URL';
 COMMENT ON COLUMN pmis_export_record.file_size IS '文件大小（字节）';
-COMMENT ON COLUMN pmis_export_record.status IS '状态 (PENDING/GENERATING/COMPLETED/FAILED/EXPIRED)';
+COMMENT ON COLUMN pmis_export_record.status IS '状态 (PENDING/GENERATING/COMPLETED/SENT/FAILED/EXPIRED)';
 COMMENT ON COLUMN pmis_export_record.params IS '导出参数（JSON）';
 COMMENT ON COLUMN pmis_export_record.error_message IS '错误信息';
 COMMENT ON COLUMN pmis_export_record.completed_at IS '完成时间';
 COMMENT ON COLUMN pmis_export_record.expired_at IS '过期时间';
 
-CREATE INDEX IF NOT EXISTS idx_export_user ON pmis_export_record (user_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_export_status ON pmis_export_record (status) WHERE completed_at IS NULL;
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pex_tenant_user_created
+    ON pmis_export_record (tenant_id, user_id, created_at DESC)
+    WHERE deleted = 0 AND source = 'MANUAL';
+CREATE INDEX IF NOT EXISTS idx_pex_tenant_status
+    ON pmis_export_record (tenant_id, status)
+    WHERE completed_at IS NULL;
+CREATE INDEX IF NOT EXISTS idx_pex_tenant_expired
+    ON pmis_export_record (tenant_id, expired_at)
+    WHERE expired_at IS NOT NULL;
+-- P0-3: 订阅维度索引（用于报表中心回溯）
+CREATE INDEX IF NOT EXISTS idx_pex_tenant_subscription
+    ON pmis_export_record (tenant_id, subscription_id, created_at DESC)
+    WHERE source = 'SUBSCRIPTION' AND deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pex_tenant_report_type
+    ON pmis_export_record (tenant_id, report_type, created_at DESC)
+    WHERE source = 'SUBSCRIPTION' AND deleted = 0;
+-- P0-3: 提供商追踪 ID 索引（与 060 节保持一致）
+CREATE INDEX IF NOT EXISTS idx_pex_provider_trace
+    ON pmis_export_record (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_036__init_export_record.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_037__init_pmis_flow_archive.sql
--- ====================================================================
+-- ============================ [037] init pmis flow archive ============================
 
 -- ============================================================
 -- V1.0.0_037  P2-3 流程历史归档表
@@ -6493,43 +6863,56 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_instance(
     variable           TEXT,
     flow_status        VARCHAR(16)  NOT NULL,
     activity_status    SMALLINT     NOT NULL DEFAULT 1,
-    start_at           TIMESTAMP,
-    end_at             TIMESTAMP,
+    start_at           TIMESTAMPTZ,
+    end_at             TIMESTAMPTZ,
     duration_ms        BIGINT,
     created_by         BIGINT       NOT NULL DEFAULT 0,
-    created_at         TIMESTAMP    NOT NULL,
+    created_at         TIMESTAMPTZ  NOT NULL,
     updated_by         BIGINT       NOT NULL DEFAULT 0,
-    updated_at         TIMESTAMP    NOT NULL,
-    archived_at        TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at         TIMESTAMPTZ  NOT NULL,
+    archived_at        TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
+    provider_trace_id  VARCHAR(64),
+    -- 数据完整性约束
+    CONSTRAINT ck_pfhi_flow_status     CHECK (flow_status IN ('RUNNING','COMPLETED','TERMINATED','SUSPENDED')),
+    CONSTRAINT ck_pfhi_activity_status CHECK (activity_status IN (0, 1)),
+    CONSTRAINT ck_pfhi_duration_nonneg CHECK (duration_ms IS NULL OR duration_ms >= 0),
+    CONSTRAINT ck_pfhi_time_range      CHECK (end_at IS NULL OR start_at IS NULL OR end_at >= start_at)
 );
 
 COMMENT ON TABLE  pmis_flow_his_instance IS '流程实例归档表: 已完成且超过 retention 天数的实例迁移至此';
 COMMENT ON COLUMN pmis_flow_his_instance.archived_at IS '归档时间';
 
-CREATE INDEX IF NOT EXISTS idx_pfhi_business   ON pmis_flow_his_instance(business_type, business_id);
-CREATE INDEX IF NOT EXISTS idx_pfhi_flow_code  ON pmis_flow_his_instance(flow_code);
-CREATE INDEX IF NOT EXISTS idx_pfhi_flow_status ON pmis_flow_his_instance(flow_status);
-CREATE INDEX IF NOT EXISTS idx_pfhi_initiator  ON pmis_flow_his_instance(initiator_id);
-CREATE INDEX IF NOT EXISTS idx_pfhi_end_at     ON pmis_flow_his_instance(end_at);
-CREATE INDEX IF NOT EXISTS idx_pfhi_tenant     ON pmis_flow_his_instance(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_pfhi_archived_at ON pmis_flow_his_instance(archived_at);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_business
+    ON pmis_flow_his_instance(tenant_id, business_type, business_id);
+CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_flow_code_status
+    ON pmis_flow_his_instance(tenant_id, flow_code, flow_status);
+CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_initiator_archived
+    ON pmis_flow_his_instance(tenant_id, initiator_id, archived_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_end_at
+    ON pmis_flow_his_instance(tenant_id, end_at DESC)
+    WHERE end_at IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pfhi_tenant_archived_at
+    ON pmis_flow_his_instance(tenant_id, archived_at DESC);
 
 -- 归档变量表（用于归档 instance 时同步迁移 variable 字段中的大 JSON）
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_his_variable;
 CREATE TABLE IF NOT EXISTS pmis_flow_his_variable(
     id            BIGSERIAL    PRIMARY KEY,
+    tenant_id     BIGINT       NOT NULL DEFAULT 1,
     instance_id   BIGINT       NOT NULL,
     var_key       VARCHAR(128) NOT NULL,
     var_value     TEXT,
-    archived_at   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP
+    archived_at   TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 COMMENT ON TABLE pmis_flow_his_variable IS '流程变量归档表: instance.variable JSON 拆分到独立行';
 
-CREATE INDEX IF NOT EXISTS idx_pfhv_instance ON pmis_flow_his_variable(instance_id);
-CREATE INDEX IF NOT EXISTS idx_pfhv_key      ON pmis_flow_his_variable(instance_id, var_key);
+CREATE INDEX IF NOT EXISTS idx_pfhv_tenant_instance
+    ON pmis_flow_his_variable(tenant_id, instance_id);
+CREATE INDEX IF NOT EXISTS idx_pfhv_tenant_instance_key
+    ON pmis_flow_his_variable(tenant_id, instance_id, var_key);
 
 -- 归档统计视图（管理员可见：实例总数/已归档/未归档）
 -- [SKIPPED-CLEANUP] DROP VIEW IF EXISTS pmis_view_flow_archive_stats;
@@ -6566,13 +6949,9 @@ VALUES
      1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
 ON CONFLICT (job_key) DO NOTHING;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_037__init_pmis_flow_archive.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_038__add_pmis_flow_canary.sql
--- ====================================================================
+-- ============================ [038] add pmis flow canary ============================
 
 -- ============================================================
 -- V1.0.0_038  P3-1 流程定义灰度发布字段
@@ -6611,13 +6990,9 @@ CREATE INDEX IF NOT EXISTS idx_pfd_canary_status
     ON pmis_flow_definition(canary_status)
     WHERE deleted = 0 AND canary_status <> 'NONE';
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_038__add_pmis_flow_canary.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_039__init_pmis_attendance_schema.sql
--- ====================================================================
+-- ============================ [039] init pmis attendance schema ============================
 
 -- =====================================================
 -- PMIS 批次12 DDL：考勤管理(出勤/加班/请假)
@@ -6633,8 +7008,8 @@ CREATE TABLE IF NOT EXISTS pmis_attendance (
     employee_id         BIGINT       NOT NULL,
     employee_name       VARCHAR(64),
     attendance_date     DATE         NOT NULL,
-    check_in_time       TIMESTAMP,
-    check_out_time      TIMESTAMP,
+    check_in_time       TIMESTAMPTZ,
+    check_out_time      TIMESTAMPTZ,
     work_hours          NUMERIC(5,2) NOT NULL DEFAULT 0.0,
     overtime_hours      NUMERIC(5,2) NOT NULL DEFAULT 0.0,
     status              VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',  -- NORMAL/LATE/EARLY/ABSENT/LEAVE/OVERTIME
@@ -6642,10 +7017,17 @@ CREATE TABLE IF NOT EXISTS pmis_attendance (
     remark              TEXT,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pa_emp_date UNIQUE (employee_id, attendance_date, deleted)
+    -- 数据完整性约束
+    CONSTRAINT uk_pa_emp_date         UNIQUE (employee_id, attendance_date, deleted),
+    CONSTRAINT ck_pa_status           CHECK (status IN ('NORMAL','LATE','EARLY','ABSENT','LEAVE','OVERTIME')),
+    CONSTRAINT ck_pa_work_type        CHECK (work_type IN ('WORKDAY','WEEKEND','HOLIDAY')),
+    CONSTRAINT ck_pa_work_hours       CHECK (work_hours >= 0),
+    CONSTRAINT ck_pa_overtime_hours   CHECK (overtime_hours >= 0),
+    CONSTRAINT ck_pa_check_range      CHECK (check_in_time IS NULL OR check_out_time IS NULL OR check_out_time >= check_in_time),
+    CONSTRAINT ck_pa_deleted          CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_attendance IS '员工出勤记录表: 每日打卡 + 工作时长统计,支撑项目工时分配';
 COMMENT ON COLUMN pmis_attendance.employee_id IS '员工 ID';
@@ -6661,9 +7043,16 @@ COMMENT ON COLUMN pmis_attendance.remark IS '备注';
 COMMENT ON COLUMN pmis_attendance.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_attendance.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_attendance.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pa_emp ON pmis_attendance(employee_id);
-CREATE INDEX IF NOT EXISTS idx_pa_date ON pmis_attendance(attendance_date);
-CREATE INDEX IF NOT EXISTS idx_pa_status ON pmis_attendance(status);
+
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pa_tenant_emp_date
+    ON pmis_attendance(tenant_id, employee_id, attendance_date DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pa_tenant_date
+    ON pmis_attendance(tenant_id, attendance_date DESC);
+CREATE INDEX IF NOT EXISTS idx_pa_tenant_status
+    ON pmis_attendance(tenant_id, status)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 2. 加班申请表 pmis_overtime
@@ -6674,8 +7063,8 @@ CREATE TABLE IF NOT EXISTS pmis_overtime (
     employee_id         BIGINT       NOT NULL,
     employee_name       VARCHAR(64),
     overtime_date       DATE         NOT NULL,
-    start_time          TIMESTAMP    NOT NULL,
-    end_time            TIMESTAMP    NOT NULL,
+    start_time          TIMESTAMPTZ  NOT NULL,
+    end_time            TIMESTAMPTZ  NOT NULL,
     overtime_hours      NUMERIC(5,2) NOT NULL,
     overtime_type       VARCHAR(32)  NOT NULL,                   -- WORKDAY/WEEKEND/HOLIDAY
     pay_rate            NUMERIC(5,2) NOT NULL DEFAULT 1.5,       -- 1.5/2.0/3.0 倍
@@ -6684,14 +7073,21 @@ CREATE TABLE IF NOT EXISTS pmis_overtime (
     approval_status     VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- DRAFT/SUBMITTED/APPROVED/REJECTED/CANCELLED
     approver_id         BIGINT,
     approver_name       VARCHAR(64),
-    approval_time       TIMESTAMP,
+    approval_time       TIMESTAMPTZ,
     approval_remark     TEXT,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pot_code UNIQUE (overtime_code, deleted)
+    -- 数据完整性约束
+    CONSTRAINT uk_pot_code                UNIQUE (overtime_code, deleted),
+    CONSTRAINT ck_pot_overtime_type       CHECK (overtime_type IN ('WORKDAY','WEEKEND','HOLIDAY')),
+    CONSTRAINT ck_pot_approval_status     CHECK (approval_status IN ('DRAFT','SUBMITTED','APPROVED','REJECTED','CANCELLED')),
+    CONSTRAINT ck_pot_hours_positive      CHECK (overtime_hours > 0),
+    CONSTRAINT ck_pot_pay_rate            CHECK (pay_rate IN (1.5, 2.0, 3.0)),
+    CONSTRAINT ck_pot_time_range          CHECK (end_time > start_time),
+    CONSTRAINT ck_pot_deleted             CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_overtime IS '加班申请表: WORKDAY 1.5x / WEEKEND 2.0x / HOLIDAY 3.0x 法定倍数';
 COMMENT ON COLUMN pmis_overtime.overtime_code IS '加班单号: 业务唯一,如 OT-2026-001';
@@ -6713,9 +7109,16 @@ COMMENT ON COLUMN pmis_overtime.approval_remark IS '审批意见';
 COMMENT ON COLUMN pmis_overtime.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_overtime.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_overtime.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pot_emp ON pmis_overtime(employee_id);
-CREATE INDEX IF NOT EXISTS idx_pot_date ON pmis_overtime(overtime_date);
-CREATE INDEX IF NOT EXISTS idx_pot_status ON pmis_overtime(approval_status);
+
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pot_tenant_emp_date
+    ON pmis_overtime(tenant_id, employee_id, overtime_date DESC)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pot_tenant_date
+    ON pmis_overtime(tenant_id, overtime_date DESC);
+CREATE INDEX IF NOT EXISTS idx_pot_tenant_status
+    ON pmis_overtime(tenant_id, approval_status)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 3. 请假申请表 pmis_leave
@@ -6735,14 +7138,20 @@ CREATE TABLE IF NOT EXISTS pmis_leave (
     approval_status     VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- DRAFT/SUBMITTED/APPROVED/REJECTED/CANCELLED
     approver_id         BIGINT,
     approver_name       VARCHAR(64),
-    approval_time       TIMESTAMP,
+    approval_time       TIMESTAMPTZ,
     approval_remark     TEXT,
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pl_code UNIQUE (leave_code, deleted)
+    -- 数据完整性约束
+    CONSTRAINT uk_pl_code                UNIQUE (leave_code, deleted),
+    CONSTRAINT ck_pl_leave_type          CHECK (leave_type IN ('ANNUAL','SICK','PERSONAL','MARRIAGE','MATERNITY','BEREAVEMENT','OTHER')),
+    CONSTRAINT ck_pl_approval_status     CHECK (approval_status IN ('DRAFT','SUBMITTED','APPROVED','REJECTED','CANCELLED')),
+    CONSTRAINT ck_pl_days_positive       CHECK (leave_days > 0),
+    CONSTRAINT ck_pl_date_range          CHECK (end_date >= start_date),
+    CONSTRAINT ck_pl_deleted             CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_leave IS '请假申请表: 7 种假期类型,自动算 leave_days';
 COMMENT ON COLUMN pmis_leave.leave_code IS '请假单号: 业务唯一,如 LV-2026-001';
@@ -6763,26 +7172,31 @@ COMMENT ON COLUMN pmis_leave.approval_remark IS '审批意见';
 COMMENT ON COLUMN pmis_leave.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_leave.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_leave.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pl_emp ON pmis_leave(employee_id);
-CREATE INDEX IF NOT EXISTS idx_pl_date ON pmis_leave(start_date, end_date);
-CREATE INDEX IF NOT EXISTS idx_pl_type ON pmis_leave(leave_type);
-CREATE INDEX IF NOT EXISTS idx_pl_status ON pmis_leave(approval_status);
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_039__init_pmis_attendance_schema.sql
--- ====================================================================
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pl_tenant_emp
+    ON pmis_leave(tenant_id, employee_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pl_tenant_date_range
+    ON pmis_leave(tenant_id, start_date, end_date)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pl_tenant_type
+    ON pmis_leave(tenant_id, leave_type)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pl_tenant_status
+    ON pmis_leave(tenant_id, approval_status)
+    WHERE deleted = 0;
+
+-- --------------------------------------------------------------------
 
 -- ====================================================================
 -- V1.0.0_040 已优化内联至 V1.0.0_001 的 pmis_operation_log 定义中
 -- (before_data / after_data / biz_type / biz_id 已内联,并升级为 JSONB)
 -- ====================================================================
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_041__init_pmis_literule_schema.sql
--- ====================================================================
+-- ============================ [041] init pmis literule schema ============================
 
 -- ============================================================
--- V1.0.0_041__init_pmis_literule_schema.sql
 -- LiteRule 轻量规则引擎：规则定义表 + 规则版本历史表
 -- ============================================================
 
@@ -6791,7 +7205,8 @@ CREATE INDEX IF NOT EXISTS idx_pl_status ON pmis_leave(approval_status);
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_def (
     id                    BIGSERIAL       PRIMARY KEY,
-    rule_code             VARCHAR(128)    NOT NULL UNIQUE,
+    tenant_id             BIGINT          NOT NULL DEFAULT 1,
+    rule_code             VARCHAR(128)    NOT NULL,
     rule_name             VARCHAR(256)    NOT NULL,
     category              VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
     description           TEXT,
@@ -6806,42 +7221,63 @@ CREATE TABLE IF NOT EXISTS pmis_rule_def (
     mutex_group           VARCHAR(128)    DEFAULT NULL,
     drilldown_available   BOOLEAN         NOT NULL DEFAULT TRUE,
     version               INTEGER         NOT NULL DEFAULT 1,
+    provider_trace_id     VARCHAR(64),
     created_by            VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
     created_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     updated_by            VARCHAR(64),
-    updated_at            TIMESTAMPTZ
+    updated_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    deleted               SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prd_tenant_code       UNIQUE (tenant_id, rule_code, deleted),
+    CONSTRAINT ck_prd_severity           CHECK (default_severity IN ('RED','YELLOW','BLUE','GREEN','GRAY')),
+    CONSTRAINT ck_prd_priority           CHECK (priority > 0),
+    CONSTRAINT ck_prd_version            CHECK (version > 0),
+    CONSTRAINT ck_prd_deleted            CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_rule_def IS 'LiteRule 规则定义表';
-COMMENT ON COLUMN pmis_rule_def.rule_code IS '规则编码（全局唯一）';
+COMMENT ON COLUMN pmis_rule_def.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_rule_def.rule_code IS '规则编码（租户内唯一）';
 COMMENT ON COLUMN pmis_rule_def.condition_expression IS '条件表达式（Aviator 语法，返回 boolean）';
 COMMENT ON COLUMN pmis_rule_def.severity_expression IS '严重度表达式（可选，动态决定严重度）';
 COMMENT ON COLUMN pmis_rule_def.priority IS '优先级（数值越小越先执行，默认100）';
 COMMENT ON COLUMN pmis_rule_def.mutex_group IS '互斥组名称（同组内首个命中后跳过其余规则；NULL 表示无互斥组）';
 
--- 索引
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_category   ON pmis_rule_def (category);
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_enabled    ON pmis_rule_def (enabled);
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_mutex_group ON pmis_rule_def (mutex_group);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_category_enabled
+    ON pmis_rule_def (tenant_id, category, enabled)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_priority
+    ON pmis_rule_def (tenant_id, priority)
+    WHERE deleted = 0 AND enabled = TRUE;
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_mutex_group
+    ON pmis_rule_def (tenant_id, mutex_group)
+    WHERE deleted = 0 AND mutex_group IS NOT NULL;
 
 -- --------------------------------------------------------
 -- 2. 规则版本历史表（审计追踪 + 回滚）
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_version_history (
     id              BIGSERIAL       PRIMARY KEY,
+    tenant_id       BIGINT          NOT NULL DEFAULT 1,
     rule_code       VARCHAR(128)    NOT NULL,
     version         INTEGER         NOT NULL,
     definition_json TEXT            NOT NULL,
     change_desc     VARCHAR(512),
     operator        VARCHAR(64)     NOT NULL,
+    provider_trace_id VARCHAR(64),
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    UNIQUE (rule_code, version)
+    -- 数据完整性约束
+    CONSTRAINT uk_prvh_tenant_code_version UNIQUE (tenant_id, rule_code, version),
+    CONSTRAINT ck_prvh_version             CHECK (version > 0)
 );
 
 COMMENT ON TABLE  pmis_rule_version_history IS 'LiteRule 规则版本历史表';
+COMMENT ON COLUMN pmis_rule_version_history.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_version_history.definition_json IS '规则定义 JSON 快照';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_ver_code ON pmis_rule_version_history (rule_code);
+CREATE INDEX IF NOT EXISTS idx_prvh_tenant_code
+    ON pmis_rule_version_history (tenant_id, rule_code, version DESC);
 
 -- --------------------------------------------------------
 -- 3. 预置规则（从硬编码迁移为表达式配置）
@@ -6942,7 +7378,8 @@ WHERE NOT EXISTS (
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_template (
     id                    BIGSERIAL       PRIMARY KEY,
-    template_code         VARCHAR(128)    NOT NULL UNIQUE,
+    tenant_id             BIGINT          NOT NULL DEFAULT 1,
+    template_code         VARCHAR(128)    NOT NULL,
     template_name         VARCHAR(256)    NOT NULL,
     category              VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
     description           TEXT,
@@ -6955,14 +7392,29 @@ CREATE TABLE IF NOT EXISTS pmis_rule_template (
     scope                 VARCHAR(128)    DEFAULT 'ALL',
     industry              VARCHAR(64)     DEFAULT 'GENERAL',
     tags                  VARCHAR(256),
+    provider_trace_id     VARCHAR(64),
     created_by            VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
-    created_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+    created_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_by            VARCHAR(64),
+    updated_at            TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    deleted               SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prt_tenant_code           UNIQUE (tenant_id, template_code, deleted),
+    CONSTRAINT ck_prt_severity              CHECK (default_severity IN ('RED','YELLOW','BLUE','GREEN','GRAY')),
+    CONSTRAINT ck_prt_priority              CHECK (priority > 0),
+    CONSTRAINT ck_prt_deleted               CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_rule_template IS 'LiteRule 规则模板表（模板市场）';
+COMMENT ON COLUMN pmis_rule_template.tenant_id IS '租户 ID';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_tpl_category ON pmis_rule_template (category);
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_tpl_industry ON pmis_rule_template (industry);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prt_tenant_category
+    ON pmis_rule_template (tenant_id, category)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prt_tenant_industry
+    ON pmis_rule_template (tenant_id, industry)
+    WHERE deleted = 0;
 
 -- 预置行业模板
 INSERT INTO pmis_rule_template (template_code, template_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, industry, tags)
@@ -7043,32 +7495,35 @@ VALUES
 -- 多行 VALUES 必须在整个块之后接 ON CONFLICT 子句。
 ON CONFLICT (template_code) DO NOTHING;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_041__init_pmis_literule_schema.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_042__init_pmis_rule_test_case.sql
--- ====================================================================
+-- ============================ [042] init pmis rule test case ============================
 
 -- ============================================
--- V1.0.0_042__init_pmis_rule_test_case.sql
 -- 规则测试用例管理表
 -- ============================================
 
 -- 测试用例主表
 CREATE TABLE IF NOT EXISTS pmis_rule_test_case (
-    id              BIGSERIAL       PRIMARY KEY,
-    name            VARCHAR(256)    NOT NULL,
-    rule_code       VARCHAR(128),
-    facts_data      JSONB           NOT NULL,
+    id                 BIGSERIAL       PRIMARY KEY,
+    tenant_id          BIGINT          NOT NULL DEFAULT 1,
+    name               VARCHAR(256)    NOT NULL,
+    rule_code          VARCHAR(128),
+    facts_data         JSONB           NOT NULL,
     expected_triggered JSONB,
-    description     TEXT,
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+    description        TEXT,
+    provider_trace_id  VARCHAR(64),
+    created_by         VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at         TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_by         VARCHAR(64),
+    updated_at         TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    deleted            SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_prtc_deleted           CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_rule_test_case IS 'P1-9: 规则测试用例表,用于规则评估的回归测试';
+COMMENT ON COLUMN pmis_rule_test_case.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_test_case.id IS '主键 ID';
 COMMENT ON COLUMN pmis_rule_test_case.name IS '测试用例名称';
 COMMENT ON COLUMN pmis_rule_test_case.rule_code IS '关联规则编码 (可选, null 表示通用测试用例)';
@@ -7078,9 +7533,13 @@ COMMENT ON COLUMN pmis_rule_test_case.description IS '用例描述';
 COMMENT ON COLUMN pmis_rule_test_case.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_rule_test_case.updated_at IS '更新时间';
 
--- 索引
-CREATE INDEX IF NOT EXISTS idx_rule_test_case_code ON pmis_rule_test_case(rule_code);
-CREATE INDEX IF NOT EXISTS idx_rule_test_case_name ON pmis_rule_test_case(name);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prtc_tenant_code
+    ON pmis_rule_test_case (tenant_id, rule_code)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prtc_tenant_name
+    ON pmis_rule_test_case (tenant_id, name)
+    WHERE deleted = 0;
 
 -- 更新触发器
 CREATE OR REPLACE FUNCTION update_rule_test_case_updated_at()
@@ -7122,16 +7581,11 @@ INSERT INTO pmis_rule_test_case (name, rule_code, facts_data, expected_triggered
  '{"avgBillableUtilization": 0.65, "activeProjects": 5}',
  '["UTILIZATION_LOW"]',
   '利用率65%且有活跃项目，应触发') ON CONFLICT DO NOTHING;
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_042__init_pmis_rule_test_case.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_043__add_rule_lifecycle_and_trace.sql
--- ====================================================================
+-- ============================ [043] add rule lifecycle and trace ============================
 
 -- ============================================
--- V1.0.0_043__add_rule_lifecycle_and_trace.sql
 -- 规则生命周期管理 & 执行链路追踪
 -- ============================================
 
@@ -7154,27 +7608,32 @@ ALTER TABLE pmis_rule_def
 ALTER TABLE pmis_rule_def
     ADD COLUMN IF NOT EXISTS review_comment VARCHAR(512);
 
--- 状态索引
-CREATE INDEX IF NOT EXISTS idx_rule_def_status ON pmis_rule_def(status);
+-- 状态索引（按租户过滤）
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_status
+    ON pmis_rule_def (tenant_id, status)
+    WHERE deleted = 0;
 
 -- 2. 执行链路追踪表
 CREATE TABLE IF NOT EXISTS pmis_rule_execution_trace (
-    id              BIGSERIAL       PRIMARY KEY,
-    trace_id        VARCHAR(64)     NOT NULL,
-    rule_code       VARCHAR(128)    NOT NULL,
-    rule_name       VARCHAR(256),
-    scenario        VARCHAR(128),
-    triggered       BOOLEAN         NOT NULL DEFAULT FALSE,
-    severity        VARCHAR(16),
-    condition_result VARCHAR(256),
-    elapsed_ms      BIGINT          NOT NULL DEFAULT 0,
-    facts_snapshot  JSONB,
-    result_snapshot JSONB,
-    error_message   TEXT,
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW()
+    id                BIGSERIAL       PRIMARY KEY,
+    tenant_id         BIGINT          NOT NULL DEFAULT 1,
+    trace_id          VARCHAR(64)     NOT NULL,
+    rule_code         VARCHAR(128)    NOT NULL,
+    rule_name         VARCHAR(256),
+    scenario          VARCHAR(128),
+    triggered         BOOLEAN         NOT NULL DEFAULT FALSE,
+    severity          VARCHAR(16),
+    condition_result  VARCHAR(256),
+    elapsed_ms        BIGINT          NOT NULL DEFAULT 0,
+    facts_snapshot    JSONB,
+    result_snapshot   JSONB,
+    error_message     TEXT,
+    provider_trace_id VARCHAR(64),
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT NOW()
 );
 
 COMMENT ON TABLE pmis_rule_execution_trace IS 'P1-11: 规则执行链路追踪表,一次评估一条记录';
+COMMENT ON COLUMN pmis_rule_execution_trace.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_execution_trace.id IS '主键 ID';
 COMMENT ON COLUMN pmis_rule_execution_trace.trace_id IS '追踪 ID (同一批次评估共享)';
 COMMENT ON COLUMN pmis_rule_execution_trace.rule_code IS '规则编码';
@@ -7189,50 +7648,60 @@ COMMENT ON COLUMN pmis_rule_execution_trace.result_snapshot IS '结果快照 JSO
 COMMENT ON COLUMN pmis_rule_execution_trace.error_message IS '错误信息';
 COMMENT ON COLUMN pmis_rule_execution_trace.created_at IS '创建时间';
 
--- 索引
-CREATE INDEX IF NOT EXISTS idx_rule_trace_trace_id ON pmis_rule_execution_trace(trace_id);
-CREATE INDEX IF NOT EXISTS idx_rule_trace_rule_code ON pmis_rule_execution_trace(rule_code);
-CREATE INDEX IF NOT EXISTS idx_rule_trace_created ON pmis_rule_execution_trace(created_at);
-CREATE INDEX IF NOT EXISTS idx_rule_trace_scenario ON pmis_rule_execution_trace(scenario);
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_043__add_rule_lifecycle_and_trace.sql
--- ====================================================================
+-- 数据完整性约束（表内）
+ALTER TABLE pmis_rule_execution_trace
+    ADD CONSTRAINT ck_prelapsed_nonneg  CHECK (elapsed_ms >= 0);
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_044__add_decision_table.sql
--- ====================================================================
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pret_tenant_trace
+    ON pmis_rule_execution_trace (tenant_id, trace_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pret_tenant_rule_code
+    ON pmis_rule_execution_trace (tenant_id, rule_code, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pret_tenant_scenario
+    ON pmis_rule_execution_trace (tenant_id, scenario, created_at DESC);
+-- --------------------------------------------------------------------
+
+-- ============================ [044] add decision table ============================
 
 -- ============================================
--- V1.0.0_044__add_decision_table.sql
 -- 决策表支持
 -- ============================================
 
 CREATE TABLE IF NOT EXISTS pmis_rule_decision_table (
-    id              BIGSERIAL       PRIMARY KEY,
-    table_code      VARCHAR(128)    NOT NULL UNIQUE,
-    table_name      VARCHAR(256)    NOT NULL,
-    description     TEXT,
-    category        VARCHAR(64),
+    id                 BIGSERIAL       PRIMARY KEY,
+    tenant_id          BIGINT          NOT NULL DEFAULT 1,
+    table_code         VARCHAR(128)    NOT NULL,
+    table_name         VARCHAR(256)    NOT NULL,
+    description        TEXT,
+    category           VARCHAR(64),
     -- 条件列定义 JSON: [{"name":"字段名","label":"显示名","type":"number|string|boolean"}]
-    condition_columns JSONB        NOT NULL,
+    condition_columns  JSONB           NOT NULL,
     -- 动作列定义 JSON: [{"name":"severity","label":"严重度","type":"string"}]
-    action_columns   JSONB        NOT NULL,
+    action_columns     JSONB           NOT NULL,
     -- 决策行 JSON: [{"conditions":{"字段名":"值"},"actions":{"severity":"RED"}}]
-    rows            JSONB        NOT NULL DEFAULT '[]',
+    rows               JSONB           NOT NULL DEFAULT '[]',
     -- 默认动作（未匹配行时的动作）
-    default_actions JSONB,
-    enabled         BOOLEAN       NOT NULL DEFAULT TRUE,
-    priority        INTEGER       NOT NULL DEFAULT 100,
-    version         INTEGER       NOT NULL DEFAULT 1,
-    created_by      VARCHAR(64),
-    created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
-    updated_by      VARCHAR(64),
-    updated_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW()
+    default_actions    JSONB,
+    enabled            BOOLEAN         NOT NULL DEFAULT TRUE,
+    priority           INTEGER         NOT NULL DEFAULT 100,
+    version            INTEGER         NOT NULL DEFAULT 1,
+    provider_trace_id  VARCHAR(64),
+    created_by         VARCHAR(64),
+    created_at         TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_by         VARCHAR(64),
+    updated_at         TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    deleted            SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prdt_tenant_code        UNIQUE (tenant_id, table_code, deleted),
+    CONSTRAINT ck_prdt_priority           CHECK (priority > 0),
+    CONSTRAINT ck_prdt_version            CHECK (version > 0),
+    CONSTRAINT ck_prdt_deleted            CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_rule_decision_table IS 'P1-12: 决策表 (DMN 简化版),条件/动作/行均以 JSON 存储';
+COMMENT ON COLUMN pmis_rule_decision_table.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_decision_table.id IS '主键 ID';
-COMMENT ON COLUMN pmis_rule_decision_table.table_code IS '决策表编码 (唯一)';
+COMMENT ON COLUMN pmis_rule_decision_table.table_code IS '决策表编码 (租户内唯一)';
 COMMENT ON COLUMN pmis_rule_decision_table.table_name IS '决策表名称';
 COMMENT ON COLUMN pmis_rule_decision_table.description IS '描述';
 COMMENT ON COLUMN pmis_rule_decision_table.category IS '类别';
@@ -7248,19 +7717,15 @@ COMMENT ON COLUMN pmis_rule_decision_table.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_rule_decision_table.updated_by IS '更新人';
 COMMENT ON COLUMN pmis_rule_decision_table.updated_at IS '更新时间';
 
-CREATE INDEX IF NOT EXISTS idx_dt_code ON pmis_rule_decision_table(table_code);
-CREATE INDEX IF NOT EXISTS idx_dt_category ON pmis_rule_decision_table(category);
-CREATE INDEX IF NOT EXISTS idx_dt_enabled ON pmis_rule_decision_table(enabled);
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_044__add_decision_table.sql
--- ====================================================================
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prdt_tenant_category_enabled
+    ON pmis_rule_decision_table (tenant_id, category, enabled)
+    WHERE deleted = 0;
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_045__add_decision_table_hit_policy.sql
--- ====================================================================
+-- ============================ [045] add decision table hit policy ============================
 
 -- ============================================
--- V1.0.0_045__add_decision_table_hit_policy.sql
 -- 决策表命中策略字段
 --
 -- 为 pmis_rule_decision_table 增加 hit_policy 列，支持 DMN 标准命中策略：
@@ -7276,13 +7741,9 @@ ALTER TABLE pmis_rule_decision_table
 
 COMMENT ON COLUMN pmis_rule_decision_table.hit_policy IS '命中策略：UNIQUE/FIRST/PRIORITY/COLLECT/ANY';
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_045__add_decision_table_hit_policy.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_046__add_pmis_flow_event_subscription.sql
--- ====================================================================
+-- ============================ [046] add pmis flow event subscription ============================
 
 -- ============================================================
 -- V1.0.0_046  P0-1 BPMN 事件运行时 — 事件订阅表
@@ -7313,17 +7774,27 @@ CREATE TABLE IF NOT EXISTS pmis_flow_event_subscription (
     boundary_task_id    BIGINT,                     -- 边界事件关联的 userTask ID
     subscription_status VARCHAR(16)     NOT NULL DEFAULT 'WAITING', -- WAITING / COMPLETED / CANCELLED
     payload             TEXT,                       -- 触发时携带的业务数据 JSON
-    triggered_at        TIMESTAMP,                  -- 实际触发时间
+    triggered_at        TIMESTAMPTZ,                -- 实际触发时间
     trigger_source      VARCHAR(128),               -- 触发来源（API / SERVICE_TASK / BOUNDARY）
     cancel_reason       VARCHAR(256),               -- 取消原因
     -- 审计字段
     status              VARCHAR(16)     NOT NULL DEFAULT 'ENABLED',
-    created_by          BIGINT,
-    created_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
-    updated_by          BIGINT,
-    updated_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
+    created_by          BIGINT          NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_by          BIGINT          NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     deleted             SMALLINT        NOT NULL DEFAULT 0,
-    provider_trace_id   VARCHAR(64)
+    provider_trace_id   VARCHAR(64),
+    -- 数据完整性约束
+    CONSTRAINT ck_pfes_event_type        CHECK (event_type IN ('MESSAGE','ERROR','SIGNAL')),
+    CONSTRAINT ck_pfes_subscription_status CHECK (subscription_status IN ('WAITING','COMPLETED','CANCELLED')),
+    CONSTRAINT ck_pfes_status            CHECK (status IN ('ENABLED','DISABLED')),
+    CONSTRAINT ck_pfes_deleted           CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_pfes_trigger_consistency CHECK (
+        (subscription_status = 'WAITING'    AND triggered_at IS NULL) OR
+        (subscription_status = 'COMPLETED'  AND triggered_at IS NOT NULL) OR
+        (subscription_status = 'CANCELLED'  AND triggered_at IS NULL)
+    )
 );
 
 COMMENT ON TABLE pmis_flow_event_subscription IS '工作流事件订阅表 — BPMN 错误/消息事件运行时';
@@ -7333,36 +7804,25 @@ COMMENT ON COLUMN pmis_flow_event_subscription.correlation_key IS '消息关联�
 COMMENT ON COLUMN pmis_flow_event_subscription.boundary_task_id IS '边界事件关联的 userTask ID（中间事件为 NULL）';
 COMMENT ON COLUMN pmis_flow_event_subscription.subscription_status IS '订阅状态: WAITING 等待中 / COMPLETED 已触发 / CANCELLED 已取消';
 
--- 索引：按实例查询等待中的订阅
-CREATE INDEX IF NOT EXISTS idx_pfes_instance
-    ON pmis_flow_event_subscription(instance_id)
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pfes_tenant_instance
+    ON pmis_flow_event_subscription(tenant_id, instance_id)
     WHERE deleted = 0;
-
--- 索引：按事件类型+引用匹配（消息/错误触发时的主查询）
-CREATE INDEX IF NOT EXISTS idx_pfes_event_match
+CREATE INDEX IF NOT EXISTS idx_pfes_tenant_event_match
     ON pmis_flow_event_subscription(tenant_id, event_type, event_ref, subscription_status)
     WHERE deleted = 0 AND subscription_status = 'WAITING';
-
--- 索引：按边界任务查询（userTask 完成时取消关联边界订阅）
-CREATE INDEX IF NOT EXISTS idx_pfes_boundary
-    ON pmis_flow_event_subscription(boundary_task_id)
+CREATE INDEX IF NOT EXISTS idx_pfes_tenant_boundary
+    ON pmis_flow_event_subscription(tenant_id, boundary_task_id)
     WHERE boundary_task_id IS NOT NULL AND deleted = 0;
-
--- 索引：按关联键匹配（业务消息精确匹配）
-CREATE INDEX IF NOT EXISTS idx_pfes_correlation
+CREATE INDEX IF NOT EXISTS idx_pfes_tenant_correlation
     ON pmis_flow_event_subscription(tenant_id, correlation_key, subscription_status)
     WHERE deleted = 0 AND correlation_key IS NOT NULL;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_046__add_pmis_flow_event_subscription.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_047__add_rule_canary.sql
--- ====================================================================
+-- ============================ [047] add rule canary ============================
 
 -- ============================================================
--- V1.0.0_047__add_rule_canary.sql
 -- 规则灰度发布：在 pmis_rule_def 表新增灰度路由字段
 -- ============================================================
 
@@ -7387,35 +7847,43 @@ COMMENT ON COLUMN pmis_rule_def.canary_conditions IS '灰度条件表达式列�
 COMMENT ON COLUMN pmis_rule_def.canary_condition_expression IS '灰度候选版本条件表达式（覆盖主版本，进行 A/B 验证）';
 COMMENT ON COLUMN pmis_rule_def.canary_severity_expression IS '灰度候选版本严重度表达式（覆盖主版本）';
 
--- 灰度规则索引（便于快速查询启用了灰度的规则集）
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_canary ON pmis_rule_def (canary_ratio) WHERE canary_ratio > 0;
+-- 灰度规则索引（按租户过滤）
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_canary_ratio
+    ON pmis_rule_def (tenant_id, canary_ratio)
+    WHERE deleted = 0 AND canary_ratio > 0;
 
 -- ------------------------------------------------------------
 -- 灰度分桶统计表（运营监控：rule_code -> 主桶/灰桶计数）
 -- ------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_canary_bucket (
     id              BIGSERIAL       PRIMARY KEY,
+    tenant_id       BIGINT          NOT NULL DEFAULT 1,
     rule_code       VARCHAR(128)    NOT NULL,
     bucket_type     VARCHAR(16)     NOT NULL,  -- PRIMARY / CANARY
     bucket_count    BIGINT          NOT NULL DEFAULT 0,
     stat_date       DATE            NOT NULL DEFAULT CURRENT_DATE,
+    provider_trace_id VARCHAR(64),
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    UNIQUE (rule_code, bucket_type, stat_date)
+    -- 数据完整性约束
+    CONSTRAINT uk_prcb_tenant_code_date_type UNIQUE (tenant_id, rule_code, bucket_type, stat_date),
+    CONSTRAINT ck_prcb_bucket_type            CHECK (bucket_type IN ('PRIMARY','CANARY')),
+    CONSTRAINT ck_prcb_bucket_count           CHECK (bucket_count >= 0)
 );
 
 COMMENT ON TABLE  pmis_rule_canary_bucket IS '规则灰度分桶统计表（按日聚合，便于运营对比新旧版本流量）';
+COMMENT ON COLUMN pmis_rule_canary_bucket.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_canary_bucket.bucket_type IS '桶类型：PRIMARY=主版本，CANARY=候选版本';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_canary_bucket_rule   ON pmis_rule_canary_bucket (rule_code);
-CREATE INDEX IF NOT EXISTS idx_pmis_canary_bucket_date   ON pmis_rule_canary_bucket (stat_date);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prcb_tenant_rule_date
+    ON pmis_rule_canary_bucket (tenant_id, rule_code, stat_date DESC);
+CREATE INDEX IF NOT EXISTS idx_prcb_tenant_date
+    ON pmis_rule_canary_bucket (tenant_id, stat_date DESC);
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_047__add_rule_canary.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_048__add_pmis_flow_run_task_priority.sql
--- ====================================================================
+-- ============================ [048] add pmis flow run task priority ============================
 
 -- ============================================================
 -- P1-1: 任务优先级 priority 字段落地
@@ -7440,16 +7908,11 @@ COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级（1-100�
 -- 注: idx_pmis_flow_run_task_priority_todo 部分索引已上移到主索引块(pmis_flow_run_task 紧邻处),
 --     此处不再重复创建,保证表结构集中。
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_048__add_pmis_flow_run_task_priority.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_049__add_rule_status_check.sql
--- ====================================================================
+-- ============================ [049] add rule status check ============================
 
 -- ============================================================
--- V1.0.0_049__add_rule_status_check.sql
 -- 规则状态字段数据库层 CHECK 约束（纵深防御，配合应用层 RuleStatus 状态机校验）
 -- ============================================================
 
@@ -7463,13 +7926,9 @@ ALTER TABLE pmis_rule_def
 COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
     '规则状态合法性约束，配合应用层 RuleStatus.canTransitionTo 状态机校验';
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_049__add_rule_status_check.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_050__add_pmis_flow_notify_outbox.sql
--- ====================================================================
+-- ============================ [050] add pmis flow notify outbox ============================
 
 -- ============================================================
 -- V1.0.0_050  P2-1 可靠消息投递 — 工作流通知外发箱（pmis_flow_notify_outbox）
@@ -7506,17 +7965,28 @@ CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
     status              VARCHAR(16)     NOT NULL DEFAULT 'PENDING', -- PENDING / SENT / DEAD
     retry_count         INT             NOT NULL DEFAULT 0,
     max_retries         INT             NOT NULL DEFAULT 5,     -- 默认最大重试 5 次
-    next_retry_at       TIMESTAMP       NOT NULL DEFAULT NOW(), -- 下次重试时间（指数退避）
-    sent_at             TIMESTAMP,                              -- 实际投递成功时间
+    next_retry_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(), -- 下次重试时间（指数退避）
+    sent_at             TIMESTAMPTZ,                            -- 实际投递成功时间
     error_msg           VARCHAR(1024),                          -- 最近一次失败原因
     -- 链路追踪
     provider_trace_id   VARCHAR(64),
     -- 审计字段
-    created_by          BIGINT,
-    created_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
-    updated_by          BIGINT,
-    updated_at          TIMESTAMP       NOT NULL DEFAULT NOW(),
-    deleted             SMALLINT        NOT NULL DEFAULT 0
+    created_by          BIGINT          NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_by          BIGINT          NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    deleted             SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfno_status          CHECK (status IN ('PENDING','SENT','DEAD')),
+    CONSTRAINT ck_pfno_retry_count     CHECK (retry_count >= 0),
+    CONSTRAINT ck_pfno_max_retries     CHECK (max_retries >= 0),
+    CONSTRAINT ck_pfno_retry_bounded   CHECK (retry_count <= max_retries + 1),
+    CONSTRAINT ck_pfno_deleted         CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_pfno_status_consistency CHECK (
+        (status = 'PENDING' AND sent_at IS NULL) OR
+        (status = 'SENT'    AND sent_at IS NOT NULL) OR
+        (status = 'DEAD'    AND sent_at IS NULL)
+    )
 );
 
 COMMENT ON TABLE pmis_flow_notify_outbox IS '工作流通知外发箱 — 可靠消息投递（Outbox Pattern，P2-1 阶段一），由扫描任务异步投递到 NotificationClient / IM / 邮件 / 短信';
@@ -7531,36 +8001,25 @@ COMMENT ON COLUMN pmis_flow_notify_outbox.max_retries IS '最大重试次数（�
 COMMENT ON COLUMN pmis_flow_notify_outbox.next_retry_at IS '下次重试时间（指数退避：30s/60s/120s/300s/600s）';
 COMMENT ON COLUMN pmis_flow_notify_outbox.error_msg IS '最近一次失败原因';
 
--- 索引：扫描任务主查询（status=PENDING AND next_retry_at <= NOW()）
-CREATE INDEX IF NOT EXISTS idx_peo_pending_scan
-    ON pmis_flow_notify_outbox(status, next_retry_at)
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pfno_tenant_pending_scan
+    ON pmis_flow_notify_outbox(tenant_id, status, next_retry_at)
     WHERE deleted = 0 AND status = 'PENDING';
-
--- 索引：按业务类型+业务 ID 查询（幂等校验：同一业务事件不重复入箱）
-CREATE INDEX IF NOT EXISTS idx_peo_biz
-    ON pmis_flow_notify_outbox(biz_type, biz_id)
+CREATE INDEX IF NOT EXISTS idx_pfno_tenant_biz
+    ON pmis_flow_notify_outbox(tenant_id, biz_type, biz_id)
     WHERE deleted = 0;
-
--- 索引：按实例查询（流程实例下所有事件）
-CREATE INDEX IF NOT EXISTS idx_peo_instance
-    ON pmis_flow_notify_outbox(instance_id)
+CREATE INDEX IF NOT EXISTS idx_pfno_tenant_instance
+    ON pmis_flow_notify_outbox(tenant_id, instance_id)
     WHERE deleted = 0 AND instance_id IS NOT NULL;
-
--- 索引：按 trace_id 查询（链路追踪）
-CREATE INDEX IF NOT EXISTS idx_peo_trace
-    ON pmis_flow_notify_outbox(provider_trace_id)
+CREATE INDEX IF NOT EXISTS idx_pfno_tenant_trace
+    ON pmis_flow_notify_outbox(tenant_id, provider_trace_id)
     WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_050__add_pmis_flow_notify_outbox.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_051__init_rule_scorecard_tree_script.sql
--- ====================================================================
+-- ============================ [051] init rule scorecard tree script ============================
 
 -- ============================================================
--- V1.0.0_051__init_rule_scorecard_tree_script.sql
 -- 评分卡 / 决策树 / 脚本规则持久化
 -- （原 V1.0.0_048 与 add_pmis_flow_run_task_priority 版本号冲突，迁移到 051）
 -- ============================================================
@@ -7569,40 +8028,54 @@ CREATE INDEX IF NOT EXISTS idx_peo_trace
 -- 1. 评分卡规则定义表
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_scorecard (
-    id              BIGSERIAL       PRIMARY KEY,
-    rule_code       VARCHAR(128)    NOT NULL UNIQUE,
-    rule_name       VARCHAR(256)   NOT NULL,
-    category        VARCHAR(64)     NOT NULL DEFAULT 'RISK',
-    description     TEXT,
-    base_score      NUMERIC(10,2)   NOT NULL DEFAULT 100,
-    red_threshold   NUMERIC(10,2)   NOT NULL,
-    yellow_threshold NUMERIC(10,2)  NOT NULL,
-    factors         JSONB           NOT NULL,   -- [{conditionExpression, score, description}]
-    priority        INTEGER         NOT NULL DEFAULT 100,
-    enabled         BOOLEAN         NOT NULL DEFAULT TRUE,
-    scope           VARCHAR(128)    DEFAULT 'ALL',
-    version         INTEGER         NOT NULL DEFAULT 1,
-    created_by      VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_by      VARCHAR(64),
-    updated_at      TIMESTAMPTZ
+    id               BIGSERIAL       PRIMARY KEY,
+    tenant_id        BIGINT          NOT NULL DEFAULT 1,
+    rule_code        VARCHAR(128)    NOT NULL,
+    rule_name        VARCHAR(256)    NOT NULL,
+    category         VARCHAR(64)     NOT NULL DEFAULT 'RISK',
+    description      TEXT,
+    base_score       NUMERIC(10,2)   NOT NULL DEFAULT 100,
+    red_threshold    NUMERIC(10,2)   NOT NULL,
+    yellow_threshold NUMERIC(10,2)   NOT NULL,
+    factors          JSONB           NOT NULL,   -- [{conditionExpression, score, description}]
+    priority         INTEGER         NOT NULL DEFAULT 100,
+    enabled          BOOLEAN         NOT NULL DEFAULT TRUE,
+    scope            VARCHAR(128)    DEFAULT 'ALL',
+    version          INTEGER         NOT NULL DEFAULT 1,
+    provider_trace_id VARCHAR(64),
+    created_by       VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_by       VARCHAR(64),
+    updated_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    deleted          SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prs2_tenant_code        UNIQUE (tenant_id, rule_code, deleted),
+    CONSTRAINT ck_prs2_base_score         CHECK (base_score >= 0),
+    CONSTRAINT ck_prs2_threshold_order    CHECK (red_threshold <= yellow_threshold),
+    CONSTRAINT ck_prs2_priority           CHECK (priority > 0),
+    CONSTRAINT ck_prs2_version            CHECK (version > 0),
+    CONSTRAINT ck_prs2_deleted            CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_rule_scorecard IS '评分卡规则定义表';
+COMMENT ON COLUMN pmis_rule_scorecard.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_scorecard.base_score IS '基础分（命中因子前的基础值，默认 100）';
 COMMENT ON COLUMN pmis_rule_scorecard.red_threshold IS '红色阈值（总分低于此值为 RED）';
 COMMENT ON COLUMN pmis_rule_scorecard.yellow_threshold IS '黄色阈值（总分低于此值为 YELLOW）';
 COMMENT ON COLUMN pmis_rule_scorecard.factors IS '评分因子数组，JSON 格式：[{"conditionExpression":"...","score":-30,"description":"..."}]';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_scorecard_enabled ON pmis_rule_scorecard (enabled);
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_scorecard_category ON pmis_rule_scorecard (category);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prs2_tenant_category_enabled
+    ON pmis_rule_scorecard (tenant_id, category, enabled)
+    WHERE deleted = 0;
 
 -- --------------------------------------------------------
 -- 2. 决策树规则定义表
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_decision_tree (
     id              BIGSERIAL       PRIMARY KEY,
-    rule_code       VARCHAR(128)    NOT NULL UNIQUE,
+    tenant_id       BIGINT          NOT NULL DEFAULT 1,
+    rule_code       VARCHAR(128)    NOT NULL,
     rule_name       VARCHAR(256)    NOT NULL,
     category        VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
     description     TEXT,
@@ -7611,54 +8084,72 @@ CREATE TABLE IF NOT EXISTS pmis_rule_decision_tree (
     enabled         BOOLEAN         NOT NULL DEFAULT TRUE,
     scope           VARCHAR(128)    DEFAULT 'ALL',
     version         INTEGER         NOT NULL DEFAULT 1,
+    provider_trace_id VARCHAR(64),
     created_by      VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
     updated_by      VARCHAR(64),
-    updated_at      TIMESTAMPTZ
+    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    deleted         SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prdt2_tenant_code    UNIQUE (tenant_id, rule_code, deleted),
+    CONSTRAINT ck_prdt2_priority       CHECK (priority > 0),
+    CONSTRAINT ck_prdt2_version        CHECK (version > 0),
+    CONSTRAINT ck_prdt2_deleted        CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_rule_decision_tree IS '决策树规则定义表';
+COMMENT ON COLUMN pmis_rule_decision_tree.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_decision_tree.root_node IS '决策树根节点 JSON：{conditionExpression, trueBranch, falseBranch, leaf, severity, title, description}';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_tree_enabled ON pmis_rule_decision_tree (enabled);
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_tree_category ON pmis_rule_decision_tree (category);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prdt2_tenant_category_enabled
+    ON pmis_rule_decision_tree (tenant_id, category, enabled)
+    WHERE deleted = 0;
 
 -- --------------------------------------------------------
 -- 3. 脚本规则定义表
 -- --------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_script (
-    id              BIGSERIAL       PRIMARY KEY,
-    rule_code       VARCHAR(128)    NOT NULL UNIQUE,
-    rule_name       VARCHAR(256)    NOT NULL,
-    category        VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
-    description     TEXT,
-    script          TEXT            NOT NULL,   -- Groovy 脚本
-    default_severity VARCHAR(16)    NOT NULL DEFAULT 'INFO',
-    sandbox_enabled BOOLEAN         NOT NULL DEFAULT TRUE,
-    priority        INTEGER         NOT NULL DEFAULT 100,
-    enabled         BOOLEAN         NOT NULL DEFAULT TRUE,
-    scope           VARCHAR(128)    DEFAULT 'ALL',
-    version         INTEGER         NOT NULL DEFAULT 1,
-    created_by      VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
-    updated_by      VARCHAR(64),
-    updated_at      TIMESTAMPTZ
+    id               BIGSERIAL       PRIMARY KEY,
+    tenant_id        BIGINT          NOT NULL DEFAULT 1,
+    rule_code        VARCHAR(128)    NOT NULL,
+    rule_name        VARCHAR(256)    NOT NULL,
+    category         VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
+    description      TEXT,
+    script           TEXT            NOT NULL,   -- Groovy 脚本
+    default_severity VARCHAR(16)     NOT NULL DEFAULT 'INFO',
+    sandbox_enabled  BOOLEAN         NOT NULL DEFAULT TRUE,
+    priority         INTEGER         NOT NULL DEFAULT 100,
+    enabled          BOOLEAN         NOT NULL DEFAULT TRUE,
+    scope            VARCHAR(128)    DEFAULT 'ALL',
+    version          INTEGER         NOT NULL DEFAULT 1,
+    provider_trace_id VARCHAR(64),
+    created_by       VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    updated_by       VARCHAR(64),
+    updated_at       TIMESTAMPTZ     NOT NULL DEFAULT NOW(),
+    deleted          SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prsc_tenant_code     UNIQUE (tenant_id, rule_code, deleted),
+    CONSTRAINT ck_prsc_severity         CHECK (default_severity IN ('RED','YELLOW','BLUE','GREEN','GRAY','INFO')),
+    CONSTRAINT ck_prsc_priority         CHECK (priority > 0),
+    CONSTRAINT ck_prsc_version          CHECK (version > 0),
+    CONSTRAINT ck_prsc_deleted          CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE  pmis_rule_script IS '脚本规则定义表（Groovy JSR-223）';
+COMMENT ON COLUMN pmis_rule_script.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_script.script IS 'Groovy 脚本内容（沙箱模式下禁止 System/反射/IO/网络访问）';
 COMMENT ON COLUMN pmis_rule_script.sandbox_enabled IS '是否启用沙箱（默认 TRUE）';
 
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_script_enabled ON pmis_rule_script (enabled);
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_script_category ON pmis_rule_script (category);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prsc_tenant_category_enabled
+    ON pmis_rule_script (tenant_id, category, enabled)
+    WHERE deleted = 0;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_051__init_rule_scorecard_tree_script.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_052__index_tuning.sql
--- ====================================================================
+-- ============================ [052] index tuning ============================
 
 -- =====================================================================
 --  PMIS PostgreSQL 索引调优 SQL（批次 19）
@@ -7694,53 +8185,23 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_provider_trace
     ON pmis_project_change (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
 
--- 项目结项（4.1.4）
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_closure_initiation_status
--- [SKIPPED-FWD-REF]     ON pmis_project_closure (initiation_id, status, created_at DESC);
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_closure_closure_type
--- [SKIPPED-FWD-REF]     ON pmis_project_closure (closure_type, created_at DESC);
-
--- 合同模板（4.1.5）
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_template_code
--- [SKIPPED-FWD-REF]     ON pmis_contract_template (code);
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_template_status_type
--- [SKIPPED-FWD-REF]     ON pmis_contract_template (status, type, created_at DESC);
-
--- 售后表（4.1.3）
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_warranty_initiation_expire
--- [SKIPPED-FWD-REF]     ON pmis_after_sales_warranty (initiation_id, expire_date DESC)
--- [SKIPPED-FWD-REF]     WHERE status = 'ACTIVE';
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_priority_status
--- [SKIPPED-FWD-REF]     ON pmis_after_sales_ops_ticket (priority, status, created_at DESC)
--- [SKIPPED-FWD-REF]     WHERE status IN ('OPEN', 'IN_PROGRESS');
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_ops_ticket_sla_due
--- [SKIPPED-FWD-REF]     ON pmis_after_sales_ops_ticket (sla_due_at)
--- [SKIPPED-FWD-REF]     WHERE status NOT IN ('CLOSED', 'CANCELLED');
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_satisfaction_ticket
--- [SKIPPED-FWD-REF]     ON pmis_after_sales_satisfaction (ticket_id, created_at DESC);
-
--- 项目交付（4.1.2）
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_delivery_initiation_stage
--- [SKIPPED-FWD-REF]     ON pmis_project_delivery (initiation_id, stage, status);
+-- P1-6 清理: 移除 [SKIPPED-FWD-REF] 索引(原引用表 pmis_project_closure / pmis_contract_template /
+--   pmis_after_sales_* / pmis_project_delivery / pmis_evm_record / pmis_daily_reconcile /
+--   pmis_agent_orchestration / pmis_agent_blackboard 暂未落地,见文件头 §Missing-Tables 列表)
+--   后续落地时按 §Missing-Tables 章节补充即可
 
 -- =====================================================================
---  2) EVM 看板（4.2 联动）
+--  2) EVM 看板（4.2 联动）—— pmis_evm_record 表暂未落地,索引随之略
 -- =====================================================================
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_evm_initiation_period
--- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, period DESC);
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_evm_wbs_period
--- [SKIPPED-FWD-REF]     ON pmis_evm_record (wbs_task_id, period DESC);
--- EVM 周期唯一性（idempotent on initiation+wbs+period）
--- [SKIPPED-FWD-REF] CREATE UNIQUE INDEX IF NOT EXISTS uq_pmis_evm_period
--- [SKIPPED-FWD-REF]     ON pmis_evm_record (initiation_id, wbs_task_id, period);
 
 -- =====================================================================
 --  3) 利用率快照（4.2.1）
 -- =====================================================================
+-- 注意: 部门维度 (department, period) 查询已被 V1.0.0_020 内联的
+--       idx_billable_tenant_dept_period (tenant_id, department, period) 覆盖,
+--       单租户下前缀 tenant_id 仍可走索引扫描,无需重复创建
 CREATE INDEX IF NOT EXISTS idx_pmis_utilization_user_period
     ON pmis_billable_utilization_snapshot (employee_id, period DESC);
-CREATE INDEX IF NOT EXISTS idx_pmis_utilization_dept_period
-    ON pmis_billable_utilization_snapshot (department, period DESC);
 
 -- =====================================================================
 --  4) 预警 / 对账（4.2.2/4.2.3）
@@ -7767,10 +8228,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_agent_prediction_type_alert
 CREATE INDEX IF NOT EXISTS idx_pmis_agent_prediction_trace
     ON pmis_agent_prediction (provider_trace_id)
     WHERE provider_trace_id IS NOT NULL;
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_agent_orchestration_biz
--- [SKIPPED-FWD-REF]     ON pmis_agent_orchestration (biz_type, biz_id, created_at DESC);
--- [SKIPPED-FWD-REF] CREATE INDEX IF NOT EXISTS idx_pmis_agent_blackboard_session
--- [SKIPPED-FWD-REF]     ON pmis_agent_blackboard (session_id);
+-- P1-6 清理: 移除 [SKIPPED-FWD-REF] pmis_agent_orchestration / pmis_agent_blackboard 索引(表暂未落地)
 
 -- =====================================================================
 --  6) 财务对账（voucher / payment / invoice）
@@ -7789,14 +8247,10 @@ CREATE INDEX IF NOT EXISTS idx_pmis_payment_unallocated
 -- =====================================================================
 --  7) 时区/时间相关 BRIN 索引（日志/审计表 100w+ 行）
 -- =====================================================================
-CREATE INDEX IF NOT EXISTS idx_pmis_audit_log_brin_created
-    ON pmis_operation_log USING BRIN (created_at)
-    WITH (pages_per_range = 32);
+-- P1-4: pmis_operation_log 的 BRIN 索引已上移到父表定义处(分区自动传播),此处跳过
+--       pmis_message_log 仍非分区表,保留原 BRIN
 CREATE INDEX IF NOT EXISTS idx_pmis_message_log_brin_sent
     ON pmis_message_log USING BRIN (create_time)
-    WITH (pages_per_range = 32);
-CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
-    ON pmis_operation_log USING BRIN (created_at)
     WITH (pages_per_range = 32);
 
 -- =====================================================================
@@ -7812,8 +8266,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_change_status_lower
 -- =====================================================================
 ANALYZE pmis_project_initiation;
 ANALYZE pmis_project_change;
--- [SKIPPED-FWD-REF] ANALYZE pmis_project_closure;
--- [SKIPPED-FWD-REF] ANALYZE pmis_evm_record;
+-- P1-6 清理: 移除 [SKIPPED-FWD-REF] ANALYZE(表暂未落地,见文件头 §Missing-Tables)
 ANALYZE pmis_billable_utilization_snapshot;
 ANALYZE pmis_agent_prediction;
 ANALYZE pmis_alert_dispatch;
@@ -7842,16 +8295,11 @@ SELECT '✅ 索引调优完成（共 ' || count(*) || ' 个索引）' AS result
   FROM pg_indexes
  WHERE schemaname = 'public' AND indexname LIKE 'idx_pmis_%';
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_052__index_tuning.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_053__add_rule_tenant_id.sql
--- ====================================================================
+-- ============================ [053] add rule tenant id ============================
 
 -- ============================================================
--- V1.0.0_053__add_rule_tenant_id.sql
 -- LiteRule 模块多租户字段预留（与项目其他业务表对齐）
 --
 -- 说明：
@@ -7906,60 +8354,46 @@ ALTER TABLE pmis_rule_canary_bucket
     ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
 CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON pmis_rule_canary_bucket (tenant_id);
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_053__add_rule_tenant_id.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
 -- ====================================================================
 -- V1.0.0_054 已优化内联至 V1.0.0_001 的 pmis_user_account 定义中
 -- (dept_id / leader_id / position_code 字段及对应 3 个索引均已内联)
 -- ====================================================================
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_055__init_rule_variable_def.sql
--- ====================================================================
+-- ============================ [055] init rule variable def ============================
 
 -- ============================================================
--- V1.0.0_055__init_rule_variable_def.sql
 -- P2-4 变量空间元数据：规则表达式中可引用的变量定义表
 -- @author ydsz-pmis-team
 -- @since 1.4.0
 -- ============================================================
 
 CREATE TABLE IF NOT EXISTS pmis_rule_variable_def (
-    id              BIGINT       NOT NULL GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    var_name        VARCHAR(128) NOT NULL,
-    var_type        VARCHAR(128) NOT NULL,
-    description     VARCHAR(512),
-    sample_value    TEXT,
-    category        VARCHAR(64)  NOT NULL DEFAULT 'GENERAL',
-    required        BOOLEAN      NOT NULL DEFAULT FALSE,
-    enabled         BOOLEAN      NOT NULL DEFAULT TRUE,
-    tenant_id       BIGINT       NOT NULL DEFAULT 1,
-    created_by      VARCHAR(64)  NOT NULL DEFAULT 'SYSTEM',
-    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(64),
-    updated_at      TIMESTAMP
+    id                BIGSERIAL       PRIMARY KEY,
+    tenant_id         BIGINT          NOT NULL DEFAULT 1,
+    var_name          VARCHAR(128)    NOT NULL,
+    var_type          VARCHAR(128)    NOT NULL,
+    description       VARCHAR(512),
+    sample_value      TEXT,
+    category          VARCHAR(64)     NOT NULL DEFAULT 'GENERAL',
+    required          BOOLEAN         NOT NULL DEFAULT FALSE,
+    enabled           BOOLEAN         NOT NULL DEFAULT TRUE,
+    provider_trace_id VARCHAR(64),
+    created_by        VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(64),
+    updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prvd_tenant_name       UNIQUE (tenant_id, var_name, deleted),
+    CONSTRAINT ck_prvd_deleted           CHECK (deleted IN (0, 1))
 );
 
--- 唯一约束：同租户下变量名唯一（幂等：约束已存在时跳过）
-DO $$
-BEGIN
-    IF NOT EXISTS (
-        SELECT 1 FROM pg_constraint
-        WHERE conname = 'uk_rule_variable_name'
-          AND conrelid = 'pmis_rule_variable_def'::regclass
-    ) THEN
-        ALTER TABLE pmis_rule_variable_def
-            ADD CONSTRAINT uk_rule_variable_name UNIQUE (tenant_id, var_name);
-    END IF;
-END $$;
-
--- 索引：按类别查询
-CREATE INDEX IF NOT EXISTS idx_rule_variable_category ON pmis_rule_variable_def (category);
-
--- 索引：按租户查询
-CREATE INDEX IF NOT EXISTS idx_rule_variable_tenant ON pmis_rule_variable_def (tenant_id);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_prvd_tenant_category
+    ON pmis_rule_variable_def (tenant_id, category, enabled)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_rule_variable_def IS '规则变量定义表：规则表达式中可引用的变量元数据';
 COMMENT ON COLUMN pmis_rule_variable_def.var_name     IS '变量名（如 cpi / budgetAmount / evmRedCount）';
@@ -7988,16 +8422,11 @@ INSERT INTO pmis_rule_variable_def (var_name, var_type, description, sample_valu
     ('tenantId',           'java.lang.String',  '租户 ID',                                   'T001','PROJECT',FALSE)
 ON CONFLICT (tenant_id, var_name) DO NOTHING;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_055__init_rule_variable_def.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_056__add_tenant_id_to_base_tables.sql
--- ====================================================================
+-- ============================ [056] add tenant id to base tables ============================
 
 -- ============================================================
--- V1.0.0_056__add_tenant_id_to_base_tables.sql
 -- 基础表多租户字段预留 + 关键查询路径复合索引
 --
 -- H2.1 修复：
@@ -8191,11 +8620,7 @@ CREATE INDEX IF NOT EXISTS idx_ppgr_tenant ON pmis_project_gate_review(tenant_id
 ALTER TABLE pmis_report_subscription ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
 CREATE INDEX IF NOT EXISTS idx_report_sub_tenant ON pmis_report_subscription(tenant_id);
 
--- 报表导出记录
-ALTER TABLE pmis_report_export_record ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
-CREATE INDEX IF NOT EXISTS idx_report_exp_tenant ON pmis_report_export_record(tenant_id);
-
--- 异步导出记录
+-- 异步导出记录（P0-3 合并：原报表导出记录已并入此表）
 ALTER TABLE pmis_export_record ADD COLUMN IF NOT EXISTS tenant_id BIGINT NOT NULL DEFAULT 1;
 CREATE INDEX IF NOT EXISTS idx_export_rec_tenant ON pmis_export_record(tenant_id);
 
@@ -8235,37 +8660,22 @@ ANALYZE pmis_project_opportunity_follow;
 ANALYZE pmis_project_budget_item;
 ANALYZE pmis_project_gate_review;
 ANALYZE pmis_report_subscription;
-ANALYZE pmis_report_export_record;
 ANALYZE pmis_export_record;
 ANALYZE pmis_flow_his_variable;
 ANALYZE pmis_rule_template;
 ANALYZE pmis_rule_test_case;
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_056__add_tenant_id_to_base_tables.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
 -- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_057__create_extensions.sql
+-- 可选扩展(性能监控/Hint 优化) - H6.2 修复
 -- ====================================================================
-
--- ============================================================
--- V1.0.0_057__create_extensions.sql
--- 创建 PostgreSQL 扩展（H6.2 修复）
---
--- 问题：原 deploy/sql/README.md:142 仅文档化要求手动执行
---   psql -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;"
---   未纳入迁移脚本管理，新环境部署易遗漏，导致查询 pg_stat_statements
---   视图报"relation does not exist"。
---
--- 注意：
+-- 说明:
 --   - pg_stat_statements / pg_hint_plan 需在 postgresql.conf 的
 --     shared_preload_libraries 中预加载后才可创建扩展
---   - uuid-ossp / pgcrypto 无需 preload
---   - 此脚本在已创建扩展的环境中执行会返回 NOTICE 而非 ERROR（IF NOT EXISTS）
---   - pg_hint_plan / pg_stat_statements 在某些环境（如 PG18 或未配置 preload）
---     不可用，使用 DO 块容错，避免阻断主流程
--- ============================================================
+--   - uuid-ossp / pgcrypto 已在文件首部创建, 此处不再重复
+--   - 此脚本在已创建扩展的环境中执行会返回 NOTICE 而非 ERROR(IF NOT EXISTS)
+--   - pg_hint_plan 在某些环境(如未配置 preload) 不可用, 使用 DO 块容错
 
 -- pg_stat_statements: 需 shared_preload_libraries 预加载, 未加载时跳过
 DO $$
@@ -8276,7 +8686,7 @@ EXCEPTION
         RAISE NOTICE 'pg_stat_statements 不可用, 跳过: %', SQLERRM;
 END $$;
 
--- pg_hint_plan: 仅 PG 12-16 可用, PG18 不支持, 跳过
+-- pg_hint_plan: 需 preload 预加载, 未加载时跳过
 DO $$
 BEGIN
     CREATE EXTENSION IF NOT EXISTS pg_hint_plan;
@@ -8285,22 +8695,11 @@ EXCEPTION
         RAISE NOTICE 'pg_hint_plan 不可用, 跳过: %', SQLERRM;
 END $$;
 
--- uuid-ossp: 无需 preload, 标准扩展
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
-
--- pgcrypto: 无需 preload, 标准扩展
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
-
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_057__create_extensions.sql
 -- ====================================================================
 
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_058__init_pmis_flow_third_party.sql
--- ====================================================================
+-- ============================ [058] init pmis flow third party ============================
 
 -- =============================================================
--- V1.0.0_058__init_pmis_flow_third_party.sql
 -- 三方审批账号映射表 + 回调日志表
 --
 -- P0-2: 三方审批 SDK（钉钉/飞书/企微）回调接入
@@ -8319,6 +8718,7 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_third_party_account (
     id                 BIGSERIAL       PRIMARY KEY,
+    tenant_id          BIGINT          NOT NULL DEFAULT 1,
     user_id            BIGINT          NOT NULL,
     platform           VARCHAR(20)     NOT NULL,
     open_id            VARCHAR(128),
@@ -8327,14 +8727,18 @@ CREATE TABLE IF NOT EXISTS pmis_flow_third_party_account (
     agent_id           VARCHAR(128),
     access_token       VARCHAR(512),
     refresh_token      VARCHAR(512),
-    token_expire_at    TIMESTAMP,
+    token_expire_at    TIMESTAMPTZ,
     status             VARCHAR(20)     NOT NULL DEFAULT 'ACTIVE',
-    tenant_id          BIGINT          NOT NULL DEFAULT 1,
-    created_by         BIGINT,
-    created_at         TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by         BIGINT,
-    updated_at         TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted            SMALLINT        NOT NULL DEFAULT 0
+    provider_trace_id  VARCHAR(64),
+    created_by         BIGINT          NOT NULL DEFAULT 0,
+    created_at         TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by         BIGINT          NOT NULL DEFAULT 0,
+    updated_at         TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pftpa_status         CHECK (status IN ('ACTIVE','INACTIVE','REVOKED')),
+    CONSTRAINT ck_pftpa_platform       CHECK (platform IN ('DINGTALK','FEISHU','WECOM')),
+    CONSTRAINT ck_pftpa_deleted        CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_flow_third_party_account IS 'P0-2: 三方审批账号映射表（钉钉/飞书/企微）';
@@ -8350,25 +8754,23 @@ COMMENT ON COLUMN pmis_flow_third_party_account.token_expire_at IS '令牌过期
 COMMENT ON COLUMN pmis_flow_third_party_account.status IS '状态: ACTIVE/INACTIVE/REVOKED';
 COMMENT ON COLUMN pmis_flow_third_party_account.deleted IS '逻辑删除标记 0=未删 1=已删';
 
--- 唯一约束：同一用户在同一平台仅绑定一个账号
-CREATE UNIQUE INDEX IF NOT EXISTS uk_third_party_user_platform
-    ON pmis_flow_third_party_account(user_id, platform)
+-- 复合/部分索引
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pftpa_tenant_user_platform
+    ON pmis_flow_third_party_account(tenant_id, user_id, platform)
     WHERE deleted = 0;
-
--- 唯一约束：同一平台同一 openId 仅映射一个系统用户
-CREATE UNIQUE INDEX IF NOT EXISTS uk_third_party_platform_openid
-    ON pmis_flow_third_party_account(platform, open_id)
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pftpa_tenant_platform_openid
+    ON pmis_flow_third_party_account(tenant_id, platform, open_id)
     WHERE deleted = 0 AND open_id IS NOT NULL;
-
--- 索引：按平台 + unionId 反查
-CREATE INDEX IF NOT EXISTS idx_third_party_union
-    ON pmis_flow_third_party_account(platform, union_id);
+CREATE INDEX IF NOT EXISTS idx_pftpa_tenant_platform_union
+    ON pmis_flow_third_party_account(tenant_id, platform, union_id)
+    WHERE union_id IS NOT NULL;
 
 -- -------------------------------------------
 -- 2. 三方审批回调日志表
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_third_party_log (
     id                  BIGSERIAL       PRIMARY KEY,
+    tenant_id           BIGINT          NOT NULL DEFAULT 1,
     platform            VARCHAR(20)     NOT NULL,
     event_type          VARCHAR(64)     NOT NULL,
     process_instance_id VARCHAR(128),
@@ -8377,8 +8779,11 @@ CREATE TABLE IF NOT EXISTS pmis_flow_third_party_log (
     callback_data       TEXT,
     handle_status       VARCHAR(20)     NOT NULL DEFAULT 'PENDING',
     error_msg           VARCHAR(512),
-    tenant_id           BIGINT          NOT NULL DEFAULT 1,
-    created_at          TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP
+    provider_trace_id   VARCHAR(64),
+    created_at          TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- 数据完整性约束
+    CONSTRAINT ck_pftpl_platform         CHECK (platform IN ('DINGTALK','FEISHU','WECOM')),
+    CONSTRAINT ck_pftpl_handle_status    CHECK (handle_status IN ('PENDING','SUCCESS','FAIL'))
 );
 
 COMMENT ON TABLE pmis_flow_third_party_log IS 'P0-2: 三方审批回调日志表';
@@ -8391,24 +8796,18 @@ COMMENT ON COLUMN pmis_flow_third_party_log.callback_data IS '回调原始数据
 COMMENT ON COLUMN pmis_flow_third_party_log.handle_status IS '处理状态: PENDING/SUCCESS/FAIL';
 COMMENT ON COLUMN pmis_flow_third_party_log.error_msg IS '处理失败原因';
 
--- 索引：按平台 + 时间查询回调日志
-CREATE INDEX IF NOT EXISTS idx_third_party_log_platform
-    ON pmis_flow_third_party_log(platform, created_at);
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_platform_created
+    ON pmis_flow_third_party_log(tenant_id, platform, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pftpl_tenant_status
+    ON pmis_flow_third_party_log(tenant_id, handle_status, created_at DESC)
+    WHERE handle_status = 'PENDING';
 
--- 索引：按处理状态扫描（PENDING 重试）
-CREATE INDEX IF NOT EXISTS idx_third_party_log_status
-    ON pmis_flow_third_party_log(handle_status, created_at);
+-- --------------------------------------------------------------------
 
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_058__init_pmis_flow_third_party.sql
--- ====================================================================
-
--- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_059__init_pmis_flow_dmn.sql
--- ====================================================================
+-- ============================ [059] init pmis flow dmn ============================
 
 -- =============================================================
--- V1.0.0_059__init_pmis_flow_dmn.sql
 -- DMN 决策表定义表
 --
 -- P0-4: DMN 决策表引擎（对标 Camunda/Flowable DMN）
@@ -8427,6 +8826,7 @@ CREATE INDEX IF NOT EXISTS idx_third_party_log_status
 -- -------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_dmn_table (
     id                BIGSERIAL       PRIMARY KEY,
+    tenant_id         BIGINT          NOT NULL DEFAULT 1,
     table_key         VARCHAR(128)    NOT NULL,
     table_name        VARCHAR(128)    NOT NULL,
     description       VARCHAR(512),
@@ -8437,12 +8837,19 @@ CREATE TABLE IF NOT EXISTS pmis_flow_dmn_table (
     rules_json        TEXT,
     version           INT             NOT NULL DEFAULT 1,
     status            VARCHAR(20)     NOT NULL DEFAULT 'DRAFT',
-    tenant_id         BIGINT          NOT NULL DEFAULT 1,
-    created_by        BIGINT,
-    created_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT,
-    updated_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT        NOT NULL DEFAULT 0
+    provider_trace_id VARCHAR(64),
+    created_by        BIGINT          NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT          NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_pfdt_tenant_key         UNIQUE (tenant_id, table_key, deleted),
+    CONSTRAINT ck_pfdt_hit_policy         CHECK (hit_policy IN ('UNIQUE','FIRST','PRIORITY','ANY','COLLECT')),
+    CONSTRAINT ck_pfdt_collect_operator   CHECK (collect_operator IS NULL OR collect_operator IN ('LIST','SUM','MIN','MAX','COUNT')),
+    CONSTRAINT ck_pfdt_status             CHECK (status IN ('DRAFT','PUBLISHED','DEPRECATED')),
+    CONSTRAINT ck_pfdt_version            CHECK (version > 0),
+    CONSTRAINT ck_pfdt_deleted            CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_flow_dmn_table IS 'P0-4: DMN 决策表定义';
@@ -8459,24 +8866,15 @@ COMMENT ON COLUMN pmis_flow_dmn_table.status IS '状态: DRAFT/PUBLISHED/DEPRECA
 COMMENT ON COLUMN pmis_flow_dmn_table.tenant_id IS '租户 ID（多租户隔离）';
 COMMENT ON COLUMN pmis_flow_dmn_table.deleted IS '逻辑删除标记 0=未删 1=已删';
 
--- 唯一约束：table_key 在未删除范围内唯一
-CREATE UNIQUE INDEX IF NOT EXISTS uk_flow_dmn_table_key
-    ON pmis_flow_dmn_table (table_key)
+-- 复合/部分索引
+CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_status
+    ON pmis_flow_dmn_table (tenant_id, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_name
+    ON pmis_flow_dmn_table (tenant_id, table_name)
     WHERE deleted = 0;
 
--- 索引：按状态筛选已发布决策表
-CREATE INDEX IF NOT EXISTS idx_flow_dmn_table_status
-    ON pmis_flow_dmn_table (status, deleted)
-    WHERE deleted = 0;
-
--- 索引：按名称模糊查询
-CREATE INDEX IF NOT EXISTS idx_flow_dmn_table_name
-    ON pmis_flow_dmn_table (table_name, deleted)
-    WHERE deleted = 0;
-
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_059__init_pmis_flow_dmn.sql
--- ====================================================================
+-- --------------------------------------------------------------------
 
 -- ====================================================================
 -- >>>>>>>>>> SUPPLEMENT: code-discovered tables (no migration script yet)
@@ -8493,6 +8891,7 @@ CREATE INDEX IF NOT EXISTS idx_flow_dmn_table_name
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_template (
     id              BIGSERIAL       PRIMARY KEY,
+    tenant_id       BIGINT          NOT NULL DEFAULT 1,
     template_code   VARCHAR(128)    NOT NULL,
     template_name   VARCHAR(256)    NOT NULL,
     category        VARCHAR(64),
@@ -8502,19 +8901,26 @@ CREATE TABLE IF NOT EXISTS pmis_flow_template (
     form_path       VARCHAR(256),
     use_count       INTEGER         NOT NULL DEFAULT 0,
     sort_order      INTEGER         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT        NOT NULL DEFAULT 0
+    provider_trace_id VARCHAR(64),
+    created_by      BIGINT          NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      BIGINT          NOT NULL DEFAULT 0,
+    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_pft_tenant_code          UNIQUE (tenant_id, template_code, deleted),
+    CONSTRAINT ck_pft_use_count            CHECK (use_count >= 0),
+    CONSTRAINT ck_pft_deleted              CHECK (deleted IN (0, 1))
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_flow_template_code
-    ON pmis_flow_template (template_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_flow_template_category
-    ON pmis_flow_template (category, sort_order) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pft_tenant_category_sort
+    ON pmis_flow_template (tenant_id, category, sort_order)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_flow_template IS 'P3-1: 流程模板市场表, 预置常用流程模板供一键导入';
 COMMENT ON COLUMN pmis_flow_template.id IS '主键 ID';
-COMMENT ON COLUMN pmis_flow_template.template_code IS '模板编码 (唯一)';
+COMMENT ON COLUMN pmis_flow_template.tenant_id IS '租户 ID';
+COMMENT ON COLUMN pmis_flow_template.template_code IS '模板编码 (租户内唯一)';
 COMMENT ON COLUMN pmis_flow_template.template_name IS '模板名称';
 COMMENT ON COLUMN pmis_flow_template.category IS '分类 (HR/FINANCE/ADMIN/PROJECT/GENERAL)';
 COMMENT ON COLUMN pmis_flow_template.description IS '模板描述';
@@ -8532,24 +8938,31 @@ COMMENT ON COLUMN pmis_flow_template.deleted IS '逻辑删除 0=未删 1=已删'
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_auto_trigger (
     id                   BIGSERIAL       PRIMARY KEY,
+    tenant_id            BIGINT          NOT NULL DEFAULT 1,
     source_flow_code     VARCHAR(64)     NOT NULL,
     target_flow_code     VARCHAR(64)     NOT NULL,
     condition_expression VARCHAR(1024),
     description          VARCHAR(512),
     enabled              INTEGER         NOT NULL DEFAULT 1,
     sort_order           INTEGER         NOT NULL DEFAULT 0,
-    created_by           BIGINT,
-    created_at           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by           BIGINT,
-    updated_at           TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted              SMALLINT        NOT NULL DEFAULT 0
+    provider_trace_id    VARCHAR(64),
+    created_by           BIGINT          NOT NULL DEFAULT 0,
+    created_at           TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by           BIGINT          NOT NULL DEFAULT 0,
+    updated_at           TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted              SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfat_enabled              CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_pfat_deleted              CHECK (deleted IN (0, 1))
 );
 
-CREATE INDEX IF NOT EXISTS idx_flow_auto_trigger_src
-    ON pmis_flow_auto_trigger (source_flow_code, enabled) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfat_tenant_src_enabled
+    ON pmis_flow_auto_trigger (tenant_id, source_flow_code, enabled)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_flow_auto_trigger IS 'P3-2: 流程完成时自动触发下游流程的规则表';
 COMMENT ON COLUMN pmis_flow_auto_trigger.id IS '主键 ID';
+COMMENT ON COLUMN pmis_flow_auto_trigger.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_flow_auto_trigger.source_flow_code IS '源流程编码 (触发方)';
 COMMENT ON COLUMN pmis_flow_auto_trigger.target_flow_code IS '目标流程编码 (被触发方)';
 COMMENT ON COLUMN pmis_flow_auto_trigger.condition_expression IS 'Aviator 条件表达式;为空则无条件触发';
@@ -8566,26 +8979,32 @@ COMMENT ON COLUMN pmis_flow_auto_trigger.deleted IS '逻辑删除 0=未删 1=已
 -- pmis_flow_notify_channel -- P3-3: notification channel config
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_notify_channel (
-    id            BIGSERIAL       PRIMARY KEY,
-    tenant_id     BIGINT          NOT NULL DEFAULT 1,
-    channel_type  VARCHAR(32)     NOT NULL,
-    channel_name  VARCHAR(128)    NOT NULL,
-    config        TEXT,
-    enabled       SMALLINT        NOT NULL DEFAULT 1,
-    created_by    BIGINT,
-    created_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by    BIGINT,
-    updated_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted       SMALLINT        NOT NULL DEFAULT 0
+    id                BIGSERIAL       PRIMARY KEY,
+    tenant_id         BIGINT          NOT NULL DEFAULT 1,
+    channel_type      VARCHAR(32)     NOT NULL,
+    channel_name      VARCHAR(128)    NOT NULL,
+    config            TEXT,
+    enabled           SMALLINT        NOT NULL DEFAULT 1,
+    provider_trace_id VARCHAR(64),
+    created_by        BIGINT          NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT          NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfnc_channel_type        CHECK (channel_type IN ('IN_APP','EMAIL','SMS','WEBHOOK','DINGTALK','WECHAT','FEISHU')),
+    CONSTRAINT ck_pfnc_enabled             CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_pfnc_deleted             CHECK (deleted IN (0, 1))
 );
 
-CREATE INDEX IF NOT EXISTS idx_flow_notify_channel_type
-    ON pmis_flow_notify_channel (channel_type, enabled) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pfnc_tenant_type_enabled
+    ON pmis_flow_notify_channel (tenant_id, channel_type, enabled)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_flow_notify_channel IS 'P3-3: 工作流通知通道配置表 (IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
 COMMENT ON COLUMN pmis_flow_notify_channel.id IS '主键 ID';
 COMMENT ON COLUMN pmis_flow_notify_channel.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_flow_notify_channel.channel_type IS '通道类型 (IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT)';
+COMMENT ON COLUMN pmis_flow_notify_channel.channel_type IS '通道类型 (IN_APP/EMAIL/SMS/WEBHOOK/DINGTALK/WECHAT/FEISHU)';
 COMMENT ON COLUMN pmis_flow_notify_channel.channel_name IS '通道名称';
 COMMENT ON COLUMN pmis_flow_notify_channel.config IS '配置 JSON (Webhook URL, 短信模板编码等)';
 COMMENT ON COLUMN pmis_flow_notify_channel.enabled IS '是否启用 1=启用 0=禁用';
@@ -8599,27 +9018,33 @@ COMMENT ON COLUMN pmis_flow_notify_channel.deleted IS '逻辑删除 0=未删 1=�
 -- pmis_flow_task_comment -- P1-3: task comment thread
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_task_comment (
-    id           BIGSERIAL       PRIMARY KEY,
-    tenant_id    BIGINT          NOT NULL DEFAULT 1,
-    instance_id  BIGINT          NOT NULL,
-    task_id      BIGINT          NOT NULL,
-    node_code    VARCHAR(64),
-    user_id      BIGINT          NOT NULL,
-    user_name    VARCHAR(128),
-    content      TEXT,
-    type         VARCHAR(16)     NOT NULL DEFAULT 'COMMENT',
-    parent_id    BIGINT,
-    created_by   BIGINT,
-    created_at   TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by   BIGINT,
-    updated_at   TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted      SMALLINT        NOT NULL DEFAULT 0
+    id              BIGSERIAL       PRIMARY KEY,
+    tenant_id       BIGINT          NOT NULL DEFAULT 1,
+    instance_id     BIGINT          NOT NULL,
+    task_id         BIGINT          NOT NULL,
+    node_code       VARCHAR(64),
+    user_id         BIGINT          NOT NULL,
+    user_name       VARCHAR(128),
+    content         TEXT,
+    type            VARCHAR(16)     NOT NULL DEFAULT 'COMMENT',
+    parent_id       BIGINT,
+    provider_trace_id VARCHAR(64),
+    created_by      BIGINT          NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      BIGINT          NOT NULL DEFAULT 0,
+    updated_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pftc_type          CHECK (type IN ('COMMENT','QUESTION','REPLY')),
+    CONSTRAINT ck_pftc_deleted       CHECK (deleted IN (0, 1))
 );
 
-CREATE INDEX IF NOT EXISTS idx_flow_task_comment_task
-    ON pmis_flow_task_comment (task_id, created_at) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_flow_task_comment_parent
-    ON pmis_flow_task_comment (parent_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pftc_tenant_task_created
+    ON pmis_flow_task_comment (tenant_id, task_id, created_at)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pftc_tenant_parent
+    ON pmis_flow_task_comment (tenant_id, parent_id)
+    WHERE deleted = 0 AND parent_id IS NOT NULL;
 
 COMMENT ON TABLE  pmis_flow_task_comment IS 'P1-3: 工作流任务评论表 (楼中楼, 通过 parent_id 形成嵌套回复)';
 COMMENT ON COLUMN pmis_flow_task_comment.id IS '主键 ID';
@@ -8642,32 +9067,39 @@ COMMENT ON COLUMN pmis_flow_task_comment.deleted IS '逻辑删除 0=未删 1=已
 -- pmis_rule_chain_graph -- P0-1: rule chain visual canvas
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_chain_graph (
-    id              BIGSERIAL       PRIMARY KEY,
-    rule_code       VARCHAR(128)    NOT NULL,
-    name            VARCHAR(256),
-    description     VARCHAR(512),
-    scenario        VARCHAR(64),
-    tenant_id       BIGINT          NOT NULL DEFAULT 1,
-    graph_version   INTEGER         NOT NULL DEFAULT 1,
-    status          VARCHAR(16)     NOT NULL DEFAULT 'DRAFT',
-    content_json    TEXT,
-    created_by      VARCHAR(64),
-    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(64),
-    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT        NOT NULL DEFAULT 0
+    id                BIGSERIAL       PRIMARY KEY,
+    tenant_id         BIGINT          NOT NULL DEFAULT 1,
+    rule_code         VARCHAR(128)    NOT NULL,
+    name              VARCHAR(256),
+    description       VARCHAR(512),
+    scenario          VARCHAR(64),
+    graph_version     INTEGER         NOT NULL DEFAULT 1,
+    status            VARCHAR(16)     NOT NULL DEFAULT 'DRAFT',
+    content_json      TEXT,
+    provider_trace_id VARCHAR(64),
+    created_by        VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(64),
+    updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prcg_tenant_rule        UNIQUE (tenant_id, rule_code, deleted),
+    CONSTRAINT ck_prcg_status             CHECK (status IN ('DRAFT','PUBLISHED','ARCHIVED')),
+    CONSTRAINT ck_prcg_graph_version      CHECK (graph_version > 0),
+    CONSTRAINT ck_prcg_deleted            CHECK (deleted IN (0, 1))
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_rule_chain_graph_rule
-    ON pmis_rule_chain_graph (rule_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prcg_tenant_scenario_status
+    ON pmis_rule_chain_graph (tenant_id, scenario, status)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_rule_chain_graph IS 'P0-1: 规则链可视化画布 JSON 存储表';
 COMMENT ON COLUMN pmis_rule_chain_graph.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_chain_graph.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_chain_graph.rule_code IS '关联规则编码';
 COMMENT ON COLUMN pmis_rule_chain_graph.name IS '画布名称';
 COMMENT ON COLUMN pmis_rule_chain_graph.description IS '画布描述';
 COMMENT ON COLUMN pmis_rule_chain_graph.scenario IS '业务场景';
-COMMENT ON COLUMN pmis_rule_chain_graph.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_chain_graph.graph_version IS '画布版本号';
 COMMENT ON COLUMN pmis_rule_chain_graph.status IS '画布状态: DRAFT/PUBLISHED/ARCHIVED';
 COMMENT ON COLUMN pmis_rule_chain_graph.content_json IS '画布节点/连线 JSON';
@@ -8682,30 +9114,39 @@ COMMENT ON COLUMN pmis_rule_chain_graph.deleted IS '逻辑删除 0=未删 1=已�
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_dependency (
     id                       BIGSERIAL       PRIMARY KEY,
+    tenant_id                BIGINT          NOT NULL DEFAULT 1,
     rule_code                VARCHAR(128)    NOT NULL,
     depends_on_rule_code     VARCHAR(128)    NOT NULL,
     dependency_type          VARCHAR(16)     NOT NULL DEFAULT 'EXECUTE',
     cascade_on_disable       SMALLINT        NOT NULL DEFAULT 0,
     description              VARCHAR(512),
-    tenant_id                BIGINT          NOT NULL DEFAULT 1,
-    created_by               VARCHAR(64),
-    created_at               TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                  SMALLINT        NOT NULL DEFAULT 0
+    provider_trace_id        VARCHAR(64),
+    created_by               VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at               TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                  SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prd_tenant_rule_dep       UNIQUE (tenant_id, rule_code, depends_on_rule_code, deleted),
+    CONSTRAINT ck_prd_dependency_type       CHECK (dependency_type IN ('EXECUTE','READ_RESULT','SOFT')),
+    CONSTRAINT ck_prd_cascade_on_disable    CHECK (cascade_on_disable IN (0, 1)),
+    CONSTRAINT ck_prd_distinct_rules        CHECK (rule_code <> depends_on_rule_code),
+    CONSTRAINT ck_prd_deleted               CHECK (deleted IN (0, 1))
 );
 
-CREATE INDEX IF NOT EXISTS idx_rule_dependency_rule
-    ON pmis_rule_dependency (rule_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_rule_dependency_depends
-    ON pmis_rule_dependency (depends_on_rule_code, cascade_on_disable) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_rule
+    ON pmis_rule_dependency (tenant_id, rule_code)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prd_tenant_depends_cascade
+    ON pmis_rule_dependency (tenant_id, depends_on_rule_code, cascade_on_disable)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_rule_dependency IS 'P1-8: 规则间依赖关系表 (EXECUTE/READ_RESULT/SOFT)';
 COMMENT ON COLUMN pmis_rule_dependency.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_dependency.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_dependency.rule_code IS '规则编码';
 COMMENT ON COLUMN pmis_rule_dependency.depends_on_rule_code IS '被依赖的规则编码';
 COMMENT ON COLUMN pmis_rule_dependency.dependency_type IS '依赖类型: EXECUTE/READ_RESULT/SOFT';
 COMMENT ON COLUMN pmis_rule_dependency.cascade_on_disable IS '上游禁用时是否级联禁用 1=是 0=否';
 COMMENT ON COLUMN pmis_rule_dependency.description IS '依赖说明';
-COMMENT ON COLUMN pmis_rule_dependency.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_dependency.created_by IS '创建人';
 COMMENT ON COLUMN pmis_rule_dependency.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_rule_dependency.deleted IS '逻辑删除 0=未删 1=已删';
@@ -8715,6 +9156,7 @@ COMMENT ON COLUMN pmis_rule_dependency.deleted IS '逻辑删除 0=未删 1=已�
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_ab_policy (
     id                      BIGSERIAL       PRIMARY KEY,
+    tenant_id               BIGINT          NOT NULL DEFAULT 1,
     rule_code               VARCHAR(128)    NOT NULL,
     auto_rollback_enabled   SMALLINT        NOT NULL DEFAULT 1,
     rollback_action         VARCHAR(16)     NOT NULL DEFAULT 'AUTO',
@@ -8723,20 +9165,31 @@ CREATE TABLE IF NOT EXISTS pmis_rule_ab_policy (
     check_window_minutes    INTEGER         NOT NULL DEFAULT 5,
     notify_channels         VARCHAR(128),
     description             VARCHAR(512),
-    last_evaluated_at       TIMESTAMP,
-    last_rollback_at        TIMESTAMP,
-    created_by              VARCHAR(64),
-    created_at              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    last_evaluated_at       TIMESTAMPTZ,
+    last_rollback_at        TIMESTAMPTZ,
+    provider_trace_id       VARCHAR(64),
+    created_by              VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by              VARCHAR(64),
-    updated_at              TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted                 SMALLINT        NOT NULL DEFAULT 0
+    updated_at              TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                 SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prap_tenant_rule          UNIQUE (tenant_id, rule_code, deleted),
+    CONSTRAINT ck_prap_auto_rollback        CHECK (auto_rollback_enabled IN (0, 1)),
+    CONSTRAINT ck_prap_rollback_action      CHECK (rollback_action IN ('AUTO','NOTIFY')),
+    CONSTRAINT ck_prap_error_rate           CHECK (error_rate_threshold >= 0 AND error_rate_threshold <= 1),
+    CONSTRAINT ck_prap_min_sample           CHECK (min_sample_size > 0),
+    CONSTRAINT ck_prap_check_window         CHECK (check_window_minutes > 0),
+    CONSTRAINT ck_prap_deleted              CHECK (deleted IN (0, 1))
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_rule_ab_policy_rule
-    ON pmis_rule_ab_policy (rule_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prap_tenant_rule
+    ON pmis_rule_ab_policy (tenant_id, rule_code)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_rule_ab_policy IS 'P1-10: AB Test 自动回滚策略表';
 COMMENT ON COLUMN pmis_rule_ab_policy.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_ab_policy.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_ab_policy.rule_code IS '规则编码';
 COMMENT ON COLUMN pmis_rule_ab_policy.auto_rollback_enabled IS '是否启用自动回滚 1=是 0=否';
 COMMENT ON COLUMN pmis_rule_ab_policy.rollback_action IS '回滚动作: AUTO 自动回滚/NOTIFY 仅通知负责人';
@@ -8758,6 +9211,7 @@ COMMENT ON COLUMN pmis_rule_ab_policy.deleted IS '逻辑删除 0=未删 1=已删
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_ab_rollback (
     id                BIGSERIAL       PRIMARY KEY,
+    tenant_id         BIGINT          NOT NULL DEFAULT 1,
     rule_code         VARCHAR(128)    NOT NULL,
     trigger_reason    VARCHAR(32)     NOT NULL,
     error_rate        NUMERIC(5,4),
@@ -8765,15 +9219,25 @@ CREATE TABLE IF NOT EXISTS pmis_rule_ab_rollback (
     from_canary       SMALLINT        NOT NULL DEFAULT 0,
     operator          VARCHAR(64),
     notify_status     VARCHAR(32),
-    created_at        TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT        NOT NULL DEFAULT 0
+    provider_trace_id VARCHAR(64),
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_prar_trigger_reason       CHECK (trigger_reason IN ('ERROR_RATE','MANUAL','OWNER_REQUEST','SCHEDULED')),
+    CONSTRAINT ck_prar_error_rate           CHECK (error_rate IS NULL OR (error_rate >= 0 AND error_rate <= 1)),
+    CONSTRAINT ck_prar_sample_size          CHECK (sample_size IS NULL OR sample_size >= 0),
+    CONSTRAINT ck_prar_from_canary          CHECK (from_canary IN (0, 1)),
+    CONSTRAINT ck_prar_notify_status        CHECK (notify_status IS NULL OR notify_status IN ('PENDING','SUCCESS','FAILED')),
+    CONSTRAINT ck_prar_deleted              CHECK (deleted IN (0, 1))
 );
 
-CREATE INDEX IF NOT EXISTS idx_rule_ab_rollback_rule
-    ON pmis_rule_ab_rollback (rule_code, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prar_tenant_rule_created
+    ON pmis_rule_ab_rollback (tenant_id, rule_code, created_at DESC)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_rule_ab_rollback IS 'P1-10: AB Test 回滚历史表';
 COMMENT ON COLUMN pmis_rule_ab_rollback.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_ab_rollback.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_ab_rollback.rule_code IS '规则编码';
 COMMENT ON COLUMN pmis_rule_ab_rollback.trigger_reason IS '触发原因: ERROR_RATE/MANUAL/OWNER_REQUEST';
 COMMENT ON COLUMN pmis_rule_ab_rollback.error_rate IS '回滚时的错误率';
@@ -8788,33 +9252,42 @@ COMMENT ON COLUMN pmis_rule_ab_rollback.deleted IS '逻辑删除 0=未删 1=已�
 -- pmis_rule_pack -- P2-14: rule pack marketplace
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_pack (
-    id              BIGSERIAL       PRIMARY KEY,
-    pack_code       VARCHAR(128)    NOT NULL,
-    pack_version    VARCHAR(32)     NOT NULL,
-    pack_name       VARCHAR(256)    NOT NULL,
-    industry        VARCHAR(64),
-    tags            VARCHAR(512),
-    rule_codes      TEXT,
-    description     VARCHAR(512),
-    author          VARCHAR(128),
-    download_count  BIGINT          NOT NULL DEFAULT 0,
-    rating          NUMERIC(3,2)    NOT NULL DEFAULT 0,
-    enabled         SMALLINT        NOT NULL DEFAULT 1,
-    official        SMALLINT        NOT NULL DEFAULT 0,
-    created_by      VARCHAR(64),
-    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      VARCHAR(64),
-    updated_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT        NOT NULL DEFAULT 0
+    id                BIGSERIAL       PRIMARY KEY,
+    tenant_id         BIGINT          NOT NULL DEFAULT 1,
+    pack_code         VARCHAR(128)    NOT NULL,
+    pack_version      VARCHAR(32)     NOT NULL,
+    pack_name         VARCHAR(256)    NOT NULL,
+    industry          VARCHAR(64),
+    tags              VARCHAR(512),
+    rule_codes        TEXT,
+    description       VARCHAR(512),
+    author            VARCHAR(128),
+    download_count    BIGINT          NOT NULL DEFAULT 0,
+    rating            NUMERIC(3,2)    NOT NULL DEFAULT 0,
+    enabled           SMALLINT        NOT NULL DEFAULT 1,
+    official          SMALLINT        NOT NULL DEFAULT 0,
+    provider_trace_id VARCHAR(64),
+    created_by        VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        VARCHAR(64),
+    updated_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_prp_tenant_code_version   UNIQUE (tenant_id, pack_code, pack_version, deleted),
+    CONSTRAINT ck_prp_download_count        CHECK (download_count >= 0),
+    CONSTRAINT ck_prp_rating                CHECK (rating >= 0 AND rating <= 5),
+    CONSTRAINT ck_prp_enabled               CHECK (enabled IN (0, 1)),
+    CONSTRAINT ck_prp_official              CHECK (official IN (0, 1)),
+    CONSTRAINT ck_prp_deleted               CHECK (deleted IN (0, 1))
 );
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_rule_pack_code_version
-    ON pmis_rule_pack (pack_code, pack_version) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_rule_pack_industry
-    ON pmis_rule_pack (industry, enabled) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prp_tenant_industry_enabled
+    ON pmis_rule_pack (tenant_id, industry, enabled)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_rule_pack IS 'P2-14: 规则集市场表 (按行业/场景打包)';
 COMMENT ON COLUMN pmis_rule_pack.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_pack.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_pack.pack_code IS '规则集编码';
 COMMENT ON COLUMN pmis_rule_pack.pack_version IS '规则集版本号 (语义化)';
 COMMENT ON COLUMN pmis_rule_pack.pack_name IS '规则集名称';
@@ -8837,32 +9310,431 @@ COMMENT ON COLUMN pmis_rule_pack.deleted IS '逻辑删除 0=未删 1=已删';
 -- pmis_rule_pack_install -- P2-14: rule pack install history
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_rule_pack_install (
-    id              BIGSERIAL       PRIMARY KEY,
-    pack_code       VARCHAR(128)    NOT NULL,
-    pack_version    VARCHAR(32)     NOT NULL,
-    tenant_id       BIGINT          NOT NULL DEFAULT 1,
-    installed_by    VARCHAR(64),
-    installed_at    TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    status          VARCHAR(16)     NOT NULL DEFAULT 'SUCCESS',
-    error_message   TEXT,
-    created_at      TIMESTAMP       NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT        NOT NULL DEFAULT 0
+    id                BIGSERIAL       PRIMARY KEY,
+    tenant_id         BIGINT          NOT NULL DEFAULT 1,
+    pack_code         VARCHAR(128)    NOT NULL,
+    pack_version      VARCHAR(32)     NOT NULL,
+    installed_by      VARCHAR(64),
+    installed_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    status            VARCHAR(16)     NOT NULL DEFAULT 'SUCCESS',
+    error_message     TEXT,
+    provider_trace_id VARCHAR(64),
+    created_at        TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_prpi_status               CHECK (status IN ('SUCCESS','FAILED','ROLLBACK')),
+    CONSTRAINT ck_prpi_deleted              CHECK (deleted IN (0, 1))
 );
 
-CREATE INDEX IF NOT EXISTS idx_rule_pack_install_tenant
-    ON pmis_rule_pack_install (tenant_id, pack_code, installed_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_prpi_tenant_code_installed
+    ON pmis_rule_pack_install (tenant_id, pack_code, installed_at DESC)
+    WHERE deleted = 0;
 
 COMMENT ON TABLE  pmis_rule_pack_install IS 'P2-14: 规则集安装历史表 (按租户)';
 COMMENT ON COLUMN pmis_rule_pack_install.id IS '主键 ID';
+COMMENT ON COLUMN pmis_rule_pack_install.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_pack_install.pack_code IS '规则集编码';
 COMMENT ON COLUMN pmis_rule_pack_install.pack_version IS '规则集版本号';
-COMMENT ON COLUMN pmis_rule_pack_install.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_rule_pack_install.installed_by IS '安装操作人';
 COMMENT ON COLUMN pmis_rule_pack_install.installed_at IS '安装时间';
 COMMENT ON COLUMN pmis_rule_pack_install.status IS '安装状态: SUCCESS/FAILED/ROLLBACK';
 COMMENT ON COLUMN pmis_rule_pack_install.error_message IS '失败时的错误信息';
 COMMENT ON COLUMN pmis_rule_pack_install.created_at IS '记录创建时间';
 COMMENT ON COLUMN pmis_rule_pack_install.deleted IS '逻辑删除 0=未删 1=已删';
+
+-- ====================================================================
+-- ============================ [060] field type unification ============================
+-- ====================================================================
+-- V1.0.0_060  H2.7 / P1-1 字段类型统一
+-- ----------------------------------------------------------------------------
+-- 背景:历史演进过程中出现了若干类型不一致:
+--   1. pmis_flow_run_task.assignor_id 为 BIGINT,assignee_id 为 VARCHAR(64) — 同含义字段类型不一致
+--   2. pmis_flow_his_task 完全缺失 assignor_id 列(主表有,历史表没有)
+--   3. pmis_finance_invoice.tax_period 为 VARCHAR(16),但 CHECK 约束限定为 YYYY-MM(7 字符),存余浪费
+--   4. pmis_dict_version 缺 updated_at/updated_by/tenant_id,且 created_at/effective_date 用了 TIMESTAMP 而非 TIMESTAMPTZ
+--
+-- 已审查但**保留原样**的差异(具备合理业务理由):
+--   - 11 张 pmis_rule_* 表的 created_by/updated_by 为 VARCHAR(64) DEFAULT 'SYSTEM'
+--     原因:对应 Java 实体明确使用 String createdBy/updatedBy(rule 责任人可为工号/SSO 用户名等非纯数字 ID)
+--     修改风险:RuleDefinitionDO 等 11 个 DTO/Service/Controller 的 ownerBy 字段全部受影响
+--     决议:保持 VARCHAR(64) 不变,但统一 DEFAULT 值与 COMMENT 文案(见下方)
+-- ====================================================================
+
+-- ----------------------------------------------------------------------------
+-- 0) 11 张 rule 表 created_by/updated_by 文案统一(DEFAULT 'SYSTEM' 已是项目约定,保留)
+--    仅刷新 COMMENT 文案,便于后续维护者理解
+-- ----------------------------------------------------------------------------
+COMMENT ON COLUMN pmis_rule_def.created_by           IS '创建人(VARCHAR(64) 支持工号/SSO用户名,DEFAULT ''SYSTEM'' 表示系统兜底)';
+COMMENT ON COLUMN pmis_rule_pack.created_by          IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_template.created_by      IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_test_case.created_by     IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_execution_trace.created_by IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_decision_table.created_by IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_scorecard.created_by     IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_decision_tree.created_by IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_script.created_by        IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_chain_graph.created_by   IS '创建人(同 rule_def)';
+COMMENT ON COLUMN pmis_rule_dependency.created_by    IS '创建人(同 rule_def)';
+
+-- ----------------------------------------------------------------------------
+-- 1) pmis_flow_run_task.assignor_id BIGINT -> VARCHAR(64),与 assignee_id 对齐
+--    pmis_flow_his_task 补齐 assignor_id 列
+-- ----------------------------------------------------------------------------
+ALTER TABLE pmis_flow_run_task ALTER COLUMN assignor_id TYPE VARCHAR(64) USING assignor_id::VARCHAR(64);
+ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignor_id VARCHAR(64);
+ALTER TABLE pmis_flow_his_task ADD COLUMN IF NOT EXISTS assignor_name VARCHAR(64);
+COMMENT ON COLUMN pmis_flow_run_task.assignor_id IS '原审批人 ID(VARCHAR(64) 与 assignee_id 对齐;支持 SSO/IM 外部账号场景)';
+COMMENT ON COLUMN pmis_flow_his_task.assignor_id IS '原审批人 ID(VARCHAR(64) 与 assignee_id 对齐)';
+COMMENT ON COLUMN pmis_flow_his_task.assignor_name IS '原审批人姓名';
+
+-- 同步主表与历史表 assignor_id 索引(若已存在则跳过)
+CREATE INDEX IF NOT EXISTS idx_pfrt_assignor
+    ON pmis_flow_run_task (assignor_id)
+    WHERE deleted = 0 AND assignor_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pfht_assignor
+    ON pmis_flow_his_task (assignor_id)
+    WHERE deleted = 0 AND assignor_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 2) pmis_finance_invoice.tax_period VARCHAR(16) -> VARCHAR(7)(与 YYYY-MM 正则匹配)
+-- ----------------------------------------------------------------------------
+ALTER TABLE pmis_finance_invoice ALTER COLUMN tax_period TYPE VARCHAR(7);
+COMMENT ON COLUMN pmis_finance_invoice.tax_period IS '税务所属期: 格式 YYYY-MM(7 字符,VARCHAR(7) 精确匹配 CHECK 约束)';
+
+-- ----------------------------------------------------------------------------
+-- 3) pmis_dict_version 字段补齐
+--    - 新增 updated_at / updated_by / tenant_id(对齐 BaseDO 5 字段基线)
+--    - created_at / effective_date 统一为 TIMESTAMPTZ(全工程时间字段统一约定)
+-- ----------------------------------------------------------------------------
+ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS updated_at    TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS updated_by    BIGINT      NOT NULL DEFAULT 0;
+ALTER TABLE pmis_dict_version ADD COLUMN IF NOT EXISTS tenant_id     BIGINT      NOT NULL DEFAULT 1;
+ALTER TABLE pmis_dict_version ALTER COLUMN created_at     TYPE TIMESTAMPTZ USING created_at AT TIME ZONE 'UTC';
+ALTER TABLE pmis_dict_version ALTER COLUMN effective_date TYPE TIMESTAMPTZ USING effective_date AT TIME ZONE 'UTC';
+
+COMMENT ON COLUMN pmis_dict_version.updated_by    IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_dict_version.updated_at    IS '最后修改时间';
+COMMENT ON COLUMN pmis_dict_version.tenant_id     IS '租户 ID(单租户部署默认 1)';
+
+-- 复合索引(与全工程惯例一致)
+CREATE INDEX IF NOT EXISTS idx_pdv_tenant_type
+    ON pmis_dict_version (tenant_id, type_code)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pdv_tenant_type_created
+    ON pmis_dict_version (tenant_id, type_code, created_at DESC)
+    WHERE deleted = 0;
+
+ANALYZE pmis_dict_version;
+ANALYZE pmis_flow_run_task;
+ANALYZE pmis_flow_his_task;
+ANALYZE pmis_finance_invoice;
+
+-- ====================================================================
+-- ============================ [061] merge export tables ============================
+-- ====================================================================
+-- V1.0.0_061  P0-3 合并 pmis_export_record 与 pmis_report_export_record
+-- ----------------------------------------------------------------------------
+-- 背景:
+--   pmis_export_record(下载中心,P2-11)与 pmis_report_export_record(订阅报表,P1-5)
+--   结构高度重复,均记录 Excel 导出 + MinIO 存储 + 状态流转,导致:
+--     1. 两表字段语义重叠(file_url/file_key/status/created_at…)
+--     2. ReportScheduleServiceImpl 直接使用 SQL INSERT,字段错位(generated_at 在
+--        新表中已不存在)且 status='COMPLETED' 不在原 CHECK 约束中
+--     3. 前端下载中心只能展示用户主动导出,看不到订阅触发的报表下载入口
+--     4. 监控/统计(导出成功率、平均耗时)需 UNION 两表,体验差
+--
+-- 合并方案:
+--   保留 pmis_export_record 作为主表,新增:
+--     - source            VARCHAR(16)  MANUAL 用户主动 / SUBSCRIPTION 订阅触发
+--     - subscription_id   BIGINT       仅 SUBSCRIPTION 来源有值
+--     - report_type       VARCHAR(50)  仅 SUBSCRIPTION 来源有值(订阅报表类型)
+--   user_id 改为可空:MANUAL 必填,SUBSCRIPTION 取订阅人
+--   状态枚举统一: PENDING/GENERATING/COMPLETED/SENT/FAILED/EXPIRED
+--   互斥 CHECK 约束: MANUAL 必须有 user_id 且无 subscription_id,反之亦然
+--   删除原 pmis_report_export_record 表
+--   同步改造 Java 实体与 Service(ReportScheduleServiceImpl 改用同一张表)
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+-- 1) pmis_export_record 新增 source / subscription_id / report_type 三列
+--    user_id 由 NOT NULL 改为可空(MANUAL 必填,SUBSCRIPTION 取订阅人)
+-- ----------------------------------------------------------------------------
+ALTER TABLE pmis_export_record ALTER COLUMN user_id DROP NOT NULL;
+
+ALTER TABLE pmis_export_record
+    ADD COLUMN IF NOT EXISTS source          VARCHAR(16) NOT NULL DEFAULT 'MANUAL';
+ALTER TABLE pmis_export_record
+    ADD COLUMN IF NOT EXISTS subscription_id BIGINT;
+ALTER TABLE pmis_export_record
+    ADD COLUMN IF NOT EXISTS report_type     VARCHAR(50);
+
+-- 互斥 CHECK 约束(若已存在则跳过)
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_pex_source'
+          AND conrelid = 'pmis_export_record'::regclass
+    ) THEN
+        ALTER TABLE pmis_export_record
+            ADD CONSTRAINT ck_pex_source CHECK (source IN ('MANUAL', 'SUBSCRIPTION'));
+    END IF;
+END $$;
+
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_pex_source_link'
+          AND conrelid = 'pmis_export_record'::regclass
+    ) THEN
+        ALTER TABLE pmis_export_record
+            ADD CONSTRAINT ck_pex_source_link CHECK (
+                (source = 'MANUAL'      AND user_id IS NOT NULL AND subscription_id IS NULL) OR
+                (source = 'SUBSCRIPTION' AND subscription_id IS NOT NULL)
+            );
+    END IF;
+END $$;
+
+-- 状态枚举扩展: 加入 SENT(报表分发场景下邮件发送完成)
+DO $$
+BEGIN
+    -- 删除旧 CHECK 重建(若已包含 SENT 则跳过)
+    IF EXISTS (
+        SELECT 1 FROM pg_constraint
+        WHERE conname = 'ck_pex_status'
+          AND conrelid = 'pmis_export_record'::regclass
+    ) THEN
+        ALTER TABLE pmis_export_record DROP CONSTRAINT ck_pex_status;
+    END IF;
+    ALTER TABLE pmis_export_record
+        ADD CONSTRAINT ck_pex_status CHECK (status IN ('PENDING','GENERATING','COMPLETED','SENT','FAILED','EXPIRED'));
+END $$;
+
+COMMENT ON COLUMN pmis_export_record.source          IS '来源:MANUAL 用户主动提交 / SUBSCRIPTION 订阅触发(P0-3 合并引入)';
+COMMENT ON COLUMN pmis_export_record.subscription_id IS '关联订阅 ID(仅 SUBSCRIPTION 来源有值)';
+COMMENT ON COLUMN pmis_export_record.report_type     IS '报表类型(SUBSCRIPTION 主用,如 COCKPIT/EVM/PROFIT)';
+
+-- ----------------------------------------------------------------------------
+-- 2) 订阅维度索引
+-- ----------------------------------------------------------------------------
+CREATE INDEX IF NOT EXISTS idx_pex_tenant_subscription
+    ON pmis_export_record (tenant_id, subscription_id, created_at DESC)
+    WHERE source = 'SUBSCRIPTION' AND deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pex_tenant_report_type
+    ON pmis_export_record (tenant_id, report_type, created_at DESC)
+    WHERE source = 'SUBSCRIPTION' AND deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pex_provider_trace
+    ON pmis_export_record (provider_trace_id)
+    WHERE provider_trace_id IS NOT NULL;
+
+-- ----------------------------------------------------------------------------
+-- 3) 删除原 pmis_report_export_record 表
+--    需先解除可能的外键引用(本项目暂未建立外键,直接 DROP)
+-- ----------------------------------------------------------------------------
+DROP TABLE IF EXISTS pmis_report_export_record CASCADE;
+
+-- ----------------------------------------------------------------------------
+-- 4) 同步重建 source=user_id 复合索引(原 user_id NOT NULL 索引已可用,无需重建)
+-- ----------------------------------------------------------------------------
+
+ANALYZE pmis_export_record;
+
+-- ====================================================================
+-- ============================ [062] monthly partitioning for audit logs ============================
+-- ====================================================================
+-- V1.0.0_062  P1-4 日志/审计表按月分区 + BRIN
+-- ----------------------------------------------------------------------------
+-- 背景:
+--   pmis_operation_log / pmis_flow_audit_log 预计 100w+/年
+--   单表 B-Tree 索引老化慢、清理成本高(DELETE 真空)、备份耗时长
+--   改造目标: 按月 RANGE 分区,主键包含分区键,索引与 BRIN 自动级联
+--
+-- 父表 DDL 改造:
+--   - pmis_operation_log       PARTITION BY RANGE (created_at)  PRIMARY KEY (id, created_at)
+--   - pmis_flow_audit_log      PARTITION BY RANGE (operated_at) PRIMARY KEY (id, operated_at)
+--
+-- 维护建议:
+--   - 每季度巡检,确保 DEFAULT 分区无新增数据
+--   - 新增月份分区: CREATE TABLE pmis_operation_log_yYYYYmMM PARTITION OF ...
+--   - 数据归档: ALTER TABLE pmis_operation_log DETACH PARTITION y2026m01
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+-- 1) pmis_operation_log 月度分区 (2026-01 ~ 2027-12 共 24 个月)
+-- ----------------------------------------------------------------------------
+DO $$
+DECLARE
+    i INT;
+    partition_date DATE;
+    next_date DATE;
+    partition_name TEXT;
+BEGIN
+    FOR i IN 0..23 LOOP
+        partition_date := DATE '2026-01-01' + (i || ' month')::INTERVAL;
+        next_date := partition_date + INTERVAL '1 month';
+        partition_name := 'pmis_operation_log_y' ||
+                          TO_CHAR(partition_date, 'YYYY') || 'm' ||
+                          TO_CHAR(partition_date, 'MM');
+        EXECUTE FORMAT(
+            'CREATE TABLE IF NOT EXISTS %I PARTITION OF pmis_operation_log FOR VALUES FROM (%L) TO (%L)',
+            partition_name, partition_date, next_date
+        );
+    END LOOP;
+END $$;
+
+-- DEFAULT 兜底分区(新分区未及时创建时数据落入此分区,触发告警后补建)
+CREATE TABLE IF NOT EXISTS pmis_operation_log_default
+    PARTITION OF pmis_operation_log DEFAULT;
+
+-- ----------------------------------------------------------------------------
+-- 2) pmis_flow_audit_log 月度分区 (2026-01 ~ 2027-12 共 24 个月)
+-- ----------------------------------------------------------------------------
+DO $$
+DECLARE
+    i INT;
+    partition_date DATE;
+    next_date DATE;
+    partition_name TEXT;
+BEGIN
+    FOR i IN 0..23 LOOP
+        partition_date := DATE '2026-01-01' + (i || ' month')::INTERVAL;
+        next_date := partition_date + INTERVAL '1 month';
+        partition_name := 'pmis_flow_audit_log_y' ||
+                          TO_CHAR(partition_date, 'YYYY') || 'm' ||
+                          TO_CHAR(partition_date, 'MM');
+        EXECUTE FORMAT(
+            'CREATE TABLE IF NOT EXISTS %I PARTITION OF pmis_flow_audit_log FOR VALUES FROM (%L) TO (%L)',
+            partition_name, partition_date, next_date
+        );
+    END LOOP;
+END $$;
+
+-- DEFAULT 兜底分区
+CREATE TABLE IF NOT EXISTS pmis_flow_audit_log_default
+    PARTITION OF pmis_flow_audit_log DEFAULT;
+
+ANALYZE pmis_operation_log;
+ANALYZE pmis_flow_audit_log;
+
+-- ====================================================================
+-- ============================ [063] tg_set_updated_at trigger ============================
+-- ====================================================================
+-- V1.0.0_063  P1-5 通用 updated_at 数据库触发器
+-- ----------------------------------------------------------------------------
+-- 背景:
+--   AuditFieldFiller 仅在 MyBatis-Plus 写路径生效,以下场景会导致 updated_at 失真:
+--     1. 原始 SQL / psql / 批量脚本更新
+--     2. 跨服务 Feign 调用后由对方直连 PG 写库
+--     3. 定时任务中通过 JdbcTemplate.update 直接 UPDATE
+--   解决: 数据库层兜底触发器,确保 updated_at 始终反映真实变更时间
+--
+-- 设计:
+--   - 通用函数 pmis_set_updated_at(): 取 NEW.updated_at 与 CURRENT_TIMESTAMP 的较大值
+--   - 触发器命名: tg_<table>_updated_at,行级 BEFORE UPDATE
+--   - 仅当 NEW 与 OLD 实际有差异时才更新(避免无意义 UPDATE 触发)
+--   - 不影响 created_at / created_by(只读)
+--
+-- 挂载原则:
+--   - 仅挂载"核心业务表"(用户/权限/项目/合同/财务/工作流主表)
+--   - 不挂载日志表(pmis_operation_log/flow_audit_log 自身无 updated_at)
+--   - 不挂载字典/配置/只读表
+-- ----------------------------------------------------------------------------
+
+-- ----------------------------------------------------------------------------
+-- 1) 通用触发器函数(BEFORE UPDATE 行级,只更新 updated_at)
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION pmis_set_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- 行无实际变更时不更新(避免 no-op UPDATE 触发)
+    IF NEW IS DISTINCT FROM OLD THEN
+        NEW.updated_at := CURRENT_TIMESTAMP;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION pmis_set_updated_at() IS
+    '通用 updated_at 维护:BEFORE UPDATE 时将 NEW.updated_at 置为 CURRENT_TIMESTAMP;'
+    '仅当 NEW 与 OLD 实际不同时触发(避免 no-op UPDATE 引起的批量时间漂移)';
+
+-- ----------------------------------------------------------------------------
+-- 2) 通用挂载辅助函数
+--    用法: SELECT pmis_attach_updated_at_trigger('pmis_user_account');
+-- ----------------------------------------------------------------------------
+CREATE OR REPLACE FUNCTION pmis_attach_updated_at_trigger(p_table_name TEXT)
+RETURNS VOID AS $$
+DECLARE
+    trigger_name TEXT;
+BEGIN
+    trigger_name := 'tg_' || p_table_name || '_updated_at';
+
+    -- 已挂载则跳过
+    IF EXISTS (
+        SELECT 1 FROM pg_trigger
+        WHERE tgname = trigger_name
+          AND tgrelid = (p_table_name)::regclass
+    ) THEN
+        RETURN;
+    END IF;
+
+    -- 表必须存在
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.tables
+        WHERE table_schema = 'public'
+          AND table_name = p_table_name
+    ) THEN
+        RAISE WARNING '[pmis_attach_updated_at_trigger] 表不存在,跳过: %', p_table_name;
+        RETURN;
+    END IF;
+
+    -- 表必须有 updated_at 列
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = p_table_name
+          AND column_name = 'updated_at'
+    ) THEN
+        RAISE WARNING '[pmis_attach_updated_at_trigger] 表无 updated_at 列,跳过: %', p_table_name;
+        RETURN;
+    END IF;
+
+    EXECUTE FORMAT(
+        'CREATE TRIGGER %I BEFORE UPDATE ON %I '
+        'FOR EACH ROW EXECUTE FUNCTION pmis_set_updated_at()',
+        trigger_name, p_table_name
+    );
+
+    RAISE NOTICE '[pmis_attach_updated_at_trigger] 挂载成功: % (trigger: %)',
+        p_table_name, trigger_name;
+END;
+$$ LANGUAGE plpgsql;
+
+COMMENT ON FUNCTION pmis_attach_updated_at_trigger(TEXT) IS
+    '通用挂载函数: 为指定 public 表添加 tg_<table>_updated_at BEFORE UPDATE 触发器;'
+    '已挂载 / 表不存在 / 缺 updated_at 列时静默跳过';
+
+-- ----------------------------------------------------------------------------
+-- 3) 挂载到核心业务表(15 张)
+--    选择标准: 频繁 UPDATE + updated_at 业务强相关 + 跨服务写路径多
+-- ----------------------------------------------------------------------------
+SELECT pmis_attach_updated_at_trigger('pmis_user_account');         -- 用户账号
+SELECT pmis_attach_updated_at_trigger('pmis_employee');             -- 员工
+SELECT pmis_attach_updated_at_trigger('pmis_department');           -- 部门
+SELECT pmis_attach_updated_at_trigger('pmis_position');             -- 岗位
+SELECT pmis_attach_updated_at_trigger('pmis_role');                 -- 角色
+SELECT pmis_attach_updated_at_trigger('pmis_config');               -- 系统配置
+SELECT pmis_attach_updated_at_trigger('pmis_dict_item');            -- 字典项
+SELECT pmis_attach_updated_at_trigger('pmis_dict_version');         -- 字典版本
+SELECT pmis_attach_updated_at_trigger('pmis_project_initiation');   -- 立项
+SELECT pmis_attach_updated_at_trigger('pmis_project_change');       -- 变更
+SELECT pmis_attach_updated_at_trigger('pmis_finance_contract');     -- 合同
+SELECT pmis_attach_updated_at_trigger('pmis_finance_invoice');      -- 发票
+SELECT pmis_attach_updated_at_trigger('pmis_finance_payment');      -- 回款
+SELECT pmis_attach_updated_at_trigger('pmis_flow_instance');        -- 流程实例
+SELECT pmis_attach_updated_at_trigger('pmis_flow_definition');      -- 流程定义
+
 -- ====================================================================
 -- >>>>>>>>>> END OF SUPPLEMENT
 -- ====================================================================

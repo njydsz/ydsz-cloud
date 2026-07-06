@@ -35,7 +35,7 @@ public interface ReportScheduleService {
     String generateReport(String reportType, Map<String, Object> params);
 
     /**
-     * 分发报表：落库 pmis_report_export_record 并发送邮件通知。
+     * 分发报表：落库 pmis_export_record（source='SUBSCRIPTION'）并发送邮件通知。
      *
      * @param subId      订阅 ID
      * @param reportType 报表类型
