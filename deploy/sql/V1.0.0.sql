@@ -92,11 +92,15 @@ CREATE TABLE IF NOT EXISTS pmis_dict_type(
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_dict_type_code UNIQUE (type_code, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    -- 数据完整性约束
+    CONSTRAINT uk_pmis_dict_type_code UNIQUE (type_code, deleted),
+    CONSTRAINT ck_pdt_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pdt_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_dict_type IS '字典类型表: 业务字典分类定义(如项目类型、招采方式、计费方式)';
 COMMENT ON COLUMN pmis_dict_type.id IS '主键 ID';
@@ -109,8 +113,11 @@ COMMENT ON COLUMN pmis_dict_type.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_dict_type.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_dict_type.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_dict_type.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_dict_type.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_dict_type_status ON pmis_dict_type (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_dict_type_tenant_created
+    ON pmis_dict_type (tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 字典项表
 CREATE TABLE IF NOT EXISTS pmis_dict_item(
@@ -124,11 +131,16 @@ CREATE TABLE IF NOT EXISTS pmis_dict_item(
     ext_json        JSONB,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_dict_item UNIQUE (type_code, item_code, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    -- 数据完整性约束
+    CONSTRAINT uk_pmis_dict_item UNIQUE (type_code, item_code, deleted),
+    CONSTRAINT ck_pdi_status_enum   CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pdi_deleted_enum  CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_pdi_sort_nonneg   CHECK (sort_order >= 0)
 );
 COMMENT ON TABLE pmis_dict_item IS '字典项表: 字典类型下的具体枚举值(如项目类型下的 SYSTEM_DEV/T_M 等)';
 COMMENT ON COLUMN pmis_dict_item.id IS '主键 ID';
@@ -184,11 +196,15 @@ CREATE TABLE IF NOT EXISTS pmis_role(
     data_scope      VARCHAR(16)    NOT NULL DEFAULT 'SELF',
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_role_code UNIQUE (role_code, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_role_code UNIQUE (role_code, deleted),
+    CONSTRAINT ck_pr_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pr_data_scope     CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_SUB', 'SELF', 'CUSTOM')),
+    CONSTRAINT ck_pr_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_role IS '角色表: RBAC 角色定义,关联权限与数据范围';
 COMMENT ON COLUMN pmis_role.id IS '主键 ID';
@@ -203,8 +219,11 @@ COMMENT ON COLUMN pmis_role.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_role.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_role.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_role.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_role.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_role_status ON pmis_role (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_role_tenant_created
+    ON pmis_role (tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 权限/菜单表
 CREATE TABLE IF NOT EXISTS pmis_permission(
@@ -220,11 +239,16 @@ CREATE TABLE IF NOT EXISTS pmis_permission(
     visible         SMALLINT       NOT NULL DEFAULT 1,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_permission_code UNIQUE (perm_code, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_permission_code UNIQUE (perm_code, deleted),
+    CONSTRAINT ck_pp_perm_type    CHECK (perm_type IN ('MENU', 'BUTTON', 'API')),
+    CONSTRAINT ck_pp_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pp_visible_enum CHECK (visible IN (0, 1)),
+    CONSTRAINT ck_pp_deleted_enum CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_permission IS '权限/菜单表: 树形结构,涵盖菜单/按钮/API 三类权限';
 COMMENT ON COLUMN pmis_permission.id IS '主键 ID';
@@ -243,9 +267,11 @@ COMMENT ON COLUMN pmis_permission.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_permission.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_permission.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_permission.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_permission.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_permission_parent ON pmis_permission (parent_id);
 CREATE INDEX IF NOT EXISTS idx_pmis_permission_type ON pmis_permission (perm_type) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_permission_tenant ON pmis_permission(tenant_id);
 
 -- 用户-角色关联表
 CREATE TABLE IF NOT EXISTS pmis_user_role(
@@ -253,9 +279,11 @@ CREATE TABLE IF NOT EXISTS pmis_user_role(
     user_id         BIGINT         NOT NULL,
     role_id         BIGINT         NOT NULL,
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_user_role UNIQUE (user_id, role_id, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_user_role UNIQUE (user_id, role_id, deleted),
+    CONSTRAINT ck_pur_deleted_enum CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_user_role IS '用户-角色关联表: 多对多,用户可同时拥有多个角色';
 COMMENT ON COLUMN pmis_user_role.id IS '主键 ID';
@@ -264,18 +292,22 @@ COMMENT ON COLUMN pmis_user_role.role_id IS '角色 ID(关联 pmis_role.id)';
 COMMENT ON COLUMN pmis_user_role.created_by IS '授权人 ID';
 COMMENT ON COLUMN pmis_user_role.created_at IS '授权时间';
 COMMENT ON COLUMN pmis_user_role.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_user_role.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_user_role_user ON pmis_user_role (user_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmis_user_role_role ON pmis_user_role (role_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_user_role_tenant ON pmis_user_role(tenant_id);
 
 -- 角色-权限关联表
 CREATE TABLE IF NOT EXISTS pmis_role_permission(
     id              BIGSERIAL      PRIMARY KEY,
     role_id         BIGINT         NOT NULL,
     permission_id   BIGINT         NOT NULL,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_role_permission UNIQUE (role_id, permission_id, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_role_permission UNIQUE (role_id, permission_id, deleted),
+    CONSTRAINT ck_prp_deleted_enum CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_role_permission IS '角色-权限关联表: 多对多,角色绑定具体可访问的权限点';
 COMMENT ON COLUMN pmis_role_permission.id IS '主键 ID';
@@ -283,6 +315,12 @@ COMMENT ON COLUMN pmis_role_permission.role_id IS '角色 ID(关联 pmis_role.id
 COMMENT ON COLUMN pmis_role_permission.permission_id IS '权限 ID(关联 pmis_permission.id)';
 COMMENT ON COLUMN pmis_role_permission.created_at IS '授权时间';
 COMMENT ON COLUMN pmis_role_permission.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_role_permission.tenant_id IS '租户 ID(单租户部署默认 1)';
+
+CREATE INDEX IF NOT EXISTS idx_pmis_role_permission_deleted ON pmis_role_permission(deleted);
+CREATE INDEX IF NOT EXISTS idx_role_permission_tenant ON pmis_role_permission(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_role_permission_perm
+    ON pmis_role_permission(permission_id) WHERE deleted = 0;
 
 -- ====================================================================
 -- 3. 组织/人员模块
@@ -302,11 +340,14 @@ CREATE TABLE IF NOT EXISTS pmis_department(
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_department_code UNIQUE (dept_code, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_department_code UNIQUE (dept_code, deleted),
+    CONSTRAINT ck_pd_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pd_deleted_enum CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_department IS '部门表: 树形组织架构,支持多级嵌套与路径检索';
 COMMENT ON COLUMN pmis_department.id IS '主键 ID';
@@ -325,9 +366,15 @@ COMMENT ON COLUMN pmis_department.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_department.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_department.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_department.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_department.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_department_parent ON pmis_department (parent_id);
 CREATE INDEX IF NOT EXISTS idx_pmis_department_status ON pmis_department (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_department_tenant ON pmis_department(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_department_tenant_created
+    ON pmis_department(tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_dept_leader
+    ON pmis_department(leader_id) WHERE deleted = 0;
 
 -- 岗位表
 CREATE TABLE IF NOT EXISTS pmis_position(
@@ -339,11 +386,14 @@ CREATE TABLE IF NOT EXISTS pmis_position(
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_position_code UNIQUE (position_code, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_position_code UNIQUE (position_code, deleted),
+    CONSTRAINT ck_pp_status_enum  CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pp_deleted_enum CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_position IS '岗位表: 部门下的具体岗位定义(如开发工程师/PM/HRBP)';
 COMMENT ON COLUMN pmis_position.id IS '主键 ID';
@@ -358,8 +408,12 @@ COMMENT ON COLUMN pmis_position.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_position.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_position.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_position.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_position.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_position_dept ON pmis_position (department_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_position_tenant ON pmis_position(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_position_tenant_created
+    ON pmis_position(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- 职级表 (L1-L18)
 CREATE TABLE IF NOT EXISTS pmis_job_level(
@@ -371,11 +425,15 @@ CREATE TABLE IF NOT EXISTS pmis_job_level(
     description     TEXT,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_job_level_code UNIQUE (level_code, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_job_level_code UNIQUE (level_code, deleted),
+    CONSTRAINT ck_pjl_segment     CHECK (level_segment IN ('PRIMARY', 'MIDDLE', 'SENIOR', 'EXPERT', 'STRATEGIC')),
+    CONSTRAINT ck_pjl_status_enum CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pjl_deleted_enum CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_job_level IS '职级表: L1-L18 共 18 级,定义能力晋升阶梯';
 COMMENT ON COLUMN pmis_job_level.id IS '主键 ID';
@@ -390,6 +448,11 @@ COMMENT ON COLUMN pmis_job_level.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_job_level.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_job_level.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_job_level.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_job_level.tenant_id IS '租户 ID(单租户部署默认 1)';
+
+CREATE INDEX IF NOT EXISTS idx_job_level_tenant ON pmis_job_level(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_job_level_tenant_sort
+    ON pmis_job_level(tenant_id, sort_order) WHERE deleted = 0;
 
 -- 职级费率表 (对外人天 / 对内人天)
 CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
@@ -410,11 +473,16 @@ CREATE TABLE IF NOT EXISTS pmis_job_level_rate(
     version             INTEGER        NOT NULL DEFAULT 1,
     description         TEXT,
     created_by          BIGINT         NOT NULL DEFAULT 0,
-    created_at          TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by          BIGINT         NOT NULL DEFAULT 0,
-    updated_at          TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_job_level_rate UNIQUE (level_code, version, deleted)
+    tenant_id           BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_job_level_rate UNIQUE (level_code, version, deleted),
+    CONSTRAINT ck_pjlr_external_nonneg CHECK (external_daily >= 0 AND internal_daily >= 0),
+    CONSTRAINT ck_pjlr_billable_range  CHECK (billable_target >= 0 AND billable_target <= 1),
+    CONSTRAINT ck_pjlr_dates_valid     CHECK (expire_date IS NULL OR expire_date >= effective_date),
+    CONSTRAINT ck_pjlr_deleted_enum    CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_job_level_rate IS '职级费率表(双费率): 对外报价人天 / 对内成本人天 / 五险一金成本拆解,支持版本化生效';
 COMMENT ON COLUMN pmis_job_level_rate.id IS '主键 ID';
@@ -438,9 +506,11 @@ COMMENT ON COLUMN pmis_job_level_rate.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_job_level_rate.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_job_level_rate.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_job_level_rate.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_job_level_rate.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_code ON pmis_job_level_rate (level_code) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmis_job_level_rate_effective ON pmis_job_level_rate (effective_date, expire_date);
+CREATE INDEX IF NOT EXISTS idx_job_level_rate_tenant ON pmis_job_level_rate(tenant_id);
 
 -- 员工表
 CREATE TABLE IF NOT EXISTS pmis_employee(
@@ -469,11 +539,17 @@ CREATE TABLE IF NOT EXISTS pmis_employee(
     emergency_phone VARCHAR(32),
     description     TEXT,
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_emp_code UNIQUE (emp_code, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_emp_code UNIQUE (emp_code, deleted),
+    CONSTRAINT ck_pe_gender_enum      CHECK (gender IN ('M', 'F', 'U')),
+    CONSTRAINT ck_pe_work_status     CHECK (work_status IN ('ACTIVE', 'LEAVE', 'SUSPEND', 'PROBATION')),
+    CONSTRAINT ck_pe_bench_status     CHECK (bench_status IN ('YES', 'NO', 'TRAINING')),
+    CONSTRAINT ck_pe_dates_valid      CHECK (leave_date IS NULL OR leave_date >= hire_date),
+    CONSTRAINT ck_pe_deleted_enum     CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_employee IS '员工表: 员工主数据,关联用户账号/部门/岗位/职级,敏感字段加密存储';
 COMMENT ON COLUMN pmis_employee.id IS '主键 ID';
@@ -505,11 +581,17 @@ COMMENT ON COLUMN pmis_employee.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_employee.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_employee.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_employee.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_employee.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_user ON pmis_employee (user_id);
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_dept ON pmis_employee (department_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_level ON pmis_employee (level_code) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_bench ON pmis_employee (bench_status, bench_start) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_employee_tenant ON pmis_employee(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_employee_tenant_created
+    ON pmis_employee(tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_emp_position
+    ON pmis_employee(position_id) WHERE deleted = 0;
 
 -- 员工标签表
 CREATE TABLE IF NOT EXISTS pmis_employee_tag(
@@ -518,8 +600,11 @@ CREATE TABLE IF NOT EXISTS pmis_employee_tag(
     tag_type        VARCHAR(32)    NOT NULL,
     tag_code        VARCHAR(64)    NOT NULL,
     tag_value       VARCHAR(255),
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT ck_pet_tag_type CHECK (tag_type IN ('TECH_STACK', 'INDUSTRY', 'DOMAIN', 'CERTIFICATE', 'SKILL')),
+    CONSTRAINT ck_pet_deleted_enum CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_employee_tag IS '员工标签表: 技能/行业/资质/认证,支持资源池精准匹配';
 COMMENT ON COLUMN pmis_employee_tag.id IS '主键 ID';
@@ -529,9 +614,12 @@ COMMENT ON COLUMN pmis_employee_tag.tag_code IS '标签编码(同类型下唯一
 COMMENT ON COLUMN pmis_employee_tag.tag_value IS '标签值(中文展示名)';
 COMMENT ON COLUMN pmis_employee_tag.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_employee_tag.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_employee_tag.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_emp ON pmis_employee_tag (employee_id);
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_code ON pmis_employee_tag (tag_code);
+CREATE INDEX IF NOT EXISTS idx_emp_tag_tenant ON pmis_employee_tag(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_deleted ON pmis_employee_tag(deleted);
 
 -- ====================================================================
 -- 4. 用户账号
@@ -539,22 +627,39 @@ CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_code ON pmis_employee_tag (tag_code)
 
 -- 用户账号表
 CREATE TABLE IF NOT EXISTS pmis_user_account(
-    id              BIGSERIAL      PRIMARY KEY,
-    username        VARCHAR(64)    NOT NULL,
-    password        VARCHAR(128)   NOT NULL,
-    salt            VARCHAR(32)    NOT NULL,
-    employee_id     BIGINT,
-    status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
-    last_login_time TIMESTAMP,
-    last_login_ip   VARCHAR(64),
-    login_fail_count INTEGER       NOT NULL DEFAULT 0,
-    locked_until    TIMESTAMP,
-    created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_user_username UNIQUE (username, deleted)
+    id                 BIGSERIAL      PRIMARY KEY,
+    username           VARCHAR(64)    NOT NULL,
+    password           VARCHAR(128)   NOT NULL,
+    salt               VARCHAR(32)    NOT NULL,
+    employee_id        BIGINT,
+    -- V1.0.0_054 内联: 组织关系字段(支持 dept:/leader:/position: 审批人展开)
+    dept_id            BIGINT,
+    leader_id          BIGINT,
+    position_code      VARCHAR(64),
+    -- V1.0.0_016 内联: 数据权限 + MFA + 密码策略字段
+    data_scope         VARCHAR(16)    NOT NULL DEFAULT 'SELF',
+    custom_dept_ids    TEXT,
+    mfa_enabled        BOOLEAN        NOT NULL DEFAULT FALSE,
+    mfa_type           VARCHAR(16)    NOT NULL DEFAULT 'NONE',
+    last_pwd_change_at TIMESTAMPTZ,
+    pwd_change_count   INT            NOT NULL DEFAULT 0,
+    status             VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
+    last_login_time    TIMESTAMPTZ,
+    last_login_ip      VARCHAR(64),
+    login_fail_count   INTEGER        NOT NULL DEFAULT 0,
+    locked_until       TIMESTAMPTZ,
+    created_by         BIGINT         NOT NULL DEFAULT 0,
+    created_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by         BIGINT         NOT NULL DEFAULT 0,
+    updated_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id          BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_user_username UNIQUE (username, deleted),
+    CONSTRAINT ck_pua_status_enum   CHECK (status IN ('ENABLED', 'DISABLED', 'LOCKED')),
+    CONSTRAINT ck_pua_data_scope    CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_SUB', 'SELF', 'CUSTOM')),
+    CONSTRAINT ck_pua_mfa_type      CHECK (mfa_type IN ('NONE', 'TOTP', 'SMS')),
+    CONSTRAINT ck_pua_fail_nonneg   CHECK (login_fail_count >= 0 AND pwd_change_count >= 0),
+    CONSTRAINT ck_pua_deleted_enum  CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_user_account IS '用户账号表: 登录凭证,存储密码哈希+盐值,支持登录失败锁定与 MFA';
 COMMENT ON COLUMN pmis_user_account.id IS '主键 ID';
@@ -567,15 +672,34 @@ COMMENT ON COLUMN pmis_user_account.last_login_time IS '最近登录时间';
 COMMENT ON COLUMN pmis_user_account.last_login_ip IS '最近登录 IP';
 COMMENT ON COLUMN pmis_user_account.login_fail_count IS '连续登录失败次数(达到阈值触发锁定)';
 COMMENT ON COLUMN pmis_user_account.locked_until IS '锁定截止时间(到期自动解锁)';
--- 注：data_scope / custom_dept_ids / mfa_enabled / mfa_type / last_pwd_change_at / pwd_change_count
--- 的 COMMENT 已迁移至 V1.0.0_016（字段在该脚本中通过 ADD COLUMN 创建）
+COMMENT ON COLUMN pmis_user_account.dept_id IS '所属部门 ID(关联 pmis_department.id,支持 dept: 审批人展开)';
+COMMENT ON COLUMN pmis_user_account.leader_id IS '直属上级用户 ID(关联 pmis_user_account.id,支持 leader: 审批人展开)';
+COMMENT ON COLUMN pmis_user_account.position_code IS '岗位编码(如 PM/DEV/QA/SA,支持 position: 审批人展开)';
+COMMENT ON COLUMN pmis_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_SUB 本部门及下级 / SELF 本人 / CUSTOM 自定义';
+COMMENT ON COLUMN pmis_user_account.custom_dept_ids IS '自定义数据权限部门 ID 列表(逗号分隔,data_scope=CUSTOM 时生效)';
+COMMENT ON COLUMN pmis_user_account.mfa_enabled IS '是否启用双因素认证';
+COMMENT ON COLUMN pmis_user_account.mfa_type IS '双因素认证类型: NONE 未启用 / TOTP 基于时间的一次性密码 / SMS 短信验证码';
+COMMENT ON COLUMN pmis_user_account.last_pwd_change_at IS '最近密码修改时间';
+COMMENT ON COLUMN pmis_user_account.pwd_change_count IS '密码修改次数(用于强制定期改密)';
 COMMENT ON COLUMN pmis_user_account.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_user_account.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_user_account.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_user_account.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_user_account.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_user_account.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_user_status ON pmis_user_account (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_user_account_tenant ON pmis_user_account(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_user_account_tenant_created
+    ON pmis_user_account(tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_user_employee
+    ON pmis_user_account(employee_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pua_dept_id
+    ON pmis_user_account(dept_id) WHERE deleted = 0 AND dept_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pua_position_code
+    ON pmis_user_account(position_code) WHERE deleted = 0 AND position_code IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pua_leader_id
+    ON pmis_user_account(leader_id) WHERE deleted = 0 AND leader_id IS NOT NULL;
 
 -- ====================================================================
 -- 5. 通知中心
@@ -592,13 +716,18 @@ CREATE TABLE IF NOT EXISTS pmis_notification(
     biz_type        VARCHAR(64),
     biz_id          VARCHAR(64),
     read_status     SMALLINT       NOT NULL DEFAULT 0,
-    read_time       TIMESTAMP,
-    expired_at      TIMESTAMP,
+    read_time       TIMESTAMPTZ,
+    expired_at      TIMESTAMPTZ,
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT       NOT NULL DEFAULT 0
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT ck_pn_level_enum     CHECK (level IN ('INFO', 'WARN', 'ERROR', 'URGENT')),
+    CONSTRAINT ck_pn_category_enum  CHECK (category IN ('SYSTEM', 'WORKFLOW', 'ALERT', 'TODO', 'ANNOUNCE')),
+    CONSTRAINT ck_pn_read_enum      CHECK (read_status IN (0, 1)),
+    CONSTRAINT ck_pn_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_notification IS '通知表: 系统消息/待办/预警统一入口,支持业务关联跳转';
 COMMENT ON COLUMN pmis_notification.id IS '主键 ID';
@@ -618,9 +747,15 @@ COMMENT ON COLUMN pmis_notification.created_at IS '发送时间';
 COMMENT ON COLUMN pmis_notification.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_notification.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_notification.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_notification.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_notif_receiver ON pmis_notification (receiver_id, read_status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pmis_notif_biz ON pmis_notification (biz_type, biz_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_notification_tenant ON pmis_notification(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_notification_tenant_created
+    ON pmis_notification(tenant_id, created_at DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_notif_sender
+    ON pmis_notification(sender_id) WHERE deleted = 0;
 
 -- ====================================================================
 -- 6. 系统配置
@@ -638,11 +773,16 @@ CREATE TABLE IF NOT EXISTS pmis_config(
     sort_order      INTEGER        NOT NULL DEFAULT 0,
     status          VARCHAR(16)    NOT NULL DEFAULT 'ENABLED',
     created_by      BIGINT         NOT NULL DEFAULT 0,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by      BIGINT         NOT NULL DEFAULT 0,
-    updated_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pmis_config_key UNIQUE (config_group, config_key, deleted)
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT uk_pmis_config_key UNIQUE (config_group, config_key, deleted),
+    CONSTRAINT ck_pc_value_type    CHECK (value_type IN ('STRING', 'NUMBER', 'BOOLEAN', 'JSON')),
+    CONSTRAINT ck_pc_status_enum   CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pc_public_enum   CHECK (is_public IN (0, 1)),
+    CONSTRAINT ck_pc_deleted_enum  CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_config IS '系统配置表: 业务可热更新的参数(预警阈值/费率/工作流引擎等),按 group 分组';
 COMMENT ON COLUMN pmis_config.id IS '主键 ID';
@@ -660,30 +800,44 @@ COMMENT ON COLUMN pmis_config.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_config.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_config.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_config.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_config.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_config_group ON pmis_config (config_group) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_config_tenant ON pmis_config(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_config_tenant_created
+    ON pmis_config(tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- ====================================================================
 -- 7. 操作日志
 -- ====================================================================
 
 CREATE TABLE IF NOT EXISTS pmis_operation_log(
-    id              BIGSERIAL      PRIMARY KEY,
-    user_id         BIGINT,
-    username        VARCHAR(64),
-    module          VARCHAR(64)    NOT NULL,
-    action          VARCHAR(64)    NOT NULL,
-    method          VARCHAR(8),
-    request_url     VARCHAR(512),
-    request_method  VARCHAR(255),
-    request_params  TEXT,
-    response_data   TEXT,
-    ip              VARCHAR(64),
-    user_agent      VARCHAR(512),
-    cost_ms         BIGINT,
-    status          VARCHAR(16)    NOT NULL DEFAULT 'SUCCESS',
-    error_message   TEXT,
-    created_at      TIMESTAMP      NOT NULL DEFAULT CURRENT_TIMESTAMP
+    id                BIGSERIAL      PRIMARY KEY,
+    user_id           BIGINT,
+    username          VARCHAR(64),
+    module            VARCHAR(64)    NOT NULL,
+    action            VARCHAR(128)   NOT NULL,
+    biz_type          VARCHAR(64),
+    biz_id            VARCHAR(64),
+    request_url       VARCHAR(512),
+    -- V1.0.0_008 内联: 字段重命名后的规范名称
+    http_method       VARCHAR(16),
+    method_signature  VARCHAR(256),
+    client_ip         VARCHAR(64),
+    user_agent        VARCHAR(512),
+    params_json       TEXT,
+    response_json     TEXT,
+    -- V1.0.0_040 内联: 审计差异字段(变更前/后快照)
+    before_data       JSONB,
+    after_data        JSONB,
+    cost_ms           BIGINT,
+    status            VARCHAR(16)    NOT NULL DEFAULT 'SUCCESS',
+    error_message     TEXT,
+    trace_id          VARCHAR(64),
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    tenant_id         BIGINT         NOT NULL DEFAULT 1,
+    CONSTRAINT ck_pol_status_enum  CHECK (status IN ('SUCCESS', 'FAILED')),
+    CONSTRAINT ck_pol_cost_nonneg  CHECK (cost_ms IS NULL OR cost_ms >= 0)
 );
 COMMENT ON TABLE pmis_operation_log IS '操作日志表: 用户关键操作全量留存(模块/动作/入参/出参/耗时/IP),用于审计与问题排查';
 COMMENT ON COLUMN pmis_operation_log.id IS '主键 ID';
@@ -691,21 +845,37 @@ COMMENT ON COLUMN pmis_operation_log.user_id IS '操作用户 ID';
 COMMENT ON COLUMN pmis_operation_log.username IS '操作用户名';
 COMMENT ON COLUMN pmis_operation_log.module IS '操作模块(如 project/contract/finance)';
 COMMENT ON COLUMN pmis_operation_log.action IS '操作动作(如 create/update/delete/approve)';
-COMMENT ON COLUMN pmis_operation_log.method IS 'HTTP 方法(GET/POST/PUT/DELETE)';
+COMMENT ON COLUMN pmis_operation_log.biz_type IS '业务类型';
+COMMENT ON COLUMN pmis_operation_log.biz_id IS '业务单据 ID';
 COMMENT ON COLUMN pmis_operation_log.request_url IS '请求 URL';
-COMMENT ON COLUMN pmis_operation_log.request_method IS '请求方法签名(如 ProjectController#create)';
-COMMENT ON COLUMN pmis_operation_log.request_params IS '请求参数 JSON';
-COMMENT ON COLUMN pmis_operation_log.response_data IS '响应数据 JSON(失败时为空)';
-COMMENT ON COLUMN pmis_operation_log.ip IS '客户端 IP';
-COMMENT ON COLUMN pmis_operation_log.user_agent IS '浏览器 User-Agent';
+COMMENT ON COLUMN pmis_operation_log.http_method IS 'V1.0.0_008: HTTP 方法(GET/POST/PUT/DELETE)';
+COMMENT ON COLUMN pmis_operation_log.method_signature IS 'V1.0.0_008: Java 方法签名(如 ProjectController#create)';
+COMMENT ON COLUMN pmis_operation_log.client_ip IS 'V1.0.0_008: 客户端 IP';
+COMMENT ON COLUMN pmis_operation_log.user_agent IS '浏览器/客户端 User-Agent';
+COMMENT ON COLUMN pmis_operation_log.params_json IS 'V1.0.0_008: 请求参数 JSON(敏感字段脱敏)';
+COMMENT ON COLUMN pmis_operation_log.response_json IS 'V1.0.0_008: 响应数据 JSON(失败时为空)';
+COMMENT ON COLUMN pmis_operation_log.before_data IS 'V1.0.0_040: 变更前数据快照(JSONB,update/delete 时填充)';
+COMMENT ON COLUMN pmis_operation_log.after_data IS 'V1.0.0_040: 变更后数据快照(JSONB,create/update 时填充)';
 COMMENT ON COLUMN pmis_operation_log.cost_ms IS '接口耗时(毫秒)';
 COMMENT ON COLUMN pmis_operation_log.status IS '操作状态: SUCCESS 成功 / FAILED 失败';
-COMMENT ON COLUMN pmis_operation_log.error_message IS '错误信息(失败时填充)';
+COMMENT ON COLUMN pmis_operation_log.error_message IS '错误信息(失败时填充堆栈摘要)';
+COMMENT ON COLUMN pmis_operation_log.trace_id IS 'V1.0.0_008: 系统链路追踪 ID(SkyWalking/TLog)';
 COMMENT ON COLUMN pmis_operation_log.created_at IS '操作时间';
+COMMENT ON COLUMN pmis_operation_log.tenant_id IS '租户 ID(单租户部署默认 1)';
 
 CREATE INDEX IF NOT EXISTS idx_pmis_oplog_user ON pmis_operation_log (user_id);
 CREATE INDEX IF NOT EXISTS idx_pmis_oplog_module ON pmis_operation_log (module, action);
 CREATE INDEX IF NOT EXISTS idx_pmis_oplog_created ON pmis_operation_log (created_at);
+CREATE INDEX IF NOT EXISTS idx_pol_tenant ON pmis_operation_log(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pol_tenant_created
+    ON pmis_operation_log(tenant_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pmis_oplog_biz
+    ON pmis_operation_log(biz_type, biz_id)
+    WHERE biz_type IS NOT NULL AND biz_id IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_pol_user_created
+    ON pmis_operation_log(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_pol_trace
+    ON pmis_operation_log(trace_id) WHERE trace_id IS NOT NULL;
 
 -- ====================================================================
 -- 8. 初始化数据
@@ -861,44 +1031,48 @@ ON CONFLICT DO NOTHING;
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_005__init_pmis_file_schema.sql
 -- ====================================================================
-
+-- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
+--   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
+--   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
+--   3) tenant_id 改为 NOT NULL DEFAULT 1,与全项目其他表保持一致
+--   4) 内联 status/deleted CHECK 约束
+--   5) 内联 (tenant_id, created_at DESC) WHERE deleted = 0 复合部分索引
 -- =====================================================
 -- PMIS 文件存储模块 DDL
--- 版本: V1.0.0_005
--- 描述: 文件元信息表
---
--- H1.5 修复：审计字段命名从 create_by/create_time/update_by/update_time
---   改为 created_by/created_at/updated_by/updated_at，与 BaseDO 及
---   全项目其他表统一规范。MyBatis-Plus MetaObjectHandler 按新字段填充。
---
--- H1.3 修复：移除 DROP TABLE IF EXISTS，改为 CREATE TABLE IF NOT EXISTS
---   避免已应用过的迁移再次执行时丢数据。
+-- 版本: V1.0.0_005 (merged into V1.0.0.sql)
+-- 描述: 文件元信息表(MinIO/OSS 对象存储统一管理)
 -- =====================================================
 
 CREATE TABLE IF NOT EXISTS pmis_file (
-    id              BIGSERIAL PRIMARY KEY,
-    file_name       VARCHAR(256) NOT NULL,
-    original_name   VARCHAR(256) NOT NULL,
-    file_path       VARCHAR(512) NOT NULL,
-    bucket          VARCHAR(64)  NOT NULL,
+    id              BIGSERIAL      PRIMARY KEY,
+    file_name       VARCHAR(256)   NOT NULL,
+    original_name   VARCHAR(256)   NOT NULL,
+    file_path       VARCHAR(512)   NOT NULL,
+    bucket          VARCHAR(64)    NOT NULL,
     content_type    VARCHAR(128),
-    file_size       BIGINT       NOT NULL DEFAULT 0,
+    file_size       BIGINT         NOT NULL DEFAULT 0,
     file_hash       VARCHAR(128),
     biz_type        VARCHAR(64),
     biz_id          VARCHAR(64),
-    storage_type    VARCHAR(32)  NOT NULL DEFAULT 'MINIO',
+    storage_type    VARCHAR(32)    NOT NULL DEFAULT 'MINIO',
     access_url      VARCHAR(1024),
-    url_expire_at   TIMESTAMP,
+    url_expire_at   TIMESTAMPTZ,
     uploader_id     BIGINT,
     uploader_name   VARCHAR(64),
-    tenant_id       BIGINT       DEFAULT 1,
     description     VARCHAR(512),
-    created_by      BIGINT,
-    created_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by      BIGINT,
-    updated_at      TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT     NOT NULL DEFAULT 0
+    created_by      BIGINT         NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      BIGINT         NOT NULL DEFAULT 0,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    -- 数据完整性约束
+    CONSTRAINT ck_pf_storage_type  CHECK (storage_type IN ('MINIO', 'LOCAL', 'OSS', 'COS')),
+    CONSTRAINT ck_pf_size_nonneg   CHECK (file_size >= 0),
+    CONSTRAINT ck_pf_deleted_enum  CHECK (deleted IN (0, 1))
 );
+-- [INLINE-OPT] 文件名 + 桶 在同一租户下应唯一(同一对象不能两次上传)
+-- 注:此处未直接加 UNIQUE 约束,因 file_path 可能随时间变化;唯一性由应用层 + file_hash 联合去重保障
 
 COMMENT ON TABLE pmis_file IS '文件元信息表: 统一管理 MinIO/OSS 等对象存储中的文件,支持业务关联与临时 URL';
 COMMENT ON COLUMN pmis_file.id IS '主键 ID';
@@ -916,19 +1090,29 @@ COMMENT ON COLUMN pmis_file.access_url IS '访问 URL(预签名 URL,带过期时
 COMMENT ON COLUMN pmis_file.url_expire_at IS '访问 URL 过期时间';
 COMMENT ON COLUMN pmis_file.uploader_id IS '上传人 ID';
 COMMENT ON COLUMN pmis_file.uploader_name IS '上传人姓名';
-COMMENT ON COLUMN pmis_file.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_file.description IS '文件描述/备注';
 COMMENT ON COLUMN pmis_file.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_file.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_file.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_file.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_file.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_file.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE INDEX IF NOT EXISTS idx_file_biz ON pmis_file(biz_type, biz_id);
-CREATE INDEX IF NOT EXISTS idx_file_hash ON pmis_file(file_hash);
-CREATE INDEX IF NOT EXISTS idx_file_uploader ON pmis_file(uploader_id);
-CREATE INDEX IF NOT EXISTS idx_file_tenant ON pmis_file(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_file_bucket ON pmis_file(bucket);
+-- [INLINE-OPT] 全部索引添加 deleted 部分条件,避免逻辑删除行干扰
+CREATE INDEX IF NOT EXISTS idx_pmis_file_biz
+    ON pmis_file (biz_type, biz_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_file_hash
+    ON pmis_file (file_hash) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_file_uploader
+    ON pmis_file (uploader_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_file_bucket
+    ON pmis_file (bucket) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:按租户 + 创建时间倒序,支持文件中心列表分页
+CREATE INDEX IF NOT EXISTS idx_pmis_file_tenant_created
+    ON pmis_file (tenant_id, created_at DESC) WHERE deleted = 0;
+-- [INLINE-OPT] URL 过期清理:按 url_expire_at 升序扫描已过期 URL(系统后台任务使用)
+CREATE INDEX IF NOT EXISTS idx_pmis_file_url_expire
+    ON pmis_file (url_expire_at) WHERE deleted = 0 AND url_expire_at IS NOT NULL;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_005__init_pmis_file_schema.sql
@@ -937,35 +1121,47 @@ CREATE INDEX IF NOT EXISTS idx_file_bucket ON pmis_file(bucket);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_006__init_pmis_job_schema.sql
 -- ====================================================================
-
+-- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
+--   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
+--   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
+--   3) tenant_id 改为 NOT NULL DEFAULT 1
+--   4) 内联 status/deleted CHECK 约束
+--   5) 内联复合部分索引 (tenant_id, created_at DESC) WHERE deleted = 0
+--   6) 计数器类字段 (fire_count/success_count/fail_count/login_fail_count 等) 添加非负 CHECK
 -- =====================================================
 -- PMIS 任务调度模块 DDL
--- 版本: V1.0.0_006
--- 描述: 动态定时任务定义与执行日志
+-- 版本: V1.0.0_006 (merged into V1.0.0.sql)
+-- 描述: 动态定时任务定义 + 执行日志(Quartz/XXL-JOB 兼容)
 -- =====================================================
 
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_job;
+-- 任务定义表 pmis_job
 CREATE TABLE IF NOT EXISTS pmis_job(
-    id              BIGSERIAL PRIMARY KEY,
-    job_name        VARCHAR(128) NOT NULL,
-    job_group       VARCHAR(64)  NOT NULL DEFAULT 'DEFAULT',
-    job_key         VARCHAR(128) NOT NULL,
-    handler         VARCHAR(256) NOT NULL,
-    cron_expression VARCHAR(128) NOT NULL,
+    id              BIGSERIAL      PRIMARY KEY,
+    job_name        VARCHAR(128)   NOT NULL,
+    job_group       VARCHAR(64)    NOT NULL DEFAULT 'DEFAULT',
+    job_key         VARCHAR(128)   NOT NULL,
+    handler         VARCHAR(256)   NOT NULL,
+    cron_expression VARCHAR(128)   NOT NULL,
     params_json     TEXT,
-    status          VARCHAR(32)  NOT NULL DEFAULT 'NORMAL',
+    status          VARCHAR(32)    NOT NULL DEFAULT 'NORMAL',
     remark          VARCHAR(512),
-    next_fire_time  TIMESTAMP,
-    last_fire_time  TIMESTAMP,
-    fire_count      BIGINT       NOT NULL DEFAULT 0,
-    success_count   BIGINT       NOT NULL DEFAULT 0,
-    fail_count      BIGINT       NOT NULL DEFAULT 0,
-    tenant_id       BIGINT       DEFAULT 1,
-    create_by       BIGINT,
-    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by       BIGINT,
-    update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT     NOT NULL DEFAULT 0
+    next_fire_time  TIMESTAMPTZ,
+    last_fire_time  TIMESTAMPTZ,
+    fire_count      BIGINT         NOT NULL DEFAULT 0,
+    success_count   BIGINT         NOT NULL DEFAULT 0,
+    fail_count      BIGINT         NOT NULL DEFAULT 0,
+    created_by      BIGINT         NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      BIGINT         NOT NULL DEFAULT 0,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    -- 数据完整性约束
+    CONSTRAINT uk_pmis_job_key UNIQUE (job_key, deleted),
+    CONSTRAINT ck_pj_status_enum    CHECK (status IN ('NORMAL', 'PAUSED', 'ERROR', 'COMPLETE')),
+    CONSTRAINT ck_pj_counts_nonneg  CHECK (fire_count >= 0 AND success_count >= 0 AND fail_count >= 0),
+    CONSTRAINT ck_pj_success_le     CHECK (success_count <= fire_count),
+    CONSTRAINT ck_pj_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
 COMMENT ON TABLE pmis_job IS '动态定时任务定义表: 支持运行时增删改触发频率的定时任务(Quartz/XXL-JOB)';
@@ -983,34 +1179,55 @@ COMMENT ON COLUMN pmis_job.last_fire_time IS '上次触发时间';
 COMMENT ON COLUMN pmis_job.fire_count IS '累计触发次数';
 COMMENT ON COLUMN pmis_job.success_count IS '成功执行次数';
 COMMENT ON COLUMN pmis_job.fail_count IS '失败次数(超过阈值告警)';
-COMMENT ON COLUMN pmis_job.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_job.create_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_job.create_time IS '创建时间';
-COMMENT ON COLUMN pmis_job.update_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_job.update_time IS '最后修改时间';
+COMMENT ON COLUMN pmis_job.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_job.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_job.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_job.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_job_key ON pmis_job(job_key);
-CREATE INDEX IF NOT EXISTS idx_pmis_job_status ON pmis_job(status);
-CREATE INDEX IF NOT EXISTS idx_pmis_job_group ON pmis_job(job_group);
-CREATE INDEX IF NOT EXISTS idx_pmis_job_tenant ON pmis_job(tenant_id);
+-- [INLINE-OPT] status/group 走部分索引(逻辑删除过滤)
+CREATE INDEX IF NOT EXISTS idx_pmis_job_status
+    ON pmis_job (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmis_job_group
+    ON pmis_job (job_group) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:按租户 + 创建时间倒序(任务中心列表)
+CREATE INDEX IF NOT EXISTS idx_pmis_job_tenant_created
+    ON pmis_job (tenant_id, created_at DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 下次触发时间:调度器扫描待触发任务
+CREATE INDEX IF NOT EXISTS idx_pmis_job_next_fire
+    ON pmis_job (next_fire_time) WHERE deleted = 0 AND status = 'NORMAL' AND next_fire_time IS NOT NULL;
 
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_job_log;
+
+-- 任务执行日志表 pmis_job_log
 CREATE TABLE IF NOT EXISTS pmis_job_log(
-    id              BIGSERIAL PRIMARY KEY,
-    job_id          BIGINT       NOT NULL,
-    job_key         VARCHAR(128) NOT NULL,
-    start_time      TIMESTAMP    NOT NULL,
-    end_time        TIMESTAMP,
+    id              BIGSERIAL      PRIMARY KEY,
+    job_id          BIGINT         NOT NULL,
+    job_key         VARCHAR(128)   NOT NULL,
+    start_time      TIMESTAMPTZ    NOT NULL,
+    end_time        TIMESTAMPTZ,
     duration_ms     BIGINT,
-    status          VARCHAR(32)  NOT NULL,
+    status          VARCHAR(32)    NOT NULL,
     error_message   TEXT,
     params_json     TEXT,
     result_json     TEXT,
     trace_id        VARCHAR(64),
-    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT     NOT NULL DEFAULT 0
+    -- [INLINE-OPT] P0-D3 内联:MQ 投递元信息字段
+    msg_id          VARCHAR(64),
+    topic           VARCHAR(128),
+    reconsume_times INTEGER        NOT NULL DEFAULT 0,
+    -- [INLINE-OPT] 审计字段统一为 created_at,deleted 字段保留以便系统级清理
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pjl_status_enum   CHECK (status IN ('RUNNING', 'SUCCESS', 'FAILED')),
+    CONSTRAINT ck_pjl_duration_nonneg CHECK (duration_ms IS NULL OR duration_ms >= 0),
+    CONSTRAINT ck_pjl_times_valid   CHECK (end_time IS NULL OR end_time >= start_time),
+    CONSTRAINT ck_pjl_reconsume_nonneg CHECK (reconsume_times >= 0),
+    CONSTRAINT ck_pjl_deleted_enum  CHECK (deleted IN (0, 1))
 );
+-- [INLINE-OPT] 任务日志不需要 tenant_id 维度(系统全局资源)
+-- 注:此处不携带 tenant_id,以避免与任务中心分页逻辑耦合
 
 COMMENT ON TABLE pmis_job_log IS '任务执行日志: 每次任务执行的耗时/入参/出参/异常,用于排障与审计';
 COMMENT ON COLUMN pmis_job_log.id IS '主键 ID';
@@ -1024,13 +1241,25 @@ COMMENT ON COLUMN pmis_job_log.error_message IS '异常堆栈(失败时填充)';
 COMMENT ON COLUMN pmis_job_log.params_json IS '执行参数 JSON';
 COMMENT ON COLUMN pmis_job_log.result_json IS '执行结果 JSON';
 COMMENT ON COLUMN pmis_job_log.trace_id IS '链路追踪 ID(SkyWalking/TLog)';
-COMMENT ON COLUMN pmis_job_log.create_time IS '日志写入时间';
+COMMENT ON COLUMN pmis_job_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
+COMMENT ON COLUMN pmis_job_log.topic IS 'RocketMQ Topic(标识消息来源 Topic,DLQ 消息填充原 Topic)';
+COMMENT ON COLUMN pmis_job_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';
+COMMENT ON COLUMN pmis_job_log.created_at IS '日志写入时间';
 COMMENT ON COLUMN pmis_job_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
 
-CREATE INDEX IF NOT EXISTS idx_pjl_job_id ON pmis_job_log(job_id);
-CREATE INDEX IF NOT EXISTS idx_pjl_job_key ON pmis_job_log(job_key);
-CREATE INDEX IF NOT EXISTS idx_pjl_status ON pmis_job_log(status);
-CREATE INDEX IF NOT EXISTS idx_pjl_start_time ON pmis_job_log(start_time);
+-- [INLINE-OPT] status 走部分索引(高频过滤)
+CREATE INDEX IF NOT EXISTS idx_pjl_job_id
+    ON pmis_job_log (job_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pjl_job_key
+    ON pmis_job_log (job_key) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pjl_status
+    ON pmis_job_log (status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:按 job_id + 开始时间倒序(任务执行历史分页)
+CREATE INDEX IF NOT EXISTS idx_pjl_job_start
+    ON pmis_job_log (job_id, start_time DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 链路追踪 ID 索引(分布式排障)
+CREATE INDEX IF NOT EXISTS idx_pjl_trace_id
+    ON pmis_job_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_006__init_pmis_job_schema.sql
@@ -1039,39 +1268,58 @@ CREATE INDEX IF NOT EXISTS idx_pjl_start_time ON pmis_job_log(start_time);
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_007__init_pmis_message_schema.sql
 -- ====================================================================
-
+-- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
+--   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
+--   2) 审计字段 create_by/create_time → created_by/created_at 规范命名
+--   3) tenant_id 改为 NOT NULL DEFAULT 1
+--   4) 内联 status/channel/deleted CHECK 约束
+--   5) 内联 P0-D3 MQ 投递元信息(msg_id/topic/reconsume_times)至 message_log
+--   6) 内联 (tenant_id, created_at DESC) WHERE deleted = 0 复合部分索引
+--   7) 内联 provider_trace_id 索引(按服务商回执 ID 反查发送记录)
 -- =====================================================
 -- PMIS 消息通道模块 DDL
--- 版本: V1.0.0_007
--- 描述: 短信/邮件/推送发送日志
+-- 版本: V1.0.0_007 (merged into V1.0.0.sql)
+-- 描述: 短信/邮件/推送/站内信/Webhook 发送日志 + 模板
 -- =====================================================
 
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_message_log;
+-- 消息发送日志表 pmis_message_log
 CREATE TABLE IF NOT EXISTS pmis_message_log(
-    id              BIGSERIAL PRIMARY KEY,
-    channel         VARCHAR(32)  NOT NULL,
+    id              BIGSERIAL      PRIMARY KEY,
+    channel         VARCHAR(32)    NOT NULL,
     biz_type        VARCHAR(64),
     biz_id          VARCHAR(64),
-    receiver        VARCHAR(256) NOT NULL,
+    receiver        VARCHAR(256)   NOT NULL,
     template_code   VARCHAR(128),
     template_params TEXT,
     content         TEXT,
-    status          VARCHAR(32)  NOT NULL,
+    status          VARCHAR(32)    NOT NULL,
     error_message   TEXT,
+    -- [INLINE-OPT] P0-D3 内联:三方服务商回执 + 链路追踪
     provider_trace_id VARCHAR(128),
     cost_ms         BIGINT,
     trace_id        VARCHAR(64),
-    tenant_id       BIGINT       DEFAULT 1,
-    create_by       BIGINT,
-    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by       BIGINT,
-    update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT     NOT NULL DEFAULT 0
+    -- [INLINE-OPT] P0-D3 内联:MQ 投递元信息
+    msg_id          VARCHAR(64),
+    topic           VARCHAR(128),
+    reconsume_times INTEGER        NOT NULL DEFAULT 0,
+    -- [INLINE-OPT] 审计字段统一
+    created_by      BIGINT         NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      BIGINT         NOT NULL DEFAULT 0,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    -- 数据完整性约束
+    CONSTRAINT ck_pml_channel_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pml_status_enum    CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED', 'RETRY')),
+    CONSTRAINT ck_pml_cost_nonneg    CHECK (cost_ms IS NULL OR cost_ms >= 0),
+    CONSTRAINT ck_pml_reconsume_nonneg CHECK (reconsume_times >= 0),
+    CONSTRAINT ck_pml_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_message_log IS '消息发送日志: 短信/邮件/推送/站内信发送全量记录,支持按业务/接收人查询';
+COMMENT ON TABLE pmis_message_log IS '消息发送日志: 短信/邮件/推送/站内信/Webhook 发送全量记录,支持按业务/接收人查询';
 COMMENT ON COLUMN pmis_message_log.id IS '主键 ID';
-COMMENT ON COLUMN pmis_message_log.channel IS '发送通道: SMS 短信 / EMAIL 邮件 / PUSH 移动推送 / IN_APP 站内信 / WEBHOOK 企业微信/钉钉机器人';
+COMMENT ON COLUMN pmis_message_log.channel IS '发送通道: SMS 短信 / EMAIL 邮件 / PUSH 移动推送 / IN_APP 站内信 / WEBHOOK 回调 / DINGTALK 钉钉 / WECOM 企业微信 / FEISHU 飞书';
 COMMENT ON COLUMN pmis_message_log.biz_type IS '业务类型(如 alert/notice/verify_code)';
 COMMENT ON COLUMN pmis_message_log.biz_id IS '业务单据 ID';
 COMMENT ON COLUMN pmis_message_log.receiver IS '接收人(手机号/邮箱/设备号/user_id)';
@@ -1083,52 +1331,66 @@ COMMENT ON COLUMN pmis_message_log.error_message IS '失败原因';
 COMMENT ON COLUMN pmis_message_log.provider_trace_id IS '三方服务商回执 ID(阿里云/腾讯云返回的流水号)';
 COMMENT ON COLUMN pmis_message_log.cost_ms IS '发送耗时(毫秒)';
 COMMENT ON COLUMN pmis_message_log.trace_id IS '系统链路追踪 ID';
-COMMENT ON COLUMN pmis_message_log.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_message_log.create_by IS '创建人 ID(系统发送为 0)';
-COMMENT ON COLUMN pmis_message_log.create_time IS '发送时间';
-COMMENT ON COLUMN pmis_message_log.update_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_message_log.update_time IS '最后修改时间';
-COMMENT ON COLUMN pmis_message_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-
-CREATE INDEX IF NOT EXISTS idx_pml_channel ON pmis_message_log(channel);
-CREATE INDEX IF NOT EXISTS idx_pml_status ON pmis_message_log(status);
-CREATE INDEX IF NOT EXISTS idx_pml_biz ON pmis_message_log(biz_type, biz_id);
-CREATE INDEX IF NOT EXISTS idx_pml_receiver ON pmis_message_log(receiver);
-CREATE INDEX IF NOT EXISTS idx_pml_tenant ON pmis_message_log(tenant_id);
-
--- P0-D3: 扩展 MQ 元信息字段（msg_id / topic / reconsume_times）
-ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS msg_id VARCHAR(64);
-ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS topic VARCHAR(128);
-ALTER TABLE pmis_message_log ADD COLUMN IF NOT EXISTS reconsume_times INTEGER DEFAULT 0;
 COMMENT ON COLUMN pmis_message_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
-COMMENT ON COLUMN pmis_message_log.topic IS 'RocketMQ Topic(标识消息来源 Topic, DLQ 消息填充原 Topic)';
+COMMENT ON COLUMN pmis_message_log.topic IS 'RocketMQ Topic(标识消息来源 Topic,DLQ 消息填充原 Topic)';
 COMMENT ON COLUMN pmis_message_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';
-CREATE INDEX IF NOT EXISTS idx_pml_msg_id ON pmis_message_log(msg_id);
+COMMENT ON COLUMN pmis_message_log.created_by IS '创建人 ID(系统发送为 0)';
+COMMENT ON COLUMN pmis_message_log.created_at IS '发送时间';
+COMMENT ON COLUMN pmis_message_log.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_message_log.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_message_log.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_message_log.tenant_id IS '租户 ID(单租户部署默认 1)';
 
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_message_template;
+-- [INLINE-OPT] channel/status/biz 走部分索引(逻辑删除过滤)
+CREATE INDEX IF NOT EXISTS idx_pml_channel
+    ON pmis_message_log (channel) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pml_status
+    ON pmis_message_log (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pml_biz
+    ON pmis_message_log (biz_type, biz_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pml_receiver
+    ON pmis_message_log (receiver) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:按租户 + 发送时间倒序(消息中心列表)
+CREATE INDEX IF NOT EXISTS idx_pml_tenant_created
+    ON pmis_message_log (tenant_id, created_at DESC) WHERE deleted = 0;
+-- [INLINE-OPT] MQ 消息 ID 索引(投递链路反查)
+CREATE INDEX IF NOT EXISTS idx_pml_msg_id
+    ON pmis_message_log (msg_id) WHERE deleted = 0 AND msg_id IS NOT NULL;
+-- [INLINE-OPT] 服务商回执 ID 索引(对接阿里云/腾讯云回执回调)
+CREATE INDEX IF NOT EXISTS idx_pml_provider_trace
+    ON pmis_message_log (provider_trace_id) WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
+
+
+-- 消息模板表 pmis_message_template
 CREATE TABLE IF NOT EXISTS pmis_message_template(
-    id              BIGSERIAL PRIMARY KEY,
-    template_code   VARCHAR(128) NOT NULL,
-    channel         VARCHAR(32)  NOT NULL,
+    id              BIGSERIAL      PRIMARY KEY,
+    template_code   VARCHAR(128)   NOT NULL,
+    channel         VARCHAR(32)    NOT NULL,
     subject         VARCHAR(256),
-    content         TEXT         NOT NULL,
+    content         TEXT           NOT NULL,
     provider        VARCHAR(64),
     provider_key    VARCHAR(128),
     sign_name       VARCHAR(64),
-    status          VARCHAR(32)  NOT NULL DEFAULT 'ENABLED',
+    status          VARCHAR(32)    NOT NULL DEFAULT 'ENABLED',
     description     VARCHAR(512),
-    tenant_id       BIGINT       DEFAULT 1,
-    create_by       BIGINT,
-    create_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    update_by       BIGINT,
-    update_time     TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         SMALLINT     NOT NULL DEFAULT 0
+    created_by      BIGINT         NOT NULL DEFAULT 0,
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      BIGINT         NOT NULL DEFAULT 0,
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id       BIGINT         NOT NULL DEFAULT 1,
+    -- 数据完整性约束
+    -- [INLINE-OPT] UNIQUE 约束升级:同租户下 template_code + channel 全局唯一
+    CONSTRAINT uk_pmt_code_channel_tenant UNIQUE (template_code, channel, tenant_id, deleted),
+    CONSTRAINT ck_pmt_channel_enum   CHECK (channel IN ('SMS', 'EMAIL', 'PUSH', 'IN_APP', 'WEBHOOK', 'DINGTALK', 'WECOM', 'FEISHU')),
+    CONSTRAINT ck_pmt_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pmt_deleted_enum   CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_message_template IS '消息模板表: 短信/邮件/推送/站内信模板,支持 ${var} 占位符嵌套替换';
+COMMENT ON TABLE pmis_message_template IS '消息模板表: 短信/邮件/推送/站内信/Webhook 模板,支持 ${var} 占位符嵌套替换';
 COMMENT ON COLUMN pmis_message_template.id IS '主键 ID';
 COMMENT ON COLUMN pmis_message_template.template_code IS '模板编码(全局唯一,如 ALERT_BUDGET_YELLOW)';
-COMMENT ON COLUMN pmis_message_template.channel IS '通道: SMS 短信 / EMAIL 邮件 / PUSH 移动推送 / IN_APP 站内信 / WEBHOOK';
+COMMENT ON COLUMN pmis_message_template.channel IS '通道: SMS 短信 / EMAIL 邮件 / PUSH 移动推送 / IN_APP 站内信 / WEBHOOK / DINGTALK 钉钉 / WECOM 企业微信 / FEISHU 飞书';
 COMMENT ON COLUMN pmis_message_template.subject IS '主题(邮件专属 Subject)';
 COMMENT ON COLUMN pmis_message_template.content IS '模板内容(支持 ${var} 占位符,可嵌套)';
 COMMENT ON COLUMN pmis_message_template.provider IS '三方服务商(阿里云/腾讯云/极光/SendCloud)';
@@ -1136,157 +1398,88 @@ COMMENT ON COLUMN pmis_message_template.provider_key IS '服务商侧模板 ID';
 COMMENT ON COLUMN pmis_message_template.sign_name IS '签名(如"PMIS"出现在短信/邮件落款)';
 COMMENT ON COLUMN pmis_message_template.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_message_template.description IS '模板说明';
-COMMENT ON COLUMN pmis_message_template.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_message_template.create_by IS '创建人 ID';
-COMMENT ON COLUMN pmis_message_template.create_time IS '创建时间';
-COMMENT ON COLUMN pmis_message_template.update_by IS '最后修改人 ID';
-COMMENT ON COLUMN pmis_message_template.update_time IS '最后修改时间';
+COMMENT ON COLUMN pmis_message_template.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_message_template.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_message_template.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_message_template.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_message_template.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_message_template.tenant_id IS '租户 ID(单租户部署默认 1)';
 
-CREATE UNIQUE INDEX IF NOT EXISTS uk_pmt_code_channel ON pmis_message_template(template_code, channel, tenant_id);
-CREATE INDEX IF NOT EXISTS idx_pmt_channel ON pmis_message_template(channel);
-CREATE INDEX IF NOT EXISTS idx_pmt_status ON pmis_message_template(status);
+CREATE INDEX IF NOT EXISTS idx_pmt_channel
+    ON pmis_message_template (channel) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pmt_status
+    ON pmis_message_template (status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:按租户 + 状态(模板中心筛选)
+CREATE INDEX IF NOT EXISTS idx_pmt_tenant_status
+    ON pmis_message_template (tenant_id, status) WHERE deleted = 0;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_007__init_pmis_message_schema.sql
 -- ====================================================================
 
 -- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_008__init_pmis_audit_schema.sql
--- ====================================================================
-
--- =====================================================
--- PMIS 审计日志模块 DDL
--- 版本: V1.0.0_008
--- 描述: 操作日志持久化（pmis_log schema）
---
--- H1.4 修复：
---   原脚本 DROP TABLE IF EXISTS pmis_operation_log 会丢弃
---   V1.0.0_001 已创建并可能已写入的数据。改为幂等迁移：
---     1) 表不存在时按 V1.0.0_008 字段结构创建
---     2) 表已存在时（来自 V1.0.0_001）补齐新字段并重命名旧字段
---   保留旧字段 method/request_method/request_params/response_data/ip
---   作为兼容列（不删除），避免历史数据不可读。
--- =====================================================
-
--- 1) 表不存在时按最终结构创建（与 OperationLogEvent 字段对齐）
-CREATE TABLE IF NOT EXISTS pmis_operation_log (
-    id                BIGSERIAL     PRIMARY KEY,
-    module            VARCHAR(64)   NOT NULL,
-    action            VARCHAR(128)  NOT NULL,
-    biz_type          VARCHAR(64),
-    biz_id            VARCHAR(64),
-    user_id           BIGINT,
-    username          VARCHAR(64),
-    request_url       VARCHAR(512),
-    http_method       VARCHAR(16),
-    method_signature  VARCHAR(256),
-    client_ip         VARCHAR(64),
-    user_agent        VARCHAR(512),
-    params_json       TEXT,
-    response_json     TEXT,
-    status            VARCHAR(16)   NOT NULL,
-    error_message     TEXT,
-    cost_ms           BIGINT,
-    trace_id          VARCHAR(64),
-    tenant_id         BIGINT        DEFAULT 1,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP
-);
-
--- 2) 表来自 V1.0.0_001 时，补齐 V1.0.0_008 新增字段（幂等）
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS biz_type         VARCHAR(64);
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS biz_id           VARCHAR(64);
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS http_method      VARCHAR(16);
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS method_signature VARCHAR(256);
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS client_ip        VARCHAR(64);
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS params_json      TEXT;
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS response_json    TEXT;
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS trace_id         VARCHAR(64);
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS tenant_id        BIGINT DEFAULT 1;
-
--- 3) 数据迁移：将 V1.0.0_001 旧字段值复制到新字段（仅当新字段为空时）
-UPDATE pmis_operation_log SET http_method      = method          WHERE http_method IS NULL     AND method          IS NOT NULL;
-UPDATE pmis_operation_log SET method_signature = request_method  WHERE method_signature IS NULL AND request_method  IS NOT NULL;
-UPDATE pmis_operation_log SET params_json      = request_params  WHERE params_json IS NULL      AND request_params  IS NOT NULL;
-UPDATE pmis_operation_log SET response_json    = response_data   WHERE response_json IS NULL    AND response_data   IS NOT NULL;
-UPDATE pmis_operation_log SET client_ip        = ip              WHERE client_ip IS NULL         AND ip              IS NOT NULL;
-
-COMMENT ON TABLE pmis_operation_log IS '操作审计日志: 异步持久化用户关键操作(模块/动作/参数/响应/异常/IP/UA),等保 2.0 三级要求';
-COMMENT ON COLUMN pmis_operation_log.id IS '主键 ID';
-COMMENT ON COLUMN pmis_operation_log.module IS '操作模块(如 project/contract/finance)';
-COMMENT ON COLUMN pmis_operation_log.action IS '操作动作(如 create/update/delete/approve)';
-COMMENT ON COLUMN pmis_operation_log.biz_type IS '业务类型';
-COMMENT ON COLUMN pmis_operation_log.biz_id IS '业务单据 ID';
-COMMENT ON COLUMN pmis_operation_log.user_id IS '操作用户 ID';
-COMMENT ON COLUMN pmis_operation_log.username IS '操作用户名(冗余,避免连表)';
-COMMENT ON COLUMN pmis_operation_log.request_url IS '请求 URL';
-COMMENT ON COLUMN pmis_operation_log.http_method IS 'HTTP 方法(GET/POST/PUT/DELETE)';
-COMMENT ON COLUMN pmis_operation_log.method_signature IS 'Java 方法签名(如 ProjectController#create)';
-COMMENT ON COLUMN pmis_operation_log.client_ip IS '客户端 IP';
-COMMENT ON COLUMN pmis_operation_log.user_agent IS '浏览器/客户端 User-Agent';
-COMMENT ON COLUMN pmis_operation_log.params_json IS '请求参数 JSON(敏感字段脱敏)';
-COMMENT ON COLUMN pmis_operation_log.response_json IS '响应数据 JSON(失败时为空)';
-COMMENT ON COLUMN pmis_operation_log.status IS '操作状态: SUCCESS 成功 / FAILED 失败';
-COMMENT ON COLUMN pmis_operation_log.error_message IS '错误信息(失败时填充堆栈摘要)';
-COMMENT ON COLUMN pmis_operation_log.cost_ms IS '接口耗时(毫秒)';
-COMMENT ON COLUMN pmis_operation_log.trace_id IS '系统链路追踪 ID(SkyWalking/TLog)';
-COMMENT ON COLUMN pmis_operation_log.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_operation_log.created_at IS '操作时间';
-
-CREATE INDEX IF NOT EXISTS idx_pol_user    ON pmis_operation_log(user_id, created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_pol_biz     ON pmis_operation_log(biz_type, biz_id);
-CREATE INDEX IF NOT EXISTS idx_pol_status  ON pmis_operation_log(status);
-CREATE INDEX IF NOT EXISTS idx_pol_trace   ON pmis_operation_log(trace_id);
-CREATE INDEX IF NOT EXISTS idx_pol_created ON pmis_operation_log(created_at DESC);
-
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_008__init_pmis_audit_schema.sql
+-- V1.0.0_008 已优化内联至 V1.0.0_001 的 pmis_operation_log 定义中
+-- (字段已统一为 http_method/method_signature/client_ip/params_json/response_json/trace_id,
+--  并补齐 V1.0.0_040 审计差异字段 before_data/after_data)
 -- ====================================================================
 
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_009__init_pmis_project_schema.sql
 -- ====================================================================
-
+-- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
+--   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
+--   2) 全部审计字段统一为 created_by/created_at/updated_by/updated_at
+--   3) tenant_id NOT NULL DEFAULT 1;tenant_id 字段统一放在审计字段之后
+--   4) 内联 status/level/category/deleted CHECK 约束
+--   5) 内联 (tenant_id, created_at DESC) WHERE deleted = 0 复合部分索引
+--   6) status/customer/owner 类索引全部加 WHERE deleted = 0 部分条件
+--   7) version 字段添加非负 CHECK 约束(乐观锁)
 -- =====================================================
 -- PMIS 项目全生命周期模块 DDL
--- 版本: V1.0.0_009
+-- 版本: V1.0.0_009 (merged into V1.0.0.sql)
 -- 描述: 商机、立项、合同、补充协议、合同变更
 -- =====================================================
 
 -- =====================================================
 -- 1. 商机主表 pmis_project_opportunity
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_opportunity;
 CREATE TABLE IF NOT EXISTS pmis_project_opportunity(
-    id                BIGSERIAL PRIMARY KEY,
-    opportunity_code  VARCHAR(64)   NOT NULL,
-    opportunity_name  VARCHAR(256)  NOT NULL,
-    customer_id       BIGINT        NOT NULL,
+    id                BIGSERIAL      PRIMARY KEY,
+    opportunity_code  VARCHAR(64)    NOT NULL,
+    opportunity_name  VARCHAR(256)   NOT NULL,
+    customer_id       BIGINT         NOT NULL,
     customer_name     VARCHAR(256),
     business_dept_id  BIGINT,
-    owner_id          BIGINT        NOT NULL,
+    owner_id          BIGINT         NOT NULL,
     owner_name        VARCHAR(64),
-    level             VARCHAR(8)    NOT NULL DEFAULT 'C',  -- A/B/C
-    source            VARCHAR(64),                        -- 商机来源
+    level             VARCHAR(8)     NOT NULL DEFAULT 'C',
+    source            VARCHAR(64),
     industry          VARCHAR(64),
-    estimated_amount  NUMERIC(18,2) NOT NULL DEFAULT 0,    -- 预计金额
-    win_rate          NUMERIC(5,4)  NOT NULL DEFAULT 0,    -- 0~1
-    expected_sign_date DATE,                               -- 预计签约日期
-    expected_start_date DATE,
-    expected_end_date   DATE,
-    status            VARCHAR(32)   NOT NULL DEFAULT 'FOLLOWING',  -- FOLLOWING/QUOTED/NEGOTIATING/WON/LOST/INVALID
+    estimated_amount  NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    win_rate          NUMERIC(5,4)   NOT NULL DEFAULT 0,
+    expected_sign_date   DATE,
+    expected_start_date  DATE,
+    expected_end_date    DATE,
+    status            VARCHAR(32)    NOT NULL DEFAULT 'FOLLOWING',
     lost_reason       VARCHAR(512),
     competitor        VARCHAR(256),
     remark            TEXT,
-    tags              VARCHAR(512),                       -- 逗号分隔
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    version           INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppo_code UNIQUE (opportunity_code, deleted)
+    tags              VARCHAR(512),
+    created_by        BIGINT         NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT         NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         BIGINT         NOT NULL DEFAULT 1,
+    version           INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_ppo_code           UNIQUE (opportunity_code, deleted),
+    CONSTRAINT ck_ppo_level_enum     CHECK (level IN ('A', 'B', 'C')),
+    CONSTRAINT ck_ppo_status_enum    CHECK (status IN ('FOLLOWING', 'QUOTED', 'NEGOTIATING', 'WON', 'LOST', 'INVALID', 'CONVERTED')),
+    CONSTRAINT ck_ppo_win_rate_range CHECK (win_rate >= 0 AND win_rate <= 1),
+    CONSTRAINT ck_ppo_amount_nonneg  CHECK (estimated_amount >= 0),
+    CONSTRAINT ck_ppo_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_ppo_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_project_opportunity IS '商机主表: 销售线索到合同前的漏斗管理,支持赢率/分级/转化立项';
 COMMENT ON COLUMN pmis_project_opportunity.id IS '主键 ID';
@@ -1310,37 +1503,56 @@ COMMENT ON COLUMN pmis_project_opportunity.lost_reason IS '输单原因';
 COMMENT ON COLUMN pmis_project_opportunity.competitor IS '竞争对手';
 COMMENT ON COLUMN pmis_project_opportunity.remark IS '备注';
 COMMENT ON COLUMN pmis_project_opportunity.tags IS '标签(逗号分隔,用于检索)';
-COMMENT ON COLUMN pmis_project_opportunity.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_project_opportunity.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_project_opportunity.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_opportunity.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_opportunity.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_opportunity.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_project_opportunity.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_opportunity.version IS '乐观锁版本号(更新时自增,防止并发覆盖)';
 
-CREATE INDEX IF NOT EXISTS idx_ppo_customer   ON pmis_project_opportunity (customer_id);
-CREATE INDEX IF NOT EXISTS idx_ppo_owner      ON pmis_project_opportunity (owner_id);
-CREATE INDEX IF NOT EXISTS idx_ppo_status     ON pmis_project_opportunity (status);
-CREATE INDEX IF NOT EXISTS idx_ppo_level      ON pmis_project_opportunity (level);
-CREATE INDEX IF NOT EXISTS idx_ppo_created    ON pmis_project_opportunity (created_at DESC);
-CREATE INDEX IF NOT EXISTS idx_ppo_tenant     ON pmis_project_opportunity (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ppo_customer
+    ON pmis_project_opportunity (customer_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppo_owner
+    ON pmis_project_opportunity (owner_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppo_status
+    ON pmis_project_opportunity (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppo_level
+    ON pmis_project_opportunity (level) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 客户 + 状态(漏斗视图)
+CREATE INDEX IF NOT EXISTS idx_ppo_tenant_customer_status
+    ON pmis_project_opportunity (tenant_id, customer_id, status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 创建时间倒序(商机中心列表)
+CREATE INDEX IF NOT EXISTS idx_ppo_tenant_created
+    ON pmis_project_opportunity (tenant_id, created_at DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 预计签约日期索引(用于赢率加权收入预测扫描)
+CREATE INDEX IF NOT EXISTS idx_ppo_expected_sign
+    ON pmis_project_opportunity (expected_sign_date) WHERE deleted = 0 AND status IN ('FOLLOWING', 'QUOTED', 'NEGOTIATING');
 
 -- =====================================================
 -- 2. 商机跟进记录 pmis_project_opportunity_follow
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_opportunity_follow;
 CREATE TABLE IF NOT EXISTS pmis_project_opportunity_follow(
-    id                BIGSERIAL PRIMARY KEY,
-    opportunity_id    BIGINT        NOT NULL,
-    follow_type       VARCHAR(32)   NOT NULL,    -- VISIT/CALL/QUOTE/NEGOTIATE/OTHER
-    follow_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    follower_id       BIGINT        NOT NULL,
+    id                BIGSERIAL      PRIMARY KEY,
+    opportunity_id    BIGINT         NOT NULL,
+    follow_type       VARCHAR(32)    NOT NULL,
+    follow_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    follower_id       BIGINT         NOT NULL,
     follower_name     VARCHAR(64),
     content           TEXT,
     next_step         TEXT,
     next_follow_date  DATE,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    version           INTEGER       NOT NULL DEFAULT 0
+    created_by        BIGINT         NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT         NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         BIGINT         NOT NULL DEFAULT 1,
+    version           INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_ppof_type_enum     CHECK (follow_type IN ('VISIT', 'CALL', 'QUOTE', 'NEGOTIATE', 'OTHER')),
+    CONSTRAINT ck_ppof_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_ppof_deleted_enum  CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_project_opportunity_follow IS '商机跟进记录: 拜访/电话/报价/谈判的痕迹管理,支持时间线回溯';
 COMMENT ON COLUMN pmis_project_opportunity_follow.id IS '主键 ID';
@@ -1352,47 +1564,69 @@ COMMENT ON COLUMN pmis_project_opportunity_follow.follower_name IS '跟进人姓
 COMMENT ON COLUMN pmis_project_opportunity_follow.content IS '跟进内容';
 COMMENT ON COLUMN pmis_project_opportunity_follow.next_step IS '下一步计划';
 COMMENT ON COLUMN pmis_project_opportunity_follow.next_follow_date IS '下次跟进日期';
+COMMENT ON COLUMN pmis_project_opportunity_follow.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_project_opportunity_follow.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_project_opportunity_follow.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_project_opportunity_follow.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_opportunity_follow.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX IF NOT EXISTS idx_ppof_opp ON pmis_project_opportunity_follow (opportunity_id, follow_at DESC);
+COMMENT ON COLUMN pmis_project_opportunity_follow.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_opportunity_follow.version IS '乐观锁版本号';
+
+-- [INLINE-OPT] 复合索引:商机 + 跟进时间倒序(时间线展示)
+CREATE INDEX IF NOT EXISTS idx_ppof_opp
+    ON pmis_project_opportunity_follow (opportunity_id, follow_at DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 跟进人 + 时间索引(销售个人工作台)
+CREATE INDEX IF NOT EXISTS idx_ppof_follower_at
+    ON pmis_project_opportunity_follow (follower_id, follow_at DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 下次跟进日期提醒(后台扫描)
+CREATE INDEX IF NOT EXISTS idx_ppof_next_date
+    ON pmis_project_opportunity_follow (next_follow_date) WHERE deleted = 0 AND next_follow_date IS NOT NULL;
 
 -- =====================================================
 -- 3. 立项主表 pmis_project_initiation
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_initiation;
 CREATE TABLE IF NOT EXISTS pmis_project_initiation(
-    id                BIGSERIAL PRIMARY KEY,
-    project_code      VARCHAR(64)   NOT NULL,
-    project_name      VARCHAR(256)  NOT NULL,
-    opportunity_id    BIGINT,                            -- 来源商机
-    customer_id       BIGINT        NOT NULL,
+    id                BIGSERIAL      PRIMARY KEY,
+    project_code      VARCHAR(64)    NOT NULL,
+    project_name      VARCHAR(256)   NOT NULL,
+    opportunity_id    BIGINT,
+    customer_id       BIGINT         NOT NULL,
     customer_name     VARCHAR(256),
     business_dept_id  BIGINT,
-    project_type      VARCHAR(32)   NOT NULL,            -- FIXED_PRICE/T&M/OUTSOURCING/PRODUCT...
-    project_level     VARCHAR(16)   NOT NULL DEFAULT 'C', -- A/B/C
-    pm_id             BIGINT,                            -- 项目经理
+    project_type      VARCHAR(32)    NOT NULL,
+    project_level     VARCHAR(16)    NOT NULL DEFAULT 'C',
+    pm_id             BIGINT,
     pm_name           VARCHAR(64),
-    sponsor_id        BIGINT,                            -- 项目发起人
+    sponsor_id        BIGINT,
     sponsor_name      VARCHAR(64),
-    estimated_amount  NUMERIC(18,2) NOT NULL DEFAULT 0,
-    budget_amount     NUMERIC(18,2) NOT NULL DEFAULT 0,
+    estimated_amount  NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    budget_amount     NUMERIC(18,2)  NOT NULL DEFAULT 0,
     planned_start_date DATE,
     planned_end_date   DATE,
-    duration_days     INTEGER       NOT NULL DEFAULT 0,
-    stage             VARCHAR(32)   NOT NULL DEFAULT 'PRE_INITIATION', -- PRE_INITIATION/SUBMITTED/APPROVING/APPROVED/REJECTED/EXECUTING/CLOSED
-    current_gate      VARCHAR(32),                       -- 当前门径 CD1/CD2/CD3/CD4/CD5
+    duration_days     INTEGER        NOT NULL DEFAULT 0,
+    stage             VARCHAR(32)    NOT NULL DEFAULT 'PRE_INITIATION',
+    current_gate      VARCHAR(32),
     description       TEXT,
-    business_case     TEXT,                              -- 立项依据
-    risk_assessment   TEXT,                              -- 风险评估
-    workflow_id       VARCHAR(64),                       -- 关联自研工作流流程实例
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    version           INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppi_code UNIQUE (project_code, deleted)
+    business_case     TEXT,
+    risk_assessment   TEXT,
+    workflow_id       VARCHAR(64),
+    created_by        BIGINT         NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT         NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         BIGINT         NOT NULL DEFAULT 1,
+    version           INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_ppi_code           UNIQUE (project_code, deleted),
+    CONSTRAINT ck_ppi_type_enum      CHECK (project_type IN ('FIXED_PRICE', 'T_M', 'OUTSOURCING', 'PRODUCT', 'MAINTENANCE', 'CONSULTING', 'TRAINING', 'OTHER')),
+    CONSTRAINT ck_ppi_level_enum     CHECK (project_level IN ('A', 'B', 'C')),
+    CONSTRAINT ck_ppi_stage_enum     CHECK (stage IN ('PRE_INITIATION', 'SUBMITTED', 'APPROVING', 'APPROVED', 'REJECTED', 'EXECUTING', 'CLOSED')),
+    CONSTRAINT ck_ppi_gate_enum      CHECK (current_gate IS NULL OR current_gate IN ('CD1', 'CD2', 'CD3', 'CD4', 'CD5')),
+    CONSTRAINT ck_ppi_amount_nonneg  CHECK (estimated_amount >= 0 AND budget_amount >= 0),
+    CONSTRAINT ck_ppi_duration_nonneg CHECK (duration_days >= 0),
+    CONSTRAINT ck_ppi_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_ppi_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_project_initiation IS '项目立项主表: 商机到合同之间的立项流程载体,关联预算/PM/CDCP 门径评审';
 COMMENT ON COLUMN pmis_project_initiation.id IS '主键 ID';
@@ -1419,43 +1653,62 @@ COMMENT ON COLUMN pmis_project_initiation.description IS '项目描述';
 COMMENT ON COLUMN pmis_project_initiation.business_case IS '立项依据(业务价值/ROI 分析)';
 COMMENT ON COLUMN pmis_project_initiation.risk_assessment IS '风险评估';
 COMMENT ON COLUMN pmis_project_initiation.workflow_id IS '关联自研工作流流程实例 ID';
-COMMENT ON COLUMN pmis_project_initiation.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_project_initiation.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_project_initiation.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_initiation.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_initiation.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_initiation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_project_initiation.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_initiation.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_ppi_customer  ON pmis_project_initiation (customer_id);
-CREATE INDEX IF NOT EXISTS idx_ppi_stage     ON pmis_project_initiation (stage);
-CREATE INDEX IF NOT EXISTS idx_ppi_pm        ON pmis_project_initiation (pm_id);
-CREATE INDEX IF NOT EXISTS idx_ppi_opp       ON pmis_project_initiation (opportunity_id);
-CREATE INDEX IF NOT EXISTS idx_ppi_tenant    ON pmis_project_initiation (tenant_id);
-CREATE INDEX IF NOT EXISTS idx_ppi_created   ON pmis_project_initiation (created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ppi_customer
+    ON pmis_project_initiation (customer_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppi_stage
+    ON pmis_project_initiation (stage) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppi_pm
+    ON pmis_project_initiation (pm_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppi_opp
+    ON pmis_project_initiation (opportunity_id) WHERE deleted = 0;
+-- [INLINE-OPT] PM 工作台:PM + 阶段(项目经理视图)
+CREATE INDEX IF NOT EXISTS idx_ppi_pm_stage
+    ON pmis_project_initiation (pm_id, stage) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 阶段 + 创建时间倒序(立项中心列表)
+CREATE INDEX IF NOT EXISTS idx_ppi_tenant_stage_created
+    ON pmis_project_initiation (tenant_id, stage, created_at DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 当前门径索引(CDCP 流程编排)
+CREATE INDEX IF NOT EXISTS idx_ppi_current_gate
+    ON pmis_project_initiation (current_gate) WHERE deleted = 0 AND current_gate IS NOT NULL;
 
 -- =====================================================
 -- 4. 立项预算明细 pmis_project_budget_item
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_budget_item;
 CREATE TABLE IF NOT EXISTS pmis_project_budget_item(
-    id                BIGSERIAL PRIMARY KEY,
-    initiation_id     BIGINT        NOT NULL,
-    category          VARCHAR(32)   NOT NULL,    -- LABOR/PURCHASE/EXPENSE/OUTSOURCE/OTHER
+    id                BIGSERIAL      PRIMARY KEY,
+    initiation_id     BIGINT         NOT NULL,
+    category          VARCHAR(32)    NOT NULL,
     sub_category      VARCHAR(64),
     description       VARCHAR(256),
-    quantity          NUMERIC(18,2) NOT NULL DEFAULT 0,
+    quantity          NUMERIC(18,2)  NOT NULL DEFAULT 0,
     unit              VARCHAR(16),
-    unit_price        NUMERIC(18,2) NOT NULL DEFAULT 0,
-    amount            NUMERIC(18,2) NOT NULL DEFAULT 0,
+    unit_price        NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    amount            NUMERIC(18,2)  NOT NULL DEFAULT 0,
     remark            VARCHAR(512),
-    sort_order        INTEGER       NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    version           INTEGER       NOT NULL DEFAULT 0
+    sort_order        INTEGER        NOT NULL DEFAULT 0,
+    created_by        BIGINT         NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT         NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         BIGINT         NOT NULL DEFAULT 1,
+    version           INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_ppbi_category_enum CHECK (category IN ('LABOR', 'PURCHASE', 'EXPENSE', 'OUTSOURCE', 'OTHER')),
+    CONSTRAINT ck_ppbi_amount_nonneg CHECK (quantity >= 0 AND unit_price >= 0 AND amount >= 0),
+    CONSTRAINT ck_ppbi_sort_nonneg   CHECK (sort_order >= 0),
+    CONSTRAINT ck_ppbi_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_ppbi_deleted_enum  CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_project_budget_item IS '立项预算明细: 按类别拆解预算,支撑执行期预算占用控制(80% 黄/95% 红)';
-COMMENT ON COLUMN pmis_project_budget_item.version IS '乐观锁版本号(P1-2)';
 COMMENT ON COLUMN pmis_project_budget_item.id IS '主键 ID';
 COMMENT ON COLUMN pmis_project_budget_item.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
 COMMENT ON COLUMN pmis_project_budget_item.category IS '预算类别: LABOR 人力 / PURCHASE 采购 / EXPENSE 费用 / OUTSOURCE 外包 / OTHER 其他';
@@ -1467,31 +1720,49 @@ COMMENT ON COLUMN pmis_project_budget_item.unit_price IS '单价(元)';
 COMMENT ON COLUMN pmis_project_budget_item.amount IS '金额(元,=quantity*unit_price)';
 COMMENT ON COLUMN pmis_project_budget_item.remark IS '备注';
 COMMENT ON COLUMN pmis_project_budget_item.sort_order IS '排序号';
+COMMENT ON COLUMN pmis_project_budget_item.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_project_budget_item.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_project_budget_item.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_budget_item.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_budget_item.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX IF NOT EXISTS idx_ppbi_init ON pmis_project_budget_item (initiation_id);
+COMMENT ON COLUMN pmis_project_budget_item.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_budget_item.version IS '乐观锁版本号(P1-2)';
+
+-- [INLINE-OPT] 复合索引:立项 + 类别 + 排序(预算分类展示)
+CREATE INDEX IF NOT EXISTS idx_ppbi_init_cat_sort
+    ON pmis_project_budget_item (initiation_id, category, sort_order) WHERE deleted = 0;
+-- [INLINE-OPT] 立项 + 租户(预算中心筛选)
+CREATE INDEX IF NOT EXISTS idx_ppbi_tenant_init
+    ON pmis_project_budget_item (tenant_id, initiation_id) WHERE deleted = 0;
 
 -- =====================================================
 -- 5. 门径评审记录 pmis_project_gate_review
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_gate_review;
 CREATE TABLE IF NOT EXISTS pmis_project_gate_review(
-    id                BIGSERIAL PRIMARY KEY,
-    initiation_id     BIGINT        NOT NULL,
-    gate_code         VARCHAR(16)   NOT NULL,    -- CD1/CD2/CD3/CD4/CD5
+    id                BIGSERIAL      PRIMARY KEY,
+    initiation_id     BIGINT         NOT NULL,
+    gate_code         VARCHAR(16)    NOT NULL,
     gate_name         VARCHAR(64),
-    review_result     VARCHAR(16)   NOT NULL DEFAULT 'PENDING', -- PENDING/PASSED/REJECTED/CONDITIONAL
+    review_result     VARCHAR(16)    NOT NULL DEFAULT 'PENDING',
     reviewer_id       BIGINT,
     reviewer_name     VARCHAR(64),
-    review_at         TIMESTAMP,
+    review_at         TIMESTAMPTZ,
     decision_basis    TEXT,
     conditions        TEXT,
     next_gate         VARCHAR(16),
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    version           INTEGER       NOT NULL DEFAULT 0
+    created_by        BIGINT         NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT         NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         BIGINT         NOT NULL DEFAULT 1,
+    version           INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_ppgr_gate_enum      CHECK (gate_code IN ('CD1', 'CD2', 'CD3', 'CD4', 'CD5')),
+    CONSTRAINT ck_ppgr_result_enum    CHECK (review_result IN ('PENDING', 'PASSED', 'REJECTED', 'CONDITIONAL')),
+    CONSTRAINT ck_ppgr_next_gate_enum CHECK (next_gate IS NULL OR next_gate IN ('CD1', 'CD2', 'CD3', 'CD4', 'CD5')),
+    CONSTRAINT ck_ppgr_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_ppgr_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_project_gate_review IS '门径评审记录: CDCP 决策评审(CD1 启动/CD2 设计/CD3 建设/CD4 UAT/CD5 上线)';
 COMMENT ON COLUMN pmis_project_gate_review.id IS '主键 ID';
@@ -1505,47 +1776,69 @@ COMMENT ON COLUMN pmis_project_gate_review.review_at IS '评审时间';
 COMMENT ON COLUMN pmis_project_gate_review.decision_basis IS '决策依据';
 COMMENT ON COLUMN pmis_project_gate_review.conditions IS '有条件通过的条件清单';
 COMMENT ON COLUMN pmis_project_gate_review.next_gate IS '下一门径';
+COMMENT ON COLUMN pmis_project_gate_review.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_project_gate_review.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_project_gate_review.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_gate_review.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_gate_review.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX IF NOT EXISTS idx_ppgr_init ON pmis_project_gate_review (initiation_id, gate_code);
+COMMENT ON COLUMN pmis_project_gate_review.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_gate_review.version IS '乐观锁版本号';
+
+-- [INLINE-OPT] 复合索引:立项 + 门径(门径状态查询)
+CREATE INDEX IF NOT EXISTS idx_ppgr_init_gate
+    ON pmis_project_gate_review (initiation_id, gate_code) WHERE deleted = 0;
+-- [INLINE-OPT] 评审结果索引(待评审 / 已驳回 工作台)
+CREATE INDEX IF NOT EXISTS idx_ppgr_result
+    ON pmis_project_gate_review (review_result) WHERE deleted = 0;
+-- [INLINE-OPT] 评审人 + 评审时间(评审人工作台)
+CREATE INDEX IF NOT EXISTS idx_ppgr_reviewer_at
+    ON pmis_project_gate_review (reviewer_id, review_at DESC) WHERE deleted = 0;
 
 -- =====================================================
 -- 6. 合同主表 pmis_project_contract
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract;
 CREATE TABLE IF NOT EXISTS pmis_project_contract(
-    id                BIGSERIAL PRIMARY KEY,
-    contract_code     VARCHAR(64)   NOT NULL,
-    contract_name     VARCHAR(256)  NOT NULL,
-    initiation_id     BIGINT,                            -- 关联立项
-    customer_id       BIGINT        NOT NULL,
+    id                BIGSERIAL      PRIMARY KEY,
+    contract_code     VARCHAR(64)    NOT NULL,
+    contract_name     VARCHAR(256)   NOT NULL,
+    initiation_id     BIGINT,
+    customer_id       BIGINT         NOT NULL,
     customer_name     VARCHAR(256),
-    contract_type     VARCHAR(32)   NOT NULL,            -- FIXED_PRICE/T&M/OUTSOURCING/PRODUCT/MAINTENANCE
+    contract_type     VARCHAR(32)    NOT NULL,
     sign_date         DATE,
     effective_date    DATE,
     expire_date       DATE,
-    total_amount      NUMERIC(18,2) NOT NULL DEFAULT 0,  -- 合同总额
-    currency          VARCHAR(8)    NOT NULL DEFAULT 'CNY',
-    payment_terms     TEXT,                              -- 付款条款
-    billing_cycle     VARCHAR(32),                       -- 结算周期
-    tax_rate          NUMERIC(5,4)  NOT NULL DEFAULT 0,   -- 税率 0.0000-1.0000
-    status            VARCHAR(32)   NOT NULL DEFAULT 'DRAFT', -- DRAFT/SUBMITTED/APPROVING/ACTIVE/SUSPENDED/EXPIRED/TERMINATED
-    risk_level        VARCHAR(8)    NOT NULL DEFAULT 'LOW',  -- LOW/MEDIUM/HIGH
+    total_amount      NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    currency          VARCHAR(8)     NOT NULL DEFAULT 'CNY',
+    payment_terms     TEXT,
+    billing_cycle     VARCHAR(32),
+    tax_rate          NUMERIC(5,4)   NOT NULL DEFAULT 0,
+    status            VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
+    risk_level        VARCHAR(8)     NOT NULL DEFAULT 'LOW',
     risk_notes        TEXT,
-    owner_id          BIGINT        NOT NULL,
+    owner_id          BIGINT         NOT NULL,
     owner_name        VARCHAR(64),
-    contract_file_id  BIGINT,                            -- 合同文件 ID（关联 file 服务）
+    contract_file_id  BIGINT,
     workflow_id       VARCHAR(64),
     remark            TEXT,
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    version           INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppc_code UNIQUE (contract_code, deleted)
+    created_by        BIGINT         NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT         NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         BIGINT         NOT NULL DEFAULT 1,
+    version           INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_ppc_code           UNIQUE (contract_code, deleted),
+    CONSTRAINT ck_ppc_type_enum      CHECK (contract_type IN ('FIXED_PRICE', 'T_M', 'OUTSOURCING', 'PRODUCT', 'MAINTENANCE', 'CONSULTING', 'TRAINING', 'OTHER')),
+    CONSTRAINT ck_ppc_status_enum    CHECK (status IN ('DRAFT', 'SUBMITTED', 'APPROVING', 'ACTIVE', 'SUSPENDED', 'EXPIRED', 'TERMINATED')),
+    CONSTRAINT ck_ppc_billing_enum   CHECK (billing_cycle IS NULL OR billing_cycle IN ('MONTHLY', 'QUARTERLY', 'MILESTONE', 'ONEOFF')),
+    CONSTRAINT ck_ppc_risk_enum      CHECK (risk_level IN ('LOW', 'MEDIUM', 'HIGH')),
+    CONSTRAINT ck_ppc_tax_rate_range CHECK (tax_rate >= 0 AND tax_rate <= 1),
+    CONSTRAINT ck_ppc_amount_nonneg  CHECK (total_amount >= 0),
+    CONSTRAINT ck_ppc_dates_valid    CHECK (expire_date IS NULL OR effective_date IS NULL OR expire_date >= effective_date),
+    CONSTRAINT ck_ppc_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_ppc_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_project_contract IS '合同主表: 项目签约合同,关联立项/客户/付款条款,支撑开票回款';
 COMMENT ON COLUMN pmis_project_contract.id IS '主键 ID';
@@ -1561,7 +1854,7 @@ COMMENT ON COLUMN pmis_project_contract.expire_date IS '合同到期日期';
 COMMENT ON COLUMN pmis_project_contract.total_amount IS '合同总额(元,含税)';
 COMMENT ON COLUMN pmis_project_contract.currency IS '币种(默认 CNY)';
 COMMENT ON COLUMN pmis_project_contract.payment_terms IS '付款条款(如 3-3-3-1 预付/启动/UAT/质保)';
-COMMENT ON COLUMN pmis_project_contract.billing_cycle IS '结算周期(MONTHLY 月结 / QUARTERLY 季结 / MILESTONE 里程碑)';
+COMMENT ON COLUMN pmis_project_contract.billing_cycle IS '结算周期(MONTHLY 月结 / QUARTERLY 季结 / MILESTONE 里程碑 / ONEOFF 一次性)';
 COMMENT ON COLUMN pmis_project_contract.tax_rate IS '适用税率(0.0000-1.0000)';
 COMMENT ON COLUMN pmis_project_contract.status IS '合同状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVING 审批中 / ACTIVE 执行中 / SUSPENDED 暂停 / EXPIRED 已到期 / TERMINATED 已终止';
 COMMENT ON COLUMN pmis_project_contract.risk_level IS '风险等级: LOW 低 / MEDIUM 中 / HIGH 高';
@@ -1571,45 +1864,64 @@ COMMENT ON COLUMN pmis_project_contract.owner_name IS '合同负责人姓名';
 COMMENT ON COLUMN pmis_project_contract.contract_file_id IS '合同文件 ID(关联 pmis_file.id)';
 COMMENT ON COLUMN pmis_project_contract.workflow_id IS '审批流程实例 ID';
 COMMENT ON COLUMN pmis_project_contract.remark IS '备注';
-COMMENT ON COLUMN pmis_project_contract.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_project_contract.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_project_contract.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_contract.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_contract.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_contract.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_project_contract.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_contract.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_ppc_customer  ON pmis_project_contract (customer_id);
-CREATE INDEX IF NOT EXISTS idx_ppc_init      ON pmis_project_contract (initiation_id);
-CREATE INDEX IF NOT EXISTS idx_ppc_status    ON pmis_project_contract (status);
-CREATE INDEX IF NOT EXISTS idx_ppc_sign      ON pmis_project_contract (sign_date);
-CREATE INDEX IF NOT EXISTS idx_ppc_risk      ON pmis_project_contract (risk_level);
-CREATE INDEX IF NOT EXISTS idx_ppc_tenant    ON pmis_project_contract (tenant_id);
+CREATE INDEX IF NOT EXISTS idx_ppc_customer
+    ON pmis_project_contract (customer_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppc_init
+    ON pmis_project_contract (initiation_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppc_status
+    ON pmis_project_contract (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppc_sign
+    ON pmis_project_contract (sign_date) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppc_risk
+    ON pmis_project_contract (risk_level) WHERE deleted = 0;
+-- [INLINE-OPT] 合同负责人 + 状态(销售合同台账)
+CREATE INDEX IF NOT EXISTS idx_ppc_owner_status
+    ON pmis_project_contract (owner_id, status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 到期日期(到期预警扫描)
+CREATE INDEX IF NOT EXISTS idx_ppc_tenant_expire
+    ON pmis_project_contract (tenant_id, expire_date) WHERE deleted = 0 AND expire_date IS NOT NULL;
+-- [INLINE-OPT] 复合索引:租户 + 创建时间倒序(合同中心列表)
+CREATE INDEX IF NOT EXISTS idx_ppc_tenant_created
+    ON pmis_project_contract (tenant_id, created_at DESC) WHERE deleted = 0;
 
 -- =====================================================
 -- 7. 合同补充协议 pmis_project_contract_supplement
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract_supplement;
 CREATE TABLE IF NOT EXISTS pmis_project_contract_supplement(
-    id                BIGSERIAL PRIMARY KEY,
-    contract_id       BIGINT        NOT NULL,
-    supplement_code   VARCHAR(64)   NOT NULL,
-    supplement_name   VARCHAR(256)  NOT NULL,
-    supplement_type   VARCHAR(32)   NOT NULL,            -- AMOUNT/SCOPE/TERM/OTHER
-    change_amount     NUMERIC(18,2) NOT NULL DEFAULT 0,
-    new_total_amount  NUMERIC(18,2) NOT NULL DEFAULT 0,
+    id                BIGSERIAL      PRIMARY KEY,
+    contract_id       BIGINT         NOT NULL,
+    supplement_code   VARCHAR(64)    NOT NULL,
+    supplement_name   VARCHAR(256)   NOT NULL,
+    supplement_type   VARCHAR(32)    NOT NULL,
+    change_amount     NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    new_total_amount  NUMERIC(18,2)  NOT NULL DEFAULT 0,
     effective_date    DATE,
     expire_date       DATE,
     content           TEXT,
     file_id           BIGINT,
-    status            VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    version           INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppcs_code UNIQUE (supplement_code, deleted)
+    status            VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
+    created_by        BIGINT         NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT         NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         BIGINT         NOT NULL DEFAULT 1,
+    version           INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_ppcs_code          UNIQUE (supplement_code, deleted),
+    CONSTRAINT ck_ppcs_type_enum     CHECK (supplement_type IN ('AMOUNT', 'SCOPE', 'TERM', 'OTHER')),
+    CONSTRAINT ck_ppcs_status_enum   CHECK (status IN ('DRAFT', 'APPROVED', 'REJECTED')),
+    CONSTRAINT ck_ppcs_amount_nonneg CHECK (new_total_amount >= 0),
+    CONSTRAINT ck_ppcs_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_ppcs_deleted_enum  CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_project_contract_supplement IS '合同补充协议: 主合同签订后的金额/范围/工期/其他补充条款,法务备案';
 COMMENT ON COLUMN pmis_project_contract_supplement.id IS '主键 ID';
@@ -1624,43 +1936,54 @@ COMMENT ON COLUMN pmis_project_contract_supplement.expire_date IS '到期日期'
 COMMENT ON COLUMN pmis_project_contract_supplement.content IS '协议正文';
 COMMENT ON COLUMN pmis_project_contract_supplement.file_id IS '协议文件 ID(关联 pmis_file.id)';
 COMMENT ON COLUMN pmis_project_contract_supplement.status IS '状态: DRAFT 草稿 / APPROVED 已签 / REJECTED 已驳回';
-COMMENT ON COLUMN pmis_project_contract_supplement.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_project_contract_supplement.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_project_contract_supplement.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_contract_supplement.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_contract_supplement.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_contract_supplement.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX IF NOT EXISTS idx_ppcs_contract ON pmis_project_contract_supplement (contract_id);
+COMMENT ON COLUMN pmis_project_contract_supplement.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_contract_supplement.version IS '乐观锁版本号';
+
+-- [INLINE-OPT] 复合索引:合同 + 类型(按类型查看补充协议)
+CREATE INDEX IF NOT EXISTS idx_ppcs_contract_type
+    ON pmis_project_contract_supplement (contract_id, supplement_type) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 状态(补充协议台账)
+CREATE INDEX IF NOT EXISTS idx_ppcs_tenant_status
+    ON pmis_project_contract_supplement (tenant_id, status) WHERE deleted = 0;
 
 -- =====================================================
 -- 8. 合同变更记录 pmis_project_contract_change
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_project_contract_change;
 CREATE TABLE IF NOT EXISTS pmis_project_contract_change(
-    id                BIGSERIAL PRIMARY KEY,
-    contract_id       BIGINT        NOT NULL,
-    change_code       VARCHAR(64)   NOT NULL,
-    change_type       VARCHAR(32)   NOT NULL,    -- SCOPE/AMOUNT/TERM/PERSONNEL/PROGRESS
+    id                BIGSERIAL      PRIMARY KEY,
+    contract_id       BIGINT         NOT NULL,
+    change_code       VARCHAR(64)    NOT NULL,
+    change_type       VARCHAR(32)    NOT NULL,
     change_reason     TEXT,
     before_value      TEXT,
     after_value       TEXT,
-    amount_delta      NUMERIC(18,2) NOT NULL DEFAULT 0,
+    amount_delta      NUMERIC(18,2)  NOT NULL DEFAULT 0,
     impact_analysis   TEXT,
-    status            VARCHAR(32)   NOT NULL DEFAULT 'DRAFT', -- DRAFT/SUBMITTED/APPROVING/APPROVED/REJECTED
+    status            VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
     applicant_id      BIGINT,
     applicant_name    VARCHAR(64),
     approver_id       BIGINT,
     approver_name     VARCHAR(64),
-    approved_at       TIMESTAMP,
+    approved_at       TIMESTAMPTZ,
     workflow_id       VARCHAR(64),
-    tenant_id         BIGINT        NOT NULL DEFAULT 1,
-    created_by        BIGINT        NOT NULL DEFAULT 0,
-    created_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by        BIGINT        NOT NULL DEFAULT 0,
-    updated_at        TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted           SMALLINT      NOT NULL DEFAULT 0,
-    version           INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppcc_code UNIQUE (change_code, deleted)
+    created_by        BIGINT         NOT NULL DEFAULT 0,
+    created_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by        BIGINT         NOT NULL DEFAULT 0,
+    updated_at        TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id         BIGINT         NOT NULL DEFAULT 1,
+    version           INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_ppcc_code          UNIQUE (change_code, deleted),
+    CONSTRAINT ck_ppcc_type_enum     CHECK (change_type IN ('SCOPE', 'AMOUNT', 'TERM', 'PERSONNEL', 'PROGRESS')),
+    CONSTRAINT ck_ppcc_status_enum   CHECK (status IN ('DRAFT', 'SUBMITTED', 'APPROVING', 'APPROVED', 'REJECTED')),
+    CONSTRAINT ck_ppcc_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_ppcc_deleted_enum  CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_project_contract_change IS '合同变更记录: 范围/金额/工期/人员/进度的变更,需走审批流';
 COMMENT ON COLUMN pmis_project_contract_change.id IS '主键 ID';
@@ -1679,14 +2002,26 @@ COMMENT ON COLUMN pmis_project_contract_change.approver_id IS '审批人 ID';
 COMMENT ON COLUMN pmis_project_contract_change.approver_name IS '审批人姓名';
 COMMENT ON COLUMN pmis_project_contract_change.approved_at IS '审批时间';
 COMMENT ON COLUMN pmis_project_contract_change.workflow_id IS '审批流程实例 ID';
-COMMENT ON COLUMN pmis_project_contract_change.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_project_contract_change.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_project_contract_change.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_project_contract_change.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_project_contract_change.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_project_contract_change.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
-CREATE INDEX IF NOT EXISTS idx_ppcc_contract ON pmis_project_contract_change (contract_id);
-CREATE INDEX IF NOT EXISTS idx_ppcc_status   ON pmis_project_contract_change (status);
+COMMENT ON COLUMN pmis_project_contract_change.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_project_contract_change.version IS '乐观锁版本号';
+
+-- [INLINE-OPT] 复合索引:合同 + 类型(合同变更历史)
+CREATE INDEX IF NOT EXISTS idx_ppcc_contract_type
+    ON pmis_project_contract_change (contract_id, change_type) WHERE deleted = 0;
+-- [INLINE-OPT] 状态索引(待审批工作台)
+CREATE INDEX IF NOT EXISTS idx_ppcc_status
+    ON pmis_project_contract_change (status) WHERE deleted = 0;
+-- [INLINE-OPT] 审批人 + 状态(审批人工作台)
+CREATE INDEX IF NOT EXISTS idx_ppcc_approver_status
+    ON pmis_project_contract_change (approver_id, status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 审批时间倒序(变更审计)
+CREATE INDEX IF NOT EXISTS idx_ppcc_tenant_approved
+    ON pmis_project_contract_change (tenant_id, approved_at DESC) WHERE deleted = 0;
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_009__init_pmis_project_schema.sql
@@ -1695,55 +2030,72 @@ CREATE INDEX IF NOT EXISTS idx_ppcc_status   ON pmis_project_contract_change (st
 -- ====================================================================
 -- >>>>>>>>>> START OF V1.0.0_010__init_pmis_execution_schema.sql
 -- ====================================================================
-
+-- [INLINE-OPT] 已统一为单文件 V1.0.0.sql 的最终形态:
+--   1) 时间字段 TIMESTAMP → TIMESTAMPTZ
+--   2) 全部审计字段统一为 created_by/created_at/updated_by/updated_at
+--   3) tenant_id NOT NULL DEFAULT 1
+--   4) 内联 status/category/type/deleted/window_check CHECK 约束
+--   5) 内联 (tenant_id, created_at DESC) WHERE deleted = 0 复合部分索引
+--   6) status/owner/category 类索引全部加 WHERE deleted = 0 部分条件
+--   7) 内联 (initiation_id, period) 等业务专用复合索引
 -- =====================================================
 -- PMIS 项目执行/成本/利润模块 DDL
--- 版本: V1.0.0_010
+-- 版本: V1.0.0_010 (merged into V1.0.0.sql)
 -- 描述: WBS 任务、工时、成本归集、利润核算
 -- =====================================================
 
 -- =====================================================
 -- 1. WBS 任务表 pmis_execution_wbs_task
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_wbs_task;
 CREATE TABLE IF NOT EXISTS pmis_execution_wbs_task(
-    id                  BIGSERIAL PRIMARY KEY,
-    task_code           VARCHAR(64)   NOT NULL,
-    task_name           VARCHAR(256)  NOT NULL,
-    initiation_id       BIGINT        NOT NULL,         -- 关联立项
-    parent_id           BIGINT        NOT NULL DEFAULT 0,
-    task_level          INTEGER       NOT NULL DEFAULT 1, -- WBS 层级
-    wbs_path            VARCHAR(512),                    -- 形如 /1/3/5
-    sort_order          INTEGER       NOT NULL DEFAULT 0,
-    task_type           VARCHAR(32)   NOT NULL DEFAULT 'TASK', -- TASK/MILESTONE/SUMMARY
+    id                  BIGSERIAL      PRIMARY KEY,
+    task_code           VARCHAR(64)    NOT NULL,
+    task_name           VARCHAR(256)   NOT NULL,
+    initiation_id       BIGINT         NOT NULL,
+    parent_id           BIGINT         NOT NULL DEFAULT 0,
+    task_level          INTEGER        NOT NULL DEFAULT 1,
+    wbs_path            VARCHAR(512),
+    sort_order          INTEGER        NOT NULL DEFAULT 0,
+    task_type           VARCHAR(32)    NOT NULL DEFAULT 'TASK',
     planned_start_date  DATE,
     planned_end_date    DATE,
     actual_start_date   DATE,
     actual_end_date     DATE,
     duration_days       INTEGER,
-    planned_effort      NUMERIC(10,2) NOT NULL DEFAULT 0,    -- 计划人天
-    actual_effort       NUMERIC(10,2) NOT NULL DEFAULT 0,    -- 实际人天
-    progress_pct        NUMERIC(5,2)  NOT NULL DEFAULT 0,    -- 0-100
-    owner_id            BIGINT        NOT NULL,               -- 责任人
+    planned_effort      NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    actual_effort       NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    progress_pct        NUMERIC(5,2)   NOT NULL DEFAULT 0,
+    owner_id            BIGINT         NOT NULL,
     owner_name          VARCHAR(64),
-    assignee_ids        VARCHAR(512),                        -- 逗号分隔执行人
-    priority            VARCHAR(16)   NOT NULL DEFAULT 'NORMAL', -- LOW/NORMAL/HIGH/URGENT
-    status              VARCHAR(32)   NOT NULL DEFAULT 'PLANNED',
-    -- PLANNED/IN_PROGRESS/BLOCKED/IN_REVIEW/COMPLETED/CANCELLED
-    depends_on          VARCHAR(512),                        -- 依赖任务ID列表
-    milestone           SMALLINT      NOT NULL DEFAULT 0,
+    assignee_ids        VARCHAR(512),
+    priority            VARCHAR(16)    NOT NULL DEFAULT 'NORMAL',
+    status              VARCHAR(32)    NOT NULL DEFAULT 'PLANNED',
+    depends_on          VARCHAR(512),
+    milestone           SMALLINT       NOT NULL DEFAULT 0,
     description         TEXT,
     deliverable         TEXT,
-    risk_level          VARCHAR(16)   NOT NULL DEFAULT 'LOW', -- LOW/MEDIUM/HIGH
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_by          BIGINT        NOT NULL DEFAULT 0,
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          BIGINT        NOT NULL DEFAULT 0,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pewt_code UNIQUE (task_code, deleted)
+    risk_level          VARCHAR(16)    NOT NULL DEFAULT 'LOW',
+    provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
+    created_by          BIGINT         NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT         NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           BIGINT         NOT NULL DEFAULT 1,
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_pewt_code           UNIQUE (task_code, deleted),
+    CONSTRAINT ck_pewt_type_enum      CHECK (task_type IN ('TASK', 'MILESTONE', 'SUMMARY')),
+    CONSTRAINT ck_pewt_priority_enum  CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'URGENT')),
+    CONSTRAINT ck_pewt_status_enum    CHECK (status IN ('PLANNED', 'IN_PROGRESS', 'BLOCKED', 'IN_REVIEW', 'COMPLETED', 'CANCELLED')),
+    CONSTRAINT ck_pewt_risk_enum      CHECK (risk_level IN ('LOW', 'MEDIUM', 'HIGH')),
+    CONSTRAINT ck_pewt_milestone_enum CHECK (milestone IN (0, 1)),
+    CONSTRAINT ck_pewt_progress_range CHECK (progress_pct >= 0 AND progress_pct <= 100),
+    CONSTRAINT ck_pewt_effort_nonneg  CHECK (planned_effort >= 0 AND actual_effort >= 0),
+    CONSTRAINT ck_pewt_duration_nonneg CHECK (duration_days IS NULL OR duration_days >= 0),
+    CONSTRAINT ck_pewt_dates_valid    CHECK (planned_end_date IS NULL OR planned_start_date IS NULL OR planned_end_date >= planned_start_date),
+    CONSTRAINT ck_pewt_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_pewt_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_execution_wbs_task IS 'WBS 任务表: 项目工作分解结构,层级化任务编排,支撑进度/工时/责任追踪';
 COMMENT ON COLUMN pmis_execution_wbs_task.id IS '主键 ID';
@@ -1773,69 +2125,78 @@ COMMENT ON COLUMN pmis_execution_wbs_task.milestone IS '是否里程碑: 1 是 /
 COMMENT ON COLUMN pmis_execution_wbs_task.description IS '任务描述';
 COMMENT ON COLUMN pmis_execution_wbs_task.deliverable IS '交付物说明';
 COMMENT ON COLUMN pmis_execution_wbs_task.risk_level IS '风险等级: LOW / MEDIUM / HIGH';
-COMMENT ON COLUMN pmis_execution_wbs_task.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_execution_wbs_task.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_execution_wbs_task.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_execution_wbs_task.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_execution_wbs_task.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_execution_wbs_task.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_execution_wbs_task.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_execution_wbs_task.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_execution_wbs_task.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_pewt_initiation ON pmis_execution_wbs_task (initiation_id, deleted);
-CREATE INDEX IF NOT EXISTS idx_pewt_parent     ON pmis_execution_wbs_task (parent_id);
-CREATE INDEX IF NOT EXISTS idx_pewt_owner      ON pmis_execution_wbs_task (owner_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pewt_status     ON pmis_execution_wbs_task (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pewt_milestone  ON pmis_execution_wbs_task (initiation_id, milestone) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pewt_trace      ON pmis_execution_wbs_task (provider_trace_id);
+-- [INLINE-OPT] 复合索引:立项 + 删除标记(WBS 树形加载)
+CREATE INDEX IF NOT EXISTS idx_pewt_initiation
+    ON pmis_execution_wbs_task (initiation_id, deleted);
+CREATE INDEX IF NOT EXISTS idx_pewt_parent
+    ON pmis_execution_wbs_task (parent_id);
+CREATE INDEX IF NOT EXISTS idx_pewt_owner
+    ON pmis_execution_wbs_task (owner_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pewt_status
+    ON pmis_execution_wbs_task (status) WHERE deleted = 0;
+-- [INLINE-OPT] 立项 + 里程碑(WBS 里程碑视图)
+CREATE INDEX IF NOT EXISTS idx_pewt_milestone
+    ON pmis_execution_wbs_task (initiation_id, milestone) WHERE deleted = 0;
+-- [INLINE-OPT] 责任人 + 状态(个人任务工作台)
+CREATE INDEX IF NOT EXISTS idx_pewt_owner_status
+    ON pmis_execution_wbs_task (owner_id, status) WHERE deleted = 0;
+-- [INLINE-OPT] 链路追踪 ID 索引(分布式排障)
+CREATE INDEX IF NOT EXISTS idx_pewt_trace
+    ON pmis_execution_wbs_task (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
 -- 2. 工时录入表 pmis_execution_time_entry
 -- =====================================================
--- 表结构要点:
---   1. 主键 BIGSERIAL,所有时间字段均带 DEFAULT CURRENT_TIMESTAMP
---   2. 冗余字段(employee_name / initiation_name / task_name)用于报表免 JOIN
---   3. 费率字段 rate_id 关联 pmis_rate_card.id,rate 冗余锁定当时报价
---      (历史变更后费率卡可能调整,但已审批工时按锁定 rate 计算成本)
---   4. CHECK 约束: 工时/加班/人天/费率均 >= 0,billable 只能是 0/1
---   5. idx_pete_rate_id 索引支持「按费率卡聚合成本」查询
---   6. 逻辑删除通过 deleted=0 过滤,所有热索引加 WHERE deleted=0
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_time_entry;
 CREATE TABLE IF NOT EXISTS pmis_execution_time_entry(
-    id                  BIGSERIAL PRIMARY KEY,
-    entry_date          DATE          NOT NULL,
-    employee_id         BIGINT        NOT NULL,        -- 填报人
+    id                  BIGSERIAL      PRIMARY KEY,
+    entry_date          DATE           NOT NULL,
+    employee_id         BIGINT         NOT NULL,
     employee_name       VARCHAR(64),
-    level_code          VARCHAR(8)    NOT NULL,        -- 职级
-    initiation_id       BIGINT        NOT NULL,
+    level_code          VARCHAR(8)     NOT NULL,
+    initiation_id       BIGINT         NOT NULL,
     initiation_name     VARCHAR(256),
-    task_id             BIGINT,                          -- 关联 WBS 任务（可空：项目级工时）
+    task_id             BIGINT,
     task_name           VARCHAR(256),
-    hours               NUMERIC(5,2)  NOT NULL,        -- 工时（小时）
-    days                NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 人天（按 8h 折算）
-    overtime            NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 加班工时
-    work_type           VARCHAR(32)   NOT NULL DEFAULT 'REGULAR', -- REGULAR/OVERTIME/TRAINING/LEAVE
-    billable            SMALLINT      NOT NULL DEFAULT 1,           -- 是否可计费: 1 可计费 / 0 不可计费
+    hours               NUMERIC(5,2)   NOT NULL,
+    days                NUMERIC(5,2)   NOT NULL DEFAULT 0,
+    overtime            NUMERIC(5,2)   NOT NULL DEFAULT 0,
+    work_type           VARCHAR(32)    NOT NULL DEFAULT 'REGULAR',
+    billable            SMALLINT       NOT NULL DEFAULT 1,
     description         TEXT,
-    rate_id             BIGINT,                          -- 命中的费率卡 ID（关联 pmis_rate_card.id,可空:未匹配到费率卡）
-    rate                NUMERIC(10,2),                    -- 人天费率（冗余,锁定当时报价,用于成本归集）
-    status              VARCHAR(16)   NOT NULL DEFAULT 'DRAFT',
-    -- DRAFT/SUBMITTED/APPROVED/REJECTED
+    rate_id             BIGINT,
+    rate                NUMERIC(10,2),
+    status              VARCHAR(16)    NOT NULL DEFAULT 'DRAFT',
     approver_id         BIGINT,
     approver_name       VARCHAR(64),
-    approved_at         TIMESTAMP,
+    approved_at         TIMESTAMPTZ,
     reject_reason       VARCHAR(512),
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0,
+    provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
+    created_by          BIGINT         NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT         NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           BIGINT         NOT NULL DEFAULT 1,
+    version             INTEGER        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT ck_pete_hours_nonneg    CHECK (hours    >= 0),
     CONSTRAINT ck_pete_days_nonneg     CHECK (days     >= 0),
     CONSTRAINT ck_pete_overtime_nonneg CHECK (overtime >= 0),
     CONSTRAINT ck_pete_rate_nonneg     CHECK (rate IS NULL OR rate >= 0),
-    CONSTRAINT ck_pete_billable_enum   CHECK (billable IN (0, 1))
+    CONSTRAINT ck_pete_work_type_enum  CHECK (work_type IN ('REGULAR', 'OVERTIME', 'TRAINING', 'LEAVE')),
+    CONSTRAINT ck_pete_status_enum     CHECK (status IN ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED')),
+    CONSTRAINT ck_pete_billable_enum   CHECK (billable IN (0, 1)),
+    CONSTRAINT ck_pete_version_nonneg  CHECK (version >= 0),
+    CONSTRAINT ck_pete_deleted_enum    CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_execution_time_entry IS '工时录入表: 日清日结,员工每日填报工时,自动计算人天/成本';
 COMMENT ON COLUMN pmis_execution_time_entry.id IS '主键 ID';
@@ -1860,44 +2221,73 @@ COMMENT ON COLUMN pmis_execution_time_entry.approver_id IS '审批人 ID';
 COMMENT ON COLUMN pmis_execution_time_entry.approver_name IS '审批人姓名';
 COMMENT ON COLUMN pmis_execution_time_entry.approved_at IS '审批时间';
 COMMENT ON COLUMN pmis_execution_time_entry.reject_reason IS '驳回原因';
-COMMENT ON COLUMN pmis_execution_time_entry.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_execution_time_entry.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_execution_time_entry.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_execution_time_entry.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_execution_time_entry.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_execution_time_entry.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_execution_time_entry.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_execution_time_entry.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_execution_time_entry.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_pete_employee  ON pmis_execution_time_entry (employee_id, entry_date DESC);
-CREATE INDEX IF NOT EXISTS idx_pete_initiation ON pmis_execution_time_entry (initiation_id, entry_date DESC);
-CREATE INDEX IF NOT EXISTS idx_pete_task      ON pmis_execution_time_entry (task_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pete_status    ON pmis_execution_time_entry (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pete_level     ON pmis_execution_time_entry (level_code) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pete_rate_id   ON pmis_execution_time_entry (rate_id) WHERE deleted = 0 AND rate_id IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_pete_trace     ON pmis_execution_time_entry (provider_trace_id);
+-- [INLINE-OPT] 复合索引:员工 + 日期(个人工时历史)
+CREATE INDEX IF NOT EXISTS idx_pete_employee
+    ON pmis_execution_time_entry (employee_id, entry_date DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:立项 + 日期(项目工时聚合)
+CREATE INDEX IF NOT EXISTS idx_pete_initiation
+    ON pmis_execution_time_entry (initiation_id, entry_date DESC) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pete_task
+    ON pmis_execution_time_entry (task_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pete_status
+    ON pmis_execution_time_entry (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pete_level
+    ON pmis_execution_time_entry (level_code) WHERE deleted = 0;
+-- [INLINE-OPT] 费率卡 ID 索引(按费率卡聚合成本)
+CREATE INDEX IF NOT EXISTS idx_pete_rate_id
+    ON pmis_execution_time_entry (rate_id) WHERE deleted = 0 AND rate_id IS NOT NULL;
+-- [INLINE-OPT] 审批人 + 状态(审批人工作台)
+CREATE INDEX IF NOT EXISTS idx_pete_approver_status
+    ON pmis_execution_time_entry (approver_id, status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 创建时间倒序(工时中心列表)
+CREATE INDEX IF NOT EXISTS idx_pete_tenant_created
+    ON pmis_execution_time_entry (tenant_id, created_at DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 链路追踪 ID 索引
+CREATE INDEX IF NOT EXISTS idx_pete_trace
+    ON pmis_execution_time_entry (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
 -- 3. 成本归集表 pmis_cost_allocation
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_cost_allocation;
 CREATE TABLE IF NOT EXISTS pmis_cost_allocation(
-    id                  BIGSERIAL PRIMARY KEY,
-    initiation_id       BIGINT        NOT NULL,
-    period              VARCHAR(7)    NOT NULL,        -- 形如 2026-06
-    cost_type           VARCHAR(32)   NOT NULL,        -- LABOR/PURCHASE/EXPENSE/OUTSOURCE/ALLOCATION/OTHER
-    source_id           BIGINT,                          -- 源单据ID（time_entry/purchase/expense）
-    source_type         VARCHAR(32),                    -- 源单据类型
+    id                  BIGSERIAL      PRIMARY KEY,
+    initiation_id       BIGINT         NOT NULL,
+    period              VARCHAR(7)     NOT NULL,
+    cost_type           VARCHAR(32)    NOT NULL,
+    source_id           BIGINT,
+    source_type         VARCHAR(32),
     description         VARCHAR(512),
-    amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
-    billable            SMALLINT      NOT NULL DEFAULT 1, -- 是否可计费
-    allocated           SMALLINT      NOT NULL DEFAULT 0, -- 是否已分摊
+    amount              NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    billable            SMALLINT       NOT NULL DEFAULT 1,
+    allocated           SMALLINT       NOT NULL DEFAULT 0,
     employee_id         BIGINT,
     employee_name       VARCHAR(64),
     level_code          VARCHAR(8),
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0
+    provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
+    created_by          BIGINT         NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT         NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           BIGINT         NOT NULL DEFAULT 1,
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pca_type_enum         CHECK (cost_type IN ('LABOR', 'PURCHASE', 'EXPENSE', 'OUTSOURCE', 'ALLOCATION', 'OTHER')),
+    CONSTRAINT ck_pca_source_type_enum  CHECK (source_type IS NULL OR source_type IN ('TIME_ENTRY', 'PURCHASE', 'EXPENSE', 'MANUAL')),
+    CONSTRAINT ck_pca_amount_nonneg     CHECK (amount >= 0),
+    CONSTRAINT ck_pca_billable_enum     CHECK (billable IN (0, 1)),
+    CONSTRAINT ck_pca_allocated_enum    CHECK (allocated IN (0, 1)),
+    CONSTRAINT ck_pca_version_nonneg    CHECK (version >= 0),
+    CONSTRAINT ck_pca_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_cost_allocation IS '项目成本归集表: 按月 × 类别归集项目发生的所有成本,支撑利润核算与驾驶舱';
 COMMENT ON COLUMN pmis_cost_allocation.id IS '主键 ID';
@@ -1913,47 +2303,68 @@ COMMENT ON COLUMN pmis_cost_allocation.allocated IS '是否已分摊到 WBS 节�
 COMMENT ON COLUMN pmis_cost_allocation.employee_id IS '员工 ID(人力成本时关联)';
 COMMENT ON COLUMN pmis_cost_allocation.employee_name IS '员工姓名';
 COMMENT ON COLUMN pmis_cost_allocation.level_code IS '职级(冗余,锁定费率)';
-COMMENT ON COLUMN pmis_cost_allocation.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_cost_allocation.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_cost_allocation.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_cost_allocation.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_cost_allocation.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_cost_allocation.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_cost_allocation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_cost_allocation.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_cost_allocation.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_pca_initiation ON pmis_cost_allocation (initiation_id, period);
-CREATE INDEX IF NOT EXISTS idx_pca_type       ON pmis_cost_allocation (cost_type) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pca_source     ON pmis_cost_allocation (source_type, source_id);
-CREATE INDEX IF NOT EXISTS idx_pca_employee   ON pmis_cost_allocation (employee_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pca_trace      ON pmis_cost_allocation (provider_trace_id);
+-- [INLINE-OPT] 复合索引:立项 + 周期(月度成本透视)
+CREATE INDEX IF NOT EXISTS idx_pca_initiation
+    ON pmis_cost_allocation (initiation_id, period) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:周期 + 类型(全公司月度成本分析)
+CREATE INDEX IF NOT EXISTS idx_pca_period_type
+    ON pmis_cost_allocation (period, cost_type) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pca_type
+    ON pmis_cost_allocation (cost_type) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pca_source
+    ON pmis_cost_allocation (source_type, source_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pca_employee
+    ON pmis_cost_allocation (employee_id) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 周期(全租户成本驾驶舱)
+CREATE INDEX IF NOT EXISTS idx_pca_tenant_period
+    ON pmis_cost_allocation (tenant_id, period) WHERE deleted = 0;
+-- [INLINE-OPT] 链路追踪 ID 索引
+CREATE INDEX IF NOT EXISTS idx_pca_trace
+    ON pmis_cost_allocation (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
 -- 4. 采购成本表 pmis_cost_purchase
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_cost_purchase;
 CREATE TABLE IF NOT EXISTS pmis_cost_purchase(
-    id                  BIGSERIAL PRIMARY KEY,
-    purchase_code       VARCHAR(64)   NOT NULL,
-    initiation_id       BIGINT        NOT NULL,
+    id                  BIGSERIAL      PRIMARY KEY,
+    purchase_code       VARCHAR(64)    NOT NULL,
+    initiation_id       BIGINT         NOT NULL,
     vendor              VARCHAR(256),
-    item_name           VARCHAR(256)  NOT NULL,
-    quantity            NUMERIC(10,2) NOT NULL DEFAULT 1,
-    unit_price          NUMERIC(18,2) NOT NULL DEFAULT 0,
-    amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
+    item_name           VARCHAR(256)   NOT NULL,
+    quantity            NUMERIC(10,2)  NOT NULL DEFAULT 1,
+    unit_price          NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    amount              NUMERIC(18,2)  NOT NULL DEFAULT 0,
     purchase_date       DATE,
-    status              VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
-    -- DRAFT/SUBMITTED/APPROVED/REJECTED/PAID
-    applicant_id        BIGINT        NOT NULL,
+    status              VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
+    applicant_id        BIGINT         NOT NULL,
     applicant_name      VARCHAR(64),
     approver_id         BIGINT,
     approver_name       VARCHAR(64),
-    approved_at         TIMESTAMP,
+    approved_at         TIMESTAMPTZ,
     description         TEXT,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pcp_code UNIQUE (purchase_code, deleted)
+    provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
+    created_by          BIGINT         NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT         NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           BIGINT         NOT NULL DEFAULT 1,
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_pcp_code           UNIQUE (purchase_code, deleted),
+    CONSTRAINT ck_pcp_status_enum    CHECK (status IN ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'PAID')),
+    CONSTRAINT ck_pcp_amount_nonneg  CHECK (quantity > 0 AND unit_price >= 0 AND amount >= 0),
+    CONSTRAINT ck_pcp_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_pcp_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_cost_purchase IS '采购成本申请表: 项目硬件/软件/服务采购,触发预算占用校验(80% 黄/95% 红)';
 COMMENT ON COLUMN pmis_cost_purchase.id IS '主键 ID';
@@ -1972,44 +2383,64 @@ COMMENT ON COLUMN pmis_cost_purchase.approver_id IS '审批人 ID';
 COMMENT ON COLUMN pmis_cost_purchase.approver_name IS '审批人姓名';
 COMMENT ON COLUMN pmis_cost_purchase.approved_at IS '审批时间';
 COMMENT ON COLUMN pmis_cost_purchase.description IS '采购说明';
-COMMENT ON COLUMN pmis_cost_purchase.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_cost_purchase.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_cost_purchase.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_cost_purchase.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_cost_purchase.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_cost_purchase.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_cost_purchase.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_cost_purchase.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_cost_purchase.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_pcp_initiation ON pmis_cost_purchase (initiation_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pcp_status     ON pmis_cost_purchase (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pcp_applicant  ON pmis_cost_purchase (applicant_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pcp_trace      ON pmis_cost_purchase (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_pcp_initiation
+    ON pmis_cost_purchase (initiation_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pcp_status
+    ON pmis_cost_purchase (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pcp_applicant
+    ON pmis_cost_purchase (applicant_id) WHERE deleted = 0;
+-- [INLINE-OPT] 申请人 + 状态(申请人台账)
+CREATE INDEX IF NOT EXISTS idx_pcp_applicant_status
+    ON pmis_cost_purchase (applicant_id, status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 采购日期(采购中心时间筛选)
+CREATE INDEX IF NOT EXISTS idx_pcp_tenant_date
+    ON pmis_cost_purchase (tenant_id, purchase_date DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 链路追踪 ID 索引
+CREATE INDEX IF NOT EXISTS idx_pcp_trace
+    ON pmis_cost_purchase (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
 -- 5. 费用报销表 pmis_cost_expense
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_cost_expense;
 CREATE TABLE IF NOT EXISTS pmis_cost_expense(
-    id                  BIGSERIAL PRIMARY KEY,
-    expense_code        VARCHAR(64)   NOT NULL,
-    initiation_id       BIGINT,                          -- 项目级费用可空（公司公共费用）
-    employee_id         BIGINT        NOT NULL,
+    id                  BIGSERIAL      PRIMARY KEY,
+    expense_code        VARCHAR(64)    NOT NULL,
+    initiation_id       BIGINT,
+    employee_id         BIGINT         NOT NULL,
     employee_name       VARCHAR(64),
-    expense_type        VARCHAR(32)   NOT NULL,        -- TRAVEL/CATERING/MEETING/SUPPLIES/COMMUNICATION/OTHER
-    amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
-    expense_date        DATE          NOT NULL,
+    expense_type        VARCHAR(32)    NOT NULL,
+    amount              NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    expense_date        DATE           NOT NULL,
     description         TEXT,
     receipt_url         VARCHAR(512),
-    status              VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
-    -- DRAFT/SUBMITTED/APPROVED/REJECTED/PAID
+    status              VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
     approver_id         BIGINT,
     approver_name       VARCHAR(64),
-    approved_at         TIMESTAMP,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pce_code UNIQUE (expense_code, deleted)
+    approved_at         TIMESTAMPTZ,
+    provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
+    created_by          BIGINT         NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT         NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           BIGINT         NOT NULL DEFAULT 1,
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_pce_code           UNIQUE (expense_code, deleted),
+    CONSTRAINT ck_pce_type_enum      CHECK (expense_type IN ('TRAVEL', 'CATERING', 'MEETING', 'SUPPLIES', 'COMMUNICATION', 'OTHER')),
+    CONSTRAINT ck_pce_status_enum    CHECK (status IN ('DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED', 'PAID')),
+    CONSTRAINT ck_pce_amount_nonneg  CHECK (amount >= 0),
+    CONSTRAINT ck_pce_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_pce_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_cost_expense IS '费用报销表: 差旅/团建/会议/办公等费用报销,可关联项目(影响项目预算)';
 COMMENT ON COLUMN pmis_cost_expense.id IS '主键 ID';
@@ -2026,45 +2457,66 @@ COMMENT ON COLUMN pmis_cost_expense.status IS '审批状态: DRAFT 草稿 / SUBM
 COMMENT ON COLUMN pmis_cost_expense.approver_id IS '审批人 ID';
 COMMENT ON COLUMN pmis_cost_expense.approver_name IS '审批人姓名';
 COMMENT ON COLUMN pmis_cost_expense.approved_at IS '审批时间';
-COMMENT ON COLUMN pmis_cost_expense.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_cost_expense.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_cost_expense.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_cost_expense.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_cost_expense.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_cost_expense.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_cost_expense.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_cost_expense.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_cost_expense.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_pce_initiation ON pmis_cost_expense (initiation_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pce_employee   ON pmis_cost_expense (employee_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pce_status     ON pmis_cost_expense (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pce_trace      ON pmis_cost_expense (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_pce_initiation
+    ON pmis_cost_expense (initiation_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pce_employee
+    ON pmis_cost_expense (employee_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pce_status
+    ON pmis_cost_expense (status) WHERE deleted = 0;
+-- [INLINE-OPT] 员工 + 状态(员工报销台账)
+CREATE INDEX IF NOT EXISTS idx_pce_employee_status
+    ON pmis_cost_expense (employee_id, status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 费用日期(报销中心时间筛选)
+CREATE INDEX IF NOT EXISTS idx_pce_tenant_date
+    ON pmis_cost_expense (tenant_id, expense_date DESC) WHERE deleted = 0;
+-- [INLINE-OPT] 链路追踪 ID 索引
+CREATE INDEX IF NOT EXISTS idx_pce_trace
+    ON pmis_cost_expense (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
 -- 6. 收入确认表 pmis_profit_revenue
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_profit_revenue;
 CREATE TABLE IF NOT EXISTS pmis_profit_revenue(
-    id                  BIGSERIAL PRIMARY KEY,
-    contract_id         BIGINT        NOT NULL,
-    initiation_id       BIGINT        NOT NULL,
-    revenue_code        VARCHAR(64)   NOT NULL,
-    recognition_method  VARCHAR(32)   NOT NULL,        -- MILESTONE/PERCENTAGE/PERCENT_COMPLETE/POINTS/MANUAL
-    period              VARCHAR(7)    NOT NULL,        -- 2026-06
-    amount              NUMERIC(18,2) NOT NULL DEFAULT 0,
-    recognition_date    DATE          NOT NULL,
-    milestone           VARCHAR(128),                    -- 里程碑描述
-    percent_complete    NUMERIC(5,2),                    -- 完工百分比（完工法）
-    invoice_id          BIGINT,                          -- 关联开票申请（批次8）
-    status              VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
-    -- DRAFT/CONFIRMED/REVERSED
+    id                  BIGSERIAL      PRIMARY KEY,
+    contract_id         BIGINT         NOT NULL,
+    initiation_id       BIGINT         NOT NULL,
+    revenue_code        VARCHAR(64)    NOT NULL,
+    recognition_method  VARCHAR(32)    NOT NULL,
+    period              VARCHAR(7)     NOT NULL,
+    amount              NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    recognition_date    DATE           NOT NULL,
+    milestone           VARCHAR(128),
+    percent_complete    NUMERIC(5,2),
+    invoice_id          BIGINT,
+    status              VARCHAR(32)    NOT NULL DEFAULT 'DRAFT',
     confirmed_by        BIGINT,
-    confirmed_at        TIMESTAMP,
+    confirmed_at        TIMESTAMPTZ,
     description         TEXT,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppr_code UNIQUE (revenue_code, deleted)
+    provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
+    created_by          BIGINT         NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT         NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           BIGINT         NOT NULL DEFAULT 1,
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_ppr_code              UNIQUE (revenue_code, deleted),
+    CONSTRAINT ck_ppr_method_enum       CHECK (recognition_method IN ('MILESTONE', 'PERCENTAGE', 'PERCENT_COMPLETE', 'POINTS', 'MANUAL')),
+    CONSTRAINT ck_ppr_status_enum       CHECK (status IN ('DRAFT', 'CONFIRMED', 'REVERSED')),
+    CONSTRAINT ck_ppr_amount_nonneg     CHECK (amount >= 0),
+    CONSTRAINT ck_ppr_pct_range         CHECK (percent_complete IS NULL OR (percent_complete >= 0 AND percent_complete <= 100)),
+    CONSTRAINT ck_ppr_version_nonneg    CHECK (version >= 0),
+    CONSTRAINT ck_ppr_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_profit_revenue IS '收入确认表: 按里程碑/百分比/完工法/手动法等多维度确认项目收入';
 COMMENT ON COLUMN pmis_profit_revenue.id IS '主键 ID';
@@ -2082,90 +2534,184 @@ COMMENT ON COLUMN pmis_profit_revenue.status IS '状态: DRAFT 草稿 / CONFIRME
 COMMENT ON COLUMN pmis_profit_revenue.confirmed_by IS '确认人 ID';
 COMMENT ON COLUMN pmis_profit_revenue.confirmed_at IS '确认时间';
 COMMENT ON COLUMN pmis_profit_revenue.description IS '收入确认说明';
-COMMENT ON COLUMN pmis_profit_revenue.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_profit_revenue.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_profit_revenue.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_profit_revenue.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_profit_revenue.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_profit_revenue.updated_at IS '最后修改时间';
 COMMENT ON COLUMN pmis_profit_revenue.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_profit_revenue.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_profit_revenue.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_ppr_contract    ON pmis_profit_revenue (contract_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_ppr_initiation  ON pmis_profit_revenue (initiation_id, period) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_ppr_status      ON pmis_profit_revenue (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_ppr_trace       ON pmis_profit_revenue (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_ppr_contract
+    ON pmis_profit_revenue (contract_id) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:立项 + 期间(项目月度收入走势)
+CREATE INDEX IF NOT EXISTS idx_ppr_initiation
+    ON pmis_profit_revenue (initiation_id, period) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppr_status
+    ON pmis_profit_revenue (status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 期间(全公司收入月报)
+CREATE INDEX IF NOT EXISTS idx_ppr_tenant_period
+    ON pmis_profit_revenue (tenant_id, period) WHERE deleted = 0;
+-- [INLINE-OPT] 关联开票申请 ID
+CREATE INDEX IF NOT EXISTS idx_ppr_invoice
+    ON pmis_profit_revenue (invoice_id) WHERE deleted = 0 AND invoice_id IS NOT NULL;
+-- [INLINE-OPT] 链路追踪 ID 索引
+CREATE INDEX IF NOT EXISTS idx_ppr_trace
+    ON pmis_profit_revenue (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
 -- 7. 项目利润快照表 pmis_profit_snapshot
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_profit_snapshot;
 CREATE TABLE IF NOT EXISTS pmis_profit_snapshot(
-    id                  BIGSERIAL PRIMARY KEY,
-    initiation_id       BIGINT        NOT NULL,
-    period              VARCHAR(7)    NOT NULL,
-    contract_amount     NUMERIC(18,2) NOT NULL DEFAULT 0, -- 合同总额
-    recognized_revenue  NUMERIC(18,2) NOT NULL DEFAULT 0, -- 已确认收入
-    billed_amount       NUMERIC(18,2) NOT NULL DEFAULT 0, -- 已开票
-    received_amount     NUMERIC(18,2) NOT NULL DEFAULT 0, -- 已回款
-    labor_cost          NUMERIC(18,2) NOT NULL DEFAULT 0, -- 人力成本
-    purchase_cost       NUMERIC(18,2) NOT NULL DEFAULT 0, -- 采购成本
-    expense_cost        NUMERIC(18,2) NOT NULL DEFAULT 0, -- 费用
-    outsource_cost      NUMERIC(18,2) NOT NULL DEFAULT 0, -- 外包
-    allocation_cost     NUMERIC(18,2) NOT NULL DEFAULT 0, -- 分摊费用
-    total_cost          NUMERIC(18,2) NOT NULL DEFAULT 0, -- 总成本
-    gross_profit        NUMERIC(18,2) NOT NULL DEFAULT 0, -- 毛利
-    gross_margin        NUMERIC(5,4)  NOT NULL DEFAULT 0, -- 毛利率
-    progress_pct        NUMERIC(5,2)  NOT NULL DEFAULT 0, -- 完工进度
-    billable_hours      NUMERIC(10,2) NOT NULL DEFAULT 0, -- 可计费工时
-    non_billable_hours  NUMERIC(10,2) NOT NULL DEFAULT 0, -- 不可计费工时
-    snapshot_at         TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0
+    id                  BIGSERIAL      PRIMARY KEY,
+    initiation_id       BIGINT         NOT NULL,
+    period              VARCHAR(7)     NOT NULL,
+    contract_amount     NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    recognized_revenue  NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    billed_amount       NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    received_amount     NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    labor_cost          NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    purchase_cost       NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    expense_cost        NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    outsource_cost      NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    allocation_cost     NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    total_cost          NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    gross_profit        NUMERIC(18,2)  NOT NULL DEFAULT 0,
+    gross_margin        NUMERIC(5,4)   NOT NULL DEFAULT 0,
+    progress_pct        NUMERIC(5,2)   NOT NULL DEFAULT 0,
+    billable_hours      NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    non_billable_hours  NUMERIC(10,2)  NOT NULL DEFAULT 0,
+    snapshot_at         TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           BIGINT         NOT NULL DEFAULT 1,
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_pps_init_period     UNIQUE (initiation_id, period, deleted),
+    CONSTRAINT ck_pps_amount_nonneg   CHECK (contract_amount >= 0 AND recognized_revenue >= 0 AND billed_amount >= 0
+                                              AND received_amount >= 0 AND labor_cost >= 0 AND purchase_cost >= 0
+                                              AND expense_cost >= 0 AND outsource_cost >= 0 AND allocation_cost >= 0
+                                              AND total_cost >= 0 AND gross_profit >= 0),
+    CONSTRAINT ck_pps_margin_range    CHECK (gross_margin >= 0 AND gross_margin <= 1),
+    CONSTRAINT ck_pps_progress_range  CHECK (progress_pct >= 0 AND progress_pct <= 100),
+    CONSTRAINT ck_pps_hours_nonneg    CHECK (billable_hours >= 0 AND non_billable_hours >= 0),
+    CONSTRAINT ck_pps_version_nonneg  CHECK (version >= 0),
+    CONSTRAINT ck_pps_deleted_enum    CHECK (deleted IN (0, 1))
 );
-COMMENT ON TABLE pmis_profit_snapshot IS '项目利润快照（按月）';
+COMMENT ON TABLE pmis_profit_snapshot IS '项目利润快照(按月): 立项 × 期间 唯一约束,周期性滚动生成';
+COMMENT ON COLUMN pmis_profit_snapshot.id IS '主键 ID';
+COMMENT ON COLUMN pmis_profit_snapshot.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_profit_snapshot.period IS '快照周期(YYYY-MM)';
+COMMENT ON COLUMN pmis_profit_snapshot.contract_amount IS '合同总额(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.recognized_revenue IS '已确认收入(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.billed_amount IS '已开票金额(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.received_amount IS '已回款金额(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.labor_cost IS '人力成本(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.purchase_cost IS '采购成本(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.expense_cost IS '费用(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.outsource_cost IS '外包(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.allocation_cost IS '分摊费用(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.total_cost IS '总成本(元)';
+COMMENT ON COLUMN pmis_profit_snapshot.gross_profit IS '毛利(元)';
 COMMENT ON COLUMN pmis_profit_snapshot.gross_margin IS '毛利率 0.0000-1.0000';
+COMMENT ON COLUMN pmis_profit_snapshot.progress_pct IS '完工进度(0-100)';
+COMMENT ON COLUMN pmis_profit_snapshot.billable_hours IS '可计费工时(小时)';
+COMMENT ON COLUMN pmis_profit_snapshot.non_billable_hours IS '不可计费工时(小时)';
+COMMENT ON COLUMN pmis_profit_snapshot.snapshot_at IS '快照生成时间';
+COMMENT ON COLUMN pmis_profit_snapshot.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_profit_snapshot.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_profit_snapshot.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_profit_snapshot.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_pps_initiation ON pmis_profit_snapshot (initiation_id, period) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pps_period     ON pmis_profit_snapshot (period) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_pps_trace      ON pmis_profit_snapshot (provider_trace_id);
+-- [INLINE-OPT] 复合索引:立项 + 期间(项目利润走势)
+CREATE INDEX IF NOT EXISTS idx_pps_initiation
+    ON pmis_profit_snapshot (initiation_id, period) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 期间(全公司月度利润驾驶舱)
+CREATE INDEX IF NOT EXISTS idx_pps_tenant_period
+    ON pmis_profit_snapshot (tenant_id, period) WHERE deleted = 0;
+-- [INLINE-OPT] 链路追踪 ID 索引
+CREATE INDEX IF NOT EXISTS idx_pps_trace
+    ON pmis_profit_snapshot (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- =====================================================
 -- 8. 项目风险登记表 pmis_execution_risk
 -- =====================================================
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_risk;
 CREATE TABLE IF NOT EXISTS pmis_execution_risk(
-    id                  BIGSERIAL PRIMARY KEY,
-    risk_code           VARCHAR(64)   NOT NULL,
-    initiation_id       BIGINT        NOT NULL,
-    risk_title          VARCHAR(256)  NOT NULL,
-    risk_type           VARCHAR(32)   NOT NULL DEFAULT 'OTHER', -- SCOPE/SCHEDULE/COST/QUALITY/RESOURCE/EXTERNAL/OTHER
+    id                  BIGSERIAL      PRIMARY KEY,
+    risk_code           VARCHAR(64)    NOT NULL,
+    initiation_id       BIGINT         NOT NULL,
+    risk_title          VARCHAR(256)   NOT NULL,
+    risk_type           VARCHAR(32)    NOT NULL DEFAULT 'OTHER',
     description         TEXT,
-    probability         VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM', -- LOW/MEDIUM/HIGH
-    impact              VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM',
-    risk_level          VARCHAR(16)   NOT NULL DEFAULT 'MEDIUM', -- 计算后的等级
+    probability         VARCHAR(16)    NOT NULL DEFAULT 'MEDIUM',
+    impact              VARCHAR(16)    NOT NULL DEFAULT 'MEDIUM',
+    risk_level          VARCHAR(16)    NOT NULL DEFAULT 'MEDIUM',
     mitigation          TEXT,
     contingency         TEXT,
-    owner_id            BIGINT        NOT NULL,
+    owner_id            BIGINT         NOT NULL,
     owner_name          VARCHAR(64),
-    status              VARCHAR(32)   NOT NULL DEFAULT 'OPEN', -- OPEN/MITIGATING/CLOSED/OCCURRED
-    occurred_at         TIMESTAMP,
-    closed_at           TIMESTAMP,
-    tenant_id           BIGINT        NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)   NOT NULL DEFAULT '',
-    created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT      NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0,
-    CONSTRAINT uk_per_code UNIQUE (risk_code, deleted)
+    status              VARCHAR(32)    NOT NULL DEFAULT 'OPEN',
+    occurred_at         TIMESTAMPTZ,
+    closed_at           TIMESTAMPTZ,
+    provider_trace_id   VARCHAR(64)    NOT NULL DEFAULT '',
+    created_by          BIGINT         NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT         NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             SMALLINT       NOT NULL DEFAULT 0,
+    tenant_id           BIGINT         NOT NULL DEFAULT 1,
+    version             INTEGER        NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_per_code           UNIQUE (risk_code, deleted),
+    CONSTRAINT ck_per_type_enum      CHECK (risk_type IN ('SCOPE', 'SCHEDULE', 'COST', 'QUALITY', 'RESOURCE', 'EXTERNAL', 'OTHER')),
+    CONSTRAINT ck_per_level_enum     CHECK (probability IN ('LOW', 'MEDIUM', 'HIGH') AND impact IN ('LOW', 'MEDIUM', 'HIGH') AND risk_level IN ('LOW', 'MEDIUM', 'HIGH')),
+    CONSTRAINT ck_per_status_enum    CHECK (status IN ('OPEN', 'MITIGATING', 'CLOSED', 'OCCURRED')),
+    CONSTRAINT ck_per_dates_valid    CHECK (closed_at IS NULL OR occurred_at IS NULL OR closed_at >= occurred_at),
+    CONSTRAINT ck_per_version_nonneg CHECK (version >= 0),
+    CONSTRAINT ck_per_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_execution_risk IS '项目风险登记表: 项目执行过程中的风险识别、跟踪与闭环管理';
+COMMENT ON COLUMN pmis_execution_risk.id IS '主键 ID';
+COMMENT ON COLUMN pmis_execution_risk.risk_code IS '风险编号(全局唯一)';
+COMMENT ON COLUMN pmis_execution_risk.initiation_id IS '立项 ID(关联 pmis_project_initiation.id)';
+COMMENT ON COLUMN pmis_execution_risk.risk_title IS '风险标题';
 COMMENT ON COLUMN pmis_execution_risk.risk_type IS '风险类型: SCOPE 范围 / SCHEDULE 进度 / COST 成本 / QUALITY 质量 / RESOURCE 资源 / EXTERNAL 外部 / OTHER 其他';
+COMMENT ON COLUMN pmis_execution_risk.description IS '风险描述';
+COMMENT ON COLUMN pmis_execution_risk.probability IS '发生概率: LOW / MEDIUM / HIGH';
+COMMENT ON COLUMN pmis_execution_risk.impact IS '影响程度: LOW / MEDIUM / HIGH';
+COMMENT ON COLUMN pmis_execution_risk.risk_level IS '风险等级(probability × impact 派生): LOW / MEDIUM / HIGH';
+COMMENT ON COLUMN pmis_execution_risk.mitigation IS '缓解措施';
+COMMENT ON COLUMN pmis_execution_risk.contingency IS '应急方案';
+COMMENT ON COLUMN pmis_execution_risk.owner_id IS '风险责任人 ID';
+COMMENT ON COLUMN pmis_execution_risk.owner_name IS '风险责任人姓名';
 COMMENT ON COLUMN pmis_execution_risk.status IS '风险状态: OPEN 待处理 / MITIGATING 处理中 / CLOSED 已关闭 / OCCURRED 已发生';
+COMMENT ON COLUMN pmis_execution_risk.occurred_at IS '风险发生时间';
+COMMENT ON COLUMN pmis_execution_risk.closed_at IS '风险关闭时间';
+COMMENT ON COLUMN pmis_execution_risk.provider_trace_id IS '链路追踪 ID';
+COMMENT ON COLUMN pmis_execution_risk.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_execution_risk.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_execution_risk.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_execution_risk.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_execution_risk.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+COMMENT ON COLUMN pmis_execution_risk.tenant_id IS '租户 ID(单租户部署默认 1)';
+COMMENT ON COLUMN pmis_execution_risk.version IS '乐观锁版本号';
 
-CREATE INDEX IF NOT EXISTS idx_per_initiation ON pmis_execution_risk (initiation_id) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_per_status     ON pmis_execution_risk (status) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_per_level      ON pmis_execution_risk (risk_level) WHERE deleted = 0;
-CREATE INDEX IF NOT EXISTS idx_per_trace      ON pmis_execution_risk (provider_trace_id);
+CREATE INDEX IF NOT EXISTS idx_per_initiation
+    ON pmis_execution_risk (initiation_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_per_status
+    ON pmis_execution_risk (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_per_level
+    ON pmis_execution_risk (risk_level) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:立项 + 状态(项目风险面板)
+CREATE INDEX IF NOT EXISTS idx_per_init_status
+    ON pmis_execution_risk (initiation_id, status) WHERE deleted = 0;
+-- [INLINE-OPT] 复合索引:租户 + 状态(全公司高风险扫描)
+CREATE INDEX IF NOT EXISTS idx_per_tenant_status
+    ON pmis_execution_risk (tenant_id, status) WHERE deleted = 0;
+-- [INLINE-OPT] 链路追踪 ID 索引
+CREATE INDEX IF NOT EXISTS idx_per_trace
+    ON pmis_execution_risk (provider_trace_id) WHERE provider_trace_id <> '';
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_010__init_pmis_execution_schema.sql
@@ -2206,11 +2752,20 @@ CREATE TABLE IF NOT EXISTS pmis_project_contract_template(
     remark                 TEXT,
     tenant_id              BIGINT       NOT NULL DEFAULT 1,
     created_by             BIGINT       NOT NULL DEFAULT 0,
-    created_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at             TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by             BIGINT       NOT NULL DEFAULT 0,
-    updated_at             TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at             TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_ppct_code UNIQUE (template_code, deleted)
+    -- 业务唯一性: 同租户下 template_code + 软删除位 唯一
+    CONSTRAINT uk_ppct_code            UNIQUE (template_code, deleted),
+    -- 枚举约束
+    CONSTRAINT ck_ppct_contract_type   CHECK (contract_type IN ('FIXED_PRICE','T_M','OUTSOURCING','PRODUCT','MAINTENANCE','CONSULTING','TRAINING','OTHER')),
+    CONSTRAINT ck_ppct_customer_level  CHECK (customer_level IS NULL OR customer_level IN ('A','B','C','D')),
+    CONSTRAINT ck_ppct_status_enum     CHECK (status IN ('DRAFT','PUBLISHED','DEPRECATED')),
+    -- 数值非负 / 比例范围
+    CONSTRAINT ck_ppct_payment_days    CHECK (default_payment_days >= 0),
+    CONSTRAINT ck_ppct_penalty_range   CHECK (default_penalty_rate >= 0 AND default_penalty_rate <= 1),
+    CONSTRAINT ck_ppct_deleted_enum    CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_project_contract_template IS '合同模板表: 8 类项目类型（FIXED_PRICE/T_M/OUTSOURCING/PRODUCT/MAINTENANCE/CONSULTING/TRAINING/OTHER）的标准化合同模板,合同起草时按类型引用';
 COMMENT ON COLUMN pmis_project_contract_template.template_code IS '模板编码: 业务唯一,如 TPL-FIX-001';
@@ -2231,8 +2786,13 @@ COMMENT ON COLUMN pmis_project_contract_template.author_name IS '模板作者姓
 COMMENT ON COLUMN pmis_project_contract_template.remark IS '备注';
 COMMENT ON COLUMN pmis_project_contract_template.tenant_id IS '租户 ID: 多租户隔离';
 COMMENT ON COLUMN pmis_project_contract_template.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_ppct_type_status ON pmis_project_contract_template(contract_type, status);
-CREATE INDEX IF NOT EXISTS idx_ppct_tenant ON pmis_project_contract_template(tenant_id);
+-- 复合/部分索引(替代零散的 idx_ppct_type_status / idx_ppct_tenant)
+CREATE INDEX IF NOT EXISTS idx_ppct_tenant_type_status
+    ON pmis_project_contract_template(tenant_id, contract_type, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_ppct_tenant_created
+    ON pmis_project_contract_template(tenant_id, created_at DESC)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 2. 项目变更主表 pmis_project_change
@@ -2261,18 +2821,28 @@ CREATE TABLE IF NOT EXISTS pmis_project_change(
     contract_id              BIGINT,
     workflow_id              VARCHAR(64),
     status                   VARCHAR(32)  NOT NULL DEFAULT 'DRAFT',  -- ChangeStatus
-    submitted_at             TIMESTAMP,
-    approved_at              TIMESTAMP,
-    executed_at              TIMESTAMP,
+    submitted_at             TIMESTAMPTZ,
+    approved_at              TIMESTAMPTZ,
+    executed_at              TIMESTAMPTZ,
     remark                   TEXT,
     tenant_id                BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR(64)  NOT NULL DEFAULT '',
     created_by               BIGINT       NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               BIGINT       NOT NULL DEFAULT 0,
-    updated_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                  SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pch_code UNIQUE (change_code, deleted)
+    -- 业务唯一性
+    CONSTRAINT uk_pch_code              UNIQUE (change_code, deleted),
+    -- 枚举约束
+    CONSTRAINT ck_pch_change_type       CHECK (change_type IN ('SCOPE','COST','CONTRACT','STAFF','SCHEDULE')),
+    CONSTRAINT ck_pch_risk_level        CHECK (risk_level_after IN ('LOW','MEDIUM','HIGH')),
+    CONSTRAINT ck_pch_status_enum       CHECK (status IN ('DRAFT','SUBMITTED','UNDER_REVIEW','APPROVED','REJECTED','EXECUTING')),
+    CONSTRAINT ck_pch_major_flag        CHECK (major_flag IN (0, 1)),
+    CONSTRAINT ck_pch_deleted_enum      CHECK (deleted IN (0, 1)),
+    -- 数值约束
+    CONSTRAINT ck_pch_wbs_count         CHECK (affected_wbs_count >= 0),
+    CONSTRAINT ck_pch_staff_count       CHECK (affected_staff_count >= 0)
 );
 COMMENT ON TABLE  pmis_project_change IS '项目变更主表: 5 类变更（SCOPE/COST/CONTRACT/STAFF/SCHEDULE）全过程管理,严格执行 DRAFT→SUBMITTED→UNDER_REVIEW→APPROVED/REJECTED→EXECUTING 状态机';
 COMMENT ON COLUMN pmis_project_change.change_code IS '变更单号: 业务唯一,如 CHG-2026-001';
@@ -2303,9 +2873,15 @@ COMMENT ON COLUMN pmis_project_change.remark IS '备注';
 COMMENT ON COLUMN pmis_project_change.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_project_change.provider_trace_id IS '链路追踪 ID: AI 智能体调用时的 trace 标识';
 COMMENT ON COLUMN pmis_project_change.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pch_initiation ON pmis_project_change(initiation_id);
-CREATE INDEX IF NOT EXISTS idx_pch_type_status ON pmis_project_change(change_type, status);
-CREATE INDEX IF NOT EXISTS idx_pch_major ON pmis_project_change(initiation_id, major_flag);
+-- 复合/部分索引(替代零散的 idx_pch_initiation / idx_pch_type_status / idx_pch_major)
+CREATE INDEX IF NOT EXISTS idx_pch_tenant_initiation
+    ON pmis_project_change(tenant_id, initiation_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pch_tenant_type_status
+    ON pmis_project_change(tenant_id, change_type, status)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pch_initiation_major
+    ON pmis_project_change(initiation_id, major_flag);
 
 -- =====================================================
 -- 3. 交付物标准表 pmis_execution_delivery_standard
@@ -2325,9 +2901,18 @@ CREATE TABLE IF NOT EXISTS pmis_execution_delivery_standard(
     remark                TEXT,
     tenant_id             BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted               SMALLINT     NOT NULL DEFAULT 0
+    created_by            BIGINT       NOT NULL DEFAULT 0,
+    created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by            BIGINT       NOT NULL DEFAULT 0,
+    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted               SMALLINT     NOT NULL DEFAULT 0,
+    -- 枚举约束
+    CONSTRAINT ck_peds_project_type    CHECK (project_type IN ('FIXED_PRICE','T_M','OUTSOURCING','PRODUCT','MAINTENANCE','CONSULTING','TRAINING','OTHER')),
+    CONSTRAINT ck_peds_category        CHECK (delivery_category IN ('DOC','CODE','MODEL','RUNBOOK','REPORT','OTHER')),
+    CONSTRAINT ck_peds_stage           CHECK (stage IN ('CD1_KICKOFF','CD2_DESIGN','CD3_BUILD','CD4_UAT','CD5_GO_LIVE')),
+    CONSTRAINT ck_peds_required        CHECK (required IN (0, 1)),
+    CONSTRAINT ck_peds_trigger_tr      CHECK (trigger_tr IN (0, 1)),
+    CONSTRAINT ck_peds_deleted_enum    CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_execution_delivery_standard IS '交付物标准库: 8 类项目类型 × 5 个门径阶段（CD1/CD2/CD3/CD4/CD5）的标准交付物定义,新建项目时按类型/级别自动生成交付物清单';
 COMMENT ON COLUMN pmis_execution_delivery_standard.project_type IS '项目类型: FIXED_PRICE / T_M / OUTSOURCING / PRODUCT / MAINTENANCE / CONSULTING / TRAINING / OTHER';
@@ -2343,8 +2928,13 @@ COMMENT ON COLUMN pmis_execution_delivery_standard.remark IS '备注';
 COMMENT ON COLUMN pmis_execution_delivery_standard.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_execution_delivery_standard.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_execution_delivery_standard.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_peds_type_level ON pmis_execution_delivery_standard(project_type, project_level);
-CREATE INDEX IF NOT EXISTS idx_peds_stage ON pmis_execution_delivery_standard(stage);
+-- 复合/部分索引(替代零散的 idx_peds_type_level / idx_peds_stage)
+CREATE INDEX IF NOT EXISTS idx_peds_tenant_type_level
+    ON pmis_execution_delivery_standard(tenant_id, project_type, project_level)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_peds_tenant_stage
+    ON pmis_execution_delivery_standard(tenant_id, stage)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 4. 交付物实例表 pmis_execution_delivery_item
@@ -2377,11 +2967,19 @@ CREATE TABLE IF NOT EXISTS pmis_execution_delivery_item(
     tenant_id             BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id     VARCHAR(64)  NOT NULL DEFAULT '',
     created_by            BIGINT       NOT NULL DEFAULT 0,
-    created_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by            BIGINT       NOT NULL DEFAULT 0,
-    updated_at            TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at            TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted               SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pedi_code UNIQUE (item_code, deleted)
+    CONSTRAINT uk_pedi_code            UNIQUE (item_code, deleted),
+    CONSTRAINT ck_pedi_project_type    CHECK (project_type IS NULL OR project_type IN ('FIXED_PRICE','T_M','OUTSOURCING','PRODUCT','MAINTENANCE','CONSULTING','TRAINING','OTHER')),
+    CONSTRAINT ck_pedi_category        CHECK (delivery_category IN ('DOC','CODE','MODEL','RUNBOOK','REPORT','OTHER')),
+    CONSTRAINT ck_pedi_stage           CHECK (stage IN ('CD1_KICKOFF','CD2_DESIGN','CD3_BUILD','CD4_UAT','CD5_GO_LIVE')),
+    CONSTRAINT ck_pedi_status_enum     CHECK (status IN ('PENDING','SUBMITTED','IN_REVIEW','ACCEPTED','REJECTED','REVISION')),
+    CONSTRAINT ck_pedi_required        CHECK (required IN (0, 1)),
+    CONSTRAINT ck_pedi_tr_required     CHECK (tr_required IN (0, 1)),
+    CONSTRAINT ck_pedi_tr_completed    CHECK (tr_completed IN (0, 1)),
+    CONSTRAINT ck_pedi_deleted_enum    CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_execution_delivery_item IS '交付物实例表: 项目立项后,按交付物标准库自动生成具体交付物实例,跟踪提交/验收全过程';
 COMMENT ON COLUMN pmis_execution_delivery_item.item_code IS '交付物实例编码: 业务唯一,如 DI-2026-001';
@@ -2409,9 +3007,16 @@ COMMENT ON COLUMN pmis_execution_delivery_item.remark IS '备注';
 COMMENT ON COLUMN pmis_execution_delivery_item.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_execution_delivery_item.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_execution_delivery_item.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pedi_initiation ON pmis_execution_delivery_item(initiation_id);
-CREATE INDEX IF NOT EXISTS idx_pedi_stage ON pmis_execution_delivery_item(initiation_id, stage);
-CREATE INDEX IF NOT EXISTS idx_pedi_status ON pmis_execution_delivery_item(status);
+-- 复合/部分索引(替代零散的 idx_pedi_initiation / idx_pedi_stage / idx_pedi_status)
+CREATE INDEX IF NOT EXISTS idx_pedi_tenant_initiation
+    ON pmis_execution_delivery_item(tenant_id, initiation_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pedi_tenant_initiation_stage
+    ON pmis_execution_delivery_item(tenant_id, initiation_id, stage)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pedi_tenant_status
+    ON pmis_execution_delivery_item(tenant_id, status)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 5. 项目结项主表 pmis_execution_closure
@@ -2444,18 +3049,27 @@ CREATE TABLE IF NOT EXISTS pmis_execution_closure(
     applicant_name           VARCHAR(64),
     approver_id              BIGINT,
     approver_name            VARCHAR(64),
-    submitted_at             TIMESTAMP,
-    approved_at              TIMESTAMP,
-    archived_at              TIMESTAMP,
+    submitted_at             TIMESTAMPTZ,
+    approved_at              TIMESTAMPTZ,
+    archived_at              TIMESTAMPTZ,
     approval_comment         TEXT,
     tenant_id                BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id        VARCHAR(64)  NOT NULL DEFAULT '',
     created_by               BIGINT       NOT NULL DEFAULT 0,
-    created_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_by               BIGINT       NOT NULL DEFAULT 0,
-    updated_at               TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at               TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted                  SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pec_code UNIQUE (closure_code, deleted)
+    CONSTRAINT uk_pec_code              UNIQUE (closure_code, deleted),
+    CONSTRAINT ck_pec_closure_type      CHECK (closure_type IN ('FORMAL','PRE_CLOSURE','FORCED')),
+    CONSTRAINT ck_pec_status_enum       CHECK (status IN ('DRAFT','SUBMITTED','APPROVING','APPROVED','REJECTED','ARCHIVED')),
+    CONSTRAINT ck_pec_locked            CHECK (locked IN (0, 1)),
+    CONSTRAINT ck_pec_deleted_enum      CHECK (deleted IN (0, 1)),
+    -- 数值/比例范围
+    CONSTRAINT ck_pec_received_ratio    CHECK (received_ratio >= 0 AND received_ratio <= 1),
+    CONSTRAINT ck_pec_gross_margin      CHECK (gross_margin >= -1 AND gross_margin <= 1),
+    CONSTRAINT ck_pec_progress          CHECK (progress_pct >= 0 AND progress_pct <= 100),
+    CONSTRAINT ck_pec_warranty_months   CHECK (warranty_months >= 0)
 );
 COMMENT ON TABLE  pmis_execution_closure IS '项目结项主表: 3 种结项类型（FORMAL/PRE_CLOSURE/FORCED）,由 ClosureAdmissionValidator 按类型校验准入条件';
 COMMENT ON COLUMN pmis_execution_closure.closure_code IS '结项单号: 业务唯一,如 PC-2026-001';
@@ -2490,8 +3104,13 @@ COMMENT ON COLUMN pmis_execution_closure.approval_comment IS '审批意见';
 COMMENT ON COLUMN pmis_execution_closure.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_execution_closure.provider_trace_id IS '链路追踪 ID';
 COMMENT ON COLUMN pmis_execution_closure.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pec_initiation ON pmis_execution_closure(initiation_id);
-CREATE INDEX IF NOT EXISTS idx_pec_type_status ON pmis_execution_closure(closure_type, status);
+-- 复合/部分索引(替代零散的 idx_pec_initiation / idx_pec_type_status)
+CREATE INDEX IF NOT EXISTS idx_pec_tenant_initiation
+    ON pmis_execution_closure(tenant_id, initiation_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pec_tenant_type_status
+    ON pmis_execution_closure(tenant_id, closure_type, status)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 6. AI 智能体预测/推荐结果表 pmis_agent_prediction
@@ -2520,10 +3139,21 @@ CREATE TABLE IF NOT EXISTS pmis_agent_prediction(
     source              VARCHAR(32)  NOT NULL DEFAULT 'MANUAL', -- MANUAL/SCHEDULED/EVENT
     tenant_id           BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at          TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_by          BIGINT       NOT NULL DEFAULT 0,
+    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by          BIGINT       NOT NULL DEFAULT 0,
+    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pap_code UNIQUE (task_code, deleted)
+    CONSTRAINT uk_pap_code              UNIQUE (task_code, deleted),
+    CONSTRAINT ck_pap_agent_type        CHECK (agent_type IN ('RISK_WARNING','RESOURCE_RECOMMEND','PROFIT_FORECAST','WIN_RATE_PREDICT','TIMESHEET_ANOMALY')),
+    CONSTRAINT ck_pap_biz_type          CHECK (biz_type IS NULL OR biz_type IN ('PROJECT','OPPORTUNITY','TIMESHEET','STAFF')),
+    CONSTRAINT ck_pap_alert_level       CHECK (alert_level IN ('INFO','YELLOW','RED','NORMAL','RECOMMEND')),
+    CONSTRAINT ck_pap_status_enum       CHECK (status IN ('PENDING','RUNNING','SUCCESS','FAILED')),
+    CONSTRAINT ck_pap_source            CHECK (source IN ('MANUAL','SCHEDULED','EVENT')),
+    CONSTRAINT ck_pap_score_range       CHECK (score >= 0 AND score <= 100),
+    CONSTRAINT ck_pap_confidence_range  CHECK (confidence >= 0 AND confidence <= 1),
+    CONSTRAINT ck_pap_cost_ms_nonneg    CHECK (cost_ms >= 0),
+    CONSTRAINT ck_pap_deleted_enum      CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE  pmis_agent_prediction IS 'AI 智能体预测/推荐结果表: 5 类智能体（风险预警/资源推荐/利润预测/赢率预测/工时异常）的输出持久化';
 COMMENT ON COLUMN pmis_agent_prediction.task_code IS '任务编码: 业务唯一,如 AGT-2026-001';
@@ -2548,9 +3178,16 @@ COMMENT ON COLUMN pmis_agent_prediction.source IS '调用来源: MANUAL 手动 /
 COMMENT ON COLUMN pmis_agent_prediction.tenant_id IS '租户 ID';
 COMMENT ON COLUMN pmis_agent_prediction.provider_trace_id IS '链路追踪 ID: 端到端 trace';
 COMMENT ON COLUMN pmis_agent_prediction.deleted IS '逻辑删除: 0=未删除,1=已删除';
-CREATE INDEX IF NOT EXISTS idx_pap_biz ON pmis_agent_prediction(biz_type, biz_id);
-CREATE INDEX IF NOT EXISTS idx_pap_agent_level ON pmis_agent_prediction(agent_type, alert_level);
-CREATE INDEX IF NOT EXISTS idx_pap_status ON pmis_agent_prediction(status);
+-- 复合/部分索引(替代零散的 idx_pap_biz / idx_pap_agent_level / idx_pap_status)
+CREATE INDEX IF NOT EXISTS idx_pap_tenant_biz
+    ON pmis_agent_prediction(tenant_id, biz_type, biz_id)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pap_tenant_agent_level
+    ON pmis_agent_prediction(tenant_id, agent_type, alert_level)
+    WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pap_tenant_status_created
+    ON pmis_agent_prediction(tenant_id, status, created_at DESC)
+    WHERE deleted = 0;
 
 -- =====================================================
 -- 7. 初始化 8 类项目类型的默认交付物标准（CD1-CD5）
@@ -3599,23 +4236,10 @@ COMMENT ON VIEW pmis_view_employee_utilization IS '人效排行视图: 按员工
 -- ============================================================
 
 -- ----------------------------
--- 1) 增强用户账号表
+-- 1) 增强用户账号表 (已优化内联至 V1.0.0_001 pmis_user_account 定义)
 -- ----------------------------
-ALTER TABLE pmis_user_account
-    ADD COLUMN IF NOT EXISTS data_scope VARCHAR(16)  NOT NULL DEFAULT 'SELF',
-    ADD COLUMN IF NOT EXISTS custom_dept_ids TEXT,
-    ADD COLUMN IF NOT EXISTS mfa_enabled BOOLEAN     NOT NULL DEFAULT FALSE,
-    ADD COLUMN IF NOT EXISTS mfa_type VARCHAR(16)    NOT NULL DEFAULT 'NONE',
-    ADD COLUMN IF NOT EXISTS last_pwd_change_at TIMESTAMP,
-    ADD COLUMN IF NOT EXISTS pwd_change_count INT    NOT NULL DEFAULT 0;
-
--- 字段注释（V1.0.0_001 中误提前写入，迁移至此处与 ADD COLUMN 同步）
-COMMENT ON COLUMN pmis_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_SUB 本部门及下级 / SELF 本人 / CUSTOM 自定义';
-COMMENT ON COLUMN pmis_user_account.custom_dept_ids IS '自定义数据权限部门 ID 列表(逗号分隔,data_scope=CUSTOM 时生效)';
-COMMENT ON COLUMN pmis_user_account.mfa_enabled IS '是否启用双因素认证';
-COMMENT ON COLUMN pmis_user_account.mfa_type IS '双因素认证类型: NONE 未启用 / TOTP 基于时间的一次性密码 / SMS 短信验证码';
-COMMENT ON COLUMN pmis_user_account.last_pwd_change_at IS '最近密码修改时间';
-COMMENT ON COLUMN pmis_user_account.pwd_change_count IS '密码修改次数(用于强制定期改密)';
+-- data_scope / custom_dept_ids / mfa_enabled / mfa_type / last_pwd_change_at / pwd_change_count
+-- 已在 V1.0.0_001 中以最终结构内联(含 CHECK 约束),此处不再重复 ADD COLUMN
 
 -- ----------------------------
 -- 2) 登录审计
@@ -6149,18 +6773,8 @@ CREATE INDEX IF NOT EXISTS idx_pl_status ON pmis_leave(approval_status);
 -- ====================================================================
 
 -- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_040__add_audit_diff_fields.sql
--- ====================================================================
-
--- 审计日志增加变更前后数据字段
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS before_data TEXT;
-ALTER TABLE pmis_operation_log ADD COLUMN IF NOT EXISTS after_data TEXT;
-
-COMMENT ON COLUMN pmis_operation_log.before_data IS '变更前数据（JSON 格式）';
-COMMENT ON COLUMN pmis_operation_log.after_data IS '变更后数据（JSON 格式）';
-
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_040__add_audit_diff_fields.sql
+-- V1.0.0_040 已优化内联至 V1.0.0_001 的 pmis_operation_log 定义中
+-- (before_data / after_data / biz_type / biz_id 已内联,并升级为 JSONB)
 -- ====================================================================
 
 -- ====================================================================
@@ -7297,59 +7911,8 @@ CREATE INDEX IF NOT EXISTS idx_rule_canary_bucket_tenant ON pmis_rule_canary_buc
 -- ====================================================================
 
 -- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_054__add_user_org_columns.sql
--- ====================================================================
-
--- ============================================================
--- V1.0.0_054  P2-2 候选人/变量独立表 — 用户表组织架构字段补全
--- ============================================================
--- 说明：为 pmis_user_account 表补充 dept_id / leader_id / position_code 字段，
---   使工作流引擎的 FlowAssigneeResolver 能够展开：
---     - dept:xxx → 部门下所有成员（按 dept_id 查询）
---     - leader:xxx → 直属上级（按 leader_id 查询）
---     - multi_leader:N → 连续 N 级主管（循环查 leader_id）
---     - position:xxx → 岗位人员（按 position_code 查询）
---
--- 兼容性：所有新增字段允许 NULL，不影响存量数据。
--- ============================================================
-
--- 1. 用户表加 dept_id（部门 ID）
-ALTER TABLE pmis_user_account ADD COLUMN IF NOT EXISTS dept_id BIGINT;
-COMMENT ON COLUMN pmis_user_account.dept_id IS '所属部门 ID（关联 pmis_department.id）';
-
--- 2. 用户表加 leader_id（直属上级用户 ID）
-ALTER TABLE pmis_user_account ADD COLUMN IF NOT EXISTS leader_id BIGINT;
-COMMENT ON COLUMN pmis_user_account.leader_id IS '直属上级用户 ID（关联 pmis_user_account.id，用于审批人 leader: 展开）';
-
--- 3. 用户表加 position_code（岗位编码）
-ALTER TABLE pmis_user_account ADD COLUMN IF NOT EXISTS position_code VARCHAR(64);
-COMMENT ON COLUMN pmis_user_account.position_code IS '岗位编码（如 PM/DEV/QA/SA，用于审批人 position: 展开）';
-
--- 索引：按部门查询用户（dept: 展开主查询）
-CREATE INDEX IF NOT EXISTS idx_pua_dept_id
-    ON pmis_user_account(dept_id)
-    WHERE deleted = 0 AND dept_id IS NOT NULL;
-
--- 索引：按岗位查询用户（position: 展开主查询）
-CREATE INDEX IF NOT EXISTS idx_pua_position_code
-    ON pmis_user_account(position_code)
-    WHERE deleted = 0 AND position_code IS NOT NULL;
-
--- 索引：按上级查询用户（反向查询"谁是某人的下属"，用于多级会签场景）
-CREATE INDEX IF NOT EXISTS idx_pua_leader_id
-    ON pmis_user_account(leader_id)
-    WHERE deleted = 0 AND leader_id IS NOT NULL;
-
--- ============================================================
--- 说明：本脚本仅补全用户表字段，候选人/变量独立表的完整方案还包括：
---   1. pmis_flow_candidate 表（候选人快照，避免运行时多次查 DB）
---   2. pmis_flow_variable 表（流程变量独立存储，支持复杂类型与索引查询）
--- 当前阶段仅落地字段补全，使 leader:/dept:/position: 能展开；
--- 候选人快照表与变量独立表留待后续迭代。
--- ============================================================
-
--- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_054__add_user_org_columns.sql
+-- V1.0.0_054 已优化内联至 V1.0.0_001 的 pmis_user_account 定义中
+-- (dept_id / leader_id / position_code 字段及对应 3 个索引均已内联)
 -- ====================================================================
 
 -- ====================================================================

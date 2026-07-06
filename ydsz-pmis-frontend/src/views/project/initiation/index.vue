@@ -20,7 +20,7 @@ import {
   reviewGate,
   startInitiationProcess,
 } from '@/api/project/initiation'
-import type { InitiationVO, InitiationCreateDTO } from '@/api/project/initiation/types'
+import type { InitiationVO, InitiationCreateDTO, BudgetItemVO } from '@/api/project/initiation/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
 import { useUserStore } from '@/store/modules/user'
@@ -236,15 +236,15 @@ async function handleStartProcess(row: InitiationVO) {
     const { data } = await startInitiationProcess(row.id, 1)
     ElMessage.success(t('project.initiation.messages.processStarted', { data }))
     fetchList()
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('project.initiation.messages.startFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('project.initiation.messages.startFailed'))
   }
 }
 
 // 预算弹窗
 const budgetDialogVisible = ref(false)
 const budgetInitiationId = ref<number | null>(null)
-const budgetList = ref<any[]>([])
+const budgetList = ref<BudgetItemVO[]>([])
 const budgetForm = reactive({ category: 'LABOR', itemName: '', amount: 0, remark: '' })
 
 /**
@@ -376,7 +376,7 @@ onMounted(fetchList)
             <StatusTag :value="row.projectLevel" :map="levelMap" />
           </template>
         </vxe-column>
-        <vxe-column field="budgetAmount" :title="t('project.initiation.columns.budgetAmount')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="budgetAmount" :title="t('project.initiation.columns.budgetAmount')" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
         <vxe-column field="currentGate" :title="t('project.initiation.columns.currentGate')" width="120">
           <template #default="{ row }">
             <StatusTag v-if="row.currentGate" :value="row.currentGate" :map="gateMap" />
@@ -549,7 +549,7 @@ onMounted(fetchList)
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="category" :title="t('project.initiation.budget.category')" width="100" />
         <vxe-column field="itemName" :title="t('project.initiation.budget.itemName')" min-width="160" show-overflow />
-        <vxe-column field="amount" :title="t('project.initiation.budget.amount')" width="120" align="right" :formatter="({ cellValue }: any) => `¥${Number(cellValue).toLocaleString()}`" />
+        <vxe-column field="amount" :title="t('project.initiation.budget.amount')" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => `¥${Number(cellValue).toLocaleString()}`" />
         <vxe-column field="remark" :title="t('project.initiation.budget.remark')" min-width="120" show-overflow />
       </vxe-table>
       <template #footer>

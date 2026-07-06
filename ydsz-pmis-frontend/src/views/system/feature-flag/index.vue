@@ -79,8 +79,8 @@ async function fetchSnapshot() {
   try {
     const { data } = await getFeatureFlagSnapshot()
     snapshots.value = data
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('system.featureFlag.messages.loadFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('system.featureFlag.messages.loadFailed'))
   } finally {
     loading.value = false
   }
@@ -111,8 +111,8 @@ async function handleToggle(s: FeatureFlagSnapshot) {
     ElMessage.success(t('system.featureFlag.messages.toggled', {
       action: next ? t('system.featureFlag.messages.toggleActionEnable') : t('system.featureFlag.messages.toggleActionDisable'),
     }))
-  } catch (e: any) {
-    if (e !== 'cancel') ElMessage.error(e?.message || t('system.featureFlag.messages.operationFailed'))
+  } catch (e: unknown) {
+    if (e !== 'cancel') ElMessage.error((e as Error)?.message || t('system.featureFlag.messages.operationFailed'))
   }
 }
 
@@ -126,8 +126,8 @@ async function handleRolloutChange(s: FeatureFlagSnapshot, val: number) {
     const { data } = await setFeatureFlagRollout(s.key, val)
     s.rolloutPercentage = data
     ElMessage.success(t('system.featureFlag.messages.rolloutSet', { key: s.key, percent: data }))
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('system.featureFlag.messages.rolloutSetFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('system.featureFlag.messages.rolloutSetFailed'))
   }
 }
 
@@ -137,8 +137,8 @@ async function handleRefresh() {
     await refreshFeatureFlagCache()
     await fetchSnapshot()
     ElMessage.success(t('system.featureFlag.messages.cacheRefreshed'))
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('system.featureFlag.messages.refreshFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('system.featureFlag.messages.refreshFailed'))
   }
 }
 

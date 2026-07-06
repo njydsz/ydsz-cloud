@@ -244,11 +244,11 @@ async function handleChangeStatus(row: OpportunityVO, target: string) {
 
 async function handleEvaluate(row: OpportunityVO) {
   try {
-    const { data } = await evaluateWinRate(row.id, (row as any).customerCredit, false)
+    const { data } = await evaluateWinRate(row.id, (row as { customerCredit?: string }).customerCredit, false)
     ElMessage.success(t('project.opportunity.messages.evaluateResult', { rate: (data * 100).toFixed(1) }))
     fetchList()
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('project.opportunity.messages.evaluateFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('project.opportunity.messages.evaluateFailed'))
   }
 }
 
@@ -313,8 +313,8 @@ onMounted(fetchList)
             <StatusTag :value="row.level" :map="levelMap" fallback-type="info" />
           </template>
         </vxe-column>
-        <vxe-column field="estimatedAmount" :title="$t('project.opportunity.columns.estimatedAmount')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="winRate" :title="$t('project.opportunity.columns.winRate')" width="80" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(0)}%` : '-'" />
+        <vxe-column field="estimatedAmount" :title="$t('project.opportunity.columns.estimatedAmount')" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="winRate" :title="$t('project.opportunity.columns.winRate')" width="80" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(0)}%` : '-'" />
         <vxe-column field="expectedSignDate" :title="$t('project.opportunity.columns.expectedSignDate')" width="110" />
         <vxe-column field="status" :title="$t('project.opportunity.columns.status')" width="110">
           <template #default="{ row }">

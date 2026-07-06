@@ -434,7 +434,7 @@ onMounted(() => {
             <vxe-column field="payRate" :title="t('attendance.overtime.columns.payRate')" width="80" align="right" />
             <vxe-column field="approvalStatus" :title="t('attendance.overtime.columns.approvalStatus')" width="100">
               <template #default="{ row }">
-                <el-tag :type="(otStatusMap[row.approvalStatus]?.type as any) || 'info'">
+                <el-tag :type="otStatusMap[row.approvalStatus]?.type || 'info'">
                   {{ otStatusMap[row.approvalStatus]?.label || row.approvalStatus }}
                 </el-tag>
               </template>
@@ -494,7 +494,7 @@ onMounted(() => {
             <vxe-column field="leaveDays" :title="t('attendance.leave.columns.leaveDays')" width="80" align="right" />
             <vxe-column field="approvalStatus" :title="t('attendance.leave.columns.approvalStatus')" width="100">
               <template #default="{ row }">
-                <el-tag :type="(lvStatusMap[row.approvalStatus]?.type as any) || 'info'">
+                <el-tag :type="lvStatusMap[row.approvalStatus]?.type || 'info'">
                   {{ lvStatusMap[row.approvalStatus]?.label || row.approvalStatus }}
                 </el-tag>
               </template>

@@ -261,7 +261,7 @@ onMounted(() => {
         <el-card shadow="hover">
           <div class="text-sm text-gray-500">{{ t('aftersales.satisfaction.stats.levelDist') }}</div>
           <div v-for="(row, idx) in levelDist" :key="idx" class="text-xs mt-1">
-            {{ (row as any).level || (row as any).name }}：<b>{{ (row as any).count }}</b>
+            {{ row.level || row.name }}：<b>{{ row.count }}</b>
           </div>
         </el-card>
       </el-col>
