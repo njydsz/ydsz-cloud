@@ -1,0 +1,107 @@
+﻿==========================================
+P1/P2 verification suite
+==========================================
+SQL dir: d:\Code\ydsz\ydsz-pmis\deploy\sql\scripts
+Generated at: 2026-07-06 22:07:17
+
+----------------------------------------
+[RUN ] check-provider-trace-index.ps1
+----------------------------------------
+=== Summary ===
+Tables with provider_trace_id field: 75
+With index     : 75
+Without index  : 0
+
+=== MISSING index on provider_trace_id ===
+
+=== OK ===
+  + pmis_message_log
+  + pmis_execution_wbs_task
+  + pmis_execution_time_entry
+  + pmis_cost_allocation
+  + pmis_cost_purchase
+  + pmis_cost_expense
+  + pmis_profit_revenue
+  + pmis_profit_snapshot
+  + pmis_execution_risk
+  + pmis_project_change
+  + pmis_execution_delivery_standard
+  + pmis_execution_delivery_item
+  + pmis_execution_closure
+  + pmis_agent_prediction
+  + pmis_finance_invoice
+  + pmis_finance_payment
+  + pmis_finance_customer_credit
+  + pmis_evm_measure
+  + pmis_rate_card
+  + pmis_rate_internal
+  + pmis_profit_simulation
+  + pmis_resource_pool
+  + pmis_employee_tag
+  + pmis_resource_assignment
+  + pmis_bench_record
+  + pmis_warranty
+  + pmis_ops_ticket
+  + pmis_satisfaction
+  + pmis_alert_dispatch
+  + pmis_reconcile_daily
+  + pmis_flow_definition
+  + pmis_flow_node
+  + pmis_flow_skip
+  + pmis_flow_instance
+  + pmis_flow_run_task
+  + pmis_flow_his_task
+  + pmis_flow_user
+  + pmis_flow_audit_log
+  + pmis_flow_cc
+  + pmis_flow_cc_rule
+  + pmis_flow_timer
+  + pmis_flow_delegate_auth
+  + pmis_flow_delegate_log
+  + pmis_report_subscription
+  + pmis_export_record
+  + pmis_flow_his_instance
+  + pmis_attendance
+  + pmis_overtime
+  + pmis_leave
+  + pmis_rule_def
+  + pmis_rule_version_history
+  + pmis_rule_template
+  + pmis_rule_test_case
+  + pmis_rule_execution_trace
+  + pmis_rule_decision_table
+  + pmis_flow_event_subscription
+  + pmis_rule_canary_bucket
+  + pmis_flow_notify_outbox
+  + pmis_rule_scorecard
+  + pmis_rule_decision_tree
+  + pmis_rule_script
+  + pmis_rule_variable_def
+  + pmis_flow_third_party_account
+  + pmis_flow_third_party_log
+  + pmis_flow_dmn_table
+  + pmis_flow_template
+  + pmis_flow_auto_trigger
+  + pmis_flow_notify_channel
+  + pmis_flow_task_comment
+  + pmis_rule_chain_graph
+  + pmis_rule_dependency
+  + pmis_rule_ab_policy
+  + pmis_rule_ab_rollback
+  + pmis_rule_pack
+  + pmis_rule_pack_install
+
+----------------------------------------
+[RUN ] check-table-comment.ps1
+----------------------------------------
+=== Summary ===
+Tables total   : 113
+With COMMENT  : 113
+Without COMMENT: 0
+Coverage: 100.0%%
+
+=== Missing COMMENT ON TABLE ===
+
+==========================================
+All checks PASSED
+==========================================

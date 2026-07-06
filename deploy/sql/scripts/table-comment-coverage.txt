@@ -1,0 +1,9 @@
+﻿=== Summary ===
+Tables total   : 112
+With COMMENT  : 110
+Without COMMENT: 2
+Coverage: 98.2%%
+
+=== Missing COMMENT ON TABLE ===
+  - pmis_flow_audit_log_default
+  - pmis_operation_log_default

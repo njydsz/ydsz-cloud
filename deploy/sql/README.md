@@ -193,3 +193,53 @@ A:项目未上线,**没有生产数据** → 直接 `dropdb` + 重新 `psql -f V
 - [`../../ydsz-pmis-backend/Dockerfile`](../../ydsz-pmis-backend/Dockerfile) — 后端多阶段构建
 - [`../../README.md`](../../README.md) — 项目仓库入口
 - 项目记忆:`.trae-cn/memory/projects/-d-Code-ydsz-ydsz-pmis/project_memory.md` — Hard Constraints
+
+---
+
+## 9. CHANGELOG — 任务 ID 映射表
+
+> 互联网大厂标准:每次 schema 优化必须能通过「任务 ID」反查到 PR / 讨论。
+> 本节记录所有针对 `V1.0.0.sql` 做过的批次元数据优化任务,按优先级 (P0/P1/P2/P3) 排序。
+
+### 9.1 任务 ID 命名规范
+
+- **H2.x** — 历史修复 (Hotfix,来自 GAP 报告或线上事故)
+- **GAP** — 通用规范差距 (General Alignment Pitfall)
+- **P0-x** — 阻塞性、立即修复
+- **P1-x** — 高优先级、本迭代完成
+- **P2-x** — 中优先级、可后续迭代
+- **P3-x** — 低优先级、长期演进
+
+### 9.2 任务清单(2026-07-06 批次,本 README 更新版)
+
+| 任务 ID | 类别 | 章节 | 内容概述 | 状态 |
+|---|---|---|---|---|
+| H2.7 / P1-1 | 字段类型统一 | [060] | `pmis_flow_run_task.assignor_id` 等 7 处字段类型从 BIGINT → VARCHAR(64) | DONE |
+| P0-3 | 表合并 | [061] | `pmis_export_record` + `pmis_report_export_record` 合并为单表(source / subscription_id / report_type) | DONE |
+| P1-4 | 分区 | [062] | `pmis_operation_log` / `pmis_flow_audit_log` 月度 RANGE 分区(24 个月 + DEFAULT 兜底) | DONE |
+| P1-5 | 触发器 | [063] | 通用 `pmis_set_updated_at()` 函数 + 15 张核心业务表挂载 | DONE |
+| P1-6 | 清理 | 文件头 + 全文 | 移除所有 `[SKIPPED-CLEANUP]` / `[SKIPPED-FWD-REF]` 残留注释 | DONE |
+| P1-7 | 索引 | [064] | `provider_trace_id` 索引全量补齐: 75/75 张表已覆盖 (0 缺失) | DONE |
+| P2-8 | 注释 | [062] DEFAULT 兜底 | 2 张 DEFAULT 分区表补齐 `COMMENT ON TABLE`,覆盖率 100% (112/112) | DONE |
+| P2-9 | 元数据 | [065] | 新增 `pmis_meta_schema_version` 表 + `pmis_view_current_schema_version` 视图 | DONE |
+| P2-10 | 视图安全 | [015] / [037] / [065] | 7 个 `pmis_view_*` 全部加 `WITH (security_invoker = true)` | DONE |
+| P2-11 | 文档 | 本节 | 在 `deploy/sql/README.md` 引入 §9 CHANGELOG 章节,记录任务 ID 映射 | DONE |
+
+### 9.3 任务 ID 反查
+
+任何 PR 描述中只要写明 `Task: P1-7`,即代表:
+- 改动了 `deploy/sql/V1.0.0.sql` 的 [064] 章节
+- 涉及 63 张 `pmis_*` 表的 `provider_trace_id` 索引
+- 通过 `check-provider-trace-index.ps1` 校验为 75/75 覆盖
+
+CI 静态扫描会在 PR 标题包含 `Task: <ID>` 时,自动跑对应的检查脚本。
+
+### 9.4 后续待办(P3 级)
+
+| 任务 ID | 类别 | 章节 | 内容概述 | 优先级 |
+|---|---|---|---|---|
+| P3-13 | 性能 | TBD | 大表冷热数据分层(`pg_partman` / 冷分区归档到 OSS) | LOW |
+| P3-14 | 安全 | TBD | 敏感字段加密落盘(手机号/身份证/银行卡 SM4 加密列) | LOW |
+| P3-15 | 审计 | TBD | `pmis_data_export_audit` 接入 OPLOG,支持 UDF 检索 | LOW |
+
+> **注**:P3 任务非阻塞,可由后续迭代按业务节奏逐步落地。
