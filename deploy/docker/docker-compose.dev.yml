@@ -15,6 +15,11 @@
 #    5. Seata 2.5           - 分布式事务协调器（AT 模式）
 #    6. RocketMQ 5.x        - 消息中间件（NameServer + Broker + Console）
 #    7. XXL-Job 2.4         - 分布式任务调度（Admin）
+#    8. Prometheus          - 指标采集（端口 9090）
+#    9. Grafana             - 可视化面板（端口 3000,内置 PMIS 仪表盘）
+#   10. Alertmanager        - 告警中枢（端口 9093,钉钉/邮件）
+#   11. Loki                - 日志聚合（端口 3100,30 天保留）
+#   12. Promtail            - 日志采集（抓取 /var/log/pmis/*.log）
 # 全文检索：PostgreSQL tsvector（已移除 Elasticsearch，P2-19）
 #
 # 端口速查:
@@ -22,6 +27,7 @@
 #    9100  MinIO API    9101  MinIO Console  8091  Seata
 #    9876  RocketMQ NS  10911 RocketMQ Broker  8080/9100  RocketMQ Console
 #    9100  XXL-Job Admin
+#    9090  Prometheus   3000  Grafana       9093  Alertmanager   3100  Loki
 #
 #  原生（无 Docker）部署: 参考 docs/INFRASTRUCTURE.md
 # =============================================================================
@@ -355,6 +361,217 @@ services:
   #  注: Elasticsearch 已移除（P2-19 起改用 PostgreSQL tsvector 全文检索）
   # ---------------------------------------------------------------------------
 
+  # ===========================================================================
+  #  监控可观测性栈 (Prometheus + Grafana + Alertmanager + Loki + Promtail)
+  # ===========================================================================
+
+  # ---------------------------------------------------------------------------
+  #  8. Prometheus - 指标采集与时序存储
+  # ---------------------------------------------------------------------------
+  #  端口: 9090 (Web UI)
+  #  配置: deploy/monitoring/prometheus/prometheus.yml
+  #  规则: deploy/monitoring/prometheus/rules/pmis-alerts.yml
+  #  抓取目标: PMIS 微服务 /actuator/prometheus (host.docker.internal)
+  # ---------------------------------------------------------------------------
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: pmis-prometheus
+    restart: unless-stopped
+    extra_hosts:
+      # Linux 下需启用 host.docker.internal 解析(Windows/Mac 内置)
+      - "host.docker.internal:host-gateway"
+    environment:
+      <<: *common-env
+    ports:
+      - "${PROMETHEUS_PORT:-9090}:9090"
+    volumes:
+      # 主配置(抓取目标 + alertmanager + rule_files)
+      - ../monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      # 告警规则
+      - ../monitoring/prometheus/rules/pmis-alerts.yml:/etc/prometheus/rules/pmis-alerts.yml:ro
+      # 持久化 tsdb 数据
+      - prometheus_data:/prometheus
+    command:
+      # 启用时序保留(lifecycle API),数据落盘
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-lifecycle
+      - --web.enable-admin-api
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  9. Grafana - 可视化面板
+  # ---------------------------------------------------------------------------
+  #  端口: 3000 (Web UI)
+  #  默认账号: admin / admin(首次登录强制改密)
+  #  数据源: Prometheus(http://prometheus:9090) + Loki(http://loki:3100)
+  #  仪表盘: provisioning 自动加载 PMIS 总览/业务/工作流三个面板
+  # ---------------------------------------------------------------------------
+  grafana:
+    image: grafana/grafana:latest
+    container_name: pmis-grafana
+    restart: unless-stopped
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      # 自动加载数据源与仪表盘 provisioning
+      GF_PATHS_PROVISIONING: /etc/grafana/provisioning
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    volumes:
+      # 仪表盘 provisioning 配置
+      - ../monitoring/grafana/provisioning/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      # 仪表盘 JSON(自动加载至 PMIS folder)
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      # 数据源 provisioning(Prometheus + Loki)
+      - ../monitoring/grafana/provisioning/datasources/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      # 持久化(用户/面板修改)
+      - grafana_data:/var/lib/grafana
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  10. Alertmanager - 告警通知中枢
+  # ---------------------------------------------------------------------------
+  #  端口: 9093 (Web UI)
+  #  配置: deploy/monitoring/alertmanager/alertmanager.yml
+  #  模板: deploy/monitoring/alertmanager/dingtalk-template.tmpl
+  #  通知渠道: 钉钉 webhook + 邮件 + 通用 webhook 回退
+  #  告警分级: P0 立即 / P1 5min / P2 30min / P3 1h
+  # ---------------------------------------------------------------------------
+  alertmanager:
+    image: prom/alertmanager:latest
+    container_name: pmis-alertmanager
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+    ports:
+      - "${ALERTMANAGER_PORT:-9093}:9093"
+    volumes:
+      # 主配置(路由 + 接收器 + 抑制规则)
+      - ../monitoring/alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      # 钉钉通知模板
+      - ../monitoring/alertmanager/dingtalk-template.tmpl:/etc/alertmanager/templates/dingtalk-template.tmpl:ro
+      # 持久化告警状态(静默/抑制)
+      - alertmanager_data:/alertmanager
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      - --web.external-url=http://localhost:9093
+      - --web.listen-address=:9093
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9093/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  11. Loki - 日志聚合时序存储
+  # ---------------------------------------------------------------------------
+  #  端口: 3100 (HTTP API)
+  #  配置: deploy/monitoring/loki/loki-config.yml
+  #  存储: 文件系统 /loki/data(开发环境)
+  #  保留: 30 天
+  # ---------------------------------------------------------------------------
+  loki:
+    image: grafana/loki:latest
+    container_name: pmis-loki
+    restart: unless-stopped
+    environment:
+      <<: *common-env
+    ports:
+      - "${LOKI_PORT:-3100}:3100"
+    volumes:
+      - ../monitoring/loki/loki-config.yml:/etc/loki/loki-config.yml:ro
+      - loki_data:/loki
+    command:
+      - -config.file=/etc/loki/loki-config.yml
+    networks:
+      - pmis-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://localhost:3100/ready || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
+  # ---------------------------------------------------------------------------
+  #  12. Promtail - 日志采集客户端
+  # ---------------------------------------------------------------------------
+  #  采集: /var/log/pmis/*.log (PMIS 后端 logback LOGSTASH_JSON appender 输出)
+  #  推送: http://loki:3100/loki/api/v1/push
+  #  解析: json pipeline 提取 service / level / traceId 标签
+  #  说明: 挂载宿主机日志目录(Windows: D:\Code\ydsz\ydsz-pmis\logs,Mac/Linux: ./logs)
+  #        通过 PMIS_LOG_DIR 环境变量配置实际路径
+  # ---------------------------------------------------------------------------
+  promtail:
+    image: grafana/promtail:latest
+    container_name: pmis-promtail
+    restart: unless-stopped
+    depends_on:
+      loki:
+        condition: service_healthy
+    environment:
+      <<: *common-env
+    volumes:
+      - ../monitoring/loki/promtail-config.yml:/etc/promtail/promtail-config.yml:ro
+      # 挂载宿主机日志目录(需配置 PMIS_LOG_DIR 指向实际日志路径)
+      - ${PMIS_LOG_DIR:-./pmis-logs}:/var/log/pmis:ro
+      # 采集 docker 容器日志(可选)
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - promtail_data:/tmp
+    command:
+      - -config.file=/etc/promtail/promtail-config.yml
+    networks:
+      - pmis-net
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "3"
+
 # =============================================================================
 #  网络与数据卷
 # =============================================================================
@@ -382,3 +599,14 @@ volumes:
     name: pmis-rocketmq-store
   xxl_job_logs:
     name: pmis-xxl-job-logs
+  # 监控可观测性栈数据卷
+  prometheus_data:
+    name: pmis-prometheus-data
+  grafana_data:
+    name: pmis-grafana-data
+  alertmanager_data:
+    name: pmis-alertmanager-data
+  loki_data:
+    name: pmis-loki-data
+  promtail_data:
+    name: pmis-promtail-data

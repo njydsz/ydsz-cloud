@@ -8,7 +8,10 @@ import com.njydsz.pmis.userinfo.service.AuthService;
 import com.njydsz.pmis.common.token.JwtTokenProvider;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.common.security.AccountLockedEvent;
+import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.CryptoUtil;
+import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.userinfo.dto.LoginContextDTO;
 import com.njydsz.pmis.userinfo.entity.RoleDO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
@@ -19,10 +22,12 @@ import com.wf.captcha.SpecCaptcha;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
 import java.util.List;
@@ -75,6 +80,8 @@ public class AuthServiceImpl implements AuthService {
     private final RoleService roleService;
     /** 权限服务 */
     private final PermissionService permissionService;
+    /** Spring 事件发布器（用于发布账号锁定事件等） */
+    private final ApplicationEventPublisher publisher;
 
     /**
      * 是否强制启用图形验证码 (测试场景可关闭)
@@ -343,9 +350,33 @@ public class AuthServiceImpl implements AuthService {
         Long count = redisTemplate.opsForValue().increment(key);
         redisTemplate.expire(key, Duration.ofMinutes(LOGIN_LOCK_MINUTES));
         if (count != null && count >= LOGIN_FAIL_THRESHOLD) {
-            log.warn("[Auth] 账号 {} 登录失败 {} 次,触发锁定", username, count);
-            // 锁定账号: 通过调用 user 服务更新 locked_until
-            // 此处简化处理, 实际生产可异步推送 user 服务
+            log.warn("[Auth] 账号 {} 登录失败 {} 次, 达到阈值触发锁定", username, count);
+            // 落库锁定: 设置 locked_until = now + 30min
+            UserAccountDO user = userAccountService.findByUsername(username);
+            if (user == null) {
+                log.warn("[Auth] 锁定失败: 用户不存在 username={}", username);
+                return;
+            }
+            LocalDateTime lockedUntil = LocalDateTime.now().plusMinutes(LOGIN_LOCK_MINUTES);
+            userAccountService.lockAccount(user.getId(), lockedUntil);
+            log.warn("[Auth] 账号已锁定 userId={} username={} lockedUntil={} (到期后自动解锁)",
+                    user.getId(), username, lockedUntil);
+            // 发布账号锁定事件, 触发异步通知（邮件/短信/站内信）
+            try {
+                AccountLockedEvent event = AccountLockedEvent.builder()
+                        .userId(user.getId())
+                        .username(username)
+                        .lockedUntil(lockedUntil)
+                        .failCount(count.intValue())
+                        .lockMinutes((int) LOGIN_LOCK_MINUTES)
+                        .traceId(TraceIdUtil.get())
+                        .tenantId(TenantContext.getTenantId())
+                        .lockedAt(System.currentTimeMillis())
+                        .build();
+                publisher.publishEvent(event);
+            } catch (Exception ex) {
+                log.warn("[Auth] 发布账号锁定事件失败 username={} reason={}", username, ex.getMessage());
+            }
         }
     }
 

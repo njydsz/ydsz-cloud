@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.njydsz.pmis.common.sensitive.Sensitive;
+import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
 import lombok.Data;
 
 import java.io.Serial;
@@ -47,7 +49,8 @@ public class SensitiveOperationDO implements Serializable {
     private LocalDateTime verifiedAt;
     /** 过期时间 */
     private LocalDateTime expireAt;
-    /** 客户端 IP */
+    /** 客户端 IP（脱敏：保留前 3 段） */
+    @Sensitive(SensitiveStrategy.ADDRESS)
     private String clientIp;
     /** 链路追踪 ID */
     private String traceId;

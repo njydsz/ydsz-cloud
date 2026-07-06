@@ -5,12 +5,18 @@
     <!-- 通用属性 -->
     <property name="LOG_PATTERN" value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%X{traceId:-}] [%thread] %logger{36} - %msg%n"/>
     <property name="LOG_HOME" value="${LOG_HOME:-./logs}"/>
-    <property name="APP_NAME" value="${APP_NAME:-pmis}"/>
-    <property name="HOST_NAME" value="${HOSTNAME:-${COMPUTERNAME:-unknown}}"/>
     <!-- Logstash TCP 接入点（默认关闭；生产通过 ENV 启用） -->
     <property name="LOGSTASH_HOST" value="${LOGSTASH_HOST:-}"/>
     <property name="LOGSTASH_PORT" value="${LOGSTASH_PORT:-5044}"/>
     <property name="LOGSTASH_ENABLED" value="${LOGSTASH_ENABLED:-false}"/>
+
+    <!-- Spring 上下文属性: 用于 LOGSTASH_JSON appender 注入 context 字段 -->
+    <!-- appName: 从 spring.application.name 读取,默认 pmis -->
+    <springProperty name="APP_NAME" source="spring.application.name" defaultValue="pmis"/>
+    <!-- profile: 从 spring.profiles.active 读取,默认空(dev 模式) -->
+    <springProperty name="ACTIVE_PROFILE" source="spring.profiles.active" defaultValue="dev"/>
+    <!-- hostname: 优先用 ENV HOSTNAME,回退到系统属性 -->
+    <springProperty name="HOST_NAME" source="HOSTNAME" defaultValue="${COMPUTERNAME:-unknown}"/>
 
     <!-- 控制台输出（开发期可读） -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -78,6 +84,31 @@
         </encoder>
     </appender>
 
+    <!-- LOGSTASH_JSON - 生产环境控制台 JSON 结构化输出(Promtail / Filebeat 直采 stdout)
+         与 JSON_FILE 区别:
+           - 输出到 ConsoleAppender(stdout),适配容器环境(docker logs / kubectl logs)
+           - MDC 增加 username,context 增加 appName/hostname/profile
+           - @timestamp 使用 logback 原生时间戳(fieldNames.timestamp=@timestamp) -->
+    <appender name="LOGSTASH_JSON" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- 上下文静态字段: appName / hostname / profile(供 Loki/Prometheus 标签提取) -->
+            <customFields>{"appName":"${APP_NAME}","hostname":"${HOST_NAME}","profile":"${ACTIVE_PROFILE}"}</customFields>
+            <!-- MDC 字段: traceId(链路追踪) / userId(用户标识) / username(用户名) -->
+            <includeMdcKeyName>traceId</includeMdcKeyName>
+            <includeMdcKeyName>userId</includeMdcKeyName>
+            <includeMdcKeyName>username</includeMdcKeyName>
+            <!-- 自定义 fieldNames: @timestamp 用 logback 原生时间戳(不覆盖) -->
+            <fieldNames>
+                <timestamp>@timestamp</timestamp>
+                <message>message</message>
+                <thread>thread</thread>
+                <logger>logger</logger>
+                <level>level</level>
+                <stackTrace>stack_trace</stackTrace>
+            </fieldNames>
+        </encoder>
+    </appender>
+
     <!-- Logstash TCP 发送（生产环境 LOGSTASH_ENABLED=true 时启用） -->
     <if condition='property("LOGSTASH_ENABLED").equals("true")'>
         <then>
@@ -111,6 +142,14 @@
 
     <appender name="ASYNC_JSON" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="JSON_FILE"/>
+        <queueSize>4096</queueSize>
+        <discardingThreshold>0</discardingThreshold>
+        <neverBlock>true</neverBlock>
+    </appender>
+
+    <!-- LOGSTASH_JSON 异步包装: 解耦业务线程与 stdout IO -->
+    <appender name="ASYNC_LOGSTASH_JSON" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="LOGSTASH_JSON"/>
         <queueSize>4096</queueSize>
         <discardingThreshold>0</discardingThreshold>
         <neverBlock>true</neverBlock>
@@ -161,17 +200,49 @@
         <appender-ref ref="AUDIT_FALLBACK_FILE"/>
     </logger>
 
-    <!-- Root -->
-    <root level="INFO">
-        <appender-ref ref="STDOUT"/>
-        <appender-ref ref="ASYNC_ALL"/>
-        <appender-ref ref="ASYNC_ERROR"/>
-        <appender-ref ref="ASYNC_JSON"/>
-        <if condition='property("LOGSTASH_ENABLED").equals("true")'>
-            <then>
-                <appender-ref ref="ASYNC_LOGSTASH"/>
-            </then>
-        </if>
-    </root>
+    <!-- Root - 按 Spring Profile 切换日志输出策略
+         dev  : STDOUT(pattern 可读) + FILE_ALL + FILE_ERROR,便于本地调试
+         prod : LOGSTASH_JSON(控制台 JSON,Promtail/Filebeat 直采) + FILE_ERROR,适配容器化日志聚合
+         默认 : 兼容旧行为(STDOUT + FILE_ALL + FILE_ERROR + JSON_FILE),用于 sit/uat 等中间环境 -->
+    <springProfile name="dev">
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="ASYNC_ALL"/>
+            <appender-ref ref="ASYNC_ERROR"/>
+            <if condition='property("LOGSTASH_ENABLED").equals("true")'>
+                <then>
+                    <appender-ref ref="ASYNC_LOGSTASH"/>
+                </then>
+            </if>
+        </root>
+    </springProfile>
+
+    <springProfile name="prod">
+        <!-- 生产环境: JSON 结构化输出为主,保留 FILE_ERROR 兜底 -->
+        <root level="INFO">
+            <appender-ref ref="ASYNC_LOGSTASH_JSON"/>
+            <appender-ref ref="ASYNC_ERROR"/>
+            <if condition='property("LOGSTASH_ENABLED").equals("true")'>
+                <then>
+                    <appender-ref ref="ASYNC_LOGSTASH"/>
+                </then>
+            </if>
+        </root>
+    </springProfile>
+
+    <!-- 非 dev/prod 的环境(sit/uat/test 等): 保持旧行为,兼容既有部署 -->
+    <springProfile name="!dev &amp; !prod">
+        <root level="INFO">
+            <appender-ref ref="STDOUT"/>
+            <appender-ref ref="ASYNC_ALL"/>
+            <appender-ref ref="ASYNC_ERROR"/>
+            <appender-ref ref="ASYNC_JSON"/>
+            <if condition='property("LOGSTASH_ENABLED").equals("true")'>
+                <then>
+                    <appender-ref ref="ASYNC_LOGSTASH"/>
+                </then>
+            </if>
+        </root>
+    </springProfile>
 
 </configuration>

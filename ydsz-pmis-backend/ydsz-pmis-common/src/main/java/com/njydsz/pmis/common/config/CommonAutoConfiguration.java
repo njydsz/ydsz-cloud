@@ -2,6 +2,8 @@ package com.njydsz.pmis.common.config;
 
 import com.njydsz.pmis.common.chaos.ChaosAutoConfiguration;
 import com.njydsz.pmis.common.featureflag.FeatureFlagAutoConfiguration;
+import com.njydsz.pmis.common.filter.SameSiteCookieFilter;
+import com.njydsz.pmis.common.filter.StrictContentTypeFilter;
 import com.njydsz.pmis.common.interceptor.AuthInterceptor;
 import com.njydsz.pmis.common.tx.TransactionPostProcessor;
 import org.slf4j.MDC;
@@ -10,6 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -114,5 +117,35 @@ public class CommonAutoConfiguration {
     @ConditionalOnMissingBean
     public TransactionPostProcessor transactionPostProcessor() {
         return new TransactionPostProcessor();
+    }
+
+    /**
+     * 注册 SameSite Cookie 过滤器(CSRF 防御纵深)
+     *
+     * <p>仅在生产 profile 启用: dev 环境通常使用 HTTP,Secure 属性会导致 Cookie
+     * 不被浏览器保存。顺序在 {@code XssFilter}(HIGHEST_PRECEDENCE + 1)之后。
+     *
+     * @return SameSiteCookieFilter 实例
+     */
+    @Bean
+    @Profile("prod")
+    @ConditionalOnMissingBean
+    public SameSiteCookieFilter sameSiteCookieFilter() {
+        return new SameSiteCookieFilter();
+    }
+
+    /**
+     * 注册 Content-Type 严格校验过滤器(CSRF 防御纵深)
+     *
+     * <p>对所有 profile 启用: 写操作强制 application/json / multipart/form-data,
+     * 拒绝 text/plain / application/x-www-form-urlencoded 等简单请求类型。
+     * 顺序在 {@code SameSiteCookieFilter}(HIGHEST_PRECEDENCE + 2)之后。
+     *
+     * @return StrictContentTypeFilter 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    public StrictContentTypeFilter strictContentTypeFilter() {
+        return new StrictContentTypeFilter();
     }
 }

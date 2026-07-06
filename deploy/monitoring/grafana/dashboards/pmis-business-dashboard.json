@@ -1,0 +1,311 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": {"type": "grafana", "uid": "-- Grafana --"},
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "description": "PMIS 业务指标仪表盘 - EVM 红项目数 / Bench 成本 / 可计费利用率 / 合同签订数 / 流程审批数",
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "liveNow": false,
+  "panels": [
+    {
+      "title": "EVM 红项目数",
+      "description": "pmis_evm_red_projects_count(SPI/CPI < 0.9),阈值 >3 触发 P1 告警",
+      "type": "stat",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": null},
+            {"color": "yellow", "value": 2},
+            {"color": "red", "value": 4}
+          ]},
+          "color": {"mode": "thresholds"},
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "gridPos": {"h": 6, "w": 6, "x": 0, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "pmis_evm_red_projects_count",
+          "legendFormat": "EVM 红项目数",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Bench 闲置成本(元)",
+      "description": "pmis_bench_total_cost,阈值 >50万 触发 P2 告警",
+      "type": "stat",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "currencyCNY",
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "green", "value": null},
+            {"color": "yellow", "value": 300000},
+            {"color": "red", "value": 500000}
+          ]},
+          "color": {"mode": "thresholds"},
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "gridPos": {"h": 6, "w": 6, "x": 6, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "pmis_bench_total_cost",
+          "legendFormat": "Bench 成本",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "可计费利用率(%)",
+      "description": "pmis_billable_utilization_avg,阈值 <60% 触发 P2 告警",
+      "type": "gauge",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {"mode": "absolute", "steps": [
+            {"color": "red", "value": null},
+            {"color": "yellow", "value": 60},
+            {"color": "green", "value": 75}
+          ]},
+          "color": {"mode": "thresholds"}
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "auto",
+        "showThresholdLabels": false,
+        "showThresholdMarkers": true
+      },
+      "gridPos": {"h": 6, "w": 6, "x": 12, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "pmis_billable_utilization_avg",
+          "legendFormat": "可计费利用率",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "流程审批数(近 1h 通过任务数)",
+      "description": "increase(pmis_flow_task_passed_total[1h]) - FlowMetrics 统计的任务通过数",
+      "type": "stat",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {"mode": "fixed", "fixedColor": "blue"},
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "gridPos": {"h": 6, "w": 6, "x": 18, "y": 0},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(increase(pmis_flow_task_passed_total{job=~\"pmis-.*\"}[1h]))",
+          "legendFormat": "审批通过数(1h)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "合同签订数(近 24h)",
+      "description": "increase(pmis_contract_signed_count[24h]) - 需后端注册该 Gauge/Counter 后生效(指标待实现)",
+      "type": "stat",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "color": {"mode": "fixed", "fixedColor": "purple"},
+          "mappings": [
+            {"options": {"0": {"text": "暂无数据(待注册指标)", "color": "text"}}, "type": "value"}
+          ],
+          "noValue": "指标待注册"
+        },
+        "overrides": []
+      },
+      "options": {
+        "reduceOptions": {"calcs": ["lastNotNull"], "fields": "", "values": false},
+        "orientation": "horizontal",
+        "textMode": "auto",
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto"
+      },
+      "gridPos": {"h": 6, "w": 12, "x": 0, "y": 6},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "sum(increase(pmis_contract_signed_count[24h]))",
+          "legendFormat": "合同签订数(24h)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "运行中流程实例 / 待办任务数",
+      "description": "pmis_flow_instance_running / pmis_flow_task_pending(FlowMetrics Gauge)",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {"drawStyle": "line", "lineInterpolation": "linear", "fillOpacity": 15}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["last", "max"]}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 6, "w": 12, "x": 12, "y": 6},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "pmis_flow_instance_running{job=~\"pmis-.*\"}",
+          "legendFormat": "运行中实例",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "pmis_flow_task_pending{job=~\"pmis-.*\"}",
+          "legendFormat": "待办任务",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "title": "EVM 红项目数趋势(24h)",
+      "description": "pmis_evm_red_projects_count 历史趋势",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {"drawStyle": "line", "lineInterpolation": "linear", "fillOpacity": 15}
+        },
+        "overrides": []
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["last", "max"]}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 12},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "pmis_evm_red_projects_count",
+          "legendFormat": "EVM 红项目数",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Bench 成本 & 利用率趋势",
+      "description": "成本(元) 与 利用率(%) 双轴对比",
+      "type": "timeseries",
+      "datasource": {"type": "prometheus", "uid": "prometheus"},
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": {"drawStyle": "line", "lineInterpolation": "linear", "fillOpacity": 10}
+        },
+        "overrides": [
+          {
+            "matcher": {"id": "byName", "options": "Bench 总成本"},
+            "properties": [{"id": "unit", "value": "currencyCNY"}]
+          },
+          {
+            "matcher": {"id": "byName", "options": "可计费利用率"},
+            "properties": [{"id": "unit", "value": "percent"}]
+          }
+        ]
+      },
+      "options": {"legend": {"displayMode": "table", "placement": "bottom", "calcs": ["last", "mean"]}, "tooltip": {"mode": "multi"}},
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 12},
+      "targets": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "pmis_bench_total_cost",
+          "legendFormat": "Bench 总成本",
+          "refId": "A"
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "expr": "pmis_billable_utilization_avg",
+          "legendFormat": "可计费利用率",
+          "refId": "B"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 38,
+  "style": "dark",
+  "tags": ["pmis", "business"],
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "query",
+        "datasource": {"type": "prometheus", "uid": "prometheus"},
+        "query": "label_values(up{job=~\"pmis-.*\"}, job)",
+        "refresh": 2,
+        "includeAll": true,
+        "multi": true,
+        "current": {"selected": true, "text": "All", "value": "$__all"}
+      }
+    ]
+  },
+  "time": {"from": "now-6h", "to": "now"},
+  "timepicker": {},
+  "timezone": "browser",
+  "title": "PMIS 业务指标",
+  "uid": "pmis-business-metrics",
+  "version": 1,
+  "weekStart": ""
+}

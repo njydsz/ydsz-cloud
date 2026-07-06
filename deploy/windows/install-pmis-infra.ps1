@@ -32,6 +32,13 @@ $SEATA_VERSION = '2.5.0'
 $ROCKETMQ_VERSION = '5.3.2'
 $XXL_JOB_VERSION = '2.4.2'
 
+# ---------- 凭据（可通过环境变量覆盖，默认值仅用于开发） ----------
+# PG 数据库密码
+$PgPassword        = if ($env:PMIS_PG_PASSWORD)        { $env:PMIS_PG_PASSWORD }        else { 'pmis123' }
+# MinIO 控制台/Root 账号
+$MinioRootUser     = if ($env:PMIS_MINIO_ROOT_USER)    { $env:PMIS_MINIO_ROOT_USER }    else { 'minioadmin' }
+$MinioRootPassword = if ($env:PMIS_MINIO_ROOT_PASSWORD) { $env:PMIS_MINIO_ROOT_PASSWORD } else { 'minioadmin' }
+
 # ---------- 公共配置目录（相对当前脚本） ----------
 $SCRIPT_DIR = $PSScriptRoot
 $COMMON_DIR = Join-Path (Split-Path -Parent $SCRIPT_DIR) 'common'
@@ -136,8 +143,8 @@ function Install-Postgres {
     }
     if (-not $NoStart) { Start-Service postgresql-x64-18 }
 
-    # 创建用户与数据库
-    & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "CREATE USER pmis WITH PASSWORD 'pmis123';" 2>$null
+    # 创建用户与数据库（密码可通过 PMIS_PG_PASSWORD 环境变量覆盖）
+    & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "CREATE USER pmis WITH PASSWORD '$PgPassword';" 2>$null
     & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "CREATE DATABASE ydsz_pmis OWNER pmis ENCODING 'UTF8';" 2>$null
     & "C:\Program Files\PostgreSQL\$PG_VERSION\bin\psql.exe" -U postgres -c "GRANT ALL PRIVILEGES ON DATABASE ydsz_pmis TO pmis;" 2>$null
 
@@ -238,7 +245,7 @@ function Install-MinIO {
         nssm set minio AppDirectory "$InstallHome\minio"
         nssm set minio DisplayName "MinIO Object Storage"
         nssm set minio Start SERVICE_AUTO_START
-        nssm set minio AppEnvironmentExtra "MINIO_ROOT_USER=minioadmin`nMINIO_ROOT_PASSWORD=minioadmin"
+        nssm set minio AppEnvironmentExtra "MINIO_ROOT_USER=$MinioRootUser`nMINIO_ROOT_PASSWORD=$MinioRootPassword"
     }
     if (-not $NoStart) { Start-Service minio }
     Write-OK "MinIO 安装完成（API:9100 / Console:9101）"

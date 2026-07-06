@@ -104,21 +104,15 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             return rejectPathTraversal(exchange);
         }
 
-        // 链路追踪 ID（先剥离客户端伪造的 traceId，再注入网关生成的值，使用雪花算法）
-        final String traceId;
-        String traceIdTmp = request.getHeaders().getFirst(CommonConstants.HEADER_TRACE_ID);
-        if (traceIdTmp == null || traceIdTmp.isEmpty()) {
-            traceId = TraceIdUtil.generate();
-        } else {
-            traceId = traceIdTmp;
-        }
+        // 链路追踪 ID（网关层强制重新生成，剥离客户端伪造的 X-Trace-Id）
+        final String traceId = TraceIdUtil.generate();
 
         // 统一写入 traceId 到响应头，确保所有响应（成功/失败/OPTIONS/白名单）都携带链路追踪 ID
         exchange.getResponse().getHeaders().add(CommonConstants.HEADER_TRACE_ID, traceId);
 
         // 跨域预检直接放行（先剥离内部头再透传）
         if ("OPTIONS".equalsIgnoreCase(request.getMethod().name())) {
-            return chain.filter(exchange.mutate()
+            return withSecurityHeaders(exchange, chain.filter(exchange.mutate()
                     .request(r -> {
                         stripInternalHeaders(r);
                         r.header(CommonConstants.HEADER_TRACE_ID, traceId);
@@ -127,12 +121,12 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                             r.header("Accept-Language", acceptLang);
                         }
                     })
-                    .build());
+                    .build()));
         }
 
         // 白名单直接放行（先剥离内部头，防止白名单请求伪造身份）
         if (PathGuard.matchWhiteList(path, WHITE_LIST)) {
-            return chain.filter(exchange.mutate()
+            return withSecurityHeaders(exchange, chain.filter(exchange.mutate()
                     .request(r -> {
                         stripInternalHeaders(r);
                         r.header(CommonConstants.HEADER_TRACE_ID, traceId);
@@ -141,7 +135,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                             r.header("Accept-Language", acceptLang);
                         }
                     })
-                    .build());
+                    .build()));
         }
 
         // 提取 Token
@@ -213,7 +207,7 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
                             })
                             .build();
 
-                    return chain.filter(exchange.mutate().request(mutated).build());
+                    return withSecurityHeaders(exchange, chain.filter(exchange.mutate().request(mutated).build()));
                 });
     }
 
@@ -275,6 +269,35 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
 
         DataBuffer buffer = response.bufferFactory().wrap(bytes);
         return response.writeWith(Mono.just(buffer));
+    }
+
+    /**
+     * 在响应头中注入 CSRF / 浏览器安全响应头
+     *
+     * <p>注入头清单:
+     * <ul>
+     *   <li>X-Content-Type-Options: nosniff — 阻止 MIME 嗅探</li>
+     *   <li>X-Frame-Options: DENY — 阻止点击劫持(Clickjacking)</li>
+     *   <li>X-XSS-Protection: 1; mode=block — 启用浏览器 XSS 过滤器</li>
+     *   <li>Referrer-Policy: strict-origin-when-cross-origin — 限制 Referrer 泄漏</li>
+     *   <li>X-CSRF-Protection: 1 — 声明已启用 CSRF 防护</li>
+     * </ul>
+     *
+     * <p>通过 chain.filter().then() 在下游链完成后注入,确保所有成功响应均携带安全头。
+     *
+     * @param exchange 服务器 Web 交换上下文
+     * @param result   下游过滤器链执行结果
+     * @return 注入安全头后的完成信号 Mono
+     */
+    private Mono<Void> withSecurityHeaders(ServerWebExchange exchange, Mono<Void> result) {
+        return result.then(Mono.fromRunnable(() -> {
+            ServerHttpResponse response = exchange.getResponse();
+            response.getHeaders().add("X-Content-Type-Options", "nosniff");
+            response.getHeaders().add("X-Frame-Options", "DENY");
+            response.getHeaders().add("X-XSS-Protection", "1; mode=block");
+            response.getHeaders().add("Referrer-Policy", "strict-origin-when-cross-origin");
+            response.getHeaders().add("X-CSRF-Protection", "1");
+        }));
     }
 
     /**

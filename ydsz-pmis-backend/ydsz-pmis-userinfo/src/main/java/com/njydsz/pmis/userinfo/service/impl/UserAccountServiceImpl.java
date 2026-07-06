@@ -427,6 +427,22 @@ public class UserAccountServiceImpl implements UserAccountService {
         userAccountMapper.updateById(u);
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = {CacheConstants.USER_BY_ID_CACHE, CacheConstants.USER_BY_USERNAME_CACHE},
+            allEntries = true)
+    public void lockAccount(Long userId, LocalDateTime lockedUntil) {
+        UserAccountDO u = userAccountMapper.selectById(userId);
+        if (u == null) {
+            log.warn("[User] 锁定账号失败: 用户不存在 userId={}", userId);
+            return;
+        }
+        u.setLockedUntil(lockedUntil);
+        userAccountMapper.updateById(u);
+        log.warn("[User] 账号已锁定 userId={} username={} lockedUntil={}",
+                userId, u.getUsername(), lockedUntil);
+    }
+
     /**
      * 登录失败处理：递增失败次数 + 必要时锁定
      */

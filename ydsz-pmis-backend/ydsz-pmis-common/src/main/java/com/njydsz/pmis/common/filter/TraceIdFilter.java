@@ -20,7 +20,7 @@ import java.io.IOException;
  * <p>traceId 来源优先级：
  * <ol>
  *   <li>MDC 中已有 traceId（由 Brave {@code Slf4jCurrentTraceContext} 或本过滤器写入）</li>
- *   <li>请求头 {@code X-Trace-Id}（向后兼容旧客户端/网关）</li>
+ *   <li>请求头 {@code X-Trace-Id}（仅当请求携带 {@code X-Internal-Sig} 签名头时信任，即来自网关）</li>
  *   <li>{@link TraceIdUtil#generate()} 自动生成（Brave 优先，降级雪花算法）</li>
  * </ol>
  *
@@ -55,11 +55,12 @@ public class TraceIdFilter extends OncePerRequestFilter {
         try {
             // 1) 优先使用 Brave 已写入 MDC 的 traceId
             String traceId = TraceIdUtil.get();
-            // 2) 兼容旧客户端：从 X-Trace-Id header 读取
-            if (traceId == null || traceId.isEmpty()) {
+            // 2) 来自网关的请求（携带 X-Internal-Sig 签名头）：信任网关注入的 X-Trace-Id
+            if ((traceId == null || traceId.isEmpty())
+                    && request.getHeader(CommonConstants.HEADER_INTERNAL_SIG) != null) {
                 traceId = request.getHeader(CommonConstants.HEADER_TRACE_ID);
             }
-            // 3) 都没有：自动生成（Brave 优先，降级雪花算法）
+            // 3) 其他情况（客户端直连/无签名）：强制重新生成，防止伪造
             if (traceId == null || traceId.isEmpty()) {
                 traceId = TraceIdUtil.generate();
             }

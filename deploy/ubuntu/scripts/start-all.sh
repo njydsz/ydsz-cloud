@@ -179,8 +179,8 @@ ok "PMIS 启动完成！"
 echo
 echo "  前端地址:        http://localhost:5173"
 echo "  API 网关:        http://localhost:9000"
-echo "  Nacos 控制台:    http://$NACOS_SERVER_ADDR/nacos  (nacos/nacos)"
-echo "  MinIO 控制台:    http://127.0.0.1:9101  (minioadmin/minioadmin)"
+echo "  Nacos 控制台:    http://$NACOS_SERVER_ADDR/nacos  (${NACOS_USERNAME:-nacos}/${NACOS_PASSWORD:-nacos})"
+echo "  MinIO 控制台:    http://127.0.0.1:9101  (${MINIO_ROOT_USER:-minioadmin}/${MINIO_ROOT_PASSWORD:-minioadmin})"
 echo
 echo "  日志目录:        $LOG_DIR"
 echo "  停止命令:        ./deploy/ubuntu/scripts/stop-all.sh"

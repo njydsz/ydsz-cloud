@@ -6,6 +6,7 @@ import com.njydsz.pmis.userinfo.dto.CaptchaVO;
 import com.njydsz.pmis.userinfo.service.AuthService;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.token.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,6 +30,8 @@ public class AuthController {
 
     /** 认证服务 */
     private final AuthService authService;
+    /** JWT Token 工具（用于登出时计算 Token 剩余有效期） */
+    private final JwtTokenProvider jwtTokenProvider;
 
     /**
      * 获取图形验证码
@@ -78,10 +81,13 @@ public class AuthController {
     @PostMapping("/logout")
     public Result<Void> logout(@RequestHeader(value = "X-User-Id", required = false) String userId,
                           @RequestHeader(value = "Authorization", required = false) String authorization) {
-        // 把当前 Token 加入黑名单（防止 8 小时内继续使用）
+        // 把当前 Token 加入黑名单（TTL 按 Token 实际剩余有效期计算，已过期则无需拉黑）
         if (authorization != null && authorization.startsWith("Bearer ")) {
             String token = authorization.substring(7);
-            authService.blacklistToken(token, 8 * 3600);
+            long remainingSeconds = jwtTokenProvider.getRemainingExpirationSeconds(token);
+            if (remainingSeconds > 0) {
+                authService.blacklistToken(token, remainingSeconds);
+            }
         }
         authService.logout(userId);
         return Result.ok();

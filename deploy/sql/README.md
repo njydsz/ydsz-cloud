@@ -105,11 +105,11 @@ SELECT pg_catalog.pg_get_userbyid(relowner) AS owner,
 ## 5. 新环境初始化流程
 
 ```bash
-# 1. 创建库
-PGPASSWORD=Limw1020 createdb -h 127.0.0.1 -U postgres ydsz-pmis
+# 1. 创建库（通过 PGPASSWORD 环境变量传入数据库密码，请替换为你的实际密码）
+PGPASSWORD=<your-postgres-password> createdb -h 127.0.0.1 -U postgres ydsz-pmis
 
 # 2. 单文件初始化(本项目唯一的 SQL 文件,所有 DDL + DML 都在里面)
-PGPASSWORD=Limw1020 psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
+PGPASSWORD=<your-postgres-password> psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
   -v ON_ERROR_STOP=1 \
   -f deploy/sql/V1.0.0.sql
 

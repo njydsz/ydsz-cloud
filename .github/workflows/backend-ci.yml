@@ -54,8 +54,12 @@ jobs:
           cache: maven
 
       - name: Maven Verify (含编译 + 单元测试 + JaCoCo 覆盖率门禁)
-        # 使用 verify 阶段以触发 jacoco-check 目标，
-        # 当行覆盖率 < 60% 或分支覆盖率 < 50% 时构建失败
+        # 使用 verify 阶段以触发 jacoco-check 目标
+        # 门禁规则（分阶段提升, 详见 pom.xml jacoco-check 注释）:
+        #   BUNDLE  级别: LINE≥80%, BRANCH≥70%
+        #   PACKAGE 级别: LINE≥75%, BRANCH≥65%（防低质包被平均掩盖）
+        #   METHOD  级别: LINE≥50%（拦截完全未测试的核心方法）
+        # 任一规则不达标即构建失败
         run: mvn -B -ntp verify
 
       - name: 静态扫描 DB Migration 依赖（拦截 Flyway / Liquibase）

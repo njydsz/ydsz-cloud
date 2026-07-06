@@ -5,8 +5,10 @@
 # 触发:  push 到 main (自动部署 staging)  /  workflow_dispatch (手动选择 staging|production)
 # 镜像仓库: registry.cn-hangzhou.aliyuncs.com/ydsz
 # 镜像 tag: ${{ github.sha }} (commit SHA) + latest
-# 部署策略:  staging = 滚动更新  /  production = Argo Rollouts 金丝雀 (5%→25%→50%→100%)
-# 关联:   backend-ci.yml  /  frontend-ci.yml (上游)  /  helm/pmis/  /  deploy/canary/
+# 部署策略:  staging  = kubectl 滚动更新
+#            production = kubectl 滚动更新 + Prometheus 5xx 错误率监控 + 自动回滚
+# 构建方式:  Docker 多阶段构建（后端 Dockerfile 内完成 Maven 编译，前端 Dockerfile 内完成 pnpm build）
+# 关联:   backend-ci.yml  /  frontend-ci.yml (上游)  /  deploy/k8s/  /  deploy/helm/
 # 凭据 (在 GitHub Secrets 中配置):
 #   - ALIYUN_REGISTRY_USERNAME / ALIYUN_REGISTRY_PASSWORD
 #   - KUBE_CONFIG_STAGING / KUBE_CONFIG_PRODUCTION (base64 编码的 kubeconfig)
@@ -20,7 +22,9 @@ on:
       - 'ydsz-pmis-backend/**'
       - 'ydsz-pmis-frontend/**'
       - 'deploy/docker/**'
-      - 'helm/**'
+      - 'deploy/k8s/**'
+      - 'deploy/helm/**'
+      - '.github/workflows/cd-deploy.yml'
   workflow_dispatch:
     inputs:
       target:
@@ -31,14 +35,17 @@ on:
         options:
           - staging
           - production
+          - rollback
 
 env:
   REGISTRY: registry.cn-hangzhou.aliyuncs.com
   NAMESPACE: ydsz
   IMAGE_TAG: ${{ github.sha }}
+  # K8s 部署命名空间（与 deploy/k8s/base/namespace.yaml 保持一致）
+  K8S_NAMESPACE: pmis
 
 jobs:
-  # ==================== 构建后端镜像 ====================
+  # ==================== 构建后端镜像（Dockerfile 多阶段构建，内含 Maven 编译） ====================
   build-backend:
     runs-on: ubuntu-latest
     strategy:
@@ -47,26 +54,15 @@ jobs:
         service:
           # 端口分配（2026-07-03 修订）: 9000 gateway / 9001 system / 9002 userinfo
           #                              9003 project / 9004 cronjob / 9005 workflow / 9006 agent
-          - { name: gateway,   port: 9000,  jar: ydsz-pmis-gateway }
-          - { name: system,    port: 9001,  jar: ydsz-pmis-system }
-          - { name: userinfo,  port: 9002,  jar: ydsz-pmis-userinfo }
-          - { name: project,   port: 9003,  jar: ydsz-pmis-project }
-          - { name: cronjob,   port: 9004,  jar: ydsz-pmis-cronjob }
-          - { name: workflow,  port: 9005,  jar: ydsz-pmis-workflow }
-          - { name: agent,     port: 9006,  jar: ydsz-pmis-agent }
+          - { name: gateway,   port: 9000,  module: ydsz-pmis-gateway }
+          - { name: system,    port: 9001,  module: ydsz-pmis-system }
+          - { name: userinfo,  port: 9002,  module: ydsz-pmis-userinfo }
+          - { name: project,   port: 9003,  module: ydsz-pmis-project }
+          - { name: cronjob,   port: 9004,  module: ydsz-pmis-cronjob }
+          - { name: workflow,  port: 9005,  module: ydsz-pmis-workflow }
+          - { name: agent,     port: 9006,  module: ydsz-pmis-agent }
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Build Backend Module
-        working-directory: ydsz-pmis-backend
-        run: mvn -B -ntp -pl ${{ matrix.service.jar }} -am -DskipTests package
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -81,39 +77,24 @@ jobs:
       - name: Build and Push ${{ matrix.service.name }}
         uses: docker/build-push-action@v5
         with:
+          # context 为后端根目录，Dockerfile 内通过多阶段构建完成 Maven 编译
           context: ydsz-pmis-backend
-          file: deploy/docker/Dockerfile.service
+          file: ydsz-pmis-backend/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:${{ env.IMAGE_TAG }}
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:latest
           build-args: |
-            APP_NAME=pmis-${{ matrix.service.name }}
-            SERVER_PORT=${{ matrix.service.port }}
-            JAR_FILE=${{ matrix.service.jar }}/target/${{ matrix.service.jar }}-*.jar
+            MODULE_NAME=${{ matrix.service.module }}
+            APP_PORT=${{ matrix.service.port }}
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:cache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${{ matrix.service.name }}:cache,mode=max
 
-  # ==================== 构建前端镜像 ====================
+  # ==================== 构建前端镜像（Dockerfile 多阶段构建，内含 pnpm build） ====================
   build-frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set up Node 20
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9
-
-      - name: Build Frontend
-        working-directory: ydsz-pmis-frontend
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm build:prod
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -128,8 +109,9 @@ jobs:
       - name: Build and Push Frontend
         uses: docker/build-push-action@v5
         with:
-          context: .
-          file: deploy/docker/Dockerfile.frontend
+          # context 为前端根目录，Dockerfile 内通过多阶段构建完成 pnpm install + build
+          context: ydsz-pmis-frontend
+          file: ydsz-pmis-frontend/Dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }}
@@ -137,9 +119,8 @@ jobs:
           cache-from: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:cache
           cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:cache,mode=max
 
-  # ==================== 镜像安全扫描 + SBOM + 签名（P1-8） ====================
-  # 作用: 对构建出的镜像进行 Trivy 漏洞扫描、Syft 生成 SBOM、cosign 签名
-  # 阻断策略: CRITICAL 漏洞阻断部署；HIGH 漏洞仅告警（避免误报阻断）
+  # ==================== 镜像安全扫描 + SBOM + 签名 ====================
+  # 阻断策略: HIGH+CRITICAL 漏洞阻断部署（可通过 .trivyignore 临时豁免）
   # SBOM 格式: CycloneDX JSON（业界标准，可对接 Dependency-Track / Anchore）
   scan-images:
     needs: [build-backend, build-frontend]
@@ -158,8 +139,8 @@ jobs:
           format: 'sarif'
           output: 'trivy-${{ matrix.service }}.sarif'
           exit-code: '1'
-          severity: 'CRITICAL'  # 仅 CRITICAL 阻断；HIGH 仅告警
-          ignore-unfixed: true   # 忽略未修复的漏洞
+          severity: 'HIGH,CRITICAL'  # HIGH+CRITICAL 均阻断（对齐大厂标准）
+          ignore-unfixed: true        # 忽略未修复的漏洞
           vuln-type: 'os,library'
 
       - name: Syft 生成 SBOM（CycloneDX）
@@ -214,7 +195,7 @@ jobs:
           echo "| SBOM 生成 | ✅ 完成 |" >> $GITHUB_STEP_SUMMARY
           echo "| cosign 签名 | ${{ secrets.COSIGN_KEY != '' && '✅ 已签名' || '⚠️ 跳过（未配置密钥）' }} |" >> $GITHUB_STEP_SUMMARY
 
-  # ==================== 部署 Staging ====================
+  # ==================== 部署 Staging（kubectl 滚动更新） ====================
   deploy-staging:
     needs: [build-backend, build-frontend, scan-images]
     runs-on: ubuntu-latest
@@ -230,22 +211,22 @@ jobs:
 
       - name: Deploy to Staging
         run: |
-          # 更新所有微服务镜像
+          # 更新所有微服务镜像（命名空间统一为 pmis，与 deploy/k8s/base/namespace.yaml 一致）
           for svc in gateway userinfo workflow project agent system cronjob; do
             kubectl set image deployment/pmis-${svc} \
               pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
-              -n pmis-staging
+              -n ${{ env.K8S_NAMESPACE }}
           done
           # 更新前端镜像
           kubectl set image deployment/pmis-frontend \
             pmis-frontend=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-frontend:${{ env.IMAGE_TAG }} \
-            -n pmis-staging
+            -n ${{ env.K8S_NAMESPACE }}
 
       - name: Wait for Rollout
         run: |
           for svc in gateway userinfo workflow project agent system cronjob frontend; do
             echo "Waiting for pmis-${svc} rollout..."
-            kubectl rollout status deployment/pmis-${svc} -n pmis-staging --timeout=300s
+            kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
           done
 
       - name: Smoke Test
@@ -253,7 +234,7 @@ jobs:
           chmod +x deploy/scripts/smoke-test.sh
           STAGING_URL=https://staging.pmis.ydsz.cn ./deploy/scripts/smoke-test.sh
 
-  # ==================== 部署 Production（金丝雀） ====================
+  # ==================== 部署 Production（kubectl 滚动更新 + Prometheus 错误率自动回滚） ====================
   deploy-production:
     needs: deploy-staging
     runs-on: ubuntu-latest
@@ -269,58 +250,55 @@ jobs:
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
 
-      - name: Canary Deploy (5% → 25% → 50% → 100%)
+      - name: Deploy to Production (滚动更新 + 5xx 错误率监控 + 自动回滚)
         run: |
-          # 使用 Argo Rollouts 金丝雀发布
-          # 错误率阈值：5 分钟窗口内 5xx 比例 > 1% 即判定失败
+          # 错误率阈值：5 分钟窗口内 5xx 比例 > 1% 即判定失败并回滚
           ERROR_RATE_THRESHOLD=0.01
           for svc in gateway userinfo workflow project agent system cronjob frontend; do
-            echo "==> 开始金丝雀发布: pmis-${svc}"
+            echo "==> 开始滚动更新: pmis-${svc}"
 
-            # 更新镜像并启动金丝雀（5%）
-            kubectl argo rollouts set image rollout/pmis-${svc} \
+            # 更新镜像触发滚动更新
+            kubectl set image deployment/pmis-${svc} \
               pmis-${svc}=${{ env.REGISTRY }}/${{ env.NAMESPACE }}/pmis-${svc}:${{ env.IMAGE_TAG }} \
-              -n pmis-production
-            echo "Canary 5% for pmis-${svc}, waiting 60s for observation..."
-            sleep 60
+              -n ${{ env.K8S_NAMESPACE }}
 
-            # 通过 Prometheus 真实查询错误率（5xx / 总请求）
-            # 查询最近 5 分钟该服务的 5xx 错误率
-            ERROR_RATE=$(curl -s "http://prometheus-server.monitoring.svc.cluster.local:9090/api/v1/query" \
-              --data-urlencode "query=sum(rate(http_server_requests_seconds_count{namespace=\"pmis-production\",pod=~\"pmis-${svc}.*\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"pmis-production\",pod=~\"pmis-${svc}.*\"}[5m]))" \
-              | jq -r '.data.result[0].value[1] // "0"')
-            echo "pmis-${svc} 当前 5xx 错误率: ${ERROR_RATE}"
-            if [ "$(echo "${ERROR_RATE} > ${ERROR_RATE_THRESHOLD}" | bc -l)" = "1" ]; then
-              echo "ERROR: pmis-${svc} 错误率 ${ERROR_RATE} 超过阈值 ${ERROR_RATE_THRESHOLD}，中止发布！"
-              kubectl argo rollouts abort rollout/pmis-${svc} -n pmis-production
-              kubectl argo rollouts undo rollout/pmis-${svc} -n pmis-production
+            # 等待滚动更新完成（超时 10 分钟）
+            echo "Waiting for pmis-${svc} rollout..."
+            if ! kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=600s; then
+              echo "ERROR: pmis-${svc} 滚动更新超时，执行回滚"
+              kubectl rollout undo deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
+              kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
               exit 1
             fi
 
-            # 检查 Pod 健康状态（如有 Pod 不健康则中止）
-            UNHEALTHY=$(kubectl get pods -n pmis-production -l app=pmis-${svc} \
+            # 等待 30s 让 Prometheus 采集到足够指标
+            sleep 30
+
+            # 通过 Prometheus 查询错误率（5xx / 总请求，最近 5 分钟）
+            ERROR_RATE=$(curl -s "http://prometheus-server.monitoring.svc.cluster.local:9090/api/v1/query" \
+              --data-urlencode "query=sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"pmis-${svc}.*\",status=~\"5..\"}[5m])) / sum(rate(http_server_requests_seconds_count{namespace=\"${{ env.K8S_NAMESPACE }}\",pod=~\"pmis-${svc}.*\"}[5m]))" \
+              | jq -r '.data.result[0].value[1] // "0"')
+            echo "pmis-${svc} 当前 5xx 错误率: ${ERROR_RATE}"
+
+            if [ "$(echo "${ERROR_RATE} > ${ERROR_RATE_THRESHOLD}" | bc -l)" = "1" ]; then
+              echo "ERROR: pmis-${svc} 错误率 ${ERROR_RATE} 超过阈值 ${ERROR_RATE_THRESHOLD}，执行回滚！"
+              kubectl rollout undo deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
+              kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+              exit 1
+            fi
+
+            # 检查 Pod 健康状态
+            UNHEALTHY=$(kubectl get pods -n ${{ env.K8S_NAMESPACE }} -l app=pmis-${svc} \
               --field-selector=status.phase!=Running,status.phase!=Succeeded \
               --no-headers 2>/dev/null | wc -l)
             if [ "${UNHEALTHY}" -gt "0" ]; then
-              echo "ERROR: pmis-${svc} 有 ${UNHEALTHY} 个 Pod 不健康，中止发布！"
-              kubectl argo rollouts abort rollout/pmis-${svc} -n pmis-production
-              kubectl argo rollouts undo rollout/pmis-${svc} -n pmis-production
+              echo "ERROR: pmis-${svc} 有 ${UNHEALTHY} 个 Pod 不健康，执行回滚！"
+              kubectl rollout undo deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
+              kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
               exit 1
             fi
 
-            # 推进到 25%
-            kubectl argo rollouts promote rollout/pmis-${svc} -n pmis-production
-            echo "Canary 25% for pmis-${svc}, waiting 60s..."
-            sleep 60
-
-            # 推进到 50%
-            kubectl argo rollouts promote rollout/pmis-${svc} -n pmis-production
-            echo "Canary 50% for pmis-${svc}, waiting 90s..."
-            sleep 90
-
-            # 完全推广
-            kubectl argo rollouts promote rollout/pmis-${svc} -n pmis-production --full
-            echo "pmis-${svc} fully promoted to 100%"
+            echo "✅ pmis-${svc} 部署成功"
           done
 
       - name: Production Smoke Test
@@ -334,3 +312,25 @@ jobs:
           echo "✅ Production deployment completed successfully"
           echo "Image tag: ${{ env.IMAGE_TAG }}"
           echo "Deploy time: $(date -u '+%Y-%m-%d %H:%M:%S UTC')"
+
+  # ==================== 手动回滚入口 ====================
+  rollback:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && inputs.target == 'rollback'
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure kubectl
+        run: |
+          mkdir -p $HOME/.kube
+          echo "${{ secrets.KUBE_CONFIG_PRODUCTION }}" | base64 -d > $HOME/.kube/config
+
+      - name: Rollback Production
+        run: |
+          for svc in gateway userinfo workflow project agent system cronjob frontend; do
+            echo "==> 回滚 pmis-${svc} 到上一版本"
+            kubectl rollout undo deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }}
+            kubectl rollout status deployment/pmis-${svc} -n ${{ env.K8S_NAMESPACE }} --timeout=300s
+          done
+          echo "✅ 所有服务已回滚到上一版本"

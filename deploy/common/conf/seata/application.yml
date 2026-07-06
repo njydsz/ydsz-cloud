@@ -30,7 +30,7 @@ logging:
 console:
   user:
     username: admin
-    password: admin
+    password: ${SEATA_PASSWORD:admin}
 
 # ---------- Seata Server 配置 ----------
 seata:

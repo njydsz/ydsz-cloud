@@ -1,0 +1,28 @@
+# =============================================================================
+# Grafana Dashboard Provisioning 配置
+# -----------------------------------------------------------------------------
+# 作用: 启动时自动从 dashboards/ 目录加载 JSON 仪表盘,无需手动 import
+# 挂载路径(docker-compose): /etc/grafana/provisioning/dashboards/dashboards.yml
+# =============================================================================
+apiVersion: 1
+
+# Dashboard 提供者定义
+providers:
+  # PMIS 业务仪表盘集合(总览 / 业务 / 工作流)
+  - name: pmis-dashboards
+    # org id (默认 1,单组织模式)
+    orgId: 1
+    # 仪表盘 JSON 所在目录(容器内路径)
+    folder: PMIS
+    # 挂载到容器内的路径(docker-compose 中 ../dashboards:/var/lib/grafana/dashboards)
+    folderUid: pmis-folder
+    type: file
+    disableDeletion: false
+    # 是否允许通过 UI 修改(Grafana UI 改动不回写文件,重启后丢失)
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      # 仪表盘 JSON 文件所在路径
+      path: /var/lib/grafana/dashboards
+      # 是否递归扫描子目录
+      foldersFromFilesStructure: false

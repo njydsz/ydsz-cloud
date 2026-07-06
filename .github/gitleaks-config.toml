@@ -19,9 +19,10 @@ patterns = [
     '''src/test/java/.*mock.*''',
     '''__mocks__/.*''',
     '''\.env\.example''',
-    '''deploy/sql/.*''',
     '''docs/.*''',
 ]
+# 注意: deploy/sql/ 不再整目录排除 —— 只通过下方 [[allowlist]] 的 regexes
+# 精确排除种子数据 INSERT 行，DDL / 注释 / README 仍会被扫描
 
 # =========================================================================
 # 白名单：已知安全的示例值（非真实密钥）
@@ -31,6 +32,7 @@ patterns = [
 description = "允许占位符（非真实密钥）"
 regexes = [
     '''<your-.*-here>''',
+    '''<change-me-in-production>''',
     '''REPLACE_VIA_SEALED_SECRETS''',
     '''CHANGE_ME''',
     '''your-password-here''',
@@ -50,6 +52,17 @@ regexes = [
     '''redis://localhost:6379''',
     '''jdbc:postgresql://localhost:5432''',
     '''jdbc:postgresql://127\.0\.0\.1:5432''',
+]
+
+[[allowlist]]
+description = "允许 SQL 种子数据中的密码哈希（bcrypt / SHA-256 等不可逆哈希，非明文密码）"
+regexes = [
+    # bcrypt: $2a$ / $2b$ / $2y$ + 2位cost + 22位salt + 31位hash
+    '''\$2[aby]\$[0-9]{2}\$[A-Za-z0-9./]{53}''',
+    # SHA-256 hex (64位十六进制)
+    '''\b[0-9a-fA-F]{64}\b''',
+    # Spring Security {noop}/{bcrypt}/{sha256} 前缀的编码密码
+    '''\{(noop|bcrypt|sha256|pbkdf2|argon2)\}''',
 ]
 
 # =========================================================================
@@ -72,3 +85,24 @@ id = "pmis-dingtalk-secret"
 description = "钉钉机器人 Secret"
 regex = '''dingtalk\.secret\s*[=:]\s*['"]?SEC[A-Za-z0-9]{60,}['"]?'''
 tags = ["pmis", "notification"]
+
+[[rules]]
+id = "pmis-weak-password"
+description = "弱密码检测（字母+数字组合，如 pmis123 / Limw1020）"
+regex = '''(?i)password\s*[=:]\s*['"]?[A-Za-z]{3,}[0-9]+[A-Za-z0-9]*'''
+keywords = ["password", "passwd", "pwd"]
+tags = ["pmis", "weak-password", "security"]
+[rules.allowlist]
+description = "排除环境变量引用 ${VAR:-default}、占位符和 SQL 种子数据行"
+regexes = [
+    # 环境变量引用: ${VAR:-default} / ${VAR} / $VAR
+    '''\$\{[^}]*\}''',
+    '''\$[A-Z_][A-Z0-9_]*''',
+    # 强占位符
+    '''<change-me-in-production>''',
+    '''<your-.*-here>''',
+    # SQL 种子数据 INSERT 行（password 列出现在 VALUES 中）
+    '''INSERT\s+INTO.*(?:password|passwd|pwd)''',
+    # Spring Security 编码密码前缀
+    '''\{(noop|bcrypt|sha256|pbkdf2|argon2)\}''',
+]

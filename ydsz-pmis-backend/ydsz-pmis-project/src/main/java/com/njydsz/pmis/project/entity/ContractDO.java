@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import com.njydsz.pmis.common.sensitive.Sensitive;
+import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
 import lombok.Data;
 
 import java.io.Serial;
@@ -68,7 +70,8 @@ public class ContractDO implements Serializable {
     private String riskNotes;
     /** 责任人 ID */
     private Long ownerId;
-    /** 责任人名称 */
+    /** 责任人名称（脱敏：保留首末字） */
+    @Sensitive(SensitiveStrategy.NAME)
     private String ownerName;
     /** 合同附件 ID */
     private Long contractFileId;

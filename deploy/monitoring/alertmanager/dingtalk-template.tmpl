@@ -1,0 +1,80 @@
+{{- /*
+=============================================================================
+ PMIS Alertmanager 钉钉通知模板
+-----------------------------------------------------------------------------
+ 挂载路径: /etc/alertmanager/templates/dingtalk-template.tmpl
+ 配套 alertmanager.yml 中 dingtalk-webhook receiver 使用
+ 钉钉自定义机器人消息格式参考:
+   https://open.dingtalk.com/document/robots/custom-robot-access
+=============================================================================
+*/ -}}
+
+{{- /* =====================================================================
+     模板: dingtalk.title
+     标题格式: [PMIS-P{severity}] {alertname}
+     ===================================================================== */ -}}
+{{ define "dingtalk.title" -}}
+[PMIS-{{ .Status | toUpper | replace "firing" "告警" | replace "resolved" "恢复" }}]
+{{- if .CommonLabels.severity }}-P{{ .CommonLabels.severity }}{{- end }}
+{{- if .CommonLabels.alertname }} {{ .CommonLabels.alertname }}{{- end }}
+{{- end }}
+
+{{- /* =====================================================================
+     模板: dingtalk.content
+     内容: 触发时间 / 服务 / 实例 / 值 / 摘要 / runbook 链接
+     钉钉 markdown 消息体
+     ===================================================================== */ -}}
+{{ define "dingtalk.content" -}}
+### {{ template "dingtalk.title" . }}
+
+**状态:** {{ if eq .Status "firing" }}🔥 告警触发{{ else }}✅ 告警恢复{{ end }}
+
+---
+
+{{ range .Alerts }}
+#### {{ .Labels.alertname }}
+
+| 维度 | 值 |
+|---|---|
+| **触发时间** | {{ .StartsAt.Format "2006-01-02 15:04:05" }} |
+{{- if .EndsAt }}
+| **结束时间** | {{ .EndsAt.Format "2006-01-02 15:04:05" }} |
+{{- end }}
+| **服务** | {{ .Labels.job }} |
+| **实例** | {{ .Labels.instance }} |
+| **告警级别** | P{{ .Labels.severity }} |
+| **分类** | {{ .Labels.category }} |
+| **当前值** | {{ reReplaceAll "(\\d+\\.\\d{4})\\d*" "${1}" .Annotations.description }} |
+| **摘要** | {{ .Annotations.summary }} |
+
+**详情:**
+> {{ .Annotations.description }}
+
+{{- if .Annotations.runbook_url }}
+**Runbook:** [{{ .Annotations.runbook_url }}]({{ .Annotations.runbook_url }})
+{{- end }}
+
+**GeneratorURL:** [Prometheus]({{ .GeneratorURL }})
+
+---
+
+{{ end }}
+{{- end }}
+
+{{- /* =====================================================================
+     模板: dingtalk.payload
+     钉钉机器人 markdown 消息 payload(完整 JSON)
+     webhook_configs 直接 POST 此内容至钉钉
+     ===================================================================== */ -}}
+{{ define "dingtalk.payload" -}}
+{
+  "msgtype": "markdown",
+  "markdown": {
+    "title": "{{ template "dingtalk.title" . }}",
+    "text": "{{ template "dingtalk.content" . }}"
+  },
+  "at": {
+    "isAtAll": {{ if eq .CommonLabels.severity "P0" }}true{{ else }}false{{ end }}
+  }
+}
+{{- end }}

@@ -11,9 +11,10 @@
  *   npm run openapi:gen -- http://your-gateway:9000/v3/api-docs
  */
 import { execSync } from 'node:child_process'
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs'
-import { dirname, join } from 'node:path'
+import { writeFileSync, mkdirSync, existsSync, readdirSync, readFileSync, unlinkSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { createHash } from 'node:crypto'
 import http from 'node:http'
 import https from 'node:https'
 
@@ -52,22 +53,64 @@ function fetchJson(url) {
 }
 
 /**
- * 生成 .d.ts 头注释
+ * 生成 .d.ts 头注释(含签名标记)
  */
 function genHeader(spec) {
   const title = spec?.info?.title || 'Unknown'
   const version = spec?.info?.version || '0.0.0'
+  // 调用 check-openapi-drift.mjs 的签名计算逻辑
+  const signature = computeControllerSignature()
   return `/**
  * OpenAPI 3.0 规范自动生成的 TypeScript 类型
+ *
+ * @openapi-signature: ${signature}
  *
  * 来源: ${SPEC_URL}
  * 标题: ${title}
  * 版本: ${version}
  *
- * ⚠️ 该文件由 scripts/openapi-gen.mjs 自动生成, 请勿手动编辑
+ * 该文件由 scripts/openapi-gen.mjs 自动生成, 请勿手动编辑
  *   重新生成命令: npm run openapi:gen
+ *   签名由 scripts/check-openapi-drift.mjs 校验
  */
 `
+}
+
+/**
+ * 计算后端 Controller 签名(与 check-openapi-drift.mjs 保持一致)
+ */
+function computeControllerSignature() {
+  const BACKEND_DIR = resolve(ROOT, '../ydsz-pmis-backend')
+  if (!existsSync(BACKEND_DIR)) return 'unknown'
+
+  const controllers = []
+  function findControllers(dir) {
+    const entries = readdirSync(dir, { withFileTypes: true })
+    for (const entry of entries) {
+      const fullPath = join(dir, entry.name)
+      if (entry.isDirectory()) findControllers(fullPath)
+      else if (entry.name.endsWith('Controller.java')) controllers.push(fullPath)
+    }
+  }
+  findControllers(BACKEND_DIR)
+
+  const allEndpoints = []
+  for (const controller of controllers.sort()) {
+    const content = readFileSync(controller, 'utf-8')
+    const classMapping = content.match(/@RequestMapping\s*\(\s*(?:value\s*=\s*)?["']([^"']+)["']/)
+    const basePath = classMapping ? classMapping[1] : ''
+    const methodPattern = /@(Get|Post|Put|Delete|Patch)Mapping\s*(?:\(\s*(?:value\s*=\s*)?["']([^"']*)["']\s*\))?/g
+    let match
+    while ((match = methodPattern.exec(content)) !== null) {
+      allEndpoints.push(`${match[1].toUpperCase()} ${basePath}${match[2] || ''}`)
+    }
+  }
+  allEndpoints.sort()
+
+  return createHash('sha256')
+    .update(allEndpoints.join('\n'))
+    .digest('hex')
+    .substring(0, 16)
 }
 
 async function main() {
@@ -113,7 +156,7 @@ async function main() {
       })
     } finally {
       try {
-        require('node:fs').unlinkSync(tmpJson)
+        unlinkSync(tmpJson)
       } catch {
         // ignore
       }

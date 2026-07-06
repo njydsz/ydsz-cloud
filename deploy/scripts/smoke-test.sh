@@ -11,7 +11,7 @@
 #    1. Gateway 健康 /actuator/health
 #    2. 各微服务通过 gateway 路由的 /actuator/health/{liveness,readiness}
 #    3. Gateway /actuator/gateway/routes 路由表完整
-#    4. 登录接口 (admin/admin123) — 拿到 token
+#    4. 登录接口 (默认 admin/admin123，可通过 SMOKE_USER/SMOKE_PASS 覆盖) — 拿到 token
 #    5. 用 token 调用 /userinfo/users/me — 鉴权链路
 #    6. Swagger UI /swagger-ui.html 可访问
 #    7. CORS 预检 OPTIONS 请求
@@ -26,6 +26,10 @@ TIMEOUT=10
 PASS=0
 FAIL=0
 SKIP=0
+
+# 登录凭据（保留默认值方便开发，生产可通过环境变量覆盖）
+SMOKE_USER="${SMOKE_USER:-admin}"
+SMOKE_PASS="${SMOKE_PASS:-admin123}"
 
 # 颜色输出
 RED=$'\033[0;31m'
@@ -97,7 +101,7 @@ echo ""
 echo "▶ 4. 登录接口"
 LOGIN_RESP=$(curl -s --max-time ${TIMEOUT} -X POST "${GATEWAY_URL}/ydsz-pmis-userinfo/auth/login" \
     -H "Content-Type: application/json" \
-    -d '{"username":"admin","password":"admin123"}')
+    -d "{\"username\":\"${SMOKE_USER}\",\"password\":\"${SMOKE_PASS}\"}")
 TOKEN=$(echo "${LOGIN_RESP}" | grep -oE '"token":"[^"]+"' | head -1 | cut -d'"' -f4)
 if [[ -n "${TOKEN}" ]]; then
     ok "POST /auth/login → 拿到 token (前16字符: ${TOKEN:0:16}...)"

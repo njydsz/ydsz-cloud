@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
+import com.njydsz.pmis.common.sensitive.Sensitive;
+import com.njydsz.pmis.common.sensitive.SensitiveStrategy;
 import lombok.Data;
 
 import java.io.Serial;
@@ -54,7 +56,8 @@ public class CustomerCreditDO implements Serializable {
     private Integer overdueCount;
     /** 上次评估时间 */
     private LocalDateTime lastEvaluationAt;
-    /** 评估人 */
+    /** 评估人（脱敏：保留首末字） */
+    @Sensitive(SensitiveStrategy.NAME)
     private String evaluator;
     /** 备注 */
     private String remark;

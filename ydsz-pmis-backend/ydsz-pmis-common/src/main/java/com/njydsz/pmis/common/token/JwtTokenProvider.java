@@ -279,6 +279,26 @@ public class JwtTokenProvider {
     }
 
     /**
+     * 计算 Token 剩余有效期（秒）
+     *
+     * <p>用于登出黑名单 TTL：仅需拉黑至 Token 自然过期即可，避免硬编码时长。
+     *
+     * @param token JWT Token
+     * @return 剩余有效期（秒），已过期或解析失败时返回 0
+     */
+    public long getRemainingExpirationSeconds(String token) {
+        try {
+            Date expiration = parseClaims(token).getExpiration();
+            if (expiration == null) return 0;
+            long remainingMs = expiration.getTime() - System.currentTimeMillis();
+            return remainingMs > 0 ? remainingMs / 1000 : 0;
+        } catch (Exception e) {
+            log.warn("[JWT] 解析 Token 过期时间失败: {}", e.getMessage());
+            return 0;
+        }
+    }
+
+    /**
      * 从 Token 中提取用户 ID
      *
      * @param token JWT Token

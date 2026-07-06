@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 #  YDSZ PMIS · 部署后冒烟测试（Windows PowerShell）
 # -----------------------------------------------------------------------------
 #  用法:
@@ -16,6 +16,10 @@ param(
 $Pass = 0
 $Fail = 0
 $Skip = 0
+
+# 登录凭据（保留默认值方便开发，生产可通过环境变量覆盖）
+$SmokeUser = if ($env:SMOKE_USER) { $env:SMOKE_USER } else { "admin" }
+$SmokePass = if ($env:SMOKE_PASS) { $env:SMOKE_PASS } else { "admin123" }
 
 function Ok($msg)   { Write-Host "[PASS] $msg" -ForegroundColor Green; $script:Pass++ }
 function Fail($msg) { Write-Host "[FAIL] $msg" -ForegroundColor Red;   $script:Fail++ }
@@ -80,7 +84,7 @@ Write-Host ""
 Write-Host "▶ 4. 登录接口"
 $token = $null
 try {
-    $body = @{ username = "admin"; password = "admin123" } | ConvertTo-Json
+    $body = @{ username = $SmokeUser; password = $SmokePass } | ConvertTo-Json
     $resp = Invoke-WebRequest -Uri "$GatewayUrl/ydsz-pmis-userinfo/auth/login" -Method POST -ContentType "application/json" -Body $body -TimeoutSec $TimeoutSec -UseBasicParsing -ErrorAction Stop
     $json = $resp.Content | ConvertFrom-Json
     $token = $json.data.token

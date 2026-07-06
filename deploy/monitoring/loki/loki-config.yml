@@ -1,0 +1,121 @@
+# =============================================================================
+# Loki 服务端配置 - 单节点模式(开发环境)
+# -----------------------------------------------------------------------------
+# 部署:
+#   挂载至容器 /etc/loki/loki-config.yml
+#   启动: loki -config.file=/etc/loki/loki-config.yml
+#
+# 特性:
+#   - 单节点(backend + distributor + compactor 同进程)
+#   - 文件系统存储(/loki/data,生产环境建议换 S3/OSS)
+#   - 30 天日志保留
+#   - compactor 自动清理过期 chunk
+# =============================================================================
+auth_enabled: false
+
+server:
+  http_listen_port: 3100
+  grpc_listen_port: 9096
+  log_level: info
+
+# =============================================================================
+# 通用配置
+# =============================================================================
+common:
+  instance_addr: 127.0.0.1
+  path_prefix: /loki
+  storage:
+    filesystem:
+      chunks_directory: /loki/chunks
+      rules_directory: /loki/rules
+  replication_factor: 1
+  ring:
+    kvstore:
+      store: inmemory
+
+# =============================================================================
+# 查询编排
+# =============================================================================
+query_range:
+  results_cache:
+    cache:
+      embedded_cache:
+        enabled: true
+        max_size_mb: 100
+
+# =============================================================================
+# Schema 配置 - 日志索引结构
+# =============================================================================
+schema_config:
+  configs:
+    - from: 2024-01-01
+      # 使用 tsdb 索引(Loki 3.x 推荐,相比 boltdb-shipper 更省内存)
+      store: tsdb
+      object_store: filesystem
+      schema: v13
+      index:
+        prefix: index_
+        period: 24h
+
+# =============================================================================
+# 存储配置 - chunk 与索引写入限速
+# =============================================================================
+storage_config:
+  filesystem:
+    directory: /loki/data
+  tsdb_shipper:
+    active_index_directory: /loki/tsdb-index
+    cache_location: /loki/tsdb-cache
+    cache_ttl: 24h
+
+# =============================================================================
+# 限流配置(单节点开发环境放宽,避免误限流)
+# =============================================================================
+limits_config:
+  # 推送限流(每租户每秒 10MB,开发环境宽松)
+  ingestion_rate_mb: 10
+  ingestion_burst_size_mb: 20
+  # 查询限流
+  max_query_series: 5000
+  max_query_parallelism: 16
+  # 拒绝旧日志(早于 7 天的日志推送拒绝,避免回灌)
+  reject_old_samples: true
+  reject_old_samples_max_age: 168h
+  # 保留时长(30 天)
+  retention_period: 720h
+  # 自动查询落盘 chunk 而非仅查索引(提高准确性)
+  allow_structured_metadata: true
+
+# =============================================================================
+# Compactor - 自动清理过期 chunk
+# =============================================================================
+compactor:
+  working_directory: /loki/compactor
+  # 启用压缩(合并小 chunk)
+  compaction_interval: 10m
+  # 启用保留策略(配合 limits_config.retention_period)
+  retention_enabled: true
+  retention_delete_delay: 2h
+  retention_delete_worker_count: 50
+  delete_request_store: filesystem
+
+# =============================================================================
+# Ruler - 告警规则(可选,本项目告警统一走 Prometheus + Alertmanager)
+# =============================================================================
+ruler:
+  storage:
+    type: local
+    local:
+      directory: /loki/rules
+  rule_path: /loki/rules-temp
+  alertmanager_url: http://alertmanager:9093
+  ring:
+    kvstore:
+      store: inmemory
+  enable_api: true
+
+# =============================================================================
+# 分析器配置(Loki 3.x 结构化日志元数据)
+# =============================================================================
+analytics:
+  reporting_enabled: false

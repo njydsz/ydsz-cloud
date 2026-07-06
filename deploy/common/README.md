@@ -120,11 +120,12 @@ common/
 执行示例(Ubuntu):
 
 ```bash
-PGPASSWORD=pmis123 psql -h 127.0.0.1 -U pmis -d ydsz_pmis \
+# 通过 PGPASSWORD 环境变量传入数据库密码（请替换为你的实际密码）
+PGPASSWORD=<your-pgis-password> psql -h 127.0.0.1 -U pmis -d ydsz_pmis \
   -f deploy/common/sql/tables_xxl_job_pg.sql
 ```
 
-> 说明:XXL-Job 复用主库 `ydsz_pmis`,沿用其账号(`pmis` / `pmis123`)。如主库改了密码,同步修改 [`../conf/xxl-job/application.properties`](../conf/xxl-job/application.properties) 中的 `spring.datasource.password`。
+> 说明:XXL-Job 复用主库 `ydsz_pmis`,沿用其账号(`pmis` / `<your-pgis-password>`)。如主库改了密码,同步修改 [`../conf/xxl-job/application.properties`](../conf/xxl-job/application.properties) 中的 `spring.datasource.password`。
 
 ---
 

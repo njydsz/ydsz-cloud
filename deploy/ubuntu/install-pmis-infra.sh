@@ -118,9 +118,9 @@ install_postgres() {
   systemctl start postgresql
   sleep 2
 
-  # 创建数据库与用户
+  # 创建数据库与用户（密码可通过 PG_PASSWORD 环境变量覆盖，默认 pmis123 仅供开发）
   sudo -u postgres psql <<EOF
-CREATE USER pmis WITH PASSWORD 'pmis123';
+CREATE USER pmis WITH PASSWORD '${PG_PASSWORD:-pmis123}';
 CREATE DATABASE ydsz_pmis OWNER pmis ENCODING 'UTF8';
 GRANT ALL PRIVILEGES ON DATABASE ydsz_pmis TO pmis;
 EOF
@@ -129,7 +129,7 @@ EOF
   SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
   if [[ -f "$SCRIPT_DIR/../../../docs/V1.0.0.sql" ]]; then
     log "导入初始化 SQL（约 1-2 分钟）..."
-    PGPASSWORD=pmis123 psql -h 127.0.0.1 -U pmis -d ydsz_pmis -f "$SCRIPT_DIR/../../../docs/V1.0.0.sql" 2>&1 | tail -3
+    PGPASSWORD=${PG_PASSWORD:-pmis123} psql -h 127.0.0.1 -U pmis -d ydsz_pmis -f "$SCRIPT_DIR/../../../docs/V1.0.0.sql" 2>&1 | tail -3
   fi
 
   ok "PostgreSQL 18 安装完成"
@@ -239,8 +239,8 @@ After=network.target
 Type=simple
 User=$SERVICE_USER
 Group=$SERVICE_USER
-Environment="MINIO_ROOT_USER=minioadmin"
-Environment="MINIO_ROOT_PASSWORD=minioadmin"
+Environment="MINIO_ROOT_USER=${MINIO_ROOT_USER:-minioadmin}"
+Environment="MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minioadmin}"
 ExecStart=/usr/local/bin/minio server $DATA_DIR/minio/data --console-address ":9001"
 Restart=on-failure
 RestartSec=10
@@ -394,7 +394,7 @@ install_xxl_job() {
   cp "$(dirname "$0")/../infra/xxl-job/application.properties" $INSTALL_HOME/xxl-job/
 
   # 初始化数据库
-  PGPASSWORD=pmis123 psql -h 127.0.0.1 -U pmis -d ydsz_pmis -f "$(dirname "$0")/../infra/xxl-job/tables_xxl_job_pg.sql" 2>&1 | tail -5
+  PGPASSWORD=${PG_PASSWORD:-pmis123} psql -h 127.0.0.1 -U pmis -d ydsz_pmis -f "$(dirname "$0")/../infra/xxl-job/tables_xxl_job_pg.sql" 2>&1 | tail -5
 
   cat > /etc/systemd/system/xxl-job.service <<EOF
 [Unit]

@@ -1,0 +1,152 @@
+# =============================================================================
+# Promtail 客户端配置 - 日志采集与推送
+# -----------------------------------------------------------------------------
+# 部署:
+#   挂载至容器 /etc/promtail/promtail-config.yml
+#   启动: promtail -config.file=/etc/promtail/promtail-config.yml
+#
+# 采集目标:
+#   /var/log/pmis/*.log (PMIS 后端服务日志,由 logback-spring.xml 输出)
+#
+# 采集流程:
+#   1. tail 抓取日志文件
+#   2. json pipeline 解析结构化日志(LogstashEncoder 输出)
+#   3. labels pipeline 提取 service / level / traceId 为 Loki 标签
+#   4. 推送至 loki:3100
+# =============================================================================
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: info
+
+# =============================================================================
+# 采集位置记录(避免重启后重复采集)
+# =============================================================================
+positions:
+  filename: /tmp/positions.yaml
+
+# =============================================================================
+# Loki 推送目标
+# =============================================================================
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    # 批处理配置
+    batchwait: 1s
+    batchsize: 1048576  # 1MB
+    # 重试配置
+    backoff_min_period: 500ms
+    backoff_max_period: 5m
+    backoff_max_retries: 10
+    # 超时
+    timeout: 10s
+    # 租户 ID(单租户模式留空)
+    tenant_id: ""
+
+# =============================================================================
+# 抓取配置
+# =============================================================================
+scrape_configs:
+  # ----------------------------------------------------------------------
+  # 1. PMIS 后端应用日志(结构化 JSON,由 logback LOGSTASH_JSON appender 输出)
+  # ----------------------------------------------------------------------
+  - job_name: pmis-app
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: pmis
+          source: app
+          # 采集容器内 /var/log/pmis/*.log
+          __path__: /var/log/pmis/*.log
+    pipeline_stages:
+      # ---- 1.1 解析 JSON 结构化日志(LogstashEncoder 输出) ----
+      - json:
+          expressions:
+            # logback 原生字段
+            level: level
+            logger: logger
+            thread: thread
+            message: message
+            timestamp: "@timestamp"
+            # MDC 字段(logback-spring.xml includeMdcKeyName)
+            traceId: traceId
+            userId: userId
+            username: username
+            # 上下文字段(LOGSTASH_JSON appender customFields)
+            appName: appName
+            hostname: hostname
+            profile: profile
+
+      # ---- 1.2 提取 Loki 标签(高频检索维度) ----
+      - labels:
+          level:
+          traceId:
+          appName:
+          profile:
+
+      # ---- 1.3 提取时间戳(用日志原生 @timestamp 而非采集时间) ----
+      - timestamp:
+          source: "@timestamp"
+          format: RFC3339Nano
+          fallback_formats:
+            - "2006-01-02T15:04:05.999Z"
+            - "2006-01-02T15:04:05Z07:00"
+
+      # ---- 1.4 输出格式化(保留原始 message 便于检索) ----
+      - output:
+          source: message
+
+  # ----------------------------------------------------------------------
+  # 2. PMIS 审计日志回灌文件(audit-fallback.log)
+  # ----------------------------------------------------------------------
+  - job_name: pmis-audit
+    static_configs:
+      - targets:
+          - localhost
+        labels:
+          job: pmis
+          source: audit
+          __path__: /var/log/pmis/audit-fallback.log
+    pipeline_stages:
+      # 审计日志本身就是 JSON 行格式,直接解析
+      - json:
+          expressions:
+            event: event
+            userId: userId
+            traceId: traceId
+      - labels:
+          event:
+
+  # ----------------------------------------------------------------------
+  # 3. 容器 stdout 日志(Docker / Kubernetes 标准输出)
+  # ----------------------------------------------------------------------
+  - job_name: docker-containers
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        # 仅采集 pmis-* 容器
+        filters:
+          - name: name
+            values: ["pmis-"]
+    relabel_configs:
+      # 提取容器名作为 label
+      - source_labels: ["__meta_docker_container_name"]
+        regex: '/(.*)'
+        target_label: container
+      # 提取镜像名
+      - source_labels: ["__meta_docker_container_label_com_docker_compose_service"]
+        target_label: service
+      # 仅保留 pmis 相关容器
+      - source_labels: ["container"]
+        regex: "pmis-.*"
+        action: keep
+    pipeline_stages:
+      # Docker 日志默认是 JSON {"log":"...","stream":"stdout"}
+      - json:
+          expressions:
+            stream: stream
+            log: log
+      - labels:
+          stream:
+      - output:
+          source: log

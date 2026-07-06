@@ -80,11 +80,14 @@ backend:
     SERVER_TOMCAT_URI_ENCODING: UTF-8
 
   # 数据库 / 中间件密码（生产请用 external-secrets 替换）
+  # ⚠️ 以下仅为开发占位密码，生产环境必须在 values-prod.yaml 中覆盖
+  #     （推荐设置 backend.secrets.useExternalSecret: true 引用 K8s Secret）
   secrets:
-    postgresPassword: pmis123
-    redisPassword: pmis123
-    nacosPassword: nacos
-    minioPassword: minioadmin
+    postgresPassword: pmis123              # ⚠️ 生产环境必须在 values-prod.yaml 中覆盖
+    redisPassword: pmis123                 # ⚠️ 生产环境必须在 values-prod.yaml 中覆盖
+    nacosPassword: nacos                   # ⚠️ 生产环境必须在 values-prod.yaml 中覆盖
+    minioPassword: minioadmin              # ⚠️ 生产环境必须在 values-prod.yaml 中覆盖
+    useExternalSecret: false               # true 时跳过本 chart 渲染的 Secret，改由 ExternalSecret/SealedSecret 注入
 
 # -----------------------------------------------------------------------------
 #  各微服务独立配置（覆盖 backend.* 默认值）

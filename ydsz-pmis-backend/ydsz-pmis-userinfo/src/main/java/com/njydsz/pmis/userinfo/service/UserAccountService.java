@@ -7,6 +7,7 @@ import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
 import com.njydsz.pmis.userinfo.vo.UserVO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -139,6 +140,14 @@ public interface UserAccountService {
      * @param userId 用户 ID
      */
     void clearLoginFailCount(Long userId);
+
+    /**
+     * 锁定账号（设置 locked_until，到期后由登录校验时自动放行）
+     *
+     * @param userId      用户 ID
+     * @param lockedUntil 锁定截止时间
+     */
+    void lockAccount(Long userId, LocalDateTime lockedUntil);
 
     /**
      * 升级密码哈希为 BCrypt（用于历史 MD5 密码的惰性升级）

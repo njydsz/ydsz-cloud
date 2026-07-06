@@ -76,7 +76,7 @@ redis_stop() {
 redis_status() {
   if systemctl is-active --quiet redis; then
     ok "Redis: 运行中"
-    redis-cli -a pmis123 ping 2>/dev/null
+    redis-cli -a ${REDIS_PASSWORD:-pmis123} ping 2>/dev/null
   else
     err "Redis: 未运行"
   fi

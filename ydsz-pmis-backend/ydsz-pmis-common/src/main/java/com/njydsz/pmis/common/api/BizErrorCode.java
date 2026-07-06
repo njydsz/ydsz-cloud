@@ -32,6 +32,7 @@ public enum BizErrorCode {
     VALIDATION_FAILED(10002, "参数校验失败"),
     MISSING_PARAMETER(10003, "缺少参数"),
     METHOD_NOT_ALLOWED(10004, "请求方法不允许"),
+    UNSUPPORTED_MEDIA_TYPE(10005, "不支持的媒体类型"),
     NOT_FOUND(10101, "资源不存在"),
     DUPLICATE_KEY(10102, "资源已存在"),
     BIZ_ERROR(10103, "业务规则校验失败"),

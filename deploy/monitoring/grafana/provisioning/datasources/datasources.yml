@@ -1,0 +1,48 @@
+# =============================================================================
+# Grafana Datasource Provisioning 配置
+# -----------------------------------------------------------------------------
+# 作用: 启动时自动配置数据源(Prometheus + Loki),无需手动在 UI 添加
+# 挂载路径(docker-compose): /etc/grafana/provisioning/datasources/datasources.yml
+# =============================================================================
+apiVersion: 1
+
+# 数据源列表
+datasources:
+  # ----------------------------------------------------------------------
+  # 1. Prometheus - 指标数据源(主)
+  # ----------------------------------------------------------------------
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    # Grafana 容器内通过服务名访问 prometheus(docker-compose 网络)
+    url: http://prometheus:9090
+    isDefault: true
+    editable: true
+    jsonData:
+      # Prometheus 数据源专用配置
+      timeInterval: "15s"
+      httpMethod: POST
+      # 启用 exemplar(配合 trace 查询)
+      exemplarTraceIdDestinations:
+        - name: traceId
+          datasourceUid: jaeger
+
+  # ----------------------------------------------------------------------
+  # 2. Loki - 日志数据源
+  # ----------------------------------------------------------------------
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    isDefault: false
+    editable: true
+    jsonData:
+      # Loki 数据源专用配置
+      maxLines: 1000
+      # 启用 trace 链接(Prometheus exemplar → Loki 日志上下文)
+      derivedFields:
+        # traceId 字段 → 跳转至 Jaeger/Tempo 查询
+        - name: traceId
+          matcherRegex: "traceId=(\\w+)"
+          url: "http://localhost:16686/trace/$${__value.raw}"
+          datasourceUid: jaeger

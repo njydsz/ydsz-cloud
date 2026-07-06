@@ -6,8 +6,8 @@
 --   migration scripts under deploy/sql/ in version order. It is
 --   equivalent to running the migrations end-to-end, suitable for
 --   one-shot initialization of fresh environments.
---   For online upgrades keep using the per-version scripts at
---   deploy/sql/V*__*.sql.
+--   任何 schema 调整请直接编辑本文件，禁止新增增量脚本
+--   (deploy/sql/V*__*.sql)。本项目已统一为单文件初始化模式。
 --
 -- Usage:
 --   psql "host=... user=... dbname=... password=..." -v ON_ERROR_STOP=1 -f V1.0.0.sql
@@ -43,21 +43,19 @@ SET search_path = public, pg_catalog;
 -- (e.g. a tool-driven init), SAVEPOINTs below still isolate us.
 BEGIN;
 -- ====================================================================
--- [GENERATOR NOTE] Forward references detected and skipped:
---   - pmis_after_sales_ops_ticket  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   - pmis_after_sales_satisfaction  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   - pmis_after_sales_warranty  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   - pmis_agent_blackboard  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   - pmis_agent_orchestration  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   - pmis_contract_template  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   - pmis_daily_reconcile  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   - pmis_evm_record  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   - pmis_project_closure  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   - pmis_project_delivery  (CREATE TABLE not in V1.0.0_001..V1.0.0_059)
---   The following source files reference these tables (index, comment,
---   analyze) but the tables are not defined anywhere in the source. They
---   are commented out in the merged file. Online upgrades will need
---   a follow-up migration that creates these tables first.
+-- [GENERATOR NOTE] 历史前向引用表已全部落地(表名经重命名规范后已存在)：
+--   - pmis_after_sales_ops_ticket  -> pmis_ops_ticket                 (已存在)
+--   - pmis_after_sales_satisfaction -> pmis_satisfaction              (已存在)
+--   - pmis_after_sales_warranty    -> pmis_warranty                   (已存在)
+--   - pmis_project_closure         -> pmis_execution_closure          (已存在)
+--   - pmis_evm_record              -> pmis_evm_measure                (已存在)
+--   - pmis_contract_template       -> pmis_project_contract_template  (已存在)
+--   - pmis_daily_reconcile         -> pmis_reconcile_daily            (已存在)
+--   - pmis_project_delivery        -> pmis_execution_delivery_standard/item (已存在)
+--   - pmis_agent_blackboard        -> 运行时对象(Blackboard 模式,非持久化实体)
+--   - pmis_agent_orchestration     -> 服务层编排概念(无实体类,非 DB 表)
+--   NOTE 中所列"前向引用缺失表"经核对后确认全部落地或为运行时对象,
+--   无需补建任何 CREATE TABLE。
 -- ====================================================================
 
 
@@ -888,9 +886,11 @@ CREATE INDEX IF NOT EXISTS idx_pmis_operation_log_brin
 -- ====================================================================
 
 -- 初始化超级管理员
--- 默认 admin 账号 (盐: pmis_salt_8, 密码: admin123, 哈希: MD5('admin123pmis_salt_8'))
+-- 默认 admin 账号 (密码: admin123, 哈希算法: BCrypt, 成本因子: 10)
+-- BCrypt 自带盐,无需单独存储 salt 字段(此处置空字符串)。
+-- 密码使用 BCrypt 哈希,首次登录建议强制修改。
 INSERT INTO pmis_user_account (username, password, salt, status, created_by)
-VALUES ('admin', MD5('admin123' || 'pmis_salt_8'), 'pmis_salt_8', 'ENABLED', 0)
+VALUES ('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMy.Mrq8BpVLqMDvQXEvCJ5DEmCJWP1tCaa', '', 'ENABLED', 0)
 ON CONFLICT (username, deleted) DO NOTHING;
 
 -- 初始化职级 (L1-L18)
@@ -9717,6 +9717,39 @@ SELECT pmis_attach_updated_at_trigger('pmis_finance_payment');      -- 回款
 SELECT pmis_attach_updated_at_trigger('pmis_flow_instance');        -- 流程实例
 SELECT pmis_attach_updated_at_trigger('pmis_flow_definition');      -- 流程定义
 
+-- ----------------------------------------------------------------------------
+-- 3.1) 批量挂载剩余所有含 updated_at 列的 pmis_ 表
+--      上方 15 张核心表已显式挂载; 此处用 DO 块动态扫描 information_schema,
+--      为所有尚未挂载触发器且含 updated_at 列的 pmis_ 表自动挂载。
+--      pmis_attach_updated_at_trigger() 自身幂等: 已挂载 / 表不存在 / 缺
+--      updated_at 列时均静默跳过, 故可安全覆盖全部表。
+--      覆盖: 规则/成本/利润/EVM/费率/资源/考勤/运维/工单/满意度/对账/
+--      利用率/工作流子表/报表/导出/2FA/会话/敏感操作等(约 80+ 张表)。
+--      日志表(pmis_operation_log / pmis_flow_audit_log 等)无 updated_at 列,
+--      会被辅助函数自动跳过。
+-- ----------------------------------------------------------------------------
+DO $$
+DECLARE
+    t_name TEXT;
+BEGIN
+    FOR t_name IN
+        SELECT c.table_name
+        FROM information_schema.columns c
+        JOIN information_schema.tables t
+          ON t.table_schema = c.table_schema
+         AND t.table_name = c.table_name
+        WHERE c.table_schema = 'public'
+          AND c.column_name = 'updated_at'
+          AND t.table_type = 'BASE TABLE'
+          AND c.table_name LIKE 'pmis\_%' ESCAPE '\'
+          -- 排除分区子表(由父表继承,无需单独挂载)
+          AND c.table_name NOT LIKE '%_default'
+    LOOP
+        PERFORM pmis_attach_updated_at_trigger(t_name);
+    END LOOP;
+END;
+$$ LANGUAGE plpgsql;
+
 -- ====================================================================
 -- ============================ [064] P1-7 provider_trace_id 索引补齐 ============================
 -- ====================================================================
@@ -10060,12 +10093,11 @@ VALUES
     ('V1.0.0', '18', 58,
      '2026-07-06 21:00:00+08',
      CURRENT_TIMESTAMP,
-     'pmis_after_sales_ops_ticket,pmis_after_sales_satisfaction,pmis_after_sales_warranty,'
-     'pmis_agent_blackboard,pmis_agent_orchestration,pmis_contract_template,'
-     'pmis_daily_reconcile,pmis_evm_record,pmis_project_closure,pmis_project_delivery',
+     NULL,
      'P1-7: 75/75 provider_trace_id 索引已全量覆盖;'
      'P2-8: 112/112 COMMENT ON TABLE 覆盖率 100%;'
-     'P2-9: 引入 pmis_meta_schema_version 元数据表')
+     'P2-9: 引入 pmis_meta_schema_version 元数据表;'
+     '历史前向引用表已全部落地(表名重命名后已存在),无 pending 表')
 ON CONFLICT (version, deleted) DO NOTHING;
 
 -- 2) 创建通用查询视图(供应用启动时探测当前 schema 版本)

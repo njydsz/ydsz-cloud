@@ -65,11 +65,15 @@ management:
       readiness:
         include: readinessState,db,redis,discoveryClient
   # =====================================================================
-  # P1-6: Micrometer Tracing + Brave（对接 Jaeger/Zipkin）
+  # P1-6: Micrometer Tracing + Brave（对接 SkyWalking / Zipkin / Jaeger）
   # --------------------------------------------------------------------
   # 采样率：开发环境 100%，生产通过 ENV TRACING_SAMPLING_PROBABILITY=0.1 调整
-  # 上报地址：Jaeger/Zipkin 收集器 OTLP 兼容端点
+  # 上报地址：通过 TRACING_ENDPOINT 环境变量配置
+  #   - SkyWalking OAP: http://skywalking-oap.observability.svc.cluster.local:12800/api/v2/spans
+  #   - Zipkin:         http://zipkin.observability.svc.cluster.local:9411/api/v2/spans
   # 传播格式：W3C Trace Context（traceparent）+ B3 多头兼容旧客户端
+  # dev 环境默认关闭 tracing 上报（export.enabled=false），避免无收集器时堆积
+  # 生产环境设置 TRACING_EXPORT_ENABLED=true 开启
   # =====================================================================
   tracing:
     sampling:
@@ -82,11 +86,12 @@ management:
         enabled: true
   zipkin:
     tracing:
-      endpoint: ${ZIPKIN_ENDPOINT:http://zipkin.observability.svc.cluster.local:9411/api/v2/spans}
+      endpoint: ${TRACING_ENDPOINT:http://skywalking-oap.observability.svc.cluster.local:12800/api/v2/spans}
       connect-timeout: 1s
       read-timeout: 5s
       export:
-        enabled: ${TRACING_EXPORT_ENABLED:true}
+        # dev 环境默认关闭 tracing 上报，生产环境通过 ENV TRACING_EXPORT_ENABLED=true 开启
+        enabled: ${TRACING_EXPORT_ENABLED:false}
   metrics:
     distribution:
       percentiles-histogram:

@@ -109,7 +109,7 @@ deploy/
 docker compose -f deploy/docker/docker-compose.dev.yml up -d
 
 # 2. 初始化主库(126 张表)
-PGPASSWORD=Limw1020 psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
+PGPASSWORD=<your-pg-password-here> psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
   -f deploy/sql/V1.0.0.sql
 
 # 3. 启动 PMIS 7 个后端 + 前端
@@ -220,8 +220,8 @@ cp deploy/.env.example deploy/.env
 | 变量 | 默认 | 说明 |
 |---|---|---|
 | `POSTGRES_HOST` / `DB_HOST` | 127.0.0.1 | PG 地址 |
-| `POSTGRES_PASSWORD` / `DB_PASSWORD` | Limw1020 | PG 密码(**生产必须改**) |
-| `REDIS_PASSWORD` | Limw1020 | Redis 密码(**生产必须改**) |
+| `POSTGRES_PASSWORD` / `DB_PASSWORD` | `<your-pg-password-here>` | PG 密码(**生产必须改**) |
+| `REDIS_PASSWORD` | `<your-redis-password-here>` | Redis 密码(**生产必须改**) |
 | `NACOS_SERVER_ADDR` | 127.0.0.1:8848 | Nacos 地址 |
 | `NACOS_NAMESPACE` | pmis | 命名空间 |
 | `NACOS_PROFILE` | dev | dev / sit / uat / prod |
@@ -262,7 +262,7 @@ cp deploy/.env.example deploy/.env
 **主库初始化**:
 
 ```bash
-PGPASSWORD=Limw1020 psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
+PGPASSWORD=<your-pg-password-here> psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
   -f deploy/sql/V1.0.0.sql
 ```
 

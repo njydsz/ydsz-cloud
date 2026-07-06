@@ -21,13 +21,8 @@
 
 import dagre from 'dagre'
 import type Modeler from 'bpmn-js/lib/Modeler'
-import type { Element as BpmnElement } from 'bpmn-js/lib/model/Types'
-
-/** bpmn-js modeling 服务类型（仅声明 autoLayout 所需方法，避免 unknown） */
-interface BpmnModeling {
-  moveShape(shape: BpmnElement, delta: { dx: number; dy: number }): void
-  layoutConnection(connection: BpmnElement): void
-}
+import type Modeling from 'bpmn-js/lib/features/modeling/Modeling'
+import type { Element as BpmnElement, Shape, Connection } from 'bpmn-js/lib/model/Types'
 
 /** bpmn-js elementRegistry 服务类型（仅声明 autoLayout 所需方法，避免 unknown） */
 interface BpmnElementRegistry {
@@ -59,11 +54,11 @@ export function autoLayout(
   options?: AutoLayoutOptions,
 ): void {
   const elementRegistry = modeler.get('elementRegistry') as unknown as BpmnElementRegistry
-  const modeling = modeler.get('modeling') as unknown as BpmnModeling
+  const modeling = modeler.get('modeling') as unknown as Modeling
 
   const allElements = elementRegistry.getAll()
-  const shapes = allElements.filter((el: BpmnElement) => el.type !== 'label' && !el.waypoints)
-  const connections = allElements.filter((el: BpmnElement) => Array.isArray(el.waypoints))
+  const shapes = allElements.filter((el: BpmnElement): el is Shape => el.type !== 'label' && !el.waypoints)
+  const connections = allElements.filter((el: BpmnElement): el is Connection => Array.isArray(el.waypoints))
 
   if (shapes.length === 0) {
     throw new Error('画布无可布局的节点')
@@ -115,7 +110,7 @@ export function autoLayout(
     const dx = targetX - currentX
     const dy = targetY - currentY
     if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5) continue
-    modeling.moveShape(shape, { dx, dy })
+    modeling.moveShape(shape, { x: dx, y: dy })
   }
 
   // 连线 waypoints 由 bpmn-js 的 layoutConnection 在 moveShape 后自动重算

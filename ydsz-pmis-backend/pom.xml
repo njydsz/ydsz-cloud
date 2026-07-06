@@ -474,7 +474,19 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
-                    <!-- 覆盖率门禁检查：行覆盖≥60%，分支覆盖≥50% -->
+                    <!--
+                        覆盖率门禁检查（分阶段提升计划）
+                        ==============================================================
+                        阶段 1（当前, 2026-07）: LINE>=80%, BRANCH>=70%  — 立即收口
+                        阶段 2（2026-08）:      LINE>=90%, BRANCH>=85%  — 接近大厂标准
+                        阶段 3（2026-09）:      LINE>=95%, BRANCH>=90%  — 对齐项目规范 100% 覆盖目标
+                        ==============================================================
+                        规则设计:
+                          1. BUNDLE 级别: 整体行/分支覆盖率, 拦截整体退化
+                          2. PACKAGE 级别: 按 Java 包校验, 避免"高质模块拉低质模块平均值"
+                          3. METHOD 级别: 单方法覆盖率, 拦截未测试的核心方法
+                        排除项: DTO/Entity/VO/Config/Mapper/Enums/Constant/Application 已在上方 excludes 中声明
+                    -->
                     <execution>
                         <id>jacoco-check</id>
                         <phase>verify</phase>
@@ -483,20 +495,57 @@
                         </goals>
                         <configuration>
                             <rules>
+                                <!-- 规则 1: 整体 BUNDLE 覆盖率门禁 -->
                                 <rule>
                                     <element>BUNDLE</element>
                                     <limits>
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.60</minimum>
+                                            <minimum>0.80</minimum>
                                         </limit>
                                         <limit>
                                             <counter>BRANCH</counter>
                                             <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                                <!-- 规则 2: PACKAGE 级别门禁, 防止低质包被整体平均掩盖 -->
+                                <rule>
+                                    <element>PACKAGE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.75</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.65</minimum>
+                                        </limit>
+                                    </limits>
+                                    <excludes>
+                                        <!-- 启动类与配置包允许较低覆盖率 -->
+                                        <exclude>com.njydsz.pmis.*.config</exclude>
+                                        <exclude>com.njydsz.pmis.*.migration</exclude>
+                                    </excludes>
+                                </rule>
+                                <!-- 规则 3: METHOD 级别, 单方法行覆盖≥50%, 拦截完全未测试的核心方法 -->
+                                <rule>
+                                    <element>METHOD</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
                                             <minimum>0.50</minimum>
                                         </limit>
                                     </limits>
+                                    <excludes>
+                                        <exclude>com.njydsz.pmis.*.config.*</exclude>
+                                        <exclude>com.njydsz.pmis.*.migration.*</exclude>
+                                    </excludes>
                                 </rule>
                             </rules>
                         </configuration>

@@ -35,6 +35,12 @@ if not exist "%LOG_DIR%" mkdir "%LOG_DIR%"
 
 cd /d "%ROOT_DIR%"
 
+REM ---------- 凭据默认值（可通过环境变量覆盖，仅用于开发提示） ----------
+if not defined NACOS_USERNAME set NACOS_USERNAME=nacos
+if not defined NACOS_PASSWORD set NACOS_PASSWORD=nacos
+if not defined MINIO_ROOT_USER set MINIO_ROOT_USER=minioadmin
+if not defined MINIO_ROOT_PASSWORD set MINIO_ROOT_PASSWORD=minioadmin
+
 REM -----------------------------------------------------------------------------
 REM  1. 环境检查
 REM -----------------------------------------------------------------------------
@@ -144,8 +150,8 @@ echo  PMIS 启动完成！
 echo.
 echo   前端地址:        http://localhost:5173
 echo   API 网关:        http://localhost:9000
-echo   Nacos 控制台:    http://127.0.0.1:8848/nacos  (nacos/nacos)
-echo   MinIO 控制台:    http://127.0.0.1:9101  (minioadmin/minioadmin)
+echo   Nacos 控制台:    http://127.0.0.1:8848/nacos  (%NACOS_USERNAME%/%NACOS_PASSWORD%)
+echo   MinIO 控制台:    http://127.0.0.1:9101  (%MINIO_ROOT_USER%/%MINIO_ROOT_PASSWORD%)
 echo.
 echo   日志目录:        %LOG_DIR%
 echo   停止命令:        deploy\windows\scripts\stop-all.bat

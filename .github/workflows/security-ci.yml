@@ -56,3 +56,63 @@ jobs:
             results/
             *.sarif
           retention-days: 30
+
+  # ============================================================
+  # CSRF 静态审计（仅 warning，不阻断 CI）
+  # ------------------------------------------------------------
+  # 作用: 静态扫描 Controller 中的写操作接口，检查权限注解覆盖情况，
+  #       并扫描 @RequestParam token 这类潜在的 CSRF 漏洞点。
+  # 阻断策略: 仅 warning，不阻断 CI（exit 0）
+  # ============================================================
+  csrf-audit:
+    name: CSRF Security Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 扫描写操作接口权限注解覆盖情况
+        continue-on-error: true
+        run: |
+          echo "=== CSRF 审计: 写操作接口权限注解检查 ==="
+          echo "扫描 @PostMapping / @PutMapping / @DeleteMapping / @PatchMapping 接口"
+          echo "验证对应 Controller 是否声明 @PrePermission 或其他安全注解"
+          echo ""
+          # 找到所有包含写操作映射的 Java 文件
+          write_files=$(grep -rlE '@(PostMapping|PutMapping|DeleteMapping|PatchMapping)' \
+            --include='*.java' ydsz-pmis-backend/ || true)
+          if [ -z "$write_files" ]; then
+            echo "未发现写操作接口，跳过检查"
+          else
+            warning_count=0
+            for f in $write_files; do
+              # 检查文件内是否有 @PrePermission 注解（类级或方法级）
+              if ! grep -qE '@PrePermission' "$f"; then
+                echo "::warning file=$f::写操作接口缺少 @PrePermission 权限注解，可能存在越权/CSRF 风险"
+                warning_count=$((warning_count + 1))
+              fi
+            done
+            echo ""
+            echo "权限注解检查完成，发现 $warning_count 个 warning"
+          fi
+
+      - name: 扫描 @RequestParam token 漏洞点
+        continue-on-error: true
+        run: |
+          echo "=== CSRF 审计: @RequestParam token 漏洞点扫描 ==="
+          echo "扫描通过 @RequestParam 接收 token 的接口（可能是 CSRF 漏洞点）"
+          echo ""
+          token_hits=$(grep -rnE '@RequestParam.*[Tt]oken' \
+            --include='*.java' ydsz-pmis-backend/ || true)
+          if [ -z "$token_hits" ]; then
+            echo "未检测到 @RequestParam token 接收点"
+          else
+            echo "$token_hits" | while IFS= read -r line; do
+              file=$(echo "$line" | cut -d: -f1)
+              echo "::warning file=$file::检测到 @RequestParam 接收 token，可能是 CSRF 漏洞点: $line"
+            done
+            echo ""
+            echo "::warning::请确认 token 是否必须通过 @RequestParam 传递，建议改用 Authorization 头"
+          fi
+          echo ""
+          echo "CSRF 审计完成（仅 warning，不阻断 CI）"
+          exit 0
