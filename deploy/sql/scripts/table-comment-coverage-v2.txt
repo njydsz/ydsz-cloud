@@ -1,7 +1,0 @@
-﻿=== Summary ===
-Tables total   : 112
-With COMMENT  : 112
-Without COMMENT: 0
-Coverage: 100.0%%
-
-=== Missing COMMENT ON TABLE ===

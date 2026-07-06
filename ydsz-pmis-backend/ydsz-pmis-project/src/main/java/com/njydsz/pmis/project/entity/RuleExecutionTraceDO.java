@@ -61,6 +61,9 @@ public class RuleExecutionTraceDO implements Serializable {
     /** 错误信息 */
     private String errorMessage;
 
+    /** 创建人（VARCHAR(64) 支持工号/SSO 用户名，DEFAULT 'SYSTEM' 表示系统兜底） */
+    private String createdBy;
+
     /** 创建时间 */
     private LocalDateTime createdAt;
 }

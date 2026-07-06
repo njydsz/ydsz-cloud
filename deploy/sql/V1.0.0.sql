@@ -3841,6 +3841,23 @@ VALUES
 --       资源分配(pmis_resource_assignment)、Bench 闲置(pmis_bench_record)
 -- =====================================================
 
+-- P1-7 fix: pmis_employee_tag 已在 [001] 章节以 tag_value 字段先建,本节扩展新字段
+ALTER TABLE pmis_employee_tag
+    ADD COLUMN IF NOT EXISTS tag_name     VARCHAR(256) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS proficiency  INTEGER      NOT NULL DEFAULT 3,
+    ADD COLUMN IF NOT EXISTS years_exp    INTEGER      NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS remark       TEXT,
+    ADD COLUMN IF NOT EXISTS provider_trace_id VARCHAR(64) NOT NULL DEFAULT '',
+    ADD COLUMN IF NOT EXISTS created_by   BIGINT       NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS updated_by   BIGINT       NOT NULL DEFAULT 0,
+    ADD COLUMN IF NOT EXISTS updated_at   TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP;
+
+-- 放宽 tag_type 枚举约束(原[001]是 TECH_STACK/INDUSTRY/DOMAIN/CERTIFICATE/SKILL,本节扩展为含 CERT)
+ALTER TABLE pmis_employee_tag
+    DROP CONSTRAINT IF EXISTS ck_pet_tag_type;
+ALTER TABLE pmis_employee_tag
+    ADD CONSTRAINT ck_pet_tag_type CHECK (tag_type IN ('SKILL', 'INDUSTRY', 'DOMAIN', 'CERT', 'TECH_STACK', 'CERTIFICATE'));
+
 -- =====================================================
 -- 1. 资源池主表 pmis_resource_pool
 -- =====================================================
@@ -3894,31 +3911,12 @@ CREATE INDEX IF NOT EXISTS idx_prp_tenant_dept
     WHERE deleted = 0 AND department_id IS NOT NULL;
 
 -- =====================================================
--- 2. 人员标签表 pmis_employee_tag
+-- 2. 人员标签表 pmis_employee_tag (已在 [001] 章节创建, [014_1] 已 ALTER 扩展新字段)
 -- =====================================================
--- 注意:历史 [SKIPPED-CLEANUP-REBUILD] 标记下的旧版 DDL 已废弃,以下为优化后的最终版本
-CREATE TABLE IF NOT EXISTS pmis_employee_tag(
-    id                  BIGSERIAL PRIMARY KEY,
-    employee_id         BIGINT       NOT NULL,
-    tag_type            VARCHAR(32)  NOT NULL,                 -- SKILL/INDUSTRY/DOMAIN/CERT
-    tag_code            VARCHAR(64)  NOT NULL,
-    tag_name            VARCHAR(256) NOT NULL,
-    proficiency         INTEGER      NOT NULL DEFAULT 3,       -- 1-5
-    years_exp           INTEGER      NOT NULL DEFAULT 0,
-    remark              TEXT,
-    tenant_id           BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id   VARCHAR(64)  NOT NULL DEFAULT '',
-    created_by          BIGINT       NOT NULL DEFAULT 0,
-    created_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_by          BIGINT       NOT NULL DEFAULT 0,
-    updated_at          TIMESTAMPTZ  NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted             SMALLINT     NOT NULL DEFAULT 0,
-    CONSTRAINT uk_pet_emp_tag           UNIQUE (employee_id, tag_code, deleted),
-    CONSTRAINT ck_pet_tag_type          CHECK (tag_type IN ('SKILL','INDUSTRY','DOMAIN','CERT')),
-    CONSTRAINT ck_pet_proficiency       CHECK (proficiency BETWEEN 1 AND 5),
-    CONSTRAINT ck_pet_years_exp_nonneg  CHECK (years_exp >= 0),
-    CONSTRAINT ck_pet_deleted_enum      CHECK (deleted IN (0, 1))
-);
+-- 注意:历史 [SKIPPED-CLEANUP-REBUILD] 标记下的旧版 DDL 已废弃,字段定义以 [001]+[014_1] 为准
+-- 本节保留 COMMENT ON COLUMN 用于覆盖 [001] 的简短注释,提供更详细的字段说明
+-- (以下 CREATE TABLE IF NOT EXISTS 因表已存在会被跳过,不会重建)
+-- =====================================================
 COMMENT ON TABLE  pmis_employee_tag IS '人员标签表: 员工的技能/行业/领域/资质标签,支撑资源推荐智能体匹配';
 COMMENT ON COLUMN pmis_employee_tag.employee_id IS '员工 ID';
 COMMENT ON COLUMN pmis_employee_tag.tag_type IS '标签类型: SKILL 技能 / INDUSTRY 行业 / DOMAIN 领域 / CERT 资质';
@@ -4239,7 +4237,8 @@ ON CONFLICT DO NOTHING;
 -- 1. 项目收入 + 成本视图（按 initiation × period）
 -- ----------------------------
 -- 优化: 显式带 tenant_id,避免 JOIN 放大导致跨租户数据泄露
-CREATE OR REPLACE VIEW pmis_view_initiation_revenue_cost AS
+CREATE OR REPLACE VIEW pmis_view_initiation_revenue_cost
+    WITH (security_invoker = true) AS
 SELECT i.tenant_id,
        i.id              AS initiation_id,
        COALESCE((SELECT SUM(amount) FROM pmis_profit_revenue r
@@ -4321,7 +4320,8 @@ COMMENT ON VIEW pmis_view_risk_dashboard IS '项目风险预警视图: 按 tenan
 -- ----------------------------
 -- 5. 人效排行（按员工聚合活跃项目数 + 平均 allocation）
 -- ----------------------------
-CREATE OR REPLACE VIEW pmis_view_employee_utilization AS
+CREATE OR REPLACE VIEW pmis_view_employee_utilization
+    WITH (security_invoker = true) AS
 SELECT tenant_id,
        employee_id,
        COUNT(*) FILTER (WHERE status = 'ACTIVE')                    AS active_count,
@@ -5177,14 +5177,14 @@ VALUES (
 -- ============================================================
 
 -- 预算黄色预警
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, create_time, update_time, deleted)
+INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'IN_APP',
        '【预算黄色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%',
        'IN_APP', 'PMIS', 'ENABLED', '预算黄色预警(80%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'IN_APP');
 
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, create_time, update_time, deleted)
+INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_YELLOW', 'EMAIL',
        '【预算黄色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及黄色阈值(80%)。</p>',
@@ -5192,14 +5192,14 @@ SELECT 'ALERT_BUDGET_YELLOW', 'EMAIL',
 WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_YELLOW' AND channel = 'EMAIL');
 
 -- 预算红色预警
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, create_time, update_time, deleted)
+INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'IN_APP',
        '【预算红色预警】${projectName}',
        '项目[${projectCode}] ${bizType}本次新增 ${delta} 元，累计已发生 ${usedAfter} 元 / 预算 ${budget} 元，使用率 ${ratio}%，已触及红色阈值(95%)，请立即关注',
        'IN_APP', 'PMIS', 'ENABLED', '预算红色预警(95%)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'IN_APP');
 
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, create_time, update_time, deleted)
+INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_BUDGET_RED', 'EMAIL',
        '【预算红色预警】${projectName}',
        '<p>项目[${projectCode}] ${bizType}本次新增 <b>${delta} 元</b>，累计已发生 <b>${usedAfter} 元</b> / 预算 <b>${budget} 元</b>，使用率 <b>${ratio}%</b>，已触及红色阈值(95%)，请立即关注。</p>',
@@ -5207,14 +5207,14 @@ SELECT 'ALERT_BUDGET_RED', 'EMAIL',
 WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_BUDGET_RED' AND channel = 'EMAIL');
 
 -- EVM 红色预警
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, create_time, update_time, deleted)
+INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'IN_APP',
        '【EVM 红色预警】${title}',
        '${content}',
        'IN_APP', 'PMIS', 'ENABLED', 'EVM 红色预警(CPI<0.85 或 SPI<0.85)', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0
 WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'IN_APP');
 
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, create_time, update_time, deleted)
+INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_EVM_RED', 'EMAIL',
        '【EVM 红色预警】${title}',
        '<p>${content}</p>',
@@ -5222,7 +5222,7 @@ SELECT 'ALERT_EVM_RED', 'EMAIL',
 WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_EVM_RED' AND channel = 'EMAIL');
 
 -- SLA 红色预警（工单超时）
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, create_time, update_time, deleted)
+INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_SLA_RED', 'IN_APP',
        '【SLA 红色预警】工单 ${alertCode} 超时',
        '${content}',
@@ -5230,7 +5230,7 @@ SELECT 'ALERT_SLA_RED', 'IN_APP',
 WHERE NOT EXISTS (SELECT 1 FROM pmis_message_template WHERE template_code = 'ALERT_SLA_RED' AND channel = 'IN_APP');
 
 -- 通用黄色预警兜底
-INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, create_time, update_time, deleted)
+INSERT INTO pmis_message_template (template_code, channel, subject, content, provider, sign_name, status, description, tenant_id, created_at, updated_at, deleted)
 SELECT 'ALERT_OTHER_YELLOW', 'IN_APP',
        '【黄色预警】${title}',
        '${content}',
@@ -5607,11 +5607,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     CONSTRAINT ck_pfrt_reminder_nonneg  CHECK (reminder_count >= 0),
     CONSTRAINT ck_pfrt_version_nonneg   CHECK (version >= 0),
     CONSTRAINT ck_pfrt_duration_nonneg  CHECK (duration_ms IS NULL OR duration_ms >= 0),
-    CONSTRAINT ck_pfrt_deleted          CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_pfrt_deleted          CHECK (deleted IN (0, 1))
     -- FOREACH 唯一性:同一实例+节点+迭代元素只能有一条未删除 task
-    CONSTRAINT uk_pfrt_foreach_iter
-        UNIQUE (instance_id, node_code, iter_var)
-        WHERE iter_var IS NOT NULL AND deleted = 0
+    -- PG 不支持 UNIQUE 约束的 WHERE 子句,改为 partial unique index(建在 CREATE TABLE 之后)
 );
 
 COMMENT ON TABLE  pmis_flow_run_task IS '待办任务运行态表: 实例推进过程中产生的待办切片(运行态),办理人待办箱核心表,完成后归档到 pmis_flow_his_task';
@@ -5832,27 +5830,32 @@ CREATE INDEX IF NOT EXISTS idx_pfu_tenant_user_processed
     ON pmis_flow_user(tenant_id, user_id, processed)
     WHERE deleted = 0;
 
+-- 流程定义唯一性:同租户+flow_code+flow_version 唯一(支持 ON CONFLICT 幂等)
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pmis_flow_definition_code_version
+    ON pmis_flow_definition (flow_code, flow_version, tenant_id)
+    WHERE deleted = 0;
+
 -- =====================================================
 -- 初始化数据：PMIS 业务流定义
 -- =====================================================
 INSERT INTO pmis_flow_definition
-    (flow_code, flow_name, category, version, model_value, form_custom, form_path,
+    (flow_code, flow_name, category, flow_version, model_value, form_custom, form_path,
      activity_status, is_publish, description, status, tenant_id, provider_trace_id,
-     created_by, updated_by)
+     created_by, updated_by, version)
 VALUES
     ('project_initiation', '项目立项审批', 'project',  '1.0', 'CLASSICS', 'N',
      '/project/initiation/detail', 1, 1,
-     '项目立项审批：申请人 → 部门负责人 → 分管领导 → 总经理', 'ENABLED', 1, 'init_v1', 0, 0),
+     '项目立项审批：申请人 → 部门负责人 → 分管领导 → 总经理', 'ENABLED', 1, 'init_v1', 0, 0, 1),
     ('contract_change',    '合同变更审批', 'contract', '1.0', 'CLASSICS', 'N',
      '/contract/change/detail', 1, 1,
-     '合同变更审批：申请人 → 法务 → 财务 → 总经理', 'ENABLED', 1, 'init_v1', 0, 0),
+     '合同变更审批：申请人 → 法务 → 财务 → 总经理', 'ENABLED', 1, 'init_v1', 0, 0, 1),
     ('project_closure',    '项目销项审批', 'closure',  '1.0', 'CLASSICS', 'N',
      '/closure/detail', 1, 1,
-     '项目销项审批：PM → 部门负责人 → 财务 → 分管领导', 'ENABLED', 1, 'init_v1', 0, 0),
+     '项目销项审批：PM → 部门负责人 → 财务 → 分管领导', 'ENABLED', 1, 'init_v1', 0, 0, 1),
     ('pmis_leave',         'PMIS 通用请假', 'admin',    '1.0', 'CLASSICS', 'N',
      '/admin/leave/detail', 1, 1,
-     'PMIS 通用请假：申请人 → 直属上级 → 人事', 'ENABLED', 1, 'init_v1', 0, 0)
-ON CONFLICT (flow_code, version, tenant_id) WHERE deleted = 0 DO NOTHING;
+     'PMIS 通用请假：申请人 → 直属上级 → 人事', 'ENABLED', 1, 'init_v1', 0, 0, 1)
+ON CONFLICT (flow_code, flow_version, tenant_id) WHERE deleted = 0 DO NOTHING;
 
 -- --------------------------------------------------------------------
 
@@ -6338,7 +6341,7 @@ VALUES (
     'NORMAL',
     'P1-2: 每 30s 扫描到点定时器，触发中间/边界定时器',
     1
-) ON CONFLICT (job_key) DO NOTHING;
+) ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- --------------------------------------------------------------------
 
@@ -6908,18 +6911,15 @@ FULL OUTER JOIN
 COMMENT ON VIEW pmis_view_flow_archive_stats IS '流程归档统计: active_count 主表实例数 / archived_count 已归档实例数';
 
 -- 注册归档任务到 pmis_job（每日 03:00 触发，阈值 30 天）
--- 早期版本误用 cron/params/created_at/updated_at 等字段名，应与
--- V1.0.0_006 中 pmis_job 表的列保持一致: cron_expression/params_json/
--- create_time/update_time。同时补齐 job_group/job_key/remark 字段。
 INSERT INTO pmis_job
-    (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id, create_time, update_time, deleted)
+    (job_name, job_group, job_key, handler, cron_expression, params_json, status, remark, tenant_id, created_at, updated_at, deleted)
 VALUES
     ('流程历史归档任务', 'WORKFLOW', 'flowHistoryArchiveJob',
      'flowHistoryArchiveJobHandler', '0 0 3 * * ?',
      '{"days":30,"batchSize":100,"maxProcessMs":30000}',
      'NORMAL', '每日 03:00 归档 30 天前的历史流程实例, 单批 100 条, 单次最长 30s',
      1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0)
-ON CONFLICT (job_key) DO NOTHING;
+ON CONFLICT (job_key, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- --------------------------------------------------------------------
 
@@ -7270,7 +7270,7 @@ VALUES
     100,
     'ALL',
     'SYSTEM'
-) ON CONFLICT (rule_code) DO NOTHING;
+) ON CONFLICT (tenant_id, rule_code, deleted) WHERE deleted = 0 DO NOTHING;
 
 INSERT INTO pmis_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
 VALUES
@@ -7287,7 +7287,7 @@ VALUES
     110,
     'ALL',
     'SYSTEM'
-) ON CONFLICT (rule_code) DO NOTHING;
+) ON CONFLICT (tenant_id, rule_code, deleted) WHERE deleted = 0 DO NOTHING;
 
 INSERT INTO pmis_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
 VALUES
@@ -7304,7 +7304,7 @@ VALUES
     120,
     'RESOURCE_POOL',
     'SYSTEM'
-) ON CONFLICT (rule_code) DO NOTHING;
+) ON CONFLICT (tenant_id, rule_code, deleted) WHERE deleted = 0 DO NOTHING;
 
 INSERT INTO pmis_rule_def (rule_code, rule_name, category, description, condition_expression, severity_expression, default_severity, title_template, description_template, priority, scope, created_by)
 VALUES
@@ -7321,7 +7321,7 @@ VALUES
     130,
     'ALL',
     'SYSTEM'
-) ON CONFLICT (rule_code) DO NOTHING;
+) ON CONFLICT (tenant_id, rule_code, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- --------------------------------------------------------
 -- 4. 初始版本快照
@@ -7465,7 +7465,7 @@ VALUES
 )
 -- 早期版本在每个 VALUES tuple 后面写 ON CONFLICT，PG 不支持该语法。
 -- 多行 VALUES 必须在整个块之后接 ON CONFLICT 子句。
-ON CONFLICT (template_code) DO NOTHING;
+ON CONFLICT (tenant_id, template_code, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- --------------------------------------------------------------------
 
@@ -7601,6 +7601,7 @@ CREATE TABLE IF NOT EXISTS pmis_rule_execution_trace (
     result_snapshot   JSONB,
     error_message     TEXT,
     provider_trace_id VARCHAR(64),
+    created_by        VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
     created_at        TIMESTAMPTZ     NOT NULL DEFAULT NOW()
 );
 
@@ -8217,7 +8218,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_payment_unallocated
 -- P1-4: pmis_operation_log 的 BRIN 索引已上移到父表定义处(分区自动传播),此处跳过
 --       pmis_message_log 仍非分区表,保留原 BRIN
 CREATE INDEX IF NOT EXISTS idx_pmis_message_log_brin_sent
-    ON pmis_message_log USING BRIN (create_time)
+    ON pmis_message_log USING BRIN (created_at)
     WITH (pages_per_range = 32);
 
 -- =====================================================================
@@ -8386,7 +8387,7 @@ INSERT INTO pmis_rule_variable_def (var_name, var_type, description, sample_valu
     ('projectName',        'java.lang.String',  '项目名称',                                  '示例项目','PROJECT',TRUE),
     ('projectStatus',      'java.lang.String',  '项目状态（IN_PROGRESS/Delayed/Completed）','IN_PROGRESS','PROJECT',TRUE),
     ('tenantId',           'java.lang.String',  '租户 ID',                                   'T001','PROJECT',FALSE)
-ON CONFLICT (tenant_id, var_name) DO NOTHING;
+ON CONFLICT (tenant_id, var_name, deleted) WHERE deleted = 0 DO NOTHING;
 
 -- --------------------------------------------------------------------
 
@@ -9360,6 +9361,11 @@ CREATE INDEX IF NOT EXISTS idx_pfrt_assignor
 CREATE INDEX IF NOT EXISTS idx_pfht_assignor
     ON pmis_flow_his_task (assignor_id)
     WHERE deleted = 0 AND assignor_id IS NOT NULL;
+
+-- FOREACH 节点 partial unique index(替代原 UNIQUE ... WHERE 约束,PG 不支持该约束语法)
+CREATE UNIQUE INDEX IF NOT EXISTS uk_pfrt_foreach_iter
+    ON pmis_flow_run_task (instance_id, node_code, iter_var)
+    WHERE iter_var IS NOT NULL AND deleted = 0;
 
 -- ----------------------------------------------------------------------------
 -- 2) pmis_finance_invoice.tax_period VARCHAR(16) -> VARCHAR(7)(与 YYYY-MM 正则匹配)
