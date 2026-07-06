@@ -52,7 +52,7 @@ const stats = computed(() => {
   const enabled = snapshots.value.filter((s) => s.effectiveValue).length
   const mandatory = snapshots.value.filter((s) => s.mandatory).length
   const inRollout = snapshots.value.filter(
-    (s) => s.rolloutPercentage != null && s.rolloutPercentage > 0 && s.rolloutPercentage < 100,
+    (s) => s.rolloutPercentage !== null && s.rolloutPercentage !== undefined && s.rolloutPercentage > 0 && s.rolloutPercentage < 100,
   ).length
   return { total, enabled, mandatory, inRollout, disabled: total - enabled }
 })
@@ -148,7 +148,7 @@ async function handleRefresh() {
  * @returns 灰度比例描述（如 '全量' / '0% (关闭)' / '85%'）
  */
 function rolloutText(s: FeatureFlagSnapshot): string {
-  if (s.rolloutPercentage == null) return t('system.featureFlag.rolloutText.full')
+  if (s.rolloutPercentage === null || s.rolloutPercentage === undefined) return t('system.featureFlag.rolloutText.full')
   if (s.rolloutPercentage === 0) return t('system.featureFlag.rolloutText.closed')
   if (s.rolloutPercentage === 100) return t('system.featureFlag.rolloutText.full100')
   return `${s.rolloutPercentage}%`

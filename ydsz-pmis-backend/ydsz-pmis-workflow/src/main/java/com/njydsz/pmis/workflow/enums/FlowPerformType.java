@@ -17,5 +17,12 @@ public enum FlowPerformType {
     /** 票签：通过率达到 approveCount / 总数 阈值才推进 */
     VOTE,
     /** P1-5: 加权票签 — 按办理人 weight 累加，权重达到阈值才推进 */
-    WEIGHTED_VOTE
+    WEIGHTED_VOTE,
+    /**
+     * GAP-P2-10: FOREACH 并行循环 — 每个集合元素对应一条独立 task，全部完成才推进
+     *
+     * <p>与 {@link #PARALLEL}（会签）的区别：会签是 1 task + N user 共享审批意见；
+     * FOREACH_PARALLEL 是 N 条独立 task，每条 task 独立完成，全部完成才推进。
+     */
+    FOREACH_PARALLEL
 }

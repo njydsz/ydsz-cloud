@@ -53,7 +53,7 @@ interface BatchAction {
 }
 
 const props = defineProps({
-  query: { type: Object as PropType<Record<string, any>>, default: () => ({ page: 1, size: 10 }) },
+  query: { type: Object as PropType<Record<string, unknown>>, default: () => ({ page: 1, size: 10 }) },
   list: { type: Array as PropType<unknown[]>, default: () => [] },
   total: { type: Number, default: 0 },
   loading: { type: Boolean, default: false },
@@ -83,7 +83,7 @@ const props = defineProps({
   /** 骨架屏列数（loadingType='skeleton' 时生效） */
   skeletonColumns: { type: Number, default: 6 },
   /** 当前选中的行数据，非空时在表格上方展示批量操作工具栏 */
-  selection: { type: Array as PropType<any[]>, default: () => [] },
+  selection: { type: Array as PropType<unknown[]>, default: () => [] },
   /** 批量操作按钮配置，传给 BatchToolbar 的 actions */
   batchActions: { type: Array as PropType<BatchAction[]>, default: () => [] },
   /** H16.4：空状态预设场景；空字符串表示不启用（使用 table 自带空状态），可选值 list/search/network/noPermission */
@@ -97,7 +97,7 @@ const emit = defineEmits<{
   (e: 'reset'): void
   (e: 'page-change'): void
   (e: 'refresh'): void
-  (e: 'update:query', value: Record<string, any>): void
+  (e: 'update:query', value: Record<string, unknown>): void
   /** 清空选择（点击 BatchToolbar「清空选择」时触发） */
   (e: 'clear-selection'): void
   /** H16.4：空状态 CTA 按钮点击 */

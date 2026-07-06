@@ -92,7 +92,7 @@ const submitting = ref(false)
 /** 新建结项弹窗可见性 */
 const dialogVisible = ref(false)
 /** 表单引用（用于校验） */
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 新建结项表单数据 */
 const form = reactive<Partial<ProjectClosureCreateDTO>>({
   closureCode: '',

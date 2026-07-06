@@ -13,6 +13,7 @@
 import { ref, watch, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 
 const { t } = useI18n()
 
@@ -41,10 +42,10 @@ const emit = defineEmits<{
   'closed': []
 }>()
 
-const formRef = ref()
+const formRef = ref<FormInstance>()
 
 defineExpose({
-  formRef: formRef as Ref<any>,
+  formRef: formRef as Ref<FormInstance | undefined>,
   /** 触发表单校验 */
   validate: async () => {
     if (!formRef.value) return true

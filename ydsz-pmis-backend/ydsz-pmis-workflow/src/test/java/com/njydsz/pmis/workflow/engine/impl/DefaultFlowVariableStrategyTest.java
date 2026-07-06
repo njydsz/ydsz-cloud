@@ -39,6 +39,7 @@ class DefaultFlowVariableStrategyTest {
     private DefaultFlowVariableStrategy aviatorStrategy;
 
     @BeforeEach
+    @SuppressWarnings("unchecked")
     void setUp() {
         // legacy：ObjectProvider 返回 null（Aviator 不可用）
         when(evaluatorProvider.getIfAvailable()).thenReturn(null);

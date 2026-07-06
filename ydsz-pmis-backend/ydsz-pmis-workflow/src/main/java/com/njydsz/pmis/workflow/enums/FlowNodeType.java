@@ -35,7 +35,26 @@ public enum FlowNodeType {
      *  <p>P1-5: ext JSON 还支持 autoDedup: true 配置，表示该节点启用跨节点办理人去重
      *  （同实例下已审批过的办理人将被排除，候选为空时自动跳过）。
      */
-    SERVICE(8, "服务节点");
+    SERVICE(8, "服务节点"),
+    /**
+     * GAP-P2-10: 循环节点（FOREACH）— 对集合变量中每个元素创建独立子任务，全部完成才推进
+     *
+     * <p>对标 BPMN 2.0 multiInstance + 钉钉/飞书"审批人动态集合"能力。
+     * 与 {@link #APPROVAL} + performType=PARALLEL（会签）的区别：
+     * <ul>
+     *   <li>会签：1 条 task + N 个 FlowUserDO（共享审批意见）</li>
+     *   <li>FOREACH：N 条独立 task（每条有自己的 assigneeId / iterVar）</li>
+     * </ul>
+     *
+     * <p>ext JSON 配置：
+     * <ul>
+     *   <li>{@code collection}：集合变量名（如 {@code ${assignees}}，复用 expandAssignees 展开逻辑）</li>
+     *   <li>{@code elementVariable}：每次迭代注入的变量名（如 {@code assignee}，存入 task.iterVar）</li>
+     *   <li>{@code completionCondition}：完成条件表达式（注入 nrOfInstances / nrOfCompletedInstances / nrOfActiveInstances）</li>
+     *   <li>{@code emptyStrategy}：集合为空兜底策略（FALLBACK/AUTO_PASS/TRANSFER_ADMIN/ASSIGN_SPECIFIED）</li>
+     * </ul>
+     */
+    FOREACH(9, "循环节点");
 
     private final int code;
     private final String desc;

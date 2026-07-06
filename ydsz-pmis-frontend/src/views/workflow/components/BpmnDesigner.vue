@@ -103,7 +103,7 @@ const isSequenceFlow = (): boolean => {
 
 // 是否显示通用属性
 const hasGeneralProps = (): boolean => {
-  return selectedElement.value != null && selectedElement.value.type !== 'bpmn:Process'
+  return selectedElement.value !== null && selectedElement.value !== undefined && selectedElement.value.type !== 'bpmn:Process'
 }
 
 // 读取 BPMN 元素属性到面板

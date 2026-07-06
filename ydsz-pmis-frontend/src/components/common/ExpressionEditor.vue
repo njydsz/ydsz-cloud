@@ -138,7 +138,7 @@ function aviatorCompletions(context: CompletionContext): CompletionResult | null
   ]
   for (const kw of keywords) {
     if (kw.label.toLowerCase().startsWith(word.text.toLowerCase())) {
-      options.push({ label: kw.label, type: kw.type as any, detail: kw.detail })
+      options.push({ label: kw.label, type: kw.type as Completion['type'], detail: kw.detail })
     }
   }
 

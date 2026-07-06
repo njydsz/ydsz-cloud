@@ -130,6 +130,15 @@ public class FlowTaskDO extends BaseDO {
     @Version
     private Integer version;
 
+    /**
+     * GAP-P2-10: FOREACH 当前迭代元素值
+     *
+     * <p>循环节点为集合中每个元素创建独立 task，该字段存储当前 task 对应的元素值
+     * （如 userId、deptId 等），用于区分不同迭代实例。
+     * 非 FOREACH 节点的 task 该字段为 null。
+     */
+    private String iterVar;
+
     /** 租户 ID */
     private Long tenantId;
 

@@ -4666,7 +4666,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_task(
     priority           INT          NOT NULL DEFAULT 50,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
+    provider_trace_id  VARCHAR(64),
+    -- GAP-P2-10: FOREACH 循环节点当前迭代元素值（非循环节点为 NULL）
+    iter_var           VARCHAR(255)
 );
 
 COMMENT ON TABLE  pmis_flow_task IS '待办任务表: 实例推进过程中产生的待办切片,办理人待办箱核心表';

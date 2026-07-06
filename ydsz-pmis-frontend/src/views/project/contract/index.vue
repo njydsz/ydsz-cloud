@@ -5,6 +5,7 @@
 -->
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {

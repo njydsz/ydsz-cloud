@@ -132,7 +132,7 @@ const isEmpty = computed(() => !loading.value && list.value.length === 0)
 
 /** 新增工单弹窗显隐 */
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 提交中状态（防重复提交） */
 const submittingForm = ref(false)
 /** 新增工单表单数据 */

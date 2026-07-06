@@ -23,6 +23,7 @@ import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.enums.FlowPerformType;
+import com.njydsz.pmis.workflow.enums.FlowSignType;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
@@ -157,6 +158,12 @@ public class FlowTaskCompleteServiceImpl {
         if (node.getNodeType() != null
                 && node.getNodeType() == FlowNodeType.SERVICE.getCode()) {
             return executeServiceNode(instance, node, variables);
+        }
+
+        // GAP-P2-10: FOREACH 循环节点 — 对集合中每个元素创建独立 task，全部完成才推进
+        if (node.getNodeType() != null
+                && node.getNodeType() == FlowNodeType.FOREACH.getCode()) {
+            return createForeachTasks(instance, node, variables, explicitAssignees);
         }
 
         // 解析办理人：GAP-P2-9 显式指定优先；否则尝试展开 ROLE/DEPT 为多人
@@ -327,6 +334,155 @@ public class FlowTaskCompleteServiceImpl {
         return task.getId();
     }
 
+    // ============================== GAP-P2-10: FOREACH 循环节点 ==============================
+
+    /**
+     * GAP-P2-10: FOREACH 循环节点 — 对集合中每个元素创建独立 task
+     *
+     * <p>对标 BPMN 2.0 multiInstance + 钉钉/飞书动态审批人集合。与会签（1 task + N user）的区别：
+     * FOREACH 为每个集合元素创建独立的 FlowTaskDO，每条 task 有独立的 assigneeId / iterVar。
+     *
+     * <h3>处理流程</h3>
+     * <ol>
+     *   <li>读取 ext.collection 配置，展开集合变量得到 N 个元素（复用 expandAssignees）</li>
+     *   <li>集合为空时走 ext.emptyStrategy 兜底（默认 AUTO_PASS 直接推进）</li>
+     *   <li>集合非空：为每个元素创建 1 条独立 task，performType=FOREACH_PARALLEL，
+     *       approveCount=1（每条 task 独立计数），iterVar 存元素值</li>
+     *   <li>返回首条 task ID（向后兼容 createTask 返回值语义）</li>
+     * </ol>
+     *
+     * <p>完成聚合在 {@link #doForeachPass} 中处理：每条 task 完成后检查同 nodeCode 的 PENDING task 数，
+     * 全部完成才调用 advancer.advance 推进。
+     *
+     * @param instance           流程实例
+     * @param node               FOREACH 节点
+     * @param variables          流程变量
+     * @param explicitAssignees  显式办理人（P2-9 自由流跳转传入，FOREACH 场景一般不传）
+     * @return 首条 task ID（集合为空且 AUTO_PASS 时返回自动完成的 task ID）
+     */
+    private Long createForeachTasks(FlowInstanceDO instance, FlowNodeDO node,
+                                      Map<String, Object> variables,
+                                      List<String> explicitAssignees) {
+        // 展开集合元素（复用 expandAssignees，支持 collection 变量 / permissionFlag / 显式指定）
+        List<String> elements = (explicitAssignees != null && !explicitAssignees.isEmpty())
+                ? new ArrayList<>(explicitAssignees)
+                : expandAssignees(node, variables);
+
+        // 集合为空兜底（复用 emptyStrategy 配置，默认 AUTO_PASS 直接推进）
+        if (elements.isEmpty()) {
+            Map<String, Object> extConfig = parseExtConfig(node.getExt());
+            String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", "AUTO_PASS");
+            if ("AUTO_PASS".equals(emptyStrategy)) {
+                FlowTaskDO autoTask = buildForeachTask(instance, node, "0",
+                        "SYSTEM_AUTO_PASS", "0");
+                autoTask.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+                autoTask.setFinishAt(LocalDateTime.now());
+                autoTask.setDurationMs(0L);
+                taskMapper.insert(autoTask);
+                archiveTask(autoTask, FlowTaskStatus.COMPLETED);
+                support.audit(autoTask, "FOREACH_AUTO_PASS", 0L, null, "FOREACH 集合为空，自动通过");
+                log.info("[Flow] FOREACH 集合为空自动通过: instanceId={} node={}",
+                        instance.getId(), node.getNodeCode());
+                // 推进到下一节点（复用 AUTO_PASS 推进逻辑）
+                advanceAfterAutoPass(instance, node, variables);
+                return autoTask.getId();
+            }
+            // 其他策略（TRANSFER_ADMIN / ASSIGN_SPECIFIED）回退到单 task 创建
+            log.warn("[Flow] FOREACH 集合为空，使用 {} 策略: node={}", emptyStrategy, node.getNodeCode());
+            elements = List.of("1"); // 默认管理员 ID
+        }
+
+        // 为每个元素创建独立 task
+        Long firstTaskId = null;
+        for (String element : elements) {
+            FlowTaskDO task = buildForeachTask(instance, node, element,
+                    "USER:" + element, element);
+            taskMapper.insert(task);
+
+            // 写入 pmis_flow_user（保持与会签一致的办理人记录）
+            FlowUserDO fu = new FlowUserDO();
+            fu.setTaskId(task.getId());
+            fu.setInstanceId(instance.getId());
+            fu.setNodeCode(node.getNodeCode());
+            fu.setUserType(FlowAssigneeType.USER.name());
+            fu.setUserId(element);
+            fu.setUserName("USER:" + element);
+            fu.setProcessed(0);
+            fu.setWeight(1);
+            fu.setSignType(FlowSignType.ORIGINAL.name());
+            fu.setTenantId(instance.getTenantId());
+            fu.setProviderTraceId(instance.getProviderTraceId());
+            userMapper.insert(fu);
+
+            // P2-3: Prometheus 指标
+            if (flowMetrics != null) {
+                flowMetrics.incTaskCreated(instance.getFlowCode(), node.getNodeCode());
+            }
+            // P1-7: WebSocket 推送
+            if (todoCountPushService != null) {
+                todoCountPushService.pushTaskAssigned(task);
+            }
+            support.fireEvent(l -> l.onTaskCreated(task.getId()), task.getId());
+            support.publishWorkflowEvent("TASK_CREATED", instance.getId(), task.getId());
+
+            if (firstTaskId == null) {
+                firstTaskId = task.getId();
+            }
+        }
+        log.info("[Flow] FOREACH 创建 {} 条独立 task: instanceId={} node={}",
+                elements.size(), instance.getId(), node.getNodeCode());
+        return firstTaskId;
+    }
+
+    /**
+     * GAP-P2-10: 构建 FOREACH 子任务
+     */
+    private FlowTaskDO buildForeachTask(FlowInstanceDO instance, FlowNodeDO node,
+                                          String assigneeId, String assigneeName, String iterVar) {
+        FlowTaskDO task = new FlowTaskDO();
+        task.setInstanceId(instance.getId());
+        task.setFlowCode(instance.getFlowCode());
+        task.setDefinitionId(instance.getDefinitionId());
+        task.setNodeCode(node.getNodeCode());
+        task.setNodeName(node.getNodeName());
+        task.setNodeType(node.getNodeType());
+        task.setBusinessType(instance.getBusinessType());
+        task.setBusinessId(instance.getBusinessId());
+        task.setBusinessNo(instance.getBusinessNo());
+        task.setFlowName(instance.getFlowName());
+        task.setTitle(instance.getTitle());
+        task.setPermissionFlag(node.getPermissionFlag());
+        task.setPerformType(FlowPerformType.FOREACH_PARALLEL.name());
+        task.setApproveCount(1);
+        task.setApproveFinished(0);
+        task.setTaskStatus(FlowTaskStatus.PENDING.name());
+        task.setAssigneeType(FlowAssigneeType.USER.name());
+        task.setAssigneeId(assigneeId);
+        task.setAssigneeName(assigneeName);
+        task.setTenantId(instance.getTenantId());
+        task.setProviderTraceId(instance.getProviderTraceId());
+        task.setIterVar(iterVar);
+        // P1-1: 从 node.ext.priority 读取优先级（默认 50）
+        Map<String, Object> nodeExt = parseExtConfig(node.getExt());
+        Object priorityVal = nodeExt.get("priority");
+        if (priorityVal instanceof Number n) {
+            task.setPriority(n.intValue());
+        } else if (priorityVal instanceof String s && !s.isBlank()) {
+            try {
+                task.setPriority(Integer.parseInt(s.trim()));
+            } catch (NumberFormatException ignore) {
+                task.setPriority(50);
+            }
+        } else {
+            task.setPriority(50);
+        }
+        // P1-6: 应用 SLA 配置
+        if (slaService != null) {
+            slaService.applySlaConfig(task, node);
+        }
+        return task;
+    }
+
     // ============================== P1-4: 长期授权委派改写 ==============================
 
     /**
@@ -446,6 +602,8 @@ public class FlowTaskCompleteServiceImpl {
             case SEQUENTIAL -> doSequentialPass(task, instance, mergedVars, dto);
             case VOTE -> doVotePass(task, instance, mergedVars, dto);
             case WEIGHTED_VOTE -> doWeightedVotePass(task, instance, mergedVars, dto);
+            // GAP-P2-10: FOREACH 并行循环 — 每条 task 独立完成，全部完成才推进
+            case FOREACH_PARALLEL -> doForeachPass(task, instance, mergedVars, dto);
         }
         // P1-7: WebSocket 推送任务完成 + 操作人待办数更新
         if (todoCountPushService != null) {
@@ -912,6 +1070,88 @@ public class FlowTaskCompleteServiceImpl {
                     condition, e.getMessage());
             return finished >= required;
         }
+    }
+
+    /**
+     * GAP-P2-10: FOREACH 并行循环 — 每条 task 独立完成，全部完成才推进
+     *
+     * <p>与 {@link #doParallelPass}（会签）的区别：
+     * <ul>
+     *   <li>会签：1 条 task + N 个 FlowUserDO，approveFinished 计数聚合在单 task 上</li>
+     *   <li>FOREACH：N 条独立 task，每条 approveCount=1，通过 countPendingByNode 判断是否全部完成</li>
+     * </ul>
+     *
+     * <h3>处理流程</h3>
+     * <ol>
+     *   <li>完成当前 task（COMPLETED + archive）</li>
+     *   <li>查询同 instanceId + nodeCode 的 PENDING task 数</li>
+     *   <li>PENDING 数 > 0：还有未完成 task，不推进</li>
+     *   <li>PENDING 数 = 0：全部完成，调用 advancer.advance 推进到下一节点</li>
+     * </ol>
+     *
+     * <p>支持 ext.completionCondition 表达式提前完成（如 {@code nrOfCompletedInstances >= 2}），
+     * 满足条件时 skipByNode 跳过剩余 PENDING task 并推进。
+     */
+    private void doForeachPass(FlowTaskDO task, FlowInstanceDO instance,
+                                 Map<String, Object> vars, FlowTaskOperateDTO dto) {
+        // 完成当前 task
+        completeAndArchive(task, dto.getComment());
+
+        // 检查同 nodeCode 的 PENDING task 数
+        int pendingCount = taskMapper.countPendingByNode(instance.getId(), task.getNodeCode());
+
+        // 优先求值 completionCondition 表达式（支持提前完成）
+        String completionCondition = resolveCompletionCondition(task);
+        if (completionCondition != null) {
+            // FOREACH 完成计数：approveCount = 集合元素总数（从 node.ext 查询 + countPendingByNode 反推）
+            // 注：FOREACH 每条 task 独立，approveFinished 不聚合，这里用"已完成数"和"总数"求值
+            int totalElements = countTotalForeachElements(instance.getId(), task.getNodeCode());
+            int completedElements = totalElements - pendingCount;
+            boolean shouldAdvance = evaluateCompletionCondition(completionCondition,
+                    completedElements, totalElements, vars);
+            if (shouldAdvance && pendingCount > 0) {
+                // 提前完成：跳过剩余 PENDING task
+                taskMapper.skipByNode(instance.getId(), task.getNodeCode(),
+                        FlowTaskStatus.SKIPPED.name());
+                pendingCount = 0;
+            }
+        }
+
+        if (pendingCount > 0) {
+            // 还有未完成 task，不推进
+            support.audit(task, "FOREACH_PASS", dto.getUserId(), null,
+                    dto.getComment(), dto.getCommentType());
+            log.info("[Flow] FOREACH 部分完成: taskId={} node={} pending={}",
+                    task.getId(), task.getNodeCode(), pendingCount);
+            return;
+        }
+
+        // 全部完成：推进到下一节点
+        List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
+                "PASS", null, vars);
+        instanceService.generateTasksForNodes(task.getInstanceId(), nextNodes, vars);
+        updateInstanceNode(instance, nextNodes);
+        fireTaskCompleted(task.getId(), "PASS", vars);
+        support.audit(task, "FOREACH_PASS_ALL", dto.getUserId(), null,
+                dto.getComment(), dto.getCommentType());
+        log.info("[Flow] FOREACH 全部完成: taskId={} node={}", task.getId(), task.getNodeCode());
+    }
+
+    /**
+     * GAP-P2-10: 统计 FOREACH 节点的总元素数（已完成 + PENDING）
+     *
+     * <p>用于 completionCondition 求值时注入 nrOfInstances。
+     * 查询 pmis_flow_task 中同 instanceId + nodeCode 的所有 task 数（不限状态）。
+     */
+    private int countTotalForeachElements(Long instanceId, String nodeCode) {
+        // 使用 countPendingByNode + 已完成数（从历史表或 task 表统计）
+        // 简化实现：查 pmis_flow_task 同节点全部 task 数（含 COMPLETED/SKIPPED/PENDING）
+        // 这里用 FlowTaskMapper 的 selectList + 过滤实现，避免新增 Mapper 方法
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowTaskDO> wrapper =
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
+        wrapper.eq(FlowTaskDO::getInstanceId, instanceId)
+                .eq(FlowTaskDO::getNodeCode, nodeCode);
+        return Math.toIntExact(taskMapper.selectCount(wrapper));
     }
 
     /** P1-12: 顺序会签 — 按序逐一处理（GAP-P1: 乐观锁防并发） */

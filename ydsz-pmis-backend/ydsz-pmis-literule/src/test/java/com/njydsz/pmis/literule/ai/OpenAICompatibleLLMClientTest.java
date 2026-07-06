@@ -38,15 +38,14 @@ import static org.mockito.Mockito.when;
  * @since 1.5.0
  */
 @DisplayName("OpenAI 兼容 LLM 客户端测试")
+@SuppressWarnings("unchecked")
 class OpenAICompatibleLLMClientTest {
 
     private LiteRuleProperties.Ai config;
     private HttpClient httpClient;
-    @SuppressWarnings("unchecked")
-    private HttpResponse<String> response;
+    private HttpResponse<String> response = (HttpResponse<String>) mock(HttpResponse.class);
 
     @BeforeEach
-    @SuppressWarnings("unchecked")
     void setUp() {
         config = new LiteRuleProperties.Ai();
         config.setEnabled(true);

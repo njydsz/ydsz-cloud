@@ -23,7 +23,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 
 > 南京云顶数字科技有限公司 · 软件定制 + 人力外包 双业态 · 业财一体化精细化运营平台
 >
-> **当前版本**: `v1.3.0-SNAPSHOT` · **最近更新**: 2026-07-04
+>- **当前版本**: `v1.3.0-SNAPSHOT` · **最近更新**: 2026-07-06
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-4.0.7-6DB33F?logo=springboot)]()
 [![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2025.1.2-6DB33F?logo=spring)]()
@@ -332,6 +332,37 @@ ydsz-pmis/
 - 后端 `ydsz-pmis-workflow` 模块 API 默认响应 PC 端字段结构（包含完整流程图 JSON、表单 Schema、审批历史），不为移动端裁剪；
 - 任何 PR 不得引入「工作流模块移动端适配」相关代码，code review 必须拦截。
 
+### 7.5 电子签章能力范围（团队共识 · 硬约束）
+
+> 自 2026-07-06 起明确：**`ydsz-pmis-workflow` 模块及其全部前端页面永远不会集成电子签章（e-sign）能力**。该决策与 7.4 同级，属于「不会做」清单。
+
+**不集成的范围**（不限于）：
+
+| 维度 | 不集成的内容 |
+|---|---|
+| ❌ 第三方 SaaS | e签宝 / 法大大 / 上上签 / 契约锁 / DocuSign / Adobe Sign 等的 OpenAPI / SDK |
+| ❌ 私有化签章 | 私有化电子签章服务器、签章前置机、SM2/RSA 数字证书组件、PDF/OFD 签章后处理 |
+| ❌ 基础设施 | 时间戳服务（TSA）、CA 认证网关、电子证据保全、司法存证 |
+| ❌ 数据对象 | 电子合同原文存证、签署轨迹哈希、签章图片、证书链、骑缝章等 |
+
+**为什么工作流不集成电子签章**：
+
+1. **业务定位决定**：项目运营管理系统（B 端内部工具）关注「审批流转」，电子签章属于法务/合同独立业务线，关注「签署生效」与法律效力。两者职责正交，合并会污染领域模型。
+2. **合规与法律风险**：电子签章涉及 CA 认证、密评、等保三级、合同法/电子签名法合规审计、证据链保全、不可抵赖性。集成到自研工作流引擎会引入不可控的法律责任（一旦签署无效需由系统方举证）。
+3. **避免厂商锁定**：电子签章 SaaS 普遍采用年度授权 + 证书计费 + 私有化部署差异，自研引擎不应承担这部分采购与运维成本。
+4. **解耦架构**：签章是合同生命周期的一环，应在「合同管理」（`ydsz-pmis-project` 模块的 `ContractDO` 链路）独立抽象，由合同服务对接电子签章平台，工作流引擎仅作为「审批节点触发方」。
+
+**实施约束**（code review 必查）：
+
+- 后端 `ydsz-pmis-workflow` 模块不得新增 `ElectronicSign*` / `Esign*` / `SignatureCert*` / `PdfSeal*` / `ContractSign*` 等 Controller / Service / Entity / Mapper；
+- `ydsz-pmis-workflow/pom.xml` 不得引入任何电子签章相关依赖（如 `esign-sdk` / `fadada-sdk` / `bouncycastle` 签章扩展 / `itextpdf` 签章模块等）；
+- 前端工作流相关页面 / 组件不得引入签章相关组件库（如 `vue-esign` / `pdf-lib` 签章插件 / `signature_pad` 在工作流场景的复用等）；
+- 权限码（`PermissionCodes`）不得增加 `esign:*` / `contract.sign:*` / `workflow:esign:*` 等命名空间；
+- SQL 脚本（`deploy/sql/V*.sql`）不得新增 `pmis_sign_*` / `pmis_cert_*` / `pmis_contract_sign_*` 表；
+- 如业务侧确有签署需求，须在 `ydsz-pmis-project` 的合同服务通过「外部跳转 / Webhook 回调」方式对接独立电子签章服务，工作流引擎仅传递 `contractId` + `signStatus` 等轻量状态字段，不持有签署原文或证书数据。
+
+**未来扩展点（不包含在本约束内）**：合同服务（`ydsz-pmis-project`）可按需集成电子签章能力，但必须走独立 RFC + 法务/合规评审，不允许直接绕过本约束。
+
 ---
 
 ## 八、批次交付总览
@@ -414,5 +445,5 @@ ydsz-pmis/
 
 ---
 
-> 本 README 由 PMIS 团队维护，与代码同步更新（v1.3.0_2026-07-04）。
+> 本 README 由 PMIS 团队维护，与代码同步更新（v1.3.0_2026-07-06）。
 > 任何变更请走 PR + Code Review 流程。

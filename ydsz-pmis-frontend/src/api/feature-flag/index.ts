@@ -51,7 +51,7 @@ export const checkFeatureFlag = (key: string, userId?: number) =>
   request<boolean>({
     url: '/feature-flags/check',
     method: 'GET',
-    params: { key, ...(userId != null ? { userId } : {}) },
+    params: { key, ...(userId !== null && userId !== undefined ? { userId } : {}) },
   })
 
 /**

@@ -52,6 +52,19 @@ module.exports = {
   },
   overrides: [
     {
+      // P2-1: 核心基础设施模块强制禁止 any（已全部收口）
+      // 这些模块被业务代码广泛复用，类型安全必须保证
+      files: [
+        'src/components/common/**',
+        'src/utils/**',
+        'src/composables/**',
+        'src/store/**',
+      ],
+      rules: {
+        '@typescript-eslint/no-explicit-any': 'error',
+      },
+    },
+    {
       // 允许特定目录继续使用 any（过渡期，可选）
       files: [
         'src/api/**/index.ts',

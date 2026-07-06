@@ -7,6 +7,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import {
   listUsers,
   createUser,

@@ -489,6 +489,9 @@ public class BpmnXmlParser {
                 String performType = "PARALLEL";
                 String collection = e.getAttributeNS(BPMN_EXT_NS, "collection");
                 String elementVariable = e.getAttributeNS(BPMN_EXT_NS, "elementVariable");
+                // GAP-P2-10: flowable:foreach="true" 标记为 FOREACH 循环节点（独立 task 模式）
+                String foreachFlag = e.getAttributeNS(BPMN_EXT_NS, "foreach");
+                boolean isForeach = "true".equalsIgnoreCase(foreachFlag);
                 NodeList miChildren = e.getChildNodes();
                 for (int j = 0; j < miChildren.getLength(); j++) {
                     Node mc = miChildren.item(j);
@@ -512,6 +515,14 @@ public class BpmnXmlParser {
                         }
                     }
                 }
+                // GAP-P2-10: FOREACH 模式 — 覆盖 nodeType 和 performType
+                if (isForeach) {
+                    node.setNodeType(FlowNodeType.FOREACH.getCode());
+                    performType = "FOREACH_PARALLEL";
+                    ext.put("multiInstance", "FOREACH");
+                } else {
+                    ext.put("multiInstance", performType);
+                }
                 // 写入 performType
                 if (ext.get("performType") == null) {
                     ext.put("performType", performType);
@@ -522,7 +533,6 @@ public class BpmnXmlParser {
                 if (elementVariable != null && !elementVariable.isBlank()) {
                     ext.put("elementVariable", elementVariable);
                 }
-                ext.put("multiInstance", performType);
                 return;
             }
         }
