@@ -251,8 +251,8 @@ function nodeStateLabel(state: string | undefined): string {
   return map[state] || state
 }
 
-function nodeStateType(state: string | undefined): '' | 'success' | 'danger' | 'warning' | 'info' {
-  if (!state) return ''
+function nodeStateType(state: string | undefined): 'primary' | 'success' | 'danger' | 'warning' | 'info' {
+  if (!state) return 'primary'
   if (state === 'PASSED' || state === 'FINISHED') return 'success'
   if (state === 'REJECTED') return 'danger'
   if (state === 'ACTIVE') return 'warning'
@@ -396,7 +396,7 @@ onBeforeUnmount(() => {
       <!-- 当前步骤详情卡 -->
       <div v-if="currentStep" class="flow-replay__current">
         <div class="current-header">
-          <el-tag :type="nodeStateType(currentNodeState) as 'success' | 'danger' | 'warning' | 'info'" effect="dark" size="large">
+          <el-tag :type="nodeStateType(currentNodeState)" effect="dark" size="large">
             {{ stepTypeLabel(currentStep.type) }} · {{ nodeStateLabel(currentNodeState) }}
           </el-tag>
           <span class="current-step-no">#{{ currentIndex + 1 }}</span>
@@ -446,7 +446,7 @@ onBeforeUnmount(() => {
             v-for="(step, idx) in steps"
             v-show="visibleStepIndices.includes(idx)"
             :key="idx"
-            :type="nodeStateType(step.nodeState) as 'success' | 'danger' | 'warning' | 'info'"
+            :type="nodeStateType(step.nodeState)"
             :timestamp="step.timestamp ? new Date(step.timestamp).toLocaleString() : ''"
             :class="{ 'is-current': idx === currentIndex, 'is-hidden-step': !visibleStepIndices.includes(idx) }"
             placement="top"
@@ -454,7 +454,7 @@ onBeforeUnmount(() => {
           >
             <div class="step-item">
               <span class="step-no">#{{ idx + 1 }}</span>
-              <el-tag size="small" :type="nodeStateType(step.nodeState) as 'success' | 'danger' | 'warning' | 'info'">
+              <el-tag size="small" :type="nodeStateType(step.nodeState)">
                 {{ nodeStateLabel(step.nodeState) }}
               </el-tag>
               <span class="step-node">{{ step.nodeName || step.nodeCode || '-' }}</span>

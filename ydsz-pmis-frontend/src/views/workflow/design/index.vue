@@ -50,7 +50,7 @@ async function loadDefinitions() {
       selectedDefinitionId.value = definitionList.value[0].id
       selectedDefinition.value = definitionList.value[0]
     }
-  } catch (e) {
+  } catch {
     ElMessage.error('加载流程定义列表失败')
   } finally {
     definitionLoading.value = false
@@ -81,7 +81,7 @@ async function loadVersions() {
   try {
     const res = await listVersions(selectedDefinitionId.value)
     versionList.value = res.data?.data ?? []
-  } catch (e) {
+  } catch {
     ElMessage.error('加载版本列表失败')
   } finally {
     versionLoading.value = false
@@ -135,7 +135,7 @@ async function doDiff() {
       diffV2.value,
     )
     diffData.value = res.data?.data ?? null
-  } catch (e) {
+  } catch {
     ElMessage.error('差异对比失败')
   } finally {
     diffLoading.value = false

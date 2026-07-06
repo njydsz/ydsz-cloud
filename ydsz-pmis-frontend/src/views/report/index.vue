@@ -573,7 +573,7 @@ onUnmounted(() => {
           <el-timeline-item
             v-for="(item, idx) in (reportData?.stages as Array<Record<string, unknown>>) || []"
             :key="idx"
-            :timestamp="item.date as string | undefined"
+            :timestamp="typeof item.date === 'string' ? item.date : ''"
             :type="item.type as TimelineType"
           >
             <h4>{{ item.stage }}</h4>

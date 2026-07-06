@@ -1009,7 +1009,7 @@ onMounted(() => {
       <RuleCategoryTreeSidebar
         v-if="sidebarVisible"
         ref="sidebarRef"
-        v-model:selectedPath="selectedCategoryPath"
+        v-model:selected-path="selectedCategoryPath"
         @select="onCategorySelect"
       />
 

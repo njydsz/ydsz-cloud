@@ -839,7 +839,7 @@ ON CONFLICT DO NOTHING;
 -- PMIS 工作流基础模块清理 DDL（Flowable 表已下线）
 -- 版本: V1.0.0_004
 -- 描述: 完全移除 Flowable 引擎相关的业务关联表 / 表单定义表 / 节点配置表
---       业务流程关联信息已统一收敛到自研 pmis_flow_instance / pmis_flow_task
+--       业务流程关联信息已统一收敛到自研 pmis_flow_instance / pmis_flow_run_task
 --       流程表单/节点配置已收敛到自研 pmis_flow_definition / pmis_flow_node / pmis_flow_skip
 -- 历史: V1.0.0_004 旧版本曾创建 pmis_workflow_business / pmis_workflow_form / pmis_workflow_node_config
 --       现已废弃，本次迁移仅 DROP（不重建），以保证幂等
@@ -4629,8 +4629,8 @@ CREATE INDEX IF NOT EXISTS idx_flow_instance_start       ON pmis_flow_instance(s
 -- 5. 待办任务表（对标 Warm-Flow flow_task）
 --    实例推进过程中产生的待办切片
 -- -----------------------------------------------------
--- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_task;
-CREATE TABLE IF NOT EXISTS pmis_flow_task(
+-- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_run_task;
+CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     id                 BIGSERIAL    PRIMARY KEY,
     instance_id        BIGINT       NOT NULL,
     flow_code          VARCHAR(64)  NOT NULL,
@@ -4671,45 +4671,45 @@ CREATE TABLE IF NOT EXISTS pmis_flow_task(
     iter_var           VARCHAR(255)
 );
 
-COMMENT ON TABLE  pmis_flow_task IS '待办任务表: 实例推进过程中产生的待办切片,办理人待办箱核心表';
-COMMENT ON COLUMN pmis_flow_task.instance_id IS '所属流程实例 ID';
-COMMENT ON COLUMN pmis_flow_task.flow_code IS '流程编码(冗余)';
-COMMENT ON COLUMN pmis_flow_task.definition_id IS '所属流程定义 ID';
-COMMENT ON COLUMN pmis_flow_task.node_code IS '当前节点编码';
-COMMENT ON COLUMN pmis_flow_task.node_name IS '当前节点名称';
-COMMENT ON COLUMN pmis_flow_task.node_type IS '节点类型(同 pmis_flow_node.node_type)';
-COMMENT ON COLUMN pmis_flow_task.business_type IS '业务类型';
-COMMENT ON COLUMN pmis_flow_task.business_id IS '业务对象 ID';
-COMMENT ON COLUMN pmis_flow_task.business_no IS '业务单号';
-COMMENT ON COLUMN pmis_flow_task.flow_name IS '流程名称';
-COMMENT ON COLUMN pmis_flow_task.title IS '任务标题';
-COMMENT ON COLUMN pmis_flow_task.assignor_id IS '转交人 ID: 上一步操作人';
-COMMENT ON COLUMN pmis_flow_task.assignor_name IS '转交人姓名(冗余)';
-COMMENT ON COLUMN pmis_flow_task.assignee_type IS '办理人类型: USER/ROLE/DEPT/SPEL';
-COMMENT ON COLUMN pmis_flow_task.assignee_id IS '办理人 ID(按 type 解析)';
-COMMENT ON COLUMN pmis_flow_task.assignee_name IS '办理人姓名(冗余)';
-COMMENT ON COLUMN pmis_flow_task.permission_flag IS '权限标识: role:hr / dept:10 / user:1001 / ${spel}';
-COMMENT ON COLUMN pmis_flow_task.perform_type IS '会签类型: OR 或签 / SEQUENTIAL 顺序会签 / PARALLEL 并行会签 / VOTE 票签';
-COMMENT ON COLUMN pmis_flow_task.approve_count IS '会签所需通过人数(仅会签节点有效)';
-COMMENT ON COLUMN pmis_flow_task.approve_finished IS '会签当前已通过人数';
-COMMENT ON COLUMN pmis_flow_task.task_status IS '任务状态: PENDING/CLAIMED/COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT';
-COMMENT ON COLUMN pmis_flow_task.comment IS '审批意见';
-COMMENT ON COLUMN pmis_flow_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_flow_task.claim_at IS '签收时间';
-COMMENT ON COLUMN pmis_flow_task.finish_at IS '完成时间';
-COMMENT ON COLUMN pmis_flow_task.duration_ms IS '处理耗时(毫秒)';
-COMMENT ON COLUMN pmis_flow_task.due_at IS '截止时间: SLA 预警依据';
-COMMENT ON COLUMN pmis_flow_task.priority IS 'P1-1: 任务优先级(1-100,默认50),待办默认按 priority DESC, created_at ASC 排序';
-COMMENT ON COLUMN pmis_flow_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON TABLE  pmis_flow_run_task IS '待办任务表: 实例推进过程中产生的待办切片,办理人待办箱核心表';
+COMMENT ON COLUMN pmis_flow_run_task.instance_id IS '所属流程实例 ID';
+COMMENT ON COLUMN pmis_flow_run_task.flow_code IS '流程编码(冗余)';
+COMMENT ON COLUMN pmis_flow_run_task.definition_id IS '所属流程定义 ID';
+COMMENT ON COLUMN pmis_flow_run_task.node_code IS '当前节点编码';
+COMMENT ON COLUMN pmis_flow_run_task.node_name IS '当前节点名称';
+COMMENT ON COLUMN pmis_flow_run_task.node_type IS '节点类型(同 pmis_flow_node.node_type)';
+COMMENT ON COLUMN pmis_flow_run_task.business_type IS '业务类型';
+COMMENT ON COLUMN pmis_flow_run_task.business_id IS '业务对象 ID';
+COMMENT ON COLUMN pmis_flow_run_task.business_no IS '业务单号';
+COMMENT ON COLUMN pmis_flow_run_task.flow_name IS '流程名称';
+COMMENT ON COLUMN pmis_flow_run_task.title IS '任务标题';
+COMMENT ON COLUMN pmis_flow_run_task.assignor_id IS '转交人 ID: 上一步操作人';
+COMMENT ON COLUMN pmis_flow_run_task.assignor_name IS '转交人姓名(冗余)';
+COMMENT ON COLUMN pmis_flow_run_task.assignee_type IS '办理人类型: USER/ROLE/DEPT/SPEL';
+COMMENT ON COLUMN pmis_flow_run_task.assignee_id IS '办理人 ID(按 type 解析)';
+COMMENT ON COLUMN pmis_flow_run_task.assignee_name IS '办理人姓名(冗余)';
+COMMENT ON COLUMN pmis_flow_run_task.permission_flag IS '权限标识: role:hr / dept:10 / user:1001 / ${spel}';
+COMMENT ON COLUMN pmis_flow_run_task.perform_type IS '会签类型: OR 或签 / SEQUENTIAL 顺序会签 / PARALLEL 并行会签 / VOTE 票签';
+COMMENT ON COLUMN pmis_flow_run_task.approve_count IS '会签所需通过人数(仅会签节点有效)';
+COMMENT ON COLUMN pmis_flow_run_task.approve_finished IS '会签当前已通过人数';
+COMMENT ON COLUMN pmis_flow_run_task.task_status IS '任务状态: PENDING/CLAIMED/COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT';
+COMMENT ON COLUMN pmis_flow_run_task.comment IS '审批意见';
+COMMENT ON COLUMN pmis_flow_run_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
+COMMENT ON COLUMN pmis_flow_run_task.claim_at IS '签收时间';
+COMMENT ON COLUMN pmis_flow_run_task.finish_at IS '完成时间';
+COMMENT ON COLUMN pmis_flow_run_task.duration_ms IS '处理耗时(毫秒)';
+COMMENT ON COLUMN pmis_flow_run_task.due_at IS '截止时间: SLA 预警依据';
+COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级(1-100,默认50),待办默认按 priority DESC, created_at ASC 排序';
+COMMENT ON COLUMN pmis_flow_run_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
 
-CREATE INDEX IF NOT EXISTS idx_pft_instance   ON pmis_flow_task(instance_id);
-CREATE INDEX IF NOT EXISTS idx_pft_assignee   ON pmis_flow_task(assignee_id, task_status);
-CREATE INDEX IF NOT EXISTS idx_pft_node       ON pmis_flow_task(node_code);
-CREATE INDEX IF NOT EXISTS idx_pft_biz        ON pmis_flow_task(business_type, business_id);
-CREATE INDEX IF NOT EXISTS idx_pft_status     ON pmis_flow_task(task_status);
-CREATE INDEX IF NOT EXISTS idx_pft_tenant     ON pmis_flow_task(tenant_id);
-CREATE INDEX IF NOT EXISTS idx_pft_create     ON pmis_flow_task(created_at);
-CREATE INDEX IF NOT EXISTS idx_pft_due        ON pmis_flow_task(due_at) WHERE task_status = 'PENDING';
+CREATE INDEX IF NOT EXISTS idx_pft_instance   ON pmis_flow_run_task(instance_id);
+CREATE INDEX IF NOT EXISTS idx_pft_assignee   ON pmis_flow_run_task(assignee_id, task_status);
+CREATE INDEX IF NOT EXISTS idx_pft_node       ON pmis_flow_run_task(node_code);
+CREATE INDEX IF NOT EXISTS idx_pft_biz        ON pmis_flow_run_task(business_type, business_id);
+CREATE INDEX IF NOT EXISTS idx_pft_status     ON pmis_flow_run_task(task_status);
+CREATE INDEX IF NOT EXISTS idx_pft_tenant     ON pmis_flow_run_task(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_pft_create     ON pmis_flow_run_task(created_at);
+CREATE INDEX IF NOT EXISTS idx_pft_due        ON pmis_flow_run_task(due_at) WHERE task_status = 'PENDING';
 
 -- -----------------------------------------------------
 -- 6. 历史任务表（对标 Warm-Flow flow_his_task）
@@ -4753,7 +4753,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
 
 COMMENT ON TABLE  pmis_flow_his_task IS '历史任务表: 已完成任务的归档,避免主表膨胀,审批历史追溯';
 COMMENT ON COLUMN pmis_flow_his_task.instance_id IS '所属流程实例 ID';
-COMMENT ON COLUMN pmis_flow_his_task.task_id IS '原始任务 ID: 引用 pmis_flow_task.id';
+COMMENT ON COLUMN pmis_flow_his_task.task_id IS '原始任务 ID: 引用 pmis_flow_run_task.id';
 COMMENT ON COLUMN pmis_flow_his_task.flow_code IS '流程编码';
 COMMENT ON COLUMN pmis_flow_his_task.definition_id IS '所属流程定义 ID';
 COMMENT ON COLUMN pmis_flow_his_task.node_code IS '节点编码';
@@ -5183,7 +5183,7 @@ COMMENT ON COLUMN undo_log.log_modified IS '最后修改时间';
 -- GAP-P0: 表单字段权限 (pmis_flow_node.form_fields_config)
 -- GAP-P1: SLA 超时配置 (pmis_flow_node.sla_config)
 -- GAP-P1: 子流程父子关系 (pmis_flow_instance.parent_instance_id / parent_node_code)
--- GAP-P1: 会签并发版本号 (pmis_flow_task.version)
+-- GAP-P1: 会签并发版本号 (pmis_flow_run_task.version)
 -- =============================================================
 
 -- -------------------------------------------
@@ -5209,11 +5209,11 @@ CREATE INDEX IF NOT EXISTS idx_pmis_flow_instance_parent
     WHERE parent_instance_id IS NOT NULL;
 
 -- -------------------------------------------
--- 3. pmis_flow_task 新增乐观锁版本号
+-- 3. pmis_flow_run_task 新增乐观锁版本号
 -- -------------------------------------------
-ALTER TABLE pmis_flow_task ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 0;
+ALTER TABLE pmis_flow_run_task ADD COLUMN IF NOT EXISTS version INT NOT NULL DEFAULT 0;
 
-COMMENT ON COLUMN pmis_flow_task.version IS 'GAP-P1: 乐观锁版本号 — 会签并发安全，防止多线程同时推进';
+COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 会签并发安全，防止多线程同时推进';
 
 -- -------------------------------------------
 -- 4. pmis_flow_audit_log 新增 action 枚举值扩展（无需 DDL，仅文档说明）
@@ -5612,12 +5612,12 @@ ALTER TABLE pmis_flow_user
 COMMENT ON COLUMN pmis_flow_user.sign_type IS '加签类型: ORIGINAL 原始审批人 / BEFORE 前加签 / AFTER 后加签 / PARALLEL 并加签 / ADD 追加处理人';
 
 -- -------------------------------------------
--- 2. pmis_flow_task 增加 vote_pass_rate 字段（VOTE 模式下的通过率阈值）
+-- 2. pmis_flow_run_task 增加 vote_pass_rate 字段（VOTE 模式下的通过率阈值）
 -- -------------------------------------------
-ALTER TABLE pmis_flow_task
+ALTER TABLE pmis_flow_run_task
     ADD COLUMN IF NOT EXISTS vote_pass_rate DECIMAL(5, 4) NOT NULL DEFAULT 0.5;
 
-COMMENT ON COLUMN pmis_flow_task.vote_pass_rate IS 'VOTE 模式通过率阈值（0~1，默认 0.5 表示过半数）';
+COMMENT ON COLUMN pmis_flow_run_task.vote_pass_rate IS 'VOTE 模式通过率阈值（0~1，默认 0.5 表示过半数）';
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_033__add_pmis_flow_weight.sql
@@ -5638,28 +5638,28 @@ COMMENT ON COLUMN pmis_flow_task.vote_pass_rate IS 'VOTE 模式通过率阈值�
 --      3. 节点可配 slaConfig.reminderIntervalMinutes（重复提醒间隔，默认 60）
 --      4. 节点可配 slaConfig.maxReminders（最大提醒次数，默认 3）
 --      5. 节点可配 slaConfig.escalateUserId（升级目标用户，可空=管理员）
---      6. 任务表 pmis_flow_task 记录 reminder_count / last_reminded_at / sla_action
+--      6. 任务表 pmis_flow_run_task 记录 reminder_count / last_reminded_at / sla_action
 -- =============================================================
 
 -- -------------------------------------------
--- 1. pmis_flow_task 增加 SLA 跟踪字段
+-- 1. pmis_flow_run_task 增加 SLA 跟踪字段
 -- -------------------------------------------
-ALTER TABLE pmis_flow_task
+ALTER TABLE pmis_flow_run_task
     ADD COLUMN IF NOT EXISTS reminder_count   INTEGER       NOT NULL DEFAULT 0;
 
-ALTER TABLE pmis_flow_task
+ALTER TABLE pmis_flow_run_task
     ADD COLUMN IF NOT EXISTS last_reminded_at TIMESTAMP     DEFAULT NULL;
 
-ALTER TABLE pmis_flow_task
+ALTER TABLE pmis_flow_run_task
     ADD COLUMN IF NOT EXISTS sla_action       VARCHAR(32)   DEFAULT NULL;
 
-ALTER TABLE pmis_flow_task
+ALTER TABLE pmis_flow_run_task
     ADD COLUMN IF NOT EXISTS sla_escalated    SMALLINT      NOT NULL DEFAULT 0;
 
-COMMENT ON COLUMN pmis_flow_task.reminder_count   IS '已发送的 SLA 催办次数';
-COMMENT ON COLUMN pmis_flow_task.last_reminded_at IS '最近一次催办时间';
-COMMENT ON COLUMN pmis_flow_task.sla_action       IS '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）';
-COMMENT ON COLUMN pmis_flow_task.sla_escalated    IS '是否已升级（0 否 / 1 是，避免重复升级）';
+COMMENT ON COLUMN pmis_flow_run_task.reminder_count   IS '已发送的 SLA 催办次数';
+COMMENT ON COLUMN pmis_flow_run_task.last_reminded_at IS '最近一次催办时间';
+COMMENT ON COLUMN pmis_flow_run_task.sla_action       IS '最终触发的 SLA 动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）';
+COMMENT ON COLUMN pmis_flow_run_task.sla_escalated    IS '是否已升级（0 否 / 1 是，避免重复升级）';
 
 -- -------------------------------------------
 -- 2. pmis_flow_node 已存在 slaConfig 字段（V1.0.0_026 引入），无需变更
@@ -6731,7 +6731,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_canary_bucket_date   ON pmis_rule_canary_buc
 -- ====================================================================
 
 -- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_048__add_pmis_flow_task_priority.sql
+-- >>>>>>>>>> START OF V1.0.0_048__add_pmis_flow_run_task_priority.sql
 -- ====================================================================
 
 -- ============================================================
@@ -6749,20 +6749,20 @@ CREATE INDEX IF NOT EXISTS idx_pmis_canary_bucket_date   ON pmis_rule_canary_buc
 --   76-100: 紧急
 -- ============================================================
 
-ALTER TABLE pmis_flow_task
+ALTER TABLE pmis_flow_run_task
     ADD COLUMN IF NOT EXISTS priority INT NOT NULL DEFAULT 50;
 
-COMMENT ON COLUMN pmis_flow_task.priority IS 'P1-1: 任务优先级（1-100，默认 50），待办默认按 priority DESC, created_at ASC 排序';
+COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级（1-100，默认 50），待办默认按 priority DESC, created_at ASC 排序';
 
 -- 部分索引：仅 PENDING/CLAIMED 状态按 priority 排序查询走索引
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_task_priority_todo
-    ON pmis_flow_task (priority DESC, created_at ASC)
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
+    ON pmis_flow_run_task (priority DESC, created_at ASC)
     WHERE task_status IN ('PENDING', 'CLAIMED')
       AND status = 'ENABLED'
       AND deleted = 0;
 
 -- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_048__add_pmis_flow_task_priority.sql
+-- >>>>>>>>>> END OF V1.0.0_048__add_pmis_flow_run_task_priority.sql
 -- ====================================================================
 
 -- ====================================================================
@@ -6789,11 +6789,11 @@ COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
 -- ====================================================================
 
 -- ====================================================================
--- >>>>>>>>>> START OF V1.0.0_050__add_pmis_event_outbox.sql
+-- >>>>>>>>>> START OF V1.0.0_050__add_pmis_flow_notify_outbox.sql
 -- ====================================================================
 
 -- ============================================================
--- V1.0.0_050  P2-1 可靠消息投递 — 事件 Outbox 表
+-- V1.0.0_050  P2-1 可靠消息投递 — 工作流通知外发箱（pmis_flow_notify_outbox）
 -- ============================================================
 -- 说明：本地消息表（Outbox Pattern），保证业务事务与消息投递的最终一致性。
 --   工作流关键事件（任务创建/通过/驳回/转办/委派/催办/超时/实例终止等）
@@ -6810,7 +6810,7 @@ COMMENT ON CONSTRAINT ck_rule_def_status_valid ON pmis_rule_def IS
 -- 状态机：PENDING → SENT（成功）/ DEAD（超过最大重试次数）
 -- ============================================================
 
-CREATE TABLE IF NOT EXISTS pmis_event_outbox (
+CREATE TABLE IF NOT EXISTS pmis_flow_notify_outbox (
     id                  BIGSERIAL       PRIMARY KEY,
     tenant_id           BIGINT          NOT NULL DEFAULT 1,
     -- 事件标识
@@ -6840,40 +6840,40 @@ CREATE TABLE IF NOT EXISTS pmis_event_outbox (
     deleted             SMALLINT        NOT NULL DEFAULT 0
 );
 
-COMMENT ON TABLE pmis_event_outbox IS '事件 Outbox 表 — 可靠消息投递（P2-1 阶段一）';
-COMMENT ON COLUMN pmis_event_outbox.event_type IS '事件类型: TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等';
-COMMENT ON COLUMN pmis_event_outbox.biz_type IS '业务类型: WORKFLOW_TASK / WORKFLOW_INSTANCE / WORKFLOW_CC';
-COMMENT ON COLUMN pmis_event_outbox.payload IS 'JSON 载荷，由接收方解析';
-COMMENT ON COLUMN pmis_event_outbox.target_channels IS '投递通道: IN_APP / IM / EMAIL / SMS（逗号分隔）';
-COMMENT ON COLUMN pmis_event_outbox.target_user_ids IS '接收用户 ID 列表（逗号分隔）';
-COMMENT ON COLUMN pmis_event_outbox.status IS '投递状态: PENDING 待投递 / SENT 已投递 / DEAD 死信';
-COMMENT ON COLUMN pmis_event_outbox.retry_count IS '已重试次数';
-COMMENT ON COLUMN pmis_event_outbox.max_retries IS '最大重试次数（默认 5）';
-COMMENT ON COLUMN pmis_event_outbox.next_retry_at IS '下次重试时间（指数退避：30s/60s/120s/300s/600s）';
-COMMENT ON COLUMN pmis_event_outbox.error_msg IS '最近一次失败原因';
+COMMENT ON TABLE pmis_flow_notify_outbox IS '工作流通知外发箱 — 可靠消息投递（Outbox Pattern，P2-1 阶段一），由扫描任务异步投递到 NotificationClient / IM / 邮件 / 短信';
+COMMENT ON COLUMN pmis_flow_notify_outbox.event_type IS '事件类型: TASK_CREATED / TASK_COMPLETED / INSTANCE_TERMINATED 等';
+COMMENT ON COLUMN pmis_flow_notify_outbox.biz_type IS '业务类型: WORKFLOW_TASK / WORKFLOW_INSTANCE / WORKFLOW_CC';
+COMMENT ON COLUMN pmis_flow_notify_outbox.payload IS 'JSON 载荷，由接收方解析';
+COMMENT ON COLUMN pmis_flow_notify_outbox.target_channels IS '投递通道: IN_APP / IM / EMAIL / SMS（逗号分隔）';
+COMMENT ON COLUMN pmis_flow_notify_outbox.target_user_ids IS '接收用户 ID 列表（逗号分隔）';
+COMMENT ON COLUMN pmis_flow_notify_outbox.status IS '投递状态: PENDING 待投递 / SENT 已投递 / DEAD 死信';
+COMMENT ON COLUMN pmis_flow_notify_outbox.retry_count IS '已重试次数';
+COMMENT ON COLUMN pmis_flow_notify_outbox.max_retries IS '最大重试次数（默认 5）';
+COMMENT ON COLUMN pmis_flow_notify_outbox.next_retry_at IS '下次重试时间（指数退避：30s/60s/120s/300s/600s）';
+COMMENT ON COLUMN pmis_flow_notify_outbox.error_msg IS '最近一次失败原因';
 
 -- 索引：扫描任务主查询（status=PENDING AND next_retry_at <= NOW()）
 CREATE INDEX IF NOT EXISTS idx_peo_pending_scan
-    ON pmis_event_outbox(status, next_retry_at)
+    ON pmis_flow_notify_outbox(status, next_retry_at)
     WHERE deleted = 0 AND status = 'PENDING';
 
 -- 索引：按业务类型+业务 ID 查询（幂等校验：同一业务事件不重复入箱）
 CREATE INDEX IF NOT EXISTS idx_peo_biz
-    ON pmis_event_outbox(biz_type, biz_id)
+    ON pmis_flow_notify_outbox(biz_type, biz_id)
     WHERE deleted = 0;
 
 -- 索引：按实例查询（流程实例下所有事件）
 CREATE INDEX IF NOT EXISTS idx_peo_instance
-    ON pmis_event_outbox(instance_id)
+    ON pmis_flow_notify_outbox(instance_id)
     WHERE deleted = 0 AND instance_id IS NOT NULL;
 
 -- 索引：按 trace_id 查询（链路追踪）
 CREATE INDEX IF NOT EXISTS idx_peo_trace
-    ON pmis_event_outbox(provider_trace_id)
+    ON pmis_flow_notify_outbox(provider_trace_id)
     WHERE deleted = 0 AND provider_trace_id IS NOT NULL;
 
 -- ====================================================================
--- >>>>>>>>>> END OF V1.0.0_050__add_pmis_event_outbox.sql
+-- >>>>>>>>>> END OF V1.0.0_050__add_pmis_flow_notify_outbox.sql
 -- ====================================================================
 
 -- ====================================================================
@@ -6883,7 +6883,7 @@ CREATE INDEX IF NOT EXISTS idx_peo_trace
 -- ============================================================
 -- V1.0.0_051__init_rule_scorecard_tree_script.sql
 -- 评分卡 / 决策树 / 脚本规则持久化
--- （原 V1.0.0_048 与 add_pmis_flow_task_priority 版本号冲突，迁移到 051）
+-- （原 V1.0.0_048 与 add_pmis_flow_run_task_priority 版本号冲突，迁移到 051）
 -- ============================================================
 
 -- --------------------------------------------------------
@@ -7529,7 +7529,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_deleted ON pmis_employee_tag(deleted
 -- 五、event_outbox 表 tenant_id 索引（H2.5）
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_peo_tenant_status
-    ON pmis_event_outbox(tenant_id, status, next_retry_at) WHERE deleted = 0;
+    ON pmis_flow_notify_outbox(tenant_id, status, next_retry_at) WHERE deleted = 0;
 
 -- ============================================================
 -- 六、undo_log 性能索引（H1.8）
@@ -7600,7 +7600,7 @@ ANALYZE pmis_user_account;
 ANALYZE pmis_notification;
 ANALYZE pmis_config;
 ANALYZE pmis_operation_log;
-ANALYZE pmis_event_outbox;
+ANALYZE pmis_flow_notify_outbox;
 ANALYZE undo_log;
 ANALYZE pmis_job_log;
 ANALYZE pmis_project_opportunity_follow;

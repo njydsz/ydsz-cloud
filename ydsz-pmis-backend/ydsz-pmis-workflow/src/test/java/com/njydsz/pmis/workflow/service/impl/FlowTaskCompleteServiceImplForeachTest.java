@@ -42,11 +42,13 @@ import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -129,21 +131,26 @@ class FlowTaskCompleteServiceImplForeachTest {
 
         service.createTask(INSTANCE_ID, node, variables);
 
-        // 验证插入 3 条 task
+        // 验证插入 3 条 task（每个集合元素一条独立 task）
         ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
-        verify(taskMapper).insert(taskCaptor.capture());
-        // 注意：由于 mock 的 taskMapper.insert 不会回填 id，FlowUserDO 写入可能因 taskId=null 失败
-        // 但这里只验证 task 字段，user 插入通过 verify(userMapper, times(3)).insert(any()) 验证
-        // 实际上 taskMapper.insert 是 mock，不回填 id，所以 userMapper.insert 也会被调用但 taskId=null
-        // 验证 task 字段
-        FlowTaskDO insertedTask = taskCaptor.getValue();
-        assertThat(insertedTask.getPerformType()).isEqualTo(FlowPerformType.FOREACH_PARALLEL.name());
-        assertThat(insertedTask.getApproveCount()).isEqualTo(1);
-        assertThat(insertedTask.getApproveFinished()).isZero();
-        assertThat(insertedTask.getTaskStatus()).isEqualTo(FlowTaskStatus.PENDING.name());
-        assertThat(insertedTask.getAssigneeType()).isEqualTo(FlowAssigneeType.USER.name());
-        assertThat(insertedTask.getIterVar()).isIn("1001", "1002", "1003");
-        assertThat(insertedTask.getNodeType()).isEqualTo(FlowNodeType.FOREACH.getCode());
+        verify(taskMapper, times(3)).insert(taskCaptor.capture());
+        List<FlowTaskDO> insertedTasks = taskCaptor.getAllValues();
+        assertThat(insertedTasks).hasSize(3);
+        // 验证每条 task 字段完整性
+        for (FlowTaskDO insertedTask : insertedTasks) {
+            assertThat(insertedTask.getPerformType()).isEqualTo(FlowPerformType.FOREACH_PARALLEL.name());
+            assertThat(insertedTask.getApproveCount()).isEqualTo(1);
+            assertThat(insertedTask.getApproveFinished()).isZero();
+            assertThat(insertedTask.getTaskStatus()).isEqualTo(FlowTaskStatus.PENDING.name());
+            assertThat(insertedTask.getAssigneeType()).isEqualTo(FlowAssigneeType.USER.name());
+            assertThat(insertedTask.getIterVar()).isIn("1001", "1002", "1003");
+            assertThat(insertedTask.getNodeType()).isEqualTo(FlowNodeType.FOREACH.getCode());
+        }
+        // 验证 iterVar 覆盖全部 3 个元素
+        assertThat(insertedTasks).extracting(FlowTaskDO::getIterVar)
+                .containsExactlyInAnyOrder("1001", "1002", "1003");
+        // 验证写入 3 条 FlowUserDO
+        verify(userMapper, times(3)).insert(any(FlowUserDO.class));
     }
 
     @Test
@@ -152,8 +159,9 @@ class FlowTaskCompleteServiceImplForeachTest {
         FlowInstanceDO instance = buildInstance();
         FlowNodeDO node = buildForeachNode("{\"emptyStrategy\":\"AUTO_PASS\"}");
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(instance);
-        // 无 collection 配置 + 无 permissionFlag → expandAssignees 返回空列表
-        when(variableStrategy.resolveAssignee(any(), any())).thenReturn(null);
+        // advanceAfterAutoPass 内部调用 advancer.advance — 桩住返回空列表（→ instanceService.complete）
+        when(advancer.advance(eq(instance), eq(NODE_CODE), eq("PASS"), eq(null), any()))
+                .thenReturn(Collections.emptyList());
 
         service.createTask(INSTANCE_ID, node, Collections.emptyMap());
 
@@ -176,7 +184,6 @@ class FlowTaskCompleteServiceImplForeachTest {
         FlowInstanceDO instance = buildInstance();
         FlowNodeDO node = buildForeachNode("{\"emptyStrategy\":\"TRANSFER_ADMIN\"}");
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(instance);
-        when(variableStrategy.resolveAssignee(any(), any())).thenReturn(null);
 
         service.createTask(INSTANCE_ID, node, Collections.emptyMap());
 
@@ -197,6 +204,8 @@ class FlowTaskCompleteServiceImplForeachTest {
     void foreachPassShouldNotAdvanceWhenPendingGreaterThanZero() {
         FlowTaskDO task = buildForeachTask(700L, "1001");
         FlowInstanceDO instance = buildInstance();
+        when(support.getTaskOrThrow(700L)).thenReturn(task);
+        when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(instance);
         when(taskMapper.countPendingByNode(INSTANCE_ID, NODE_CODE)).thenReturn(2); // 还有 2 条待办
         // resolveCompletionCondition 查 node，返回 null（无 completionCondition 配置）
         when(nodeMapper.selectByCode(DEFINITION_ID, NODE_CODE)).thenReturn(buildForeachNode(null));
@@ -217,6 +226,8 @@ class FlowTaskCompleteServiceImplForeachTest {
     void foreachPassShouldAdvanceWhenAllCompleted() {
         FlowTaskDO task = buildForeachTask(701L, "1003");
         FlowInstanceDO instance = buildInstance();
+        when(support.getTaskOrThrow(701L)).thenReturn(task);
+        when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(instance);
         when(taskMapper.countPendingByNode(INSTANCE_ID, NODE_CODE)).thenReturn(0); // 全部完成
         when(nodeMapper.selectByCode(DEFINITION_ID, NODE_CODE)).thenReturn(buildForeachNode(null));
         List<FlowNodeDO> nextNodes = List.of(buildForeachNode(null));
@@ -237,6 +248,8 @@ class FlowTaskCompleteServiceImplForeachTest {
     void foreachPassShouldSkipRemainingWhenCompletionConditionMet() {
         FlowTaskDO task = buildForeachTask(702L, "1001");
         FlowInstanceDO instance = buildInstance();
+        when(support.getTaskOrThrow(702L)).thenReturn(task);
+        when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(instance);
         // 配置 completionCondition: nrOfCompletedInstances >= 1（第 1 个完成即推进）
         FlowNodeDO node = buildForeachNode("{\"completionCondition\":\"nrOfCompletedInstances >= 1\"}");
         when(nodeMapper.selectByCode(DEFINITION_ID, NODE_CODE)).thenReturn(node);
@@ -265,8 +278,9 @@ class FlowTaskCompleteServiceImplForeachTest {
     void foreachPassShouldThrowWhenTaskFinished() {
         FlowTaskDO task = buildForeachTask(703L, "1001");
         task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
+        when(support.getTaskOrThrow(703L)).thenReturn(task);
 
-        assertThat(((Throwable) catchThrowable(() -> service.pass(buildPassDto(task)))))
+        assertThatThrownBy(() -> service.pass(buildPassDto(task)))
                 .isInstanceOf(BizException.class)
                 .satisfies(ex -> {
                     BizException biz = (BizException) ex;
@@ -327,15 +341,5 @@ class FlowTaskCompleteServiceImplForeachTest {
         dto.setUserName("操作人");
         dto.setComment("FOREACH 通过测试");
         return dto;
-    }
-
-    /** 捕获异常的辅助方法（避免引入 AssertJ catchThrowable 的静态导入冲突） */
-    private static Throwable catchThrowable(Runnable runnable) {
-        try {
-            runnable.run();
-            return null;
-        } catch (Throwable t) {
-            return t;
-        }
     }
 }

@@ -209,7 +209,7 @@ function collectSyntaxIssues(expression: string): {
       issues.push({
         line: i + 1,
         column: line.length + 1,
-        message: `双引号未闭合（"\""）`,
+        message: `双引号未闭合（'"'）`,
       })
     }
   }
