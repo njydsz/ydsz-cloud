@@ -119,8 +119,14 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
         // 互斥组：记录本次评估中已命中的互斥组，同组后续规则跳过
         Set<String> triggeredGroups = new HashSet<>();
         String scenario = context.getScenario();
+        long contextTenantId = context.getTenantId();
         int evaluatedCount = 0;
         for (Rule rule : rules) {
+            // 租户隔离（1.5.0）：仅评估与上下文租户匹配的规则
+            if (rule.getTenantId() != contextTenantId) {
+                continue;
+            }
+
             // 场景过滤：非 DEFAULT 场景下，跳过 scope 不匹配的规则
             if (!shouldEvaluate(rule, scenario)) {
                 continue;
@@ -322,7 +328,12 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     @Override
     public List<RuleResult> dryRun(RuleContext context) {
         List<RuleResult> all = new ArrayList<>();
+        long contextTenantId = context.getTenantId();
         for (Rule rule : rules) {
+            // 租户隔离（1.5.0）：dry-run 同样仅评估与上下文租户匹配的规则
+            if (rule.getTenantId() != contextTenantId) {
+                continue;
+            }
             try {
                 RuleResult result = rule.evaluate(context);
                 if (result == null) {

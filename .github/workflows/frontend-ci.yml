@@ -8,6 +8,7 @@
 #
 # Job 编排:
 #   1. lint-build         pnpm install (frozen-lockfile) → eslint → tsc + build
+#                         + OpenAPI schema.d.ts 存在性 & 漂移检查（仅提醒不失败）
 #   2. test               pnpm test (vitest 单元测试)
 #
 # 工具版本:  Node.js 20 · pnpm 9 · Vue 3.5 · Vite 5.4
@@ -63,6 +64,41 @@ jobs:
 
       - name: Type Check & Build
         run: pnpm run build
+
+      - name: OpenAPI Schema 检查（提醒，不阻断 CI）
+        # ----------------------------------------------------------------
+        # 方案选型说明：
+        # 完整方案 B（springdoc-openapi-maven-plugin 构建期生成 spec JSON）
+        # 需要后端 Spring Boot 应用启动以暴露 /v3/api-docs 端点，但本项目
+        # 依赖 Nacos 配置中心 / 服务发现 + PostgreSQL + Seata，CI 环境
+        # 无法完整启动后端，故采用任务说明中的简化提醒方案。
+        # ----------------------------------------------------------------
+        # 本步骤做两件事（均仅提醒，不失败）：
+        #   1. 检查 src/api/openapi/schema.d.ts 是否存在
+        #   2. 若存在，检查其 mtime 是否比后端 controller 旧（漂移提醒）
+        # 当 schema.d.ts 缺失或过期时，开发者应在本地启动后端后运行
+        #   pnpm openapi:gen
+        # 重新生成并提交该文件。
+        run: |
+          SCHEMA_FILE="src/api/openapi/schema.d.ts"
+          if [ ! -f "$SCHEMA_FILE" ]; then
+            echo "::warning::OpenAPI schema 文件不存在: $SCHEMA_FILE"
+            echo "::warning::请在本地启动后端后运行 'pnpm openapi:gen' 生成并提交该文件"
+            echo "⚠️  schema.d.ts 不存在（仅提醒，不阻断 CI）"
+            exit 0
+          fi
+          echo "✅ schema.d.ts 已存在"
+          # 比较 schema.d.ts 与后端 controller 的最后修改时间
+          SCHEMA_MTIME=$(stat -c %Y "$SCHEMA_FILE")
+          BACKEND_DIR="../ydsz-pmis-backend"
+          NEWEST_CONTROLLER=$(find "$BACKEND_DIR" -path '*/controller/*.java' -printf '%T@\n' 2>/dev/null | sort -rn | head -1 | cut -d. -f1)
+          if [ -n "$NEWEST_CONTROLLER" ] && [ "$NEWEST_CONTROLLER" -gt "$SCHEMA_MTIME" ]; then
+            echo "::warning::schema.d.ts 可能已过期：后端 controller 有更新但 schema.d.ts 未重新生成"
+            echo "::warning::请运行 'pnpm openapi:gen' 重新生成（仅提醒，不阻断 CI）"
+            echo "⚠️  schema.d.ts 可能已过期（仅提醒，不阻断 CI）"
+          else
+            echo "✅ schema.d.ts 时间戳与后端 controller 一致或更新"
+          fi
 
   test:
     name: Unit Test

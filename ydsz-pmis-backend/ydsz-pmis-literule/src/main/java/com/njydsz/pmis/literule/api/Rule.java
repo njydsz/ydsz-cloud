@@ -88,6 +88,24 @@ public interface Rule {
     }
 
     /**
+     * 租户 ID（多租户运行时隔离）
+     *
+     * <p>1.5.0 起启用运行时租户过滤：{@link com.njydsz.pmis.literule.core.DefaultRuleEngine}
+     * 在评估前会比较 {@code rule.getTenantId()} 与 {@link RuleContext#getTenantId()}，
+     * 仅当两者匹配时才评估该规则。
+     *
+     * <p>默认返回 {@code 1L}（单租户部署），向后兼容。
+     * {@link com.njydsz.pmis.literule.impl.ExpressionRule} 等基于 {@link RuleDefinition}
+     * 的规则会覆写此方法返回定义中的 tenantId。
+     *
+     * @return 租户 ID；默认 1L
+     * @since 1.5.0
+     */
+    default long getTenantId() {
+        return 1L;
+    }
+
+    /**
      * 评估规则
      *
      * @param context 规则上下文（事实数据）

@@ -50,7 +50,20 @@ public class ScriptDefinition implements Serializable {
     /** 描述 */
     private String description;
 
-    /** Groovy 脚本内容 */
+    /**
+     * 脚本语言（1.5.0 起）
+     *
+     * <p>可选值：
+     * <ul>
+     *   <li>{@code groovy}（默认）- Groovy JSR-223，语法灵活</li>
+     *   <li>{@code javascript} / {@code js} - Nashorn JSR-223，ECMAScript 语法</li>
+     *   <li>{@code python} - Jython JSR-223，Python 2.7 语法（需引入 jython 依赖）</li>
+     * </ul>
+     */
+    @Builder.Default
+    private String language = "groovy";
+
+    /** 脚本内容 */
     private String script;
 
     /** 默认严重度字符串（"RED"/"YELLOW"/"INFO"，脚本未设置 severity 时使用） */

@@ -43,4 +43,12 @@ public interface AuthService {
      * @param userId 用户 ID
      */
     void logout(String userId);
+
+    /**
+     * 将 Token 加入黑名单（用于登出后防止 Token 继续使用）
+     *
+     * @param token         待拉黑的 Token
+     * @param expireSeconds 黑名单有效期（秒），通常与 Token 剩余有效期一致
+     */
+    void blacklistToken(String token, long expireSeconds);
 }

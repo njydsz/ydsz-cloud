@@ -77,7 +77,7 @@ public class AttendanceController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return Result.ok(attendanceService.pageAttendance(employeeId, startDate, endDate, page, size));
     }
 
@@ -154,7 +154,7 @@ public class AttendanceController {
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") int page,
-            @RequestParam(defaultValue = "20") int size) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return Result.ok(attendanceService.pageOvertime(employeeId, approvalStatus, page, size));
     }
 
@@ -226,7 +226,7 @@ public class AttendanceController {
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) String approvalStatus,
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return Result.ok(attendanceService.pageLeave(employeeId, approvalStatus, page, size));
     }
 

@@ -7,6 +7,7 @@ import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowUserDO;
 import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.FlowPerformType;
+import com.njydsz.pmis.workflow.enums.FlowSignType;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
@@ -70,7 +71,7 @@ public class FlowTaskSignServiceImpl {
             fu.setUserName(dto.getTargetUserName());
             fu.setProcessed(0);
             fu.setWeight(1);
-            fu.setSignType("BEFORE");
+            fu.setSignType(FlowSignType.BEFORE.name());
             fu.setTenantId(task.getTenantId());
             fu.setProviderTraceId(task.getProviderTraceId());
             userMapper.insert(fu);
@@ -114,7 +115,7 @@ public class FlowTaskSignServiceImpl {
             fu.setUserName(dto.getTargetUserName());
             fu.setProcessed(0);
             fu.setWeight(1);
-            fu.setSignType("AFTER");
+            fu.setSignType(FlowSignType.AFTER.name());
             fu.setTenantId(task.getTenantId());
             fu.setProviderTraceId(task.getProviderTraceId());
             userMapper.insert(fu);
@@ -163,7 +164,7 @@ public class FlowTaskSignServiceImpl {
         fu.setUserName(dto.getTargetUserName());
         fu.setProcessed(0);
         fu.setWeight(1);
-        fu.setSignType("PARALLEL");
+        fu.setSignType(FlowSignType.PARALLEL.name());
         fu.setTenantId(task.getTenantId());
         fu.setProviderTraceId(task.getProviderTraceId());
         userMapper.insert(fu);
@@ -298,7 +299,7 @@ public class FlowTaskSignServiceImpl {
         fu.setUserName(dto.getTargetUserName());
         fu.setProcessed(0);
         fu.setWeight(1); // 默认权重 1
-        fu.setSignType("ADD");
+        fu.setSignType(FlowSignType.ADD.name());
         fu.setTenantId(task.getTenantId());
         fu.setProviderTraceId(task.getProviderTraceId());
         userMapper.insert(fu);

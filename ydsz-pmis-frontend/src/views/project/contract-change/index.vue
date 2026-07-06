@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -82,7 +83,7 @@ function handleReset() {
 
 // ===== 新增变更表单弹窗 =====
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<Partial<ContractChangeCreateDTO>>({
   contractId: 0,
   changeType: 'SCOPE',

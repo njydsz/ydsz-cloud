@@ -17,6 +17,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -61,7 +62,7 @@ const {
     status: q.status || undefined,
     initiationId: q.initiationId,
   })
-  const data = resp.data || (resp as any)
+  const data = resp.data ?? (resp as unknown as PageResult)
   return { list: data.list || [], total: data.total || 0, page: data.page, size: data.size, pages: data.pages }
 }, { defaultSize: 10 })
 
@@ -155,7 +156,7 @@ const dialogVisible = ref(false)
 /** 提交中状态（防重复提交） */
 const submitting = ref(false)
 /** 新增变更表单引用 */
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 新增变更表单数据 */
 const form = reactive<Partial<ProjectChangeCreateDTO>>({
   changeCode: '',
@@ -350,7 +351,7 @@ onMounted(() => {
   >
     <template #search>
       <el-form-item :label="t('change.field.keyword')">
-        <el-input v-model="query.keyword" :placeholder="t('change.placeholder.keyword')" clearable />
+        <el-input v-model="query.keyword" :placeholder="t('change.placeholder.keyword')" clearable @keyup.enter="handleQuery" />
       </el-form-item>
       <el-form-item :label="t('common.column.status')">
         <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 130px">

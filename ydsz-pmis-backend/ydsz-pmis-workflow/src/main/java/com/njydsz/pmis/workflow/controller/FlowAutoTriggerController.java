@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.entity.FlowAutoTriggerDO;
 import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
@@ -69,6 +70,7 @@ public class FlowAutoTriggerController {
      * @return 删除结果
      */
     @Operation(summary = "删除触发规则")
+    @OperationLog(module = "工作流", action = "删除触发规则", bizType = "FLOW_AUTO_TRIGGER")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable @Min(1) Long id) {
         autoTriggerService.deleteById(id);

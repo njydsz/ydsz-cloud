@@ -13,6 +13,7 @@
  */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import {
   pageProfitSimulations,
@@ -139,7 +140,7 @@ async function fetchCompare() {
 const submitting = ref(false)
 // 弹窗 - 新建
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<ProfitSimulationCreateDTO>({
   simulationCode: '',
   simulationName: '',

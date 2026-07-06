@@ -197,7 +197,7 @@ onMounted(fetchList)
     <el-card shadow="never">
       <el-form inline :model="query" class="search-form">
         <el-form-item :label="$t('system.role.search.keyword')">
-          <el-input v-model="query.keyword" :placeholder="$t('system.role.search.keywordPlaceholder')" clearable />
+          <el-input v-model="query.keyword" :placeholder="$t('system.role.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="query.page = 1; fetchList()">{{ $t('common.search') }}</el-button>

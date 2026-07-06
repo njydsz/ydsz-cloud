@@ -34,6 +34,10 @@ export interface TimeEntryVO {
   workType?: string
   /** 备注说明 */
   description?: string
+  /** 命中的费率卡 ID（由后端自动匹配，可空） */
+  rateId?: number
+  /** 人天费率（由后端自动匹配填入，用于成本归集） */
+  rate?: number
   /** 状态：DRAFT/SUBMITTED/APPROVED/REJECTED */
   status?: string
   /** 审批人 ID */
@@ -67,6 +71,10 @@ export interface TimeEntryCreateDTO {
   workType?: string
   /** 备注说明 */
   description?: string
+  /** 费率卡 ID（可选，前端不传由后端自动匹配） */
+  rateId?: number
+  /** 人天费率（可选，前端只读展示，由后端自动匹配填入） */
+  rate?: number
 }
 
 export interface TimeEntryApprovalDTO {

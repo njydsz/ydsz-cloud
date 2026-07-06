@@ -210,7 +210,7 @@ public class FlowInstanceController {
     @GetMapping("/instance/page")
     public Result<PageResult<FlowInstanceDO>> instancePage(
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
-            @RequestParam(defaultValue = "20") @Max(100) int pageSize,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) Long initiatorId,
             @RequestParam(required = false) String flowStatus,
@@ -241,7 +241,7 @@ public class FlowInstanceController {
     @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
     public Result<List<Map<String, Object>>> instanceAll(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String businessType,
             @RequestParam(required = false) String flowStatus,
             @RequestParam(required = false) LocalDateTime startTime,

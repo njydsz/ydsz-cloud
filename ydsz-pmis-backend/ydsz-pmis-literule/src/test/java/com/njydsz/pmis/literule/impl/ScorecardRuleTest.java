@@ -262,20 +262,6 @@ class ScorecardRuleTest {
     @Test
     @DisplayName("ASCENDING 模式 - 中等分数映射 YELLOW")
     void ascendingDirectionShouldMapMediumScoreToYellow() {
-        ScorecardRule rule = ScorecardRule.builder()
-                .code("DEBT_RATIO")
-                .name("负债率评分")
-                .category("RISK")
-                .baseScore(0)
-                .minScore(0)
-                .maxScore(200)
-                .scoreDirection(ScorecardDefinition.ScoreDirection.ASCENDING)
-                .redThreshold(80)
-                .yellowThreshold(50)
-                .evaluator(evaluator)
-                .factor(ScorecardRule.ScoreFactor.of("debtRatio > 0.5", 30, "负债率过高"))
-                .build();
-
         // debtRatio=0.6 命中一个因子，总分 = 30，50 ≤ 30 < 80？不对，30 < 50 → INFO
         // 让我重新算：debtRatio=0.6 > 0.5 命中（+30），总分=30 < 50 → INFO
         // 要测 YELLOW，需要 50 ≤ 总分 < 80，所以需要 debtRatio>0.5（+30）和某个+20的因子

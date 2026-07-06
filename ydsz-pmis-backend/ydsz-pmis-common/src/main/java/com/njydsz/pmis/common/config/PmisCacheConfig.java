@@ -82,6 +82,7 @@ public class PmisCacheConfig {
      */
     @Bean
     @ConditionalOnMissingBean(CacheManager.class)
+    @SuppressWarnings("removal")
     public CacheManager pmisCacheManager(RedisConnectionFactory connectionFactory,
                                          ObjectMapper objectMapper) {
         // 默认配置

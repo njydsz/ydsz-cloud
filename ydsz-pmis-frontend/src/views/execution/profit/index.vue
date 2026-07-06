@@ -76,7 +76,7 @@ const rSubmitting = ref(false)
 /** 新增收入弹窗可见性 */
 const rDialogVisible = ref(false)
 /** 收入表单引用（用于校验） */
-const rFormRef = ref<any>()
+const rFormRef = ref<FormInstance>()
 /** 新增收入表单数据 */
 const rForm = reactive<Partial<RevenueCreateDTO>>({
   initiationId: 0,

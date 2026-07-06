@@ -227,6 +227,29 @@ public class FlowTaskController {
     }
 
     /**
+     * GAP-P2-9: 自由流跳转 — 当前办理人运行时动态指定下一节点 + 办理人
+     *
+     * <p>对标钉钉/飞书"自由流"：与 {@code /task/jump}（管理员强制跳转）的区别：
+     * <ul>
+     *   <li>权限码：{@code WORKFLOW_TASK_FREE_JUMP}（普通办理人可用，非管理员专属）</li>
+     *   <li>白名单校验：目标节点必须 {@code ext.freeJump=true} 才允许跳转</li>
+     *   <li>显式办理人：{@code dto.targetAssignees} 非空时覆盖目标节点默认办理人</li>
+     * </ul>
+     *
+     * @param dto 任务操作参数（需含 taskId + targetNodeCode + action=JUMP，可选 targetAssignees）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/freeJump")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_FREE_JUMP)
+    public Result<Void> freeJump(@Valid @RequestBody FlowTaskOperateDTO dto) {
+        dto.setUserId(SecurityContext.getUserId());
+        dto.setUserName(SecurityContext.getUsername());
+        dto.setAction("JUMP");
+        workflowFacade.jumpTask(dto);
+        return Result.ok();
+    }
+
+    /**
      * P2-26: 批量审批 — 对多个任务逐一通过
      *
      * <p>P0-1 修复：操作人 ID 从 SecurityContext 获取，不再暴露为 URL 参数。
@@ -268,7 +291,7 @@ public class FlowTaskController {
      */
     @GetMapping("/task/todo")
     public Result<List<Map<String, Object>>> todo(@RequestParam(defaultValue = "1") @Min(1) int page,
-                                              @RequestParam(defaultValue = "20") @Max(100) int size) {
+                                              @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return Result.ok(workflowFacade.listTodoTasks(SecurityContext.getUserId(), page, size));
     }
 
@@ -283,7 +306,7 @@ public class FlowTaskController {
      */
     @GetMapping("/task/done")
     public Result<List<Map<String, Object>>> done(@RequestParam(defaultValue = "1") @Min(1) int page,
-                                              @RequestParam(defaultValue = "20") @Max(100) int size) {
+                                              @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return Result.ok(workflowFacade.listDoneTasks(SecurityContext.getUserId(), page, size));
     }
 
@@ -337,7 +360,7 @@ public class FlowTaskController {
             @RequestParam(required = false) LocalDateTime endTime,
             @RequestParam(required = false) Long tenantId,
             @RequestParam(defaultValue = "1") @Min(1) int pageNo,
-            @RequestParam(defaultValue = "20") @Max(100) int pageSize) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize) {
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
         return Result.ok(taskService.listDoneByAssigneePageMulti(assigneeId, businessType,
                 flowCode, startTime, endTime, tid, pageNo, pageSize));

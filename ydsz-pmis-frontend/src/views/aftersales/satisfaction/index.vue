@@ -13,6 +13,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -117,7 +118,7 @@ function handleReset() {
 
 /** 评价弹窗显隐 */
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 提交中状态（防重复提交） */
 const submitting = ref(false)
 /** 评价表单数据 */
@@ -212,7 +213,7 @@ onMounted(() => {
   >
     <!-- 搜索栏 -->
     <template #search>
-      <el-form-item :label="t('aftersales.satisfaction.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('aftersales.satisfaction.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="t('aftersales.satisfaction.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('aftersales.satisfaction.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item :label="t('aftersales.satisfaction.search.level')">
         <el-select v-model="query.level" :placeholder="t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in levelMap" :key="k" :label="v.label" :value="k" />

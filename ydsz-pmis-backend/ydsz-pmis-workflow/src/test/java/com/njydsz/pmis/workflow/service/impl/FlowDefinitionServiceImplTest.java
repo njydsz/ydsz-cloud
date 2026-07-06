@@ -24,12 +24,15 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Map;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -62,6 +65,8 @@ class FlowDefinitionServiceImplTest {
         service = new FlowDefinitionServiceImpl(
                 definitionMapper, nodeMapper, skipMapper,
                 bpmnXmlParser, graphValidator, flowDefinitionCacheService);
+        // GAP-P1-6: batchDeployFromZip 通过 self 代理调用 deploy，单元测试中指向自身
+        service.self = service;
     }
 
     // ============ 部署 ============
@@ -476,5 +481,122 @@ class FlowDefinitionServiceImplTest {
         dto.setBpmnXml("<bpmn>test</bpmn>");
         dto.setTenantId(1L);
         return dto;
+    }
+
+    // ============ GAP-P1-6: batchDeployFromZip 批量 zip 导入 ============
+
+    /**
+     * 构建包含指定 BPMN 文件的 zip 字节数组。
+     * @param entries 文件名 → BPMN XML 内容
+     */
+    private byte[] buildZip(Map<String, String> entries) throws Exception {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        try (ZipOutputStream zos = new ZipOutputStream(baos)) {
+            for (Map.Entry<String, String> e : entries.entrySet()) {
+                zos.putNextEntry(new ZipEntry(e.getKey()));
+                zos.write(e.getValue().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                zos.closeEntry();
+            }
+        }
+        return baos.toByteArray();
+    }
+
+    private BpmnModel buildBpmnModel(String processId, String processName) {
+        BpmnModel model = new BpmnModel();
+        model.setProcessId(processId);
+        model.setProcessName(processName);
+        model.setNodes(java.util.Collections.emptyList());
+        model.setSkips(java.util.Collections.emptyList());
+        model.setNodeCoordinates(java.util.Collections.emptyMap());
+        model.setSkipCoordinates(java.util.Collections.emptyMap());
+        return model;
+    }
+
+    @Test
+    @DisplayName("batchDeployFromZip - 成功导入 2 个 BPMN 文件")
+    void batchDeployFromZipShouldImportAllFiles() throws Exception {
+        String xml1 = "<bpmn><process id='flow_a'/></bpmn>";
+        String xml2 = "<bpmn><process id='flow_b'/></bpmn>";
+        byte[] zip = buildZip(java.util.Map.of(
+                "flow_a.bpmn", xml1,
+                "flow_b.bpmn20.xml", xml2,
+                "readme.txt", "忽略非 bpmn 文件"));
+
+        // 用 spy 替换 self，mock deploy 方法返回成功，避免触发真实 deploy 的图校验逻辑
+        FlowDefinitionServiceImpl spySelf = org.mockito.Mockito.spy(service);
+        org.mockito.Mockito.doReturn(DEFINITION_ID).when(spySelf).deploy(any(FlowDeployProcessDTO.class));
+        service.self = spySelf;
+
+        // bpmnXmlParser 对两个文件分别返回不同 processId 的 model
+        when(bpmnXmlParser.parse(xml1)).thenReturn(buildBpmnModel("flow_a", "流程A"));
+        when(bpmnXmlParser.parse(xml2)).thenReturn(buildBpmnModel("flow_b", "流程B"));
+
+        Map<String, Object> result = service.batchDeployFromZip(zip, 1L);
+
+        assertThat(result.get("successCount")).isEqualTo(2);
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> failed = (List<Map<String, String>>) result.get("failedItems");
+        assertThat(failed).isEmpty();
+        // 验证 deploy 被调用 2 次（非 bpmn 文件被忽略）
+        org.mockito.Mockito.verify(spySelf, org.mockito.Mockito.times(2)).deploy(any(FlowDeployProcessDTO.class));
+    }
+
+    @Test
+    @DisplayName("batchDeployFromZip - 单个文件失败不影响其他文件")
+    void batchDeployFromZipShouldContinueOnSingleFileFailure() throws Exception {
+        String xmlOk = "<bpmn><process id='flow_ok'/></bpmn>";
+        String xmlBad = "<bpmn>invalid</bpmn>";
+        byte[] zip = buildZip(java.util.Map.of(
+                "ok.bpmn", xmlOk,
+                "bad.bpmn", xmlBad));
+
+        // 用 spy 替换 self，对 ok 文件返回成功，对 bad 文件抛异常
+        FlowDefinitionServiceImpl spySelf = org.mockito.Mockito.spy(service);
+        org.mockito.Mockito.doAnswer(inv -> {
+            FlowDeployProcessDTO dto = inv.getArgument(0);
+            if ("flow_bad".equals(dto.getFlowCode()) || dto.getFlowCode() == null) {
+                throw new RuntimeException("XML 解析错误");
+            }
+            return DEFINITION_ID;
+        }).when(spySelf).deploy(any(FlowDeployProcessDTO.class));
+        service.self = spySelf;
+
+        when(bpmnXmlParser.parse(xmlOk)).thenReturn(buildBpmnModel("flow_ok", "OK流程"));
+        when(bpmnXmlParser.parse(xmlBad)).thenThrow(new RuntimeException("XML 解析错误"));
+
+        Map<String, Object> result = service.batchDeployFromZip(zip, 1L);
+
+        assertThat(result.get("successCount")).isEqualTo(1);
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> failed = (List<Map<String, String>>) result.get("failedItems");
+        assertThat(failed).hasSize(1);
+        assertThat(failed.get(0).get("fileName")).isEqualTo("bad.bpmn");
+        assertThat(failed.get(0).get("reason")).contains("XML 解析错误");
+    }
+
+    @Test
+    @DisplayName("batchDeployFromZip - 空字节数组抛 BAD_REQUEST")
+    void batchDeployFromZipShouldThrowWhenEmpty() {
+        assertThatThrownBy(() -> service.batchDeployFromZip(new byte[0], 1L))
+                .isInstanceOf(BizException.class)
+                .satisfies(ex -> {
+                    BizException biz = (BizException) ex;
+                    assertThat(biz.getCode()).isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+                });
+        verify(definitionMapper, never()).insert(any(FlowDefinitionDO.class));
+    }
+
+    @Test
+    @DisplayName("batchDeployFromZip - 无 bpmn 文件时返回 0 成功")
+    void batchDeployFromZipShouldReturnZeroWhenNoBpmnFiles() throws Exception {
+        byte[] zip = buildZip(java.util.Map.of("readme.txt", "说明文档"));
+
+        Map<String, Object> result = service.batchDeployFromZip(zip, 1L);
+
+        assertThat(result.get("successCount")).isEqualTo(0);
+        @SuppressWarnings("unchecked")
+        List<Map<String, String>> failed = (List<Map<String, String>>) result.get("failedItems");
+        assertThat(failed).isEmpty();
+        verify(definitionMapper, never()).insert(any(FlowDefinitionDO.class));
     }
 }

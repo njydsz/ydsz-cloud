@@ -92,7 +92,7 @@ function handleReset() {
 
 // 弹窗 - 新建 WBS 任务
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<Partial<WbsTaskCreateDTO>>({
   taskCode: '',
   taskName: '',
@@ -195,7 +195,7 @@ onMounted(fetchList)
   >
     <template #search>
       <el-form-item :label="$t('execution.wbsTask.search.keyword')">
-        <el-input v-model="query.keyword" :placeholder="$t('execution.wbsTask.search.keywordPlaceholder')" clearable />
+        <el-input v-model="query.keyword" :placeholder="$t('execution.wbsTask.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" />
       </el-form-item>
       <el-form-item :label="$t('execution.wbsTask.search.status')">
         <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">

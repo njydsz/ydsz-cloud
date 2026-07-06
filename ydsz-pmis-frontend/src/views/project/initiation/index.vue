@@ -99,7 +99,7 @@ function handleReset() {
 
 // 立项弹窗
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<Partial<InitiationCreateDTO>>({
   projectCode: '',
   projectName: '',

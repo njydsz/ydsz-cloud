@@ -184,4 +184,17 @@ public interface FlowDefinitionService {
      * @return Map 包含 version1 / version2 / nodeChanges / skipChanges
      */
     Map<String, Object> diffVersions(Long definitionId, Integer version1, Integer version2);
+
+    /**
+     * GAP-P1-6: 从 BPMN 部署包 .zip 批量导入流程定义。
+     *
+     * <p>对标 Activiti/Flowable 的 `repositoryService.createDeployment().addZipInputStream()` 能力。
+     * 遍历 zip 内的 {@code .bpmn} / {@code .bpmn20.xml} 文件，逐个解析并委托 {@link #deploy} 入库。
+     * 单个文件失败不影响其他文件（每个 deploy 是独立事务）。
+     *
+     * @param zipBytes zip 文件字节数组
+     * @param tenantId 租户 ID（可空，默认从 SecurityContext 获取）
+     * @return 批量导入结果：successCount / failedItems（fileName + reason）
+     */
+    Map<String, Object> batchDeployFromZip(byte[] zipBytes, Long tenantId);
 }

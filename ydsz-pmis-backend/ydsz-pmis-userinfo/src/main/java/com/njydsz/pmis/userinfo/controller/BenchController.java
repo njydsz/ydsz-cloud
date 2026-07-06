@@ -123,7 +123,7 @@ public class BenchController {
     @GetMapping("/page")
     public Result<Page<BenchRecordDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) Long poolId,
             @RequestParam(required = false) String status) {
         return Result.ok(benchService.page(page, size, poolId, status));

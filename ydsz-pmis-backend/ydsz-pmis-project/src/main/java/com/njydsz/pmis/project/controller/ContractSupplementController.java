@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ContractSupplementDTO;
 import com.njydsz.pmis.project.entity.ContractSupplementDO;
@@ -60,6 +61,7 @@ public class ContractSupplementController {
      * @return 空结果
      */
     @Operation(summary = "删除补充协议")
+    @OperationLog(module = "合同管理", action = "删除补充协议", bizType = "CONTRACT_SUPPLEMENT")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
@@ -102,7 +104,7 @@ public class ContractSupplementController {
     @GetMapping("/page")
     public Result<Page<ContractSupplementDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) Long contractId) {
         return Result.ok(service.page(page, size, contractId));
     }

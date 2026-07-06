@@ -1,11 +1,9 @@
 package com.njydsz.pmis.literule.dsl;
 
-import com.njydsz.pmis.literule.api.HitPolicy;
 import com.njydsz.pmis.literule.api.Rule;
 import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleSeverity;
-import com.njydsz.pmis.literule.api.ScorecardDefinition;
 import com.njydsz.pmis.literule.expr.AviatorExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.impl.ExpressionRule;

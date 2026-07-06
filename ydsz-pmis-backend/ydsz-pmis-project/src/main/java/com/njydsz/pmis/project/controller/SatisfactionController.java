@@ -82,7 +82,7 @@ public class SatisfactionController {
     @GetMapping("/page")
     public Result<PageResult<SatisfactionDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String level,
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) String keyword) {

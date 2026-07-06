@@ -10,6 +10,8 @@
  * ```
  */
 import { ref, reactive, watch, type Ref } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useI18n } from 'vue-i18n'
 
 /** 分页查询参数基类 */
 export interface UseTableQuery {
@@ -70,12 +72,15 @@ export function useTable<Q extends UseTableQuery>(
   fetcher: (query: Q) => Promise<PageResult<unknown>>,
   options: UseTableOptions<Q> = {},
 ) {
+  const { t } = useI18n()
   /** 加载中标志 */
   const loading = ref(false)
   /** 当前列表数据 */
   const list = ref<unknown[]>([]) as Ref<unknown[]>
   /** 总条数（用于分页器显示） */
   const total = ref(0)
+  /** 最近一次请求的错误信息（null 表示无错误） */
+  const error = ref<string | null>(null)
 
   // 解析初始 size：优先使用持久化值，其次 defaultQuery.size，最后 defaultSize 或 10
   const persistedSize = loadPersistedSize(options.persistSizeKey)
@@ -103,6 +108,8 @@ export function useTable<Q extends UseTableQuery>(
   /** 拉取数据（兼容 ApiResponse<PageResult> 与 PageResult 两种返回结构） */
   async function fetchData(): Promise<void> {
     loading.value = true
+    // 进入新一轮请求前清空历史错误
+    error.value = null
     try {
       const res = await fetcher(query as unknown as Q) as {
         data?: { list?: unknown[]; total?: number }
@@ -111,6 +118,16 @@ export function useTable<Q extends UseTableQuery>(
       }
       list.value = res?.data?.list ?? res?.list ?? []
       total.value = res?.data?.total ?? res?.total ?? 0
+    } catch (e: unknown) {
+      // 请求失败：清空列表数据，避免用户误以为是空数据
+      list.value = []
+      total.value = 0
+      const msg = e instanceof Error ? e.message : String(e)
+      error.value = msg
+      ElMessage.error(`${t('common.msg_fetch_failed')}: ${msg}`)
+      // 不吞掉错误，便于上层（如调用方）感知失败
+      console.error('[useTable] fetchData failed:', e)
+      throw e
     } finally {
       loading.value = false
     }
@@ -148,6 +165,7 @@ export function useTable<Q extends UseTableQuery>(
     loading,
     list,
     total,
+    error,
     query,
     fetchData,
     handleQuery,

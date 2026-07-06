@@ -42,7 +42,7 @@ const query = reactive({
   status: '',
 })
 
-const queryForm = ref<InstanceType<any> | null>(null)
+const queryForm = ref<FormInstance | null>(null)
 
 // 角色选项
 const roleList = ref<RoleVO[]>([])
@@ -337,7 +337,7 @@ onMounted(() => {
     <el-card shadow="never">
       <el-form ref="queryForm" :inline="!isMobile" :model="query" class="search-form">
         <el-form-item :label="$t('system.user.search.keyword')">
-          <el-input v-model="query.keyword" :placeholder="$t('system.user.search.keywordPlaceholder')" clearable />
+          <el-input v-model="query.keyword" :placeholder="$t('system.user.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" />
         </el-form-item>
         <el-form-item :label="$t('system.user.search.status')">
           <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">

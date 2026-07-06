@@ -113,7 +113,7 @@ public class MessageTemplateController {
     @GetMapping("/page")
     public Result<Page<MessageTemplateDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "通道") @RequestParam(required = false) String channel,
             @Parameter(description = "关键字") @RequestParam(required = false) String keyword) {
         return Result.ok(templateService.page(page, size, channel, keyword));

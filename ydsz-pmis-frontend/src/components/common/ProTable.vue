@@ -4,20 +4,26 @@
                配合 useTable composable 使用，大幅减少列表页样板代码。
   @module components/common/ProTable
 -->
-<script setup lang="ts">
+<script setup lang="ts" generic="T extends Record<string, unknown> = Record<string, unknown>">
 /**
  * ProTable 通用表格组件
  *
  * 集成搜索表单、工具栏、分页、行选择、排序、空状态等功能，
  * 配合 useTable composable 使用，减少页面样板代码。
+ *
+ * 泛型参数 T 为行数据类型，默认 Record<string, unknown>，使用时可传入具体类型以获得类型提示：
+ * ```vue
+ * <ProTable<UserVO> :data="users" :columns="cols" />
+ * ```
  */
 import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Document } from '@element-plus/icons-vue'
 import type { VNode } from 'vue'
+import type { TableInstance } from 'element-plus'
 
 /** 列定义 */
-export interface ProTableColumn {
+export interface ProTableColumn<R = Record<string, unknown>> {
   /** 字段名 */
   prop: string
   /** 列标题 */
@@ -29,7 +35,7 @@ export interface ProTableColumn {
   /** 固定列 */
   fixed?: 'left' | 'right'
   /** 格式化函数 */
-  formatter?: (row: any) => string | VNode
+  formatter?: (row: R) => string | VNode
   /** 自定义列插槽名（对应 template #[slot]） */
   slot?: string
   /** 最小宽度 */
@@ -47,9 +53,9 @@ const { t } = useI18n()
 withDefaults(
   defineProps<{
     /** 列配置 */
-    columns: ProTableColumn[]
+    columns: ProTableColumn<T>[]
     /** 表格数据 */
-    data: any[]
+    data: T[]
     /** 加载状态 */
     loading?: boolean
     /** 总条数 */
@@ -103,14 +109,14 @@ const emit = defineEmits<{
   (e: 'update:size', size: number): void
   (e: 'page-change', page: number): void
   (e: 'size-change', size: number): void
-  (e: 'selection-change', selection: any[]): void
+  (e: 'selection-change', selection: T[]): void
   (e: 'sort-change', payload: { prop: string; order: string }): void
 }>()
 
-const tableRef = ref<InstanceType<any> | null>(null)
+const tableRef = ref<TableInstance | null>(null)
 
 /** 当前选中行 */
-const selectedRows = ref<any[]>([])
+const selectedRows = ref<T[]>([])
 
 /** 页码变化 */
 function handlePageChange(page: number) {
@@ -125,7 +131,7 @@ function handleSizeChange(size: number) {
 }
 
 /** 选择变化 */
-function handleSelectionChange(selection: any[]) {
+function handleSelectionChange(selection: T[]) {
   selectedRows.value = selection
   emit('selection-change', selection)
 }

@@ -1,6 +1,8 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.project.service.ImportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -21,6 +23,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
 
 /**
  * 批量导入 Controller
@@ -40,6 +43,9 @@ import java.nio.charset.StandardCharsets;
 @Validated
 public class ImportExportController {
 
+    /** bizType 白名单（防御性编程：阻止路径穿越与非法业务类型） */
+    private static final Set<String> ALLOWED_BIZ_TYPES = Set.of("rate-card", "rate-internal", "time-entry");
+
     private final ImportService importService;
 
     /**
@@ -52,6 +58,10 @@ public class ImportExportController {
     @Operation(summary = "下载空白模板（带样例数据）")
     @GetMapping("/template/{bizType}")
     public void downloadTemplate(@PathVariable String bizType, HttpServletResponse response) throws IOException {
+        // 白名单校验：防止非法 bizType 导致路径穿越或未预期的分派
+        if (!ALLOWED_BIZ_TYPES.contains(bizType)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.project.msg_f7d2a1b3", bizType);
+        }
         TemplateBundle bundle = importService.buildTemplate(bizType);
 
         String filename = URLEncoder.encode(bundle.filename(), StandardCharsets.UTF_8).replace("+", "%20");

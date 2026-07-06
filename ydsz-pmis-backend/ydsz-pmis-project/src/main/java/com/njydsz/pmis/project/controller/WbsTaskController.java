@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.WbsTaskCreateDTO;
@@ -102,6 +103,7 @@ public class WbsTaskController {
     @Operation(summary = "删除任务")
     @PrePermission("execution:wbs:delete")
     @Idempotent(key = "wbs-task:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @OperationLog(module = "WBS任务", action = "删除任务", bizType = "WBS_TASK")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
@@ -138,7 +140,7 @@ public class WbsTaskController {
     @GetMapping("/page")
     public Result<Page<WbsTaskDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String taskType,

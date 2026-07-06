@@ -1,10 +1,16 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.workflow.dto.EmbeddedApprovalActionDTO;
 import com.njydsz.pmis.workflow.entity.FlowThirdPartyAccountDO;
+import com.njydsz.pmis.workflow.entity.FlowThirdPartyLogDO;
 import com.njydsz.pmis.workflow.enums.ThirdPartyPlatform;
+import com.njydsz.pmis.workflow.service.FlowEmbeddedApprovalService;
 import com.njydsz.pmis.workflow.service.FlowThirdPartyAccountService;
+import com.njydsz.pmis.workflow.service.FlowThirdPartyLogService;
 import com.njydsz.pmis.workflow.thirdparty.DingTalkSignatureUtil;
 import com.njydsz.pmis.workflow.thirdparty.FeishuSignatureUtil;
+import com.njydsz.pmis.workflow.thirdparty.ThirdPartyApprovalActionResolver;
 import com.njydsz.pmis.workflow.thirdparty.WeComSignatureUtil;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
@@ -46,6 +52,10 @@ import java.util.Map;
 public class FlowThirdPartyApprovalController {
 
     private final FlowThirdPartyAccountService thirdPartyAccountService;
+    /** 嵌入式审批服务（驱动工作流通过/驳回/撤回） */
+    private final FlowEmbeddedApprovalService embeddedApprovalService;
+    /** 三方审批回调日志服务（PENDING → SUCCESS/FAIL 状态流转） */
+    private final FlowThirdPartyLogService thirdPartyLogService;
 
     /** 钉钉应用 appSecret（签名校验密钥） */
     @Value("${pmis.workflow.third-party.dingtalk.app-secret:}")
@@ -155,27 +165,31 @@ public class FlowThirdPartyApprovalController {
         log.info("[ThirdPartyCallback] 收到回调: platform={} eventType={} processInstanceId={} businessType={} businessId={} openId={}",
                 platform, eventType, processInstanceId, businessType, businessId, openId);
 
-        // P2 待实现：将回调原始数据落库到 pmis_flow_third_party_log（handle_status=PENDING），由独立重试任务保证最终一致
+        // 1. 回调原始数据落库（handle_status=PENDING），由独立重试任务保证最终一致
+        Long logId = savePendingLog(platform, eventType, processInstanceId, businessType, businessId, body);
 
-        // 通过 openId 反查系统用户
+        // 2. 通过 openId 反查系统用户
         FlowThirdPartyAccountDO account = null;
         if (openId != null) {
             account = thirdPartyAccountService.getByOpenId(platform, openId);
         }
         if (account == null) {
             log.warn("[ThirdPartyCallback] 未找到账号映射: platform={} openId={}", platform, openId);
+            thirdPartyLogService.updateFailed(logId, "account not mapped");
             return fail("account not mapped");
         }
 
-        // 驱动工作流（通过/驳回等）
+        // 3. 驱动工作流（通过/驳回等）
         try {
             dispatchApprovalAction(platform, eventType, account, body);
             log.info("[ThirdPartyCallback] 回调处理成功: platform={} userId={} eventType={}",
                     platform, account.getUserId(), eventType);
+            thirdPartyLogService.updateSuccess(logId);
             return ok();
         } catch (Exception e) {
             log.error("[ThirdPartyCallback] 回调处理失败: platform={} userId={} eventType={} err={}",
                     platform, account.getUserId(), eventType, e.getMessage(), e);
+            thirdPartyLogService.updateFailed(logId, e.getMessage());
             return fail(e.getMessage());
         }
     }
@@ -184,23 +198,82 @@ public class FlowThirdPartyApprovalController {
      * 驱动工作流操作
      *
      * <p>根据三方事件类型映射为工作流动作（通过/驳回/撤回等），
-     * 调用嵌入式审批服务或工作流引擎执行。
-     * P2 待对接：FlowEmbeddedApprovalService.quickAction，需根据三方回调字段映射 EmbeddedApprovalActionDTO
+     * 调用 {@link FlowEmbeddedApprovalService#quickAction} 执行。
      *
-     * @param platform       平台
-     * @param eventType      三方事件类型
-     * @param account        账号映射（含系统用户 ID）
-     * @param body           回调原始数据
+     * <p>容错策略：
+     * <ul>
+     *   <li>不支持的事件类型 → log.warn 跳过，不抛异常（三方会回调各种事件）</li>
+     *   <li>缺少 businessType/businessId → log.warn 跳过，不抛异常</li>
+     *   <li>找不到任务 / 流程已结束 / 实例不存在 → log.warn 跳过，不抛异常
+     *       （三方可能重复回调、可能延迟回调已处理的任务）</li>
+     *   <li>其他系统异常（数据库/网络） → 抛出，由 {@link #handleCallback} 捕获并返回 fail</li>
+     * </ul>
+     *
+     * @param platform  平台
+     * @param eventType 三方事件类型
+     * @param account   账号映射（含系统用户 ID）
+     * @param body      回调原始数据
      */
     private void dispatchApprovalAction(String platform, String eventType,
                                         FlowThirdPartyAccountDO account, Map<String, Object> body) {
-        // P2 待实现：按 platform + eventType 映射工作流动作：
-        //   钉钉: bpmsTaskChange / bpmsInstanceChange
-        //   飞书: approval.approved / approval.rejected / approval.canceled
-        //   企微: sys_approval_change
-        // 调用 FlowEmbeddedApprovalService.quickAction(actionDTO) 完成通过/驳回
-        log.info("[ThirdPartyCallback] 派发审批动作: platform={} userId={} eventType={}（待对接工作流引擎）",
-                platform, account.getUserId(), eventType);
+        // 1. 解析三方事件 → 工作流动作
+        ThirdPartyApprovalActionResolver.FlowAction action =
+                ThirdPartyApprovalActionResolver.resolve(platform, eventType, body);
+        if (action == null) {
+            log.warn("[ThirdPartyCallback] 不支持的事件类型，跳过: platform={} eventType={}",
+                    platform, eventType);
+            return;
+        }
+
+        // 2. 读取业务类型/业务 ID（quickAction 通过 businessType+businessId 定位流程实例）
+        String businessType = mapStr(body, "businessType");
+        String businessId = mapStr(body, "businessId");
+        if (businessType == null || businessType.isBlank()
+                || businessId == null || businessId.isBlank()) {
+            log.warn("[ThirdPartyCallback] 回调缺少 businessType/businessId，跳过: platform={} eventType={} action={}",
+                    platform, eventType, action);
+            return;
+        }
+
+        // 3. 构造 EmbeddedApprovalActionDTO 并调用 quickAction
+        EmbeddedApprovalActionDTO dto = new EmbeddedApprovalActionDTO();
+        dto.setBusinessType(businessType);
+        dto.setBusinessId(businessId);
+        dto.setAction(action.code());
+        dto.setUserId(account.getUserId());
+        dto.setComment(mapStr(body, "comment"));
+        // webhook 免认证无 SecurityContext，显式传入租户 ID
+        if (account.getTenantId() != null) {
+            dto.setTenantId(account.getTenantId());
+        }
+
+        try {
+            embeddedApprovalService.quickAction(dto);
+            log.info("[ThirdPartyCallback] 派发审批动作成功: platform={} userId={} action={} businessType={} businessId={}",
+                    platform, account.getUserId(), action, businessType, businessId);
+        } catch (BizException e) {
+            // 业务异常（找不到任务/流程已结束/参数错误等）— 三方可能回调已处理的任务或延迟回调，log.warn 不抛
+            log.warn("[ThirdPartyCallback] 回调容错跳过: platform={} userId={} action={} code={} msg={}",
+                    platform, account.getUserId(), action, e.getCode(), e.getMessage());
+        }
+    }
+
+    /**
+     * 保存 PENDING 状态的回调日志
+     *
+     * @return 日志 ID，落库失败返回 null
+     */
+    private Long savePendingLog(String platform, String eventType, String processInstanceId,
+                                String businessType, String businessId, Map<String, Object> body) {
+        FlowThirdPartyLogDO logEntry = new FlowThirdPartyLogDO();
+        logEntry.setPlatform(platform);
+        logEntry.setEventType(eventType);
+        logEntry.setProcessInstanceId(processInstanceId);
+        logEntry.setBusinessType(businessType);
+        logEntry.setBusinessId(businessId);
+        logEntry.setCallbackData(body == null ? null : body.toString());
+        logEntry.setTenantId(1L); // 默认租户，多租户场景由 account.tenantId 兜底
+        return thirdPartyLogService.savePending(logEntry);
     }
 
     /**

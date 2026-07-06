@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.literule.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.expr.VariableDefinition;
@@ -84,6 +85,7 @@ public class RuleVariableAdminController {
      * @param varName 变量名
      * @return 操作结果
      */
+    @OperationLog(module = "规则变量", action = "删除变量定义", bizType = "RULE_VARIABLE")
     @DeleteMapping("/{varName}")
     public Result<Void> delete(@PathVariable String varName) {
         variableRegistry.unregister(varName);

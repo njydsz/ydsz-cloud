@@ -55,7 +55,20 @@ public class FlowNodeDO extends BaseDO {
     /** 节点跳转路由集合 JSON */
     private String skipList;
 
-    /** 扩展字段 JSON */
+    /**
+     * 扩展字段 JSON
+     *
+     * <p>支持的配置项：
+     * <ul>
+     *   <li>{@code priority}：节点优先级（默认 50）</li>
+     *   <li>{@code emptyStrategy}：审批人为空兜底策略（FALLBACK/AUTO_PASS/TRANSFER_ADMIN/ASSIGN_SPECIFIED）</li>
+     *   <li>{@code collection}：会签人员集合变量名（如 {@code ${approvers}}）</li>
+     *   <li>{@code votePassRate}：票签通过率（0~1）</li>
+     *   <li>{@code userWeights}：加权票签权重映射（userId -> weight）</li>
+     *   <li>{@code autoDedup}：是否启用跨节点办理人去重</li>
+     *   <li>GAP-P2-9 {@code freeJump}：是否允许自由流跳转到该节点（true/false，默认 false）</li>
+     * </ul>
+     */
     private String ext;
 
     /** GAP-P0: 表单字段权限配置 JSON — 按节点控制字段可编辑/只读/隐藏，格式: {"fieldKey":"EDIT|READONLY|HIDDEN",...} */

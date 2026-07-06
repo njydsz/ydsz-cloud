@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.annotation.Idempotent;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.literule.spi.BudgetSnapshotProvider;
 import com.njydsz.pmis.project.dto.BudgetItemDTO;
 import com.njydsz.pmis.project.dto.GateReviewDTO;
 import com.njydsz.pmis.project.dto.InitiationCreateDTO;
@@ -13,6 +14,7 @@ import com.njydsz.pmis.project.entity.BudgetItemDO;
 import com.njydsz.pmis.project.entity.GateReviewDO;
 import com.njydsz.pmis.project.entity.InitiationDO;
 import com.njydsz.pmis.project.service.InitiationService;
+import com.njydsz.pmis.project.vo.BudgetSnapshotVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -50,6 +52,9 @@ public class InitiationController {
 
     /** 立项服务 */
     private final InitiationService service;
+
+    /** 预算快照提供者（SPI），用于批量查询预算快照 */
+    private final BudgetSnapshotProvider budgetSnapshotProvider;
 
     /**
      * 提交立项。
@@ -126,7 +131,7 @@ public class InitiationController {
     @GetMapping("/page")
     public Result<Page<InitiationDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "阶段") @RequestParam(required = false) String stage,
             @Parameter(description = "项目分级") @RequestParam(required = false) String projectLevel,
@@ -260,6 +265,25 @@ public class InitiationController {
     @GetMapping("/{id}/budget/snapshot")
     public Result<Map<String, Object>> budgetSnapshot(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
         return Result.ok(service.budgetSnapshot(id));
+    }
+
+    /**
+     * 批量查询项目预算快照。
+     *
+     * <p>返回全部预算预警相关项目的预算快照（projectId/projectName/totalBudget/incurredCost/usageRatio），
+     * 供前端预算看板、预警大盘等场景使用。底层通过 SPI 接口
+     * {@link BudgetSnapshotProvider#getBudgetSnapshots()} 获取数据。
+     *
+     * @return 预算快照列表
+     */
+    @Operation(summary = "批量查询项目预算快照")
+    @PrePermission("project:initiation:budget")
+    @GetMapping("/budget/snapshots")
+    public Result<List<BudgetSnapshotVO>> batchBudgetSnapshots() {
+        List<BudgetSnapshotVO> vos = budgetSnapshotProvider.getBudgetSnapshots().stream()
+                .map(BudgetSnapshotVO::from)
+                .toList();
+        return Result.ok(vos);
     }
 
     // ============= 流程状态联动（供 workflow 模块 Feign 调用） =============

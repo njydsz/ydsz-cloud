@@ -12,6 +12,7 @@
  */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -78,7 +79,7 @@ function handleReset() {
 const submitting = ref(false)
 // 弹窗 - 新建采购单
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<Partial<PurchaseCreateDTO>>({
   purchaseCode: '',
   initiationId: 0,
@@ -171,7 +172,7 @@ onMounted(fetchList)
   >
     <!-- 查询条件区：关键字 / 状态 / 项目 ID -->
     <template #search>
-      <el-form-item :label="$t('execution.purchase.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.purchase.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="$t('execution.purchase.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.purchase.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item :label="$t('execution.purchase.search.status')">
         <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />

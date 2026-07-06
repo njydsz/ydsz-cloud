@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
@@ -83,7 +84,7 @@ function onSelectionChange({ records }: { records: ContractTemplateVO[] }) {
 
 // ===== 新增表单弹窗 =====
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 提交中状态（防重复提交） */
 const submitting = ref(false)
 const form = reactive<Partial<ContractTemplateCreateDTO>>({
@@ -159,7 +160,7 @@ onMounted(fetchList)
   >
     <template #search>
       <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="编码/名称" clearable />
+        <el-input v-model="query.keyword" placeholder="编码/名称" clearable @keyup.enter="query.page = 1; fetchList()" />
       </el-form-item>
       <el-form-item label="类型">
         <el-select v-model="query.type" placeholder="全部" clearable style="width: 140px">

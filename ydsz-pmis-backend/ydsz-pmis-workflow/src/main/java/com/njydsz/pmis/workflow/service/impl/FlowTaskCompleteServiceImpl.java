@@ -120,10 +120,34 @@ public class FlowTaskCompleteServiceImpl {
     // ============================== 创建任务 ==============================
 
     /**
-     * 创建任务
+     * 创建任务（向后兼容重载）
+     *
+     * @param instanceId 流程实例 ID
+     * @param node       节点
+     * @param variables  流程变量
+     * @return 任务 ID
      */
     @Transactional(rollbackFor = Exception.class)
     public Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
+        return createTask(instanceId, node, variables, null);
+    }
+
+    /**
+     * 创建任务（支持显式指定办理人）
+     *
+     * <p>GAP-P2-9 自由流扩展：{@code explicitAssignees} 非空时直接作为目标节点办理人，
+     * 跳过 {@code node.permissionFlag} / {@code ext.collection} 解析逻辑。
+     * 为空时回退到原有解析逻辑（向后兼容）。
+     *
+     * @param instanceId         流程实例 ID
+     * @param node               节点
+     * @param variables          流程变量
+     * @param explicitAssignees  显式办理人列表（可选，自由流 JUMP 时传入）
+     * @return 任务 ID
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public Long createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables,
+                           List<String> explicitAssignees) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_fc4b1c16", instanceId);
@@ -135,8 +159,10 @@ public class FlowTaskCompleteServiceImpl {
             return executeServiceNode(instance, node, variables);
         }
 
-        // 解析办理人：尝试展开 ROLE/DEPT 为多人
-        List<String> userIds = expandAssignees(node, variables);
+        // 解析办理人：GAP-P2-9 显式指定优先；否则尝试展开 ROLE/DEPT 为多人
+        List<String> userIds = (explicitAssignees != null && !explicitAssignees.isEmpty())
+                ? new ArrayList<>(explicitAssignees)
+                : expandAssignees(node, variables);
         FlowPerformType performType = resolvePerformType(node);
 
         // P1-5: 跨节点办理人去重 — 排除同实例下已审批过的人员
@@ -619,10 +645,27 @@ public class FlowTaskCompleteServiceImpl {
         return urged;
     }
 
-    // ============================== 自由跳转（P2-25） ==============================
+    // ============================== 自由跳转（P2-25 / GAP-P2-9 自由流） ==============================
 
     /**
-     * P2-25: 自由跳转 — 管理员强制跳转到任意节点
+     * P2-25 / GAP-P2-9: 自由跳转 — 运行时动态指定下一节点（自由流核心能力）
+     *
+     * <p>对标钉钉/飞书"自由流"：当前办理人可在审批中跳转到流程定义内任意已开启 freeJump 白名单的节点，
+     * 并可显式指定目标节点的办理人。
+     *
+     * <h3>GAP-P2-9 增强点</h3>
+     * <ul>
+     *   <li>节点级白名单校验：目标节点 {@code ext.freeJump=true} 才允许跳转，
+     *       未开启的节点抛 BAD_REQUEST（避免任意跳转破坏流程语义）</li>
+     *   <li>显式办理人：{@code dto.targetAssignees} 非空时覆盖目标节点默认办理人</li>
+     * </ul>
+     *
+     * <p>原有 P2-25 行为（管理员强制跳转）通过 {@link com.njydsz.pmis.common.permission.PermissionCodes#WORKFLOW_INSTANCE_CONTROL}
+     * 权限放行，不强制要求目标节点 freeJump=true（向后兼容历史调用）。
+     * 自由流场景由 {@link com.njydsz.pmis.common.permission.PermissionCodes#WORKFLOW_TASK_FREE_JUMP} 权限控制，
+     * 走节点级白名单校验。
+     *
+     * @param dto 任务操作参数（需含 taskId + targetNodeCode，可选 targetAssignees）
      */
     @Transactional(rollbackFor = Exception.class)
     public void jump(FlowTaskOperateDTO dto) {
@@ -642,6 +685,12 @@ public class FlowTaskCompleteServiceImpl {
         if (targetNode == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_a35217ba", dto.getTargetNodeCode());
         }
+        // GAP-P2-9: 节点级 freeJump 白名单校验（仅自由流操作 action=JUMP 时启用）
+        // 历史管理员强制跳转（无 action 字段或 action != JUMP）保持原有放行语义，向后兼容
+        if ("JUMP".equals(dto.getAction()) && !isFreeJumpEnabled(targetNode)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    String.format("目标节点未开启自由跳转白名单: nodeCode=%s", dto.getTargetNodeCode()));
+        }
         // 完成当前任务（状态 COMPLETED，审计 action=JUMP）
         completeAndArchive(task, dto.getComment());
         // 取消同实例其他 PENDING 任务
@@ -649,18 +698,44 @@ public class FlowTaskCompleteServiceImpl {
         // 更新实例当前节点为目标节点
         instanceMapper.updateStatus(instance.getId(), instance.getFlowStatus(),
                 targetNode.getNodeCode(), targetNode.getNodeName(), null, null);
-        // 在目标节点创建新任务
+        // 在目标节点创建新任务（GAP-P2-9: 显式办理人优先）
         Map<String, Object> vars = mergeVariables(instance, dto.getVariables());
-        createTask(instance.getId(), targetNode, vars);
+        createTask(instance.getId(), targetNode, vars, dto.getTargetAssignees());
         // 触发任务完成事件
         fireTaskCompleted(task.getId(), "JUMP", vars);
         support.audit(task, "JUMP", dto.getUserId(), null, dto.getComment());
-        log.info("[Flow] 自由跳转: taskId={} → targetNode={}", task.getId(), dto.getTargetNodeCode());
+        log.info("[Flow] 自由跳转: taskId={} → targetNode={} explicitAssignees={}",
+                task.getId(), dto.getTargetNodeCode(),
+                dto.getTargetAssignees() != null ? dto.getTargetAssignees().size() : 0);
         // P2-34: 触发 onTaskJumped 事件
         support.fireEvent(l -> l.onTaskJumped(task.getId(), task.getNodeCode(), dto.getTargetNodeCode()),
                 task.getId());
         // P2-35: 发布 Spring 异步事件
         support.publishWorkflowEvent("TASK_JUMPED", instance.getId(), task.getId());
+    }
+
+    /**
+     * GAP-P2-9: 判断目标节点是否开启自由跳转白名单
+     *
+     * <p>读取 {@code node.ext.freeJump} 配置：
+     * <ul>
+     *   <li>{@code true} / {@code "true"}：允许自由跳转到该节点</li>
+     *   <li>未配置 / 其他值：禁止（默认关闭，避免任意跳转破坏流程语义）</li>
+     * </ul>
+     *
+     * @param node 目标节点
+     * @return 是否允许自由跳转
+     */
+    private boolean isFreeJumpEnabled(FlowNodeDO node) {
+        Map<String, Object> ext = parseExtConfig(node.getExt());
+        Object val = ext.get("freeJump");
+        if (val == null) {
+            return false;
+        }
+        if (val instanceof Boolean b) {
+            return b;
+        }
+        return "true".equalsIgnoreCase(String.valueOf(val).trim());
     }
 
     // ============================== 取消 ==============================

@@ -73,7 +73,7 @@ public class MessageController {
     @GetMapping("/log/page")
     public Result<Page<MessageLogDO>> pageLog(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "通道") @RequestParam(required = false) String channel,
             @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
             @Parameter(description = "发送状态") @RequestParam(required = false) String status) {

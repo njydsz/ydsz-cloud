@@ -82,7 +82,7 @@ public class FlowMonitorController {
     @GetMapping("/efficiency/bottleneck")
     public Result<List<Map<String, Object>>> bottleneckRanking(
             @RequestParam(required = false) String flowCode,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         return Result.ok(efficiencyService.bottleneckRanking(tenantId, flowCode, limit));
     }
@@ -99,7 +99,7 @@ public class FlowMonitorController {
     public Result<List<Map<String, Object>>> approverRanking(
             @RequestParam(required = false) String startTime,
             @RequestParam(required = false) String endTime,
-            @RequestParam(defaultValue = "10") int limit) {
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
         return Result.ok(efficiencyService.approverRanking(tenantId, startTime, endTime, limit));
     }
@@ -227,7 +227,7 @@ public class FlowMonitorController {
             @RequestParam(required = false) String anomalyType,
             @RequestParam(required = false) String warnLevel,
             @RequestParam(defaultValue = "1") @Min(1) int pageNum,
-            @RequestParam(defaultValue = "10") @Max(100) int pageSize) {
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int pageSize) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
 
         // 拉取全量异常（detectAnomalies 默认 limit=100，足够覆盖监控场景）

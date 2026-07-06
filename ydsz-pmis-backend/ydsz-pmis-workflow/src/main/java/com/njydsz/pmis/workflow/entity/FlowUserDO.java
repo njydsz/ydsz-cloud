@@ -56,6 +56,8 @@ public class FlowUserDO extends BaseDO {
 
     /**
      * GAP-P0-3: 加签类型标识，区分原始审批人与动态加签人。
+     * <p>GAP-P1-7: 取值对齐 {@link com.njydsz.pmis.workflow.enums.FlowSignType} 枚举，
+     * 持久化使用 {@code FlowSignType.name()}。
      * <ul>
      *   <li>ORIGINAL：流程定义中配置的原始审批人</li>
      *   <li>BEFORE：前加签插入的审批人</li>

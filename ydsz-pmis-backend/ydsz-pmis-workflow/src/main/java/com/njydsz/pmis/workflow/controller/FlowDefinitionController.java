@@ -59,6 +59,31 @@ public class FlowDefinitionController {
     }
 
     /**
+     * GAP-P1-6: BPMN 部署包 .zip 批量导入流程定义。
+     *
+     * <p>对标 Activiti/Flowable 的 zip 部署能力。上传 .zip 文件，遍历其中的
+     * {@code .bpmn} / {@code .bpmn20.xml} 文件逐个部署，单个失败不影响其他文件。
+     *
+     * @param file     zip 文件（multipart/form-data）
+     * @return 统一响应结果，包含 successCount / failedItems
+     */
+    @PostMapping(value = "/definition/batch-deploy-zip", consumes = "multipart/form-data")
+    @Operation(summary = "BPMN 部署包 .zip 批量导入")
+    @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
+    public Result<Map<String, Object>> batchDeployFromZip(
+            @org.springframework.web.bind.annotation.RequestParam("file")
+            org.springframework.web.multipart.MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            return Result.fail("zip 文件不能为空");
+        }
+        try {
+            return Result.ok(definitionService.batchDeployFromZip(file.getBytes(), null));
+        } catch (java.io.IOException e) {
+            return Result.fail("读取 zip 文件失败: " + e.getMessage());
+        }
+    }
+
+    /**
      * 发布流程定义
      *
      * @param id 流程定义 ID
@@ -114,7 +139,7 @@ public class FlowDefinitionController {
     @GetMapping("/definition/page")
     @Operation(summary = "分页查询流程定义")
     public Result<List<FlowDefinitionDO>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNo,
-                                          @RequestParam(defaultValue = "20") @Max(100) int pageSize,
+                                          @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
                                           @RequestParam(required = false) String category,
                                           @RequestParam(required = false) String flowCode) {
         return Result.ok(definitionService.page(pageNo, pageSize, category, flowCode));

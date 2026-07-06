@@ -15,6 +15,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -100,7 +101,7 @@ const submitting = ref(false)
 /** 新增交付物弹窗可见性 */
 const dialogVisible = ref(false)
 /** 表单引用（用于校验） */
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 新增交付物表单数据 */
 const form = reactive<Partial<DeliveryItemCreateDTO>>({
   initiationId: 0,
@@ -182,7 +183,7 @@ onMounted(fetchList)
   >
     <!-- 搜索栏 -->
     <template #search>
-      <el-form-item :label="$t('execution.delivery.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.delivery.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="$t('execution.delivery.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.delivery.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item :label="$t('execution.delivery.search.stage')">
         <el-select v-model="query.stage" :placeholder="$t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in stageMap" :key="k" :label="v.label" :value="k" />

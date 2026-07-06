@@ -24,6 +24,8 @@ const { t } = useI18n()
 const unreadCount = ref(0)
 /** 收件箱列表 */
 const notifications = ref<NotificationVO[]>([])
+/** 收件箱加载中标志 */
+const inboxLoading = ref(false)
 /** 轮询定时器（WebSocket 降级兜底） */
 let pollTimer: ReturnType<typeof setInterval> | null = null
 
@@ -41,11 +43,14 @@ const fetchUnreadCount = async () => {
 
 /** 拉取收件箱 */
 const fetchInbox = async () => {
+  inboxLoading.value = true
   try {
     const resp = await getInbox({ page: 1, size: 10 })
     notifications.value = resp.data?.records ?? []
   } catch {
     // 静默失败
+  } finally {
+    inboxLoading.value = false
   }
 }
 
@@ -101,17 +106,19 @@ onUnmounted(() => {
         </el-button>
       </div>
       <el-scrollbar max-height="400px">
-        <div v-if="notifications.length === 0" class="empty-tip">{{ t('notification.empty') }}</div>
-        <div
-          v-for="n in notifications"
-          :key="n.id"
-          class="notification-item"
-          :class="{ unread: n.readStatus === 0 }"
-          @click="n.readStatus === 0 && handleMarkRead(n.id)"
-        >
-          <div class="notification-title">{{ n.title }}</div>
-          <div class="notification-content">{{ n.content }}</div>
-          <div class="notification-time">{{ n.createdAt }}</div>
+        <div v-loading="inboxLoading" class="inbox-body">
+          <el-empty v-if="!inboxLoading && notifications.length === 0" :description="t('notification.empty')" :image-size="80" />
+          <div
+            v-for="n in notifications"
+            :key="n.id"
+            class="notification-item"
+            :class="{ unread: n.readStatus === 0 }"
+            @click="n.readStatus === 0 && handleMarkRead(n.id)"
+          >
+            <div class="notification-title">{{ n.title }}</div>
+            <div class="notification-content">{{ n.content }}</div>
+            <div class="notification-time">{{ n.createdAt }}</div>
+          </div>
         </div>
       </el-scrollbar>
     </div>
@@ -161,12 +168,6 @@ onUnmounted(() => {
 
 .notification-time {
   font-size: 12px;
-  color: var(--el-text-color-placeholder);
-}
-
-.empty-tip {
-  text-align: center;
-  padding: 40px;
   color: var(--el-text-color-placeholder);
 }
 

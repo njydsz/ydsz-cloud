@@ -26,6 +26,12 @@ interface ImportMetaEnv {
   readonly VITE_TOKEN_KEY: string
   /** Refresh Token 在 localStorage 中的 key */
   readonly VITE_REFRESH_TOKEN_KEY: string
+  /** Sentry DSN（生产环境错误监控，未配置则跳过 Sentry 初始化） */
+  readonly VITE_SENTRY_DSN?: string
+  /** 应用发布版本号（CI_COMMIT_SHORT_SHA 或 package.json version，用于 Sentry release） */
+  readonly VITE_APP_VERSION?: string
+  /** 是否启用 Web Vitals 后端 beacon 上报（'true' 时通过 navigator.sendBeacon 上报到 /api/vitals） */
+  readonly VITE_ENABLE_VITALS_BEACON?: string
 }
 
 interface ImportMeta {

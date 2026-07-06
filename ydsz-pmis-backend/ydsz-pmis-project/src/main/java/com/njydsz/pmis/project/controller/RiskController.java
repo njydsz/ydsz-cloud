@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.RiskCreateDTO;
@@ -84,6 +85,7 @@ public class RiskController {
     @Operation(summary = "删除")
     @PrePermission("execution:risk:delete")
     @Idempotent(key = "risk:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @OperationLog(module = "风险管理", action = "删除风险", bizType = "RISK")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "风险ID") @PathVariable @Min(1) Long id) {
         service.delete(id);
@@ -119,7 +121,7 @@ public class RiskController {
     @GetMapping("/page")
     public Result<Page<RiskVO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "风险等级") @RequestParam(required = false) String riskLevel,

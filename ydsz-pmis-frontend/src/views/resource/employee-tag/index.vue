@@ -40,7 +40,7 @@ const tagTypeMap = computed<Record<string, string>>(() => ({
 }))
 
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<EmployeeTagCreateDTO>({
   employeeId: 0,
   tagType: 'SKILL',

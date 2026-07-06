@@ -13,15 +13,17 @@ import javax.script.CompiledScript;
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 脚本规则：基于 Groovy 脚本动态评估
+ * 脚本规则：基于 JSR-223 多语言脚本动态评估
  *
- * <p>支持通过 Groovy 脚本编写复杂规则逻辑，适用于 Aviator 表达式无法覆盖的场景：
+ * <p>1.5.0 起支持多脚本语言：
  * <ul>
- *   <li>多步骤条件判断（如循环检查、状态机）</li>
- *   <li>需要访问外部服务或计算工具的规则</li>
- *   <li>需要复杂对象操作的规则</li>
+ *   <li>{@code groovy}（默认）- Groovy JSR-223，语法灵活，需 groovy-jsr223 依赖</li>
+ *   <li>{@code javascript} / {@code js} - Nashorn JSR-223，ECMAScript 语法，需 nashorn-core 依赖</li>
+ *   <li>{@code python} - Jython JSR-223，Python 2.7 语法，需 jython 依赖（可选）</li>
  * </ul>
  *
  * <p>脚本约定：
@@ -32,7 +34,7 @@ import java.time.LocalDateTime;
  *   <li>脚本可设置 {@code title} 和 {@code description} 变量自定义预警信息</li>
  * </ul>
  *
- * <p>沙箱模式（默认启用）通过 {@link groovy.security.SecurityContext} 限制：
+ * <p>沙箱模式（默认启用）通过正则黑名单拦截危险 API：
  * <ul>
  *   <li>禁止 {@code System.exit} / {@code Runtime.exec} / {@code ProcessBuilder}</li>
  *   <li>禁止反射调用 ({@code Class.forName} / {@code loadClass})</li>
@@ -40,22 +42,27 @@ import java.time.LocalDateTime;
  *   <li>禁止网络访问 ({@code java.net.Socket} / {@code URL.openConnection})</li>
  * </ul>
  *
- * <p>示例脚本：
+ * <p>Groovy 示例脚本：
  * <pre>
  * def budget = facts.budgetUsedRatio ?: 0
  * def spi = facts.spi ?: 1.0
- * def cpi = facts.cpi ?: 1.0
  * if (budget >= 0.9 &amp;&amp; spi &lt; 0.85) {
  *     severity = 'RED'
- *     title = "预算超支且进度严重滞后"
- *     description = "预算使用率 ${budget * 100}%, SPI=${spi}"
- *     return true
- * }
- * if (budget >= 0.8 &amp;&amp; cpi &lt; 0.9) {
- *     severity = 'YELLOW'
  *     return true
  * }
  * return false
+ * </pre>
+ *
+ * <p>JavaScript 示例脚本：
+ * <pre>
+ * var budget = facts.budgetUsedRatio || 0;
+ * var spi = facts.spi || 1.0;
+ * if (budget >= 0.9 &amp;&amp; spi &lt; 0.85) {
+ *     severity = 'RED';
+ *     true;
+ * } else {
+ *     false;
+ * }
  * </pre>
  *
  * @author ydsz-pmis-team
@@ -71,19 +78,58 @@ public class ScriptRule implements Rule {
     private final String scope;
     private final RuleSeverity defaultSeverity;
     private final String script;
+    private final String language;
     private final boolean sandboxEnabled;
     private final CompiledScript compiledScript;
+    private final ScriptEngine scriptEngine;
 
-    /** Groovy ScriptEngine（全局共享，线程安全） */
-    private static final ScriptEngine GROOVY_ENGINE;
+    /** ScriptEngine 缓存（按语言名，全局共享，线程安全） */
+    private static final Map<String, ScriptEngine> ENGINE_CACHE = new ConcurrentHashMap<>();
+    private static final ScriptEngineManager ENGINE_MANAGER = new ScriptEngineManager();
 
-    static {
-        ScriptEngineManager manager = new ScriptEngineManager();
-        ScriptEngine engine = manager.getEngineByName("groovy");
-        if (engine == null) {
-            throw new IllegalStateException("Groovy ScriptEngine 未找到，请确保 groovy-jsr223 在 classpath 中");
+    /**
+     * 获取指定语言的 ScriptEngine（带缓存）
+     *
+     * @param language 语言名（groovy/javascript/js/python）
+     * @return ScriptEngine 实例
+     * @throws IllegalStateException 引擎未找到
+     */
+    private static ScriptEngine getEngine(String language) {
+        String normalized = normalizeLanguage(language);
+        return ENGINE_CACHE.computeIfAbsent(normalized, lang -> {
+            ScriptEngine engine = ENGINE_MANAGER.getEngineByName(lang);
+            if (engine == null && "javascript".equals(lang)) {
+                // Nashorn 可能通过短名 "nashorn" 注册
+                engine = ENGINE_MANAGER.getEngineByName("nashorn");
+            }
+            if (engine == null && "python".equals(lang)) {
+                // Jython 可能通过短名 "jython" 注册
+                engine = ENGINE_MANAGER.getEngineByName("jython");
+            }
+            if (engine == null) {
+                throw new IllegalStateException(
+                        "脚本引擎未找到: " + lang + "，请确保对应 JSR-223 实现在 classpath 中"
+                                + "（groovy 需 groovy-jsr223，javascript 需 nashorn-core，python 需 jython）");
+            }
+            return engine;
+        });
+    }
+
+    /**
+     * 规范化语言名称
+     *
+     * @param language 原始语言名
+     * @return 规范化后的语言名（groovy/javascript/python）
+     */
+    private static String normalizeLanguage(String language) {
+        if (language == null || language.isBlank()) {
+            return "groovy";
         }
-        GROOVY_ENGINE = engine;
+        String lang = language.trim().toLowerCase();
+        if ("js".equals(lang)) {
+            return "javascript";
+        }
+        return lang;
     }
 
     /**
@@ -95,12 +141,13 @@ public class ScriptRule implements Rule {
      * @param priority        优先级
      * @param scope           作用域
      * @param defaultSeverity 默认严重度
-     * @param script          Groovy 脚本
+     * @param script          脚本内容
+     * @param language        脚本语言（groovy/javascript/python）
      * @param sandboxEnabled  是否启用沙箱
      */
     public ScriptRule(String code, String name, String category, int priority,
                       String scope, RuleSeverity defaultSeverity,
-                      String script, boolean sandboxEnabled) {
+                      String script, String language, boolean sandboxEnabled) {
         this.code = code;
         this.name = name;
         this.category = category;
@@ -108,12 +155,14 @@ public class ScriptRule implements Rule {
         this.scope = scope;
         this.defaultSeverity = defaultSeverity != null ? defaultSeverity : RuleSeverity.INFO;
         this.script = script;
+        this.language = normalizeLanguage(language);
         this.sandboxEnabled = sandboxEnabled;
-        this.compiledScript = compileScript(script, sandboxEnabled);
+        this.scriptEngine = getEngine(this.language);
+        this.compiledScript = compileScript(script, sandboxEnabled, this.scriptEngine, this.language);
     }
 
     /**
-     * 构建脚本规则（默认启用沙箱、默认优先级）
+     * 构建脚本规则（Groovy，默认启用沙箱、默认优先级）
      *
      * @param code            规则编码
      * @param name            规则名称
@@ -123,11 +172,11 @@ public class ScriptRule implements Rule {
      */
     public ScriptRule(String code, String name, String category,
                       RuleSeverity defaultSeverity, String script) {
-        this(code, name, category, DEFAULT_PRIORITY, null, defaultSeverity, script, true);
+        this(code, name, category, DEFAULT_PRIORITY, null, defaultSeverity, script, "groovy", true);
     }
 
     /**
-     * 构建脚本规则（可指定沙箱开关）
+     * 构建脚本规则（Groovy，可指定沙箱开关）
      *
      * @param code            规则编码
      * @param name            规则名称
@@ -138,7 +187,7 @@ public class ScriptRule implements Rule {
      */
     public ScriptRule(String code, String name, String category,
                       RuleSeverity defaultSeverity, String script, boolean sandboxEnabled) {
-        this(code, name, category, DEFAULT_PRIORITY, null, defaultSeverity, script, sandboxEnabled);
+        this(code, name, category, DEFAULT_PRIORITY, null, defaultSeverity, script, "groovy", sandboxEnabled);
     }
 
     /**
@@ -160,6 +209,7 @@ public class ScriptRule implements Rule {
                 def.getScope(),
                 severity,
                 def.getScript(),
+                def.getLanguage(),
                 def.isSandboxEnabled()
         );
     }
@@ -183,7 +233,7 @@ public class ScriptRule implements Rule {
     public RuleResult evaluate(RuleContext context) {
         long start = System.nanoTime();
         try {
-            Bindings bindings = GROOVY_ENGINE.createBindings();
+            Bindings bindings = scriptEngine.createBindings();
             bindings.put("facts", context.getFacts());
             // 预设可写变量（脚本可覆盖）
             bindings.put("severity", null);
@@ -227,7 +277,7 @@ public class ScriptRule implements Rule {
                     .title(title)
                     .description(desc)
                     .scope(scope)
-                    .threshold("Groovy Script")
+                    .threshold(capitalize(language) + " Script")
                     .triggeredAt(LocalDateTime.now())
                     .elapsedMs(elapsedMs(start))
                     .build();
@@ -245,29 +295,30 @@ public class ScriptRule implements Rule {
     }
 
     /**
-     * 编译 Groovy 脚本
+     * 编译脚本
      *
-     * <p>沙箱模式下使用 {@link groovy.security.SecurityContext} 限制危险操作，
-     * 并通过自定义 {@link groovy.lang.GroovyClassLoader} 设置安全过滤器。
+     * <p>沙箱模式下通过正则黑名单拦截危险 API。
      *
      * @param script         脚本内容
      * @param sandboxEnabled 是否启用沙箱
+     * @param engine         ScriptEngine 实例
+     * @param language       脚本语言
      * @return 编译后的脚本
      */
-    private static CompiledScript compileScript(String script, boolean sandboxEnabled) {
-        // 沙箱安全检查在编译前执行，SecurityException 直接抛出
+    private static CompiledScript compileScript(String script, boolean sandboxEnabled,
+                                                 ScriptEngine engine, String language) {
         if (sandboxEnabled) {
             checkScriptSafety(script);
         }
         try {
-            Compilable compilable = (Compilable) GROOVY_ENGINE;
+            Compilable compilable = (Compilable) engine;
             return compilable.compile(script);
         } catch (Exception e) {
-            throw new IllegalArgumentException("Groovy 脚本编译失败: " + e.getMessage(), e);
+            throw new IllegalArgumentException(capitalize(language) + " 脚本编译失败: " + e.getMessage(), e);
         }
     }
 
-    /** 危险 API 模式正则 */
+    /** 危险 API 模式正则（通用，适用于所有 JSR-223 语言） */
     private static final java.util.regex.Pattern DANGEROUS_PATTERN = java.util.regex.Pattern.compile(
         "\\b(System\\s*\\.\\s*exit|Runtime\\s*\\.\\s*getRuntime|ProcessBuilder|Class\\s*\\.\\s*forName|" +
         "ClassLoader|FileInputStream|FileOutputStream|RandomAccessFile|Socket\\s*\\(|URL\\s*\\.\\s*openConnection|" +
@@ -291,27 +342,38 @@ public class ScriptRule implements Rule {
 
     /**
      * 计算耗时（毫秒）
-     *
-     * @param startNano 开始纳秒
-     * @return 耗时毫秒
      */
     private long elapsedMs(long startNano) {
         return (System.nanoTime() - startNano) / 1_000_000;
     }
 
     /**
+     * 首字母大写
+     */
+    private static String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
+    }
+
+    /**
      * 获取脚本内容
-     *
-     * @return Groovy 脚本
      */
     public String getScript() {
         return script;
     }
 
     /**
-     * 是否启用沙箱
+     * 获取脚本语言
      *
-     * @return true=沙箱已启用
+     * @return 语言名（groovy/javascript/python）
+     * @since 1.5.0
+     */
+    public String getLanguage() {
+        return language;
+    }
+
+    /**
+     * 是否启用沙箱
      */
     public boolean isSandboxEnabled() {
         return sandboxEnabled;

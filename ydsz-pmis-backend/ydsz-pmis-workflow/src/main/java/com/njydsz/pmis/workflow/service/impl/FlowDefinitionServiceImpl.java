@@ -25,10 +25,14 @@ import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -36,6 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 /**
  * 流程定义 Service 实现
@@ -57,6 +63,16 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
     private final FlowGraphValidator graphValidator;
     /** P1: 流程定义元数据缓存，部署/更新时主动失效 */
     private final FlowDefinitionCacheService flowDefinitionCacheService;
+
+    /**
+     * GAP-P1-6: 自注入代理引用，使 {@link #batchDeployFromZip} 内部调用 {@link #deploy}
+     * 时能正确触发 Spring 事务代理（避免 self-invocation 导致事务失效）。
+     * 使用 {@code @Lazy} 打破启动期循环依赖。
+     * 包级可见以便单元测试注入 mock/self 引用。
+     */
+    @Autowired
+    @Lazy
+    FlowDefinitionServiceImpl self;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -910,5 +926,112 @@ public class FlowDefinitionServiceImpl implements FlowDefinitionService {
         map.put("skipType", skip.getSkipType() != null ? skip.getSkipType() : "");
         map.put("skipCondition", skip.getSkipCondition() != null ? skip.getSkipCondition() : "");
         return map;
+    }
+
+    // ============================== GAP-P1-6: BPMN 部署包 .zip 批量导入 ==============================
+
+    /**
+     * GAP-P1-6: 从 BPMN 部署包 .zip 批量导入流程定义。
+     *
+     * <p>对标 Activiti/Flowable 的 {@code repositoryService.createDeployment().addZipInputStream()}。
+     * 遍历 zip 内的 {@code .bpmn} / {@code .bpmn20.xml} 文件，逐个解析并委托 {@link #deploy} 入库。
+     * 单个文件失败不影响其他文件（通过 self 代理调用 deploy，每个文件独立事务）。
+     *
+     * <p>flowCode 取自 BPMN process id，flowName 取自 BPMN process name（缺失时回退为文件名）。
+     * 版本号默认 "1.0"，如已存在同 flowCode + version 的定义则该文件记为失败并跳过。
+     *
+     * @param zipBytes zip 文件字节数组
+     * @param tenantId 租户 ID（可空，默认从 SecurityContext 获取）
+     * @return Map 包含 successCount（成功数）和 failedItems（失败列表，每项含 fileName + reason）
+     */
+    @Override
+    public Map<String, Object> batchDeployFromZip(byte[] zipBytes, Long tenantId) {
+        if (zipBytes == null || zipBytes.length == 0) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "zip 文件内容为空");
+        }
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+
+        int successCount = 0;
+        List<Map<String, String>> failedItems = new ArrayList<>();
+
+        try (ZipInputStream zis = new ZipInputStream(new ByteArrayInputStream(zipBytes))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                String fileName = entry.getName();
+                // 仅处理 .bpmn / .bpmn20.xml 文件（大小写不敏感）
+                String lowerName = fileName.toLowerCase();
+                if (!lowerName.endsWith(".bpmn") && !lowerName.endsWith(".bpmn20.xml")) {
+                    continue;
+                }
+                try {
+                    String bpmnXml = new String(readAllBytes(zis), StandardCharsets.UTF_8);
+                    // 先解析一次获取 processId（作为 flowCode）和 processName（作为 flowName）
+                    BpmnModel model = bpmnXmlParser.parse(bpmnXml);
+                    String flowCode = model.getProcessId();
+                    String flowName = StringUtils.hasText(model.getProcessName())
+                            ? model.getProcessName() : extractBaseName(fileName);
+
+                    if (!StringUtils.hasText(flowCode)) {
+                        throw new BizException(BizErrorCode.BAD_REQUEST,
+                                "BPMN 文件缺少 process id: " + fileName);
+                    }
+
+                    FlowDeployProcessDTO dto = new FlowDeployProcessDTO();
+                    dto.setFlowCode(flowCode);
+                    dto.setFlowName(flowName);
+                    dto.setVersion("1.0");
+                    dto.setBpmnXml(bpmnXml);
+                    dto.setTenantId(tid);
+                    // 通过 self 代理调用，确保 deploy 的 @Transactional 生效（独立事务）
+                    self.deploy(dto);
+                    successCount++;
+                    log.info("[Flow] zip 批量导入成功: fileName={} flowCode={}", fileName, flowCode);
+                } catch (Exception e) {
+                    Map<String, String> fail = new LinkedHashMap<>();
+                    fail.put("fileName", fileName);
+                    fail.put("reason", e.getMessage() != null ? e.getMessage() : e.getClass().getSimpleName());
+                    failedItems.add(fail);
+                    log.warn("[Flow] zip 批量导入失败: fileName={} reason={}", fileName, e.getMessage());
+                } finally {
+                    zis.closeEntry();
+                }
+            }
+        } catch (Exception e) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "zip 文件解析失败: " + e.getMessage());
+        }
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("successCount", successCount);
+        result.put("failedItems", failedItems);
+        log.info("[Flow] zip 批量导入完成: success={} failed={}", successCount, failedItems.size());
+        return result;
+    }
+
+    /** 读取 ZipInputStream 当前 entry 的全部字节（不关闭流） */
+    private byte[] readAllBytes(ZipInputStream zis) throws Exception {
+        java.io.ByteArrayOutputStream baos = new java.io.ByteArrayOutputStream();
+        byte[] buffer = new byte[4096];
+        int len;
+        while ((len = zis.read(buffer)) > 0) {
+            baos.write(buffer, 0, len);
+        }
+        return baos.toByteArray();
+    }
+
+    /** 从 zip entry 路径中提取文件名（去掉目录和扩展名） */
+    private String extractBaseName(String fileName) {
+        String name = fileName;
+        int slashIdx = name.lastIndexOf('/');
+        if (slashIdx >= 0) {
+            name = name.substring(slashIdx + 1);
+        }
+        int dotIdx = name.lastIndexOf('.');
+        if (dotIdx > 0) {
+            name = name.substring(0, dotIdx);
+        }
+        return name;
     }
 }

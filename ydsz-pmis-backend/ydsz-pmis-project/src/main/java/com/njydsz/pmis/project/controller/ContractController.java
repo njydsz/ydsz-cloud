@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ContractCreateDTO;
@@ -82,6 +83,7 @@ public class ContractController {
     @Operation(summary = "删除合同")
     @PrePermission("project:contract:delete")
     @Idempotent(key = "contract:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @OperationLog(module = "合同管理", action = "删除合同", bizType = "CONTRACT")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@Parameter(description = "合同ID") @PathVariable @Min(1) Long id) {
         service.delete(id);

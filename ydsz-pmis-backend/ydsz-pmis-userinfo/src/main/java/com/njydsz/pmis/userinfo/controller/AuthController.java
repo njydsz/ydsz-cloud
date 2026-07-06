@@ -4,7 +4,6 @@ import com.njydsz.pmis.userinfo.dto.LoginDTO;
 import com.njydsz.pmis.userinfo.dto.LoginResultVO;
 import com.njydsz.pmis.userinfo.dto.CaptchaVO;
 import com.njydsz.pmis.userinfo.service.AuthService;
-import com.njydsz.pmis.userinfo.service.impl.AuthServiceImpl;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
@@ -82,7 +81,7 @@ public class AuthController {
         // 把当前 Token 加入黑名单（防止 8 小时内继续使用）
         if (authorization != null && authorization.startsWith("Bearer ")) {
             String token = authorization.substring(7);
-            ((AuthServiceImpl) authService).blacklistToken(token, 8 * 3600);
+            authService.blacklistToken(token, 8 * 3600);
         }
         authService.logout(userId);
         return Result.ok();

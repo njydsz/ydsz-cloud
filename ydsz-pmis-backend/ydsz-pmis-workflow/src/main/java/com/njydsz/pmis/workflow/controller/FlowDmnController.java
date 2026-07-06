@@ -48,7 +48,7 @@ public class FlowDmnController {
     @Operation(summary = "分页查询决策表")
     @PostMapping("/page")
     public Result<Page<FlowDmnTableDO>> page(@RequestParam(defaultValue = "1") @Min(1) int pageNum,
-                                             @RequestParam(defaultValue = "20") @Max(100) int pageSize,
+                                             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int pageSize,
                                              @RequestParam(required = false) String tableName) {
         return Result.ok(dmnTableService.page(pageNum, pageSize, tableName));
     }

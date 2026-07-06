@@ -12,6 +12,7 @@
  */
 import { ref, watch, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { ElMessageBox } from 'element-plus'
 
 const { t } = useI18n()
 
@@ -26,6 +27,10 @@ const props = defineProps<{
   closeOnClickModal?: boolean
   /** 是否显示底部 */
   showFooter?: boolean
+  /** 是否启用未保存修改检查（关闭前弹确认框，默认 false） */
+  checkDirty?: boolean
+  /** 表单是否存在未保存修改，配合 checkDirty 使用，由调用方维护 */
+  dirty?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -61,6 +66,23 @@ watch(() => props.modelValue, (v) => (visible.value = v))
 watch(visible, (v) => emit('update:modelValue', v))
 
 async function handleClose(done: () => void) {
+  // 启用 dirty check 且存在未保存修改时，弹出确认框
+  if (props.checkDirty && props.dirty) {
+    try {
+      await ElMessageBox.confirm(
+        t('common.msg_discard_confirm'),
+        t('common.msg_unsaved_changes'),
+        {
+          confirmButtonText: t('common.ok'),
+          cancelButtonText: t('common.cancel'),
+          type: 'warning',
+        },
+      )
+    } catch {
+      // 用户取消，保持弹窗打开
+      return
+    }
+  }
   if (props.beforeClose) {
     const ok = await props.beforeClose()
     if (!ok) return

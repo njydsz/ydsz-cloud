@@ -60,6 +60,10 @@ public class TimeEntryDO implements Serializable {
     private Integer billable;
     /** 工作描述 */
     private String description;
+    /** 命中的费率卡 ID（关联 pmis_rate_card.id，可空：未匹配到费率卡） */
+    private Long rateId;
+    /** 人天费率（冗余，锁定当时报价，用于成本归集） */
+    private BigDecimal rate;
     /** 状态：TimeEntryStatus.code */
     private String status;
     /** 审批人ID */

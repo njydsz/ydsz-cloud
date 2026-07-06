@@ -91,8 +91,18 @@ const fmtPercent = (v: number | undefined) => {
 }
 
 // ===== KPI 列表 (动态计算) =====
+/** KPI 卡片数据结构 */
+interface DashboardMetric {
+  title: string
+  value: string
+  unit: string
+  color: string
+  icon: string
+  /** 可选副标题（如毛利率） */
+  sub?: string
+}
 /** 顶部 4 个 KPI 卡片数据 */
-const metrics = computed(() => [
+const metrics = computed<DashboardMetric[]>(() => [
   {
     title: t('dashboard.metrics.activeProjects'),
     value: String(kpi.value?.activeProjectCount ?? 0),
@@ -378,7 +388,7 @@ onMounted(async () => {
                 <span class="value">{{ m.value }}</span>
                 <span class="unit">{{ m.unit }}</span>
               </p>
-              <p v-if="(m as any).sub" class="metric-sub">{{ (m as any).sub }}</p>
+              <p v-if="m.sub" class="metric-sub">{{ m.sub }}</p>
             </div>
           </div>
         </el-card>

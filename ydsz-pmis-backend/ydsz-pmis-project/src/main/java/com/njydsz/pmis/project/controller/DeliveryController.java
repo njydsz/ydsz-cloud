@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.DeliveryItemCreateDTO;
@@ -68,6 +69,7 @@ public class DeliveryController {
      */
     @Operation(summary = "删除交付物标准")
     @PrePermission("execution:delivery:delete")
+    @OperationLog(module = "交付物管理", action = "删除交付物标准", bizType = "DELIVERY_STANDARD")
     @DeleteMapping("/standard/{id}")
     public Result<Void> deleteStandard(@PathVariable @Min(1) Long id) {
         service.deleteStandard(id);
@@ -172,6 +174,7 @@ public class DeliveryController {
      */
     @Operation(summary = "删除交付物实例")
     @PrePermission("execution:delivery:delete")
+    @OperationLog(module = "交付物管理", action = "删除交付物实例", bizType = "DELIVERY_ITEM")
     @DeleteMapping("/item/{id}")
     public Result<Void> deleteItem(@PathVariable @Min(1) Long id) {
         service.deleteItem(id);

@@ -133,10 +133,16 @@ export interface FlowTaskOperateDTO {
   comment?: string
   targetUserId?: number
   targetUserName?: string
-  /** 单节点退回目标（向后兼容） */
+  /**
+   * 目标节点编码
+   * - REJECT：单节点退回（向后兼容）
+   * - GAP-P2-9 自由流（JUMP）：运行时动态指定下一节点，目标节点需 ext.freeJump=true
+   */
   targetNodeCode?: string
   /** GAP-P0-2: 多节点同退目标列表（非空时优先于 targetNodeCode） */
   targetNodeCodes?: string[]
+  /** GAP-P2-9: 自由流（JUMP）运行时指定目标节点办理人列表（如 ['1001','1002']） */
+  targetAssignees?: string[]
   variables?: Record<string, unknown>
 }
 

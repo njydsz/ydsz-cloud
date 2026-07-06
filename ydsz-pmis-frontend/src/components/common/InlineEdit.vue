@@ -18,6 +18,11 @@ import { Edit } from '@element-plus/icons-vue'
 
 type EditType = 'text' | 'number' | 'select' | 'date'
 
+/** 可聚焦的编辑控件最小接口（el-input/el-select/el-date-picker 均满足） */
+interface Focusable {
+  focus?: () => void
+}
+
 interface Props {
   modelValue: string | number | undefined
   type?: EditType
@@ -25,7 +30,7 @@ interface Props {
   width?: string
   placeholder?: string
   disabled?: boolean
-  rules?: Array<(val: any) => string | true>
+  rules?: Array<(val: string | number) => string | true>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -42,7 +47,7 @@ const emit = defineEmits<{
 
 const editing = ref(false)
 const editValue = ref<string | number>('')
-const inputRef = ref<any>(null)
+const inputRef = ref<Focusable | null>(null)
 const errorMsg = ref('')
 
 const startEdit = () => {

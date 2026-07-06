@@ -65,6 +65,20 @@ public class OpenAICompatibleLLMClient implements LLMClient {
                 .build();
     }
 
+    /**
+     * 测试用构造函数（注入 HttpClient，便于单测 mock 网络层）
+     *
+     * <p>仅用于单元测试，生产环境应使用 {@link #OpenAICompatibleLLMClient(LiteRuleProperties.Ai)}。
+     *
+     * @param config     配置
+     * @param httpClient 注入的 HttpClient 实例
+     * @since 1.5.0
+     */
+    OpenAICompatibleLLMClient(LiteRuleProperties.Ai config, HttpClient httpClient) {
+        this.config = config;
+        this.httpClient = httpClient;
+    }
+
     @Override
     public String chat(String systemPrompt, String userPrompt, Map<String, Object> options) {
         List<Map<String, String>> messages = new ArrayList<>(2);

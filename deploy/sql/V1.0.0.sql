@@ -1808,6 +1808,8 @@ CREATE TABLE IF NOT EXISTS pmis_execution_time_entry(
     work_type           VARCHAR(32)   NOT NULL DEFAULT 'REGULAR', -- REGULAR/OVERTIME/TRAINING/LEAVE
     billable            SMALLINT      NOT NULL DEFAULT 1,           -- 是否可计费: 1 可计费 / 0 不可计费
     description         TEXT,
+    rate_id             BIGINT,                          -- 命中的费率卡 ID（关联 pmis_rate_card.id,可空:未匹配到费率卡）
+    rate                NUMERIC(10,2),                    -- 人天费率（冗余,锁定当时报价,用于成本归集）
     status              VARCHAR(16)   NOT NULL DEFAULT 'DRAFT',
     -- DRAFT/SUBMITTED/APPROVED/REJECTED
     approver_id         BIGINT,
@@ -1837,6 +1839,8 @@ COMMENT ON COLUMN pmis_execution_time_entry.overtime IS '加班工时(小时)';
 COMMENT ON COLUMN pmis_execution_time_entry.work_type IS '工时类型: REGULAR 正常 / OVERTIME 加班 / TRAINING 培训 / LEAVE 请假';
 COMMENT ON COLUMN pmis_execution_time_entry.billable IS '是否可计费: 1 可计费(向客户收费) / 0 不可计费(培训/管理工时)';
 COMMENT ON COLUMN pmis_execution_time_entry.description IS '工时说明';
+COMMENT ON COLUMN pmis_execution_time_entry.rate_id IS '命中的费率卡 ID(关联 pmis_rate_card.id,可空:未匹配到费率卡)';
+COMMENT ON COLUMN pmis_execution_time_entry.rate IS '人天费率(冗余,锁定当时报价,用于成本归集)';
 COMMENT ON COLUMN pmis_execution_time_entry.status IS '审批状态: DRAFT 草稿 / SUBMITTED 已提交 / APPROVED 已批准 / REJECTED 已驳回';
 COMMENT ON COLUMN pmis_execution_time_entry.approver_id IS '审批人 ID';
 COMMENT ON COLUMN pmis_execution_time_entry.approver_name IS '审批人姓名';

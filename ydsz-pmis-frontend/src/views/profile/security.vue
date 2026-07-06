@@ -15,6 +15,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import {
   bind2fa,
   confirm2fa,
@@ -47,7 +48,7 @@ const bindResult = ref<{ secret: string; otpauthUri: string } | null>(null)
 /** 绑定确认表单（输入 6 位动态码） */
 const bindForm = reactive({ otp: '' })
 /** 绑定确认表单引用 */
-const bindFormRef = ref<any>()
+const bindFormRef = ref<FormInstance>()
 /** 备份码列表 */
 const backupCodes = ref<string[]>([])
 
@@ -180,7 +181,7 @@ async function onKickOthers() {
 /** 修改密码表单数据 */
 const pwdForm = reactive({ oldPassword: '', newPassword: '', confirmPassword: '' })
 /** 修改密码表单引用 */
-const pwdFormRef = ref<any>()
+const pwdFormRef = ref<FormInstance>()
 /** 新密码强度评估结果 */
 const { result: pwdStrength } = usePasswordStrength(
   computed(() => pwdForm.newPassword),

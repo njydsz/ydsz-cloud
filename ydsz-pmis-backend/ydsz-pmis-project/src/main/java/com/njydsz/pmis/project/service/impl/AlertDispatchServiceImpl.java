@@ -14,10 +14,8 @@ import com.njydsz.pmis.project.service.AlertDispatchService;
 import com.njydsz.pmis.common.feign.MessageRequest;
 import com.njydsz.pmis.common.feign.MessageResult;
 import com.njydsz.pmis.common.feign.NotificationPushClient;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,23 +40,29 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AlertDispatchServiceImpl implements AlertDispatchService {
 
     private final AlertDispatchMapper mapper;
     private final MessageServiceClient messageClient;
     /** 通知实时推送 Feign 客户端（P0-2，通过 notification 服务 WebSocket 下发） */
     private final NotificationPushClient pushClient;
-
     /**
      * 自身代理引用，避免内部 this 调用绕过 Spring AOP（@GlobalTransactional / @Transactional）。
      * <p>P1-4 修复：retryFailed 通过 this.dispatchNow() 调用时，AOP 注解不生效，导致
      * 分布式事务回滚失效。改为通过 self 代理调用，确保 @GlobalTransactional 正常工作。
      * <p>@Lazy 避免循环依赖（self 引用自身 bean）。
      */
-    @Autowired
-    @Lazy
-    private AlertDispatchService self;
+    private final AlertDispatchService self;
+
+    public AlertDispatchServiceImpl(AlertDispatchMapper mapper,
+                                    MessageServiceClient messageClient,
+                                    NotificationPushClient pushClient,
+                                    @Lazy AlertDispatchService self) {
+        this.mapper = mapper;
+        this.messageClient = messageClient;
+        this.pushClient = pushClient;
+        this.self = self;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)

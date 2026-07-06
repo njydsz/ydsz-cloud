@@ -43,7 +43,16 @@ public class FlowTaskOperateDTO implements Serializable {
     /** 流程变量 */
     private Map<String, Object> variables;
 
-    /** 退回目标节点编码（仅 REJECT 时使用，单节点退回，向后兼容） */
+    /**
+     * 目标节点编码
+     *
+     * <p>多场景复用：
+     * <ul>
+     *   <li>REJECT：单节点退回（向后兼容）</li>
+     *   <li>GAP-P2-9 自由流（JUMP）：运行时动态指定下一节点编码，目标节点必须存在于当前流程定义中，
+     *       且目标节点的 {@code ext.freeJump=true}（节点级白名单）才允许跳转</li>
+     * </ul>
+     */
     private String targetNodeCode;
 
     /**
@@ -53,6 +62,17 @@ public class FlowTaskOperateDTO implements Serializable {
      * 非空时优先于 {@link #targetNodeCode}；为空时降级到单节点退回（向后兼容）。
      */
     private List<String> targetNodeCodes;
+
+    /**
+     * GAP-P2-9: 自由流（JUMP）运行时指定目标节点办理人列表
+     *
+     * <p>对标钉钉/飞书"自由流"能力：跳转时可显式指定目标节点的办理人（用户 ID 字符串列表，
+     * 如 {@code ["1001","1002"]}）。非空时覆盖目标节点 {@code permissionFlag} 解析出的默认办理人；
+     * 为空时回退到节点配置的办理人解析逻辑。
+     *
+     * <p>仅 {@code action=JUMP} 时生效，其他操作忽略该字段。
+     */
+    private List<String> targetAssignees;
 
     /** 转办/委派目标人 */
     private Long targetUserId;

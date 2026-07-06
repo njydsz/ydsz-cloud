@@ -95,7 +95,7 @@ public class SessionController {
     @GetMapping("/admin/page")
     public Result<PageResult<UserSessionDO>> adminPage(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String clientIp) {

@@ -183,6 +183,7 @@ public class ChaosController {
      */
     @Operation(summary = "清空历史")
     @PrePermission("sys:chaos:trigger")
+    @OperationLog(module = "混沌工程", action = "清空实验历史", bizType = "CHAOS_EXPERIMENT")
     @PostMapping("/history/clear")
     public Result<Void> clearHistory() {
         chaosService.clearHistory();

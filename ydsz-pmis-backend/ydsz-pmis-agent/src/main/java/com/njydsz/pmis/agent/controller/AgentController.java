@@ -9,7 +9,6 @@ import com.njydsz.pmis.agent.entity.AgentPredictionDO;
 import com.njydsz.pmis.agent.mapper.AgentPredictionMapper;
 import com.njydsz.pmis.agent.service.AgentService;
 import com.njydsz.pmis.common.annotation.PrePermission;
-import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -123,7 +122,7 @@ public class AgentController {
     @GetMapping("/page")
     public Result<Page<AgentPredictionDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) String alertLevel,
             @RequestParam(required = false) String status,
@@ -146,7 +145,7 @@ public class AgentController {
     public Result<List<AgentPredictionDO>> recent(
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) String alertLevel,
-            @RequestParam(defaultValue = "20") Integer limit) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) Integer limit) {
         return Result.ok(service.listRecent(agentType, alertLevel, limit));
     }
 

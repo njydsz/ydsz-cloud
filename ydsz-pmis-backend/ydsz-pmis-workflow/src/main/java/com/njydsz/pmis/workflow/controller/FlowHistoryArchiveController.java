@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowHistoryArchiveService;
 import org.springframework.validation.annotation.Validated;
@@ -64,6 +65,7 @@ public class FlowHistoryArchiveController {
      * @return 执行结果摘要
      */
     @Operation(summary = "手动触发归档")
+    @OperationLog(module = "流程历史归档", action = "手动触发归档", bizType = "FLOW_HISTORY_ARCHIVE")
     @PostMapping("/archive")
     public Result<Map<String, Object>> archive(@RequestParam(required = false) Integer retentionDays,
                                                   @RequestParam(required = false) Integer batchSize,
@@ -83,6 +85,7 @@ public class FlowHistoryArchiveController {
      * @return 执行结果摘要
      */
     @Operation(summary = "手动触发清理（purge）")
+    @OperationLog(module = "流程历史归档", action = "手动触发清理", bizType = "FLOW_HISTORY_PURGE")
     @PostMapping("/purge")
     public Result<Map<String, Object>> purge(@RequestParam(required = false) Integer purgeDays) {
         log.info("[FlowHistoryArchiveController] 手动触发清理 purgeDays={}", purgeDays);

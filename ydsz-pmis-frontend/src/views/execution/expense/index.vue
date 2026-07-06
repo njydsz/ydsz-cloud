@@ -101,7 +101,7 @@ const submitting = ref(false)
 /** 新增报销弹窗可见性 */
 const dialogVisible = ref(false)
 /** 表单引用（用于校验） */
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 新增报销表单数据 */
 const form = reactive<Partial<ExpenseCreateDTO>>({
   expenseCode: '',
@@ -229,7 +229,7 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item :label="$t('execution.expense.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.expense.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="$t('execution.expense.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.expense.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item :label="$t('execution.expense.search.status')">
         <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />

@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import {
   actResourceAssignment,
@@ -57,7 +58,7 @@ async function fetchList() {
 }
 
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 // 分配动作表单（与后端 ResourceAssignmentCreateDTO 对齐）
 const form = reactive<ResourceAssignmentCreateDTO>({
   employeeId: 0,

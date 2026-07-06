@@ -14,6 +14,7 @@
  */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -100,7 +101,7 @@ const submitting = ref(false)
 /** 信用评估弹窗可见性 */
 const dialogVisible = ref(false)
 /** 表单引用（用于校验） */
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 信用评估入参表单 */
 const form = reactive<Partial<CreditAssessmentDTO>>({
   customerId: 0,
@@ -166,7 +167,7 @@ onMounted(fetchList)
   >
     <!-- 搜索栏 -->
     <template #search>
-      <el-form-item :label="t('finance.credit.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('finance.credit.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="t('finance.credit.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('finance.credit.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item :label="t('finance.credit.search.level')">
         <el-select v-model="query.level" :placeholder="t('common.all')" clearable style="width: 120px">
           <el-option v-for="(v, k) in levelMap" :key="k" :label="v.label" :value="k" />

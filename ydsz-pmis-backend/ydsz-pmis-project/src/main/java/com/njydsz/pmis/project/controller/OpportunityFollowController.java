@@ -61,7 +61,7 @@ public class OpportunityFollowController {
     @GetMapping("/page")
     public Result<Page<OpportunityFollowDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) Long opportunityId) {
         return Result.ok(service.page(page, size, opportunityId));
     }

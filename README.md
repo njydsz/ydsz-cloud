@@ -84,7 +84,7 @@ YDSZ PMIS · 项目运营管理系统 · README
 | **经营驾驶舱** | 6 大 KPI + 3 维下钻（部门/项目类型/客户） + 高管看板 + KPI 趋势 + 预警 banner + 60s 实时刷新 + BFF 聚合 |
 | **AI 多智能体编排** | Blackboard 共享上下文 + 4 编排策略（串行/并行/投票/级联） + 5 内置 Agent + 5 LLM Provider 路由 + provider_trace_id 追踪 |
 | **轻量规则引擎 (literule)** | Aviator 表达式驱动 + 动态配置 + 热加载 + 版本管理 + dry-run 仿真 + 规则链编排 + 阈值动态注入 |
-| **自研工作流 v2** | `pmis_flow_*` 表 + BPMN 2.0 解析 + 设计器（数据 API）+ 表单设计器 + 流程模板 + 通知渠道 + 审批人自动去重 + 流程导入导出 + 50 步模拟运行 + 流程监控仪表盘 |
+| **自研工作流 v2** | `pmis_flow_*` 表 + BPMN 2.0 解析 + 设计器（数据 API）+ 表单设计器 + 流程模板 + 通知渠道 + 审批人自动去重 + 流程导入导出 + 50 步模拟运行 + 流程监控仪表盘 ⚠️ **仅适配 PC Web 端，不支持移动端/独立 H5**（见 7.4） |
 | **混沌工程** | ChaosService 实验注册 + FeatureFlag 双保险 + 注入统计 + chaos-dashboard 实时监控 |
 | **变更-交付-结项闭环** | 5 类变更（范围/成本/合同/人员/进度） + 8 类项目交付物标准化（CD1-CD5 门径） + 3 类结项（正式/预/强制）准入 |
 | **国际化（i18n）** | vue-i18n 10 + 中/英文语言包 + 6 个核心页面覆盖 + 语言切换组件 + 集中化文案管理（部分业务页面 i18n 迁移待完成） |
@@ -308,6 +308,31 @@ ydsz-pmis/
 - **WbsTaskStatus**: PLANNED → IN_PROGRESS → (BLOCKED) → IN_REVIEW → COMPLETED / CANCELLED
 - **OpportunityStatus**: NEW → QUALIFIED → (WON → CONVERTED 终态) / (LOST 终态) / ON_HOLD
 - **OpsTicketStatus**: OPEN → TRIAGED → IN_PROGRESS → (RESOLVED / ESCALATED) → CLOSED
+
+### 7.4 平台适配范围（团队共识 · 硬约束）
+
+> 自 2026-07-06 起明确：**本项目自研工作流引擎（`ydsz-pmis-workflow` 模块及其全部前端页面）永远不适配移动端 App 与独立 H5 应用**。
+
+| 维度 | 范围 |
+|---|---|
+| ✅ 支持 | PC Web（`ydsz-pmis-frontend`，Vue 3.5 + Element Plus，桌面浏览器 ≥ 1280px） |
+| ❌ 不支持 | 原生 iOS/Android App、uni-app / Taro 移动端、独立的移动 H5 子应用、PWA 移动模式 |
+| 🔁 移动端审批替代方案 | ① 对接企业微信 / 钉钉 / 飞书（已实现 `WeComSignatureUtil` / `DingTalkSignatureUtil` / `FeishuSignatureUtil`）；② 独立「轻审批 H5」应用（仅查询/同意/驳回，不含设计器/监控） |
+
+**为什么不做移动端适配**：
+
+1. **流程设计器强依赖桌面交互**：bpmn-js 拖拽、连线、属性面板、表单设计器（form-create）、表达式编辑器（CodeMirror）均基于鼠标/键盘桌面交互范式，重写成本远超收益。
+2. **流程监控/模拟运行信息密度高**：审批中心、流程监控仪表盘、50 步模拟运行等页面的信息密度（多列表格 + 流程图 + 时间线 + 属性抽屉）无法在手机屏下保证可用性。
+3. **业务定位决定**：项目运营管理系统（B 端内部工具）天然服务于办公室 PC 场景，移动端需求已通过 IM 审批通道完整覆盖。
+4. **避免范围蔓延**：强制边界可防止后续在移动端踩坑（适配层兼容、触控事件、性能、图表缩放等）反复消耗研发资源。
+
+**实施约束**：
+
+- 前端代码中工作流相关页面/组件严禁引入 `vant` / `uni-ui` / `taro-ui` 等移动端 UI 库；
+- 后端 `ydsz-pmis-workflow` 模块 API 默认响应 PC 端字段结构（包含完整流程图 JSON、表单 Schema、审批历史），不为移动端裁剪；
+- 任何 PR 不得引入「工作流模块移动端适配」相关代码，code review 必须拦截。
+
+---
 
 ## 八、批次交付总览
 

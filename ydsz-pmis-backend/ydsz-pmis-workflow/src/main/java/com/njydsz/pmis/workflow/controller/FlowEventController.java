@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.controller;
 
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -168,6 +169,7 @@ public class FlowEventController {
      * @param id 通道配置 ID
      * @return 统一响应结果
      */
+    @OperationLog(module = "工作流", action = "删除通知通道", bizType = "FLOW_NOTIFY_CHANNEL")
     @DeleteMapping("/notify-channel/{id}")
     public Result<Void> deleteNotifyChannel(@PathVariable @Min(1) Long id) {
         notifyChannelService.deleteChannel(id);

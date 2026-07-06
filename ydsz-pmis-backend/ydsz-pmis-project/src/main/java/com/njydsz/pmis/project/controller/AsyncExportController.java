@@ -1,9 +1,11 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.RateLimit;
 import com.njydsz.pmis.project.service.AsyncExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -56,7 +58,7 @@ public class AsyncExportController {
     public Page<Map<String, Object>> getExportRecords(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam(defaultValue = "0") @Min(0) int page,
-            @RequestParam(defaultValue = "20") @Min(1) int size) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         return asyncExportService.getExportRecords(userId,
                 PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, AsyncExportService.COL_CREATED_AT)));
     }
@@ -68,6 +70,7 @@ public class AsyncExportController {
         return Map.of("url", url != null ? url : "", "success", url != null);
     }
 
+    @OperationLog(module = "异步导出", action = "删除导出记录", bizType = "ASYNC_EXPORT")
     @DeleteMapping("/{recordId}")
     @Operation(summary = "删除导出记录")
     public Map<String, Object> deleteExportRecord(@PathVariable @Min(1) Long recordId) {

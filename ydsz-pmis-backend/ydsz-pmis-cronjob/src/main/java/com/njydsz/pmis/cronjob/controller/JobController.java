@@ -1,6 +1,7 @@
 package com.njydsz.pmis.cronjob.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
@@ -71,6 +72,7 @@ public class JobController {
      */
     @Operation(summary = "删除任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_DELETE)
+    @OperationLog(module = "任务调度", action = "删除任务", bizType = "CRONJOB_JOB")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable @Min(1) Long id) {
         jobService.delete(id);

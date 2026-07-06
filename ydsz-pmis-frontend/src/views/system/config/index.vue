@@ -269,6 +269,7 @@ onMounted(fetchList)
             :placeholder="t('system.config.search.keywordPlaceholder')"
             clearable
             style="width: 200px"
+            @keyup.enter="query.page = 1; fetchList()"
           />
         </el-form-item>
         <el-form-item :label="t('system.config.search.group')">

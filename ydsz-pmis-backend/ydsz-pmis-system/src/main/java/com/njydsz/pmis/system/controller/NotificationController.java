@@ -110,6 +110,7 @@ public class NotificationController {
      * @return 统一响应结果
      */
     @Operation(summary = "删除通知")
+    @OperationLog(module = "通知中心", action = "删除通知", bizType = "NOTIF")
     @DeleteMapping
     public Result<Void> delete(@RequestBody List<Long> ids) {
         notificationService.delete(SecurityContext.getUserId(), ids);

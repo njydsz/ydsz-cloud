@@ -1,6 +1,7 @@
 package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.EvmMeasureCreateDTO;
@@ -134,7 +135,7 @@ public class EvmController {
     @GetMapping("/page")
     public Result<Page<EvmMeasureVO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) Long initiationId,
             @RequestParam(required = false) String alertLevel) {
         return Result.ok(service.page(page, size, initiationId, alertLevel));
@@ -148,6 +149,7 @@ public class EvmController {
      */
     @Operation(summary = "删除")
     @PrePermission("execution:evm:delete")
+    @OperationLog(module = "挣值管理", action = "删除EVM测量", bizType = "EVM_MEASURE")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);

@@ -6,6 +6,7 @@ import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowUserDO;
 import com.njydsz.pmis.workflow.enums.FlowPerformType;
+import com.njydsz.pmis.workflow.enums.FlowSignType;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
@@ -20,8 +21,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -86,7 +85,7 @@ class FlowTaskSignServiceImplTest {
         assertThat(insertedUser.getUserName()).isEqualTo("张三");
         assertThat(insertedUser.getProcessed()).isZero();
         assertThat(insertedUser.getWeight()).isEqualTo(1);
-        assertThat(insertedUser.getSignType()).isEqualTo("PARALLEL");
+        assertThat(insertedUser.getSignType()).isEqualTo(FlowSignType.PARALLEL.name());
         assertThat(insertedUser.getTenantId()).isEqualTo(TENANT_ID);
         assertThat(insertedUser.getProviderTraceId()).isEqualTo(TRACE_ID);
 
@@ -151,7 +150,7 @@ class FlowTaskSignServiceImplTest {
 
         ArgumentCaptor<FlowUserDO> userCaptor = ArgumentCaptor.forClass(FlowUserDO.class);
         verify(userMapper).insert(userCaptor.capture());
-        assertThat(userCaptor.getValue().getSignType()).isEqualTo("BEFORE");
+        assertThat(userCaptor.getValue().getSignType()).isEqualTo(FlowSignType.BEFORE.name());
         // 前加签不切换 performType
         assertThat(task.getPerformType()).isEqualTo(FlowPerformType.OR.name());
         assertThat(task.getApproveCount()).isEqualTo(2);
@@ -171,7 +170,7 @@ class FlowTaskSignServiceImplTest {
 
         ArgumentCaptor<FlowUserDO> userCaptor = ArgumentCaptor.forClass(FlowUserDO.class);
         verify(userMapper).insert(userCaptor.capture());
-        assertThat(userCaptor.getValue().getSignType()).isEqualTo("AFTER");
+        assertThat(userCaptor.getValue().getSignType()).isEqualTo(FlowSignType.AFTER.name());
         // 后加签切换为 SEQUENTIAL
         assertThat(task.getPerformType()).isEqualTo(FlowPerformType.SEQUENTIAL.name());
         assertThat(task.getApproveCount()).isEqualTo(2);
@@ -201,7 +200,7 @@ class FlowTaskSignServiceImplTest {
         assertThat(insertedUser.getUserName()).isEqualTo("赵六");
         assertThat(insertedUser.getProcessed()).isZero();
         assertThat(insertedUser.getWeight()).isEqualTo(1);
-        assertThat(insertedUser.getSignType()).isEqualTo("ADD");
+        assertThat(insertedUser.getSignType()).isEqualTo(FlowSignType.ADD.name());
         assertThat(insertedUser.getTenantId()).isEqualTo(TENANT_ID);
         assertThat(insertedUser.getProviderTraceId()).isEqualTo(TRACE_ID);
 

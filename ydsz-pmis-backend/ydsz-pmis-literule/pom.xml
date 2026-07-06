@@ -17,6 +17,7 @@
     <properties>
         <aviator.version>5.4.3</aviator.version>
         <groovy.version>4.0.22</groovy.version>
+        <nashorn.version>15.4</nashorn.version>
         <qlexpress.version>3.3.1</qlexpress.version>
         <redisson.version>4.6.1</redisson.version>
     </properties>
@@ -40,6 +41,13 @@
             <groupId>org.apache.groovy</groupId>
             <artifactId>groovy-jsr223</artifactId>
             <version>${groovy.version}</version>
+        </dependency>
+
+        <!-- Nashorn JavaScript 引擎（脚本规则多语言支持，1.5.0 起；JSR-223） -->
+        <dependency>
+            <groupId>org.openjdk.nashorn</groupId>
+            <artifactId>nashorn-core</artifactId>
+            <version>${nashorn.version}</version>
         </dependency>
 
         <!-- QLExpress 阿里表达式引擎（P0-3：与 Aviator 双引擎可切换） -->

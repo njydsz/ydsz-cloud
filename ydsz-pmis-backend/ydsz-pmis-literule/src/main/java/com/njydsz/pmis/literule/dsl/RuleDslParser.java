@@ -96,7 +96,6 @@ public final class RuleDslParser {
      * @param rawMap YAML 解析后的 Map（顶层）
      * @return DSL 模型
      */
-    @SuppressWarnings("unchecked")
     public static RuleDsl parseMap(Map<String, Object> rawMap) {
         if (rawMap == null || rawMap.isEmpty()) {
             return emptyDsl();
@@ -408,7 +407,6 @@ public final class RuleDslParser {
         return dsl;
     }
 
-    @SuppressWarnings("unchecked")
     private static Map<String, Object> asStringMap(Map<?, ?> map) {
         Map<String, Object> result = new LinkedHashMap<>(map.size());
         for (Map.Entry<?, ?> e : map.entrySet()) {
@@ -419,7 +417,6 @@ public final class RuleDslParser {
         return result;
     }
 
-    @SuppressWarnings("unchecked")
     private static List<Map<String, Object>> asListOfMaps(Object obj) {
         if (!(obj instanceof List<?> list)) return null;
         List<Map<String, Object>> result = new ArrayList<>(list.size());

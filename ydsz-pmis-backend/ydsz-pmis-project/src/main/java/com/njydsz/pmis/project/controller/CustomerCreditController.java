@@ -122,7 +122,7 @@ public class CustomerCreditController {
     @GetMapping("/page")
     public Result<Page<CustomerCreditDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String level) {
         return Result.ok(service.page(page, size, keyword, level));

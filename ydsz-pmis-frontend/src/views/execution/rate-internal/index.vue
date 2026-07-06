@@ -118,7 +118,7 @@ async function onRefresh() {
 const submitting = ref(false)
 // 弹窗 - 新建/编辑内部费率
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const editingId = ref<number | null>(null)
 const form = reactive<RateInternalCreateDTO>({
   rateCode: '',

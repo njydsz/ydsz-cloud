@@ -17,6 +17,7 @@
  */
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import {
   saveEvm,
@@ -137,7 +138,7 @@ const submitting = ref(false)
 /** 录入/编辑弹窗可见性 */
 const dialogVisible = ref(false)
 /** 表单引用（用于校验） */
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** EVM 测量录入/编辑表单 */
 const form = reactive<EvmMeasureCreateDTO>({
   initiationId: 0,

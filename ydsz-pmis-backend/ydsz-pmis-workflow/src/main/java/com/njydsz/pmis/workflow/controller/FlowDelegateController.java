@@ -116,7 +116,7 @@ public class FlowDelegateController {
     @GetMapping("/delegate-auth/log/delegate")
     public Result<PageResult<?>> myDelegateLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         Long delegateUserId = SecurityContext.getUserId();
         return Result.ok(delegateAuthService.listDelegateLog(delegateUserId, page, size));
     }
@@ -127,7 +127,7 @@ public class FlowDelegateController {
     @GetMapping("/delegate-auth/log/owner")
     public Result<PageResult<?>> myOwnerLog(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size) {
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size) {
         Long ownerUserId = SecurityContext.getUserId();
         return Result.ok(delegateAuthService.listOwnerLog(ownerUserId, page, size));
     }

@@ -6,6 +6,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import {
@@ -147,7 +148,7 @@ async function onRefresh() {
 // 入池/出池 弹窗
 const dialogVisible = ref(false)
 const dialogAction = ref<'ENTER' | 'EXIT'>('ENTER')
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<BenchRecordCreateDTO>({
   benchCode: '',
   employeeId: 0,

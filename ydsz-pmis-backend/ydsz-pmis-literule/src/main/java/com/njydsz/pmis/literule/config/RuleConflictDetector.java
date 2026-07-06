@@ -177,11 +177,13 @@ public class RuleConflictDetector {
         if (expression == null) {
             return null;
         }
-        String s = expression.replaceAll("\\s+", "");
-        // 统一逻辑运算符（大小写不敏感）
+        String s = expression;
+        // 先统一逻辑运算符（大小写不敏感，在去空白前替换以利用 \b 单词边界）
         s = s.replaceAll("(?i)\\band\\b", "&&");
         s = s.replaceAll("(?i)\\bor\\b", "||");
         s = s.replaceAll("(?i)\\bnot\\b", "!");
+        // 再去除所有空白字符
+        s = s.replaceAll("\\s+", "");
         // 翻转反向比较：number OP var → var FLIP_OP number
         Matcher rm = REVERSE_COMPARISON_PATTERN.matcher(s);
         if (rm.matches()) {

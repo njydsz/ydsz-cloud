@@ -13,6 +13,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -91,7 +92,7 @@ function handleReset() {
 
 // 弹窗 - 填写工时
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<Partial<TimeEntryCreateDTO>>({
   entryDate: new Date().toISOString().slice(0, 10),
   employeeId: 0,
@@ -102,6 +103,7 @@ const form = reactive<Partial<TimeEntryCreateDTO>>({
   overtime: 0,
   workType: 'REGULAR',
   description: '',
+  rate: undefined,
 })
 
 const formRules = computed(() => ({
@@ -123,6 +125,7 @@ function openCreate() {
     overtime: 0,
     workType: 'REGULAR',
     description: '',
+    rate: undefined,
   })
   dialogVisible.value = true
 }
@@ -181,7 +184,7 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item :label="$t('execution.timeEntry.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.timeEntry.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="$t('execution.timeEntry.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.timeEntry.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item :label="$t('execution.timeEntry.search.status')">
         <el-select v-model="query.status" :placeholder="$t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />
@@ -218,6 +221,9 @@ onMounted(fetchList)
         <vxe-column field="taskName" :title="$t('execution.timeEntry.columns.taskName')" width="140" show-overflow />
         <vxe-column field="hours" :title="$t('execution.timeEntry.columns.hours')" width="90" align="right" />
         <vxe-column field="overtime" :title="$t('execution.timeEntry.columns.overtime')" width="90" align="right" />
+        <vxe-column field="rate" :title="$t('execution.timeEntry.columns.rate')" width="100" align="right">
+          <template #default="{ row }">{{ row.rate != null ? row.rate : '-' }}</template>
+        </vxe-column>
         <vxe-column field="workType" :title="$t('execution.timeEntry.columns.workType')" width="80" align="center">
           <template #default="{ row }">{{ workTypeMap[row.workType as keyof typeof workTypeMap]?.label || row.workType || '-' }}</template>
         </vxe-column>
@@ -263,6 +269,9 @@ onMounted(fetchList)
           <el-select v-model="form.workType" style="width: 100%">
             <el-option v-for="(v, k) in workTypeMap" :key="k" :label="v.label" :value="k" />
           </el-select>
+        </el-form-item>
+        <el-form-item :label="$t('execution.timeEntry.form.rate')">
+          <el-input :model-value="form.rate" :placeholder="$t('execution.timeEntry.form.ratePlaceholder')" readonly />
         </el-form-item>
         <el-form-item :label="$t('execution.timeEntry.form.description')">
           <el-input v-model="form.description" type="textarea" :rows="2" />

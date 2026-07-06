@@ -89,7 +89,7 @@ function handleReset() {
 // ===== 新增/编辑表单弹窗 =====
 const dialogVisible = ref(false)
 const formMode = ref<'create' | 'edit'>('create')
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<Partial<ContractCreateDTO> & { id?: number }>({
   contractCode: '',
   contractName: '',
@@ -282,7 +282,7 @@ onMounted(fetchList)
   >
     <template #search>
       <el-form-item label="关键字">
-        <el-input v-model="query.keyword" placeholder="编码/名称" clearable />
+        <el-input v-model="query.keyword" placeholder="编码/名称" clearable @keyup.enter="query.page = 1; fetchList()" />
       </el-form-item>
       <el-form-item label="状态">
         <el-select v-model="query.status" placeholder="全部" clearable style="width: 140px">

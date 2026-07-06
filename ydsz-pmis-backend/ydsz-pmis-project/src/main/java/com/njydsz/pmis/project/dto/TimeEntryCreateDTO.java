@@ -24,4 +24,8 @@ public class TimeEntryCreateDTO {
     private BigDecimal overtime;
     private String workType;
     private String description;
+    /** 费率卡 ID（可选，前端不传由后端自动匹配） */
+    private Long rateId;
+    /** 人天费率（可选，前端只读展示，由后端自动匹配填入） */
+    private BigDecimal rate;
 }

@@ -11,10 +11,12 @@ import com.njydsz.pmis.project.assembler.NameAssembler;
 import com.njydsz.pmis.project.dto.TimeEntryApprovalDTO;
 import com.njydsz.pmis.project.dto.TimeEntryCreateDTO;
 import com.njydsz.pmis.project.engine.TimeEntryValidator;
+import com.njydsz.pmis.project.entity.RateCardDO;
 import com.njydsz.pmis.project.entity.TimeEntryDO;
 import com.njydsz.pmis.project.enums.TimeEntryStatus;
 import com.njydsz.pmis.project.mapper.TimeEntryMapper;
 import com.njydsz.pmis.project.service.CostAllocationService;
+import com.njydsz.pmis.project.service.RateCardService;
 import com.njydsz.pmis.project.service.TimeEntryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +46,10 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     private final TimeEntryMapper timeEntryMapper;
     private final NameAssembler nameAssembler;
     private final CostAllocationService costAllocationService;
+    private final RateCardService rateCardService;
+
+    /** 旧数据无 rate 时的兜底费率（元/人天），向后兼容 */
+    private static final BigDecimal DEFAULT_FALLBACK_RATE = new BigDecimal("800");
 
     private static final DateTimeFormatter PERIOD_FMT = DateTimeFormatter.ofPattern("yyyy-MM");
 
@@ -86,9 +92,27 @@ public class TimeEntryServiceImpl implements TimeEntryService {
             } catch (Exception ex) { log.warn("解析员工名称失败 employeeId={}: {}", e.getEmployeeId(), ex.getMessage(), ex); }
         }
 
+        // 费率卡匹配：用户未指定 rateId 时，按职级 + 填报日期自动命中费率卡
+        if (e.getRateId() == null) {
+            try {
+                RateCardDO card = rateCardService.matchEffective(
+                        e.getLevelCode(), null, null, e.getEntryDate());
+                if (card != null) {
+                    e.setRateId(card.getId());
+                    e.setRate(card.getRateAmount());
+                } else {
+                    log.warn("[TimeEntry] 未匹配到费率卡 levelCode={} entryDate={}，rate 留空",
+                            e.getLevelCode(), e.getEntryDate());
+                }
+            } catch (Exception ex) {
+                log.warn("[TimeEntry] 费率卡匹配异常 levelCode={} entryDate={}: {}",
+                        e.getLevelCode(), e.getEntryDate(), ex.getMessage());
+            }
+        }
+
         timeEntryMapper.insert(e);
-        log.info("[TimeEntry] 录入工时: id={} employeeId={} hours={}",
-                e.getId(), e.getEmployeeId(), e.getHours());
+        log.info("[TimeEntry] 录入工时: id={} employeeId={} hours={} rateId={} rate={}",
+                e.getId(), e.getEmployeeId(), e.getHours(), e.getRateId(), e.getRate());
         return e.getId();
     }
 
@@ -136,14 +160,19 @@ public class TimeEntryServiceImpl implements TimeEntryService {
                 String period = e.getEntryDate() == null
                         ? LocalDate.now().format(PERIOD_FMT)
                         : e.getEntryDate().format(PERIOD_FMT);
-                // 简化：人力成本按 8h 折算 1 人天，费率取默认 800 元（人天）
-                BigDecimal amount = e.getDays() == null
-                        ? TimeEntryValidator.toDays(e.getHours()).multiply(new BigDecimal("800"))
-                        : e.getDays().multiply(new BigDecimal("800"));
+                // 使用实际命中费率核算成本；旧数据无 rate 时兜底 800 元/人天（向后兼容）
+                BigDecimal rate = e.getRate() != null ? e.getRate() : DEFAULT_FALLBACK_RATE;
+                if (e.getRate() == null) {
+                    log.warn("[TimeEntry] 工时无费率,使用兜底 {} 元/人天 entryId={}", DEFAULT_FALLBACK_RATE, e.getId());
+                }
+                BigDecimal days = e.getDays() == null
+                        ? TimeEntryValidator.toDays(e.getHours())
+                        : e.getDays();
+                BigDecimal amount = days.multiply(rate);
                 costAllocationService.syncFromTimeEntry(
                         e.getId(), e.getInitiationId(), e.getEmployeeId(), e.getEmployeeName(),
                         e.getLevelCode(), period, amount, true);
-                log.debug("[TimeEntry] 成本归集成功 entryId={} amount={}", e.getId(), amount);
+                log.debug("[TimeEntry] 成本归集成功 entryId={} amount={} rate={}", e.getId(), amount, rate);
             } catch (Exception ex) {
                 log.warn("[TimeEntry] 成本归集失败 entryId={}: {}", e.getId(), ex.getMessage());
             }

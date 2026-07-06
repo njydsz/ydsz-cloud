@@ -333,12 +333,11 @@ public final class RuleDslConverter {
 
     /**
      * 将 DSL 规则条目转换为 ScriptRule（script 类型）
+     *
+     * <p>1.5.0 起支持多语言：groovy / javascript / python（需对应 JSR-223 引擎在 classpath）。
      */
     private static Rule toScriptRule(RuleDslEntry entry) {
-        String lang = entry.getScriptLanguage() == null ? "groovy" : entry.getScriptLanguage().toLowerCase();
-        if (!"groovy".equals(lang)) {
-            throw new IllegalArgumentException("DSL 暂仅支持 groovy 脚本，当前: " + lang);
-        }
+        String language = entry.getScriptLanguage() == null ? "groovy" : entry.getScriptLanguage().toLowerCase();
         RuleSeverity defaultSeverity = parseSeverity(entry.getSeverity(), RuleSeverity.INFO);
         return new ScriptRule(
                 entry.getCode(),
@@ -348,6 +347,7 @@ public final class RuleDslConverter {
                 entry.getScope(),
                 defaultSeverity,
                 entry.getScriptBody(),
+                language,
                 true);
     }
 

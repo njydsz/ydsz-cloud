@@ -42,7 +42,7 @@ public class LoginAuditController {
     @GetMapping("/page")
     public Result<PageResult<LoginAuditDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "用户名") @RequestParam(required = false) String username,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "登录IP") @RequestParam(required = false) String loginIp) {
@@ -60,7 +60,7 @@ public class LoginAuditController {
     @GetMapping("/by-username")
     public Result<List<LoginAuditDO>> byUsername(
             @Parameter(description = "用户名") @RequestParam String username,
-            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") int limit) {
+            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
         return Result.ok(loginAuditMapper.selectByUsername(username, Math.min(limit, 200)));
     }
 

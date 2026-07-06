@@ -33,6 +33,8 @@ import {
   countersignParallel,
   countersignRemove,
   batchPass,
+  passAllTodo,
+  freeJumpTask,
 } from '@/api/workflow'
 import type { FlowTaskDTO, FlowTaskOperateDTO } from '@/api/workflow/types'
 import type { ApiResponse } from '@/utils/request'
@@ -652,6 +654,104 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     }
   }
 
+  /** GAP-P0-4: 一键通过所有待办（上限 100 条） */
+  async function quickPassAll() {
+    try {
+      await ElMessageBox.confirm(
+        t('workflow.approval.messages.passAllConfirm'),
+        t('workflow.approval.messages.passAllTitle'),
+        { type: 'warning', confirmButtonText: t('common.confirm'), cancelButtonText: t('common.cancel') },
+      )
+      const { value } = await ElMessageBox.prompt(
+        t('workflow.approval.messages.passAllPrompt'),
+        t('workflow.approval.messages.passAllTitle'),
+        { confirmButtonText: t('common.confirm'), cancelButtonText: t('common.cancel') },
+      )
+      const res = await passAllTodo(value || undefined)
+      if (res.data?.code === 0) {
+        const count = res.data.data || 0
+        if (count === 0) {
+          ElMessage.info(t('workflow.approval.messages.passAllEmpty'))
+        } else {
+          ElMessage.success(t('workflow.approval.messages.passAllSuccess', { count }))
+        }
+        onSuccess?.()
+      } else {
+        ElMessage.error(res.data?.message || t('workflow.approval.messages.passAllFailed'))
+      }
+    } catch {
+      // 用户取消
+    }
+  }
+
+  /**
+   * GAP-P2-9: 自由流跳转 — 当前办理人运行时动态指定下一节点 + 办理人
+   *
+   * 弹窗收集目标节点编码 + 可选办理人（逗号分隔），调用 /task/freeJump 端点。
+   * 目标节点必须 ext.freeJump=true 才允许跳转（后端校验）。
+   *
+   * @param task 当前任务
+   */
+  async function freeJump(task: FlowTaskDTO) {
+    try {
+      const { value } = await ElMessageBox.prompt(
+        t('workflow.approval.messages.freeJumpPrompt'),
+        t('workflow.approval.messages.freeJumpTitle'),
+        {
+          confirmButtonText: t('common.confirm'),
+          cancelButtonText: t('common.cancel'),
+          inputPlaceholder: t('workflow.approval.messages.freeJumpNodePlaceholder'),
+          inputValidator: (input: string) => {
+            if (!input || !input.trim()) {
+              return t('workflow.approval.messages.freeJumpNodeRequired')
+            }
+            return true
+          },
+        },
+      )
+      const targetNodeCode = value.trim()
+
+      // 可选：办理人列表（逗号分隔）
+      let targetAssignees: string[] | undefined
+      try {
+        const { value: assigneeInput } = await ElMessageBox.prompt(
+          t('workflow.approval.messages.freeJumpAssigneePrompt'),
+          t('workflow.approval.messages.freeJumpTitle'),
+          {
+            confirmButtonText: t('common.confirm'),
+            cancelButtonText: t('common.cancel'),
+            inputPlaceholder: t('workflow.approval.messages.freeJumpAssigneePlaceholder'),
+            inputValidator: () => true,
+          },
+        )
+        const trimmed = assigneeInput?.trim()
+        if (trimmed) {
+          targetAssignees = trimmed
+            .split(/[,，\s]+/)
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0)
+        }
+      } catch {
+        // 用户取消办理人输入，targetAssignees 保持 undefined（回退到节点默认办理人）
+      }
+
+      const payload: FlowTaskOperateDTO = {
+        taskId: task.id,
+        targetNodeCode,
+        targetAssignees,
+      }
+      const res = await freeJumpTask(payload)
+      if (res.data?.code === 0) {
+        ElMessage.success(t('workflow.approval.messages.freeJumpSuccess'))
+        onSuccess?.()
+      } else {
+        ElMessage.error(res.data?.message || t('workflow.approval.messages.freeJumpFailed'))
+      }
+    } catch {
+      // 用户取消
+    }
+  }
+
   /**
    * P1-3: 批量签收 — 前端循环调单条 claim，收集结果并汇总提示
    *
@@ -750,6 +850,9 @@ export function useApprovalActions(options: UseApprovalActionsOptions = {}) {
     quickBatchPass,
     quickBatchClaim,
     quickBatchMarkRead,
+    quickPassAll,
+    // GAP-P2-9: 自由流跳转
+    freeJump,
     // 常量
     commentPhrases: commentPhraseKeys.map((k) => t(k)),
   }

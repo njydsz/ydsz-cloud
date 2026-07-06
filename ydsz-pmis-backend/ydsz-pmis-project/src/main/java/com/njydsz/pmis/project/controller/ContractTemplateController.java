@@ -2,6 +2,7 @@ package com.njydsz.pmis.project.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.Idempotent;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.dto.ContractTemplateCreateDTO;
@@ -81,6 +82,7 @@ public class ContractTemplateController {
     @Operation(summary = "删除模板")
     @PrePermission("project:contract-template:delete")
     @Idempotent(key = "contract-template:delete", ttlSeconds = 5, message = "请勿重复提交")
+    @OperationLog(module = "合同模板", action = "删除模板", bizType = "CONTRACT_TEMPLATE")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable @Min(1) Long id) {
         service.delete(id);
@@ -115,7 +117,7 @@ public class ContractTemplateController {
     @GetMapping("/page")
     public Result<Page<ContractTemplateDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
-            @RequestParam(defaultValue = "20") @Max(100) int size,
+            @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String contractType,
             @RequestParam(required = false) String status) {

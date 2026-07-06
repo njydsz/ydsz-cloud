@@ -427,6 +427,8 @@ const {
   quickBatchPass,
   quickBatchClaim,
   quickBatchMarkRead,
+  quickPassAll,
+  freeJump,
 } = useApprovalActions({
   onSuccess: () => {
     loadTodo()
@@ -556,6 +558,11 @@ onMounted(() => {
           @keyup.enter="loadTodo"
         />
         <el-button type="primary" size="small" @click="loadTodo">{{ t('workflow.approval.buttons.query') }}</el-button>
+
+        <!-- GAP-P0-4: 一键通过所有待办（上限 100 条） -->
+        <el-button type="success" size="small" @click="quickPassAll">
+          {{ t('workflow.approval.buttons.passAll') }}
+        </el-button>
 
         <!-- P1-3: 分组展示切换 -->
         <el-tooltip content="按流程类型分组展示" placement="top">
@@ -794,6 +801,10 @@ onMounted(() => {
                   </el-dropdown-item>
                   <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_REMOVE', row as FlowTaskDTO)">
                     {{ t('workflow.approval.actions.countersignRemove') }}
+                  </el-dropdown-item>
+                  <!-- GAP-P2-9: 自由流跳转 — 仅 PC 端，目标节点需 ext.freeJump=true -->
+                  <el-dropdown-item v-if="!isMobile && row.taskStatus === 'PENDING'" divided @click="freeJump(row as FlowTaskDTO)">
+                    {{ t('workflow.approval.messages.freeJumpTitle') }}
                   </el-dropdown-item>
                   <el-dropdown-item divided @click="quickUrge(row as FlowTaskDTO)">{{ t('workflow.task.urge') }}</el-dropdown-item>
                   <el-dropdown-item @click="goInstance(row.instanceId)">{{ t('workflow.approval.actions.viewFlow') }}</el-dropdown-item>

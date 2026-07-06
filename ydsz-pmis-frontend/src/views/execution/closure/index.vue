@@ -14,6 +14,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import { useI18n } from 'vue-i18n'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -172,7 +173,7 @@ onMounted(fetchList)
   >
     <!-- 搜索栏 -->
     <template #search>
-      <el-form-item :label="$t('execution.closure.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.closure.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="$t('execution.closure.search.keyword')"><el-input v-model="query.keyword" :placeholder="$t('execution.closure.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item :label="$t('execution.closure.search.type')">
         <el-select v-model="query.type" :placeholder="$t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in typeMap" :key="k" :label="v.label" :value="k" />

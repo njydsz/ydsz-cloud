@@ -13,6 +13,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
 import {
@@ -90,7 +91,7 @@ function onSelectionChange({ records }: { records: WarrantyVO[] }) {
 /** 新增质保期弹窗显隐 */
 const dialogVisible = ref(false)
 /** 新增质保期表单引用 */
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 提交中状态（防重复提交） */
 const submitting = ref(false)
 /** 新增质保期表单数据 */
@@ -178,7 +179,7 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item :label="t('aftersales.warranty.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('aftersales.warranty.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="t('aftersales.warranty.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('aftersales.warranty.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item :label="t('aftersales.warranty.search.status')">
         <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 130px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />

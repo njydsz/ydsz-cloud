@@ -94,7 +94,7 @@ function handleReset() {
 const submitting = ref(false)
 // 弹窗 - 新建风险
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const form = reactive<Partial<RiskCreateDTO>>({
   initiationId: 0,
   riskName: '',
@@ -169,7 +169,7 @@ onMounted(fetchList)
     @refresh="fetchList"
   >
     <template #search>
-      <el-form-item :label="t('execution.risk.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('execution.risk.search.keywordPlaceholder')" clearable /></el-form-item>
+      <el-form-item :label="t('execution.risk.search.keyword')"><el-input v-model="query.keyword" :placeholder="t('execution.risk.search.keywordPlaceholder')" clearable @keyup.enter="query.page = 1; fetchList()" /></el-form-item>
       <el-form-item :label="t('execution.risk.search.status')">
         <el-select v-model="query.status" :placeholder="t('common.all')" clearable style="width: 140px">
           <el-option v-for="(v, k) in statusMap" :key="k" :label="v.label" :value="k" />

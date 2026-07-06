@@ -53,7 +53,7 @@ public class DataExportAuditController {
     @GetMapping("/page")
     public Result<PageResult<DataExportAuditDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
             @Parameter(description = "导出模块") @RequestParam(required = false) String exportModule,
             @Parameter(description = "导出动作") @RequestParam(required = false) String exportAction) {
@@ -78,7 +78,7 @@ public class DataExportAuditController {
     @GetMapping("/by-user")
     public Result<List<DataExportAuditDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam Long userId,
-            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") int limit) {
+            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
         return Result.ok(mapper.selectByUser(userId, Math.min(limit, 200)));
     }
 }

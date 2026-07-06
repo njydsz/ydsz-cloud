@@ -246,6 +246,7 @@ public class AuthServiceImpl implements AuthService {
      * @param token         待拉黑的 Token
      * @param expireSeconds 黑名单有效期（秒），通常与 Token 剩余有效期一致
      */
+    @Override
     public void blacklistToken(String token, long expireSeconds) {
         if (token == null || token.isBlank()) return;
         redisTemplate.opsForValue().set(

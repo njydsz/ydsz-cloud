@@ -1,5 +1,6 @@
 package com.njydsz.pmis.project.controller;
 
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.project.entity.DecisionTableDO;
 import com.njydsz.pmis.project.entity.RuleExecutionTraceDO;
@@ -26,6 +27,8 @@ import com.njydsz.pmis.project.dto.RuleBatchCategoryDTO;
 import com.njydsz.pmis.project.dto.RuleDependencyAddDTO;
 import com.njydsz.pmis.project.dto.RuleNL2RuleDTO;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
@@ -58,6 +61,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.LinkedHashMap;
@@ -79,6 +83,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/rules")
 @RequiredArgsConstructor
+@Validated
 @Tag(name = "规则引擎管理", description = "规则 CRUD、版本、dry-run、冲突检测、画布、模板市场、AI 增强、规则集市场")
 public class RuleAdminController {
 
@@ -410,6 +415,7 @@ public class RuleAdminController {
      * @param id 测试用例 ID
      * @return 操作结果
      */
+    @OperationLog(module = "规则引擎", action = "删除测试用例", bizType = "RULE_TEST_CASE")
     @DeleteMapping("/test-cases/{id}")
     public Result<Void> deleteTestCase(@PathVariable Long id) {
         ruleTestCaseMapper.deleteById(id);
@@ -643,7 +649,7 @@ public class RuleAdminController {
      */
     @GetMapping("/traces/rule/{ruleCode}")
     public Result<List<RuleExecutionTraceDO>> getTracesByRule(@PathVariable String ruleCode,
-                                                               @RequestParam(defaultValue = "20") int limit) {
+                                                               @RequestParam(defaultValue = "20") @Min(1) @Max(100) int limit) {
         return Result.ok(ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
@@ -724,7 +730,7 @@ public class RuleAdminController {
      * @return 最近的执行链路列表
      */
     @GetMapping("/traces")
-    public Result<List<RuleExecutionTraceDO>> listRecentTraces(@RequestParam(defaultValue = "50") int limit) {
+    public Result<List<RuleExecutionTraceDO>> listRecentTraces(@RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
         return Result.ok(ruleExecutionTraceMapper.selectList(
             new LambdaQueryWrapper<RuleExecutionTraceDO>()
                 .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
@@ -767,6 +773,7 @@ public class RuleAdminController {
     /**
      * 删除决策表
      */
+    @OperationLog(module = "规则引擎", action = "删除决策表", bizType = "DECISION_TABLE")
     @DeleteMapping("/decision-tables/{id}")
     public Result<Void> deleteDecisionTable(@PathVariable Long id) {
         decisionTableMapper.deleteById(id);
@@ -877,6 +884,7 @@ public class RuleAdminController {
      * @param operator 操作人
      * @return 操作结果
      */
+    @OperationLog(module = "规则引擎", action = "删除规则", bizType = "RULE")
     @DeleteMapping("/{ruleCode}")
     public Result<Void> deleteRule(@PathVariable String ruleCode,
                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
@@ -1065,6 +1073,7 @@ public class RuleAdminController {
     /**
      * 删除画布
      */
+    @OperationLog(module = "规则引擎", action = "删除画布", bizType = "RULE_CHAIN_GRAPH")
     @DeleteMapping("/{ruleCode}/graph")
     public Result<Void> deleteChainGraph(@PathVariable String ruleCode) {
         ruleChainGraphService.delete(ruleCode);
@@ -1123,6 +1132,7 @@ public class RuleAdminController {
     /**
      * 删除规则依赖
      */
+    @OperationLog(module = "规则引擎", action = "删除规则依赖", bizType = "RULE_DEPENDENCY")
     @DeleteMapping("/{ruleCode}/dependencies/{dependsOnRuleCode}")
     public Result<Void> removeDependency(
             @PathVariable String ruleCode,
@@ -1322,6 +1332,7 @@ public class RuleAdminController {
     /**
      * 删除规则集
      */
+    @OperationLog(module = "规则引擎", action = "删除规则集", bizType = "RULE_PACK")
     @DeleteMapping("/packs/{id}")
     public Result<Void> deletePack(@PathVariable Long id) {
         rulePackService.delete(id);

@@ -97,6 +97,7 @@ public class FileController {
      */
     @Operation(summary = "批量删除")
     @PrePermission(PermissionCodes.FILE_STORAGE_DELETE)
+    @OperationLog(module = "文件存储", action = "批量删除文件", bizType = "FILE")
     @DeleteMapping("/batch")
     public Result<Void> deleteBatch(@Valid @RequestBody List<Long> ids) throws Exception {
         fileService.deleteBatch(ids);

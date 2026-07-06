@@ -66,6 +66,17 @@ export function deployDefinition(payload: FlowDeployDTO) {
   return http.post<ApiResponse<number>>('/workflow/engine/definition/deploy', payload)
 }
 
+/** GAP-P1-6: BPMN 部署包 .zip 批量导入 */
+export function batchDeployByZip(file: File) {
+  const formData = new FormData()
+  formData.append('file', file)
+  return http.post<ApiResponse<{ successCount: number; failedItems: Array<{ fileName: string; reason: string }> }>>(
+    '/workflow/engine/definition/batch-deploy-zip',
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } },
+  )
+}
+
 /** 发布流程定义（启用） */
 export function publishDefinition(id: number) {
   return http.post<ApiResponse<null>>(`/workflow/engine/definition/${id}/publish`)
@@ -292,9 +303,19 @@ export function unclaimTask(payload: FlowTaskOperateDTO) {
   return http.post<ApiResponse<null>>('/workflow/engine/task/unclaim', payload)
 }
 
-/** 自由跳转 */
+/** 自由跳转（管理员强制跳转，向后兼容 P2-25） */
 export function jumpTask(payload: FlowTaskOperateDTO) {
   return http.post<ApiResponse<null>>('/workflow/engine/task/jump', payload)
+}
+
+/**
+ * GAP-P2-9: 自由流跳转 — 当前办理人运行时动态指定下一节点 + 办理人
+ *
+ * 与 jumpTask 区别：权限码为 WORKFLOW_TASK_FREE_JUMP（普通办理人可用），
+ * 目标节点必须 ext.freeJump=true 才允许跳转。
+ */
+export function freeJumpTask(payload: FlowTaskOperateDTO) {
+  return http.post<ApiResponse<null>>('/workflow/engine/task/freeJump', payload)
 }
 
 /**
@@ -318,6 +339,15 @@ export function batchPass(taskIds: number[], comment?: string) {
     '/workflow/engine/task/batchPass',
     null,
     { params: { taskIds, comment } },
+  )
+}
+
+/** GAP-P0-4: 一键通过所有待办（上限 100 条），返回实际通过的任务数量 */
+export function passAllTodo(comment?: string) {
+  return http.post<ApiResponse<number>>(
+    '/workflow/engine/task/passAll',
+    null,
+    { params: { comment } },
   )
 }
 

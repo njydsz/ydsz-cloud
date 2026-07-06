@@ -64,6 +64,18 @@ public class ExpressionRule implements Rule {
     @Override
     public RuleDefinition getRuleDefinition() { return definition; }
 
+    /**
+     * 租户 ID（来自规则定义）
+     *
+     * <p>1.5.0 起启用运行时租户过滤：{@link com.njydsz.pmis.literule.core.DefaultRuleEngine}
+     * 在评估前会比较本方法返回值与 {@link RuleContext#getTenantId()}，仅当两者匹配时才评估该规则。
+     *
+     * @return 规则定义中的租户 ID；默认 1L
+     * @since 1.5.0
+     */
+    @Override
+    public long getTenantId() { return definition.getTenantId(); }
+
     @Override
     public RuleResult evaluate(RuleContext context) {
         long start = System.nanoTime();

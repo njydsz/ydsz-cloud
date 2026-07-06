@@ -3,6 +3,7 @@ package com.njydsz.pmis.system.controller;
 import com.njydsz.pmis.system.entity.OperationLogDO;
 import com.njydsz.pmis.system.service.OperationLogServiceImpl;
 import com.njydsz.pmis.system.util.DiffCalculator;
+import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.api.Result;
@@ -60,7 +61,7 @@ public class OperationLogController {
     @GetMapping("/page")
     public Result<PageResult<OperationLogDO>> page(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") @Min(1) int page,
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
             @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
@@ -94,7 +95,7 @@ public class OperationLogController {
     @PrePermission(PermissionCodes.AUDIT_LOG_VIEW)
     @GetMapping("/cursor-page")
     public Result<CursorPageResult<OperationLogDO>> cursorPage(
-            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Max(100) int size,
+            @Parameter(description = "每页大小") @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @Parameter(description = "游标（首次请求不传）") @RequestParam(required = false) String cursor,
             @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
             @Parameter(description = "业务类型") @RequestParam(required = false) String bizType,
@@ -121,7 +122,7 @@ public class OperationLogController {
     @GetMapping("/by-user")
     public Result<List<OperationLogDO>> byUser(
             @Parameter(description = "用户ID") @RequestParam Long userId,
-            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") int limit) {
+            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
         return Result.ok(service.listByUser(userId, limit));
     }
 
@@ -139,7 +140,7 @@ public class OperationLogController {
     public Result<List<OperationLogDO>> byBiz(
             @Parameter(description = "业务类型") @RequestParam String bizType,
             @Parameter(description = "业务单据ID") @RequestParam String bizId,
-            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") int limit) {
+            @Parameter(description = "最大条数") @RequestParam(defaultValue = "50") @Min(1) @Max(100) int limit) {
         return Result.ok(service.listByBiz(bizType, bizId, limit));
     }
 
@@ -151,6 +152,7 @@ public class OperationLogController {
      */
     @Operation(summary = "清理 N 天前日志")
     @PrePermission(PermissionCodes.AUDIT_LOG_CLEAN)
+    @OperationLog(module = "操作日志", action = "清理历史日志", bizType = "AUDIT_LOG", saveParams = true)
     @PostMapping("/clean")
     public Result<Integer> clean(
             @Parameter(description = "保留天数") @RequestParam(defaultValue = "90") int days) {

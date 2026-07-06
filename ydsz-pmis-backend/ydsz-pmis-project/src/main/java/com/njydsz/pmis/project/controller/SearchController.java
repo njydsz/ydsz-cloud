@@ -7,6 +7,7 @@ import com.njydsz.pmis.project.search.ProjectSearchVO;
 import com.njydsz.pmis.project.service.SearchService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -48,7 +49,7 @@ public class SearchController {
     public Result<Page<ProjectSearchVO>> searchProjects(
             @RequestParam @NotBlank(message = "{validation.execution.msg_ede12b69}") String keyword,
             @RequestParam(defaultValue = "0") @Min(value = 0, message = "{validation.execution.msg_9aaebb77}") int page,
-            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.execution.msg_15154512}") int size) {
+            @RequestParam(defaultValue = "20") @Min(value = 1, message = "{validation.execution.msg_15154512}") @Max(100) int size) {
         return Result.ok(searchService.searchProjects(keyword,
                 PageRequest.of(page, size, SortBy.desc(ProjectSearchVO::getCreatedAt))));
     }

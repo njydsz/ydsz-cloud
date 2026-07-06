@@ -11,6 +11,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import {
   pageRateCards,
@@ -109,7 +110,7 @@ async function onRefresh() {
 const submitting = ref(false)
 // 弹窗 - 新建/编辑报价费率
 const dialogVisible = ref(false)
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 const editingId = ref<number | null>(null)
 const form = reactive<RateCardCreateDTO>({
   rateCode: '',

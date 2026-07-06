@@ -101,7 +101,7 @@ function handleReset() {
 /** 新增回款弹窗可见性 */
 const dialogVisible = ref(false)
 /** 表单引用（用于校验） */
-const formRef = ref<any>()
+const formRef = ref<FormInstance>()
 /** 新增回款表单数据 */
 const form = reactive<Partial<PaymentCreateDTO>>({
   paymentCode: '',

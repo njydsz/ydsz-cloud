@@ -334,6 +334,8 @@ public final class PermissionCodes {
     public static final String WORKFLOW_TASK_VIEW = "workflow:task:view";
     /** 任务操作: 通过/驳回/签收/转办/委派/加签/跳转/批量审批 (本人) */
     public static final String WORKFLOW_TASK_OPERATE = "workflow:task:operate";
+    /** GAP-P2-9: 自由流跳转 — 运行时动态指定下一节点 + 办理人 (需节点级 freeJump 白名单) */
+    public static final String WORKFLOW_TASK_FREE_JUMP = "workflow:task:freeJump";
     /** 灰度发布管理 (管理员) */
     public static final String WORKFLOW_CANARY_MANAGE = "workflow:canary:manage";
     /** 抄送查询 (本人) */

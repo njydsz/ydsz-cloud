@@ -9,7 +9,7 @@
  */
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { CopyDocument, VideoPlay, Refresh, Search, Files, MagicStick } from '@element-plus/icons-vue'
+import { CopyDocument, VideoPlay, Refresh, Search, Files, MagicStick, Upload } from '@element-plus/icons-vue'
 import FlowDesigner from '../components/FlowDesigner.vue'
 import BpmnDesigner from '../components/BpmnDesigner.vue'
 import {
@@ -22,6 +22,7 @@ import {
   importFlowTemplate,
   exportAsTemplate,
   generateBpmn,
+  batchDeployByZip,
 } from '@/api/workflow'
 import type {
   FlowDefinitionDTO,
@@ -284,6 +285,44 @@ async function doExport() {
   }
 }
 
+// ==================== GAP-P1-6: BPMN 部署包 .zip 批量导入 ====================
+const zipUploading = ref(false)
+
+function handleZipBeforeUpload(file: File): boolean {
+  if (!file.name.toLowerCase().endsWith('.zip')) {
+    ElMessage.warning('仅支持 .zip 文件')
+    return false
+  }
+  return true
+}
+
+async function handleZipUpload(options: { file: File }) {
+  zipUploading.value = true
+  try {
+    const res = await batchDeployByZip(options.file)
+    if (res.data?.code === 0) {
+      const { successCount, failedItems } = res.data.data || { successCount: 0, failedItems: [] }
+      if (failedItems.length === 0) {
+        ElMessage.success(`批量导入成功，共部署 ${successCount} 个流程定义`)
+      } else {
+        const detail = failedItems.map((f) => `${f.fileName}: ${f.reason}`).join('\n')
+        ElMessageBox.alert(
+          `成功 ${successCount} 个，失败 ${failedItems.length} 个：\n${detail}`,
+          '批量导入结果',
+          { type: successCount > 0 ? 'warning' : 'error' },
+        )
+      }
+      loadDefinitions()
+    } else {
+      ElMessage.error(res.data?.message || '批量导入失败')
+    }
+  } catch (e: any) {
+    ElMessage.error(e?.message || '批量导入失败')
+  } finally {
+    zipUploading.value = false
+  }
+}
+
 function categoryLabel(cat?: string): string {
   const found = categoryOptions.find((c) => c.value === cat)
   return found?.label || cat || '通用'
@@ -388,6 +427,15 @@ onMounted(() => {
 
       <el-button :icon="Files" @click="openTemplateDialog">模板库</el-button>
       <el-button @click="openExportDialog">导出为模板</el-button>
+      <!-- GAP-P1-6: BPMN 部署包 .zip 批量导入 -->
+      <el-upload
+        :show-file-list="false"
+        :before-upload="handleZipBeforeUpload"
+        :http-request="handleZipUpload"
+        accept=".zip"
+      >
+        <el-button :icon="Upload">批量导入 Zip</el-button>
+      </el-upload>
       <el-button :icon="CopyDocument" @click="openVersionDrawer">版本管理</el-button>
       <el-button type="primary" :icon="VideoPlay" @click="openSimulateDialog">
         模拟运行
