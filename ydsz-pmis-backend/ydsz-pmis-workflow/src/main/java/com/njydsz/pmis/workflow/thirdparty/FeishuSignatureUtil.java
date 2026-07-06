@@ -1,5 +1,8 @@
 package com.njydsz.pmis.workflow.thirdparty;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 
@@ -13,6 +16,8 @@ import java.security.MessageDigest;
  * @since 1.1.0
  */
 public final class FeishuSignatureUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(FeishuSignatureUtil.class);
 
     private static final String SHA_256 = "SHA-256";
 
@@ -41,6 +46,7 @@ public final class FeishuSignatureUtil {
             String computed = toHexLower(digest);
             return constantTimeEquals(computed, signature.toLowerCase());
         } catch (Exception e) {
+            log.warn("[FeishuSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
             return false;
         }
     }

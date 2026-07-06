@@ -313,6 +313,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         try {
             return Long.parseLong(s);
         } catch (NumberFormatException e) {
+            log.warn("[FlowTimerServiceImpl] 用户 ID 解析失败 s={}: {}", s, e.getMessage());
             return null;
         }
     }

@@ -132,6 +132,7 @@ public class FlowUrgeLimiter {
                         Long ttl = redisTemplate.getExpire(buildKey(userId, targetId, type));
                         return ttl == null ? 0L : ttl;
                     } catch (Exception e) {
+                        log.warn("[FlowUrgeLimiter] 获取催办剩余 TTL 失败 targetId={}: {}", targetId, e.getMessage());
                         return 0L;
                     }
                 })

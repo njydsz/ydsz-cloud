@@ -107,6 +107,7 @@ public class StageGateValidator {
             int n = Integer.parseInt(num);
             return n >= 13;
         } catch (Exception ignore) {
+            log.warn("[StageGateValidator] 项目等级解析失败 level={}: {}", level, ignore.getMessage());
             return false;
         }
     }

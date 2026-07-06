@@ -723,6 +723,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             return ext.containsKey("callActivityFlowCode")
                     || ext.containsKey("subProcessFlowCode");
         } catch (Exception e) {
+            log.warn("[FlowInstanceServiceImpl] 节点 ext 解析失败，视为非子流程调用: {}", e.getMessage());
             return false;
         }
     }

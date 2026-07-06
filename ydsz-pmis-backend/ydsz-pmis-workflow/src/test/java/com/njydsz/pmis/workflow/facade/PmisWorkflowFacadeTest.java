@@ -3,6 +3,7 @@ package com.njydsz.pmis.workflow.facade;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
+import com.njydsz.pmis.workflow.entity.FlowTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
@@ -30,6 +31,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -142,6 +144,38 @@ class PmisWorkflowFacadeTest {
         assertThat(result).hasSize(1);
     }
 
+    // ============ GAP-P0-4: passAllTodoTasks 一键通过所有待办 ============
+
+    @Test
+    @DisplayName("passAllTodoTasks - 有待办时查询并批量通过，返回通过数量")
+    void passAllTodoTasksShouldQueryAndBatchPass() {
+        FlowTaskDO t1 = buildTodoTask(501L);
+        FlowTaskDO t2 = buildTodoTask(502L);
+        FlowTaskDO t3 = buildTodoTask(503L);
+        PageResult<FlowTaskDO> pageResult = PageResult.of(List.of(t1, t2, t3), 3L, 1L, 100L);
+        when(taskService.listTodoByAssigneePage(eq("500"), eq(1L), eq(1), eq(100)))
+                .thenReturn(pageResult);
+
+        int count = facade.passAllTodoTasks(500L, "一键通过");
+
+        assertThat(count).isEqualTo(3);
+        verify(taskService).batchPass(eq(List.of(501L, 502L, 503L)), eq(500L), eq("一键通过"));
+    }
+
+    @Test
+    @DisplayName("passAllTodoTasks - 无待办时返回 0 且不调用 batchPass")
+    void passAllTodoTasksShouldReturnZeroWhenNoTodo() {
+        PageResult<FlowTaskDO> emptyPage = PageResult.of(Collections.emptyList(), 0L, 1L, 100L);
+        when(taskService.listTodoByAssigneePage(anyString(), anyLong(), anyInt(), anyInt()))
+                .thenReturn(emptyPage);
+
+        int count = facade.passAllTodoTasks(500L, null);
+
+        assertThat(count).isZero();
+        verify(taskService, org.mockito.Mockito.never())
+                .batchPass(any(), anyLong(), any());
+    }
+
     // ============ 辅助方法 ============
 
     private FlowInstanceDO buildInstance(Long id, String businessType, String flowStatus) {
@@ -165,5 +199,14 @@ class PmisWorkflowFacadeTest {
         inst.setEndAt(flowStatus.equals("COMPLETED") ? LocalDateTime.of(2026, 7, 3, 15, 0) : null);
         inst.setDurationMs(180000L);
         return inst;
+    }
+
+    private FlowTaskDO buildTodoTask(Long id) {
+        FlowTaskDO task = new FlowTaskDO();
+        task.setId(id);
+        task.setInstanceId(1001L);
+        task.setNodeCode("node_approve_1");
+        task.setTaskStatus("PENDING");
+        return task;
     }
 }

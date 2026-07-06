@@ -629,6 +629,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
         try {
             return Double.parseDouble(val.toString());
         } catch (NumberFormatException e) {
+            log.warn("[FlowEfficiencyServiceImpl] Double 解析失败，使用 0.0 兜底 val={}: {}", val, e.getMessage());
             return 0.0;
         }
     }
@@ -640,6 +641,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
         try {
             return Long.parseLong(val.toString());
         } catch (NumberFormatException e) {
+            log.warn("[FlowEfficiencyServiceImpl] Long 解析失败，使用 0L 兜底 val={}: {}", val, e.getMessage());
             return 0L;
         }
     }

@@ -193,6 +193,7 @@ public class BudgetSnapshotProviderImpl implements BudgetSnapshotProvider {
         try {
             return new BigDecimal(o.toString());
         } catch (Exception e) {
+            log.warn("[BudgetSnapshotProviderImpl] BigDecimal 转换失败 o={}: {}", o, e.getMessage());
             return null;
         }
     }

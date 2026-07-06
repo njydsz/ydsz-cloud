@@ -417,6 +417,7 @@ public class ReportExportServiceImpl implements ReportExportService {
         try {
             return Long.parseLong(o.toString());
         } catch (Exception e) {
+            log.warn("[ReportExportServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
             return null;
         }
     }

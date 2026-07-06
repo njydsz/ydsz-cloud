@@ -158,6 +158,7 @@ public class FlowAiAssistServiceImpl implements FlowAiAssistService {
         try {
             return Long.parseLong(o.toString());
         } catch (Exception ignore) {
+            log.warn("[FlowAiAssistServiceImpl] Long 解析失败，使用 0L 兜底 o={}: {}", o, ignore.getMessage());
             return 0L;
         }
     }

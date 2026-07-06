@@ -5597,6 +5597,14 @@ ALTER TABLE pmis_flow_user
 
 COMMENT ON COLUMN pmis_flow_user.weight IS '办理人权重（默认 1，可配置 2/3 等）';
 
+-- -----------------------------------
+-- GAP-P0-3: pmis_flow_user 增加 sign_type 字段（区分原始审批人与加签人）
+-- -----------------------------------
+ALTER TABLE pmis_flow_user
+    ADD COLUMN IF NOT EXISTS sign_type VARCHAR(16) NOT NULL DEFAULT 'ORIGINAL';
+
+COMMENT ON COLUMN pmis_flow_user.sign_type IS '加签类型: ORIGINAL 原始审批人 / BEFORE 前加签 / AFTER 后加签 / PARALLEL 并加签 / ADD 追加处理人';
+
 -- -------------------------------------------
 -- 2. pmis_flow_task 增加 vote_pass_rate 字段（VOTE 模式下的通过率阈值）
 -- -------------------------------------------
@@ -6106,6 +6114,7 @@ CREATE TABLE IF NOT EXISTS pmis_rule_def (
     priority              INTEGER         NOT NULL DEFAULT 100,
     enabled               BOOLEAN         NOT NULL DEFAULT TRUE,
     scope                 VARCHAR(128)    DEFAULT 'ALL',
+    mutex_group           VARCHAR(128)    DEFAULT NULL,
     drilldown_available   BOOLEAN         NOT NULL DEFAULT TRUE,
     version               INTEGER         NOT NULL DEFAULT 1,
     created_by            VARCHAR(64)     NOT NULL DEFAULT 'SYSTEM',
@@ -6119,10 +6128,12 @@ COMMENT ON COLUMN pmis_rule_def.rule_code IS '规则编码（全局唯一）';
 COMMENT ON COLUMN pmis_rule_def.condition_expression IS '条件表达式（Aviator 语法，返回 boolean）';
 COMMENT ON COLUMN pmis_rule_def.severity_expression IS '严重度表达式（可选，动态决定严重度）';
 COMMENT ON COLUMN pmis_rule_def.priority IS '优先级（数值越小越先执行，默认100）';
+COMMENT ON COLUMN pmis_rule_def.mutex_group IS '互斥组名称（同组内首个命中后跳过其余规则；NULL 表示无互斥组）';
 
 -- 索引
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_category ON pmis_rule_def (category);
-CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_enabled  ON pmis_rule_def (enabled);
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_category   ON pmis_rule_def (category);
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_enabled    ON pmis_rule_def (enabled);
+CREATE INDEX IF NOT EXISTS idx_pmis_rule_def_mutex_group ON pmis_rule_def (mutex_group);
 
 -- --------------------------------------------------------
 -- 2. 规则版本历史表（审计追踪 + 回滚）

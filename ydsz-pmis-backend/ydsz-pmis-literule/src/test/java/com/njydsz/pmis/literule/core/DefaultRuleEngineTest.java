@@ -327,6 +327,66 @@ class DefaultRuleEngineTest {
         assertThat(results.get(0).getRuleCode()).isEqualTo("R_NORMAL");
     }
 
+    // ============ 互斥组 ============
+
+    @Test
+    @DisplayName("互斥组 - 高优先级命中后，同组低优先级规则跳过")
+    void mutexGroupShouldSkipLowerPriorityWhenHigherTriggered() {
+        Rule highPriority = createRuleWithMutexGroup("R_HIGH", "高优先级", 10, "G1", true, "RED");
+        Rule lowPriority = createRuleWithMutexGroup("R_LOW", "低优先级", 200, "G1", true, "YELLOW");
+        engine.register(lowPriority);
+        engine.register(highPriority);
+
+        List<RuleResult> results = engine.evaluate(RuleContext.of(Map.of("amount", 1000)));
+
+        // 仅高优先级规则触发，低优先级被互斥组短路
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getRuleCode()).isEqualTo("R_HIGH");
+    }
+
+    @Test
+    @DisplayName("互斥组 - 首条未命中时，同组后续规则正常评估")
+    void mutexGroupShouldNotSkipWhenFirstNotTriggered() {
+        Rule notTriggered = createRuleWithMutexGroup("R_NT", "未命中", 10, "G1", false, null);
+        Rule triggered = createRuleWithMutexGroup("R_T", "命中", 200, "G1", true, "YELLOW");
+        engine.register(notTriggered);
+        engine.register(triggered);
+
+        List<RuleResult> results = engine.evaluate(RuleContext.of(Map.of("amount", 1000)));
+
+        // 首条未命中不占用互斥组，第二条正常触发
+        assertThat(results).hasSize(1);
+        assertThat(results.get(0).getRuleCode()).isEqualTo("R_T");
+    }
+
+    @Test
+    @DisplayName("互斥组 - 无互斥组的规则不受影响")
+    void mutexGroupShouldNotAffectRulesWithoutGroup() {
+        Rule grouped = createRuleWithMutexGroup("R_G", "组内规则", 10, "G1", true, "RED");
+        Rule ungrouped = createTriggeredRule("R_U", "无组规则", "YELLOW", "独立");
+        engine.register(grouped);
+        engine.register(ungrouped);
+
+        List<RuleResult> results = engine.evaluate(RuleContext.of(Map.of("amount", 1000)));
+
+        // 两条规则都应触发
+        assertThat(results).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("互斥组 - 不同互斥组互不影响")
+    void differentMutexGroupsShouldNotInterfere() {
+        Rule g1Rule = createRuleWithMutexGroup("R_G1", "组1规则", 10, "G1", true, "RED");
+        Rule g2Rule = createRuleWithMutexGroup("R_G2", "组2规则", 20, "G2", true, "YELLOW");
+        engine.register(g1Rule);
+        engine.register(g2Rule);
+
+        List<RuleResult> results = engine.evaluate(RuleContext.of(Map.of("amount", 1000)));
+
+        // 不同互斥组的规则都应触发
+        assertThat(results).hasSize(2);
+    }
+
     // ============ 辅助方法 ============
 
     private Rule createRule(String code, String name, int priority) {
@@ -413,6 +473,40 @@ class DefaultRuleEngineTest {
             @Override
             public RuleResult evaluate(RuleContext context) {
                 throw new RuntimeException("模拟规则异常");
+            }
+        };
+    }
+
+    /**
+     * 创建带互斥组的测试规则
+     *
+     * @param code        规则编码
+     * @param name        规则名称
+     * @param priority    优先级
+     * @param mutexGroup  互斥组名称
+     * @param triggered   是否触发
+     * @param severity    严重度（triggered=false 时可传 null）
+     */
+    private Rule createRuleWithMutexGroup(String code, String name, int priority,
+                                           String mutexGroup, boolean triggered, String severity) {
+        return new Rule() {
+            @Override
+            public String getCode() { return code; }
+            @Override
+            public String getName() { return name; }
+            @Override
+            public String getCategory() { return "TEST"; }
+            @Override
+            public int getPriority() { return priority; }
+            @Override
+            public String getMutexGroup() { return mutexGroup; }
+            @Override
+            public RuleResult evaluate(RuleContext context) {
+                if (!triggered) {
+                    return RuleResult.notTriggered(code);
+                }
+                return RuleResult.triggered(code, name, "TEST",
+                        RuleSeverity.valueOf(severity), name, "触发");
             }
         };
     }

@@ -207,7 +207,12 @@ class FlowInstanceServiceImplRollbackTest {
 
         assertThatThrownBy(() -> service.rollback(INSTANCE_ID, INITIATOR_ID, "撤销", 7))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining("RUNNING");
+                .satisfies(ex -> {
+                    BizException biz = (BizException) ex;
+                    assertThat(biz.getCode()).isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+                    // 消息码 a1b2c3d4 为状态校验错误码，参数含状态名
+                    assertThat(biz.getMessage()).contains("a1b2c3d4");
+                });
 
         // 不应更新状态
         verify(instanceMapper, never()).updateStatus(anyLong(), anyString(), any(), any(), any(), any());
@@ -221,7 +226,11 @@ class FlowInstanceServiceImplRollbackTest {
 
         assertThatThrownBy(() -> service.rollback(INSTANCE_ID, INITIATOR_ID, "撤销", 7))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining("TERMINATED");
+                .satisfies(ex -> {
+                    BizException biz = (BizException) ex;
+                    assertThat(biz.getCode()).isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+                    assertThat(biz.getMessage()).contains("a1b2c3d4");
+                });
     }
 
     @Test
@@ -232,7 +241,11 @@ class FlowInstanceServiceImplRollbackTest {
 
         assertThatThrownBy(() -> service.rollback(INSTANCE_ID, INITIATOR_ID, "撤销", 7))
                 .isInstanceOf(BizException.class)
-                .hasMessageContaining("REJECTED");
+                .satisfies(ex -> {
+                    BizException biz = (BizException) ex;
+                    assertThat(biz.getCode()).isEqualTo(BizErrorCode.BAD_REQUEST.getCode());
+                    assertThat(biz.getMessage()).contains("a1b2c3d4");
+                });
     }
 
     // ==================== 权限校验 ====================

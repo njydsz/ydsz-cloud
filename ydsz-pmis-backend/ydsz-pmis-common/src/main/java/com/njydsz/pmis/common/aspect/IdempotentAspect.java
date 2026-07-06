@@ -116,6 +116,7 @@ public class IdempotentAspect {
                     user = String.valueOf(u.getUserId());
                 }
             } catch (Exception ignored) {
+                log.debug("[Idempotent] 获取当前用户失败，使用匿名标识 key={}", ann.key(), ignored);
             }
             sb.append("u").append(user).append(":");
         }

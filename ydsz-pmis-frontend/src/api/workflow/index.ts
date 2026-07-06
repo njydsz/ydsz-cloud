@@ -259,6 +259,14 @@ export function countersignAfter(payload: FlowTaskOperateDTO) {
   )
 }
 
+/** GAP-P0-3: 并加签（与原审批人并行审批，所有人审完才推进） */
+export function countersignParallel(payload: FlowTaskOperateDTO) {
+  return http.post<ApiResponse<null>>(
+    '/workflow/engine/task/countersignParallel',
+    payload,
+  )
+}
+
 /** 减签 */
 export function countersignRemove(payload: FlowTaskOperateDTO) {
   return http.post<ApiResponse<null>>(

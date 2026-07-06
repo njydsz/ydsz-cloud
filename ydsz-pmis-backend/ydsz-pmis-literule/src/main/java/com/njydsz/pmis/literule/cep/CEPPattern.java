@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -38,6 +39,7 @@ import java.util.Map;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Slf4j
 public class CEPPattern implements Serializable {
 
     @Serial
@@ -157,6 +159,7 @@ public class CEPPattern implements Serializable {
         try {
             return Double.parseDouble(v.toString());
         } catch (NumberFormatException e) {
+            log.warn("[CEPPattern] 双精度解析失败，使用 0 兜底 v={}: {}", v, e.getMessage());
             return 0;
         }
     }

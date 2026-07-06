@@ -440,6 +440,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                 try {
                     return Long.parseLong(assigneeId.substring(idx + 1));
                 } catch (NumberFormatException ignore2) {
+                    log.warn("[ProjectInitiationFlowListener] assigneeId 解析失败 assigneeId={}: {}", assigneeId, ignore2.getMessage());
                     return null;
                 }
             }

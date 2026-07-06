@@ -54,6 +54,19 @@ public class FlowUserDO extends BaseDO {
     /** P1-5: 办理人权重（默认 1，可配置 2/3 等，用于加权会签） */
     private Integer weight;
 
+    /**
+     * GAP-P0-3: 加签类型标识，区分原始审批人与动态加签人。
+     * <ul>
+     *   <li>ORIGINAL：流程定义中配置的原始审批人</li>
+     *   <li>BEFORE：前加签插入的审批人</li>
+     *   <li>AFTER：后加签插入的审批人</li>
+     *   <li>PARALLEL：并加签插入的审批人（与原审批人并行，所有人审完才推进）</li>
+     *   <li>ADD：追加处理人</li>
+     * </ul>
+     * 默认 ORIGINAL，向后兼容存量数据。
+     */
+    private String signType;
+
     /** 租户 ID */
     private Long tenantId;
     /** 链路追踪 ID */

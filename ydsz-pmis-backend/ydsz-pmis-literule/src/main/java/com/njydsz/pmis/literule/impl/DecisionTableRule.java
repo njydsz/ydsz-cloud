@@ -278,6 +278,7 @@ public class DecisionTableRule implements Rule {
             boolean rightOk = rightBracket.equals("]") ? fact.compareTo(right) <= 0 : fact.compareTo(right) < 0;
             return leftOk && rightOk;
         } catch (Exception e) {
+            log.warn("[DecisionTableRule] 区间匹配异常 factValue={}: {}", factValue, e.getMessage());
             return false;
         }
     }
@@ -304,6 +305,8 @@ public class DecisionTableRule implements Rule {
                 default -> false;
             };
         } catch (Exception e) {
+            log.warn("[DecisionTableRule] 比较匹配异常 op={} operandStr={} factValue={}: {}",
+                    op, operandStr, factValue, e.getMessage());
             return false;
         }
     }
@@ -315,6 +318,8 @@ public class DecisionTableRule implements Rule {
             BigDecimal operand = new BigDecimal(operandStr.trim());
             return fact.compareTo(operand) == 0;
         } catch (Exception e) {
+            log.warn("[DecisionTableRule] 数值相等比较异常 factValue={} operandStr={}: {}",
+                    factValue, operandStr, e.getMessage());
             return false;
         }
     }
@@ -326,6 +331,7 @@ public class DecisionTableRule implements Rule {
         try {
             return new BigDecimal(value.toString().trim());
         } catch (Exception e) {
+            log.warn("[DecisionTableRule] BigDecimal 转换失败 value={}: {}", value, e.getMessage());
             return null;
         }
     }

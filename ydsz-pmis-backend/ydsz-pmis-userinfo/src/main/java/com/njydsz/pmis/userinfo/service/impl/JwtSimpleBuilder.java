@@ -1,6 +1,8 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
 import com.alibaba.fastjson2.JSON;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -15,6 +17,8 @@ import java.util.Map;
  * @since 1.0.0
  */
 final class JwtSimpleBuilder {
+
+    private static final Logger log = LoggerFactory.getLogger(JwtSimpleBuilder.class);
 
     private static final String HEADER = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
     private static final String SECRET = "pmis-user-module-jwt-secret-2026";
@@ -51,6 +55,7 @@ final class JwtSimpleBuilder {
             byte[] sig = mac.doFinal(input.getBytes(StandardCharsets.UTF_8));
             return Base64.getUrlEncoder().withoutPadding().encodeToString(sig);
         } catch (Exception e) {
+            log.error("[JwtSimpleBuilder] HMAC 签名失败，返回空串（仅用于测试/演示）: {}", e.getMessage(), e);
             return "";
         }
     }

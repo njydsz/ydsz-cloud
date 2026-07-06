@@ -122,6 +122,21 @@ public interface FlowTaskService {
     void countersignAfter(FlowTaskOperateDTO dto);
 
     /**
+     * GAP-P0-3: 并加签 — 动态追加审批人与原审批人并行审批，所有人审完后才推进。
+     *
+     * <p>对标钉钉/飞书"并加签"语义。当前审批人尚未审批时动态追加，
+     * 加签人与原审批人<b>并行</b>审批（performType 强制切换为 PARALLEL），
+     * 所有人全部通过后才推进到下一节点。
+     *
+     * <p>与 {@link #countersignAfter}（后加签，SEQUENTIAL 顺序）的区别：
+     * 后加签是"当前人审完→加签人审"的串行流程；并加签是"当前人+加签人同时审"的并行流程。
+     *
+     * @param dto 任务操作参数（需含 taskId + targetUserId + targetUserName）
+     * @since 1.6.0
+     */
+    void countersignParallel(FlowTaskOperateDTO dto);
+
+    /**
      * GAP-P1: 减签 — 从会签任务中移除指定审批人
      *
      * <p>对标钉钉/飞书的"减签"功能。从 pmis_flow_user 中删除指定用户，

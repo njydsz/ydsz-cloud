@@ -44,7 +44,14 @@ public class RuleConflict implements Serializable {
         /** 条件相同但严重度不同（语义冲突） */
         CONTRADICTORY_SEVERITY,
         /** 同类别下名称相同但逻辑不同（命名冲突） */
-        NAME_COLLISION
+        NAME_COLLISION,
+        /**
+         * 条件范围重叠（1.5.0 起）
+         *
+         * <p>两条规则的条件在相同变量上存在范围交集，
+         * 可能导致同一事实同时命中多条规则（除非属于同一互斥组）。
+         */
+        CONDITION_OVERLAP
     }
 
     /** 冲突类型 */

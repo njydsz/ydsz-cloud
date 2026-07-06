@@ -440,6 +440,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
         try {
             return aiAssistService.isAiAvailable();
         } catch (Exception e) {
+            log.warn("[FlowEmbeddedApprovalServiceImpl] AI 服务可用性检测异常，按不可用处理: {}", e.getMessage(), e);
             return false;
         }
     }

@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -32,6 +33,7 @@ import java.util.UUID;
 @Builder(toBuilder = true)
 @NoArgsConstructor
 @AllArgsConstructor
+@Slf4j
 public class CEPEvent implements Serializable {
 
     @Serial
@@ -73,6 +75,7 @@ public class CEPEvent implements Serializable {
         try {
             return Double.parseDouble(v.toString());
         } catch (NumberFormatException e) {
+            log.warn("[CEPEvent] 双精度解析失败，使用 0.0 兜底 v={}: {}", v, e.getMessage());
             return 0.0;
         }
     }

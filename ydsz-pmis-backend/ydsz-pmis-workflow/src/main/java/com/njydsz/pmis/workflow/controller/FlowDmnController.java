@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.entity.FlowDmnTableDO;
 import com.njydsz.pmis.workflow.service.FlowDmnTableService;
+import com.njydsz.pmis.workflow.dto.DmnExecuteDTO;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 import org.springframework.validation.annotation.Validated;
@@ -122,10 +124,9 @@ public class FlowDmnController {
      */
     @Operation(summary = "执行决策")
     @PostMapping("/execute")
-    public Result<List<Map<String, Object>>> execute(@RequestBody Map<String, Object> body) {
-        String tableKey = body == null ? null : (String) body.get("tableKey");
-        @SuppressWarnings("unchecked")
-        Map<String, Object> context = body == null ? null : (Map<String, Object>) body.get("context");
+    public Result<List<Map<String, Object>>> execute(@Valid @RequestBody DmnExecuteDTO dto) {
+        String tableKey = dto.getTableKey();
+        Map<String, Object> context = dto.getContext();
         return Result.ok(dmnTableService.execute(tableKey, context));
     }
 }

@@ -301,6 +301,7 @@ public class ReportServiceImpl implements ReportService {
             });
             return list.get(0);
         } catch (Exception e) {
+            log.warn("[ReportServiceImpl] 获取最近快照失败 initiationId={} period={}: {}", initiationId, period, e.getMessage());
             return null;
         }
     }

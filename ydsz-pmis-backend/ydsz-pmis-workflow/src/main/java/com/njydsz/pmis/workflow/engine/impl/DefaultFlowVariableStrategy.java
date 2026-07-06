@@ -362,6 +362,7 @@ public class DefaultFlowVariableStrategy implements FlowVariableStrategy {
                         field.setAccessible(true);
                         cursor = field.get(cursor);
                     } catch (Exception e) {
+                        log.warn("[DefaultFlowVariableStrategy] 反射读取字段失败 parts[{}]={}: {}", i, parts[i], e.getMessage());
                         return null;
                     }
                 }

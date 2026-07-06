@@ -314,6 +314,7 @@ public class FlowCcServiceImpl implements FlowCcService {
         try {
             return Long.parseLong(str.trim());
         } catch (NumberFormatException e) {
+            log.warn("[FlowCcServiceImpl] Long 解析失败 str={}: {}", str, e.getMessage());
             return null;
         }
     }

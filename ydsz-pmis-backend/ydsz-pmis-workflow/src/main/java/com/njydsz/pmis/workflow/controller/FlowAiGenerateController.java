@@ -2,6 +2,8 @@ package com.njydsz.pmis.workflow.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.service.FlowAiGenerateService;
+import com.njydsz.pmis.workflow.dto.FlowAiGenerateDTO;
+import jakarta.validation.Valid;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -44,9 +46,8 @@ public class FlowAiGenerateController {
      */
     @PostMapping("/generate")
     @Operation(summary = "AI一句话生成流程")
-    public Result<Map<String, Object>> generate(@RequestBody Map<String, Object> body) {
-        Object desc = body == null ? null : body.get("description");
-        String description = desc == null ? "" : desc.toString();
+    public Result<Map<String, Object>> generate(@Valid @RequestBody FlowAiGenerateDTO dto) {
+        String description = dto.getDescription();
         log.info("[FlowAiGenerate] 收到生成请求, description.length={}", description.length());
 
         String bpmnXml = flowAiGenerateService.generateBpmnFromDescription(description);

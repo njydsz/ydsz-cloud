@@ -789,6 +789,9 @@ onMounted(() => {
                   <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_AFTER', row as FlowTaskDTO)">
                     {{ t('workflow.approval.actions.countersignAfter') }}
                   </el-dropdown-item>
+                  <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_PARALLEL', row as FlowTaskDTO)">
+                    {{ t('workflow.approval.actions.countersignParallel') }}
+                  </el-dropdown-item>
                   <el-dropdown-item v-if="!isMobile" @click="openOpDialog('COUNTERSIGN_REMOVE', row as FlowTaskDTO)">
                     {{ t('workflow.approval.actions.countersignRemove') }}
                   </el-dropdown-item>

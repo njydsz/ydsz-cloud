@@ -153,6 +153,12 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         taskService.countersignAfter(dto);
     }
 
+    /** GAP-P0-3: 并加签 */
+    @Override
+    public void countersignParallelTask(FlowTaskOperateDTO dto) {
+        taskService.countersignParallel(dto);
+    }
+
     @Override
     public List<String> urgeTask(Long instanceId, Long operatorId, String comment) {
         return taskService.urge(instanceId, operatorId, comment);
@@ -198,6 +204,22 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     @Override
     public void batchPassTasks(List<Long> taskIds, Long userId, String comment) {
         taskService.batchPass(taskIds, userId, comment);
+    }
+
+    /** GAP-P0-4: 一键通过所有待办 */
+    @Override
+    public int passAllTodoTasks(Long userId, String comment) {
+        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        PageResult<FlowTaskDO> pageResult = taskService.listTodoByAssigneePage(
+                String.valueOf(userId), tenantId, 1, 100);
+        List<FlowTaskDO> todos = pageResult.getList();
+        if (todos.isEmpty()) {
+            return 0;
+        }
+        List<Long> taskIds = todos.stream().map(FlowTaskDO::getId).toList();
+        taskService.batchPass(taskIds, userId, comment);
+        log.info("[Flow] 一键通过所有待办: userId={} count={}", userId, taskIds.size());
+        return taskIds.size();
     }
 
     // ============================== P2-22: 流程图查询（高亮当前节点） ==============================

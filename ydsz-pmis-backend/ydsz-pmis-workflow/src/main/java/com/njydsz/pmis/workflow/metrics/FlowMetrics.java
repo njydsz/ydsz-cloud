@@ -316,6 +316,7 @@ public class FlowMetrics {
             return ccMapper.countUnread();
         } catch (Exception e) {
             // 兼容老版本 ccMapper 无 countUnread
+            log.warn("[FlowMetrics] ccMapper.countUnread 调用失败，按 0 处理: {}", e.getMessage());
             return 0L;
         }
     }

@@ -321,6 +321,7 @@ public class BillableUtilizationServiceImpl implements BillableUtilizationServic
         try {
             return Long.parseLong(o.toString());
         } catch (Exception e) {
+            log.warn("[BillableUtilizationServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
             return null;
         }
     }

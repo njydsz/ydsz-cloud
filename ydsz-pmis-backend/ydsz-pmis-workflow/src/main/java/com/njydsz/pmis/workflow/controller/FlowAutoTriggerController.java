@@ -3,6 +3,8 @@ package com.njydsz.pmis.workflow.controller;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.entity.FlowAutoTriggerDO;
 import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
+import com.njydsz.pmis.workflow.dto.FlowAutoTriggerCreateDTO;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
@@ -52,10 +54,10 @@ public class FlowAutoTriggerController {
      */
     @Operation(summary = "创建触发规则")
     @PostMapping
-    public Result<Void> create(@RequestBody Map<String, String> body) {
-        String sourceFlowCode = body.get("sourceFlowCode");
-        String targetFlowCode = body.get("targetFlowCode");
-        String conditionExpression = body.get("conditionExpression");
+    public Result<Void> create(@Valid @RequestBody FlowAutoTriggerCreateDTO dto) {
+        String sourceFlowCode = dto.getSourceFlowCode();
+        String targetFlowCode = dto.getTargetFlowCode();
+        String conditionExpression = dto.getConditionExpression();
         autoTriggerService.registerTrigger(sourceFlowCode, targetFlowCode, conditionExpression);
         return Result.ok();
     }

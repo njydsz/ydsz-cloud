@@ -9,24 +9,38 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 规则冲突检测器
  *
  * <p>在规则保存前检测新规则与现有规则的潜在冲突，输出 {@link RuleConflict} 列表。
  *
- * <p>当前实现的检测维度（基于字段精确匹配，不做表达式语义分析）：
+ * <p>检测维度（1.5.0 增强表达式归一化与范围重叠分析）：
  * <ul>
  *   <li>{@link RuleConflict.Type#IDENTICAL_CONDITION}：同 category + 同 tenantId 下，
- *       条件表达式 trim 后完全相同（WARN，可能重复定义）</li>
+ *       条件表达式归一化后完全相同（WARN，可能重复定义）</li>
  *   <li>{@link RuleConflict.Type#CONTRADICTORY_SEVERITY}：条件表达式相同但严重度不同
  *       （ERROR，语义冲突）</li>
  *   <li>{@link RuleConflict.Type#NAME_COLLISION}：同 category + 同 tenantId 下，
  *       name 相同但条件表达式不同（WARN，命名冲突）</li>
+ *   <li>{@link RuleConflict.Type#CONDITION_OVERLAP}：条件范围重叠（WARN），
+ *       两条规则在同一变量上存在范围交集，可能导致同一事实同时命中（1.5.0 起）</li>
  * </ul>
  *
- * <p>说明：条件范围重叠（overlap）的语义分析依赖变量空间元数据（P2-4），
- * 当前版本不做样本探测，避免误报。未来 VariableRegistry 完成后可增强。
+ * <p><b>表达式归一化（1.5.0 增强）</b>：
+ * <ul>
+ *   <li>去除所有空白字符</li>
+ *   <li>统一逻辑运算符：{@code and}→{@code &&}、{@code or}→{@code ||}、{@code not}→{@code !}</li>
+ *   <li>统一大小写</li>
+ *   <li>翻转比较操作数顺序：{@code 3 &lt; x} → {@code x &gt; 3}（规范化为 变量在左、常量在右）</li>
+ * </ul>
+ *
+ * <p><b>条件重叠分析（1.5.0 新增）</b>：
+ * 仅对简单比较表达式（{@code var OP number}）做范围交集检测，
+ * 复杂表达式（含 &amp;&amp; / || 或嵌套）降级为不检测，避免误报。
+ * 同互斥组内的规则不报重叠（互斥组本身保证短路）。
  *
  * <p>租户隔离：仅在同一 tenantId 内检测冲突（单租户部署下 tenantId 恒为 1）。
  *
@@ -39,10 +53,16 @@ public class RuleConflictDetector {
 
     private final RuleConfigProvider configProvider;
 
+    /** 简单比较表达式模式：var OP number（用于范围重叠分析） */
+    private static final Pattern COMPARISON_PATTERN = Pattern.compile(
+            "^([a-zA-Z_]\\w*)\\s*(>=|<=|>|<|==|!=)\\s*(-?\\d+(?:\\.\\d+)?)$");
+
+    /** 反向比较表达式模式：number OP var（如 "3 < x"） */
+    private static final Pattern REVERSE_COMPARISON_PATTERN = Pattern.compile(
+            "^(-?\\d+(?:\\.\\d+)?)\\s*(>=|<=|>|<|==|!=)\\s*([a-zA-Z_]\\w*)$");
+
     /**
      * 检测新规则与所有现有规则的冲突
-     *
-     * <p>会跳过自身（ruleCode 相同的规则，用于更新场景）和不同租户的规则。
      *
      * @param newDefinition 待保存的新规则定义
      * @return 冲突列表；无冲突返回空列表
@@ -61,29 +81,27 @@ public class RuleConflictDetector {
         long newTenantId = newDefinition.getTenantId();
         String newCategory = newDefinition.getCategory();
         String newName = newDefinition.getName();
-        String newCondition = normalize(newDefinition.getConditionExpression());
+        String newConditionRaw = newDefinition.getConditionExpression();
+        String newCondition = normalize(newConditionRaw);
         String newSeverity = severityKey(newDefinition);
+        String newMutexGroup = newDefinition.getMutexGroup();
+
+        // 解析新规则的简单比较条件（用于范围重叠分析）
+        ComparisonCondition newComparison = parseComparison(newConditionRaw);
 
         for (RuleDefinition other : existingRules) {
-            // 跳过自身（更新场景）
-            if (Objects.equals(other.getCode(), newCode)) {
-                continue;
-            }
-            // 跨租户不检测
-            if (other.getTenantId() != newTenantId) {
-                continue;
-            }
+            if (Objects.equals(other.getCode(), newCode)) continue;
+            if (other.getTenantId() != newTenantId) continue;
 
             String otherCondition = normalize(other.getConditionExpression());
             String otherSeverity = severityKey(other);
 
-            // 1. 条件表达式完全相同
+            // 1. 条件表达式归一化后完全相同
             boolean sameCondition = newCondition != null
                     && newCondition.equals(otherCondition)
                     && !newCondition.isEmpty();
 
             if (sameCondition) {
-                // 2. 条件相同但严重度不同 → 语义冲突（ERROR）
                 if (!Objects.equals(newSeverity, otherSeverity)) {
                     conflicts.add(RuleConflict.builder()
                             .type(RuleConflict.Type.CONTRADICTORY_SEVERITY)
@@ -95,7 +113,6 @@ public class RuleConflictDetector {
                                     + "），存在语义冲突")
                             .build());
                 } else {
-                    // 3. 条件相同且严重度相同 → 重复定义（WARN）
                     conflicts.add(RuleConflict.builder()
                             .type(RuleConflict.Type.IDENTICAL_CONDITION)
                             .level(RuleConflict.Level.WARN)
@@ -107,7 +124,7 @@ public class RuleConflictDetector {
                 continue;
             }
 
-            // 4. 同 category 下名称相同但条件不同 → 命名冲突（WARN）
+            // 2. 同 category 下名称相同但条件不同
             if (Objects.equals(newCategory, other.getCategory())
                     && newName != null && newName.equals(other.getName())
                     && !newName.isEmpty()) {
@@ -120,30 +137,165 @@ public class RuleConflictDetector {
                                 + " 下与规则 " + other.getCode() + " 重名，但条件不同")
                         .build());
             }
+
+            // 3. 条件范围重叠（1.5.0 新增）
+            if (newComparison != null) {
+                ComparisonCondition otherComparison = parseComparison(other.getConditionExpression());
+                if (otherComparison != null && isOverlap(newComparison, otherComparison, newMutexGroup, other.getMutexGroup())) {
+                    conflicts.add(RuleConflict.builder()
+                            .type(RuleConflict.Type.CONDITION_OVERLAP)
+                            .level(RuleConflict.Level.WARN)
+                            .newRuleCode(newCode)
+                            .conflictingRuleCode(other.getCode())
+                            .description("条件范围与规则 " + other.getCode() + " 在变量 '"
+                                    + newComparison.variable + "' 上存在重叠（"
+                                    + newComparison.original + " vs " + otherComparison.original
+                                    + "），可能导致同一事实同时命中两条规则")
+                            .build());
+                }
+            }
         }
 
         return conflicts;
     }
 
     /**
-     * 规范化条件表达式（去空白、转小写），用于精确匹配
+     * 规范化条件表达式（1.5.0 增强）
+     *
+     * <p>归一化步骤：
+     * <ol>
+     *   <li>去除所有空白字符</li>
+     *   <li>统一逻辑运算符：and→&&、or→||、not→!</li>
+     *   <li>翻转反向比较：3 &lt; x → x &gt; 3、3 &gt; x → x &lt; 3</li>
+     *   <li>统一大小写</li>
+     * </ol>
      *
      * @param expression 原始表达式
-     * @return 规范化后的表达式；null 输入返回 null
+     * @return 归一化后的表达式；null 输入返回 null
      */
     private String normalize(String expression) {
         if (expression == null) {
             return null;
         }
-        // 去除所有空白字符后转小写，使 "a > 1" 与 "a>1" 视为相同
-        return expression.replaceAll("\\s+", "").toLowerCase();
+        String s = expression.replaceAll("\\s+", "");
+        // 统一逻辑运算符（大小写不敏感）
+        s = s.replaceAll("(?i)\\band\\b", "&&");
+        s = s.replaceAll("(?i)\\bor\\b", "||");
+        s = s.replaceAll("(?i)\\bnot\\b", "!");
+        // 翻转反向比较：number OP var → var FLIP_OP number
+        Matcher rm = REVERSE_COMPARISON_PATTERN.matcher(s);
+        if (rm.matches()) {
+            String number = rm.group(1);
+            String op = rm.group(2);
+            String var = rm.group(3);
+            s = var + flipOperator(op) + number;
+        }
+        return s.toLowerCase();
     }
 
     /**
-     * 提取规则的严重度标识（severityExpression 优先，否则 defaultSeverity）
+     * 翻转比较运算符（用于反向比较归一化）
      *
-     * @param def 规则定义
-     * @return 严重度标识字符串
+     * @param op 原始运算符
+     * @return 翻转后的运算符
+     */
+    private String flipOperator(String op) {
+        return switch (op) {
+            case ">" -> "<";
+            case "<" -> ">";
+            case ">=" -> "<=";
+            case "<=" -> ">=";
+            default -> op; // == 和 != 不翻转
+        };
+    }
+
+    /**
+     * 解析简单比较表达式为 ComparisonCondition
+     *
+     * <p>仅支持 {@code var OP number} 或 {@code number OP var} 形式，
+     * 复杂表达式（含 && / ||）返回 null。
+     *
+     * @param expression 条件表达式
+     * @return ComparisonCondition；无法解析返回 null
+     */
+    private ComparisonCondition parseComparison(String expression) {
+        if (expression == null || expression.isBlank()) return null;
+        String trimmed = expression.trim();
+        // 不支持复合条件
+        if (trimmed.contains("&&") || trimmed.contains("||")
+                || trimmed.toLowerCase().contains(" and ") || trimmed.toLowerCase().contains(" or ")) {
+            return null;
+        }
+        // 正向：var OP number
+        Matcher m = COMPARISON_PATTERN.matcher(trimmed);
+        if (m.matches()) {
+            return new ComparisonCondition(m.group(1), m.group(2), Double.parseDouble(m.group(3)), trimmed);
+        }
+        // 反向：number OP var → 翻转为 var FLIP_OP number
+        Matcher rm = REVERSE_COMPARISON_PATTERN.matcher(trimmed);
+        if (rm.matches()) {
+            String number = rm.group(1);
+            String op = rm.group(2);
+            String var = rm.group(3);
+            return new ComparisonCondition(var, flipOperator(op), Double.parseDouble(number), trimmed);
+        }
+        return null;
+    }
+
+    /**
+     * 判断两个比较条件在相同变量上的范围是否重叠
+     *
+     * <p>规则：
+     * <ul>
+     *   <li>变量不同 → 不重叠</li>
+     *   <li>同互斥组 → 不报重叠（互斥组保证短路）</li>
+     *   <li>相同变量 + 相同操作符 + 相同阈值 → 已由 IDENTICAL_CONDITION 覆盖，不重复报</li>
+     *   <li>相同变量 + 范围有交集 → 重叠</li>
+     * </ul>
+     *
+     * @param a 条件 A
+     * @param b 条件 B
+     * @param mutexA 规则 A 的互斥组
+     * @param mutexB 规则 B 的互斥组
+     * @return true 表示范围重叠
+     */
+    private boolean isOverlap(ComparisonCondition a, ComparisonCondition b, String mutexA, String mutexB) {
+        // 变量不同不重叠
+        if (!a.variable.equals(b.variable)) return false;
+        // 同互斥组不报重叠
+        if (mutexA != null && !mutexA.isBlank() && mutexA.equals(mutexB)) return false;
+        // 相同操作符+相同阈值视为等价（由 IDENTICAL_CONDITION 覆盖）
+        if (a.operator.equals(b.operator) && a.value == b.value) return false;
+        // 计算两个条件的命中范围是否有交集
+        // 范围用 [lower, upper] 表示，-∞/∞ 用 null 表示
+        double[] rangeA = toRange(a.operator, a.value);
+        double[] rangeB = toRange(b.operator, b.value);
+        // 交集判断：max(lower) <= min(upper)
+        double lower = Math.max(rangeA[0], rangeB[0]);
+        double upper = Math.min(rangeA[1], rangeB[1]);
+        return lower <= upper;
+    }
+
+    /**
+     * 将比较条件转换为数值范围 [lower, upper]
+     *
+     * @param op 比较运算符
+     * @param value 阈值
+     * @return [lower, upper]，-∞ 用 -Double.MAX_VALUE，+∞ 用 Double.MAX_VALUE
+     */
+    private double[] toRange(String op, double value) {
+        return switch (op) {
+            case ">" -> new double[]{value, Double.MAX_VALUE}; // (value, +∞)
+            case ">=" -> new double[]{value, Double.MAX_VALUE}; // [value, +∞)
+            case "<" -> new double[]{-Double.MAX_VALUE, value}; // (-∞, value)
+            case "<=" -> new double[]{-Double.MAX_VALUE, value}; // (-∞, value]
+            case "==", "!=" -> new double[]{value, value}; // 单点
+            default -> new double[]{-Double.MAX_VALUE, Double.MAX_VALUE}; // 全域
+        };
+    }
+
+    /**
+     * 提取规则的严重度标识
      */
     private String severityKey(RuleDefinition def) {
         if (def.getSeverityExpression() != null && !def.getSeverityExpression().isBlank()) {
@@ -151,5 +303,16 @@ public class RuleConflictDetector {
         }
         RuleSeverity severity = def.getDefaultSeverity();
         return severity != null ? "default:" + severity.getCode() : "default:YELLOW";
+    }
+
+    /**
+     * 简单比较条件（内部数据结构）
+     *
+     * @param variable 变量名
+     * @param operator 比较运算符（已归一化为正向）
+     * @param value 阈值
+     * @param original 原始表达式字符串
+     */
+    private record ComparisonCondition(String variable, String operator, double value, String original) {
     }
 }

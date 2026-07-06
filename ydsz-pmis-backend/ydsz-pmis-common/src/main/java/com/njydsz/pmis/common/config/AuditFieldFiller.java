@@ -54,6 +54,7 @@ public class AuditFieldFiller implements MetaObjectHandler {
         try {
             return SecurityContext.getUserId();
         } catch (Exception e) {
+            log.debug("[AuditFieldFiller] 当前线程无登录用户，审计字段使用默认值 0L: {}", e.getMessage());
             return 0L;
         }
     }

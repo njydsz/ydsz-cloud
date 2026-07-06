@@ -91,6 +91,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
             Integer v = obj.getInteger(key);
             return v == null || v <= 0 ? null : v;
         } catch (Exception e) {
+            log.warn("[FlowHistoryArchiveJobHandler] JSON 整数解析失败 key={}: {}", key, e.getMessage());
             return null;
         }
     }
@@ -103,6 +104,7 @@ public class FlowHistoryArchiveJobHandler implements JobHandler {
             Long v = obj.getLong(key);
             return v == null || v <= 0 ? null : v;
         } catch (Exception e) {
+            log.warn("[FlowHistoryArchiveJobHandler] JSON 长整数解析失败 key={}: {}", key, e.getMessage());
             return null;
         }
     }

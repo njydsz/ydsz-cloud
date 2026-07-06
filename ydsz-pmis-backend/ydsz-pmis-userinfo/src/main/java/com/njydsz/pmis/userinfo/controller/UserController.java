@@ -11,6 +11,7 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.userinfo.dto.PasswordChangeDTO;
 import com.njydsz.pmis.userinfo.dto.PasswordResetDTO;
+import com.njydsz.pmis.userinfo.dto.UserCreateDTO;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
 import com.njydsz.pmis.userinfo.service.UserAccountService;
@@ -110,13 +111,11 @@ public class UserController {
     @RateLimit(key = "register", qps = 3, windowSeconds = 60,
             message = "{validation.user.msg_7aa2293e}")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody Map<String, Object> body) {
-        String username = (String) body.get("username");
-        String password = (String) body.get("password");
-        Long employeeId = body.get("employeeId") == null ? null : Long.valueOf(body.get("employeeId").toString());
-        if (username == null || password == null) {
-            throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_c511ed00");
-        }
+    public Result<Long> create(@Valid @RequestBody UserCreateDTO dto) {
+        String username = dto.getUsername();
+        String password = dto.getPassword();
+        Long employeeId = dto.getEmployeeId();
+        // @NotBlank + @Size 已校验 username/password，移除手动校验
         UserAccountDO u = new UserAccountDO();
         u.setUsername(username);
         u.setEmployeeId(employeeId);

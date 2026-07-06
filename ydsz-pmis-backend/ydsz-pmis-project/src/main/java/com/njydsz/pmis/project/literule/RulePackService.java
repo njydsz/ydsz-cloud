@@ -311,6 +311,7 @@ public class RulePackService {
         try {
             return Integer.parseInt(s);
         } catch (NumberFormatException e) {
+            log.warn("[RulePackService] 整数解析失败 s={}: {}", s, e.getMessage());
             return 0;
         }
     }

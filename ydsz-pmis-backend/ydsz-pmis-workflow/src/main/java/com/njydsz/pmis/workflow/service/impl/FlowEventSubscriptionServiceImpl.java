@@ -205,6 +205,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
             Map<String, Object> ext = JsonHelper.fromJson(node.getExt());
             return ext != null && Boolean.TRUE.equals(ext.get("eventCatch"));
         } catch (Exception e) {
+            log.warn("[FlowEventSubscriptionServiceImpl] 节点 ext 解析失败，视为未配置事件捕获: {}", e.getMessage());
             return false;
         }
     }

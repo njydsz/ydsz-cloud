@@ -147,6 +147,7 @@ public class ImportServiceImpl implements ImportService {
             try {
                 return LocalDate.parse(value.trim(), f);
             } catch (Exception ignore) {
+                log.debug("[ImportServiceImpl] 日期格式尝试失败 value={} format={}: {}", value, f, ignore.getMessage());
             }
         }
         throw new BizException(400, field + " 日期格式错误: " + value + "，应为 yyyy-MM-dd 或 yyyy/MM/dd");

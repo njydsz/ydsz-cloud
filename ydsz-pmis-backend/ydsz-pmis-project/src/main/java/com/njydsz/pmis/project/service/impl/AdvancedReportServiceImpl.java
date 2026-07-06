@@ -1081,6 +1081,7 @@ public class AdvancedReportServiceImpl implements AdvancedReportService {
         try {
             return Long.parseLong(o.toString());
         } catch (Exception e) {
+            log.warn("[AdvancedReportServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
             return null;
         }
     }

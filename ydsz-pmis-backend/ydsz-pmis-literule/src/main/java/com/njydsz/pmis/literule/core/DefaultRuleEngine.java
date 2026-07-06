@@ -15,10 +15,12 @@ import jakarta.annotation.PreDestroy;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -114,6 +116,8 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
     @Override
     public List<RuleResult> evaluate(RuleContext context) {
         List<RuleResult> triggered = new ArrayList<>();
+        // 互斥组：记录本次评估中已命中的互斥组，同组后续规则跳过
+        Set<String> triggeredGroups = new HashSet<>();
         String scenario = context.getScenario();
         int evaluatedCount = 0;
         for (Rule rule : rules) {
@@ -121,6 +125,16 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             if (!shouldEvaluate(rule, scenario)) {
                 continue;
             }
+
+            // 互斥组短路：同组内已有规则命中，跳过评估
+            String mutexGroup = rule.getMutexGroup();
+            if (mutexGroup != null && !mutexGroup.isBlank() && triggeredGroups.contains(mutexGroup)) {
+                if (log.isDebugEnabled()) {
+                    log.debug("[LiteRule] 规则 {} 所属互斥组 {} 已命中，跳过评估", rule.getCode(), mutexGroup);
+                }
+                continue;
+            }
+
             evaluatedCount++;
 
             // 熔断检查：已被熔断的规则跳过评估
@@ -255,6 +269,10 @@ public class DefaultRuleEngine implements RuleEngine, StatsRecorder {
             }
             if (isTriggered) {
                 triggered.add(result);
+                // 互斥组：记录已命中的组，同组后续规则跳过评估
+                if (mutexGroup != null && !mutexGroup.isBlank()) {
+                    triggeredGroups.add(mutexGroup);
+                }
             }
         }
         // 按严重度倒序

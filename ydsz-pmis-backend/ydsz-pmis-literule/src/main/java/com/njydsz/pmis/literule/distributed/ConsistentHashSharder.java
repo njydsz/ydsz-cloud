@@ -1,5 +1,8 @@
 package com.njydsz.pmis.literule.distributed;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -32,6 +35,8 @@ import java.util.TreeMap;
  * @since 1.5.0
  */
 public class ConsistentHashSharder {
+
+    private static final Logger log = LoggerFactory.getLogger(ConsistentHashSharder.class);
 
     /** 默认虚拟节点数 */
     public static final int DEFAULT_VNODES = 150;
@@ -168,6 +173,7 @@ public class ConsistentHashSharder {
             return h & Long.MAX_VALUE;
         } catch (NoSuchAlgorithmException e) {
             // MD5 一定存在
+            log.warn("[ConsistentHashSharder] MD5 算法不可用，降级使用 hashCode key={}: {}", key, e.getMessage());
             return key.hashCode() & Long.MAX_VALUE;
         }
     }

@@ -90,6 +90,15 @@ public class RuleDefinition implements Serializable {
     /** 影响范围 */
     private String scope;
 
+    /**
+     * 互斥组名称
+     *
+     * <p>同组内首个命中的规则执行后，其余规则跳过评估。null 表示无互斥组。
+     *
+     * @since 1.5.0
+     */
+    private String mutexGroup;
+
     /** 是否可下钻 */
     @Builder.Default
     private boolean drilldownAvailable = true;

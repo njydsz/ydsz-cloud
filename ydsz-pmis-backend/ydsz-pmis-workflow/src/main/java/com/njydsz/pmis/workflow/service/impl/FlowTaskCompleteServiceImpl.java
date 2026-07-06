@@ -1394,6 +1394,7 @@ public class FlowTaskCompleteServiceImpl {
                 try {
                     levels = Integer.parseInt(levelStr);
                 } catch (NumberFormatException ignored) {
+                    log.debug("[FlowTaskCompleteServiceImpl] multi_leader 层级解析失败，使用默认 1 levelStr={}: {}", levelStr, ignored.getMessage());
                 }
                 Long startUserId = resolveInitiatorId(variables);
                 if (startUserId != null) {
@@ -1493,6 +1494,7 @@ public class FlowTaskCompleteServiceImpl {
         try {
             return Long.parseLong(String.valueOf(val));
         } catch (NumberFormatException e) {
+            log.warn("[FlowTaskCompleteServiceImpl] 发起人 ID 解析失败 val={}: {}", val, e.getMessage());
             return null;
         }
     }
@@ -1507,6 +1509,7 @@ public class FlowTaskCompleteServiceImpl {
                     return FlowPerformType.valueOf(pt);
                 }
             } catch (Exception ignored) {
+                log.debug("[FlowTaskCompleteServiceImpl] performType 解析失败，使用默认 OR nodeCode={}: {}", node.getNodeCode(), ignored.getMessage());
             }
         }
         return FlowPerformType.OR;
@@ -1580,6 +1583,7 @@ public class FlowTaskCompleteServiceImpl {
         try {
             return Long.parseLong(assigneeId);
         } catch (NumberFormatException e) {
+            log.warn("[FlowTaskCompleteServiceImpl] assignorId 解析失败 assigneeId={}: {}", assigneeId, e.getMessage());
             return null;
         }
     }
@@ -1645,6 +1649,7 @@ public class FlowTaskCompleteServiceImpl {
                             if (w < 1) w = 1;
                             result.put(key, w);
                         } catch (NumberFormatException ignored) {
+                            log.debug("[FlowTaskCompleteServiceImpl] 会签权重解析失败，跳过 key={} val={}: {}", key, val, ignored.getMessage());
                         }
                     }
                 }
@@ -1667,6 +1672,7 @@ public class FlowTaskCompleteServiceImpl {
         try {
             return new BigDecimal(String.valueOf(val));
         } catch (NumberFormatException e) {
+            log.warn("[FlowTaskCompleteServiceImpl] BigDecimal 转换失败 val={}: {}", val, e.getMessage());
             return null;
         }
     }

@@ -133,6 +133,7 @@ public final class JobRunRecorder {
             MDC.put(key, val);
             return true;
         } catch (Throwable t) {
+            log.warn("[JobRunRecorder] MDC.put 失败 key={} val={}: {}", key, val, t.getMessage(), t);
             return false;
         }
     }

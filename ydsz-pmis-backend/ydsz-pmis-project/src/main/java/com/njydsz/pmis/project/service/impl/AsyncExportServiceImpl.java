@@ -292,6 +292,7 @@ public class AsyncExportServiceImpl implements AsyncExportService {
         try {
             return Long.parseLong(v.toString());
         } catch (NumberFormatException e) {
+            log.warn("[AsyncExportServiceImpl] Long 解析失败 v={}: {}", v, e.getMessage());
             return null;
         }
     }

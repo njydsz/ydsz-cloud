@@ -418,6 +418,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             return Long.parseLong(String.valueOf(o));
         } catch (Exception e) {
+            log.warn("[CockpitReportServiceImpl] Long 解析失败，使用 0L 兜底 o={}: {}", o, e.getMessage());
             return 0L;
         }
     }
@@ -428,6 +429,7 @@ public class CockpitReportServiceImpl implements CockpitReportService {
         try {
             return Integer.parseInt(String.valueOf(o));
         } catch (Exception e) {
+            log.warn("[CockpitReportServiceImpl] Integer 解析失败，使用 0 兜底 o={}: {}", o, e.getMessage());
             return 0;
         }
     }

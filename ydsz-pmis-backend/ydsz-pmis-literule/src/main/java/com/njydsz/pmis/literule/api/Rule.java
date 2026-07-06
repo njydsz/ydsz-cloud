@@ -72,6 +72,22 @@ public interface Rule {
     }
 
     /**
+     * 互斥组（Mutex Group）
+     *
+     * <p>同一互斥组内，按优先级（priority 升序）遍历，首个命中的规则执行后，
+     * 同组其余规则跳过评估。null 表示该规则不归属任何互斥组。
+     *
+     * <p>典型场景：同一业务维度配置多条不同阈值的规则，仅希望最严重的那个生效。
+     * 例如：金额>1000（RED）与 金额>500（YELLOW）归属同一互斥组，避免重复告警。
+     *
+     * @return 互斥组名称；null 或空串表示无互斥组
+     * @since 1.5.0
+     */
+    default String getMutexGroup() {
+        return null;
+    }
+
+    /**
      * 评估规则
      *
      * @param context 规则上下文（事实数据）

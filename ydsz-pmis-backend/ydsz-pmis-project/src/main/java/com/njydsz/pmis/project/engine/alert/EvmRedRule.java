@@ -3,6 +3,8 @@ package com.njydsz.pmis.project.engine.alert;
 import com.njydsz.pmis.common.util.SnowflakeIdGenerator;
 import com.njydsz.pmis.project.dto.AlertEventDTO;
 import com.njydsz.pmis.project.enums.AlertSeverity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -16,6 +18,8 @@ import java.util.Map;
  * @since 1.0.0
  */
 public class EvmRedRule implements AlertRule {
+
+    private static final Logger log = LoggerFactory.getLogger(EvmRedRule.class);
 
     /** 缺省红色项目数阈值 */
     public static final int DEFAULT_THRESHOLD = 3;
@@ -101,6 +105,7 @@ public class EvmRedRule implements AlertRule {
         try {
             return Integer.parseInt(String.valueOf(o));
         } catch (Exception e) {
+            log.warn("[EvmRedRule] 整数解析失败，使用 0 兜底 o={}: {}", o, e.getMessage());
             return 0;
         }
     }

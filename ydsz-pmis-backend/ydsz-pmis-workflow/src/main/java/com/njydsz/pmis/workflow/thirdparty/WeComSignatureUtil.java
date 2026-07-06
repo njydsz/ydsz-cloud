@@ -1,5 +1,8 @@
 package com.njydsz.pmis.workflow.thirdparty;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
@@ -14,6 +17,8 @@ import java.util.Arrays;
  * @since 1.1.0
  */
 public final class WeComSignatureUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(WeComSignatureUtil.class);
 
     private static final String SHA_1 = "SHA-1";
 
@@ -47,6 +52,7 @@ public final class WeComSignatureUtil {
             String computed = toHexLower(digest);
             return constantTimeEquals(computed, signature.toLowerCase());
         } catch (Exception e) {
+            log.warn("[WeComSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
             return false;
         }
     }

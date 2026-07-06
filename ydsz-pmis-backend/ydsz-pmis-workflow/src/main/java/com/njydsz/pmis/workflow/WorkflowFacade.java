@@ -113,6 +113,11 @@ public interface WorkflowFacade {
     void countersignAfterTask(FlowTaskOperateDTO dto);
 
     /**
+     * GAP-P0-3: 并加签 — 与原审批人并行审批，所有人审完才推进
+     */
+    void countersignParallelTask(FlowTaskOperateDTO dto);
+
+    /**
      * 催办
      */
     List<String> urgeTask(Long instanceId, Long operatorId, String comment);
@@ -163,6 +168,17 @@ public interface WorkflowFacade {
      * @param comment 审批意见
      */
     void batchPassTasks(List<Long> taskIds, Long userId, String comment);
+
+    /**
+     * GAP-P0-4: 一键通过所有待办 — 查询当前用户全部待办（上限 100 条）并逐一通过。
+     *
+     * <p>对标钉钉/飞书审批中心"一键通过"按钮。内部委托 {@link #batchPassTasks} 保证原子性。
+     *
+     * @param userId  操作人 ID
+     * @param comment 审批意见（可选）
+     * @return 实际通过的任务数量
+     */
+    int passAllTodoTasks(Long userId, String comment);
 
     /**
      * P2-30: 审批轨迹时间线查询 — 合并历史任务 + 审计日志 + 当前待办为统一时间线

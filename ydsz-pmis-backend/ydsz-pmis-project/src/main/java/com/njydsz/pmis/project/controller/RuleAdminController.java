@@ -12,6 +12,20 @@ import com.njydsz.pmis.project.mapper.DecisionTableMapper;
 import com.njydsz.pmis.project.mapper.RuleTestCaseMapper;
 import com.njydsz.pmis.project.mapper.RuleExecutionTraceMapper;
 import com.njydsz.pmis.project.service.DecisionTableEvalService;
+import com.njydsz.pmis.project.dto.ExpressionValidateDTO;
+import com.njydsz.pmis.project.dto.RuleABTestDTO;
+import com.njydsz.pmis.project.dto.RuleAiGenerateDTO;
+import com.njydsz.pmis.project.dto.TestCaseBatchRunDTO;
+import com.njydsz.pmis.project.dto.RuleStatusChangeDTO;
+import com.njydsz.pmis.project.dto.RuleApproveDTO;
+import com.njydsz.pmis.project.dto.RuleRejectDTO;
+import com.njydsz.pmis.project.dto.RuleImportDTO;
+import com.njydsz.pmis.project.dto.RuleBatchToggleDTO;
+import com.njydsz.pmis.project.dto.RuleBatchPriorityDTO;
+import com.njydsz.pmis.project.dto.RuleBatchCategoryDTO;
+import com.njydsz.pmis.project.dto.RuleDependencyAddDTO;
+import com.njydsz.pmis.project.dto.RuleNL2RuleDTO;
+import jakarta.validation.Valid;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleEngineStats;
@@ -202,9 +216,9 @@ public class RuleAdminController {
      * @return 校验结果
      */
     @PostMapping("/validate-expression")
-    public Result<ExpressionValidationResult> validateExpression(@RequestBody Map<String, String> request) {
-        String expression = request.get("expression");
-        String type = request.getOrDefault("type", "condition");
+    public Result<ExpressionValidationResult> validateExpression(@Valid @RequestBody ExpressionValidateDTO dto) {
+        String expression = dto.getExpression();
+        String type = dto.getType() == null ? "condition" : dto.getType();
         ExpressionValidationResult result;
         switch (type) {
             case "severity":
@@ -244,26 +258,17 @@ public class RuleAdminController {
      */
     @PostMapping("/{ruleCode}/ab-test")
     public Result<ABTestService.ABTestReport> abTest(@PathVariable String ruleCode,
-                                                      @RequestBody Map<String, Object> request) {
+                                                      @Valid @RequestBody RuleABTestDTO dto) {
         RuleDefinition currentDef = ruleAdminService.getByCode(ruleCode);
         if (currentDef == null) {
             return Result.fail("规则不存在: " + ruleCode);
         }
 
-        @SuppressWarnings("unchecked")
-        Map<String, Object> candidateMap = (Map<String, Object>) request.get("candidate");
-        @SuppressWarnings("unchecked")
-        Map<String, Object> facts = (Map<String, Object>) request.get("facts");
-
-        if (candidateMap == null || facts == null) {
-            return Result.fail("请求体必须包含 candidate 和 facts 字段");
-        }
-
         // 构建候选规则定义（基于当前规则，覆盖候选字段）
-        RuleDefinition candidateDef = objectMapper.convertValue(candidateMap, RuleDefinition.class);
+        RuleDefinition candidateDef = dto.getCandidate();
         candidateDef.setCode(ruleCode);
 
-        return Result.ok(abTestService.test(currentDef, candidateDef, facts));
+        return Result.ok(abTestService.test(currentDef, candidateDef, dto.getFacts()));
     }
 
     /**
@@ -332,12 +337,10 @@ public class RuleAdminController {
      * @return 生成的规则定义
      */
     @PostMapping("/ai-generate")
-    public Result<RuleDefinition> aiGenerate(@RequestBody Map<String, Object> request) {
-        String description = (String) request.get("description");
-        @SuppressWarnings("unchecked")
-        List<String> fields = (List<String>) request.get("availableFields");
+    public Result<RuleDefinition> aiGenerate(@Valid @RequestBody RuleAiGenerateDTO dto) {
+        List<String> fields = dto.getAvailableFields();
         if (fields == null) fields = List.of();
-        return Result.ok(ruleGenerationService.generate(description, fields));
+        return Result.ok(ruleGenerationService.generate(dto.getDescription(), fields));
     }
 
     /**
@@ -348,13 +351,11 @@ public class RuleAdminController {
      * @return 保存后的规则定义
      */
     @PostMapping("/ai-generate-and-save")
-    public Result<RuleDefinition> aiGenerateAndSave(@RequestBody Map<String, Object> request,
+    public Result<RuleDefinition> aiGenerateAndSave(@Valid @RequestBody RuleAiGenerateDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        String description = (String) request.get("description");
-        @SuppressWarnings("unchecked")
-        List<String> fields = (List<String>) request.get("availableFields");
+        List<String> fields = dto.getAvailableFields();
         if (fields == null) fields = List.of();
-        return Result.ok(ruleGenerationService.generateAndSave(description, fields, operator));
+        return Result.ok(ruleGenerationService.generateAndSave(dto.getDescription(), fields, operator));
     }
 
     // ==================== 冲突检测 ====================
@@ -426,9 +427,8 @@ public class RuleAdminController {
      * @return 回归测试报告（含每个用例的 pass/fail + 通过率统计）
      */
     @PostMapping("/test-cases/batch-run")
-    public Result<Map<String, Object>> batchRunTestCases(@RequestBody Map<String, Object> request) {
-        @SuppressWarnings("unchecked")
-        List<Integer> ids = (List<Integer>) request.get("ids");
+    public Result<Map<String, Object>> batchRunTestCases(@Valid @RequestBody TestCaseBatchRunDTO dto) {
+        List<Long> ids = dto.getIds();
 
         List<RuleTestCaseDO> testCases;
         if (ids == null || ids.isEmpty()) {
@@ -436,7 +436,7 @@ public class RuleAdminController {
             testCases = ruleTestCaseMapper.selectList(null);
         } else {
             testCases = ids.stream()
-                .map(id -> ruleTestCaseMapper.selectById(id.longValue()))
+                .map(ruleTestCaseMapper::selectById)
                 .filter(java.util.Objects::nonNull)
                 .collect(java.util.stream.Collectors.toList());
         }
@@ -515,10 +515,10 @@ public class RuleAdminController {
      */
     @PutMapping("/{ruleCode}/status")
     public Result<RuleDefinition> changeStatus(@PathVariable String ruleCode,
-                                               @RequestBody Map<String, String> request,
+                                               @Valid @RequestBody RuleStatusChangeDTO dto,
                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        String targetStatus = request.get("targetStatus");
-        String comment = request.getOrDefault("comment", "");
+        String targetStatus = dto.getTargetStatus();
+        String comment = dto.getComment() == null ? "" : dto.getComment();
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         RuleStatus current = RuleStatus.valueOf(def.getStatus());
         RuleStatus target = RuleStatus.valueOf(targetStatus);
@@ -547,7 +547,7 @@ public class RuleAdminController {
      */
     @PostMapping("/{ruleCode}/approve")
     public Result<RuleDefinition> approve(@PathVariable String ruleCode,
-                                           @RequestBody Map<String, String> request,
+                                           @Valid @RequestBody RuleApproveDTO dto,
                                            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
@@ -559,7 +559,7 @@ public class RuleAdminController {
             return Result.fail("当前状态 " + current.getDesc() + " 不允许审批通过，仅 DRAFT/REVIEW 可审批");
         }
 
-        String comment = request.getOrDefault("comment", "");
+        String comment = dto.getComment() == null ? "" : dto.getComment();
 
         // 记录审批留痕
         def.setStatus(RuleStatus.PUBLISHED.name());
@@ -587,7 +587,7 @@ public class RuleAdminController {
      */
     @PostMapping("/{ruleCode}/reject")
     public Result<RuleDefinition> reject(@PathVariable String ruleCode,
-                                          @RequestBody Map<String, String> request,
+                                          @Valid @RequestBody RuleRejectDTO dto,
                                           @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
         RuleDefinition def = ruleAdminService.getByCode(ruleCode);
         if (def == null) {
@@ -599,10 +599,8 @@ public class RuleAdminController {
             return Result.fail("当前状态 " + current.getDesc() + " 不允许驳回，仅 DRAFT/REVIEW/PUBLISHED 可驳回");
         }
 
-        String reason = request.getOrDefault("reason", "");
-        if (reason.isBlank()) {
-            return Result.fail("驳回理由不能为空");
-        }
+        String reason = dto.getReason();
+        // @NotBlank 已校验非空，移除手动校验
 
         // 记录驳回留痕
         def.setStatus(RuleStatus.ARCHIVED.name());
@@ -834,10 +832,9 @@ public class RuleAdminController {
      * 导入规则（JSON 格式）
      */
     @PostMapping("/import")
-    public Result<Map<String, Object>> importRules(@RequestBody Map<String, Object> request,
+    public Result<Map<String, Object>> importRules(@Valid @RequestBody RuleImportDTO dto,
                                                     @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        @SuppressWarnings("unchecked")
-        List<Map<String, Object>> rules = (List<Map<String, Object>>) request.get("rules");
+        List<Map<String, Object>> rules = dto.getRules();
         if (rules == null || rules.isEmpty()) {
             return Result.ok(Map.of("imported", 0, "skipped", 0));
         }
@@ -909,17 +906,11 @@ public class RuleAdminController {
      * @return 成功与失败明细
      */
     @PostMapping("/batch-toggle")
-    public Result<Map<String, Object>> batchToggle(@RequestBody Map<String, Object> request,
+    public Result<Map<String, Object>> batchToggle(@Valid @RequestBody RuleBatchToggleDTO dto,
                                                    @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        @SuppressWarnings("unchecked")
-        List<String> ruleCodes = (List<String>) request.get("ruleCodes");
-        Boolean enabled = (Boolean) request.get("enabled");
-        if (ruleCodes == null || ruleCodes.isEmpty()) {
-            return Result.fail("ruleCodes 不能为空");
-        }
-        if (enabled == null) {
-            return Result.fail("enabled 不能为空");
-        }
+        List<String> ruleCodes = dto.getRuleCodes();
+        Boolean enabled = dto.getEnabled();
+        // @NotEmpty + @NotNull 已校验非空，移除手动校验
         int success = 0;
         List<String> failed = new java.util.ArrayList<>();
         for (String code : ruleCodes) {
@@ -954,16 +945,13 @@ public class RuleAdminController {
      * @return 成功与失败明细
      */
     @PostMapping("/batch-priority")
-    public Result<Map<String, Object>> batchPriority(@RequestBody Map<String, Object> request,
+    public Result<Map<String, Object>> batchPriority(@Valid @RequestBody RuleBatchPriorityDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        @SuppressWarnings("unchecked")
-        List<String> ruleCodes = (List<String>) request.get("ruleCodes");
-        Integer delta = (Integer) request.get("delta");
-        if (ruleCodes == null || ruleCodes.isEmpty()) {
-            return Result.fail("ruleCodes 不能为空");
-        }
-        if (delta == null || delta == 0) {
-            return Result.fail("delta 不能为空或 0");
+        List<String> ruleCodes = dto.getRuleCodes();
+        Integer delta = dto.getDelta();
+        // @NotEmpty + @NotNull 已校验非空；delta==0 需保留手动校验（JSR-303 无原生非零约束）
+        if (delta == 0) {
+            return Result.fail("delta 不能为 0");
         }
         int success = 0;
         List<String> failed = new java.util.ArrayList<>();
@@ -998,17 +986,11 @@ public class RuleAdminController {
      * @return 成功与失败明细
      */
     @PostMapping("/batch-category")
-    public Result<Map<String, Object>> batchCategory(@RequestBody Map<String, Object> request,
+    public Result<Map<String, Object>> batchCategory(@Valid @RequestBody RuleBatchCategoryDTO dto,
                                                       @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        @SuppressWarnings("unchecked")
-        List<String> ruleCodes = (List<String>) request.get("ruleCodes");
-        String category = (String) request.get("category");
-        if (ruleCodes == null || ruleCodes.isEmpty()) {
-            return Result.fail("ruleCodes 不能为空");
-        }
-        if (category == null || category.isBlank()) {
-            return Result.fail("category 不能为空");
-        }
+        List<String> ruleCodes = dto.getRuleCodes();
+        String category = dto.getCategory();
+        // @NotEmpty + @NotBlank 已校验非空，移除手动校验
         int success = 0;
         List<String> failed = new java.util.ArrayList<>();
         for (String code : ruleCodes) {
@@ -1129,12 +1111,12 @@ public class RuleAdminController {
     @PostMapping("/{ruleCode}/dependencies")
     public Result<RuleDependencyDO> addDependency(
             @PathVariable String ruleCode,
-            @RequestBody Map<String, Object> body,
+            @Valid @RequestBody RuleDependencyAddDTO dto,
             @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
-        String dependsOn = (String) body.get("dependsOnRuleCode");
-        String depType = (String) body.getOrDefault("dependencyType", "EXECUTE");
-        Boolean cascade = (Boolean) body.getOrDefault("cascadeOnDisable", false);
-        String description = (String) body.get("description");
+        String dependsOn = dto.getDependsOnRuleCode();
+        String depType = dto.getDependencyType() == null ? "EXECUTE" : dto.getDependencyType();
+        Boolean cascade = dto.getCascadeOnDisable() == null ? false : dto.getCascadeOnDisable();
+        String description = dto.getDescription();
         return Result.ok(ruleDependencyService.add(ruleCode, dependsOn, depType, cascade, description, operator));
     }
 
@@ -1383,12 +1365,12 @@ public class RuleAdminController {
      */
     @PostMapping("/ai/nl2rule")
     @Operation(summary = "AI 自然语言转规则（NL2Rule）", description = "调用 LLM 将自然语言描述转为结构化规则定义（含表达式、严重度、描述）；LLM 不可用时降级返回空壳定义")
-    public Result<RuleDefinition> naturalLanguageToRule(@RequestBody Map<String, String> body) {
+    public Result<RuleDefinition> naturalLanguageToRule(@Valid @RequestBody RuleNL2RuleDTO dto) {
         RuleLLMService svc = ruleLLMServiceProvider.getIfAvailable();
         if (svc == null) {
             return Result.fail("AI 增强未启用（pmis.literule.ai.enabled=false）");
         }
-        String text = body == null ? null : body.get("naturalLanguage");
+        String text = dto.getNaturalLanguage();
         return Result.ok(svc.naturalLanguageToRule(text));
     }
 

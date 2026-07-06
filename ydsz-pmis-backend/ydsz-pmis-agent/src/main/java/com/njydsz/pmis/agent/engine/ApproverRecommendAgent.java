@@ -231,6 +231,7 @@ public class ApproverRecommendAgent implements Agent {
         try {
             return Integer.parseInt(o.toString());
         } catch (Exception ignore) {
+            log.warn("[ApproverRecommendAgent] 整数解析失败，使用 0 兜底 o={}: {}", o, ignore.getMessage());
             return 0;
         }
     }
@@ -241,6 +242,7 @@ public class ApproverRecommendAgent implements Agent {
         try {
             return Long.parseLong(o.toString());
         } catch (Exception ignore) {
+            log.warn("[ApproverRecommendAgent] 长整数解析失败，使用 0L 兜底 o={}: {}", o, ignore.getMessage());
             return 0L;
         }
     }

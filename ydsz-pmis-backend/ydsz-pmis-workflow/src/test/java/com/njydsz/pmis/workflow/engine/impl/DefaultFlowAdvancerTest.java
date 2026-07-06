@@ -355,7 +355,7 @@ class DefaultFlowAdvancerTest {
         when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(target1);
         when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node3")).thenReturn(target2);
 
-        List<FlowNodeDO> result = advancer.advance(instance, "node5", "REJECT",
+        List<FlowNodeDO> result = advancer.advanceMulti(instance, "node5", "REJECT",
                 List.of("node1", "node3"), Collections.emptyMap());
 
         assertThat(result).hasSize(2);
@@ -373,7 +373,7 @@ class DefaultFlowAdvancerTest {
         when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node2")).thenReturn(currentNode);
         when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(target);
 
-        List<FlowNodeDO> result = advancer.advance(instance, "node2", "REJECT",
+        List<FlowNodeDO> result = advancer.advanceMulti(instance, "node2", "REJECT",
                 List.of("node1"), Collections.emptyMap());
 
         assertThat(result).hasSize(1);
@@ -395,7 +395,7 @@ class DefaultFlowAdvancerTest {
         when(flowDefinitionCacheService.getAllNodes(DEFINITION_ID)).thenReturn(List.of(currentNode, prevNode));
         when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(prevNode);
 
-        List<FlowNodeDO> result = advancer.advance(instance, "node2", "REJECT",
+        List<FlowNodeDO> result = advancer.advanceMulti(instance, "node2", "REJECT",
                 Collections.emptyList(), Collections.emptyMap());
 
         assertThat(result).hasSize(1);
@@ -410,7 +410,7 @@ class DefaultFlowAdvancerTest {
 
         when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node1")).thenReturn(target1);
 
-        List<FlowNodeDO> result = advancer.advance(instance, "node5", "REJECT",
+        List<FlowNodeDO> result = advancer.advanceMulti(instance, "node5", "REJECT",
                 List.of("node1", "node1", "node1"), Collections.emptyMap());
 
         assertThat(result).hasSize(1);
@@ -430,7 +430,7 @@ class DefaultFlowAdvancerTest {
         when(flowDefinitionCacheService.getNodeByCode(DEFINITION_ID, "node2")).thenReturn(nextNode);
 
         // skipType=PASS 时即便传了多节点列表，也应走 PASS 推进
-        List<FlowNodeDO> result = advancer.advance(instance, "node1", "PASS",
+        List<FlowNodeDO> result = advancer.advanceMulti(instance, "node1", "PASS",
                 List.of("node1", "node2"), Collections.emptyMap());
 
         assertThat(result).hasSize(1);

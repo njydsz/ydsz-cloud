@@ -156,6 +156,12 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         signService.countersignAfter(dto);
     }
 
+    /** GAP-P0-3: 并加签 — 委托给 signService */
+    @Override
+    public void countersignParallel(FlowTaskOperateDTO dto) {
+        signService.countersignParallel(dto);
+    }
+
     @Override
     public void countersignRemove(FlowTaskOperateDTO dto) {
         signService.countersignRemove(dto);

@@ -198,7 +198,9 @@ public class PaymentServiceImpl implements PaymentService {
                 try {
                     Long iid = Long.parseLong(idStr.trim());
                     invoiceAllocated.merge(iid, each, BigDecimal::add);
-                } catch (NumberFormatException ignore) { }
+                } catch (NumberFormatException ignore) {
+                    log.warn("[PaymentServiceImpl] 收款分摊 ID 解析失败，跳过 idStr={}: {}", idStr, ignore.getMessage());
+                }
             }
         }
 

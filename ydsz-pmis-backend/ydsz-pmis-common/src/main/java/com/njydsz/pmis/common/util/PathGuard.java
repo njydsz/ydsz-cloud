@@ -1,5 +1,8 @@
 package com.njydsz.pmis.common.util;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.LinkedHashSet;
@@ -24,6 +27,8 @@ import java.util.Set;
  * @since 1.0.0
  */
 public final class PathGuard {
+
+    private static final Logger log = LoggerFactory.getLogger(PathGuard.class);
 
     /** 需要剥离的内部头集合（防止客户端伪造） */
     public static final Set<String> INTERNAL_HEADERS = Set.of(
@@ -62,6 +67,7 @@ public final class PathGuard {
             }
             return nPath;
         } catch (URISyntaxException e) {
+            log.warn("[PathGuard] 路径规范化失败 rawPath={}: {}", collapsed, e.getMessage());
             return null;
         }
     }

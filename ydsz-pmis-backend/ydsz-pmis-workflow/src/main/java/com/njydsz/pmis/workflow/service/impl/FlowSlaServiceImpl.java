@@ -442,6 +442,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
         try {
             return Long.parseLong(s.trim());
         } catch (NumberFormatException e) {
+            log.warn("[FlowSlaServiceImpl] 用户 ID 解析失败 s={}: {}", s, e.getMessage());
             return null;
         }
     }

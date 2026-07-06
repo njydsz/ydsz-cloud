@@ -76,6 +76,7 @@ public class RedisRuleConfigBroadcaster implements RuleConfigBroadcaster {
             redissonClient.getTopic(TOPIC_NAME).countListeners();
             return true;
         } catch (Exception e) {
+            log.warn("[RedisRuleConfigBroadcaster] Redis 广播器不可用: {}", e.getMessage(), e);
             return false;
         }
     }

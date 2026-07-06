@@ -97,6 +97,7 @@ public class QLExpressExpressionEvaluator implements ExpressionEvaluator {
             runner.execute(expression, probeCtx, Collections.emptyList(), false, false);
             return true;
         } catch (Exception e) {
+            log.debug("[QLExpressExpressionEvaluator] 表达式校验失败 expr={}: {}", expression, e.getMessage());
             return false;
         }
     }

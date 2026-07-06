@@ -52,6 +52,9 @@ public class ExpressionRule implements Rule {
     @Override
     public String getScope() { return definition.getScope(); }
 
+    @Override
+    public String getMutexGroup() { return definition.getMutexGroup(); }
+
     /**
      * 暴露规则定义（用于灰度路由 / Trace 记录 / 监控指标）
      *

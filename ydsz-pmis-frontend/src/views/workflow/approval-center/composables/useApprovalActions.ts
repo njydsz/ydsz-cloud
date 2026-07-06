@@ -30,6 +30,7 @@ import {
   communicateTask,
   countersignBefore,
   countersignAfter,
+  countersignParallel,
   countersignRemove,
   batchPass,
 } from '@/api/workflow'
@@ -53,6 +54,7 @@ export type ApprovalActionType =
   | 'ADD_APPROVER'
   | 'COUNTERSIGN_BEFORE'
   | 'COUNTERSIGN_AFTER'
+  | 'COUNTERSIGN_PARALLEL'
   | 'COUNTERSIGN_REMOVE'
   | 'MARK_READ'
   | 'COMMUNICATE'
@@ -276,6 +278,20 @@ class CountersignAfterAction extends BaseAction {
   }
 }
 
+/** GAP-P0-3: 并加签 — 与原审批人并行审批，所有人审完才推进 */
+class CountersignParallelAction extends BaseAction {
+  readonly type = 'COUNTERSIGN_PARALLEL' as const
+  readonly title = 'workflow.approval.actions.countersignParallelTitle'
+  override readonly needComment = true
+  override readonly needTargetUser = true
+  override readonly targetUserLabel = 'workflow.approval.actions.countersignParallelLabel'
+  override readonly targetUserDialogTitle = 'workflow.approval.actions.countersignParallelDialogTitle'
+  override readonly commentPlaceholder = 'workflow.approval.actions.countersignParallelPlaceholder'
+  protected call(ctx: ApprovalActionContext) {
+    return countersignParallel(this.toDto(ctx))
+  }
+}
+
 /** 减签 */
 class CountersignRemoveAction extends BaseAction {
   readonly type = 'COUNTERSIGN_REMOVE' as const
@@ -324,6 +340,7 @@ export const actionMap: Record<ApprovalActionType, ApprovalAction> = {
   ADD_APPROVER: markRaw(new AddApproverAction()),
   COUNTERSIGN_BEFORE: markRaw(new CountersignBeforeAction()),
   COUNTERSIGN_AFTER: markRaw(new CountersignAfterAction()),
+  COUNTERSIGN_PARALLEL: markRaw(new CountersignParallelAction()),
   COUNTERSIGN_REMOVE: markRaw(new CountersignRemoveAction()),
   MARK_READ: markRaw(new MarkReadAction()),
   COMMUNICATE: markRaw(new CommunicateAction()),

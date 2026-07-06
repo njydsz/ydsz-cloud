@@ -52,15 +52,36 @@ import java.util.Map;
 public class LiteRuleAutoConfiguration {
 
     /**
-     * 表达式求值器（Aviator）
+     * 表达式求值器
      *
-     * @return AviatorExpressionEvaluator 实例
+     * <p>根据 {@code pmis.literule.evaluator} 配置选择实现：
+     * <ul>
+     *   <li>{@code aviator}（默认）- {@link AviatorExpressionEvaluator}，高性能、AST 缓存</li>
+     *   <li>{@code qlexpress} - {@link com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator}，
+     *       阿里 QLExpress，语法接近 Java，支持流程控制</li>
+     * </ul>
+     *
+     * @param properties 配置属性
+     * @return ExpressionEvaluator 实例
      */
     @Bean
     @ConditionalOnMissingBean
     public ExpressionEvaluator expressionEvaluator(LiteRuleProperties properties) {
-        log.info("[LiteRule] Aviator 表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
-        return new AviatorExpressionEvaluator(properties.isSandboxEnabled());
+        String type = properties.getEvaluator() == null ? "aviator" : properties.getEvaluator().trim().toLowerCase();
+        switch (type) {
+            case "qlexpress" -> {
+                log.info("[LiteRule] QLExpress 表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
+                return new com.njydsz.pmis.literule.expr.QLExpressExpressionEvaluator();
+            }
+            case "aviator" -> {
+                log.info("[LiteRule] Aviator 表达式求值器已初始化（sandbox={}）", properties.isSandboxEnabled());
+                return new AviatorExpressionEvaluator(properties.isSandboxEnabled());
+            }
+            default -> {
+                log.warn("[LiteRule] 未知表达式引擎类型: {}，回退到 Aviator", properties.getEvaluator());
+                return new AviatorExpressionEvaluator(properties.isSandboxEnabled());
+            }
+        }
     }
 
     /**
@@ -134,7 +155,7 @@ public class LiteRuleAutoConfiguration {
         if (properties.isCanaryEnabled()) {
             ExpressionEvaluator evaluator = evaluatorProvider.getIfAvailable();
             if (evaluator == null) {
-                evaluator = new AviatorExpressionEvaluator(properties.isSandboxEnabled());
+                evaluator = expressionEvaluator(properties);
             }
             RuleCanaryRouter canaryRouter = new RuleCanaryRouter(evaluator);
             engine.setCanaryRouter(canaryRouter);

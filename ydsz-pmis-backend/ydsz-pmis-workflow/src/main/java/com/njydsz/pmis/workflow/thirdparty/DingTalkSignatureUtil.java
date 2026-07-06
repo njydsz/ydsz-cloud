@@ -1,5 +1,8 @@
 package com.njydsz.pmis.workflow.thirdparty;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
@@ -16,6 +19,8 @@ import java.util.Base64;
  * @since 1.1.0
  */
 public final class DingTalkSignatureUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(DingTalkSignatureUtil.class);
 
     private static final String HMAC_SHA256 = "HmacSHA256";
 
@@ -45,6 +50,7 @@ public final class DingTalkSignatureUtil {
             String computed = Base64.getEncoder().encodeToString(signData);
             return constantTimeEquals(computed, signature);
         } catch (Exception e) {
+            log.warn("[DingTalkSignatureUtil] 签名验证异常 timestamp={}: {}", timestamp, e.getMessage(), e);
             return false;
         }
     }

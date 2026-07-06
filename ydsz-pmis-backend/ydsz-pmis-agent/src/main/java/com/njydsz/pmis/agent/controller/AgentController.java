@@ -2,6 +2,7 @@ package com.njydsz.pmis.agent.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.agent.dto.AgentRunRequestDTO;
+import com.njydsz.pmis.agent.dto.AgentInternalExecuteDTO;
 import com.njydsz.pmis.agent.engine.AgentContext;
 import com.njydsz.pmis.agent.engine.AgentResult;
 import com.njydsz.pmis.agent.entity.AgentPredictionDO;
@@ -223,21 +224,13 @@ public class AgentController {
      */
     @Operation(summary = "[内部] 同步执行 Agent（Feign 入口）")
     @PostMapping("/internal/execute")
-    public Result<Map<String, Object>> internalExecute(@RequestBody Map<String, Object> body) {
-        if (body == null) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "请求体不能为空");
-        }
-        String agentType = body.get("agentType") == null ? null : body.get("agentType").toString();
-        if (agentType == null) {
-            return Result.failed(BizErrorCode.BAD_REQUEST, "agentType 必填");
-        }
-        String bizType = body.get("bizType") == null ? "INTERNAL" : body.get("bizType").toString();
-        Long bizId = body.get("bizId") instanceof Number n ? n.longValue() : 0L;
-        String bizRef = body.get("bizRef") == null ? "" : body.get("bizRef").toString();
-        @SuppressWarnings("unchecked")
-        Map<String, Object> params = body.get("params") instanceof Map<?, ?>
-                ? (Map<String, Object>) body.get("params")
-                : Map.of();
+    public Result<Map<String, Object>> internalExecute(@Valid @RequestBody AgentInternalExecuteDTO dto) {
+        // @NotBlank 已校验 agentType 非空，移除手动校验
+        String agentType = dto.getAgentType();
+        String bizType = dto.getBizType() == null ? "INTERNAL" : dto.getBizType();
+        Long bizId = dto.getBizId() == null ? 0L : dto.getBizId();
+        String bizRef = dto.getBizRef() == null ? "" : dto.getBizRef();
+        Map<String, Object> params = dto.getParams() == null ? Map.of() : dto.getParams();
 
         AgentContext ctx = new AgentContext();
         ctx.setBizType(bizType);

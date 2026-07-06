@@ -383,6 +383,7 @@ public class DmnEngine {
         try {
             return Double.parseDouble(stripped);
         } catch (NumberFormatException e) {
+            log.warn("[DmnEngine] Double 解析失败 s={}: {}", s, e.getMessage());
             return null;
         }
     }

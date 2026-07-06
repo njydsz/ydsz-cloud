@@ -1,5 +1,7 @@
 package com.njydsz.pmis.common.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.EnvironmentPostProcessor;
 import org.springframework.core.env.ConfigurableEnvironment;
@@ -33,6 +35,8 @@ import java.util.Map;
  */
 public class DruidMonitorEnabler implements EnvironmentPostProcessor {
 
+    private static final Logger log = LoggerFactory.getLogger(DruidMonitorEnabler.class);
+
     /** 默认慢 SQL 阈值（毫秒），与 PostgreSQL log_min_duration_statement=500ms 对齐（取 1000ms 平衡噪音与可视性） */
     public static final String SLOW_SQL_MILLIS_DEFAULT = "1000";
 
@@ -61,6 +65,7 @@ public class DruidMonitorEnabler implements EnvironmentPostProcessor {
             Class.forName(DRUID_DATASOURCE_CLASS);
             return true;
         } catch (ClassNotFoundException e) {
+            log.debug("[DruidMonitorEnabler] classpath 未找到 Druid，跳过监控默认配置: {}", e.getMessage());
             return false;
         }
     }

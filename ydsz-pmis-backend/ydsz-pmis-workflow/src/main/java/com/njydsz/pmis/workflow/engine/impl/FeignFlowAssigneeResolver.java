@@ -341,6 +341,7 @@ public class FeignFlowAssigneeResolver implements FlowAssigneeResolver {
         try {
             return Long.parseLong(String.valueOf(initiator));
         } catch (NumberFormatException e) {
+            log.warn("[FeignFlowAssigneeResolver] 发起人 ID 解析失败 initiator={}: {}", initiator, e.getMessage());
             return null;
         }
     }

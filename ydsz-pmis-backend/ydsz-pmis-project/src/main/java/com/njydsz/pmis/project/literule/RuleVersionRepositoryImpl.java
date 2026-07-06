@@ -79,6 +79,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
         existing.setDescriptionTemplate(restored.getDescriptionTemplate());
         existing.setPriority(restored.getPriority());
         existing.setScope(restored.getScope());
+        existing.setMutexGroup(restored.getMutexGroup());
         existing.setVersion(existing.getVersion() + 1);
         existing.setUpdatedBy(operator);
         existing.setUpdatedAt(LocalDateTime.now());
@@ -97,6 +98,7 @@ public class RuleVersionRepositoryImpl implements RuleVersionRepository {
                 .priority(existing.getPriority())
                 .enabled(Boolean.TRUE.equals(existing.getEnabled()))
                 .scope(existing.getScope())
+                .mutexGroup(existing.getMutexGroup())
                 .drilldownAvailable(Boolean.TRUE.equals(existing.getDrilldownAvailable()))
                 .version(existing.getVersion())
                 .build();

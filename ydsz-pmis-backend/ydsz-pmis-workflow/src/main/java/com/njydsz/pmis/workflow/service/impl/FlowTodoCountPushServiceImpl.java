@@ -155,6 +155,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
         try {
             return Long.parseLong(s.trim());
         } catch (NumberFormatException e) {
+            log.warn("[FlowTodoCountPushServiceImpl] 用户 ID 解析失败 s={}: {}", s, e.getMessage());
             return null;
         }
     }

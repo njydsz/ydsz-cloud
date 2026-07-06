@@ -69,6 +69,8 @@ public class FlowTaskSignServiceImpl {
             fu.setUserId(String.valueOf(dto.getTargetUserId()));
             fu.setUserName(dto.getTargetUserName());
             fu.setProcessed(0);
+            fu.setWeight(1);
+            fu.setSignType("BEFORE");
             fu.setTenantId(task.getTenantId());
             fu.setProviderTraceId(task.getProviderTraceId());
             userMapper.insert(fu);
@@ -111,6 +113,8 @@ public class FlowTaskSignServiceImpl {
             fu.setUserId(String.valueOf(dto.getTargetUserId()));
             fu.setUserName(dto.getTargetUserName());
             fu.setProcessed(0);
+            fu.setWeight(1);
+            fu.setSignType("AFTER");
             fu.setTenantId(task.getTenantId());
             fu.setProviderTraceId(task.getProviderTraceId());
             userMapper.insert(fu);
@@ -126,6 +130,52 @@ public class FlowTaskSignServiceImpl {
         support.fireEvent(l -> l.onTaskCountersigned(task.getId(), dto.getTargetUserId(), "AFTER"),
                 task.getId());
         // P2-35: 发布 Spring 异步事件
+        support.publishWorkflowEvent("TASK_COUNTERSIGNED", task.getInstanceId(), task.getId());
+    }
+
+    /**
+     * GAP-P0-3: 并加签 — 动态追加审批人与原审批人并行审批，所有人审完后才推进。
+     *
+     * <p>对标钉钉/飞书"并加签"。实现方式：
+     * <ol>
+     *   <li>向 pmis_flow_user 插入新审批人（signType=PARALLEL，processed=0）</li>
+     *   <li>approveCount +1</li>
+     *   <li>强制切换 performType 为 PARALLEL —— 确保所有人全部通过才推进</li>
+     * </ol>
+     * 与后加签（SEQUENTIAL 顺序）不同，并加签的加签人与原审批人<b>同时</b>收到待办，
+     * 互不阻塞，全部审完后才推进到下一节点。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void countersignParallel(FlowTaskOperateDTO dto) {
+        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
+        }
+        if (dto.getTargetUserId() == null) {
+            throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_2deb2e4f");
+        }
+        FlowUserDO fu = new FlowUserDO();
+        fu.setTaskId(task.getId());
+        fu.setInstanceId(task.getInstanceId());
+        fu.setNodeCode(task.getNodeCode());
+        fu.setUserType(FlowAssigneeType.USER.name());
+        fu.setUserId(String.valueOf(dto.getTargetUserId()));
+        fu.setUserName(dto.getTargetUserName());
+        fu.setProcessed(0);
+        fu.setWeight(1);
+        fu.setSignType("PARALLEL");
+        fu.setTenantId(task.getTenantId());
+        fu.setProviderTraceId(task.getProviderTraceId());
+        userMapper.insert(fu);
+        // 强制切换为并行会签：加签人与原审批人并行审批，所有人全部通过才推进
+        task.setPerformType(FlowPerformType.PARALLEL.name());
+        task.setApproveCount((task.getApproveCount() == null ? 0 : task.getApproveCount()) + 1);
+        taskMapper.updateById(task);
+        support.audit(task, "COUNTERSIGN_PARALLEL", dto.getUserId(), dto.getTargetUserId(), dto.getComment());
+        log.info("[Flow] 并加签: taskId={} → 新增审批人={} (切换为并行会签)",
+                task.getId(), dto.getTargetUserId());
+        support.fireEvent(l -> l.onTaskCountersigned(task.getId(), dto.getTargetUserId(), "PARALLEL"),
+                task.getId());
         support.publishWorkflowEvent("TASK_COUNTERSIGNED", task.getInstanceId(), task.getId());
     }
 
@@ -241,9 +291,16 @@ public class FlowTaskSignServiceImpl {
         // 向 pmis_flow_user 插入新审批人
         FlowUserDO fu = new FlowUserDO();
         fu.setTaskId(task.getId());
+        fu.setInstanceId(task.getInstanceId());
+        fu.setNodeCode(task.getNodeCode());
+        fu.setUserType(FlowAssigneeType.USER.name());
         fu.setUserId(String.valueOf(dto.getTargetUserId()));
+        fu.setUserName(dto.getTargetUserName());
         fu.setProcessed(0);
         fu.setWeight(1); // 默认权重 1
+        fu.setSignType("ADD");
+        fu.setTenantId(task.getTenantId());
+        fu.setProviderTraceId(task.getProviderTraceId());
         userMapper.insert(fu);
         // approveCount +1
         int currentCount = task.getApproveCount() == null ? 1 : task.getApproveCount();

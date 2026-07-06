@@ -1,5 +1,8 @@
 package com.njydsz.pmis.project.enums;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * 门径评审点 (CDCP - Critical Decision Checkpoint)
  *
@@ -17,6 +20,8 @@ package com.njydsz.pmis.project.enums;
 public enum GateCode {
     CD1, CD2, CD3, CD4, CD5;
 
+    private static final Logger log = LoggerFactory.getLogger(GateCode.class);
+
     /**
      * 根据状态码解析枚举。
      *
@@ -28,6 +33,7 @@ public enum GateCode {
         try {
             return GateCode.valueOf(code.trim().toUpperCase());
         } catch (Exception e) {
+            log.warn("[GateCode] 枚举解析失败 code={}: {}", code, e.getMessage());
             return null;
         }
     }

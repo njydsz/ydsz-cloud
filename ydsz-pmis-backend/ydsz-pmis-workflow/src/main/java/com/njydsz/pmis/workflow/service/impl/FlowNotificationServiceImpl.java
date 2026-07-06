@@ -380,6 +380,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
         try {
             return Long.parseLong(o.toString().trim());
         } catch (NumberFormatException e) {
+            log.warn("[FlowNotificationServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
             return null;
         }
     }
