@@ -5,9 +5,9 @@ import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
-import com.njydsz.pmis.workflow.entity.EventOutboxDO;
-import com.njydsz.pmis.workflow.mapper.EventOutboxMapper;
-import com.njydsz.pmis.workflow.service.FlowEventOutboxService;
+import com.njydsz.pmis.workflow.entity.FlowNotifyOutboxDO;
+import com.njydsz.pmis.workflow.mapper.FlowNotifyOutboxMapper;
+import com.njydsz.pmis.workflow.service.FlowNotifyOutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,9 +19,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 事件 Outbox 服务实现（P2-1 阶段一）
+ * 工作流通知外发箱服务实现（P2-1 阶段一）
  *
- * <p>本地消息表 + 定时扫描重投，保证业务事务与消息投递的最终一致性。
+ * <p>本地消息表 + 定时扫描重投，保证业务事务与通知投递的最终一致性。
  * 阶段一不接 MQ，直接同步调 NotificationClient Feign 重投；
  * 阶段二将切换为 RocketMQ 投递（消费端 MessageConsumer 已就绪）。
  *
@@ -31,7 +31,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
+public class FlowNotifyOutboxServiceImpl implements FlowNotifyOutboxService {
 
     /** 默认最大重试次数 */
     private static final int DEFAULT_MAX_RETRIES = 5;
@@ -44,7 +44,7 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
 
     /** 通知中心 Feign 客户端（注入失败时由 fallback 返回错误码） */
     private final NotificationClient notificationClient;
-    private final EventOutboxMapper eventOutboxMapper;
+    private final FlowNotifyOutboxMapper flowNotifyOutboxMapper;
 
     /**
      * 写入 outbox（在主事务内同步执行，事务回滚则 outbox 也回滚）
@@ -52,7 +52,7 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
      * <p>不使用 @Transactional，继承调用方事务上下文。
      */
     @Override
-    public Long saveOutbox(EventOutboxDO event) {
+    public Long saveOutbox(FlowNotifyOutboxDO event) {
         if (event == null) {
             return null;
         }
@@ -71,8 +71,8 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
         if (event.getTenantId() == null) {
             event.setTenantId(TenantContext.getTenantId());
         }
-        eventOutboxMapper.insert(event);
-        log.debug("[Outbox] 事件入箱: id={} type={} bizType={} bizId={}",
+        flowNotifyOutboxMapper.insert(event);
+        log.debug("[NotifyOutbox] 事件入箱: id={} type={} bizType={} bizId={}",
                 event.getId(), event.getEventType(), event.getBizType(), event.getBizId());
         return event.getId();
     }
@@ -88,17 +88,17 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
     public int scanAndDeliver(int batchSize) {
         int effectiveBatch = batchSize <= 0 ? DEFAULT_BATCH_SIZE : batchSize;
         LocalDateTime now = LocalDateTime.now();
-        List<EventOutboxDO> pending = eventOutboxMapper.selectPendingForSend(now, effectiveBatch);
+        List<FlowNotifyOutboxDO> pending = flowNotifyOutboxMapper.selectPendingForSend(now, effectiveBatch);
         if (pending == null || pending.isEmpty()) {
             return 0;
         }
-        log.info("[Outbox] 扫描到 {} 条待投递事件", pending.size());
+        log.info("[NotifyOutbox] 扫描到 {} 条待投递事件", pending.size());
         int successCount = 0;
-        for (EventOutboxDO event : pending) {
+        for (FlowNotifyOutboxDO event : pending) {
             try {
                 boolean ok = deliverOne(event);
                 if (ok) {
-                    eventOutboxMapper.markSent(event.getId(), LocalDateTime.now());
+                    flowNotifyOutboxMapper.markSent(event.getId(), LocalDateTime.now());
                     successCount++;
                 } else {
                     handleFailure(event, "投递返回失败码");
@@ -107,18 +107,18 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
                 handleFailure(event, truncate(e.getMessage(), 1000));
             }
         }
-        log.info("[Outbox] 本轮投递完成: 成功 {} / 总 {} 条", successCount, pending.size());
+        log.info("[NotifyOutbox] 本轮投递完成: 成功 {} / 总 {} 条", successCount, pending.size());
         return successCount;
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<EventOutboxDO> listDeadEvents(int limit) {
+    public List<FlowNotifyOutboxDO> listDeadEvents(int limit) {
         int effectiveLimit = limit <= 0 ? 50 : limit;
-        return eventOutboxMapper.selectList(
-                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<EventOutboxDO>()
-                        .eq(EventOutboxDO::getStatus, "DEAD")
-                        .orderByDesc(EventOutboxDO::getCreatedAt)
+        return flowNotifyOutboxMapper.selectList(
+                new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowNotifyOutboxDO>()
+                        .eq(FlowNotifyOutboxDO::getStatus, "DEAD")
+                        .orderByDesc(FlowNotifyOutboxDO::getCreatedAt)
                         .last("LIMIT " + effectiveLimit));
     }
 
@@ -128,7 +128,7 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
         if (id == null) {
             return false;
         }
-        EventOutboxDO event = eventOutboxMapper.selectById(id);
+        FlowNotifyOutboxDO event = flowNotifyOutboxMapper.selectById(id);
         if (event == null || !"DEAD".equals(event.getStatus())) {
             return false;
         }
@@ -136,8 +136,8 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
         event.setRetryCount(0);
         event.setErrorMsg(null);
         event.setNextRetryAt(LocalDateTime.now());
-        eventOutboxMapper.updateById(event);
-        log.info("[Outbox] 死信事件人工重投: id={} type={}", id, event.getEventType());
+        flowNotifyOutboxMapper.updateById(event);
+        log.info("[NotifyOutbox] 死信事件人工重投: id={} type={}", id, event.getEventType());
         return true;
     }
 
@@ -152,23 +152,23 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
      * @param event 事件
      * @return true 表示投递成功
      */
-    private boolean deliverOne(EventOutboxDO event) {
+    private boolean deliverOne(FlowNotifyOutboxDO event) {
         try {
             NotificationFeignDTO dto = buildNotificationDTO(event);
             Result<Integer> resp = notificationClient.send(dto);
             if (resp == null) {
-                log.warn("[Outbox] 投递响应为空: id={}", event.getId());
+                log.warn("[NotifyOutbox] 投递响应为空: id={}", event.getId());
                 return false;
             }
             if (resp.getCode() != Result.CODE_SUCCESS) {
-                log.warn("[Outbox] 投递返回失败码: id={} code={} msg={}",
+                log.warn("[NotifyOutbox] 投递返回失败码: id={} code={} msg={}",
                         event.getId(), resp.getCode(), resp.getMessage());
                 return false;
             }
-            log.debug("[Outbox] 投递成功: id={} type={}", event.getId(), event.getEventType());
+            log.debug("[NotifyOutbox] 投递成功: id={} type={}", event.getId(), event.getEventType());
             return true;
         } catch (Exception e) {
-            log.warn("[Outbox] 投递异常: id={} err={}", event.getId(), e.getMessage());
+            log.warn("[NotifyOutbox] 投递异常: id={} err={}", event.getId(), e.getMessage());
             throw new RuntimeException("投递异常: " + e.getMessage(), e);
         }
     }
@@ -176,17 +176,17 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
     /**
      * 处理投递失败：增加重试计数，超阈值标 DEAD
      */
-    private void handleFailure(EventOutboxDO event, String errorMsg) {
+    private void handleFailure(FlowNotifyOutboxDO event, String errorMsg) {
         int newRetryCount = (event.getRetryCount() == null ? 0 : event.getRetryCount()) + 1;
         int maxRetries = event.getMaxRetries() == null ? DEFAULT_MAX_RETRIES : event.getMaxRetries();
         if (newRetryCount >= maxRetries) {
-            eventOutboxMapper.markDead(event.getId(), truncate(errorMsg, 1000));
-            log.warn("[Outbox] 事件转入死信: id={} type={} retries={}",
+            flowNotifyOutboxMapper.markDead(event.getId(), truncate(errorMsg, 1000));
+            log.warn("[NotifyOutbox] 事件转入死信: id={} type={} retries={}",
                     event.getId(), event.getEventType(), newRetryCount);
         } else {
             LocalDateTime nextRetry = LocalDateTime.now().plusSeconds(calcBackoff(newRetryCount));
-            eventOutboxMapper.markRetry(event.getId(), truncate(errorMsg, 1000), nextRetry);
-            log.debug("[Outbox] 事件投递失败，等待下次重试: id={} retries={} nextRetry={}",
+            flowNotifyOutboxMapper.markRetry(event.getId(), truncate(errorMsg, 1000), nextRetry);
+            log.debug("[NotifyOutbox] 事件投递失败，等待下次重试: id={} retries={} nextRetry={}",
                     event.getId(), newRetryCount, nextRetry);
         }
     }
@@ -194,7 +194,7 @@ public class FlowEventOutboxServiceImpl implements FlowEventOutboxService {
     /**
      * 构造通知中心 send 接口的 DTO
      */
-    private NotificationFeignDTO buildNotificationDTO(EventOutboxDO event) {
+    private NotificationFeignDTO buildNotificationDTO(FlowNotifyOutboxDO event) {
         NotificationFeignDTO dto = new NotificationFeignDTO();
         dto.setTitle(event.getEventType());
         dto.setContent(event.getPayload());

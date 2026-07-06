@@ -6,13 +6,13 @@ import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowNotificationService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +28,7 @@ import java.util.Map;
 /**
  * GAP-P1: SLA 超时自动化任务处理器
  *
- * <p>定时扫描 pmis_flow_task 中已超期（due_at &lt; now）且状态为 PENDING/CLAIMED 的待办任务，
+ * <p>定时扫描 pmis_flow_run_task 中已超期（due_at &lt; now）且状态为 PENDING/CLAIMED 的待办任务，
  * 根据节点 sla_config 配置的 action 执行自动化处理：
  * <ul>
  *   <li>REMIND —— 发送催办通知（站内信+邮件，调用 notificationService.notifySlaTimeout）</li>
@@ -44,8 +44,8 @@ import java.util.Map;
  * <p>Bean 名称 = {@code flowTimeoutJobHandler}，
  * 可在 pmis_job 表配置：handler=flowTimeoutJobHandler, cron="0 0/5 * * * ?"（每 5 分钟扫描一次）。
  *
- * <p>说明：FlowTaskMapper 暂无 {@code timeoutTask} 专用方法，
- * 此处复用 {@link FlowTaskMapper#completeTask} 以 {@link FlowTaskStatus#TIMEOUT} 状态标记超时，
+ * <p>说明：FlowRunTaskMapper 暂无 {@code timeoutTask} 专用方法，
+ * 此处复用 {@link FlowRunTaskMapper#completeTask} 以 {@link FlowTaskStatus#TIMEOUT} 状态标记超时，
  * 与 {@code FlowTaskServiceImpl.timeoutTask} 内部实现保持一致。
  *
  * <p>增强：添加子流程超时检测逻辑，扫描 pmis_flow_instance 中 due_at 已超期且状态为 RUNNING 的子流程实例，
@@ -68,7 +68,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
     /** SLA 动作：自动驳回 */
     private static final String ACTION_AUTO_REJECT = "AUTO_REJECT";
 
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowNodeMapper nodeMapper;
     /** P0-1/P0-2: 任务服务（AUTO_PASS 真正推进流程） */
@@ -91,7 +91,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
         Long tenantId = parseTenantId(paramsJson);
 
         // selectOverdue 已内置 deleted=0、task_status IN ('PENDING','CLAIMED')、due_at < now 过滤
-        List<FlowTaskDO> overdueTasks;
+        List<FlowRunTaskDO> overdueTasks;
         try {
             overdueTasks = taskMapper.selectOverdue(null, tenantId);
         } catch (Exception e) {
@@ -106,7 +106,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
         int processed = 0;
         int errors = 0;
         if (overdueTasks != null && !overdueTasks.isEmpty()) {
-            for (FlowTaskDO task : overdueTasks) {
+            for (FlowRunTaskDO task : overdueTasks) {
                 try {
                     handleOverdueTask(task);
                     processed++;
@@ -150,7 +150,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      *
      * @param task 超期任务
      */
-    private void handleOverdueTask(FlowTaskDO task) {
+    private void handleOverdueTask(FlowRunTaskDO task) {
         Long taskId = task.getId();
         Long instanceId = task.getInstanceId();
         FlowNodeDO node = safelySelectNode(task);
@@ -205,7 +205,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      * 通过 FlowNotificationService 发送站内信 + 邮件通知，确保催办消息真实触达办理人。
      * 同时更新任务的 reminder_count 和 last_reminded_at 字段。
      */
-    private void doRemind(FlowTaskDO task, JSONObject slaConfig) {
+    private void doRemind(FlowRunTaskDO task, JSONObject slaConfig) {
         int reminderCount = slaConfig.getIntValue("reminderCount", 1);
         String assigneeId = task.getAssigneeId();
 
@@ -237,7 +237,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      * <p>将任务办理人切换为 sla_config.adminUserId，任务保持活跃（PENDING/CLAIMED），
      * 由升级后的办理人继续处理。
      */
-    private void doEscalate(FlowTaskDO task, JSONObject slaConfig) {
+    private void doEscalate(FlowRunTaskDO task, JSONObject slaConfig) {
         Long adminUserId = slaConfig.getLong("adminUserId");
         if (adminUserId == null) {
             log.warn("[FlowTimeout] ESCALATE 未配置 adminUserId taskId={} node={}，降级为标记超时",
@@ -261,9 +261,9 @@ public class FlowTimeoutJobHandler implements JobHandler {
      *
      * <p>容错策略：pass() 失败时降级为仅标记 COMPLETED（不推进），避免定时任务异常中断。
      */
-    private void doAutoPass(FlowTaskDO task, JSONObject slaConfig) {
+    private void doAutoPass(FlowRunTaskDO task, JSONObject slaConfig) {
         // 二次校验：扫描窗口内任务可能已被人工处理
-        FlowTaskDO latest = taskMapper.selectById(task.getId());
+        FlowRunTaskDO latest = taskMapper.selectById(task.getId());
         if (latest == null) {
             log.warn("[FlowTimeout] AUTO_PASS 任务不存在 taskId={}", task.getId());
             return;
@@ -306,7 +306,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      * <p>将当前任务标记为 REJECTED，取消实例下其余 PENDING 任务，
      * 并将实例状态推进为 TERMINATED。
      */
-    private void doAutoReject(FlowTaskDO task, JSONObject slaConfig) {
+    private void doAutoReject(FlowRunTaskDO task, JSONObject slaConfig) {
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = calcDuration(task, now);
         // 1. 驳回当前任务
@@ -413,15 +413,15 @@ public class FlowTimeoutJobHandler implements JobHandler {
     /**
      * 标记任务为 TIMEOUT（用于无 action / 解析失败等场景）
      *
-     * <p>FlowTaskMapper 暂无 timeoutTask 专用方法，此处复用 completeTask
+     * <p>FlowRunTaskMapper 暂无 timeoutTask 专用方法，此处复用 completeTask
      * 以 {@link FlowTaskStatus#TIMEOUT} 状态完成，等价于服务层 timeoutTask 的底层操作。
      *
      * @param task   任务
      * @param reason 超时原因
      */
-    private void markTimeout(FlowTaskDO task, String reason) {
+    private void markTimeout(FlowRunTaskDO task, String reason) {
         // 再次校验状态，避免重复处理（扫描窗口内任务可能已被人工处理）
-        FlowTaskDO latest = taskMapper.selectById(task.getId());
+        FlowRunTaskDO latest = taskMapper.selectById(task.getId());
         if (latest == null) {
             return;
         }
@@ -439,13 +439,13 @@ public class FlowTimeoutJobHandler implements JobHandler {
     }
 
     /** 计算任务耗时（毫秒），createdAt 缺失时返回 0 */
-    private Long calcDuration(FlowTaskDO task, LocalDateTime now) {
+    private Long calcDuration(FlowRunTaskDO task, LocalDateTime now) {
         return task.getCreatedAt() == null ? 0L
                 : Duration.between(task.getCreatedAt(), now).toMillis();
     }
 
     /** 安全查询节点（防御 null） */
-    private FlowNodeDO safelySelectNode(FlowTaskDO task) {
+    private FlowNodeDO safelySelectNode(FlowRunTaskDO task) {
         if (task.getDefinitionId() == null || task.getNodeCode() == null) {
             return null;
         }

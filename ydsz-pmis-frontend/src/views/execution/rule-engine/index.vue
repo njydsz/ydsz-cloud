@@ -267,8 +267,8 @@ async function fetchExpressionFunctions() {
     if (res.code === 0) {
       expressionFunctionDefs.value = res.data || []
     }
-  } catch (e: any) {
-    logger.warn('[ExpressionFunctions]', '拉取失败:', e?.message)
+  } catch (e: unknown) {
+    logger.warn('[ExpressionFunctions]', '拉取失败:', (e as Error)?.message)
     expressionFunctionDefs.value = []
   }
 }
@@ -315,8 +315,8 @@ async function handleBatchToggle(enabled: boolean) {
     } else {
       ElMessage.error(res.message || '批量操作失败')
     }
-  } catch (e: any) {
-    ElMessage.error(e?.message || '批量操作异常')
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '批量操作异常')
   }
 }
 
@@ -334,8 +334,8 @@ async function handleBatchPriority(delta: number) {
     } else {
       ElMessage.error(res.message || '批量调整失败')
     }
-  } catch (e: any) {
-    ElMessage.error(e?.message || '操作异常')
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '操作异常')
   }
 }
 
@@ -360,8 +360,8 @@ async function confirmBatchCategory() {
     } else {
       ElMessage.error(res.message || '批量改分类失败')
     }
-  } catch (e: any) {
-    ElMessage.error(e?.message || '操作异常')
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '操作异常')
   }
 }
 
@@ -569,8 +569,8 @@ async function handleDelete(row: RuleDefinition) {
     } else {
       ElMessage.error(res.message || '删除失败')
     }
-  } catch (e: any) {
-    ElMessage.error(e?.message || '删除异常')
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '删除异常')
   }
 }
 

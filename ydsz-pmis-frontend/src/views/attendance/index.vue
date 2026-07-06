@@ -37,7 +37,7 @@ const attQuery = reactive({ employeeId: undefined as number | undefined, startDa
 /** 出勤状态聚合统计 */
 const attStat = ref<Array<Record<string, unknown>>>([])
 
-const statusMap = computed<Record<string, { label: string; type: string }>>(() => ({
+const statusMap = computed<Record<string, { label: string; type: 'success' | 'warning' | 'info' | 'danger' | 'primary' }>>(() => ({
   NORMAL: { label: t('attendance.attendance.status.NORMAL'), type: 'success' },
   LATE: { label: t('attendance.attendance.status.LATE'), type: 'warning' },
   EARLY: { label: t('attendance.attendance.status.EARLY'), type: 'warning' },
@@ -133,7 +133,7 @@ const otTypeMap = computed<Record<string, string>>(() => ({
   WEEKEND: t('attendance.overtime.type.WEEKEND'),
   HOLIDAY: t('attendance.overtime.type.HOLIDAY'),
 }))
-const otStatusMap = computed<Record<string, { label: string; type: string }>>(() => ({
+const otStatusMap = computed<Record<string, { label: string; type: 'success' | 'warning' | 'info' | 'danger' | 'primary' }>>(() => ({
   DRAFT: { label: t('attendance.common.status.DRAFT'), type: 'info' },
   SUBMITTED: { label: t('attendance.common.status.SUBMITTED'), type: 'warning' },
   APPROVED: { label: t('attendance.common.status.APPROVED'), type: 'success' },
@@ -360,7 +360,7 @@ onMounted(() => {
           </div>
 
           <div v-if="attStat.length > 0" class="stat-row">
-            <el-tag v-for="(s, idx) in attStat" :key="idx" :type="(statusMap[(s.status as string) || '']?.type as any) || 'info'" effect="plain" size="large">
+            <el-tag v-for="(s, idx) in attStat" :key="idx" :type="statusMap[(s.status as string) || '']?.type || 'info'" effect="plain" size="large">
               {{ statusMap[(s.status as string) || '']?.label || s.status || t('attendance.attendance.status.unknown') }}{{ t('attendance.attendance.statSuffix', { days: s.count, hours: s.total_hours }) }}
             </el-tag>
           </div>
@@ -379,7 +379,7 @@ onMounted(() => {
             </vxe-column>
             <vxe-column field="status" :title="t('attendance.attendance.columns.status')" width="100">
               <template #default="{ row }">
-                <el-tag :type="(statusMap[row.status]?.type as any) || 'info'">
+                <el-tag :type="statusMap[row.status]?.type || 'info'">
                   {{ statusMap[row.status]?.label || row.status }}
                 </el-tag>
               </template>

@@ -12,17 +12,21 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 /**
- * 待办任务 DO
+ * 待办任务运行态 DO
  *
- * <p>对标 Warm-Flow flow_task，存储实例推进过程中的待办切片。
+ * <p>对应表 {@code pmis_flow_run_task}（原 {@code pmis_flow_task}，2026-07-06 重命名），
+ * 存储实例推进过程中产生的待办切片，办理人待办箱核心表。
+ *
+ * <p>命名说明：表名采用 {@code run_task} 而非 {@code task}，与 {@code pmis_flow_his_task}（已完成归档）
+ * 区分 —— 本表只承载「正在运行中」的待办实例。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("pmis_flow_task")
-public class FlowTaskDO extends BaseDO {
+@TableName("pmis_flow_run_task")
+public class FlowRunTaskDO extends BaseDO {
 
     @Serial
     private static final long serialVersionUID = 1L;

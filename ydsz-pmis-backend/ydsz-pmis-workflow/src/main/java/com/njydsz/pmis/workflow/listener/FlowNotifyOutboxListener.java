@@ -3,8 +3,8 @@ package com.njydsz.pmis.workflow.listener;
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.workflow.engine.FlowEventContext;
 import com.njydsz.pmis.workflow.engine.FlowEventListener;
-import com.njydsz.pmis.workflow.entity.EventOutboxDO;
-import com.njydsz.pmis.workflow.service.FlowEventOutboxService;
+import com.njydsz.pmis.workflow.entity.FlowNotifyOutboxDO;
+import com.njydsz.pmis.workflow.service.FlowNotifyOutboxService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
@@ -15,10 +15,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Outbox 事件写入监听器（P2-1）
+ * 工作流通知外发箱写入监听器（P2-1）
  *
- * <p>实现 {@link FlowEventListener}，在关键事件触发时将事件信息写入 outbox 表，
- * 保证与主事务的原子性（同事务内 INSERT，事务回滚则 outbox 也回滚）。
+ * <p>实现 {@link FlowEventListener}，在关键事件触发时将事件信息写入
+ * {@code pmis_flow_notify_outbox} 表，保证与主事务的原子性
+ * （同事务内 INSERT，事务回滚则 outbox 也回滚）。
  *
  * <p>优先级最高（@Order(Ordered.HIGHEST_PRECEDENCE)），确保在业务监听器之前写入 outbox，
  * 即使后续监听器抛异常导致事务回滚，outbox 也不会残留脏数据。
@@ -30,9 +31,9 @@ import java.util.Map;
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @RequiredArgsConstructor
-public class FlowEventOutboxListener implements FlowEventListener {
+public class FlowNotifyOutboxListener implements FlowEventListener {
 
-    private final FlowEventOutboxService outboxService;
+    private final FlowNotifyOutboxService notifyOutboxService;
 
     @Override
     public void onTaskCreated(Long taskId) {
@@ -158,7 +159,7 @@ public class FlowEventOutboxListener implements FlowEventListener {
     private void saveOutbox(String eventType, String bizType, Long bizId,
                             Long instanceId, Long taskId, Map<String, Object> extraPayload) {
         try {
-            EventOutboxDO event = new EventOutboxDO();
+            FlowNotifyOutboxDO event = new FlowNotifyOutboxDO();
             event.setEventType(eventType);
             event.setBizType(bizType);
             event.setBizId(bizId);
@@ -167,10 +168,10 @@ public class FlowEventOutboxListener implements FlowEventListener {
             event.setPayload(extraPayload == null || extraPayload.isEmpty() ? "{}"
                     : JSON.toJSONString(extraPayload));
             // 阶段一：不指定 targetChannels/targetUserIds，由 NotificationClient 根据 eventType 自行路由
-            outboxService.saveOutbox(event);
+            notifyOutboxService.saveOutbox(event);
         } catch (Exception e) {
             // outbox 写入失败不应阻塞主流程，降级到日志
-            log.error("[Outbox] 事件写入失败（降级到日志）: type={} bizId={} err={}",
+            log.error("[NotifyOutbox] 事件写入失败（降级到日志）: type={} bizId={} err={}",
                     eventType, bizId, e.getMessage());
         }
     }

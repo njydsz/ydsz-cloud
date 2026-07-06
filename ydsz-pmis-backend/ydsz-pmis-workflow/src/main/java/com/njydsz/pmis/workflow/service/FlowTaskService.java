@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -29,7 +29,7 @@ public interface FlowTaskService {
      * @param taskId 任务 ID
      * @return 任务 DO，不存在返回 null
      */
-    FlowTaskDO getById(Long taskId);
+    FlowRunTaskDO getById(Long taskId);
 
     /**
      * 签收
@@ -64,12 +64,12 @@ public interface FlowTaskService {
     /**
      * 查实例的当前 PENDING 任务
      */
-    List<FlowTaskDO> listPendingByInstance(Long instanceId);
+    List<FlowRunTaskDO> listPendingByInstance(Long instanceId);
 
     /**
      * 查用户的待办
      */
-    List<FlowTaskDO> listTodoByAssignee(String assigneeId, Long tenantId);
+    List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, Long tenantId);
 
     /**
      * P2-17: 查用户的待办（真分页：SQL LIMIT/OFFSET）
@@ -80,13 +80,13 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    PageResult<FlowTaskDO> listTodoByAssigneePage(String assigneeId, Long tenantId,
+    PageResult<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, Long tenantId,
                                                    int page, int size);
 
     /**
      * 查用户的已办
      */
-    List<FlowTaskDO> listDoneByAssignee(String assigneeId, Long tenantId);
+    List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, Long tenantId);
 
     /**
      * P2-17: 查用户的已办（真分页：SQL LIMIT/OFFSET）
@@ -97,7 +97,7 @@ public interface FlowTaskService {
      * @param size       每页大小
      * @return 分页结果
      */
-    PageResult<FlowTaskDO> listDoneByAssigneePage(String assigneeId, Long tenantId,
+    PageResult<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, Long tenantId,
                                                    int page, int size);
 
     /**
@@ -108,7 +108,7 @@ public interface FlowTaskService {
      * @param deptIds   用户所属部门 ID（字符串形式，可空）
      * @param tenantId  租户 ID（可空，默认 1L）
      */
-    List<FlowTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
+    List<FlowRunTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
                                      List<String> deptIds, Long tenantId);
 
     /**
@@ -189,7 +189,7 @@ public interface FlowTaskService {
     /**
      * 转视图
      */
-    FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowTaskDO task);
+    FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task);
 
     /**
      * P2-31: 按节点统计平均耗时（GROUP BY node_code, node_name）
@@ -207,7 +207,7 @@ public interface FlowTaskService {
      * @param tenantId   租户 ID（可空）
      * @return 超期任务列表
      */
-    List<FlowTaskDO> listOverdue(String assigneeId, Long tenantId);
+    List<FlowRunTaskDO> listOverdue(String assigneeId, Long tenantId);
 
     /**
      * P2-32: 统计超期任务数量
@@ -239,7 +239,7 @@ public interface FlowTaskService {
      * @param size         每页大小
      * @return 分页结果
      */
-    PageResult<FlowTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    PageResult<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                        String flowCode, LocalDateTime startTime,
                                                        LocalDateTime endTime, Long tenantId,
                                                        int page, int size);

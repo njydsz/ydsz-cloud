@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -54,7 +54,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 详情查询 ==============================
 
     @Override
-    public FlowTaskDO getById(Long taskId) {
+    public FlowRunTaskDO getById(Long taskId) {
         return queryService.getById(taskId);
     }
 
@@ -112,34 +112,34 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 待办 / 已办 / 实例列表 ==============================
 
     @Override
-    public List<FlowTaskDO> listPendingByInstance(Long instanceId) {
+    public List<FlowRunTaskDO> listPendingByInstance(Long instanceId) {
         return queryService.listPendingByInstance(instanceId);
     }
 
     @Override
-    public List<FlowTaskDO> listTodoByAssignee(String assigneeId, Long tenantId) {
+    public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, Long tenantId) {
         return queryService.listTodoByAssignee(assigneeId, tenantId);
     }
 
     @Override
-    public PageResult<FlowTaskDO> listTodoByAssigneePage(String assigneeId, Long tenantId,
+    public PageResult<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, Long tenantId,
                                                           int page, int size) {
         return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
     }
 
     @Override
-    public List<FlowTaskDO> listDoneByAssignee(String assigneeId, Long tenantId) {
+    public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, Long tenantId) {
         return queryService.listDoneByAssignee(assigneeId, tenantId);
     }
 
     @Override
-    public PageResult<FlowTaskDO> listDoneByAssigneePage(String assigneeId, Long tenantId,
+    public PageResult<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, Long tenantId,
                                                           int page, int size) {
         return queryService.listDoneByAssigneePage(assigneeId, tenantId, page, size);
     }
 
     @Override
-    public List<FlowTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
+    public List<FlowRunTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
                                             List<String> deptIds, Long tenantId) {
         return queryService.listTodoByUser(userId, roleCodes, deptIds, tenantId);
     }
@@ -199,7 +199,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 视图转换 / 统计 ==============================
 
     @Override
-    public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowTaskDO task) {
+    public FlowInstanceViewDTO.FlowTaskViewDTO toView(FlowRunTaskDO task) {
         return queryService.toView(task);
     }
 
@@ -209,7 +209,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public List<FlowTaskDO> listOverdue(String assigneeId, Long tenantId) {
+    public List<FlowRunTaskDO> listOverdue(String assigneeId, Long tenantId) {
         return queryService.listOverdue(assigneeId, tenantId);
     }
 
@@ -224,7 +224,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public PageResult<FlowTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
+    public PageResult<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                                String flowCode, LocalDateTime startTime,
                                                                LocalDateTime endTime, Long tenantId,
                                                                int page, int size) {

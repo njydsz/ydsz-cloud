@@ -3,12 +3,12 @@ package com.njydsz.pmis.workflow.service.impl;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowUserDO;
 import com.njydsz.pmis.workflow.enums.FlowPerformType;
 import com.njydsz.pmis.workflow.enums.FlowSignType;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,7 +47,7 @@ import static org.mockito.Mockito.when;
 class FlowTaskSignServiceImplTest {
 
     @Mock
-    private FlowTaskMapper taskMapper;
+    private FlowRunTaskMapper taskMapper;
     @Mock
     private FlowUserMapper userMapper;
     @Mock
@@ -67,7 +67,7 @@ class FlowTaskSignServiceImplTest {
     @Test
     @DisplayName("并加签 - 成功插入 PARALLEL 类型审批人 + 切换 performType 为 PARALLEL")
     void countersignParallelShouldInsertParallelUserAndSwitchPerformType() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.OR, 1, 0);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.OR, 1, 0);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
 
         FlowTaskOperateDTO dto = buildDto(999L, "张三");
@@ -102,7 +102,7 @@ class FlowTaskSignServiceImplTest {
     @Test
     @DisplayName("并加签 - 任务已完成时抛 BAD_REQUEST")
     void countersignParallelShouldThrowWhenTaskFinished() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.COMPLETED, FlowPerformType.OR, 1, 1);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.COMPLETED, FlowPerformType.OR, 1, 1);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
 
         FlowTaskOperateDTO dto = buildDto(999L, "张三");
@@ -115,13 +115,13 @@ class FlowTaskSignServiceImplTest {
                 });
 
         verify(userMapper, never()).insert(any(FlowUserDO.class));
-        verify(taskMapper, never()).updateById(any(FlowTaskDO.class));
+        verify(taskMapper, never()).updateById(any(FlowRunTaskDO.class));
     }
 
     @Test
     @DisplayName("并加签 - targetUserId 为 null 时抛 BAD_REQUEST")
     void countersignParallelShouldThrowWhenTargetUserIdNull() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.OR, 1, 0);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.OR, 1, 0);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
 
         FlowTaskOperateDTO dto = buildDto(null, null);
@@ -141,7 +141,7 @@ class FlowTaskSignServiceImplTest {
     @Test
     @DisplayName("前加签 - 设置 signType=BEFORE")
     void countersignBeforeShouldSetSignTypeBefore() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.OR, 1, 0);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.OR, 1, 0);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
 
         FlowTaskOperateDTO dto = buildDto(888L, "李四");
@@ -161,7 +161,7 @@ class FlowTaskSignServiceImplTest {
     @Test
     @DisplayName("后加签 - 设置 signType=AFTER + 切换 SEQUENTIAL")
     void countersignAfterShouldSetSignTypeAfterAndSwitchSequential() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.OR, 1, 0);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.OR, 1, 0);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
 
         FlowTaskOperateDTO dto = buildDto(777L, "王五");
@@ -181,7 +181,7 @@ class FlowTaskSignServiceImplTest {
     @Test
     @DisplayName("追加处理人 - 字段完整 + signType=ADD（修复前 instanceId/nodeCode/userType 等字段缺失）")
     void addApproverShouldSetAllFieldsAndSignTypeAdd() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.PARALLEL, 2, 0);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING, FlowPerformType.PARALLEL, 2, 0);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
 
         FlowTaskOperateDTO dto = buildDto(666L, "赵六");
@@ -211,9 +211,9 @@ class FlowTaskSignServiceImplTest {
 
     // ==================== 辅助方法 ====================
 
-    private FlowTaskDO buildTask(FlowTaskStatus status, FlowPerformType performType,
+    private FlowRunTaskDO buildTask(FlowTaskStatus status, FlowPerformType performType,
                                   Integer approveCount, Integer approveFinished) {
-        FlowTaskDO task = new FlowTaskDO();
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setId(TASK_ID);
         task.setInstanceId(INSTANCE_ID);
         task.setNodeCode(NODE_CODE);

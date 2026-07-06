@@ -2,7 +2,7 @@ package com.njydsz.pmis.workflow.service.impl;
 
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -59,10 +59,10 @@ class FlowTaskServiceImplTest {
     @Test
     @DisplayName("根据ID查询任务 - 委托到 queryService")
     void getByIdShouldDelegateToQueryService() {
-        FlowTaskDO task = new FlowTaskDO();
+        FlowRunTaskDO task = new FlowRunTaskDO();
         when(queryService.getById(1L)).thenReturn(task);
 
-        FlowTaskDO result = taskService.getById(1L);
+        FlowRunTaskDO result = taskService.getById(1L);
 
         assertThat(result).isEqualTo(task);
         verify(queryService).getById(1L);

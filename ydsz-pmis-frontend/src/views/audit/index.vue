@@ -184,7 +184,7 @@ function fmtDate(s?: string) {
  * @param status 状态文本（SUCCESS/FAILED/FAIL_PASSWORD 等）
  * @returns el-tag type：success / danger / warning / info
  */
-function statusTag(status?: string) {
+function statusTag(status?: string): 'success' | 'danger' | 'warning' | 'info' {
   const upper = (status || '').toUpperCase()
   if (upper === 'SUCCESS' || upper === 'OK' || upper === 'PASS') return 'success'
   if (upper === 'FAILED' || upper === 'FAIL' || upper === 'FAIL_PASSWORD' || upper === 'FAIL_LOCKED')
@@ -214,7 +214,7 @@ onMounted(fetchOperation)
 
 <template>
   <div class="audit-center">
-    <el-tabs v-model="activeTab" type="card" class="audit-tabs" @tab-change="(t: any) => onTabChange(t as Tab)">
+    <el-tabs v-model="activeTab" type="card" class="audit-tabs" @tab-change="(t: string | number) => onTabChange(t as Tab)">
       <!-- Tab 1: 操作日志 -->
       <el-tab-pane name="operation" :label="$t('audit.tabs.operation')">
         <div class="search-bar">
@@ -256,7 +256,7 @@ onMounted(fetchOperation)
           <vxe-column field="requestUrl" :title="$t('audit.columns.requestUrl')" min-width="200" show-overflow="tooltip" />
           <vxe-column field="status" :title="$t('audit.columns.status')" width="80">
             <template #default="{ row }">
-              <el-tag :type="statusTag(row.status) as any" size="small">{{ row.status }}</el-tag>
+              <el-tag :type="statusTag(row.status)" size="small">{{ row.status }}</el-tag>
             </template>
           </vxe-column>
           <vxe-column field="costMs" :title="$t('audit.columns.costMs')" width="100" />
@@ -311,7 +311,7 @@ onMounted(fetchOperation)
           <vxe-column field="username" :title="$t('audit.columns.username')" width="120" />
           <vxe-column field="status" :title="$t('audit.columns.status')" width="120">
             <template #default="{ row }">
-              <el-tag :type="statusTag(row.status) as any" size="small">{{ row.status }}</el-tag>
+              <el-tag :type="statusTag(row.status)" size="small">{{ row.status }}</el-tag>
             </template>
           </vxe-column>
           <vxe-column field="loginIp" :title="$t('audit.columns.clientIp')" width="120" />
@@ -368,7 +368,7 @@ onMounted(fetchOperation)
           <vxe-column field="targetId" :title="$t('audit.columns.targetId')" width="120" />
           <vxe-column field="opResult" :title="$t('audit.columns.opResult')" width="100">
             <template #default="{ row }">
-              <el-tag :type="statusTag(row.opResult) as any" size="small">{{ row.opResult }}</el-tag>
+              <el-tag :type="statusTag(row.opResult)" size="small">{{ row.opResult }}</el-tag>
             </template>
           </vxe-column>
           <vxe-column field="reAuthUsed" :title="$t('audit.columns.reAuthUsed')" width="100">

@@ -87,6 +87,7 @@ declare module 'vue' {
     NotificationBell: typeof import('./src/components/common/NotificationBell.vue')['default']
     PageLayout: typeof import('./src/components/common/PageLayout.vue')['default']
     PasswordStrengthBar: typeof import('./src/components/common/PasswordStrengthBar.vue')['default']
+    ProTable: typeof import('./src/components/common/ProTable.vue')['default']
     QuickAccess: typeof import('./src/components/common/QuickAccess.vue')['default']
     ReAuthDialog: typeof import('./src/components/common/ReAuthDialog.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']

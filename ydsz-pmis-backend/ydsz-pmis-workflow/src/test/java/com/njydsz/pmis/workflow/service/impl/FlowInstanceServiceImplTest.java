@@ -12,7 +12,7 @@ import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
 import com.njydsz.pmis.workflow.service.FlowCanaryService;
@@ -62,7 +62,7 @@ class FlowInstanceServiceImplTest {
     @Mock private FlowCanaryService canaryService;
     @Mock private FlowAdvancer advancer;
     @Mock private FlowTaskService taskService;
-    @Mock private FlowTaskMapper taskMapper;
+    @Mock private FlowRunTaskMapper taskMapper;
     @Mock private FlowNodeMapper nodeMapper;
     @Mock private FlowSkipMapper skipMapper;
     @Mock private FlowVariableStrategy variableStrategy;

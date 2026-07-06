@@ -5,9 +5,9 @@ import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 @RequiredArgsConstructor
 public class FlowTaskSupport {
 
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     private final FlowAuditLogMapper auditLogMapper;
     private final List<FlowEventListener> eventListeners;
     /** P2-35: Spring 事件发布器，用于异步事件机制（测试环境可能为 null） */
@@ -54,8 +54,8 @@ public class FlowTaskSupport {
      * @param id 任务 ID
      * @return 任务 DO
      */
-    public FlowTaskDO getTaskOrThrow(Long id) {
-        FlowTaskDO task = taskMapper.selectById(id);
+    public FlowRunTaskDO getTaskOrThrow(Long id) {
+        FlowRunTaskDO task = taskMapper.selectById(id);
         if (task == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08", id);
         }
@@ -67,7 +67,7 @@ public class FlowTaskSupport {
     /**
      * 写审计日志（无意见分类）。
      */
-    public void audit(FlowTaskDO task, String action, Long operatorId,
+    public void audit(FlowRunTaskDO task, String action, Long operatorId,
                       Long targetId, String comment) {
         audit(task, action, operatorId, targetId, comment, null);
     }
@@ -82,7 +82,7 @@ public class FlowTaskSupport {
      * @param comment     审批意见
      * @param commentType 意见分类：AGREE/DISAGREE/SUGGEST/INQUIRE
      */
-    public void audit(FlowTaskDO task, String action, Long operatorId,
+    public void audit(FlowRunTaskDO task, String action, Long operatorId,
                       Long targetId, String comment, String commentType) {
         try {
             FlowAuditLogDO log = new FlowAuditLogDO();

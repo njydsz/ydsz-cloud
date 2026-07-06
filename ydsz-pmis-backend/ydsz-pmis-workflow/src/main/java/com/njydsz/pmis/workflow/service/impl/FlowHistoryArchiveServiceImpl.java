@@ -8,13 +8,13 @@ import com.njydsz.pmis.workflow.entity.FlowHisInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowHisVariableDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.mapper.FlowHisInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisVariableMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowHistoryArchiveService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -62,7 +62,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
 
     private final FlowInstanceMapper instanceMapper;
     private final FlowHisTaskMapper hisTaskMapper;
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     private final FlowHisInstanceMapper hisInstanceMapper;
     private final FlowHisVariableMapper hisVariableMapper;
     private final FlowHistoryProperties properties;
@@ -257,7 +257,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
         Long instanceId = instance.getId();
 
         // 1. 校验所有任务都已归档到 his_task
-        List<FlowTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
+        List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
         List<FlowHisTaskDO> hisTasks = hisTaskMapper.selectByInstanceId(instanceId);
         Set<Long> archivedTaskIds = new HashSet<>();
         if (hisTasks != null) {
@@ -268,7 +268,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
             }
         }
         if (tasks != null) {
-            for (FlowTaskDO task : tasks) {
+            for (FlowRunTaskDO task : tasks) {
                 if (task.getId() != null
                         && !archivedTaskIds.contains(task.getId())
                         && !isTerminalTaskStatus(task.getTaskStatus())) {

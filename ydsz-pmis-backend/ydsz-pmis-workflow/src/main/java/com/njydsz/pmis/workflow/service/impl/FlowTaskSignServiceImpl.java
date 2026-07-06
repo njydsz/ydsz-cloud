@@ -3,13 +3,13 @@ package com.njydsz.pmis.workflow.service.impl;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowUserDO;
 import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.FlowPerformType;
 import com.njydsz.pmis.workflow.enums.FlowSignType;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +43,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTaskSignServiceImpl {
 
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     private final FlowUserMapper userMapper;
     /** 跨子 Service 共享的任务校验/审计/事件辅助 */
     private final FlowTaskSupport support;
@@ -55,7 +55,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignBefore(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
@@ -94,7 +94,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignAfter(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
@@ -148,7 +148,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignParallel(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5ac7f16a");
         }
@@ -192,7 +192,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void countersignRemove(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_ff1454e4");
         }
@@ -231,7 +231,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void markRead(Long taskId, Long userId) {
-        FlowTaskDO task = support.getTaskOrThrow(taskId);
+        FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         support.audit(task, "READ", userId, null, null);
         log.info("[Flow] 已阅: taskId={} userId={}", taskId, userId);
     }
@@ -243,7 +243,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void communicate(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         support.audit(task, "COMMUNICATE", dto.getUserId(), null, dto.getComment(), dto.getCommentType());
         log.info("[Flow] 沟通: taskId={} userId={} comment={}",
                 dto.getTaskId(), dto.getUserId(), dto.getComment());
@@ -261,7 +261,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void saveDraft(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_8913103b");
         }
@@ -282,7 +282,7 @@ public class FlowTaskSignServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void addApprover(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_511d4aaa");
         }

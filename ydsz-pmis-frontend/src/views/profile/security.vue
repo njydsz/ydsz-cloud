@@ -74,8 +74,8 @@ async function startBind() {
     const { data } = await bind2fa()
     bindResult.value = data
     ElMessage.success(t('profile.security.twoFA.messages.bindGenerated'))
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('profile.security.twoFA.messages.bindFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('profile.security.twoFA.messages.bindFailed'))
   }
 }
 
@@ -94,8 +94,8 @@ async function confirmBind() {
     bindForm.otp = ''
     await fetch2faStatus()
     await fetchBackupCodes()
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('profile.security.twoFA.messages.confirmFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('profile.security.twoFA.messages.confirmFailed'))
   }
 }
 
@@ -192,7 +192,7 @@ const pwdRules = computed(() => ({
     { required: true, message: t('profile.security.password.rules.newRequired'), trigger: 'blur' },
     { min: 8, max: 32, message: t('profile.security.password.rules.newLength'), trigger: 'blur' },
     {
-      validator: (_: any, v: string, cb: any) => {
+      validator: (_rule: unknown, v: string, cb: (error?: Error) => void) => {
         if (!v) return cb()
         if (pwdStrength.value.score < 3) {
           return cb(new Error(t('profile.security.password.rules.newWeak', { text: pwdStrength.value.text })))
@@ -205,7 +205,7 @@ const pwdRules = computed(() => ({
   confirmPassword: [
     { required: true, message: t('profile.security.password.rules.confirmRequired'), trigger: 'blur' },
     {
-      validator: (_: any, v: string, cb: any) => {
+      validator: (_rule: unknown, v: string, cb: (error?: Error) => void) => {
         if (v !== pwdForm.newPassword) return cb(new Error(t('profile.security.password.rules.confirmMismatch')))
         cb()
       },
@@ -232,8 +232,8 @@ async function onChangePwd() {
       await userStore.logout()
       location.href = '/#/login'
     }, 1500)
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('profile.security.password.messages.changeFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('profile.security.password.messages.changeFailed'))
   }
 }
 

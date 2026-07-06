@@ -11,12 +11,12 @@ import com.njydsz.pmis.workflow.engine.JsonHelper;
 import com.njydsz.pmis.workflow.entity.FlowEventSubscriptionDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowEventSubscriptionMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowEventSubscriptionService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import lombok.RequiredArgsConstructor;
@@ -56,7 +56,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     private final FlowEventSubscriptionMapper subscriptionMapper;
     private final FlowInstanceMapper instanceMapper;
     private final FlowNodeMapper nodeMapper;
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     private final FlowAdvancer advancer;
 
     @Override
@@ -283,7 +283,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
      * 取消边界事件关联的 userTask
      */
     private void cancelBoundaryTask(Long taskId, String errorCode) {
-        FlowTaskDO task = taskMapper.selectById(taskId);
+        FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
             return;
         }

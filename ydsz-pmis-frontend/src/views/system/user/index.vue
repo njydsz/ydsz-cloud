@@ -104,7 +104,7 @@ const formRules = computed(() => ({
   realName: [{ required: true, message: t('system.user.rules.realNameRequired'), trigger: 'blur' }],
   password: [
     {
-      validator: (_: any, v: string, cb: any) => {
+      validator: (_rule: unknown, v: string, cb: (error?: Error) => void) => {
         if (formMode.value === 'create' && !v) return cb(new Error(t('system.user.rules.passwordRequired')))
         if (v && v.length < 6) return cb(new Error(t('system.user.messages.passwordMinLength')))
         cb()
@@ -150,7 +150,7 @@ async function openEdit(row: UserVO) {
     departmentId: row.departmentId,
     positionId: row.positionId,
     roleIds: [],
-    status: (row as any).status ?? 'ENABLED',
+    status: (row as { status?: string }).status ?? 'ENABLED',
   })
   try {
     const { data } = await listUserRoles(row.id)
@@ -179,7 +179,7 @@ async function submitForm() {
         positionId: form.positionId,
         roleIds: form.roleIds,
         status: form.status,
-      } as any)
+      } as UserCreateDTO)
       ElMessage.success(t('system.user.messages.createSuccess'))
       if (form.roleIds && form.roleIds.length) {
         try {
@@ -199,7 +199,7 @@ async function submitForm() {
           positionId: form.positionId,
           status: form.status,
           roleIds: form.roleIds,
-        } as any)
+        } as unknown as UserCreateDTO)
         await assignUserRoles(form.id, form.roleIds ?? [])
         ElMessage.success(t('system.user.messages.updateSuccess'))
       }
@@ -233,7 +233,7 @@ async function handleDelete(row: UserVO) {
  * @param row 待切换状态的用户行数据
  */
 async function handleToggleStatus(row: UserVO) {
-  const next = (row as any).status === 'ENABLED' ? 'DISABLED' : 'ENABLED'
+  const next = (row as { status?: string }).status === 'ENABLED' ? 'DISABLED' : 'ENABLED'
   const confirmed = await confirmAction(
     t('system.user.messages.confirmToggle', { action: next === 'ENABLED' ? t('system.user.buttons.enable') : t('system.user.buttons.disable'), name: row.realName }),
     t('common.confirm'),
@@ -371,8 +371,8 @@ onMounted(() => {
           <vxe-column field="email" :title="$t('system.user.columns.email')" min-width="180" />
           <vxe-column field="status" :title="$t('system.user.columns.status')" width="80">
             <template #default="{ row }">
-              <el-tag :type="(row as any).status === 'ENABLED' ? 'success' : 'info'">
-                {{ $t(`system.user.status.${(row as any).status}`) }}
+              <el-tag :type="(row as { status?: string }).status === 'ENABLED' ? 'success' : 'info'">
+                {{ $t(`system.user.status.${(row as { status?: string }).status}`) }}
               </el-tag>
             </template>
           </vxe-column>
@@ -385,7 +385,7 @@ onMounted(() => {
                 {{ $t('system.user.buttons.resetPassword') }}
               </el-button>
               <el-button v-permission="['auth:user:toggle']" link type="primary" size="small" @click="handleToggleStatus(row)">
-                {{ (row as any).status === 'ENABLED' ? $t('system.user.buttons.disable') : $t('system.user.buttons.enable') }}
+                {{ (row as { status?: string }).status === 'ENABLED' ? $t('system.user.buttons.disable') : $t('system.user.buttons.enable') }}
               </el-button>
               <el-button v-permission="['auth:user:delete']" link type="danger" size="small" @click="handleDelete(row)">
                 {{ $t('common.delete') }}

@@ -1,18 +1,20 @@
 package com.njydsz.pmis.workflow.service;
 
-import com.njydsz.pmis.workflow.entity.EventOutboxDO;
+import com.njydsz.pmis.workflow.entity.FlowNotifyOutboxDO;
 
 import java.util.List;
 
 /**
- * 事件 Outbox 服务（P2-1）
+ * 工作流通知外发箱服务（P2-1）
  *
- * <p>提供事件落库 + 扫描投递能力，保证业务事务与消息投递的最终一致性。
+ * <p>提供事件落库 + 扫描投递能力，保证业务事务与通知投递的最终一致性。
+ * 对应表 {@code pmis_flow_notify_outbox}，由
+ * {@link com.njydsz.pmis.workflow.scheduler.NotifyOutboxScanner} 定时拉取并投递。
  *
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
-public interface FlowEventOutboxService {
+public interface FlowNotifyOutboxService {
 
     /**
      * 写入 outbox（在主事务内同步执行，事务回滚则 outbox 也回滚）
@@ -20,7 +22,7 @@ public interface FlowEventOutboxService {
      * @param event 事件实体（status 默认 PENDING）
      * @return outbox ID
      */
-    Long saveOutbox(EventOutboxDO event);
+    Long saveOutbox(FlowNotifyOutboxDO event);
 
     /**
      * 扫描待投递事件并投递
@@ -39,7 +41,7 @@ public interface FlowEventOutboxService {
      * @param limit 最大条数
      * @return 死信事件列表
      */
-    List<EventOutboxDO> listDeadEvents(int limit);
+    List<FlowNotifyOutboxDO> listDeadEvents(int limit);
 
     /**
      * 人工重投死信事件

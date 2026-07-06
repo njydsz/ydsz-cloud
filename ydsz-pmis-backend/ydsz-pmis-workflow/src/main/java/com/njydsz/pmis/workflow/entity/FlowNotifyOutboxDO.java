@@ -11,18 +11,20 @@ import java.io.Serial;
 import java.time.LocalDateTime;
 
 /**
- * 事件 Outbox 实体（P2-1）
+ * 工作流通知外发箱实体（P2-1）
  *
- * <p>本地消息表，保证业务事务与消息投递的最终一致性。
- * 主事务内 INSERT 本表（status=PENDING），事务提交后由扫描任务异步投递。
+ * <p>本地消息表（Outbox Pattern），保证业务事务与通知投递的最终一致性。
+ * 主事务内 INSERT 本表（status=PENDING），事务提交后由扫描任务异步投递到通知中心。
+ * 对应表 {@code pmis_flow_notify_outbox}，由 {@link com.njydsz.pmis.workflow.scheduler.NotifyOutboxScanner}
+ * 定时扫描，调用 NotificationClient / IM / 邮件 / 短信渠道完成 at-least-once 投递。
  *
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("pmis_event_outbox")
-public class EventOutboxDO extends BaseDO {
+@TableName("pmis_flow_notify_outbox")
+public class FlowNotifyOutboxDO extends BaseDO {
 
     @Serial
     private static final long serialVersionUID = 1L;

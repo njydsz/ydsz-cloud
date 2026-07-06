@@ -7,9 +7,9 @@ import com.njydsz.pmis.workflow.engine.FlowEventListener;
 import com.njydsz.pmis.workflow.engine.FlowNotificationHelper;
 import com.njydsz.pmis.workflow.engine.FlowWorkflowEvent;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowSubProcessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -54,7 +54,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
 
     private final FlowNotificationHelper notificationHelper;
     private final FlowInstanceMapper instanceMapper;
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     /** P1-3: 子流程服务（监听器作为子流程完成回调的入口） */
     private final FlowSubProcessService subProcessService;
     /** P1-7: 立项状态联动 Feign 客户端（审批中 / 已批准 / 已驳回） */
@@ -81,7 +81,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (taskId == null) {
             return;
         }
-        FlowTaskDO task = taskMapper.selectById(taskId);
+        FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
             return;
         }
@@ -218,7 +218,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (instanceId == null) {
             return;
         }
-        List<FlowTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
+        List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
         List<Long> receivers = pending == null ? Collections.emptyList() : pending.stream()
                 .map(t -> parseUserId(t.getAssigneeId()))
                 .filter(java.util.Objects::nonNull)
@@ -256,7 +256,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (instanceId == null) {
             return;
         }
-        List<FlowTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
+        List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
         List<Long> receivers = pending == null ? Collections.emptyList() : pending.stream()
                 .map(t -> parseUserId(t.getAssigneeId()))
                 .filter(java.util.Objects::nonNull)
@@ -275,7 +275,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (taskId == null || toUserId == null) {
             return;
         }
-        FlowTaskDO task = taskMapper.selectById(taskId);
+        FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
             return;
         }
@@ -294,7 +294,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (taskId == null || toUserId == null) {
             return;
         }
-        FlowTaskDO task = taskMapper.selectById(taskId);
+        FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
             return;
         }
@@ -313,7 +313,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (taskId == null) {
             return;
         }
-        FlowTaskDO task = taskMapper.selectById(taskId);
+        FlowRunTaskDO task = taskMapper.selectById(taskId);
         if (task == null) {
             return;
         }

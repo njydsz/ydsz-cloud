@@ -1791,6 +1791,14 @@ CREATE INDEX IF NOT EXISTS idx_pewt_trace      ON pmis_execution_wbs_task (provi
 -- =====================================================
 -- 2. 工时录入表 pmis_execution_time_entry
 -- =====================================================
+-- 表结构要点:
+--   1. 主键 BIGSERIAL,所有时间字段均带 DEFAULT CURRENT_TIMESTAMP
+--   2. 冗余字段(employee_name / initiation_name / task_name)用于报表免 JOIN
+--   3. 费率字段 rate_id 关联 pmis_rate_card.id,rate 冗余锁定当时报价
+--      (历史变更后费率卡可能调整,但已审批工时按锁定 rate 计算成本)
+--   4. CHECK 约束: 工时/加班/人天/费率均 >= 0,billable 只能是 0/1
+--   5. idx_pete_rate_id 索引支持「按费率卡聚合成本」查询
+--   6. 逻辑删除通过 deleted=0 过滤,所有热索引加 WHERE deleted=0
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_execution_time_entry;
 CREATE TABLE IF NOT EXISTS pmis_execution_time_entry(
     id                  BIGSERIAL PRIMARY KEY,
@@ -1821,7 +1829,13 @@ CREATE TABLE IF NOT EXISTS pmis_execution_time_entry(
     created_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at          TIMESTAMP     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted             SMALLINT      NOT NULL DEFAULT 0,
-    version             INTEGER       NOT NULL DEFAULT 0
+    version             INTEGER       NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pete_hours_nonneg    CHECK (hours    >= 0),
+    CONSTRAINT ck_pete_days_nonneg     CHECK (days     >= 0),
+    CONSTRAINT ck_pete_overtime_nonneg CHECK (overtime >= 0),
+    CONSTRAINT ck_pete_rate_nonneg     CHECK (rate IS NULL OR rate >= 0),
+    CONSTRAINT ck_pete_billable_enum   CHECK (billable IN (0, 1))
 );
 COMMENT ON TABLE pmis_execution_time_entry IS '工时录入表: 日清日结,员工每日填报工时,自动计算人天/成本';
 COMMENT ON COLUMN pmis_execution_time_entry.id IS '主键 ID';
@@ -1857,6 +1871,7 @@ CREATE INDEX IF NOT EXISTS idx_pete_initiation ON pmis_execution_time_entry (ini
 CREATE INDEX IF NOT EXISTS idx_pete_task      ON pmis_execution_time_entry (task_id) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pete_status    ON pmis_execution_time_entry (status) WHERE deleted = 0;
 CREATE INDEX IF NOT EXISTS idx_pete_level     ON pmis_execution_time_entry (level_code) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pete_rate_id   ON pmis_execution_time_entry (rate_id) WHERE deleted = 0 AND rate_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_pete_trace     ON pmis_execution_time_entry (provider_trace_id);
 
 -- =====================================================
@@ -4625,10 +4640,30 @@ CREATE INDEX IF NOT EXISTS idx_flow_instance_initiator   ON pmis_flow_instance(i
 CREATE INDEX IF NOT EXISTS idx_flow_instance_tenant      ON pmis_flow_instance(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_flow_instance_start       ON pmis_flow_instance(start_at);
 
--- -----------------------------------------------------
--- 5. 待办任务表（对标 Warm-Flow flow_task）
---    实例推进过程中产生的待办切片
--- -----------------------------------------------------
+-- =====================================================
+-- 5. 待办任务运行态表 pmis_flow_run_task
+--    (2026-07-06 由 pmis_flow_task 重命名,与 pmis_flow_his_task 区分)
+-- =====================================================
+-- 表结构要点:
+--   1. 核心索引:
+--      - idx_pft_assignee    (assignee_id, task_status)           待办箱按办理人+状态
+--      - idx_pft_due         (due_at) WHERE task_status='PENDING' SLA 扫描
+--      - idx_pfrt_foreach_iter UNIQUE (instance_id, node_code, iter_var) WHERE iter_var IS NOT NULL
+--        (由 UK 约束自动创建,FOREACH 节点防止重复创建 task)
+--      - idx_pmis_flow_run_task_priority_todo (priority DESC, created_at ASC) WHERE task_status IN ('PENDING','CLAIMED')
+--        待办按优先级+时间排序(P1-1,主索引块内创建)
+--   2. GAP-P1:version 是 MyBatis-Plus @Version 乐观锁,会签并发安全
+--   3. P1-5:vote_pass_rate 票签通过率阈值(0~1),performType='VOTE' 时生效
+--   4. P1-6:SLA 催办:reminder_count / last_reminded_at / sla_action / sla_escalated
+--   5. GAP-P2-10:iter_var FOREACH 循环节点的当前迭代元素值,非循环节点为 NULL
+--      - UNIQUE 约束 (instance_id, node_code, iter_var) WHERE iter_var IS NOT NULL
+--        防止 FOREACH 对同一元素重复创建 task
+--      - 由于逻辑删除,加 deleted=0 过滤:被 soft-delete 的不参与唯一性判定
+--   6. CHECK 约束:
+--      - vote_pass_rate 必须在 [0, 1] 之间
+--      - priority 必须在 [1, 100] 之间(P1-1 取值约定)
+--      - approve_finished <= approve_count(已通过不能多于要求)
+--      - approve_count / approve_finished 非负
 -- [SKIPPED-CLEANUP] DROP TABLE IF EXISTS pmis_flow_run_task;
 CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     id                 BIGSERIAL    PRIMARY KEY,
@@ -4652,6 +4687,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     perform_type       VARCHAR(16)  NOT NULL DEFAULT 'OR',
     approve_count      INT          NOT NULL DEFAULT 1,
     approve_finished   INT          NOT NULL DEFAULT 0,
+    vote_pass_rate     DECIMAL(5,4) NOT NULL DEFAULT 0.5,
     task_status        VARCHAR(32)  NOT NULL DEFAULT 'PENDING',
     comment            TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
@@ -4664,14 +4700,29 @@ CREATE TABLE IF NOT EXISTS pmis_flow_run_task(
     duration_ms        BIGINT,
     due_at             TIMESTAMP,
     priority           INT          NOT NULL DEFAULT 50,
+    reminder_count     INT          NOT NULL DEFAULT 0,
+    last_reminded_at   TIMESTAMP,
+    sla_action         VARCHAR(32),
+    sla_escalated      SMALLINT     NOT NULL DEFAULT 0,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
     provider_trace_id  VARCHAR(64),
     -- GAP-P2-10: FOREACH 循环节点当前迭代元素值（非循环节点为 NULL）
-    iter_var           VARCHAR(255)
+    iter_var           VARCHAR(255),
+    -- 乐观锁版本号(GAP-P1: 会签并发安全,MyBatis-Plus @Version 自动维护)
+    version            INT          NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT ck_pfrt_vote_pass_rate  CHECK (vote_pass_rate >= 0 AND vote_pass_rate <= 1),
+    CONSTRAINT ck_pfrt_priority_range  CHECK (priority >= 1 AND priority <= 100),
+    CONSTRAINT ck_pfrt_approve_nonneg  CHECK (approve_count >= 0 AND approve_finished >= 0),
+    CONSTRAINT ck_pfrt_approve_bounded CHECK (approve_finished <= approve_count),
+    -- FOREACH 唯一性:同一实例+节点+迭代元素只能有一条未删除 task
+    CONSTRAINT uk_pfrt_foreach_iter
+        UNIQUE (instance_id, node_code, iter_var)
+        WHERE iter_var IS NOT NULL AND deleted = 0
 );
 
-COMMENT ON TABLE  pmis_flow_run_task IS '待办任务表: 实例推进过程中产生的待办切片,办理人待办箱核心表';
+COMMENT ON TABLE  pmis_flow_run_task IS '待办任务运行态表: 实例推进过程中产生的待办切片(运行态),办理人待办箱核心表,完成后归档到 pmis_flow_his_task';
 COMMENT ON COLUMN pmis_flow_run_task.instance_id IS '所属流程实例 ID';
 COMMENT ON COLUMN pmis_flow_run_task.flow_code IS '流程编码(冗余)';
 COMMENT ON COLUMN pmis_flow_run_task.definition_id IS '所属流程定义 ID';
@@ -4685,14 +4736,15 @@ COMMENT ON COLUMN pmis_flow_run_task.flow_name IS '流程名称';
 COMMENT ON COLUMN pmis_flow_run_task.title IS '任务标题';
 COMMENT ON COLUMN pmis_flow_run_task.assignor_id IS '转交人 ID: 上一步操作人';
 COMMENT ON COLUMN pmis_flow_run_task.assignor_name IS '转交人姓名(冗余)';
-COMMENT ON COLUMN pmis_flow_run_task.assignee_type IS '办理人类型: USER/ROLE/DEPT/SPEL';
+COMMENT ON COLUMN pmis_flow_run_task.assignee_type IS '办理人类型: USER/ROLE/DEPT/SPEL/FOREACH_PARALLEL';
 COMMENT ON COLUMN pmis_flow_run_task.assignee_id IS '办理人 ID(按 type 解析)';
 COMMENT ON COLUMN pmis_flow_run_task.assignee_name IS '办理人姓名(冗余)';
 COMMENT ON COLUMN pmis_flow_run_task.permission_flag IS '权限标识: role:hr / dept:10 / user:1001 / ${spel}';
-COMMENT ON COLUMN pmis_flow_run_task.perform_type IS '会签类型: OR 或签 / SEQUENTIAL 顺序会签 / PARALLEL 并行会签 / VOTE 票签';
+COMMENT ON COLUMN pmis_flow_run_task.perform_type IS '会签类型: OR 或签 / SEQUENTIAL 顺序会签 / PARALLEL 并行会签 / VOTE 票签 / FOREACH_PARALLEL 多实例并行';
 COMMENT ON COLUMN pmis_flow_run_task.approve_count IS '会签所需通过人数(仅会签节点有效)';
 COMMENT ON COLUMN pmis_flow_run_task.approve_finished IS '会签当前已通过人数';
-COMMENT ON COLUMN pmis_flow_run_task.task_status IS '任务状态: PENDING/CLAIMED/COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT';
+COMMENT ON COLUMN pmis_flow_run_task.vote_pass_rate IS 'P1-5: VOTE 票签模式通过率阈值(0~1,默认 0.5 表示过半数),performType=VOTE 时生效';
+COMMENT ON COLUMN pmis_flow_run_task.task_status IS '任务状态: PENDING/CLAIMED/COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT/FROZEN';
 COMMENT ON COLUMN pmis_flow_run_task.comment IS '审批意见';
 COMMENT ON COLUMN pmis_flow_run_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_flow_run_task.claim_at IS '签收时间';
@@ -4700,7 +4752,13 @@ COMMENT ON COLUMN pmis_flow_run_task.finish_at IS '完成时间';
 COMMENT ON COLUMN pmis_flow_run_task.duration_ms IS '处理耗时(毫秒)';
 COMMENT ON COLUMN pmis_flow_run_task.due_at IS '截止时间: SLA 预警依据';
 COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级(1-100,默认50),待办默认按 priority DESC, created_at ASC 排序';
+COMMENT ON COLUMN pmis_flow_run_task.reminder_count IS 'P1-6: 已发送的 SLA 催办次数';
+COMMENT ON COLUMN pmis_flow_run_task.last_reminded_at IS 'P1-6: 最近一次催办时间';
+COMMENT ON COLUMN pmis_flow_run_task.sla_action IS 'P1-6: 最终触发的 SLA 动作(REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT)';
+COMMENT ON COLUMN pmis_flow_run_task.sla_escalated IS 'P1-6: 是否已升级(0 否 / 1 是,避免重复升级)';
 COMMENT ON COLUMN pmis_flow_run_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN pmis_flow_run_task.iter_var IS 'GAP-P2-10: FOREACH 当前迭代元素值(循环节点每条独立 task 对应的集合元素,非循环节点为 NULL),UK 约束 (instance_id, node_code, iter_var) 防止重复创建';
+COMMENT ON COLUMN pmis_flow_run_task.version IS 'GAP-P1: 乐观锁版本号 — 会签并发安全,MyBatis-Plus @Version 自动维护';
 
 CREATE INDEX IF NOT EXISTS idx_pft_instance   ON pmis_flow_run_task(instance_id);
 CREATE INDEX IF NOT EXISTS idx_pft_assignee   ON pmis_flow_run_task(assignee_id, task_status);
@@ -4710,6 +4768,12 @@ CREATE INDEX IF NOT EXISTS idx_pft_status     ON pmis_flow_run_task(task_status)
 CREATE INDEX IF NOT EXISTS idx_pft_tenant     ON pmis_flow_run_task(tenant_id);
 CREATE INDEX IF NOT EXISTS idx_pft_create     ON pmis_flow_run_task(created_at);
 CREATE INDEX IF NOT EXISTS idx_pft_due        ON pmis_flow_run_task(due_at) WHERE task_status = 'PENDING';
+-- P1-1: 待办按优先级+时间排序(仅 PENDING/CLAIMED 走索引)
+CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
+    ON pmis_flow_run_task (priority DESC, created_at ASC)
+    WHERE task_status IN ('PENDING', 'CLAIMED')
+      AND status = 'ENABLED'
+      AND deleted = 0;
 
 -- -----------------------------------------------------
 -- 6. 历史任务表（对标 Warm-Flow flow_his_task）
@@ -4736,6 +4800,7 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
     perform_type       VARCHAR(16)  NOT NULL,
     approve_count      INT          NOT NULL DEFAULT 1,
     approve_finished   INT          NOT NULL DEFAULT 0,
+    vote_pass_rate     DECIMAL(5,4) NOT NULL DEFAULT 0.5,
     task_status        VARCHAR(32)  NOT NULL,
     comment            TEXT,
     status             VARCHAR(16)  NOT NULL DEFAULT 'ENABLED',
@@ -4748,7 +4813,9 @@ CREATE TABLE IF NOT EXISTS pmis_flow_his_task(
     duration_ms        BIGINT,
     deleted            SMALLINT     NOT NULL DEFAULT 0,
     tenant_id          BIGINT       NOT NULL DEFAULT 1,
-    provider_trace_id  VARCHAR(64)
+    provider_trace_id  VARCHAR(64),
+    -- GAP-P2-10: FOREACH 归档追溯(从 pmis_flow_run_task 复制)
+    iter_var           VARCHAR(255)
 );
 
 COMMENT ON TABLE  pmis_flow_his_task IS '历史任务表: 已完成任务的归档,避免主表膨胀,审批历史追溯';
@@ -4770,6 +4837,7 @@ COMMENT ON COLUMN pmis_flow_his_task.assignee_name IS '办理人姓名';
 COMMENT ON COLUMN pmis_flow_his_task.perform_type IS '会签类型';
 COMMENT ON COLUMN pmis_flow_his_task.approve_count IS '会签所需通过人数';
 COMMENT ON COLUMN pmis_flow_his_task.approve_finished IS '会签已通过人数';
+COMMENT ON COLUMN pmis_flow_his_task.vote_pass_rate IS 'P1-5: VOTE 票签通过率阈值(0~1,从 pmis_flow_run_task 归档)';
 COMMENT ON COLUMN pmis_flow_his_task.task_status IS '任务终态: COMPLETED/REJECTED/SKIPPED/CANCELLED/TIMEOUT';
 COMMENT ON COLUMN pmis_flow_his_task.comment IS '审批意见';
 COMMENT ON COLUMN pmis_flow_his_task.status IS '记录状态: ENABLED 启用 / DISABLED 停用';
@@ -4777,6 +4845,7 @@ COMMENT ON COLUMN pmis_flow_his_task.claim_at IS '签收时间';
 COMMENT ON COLUMN pmis_flow_his_task.finish_at IS '完成时间';
 COMMENT ON COLUMN pmis_flow_his_task.duration_ms IS '处理耗时(毫秒)';
 COMMENT ON COLUMN pmis_flow_his_task.deleted IS '逻辑删除: 0=未删除,1=已删除';
+COMMENT ON COLUMN pmis_flow_his_task.iter_var IS 'GAP-P2-10: FOREACH 归档时的迭代元素值(从 pmis_flow_run_task 复制,审批历史追溯)';
 
 CREATE INDEX IF NOT EXISTS idx_pfht_instance   ON pmis_flow_his_task(instance_id);
 CREATE INDEX IF NOT EXISTS idx_pfht_assignee   ON pmis_flow_his_task(assignee_id, task_status);
@@ -6754,12 +6823,8 @@ ALTER TABLE pmis_flow_run_task
 
 COMMENT ON COLUMN pmis_flow_run_task.priority IS 'P1-1: 任务优先级（1-100，默认 50），待办默认按 priority DESC, created_at ASC 排序';
 
--- 部分索引：仅 PENDING/CLAIMED 状态按 priority 排序查询走索引
-CREATE INDEX IF NOT EXISTS idx_pmis_flow_run_task_priority_todo
-    ON pmis_flow_run_task (priority DESC, created_at ASC)
-    WHERE task_status IN ('PENDING', 'CLAIMED')
-      AND status = 'ENABLED'
-      AND deleted = 0;
+-- 注: idx_pmis_flow_run_task_priority_todo 部分索引已上移到主索引块(pmis_flow_run_task 紧邻处),
+--     此处不再重复创建,保证表结构集中。
 
 -- ====================================================================
 -- >>>>>>>>>> END OF V1.0.0_048__add_pmis_flow_run_task_priority.sql
@@ -7526,7 +7591,7 @@ CREATE INDEX IF NOT EXISTS idx_pmis_role_permission_deleted ON pmis_role_permiss
 CREATE INDEX IF NOT EXISTS idx_pmis_emp_tag_deleted ON pmis_employee_tag(deleted);
 
 -- ============================================================
--- 五、event_outbox 表 tenant_id 索引（H2.5）
+-- 五、pmis_flow_notify_outbox 表 tenant_id 索引（H2.5）
 -- ============================================================
 CREATE INDEX IF NOT EXISTS idx_peo_tenant_status
     ON pmis_flow_notify_outbox(tenant_id, status, next_retry_at) WHERE deleted = 0;

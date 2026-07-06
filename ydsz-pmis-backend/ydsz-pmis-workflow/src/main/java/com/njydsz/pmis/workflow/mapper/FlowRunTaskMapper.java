@@ -1,44 +1,45 @@
 package com.njydsz.pmis.workflow.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
 /**
- * 待办任务 Mapper
+ * 待办任务运行态 Mapper
  *
- * <p>对应 pmis_flow_task 表，提供待办/已办查询、任务完成、会签计数、批量取消等能力。
+ * <p>对应 {@code pmis_flow_run_task} 表（原 {@code pmis_flow_task}，2026-07-06 重命名），
+ * 提供待办/已办查询、任务完成、会签计数、批量取消等能力。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
 @Mapper
-public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
+public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
 
     /**
      * 根据实例 ID 查所有任务
      */
-    List<FlowTaskDO> selectByInstanceId(@Param("instanceId") Long instanceId);
+    List<FlowRunTaskDO> selectByInstanceId(@Param("instanceId") Long instanceId);
 
     /**
      * 查某实例的当前 PENDING 任务
      */
-    List<FlowTaskDO> selectPendingByInstance(@Param("instanceId") Long instanceId);
+    List<FlowRunTaskDO> selectPendingByInstance(@Param("instanceId") Long instanceId);
 
     /**
      * 查某节点 PENDING 任务
      */
-    List<FlowTaskDO> selectPendingByNode(@Param("instanceId") Long instanceId,
-                                         @Param("nodeCode") String nodeCode);
+    List<FlowRunTaskDO> selectPendingByNode(@Param("instanceId") Long instanceId,
+                                            @Param("nodeCode") String nodeCode);
 
     /**
      * 查用户的待办
      */
-    List<FlowTaskDO> selectTodoByAssignee(@Param("assigneeId") String assigneeId,
-                                          @Param("tenantId") Long tenantId);
+    List<FlowRunTaskDO> selectTodoByAssignee(@Param("assigneeId") String assigneeId,
+                                             @Param("tenantId") Long tenantId);
 
     /**
      * 查用户的待办（真分页：LIMIT/OFFSET）
@@ -48,10 +49,10 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
      * @param offset     偏移量（从 0 开始）
      * @param limit      每页大小
      */
-    List<FlowTaskDO> selectTodoByAssigneePage(@Param("assigneeId") String assigneeId,
-                                              @Param("tenantId") Long tenantId,
-                                              @Param("offset") int offset,
-                                              @Param("limit") int limit);
+    List<FlowRunTaskDO> selectTodoByAssigneePage(@Param("assigneeId") String assigneeId,
+                                                 @Param("tenantId") Long tenantId,
+                                                 @Param("offset") int offset,
+                                                 @Param("limit") int limit);
 
     /**
      * 统计用户待办总数（用于分页计算总页数）
@@ -62,8 +63,8 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
     /**
      * 查用户已办
      */
-    List<FlowTaskDO> selectDoneByAssignee(@Param("assigneeId") String assigneeId,
-                                          @Param("tenantId") Long tenantId);
+    List<FlowRunTaskDO> selectDoneByAssignee(@Param("assigneeId") String assigneeId,
+                                             @Param("tenantId") Long tenantId);
 
     /**
      * 标记任务完成
@@ -144,8 +145,8 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
      * @param tenantId   租户 ID（可空）
      * @return 超期任务列表
      */
-    List<FlowTaskDO> selectOverdue(@Param("assigneeId") String assigneeId,
-                                   @Param("tenantId") Long tenantId);
+    List<FlowRunTaskDO> selectOverdue(@Param("assigneeId") String assigneeId,
+                                      @Param("tenantId") Long tenantId);
 
     /**
      * P2-32: 统计超期任务数量
@@ -165,7 +166,7 @@ public interface FlowTaskMapper extends BaseMapper<FlowTaskDO> {
      * @param limit 单次扫描上限
      * @return 候选 SLA 任务列表
      */
-    List<FlowTaskDO> selectSlaCandidates(@Param("limit") int limit);
+    List<FlowRunTaskDO> selectSlaCandidates(@Param("limit") int limit);
 
     /**
      * P1-6: 增加 SLA 催办计数

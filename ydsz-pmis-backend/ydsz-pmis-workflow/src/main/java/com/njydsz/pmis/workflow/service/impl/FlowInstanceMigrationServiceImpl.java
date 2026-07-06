@@ -10,12 +10,12 @@ import com.njydsz.pmis.workflow.dto.InstanceMigrationResultDTO.MigrationDetail;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceMigrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
  * <p>当流程定义更新（新版本部署）后，将运行中实例迁移到新版本：
  * 更新 definitionId / flowVersion，并按节点映射调整 currentNodeCode。
  *
- * <p>P3-3 增强：实例迁移成功后同步更新该实例下未完成的待办任务（pmis_flow_task）的
+ * <p>P3-3 增强：实例迁移成功后同步更新该实例下未完成的待办任务（pmis_flow_run_task）的
  * definitionId / nodeCode / nodeName，避免迁移后待办任务仍指向旧定义导致办理异常。
  *
  * <p>注意：{@link #migrate(InstanceMigrationDTO)} 不加 {@code @Transactional}，
@@ -55,7 +55,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
     private final FlowInstanceMapper instanceMapper;
     private final FlowNodeMapper nodeMapper;
     private final FlowDefinitionMapper definitionMapper;
-    private final FlowTaskMapper flowTaskMapper;
+    private final FlowRunTaskMapper flowTaskMapper;
 
     @Override
     public InstanceMigrationResultDTO migrate(InstanceMigrationDTO dto) {
@@ -227,7 +227,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
                         }
                         instanceMapper.updateById(instance);
 
-                        // P3-3: 同步迁移该实例下未完成的待办任务（pmis_flow_task）
+                        // P3-3: 同步迁移该实例下未完成的待办任务（pmis_flow_run_task）
                         // 仅迁移 PENDING/CLAIMED 状态的任务，已完成的历史任务保持不变
                         int taskMigrated = migrateInstanceTasks(
                                 instance.getId(), targetDefId, oldNodeCode, newNodeCode,
@@ -336,12 +336,12 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
                                      String oldInstNode, String newInstNode,
                                      Map<String, String> nodeMapping,
                                      Map<String, FlowNodeDO> targetNodeMap) {
-        List<FlowTaskDO> pendingTasks = flowTaskMapper.selectPendingByInstance(instanceId);
+        List<FlowRunTaskDO> pendingTasks = flowTaskMapper.selectPendingByInstance(instanceId);
         if (pendingTasks == null || pendingTasks.isEmpty()) {
             return 0;
         }
         int migrated = 0;
-        for (FlowTaskDO task : pendingTasks) {
+        for (FlowRunTaskDO task : pendingTasks) {
             String oldTaskNode = task.getNodeCode();
             String newTaskNode = resolveTaskNodeCode(oldTaskNode, oldInstNode, newInstNode,
                     nodeMapping, targetNodeMap);

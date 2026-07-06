@@ -91,8 +91,8 @@ async function handleQuery(row: CustomerCreditVO) {
   try {
     const { data } = await getCreditByCustomer(row.customerId)
     ElMessage.success(t('finance.credit.messages.queryResult', { level: data?.level, score: data?.score }))
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('finance.credit.messages.queryFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('finance.credit.messages.queryFailed'))
   }
 }
 
@@ -143,8 +143,8 @@ async function submitAssess() {
     ElMessage.success(t('finance.credit.messages.assessResult', { level: data.level, score: data.score }))
     dialogVisible.value = false
     fetchList()
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('finance.credit.messages.assessFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('finance.credit.messages.assessFailed'))
   } finally {
     submitting.value = false
   }
@@ -199,9 +199,9 @@ onMounted(fetchList)
           <template #default="{ row }"><StatusTag :value="row.level" :map="levelMap" /></template>
         </vxe-column>
         <vxe-column field="contractCount" :title="t('finance.credit.columns.contractCount')" width="100" align="center" />
-        <vxe-column field="totalContractAmount" :title="t('finance.credit.columns.totalContractAmount')" width="140" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="totalContractAmount" :title="t('finance.credit.columns.totalContractAmount')" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
         <vxe-column field="overdueCount" :title="t('finance.credit.columns.overdueCount')" width="100" align="center" />
-        <vxe-column field="overdueAmount" :title="t('finance.credit.columns.overdueAmount')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="overdueAmount" :title="t('finance.credit.columns.overdueAmount')" width="130" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
         <vxe-column field="lastAssessDate" :title="t('finance.credit.columns.lastAssessDate')" width="120" />
         <vxe-column :title="t('finance.credit.columns.action')" width="140" fixed="right">
           <template #default="{ row }">

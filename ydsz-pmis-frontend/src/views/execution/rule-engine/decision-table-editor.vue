@@ -164,7 +164,7 @@ const tableName = ref('')
 const loading = ref(false)
 const saving = ref(false)
 const previewVisible = ref(false)
-const previewResult = ref<any>(null)
+const previewResult = ref<unknown>(null)
 
 interface ColumnDef {
   _key: string
@@ -178,7 +178,7 @@ interface RowDef {
   priority: number
   conditions: Record<string, string>
   actionText: string
-  _actions: Record<string, any>
+  _actions: Record<string, unknown>
 }
 
 const tableData = ref<{
@@ -233,11 +233,11 @@ function conditionHint(col: ColumnDef): string {
   }
 }
 
-function parseRowActions(text: string): Record<string, any> {
+function parseRowActions(text: string): Record<string, unknown> {
   try { return JSON.parse(text || '{}') } catch { return {} }
 }
 
-function formatJson(obj: any): string {
+function formatJson(obj: unknown): string {
   if (!obj) return '（空）'
   return JSON.stringify(obj, null, 2)
 }
@@ -255,22 +255,22 @@ async function loadTable() {
       tableData.value.priority = def.priority ?? 50
 
       // 从 raw 解析 decision-table 数据
-      const raw = (def as any).decisionTable
+      const raw = (def as { decisionTable?: { hitPolicy?: string; conditions?: Array<Record<string, unknown>>; rows?: Array<Record<string, unknown>>; defaultActions?: unknown } }).decisionTable
       if (raw) {
         tableData.value.hitPolicy = raw.hitPolicy || 'FIRST'
-        tableData.value.conditions = (raw.conditions || []).map((c: any) => ({
+        tableData.value.conditions = (raw.conditions || []).map((c) => ({
           _key: uuid(),
-          columnName: c.columnName || c.name || '',
-          displayName: c.displayName || '',
-          dataType: c.dataType || 'string',
-          operatorHint: c.operatorHint || '=',
+          columnName: (c.columnName as string) || (c.name as string) || '',
+          displayName: (c.displayName as string) || '',
+          dataType: (c.dataType as ColumnDef['dataType']) || 'string',
+          operatorHint: (c.operatorHint as ColumnDef['operatorHint']) || '=',
           required: !!c.required,
         }))
-        tableData.value.rows = (raw.rows || []).map((r: any) => ({
-          priority: r.priority ?? 50,
-          conditions: r.conditions || {},
+        tableData.value.rows = (raw.rows || []).map((r) => ({
+          priority: (r.priority as number) ?? 50,
+          conditions: (r.conditions as Record<string, string>) || {},
           actionText: JSON.stringify(r.actions || {}),
-          _actions: r.actions || {},
+          _actions: (r.actions as Record<string, unknown>) || {},
         }))
         if (raw.defaultActions) {
           defaultActionText.value = JSON.stringify(raw.defaultActions)
@@ -332,14 +332,14 @@ async function save() {
 
 async function dryRun() {
   // 命中预览：把所有条件 → row 用通配符 '*' 填，跑一次 dryRun
-  const input: Record<string, any> = {}
+  const input: Record<string, unknown> = {}
   // 用户暂不输入事实，仅展示当前表的结构
   try {
     const res = await ruleApi.dryRun(ruleCode.value, input)
     previewResult.value = res.data
     previewVisible.value = true
-  } catch (e: any) {
-    ElMessage.error(e?.message || '预览失败')
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '预览失败')
   }
 }
 

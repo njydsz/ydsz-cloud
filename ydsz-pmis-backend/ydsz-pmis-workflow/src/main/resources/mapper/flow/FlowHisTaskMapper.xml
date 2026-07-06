@@ -22,6 +22,7 @@
         <result column="perform_type" property="performType"/>
         <result column="approve_count" property="approveCount"/>
         <result column="approve_finished" property="approveFinished"/>
+        <result column="vote_pass_rate" property="votePassRate"/>
         <result column="task_status" property="taskStatus"/>
         <result column="comment" property="comment"/>
         <result column="status" property="status"/>
@@ -35,15 +36,17 @@
         <result column="deleted" property="deleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="iter_var" property="iterVar"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, instance_id, task_id, flow_code, definition_id, node_code, node_name, node_type,
         business_type, business_id, business_no, flow_name, title,
         assignee_type, assignee_id, assignee_name, perform_type,
-        approve_count, approve_finished, task_status, comment, status,
+        approve_count, approve_finished, vote_pass_rate, task_status, comment, status,
         created_by, created_at, updated_by, updated_at, claim_at, finish_at, duration_ms,
-        deleted, tenant_id, provider_trace_id
+        deleted, tenant_id, provider_trace_id,
+        iter_var
     </sql>
 
     <select id="selectDoneByAssignee" resultMap="BaseResultMap">

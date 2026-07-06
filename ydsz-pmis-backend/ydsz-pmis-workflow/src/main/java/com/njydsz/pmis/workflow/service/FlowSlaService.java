@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.service;
 
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 
 import java.util.Map;
 
@@ -35,7 +35,7 @@ public interface FlowSlaService {
      * @param task 当前任务（必须已 setAssigneeId + dueAt）
      * @return true=已处理或无需处理；false=处理异常
      */
-    boolean processOverdue(FlowTaskDO task);
+    boolean processOverdue(FlowRunTaskDO task);
 
     /**
      * 应用 SLA 配置到任务（创建任务时调用，解析 node.slaConfig 设置 dueAt）
@@ -43,7 +43,7 @@ public interface FlowSlaService {
      * @param task 待设置 dueAt 的任务
      * @param node 当前节点（slaConfig 字段从 ext 中读取）
      */
-    void applySlaConfig(FlowTaskDO task, FlowNodeDO node);
+    void applySlaConfig(FlowRunTaskDO task, FlowNodeDO node);
 
     /**
      * 解析 SLA 配置（同时支持 slaConfig JSON 和 ext.slaConfig 嵌套）

@@ -51,7 +51,7 @@ YDSZ PMIS · ydsz-pmis-workflow 模块说明
 | 表达式 | Aviator（与 literule 共享） |
 | 路由 | `DefaultFlowAssigneeResolver` + `FeignFlowAssigneeResolver` + `NameAssembler` |
 | 缓存 | Caffeine（流程定义元数据）+ Redis（分布式锁 / 幂等） |
-| 消息 | RocketMQ 5.x（`FlowEventOutboxListener` 事件外发） |
+| 消息 | RocketMQ 5.x（`FlowNotifyOutboxListener` 事件外发） |
 | 数据库 | PostgreSQL 18（`pmis_flow_*` 物理表共 26 张，详见 `deploy/sql/V1.0.0.sql`） |
 
 依赖关系：
@@ -164,8 +164,8 @@ ydsz-pmis-workflow
 ### 4.3 事件外发 + 异步持久化
 
 - `engine/FlowEventListener` 在流程关键节点发布 `FlowWorkflowEvent`；
-- `listener/FlowEventOutboxListener` 监听事件后通过 RocketMQ 外发；
-- `scheduler/EventOutboxScanner` 定时扫描 `pmis_flow_event_outbox` 表确保 at-least-once。
+- `listener/FlowNotifyOutboxListener` 监听事件后通过 RocketMQ 外发；
+- `scheduler/NotifyOutboxScanner` 定时扫描 `pmis_flow_notify_outbox` 表确保 at-least-once。
 
 ### 4.4 审批人自动去重
 
@@ -213,7 +213,7 @@ ydsz-pmis-workflow
 | `pmis_flow_definition` | 流程定义（含 BPMN XML） |
 | `pmis_flow_instance` | 流程实例 |
 | `pmis_flow_his_instance` | 流程历史实例（归档前） |
-| `pmis_flow_task` | 待办任务 |
+| `pmis_flow_run_task` | 待办任务运行态 |
 | `pmis_flow_his_task` | 已办任务 |
 | `pmis_flow_node` | 节点配置（审批人/表单/SLA） |
 | `pmis_flow_skip` | 跳转规则 |
@@ -227,13 +227,12 @@ ydsz-pmis-workflow
 | `pmis_flow_dmn_table` | DMN 决策表 |
 | `pmis_flow_auto_trigger` | 自动触发规则 |
 | `pmis_flow_event_subscription` | 事件订阅 |
-| `pmis_flow_event_outbox` | 事件外发表 |
+| `pmis_flow_notify_outbox` | 工作流通知外发箱（Outbox Pattern，事件 PENDING/SENT/DEAD） |
 | `pmis_flow_notify_channel` | 通知渠道配置 |
 | `pmis_flow_thirdparty_account` | 第三方平台账号 |
 | `pmis_flow_thirdparty_log` | 第三方平台交互日志 |
 | `pmis_flow_his_variable` | 历史变量 |
 | `pmis_flow_timer` | 定时器（含边界事件） |
-| `event_outbox` | 全局事件外发（与上面 outbox 解耦） |
 
 > ⚠️ **禁止新增** `pmis_sign_*` / `pmis_cert_*` / `pmis_contract_sign_*` 等签章相关表。
 

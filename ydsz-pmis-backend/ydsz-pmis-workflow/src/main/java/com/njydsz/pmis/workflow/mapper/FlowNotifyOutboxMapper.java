@@ -1,7 +1,7 @@
 package com.njydsz.pmis.workflow.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.njydsz.pmis.workflow.entity.EventOutboxDO;
+import com.njydsz.pmis.workflow.entity.FlowNotifyOutboxDO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -11,13 +11,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 事件 Outbox Mapper（P2-1）
+ * 工作流通知外发箱 Mapper（P2-1）
+ *
+ * <p>对应表 {@code pmis_flow_notify_outbox}，与全局事件外发表解耦，
+ * 仅服务于工作流模块的可靠通知投递。
  *
  * @author ydsz-pmis-team
  * @since 1.2.0
  */
 @Mapper
-public interface EventOutboxMapper extends BaseMapper<EventOutboxDO> {
+public interface FlowNotifyOutboxMapper extends BaseMapper<FlowNotifyOutboxDO> {
 
     /**
      * 扫描待投递事件（status=PENDING AND next_retry_at <= now）
@@ -29,7 +32,7 @@ public interface EventOutboxMapper extends BaseMapper<EventOutboxDO> {
      * @return 待投递事件列表
      */
     @Select("""
-            SELECT * FROM pmis_event_outbox
+            SELECT * FROM pmis_flow_notify_outbox
             WHERE deleted = 0
               AND status = 'PENDING'
               AND next_retry_at <= #{now}
@@ -37,8 +40,8 @@ public interface EventOutboxMapper extends BaseMapper<EventOutboxDO> {
             LIMIT #{limit}
             FOR UPDATE SKIP LOCKED
             """)
-    List<EventOutboxDO> selectPendingForSend(@Param("now") LocalDateTime now,
-                                              @Param("limit") int limit);
+    List<FlowNotifyOutboxDO> selectPendingForSend(@Param("now") LocalDateTime now,
+                                                   @Param("limit") int limit);
 
     /**
      * 标记事件投递成功
@@ -48,7 +51,7 @@ public interface EventOutboxMapper extends BaseMapper<EventOutboxDO> {
      * @return 影响行数
      */
     @Update("""
-            UPDATE pmis_event_outbox
+            UPDATE pmis_flow_notify_outbox
             SET status = 'SENT',
                 sent_at = #{sentAt},
                 error_msg = NULL,
@@ -66,7 +69,7 @@ public interface EventOutboxMapper extends BaseMapper<EventOutboxDO> {
      * @return 影响行数
      */
     @Update("""
-            UPDATE pmis_event_outbox
+            UPDATE pmis_flow_notify_outbox
             SET retry_count = retry_count + 1,
                 error_msg = #{errorMsg},
                 next_retry_at = #{nextRetryAt},
@@ -85,7 +88,7 @@ public interface EventOutboxMapper extends BaseMapper<EventOutboxDO> {
      * @return 影响行数
      */
     @Update("""
-            UPDATE pmis_event_outbox
+            UPDATE pmis_flow_notify_outbox
             SET status = 'DEAD',
                 error_msg = #{errorMsg},
                 updated_at = NOW()

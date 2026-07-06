@@ -177,8 +177,8 @@ async function handleGenerate() {
     const { data } = await generateProfitSnapshot(pQuery.initiationId, period)
     ElMessage.success(t('execution.profit.messages.snapshotGenerated', { id: data }))
     fetchProfit()
-  } catch (e: any) {
-    ElMessage.error(e?.message || t('execution.profit.messages.generateFailed'))
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || t('execution.profit.messages.generateFailed'))
   }
 }
 
@@ -224,7 +224,7 @@ onMounted(() => {
                 <template #default="{ row }">{{ methodMap[row.recognitionMethod as keyof typeof methodMap]?.label || row.recognitionMethod || '-' }}</template>
               </vxe-column>
               <vxe-column field="period" :title="$t('execution.profit.columns.period')" width="100" />
-              <vxe-column field="amount" :title="$t('execution.profit.columns.amount')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="amount" :title="$t('execution.profit.columns.amount')" width="130" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
               <vxe-column field="recognitionDate" :title="$t('execution.profit.columns.recognitionDate')" width="110" />
               <vxe-column field="description" :title="$t('execution.profit.columns.description')" min-width="200" show-overflow />
               <vxe-column :title="$t('execution.profit.columns.action')" width="100" fixed="right">
@@ -262,13 +262,13 @@ onMounted(() => {
               <vxe-column type="seq" title="#" width="50" />
               <vxe-column field="initiationName" :title="$t('execution.profit.columns.initiationName')" width="200" show-overflow />
               <vxe-column field="period" :title="$t('execution.profit.columns.period')" width="100" />
-              <vxe-column field="revenue" :title="$t('execution.profit.columns.revenue')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="laborCost" :title="$t('execution.profit.columns.laborCost')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="purchaseCost" :title="$t('execution.profit.columns.purchaseCost')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="expenseCost" :title="$t('execution.profit.columns.expenseCost')" width="120" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="totalCost" :title="$t('execution.profit.columns.totalCost')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="grossProfit" :title="$t('execution.profit.columns.grossProfit')" width="130" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-              <vxe-column field="grossMargin" :title="$t('execution.profit.columns.grossMargin')" width="100" align="right" :formatter="({ cellValue }: any) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(1)}%` : '-'" />
+              <vxe-column field="revenue" :title="$t('execution.profit.columns.revenue')" width="130" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="laborCost" :title="$t('execution.profit.columns.laborCost')" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="purchaseCost" :title="$t('execution.profit.columns.purchaseCost')" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="expenseCost" :title="$t('execution.profit.columns.expenseCost')" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="totalCost" :title="$t('execution.profit.columns.totalCost')" width="130" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="grossProfit" :title="$t('execution.profit.columns.grossProfit')" width="130" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+              <vxe-column field="grossMargin" :title="$t('execution.profit.columns.grossMargin')" width="100" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(1)}%` : '-'" />
               <vxe-column field="healthScore" :title="$t('execution.profit.columns.healthScore')" width="100" align="center">
                 <template #default="{ row }">
                   <el-tag :type="Number(row.healthScore || 0) >= 80 ? 'success' : Number(row.healthScore || 0) >= 60 ? 'warning' : 'danger'">

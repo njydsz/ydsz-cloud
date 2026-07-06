@@ -11,7 +11,7 @@ import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowDefinitionService;
@@ -63,7 +63,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         if (instance == null) {
             return null;
         }
-        List<FlowTaskDO> currentTasks = taskService.listPendingByInstance(instance.getId());
+        List<FlowRunTaskDO> currentTasks = taskService.listPendingByInstance(instance.getId());
         return instanceService.toView(instance, currentTasks.stream()
                 .map(taskService::toView).toList());
     }
@@ -111,7 +111,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     @Override
     public List<Map<String, Object>> listTodoTasks(Long userId, int page, int size) {
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        PageResult<FlowTaskDO> pageResult = taskService.listTodoByAssigneePage(
+        PageResult<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L), page, size);
         return pageResult.getList().stream().map(this::toMap).toList();
     }
@@ -120,7 +120,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     public List<Map<String, Object>> listDoneTasks(Long userId, int page, int size) {
         // P0-3: 已办走历史表（FlowTaskServiceImpl 内部已切换到 FlowHisTaskMapper）
         // P2-17: 真分页（SQL LIMIT/OFFSET）
-        PageResult<FlowTaskDO> pageResult = taskService.listDoneByAssigneePage(
+        PageResult<FlowRunTaskDO> pageResult = taskService.listDoneByAssigneePage(
                 String.valueOf(userId), SecurityContext.getTenantIdOrDefault(1L), page, size);
         return pageResult.getList().stream().map(this::toMap).toList();
     }
@@ -186,7 +186,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     @Override
     public Map<String, Object> getTaskDetail(Long taskId) {
         // P2-20: 调用 taskService.getById 获取任务，再用 toView 转换为视图
-        FlowTaskDO task = taskService.getById(taskId);
+        FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
             return null;
         }
@@ -210,13 +210,13 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     @Override
     public int passAllTodoTasks(Long userId, String comment) {
         Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
-        PageResult<FlowTaskDO> pageResult = taskService.listTodoByAssigneePage(
+        PageResult<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
-        List<FlowTaskDO> todos = pageResult.getList();
+        List<FlowRunTaskDO> todos = pageResult.getList();
         if (todos.isEmpty()) {
             return 0;
         }
-        List<Long> taskIds = todos.stream().map(FlowTaskDO::getId).toList();
+        List<Long> taskIds = todos.stream().map(FlowRunTaskDO::getId).toList();
         taskService.batchPass(taskIds, userId, comment);
         log.info("[Flow] 一键通过所有待办: userId={} count={}", userId, taskIds.size());
         return taskIds.size();
@@ -318,8 +318,8 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         }
 
         // 4. 获取当前待办任务
-        List<FlowTaskDO> currentTasks = taskService.listPendingByInstance(id);
-        for (FlowTaskDO task : currentTasks) {
+        List<FlowRunTaskDO> currentTasks = taskService.listPendingByInstance(id);
+        for (FlowRunTaskDO task : currentTasks) {
             Map<String, Object> entry = new HashMap<>();
             entry.put("type", "CURRENT_TASK");
             entry.put("timestamp", task.getCreatedAt());
@@ -375,7 +375,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         return m;
     }
 
-    private Map<String, Object> toMap(FlowTaskDO t) {
+    private Map<String, Object> toMap(FlowRunTaskDO t) {
         Map<String, Object> m = new HashMap<>();
         m.put("id", t.getId());
         m.put("instanceId", t.getInstanceId());
@@ -543,8 +543,8 @@ public class PmisWorkflowFacade implements WorkflowFacade {
         // 4. 当前待办（RUNNING 实例的最后状态）
         if ("RUNNING".equals(instance.getFlowStatus())
                 || "SUSPENDED".equals(instance.getFlowStatus())) {
-            List<FlowTaskDO> currentTasks = taskService.listPendingByInstance(id);
-            for (FlowTaskDO task : currentTasks) {
+            List<FlowRunTaskDO> currentTasks = taskService.listPendingByInstance(id);
+            for (FlowRunTaskDO task : currentTasks) {
                 Map<String, Object> step = new HashMap<>();
                 step.put("type", "CURRENT_TASK");
                 step.put("timestamp", task.getCreatedAt());

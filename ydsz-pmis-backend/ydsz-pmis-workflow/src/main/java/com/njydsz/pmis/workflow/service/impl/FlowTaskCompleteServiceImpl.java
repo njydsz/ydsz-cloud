@@ -17,7 +17,7 @@ import com.njydsz.pmis.workflow.entity.FlowDelegateLogDO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowUserDO;
 import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
@@ -29,7 +29,7 @@ import com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
@@ -83,7 +83,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class FlowTaskCompleteServiceImpl {
 
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     private final FlowInstanceMapper instanceMapper;
     /** 归档任务到历史表（completeAndArchive / AUTO_PASS / 自动去重 使用） */
     private final FlowHisTaskMapper hisTaskMapper;
@@ -178,7 +178,7 @@ public class FlowTaskCompleteServiceImpl {
             userIds = applyCrossNodeDedup(userIds, instanceId, node);
         }
 
-        FlowTaskDO task = new FlowTaskDO();
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setInstanceId(instanceId);
         task.setFlowCode(instance.getFlowCode());
         task.setDefinitionId(instance.getDefinitionId());
@@ -340,7 +340,7 @@ public class FlowTaskCompleteServiceImpl {
      * GAP-P2-10: FOREACH 循环节点 — 对集合中每个元素创建独立 task
      *
      * <p>对标 BPMN 2.0 multiInstance + 钉钉/飞书动态审批人集合。与会签（1 task + N user）的区别：
-     * FOREACH 为每个集合元素创建独立的 FlowTaskDO，每条 task 有独立的 assigneeId / iterVar。
+     * FOREACH 为每个集合元素创建独立的 FlowRunTaskDO，每条 task 有独立的 assigneeId / iterVar。
      *
      * <h3>处理流程</h3>
      * <ol>
@@ -373,7 +373,7 @@ public class FlowTaskCompleteServiceImpl {
             Map<String, Object> extConfig = parseExtConfig(node.getExt());
             String emptyStrategy = (String) extConfig.getOrDefault("emptyStrategy", "AUTO_PASS");
             if ("AUTO_PASS".equals(emptyStrategy)) {
-                FlowTaskDO autoTask = buildForeachTask(instance, node, "0",
+                FlowRunTaskDO autoTask = buildForeachTask(instance, node, "0",
                         "SYSTEM_AUTO_PASS", "0");
                 autoTask.setTaskStatus(FlowTaskStatus.COMPLETED.name());
                 autoTask.setFinishAt(LocalDateTime.now());
@@ -395,7 +395,7 @@ public class FlowTaskCompleteServiceImpl {
         // 为每个元素创建独立 task
         Long firstTaskId = null;
         for (String element : elements) {
-            FlowTaskDO task = buildForeachTask(instance, node, element,
+            FlowRunTaskDO task = buildForeachTask(instance, node, element,
                     "USER:" + element, element);
             taskMapper.insert(task);
 
@@ -437,9 +437,9 @@ public class FlowTaskCompleteServiceImpl {
     /**
      * GAP-P2-10: 构建 FOREACH 子任务
      */
-    private FlowTaskDO buildForeachTask(FlowInstanceDO instance, FlowNodeDO node,
+    private FlowRunTaskDO buildForeachTask(FlowInstanceDO instance, FlowNodeDO node,
                                           String assigneeId, String assigneeName, String iterVar) {
-        FlowTaskDO task = new FlowTaskDO();
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setInstanceId(instance.getId());
         task.setFlowCode(instance.getFlowCode());
         task.setDefinitionId(instance.getDefinitionId());
@@ -491,7 +491,7 @@ public class FlowTaskCompleteServiceImpl {
      *
      * <p>改写是静默的（写日志 + audit），不抛异常，避免拖垮主流程。
      */
-    private void applyDelegateRedirect(FlowTaskDO task,
+    private void applyDelegateRedirect(FlowRunTaskDO task,
                                        FlowInstanceDO instance,
                                        FlowNodeDO node) {
         try {
@@ -540,7 +540,7 @@ public class FlowTaskCompleteServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void claim(Long taskId, Long userId) {
-        FlowTaskDO task = support.getTaskOrThrow(taskId);
+        FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         if (!FlowTaskStatus.PENDING.name().equals(task.getTaskStatus())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_5873f2ae", task.getTaskStatus());
         }
@@ -562,7 +562,7 @@ public class FlowTaskCompleteServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void pass(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_7f4098fb", task.getTaskStatus());
         }
@@ -627,7 +627,7 @@ public class FlowTaskCompleteServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void reject(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_b35e6ea3");
         }
@@ -703,7 +703,7 @@ public class FlowTaskCompleteServiceImpl {
         if (dto.getTargetUserId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_6ddae4d1");
         }
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         Long originalAssignorId = parseAssignorId(task.getAssigneeId());
         String originalAssignorName = task.getAssigneeName();
         task.setAssigneeId(String.valueOf(dto.getTargetUserId()));
@@ -736,7 +736,7 @@ public class FlowTaskCompleteServiceImpl {
         if (dto.getTargetUserId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d4faa79e");
         }
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         // 保存原办理人
         Long originalAssigneeId = parseAssignorId(task.getAssigneeId());
         String originalAssigneeName = task.getAssigneeName();
@@ -775,9 +775,9 @@ public class FlowTaskCompleteServiceImpl {
             throw new BizException(BizErrorCode.RATE_LIMIT,
                     "error.workflow.msg_75474a57");
         }
-        List<FlowTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
         List<String> urged = new ArrayList<>();
-        for (FlowTaskDO task : pendingTasks) {
+        for (FlowRunTaskDO task : pendingTasks) {
             urged.add(task.getAssigneeId());
             support.audit(task, "URGE", operatorId, null, comment);
         }
@@ -827,7 +827,7 @@ public class FlowTaskCompleteServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void jump(FlowTaskOperateDTO dto) {
-        FlowTaskDO task = support.getTaskOrThrow(dto.getTaskId());
+        FlowRunTaskDO task = support.getTaskOrThrow(dto.getTaskId());
         if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_1efc5644", task.getTaskStatus());
         }
@@ -912,7 +912,7 @@ public class FlowTaskCompleteServiceImpl {
      */
     @Transactional(rollbackFor = Exception.class)
     public void timeoutTask(Long taskId, String reason) {
-        FlowTaskDO task = support.getTaskOrThrow(taskId);
+        FlowRunTaskDO task = support.getTaskOrThrow(taskId);
         // 校验状态为 PENDING/CLAIMED
         String status = task.getTaskStatus();
         if (!FlowTaskStatus.PENDING.name().equals(status)
@@ -946,7 +946,7 @@ public class FlowTaskCompleteServiceImpl {
     // ============================== 会签推进逻辑 ==============================
 
     /** OR 或签：直接完成 + 推进 */
-    private void doPassAndAdvance(FlowTaskDO task, FlowInstanceDO instance,
+    private void doPassAndAdvance(FlowRunTaskDO task, FlowInstanceDO instance,
                                    Map<String, Object> vars, FlowTaskOperateDTO dto) {
         completeAndArchive(task, dto.getComment());
         List<FlowNodeDO> nextNodes = advancer.advance(instance, task.getNodeCode(),
@@ -960,7 +960,7 @@ public class FlowTaskCompleteServiceImpl {
     }
 
     /** P0-1: 并行会签 — 全部通过才推进（GAP-P1: 乐观锁防并发） */
-    private void doParallelPass(FlowTaskDO task, FlowInstanceDO instance,
+    private void doParallelPass(FlowRunTaskDO task, FlowInstanceDO instance,
                                  Map<String, Object> vars, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
         int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
@@ -1011,7 +1011,7 @@ public class FlowTaskCompleteServiceImpl {
      *
      * @return 完成条件表达式，未配置返回 null
      */
-    private String resolveCompletionCondition(FlowTaskDO task) {
+    private String resolveCompletionCondition(FlowRunTaskDO task) {
         if (task.getDefinitionId() == null || task.getNodeCode() == null) {
             return null;
         }
@@ -1092,7 +1092,7 @@ public class FlowTaskCompleteServiceImpl {
      * <p>支持 ext.completionCondition 表达式提前完成（如 {@code nrOfCompletedInstances >= 2}），
      * 满足条件时 skipByNode 跳过剩余 PENDING task 并推进。
      */
-    private void doForeachPass(FlowTaskDO task, FlowInstanceDO instance,
+    private void doForeachPass(FlowRunTaskDO task, FlowInstanceDO instance,
                                  Map<String, Object> vars, FlowTaskOperateDTO dto) {
         // 完成当前 task
         completeAndArchive(task, dto.getComment());
@@ -1141,21 +1141,21 @@ public class FlowTaskCompleteServiceImpl {
      * GAP-P2-10: 统计 FOREACH 节点的总元素数（已完成 + PENDING）
      *
      * <p>用于 completionCondition 求值时注入 nrOfInstances。
-     * 查询 pmis_flow_task 中同 instanceId + nodeCode 的所有 task 数（不限状态）。
+     * 查询 pmis_flow_run_task 中同 instanceId + nodeCode 的所有 task 数（不限状态）。
      */
     private int countTotalForeachElements(Long instanceId, String nodeCode) {
         // 使用 countPendingByNode + 已完成数（从历史表或 task 表统计）
-        // 简化实现：查 pmis_flow_task 同节点全部 task 数（含 COMPLETED/SKIPPED/PENDING）
-        // 这里用 FlowTaskMapper 的 selectList + 过滤实现，避免新增 Mapper 方法
-        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowTaskDO> wrapper =
+        // 简化实现：查 pmis_flow_run_task 同节点全部 task 数（含 COMPLETED/SKIPPED/PENDING）
+        // 这里用 FlowRunTaskMapper 的 selectList + 过滤实现，避免新增 Mapper 方法
+        com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<FlowRunTaskDO> wrapper =
                 new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<>();
-        wrapper.eq(FlowTaskDO::getInstanceId, instanceId)
-                .eq(FlowTaskDO::getNodeCode, nodeCode);
+        wrapper.eq(FlowRunTaskDO::getInstanceId, instanceId)
+                .eq(FlowRunTaskDO::getNodeCode, nodeCode);
         return Math.toIntExact(taskMapper.selectCount(wrapper));
     }
 
     /** P1-12: 顺序会签 — 按序逐一处理（GAP-P1: 乐观锁防并发） */
-    private void doSequentialPass(FlowTaskDO task, FlowInstanceDO instance,
+    private void doSequentialPass(FlowRunTaskDO task, FlowInstanceDO instance,
                                    Map<String, Object> vars, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
         int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
@@ -1192,7 +1192,7 @@ public class FlowTaskCompleteServiceImpl {
     }
 
     /** P1-12 + P1-5: 票签 — 可配置通过率（默认 50%+1，支持 0~1 之间任意阈值） */
-    private void doVotePass(FlowTaskDO task, FlowInstanceDO instance,
+    private void doVotePass(FlowRunTaskDO task, FlowInstanceDO instance,
                              Map<String, Object> vars, FlowTaskOperateDTO dto) {
         int finished = (task.getApproveFinished() == null ? 0 : task.getApproveFinished()) + 1;
         int required = task.getApproveCount() == null ? 1 : task.getApproveCount();
@@ -1240,7 +1240,7 @@ public class FlowTaskCompleteServiceImpl {
     /**
      * P1-5: 加权票签 — 按办理人 weight 累加，权重达到阈值才推进。
      */
-    private void doWeightedVotePass(FlowTaskDO task, FlowInstanceDO instance,
+    private void doWeightedVotePass(FlowRunTaskDO task, FlowInstanceDO instance,
                                      Map<String, Object> vars, FlowTaskOperateDTO dto) {
         // 1. 查询所有办理人（含 weight）
         List<FlowUserDO> users = userMapper.selectByTaskId(task.getId());
@@ -1305,7 +1305,7 @@ public class FlowTaskCompleteServiceImpl {
 
     // ============================== 私有辅助 ==============================
 
-    private void completeAndArchive(FlowTaskDO task, String comment) {
+    private void completeAndArchive(FlowRunTaskDO task, String comment) {
         LocalDateTime now = LocalDateTime.now();
         Long durationMs = task.getCreatedAt() == null
                 ? null
@@ -1331,7 +1331,7 @@ public class FlowTaskCompleteServiceImpl {
     }
 
     /** 归档任务到历史表 */
-    private void archiveTask(FlowTaskDO src, FlowTaskStatus finalStatus) {
+    private void archiveTask(FlowRunTaskDO src, FlowTaskStatus finalStatus) {
         FlowHisTaskDO his = new FlowHisTaskDO();
         his.setInstanceId(src.getInstanceId());
         his.setTaskId(src.getId());
@@ -1351,6 +1351,7 @@ public class FlowTaskCompleteServiceImpl {
         his.setPerformType(src.getPerformType());
         his.setApproveCount(src.getApproveCount());
         his.setApproveFinished(src.getApproveFinished());
+        his.setVotePassRate(src.getVotePassRate());
         his.setTaskStatus(finalStatus.name());
         his.setComment(src.getComment());
         his.setCreatedAt(src.getCreatedAt());
@@ -1359,6 +1360,8 @@ public class FlowTaskCompleteServiceImpl {
         his.setDurationMs(src.getDurationMs());
         his.setTenantId(src.getTenantId());
         his.setProviderTraceId(src.getProviderTraceId());
+        // GAP-P2-10: 归档保留 iter_var,FOREACH 任务审批历史可追溯
+        his.setIterVar(src.getIterVar());
         hisTaskMapper.insert(his);
     }
 
@@ -1448,7 +1451,7 @@ public class FlowTaskCompleteServiceImpl {
                 serviceNodeExecutor.execute(node, variables);
 
         // 2. 创建任务记录（COMPLETED/TIMEOUT，用于审计追溯，非人工任务）
-        FlowTaskDO task = new FlowTaskDO();
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setInstanceId(instance.getId());
         task.setFlowCode(instance.getFlowCode());
         task.setDefinitionId(instance.getDefinitionId());
@@ -1570,20 +1573,20 @@ public class FlowTaskCompleteServiceImpl {
     /**
      * GAP-V2-05: 审批人自动去重检查
      */
-    private Long tryAutoDedup(FlowTaskDO task, FlowInstanceDO instance, FlowNodeDO node,
+    private Long tryAutoDedup(FlowRunTaskDO task, FlowInstanceDO instance, FlowNodeDO node,
                               Map<String, Object> variables, String currentAssigneeId) {
         try {
             // 查询同实例下最近一条已完成任务（按主键倒序取最新一条）
-            LambdaQueryWrapper<FlowTaskDO> qw = new LambdaQueryWrapper<>();
-            qw.eq(FlowTaskDO::getInstanceId, instance.getId())
-                    .eq(FlowTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name())
-                    .orderByDesc(FlowTaskDO::getId)
+            LambdaQueryWrapper<FlowRunTaskDO> qw = new LambdaQueryWrapper<>();
+            qw.eq(FlowRunTaskDO::getInstanceId, instance.getId())
+                    .eq(FlowRunTaskDO::getTaskStatus, FlowTaskStatus.COMPLETED.name())
+                    .orderByDesc(FlowRunTaskDO::getId)
                     .last("LIMIT 1");
-            List<FlowTaskDO> prevTasks = taskMapper.selectList(qw);
+            List<FlowRunTaskDO> prevTasks = taskMapper.selectList(qw);
             if (prevTasks.isEmpty()) {
                 return null;
             }
-            FlowTaskDO prevTask = prevTasks.get(0);
+            FlowRunTaskDO prevTask = prevTasks.get(0);
             String prevAssigneeId = prevTask.getAssigneeId();
             // 上一任务为 AUTO_PASS（assigneeName=SYSTEM_AUTO_PASS）不参与去重；
             // assigneeId 不同也不去重
@@ -1830,7 +1833,7 @@ public class FlowTaskCompleteServiceImpl {
         return FlowPerformType.OR;
     }
 
-    private void resolveAssignee(FlowTaskDO task, FlowNodeDO node,
+    private void resolveAssignee(FlowRunTaskDO task, FlowNodeDO node,
                                   Map<String, Object> variables,
                                   FlowAssigneeDTO explicit,
                                   FlowInstanceDO instance) {
@@ -1903,7 +1906,7 @@ public class FlowTaskCompleteServiceImpl {
         }
     }
 
-    private FlowTaskDO toClaimTask(FlowTaskDO src, Long userId) {
+    private FlowRunTaskDO toClaimTask(FlowRunTaskDO src, Long userId) {
         src.setAssigneeId(String.valueOf(userId));
         src.setTaskStatus(FlowTaskStatus.CLAIMED.name());
         src.setClaimAt(LocalDateTime.now());
@@ -1915,7 +1918,7 @@ public class FlowTaskCompleteServiceImpl {
     /**
      * P1-5: 应用投票配置 — 从 node.ext 读取 votePassRate 写入 task
      */
-    private void applyVoteConfig(FlowTaskDO task, FlowNodeDO node) {
+    private void applyVoteConfig(FlowRunTaskDO task, FlowNodeDO node) {
         if (node == null || !StringUtils.hasText(node.getExt())) {
             return;
         }
@@ -1997,7 +2000,7 @@ public class FlowTaskCompleteServiceImpl {
     /**
      * P1-4: 写入委派代理日志（当被委派人 PASS/REJECT/CLAIM/TRANSFER 时记录）
      */
-    private void logDelegateOperation(FlowTaskDO task, String action, String opType) {
+    private void logDelegateOperation(FlowRunTaskDO task, String action, String opType) {
         if (task == null || delegateLogMapper == null) {
             return;
         }
@@ -2036,7 +2039,7 @@ public class FlowTaskCompleteServiceImpl {
      * 此处通过 ownerId + flowCode + nodeCode 重新匹配授权规则以恢复 authId。
      * 匹配失败（授权已过期/已撤回）时返回 0L，不影响日志写入。
      */
-    private Long resolveDelegateAuthId(FlowTaskDO task, Long ownerId) {
+    private Long resolveDelegateAuthId(FlowRunTaskDO task, Long ownerId) {
         try {
             FlowInstanceDO instance = instanceMapper.selectById(task.getInstanceId());
             if (instance == null) {

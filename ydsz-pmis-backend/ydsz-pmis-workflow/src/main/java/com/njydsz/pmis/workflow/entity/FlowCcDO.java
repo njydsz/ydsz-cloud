@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
  * 流程抄送 DO
  *
  * <p>P0-3: 抄送中心（对标钉钉/飞书的"抄送我的"独立 Tab）。
- * <p>CC 节点触发或人工抄送都会写入本表，区别于 pmis_flow_task（无需办理动作）。
+ * <p>CC 节点触发或人工抄送都会写入本表，区别于 pmis_flow_run_task（无需办理动作）。
  *
  * @author ydsz-pmis-team
  * @since 1.1.0

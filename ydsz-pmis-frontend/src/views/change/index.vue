@@ -35,6 +35,7 @@ import type {
 } from '@/api/project/change/types'
 import { PC } from '@/constants/permissionCodes'
 import { useTable } from '@/composables/useTable'
+import type { PageResult } from '@/utils/request'
 
 const { t } = useI18n()
 

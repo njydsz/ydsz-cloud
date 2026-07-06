@@ -17,14 +17,14 @@ import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowSkipDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
 import com.njydsz.pmis.workflow.mapper.FlowSkipMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowAutoTriggerService;
 import com.njydsz.pmis.workflow.service.FlowCanaryService;
@@ -72,7 +72,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
     private final FlowCanaryService canaryService;
     private final FlowAdvancer advancer;
     private final FlowTaskService taskService;
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     /** GAP-V2-08: 流程节点 Mapper（模拟运行时查询节点） */
     private final FlowNodeMapper nodeMapper;
     /** GAP-V2-08: 流程跳转 Mapper（模拟运行时查询跳转） */
@@ -384,7 +384,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_3095a676");
         }
         // 校验：下一节点未被处理（PENDING 状态的任务可以撤回）
-        List<FlowTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
+        List<FlowRunTaskDO> pendingTasks = taskMapper.selectPendingByInstance(instanceId);
         boolean anyProcessed = pendingTasks.stream()
                 .anyMatch(t -> FlowTaskStatus.CLAIMED.name().equals(t.getTaskStatus())
                         || FlowTaskStatus.COMPLETED.name().equals(t.getTaskStatus()));
@@ -700,7 +700,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 return null;
             }
             // 查找被附着节点的当前 PENDING 任务
-            List<FlowTaskDO> tasks = taskMapper.selectPendingByNode(instanceId, attachedToRef);
+            List<FlowRunTaskDO> tasks = taskMapper.selectPendingByNode(instanceId, attachedToRef);
             return tasks.isEmpty() ? null : tasks.get(0).getId();
         } catch (Exception e) {
             log.warn("[Flow] 解析 boundaryTaskId 失败: nodeCode={} err={}",
@@ -1007,7 +1007,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         String formFieldsConfig = null;
         if (taskId != null) {
             // 优先从任务获取节点信息
-            FlowTaskDO task = taskMapper.selectById(taskId);
+            FlowRunTaskDO task = taskMapper.selectById(taskId);
             if (task == null) {
                 throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_6541ab08", taskId);
             }

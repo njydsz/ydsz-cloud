@@ -6,12 +6,12 @@ import com.njydsz.pmis.workflow.dto.InstanceMigrationResultDTO;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -39,7 +39,7 @@ import static org.mockito.Mockito.when;
  *
  * <p>P3-3：覆盖实例迁移主流程与新增的"任务级迁移"能力。验证：
  * <ul>
- *   <li>实例迁移成功后同步更新 pmis_flow_task 的 definitionId / nodeCode / nodeName</li>
+ *   <li>实例迁移成功后同步更新 pmis_flow_run_task 的 definitionId / nodeCode / nodeName</li>
  *   <li>任务节点 == 实例旧节点 → 跟随实例迁移到新节点</li>
  *   <li>任务节点 != 实例节点时按 nodeMapping 映射</li>
  *   <li>任务节点直接存在于目标定义时保持不变</li>
@@ -68,7 +68,7 @@ class FlowInstanceMigrationServiceImplTest {
     @Mock
     private FlowDefinitionMapper definitionMapper;
     @Mock
-    private FlowTaskMapper flowTaskMapper;
+    private FlowRunTaskMapper flowTaskMapper;
 
     private FlowInstanceMigrationServiceImpl service;
 
@@ -95,7 +95,7 @@ class FlowInstanceMigrationServiceImplTest {
         when(nodeMapper.selectByDefinitionId(TARGET_DEF_ID)).thenReturn(targetNodes);
         when(instanceMapper.selectList(any())).thenReturn(List.of(instance));
 
-        FlowTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "approve");
+        FlowRunTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "approve");
         when(flowTaskMapper.selectPendingByInstance(1001L)).thenReturn(List.of(task));
 
         InstanceMigrationDTO dto = buildDto(null); // 无节点映射
@@ -105,9 +105,9 @@ class FlowInstanceMigrationServiceImplTest {
         // 实例更新
         verify(instanceMapper).updateById(any(FlowInstanceDO.class));
         // 任务更新：definitionId 改为 200，nodeCode 保持 approve
-        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        ArgumentCaptor<FlowRunTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowRunTaskDO.class);
         verify(flowTaskMapper).updateById(taskCaptor.capture());
-        FlowTaskDO updated = taskCaptor.getValue();
+        FlowRunTaskDO updated = taskCaptor.getValue();
         assertThat(updated.getId()).isEqualTo(5001L);
         assertThat(updated.getDefinitionId()).isEqualTo(TARGET_DEF_ID);
         assertThat(updated.getNodeCode()).isEqualTo("approve");
@@ -128,7 +128,7 @@ class FlowInstanceMigrationServiceImplTest {
         when(nodeMapper.selectByDefinitionId(TARGET_DEF_ID)).thenReturn(targetNodes);
         when(instanceMapper.selectList(any())).thenReturn(List.of(instance));
 
-        FlowTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "apply");
+        FlowRunTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "apply");
         when(flowTaskMapper.selectPendingByInstance(1001L)).thenReturn(List.of(task));
 
         // 节点映射 apply → submit
@@ -136,9 +136,9 @@ class FlowInstanceMigrationServiceImplTest {
         InstanceMigrationResultDTO result = service.migrate(dto);
 
         assertThat(result.getMigratedCount()).isEqualTo(1);
-        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        ArgumentCaptor<FlowRunTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowRunTaskDO.class);
         verify(flowTaskMapper).updateById(taskCaptor.capture());
-        FlowTaskDO updated = taskCaptor.getValue();
+        FlowRunTaskDO updated = taskCaptor.getValue();
         // 任务节点 == 实例旧节点 apply → 跟随实例迁移到 submit
         assertThat(updated.getNodeCode()).isEqualTo("submit");
         assertThat(updated.getDefinitionId()).isEqualTo(TARGET_DEF_ID);
@@ -159,16 +159,16 @@ class FlowInstanceMigrationServiceImplTest {
         when(nodeMapper.selectByDefinitionId(TARGET_DEF_ID)).thenReturn(targetNodes);
         when(instanceMapper.selectList(any())).thenReturn(List.of(instance));
 
-        FlowTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "counter_sign");
+        FlowRunTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "counter_sign");
         when(flowTaskMapper.selectPendingByInstance(1001L)).thenReturn(List.of(task));
 
         // 节点映射：counter_sign → cs_new
         InstanceMigrationDTO dto = buildDto(Map.of("counter_sign", "cs_new"));
         service.migrate(dto);
 
-        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        ArgumentCaptor<FlowRunTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowRunTaskDO.class);
         verify(flowTaskMapper).updateById(taskCaptor.capture());
-        FlowTaskDO updated = taskCaptor.getValue();
+        FlowRunTaskDO updated = taskCaptor.getValue();
         assertThat(updated.getNodeCode()).isEqualTo("cs_new");
         assertThat(updated.getDefinitionId()).isEqualTo(TARGET_DEF_ID);
     }
@@ -187,16 +187,16 @@ class FlowInstanceMigrationServiceImplTest {
         when(nodeMapper.selectByDefinitionId(TARGET_DEF_ID)).thenReturn(targetNodes);
         when(instanceMapper.selectList(any())).thenReturn(List.of(instance));
 
-        FlowTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "notify");
+        FlowRunTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "notify");
         when(flowTaskMapper.selectPendingByInstance(1001L)).thenReturn(List.of(task));
 
         // 无节点映射
         InstanceMigrationDTO dto = buildDto(null);
         service.migrate(dto);
 
-        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        ArgumentCaptor<FlowRunTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowRunTaskDO.class);
         verify(flowTaskMapper).updateById(taskCaptor.capture());
-        FlowTaskDO updated = taskCaptor.getValue();
+        FlowRunTaskDO updated = taskCaptor.getValue();
         // 节点保持 notify，仅 definitionId 变更
         assertThat(updated.getNodeCode()).isEqualTo("notify");
         assertThat(updated.getDefinitionId()).isEqualTo(TARGET_DEF_ID);
@@ -216,7 +216,7 @@ class FlowInstanceMigrationServiceImplTest {
         when(nodeMapper.selectByDefinitionId(TARGET_DEF_ID)).thenReturn(targetNodes);
         when(instanceMapper.selectList(any())).thenReturn(List.of(instance));
 
-        FlowTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "old_review");
+        FlowRunTaskDO task = buildTask(5001L, 1001L, SOURCE_DEF_ID, "old_review");
         when(flowTaskMapper.selectPendingByInstance(1001L)).thenReturn(List.of(task));
 
         InstanceMigrationDTO dto = buildDto(null);
@@ -225,7 +225,7 @@ class FlowInstanceMigrationServiceImplTest {
         // 实例更新仍发生
         verify(instanceMapper).updateById(any(FlowInstanceDO.class));
         // 任务未被更新
-        verify(flowTaskMapper, never()).updateById(any(FlowTaskDO.class));
+        verify(flowTaskMapper, never()).updateById(any(FlowRunTaskDO.class));
     }
 
     @Test
@@ -245,7 +245,7 @@ class FlowInstanceMigrationServiceImplTest {
         InstanceMigrationDTO dto = buildDto(null);
         service.migrate(dto);
 
-        verify(flowTaskMapper, never()).updateById(any(FlowTaskDO.class));
+        verify(flowTaskMapper, never()).updateById(any(FlowRunTaskDO.class));
     }
 
     @Test
@@ -270,7 +270,7 @@ class FlowInstanceMigrationServiceImplTest {
         assertThat(result.getDetails().get(0).getReason()).contains("试运行");
         verify(instanceMapper, never()).updateById(any(FlowInstanceDO.class));
         verify(flowTaskMapper, never()).selectPendingByInstance(any());
-        verify(flowTaskMapper, never()).updateById(any(FlowTaskDO.class));
+        verify(flowTaskMapper, never()).updateById(any(FlowRunTaskDO.class));
     }
 
     @Test
@@ -292,7 +292,7 @@ class FlowInstanceMigrationServiceImplTest {
         assertThat(result.getMigratedCount()).isEqualTo(1);
         verify(instanceMapper, never()).updateById(any(FlowInstanceDO.class));
         verify(flowTaskMapper, never()).selectPendingByInstance(any());
-        verify(flowTaskMapper, never()).updateById(any(FlowTaskDO.class));
+        verify(flowTaskMapper, never()).updateById(any(FlowRunTaskDO.class));
     }
 
     @Test
@@ -333,8 +333,8 @@ class FlowInstanceMigrationServiceImplTest {
         when(nodeMapper.selectByDefinitionId(TARGET_DEF_ID)).thenReturn(targetNodes);
         when(instanceMapper.selectList(any())).thenReturn(List.of(inst1, inst2, inst3));
 
-        FlowTaskDO task1 = buildTask(5001L, 1001L, SOURCE_DEF_ID, "apply");
-        FlowTaskDO task2 = buildTask(5002L, 1002L, SOURCE_DEF_ID, "approve");
+        FlowRunTaskDO task1 = buildTask(5001L, 1001L, SOURCE_DEF_ID, "apply");
+        FlowRunTaskDO task2 = buildTask(5002L, 1002L, SOURCE_DEF_ID, "approve");
         when(flowTaskMapper.selectPendingByInstance(1001L)).thenReturn(List.of(task1));
         when(flowTaskMapper.selectPendingByInstance(1002L)).thenReturn(List.of(task2));
 
@@ -345,7 +345,7 @@ class FlowInstanceMigrationServiceImplTest {
         assertThat(result.getMigratedCount()).isEqualTo(2);
         assertThat(result.getSkippedCount()).isEqualTo(1);
         verify(instanceMapper, times(2)).updateById(any(FlowInstanceDO.class));
-        verify(flowTaskMapper, times(2)).updateById(any(FlowTaskDO.class));
+        verify(flowTaskMapper, times(2)).updateById(any(FlowRunTaskDO.class));
         // 跳过的实例不查询任务
         verify(flowTaskMapper, never()).selectPendingByInstance(eq(1003L));
     }
@@ -429,8 +429,8 @@ class FlowInstanceMigrationServiceImplTest {
         return inst;
     }
 
-    private FlowTaskDO buildTask(Long id, Long instanceId, Long defId, String nodeCode) {
-        FlowTaskDO task = new FlowTaskDO();
+    private FlowRunTaskDO buildTask(Long id, Long instanceId, Long defId, String nodeCode) {
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setId(id);
         task.setInstanceId(instanceId);
         task.setDefinitionId(defId);

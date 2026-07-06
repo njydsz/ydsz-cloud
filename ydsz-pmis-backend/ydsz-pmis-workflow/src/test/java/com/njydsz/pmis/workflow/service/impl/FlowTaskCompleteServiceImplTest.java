@@ -10,14 +10,14 @@ import com.njydsz.pmis.workflow.engine.FlowUrgeLimiter;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
@@ -68,7 +68,7 @@ import static org.mockito.Mockito.when;
 class FlowTaskCompleteServiceImplTest {
 
     @Mock
-    private FlowTaskMapper taskMapper;
+    private FlowRunTaskMapper taskMapper;
     @Mock
     private FlowInstanceMapper instanceMapper;
     @Mock
@@ -121,7 +121,7 @@ class FlowTaskCompleteServiceImplTest {
     @Test
     @DisplayName("jump - 任务已完成时抛 BAD_REQUEST")
     void jumpShouldThrowWhenTaskFinished() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.COMPLETED);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.COMPLETED);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
 
         FlowTaskOperateDTO dto = buildJumpDto(TARGET_NODE, null);
@@ -139,7 +139,7 @@ class FlowTaskCompleteServiceImplTest {
     @Test
     @DisplayName("jump - targetNodeCode 为空时抛 BAD_REQUEST")
     void jumpShouldThrowWhenTargetNodeCodeEmpty() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
 
         FlowTaskOperateDTO dto = buildJumpDto(null, null);
@@ -157,7 +157,7 @@ class FlowTaskCompleteServiceImplTest {
     @Test
     @DisplayName("jump - 实例不存在时抛 NOT_FOUND")
     void jumpShouldThrowWhenInstanceNotFound() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(null);
 
@@ -176,7 +176,7 @@ class FlowTaskCompleteServiceImplTest {
     @Test
     @DisplayName("jump - 目标节点不存在时抛 NOT_FOUND")
     void jumpShouldThrowWhenTargetNodeNotFound() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(buildInstance());
         when(nodeMapper.selectByCode(DEFINITION_ID, TARGET_NODE)).thenReturn(null);
@@ -196,7 +196,7 @@ class FlowTaskCompleteServiceImplTest {
     @Test
     @DisplayName("GAP-P2-9 jump - action=JUMP 且目标节点未开启 freeJump 时抛 BAD_REQUEST")
     void jumpShouldThrowWhenFreeJumpNotEnabledAndActionIsJump() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(buildInstance());
         // 目标节点 ext 无 freeJump 配置
@@ -223,7 +223,7 @@ class FlowTaskCompleteServiceImplTest {
     @Test
     @DisplayName("GAP-P2-9 jump - action=JUMP 且 ext.freeJump=false 时抛 BAD_REQUEST")
     void jumpShouldThrowWhenFreeJumpExplicitlyFalse() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(buildInstance());
         when(nodeMapper.selectByCode(DEFINITION_ID, TARGET_NODE))
@@ -243,7 +243,7 @@ class FlowTaskCompleteServiceImplTest {
     @Test
     @DisplayName("GAP-P2-9 jump - ext.freeJump=\"true\"（字符串）时允许跳转")
     void jumpShouldPassWhenFreeJumpIsStringTrue() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(buildInstance());
         when(nodeMapper.selectByCode(DEFINITION_ID, TARGET_NODE))
@@ -262,14 +262,14 @@ class FlowTaskCompleteServiceImplTest {
         verify(taskMapper).completeTask(eq(TASK_ID), eq(FlowTaskStatus.COMPLETED.name()),
                 anyString(), any(), any());
         verify(taskMapper).cancelByInstance(INSTANCE_ID, FlowTaskStatus.CANCELLED.name());
-        verify(support).audit(any(FlowTaskDO.class), eq("JUMP"), eq(OPERATOR_ID),
+        verify(support).audit(any(FlowRunTaskDO.class), eq("JUMP"), eq(OPERATOR_ID),
                 eq(null), anyString());
     }
 
     @Test
     @DisplayName("GAP-P2-9 jump - ext.freeJump=true（布尔）时允许跳转 + 透传显式办理人")
     void jumpShouldPassWhenFreeJumpIsBooleanTrueAndPassThroughAssignees() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(buildInstance());
         when(nodeMapper.selectByCode(DEFINITION_ID, TARGET_NODE))
@@ -297,7 +297,7 @@ class FlowTaskCompleteServiceImplTest {
     @Test
     @DisplayName("GAP-P2-9 向后兼容 - action != JUMP（管理员强制跳转）即使 freeJump 未开启也放行")
     void jumpShouldPassWhenActionNotJumpWithoutFreeJumpWhitelist() {
-        FlowTaskDO task = buildTask(FlowTaskStatus.PENDING);
+        FlowRunTaskDO task = buildTask(FlowTaskStatus.PENDING);
         when(support.getTaskOrThrow(TASK_ID)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(buildInstance());
         // 目标节点未开启 freeJump
@@ -315,14 +315,14 @@ class FlowTaskCompleteServiceImplTest {
 
         verify(taskMapper).completeTask(eq(TASK_ID), eq(FlowTaskStatus.COMPLETED.name()),
                 anyString(), any(), any());
-        verify(support).audit(any(FlowTaskDO.class), eq("JUMP"), eq(OPERATOR_ID),
+        verify(support).audit(any(FlowRunTaskDO.class), eq("JUMP"), eq(OPERATOR_ID),
                 eq(null), anyString());
     }
 
     // ==================== 辅助方法 ====================
 
-    private FlowTaskDO buildTask(FlowTaskStatus status) {
-        FlowTaskDO task = new FlowTaskDO();
+    private FlowRunTaskDO buildTask(FlowTaskStatus status) {
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setId(TASK_ID);
         task.setInstanceId(INSTANCE_ID);
         task.setDefinitionId(DEFINITION_ID);

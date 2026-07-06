@@ -12,7 +12,7 @@ import com.njydsz.pmis.workflow.entity.FlowNodeDO;
 import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowJoinTokenService;
 import com.njydsz.pmis.workflow.service.impl.FlowInstanceServiceImpl;
@@ -45,7 +45,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
     private final FlowTaskService taskService;
     private final FlowInstanceService instanceService;
     private final FlowVariableStrategy variableStrategy;
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     /** GAP-P2: 并行网关 join 令牌服务（精确跟踪分支到达状态） */
     private final FlowJoinTokenService joinTokenService;
 
@@ -62,7 +62,7 @@ public class DefaultFlowAdvancer implements FlowAdvancer {
                                 FlowTaskService taskService,
                                 FlowInstanceService instanceService,
                                 FlowVariableStrategy variableStrategy,
-                                FlowTaskMapper taskMapper,
+                                FlowRunTaskMapper taskMapper,
                                 FlowJoinTokenService joinTokenService,
                                 @Autowired(required = false) FlowRoutingService routingService) {
         this.flowDefinitionCacheService = flowDefinitionCacheService;

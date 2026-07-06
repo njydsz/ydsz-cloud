@@ -8,7 +8,7 @@ import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.enums.FlowNodeType;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowJoinTokenService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
@@ -79,7 +79,7 @@ class DefaultFlowAdvancerTest {
     @Mock
     private FlowVariableStrategy variableStrategy;
     @Mock
-    private FlowTaskMapper taskMapper;
+    private FlowRunTaskMapper taskMapper;
     @Mock
     private FlowJoinTokenService joinTokenService;
 

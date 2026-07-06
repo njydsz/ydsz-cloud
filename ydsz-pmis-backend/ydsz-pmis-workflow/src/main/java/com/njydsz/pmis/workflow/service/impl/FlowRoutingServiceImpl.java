@@ -6,11 +6,11 @@ import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.workflow.entity.FlowAuditLogDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowTaskStatus;
 import com.njydsz.pmis.workflow.mapper.FlowAuditLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowRoutingService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -52,7 +52,7 @@ import java.util.stream.Collectors;
 public class FlowRoutingServiceImpl implements FlowRoutingService {
 
     private final ExpressionEvaluator expressionEvaluator;
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     private final FlowAuditLogMapper auditLogMapper;
     private final FlowInstanceMapper instanceMapper;
 
@@ -63,7 +63,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
      * 构造注入：使用 {@link ObjectProvider} 支持可选依赖 {@link DecisionTableEvalService}。
      */
     public FlowRoutingServiceImpl(ExpressionEvaluator expressionEvaluator,
-                                  FlowTaskMapper taskMapper,
+                                  FlowRunTaskMapper taskMapper,
                                   FlowAuditLogMapper auditLogMapper,
                                   FlowInstanceMapper instanceMapper,
                                   ObjectProvider<DecisionTableEvalService> decisionTableEvalServiceProvider) {
@@ -218,12 +218,12 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
      * <p>遍历实例下所有任务，筛选出 dueAt 已过期且任务状态未完成的记录。
      */
     private void detectTimeout(Long instanceId, List<Map<String, Object>> anomalies) {
-        List<FlowTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
+        List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
         if (tasks == null || tasks.isEmpty()) {
             return;
         }
         LocalDateTime now = LocalDateTime.now();
-        for (FlowTaskDO task : tasks) {
+        for (FlowRunTaskDO task : tasks) {
             if (task.getDueAt() == null) {
                 continue;
             }
@@ -253,12 +253,12 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
      * 仅检测未完成的任务。
      */
     private void detectStuck(Long instanceId, List<Map<String, Object>> anomalies) {
-        List<FlowTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
+        List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
         if (tasks == null || tasks.isEmpty()) {
             return;
         }
         LocalDateTime now = LocalDateTime.now();
-        for (FlowTaskDO task : tasks) {
+        for (FlowRunTaskDO task : tasks) {
             if (FlowTaskStatus.valueOf(task.getTaskStatus()).isFinished()) {
                 continue;
             }

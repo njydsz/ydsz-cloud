@@ -18,6 +18,8 @@
         <result column="work_type" property="workType"/>
         <result column="billable" property="billable"/>
         <result column="description" property="description"/>
+        <result column="rate_id" property="rateId"/>
+        <result column="rate" property="rate"/>
         <result column="status" property="status"/>
         <result column="approver_id" property="approverId"/>
         <result column="approver_name" property="approverName"/>
@@ -41,27 +43,27 @@
     </update>
 
     <select id="selectByEmployeeAndDateRange" resultMap="BaseResultMap">
-        SELECT id, entry_date, employee_id, employee_name, level_code, initiation_id, initiation_name, task_id, task_name, hours, days, overtime, work_type, billable, description, status, approver_id, approver_name, approved_at, reject_reason, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_execution_time_entry
+        SELECT id, entry_date, employee_id, employee_name, level_code, initiation_id, initiation_name, task_id, task_name, hours, days, overtime, work_type, billable, description, rate_id, rate, status, approver_id, approver_name, approved_at, reject_reason, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_execution_time_entry
         WHERE employee_id = #{employeeId} AND deleted = 0
           AND entry_date BETWEEN #{from} AND #{to}
         ORDER BY entry_date DESC
     </select>
 
     <select id="selectByInitiationAndDateRange" resultMap="BaseResultMap">
-        SELECT id, entry_date, employee_id, employee_name, level_code, initiation_id, initiation_name, task_id, task_name, hours, days, overtime, work_type, billable, description, status, approver_id, approver_name, approved_at, reject_reason, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_execution_time_entry
+        SELECT id, entry_date, employee_id, employee_name, level_code, initiation_id, initiation_name, task_id, task_name, hours, days, overtime, work_type, billable, description, rate_id, rate, status, approver_id, approver_name, approved_at, reject_reason, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_execution_time_entry
         WHERE initiation_id = #{initiationId} AND deleted = 0
           AND entry_date BETWEEN #{from} AND #{to}
         ORDER BY entry_date DESC
     </select>
 
     <select id="selectByTask" resultMap="BaseResultMap">
-        SELECT id, entry_date, employee_id, employee_name, level_code, initiation_id, initiation_name, task_id, task_name, hours, days, overtime, work_type, billable, description, status, approver_id, approver_name, approved_at, reject_reason, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_execution_time_entry
+        SELECT id, entry_date, employee_id, employee_name, level_code, initiation_id, initiation_name, task_id, task_name, hours, days, overtime, work_type, billable, description, rate_id, rate, status, approver_id, approver_name, approved_at, reject_reason, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_execution_time_entry
         WHERE task_id = #{taskId} AND deleted = 0
         ORDER BY entry_date DESC
     </select>
 
     <select id="selectByStatus" resultMap="BaseResultMap">
-        SELECT id, entry_date, employee_id, employee_name, level_code, initiation_id, initiation_name, task_id, task_name, hours, days, overtime, work_type, billable, description, status, approver_id, approver_name, approved_at, reject_reason, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_execution_time_entry
+        SELECT id, entry_date, employee_id, employee_name, level_code, initiation_id, initiation_name, task_id, task_name, hours, days, overtime, work_type, billable, description, rate_id, rate, status, approver_id, approver_name, approved_at, reject_reason, tenant_id, provider_trace_id, created_at, updated_at, deleted FROM pmis_execution_time_entry
         WHERE status = #{status} AND deleted = 0
     </select>
 

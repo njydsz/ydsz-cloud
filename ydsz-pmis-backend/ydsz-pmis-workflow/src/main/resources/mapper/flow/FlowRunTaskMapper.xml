@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.njydsz.pmis.workflow.mapper.FlowTaskMapper">
+<mapper namespace="com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper">
 
-    <resultMap id="BaseResultMap" type="com.njydsz.pmis.workflow.entity.FlowTaskDO">
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.workflow.entity.FlowRunTaskDO">
         <id column="id" property="id"/>
         <result column="instance_id" property="instanceId"/>
         <result column="flow_code" property="flowCode"/>
@@ -24,6 +24,7 @@
         <result column="perform_type" property="performType"/>
         <result column="approve_count" property="approveCount"/>
         <result column="approve_finished" property="approveFinished"/>
+        <result column="vote_pass_rate" property="votePassRate"/>
         <result column="task_status" property="taskStatus"/>
         <result column="comment" property="comment"/>
         <result column="status" property="status"/>
@@ -43,21 +44,24 @@
         <result column="deleted" property="deleted"/>
         <result column="tenant_id" property="tenantId"/>
         <result column="provider_trace_id" property="providerTraceId"/>
+        <result column="iter_var" property="iterVar"/>
+        <result column="version" property="version"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id, instance_id, flow_code, definition_id, node_code, node_name, node_type,
         business_type, business_id, business_no, flow_name, title,
         assignor_id, assignor_name, assignee_type, assignee_id, assignee_name, permission_flag,
-        perform_type, approve_count, approve_finished, task_status, comment, status,
+        perform_type, approve_count, approve_finished, vote_pass_rate, task_status, comment, status,
         created_by, created_at, updated_by, updated_at, claim_at, finish_at, duration_ms, due_at, priority,
         reminder_count, last_reminded_at, sla_action, sla_escalated,
-        deleted, tenant_id, provider_trace_id
+        deleted, tenant_id, provider_trace_id,
+        iter_var, version
     </sql>
 
     <select id="selectByInstanceId" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE instance_id = #{instanceId}
           AND status = 'ENABLED'
           AND deleted = 0
@@ -66,7 +70,7 @@
 
     <select id="selectPendingByInstance" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE instance_id = #{instanceId}
           AND task_status = 'PENDING'
           AND status = 'ENABLED'
@@ -76,7 +80,7 @@
 
     <select id="selectPendingByNode" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE instance_id = #{instanceId}
           AND node_code = #{nodeCode}
           AND task_status = 'PENDING'
@@ -87,7 +91,7 @@
 
     <select id="selectTodoByAssignee" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE assignee_id = #{assigneeId}
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
@@ -98,7 +102,7 @@
     <!-- P2-17: 真分页查询 -->
     <select id="selectTodoByAssigneePage" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE assignee_id = #{assigneeId}
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
@@ -109,7 +113,7 @@
 
     <select id="countTodoByAssignee" resultType="long">
         SELECT COUNT(*)
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE assignee_id = #{assigneeId}
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
@@ -118,7 +122,7 @@
 
     <select id="selectDoneByAssignee" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE assignee_id = #{assigneeId}
           AND task_status IN ('COMPLETED', 'REJECTED', 'SKIPPED', 'CANCELLED', 'TIMEOUT')
           AND status = 'ENABLED'
@@ -127,7 +131,7 @@
     </select>
 
     <update id="completeTask">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET task_status = #{taskStatus},
             comment = #{comment},
             finish_at = #{finishAt},
@@ -140,7 +144,7 @@
     </update>
 
     <update id="incrementFinished">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET approve_finished = approve_finished + 1,
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
@@ -149,7 +153,7 @@
     </update>
 
     <update id="cancelByInstance">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET task_status = #{taskStatus},
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
@@ -160,7 +164,7 @@
 
     <!-- P0-1: 取消单个任务（边界事件触发时使用） -->
     <update id="cancelTask">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET task_status = #{taskStatus},
             comment = #{comment},
             finish_at = CURRENT_TIMESTAMP,
@@ -171,7 +175,7 @@
     </update>
 
     <update id="skipByNode">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET task_status = #{taskStatus},
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
@@ -183,7 +187,7 @@
 
     <!-- P2-18: 冻结某实例下所有 PENDING/CLAIMED 任务（流程挂起时调用） -->
     <update id="freezeByInstance">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET task_status = 'FROZEN',
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
@@ -194,7 +198,7 @@
 
     <!-- P2-18: 解冻某实例下所有 FROZEN 任务（流程激活时调用，回到 PENDING） -->
     <update id="unfreezeByInstance">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET task_status = 'PENDING',
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
@@ -206,7 +210,7 @@
     <!-- P0-5: 统计某实例某节点的未完成任务数（用于并行网关 join 判断） -->
     <select id="countPendingByNode" resultType="int">
         SELECT COUNT(1)
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE instance_id = #{instanceId}
           AND node_code = #{nodeCode}
           AND task_status IN ('PENDING', 'CLAIMED')
@@ -216,7 +220,7 @@
 
     <!-- P0-1: 更新会签计数（设置 approveFinished） -->
     <update id="updateApproveFinished">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET approve_finished = #{approveFinished},
             updated_by = 0,
             updated_at = CURRENT_TIMESTAMP
@@ -226,7 +230,7 @@
 
     <!-- P1-12: 更新任务办理人信息（用于顺序会签切换办理人） -->
     <update id="updateAssignee">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET assignee_id = #{assigneeId},
             assignee_name = #{assigneeName},
             assignee_type = #{assigneeType},
@@ -239,7 +243,7 @@
     <!-- P2-32: 查询超期任务（dueAt < now 且状态为 PENDING/CLAIMED） -->
     <select id="selectOverdue" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE due_at &lt; CURRENT_TIMESTAMP
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
@@ -252,7 +256,7 @@
     <!-- P2-32: 统计超期任务数量 -->
     <select id="countOverdue" resultType="long">
         SELECT COUNT(*)
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE due_at &lt; CURRENT_TIMESTAMP
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
@@ -264,7 +268,7 @@
     <!-- P1-6: SLA 扫描候选 — 所有设置过 dueAt 且未完成的任务 -->
     <select id="selectSlaCandidates" resultMap="BaseResultMap">
         SELECT <include refid="Base_Column_List"/>
-        FROM pmis_flow_task
+        FROM pmis_flow_run_task
         WHERE due_at IS NOT NULL
           AND task_status IN ('PENDING', 'CLAIMED')
           AND status = 'ENABLED'
@@ -275,7 +279,7 @@
 
     <!-- P1-6: 增加 SLA 催办计数 -->
     <update id="incrementReminderCount">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET reminder_count = #{reminderCount},
             last_reminded_at = #{lastRemindedAt},
             updated_by = 0,
@@ -286,7 +290,7 @@
 
     <!-- P1-6: 标记 SLA 动作（用于审计） -->
     <update id="markSlaAction">
-        UPDATE pmis_flow_task
+        UPDATE pmis_flow_run_task
         SET sla_action = #{slaAction},
             sla_escalated = #{slaEscalated},
             updated_by = 0,

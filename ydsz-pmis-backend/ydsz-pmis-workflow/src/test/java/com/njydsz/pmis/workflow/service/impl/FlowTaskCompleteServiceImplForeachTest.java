@@ -10,7 +10,7 @@ import com.njydsz.pmis.workflow.engine.FlowUrgeLimiter;
 import com.njydsz.pmis.workflow.engine.FlowVariableStrategy;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowUserDO;
 import com.njydsz.pmis.workflow.enums.FlowAssigneeType;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
@@ -21,7 +21,7 @@ import com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowUserMapper;
 import com.njydsz.pmis.workflow.metrics.FlowMetrics;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
@@ -71,7 +71,7 @@ import static org.mockito.Mockito.when;
 class FlowTaskCompleteServiceImplForeachTest {
 
     @Mock
-    private FlowTaskMapper taskMapper;
+    private FlowRunTaskMapper taskMapper;
     @Mock
     private FlowInstanceMapper instanceMapper;
     @Mock
@@ -132,12 +132,12 @@ class FlowTaskCompleteServiceImplForeachTest {
         service.createTask(INSTANCE_ID, node, variables);
 
         // 验证插入 3 条 task（每个集合元素一条独立 task）
-        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        ArgumentCaptor<FlowRunTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowRunTaskDO.class);
         verify(taskMapper, times(3)).insert(taskCaptor.capture());
-        List<FlowTaskDO> insertedTasks = taskCaptor.getAllValues();
+        List<FlowRunTaskDO> insertedTasks = taskCaptor.getAllValues();
         assertThat(insertedTasks).hasSize(3);
         // 验证每条 task 字段完整性
-        for (FlowTaskDO insertedTask : insertedTasks) {
+        for (FlowRunTaskDO insertedTask : insertedTasks) {
             assertThat(insertedTask.getPerformType()).isEqualTo(FlowPerformType.FOREACH_PARALLEL.name());
             assertThat(insertedTask.getApproveCount()).isEqualTo(1);
             assertThat(insertedTask.getApproveFinished()).isZero();
@@ -147,7 +147,7 @@ class FlowTaskCompleteServiceImplForeachTest {
             assertThat(insertedTask.getNodeType()).isEqualTo(FlowNodeType.FOREACH.getCode());
         }
         // 验证 iterVar 覆盖全部 3 个元素
-        assertThat(insertedTasks).extracting(FlowTaskDO::getIterVar)
+        assertThat(insertedTasks).extracting(FlowRunTaskDO::getIterVar)
                 .containsExactlyInAnyOrder("1001", "1002", "1003");
         // 验证写入 3 条 FlowUserDO
         verify(userMapper, times(3)).insert(any(FlowUserDO.class));
@@ -166,15 +166,15 @@ class FlowTaskCompleteServiceImplForeachTest {
         service.createTask(INSTANCE_ID, node, Collections.emptyMap());
 
         // 验证插入 1 条自动完成的 task
-        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        ArgumentCaptor<FlowRunTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowRunTaskDO.class);
         verify(taskMapper).insert(taskCaptor.capture());
-        FlowTaskDO autoTask = taskCaptor.getValue();
+        FlowRunTaskDO autoTask = taskCaptor.getValue();
         assertThat(autoTask.getTaskStatus()).isEqualTo(FlowTaskStatus.COMPLETED.name());
         assertThat(autoTask.getAssigneeName()).isEqualTo("SYSTEM_AUTO_PASS");
 
         // 验证推进到下一节点（advanceAfterAutoPass 调用）
         verify(advancer).advance(eq(instance), eq(NODE_CODE), eq("PASS"), eq(null), any());
-        verify(support).audit(any(FlowTaskDO.class), eq("FOREACH_AUTO_PASS"),
+        verify(support).audit(any(FlowRunTaskDO.class), eq("FOREACH_AUTO_PASS"),
                 eq(0L), eq(null), anyString());
     }
 
@@ -188,9 +188,9 @@ class FlowTaskCompleteServiceImplForeachTest {
         service.createTask(INSTANCE_ID, node, Collections.emptyMap());
 
         // 验证插入 1 条 task（默认管理员 ID="1"）
-        ArgumentCaptor<FlowTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowTaskDO.class);
+        ArgumentCaptor<FlowRunTaskDO> taskCaptor = ArgumentCaptor.forClass(FlowRunTaskDO.class);
         verify(taskMapper).insert(taskCaptor.capture());
-        FlowTaskDO task = taskCaptor.getValue();
+        FlowRunTaskDO task = taskCaptor.getValue();
         assertThat(task.getAssigneeId()).isEqualTo("1");
         assertThat(task.getTaskStatus()).isEqualTo(FlowTaskStatus.PENDING.name());
         // 不应调用 advanceAfterAutoPass
@@ -202,7 +202,7 @@ class FlowTaskCompleteServiceImplForeachTest {
     @Test
     @DisplayName("GAP-P2-10 doForeachPass 部分完成 - pending > 0 不推进")
     void foreachPassShouldNotAdvanceWhenPendingGreaterThanZero() {
-        FlowTaskDO task = buildForeachTask(700L, "1001");
+        FlowRunTaskDO task = buildForeachTask(700L, "1001");
         FlowInstanceDO instance = buildInstance();
         when(support.getTaskOrThrow(700L)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(instance);
@@ -217,14 +217,14 @@ class FlowTaskCompleteServiceImplForeachTest {
                 anyString(), any(), any());
         // 验证未推进
         verify(advancer, never()).advance(any(), anyString(), anyString(), any(), any());
-        verify(support).audit(any(FlowTaskDO.class), eq("FOREACH_PASS"),
+        verify(support).audit(any(FlowRunTaskDO.class), eq("FOREACH_PASS"),
                 eq(OPERATOR_ID), eq(null), anyString(), any());
     }
 
     @Test
     @DisplayName("GAP-P2-10 doForeachPass 全部完成 - pending = 0 推进到下一节点")
     void foreachPassShouldAdvanceWhenAllCompleted() {
-        FlowTaskDO task = buildForeachTask(701L, "1003");
+        FlowRunTaskDO task = buildForeachTask(701L, "1003");
         FlowInstanceDO instance = buildInstance();
         when(support.getTaskOrThrow(701L)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(instance);
@@ -239,14 +239,14 @@ class FlowTaskCompleteServiceImplForeachTest {
         // 验证推进
         verify(advancer).advance(eq(instance), eq(NODE_CODE), eq("PASS"), eq(null), any());
         verify(instanceService).generateTasksForNodes(eq(INSTANCE_ID), eq(nextNodes), any());
-        verify(support).audit(any(FlowTaskDO.class), eq("FOREACH_PASS_ALL"),
+        verify(support).audit(any(FlowRunTaskDO.class), eq("FOREACH_PASS_ALL"),
                 eq(OPERATOR_ID), eq(null), anyString(), any());
     }
 
     @Test
     @DisplayName("GAP-P2-10 doForeachPass completionCondition 提前完成 - 跳过剩余 PENDING")
     void foreachPassShouldSkipRemainingWhenCompletionConditionMet() {
-        FlowTaskDO task = buildForeachTask(702L, "1001");
+        FlowRunTaskDO task = buildForeachTask(702L, "1001");
         FlowInstanceDO instance = buildInstance();
         when(support.getTaskOrThrow(702L)).thenReturn(task);
         when(instanceMapper.selectById(INSTANCE_ID)).thenReturn(instance);
@@ -269,14 +269,14 @@ class FlowTaskCompleteServiceImplForeachTest {
         verify(taskMapper).skipByNode(INSTANCE_ID, NODE_CODE, FlowTaskStatus.SKIPPED.name());
         // 验证推进
         verify(advancer).advance(eq(instance), eq(NODE_CODE), eq("PASS"), eq(null), any());
-        verify(support).audit(any(FlowTaskDO.class), eq("FOREACH_PASS_ALL"),
+        verify(support).audit(any(FlowRunTaskDO.class), eq("FOREACH_PASS_ALL"),
                 eq(OPERATOR_ID), eq(null), anyString(), any());
     }
 
     @Test
     @DisplayName("GAP-P2-10 doForeachPass 任务已完成时抛 BAD_REQUEST")
     void foreachPassShouldThrowWhenTaskFinished() {
-        FlowTaskDO task = buildForeachTask(703L, "1001");
+        FlowRunTaskDO task = buildForeachTask(703L, "1001");
         task.setTaskStatus(FlowTaskStatus.COMPLETED.name());
         when(support.getTaskOrThrow(703L)).thenReturn(task);
 
@@ -315,8 +315,8 @@ class FlowTaskCompleteServiceImplForeachTest {
         return node;
     }
 
-    private FlowTaskDO buildForeachTask(Long taskId, String iterVar) {
-        FlowTaskDO task = new FlowTaskDO();
+    private FlowRunTaskDO buildForeachTask(Long taskId, String iterVar) {
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setId(taskId);
         task.setInstanceId(INSTANCE_ID);
         task.setDefinitionId(DEFINITION_ID);
@@ -334,7 +334,7 @@ class FlowTaskCompleteServiceImplForeachTest {
         return task;
     }
 
-    private FlowTaskOperateDTO buildPassDto(FlowTaskDO task) {
+    private FlowTaskOperateDTO buildPassDto(FlowRunTaskDO task) {
         FlowTaskOperateDTO dto = new FlowTaskOperateDTO();
         dto.setTaskId(task.getId());
         dto.setUserId(OPERATOR_ID);

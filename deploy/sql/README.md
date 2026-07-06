@@ -71,7 +71,7 @@ deploy/sql/
    - **不要**新建任何 `V*.sql` 增量文件
    - 字段新增请紧跟原表 `CREATE TABLE` 块,并在文件顶部的目录注释里登记
 2. **本地验证**:`psql -f deploy/sql/V1.0.0.sql` 跑一次,确认 DDL 全部通过(`-v ON_ERROR_STOP=1`)
-3. **提交 PR**:标题格式 `schema: <表名> <变更摘要>`,例如 `schema: pmis_flow_task add iter_var`
+3. **提交 PR**:标题格式 `schema: <表名> <变更摘要>`,例如 `schema: pmis_flow_run_task add iter_var`
 4. **PR 必含内容**:
    - `V1.0.0.sql` 的 diff
    - 字段/表/索引含义说明(写到 PR 描述,而不是文件头)

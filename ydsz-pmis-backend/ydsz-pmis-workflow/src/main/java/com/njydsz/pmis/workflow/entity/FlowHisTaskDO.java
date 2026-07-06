@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.io.Serial;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -66,6 +67,8 @@ public class FlowHisTaskDO extends BaseDO {
     private Integer approveCount;
     /** 会签当前已通过人数 */
     private Integer approveFinished;
+    /** P1-5: VOTE 模式通过率阈值（0~1，从源 task 复制） */
+    private BigDecimal votePassRate;
     /** 任务状态（FlowTaskStatus.name） */
     private String taskStatus;
     /** 审批意见 */
@@ -81,4 +84,13 @@ public class FlowHisTaskDO extends BaseDO {
     private Long tenantId;
     /** 链路追踪 ID */
     private String providerTraceId;
+
+    /**
+     * GAP-P2-10: FOREACH 迭代元素值（从源 task 复制）
+     *
+     * <p>循环节点每条独立 task 对应的集合元素，归档后保留以支持审批历史追溯
+     * （如「这个审批是谁做的？属于哪一轮迭代？」）。
+     * 非 FOREACH 节点的 task 该字段为 null。
+     */
+    private String iterVar;
 }

@@ -4,8 +4,8 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.pmis.common.security.TenantContext;
-import com.njydsz.pmis.workflow.entity.EventOutboxDO;
-import com.njydsz.pmis.workflow.mapper.EventOutboxMapper;
+import com.njydsz.pmis.workflow.entity.FlowNotifyOutboxDO;
+import com.njydsz.pmis.workflow.mapper.FlowNotifyOutboxMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,9 +29,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * FlowEventOutboxServiceImpl 单元测试
+ * FlowNotifyOutboxServiceImpl 单元测试
  *
- * <p>P2-1：覆盖事件 Outbox 服务的核心场景，验证入箱默认值、扫描投递、失败重试退避、
+ * <p>P2-1：覆盖工作流通知外发箱服务的核心场景，验证入箱默认值、扫描投递、失败重试退避、
  * 死信转换、死信查询与人工重投、通知 DTO 构造等行为。
  *
  * <p>覆盖场景：
@@ -51,20 +51,20 @@ import static org.mockito.Mockito.when;
  * @since 1.5.0
  */
 @ExtendWith(MockitoExtension.class)
-class FlowEventOutboxServiceImplTest {
+class FlowNotifyOutboxServiceImplTest {
 
     @Mock
     private NotificationClient notificationClient;
 
     @Mock
-    private EventOutboxMapper eventOutboxMapper;
+    private FlowNotifyOutboxMapper flowNotifyOutboxMapper;
 
-    private FlowEventOutboxServiceImpl service;
+    private FlowNotifyOutboxServiceImpl service;
 
     @BeforeEach
     void setUp() {
-        // 构造器方式注入被测对象（顺序：NotificationClient, EventOutboxMapper）
-        service = new FlowEventOutboxServiceImpl(notificationClient, eventOutboxMapper);
+        // 构造器方式注入被测对象（顺序：NotificationClient, FlowNotifyOutboxMapper）
+        service = new FlowNotifyOutboxServiceImpl(notificationClient, flowNotifyOutboxMapper);
     }
 
     // ============ saveOutbox 场景 ============
@@ -72,7 +72,7 @@ class FlowEventOutboxServiceImplTest {
     @Test
     @DisplayName("saveOutbox：未设置默认字段时填充 PENDING/0/5/now 并写入 mapper")
     void saveOutboxShouldFillDefaultsAndInsert() {
-        EventOutboxDO event = new EventOutboxDO();
+        FlowNotifyOutboxDO event = new FlowNotifyOutboxDO();
         event.setId(1L);
         event.setEventType("TASK_CREATED");
         event.setBizType("WORKFLOW_TASK");
@@ -83,9 +83,9 @@ class FlowEventOutboxServiceImplTest {
 
         assertThat(id).isEqualTo(1L);
 
-        ArgumentCaptor<EventOutboxDO> captor = ArgumentCaptor.forClass(EventOutboxDO.class);
-        verify(eventOutboxMapper, times(1)).insert(captor.capture());
-        EventOutboxDO saved = captor.getValue();
+        ArgumentCaptor<FlowNotifyOutboxDO> captor = ArgumentCaptor.forClass(FlowNotifyOutboxDO.class);
+        verify(flowNotifyOutboxMapper, times(1)).insert(captor.capture());
+        FlowNotifyOutboxDO saved = captor.getValue();
         assertThat(saved.getStatus()).isEqualTo("PENDING");
         assertThat(saved.getRetryCount()).isEqualTo(0);
         assertThat(saved.getMaxRetries()).isEqualTo(5);
@@ -100,7 +100,7 @@ class FlowEventOutboxServiceImplTest {
         Long id = service.saveOutbox(null);
 
         assertThat(id).isNull();
-        verify(eventOutboxMapper, never()).insert(any(EventOutboxDO.class));
+        verify(flowNotifyOutboxMapper, never()).insert(any(FlowNotifyOutboxDO.class));
     }
 
     // ============ scanAndDeliver 场景 ============
@@ -108,8 +108,8 @@ class FlowEventOutboxServiceImplTest {
     @Test
     @DisplayName("scanAndDeliver：投递成功时调用 markSent 并返回成功条数")
     void scanAndDeliverShouldMarkSentWhenDeliverSuccess() {
-        EventOutboxDO event = buildPendingEvent(1L, 0);
-        when(eventOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
+        FlowNotifyOutboxDO event = buildPendingEvent(1L, 0);
+        when(flowNotifyOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
                 .thenReturn(List.of(event));
         when(notificationClient.send(any(NotificationFeignDTO.class)))
                 .thenReturn(Result.ok(1));
@@ -117,17 +117,17 @@ class FlowEventOutboxServiceImplTest {
         int success = service.scanAndDeliver(50);
 
         assertThat(success).isEqualTo(1);
-        verify(eventOutboxMapper, times(1)).markSent(eq(1L), any(LocalDateTime.class));
-        verify(eventOutboxMapper, never()).markRetry(any(), anyString(), any());
-        verify(eventOutboxMapper, never()).markDead(any(), anyString());
+        verify(flowNotifyOutboxMapper, times(1)).markSent(eq(1L), any(LocalDateTime.class));
+        verify(flowNotifyOutboxMapper, never()).markRetry(any(), anyString(), any());
+        verify(flowNotifyOutboxMapper, never()).markDead(any(), anyString());
     }
 
     @Test
     @DisplayName("scanAndDeliver：投递返回失败码时调用 markRetry，nextRetryAt 按指数退避（首次 30s）")
     void scanAndDeliverShouldMarkRetryWithExponentialBackoffWhenFailedCode() {
         // retryCount=0 → newRetryCount=1 < maxRetries(5) → markRetry，退避 BACKOFF_SECONDS[0]=30s
-        EventOutboxDO event = buildPendingEvent(2L, 0);
-        when(eventOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
+        FlowNotifyOutboxDO event = buildPendingEvent(2L, 0);
+        when(flowNotifyOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
                 .thenReturn(List.of(event));
         when(notificationClient.send(any(NotificationFeignDTO.class)))
                 .thenReturn(Result.failed(-1, "通知中心内部错误"));
@@ -139,20 +139,20 @@ class FlowEventOutboxServiceImplTest {
         assertThat(success).isEqualTo(0);
 
         ArgumentCaptor<LocalDateTime> nextRetryCaptor = ArgumentCaptor.forClass(LocalDateTime.class);
-        verify(eventOutboxMapper, times(1)).markRetry(eq(2L), eq("投递返回失败码"), nextRetryCaptor.capture());
+        verify(flowNotifyOutboxMapper, times(1)).markRetry(eq(2L), eq("投递返回失败码"), nextRetryCaptor.capture());
         // 退避 30s：nextRetryAt 落在 [before+28s, after+32s] 区间内
         assertThat(nextRetryCaptor.getValue())
                 .isBetween(before.plusSeconds(28), after.plusSeconds(32));
-        verify(eventOutboxMapper, never()).markSent(any(), any());
-        verify(eventOutboxMapper, never()).markDead(any(), anyString());
+        verify(flowNotifyOutboxMapper, never()).markSent(any(), any());
+        verify(flowNotifyOutboxMapper, never()).markDead(any(), anyString());
     }
 
     @Test
     @DisplayName("scanAndDeliver：retryCount 达到 maxRetries 时转为死信 markDead")
     void scanAndDeliverShouldMarkDeadWhenRetryCountReachesMax() {
         // retryCount=4 → newRetryCount=5 >= maxRetries(5) → markDead
-        EventOutboxDO event = buildPendingEvent(3L, 4);
-        when(eventOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
+        FlowNotifyOutboxDO event = buildPendingEvent(3L, 4);
+        when(flowNotifyOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
                 .thenReturn(List.of(event));
         when(notificationClient.send(any(NotificationFeignDTO.class)))
                 .thenReturn(Result.failed(-1, "通知中心内部错误"));
@@ -160,16 +160,16 @@ class FlowEventOutboxServiceImplTest {
         int success = service.scanAndDeliver(50);
 
         assertThat(success).isEqualTo(0);
-        verify(eventOutboxMapper, times(1)).markDead(eq(3L), eq("投递返回失败码"));
-        verify(eventOutboxMapper, never()).markRetry(any(), anyString(), any());
-        verify(eventOutboxMapper, never()).markSent(any(), any());
+        verify(flowNotifyOutboxMapper, times(1)).markDead(eq(3L), eq("投递返回失败码"));
+        verify(flowNotifyOutboxMapper, never()).markRetry(any(), anyString(), any());
+        verify(flowNotifyOutboxMapper, never()).markSent(any(), any());
     }
 
     @Test
     @DisplayName("scanAndDeliver：NotificationClient 抛异常时走 handleFailure 并 markRetry")
     void scanAndDeliverShouldHandleFailureWhenClientThrowsException() {
-        EventOutboxDO event = buildPendingEvent(4L, 0);
-        when(eventOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
+        FlowNotifyOutboxDO event = buildPendingEvent(4L, 0);
+        when(flowNotifyOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
                 .thenReturn(List.of(event));
         when(notificationClient.send(any(NotificationFeignDTO.class)))
                 .thenThrow(new RuntimeException("连接超时"));
@@ -178,25 +178,25 @@ class FlowEventOutboxServiceImplTest {
 
         assertThat(success).isEqualTo(0);
         // 异常被 scanAndDeliver 捕获后转 handleFailure：retryCount 0→1，调用 markRetry
-        verify(eventOutboxMapper, times(1))
+        verify(flowNotifyOutboxMapper, times(1))
                 .markRetry(eq(4L), eq("投递异常: 连接超时"), any(LocalDateTime.class));
-        verify(eventOutboxMapper, never()).markSent(any(), any());
-        verify(eventOutboxMapper, never()).markDead(any(), anyString());
+        verify(flowNotifyOutboxMapper, never()).markSent(any(), any());
+        verify(flowNotifyOutboxMapper, never()).markDead(any(), anyString());
     }
 
     @Test
     @DisplayName("scanAndDeliver：扫描结果为空时不调用 NotificationClient 并返回 0")
     void scanAndDeliverShouldSkipClientWhenPendingEmpty() {
-        when(eventOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
+        when(flowNotifyOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
                 .thenReturn(Collections.emptyList());
 
         int success = service.scanAndDeliver(50);
 
         assertThat(success).isEqualTo(0);
         verify(notificationClient, never()).send(any(NotificationFeignDTO.class));
-        verify(eventOutboxMapper, never()).markSent(any(), any());
-        verify(eventOutboxMapper, never()).markRetry(any(), anyString(), any());
-        verify(eventOutboxMapper, never()).markDead(any(), anyString());
+        verify(flowNotifyOutboxMapper, never()).markSent(any(), any());
+        verify(flowNotifyOutboxMapper, never()).markRetry(any(), anyString(), any());
+        verify(flowNotifyOutboxMapper, never()).markDead(any(), anyString());
     }
 
     // ============ listDeadEvents 场景 ============
@@ -204,16 +204,16 @@ class FlowEventOutboxServiceImplTest {
     @Test
     @DisplayName("listDeadEvents：调用 mapper 查询死信事件并返回列表")
     void listDeadEventsShouldReturnDeadEventsFromMapper() {
-        EventOutboxDO dead1 = buildDeadEvent(10L);
-        EventOutboxDO dead2 = buildDeadEvent(11L);
-        when(eventOutboxMapper.selectList(any())).thenReturn(List.of(dead1, dead2));
+        FlowNotifyOutboxDO dead1 = buildDeadEvent(10L);
+        FlowNotifyOutboxDO dead2 = buildDeadEvent(11L);
+        when(flowNotifyOutboxMapper.selectList(any())).thenReturn(List.of(dead1, dead2));
 
-        List<EventOutboxDO> deadEvents = service.listDeadEvents(20);
+        List<FlowNotifyOutboxDO> deadEvents = service.listDeadEvents(20);
 
         assertThat(deadEvents).hasSize(2);
-        assertThat(deadEvents).extracting(EventOutboxDO::getId).containsExactly(10L, 11L);
+        assertThat(deadEvents).extracting(FlowNotifyOutboxDO::getId).containsExactly(10L, 11L);
         assertThat(deadEvents).allMatch(e -> "DEAD".equals(e.getStatus()));
-        verify(eventOutboxMapper, times(1)).selectList(any());
+        verify(flowNotifyOutboxMapper, times(1)).selectList(any());
     }
 
     // ============ retryDeadEvent 场景 ============
@@ -221,10 +221,10 @@ class FlowEventOutboxServiceImplTest {
     @Test
     @DisplayName("retryDeadEvent：将 DEAD 事件重置为 PENDING、retryCount=0、nextRetryAt=now")
     void retryDeadEventShouldResetToPending() {
-        EventOutboxDO dead = buildDeadEvent(20L);
+        FlowNotifyOutboxDO dead = buildDeadEvent(20L);
         dead.setRetryCount(5);
         dead.setErrorMsg("累计失败");
-        when(eventOutboxMapper.selectById(20L)).thenReturn(dead);
+        when(flowNotifyOutboxMapper.selectById(20L)).thenReturn(dead);
 
         LocalDateTime before = LocalDateTime.now();
         boolean ok = service.retryDeadEvent(20L);
@@ -232,9 +232,9 @@ class FlowEventOutboxServiceImplTest {
 
         assertThat(ok).isTrue();
 
-        ArgumentCaptor<EventOutboxDO> captor = ArgumentCaptor.forClass(EventOutboxDO.class);
-        verify(eventOutboxMapper, times(1)).updateById(captor.capture());
-        EventOutboxDO updated = captor.getValue();
+        ArgumentCaptor<FlowNotifyOutboxDO> captor = ArgumentCaptor.forClass(FlowNotifyOutboxDO.class);
+        verify(flowNotifyOutboxMapper, times(1)).updateById(captor.capture());
+        FlowNotifyOutboxDO updated = captor.getValue();
         assertThat(updated.getStatus()).isEqualTo("PENDING");
         assertThat(updated.getRetryCount()).isEqualTo(0);
         assertThat(updated.getErrorMsg()).isNull();
@@ -244,13 +244,13 @@ class FlowEventOutboxServiceImplTest {
     @Test
     @DisplayName("retryDeadEvent：非 DEAD 状态事件返回 false 且不更新")
     void retryDeadEventShouldReturnFalseWhenNotDead() {
-        EventOutboxDO pending = buildPendingEvent(21L, 1);
-        when(eventOutboxMapper.selectById(21L)).thenReturn(pending);
+        FlowNotifyOutboxDO pending = buildPendingEvent(21L, 1);
+        when(flowNotifyOutboxMapper.selectById(21L)).thenReturn(pending);
 
         boolean ok = service.retryDeadEvent(21L);
 
         assertThat(ok).isFalse();
-        verify(eventOutboxMapper, never()).updateById(any(EventOutboxDO.class));
+        verify(flowNotifyOutboxMapper, never()).updateById(any(FlowNotifyOutboxDO.class));
     }
 
     // ============ buildNotificationDTO 场景（通过 scanAndDeliver 成功路径捕获 DTO） ============
@@ -258,13 +258,13 @@ class FlowEventOutboxServiceImplTest {
     @Test
     @DisplayName("buildNotificationDTO：从 payload JSON 提取 title/content/level/receiverId，targetUserIds 逗号分隔解析")
     void buildNotificationDTOShouldParsePayloadAndTargetUserIds() {
-        EventOutboxDO event = buildPendingEvent(30L, 0);
+        FlowNotifyOutboxDO event = buildPendingEvent(30L, 0);
         event.setEventType("TASK_CREATED");
         event.setBizType("WORKFLOW_TASK");
         event.setBizId(500L);
         event.setPayload("{\"title\":\"任务待办\",\"content\":\"您有新任务待处理\",\"level\":\"URGENT\",\"receiverId\":1001}");
         event.setTargetUserIds("1, 2, 3");
-        when(eventOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
+        when(flowNotifyOutboxMapper.selectPendingForSend(any(LocalDateTime.class), anyInt()))
                 .thenReturn(List.of(event));
         when(notificationClient.send(any(NotificationFeignDTO.class)))
                 .thenReturn(Result.ok(1));
@@ -295,8 +295,8 @@ class FlowEventOutboxServiceImplTest {
      * @param id         事件 ID
      * @param retryCount 已重试次数
      */
-    private EventOutboxDO buildPendingEvent(Long id, int retryCount) {
-        EventOutboxDO event = new EventOutboxDO();
+    private FlowNotifyOutboxDO buildPendingEvent(Long id, int retryCount) {
+        FlowNotifyOutboxDO event = new FlowNotifyOutboxDO();
         event.setId(id);
         event.setTenantId(1L);
         event.setEventType("TASK_CREATED");
@@ -312,8 +312,8 @@ class FlowEventOutboxServiceImplTest {
     /**
      * 构造死信事件
      */
-    private EventOutboxDO buildDeadEvent(Long id) {
-        EventOutboxDO event = new EventOutboxDO();
+    private FlowNotifyOutboxDO buildDeadEvent(Long id) {
+        FlowNotifyOutboxDO event = new FlowNotifyOutboxDO();
         event.setId(id);
         event.setTenantId(1L);
         event.setEventType("TASK_CREATED");

@@ -4,13 +4,13 @@ import com.njydsz.pmis.workflow.config.FlowHistoryProperties;
 import com.njydsz.pmis.workflow.entity.FlowHisInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.enums.FlowInstanceStatus;
 import com.njydsz.pmis.workflow.mapper.FlowHisInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisVariableMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -64,7 +64,7 @@ class FlowHistoryArchiveServiceImplTest {
     private FlowHisTaskMapper hisTaskMapper;
 
     @Mock
-    private FlowTaskMapper taskMapper;
+    private FlowRunTaskMapper taskMapper;
 
     @Mock
     private FlowHisInstanceMapper hisInstanceMapper;
@@ -109,7 +109,7 @@ class FlowHistoryArchiveServiceImplTest {
         when(instanceMapper.selectList(any())).thenReturn(List.of(instance));
 
         // 任务已归档到 his_task
-        FlowTaskDO task = new FlowTaskDO();
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setId(100L);
         task.setTaskStatus("COMPLETED");
         when(taskMapper.selectByInstanceId(1L)).thenReturn(List.of(task));
@@ -138,7 +138,7 @@ class FlowHistoryArchiveServiceImplTest {
         when(instanceMapper.selectList(any())).thenReturn(List.of(instance));
 
         // 存在未归档且非终态的任务
-        FlowTaskDO task = new FlowTaskDO();
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setId(200L);
         task.setTaskStatus("PENDING"); // 非终态
         when(taskMapper.selectByInstanceId(2L)).thenReturn(List.of(task));
@@ -180,7 +180,7 @@ class FlowHistoryArchiveServiceImplTest {
         FlowInstanceDO instance = buildCompletedInstance(3L, 60);
         when(instanceMapper.selectList(any())).thenReturn(List.of(instance));
 
-        FlowTaskDO task = new FlowTaskDO();
+        FlowRunTaskDO task = new FlowRunTaskDO();
         task.setId(300L);
         task.setTaskStatus("COMPLETED"); // 终态
         when(taskMapper.selectByInstanceId(3L)).thenReturn(List.of(task));

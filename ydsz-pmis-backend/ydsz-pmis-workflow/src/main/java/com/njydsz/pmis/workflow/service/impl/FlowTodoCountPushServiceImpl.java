@@ -2,8 +2,8 @@ package com.njydsz.pmis.workflow.service.impl;
 
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.RealtimePushDTO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowTodoCountPushService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
 
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     private final NotificationClient notificationClient;
 
     /** 推送消息类型：待办数更新 */
@@ -70,7 +70,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
 
     @Override
-    public void pushTaskAssigned(FlowTaskDO task) {
+    public void pushTaskAssigned(FlowRunTaskDO task) {
         if (task == null) {
             return;
         }
@@ -100,7 +100,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
 
     @Override
-    public void pushTaskCompleted(FlowTaskDO task, Long operatorUserId) {
+    public void pushTaskCompleted(FlowRunTaskDO task, Long operatorUserId) {
         if (task == null) {
             return;
         }
@@ -126,7 +126,7 @@ public class FlowTodoCountPushServiceImpl implements FlowTodoCountPushService {
     }
 
     @Override
-    public void pushTaskRejected(FlowTaskDO task, Long operatorUserId, String reason) {
+    public void pushTaskRejected(FlowRunTaskDO task, Long operatorUserId, String reason) {
         if (task == null) {
             return;
         }

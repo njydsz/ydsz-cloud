@@ -1,6 +1,6 @@
 package com.njydsz.pmis.workflow.service;
 
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 
 /**
  * 待办数实时推送服务接口
@@ -32,7 +32,7 @@ public interface FlowTodoCountPushService {
      *
      * @param task 任务
      */
-    void pushTaskAssigned(FlowTaskDO task);
+    void pushTaskAssigned(FlowRunTaskDO task);
 
     /**
      * 推送任务已完成（含最新待办数）
@@ -40,7 +40,7 @@ public interface FlowTodoCountPushService {
      * @param task          任务
      * @param operatorUserId 操作人
      */
-    void pushTaskCompleted(FlowTaskDO task, Long operatorUserId);
+    void pushTaskCompleted(FlowRunTaskDO task, Long operatorUserId);
 
     /**
      * 推送任务已驳回（含最新待办数）
@@ -49,5 +49,5 @@ public interface FlowTodoCountPushService {
      * @param operatorUserId 操作人
      * @param reason         驳回原因
      */
-    void pushTaskRejected(FlowTaskDO task, Long operatorUserId, String reason);
+    void pushTaskRejected(FlowRunTaskDO task, Long operatorUserId, String reason);
 }

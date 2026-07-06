@@ -4,6 +4,7 @@
   @module components/common/LanguageSwitcher
 -->
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { setLocale, getLocale, type LocaleType } from '@/locales'
 import { ElTooltip } from 'element-plus'

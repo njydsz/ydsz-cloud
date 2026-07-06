@@ -4,7 +4,7 @@ import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.service.FlowSlaService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -56,7 +56,7 @@ public class FlowSlaController {
     @PostMapping("/sla/process/{taskId}")
     @PrePermission(PermissionCodes.WORKFLOW_SLA_CONFIG)
     public Result<Boolean> slaProcess(@PathVariable @Min(1) Long taskId) {
-        FlowTaskDO task = taskService.getById(taskId);
+        FlowRunTaskDO task = taskService.getById(taskId);
         if (task == null) {
             return Result.failed(BizErrorCode.NOT_FOUND, "任务不存在: " + taskId);
         }

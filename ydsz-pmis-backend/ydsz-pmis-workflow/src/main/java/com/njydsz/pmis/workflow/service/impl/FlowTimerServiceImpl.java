@@ -8,11 +8,11 @@ import com.njydsz.pmis.workflow.engine.FlowAdvancer;
 import com.njydsz.pmis.workflow.engine.FlowNotificationHelper;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowTimerDO;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowTimerMapper;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowTimerService;
@@ -45,7 +45,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     private final FlowTimerMapper timerMapper;
     private final FlowInstanceMapper instanceMapper;
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     private final FlowNodeMapper nodeMapper;
     private final FlowAdvancer advancer;
     private final FlowNotificationHelper notificationHelper;
@@ -172,7 +172,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
      * 边界定时器触发：取消 userTask，触发"超时分支"（节点 ext 中标记的 boundarySkip）
      */
     private void fireBoundary(FlowTimerDO timer) {
-        FlowTaskDO task = taskMapper.selectById(timer.getBoundaryTaskId());
+        FlowRunTaskDO task = taskMapper.selectById(timer.getBoundaryTaskId());
         if (task == null) {
             log.info("[FlowTimer] 边界定时器对应 userTask 已删除: timerId={}", timer.getId());
             return;

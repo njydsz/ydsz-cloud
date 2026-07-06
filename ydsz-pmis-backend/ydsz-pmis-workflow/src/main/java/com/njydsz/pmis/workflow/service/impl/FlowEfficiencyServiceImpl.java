@@ -4,11 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.njydsz.pmis.workflow.entity.FlowDelegateLogDO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
-import com.njydsz.pmis.workflow.entity.FlowTaskDO;
+import com.njydsz.pmis.workflow.entity.FlowRunTaskDO;
 import com.njydsz.pmis.workflow.mapper.FlowDelegateLogMapper;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
-import com.njydsz.pmis.workflow.mapper.FlowTaskMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowEfficiencyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -56,7 +56,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     /** P0-2: 委派代理日志 Mapper（用于统计真实代批率） */
     private final FlowDelegateLogMapper delegateLogMapper;
     /** 待办任务 Mapper（用于卡单检测） */
-    private final FlowTaskMapper taskMapper;
+    private final FlowRunTaskMapper taskMapper;
     /** 流程实例 Mapper（用于长期运行实例检测） */
     private final FlowInstanceMapper instanceMapper;
 
@@ -374,21 +374,21 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
         LocalDateTime threshold = LocalDateTime.now().minusHours(effectiveStuckHours);
 
         // 查询未完成且创建时间超过阈值的任务
-        LambdaQueryWrapper<FlowTaskDO> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(tenantId != null, FlowTaskDO::getTenantId, tenantId)
-                .in(FlowTaskDO::getTaskStatus, "PENDING", "CLAIMED")
-                .lt(FlowTaskDO::getCreatedAt, threshold)
-                .orderByAsc(FlowTaskDO::getCreatedAt)
+        LambdaQueryWrapper<FlowRunTaskDO> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(tenantId != null, FlowRunTaskDO::getTenantId, tenantId)
+                .in(FlowRunTaskDO::getTaskStatus, "PENDING", "CLAIMED")
+                .lt(FlowRunTaskDO::getCreatedAt, threshold)
+                .orderByAsc(FlowRunTaskDO::getCreatedAt)
                 .last("LIMIT " + effectiveLimit);
 
-        List<FlowTaskDO> stuckTasks = taskMapper.selectList(wrapper);
+        List<FlowRunTaskDO> stuckTasks = taskMapper.selectList(wrapper);
         if (stuckTasks == null || stuckTasks.isEmpty()) {
             return List.of();
         }
 
         LocalDateTime now = LocalDateTime.now();
         List<Map<String, Object>> result = new ArrayList<>();
-        for (FlowTaskDO task : stuckTasks) {
+        for (FlowRunTaskDO task : stuckTasks) {
             long hours = task.getCreatedAt() != null
                     ? Duration.between(task.getCreatedAt(), now).toHours()
                     : effectiveStuckHours;
