@@ -55,7 +55,7 @@ public class FlowDefinitionController {
     @Operation(summary = "部署流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public Result<Long> deploy(@Valid @RequestBody FlowDeployProcessDTO dto) {
-        Long id = definitionService.deploy(dto);
+        String id = definitionService.deploy(dto);
         return Result.ok(id);
     }
 
@@ -124,7 +124,7 @@ public class FlowDefinitionController {
     @Operation(summary = "按编码查询已发布流程定义")
     public Result<FlowDefinitionDO> getByCode(@PathVariable String code,
                                           @RequestParam(required = false) String version,
-                                          @RequestParam(required = false) Long tenantId) {
+                                          @RequestParam(required = false) String tenantId) {
         return Result.ok(definitionService.getPublished(code, version, tenantId));
     }
 
@@ -171,7 +171,7 @@ public class FlowDefinitionController {
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_PUBLISH)
     public Result<Void> switchVersion(@PathVariable String code,
                                       @RequestParam Long definitionId,
-                                      @RequestParam(required = false) Long tenantId) {
+                                      @RequestParam(required = false) String tenantId) {
         definitionService.switchActiveVersion(code, definitionId, tenantId);
         return Result.ok();
     }
@@ -261,8 +261,8 @@ public class FlowDefinitionController {
     @Operation(summary = "从 JSON 导入流程定义")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_IMPORT)
     public Result<Long> importDefinition(@RequestBody String json,
-                                         @RequestParam(required = false) Long tenantId) {
-        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
+                                         @RequestParam(required = false) String tenantId) {
+        Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(definitionService.importDefinition(json, tid));
     }
 
@@ -306,7 +306,7 @@ public class FlowDefinitionController {
     @Operation(summary = "流程模拟运行")
     @PrePermission(PermissionCodes.WORKFLOW_DEFINITION_DEPLOY)
     public Result<List<Map<String, Object>>> simulate(@Valid @RequestBody FlowDefinitionSimulateDTO dto) {
-        Long tid = SecurityContext.getTenantIdOrDefault(1L);
+        Long tid = SecurityContext.getTenantIdOrDefault("1");
         return Result.ok(instanceService.simulate(dto.getFlowCode(),
                 String.valueOf(dto.getVersion()), dto.getVariables(), tid));
     }

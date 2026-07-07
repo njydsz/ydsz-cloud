@@ -111,14 +111,14 @@ public class OpportunityController {
     @Operation(summary = "按状态聚合")
     @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByStatus(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByStatus(tenantId));
     }
 
     @Operation(summary = "按分级聚合")
     @PrePermission("project:opportunity:list")
     @GetMapping("/aggregate/level")
-    public Result<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "租户ID") @RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByLevel(tenantId));
     }
 

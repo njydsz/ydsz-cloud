@@ -30,7 +30,7 @@ public class FlowNotifyChannelServiceImpl implements FlowNotifyChannelService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowNotifyChannelDO> listChannels(Long tenantId) {
+    public List<FlowNotifyChannelDO> listChannels(String tenantId) {
         LambdaQueryWrapper<FlowNotifyChannelDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FlowNotifyChannelDO::getTenantId, tenantId)
                 .orderByDesc(FlowNotifyChannelDO::getCreatedAt);
@@ -39,7 +39,7 @@ public class FlowNotifyChannelServiceImpl implements FlowNotifyChannelService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowNotifyChannelDO> listEnabledChannels(Long tenantId) {
+    public List<FlowNotifyChannelDO> listEnabledChannels(String tenantId) {
         LambdaQueryWrapper<FlowNotifyChannelDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FlowNotifyChannelDO::getTenantId, tenantId)
                 .eq(FlowNotifyChannelDO::getEnabled, true)
@@ -85,7 +85,7 @@ public class FlowNotifyChannelServiceImpl implements FlowNotifyChannelService {
 
     @Override
     @Transactional(readOnly = true)
-    public String getConfig(String channelType, Long tenantId) {
+    public String getConfig(String channelType, String tenantId) {
         LambdaQueryWrapper<FlowNotifyChannelDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(FlowNotifyChannelDO::getTenantId, tenantId)
                 .eq(FlowNotifyChannelDO::getChannelType, channelType)

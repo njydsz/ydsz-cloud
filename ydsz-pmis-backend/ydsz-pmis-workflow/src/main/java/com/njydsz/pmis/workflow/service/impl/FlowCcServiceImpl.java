@@ -121,7 +121,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowCcDO> pageMyCc(Long tenantId, Long userId, FlowCcQueryDTO query) {
+    public List<FlowCcDO> pageMyCc(String tenantId, Long userId, FlowCcQueryDTO query) {
         try {
             if (userId == null || query == null) {
                 return List.of();
@@ -139,7 +139,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countMyCc(Long tenantId, Long userId, FlowCcQueryDTO query) {
+    public long countMyCc(String tenantId, Long userId, FlowCcQueryDTO query) {
         try {
             if (userId == null || query == null) {
                 return 0L;
@@ -154,7 +154,7 @@ public class FlowCcServiceImpl implements FlowCcService {
     @Override
     @Transactional(readOnly = true)
     public PageResult<FlowCcDO> listCcByUser(Long userId, String readStatus, String flowCode,
-                                             Long tenantId, int pageNo, int pageSize) {
+                                             String tenantId, int pageNo, int pageSize) {
         try {
             if (userId == null) {
                 return PageResult.empty();
@@ -177,7 +177,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void markRead(Long tenantId, Long userId, Long ccId) {
+    public void markRead(String tenantId, Long userId, Long ccId) {
         try {
             if (ccId == null || userId == null) {
                 return;
@@ -191,7 +191,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int markAllRead(Long tenantId, Long userId) {
+    public int markAllRead(String tenantId, Long userId) {
         try {
             if (userId == null || tenantId == null) {
                 return 0;
@@ -210,7 +210,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countUnread(Long userId, Long tenantId) {
+    public long countUnread(Long userId, String tenantId) {
         try {
             if (userId == null || tenantId == null) {
                 return 0L;
@@ -227,7 +227,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowCcDO> listByInstance(Long instanceId, Long tenantId) {
+    public List<FlowCcDO> listByInstance(Long instanceId, String tenantId) {
         try {
             if (instanceId == null) {
                 return List.of();

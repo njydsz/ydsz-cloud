@@ -209,7 +209,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByType(Long tenantId) {
+    public List<Map<String, Object>> aggregateByType(String tenantId) {
         if (tenantId == null) tenantId = 1L;
         return changeMapper.aggregateByType(tenantId);
     }
@@ -222,7 +222,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
+    public List<Map<String, Object>> aggregateByStatus(String tenantId) {
         if (tenantId == null) tenantId = 1L;
         return changeMapper.aggregateByStatus(tenantId);
     }

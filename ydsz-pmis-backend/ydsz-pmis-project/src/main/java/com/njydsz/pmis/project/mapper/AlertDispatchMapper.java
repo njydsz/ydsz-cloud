@@ -70,5 +70,5 @@ public interface AlertDispatchMapper extends BaseMapper<AlertDispatchDO> {
      * @param tenantId 租户 ID，可选
      * @return 聚合统计列表
      */
-    List<Map<String, Object>> aggregateByTypeAndLevel(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByTypeAndLevel(@Param("tenantId") String tenantId);
 }

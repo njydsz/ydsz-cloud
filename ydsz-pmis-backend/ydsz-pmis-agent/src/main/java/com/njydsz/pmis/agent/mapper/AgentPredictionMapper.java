@@ -65,7 +65,7 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
      * @param tenantId 租户 ID
      * @return 每种 Agent 类型对应的数量列表
      */
-    List<Map<String, Object>> aggregateByType(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByType(@Param("tenantId") String tenantId);
 
     /**
      * 按告警等级统计 Agent 记录数量。
@@ -77,7 +77,7 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
      */
     long countByAlertLevel(@Param("alertLevel") String alertLevel,
                            @Param("agentType") String agentType,
-                           @Param("tenantId") Long tenantId);
+                           @Param("tenantId") String tenantId);
 
     /**
      * 计算 AI Agent 执行耗时统计 (P50/P90/P95/Max/Avg)
@@ -94,7 +94,7 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
     Map<String, Object> selectDurationStats(@Param("agentType") String agentType,
                                             @Param("from") LocalDateTime from,
                                             @Param("to") LocalDateTime to,
-                                            @Param("tenantId") Long tenantId);
+                                            @Param("tenantId") String tenantId);
 
     /**
      * 按 Agent 类型分组, 计算每类 Agent 的耗时 P50/P95
@@ -108,5 +108,5 @@ public interface AgentPredictionMapper extends BaseMapper<AgentPredictionDO> {
      */
     List<Map<String, Object>> selectDurationStatsByAgentType(@Param("from") LocalDateTime from,
                                                               @Param("to") LocalDateTime to,
-                                                              @Param("tenantId") Long tenantId);
+                                                              @Param("tenantId") String tenantId);
 }

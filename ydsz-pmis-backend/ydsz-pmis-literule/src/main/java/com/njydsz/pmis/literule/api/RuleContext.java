@@ -41,10 +41,10 @@ public final class RuleContext implements Serializable {
     private final String traceId;
 
     /** 租户 ID（运行时隔离，1.5.0 起） */
-    private final long tenantId;
+    private final String tenantId;
 
     private RuleContext(Map<String, Object> facts, String scenario, String source,
-                        String traceId, long tenantId) {
+                        String traceId, String tenantId) {
         this.facts = Collections.unmodifiableMap(new LinkedHashMap<>(facts));
         this.scenario = scenario;
         this.source = source;
@@ -66,7 +66,7 @@ public final class RuleContext implements Serializable {
      * @since 1.5.0
      */
     public static RuleContext of(Map<String, Object> facts, String scenario, String source,
-                                 String traceId, long tenantId) {
+                                 String traceId, String tenantId) {
         Objects.requireNonNull(facts, "facts 不能为 null");
         return new RuleContext(facts, scenario, source, traceId, tenantId);
     }

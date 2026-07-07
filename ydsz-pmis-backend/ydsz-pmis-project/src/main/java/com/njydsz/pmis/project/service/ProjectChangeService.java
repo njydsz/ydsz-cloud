@@ -74,7 +74,7 @@ public interface ProjectChangeService {
      * @param tenantId 租户 ID，可空
      * @return 每种变更类型对应的数量列表
      */
-    List<Map<String, Object>> aggregateByType(Long tenantId);
+    List<Map<String, Object>> aggregateByType(String tenantId);
 
     /**
      * 按变更状态聚合计数。
@@ -82,7 +82,7 @@ public interface ProjectChangeService {
      * @param tenantId 租户 ID，可空
      * @return 每种变更状态对应的数量列表
      */
-    List<Map<String, Object>> aggregateByStatus(Long tenantId);
+    List<Map<String, Object>> aggregateByStatus(String tenantId);
 
     /**
      * 统计指定立项下的重大变更数量。

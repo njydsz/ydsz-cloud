@@ -9403,9 +9403,9 @@ ANALYZE pmis_finance_invoice;
 
 -- ----------------------------------------------------------------------------
 -- 4) 人员ID字段 BIGINT -> VARCHAR(20) 统一(对齐其它 _by 雪花 ID 约定)
---    - pmis_finance_revenue_recognition.confirmed_by  BIGINT -> VARCHAR(20)
---    - pmis_finance_invoice.applied_by / approved_by / issued_by  BIGINT -> VARCHAR(20)
---    - pmis_finance_payment.confirmed_by / recorded_by             BIGINT -> VARCHAR(20)
+--    - pmis_profit_revenue.confirmed_by                          BIGINT -> VARCHAR(20)
+--    - pmis_finance_invoice.applied_by / approved_by / issued_by BIGINT -> VARCHAR(20)
+--    - pmis_finance_payment.confirmed_by / recorded_by            BIGINT -> VARCHAR(20)
 --    USING ::VARCHAR(20) 处理历史 BIGINT 数据(雪花 ID 字符串可直接转型)
 -- ----------------------------------------------------------------------------
 ALTER TABLE pmis_profit_revenue ALTER COLUMN confirmed_by TYPE VARCHAR(20) USING confirmed_by::VARCHAR(20);

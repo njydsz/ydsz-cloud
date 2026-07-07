@@ -119,7 +119,7 @@ public class RuleDefinition implements Serializable {
      * @since 1.4.0
      */
     @Builder.Default
-    private long tenantId = 1L;
+    private String tenantId = 1L;
 
     /** 生命周期状态 */
     @Builder.Default

@@ -82,7 +82,7 @@ public interface ProjectClosureService {
      * @param tenantId 租户ID
      * @return 聚合结果
      */
-    List<Map<String, Object>> aggregateByType(Long tenantId);
+    List<Map<String, Object>> aggregateByType(String tenantId);
 
     /**
      * 准入校验

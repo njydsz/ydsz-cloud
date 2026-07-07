@@ -38,7 +38,7 @@ public class DecisionTableEvalServiceImpl implements DecisionTableEvalService {
     }
 
     @Override
-    public List<Map<String, Object>> evaluate(String tableCode, Map<String, Object> facts, Long tenantId) {
+    public List<Map<String, Object>> evaluate(String tableCode, Map<String, Object> facts, String tenantId) {
         if (tableCode == null || tableCode.isBlank()) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "决策表编码不能为空");
         }
@@ -56,7 +56,7 @@ public class DecisionTableEvalServiceImpl implements DecisionTableEvalService {
      * @return 决策表实体
      * @throws BizException 决策表不存在或未启用
      */
-    private DecisionTableDO loadTable(String tableCode, Long tenantId) {
+    private DecisionTableDO loadTable(String tableCode, String tenantId) {
         LambdaQueryWrapper<DecisionTableDO> wrapper = new LambdaQueryWrapper<DecisionTableDO>()
                 .eq(DecisionTableDO::getTableCode, tableCode)
                 .eq(DecisionTableDO::getEnabled, Boolean.TRUE)

@@ -65,7 +65,7 @@ public interface ProjectClosureMapper extends BaseMapper<ProjectClosureDO> {
      * @param tenantId 租户 ID，可选
      * @return 聚合统计列表
      */
-    List<Map<String, Object>> aggregateByType(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByType(@Param("tenantId") String tenantId);
 
     /**
      * 按状态计数
@@ -74,5 +74,5 @@ public interface ProjectClosureMapper extends BaseMapper<ProjectClosureDO> {
      * @param tenantId 租户 ID，可选
      * @return 符合条件的记录数
      */
-    long countByStatus(@Param("status") String status, @Param("tenantId") Long tenantId);
+    long countByStatus(@Param("status") String status, @Param("tenantId") String tenantId);
 }

@@ -101,7 +101,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
         }
 
         // 1) 失效同 flowCode 的其他已发布版本
-        Long tenantId = def.getTenantId() != null
+        String tenantId = def.getTenantId() != null
                 ? def.getTenantId() : SecurityContext.getTenantIdOrDefault(1L);
         definitionMapper.deactivateByFlowCode(def.getFlowCode(), definitionId, tenantId);
 
@@ -137,7 +137,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
     @Override
     @Transactional(readOnly = true)
     public FlowDefinitionDO resolveEffectiveDefinition(String flowCode, String version,
-                                                       Long tenantId, Long initiatorId) {
+                                                       String tenantId, Long initiatorId) {
         // 1) 先查稳定版（isPublish=1 且 canaryStatus != CANARYING 的最新已发布）
         FlowDefinitionDO stable = definitionMapper.selectPublished(
                 flowCode,
@@ -171,7 +171,7 @@ public class FlowCanaryServiceImpl implements FlowCanaryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> listCanaryRolloutLog(String flowCode, Long tenantId) {
+    public List<Map<String, Object>> listCanaryRolloutLog(String flowCode, String tenantId) {
         if (!StringUtils.hasText(flowCode)) {
             return Collections.emptyList();
         }

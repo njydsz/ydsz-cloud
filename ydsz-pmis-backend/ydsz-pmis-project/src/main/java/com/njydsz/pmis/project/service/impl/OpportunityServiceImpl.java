@@ -253,7 +253,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
+    public List<Map<String, Object>> aggregateByStatus(String tenantId) {
         if (tenantId == null) tenantId = 1L;
         return opportunityMapper.aggregateByStatus(tenantId);
     }
@@ -266,7 +266,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByLevel(Long tenantId) {
+    public List<Map<String, Object>> aggregateByLevel(String tenantId) {
         if (tenantId == null) tenantId = 1L;
         return opportunityMapper.aggregateByLevel(tenantId);
     }

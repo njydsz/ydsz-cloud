@@ -84,7 +84,7 @@ public interface OpportunityService {
      * @param tenantId 租户 ID，可空
      * @return 每种状态对应的数量列表
      */
-    List<Map<String, Object>> aggregateByStatus(Long tenantId);
+    List<Map<String, Object>> aggregateByStatus(String tenantId);
 
     /**
      * 分级分布。
@@ -92,7 +92,7 @@ public interface OpportunityService {
      * @param tenantId 租户 ID，可空
      * @return 每种分级对应的数量列表
      */
-    List<Map<String, Object>> aggregateByLevel(Long tenantId);
+    List<Map<String, Object>> aggregateByLevel(String tenantId);
 
     /**
      * 商机转立项自动化：

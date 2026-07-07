@@ -110,7 +110,7 @@ public class AlertDispatchController {
      */
     @Operation(summary = "按类型 × 等级 聚合统计")
     @GetMapping("/aggregate")
-    public Result<List<Map<String, Object>>> aggregate(@RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregate(@RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByTypeAndLevel(tenantId));
     }
 

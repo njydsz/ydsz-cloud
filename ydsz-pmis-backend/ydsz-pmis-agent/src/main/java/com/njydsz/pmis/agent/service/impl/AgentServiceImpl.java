@@ -180,14 +180,14 @@ public class AgentServiceImpl implements AgentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByType(Long tenantId) {
+    public List<Map<String, Object>> aggregateByType(String tenantId) {
         if (tenantId == null) tenantId = 1L;
         return predictionMapper.aggregateByType(tenantId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public long countByAlertLevel(String alertLevel, String agentType, Long tenantId) {
+    public long countByAlertLevel(String alertLevel, String agentType, String tenantId) {
         if (tenantId == null) tenantId = 1L;
         return predictionMapper.countByAlertLevel(alertLevel, agentType, tenantId);
     }

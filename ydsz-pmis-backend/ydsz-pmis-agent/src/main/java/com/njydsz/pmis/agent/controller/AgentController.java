@@ -158,7 +158,7 @@ public class AgentController {
     @Operation(summary = "按类型/告警等级聚合")
     @PrePermission("agent:task:list")
     @GetMapping("/aggregate/type")
-    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByType(tenantId));
     }
 
@@ -176,7 +176,7 @@ public class AgentController {
     public Result<Long> countByAlertLevel(
             @RequestParam(required = false) String alertLevel,
             @RequestParam(required = false) String agentType,
-            @RequestParam(required = false) Long tenantId) {
+            @RequestParam(required = false) String tenantId) {
         return Result.ok(service.countByAlertLevel(alertLevel, agentType, tenantId));
     }
 
@@ -191,7 +191,7 @@ public class AgentController {
             @RequestParam(required = false) String agentType,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
-            @RequestParam(required = false) Long tenantId) {
+            @RequestParam(required = false) String tenantId) {
         return Result.ok(predictionMapper.selectDurationStats(agentType, from, to, tenantId));
     }
 
@@ -204,7 +204,7 @@ public class AgentController {
     public Result<List<Map<String, Object>>> durationStatsByAgentType(
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime from,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime to,
-            @RequestParam(required = false) Long tenantId) {
+            @RequestParam(required = false) String tenantId) {
         return Result.ok(predictionMapper.selectDurationStatsByAgentType(from, to, tenantId));
     }
 

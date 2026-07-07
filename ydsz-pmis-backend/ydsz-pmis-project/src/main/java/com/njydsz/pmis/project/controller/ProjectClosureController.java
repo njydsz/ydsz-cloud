@@ -156,7 +156,7 @@ public class ProjectClosureController {
     @Operation(summary = "按结项类型聚合")
     @PrePermission("closure:project:list")
     @GetMapping("/aggregate/type")
-    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByType(tenantId));
     }
 

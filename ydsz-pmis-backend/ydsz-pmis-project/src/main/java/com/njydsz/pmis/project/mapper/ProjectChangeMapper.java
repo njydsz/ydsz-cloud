@@ -48,7 +48,7 @@ public interface ProjectChangeMapper extends BaseMapper<ProjectChangeDO> {
      * @param tenantId 租户 ID
      * @return 每种变更类型对应的数量列表
      */
-    List<Map<String, Object>> aggregateByType(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByType(@Param("tenantId") String tenantId);
 
     /**
      * 按变更状态聚合计数（用于看板）。
@@ -56,7 +56,7 @@ public interface ProjectChangeMapper extends BaseMapper<ProjectChangeDO> {
      * @param tenantId 租户 ID
      * @return 每种变更状态对应的数量列表
      */
-    List<Map<String, Object>> aggregateByStatus(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByStatus(@Param("tenantId") String tenantId);
 
     /**
      * 统计指定立项下的重大变更数量。

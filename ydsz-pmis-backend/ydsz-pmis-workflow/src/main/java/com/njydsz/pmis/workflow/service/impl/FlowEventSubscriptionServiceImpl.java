@@ -104,7 +104,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int correlateMessage(Long tenantId, String messageName,
+    public int correlateMessage(String tenantId, String messageName,
                                  String correlationKey, String payload) {
         if (!StringUtils.hasText(messageName)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "messageName 不能为空");
@@ -137,7 +137,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int throwError(Long tenantId, Long instanceId, String errorCode, String payload) {
+    public int throwError(String tenantId, Long instanceId, String errorCode, String payload) {
         if (!StringUtils.hasText(errorCode)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "errorCode 不能为空");
         }

@@ -88,7 +88,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
         log.info("[FlowTimeout] 开始扫描超期任务 params={}", paramsJson);
 
         // 解析可选参数：tenantId（可空，为空时扫描全租户）
-        Long tenantId = parseTenantId(paramsJson);
+        String tenantId = parseTenantId(paramsJson);
 
         // selectOverdue 已内置 deleted=0、task_status IN ('PENDING','CLAIMED')、due_at < now 过滤
         List<FlowRunTaskDO> overdueTasks;
@@ -336,7 +336,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      * @param tenantId 租户 ID（可空）
      * @return 处理计数
      */
-    private Map<String, Object> handleSubProcessTimeout(Long tenantId) {
+    private Map<String, Object> handleSubProcessTimeout(String tenantId) {
         List<FlowInstanceDO> overdueInstances = instanceMapper.selectOverdueInstances(tenantId);
         int processed = 0;
         int errors = 0;

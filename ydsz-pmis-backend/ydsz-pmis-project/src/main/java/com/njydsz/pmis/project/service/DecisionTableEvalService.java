@@ -33,5 +33,5 @@ public interface DecisionTableEvalService {
      * @param tenantId  租户 ID（可空）
      * @return 命中行的动作值列表；无匹配时返回默认动作或空列表
      */
-    List<Map<String, Object>> evaluate(String tableCode, Map<String, Object> facts, Long tenantId);
+    List<Map<String, Object>> evaluate(String tableCode, Map<String, Object> facts, String tenantId);
 }

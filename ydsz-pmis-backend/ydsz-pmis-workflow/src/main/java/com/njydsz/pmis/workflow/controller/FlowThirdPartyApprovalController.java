@@ -166,7 +166,7 @@ public class FlowThirdPartyApprovalController {
                 platform, eventType, processInstanceId, businessType, businessId, openId);
 
         // 1. 回调原始数据落库（handle_status=PENDING），由独立重试任务保证最终一致
-        Long logId = savePendingLog(platform, eventType, processInstanceId, businessType, businessId, body);
+        String logId = savePendingLog(platform, eventType, processInstanceId, businessType, businessId, body);
 
         // 2. 通过 openId 反查系统用户
         FlowThirdPartyAccountDO account = null;
@@ -263,7 +263,7 @@ public class FlowThirdPartyApprovalController {
      *
      * @return 日志 ID，落库失败返回 null
      */
-    private Long savePendingLog(String platform, String eventType, String processInstanceId,
+    private String savePendingLog(String platform, String eventType, String processInstanceId,
                                 String businessType, String businessId, Map<String, Object> body) {
         FlowThirdPartyLogDO logEntry = new FlowThirdPartyLogDO();
         logEntry.setPlatform(platform);
@@ -272,7 +272,7 @@ public class FlowThirdPartyApprovalController {
         logEntry.setBusinessType(businessType);
         logEntry.setBusinessId(businessId);
         logEntry.setCallbackData(body == null ? null : body.toString());
-        logEntry.setTenantId(1L); // 默认租户，多租户场景由 account.tenantId 兜底
+        logEntry.setTenantId("1"); // 默认租户，多租户场景由 account.tenantId 兜底
         return thirdPartyLogService.savePending(logEntry);
     }
 

@@ -31,7 +31,7 @@ public interface OpportunityMapper extends BaseMapper<OpportunityDO> {
      * @param tenantId 租户 ID
      * @return 每种状态对应的数量列表
      */
-    List<Map<String, Object>> aggregateByStatus(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByStatus(@Param("tenantId") String tenantId);
 
     /**
      * 按分级聚合计数（用于看板）。
@@ -39,7 +39,7 @@ public interface OpportunityMapper extends BaseMapper<OpportunityDO> {
      * @param tenantId 租户 ID
      * @return 每种分级对应的数量列表
      */
-    List<Map<String, Object>> aggregateByLevel(@Param("tenantId") Long tenantId);
+    List<Map<String, Object>> aggregateByLevel(@Param("tenantId") String tenantId);
 
     /**
      * 更新商机状态。
@@ -60,5 +60,5 @@ public interface OpportunityMapper extends BaseMapper<OpportunityDO> {
      * @param tenantId 租户 ID
      * @return 数量
      */
-    Long countByStatus(@Param("status") String status, @Param("tenantId") Long tenantId);
+    Long countByStatus(@Param("status") String status, @Param("tenantId") String tenantId);
 }

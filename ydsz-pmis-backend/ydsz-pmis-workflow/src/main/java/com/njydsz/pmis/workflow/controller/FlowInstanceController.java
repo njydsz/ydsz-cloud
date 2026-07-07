@@ -216,7 +216,7 @@ public class FlowInstanceController {
             @RequestParam(required = false) String flowStatus,
             @RequestParam(required = false) LocalDateTime startTime,
             @RequestParam(required = false) LocalDateTime endTime,
-            @RequestParam(required = false) Long tenantId) {
+            @RequestParam(required = false) String tenantId) {
         Long tid = tenantId != null ? tenantId : SecurityContext.getTenantIdOrDefault(1L);
         return Result.ok(instanceService.page(businessType, initiatorId, flowStatus,
                 startTime, endTime, tid, pageNo, pageSize));

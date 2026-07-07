@@ -53,7 +53,7 @@ public interface AgentService {
      * @param id 记录 ID
      * @return 预测记录实体；不存在抛出业务异常
      */
-    AgentPredictionDO getById(Long id);
+    AgentPredictionDO getById(String id);
 
     /**
      * 分页查询 Agent 预测记录。
@@ -86,7 +86,7 @@ public interface AgentService {
      * @param tenantId 租户 ID，可空（为空时默认 1）
      * @return 每种 Agent 类型对应的数量列表
      */
-    List<Map<String, Object>> aggregateByType(Long tenantId);
+    List<Map<String, Object>> aggregateByType(String tenantId);
 
     /**
      * 按告警等级统计 Agent 记录数量。
@@ -96,5 +96,5 @@ public interface AgentService {
      * @param tenantId   租户 ID，可空（为空时默认 1）
      * @return 数量
      */
-    long countByAlertLevel(String alertLevel, String agentType, Long tenantId);
+    long countByAlertLevel(String alertLevel, String agentType, String tenantId);
 }

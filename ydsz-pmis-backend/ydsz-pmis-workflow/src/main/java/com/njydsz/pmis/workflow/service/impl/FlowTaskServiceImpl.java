@@ -117,30 +117,30 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, Long tenantId) {
+    public List<FlowRunTaskDO> listTodoByAssignee(String assigneeId, String tenantId) {
         return queryService.listTodoByAssignee(assigneeId, tenantId);
     }
 
     @Override
-    public PageResult<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, Long tenantId,
+    public PageResult<FlowRunTaskDO> listTodoByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listTodoByAssigneePage(assigneeId, tenantId, page, size);
     }
 
     @Override
-    public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, Long tenantId) {
+    public List<FlowRunTaskDO> listDoneByAssignee(String assigneeId, String tenantId) {
         return queryService.listDoneByAssignee(assigneeId, tenantId);
     }
 
     @Override
-    public PageResult<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, Long tenantId,
+    public PageResult<FlowRunTaskDO> listDoneByAssigneePage(String assigneeId, String tenantId,
                                                           int page, int size) {
         return queryService.listDoneByAssigneePage(assigneeId, tenantId, page, size);
     }
 
     @Override
     public List<FlowRunTaskDO> listTodoByUser(Long userId, List<String> roleCodes,
-                                            List<String> deptIds, Long tenantId) {
+                                            List<String> deptIds, String tenantId) {
         return queryService.listTodoByUser(userId, roleCodes, deptIds, tenantId);
     }
 
@@ -204,29 +204,29 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     }
 
     @Override
-    public List<Map<String, Object>> nodeDurationStats(String flowCode, Long tenantId) {
+    public List<Map<String, Object>> nodeDurationStats(String flowCode, String tenantId) {
         return queryService.nodeDurationStats(flowCode, tenantId);
     }
 
     @Override
-    public List<FlowRunTaskDO> listOverdue(String assigneeId, Long tenantId) {
+    public List<FlowRunTaskDO> listOverdue(String assigneeId, String tenantId) {
         return queryService.listOverdue(assigneeId, tenantId);
     }
 
     @Override
-    public long countOverdue(String assigneeId, Long tenantId) {
+    public long countOverdue(String assigneeId, String tenantId) {
         return queryService.countOverdue(assigneeId, tenantId);
     }
 
     @Override
-    public long countPending(Long tenantId) {
+    public long countPending(String tenantId) {
         return queryService.countPending(tenantId);
     }
 
     @Override
     public PageResult<FlowRunTaskDO> listDoneByAssigneePageMulti(String assigneeId, String businessType,
                                                                String flowCode, LocalDateTime startTime,
-                                                               LocalDateTime endTime, Long tenantId,
+                                                               LocalDateTime endTime, String tenantId,
                                                                int page, int size) {
         return queryService.listDoneByAssigneePageMulti(assigneeId, businessType, flowCode,
                 startTime, endTime, tenantId, page, size);

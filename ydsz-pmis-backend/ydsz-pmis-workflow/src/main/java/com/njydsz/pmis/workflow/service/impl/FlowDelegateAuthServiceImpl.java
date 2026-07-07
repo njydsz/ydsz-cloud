@@ -144,7 +144,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowDelegateAuthDO> listMine(Long ownerUserId, Long tenantId, String status) {
+    public List<FlowDelegateAuthDO> listMine(Long ownerUserId, String tenantId, String status) {
         if (ownerUserId == null) {
             return List.of();
         }
@@ -154,7 +154,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowDelegateAuthDO> listAsDelegate(Long delegateUserId, Long tenantId, String status) {
+    public List<FlowDelegateAuthDO> listAsDelegate(Long delegateUserId, String tenantId, String status) {
         if (delegateUserId == null) {
             return List.of();
         }
@@ -164,7 +164,7 @@ public class FlowDelegateAuthServiceImpl implements FlowDelegateAuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public FlowDelegateAuthDO matchAuth(Long tenantId, Long ownerUserId,
+    public FlowDelegateAuthDO matchAuth(String tenantId, Long ownerUserId,
                                          String flowCode, String nodeCode) {
         if (tenantId == null || ownerUserId == null) {
             return null;

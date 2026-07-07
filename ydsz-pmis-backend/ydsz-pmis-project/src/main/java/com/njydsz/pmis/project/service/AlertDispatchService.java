@@ -67,7 +67,7 @@ public interface AlertDispatchService {
      * @param tenantId 租户 ID
      * @return 聚合统计结果
      */
-    List<Map<String, Object>> aggregateByTypeAndLevel(Long tenantId);
+    List<Map<String, Object>> aggregateByTypeAndLevel(String tenantId);
 
     /**
      * 取消预警

@@ -209,7 +209,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     /** GAP-P0-4: 一键通过所有待办 */
     @Override
     public int passAllTodoTasks(Long userId, String comment) {
-        Long tenantId = SecurityContext.getTenantIdOrDefault(1L);
+        String tenantId = SecurityContext.getTenantIdOrDefault(1L);
         PageResult<FlowRunTaskDO> pageResult = taskService.listTodoByAssigneePage(
                 String.valueOf(userId), tenantId, 1, 100);
         List<FlowRunTaskDO> todos = pageResult.getList();

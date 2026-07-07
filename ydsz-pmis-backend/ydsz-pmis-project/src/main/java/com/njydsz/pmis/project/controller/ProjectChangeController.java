@@ -149,7 +149,7 @@ public class ProjectChangeController {
     @Operation(summary = "按变更类型聚合")
     @PrePermission("project:change:list")
     @GetMapping("/aggregate/type")
-    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByType(@RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByType(tenantId));
     }
 
@@ -162,7 +162,7 @@ public class ProjectChangeController {
     @Operation(summary = "按状态聚合")
     @PrePermission("project:change:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByStatus(tenantId));
     }
 

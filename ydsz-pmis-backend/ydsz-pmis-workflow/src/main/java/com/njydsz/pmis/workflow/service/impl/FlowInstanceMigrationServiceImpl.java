@@ -70,7 +70,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
 
     @Override
     @Transactional(readOnly = true)
-    public List<String> findRunningInstances(Long definitionId, Long tenantId) {
+    public List<String> findRunningInstances(Long definitionId, String tenantId) {
         if (definitionId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "definitionId 不能为空");
         }
@@ -148,7 +148,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
         boolean dryRun = Boolean.TRUE.equals(dto.getDryRun()) || forceDry;
         Long sourceDefId = dto.getSourceDefinitionId();
         Long targetDefId = dto.getTargetDefinitionId();
-        Long tenantId = dto.getTenantId() != null
+        String tenantId = dto.getTenantId() != null
                 ? dto.getTenantId()
                 : SecurityContext.getTenantIdOrDefault(1L);
         Map<String, String> nodeMapping = dto.getNodeMapping() != null

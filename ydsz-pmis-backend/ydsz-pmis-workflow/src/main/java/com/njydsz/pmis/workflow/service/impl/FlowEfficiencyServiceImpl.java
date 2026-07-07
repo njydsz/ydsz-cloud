@@ -76,7 +76,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     private static final int HIGH_REJECTION_MIN_SAMPLE = 5;
 
     @Override
-    public Map<String, Object> efficiencyStats(Long tenantId, String startTime, String endTime) {
+    public Map<String, Object> efficiencyStats(String tenantId, String startTime, String endTime) {
         Map<String, Object> result = new LinkedHashMap<>();
         try {
             List<FlowHisTaskDO> records = queryHisTasks(tenantId, startTime, endTime, null);
@@ -124,7 +124,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
      * <p>数据来源为 {@code pmis_flow_delegate_log}，仅统计 action 为 PASS/REJECT 的记录，
      * 即代理人真正代替原办理人完成审批的操作数。
      */
-    private long countDelegateActions(Long tenantId, String startTime, String endTime) {
+    private long countDelegateActions(String tenantId, String startTime, String endTime) {
         try {
             LambdaQueryWrapper<FlowDelegateLogDO> wrapper = new LambdaQueryWrapper<>();
             if (tenantId != null) {
@@ -145,7 +145,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
 
     @Override
-    public List<Map<String, Object>> bottleneckRanking(Long tenantId, String flowCode, int limit) {
+    public List<Map<String, Object>> bottleneckRanking(String tenantId, String flowCode, int limit) {
         try {
             // 直接使用 Mapper 已有的 nodeDurationStats（SQL GROUP BY 聚合）
             List<Map<String, Object>> stats = hisTaskMapper.nodeDurationStats(flowCode, tenantId);
@@ -166,7 +166,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
 
     @Override
-    public List<Map<String, Object>> approverRanking(Long tenantId, String startTime, String endTime, int limit) {
+    public List<Map<String, Object>> approverRanking(String tenantId, String startTime, String endTime, int limit) {
         try {
             List<FlowHisTaskDO> records = queryHisTasks(tenantId, startTime, endTime, null);
             if (records.isEmpty()) {
@@ -204,7 +204,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
 
     @Override
-    public List<Map<String, Object>> approvalTrend(Long tenantId, String interval,
+    public List<Map<String, Object>> approvalTrend(String tenantId, String interval,
                                                     String startTime, String endTime) {
         try {
             List<FlowHisTaskDO> records = queryHisTasks(tenantId, startTime, endTime, null);
@@ -255,7 +255,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     /**
      * 查询历史任务（带时间范围过滤）
      */
-    private List<FlowHisTaskDO> queryHisTasks(Long tenantId, String startTime, String endTime, String flowCode) {
+    private List<FlowHisTaskDO> queryHisTasks(String tenantId, String startTime, String endTime, String flowCode) {
         LambdaQueryWrapper<FlowHisTaskDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
                 .eq(StringUtils.hasText(flowCode), FlowHisTaskDO::getFlowCode, flowCode)
@@ -319,7 +319,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     // ============================== 异常检测 ==============================
 
     @Override
-    public List<Map<String, Object>> detectAnomalies(Long tenantId, int limit,
+    public List<Map<String, Object>> detectAnomalies(String tenantId, int limit,
                                                       int stuckHours, int longRunningDays) {
         int effectiveLimit = limit > 0 ? limit : 20;
         int effectiveStuckHours = stuckHours > 0 ? stuckHours : 24;
@@ -367,7 +367,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
 
     @Override
-    public List<Map<String, Object>> detectStuckTasks(Long tenantId, int limit, int stuckHours) {
+    public List<Map<String, Object>> detectStuckTasks(String tenantId, int limit, int stuckHours) {
         int effectiveLimit = limit > 0 ? limit : 20;
         int effectiveStuckHours = stuckHours > 0 ? stuckHours : 24;
 
@@ -415,7 +415,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
 
     @Override
-    public List<Map<String, Object>> detectHighRejectionNodes(Long tenantId) {
+    public List<Map<String, Object>> detectHighRejectionNodes(String tenantId) {
         // 查询最近 100 个历史任务（按完成时间倒序）
         LambdaQueryWrapper<FlowHisTaskDO> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(tenantId != null, FlowHisTaskDO::getTenantId, tenantId)
@@ -483,7 +483,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
     }
 
     @Override
-    public List<Map<String, Object>> detectLongRunningInstances(Long tenantId, int limit, int longRunningDays) {
+    public List<Map<String, Object>> detectLongRunningInstances(String tenantId, int limit, int longRunningDays) {
         int effectiveLimit = limit > 0 ? limit : 20;
         int effectiveLongRunningDays = longRunningDays > 0 ? longRunningDays : 7;
 
@@ -544,7 +544,7 @@ public class FlowEfficiencyServiceImpl implements FlowEfficiencyService {
      * </ul>
      */
     @Override
-    public Map<String, Object> healthScore(Long tenantId, String startTime, String endTime) {
+    public Map<String, Object> healthScore(String tenantId, String startTime, String endTime) {
         Map<String, Object> result = new LinkedHashMap<>();
         try {
             // 复用效率统计

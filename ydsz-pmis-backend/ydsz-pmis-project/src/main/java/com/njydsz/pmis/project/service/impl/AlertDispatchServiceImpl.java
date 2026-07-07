@@ -297,7 +297,7 @@ public class AlertDispatchServiceImpl implements AlertDispatchService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByTypeAndLevel(Long tenantId) {
+    public List<Map<String, Object>> aggregateByTypeAndLevel(String tenantId) {
         return mapper.aggregateByTypeAndLevel(tenantId);
     }
 
