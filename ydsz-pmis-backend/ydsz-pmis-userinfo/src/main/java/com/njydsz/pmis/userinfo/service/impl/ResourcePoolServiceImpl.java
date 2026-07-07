@@ -34,7 +34,7 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(ResourcePoolCreateDTO dto) {
+    public String create(ResourcePoolCreateDTO dto) {
         validate(dto);
         if (poolMapper.selectByCode(dto.getPoolCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.user.msg_c51c8d33", dto.getPoolCode());
@@ -56,7 +56,7 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(Long id, ResourcePoolCreateDTO dto) {
+    public void update(String id, ResourcePoolCreateDTO dto) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourcePoolDO p = poolMapper.selectById(id);
         if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_f0e76f2f");
@@ -73,14 +73,14 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         poolMapper.deleteById(id);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public ResourcePoolDO getById(Long id) {
+    public ResourcePoolDO getById(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourcePoolDO p = poolMapper.selectById(id);
         if (p == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_f0e76f2f");
@@ -96,7 +96,7 @@ public class ResourcePoolServiceImpl implements ResourcePoolService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ResourcePoolDO> listByDept(Long departmentId) {
+    public List<ResourcePoolDO> listByDept(String departmentId) {
         if (departmentId == null) return List.of();
         return poolMapper.selectByDept(departmentId);
     }

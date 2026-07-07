@@ -339,25 +339,21 @@ public class AuthServiceImpl implements AuthService {
     /**
      * P1-6 修复: 解析 CUSTOM 模式自定义部门 ID 集
      *
-     * <p>UserAccountDO.customDeptIds 为逗号分隔字符串（如 "1,3,5"），解析为 List&lt;Long&gt;。
+     * <p>UserAccountDO.customDeptIds 为逗号分隔字符串（如 "1,3,5"），解析为 List&lt;String&gt;。
      * 解析失败时跳过非法值并打印告警，避免登录流程中断。
      *
      * @param customDeptIds 逗号分隔的部门 ID 字符串
-     * @return Long 列表，为空时返回 null（不写入 JWT）
+     * @return String 列表，为空时返回 null（不写入 JWT）
      */
-    private List<Long> parseCustomDeptIds(String customDeptIds) {
+    private List<String> parseCustomDeptIds(String customDeptIds) {
         if (customDeptIds == null || customDeptIds.isBlank()) {
             return null;
         }
-        List<Long> result = new ArrayList<>();
+        List<String> result = new ArrayList<>();
         for (String s : customDeptIds.split(",")) {
             String trimmed = s.trim();
             if (!trimmed.isEmpty()) {
-                try {
-                    result.add(Long.parseLong(trimmed));
-                } catch (NumberFormatException e) {
-                    log.warn("[Auth] customDeptIds 解析失败，跳过非数字值: {}", trimmed);
-                }
+                result.add(trimmed);
             }
         }
         return result.isEmpty() ? null : result;
@@ -373,7 +369,7 @@ public class AuthServiceImpl implements AuthService {
      * @param deptId 当前用户所属部门 ID
      * @return 部门 ID 链（含当前部门），为 null 时返回 null
      */
-    private List<Long> resolveDeptIds(Long deptId) {
+    private List<String> resolveDeptIds(String deptId) {
         if (deptId == null) {
             return null;
         }
@@ -386,7 +382,7 @@ public class AuthServiceImpl implements AuthService {
                 return List.of(deptId);
             }
             String prefix = current.getDeptPath() + "/";
-            List<Long> ids = new ArrayList<>();
+            List<String> ids = new ArrayList<>();
             ids.add(deptId);
             for (DepartmentDO d : all) {
                 if (d.getDeptPath() != null && d.getDeptPath().startsWith(prefix)) {

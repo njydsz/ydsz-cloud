@@ -33,7 +33,7 @@ public interface PurchaseMapper extends BaseMapper<PurchaseDO> {
      * @param approverName 审批人姓名
      * @return 受影响行数
      */
-    int updateStatus(@Param("id") Long id, @Param("status") String status,
+    int updateStatus(@Param("id") String id, @Param("status") String status,
                      @Param("approverId") Long approverId, @Param("approverName") String approverName);
 
     /**
@@ -49,5 +49,5 @@ public interface PurchaseMapper extends BaseMapper<PurchaseDO> {
      * @param initiationId 立项 ID
      * @return 项目采购总金额
      */
-    BigDecimal sumByInitiation(@Param("initiationId") Long initiationId);
+    BigDecimal sumByInitiation(@Param("initiationId") String initiationId);
 }

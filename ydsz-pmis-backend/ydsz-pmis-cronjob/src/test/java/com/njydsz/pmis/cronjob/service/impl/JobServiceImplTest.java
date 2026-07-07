@@ -90,10 +90,10 @@ class JobServiceImplTest {
             return 1;
         });
 
-        Long id = jobService.create(job);
+        String id = jobService.create(job);
 
         assertNotNull(id);
-        assertEquals(1L, id);
+        assertEquals("1", id);
         verify(jobMapper).insert(any(JobDO.class));
     }
 
@@ -151,9 +151,9 @@ class JobServiceImplTest {
         JobDO job = buildJob("test-job", "testHandler", "0 0 8 * * ?");
         job.setId("1");
 
-        when(jobMapper.selectById(1L)).thenReturn(job);
+        when(jobMapper.selectById("1")).thenReturn(job);
 
-        JobDO result = jobService.getById(1L);
+        JobDO result = jobService.getById("1");
 
         assertNotNull(result);
         assertEquals("1", result.getId());
@@ -163,9 +163,9 @@ class JobServiceImplTest {
     @Test
     @DisplayName("getById - 任务不存在时抛出 BizException")
     void getById_shouldThrowBizExceptionWhenNotFound() {
-        when(jobMapper.selectById(999L)).thenReturn(null);
+        when(jobMapper.selectById("999")).thenReturn(null);
 
-        BizException ex = assertThrows(BizException.class, () -> jobService.getById(999L));
+        BizException ex = assertThrows(BizException.class, () -> jobService.getById("999"));
         assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -178,9 +178,9 @@ class JobServiceImplTest {
         job.setId("1");
         job.setStatus("NORMAL");
 
-        when(jobMapper.selectById(1L)).thenReturn(job);
+        when(jobMapper.selectById("1")).thenReturn(job);
 
-        jobService.pause(1L);
+        jobService.pause("1");
 
         assertEquals("PAUSED", job.getStatus());
         verify(jobMapper).updateById(job);
@@ -189,9 +189,9 @@ class JobServiceImplTest {
     @Test
     @DisplayName("pause - 任务不存在时抛出 BizException")
     void pause_shouldThrowBizExceptionWhenJobNotFound() {
-        when(jobMapper.selectById(999L)).thenReturn(null);
+        when(jobMapper.selectById("999")).thenReturn(null);
 
-        BizException ex = assertThrows(BizException.class, () -> jobService.pause(999L));
+        BizException ex = assertThrows(BizException.class, () -> jobService.pause("999"));
         assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -204,9 +204,9 @@ class JobServiceImplTest {
         job.setId("1");
         job.setStatus("PAUSED");
 
-        when(jobMapper.selectById(1L)).thenReturn(job);
+        when(jobMapper.selectById("1")).thenReturn(job);
 
-        jobService.resume(1L);
+        jobService.resume("1");
 
         assertEquals("NORMAL", job.getStatus());
         verify(jobMapper).updateById(job);
@@ -222,7 +222,7 @@ class JobServiceImplTest {
         job.setStatus("NORMAL");
 
         JobHandler handler = params -> "success";
-        when(jobMapper.selectById(1L)).thenReturn(job);
+        when(jobMapper.selectById("1")).thenReturn(job);
         when(applicationContext.getBean("testHandler", JobHandler.class)).thenReturn(handler);
         when(jobLogMapper.insert(any(JobLogDO.class))).thenAnswer(inv -> {
             JobLogDO log = inv.getArgument(0);
@@ -232,10 +232,10 @@ class JobServiceImplTest {
         when(jobMapper.updateStats(anyString(), any(), isNull(), anyLong(), anyLong(), anyLong(), any()))
                 .thenReturn(1);
 
-        Long logId = jobService.trigger(1L);
+        String logId = jobService.trigger("1");
 
         assertNotNull(logId);
-        assertEquals(10L, logId);
+        assertEquals("10", logId);
         verify(jobLogMapper).insert(any(JobLogDO.class));
     }
 
@@ -247,19 +247,19 @@ class JobServiceImplTest {
         JobDO job = buildJob("test-job", "testHandler", "0 0 8 * * ?");
         job.setId("1");
 
-        when(jobMapper.selectById(1L)).thenReturn(job);
+        when(jobMapper.selectById("1")).thenReturn(job);
 
-        jobService.delete(1L);
+        jobService.delete("1");
 
-        verify(jobMapper).deleteById(1L);
+        verify(jobMapper).deleteById("1");
     }
 
     @Test
     @DisplayName("delete - 任务不存在时抛出 BizException")
     void delete_shouldThrowBizExceptionWhenJobNotFound() {
-        when(jobMapper.selectById(999L)).thenReturn(null);
+        when(jobMapper.selectById("999")).thenReturn(null);
 
-        BizException ex = assertThrows(BizException.class, () -> jobService.delete(999L));
+        BizException ex = assertThrows(BizException.class, () -> jobService.delete("999"));
         assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());
     }
 
@@ -334,7 +334,7 @@ class JobServiceImplTest {
         JobDO job = new JobDO();
         job.setId("999");
 
-        when(jobMapper.selectById(999L)).thenReturn(null);
+        when(jobMapper.selectById("999")).thenReturn(null);
 
         BizException ex = assertThrows(BizException.class, () -> jobService.update(job));
         assertEquals(BizErrorCode.NOT_FOUND.getCode(), ex.getCode());

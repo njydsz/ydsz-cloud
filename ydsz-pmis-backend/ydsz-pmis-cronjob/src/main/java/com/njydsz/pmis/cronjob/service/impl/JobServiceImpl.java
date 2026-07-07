@@ -167,7 +167,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(JobDO job) {
+    public String create(JobDO job) {
         validate(job);
         if (jobMapper.selectByJobKey(job.getJobKey()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.cronjob.msg_7e5ef640", job.getJobKey());
@@ -238,7 +238,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @throws BizException 当任务不存在时抛出
      */
     @Override
-    public void delete(Long id) {
+    public void delete(String id) {
         JobDO j = jobMapper.selectById(id);
         if (j == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
@@ -255,7 +255,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @throws BizException 当任务不存在时抛出
      */
     @Override
-    public void pause(Long id) {
+    public void pause(String id) {
         JobDO j = getById(id);
         unregister(j.getJobKey());
         j.setStatus("PAUSED");
@@ -270,7 +270,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @throws BizException 当任务不存在时抛出
      */
     @Override
-    public void resume(Long id) {
+    public void resume(String id) {
         JobDO j = getById(id);
         if ("NORMAL".equals(j.getStatus())) {
             if (!scheduledMap.containsKey(j.getJobKey())) {
@@ -292,7 +292,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @throws BizException 当任务不存在时抛出
      */
     @Override
-    public Long trigger(Long id) {
+    public String trigger(String id) {
         JobDO j = getById(id);
         return executeJob(j, true);
     }
@@ -368,7 +368,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      */
     @Override
     @Transactional(readOnly = true)
-    public JobDO getById(Long id) {
+    public JobDO getById(String id) {
         JobDO j = jobMapper.selectById(id);
         if (j == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.cronjob.msg_c0d8369f");
@@ -442,7 +442,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * @param manual 是否手动触发（手动触发不加分布式锁）
      * @return 执行日志 ID；定时触发且锁已被持有时返回 null
      */
-    private Long executeJob(JobDO job, boolean manual) {
+    private String executeJob(JobDO job, boolean manual) {
         // 定时触发（非手动）时获取分布式锁，防止多实例重复执行
         String lockKey = null;
         if (!manual) {

@@ -77,7 +77,7 @@ public class LoginContextDTO implements Serializable {
      * 避免每次请求都查库计算子部门。
      */
     @Schema(description = "DEPT_AND_CHILD 模式部门 ID 链（含下级）")
-    private List<Long> deptIds;
+    private List<String> deptIds;
 
     /**
      * P1-6 修复: CUSTOM 模式自定义部门 ID 集
@@ -85,7 +85,7 @@ public class LoginContextDTO implements Serializable {
      * <p>由 UserAccountDO.customDeptIds（逗号分隔字符串）解析得到。
      */
     @Schema(description = "CUSTOM 模式自定义部门 ID 集")
-    private List<Long> customDeptIds;
+    private List<String> customDeptIds;
 
     @Schema(description = "角色编码列表")
     private List<String> roles;

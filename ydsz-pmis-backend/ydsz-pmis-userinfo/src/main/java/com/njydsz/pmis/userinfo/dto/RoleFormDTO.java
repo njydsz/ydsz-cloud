@@ -48,5 +48,5 @@ public class RoleFormDTO implements Serializable {
     private String status = "ENABLED";
 
     /** 关联权限 ID 列表 */
-    private List<Long> permissionIds;
+    private List<String> permissionIds;
 }

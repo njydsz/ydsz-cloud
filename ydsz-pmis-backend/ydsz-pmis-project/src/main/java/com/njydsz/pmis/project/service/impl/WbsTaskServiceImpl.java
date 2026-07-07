@@ -125,7 +125,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateProgress(Long id, BigDecimal progressPct, BigDecimal actualEffort) {
+    public void updateProgress(String id, BigDecimal progressPct, BigDecimal actualEffort) {
         WbsTaskDO t = getById(id);
         if (progressPct != null) {
             if (progressPct.signum() < 0 || progressPct.compareTo(new BigDecimal("100")) > 0) {
@@ -141,7 +141,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         WbsTaskDO t = getById(id);
         if (WbsTaskStatus.fromCode(t.getStatus()) == WbsTaskStatus.IN_PROGRESS) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_ce5c0a72");
@@ -152,7 +152,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public WbsTaskDO getById(Long id) {
+    public WbsTaskDO getById(String id) {
         WbsTaskDO t = wbsTaskMapper.selectById(id);
         if (t == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_c0d8369f");
@@ -164,7 +164,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
     @DataScope(userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<WbsTaskDO> page(int page, int size, String keyword, String status,
-                                String taskType, Long initiationId, Long ownerId) {
+                                String taskType, String initiationId, Long ownerId) {
         Page<WbsTaskDO> p = new Page<>(page, size);
         LambdaQueryWrapper<WbsTaskDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
@@ -184,19 +184,19 @@ public class WbsTaskServiceImpl implements WbsTaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<WbsTaskDO> listByInitiation(Long initiationId) {
+    public List<WbsTaskDO> listByInitiation(String initiationId) {
         return wbsTaskMapper.selectByInitiation(initiationId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<WbsTaskDO> listMilestones(Long initiationId) {
+    public List<WbsTaskDO> listMilestones(String initiationId) {
         return wbsTaskMapper.selectMilestones(initiationId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BigDecimal calcOverallProgress(Long initiationId) {
+    public BigDecimal calcOverallProgress(String initiationId) {
         List<WbsTaskDO> list = wbsTaskMapper.selectByInitiation(initiationId);
         if (list == null || list.isEmpty()) return BigDecimal.ZERO;
         BigDecimal totalEffort = BigDecimal.ZERO;
@@ -213,7 +213,7 @@ public class WbsTaskServiceImpl implements WbsTaskService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByStatus(Long initiationId) {
+    public List<Map<String, Object>> aggregateByStatus(String initiationId) {
         if (initiationId == null) return List.of();
         return wbsTaskMapper.aggregateByStatus(initiationId);
     }

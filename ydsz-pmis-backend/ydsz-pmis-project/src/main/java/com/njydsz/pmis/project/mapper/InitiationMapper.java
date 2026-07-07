@@ -71,7 +71,7 @@ public interface InitiationMapper extends BaseMapper<InitiationDO> {
      */
     java.util.List<com.njydsz.pmis.project.search.ProjectSearchVO> searchByFullText(
             @Param("keyword") String keyword,
-            @Param("tenantId") Long tenantId,
+            @Param("tenantId") String tenantId,
             @Param("offset") int offset,
             @Param("limit") int limit);
 
@@ -82,5 +82,5 @@ public interface InitiationMapper extends BaseMapper<InitiationDO> {
      * @param tenantId 租户 ID
      * @return 命中总数
      */
-    Long countByFullText(@Param("keyword") String keyword, @Param("tenantId") Long tenantId);
+    Long countByFullText(@Param("keyword") String keyword, @Param("tenantId") String tenantId);
 }

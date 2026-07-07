@@ -124,7 +124,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void submit(Long id, Long operatorId) {
+    public void submit(String id, Long operatorId) {
         InvoiceDO inv = getById(id);
         transit(inv, InvoiceStatus.SUBMITTED, null, operatorId);
         if (inv.getAppliedBy() == null) {
@@ -135,7 +135,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void approve(Long id, InvoiceApprovalDTO dto) {
+    public void approve(String id, InvoiceApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
         }
@@ -149,7 +149,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void reject(Long id, InvoiceApprovalDTO dto) {
+    public void reject(String id, InvoiceApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_52fbfb11");
         }
@@ -163,7 +163,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void issue(Long id, InvoiceApprovalDTO dto) {
+    public void issue(String id, InvoiceApprovalDTO dto) {
         if (dto == null || dto.getOperatorId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_69724bea");
         }
@@ -187,7 +187,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void redReverse(Long id, Long operatorId, String comment) {
+    public void redReverse(String id, Long operatorId, String comment) {
         if (operatorId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
         }
@@ -207,7 +207,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void cancel(Long id, Long operatorId, String comment) {
+    public void cancel(String id, Long operatorId, String comment) {
         if (operatorId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_2f7e744f");
         }
@@ -217,7 +217,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         InvoiceDO inv = getById(id);
         if (!InvoiceStatus.DRAFT.getCode().equals(inv.getStatus())
                 && !InvoiceStatus.REJECTED.getCode().equals(inv.getStatus())
@@ -230,7 +230,7 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(readOnly = true)
-    public InvoiceDO getById(Long id) {
+    public InvoiceDO getById(String id) {
         InvoiceDO inv = invoiceMapper.selectById(id);
         if (inv == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_1b0f0829");
         return inv;
@@ -239,7 +239,7 @@ public class InvoiceServiceImpl implements InvoiceService {
     @Override
     @Transactional(readOnly = true)
     public Page<InvoiceDO> page(int page, int size, String keyword, String status,
-                                Long contractId, Long initiationId, Long customerId,
+                                String contractId, String initiationId, String customerId,
                                 String invoiceType) {
         Page<InvoiceDO> p = new Page<>(page, size);
         LambdaQueryWrapper<InvoiceDO> w = new LambdaQueryWrapper<>();
@@ -259,21 +259,21 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<InvoiceDO> listByContract(Long contractId) {
+    public List<InvoiceDO> listByContract(String contractId) {
         if (contractId == null) return List.of();
         return invoiceMapper.selectByContract(contractId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<InvoiceDO> listByInitiation(Long initiationId) {
+    public List<InvoiceDO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
         return invoiceMapper.selectByInitiation(initiationId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public BigDecimal sumInvoicedByContract(Long contractId) {
+    public BigDecimal sumInvoicedByContract(String contractId) {
         if (contractId == null) return BigDecimal.ZERO;
         BigDecimal v = invoiceMapper.sumInvoicedByContract(contractId);
         return v == null ? BigDecimal.ZERO : v;
@@ -281,14 +281,14 @@ public class InvoiceServiceImpl implements InvoiceService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByStatus(Long contractId) {
+    public List<Map<String, Object>> aggregateByStatus(String contractId) {
         if (contractId == null) return List.of();
         return invoiceMapper.aggregateByStatus(contractId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> sumByMonth(Long initiationId) {
+    public List<Map<String, Object>> sumByMonth(String initiationId) {
         if (initiationId == null) return List.of();
         return invoiceMapper.sumByMonth(initiationId);
     }

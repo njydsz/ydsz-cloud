@@ -45,7 +45,7 @@ public interface AlertDispatchMapper extends BaseMapper<AlertDispatchDO> {
      * @param sentAt 发送时间
      * @return 受影响行数
      */
-    int markSent(@Param("id") Long id, @Param("sentAt") LocalDateTime sentAt);
+    int markSent(@Param("id") String id, @Param("sentAt") LocalDateTime sentAt);
 
     /**
      * 标记发送失败
@@ -54,7 +54,7 @@ public interface AlertDispatchMapper extends BaseMapper<AlertDispatchDO> {
      * @param reason 失败原因
      * @return 受影响行数
      */
-    int markFailed(@Param("id") Long id, @Param("reason") String reason);
+    int markFailed(@Param("id") String id, @Param("reason") String reason);
 
     /**
      * 递增重试次数
@@ -62,7 +62,7 @@ public interface AlertDispatchMapper extends BaseMapper<AlertDispatchDO> {
      * @param id 预警记录 ID
      * @return 受影响行数
      */
-    int incrementRetry(@Param("id") Long id);
+    int incrementRetry(@Param("id") String id);
 
     /**
      * 按类型 + 等级 聚合

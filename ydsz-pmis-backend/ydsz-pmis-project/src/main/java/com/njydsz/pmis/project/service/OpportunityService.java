@@ -45,7 +45,7 @@ public interface OpportunityService {
      *
      * @param id 商机 ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据商机 ID 查询商机详情。
@@ -53,7 +53,7 @@ public interface OpportunityService {
      * @param id 商机 ID
      * @return 商机实体；不存在返回 null
      */
-    OpportunityDO getById(Long id);
+    OpportunityDO getById(String id);
 
     /**
      * 分页查询商机列表。
@@ -76,7 +76,7 @@ public interface OpportunityService {
      * @param hasHistory     是否有历史合作
      * @return 赢单率（0-1）
      */
-    BigDecimal evaluateWinRate(Long id, String customerCredit, boolean hasHistory);
+    BigDecimal evaluateWinRate(String id, String customerCredit, boolean hasHistory);
 
     /**
      * 状态分布。
@@ -109,5 +109,5 @@ public interface OpportunityService {
      * @param pmId          项目经理 ID(可空)
      * @return 新建立项 ID
      */
-    Long convertToInitiation(Long opportunityId, Long sponsorId, Long pmId);
+    Long convertToInitiation(String opportunityId, Long sponsorId, Long pmId);
 }

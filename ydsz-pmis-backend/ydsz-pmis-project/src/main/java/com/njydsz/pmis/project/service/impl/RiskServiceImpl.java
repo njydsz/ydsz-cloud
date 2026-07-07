@@ -97,7 +97,7 @@ public class RiskServiceImpl implements RiskService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         RiskDO r = loadByIdDO(id);
         if (RiskStatus.fromCode(r.getStatus()) == RiskStatus.OCCURRED) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_0fa95df6");
@@ -107,7 +107,7 @@ public class RiskServiceImpl implements RiskService {
 
     @Override
     @Transactional(readOnly = true)
-    public RiskVO getById(Long id) {
+    public RiskVO getById(String id) {
         RiskDO r = loadByIdDO(id);
         return toVo(r);
     }
@@ -115,7 +115,7 @@ public class RiskServiceImpl implements RiskService {
     @Override
     @Transactional(readOnly = true)
     public Page<RiskVO> page(int page, int size, String keyword, String status,
-                             String riskLevel, Long initiationId) {
+                             String riskLevel, String initiationId) {
         Page<RiskDO> p = new Page<>(page, size);
         LambdaQueryWrapper<RiskDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
@@ -139,7 +139,7 @@ public class RiskServiceImpl implements RiskService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RiskVO> listByInitiation(Long initiationId) {
+    public List<RiskVO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
         List<RiskDO> list = riskMapper.selectByInitiation(initiationId);
         if (list == null || list.isEmpty()) return List.of();
@@ -148,7 +148,7 @@ public class RiskServiceImpl implements RiskService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByLevel(Long initiationId) {
+    public List<Map<String, Object>> aggregateByLevel(String initiationId) {
         if (initiationId == null) return List.of();
         return riskMapper.aggregateByLevel(initiationId);
     }
@@ -156,12 +156,12 @@ public class RiskServiceImpl implements RiskService {
     /**
      * 内部使用：根据 ID 加载 DO（保留所有字段，供 changeStatus/delete 等内部业务判断使用）
      *
-     * <p>对外接口请使用 {@link #getById(Long)} 返回 VO。
+     * <p>对外接口请使用 {@link #getById(String)} 返回 VO。
      *
      * @param id 风险ID
      * @return 风险 DO
      */
-    private RiskDO loadByIdDO(Long id) {
+    private RiskDO loadByIdDO(String id) {
         RiskDO r = riskMapper.selectById(id);
         if (r == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_eed2ed24");
         return r;

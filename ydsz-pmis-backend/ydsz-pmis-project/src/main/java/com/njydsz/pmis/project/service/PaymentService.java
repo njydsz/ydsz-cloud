@@ -25,12 +25,12 @@ public interface PaymentService {
     /**
      * 确认到账 (PENDING → CONFIRMED)
      */
-    void confirm(String id, Long operatorId);
+    void confirm(String id, String operatorId);
 
     /**
      * 取消 (PENDING/CONFIRMED → CANCELLED)
      */
-    void cancel(String id, Long operatorId, String reason);
+    void cancel(String id, String operatorId, String reason);
 
     /**
      * 删除（仅 PENDING/CANCELLED 可删）
@@ -45,7 +45,7 @@ public interface PaymentService {
     /**
      * 自动核销：按客户维度，把已确认的回款按发票到期顺序自动分配
      */
-    int autoAllocate(String customerId, Long operatorId);
+    int autoAllocate(String customerId, String operatorId);
 
     /**
      * 现金流预测：基于回款历史 + 应收余额预测未来 N 个月回款

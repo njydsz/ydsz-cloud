@@ -23,7 +23,7 @@ public interface BudgetItemMapper extends BaseMapper<BudgetItemDO> {
      * @param initiationId 立项 ID
      * @return 预算明细列表
      */
-    List<BudgetItemDO> selectByInitiationId(@Param("initiationId") Long initiationId);
+    List<BudgetItemDO> selectByInitiationId(@Param("initiationId") String initiationId);
 
     /**
      * 按预算大类汇总金额。
@@ -31,7 +31,7 @@ public interface BudgetItemMapper extends BaseMapper<BudgetItemDO> {
      * @param initiationId 立项 ID
      * @return 每个大类对应的金额汇总列表
      */
-    List<Map<String, Object>> sumByCategory(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> sumByCategory(@Param("initiationId") String initiationId);
 
     /**
      * 根据立项 ID 物理删除所有预算明细（用于重新提交时清理）。
@@ -39,5 +39,5 @@ public interface BudgetItemMapper extends BaseMapper<BudgetItemDO> {
      * @param initiationId 立项 ID
      * @return 受影响行数
      */
-    int deleteByInitiationId(@Param("initiationId") Long initiationId);
+    int deleteByInitiationId(@Param("initiationId") String initiationId);
 }

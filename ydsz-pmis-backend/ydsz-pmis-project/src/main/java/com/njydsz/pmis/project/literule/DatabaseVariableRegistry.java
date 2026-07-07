@@ -40,7 +40,7 @@ public class DatabaseVariableRegistry implements VariableRegistry {
     private static final long CACHE_TTL_MS = 5 * 60 * 1000L;
 
     /** 默认租户 ID（单租户部署） */
-    private static final long DEFAULT_TENANT_ID = 1L;
+    private static final String DEFAULT_TENANT_ID = "1";
 
     private final RuleVariableDefMapper ruleVariableDefMapper;
 

@@ -86,7 +86,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void confirm(String id, Long operatorId) {
+    public void confirm(String id, String operatorId) {
         PaymentDO p = getById(id);
         transit(p, PaymentStatus.CONFIRMED, operatorId);
         p.setConfirmedBy(operatorId);
@@ -96,7 +96,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void cancel(String id, Long operatorId, String reason) {
+    public void cancel(String id, String operatorId, String reason) {
         PaymentDO p = getById(id);
         if (p.getAllocatedAmount() != null && p.getAllocatedAmount().signum() > 0) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_1ccbb047");
@@ -162,7 +162,7 @@ public class PaymentServiceImpl implements PaymentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int autoAllocate(String customerId, Long operatorId) {
+    public int autoAllocate(String customerId, String operatorId) {
         if (customerId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_6de1fd36");
         }
@@ -316,7 +316,7 @@ public class PaymentServiceImpl implements PaymentService {
         return paymentMapper.aggregateByCustomer();
     }
 
-    private void transit(PaymentDO p, PaymentStatus target, Long operatorId) {
+    private void transit(PaymentDO p, PaymentStatus target, String operatorId) {
         PaymentStatus from = PaymentStatus.fromCode(p.getStatus());
         if (from == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST,

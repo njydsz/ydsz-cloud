@@ -146,7 +146,7 @@ public class RequireReAuthAspect {
      * @param ttlSeconds    有效期（秒）
      * @return 二次认证 token
      */
-    public String issueToken(String operationCode, Long userId, int ttlSeconds) {
+    public String issueToken(String operationCode, String userId, int ttlSeconds) {
         String token = SnowflakeIdGenerator.nextIdStr();
         String key = KEY_PREFIX + operationCode + ":" + userId + ":" + token;
         redisTemplate.opsForValue().set(key, "1", Duration.ofSeconds(ttlSeconds));

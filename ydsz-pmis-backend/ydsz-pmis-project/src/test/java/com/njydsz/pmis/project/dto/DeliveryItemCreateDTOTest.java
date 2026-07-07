@@ -95,7 +95,7 @@ class DeliveryItemCreateDTOTest {
         void shouldPassValidationWhenAllRequiredFieldsPresent() {
             DeliveryItemCreateDTO dto = new DeliveryItemCreateDTO();
             dto.setItemCode("DEL-001");
-            dto.setInitiationId(1L);
+            dto.setInitiationId("1");
 
             Set<ConstraintViolation<DeliveryItemCreateDTO>> violations = validator.validate(dto);
             assertThat(violations).isEmpty();
@@ -106,7 +106,7 @@ class DeliveryItemCreateDTOTest {
         void shouldFailWhenItemCodeBlank() {
             DeliveryItemCreateDTO dto = new DeliveryItemCreateDTO();
             dto.setItemCode("");
-            dto.setInitiationId(1L);
+            dto.setInitiationId("1");
 
             Set<ConstraintViolation<DeliveryItemCreateDTO>> violations = validator.validate(dto);
             assertThat(violations).isNotEmpty();

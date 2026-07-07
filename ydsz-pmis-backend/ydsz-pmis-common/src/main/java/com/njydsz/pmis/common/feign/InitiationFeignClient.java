@@ -31,7 +31,7 @@ public interface InitiationFeignClient {
      * @return 操作结果
      */
     @PostMapping("/{id}/mark-processing")
-    Result<Void> markProcessing(@PathVariable("id") Long initiationId);
+    Result<Void> markProcessing(@PathVariable("id") String initiationId);
 
     /**
      * 标记立项为已批准。
@@ -40,7 +40,7 @@ public interface InitiationFeignClient {
      * @return 操作结果
      */
     @PostMapping("/{id}/mark-approved")
-    Result<Void> markApproved(@PathVariable("id") Long initiationId);
+    Result<Void> markApproved(@PathVariable("id") String initiationId);
 
     /**
      * 标记立项为已驳回。
@@ -50,6 +50,6 @@ public interface InitiationFeignClient {
      * @return 操作结果
      */
     @PostMapping("/{id}/mark-rejected")
-    Result<Void> markRejected(@PathVariable("id") Long initiationId,
+    Result<Void> markRejected(@PathVariable("id") String initiationId,
                               @RequestParam(value = "reason", required = false) String reason);
 }

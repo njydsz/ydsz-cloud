@@ -25,7 +25,7 @@ public interface ProfitSnapshotMapper extends BaseMapper<ProfitSnapshotDO> {
      * @param period       期间
      * @return 利润快照对象，未找到返回 null
      */
-    ProfitSnapshotDO selectByInitiationAndPeriod(@Param("initiationId") Long initiationId,
+    ProfitSnapshotDO selectByInitiationAndPeriod(@Param("initiationId") String initiationId,
                                                  @Param("period") String period);
 
     /**
@@ -34,7 +34,7 @@ public interface ProfitSnapshotMapper extends BaseMapper<ProfitSnapshotDO> {
      * @param initiationId 立项 ID
      * @return 利润快照列表
      */
-    List<ProfitSnapshotDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<ProfitSnapshotDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按期间查询利润趋势
@@ -42,7 +42,7 @@ public interface ProfitSnapshotMapper extends BaseMapper<ProfitSnapshotDO> {
      * @param initiationId 立项 ID
      * @return 利润趋势列表
      */
-    List<Map<String, Object>> trendByPeriod(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> trendByPeriod(@Param("initiationId") String initiationId);
 
     /**
      * P4-3 跨项目汇总所有快照利润

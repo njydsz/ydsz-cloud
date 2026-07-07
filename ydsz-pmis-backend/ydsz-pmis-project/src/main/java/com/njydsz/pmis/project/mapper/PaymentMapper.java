@@ -35,7 +35,7 @@ public interface PaymentMapper extends BaseMapper<PaymentDO> {
      * @return 受影响行数
      */
     int updateStatus(@Param("id") String id, @Param("status") String status,
-                     @Param("confirmedBy") Long confirmedBy);
+                     @Param("confirmedBy") String confirmedBy);
 
     /**
      * 更新分配信息

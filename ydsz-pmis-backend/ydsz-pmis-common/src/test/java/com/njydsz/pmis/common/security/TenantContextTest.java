@@ -36,7 +36,7 @@ class TenantContextTest {
     @DisplayName("setTenantId/getTenantId - 设置为 null 后应返回默认值")
     void setTenantId_null_shouldFallbackToDefault() {
         TenantContext.setTenantId(null);
-        assertEquals(1L, TenantContext.getTenantId());
+        assertEquals("1", TenantContext.getTenantId());
     }
 
     @Test

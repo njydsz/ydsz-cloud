@@ -31,7 +31,7 @@ public class NameAssembler {
      * @param id 员工 ID
      * @return 员工姓名；失败或不存在返回 null
      */
-    public String resolveEmployee(Long id) {
+    public String resolveEmployee(String id) {
         if (id == null) return null;
         try {
             Result<Map<String, Object>> r = userServiceClient.getEmployee(id);
@@ -52,7 +52,7 @@ public class NameAssembler {
      * @param id 客户 ID
      * @return 客户名称；失败或不存在返回 null
      */
-    public String resolveCustomer(Long id) {
+    public String resolveCustomer(String id) {
         if (id == null) return null;
         try {
             Result<String> r = userServiceClient.getCustomerName(id);
@@ -71,10 +71,10 @@ public class NameAssembler {
      * @param ids 员工 ID 列表
      * @return 员工 ID 到姓名的映射；失败返回空 Map
      */
-    public Map<Long, String> batchEmployeeName(List<Long> ids) {
+    public Map<String, String> batchEmployeeName(List<String> ids) {
         if (ids == null || ids.isEmpty()) return Map.of();
         try {
-            Result<Map<Long, String>> r = userServiceClient.batchEmployeeName(ids);
+            Result<Map<String, String>> r = userServiceClient.batchEmployeeName(ids);
             if (r != null && r.getData() != null) {
                 return r.getData();
             }
@@ -90,10 +90,10 @@ public class NameAssembler {
      * @param ids 客户 ID 列表
      * @return 客户 ID 到名称的映射；失败返回空 Map
      */
-    public Map<Long, String> batchCustomerName(List<Long> ids) {
+    public Map<String, String> batchCustomerName(List<String> ids) {
         if (ids == null || ids.isEmpty()) return Map.of();
         try {
-            Result<Map<Long, String>> r = userServiceClient.batchCustomerName(ids);
+            Result<Map<String, String>> r = userServiceClient.batchCustomerName(ids);
             if (r != null && r.getData() != null) {
                 return r.getData();
             }

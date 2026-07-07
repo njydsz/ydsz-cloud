@@ -26,5 +26,5 @@ public interface RulePackMapper extends BaseMapper<RulePackDO> {
     /**
      * 增加下载次数（+1）
      */
-    int increaseDownloadCount(@Param("id") Long id);
+    int increaseDownloadCount(@Param("id") String id);
 }

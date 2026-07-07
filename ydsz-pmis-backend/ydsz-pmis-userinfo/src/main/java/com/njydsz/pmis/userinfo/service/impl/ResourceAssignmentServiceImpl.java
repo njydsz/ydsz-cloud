@@ -41,7 +41,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long act(ResourceAssignmentCreateDTO dto) {
+    public String act(ResourceAssignmentCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_d9712a58");
         if (!StringUtils.hasText(dto.getAction())) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_f0494194");
@@ -91,7 +91,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
 
     @Override
     @Transactional(readOnly = true)
-    public ResourceAssignmentDO getById(Long id) {
+    public ResourceAssignmentDO getById(String id) {
         if (id == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.user.msg_411b6827");
         ResourceAssignmentDO a = assignmentMapper.selectById(id);
         if (a == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.user.msg_3d429777");
@@ -100,21 +100,21 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
 
     @Override
     @Transactional(readOnly = true)
-    public List<ResourceAssignmentDO> listByEmployee(Long employeeId) {
+    public List<ResourceAssignmentDO> listByEmployee(String employeeId) {
         if (employeeId == null) return List.of();
         return assignmentMapper.selectByEmployee(employeeId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<ResourceAssignmentDO> listByInitiation(Long initiationId) {
+    public List<ResourceAssignmentDO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
         return assignmentMapper.selectByInitiation(initiationId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public int activeCount(Long employeeId) {
+    public int activeCount(String employeeId) {
         if (employeeId == null) return 0;
         Integer c = assignmentMapper.countActiveByEmployee(employeeId);
         return c == null ? 0 : c;
@@ -122,7 +122,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
 
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> utilization(Long employeeId) {
+    public Map<String, Object> utilization(String employeeId) {
         Map<String, Object> out = new HashMap<>();
         if (employeeId == null) return out;
         List<ResourceAssignmentDO> all = assignmentMapper.selectByEmployee(employeeId);
@@ -148,7 +148,7 @@ public class ResourceAssignmentServiceImpl implements ResourceAssignmentService 
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ResourceAssignmentDO> page(int page, int size, Long employeeId, Long initiationId, String status) {
+    public Page<ResourceAssignmentDO> page(int page, int size, String employeeId, String initiationId, String status) {
         Page<ResourceAssignmentDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ResourceAssignmentDO> w = new LambdaQueryWrapper<>();
         if (employeeId != null) w.eq(ResourceAssignmentDO::getEmployeeId, employeeId);

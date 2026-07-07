@@ -45,7 +45,7 @@ public interface JobMapper extends BaseMapper<JobDO> {
      * @param status       任务状态（失败时设为 ERROR，成功时传 null 不更新）
      * @return 受影响行数
      */
-    int updateStats(@Param("id") Long id,
+    int updateStats(@Param("id") String id,
                     @Param("lastFireTime") java.time.LocalDateTime lastFireTime,
                     @Param("nextFireTime") java.time.LocalDateTime nextFireTime,
                     @Param("fireCount") Long fireCount,

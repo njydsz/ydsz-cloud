@@ -65,7 +65,7 @@ public class RuleChainGraphService {
             DO.setName(graph.getName() != null ? graph.getName() : ruleCode);
             DO.setDescription(graph.getDescription());
             DO.setScenario(graph.getScenario());
-            DO.setTenantId(graph.getTenantId() != null ? Long.parseLong(graph.getTenantId()) : 1L);
+            DO.setTenantId(graph.getTenantId() != null ? graph.getTenantId() : "1");
             DO.setGraphVersion(1);
             DO.setStatus(graph.getStatus() != null ? graph.getStatus() : "DRAFT");
             DO.setContentJson(JSON.toJSONString(graph));

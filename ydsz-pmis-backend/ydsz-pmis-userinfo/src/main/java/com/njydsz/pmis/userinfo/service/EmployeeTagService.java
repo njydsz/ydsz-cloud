@@ -19,14 +19,14 @@ public interface EmployeeTagService {
      * @param dto 标签表单
      * @return 新建标签 ID
      */
-    Long add(EmployeeTagCreateDTO dto);
+    String add(EmployeeTagCreateDTO dto);
 
     /**
      * 删除标签
      *
      * @param id 标签 ID
      */
-    void remove(Long id);
+    void remove(String id);
 
     /**
      * 按员工替换标签集（先删后增）
@@ -34,7 +34,7 @@ public interface EmployeeTagService {
      * @param employeeId 员工 ID
      * @param tags       标签表单列表
      */
-    void replaceByEmployee(Long employeeId, List<EmployeeTagCreateDTO> tags);
+    void replaceByEmployee(String employeeId, List<EmployeeTagCreateDTO> tags);
 
     /**
      * 查询员工标签列表
@@ -42,7 +42,7 @@ public interface EmployeeTagService {
      * @param employeeId 员工 ID
      * @return 标签列表
      */
-    List<EmployeeTagDO> listByEmployee(Long employeeId);
+    List<EmployeeTagDO> listByEmployee(String employeeId);
 
     /**
      * 按标签类型与编码查询候选人员

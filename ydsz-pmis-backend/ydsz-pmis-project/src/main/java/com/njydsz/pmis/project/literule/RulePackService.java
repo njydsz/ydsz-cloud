@@ -180,7 +180,7 @@ public class RulePackService {
             }
         }
         // 增加下载次数
-        rulePackMapper.increaseDownloadCount(entity.getId());
+        rulePackMapper.increaseDownloadCount(Long.parseLong(entity.getId()));
 
         // 记录安装历史
         RulePackInstallDO record = new RulePackInstallDO();
@@ -223,7 +223,7 @@ public class RulePackService {
      * 删除规则集
      */
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         if (id == null) return;
         rulePackMapper.deleteById(id);
         log.info("[RulePack] 删除规则集: id={}", id);
@@ -233,7 +233,7 @@ public class RulePackService {
      * 标记为官方
      */
     @Transactional(rollbackFor = Exception.class)
-    public void markOfficial(Long id, boolean official) {
+    public void markOfficial(String id, boolean official) {
         if (id == null) return;
         RulePackDO entity = rulePackMapper.selectById(id);
         if (entity == null) return;
@@ -246,7 +246,7 @@ public class RulePackService {
      * 评分
      */
     @Transactional(rollbackFor = Exception.class)
-    public void rate(Long id, double rating) {
+    public void rate(String id, double rating) {
         if (id == null) return;
         if (rating < 0 || rating > 5) {
             throw new IllegalArgumentException("rating 必须在 0-5 之间");

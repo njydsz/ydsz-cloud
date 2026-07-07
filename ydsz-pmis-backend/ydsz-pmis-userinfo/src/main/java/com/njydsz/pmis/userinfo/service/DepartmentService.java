@@ -34,7 +34,7 @@ public interface DepartmentService {
      * @param id 部门 ID
      * @return 部门实体，不存在时返回 null
      */
-    DepartmentDO getById(Long id);
+    DepartmentDO getById(String id);
 
     /**
      * 创建部门
@@ -42,7 +42,7 @@ public interface DepartmentService {
      * @param dto 部门表单
      * @return 新建部门 ID
      */
-    Long create(DepartmentFormDTO dto);
+    String create(DepartmentFormDTO dto);
 
     /**
      * 更新部门
@@ -56,5 +56,5 @@ public interface DepartmentService {
      *
      * @param id 部门 ID
      */
-    void delete(Long id);
+    void delete(String id);
 }

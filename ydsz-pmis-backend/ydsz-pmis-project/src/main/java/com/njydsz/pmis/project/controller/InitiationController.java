@@ -67,7 +67,7 @@ public class InitiationController {
     @OperationLog(module = "立项管理", action = "提交立项", bizType = "INITIATION", saveResult = true)
     @Idempotent(key = "initiation:create", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody InitiationCreateDTO dto) {
+    public Result<String> create(@Valid @RequestBody InitiationCreateDTO dto) {
         return Result.ok(service.create(dto));
     }
 
@@ -97,7 +97,7 @@ public class InitiationController {
     @PrePermission("project:initiation:delete")
     @OperationLog(module = "立项管理", action = "删除立项", bizType = "INITIATION")
     @DeleteMapping("/{id}")
-    public Result<Void> delete(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
+    public Result<Void> delete(@Parameter(description = "立项ID") @PathVariable String id) {
         service.delete(id);
         return Result.ok();
     }
@@ -111,7 +111,7 @@ public class InitiationController {
     @Operation(summary = "立项详情")
     @PrePermission("project:initiation:list")
     @GetMapping("/{id}")
-    public Result<InitiationDO> get(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
+    public Result<InitiationDO> get(@Parameter(description = "立项ID") @PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
@@ -135,7 +135,7 @@ public class InitiationController {
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "阶段") @RequestParam(required = false) String stage,
             @Parameter(description = "项目分级") @RequestParam(required = false) String projectLevel,
-            @Parameter(description = "项目经理ID") @RequestParam(required = false) Long pmId) {
+            @Parameter(description = "项目经理ID") @RequestParam(required = false) String pmId) {
         return Result.ok(service.page(page, size, keyword, stage, projectLevel, pmId));
     }
 
@@ -151,7 +151,7 @@ public class InitiationController {
     @PrePermission("project:initiation:budget")
     @OperationLog(module = "立项管理", action = "新增预算明细", bizType = "BUDGET", saveResult = true)
     @PostMapping("/budget")
-    public Result<Long> addBudget(@Valid @RequestBody BudgetItemDTO dto) {
+    public Result<String> addBudget(@Valid @RequestBody BudgetItemDTO dto) {
         return Result.ok(service.addBudgetItem(dto));
     }
 
@@ -165,7 +165,7 @@ public class InitiationController {
     @PrePermission("project:initiation:budget")
     @OperationLog(module = "立项管理", action = "删除预算明细", bizType = "BUDGET")
     @DeleteMapping("/budget/{id}")
-    public Result<Void> delBudget(@Parameter(description = "预算明细ID") @PathVariable @Min(1) Long id) {
+    public Result<Void> delBudget(@Parameter(description = "预算明细ID") @PathVariable String id) {
         service.deleteBudgetItem(id);
         return Result.ok();
     }
@@ -179,7 +179,7 @@ public class InitiationController {
     @Operation(summary = "预算明细列表")
     @PrePermission("project:initiation:budget")
     @GetMapping("/{id}/budget")
-    public Result<List<BudgetItemDO>> listBudget(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
+    public Result<List<BudgetItemDO>> listBudget(@Parameter(description = "立项ID") @PathVariable String id) {
         return Result.ok(service.listBudget(id));
     }
 
@@ -192,7 +192,7 @@ public class InitiationController {
     @Operation(summary = "预算按分类汇总")
     @PrePermission("project:initiation:budget")
     @GetMapping("/{id}/budget/summary")
-    public Result<List<Map<String, Object>>> sumBudget(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
+    public Result<List<Map<String, Object>>> sumBudget(@Parameter(description = "立项ID") @PathVariable String id) {
         return Result.ok(service.sumBudgetByCategory(id));
     }
 
@@ -206,7 +206,7 @@ public class InitiationController {
     @PrePermission("project:initiation:budget")
     @OperationLog(module = "立项管理", action = "重新汇总预算总额", bizType = "BUDGET", saveResult = true)
     @PostMapping("/{id}/budget/recompute")
-    public Result<BigDecimal> recomputeBudget(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
+    public Result<BigDecimal> recomputeBudget(@Parameter(description = "立项ID") @PathVariable String id) {
         return Result.ok(service.recomputeBudget(id));
     }
 
@@ -222,7 +222,7 @@ public class InitiationController {
     @PrePermission("project:initiation:gate")
     @OperationLog(module = "立项管理", action = "门径评审", bizType = "GATE", saveResult = true)
     @PostMapping("/gate/review")
-    public Result<Long> reviewGate(@Valid @RequestBody GateReviewDTO dto) {
+    public Result<String> reviewGate(@Valid @RequestBody GateReviewDTO dto) {
         return Result.ok(service.reviewGate(dto));
     }
 
@@ -235,7 +235,7 @@ public class InitiationController {
     @Operation(summary = "门径评审记录")
     @PrePermission("project:initiation:gate")
     @GetMapping("/{id}/gate/reviews")
-    public Result<List<GateReviewDO>> listGateReviews(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
+    public Result<List<GateReviewDO>> listGateReviews(@Parameter(description = "立项ID") @PathVariable String id) {
         return Result.ok(service.listGateReviews(id));
     }
 
@@ -250,7 +250,7 @@ public class InitiationController {
     @Operation(summary = "按阶段聚合")
     @PrePermission("project:initiation:list")
     @GetMapping("/aggregate/stage")
-    public Result<List<Map<String, Object>>> aggregateByStage(@Parameter(description = "租户ID") @RequestParam(required = false) Long tenantId) {
+    public Result<List<Map<String, Object>>> aggregateByStage(@Parameter(description = "租户ID") @RequestParam(required = false) String tenantId) {
         return Result.ok(service.aggregateByStage(tenantId));
     }
 
@@ -263,7 +263,7 @@ public class InitiationController {
     @Operation(summary = "查询立项预算（供执行模块调用）")
     @PrePermission("project:initiation:budget")
     @GetMapping("/{id}/budget/snapshot")
-    public Result<Map<String, Object>> budgetSnapshot(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
+    public Result<Map<String, Object>> budgetSnapshot(@Parameter(description = "立项ID") @PathVariable String id) {
         return Result.ok(service.budgetSnapshot(id));
     }
 
@@ -298,7 +298,7 @@ public class InitiationController {
     @PrePermission("project:initiation:update")
     @OperationLog(module = "立项管理", action = "标记审批中（流程回调）", bizType = "INITIATION")
     @PostMapping("/{id}/mark-processing")
-    public Result<Void> markProcessing(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
+    public Result<Void> markProcessing(@Parameter(description = "立项ID") @PathVariable String id) {
         service.markProcessing(id);
         return Result.ok();
     }
@@ -313,7 +313,7 @@ public class InitiationController {
     @PrePermission("project:initiation:update")
     @OperationLog(module = "立项管理", action = "标记已批准（流程回调）", bizType = "INITIATION")
     @PostMapping("/{id}/mark-approved")
-    public Result<Void> markApproved(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id) {
+    public Result<Void> markApproved(@Parameter(description = "立项ID") @PathVariable String id) {
         service.markApproved(id);
         return Result.ok();
     }
@@ -329,7 +329,7 @@ public class InitiationController {
     @PrePermission("project:initiation:update")
     @OperationLog(module = "立项管理", action = "标记已驳回（流程回调）", bizType = "INITIATION")
     @PostMapping("/{id}/mark-rejected")
-    public Result<Void> markRejected(@Parameter(description = "立项ID") @PathVariable @Min(1) Long id,
+    public Result<Void> markRejected(@Parameter(description = "立项ID") @PathVariable String id,
                                      @Parameter(description = "驳回原因") @RequestParam(required = false) String reason) {
         service.markRejected(id, reason);
         return Result.ok();

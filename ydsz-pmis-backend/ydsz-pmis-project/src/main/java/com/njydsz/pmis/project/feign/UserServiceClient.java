@@ -29,7 +29,7 @@ public interface UserServiceClient {
      * @return 员工信息（含姓名 / 部门 / 职级等）
      */
     @GetMapping("/user/employee/{id}")
-    Result<Map<String, Object>> getEmployee(@PathVariable("id") Long id);
+    Result<Map<String, Object>> getEmployee(@PathVariable("id") String id);
 
     /**
      * 根据客户 ID 查询客户名称
@@ -47,7 +47,7 @@ public interface UserServiceClient {
      * @return 员工 ID 到姓名的映射；服务降级时返回空 Map
      */
     @GetMapping("/user/employees/batch")
-    Result<Map<Long, String>> batchEmployeeName(@RequestParam("ids") List<Long> ids);
+    Result<Map<String, String>> batchEmployeeName(@RequestParam("ids") List<String> ids);
 
     /**
      * 批量查询客户名称
@@ -56,7 +56,7 @@ public interface UserServiceClient {
      * @return 客户 ID 到名称的映射
      */
     @GetMapping("/user/customers/batch-name")
-    Result<Map<Long, String>> batchCustomerName(@RequestParam("ids") List<Long> customerIds);
+    Result<Map<String, String>> batchCustomerName(@RequestParam("ids") List<String> customerIds);
 
     /**
      * 按职级编码查询内部成本费率

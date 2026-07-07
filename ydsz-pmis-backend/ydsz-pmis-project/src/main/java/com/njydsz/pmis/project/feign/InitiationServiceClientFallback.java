@@ -33,7 +33,7 @@ public class InitiationServiceClientFallback implements FallbackFactory<Initiati
         log.warn("[Feign] project 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new InitiationServiceClient() {
             @Override
-            public Result<Map<String, Object>> budgetSnapshot(Long id) {
+            public Result<Map<String, Object>> budgetSnapshot(String id) {
                 // 返回 code=503 + 空数据；BudgetGuard 将识别后跳过强管控
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }

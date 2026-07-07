@@ -25,8 +25,8 @@ public interface EvmMeasureMapper extends BaseMapper<EvmMeasureDO> {
      * @param period       期间
      * @return EVM 度量记录，未找到返回 null
      */
-    EvmMeasureDO selectByInitiationAndPeriod(@Param("initiationId") Long initiationId,
-                                             @Param("wbsTaskId") Long wbsTaskId,
+    EvmMeasureDO selectByInitiationAndPeriod(@Param("initiationId") String initiationId,
+                                             @Param("wbsTaskId") String wbsTaskId,
                                              @Param("period") String period);
 
     /**
@@ -35,7 +35,7 @@ public interface EvmMeasureMapper extends BaseMapper<EvmMeasureDO> {
      * @param initiationId 立项 ID
      * @return EVM 度量记录列表
      */
-    List<EvmMeasureDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<EvmMeasureDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按 WBS 任务 ID 查询 EVM 度量记录列表
@@ -43,7 +43,7 @@ public interface EvmMeasureMapper extends BaseMapper<EvmMeasureDO> {
      * @param wbsTaskId WBS 任务 ID
      * @return EVM 度量记录列表
      */
-    List<EvmMeasureDO> selectByWbs(@Param("wbsTaskId") Long wbsTaskId);
+    List<EvmMeasureDO> selectByWbs(@Param("wbsTaskId") String wbsTaskId);
 
     /**
      * WBS 节点级偏差趋势：返回每期 CPI/SPI/VAC
@@ -51,7 +51,7 @@ public interface EvmMeasureMapper extends BaseMapper<EvmMeasureDO> {
      * @param initiationId 立项 ID
      * @return 偏差趋势列表
      */
-    List<Map<String, Object>> trendByPeriod(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> trendByPeriod(@Param("initiationId") String initiationId);
 
     /**
      * 跨项目 EVM 健康度：返回每个项目的 top_alert

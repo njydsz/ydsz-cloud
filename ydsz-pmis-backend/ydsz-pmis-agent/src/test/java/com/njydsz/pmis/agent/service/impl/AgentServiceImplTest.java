@@ -80,7 +80,7 @@ class AgentServiceImplTest {
     @Test
     @DisplayName("run - 正常执行 Agent 并返回预测记录")
     void run_shouldExecuteAgentAndReturnPrediction() {
-        AgentRunRequestDTO req = buildRequest("RISK_WARNING", 100L, "PROJECT");
+        AgentRunRequestDTO req = buildRequest("RISK_WARNING", "100", "PROJECT");
         AgentResult mockResult = buildAgentResult(AgentAlertLevel.YELLOW, new BigDecimal("75.0"), new BigDecimal("0.85"));
 
         when(riskWarningAgent.execute(any(AgentContext.class))).thenReturn(mockResult);
@@ -105,7 +105,7 @@ class AgentServiceImplTest {
     @Test
     @DisplayName("run - 无效 Agent 类型时抛出 BizException")
     void run_shouldThrowBizExceptionWhenAgentTypeInvalid() {
-        AgentRunRequestDTO req = buildRequest("INVALID_TYPE", 100L, "PROJECT");
+        AgentRunRequestDTO req = buildRequest("INVALID_TYPE", "100", "PROJECT");
 
         BizException ex = assertThrows(BizException.class, () -> agentService.run(req));
         assertEquals(BizErrorCode.BAD_REQUEST.getCode(), ex.getCode());
@@ -114,7 +114,7 @@ class AgentServiceImplTest {
     @Test
     @DisplayName("run - Agent 执行失败时更新状态为 FAILED 并抛出异常")
     void run_shouldMarkFailedWhenAgentThrows() {
-        AgentRunRequestDTO req = buildRequest("RISK_WARNING", 100L, "PROJECT");
+        AgentRunRequestDTO req = buildRequest("RISK_WARNING", "100", "PROJECT");
 
         when(riskWarningAgent.execute(any(AgentContext.class)))
                 .thenThrow(new RuntimeException("Agent execution error"));
@@ -132,7 +132,7 @@ class AgentServiceImplTest {
     @Test
     @DisplayName("run - 无 source 时默认设置为 MANUAL")
     void run_shouldDefaultSourceToManual() {
-        AgentRunRequestDTO req = buildRequest("RISK_WARNING", 100L, "PROJECT");
+        AgentRunRequestDTO req = buildRequest("RISK_WARNING", "100", "PROJECT");
         req.setSource(null);
 
         AgentResult mockResult = buildAgentResult(AgentAlertLevel.NORMAL, new BigDecimal("50.0"), new BigDecimal("0.9"));
@@ -207,7 +207,7 @@ class AgentServiceImplTest {
         Page<AgentPredictionDO> mockPage = new Page<>(1, 10);
         when(predictionMapper.selectPage(any(Page.class), any())).thenReturn(mockPage);
 
-        Page<AgentPredictionDO> result = agentService.page(1, 10, "RISK_WARNING", "YELLOW", "SUCCESS", "PROJECT", 100L);
+        Page<AgentPredictionDO> result = agentService.page(1, 10, "RISK_WARNING", "YELLOW", "SUCCESS", "PROJECT", "100");
 
         assertNotNull(result);
         assertEquals(1, result.getCurrent());

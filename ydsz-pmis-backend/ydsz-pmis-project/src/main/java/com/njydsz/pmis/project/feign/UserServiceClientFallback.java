@@ -33,22 +33,22 @@ public class UserServiceClientFallback implements FallbackFactory<UserServiceCli
         log.warn("[Feign] user 服务降级: {}", cause == null ? "?" : cause.getMessage());
         return new UserServiceClient() {
             @Override
-            public Result<Map<String, Object>> getEmployee(Long id) {
+            public Result<Map<String, Object>> getEmployee(String id) {
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<String> getCustomerName(Long customerId) {
+            public Result<String> getCustomerName(String customerId) {
                 return Result.ok("");
             }
 
             @Override
-            public Result<Map<Long, String>> batchEmployeeName(List<Long> ids) {
+            public Result<Map<String, String>> batchEmployeeName(List<String> ids) {
                 return Result.ok(Map.of());
             }
 
             @Override
-            public Result<Map<Long, String>> batchCustomerName(List<Long> customerIds) {
+            public Result<Map<String, String>> batchCustomerName(List<String> customerIds) {
                 log.warn("[UserServiceClientFallback] batchCustomerName 降级: ids={}", customerIds);
                 return Result.ok(Map.of());
             }

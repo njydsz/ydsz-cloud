@@ -68,7 +68,7 @@ public class AgentServiceImpl implements AgentService {
         record.setCallerId(req.getCallerId());
         record.setCallerName(req.getCallerName());
         record.setSource(StringUtils.hasText(req.getSource()) ? req.getSource() : "MANUAL");
-        record.setTenantId(TenantContext.getTenantId());
+        record.setTenantId(String.valueOf(TenantContext.getTenantId()));
         record.setProviderTraceId(TraceIdUtil.get() == null ? "" : TraceIdUtil.get());
         predictionMapper.insert(record);
 

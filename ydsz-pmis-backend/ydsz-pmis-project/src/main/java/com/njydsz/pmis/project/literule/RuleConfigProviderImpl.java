@@ -113,7 +113,7 @@ public class RuleConfigProviderImpl implements RuleConfigProvider {
                 .scope(DO.getScope())
                 .drilldownAvailable(DO.getDrilldownAvailable() != null ? DO.getDrilldownAvailable() : true)
                 .version(DO.getVersion() != null ? DO.getVersion() : 1)
-                .tenantId(DO.getTenantId() != null ? DO.getTenantId() : 1L)
+                .tenantId(DO.getTenantId() != null ? Long.parseLong(DO.getTenantId()) : 1L)
                 .status(DO.getStatus() != null ? DO.getStatus() : "PUBLISHED")
                 .reviewedBy(DO.getReviewedBy())
                 .reviewComment(DO.getReviewComment())
@@ -144,7 +144,7 @@ public class RuleConfigProviderImpl implements RuleConfigProvider {
         DO.setScope(def.getScope());
         DO.setDrilldownAvailable(def.isDrilldownAvailable());
         DO.setVersion(def.getVersion());
-        DO.setTenantId(def.getTenantId() > 0 ? def.getTenantId() : 1L);
+        DO.setTenantId(def.getTenantId() > 0 ? String.valueOf(def.getTenantId()) : "1");
         DO.setStatus(def.getStatus() != null && !def.getStatus().isBlank() ? def.getStatus() : "PUBLISHED");
         DO.setReviewedBy(def.getReviewedBy());
         DO.setReviewComment(def.getReviewComment());

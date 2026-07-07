@@ -24,17 +24,17 @@ public class InitiationFeignClientFallbackFactory implements FallbackFactory<Ini
                 cause == null ? "null" : cause.getMessage());
         return new InitiationFeignClient() {
             @Override
-            public Result<Void> markProcessing(Long initiationId) {
+            public Result<Void> markProcessing(String initiationId) {
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<Void> markApproved(Long initiationId) {
+            public Result<Void> markApproved(String initiationId) {
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
 
             @Override
-            public Result<Void> markRejected(Long initiationId, String reason) {
+            public Result<Void> markRejected(String initiationId, String reason) {
                 return Result.failed(BizErrorCode.SERVICE_UNAVAILABLE);
             }
         };

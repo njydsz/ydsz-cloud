@@ -172,7 +172,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      * @throws BizException 商机不存在时抛出
      */
     @Override
-    public void delete(Long id) {
+    public void delete(String id) {
         OpportunityDO o = getById(id);
         opportunityMapper.deleteById(o.getId());
         log.info("[Opportunity] 删除商机: id={}", id);
@@ -187,7 +187,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     @Override
     @Transactional(readOnly = true)
-    public OpportunityDO getById(Long id) {
+    public OpportunityDO getById(String id) {
         OpportunityDO o = opportunityMapper.selectById(id);
         if (o == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "商机不存在");
@@ -237,7 +237,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      * @throws BizException 商机不存在时抛出
      */
     @Override
-    public BigDecimal evaluateWinRate(Long id, String customerCredit, boolean hasHistory) {
+    public BigDecimal evaluateWinRate(String id, String customerCredit, boolean hasHistory) {
         OpportunityDO o = getById(id);
         BigDecimal rate = WinRateEvaluator.evaluate(o, customerCredit, hasHistory);
         o.setWinRate(rate);
@@ -330,7 +330,7 @@ public class OpportunityServiceImpl implements OpportunityService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long convertToInitiation(Long opportunityId, Long sponsorId, Long pmId) {
+    public Long convertToInitiation(String opportunityId, Long sponsorId, Long pmId) {
         if (opportunityId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "商机 ID 不能为空");
         }

@@ -96,7 +96,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         ExpenseDO e = getById(id);
         ApprovalStatus s = ApprovalStatus.fromCode(e.getStatus());
         if (s == ApprovalStatus.APPROVED || s == ApprovalStatus.PAID) {
@@ -107,7 +107,7 @@ public class ExpenseServiceImpl implements ExpenseService {
 
     @Override
     @Transactional(readOnly = true)
-    public ExpenseDO getById(Long id) {
+    public ExpenseDO getById(String id) {
         ExpenseDO e = expenseMapper.selectById(id);
         if (e == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_fe55e2d1");
         return e;
@@ -116,7 +116,7 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Override
     @Transactional(readOnly = true)
     public Page<ExpenseDO> page(int page, int size, String keyword, String status,
-                                String expenseType, Long employeeId, Long initiationId) {
+                                String expenseType, Long employeeId, String initiationId) {
         Page<ExpenseDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ExpenseDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {

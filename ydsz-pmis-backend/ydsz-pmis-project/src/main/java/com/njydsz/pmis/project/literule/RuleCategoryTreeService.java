@@ -137,7 +137,7 @@ public class RuleCategoryTreeService {
                 .scope(d.getScope())
                 .drilldownAvailable(d.getDrilldownAvailable() != null ? d.getDrilldownAvailable() : true)
                 .version(d.getVersion() != null ? d.getVersion() : 1)
-                .tenantId(d.getTenantId() != null ? d.getTenantId() : 1L)
+                .tenantId(d.getTenantId() != null ? Long.parseLong(d.getTenantId()) : 1L)
                 .status(d.getStatus() != null ? d.getStatus() : "PUBLISHED")
                 .build();
     }

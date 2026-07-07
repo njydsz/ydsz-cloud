@@ -188,7 +188,7 @@ public class JwtTokenProvider {
      * @param expireSeconds 过期时间（秒），为 null 时使用默认值
      * @return JWT Token
      */
-    public String generateToken(Long userId, String username,
+    public String generateToken(String userId, String username,
                                 List<String> roles, List<String> permissions,
                                 Long expireSeconds) {
         return generateToken(userId, username, roles, permissions,
@@ -212,9 +212,9 @@ public class JwtTokenProvider {
      * @param expireSeconds 过期时间（秒），为 null 时使用默认值
      * @return JWT Token
      */
-    public String generateToken(Long userId, String username,
+    public String generateToken(String userId, String username,
                                 List<String> roles, List<String> permissions,
-                                Long deptId, List<Long> deptIds, List<Long> customDeptIds,
+                                String deptId, List<String> deptIds, List<String> customDeptIds,
                                 String dataScope,
                                 Long expireSeconds) {
         Map<String, Object> claims = new HashMap<>();
@@ -250,7 +250,7 @@ public class JwtTokenProvider {
      * @param expireSeconds 过期时间（秒）
      * @return JWT Token
      */
-    public String generateToken(Long userId, String username, long expireSeconds) {
+    public String generateToken(String userId, String username, long expireSeconds) {
         return generateToken(userId, username, null, null, expireSeconds);
     }
 
@@ -261,7 +261,7 @@ public class JwtTokenProvider {
      * @param expireSeconds 过期时间（秒），为 null 时使用默认值
      * @return JWT Refresh Token
      */
-    public String generateRefreshToken(Long userId, Long expireSeconds) {
+    public String generateRefreshToken(String userId, Long expireSeconds) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("type", "refresh");
@@ -334,8 +334,8 @@ public class JwtTokenProvider {
      * @param token JWT Token
      * @return 用户 ID
      */
-    public Long getUserId(String token) {
-        return Long.parseLong(parseClaims(token).getSubject());
+    public String getUserId(String token) {
+        return parseClaims(token).getSubject();
     }
 
     /**

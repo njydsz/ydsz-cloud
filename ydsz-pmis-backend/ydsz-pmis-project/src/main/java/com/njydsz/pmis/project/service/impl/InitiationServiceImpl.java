@@ -85,7 +85,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long create(InitiationCreateDTO dto) {
+    public String create(InitiationCreateDTO dto) {
         validate(dto);
         if (initiationMapper.selectByCode(dto.getProjectCode()) != null) {
             throw new BizException(BizErrorCode.DUPLICATE_KEY, "error.project.msg_32756e2a", dto.getProjectCode());
@@ -148,7 +148,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @throws BizException 立项不存在时抛出
      */
     @Override
-    public void delete(Long id) {
+    public void delete(String id) {
         InitiationDO o = getById(id);
         initiationMapper.deleteById(o.getId());
         log.info("[Initiation] 删除立项: id={}", id);
@@ -163,7 +163,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public InitiationDO getById(Long id) {
+    public InitiationDO getById(String id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
@@ -188,7 +188,7 @@ public class InitiationServiceImpl implements InitiationService {
     @DataScope(deptColumn = "business_dept_id", userColumn = "created_by")
     @Transactional(readOnly = true)
     public Page<InitiationDO> page(int page, int size, String keyword, String stage,
-                                   String projectLevel, Long pmId) {
+                                   String projectLevel, String pmId) {
         Page<InitiationDO> p = new Page<>(page, size);
         LambdaQueryWrapper<InitiationDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
@@ -221,8 +221,8 @@ public class InitiationServiceImpl implements InitiationService {
      */
     private void batchAssembleNames(List<InitiationDO> records) {
         // 收集需要解析的 ID
-        Set<Long> customerIds = new HashSet<>();
-        Set<Long> employeeIds = new HashSet<>();
+        Set<String> customerIds = new HashSet<>();
+        Set<String> employeeIds = new HashSet<>();
         for (InitiationDO rec : records) {
             if (!StringUtils.hasText(rec.getCustomerName()) && rec.getCustomerId() != null) {
                 customerIds.add(rec.getCustomerId());
@@ -235,9 +235,9 @@ public class InitiationServiceImpl implements InitiationService {
             }
         }
         // 批量查询
-        Map<Long, String> customerNames = customerIds.isEmpty()
+        Map<String, String> customerNames = customerIds.isEmpty()
                 ? Map.of() : nameAssembler.batchCustomerName(new ArrayList<>(customerIds));
-        Map<Long, String> employeeNames = employeeIds.isEmpty()
+        Map<String, String> employeeNames = employeeIds.isEmpty()
                 ? Map.of() : nameAssembler.batchEmployeeName(new ArrayList<>(employeeIds));
         // 填充名称
         for (InitiationDO rec : records) {
@@ -267,7 +267,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @throws BizException 立项不存在或参数非法时抛出
      */
     @Override
-    public Long addBudgetItem(BudgetItemDTO dto) {
+    public String addBudgetItem(BudgetItemDTO dto) {
         validateBudget(dto);
         if (initiationMapper.selectById(dto.getInitiationId()) == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
@@ -292,7 +292,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @throws BizException 预算明细不存在时抛出
      */
     @Override
-    public void deleteBudgetItem(Long id) {
+    public void deleteBudgetItem(String id) {
         BudgetItemDO b = budgetItemMapper.selectById(id);
         if (b == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_6b9c2579");
@@ -309,7 +309,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<BudgetItemDO> listBudget(Long initiationId) {
+    public List<BudgetItemDO> listBudget(String initiationId) {
         if (initiationId == null) return List.of();
         return budgetItemMapper.selectByInitiationId(initiationId);
     }
@@ -322,7 +322,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> sumBudgetByCategory(Long initiationId) {
+    public List<Map<String, Object>> sumBudgetByCategory(String initiationId) {
         if (initiationId == null) return List.of();
         return budgetItemMapper.sumByCategory(initiationId);
     }
@@ -335,7 +335,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @return 重算后的预算总额
      */
     @Override
-    public BigDecimal recomputeBudget(Long initiationId) {
+    public BigDecimal recomputeBudget(String initiationId) {
         List<BudgetItemDO> items = budgetItemMapper.selectByInitiationId(initiationId);
         BigDecimal total = BigDecimal.ZERO;
         for (BudgetItemDO b : items) {
@@ -364,7 +364,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long reviewGate(GateReviewDTO dto) {
+    public String reviewGate(GateReviewDTO dto) {
         InitiationDO o = getById(dto.getInitiationId());
         GateCode gate = GateCode.fromCode(dto.getGateCode());
         if (gate == null) {
@@ -408,7 +408,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<GateReviewDO> listGateReviews(Long initiationId) {
+    public List<GateReviewDO> listGateReviews(String initiationId) {
         if (initiationId == null) return List.of();
         return gateReviewMapper.selectByInitiationId(initiationId);
     }
@@ -423,8 +423,8 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByStage(Long tenantId) {
-        if (tenantId == null) tenantId = 1L;
+    public List<Map<String, Object>> aggregateByStage(String tenantId) {
+        if (tenantId == null) tenantId = TenantContext.getTenantId();
         return initiationMapper.aggregateByStage(tenantId);
     }
 
@@ -443,7 +443,7 @@ public class InitiationServiceImpl implements InitiationService {
     @Override
     @GlobalTransactional(name = "pmis-initiation-start-process", rollbackFor = Exception.class)
     @Transactional(rollbackFor = Exception.class)
-    public String startProcess(Long id, Long initiatorId) {
+    public String startProcess(String id, String initiatorId) {
         InitiationDO o = getById(id);
         if (StringUtils.hasText(o.getWorkflowId())) {
             log.info("[Initiation] 立项 {} 已存在流程实例: {}，跳过启动", id, o.getWorkflowId());
@@ -516,7 +516,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(readOnly = true)
-    public Map<String, Object> budgetSnapshot(Long id) {
+    public Map<String, Object> budgetSnapshot(String id) {
         InitiationDO o = getById(id);
         Map<String, Object> snap = new LinkedHashMap<>();
         snap.put("initiationId", o.getId());
@@ -538,7 +538,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void markProcessing(Long id) {
+    public void markProcessing(String id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
@@ -555,7 +555,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void markApproved(Long id) {
+    public void markApproved(String id) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
@@ -573,7 +573,7 @@ public class InitiationServiceImpl implements InitiationService {
      */
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void markRejected(Long id, String reason) {
+    public void markRejected(String id, String reason) {
         InitiationDO o = initiationMapper.selectById(id);
         if (o == null) {
             throw new BizException(BizErrorCode.NOT_FOUND, "error.project.msg_f7fde8f5");
@@ -588,7 +588,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @param id 客户 ID
      * @return 客户名称，调用失败返回 null
      */
-    private String safeCustomerName(Long id) {
+    private String safeCustomerName(String id) {
         try { return nameAssembler.resolveCustomer(id); }
         catch (Exception e) { log.warn("[Initiation] 容错解析客户名称失败: id={}", id, e); return null; }
     }
@@ -599,7 +599,7 @@ public class InitiationServiceImpl implements InitiationService {
      * @param id 员工 ID
      * @return 员工名称，调用失败返回 null
      */
-    private String safeEmployeeName(Long id) {
+    private String safeEmployeeName(String id) {
         try { return nameAssembler.resolveEmployee(id); }
         catch (Exception e) { log.warn("[Initiation] 容错解析员工名称失败: id={}", id, e); return null; }
     }

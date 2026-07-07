@@ -21,7 +21,7 @@ public interface JobService {
      * @return 新增任务 ID
      * @throws com.njydsz.pmis.common.exception.BizException 当 jobKey 已存在或参数非法时抛出
      */
-    Long create(JobDO job);
+    String create(JobDO job);
 
     /**
      * 更新任务
@@ -37,7 +37,7 @@ public interface JobService {
      * @param id 任务 ID
      * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 暂停任务
@@ -45,7 +45,7 @@ public interface JobService {
      * @param id 任务 ID
      * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
      */
-    void pause(Long id);
+    void pause(String id);
 
     /**
      * 恢复任务
@@ -53,7 +53,7 @@ public interface JobService {
      * @param id 任务 ID
      * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
      */
-    void resume(Long id);
+    void resume(String id);
 
     /**
      * 立即执行一次
@@ -62,7 +62,7 @@ public interface JobService {
      * @return 执行日志 ID
      * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
      */
-    Long trigger(Long id);
+    String trigger(String id);
 
     /**
      * 注册到调度器（从 DB 加载/动态新增）
@@ -95,7 +95,7 @@ public interface JobService {
      * @return 任务定义
      * @throws com.njydsz.pmis.common.exception.BizException 当任务不存在时抛出
      */
-    JobDO getById(Long id);
+    JobDO getById(String id);
 
     /**
      * 分页查询任务

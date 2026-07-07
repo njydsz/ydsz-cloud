@@ -31,7 +31,7 @@ public interface WarrantyMapper extends BaseMapper<WarrantyDO> {
      * @param initiationId 立项 ID
      * @return 质保期列表
      */
-    List<WarrantyDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<WarrantyDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 即将到期（end_date ≤ 截止日期 且状态为 ACTIVE/EXPIRING_SOON）
@@ -57,6 +57,6 @@ public interface WarrantyMapper extends BaseMapper<WarrantyDO> {
      * @param terminatedReason 终止原因
      * @return 受影响行数
      */
-    int markStatus(@Param("id") Long id, @Param("status") String status,
+    int markStatus(@Param("id") String id, @Param("status") String status,
                    @Param("terminatedReason") String terminatedReason);
 }

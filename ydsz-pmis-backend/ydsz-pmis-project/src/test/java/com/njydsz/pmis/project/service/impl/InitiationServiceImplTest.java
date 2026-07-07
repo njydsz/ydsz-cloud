@@ -61,7 +61,7 @@ class InitiationServiceImplTest {
             InitiationCreateDTO dto = new InitiationCreateDTO();
             dto.setProjectCode("PRJ-001");
             dto.setProjectName("测试项目");
-            dto.setCustomerId(100L);
+            dto.setCustomerId("100");
             dto.setProjectType("OUTSOURCING");
             dto.setPlannedStartDate(LocalDate.of(2026, 1, 1));
             dto.setPlannedEndDate(LocalDate.of(2026, 12, 31));
@@ -69,15 +69,15 @@ class InitiationServiceImplTest {
             when(initiationMapper.selectByCode("PRJ-001")).thenReturn(null);
             doAnswer(invocation -> {
                 InitiationDO entity = invocation.getArgument(0);
-                entity.setId(1L);
+                entity.setId("1");
                 return 1;
             }).when(initiationMapper).insert(any(InitiationDO.class));
 
             // When
-            Long id = initiationService.create(dto);
+            String id = initiationService.create(dto);
 
             // Then
-            assertThat(id).isEqualTo(1L);
+            assertThat(id).isEqualTo("1");
             verify(initiationMapper).insert(any(InitiationDO.class));
         }
 
@@ -88,7 +88,7 @@ class InitiationServiceImplTest {
             InitiationCreateDTO dto = new InitiationCreateDTO();
             dto.setProjectCode("EXISTING-PRJ");
             dto.setProjectName("测试项目");
-            dto.setCustomerId(100L);
+            dto.setCustomerId("100");
             dto.setProjectType("OUTSOURCING");
 
             InitiationDO existing = new InitiationDO();
@@ -115,7 +115,7 @@ class InitiationServiceImplTest {
             InitiationCreateDTO dto = new InitiationCreateDTO();
             dto.setProjectCode("");
             dto.setProjectName("测试项目");
-            dto.setCustomerId(100L);
+            dto.setCustomerId("100");
             dto.setProjectType("OUTSOURCING");
 
             // When & Then
@@ -145,7 +145,7 @@ class InitiationServiceImplTest {
             InitiationCreateDTO dto = new InitiationCreateDTO();
             dto.setProjectCode("PRJ-001");
             dto.setProjectName("测试项目");
-            dto.setCustomerId(100L);
+            dto.setCustomerId("100");
             dto.setProjectType("OUTSOURCING");
             dto.setPlannedStartDate(LocalDate.of(2026, 12, 31));
             dto.setPlannedEndDate(LocalDate.of(2026, 1, 1));
@@ -162,14 +162,14 @@ class InitiationServiceImplTest {
             InitiationCreateDTO dto = new InitiationCreateDTO();
             dto.setProjectCode("PRJ-001");
             dto.setProjectName("测试项目");
-            dto.setCustomerId(100L);
+            dto.setCustomerId("100");
             dto.setProjectType("OUTSOURCING");
             // 不设置 stage 和 projectLevel
 
             when(initiationMapper.selectByCode("PRJ-001")).thenReturn(null);
             doAnswer(invocation -> {
                 InitiationDO entity = invocation.getArgument(0);
-                entity.setId(1L);
+                entity.setId("1");
                 // 验证默认值
                 assertThat(entity.getStage()).isEqualTo(InitiationStage.PRE_INITIATION.getCode());
                 assertThat(entity.getProjectLevel()).isEqualTo("C");
@@ -177,10 +177,10 @@ class InitiationServiceImplTest {
             }).when(initiationMapper).insert(any(InitiationDO.class));
 
             // When
-            Long id = initiationService.create(dto);
+            String id = initiationService.create(dto);
 
             // Then
-            assertThat(id).isEqualTo(1L);
+            assertThat(id).isEqualTo("1");
         }
 
         @Test
@@ -190,7 +190,7 @@ class InitiationServiceImplTest {
             InitiationCreateDTO dto = new InitiationCreateDTO();
             dto.setProjectCode("PRJ-001");
             dto.setProjectName("测试项目");
-            dto.setCustomerId(100L);
+            dto.setCustomerId("100");
             dto.setProjectType("OUTSOURCING");
             dto.setPlannedStartDate(LocalDate.of(2026, 1, 1));
             dto.setPlannedEndDate(LocalDate.of(2026, 1, 11)); // 10天
@@ -198,17 +198,17 @@ class InitiationServiceImplTest {
             when(initiationMapper.selectByCode("PRJ-001")).thenReturn(null);
             doAnswer(invocation -> {
                 InitiationDO entity = invocation.getArgument(0);
-                entity.setId(1L);
+                entity.setId("1");
                 // 验证工期计算
                 assertThat(entity.getDurationDays()).isEqualTo(10);
                 return 1;
             }).when(initiationMapper).insert(any(InitiationDO.class));
 
             // When
-            Long id = initiationService.create(dto);
+            String id = initiationService.create(dto);
 
             // Then
-            assertThat(id).isEqualTo(1L);
+            assertThat(id).isEqualTo("1");
         }
     }
 
@@ -221,19 +221,19 @@ class InitiationServiceImplTest {
         void changeStage_Success() {
             // Given
             InitiationStageDTO dto = new InitiationStageDTO();
-            dto.setId(1L);
+            dto.setId("1");
             dto.setTargetStage(InitiationStage.SUBMITTED.getCode());
 
             InitiationDO existing = new InitiationDO();
-            existing.setId(1L);
+            existing.setId("1");
             existing.setStage(InitiationStage.PRE_INITIATION.getCode());
             existing.setCurrentGate("GD0");
-            when(initiationMapper.selectById(1L)).thenReturn(existing);
-            when(initiationMapper.updateStage(eq(1L), eq(InitiationStage.SUBMITTED.getCode()), anyString())).thenReturn(1);
+            when(initiationMapper.selectById("1")).thenReturn(existing);
+            when(initiationMapper.updateStage(eq("1"), eq(InitiationStage.SUBMITTED.getCode()), anyString())).thenReturn(1);
 
             // When & Then
             assertThatCode(() -> initiationService.changeStage(dto)).doesNotThrowAnyException();
-            verify(initiationMapper).updateStage(eq(1L), eq(InitiationStage.SUBMITTED.getCode()), anyString());
+            verify(initiationMapper).updateStage(eq("1"), eq(InitiationStage.SUBMITTED.getCode()), anyString());
         }
 
         @Test
@@ -241,10 +241,10 @@ class InitiationServiceImplTest {
         void changeStage_NotFound() {
             // Given
             InitiationStageDTO dto = new InitiationStageDTO();
-            dto.setId(999L);
+            dto.setId("999");
             dto.setTargetStage(InitiationStage.APPROVED.getCode());
 
-            when(initiationMapper.selectById(999L)).thenReturn(null);
+            when(initiationMapper.selectById("999")).thenReturn(null);
 
             // When & Then
             assertThatThrownBy(() -> initiationService.changeStage(dto))
@@ -256,13 +256,13 @@ class InitiationServiceImplTest {
         void changeStage_InvalidTargetStage() {
             // Given
             InitiationStageDTO dto = new InitiationStageDTO();
-            dto.setId(1L);
+            dto.setId("1");
             dto.setTargetStage("INVALID_STAGE");
 
             InitiationDO existing = new InitiationDO();
-            existing.setId(1L);
+            existing.setId("1");
             existing.setStage(InitiationStage.PRE_INITIATION.getCode());
-            when(initiationMapper.selectById(1L)).thenReturn(existing);
+            when(initiationMapper.selectById("1")).thenReturn(existing);
 
             // When & Then
             assertThatThrownBy(() -> initiationService.changeStage(dto))
@@ -279,14 +279,14 @@ class InitiationServiceImplTest {
         void markApproved_Success() {
             // Given
             InitiationDO existing = new InitiationDO();
-            existing.setId(1L);
+            existing.setId("1");
             existing.setStage(InitiationStage.APPROVING.getCode());
-            when(initiationMapper.selectById(1L)).thenReturn(existing);
-            when(initiationMapper.updateStage(eq(1L), eq(InitiationStage.APPROVED.getCode()), anyString())).thenReturn(1);
+            when(initiationMapper.selectById("1")).thenReturn(existing);
+            when(initiationMapper.updateStage(eq("1"), eq(InitiationStage.APPROVED.getCode()), anyString())).thenReturn(1);
 
             // When & Then
-            assertThatCode(() -> initiationService.markApproved(1L)).doesNotThrowAnyException();
-            verify(initiationMapper).updateStage(eq(1L), eq(InitiationStage.APPROVED.getCode()), anyString());
+            assertThatCode(() -> initiationService.markApproved("1")).doesNotThrowAnyException();
+            verify(initiationMapper).updateStage(eq("1"), eq(InitiationStage.APPROVED.getCode()), anyString());
         }
 
         @Test

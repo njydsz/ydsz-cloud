@@ -99,7 +99,7 @@ public class PermissionController {
      */
     @Operation(summary = "权限详情")
     @GetMapping("/{id}")
-    public Result<PermissionDO> get(@Parameter(description = "权限ID") @PathVariable @Min(1) Long id) {
+    public Result<PermissionDO> get(@Parameter(description = "权限ID") @PathVariable String id) {
         return Result.ok(permissionService.getById(id));
     }
 

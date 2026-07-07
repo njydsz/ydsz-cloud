@@ -118,7 +118,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void submit(Long id) {
+    public void submit(String id) {
         TimeEntryDO e = getById(id);
         TimeEntryStatus from = TimeEntryStatus.fromCode(e.getStatus());
         if (from == null || !from.canTransitTo(TimeEntryStatus.SUBMITTED)) {
@@ -181,7 +181,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(Long id) {
+    public void delete(String id) {
         TimeEntryDO e = getById(id);
         if (TimeEntryStatus.fromCode(e.getStatus()) == TimeEntryStatus.APPROVED) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_b0ba9ac4");
@@ -192,7 +192,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     @Transactional(readOnly = true)
-    public TimeEntryDO getById(Long id) {
+    public TimeEntryDO getById(String id) {
         TimeEntryDO e = timeEntryMapper.selectById(id);
         if (e == null) throw new BizException(BizErrorCode.NOT_FOUND, "error.execution.msg_24f2654b");
         return e;
@@ -202,7 +202,7 @@ public class TimeEntryServiceImpl implements TimeEntryService {
     @DataScope(userColumn = "employee_id")
     @Transactional(readOnly = true)
     public Page<TimeEntryDO> page(int page, int size, String keyword, String status,
-                                  Long employeeId, Long initiationId, Long taskId,
+                                  Long employeeId, String initiationId, String taskId,
                                   LocalDate from, LocalDate to) {
         Page<TimeEntryDO> p = new Page<>(page, size);
         LambdaQueryWrapper<TimeEntryDO> w = new LambdaQueryWrapper<>();
@@ -231,13 +231,13 @@ public class TimeEntryServiceImpl implements TimeEntryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<TimeEntryDO> listByInitiationAndDateRange(Long initiationId, LocalDate from, LocalDate to) {
+    public List<TimeEntryDO> listByInitiationAndDateRange(String initiationId, LocalDate from, LocalDate to) {
         return timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateHoursByEmployeeAndLevel(Long initiationId,
+    public List<Map<String, Object>> aggregateHoursByEmployeeAndLevel(String initiationId,
                                                                       LocalDate from, LocalDate to) {
         return timeEntryMapper.aggregateHoursByEmployeeAndLevel(initiationId, from, to);
     }

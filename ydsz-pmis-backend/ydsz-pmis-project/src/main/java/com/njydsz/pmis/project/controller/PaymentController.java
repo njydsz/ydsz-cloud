@@ -73,7 +73,7 @@ public class PaymentController {
     @PrePermission("finance:payment:status")
     @OperationLog(module = "回款管理", action = "确认到账", bizType = "PAYMENT")
     @PutMapping("/{id}/confirm")
-    public Result<Void> confirm(@PathVariable String id, @RequestParam Long operatorId) {
+    public Result<Void> confirm(@PathVariable String id, @RequestParam String operatorId) {
         service.confirm(id, operatorId);
         return Result.ok();
     }
@@ -91,7 +91,7 @@ public class PaymentController {
     @OperationLog(module = "回款管理", action = "取消回款", bizType = "PAYMENT")
     @PutMapping("/{id}/cancel")
     public Result<Void> cancel(@PathVariable String id,
-                          @RequestParam Long operatorId,
+                          @RequestParam String operatorId,
                           @RequestParam(required = false) String reason) {
         service.cancel(id, operatorId, reason);
         return Result.ok();
@@ -138,8 +138,8 @@ public class PaymentController {
     @PrePermission("finance:payment:allocate")
     @OperationLog(module = "回款管理", action = "自动核销（按客户）", bizType = "PAYMENT", saveResult = true)
     @PostMapping("/auto-allocate")
-    public Result<Integer> autoAllocate(@RequestParam Long customerId,
-                                   @RequestParam Long operatorId) {
+    public Result<Integer> autoAllocate(@RequestParam String customerId,
+                                   @RequestParam String operatorId) {
         return Result.ok(service.autoAllocate(customerId, operatorId));
     }
 
@@ -153,7 +153,7 @@ public class PaymentController {
     @Operation(summary = "现金流预测")
     @PrePermission("finance:payment:list")
     @GetMapping("/forecast")
-    public Result<List<Map<String, Object>>> forecast(@RequestParam Long initiationId,
+    public Result<List<Map<String, Object>>> forecast(@RequestParam String initiationId,
                                                  @RequestParam(defaultValue = "3") int months) {
         return Result.ok(service.forecastCashFlow(initiationId, months));
     }
@@ -167,7 +167,7 @@ public class PaymentController {
     @Operation(summary = "详情")
     @PrePermission("finance:payment:list")
     @GetMapping("/{id}")
-    public Result<PaymentDO> get(@PathVariable @Min(1) Long id) {
+    public Result<PaymentDO> get(@PathVariable String id) {
         return Result.ok(service.getById(id));
     }
 
@@ -206,7 +206,7 @@ public class PaymentController {
     @Operation(summary = "按合同汇总回款")
     @PrePermission("finance:payment:list")
     @GetMapping("/sum/by-contract")
-    public Result<BigDecimal> sumByContract(@RequestParam Long contractId) {
+    public Result<BigDecimal> sumByContract(@RequestParam String contractId) {
         return Result.ok(service.sumReceivedByContract(contractId));
     }
 
@@ -219,7 +219,7 @@ public class PaymentController {
     @Operation(summary = "按月汇总")
     @PrePermission("finance:payment:list")
     @GetMapping("/aggregate/by-month")
-    public Result<List<Map<String, Object>>> aggregateByMonth(@RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> aggregateByMonth(@RequestParam String initiationId) {
         return Result.ok(service.aggregateByMonth(initiationId));
     }
 }

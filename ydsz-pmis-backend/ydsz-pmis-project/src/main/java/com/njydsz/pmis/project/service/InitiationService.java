@@ -27,7 +27,7 @@ public interface InitiationService {
      * @param dto 立项申请参数
      * @return 立项 ID
      */
-    Long create(InitiationCreateDTO dto);
+    String create(InitiationCreateDTO dto);
 
     /**
      * 立项阶段迁移（遵循 InitiationStage 状态机）。
@@ -41,7 +41,7 @@ public interface InitiationService {
      *
      * @param id 立项 ID
      */
-    void delete(Long id);
+    void delete(String id);
 
     /**
      * 根据立项 ID 查询立项详情。
@@ -49,7 +49,7 @@ public interface InitiationService {
      * @param id 立项 ID
      * @return 立项实体；不存在返回 null
      */
-    InitiationDO getById(Long id);
+    InitiationDO getById(String id);
 
     /**
      * 分页查询立项列表。
@@ -62,7 +62,7 @@ public interface InitiationService {
      * @param pmId         项目经理 ID，可空
      * @return 分页结果
      */
-    Page<InitiationDO> page(int page, int size, String keyword, String stage, String projectLevel, Long pmId);
+    Page<InitiationDO> page(int page, int size, String keyword, String stage, String projectLevel, String pmId);
 
     // ============= 预算 =============
 
@@ -72,14 +72,14 @@ public interface InitiationService {
      * @param dto 预算明细参数
      * @return 预算明细 ID
      */
-    Long addBudgetItem(BudgetItemDTO dto);
+    String addBudgetItem(BudgetItemDTO dto);
 
     /**
      * 删除预算明细。
      *
      * @param id 预算明细 ID
      */
-    void deleteBudgetItem(Long id);
+    void deleteBudgetItem(String id);
 
     /**
      * 查询立项的所有预算明细。
@@ -87,7 +87,7 @@ public interface InitiationService {
      * @param initiationId 立项 ID
      * @return 预算明细列表
      */
-    List<BudgetItemDO> listBudget(Long initiationId);
+    List<BudgetItemDO> listBudget(String initiationId);
 
     /**
      * 按预算大类汇总金额。
@@ -95,7 +95,7 @@ public interface InitiationService {
      * @param initiationId 立项 ID
      * @return 每个大类对应的金额汇总列表
      */
-    List<Map<String, Object>> sumBudgetByCategory(Long initiationId);
+    List<Map<String, Object>> sumBudgetByCategory(String initiationId);
 
     /**
      * 重新汇总预算总额并写回 initiation。
@@ -103,7 +103,7 @@ public interface InitiationService {
      * @param initiationId 立项 ID
      * @return 汇总后的预算总额
      */
-    BigDecimal recomputeBudget(Long initiationId);
+    BigDecimal recomputeBudget(String initiationId);
 
     // ============= 门径 =============
 
@@ -113,7 +113,7 @@ public interface InitiationService {
      * @param dto 评审参数
      * @return 评审记录 ID
      */
-    Long reviewGate(GateReviewDTO dto);
+    String reviewGate(GateReviewDTO dto);
 
     /**
      * 查询立项的所有门径评审记录。
@@ -121,7 +121,7 @@ public interface InitiationService {
      * @param initiationId 立项 ID
      * @return 评审记录列表
      */
-    List<GateReviewDO> listGateReviews(Long initiationId);
+    List<GateReviewDO> listGateReviews(String initiationId);
 
     // ============= 统计 =============
 
@@ -131,7 +131,7 @@ public interface InitiationService {
      * @param tenantId 租户 ID，可空
      * @return 每种阶段对应的数量列表
      */
-    List<Map<String, Object>> aggregateByStage(Long tenantId);
+    List<Map<String, Object>> aggregateByStage(String tenantId);
 
     // ============= 流程集成 =============
 
@@ -142,7 +142,7 @@ public interface InitiationService {
      * @param initiatorId 发起人 ID
      * @return 流程实例 ID（启动失败时返回 null）
      */
-    String startProcess(Long id, Long initiatorId);
+    String startProcess(String id, String initiatorId);
 
     /**
      * 装配客户/PM/发起人名称（按需调用 Feign 客户端）。
@@ -157,7 +157,7 @@ public interface InitiationService {
      * @param id 立项 ID
      * @return {initiationId, projectCode, projectName, budgetAmount, estimatedAmount, stage}
      */
-    java.util.Map<String, Object> budgetSnapshot(Long id);
+    java.util.Map<String, Object> budgetSnapshot(String id);
 
     // ============= 流程状态联动（供 workflow 模块 Feign 调用） =============
 
@@ -167,7 +167,7 @@ public interface InitiationService {
      * @param id 立项 ID
      * @throws BizException 立项不存在时抛出
      */
-    void markProcessing(Long id);
+    void markProcessing(String id);
 
     /**
      * 标记立项为已批准（APPROVED），并设置门径为 CD1。
@@ -175,7 +175,7 @@ public interface InitiationService {
      * @param id 立项 ID
      * @throws BizException 立项不存在时抛出
      */
-    void markApproved(Long id);
+    void markApproved(String id);
 
     /**
      * 标记立项为已驳回（REJECTED）。
@@ -184,5 +184,5 @@ public interface InitiationService {
      * @param reason 驳回原因（可空）
      * @throws BizException 立项不存在时抛出
      */
-    void markRejected(Long id, String reason);
+    void markRejected(String id, String reason);
 }
