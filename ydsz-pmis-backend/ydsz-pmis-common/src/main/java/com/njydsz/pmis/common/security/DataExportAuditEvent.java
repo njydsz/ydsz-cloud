@@ -21,8 +21,12 @@ public class DataExportAuditEvent implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 操作用户 ID */
-    private Long userId;
+    /**
+     * 操作用户 ID（雪花算法字符串 VARCHAR(20)）。
+     *
+     * <p>P3-1：与 LoginUser.userId / BaseDO.createdBy 一致，统一字符串类型。
+     */
+    private String userId;
 
     /** 操作用户名 */
     private String username;

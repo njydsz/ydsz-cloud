@@ -22,8 +22,12 @@ public class SensitiveOperationEvent implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    /** 操作用户 ID */
-    private Long userId;
+    /**
+     * 操作用户 ID（雪花算法字符串 VARCHAR(20)）。
+     *
+     * <p>P3-1：与 LoginUser.userId 保持类型一致。
+     */
+    private String userId;
 
     /** 操作用户名 */
     private String username;

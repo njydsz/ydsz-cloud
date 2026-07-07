@@ -168,6 +168,8 @@ public class OperationLogAspect {
                 .paramsJson(params)
                 .responseJson(responseData)
                 // P1-5 修复：采集业务层通过 OperationLogContext 设置的变更前/后数据
+                // P3-1：OperationLogEvent.beforeData/afterData 是 String (JSON),
+                //        业务层调用 setBeforeData(jsonString) 时需自行序列化。
                 .beforeData(ann.saveDiff() ? OperationLogContext.getBeforeData() : null)
                 .afterData(ann.saveDiff() ? OperationLogContext.getAfterData() : null)
                 .status(error == null ? "SUCCESS" : "FAILED")

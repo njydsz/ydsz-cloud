@@ -119,7 +119,7 @@ public final class DataScopeHelper {
             case DEPT -> sb.append(prefix(deptAlias)).append(deptColumn).append(suffix(deptAlias))
                     .append(" = ").append(safeValue(ctx.getDeptId()));
             case DEPT_AND_CHILD -> {
-                List<Long> ids = ctx.getDeptIds();
+                List<String> ids = ctx.getDeptIds();
                 if (ids == null || ids.isEmpty()) {
                     sb.append(prefix(deptAlias)).append(deptColumn).append(suffix(deptAlias))
                             .append(" = ").append(safeValue(ctx.getDeptId()));
@@ -129,7 +129,7 @@ public final class DataScopeHelper {
                 }
             }
             case CUSTOM -> {
-                List<Long> ids = ctx.getCustomDeptIds();
+                List<String> ids = ctx.getCustomDeptIds();
                 if (ids == null || ids.isEmpty()) {
                     sb.append("1=0");
                 } else {
@@ -176,10 +176,12 @@ public final class DataScopeHelper {
     /**
      * 过滤可访问部门 ID 集合（去除越权 ID）
      *
+     * <p>P3-1：部门 ID 已统一为雪花字符串，参数与返回值改为 {@code Set<String> / List<String>}。
+     *
      * @param candidate 候选部门 ID 集合
      * @return 当前用户可访问的部门 ID 列表
      */
-    public static List<Long> filterDeptIds(Set<Long> candidate) {
+    public static List<String> filterDeptIds(Set<String> candidate) {
         if (candidate == null || candidate.isEmpty()) {
             return new ArrayList<>();
         }
@@ -187,9 +189,9 @@ public final class DataScopeHelper {
         if (ctx.isAll()) {
             return new ArrayList<>(candidate);
         }
-        List<Long> allowed = new ArrayList<>();
-        for (Long id : candidate) {
-            if (id == null) continue;
+        List<String> allowed = new ArrayList<>();
+        for (String id : candidate) {
+            if (id == null || id.isEmpty()) continue;
             if (ctx.getDeptId() != null && ctx.getDeptId().equals(id)) {
                 allowed.add(id);
                 continue;

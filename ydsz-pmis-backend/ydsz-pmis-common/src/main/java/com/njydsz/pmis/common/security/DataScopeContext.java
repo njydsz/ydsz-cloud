@@ -29,17 +29,27 @@ public class DataScopeContext implements Serializable {
     /** 数据权限范围 */
     private DataScope scope;
 
-    /** 当前用户 ID */
-    private Long userId;
+    /**
+     * 当前用户 ID（雪花算法字符串 VARCHAR(20)）。
+     *
+     * <p>P3-1：随主键雪花化统一为 String。
+     */
+    private String userId;
 
-    /** 当前部门 ID */
-    private Long deptId;
+    /**
+     * 当前部门 ID（雪花算法字符串 VARCHAR(20)）。
+     */
+    private String deptId;
 
-    /** 当前部门 ID 链（含所有下级，DEPT_AND_CHILD 模式） */
-    private List<Long> deptIds;
+    /**
+     * 当前部门 ID 链（含所有下级，DEPT_AND_CHILD 模式）。
+     */
+    private List<String> deptIds;
 
-    /** 自定义部门 ID 集（CUSTOM 模式） */
-    private List<Long> customDeptIds;
+    /**
+     * 自定义部门 ID 集（CUSTOM 模式）。
+     */
+    private List<String> customDeptIds;
 
     /** 是否超管（绕过数据权限） */
     private boolean superAdmin;

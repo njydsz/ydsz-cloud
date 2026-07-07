@@ -37,8 +37,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class SnowflakeIdGenerator {
 
-    /** 起始时间戳: 2024-01-01 00:00:00 UTC（项目上线年份） */
-    private static final long TWEPOCH = 1704067200000L;
+    /** 起始时间戳: 2022-10-20 00:00:00 UTC */
+    private static final long TWEPOCH = 1666224000000L;
 
     /** workerId 占用位数: 10bit（支持 1024 实例） */
     private static final long WORKER_ID_BITS = 10L;

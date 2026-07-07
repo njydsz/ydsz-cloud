@@ -34,8 +34,12 @@ public class OperationLogEvent implements Serializable {
     private String bizType;
     /** 业务主键 ID */
     private String bizId;
-    /** 操作人用户 ID */
-    private Long userId;
+    /**
+     * 操作人用户 ID（雪花算法字符串 VARCHAR(20)）。
+     *
+     * <p>P3-1：与 LoginUser.userId 保持类型一致。
+     */
+    private String userId;
     /** 操作人用户名 */
     private String username;
     /** 请求 URL */

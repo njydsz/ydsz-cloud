@@ -115,14 +115,17 @@ public class AuthInterceptor implements HandlerInterceptor {
     /**
      * 根据 Claims 构造登录用户对象
      *
+     * <p>P3-1：userId / deptId 已统一为雪花算法字符串（VARCHAR(20)），
+     * JWT 中以字符串形式承载 subject 与 deptId claim，避免大数精度丢失。
+     *
      * @param claims JWT Claims
      * @param token  原始 Token 字符串
      * @return 登录用户对象
      */
     private LoginUser buildLoginUser(Claims claims, String token) {
-        Long userId = Long.parseLong(claims.getSubject());
+        String userId = claims.getSubject();
         String username = (String) claims.get("username");
-        Long deptId = claims.get("deptId") != null ? Long.parseLong(claims.get("deptId").toString()) : null;
+        String deptId = claims.get("deptId") != null ? claims.get("deptId").toString() : null;
         String deptName = (String) claims.get("deptName");
         String levelCode = (String) claims.get("levelCode");
         String dataScope = (String) claims.get("dataScope");
@@ -133,8 +136,9 @@ public class AuthInterceptor implements HandlerInterceptor {
         List<String> permissions = claims.get("permissions", List.class);
 
         // P1-6 修复：解析 customDeptIds（CUSTOM 模式）和 deptIds（DEPT_AND_CHILD 模式）
-        List<Long> customDeptIds = parseLongList(claims.get("customDeptIds"));
-        List<Long> deptIds = parseLongList(claims.get("deptIds"));
+        // P3-1：部门 ID 已统一为雪花字符串，改为 parseStringList
+        List<String> customDeptIds = parseStringList(claims.get("customDeptIds"));
+        List<String> deptIds = parseStringList(claims.get("deptIds"));
 
         return LoginUser.builder()
                 .userId(userId)
@@ -154,25 +158,22 @@ public class AuthInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * 从 JWT claim 解析 Long 列表
+     * 从 JWT claim 解析 String 列表
      *
-     * <p>JWT 中 List 字段反序列化后通常为 {@code List<?>}，元素可能是 Integer 或 Long，
-     * 统一转为 Long 避免 ClassCastException。
+     * <p>JWT 中 List 字段反序列化后通常为 {@code List<?>}，元素可能是任意类型；
+     * 统一调用 {@code toString()} 得到部门 ID 字符串，避免 ClassCastException。
      *
      * @param claim JWT claim 值
-     * @return Long 列表，null 时返回 null
+     * @return String 列表，null 时返回 null
      */
-    private List<Long> parseLongList(Object claim) {
+    private List<String> parseStringList(Object claim) {
         if (claim == null) {
             return null;
         }
         if (claim instanceof List<?> list) {
             return list.stream()
                     .filter(o -> o != null)
-                    .map(o -> {
-                        if (o instanceof Number n) return n.longValue();
-                        return Long.parseLong(o.toString());
-                    })
+                    .map(Object::toString)
                     .toList();
         }
         return null;
