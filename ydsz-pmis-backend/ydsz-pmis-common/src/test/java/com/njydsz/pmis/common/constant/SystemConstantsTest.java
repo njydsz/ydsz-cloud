@@ -3,35 +3,15 @@ package com.njydsz.pmis.common.constant;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.jupiter.api.Assertions.*;
-
-/**
- * SystemConstants 单元测试
- *
- * @author ydsz-pmis-team
- */
-@DisplayName("SystemConstants 测试")
-class SystemConstantsTest {
-
-    @Test
-    @DisplayName("SYSTEM_USER_ID - 应等于 SYSTEM 字符串字面量")
-    void systemUserId_shouldBeSystem() {
-        assertEquals("SYSTEM", SystemConstants.SYSTEM_USER_ID);
-    }
-
-    @Test
-    @<function_calls>
-<invoke name="Write">
-<parameter name="content">package com.njydsz.pmis.common.constant;
-
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * SystemConstants 单元测试

@@ -1,0 +1,191 @@
+﻿[ERROR] COMPILATION ERROR : 
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/AuthFeignController.java:[90,69] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/AuthFeignController.java:[102,84] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/OrgQueryFeignController.java:[87,81] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/OrgQueryFeignController.java:[121,29] 不兼容的类型: 推论变量 T 具有不兼容的上限
+    等式约束条件：java.lang.Long
+    下限：java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/OrgQueryFeignController.java:[146,29] 不兼容的类型: 推论变量 T 具有不兼容的上限
+    等式约束条件：java.lang.Long
+    下限：java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/ReAuthController.java:[46,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/SessionController.java:[55,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/SessionController.java:[80,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[44,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[58,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[71,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[84,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[96,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[109,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[121,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/UserController.java:[84,81] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/UserController.java:[97,68] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/UserController.java:[117,44] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/UserController.java:[121,25] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[75,87] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[81,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[121,87] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[127,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[143,49] 不兼容的类型: 条件表达式中的类型错误
+    java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[185,87] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[191,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[210,66] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[175,69] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[188,30] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[194,30] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[231,30] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[237,30] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[311,69] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[323,84] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[334,55] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[393,36] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[444,54] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[450,43] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/BenchServiceImpl.java:[56,39] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/BenchServiceImpl.java:[67,84] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/BenchServiceImpl.java:[77,77] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/BenchServiceImpl.java:[85,23] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[48,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[53,60] 二元运算符 '==' 的操作数类型错误
+  第一个类型:  java.lang.String
+  第二个类型: long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[96,73] 不兼容的类型: 条件表达式中的类型错误
+    java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[105,28] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[118,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/EmployeeTagServiceImpl.java:[41,77] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/EmployeeTagServiceImpl.java:[45,23] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/EmployeeTagServiceImpl.java:[62,31] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/PermissionServiceImpl.java:[101,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/PermissionServiceImpl.java:[108,68] 不兼容的类型: 条件表达式中的类型错误
+    java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/PermissionServiceImpl.java:[165,62] 不兼容的类型: long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/PermissionServiceImpl.java:[167,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourceAssignmentServiceImpl.java:[67,82] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourceAssignmentServiceImpl.java:[78,77] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourceAssignmentServiceImpl.java:[89,23] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourcePoolServiceImpl.java:[50,77] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourcePoolServiceImpl.java:[54,23] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[100,43] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[102,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[120,43] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[153,26] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[154,32] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/SessionServiceImpl.java:[34,21] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/SessionServiceImpl.java:[43,48] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/TwoFactorServiceImpl.java:[55,26] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/TwoFactorServiceImpl.java:[61,53] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[224,26] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[312,26] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[313,26] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[339,42] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[347,42] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[363,44] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[370,63] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[380,46] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[393,52] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[401,51] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[403,38] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[509,35] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[538,56] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[609,36] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.15.0:compile (default-compile) on project ydsz-pmis-userinfo: Compilation failure: Compilation failure: 
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/AuthFeignController.java:[90,69] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/AuthFeignController.java:[102,84] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/OrgQueryFeignController.java:[87,81] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/OrgQueryFeignController.java:[121,29] 不兼容的类型: 推论变量 T 具有不兼容的上限
+[ERROR]     等式约束条件：java.lang.Long
+[ERROR]     下限：java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/OrgQueryFeignController.java:[146,29] 不兼容的类型: 推论变量 T 具有不兼容的上限
+[ERROR]     等式约束条件：java.lang.Long
+[ERROR]     下限：java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/ReAuthController.java:[46,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/SessionController.java:[55,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/SessionController.java:[80,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[44,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[58,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[71,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[84,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[96,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[109,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/TwoFactorController.java:[121,48] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/UserController.java:[84,81] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/UserController.java:[97,68] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/UserController.java:[117,44] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/controller/UserController.java:[121,25] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[75,87] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[81,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[121,87] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[127,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[143,49] 不兼容的类型: 条件表达式中的类型错误
+[ERROR]     java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[185,87] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[191,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AttendanceServiceImpl.java:[210,66] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[175,69] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[188,30] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[194,30] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[231,30] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[237,30] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[311,69] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[323,84] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[334,55] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[393,36] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[444,54] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/AuthServiceImpl.java:[450,43] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/BenchServiceImpl.java:[56,39] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/BenchServiceImpl.java:[67,84] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/BenchServiceImpl.java:[77,77] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/BenchServiceImpl.java:[85,23] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[48,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[53,60] 二元运算符 '==' 的操作数类型错误
+[ERROR]   第一个类型:  java.lang.String
+[ERROR]   第二个类型: long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[96,73] 不兼容的类型: 条件表达式中的类型错误
+[ERROR]     java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[105,28] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/DepartmentServiceImpl.java:[118,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/EmployeeTagServiceImpl.java:[41,77] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/EmployeeTagServiceImpl.java:[45,23] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/EmployeeTagServiceImpl.java:[62,31] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/PermissionServiceImpl.java:[101,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/PermissionServiceImpl.java:[108,68] 不兼容的类型: 条件表达式中的类型错误
+[ERROR]     java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/PermissionServiceImpl.java:[165,62] 不兼容的类型: long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/PermissionServiceImpl.java:[167,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourceAssignmentServiceImpl.java:[67,82] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourceAssignmentServiceImpl.java:[78,77] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourceAssignmentServiceImpl.java:[89,23] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourcePoolServiceImpl.java:[50,77] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/ResourcePoolServiceImpl.java:[54,23] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[100,43] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[102,28] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[120,43] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[153,26] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/RoleServiceImpl.java:[154,32] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/SessionServiceImpl.java:[34,21] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/SessionServiceImpl.java:[43,48] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/TwoFactorServiceImpl.java:[55,26] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/TwoFactorServiceImpl.java:[61,53] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[224,26] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[312,26] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[313,26] 不兼容的类型: java.lang.Long无法转换为java.lang.String
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[339,42] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[347,42] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[363,44] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[370,63] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[380,46] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[393,52] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[401,51] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[403,38] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[509,35] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[538,56] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] /D:/Code/ydsz/ydsz-pmis/ydsz-pmis-backend/ydsz-pmis-userinfo/src/main/java/com/njydsz/pmis/userinfo/service/impl/UserAccountServiceImpl.java:[609,36] 不兼容的类型: java.lang.String无法转换为java.lang.Long
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

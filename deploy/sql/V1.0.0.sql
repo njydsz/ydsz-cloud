@@ -102,7 +102,7 @@ COMMENT ON COLUMN pmis_dict_type.type_code IS '字典类型编码(全局唯一,�
 COMMENT ON COLUMN pmis_dict_type.type_name IS '字典类型名称(中文展示名)';
 COMMENT ON COLUMN pmis_dict_type.description IS '字典类型业务说明';
 COMMENT ON COLUMN pmis_dict_type.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
-COMMENT ON COLUMN pmis_dict_type.created_by IS '创建人 ID(0=系统初始化)';
+COMMENT ON COLUMN pmis_dict_type.created_by IS '创建人 ID(SYSTEM=系统初始化)';
 COMMENT ON COLUMN pmis_dict_type.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_dict_type.updated_by IS '最后修改人 ID';
 COMMENT ON COLUMN pmis_dict_type.updated_at IS '最后修改时间';

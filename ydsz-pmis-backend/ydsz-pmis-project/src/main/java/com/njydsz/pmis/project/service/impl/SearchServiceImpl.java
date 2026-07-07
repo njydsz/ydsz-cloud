@@ -55,7 +55,7 @@ public class SearchServiceImpl implements SearchService {
             return new PageImpl<>(List.of(), pageable, 0);
         }
         try {
-            Long tenantId = TenantContext.getTenantId();
+            String tenantId = TenantContext.getTenantId();
             int offset = (int) pageable.getOffset();
             int limit = pageable.getPageSize();
             long total = initiationMapper.countByFullText(keyword, tenantId);

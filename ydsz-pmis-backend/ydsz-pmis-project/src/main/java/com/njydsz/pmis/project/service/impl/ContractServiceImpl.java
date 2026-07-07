@@ -204,7 +204,7 @@ public class ContractServiceImpl implements ContractService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByStatus(Long tenantId) {
+    public List<Map<String, Object>> aggregateByStatus(String tenantId) {
         if (tenantId == null) tenantId = TenantContext.getTenantId();
         return contractMapper.aggregateByStatus(tenantId);
     }
@@ -217,7 +217,7 @@ public class ContractServiceImpl implements ContractService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByRisk(Long tenantId) {
+    public List<Map<String, Object>> aggregateByRisk(String tenantId) {
         if (tenantId == null) tenantId = TenantContext.getTenantId();
         return contractMapper.aggregateByRisk(tenantId);
     }
