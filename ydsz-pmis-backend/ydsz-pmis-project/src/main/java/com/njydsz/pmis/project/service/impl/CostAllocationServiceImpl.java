@@ -32,7 +32,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long syncFromTimeEntry(String timeEntryId, String initiationId, String employeeId,
+    public String syncFromTimeEntry(String timeEntryId, String initiationId, String employeeId,
                                    String employeeName, String levelCode,
                                    String period, BigDecimal amount, boolean billable) {
         CostAllocationDO c = new CostAllocationDO();
@@ -56,7 +56,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long syncFromPurchase(String purchaseId, String initiationId, String period,
+    public String syncFromPurchase(String purchaseId, String initiationId, String period,
                                   BigDecimal amount, boolean billable) {
         CostAllocationDO c = new CostAllocationDO();
         c.setInitiationId(initiationId);
@@ -75,7 +75,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long syncFromExpense(String expenseId, String initiationId, String period,
+    public String syncFromExpense(String expenseId, String initiationId, String period,
                                  BigDecimal amount, boolean billable) {
         CostAllocationDO c = new CostAllocationDO();
         c.setInitiationId(initiationId);

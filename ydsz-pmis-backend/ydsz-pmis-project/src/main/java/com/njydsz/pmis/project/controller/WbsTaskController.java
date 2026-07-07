@@ -145,7 +145,7 @@ public class WbsTaskController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String taskType,
             @RequestParam(required = false) String initiationId,
-            @RequestParam(required = false) Long ownerId) {
+            @RequestParam(required = false) String ownerId) {
         return Result.ok(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
     }
 

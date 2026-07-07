@@ -115,7 +115,7 @@ public class RateInternalController {
     @GetMapping("/match")
     public Result<RateInternalDO> match(
             @RequestParam String levelCode,
-            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) String departmentId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
         return Result.ok(service.matchEffective(levelCode, departmentId, date));
     }
@@ -132,7 +132,7 @@ public class RateInternalController {
     @GetMapping("/by-level-dept")
     public Result<List<RateInternalDO>> listByLevelAndDept(
             @RequestParam String levelCode,
-            @RequestParam(required = false) Long departmentId) {
+            @RequestParam(required = false) String departmentId) {
         return Result.ok(service.listByLevelAndDept(levelCode, departmentId));
     }
 
@@ -153,7 +153,7 @@ public class RateInternalController {
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String levelCode,
-            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) String departmentId,
             @RequestParam(required = false) String status) {
         return Result.ok(service.page(page, size, levelCode, departmentId, status));
     }

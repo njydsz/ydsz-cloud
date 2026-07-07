@@ -66,7 +66,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             }
             String title = "您有一个新的审批待办";
             String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 需要您处理";
-            String userId = parseUserId(assigneeId);
+            String userId = assigneeId;
             Map<String, Object> extra = new HashMap<>();
             extra.put("bizType", "WORKFLOW_TASK");
             extra.put("instanceId", instanceId);
@@ -93,7 +93,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
                 content += "，备注：" + comment;
             }
             for (String assigneeId : assigneeIds) {
-                String userId = parseUserId(assigneeId);
+                String userId = assigneeId;
                 Map<String, Object> extra = new HashMap<>();
                 extra.put("bizType", "WORKFLOW_URGE");
                 extra.put("instanceId", instanceId);
@@ -183,7 +183,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             }
             String title = "审批任务已超时";
             String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 超时，触发动作：" + action;
-            String userId = parseUserId(assigneeId);
+            String userId = assigneeId;
             Map<String, Object> extra = new HashMap<>();
             extra.put("bizType", "WORKFLOW_SLA_TIMEOUT");
             extra.put("instanceId", instanceId);
@@ -382,24 +382,6 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             return Long.parseLong(o.toString().trim());
         } catch (NumberFormatException e) {
             log.warn("[FlowNotificationServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * 将字符串形式的 assigneeId 安全解析为 Long
-     *
-     * @param assigneeId 办理人 ID（字符串）
-     * @return Long 值，解析失败返回 null
-     */
-    private Long parseUserId(String assigneeId) {
-        if (assigneeId == null || assigneeId.isBlank()) {
-            return null;
-        }
-        try {
-            return Long.parseLong(assigneeId.trim());
-        } catch (NumberFormatException e) {
-            log.warn("[FlowNotify] assigneeId 无法解析为 Long: {}", assigneeId);
             return null;
         }
     }

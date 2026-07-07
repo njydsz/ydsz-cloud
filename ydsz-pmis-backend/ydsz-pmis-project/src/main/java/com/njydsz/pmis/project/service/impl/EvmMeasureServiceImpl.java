@@ -49,7 +49,7 @@ public class EvmMeasureServiceImpl implements EvmMeasureService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long save(EvmMeasureCreateDTO dto) {
+    public String save(EvmMeasureCreateDTO dto) {
         if (dto == null) throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_d9712a58");
         if (dto.getInitiationId() == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.execution.msg_576c2b5e");

@@ -44,8 +44,8 @@ public class FlowNotificationHelper {
      * @param bizType     业务类型（WORKFLOW_TASK）
      * @param level       级别 INFO/WARN/ERROR/URGENT
      */
-    public void notifyTaskAssigned(Long receiverId, String title, String content,
-                                   Long taskId, String bizType, String level) {
+    public void notifyTaskAssigned(String receiverId, String title, String content,
+                                   String taskId, String bizType, String level) {
         if (receiverId == null) {
             return;
         }

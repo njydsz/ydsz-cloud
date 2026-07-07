@@ -19,20 +19,20 @@ public interface CostAllocationService {
     /**
      * 同步一条工时到成本归集（人力成本）
      */
-    Long syncFromTimeEntry(String timeEntryId, String initiationId, String employeeId,
+    String syncFromTimeEntry(String timeEntryId, String initiationId, String employeeId,
                             String employeeName, String levelCode,
                             String period, BigDecimal amount, boolean billable);
 
     /**
      * 同步采购成本
      */
-    Long syncFromPurchase(String purchaseId, String initiationId, String period,
+    String syncFromPurchase(String purchaseId, String initiationId, String period,
                            BigDecimal amount, boolean billable);
 
     /**
      * 同步费用成本
      */
-    Long syncFromExpense(String expenseId, String initiationId, String period,
+    String syncFromExpense(String expenseId, String initiationId, String period,
                           BigDecimal amount, boolean billable);
 
     /**

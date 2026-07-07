@@ -144,7 +144,7 @@ public class TimeEntryController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String employeeId,
             @RequestParam(required = false) String initiationId,
-            @RequestParam(required = false) Long taskId,
+            @RequestParam(required = false) String taskId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return Result.ok(service.page(page, size, keyword, status, employeeId, initiationId, taskId, from, to));

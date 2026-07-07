@@ -9,7 +9,6 @@ import com.njydsz.pmis.project.service.ProfitService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -50,7 +49,7 @@ public class ProfitController {
     @PrePermission("execution:profit:snapshot")
     @Idempotent(key = "profit:snapshot", ttlSeconds = 5, message = "请勿重复提交")
     @PostMapping("/snapshot")
-    public Result<Long> snapshot(@Valid @RequestBody ProfitSnapshotDTO dto) {
+    public Result<String> snapshot(@Valid @RequestBody ProfitSnapshotDTO dto) {
         return Result.ok(service.generateSnapshot(dto));
     }
 

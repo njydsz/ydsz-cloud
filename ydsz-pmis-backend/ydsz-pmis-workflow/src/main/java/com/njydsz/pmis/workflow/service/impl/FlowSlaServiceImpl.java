@@ -225,7 +225,7 @@ public class FlowSlaServiceImpl implements FlowSlaService {
                     task.getDueAt(),
                     newReminderCount,
                     maxReminders);
-            Long receiverId = parseUserId(task.getAssigneeId());
+            String receiverId = task.getAssigneeId();
             if (receiverId == null) {
                 log.warn("[FlowSla] 无法解析 assigneeId: taskId={} assigneeId={}",
                         task.getId(), task.getAssigneeId());
@@ -434,16 +434,6 @@ public class FlowSlaServiceImpl implements FlowSlaService {
             return Integer.parseInt(String.valueOf(val));
         } catch (NumberFormatException e) {
             return defaultValue;
-        }
-    }
-
-    private Long parseUserId(String s) {
-        if (s == null) return null;
-        try {
-            return Long.parseLong(s.trim());
-        } catch (NumberFormatException e) {
-            log.warn("[FlowSlaServiceImpl] 用户 ID 解析失败 s={}: {}", s, e.getMessage());
-            return null;
         }
     }
 

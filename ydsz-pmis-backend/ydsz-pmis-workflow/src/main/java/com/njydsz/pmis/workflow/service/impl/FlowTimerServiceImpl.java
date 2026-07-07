@@ -200,7 +200,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         // 2. 通知原办理人
         try {
             if (task.getAssigneeId() != null) {
-                notificationHelper.notifyTaskAssigned(parseUserId(task.getAssigneeId()),
+                notificationHelper.notifyTaskAssigned(task.getAssigneeId(),
                         "审批超时",
                         String.format("【%s】%s 已超时，请尽快处理",
                                 nullSafe(instance.getFlowName()),
@@ -306,16 +306,6 @@ public class FlowTimerServiceImpl implements FlowTimerService {
         }
         Map<String, Object> map = JSON.parseObject(variableJson);
         return map == null ? new HashMap<>() : map;
-    }
-
-    private Long parseUserId(String s) {
-        if (s == null) return null;
-        try {
-            return Long.parseLong(s);
-        } catch (NumberFormatException e) {
-            log.warn("[FlowTimerServiceImpl] 用户 ID 解析失败 s={}: {}", s, e.getMessage());
-            return null;
-        }
     }
 
     private String nullSafe(String s) {

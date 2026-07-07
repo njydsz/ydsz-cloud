@@ -67,7 +67,8 @@ public class WbsTaskServiceImpl implements WbsTaskService {
             t.setDurationDays((int) Math.max(0, days));
         }
         // 计算 WBS 路径
-        if (t.getParentId() != null && t.getParentId() > 0) {
+        if (t.getParentId() != null && !t.getParentId().isBlank()
+                && Long.parseLong(t.getParentId()) > 0) {
             WbsTaskDO parent = wbsTaskMapper.selectById(t.getParentId());
             if (parent != null) {
                 t.setTaskLevel((parent.getTaskLevel() == null ? 1 : parent.getTaskLevel()) + 1);

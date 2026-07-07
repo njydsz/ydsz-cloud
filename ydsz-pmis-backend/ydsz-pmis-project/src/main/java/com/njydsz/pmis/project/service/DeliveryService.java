@@ -25,7 +25,7 @@ public interface DeliveryService {
      * @param dto 标准创建参数
      * @return 标准ID
      */
-    Long createStandard(DeliveryStandardCreateDTO dto);
+    String createStandard(DeliveryStandardCreateDTO dto);
 
     /**
      * 删除交付物标准
@@ -67,7 +67,7 @@ public interface DeliveryService {
      * @param dto 实例创建参数
      * @return 实例ID
      */
-    Long createItem(DeliveryItemCreateDTO dto);
+    String createItem(DeliveryItemCreateDTO dto);
 
     /**
      * 变更交付物实例状态
@@ -105,7 +105,7 @@ public interface DeliveryService {
      * @param initiationId 项目立项ID
      * @return 实例列表
      */
-    List<DeliveryItemDO> listItemsByInitiation(Long initiationId);
+    List<DeliveryItemDO> listItemsByInitiation(String initiationId);
 
     /**
      * 按阶段查询交付物实例

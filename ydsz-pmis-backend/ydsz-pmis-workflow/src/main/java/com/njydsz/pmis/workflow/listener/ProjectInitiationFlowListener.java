@@ -86,7 +86,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (task == null) {
             return;
         }
-        String assigneeId = parseUserId(task.getAssigneeId());
+        String assigneeId = task.getAssigneeId();
         if (assigneeId == null) {
             return;
         }
@@ -220,8 +220,8 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
             return;
         }
         List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
-        List<Long> receivers = pending == null ? Collections.emptyList() : pending.stream()
-                .map(t -> parseUserId(t.getAssigneeId()))
+        List<String> receivers = pending == null ? Collections.emptyList() : pending.stream()
+                .map(t -> t.getAssigneeId())
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -258,8 +258,8 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
             return;
         }
         List<FlowRunTaskDO> pending = taskMapper.selectPendingByInstance(instanceId);
-        List<Long> receivers = pending == null ? Collections.emptyList() : pending.stream()
-                .map(t -> parseUserId(t.getAssigneeId()))
+        List<String> receivers = pending == null ? Collections.emptyList() : pending.stream()
+                .map(t -> t.getAssigneeId())
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
@@ -318,7 +318,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         if (task == null) {
             return;
         }
-        String assigneeId = parseUserId(task.getAssigneeId());
+        String assigneeId = task.getAssigneeId();
         if (assigneeId == null) {
             return;
         }
@@ -423,29 +423,6 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
         } catch (Exception e) {
             log.warn("[FlowListener] IM 推送失败: assigneeId={} taskId={}: {}",
                     assigneeId, taskId, e.getMessage());
-        }
-    }
-
-    /** 解析 assigneeId 字符串为 Long（可能为 user:/role:/dept: 前缀） */
-    private static Long parseUserId(String assigneeId) {
-        if (assigneeId == null || assigneeId.isBlank()) {
-            return null;
-        }
-        // 数字或纯数字字符串
-        try {
-            return Long.parseLong(assigneeId);
-        } catch (NumberFormatException ignore) {
-            // 形如 "user:1001" → 取冒号后部分
-            int idx = assigneeId.lastIndexOf(':');
-            if (idx >= 0 && idx < assigneeId.length() - 1) {
-                try {
-                    return Long.parseLong(assigneeId.substring(idx + 1));
-                } catch (NumberFormatException ignore2) {
-                    log.warn("[ProjectInitiationFlowListener] assigneeId 解析失败 assigneeId={}: {}", assigneeId, ignore2.getMessage());
-                    return null;
-                }
-            }
-            return null;
         }
     }
 

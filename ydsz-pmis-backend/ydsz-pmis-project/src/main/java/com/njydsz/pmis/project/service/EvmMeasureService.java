@@ -23,7 +23,7 @@ public interface EvmMeasureService {
      * @param dto 测量录入参数
      * @return 测量记录 ID
      */
-    Long save(EvmMeasureCreateDTO dto);
+    String save(EvmMeasureCreateDTO dto);
 
     /**
      * 根据ID查询测量记录
