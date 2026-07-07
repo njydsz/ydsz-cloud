@@ -59,7 +59,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
-    public void notifyTaskCreated(Long instanceId, Long taskId, String assigneeId, String assigneeName) {
+    public void notifyTaskCreated(String instanceId, Long taskId, String assigneeId, String assigneeName) {
         try {
             if (assigneeId == null) {
                 return;
@@ -82,7 +82,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
 
     @Override
-    public void notifyUrge(Long instanceId, Long taskId, List<String> assigneeIds, String comment) {
+    public void notifyUrge(String instanceId, Long taskId, List<String> assigneeIds, String comment) {
         try {
             if (assigneeIds == null || assigneeIds.isEmpty()) {
                 return;
@@ -110,7 +110,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
 
     @Override
-    public void notifyCc(Long instanceId, String nodeCode, List<Long> ccUserIds, String title) {
+    public void notifyCc(String instanceId, String nodeCode, List<Long> ccUserIds, String title) {
         try {
             if (ccUserIds == null || ccUserIds.isEmpty()) {
                 return;
@@ -132,7 +132,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
 
     @Override
-    public void notifyInstanceCompleted(Long instanceId, Long initiatorId) {
+    public void notifyInstanceCompleted(String instanceId, Long initiatorId) {
         try {
             if (initiatorId == null) {
                 return;
@@ -152,7 +152,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
 
     @Override
-    public void notifyInstanceRejected(Long instanceId, Long initiatorId, String reason) {
+    public void notifyInstanceRejected(String instanceId, Long initiatorId, String reason) {
         try {
             if (initiatorId == null) {
                 return;
@@ -176,7 +176,7 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     }
 
     @Override
-    public void notifySlaTimeout(Long instanceId, Long taskId, String assigneeId, String action) {
+    public void notifySlaTimeout(String instanceId, Long taskId, String assigneeId, String action) {
         try {
             if (assigneeId == null) {
                 return;

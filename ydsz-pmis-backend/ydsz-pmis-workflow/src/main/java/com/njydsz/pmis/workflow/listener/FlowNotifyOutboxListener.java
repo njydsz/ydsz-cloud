@@ -58,31 +58,31 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     }
 
     @Override
-    public void onInstanceStart(Long instanceId, Map<String, Object> variables) {
+    public void onInstanceStart(String instanceId, Map<String, Object> variables) {
         saveOutbox("INSTANCE_START", "WORKFLOW_INSTANCE", instanceId, instanceId, null, null);
     }
 
     @Override
-    public void onInstanceCompleted(Long instanceId) {
+    public void onInstanceCompleted(String instanceId) {
         saveOutbox("INSTANCE_COMPLETED", "WORKFLOW_INSTANCE", instanceId, instanceId, null, null);
     }
 
     @Override
-    public void onInstanceRejected(Long instanceId, String reason) {
+    public void onInstanceRejected(String instanceId, String reason) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("reason", reason);
         saveOutbox("INSTANCE_REJECTED", "WORKFLOW_INSTANCE", instanceId, instanceId, null, payload);
     }
 
     @Override
-    public void onInstanceTerminated(Long instanceId, String reason) {
+    public void onInstanceTerminated(String instanceId, String reason) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("reason", reason);
         saveOutbox("INSTANCE_TERMINATED", "WORKFLOW_INSTANCE", instanceId, instanceId, null, payload);
     }
 
     @Override
-    public void onInstanceTerminated(Long instanceId, String reason, FlowEventContext ctx) {
+    public void onInstanceTerminated(String instanceId, String reason, FlowEventContext ctx) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("reason", reason);
         if (ctx != null) {
@@ -92,24 +92,24 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     }
 
     @Override
-    public void onInstanceSuspended(Long instanceId) {
+    public void onInstanceSuspended(String instanceId) {
         saveOutbox("INSTANCE_SUSPENDED", "WORKFLOW_INSTANCE", instanceId, instanceId, null, null);
     }
 
     @Override
-    public void onInstanceActivated(Long instanceId) {
+    public void onInstanceActivated(String instanceId) {
         saveOutbox("INSTANCE_ACTIVATED", "WORKFLOW_INSTANCE", instanceId, instanceId, null, null);
     }
 
     @Override
-    public void onInstanceRecalled(Long instanceId, Long initiatorId) {
+    public void onInstanceRecalled(String instanceId, Long initiatorId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("initiatorId", initiatorId);
         saveOutbox("INSTANCE_RECALLED", "WORKFLOW_INSTANCE", instanceId, instanceId, null, payload);
     }
 
     @Override
-    public void onTaskUrged(Long instanceId, Long taskId) {
+    public void onTaskUrged(String instanceId, Long taskId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("instanceId", instanceId);
         saveOutbox("TASK_URGED", "WORKFLOW_TASK", taskId, instanceId, taskId, payload);
@@ -148,7 +148,7 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskTimeout(Long taskId, Long instanceId) {
+    public void onTaskTimeout(Long taskId, String instanceId) {
         Map<String, Object> payload = new HashMap<>();
         payload.put("instanceId", instanceId);
         saveOutbox("TASK_TIMEOUT", "WORKFLOW_TASK", taskId, instanceId, taskId, payload);
@@ -157,7 +157,7 @@ public class FlowNotifyOutboxListener implements FlowEventListener {
     // ============================== 内部辅助 ==============================
 
     private void saveOutbox(String eventType, String bizType, Long bizId,
-                            Long instanceId, Long taskId, Map<String, Object> extraPayload) {
+                            String instanceId, Long taskId, Map<String, Object> extraPayload) {
         try {
             FlowNotifyOutboxDO event = new FlowNotifyOutboxDO();
             event.setEventType(eventType);

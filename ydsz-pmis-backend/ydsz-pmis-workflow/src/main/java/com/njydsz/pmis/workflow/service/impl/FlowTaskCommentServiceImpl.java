@@ -41,7 +41,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public FlowTaskCommentDO addComment(Long instanceId, Long taskId, String nodeCode,
+    public FlowTaskCommentDO addComment(String instanceId, Long taskId, String nodeCode,
                                        String userId, String userName, String content,
                                        String type, Long parentId) {
         FlowTaskCommentDO comment = new FlowTaskCommentDO();
@@ -86,7 +86,7 @@ public class FlowTaskCommentServiceImpl implements FlowTaskCommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowTaskCommentDO> listByInstanceId(Long instanceId) {
+    public List<FlowTaskCommentDO> listByInstanceId(String instanceId) {
         try {
             if (instanceId == null) {
                 return List.of();

@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  * </ul>
  *
  * <p>所有方法返回 {@link ReconcileResult} 列表，
- * 业务层可通过 {@link #buildReport(Long, List)} 汇总为 {@link ReconcileReport}。
+ * 业务层可通过 {@link #buildReport(String, List)} 汇总为 {@link ReconcileReport}。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -130,7 +130,7 @@ public class ReconcileHandler {
         if (approved.isEmpty()) return out;
 
         List<CostAllocationDO> costs = costAllocationMapper.selectByInitiationAndPeriod(initiationId, null);
-        Set<Long> costSourceIds = costs.stream()
+        Set<String> costSourceIds = costs.stream()
                 .filter(c -> CostType.LABOR.getCode().equals(c.getCostType()))
                 .map(CostAllocationDO::getSourceId)
                 .filter(Objects::nonNull)
@@ -147,7 +147,7 @@ public class ReconcileHandler {
                         .sourceId(e.getId())
                         .sourceType("TIME_ENTRY")
                         .description(String.format(
-                                "工时 id=%d 状态=APPROVED 但未生成成本归集记录,工时=%sh,人员=%s",
+                                "工时 id=%s 状态=APPROVED 但未生成成本归集记录,工时=%sh,人员=%s",
                                 e.getId(),
                                 e.getHours() == null ? "?" : e.getHours().toPlainString(),
                                 e.getEmployeeName() == null ? "?" : e.getEmployeeName()))
@@ -181,12 +181,12 @@ public class ReconcileHandler {
         if (laborCosts.isEmpty()) return out;
 
         // 收集 sourceId 对应的工时状态
-        Set<Long> sourceIds = laborCosts.stream()
+        Set<String> sourceIds = laborCosts.stream()
                 .map(CostAllocationDO::getSourceId)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toSet());
-        Map<Long, TimeEntryDO> entryMap = new HashMap<>();
-        for (Long sid : sourceIds) {
+        Map<String, TimeEntryDO> entryMap = new HashMap<>();
+        for (String sid : sourceIds) {
             if (sid == null) continue;
             TimeEntryDO e = timeEntryMapper.selectById(sid);
             if (e != null) entryMap.put(sid, e);
@@ -205,7 +205,7 @@ public class ReconcileHandler {
                         .sourceId(c.getId())
                         .sourceType("COST_ALLOCATION")
                         .description(String.format(
-                                "工时 id=%d 状态=REJECTED 但存在成本归集 costId=%d 金额=%s",
+                                "工时 id=%s 状态=REJECTED 但存在成本归集 costId=%s 金额=%s",
                                 e.getId(), c.getId(), c.getAmount()))
                         .actualValue(c.getAmount())
                         .suggestion("删除该幽灵成本记录或恢复工时状态")
@@ -245,7 +245,7 @@ public class ReconcileHandler {
         for (Map.Entry<String, BigDecimal> en : sumMap.entrySet()) {
             if (en.getValue().compareTo(TimeEntryValidator.MAX_DAILY_HOURS) > 0) {
                 String[] parts = en.getKey().split("\\|");
-                Long empId = Long.parseLong(parts[0]);
+                String empId = parts[0];
                 LocalDate date = LocalDate.parse(parts[1]);
                 out.add(ReconcileResult.builder()
                         .type(ReconcileType.DAILY_HOURS_OVERFLOW)
@@ -299,7 +299,7 @@ public class ReconcileHandler {
                         .type(ReconcileType.WEEKLY_HOURS_OVERLOAD)
                         .level(ReconcileLevel.WARN)
                         .initiationId(initiationId)
-                        .employeeId(Long.parseLong(parts[0]))
+                        .employeeId(parts[0])
                         .description(String.format("员工 %s 第 %s-%s 周工时合计 %sh > 60h 警戒",
                                 parts[0], parts[1], parts[2], en.getValue().toPlainString()))
                         .actualValue(en.getValue())
@@ -379,7 +379,7 @@ public class ReconcileHandler {
 
         // 取出 LABOR 成本
         List<CostAllocationDO> costs = costAllocationMapper.selectByInitiationAndPeriod(initiationId, null);
-        Map<Long, CostAllocationDO> costBySource = costs.stream()
+        Map<String, CostAllocationDO> costBySource = costs.stream()
                 .filter(c -> CostType.LABOR.getCode().equals(c.getCostType()))
                 .filter(c -> c.getSourceId() != null)
                 .collect(Collectors.toMap(CostAllocationDO::getSourceId, c -> c, (a, b) -> a));
@@ -403,7 +403,7 @@ public class ReconcileHandler {
                         .sourceId(c.getId())
                         .sourceType("COST_ALLOCATION")
                         .description(String.format(
-                                "工时 id=%d (人天=%s) 期望成本 %s 元,实际 %s 元,偏差 %s 元",
+                                "工时 id=%s (人天=%s) 期望成本 %s 元,实际 %s 元,偏差 %s 元",
                                 e.getId(), days.toPlainString(),
                                 expected.toPlainString(), actual.toPlainString(), drift.toPlainString()))
                         .actualValue(actual)
@@ -446,7 +446,7 @@ public class ReconcileHandler {
                         .sourceId(c.getId())
                         .sourceType("COST_ALLOCATION")
                         .description(String.format(
-                                "成本 costId=%d 已标记 allocated=1,但工时 id=%d 状态=%s",
+                                "成本 costId=%s 已标记 allocated=1,但工时 id=%s 状态=%s",
                                 c.getId(), e.getId(), e.getStatus()))
                         .suggestion("回滚分配状态或审批工时")
                         .build());

@@ -26,13 +26,13 @@ public class FlowWorkflowEvent extends ApplicationEvent {
     /** 事件类型 */
     private final String eventType;
     /** 流程实例 ID */
-    private final Long instanceId;
+    private final String instanceId;
     /** 任务 ID */
     private final Long taskId;
     /** 附加数据 */
     private final Map<String, Object> data;
 
-    public FlowWorkflowEvent(Object source, String eventType, Long instanceId,
+    public FlowWorkflowEvent(Object source, String eventType, String instanceId,
                              Long taskId, Map<String, Object> data) {
         super(source);
         this.eventType = eventType;

@@ -67,7 +67,7 @@ public class FlowNotificationHelper {
      * @param content     内容
      * @param instanceId  流程实例 ID
      */
-    public void notifyUrge(List<Long> receiverIds, String title, String content, Long instanceId) {
+    public void notifyUrge(List<Long> receiverIds, String title, String content, String instanceId) {
         if (receiverIds == null || receiverIds.isEmpty()) {
             return;
         }
@@ -86,7 +86,7 @@ public class FlowNotificationHelper {
     /**
      * 流程完成通知：发起人收到结果
      */
-    public void notifyInstanceCompleted(Long receiverId, String title, String content, Long instanceId) {
+    public void notifyInstanceCompleted(Long receiverId, String title, String content, String instanceId) {
         if (receiverId == null) {
             return;
         }
@@ -103,7 +103,7 @@ public class FlowNotificationHelper {
     /**
      * 流程驳回通知：发起人收到驳回结果
      */
-    public void notifyInstanceRejected(Long receiverId, String title, String content, Long instanceId) {
+    public void notifyInstanceRejected(Long receiverId, String title, String content, String instanceId) {
         if (receiverId == null) {
             return;
         }
@@ -120,7 +120,7 @@ public class FlowNotificationHelper {
     /**
      * 流程撤回通知：所有当前待办人收到撤回消息
      */
-    public void notifyInstanceRecalled(List<Long> receiverIds, String title, String content, Long instanceId) {
+    public void notifyInstanceRecalled(List<Long> receiverIds, String title, String content, String instanceId) {
         if (receiverIds == null || receiverIds.isEmpty()) {
             return;
         }
@@ -139,7 +139,7 @@ public class FlowNotificationHelper {
     /**
      * 流程终止通知：发起人收到终止消息
      */
-    public void notifyInstanceTerminated(Long receiverId, String title, String content, Long instanceId) {
+    public void notifyInstanceTerminated(Long receiverId, String title, String content, String instanceId) {
         if (receiverId == null) {
             return;
         }

@@ -28,7 +28,7 @@ public interface FlowTaskCommentService {
      * @param parentId   父评论 ID（可空，用于楼中楼回复）
      * @return 新建的评论记录
      */
-    FlowTaskCommentDO addComment(Long instanceId, Long taskId, String nodeCode,
+    FlowTaskCommentDO addComment(String instanceId, Long taskId, String nodeCode,
                                  String userId, String userName, String content,
                                  String type, Long parentId);
 
@@ -46,7 +46,7 @@ public interface FlowTaskCommentService {
      * @param instanceId 流程实例 ID
      * @return 评论列表
      */
-    List<FlowTaskCommentDO> listByInstanceId(Long instanceId);
+    List<FlowTaskCommentDO> listByInstanceId(String instanceId);
 
     /**
      * 删除评论（仅评论发起人可删除）

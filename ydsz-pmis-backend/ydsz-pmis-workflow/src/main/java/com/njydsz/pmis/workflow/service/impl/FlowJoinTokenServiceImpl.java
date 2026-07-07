@@ -54,7 +54,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
      * @param branchCount  并行分支数（&lt;=0 时按 1 处理）
      */
     @Override
-    public void initTokens(Long instanceId, String joinNodeCode, int branchCount) {
+    public void initTokens(String instanceId, String joinNodeCode, int branchCount) {
         if (!isValidParam(instanceId, joinNodeCode)) {
             return;
         }
@@ -80,7 +80,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
      * @return true=本次到达后全部分支已到达（可聚合）；false=仍有分支未到达或 Redis 异常
      */
     @Override
-    public boolean arriveToken(Long instanceId, String joinNodeCode) {
+    public boolean arriveToken(String instanceId, String joinNodeCode) {
         if (!isValidParam(instanceId, joinNodeCode)) {
             return false;
         }
@@ -112,7 +112,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
      * @return true=全部到达可聚合；false=未全部到达 / 未初始化 / Redis 异常
      */
     @Override
-    public boolean allArrived(Long instanceId, String joinNodeCode) {
+    public boolean allArrived(String instanceId, String joinNodeCode) {
         if (!isValidParam(instanceId, joinNodeCode)) {
             return false;
         }
@@ -145,7 +145,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
      * @param joinNodeCode join 节点编码
      */
     @Override
-    public void clearTokens(Long instanceId, String joinNodeCode) {
+    public void clearTokens(String instanceId, String joinNodeCode) {
         if (!isValidParam(instanceId, joinNodeCode)) {
             return;
         }
@@ -164,7 +164,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
      * 检查 join 令牌是否已初始化（total key 是否存在）
      */
     @Override
-    public boolean isInitialized(Long instanceId, String joinNodeCode) {
+    public boolean isInitialized(String instanceId, String joinNodeCode) {
         if (!isValidParam(instanceId, joinNodeCode)) {
             return false;
         }
@@ -181,7 +181,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     // ============================== 私有辅助 ==============================
 
     /** 读取分支总数，未初始化时返回 Integer.MAX_VALUE（避免误判为已全部到达） */
-    private int readTotal(Long instanceId, String joinNodeCode) {
+    private int readTotal(String instanceId, String joinNodeCode) {
         try {
             String totalStr = redisTemplate.opsForValue().get(buildTotalKey(instanceId, joinNodeCode));
             if (totalStr == null) {
@@ -203,7 +203,7 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
 
     /** 参数合法性校验 */
-    private boolean isValidParam(Long instanceId, String joinNodeCode) {
+    private boolean isValidParam(String instanceId, String joinNodeCode) {
         if (instanceId == null) {
             log.warn("[FlowJoinToken] instanceId 为空，跳过");
             return false;
@@ -216,12 +216,12 @@ public class FlowJoinTokenServiceImpl implements FlowJoinTokenService {
     }
 
     /** 构建到达计数 key：flow:join:{instanceId}:{joinNodeCode} */
-    private String buildArrivedKey(Long instanceId, String joinNodeCode) {
+    private String buildArrivedKey(String instanceId, String joinNodeCode) {
         return KEY_PREFIX + instanceId + ":" + joinNodeCode;
     }
 
     /** 构建分支总数 key：flow:join:{instanceId}:{joinNodeCode}:total */
-    private String buildTotalKey(Long instanceId, String joinNodeCode) {
+    private String buildTotalKey(String instanceId, String joinNodeCode) {
         return buildArrivedKey(instanceId, joinNodeCode) + TOTAL_SUFFIX;
     }
 }

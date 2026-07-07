@@ -129,7 +129,7 @@ public class FlowTaskCompleteServiceImpl {
      * @return 任务 ID
      */
     @Transactional(rollbackFor = Exception.class)
-    public String createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
+    public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
         return createTask(instanceId, node, variables, null);
     }
 
@@ -147,7 +147,7 @@ public class FlowTaskCompleteServiceImpl {
      * @return 任务 ID
      */
     @Transactional(rollbackFor = Exception.class)
-    public String createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables,
+    public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables,
                            List<String> explicitAssignees) {
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
         if (instance == null) {
@@ -768,7 +768,7 @@ public class FlowTaskCompleteServiceImpl {
      *
      * @return 被催办人 ID 列表
      */
-    public List<String> urge(Long instanceId, Long operatorId, String comment) {
+    public List<String> urge(String instanceId, Long operatorId, String comment) {
         // P0-2: 催办限流：同一催办人对同一实例 30 分钟内只允许一次
         if (operatorId != null && instanceId != null
                 && !urgeLimiter.tryAcquire(operatorId, instanceId, "INSTANCE")) {
@@ -901,7 +901,7 @@ public class FlowTaskCompleteServiceImpl {
     /**
      * 取消某实例的全部 PENDING 任务（终止/驳回终态时使用）
      */
-    public void cancelByInstance(Long instanceId, String taskStatus) {
+    public void cancelByInstance(String instanceId, String taskStatus) {
         taskMapper.cancelByInstance(instanceId, taskStatus);
     }
 
@@ -1143,7 +1143,7 @@ public class FlowTaskCompleteServiceImpl {
      * <p>用于 completionCondition 求值时注入 nrOfInstances。
      * 查询 pmis_flow_run_task 中同 instanceId + nodeCode 的所有 task 数（不限状态）。
      */
-    private int countTotalForeachElements(Long instanceId, String nodeCode) {
+    private int countTotalForeachElements(String instanceId, String nodeCode) {
         // 使用 countPendingByNode + 已完成数（从历史表或 task 表统计）
         // 简化实现：查 pmis_flow_run_task 同节点全部 task 数（含 COMPLETED/SKIPPED/PENDING）
         // 这里用 FlowRunTaskMapper 的 selectList + 过滤实现，避免新增 Mapper 方法
@@ -1394,7 +1394,7 @@ public class FlowTaskCompleteServiceImpl {
         support.publishWorkflowEvent("TASK_COMPLETED", null, taskId);
     }
 
-    private void fireInstanceRejected(Long instanceId, String reason) {
+    private void fireInstanceRejected(String instanceId, String reason) {
         support.fireEvent(l -> l.onInstanceRejected(instanceId, reason), null);
     }
 
@@ -1547,7 +1547,7 @@ public class FlowTaskCompleteServiceImpl {
      * @param node       流程节点（用于日志）
      * @return 去重后的候选办理人列表
      */
-    private List<String> applyCrossNodeDedup(List<String> userIds, Long instanceId,
+    private List<String> applyCrossNodeDedup(List<String> userIds, String instanceId,
                                               FlowNodeDO node) {
         try {
             List<String> completedAssignees = hisTaskMapper.selectCompletedAssigneeIds(instanceId);

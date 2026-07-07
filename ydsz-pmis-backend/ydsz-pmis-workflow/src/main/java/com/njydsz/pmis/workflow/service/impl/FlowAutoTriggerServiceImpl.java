@@ -46,7 +46,7 @@ public class FlowAutoTriggerServiceImpl implements FlowAutoTriggerService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void onInstanceCompleted(Long instanceId) {
+    public void onInstanceCompleted(String instanceId) {
         if (instanceId == null) {
             return;
         }

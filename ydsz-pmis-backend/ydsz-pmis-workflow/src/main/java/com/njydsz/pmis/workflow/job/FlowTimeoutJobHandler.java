@@ -152,7 +152,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      */
     private void handleOverdueTask(FlowRunTaskDO task) {
         Long taskId = task.getId();
-        Long instanceId = task.getInstanceId();
+        String instanceId = task.getInstanceId();
         FlowNodeDO node = safelySelectNode(task);
 
         // 节点不存在或 sla_config 为空：仅标记超时
@@ -370,7 +370,7 @@ public class FlowTimeoutJobHandler implements JobHandler {
      * @param instance 超期子流程实例
      */
     private void handleOverdueSubProcess(FlowInstanceDO instance) {
-        Long instanceId = instance.getId();
+        String instanceId = instance.getId();
         LocalDateTime now = LocalDateTime.now();
         // 二次校验：避免并发的状态变更
         FlowInstanceDO latest = instanceMapper.selectById(instanceId);

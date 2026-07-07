@@ -160,7 +160,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
     }
 
     @Override
-    public List<String> urgeTask(Long instanceId, Long operatorId, String comment) {
+    public List<String> urgeTask(String instanceId, Long operatorId, String comment) {
         return taskService.urge(instanceId, operatorId, comment);
     }
 
@@ -171,7 +171,7 @@ public class PmisWorkflowFacade implements WorkflowFacade {
 
     @Override
     public List<Map<String, Object>> listAuditTrail(String processInstanceId) {
-        Long instanceId = Long.parseLong(processInstanceId);
+        String instanceId = Long.parseLong(processInstanceId);
         List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
         return logs.stream().map(this::auditToMap).toList();
     }

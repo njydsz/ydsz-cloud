@@ -64,7 +64,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     private final NotificationPushClient notificationPushClient;
 
     @Override
-    public void onInstanceStart(Long instanceId, Map<String, Object> variables) {
+    public void onInstanceStart(String instanceId, Map<String, Object> variables) {
         log.info("[FlowListener] 立项流程启动: instanceId={} vars={}", instanceId,
                 variables == null ? Collections.emptySet() : variables.keySet());
         // P1-7: 流程启动 → 标记立项为审批中（APPROVING）
@@ -109,7 +109,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onInstanceCompleted(Long instanceId) {
+    public void onInstanceCompleted(String instanceId) {
         log.info("[FlowListener] 立项流程完成: instanceId={}", instanceId);
         // P0-1: 通知发起人流程已完成
         if (instanceId == null) {
@@ -143,7 +143,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onInstanceRejected(Long instanceId, String reason) {
+    public void onInstanceRejected(String instanceId, String reason) {
         log.info("[FlowListener] 立项流程驳回: instanceId={} reason={}", instanceId, reason);
         // P0-1: 通知发起人流程已驳回
         if (instanceId == null) {
@@ -178,7 +178,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onError(Long instanceId, Throwable t) {
+    public void onError(String instanceId, Throwable t) {
         log.error("[FlowListener][ALERT] 立项流程异常: instanceId={}", instanceId, t);
         // P1-7: 触发重试机制 —— 尝试恢复立项状态联动（标记审批中），失败不抛出
         if (instanceId == null) {
@@ -214,7 +214,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     // ============================== P0-1: 关键事件通知触发 ==============================
 
     @Override
-    public void onTaskUrged(Long instanceId, Long taskId) {
+    public void onTaskUrged(String instanceId, Long taskId) {
         // P0-1: 催办通知：实例级催办推送给所有当前待办办理人
         if (instanceId == null) {
             return;
@@ -233,7 +233,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onInstanceTerminated(Long instanceId, String reason) {
+    public void onInstanceTerminated(String instanceId, String reason) {
         // P0-1: 终止通知：通知发起人
         if (instanceId == null) {
             return;
@@ -252,7 +252,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onInstanceRecalled(Long instanceId, Long initiatorId) {
+    public void onInstanceRecalled(String instanceId, Long initiatorId) {
         // P0-1: 撤回通知：通知所有当前待办办理人
         if (instanceId == null) {
             return;
@@ -309,7 +309,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
     }
 
     @Override
-    public void onTaskTimeout(Long taskId, Long instanceId) {
+    public void onTaskTimeout(Long taskId, String instanceId) {
         // P0-1: 超时通知：通知当前办理人
         if (taskId == null) {
             return;

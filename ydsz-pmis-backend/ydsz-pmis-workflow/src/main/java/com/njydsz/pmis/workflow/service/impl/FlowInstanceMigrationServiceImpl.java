@@ -332,7 +332,7 @@ public class FlowInstanceMigrationServiceImpl implements FlowInstanceMigrationSe
      * @param targetNodeMap 目标定义节点编码集合
      * @return 成功迁移的任务数
      */
-    private int migrateInstanceTasks(Long instanceId, Long targetDefId,
+    private int migrateInstanceTasks(String instanceId, Long targetDefId,
                                      String oldInstNode, String newInstNode,
                                      Map<String, String> nodeMapping,
                                      Map<String, FlowNodeDO> targetNodeMap) {

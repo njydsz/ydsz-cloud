@@ -47,7 +47,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 创建任务 ==============================
 
     @Override
-    public String createTask(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
+    public String createTask(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
         return completeService.createTask(instanceId, node, variables);
     }
 
@@ -90,12 +90,12 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 取消 / 催办 / 跳转 / 超时 ==============================
 
     @Override
-    public void cancelByInstance(Long instanceId, String taskStatus) {
+    public void cancelByInstance(String instanceId, String taskStatus) {
         completeService.cancelByInstance(instanceId, taskStatus);
     }
 
     @Override
-    public List<String> urge(Long instanceId, Long operatorId, String comment) {
+    public List<String> urge(String instanceId, Long operatorId, String comment) {
         return completeService.urge(instanceId, operatorId, comment);
     }
 
@@ -112,7 +112,7 @@ public class FlowTaskServiceImpl implements FlowTaskService {
     // ============================== 待办 / 已办 / 实例列表 ==============================
 
     @Override
-    public List<FlowRunTaskDO> listPendingByInstance(Long instanceId) {
+    public List<FlowRunTaskDO> listPendingByInstance(String instanceId) {
         return queryService.listPendingByInstance(instanceId);
     }
 

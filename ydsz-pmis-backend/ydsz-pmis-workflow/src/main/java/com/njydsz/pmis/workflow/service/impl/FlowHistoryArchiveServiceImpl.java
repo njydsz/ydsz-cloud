@@ -254,7 +254,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
      */
     @Transactional(rollbackFor = Exception.class)
     public boolean archiveOne(FlowInstanceDO instance) {
-        Long instanceId = instance.getId();
+        String instanceId = instance.getId();
 
         // 1. 校验所有任务都已归档到 his_task
         List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
@@ -339,7 +339,7 @@ public class FlowHistoryArchiveServiceImpl implements FlowHistoryArchiveService 
     /**
      * 解析 variable JSON 字符串为变量行列表
      */
-    private List<FlowHisVariableDO> parseVariables(Long instanceId, String variableJson) {
+    private List<FlowHisVariableDO> parseVariables(String instanceId, String variableJson) {
         List<FlowHisVariableDO> out = new ArrayList<>();
         try {
             JSONObject obj = JSON.parseObject(variableJson);

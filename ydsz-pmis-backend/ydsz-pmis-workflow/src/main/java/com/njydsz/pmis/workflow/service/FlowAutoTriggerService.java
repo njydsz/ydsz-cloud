@@ -26,7 +26,7 @@ public interface FlowAutoTriggerService {
      *
      * @param instanceId 已完成的流程实例 ID
      */
-    void onInstanceCompleted(Long instanceId);
+    void onInstanceCompleted(String instanceId);
 
     /**
      * 注册触发规则

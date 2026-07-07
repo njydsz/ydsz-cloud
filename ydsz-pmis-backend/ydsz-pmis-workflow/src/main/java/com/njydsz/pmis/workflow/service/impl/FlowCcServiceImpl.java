@@ -55,7 +55,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void handleCcNode(Long instanceId, FlowNodeDO node, Map<String, Object> variables) {
+    public void handleCcNode(String instanceId, FlowNodeDO node, Map<String, Object> variables) {
         try {
             if (instanceId == null || node == null) {
                 log.warn("[FlowCc] handleCcNode 参数为空: instanceId={} node={}", instanceId, node == null);
@@ -227,7 +227,7 @@ public class FlowCcServiceImpl implements FlowCcService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowCcDO> listByInstance(Long instanceId, String tenantId) {
+    public List<FlowCcDO> listByInstance(String instanceId, String tenantId) {
         try {
             if (instanceId == null) {
                 return List.of();

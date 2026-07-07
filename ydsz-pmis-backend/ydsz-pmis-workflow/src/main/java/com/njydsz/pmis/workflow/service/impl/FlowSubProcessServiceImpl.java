@@ -389,7 +389,7 @@ public class FlowSubProcessServiceImpl implements FlowSubProcessService {
     /**
      * 触发 onInstanceStart 事件
      */
-    private void fireInstanceStart(Long instanceId, Map<String, Object> variables) {
+    private void fireInstanceStart(String instanceId, Map<String, Object> variables) {
         if (eventListeners == null) return;
         for (FlowEventListener listener : eventListeners) {
             try {

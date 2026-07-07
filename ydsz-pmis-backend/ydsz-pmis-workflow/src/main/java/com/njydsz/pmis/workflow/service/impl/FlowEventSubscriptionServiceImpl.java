@@ -61,7 +61,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public String createSubscription(Long instanceId, FlowNodeDO node,
+    public String createSubscription(String instanceId, FlowNodeDO node,
                                     Map<String, Object> variables, Long boundaryTaskId) {
         if (instanceId == null || node == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "instanceId/node 不能为空");
@@ -137,7 +137,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public int throwError(String tenantId, Long instanceId, String errorCode, String payload) {
+    public int throwError(String tenantId, String instanceId, String errorCode, String payload) {
         if (!StringUtils.hasText(errorCode)) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "errorCode 不能为空");
         }
@@ -176,7 +176,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
     }
 
     @Override
-    public int cancelByInstance(Long instanceId, String reason) {
+    public int cancelByInstance(String instanceId, String reason) {
         if (instanceId == null) {
             return 0;
         }
@@ -185,7 +185,7 @@ public class FlowEventSubscriptionServiceImpl implements FlowEventSubscriptionSe
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowEventSubscriptionDO> listByInstance(Long instanceId) {
+    public List<FlowEventSubscriptionDO> listByInstance(String instanceId) {
         if (instanceId == null) {
             return Collections.emptyList();
         }

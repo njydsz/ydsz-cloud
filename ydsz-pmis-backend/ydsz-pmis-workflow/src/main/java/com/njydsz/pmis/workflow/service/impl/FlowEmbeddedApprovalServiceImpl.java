@@ -345,7 +345,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 找到当前用户 mine 的第一个未完成任务
      */
-    private FlowRunTaskDO findMyTask(Long instanceId, String userId) {
+    private FlowRunTaskDO findMyTask(String instanceId, String userId) {
         if (userId == null) {
             return null;
         }
@@ -389,7 +389,7 @@ public class FlowEmbeddedApprovalServiceImpl implements FlowEmbeddedApprovalServ
     /**
      * 加载审批轨迹（历史任务 + 审计日志）
      */
-    private List<Map<String, Object>> loadHistory(Long instanceId) {
+    private List<Map<String, Object>> loadHistory(String instanceId) {
         try {
             List<FlowHisTaskDO> his = hisTaskMapper.selectByInstanceId(instanceId);
             if (his == null || his.isEmpty()) {

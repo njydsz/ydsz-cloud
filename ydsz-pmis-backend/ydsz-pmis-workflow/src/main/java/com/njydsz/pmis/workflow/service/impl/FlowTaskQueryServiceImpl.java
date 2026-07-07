@@ -73,7 +73,7 @@ public class FlowTaskQueryServiceImpl {
     /**
      * 查实例的当前 PENDING 任务
      */
-    public List<FlowRunTaskDO> listPendingByInstance(Long instanceId) {
+    public List<FlowRunTaskDO> listPendingByInstance(String instanceId) {
         return taskMapper.selectPendingByInstance(instanceId);
     }
 

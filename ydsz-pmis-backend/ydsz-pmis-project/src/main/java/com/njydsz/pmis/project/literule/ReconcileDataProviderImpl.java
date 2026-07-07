@@ -45,7 +45,7 @@ public class ReconcileDataProviderImpl implements ReconcileDataProvider {
     /**
      * 获取指定日期范围内某项目的工时明细
      *
-     * <p>通过 {@link TimeEntryMapper#selectByInitiationAndDateRange(Long, LocalDate, LocalDate)}
+     * <p>通过 {@link TimeEntryMapper#selectByInitiationAndDateRange(String, LocalDate, LocalDate)}
      * 查询工时记录，转换为 {@link TimeEntryRecord} 列表。
      *
      * @param projectId 项目 ID（对应立项 initiationId 的字符串形式）
@@ -139,21 +139,18 @@ public class ReconcileDataProviderImpl implements ReconcileDataProvider {
     // -------------------- 内部工具方法 --------------------
 
     /**
-     * 将 projectId（String）解析为 initiationId（Long）
+     * 将 projectId（String）解析为 initiationId（String）
+     *
+     * <p>当前实现仅做空值与空白校验，原样返回 trim 后的字符串。
      *
      * @param projectId 项目 ID 字符串
-     * @return 立项 ID；解析失败返回 null
+     * @return 立项 ID；为空时返回 null
      */
     private String parseInitiationId(String projectId) {
         if (projectId == null || projectId.isBlank()) {
             return null;
         }
-        try {
-            return projectId.trim();
-        } catch (Exception e) {
-            log.warn("[ReconcileDataProvider] projectId={} 无法解析为 String", projectId);
-            return null;
-        }
+        return projectId.trim();
     }
 
     /**

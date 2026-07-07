@@ -163,7 +163,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> detectAnomalies(Long instanceId) {
+    public List<Map<String, Object>> detectAnomalies(String instanceId) {
         if (instanceId == null) {
             return Collections.emptyList();
         }
@@ -192,7 +192,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
 
     @Override
     @Transactional(readOnly = true)
-    public boolean isAnomaly(Long instanceId) {
+    public boolean isAnomaly(String instanceId) {
         return !detectAnomalies(instanceId).isEmpty();
     }
 
@@ -217,7 +217,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
      *
      * <p>遍历实例下所有任务，筛选出 dueAt 已过期且任务状态未完成的记录。
      */
-    private void detectTimeout(Long instanceId, List<Map<String, Object>> anomalies) {
+    private void detectTimeout(String instanceId, List<Map<String, Object>> anomalies) {
         List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
         if (tasks == null || tasks.isEmpty()) {
             return;
@@ -252,7 +252,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
      * <p>以任务的创建时间（createdAt）为起点，计算停留时长。
      * 仅检测未完成的任务。
      */
-    private void detectStuck(Long instanceId, List<Map<String, Object>> anomalies) {
+    private void detectStuck(String instanceId, List<Map<String, Object>> anomalies) {
         List<FlowRunTaskDO> tasks = taskMapper.selectByInstanceId(instanceId);
         if (tasks == null || tasks.isEmpty()) {
             return;
@@ -291,7 +291,7 @@ public class FlowRoutingServiceImpl implements FlowRoutingService {
      * <p>统计审计日志中 action=REJECT 的记录，按节点编码分组计数。
      * 任意节点驳回次数超过 3 次即视为循环审批异常。
      */
-    private void detectLoop(Long instanceId, List<Map<String, Object>> anomalies) {
+    private void detectLoop(String instanceId, List<Map<String, Object>> anomalies) {
         List<FlowAuditLogDO> logs = auditLogMapper.selectByInstanceId(instanceId);
         if (logs == null || logs.isEmpty()) {
             return;

@@ -67,7 +67,7 @@ public interface FlowRoutingService {
      * @param instanceId 流程实例 ID
      * @return 异常记录列表；无异常返回空列表
      */
-    List<Map<String, Object>> detectAnomalies(Long instanceId);
+    List<Map<String, Object>> detectAnomalies(String instanceId);
 
     /**
      * 判断流程实例是否异常
@@ -77,5 +77,5 @@ public interface FlowRoutingService {
      * @param instanceId 流程实例 ID
      * @return true=存在异常，false=正常
      */
-    boolean isAnomaly(Long instanceId);
+    boolean isAnomaly(String instanceId);
 }

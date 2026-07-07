@@ -28,7 +28,7 @@ public interface FlowNotificationService {
      * @param assigneeId    办理人 ID
      * @param assigneeName  办理人姓名
      */
-    void notifyTaskCreated(Long instanceId, Long taskId, String assigneeId, String assigneeName);
+    void notifyTaskCreated(String instanceId, Long taskId, String assigneeId, String assigneeName);
 
     /**
      * 催办通知
@@ -38,7 +38,7 @@ public interface FlowNotificationService {
      * @param assigneeIds   被催办人 ID 列表
      * @param comment       催办备注
      */
-    void notifyUrge(Long instanceId, Long taskId, List<String> assigneeIds, String comment);
+    void notifyUrge(String instanceId, Long taskId, List<String> assigneeIds, String comment);
 
     /**
      * 抄送通知
@@ -48,7 +48,7 @@ public interface FlowNotificationService {
      * @param ccUserIds   抄送接收人 ID 列表
      * @param title       通知标题
      */
-    void notifyCc(Long instanceId, String nodeCode, List<Long> ccUserIds, String title);
+    void notifyCc(String instanceId, String nodeCode, List<Long> ccUserIds, String title);
 
     /**
      * 流程完成通知
@@ -56,7 +56,7 @@ public interface FlowNotificationService {
      * @param instanceId  流程实例 ID
      * @param initiatorId 发起人 ID
      */
-    void notifyInstanceCompleted(Long instanceId, Long initiatorId);
+    void notifyInstanceCompleted(String instanceId, Long initiatorId);
 
     /**
      * 流程驳回通知
@@ -65,7 +65,7 @@ public interface FlowNotificationService {
      * @param initiatorId 发起人 ID
      * @param reason      驳回原因
      */
-    void notifyInstanceRejected(Long instanceId, Long initiatorId, String reason);
+    void notifyInstanceRejected(String instanceId, Long initiatorId, String reason);
 
     /**
      * SLA 超时通知
@@ -75,7 +75,7 @@ public interface FlowNotificationService {
      * @param assigneeId  办理人 ID
      * @param action      超时动作（REMIND/ESCALATE/AUTO_PASS/AUTO_REJECT）
      */
-    void notifySlaTimeout(Long instanceId, Long taskId, String assigneeId, String action);
+    void notifySlaTimeout(String instanceId, Long taskId, String assigneeId, String action);
 
     /**
      * 通用发送

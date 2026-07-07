@@ -134,7 +134,7 @@ public class FlowTaskSupport {
      * @param instanceId 实例 ID（可空）
      * @param taskId     任务 ID（可空）
      */
-    public void publishWorkflowEvent(String eventType, Long instanceId, Long taskId) {
+    public void publishWorkflowEvent(String eventType, String instanceId, Long taskId) {
         if (eventPublisher == null) return;
         try {
             eventPublisher.publishEvent(new FlowWorkflowEvent(this, eventType, instanceId, taskId, null));

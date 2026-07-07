@@ -55,7 +55,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long scheduleIntermediate(Long instanceId, String nodeCode, Duration delay) {
+    public Long scheduleIntermediate(String instanceId, String nodeCode, Duration delay) {
         if (instanceId == null || nodeCode == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "instanceId/nodeCode 不能为空");
         }
@@ -86,7 +86,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long scheduleBoundary(Long taskId, Long instanceId, String nodeCode, Duration delay) {
+    public Long scheduleBoundary(Long taskId, String instanceId, String nodeCode, Duration delay) {
         if (taskId == null || instanceId == null) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "taskId/instanceId 不能为空");
         }
@@ -261,7 +261,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
     }
 
     @Override
-    public int cancelByInstance(Long instanceId, String reason) {
+    public int cancelByInstance(String instanceId, String reason) {
         if (instanceId == null) {
             return 0;
         }
@@ -271,7 +271,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<FlowTimerDO> listByInstance(Long instanceId) {
+    public List<FlowTimerDO> listByInstance(String instanceId) {
         return timerMapper.selectList(new QueryWrapper<FlowTimerDO>()
                 .eq("instance_id", instanceId)
                 .eq("deleted", 0)
@@ -280,7 +280,7 @@ public class FlowTimerServiceImpl implements FlowTimerService {
 
     @Override
     @Transactional(readOnly = true)
-    public long countPending(Long instanceId) {
+    public long countPending(String instanceId) {
         return timerMapper.countPendingByInstance(instanceId);
     }
 
