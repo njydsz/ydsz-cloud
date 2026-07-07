@@ -78,12 +78,12 @@ public class RedissonLeaderElector implements LeaderElector {
         }
         try {
             if (lock.isHeldByCurrentThread()) {
-                // RLock 续期：通过 Redisson 的 expireAsync 设置新过期时间
+                // RLock 续期：通过 Redisson 的 expire(Duration) 设置新过期时间
                 // 注意：RLock 自身不暴露 expire(long, TimeUnit)，但 RedissonObject 基类提供
                 // 此处用 redissonClient 获取底层 key 并重新设置 TTL
                 String key = LOCK_KEY_PREFIX + role;
                 redissonClient.getBucket(key).expire(
-                        cronjobProperties.getLeader().getLeaseSeconds(), TimeUnit.SECONDS);
+                        Duration.ofSeconds(cronjobProperties.getLeader().getLeaseSeconds()));
                 return true;
             }
             return false;

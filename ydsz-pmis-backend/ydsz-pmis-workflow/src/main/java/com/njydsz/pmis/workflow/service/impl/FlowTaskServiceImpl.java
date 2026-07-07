@@ -1,5 +1,6 @@
 package com.njydsz.pmis.workflow.service.impl;
 
+import com.njydsz.pmis.common.annotation.DistributedLock;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.dto.FlowTaskOperateDTO;
@@ -60,29 +61,39 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
     // ============================== 签收 ==============================
 
+    /** P0-1: 任务签收加分布式锁，防止多人同时签收同一任务 */
     @Override
+    @DistributedLock(key = "'flow:task:claim:' + #taskId", waitTime = 3, leaseTime = 30)
     public void claim(String taskId, String userId) {
         completeService.claim(taskId, userId);
     }
 
     // ============================== 通过 / 驳回 / 转办 / 委派 ==============================
 
+    /** P0-1: 任务通过加分布式锁，防止并发审批导致状态不一致 */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void pass(FlowTaskOperateDTO dto) {
         completeService.pass(dto);
     }
 
+    /** P0-1: 任务驳回加分布式锁 */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void reject(FlowTaskOperateDTO dto) {
         completeService.reject(dto);
     }
 
+    /** P0-1: 任务转办加分布式锁 */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void transfer(FlowTaskOperateDTO dto) {
         completeService.transfer(dto);
     }
 
+    /** P0-1: 任务委派加分布式锁 */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void delegate(FlowTaskOperateDTO dto) {
         completeService.delegate(dto);
     }
@@ -99,7 +110,9 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         return completeService.urge(instanceId, operatorId, comment);
     }
 
+    /** P0-1: 自由跳转加分布式锁 */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void jump(FlowTaskOperateDTO dto) {
         completeService.jump(dto);
     }
@@ -146,28 +159,37 @@ public class FlowTaskServiceImpl implements FlowTaskService {
 
     // ============================== 加签 / 减签 / 追加处理人 ==============================
 
+    /** P0-1: 前加签加分布式锁 */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void countersignBefore(FlowTaskOperateDTO dto) {
         signService.countersignBefore(dto);
     }
 
+    /** P0-1: 后加签加分布式锁 */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void countersignAfter(FlowTaskOperateDTO dto) {
         signService.countersignAfter(dto);
     }
 
     /** GAP-P0-3: 并加签 — 委托给 signService */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void countersignParallel(FlowTaskOperateDTO dto) {
         signService.countersignParallel(dto);
     }
 
+    /** P0-1: 减签加分布式锁 */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void countersignRemove(FlowTaskOperateDTO dto) {
         signService.countersignRemove(dto);
     }
 
+    /** P0-1: 追加处理人加分布式锁 */
     @Override
+    @DistributedLock(key = "'flow:task:op:' + #dto.taskId", waitTime = 3, leaseTime = 30)
     public void addApprover(FlowTaskOperateDTO dto) {
         signService.addApprover(dto);
     }

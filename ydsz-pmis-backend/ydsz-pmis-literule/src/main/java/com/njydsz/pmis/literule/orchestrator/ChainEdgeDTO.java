@@ -72,6 +72,8 @@ public class ChainEdgeDTO implements Serializable {
      */
     public static final class EdgeType {
         public static final String THEN = "THEN";
+        /** 并行流：WHEN 链中节点间的连线类型（与 THEN 顺序流区分） */
+        public static final String WHEN = "WHEN";
         public static final String IF_BRANCH = "IF_BRANCH";
         public static final String ELIF_BRANCH = "ELIF_BRANCH";
         public static final String SWITCH_BRANCH = "SWITCH_BRANCH";

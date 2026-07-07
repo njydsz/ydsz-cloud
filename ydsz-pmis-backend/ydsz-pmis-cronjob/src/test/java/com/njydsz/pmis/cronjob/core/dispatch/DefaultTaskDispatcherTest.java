@@ -57,6 +57,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("DefaultTaskDispatcher 任务派发器测试")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
+@SuppressWarnings("unchecked")
 class DefaultTaskDispatcherTest {
 
     @Mock
@@ -77,6 +78,8 @@ class DefaultTaskDispatcherTest {
     private JobNodeMapper jobNodeMapper;
     @Mock
     private ObjectProvider<ShardingStrategy> shardingStrategyProvider;
+    @Mock
+    private org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     private CronjobProperties cronjobProperties;
 

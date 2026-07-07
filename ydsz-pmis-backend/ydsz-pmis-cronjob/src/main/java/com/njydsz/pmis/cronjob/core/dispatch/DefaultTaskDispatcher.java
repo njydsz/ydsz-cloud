@@ -31,15 +31,14 @@ import org.springframework.scheduling.support.SimpleTriggerContext;
 
 import java.lang.management.ManagementFactory;
 import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.TimeZone;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -79,6 +78,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final JobNodeMapper jobNodeMapper;
     /** P3: 分片策略（可选注入，未配置时 fallback 到非分片模式） */
     private final ObjectProvider<ShardingStrategy> shardingStrategyProvider;
+    /** P4: 事件发布器，任务完成后发布事件触发后继依赖 */
+    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -96,9 +97,6 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     public static final String TRIGGER_DEPENDENT = "DEPENDENT";
     /** P2-2: Misfire 触发（合并执行时使用，日志可识别） */
     public static final String TRIGGER_MISFIRED = "MISFIRED";
-
-    /** 缓存: jobKey -> 上次扫描的下次触发时间（用于避免重复派发） */
-    private final Map<String, LocalDateTime> lastDispatchedNextFire = new ConcurrentHashMap<>();
 
     @Override
     public String dispatch(JobDO job, String executorNode, String triggerType) {
@@ -381,7 +379,26 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 jobNodeHeartbeat.onTaskComplete();
             }
         }
+        // P4: 发布任务完成事件，触发后继依赖任务（DagExecutor 异步监听）
+        publishTaskCompleted(job, success, log0.getId());
         return log0.getId();
+    }
+
+    /**
+     * P4: 发布任务完成事件，触发后继依赖任务。
+     *
+     * <p>使用 try-catch 包裹，确保事件发布失败不影响主流程。
+     */
+    private void publishTaskCompleted(JobDO job, boolean success, String logId) {
+        try {
+            com.njydsz.pmis.cronjob.core.dag.TaskCompletedEvent event =
+                    new com.njydsz.pmis.cronjob.core.dag.TaskCompletedEvent(
+                            job.getId(), job.getJobKey(), success, logId);
+            eventPublisher.publishEvent(event);
+        } catch (Exception e) {
+            log.warn("[Dispatcher] 发布任务完成事件失败(不影响主流程): key={} reason={}",
+                    job.getJobKey(), e.getMessage());
+        }
     }
 
     /**
@@ -403,9 +420,9 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             CronTrigger trigger = new CronTrigger(cron,
                     TimeZone.getTimeZone("Asia/Shanghai"));
             TriggerContext ctx = new SimpleTriggerContext();
-            Date next = trigger.nextExecutionTime(ctx);
-            return next == null ? null : LocalDateTime.ofInstant(next.toInstant(),
-                    ZoneId.systemDefault());
+            Optional<Instant> next = trigger.nextExecution(ctx);
+            return next.map(instant -> LocalDateTime.ofInstant(instant,
+                    ZoneId.systemDefault())).orElse(null);
         } catch (IllegalArgumentException e) {
             throw new BizException(BizErrorCode.BAD_REQUEST, "error.cronjob.msg_5d0044ca", e.getMessage());
         }

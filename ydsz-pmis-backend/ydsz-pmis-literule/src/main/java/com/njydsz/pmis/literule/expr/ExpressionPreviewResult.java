@@ -28,7 +28,7 @@ public class ExpressionPreviewResult implements Serializable {
     private String javaType;
 
     /** 当结果为布尔值时的取值（便于前端直接判断） */
-    private Boolean boolean;
+    private Boolean booleanValue;
 
     /** 求值耗时（毫秒） */
     private long elapsedMs;

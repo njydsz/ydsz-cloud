@@ -366,7 +366,6 @@ public class ScriptRule implements Rule {
             customizerClass.getMethod("setReceiversWhiteList", java.util.List.class)
                     .invoke(customizer, receivers);
             // 应用到 GroovyScriptEngineImpl 的 CompilerConfiguration
-            Object factory = engine.getClass().getMethod("getFactory").invoke(engine);
             // GroovyScriptEngineImpl 暴露 CompilerConfiguration 通过 setConfiguration
             java.lang.reflect.Field confField = engine.getClass().getDeclaredField("conf");
             confField.setAccessible(true);

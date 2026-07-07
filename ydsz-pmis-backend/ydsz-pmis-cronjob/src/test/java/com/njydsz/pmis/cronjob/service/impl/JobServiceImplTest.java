@@ -4,6 +4,7 @@ import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.job.JobHandler;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
+import com.njydsz.pmis.cronjob.core.dispatch.TaskDispatcher;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
@@ -17,13 +18,13 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.data.redis.core.script.RedisScript;
 
 import java.time.Duration;
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -53,6 +54,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("JobServiceImpl 核心逻辑测试")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
+@SuppressWarnings("unchecked")
 class JobServiceImplTest {
 
     @Mock
@@ -85,6 +87,18 @@ class JobServiceImplTest {
             f.set(jobService, cronjobProperties);
         } catch (Exception e) {
             throw new IllegalStateException("注入 cronjobProperties 失败", e);
+        }
+        // 注入 taskDispatcherProvider（P1-7 可选注入；测试场景默认无 Dispatcher，回退到内部 executeJob 路径）
+        try {
+            java.lang.reflect.Field f = JobServiceImpl.class.getDeclaredField("taskDispatcherProvider");
+            f.setAccessible(true);
+            @SuppressWarnings("unchecked")
+            ObjectProvider<TaskDispatcher> emptyProvider =
+                    (ObjectProvider<TaskDispatcher>) org.mockito.Mockito.mock(ObjectProvider.class);
+            org.mockito.Mockito.when(emptyProvider.getIfAvailable()).thenReturn(null);
+            f.set(jobService, emptyProvider);
+        } catch (Exception e) {
+            throw new IllegalStateException("注入 taskDispatcherProvider 失败", e);
         }
 
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);

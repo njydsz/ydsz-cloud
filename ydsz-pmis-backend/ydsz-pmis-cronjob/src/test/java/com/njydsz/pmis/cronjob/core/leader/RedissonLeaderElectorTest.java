@@ -126,7 +126,7 @@ class RedissonLeaderElectorTest {
         boolean renewed = elector.renew("role-1");
 
         assertTrue(renewed);
-        verify(bucket, times(1)).expire(eq(30L), eq(TimeUnit.SECONDS));
+        verify(bucket, times(1)).expire(eq(Duration.ofSeconds(30)));
     }
 
     @Test
@@ -134,7 +134,7 @@ class RedissonLeaderElectorTest {
     void renew_notHeld_returnsFalse() {
         boolean renewed = elector.renew("role-1");
         assertFalse(renewed);
-        verify(bucket, never()).expire(anyLong(), any(TimeUnit.class));
+        verify(bucket, never()).expire(any(Duration.class));
     }
 
     @Test

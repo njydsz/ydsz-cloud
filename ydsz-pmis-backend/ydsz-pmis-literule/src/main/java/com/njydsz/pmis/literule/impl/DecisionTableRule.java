@@ -226,9 +226,9 @@ public class DecisionTableRule implements Rule {
             }
         }
 
-        // null 检查
+        // null 检查：支持 "null"、"==null" 匹配 null；"!=null" 匹配非 null（此处 factValue 为 null 所以返回 false）
         if (factValue == null) {
-            return "null".equalsIgnoreCase(condExpr) || "==null".equals(condExpr) || "!=null".equals(condExpr) && false;
+            return "null".equalsIgnoreCase(condExpr) || "==null".equals(condExpr);
         }
 
         // 区间：[0.05,0.15)

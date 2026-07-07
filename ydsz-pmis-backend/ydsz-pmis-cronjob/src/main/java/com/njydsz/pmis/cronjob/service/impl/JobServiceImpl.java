@@ -83,8 +83,7 @@ public class JobServiceImpl implements JobService, ApplicationRunner {
      * <p>Leader 模式启用时由 {@link DefaultTaskDispatcher} 提供；
      * Leaderless 模式下若未注册 Dispatcher 则回退到内部 {@link #executeJob(JobDO, boolean)} 旧路径。
      */
-    @org.springframework.beans.factory.annotation.Autowired
-    private ObjectProvider<TaskDispatcher> taskDispatcherProvider;
+    private final ObjectProvider<TaskDispatcher> taskDispatcherProvider;
 
     /** 调度器 */
     private TaskScheduler taskScheduler;

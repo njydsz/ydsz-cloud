@@ -1261,7 +1261,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     params_json     TEXT,
     result_json     TEXT,
     trace_id        VARCHAR(20),
-    -- [P2-2] 触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发
+    -- [P2-2] 触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发
     trigger_type    VARCHAR(32)    NOT NULL DEFAULT 'CRON',
     -- [INLINE-OPT] P0-D3 内联:MQ 投递元信息字段
     msg_id          VARCHAR(20),
@@ -1275,7 +1275,7 @@ CREATE TABLE IF NOT EXISTS pmis_job_log(
     CONSTRAINT ck_pjl_duration_nonneg CHECK (duration_ms IS NULL OR duration_ms >= 0),
     CONSTRAINT ck_pjl_times_valid   CHECK (end_time IS NULL OR end_time >= start_time),
     CONSTRAINT ck_pjl_reconsume_nonneg CHECK (reconsume_times >= 0),
-    CONSTRAINT ck_pjl_trigger_type_enum CHECK (trigger_type IN ('CRON', 'MANUAL', 'RETRY', 'MISFIRED')),
+    CONSTRAINT ck_pjl_trigger_type_enum CHECK (trigger_type IN ('CRON', 'MANUAL', 'RETRY', 'MISFIRED', 'DEPENDENT')),
     CONSTRAINT ck_pjl_deleted_enum  CHECK (deleted IN (0, 1))
 );
 -- [INLINE-OPT] 任务日志不需要 tenant_id 维度(系统全局资源)
@@ -1293,7 +1293,7 @@ COMMENT ON COLUMN pmis_job_log.error_message IS '异常堆栈(失败时填充)';
 COMMENT ON COLUMN pmis_job_log.params_json IS '执行参数 JSON';
 COMMENT ON COLUMN pmis_job_log.result_json IS '执行结果 JSON';
 COMMENT ON COLUMN pmis_job_log.trace_id IS '链路追踪 ID(SkyWalking/TLog)';
-COMMENT ON COLUMN pmis_job_log.trigger_type IS '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发';
+COMMENT ON COLUMN pmis_job_log.trigger_type IS '触发类型: CRON 定时 / MANUAL 手动 / RETRY 重试 / MISFIRED Misfire 触发 / DEPENDENT 依赖触发';
 COMMENT ON COLUMN pmis_job_log.msg_id IS 'RocketMQ 消息 ID(关联 MQ 投递链路)';
 COMMENT ON COLUMN pmis_job_log.topic IS 'RocketMQ Topic(标识消息来源 Topic,DLQ 消息填充原 Topic)';
 COMMENT ON COLUMN pmis_job_log.reconsume_times IS 'RocketMQ 重试次数(死信消息填充实际重试次数)';
@@ -1313,6 +1313,49 @@ CREATE INDEX IF NOT EXISTS idx_pjl_job_start
 -- [INLINE-OPT] 链路追踪 ID 索引(分布式排障)
 CREATE INDEX IF NOT EXISTS idx_pjl_trace_id
     ON pmis_job_log (trace_id) WHERE deleted = 0 AND trace_id IS NOT NULL;
+
+-- ============================================================================
+-- [P4-1] 任务依赖关系表 pmis_job_relation
+-- ----------------------------------------------------------------------------
+-- 存储 DAG 工作流中任务之间的依赖边（parent_job → child_job）。
+-- 当 parent_job 执行成功后，根据 fail_strategy 决定是否触发 child_job。
+-- 对标 XXL-Job 子任务依赖 / PowerJob 工作流实例。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_relation(
+    id              VARCHAR(20)      PRIMARY KEY,
+    parent_job_id   VARCHAR(20)      NOT NULL,
+    child_job_id    VARCHAR(20)      NOT NULL,
+    -- [P4-3] 失败传播策略: FAIL_FAST 前置失败不触发后继(默认) / CONTINUE_ON_FAIL 前置失败仍触发
+    fail_strategy   VARCHAR(32)    NOT NULL DEFAULT 'FAIL_FAST',
+    created_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    created_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by      VARCHAR(20)         NOT NULL DEFAULT 'SYSTEM',
+    updated_at      TIMESTAMPTZ    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         SMALLINT       NOT NULL DEFAULT 0,
+    -- 数据完整性约束
+    CONSTRAINT uk_pmis_job_relation UNIQUE (parent_job_id, child_job_id, deleted),
+    CONSTRAINT ck_pjr_fail_strategy  CHECK (fail_strategy IN ('FAIL_FAST', 'CONTINUE_ON_FAIL')),
+    CONSTRAINT ck_pjr_no_self_ref   CHECK (parent_job_id != child_job_id),
+    CONSTRAINT ck_pjr_deleted_enum  CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_relation IS '任务依赖关系表（P4 DAG 工作流）';
+COMMENT ON COLUMN pmis_job_relation.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_relation.parent_job_id IS '前置任务 ID（执行成功后触发后继）';
+COMMENT ON COLUMN pmis_job_relation.child_job_id IS '后继任务 ID（被前置任务触发）';
+COMMENT ON COLUMN pmis_job_relation.fail_strategy IS '失败传播策略: FAIL_FAST 前置失败不触发后继(默认) / CONTINUE_ON_FAIL 前置失败仍触发后继';
+COMMENT ON COLUMN pmis_job_relation.created_by IS '创建人 ID';
+COMMENT ON COLUMN pmis_job_relation.created_at IS '创建时间';
+COMMENT ON COLUMN pmis_job_relation.updated_by IS '最后修改人 ID';
+COMMENT ON COLUMN pmis_job_relation.updated_at IS '最后修改时间';
+COMMENT ON COLUMN pmis_job_relation.deleted IS '逻辑删除标记: 0 未删除 / 1 已删除';
+
+-- 索引: 按前置任务查询后继列表（高频，任务成功后触发）
+CREATE INDEX IF NOT EXISTS idx_pjr_parent
+    ON pmis_job_relation (parent_job_id) WHERE deleted = 0;
+-- 索引: 按后继任务查询前置列表（DAG 解析时使用）
+CREATE INDEX IF NOT EXISTS idx_pjr_child
+    ON pmis_job_relation (child_job_id) WHERE deleted = 0;
 
 -- --------------------------------------------------------------------
 

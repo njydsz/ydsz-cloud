@@ -278,7 +278,7 @@ public class ExpressionValidationService {
             Object value = evaluator.eval(expression, ctx);
             result.setValue(value == null ? "null" : String.valueOf(value));
             result.setJavaType(value == null ? "null" : value.getClass().getSimpleName());
-            result.setBoolean(value instanceof Boolean b ? b : null);
+            result.setBooleanValue(value instanceof Boolean b ? b : null);
         } catch (Exception e) {
             result.setError("求值失败: " + e.getMessage());
         }

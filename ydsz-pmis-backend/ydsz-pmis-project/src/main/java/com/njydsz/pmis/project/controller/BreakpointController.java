@@ -2,7 +2,6 @@ package com.njydsz.pmis.project.controller;
 
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.literule.core.DefaultBreakpointHook;
-import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

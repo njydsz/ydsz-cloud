@@ -1,7 +1,5 @@
 package com.njydsz.pmis.literule.core;
 
-import com.njydsz.pmis.literule.api.RuleResult;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;

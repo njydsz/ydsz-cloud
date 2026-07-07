@@ -125,7 +125,7 @@ public final class ChainGraphConverter {
                         .targetNodeId(nodeId)
                         .edgeType(chain.getChainType() == RuleChainType.THEN
                                 ? ChainEdgeDTO.EdgeType.THEN
-                                : ChainEdgeDTO.EdgeType.THEN) // WHEN 也用 THEN 边类型表示并行
+                                : ChainEdgeDTO.EdgeType.WHEN) // WHEN 并行流使用独立边类型
                         .build());
             }
             prevId = nodeId;
@@ -414,11 +414,14 @@ public final class ChainGraphConverter {
             case "WHEN":
                 return buildSequenceChain(children, graph, resolver, true);
             case "IF": {
-                String condition = root.getLabel() != null && root.getLabel().contains(" ")
-                        ? root.getLabel() : "true";
+                // 从边的 condition 字段精确还原 IF 条件表达式（不再依赖 label 启发式解析）
                 ChainEdgeDTO firstEdge = findFirstEdge(graph, root.getNodeId());
+                String condition = "true";
                 if (firstEdge != null && firstEdge.getCondition() != null) {
                     condition = firstEdge.getCondition();
+                } else if (root.getMetadata() != null && root.getMetadata().get("condition") != null) {
+                    // 优先从 metadata 获取条件表达式（最可靠）
+                    condition = String.valueOf(root.getMetadata().get("condition"));
                 }
                 Rule action = firstChildRule(children, graph, resolver);
                 return action != null ? RuleChain.ifThen(condition, action) : null;
@@ -441,8 +444,11 @@ public final class ChainGraphConverter {
                 return RuleChain.elif(branchMap, elseRule);
             }
             case "SWITCH": {
+                // 优先从 metadata 获取 branchKey（最可靠），其次从 label 启发式解析
                 String branchKey = "type";
-                if (root.getLabel() != null && root.getLabel().contains("=")) {
+                if (root.getMetadata() != null && root.getMetadata().get("branchKey") != null) {
+                    branchKey = String.valueOf(root.getMetadata().get("branchKey"));
+                } else if (root.getLabel() != null && root.getLabel().contains("=")) {
                     branchKey = root.getLabel().split("=")[0].trim();
                 }
                 Map<String, Rule> branchMap = new LinkedHashMap<>();
@@ -521,13 +527,20 @@ public final class ChainGraphConverter {
 
     /**
      * 解析单个节点为 Rule
+     *
+     * <p>支持 SINGLE 和 CHAIN 嵌套节点：
+     * <ul>
+     *   <li>SINGLE - 通过 ruleCode 回调 resolver 获取规则实例</li>
+     *   <li>CHAIN - 递归查找该节点的子节点，构建子 RuleChain 后包装为 {@link ChainAsRule} 适配器</li>
+     *   <li>GROUP - 将 GROUP 下全部子节点解析为规则列表，顺序执行</li>
+     * </ul>
      */
     private static Rule resolveNode(ChainNodeDTO node, RuleResolver resolver) {
         if (node == null) return null;
         if ("SINGLE".equals(node.getNodeType()) && node.getRuleCode() != null) {
             return resolver.resolve(node.getRuleCode());
         }
-        // CHAIN/GROUP 类型暂不支持直接 resolve 为单一 Rule，留待后续扩展
+        // CHAIN/GROUP 嵌套节点暂不支持直接 resolve 为单一 Rule
         return null;
     }
 
