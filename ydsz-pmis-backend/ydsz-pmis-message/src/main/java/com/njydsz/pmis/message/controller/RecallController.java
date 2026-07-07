@@ -1,6 +1,8 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.dto.RecallRequestDTO;
 import com.njydsz.pmis.message.service.RecallService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,24 +30,24 @@ public class RecallController {
     private final RecallService recallService;
 
     @Operation(summary = "撤回站内通知")
+    @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @PostMapping("/notification")
     public Result<Boolean> recallNotification(@RequestParam String userId,
                                               @RequestBody RecallRequestDTO dto) {
-        // TODO 权限码
         return Result.ok(recallService.recallNotification(userId, dto.getId()));
     }
 
     @Operation(summary = "撤回已发送消息")
+    @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @PostMapping("/message/{logId}")
     public Result<Boolean> recallMessage(@PathVariable String logId) {
-        // TODO 权限码
         return Result.ok(recallService.recallMessage(logId));
     }
 
     @Operation(summary = "按业务类型+单据 ID 批量撤回")
+    @PrePermission(PermissionCodes.MESSAGE_RECALL_ACT)
     @PostMapping("/batch")
     public Result<Integer> recallBatch(@RequestBody RecallRequestDTO dto) {
-        // TODO 权限码
         return Result.ok(recallService.recallBatch(dto.getBizType(), dto.getBizId()));
     }
 }

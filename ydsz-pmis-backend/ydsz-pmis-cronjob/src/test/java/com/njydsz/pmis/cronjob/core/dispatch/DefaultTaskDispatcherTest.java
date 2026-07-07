@@ -9,6 +9,7 @@ import com.njydsz.pmis.cronjob.core.executor.JobNodeHeartbeat;
 import com.njydsz.pmis.cronjob.core.sharding.ShardingStrategy;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
+import com.njydsz.pmis.cronjob.entity.JobNodeDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
@@ -42,6 +43,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -98,6 +100,8 @@ class DefaultTaskDispatcherTest {
     private TenantQuotaService tenantQuotaService;
     @Mock
     private ObjectProvider<com.njydsz.pmis.cronjob.core.handler.HttpJobHandler> httpJobHandlerProvider;
+    @Mock
+    private ObjectProvider<RemoteTaskClient> remoteTaskClientProvider;
 
     private CronjobProperties cronjobProperties;
 
@@ -135,6 +139,10 @@ class DefaultTaskDispatcherTest {
             java.lang.reflect.Field f5 = DefaultTaskDispatcher.class.getDeclaredField("httpJobHandlerProvider");
             f5.setAccessible(true);
             f5.set(dispatcher, httpJobHandlerProvider);
+            // P1-4: 注入 RemoteTaskClient ObjectProvider
+            java.lang.reflect.Field f6 = DefaultTaskDispatcher.class.getDeclaredField("remoteTaskClientProvider");
+            f6.setAccessible(true);
+            f6.set(dispatcher, remoteTaskClientProvider);
         } catch (Exception e) {
             throw new IllegalStateException("注入 ObjectProvider 失败", e);
         }
@@ -149,6 +157,8 @@ class DefaultTaskDispatcherTest {
         lenient().when(tenantQuotaServiceProvider.getIfAvailable()).thenReturn(null);
         // P1-5: HttpJobHandler 默认不启用（HTTP 任务类型在测试中默认降级到 BEAN 模式）
         lenient().when(httpJobHandlerProvider.getIfAvailable()).thenReturn(null);
+        // P1-4: RemoteTaskClient 默认不启用（分片任务在测试中默认本地执行）
+        lenient().when(remoteTaskClientProvider.getIfAvailable()).thenReturn(null);
         // P1-7: 初始化执行线程池（测试用同步执行器，任务在调用线程中执行）
         try {
             java.util.concurrent.ThreadPoolExecutor syncPool = new java.util.concurrent.ThreadPoolExecutor(

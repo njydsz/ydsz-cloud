@@ -1,8 +1,10 @@
 package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.entity.PageQuery;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.dto.CanaryUpsertDTO;
 import com.njydsz.pmis.message.entity.MsgCanaryDO;
 import com.njydsz.pmis.message.service.CanaryService;
@@ -32,30 +34,30 @@ public class CanaryController {
     private final CanaryService canaryService;
 
     @Operation(summary = "新增/更新灰度桶")
+    @PrePermission(PermissionCodes.MESSAGE_CANARY_UPDATE)
     @PostMapping
     public Result<MsgCanaryDO> upsert(@RequestBody CanaryUpsertDTO dto) {
-        // TODO 权限码
         return Result.ok(canaryService.upsert(dto));
     }
 
     @Operation(summary = "按灰度键查询灰度桶")
+    @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/{canaryKey}")
     public Result<MsgCanaryDO> getByKey(@PathVariable String canaryKey) {
-        // TODO 权限码
         return Result.ok(canaryService.getByKey(canaryKey));
     }
 
     @Operation(summary = "灰度桶分页")
+    @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/page")
     public Result<Page<MsgCanaryDO>> page(PageQuery query) {
-        // TODO 权限码
         return Result.ok(canaryService.page(query));
     }
 
     @Operation(summary = "判定桶值是否命中灰度")
+    @PrePermission(PermissionCodes.MESSAGE_CANARY_VIEW)
     @GetMapping("/hit")
     public Result<Boolean> hit(@RequestParam String canaryKey, @RequestParam String bucketValue) {
-        // TODO 权限码
         return Result.ok(canaryService.hit(canaryKey, bucketValue));
     }
 }

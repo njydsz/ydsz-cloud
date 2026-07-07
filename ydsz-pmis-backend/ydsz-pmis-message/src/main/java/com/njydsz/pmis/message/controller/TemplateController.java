@@ -1,7 +1,9 @@
 package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.dto.TemplateAuditDTO;
 import com.njydsz.pmis.message.dto.TemplateCreateDTO;
 import com.njydsz.pmis.message.dto.TemplateQueryDTO;
@@ -34,45 +36,45 @@ public class TemplateController {
     private final TemplateService templateService;
 
     @Operation(summary = "创建模板")
+    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_CREATE)
     @PostMapping
     public Result<MsgTemplateDO> create(@RequestBody TemplateCreateDTO dto) {
-        // TODO 权限码
         return Result.ok(templateService.create(dto));
     }
 
     @Operation(summary = "更新模板")
+    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_UPDATE)
     @PutMapping("/{id}")
     public Result<MsgTemplateDO> update(@PathVariable String id, @RequestBody TemplateCreateDTO dto) {
-        // TODO 权限码
         return Result.ok(templateService.update(id, dto));
     }
 
     @Operation(summary = "删除模板")
+    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_DELETE)
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
-        // TODO 权限码
         templateService.delete(id);
         return Result.ok();
     }
 
     @Operation(summary = "模板详情")
+    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_VIEW)
     @GetMapping("/{id}")
     public Result<MsgTemplateDO> getById(@PathVariable String id) {
-        // TODO 权限码
         return Result.ok(templateService.getById(id));
     }
 
     @Operation(summary = "模板分页")
+    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_LIST)
     @GetMapping("/page")
     public Result<Page<MsgTemplateDO>> page(TemplateQueryDTO query) {
-        // TODO 权限码
         return Result.ok(templateService.page(query));
     }
 
     @Operation(summary = "审核模板")
+    @PrePermission(PermissionCodes.MESSAGE_TEMPLATE_APPROVE)
     @PostMapping("/{id}/audit")
     public Result<Void> audit(@PathVariable String id, @RequestBody TemplateAuditDTO dto) {
-        // TODO 权限码
         dto.setId(id);
         templateService.audit(id, dto);
         return Result.ok();

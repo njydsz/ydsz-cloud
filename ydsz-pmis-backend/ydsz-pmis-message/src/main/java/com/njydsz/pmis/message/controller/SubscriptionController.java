@@ -1,6 +1,8 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.dto.SubscriptionUpsertDTO;
 import com.njydsz.pmis.message.entity.MsgSubscriptionDO;
 import com.njydsz.pmis.message.service.SubscriptionService;
@@ -32,33 +34,33 @@ public class SubscriptionController {
     private final SubscriptionService subscriptionService;
 
     @Operation(summary = "新增/更新订阅")
+    @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_UPDATE)
     @PostMapping
     public Result<MsgSubscriptionDO> upsert(@RequestBody SubscriptionUpsertDTO dto) {
-        // TODO 权限码
         return Result.ok(subscriptionService.upsert(dto));
     }
 
     @Operation(summary = "查询用户所有订阅")
+    @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
     @GetMapping("/user/{userId}")
     public Result<List<MsgSubscriptionDO>> listByUser(@PathVariable String userId) {
-        // TODO 权限码
         return Result.ok(subscriptionService.listByUser(userId));
     }
 
     @Operation(summary = "按主题+通道查询订阅")
+    @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_LIST)
     @GetMapping("/topic/{topicCode}/{channel}")
     public Result<List<MsgSubscriptionDO>> listByTopic(@PathVariable String topicCode,
                                                        @PathVariable String channel) {
-        // TODO 权限码
         return Result.ok(subscriptionService.listByTopic(topicCode, channel));
     }
 
     @Operation(summary = "退订")
+    @PrePermission(PermissionCodes.MESSAGE_SUBSCRIPTION_DELETE)
     @PostMapping("/unsubscribe")
     public Result<Void> unsubscribe(@RequestParam String userId,
                                     @RequestParam String topicCode,
                                     @RequestParam String channel) {
-        // TODO 权限码
         subscriptionService.unsubscribe(userId, topicCode, channel);
         return Result.ok();
     }

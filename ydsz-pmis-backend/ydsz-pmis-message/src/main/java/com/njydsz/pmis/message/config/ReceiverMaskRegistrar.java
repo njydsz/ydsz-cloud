@@ -12,17 +12,18 @@ import java.util.regex.Pattern;
  *
  * <p>消息日志的 receiver 字段可能是手机号 / 邮箱 / 用户 ID / openId 等多种形态，
  * 单一固定策略无法覆盖。本类在启动时向 {@link SensitiveUtil} 注册名为
- * {@code "receiver"} 的 CUSTOM 脱敏函数，根据值特征自动选择策略：
+ * {@code "default"} 的 CUSTOM 脱敏函数（{@link SensitiveSerializer} 对
+ * {@code @Sensitive(CUSTOM)} 字段固定调用 "default" handler），按值特征自动选择策略：
  * <ul>
  *   <li>11 位手机号 → {@link SensitiveUtil#maskPhone(String)}</li>
  *   <li>邮箱 → {@link SensitiveUtil#maskEmail(String)}</li>
  *   <li>其它（用户 ID / openId 等）→ 保留前 2 后 2，中间 ***</li>
  * </ul>
  *
- * <p>该 handler 与 {@code @Sensitive(SensitiveStrategy.CUSTOM)} 注解配合，
- * 但因 {@link SensitiveSerializer} 默认调用 "default" handler，需要实体字段
- * 在序列化时显式走 "receiver" handler——故本注册器同时注册 "default" 与 "receiver"
- * 两个名称指向同一逻辑，避免改 SensitiveSerializer 改动面过大。
+ * <p><b>副作用警告</b>：本注册器覆盖全局 "default" CUSTOM handler，
+ * 影响所有 {@code @Sensitive(CUSTOM)} 字段。当前项目其它模块均使用固定策略
+ * （PHONE/EMAIL/ID_CARD 等），未使用 CUSTOM，故无冲突。若未来其它模块需要
+ * 不同的 CUSTOM 行为，应重构 {@link SensitiveSerializer} 支持 handlerName 参数。
  *
  * @author ydsz-pmis-team
  * @since 1.0.0
@@ -42,7 +43,6 @@ public class ReceiverMaskRegistrar {
      */
     @PostConstruct
     public void register() {
-        SensitiveUtil.register("receiver", ReceiverMaskRegistrar::maskReceiver);
         SensitiveUtil.register("default", ReceiverMaskRegistrar::maskReceiver);
         log.info("[ReceiverMaskRegistrar] receiver 脱敏 handler 已注册");
     }

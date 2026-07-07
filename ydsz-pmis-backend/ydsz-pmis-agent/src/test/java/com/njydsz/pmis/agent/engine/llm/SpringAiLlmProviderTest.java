@@ -5,140 +5,146 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
+import java.net.http.HttpClient;
+import java.net.http.HttpResponse;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
- * SpringAiLlmProvider 单元测试
+ * SpringAiLlmProvider 单元测试（P1-4 重构版）
  *
- * <p>不依赖真实 Spring AI 类，全部使用自定义 stub 对象。
- * 覆盖：
+ * <p>原反射 hack 已被替换为 OpenAI 兼容 HTTP 协议直调。本测试覆盖：
  * <ul>
- *   <li>chatClient=null 时降级到 MockLlmProvider</li>
- *   <li>chatClient 非 null 时反射调用 call(String) 成功</li>
- *   <li>反射调用 call(String) 抛 NoSuchMethodException 时降级到 invokeChatModelFallback 路径</li>
- *   <li>extractContent 抛异常时降级到 mock</li>
+ *   <li>API Key 为空时降级到 MockLlmProvider</li>
+ *   <li>HTTP 2xx 响应：正确提取 choices[0].message.content</li>
+ *   <li>HTTP 2xx 响应：兼容流式 delta 字段</li>
+ *   <li>HTTP 非 2xx：抛异常 → 重试 → 最终降级 mock</li>
+ *   <li>HTTP 非 2xx + fallback=false：抛 RuntimeException</li>
+ *   <li>响应体无 choices：返回空字符串</li>
+ *   <li>URL 规范化：补全 /v1/chat/completions</li>
+ *   <li>chatForJson() 默认方法：剥离 markdown 代码块并反序列化</li>
  * </ul>
  *
+ * <p>使用 Mockito mock {@link HttpClient} + {@link HttpResponse}，无真实网络请求。
+ *
  * @author ydsz-pmis-team
- * @since 1.0.0
+ * @since 1.0.0 (P1-4)
  */
-@DisplayName("SpringAiLlmProvider Spring AI LLM Provider 测试")
+@DisplayName("SpringAiLlmProvider OpenAI 兼容 LLM Provider 测试")
 class SpringAiLlmProviderTest {
-
-    // ==================== Stub 类（模拟 Spring AI ChatClient / ChatResponse 链） ====================
-
-    /** 模拟 ChatClient - 有 call(String) 方法 */
-    public static class StubChatClient {
-        public Object callResponse;
-        public Object call(String prompt) {
-            return callResponse;
-        }
-    }
-
-    /** 模拟 ChatResponse - 有 getResult() 方法 */
-    public static class StubChatResponse {
-        public Object generation;
-        public Object getResult() {
-            return generation;
-        }
-    }
-
-    /** 模拟 Generation - 有 getOutput() 方法 */
-    public static class StubGeneration {
-        public Object output;
-        public Object getOutput() {
-            return output;
-        }
-    }
-
-    /** 模拟 Output - 有 getContent() 方法 */
-    public static class StubOutput {
-        public String content;
-        public String getContent() {
-            return content;
-        }
-    }
-
-    /** 模拟无 call(String) 方法的对象（触发 NoSuchMethodException） */
-    public static class StubNoCallStringClient {
-        public Object callResponse;
-        // 没有 call(String) 方法，会触发 NoSuchMethodException
-    }
-
-    /** 模拟返回非法响应的对象（extractContent 抛 NoSuchMethodException） */
-    public static class StubBadResponseClient {
-        public Object call(String prompt) {
-            return new Object();  // Object 没有 getResult() 方法
-        }
-    }
 
     // ==================== 辅助方法 ====================
 
-    /** 构造完整的 chat response 链：response.getResult().getOutput().getContent() */
-    private StubChatClient clientWithContent(String content) {
-        StubOutput output = new StubOutput();
-        output.content = content;
-        StubGeneration generation = new StubGeneration();
-        generation.output = output;
-        StubChatResponse response = new StubChatResponse();
-        response.generation = generation;
-        StubChatClient client = new StubChatClient();
-        client.callResponse = response;
+    /** 构造一个 mock HttpClient，对 send 请求返回指定 status + body */
+    @SuppressWarnings("unchecked")
+    private HttpClient mockHttpClient(int status, String body) throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        HttpResponse<String> resp = mock(HttpResponse.class);
+        when(resp.statusCode()).thenReturn(status);
+        when(resp.body()).thenReturn(body);
+        when(client.send(any(), any())).thenReturn(resp);
         return client;
     }
 
-    // ==================== chatClient=null 测试 ====================
+    /** 构造一个 mock HttpClient，第 N 次调用返回不同 status + body */
+    @SuppressWarnings("unchecked")
+    private HttpClient mockHttpClientSeq(Object... statusBodyPairs) throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        HttpResponse<String> resp = mock(HttpResponse.class);
+        // 用 thenReturn 多个值
+        if (statusBodyPairs.length >= 2 && statusBodyPairs[0] instanceof Integer firstStatus) {
+            when(resp.statusCode()).thenReturn(firstStatus);
+            when(resp.body()).thenReturn((String) statusBodyPairs[1]);
+            // 后续状态
+            for (int i = 2; i < statusBodyPairs.length; i += 2) {
+                Integer s = (Integer) statusBodyPairs[i];
+                String b = (String) statusBodyPairs[i + 1];
+                when(resp.statusCode()).thenReturn(s);
+                when(resp.body()).thenReturn(b);
+            }
+        }
+        when(client.send(any(), any())).thenReturn(resp);
+        return client;
+    }
+
+    /** 标准 OpenAI 响应体 */
+    private String openAiResponse(String content) {
+        return "{\"choices\":[{\"message\":{\"role\":\"assistant\",\"content\":\"" + content + "\"}}]}";
+    }
+
+    /** 流式 delta 响应体 */
+    private String deltaResponse(String content) {
+        return "{\"choices\":[{\"delta\":{\"content\":\"" + content + "\"}}]}";
+    }
+
+    /** 构造 SpringAiLlmProvider，注入 mock HttpClient */
+    private SpringAiLlmProvider providerWithMock(String apiKey, int status, String body,
+                                                   long timeout, int retries, boolean fallback) throws Exception {
+        HttpClient client = mockHttpClient(status, body);
+        return new SpringAiLlmProvider(apiKey, "https://api.openai.com", "gpt-4o-mini", 0.3,
+                timeout, retries, fallback, client);
+    }
+
+    // ==================== API Key 为空降级测试 ====================
 
     @Nested
-    @DisplayName("chatClient=null 降级测试")
-    class NullChatClientTest {
+    @DisplayName("API Key 为空降级测试")
+    class EmptyApiKeyTest {
 
         @Test
-        @DisplayName("chatClient=null 时降级到 MockLlmProvider")
-        void shouldFallbackToMockWhenChatClientNull() {
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(null, 5000, 0, true);
+        @DisplayName("apiKey=null 时降级到 MockLlmProvider")
+        void shouldFallbackToMockWhenApiKeyNull() {
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    null, "https://api.openai.com", "gpt-4o-mini", 0.3,
+                    5000, 0, true, HttpClient.newHttpClient());
 
             String result = provider.chat("sys", "user", new AgentContext());
 
-            // MockLlmProvider 对普通查询返回 NORMAL 等级
+            // MockLlmProvider 对普通查询返回 NORMAL
             assertThat(result).contains("NORMAL");
         }
 
         @Test
-        @DisplayName("chatClient=null 时返回 MockLlmProvider 的标准输出")
-        void shouldReturnMockOutputWhenChatClientNull() {
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(null, 5000, 0, true);
+        @DisplayName("apiKey=空串 时降级到 MockLlmProvider")
+        void shouldFallbackToMockWhenApiKeyBlank() {
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    "  ", "https://api.openai.com", "gpt-4o-mini", 0.3,
+                    5000, 0, true, HttpClient.newHttpClient());
 
-            // 触发"严重"关键词，MockLlmProvider 返回 RED
             String result = provider.chat("sys", "严重告警", new AgentContext());
 
+            // MockLlmProvider 检测到"严重"关键词返回 RED
             assertThat(result).contains("RED");
         }
     }
 
-    // ==================== 反射调用成功测试 ====================
+    // ==================== HTTP 2xx 成功调用测试 ====================
 
     @Nested
-    @DisplayName("反射调用成功测试")
-    class ReflectionSuccessTest {
+    @DisplayName("HTTP 2xx 成功调用测试")
+    class SuccessTest {
 
         @Test
-        @DisplayName("chatClient 非 null 时反射调用 call(String) 成功")
-        void shouldCallViaReflection() {
-            StubChatClient chatClient = clientWithContent("hello from spring-ai");
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(chatClient, 5000, 0, true);
+        @DisplayName("HTTP 200 时正确提取 choices[0].message.content")
+        void shouldExtractContentOnSuccess() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    openAiResponse("hello from openai"), 5000, 0, true);
 
             String result = provider.chat("sys", "user", new AgentContext());
 
-            assertThat(result).isEqualTo("hello from spring-ai");
+            assertThat(result).isEqualTo("hello from openai");
         }
 
         @Test
-        @DisplayName("systemPrompt=null 时不抛 NPE")
-        void shouldHandleNullSystemPrompt() {
-            StubChatClient chatClient = clientWithContent("ok");
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(chatClient, 5000, 0, true);
+        @DisplayName("systemPrompt=null 时仅发送 user 消息")
+        void shouldHandleNullSystemPrompt() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    openAiResponse("ok"), 5000, 0, true);
 
             String result = provider.chat(null, "user", new AgentContext());
 
@@ -147,9 +153,9 @@ class SpringAiLlmProviderTest {
 
         @Test
         @DisplayName("userPrompt=null 时不抛 NPE")
-        void shouldHandleNullUserPrompt() {
-            StubChatClient chatClient = clientWithContent("ok");
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(chatClient, 5000, 0, true);
+        void shouldHandleNullUserPrompt() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    openAiResponse("ok"), 5000, 0, true);
 
             String result = provider.chat("sys", null, new AgentContext());
 
@@ -157,18 +163,43 @@ class SpringAiLlmProviderTest {
         }
 
         @Test
-        @DisplayName("getContent() 返回 null 时返回空字符串")
-        void shouldReturnEmptyStringWhenContentNull() {
-            StubOutput output = new StubOutput();
-            output.content = null;
-            StubGeneration generation = new StubGeneration();
-            generation.output = output;
-            StubChatResponse response = new StubChatResponse();
-            response.generation = generation;
-            StubChatClient chatClient = new StubChatClient();
-            chatClient.callResponse = response;
+        @DisplayName("响应为流式 delta 格式时正确提取 content")
+        void shouldExtractFromDeltaFormat() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    deltaResponse("delta-content"), 5000, 0, true);
 
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(chatClient, 5000, 0, true);
+            String result = provider.chat("sys", "user", new AgentContext());
+
+            assertThat(result).isEqualTo("delta-content");
+        }
+
+        @Test
+        @DisplayName("响应体 choices 为空时返回空字符串")
+        void shouldReturnEmptyWhenChoicesEmpty() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    "{\"choices\":[]}", 5000, 0, true);
+
+            String result = provider.chat("sys", "user", new AgentContext());
+
+            assertThat(result).isEqualTo("");
+        }
+
+        @Test
+        @DisplayName("响应体无 choices 字段时返回空字符串")
+        void shouldReturnEmptyWhenNoChoicesField() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    "{\"error\":\"rate limit\"}", 5000, 0, true);
+
+            String result = provider.chat("sys", "user", new AgentContext());
+
+            assertThat(result).isEqualTo("");
+        }
+
+        @Test
+        @DisplayName("响应体为空字符串时返回空字符串")
+        void shouldReturnEmptyWhenBodyEmpty() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    "", 5000, 0, true);
 
             String result = provider.chat("sys", "user", new AgentContext());
 
@@ -176,62 +207,172 @@ class SpringAiLlmProviderTest {
         }
     }
 
-    // ==================== NoSuchMethodException 降级测试 ====================
+    // ==================== HTTP 非 2xx 异常测试 ====================
 
     @Nested
-    @DisplayName("NoSuchMethodException 降级测试")
-    class NoSuchMethodTest {
+    @DisplayName("HTTP 非 2xx 异常测试")
+    class HttpErrorTest {
 
         @Test
-        @DisplayName("call(String) 不存在时降级到 invokeChatModelFallback 路径（最终降级到 mock）")
-        void shouldFallbackToInvokeChatModelFallback() {
-            // StubNoCallStringClient 没有 call(String) 方法，会触发 NoSuchMethodException
-            // invokeChatModelFallback 会尝试加载 Spring AI 类，若类不在或调用失败，
-            // executeWithGuard 会重试并最终降级到 mock
-            StubNoCallStringClient chatClient = new StubNoCallStringClient();
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(chatClient, 5000, 0, true);
+        @DisplayName("HTTP 500 → fallback=true 时降级到 mock")
+        void shouldFallbackToMockOnHttp500() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 500,
+                    "internal error", 5000, 0, true);
 
             String result = provider.chat("sys", "user", new AgentContext());
 
-            // 最终降级到 MockLlmProvider 的输出
-            assertThat(result).contains("NORMAL");
-        }
-    }
-
-    // ==================== extractContent 异常测试 ====================
-
-    @Nested
-    @DisplayName("extractContent 异常降级测试")
-    class ExtractContentExceptionTest {
-
-        @Test
-        @DisplayName("extractContent 抛异常时降级到 mock")
-        void shouldFallbackToMockWhenExtractContentFails() {
-            // StubBadResponseClient.call(String) 返回普通 Object，没有 getResult() 方法
-            // extractContent 会抛 NoSuchMethodException
-            StubBadResponseClient chatClient = new StubBadResponseClient();
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(chatClient, 5000, 0, true);
-
-            String result = provider.chat("sys", "user", new AgentContext());
-
-            // 降级到 MockLlmProvider 的输出
             assertThat(result).contains("NORMAL");
         }
 
         @Test
-        @DisplayName("extractContent 抛异常且 fallbackToMockOnError=false 时抛 RuntimeException")
-        void shouldThrowWhenExtractContentFailsAndFallbackDisabled() {
-            StubBadResponseClient chatClient = new StubBadResponseClient();
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(chatClient, 5000, 0, false);
+        @DisplayName("HTTP 500 → fallback=false 时抛 RuntimeException")
+        void shouldThrowOnHttp500WhenFallbackDisabled() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 500,
+                    "internal error", 5000, 0, false);
 
             assertThatThrownBy(() -> provider.chat("sys", "user", new AgentContext()))
                     .isInstanceOf(RuntimeException.class)
                     .hasMessageContaining("spring-ai-openai")
                     .hasMessageContaining("failed");
         }
+
+        @Test
+        @DisplayName("HTTP 429 → 重试 2 次后降级 mock")
+        void shouldRetryOnHttp429ThenFallback() throws Exception {
+            HttpClient client = mockHttpClientSeq(429, "rate limit", 429, "rate limit", 429, "rate limit");
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    "sk-test", "https://api.openai.com", "gpt-4o-mini", 0.3,
+                    5000, 2, true, client);
+
+            String result = provider.chat("sys", "user", new AgentContext());
+
+            // 重试 3 次（首次 + 2 次重试）都失败，降级 mock
+            assertThat(result).contains("NORMAL");
+        }
+
+        @Test
+        @DisplayName("HTTP 500 第 1 次 + HTTP 200 第 2 次 → 重试成功")
+        void shouldRetryAndSucceedOnSecondAttempt() throws Exception {
+            HttpClient client = mockHttpClientSeq(500, "error", 200, openAiResponse("recovered"));
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    "sk-test", "https://api.openai.com", "gpt-4o-mini", 0.3,
+                    5000, 2, true, client);
+
+            String result = provider.chat("sys", "user", new AgentContext());
+
+            assertThat(result).isEqualTo("recovered");
+        }
     }
 
-    // ==================== name() 测试 ====================
+    // ==================== URL 规范化测试 ====================
+
+    @Nested
+    @DisplayName("URL 规范化测试")
+    class UrlNormalizeTest {
+
+        @Test
+        @DisplayName("base-url 末尾无斜杠 → 补全 /v1/chat/completions")
+        void shouldNormalizeBaseUrlWithoutSlash() throws Exception {
+            HttpClient client = mockHttpClient(200, openAiResponse("ok"));
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    "sk-test", "https://api.openai.com", "gpt-4o-mini", 0.3,
+                    5000, 0, true, client);
+
+            provider.chat("sys", "user", new AgentContext());
+            // 不抛异常即表示 URL 合法
+        }
+
+        @Test
+        @DisplayName("base-url 末尾有斜杠 → 补全 v1/chat/completions")
+        void shouldNormalizeBaseUrlWithSlash() throws Exception {
+            HttpClient client = mockHttpClient(200, openAiResponse("ok"));
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    "sk-test", "https://api.openai.com/", "gpt-4o-mini", 0.3,
+                    5000, 0, true, client);
+
+            provider.chat("sys", "user", new AgentContext());
+        }
+
+        @Test
+        @DisplayName("base-url 已含 /v1 → 仅补全 /chat/completions")
+        void shouldNormalizeBaseUrlWithV1() throws Exception {
+            HttpClient client = mockHttpClient(200, openAiResponse("ok"));
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    "sk-test", "https://api.deepseek.com/v1", "deepseek-chat", 0.3,
+                    5000, 0, true, client);
+
+            provider.chat("sys", "user", new AgentContext());
+        }
+
+        @Test
+        @DisplayName("base-url 已含完整路径 → 不再追加")
+        void shouldNormalizeBaseUrlWithFullPath() throws Exception {
+            HttpClient client = mockHttpClient(200, openAiResponse("ok"));
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    "sk-test", "https://api.openai.com/v1/chat/completions", "gpt-4o-mini", 0.3,
+                    5000, 0, true, client);
+
+            provider.chat("sys", "user", new AgentContext());
+        }
+
+        @Test
+        @DisplayName("base-url 为空 → 使用默认 OpenAI URL")
+        void shouldUseDefaultUrlWhenBaseUrlEmpty() throws Exception {
+            HttpClient client = mockHttpClient(200, openAiResponse("ok"));
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    "sk-test", "", "gpt-4o-mini", 0.3,
+                    5000, 0, true, client);
+
+            provider.chat("sys", "user", new AgentContext());
+        }
+    }
+
+    // ==================== chatForJson() 测试 ====================
+
+    @Nested
+    @DisplayName("chatForJson 结构化输出测试")
+    class ChatForJsonTest {
+
+        @Test
+        @DisplayName("LLM 返回纯 JSON → 直接反序列化")
+        void shouldParsePlainJson() throws Exception {
+            String json = "{\"name\":\"风险预警\",\"score\":85}";
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    json, 5000, 0, true);
+
+            TestDto dto = provider.chatForJson("sys", "user", TestDto.class, new AgentContext());
+
+            assertThat(dto.getName()).isEqualTo("风险预警");
+            assertThat(dto.getScore()).isEqualTo(85);
+        }
+
+        @Test
+        @DisplayName("LLM 返回 ```json ... ``` 代码块 → 剥离后反序列化")
+        void shouldParseMarkdownJsonFence() throws Exception {
+            String json = "```json\n{\"name\":\"wrapped\",\"score\":50}\n```";
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    json, 5000, 0, true);
+
+            TestDto dto = provider.chatForJson("sys", "user", TestDto.class, new AgentContext());
+
+            assertThat(dto.getName()).isEqualTo("wrapped");
+            assertThat(dto.getScore()).isEqualTo(50);
+        }
+
+        @Test
+        @DisplayName("LLM 返回非 JSON → 抛 RuntimeException")
+        void shouldThrowOnInvalidJson() throws Exception {
+            SpringAiLlmProvider provider = providerWithMock("sk-test", 200,
+                    "not a json", 5000, 0, true);
+
+            assertThatThrownBy(() ->
+                    provider.chatForJson("sys", "user", TestDto.class, new AgentContext()))
+                    .isInstanceOf(RuntimeException.class)
+                    .hasMessageContaining("非合法 JSON");
+        }
+    }
+
+    // ==================== 基础属性测试 ====================
 
     @Nested
     @DisplayName("基础属性测试")
@@ -240,8 +381,20 @@ class SpringAiLlmProviderTest {
         @Test
         @DisplayName("name() 返回 'spring-ai-openai'")
         void shouldReturnSpringAiOpenAiName() {
-            SpringAiLlmProvider provider = new SpringAiLlmProvider(null, 5000, 0, true);
+            SpringAiLlmProvider provider = new SpringAiLlmProvider(
+                    "sk-test", "https://api.openai.com", "gpt-4o-mini", 0.3,
+                    5000, 0, true, HttpClient.newHttpClient());
+
             assertThat(provider.name()).isEqualTo("spring-ai-openai");
         }
+    }
+
+    // ==================== 测试 DTO ====================
+
+    /** 用于 chatForJson 测试的简单 DTO */
+    @lombok.Data
+    public static class TestDto {
+        private String name;
+        private int score;
     }
 }

@@ -25,6 +25,7 @@ import com.njydsz.pmis.message.entity.MsgRouteRuleDO;
 import com.njydsz.pmis.message.entity.MsgTemplateDO;
 import com.njydsz.pmis.message.enums.MessageStatusEnum;
 import com.njydsz.pmis.message.enums.RecallStatusEnum;
+import com.njydsz.pmis.message.filter.SensitiveWordFilter;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
 import com.njydsz.pmis.message.metric.MessageMetrics;
 import com.njydsz.pmis.message.service.AggregateService;
@@ -72,6 +73,7 @@ public class MessageServiceImpl implements MessageService {
     private final SubscriptionService subscriptionService;
     private final PreferenceService preferenceService;
     private final AggregateService aggregateService;
+    private final SensitiveWordFilter sensitiveWordFilter;
 
     @Override
     public MessageResult send(MessageRequest request) {
@@ -164,6 +166,11 @@ public class MessageServiceImpl implements MessageService {
             if (!StringUtils.hasText(subject) && StringUtils.hasText(template.getSubject())) {
                 subject = templateEngine.render(template.getSubject(), request.getParams());
             }
+        }
+
+        // ⑦-2 敏感词过滤（P2-1）：对最终 content 做敏感词替换,无论模板渲染还是直传内容
+        if (StringUtils.hasText(content)) {
+            content = sensitiveWordFilter.filter(content);
         }
 
         // ⑧ 落库 PENDING

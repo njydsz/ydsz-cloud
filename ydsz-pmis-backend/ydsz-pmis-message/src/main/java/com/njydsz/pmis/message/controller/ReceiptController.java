@@ -1,6 +1,8 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.dto.ReceiptCallbackDTO;
 import com.njydsz.pmis.message.entity.MsgReceiptDO;
 import com.njydsz.pmis.message.service.ReceiptService;
@@ -31,17 +33,17 @@ public class ReceiptController {
     private final ReceiptService receiptService;
 
     @Operation(summary = "回执回调")
+    @PrePermission(PermissionCodes.MESSAGE_RECEIPT_CALLBACK)
     @PostMapping("/callback")
     public Result<Void> callback(@RequestBody ReceiptCallbackDTO dto) {
-        // TODO 权限码
         receiptService.callback(dto);
         return Result.ok();
     }
 
     @Operation(summary = "按日志 ID 查询回执列表")
+    @PrePermission(PermissionCodes.MESSAGE_RECEIPT_VIEW)
     @GetMapping("/{logId}")
     public Result<List<MsgReceiptDO>> listByLogId(@PathVariable String logId) {
-        // TODO 权限码
         return Result.ok(receiptService.listByLogId(logId));
     }
 }

@@ -7,6 +7,7 @@ import com.njydsz.pmis.message.channel.ChannelRouter;
 import com.njydsz.pmis.message.config.MessageProperties;
 import com.njydsz.pmis.message.entity.MsgLogDO;
 import com.njydsz.pmis.message.entity.MsgTemplateDO;
+import com.njydsz.pmis.message.filter.SensitiveWordFilter;
 import com.njydsz.pmis.message.mapper.MsgLogMapper;
 import com.njydsz.pmis.message.metric.MessageMetrics;
 import com.njydsz.pmis.message.service.AggregateService;
@@ -17,12 +18,15 @@ import com.njydsz.pmis.message.service.RouteRuleService;
 import com.njydsz.pmis.message.service.SubscriptionService;
 import com.njydsz.pmis.message.service.TemplateService;
 import com.njydsz.pmis.message.template.TemplateEngine;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -42,6 +46,7 @@ import static org.mockito.Mockito.when;
  */
 @DisplayName("MessageServiceImpl 发送编排测试")
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 @SuppressWarnings("unchecked")
 class MessageServiceImplTest {
 
@@ -69,9 +74,17 @@ class MessageServiceImplTest {
     private SubscriptionService subscriptionService;
     @Mock
     private AggregateService aggregateService;
+    @Mock
+    private SensitiveWordFilter sensitiveWordFilter;
 
     @InjectMocks
     private MessageServiceImpl messageService;
+
+    @BeforeEach
+    void setUp() {
+        // 敏感词过滤器默认透传(返回输入值),需要过滤的测试单独覆盖
+        when(sensitiveWordFilter.filter(anyString())).thenAnswer(inv -> inv.getArgument(0));
+    }
 
     private MessageRequest buildRequest() {
         MessageRequest req = new MessageRequest();

@@ -44,6 +44,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.TimeZone;
 import java.util.stream.Collectors;
 
@@ -94,6 +95,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ObjectProvider<TenantQuotaService> tenantQuotaServiceProvider;
     /** P1-5: HTTP 任务处理器（可选注入，未配置时 HTTP 类型任务降级到 BEAN 模式） */
     private final ObjectProvider<com.njydsz.pmis.cronjob.core.handler.HttpJobHandler> httpJobHandlerProvider;
+    /** P1-4: 远程派发客户端（可选注入，未配置时分片任务仅本地执行） */
+    private final ObjectProvider<RemoteTaskClient> remoteTaskClientProvider;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -146,6 +149,30 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             return executeJob(job, holdLock, triggerType, 0);
         }
         return dispatchAsync(job, holdLock, triggerType, 0);
+    }
+
+    /**
+     * P1-4: 在本地执行任务（远程派发接收端）。
+     *
+     * <p>由 {@code InternalJobController} 调用，接收 Leader 节点的远程派发请求后在本地执行。
+     * 不经过 dispatch 路由（无配额检查、无异步派发），直接调用 executeJob/executeShard。
+     *
+     * @param job         任务定义
+     * @param triggerType 触发类型
+     * @param shardIndex  分片索引（-1 表示非分片任务）
+     * @param shardTotal  分片总数（1 表示非分片任务）
+     * @return 执行日志 ID；锁被持有或执行失败返回 null
+     */
+    @Override
+    public String executeLocally(JobDO job, String triggerType, int shardIndex, int shardTotal) {
+        boolean holdLock = !TRIGGER_MANUAL.equals(triggerType);
+        if ("CONCURRENT".equals(job.getBlockStrategy())) {
+            holdLock = false;
+        }
+        if (shardIndex >= 0 && shardTotal > 1) {
+            return executeShard(job, shardIndex, shardTotal, holdLock, triggerType);
+        }
+        return executeJob(job, holdLock, triggerType, 0);
     }
 
     /**
@@ -226,17 +253,18 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     }
 
     /**
-     * 分片任务执行入口（P3）。
+     * 分片任务执行入口（P3 + P1-4 远程派发）。
      *
      * <p>流程：
      * <ol>
      *   <li>查询在线节点列表（按 nodeId 升序保证确定性）</li>
      *   <li>通过 ShardingStrategy 计算分片分配方案</li>
-     *   <li>筛选分配给本地节点的分片（P3 阶段仅本地执行，远程派发留作扩展）</li>
-     *   <li>对每个本地分片独立加锁、写日志、执行 handler</li>
+     *   <li>本地分片：Leader 直接调用 {@link #executeShard}</li>
+     *   <li>远程分片：通过 {@link RemoteTaskClient} HTTP 派发到执行器节点（P1-4）</li>
+     *   <li>远程派发失败时根据 {@code remote.fallbackToLocal} 决定是否降级本地执行</li>
      * </ol>
      *
-     * @return 第一个成功创建日志的分片 logId；无本地分片或全部被锁返回 null
+     * @return 第一个成功创建日志的分片 logId；全部被锁或无本地分片返回 null
      */
     private String executeShardedJob(JobDO job, boolean holdLock, String triggerType) {
         int shardTotal = job.getShardTotal();
@@ -247,7 +275,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             return executeJob(job, holdLock, triggerType, 0);
         }
 
-        List<String> onlineNodes = getOnlineNodes();
+        List<JobNodeDO> onlineNodes = getOnlineNodeList();
         String localNodeId = jobNodeHeartbeat != null ? jobNodeHeartbeat.getNodeId() : null;
 
         List<ShardAssignment> assignments;
@@ -255,30 +283,85 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             // fallback: 无在线节点信息或本地 nodeId 未知, 本地执行全部分片
             assignments = buildLocalOnlyAssignments(shardTotal, localNodeId);
         } else {
-            assignments = strategy.assign(shardTotal, onlineNodes);
+            List<String> nodeIds = onlineNodes.stream()
+                    .map(JobNodeDO::getNodeId).collect(Collectors.toList());
+            assignments = strategy.assign(shardTotal, nodeIds);
         }
 
-        List<ShardAssignment> localShards = assignments.stream()
-                .filter(a -> localNodeId == null || localNodeId.equals(a.nodeId()))
-                .collect(Collectors.toList());
+        // 构建 nodeId → JobNodeDO 映射，供远程派发查询节点地址
+        Map<String, JobNodeDO> nodeMap = onlineNodes.stream()
+                .collect(Collectors.toMap(JobNodeDO::getNodeId, n -> n, (a, b) -> a));
 
-        if (localShards.isEmpty()) {
-            log.info("[Dispatcher] 分片任务无本地分片, 跳过: key={} localNode={}",
-                    job.getJobKey(), localNodeId);
-            return null;
-        }
-
-        log.info("[Dispatcher] 分片任务派发: key={} shardTotal={} localShards={}",
-                job.getJobKey(), shardTotal, localShards.size());
+        log.info("[Dispatcher] 分片任务派发: key={} shardTotal={} assignments={} localNode={}",
+                job.getJobKey(), shardTotal, assignments.size(), localNodeId);
 
         String firstLogId = null;
-        for (ShardAssignment assignment : localShards) {
-            String logId = executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+        for (ShardAssignment assignment : assignments) {
+            String assignedNodeId = assignment.nodeId();
+            String logId;
+            if (localNodeId != null && localNodeId.equals(assignedNodeId)) {
+                // 本地分片：直接执行
+                logId = executeShard(job, assignment.shardIndex(), shardTotal, holdLock, triggerType);
+            } else {
+                // P1-4: 远程分片：通过 HTTP 派发到执行器节点
+                logId = dispatchShardRemotely(job, assignment, shardTotal, triggerType, nodeMap);
+            }
             if (firstLogId == null && logId != null) {
                 firstLogId = logId;
             }
         }
         return firstLogId;
+    }
+
+    /**
+     * P1-4: 远程派发分片到执行器节点。
+     *
+     * <p>通过 {@link RemoteTaskClient} 将分片任务 HTTP 派发到选定的执行器节点。
+     * 执行器节点收到请求后调用 {@link #executeLocally} 在本地执行。
+     *
+     * <p>降级策略：当 {@code remote.fallbackToLocal=true} 且远程派发失败时
+     * （连接拒绝、超时、HTTP 错误），Leader 在本地执行该分片。
+     * 由 Redis 分布式锁保证不会重复执行（远程节点已持锁时本地执行也会跳过）。
+     *
+     * @param job        任务定义
+     * @param assignment 分片分配结果
+     * @param shardTotal 分片总数
+     * @param triggerType 触发类型
+     * @param nodeMap    在线节点映射（nodeId → JobNodeDO）
+     * @return 执行日志 ID；派发失败且未降级返回 null
+     */
+    private String dispatchShardRemotely(JobDO job, ShardAssignment assignment, int shardTotal,
+                                          String triggerType, Map<String, JobNodeDO> nodeMap) {
+        CronjobProperties.Remote remoteConfig = cronjobProperties.getRemote();
+        if (!remoteConfig.isEnabled()) {
+            // 远程派发未启用：本地执行该分片（兼容旧行为）
+            return executeShard(job, assignment.shardIndex(), shardTotal, true, triggerType);
+        }
+        RemoteTaskClient client = remoteTaskClientProvider.getIfAvailable();
+        if (client == null) {
+            log.debug("[Dispatcher] RemoteTaskClient 不可用, 本地执行: key={} shard={}",
+                    job.getJobKey(), assignment.shardIndex());
+            return executeShard(job, assignment.shardIndex(), shardTotal, true, triggerType);
+        }
+        JobNodeDO node = nodeMap.get(assignment.nodeId());
+        if (node == null || node.getHost() == null || node.getPort() == null) {
+            log.warn("[Dispatcher] 节点信息缺失, 降级本地执行: key={} shard={} nodeId={}",
+                    job.getJobKey(), assignment.shardIndex(), assignment.nodeId());
+            return executeShard(job, assignment.shardIndex(), shardTotal, true, triggerType);
+        }
+        RemoteTaskRequest request = new RemoteTaskRequest(
+                job, triggerType, assignment.shardIndex(), shardTotal, TraceIdUtil.get());
+        String logId = client.dispatch(node, request);
+        if (logId == null && remoteConfig.isFallbackToLocal()) {
+            log.info("[Dispatcher] 远程派发失败, 降级本地执行: key={} shard={} nodeId={}",
+                    job.getJobKey(), assignment.shardIndex(), assignment.nodeId());
+            return executeShard(job, assignment.shardIndex(), shardTotal, true, triggerType);
+        }
+        if (logId != null) {
+            log.debug("[Dispatcher] 远程分片派发成功: key={} shard={} nodeId={} logId={}",
+                    job.getJobKey(), assignment.shardIndex(), assignment.nodeId(), logId);
+        }
+        return logId;
     }
 
     /**
@@ -384,8 +467,10 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
 
     /**
      * 查询在线节点列表（按 nodeId 升序，保证分片分配确定性）。
+     *
+     * <p>P1-4: 返回完整的 {@link JobNodeDO} 列表，供远程派发获取 host/port。
      */
-    private List<String> getOnlineNodes() {
+    private List<JobNodeDO> getOnlineNodeList() {
         try {
             long threshold = cronjobProperties.getExecutor().getOfflineThresholdSeconds();
             LocalDateTime cutoff = LocalDateTime.now().minusSeconds(threshold);
@@ -393,8 +478,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             wrapper.eq(JobNodeDO::getStatus, "ONLINE")
                     .ge(JobNodeDO::getLastHeartbeat, cutoff)
                     .orderByAsc(JobNodeDO::getNodeId);
-            List<JobNodeDO> nodes = jobNodeMapper.selectList(wrapper);
-            return nodes.stream().map(JobNodeDO::getNodeId).collect(Collectors.toList());
+            return jobNodeMapper.selectList(wrapper);
         } catch (Exception e) {
             log.warn("[Dispatcher] 查询在线节点失败, fallback 到本地执行全部分片: reason={}",
                     e.getMessage());

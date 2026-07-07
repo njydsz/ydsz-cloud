@@ -1,7 +1,9 @@
 package com.njydsz.pmis.message.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.dto.RouteRuleUpsertDTO;
 import com.njydsz.pmis.message.entity.MsgRouteRuleDO;
 import com.njydsz.pmis.message.service.RouteRuleService;
@@ -34,45 +36,45 @@ public class RouteRuleController {
     private final RouteRuleService routeRuleService;
 
     @Operation(summary = "创建路由规则")
+    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_CREATE)
     @PostMapping
     public Result<MsgRouteRuleDO> create(@RequestBody RouteRuleUpsertDTO dto) {
-        // TODO 权限码
         return Result.ok(routeRuleService.create(dto));
     }
 
     @Operation(summary = "更新路由规则")
+    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_UPDATE)
     @PutMapping("/{id}")
     public Result<MsgRouteRuleDO> update(@PathVariable String id, @RequestBody RouteRuleUpsertDTO dto) {
-        // TODO 权限码
         return Result.ok(routeRuleService.update(id, dto));
     }
 
     @Operation(summary = "删除路由规则")
+    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_DELETE)
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
-        // TODO 权限码
         routeRuleService.delete(id);
         return Result.ok();
     }
 
     @Operation(summary = "路由规则详情")
+    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_VIEW)
     @GetMapping("/{id}")
     public Result<MsgRouteRuleDO> getById(@PathVariable String id) {
-        // TODO 权限码
         return Result.ok(routeRuleService.getById(id));
     }
 
     @Operation(summary = "路由规则分页")
+    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/page")
     public Result<Page<MsgRouteRuleDO>> page(com.njydsz.pmis.common.entity.PageQuery query) {
-        // TODO 权限码
         return Result.ok(routeRuleService.page(query));
     }
 
     @Operation(summary = "查询启用的路由规则")
+    @PrePermission(PermissionCodes.MESSAGE_ROUTE_RULE_LIST)
     @GetMapping("/enabled")
     public Result<List<MsgRouteRuleDO>> listEnabled() {
-        // TODO 权限码
         return Result.ok(routeRuleService.listEnabled());
     }
 }

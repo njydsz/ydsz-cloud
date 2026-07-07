@@ -1,6 +1,8 @@
 package com.njydsz.pmis.message.controller;
 
+import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.message.dto.PreferenceUpsertDTO;
 import com.njydsz.pmis.message.entity.MsgPreferenceDO;
 import com.njydsz.pmis.message.service.PreferenceService;
@@ -32,32 +34,32 @@ public class PreferenceController {
     private final PreferenceService preferenceService;
 
     @Operation(summary = "新增/更新偏好")
+    @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_UPDATE)
     @PostMapping
     public Result<MsgPreferenceDO> upsert(@RequestBody PreferenceUpsertDTO dto) {
-        // TODO 权限码
         return Result.ok(preferenceService.upsert(dto));
     }
 
     @Operation(summary = "查询用户所有偏好")
+    @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}")
     public Result<List<MsgPreferenceDO>> listByUser(@PathVariable String userId) {
-        // TODO 权限码
         return Result.ok(preferenceService.listByUser(userId));
     }
 
     @Operation(summary = "按用户+通道+业务类型查询偏好")
+    @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_VIEW)
     @GetMapping("/{userId}/{channel}/{bizType}")
     public Result<MsgPreferenceDO> getByUser(@PathVariable String userId,
                                              @PathVariable String channel,
                                              @PathVariable String bizType) {
-        // TODO 权限码
         return Result.ok(preferenceService.getByUser(userId, channel, bizType));
     }
 
     @Operation(summary = "删除偏好")
+    @PrePermission(PermissionCodes.MESSAGE_PREFERENCE_DELETE)
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable String id) {
-        // TODO 权限码
         preferenceService.delete(id);
         return Result.ok();
     }

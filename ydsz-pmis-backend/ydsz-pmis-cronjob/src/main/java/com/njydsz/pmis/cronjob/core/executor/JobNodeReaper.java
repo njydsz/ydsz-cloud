@@ -146,7 +146,7 @@ public class JobNodeReaper {
             log.warn("[JobNodeReaper] 故障转移开始: nodeId={} runningTasks={}",
                     nodeId, runningLogs.size());
 
-            // 1. 释放 Redis 锁（best-effort，仅非分片任务可重建 lockKey）
+            // 1. 释放 Redis 锁（best-effort，P1-4: 支持分片和非分片任务）
             for (JobLogDO logEntry : runningLogs) {
                 releaseLockSafe(logEntry);
             }
@@ -164,16 +164,28 @@ public class JobNodeReaper {
     /**
      * 安全释放锁（Lua 脚本，仅当 lockHolder 匹配时才 delete）。
      *
-     * <p>仅处理非分片任务的锁（lockKey = {@code pmis:job:lock:{jobKey}}）。
-     * 分片任务的锁含 shard 索引（{@code :shard:{index}}），无法从日志重建完整 lockKey，
-     * 依赖 TTL 自动过期。Lua 脚本在 key 不存在或 value 不匹配时返回 0，无副作用。
+     * <p>P1-4: 支持分片任务锁释放。根据日志的 shardIndex 字段重建完整 lockKey：
+     * <ul>
+     *   <li>非分片任务（shardIndex=null）：{@code pmis:job:lock:{jobKey}}</li>
+     *   <li>分片任务（shardIndex>=0）：{@code pmis:job:lock:{jobKey}:shard:{shardIndex}}</li>
+     * </ul>
+     * Lua 脚本在 key 不存在或 value 不匹配时返回 0，无副作用。
+     *
+     * @param logEntry 任务日志（含 jobKey、lockHolder、shardIndex）
      */
     private void releaseLockSafe(JobLogDO logEntry) {
         String lockHolder = logEntry.getLockHolder();
         if (lockHolder == null || lockHolder.isBlank()) {
             return;
         }
-        String lockKey = JOB_LOCK_PREFIX + logEntry.getJobKey();
+        // P1-4: 根据 shardIndex 重建 lockKey
+        String lockKey;
+        Integer shardIndex = logEntry.getShardIndex();
+        if (shardIndex != null && shardIndex >= 0) {
+            lockKey = JOB_LOCK_PREFIX + logEntry.getJobKey() + ":shard:" + shardIndex;
+        } else {
+            lockKey = JOB_LOCK_PREFIX + logEntry.getJobKey();
+        }
         try {
             Long result = redisTemplate.execute(RELEASE_LOCK_SCRIPT,
                     Collections.singletonList(lockKey), lockHolder);
