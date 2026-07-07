@@ -12,6 +12,7 @@ import com.njydsz.pmis.userinfo.dto.PasswordChangeDTO;
 import com.njydsz.pmis.userinfo.dto.PasswordResetDTO;
 import com.njydsz.pmis.userinfo.dto.UserCreateDTO;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
+import com.njydsz.pmis.userinfo.dto.UserUpdateDTO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
 import com.njydsz.pmis.userinfo.service.UserAccountService;
 import com.njydsz.pmis.userinfo.vo.UserVO;
@@ -22,6 +23,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -131,7 +133,9 @@ public class UserController {
     @PrePermission("auth:user:update")
     @OperationLog(module = "权限管理", action = "更新用户", bizType = "USER")
     @PutMapping
-    public Result<Void> update(@Valid @RequestBody UserAccountDO user) {
+    public Result<Void> update(@Valid @RequestBody UserUpdateDTO dto) {
+        UserAccountDO user = new UserAccountDO();
+        BeanUtils.copyProperties(dto, user);
         userAccountService.update(user);
         return Result.ok();
     }

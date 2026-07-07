@@ -19,6 +19,7 @@ import { useAppStore } from '@/store/modules/app'
 import i18n from '@/locales'
 import { logger } from '@/utils/logger'
 import { recordAccess } from '@/api/favorite'
+import { requestCanceler } from '@/utils/request-canceler'
 
 // 关闭右上角转圈动画，仅保留顶部进度条
 NProgress.configure({ showSpinner: false })
@@ -42,6 +43,11 @@ function resolveRouteTitle(title: string | undefined): string {
 export function setupRouterGuard(router: Router): void {
   router.beforeEach(async (to, _from, next) => {
     NProgress.start()
+
+    // 路由切换时取消所有未完成的请求（避免上一个页面的请求污染下一个页面）
+    // 路由守卫自身的请求（如 getUserInfo）通过 skipCancel: true 豁免
+    requestCanceler.cancelAll()
+
     const userStore = useUserStore()
     const permissionStore = usePermissionStore()
 

@@ -59,6 +59,9 @@ public class LoginUser implements Serializable {
     /** 自定义部门 ID 集（CUSTOM 模式） */
     private List<Long> customDeptIds;
 
+    /** 本部门及下级部门 ID 链（DEPT_AND_CHILD 模式，登录时计算并放入 JWT） */
+    private List<Long> deptIds;
+
     /** Token */
     private String token;
 

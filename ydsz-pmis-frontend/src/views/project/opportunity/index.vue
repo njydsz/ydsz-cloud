@@ -5,7 +5,7 @@
  * 提供商机的查询、新增、编辑、状态流转、赢率评估、转立项等操作。
  * 状态机: FOLLOWING -> QUOTED -> NEGOTIATING -> WON -> CONVERTED / LOST
  */
-import { ref, reactive, onMounted, computed } from 'vue'
+import { ref, reactive, onMounted, computed, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
@@ -23,6 +23,8 @@ import {
 import type { OpportunityVO, OpportunityCreateDTO, OpportunityUpdateDTO } from '@/api/project/opportunity/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
+import { useFormGuard } from '@/composables/useFormGuard'
+import { useModalA11y } from '@/composables/useModalA11y'
 import { useUserStore } from '@/store/modules/user'
 
 const { t } = useI18n()
@@ -111,6 +113,20 @@ const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form,
   debounce: 3000,
   userId: userStore.userInfo?.id,
 })
+
+// ===== 表单防误关闭守卫 =====
+const { setDirty } = useFormGuard({ message: '商机表单内容未保存，确定离开？' })
+// 表单字段修改时启用守卫（仅弹窗打开期间）
+watch(form, () => {
+  if (dialogVisible.value) setDirty(true)
+}, { deep: true })
+// 弹窗打开后清除 dirty（覆盖 openCreate/openEdit 重置 form 触发的 watch）
+watch(dialogVisible, (val) => {
+  if (val) nextTick(() => setDirty(false))
+})
+
+// 无障碍访问增强：对话框关闭后恢复焦点到打开前的触发元素（focus trap 由 Element Plus 内置）
+useModalA11y(dialogVisible)
 
 const draftTimeText = computed(() => {
   if (!lastSavedAt.value) return ''
@@ -211,6 +227,8 @@ async function submitForm() {
       await updateOpportunity(dto)
       ElMessage.success(t('project.opportunity.messages.updateSuccess'))
     }
+    // 表单已保存，解除防误关闭守卫
+    setDirty(false)
     dialogVisible.value = false
     fetchList()
   } finally {
@@ -313,8 +331,8 @@ onMounted(fetchList)
             <StatusTag :value="row.level" :map="levelMap" fallback-type="info" />
           </template>
         </vxe-column>
-        <vxe-column field="estimatedAmount" :title="$t('project.opportunity.columns.estimatedAmount')" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
-        <vxe-column field="winRate" :title="$t('project.opportunity.columns.winRate')" width="80" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(0)}%` : '-'" />
+        <vxe-column field="estimatedAmount" :title="$t('project.opportunity.columns.estimatedAmount')" width="120" align="right" :formatter="({ cellValue }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="winRate" :title="$t('project.opportunity.columns.winRate')" width="80" align="right" :formatter="({ cellValue }) => cellValue != null ? `${(Number(cellValue) * 100).toFixed(0)}%` : '-'" />
         <vxe-column field="expectedSignDate" :title="$t('project.opportunity.columns.expectedSignDate')" width="110" />
         <vxe-column field="status" :title="$t('project.opportunity.columns.status')" width="110">
           <template #default="{ row }">
@@ -353,7 +371,7 @@ onMounted(fetchList)
     </template>
 
     <template #footer>
-      <el-dialog v-model="dialogVisible" :title="formMode === 'create' ? $t('project.opportunity.dialog.createTitle') : $t('project.opportunity.dialog.editTitle')" width="720px">
+      <el-dialog v-model="dialogVisible" :title="formMode === 'create' ? $t('project.opportunity.dialog.createTitle') : $t('project.opportunity.dialog.editTitle')" width="720px" :close-on-click-modal="false" :close-on-press-escape="true">
         <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
           <el-row :gutter="16">
             <el-col :span="12">

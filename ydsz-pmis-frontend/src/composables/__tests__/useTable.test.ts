@@ -1,8 +1,26 @@
 /**
  * @file useTable.test.ts
  * @description 测试 useTable 分页查询 composable
+ * @vitest-environment jsdom
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+
+// ========== Mock 依赖 ==========
+// useTable 内部调用 useI18n() 与 ElMessage，测试中需提供 mock 避免上下文缺失
+vi.mock('vue-i18n', () => ({
+  useI18n: () => ({ t: (key: string) => key }),
+}))
+
+vi.mock('element-plus', () => ({
+  ElMessage: {
+    error: vi.fn(),
+    success: vi.fn(),
+    warning: vi.fn(),
+    info: vi.fn(),
+  },
+}))
+
+// ========== 导入被测试模块 ==========
 import { useTable } from '@/composables/useTable'
 import type { UseTableQuery } from '@/composables/useTable'
 

@@ -16,8 +16,9 @@
 6. [7 个微服务端口约定](#6-7-个微服务端口约定)
 7. [环境变量(.env)](#7-环境变量env)
 8. [占位符约定(common/conf)](#8-占位符约定commonconf)
-9. [数据库初始化](#9-数据库初始化)
-10. [相关文档](#10-相关文档)
+9. [配置加密 (Jasypt)](#9-配置加密-jasypt)
+10. [数据库初始化](#10-数据库初始化)
+11. [相关文档](#11-相关文档)
 
 ---
 
@@ -252,7 +253,87 @@ cp deploy/.env.example deploy/.env
 
 ---
 
-## 9. 数据库初始化
+## 9. 配置加密 (Jasypt)
+
+> 解决敏感配置（数据库密码、Redis 密码、JWT 密钥等）明文存储的 P0 安全问题。
+> 采用 `jasypt-spring-boot-starter` 3.0.5，启动时自动解密 `ENC(xxx)` 格式的配置。
+
+### 9.1 工作原理
+
+1. `jasypt-spring-boot-starter` 在 Spring Boot 启动时拦截所有属性源
+2. 遇到 `ENC(密文)` 格式的值，自动用主密码解密为明文注入 Spring
+3. 主密码通过环境变量 `JASYPT_ENCRYPTOR_PASSWORD` 注入，**不写入配置文件/代码仓库**
+4. 加密算法默认 `PBEWithHMACSHA512AndAES_256`（需 JCE unlimited strength，JDK 8u161+ 已内置）
+
+### 9.2 生成加密串
+
+```bash
+# 下载 jasypt CLI（或使用项目已引入的 jasypt-spring-boot-starter 依赖中的 jar）
+# 方式一：使用 jasypt-1.9.3.jar（独立 CLI）
+java -cp jasypt-1.9.3.jar org.jasypt.intf.cli.JasyptPBEStringEncryptionCLI \
+  input="mypassword" \
+  password=masterpassword \
+  algorithm=PBEWithHMACSHA512AndAES_256
+
+# 输出示例:
+# OUTPUT: G8NkR6qVw2J3FpY0bXxC7A==（此即密文，放入 ENC(...) 中）
+
+# 方式二：在项目内写一个 JasyptTest 单元测试调用 StringEncryptor.encrypt()
+```
+
+### 9.3 在 Nacos 配置中使用
+
+将生成的密文以 `ENC(密文)` 格式替换明文值：
+
+```yaml
+spring:
+  datasource:
+    password: ENC(G8NkR6qVw2J3FpY0bXxC7A==)   # 生产环境：Jasypt 自动解密
+    # password: ${DB_PASSWORD}                 # 开发环境：环境变量注入明文（无需 Jasypt）
+```
+
+> 当前 `deploy/common/nacos/ydsz-pmis-common.yaml` 中已用注释标注需加密的字段
+>（`spring.datasource.password`、`spring.data.redis.password`、`pmis.jwt.secret`）。
+
+### 9.4 生产环境注入主密码
+
+主密码 **严禁入仓**，通过 K8s Secret 环境变量注入：
+
+```bash
+# 方式 A：kubectl 命令行创建（不入仓）
+kubectl create secret generic pmis-jasypt-secret \
+  --from-literal=jasypt-encryptor-password='your-strong-master-password'
+
+# 方式 B：Sealed Secrets / External Secrets Operator（加密后可入仓）
+# 详见 deploy/k8s/base/secret-jasypt.yaml 注释
+```
+
+在 Deployment 中通过 `envFrom` 引用：
+
+```yaml
+spec:
+  template:
+    spec:
+      containers:
+        - name: pmis-service
+          envFrom:
+            - secretRef:
+                name: pmis-jasypt-secret   # 注入 JASYPT_ENCRYPTOR_PASSWORD
+```
+
+### 9.5 注意事项
+
+| 场景 | 建议 |
+|---|---|
+| 开发环境 | **可不加密**，直接用明文 + 环境变量默认值（`${DB_PASSWORD:devpass}`） |
+| 生产环境 | **必须加密**，主密码从 K8s Secret/Vault 注入，配置文件中只留 `ENC(密文)` |
+| 算法降级 | 若运行环境不支持 `PBEWithHMACSHA512AndAES_256`（缺 JCE），降级为 `PBEWithMD5AndDES` |
+| 主密码轮换 | 轮换主密码后需用新密码重新加密所有密文，更新 Nacos 配置 |
+| 密文唯一性 | 同一明文每次加密结果不同（随机盐），属正常现象 |
+
+---
+
+## 10. 数据库初始化
 
 | 用途 | 文件 | 位置 |
 |---|---|---|
@@ -271,7 +352,7 @@ PGPASSWORD=<your-pg-password-here> psql -h 127.0.0.1 -U postgres -d ydsz-pmis \
 
 ---
 
-## 10. 相关文档
+## 11. 相关文档
 
 ### 本目录文档(各子目录 README)
 

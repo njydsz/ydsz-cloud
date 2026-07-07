@@ -12,6 +12,7 @@ import com.njydsz.pmis.userinfo.entity.RoleDO;
 import com.njydsz.pmis.userinfo.mapper.UserAccountMapper;
 import com.njydsz.pmis.userinfo.mapper.UserRoleMapper;
 import com.njydsz.pmis.userinfo.mapper.User2FAMapper;
+import com.njydsz.pmis.userinfo.service.DepartmentService;
 import com.njydsz.pmis.userinfo.service.RoleService;
 import com.njydsz.pmis.userinfo.service.SessionService;
 import org.junit.jupiter.api.DisplayName;
@@ -43,6 +44,8 @@ class UserAccountServiceImplTest {
     private SessionService sessionService;
     @Mock
     private RoleService roleService;
+    @Mock
+    private DepartmentService departmentService;
     @Mock
     private ApplicationEventPublisher publisher;
 

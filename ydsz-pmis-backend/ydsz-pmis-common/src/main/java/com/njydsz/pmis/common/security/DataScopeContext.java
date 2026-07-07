@@ -81,6 +81,7 @@ public class DataScopeContext implements Serializable {
                 .scope(scope)
                 .userId(user.getUserId())
                 .deptId(user.getDeptId())
+                .deptIds(user.getDeptIds())
                 .customDeptIds(user.getCustomDeptIds())
                 .superAdmin(superAdmin)
                 .build();

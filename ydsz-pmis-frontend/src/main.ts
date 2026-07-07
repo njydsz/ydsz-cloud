@@ -17,6 +17,8 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import router from './router'
 import pinia from './store'
+// Pinia 持久化插件（为显式声明 persist 的 store 提供 localStorage 持久化）
+import { setupPiniaPersist } from './plugins/pinia-persist'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import i18n from './locales'
 import formCreate from '@form-create/element-ui'
@@ -38,6 +40,8 @@ import { initSentry, captureError } from './utils/sentry'
 import { logger } from './utils/logger'
 // Web Vitals 性能监控
 import { reportWebVitals } from './composables/usePerformance'
+// P2-7: 大屏 rem 自适应（在应用挂载前初始化 html font-size，确保首屏即按视口宽度缩放）
+import { initResponsive } from './composables/useResponsive'
 
 const app = createApp(App)
 
@@ -62,12 +66,30 @@ for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
   app.component(key, component as never)
 }
 
+/**
+ * P2-5: ElDialog 全局无障碍访问默认配置
+ *
+ * 说明：
+ *  - Element Plus 2.8.x 的 ElDialog 已内置 focus trap（通过 el-focus-trap 组件实现），
+ *    打开时 Tab 键焦点不会跳出对话框，且默认已设置 aria-modal="true" 与 role="dialog"，
+ *    因此无需额外引入 focus-trap 库。
+ *  - 此处集中声明项目级 a11y 默认偏好：禁止点击遮罩关闭、允许 Esc 关闭、启用 focus trap。
+ *  - 各业务对话框仍需通过 useModalA11y composable 补充焦点恢复能力（关闭后回到触发器）。
+ */
+app.config.globalProperties.$dialog = {
+  closeOnClickModal: false,
+  closeOnPressEscape: true,
+  trapFocus: true,
+}
+
 // 注册权限指令 v-permission，用于按钮级权限控制
 setupPermissionDirective(app)
 // 注册图片懒加载指令 v-lazy，用于长列表图片性能优化
 setupLazyDirective(app)
 
 // 状态管理（必须先于 router 安装，路由守卫依赖 pinia store）
+// P2-4: 注册持久化插件，必须在 app.use(pinia) 之前，确保 store 首次使用时已具备持久化能力
+setupPiniaPersist(pinia)
 app.use(pinia)
 // 国际化（注册全局 $t 与 useI18n 组合式 API）
 app.use(i18n)
@@ -75,6 +97,9 @@ app.use(i18n)
 app.use(formCreate)
 // 路由（守卫内部会使用 userStore / permissionStore）
 app.use(router)
+
+// P2-7: 初始化 rem 自适应（设置 html font-size 并监听 resize，需在挂载前完成以保证首屏缩放正确）
+initResponsive()
 
 // 挂载应用
 app.mount('#app')

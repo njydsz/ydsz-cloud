@@ -24,12 +24,14 @@ import axios, {
   type AxiosRequestConfig,
   type InternalAxiosRequestConfig,
   type AxiosResponse,
+  CanceledError,
 } from 'axios'
 import { ElMessage, ElLoading } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { getToken, getRefreshToken, setToken } from './auth'
 import { generateTraceId } from './trace'
 import { BizException, HttpException } from './error'
+import { requestCanceler } from './request-canceler'
 import i18n from '@/locales'
 import { logger } from '@/utils/logger'
 
@@ -81,6 +83,12 @@ declare module 'axios' {
     _tokenRefreshed?: boolean
     /** 请求元数据（内部使用，记录请求开始时间用于性能监控） */
     metadata?: { startTime: number }
+    /**
+     * 是否跳过请求取消管理（不纳入 pending Map，不受 cancelAll / cancelByUrl 影响）
+     *
+     * 适用于：路由守卫自身的请求（getUserInfo）、轮询、WebSocket 相关等不应被取消的请求
+     */
+    skipCancel?: boolean
   }
 }
 
@@ -153,7 +161,7 @@ const service: AxiosInstance = axios.create({
   headers: { 'Content-Type': 'application/json;charset=UTF-8' },
 })
 
-// 请求拦截器：注入 Token + TraceId + 全局 loading + 性能监控
+// 请求拦截器：注入 Token + TraceId + 全局 loading + 性能监控 + 请求取消管理
 service.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const token = getToken()
@@ -171,6 +179,10 @@ service.interceptors.request.use(
     // 记录请求开始时间（用于性能监控）
     config.metadata = { startTime: performance.now() }
 
+    // 纳入请求取消管理（写入 config.signal，重复请求自动取消旧请求）
+    // skipCancel: true 的请求不纳入管理
+    requestCanceler.addPending(config)
+
     // 非静默请求开启全局 loading
     if (!config.silent) {
       showLoading()
@@ -187,6 +199,9 @@ service.interceptors.request.use(
 // 响应拦截器：统一处理业务码与 HTTP 错误 + 性能监控
 service.interceptors.response.use(
   (response: AxiosResponse): AxiosResponse | Promise<AxiosResponse> => {
+    // 请求完成：从 pending Map 中移除
+    requestCanceler.removePending(response.config)
+
     // 非静默请求关闭全局 loading
     if (!response.config.silent) {
       hideLoading()
@@ -231,9 +246,20 @@ service.interceptors.response.use(
     return Promise.reject(new BizException(errMsg, res.code, true))
   },
   (error) => {
+    // 请求结束（含失败）：从 pending Map 中移除
+    if (error.config) {
+      requestCanceler.removePending(error.config)
+    }
+
     // 非静默请求关闭全局 loading
     if (!error.config?.silent) {
       hideLoading()
+    }
+
+    // 请求被主动取消（路由切换 / 组件卸载 / 重复请求）：静默处理，不弹 ElMessage
+    // 直接 reject 原 CanceledError，调用方可用 axios.isCancel(error) 判断
+    if (error instanceof CanceledError || axios.isCancel(error)) {
+      return Promise.reject(error)
     }
 
     // 刷新 Token 请求自身失败：静默拒绝（handled=false），由调用方处理跳转
@@ -338,6 +364,8 @@ async function doRefreshToken(): Promise<string> {
     params: { refreshToken },
     silent: true,
     _isRefreshTokenRequest: true,
+    // 刷新 Token 请求不能被取消（路由切换时若被打断会导致用户被登出）
+    skipCancel: true,
   })) as ApiResponse<{ accessToken?: string; refreshToken?: string; token?: string }>
 
   const newToken = res.data.accessToken || res.data.token || ''

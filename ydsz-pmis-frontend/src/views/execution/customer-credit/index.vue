@@ -199,9 +199,9 @@ onMounted(fetchList)
           <template #default="{ row }"><StatusTag :value="row.level" :map="levelMap" /></template>
         </vxe-column>
         <vxe-column field="contractCount" :title="t('finance.credit.columns.contractCount')" width="100" align="center" />
-        <vxe-column field="totalContractAmount" :title="t('finance.credit.columns.totalContractAmount')" width="140" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="totalContractAmount" :title="t('finance.credit.columns.totalContractAmount')" width="140" align="right" :formatter="({ cellValue }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
         <vxe-column field="overdueCount" :title="t('finance.credit.columns.overdueCount')" width="100" align="center" />
-        <vxe-column field="overdueAmount" :title="t('finance.credit.columns.overdueAmount')" width="130" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="overdueAmount" :title="t('finance.credit.columns.overdueAmount')" width="130" align="right" :formatter="({ cellValue }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
         <vxe-column field="lastAssessDate" :title="t('finance.credit.columns.lastAssessDate')" width="120" />
         <vxe-column :title="t('finance.credit.columns.action')" width="140" fixed="right">
           <template #default="{ row }">

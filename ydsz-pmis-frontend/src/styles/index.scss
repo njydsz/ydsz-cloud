@@ -67,3 +67,6 @@
 @import './transition.scss';
 @import './element-overrides.scss';
 @import './responsive.scss';
+// P2-7: rem 自适应工具（rem() 函数 + 大屏断点 mixin），与 useResponsive.ts 的 initResponsive() 协同
+// 文件名使用 _responsive-rem.scss 以避免与 responsive.scss 产生 Sass partial 同名歧义
+@import './_responsive-rem.scss';

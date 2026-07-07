@@ -197,7 +197,7 @@ CREATE TABLE IF NOT EXISTS pmis_role(
     tenant_id       BIGINT         NOT NULL DEFAULT 1,
     CONSTRAINT uk_pmis_role_code UNIQUE (role_code, deleted),
     CONSTRAINT ck_pr_status_enum    CHECK (status IN ('ENABLED', 'DISABLED')),
-    CONSTRAINT ck_pr_data_scope     CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_SUB', 'SELF', 'CUSTOM')),
+    CONSTRAINT ck_pr_data_scope     CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_CHILD', 'SELF', 'CUSTOM')),
     CONSTRAINT ck_pr_deleted_enum   CHECK (deleted IN (0, 1))
 );
 COMMENT ON TABLE pmis_role IS '角色表: RBAC 角色定义,关联权限与数据范围';
@@ -206,7 +206,7 @@ COMMENT ON COLUMN pmis_role.role_code IS '角色编码(全局唯一,如 SUPER_AD
 COMMENT ON COLUMN pmis_role.role_name IS '角色名称(中文展示名)';
 COMMENT ON COLUMN pmis_role.description IS '角色业务说明(职责、适用场景)';
 COMMENT ON COLUMN pmis_role.sort_order IS '角色排序号(升序)';
-COMMENT ON COLUMN pmis_role.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_SUB 本部门及下级 / SELF 本人 / CUSTOM 自定义';
+COMMENT ON COLUMN pmis_role.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_CHILD 本部门及下级 / SELF 本人 / CUSTOM 自定义';
 COMMENT ON COLUMN pmis_role.status IS '启用状态: ENABLED 启用 / DISABLED 停用';
 COMMENT ON COLUMN pmis_role.created_by IS '创建人 ID';
 COMMENT ON COLUMN pmis_role.created_at IS '创建时间';
@@ -650,7 +650,7 @@ CREATE TABLE IF NOT EXISTS pmis_user_account(
     tenant_id          BIGINT         NOT NULL DEFAULT 1,
     CONSTRAINT uk_pmis_user_username UNIQUE (username, deleted),
     CONSTRAINT ck_pua_status_enum   CHECK (status IN ('ENABLED', 'DISABLED', 'LOCKED')),
-    CONSTRAINT ck_pua_data_scope    CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_SUB', 'SELF', 'CUSTOM')),
+    CONSTRAINT ck_pua_data_scope    CHECK (data_scope IN ('ALL', 'DEPT', 'DEPT_AND_CHILD', 'SELF', 'CUSTOM')),
     CONSTRAINT ck_pua_mfa_type      CHECK (mfa_type IN ('NONE', 'TOTP', 'SMS')),
     CONSTRAINT ck_pua_fail_nonneg   CHECK (login_fail_count >= 0 AND pwd_change_count >= 0),
     CONSTRAINT ck_pua_deleted_enum  CHECK (deleted IN (0, 1))
@@ -669,7 +669,7 @@ COMMENT ON COLUMN pmis_user_account.locked_until IS '锁定截止时间(到期�
 COMMENT ON COLUMN pmis_user_account.dept_id IS '所属部门 ID(关联 pmis_department.id,支持 dept: 审批人展开)';
 COMMENT ON COLUMN pmis_user_account.leader_id IS '直属上级用户 ID(关联 pmis_user_account.id,支持 leader: 审批人展开)';
 COMMENT ON COLUMN pmis_user_account.position_code IS '岗位编码(如 PM/DEV/QA/SA,支持 position: 审批人展开)';
-COMMENT ON COLUMN pmis_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_SUB 本部门及下级 / SELF 本人 / CUSTOM 自定义';
+COMMENT ON COLUMN pmis_user_account.data_scope IS '数据权限范围: ALL 全部 / DEPT 本部门 / DEPT_AND_CHILD 本部门及下级 / SELF 本人 / CUSTOM 自定义';
 COMMENT ON COLUMN pmis_user_account.custom_dept_ids IS '自定义数据权限部门 ID 列表(逗号分隔,data_scope=CUSTOM 时生效)';
 COMMENT ON COLUMN pmis_user_account.mfa_enabled IS '是否启用双因素认证';
 COMMENT ON COLUMN pmis_user_account.mfa_type IS '双因素认证类型: NONE 未启用 / TOTP 基于时间的一次性密码 / SMS 短信验证码';

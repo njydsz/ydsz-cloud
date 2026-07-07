@@ -9,9 +9,10 @@
  *   useTable(pageApi, { defaultSize: 20, persistSizeKey: 'project-list' })
  * ```
  */
-import { ref, reactive, watch, type Ref } from 'vue'
+import { ref, reactive, watch, onUnmounted, getCurrentInstance, type Ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useI18n } from 'vue-i18n'
+import { requestCanceler } from '@/utils/request-canceler'
 
 /** 分页查询参数基类 */
 export interface UseTableQuery {
@@ -33,6 +34,14 @@ export interface UseTableOptions<Q extends UseTableQuery> {
    * - 传入后：初始化时从 localStorage 恢复用户上次选择，size 变化时回写
    */
   persistSizeKey?: string
+  /**
+   * 组件卸载时需要取消的请求 URL 片段（模糊匹配）
+   *
+   * 传入后，组件 onUnmounted 时会调用 requestCanceler.cancelByUrl(cancelUrl)，
+   * 取消当前表格未完成的查询请求，避免数据竞态与内存泄漏。
+   * 不传则不执行取消（适合全局共享的表格或无需取消的场景）。
+   */
+  cancelUrl?: string
 }
 
 /** localStorage 中 pageSize 持久化的统一前缀，便于清理与避免冲突 */
@@ -82,6 +91,14 @@ export function useTable<Q extends UseTableQuery>(
   /** 最近一次请求的错误信息（null 表示无错误） */
   const error = ref<string | null>(null)
 
+  // 组件卸载时取消未完成的查询请求，避免数据竞态与内存泄漏
+  // 仅在组件上下文中注册（测试 / 非组件场景下 getCurrentInstance 返回 null，跳过避免告警）
+  if (getCurrentInstance() && options.cancelUrl) {
+    onUnmounted(() => {
+      requestCanceler.cancelByUrl(options.cancelUrl!)
+    })
+  }
+
   // 解析初始 size：优先使用持久化值，其次 defaultQuery.size，最后 defaultSize 或 10
   const persistedSize = loadPersistedSize(options.persistSizeKey)
   const initialSize =
@@ -119,6 +136,12 @@ export function useTable<Q extends UseTableQuery>(
       list.value = res?.data?.list ?? res?.list ?? []
       total.value = res?.data?.total ?? res?.total ?? 0
     } catch (e: unknown) {
+      // 请求被主动取消（组件卸载 / 路由切换 / 重复请求）：静默处理，不清空列表、不弹错
+      // CanceledError 的 name 为 'CanceledError'，code 为 'ERR_CANCELED'
+      if (e instanceof Error && (e.name === 'CanceledError' || (e as Error & { code?: string }).code === 'ERR_CANCELED')) {
+        // 还原 loading，保留已有列表数据，不抛错
+        return
+      }
       // 请求失败：清空列表数据，避免用户误以为是空数据
       list.value = []
       total.value = 0

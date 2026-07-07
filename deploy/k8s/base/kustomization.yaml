@@ -10,6 +10,7 @@ resources:
   - namespace.yaml
   - configmap-common.yaml
   - secret-db.yaml
+  - secret-jasypt.yaml
   - gateway.yaml
   - system.yaml
   - userinfo.yaml

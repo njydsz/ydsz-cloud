@@ -17,6 +17,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.dao.QueryTimeoutException;
 import org.springframework.dao.TransientDataAccessResourceException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
@@ -71,12 +72,16 @@ public class GlobalExceptionHandler {
      * 通过 {@link MessageSource} 解析国际化消息；当存在自定义 message 时直接使用该 message，
      * 不经过 MessageSource。
      *
+     * <p>HTTP 状态码映射：根据 {@link BizErrorCode#getHttpStatus()} 返回对应的 HTTP 4xx/5xx 状态码，
+     * 使前端、网关、监控系统可基于 HTTP 状态码做错误分支与告警。
+     * 当异常使用裸 int code 构造（未匹配到 BizErrorCode）时，默认返回 400 BAD_REQUEST。
+     *
      * @param e   业务异常
      * @param req HTTP 请求
-     * @return 统一响应
+     * @return 统一响应（携带 HTTP 状态码）
      */
     @ExceptionHandler(BizException.class)
-    public Result<Void> handleBizException(BizException e, HttpServletRequest req) {
+    public ResponseEntity<Result<Void>> handleBizException(BizException e, HttpServletRequest req) {
         log.warn("[BizException] {} {} - code={} message={}",
                 req.getMethod(), req.getRequestURI(), e.getCode(), e.getMessage());
         String message = e.getErrorMessage();
@@ -91,7 +96,8 @@ public class GlobalExceptionHandler {
         }
         Result<Void> r = Result.failed(e.getCode(), message);
         r.setTraceId(TraceIdUtil.get());
-        return r;
+        HttpStatus status = errorCode != null ? errorCode.getHttpStatus() : HttpStatus.BAD_REQUEST;
+        return ResponseEntity.status(status).body(r);
     }
 
     /**
@@ -157,6 +163,7 @@ public class GlobalExceptionHandler {
      * @return 统一响应
      */
     @ExceptionHandler(MissingServletRequestParameterException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleMissingParam(MissingServletRequestParameterException e) {
         String msg = resolveMessage("error.missing_parameter",
                 new Object[]{e.getParameterName()},
@@ -173,6 +180,7 @@ public class GlobalExceptionHandler {
      * @return 统一响应
      */
     @ExceptionHandler(HttpMessageNotReadableException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleNotReadable(HttpMessageNotReadableException e) {
         log.warn("[HttpMessageNotReadable] {}", e.getMessage());
         Result<Void> r = Result.failed(BizErrorCode.BAD_REQUEST.getCode(), resolveMessage(BizErrorCode.BAD_REQUEST));
@@ -215,6 +223,7 @@ public class GlobalExceptionHandler {
      * @return 统一响应
      */
     @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
     public Result<Void> handleIllegalArgument(IllegalArgumentException e) {
         log.warn("[IllegalArgument] {}", e.getMessage());
         Result<Void> r = Result.failed(BizErrorCode.BAD_REQUEST.getCode(), e.getMessage());

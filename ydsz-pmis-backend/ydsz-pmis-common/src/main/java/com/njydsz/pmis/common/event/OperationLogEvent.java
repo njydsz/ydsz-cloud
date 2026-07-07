@@ -52,6 +52,19 @@ public class OperationLogEvent implements Serializable {
     private String paramsJson;
     /** 响应结果 JSON */
     private String responseJson;
+    /**
+     * 变更前数据（JSON）
+     *
+     * <p>P1-5 修复：由业务层通过 OperationLogContext 设置，Aspect 采集。
+     * 配合 afterData 可通过 DiffCalculator 计算字段级 diff。
+     */
+    private String beforeData;
+    /**
+     * 变更后数据（JSON）
+     *
+     * <p>P1-5 修复：由业务层通过 OperationLogContext 设置，Aspect 采集。
+     */
+    private String afterData;
     /** 操作状态，如 SUCCESS / FAIL */
     private String status;
     /** 错误信息（失败时填充） */

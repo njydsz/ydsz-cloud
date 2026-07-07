@@ -39,7 +39,7 @@ public class ProjectChangeExecutedEventListener {
      *
      * @param event 项目变更执行事件
      */
-    @Async
+    @Async("auditExecutor")
     @EventListener
     public void onProjectChangeExecuted(ProjectChangeExecutedEvent event) {
         if (event == null || event.getInitiationId() == null) {

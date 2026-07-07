@@ -202,7 +202,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
      * @param event 工作流事件
      */
     @EventListener
-    @Async
+    @Async("auditExecutor")
     public void onFlowWorkflowEvent(FlowWorkflowEvent event) {
         log.info("[FlowListener] 异步事件: type={} instanceId={} taskId={}",
                 event.getEventType(), event.getInstanceId(), event.getTaskId());

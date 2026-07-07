@@ -37,6 +37,16 @@ public @interface OperationLog {
     /** 是否保存响应结果 */
     boolean saveResult() default false;
 
+    /**
+     * 是否保存变更前/后数据（diff 快照）
+     *
+     * <p>P1-5 修复：为 true 时，Aspect 会从 {@link com.njydsz.pmis.common.log.OperationLogContext}
+     * 采集业务层设置的 beforeData/afterData，写入 pmis_operation_log.before_data/after_data。
+     *
+     * <p>业务层需在方法内通过 OperationLogContext.setBeforeData()/setAfterData() 设置快照。
+     */
+    boolean saveDiff() default false;
+
     /** 排除保存的字段（脱敏） */
     String[] excludeFields() default {"password", "oldPassword", "newPassword"};
 }

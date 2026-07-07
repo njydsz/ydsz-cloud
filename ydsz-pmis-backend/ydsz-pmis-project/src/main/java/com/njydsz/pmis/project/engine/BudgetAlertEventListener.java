@@ -32,7 +32,7 @@ public class BudgetAlertEventListener {
      *
      * @param event 预算告警事件
      */
-    @Async
+    @Async("auditExecutor")
     @EventListener
     public void onBudgetAlert(BudgetAlertEvent event) {
         if (event == null) {

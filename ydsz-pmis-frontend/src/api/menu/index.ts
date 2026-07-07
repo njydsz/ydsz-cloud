@@ -14,10 +14,13 @@ export * from './types'
  *
  * 根据当前登录用户的角色返回可见的菜单/按钮/API 权限树，前端用于动态路由与按钮鉴权。
  *
+ * 注：此接口由路由守卫在首次进入受保护路由时调用（generateRoutes），设置 skipCancel: true
+ * 避免路由切换时被 cancelAll 打断导致动态路由加载失败。
+ *
  * @returns 菜单树节点数组
  */
 export const getMenuTreeApi = () =>
-  request<MenuTreeNode[]>({ url: '/permissions/menu-tree', method: 'GET' })
+  request<MenuTreeNode[]>({ url: '/permissions/menu-tree', method: 'GET', skipCancel: true })
 
 /**
  * 拉取所有权限(管理端)

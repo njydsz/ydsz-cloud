@@ -24,6 +24,7 @@ import ReAuthDialog from '@/components/common/ReAuthDialog.vue'
 import PasswordStrengthBar from '@/components/common/PasswordStrengthBar.vue'
 import { useReAuth } from '@/composables/useReAuth'
 import { useResponsive } from '@/composables/useResponsive'
+import { useModalA11y } from '@/composables/useModalA11y'
 import { handleError, confirmAction, showSuccess } from '@/utils/error'
 import type { ReAuthMethod } from '@/api/user/reauth'
 import type { UserVO, UserCreateDTO } from '@/api/system/user/types'
@@ -250,6 +251,10 @@ const resetUserId = ref<number | null>(null)
 const newPassword = ref('')
 /** 重置密码提交中状态（防重复提交） */
 const submittingResetPwd = ref(false)
+
+// 无障碍访问增强：对话框关闭后恢复焦点到打开前的触发元素（focus trap 由 Element Plus 内置）
+useModalA11y(formDialogVisible)
+useModalA11y(resetDialogVisible)
 /**
  * 打开重置密码弹窗
  * @param row 待重置密码的用户行数据
@@ -371,8 +376,8 @@ onMounted(() => {
           <vxe-column field="email" :title="$t('system.user.columns.email')" min-width="180" />
           <vxe-column field="status" :title="$t('system.user.columns.status')" width="80">
             <template #default="{ row }">
-              <el-tag :type="(row as { status?: string }).status === 'ENABLED' ? 'success' : 'info'">
-                {{ $t(`system.user.status.${(row as { status?: string }).status}`) }}
+              <el-tag :type="row.status === 'ENABLED' ? 'success' : 'info'">
+                {{ $t(`system.user.status.${row.status}`) }}
               </el-tag>
             </template>
           </vxe-column>
@@ -385,7 +390,7 @@ onMounted(() => {
                 {{ $t('system.user.buttons.resetPassword') }}
               </el-button>
               <el-button v-permission="['auth:user:toggle']" link type="primary" size="small" @click="handleToggleStatus(row)">
-                {{ (row as { status?: string }).status === 'ENABLED' ? $t('system.user.buttons.disable') : $t('system.user.buttons.enable') }}
+                {{ row.status === 'ENABLED' ? $t('system.user.buttons.disable') : $t('system.user.buttons.enable') }}
               </el-button>
               <el-button v-permission="['auth:user:delete']" link type="danger" size="small" @click="handleDelete(row)">
                 {{ $t('common.delete') }}
@@ -414,6 +419,8 @@ onMounted(() => {
       :title="formMode === 'create' ? $t('system.user.dialog.createTitle') : $t('system.user.dialog.editTitle')"
       :width="isMobile ? '90%' : '640px'"
       :fullscreen="isMobile"
+      :close-on-click-modal="false"
+      :close-on-press-escape="true"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
@@ -484,7 +491,7 @@ onMounted(() => {
     </el-dialog>
 
     <!-- 重置密码弹窗 -->
-    <el-dialog v-model="resetDialogVisible" :title="$t('system.user.dialog.resetPwdTitle')" :width="isMobile ? '90%' : '420px'" :fullscreen="isMobile">
+    <el-dialog v-model="resetDialogVisible" :title="$t('system.user.dialog.resetPwdTitle')" :width="isMobile ? '90%' : '420px'" :fullscreen="isMobile" :close-on-click-modal="false" :close-on-press-escape="true">
       <el-form label-width="80px">
         <el-form-item :label="$t('system.user.form.password')">
           <el-input v-model="newPassword" type="password" show-password :placeholder="$t('system.user.form.passwordPlaceholder')" />

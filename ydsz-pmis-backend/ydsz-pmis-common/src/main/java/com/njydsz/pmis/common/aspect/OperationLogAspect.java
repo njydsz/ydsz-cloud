@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.event.OperationLogEvent;
+import com.njydsz.pmis.common.log.OperationLogContext;
 import com.njydsz.pmis.common.security.LoginUser;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.common.security.TenantContext;
@@ -76,6 +77,9 @@ public class OperationLogAspect {
                 publishEvent(pjp, operationLog, result, error, cost);
             } catch (Exception e) {
                 log.error("[OperationLog] 发布事件失败", e);
+            } finally {
+                // P1-5 修复：清理 OperationLogContext ThreadLocal，防止内存泄漏与跨请求串号
+                OperationLogContext.clear();
             }
         }
     }
@@ -163,6 +167,9 @@ public class OperationLogAspect {
                 .userAgent(request != null ? request.getHeader("User-Agent") : "")
                 .paramsJson(params)
                 .responseJson(responseData)
+                // P1-5 修复：采集业务层通过 OperationLogContext 设置的变更前/后数据
+                .beforeData(ann.saveDiff() ? OperationLogContext.getBeforeData() : null)
+                .afterData(ann.saveDiff() ? OperationLogContext.getAfterData() : null)
                 .status(error == null ? "SUCCESS" : "FAILED")
                 .errorMessage(error == null ? "" : error.getMessage())
                 .costMs(cost)

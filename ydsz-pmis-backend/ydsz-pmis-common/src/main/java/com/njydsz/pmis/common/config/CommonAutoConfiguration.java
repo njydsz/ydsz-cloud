@@ -5,17 +5,29 @@ import com.njydsz.pmis.common.featureflag.FeatureFlagAutoConfiguration;
 import com.njydsz.pmis.common.filter.SameSiteCookieFilter;
 import com.njydsz.pmis.common.filter.StrictContentTypeFilter;
 import com.njydsz.pmis.common.interceptor.AuthInterceptor;
+import com.njydsz.pmis.common.kms.EnvironmentSecretProvider;
+import com.njydsz.pmis.common.kms.JasyptSecretProvider;
+import com.njydsz.pmis.common.kms.KmsProperties;
+import com.njydsz.pmis.common.kms.SecretManager;
+import com.njydsz.pmis.common.kms.SecretProvider;
+import com.njydsz.pmis.common.service.BloomFilterService;
 import com.njydsz.pmis.common.tx.TransactionPostProcessor;
+import org.jasypt.encryption.StringEncryptor;
+import org.redisson.api.RBloomFilter;
+import org.redisson.api.RedissonClient;
 import org.slf4j.MDC;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.env.Environment;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.util.Map;
 
@@ -32,9 +44,8 @@ import java.util.Map;
  */
 @Configuration
 @ComponentScan("com.njydsz.pmis.common")
-@Import({FeatureFlagAutoConfiguration.class, ChaosAutoConfiguration.class, SentinelAutoConfiguration.class,
-        JasyptAutoConfiguration.class})
-@EnableAsync
+@Import({FeatureFlagAutoConfiguration.class, ChaosAutoConfiguration.class, SentinelAutoConfiguration.class, AsyncAutoConfiguration.class, BloomFilterConfig.class})
+@EnableConfigurationProperties(KmsProperties.class)
 @EnableCaching
 public class CommonAutoConfiguration {
 
@@ -147,5 +158,86 @@ public class CommonAutoConfiguration {
     @ConditionalOnMissingBean
     public StrictContentTypeFilter strictContentTypeFilter() {
         return new StrictContentTypeFilter();
+    }
+
+    /**
+     * 注册布隆过滤器服务(P1-10:防止缓存穿透)
+     *
+     * <p>仅当 classpath 存在 {@link RedissonClient} 时生效,与 {@link BloomFilterConfig}
+     * 中定义的 {@code userBloomFilter} / {@code userIdBloomFilter} Bean 配合使用。
+     * 业务层注入后,通过逻辑名称(如 {@code "user:username"})操作过滤器。
+     *
+     * @param userBloomFilter   用户名维度的布隆过滤器(由 BloomFilterConfig 注册)
+     * @param userIdBloomFilter 用户 ID 维度的布隆过滤器(由 BloomFilterConfig 注册)
+     * @return BloomFilterService 实例
+     */
+    @Bean
+    @ConditionalOnClass(RedissonClient.class)
+    @ConditionalOnMissingBean
+    public BloomFilterService bloomFilterService(RBloomFilter<String> userBloomFilter,
+                                                 RBloomFilter<String> userIdBloomFilter) {
+        return new BloomFilterService(userBloomFilter, userIdBloomFilter);
+    }
+
+    // ==================== KMS 密钥管理（P2-9） ====================
+
+    /**
+     * 注册默认密钥提供者：基于环境变量/Nacos 配置（P2-9）
+     *
+     * <p>当 {@code pmis.kms.provider=environment}（默认值或缺省）时生效。
+     * 优先从环境变量读取（{@code PMIS_SECRETS_DB_PASSWORD} 等），
+     * 其次从 Nacos 配置 {@code pmis.kms.secrets.*} 读取。
+     *
+     * <p>使用 {@code @ConditionalOnMissingBean(SecretProvider.class)} 允许业务模块覆盖。
+     *
+     * @param kmsProperties KMS 配置属性
+     * @param environment   Spring Environment
+     * @return EnvironmentSecretProvider 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(SecretProvider.class)
+    @ConditionalOnProperty(prefix = "pmis.kms", name = "provider", havingValue = "environment", matchIfMissing = true)
+    public EnvironmentSecretProvider environmentSecretProvider(KmsProperties kmsProperties,
+                                                              Environment environment) {
+        return new EnvironmentSecretProvider(kmsProperties, environment);
+    }
+
+    /**
+     * 注册 Jasypt 增强密钥提供者（P2-9）
+     *
+     * <p>当 {@code pmis.kms.provider=jasypt} 时生效。在环境变量/Nacos 配置基础上，
+     * 对 {@code ENC()} 密文自动解密，复用项目现有 Jasypt 配置。
+     *
+     * <p>使用 {@code @ConditionalOnMissingBean(SecretProvider.class)} 允许业务模块覆盖。
+     *
+     * @param kmsProperties   KMS 配置属性
+     * @param environment     Spring Environment
+     * @param stringEncryptor Jasypt 字符串加密器（由 jasypt-spring-boot-starter 自动装配）
+     * @return JasyptSecretProvider 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(SecretProvider.class)
+    @ConditionalOnProperty(prefix = "pmis.kms", name = "provider", havingValue = "jasypt")
+    public JasyptSecretProvider jasyptSecretProvider(KmsProperties kmsProperties,
+                                                     Environment environment,
+                                                     StringEncryptor stringEncryptor) {
+        return new JasyptSecretProvider(kmsProperties, environment, stringEncryptor);
+    }
+
+    /**
+     * 注册密钥管理器（P2-9 业务统一入口）
+     *
+     * <p>业务代码注入 {@link SecretManager} 获取数据库密码、Redis 密码、JWT 密钥等，
+     * 内部委托给当前生效的 {@link SecretProvider} 实现。
+     *
+     * <p>使用 {@code @ConditionalOnMissingBean} 允许业务模块覆盖。
+     *
+     * @param secretProvider 当前生效的密钥提供者
+     * @return SecretManager 实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(SecretManager.class)
+    public SecretManager secretManager(SecretProvider secretProvider) {
+        return new SecretManager(secretProvider);
     }
 }

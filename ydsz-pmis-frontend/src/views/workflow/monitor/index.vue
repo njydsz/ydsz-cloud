@@ -26,15 +26,7 @@ import type {
   ApproverEfficiencyDTO,
   FlowTypeDistributionDTO,
 } from '@/api/workflow/types'
-import * as echarts from 'echarts/core'
-import { LineChart, BarChart, PieChart } from 'echarts/charts'
-import {
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent,
-} from 'echarts/components'
-import { CanvasRenderer } from 'echarts/renderers'
+import * as echarts from '@/utils/echarts'
 import { logger } from '@/utils/logger'
 
 /** ECharts tooltip formatter 的 axisPointer 模式参数类型（外部未导出，手动声明） */
@@ -43,17 +35,6 @@ interface AxisTooltipParam {
   value?: number
   dataIndex?: number
 }
-
-echarts.use([
-  LineChart,
-  BarChart,
-  PieChart,
-  TitleComponent,
-  TooltipComponent,
-  GridComponent,
-  LegendComponent,
-  CanvasRenderer,
-])
 
 const router = useRouter()
 const { t } = useI18n()
@@ -241,10 +222,14 @@ function renderTrendChart() {
         lineStyle: { color: '#1890ff', width: 2 },
         itemStyle: { color: '#1890ff' },
         areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(24,144,255,0.25)' },
-            { offset: 1, color: 'rgba(24,144,255,0.02)' },
-          ]),
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(24,144,255,0.25)' },
+              { offset: 1, color: 'rgba(24,144,255,0.02)' },
+            ],
+          },
         },
       },
       {
@@ -255,10 +240,14 @@ function renderTrendChart() {
         lineStyle: { color: '#52c41a', width: 2 },
         itemStyle: { color: '#52c41a' },
         areaStyle: {
-          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-            { offset: 0, color: 'rgba(82,196,26,0.25)' },
-            { offset: 1, color: 'rgba(82,196,26,0.02)' },
-          ]),
+          color: {
+            type: 'linear',
+            x: 0, y: 0, x2: 0, y2: 1,
+            colorStops: [
+              { offset: 0, color: 'rgba(82,196,26,0.25)' },
+              { offset: 1, color: 'rgba(82,196,26,0.02)' },
+            ],
+          },
         },
       },
     ],
@@ -337,10 +326,14 @@ function renderBottleneckChart() {
           .map((s) => ({
             value: Math.round(s.avgDurationMs || 0),
             itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#ff7a45' },
-                { offset: 1, color: '#ff4d4f' },
-              ]),
+              color: {
+                type: 'linear',
+                x: 0, y: 0, x2: 1, y2: 0,
+                colorStops: [
+                  { offset: 0, color: '#ff7a45' },
+                  { offset: 1, color: '#ff4d4f' },
+                ],
+              },
               borderRadius: [0, 4, 4, 0],
             },
           }))
@@ -424,10 +417,14 @@ function renderApproverChart() {
           .map((s) => ({
             value: Math.round(s.avgDurationMs || 0),
             itemStyle: {
-              color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-                { offset: 0, color: '#36cfc9' },
-                { offset: 1, color: '#13c2c2' },
-              ]),
+              color: {
+                type: 'linear',
+                x: 0, y: 0, x2: 1, y2: 0,
+                colorStops: [
+                  { offset: 0, color: '#36cfc9' },
+                  { offset: 1, color: '#13c2c2' },
+                ],
+              },
               borderRadius: [0, 4, 4, 0],
             },
           }))

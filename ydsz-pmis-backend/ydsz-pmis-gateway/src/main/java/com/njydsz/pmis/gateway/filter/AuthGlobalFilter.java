@@ -281,6 +281,8 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
      *   <li>X-XSS-Protection: 1; mode=block — 启用浏览器 XSS 过滤器</li>
      *   <li>Referrer-Policy: strict-origin-when-cross-origin — 限制 Referrer 泄漏</li>
      *   <li>X-CSRF-Protection: 1 — 声明已启用 CSRF 防护</li>
+     *   <li>Content-Security-Policy — 限制脚本/样式/图片/连接来源,防 XSS 注入</li>
+     *   <li>Permissions-Policy — 限制浏览器 API 权限(摄像头/麦克风/地理位置等)</li>
      * </ul>
      *
      * <p>通过 chain.filter().then() 在下游链完成后注入,确保所有成功响应均携带安全头。
@@ -297,6 +299,28 @@ public class AuthGlobalFilter implements GlobalFilter, Ordered {
             response.getHeaders().add("X-XSS-Protection", "1; mode=block");
             response.getHeaders().add("Referrer-Policy", "strict-origin-when-cross-origin");
             response.getHeaders().add("X-CSRF-Protection", "1");
+            // CSP 策略: 限制脚本/样式/图片/连接来源
+            // - script-src: self + unsafe-inline(Vue 模板) + unsafe-eval(开发环境)
+            // - style-src: self + unsafe-inline(Element Plus 样式注入)
+            // - img-src: self + data:(base64) + blob:(URL) + https:(CDN 图片)
+            // - connect-src: self + ws/wss(WebSocket) + https(API/Sentry)
+            // - font-src: self + data:(字体 base64)
+            // - frame-ancestors: none(防点击劫持)
+            // - base-uri: self(防 base 标签注入)
+            // - form-action: self(防表单提交到外部)
+            response.getHeaders().add("Content-Security-Policy",
+                "default-src 'self'; "
+                + "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+                + "style-src 'self' 'unsafe-inline'; "
+                + "img-src 'self' data: blob: https:; "
+                + "font-src 'self' data:; "
+                + "connect-src 'self' ws: wss: https:; "
+                + "frame-ancestors 'none'; "
+                + "base-uri 'self'; "
+                + "form-action 'self'");
+            // Permissions-Policy: 禁用不需要的浏览器 API
+            response.getHeaders().add("Permissions-Policy",
+                "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()");
         }));
     }
 

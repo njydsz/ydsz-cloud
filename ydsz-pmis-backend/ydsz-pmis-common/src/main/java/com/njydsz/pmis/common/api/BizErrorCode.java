@@ -1,6 +1,7 @@
 package com.njydsz.pmis.common.api;
 
 import lombok.Getter;
+import org.springframework.http.HttpStatus;
 
 /**
  * 业务错误码
@@ -129,5 +130,54 @@ public enum BizErrorCode {
      */
     public String getMessageKey() {
         return "error." + name();
+    }
+
+    /**
+     * 将业务错误码映射到合适的 HTTP 状态码
+     *
+     * <p>遵循 REST 语义：
+     * <ul>
+     *   <li>参数/校验类错误 → 400 BAD_REQUEST</li>
+     *   <li>认证类错误（未登录/Token 失效） → 401 UNAUTHORIZED</li>
+     *   <li>授权类错误（无权限/账号禁用） → 403 FORBIDDEN</li>
+     *   <li>资源不存在 → 404 NOT_FOUND</li>
+     *   <li>资源冲突/并发冲突 → 409 CONFLICT</li>
+     *   <li>资源锁定 → 423 LOCKED</li>
+     *   <li>限流 → 429 TOO_MANY_REQUESTS</li>
+     *   <li>服务端错误 → 500 INTERNAL_SERVER_ERROR</li>
+     *   <li>服务不可用 → 503 SERVICE_UNAVAILABLE</li>
+     * </ul>
+     *
+     * @return 对应的 HTTP 状态码
+     */
+    public HttpStatus getHttpStatus() {
+        return switch (this) {
+            // 1xxxx 通用
+            case BAD_REQUEST, VALIDATION_FAILED, MISSING_PARAMETER, UNSUPPORTED_MEDIA_TYPE,
+                 BIZ_ERROR, CONTRACT_AMOUNT_EXCEED, COST_OVERFLOW, INVOICE_EXCEED,
+                 PROFIT_NEGATIVE, BENCH_OVER_LIMIT, WORKFLOW_REJECT,
+                 PASSWORD_WEAK, PASSWORD_REUSED,
+                 DB_CONSTRAINT_VIOLATION, DB_DATA_INTEGRITY -> HttpStatus.BAD_REQUEST;
+            case METHOD_NOT_ALLOWED -> HttpStatus.METHOD_NOT_ALLOWED;
+            case NOT_FOUND, USER_NOT_FOUND, DEPARTMENT_NOT_FOUND, EMPLOYEE_NOT_FOUND,
+                 PROJECT_NOT_FOUND, OPPORTUNITY_NOT_FOUND, CONTRACT_NOT_FOUND,
+                 PAYMENT_NOT_FOUND, WORKFLOW_NOT_FOUND -> HttpStatus.NOT_FOUND;
+            case DUPLICATE_KEY, USERNAME_DUPLICATE, TIMESHEET_DUPLICATE,
+                 RESOURCE_CONFLICT, PROJECT_STATUS_INVALID,
+                 DB_DUPLICATE_KEY, DB_LOCK_CONTENTION, RESOURCE_LOCKED -> HttpStatus.CONFLICT;
+            case RATE_LIMIT -> HttpStatus.TOO_MANY_REQUESTS;
+            case REQUEST_TIMEOUT -> HttpStatus.REQUEST_TIMEOUT;
+            case INTERNAL_ERROR, UNKNOWN, REPORT_GENERATE_FAILED -> HttpStatus.INTERNAL_SERVER_ERROR;
+            case SERVICE_UNAVAILABLE, DB_QUERY_TIMEOUT, DB_CONNECTION_FAILED -> HttpStatus.SERVICE_UNAVAILABLE;
+            // 2xxxx 认证授权
+            case UNAUTHORIZED, TOKEN_EXPIRED, TOKEN_INVALID,
+                 PASSWORD_EXPIRED, REAUTH_REQUIRED, REAUTH_INVALID,
+                 MFA_REQUIRED, MFA_INVALID, SESSION_KICKED,
+                 PASSWORD_INCORRECT -> HttpStatus.UNAUTHORIZED;
+            case FORBIDDEN, DATA_SCOPE_FORBIDDEN, USER_DISABLED,
+                 WORKFLOW_NO_PERMISSION -> HttpStatus.FORBIDDEN;
+            case ACCOUNT_LOCKED, USER_LOCKED, TIMESHEET_LOCKED -> HttpStatus.LOCKED;
+            case OK -> HttpStatus.OK;
+        };
     }
 }

@@ -1,6 +1,8 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.api.Result;
+import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.project.dto.AlertEventDTO;
 import com.njydsz.pmis.project.dto.CockpitAlertSummaryVO;
 import com.njydsz.pmis.project.dto.CockpitDrillDownDTO;
@@ -59,6 +61,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@DS(DataSourceConstants.SLAVE)
 @Transactional(readOnly = true)
 public class CockpitReportServiceImpl implements CockpitReportService {
 

@@ -5,13 +5,16 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.common.security.SecurityContext;
+import com.njydsz.pmis.workflow.dto.FlowDelegateAuthSaveDTO;
 import com.njydsz.pmis.workflow.entity.FlowDelegateAuthDO;
 import com.njydsz.pmis.workflow.service.FlowDelegateAuthService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -56,7 +59,9 @@ public class FlowDelegateController {
      */
     @PostMapping("/delegate-auth/create")
     @PrePermission(PermissionCodes.WORKFLOW_DELEGATE_MANAGE)
-    public Result<Long> createDelegateAuth(@RequestBody FlowDelegateAuthDO auth) {
+    public Result<Long> createDelegateAuth(@Valid @RequestBody FlowDelegateAuthSaveDTO dto) {
+        FlowDelegateAuthDO auth = new FlowDelegateAuthDO();
+        BeanUtils.copyProperties(dto, auth);
         // 从 SecurityContext 兜底 ownerUserId（防止前端漏传）
         if (auth.getOwnerUserId() == null) {
             auth.setOwnerUserId(SecurityContext.getUserId());

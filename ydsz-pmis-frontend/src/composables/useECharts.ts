@@ -17,8 +17,8 @@
  * @since 1.0.0
  */
 import { onBeforeUnmount, onMounted, ref, watch, type Ref } from 'vue'
-import * as echarts from 'echarts'
-import type { EChartsOption } from 'echarts'
+import * as echarts from '@/utils/echarts'
+import type { EChartsOption } from '@/utils/echarts'
 
 /** 内部 ECharts 实例最小方法集（避免直接依赖 ECharts 类型导出） */
 interface EChartsInstance {

@@ -32,7 +32,7 @@ public class LoginAuditListener {
      *
      * @param event 登录审计事件
      */
-    @Async
+    @Async("auditExecutor")
     @EventListener
     public void onLoginAudit(LoginAuditEvent event) {
         try {

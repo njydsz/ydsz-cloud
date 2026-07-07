@@ -17,6 +17,9 @@
         <result column="user_agent" property="userAgent"/>
         <result column="params_json" property="paramsJson"/>
         <result column="response_json" property="responseJson"/>
+        <!-- P1-5 修复：映射变更前/后数据列 -->
+        <result column="before_data" property="beforeData"/>
+        <result column="after_data" property="afterData"/>
         <result column="status" property="status"/>
         <result column="error_message" property="errorMessage"/>
         <result column="cost_ms" property="costMs"/>
@@ -30,18 +33,22 @@
         INSERT INTO pmis_operation_log (
             module, action, biz_type, biz_id, user_id, username,
             request_url, http_method, method_signature, client_ip, user_agent,
-            params_json, response_json, status, error_message, cost_ms, trace_id, tenant_id, created_at
+            params_json, response_json, before_data, after_data,
+            status, error_message, cost_ms, trace_id, tenant_id, created_at
         ) VALUES (
             #{module}, #{action}, #{bizType}, #{bizId}, #{userId}, #{username},
             #{requestUrl}, #{httpMethod}, #{methodSignature}, #{clientIp}, #{userAgent},
-            #{paramsJson}, #{responseJson}, #{status}, #{errorMessage}, #{costMs}, #{traceId}, #{tenantId}, NOW()
+            #{paramsJson}, #{responseJson},
+            #{beforeData}::jsonb, #{afterData}::jsonb,
+            #{status}, #{errorMessage}, #{costMs}, #{traceId}, #{tenantId}, NOW()
         )
     </insert>
 
     <select id="selectByUser" resultMap="BaseResultMap">
         SELECT id, module, action, biz_type, biz_id, user_id, username,
                request_url, http_method, method_signature, client_ip, user_agent,
-               params_json, response_json, status, error_message, cost_ms,
+               params_json, response_json, before_data, after_data,
+               status, error_message, cost_ms,
                trace_id, tenant_id, created_at
         FROM pmis_operation_log
         WHERE user_id = #{userId}
@@ -52,7 +59,8 @@
     <select id="selectByBiz" resultMap="BaseResultMap">
         SELECT id, module, action, biz_type, biz_id, user_id, username,
                request_url, http_method, method_signature, client_ip, user_agent,
-               params_json, response_json, status, error_message, cost_ms,
+               params_json, response_json, before_data, after_data,
+               status, error_message, cost_ms,
                trace_id, tenant_id, created_at
         FROM pmis_operation_log
         WHERE biz_type = #{bizType} AND biz_id = #{bizId}

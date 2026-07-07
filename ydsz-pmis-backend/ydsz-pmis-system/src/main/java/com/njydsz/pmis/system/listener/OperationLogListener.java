@@ -46,7 +46,7 @@ public class OperationLogListener {
      *
      * @param event 操作日志事件
      */
-    @Async
+    @Async("auditExecutor")
     @EventListener
     public void onOperationLog(OperationLogEvent event) {
         OperationLogDO entity = toDO(event);
@@ -112,6 +112,9 @@ public class OperationLogListener {
         l.setUserAgent(e.getUserAgent());
         l.setParamsJson(e.getParamsJson());
         l.setResponseJson(e.getResponseJson());
+        // P1-5 修复：填充变更前/后数据，落库到 before_data/after_data 列
+        l.setBeforeData(e.getBeforeData());
+        l.setAfterData(e.getAfterData());
         l.setStatus(e.getStatus());
         l.setErrorMessage(e.getErrorMessage());
         l.setCostMs(e.getCostMs());

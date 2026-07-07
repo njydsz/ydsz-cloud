@@ -66,6 +66,8 @@ class LoginUserTest {
         assertNull(user.getRoles());
         assertNull(user.getPermissions());
         assertNull(user.getDataScope());
+        assertNull(user.getCustomDeptIds());
+        assertNull(user.getDeptIds());
         assertNull(user.getToken());
         assertNull(user.getLoginTime());
         assertNull(user.getExpireTime());
@@ -77,10 +79,11 @@ class LoginUserTest {
         List<String> roles = Arrays.asList("admin");
         List<String> permissions = Arrays.asList("*:*:*");
         List<Long> customDeptIds = Arrays.asList(1L, 2L);
+        List<Long> deptIds = Arrays.asList(200L, 300L);
 
         LoginUser user = new LoginUser(
                 1L, "lisi", "李四", 200L, "财务部", 1L, "P8",
-                roles, permissions, "DEPT", customDeptIds, "token123",
+                roles, permissions, "DEPT", customDeptIds, deptIds, "token123",
                 1700000000000L, 1700086400000L
         );
 
@@ -95,6 +98,7 @@ class LoginUserTest {
         assertEquals(permissions, user.getPermissions());
         assertEquals("DEPT", user.getDataScope());
         assertEquals(customDeptIds, user.getCustomDeptIds());
+        assertEquals(deptIds, user.getDeptIds());
         assertEquals("token123", user.getToken());
         assertEquals(1700000000000L, user.getLoginTime());
         assertEquals(1700086400000L, user.getExpireTime());

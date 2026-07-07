@@ -7,6 +7,7 @@ import com.njydsz.pmis.userinfo.dto.CaptchaVO;
 import com.njydsz.pmis.userinfo.dto.LoginDTO;
 import com.njydsz.pmis.userinfo.dto.LoginResultVO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
+import com.njydsz.pmis.userinfo.service.DepartmentService;
 import com.njydsz.pmis.userinfo.service.PermissionService;
 import com.njydsz.pmis.userinfo.service.RoleService;
 import com.njydsz.pmis.userinfo.service.UserAccountService;
@@ -44,6 +45,8 @@ class AuthServiceImplTest {
     private RoleService roleService;
     @Mock
     private PermissionService permissionService;
+    @Mock
+    private DepartmentService departmentService;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -86,7 +89,9 @@ class AuthServiceImplTest {
             cryptoUtil.when(() -> CryptoUtil.verifyPassword(anyString(), anyString(), anyString())).thenReturn(true);
             // 惰性升级：返回模拟的 BCrypt 哈希
             cryptoUtil.when(() -> CryptoUtil.hashPasswordBCrypt(anyString())).thenReturn("$2a$12$mockedBcryptHash");
-            when(jwtTokenProvider.generateToken(anyLong(), anyString(), anyList(), anyList(), anyLong()))
+            when(jwtTokenProvider.generateToken(anyLong(), anyString(), anyList(), anyList(),
+                                                any(), any(), any(), any(),
+                                                anyLong()))
                     .thenReturn("access-token-xxx");
             when(jwtTokenProvider.generateRefreshToken(anyLong(), anyLong()))
                     .thenReturn("refresh-token-xxx");
@@ -125,7 +130,9 @@ class AuthServiceImplTest {
             // BCrypt 格式：isBCryptFormat 返回 true，走 verifyPasswordBCrypt 路径
             cryptoUtil.when(() -> CryptoUtil.isBCryptFormat("$2a$12$realBcryptHash")).thenReturn(true);
             cryptoUtil.when(() -> CryptoUtil.verifyPasswordBCrypt(anyString(), anyString())).thenReturn(true);
-            when(jwtTokenProvider.generateToken(anyLong(), anyString(), anyList(), anyList(), anyLong()))
+            when(jwtTokenProvider.generateToken(anyLong(), anyString(), anyList(), anyList(),
+                                                any(), any(), any(), any(),
+                                                anyLong()))
                     .thenReturn("access-token-bcrypt");
             when(jwtTokenProvider.generateRefreshToken(anyLong(), anyLong()))
                     .thenReturn("refresh-token-bcrypt");

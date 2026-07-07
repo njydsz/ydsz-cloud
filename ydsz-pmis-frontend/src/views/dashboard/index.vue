@@ -14,7 +14,7 @@
  * 批次 21 / P2 - 迁移原始 echarts.init() 到 useECharts composable
  */
 import { ref, onMounted, computed, nextTick, watch } from 'vue'
-import type { EChartsOption } from 'echarts'
+import type { EChartsOption } from '@/utils/echarts'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
@@ -376,7 +376,7 @@ onMounted(async () => {
     </div>
 
     <el-row :gutter="16" class="metric-row">
-      <el-col v-for="m in metrics" :key="m.title" :xs="24" :sm="12" :md="8" :lg="6">
+      <el-col v-for="m in metrics" :key="m.title" :xs="24" :sm="12" :md="8" :lg="6" :xl="6">
         <el-card class="metric-card" shadow="hover">
           <div class="metric-content">
             <div class="metric-icon" :style="{ background: m.color }">
@@ -564,6 +564,8 @@ onMounted(async () => {
 
 .chart-area {
   width: 100%;
+  // 最小宽度：保证图表在窄列下仍有可读的渲染区域；1366px 下最小图表列约 455px，不会触发横向溢出
+  min-width: 280px;
   height: 320px;
 }
 

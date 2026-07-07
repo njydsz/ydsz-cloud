@@ -31,7 +31,7 @@ public class DataExportAuditListener {
      *
      * @param e 数据导出审计事件
      */
-    @Async
+    @Async("auditExecutor")
     @EventListener
     public void onExport(DataExportAuditEvent e) {
         try {

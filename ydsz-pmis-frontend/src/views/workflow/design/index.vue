@@ -7,7 +7,7 @@
  *   - 经典模式（自绘 SVG，仿钉钉/飞书审批流，轻量拖拽）
  * 附带：版本管理（列表/切换激活/差异对比）+ 模拟运行。
  */
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { CopyDocument, VideoPlay, Refresh, Search, Files, MagicStick, Upload } from '@element-plus/icons-vue'
 import FlowDesigner from '../components/FlowDesigner.vue'
@@ -31,15 +31,24 @@ import type {
   SimulateResultDTO,
   FlowTemplateDTO,
 } from '@/api/workflow/types'
+import { useFormGuard } from '@/composables/useFormGuard'
 
 // ==================== 设计器模式 ====================
 const designerMode = ref<'bpmn' | 'classic'>('bpmn')
+
+// ==================== 表单防误关闭守卫 ====================
+const { setDirty } = useFormGuard({ message: '流程设计器内容未保存，确定离开？' })
 
 // ==================== 流程定义选择 ====================
 const definitionList = ref<FlowDefinitionDTO[]>([])
 const definitionLoading = ref(false)
 const selectedDefinitionId = ref<number | undefined>(undefined)
 const selectedDefinition = ref<FlowDefinitionDTO | undefined>(undefined)
+
+// 切换流程定义时重置 dirty（加载已有内容不算修改）
+watch(selectedDefinitionId, () => {
+  setDirty(false)
+})
 
 async function loadDefinitions() {
   definitionLoading.value = true
@@ -455,6 +464,9 @@ onMounted(() => {
         :flow-code="selectedDefinition?.flowCode"
         :flow-name="selectedDefinition?.flowName"
         :initial-xml="selectedDefinition?.bpmnXml"
+        @change="setDirty(true)"
+        @save="setDirty(false)"
+        @deploy="setDirty(false)"
       />
       <FlowDesigner v-else />
     </div>

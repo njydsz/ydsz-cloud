@@ -494,7 +494,7 @@ onMounted(() => {
             <vxe-column field="leaveDays" :title="t('attendance.leave.columns.leaveDays')" width="80" align="right" />
             <vxe-column field="approvalStatus" :title="t('attendance.leave.columns.approvalStatus')" width="100">
               <template #default="{ row }">
-                <el-tag :type="lvStatusMap[row.approvalStatus]?.type || 'info'">
+                <el-tag :type="(lvStatusMap[row.approvalStatus]?.type || 'info') as 'info' | 'warning' | 'primary' | 'success' | 'danger'">
                   {{ lvStatusMap[row.approvalStatus]?.label || row.approvalStatus }}
                 </el-tag>
               </template>

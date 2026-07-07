@@ -97,7 +97,7 @@ describe('Auth API', () => {
 
       const result = await getUserInfoApi()
 
-      expect(mockRequest).toHaveBeenCalledWith({ url: '/users/me', method: 'GET' })
+      expect(mockRequest).toHaveBeenCalledWith({ url: '/users/me', method: 'GET', skipCancel: true })
       expect(result.username).toBe('admin')
       expect(result.roles).toContain('admin')
     })

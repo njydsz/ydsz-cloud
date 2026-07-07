@@ -6,12 +6,13 @@
  *   支持保存表单 schema 到后端。
  *   P2-7: 新增 CodeMirror JSON 编辑器 + 表单模板库。
  */
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import FormDesigner from '../components/FormDesigner.vue'
 import FormTemplateLibrary from '../components/FormTemplateLibrary.vue'
 import JsonEditor from '@/components/common/JsonEditor.vue'
 import { saveFormSchema, getFormSchema } from '@/api/workflow'
+import { useFormGuard } from '@/composables/useFormGuard'
 import type { Rule, Options } from '@form-create/element-ui'
 
 // ==================== 双模式 ====================
@@ -28,6 +29,11 @@ const loading = ref(false)
 const jsonEditorContent = ref('')
 const jsonEditorError = ref('')
 const jsonValid = ref(true)
+
+// ==================== 表单防误关闭守卫 ====================
+const { setDirty } = useFormGuard({ message: '表单设计器内容未保存，确定离开？' })
+// JSON 编辑器内容变更时启用守卫
+watch(jsonEditorContent, () => setDirty(true))
 
 // P2-7: 表单模板库弹窗
 const templateLibraryVisible = ref(false)
@@ -152,6 +158,8 @@ function handleTemplateSelect(template: { rule: Record<string, unknown>[]; optio
     jsonEditorContent.value = JSON.stringify({ rule: template.rule, options: template.options }, null, 2)
     jsonEditorError.value = ''
     editorMode.value = 'design'
+    // 模板导入视为内容变更
+    setDirty(true)
   }
 }
 
@@ -166,6 +174,8 @@ async function doSaveToBackend(json: string) {
     })
     if (res.data?.code === 0) {
       ElMessage.success('表单保存成功')
+      // 表单已保存，解除防误关闭守卫
+      setDirty(false)
     } else {
       ElMessage.error(res.data?.message || '保存失败')
     }
@@ -203,6 +213,8 @@ async function handleLoadForm() {
         formInfo.value.formName = schema.formName || ''
 
         editorMode.value = 'design'
+        // 加载已有表单，重置 dirty（需在 watch jsonEditorContent 触发后覆盖）
+        nextTick(() => setDirty(false))
         ElMessage.success('表单加载成功')
       }
     } else {
@@ -260,6 +272,7 @@ async function handleLoadForm() {
         :form-code="formInfo.formCode"
         :form-name="formInfo.formName"
         @save="handleDesignSave"
+        @change="setDirty(true)"
       />
     </div>
 

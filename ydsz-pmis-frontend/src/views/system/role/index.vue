@@ -19,6 +19,7 @@ import { getAllPermissionsApi } from '@/api/menu'
 import type { RoleVO, RoleFormDTO } from '@/api/system/role/types'
 import type { MenuTreeNode } from '@/api/menu/types'
 import { handleError, confirmAction, showSuccess } from '@/utils/error'
+import { useModalA11y } from '@/composables/useModalA11y'
 
 const { t } = useI18n()
 
@@ -57,6 +58,10 @@ const permTree = ref<MenuTreeNode[]>([])
 const permTreeRef = ref()
 const permDialogRoleId = ref<number | null>(null)
 const permCheckedIds = ref<number[]>([])
+
+// 无障碍访问增强：对话框关闭后恢复焦点到打开前的触发元素（focus trap 由 Element Plus 内置）
+useModalA11y(dialogVisible)
+useModalA11y(permDialogVisible)
 
 /** 拉取角色分页列表 */
 async function fetchList() {
@@ -263,6 +268,8 @@ onMounted(fetchList)
       v-model="dialogVisible"
       :title="dialogMode === 'create' ? $t('system.role.dialog.createTitle') : $t('system.role.dialog.editTitle')"
       width="560px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="true"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item :label="$t('system.role.form.roleCode')" prop="roleCode">
@@ -299,7 +306,7 @@ onMounted(fetchList)
     </el-dialog>
 
     <!-- 分配权限 -->
-    <el-dialog v-model="permDialogVisible" :title="$t('system.role.dialog.permTitle')" width="500px">
+    <el-dialog v-model="permDialogVisible" :title="$t('system.role.dialog.permTitle')" width="500px" :close-on-click-modal="false" :close-on-press-escape="true">
       <el-tree
         ref="permTreeRef"
         :data="permTree"

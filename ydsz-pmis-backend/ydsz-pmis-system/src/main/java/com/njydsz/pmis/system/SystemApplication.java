@@ -5,7 +5,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * 系统基础服务启动类（合并 file + config + audit + notification + message）
@@ -22,7 +21,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 })
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.njydsz.pmis.system.feign")
-@EnableAsync
 @MapperScan("com.njydsz.pmis.system.mapper")
 public class SystemApplication {
 

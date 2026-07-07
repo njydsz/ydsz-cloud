@@ -66,7 +66,7 @@ public class DataExportAuditAspect {
      * @param ann    数据导出审计注解
      * @param result 目标方法返回值
      */
-    @Async
+    @Async("exportExecutor")
     void publish(ProceedingJoinPoint pjp, DataExportAudit ann, Object result) {
         ServletRequestAttributes attrs = (ServletRequestAttributes) RequestContextHolder.getRequestAttributes();
         HttpServletRequest request = attrs != null ? attrs.getRequest() : null;

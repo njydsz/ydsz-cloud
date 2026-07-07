@@ -4,7 +4,7 @@
   @module views/project/contract
 -->
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import type { FormInstance } from 'element-plus'
 import PageLayout from '@/components/common/PageLayout.vue'
 import StatusTag from '@/components/common/StatusTag.vue'
@@ -18,6 +18,8 @@ import {
 import type { ContractVO, ContractCreateDTO, ContractStatusDTO } from '@/api/project/contract/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
+import { useFormGuard } from '@/composables/useFormGuard'
+import { useModalA11y } from '@/composables/useModalA11y'
 import { useUserStore } from '@/store/modules/user'
 import { handleError, confirmAction, showSuccess } from '@/utils/error'
 
@@ -121,6 +123,20 @@ const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form,
   userId: userStore.userInfo?.id,
 })
 
+// ===== 表单防误关闭守卫 =====
+const { setDirty } = useFormGuard({ message: '合同表单内容未保存，确定离开？' })
+// 表单字段修改时启用守卫（仅弹窗打开期间）
+watch(form, () => {
+  if (dialogVisible.value) setDirty(true)
+}, { deep: true })
+// 弹窗打开后清除 dirty（覆盖 openCreate/openEdit 重置 form 触发的 watch）
+watch(dialogVisible, (val) => {
+  if (val) nextTick(() => setDirty(false))
+})
+
+// 无障碍访问增强：对话框关闭后恢复焦点到打开前的触发元素（focus trap 由 Element Plus 内置）
+useModalA11y(dialogVisible)
+
 const draftTimeText = computed(() => {
   if (!lastSavedAt.value) return ''
   return lastSavedAt.value.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
@@ -223,6 +239,8 @@ async function submitForm() {
       } as any)
       showSuccess('更新成功')
     }
+    // 表单已保存，解除防误关闭守卫
+    setDirty(false)
     dialogVisible.value = false
     fetchList()
   } catch (e) {
@@ -353,7 +371,7 @@ onMounted(fetchList)
       </vxe-table>
     </template>
 
-    <el-dialog v-model="dialogVisible" :title="formMode === 'create' ? '新增合同' : '编辑合同'" width="720px">
+    <el-dialog v-model="dialogVisible" :title="formMode === 'create' ? '新增合同' : '编辑合同'" width="720px" :close-on-click-modal="false" :close-on-press-escape="true">
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-row :gutter="16">
           <el-col :span="12">

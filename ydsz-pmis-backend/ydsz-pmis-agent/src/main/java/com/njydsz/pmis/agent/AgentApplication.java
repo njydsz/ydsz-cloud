@@ -5,7 +5,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
 import org.springframework.cloud.openfeign.EnableFeignClients;
-import org.springframework.scheduling.annotation.EnableAsync;
 
 /**
  * AI 智能体服务启动类
@@ -22,7 +21,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
 })
 @EnableDiscoveryClient
 @EnableFeignClients(basePackages = "com.njydsz.pmis.agent.feign")
-@EnableAsync
 @MapperScan("com.njydsz.pmis.agent.mapper")
 public class AgentApplication {
 

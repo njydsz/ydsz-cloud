@@ -17,6 +17,7 @@ import {
   refreshConfigCache,
 } from '@/api/system/config'
 import type { ConfigVO, ConfigFormDTO } from '@/api/system/config/types'
+import { useModalA11y } from '@/composables/useModalA11y'
 
 const { t } = useI18n()
 
@@ -67,6 +68,9 @@ const formRules = {
   ],
   valueType: [{ required: true, message: t('system.config.rules.valueTypeRequired'), trigger: 'change' }],
 }
+
+// 无障碍访问增强：对话框关闭后恢复焦点到打开前的触发元素（focus trap 由 Element Plus 内置）
+useModalA11y(dialogVisible)
 
 const valueTypeOptions = computed(() => [
   { label: t('system.config.valueType.STRING'), value: 'STRING' },
@@ -410,6 +414,8 @@ onMounted(fetchList)
       v-model="dialogVisible"
       :title="dialogMode === 'create' ? t('system.config.dialog.createTitle') : t('system.config.dialog.editTitle')"
       width="640px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="true"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item :label="t('system.config.form.configGroup')" prop="configGroup">

@@ -39,6 +39,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'save', xml: string, svg: string): void
   (e: 'deploy', flowCode: string, flowName: string, xml: string): void
+  /** 设计器内容变更（节点增删改、连线等） */
+  (e: 'change'): void
 }>()
 
 // ==================== State ====================
@@ -219,6 +221,8 @@ function initModeler() {
       } catch {
         // ignore
       }
+      // 通知父组件内容已变更（用于防误关闭守卫）
+      emit('change')
     })
 
     // P1-02: 监听元素选中变化 → 更新属性面板

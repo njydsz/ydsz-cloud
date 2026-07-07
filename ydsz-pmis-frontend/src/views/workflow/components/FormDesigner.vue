@@ -25,6 +25,8 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'save', rule: Rule[], options: Options, json: string): void
+  /** 设计器内容变更（清空、导入 JSON 等） */
+  (e: 'change'): void
 }>()
 
 // ==================== State ====================
@@ -126,6 +128,7 @@ function handleClear() {
   const designer = getDesigner()
   if (!designer) return
   designer.clearDragRule()
+  emit('change')
   ElMessage.success('表单已清空')
 }
 
@@ -183,6 +186,7 @@ function handleImportJson() {
         ElMessage.error('JSON 格式不正确，需要包含 rule 数组')
         return
       }
+      emit('change')
       ElMessage.success('表单 JSON 已导入')
     } catch (err) {
       ElMessage.error('JSON 解析失败：' + (err as Error).message)

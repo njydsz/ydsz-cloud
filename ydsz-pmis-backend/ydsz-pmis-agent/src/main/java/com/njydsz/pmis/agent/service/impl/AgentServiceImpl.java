@@ -127,7 +127,7 @@ public class AgentServiceImpl implements AgentService {
     }
 
     @Override
-    @Async
+    @Async("agentExecutor")
     public void runAsync(AgentRunRequestDTO req) {
         try {
             run(req);

@@ -43,9 +43,13 @@ export const logoutApi = () => request<void>({ url: '/auth/logout', method: 'POS
  *
  * 拉取当前登录用户的资料、角色与权限码列表。
  *
+ * 注：此接口由路由守卫在首次进入受保护路由时调用，设置 skipCancel: true
+ * 避免路由切换时被 cancelAll 打断导致用户被误判为未登录。
+ *
  * @returns 当前用户信息
  */
-export const getUserInfoApi = () => request<UserInfo>({ url: '/users/me', method: 'GET' })
+export const getUserInfoApi = () =>
+  request<UserInfo>({ url: '/users/me', method: 'GET', skipCancel: true })
 
 /**
  * 刷新 Token

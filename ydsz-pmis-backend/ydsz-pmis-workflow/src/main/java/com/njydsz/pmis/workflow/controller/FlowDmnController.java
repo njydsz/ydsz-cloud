@@ -5,9 +5,11 @@ import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.workflow.entity.FlowDmnTableDO;
 import com.njydsz.pmis.workflow.service.FlowDmnTableService;
 import com.njydsz.pmis.workflow.dto.DmnExecuteDTO;
+import com.njydsz.pmis.workflow.dto.FlowDmnTableSaveDTO;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
+import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -87,7 +89,9 @@ public class FlowDmnController {
      */
     @Operation(summary = "新建/更新决策表")
     @PostMapping("/save")
-    public Result<Long> save(@RequestBody FlowDmnTableDO table) {
+    public Result<Long> save(@Valid @RequestBody FlowDmnTableSaveDTO dto) {
+        FlowDmnTableDO table = new FlowDmnTableDO();
+        BeanUtils.copyProperties(dto, table);
         if (table.getId() != null) {
             dmnTableService.update(table);
             return Result.ok();

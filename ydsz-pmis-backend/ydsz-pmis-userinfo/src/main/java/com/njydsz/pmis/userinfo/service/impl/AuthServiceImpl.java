@@ -13,8 +13,10 @@ import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.userinfo.dto.LoginContextDTO;
+import com.njydsz.pmis.userinfo.entity.DepartmentDO;
 import com.njydsz.pmis.userinfo.entity.RoleDO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
+import com.njydsz.pmis.userinfo.service.DepartmentService;
 import com.njydsz.pmis.userinfo.service.PermissionService;
 import com.njydsz.pmis.userinfo.service.RoleService;
 import com.njydsz.pmis.userinfo.service.UserAccountService;
@@ -29,6 +31,7 @@ import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -80,6 +83,10 @@ public class AuthServiceImpl implements AuthService {
     private final RoleService roleService;
     /** 权限服务 */
     private final PermissionService permissionService;
+    /**
+     * 部门服务（P1-6 修复：用于 DEPT_AND_CHILD 模式递归计算 deptIds 链）
+     */
+    private final DepartmentService departmentService;
     /** Spring 事件发布器（用于发布账号锁定事件等） */
     private final ApplicationEventPublisher publisher;
 
@@ -176,10 +183,12 @@ public class AuthServiceImpl implements AuthService {
         // 6. 清除失败计数
         clearLoginFailure(dto.getUsername());
 
-        // 7. 生成 Token (roles/permissions 写入 Claims)
+        // 7. 生成 Token (P1-6 修复: 含数据权限上下文 deptId/deptIds/customDeptIds/dataScope)
         String token = jwtTokenProvider.generateToken(
                 ctx.getUserId(), ctx.getUsername(),
                 ctx.getRoles(), ctx.getPermissions(),
+                ctx.getDeptId(), ctx.getDeptIds(), ctx.getCustomDeptIds(),
+                ctx.getDataScope(),
                 TOKEN_EXPIRE_HOURS * 3600L);
         String refreshToken = jwtTokenProvider.generateRefreshToken(
                 ctx.getUserId(), REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600L);
@@ -221,6 +230,8 @@ public class AuthServiceImpl implements AuthService {
         String newToken = jwtTokenProvider.generateToken(
                 ctx.getUserId(), ctx.getUsername(),
                 ctx.getRoles(), ctx.getPermissions(),
+                ctx.getDeptId(), ctx.getDeptIds(), ctx.getCustomDeptIds(),
+                ctx.getDataScope(),
                 TOKEN_EXPIRE_HOURS * 3600L);
         String newRefreshToken = jwtTokenProvider.generateRefreshToken(
                 ctx.getUserId(), REFRESH_TOKEN_EXPIRE_DAYS * 24 * 3600L);
@@ -315,7 +326,79 @@ public class AuthServiceImpl implements AuthService {
             builder.permissions(Collections.emptyList());
         }
 
+        // P1-6 修复: 数据权限上下文 (deptId/deptIds/customDeptIds/dataScope)
+        // 这些字段将写入 JWT，下游服务通过 AuthInterceptor 解析还原 DataScopeContext
+        builder.dataScope(user.getDataScope())
+                .deptId(user.getDeptId())
+                .customDeptIds(parseCustomDeptIds(user.getCustomDeptIds()))
+                .deptIds(resolveDeptIds(user.getDeptId()));
+
         return builder.build();
+    }
+
+    /**
+     * P1-6 修复: 解析 CUSTOM 模式自定义部门 ID 集
+     *
+     * <p>UserAccountDO.customDeptIds 为逗号分隔字符串（如 "1,3,5"），解析为 List&lt;Long&gt;。
+     * 解析失败时跳过非法值并打印告警，避免登录流程中断。
+     *
+     * @param customDeptIds 逗号分隔的部门 ID 字符串
+     * @return Long 列表，为空时返回 null（不写入 JWT）
+     */
+    private List<Long> parseCustomDeptIds(String customDeptIds) {
+        if (customDeptIds == null || customDeptIds.isBlank()) {
+            return null;
+        }
+        List<Long> result = new ArrayList<>();
+        for (String s : customDeptIds.split(",")) {
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) {
+                try {
+                    result.add(Long.parseLong(trimmed));
+                } catch (NumberFormatException e) {
+                    log.warn("[Auth] customDeptIds 解析失败，跳过非数字值: {}", trimmed);
+                }
+            }
+        }
+        return result.isEmpty() ? null : result;
+    }
+
+    /**
+     * P1-6 修复: 递归计算 DEPT_AND_CHILD 模式部门 ID 链
+     *
+     * <p>基于 {@link DepartmentDO#getDeptPath()} 前缀匹配（deptPath 形如 "/1/3/5"），
+     * 含当前部门及所有下级部门。利用 DepartmentService 缓存，避免每次请求查库。
+     * 查询失败时退化为仅当前部门，保证登录流程不中断。
+     *
+     * @param deptId 当前用户所属部门 ID
+     * @return 部门 ID 链（含当前部门），为 null 时返回 null
+     */
+    private List<Long> resolveDeptIds(Long deptId) {
+        if (deptId == null) {
+            return null;
+        }
+        try {
+            List<DepartmentDO> all = departmentService.listAllEnabled();
+            DepartmentDO current = all.stream()
+                    .filter(d -> deptId.equals(d.getId()))
+                    .findFirst().orElse(null);
+            if (current == null || current.getDeptPath() == null) {
+                return List.of(deptId);
+            }
+            String prefix = current.getDeptPath() + "/";
+            List<Long> ids = new ArrayList<>();
+            ids.add(deptId);
+            for (DepartmentDO d : all) {
+                if (d.getDeptPath() != null && d.getDeptPath().startsWith(prefix)) {
+                    ids.add(d.getId());
+                }
+            }
+            return ids;
+        } catch (Exception e) {
+            log.warn("[Auth] 计算 deptIds 失败 deptId={} reason={}，退化为仅当前部门",
+                    deptId, e.getMessage());
+            return List.of(deptId);
+        }
     }
 
     /**

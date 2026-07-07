@@ -132,6 +132,10 @@ public class AuthInterceptor implements HandlerInterceptor {
         @SuppressWarnings("unchecked")
         List<String> permissions = claims.get("permissions", List.class);
 
+        // P1-6 修复：解析 customDeptIds（CUSTOM 模式）和 deptIds（DEPT_AND_CHILD 模式）
+        List<Long> customDeptIds = parseLongList(claims.get("customDeptIds"));
+        List<Long> deptIds = parseLongList(claims.get("deptIds"));
+
         return LoginUser.builder()
                 .userId(userId)
                 .username(username)
@@ -141,9 +145,37 @@ public class AuthInterceptor implements HandlerInterceptor {
                 .dataScope(dataScope)
                 .roles(roles != null ? roles : List.of())
                 .permissions(permissions != null ? permissions : List.of())
+                .customDeptIds(customDeptIds)
+                .deptIds(deptIds)
                 .token(token)
                 .loginTime(claims.getIssuedAt() != null ? claims.getIssuedAt().getTime() : null)
                 .expireTime(claims.getExpiration() != null ? claims.getExpiration().getTime() : null)
                 .build();
+    }
+
+    /**
+     * 从 JWT claim 解析 Long 列表
+     *
+     * <p>JWT 中 List 字段反序列化后通常为 {@code List<?>}，元素可能是 Integer 或 Long，
+     * 统一转为 Long 避免 ClassCastException。
+     *
+     * @param claim JWT claim 值
+     * @return Long 列表，null 时返回 null
+     */
+    @SuppressWarnings("unchecked")
+    private List<Long> parseLongList(Object claim) {
+        if (claim == null) {
+            return null;
+        }
+        if (claim instanceof List<?> list) {
+            return list.stream()
+                    .filter(o -> o != null)
+                    .map(o -> {
+                        if (o instanceof Number n) return n.longValue();
+                        return Long.parseLong(o.toString());
+                    })
+                    .toList();
+        }
+        return null;
     }
 }

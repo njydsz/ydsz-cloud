@@ -4,7 +4,8 @@
  *              通过环境变量 (.env / .env.[mode]) 控制是否启用 Mock、Bundle 分析等开关。
  * @module ydsz-pmis-frontend/vite.config.ts
  */
-import { defineConfig, loadEnv } from 'vite'
+import { defineConfig } from 'vitest/config'
+import { loadEnv } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
@@ -15,6 +16,29 @@ import viteImagemin from 'vite-plugin-imagemin'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
 import { viteMockPlugin } from './src/mock/vite-plugin-mock'
+// P2-6: CDN 外置依赖清单（仅纯数据，兼容 Node 环境导入）
+import { CDN_DEPS } from './src/config/cdn'
+
+/**
+ * P2-6: CDN 外置 - index.html 注入插件
+ * 仅在启用 CDN 时（生产环境 + VITE_CDN_ENABLED !== 'false'）向 index.html 注入
+ * CDN 的 <script> 与 <link> 标签，替换占位符 <!-- CDN_INJECT -->。
+ * 开发环境不注入，仍走 node_modules 本地加载。
+ */
+function injectCdn(enabled: boolean) {
+  return {
+    name: 'inject-cdn',
+    transformIndexHtml(html: string) {
+      if (!enabled) return html
+      const styles = CDN_DEPS.flatMap((dep) => dep.css || [])
+        .map((css) => `  <link rel="stylesheet" href="${css}">`)
+        .join('\n')
+      const scripts = CDN_DEPS.map((dep) => `  <script src="${dep.url}"></script>`).join('\n')
+      const inject = [styles, scripts].filter(Boolean).join('\n')
+      return html.replace('<!-- CDN_INJECT -->', inject)
+    },
+  }
+}
 
 export default defineConfig(({ mode }) => {
   // 加载 .env / .env.[mode] 文件中的环境变量 (前缀不做限制, 全量加载)
@@ -23,6 +47,11 @@ export default defineConfig(({ mode }) => {
   const useMock = env.VITE_USE_MOCK === 'true'
   // 是否开启 bundle 体积分析 (ANALYZE=true 时启用)
   const analyze = env.ANALYZE === 'true'
+  // P2-6: 是否启用 CDN 外置（仅生产环境启用，可通过 VITE_CDN_ENABLED=false 关闭）
+  const cdnEnabled = mode === 'production' && env.VITE_CDN_ENABLED !== 'false'
+  // 测试环境下禁用 Element Plus 样式自动导入，避免 vitest 无法处理 CSS 文件
+  const isTest = process.env.VITEST === 'true'
+  const epResolverOption = isTest ? { importStyle: false } : {}
 
   return {
     // hash 路由模式下使用相对路径, 以便部署到子路径; history 模式使用根路径
@@ -31,20 +60,27 @@ export default defineConfig(({ mode }) => {
     plugins: [
       // Vue SFC 编译插件
       vue(),
+      // P2-6: 生产环境向 index.html 注入 CDN <script>/<link>（开发环境无副作用）
+      injectCdn(cdnEnabled),
       // 自动导入 Vue / Vue Router / Pinia 的 API, 免去手动 import ref/reactive 等
       AutoImport({
         imports: ['vue', 'vue-router', 'pinia'],
-        resolvers: [ElementPlusResolver()],
+        resolvers: [ElementPlusResolver(epResolverOption)],
         dts: 'auto-imports.d.ts',
         eslintrc: {
           enabled: true,
         },
       }),
       // 自动按需注册 Element Plus 组件, 配合 ts 声明文件提供类型提示
-      Components({
-        resolvers: [ElementPlusResolver()],
-        dts: 'components.d.ts',
-      }),
+      // 测试模式下禁用，以便测试中可用 app.component 注册桩组件替代
+      ...(isTest
+        ? []
+        : [
+            Components({
+              resolvers: [ElementPlusResolver(epResolverOption)],
+              dts: 'components.d.ts',
+            }),
+          ]),
       // P1 批次 20: 独立开发 mock 插件
       // 启用后, 拦截 /api/v1/* 请求直接返回 mock 数据
       // 关闭后, 请求自动 fallback 到 proxy 转发给后端
@@ -162,15 +198,59 @@ export default defineConfig(({ mode }) => {
       minify: 'esbuild', // 使用 esbuild 压缩, 速度优于 terser
       chunkSizeWarningLimit: 1500, // chunk 体积告警阈值 (kB), 兼容 vxe-table 等大依赖
       rollupOptions: {
+        // P2-6: 生产环境将 CDN 依赖标记为 external，不打包进 bundle
+        external: cdnEnabled ? CDN_DEPS.map((dep) => dep.name) : [],
         output: {
+          // P2-6: external 依赖对应的全局变量名映射（UMD/IIFE 全局变量名）
+          globals: cdnEnabled
+            ? Object.fromEntries(CDN_DEPS.map((dep) => [dep.name, dep.var]))
+            : {},
           // 手动拆分 vendor chunk, 提升缓存命中率并减少首屏体积
-          manualChunks: {
-            vue: ['vue', 'vue-router', 'pinia'], // Vue 全家桶
-            element: ['element-plus', '@element-plus/icons-vue'], // Element Plus UI 库
-            echarts: ['echarts'], // 图表库
-            'vxe-table': ['vxe-table', 'xe-utils'], // 高性能表格
-            bpmn: ['bpmn-js'], // BPMN 流程图
-            codemirror: ['codemirror', '@codemirror/lang-javascript'], // 代码编辑器
+          // 使用函数形式精确匹配模块路径,避免对象形式引用全量包
+          // 注意：被 external 的依赖不会进入 manualChunks 判断（已不参与打包）
+          manualChunks(id) {
+            // Vite 会将路径规范化为正斜杠,但为兼容性同时处理 Windows 反斜杠
+            const normalizedId = id.replace(/\\/g, '/')
+
+            // ECharts 按需引入:仅匹配 echarts/ 和 zrender/ 子模块,不匹配全量 'echarts' 包入口
+            // 配合 src/utils/echarts.ts 集中注册,相比全量引入体积减少约 60%
+            if (normalizedId.includes('node_modules/echarts/') || normalizedId.includes('node_modules/zrender/')) {
+              return 'echarts'
+            }
+            // Vue 全家桶
+            if (
+              normalizedId.includes('node_modules/vue/') ||
+              normalizedId.includes('node_modules/vue-router/') ||
+              normalizedId.includes('node_modules/pinia/')
+            ) {
+              return 'vue'
+            }
+            // Element Plus UI 库
+            if (
+              normalizedId.includes('node_modules/element-plus/') ||
+              normalizedId.includes('node_modules/@element-plus/icons-vue/')
+            ) {
+              return 'element'
+            }
+            // 高性能表格
+            if (
+              normalizedId.includes('node_modules/vxe-table/') ||
+              normalizedId.includes('node_modules/xe-utils/')
+            ) {
+              return 'vxe-table'
+            }
+            // BPMN 流程图
+            if (normalizedId.includes('node_modules/bpmn-js/')) {
+              return 'bpmn'
+            }
+            // 代码编辑器
+            if (
+              normalizedId.includes('node_modules/codemirror/') ||
+              normalizedId.includes('node_modules/@codemirror/')
+            ) {
+              return 'codemirror'
+            }
+            return undefined
           },
         },
       },
@@ -179,6 +259,12 @@ export default defineConfig(({ mode }) => {
     define: {
       // 注入应用版本号, 业务代码可通过 __VITE_APP_VERSION__ 读取 (取自 package.json)
       __VITE_APP_VERSION__: JSON.stringify(process.env.npm_package_version),
+    },
+
+    // Vitest 配置：排除 e2e 目录（由 Playwright 运行），使用 jsdom 环境
+    test: {
+      environment: 'jsdom',
+      exclude: ['node_modules', 'dist', 'e2e'],
     },
   }
 })

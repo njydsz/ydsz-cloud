@@ -5,6 +5,7 @@ import com.njydsz.pmis.common.annotation.OperationLog;
 import com.njydsz.pmis.common.annotation.PrePermission;
 import com.njydsz.pmis.common.api.Result;
 import com.njydsz.pmis.common.permission.PermissionCodes;
+import com.njydsz.pmis.cronjob.dto.JobSaveDTO;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.service.JobService;
@@ -14,6 +15,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.BeanUtils;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,7 +48,9 @@ public class JobController {
     @Operation(summary = "新增任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_CREATE)
     @PostMapping
-    public Result<Long> create(@Valid @RequestBody JobDO job) {
+    public Result<Long> create(@Valid @RequestBody JobSaveDTO dto) {
+        JobDO job = new JobDO();
+        BeanUtils.copyProperties(dto, job);
         return Result.ok(jobService.create(job));
     }
 
@@ -59,7 +63,9 @@ public class JobController {
     @Operation(summary = "更新任务")
     @PrePermission(PermissionCodes.CRONJOB_JOB_UPDATE)
     @PutMapping
-    public Result<Void> update(@Valid @RequestBody JobDO job) {
+    public Result<Void> update(@Valid @RequestBody JobSaveDTO dto) {
+        JobDO job = new JobDO();
+        BeanUtils.copyProperties(dto, job);
         jobService.update(job);
         return Result.ok();
     }

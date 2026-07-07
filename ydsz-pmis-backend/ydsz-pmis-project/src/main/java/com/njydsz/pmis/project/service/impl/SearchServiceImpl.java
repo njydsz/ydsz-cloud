@@ -1,5 +1,7 @@
 package com.njydsz.pmis.project.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
+import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.project.mapper.InitiationMapper;
 import com.njydsz.pmis.project.search.ProjectSearchVO;
@@ -32,6 +34,7 @@ import java.util.List;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@DS(DataSourceConstants.SLAVE)
 public class SearchServiceImpl implements SearchService {
 
     private final InitiationMapper initiationMapper;

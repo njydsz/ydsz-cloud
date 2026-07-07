@@ -1,10 +1,12 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.constant.CacheConstants;
+import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.common.security.DataScopeHelper;
 import com.njydsz.pmis.common.security.AccountLockInfo;
@@ -13,11 +15,13 @@ import com.njydsz.pmis.common.security.LoginStatus;
 import com.njydsz.pmis.common.security.PasswordPolicy;
 import com.njydsz.pmis.common.security.TenantContext;
 import com.njydsz.pmis.common.security.TotpUtil;
+import com.njydsz.pmis.common.service.BloomFilterService;
 import com.njydsz.pmis.common.util.CryptoUtil;
 import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.userinfo.dto.LoginRequest;
 import com.njydsz.pmis.userinfo.dto.LoginResult;
 import com.njydsz.pmis.userinfo.dto.UserQueryDTO;
+import com.njydsz.pmis.userinfo.entity.DepartmentDO;
 import com.njydsz.pmis.userinfo.entity.RoleDO;
 import com.njydsz.pmis.userinfo.entity.User2FADO;
 import com.njydsz.pmis.userinfo.entity.UserAccountDO;
@@ -25,12 +29,14 @@ import com.njydsz.pmis.userinfo.entity.UserRoleDO;
 import com.njydsz.pmis.userinfo.mapper.User2FAMapper;
 import com.njydsz.pmis.userinfo.mapper.UserAccountMapper;
 import com.njydsz.pmis.userinfo.mapper.UserRoleMapper;
+import com.njydsz.pmis.userinfo.service.DepartmentService;
 import com.njydsz.pmis.userinfo.service.RoleService;
 import com.njydsz.pmis.userinfo.service.SessionService;
 import com.njydsz.pmis.userinfo.service.UserAccountService;
 import com.njydsz.pmis.userinfo.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.annotation.PostConstruct;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -39,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,14 +70,54 @@ public class UserAccountServiceImpl implements UserAccountService {
     private final User2FAMapper user2FAMapper;
     private final RoleService roleService;
     private final SessionService sessionService;
+    /**
+     * P1-6 修复: 用于 DEPT_AND_CHILD 模式递归计算 deptIds 链
+     */
+    private final DepartmentService departmentService;
     private final ApplicationEventPublisher publisher;
     private final AccountLockInfo lockPolicy = AccountLockInfo.defaultPolicy();
+    /**
+     * 布隆过滤器服务:用于防止缓存穿透(P1-10)
+     */
+    private final BloomFilterService bloomFilterService;
+
+    /**
+     * 启动时初始化布隆过滤器:从 DB 加载所有用户名
+     *
+     * <p>仅在过滤器为空时加载(首次启动或过滤器被清空后),
+     * 避免每次重启都全量加载。过滤器数据持久化在 Redis 中,重启后仍然有效。
+     * 加载失败不影响应用启动,仅打印告警日志。
+     */
+    @PostConstruct
+    public void initBloomFilter() {
+        try {
+            if (bloomFilterService.count("user:username") > 0) {
+                log.info("[User] 布隆过滤器已存在数据,跳过初始化");
+                return;
+            }
+            // 仅查询 username 列,避免加载 password 等敏感字段
+            List<UserAccountDO> users = userAccountMapper.selectList(
+                    new LambdaQueryWrapper<UserAccountDO>().select(UserAccountDO::getUsername));
+            List<String> usernames = users.stream()
+                    .map(UserAccountDO::getUsername)
+                    .filter(StringUtils::hasText)
+                    .toList();
+            bloomFilterService.addAll("user:username", usernames);
+            log.info("[User] 布隆过滤器初始化完成,加载用户名数量={}", usernames.size());
+        } catch (Exception e) {
+            log.warn("[User] 布隆过滤器初始化失败: {}", e.getMessage());
+        }
+    }
 
     @Override
     @Transactional(readOnly = true)
     @Cacheable(value = CacheConstants.USER_BY_USERNAME_CACHE, key = "#username",
             unless = "#result == null")
     public UserAccountDO findByUsername(String username) {
+        // 布隆过滤器防穿透:判定不存在时直接返回,不查 DB
+        if (!bloomFilterService.mightContain("user:username", username)) {
+            return null;
+        }
         return userAccountMapper.selectOne(new LambdaQueryWrapper<UserAccountDO>()
                 .eq(UserAccountDO::getUsername, username));
     }
@@ -94,6 +141,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @DS(DataSourceConstants.SLAVE)
     @DataScope(deptColumn = "dept_id", userColumn = "id")
     @Transactional(readOnly = true)
     public Page<UserAccountDO> page(UserQueryDTO query) {
@@ -116,6 +164,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @DS(DataSourceConstants.SLAVE)
     @Transactional(readOnly = true)
     public Page<UserVO> pageVo(UserQueryDTO query) {
         Page<UserAccountDO> doPage = page(query);
@@ -169,6 +218,8 @@ public class UserAccountServiceImpl implements UserAccountService {
         user.setPwdChangeCount(0);
         if (user.getDataScope() == null) user.setDataScope("SELF");
         userAccountMapper.insert(user);
+        // 添加到布隆过滤器,后续查询可命中防穿透校验
+        bloomFilterService.add("user:username", user.getUsername());
         return user.getId();
     }
 
@@ -264,6 +315,7 @@ public class UserAccountServiceImpl implements UserAccountService {
     }
 
     @Override
+    @DS(DataSourceConstants.SLAVE)
     @Transactional(readOnly = true)
     public List<Long> listRoleIds(Long userId) {
         return userRoleMapper.selectRoleIdsByUserId(userId);
@@ -478,6 +530,18 @@ public class UserAccountServiceImpl implements UserAccountService {
         claims.put("sessionId", sessionId);
         claims.put("mfa", u.getMfaEnabled() != null && u.getMfaEnabled());
         claims.put("dataScope", u.getDataScope());
+        // P1-6 修复: 写入数据权限上下文 claims，下游服务通过 AuthInterceptor 还原 DataScopeContext
+        if (u.getDeptId() != null) {
+            claims.put("deptId", u.getDeptId());
+        }
+        List<Long> deptIds = resolveDeptIds(u.getDeptId());
+        if (deptIds != null && !deptIds.isEmpty()) {
+            claims.put("deptIds", deptIds);
+        }
+        List<Long> customDeptIds = parseCustomDeptIds(u.getCustomDeptIds());
+        if (customDeptIds != null && !customDeptIds.isEmpty()) {
+            claims.put("customDeptIds", customDeptIds);
+        }
         return JwtSimpleBuilder.build(claims, ACCESS_TOKEN_EXPIRE_SECONDS);
     }
 
@@ -486,6 +550,70 @@ public class UserAccountServiceImpl implements UserAccountService {
         claims.put("userId", userId);
         claims.put("type", "refresh");
         return JwtSimpleBuilder.build(claims, REFRESH_TOKEN_EXPIRE_SECONDS);
+    }
+
+    /**
+     * P1-6 修复: 解析 CUSTOM 模式自定义部门 ID 集
+     *
+     * <p>UserAccountDO.customDeptIds 为逗号分隔字符串（如 "1,3,5"），解析为 List&lt;Long&gt;。
+     * 解析失败时跳过非法值并打印告警。
+     *
+     * @param customDeptIds 逗号分隔的部门 ID 字符串
+     * @return Long 列表，为空时返回 null
+     */
+    private List<Long> parseCustomDeptIds(String customDeptIds) {
+        if (customDeptIds == null || customDeptIds.isBlank()) {
+            return null;
+        }
+        List<Long> result = new ArrayList<>();
+        for (String s : customDeptIds.split(",")) {
+            String trimmed = s.trim();
+            if (!trimmed.isEmpty()) {
+                try {
+                    result.add(Long.parseLong(trimmed));
+                } catch (NumberFormatException e) {
+                    log.warn("[User] customDeptIds 解析失败，跳过非数字值: {}", trimmed);
+                }
+            }
+        }
+        return result.isEmpty() ? null : result;
+    }
+
+    /**
+     * P1-6 修复: 递归计算 DEPT_AND_CHILD 模式部门 ID 链
+     *
+     * <p>基于 {@link DepartmentDO#getDeptPath()} 前缀匹配（deptPath 形如 "/1/3/5"），
+     * 含当前部门及所有下级部门。查询失败时退化为仅当前部门。
+     *
+     * @param deptId 当前用户所属部门 ID
+     * @return 部门 ID 链（含当前部门），为 null 时返回 null
+     */
+    private List<Long> resolveDeptIds(Long deptId) {
+        if (deptId == null) {
+            return null;
+        }
+        try {
+            List<DepartmentDO> all = departmentService.listAllEnabled();
+            DepartmentDO current = all.stream()
+                    .filter(d -> deptId.equals(d.getId()))
+                    .findFirst().orElse(null);
+            if (current == null || current.getDeptPath() == null) {
+                return List.of(deptId);
+            }
+            String prefix = current.getDeptPath() + "/";
+            List<Long> ids = new ArrayList<>();
+            ids.add(deptId);
+            for (DepartmentDO d : all) {
+                if (d.getDeptPath() != null && d.getDeptPath().startsWith(prefix)) {
+                    ids.add(d.getId());
+                }
+            }
+            return ids;
+        } catch (Exception e) {
+            log.warn("[User] 计算 deptIds 失败 deptId={} reason={}，退化为仅当前部门",
+                    deptId, e.getMessage());
+            return List.of(deptId);
+        }
     }
 
     private void publishAudit(LoginRequest req, Long userId, LoginStatus status,

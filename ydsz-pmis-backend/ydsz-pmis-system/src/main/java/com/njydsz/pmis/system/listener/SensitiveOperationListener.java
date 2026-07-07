@@ -31,7 +31,7 @@ public class SensitiveOperationListener {
      *
      * @param e 敏感操作审计事件
      */
-    @Async
+    @Async("auditExecutor")
     @EventListener
     public void onOp(SensitiveOperationEvent e) {
         try {

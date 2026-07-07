@@ -65,6 +65,12 @@
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
             <version>2.6.0</version>
         </dependency>
+        <!-- Knife4j 增强 OpenAPI UI（基于 SpringDoc 2.x，生产环境通过 knife4j.production 关闭） -->
+        <dependency>
+            <groupId>com.github.xiaoymin</groupId>
+            <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
+            <version>${knife4j.version}</version>
+        </dependency>
         <!-- Micrometer Prometheus（批次 19 P1-3 监控落地配套）-->
         <dependency>
             <groupId>io.micrometer</groupId>
@@ -113,6 +119,11 @@
         <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-jsqlparser</artifactId>
+        </dependency>
+        <!-- baomidou 动态数据源（读写分离 P2-3）：@DS 注解 + 主从数据源切换 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot3-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>

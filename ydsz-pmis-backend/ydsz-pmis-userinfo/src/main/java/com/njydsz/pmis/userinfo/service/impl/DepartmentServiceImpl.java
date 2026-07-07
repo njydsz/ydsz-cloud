@@ -1,6 +1,8 @@
 package com.njydsz.pmis.userinfo.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.api.BizErrorCode;
+import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.common.exception.BizException;
 import com.njydsz.pmis.userinfo.dto.DepartmentFormDTO;
 import com.njydsz.pmis.userinfo.entity.DepartmentDO;
@@ -36,6 +38,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentMapper departmentMapper;
 
     @Override
+    @DS(DataSourceConstants.SLAVE)
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_NAME, key = "'tree'", unless = "#result == null || #result.isEmpty()")
     public List<DepartmentTreeVO> tree() {
@@ -62,6 +65,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     }
 
     @Override
+    @DS(DataSourceConstants.SLAVE)
     @Transactional(readOnly = true)
     @Cacheable(value = CACHE_NAME, key = "'listAllEnabled'", unless = "#result == null || #result.isEmpty()")
     public List<DepartmentDO> listAllEnabled() {

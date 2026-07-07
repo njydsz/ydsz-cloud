@@ -23,7 +23,7 @@ import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import { CircleCheck, CircleClose, Connection, Expand, Fold, User } from '@element-plus/icons-vue'
-import * as echarts from 'echarts'
+import * as echarts from '@/utils/echarts'
 import * as ruleApi from '@/api/execution/rule-engine'
 import type {
   RuleDefinition,

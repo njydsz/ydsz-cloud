@@ -18,6 +18,7 @@ import {
   refreshDictCache,
 } from '@/api/system/dict'
 import type { DictTypeVO, DictItemVO, DictTypeFormDTO, DictItemFormDTO } from '@/api/system/dict/types'
+import { useModalA11y } from '@/composables/useModalA11y'
 
 const { t } = useI18n()
 
@@ -52,6 +53,10 @@ const typeFormRules = {
   typeCode: [{ required: true, message: t('system.dict.type.rules.typeCodeRequired'), trigger: 'blur' }],
   typeName: [{ required: true, message: t('system.dict.type.rules.typeNameRequired'), trigger: 'blur' }],
 }
+
+// 无障碍访问增强：对话框关闭后恢复焦点到打开前的触发元素（focus trap 由 Element Plus 内置）
+useModalA11y(typeDialogVisible)
+useModalA11y(itemDialogVisible)
 const itemFormRules = {
   itemCode: [{ required: true, message: t('system.dict.item.rules.itemCodeRequired'), trigger: 'blur' }],
   itemValue: [{ required: true, message: t('system.dict.item.rules.itemValueRequired'), trigger: 'blur' }],
@@ -248,7 +253,7 @@ onMounted(fetchTypes)
     </el-card>
 
     <!-- 字典类型表单 -->
-    <el-dialog v-model="typeDialogVisible" :title="t('system.dict.type.dialogTitle')" width="500px">
+    <el-dialog v-model="typeDialogVisible" :title="t('system.dict.type.dialogTitle')" width="500px" :close-on-click-modal="false" :close-on-press-escape="true">
       <el-form ref="typeFormRef" :model="typeForm" :rules="typeFormRules" label-width="100px">
         <el-form-item :label="t('system.dict.type.typeCode')" prop="typeCode">
           <el-input v-model="typeForm.typeCode" :placeholder="t('system.dict.type.typeCodePlaceholder')" />
@@ -271,6 +276,8 @@ onMounted(fetchTypes)
       v-model="itemDialogVisible"
       :title="itemDialogMode === 'create' ? t('system.dict.item.createTitle') : t('system.dict.item.editTitle')"
       width="500px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="true"
     >
       <el-form ref="itemFormRef" :model="itemForm" :rules="itemFormRules" label-width="100px">
         <el-form-item :label="t('system.dict.item.belongType')">

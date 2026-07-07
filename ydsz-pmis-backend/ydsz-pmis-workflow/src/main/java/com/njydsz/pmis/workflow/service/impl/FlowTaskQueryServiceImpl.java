@@ -1,6 +1,8 @@
 package com.njydsz.pmis.workflow.service.impl;
 
+import com.baomidou.dynamic.datasource.annotation.DS;
 import com.njydsz.pmis.common.api.PageResult;
+import com.njydsz.pmis.common.datasource.DataSourceConstants;
 import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.dto.FlowInstanceViewDTO;
 import com.njydsz.pmis.workflow.entity.FlowHisTaskDO;
@@ -41,6 +43,7 @@ import java.util.Set;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@DS(DataSourceConstants.SLAVE)
 @Transactional(readOnly = true)
 public class FlowTaskQueryServiceImpl {
 

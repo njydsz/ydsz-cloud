@@ -64,6 +64,29 @@ public class LoginContextDTO implements Serializable {
     @Schema(description = "数据权限范围")
     private String dataScope;
 
+    /**
+     * P1-6 修复: 所属部门 ID（与 UserAccountDO.deptId 对齐，写入 JWT）
+     */
+    @Schema(description = "所属部门 ID（写入 JWT, DEPT 模式使用）")
+    private Long deptId;
+
+    /**
+     * P1-6 修复: DEPT_AND_CHILD 模式部门 ID 链（含所有下级部门）
+     *
+     * <p>登录时基于 deptPath 递归计算，写入 JWT。下游服务解析后直接用于 IN (...) 查询，
+     * 避免每次请求都查库计算子部门。
+     */
+    @Schema(description = "DEPT_AND_CHILD 模式部门 ID 链（含下级）")
+    private List<Long> deptIds;
+
+    /**
+     * P1-6 修复: CUSTOM 模式自定义部门 ID 集
+     *
+     * <p>由 UserAccountDO.customDeptIds（逗号分隔字符串）解析得到。
+     */
+    @Schema(description = "CUSTOM 模式自定义部门 ID 集")
+    private List<Long> customDeptIds;
+
     @Schema(description = "角色编码列表")
     private List<String> roles;
 

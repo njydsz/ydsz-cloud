@@ -9,6 +9,7 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { listDeptTree, createDept, updateDept, deleteDept } from '@/api/system/dept'
 import type { DeptVO, DeptFormDTO } from '@/api/system/dept/types'
+import { useModalA11y } from '@/composables/useModalA11y'
 
 const { t } = useI18n()
 
@@ -38,6 +39,9 @@ const formRules = {
   deptName: [{ required: true, message: t('system.dept.rules.deptNameRequired'), trigger: 'blur' }],
   parentId: [{ required: true, message: t('system.dept.rules.parentIdRequired'), trigger: 'change' }],
 }
+
+// 无障碍访问增强：对话框关闭后恢复焦点到打开前的触发元素（focus trap 由 Element Plus 内置）
+useModalA11y(dialogVisible)
 
 /** 拉取部门树形数据 */
 async function fetchTree() {
@@ -175,6 +179,8 @@ onMounted(fetchTree)
       v-model="dialogVisible"
       :title="dialogMode === 'create' ? t('system.dept.dialog.createTitle') : t('system.dept.dialog.editTitle')"
       width="560px"
+      :close-on-click-modal="false"
+      :close-on-press-escape="true"
     >
       <el-form ref="formRef" :model="form" :rules="formRules" label-width="100px">
         <el-form-item :label="t('system.dept.form.parentId')" prop="parentId">

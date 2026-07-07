@@ -4,7 +4,7 @@
   @module views/project/initiation
 -->
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance } from 'element-plus'
@@ -23,6 +23,7 @@ import {
 import type { InitiationVO, InitiationCreateDTO, BudgetItemVO } from '@/api/project/initiation/types'
 import { PC } from '@/constants/permissionCodes'
 import { useFormDraft } from '@/composables/useFormDraft'
+import { useFormGuard } from '@/composables/useFormGuard'
 import { useUserStore } from '@/store/modules/user'
 
 const { t } = useI18n()
@@ -130,6 +131,17 @@ const { hasDraft, lastSavedAt, restore, clear: clearDraft } = useFormDraft(form,
   userId: userStore.userInfo?.id,
 })
 
+// ===== 表单防误关闭守卫 =====
+const { setDirty } = useFormGuard({ message: '立项表单内容未保存，确定离开？' })
+// 表单字段修改时启用守卫（仅弹窗打开期间）
+watch(form, () => {
+  if (dialogVisible.value) setDirty(true)
+}, { deep: true })
+// 弹窗打开后清除 dirty（覆盖 openCreate 重置 form 触发的 watch）
+watch(dialogVisible, (val) => {
+  if (val) nextTick(() => setDirty(false))
+})
+
 const draftTimeText = computed(() => {
   if (!lastSavedAt.value) return ''
   return lastSavedAt.value.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
@@ -193,6 +205,8 @@ async function submitForm() {
     await formRef.value?.validate()
     await createInitiation(form as InitiationCreateDTO)
     clearDraft()
+    // 表单已保存，解除防误关闭守卫
+    setDirty(false)
     ElMessage.success(t('project.initiation.messages.createSuccess'))
     dialogVisible.value = false
     fetchList()
@@ -376,7 +390,7 @@ onMounted(fetchList)
             <StatusTag :value="row.projectLevel" :map="levelMap" />
           </template>
         </vxe-column>
-        <vxe-column field="budgetAmount" :title="t('project.initiation.columns.budgetAmount')" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
+        <vxe-column field="budgetAmount" :title="t('project.initiation.columns.budgetAmount')" width="120" align="right" :formatter="({ cellValue }) => cellValue != null ? `¥${Number(cellValue).toLocaleString()}` : '-'" />
         <vxe-column field="currentGate" :title="t('project.initiation.columns.currentGate')" width="120">
           <template #default="{ row }">
             <StatusTag v-if="row.currentGate" :value="row.currentGate" :map="gateMap" />
@@ -549,7 +563,7 @@ onMounted(fetchList)
         <vxe-column type="seq" title="#" width="50" />
         <vxe-column field="category" :title="t('project.initiation.budget.category')" width="100" />
         <vxe-column field="itemName" :title="t('project.initiation.budget.itemName')" min-width="160" show-overflow />
-        <vxe-column field="amount" :title="t('project.initiation.budget.amount')" width="120" align="right" :formatter="({ cellValue }: { cellValue: unknown }) => `¥${Number(cellValue).toLocaleString()}`" />
+        <vxe-column field="amount" :title="t('project.initiation.budget.amount')" width="120" align="right" :formatter="({ cellValue }) => `¥${Number(cellValue).toLocaleString()}`" />
         <vxe-column field="remark" :title="t('project.initiation.budget.remark')" min-width="120" show-overflow />
       </vxe-table>
       <template #footer>

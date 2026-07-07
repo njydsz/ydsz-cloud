@@ -7,7 +7,7 @@
 import { ref, reactive, onMounted, onUnmounted, nextTick, watch, type ComponentPublicInstance } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
+import * as echarts from '@/utils/echarts'
 import {
   getProjectProfitReport,
   getCostDetailReport,

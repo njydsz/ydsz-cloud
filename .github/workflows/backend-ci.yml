@@ -62,6 +62,18 @@ jobs:
         # 任一规则不达标即构建失败
         run: mvn -B -ntp verify
 
+      - name: 幂等注解覆盖检查
+        # 扫描所有写接口(@PostMapping/@PutMapping/@DeleteMapping/@PatchMapping)
+        # 是否标注了 @Idempotent,未标注的输出 warning(当前不阻断 CI)
+        # 后续会逐步提升为 error
+        # 注意:defaults.run.working-directory 是 ydsz-pmis-backend,这里切换到
+        # 仓库根目录,使脚本路径 ydsz-pmis-backend/scripts/... 与参数 ydsz-pmis-backend
+        # 均相对于仓库根目录解析
+        working-directory: .
+        run: |
+          chmod +x ydsz-pmis-backend/scripts/check-idempotent-coverage.sh
+          bash ydsz-pmis-backend/scripts/check-idempotent-coverage.sh ydsz-pmis-backend
+
       - name: 静态扫描 DB Migration 依赖（拦截 Flyway / Liquibase）
         # 项目规范（deploy/sql/README.md §1）：不引入任何自动化 schema migration 框架
         # CI 静态扫描拦截，确保 PR 不会误引入 flyway-core / liquibase-core

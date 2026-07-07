@@ -191,12 +191,42 @@ public class JwtTokenProvider {
     public String generateToken(Long userId, String username,
                                 List<String> roles, List<String> permissions,
                                 Long expireSeconds) {
+        return generateToken(userId, username, roles, permissions,
+                null, null, null, null, expireSeconds);
+    }
+
+    /**
+     * 生成访问 Token (含完整数据权限上下文)
+     *
+     * <p>P1-6 修复: 支持 deptId / deptIds / customDeptIds / dataScope claims，
+     * 使下游服务可通过 AuthInterceptor 还原完整 DataScopeContext。
+     *
+     * @param userId        用户 ID
+     * @param username      用户名
+     * @param roles         角色列表
+     * @param permissions   权限列表
+     * @param deptId        所属部门 ID（所有模式均需写入，DEPT 模式直接使用）
+     * @param deptIds       DEPT_AND_CHILD 模式部门 ID 链（含下级），为空时退化为 DEPT
+     * @param customDeptIds CUSTOM 模式自定义部门 ID 集
+     * @param dataScope     数据权限范围字符串 (ALL/DEPT/DEPT_AND_CHILD/SELF/CUSTOM/PROJECT)
+     * @param expireSeconds 过期时间（秒），为 null 时使用默认值
+     * @return JWT Token
+     */
+    public String generateToken(Long userId, String username,
+                                List<String> roles, List<String> permissions,
+                                Long deptId, List<Long> deptIds, List<Long> customDeptIds,
+                                String dataScope,
+                                Long expireSeconds) {
         Map<String, Object> claims = new HashMap<>();
         claims.put("userId", userId);
         claims.put("username", username);
         claims.put("type", "access");
         if (roles != null) claims.put("roles", roles);
         if (permissions != null) claims.put("permissions", permissions);
+        if (deptId != null) claims.put("deptId", deptId);
+        if (deptIds != null && !deptIds.isEmpty()) claims.put("deptIds", deptIds);
+        if (customDeptIds != null && !customDeptIds.isEmpty()) claims.put("customDeptIds", customDeptIds);
+        if (dataScope != null) claims.put("dataScope", dataScope);
 
         Date now = new Date();
         Date expire = new Date(now.getTime()
