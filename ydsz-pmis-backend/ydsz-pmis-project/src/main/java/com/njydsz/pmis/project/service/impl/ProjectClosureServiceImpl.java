@@ -120,7 +120,7 @@ public class ProjectClosureServiceImpl implements ProjectClosureService {
 
     @Override
     @Transactional(readOnly = true)
-    public ProjectClosureDO getByInitiation(Long initiationId) {
+    public ProjectClosureDO getByInitiation(String initiationId) {
         if (initiationId == null) return null;
         return closureMapper.selectByInitiation(initiationId);
     }

@@ -30,7 +30,7 @@ public interface ProfitSimulationMapper extends BaseMapper<ProfitSimulationDO> {
      * @param initiationId 立项 ID
      * @return 利润模拟列表
      */
-    List<ProfitSimulationDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<ProfitSimulationDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 同项目下最大版本号
@@ -38,5 +38,5 @@ public interface ProfitSimulationMapper extends BaseMapper<ProfitSimulationDO> {
      * @param initiationId 立项 ID
      * @return 最大版本号，无记录返回 null
      */
-    Integer maxVersion(@Param("initiationId") Long initiationId);
+    Integer maxVersion(@Param("initiationId") String initiationId);
 }

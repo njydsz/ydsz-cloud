@@ -29,7 +29,7 @@ public class StageGateValidator {
      * @param projectLevel 项目级别（用于判断是否高级项目）
      * @return 校验结果
      */
-    public static GateCheckResult check(Long initiationId, DeliveryStage targetStage,
+    public static GateCheckResult check(String initiationId, DeliveryStage targetStage,
                                         List<DeliveryItemDO> items, String projectLevel) {
         if (targetStage == null) {
             return GateCheckResult.fail("目标阶段不能为空");

@@ -66,7 +66,7 @@ public class ReconcileHandler {
      * @param to           结束日期
      * @return 对账结果列表
      */
-    public List<ReconcileResult> reconcile(Long initiationId, LocalDate from, LocalDate to) {
+    public List<ReconcileResult> reconcile(String initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> results = new ArrayList<>();
         results.addAll(reconcileMissingCost(initiationId));
         results.addAll(reconcileGhostCost(initiationId));
@@ -85,7 +85,7 @@ public class ReconcileHandler {
      * @param results      对账结果列表
      * @return 汇总后的对账报告
      */
-    public ReconcileReport buildReport(Long initiationId, List<ReconcileResult> results) {
+    public ReconcileReport buildReport(String initiationId, List<ReconcileResult> results) {
         ReconcileReport report = new ReconcileReport();
         report.setInitiationId(initiationId);
         report.setCheckAt(LocalDateTime.now());
@@ -119,7 +119,7 @@ public class ReconcileHandler {
      * @param initiationId 项目立项 ID
      * @return 异常结果列表
      */
-    public List<ReconcileResult> reconcileMissingCost(Long initiationId) {
+    public List<ReconcileResult> reconcileMissingCost(String initiationId) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
 
@@ -169,7 +169,7 @@ public class ReconcileHandler {
      * @param initiationId 项目立项 ID
      * @return 异常结果列表
      */
-    public List<ReconcileResult> reconcileGhostCost(Long initiationId) {
+    public List<ReconcileResult> reconcileGhostCost(String initiationId) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
 
@@ -227,7 +227,7 @@ public class ReconcileHandler {
      * @param to           结束日期
      * @return 异常结果列表
      */
-    public List<ReconcileResult> reconcileDailyOverflow(Long initiationId, LocalDate from, LocalDate to) {
+    public List<ReconcileResult> reconcileDailyOverflow(String initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
         List<TimeEntryDO> entries = timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
@@ -276,7 +276,7 @@ public class ReconcileHandler {
      * @param to           结束日期
      * @return 异常结果列表
      */
-    public List<ReconcileResult> reconcileWeeklyOverload(Long initiationId, LocalDate from, LocalDate to) {
+    public List<ReconcileResult> reconcileWeeklyOverload(String initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
         List<TimeEntryDO> entries = timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
@@ -324,7 +324,7 @@ public class ReconcileHandler {
      * @param to           结束日期
      * @return 异常结果列表
      */
-    public List<ReconcileResult> reconcileCrossProject(Long initiationId, LocalDate from, LocalDate to) {
+    public List<ReconcileResult> reconcileCrossProject(String initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
         List<TimeEntryDO> entries = timeEntryMapper.selectByInitiationAndDateRange(initiationId, from, to);
@@ -367,7 +367,7 @@ public class ReconcileHandler {
      * @param to           结束日期
      * @return 异常结果列表
      */
-    public List<ReconcileResult> reconcileAmountDrift(Long initiationId, LocalDate from, LocalDate to) {
+    public List<ReconcileResult> reconcileAmountDrift(String initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
 
@@ -426,7 +426,7 @@ public class ReconcileHandler {
      * @param initiationId 项目立项 ID
      * @return 异常结果列表
      */
-    public List<ReconcileResult> reconcileAllocatedBeforeApproval(Long initiationId) {
+    public List<ReconcileResult> reconcileAllocatedBeforeApproval(String initiationId) {
         List<ReconcileResult> out = new ArrayList<>();
         if (initiationId == null) return out;
         List<CostAllocationDO> costs = costAllocationMapper.selectByInitiationAndPeriod(initiationId, null);

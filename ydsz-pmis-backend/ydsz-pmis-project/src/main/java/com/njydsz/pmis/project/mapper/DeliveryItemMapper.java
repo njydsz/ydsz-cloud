@@ -49,7 +49,7 @@ public interface DeliveryItemMapper extends BaseMapper<DeliveryItemDO> {
      * @param initiationId 立项 ID
      * @return 交付项列表
      */
-    List<DeliveryItemDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<DeliveryItemDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按立项 + 阶段查询交付项列表
@@ -58,7 +58,7 @@ public interface DeliveryItemMapper extends BaseMapper<DeliveryItemDO> {
      * @param stage        阶段
      * @return 交付项列表
      */
-    List<DeliveryItemDO> selectByStage(@Param("initiationId") Long initiationId,
+    List<DeliveryItemDO> selectByStage(@Param("initiationId") String initiationId,
                                        @Param("stage") String stage);
 
     /**
@@ -67,7 +67,7 @@ public interface DeliveryItemMapper extends BaseMapper<DeliveryItemDO> {
      * @param initiationId 立项 ID
      * @return 状态聚合列表
      */
-    List<Map<String, Object>> aggregateByStatus(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> aggregateByStatus(@Param("initiationId") String initiationId);
 
     /**
      * 统计某阶段已验收的交付项数量
@@ -76,7 +76,7 @@ public interface DeliveryItemMapper extends BaseMapper<DeliveryItemDO> {
      * @param stage        阶段
      * @return 已验收数量
      */
-    long countAcceptedByStage(@Param("initiationId") Long initiationId,
+    long countAcceptedByStage(@Param("initiationId") String initiationId,
                               @Param("stage") String stage);
 
     /**
@@ -86,6 +86,6 @@ public interface DeliveryItemMapper extends BaseMapper<DeliveryItemDO> {
      * @param stage        阶段
      * @return 必选交付项数量
      */
-    long countRequiredByStage(@Param("initiationId") Long initiationId,
+    long countRequiredByStage(@Param("initiationId") String initiationId,
                               @Param("stage") String stage);
 }

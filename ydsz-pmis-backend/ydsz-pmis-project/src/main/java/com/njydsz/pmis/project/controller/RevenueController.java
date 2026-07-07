@@ -136,7 +136,7 @@ public class RevenueController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String contractId,
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String period) {
         return Result.ok(service.page(page, size, keyword, status, contractId, initiationId, period));
     }
@@ -163,7 +163,7 @@ public class RevenueController {
     @Operation(summary = "按期间汇总")
     @PrePermission("execution:revenue:list")
     @GetMapping("/aggregate/by-period")
-    public Result<List<Map<String, Object>>> sumByPeriod(@RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> sumByPeriod(@RequestParam String initiationId) {
         return Result.ok(service.sumByPeriod(initiationId));
     }
 }

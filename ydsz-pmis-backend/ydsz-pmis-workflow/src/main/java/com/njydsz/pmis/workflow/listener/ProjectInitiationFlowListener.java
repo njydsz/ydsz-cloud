@@ -69,7 +69,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                 variables == null ? Collections.emptySet() : variables.keySet());
         // P1-7: 流程启动 → 标记立项为审批中（APPROVING）
         FlowInstanceDO instance = instanceId == null ? null : instanceMapper.selectById(instanceId);
-        Long initiationId = resolveInitiationId(instance);
+        String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
             linkageWithRetry("markProcessing", initiationId,
                     () -> initiationFeignClient.markProcessing(initiationId));
@@ -135,7 +135,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                         nullSafe(instance.getTitle())),
                 instanceId);
         // P1-7: 流程通过 → 标记立项为已批准（APPROVED）
-        Long initiationId = resolveInitiationId(instance);
+        String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
             linkageWithRetry("markApproved", initiationId,
                     () -> initiationFeignClient.markApproved(initiationId));
@@ -170,7 +170,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
                         reason == null || reason.isBlank() ? "" : "，原因：" + reason),
                 instanceId);
         // P1-7: 流程驳回 → 标记立项为已驳回（REJECTED）
-        Long initiationId = resolveInitiationId(instance);
+        String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
             linkageWithRetry("markRejected", initiationId,
                     () -> initiationFeignClient.markRejected(initiationId, reason));
@@ -185,7 +185,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
             return;
         }
         FlowInstanceDO instance = instanceMapper.selectById(instanceId);
-        Long initiationId = resolveInitiationId(instance);
+        String initiationId = resolveInitiationId(instance);
         if (initiationId != null) {
             linkageWithRetry("markProcessing(recover)", initiationId,
                     () -> initiationFeignClient.markProcessing(initiationId));
@@ -371,7 +371,7 @@ public class ProjectInitiationFlowListener implements FlowEventListener {
      * @param initiationId 立项 ID
      * @param call         Feign 调用
      */
-    private void linkageWithRetry(String action, Long initiationId, Supplier<Result<Void>> call) {
+    private void linkageWithRetry(String action, String initiationId, Supplier<Result<Void>> call) {
         for (int attempt = 1; attempt <= LINKAGE_MAX_ATTEMPTS; attempt++) {
             try {
                 Result<Void> result = call.get();

@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
  *
  * <p>说明：
  * <ul>
- *   <li>接口中 projectId 为 String 类型，内部转换为 Long initiationId 使用</li>
+ *   <li>接口中 projectId 为 String 类型，内部转换为 String initiationId 使用</li>
  *   <li>{@link TimeEntryRecord#billableRate()} 暂为 null（待接入费率卡查询）</li>
  *   <li>{@link CostAllocationRecord#approvedBy()} 暂为 null（CostAllocationDO 无审批人字段）</li>
  *   <li>{@link CostAllocationRecord#allocationDate()} 由 period(YYYY-MM) 解析为当月第一天</li>
@@ -55,7 +55,7 @@ public class ReconcileDataProviderImpl implements ReconcileDataProvider {
      */
     @Override
     public List<TimeEntryRecord> listTimeEntries(String projectId, LocalDate startDate, LocalDate endDate) {
-        Long initiationId = parseInitiationId(projectId);
+        String initiationId = parseInitiationId(projectId);
         if (initiationId == null) {
             return Collections.emptyList();
         }
@@ -81,7 +81,7 @@ public class ReconcileDataProviderImpl implements ReconcileDataProvider {
      */
     @Override
     public List<CostAllocationRecord> listCostAllocations(String projectId, LocalDate startDate, LocalDate endDate) {
-        Long initiationId = parseInitiationId(projectId);
+        String initiationId = parseInitiationId(projectId);
         if (initiationId == null) {
             return Collections.emptyList();
         }

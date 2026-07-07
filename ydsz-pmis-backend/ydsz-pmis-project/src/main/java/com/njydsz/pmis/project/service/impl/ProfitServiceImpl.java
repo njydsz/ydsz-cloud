@@ -80,7 +80,7 @@ public class ProfitServiceImpl implements ProfitService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> trendByPeriod(Long initiationId) {
+    public List<Map<String, Object>> trendByPeriod(String initiationId) {
         if (initiationId == null) return List.of();
         return snapshotMapper.trendByPeriod(initiationId);
     }

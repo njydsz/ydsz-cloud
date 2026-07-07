@@ -71,7 +71,7 @@ public class ReportExportController {
     public void download(
             @RequestParam String type,
             @RequestParam(defaultValue = "XLSX") String format,
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String period,
             @RequestParam(required = false) String department,
             @RequestParam(required = false) String riskType,

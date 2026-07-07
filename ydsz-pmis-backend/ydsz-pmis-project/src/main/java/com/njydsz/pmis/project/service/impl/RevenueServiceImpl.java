@@ -114,7 +114,7 @@ public class RevenueServiceImpl implements RevenueService {
     @Override
     @Transactional(readOnly = true)
     public Page<RevenueDO> page(int page, int size, String keyword, String status,
-                                 String contractId, Long initiationId, String period) {
+                                 String contractId, String initiationId, String period) {
         Page<RevenueDO> p = new Page<>(page, size);
         LambdaQueryWrapper<RevenueDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
@@ -131,7 +131,7 @@ public class RevenueServiceImpl implements RevenueService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<RevenueDO> listByInitiation(Long initiationId) {
+    public List<RevenueDO> listByInitiation(String initiationId) {
         return revenueMapper.selectByInitiation(initiationId);
     }
 
@@ -144,7 +144,7 @@ public class RevenueServiceImpl implements RevenueService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> sumByPeriod(Long initiationId) {
+    public List<Map<String, Object>> sumByPeriod(String initiationId) {
         if (initiationId == null) return List.of();
         return revenueMapper.sumByPeriod(initiationId);
     }

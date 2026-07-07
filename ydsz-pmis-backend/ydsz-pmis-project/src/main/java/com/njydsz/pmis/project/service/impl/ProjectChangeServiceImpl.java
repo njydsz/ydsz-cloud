@@ -173,7 +173,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
     @Override
     @Transactional(readOnly = true)
     public Page<ProjectChangeDO> page(int page, int size, String keyword,
-                                      String changeType, String status, Long initiationId) {
+                                      String changeType, String status, String initiationId) {
         Page<ProjectChangeDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ProjectChangeDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {
@@ -196,7 +196,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public List<ProjectChangeDO> listByInitiation(Long initiationId) {
+    public List<ProjectChangeDO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
         return changeMapper.selectByInitiation(initiationId);
     }
@@ -235,7 +235,7 @@ public class ProjectChangeServiceImpl implements ProjectChangeService {
      */
     @Override
     @Transactional(readOnly = true)
-    public long countMajorByInitiation(Long initiationId) {
+    public long countMajorByInitiation(String initiationId) {
         if (initiationId == null) return 0L;
         return changeMapper.countMajorByInitiation(initiationId);
     }

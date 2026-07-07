@@ -21,7 +21,7 @@ public interface PurchaseService {
      * @param dto 采购创建参数
      * @return 采购单ID
      */
-    Long create(PurchaseCreateDTO dto);
+    String create(PurchaseCreateDTO dto);
 
     /**
      * 提交、审批

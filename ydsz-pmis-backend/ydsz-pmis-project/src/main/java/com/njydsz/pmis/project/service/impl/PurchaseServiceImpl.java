@@ -118,7 +118,7 @@ public class PurchaseServiceImpl implements PurchaseService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<PurchaseDO> page(int page, int size, String keyword, String status, Long initiationId) {
+    public Page<PurchaseDO> page(int page, int size, String keyword, String status, String initiationId) {
         Page<PurchaseDO> p = new Page<>(page, size);
         LambdaQueryWrapper<PurchaseDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(keyword)) {

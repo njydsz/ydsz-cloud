@@ -54,10 +54,10 @@ public interface ProfitSimulationService {
      * @param initiationId 项目立项ID
      * @return 测算版本列表
      */
-    List<ProfitSimulationDO> listByInitiation(Long initiationId);
+    List<ProfitSimulationDO> listByInitiation(String initiationId);
 
     /** 多版本对比 */
-    List<Map<String, Object>> compare(Long initiationId);
+    List<Map<String, Object>> compare(String initiationId);
 
     /**
      * 分页查询测算版本
@@ -69,5 +69,5 @@ public interface ProfitSimulationService {
      * @param status       状态过滤
      * @return 分页结果
      */
-    Page<ProfitSimulationDO> page(int page, int size, Long initiationId, String scenarioType, String status);
+    Page<ProfitSimulationDO> page(int page, int size, String initiationId, String scenarioType, String status);
 }

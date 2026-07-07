@@ -39,5 +39,5 @@ public interface BenchResourceClient {
      */
     @GetMapping("/resource-assignments/by-initiation/{initiationId}")
     Result<List<Map<String, Object>>> listResourceAssignmentsByInitiation(
-            @PathVariable("initiationId") Long initiationId);
+            @PathVariable("initiationId") String initiationId);
 }

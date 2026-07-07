@@ -31,7 +31,7 @@ public class ReconcileServiceImpl implements ReconcileService {
     private final ReconcileHandler reconcileHandler;
 
     @Override
-    public ReconcileReport reconcileAll(Long initiationId, LocalDate from, LocalDate to) {
+    public ReconcileReport reconcileAll(String initiationId, LocalDate from, LocalDate to) {
         log.info("[Reconcile] 开始对账: initiationId={}, from={}, to={}", initiationId, from, to);
         long t0 = System.currentTimeMillis();
         List<ReconcileResult> results = reconcileHandler.reconcile(initiationId, from, to);
@@ -43,7 +43,7 @@ public class ReconcileServiceImpl implements ReconcileService {
     }
 
     @Override
-    public List<ReconcileResult> checkMissingCost(Long initiationId) {
+    public List<ReconcileResult> checkMissingCost(String initiationId) {
         List<ReconcileResult> out = new ArrayList<>();
         out.addAll(reconcileHandler.reconcileMissingCost(initiationId));
         out.addAll(reconcileHandler.reconcileGhostCost(initiationId));
@@ -51,7 +51,7 @@ public class ReconcileServiceImpl implements ReconcileService {
     }
 
     @Override
-    public List<ReconcileResult> checkTimeEntryAnomaly(Long initiationId, LocalDate from, LocalDate to) {
+    public List<ReconcileResult> checkTimeEntryAnomaly(String initiationId, LocalDate from, LocalDate to) {
         List<ReconcileResult> out = new ArrayList<>();
         out.addAll(reconcileHandler.reconcileDailyOverflow(initiationId, from, to));
         out.addAll(reconcileHandler.reconcileWeeklyOverload(initiationId, from, to));

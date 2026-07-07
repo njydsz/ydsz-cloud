@@ -90,7 +90,7 @@ public class OpsTicketController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String priority,
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) Long assigneeId,
             @RequestParam(required = false) String keyword) {
         return Result.ok(PageResult.ofPage(service.page(page, size, status, priority,
@@ -107,7 +107,7 @@ public class OpsTicketController {
     @Operation(summary = "按状态聚合")
     @PrePermission("aftersales:ops-ticket:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) Long initiationId) {
+    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam(required = false) String initiationId) {
         return Result.ok(service.aggregateByStatus(initiationId));
     }
 

@@ -24,7 +24,7 @@ public interface ReconcileService {
      * @param to           结束日期
      * @return 对账报告
      */
-    ReconcileReport reconcileAll(Long initiationId, LocalDate from, LocalDate to);
+    ReconcileReport reconcileAll(String initiationId, LocalDate from, LocalDate to);
 
     /**
      * 单项对账: 工时漏算成本
@@ -32,7 +32,7 @@ public interface ReconcileService {
      * @param initiationId 项目立项 ID
      * @return 对账结果列表
      */
-    List<ReconcileResult> checkMissingCost(Long initiationId);
+    List<ReconcileResult> checkMissingCost(String initiationId);
 
     /**
      * 单项对账: 工时-工时异常 (单日/单周/跨项目)
@@ -42,5 +42,5 @@ public interface ReconcileService {
      * @param to           结束日期
      * @return 对账结果列表
      */
-    List<ReconcileResult> checkTimeEntryAnomaly(Long initiationId, LocalDate from, LocalDate to);
+    List<ReconcileResult> checkTimeEntryAnomaly(String initiationId, LocalDate from, LocalDate to);
 }

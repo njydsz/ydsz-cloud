@@ -182,21 +182,21 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<DeliveryItemDO> listItemsByInitiation(Long initiationId) {
+    public List<DeliveryItemDO> listItemsByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
         return itemMapper.selectByInitiation(initiationId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<DeliveryItemDO> listItemsByStage(Long initiationId, String stage) {
+    public List<DeliveryItemDO> listItemsByStage(String initiationId, String stage) {
         if (initiationId == null) return List.of();
         return itemMapper.selectByStage(initiationId, stage);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateItemStatus(Long initiationId) {
+    public List<Map<String, Object>> aggregateItemStatus(String initiationId) {
         if (initiationId == null) return List.of();
         return itemMapper.aggregateByStatus(initiationId);
     }
@@ -205,7 +205,7 @@ public class DeliveryServiceImpl implements DeliveryService {
 
     @Override
     @Transactional(readOnly = true)
-    public StageGateValidator.GateCheckResult checkStageGate(Long initiationId, String targetStage,
+    public StageGateValidator.GateCheckResult checkStageGate(String initiationId, String targetStage,
                                                               String projectLevel) {
         DeliveryStage target = DeliveryStage.fromCode(targetStage);
         if (target == null) {

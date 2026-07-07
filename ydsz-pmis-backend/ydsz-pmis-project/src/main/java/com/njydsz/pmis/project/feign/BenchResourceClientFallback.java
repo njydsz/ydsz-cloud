@@ -48,7 +48,7 @@ public class BenchResourceClientFallback implements FallbackFactory<BenchResourc
             }
 
             @Override
-            public Result<List<Map<String, Object>>> listResourceAssignmentsByInitiation(Long initiationId) {
+            public Result<List<Map<String, Object>>> listResourceAssignmentsByInitiation(String initiationId) {
                 return Result.ok(Collections.emptyList());
             }
         };

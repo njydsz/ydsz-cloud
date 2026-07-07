@@ -293,7 +293,7 @@ public class LocalFeatureFlagService implements FeatureFlagService {
      * @return true 表示该用户命中灰度白名单
      */
     static boolean isUserInRollout(String userId, int rolloutPercentage) {
-        long bucket = Math.floorMod(userId, ROLLOUT_HASH_BASE);
+        long bucket = Math.floorMod((long) userId.hashCode(), ROLLOUT_HASH_BASE);
         return bucket < rolloutPercentage;
     }
 

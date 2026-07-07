@@ -140,14 +140,14 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<ProfitSimulationDO> listByInitiation(Long initiationId) {
+    public List<ProfitSimulationDO> listByInitiation(String initiationId) {
         if (initiationId == null) return List.of();
         return mapper.selectByInitiation(initiationId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> compare(Long initiationId) {
+    public List<Map<String, Object>> compare(String initiationId) {
         if (initiationId == null) return List.of();
         List<ProfitSimulationDO> list = mapper.selectByInitiation(initiationId);
         List<Map<String, Object>> result = new ArrayList<>();
@@ -174,7 +174,7 @@ public class ProfitSimulationServiceImpl implements ProfitSimulationService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<ProfitSimulationDO> page(int page, int size, Long initiationId, String scenarioType, String status) {
+    public Page<ProfitSimulationDO> page(int page, int size, String initiationId, String scenarioType, String status) {
         Page<ProfitSimulationDO> p = new Page<>(page, size);
         LambdaQueryWrapper<ProfitSimulationDO> w = new LambdaQueryWrapper<>();
         if (initiationId != null) w.eq(ProfitSimulationDO::getInitiationId, initiationId);

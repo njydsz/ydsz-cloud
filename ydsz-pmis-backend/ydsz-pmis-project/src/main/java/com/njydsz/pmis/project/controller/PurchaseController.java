@@ -116,7 +116,7 @@ public class PurchaseController {
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long initiationId) {
+            @RequestParam(required = false) String initiationId) {
         return Result.ok(service.page(page, size, keyword, status, initiationId));
     }
 }

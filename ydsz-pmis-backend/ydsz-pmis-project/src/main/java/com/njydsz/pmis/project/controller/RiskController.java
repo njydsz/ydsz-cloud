@@ -125,7 +125,7 @@ public class RiskController {
             @Parameter(description = "关键词") @RequestParam(required = false) String keyword,
             @Parameter(description = "状态") @RequestParam(required = false) String status,
             @Parameter(description = "风险等级") @RequestParam(required = false) String riskLevel,
-            @Parameter(description = "立项ID") @RequestParam(required = false) Long initiationId) {
+            @Parameter(description = "立项ID") @RequestParam(required = false) String initiationId) {
         return Result.ok(service.page(page, size, keyword, status, riskLevel, initiationId));
     }
 
@@ -138,7 +138,7 @@ public class RiskController {
     @Operation(summary = "按等级聚合")
     @PrePermission("execution:risk:list")
     @GetMapping("/aggregate/by-level")
-    public Result<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "立项ID") @RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> aggregateByLevel(@Parameter(description = "立项ID") @RequestParam String initiationId) {
         return Result.ok(service.aggregateByLevel(initiationId));
     }
 }

@@ -47,7 +47,7 @@ public interface DailyReconcileService {
      * @param actual       实际值
      * @param detail       明细描述
      */
-    void upsert(LocalDate date, String type, Long initiationId,
+    void upsert(LocalDate date, String type, String initiationId,
                 double expected, double actual, String detail);
 
     /**

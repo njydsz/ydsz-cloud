@@ -28,7 +28,7 @@ public interface DailyReconcileMapper extends BaseMapper<DailyReconcileDO> {
      */
     DailyReconcileDO selectUnique(@Param("date") LocalDate date,
                                   @Param("type") String type,
-                                  @Param("initiationId") Long initiationId);
+                                  @Param("initiationId") String initiationId);
 
     /**
      * 按日期范围 + 状态 查询

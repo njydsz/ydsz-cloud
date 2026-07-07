@@ -109,7 +109,7 @@ public class ProfitSimulationController {
     @Operation(summary = "按项目查询所有版本")
     @PrePermission("execution:simulation:list")
     @GetMapping("/by-initiation")
-    public Result<List<ProfitSimulationDO>> listByInitiation(@RequestParam Long initiationId) {
+    public Result<List<ProfitSimulationDO>> listByInitiation(@RequestParam String initiationId) {
         return Result.ok(service.listByInitiation(initiationId));
     }
 
@@ -122,7 +122,7 @@ public class ProfitSimulationController {
     @Operation(summary = "多版本对比")
     @PrePermission("execution:simulation:list")
     @GetMapping("/compare")
-    public Result<List<Map<String, Object>>> compare(@RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> compare(@RequestParam String initiationId) {
         return Result.ok(service.compare(initiationId));
     }
 
@@ -142,7 +142,7 @@ public class ProfitSimulationController {
     public Result<Page<ProfitSimulationDO>> page(
             @RequestParam(defaultValue = "1") @Min(1) int page,
             @RequestParam(defaultValue = "20") @Min(1) @Max(100) int size,
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) String scenarioType,
             @RequestParam(required = false) String status) {
         return Result.ok(service.page(page, size, initiationId, scenarioType, status));

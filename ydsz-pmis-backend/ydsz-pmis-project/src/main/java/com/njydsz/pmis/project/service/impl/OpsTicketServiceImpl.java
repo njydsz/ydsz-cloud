@@ -184,7 +184,7 @@ public class OpsTicketServiceImpl implements OpsTicketService {
     @Override
     @Transactional(readOnly = true)
     public Page<OpsTicketDO> page(int page, int size, String status, String priority,
-                                   Long initiationId, Long assigneeId, String keyword) {
+                                   String initiationId, Long assigneeId, String keyword) {
         Page<OpsTicketDO> p = new Page<>(page, size);
         LambdaQueryWrapper<OpsTicketDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(status)) w.eq(OpsTicketDO::getStatus, status);
@@ -208,13 +208,13 @@ public class OpsTicketServiceImpl implements OpsTicketService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> aggregateByStatus(Long initiationId) {
+    public List<Map<String, Object>> aggregateByStatus(String initiationId) {
         return ticketMapper.aggregateByStatus(initiationId);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<OpsTicketDO> listByInitiation(Long initiationId) {
+    public List<OpsTicketDO> listByInitiation(String initiationId) {
         return ticketMapper.selectByInitiation(initiationId);
     }
 

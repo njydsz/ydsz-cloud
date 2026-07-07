@@ -143,7 +143,7 @@ public class TimeEntryController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) Long employeeId,
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) Long taskId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
@@ -162,7 +162,7 @@ public class TimeEntryController {
     @PrePermission("execution:time:list")
     @GetMapping("/aggregate/by-employee-level")
     public Result<List<Map<String, Object>>> aggregateByEmployeeLevel(
-            @RequestParam Long initiationId,
+            @RequestParam String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return Result.ok(service.aggregateHoursByEmployeeAndLevel(initiationId, from, to));

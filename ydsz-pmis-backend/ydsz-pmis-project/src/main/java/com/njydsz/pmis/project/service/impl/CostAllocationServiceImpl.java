@@ -56,7 +56,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long syncFromPurchase(Long purchaseId, Long initiationId, String period,
+    public Long syncFromPurchase(Long purchaseId, String initiationId, String period,
                                   BigDecimal amount, boolean billable) {
         CostAllocationDO c = new CostAllocationDO();
         c.setInitiationId(initiationId);
@@ -75,7 +75,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long syncFromExpense(Long expenseId, Long initiationId, String period,
+    public Long syncFromExpense(Long expenseId, String initiationId, String period,
                                  BigDecimal amount, boolean billable) {
         CostAllocationDO c = new CostAllocationDO();
         c.setInitiationId(initiationId);
@@ -94,7 +94,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<Map<String, Object>> monthlySummary(Long initiationId) {
+    public List<Map<String, Object>> monthlySummary(String initiationId) {
         if (initiationId == null) return List.of();
         return costAllocationMapper.monthlySummary(initiationId);
     }
@@ -108,7 +108,7 @@ public class CostAllocationServiceImpl implements CostAllocationService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<CostAllocationDO> listByInitiationAndPeriod(Long initiationId, String period) {
+    public List<CostAllocationDO> listByInitiationAndPeriod(String initiationId, String period) {
         return costAllocationMapper.selectByInitiationAndPeriod(initiationId, period);
     }
 

@@ -151,7 +151,7 @@ public class ReportExportServiceImpl implements ReportExportService {
         if (initIdObj == null) {
             return List.of();
         }
-        Long initiationId = toLong(initIdObj);
+        String initiationId = toLong(initIdObj);
         String period = stringOf(params.get("period"));
         Map<String, Object> r = reportService.projectProfitReport(initiationId, period);
         if (r == null || r.containsKey("error")) {
@@ -179,7 +179,7 @@ public class ReportExportServiceImpl implements ReportExportService {
         if (initIdObj == null) {
             return List.of();
         }
-        Long initiationId = toLong(initIdObj);
+        String initiationId = toLong(initIdObj);
         String period = stringOf(params.get("period"));
         Map<String, Object> r = reportService.costDetailReport(initiationId, period);
         if (r == null || r.containsKey("error")) {
@@ -209,7 +209,7 @@ public class ReportExportServiceImpl implements ReportExportService {
         if (initIdObj == null) {
             return List.of();
         }
-        Long initiationId = toLong(initIdObj);
+        String initiationId = toLong(initIdObj);
         Map<String, Object> r = reportService.paymentLedgerReport(initiationId);
         if (r == null || r.containsKey("error")) {
             return List.of();
@@ -236,7 +236,7 @@ public class ReportExportServiceImpl implements ReportExportService {
 
     private List<Map<String, Object>> collectRiskMatrixRows(Map<String, Object> params) {
         Object initIdObj = params.get("initiationId");
-        Long initiationId = initIdObj == null ? null : toLong(initIdObj);
+        String initiationId = initIdObj == null ? null : toLong(initIdObj);
         String riskType = stringOf(params.get("riskType"));
         String status = stringOf(params.get("status"));
         Map<String, Object> matrix = advancedReportService.riskMatrix(initiationId, riskType, status);

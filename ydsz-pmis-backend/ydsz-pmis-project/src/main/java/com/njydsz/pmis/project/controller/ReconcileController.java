@@ -45,7 +45,7 @@ public class ReconcileController {
     @PrePermission("execution:reconcile:view")
     @GetMapping("/report")
     public Result<ReconcileReport> report(
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return Result.ok(reconcileService.reconcileAll(initiationId, from, to));
@@ -60,7 +60,7 @@ public class ReconcileController {
     @Operation(summary = "工时漏算 / 幽灵成本")
     @PrePermission("execution:reconcile:view")
     @GetMapping("/missing-cost")
-    public Result<List<ReconcileResult>> missingCost(@RequestParam(required = false) Long initiationId) {
+    public Result<List<ReconcileResult>> missingCost(@RequestParam(required = false) String initiationId) {
         return Result.ok(reconcileService.checkMissingCost(initiationId));
     }
 
@@ -76,7 +76,7 @@ public class ReconcileController {
     @PrePermission("execution:reconcile:view")
     @GetMapping("/time-anomaly")
     public Result<List<ReconcileResult>> timeAnomaly(
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to) {
         return Result.ok(reconcileService.checkTimeEntryAnomaly(initiationId, from, to));

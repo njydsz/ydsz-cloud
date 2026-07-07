@@ -43,7 +43,7 @@ public interface RevenueMapper extends BaseMapper<RevenueDO> {
      * @param initiationId 立项 ID
      * @return 收入确认列表
      */
-    List<RevenueDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<RevenueDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按期间汇总收入
@@ -51,7 +51,7 @@ public interface RevenueMapper extends BaseMapper<RevenueDO> {
      * @param initiationId 立项 ID
      * @return 期间汇总列表
      */
-    List<Map<String, Object>> sumByPeriod(@Param("initiationId") Long initiationId);
+    List<Map<String, Object>> sumByPeriod(@Param("initiationId") String initiationId);
 
     /**
      * 按合同汇总收入

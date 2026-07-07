@@ -367,7 +367,7 @@ public class OpportunityServiceImpl implements OpportunityService {
         initDto.setDescription("由商机[" + opp.getOpportunityCode() + "]自动转立项");
         initDto.setBusinessCase("商机赢单后自动生成立项草稿，请补充业务依据后提交审批");
 
-        Long initiationId = initiationService.create(initDto);
+        String initiationId = initiationService.create(initDto);
         log.info("[Opportunity] 商机[{}]自动转立项[{}]成功", opp.getOpportunityCode(), initiationId);
 
         // 2. 商机状态推进到 CONVERTED

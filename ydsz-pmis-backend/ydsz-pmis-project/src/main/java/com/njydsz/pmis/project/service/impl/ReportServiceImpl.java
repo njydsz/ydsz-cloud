@@ -48,7 +48,7 @@ public class ReportServiceImpl implements ReportService {
     private final RevenueMapper revenueMapper;
 
     @Override
-    public Map<String, Object> projectProfitReport(Long initiationId, String period) {
+    public Map<String, Object> projectProfitReport(String initiationId, String period) {
         Map<String, Object> report = new HashMap<>();
         if (initiationId == null) {
             report.put("error", "initiationId 不能为空");
@@ -94,7 +94,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Map<String, Object> costDetailReport(Long initiationId, String period) {
+    public Map<String, Object> costDetailReport(String initiationId, String period) {
         Map<String, Object> report = new HashMap<>();
         if (initiationId == null) {
             report.put("error", "initiationId 不能为空");
@@ -152,7 +152,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Map<String, Object> paymentLedgerReport(Long initiationId) {
+    public Map<String, Object> paymentLedgerReport(String initiationId) {
         Map<String, Object> report = new HashMap<>();
         if (initiationId == null) {
             report.put("error", "initiationId 不能为空");
@@ -175,7 +175,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     @Override
-    public Map<String, Object> projectLifecycleReport(Long initiationId) {
+    public Map<String, Object> projectLifecycleReport(String initiationId) {
         Map<String, Object> report = new HashMap<>();
         report.put("initiationId", initiationId);
         // 跨模块的台账通常会通过 Feign 聚合；这里返回当前模块范围内的关键节点
@@ -286,7 +286,7 @@ public class ReportServiceImpl implements ReportService {
         return v == null ? BigDecimal.ZERO : v;
     }
 
-    private ProfitSnapshotDO latestSnapshot(Long initiationId, String period) {
+    private ProfitSnapshotDO latestSnapshot(String initiationId, String period) {
         try {
             if (StringUtils.hasText(period)) {
                 return profitSnapshotMapper.selectByInitiationAndPeriod(initiationId, period);
@@ -306,7 +306,7 @@ public class ReportServiceImpl implements ReportService {
         }
     }
 
-    private BigDecimal sumRevenue(Long initiationId, String period) {
+    private BigDecimal sumRevenue(String initiationId, String period) {
         BigDecimal sum = BigDecimal.ZERO;
         List<RevenueDO> list = revenueMapper.selectByInitiation(initiationId);
         if (list == null) return sum;
@@ -318,7 +318,7 @@ public class ReportServiceImpl implements ReportService {
         return sum;
     }
 
-    private BigDecimal sumCost(Long initiationId, String period, String costType) {
+    private BigDecimal sumCost(String initiationId, String period, String costType) {
         BigDecimal sum = BigDecimal.ZERO;
         try {
             List<CostAllocationDO> list = costAllocationMapper.selectByInitiationAndPeriod(initiationId, period);
@@ -331,7 +331,7 @@ public class ReportServiceImpl implements ReportService {
         return sum;
     }
 
-    private BigDecimal sumPurchase(Long initiationId, String period) {
+    private BigDecimal sumPurchase(String initiationId, String period) {
         BigDecimal sum = BigDecimal.ZERO;
         try {
             LambdaQueryWrapper<PurchaseDO> w = new LambdaQueryWrapper<>();
@@ -349,7 +349,7 @@ public class ReportServiceImpl implements ReportService {
         return sum;
     }
 
-    private BigDecimal sumExpense(Long initiationId, String period) {
+    private BigDecimal sumExpense(String initiationId, String period) {
         BigDecimal sum = BigDecimal.ZERO;
         try {
             LambdaQueryWrapper<ExpenseDO> w = new LambdaQueryWrapper<>();
@@ -367,7 +367,7 @@ public class ReportServiceImpl implements ReportService {
         return sum;
     }
 
-    private Map<String, BigDecimal> sumCostDetail(Long initiationId) {
+    private Map<String, BigDecimal> sumCostDetail(String initiationId) {
         Map<String, BigDecimal> m = new HashMap<>();
         m.put("labor", sumCost(initiationId, null, "LABOR"));
         m.put("purchase", sumPurchase(initiationId, null));

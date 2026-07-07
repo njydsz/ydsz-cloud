@@ -100,7 +100,7 @@ public class SatisfactionServiceImpl implements SatisfactionService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<SatisfactionDO> page(int page, int size, String level, Long initiationId, String keyword) {
+    public Page<SatisfactionDO> page(int page, int size, String level, String initiationId, String keyword) {
         Page<SatisfactionDO> p = new Page<>(page, size);
         LambdaQueryWrapper<SatisfactionDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(level)) w.eq(SatisfactionDO::getLevel, level);

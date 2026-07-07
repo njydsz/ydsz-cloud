@@ -23,7 +23,7 @@ import java.util.Map;
  *
  * <p>说明：
  * <ul>
- *   <li>接口中 projectId 为 String 类型，内部转换为 Long initiationId 使用</li>
+ *   <li>接口中 projectId 为 String 类型，内部转换为 String initiationId 使用</li>
  *   <li>{@link #getPendingAmount} 简化返回 ZERO，实际申请金额由调用方传入</li>
  *   <li>{@link #getBudgetSnapshots} 暂返回空列表，待接入活跃项目列表查询</li>
  * </ul>

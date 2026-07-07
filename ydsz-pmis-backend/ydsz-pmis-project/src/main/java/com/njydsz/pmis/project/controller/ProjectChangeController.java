@@ -123,7 +123,7 @@ public class ProjectChangeController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String changeType,
             @RequestParam(required = false) String status,
-            @RequestParam(required = false) Long initiationId) {
+            @RequestParam(required = false) String initiationId) {
         return Result.ok(service.page(page, size, keyword, changeType, status, initiationId));
     }
 

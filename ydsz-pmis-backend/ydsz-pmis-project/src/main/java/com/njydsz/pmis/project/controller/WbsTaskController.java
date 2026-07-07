@@ -144,7 +144,7 @@ public class WbsTaskController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String taskType,
-            @RequestParam(required = false) Long initiationId,
+            @RequestParam(required = false) String initiationId,
             @RequestParam(required = false) Long ownerId) {
         return Result.ok(service.page(page, size, keyword, status, taskType, initiationId, ownerId));
     }
@@ -197,7 +197,7 @@ public class WbsTaskController {
     @Operation(summary = "状态分布")
     @PrePermission("execution:wbs:list")
     @GetMapping("/aggregate/status")
-    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam Long initiationId) {
+    public Result<List<Map<String, Object>>> aggregateByStatus(@RequestParam String initiationId) {
         return Result.ok(service.aggregateByStatus(initiationId));
     }
 }

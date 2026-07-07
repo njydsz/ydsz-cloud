@@ -80,7 +80,7 @@ public class DailyReconcileServiceImpl implements DailyReconcileService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void upsert(LocalDate date, String type, Long initiationId,
+    public void upsert(LocalDate date, String type, String initiationId,
                        double expected, double actual, String detail) {
         if (date == null || type == null) return;
         DailyReconcileDO exist = reconcileMapper.selectUnique(date, type, initiationId);

@@ -31,7 +31,7 @@ public interface SatisfactionMapper extends BaseMapper<SatisfactionDO> {
      * @param initiationId 立项 ID
      * @return 满意度列表
      */
-    List<SatisfactionDO> selectByInitiation(@Param("initiationId") Long initiationId);
+    List<SatisfactionDO> selectByInitiation(@Param("initiationId") String initiationId);
 
     /**
      * 按工单 ID 查询满意度评价列表

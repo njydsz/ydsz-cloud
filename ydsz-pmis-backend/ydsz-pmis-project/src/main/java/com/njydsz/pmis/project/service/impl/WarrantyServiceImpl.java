@@ -137,7 +137,7 @@ public class WarrantyServiceImpl implements WarrantyService {
 
     @Override
     @Transactional(readOnly = true)
-    public Page<WarrantyDO> page(int page, int size, String status, Long initiationId, String keyword) {
+    public Page<WarrantyDO> page(int page, int size, String status, String initiationId, String keyword) {
         Page<WarrantyDO> p = new Page<>(page, size);
         LambdaQueryWrapper<WarrantyDO> w = new LambdaQueryWrapper<>();
         if (StringUtils.hasText(status)) w.eq(WarrantyDO::getStatus, status);
