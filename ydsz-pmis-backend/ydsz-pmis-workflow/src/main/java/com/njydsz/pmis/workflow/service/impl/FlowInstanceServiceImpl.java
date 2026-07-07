@@ -2,6 +2,7 @@ package com.njydsz.pmis.workflow.service.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.annotation.DistributedLock;
+import com.njydsz.pmis.common.annotation.DataScope;
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.api.PageResult;
 import com.njydsz.pmis.common.exception.BizException;
@@ -511,6 +512,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
 
     @Override
     @Transactional(readOnly = true)
+    @DataScope(deptAlias = "", userAlias = "", userColumn = "initiator_id")
     public PageResult<FlowInstanceDO> page(String businessType, String initiatorId, String flowStatus,
                                            LocalDateTime startTime, LocalDateTime endTime,
                                            String tenantId, int pageNo, int pageSize) {
@@ -518,10 +520,19 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         int safePage = Math.max(1, pageNo);
         int safeSize = pageSize > 0 ? pageSize : 20;
         int offset = (safePage - 1) * safeSize;
+        // P1-3: 数据权限 SQL 片段（由 DataScopeAspect ThreadLocal 传递，DataScopeHelper 构造）
+        String dataScopeFilter = "";
+        try {
+            dataScopeFilter = com.njydsz.pmis.common.security.DataScopeHelper
+                    .buildSqlFragment("", "", "dept_id", "initiator_id");
+        } catch (Exception e) {
+            log.debug("[Flow] 数据权限片段构建失败（无登录用户上下文）: {}", e.getMessage());
+        }
         List<FlowInstanceDO> list = instanceMapper.selectPage(
-                businessType, initiatorId, flowStatus, startTime, endTime, tenantId, offset, safeSize);
+                businessType, initiatorId, flowStatus, startTime, endTime, tenantId,
+                dataScopeFilter, offset, safeSize);
         long total = instanceMapper.countPage(
-                businessType, initiatorId, flowStatus, startTime, endTime, tenantId);
+                businessType, initiatorId, flowStatus, startTime, endTime, tenantId, dataScopeFilter);
         return PageResult.of(list, total, safePage, safeSize);
     }
 
@@ -1012,6 +1023,8 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         String nodeCode;
         String nodeName;
         String formFieldsConfig = null;
+        Map<String, Object> fieldPermissions = null;
+        Map<String, Object> commentConfig = null;
         if (taskId != null) {
             // 优先从任务获取节点信息
             FlowRunTaskDO task = taskMapper.selectById(taskId);
@@ -1025,7 +1038,7 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
             nodeCode = instance.getCurrentNodeCode();
             nodeName = instance.getCurrentNodeName();
         }
-        // 查节点表获取 formFieldsConfig
+        // 查节点表获取 formFieldsConfig 和 ext 中的字段权限
         if (nodeCode != null) {
             FlowNodeDO node = nodeMapper.selectByCode(
                     instance.getDefinitionId(), nodeCode);
@@ -1033,6 +1046,25 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
                 formFieldsConfig = node.getFormFieldsConfig();
                 if (nodeName == null) {
                     nodeName = node.getNodeName();
+                }
+                // P1-4: 从 ext JSON 解析字段权限和审批意见配置
+                if (node.getExt() != null && !node.getExt().isBlank()) {
+                    try {
+                        Map<String, Object> ext = JsonUtils.parseMap(node.getExt());
+                        if (ext != null) {
+                            Object fp = ext.get("formFieldPermissions");
+                            if (fp instanceof Map<?, ?> m) {
+                                fieldPermissions = (Map<String, Object>) m;
+                            }
+                            Object cc = ext.get("commentConfig");
+                            if (cc instanceof Map<?, ?> m2) {
+                                commentConfig = (Map<String, Object>) m2;
+                            }
+                        }
+                    } catch (Exception e) {
+                        log.debug("[Flow] 解析节点 ext 字段权限失败: node={} err={}",
+                                nodeCode, e.getMessage());
+                    }
                 }
             }
         }
@@ -1042,6 +1074,10 @@ public class FlowInstanceServiceImpl implements FlowInstanceService {
         result.put("nodeCode", nodeCode);
         result.put("nodeName", nodeName);
         result.put("formFieldsConfig", formFieldsConfig);
+        // P1-4: 字段权限配置（READONLY/REQUIRED/HIDDEN/EDITABLE）
+        result.put("fieldPermissions", fieldPermissions);
+        // P1-4: 审批意见配置（required/minLength/placeholder）
+        result.put("commentConfig", commentConfig);
         result.put("variables", getVariables(instanceId));
         result.put("flowStatus", instance.getFlowStatus());
         result.put("title", instance.getTitle());

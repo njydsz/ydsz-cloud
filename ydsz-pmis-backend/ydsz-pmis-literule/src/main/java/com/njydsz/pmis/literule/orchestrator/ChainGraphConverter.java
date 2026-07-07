@@ -142,6 +142,16 @@ public final class ChainGraphConverter {
         List<RuleNode> ruleNodes = chain.getNodes();
         if (ruleNodes == null || ruleNodes.isEmpty()) return;
         String condition = chain.getConditionExpression();
+        // 在根节点的 metadata 中携带条件表达式，便于反向解析
+        ChainNodeDTO rootNode = nodes.stream()
+                .filter(n -> parentId.equals(n.getNodeId()))
+                .findFirst().orElse(null);
+        if (rootNode != null && condition != null) {
+            Map<String, Object> meta = rootNode.getMetadata() != null
+                    ? new LinkedHashMap<>(rootNode.getMetadata()) : new LinkedHashMap<>();
+            meta.put("condition", condition);
+            rootNode.setMetadata(meta);
+        }
         for (RuleNode rn : ruleNodes) {
             String nodeId = "node-" + nodeSeq.incrementAndGet();
             ChainNodeDTO node = ruleNodeToDTO(rn, nodeId, parentId);
@@ -213,6 +223,17 @@ public final class ChainGraphConverter {
                                       AtomicInteger nodeSeq,
                                       List<ChainNodeDTO> nodes,
                                       List<ChainEdgeDTO> edges) {
+        // 在根节点的 metadata 中携带 branchKey，便于反向解析
+        String branchKey = chain.getBranchKey();
+        ChainNodeDTO rootNode = nodes.stream()
+                .filter(n -> parentId.equals(n.getNodeId()))
+                .findFirst().orElse(null);
+        if (rootNode != null && branchKey != null) {
+            Map<String, Object> meta = rootNode.getMetadata() != null
+                    ? new LinkedHashMap<>(rootNode.getMetadata()) : new LinkedHashMap<>();
+            meta.put("branchKey", branchKey);
+            rootNode.setMetadata(meta);
+        }
         Map<String, RuleNode> branchMap = chain.getBranchMap();
         if (branchMap != null) {
             for (Map.Entry<String, RuleNode> entry : branchMap.entrySet()) {
@@ -528,11 +549,11 @@ public final class ChainGraphConverter {
     /**
      * 解析单个节点为 Rule
      *
-     * <p>支持 SINGLE 和 CHAIN 嵌套节点：
+     * <p>P1-7 增强：支持 SINGLE 和 CHAIN 嵌套节点的递归解析：
      * <ul>
      *   <li>SINGLE - 通过 ruleCode 回调 resolver 获取规则实例</li>
-     *   <li>CHAIN - 递归查找该节点的子节点，构建子 RuleChain 后包装为 {@link ChainAsRule} 适配器</li>
-     *   <li>GROUP - 将 GROUP 下全部子节点解析为规则列表，顺序执行</li>
+     *   <li>CHAIN - 查找该节点的子节点，递归构建子 RuleChain，包装为 {@link ChainAsRule} 适配器</li>
+     *   <li>GROUP - 将 GROUP 下全部子节点解析为规则列表，包装为 {@link ChainAsRule}（THEN 顺序执行）</li>
      * </ul>
      */
     private static Rule resolveNode(ChainNodeDTO node, RuleResolver resolver) {
@@ -540,8 +561,97 @@ public final class ChainGraphConverter {
         if ("SINGLE".equals(node.getNodeType()) && node.getRuleCode() != null) {
             return resolver.resolve(node.getRuleCode());
         }
-        // CHAIN/GROUP 嵌套节点暂不支持直接 resolve 为单一 Rule
+        // CHAIN/GROUP 类型暂不支持直接 resolve 为单一 Rule
+        // 嵌套子链解析需要图上下文，在外部 toChain 方法中处理
         return null;
+    }
+
+    /**
+     * 解析单个节点为 Rule（带图上下文，支持嵌套子链递归解析）
+     *
+     * <p>P1-7 增强：CHAIN 类型节点会递归查找子节点并构建子 RuleChain，
+     * 包装为 {@link ChainAsRule} 适配器后返回。
+     *
+     * @param node     节点
+     * @param graph    画布图（用于查找子节点）
+     * @param resolver 规则解析器
+     * @return Rule 实例；无法解析返回 null
+     * @since 1.6.0
+     */
+    private static Rule resolveNodeWithContext(ChainNodeDTO node, RuleChainGraph graph, RuleResolver resolver) {
+        if (node == null) return null;
+        if ("SINGLE".equals(node.getNodeType()) && node.getRuleCode() != null) {
+            return resolver.resolve(node.getRuleCode());
+        }
+        if ("CHAIN".equals(node.getNodeType())) {
+            // 递归构建子链
+            List<ChainNodeDTO> children = findChildren(graph, node.getNodeId());
+            String chainType = node.getChainType() != null ? node.getChainType() : "THEN";
+            RuleChain subChain = buildChainFromChildren(chainType, children, graph, resolver, node);
+            if (subChain != null) {
+                return new ChainAsRule(subChain);
+            }
+        }
+        if ("GROUP".equals(node.getNodeType())) {
+            // GROUP 节点：将子节点解析为规则列表，构建 THEN 链
+            List<ChainNodeDTO> children = findChildren(graph, node.getNodeId());
+            if (children == null || children.isEmpty()) return null;
+            List<Rule> rules = new ArrayList<>();
+            for (ChainNodeDTO child : children) {
+                Rule r = resolveNodeWithContext(child, graph, resolver);
+                if (r != null) rules.add(r);
+            }
+            if (!rules.isEmpty()) {
+                return new ChainAsRule(RuleChain.then(rules.toArray(new Rule[0])));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 根据链类型和子节点构建 RuleChain
+     *
+     * <p>P1-7：支持嵌套 CHAIN 节点的递归解析
+     */
+    private static RuleChain buildChainFromChildren(String chainType, List<ChainNodeDTO> children,
+                                                     RuleChainGraph graph, RuleResolver resolver,
+                                                     ChainNodeDTO parentNode) {
+        if (children == null || children.isEmpty()) return null;
+
+        switch (chainType) {
+            case "THEN":
+            case "WHEN": {
+                List<Rule> rules = new ArrayList<>();
+                for (ChainNodeDTO child : children) {
+                    Rule r = resolveNodeWithContext(child, graph, resolver);
+                    if (r != null) rules.add(r);
+                }
+                if (rules.isEmpty()) return null;
+                return "WHEN".equals(chainType)
+                        ? RuleChain.when(rules.toArray(new Rule[0]))
+                        : RuleChain.then(rules.toArray(new Rule[0]));
+            }
+            case "IF": {
+                String condition = "true";
+                if (parentNode.getMetadata() != null && parentNode.getMetadata().get("condition") != null) {
+                    condition = String.valueOf(parentNode.getMetadata().get("condition"));
+                }
+                ChainEdgeDTO firstEdge = findFirstEdge(graph, parentNode.getNodeId());
+                if (firstEdge != null && firstEdge.getCondition() != null) {
+                    condition = firstEdge.getCondition();
+                }
+                Rule action = resolveNodeWithContext(children.get(0), graph, resolver);
+                return action != null ? RuleChain.ifThen(condition, action) : null;
+            }
+            default:
+                // 其他类型降级为 THEN
+                List<Rule> rules = new ArrayList<>();
+                for (ChainNodeDTO child : children) {
+                    Rule r = resolveNodeWithContext(child, graph, resolver);
+                    if (r != null) rules.add(r);
+                }
+                return rules.isEmpty() ? null : RuleChain.then(rules.toArray(new Rule[0]));
+        }
     }
 
     /**

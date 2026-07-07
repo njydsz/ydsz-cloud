@@ -28,6 +28,7 @@
         <module>ydsz-pmis-cronjob</module>
         <module>ydsz-pmis-workflow</module>
         <module>ydsz-pmis-agent</module>
+        <module>ydsz-pmis-message</module>
     </modules>
 
     <properties>
@@ -124,6 +125,11 @@
             <dependency>
                 <groupId>com.njydsz.pmis</groupId>
                 <artifactId>ydsz-pmis-literule</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.njydsz.pmis</groupId>
+                <artifactId>ydsz-pmis-message</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

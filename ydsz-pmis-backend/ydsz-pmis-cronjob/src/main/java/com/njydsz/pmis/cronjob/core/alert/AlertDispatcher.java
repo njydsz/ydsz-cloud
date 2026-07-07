@@ -6,8 +6,10 @@ import com.njydsz.pmis.cronjob.entity.JobAlertLogDO;
 import com.njydsz.pmis.cronjob.entity.JobAlertRuleDO;
 import com.njydsz.pmis.cronjob.mapper.JobAlertLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobAlertRuleMapper;
+import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -45,6 +47,8 @@ public class AlertDispatcher {
     private final JobAlertRuleMapper jobAlertRuleMapper;
     private final JobAlertLogMapper jobAlertLogMapper;
     private final ApplicationContext applicationContext;
+    /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
+    private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
     /** AlertChannel → AlertNotifier 缓存（懒加载，避免启动顺序问题） */
     private final Map<AlertChannel, AlertNotifier> notifierCache = new ConcurrentHashMap<>();
@@ -79,6 +83,8 @@ public class AlertDispatcher {
         if (!acquireAlertSlot(rule)) {
             log.info("[AlertDispatcher] 规则在冷却期内, 跳过本次告警: ruleId={} ruleName={} jobId={}",
                     rule.getId(), rule.getRuleName(), context.jobId());
+            // P6-2: 记录告警指标（冷却跳过）
+            recordAlertMetrics(rule.getAlertType(), "SKIPPED");
             return;
         }
 
@@ -89,6 +95,8 @@ public class AlertDispatcher {
         if (channels.isEmpty()) {
             log.warn("[AlertDispatcher] 规则未配置有效通道, 跳过: ruleId={} ruleName={}",
                     rule.getId(), rule.getRuleName());
+            // P6-2: 记录告警指标（无通道跳过）
+            recordAlertMetrics(rule.getAlertType(), "SKIPPED");
             return;
         }
 
@@ -123,6 +131,8 @@ public class AlertDispatcher {
         String status = determineStatus(channels.size(), failedChannels.size());
         String errorMessage = errorMessages.isEmpty() ? null : String.join(" | ", errorMessages);
         persistAlertLog(context, rule, status, errorMessage);
+        // P6-2: 记录告警指标
+        recordAlertMetrics(rule.getAlertType(), status);
 
         log.info("[AlertDispatcher] 告警派发完成: ruleId={} ruleName={} channels={} failed={} status={}",
                 rule.getId(), rule.getRuleName(), channels.size(), failedChannels.size(), status);
@@ -254,6 +264,26 @@ public class AlertDispatcher {
             return "FAILED";
         }
         return "PARTIAL";
+    }
+
+    /**
+     * P6-2: 记录告警派发指标。
+     *
+     * <p>使用 try-catch 包裹，确保指标记录失败不影响主流程。
+     *
+     * @param alertType 告警类型
+     * @param status    派发结果
+     */
+    private void recordAlertMetrics(String alertType, String status) {
+        CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+        if (metrics == null) {
+            return;
+        }
+        try {
+            metrics.incAlertDispatched(alertType, status);
+        } catch (Exception e) {
+            log.debug("[AlertDispatcher] 指标记录失败(不影响主流程): reason={}", e.getMessage());
+        }
     }
 
     /**

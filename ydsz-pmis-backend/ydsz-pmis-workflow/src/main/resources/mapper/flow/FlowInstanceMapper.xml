@@ -114,6 +114,10 @@
           <if test="tenantId != null">
             AND tenant_id = #{tenantId}
           </if>
+          <!-- P1-3: 数据权限 SQL 片段（由 DataScopeHelper.buildSqlFragment 生成） -->
+          <if test="dataScopeFilter != null and dataScopeFilter != ''">
+            AND ${dataScopeFilter}
+          </if>
         ORDER BY start_at DESC
         LIMIT #{limit} OFFSET #{offset}
     </select>
@@ -141,6 +145,10 @@
           </if>
           <if test="tenantId != null">
             AND tenant_id = #{tenantId}
+          </if>
+          <!-- P1-3: 数据权限 SQL 片段 -->
+          <if test="dataScopeFilter != null and dataScopeFilter != ''">
+            AND ${dataScopeFilter}
           </if>
     </select>
 

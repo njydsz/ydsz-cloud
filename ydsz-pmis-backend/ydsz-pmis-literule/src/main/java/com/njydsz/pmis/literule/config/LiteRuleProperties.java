@@ -102,6 +102,14 @@ public class LiteRuleProperties {
     private Distributed distributed = new Distributed();
 
     /**
+     * 多数据源配置（P1-5）
+     *
+     * <p>支持从 Nacos / Apollo / ZooKeeper / Redis / File 等配置中心加载规则。
+     * 默认 DB（数据库），配置后可切换到配置中心数据源。
+     */
+    private RuleSourceConfig ruleSource = new RuleSourceConfig();
+
+    /**
      * AI 增强配置
      *
      * <p>支持自然语言转规则表达式、规则推荐、健康度评分。
@@ -176,5 +184,72 @@ public class LiteRuleProperties {
 
         /** 心跳发送间隔（毫秒） */
         private long heartbeatIntervalMs = 5_000L;
+    }
+
+    /**
+     * 规则数据源配置（P1-5）
+     *
+     * <p>支持从多种数据源加载规则定义，默认 DB（数据库）。
+     *
+     * <p>配置示例：
+     * <pre>
+     * pmis:
+     *   literule:
+     *     rule-source:
+     *       type: nacos          # nacos / apollo / zookeeper / redis / file / db
+     *       nacos:
+     *         server-addr: 127.0.0.1:8848
+     *         data-id: rule-definitions
+     *         group: DEFAULT_GROUP
+     *       apollo:
+     *         namespace: rule-engine
+     *       zookeeper:
+     *         connect-string: 127.0.0.1:2181
+     *         path: /literule/definitions
+     * </pre>
+     *
+     * @since 1.6.0
+     */
+    @Data
+    public static class RuleSourceConfig {
+
+        /** 数据源类型：db（默认）/ nacos / apollo / zookeeper / redis / file */
+        private String type = "db";
+
+        /** Nacos 数据源配置 */
+        private NacosConfig nacos = new NacosConfig();
+
+        /** Apollo 数据源配置 */
+        private ApolloConfig apollo = new ApolloConfig();
+
+        /** ZooKeeper 数据源配置 */
+        private ZookeeperConfig zookeeper = new ZookeeperConfig();
+
+        /** 是否启用 Watch 监听（仅支持 Watch 的数据源有效） */
+        private boolean watchEnabled = true;
+    }
+
+    @Data
+    public static class NacosConfig {
+        /** Nacos 服务地址 */
+        private String serverAddr = "127.0.0.1:8848";
+        /** 配置 Data ID */
+        private String dataId = "rule-definitions";
+        /** 配置 Group */
+        private String group = "DEFAULT_GROUP";
+    }
+
+    @Data
+    public static class ApolloConfig {
+        /** Apollo Namespace */
+        private String namespace = "rule-engine";
+    }
+
+    @Data
+    public static class ZookeeperConfig {
+        /** ZK 连接地址 */
+        private String connectString = "127.0.0.1:2181";
+        /** 规则定义节点路径 */
+        private String path = "/literule/definitions";
     }
 }

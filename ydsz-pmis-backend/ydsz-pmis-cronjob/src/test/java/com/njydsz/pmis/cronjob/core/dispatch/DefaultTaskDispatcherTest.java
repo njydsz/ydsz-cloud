@@ -10,6 +10,7 @@ import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
+import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -84,6 +85,8 @@ class DefaultTaskDispatcherTest {
     private ApplicationEventPublisher eventPublisher;
     @Mock
     private ObjectProvider<AlertTrigger> alertTriggerProvider;
+    @Mock
+    private ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
     private CronjobProperties cronjobProperties;
 
@@ -101,8 +104,8 @@ class DefaultTaskDispatcherTest {
         } catch (Exception e) {
             throw new IllegalStateException("注入 cronjobProperties 失败", e);
         }
-        // P5: 手动注入 ObjectProvider 字段，避免 @InjectMocks 因类型擦除将
-        // shardingStrategyProvider 与 alertTriggerProvider 互相错位注入
+        // P5/P6-2: 手动注入 ObjectProvider 字段，避免 @InjectMocks 因类型擦除将
+        // shardingStrategyProvider / alertTriggerProvider / cronjobMetricsProvider 互相错位注入
         try {
             java.lang.reflect.Field f1 = DefaultTaskDispatcher.class.getDeclaredField("shardingStrategyProvider");
             f1.setAccessible(true);
@@ -110,12 +113,19 @@ class DefaultTaskDispatcherTest {
             java.lang.reflect.Field f2 = DefaultTaskDispatcher.class.getDeclaredField("alertTriggerProvider");
             f2.setAccessible(true);
             f2.set(dispatcher, alertTriggerProvider);
+            java.lang.reflect.Field f3 = DefaultTaskDispatcher.class.getDeclaredField("cronjobMetricsProvider");
+            f3.setAccessible(true);
+            f3.set(dispatcher, cronjobMetricsProvider);
         } catch (Exception e) {
             throw new IllegalStateException("注入 ObjectProvider 失败", e);
         }
 
         lenient().when(redisTemplate.opsForValue()).thenReturn(valueOps);
         lenient().when(applicationContext.getBean(anyString(), eq(JobHandler.class))).thenReturn(jobHandler);
+        // P5/P6-2: ObjectProvider 默认返回 null（告警触发器与指标收集器在测试中不启用）
+        lenient().when(shardingStrategyProvider.getIfAvailable()).thenReturn(null);
+        lenient().when(alertTriggerProvider.getIfAvailable()).thenReturn(null);
+        lenient().when(cronjobMetricsProvider.getIfAvailable()).thenReturn(null);
         lenient().when(jobLogMapper.insert(any(JobLogDO.class))).thenAnswer(invocation -> {
             JobLogDO log = invocation.getArgument(0);
             log.setId("log-test-" + System.nanoTime());

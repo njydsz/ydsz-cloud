@@ -81,6 +81,13 @@ public class JobDO extends BaseDO {
     private Long timeoutMs;
 
     /**
+     * 慢任务阈值（毫秒，P6-3）。
+     *
+     * <p>null 表示不检测慢任务；执行耗时超过此值时记入 pmis_job_slow_log。
+     */
+    private Long slowThresholdMs;
+
+    /**
      * Misfire 策略（P2-1）：FIRE_NOW / SKIP / COALESCE。
      *
      * <p>当 next_fire_time 早于 NOW() - misfireGraceMinutes 时按本策略处理。

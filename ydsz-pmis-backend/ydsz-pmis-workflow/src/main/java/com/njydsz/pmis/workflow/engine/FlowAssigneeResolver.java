@@ -59,4 +59,18 @@ public interface FlowAssigneeResolver {
     default List<Long> expandMultiLeader(String userId, int levels, Map<String, Object> variables) {
         return List.of();
     }
+
+    /**
+     * P1-5: 查询部门负责人
+     *
+     * <p>将部门 ID 解析为该部门的负责人用户 ID。
+     * 业务方需提供实现：查询部门主表的 leader_user_id 字段。
+     *
+     * @param deptId    部门 ID
+     * @param variables 流程变量（可用于动态解析）
+     * @return 部门负责人用户 ID（null 表示无法解析，引擎将原样保留 deptId）
+     */
+    default Long expandDeptLeader(String deptId, Map<String, Object> variables) {
+        return null;
+    }
 }

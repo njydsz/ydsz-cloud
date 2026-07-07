@@ -1968,6 +1968,21 @@ public class FlowTaskCompleteServiceImpl {
                 continue;
             }
             // role:/dept:/leader:/position: 前缀通过 SPI 展开
+            // P1-5: dept_leader: 前缀通过 SPI 调用 expandDeptLeader 解析部门负责人
+            if (t.startsWith("dept_leader:")) {
+                String deptId = t.substring("dept_leader:".length()).trim();
+                if (!deptId.isEmpty()) {
+                    Long leaderId = assigneeResolver.expandDeptLeader(deptId, variables);
+                    if (leaderId != null) {
+                        String s = String.valueOf(leaderId);
+                        if (seen.add(s)) {
+                            result.add(s);
+                        }
+                    }
+                }
+                continue;
+            }
+            // role:/dept:/leader:/position: 前缀通过 SPI 展开
             List<Long> expanded = assigneeResolver.expandUsers(t, variables);
             if (expanded != null) {
                 for (Long uid : expanded) {
@@ -2105,6 +2120,10 @@ public class FlowTaskCompleteServiceImpl {
         } else if (resolved.startsWith("position:")) {
             task.setAssigneeType(FlowAssigneeType.POSITION.name());
             task.setAssigneeId(resolved.substring(9));
+        } else if (resolved.startsWith("dept_leader:")) {
+            // P1-5: 部门负责人，assigneeId 为部门 ID
+            task.setAssigneeType(FlowAssigneeType.DEPT_LEADER.name());
+            task.setAssigneeId(resolved.substring("dept_leader:".length()));
         } else if (resolved.startsWith("self_select:")) {
             // P2-38: 发起人自选审批人，assigneeId 为变量名（如 self_select:approvers → approvers）
             task.setAssigneeType(FlowAssigneeType.SELF_SELECT.name());

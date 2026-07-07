@@ -1,13 +1,16 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
+import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -60,6 +63,8 @@ public class JobScanner {
     private final LeaderElector leaderElector;
     private final TaskDispatcher taskDispatcher;
     private final CronjobProperties cronjobProperties;
+    /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
+    private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
     /** 扫描执行中标志（避免上次扫描未完成时重叠触发） */
     private final AtomicBoolean scanning = new AtomicBoolean(false);
@@ -97,12 +102,21 @@ public class JobScanner {
             log.debug("[JobScanner] 上次扫描尚未完成, 跳过本次执行");
             return;
         }
+        // P6-2: 更新扫描中状态指标
+        CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+        if (metrics != null) {
+            metrics.setScanning(true);
+        }
         try {
             doScan();
         } catch (Exception e) {
             log.error("[JobScanner] 扫描异常: role={} reason={}", leaderRole, e.getMessage(), e);
         } finally {
             scanning.set(false);
+            // P6-2: 更新扫描中状态指标
+            if (metrics != null) {
+                metrics.setScanning(false);
+            }
         }
     }
 
@@ -115,16 +129,28 @@ public class JobScanner {
      *   <li>{@link MisfirePolicy#FIRE_NOW} 立即执行一次（默认）</li>
      *   <li>{@link MisfirePolicy#COALESCE} 执行一次，日志 triggerType 标记 MISFIRED</li>
      * </ul>
+     *
+     * <p>P6-1: 在派发前通过 {@link TraceIdUtil#getOrCreate()} 初始化 traceId 到 MDC，
+     * 使 DefaultTaskDispatcher 写入 job_log.trace_id 时能取到非空值，
+     * 实现"扫描 → 派发 → 执行 → 日志"全链路 traceId 串联。
+     * 单个任务派发完成后立即清理 MDC，避免 traceId 串任务。
      */
     private void doScan() {
         LocalDateTime now = LocalDateTime.now();
         int batchSize = cronjobProperties.getScanner().getBatchSize();
         List<JobDO> dueJobs = acquireDueJobs(now, batchSize);
+        // P6-2: 更新上次扫描到的待触发任务数指标
+        CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+        if (metrics != null) {
+            metrics.setLastScanDueJobs(dueJobs.size());
+        }
         if (dueJobs.isEmpty()) {
             return;
         }
         log.info("[JobScanner] 扫描到 {} 个待触发任务: role={}", dueJobs.size(), leaderRole);
         for (JobDO job : dueJobs) {
+            // P6-1: 为每个任务派发生成独立 traceId，保证任务间链路隔离
+            TraceIdUtil.getOrCreate();
             try {
                 // P2-2: Misfire 判定
                 MisfirePolicy policy = MisfirePolicy.parse(job.getMisfirePolicy());
@@ -133,6 +159,10 @@ public class JobScanner {
                     // 仅推进 next_fire_time，不派发
                     LocalDateTime newNext = nextFireTime(job.getCronExpression());
                     boolean advanced = advanceNextFireTime(job, job.getNextFireTime(), newNext, now);
+                    // P6-2: Misfire SKIP 计数
+                    if (metrics != null) {
+                        metrics.incMisfire("SKIP");
+                    }
                     log.info("[JobScanner] Misfire SKIP 跳过派发: key={} advanced={}",
                             job.getJobKey(), advanced);
                     continue;
@@ -153,21 +183,32 @@ public class JobScanner {
                 String triggerType = DefaultTaskDispatcher.TRIGGER_CRON;
                 if (misfired && policy == MisfirePolicy.COALESCE) {
                     triggerType = DefaultTaskDispatcher.TRIGGER_MISFIRED;
+                    // P6-2: Misfire COALESCE 计数
+                    if (metrics != null) {
+                        metrics.incMisfire("COALESCE");
+                    }
                     log.info("[JobScanner] Misfire COALESCE 派发（日志标记 MISFIRED）: key={}",
                             job.getJobKey());
                 } else if (misfired) {
+                    // P6-2: Misfire FIRE_NOW 计数
+                    if (metrics != null) {
+                        metrics.incMisfire("FIRE_NOW");
+                    }
                     log.info("[JobScanner] Misfire FIRE_NOW 立即派发: key={}", job.getJobKey());
                 }
                 String logId = taskDispatcher.dispatch(job, null, triggerType);
                 if (logId == null) {
                     log.info("[JobScanner] 任务被其他实例持有锁, 跳过: key={}", job.getJobKey());
                 } else {
-                    log.info("[JobScanner] 任务派发成功: key={} logId={} triggerType={}",
-                            job.getJobKey(), logId, triggerType);
+                    log.info("[JobScanner] 任务派发成功: key={} logId={} triggerType={} traceId={}",
+                            job.getJobKey(), logId, triggerType, TraceIdUtil.get());
                 }
             } catch (Exception e) {
                 log.error("[JobScanner] 任务派发失败: key={} reason={}",
                         job.getJobKey(), e.getMessage(), e);
+            } finally {
+                // P6-1: 清理 MDC，避免 traceId 串到下一个任务
+                TraceIdUtil.clear();
             }
         }
     }

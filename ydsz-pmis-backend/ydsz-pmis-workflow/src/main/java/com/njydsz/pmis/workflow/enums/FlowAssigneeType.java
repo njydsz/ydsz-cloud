@@ -26,6 +26,8 @@ public enum FlowAssigneeType {
     LEADER,
     /** 岗位：assignee_id = positionCode */
     POSITION,
+    /** P1-5: 部门负责人：assignee_id = deptId，解析为该部门的负责人 userId */
+    DEPT_LEADER,
     /** P2-38: 发起人自选审批人：assignee_id = 流程变量名（如 self_select:approvers） */
     SELF_SELECT,
     /** P2-39: 多级上级：assignee_id = 级数（如 multi_leader:3 表示连续 3 级上级） */

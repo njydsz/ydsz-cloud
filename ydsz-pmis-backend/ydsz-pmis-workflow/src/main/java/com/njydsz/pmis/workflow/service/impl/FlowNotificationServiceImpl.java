@@ -4,6 +4,7 @@ import com.alibaba.fastjson2.JSON;
 import com.njydsz.pmis.common.feign.NotificationClient;
 import com.njydsz.pmis.common.feign.dto.NotificationFeignDTO;
 import com.njydsz.pmis.common.util.TraceIdUtil;
+import com.njydsz.pmis.workflow.engine.FlowNotifyTemplateResolver;
 import com.njydsz.pmis.workflow.service.FlowNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -49,6 +50,9 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
     /** Feign 通知客户端（IN_APP / EMAIL 通道），由 @RequiredArgsConstructor 注入 */
     private final NotificationClient notificationClient;
 
+    /** P1-2: 通知模板解析器（可选注入，不可用时回退到硬编码） */
+    private final FlowNotifyTemplateResolver templateResolver;
+
     /**
      * WEBHOOK 通道使用的 RestTemplate。
      *
@@ -64,15 +68,19 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             if (assigneeId == null) {
                 return;
             }
-            String title = "您有一个新的审批待办";
-            String content = "流程实例[" + instanceId + "] 任务[" + taskId + "] 需要您处理";
-            String userId = assigneeId;
+            Map<String, Object> vars = new HashMap<>();
+            vars.put("instanceId", instanceId);
+            vars.put("taskId", taskId);
+            vars.put("assigneeName", assigneeName);
+            String[] tc = resolveOrDefault("TASK_CREATED", CHANNEL_IN_APP, vars,
+                    "您有一个新的审批待办",
+                    "流程实例[" + instanceId + "] 任务[" + taskId + "] 需要您处理");
             Map<String, Object> extra = new HashMap<>();
             extra.put("bizType", "WORKFLOW_TASK");
             extra.put("instanceId", instanceId);
             extra.put("taskId", taskId);
             extra.put("assigneeName", assigneeName);
-            send(CHANNEL_IN_APP, userId, title, content, extra);
+            send(CHANNEL_IN_APP, assigneeId, tc[0], tc[1], extra);
             log.debug("[FlowNotify] 任务创建通知: instanceId={} taskId={} assigneeId={}",
                     instanceId, taskId, assigneeId);
         } catch (Exception e) {
@@ -384,5 +392,29 @@ public class FlowNotificationServiceImpl implements FlowNotificationService {
             log.warn("[FlowNotificationServiceImpl] Long 解析失败 o={}: {}", o, e.getMessage());
             return null;
         }
+    }
+
+    // ============================== P1-2: 通知模板支持 ==============================
+
+    /**
+     * P1-2: 尝试用模板解析标题和内容，模板不存在时回退到默认值
+     *
+     * @param templateCode 模板编码（如 TASK_CREATED）
+     * @param channel      通知通道
+     * @param variables    变量上下文
+     * @param defaultTitle 默认标题（模板不存在时使用）
+     * @param defaultContent 默认内容
+     * @return [title, content]
+     */
+    private String[] resolveOrDefault(String templateCode, String channel,
+                                       Map<String, Object> variables,
+                                       String defaultTitle, String defaultContent) {
+        if (templateResolver != null) {
+            String[] resolved = templateResolver.resolve("1", templateCode, channel, variables);
+            if (resolved != null) {
+                return resolved;
+            }
+        }
+        return new String[]{defaultTitle, defaultContent};
     }
 }

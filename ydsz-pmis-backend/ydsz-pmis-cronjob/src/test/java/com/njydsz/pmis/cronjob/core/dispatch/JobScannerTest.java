@@ -1,9 +1,12 @@
 package com.njydsz.pmis.cronjob.core.dispatch;
 
+import com.njydsz.pmis.common.util.TraceIdUtil;
 import com.njydsz.pmis.cronjob.config.CronjobProperties;
 import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.entity.JobDO;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,6 +16,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.ObjectProvider;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -20,10 +25,13 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -40,6 +48,8 @@ import static org.mockito.Mockito.when;
  *   <li>CAS advanceNextFireTime 失败时跳过派发</li>
  *   <li>dispatcher 返回 null 时仅记录日志</li>
  *   <li>scanning 标志位正确管理（防重入）</li>
+ *   <li>P6-1: 派发时 MDC traceId 已设置且派发后已清理</li>
+ *   <li>P6-1: 多任务派发时 traceId 互不串任务</li>
  * </ul>
  *
  * @author ydsz-pmis-team
@@ -56,6 +66,8 @@ class JobScannerTest {
     private LeaderElector leaderElector;
     @Mock
     private TaskDispatcher taskDispatcher;
+    @Mock
+    private ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
     private CronjobProperties cronjobProperties;
 
@@ -75,6 +87,16 @@ class JobScannerTest {
         }
         // 初始化 leaderRole
         scanner.init();
+        // P6-2: CronjobMetrics 默认不可用（指标收集器在测试中不启用）
+        lenient().when(cronjobMetricsProvider.getIfAvailable()).thenReturn(null);
+        // 清理 MDC，避免上次测试残留
+        MDC.remove(TraceIdUtil.TRACE_ID_KEY);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // 清理 MDC，避免测试间串扰
+        MDC.remove(TraceIdUtil.TRACE_ID_KEY);
     }
 
     @Test
@@ -271,6 +293,104 @@ class JobScannerTest {
         scanner.scan();
 
         verify(taskDispatcher, times(1)).dispatch(eq(job), any(), eq(DefaultTaskDispatcher.TRIGGER_CRON));
+    }
+
+    @Test
+    @DisplayName("P6-1: 派发任务时 MDC traceId 已设置")
+    void scan_dispatch_setsTraceIdInMdc() {
+        cronjobProperties.getLeader().setEnabled(true);
+        when(leaderElector.isLeader(anyString())).thenReturn(true);
+        JobDO job = buildDueJob("trace-key", LocalDateTime.now().minusMinutes(1));
+        when(jobMapper.selectDueJobs(any(), anyInt())).thenReturn(List.of(job));
+        when(jobMapper.advanceNextFireTime(anyString(), any(), any(), any())).thenReturn(1);
+        // 在 dispatcher 调用时验证 MDC 中 traceId 已被设置
+        when(taskDispatcher.dispatch(any(), any(), anyString())).thenAnswer(invocation -> {
+            String traceId = MDC.get(TraceIdUtil.TRACE_ID_KEY);
+            assertNotNull(traceId, "派发时 MDC traceId 不应为 null");
+            assertFalse(traceId.isEmpty(), "派发时 MDC traceId 不应为空");
+            return "log-trace";
+        });
+
+        scanner.scan();
+
+        verify(taskDispatcher, times(1)).dispatch(eq(job), any(), eq(DefaultTaskDispatcher.TRIGGER_CRON));
+    }
+
+    @Test
+    @DisplayName("P6-1: 派发完成后 MDC traceId 已清理")
+    void scan_dispatchCompleted_clearsTraceIdFromMdc() {
+        cronjobProperties.getLeader().setEnabled(true);
+        when(leaderElector.isLeader(anyString())).thenReturn(true);
+        JobDO job = buildDueJob("clear-key", LocalDateTime.now().minusMinutes(1));
+        when(jobMapper.selectDueJobs(any(), anyInt())).thenReturn(List.of(job));
+        when(jobMapper.advanceNextFireTime(anyString(), any(), any(), any())).thenReturn(1);
+        when(taskDispatcher.dispatch(any(), any(), anyString())).thenReturn("log-clear");
+
+        scanner.scan();
+
+        // 派发完成后 MDC 应已清理
+        assertNull(MDC.get(TraceIdUtil.TRACE_ID_KEY),
+                "派发完成后 MDC traceId 应被清理");
+    }
+
+    @Test
+    @DisplayName("P6-1: 多任务派发时每个任务有独立 traceId")
+    void scan_multipleJobs_eachHasIndependentTraceId() {
+        cronjobProperties.getLeader().setEnabled(true);
+        when(leaderElector.isLeader(anyString())).thenReturn(true);
+        JobDO job1 = buildDueJob("multi-key-1", LocalDateTime.now().minusMinutes(2));
+        JobDO job2 = buildDueJob("multi-key-2", LocalDateTime.now().minusMinutes(1));
+        when(jobMapper.selectDueJobs(any(), anyInt())).thenReturn(List.of(job1, job2));
+        when(jobMapper.advanceNextFireTime(anyString(), any(), any(), any())).thenReturn(1);
+
+        // 收集每次 dispatch 调用时的 traceId
+        java.util.List<String> traceIds = new java.util.ArrayList<>();
+        when(taskDispatcher.dispatch(any(), any(), anyString())).thenAnswer(invocation -> {
+            traceIds.add(MDC.get(TraceIdUtil.TRACE_ID_KEY));
+            return "log-" + traceIds.size();
+        });
+
+        scanner.scan();
+
+        assertEquals(2, traceIds.size());
+        assertNotNull(traceIds.get(0), "第一个任务 traceId 不应为 null");
+        assertNotNull(traceIds.get(1), "第二个任务 traceId 不应为 null");
+        assertFalse(traceIds.get(0).equals(traceIds.get(1)),
+                "两个任务的 traceId 应不同，避免串任务");
+    }
+
+    @Test
+    @DisplayName("P6-1: dispatcher 抛异常后 MDC traceId 仍被清理")
+    void scan_dispatcherThrows_stillClearsTraceId() {
+        cronjobProperties.getLeader().setEnabled(true);
+        when(leaderElector.isLeader(anyString())).thenReturn(true);
+        JobDO job = buildDueJob("throw-trace-key", LocalDateTime.now().minusMinutes(1));
+        when(jobMapper.selectDueJobs(any(), anyInt())).thenReturn(List.of(job));
+        when(jobMapper.advanceNextFireTime(anyString(), any(), any(), any())).thenReturn(1);
+        when(taskDispatcher.dispatch(any(), any(), anyString()))
+                .thenThrow(new RuntimeException("dispatch err"));
+
+        scanner.scan(); // 不应抛异常
+
+        // 即使 dispatcher 抛异常，finally 块也应清理 MDC
+        assertNull(MDC.get(TraceIdUtil.TRACE_ID_KEY),
+                "dispatcher 抛异常后 MDC traceId 仍应被清理");
+    }
+
+    @Test
+    @DisplayName("P6-1: CAS 失败跳过派发后 MDC traceId 仍被清理")
+    void scan_casFails_stillClearsTraceId() {
+        cronjobProperties.getLeader().setEnabled(true);
+        when(leaderElector.isLeader(anyString())).thenReturn(true);
+        JobDO job = buildDueJob("cas-trace-key", LocalDateTime.now().minusMinutes(1));
+        when(jobMapper.selectDueJobs(any(), anyInt())).thenReturn(List.of(job));
+        when(jobMapper.advanceNextFireTime(anyString(), any(), any(), any())).thenReturn(0);
+
+        scanner.scan();
+
+        // CAS 失败后也走了 finally，MDC 应已清理
+        assertNull(MDC.get(TraceIdUtil.TRACE_ID_KEY),
+                "CAS 失败后 MDC traceId 仍应被清理");
     }
 
     private JobDO buildDueJob(String key, LocalDateTime nextFireTime) {

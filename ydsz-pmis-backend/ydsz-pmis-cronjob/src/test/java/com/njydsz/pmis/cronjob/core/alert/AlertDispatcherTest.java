@@ -4,6 +4,7 @@ import com.njydsz.pmis.cronjob.entity.JobAlertLogDO;
 import com.njydsz.pmis.cronjob.entity.JobAlertRuleDO;
 import com.njydsz.pmis.cronjob.mapper.JobAlertLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobAlertRuleMapper;
+import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.ApplicationContext;
 
 import java.util.List;
@@ -51,7 +53,7 @@ import static org.mockito.Mockito.when;
 @DisplayName("AlertDispatcher 告警派发器测试")
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
-@SuppressWarnings({"unchecked", "rawtypes"})
+@SuppressWarnings("unchecked")
 class AlertDispatcherTest {
 
     @Mock
@@ -60,6 +62,8 @@ class AlertDispatcherTest {
     private JobAlertLogMapper jobAlertLogMapper;
     @Mock
     private ApplicationContext applicationContext;
+    @Mock
+    private ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
     @Mock
     private AlertNotifier emailNotifier;
     @Mock
@@ -74,6 +78,8 @@ class AlertDispatcherTest {
         lenient().when(emailNotifier.supportedChannel()).thenReturn(AlertChannel.EMAIL);
         lenient().when(applicationContext.getBeansOfType(AlertNotifier.class))
                 .thenReturn(Map.of("emailNotifier", emailNotifier));
+        // P6-2: CronjobMetrics 默认不可用（指标收集器在测试中不启用）
+        lenient().when(cronjobMetricsProvider.getIfAvailable()).thenReturn(null);
     }
 
     @Test

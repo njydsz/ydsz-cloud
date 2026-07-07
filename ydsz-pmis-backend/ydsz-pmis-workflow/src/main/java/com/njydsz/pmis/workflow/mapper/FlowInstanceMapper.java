@@ -54,14 +54,17 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
     /**
      * P2-23: 实例多维分页查询
      *
-     * @param businessType 业务类型（可选）
-     * @param initiatorId  发起人 ID（可选）
-     * @param flowStatus   流程状态（可选）
-     * @param startTime    开始时间下界（可选）
-     * @param endTime      开始时间上界（可选）
-     * @param tenantId     租户 ID（可选）
-     * @param offset       偏移量（从 0 开始）
-     * @param limit        每页大小
+     * <p>P1-3: 新增 {@code dataScopeFilter} 参数，支持数据权限 SQL 片段注入。
+     *
+     * @param businessType    业务类型（可选）
+     * @param initiatorId     发起人 ID（可选）
+     * @param flowStatus      流程状态（可选）
+     * @param startTime       开始时间下界（可选）
+     * @param endTime         开始时间上界（可选）
+     * @param tenantId        租户 ID（可选）
+     * @param dataScopeFilter 数据权限 SQL 片段（可选，由 DataScopeHelper.buildSqlFragment 生成）
+     * @param offset          偏移量（从 0 开始）
+     * @param limit           每页大小
      * @return 实例列表
      */
     List<FlowInstanceDO> selectPage(@Param("businessType") String businessType,
@@ -70,6 +73,7 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
                                     @Param("startTime") LocalDateTime startTime,
                                     @Param("endTime") LocalDateTime endTime,
                                     @Param("tenantId") String tenantId,
+                                    @Param("dataScopeFilter") String dataScopeFilter,
                                     @Param("offset") int offset,
                                     @Param("limit") int limit);
 
@@ -89,7 +93,8 @@ public interface FlowInstanceMapper extends BaseMapper<FlowInstanceDO> {
                    @Param("flowStatus") String flowStatus,
                    @Param("startTime") LocalDateTime startTime,
                    @Param("endTime") LocalDateTime endTime,
-                   @Param("tenantId") String tenantId);
+                   @Param("tenantId") String tenantId,
+                   @Param("dataScopeFilter") String dataScopeFilter);
 
     /**
      * 更新实例的 dueAt 字段（子流程超时用）

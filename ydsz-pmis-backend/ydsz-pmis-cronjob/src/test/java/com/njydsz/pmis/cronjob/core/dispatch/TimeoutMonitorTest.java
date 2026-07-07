@@ -6,6 +6,7 @@ import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -54,6 +55,8 @@ class TimeoutMonitorTest {
     private StringRedisTemplate redisTemplate;
     @Mock
     private ObjectProvider<AlertTrigger> alertTriggerProvider;
+    @Mock
+    private ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
     private CronjobProperties cronjobProperties;
 
@@ -70,10 +73,23 @@ class TimeoutMonitorTest {
         } catch (Exception e) {
             throw new IllegalStateException("注入 cronjobProperties 失败", e);
         }
+        // P6-2: 手动注入 ObjectProvider 字段，避免 @InjectMocks 因类型擦除将
+        // alertTriggerProvider 与 cronjobMetricsProvider 互相错位注入
+        try {
+            java.lang.reflect.Field f1 = TimeoutMonitor.class.getDeclaredField("alertTriggerProvider");
+            f1.setAccessible(true);
+            f1.set(monitor, alertTriggerProvider);
+            java.lang.reflect.Field f2 = TimeoutMonitor.class.getDeclaredField("cronjobMetricsProvider");
+            f2.setAccessible(true);
+            f2.set(monitor, cronjobMetricsProvider);
+        } catch (Exception e) {
+            throw new IllegalStateException("注入 ObjectProvider 失败", e);
+        }
         monitor.init();
         lenient().when(leaderElector.isLeader(anyString())).thenReturn(true);
-        // P5: AlertTrigger 默认不可用（告警触发器在测试中不启用）
+        // P5/P6-2: ObjectProvider 默认返回 null（告警触发器与指标收集器在测试中不启用）
         lenient().when(alertTriggerProvider.getIfAvailable()).thenReturn(null);
+        lenient().when(cronjobMetricsProvider.getIfAvailable()).thenReturn(null);
     }
 
     @Test

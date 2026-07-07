@@ -21,6 +21,7 @@ import com.njydsz.pmis.cronjob.entity.JobNodeDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
 import com.njydsz.pmis.cronjob.mapper.JobNodeMapper;
+import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -86,6 +87,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
     private final ApplicationEventPublisher eventPublisher;
     /** P5: 告警触发器（可选注入，未配置时不触发告警） */
     private final ObjectProvider<AlertTrigger> alertTriggerProvider;
+    /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
+    private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
     /** 任务锁 key 前缀 */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -266,6 +269,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 jobNodeHeartbeat.onTaskComplete();
             }
         }
+        // P6-2: 记录分片执行指标
+        recordJobMetrics(job, triggerType, success, log0);
         // P5: 触发告警（分片级别，失败告警 + 慢任务告警）
         triggerAlerts(job, success, log0);
         return log0.getId();
@@ -387,6 +392,8 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
                 jobNodeHeartbeat.onTaskComplete();
             }
         }
+        // P6-2: 记录任务执行指标
+        recordJobMetrics(job, triggerType, success, log0);
         // P4: 发布任务完成事件，触发后继依赖任务（DagExecutor 异步监听）
         publishTaskCompleted(job, success, log0.getId());
         // P5: 触发告警（失败告警 + 慢任务告警）
@@ -448,6 +455,35 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             alertTrigger.trigger(context);
         } catch (Exception e) {
             log.warn("[Dispatcher] 触发告警失败(不影响主流程): key={} reason={}",
+                    job.getJobKey(), e.getMessage());
+        }
+    }
+
+    /**
+     * P6-2: 记录任务执行指标。
+     *
+     * <p>使用 try-catch 包裹，确保指标记录失败不影响主流程。
+     *
+     * @param job         任务定义
+     * @param triggerType 触发类型
+     * @param success     是否执行成功
+     * @param log0        任务日志（含耗时信息）
+     */
+    private void recordJobMetrics(JobDO job, String triggerType, boolean success, JobLogDO log0) {
+        CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+        if (metrics == null) {
+            return;
+        }
+        try {
+            String status = success ? "SUCCESS" : "FAILED";
+            metrics.incJobDispatched(triggerType, status);
+            metrics.recordJobDuration(job.getJobKey(), status,
+                    log0.getDurationMs() != null ? log0.getDurationMs() : 0L);
+            if (!success) {
+                metrics.incJobFailed(job.getJobKey());
+            }
+        } catch (Exception e) {
+            log.debug("[Dispatcher] 指标记录失败(不影响主流程): key={} reason={}",
                     job.getJobKey(), e.getMessage());
         }
     }

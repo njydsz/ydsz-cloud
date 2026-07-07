@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.njydsz.pmis.message.mapper.MsgNotificationMapper">
+
+    <resultMap id="BaseResultMap" type="com.njydsz.pmis.message.entity.MsgNotificationDO">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="content" property="content"/>
+        <result column="level" property="level"/>
+        <result column="category" property="category"/>
+        <result column="priority" property="priority"/>
+        <result column="sender_id" property="senderId"/>
+        <result column="receiver_id" property="receiverId"/>
+        <result column="biz_type" property="bizType"/>
+        <result column="biz_id" property="bizId"/>
+        <result column="message_group" property="messageGroup"/>
+        <result column="batch_id" property="batchId"/>
+        <result column="action_url" property="actionUrl"/>
+        <result column="action_text" property="actionText"/>
+        <result column="icon" property="icon"/>
+        <result column="extra" property="extra"/>
+        <result column="source_module" property="sourceModule"/>
+        <result column="read_status" property="readStatus"/>
+        <result column="read_time" property="readTime"/>
+        <result column="recall_status" property="recallStatus"/>
+        <result column="recall_at" property="recallAt"/>
+        <result column="expired_at" property="expiredAt"/>
+        <result column="created_by" property="createdBy"/>
+        <result column="created_at" property="createdAt"/>
+        <result column="updated_by" property="updatedBy"/>
+        <result column="updated_at" property="updatedAt"/>
+        <result column="deleted" property="deleted"/>
+        <result column="tenant_id" property="tenantId"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, title, content, level, category, priority, sender_id, receiver_id, biz_type, biz_id,
+        message_group, batch_id, action_url, action_text, icon, extra, source_module, read_status,
+        read_time, recall_status, recall_at, expired_at,
+        created_by, created_at, updated_by, updated_at, deleted, tenant_id
+    </sql>
+
+    <update id="markRead">
+        UPDATE pmis_msg_notification
+        SET read_status = 1, read_time = CURRENT_TIMESTAMP
+        WHERE id = #{id}
+          AND receiver_id = #{userId}
+          AND read_status = 0
+          AND deleted = 0
+    </update>
+
+    <update id="markAllRead">
+        UPDATE pmis_msg_notification
+        SET read_status = 1, read_time = CURRENT_TIMESTAMP
+        WHERE receiver_id = #{userId}
+          AND read_status = 0
+          AND deleted = 0
+    </update>
+
+    <select id="countUnread" resultType="java.lang.Long">
+        SELECT COUNT(*)
+        FROM pmis_msg_notification
+        WHERE receiver_id = #{userId}
+          AND read_status = 0
+          AND deleted = 0
+    </select>
+
+</mapper>

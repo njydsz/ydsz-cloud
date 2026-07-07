@@ -8,6 +8,7 @@ import com.njydsz.pmis.cronjob.core.leader.LeaderElector;
 import com.njydsz.pmis.cronjob.entity.JobLogDO;
 import com.njydsz.pmis.cronjob.mapper.JobLogMapper;
 import com.njydsz.pmis.cronjob.mapper.JobMapper;
+import com.njydsz.pmis.cronjob.metrics.CronjobMetrics;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -66,6 +67,8 @@ public class TimeoutMonitor {
     private final CronjobProperties cronjobProperties;
     /** P5: 告警触发器（可选注入，未配置时不触发告警） */
     private final ObjectProvider<AlertTrigger> alertTriggerProvider;
+    /** P6-2: Prometheus 指标收集器（可选注入，未配置时不记录指标） */
+    private final ObjectProvider<CronjobMetrics> cronjobMetricsProvider;
 
     /** 任务锁 key 前缀（与 DefaultTaskDispatcher 保持一致） */
     private static final String JOB_LOCK_PREFIX = "pmis:job:lock:";
@@ -136,6 +139,11 @@ public class TimeoutMonitor {
         if (affected == 0) {
             log.debug("[TimeoutMonitor] 日志已非 RUNNING 状态, 跳过: logId={}", log0.getId());
             return;
+        }
+        // P6-2: 记录超时指标
+        CronjobMetrics metrics = cronjobMetricsProvider.getIfAvailable();
+        if (metrics != null) {
+            metrics.incJobTimeout(log0.getJobKey());
         }
         // 释放任务锁（Lua 脚本安全释放；锁的 value 无法精确匹配，使用通配删除）
         String lockKey = JOB_LOCK_PREFIX + log0.getJobKey();
