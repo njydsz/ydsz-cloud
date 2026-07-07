@@ -175,4 +175,29 @@
         ORDER BY completedCount DESC
         LIMIT #{limit}
     </select>
+
+    <!-- P2-7: 流程效率对比 — 按流程编码分组聚合（COMPLETED + REJECTED 计入总数） -->
+    <select id="selectFlowEfficiencyComparison" resultType="java.util.Map">
+        SELECT flow_code                                                              AS "flowCode",
+               MAX(flow_name)                                                         AS "flowName",
+               COUNT(1) FILTER (WHERE task_status IN ('COMPLETED', 'REJECTED'))       AS "totalCount",
+               COUNT(1) FILTER (WHERE task_status = 'COMPLETED')                      AS "completedCount",
+               COUNT(1) FILTER (WHERE task_status = 'REJECTED')                       AS "rejectedCount",
+               CASE WHEN COUNT(1) FILTER (WHERE task_status IN ('COMPLETED', 'REJECTED')) = 0
+                    THEN 0
+                    ELSE COUNT(1) FILTER (WHERE task_status = 'REJECTED')::FLOAT
+                         / COUNT(1) FILTER (WHERE task_status IN ('COMPLETED', 'REJECTED'))
+               END                                                                    AS "rejectionRate",
+               COALESCE(AVG(duration_ms) FILTER (WHERE task_status = 'COMPLETED'
+                   AND duration_ms IS NOT NULL AND duration_ms &gt; 0), 0)              AS "avgDurationMs"
+        FROM pmis_flow_his_task
+        WHERE status = 'ENABLED'
+          AND deleted = 0
+          AND task_status IN ('COMPLETED', 'REJECTED')
+          <if test="tenantId != null">AND tenant_id = #{tenantId}</if>
+          <if test="startTime != null">AND finish_at &gt;= #{startTime}</if>
+          <if test="endTime != null">AND finish_at &lt;= #{endTime}</if>
+        GROUP BY flow_code
+        ORDER BY totalCount DESC
+    </select>
 </mapper>

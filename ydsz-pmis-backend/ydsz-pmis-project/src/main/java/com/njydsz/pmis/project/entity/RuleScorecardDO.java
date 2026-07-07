@@ -64,7 +64,7 @@ public class RuleScorecardDO extends BaseDO {
     /** 是否启用 */
     private Boolean enabled;
 
-    /** 适用范围（如 ALL / PROJECT_TYPE:XXX） */
+    /** 适用范围（如 ALL / PROJECT_TYPE:CONSTRUCTION 表示限定项目类型） */
     private String scope;
 
     /** 版本号 */

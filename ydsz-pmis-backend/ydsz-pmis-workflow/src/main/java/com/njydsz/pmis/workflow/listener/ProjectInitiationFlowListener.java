@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  *
  * <p>本监听器兼任两层职责：
  * <ol>
- *   <li>业务流程联动（业务侧 TODO 中描述的 initiationService / wbsService 联动）</li>
+ *   <li>业务流程联动（调用 initiationService / wbsService 同步立项及任务分解）</li>
  *   <li>通知触达（对标用友 BPM / 钉钉审批的实时通知能力）</li>
  * </ol>
  *

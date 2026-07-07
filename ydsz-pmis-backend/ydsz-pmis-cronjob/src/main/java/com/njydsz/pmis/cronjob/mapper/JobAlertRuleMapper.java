@@ -50,6 +50,23 @@ public interface JobAlertRuleMapper extends BaseMapper<JobAlertRuleDO> {
     List<JobAlertRuleDO> selectByJobIdOrGlobal(@Param("jobId") String jobId);
 
     /**
+     * P3-2: 按告警类型查询启用的规则（周期性扫描使用）。
+     *
+     * <p>用于 FAIL_RATE / DURATION_P95 等需要周期性统计的告警类型，
+     * 由 {@code AlertScanner} 定时调用。
+     *
+     * @param alertType 告警类型字符串（如 "FAIL_RATE" / "DURATION_P95"）
+     * @return 启用的规则列表
+     */
+    @Select("SELECT id, rule_name, job_id, job_key, alert_type, alert_level, "
+            + "threshold, time_window_minutes, channels, receivers, "
+            + "cooldown_minutes, enabled, last_alert_at, tenant_id, "
+            + "created_by, created_at, updated_by, updated_at, deleted "
+            + "FROM pmis_job_alert_rule "
+            + "WHERE alert_type = #{alertType} AND enabled = 1 AND deleted = 0")
+    List<JobAlertRuleDO> selectByAlertType(@Param("alertType") String alertType);
+
+    /**
      * 原子更新最后告警时间（CAS 语义，避免并发重复告警）。
      *
      * <p>仅当 {@code last_alert_at IS NULL} 或 {@code last_alert_at < cooldownBefore} 时更新成功。

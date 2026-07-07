@@ -36,6 +36,13 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <p>使用 {@code @Async} 异步执行，避免阻塞任务执行主流程。
  *
+ * <p>P3-1: 支持告警恢复通知。当 {@link AlertEvent#recovery()}=true 时：
+ * <ul>
+ *   <li>跳过冷却窗口检查（恢复通知不需要去重）</li>
+ *   <li>持久化的日志 status 带 {@code _RECOVERY} 后缀（如 SUCCESS_RECOVERY）</li>
+ *   <li>通知器可通过 {@link AlertContext#recovery()} 判断文案</li>
+ * </ul>
+ *
  * @author ydsz-pmis-team
  * @since 1.0.0
  */
@@ -59,7 +66,7 @@ public class AlertDispatcher {
     /**
      * 监听告警事件，异步派发通知。
      *
-     * @param event 告警事件
+     * @param event 告警事件（recovery=true 时为恢复通知）
      */
     @Async
     @EventListener
@@ -67,20 +74,25 @@ public class AlertDispatcher {
         try {
             dispatch(event.context(), event.rule());
         } catch (Exception e) {
-            log.error("[AlertDispatcher] 告警派发异常: ruleId={} jobId={} reason={}",
-                    event.rule().getId(), event.context().jobId(), e.getMessage(), e);
+            log.error("[AlertDispatcher] 告警派发异常: ruleId={} jobId={} recovery={} reason={}",
+                    event.rule().getId(), event.context().jobId(), event.recovery(), e.getMessage(), e);
         }
     }
 
     /**
      * 执行告警派发（同步入口，便于单元测试）。
      *
-     * @param context 告警上下文
+     * <p>P3-1: 当 {@code context.recovery()}=true 时，跳过冷却窗口检查，
+     * 且持久化的日志 status 带 {@code _RECOVERY} 后缀。
+     *
+     * @param context 告警上下文（recovery=true 表示恢复通知）
      * @param rule    匹配到的告警规则
      */
     void dispatch(AlertContext context, JobAlertRuleDO rule) {
-        // 1. 冷却窗口去重：CAS 更新 last_alert_at
-        if (!acquireAlertSlot(rule)) {
+        boolean recovery = context.recovery();
+
+        // 1. 冷却窗口去重：CAS 更新 last_alert_at（恢复通知跳过冷却）
+        if (!recovery && !acquireAlertSlot(rule)) {
             log.info("[AlertDispatcher] 规则在冷却期内, 跳过本次告警: ruleId={} ruleName={} jobId={}",
                     rule.getId(), rule.getRuleName(), context.jobId());
             // P6-2: 记录告警指标（冷却跳过）
@@ -93,8 +105,8 @@ public class AlertDispatcher {
         List<String> receivers = parseReceivers(rule.getReceivers());
 
         if (channels.isEmpty()) {
-            log.warn("[AlertDispatcher] 规则未配置有效通道, 跳过: ruleId={} ruleName={}",
-                    rule.getId(), rule.getRuleName());
+            log.warn("[AlertDispatcher] 规则未配置有效通道, 跳过: ruleId={} ruleName={} recovery={}",
+                    rule.getId(), rule.getRuleName(), recovery);
             // P6-2: 记录告警指标（无通道跳过）
             recordAlertMetrics(rule.getAlertType(), "SKIPPED");
             return;
@@ -112,30 +124,30 @@ public class AlertDispatcher {
                     continue;
                 }
                 notifier.notify(context, rule, receivers);
-                log.info("[AlertDispatcher] 通道派发成功: channel={} ruleId={} jobId={}",
-                        channel, rule.getId(), context.jobId());
+                log.info("[AlertDispatcher] 通道派发成功: channel={} ruleId={} jobId={} recovery={}",
+                        channel, rule.getId(), context.jobId(), recovery);
             } catch (AlertSendException e) {
-                log.warn("[AlertDispatcher] 通道派发失败: channel={} ruleId={} reason={}",
-                        channel, rule.getId(), e.getMessage());
+                log.warn("[AlertDispatcher] 通道派发失败: channel={} ruleId={} recovery={} reason={}",
+                        channel, rule.getId(), recovery, e.getMessage());
                 failedChannels.add(channel.name());
                 errorMessages.add(channel + ": " + e.getMessage());
             } catch (Exception e) {
-                log.error("[AlertDispatcher] 通道派发异常: channel={} ruleId={}",
-                        channel, rule.getId(), e);
+                log.error("[AlertDispatcher] 通道派发异常: channel={} ruleId={} recovery={}",
+                        channel, rule.getId(), recovery, e);
                 failedChannels.add(channel.name());
                 errorMessages.add(channel + ": " + e.getClass().getSimpleName());
             }
         }
 
-        // 4. 持久化告警日志
-        String status = determineStatus(channels.size(), failedChannels.size());
+        // 4. 持久化告警日志（恢复通知 status 带 _RECOVERY 后缀）
+        String status = determineStatus(channels.size(), failedChannels.size(), recovery);
         String errorMessage = errorMessages.isEmpty() ? null : String.join(" | ", errorMessages);
         persistAlertLog(context, rule, status, errorMessage);
         // P6-2: 记录告警指标
         recordAlertMetrics(rule.getAlertType(), status);
 
-        log.info("[AlertDispatcher] 告警派发完成: ruleId={} ruleName={} channels={} failed={} status={}",
-                rule.getId(), rule.getRuleName(), channels.size(), failedChannels.size(), status);
+        log.info("[AlertDispatcher] 告警派发完成: ruleId={} ruleName={} channels={} failed={} status={} recovery={}",
+                rule.getId(), rule.getRuleName(), channels.size(), failedChannels.size(), status, recovery);
     }
 
     /**
@@ -252,18 +264,24 @@ public class AlertDispatcher {
     /**
      * 根据失败通道数量确定告警状态。
      *
+     * <p>P3-1: 恢复通知的 status 带 {@code _RECOVERY} 后缀（如 SUCCESS_RECOVERY），
+     * 便于在告警日志中区分告警与恢复记录。
+     *
      * @param totalChannels   总通道数
      * @param failedChannels  失败通道数
-     * @return SUCCESS 全部成功 / PARTIAL 部分成功 / FAILED 全部失败
+     * @param recovery        是否为恢复通知
+     * @return SUCCESS/PARTIAL/FAILED（恢复通知带 _RECOVERY 后缀）
      */
-    private String determineStatus(int totalChannels, int failedChannels) {
+    private String determineStatus(int totalChannels, int failedChannels, boolean recovery) {
+        String base;
         if (failedChannels == 0) {
-            return "SUCCESS";
+            base = "SUCCESS";
+        } else if (failedChannels >= totalChannels) {
+            base = "FAILED";
+        } else {
+            base = "PARTIAL";
         }
-        if (failedChannels >= totalChannels) {
-            return "FAILED";
-        }
-        return "PARTIAL";
+        return recovery ? base + "_RECOVERY" : base;
     }
 
     /**

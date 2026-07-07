@@ -97,8 +97,11 @@ public class FlowGeneratorAgent implements StreamableAgent {
         // 调用 ReAct 推理循环（流式版本）
         ReActResult reactResult;
         try {
+            // 防御：listener=null 时降级为 NoOp，避免 mock 与 ReActLoop 内部判空不一致
+            ReActEventListener safeListener = listener == null
+                    ? NoOpReActEventListener.getInstance() : listener;
             reactResult = reactLoop.runStream(systemPrompt, userPrompt, ctx,
-                    ReActLoop.DEFAULT_MAX_STEPS, listener);
+                    ReActLoop.DEFAULT_MAX_STEPS, safeListener);
         } catch (Exception e) {
             log.warn("[FlowGenerator] biz={} ReAct 循环异常: {}", ctx.getBizRef(), e.getMessage());
             if (listener != null) {

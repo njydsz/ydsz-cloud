@@ -16,6 +16,9 @@ import java.util.List;
  * 触发点只需构造 {@link AlertContext} 并调用 {@link #trigger(AlertContext)}，无需关心规则查询、
  * 去重、通道派发等细节。
  *
+ * <p>P3-1: 新增 {@link #triggerRecovery(AlertContext)} 方法，用于在告警条件解除时
+ * 发布 recovery=true 的恢复通知事件。
+ *
  * <h3>规则匹配</h3>
  * <ul>
  *   <li>查询 jobId 专属规则（{@code job_id = ?}）</li>
@@ -61,11 +64,52 @@ public class AlertTrigger {
                 if (!isRuleMatched(rule, context)) {
                     continue;
                 }
-                AlertEvent event = new AlertEvent(context, rule);
+                AlertEvent event = AlertEvent.of(context, rule);
                 eventPublisher.publishEvent(event);
             }
         } catch (Exception e) {
             log.error("[AlertTrigger] 触发告警异常(不影响主流程): alertType={} jobId={} reason={}",
+                    context.alertType(), context.jobId(), e.getMessage(), e);
+        }
+    }
+
+    /**
+     * P3-1: 触发恢复通知：查询匹配规则并发布恢复事件。
+     *
+     * <p>当告警条件解除（如任务从失败恢复为成功、慢任务恢复为正常耗时）时调用。
+     * 发布的 {@link AlertEvent} 携带 recovery=true 标志，由 {@link AlertDispatcher}
+     * 处理时跳过冷却窗口检查，日志 status 带 {@code _RECOVERY} 后缀。
+     *
+     * <p>规则匹配逻辑与 {@link #trigger(AlertContext)} 不同：
+     * <ul>
+     *   <li>仅按 {@code alert_type} 匹配（不做阈值判定）</li>
+     *   <li>原因：恢复时 triggerValue 通常已低于阈值，正常匹配会失败</li>
+     * </ul>
+     *
+     * @param context 恢复上下文（建议通过 {@link AlertContext#recovery} 工厂方法构造）
+     */
+    public void triggerRecovery(AlertContext context) {
+        if (context == null || context.alertType() == null) {
+            return;
+        }
+        try {
+            List<JobAlertRuleDO> rules = findMatchingRules(context);
+            if (rules.isEmpty()) {
+                log.debug("[AlertTrigger] 无匹配规则, 跳过恢复通知: alertType={} jobId={}",
+                        context.alertType(), context.jobId());
+                return;
+            }
+            log.info("[AlertTrigger] 触发恢复通知: alertType={} jobId={} matchedRules={}",
+                    context.alertType(), context.jobId(), rules.size());
+            for (JobAlertRuleDO rule : rules) {
+                if (!isRuleMatchedForRecovery(rule, context)) {
+                    continue;
+                }
+                AlertEvent event = AlertEvent.recovery(context, rule);
+                eventPublisher.publishEvent(event);
+            }
+        } catch (Exception e) {
+            log.error("[AlertTrigger] 触发恢复通知异常(不影响主流程): alertType={} jobId={} reason={}",
                     context.alertType(), context.jobId(), e.getMessage(), e);
         }
     }
@@ -110,5 +154,24 @@ public class AlertTrigger {
             }
         }
         return true;
+    }
+
+    /**
+     * P3-1: 判断规则是否匹配当前恢复上下文。
+     *
+     * <p>恢复通知的匹配逻辑较告警匹配更宽松：
+     * <ul>
+     *   <li>{@code alert_type} 必须一致</li>
+     *   <li><b>不做阈值判定</b>：恢复时 triggerValue 通常已低于阈值，
+     *       若仍按阈值判定将无法匹配到规则，导致恢复通知无法发出</li>
+     * </ul>
+     *
+     * @param rule    告警规则
+     * @param context 恢复上下文
+     * @return true 表示规则匹配（按 alert_type 维度）
+     */
+    private boolean isRuleMatchedForRecovery(JobAlertRuleDO rule, AlertContext context) {
+        AlertType ruleAlertType = AlertType.parse(rule.getAlertType());
+        return ruleAlertType == context.alertType();
     }
 }

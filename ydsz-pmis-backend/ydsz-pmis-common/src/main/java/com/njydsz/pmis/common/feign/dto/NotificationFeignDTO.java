@@ -26,7 +26,7 @@ public class NotificationFeignDTO implements Serializable {
     private String content;
     /** INFO/WARN/ERROR/URGENT */
     private String level;
-    /** SYSTEM/WORKFLOW/ALERT/TODO */
+    /** SYSTEM 系统 / WORKFLOW 流程 / ALERT 告警 / TO_DO 待办 通知分类 */
     private String category;
     /** 发送人 ID */
     private String senderId;

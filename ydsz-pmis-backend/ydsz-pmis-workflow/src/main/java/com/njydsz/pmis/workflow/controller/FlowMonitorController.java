@@ -8,6 +8,7 @@ import com.njydsz.pmis.common.security.SecurityContext;
 import com.njydsz.pmis.workflow.entity.FlowInstanceDO;
 import com.njydsz.pmis.workflow.mapper.FlowHisTaskMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
+import com.njydsz.pmis.workflow.mapper.FlowRunTaskMapper;
 import com.njydsz.pmis.workflow.service.FlowEfficiencyService;
 import com.njydsz.pmis.workflow.service.FlowInstanceService;
 import com.njydsz.pmis.workflow.service.FlowTaskService;
@@ -56,6 +57,8 @@ public class FlowMonitorController {
     private final FlowTaskService taskService;
     /** 流程实例服务（异常实例详情查询） */
     private final FlowInstanceService instanceService;
+    /** P2-7: 待办任务 mapper（超期任务 TopN / 审批人负载分布） */
+    private final FlowRunTaskMapper runTaskMapper;
 
     // ============== GAP-P2: 审批效率分析 ==============
 
@@ -473,6 +476,255 @@ public class FlowMonitorController {
             }
         }
         return Result.ok(result);
+    }
+
+    // ============== P2-7: 监控仪表盘 UI 增强 ==============
+
+    /**
+     * P2-7: 仪表盘聚合端点 — 一次性返回概览 + 7 天趋势 + 异常 Top5 + 效率统计。
+     *
+     * <p>对标钉钉/飞书审批中心首页仪表盘。前端首屏加载仅需一次请求，避免 N 次 HTTP 往返。
+     * 聚合内容：
+     * <ul>
+     *   <li>overview — 运行中/今日新增/今日完成/待办/超期计数（复用 monitorOverview 逻辑）</li>
+     *   <li>instanceTrend — 近 7 天新增/完成趋势</li>
+     *   <li>overdueTop5 — 超期最严重的 5 个任务</li>
+     *   <li>anomalyTop5 — 异常实例 Top5（复用 efficiencyService.detectAnomalies）</li>
+     *   <li>efficiency — 效率统计（单量/平均耗时/代批率/超期率）</li>
+     *   <li>healthScore — 健康度评分</li>
+     * </ul>
+     *
+     * <p>各子模块查询失败时降级返回空值/默认值，不阻塞其他模块。
+     *
+     * @return 仪表盘聚合数据
+     */
+    @GetMapping("/monitor/dashboard")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @Operation(summary = "监控仪表盘聚合数据（首屏一次加载）")
+    public Result<Map<String, Object>> monitorDashboard() {
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        Map<String, Object> dashboard = new LinkedHashMap<>();
+
+        // 1. overview
+        try {
+            dashboard.put("overview", buildOverview(tenantId));
+        } catch (Exception e) {
+            log.warn("[Dashboard] overview 聚合失败: {}", e.getMessage());
+            dashboard.put("overview", new LinkedHashMap<>());
+        }
+
+        // 2. instanceTrend（近 7 天）
+        try {
+            dashboard.put("instanceTrend", buildInstanceTrend(tenantId, 7));
+        } catch (Exception e) {
+            log.warn("[Dashboard] instanceTrend 聚合失败: {}", e.getMessage());
+            dashboard.put("instanceTrend", new ArrayList<>());
+        }
+
+        // 3. overdueTop5
+        try {
+            List<Map<String, Object>> overdueTop = runTaskMapper.selectOverdueTopN(tenantId, 5);
+            dashboard.put("overdueTop5", overdueTop != null ? overdueTop : new ArrayList<>());
+        } catch (Exception e) {
+            log.warn("[Dashboard] overdueTop5 查询失败: {}", e.getMessage());
+            dashboard.put("overdueTop5", new ArrayList<>());
+        }
+
+        // 4. anomalyTop5
+        try {
+            List<Map<String, Object>> anomalies = efficiencyService.detectAnomalies(tenantId, 5, 24, 7);
+            dashboard.put("anomalyTop5", anomalies != null ? anomalies : new ArrayList<>());
+        } catch (Exception e) {
+            log.warn("[Dashboard] anomalyTop5 查询失败: {}", e.getMessage());
+            dashboard.put("anomalyTop5", new ArrayList<>());
+        }
+
+        // 5. efficiency
+        try {
+            dashboard.put("efficiency", efficiencyService.efficiencyStats(tenantId, null, null));
+        } catch (Exception e) {
+            log.warn("[Dashboard] efficiency 查询失败: {}", e.getMessage());
+            dashboard.put("efficiency", new LinkedHashMap<>());
+        }
+
+        // 6. healthScore
+        try {
+            dashboard.put("healthScore", efficiencyService.healthScore(tenantId, null, null));
+        } catch (Exception e) {
+            log.warn("[Dashboard] healthScore 查询失败: {}", e.getMessage());
+            dashboard.put("healthScore", new LinkedHashMap<>());
+        }
+
+        return Result.ok(dashboard);
+    }
+
+    /**
+     * P2-7: 超期任务 Top N 排行 — 按超期时长降序返回最严重的超期任务。
+     *
+     * <p>对标钉钉/飞书审批中心"超期任务"看板。与 {@link #monitorAnomaly} 的区别：
+     * monitorAnomaly 返回异常实例（TIMEOUT/STUCK/REPEATED_REJECT），本端点专注超期任务维度，
+     * 按超期时长（overdueHours = now - dueAt）降序，直接返回任务级明细。
+     *
+     * @param limit 返回条数上限（默认 10，最大 100）
+     * @return 超期任务列表：taskId / instanceId / flowCode / flowName / title / nodeName /
+     * assigneeId / assigneeName / dueAt / overdueHours / reminderCount
+     */
+    @GetMapping("/monitor/overdue-tasks")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @Operation(summary = "超期任务 Top N 排行（按超期时长降序）")
+    public Result<List<Map<String, Object>>> monitorOverdueTasks(
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        List<Map<String, Object>> rows = runTaskMapper.selectOverdueTopN(tenantId, limit);
+        return Result.ok(rows != null ? rows : new ArrayList<>());
+    }
+
+    /**
+     * P2-7: 审批人负载分布 — 统计各审批人当前待办数量（PENDING + CLAIMED）。
+     *
+     * <p>对标钉钉/飞书"审批人负载"看板，用于识别负载不均、优化审批人配置。
+     * 返回字段：assigneeId / assigneeName / pendingCount / claimedCount / totalCount / overdueCount。
+     *
+     * @param limit 返回条数上限（默认 10，最大 100）
+     * @return 审批人负载列表，按 totalCount 降序
+     */
+    @GetMapping("/monitor/approver-workload")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @Operation(summary = "审批人负载分布（当前待办数量）")
+    public Result<List<Map<String, Object>>> monitorApproverWorkload(
+            @RequestParam(defaultValue = "10") @Min(1) @Max(100) int limit) {
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        List<Map<String, Object>> rows = runTaskMapper.selectWorkloadByAssignee(tenantId, limit);
+        return Result.ok(rows != null ? rows : new ArrayList<>());
+    }
+
+    /**
+     * P2-7: 流程效率对比 — 按流程编码分组聚合效率指标。
+     *
+     * <p>对标钉钉/飞书"流程效率对比"看板。用于横向对比不同流程类型的效率：
+     * <ul>
+     *   <li>totalCount — 任务总数（COMPLETED + REJECTED）</li>
+     *   <li>completedCount — 通过数</li>
+     *   <li>rejectedCount — 驳回数</li>
+     *   <li>rejectionRate — 驳回率（0~1）</li>
+     *   <li>avgDurationMs — 平均处理耗时（毫秒，仅 COMPLETED）</li>
+     * </ul>
+     *
+     * @param startTime finish_at 下界（可空，格式 yyyy-MM-dd HH:mm:ss 或 yyyy-MM-dd）
+     * @param endTime   finish_at 上界（可空）
+     * @return 流程效率对比列表，按 totalCount 降序
+     */
+    @GetMapping("/monitor/flow-efficiency-comparison")
+    @PrePermission(PermissionCodes.WORKFLOW_MONITOR_VIEW)
+    @Operation(summary = "流程效率对比（按流程编码分组）")
+    public Result<List<Map<String, Object>>> monitorFlowEfficiencyComparison(
+            @RequestParam(required = false) String startTime,
+            @RequestParam(required = false) String endTime) {
+        String tenantId = SecurityContext.getTenantIdOrDefault("1");
+        LocalDateTime startDt = parseDateTime(startTime);
+        LocalDateTime endDt = parseDateTime(endTime);
+        List<Map<String, Object>> rows = hisTaskMapper.selectFlowEfficiencyComparison(tenantId, startDt, endDt);
+        return Result.ok(rows != null ? rows : new ArrayList<>());
+    }
+
+    // ============== P2-7: 私有辅助方法 ==============
+
+    /**
+     * P2-7: 构建监控概览数据（复用 monitorOverview 逻辑，供 dashboard 聚合调用）
+     */
+    private Map<String, Object> buildOverview(String tenantId) {
+        Map<String, Object> overview = new LinkedHashMap<>();
+        long running = 0;
+        try {
+            List<Map<String, Object>> statusCounts = instanceMapper.selectCountGroupByStatus(tenantId);
+            if (statusCounts != null) {
+                for (Map<String, Object> row : statusCounts) {
+                    String status = String.valueOf(row.get("flowStatus"));
+                    long cnt = ((Number) row.get("cnt")).longValue();
+                    if ("RUNNING".equals(status)) running = cnt;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("[Dashboard] 状态分组计数查询失败: {}", e.getMessage());
+        }
+        overview.put("runningCount", running);
+
+        try {
+            Map<String, Object> today = instanceMapper.selectTodayCount(tenantId);
+            if (today != null) {
+                overview.put("todayNewCount",
+                        today.get("todayNewCount") == null ? 0L : ((Number) today.get("todayNewCount")).longValue());
+                overview.put("todayCompletedCount",
+                        today.get("todayCompletedCount") == null ? 0L : ((Number) today.get("todayCompletedCount")).longValue());
+            } else {
+                overview.put("todayNewCount", 0L);
+                overview.put("todayCompletedCount", 0L);
+            }
+        } catch (Exception e) {
+            log.warn("[Dashboard] 今日计数查询失败: {}", e.getMessage());
+            overview.put("todayNewCount", 0L);
+            overview.put("todayCompletedCount", 0L);
+        }
+
+        try {
+            overview.put("pendingTaskCount", taskService.countPending(tenantId));
+        } catch (Exception e) {
+            log.warn("[Dashboard] 待办任务计数失败: {}", e.getMessage());
+            overview.put("pendingTaskCount", 0L);
+        }
+
+        try {
+            overview.put("overdueTaskCount", taskService.countOverdue(null, tenantId));
+        } catch (Exception e) {
+            log.warn("[Dashboard] 超期任务计数失败: {}", e.getMessage());
+            overview.put("overdueTaskCount", 0L);
+        }
+        return overview;
+    }
+
+    /**
+     * P2-7: 构建实例趋势数据（复用 monitorInstanceTrend 逻辑，供 dashboard 聚合调用）
+     */
+    private List<Map<String, Object>> buildInstanceTrend(String tenantId, int days) {
+        int effectiveDays = (days == 30) ? 30 : 7;
+        LocalDate today = LocalDate.now();
+        LocalDate start = today.minusDays(effectiveDays - 1L);
+        LocalDateTime startDt = start.atStartOfDay();
+        LocalDateTime endDt = today.atTime(23, 59, 59);
+
+        List<Map<String, Object>> newCounts = instanceMapper.selectDailyNewCount(tenantId, startDt, endDt);
+        List<Map<String, Object>> completedCounts = instanceMapper.selectDailyCompletedCount(tenantId, startDt, endDt);
+
+        Map<String, long[]> byDate = new LinkedHashMap<>();
+        for (int i = 0; i < effectiveDays; i++) {
+            byDate.put(start.plusDays(i).toString(), new long[]{0, 0});
+        }
+        if (newCounts != null) {
+            for (Map<String, Object> row : newCounts) {
+                String d = String.valueOf(row.get("date"));
+                if (byDate.containsKey(d)) {
+                    byDate.get(d)[0] = ((Number) row.get("newCount")).longValue();
+                }
+            }
+        }
+        if (completedCounts != null) {
+            for (Map<String, Object> row : completedCounts) {
+                String d = String.valueOf(row.get("date"));
+                if (byDate.containsKey(d)) {
+                    byDate.get(d)[1] = ((Number) row.get("completedCount")).longValue();
+                }
+            }
+        }
+
+        List<Map<String, Object>> result = new ArrayList<>(effectiveDays);
+        for (Map.Entry<String, long[]> entry : byDate.entrySet()) {
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("date", entry.getKey());
+            row.put("newCount", entry.getValue()[0]);
+            row.put("completedCount", entry.getValue()[1]);
+            result.add(row);
+        }
+        return result;
     }
 
     /**

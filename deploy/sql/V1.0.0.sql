@@ -2065,7 +2065,7 @@ CREATE TABLE IF NOT EXISTS pmis_msg_log(
     CONSTRAINT ck_pml_status_enum       CHECK (status IN ('PENDING', 'SENDING', 'SUCCESS', 'FAILED', 'RETRY', 'DEAD', 'RECALLED')),
     CONSTRAINT ck_pml_priority_enum     CHECK (priority IN ('LOW', 'NORMAL', 'HIGH', 'URGENT')),
     CONSTRAINT ck_pml_recall_enum       CHECK (recall_status IN ('NONE', 'RECALLED')),
-    CONSTRAINT ck_pml_receipt_enum      CHECK (receipt_status IN ('NONE', 'DELIVERED', 'READ', 'CLICKED', 'FAILED')),
+    CONSTRAINT ck_pml_receipt_enum      CHECK (receipt_status IN ('NONE', 'DELIVERED', 'READ', 'CLICKED', 'FAILED', 'TIMEOUT')),
     CONSTRAINT ck_pml_canary_enum       CHECK (canary IN (0, 1)),
     CONSTRAINT ck_pml_cost_nonneg       CHECK (cost_ms IS NULL OR cost_ms >= 0),
     CONSTRAINT ck_pml_reconsume_nonneg  CHECK (reconsume_times >= 0),
@@ -2103,7 +2103,7 @@ COMMENT ON COLUMN pmis_msg_log.canary IS '是否灰度命中: 0 正式 / 1 灰�
 COMMENT ON COLUMN pmis_msg_log.dedup_key IS '幂等去重键(用于消费端幂等,Redis SET NX EX)';
 COMMENT ON COLUMN pmis_msg_log.recall_status IS '撤回状态: NONE 未撤回 / RECALLED 已撤回';
 COMMENT ON COLUMN pmis_msg_log.receipt_at IS '回执到达时间';
-COMMENT ON COLUMN pmis_msg_log.receipt_status IS '回执状态: NONE 无 / DELIVERED 已送达 / READ 已读 / CLICKED 已点击 / FAILED 失败';
+COMMENT ON COLUMN pmis_msg_log.receipt_status IS '回执状态: NONE 无 / DELIVERED 已送达 / READ 已读 / CLICKED 已点击 / FAILED 失败 / TIMEOUT 超时(ReceiptPuller 标记)';
 COMMENT ON COLUMN pmis_msg_log.retry_count IS '已重试次数';
 COMMENT ON COLUMN pmis_msg_log.next_retry_at IS '下次重试时间(退避调度)';
 COMMENT ON COLUMN pmis_msg_log.provider_trace_id IS '三方服务商回执 ID';
@@ -9764,18 +9764,19 @@ CREATE TABLE IF NOT EXISTS pmis_flow_dmn_table (
     deleted           SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
     CONSTRAINT uk_pfdt_tenant_key         UNIQUE (tenant_id, table_key, deleted),
-    CONSTRAINT ck_pfdt_hit_policy         CHECK (hit_policy IN ('UNIQUE','FIRST','PRIORITY','ANY','COLLECT')),
+    -- P2-10: 新增 RULE_ORDER / OUTPUT_ORDER 命中策略
+    CONSTRAINT ck_pfdt_hit_policy         CHECK (hit_policy IN ('UNIQUE','FIRST','PRIORITY','ANY','COLLECT','RULE_ORDER','OUTPUT_ORDER')),
     CONSTRAINT ck_pfdt_collect_operator   CHECK (collect_operator IS NULL OR collect_operator IN ('LIST','SUM','MIN','MAX','COUNT')),
     CONSTRAINT ck_pfdt_status             CHECK (status IN ('DRAFT','PUBLISHED','DEPRECATED')),
     CONSTRAINT ck_pfdt_version            CHECK (version > 0),
     CONSTRAINT ck_pfdt_deleted            CHECK (deleted IN (0, 1))
 );
 
-COMMENT ON TABLE pmis_flow_dmn_table IS 'P0-4: DMN 决策表定义';
+COMMENT ON TABLE pmis_flow_dmn_table IS 'P0-4: DMN 决策表定义; P2-10: 扩展命中策略至 7 种';
 COMMENT ON COLUMN pmis_flow_dmn_table.table_key IS '决策表唯一标识';
 COMMENT ON COLUMN pmis_flow_dmn_table.table_name IS '决策表名称';
 COMMENT ON COLUMN pmis_flow_dmn_table.description IS '决策表描述';
-COMMENT ON COLUMN pmis_flow_dmn_table.hit_policy IS '命中策略: UNIQUE/FIRST/PRIORITY/ANY/COLLECT';
+COMMENT ON COLUMN pmis_flow_dmn_table.hit_policy IS '命中策略: UNIQUE/FIRST/PRIORITY/ANY/COLLECT/RULE_ORDER/OUTPUT_ORDER';
 COMMENT ON COLUMN pmis_flow_dmn_table.collect_operator IS 'COLLECT 聚合运算符: LIST/SUM/MIN/MAX/COUNT';
 COMMENT ON COLUMN pmis_flow_dmn_table.inputs_json IS '输入列定义(JSON)';
 COMMENT ON COLUMN pmis_flow_dmn_table.outputs_json IS '输出列定义(JSON)';
@@ -9807,6 +9808,8 @@ CREATE INDEX IF NOT EXISTS idx_pfdt_tenant_name
 
 -- ----------------------------------------------------------------
 -- pmis_flow_template -- P3-1: process template marketplace
+-- P2-9: 增加 parent_template_id / version / version_label /
+--       inherit_type / is_latest 字段，支持模板继承与版本化
 -- ----------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS pmis_flow_template (
     id              VARCHAR(20)       PRIMARY KEY,
@@ -9820,6 +9823,12 @@ CREATE TABLE IF NOT EXISTS pmis_flow_template (
     form_path       VARCHAR(256),
     use_count       INTEGER         NOT NULL DEFAULT 0,
     sort_order      INTEGER         NOT NULL DEFAULT 0,
+    -- P2-9: 模板继承与版本化字段
+    parent_template_id VARCHAR(20),
+    version         INTEGER         NOT NULL DEFAULT 1,
+    version_label   VARCHAR(32),
+    inherit_type    VARCHAR(16)     NOT NULL DEFAULT 'STANDALONE',
+    is_latest       SMALLINT        NOT NULL DEFAULT 1,
     provider_trace_id VARCHAR(64),
     created_by      VARCHAR(20)          NOT NULL DEFAULT 'SYSTEM',
     created_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -9827,19 +9836,31 @@ CREATE TABLE IF NOT EXISTS pmis_flow_template (
     updated_at      TIMESTAMPTZ     NOT NULL DEFAULT CURRENT_TIMESTAMP,
     deleted         SMALLINT        NOT NULL DEFAULT 0,
     -- 数据完整性约束
-    CONSTRAINT uk_pft_tenant_code          UNIQUE (tenant_id, template_code, deleted),
+    -- P2-9: 唯一约束加入 version 维度，同一 template_code 可存在多版本
+    CONSTRAINT uk_pft_tenant_code_version  UNIQUE (tenant_id, template_code, version, deleted),
     CONSTRAINT ck_pft_use_count            CHECK (use_count >= 0),
-    CONSTRAINT ck_pft_deleted              CHECK (deleted IN (0, 1))
+    CONSTRAINT ck_pft_deleted              CHECK (deleted IN (0, 1)),
+    CONSTRAINT ck_pft_version              CHECK (version >= 1),
+    CONSTRAINT ck_pft_is_latest            CHECK (is_latest IN (0, 1)),
+    CONSTRAINT ck_pft_inherit_type         CHECK (inherit_type IN ('STANDALONE', 'CLONE', 'INHERIT'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_pft_tenant_category_sort
     ON pmis_flow_template (tenant_id, category, sort_order)
+    WHERE deleted = 0 AND is_latest = 1;
+-- P2-9: 按 template_code 查最新版本的高效索引
+CREATE INDEX IF NOT EXISTS idx_pft_tenant_code_latest
+    ON pmis_flow_template (tenant_id, template_code, is_latest)
     WHERE deleted = 0;
+-- P2-9: 按父模板反查继承关系
+CREATE INDEX IF NOT EXISTS idx_pft_parent_template
+    ON pmis_flow_template (tenant_id, parent_template_id)
+    WHERE deleted = 0 AND parent_template_id IS NOT NULL;
 
-COMMENT ON TABLE  pmis_flow_template IS 'P3-1: 流程模板市场表, 预置常用流程模板供一键导入';
+COMMENT ON TABLE  pmis_flow_template IS 'P3-1: 流程模板市场表, 预置常用流程模板供一键导入; P2-9: 支持模板继承与版本化';
 COMMENT ON COLUMN pmis_flow_template.id IS '主键 ID';
 COMMENT ON COLUMN pmis_flow_template.tenant_id IS '租户 ID';
-COMMENT ON COLUMN pmis_flow_template.template_code IS '模板编码 (租户内唯一)';
+COMMENT ON COLUMN pmis_flow_template.template_code IS '模板编码 (租户内 + 版本内唯一)';
 COMMENT ON COLUMN pmis_flow_template.template_name IS '模板名称';
 COMMENT ON COLUMN pmis_flow_template.category IS '分类 (HR/FINANCE/ADMIN/PROJECT/GENERAL)';
 COMMENT ON COLUMN pmis_flow_template.description IS '模板描述';
@@ -9848,6 +9869,11 @@ COMMENT ON COLUMN pmis_flow_template.bpmn_xml IS 'BPMN 2.0 XML 流程定义';
 COMMENT ON COLUMN pmis_flow_template.form_path IS '关联表单路径';
 COMMENT ON COLUMN pmis_flow_template.use_count IS '使用次数';
 COMMENT ON COLUMN pmis_flow_template.sort_order IS '排序值, 升序';
+COMMENT ON COLUMN pmis_flow_template.parent_template_id IS 'P2-9: 父模板 ID (跨模板继承关系, STANDALONE 时为空)';
+COMMENT ON COLUMN pmis_flow_template.version IS 'P2-9: 模板版本号 (从 1 开始单调递增)';
+COMMENT ON COLUMN pmis_flow_template.version_label IS 'P2-9: 版本标签 (如 v1.0 / v2.0-rc1)';
+COMMENT ON COLUMN pmis_flow_template.inherit_type IS 'P2-9: 继承类型 STANDALONE=独立 / CLONE=克隆 / INHERIT=继承';
+COMMENT ON COLUMN pmis_flow_template.is_latest IS 'P2-9: 是否当前 template_code 下最新版本 0=否 1=是';
 COMMENT ON COLUMN pmis_flow_template.created_at IS '创建时间';
 COMMENT ON COLUMN pmis_flow_template.updated_at IS '更新时间';
 COMMENT ON COLUMN pmis_flow_template.deleted IS '逻辑删除 0=未删 1=已删';

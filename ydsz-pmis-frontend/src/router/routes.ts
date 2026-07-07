@@ -288,6 +288,12 @@ export const asyncRoutes: RouteRecordRaw[] = [
         meta: { title: 'route.executionRuleEngine', icon: 'Setting', affix: false, keepAlive: true },
       },
       {
+        path: 'rule-engine/dashboard',
+        name: 'RuleEngineDashboard',
+        component: () => import('@/views/execution/rule-engine/dashboard.vue'),
+        meta: { title: 'rule-engine.dashboard', icon: 'DataLine', activeMenu: '/execution/rule-engine', keepAlive: true },
+      },
+      {
         path: 'rule-engine/designer/:ruleCode',
         name: 'RuleEngineDesigner',
         component: () => import('@/views/execution/rule-engine/designer.vue'),
@@ -300,15 +306,39 @@ export const asyncRoutes: RouteRecordRaw[] = [
         meta: { title: 'rule-engine.traces', icon: 'DataLine', activeMenu: '/execution/rule-engine', hidden: true },
       },
       {
+        path: 'rule-engine/dependency-graph',
+        name: 'RuleEngineDependencyGraph',
+        component: () => import('@/views/execution/rule-engine/dependency-graph.vue'),
+        meta: { title: 'rule-engine.dependencyGraph', icon: 'Connection', activeMenu: '/execution/rule-engine', hidden: true },
+      },
+      {
         path: 'rule-engine/decision-table/:ruleCode',
         name: 'RuleEngineDecisionTable',
         component: () => import('@/views/execution/rule-engine/decision-table-editor.vue'),
         meta: { title: 'rule-engine.decisionTable', icon: 'Grid', activeMenu: '/execution/rule-engine', hidden: true },
       },
       {
+        path: 'rule-engine/decision-tree/:ruleCode',
+        name: 'RuleEngineDecisionTree',
+        component: () => import('@/views/execution/rule-engine/decision-tree-editor.vue'),
+        meta: { title: 'rule-engine.decisionTree', icon: 'Share', activeMenu: '/execution/rule-engine', hidden: true },
+      },
+      {
+        path: 'rule-engine/scorecard/:ruleCode',
+        name: 'RuleEngineScorecard',
+        component: () => import('@/views/execution/rule-engine/scorecard-editor.vue'),
+        meta: { title: 'rule-engine.scorecard', icon: 'Histogram', activeMenu: '/execution/rule-engine', hidden: true },
+      },
+      {
         path: 'rule-engine/pack-market',
         component: () => import('@/views/execution/rule-engine/pack-market.vue'),
         meta: { title: 'rule-engine.packMarket', icon: 'Box', activeMenu: '/execution/rule-engine' },
+      },
+      {
+        path: 'rule-engine/cep-patterns',
+        name: 'RuleEngineCepPatterns',
+        component: () => import('@/views/execution/rule-engine/cep-pattern-editor.vue'),
+        meta: { title: 'rule-engine.cepPatterns', icon: 'Cpu', activeMenu: '/execution/rule-engine', hidden: true },
       },
     ],
   },

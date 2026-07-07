@@ -7,6 +7,7 @@ import org.apache.ibatis.annotations.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 待办任务运行态 Mapper
@@ -168,6 +169,35 @@ public interface FlowRunTaskMapper extends BaseMapper<FlowRunTaskDO> {
      * @return 候选 SLA 任务列表
      */
     List<FlowRunTaskDO> selectSlaCandidates(@Param("limit") int limit);
+
+    /**
+     * P2-7: 超期任务 Top N 排行 — 按超期时长降序返回最严重的超期任务。
+     *
+     * <p>对标钉钉/飞书审批中心"超期任务"看板。超期时长 = now - due_at。
+     * 返回 Map 字段对齐前端 OverdueTaskDTO：
+     * taskId / instanceId / flowCode / flowName / title / nodeName / assigneeId / assigneeName /
+     * dueAt / overdueHours / reminderCount。
+     *
+     * @param tenantId 租户 ID（可空）
+     * @param limit    返回条数上限
+     * @return 超期任务列表，按超期时长降序
+     */
+    List<Map<String, Object>> selectOverdueTopN(@Param("tenantId") String tenantId,
+                                                 @Param("limit") int limit);
+
+    /**
+     * P2-7: 审批人负载分布 — 统计各审批人当前待办数量（PENDING + CLAIMED）。
+     *
+     * <p>对标钉钉/飞书"审批人负载"看板，用于识别负载不均。返回 Map 字段对齐前端
+     * ApproverWorkloadDTO：assigneeId / assigneeName / pendingCount / claimedCount / totalCount /
+     * overdueCount。
+     *
+     * @param tenantId 租户 ID（可空）
+     * @param limit    返回条数上限
+     * @return 审批人负载列表，按 totalCount 降序
+     */
+    List<Map<String, Object>> selectWorkloadByAssignee(@Param("tenantId") String tenantId,
+                                                        @Param("limit") int limit);
 
     /**
      * P1-6: 增加 SLA 催办计数

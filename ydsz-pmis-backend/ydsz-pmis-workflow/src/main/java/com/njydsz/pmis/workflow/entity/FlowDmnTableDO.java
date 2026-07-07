@@ -41,7 +41,7 @@ public class FlowDmnTableDO extends BaseDO {
     /** 决策表描述 */
     private String description;
 
-    /** 命中策略: UNIQUE/FIRST/PRIORITY/ANY/COLLECT */
+    /** 命中策略: UNIQUE/FIRST/PRIORITY/ANY/COLLECT/RULE_ORDER/OUTPUT_ORDER（P2-10 新增后两者） */
     private String hitPolicy;
 
     /** COLLECT 聚合运算符: LIST/SUM/MIN/MAX/COUNT */

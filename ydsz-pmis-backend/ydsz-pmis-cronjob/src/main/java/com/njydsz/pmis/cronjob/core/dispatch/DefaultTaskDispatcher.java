@@ -693,7 +693,7 @@ public class DefaultTaskDispatcher implements TaskDispatcher {
             String triggerValue = log0.getDurationMs() != null
                     ? String.valueOf(log0.getDurationMs())
                     : null;
-            AlertContext context = new AlertContext(
+            AlertContext context = AlertContext.of(
                     success ? AlertType.SLOW : AlertType.FAIL,
                     job.getId(),
                     job.getJobKey(),

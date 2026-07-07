@@ -263,7 +263,7 @@ class AlertDispatcherTest {
         rule.setAlertType("FAIL");
         rule.setAlertLevel("ERROR");
         rule.setThreshold(5000L);
-        AlertContext context = new AlertContext(
+        AlertContext context = AlertContext.of(
                 AlertType.FAIL, "job-1", "key-1", "name-1",
                 "log-1", "5000", "NPE", "trace-1", "tenant-1");
 
@@ -344,15 +344,122 @@ class AlertDispatcherTest {
                 anyString(), any(), any()))
                 .thenThrow(new RuntimeException("DB error"));
 
-        AlertEvent event = new AlertEvent(context, rule);
+        AlertEvent event = AlertEvent.of(context, rule);
         // 不应抛出异常
         dispatcher.onAlertEvent(event);
+    }
+
+    // ==================== P3-1: 恢复通知测试 ====================
+
+    @Test
+    @DisplayName("dispatch: 恢复通知跳过冷却窗口检查(不调用 CAS)")
+    void dispatch_recovery_skipsCooldownCheck() throws Exception {
+        JobAlertRuleDO rule = buildRule("rule-1", 10);
+        rule.setChannels("[\"EMAIL\"]");
+        AlertContext context = buildRecoveryContext();
+
+        dispatcher.dispatch(context, rule);
+
+        // 恢复通知不应调用 CAS 更新（跳过冷却窗口）
+        verify(jobAlertRuleMapper, never()).updateLastAlertAtIfNotInCooldown(
+                anyString(), any(), any());
+        // 应当直接派发到通知器
+        verify(emailNotifier, times(1)).notify(eq(context), eq(rule), any());
+    }
+
+    @Test
+    @DisplayName("dispatch: 恢复通知全部通道成功时 status=SUCCESS_RECOVERY")
+    void dispatch_recoveryAllChannelsSucceed_statusSuccessRecovery() throws Exception {
+        JobAlertRuleDO rule = buildRule("rule-1", 10);
+        rule.setChannels("[\"EMAIL\"]");
+        AlertContext context = buildRecoveryContext();
+
+        dispatcher.dispatch(context, rule);
+
+        verify(emailNotifier, times(1)).notify(eq(context), eq(rule), any());
+        ArgumentCaptor<JobAlertLogDO> logCaptor = ArgumentCaptor.forClass(JobAlertLogDO.class);
+        verify(jobAlertLogMapper, times(1)).insert(logCaptor.capture());
+        assertEquals("SUCCESS_RECOVERY", logCaptor.getValue().getStatus());
+    }
+
+    @Test
+    @DisplayName("dispatch: 恢复通知部分通道失败时 status=PARTIAL_RECOVERY")
+    void dispatch_recoveryPartialFailure_statusPartialRecovery() throws Exception {
+        JobAlertRuleDO rule = buildRule("rule-1", 10);
+        rule.setChannels("[\"EMAIL\",\"DINGTALK\"]");
+        AlertContext context = buildRecoveryContext();
+        when(dingtalkNotifier.supportedChannel()).thenReturn(AlertChannel.DINGTALK);
+        when(applicationContext.getBeansOfType(AlertNotifier.class))
+                .thenReturn(Map.of("emailNotifier", emailNotifier,
+                        "dingtalkNotifier", dingtalkNotifier));
+        // 钉钉通道抛出异常
+        doThrow(new AlertSendException("dingtalk down"))
+                .when(dingtalkNotifier).notify(eq(context), eq(rule), any());
+
+        dispatcher.dispatch(context, rule);
+
+        verify(emailNotifier, times(1)).notify(eq(context), eq(rule), any());
+        verify(dingtalkNotifier, times(1)).notify(eq(context), eq(rule), any());
+        ArgumentCaptor<JobAlertLogDO> logCaptor = ArgumentCaptor.forClass(JobAlertLogDO.class);
+        verify(jobAlertLogMapper, times(1)).insert(logCaptor.capture());
+        assertEquals("PARTIAL_RECOVERY", logCaptor.getValue().getStatus());
+    }
+
+    @Test
+    @DisplayName("dispatch: 恢复通知全部通道失败时 status=FAILED_RECOVERY")
+    void dispatch_recoveryAllChannelsFail_statusFailedRecovery() throws Exception {
+        JobAlertRuleDO rule = buildRule("rule-1", 10);
+        rule.setChannels("[\"EMAIL\"]");
+        AlertContext context = buildRecoveryContext();
+        doThrow(new AlertSendException("email down"))
+                .when(emailNotifier).notify(eq(context), eq(rule), any());
+
+        dispatcher.dispatch(context, rule);
+
+        ArgumentCaptor<JobAlertLogDO> logCaptor = ArgumentCaptor.forClass(JobAlertLogDO.class);
+        verify(jobAlertLogMapper, times(1)).insert(logCaptor.capture());
+        assertEquals("FAILED_RECOVERY", logCaptor.getValue().getStatus());
+    }
+
+    @Test
+    @DisplayName("dispatch: 恢复通知 context.recovery()=true 传入 notifier")
+    void dispatch_recovery_contextPassedToNotifierHasRecoveryFlag() throws Exception {
+        JobAlertRuleDO rule = buildRule("rule-1", 10);
+        rule.setChannels("[\"EMAIL\"]");
+        AlertContext context = buildRecoveryContext();
+
+        dispatcher.dispatch(context, rule);
+
+        ArgumentCaptor<AlertContext> ctxCaptor = ArgumentCaptor.forClass(AlertContext.class);
+        verify(emailNotifier, times(1)).notify(ctxCaptor.capture(), eq(rule), any());
+        assertEquals(true, ctxCaptor.getValue().recovery());
+    }
+
+    @Test
+    @DisplayName("onAlertEvent: 恢复事件触发派发且跳过冷却")
+    void onAlertEvent_recoveryEvent_dispatchesWithoutCooldown() throws Exception {
+        JobAlertRuleDO rule = buildRule("rule-1", 10);
+        rule.setChannels("[\"EMAIL\"]");
+        AlertContext context = buildRecoveryContext();
+        AlertEvent event = AlertEvent.recovery(context, rule);
+
+        dispatcher.onAlertEvent(event);
+
+        verify(jobAlertRuleMapper, never()).updateLastAlertAtIfNotInCooldown(
+                anyString(), any(), any());
+        verify(emailNotifier, times(1)).notify(eq(context), eq(rule), any());
     }
 
     // ==================== 辅助方法 ====================
 
     private AlertContext buildContext() {
-        return new AlertContext(
+        return AlertContext.of(
+                AlertType.FAIL, "job-1", "key-1", "name-1",
+                "log-1", null, null, "trace-1", "tenant-1");
+    }
+
+    private AlertContext buildRecoveryContext() {
+        return AlertContext.recovery(
                 AlertType.FAIL, "job-1", "key-1", "name-1",
                 "log-1", null, null, "trace-1", "tenant-1");
     }

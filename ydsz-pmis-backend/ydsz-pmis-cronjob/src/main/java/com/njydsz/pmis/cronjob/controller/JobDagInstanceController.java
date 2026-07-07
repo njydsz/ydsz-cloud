@@ -7,6 +7,7 @@ import com.njydsz.pmis.common.permission.PermissionCodes;
 import com.njydsz.pmis.cronjob.entity.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.entity.JobDagNodeInstanceDO;
 import com.njydsz.pmis.cronjob.service.JobDagInstanceService;
+import com.njydsz.pmis.cronjob.vo.DagInstanceVisualizationVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,13 @@ public class JobDagInstanceController {
     @GetMapping("/{instanceId}/nodes")
     public Result<List<JobDagNodeInstanceDO>> listNodes(@PathVariable String instanceId) {
         return Result.ok(jobDagInstanceService.listNodes(instanceId));
+    }
+
+    @Operation(summary = "获取 DAG 实例可视化数据（P4-1）")
+    @PrePermission(PermissionCodes.CRONJOB_DAG_VIEW)
+    @GetMapping("/{instanceId}/visualization")
+    public Result<DagInstanceVisualizationVO> getVisualization(@PathVariable String instanceId) {
+        return Result.ok(jobDagInstanceService.getVisualization(instanceId));
     }
 
     @Operation(summary = "暂停 DAG 实例")

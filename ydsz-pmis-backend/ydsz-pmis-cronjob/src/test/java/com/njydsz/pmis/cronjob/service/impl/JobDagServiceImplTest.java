@@ -67,7 +67,6 @@ class JobDagServiceImplTest {
     @Mock
     private JobMapper jobMapper;
     @Mock
-    @SuppressWarnings("unchecked")
     private ObjectProvider<DagInstanceExecutor> dagInstanceExecutorProvider;
     @Mock
     private DagInstanceExecutor dagInstanceExecutor;

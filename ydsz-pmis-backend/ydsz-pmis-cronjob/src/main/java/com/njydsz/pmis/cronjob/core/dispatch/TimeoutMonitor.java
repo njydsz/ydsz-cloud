@@ -204,7 +204,7 @@ public class TimeoutMonitor {
             return;
         }
         try {
-            AlertContext context = new AlertContext(
+            AlertContext context = AlertContext.of(
                     AlertType.TIMEOUT,
                     log0.getJobId(),
                     log0.getJobKey(),

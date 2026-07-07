@@ -26,9 +26,9 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.atLeast;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -123,7 +123,6 @@ class ReActLoopStreamTest {
     /** 收集所有触发的事件（用 recording listener） */
     private static class RecordingListener implements ReActEventListener {
         final List<String> events = new ArrayList<>();
-        ReActResult lastResult;
 
         @Override
         public void onStepStart(int stepIndex) {
@@ -158,7 +157,6 @@ class ReActLoopStreamTest {
         @Override
         public void onComplete(ReActResult result) {
             events.add("ON_COMPLETE:" + (result == null ? "null" : result.isSuccess()));
-            this.lastResult = result;
         }
 
         @Override
@@ -232,9 +230,9 @@ class ReActLoopStreamTest {
 
             // 验证事件序列：第 1 步 + 第 2 步 + 完成
             assertThat(listener.events).contains(
-                    "STEP_START:1", "THOUGHT:1", "ACTION:1:query",
+                    "STEP_START:1", "THOUGHT:1:调用工具 query", "ACTION:1:query",
                     "OBSERVATION:1", "STEP_END:1",
-                    "STEP_START:2", "ACTION:2:final_answer",
+                    "STEP_START:2", "THOUGHT:2:已得到最终答案", "ACTION:2:final_answer",
                     "FINAL_ANSWER:2", "STEP_END:2",
                     "ON_COMPLETE:true");
             assertThat(listener.events).hasSize(11);
@@ -371,9 +369,13 @@ class ReActLoopStreamTest {
             reactLoop.runStream("sys", "user", ctx(),
                     ReActLoop.DEFAULT_MAX_STEPS, mockListener);
 
-            verify(mockListener, atLeast(6)).onStepStart(any());
-            // 或验证其他方法
-            verify(mockListener, times(1)).onFinalAnswer(eq(1), anyString());
+            // 单步成功共触发 6 种回调：onStepStart / onThought / onAction /
+            // onFinalAnswer / onStepEnd / onComplete（各 1 次）
+            verify(mockListener, times(1)).onStepStart(anyInt());
+            verify(mockListener, times(1)).onThought(anyInt(), any());
+            verify(mockListener, times(1)).onAction(anyInt(), any());
+            verify(mockListener, times(1)).onFinalAnswer(anyInt(), anyString());
+            verify(mockListener, times(1)).onStepEnd(anyInt());
             verify(mockListener, times(1)).onComplete(any());
         }
 
@@ -390,10 +392,10 @@ class ReActLoopStreamTest {
             reactLoop.runStream("sys", "user", ctx(),
                     ReActLoop.DEFAULT_MAX_STEPS, mockListener);
 
-            verify(mockListener, times(2)).onStepStart(any());
+            verify(mockListener, times(2)).onStepStart(anyInt());
             verify(mockListener, times(1)).onObservation(eq(1), anyString());
             verify(mockListener, times(1)).onFinalAnswer(eq(2), anyString());
-            verify(mockListener, never()).onError(any(), any());
+            verify(mockListener, never()).onError(anyInt(), any());
         }
 
         @Test
@@ -408,7 +410,7 @@ class ReActLoopStreamTest {
                     ReActLoop.DEFAULT_MAX_STEPS, mockListener);
 
             assertThat(result.isSuccess()).isFalse();
-            verify(mockListener, never()).onFinalAnswer(any(), any());
+            verify(mockListener, never()).onFinalAnswer(anyInt(), any());
             verify(mockListener, times(1)).onComplete(any());
 
             // 捕获 onComplete 的参数，验证 success=false

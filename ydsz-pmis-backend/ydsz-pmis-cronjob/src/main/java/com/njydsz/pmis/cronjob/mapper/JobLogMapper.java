@@ -9,6 +9,7 @@ import org.apache.ibatis.annotations.Update;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 任务日志 Mapper
@@ -126,4 +127,41 @@ public interface JobLogMapper extends BaseMapper<JobLogDO> {
             + "WHERE status = 'RUNNING' AND deleted = 0 AND exec_node_id = #{nodeId}")
     int markFailedByNodeOffline(@Param("nodeId") String nodeId,
                                  @Param("now") LocalDateTime now);
+
+    /**
+     * P3-2: 统计指定任务在时间窗口内的执行次数和失败次数。
+     *
+     * <p>用于 FAIL_RATE 告警计算：失败率 = failed / total * 100。
+     *
+     * @param jobId 任务 ID
+     * @param since 时间窗口起点（仅统计此时间之后的日志）
+     * @return Map 包含 total（总次数）和 failed（失败次数）字段；
+     *         无记录时 total=0 / failed=0（COUNT/SUM 不返回 null）
+     */
+    @Select("SELECT COUNT(1) as total, "
+            + "SUM(CASE WHEN status = 'FAILED' THEN 1 ELSE 0 END) as failed "
+            + "FROM pmis_job_log "
+            + "WHERE job_id = #{jobId} AND created_at >= #{since} AND deleted = 0")
+    Map<String, Object> countByJobIdSince(@Param("jobId") String jobId,
+                                            @Param("since") LocalDateTime since);
+
+    /**
+     * P3-2: 统计指定任务在时间窗口内的 P95 耗时（PostgreSQL PERCENTILE_CONT 近似）。
+     *
+     * <p>仅统计 {@code status='SUCCESS'} 的执行，避免失败/超时任务拉高 P95。
+     * 用于 DURATION_P95 告警计算：P95 &gt;= threshold 时触发告警。
+     *
+     * <p>注意：PERCENTILE_CONT 是 PostgreSQL 标准聚合函数，返回 double；
+     * 此处通过 {@code ::BIGINT} 转 Long 兼容（NULL 时 COALESCE 返回 0）。
+     *
+     * @param jobId 任务 ID
+     * @param since 时间窗口起点
+     * @return P95 耗时（毫秒）；无成功记录时返回 0
+     */
+    @Select("SELECT COALESCE(PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY duration_ms), 0)::BIGINT "
+            + "FROM pmis_job_log "
+            + "WHERE job_id = #{jobId} AND created_at >= #{since} "
+            + "AND status = 'SUCCESS' AND deleted = 0")
+    Long selectDurationP95(@Param("jobId") String jobId,
+                            @Param("since") LocalDateTime since);
 }

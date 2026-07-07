@@ -22,7 +22,9 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 规则集 Service（P2-14）
@@ -496,5 +498,98 @@ public class RulePackService {
         private List<String> removed;
         /** 内容发生变更的规则编码 */
         private List<String> changed;
+    }
+
+    /**
+     * 知识包更新信息（P2-10）
+     */
+    @lombok.Data
+    public static class PackUpdateInfo {
+        /** 知识包编码 */
+        private String packCode;
+        /** 知识包名称 */
+        private String packName;
+        /** 已安装版本 */
+        private String installedVersion;
+        /** 市场最新版本 */
+        private String latestVersion;
+        /** 是否有更新 */
+        private boolean hasUpdate;
+        /** 安装时间 */
+        private LocalDateTime installedAt;
+        /** 行业 */
+        private String industry;
+        /** 描述 */
+        private String description;
+    }
+
+    /**
+     * 检查已安装知识包的版本更新（P2-10）
+     *
+     * <p>查询当前租户已安装的知识包列表，对比每个包的已安装版本与市场最新版本，
+     * 返回所有已安装包的更新检查结果（含无更新的包，便于前端展示完整列表）。
+     * 调用方可通过 {@code hasUpdate=true} 过滤有更新的包。
+     *
+     * <p>实现策略：
+     * <ol>
+     *   <li>从 {@code pmis_rule_pack_install} 查询当前租户的安装记录，按 packCode 聚合最新一次安装版本</li>
+     *   <li>对每个已安装的 packCode，查询 {@code pmis_rule_pack} 中的最高版本作为 latestVersion</li>
+     *   <li>使用语义化版本比较 installedVersion 与 latestVersion</li>
+     * </ol>
+     *
+     * @return 更新检查结果列表
+     * @since 1.6.0
+     */
+    public List<PackUpdateInfo> checkPackUpdates() {
+        // 1. 查询当前租户的安装记录
+        LambdaQueryWrapper<RulePackInstallDO> wrapper = new LambdaQueryWrapper<>();
+        String tenantId = TenantContext.getTenantId();
+        if (tenantId != null) {
+            wrapper.eq(RulePackInstallDO::getTenantId, tenantId);
+        }
+        wrapper.orderByDesc(RulePackInstallDO::getInstalledAt);
+        List<RulePackInstallDO> installs = rulePackInstallMapper.selectList(wrapper);
+        if (installs.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        // 2. 按 packCode 聚合：保留最新一次安装的版本（installs 已按 installedAt 倒序）
+        Map<String, RulePackInstallDO> latestInstallByCode = new LinkedHashMap<>();
+        for (RulePackInstallDO inst : installs) {
+            latestInstallByCode.putIfAbsent(inst.getPackCode(), inst);
+        }
+
+        // 3. 对每个 packCode 查询市场最新版本
+        List<PackUpdateInfo> result = new ArrayList<>(latestInstallByCode.size());
+        for (Map.Entry<String, RulePackInstallDO> entry : latestInstallByCode.entrySet()) {
+            String packCode = entry.getKey();
+            RulePackInstallDO install = entry.getValue();
+            String installedVersion = install.getPackVersion();
+            // 查询该 packCode 的所有版本，取最高版本作为 latest
+            List<RulePackDO> allVersions = rulePackMapper.selectByPackCode(packCode);
+            String latestVersion = installedVersion;
+            RulePackDO latestEntity = null;
+            if (!allVersions.isEmpty()) {
+                latestEntity = allVersions.stream()
+                        .max((a, b) -> compareVersion(a.getPackVersion(), b.getPackVersion()))
+                        .orElse(null);
+                if (latestEntity != null) {
+                    latestVersion = latestEntity.getPackVersion();
+                }
+            }
+            PackUpdateInfo info = new PackUpdateInfo();
+            info.setPackCode(packCode);
+            info.setPackName(latestEntity != null ? latestEntity.getPackName() : packCode);
+            info.setInstalledVersion(installedVersion);
+            info.setLatestVersion(latestVersion);
+            info.setHasUpdate(compareVersion(latestVersion, installedVersion) > 0);
+            info.setInstalledAt(install.getInstalledAt());
+            info.setIndustry(latestEntity != null ? latestEntity.getIndustry() : null);
+            info.setDescription(latestEntity != null ? latestEntity.getDescription() : null);
+            result.add(info);
+        }
+        log.info("[RulePack] 更新检查完成: 已安装 {} 个知识包，有更新 {} 个",
+                result.size(), result.stream().filter(PackUpdateInfo::isHasUpdate).count());
+        return result;
     }
 }

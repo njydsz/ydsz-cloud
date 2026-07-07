@@ -2,12 +2,17 @@ package com.njydsz.pmis.cronjob.service.impl;
 
 import com.njydsz.pmis.common.api.BizErrorCode;
 import com.njydsz.pmis.common.exception.BizException;
+import com.njydsz.pmis.cronjob.core.dag.DagDefinition;
+import com.njydsz.pmis.cronjob.core.dag.DagDefinitionCodec;
 import com.njydsz.pmis.cronjob.core.dag.DagInstanceStatus;
+import com.njydsz.pmis.cronjob.entity.JobDagDO;
 import com.njydsz.pmis.cronjob.entity.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.entity.JobDagNodeInstanceDO;
 import com.njydsz.pmis.cronjob.mapper.JobDagInstanceMapper;
+import com.njydsz.pmis.cronjob.mapper.JobDagMapper;
 import com.njydsz.pmis.cronjob.mapper.JobDagNodeInstanceMapper;
 import com.njydsz.pmis.cronjob.service.JobDagInstanceService;
+import com.njydsz.pmis.cronjob.vo.DagInstanceVisualizationVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -34,6 +39,10 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
     private final JobDagInstanceMapper jobDagInstanceMapper;
     /** DAG 节点实例 Mapper */
     private final JobDagNodeInstanceMapper jobDagNodeInstanceMapper;
+    /** DAG 定义 Mapper（用于查询 DAG 定义 JSON） */
+    private final JobDagMapper jobDagMapper;
+    /** DAG 定义 JSON 编解码器 */
+    private final DagDefinitionCodec dagDefinitionCodec;
 
     @Override
     @Transactional(readOnly = true)
@@ -119,5 +128,32 @@ public class JobDagInstanceServiceImpl implements JobDagInstanceService {
         getInstanceById(instanceId);
         jobDagInstanceMapper.updateContext(instanceId, contextJson);
         log.info("[JobDagInstance] 更新 DAG 实例上下文: instanceId={}", instanceId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public DagInstanceVisualizationVO getVisualization(String instanceId) {
+        // 1. 查询 DAG 实例（不存在时抛 BizException）
+        JobDagInstanceDO instance = getInstanceById(instanceId);
+
+        // 2. 查询 DAG 定义（通过实例.dagId 关联）
+        JobDagDO dag = jobDagMapper.selectById(instance.getDagId());
+        if (dag == null) {
+            throw new BizException(BizErrorCode.NOT_FOUND,
+                    "error.cronjob.msg_dag_not_found_def", instance.getDagId());
+        }
+
+        // 3. 解析 DAG 定义 JSON（非法时抛 BizException）
+        DagDefinition definition = dagDefinitionCodec.fromJson(dag.getDagDefinition());
+
+        // 4. 查询节点实例执行状态
+        List<JobDagNodeInstanceDO> nodeInstances = listNodes(instanceId);
+
+        // 5. 组装可视化数据 VO
+        DagInstanceVisualizationVO vo = new DagInstanceVisualizationVO();
+        vo.setInstance(instance);
+        vo.setDefinition(definition);
+        vo.setNodeInstances(nodeInstances);
+        return vo;
     }
 }

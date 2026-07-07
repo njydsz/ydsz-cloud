@@ -2,6 +2,7 @@ package com.njydsz.pmis.cronjob.service;
 
 import com.njydsz.pmis.cronjob.entity.JobDagInstanceDO;
 import com.njydsz.pmis.cronjob.entity.JobDagNodeInstanceDO;
+import com.njydsz.pmis.cronjob.vo.DagInstanceVisualizationVO;
 
 import java.util.List;
 
@@ -81,4 +82,13 @@ public interface JobDagInstanceService {
      * @throws com.njydsz.pmis.common.exception.BizException 当实例不存在时抛出
      */
     void updateContext(String instanceId, String contextJson);
+
+    /**
+     * P4-1: 获取 DAG 实例可视化数据（DAG 定义 + 节点执行状态）。
+     *
+     * @param instanceId 实例 ID
+     * @return 可视化数据 VO
+     * @throws com.njydsz.pmis.common.exception.BizException 当实例不存在或 DAG 定义非法时抛出
+     */
+    DagInstanceVisualizationVO getVisualization(String instanceId);
 }

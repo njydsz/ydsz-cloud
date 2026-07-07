@@ -7,7 +7,6 @@ import com.njydsz.pmis.workflow.engine.FlowDefinitionCacheService;
 import com.njydsz.pmis.workflow.engine.FlowGraphValidator;
 import com.njydsz.pmis.workflow.entity.FlowDefinitionDO;
 import com.njydsz.pmis.workflow.entity.FlowNodeDO;
-import com.njydsz.pmis.workflow.entity.FlowSkipDO;
 import com.njydsz.pmis.workflow.mapper.FlowDefinitionMapper;
 import com.njydsz.pmis.workflow.mapper.FlowInstanceMapper;
 import com.njydsz.pmis.workflow.mapper.FlowNodeMapper;

@@ -146,21 +146,34 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
             // 生成 BPMN XML
             String bpmnXml = generateBpmnXml(detail);
 
-            // 检查是否已存在
+            // 检查是否已存在（最新版本）
             FlowTemplateDO existing = templateMapper.selectByTemplateCode(templateCode);
             if (existing != null) {
-                // 更新已有模板
-                FlowTemplateDO update = new FlowTemplateDO();
-                update.setId(existing.getId());
-                update.setTemplateName(templateName);
-                update.setCategory(StringUtils.hasText(category) ? category : "GENERAL");
-                update.setDescription(definition.getDescription());
-                update.setBpmnXml(bpmnXml);
-                update.setFormPath(definition.getFormPath());
-                templateMapper.updateById(update);
-                log.info("[FlowTemplate] 模板已更新: templateCode={} definitionId={}", templateCode, definitionId);
+                // P2-9: 已存在 → 创建新版本，旧版本统一降级为 is_latest=0
+                templateMapper.markAsNotLatest(templateCode);
+                Integer maxVersion = templateMapper.selectMaxVersion(templateCode);
+                int newVersion = (maxVersion == null ? 0 : maxVersion) + 1;
+
+                FlowTemplateDO template = new FlowTemplateDO();
+                template.setTemplateCode(templateCode);
+                template.setTemplateName(templateName);
+                template.setCategory(StringUtils.hasText(category) ? category : "GENERAL");
+                template.setDescription(definition.getDescription());
+                template.setBpmnXml(bpmnXml);
+                template.setFormPath(definition.getFormPath());
+                template.setUseCount(0);
+                template.setSortOrder(existing.getSortOrder() != null ? existing.getSortOrder() : 999);
+                // P2-9: 版本化字段 — 沿用 inherit_type 与 parent_template_id 保持继承关系连续
+                template.setVersion(newVersion);
+                template.setVersionLabel("v" + newVersion + ".0");
+                template.setInheritType(existing.getInheritType() != null ? existing.getInheritType() : "STANDALONE");
+                template.setParentTemplateId(existing.getParentTemplateId());
+                template.setIsLatest(1);
+                templateMapper.insert(template);
+                log.info("[FlowTemplate] 模板新版本已创建: templateCode={} version={} definitionId={}",
+                        templateCode, newVersion, definitionId);
             } else {
-                // 新建模板
+                // 新建模板（version=1, is_latest=1, inherit_type=STANDALONE）
                 FlowTemplateDO template = new FlowTemplateDO();
                 template.setTemplateCode(templateCode);
                 template.setTemplateName(templateName);
@@ -170,8 +183,14 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
                 template.setFormPath(definition.getFormPath());
                 template.setUseCount(0);
                 template.setSortOrder(999);
+                // P2-9: 版本化字段
+                template.setVersion(1);
+                template.setVersionLabel("v1.0");
+                template.setInheritType("STANDALONE");
+                template.setIsLatest(1);
                 templateMapper.insert(template);
-                log.info("[FlowTemplate] 模板已创建: templateCode={} definitionId={}", templateCode, definitionId);
+                log.info("[FlowTemplate] 模板已创建: templateCode={} version=1 definitionId={}",
+                        templateCode, definitionId);
             }
         } catch (BizException e) {
             throw e;
@@ -181,10 +200,225 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         }
     }
 
+    // ============================== P2-9: 模板继承与版本化 ==============================
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listTemplateVersions(String templateCode) {
+        try {
+            if (!StringUtils.hasText(templateCode)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+            }
+            List<FlowTemplateDO> versions = templateMapper.selectVersionsByTemplateCode(templateCode);
+            return versions.stream().map(this::toSummaryMap).collect(Collectors.toList());
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("[FlowTemplate] 列出版本异常: templateCode={} err={}", templateCode, e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<String, Object> getTemplateVersion(String templateCode, Integer version) {
+        try {
+            if (!StringUtils.hasText(templateCode)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+            }
+            // version 为空 → 返回最新版本（保持与 getTemplate 一致的语义）
+            if (version == null) {
+                FlowTemplateDO latest = templateMapper.selectByTemplateCode(templateCode);
+                if (latest == null) {
+                    throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
+                }
+                return toDetailMap(latest);
+            }
+            if (version < 1) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_a9b0c1d3", version);
+            }
+            // 在所有版本中筛选指定版本
+            List<FlowTemplateDO> versions = templateMapper.selectVersionsByTemplateCode(templateCode);
+            if (versions.isEmpty()) {
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
+            }
+            return versions.stream()
+                    .filter(v -> version.equals(v.getVersion()))
+                    .findFirst()
+                    .map(this::toDetailMap)
+                    .orElseThrow(() -> new BizException(BizErrorCode.NOT_FOUND,
+                            "error.workflow.msg_f4a5b6c8", templateCode, version));
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("[FlowTemplate] 获取模板版本异常: templateCode={} version={} err={}",
+                    templateCode, version, e.getMessage(), e);
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Integer createNewVersion(String templateCode, String versionLabel) {
+        try {
+            if (!StringUtils.hasText(templateCode)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+            }
+            // 读取当前最新版本作为复制源
+            FlowTemplateDO source = templateMapper.selectByTemplateCode(templateCode);
+            if (source == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND, "error.workflow.msg_c16cb047", templateCode);
+            }
+            if (!StringUtils.hasText(source.getBpmnXml())) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f407e561", templateCode);
+            }
+            // 旧版本统一降级
+            templateMapper.markAsNotLatest(templateCode);
+            Integer maxVersion = templateMapper.selectMaxVersion(templateCode);
+            int newVersion = (maxVersion == null ? 0 : maxVersion) + 1;
+
+            FlowTemplateDO newVer = new FlowTemplateDO();
+            newVer.setTemplateCode(templateCode);
+            newVer.setTemplateName(source.getTemplateName());
+            newVer.setCategory(source.getCategory());
+            newVer.setDescription(source.getDescription());
+            newVer.setIcon(source.getIcon());
+            newVer.setBpmnXml(source.getBpmnXml());
+            newVer.setFormPath(source.getFormPath());
+            newVer.setUseCount(0);
+            newVer.setSortOrder(source.getSortOrder());
+            // 沿用继承关系
+            newVer.setParentTemplateId(source.getParentTemplateId());
+            newVer.setVersion(newVersion);
+            newVer.setVersionLabel(StringUtils.hasText(versionLabel) ? versionLabel : "v" + newVersion + ".0");
+            newVer.setInheritType(source.getInheritType() != null ? source.getInheritType() : "STANDALONE");
+            newVer.setIsLatest(1);
+            templateMapper.insert(newVer);
+
+            log.info("[FlowTemplate] 新版本已创建: templateCode={} oldVersion={} newVersion={} label={}",
+                    templateCode, source.getVersion(), newVersion, newVer.getVersionLabel());
+            return newVersion;
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("[FlowTemplate] 创建新版本异常: templateCode={} err={}",
+                    templateCode, e.getMessage(), e);
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String cloneTemplate(String sourceTemplateCode, String newTemplateCode,
+                                String newTemplateName, String newCategory) {
+        return doCloneOrInherit(sourceTemplateCode, newTemplateCode, newTemplateName, newCategory, "CLONE");
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public String inheritFromParent(String parentTemplateCode, String newTemplateCode,
+                                    String newTemplateName, String newCategory) {
+        return doCloneOrInherit(parentTemplateCode, newTemplateCode, newTemplateName, newCategory, "INHERIT");
+    }
+
+    /**
+     * P2-9: cloneTemplate / inheritFromParent 共用复制逻辑。
+     *
+     * <p>差异仅在 {@code inheritType}：CLONE=克隆独立演进，INHERIT=继承保留父子关联。
+     *
+     * @param sourceTemplateCode 源/父模板编码（取其最新版本）
+     * @param newTemplateCode    新模板编码（必须不存在）
+     * @param newTemplateName    新模板名称
+     * @param newCategory        新模板分类（可空，默认沿用源模板分类）
+     * @param inheritType        CLONE 或 INHERIT
+     * @return 新模板编码
+     */
+    private String doCloneOrInherit(String sourceTemplateCode, String newTemplateCode,
+                                    String newTemplateName, String newCategory, String inheritType) {
+        try {
+            if (!StringUtils.hasText(sourceTemplateCode)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+            }
+            if (!StringUtils.hasText(newTemplateCode)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_d2e3f4a6");
+            }
+            if (!StringUtils.hasText(newTemplateName)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_b6c7d8e0");
+            }
+            // 读取源模板最新版本
+            FlowTemplateDO source = templateMapper.selectByTemplateCode(sourceTemplateCode);
+            if (source == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND,
+                        "error.workflow.msg_e3f4a5b7", sourceTemplateCode);
+            }
+            // 校验新编码未占用
+            FlowTemplateDO existing = templateMapper.selectByTemplateCode(newTemplateCode);
+            if (existing != null) {
+                throw new BizException(BizErrorCode.BAD_REQUEST,
+                        "error.workflow.msg_c1d2e3f5", newTemplateCode);
+            }
+            // 复制为新模板（version=1, is_latest=1, inherit_type=CLONE/INHERIT, parent_template_id=源模板 id）
+            FlowTemplateDO newTemplate = new FlowTemplateDO();
+            newTemplate.setTemplateCode(newTemplateCode);
+            newTemplate.setTemplateName(newTemplateName);
+            newTemplate.setCategory(StringUtils.hasText(newCategory) ? newCategory : source.getCategory());
+            newTemplate.setDescription(source.getDescription());
+            newTemplate.setIcon(source.getIcon());
+            newTemplate.setBpmnXml(source.getBpmnXml());
+            newTemplate.setFormPath(source.getFormPath());
+            newTemplate.setUseCount(0);
+            newTemplate.setSortOrder(source.getSortOrder() != null ? source.getSortOrder() : 999);
+            // P2-9: 继承关系字段
+            newTemplate.setParentTemplateId(source.getId());
+            newTemplate.setVersion(1);
+            newTemplate.setVersionLabel("v1.0");
+            newTemplate.setInheritType(inheritType);
+            newTemplate.setIsLatest(1);
+            templateMapper.insert(newTemplate);
+
+            log.info("[FlowTemplate] 模板{}成功: source={} newCode={} parentId={} inheritType={}",
+                    "CLONE".equals(inheritType) ? "克隆" : "继承",
+                    sourceTemplateCode, newTemplateCode, source.getId(), inheritType);
+            return newTemplateCode;
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("[FlowTemplate] 复制模板异常: source={} newCode={} inheritType={} err={}",
+                    sourceTemplateCode, newTemplateCode, inheritType, e.getMessage(), e);
+            throw new BizException(BizErrorCode.INTERNAL_ERROR, "error.workflow.msg_c2642700", e.getMessage());
+        }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Map<String, Object>> listInheritedTemplates(String parentTemplateCode) {
+        try {
+            if (!StringUtils.hasText(parentTemplateCode)) {
+                throw new BizException(BizErrorCode.BAD_REQUEST, "error.workflow.msg_f68a3fa3");
+            }
+            // 先查出父模板主键 ID
+            FlowTemplateDO parent = templateMapper.selectByTemplateCode(parentTemplateCode);
+            if (parent == null) {
+                throw new BizException(BizErrorCode.NOT_FOUND,
+                        "error.workflow.msg_b0c1d2e4", parentTemplateCode);
+            }
+            List<FlowTemplateDO> children = templateMapper.selectByParentTemplateId(parent.getId());
+            return children.stream().map(this::toSummaryMap).collect(Collectors.toList());
+        } catch (BizException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("[FlowTemplate] 列出继承子模板异常: parentTemplateCode={} err={}",
+                    parentTemplateCode, e.getMessage(), e);
+            return List.of();
+        }
+    }
+
     // ============================== 私有方法 ==============================
 
     /**
      * 将 DO 转为摘要 Map（不含 BPMN XML）
+     *
+     * <p>P2-9: 包含版本与继承元信息。
      */
     private Map<String, Object> toSummaryMap(FlowTemplateDO t) {
         Map<String, Object> map = new LinkedHashMap<>();
@@ -196,11 +430,19 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         map.put("formPath", t.getFormPath());
         map.put("useCount", t.getUseCount());
         map.put("sortOrder", t.getSortOrder());
+        // P2-9: 版本与继承元信息
+        map.put("parentTemplateId", t.getParentTemplateId());
+        map.put("version", t.getVersion());
+        map.put("versionLabel", t.getVersionLabel());
+        map.put("inheritType", t.getInheritType());
+        map.put("isLatest", t.getIsLatest());
         return map;
     }
 
     /**
      * 将 DO 转为详情 Map（含 BPMN XML）
+     *
+     * <p>P2-9: 包含版本与继承元信息。
      */
     private Map<String, Object> toDetailMap(FlowTemplateDO t) {
         Map<String, Object> map = new LinkedHashMap<>();
@@ -212,6 +454,12 @@ public class FlowTemplateServiceImpl implements FlowTemplateService {
         map.put("formPath", t.getFormPath());
         map.put("useCount", t.getUseCount());
         map.put("sortOrder", t.getSortOrder());
+        // P2-9: 版本与继承元信息
+        map.put("parentTemplateId", t.getParentTemplateId());
+        map.put("version", t.getVersion());
+        map.put("versionLabel", t.getVersionLabel());
+        map.put("inheritType", t.getInheritType());
+        map.put("isLatest", t.getIsLatest());
         map.put("bpmnXml", t.getBpmnXml());
         return map;
     }

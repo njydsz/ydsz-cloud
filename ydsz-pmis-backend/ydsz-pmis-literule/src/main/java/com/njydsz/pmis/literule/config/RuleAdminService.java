@@ -4,6 +4,7 @@ import com.njydsz.pmis.literule.api.RuleContext;
 import com.njydsz.pmis.literule.api.RuleDefinition;
 import com.njydsz.pmis.literule.api.RuleEngine;
 import com.njydsz.pmis.literule.api.RuleResult;
+import com.njydsz.pmis.literule.api.RuleSeverity;
 import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.event.RuleConfigRefreshEvent;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
@@ -371,6 +372,53 @@ public class RuleAdminService {
     }
 
     /**
+     * 用指定表达式评估事实数据（P2-2 规则变更影响分析）
+     *
+     * <p>构造临时规则定义，用新的条件表达式 / 严重度表达式对历史 facts 重新评估，
+     * 用于预览规则变更后的影响范围。不发布事件、不记录统计、不持久化。
+     *
+     * @param ruleCode           规则编码（用于结果标识）
+     * @param conditionExpression 新条件表达式
+     * @param severityExpression  新严重度表达式（可为 null）
+     * @param defaultSeverity     默认严重度（severityExpression 为空时使用）
+     * @param facts               事实数据
+     * @return 评估结果；表达式非法或评估异常时返回未触发结果
+     * @since 1.7.0
+     */
+    public RuleResult evaluateWithExpression(String ruleCode, String conditionExpression,
+                                              String severityExpression, RuleSeverity defaultSeverity,
+                                              Map<String, Object> facts) {
+        // 表达式语法校验
+        if (!evaluator.validate(conditionExpression)) {
+            return RuleResult.notTriggered(ruleCode);
+        }
+        if (severityExpression != null && !severityExpression.isBlank()
+                && !evaluator.validate(severityExpression)) {
+            return RuleResult.notTriggered(ruleCode);
+        }
+
+        // 构造临时规则定义
+        RuleDefinition tempDef = RuleDefinition.builder()
+                .code(ruleCode)
+                .name("影响分析-" + ruleCode)
+                .conditionExpression(conditionExpression)
+                .severityExpression(severityExpression)
+                .defaultSeverity(defaultSeverity != null ? defaultSeverity : RuleSeverity.YELLOW)
+                .build();
+
+        ExpressionRule rule = new ExpressionRule(tempDef, evaluator);
+        RuleContext context = RuleContext.of(facts != null ? facts : java.util.Collections.emptyMap(),
+                "IMPACT_PREVIEW", "MANUAL");
+        try {
+            return rule.evaluate(context);
+        } catch (Exception e) {
+            log.warn("[LiteRule] 影响分析评估异常: ruleCode={}, expr={}, error={}",
+                    ruleCode, conditionExpression, e.getMessage());
+            return RuleResult.notTriggered(ruleCode);
+        }
+    }
+
+    /**
      * 校验表达式语法
      *
      * @param expression 表达式
@@ -432,7 +480,7 @@ public class RuleAdminService {
         RuleStatus target = RuleStatus.fromCode(statusStr);
         if (target == null) {
             throw new IllegalArgumentException("非法的规则状态: " + statusStr
-                    + "，合法值: DRAFT/REVIEW/PUBLISHED/DISABLED/ARCHIVED");
+                    + "，合法值: DRAFT/REVIEW/REVIEW_L1/REVIEW_L2/REVIEW_FINAL/PUBLISHED/DISABLED/ARCHIVED");
         }
 
         RuleDefinition existing = configProvider.findByCode(definition.getCode());

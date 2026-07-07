@@ -7,6 +7,9 @@ import com.njydsz.pmis.literule.ai.RuleHealthScoreService;
 import com.njydsz.pmis.literule.ai.RuleLLMService;
 import com.njydsz.pmis.literule.ai.RuleRecommendationService;
 import com.njydsz.pmis.literule.api.RuleEngine;
+import com.njydsz.pmis.literule.approval.ApprovalPermissionChecker;
+import com.njydsz.pmis.literule.approval.ApprovalRecordRepository;
+import com.njydsz.pmis.literule.approval.RuleApprovalService;
 import com.njydsz.pmis.literule.core.AsyncTraceRecorder;
 import com.njydsz.pmis.literule.core.DefaultRuleEngine;
 import com.njydsz.pmis.literule.core.MicrometerRuleMetrics;
@@ -374,6 +377,42 @@ public class LiteRuleAutoConfiguration {
         return service;
     }
 
+    /**
+     * 规则审批流服务（P1-3 多级审批流）
+     *
+     * <p>当存在 {@link RuleConfigProvider} 时自动装配。默认注册 2 级审批流
+     * （default-2level），消费方可通过 {@link RuleApprovalService#registerFlow}
+     * 注册自定义审批流。审批记录默认内存存储，可通过
+     * {@link ApprovalRecordRepository} SPI 提供持久化实现；权限校验可通过
+     * {@link ApprovalPermissionChecker} SPI 委托给消费方。
+     *
+     * @param configProvider       规则配置提供者
+     * @param recordRepoProvider   审批记录持久化仓库（可选）
+     * @param permissionCheckerProvider 权限检查器（可选）
+     * @return RuleApprovalService 实例
+     * @since 1.7.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnBean(RuleConfigProvider.class)
+    public RuleApprovalService ruleApprovalService(
+            RuleConfigProvider configProvider,
+            org.springframework.beans.factory.ObjectProvider<ApprovalRecordRepository> recordRepoProvider,
+            org.springframework.beans.factory.ObjectProvider<ApprovalPermissionChecker> permissionCheckerProvider) {
+        RuleApprovalService service = new RuleApprovalService(configProvider);
+        ApprovalRecordRepository recordRepo = recordRepoProvider.getIfAvailable();
+        if (recordRepo != null) {
+            service.setRecordRepository(recordRepo);
+        }
+        ApprovalPermissionChecker checker = permissionCheckerProvider.getIfAvailable();
+        if (checker != null) {
+            service.setPermissionChecker(checker);
+        }
+        log.info("[LiteRule-Approval] 规则审批流服务已初始化（recordRepository={}, permissionChecker={}）",
+                recordRepo != null, checker != null);
+        return service;
+    }
+
     // ------------------------------------------------------------------
     // P2-15 AI 增强
     // ------------------------------------------------------------------
@@ -576,5 +615,41 @@ public class LiteRuleAutoConfiguration {
         log.info("[LiteRule-Annotation] 声明式规则注册器已初始化（scanBasePackages={}）",
                 properties.getAnnotationScanBasePackages());
         return registrar;
+    }
+
+    // ------------------------------------------------------------------
+    // P2-3 DSL YAML/JSON 规则文件加载（FileRuleSource）
+    // ------------------------------------------------------------------
+
+    /**
+     * 文件规则数据源 Bean（P2-3）
+     *
+     * <p>当 {@code pmis.literule.file-source.enabled=true} 时自动装配
+     * {@link com.njydsz.pmis.literule.spi.FileRuleSource}，从 classpath 或文件系统
+     * 加载 YAML/JSON 规则文件。加载后可配合 {@link RuleHotReloader} 注册到引擎。
+     *
+     * <p>Bean 初始化时调用 {@code init()}，销毁时调用 {@code destroy()} 释放 WatchService。
+     *
+     * @param properties 配置属性
+     * @return FileRuleSource 实例
+     * @since 1.7.0
+     */
+    @Bean
+    @ConditionalOnMissingBean
+    @org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+            prefix = "pmis.literule.file-source", name = "enabled", havingValue = "true")
+    public com.njydsz.pmis.literule.spi.FileRuleSource fileRuleSource(LiteRuleProperties properties) {
+        LiteRuleProperties.FileSourceConfig cfg = properties.getFileSource();
+        com.njydsz.pmis.literule.spi.FileRuleSource source =
+                new com.njydsz.pmis.literule.spi.FileRuleSource(cfg.getLocation(), cfg.isWatch());
+        try {
+            source.init();
+            log.info("[LiteRule-FileSource] 文件规则源已初始化（location={}, watch={}, rules={}）",
+                    cfg.getLocation(), cfg.isWatch(), source.loadAllRules().size());
+        } catch (Exception e) {
+            log.error("[LiteRule-FileSource] 文件规则源初始化失败: {}", e.getMessage(), e);
+            throw new IllegalStateException("FileRuleSource 初始化失败: " + e.getMessage(), e);
+        }
+        return source;
     }
 }

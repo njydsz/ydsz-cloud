@@ -22,7 +22,7 @@ import { ref, reactive, computed, onMounted, watch, nextTick, shallowRef } from 
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { CircleCheck, CircleClose, Connection, Expand, Fold, User, Document } from '@element-plus/icons-vue'
+import { CircleCheck, CircleClose, Connection, Expand, Fold, User, Document, DataLine, Cpu, Histogram } from '@element-plus/icons-vue'
 import * as echarts from '@/utils/echarts'
 import * as ruleApi from '@/api/execution/rule-engine'
 import type {
@@ -36,6 +36,8 @@ import type {
   RegressionReport,
   ABTestReport,
   RuleTestCase,
+  StressTestResult,
+  StressTestParams,
 } from '@/api/execution/rule-engine'
 import ExpressionEditor from '@/components/common/ExpressionEditor.vue'
 import RuleCategoryTreeSidebar from '@/components/common/RuleCategoryTreeSidebar.vue'
@@ -298,7 +300,7 @@ const ruleColumns: ColumnConfig[] = [
   { field: 'defaultSeverity', title: '默认严重度', width: 110, slot: true },
   { field: 'enabled', title: '状态', width: 90, slot: true },
   { field: 'version', title: '版本', width: 80, align: 'center', slot: true },
-  { field: 'actions', title: '操作', width: 380, fixed: 'right', slot: true },
+  { field: 'actions', title: '操作', width: 520, fixed: 'right', slot: true },
 ]
 
 async function handleBatchToggle(enabled: boolean) {
@@ -369,6 +371,144 @@ async function confirmBatchCategory() {
 // ==================== P0-1 画布编辑入口 ====================
 function openDesigner(row: RuleDefinition) {
   router.push(`/rule-engine/designer/${row.code}`)
+}
+
+/** 跳转到监控大盘（P1-6） */
+function openDashboard() {
+  router.push('/execution/rule-engine/dashboard')
+}
+
+/** 跳转到规则依赖拓扑图（P2-6） */
+function openDependencyGraph() {
+  router.push('/execution/rule-engine/dependency-graph')
+}
+
+/** 跳转到 CEP 模式可视化编辑器（P2-7） */
+function openCepPatternEditor() {
+  router.push('/execution/rule-engine/cep-patterns')
+}
+
+// ==================== P2-9 规则压测 ====================
+
+/** 压测对话框可见性 */
+const stressTestVisible = ref(false)
+/** 压测执行中 */
+const stressTestLoading = ref(false)
+/** 压测目标规则编码 */
+const stressTestRuleCode = ref<string>('')
+/** 压测配置 */
+const stressTestConfig = reactive({
+  threads: 4,
+  iterations: 100,
+  warmupIterations: 10,
+})
+/** 压测事实数据 JSON 文本（多条事实，数组形式） */
+const stressTestFactsText = ref<string>(
+  JSON.stringify([{ amount: 1500, score: 750, budgetUsedRatio: 0.9 }], null, 2),
+)
+/** 压测结果 */
+const stressTestResult = ref<StressTestResult | null>(null)
+/** 压测结果图表容器 */
+const stressTestChartRef = ref<HTMLElement | null>(null)
+/** 压测图表实例（shallowRef 避免深度响应式包装 echarts 实例） */
+const stressTestChart = shallowRef<echarts.ECharts | null>(null)
+
+/** 打开压测对话框 */
+function openStressTest(row?: RuleDefinition) {
+  stressTestRuleCode.value = row?.code || ''
+  stressTestResult.value = null
+  stressTestVisible.value = true
+}
+
+/** 执行压测 */
+async function runStressTest() {
+  if (!stressTestRuleCode.value.trim()) {
+    ElMessage.warning('请填写目标规则编码')
+    return
+  }
+  let factsList: Record<string, unknown>[] = []
+  try {
+    const parsed = JSON.parse(stressTestFactsText.value)
+    if (Array.isArray(parsed)) {
+      factsList = parsed as Record<string, unknown>[]
+    } else {
+      // 单条对象也支持
+      factsList = [parsed as Record<string, unknown>]
+    }
+  } catch {
+    ElMessage.warning('事实数据 JSON 解析失败')
+    return
+  }
+  if (!factsList.length) {
+    ElMessage.warning('事实数据不能为空')
+    return
+  }
+  const params: StressTestParams = {
+    ruleCode: stressTestRuleCode.value.trim(),
+    factsList,
+    threads: stressTestConfig.threads,
+    iterations: stressTestConfig.iterations,
+    warmupIterations: stressTestConfig.warmupIterations,
+  }
+  stressTestLoading.value = true
+  stressTestResult.value = null
+  try {
+    const { data } = await ruleApi.stressTest(params)
+    stressTestResult.value = data
+    ElMessage.success(`压测完成：QPS ${data.qps.toFixed(0)}，P99 ${data.p99Ms.toFixed(2)}ms`)
+    // 渲染直方图
+    nextTick(() => renderStressTestHistogram(data))
+  } catch (e: any) {
+    ElMessage.error(e?.message || '压测失败')
+  } finally {
+    stressTestLoading.value = false
+  }
+}
+
+/** 渲染压测耗时分布直方图 */
+function renderStressTestHistogram(result: StressTestResult) {
+  if (!stressTestChartRef.value) return
+  if (stressTestChart.value) {
+    stressTestChart.value.dispose()
+  }
+  const chart = echarts.init(stressTestChartRef.value)
+  stressTestChart.value = chart
+  const labels = result.histogram?.map((b) => b.bucketLabel) || []
+  const counts = result.histogram?.map((b) => b.count) || []
+  chart.setOption({
+    title: { text: '耗时分布直方图', left: 'center', textStyle: { fontSize: 14 } },
+    tooltip: { trigger: 'axis', formatter: (p: any) => `${p[0].name}<br/>次数: ${p[0].value}` },
+    grid: { left: 50, right: 20, top: 50, bottom: 40 },
+    xAxis: { type: 'category', data: labels, axisLabel: { rotate: 30, fontSize: 10 } },
+    yAxis: { type: 'value', name: '次数' },
+    series: [
+      {
+        name: '耗时',
+        type: 'bar',
+        data: counts,
+        itemStyle: { color: '#409eff' },
+      },
+    ],
+  })
+}
+
+/** 关闭压测对话框时释放图表 */
+function closeStressTest() {
+  if (stressTestChart.value) {
+    stressTestChart.value.dispose()
+    stressTestChart.value = null
+  }
+}
+
+// ==================== P1-4 决策树 / 评分卡编辑入口 ====================
+/** 跳转到决策树编辑器 */
+function openDecisionTreeEditor(row: RuleDefinition) {
+  router.push(`/rule-engine/decision-tree/${row.code}`)
+}
+
+/** 跳转到评分卡编辑器 */
+function openScorecardEditor(row: RuleDefinition) {
+  router.push(`/rule-engine/scorecard/${row.code}`)
 }
 
 /** 已存在的类别集合（用于筛选下拉） */
@@ -598,12 +738,24 @@ function openDryRun(row?: RuleDefinition) {
   if (row) {
     dryRunRuleCode.value = row.code
     dryRunRuleName.value = row.name
+    // P2-8: 预填版本对比的目标规则和候选表达式
+    diffTargetRuleCode.value = row.code
+    diffCandidateCondition.value = row.conditionExpression || ''
+    diffCandidateSeverity.value = row.severityExpression || ''
   } else {
     dryRunRuleCode.value = ''
     dryRunRuleName.value = '全部启用规则'
+    diffTargetRuleCode.value = ''
+    diffCandidateCondition.value = ''
+    diffCandidateSeverity.value = ''
   }
   dryRunResults.value = []
   dryRunFactsText.value = '{\n  "budgetUsedRatio": 0.95,\n  "spi": 0.85,\n  "cpi": 0.9\n}'
+  // P2-8: 重置版本对比状态
+  dryRunMode.value = 'single'
+  diffCurrentResults.value = []
+  diffAbTestReport.value = null
+  diffFilter.value = 'all'
   dryRunDialogVisible.value = true
 }
 
@@ -626,6 +778,170 @@ async function handleDryRun() {
     dryRunLoading.value = false
   }
 }
+
+// ==================== P2-8 Dry-run 版本对比 ====================
+
+/** Dry-run 模式：single / diff */
+const dryRunMode = ref<'single' | 'diff'>('single')
+/** 版本对比：目标规则编码 */
+const diffTargetRuleCode = ref<string>('')
+/** 版本对比：候选条件表达式 */
+const diffCandidateCondition = ref<string>('')
+/** 版本对比：候选严重度表达式 */
+const diffCandidateSeverity = ref<string>('')
+/** 版本对比：结果筛选 */
+const diffFilter = ref<'all' | 'diff-only'>('all')
+/** 版本对比：loading */
+const diffLoading = ref(false)
+/** 版本对比：当前版本结果（全量） */
+const diffCurrentResults = ref<RuleResult[]>([])
+/** 版本对比：ABTest 报告 */
+const diffAbTestReport = ref<ABTestReport | null>(null)
+
+/** 版本对比 diff 行 */
+interface DryRunDiffRow {
+  ruleCode: string
+  ruleName: string
+  currentTriggered: boolean
+  candidateTriggered: boolean | null
+  currentSeverity: string | undefined
+  candidateSeverity: string | undefined
+  diffType: 'added' | 'removed' | 'severity-changed' | 'unchanged' | 'not-compared'
+}
+
+/** 计算版本对比 diff 行 */
+const diffRows = computed<DryRunDiffRow[]>(() => {
+  const currentResults = diffCurrentResults.value
+  const report = diffAbTestReport.value
+  const targetCode = diffTargetRuleCode.value
+
+  return currentResults.map((r) => {
+    // 被对比的规则：使用 abTest 报告中的 current vs candidate 数据
+    if (report && r.ruleCode === targetCode) {
+      const curr = report.currentResult
+      const cand = report.candidateResult
+      let diffType: DryRunDiffRow['diffType'] = 'unchanged'
+      if (cand.triggered && !curr.triggered) diffType = 'added'
+      else if (curr.triggered && !cand.triggered) diffType = 'removed'
+      else if (curr.triggered && cand.triggered && curr.severity !== cand.severity) diffType = 'severity-changed'
+      return {
+        ruleCode: r.ruleCode,
+        ruleName: r.ruleName,
+        currentTriggered: curr.triggered,
+        candidateTriggered: cand.triggered,
+        currentSeverity: curr.severity,
+        candidateSeverity: cand.severity,
+        diffType,
+      }
+    }
+    // 其他规则：未参与对比
+    return {
+      ruleCode: r.ruleCode,
+      ruleName: r.ruleName,
+      currentTriggered: r.triggered,
+      candidateTriggered: null,
+      currentSeverity: r.severity,
+      candidateSeverity: undefined,
+      diffType: 'not-compared' as const,
+    }
+  })
+})
+
+/** 筛选后的 diff 行 */
+const filteredDiffRows = computed(() => {
+  if (diffFilter.value === 'diff-only') {
+    return diffRows.value.filter((r) => r.diffType !== 'not-compared' && r.diffType !== 'unchanged')
+  }
+  return diffRows.value
+})
+
+/** diff 类型 → tag 类型 */
+function diffTagType(t: DryRunDiffRow['diffType']): 'success' | 'danger' | 'warning' | 'info' {
+  if (t === 'added') return 'success'
+  if (t === 'removed') return 'danger'
+  if (t === 'severity-changed') return 'warning'
+  return 'info'
+}
+
+/** diff 类型 → 中文标签 */
+function diffTagLabel(t: DryRunDiffRow['diffType']): string {
+  if (t === 'added') return '新增触发'
+  if (t === 'removed') return '移除触发'
+  if (t === 'severity-changed') return '严重度变化'
+  if (t === 'unchanged') return '无变化'
+  return '未对比'
+}
+
+/** diff 行背景色（适配 el-table row-style 签名） */
+function diffRowStyle({ row }: { row: DryRunDiffRow }): Record<string, string> {
+  switch (row.diffType) {
+    case 'added': return { backgroundColor: '#f0f9eb' }
+    case 'removed': return { backgroundColor: '#fef0f0' }
+    case 'severity-changed': return { backgroundColor: '#fdf6ec' }
+    default: return {}
+  }
+}
+
+/** 执行版本对比 */
+async function handleDryRunDiff() {
+  if (!diffTargetRuleCode.value) {
+    ElMessage.warning('请选择要对比的规则')
+    return
+  }
+  let facts: Record<string, unknown>
+  try {
+    facts = JSON.parse(dryRunFactsText.value) as Record<string, unknown>
+  } catch {
+    ElMessage.error('事实数据 JSON 格式不正确，请检查')
+    return
+  }
+
+  const rule = rules.value.find((r) => r.code === diffTargetRuleCode.value)
+  if (!rule) {
+    ElMessage.error('未找到规则定义')
+    return
+  }
+
+  diffLoading.value = true
+  try {
+    // 1. 调用 dryRun 获取全量当前版本结果
+    const { data: currentResults } = await ruleApi.dryRun(null, facts)
+    diffCurrentResults.value = currentResults || []
+
+    // 2. 构建候选规则定义
+    const candidate: Partial<RuleDefinition> = {
+      ...rule,
+      conditionExpression: diffCandidateCondition.value,
+      severityExpression: diffCandidateSeverity.value,
+    }
+
+    // 3. 调用 abTest 获取目标规则的双版本对比
+    const { data: report } = await ruleApi.abTest(diffTargetRuleCode.value, candidate, facts)
+    diffAbTestReport.value = report
+
+    // 4. 提示差异
+    const diffRow = diffRows.value.find((r) => r.ruleCode === diffTargetRuleCode.value)
+    if (diffRow && diffRow.diffType !== 'unchanged' && diffRow.diffType !== 'not-compared') {
+      ElMessage.warning(`检测到差异：${diffTagLabel(diffRow.diffType)}`)
+    } else {
+      ElMessage.success('版本对比完成，无差异')
+    }
+  } catch (e: unknown) {
+    ElMessage.error((e as Error)?.message || '版本对比执行失败')
+  } finally {
+    diffLoading.value = false
+  }
+}
+
+/** 选择对比规则时，预填候选表达式 */
+watch(diffTargetRuleCode, (code) => {
+  if (!code) return
+  const rule = rules.value.find((r) => r.code === code)
+  if (rule) {
+    diffCandidateCondition.value = rule.conditionExpression || ''
+    diffCandidateSeverity.value = rule.severityExpression || ''
+  }
+})
 
 // ==================== 版本历史 ====================
 
@@ -1145,6 +1461,18 @@ onMounted(() => {
           <el-button plain aria-label="测试用例管理" @click="openTestCases">
             <el-icon><Document /></el-icon>测试用例
           </el-button>
+          <el-button type="primary" plain aria-label="监控大盘" @click="openDashboard">
+            <el-icon><DataLine /></el-icon>监控大盘
+          </el-button>
+          <el-button type="info" plain aria-label="依赖拓扑图" @click="openDependencyGraph">
+            <el-icon><Connection /></el-icon>依赖拓扑图
+          </el-button>
+          <el-button type="warning" plain aria-label="CEP 模式管理" @click="openCepPatternEditor">
+            <el-icon><Cpu /></el-icon>CEP 模式管理
+          </el-button>
+          <el-button type="danger" plain aria-label="规则压测" @click="openStressTest()">
+            <el-icon><Histogram /></el-icon>压测
+          </el-button>
         </div>
         <div class="toolbar-right">
           <el-select
@@ -1222,6 +1550,15 @@ onMounted(() => {
           </el-button>
           <el-button link type="success" size="small" aria-label="画布编辑" @click="openDesigner(row as RuleDefinition)">
             <el-icon><Connection /></el-icon>画布
+          </el-button>
+          <el-button link type="primary" size="small" aria-label="决策树编辑" @click="openDecisionTreeEditor(row as RuleDefinition)">
+            <el-icon><Share /></el-icon>决策树
+          </el-button>
+          <el-button link type="primary" size="small" aria-label="评分卡编辑" @click="openScorecardEditor(row as RuleDefinition)">
+            <el-icon><Histogram /></el-icon>评分卡
+          </el-button>
+          <el-button link type="danger" size="small" aria-label="规则压测" @click="openStressTest(row as RuleDefinition)">
+            <el-icon><DataLine /></el-icon>压测
           </el-button>
           <el-button link type="danger" size="small" aria-label="删除规则" @click="handleDelete(row as RuleDefinition)">
             <el-icon><Delete /></el-icon>删除
@@ -1409,8 +1746,8 @@ onMounted(() => {
       </template>
     </el-dialog>
 
-    <!-- ==================== Dry-run 仿真对话框 ==================== -->
-    <el-dialog v-model="dryRunDialogVisible" title="Dry-run 仿真" width="860px" :close-on-click-modal="false">
+    <!-- ==================== Dry-run 仿真对话框（P2-8: 支持单次仿真 / 版本对比） ==================== -->
+    <el-dialog v-model="dryRunDialogVisible" title="Dry-run 仿真" width="900px" :close-on-click-modal="false">
       <el-alert
         :title="`当前仿真目标：${dryRunRuleName}${dryRunRuleCode ? '（' + dryRunRuleCode + '）' : '（全部启用规则）'}`"
         type="info"
@@ -1418,45 +1755,178 @@ onMounted(() => {
         show-icon
         class="mb-3"
       />
-      <el-form label-width="100px">
-        <el-form-item label="事实数据">
-          <el-input
-            v-model="dryRunFactsText"
-            type="textarea"
-            :rows="10"
-            :placeholder="$t('execution.ruleEngine.dryRun.factsPlaceholder')"
-            class="json-input"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" :loading="dryRunLoading" aria-label="执行仿真" @click="handleDryRun">
-            <el-icon><VideoPlay /></el-icon>执行仿真
-          </el-button>
-        </el-form-item>
-      </el-form>
+      <!-- P2-8: 模式切换 -->
+      <el-radio-group v-model="dryRunMode" class="mb-3">
+        <el-radio-button value="single">单次仿真</el-radio-button>
+        <el-radio-button value="diff">版本对比</el-radio-button>
+      </el-radio-group>
 
-      <el-divider content-position="left">仿真结果</el-divider>
-      <el-table :data="dryRunResults" border stripe size="small" empty-text="暂无仿真结果">
-        <el-table-column prop="ruleCode" label="规则编码" width="160" show-overflow-tooltip />
-        <el-table-column prop="ruleName" label="规则名称" min-width="160" show-overflow-tooltip />
-        <el-table-column prop="category" label="类别" width="100" />
-        <el-table-column label="是否触发" width="90" align="center">
-          <template #default="{ row }">
-            <el-tag :type="row.triggered ? 'danger' : 'info'" size="small">
-              {{ row.triggered ? '触发' : '未触发' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="严重度" width="90">
-          <template #default="{ row }">
-            <el-tag :type="severityOf(row.severity).type" size="small">
-              {{ severityOf(row.severity).label }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
-        <el-table-column prop="elapsedMs" label="耗时(ms)" width="100" />
-      </el-table>
+      <!-- ==================== 单次仿真模式 ==================== -->
+      <div v-if="dryRunMode === 'single'">
+        <el-form label-width="100px">
+          <el-form-item label="事实数据">
+            <el-input
+              v-model="dryRunFactsText"
+              type="textarea"
+              :rows="10"
+              :placeholder="$t('execution.ruleEngine.dryRun.factsPlaceholder')"
+              class="json-input"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" :loading="dryRunLoading" aria-label="执行仿真" @click="handleDryRun">
+              <el-icon><VideoPlay /></el-icon>执行仿真
+            </el-button>
+          </el-form-item>
+        </el-form>
+
+        <el-divider content-position="left">仿真结果</el-divider>
+        <el-table :data="dryRunResults" border stripe size="small" empty-text="暂无仿真结果">
+          <el-table-column prop="ruleCode" label="规则编码" width="160" show-overflow-tooltip />
+          <el-table-column prop="ruleName" label="规则名称" min-width="160" show-overflow-tooltip />
+          <el-table-column prop="category" label="类别" width="100" />
+          <el-table-column label="是否触发" width="90" align="center">
+            <template #default="{ row }">
+              <el-tag :type="row.triggered ? 'danger' : 'info'" size="small">
+                {{ row.triggered ? '触发' : '未触发' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="严重度" width="90">
+            <template #default="{ row }">
+              <el-tag :type="severityOf(row.severity).type" size="small">
+                {{ severityOf(row.severity).label }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="title" label="标题" min-width="180" show-overflow-tooltip />
+          <el-table-column prop="elapsedMs" label="耗时(ms)" width="100" />
+        </el-table>
+      </div>
+
+      <!-- ==================== 版本对比模式（P2-8） ==================== -->
+      <div v-else>
+        <el-alert
+          title="版本对比模式：选择目标规则并修改候选表达式，将对比当前版本与候选版本的触发与严重度差异。"
+          type="warning"
+          :closable="false"
+          show-icon
+          class="mb-3"
+        />
+        <el-form label-width="120px">
+          <el-form-item label="对比规则" required>
+            <el-select
+              v-model="diffTargetRuleCode"
+              filterable
+              clearable
+              placeholder="请选择要对比的规则"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="r in rules"
+                :key="r.code"
+                :label="`${r.name}（${r.code}）`"
+                :value="r.code"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="候选条件表达式">
+            <el-input
+              v-model="diffCandidateCondition"
+              type="textarea"
+              :rows="3"
+              placeholder="候选版本的条件表达式（Aviator），留空使用原值"
+            />
+          </el-form-item>
+          <el-form-item label="候选严重度表达式">
+            <el-input
+              v-model="diffCandidateSeverity"
+              type="textarea"
+              :rows="2"
+              placeholder="候选版本的严重度表达式（Aviator），留空使用原值"
+            />
+          </el-form-item>
+          <el-form-item label="事实数据">
+            <el-input
+              v-model="dryRunFactsText"
+              type="textarea"
+              :rows="8"
+              :placeholder="$t('execution.ruleEngine.dryRun.factsPlaceholder')"
+              class="json-input"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" :loading="diffLoading" aria-label="执行版本对比" @click="handleDryRunDiff">
+              <el-icon><Switch /></el-icon>执行版本对比
+            </el-button>
+          </el-form-item>
+        </el-form>
+
+        <el-divider content-position="left">对比结果</el-divider>
+        <div class="mb-3">
+          <el-radio-group v-model="diffFilter" size="small">
+            <el-radio-button value="all">全部</el-radio-button>
+            <el-radio-button value="diff-only">仅差异</el-radio-button>
+          </el-radio-group>
+        </div>
+        <el-table
+          :data="filteredDiffRows"
+          :row-style="diffRowStyle"
+          border
+          stripe
+          size="small"
+          empty-text="暂无对比结果"
+        >
+          <el-table-column prop="ruleCode" label="规则编码" width="160" show-overflow-tooltip />
+          <el-table-column prop="ruleName" label="规则名称" min-width="160" show-overflow-tooltip />
+          <el-table-column label="当前版本触发" width="120" align="center">
+            <template #default="{ row }">
+              <el-tag :type="row.currentTriggered ? 'danger' : 'info'" size="small">
+                {{ row.currentTriggered ? '触发' : '未触发' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="候选版本触发" width="120" align="center">
+            <template #default="{ row }">
+              <el-tag
+                v-if="row.candidateTriggered !== null"
+                :type="row.candidateTriggered ? 'danger' : 'info'"
+                size="small"
+              >
+                {{ row.candidateTriggered ? '触发' : '未触发' }}
+              </el-tag>
+              <span v-else style="color: #909399">—</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="当前严重度" width="110" align="center">
+            <template #default="{ row }">
+              <el-tag :type="severityOf(row.currentSeverity).type" size="small">
+                {{ severityOf(row.currentSeverity).label }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="候选严重度" width="110" align="center">
+            <template #default="{ row }">
+              <el-tag
+                v-if="row.candidateSeverity"
+                :type="severityOf(row.candidateSeverity).type"
+                size="small"
+              >
+                {{ severityOf(row.candidateSeverity).label }}
+              </el-tag>
+              <span v-else style="color: #909399">—</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="差异" width="120" align="center">
+            <template #default="{ row }">
+              <el-tag :type="diffTagType(row.diffType)" size="small">
+                {{ diffTagLabel(row.diffType) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
       <template #footer>
         <el-button @click="dryRunDialogVisible = false">关闭</el-button>
       </template>
@@ -2003,6 +2473,114 @@ onMounted(() => {
         <el-button type="primary" @click="saveTestCaseItem">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- P2-9 规则压测对话框 -->
+    <el-dialog
+      v-model="stressTestVisible"
+      title="规则压测"
+      width="780px"
+      :close-on-click-modal="false"
+      @closed="closeStressTest"
+    >
+      <el-form label-width="110px" label-position="right">
+        <el-row :gutter="16">
+          <el-col :span="24">
+            <el-form-item label="目标规则编码" required>
+              <el-input v-model="stressTestRuleCode" placeholder="如 BUDGET_OVERRUN" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="16">
+          <el-col :span="8">
+            <el-form-item label="并发线程数">
+              <el-input-number v-model="stressTestConfig.threads" :min="1" :max="64" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="每线程迭代">
+              <el-input-number v-model="stressTestConfig.iterations" :min="1" :max="10000" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="预热迭代">
+              <el-input-number v-model="stressTestConfig.warmupIterations" :min="0" :max="1000" style="width: 100%" />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="事实数据(JSON)">
+          <el-input
+            v-model="stressTestFactsText"
+            type="textarea"
+            :rows="5"
+            placeholder='JSON 数组，如 [{"amount": 1500, "score": 750}]'
+          />
+        </el-form-item>
+
+        <!-- 压测结果概要 -->
+        <div v-if="stressTestResult" class="stress-test-summary">
+          <el-row :gutter="12">
+            <el-col :span="6">
+              <div class="metric-card">
+                <div class="metric-label">QPS</div>
+                <div class="metric-value">{{ stressTestResult.qps.toFixed(0) }}</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="metric-card">
+                <div class="metric-label">P50 (ms)</div>
+                <div class="metric-value">{{ stressTestResult.p50Ms.toFixed(3) }}</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="metric-card">
+                <div class="metric-label">P95 (ms)</div>
+                <div class="metric-value">{{ stressTestResult.p95Ms.toFixed(3) }}</div>
+              </div>
+            </el-col>
+            <el-col :span="6">
+              <div class="metric-card">
+                <div class="metric-label">P99 (ms)</div>
+                <div class="metric-value">{{ stressTestResult.p99Ms.toFixed(3) }}</div>
+              </div>
+            </el-col>
+          </el-row>
+          <el-row :gutter="12" style="margin-top: 8px">
+            <el-col :span="8">
+              <div class="metric-card">
+                <div class="metric-label">总执行次数</div>
+                <div class="metric-value">{{ stressTestResult.totalExecutions }}</div>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="metric-card">
+                <div class="metric-label">总耗时 (ms)</div>
+                <div class="metric-value">{{ stressTestResult.totalTimeMs.toFixed(1) }}</div>
+              </div>
+            </el-col>
+            <el-col :span="8">
+              <div class="metric-card">
+                <div class="metric-label">错误率</div>
+                <div class="metric-value" :class="{ 'metric-error': stressTestResult.errorRate > 0 }">
+                  {{ (stressTestResult.errorRate * 100).toFixed(2) }}%
+                </div>
+              </div>
+            </el-col>
+          </el-row>
+          <div v-if="stressTestResult.errors?.length" class="stress-test-errors">
+            <div class="errors-title">错误详情（最多 10 条）</div>
+            <ul>
+              <li v-for="(err, i) in stressTestResult.errors" :key="i">{{ err }}</li>
+            </ul>
+          </div>
+          <!-- 耗时分布直方图 -->
+          <div ref="stressTestChartRef" class="stress-test-chart"></div>
+        </div>
+      </el-form>
+      <template #footer>
+        <el-button @click="stressTestVisible = false">关闭</el-button>
+        <el-button type="primary" :loading="stressTestLoading" @click="runStressTest">开始压测</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -2192,5 +2770,63 @@ onMounted(() => {
 .path-empty {
   color: #c0c4cc;
   font-size: 12px;
+}
+
+/* P2-9 规则压测结果样式 */
+.stress-test-summary {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f5f7fa;
+  border-radius: 4px;
+
+  .metric-card {
+    background: #fff;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    padding: 10px 8px;
+    text-align: center;
+
+    .metric-label {
+      font-size: 12px;
+      color: #909399;
+      margin-bottom: 4px;
+    }
+
+    .metric-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #303133;
+
+      &.metric-error {
+        color: #f56c6c;
+      }
+    }
+  }
+
+  .stress-test-errors {
+    margin-top: 12px;
+
+    .errors-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: #f56c6c;
+      margin-bottom: 4px;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+      font-size: 12px;
+      color: #606266;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+  }
+
+  .stress-test-chart {
+    width: 100%;
+    height: 260px;
+    margin-top: 12px;
+  }
 }
 </style>

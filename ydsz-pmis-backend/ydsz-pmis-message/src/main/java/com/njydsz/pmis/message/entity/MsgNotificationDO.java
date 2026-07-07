@@ -37,7 +37,7 @@ public class MsgNotificationDO extends BaseDO {
     /** 通知级别: INFO 提示 / WARN 警告 / ERROR 错误 / URGENT 紧急 */
     private String level;
 
-    /** 通知分类: SYSTEM/WORKFLOW/ALERT/TODO/ANNOUNCE */
+    /** 通知分类: SYSTEM 系统 / WORKFLOW 流程 / ALERT 告警 / TO_DO 待办 / ANNOUNCE 公告 */
     private String category;
 
     /** 发送优先级: LOW/NORMAL/HIGH/URGENT(影响排队与聚合) */

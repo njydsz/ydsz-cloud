@@ -21,6 +21,8 @@ import com.njydsz.pmis.project.dto.TestCaseBatchRunDTO;
 import com.njydsz.pmis.project.dto.RuleStatusChangeDTO;
 import com.njydsz.pmis.project.dto.RuleApproveDTO;
 import com.njydsz.pmis.project.dto.RuleRejectDTO;
+import com.njydsz.pmis.project.dto.RuleSubmitReviewDTO;
+import com.njydsz.pmis.project.dto.RuleDelegateDTO;
 import com.njydsz.pmis.project.dto.RuleImportDTO;
 import com.njydsz.pmis.project.dto.RuleBatchToggleDTO;
 import com.njydsz.pmis.project.dto.RuleBatchPriorityDTO;
@@ -38,6 +40,9 @@ import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.config.ABTestService;
 import com.njydsz.pmis.literule.config.DecisionTableAdminService;
+import com.njydsz.pmis.literule.approval.ApprovalFlow;
+import com.njydsz.pmis.literule.approval.ApprovalRecord;
+import com.njydsz.pmis.literule.approval.RuleApprovalService;
 import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
 import com.njydsz.pmis.literule.expr.ExpressionFunctionDef;
@@ -55,6 +60,7 @@ import com.njydsz.pmis.project.literule.RuleDependencyService;
 import com.njydsz.pmis.project.literule.RuleCategoryTreeService;
 import com.njydsz.pmis.project.literule.ABTestAutoRollbackService;
 import com.njydsz.pmis.project.literule.RulePackService;
+import com.njydsz.pmis.literule.benchmark.RuleStressTestService;
 import com.njydsz.pmis.project.entity.RuleDependencyDO;
 import com.njydsz.pmis.project.entity.RuleABPolicyDO;
 import com.njydsz.pmis.project.entity.RuleABRollbackDO;
@@ -122,12 +128,16 @@ public class RuleAdminController {
     private final RuleCategoryTreeService ruleCategoryTreeService;
     private final ABTestAutoRollbackService abTestAutoRollbackService;
     private final RulePackService rulePackService;
+    // 规则压测服务（P2-9）：可选注入，RuleAdminService 未装配时为空
+    private final org.springframework.beans.factory.ObjectProvider<RuleStressTestService> ruleStressTestServiceProvider;
     // 决策表管理服务（P0-3）：可选注入，未启用决策表时为空
     private final org.springframework.beans.factory.ObjectProvider<DecisionTableAdminService> decisionTableAdminServiceProvider;
     // AI 增强（P2-15）：可选注入，未启用 AI 时为空
     private final org.springframework.beans.factory.ObjectProvider<RuleLLMService> ruleLLMServiceProvider;
     private final org.springframework.beans.factory.ObjectProvider<RuleHealthScoreService> ruleHealthScoreServiceProvider;
     private final org.springframework.beans.factory.ObjectProvider<RuleRecommendationService> ruleRecommendationServiceProvider;
+    // 多级审批流服务（P1-3）：可选注入，未配置 RuleConfigProvider 时为空
+    private final org.springframework.beans.factory.ObjectProvider<RuleApprovalService> ruleApprovalServiceProvider;
 
     /**
      * 查询全部规则定义
@@ -683,6 +693,169 @@ public class RuleAdminController {
         }
     }
 
+    // ==================== 多级审批流（P1-3） ====================
+
+    /**
+     * 提交审核（P1-3 多级审批流）
+     *
+     * <p>将规则从 DRAFT 状态提交到指定审批流的第一级。flowCode 为空时使用默认 2 级审批流。
+     *
+     * @param ruleCode 规则编码
+     * @param dto      请求体，包含 flowCode（可选）
+     * @param operator 操作人
+     * @return 审批记录
+     */
+    @PostMapping("/{ruleCode}/submit-review")
+    @PrePermission("execution:rule:save")
+    @OperationLog(module = "规则引擎", action = "提交审核", bizType = "RULE")
+    public Result<ApprovalRecord> submitReview(@PathVariable String ruleCode,
+                                                @Valid @RequestBody(required = false) RuleSubmitReviewDTO dto,
+                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("多级审批流服务未启用");
+        }
+        String flowCode = dto == null ? null : dto.getFlowCode();
+        return Result.ok(svc.submitForReview(ruleCode, flowCode, operator));
+    }
+
+    /**
+     * 级别审批通过（P1-3 多级审批流）
+     *
+     * <p>审批通过当前级别。根据审批类型（SINGLE/COUNTERSIGN/SEQUENCE）决定是否进入下一级。
+     * 全部级别通过后规则状态变为 PUBLISHED。
+     *
+     * @param ruleCode 规则编码
+     * @param dto      请求体，包含 comment（审批意见）
+     * @param operator 审批人
+     * @return 审批记录
+     */
+    @PostMapping("/{ruleCode}/approve-level")
+    @PrePermission("execution:rule:approve")
+    @OperationLog(module = "规则引擎", action = "级别审批通过", bizType = "RULE")
+    public Result<ApprovalRecord> approveLevel(@PathVariable String ruleCode,
+                                                @Valid @RequestBody RuleApproveDTO dto,
+                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("多级审批流服务未启用");
+        }
+        String comment = dto.getComment() == null ? "" : dto.getComment();
+        return Result.ok(svc.approve(ruleCode, operator, comment));
+    }
+
+    /**
+     * 级别审批驳回（P1-3 多级审批流）
+     *
+     * <p>驳回当前级别，回退到上一级。一级驳回回退到 DRAFT。
+     *
+     * @param ruleCode 规则编码
+     * @param dto      请求体，包含 reason（驳回理由，必填）
+     * @param operator 审批人
+     * @return 审批记录
+     */
+    @PostMapping("/{ruleCode}/reject-level")
+    @PrePermission("execution:rule:approve")
+    @OperationLog(module = "规则引擎", action = "级别审批驳回", bizType = "RULE")
+    public Result<ApprovalRecord> rejectLevel(@PathVariable String ruleCode,
+                                               @Valid @RequestBody RuleRejectDTO dto,
+                                               @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("多级审批流服务未启用");
+        }
+        return Result.ok(svc.reject(ruleCode, operator, dto.getReason()));
+    }
+
+    /**
+     * 委托审批（P1-3 多级审批流）
+     *
+     * <p>将当前级别的审批权委托给他人。委托后被委托人通过 approve-level 完成审批。
+     *
+     * @param ruleCode 规则编码
+     * @param dto      请求体，包含 delegatedTo（被委托人工号，必填）和 comment（委托说明）
+     * @param operator 委托人
+     * @return 审批记录
+     */
+    @PostMapping("/{ruleCode}/delegate")
+    @PrePermission("execution:rule:approve")
+    @OperationLog(module = "规则引擎", action = "委托审批", bizType = "RULE")
+    public Result<ApprovalRecord> delegate(@PathVariable String ruleCode,
+                                            @Valid @RequestBody RuleDelegateDTO dto,
+                                            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("多级审批流服务未启用");
+        }
+        String comment = dto.getComment() == null ? "" : dto.getComment();
+        return Result.ok(svc.delegate(ruleCode, operator, dto.getDelegatedTo(), comment));
+    }
+
+    /**
+     * 查询审批状态（P1-3 多级审批流）
+     *
+     * @param ruleCode 规则编码
+     * @return 审批记录；无审批记录时返回 null
+     */
+    @GetMapping("/{ruleCode}/approval-status")
+    public Result<ApprovalRecord> approvalStatus(@PathVariable String ruleCode) {
+        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.ok(null);
+        }
+        return Result.ok(svc.getApprovalStatus(ruleCode));
+    }
+
+    /**
+     * 查询待审批列表（P1-3 多级审批流）
+     *
+     * @param approver 审批人工号
+     * @return 待审批记录列表
+     */
+    @GetMapping("/pending-approvals")
+    public Result<List<ApprovalRecord>> pendingApprovals(@RequestParam String approver) {
+        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.ok(List.of());
+        }
+        return Result.ok(svc.listPendingApprovals(approver));
+    }
+
+    /**
+     * 撤回审核（P1-3 多级审批流）
+     *
+     * <p>将规则从审核中状态撤回到 DRAFT。仅 PENDING/DELEGATED 状态可撤回。
+     *
+     * @param ruleCode 规则编码
+     * @param operator 操作人
+     * @return 审批记录
+     */
+    @PostMapping("/{ruleCode}/cancel-review")
+    @PrePermission("execution:rule:save")
+    @OperationLog(module = "规则引擎", action = "撤回审核", bizType = "RULE")
+    public Result<ApprovalRecord> cancelReview(@PathVariable String ruleCode,
+                                                @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("多级审批流服务未启用");
+        }
+        return Result.ok(svc.cancelReview(ruleCode, operator));
+    }
+
+    /**
+     * 查询可用审批流配置（P1-3 多级审批流）
+     *
+     * @return 审批流配置列表
+     */
+    @GetMapping("/approval-flows")
+    public Result<List<ApprovalFlow>> approvalFlows() {
+        RuleApprovalService svc = ruleApprovalServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.ok(List.of());
+        }
+        return Result.ok(svc.listFlows());
+    }
+
     // ==================== 执行链路追踪 ====================
 
     /**
@@ -773,6 +946,282 @@ public class RuleAdminController {
         ));
 
         return Result.ok(replay);
+    }
+
+    /**
+     * P2-1 批量历史数据回放
+     *
+     * <p>按时间范围查询历史 trace，用当前规则集重新评估每条 trace 的事实快照，
+     * 对比历史结果与当前结果，生成差异报告。
+     *
+     * <p>差异类型：
+     * <ul>
+     *   <li>consistent：历史与当前触发状态一致</li>
+     *   <li>diff：历史与当前触发状态不一致（含触发→未触发、未触发→触发、严重度变化）</li>
+     * </ul>
+     *
+     * <p>请求体示例：
+     * <pre>
+     * {
+     *   "startTime": "2026-07-01T00:00:00",
+     *   "endTime": "2026-07-07T00:00:00",
+     *   "ruleCode": "EVM_RED_ALERT",  // 可选，为空表示全部规则
+     *   "limit": 100                   // 默认 100，最大 1000
+     * }
+     * </pre>
+     *
+     * @param request 请求体（startTime / endTime / ruleCode / limit）
+     * @return 批量回放差异报告
+     */
+    @PostMapping("/traces/batch-replay")
+    public Result<Map<String, Object>> batchReplayTraces(@RequestBody Map<String, Object> request) {
+        // 解析请求参数
+        String startTimeStr = (String) request.get("startTime");
+        String endTimeStr = (String) request.get("endTime");
+        String ruleCode = (String) request.get("ruleCode");
+        int limit = request.containsKey("limit")
+                ? ((Number) request.get("limit")).intValue() : 100;
+        if (limit <= 0 || limit > 1000) {
+            limit = 100;
+        }
+
+        if (startTimeStr == null || endTimeStr == null) {
+            return Result.fail("startTime 和 endTime 不能为空");
+        }
+
+        LocalDateTime startTime = LocalDateTime.parse(startTimeStr);
+        LocalDateTime endTime = LocalDateTime.parse(endTimeStr);
+
+        // 按时间范围查询历史 trace（可选按 ruleCode 过滤）
+        LambdaQueryWrapper<RuleExecutionTraceDO> wrapper = new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                .ge(RuleExecutionTraceDO::getCreatedAt, startTime)
+                .lt(RuleExecutionTraceDO::getCreatedAt, endTime)
+                .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+                .last("LIMIT " + limit);
+        if (ruleCode != null && !ruleCode.isBlank()) {
+            wrapper.eq(RuleExecutionTraceDO::getRuleCode, ruleCode);
+        }
+        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(wrapper);
+
+        // 逐条回放：用当前规则集重新评估
+        List<Map<String, Object>> diffs = new ArrayList<>();
+        int consistentCount = 0;
+        int diffCount = 0;
+
+        for (RuleExecutionTraceDO trace : traces) {
+            Map<String, Object> facts = trace.getFactsSnapshot();
+            if (facts == null || facts.isEmpty()) {
+                continue;
+            }
+
+            // 用当前规则集对单条规则重新评估
+            List<RuleResult> currentResults = ruleAdminService.dryRun(trace.getRuleCode(), facts);
+            RuleResult currentResult = currentResults.stream()
+                    .filter(r -> trace.getRuleCode().equals(r.getRuleCode()))
+                    .findFirst()
+                    .orElse(null);
+
+            boolean historicalTriggered = Boolean.TRUE.equals(trace.getTriggered());
+            boolean currentTriggered = currentResult != null && currentResult.isTriggered();
+            String historicalSeverity = trace.getSeverity();
+            String currentSeverity = currentResult != null && currentResult.getSeverity() != null
+                    ? currentResult.getSeverity().name() : null;
+
+            // 严重度归一化（null 视为一致）
+            boolean severityConsistent = severityEquals(historicalSeverity, currentSeverity);
+
+            if (historicalTriggered == currentTriggered && severityConsistent) {
+                consistentCount++;
+            } else {
+                diffCount++;
+                Map<String, Object> diff = new LinkedHashMap<>();
+                diff.put("traceId", trace.getTraceId());
+                diff.put("ruleCode", trace.getRuleCode());
+                diff.put("historicalTriggered", historicalTriggered);
+                diff.put("currentTriggered", currentTriggered);
+                diff.put("historicalSeverity", historicalSeverity);
+                diff.put("currentSeverity", currentSeverity);
+                diff.put("diffType", classifyDiff(historicalTriggered, currentTriggered,
+                        severityConsistent));
+                diffs.add(diff);
+            }
+        }
+
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("totalReplayed", traces.size());
+        report.put("consistentCount", consistentCount);
+        report.put("diffCount", diffCount);
+        report.put("diffs", diffs);
+        report.put("summary", String.format("共回放 %d 条，一致 %d 条，差异 %d 条",
+                traces.size(), consistentCount, diffCount));
+
+        return Result.ok(report);
+    }
+
+    /**
+     * P2-2 规则变更影响分析
+     *
+     * <p>接收规则定义变更（新条件表达式），从历史 trace 中查询该规则最近 N 条记录，
+     * 用新表达式重新评估每条 trace 的事实快照，预览变更后的影响范围。
+     *
+     * <p>请求体示例：
+     * <pre>
+     * {
+     *   "conditionExpression": "evmRedCount >= 5",
+     *   "severityExpression": "evmRedCount >= 10 ? 'RED' : 'YELLOW'",
+     *   "defaultSeverity": "YELLOW",
+     *   "limit": 1000
+     * }
+     * </pre>
+     *
+     * <p>影响类型：
+     * <ul>
+     *   <li>added：历史未触发，新表达式触发（新增触发）</li>
+     *   <li>removed：历史触发，新表达式未触发（减少触发）</li>
+     *   <li>severityChanged：触发状态不变，但严重度变化</li>
+     *   <li>unchanged：触发状态和严重度均不变</li>
+     * </ul>
+     *
+     * @param ruleCode 规则编码
+     * @param request  请求体（conditionExpression / severityExpression / defaultSeverity / limit）
+     * @return 影响分析报告
+     */
+    @PostMapping("/{ruleCode}/impact-preview")
+    public Result<Map<String, Object>> impactPreview(@PathVariable String ruleCode,
+                                                      @RequestBody Map<String, Object> request) {
+        String conditionExpression = (String) request.get("conditionExpression");
+        String severityExpression = (String) request.get("severityExpression");
+        String defaultSeverityStr = (String) request.get("defaultSeverity");
+        int limit = request.containsKey("limit")
+                ? ((Number) request.get("limit")).intValue() : 1000;
+        if (limit <= 0 || limit > 5000) {
+            limit = 1000;
+        }
+
+        if (conditionExpression == null || conditionExpression.isBlank()) {
+            return Result.fail("conditionExpression 不能为空");
+        }
+
+        // 解析默认严重度
+        com.njydsz.pmis.literule.api.RuleSeverity defaultSeverity = null;
+        if (defaultSeverityStr != null && !defaultSeverityStr.isBlank()) {
+            try {
+                defaultSeverity = com.njydsz.pmis.literule.api.RuleSeverity.valueOf(defaultSeverityStr);
+            } catch (IllegalArgumentException e) {
+                return Result.fail("非法的 defaultSeverity: " + defaultSeverityStr
+                        + "，合法值: INFO / YELLOW / RED");
+            }
+        }
+
+        // 查询该规则最近 N 条 trace
+        List<RuleExecutionTraceDO> traces = ruleExecutionTraceMapper.selectList(
+                new LambdaQueryWrapper<RuleExecutionTraceDO>()
+                        .eq(RuleExecutionTraceDO::getRuleCode, ruleCode)
+                        .orderByDesc(RuleExecutionTraceDO::getCreatedAt)
+                        .last("LIMIT " + limit));
+
+        // 逐条用新表达式重新评估
+        List<Map<String, Object>> affectedTraces = new ArrayList<>();
+        int historicalTriggeredCount = 0;
+        int newTriggeredCount = 0;
+        int addedTriggeredCount = 0;
+        int removedTriggeredCount = 0;
+
+        for (RuleExecutionTraceDO trace : traces) {
+            Map<String, Object> facts = trace.getFactsSnapshot();
+            if (facts == null || facts.isEmpty()) {
+                continue;
+            }
+
+            // 用新表达式评估
+            RuleResult newResult = ruleAdminService.evaluateWithExpression(
+                    ruleCode, conditionExpression, severityExpression, defaultSeverity, facts);
+
+            boolean historicalTriggered = Boolean.TRUE.equals(trace.getTriggered());
+            boolean newTriggered = newResult.isTriggered();
+            String historicalSeverity = trace.getSeverity();
+            String newSeverity = newResult.getSeverity() != null
+                    ? newResult.getSeverity().name() : null;
+
+            if (historicalTriggered) {
+                historicalTriggeredCount++;
+            }
+            if (newTriggered) {
+                newTriggeredCount++;
+            }
+
+            // 分类影响
+            String impactType;
+            if (!historicalTriggered && newTriggered) {
+                addedTriggeredCount++;
+                impactType = "added";
+            } else if (historicalTriggered && !newTriggered) {
+                removedTriggeredCount++;
+                impactType = "removed";
+            } else if (historicalTriggered == newTriggered && !severityEquals(historicalSeverity, newSeverity)) {
+                impactType = "severityChanged";
+            } else {
+                impactType = "unchanged";
+            }
+
+            // 仅记录受影响的 trace（非 unchanged）
+            if (!"unchanged".equals(impactType)) {
+                Map<String, Object> affected = new LinkedHashMap<>();
+                affected.put("traceId", trace.getTraceId());
+                affected.put("historicalTriggered", historicalTriggered);
+                affected.put("newTriggered", newTriggered);
+                affected.put("historicalSeverity", historicalSeverity);
+                affected.put("newSeverity", newSeverity);
+                affected.put("impactType", impactType);
+                affected.put("createdAt", trace.getCreatedAt());
+                affectedTraces.add(affected);
+            }
+        }
+
+        Map<String, Object> report = new LinkedHashMap<>();
+        report.put("ruleCode", ruleCode);
+        report.put("conditionExpression", conditionExpression);
+        report.put("totalTraces", traces.size());
+        report.put("historicalTriggeredCount", historicalTriggeredCount);
+        report.put("newTriggeredCount", newTriggeredCount);
+        report.put("addedTriggeredCount", addedTriggeredCount);
+        report.put("removedTriggeredCount", removedTriggeredCount);
+        report.put("affectedTraces", affectedTraces);
+        report.put("summary", String.format(
+                "共分析 %d 条 trace，历史触发 %d 条，新表达式触发 %d 条（新增 %d，减少 %d）",
+                traces.size(), historicalTriggeredCount, newTriggeredCount,
+                addedTriggeredCount, removedTriggeredCount));
+
+        return Result.ok(report);
+    }
+
+    /**
+     * 比较两个严重度字符串是否一致（null 与 null 视为一致）
+     *
+     * @param s1 严重度 1
+     * @param s2 严重度 2
+     * @return true=一致
+     */
+    private boolean severityEquals(String s1, String s2) {
+        if (s1 == null && s2 == null) return true;
+        if (s1 == null || s2 == null) return false;
+        return s1.equalsIgnoreCase(s2);
+    }
+
+    /**
+     * 分类差异类型
+     *
+     * @param historicalTriggered 历史是否触发
+     * @param currentTriggered    当前是否触发
+     * @param severityConsistent  严重度是否一致
+     * @return 差异类型：triggered_to_not / not_to_triggered / severity_changed / consistent
+     */
+    private String classifyDiff(boolean historicalTriggered, boolean currentTriggered,
+                                 boolean severityConsistent) {
+        if (historicalTriggered && !currentTriggered) return "triggered_to_not";
+        if (!historicalTriggered && currentTriggered) return "not_to_triggered";
+        if (!severityConsistent) return "severity_changed";
+        return "consistent";
     }
 
     /**
@@ -1777,5 +2226,108 @@ public class RuleAdminController {
             statsMap.put(source.getCode(), stats);
         }
         return Result.ok(svc.recommend(source, all, statsMap));
+    }
+
+    // ==================================================================
+    // P2-9 规则压测工具
+    // ==================================================================
+
+    /**
+     * 规则压测
+     *
+     * <p>使用线程池并发执行 Dry-run，统计 QPS、P50/P95/P99 耗时、错误率等指标，
+     * 用于规则变更前的性能回归验证与容量评估。
+     *
+     * <p>请求体示例：
+     * <pre>
+     * POST /rules/stress-test
+     * {
+     *   "ruleCode": null,
+     *   "factsList": [{"budgetUsedRatio":0.95}, {"budgetUsedRatio":0.5}],
+     *   "threads": 10,
+     *   "iterations": 1000,
+     *   "warmupIterations": 100
+     * }
+     * </pre>
+     *
+     * @param request 压测请求
+     * @return 压测结果（含 QPS、分位数耗时、错误率、直方图）
+     */
+    @PostMapping("/stress-test")
+    @Operation(summary = "规则压测", description = "使用线程池并发执行 Dry-run，统计 QPS、P50/P95/P99 耗时、错误率")
+    public Result<RuleStressTestService.StressTestResult> stressTest(
+            @RequestBody Map<String, Object> request) {
+        RuleStressTestService svc = ruleStressTestServiceProvider.getIfAvailable();
+        if (svc == null) {
+            return Result.fail("规则压测服务未启用");
+        }
+        String ruleCode = (String) request.get("ruleCode");
+        if (ruleCode != null && ruleCode.isBlank()) ruleCode = null;
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> factsList = (List<Map<String, Object>>) request.get("factsList");
+        int threads = toInt(request.get("threads"), 10);
+        int iterations = toInt(request.get("iterations"), 1000);
+        int warmupIterations = toInt(request.get("warmupIterations"), 100);
+        if (factsList == null || factsList.isEmpty()) {
+            return Result.fail("factsList 不能为空");
+        }
+        return Result.ok(svc.run(ruleCode, factsList, threads, iterations, warmupIterations));
+    }
+
+    /**
+     * 安全转换为 int
+     */
+    private int toInt(Object v, int defaultValue) {
+        if (v == null) return defaultValue;
+        if (v instanceof Number n) return n.intValue();
+        try {
+            return Integer.parseInt(v.toString());
+        } catch (NumberFormatException e) {
+            return defaultValue;
+        }
+    }
+
+    // ==================================================================
+    // P2-10 知识包依赖更新提醒
+    // ==================================================================
+
+    /**
+     * 检查已安装知识包的版本更新
+     *
+     * <p>查询当前租户已安装的知识包列表，对比每个包的已安装版本与市场最新版本，
+     * 返回有更新可用的包列表。
+     *
+     * @return 更新检查结果列表
+     */
+    @GetMapping("/packs/update-check")
+    @Operation(summary = "知识包更新检查", description = "对比已安装知识包与市场最新版本，返回有更新的包列表")
+    public Result<List<RulePackService.PackUpdateInfo>> checkPackUpdates() {
+        return Result.ok(rulePackService.checkPackUpdates());
+    }
+
+    /**
+     * 批量更新知识包到最新版本
+     *
+     * @param operator 操作人
+     * @return 每个包的更新结果
+     */
+    @PostMapping("/packs/batch-update")
+    @OperationLog(module = "规则引擎", action = "批量更新知识包", bizType = "RULE_PACK")
+    @Operation(summary = "批量更新知识包", description = "将指定知识包列表更新到最新版本")
+    public Result<List<RulePackService.InstallResult>> batchUpdatePacks(
+            @RequestBody List<String> packCodes,
+            @RequestHeader(value = "X-Operator", defaultValue = "SYSTEM") String operator) {
+        if (packCodes == null || packCodes.isEmpty()) {
+            return Result.ok(List.of());
+        }
+        List<RulePackService.InstallResult> results = new ArrayList<>();
+        for (String packCode : packCodes) {
+            try {
+                results.add(rulePackService.install(packCode, null, operator));
+            } catch (Exception e) {
+                log.warn("[RuleAdmin] 批量更新知识包失败: packCode={}, err={}", packCode, e.getMessage());
+            }
+        }
+        return Result.ok(results);
     }
 }

@@ -1,10 +1,16 @@
 package com.njydsz.pmis.literule.dsl;
 
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONObject;
 import lombok.extern.slf4j.Slf4j;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashMap;
@@ -46,6 +52,20 @@ public final class RuleDslParser {
     /**
      * 解析 YAML 字符串为 DSL 模型
      *
+     * <p>{@link #parse(String)} 的语义化别名，便于与 {@link #parseJson(String)} 配对使用。
+     *
+     * @param yamlContent YAML 内容
+     * @return DSL 模型；空内容返回空 RuleDsl（rules/chains 为空列表）
+     * @throws IllegalArgumentException YAML 格式错误时抛出
+     * @since 1.7.0
+     */
+    public static RuleDsl parseYaml(String yamlContent) {
+        return parse(yamlContent);
+    }
+
+    /**
+     * 解析 YAML 字符串为 DSL 模型
+     *
      * @param yamlContent YAML 内容
      * @return DSL 模型；空内容返回空 RuleDsl（rules/chains 为空列表）
      * @throws IllegalArgumentException YAML 格式错误时抛出
@@ -57,6 +77,87 @@ public final class RuleDslParser {
         Yaml yaml = newYaml();
         Map<String, Object> raw = yaml.load(yamlContent);
         return parseMap(raw);
+    }
+
+    /**
+     * 解析 JSON 字符串为 DSL 模型（P2-3）
+     *
+     * <p>JSON 字段名与 YAML 一致，使用 snake_case（如 {@code condition_expression}）。
+     * 内部使用 Fastjson2 解析后复用 {@link #parseMap(Map)} 完成字段映射与校验。
+     *
+     * @param jsonContent JSON 内容
+     * @return DSL 模型；空内容返回空 RuleDsl
+     * @throws IllegalArgumentException JSON 格式错误时抛出
+     * @since 1.7.0
+     */
+    public static RuleDsl parseJson(String jsonContent) {
+        if (jsonContent == null || jsonContent.isBlank()) {
+            return emptyDsl();
+        }
+        JSONObject raw = JSON.parseObject(jsonContent);
+        if (raw == null || raw.isEmpty()) {
+            return emptyDsl();
+        }
+        return parseMap(new LinkedHashMap<>(raw));
+    }
+
+    /**
+     * 从文件加载 DSL 模型（P2-3）
+     *
+     * <p>按文件后缀自动选择解析器：
+     * <ul>
+     *   <li>{@code .yml} / {@code .yaml} - YAML 解析（SnakeYAML）</li>
+     *   <li>{@code .json} - JSON 解析（Fastjson2）</li>
+     * </ul>
+     * 其他后缀抛出 {@link IllegalArgumentException}。
+     *
+     * @param path 文件路径
+     * @return DSL 模型
+     * @throws IOException              文件读取失败
+     * @throws IllegalArgumentException 文件后缀不支持或内容格式错误
+     * @since 1.7.0
+     */
+    public static RuleDsl loadFromFile(Path path) throws IOException {
+        if (path == null) {
+            throw new IllegalArgumentException("文件路径不能为 null");
+        }
+        String fileName = path.getFileName() == null ? "" : path.getFileName().toString();
+        String lower = fileName.toLowerCase();
+        String content = Files.readString(path, StandardCharsets.UTF_8);
+        if (lower.endsWith(".yml") || lower.endsWith(".yaml")) {
+            return parseYaml(content);
+        }
+        if (lower.endsWith(".json")) {
+            return parseJson(content);
+        }
+        throw new IllegalArgumentException("不支持的规则文件后缀: " + fileName
+                + "（仅支持 .yml / .yaml / .json）");
+    }
+
+    /**
+     * 从 InputStream 加载 DSL 模型（按指定格式）
+     *
+     * @param stream 输入流
+     * @param format 文件格式：yaml / json（大小写不敏感）
+     * @return DSL 模型
+     * @throws IOException              流读取失败
+     * @throws IllegalArgumentException 格式不支持或内容错误
+     * @since 1.7.0
+     */
+    public static RuleDsl loadFromStream(InputStream stream, String format) throws IOException {
+        if (stream == null) {
+            return emptyDsl();
+        }
+        String content = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+        if (format == null || format.isBlank()) {
+            throw new IllegalArgumentException("format 不能为空（yaml / json）");
+        }
+        String f = format.trim().toLowerCase();
+        return switch (f) {
+            case "yaml", "yml" -> parseYaml(content);
+            case "json" -> parseJson(content);
+            default -> throw new IllegalArgumentException("不支持的规则文件格式: " + format);
+        };
     }
 
     /**

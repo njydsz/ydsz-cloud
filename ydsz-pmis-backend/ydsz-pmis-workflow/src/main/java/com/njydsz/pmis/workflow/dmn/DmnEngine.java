@@ -45,6 +45,8 @@ public class DmnEngine {
     /**
      * 执行 DMN 决策表
      *
+     * <p>P2-10: 修复 PRIORITY 命中策略为按输出值优先级返回第一条；新增 RULE_ORDER / OUTPUT_ORDER 策略。
+     *
      * @param table   决策表定义
      * @param context 输入上下文（变量名 → 值）
      * @return 输出结果列表（每个匹配规则产生一组输出）
@@ -65,12 +67,11 @@ public class DmnEngine {
         for (DmnRule rule : table.getRules()) {
             if (matchRule(table, rule, ctx)) {
                 matched.add(buildOutput(table, rule));
-                // 单结果策略：命中即返回
-                if (policy == DmnHitPolicy.FIRST
-                        || policy == DmnHitPolicy.ANY
-                        || policy == DmnHitPolicy.PRIORITY) {
+                // 单结果短路策略：命中即返回（按定义顺序的第一条）
+                if (policy == DmnHitPolicy.FIRST || policy == DmnHitPolicy.ANY) {
                     break;
                 }
+                // PRIORITY / OUTPUT_ORDER / RULE_ORDER / UNIQUE / COLLECT 需要收集全部命中行
             }
         }
 
@@ -86,6 +87,23 @@ public class DmnEngine {
             return aggregate(matched, table);
         }
 
+        // P2-10: PRIORITY — 按首个输出列 allowedValues 排序，返回排名第一的命中行
+        if (policy == DmnHitPolicy.PRIORITY) {
+            if (matched.isEmpty()) {
+                return matched;
+            }
+            List<Map<String, Object>> sorted = sortByOutputPriority(matched, table);
+            return List.of(sorted.get(0));
+        }
+
+        // P2-10: OUTPUT_ORDER — 按输出列 allowedValues 排序，返回所有命中行
+        if (policy == DmnHitPolicy.OUTPUT_ORDER) {
+            return sortByOutputPriority(matched, table);
+        }
+
+        // P2-10: RULE_ORDER — 返回所有命中行（按规则定义顺序，不排序）
+        // matched 已按规则定义顺序收集，直接返回
+        // FIRST / ANY / UNIQUE（单条命中）也走此路径
         return matched;
     }
 
@@ -349,6 +367,86 @@ public class DmnEngine {
             }
         }
         return List.of(result);
+    }
+
+    // ============================== P2-10: 输出值优先级排序 ==============================
+
+    /**
+     * P2-10: 按输出值优先级排序命中行。
+     *
+     * <p>用于 {@link DmnHitPolicy#PRIORITY} 与 {@link DmnHitPolicy#OUTPUT_ORDER} 命中策略。
+     *
+     * <p>排序规则：
+     * <ul>
+     *   <li>从最后一个输出列向首个输出列逆序排序（稳定排序下，首个输出列成为主排序键）</li>
+     *   <li>每个输出列按其 {@code allowedValues} 顺序排序，索引靠前优先级高</li>
+     *   <li>未在 {@code allowedValues} 中的值视为最低优先级（{@code Integer.MAX_VALUE}）</li>
+     *   <li>相同优先级保留命中顺序（{@code List.sort} 稳定）</li>
+     * </ul>
+     *
+     * <p>降级策略：若任何输出列都未定义 {@code allowedValues}，告警并回退为命中顺序。
+     *
+     * @param matched 命中行列表
+     * @param table   决策表定义
+     * @return 排序后的命中行列表（新列表，不修改原列表）
+     */
+    private List<Map<String, Object>> sortByOutputPriority(List<Map<String, Object>> matched,
+                                                           DmnDecisionTable table) {
+        if (matched.size() <= 1) {
+            return new ArrayList<>(matched);
+        }
+        List<DmnOutput> outputs = table.getOutputs();
+        if (outputs == null || outputs.isEmpty()) {
+            log.warn("[DmnEngine] PRIORITY/OUTPUT_ORDER 策略未定义输出列，回退为命中顺序: tableKey={}",
+                    table.getTableKey());
+            return new ArrayList<>(matched);
+        }
+        // 检查是否任何输出列定义了 allowedValues
+        boolean hasAnyAllowedValues = outputs.stream()
+                .anyMatch(o -> o.getAllowedValues() != null && !o.getAllowedValues().isEmpty());
+        if (!hasAnyAllowedValues) {
+            log.warn("[DmnEngine] PRIORITY/OUTPUT_ORDER 策略未定义 allowedValues，回退为命中顺序: tableKey={}",
+                    table.getTableKey());
+            return new ArrayList<>(matched);
+        }
+
+        List<Map<String, Object>> sorted = new ArrayList<>(matched);
+        // 从最后一个输出列开始排序（稳定排序：首个输出列最后排序，决定主顺序）
+        for (int i = outputs.size() - 1; i >= 0; i--) {
+            DmnOutput output = outputs.get(i);
+            List<String> allowedValues = output.getAllowedValues();
+            if (allowedValues == null || allowedValues.isEmpty()) {
+                continue;
+            }
+            final List<String> av = allowedValues;
+            final String outputName = output.getName();
+            sorted.sort((a, b) -> {
+                int idxA = indexOfOutputValue(av, a.get(outputName));
+                int idxB = indexOfOutputValue(av, b.get(outputName));
+                return Integer.compare(idxA, idxB);
+            });
+        }
+        return sorted;
+    }
+
+    /**
+     * P2-10: 计算输出值在 allowedValues 中的索引。
+     *
+     * @param allowedValues 允许值列表
+     * @param value         实际输出值
+     * @return 索引（0-based），未找到返回 {@code Integer.MAX_VALUE}（最低优先级）
+     */
+    private int indexOfOutputValue(List<String> allowedValues, Object value) {
+        if (value == null) {
+            return Integer.MAX_VALUE;
+        }
+        String strValue = String.valueOf(value);
+        for (int i = 0; i < allowedValues.size(); i++) {
+            if (allowedValues.get(i).equals(strValue)) {
+                return i;
+            }
+        }
+        return Integer.MAX_VALUE;
     }
 
     // ============================== 工具方法 ==============================

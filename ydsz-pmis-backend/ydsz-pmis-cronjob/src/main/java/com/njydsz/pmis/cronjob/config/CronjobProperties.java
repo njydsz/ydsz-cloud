@@ -62,6 +62,9 @@ public class CronjobProperties {
     /** 远程派发配置（P1-4 新增） */
     private Remote remote = new Remote();
 
+    /** 告警扫描配置（P3-2 新增：周期性告警扫描使用） */
+    private Alert alert = new Alert();
+
     /**
      * 校验并规整化 TTL 值。
      *
@@ -234,6 +237,21 @@ public class CronjobProperties {
 
         /** 远程派发失败时是否降级到 Leader 本地执行（true=保证分片不丢失） */
         private boolean fallbackToLocal = true;
+    }
+
+    /**
+     * 告警扫描配置（P3-2 周期性告警扫描）。
+     *
+     * <p>控制 {@link com.njydsz.pmis.cronjob.core.alert.AlertScanner} 的扫描间隔。
+     * 仅 Leader 节点启用周期性扫描，统计 FAIL_RATE / DURATION_P95 等需要聚合计算的告警类型。
+     *
+     * <p>对应配置前缀 {@code pmis.cronjob.alert.scan-interval-ms}（与 {@link AlertProperties} 共享前缀，
+     * Spring Boot 会自动合并字段，无冲突）。
+     */
+    @Data
+    public static class Alert {
+        /** 告警扫描间隔（毫秒，默认 5 分钟） */
+        private long scanIntervalMs = 300000L;
     }
 }
 

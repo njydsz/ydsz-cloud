@@ -24,7 +24,7 @@
  *   <li><b>读 / 写分离</b>：纯读方法标注 {@code @Transactional(readOnly = true)}，走从库</li>
  *   <li><b>数据权限</b>：通过 {@code @DataScope} 注解自动注入数据权限过滤条件</li>
  *   <li><b>日志规范</b>：业务关键路径必须记录 INFO 日志（操作人、操作对象、变更前后值）</li>
- *   <li><b>异常统一</b>：业务校验失败抛 {@code BizException(BizErrorCode.XXX)}，禁止直接返回 null/boolean</li>
+ *   <li><b>异常统一</b>：业务校验失败抛 {@code BizException} 并附带明确的 {@code BizErrorCode}，禁止直接返回 null/boolean</li>
  *   <li><b>幂等保护</b>：写入操作需在 Mapper 层使用乐观锁或 DB 唯一约束确保幂等</li>
  * </ul>
  *

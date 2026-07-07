@@ -124,4 +124,25 @@ public interface FlowHisTaskMapper extends BaseMapper<FlowHisTaskDO> {
                                                         @Param("startTime") LocalDateTime startTime,
                                                         @Param("endTime") LocalDateTime endTime,
                                                         @Param("limit") int limit);
+
+    /**
+     * P2-7: 流程效率对比 — 按流程编码分组聚合效率指标。
+     *
+     * <p>对标钉钉/飞书"流程效率对比"看板。聚合指标：
+     * <ul>
+     *   <li>totalCount — 任务总数（COMPLETED + REJECTED）</li>
+     *   <li>completedCount — 通过数（COMPLETED）</li>
+     *   <li>rejectedCount — 驳回数（REJECTED）</li>
+     *   <li>rejectionRate — 驳回率 = rejectedCount / totalCount</li>
+     *   <li>avgDurationMs — 平均处理耗时（仅 COMPLETED）</li>
+     * </ul>
+     *
+     * @param tenantId  租户 ID（可空）
+     * @param startTime finish_at 下界（可空）
+     * @param endTime   finish_at 上界（可空）
+     * @return 每个流程一行：flowCode / flowName / totalCount / completedCount / rejectedCount / rejectionRate / avgDurationMs
+     */
+    List<Map<String, Object>> selectFlowEfficiencyComparison(@Param("tenantId") String tenantId,
+                                                              @Param("startTime") LocalDateTime startTime,
+                                                              @Param("endTime") LocalDateTime endTime);
 }

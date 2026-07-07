@@ -33,6 +33,18 @@ public class MessageProperties {
     /** 重试扫描间隔（毫秒） */
     private long retryScanIntervalMs = 30000L;
 
+    /** P2-9: 回执拉取开关（关闭后不再主动拉取回执，仅依赖服务商回调） */
+    private boolean receiptPullEnabled = true;
+
+    /** P2-9: 回执拉取扫描间隔（毫秒），默认 120s */
+    private long receiptPullScanIntervalMs = 120000L;
+
+    /** P2-9: 回执拉取延迟阈值（分钟）：发送成功后多少分钟才开始主动拉取 */
+    private long receiptPullDelayMinutes = 5L;
+
+    /** P2-9: 回执超时阈值（分钟）：超过此时间仍未收到回执则标记为 TIMEOUT */
+    private long receiptTimeoutMinutes = 30L;
+
     /** 全局每日发送上限（单用户单通道，0 表示不限） */
     private int globalDailyLimit = 0;
 

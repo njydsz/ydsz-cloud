@@ -110,6 +110,28 @@ public class LiteRuleProperties {
     private RuleSourceConfig ruleSource = new RuleSourceConfig();
 
     /**
+     * 文件规则源配置（P2-3 DSL YAML/JSON 规则文件加载）
+     *
+     * <p>启用后从 classpath 或文件系统加载 YAML/JSON 规则文件，注册为
+     * {@link com.njydsz.pmis.literule.spi.FileRuleSource} Bean。
+     * 适用于 GitOps 场景：规则以 YAML 文件形式存储在 Git 仓库中，
+     * 应用启动时自动加载，文件变更可通过 WatchService 触发热刷新。
+     *
+     * <p>配置示例：
+     * <pre>
+     * pmis:
+     *   literule:
+     *     file-source:
+     *       enabled: false
+     *       location: classpath:rules/
+     *       watch: true
+     * </pre>
+     *
+     * @since 1.7.0
+     */
+    private FileSourceConfig fileSource = new FileSourceConfig();
+
+    /**
      * 多级缓存配置（P1-1）
      *
      * <p>启用后自动装饰 {@link com.njydsz.pmis.literule.spi.RuleConfigProvider} 为
@@ -330,5 +352,47 @@ public class LiteRuleProperties {
          * false：强制仅用 L1，即便 RedissonClient 存在也不使用。
          */
         private boolean l2Enabled = true;
+    }
+
+    /**
+     * 文件规则源配置（P2-3）
+     *
+     * <p>控制 {@link com.njydsz.pmis.literule.spi.FileRuleSource} 的加载行为。
+     *
+     * @since 1.7.0
+     */
+    @Data
+    public static class FileSourceConfig {
+
+        /**
+         * 是否启用文件规则源
+         *
+         * <p>true：启动时加载 YAML/JSON 规则文件并注册 FileRuleSource Bean；
+         * false（默认）：不加载，规则仍从 DB / 配置中心获取。
+         */
+        private boolean enabled = false;
+
+        /**
+         * 规则文件位置
+         *
+         * <p>支持的格式：
+         * <ul>
+         *   <li>{@code classpath:rules/} - classpath 目录（默认）</li>
+         *   <li>{@code classpath:rules/risk.yml} - 单个 classpath 文件</li>
+         *   <li>{@code file:/etc/rules/} - 文件系统目录</li>
+         *   <li>{@code file:/etc/rules/risk.yml} - 单个文件系统文件</li>
+         * </ul>
+         * 不带前缀时默认按 classpath 处理。
+         */
+        private String location = "classpath:rules/";
+
+        /**
+         * 是否启用文件变更监听（WatchService）
+         *
+         * <p>true：文件变更后自动重载并通知监听器；
+         * false：仅启动时加载一次。
+         * 仅对文件系统目录有效，classpath 内资源（jar 包内）无法监听。
+         */
+        private boolean watch = true;
     }
 }

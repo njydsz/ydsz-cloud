@@ -57,6 +57,9 @@ public class CEPController {
     private static final int MAX_RECENT_HITS = 200;
     private final List<CEPHit> recentHits = new ArrayList<>();
 
+    /** ObjectMapper 用于 CEP 模式反序列化（P2-7 测试模式端点使用） */
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
     /**
      * 启动时注册 CEP 命中监听器
      *
@@ -263,5 +266,82 @@ public class CEPController {
             b.attributes(new HashMap<>((Map<String, Object>) body.get("attributes")));
         }
         return b.build();
+    }
+
+    /**
+     * 测试 CEP 模式（P2-7）
+     *
+     * <p>注册一个临时模式，按顺序投递测试事件，收集命中结果后立即注销该模式。
+     * 用于可视化编辑器中的"测试"按钮：用户配置好模式后投递模拟事件流，
+     * 即时查看是否命中及命中详情，无需持久化模式定义。
+     *
+     * <p>请求体示例：
+     * <pre>
+     * POST /execution/rules/cep/patterns/test
+     * {
+     *   "pattern": { "id": "TEST_TMP", "type": "TIME_WINDOW", ... },
+     *   "events": [
+     *     { "type": "LOGIN_FAILED", "partitionKey": "u1" },
+     *     { "type": "LOGIN_FAILED", "partitionKey": "u1" }
+     *   ]
+     * }
+     * </pre>
+     *
+     * @param body 包含 pattern 和 events 的请求体
+     * @return 测试结果（含命中列表、命中数、投递事件数）
+     */
+    @PostMapping("/patterns/test")
+    public Result<Map<String, Object>> testPattern(@RequestBody Map<String, Object> body) {
+        CEPEngine engine = cepEngineProvider.getIfAvailable();
+        if (engine == null) {
+            return Result.fail("CEP 引擎未启用");
+        }
+        try {
+            Object patternObj = body.get("pattern");
+            if (patternObj == null) {
+                return Result.fail("pattern 不能为空");
+            }
+            CEPPattern pattern = objectMapper.convertValue(patternObj, CEPPattern.class);
+            if (pattern.getId() == null || pattern.getId().isBlank()) {
+                pattern.setId("TEST_TMP_" + System.nanoTime());
+            }
+            String patternId = pattern.getId();
+            Object eventsObj = body.get("events");
+            if (!(eventsObj instanceof List<?> eventsList)) {
+                return Result.fail("events 必须为数组");
+            }
+
+            // 注册临时模式
+            engine.registerPattern(pattern);
+            // 注册监听器收集命中
+            List<CEPHit> testHits = new ArrayList<>();
+            java.util.function.Consumer<CEPHit> listener = testHits::add;
+            engine.addListener(listener);
+            long hitsBefore = engine.totalHits();
+            try {
+                // 投递测试事件
+                for (Object item : eventsList) {
+                    if (item instanceof Map<?, ?> mp) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> eventBody = (Map<String, Object>) mp;
+                        engine.feed(toEvent(eventBody));
+                    }
+                }
+            } finally {
+                engine.removeListener(listener);
+                engine.unregisterPattern(patternId);
+            }
+            long hitsAfter = engine.totalHits();
+
+            Map<String, Object> result = new HashMap<>();
+            result.put("patternId", patternId);
+            result.put("fedEvents", eventsList.size());
+            result.put("triggeredHits", hitsAfter - hitsBefore);
+            result.put("hits", testHits);
+            return Result.ok(result);
+        } catch (Exception e) {
+            log.warn("[CEP] 测试模式失败: {}", e.getMessage());
+            return Result.fail("测试失败: " + e.getMessage());
+        }
     }
 }

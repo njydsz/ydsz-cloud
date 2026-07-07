@@ -968,3 +968,693 @@ export const installPack = (packCode: string, version?: string) =>
     method: 'POST',
     params: version ? { version } : {},
   })
+
+// ==================== 决策树管理（P1-4） ====================
+
+/** 决策树节点（内部条件节点 / 叶子决策节点） */
+export interface DecisionNode {
+  /** 条件表达式（仅条件节点使用，Aviator 返回 boolean） */
+  conditionExpression?: string
+  /** true 分支子节点 */
+  trueBranch?: DecisionNode
+  /** false 分支子节点 */
+  falseBranch?: DecisionNode
+  /** 严重度字符串（仅叶子节点使用，RED/YELLOW/INFO） */
+  severity?: string
+  /** 标题（仅叶子节点使用） */
+  title?: string
+  /** 描述（仅叶子节点使用） */
+  description?: string
+  /** 是否为叶子节点 */
+  leaf?: boolean
+}
+
+/** 决策树规则定义 */
+export interface DecisionTreeDefinition {
+  /** 规则编码（唯一） */
+  ruleCode: string
+  /** 规则名称 */
+  ruleName: string
+  /** 类别（如 RISK / GENERAL） */
+  category?: string
+  /** 描述 */
+  description?: string
+  /** 根节点 */
+  root?: DecisionNode
+  /** 是否启用 */
+  enabled?: boolean
+  /** 优先级（数值越小越先执行） */
+  priority?: number
+  /** 影响范围 */
+  scope?: string
+  /** 当前版本号 */
+  version?: number
+}
+
+/** 决策树校验问题 */
+export interface DecisionTreeIssue {
+  level: 'ERROR' | 'WARN'
+  code: string
+  message: string
+  nodePath?: string
+}
+
+/** 决策树校验结果 */
+export interface DecisionTreeValidateResult {
+  valid: boolean
+  issues: DecisionTreeIssue[]
+}
+
+/**
+ * 查询决策树定义
+ * @param ruleCode 规则编码
+ */
+export const getDecisionTree = (ruleCode: string) =>
+  request<DecisionTreeDefinition>({
+    url: `/execution/rules/decision-trees/${ruleCode}`,
+    method: 'GET',
+  })
+
+/**
+ * 保存决策树定义
+ * @param data 决策树定义
+ */
+export const saveDecisionTree = (data: DecisionTreeDefinition) =>
+  request<DecisionTreeDefinition>({
+    url: '/execution/rules/decision-trees',
+    method: 'POST',
+    data,
+    headers: { 'X-Operator': 'admin' },
+  })
+
+/**
+ * 校验决策树结构（不保存）
+ * @param data 决策树定义
+ */
+export const validateDecisionTree = (data: DecisionTreeDefinition) =>
+  request<DecisionTreeValidateResult>({
+    url: '/execution/rules/decision-trees/validate',
+    method: 'POST',
+    data,
+  })
+
+// ==================== 评分卡管理（P1-4） ====================
+
+/** 评分方向：DESCENDING 分数越低风险越高；ASCENDING 分数越高风险越高 */
+export type ScoreDirection = 'DESCENDING' | 'ASCENDING'
+
+/** 评分因子 */
+export interface ScoreFactor {
+  /** 条件表达式（Aviator，返回 boolean） */
+  conditionExpression: string
+  /** 命中时的固定得分（正分加分，负分扣分） */
+  score?: number
+  /** 动态分值表达式（与 score 二选一，优先使用 scoreExpression） */
+  scoreExpression?: string
+  /** 权重（实际得分 = 分值 × 权重，默认 1.0） */
+  weight?: number
+  /** 因子描述 */
+  description?: string
+}
+
+/** 评分评级映射 */
+export interface ScoreGrade {
+  /** 评级名称（如 A/B/C/D） */
+  label: string
+  /** 区间下界（含） */
+  minScore: number
+  /** 区间上界（不含） */
+  maxScore: number
+  /** 对应的严重度编码（RED/YELLOW/INFO，可选） */
+  severity?: string
+}
+
+/** 评分卡规则定义 */
+export interface ScorecardDefinition {
+  /** 规则编码（唯一） */
+  ruleCode: string
+  /** 规则名称 */
+  ruleName: string
+  /** 类别 */
+  category?: string
+  /** 描述 */
+  description?: string
+  /** 基础分（默认 100） */
+  baseScore?: number
+  /** 红色阈值 */
+  redThreshold?: number
+  /** 黄色阈值 */
+  yellowThreshold?: number
+  /** 评分方向（默认 DESCENDING） */
+  scoreDirection?: ScoreDirection
+  /** 最低分（钳制下界，默认 0） */
+  minScore?: number
+  /** 最高分（钳制上界，默认 100） */
+  maxScore?: number
+  /** 评分因子列表 */
+  factors?: ScoreFactor[]
+  /** 自定义评级映射（可选） */
+  grades?: ScoreGrade[]
+  /** 是否启用 */
+  enabled?: boolean
+  /** 优先级 */
+  priority?: number
+  /** 影响范围 */
+  scope?: string
+  /** 当前版本号 */
+  version?: number
+}
+
+/** 评分卡校验问题 */
+export interface ScorecardIssue {
+  level: 'ERROR' | 'WARN'
+  code: string
+  message: string
+  factorIndex?: number
+}
+
+/** 评分卡校验结果 */
+export interface ScorecardValidateResult {
+  valid: boolean
+  issues: ScorecardIssue[]
+}
+
+/**
+ * 查询评分卡定义
+ * @param ruleCode 规则编码
+ */
+export const getScorecard = (ruleCode: string) =>
+  request<ScorecardDefinition>({
+    url: `/execution/rules/scorecards/${ruleCode}`,
+    method: 'GET',
+  })
+
+/**
+ * 保存评分卡定义
+ * @param data 评分卡定义
+ */
+export const saveScorecard = (data: ScorecardDefinition) =>
+  request<ScorecardDefinition>({
+    url: '/execution/rules/scorecards',
+    method: 'POST',
+    data,
+    headers: { 'X-Operator': 'admin' },
+  })
+
+/**
+ * 校验评分卡结构（不保存）
+ * @param data 评分卡定义
+ */
+export const validateScorecard = (data: ScorecardDefinition) =>
+  request<ScorecardValidateResult>({
+    url: '/execution/rules/scorecards/validate',
+    method: 'POST',
+    data,
+  })
+
+// ==================== 监控大盘（P1-6） ====================
+
+/** 监控大盘时间范围 */
+export type DashboardTimeRange = '24h' | '7d' | '30d'
+
+/** Top 规则排序类型 */
+export type DashboardTopType = 'triggered' | 'slowest' | 'errorRate'
+
+/** 监控大盘 - 概览指标 */
+export interface DashboardOverview {
+  /** 规则总数 */
+  totalRules: number
+  /** 启用规则数 */
+  enabledRules: number
+  /** 按状态分组：DRAFT/REVIEW/PUBLISHED/DISABLED/ARCHIVED → 数量 */
+  statusDistribution: Record<string, number>
+  /** 按类别分组：category → 数量 */
+  categoryDistribution: Record<string, number>
+  /** 今日评估次数 */
+  todayEvaluations: number
+  /** 今日触发次数 */
+  todayTriggered: number
+  /** 今日触发率（0~1） */
+  todayTriggerRate: number
+  /** 今日错误次数 */
+  todayErrors: number
+  /** 今日错误率（0~1） */
+  todayErrorRate: number
+  /** 今日活跃规则数 */
+  todayActiveRules: number
+  /** P50 耗时（毫秒） */
+  p50ElapsedMs: number
+  /** P95 耗时（毫秒） */
+  p95ElapsedMs: number
+  /** P99 耗时（毫秒） */
+  p99ElapsedMs: number
+  /** 平均耗时（毫秒） */
+  avgElapsedMs: number
+  /** 统计时间窗口起始 */
+  since: string
+  /** 统计时间窗口结束 */
+  until: string
+}
+
+/** 监控大盘 - 趋势指标 */
+export interface DashboardTrend {
+  /** 时间范围 */
+  timeRange: DashboardTimeRange
+  /** 时间点标签列表（X 轴） */
+  timeLabels: string[]
+  /** 评估次数序列 */
+  evaluationSeries: number[]
+  /** 触发次数序列 */
+  triggeredSeries: number[]
+  /** 错误次数序列 */
+  errorSeries: number[]
+  /** P99 耗时序列（毫秒） */
+  p99ElapsedSeries: number[]
+  /** P50 耗时序列（毫秒） */
+  p50ElapsedSeries: number[]
+  /** 错误率序列（0~1） */
+  errorRateSeries: number[]
+  /** 触发率序列（0~1） */
+  triggerRateSeries: number[]
+  /** 起始时间 */
+  since: string
+  /** 结束时间 */
+  until: string
+}
+
+/** 饼图条目 */
+export interface DashboardPieItem {
+  /** 名称 */
+  name: string
+  /** 数量 */
+  value: number
+}
+
+/** 监控大盘 - 分布指标 */
+export interface DashboardDistribution {
+  /** 按状态分布 */
+  byStatus: Record<string, number>
+  /** 按类别分布 */
+  byCategory: Record<string, number>
+  /** 按严重度分布 */
+  bySeverity: Record<string, number>
+  /** 按场景分布 */
+  byScenario: Record<string, number>
+  /** 按租户分布 */
+  byTenant: Record<string, number>
+  /** 按责任人分布 */
+  byOwner: Record<string, number>
+  /** 状态饼图 */
+  statusPie: DashboardPieItem[]
+  /** 类别饼图 */
+  categoryPie: DashboardPieItem[]
+  /** 严重度饼图 */
+  severityPie: DashboardPieItem[]
+  /** 场景饼图 */
+  scenarioPie: DashboardPieItem[]
+}
+
+/** 监控大盘 - Top 规则条目 */
+export interface DashboardTopRule {
+  /** 规则编码 */
+  ruleCode: string
+  /** 规则名称 */
+  ruleName: string
+  /** 规则类别 */
+  category?: string
+  /** 责任人 */
+  owner?: string
+  /** 是否启用 */
+  enabled?: boolean
+  /** 默认严重度 */
+  defaultSeverity?: string
+  /** 评估次数 */
+  evaluations: number
+  /** 触发次数 */
+  triggered: number
+  /** 错误次数 */
+  errors: number
+  /** 触发率（0~1） */
+  triggerRate: number
+  /** 错误率（0~1） */
+  errorRate: number
+  /** 平均耗时（毫秒） */
+  avgElapsedMs: number
+  /** P99 耗时（毫秒） */
+  p99ElapsedMs: number
+  /** 总耗时（毫秒） */
+  totalElapsedMs: number
+}
+
+/** 监控大盘 - 实时指标 */
+export interface DashboardRealtime {
+  /** 当前注册规则数 */
+  registeredRules: number
+  /** 最近一次评估遍历的规则数 */
+  lastEvaluatedRules: number
+  /** 最近 1 分钟评估次数 */
+  recentEvaluations: number
+  /** 最近 1 分钟触发次数 */
+  recentTriggered: number
+  /** 最近 1 分钟错误次数 */
+  recentErrors: number
+  /** 当前 QPS（次/秒） */
+  currentQps: number
+  /** 当前活跃规则数 */
+  activeRules: number
+  /** Trace 队列积压 */
+  traceQueueSize: number
+  /** 服务器时间戳 */
+  timestamp: number
+}
+
+/**
+ * 概览指标
+ * @returns 概览指标（首屏卡片）
+ */
+export const getDashboardOverview = () =>
+  request<DashboardOverview>({
+    url: '/execution/rules/dashboard/overview',
+    method: 'GET',
+  })
+
+/**
+ * 趋势指标
+ * @param timeRange 时间范围：24h / 7d / 30d
+ * @returns 趋势数据（时间序列）
+ */
+export const getDashboardTrends = (timeRange: DashboardTimeRange = '24h') =>
+  request<DashboardTrend>({
+    url: '/execution/rules/dashboard/trends',
+    method: 'GET',
+    params: { timeRange },
+  })
+
+/**
+ * 分布指标
+ * @returns 分布数据（饼图）
+ */
+export const getDashboardDistribution = () =>
+  request<DashboardDistribution>({
+    url: '/execution/rules/dashboard/distribution',
+    method: 'GET',
+  })
+
+/**
+ * Top 规则列表
+ * @param type  排序类型：triggered / slowest / errorRate
+ * @param limit 返回条数（默认 10）
+ */
+export const getDashboardTopRules = (type: DashboardTopType = 'triggered', limit = 10) =>
+  request<DashboardTopRule[]>({
+    url: '/execution/rules/dashboard/top-rules',
+    method: 'GET',
+    params: { type, limit },
+  })
+
+/**
+ * 实时指标
+ * @returns 实时指标（当前 QPS、活跃规则数）
+ */
+export const getDashboardRealtime = () =>
+  request<DashboardRealtime>({
+    url: '/execution/rules/dashboard/realtime',
+    method: 'GET',
+  })
+
+// ==================== 规则依赖关系（P2-6） ====================
+
+/** 规则依赖关系记录 */
+export interface RuleDependency {
+  /** 记录 ID */
+  id: string
+  /** 主规则编码（依赖方） */
+  ruleCode: string
+  /** 被依赖的规则编码 */
+  dependsOnRuleCode: string
+  /** 依赖类型：EXECUTE / READ_RESULT / SOFT */
+  dependencyType: string
+  /** 被依赖规则被禁用时是否级联禁用本规则 */
+  cascadeOnDisable: boolean
+  /** 依赖说明 */
+  description?: string
+  /** 租户 ID */
+  tenantId?: string
+  /** 创建人 */
+  createdBy?: string
+  /** 创建时间 */
+  createdAt?: string
+}
+
+/**
+ * 查询规则的正向依赖（依赖了哪些规则）
+ * @param ruleCode 规则编码
+ * @returns 依赖记录列表
+ */
+export const listDependencies = (ruleCode: string) =>
+  request<RuleDependency[]>({
+    url: `/execution/rules/${ruleCode}/dependencies`,
+    method: 'GET',
+  })
+
+/**
+ * 查询规则的反向依赖（被哪些规则依赖）
+ * @param ruleCode 规则编码
+ * @returns 被依赖记录列表
+ */
+export const listDependents = (ruleCode: string) =>
+  request<RuleDependency[]>({
+    url: `/execution/rules/${ruleCode}/dependents`,
+    method: 'GET',
+  })
+
+// ==================== CEP 模式管理（P2-7） ====================
+
+/** CEP 模式类型 */
+export type CEPPatternType = 'TIME_WINDOW' | 'SEQUENCE' | 'AGGREGATE' | 'ABSENCE'
+
+/** CEP 聚合函数 */
+export type CEPAggregateFunction = 'COUNT' | 'SUM' | 'AVG' | 'MIN' | 'MAX'
+
+/** CEP 序列步骤 */
+export interface CEPSequenceStep {
+  /** 步骤序号（从 1 开始） */
+  order: number
+  /** 该步骤匹配的事件类型 */
+  eventType: string
+  /** 该步骤的事件过滤条件（Aviator 表达式） */
+  filter?: string
+  /** 该步骤与下一步的最小间隔（毫秒，null 表示无限制） */
+  minGapMs?: number
+  /** 该步骤与下一步的最大间隔（毫秒，null 表示无限制） */
+  maxGapMs?: number
+}
+
+/** CEP 模式定义 */
+export interface CEPPattern {
+  /** 模式唯一标识 */
+  id: string
+  /** 模式类型 */
+  type: CEPPatternType
+  /** 关联的规则编码（命中模式时触发的规则） */
+  ruleCode?: string
+  /** 模式名称 */
+  name?: string
+  /** 时间窗口长度（毫秒） */
+  windowMs?: number
+  /** 滑动步长（毫秒，仅滑动窗口；null 表示滚动窗口） */
+  slideMs?: number
+  /** 触发阈值（TIME_WINDOW 模式下为次数，AGGREGATE 模式下为数值阈值） */
+  threshold?: number
+  /** 事件类型（单事件类型匹配） */
+  eventType?: string
+  /** 事件类型列表（多类型 OR 匹配） */
+  eventTypes?: string[]
+  /** 事件过滤条件（Aviator 表达式） */
+  filter?: string
+  /** 聚合函数（AGGREGATE 模式使用） */
+  aggregateFunction?: CEPAggregateFunction
+  /** 聚合字段（AGGREGATE 模式使用） */
+  aggregateField?: string
+  /** 序列步骤（SEQUENCE 模式使用） */
+  sequence?: CEPSequenceStep[]
+  /** 描述 */
+  description?: string
+}
+
+/** CEP 命中记录 */
+export interface CEPHit {
+  /** 命中模式 ID */
+  patternId: string
+  /** 关联规则编码 */
+  ruleCode?: string
+  /** 命中时间戳（ISO 字符串） */
+  hitAt: string
+  /** 触发事件列表 */
+  events?: Record<string, unknown>[]
+  /** 命中时的属性快照 */
+  attributes?: Record<string, unknown>
+}
+
+/**
+ * 列出已注册的 CEP 模式
+ * @returns 模式列表
+ */
+export const listCepPatterns = () =>
+  request<CEPPattern[]>({
+    url: '/execution/rules/cep/patterns',
+    method: 'GET',
+  })
+
+/**
+ * 注册 / 更新 CEP 模式
+ * @param pattern 模式定义
+ */
+export const saveCepPattern = (pattern: CEPPattern) =>
+  request<void>({
+    url: '/execution/rules/cep/patterns',
+    method: 'POST',
+    data: pattern,
+  })
+
+/**
+ * 注销 CEP 模式
+ * @param patternId 模式 ID
+ */
+export const deleteCepPattern = (patternId: string) =>
+  request<void>({
+    url: `/execution/rules/cep/patterns/${patternId}`,
+    method: 'DELETE',
+  })
+
+/** CEP 模式测试事件 */
+export interface CEPTestEvent {
+  type: string
+  partitionKey?: string
+  timestamp?: string
+  attributes?: Record<string, unknown>
+}
+
+/** CEP 模式测试结果 */
+export interface CEPTestResult {
+  patternId: string
+  fedEvents: number
+  triggeredHits: number
+  hits: CEPHit[]
+}
+
+/**
+ * 测试 CEP 模式（注册临时模式 → 投递事件 → 收集命中 → 注销）
+ * @param pattern 模式定义
+ * @param events 测试事件列表
+ * @returns 测试结果
+ */
+export const testCepPattern = (pattern: CEPPattern, events: CEPTestEvent[]) =>
+  request<CEPTestResult>({
+    url: '/execution/rules/cep/patterns/test',
+    method: 'POST',
+    data: { pattern, events },
+  })
+
+// ==================== 规则压测（P2-9） ====================
+
+/** 压测直方图分桶 */
+export interface StressTestHistogramBucket {
+  bucketLabel: string
+  count: number
+}
+
+/** 压测结果 */
+export interface StressTestResult {
+  /** 总执行次数 */
+  totalExecutions: number
+  /** 总耗时（毫秒） */
+  totalTimeMs: number
+  /** QPS（次/秒） */
+  qps: number
+  /** P50 耗时（毫秒） */
+  p50Ms: number
+  /** P95 耗时（毫秒） */
+  p95Ms: number
+  /** P99 耗时（毫秒） */
+  p99Ms: number
+  /** 错误率（0~1） */
+  errorRate: number
+  /** 错误次数 */
+  errorCount: number
+  /** 错误详情（最多 10 条） */
+  errors: string[]
+  /** 耗时分布直方图 */
+  histogram: StressTestHistogramBucket[]
+}
+
+/** 压测请求参数 */
+export interface StressTestParams {
+  /** 目标规则编码 */
+  ruleCode: string
+  /** 事实数据列表（多条用于并发投递） */
+  factsList: Record<string, unknown>[]
+  /** 并发线程数 */
+  threads: number
+  /** 每线程迭代次数 */
+  iterations: number
+  /** 预热迭代次数（不统计） */
+  warmupIterations: number
+}
+
+/**
+ * 执行规则压测
+ * @param params 压测参数
+ * @returns 压测结果（含 QPS、P50/P95/P99、直方图）
+ */
+export const stressTest = (params: StressTestParams) =>
+  request<StressTestResult>({
+    url: '/execution/rules/stress-test',
+    method: 'POST',
+    data: params,
+  })
+
+// ==================== 知识包更新检查（P2-10） ====================
+
+/** 知识包更新信息 */
+export interface PackUpdateInfo {
+  /** 知识包编码 */
+  packCode: string
+  /** 知识包名称 */
+  packName: string
+  /** 已安装版本 */
+  installedVersion: string
+  /** 市场最新版本 */
+  latestVersion: string
+  /** 是否有更新 */
+  hasUpdate: boolean
+  /** 安装时间（ISO 字符串） */
+  installedAt?: string
+  /** 行业 */
+  industry?: string
+  /** 描述 */
+  description?: string
+}
+
+/**
+ * 检查已安装知识包的更新（P2-10）
+ * @returns 全部已安装包的更新信息（含无更新的，调用方可通过 hasUpdate=true 过滤）
+ */
+export const checkPackUpdates = () =>
+  request<PackUpdateInfo[]>({
+    url: '/execution/rules/packs/update-check',
+    method: 'GET',
+  })
+
+/**
+ * 批量更新知识包
+ * @param packCodes 知识包编码列表
+ * @returns 每个知识包的安装结果
+ */
+export const batchUpdatePacks = (packCodes: string[]) =>
+  request<RulePackInstallResult[]>({
+    url: '/execution/rules/packs/batch-update',
+    method: 'POST',
+    data: packCodes,
+    headers: { 'X-Operator': 'admin' },
+  })
