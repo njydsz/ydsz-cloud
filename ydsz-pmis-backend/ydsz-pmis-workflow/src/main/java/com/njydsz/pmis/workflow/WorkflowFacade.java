@@ -260,4 +260,21 @@ public interface WorkflowFacade {
      */
     String resubmitProcess(String instanceId, String initiatorId,
                            Map<String, Object> variables, String comment, String redoMode);
+
+    /**
+     * P2-1: 任务级挂起 — 将 PENDING/CLAIMED 任务临时挂起为 SUSPENDED。
+     *
+     * @param taskId     任务 ID
+     * @param operatorId 操作人 ID
+     * @param reason     挂起原因（可选）
+     */
+    void suspendTask(String taskId, String operatorId, String reason);
+
+    /**
+     * P2-1: 任务级激活 — 将 SUSPENDED 任务恢复为 PENDING。
+     *
+     * @param taskId     任务 ID
+     * @param operatorId 操作人 ID
+     */
+    void activateTask(String taskId, String operatorId);
 }

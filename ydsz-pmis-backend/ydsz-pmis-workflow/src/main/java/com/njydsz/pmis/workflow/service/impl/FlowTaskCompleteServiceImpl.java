@@ -1373,6 +1373,54 @@ public class FlowTaskCompleteServiceImpl {
         support.publishWorkflowEvent("TASK_TIMEOUT", task.getInstanceId(), task.getId());
     }
 
+    // ============================== P2-1: 任务级挂起 / 激活 ==============================
+
+    /**
+     * P2-1: 任务级挂起 — 将 PENDING/CLAIMED 任务临时挂起为 SUSPENDED。
+     *
+     * <p>仅修改任务状态，不推进流程、不取消其它任务。挂起期间不计超时（JobScanner 应跳过 SUSPENDED）。
+     * 激活后回到 PENDING，需重新签收。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void suspendTask(String taskId, String operatorId, String reason) {
+        FlowRunTaskDO task = support.getTaskOrThrow(taskId);
+        String status = task.getTaskStatus();
+        if (!FlowTaskStatus.PENDING.name().equals(status)
+                && !FlowTaskStatus.CLAIMED.name().equals(status)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_d0e1f2a3", status);
+        }
+        task.setTaskStatus(FlowTaskStatus.SUSPENDED.name());
+        task.setComment(reason);
+        task.setUpdatedAt(LocalDateTime.now());
+        taskMapper.updateById(task);
+        support.audit(task, "SUSPEND", operatorId, null, reason);
+        log.info("[Flow] 任务挂起: taskId={} operator={} reason={}", taskId, operatorId, reason);
+    }
+
+    /**
+     * P2-1: 任务级激活 — 将 SUSPENDED 任务恢复为 PENDING。
+     *
+     * <p>激活后清空签收人（assigneeId/assigneeName），需重新签收。
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void activateTask(String taskId, String operatorId) {
+        FlowRunTaskDO task = support.getTaskOrThrow(taskId);
+        String status = task.getTaskStatus();
+        if (!FlowTaskStatus.SUSPENDED.name().equals(status)) {
+            throw new BizException(BizErrorCode.BAD_REQUEST,
+                    "error.workflow.msg_e1f2a3b4", status);
+        }
+        task.setTaskStatus(FlowTaskStatus.PENDING.name());
+        task.setAssigneeId(null);
+        task.setAssigneeName(null);
+        task.setClaimAt(null);
+        task.setUpdatedAt(LocalDateTime.now());
+        taskMapper.updateById(task);
+        support.audit(task, "ACTIVATE", operatorId, null, null);
+        log.info("[Flow] 任务激活: taskId={} operator={}", taskId, operatorId);
+    }
+
     // ============================== 会签推进逻辑 ==============================
 
     /** OR 或签：直接完成 + 推进 */

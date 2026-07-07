@@ -26,6 +26,8 @@ public enum FlowTaskStatus {
     DELEGATED,
     /** 已冻结（流程挂起时连带冻结 PENDING/CLAIMED，激活后回到 PENDING） */
     FROZEN,
+    /** P2-1: 已挂起（任务级挂起，激活后回到 PENDING；与 FROZEN 区别：FROZEN 由实例级挂起连带触发，SUSPENDED 由任务级独立挂起） */
+    SUSPENDED,
     /** 暂存（审批人暂存审批意见草稿，不改变任务主状态，可随时提交） */
     DRAFT;
 

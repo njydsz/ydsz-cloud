@@ -38,6 +38,8 @@ import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.config.RuleAdminService;
 import com.njydsz.pmis.literule.config.ABTestService;
 import com.njydsz.pmis.literule.expr.ExpressionValidationResult;
+import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.expr.ExpressionTraceNode;
 import com.njydsz.pmis.literule.expr.ExpressionFunctionDef;
 import com.njydsz.pmis.literule.expr.ExpressionValidationService;
 import com.njydsz.pmis.literule.orchestrator.RuleChainGraph;
@@ -220,6 +222,33 @@ public class RuleAdminController {
     @GetMapping("/validate")
     public Result<Boolean> validate(@RequestParam String expression) {
         return Result.ok(ruleAdminService.validateExpression(expression));
+    }
+
+    /**
+     * 表达式追踪求值（P0-2 表达式级追踪/归因）
+     *
+     * <p>对标 QLExpress4 的 ExpressionTrace 能力，将表达式执行过程转换为计算树，
+     * 用于规则归因分析、短路排查和中间结果可视化。
+     *
+     * <p>请求体示例：
+     * <pre>
+     * POST /rules/expr-trace
+     * {
+     *   "expression": "amount > 1000 && score > 800",
+     *   "facts": { "amount": 1500, "score": 750 }
+     * }
+     * </pre>
+     *
+     * @param request 包含 expression 和 facts 的请求体
+     * @return 追踪结果（含求值结果和追踪树）
+     * @since 1.6.0
+     */
+    @PostMapping("/expr-trace")
+    public Result<ExpressionEvaluator.TraceResult> traceExpression(@RequestBody Map<String, Object> request) {
+        String expression = (String) request.get("expression");
+        @SuppressWarnings("unchecked")
+        Map<String, Object> facts = (Map<String, Object>) request.get("facts");
+        return Result.ok(ruleAdminService.traceExpression(expression, facts));
     }
 
     /**

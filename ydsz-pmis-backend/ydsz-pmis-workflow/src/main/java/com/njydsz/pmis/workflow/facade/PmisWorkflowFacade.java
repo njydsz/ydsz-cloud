@@ -693,4 +693,14 @@ public class PmisWorkflowFacade implements WorkflowFacade {
                                   Map<String, Object> variables, String comment, String redoMode) {
         return instanceService.resubmit(instanceId, initiatorId, variables, comment, redoMode);
     }
+
+    @Override
+    public void suspendTask(String taskId, String operatorId, String reason) {
+        taskService.suspendTask(taskId, operatorId, reason);
+    }
+
+    @Override
+    public void activateTask(String taskId, String operatorId) {
+        taskService.activateTask(taskId, operatorId);
+    }
 }

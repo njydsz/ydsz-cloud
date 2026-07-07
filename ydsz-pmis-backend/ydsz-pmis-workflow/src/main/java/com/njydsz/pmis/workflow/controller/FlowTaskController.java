@@ -508,6 +508,37 @@ public class FlowTaskController {
         return Result.ok(taskService.retract(hisTaskId, SecurityContext.getUserId(), comment));
     }
 
+    /**
+     * P2-1: 任务级挂起 — 将 PENDING/CLAIMED 任务临时挂起为 SUSPENDED。
+     *
+     * <p>对标钉钉/飞书"任务挂起"。挂起期间不计超时，激活后回到 PENDING 需重新签收。
+     * 与实例级挂起（{@code /instance/suspend}）的区别：仅挂起指定任务，其它任务不受影响。
+     *
+     * @param taskId 任务 ID
+     * @param reason 挂起原因（可选）
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/{taskId}/suspend")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    public Result<Void> suspendTask(@PathVariable String taskId,
+                                    @RequestParam(required = false) String reason) {
+        workflowFacade.suspendTask(taskId, SecurityContext.getUserId(), reason);
+        return Result.ok();
+    }
+
+    /**
+     * P2-1: 任务级激活 — 将 SUSPENDED 任务恢复为 PENDING。
+     *
+     * @param taskId 任务 ID
+     * @return 统一响应结果
+     */
+    @PostMapping("/task/{taskId}/activate")
+    @PrePermission(PermissionCodes.WORKFLOW_TASK_OPERATE)
+    public Result<Void> activateTask(@PathVariable String taskId) {
+        workflowFacade.activateTask(taskId, SecurityContext.getUserId());
+        return Result.ok();
+    }
+
     // ============== P1-7: WebSocket 待办数实时推送 ==============
 
     /**

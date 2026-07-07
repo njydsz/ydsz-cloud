@@ -1580,6 +1580,211 @@ CREATE INDEX IF NOT EXISTS idx_pjr_child
     ON pmis_job_relation (child_job_id) WHERE deleted = 0;
 
 -- ============================================================================
+-- [P2-1] DAG 工作流定义表 pmis_job_dag
+-- ----------------------------------------------------------------------------
+-- 将 DAG 提升为一等公民：一个 DAG 定义包含若干任务节点和依赖边，
+-- 支持手动触发或 Cron 定时触发整个工作流。
+-- dag_definition(JSON) 存储节点与边及前端可视化位置信息，格式：
+-- {
+--   "nodes": [{"jobKey":"a","jobId":"1","label":"抽取","x":100,"y":200,"paramsJson":"{}"}],
+--   "edges": [{"from":"a","to":"b","failStrategy":"FAIL_FAST","condition":null}]
+-- }
+-- 对标 PowerJob workflow / XXL-Job 子任务链。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_dag(
+    id                      VARCHAR(20)      PRIMARY KEY,
+    dag_key                 VARCHAR(128)  NOT NULL,
+    dag_name                VARCHAR(128)  NOT NULL,
+    dag_definition          TEXT          NOT NULL,
+    -- DAG 状态: DRAFT 草稿 / ENABLED 启用 / DISABLED 禁用
+    status                  VARCHAR(32)   NOT NULL DEFAULT 'DRAFT',
+    -- 触发类型: MANUAL 手动 / CRON 定时
+    trigger_type            VARCHAR(32)   NOT NULL DEFAULT 'MANUAL',
+    cron_expression         VARCHAR(128),
+    -- 最大并发实例数: 0=不限制(默认 1)，防止同一 DAG 并发执行过多
+    max_concurrent_instances INTEGER      NOT NULL DEFAULT 1,
+    -- DAG 级失败策略: FAIL_FAST 任一节点失败则中止整个 DAG / CONTINUE_ON_FAIL 继续执行无关分支
+    fail_strategy           VARCHAR(32)   NOT NULL DEFAULT 'FAIL_FAST',
+    description             VARCHAR(512),
+    next_fire_time          TIMESTAMPTZ,
+    last_fire_time          TIMESTAMPTZ,
+    fire_count              BIGINT        NOT NULL DEFAULT 0,
+    success_count           BIGINT        NOT NULL DEFAULT 0,
+    fail_count              BIGINT        NOT NULL DEFAULT 0,
+    -- 版本号: 每次修改 +1，用于乐观锁
+    version                 INTEGER       NOT NULL DEFAULT 1,
+    created_by              VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at              TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by              VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at              TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                 SMALLINT      NOT NULL DEFAULT 0,
+    tenant_id               VARCHAR(20)       NOT NULL DEFAULT '1',
+    -- 数据完整性约束
+    CONSTRAINT uk_pmis_job_dag_key UNIQUE (dag_key, deleted),
+    CONSTRAINT ck_pjd_status_enum  CHECK (status IN ('DRAFT', 'ENABLED', 'DISABLED')),
+    CONSTRAINT ck_pjd_trigger_enum CHECK (trigger_type IN ('MANUAL', 'CRON')),
+    CONSTRAINT ck_pjd_fail_strategy_enum CHECK (fail_strategy IN ('FAIL_FAST', 'CONTINUE_ON_FAIL')),
+    CONSTRAINT ck_pjd_max_concurrent_nonneg CHECK (max_concurrent_instances >= 0),
+    CONSTRAINT ck_pjd_counts_nonneg CHECK (fire_count >= 0 AND success_count >= 0 AND fail_count >= 0),
+    CONSTRAINT ck_pjd_version_pos  CHECK (version >= 1),
+    CONSTRAINT ck_pjd_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_dag IS 'DAG 工作流定义表（P2 DAG 增强）';
+COMMENT ON COLUMN pmis_job_dag.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_dag.dag_key IS 'DAG 唯一 KEY（调度与触发使用）';
+COMMENT ON COLUMN pmis_job_dag.dag_name IS 'DAG 名称（展示用）';
+COMMENT ON COLUMN pmis_job_dag.dag_definition IS 'DAG 定义 JSON（nodes + edges + 可视化坐标）';
+COMMENT ON COLUMN pmis_job_dag.status IS 'DAG 状态: DRAFT 草稿 / ENABLED 启用 / DISABLED 禁用';
+COMMENT ON COLUMN pmis_job_dag.trigger_type IS '触发类型: MANUAL 手动 / CRON 定时';
+COMMENT ON COLUMN pmis_job_dag.cron_expression IS 'Cron 表达式（trigger_type=CRON 时必填）';
+COMMENT ON COLUMN pmis_job_dag.max_concurrent_instances IS '最大并发实例数(0=不限制, 默认1)';
+COMMENT ON COLUMN pmis_job_dag.fail_strategy IS 'DAG 级失败策略: FAIL_FAST 中止 / CONTINUE_ON_FAIL 继续';
+COMMENT ON COLUMN pmis_job_dag.description IS 'DAG 描述';
+COMMENT ON COLUMN pmis_job_dag.next_fire_time IS '下次触发时间（CRON 模式）';
+COMMENT ON COLUMN pmis_job_dag.last_fire_time IS '上次触发时间';
+COMMENT ON COLUMN pmis_job_dag.fire_count IS '总触发次数';
+COMMENT ON COLUMN pmis_job_dag.success_count IS '成功次数';
+COMMENT ON COLUMN pmis_job_dag.fail_count IS '失败次数';
+COMMENT ON COLUMN pmis_job_dag.version IS '版本号(乐观锁)';
+COMMENT ON COLUMN pmis_job_dag.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_pjd_status
+    ON pmis_job_dag (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pjd_tenant
+    ON pmis_job_dag (tenant_id) WHERE deleted = 0;
+
+-- ============================================================================
+-- [P2-2] DAG 工作流实例表 pmis_job_dag_instance
+-- ----------------------------------------------------------------------------
+-- 记录每次 DAG 执行的整体状态，对标 PowerJob workflow_instance。
+-- 一个 DAG 定义可对应多次实例（每次触发/每次定时调度）。
+-- context_json 存储 DAG 实例级上下文，支持跨节点传参。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_dag_instance(
+    id                      VARCHAR(20)      PRIMARY KEY,
+    dag_id                  VARCHAR(20)   NOT NULL,
+    dag_key                 VARCHAR(128)  NOT NULL,
+    -- 实例状态: PENDING 待执行 / RUNNING 执行中 / SUCCESS 成功 / FAILED 失败
+    --          PARTIAL_SUCCESS 部分成功 / PAUSED 暂停 / CANCELED 取消
+    status                  VARCHAR(32)   NOT NULL DEFAULT 'PENDING',
+    trigger_type            VARCHAR(32)   NOT NULL,
+    trigger_by              VARCHAR(20),
+    trigger_trace_id        VARCHAR(64),
+    -- DAG 实例级上下文 JSON：上游节点输出可写入此上下文，下游节点读取
+    context_json            TEXT,
+    started_at              TIMESTAMPTZ,
+    finished_at             TIMESTAMPTZ,
+    duration_ms             BIGINT,
+    error_message           VARCHAR(1024),
+    -- 节点统计: 便于前端展示进度
+    total_nodes             INTEGER       NOT NULL DEFAULT 0,
+    success_nodes           INTEGER       NOT NULL DEFAULT 0,
+    failed_nodes            INTEGER       NOT NULL DEFAULT 0,
+    skipped_nodes           INTEGER       NOT NULL DEFAULT 0,
+    created_by              VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at              TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by              VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at              TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                 SMALLINT      NOT NULL DEFAULT 0,
+    tenant_id               VARCHAR(20)       NOT NULL DEFAULT '1',
+    -- 数据完整性约束
+    CONSTRAINT ck_pjdi_status_enum CHECK (status IN ('PENDING', 'RUNNING', 'SUCCESS', 'FAILED', 'PARTIAL_SUCCESS', 'PAUSED', 'CANCELED')),
+    CONSTRAINT ck_pjdi_trigger_enum CHECK (trigger_type IN ('MANUAL', 'CRON', 'DEPENDENT')),
+    CONSTRAINT ck_pjdi_counts_nonneg CHECK (total_nodes >= 0 AND success_nodes >= 0 AND failed_nodes >= 0 AND skipped_nodes >= 0),
+    CONSTRAINT ck_pjdi_nodes_consistent CHECK (success_nodes + failed_nodes + skipped_nodes <= total_nodes),
+    CONSTRAINT ck_pjdi_duration_nonneg CHECK (duration_ms IS NULL OR duration_ms >= 0),
+    CONSTRAINT ck_pjdi_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_dag_instance IS 'DAG 工作流实例表（P2 DAG 增强）';
+COMMENT ON COLUMN pmis_job_dag_instance.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_dag_instance.dag_id IS 'DAG 定义 ID';
+COMMENT ON COLUMN pmis_job_dag_instance.dag_key IS 'DAG KEY（冗余，便于查询）';
+COMMENT ON COLUMN pmis_job_dag_instance.status IS '实例状态: PENDING/RUNNING/SUCCESS/FAILED/PARTIAL_SUCCESS/PAUSED/CANCELED';
+COMMENT ON COLUMN pmis_job_dag_instance.trigger_type IS '触发类型: MANUAL/CRON/DEPENDENT';
+COMMENT ON COLUMN pmis_job_dag_instance.trigger_by IS '触发人（MANUAL 时为用户 ID）';
+COMMENT ON COLUMN pmis_job_dag_instance.trigger_trace_id IS '触发 traceId（用于链路追踪）';
+COMMENT ON COLUMN pmis_job_dag_instance.context_json IS 'DAG 实例级上下文 JSON（跨节点传参）';
+COMMENT ON COLUMN pmis_job_dag_instance.started_at IS '开始时间';
+COMMENT ON COLUMN pmis_job_dag_instance.finished_at IS '结束时间';
+COMMENT ON COLUMN pmis_job_dag_instance.duration_ms IS '执行耗时（毫秒）';
+COMMENT ON COLUMN pmis_job_dag_instance.error_message IS '错误信息（FAILED 时填充）';
+COMMENT ON COLUMN pmis_job_dag_instance.total_nodes IS '总节点数';
+COMMENT ON COLUMN pmis_job_dag_instance.success_nodes IS '成功节点数';
+COMMENT ON COLUMN pmis_job_dag_instance.failed_nodes IS '失败节点数';
+COMMENT ON COLUMN pmis_job_dag_instance.skipped_nodes IS '跳过节点数';
+COMMENT ON COLUMN pmis_job_dag_instance.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_pjdi_dag_id
+    ON pmis_job_dag_instance (dag_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pjdi_status
+    ON pmis_job_dag_instance (status) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pjdi_created_at
+    ON pmis_job_dag_instance (created_at DESC) WHERE deleted = 0;
+
+-- ============================================================================
+-- [P2-3] DAG 节点实例表 pmis_job_dag_node_instance
+-- ----------------------------------------------------------------------------
+-- 记录 DAG 实例中每个任务节点的执行状态，对标 PowerJob node_instance。
+-- 一个 DAG 实例包含若干节点实例，每个节点实例关联一个任务执行日志（pmis_job_log）。
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS pmis_job_dag_node_instance(
+    id                      VARCHAR(20)      PRIMARY KEY,
+    dag_instance_id         VARCHAR(20)   NOT NULL,
+    dag_id                  VARCHAR(20)   NOT NULL,
+    job_id                  VARCHAR(20)   NOT NULL,
+    job_key                 VARCHAR(128)  NOT NULL,
+    -- 节点状态: PENDING 待执行 / RUNNING 执行中 / SUCCESS 成功 / FAILED 失败 / SKIPPED 跳过 / RETRYING 重试中
+    node_status             VARCHAR(32)   NOT NULL DEFAULT 'PENDING',
+    -- 关联的任务执行日志 ID（pmis_job_log.id）
+    log_id                  VARCHAR(20),
+    -- 节点级重试次数（独立于任务级 maxRetries，由 DAG 失败策略控制）
+    retry_count             INTEGER       NOT NULL DEFAULT 0,
+    max_retries             INTEGER       NOT NULL DEFAULT 0,
+    started_at              TIMESTAMPTZ,
+    finished_at             TIMESTAMPTZ,
+    duration_ms             BIGINT,
+    result_json             TEXT,
+    error_message           VARCHAR(1024),
+    created_by              VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    created_at              TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_by              VARCHAR(20)       NOT NULL DEFAULT 'SYSTEM',
+    updated_at              TIMESTAMPTZ   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted                 SMALLINT      NOT NULL DEFAULT 0,
+    tenant_id               VARCHAR(20)       NOT NULL DEFAULT '1',
+    -- 数据完整性约束
+    CONSTRAINT ck_pjdni_status_enum CHECK (node_status IN ('PENDING', 'RUNNING', 'SUCCESS', 'FAILED', 'SKIPPED', 'RETRYING')),
+    CONSTRAINT ck_pjdni_retry_nonneg CHECK (retry_count >= 0 AND max_retries >= 0),
+    CONSTRAINT ck_pjdni_duration_nonneg CHECK (duration_ms IS NULL OR duration_ms >= 0),
+    CONSTRAINT ck_pjdni_deleted_enum CHECK (deleted IN (0, 1))
+);
+
+COMMENT ON TABLE pmis_job_dag_node_instance IS 'DAG 节点实例表（P2 DAG 增强）';
+COMMENT ON COLUMN pmis_job_dag_node_instance.id IS '主键 ID';
+COMMENT ON COLUMN pmis_job_dag_node_instance.dag_instance_id IS 'DAG 实例 ID';
+COMMENT ON COLUMN pmis_job_dag_node_instance.dag_id IS 'DAG 定义 ID';
+COMMENT ON COLUMN pmis_job_dag_node_instance.job_id IS '任务 ID';
+COMMENT ON COLUMN pmis_job_dag_node_instance.job_key IS '任务 KEY（冗余）';
+COMMENT ON COLUMN pmis_job_dag_node_instance.node_status IS '节点状态: PENDING/RUNNING/SUCCESS/FAILED/SKIPPED/RETRYING';
+COMMENT ON COLUMN pmis_job_dag_node_instance.log_id IS '关联的任务执行日志 ID（pmis_job_log.id）';
+COMMENT ON COLUMN pmis_job_dag_node_instance.retry_count IS '节点级重试次数';
+COMMENT ON COLUMN pmis_job_dag_node_instance.max_retries IS '节点级最大重试次数';
+COMMENT ON COLUMN pmis_job_dag_node_instance.started_at IS '节点开始时间';
+COMMENT ON COLUMN pmis_job_dag_node_instance.finished_at IS '节点结束时间';
+COMMENT ON COLUMN pmis_job_dag_node_instance.duration_ms IS '节点执行耗时（毫秒）';
+COMMENT ON COLUMN pmis_job_dag_node_instance.result_json IS '节点执行结果 JSON';
+COMMENT ON COLUMN pmis_job_dag_node_instance.error_message IS '节点错误信息';
+COMMENT ON COLUMN pmis_job_dag_node_instance.tenant_id IS '租户 ID';
+
+CREATE INDEX IF NOT EXISTS idx_pjdni_dag_instance
+    ON pmis_job_dag_node_instance (dag_instance_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pjdni_job_id
+    ON pmis_job_dag_node_instance (job_id) WHERE deleted = 0;
+CREATE INDEX IF NOT EXISTS idx_pjdni_status
+    ON pmis_job_dag_node_instance (node_status) WHERE deleted = 0;
+
+-- ============================================================================
 -- [P5-1] 任务告警规则表 pmis_job_alert_rule
 -- ----------------------------------------------------------------------------
 -- 定义告警触发条件、级别、通知通道与去重策略。

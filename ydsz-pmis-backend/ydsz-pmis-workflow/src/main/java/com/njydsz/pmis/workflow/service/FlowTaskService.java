@@ -323,6 +323,45 @@ public interface FlowTaskService {
     void addApprover(FlowTaskOperateDTO dto);
 
     /**
+     * P2-1: 任务级挂起 — 将 PENDING/CLAIMED 任务临时挂起（不推进、不计超时），激活后回到 PENDING。
+     *
+     * <p>对标钉钉/飞书"任务挂起"。与实例级挂起（{@code suspendProcess}）的区别：
+     * <ul>
+     *   <li>实例级挂起：整个实例全部 PENDING/CLAIMED 任务连带冻结为 FROZEN；</li>
+     *   <li>任务级挂起：仅挂起指定任务为 SUSPENDED，其它任务不受影响。</li>
+     * </ul>
+     *
+     * <p>校验规则：
+     * <ul>
+     *   <li>任务存在；</li>
+     *   <li>任务状态为 PENDING 或 CLAIMED（已签收但未完成）；</li>
+     *   <li>挂起后任务状态 → SUSPENDED，写审计日志 action=SUSPEND。</li>
+     * </ul>
+     *
+     * @param taskId     任务 ID
+     * @param operatorId 操作人 ID
+     * @param reason     挂起原因（可选，写入 comment）
+     * @since 1.7.0
+     */
+    void suspendTask(String taskId, String operatorId, String reason);
+
+    /**
+     * P2-1: 任务级激活 — 将 SUSPENDED 任务恢复为 PENDING。
+     *
+     * <p>校验规则：
+     * <ul>
+     *   <li>任务存在；</li>
+     *   <li>任务状态为 SUSPENDED；</li>
+     *   <li>激活后任务状态 → PENDING（清空签收人，需重新签收），写审计日志 action=ACTIVATE。</li>
+     * </ul>
+     *
+     * @param taskId     任务 ID
+     * @param operatorId 操作人 ID
+     * @since 1.7.0
+     */
+    void activateTask(String taskId, String operatorId);
+
+    /**
      * P1-3: 取回 — 审批人已审批后，在下一节点未处理前，把自己的审批撤回。
      *
      * <p>对标钉钉/飞书"取回"能力。与发起人撤回（{@link com.njydsz.pmis.workflow.service.FlowInstanceService#recall}) 不同，

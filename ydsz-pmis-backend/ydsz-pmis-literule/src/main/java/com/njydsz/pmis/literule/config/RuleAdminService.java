@@ -7,6 +7,7 @@ import com.njydsz.pmis.literule.api.RuleResult;
 import com.njydsz.pmis.literule.api.RuleStatus;
 import com.njydsz.pmis.literule.event.RuleConfigRefreshEvent;
 import com.njydsz.pmis.literule.expr.ExpressionEvaluator;
+import com.njydsz.pmis.literule.expr.ExpressionTraceNode;
 import com.njydsz.pmis.literule.impl.ExpressionRule;
 import com.njydsz.pmis.literule.spi.RuleConfigProvider;
 import com.njydsz.pmis.literule.spi.RuleConfigBroadcaster;
@@ -377,6 +378,35 @@ public class RuleAdminService {
      */
     public boolean validateExpression(String expression) {
         return evaluator.validate(expression);
+    }
+
+    /**
+     * 表达式追踪求值（P0-2 表达式级追踪/归因）
+     *
+     * <p>对标 QLExpress4 的 ExpressionTrace 能力，将表达式执行过程转换为计算树，
+     * 用于规则归因分析、短路排查和中间结果可视化。
+     *
+     * <p>Aviator 引擎提供完整的追踪树（逻辑/比较/变量节点 + 短路分析）；
+     * QLExpress 引擎降级为 ROOT 节点（仅记录最终结果）。
+     *
+     * @param expression 表达式字符串
+     * @param facts      事实数据
+     * @return 追踪结果（含求值结果和追踪树）
+     * @since 1.6.0
+     */
+    public ExpressionEvaluator.TraceResult traceExpression(String expression, Map<String, Object> facts) {
+        if (expression == null || expression.isBlank()) {
+            ExpressionTraceNode root = ExpressionTraceNode.builder()
+                    .nodeType(ExpressionTraceNode.NodeType.ROOT)
+                    .expression(expression)
+                    .result(false)
+                    .error("表达式为空")
+                    .build();
+            return new ExpressionEvaluator.TraceResult(false, root);
+        }
+        RuleContext context = RuleContext.of(facts != null ? facts : java.util.Collections.emptyMap(),
+                "EXPR_TRACE", "MANUAL");
+        return evaluator.evalBooleanWithTrace(expression, context);
     }
 
     /**

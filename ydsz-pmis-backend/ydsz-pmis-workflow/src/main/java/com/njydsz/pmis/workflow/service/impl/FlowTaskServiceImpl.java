@@ -207,6 +207,20 @@ public class FlowTaskServiceImpl implements FlowTaskService {
         return completeService.retract(hisTaskId, operatorId, comment);
     }
 
+    /** P2-1: 任务级挂起 — 加分布式锁防止并发 */
+    @Override
+    @DistributedLock(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)
+    public void suspendTask(String taskId, String operatorId, String reason) {
+        completeService.suspendTask(taskId, operatorId, reason);
+    }
+
+    /** P2-1: 任务级激活 — 加分布式锁防止并发 */
+    @Override
+    @DistributedLock(key = "'flow:task:op:' + #taskId", waitTime = 3, leaseTime = 30)
+    public void activateTask(String taskId, String operatorId) {
+        completeService.activateTask(taskId, operatorId);
+    }
+
     // ============================== 已阅 / 沟通 / 暂存 ==============================
 
     @Override
